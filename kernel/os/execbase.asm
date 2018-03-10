@@ -2344,7 +2344,9 @@ UnloadProcess:
     mov es,es:p_loader
     call fword ptr es:loader_detach_kernel_fork_proc
 ;
+    EnterSection ds:pr_cow_section
     DetachFork
+    LeaveSection ds:pr_cow_section
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

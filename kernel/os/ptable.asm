@@ -2477,9 +2477,7 @@ ldfDirLoop32:
     test al,1
     jz ldfDirNext32
 ;
-    EnterSection ds:pr_cow_section
     call DetachDirEntry32
-    LeaveSection ds:pr_cow_section
 
 ldfDirNext32:
     xor eax,eax
@@ -5390,9 +5388,7 @@ ldfDirLoop64:
     test al,1
     jz ldfDirNext64
 ;
-    EnterSection ds:pr_cow_section
     call DetachDirEntry64
-    LeaveSection ds:pr_cow_section
 
 ldfDirNext64:
     xor eax,eax
