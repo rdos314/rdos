@@ -231,6 +231,8 @@ InitProgramBlock Proc near
     mov gs:pr_page_table_count,0
     mov gs:pr_cow_thread,0
     mov gs:pr_cow_counter,0
+    mov gs:pr_fault_linear,-1
+    mov gs:pr_fault_counter,0
     InitSection gs:pr_section
     InitSection gs:pr_cow_section
     mov gs:pr_memmap_list,0

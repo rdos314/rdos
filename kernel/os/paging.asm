@@ -523,9 +523,7 @@ ptUserDirValid:
     test ax,400h
     jz ptUserCheckPage
 ;
-    int 3
     call cs:cow_dir_proc
-    int 3
     jmp ptUserDone
 
 ptUserCheckPage:
@@ -590,6 +588,22 @@ ptUserFlat:
 
 ptUserPossibleFault:
     int 3
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    xor ax,ax
+    cmp edx,ds:pr_fault_linear
+    jne ptUserFaultRetry
+;
+    mov ax,ds:pr_fault_counter
+    inc ax
+    cmp ax,3
+    jae ptFault
+
+ptUserFaultRetry:
+    mov ds:pr_fault_linear,edx
+    mov ds:pr_fault_counter,ax
+    jmp ptUserDone
 
 ptLoaderCheck:
     jnc ptUserDone

@@ -169,6 +169,9 @@ pr_cow_thread        DW ?
 pr_cow_counter       DW ?
 pr_cow_section       section_typ <>
 
+pr_fault_linear      DD ?,?
+pr_fault_counter     DW ?
+
 pr_page_table_count  DW ?
 pr_page_dir_arr      DD MAX_PROGRAM_PROCESSES DUP(?)
 pr_page_table_arr    DD MAX_PROGRAM_PROCESSES DUP(?)
