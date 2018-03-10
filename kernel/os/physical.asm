@@ -594,6 +594,11 @@ fpDo:
     shl edi,12
     add edi,phys_bitmap_start
     lock bts ds:[edi],ecx
+    jnc fpOk
+;
+    int 3
+
+fpOk:
 ;
     shl ebx,2
     add ebx,phys_header_start

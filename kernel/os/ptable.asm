@@ -2276,6 +2276,9 @@ gprLoop32:
     jz gprNext32
 ;
     mov edx,fs:[edx+esi]
+    test dl,1
+    jz gprNext32
+;
     and dx,0F000h
     cmp eax,edx
     jne gprNext32
@@ -5188,6 +5191,9 @@ gprLoop64:
     jne gprNext64
 ;
     mov edx,fs:[edx+esi]
+    test dl,1
+    jz gprNext64
+;
     and dx,0F000h
     cmp eax,edx
     jne gprNext64
