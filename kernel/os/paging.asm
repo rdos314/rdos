@@ -525,6 +525,8 @@ ptUserDirValid:
 ;
     int 3
     call cs:cow_dir_proc
+    int 3
+    jmp ptUserDone
 
 ptUserCowOk:
     call cs:get_page_entry_proc
