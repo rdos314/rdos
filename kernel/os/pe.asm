@@ -4000,12 +4000,11 @@ fork_child:
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
 ;
-    mov ds,ds:p_proc_sel        
+    mov ds,ds:p_proc_sel
     movzx ebx,ds:pf_module_arr
-    mov fs:pvModuleHandle,ebx
-;
     ModuleIdToSel
     mov ds,ebx
+;
     mov ax,ds:mod_debug_id
     or ax,ax
     jz fork_notify_ok
