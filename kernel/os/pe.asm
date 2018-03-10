@@ -3938,28 +3938,22 @@ free_thread_kernel     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_proc      Proc far
+    push ds
+    push es
     push ebx
     push ecx
     push edx
 ;
     GetThread
-    push es
-    mov es,ax
-    lock and es:p_flags,NOT THREAD_FLAG_FORK_COMPLETED
-    pop es
-;
     push eax
 ;
-    mov ebx,fs:pvModuleHandle
-    ModuleIdToSel
-    push ebx
+    mov es,ax
+    lock and es:p_flags,NOT THREAD_FLAG_FORK_COMPLETED
 ;
     mov bx,fs
     GetSelectorBaseSize
     push ecx
     push edx
-
-
 ;
     ClearSignal
     ForkProcess
@@ -3967,19 +3961,10 @@ fork_proc      Proc far
     jz fork_child
 
 fork_parent:
-    push es
-    mov es,ax
-;
-    push ds
-    push dx
-;
-    movzx eax,bx
-;
-    pop dx
-    pop ds
-;
+    push ax
     GetThread
     mov es,ax
+    pop ax
 
 fork_wait_child:
     test es:p_flags,THREAD_FLAG_FORK_COMPLETED
@@ -3989,11 +3974,6 @@ fork_wait_child:
     jmp fork_wait_child
     
 fork_child_completed:
-    mov ax,100
-    WaitMilliSec
-;
-    pop es
-    pop ebx
     pop ebx
     pop ebx
     pop ebx
@@ -4001,6 +3981,8 @@ fork_child_completed:
     pop edx
     pop ecx
     pop ebx
+    pop es
+    pop ds
     jmp fork_done
 
 fork_child:
@@ -4010,15 +3992,6 @@ fork_child:
     or bl,7
     CreateDataSelector32
     mov fs,bx
-;
-    pop eax
-;
-    push es
-    mov es,ax
-;    SetModule
-    pop es
-;
-    push ds
 ;
     GetThread
     mov ds,ax
@@ -4053,18 +4026,17 @@ fork_child:
     pop ds
 
 fork_notify_ok:    
-    pop ds
-;
     pop ebx
-;
     mov ds,bx
     lock or ds:p_flags,THREAD_FLAG_FORK_COMPLETED
     Signal
 ;
+    xor eax,eax
     pop edx
     pop ecx
     pop ebx
-    xor eax,eax
+    pop es
+    pop ds
 
 fork_done:    
     ret
