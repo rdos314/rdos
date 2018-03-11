@@ -165,7 +165,7 @@ move_page_loop:
     mov edx,esi
     call cs:get_sys_page_entry_proc
 ;    
-    mov al,5
+    mov al,7
     mov edx,edi
     call cs:set_sys_page_entry_proc
 ;

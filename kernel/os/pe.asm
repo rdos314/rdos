@@ -1175,6 +1175,12 @@ spCreate:
     mov ax,flat_sel
     mov ds,ax    
 ;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
     mov eax,gs:ppr_create_section_proc    
     sub eax,esi
     sub eax,6
@@ -1185,6 +1191,10 @@ spCreate:
 ;
     mov ax,0E890h    
     xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
     clc
 ;
     pop esi
@@ -1208,6 +1218,12 @@ spCreateNamed:
     mov ax,flat_sel
     mov ds,ax    
 ;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
     mov eax,gs:ppr_create_named_section_proc
     sub eax,esi
     sub eax,6
@@ -1218,6 +1234,10 @@ spCreateNamed:
 ;
     mov ax,0E890h    
     xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
     clc
 ;
     pop esi
@@ -1241,6 +1261,12 @@ spDelete:
     mov ax,flat_sel
     mov ds,ax    
 ;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
     mov eax,gs:ppr_delete_section_proc    
     sub eax,esi
     sub eax,6
@@ -1251,6 +1277,10 @@ spDelete:
 ;
     mov ax,0E890h    
     xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
     clc
 ;
     pop esi
@@ -1274,6 +1304,12 @@ spEnter:
     mov ax,flat_sel
     mov ds,ax    
 ;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
     mov eax,gs:ppr_enter_section_proc    
     sub eax,esi
     sub eax,6
@@ -1284,6 +1320,10 @@ spEnter:
 ;
     mov ax,0E890h    
     xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
     clc
 ;
     pop esi
@@ -1307,6 +1347,12 @@ spLeave:
     mov ax,flat_sel
     mov ds,ax    
 ;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
     mov eax,gs:ppr_leave_section_proc    
     sub eax,esi
     sub eax,6
@@ -1317,6 +1363,10 @@ spLeave:
 ;
     mov ax,0E890h    
     xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
     clc
 ;
     pop esi
@@ -3032,6 +3082,12 @@ FixupDebug Proc near
 ;
     call FixupDebugUserStack
 ;
+    mov eax,cr0
+    push eax
+    and eax,NOT 10000h
+    cli
+    mov cr0,eax
+;
     mov ax,flat_data_sel
     mov ds,ax
     mov esi,es:lib_org_eip
@@ -3040,6 +3096,10 @@ FixupDebug Proc near
     sub eax,5
     mov ds:[esi+1],eax
     mov [ebp].load_eip,esi
+;
+    pop eax
+    mov cr0,eax
+    sti
 ;
     popad
     pop es

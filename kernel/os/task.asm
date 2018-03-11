@@ -2051,7 +2051,7 @@ run_ap_core_name    DB 'Run AP Core', 0
 
 run_ap_core:
     mov eax,cr0
-    or al,8
+    or eax,10008h
     mov cr0,eax    
 ;
     mov ax,core_data_sel
@@ -4824,7 +4824,7 @@ stop_core_timer      ENDP
     
 init_first_thread:
     mov eax,cr0
-    or al,8
+    or eax,10008h
     mov cr0,eax    
     StartSyscall
 ;    

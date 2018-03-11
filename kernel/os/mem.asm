@@ -3401,6 +3401,7 @@ write_thread_selector_do:
     AllocateLocalLinear
     pop eax
 ;
+    or al,2
     SetPageEntry
 ;
     mov es:[edx+esi],cl
