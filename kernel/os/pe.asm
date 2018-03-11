@@ -1550,6 +1550,12 @@ reloc_nop       Proc near
 reloc_nop       Endp
 
 reloc_high      Proc near
+    mov ebx,cr0
+    push ebx
+    and ebx,NOT 10000h
+    cli
+    mov cr0,ebx
+;
     push ecx
     mov ecx,edi
     shr ecx,16
@@ -1558,22 +1564,46 @@ reloc_high      Proc near
     add eax,edx
     add [eax],cx
     pop ecx
+;
+    pop ebx
+    mov cr0,ebx
+    sti
     ret
 reloc_high      Endp
 
 reloc_low       Proc near
+    mov ebx,cr0
+    push ebx
+    and ebx,NOT 10000h
+    cli
+    mov cr0,ebx
+;
     and ax,0FFFh
     movzx eax,ax
     add eax,edx
     add [eax],di
+;
+    pop ebx
+    mov cr0,ebx
+    sti
     ret
 reloc_low       Endp
 
 reloc_highlow   Proc near
+    mov ebx,cr0
+    push ebx
+    and ebx,NOT 10000h
+    cli
+    mov cr0,ebx
+;
     and ax,0FFFh
     movzx eax,ax
     add eax,edx
     add [eax],edi
+;
+    pop ebx
+    mov cr0,ebx
+    sti
     ret
 reloc_highlow   Endp
 
