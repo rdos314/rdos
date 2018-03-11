@@ -2184,8 +2184,15 @@ lsfuSave32:
     add edi,4
     loop lsfuLoop32
 ;
+    mov ecx,(process_page_linear - fork_mem_size) SHR 22
+
+lsfuCopy32:
     mov eax,fs:[esi]
     mov fs:[edi],eax
+;
+    add esi,4
+    add edi,4
+    loop lsfuCopy32
 ;
     popad
     pop fs
@@ -5082,19 +5089,18 @@ lsfuSave64:
     add edi,8
     loop lsfuLoop64
 ;
+    mov ecx,(process_page_linear - fork_mem_size) SHR 21
+
+lsfuCopy64:
     mov eax,fs:[esi]
     mov ebx,fs:[esi+4]
+;
+    mov fs:[edi],eax
+    mov fs:[edi+4],ebx
+;
     add esi,8
-;
-    mov fs:[edi],eax
-    mov fs:[edi+4],ebx
     add edi,8
-;
-    mov eax,fs:[esi]
-    mov ebx,fs:[esi+4]
-;
-    mov fs:[edi],eax
-    mov fs:[edi+4],ebx
+    loop lsfuCopy64
 ;
     popad
     pop fs
