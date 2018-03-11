@@ -402,9 +402,8 @@ ptEnter:
     jmp ptUserDone
 
 ptNoDir:
-    call local_allocate_physical
-    mov al,07h
-    call cs:set_page_entry_proc
+    call cs:fault_to_dir_proc
+    call cs:create_page_dir_proc
     jmp ptUserDone
 
 ptNotDir:
