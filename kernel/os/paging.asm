@@ -354,11 +354,19 @@ pagefault_trap:
     push edi
 ;
     mov edx,cr2
-    cmp edx,system_mem_start
-    jc ptUser
+    cmp edx,sys_page_linear
+    jae ptKernel
 ;
-    cmp edx,handle_linear
-    jne ptKernel
+    cmp edx,process_page_linear
+    jb ptUser
+;
+    push edx
+    call cs:fault_to_dir_proc
+    mov eax,edx
+    pop edx
+;
+    cmp eax,sys_page_linear
+    jae ptKernel
 
 ptUser:
     sti
@@ -377,6 +385,26 @@ ptSection:
     mov ds:pr_cow_thread,ax
 
 ptEnter:
+    cmp edx,process_page_linear
+    jb ptNotDir
+;
+    call cs:get_page_entry_proc
+    test al,1
+    jz ptNoDir
+;
+    test ax,400h
+    jz ptUserDone
+;
+    CrashGate
+    call cs:fault_to_dir_proc
+
+ptNoDir:
+    call local_allocate_physical
+    mov al,07h
+    call cs:set_page_entry_proc
+    jmp ptUserDone
+
+ptNotDir:
     call cs:get_page_dir_proc 
     test al,1
     jnz ptUserDirValid
@@ -450,7 +478,7 @@ ptNormal:
     jmp ptUserDone
 
 ptUserFlat:
-    int 3
+    CrashGate
 
 ptUserPossibleFault:
     GetThread
