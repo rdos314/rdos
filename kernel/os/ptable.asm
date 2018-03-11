@@ -1181,8 +1181,6 @@ local_has_page_entry32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_reserve_page_entries32       Proc near
-    push ds
-    push es
     push eax
 ;    
     mov ax,process_page_sel
@@ -1225,8 +1223,6 @@ rpePopFail:
 
 rpeDone:    
     pop eax
-    pop es
-    pop ds
     ret
 local_reserve_page_entries32       Endp
 
@@ -1246,7 +1242,6 @@ local_reserve_page_entries32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_allocate_page_entries32       Proc near
-    push ds
     push eax
     push ebx
     push esi
@@ -1306,7 +1301,6 @@ apeDone:
     pop esi
     pop ebx
     pop eax
-    pop ds
     ret
 local_allocate_page_entries32       Endp
 
@@ -2625,7 +2619,7 @@ lcowdCopy32:
     mov esi,edx
 ;
     add edx,1000h
-    call local_allocate_physical
+    AllocatePhysical32
     or al,67h
     SetPageEntry
     mov edi,edx
@@ -2787,7 +2781,7 @@ lcowpCopy32:
     mov esi,edx
 ;
     add edx,1000h
-    call local_allocate_physical
+    AllocatePhysical32
     or al,67h
     SetPageEntry
     mov edi,edx
@@ -3812,8 +3806,6 @@ local_has_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_reserve_page_entries64       Proc near
-    push ds
-    push es
     push eax
 ;    
     mov ax,process_page_sel
@@ -3856,8 +3848,6 @@ rpePopFail64:
 
 rpeDone64:    
     pop eax
-    pop es
-    pop ds
     ret
 local_reserve_page_entries64       Endp
 
@@ -3877,39 +3867,17 @@ local_reserve_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_allocate_page_entries64       Proc near
-    push ds
-    push es
     push eax
     push ebx
     push esi
-    push edi
-;
-    mov edi,edx
-    shr edi,18
-    and di,3FF8h
-;
-    shr edx,9
-    and dx,0FFF8h
 ;
     mov esi,eax
+    shr edx,9
     shr esi,9
-    and si,0FFF8h
 ;    
     mov bx,process_page_sel
     mov ds,bx
-    mov bx,process_dir_sel
-    mov es,bx
-;
-    mov al,es:[edi]
-    test al,1
-    jnz apeDirOk64
-;
-    call local_allocate_physical
-    or al,67h
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-
-apeDirOk64:    
+;    
     xor ebx,ebx
 
 apeLoop64:
@@ -3926,24 +3894,6 @@ apeLoop64:
     
 apeNext64:
     add edx,8
-;
-    test dx,0FFFh
-    jnz apeNextDirOk64
-;
-    int 3
-    add edi,8
-    mov al,es:[edi]
-    test al,1
-    jnz apeNextDirOk64
-;
-    push ebx
-    call local_allocate_physical
-    or al,67h
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-    pop ebx
-
-apeNextDirOk64:    
     cmp ecx,ebx
     jne apeLoop64
 ;
@@ -3954,32 +3904,11 @@ apeNextDirOk64:
     push edx
     push ecx
 ;    
-    mov edi,edx
-    shr edi,9
-    and di,3FF8h
-    mov ax,es:[edi]
-    test ax,400h
-    jz apeMark64
-;
-    int 3
-
-apeMark64:
     mov eax,2
+    
+apeMark64:
     mov [edx],eax
     add edx,8
-;
-    test dx,0FFFh
-    jnz apeMarkNext64
-;
-    int 3
-    add edi,8
-    mov ax,es:[edi]
-    test ax,400h
-    jnz apeMarkNext64
-;
-    int 3
-
-apeMarkNext64:
     sub ecx,1
     jnz apeMark64
 ;
@@ -3994,12 +3923,9 @@ apeFail64:
     stc
 
 apeDone64:
-    pop edi
     pop esi
     pop ebx
     pop eax
-    pop es
-    pop ds
     ret
 local_allocate_page_entries64       Endp
 
@@ -5614,7 +5540,7 @@ lcowdCopy64:
     mov esi,edx
 ;
     add edx,1000h
-    call local_allocate_physical
+    AllocatePhysical64
     or al,67h
     SetPageEntry
     mov edi,edx
@@ -5786,7 +5712,7 @@ lcowpCopy64:
     mov esi,edx
 ;
     add edx,1000h
-    call local_allocate_physical
+    AllocatePhysical64
     or al,67h
     SetPageEntry
     mov edi,edx

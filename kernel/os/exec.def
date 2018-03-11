@@ -172,11 +172,6 @@ pr_cow_section       section_typ <>
 pr_fault_linear      DD ?,?
 pr_fault_counter     DW ?
 
-pr_used_mem          DD ?
-pr_avail_mem         DD ?
-
-pr_mem_base          DD ?
-
 pr_page_table_count  DW ?
 pr_page_dir_arr      DD MAX_PROGRAM_PROCESSES DUP(?)
 pr_page_table_arr    DD MAX_PROGRAM_PROCESSES DUP(?)

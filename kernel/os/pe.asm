@@ -3986,12 +3986,6 @@ fork_child_completed:
     jmp fork_done
 
 fork_child:
-    CrashGate
-    mov eax,1000h
-    AllocateLocalLinear
-    int 3
-
-
     pop edx
     pop ecx
     AllocateLdt

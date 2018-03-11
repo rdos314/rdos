@@ -792,14 +792,6 @@ UnhookPage      MACRO
 
 ;;;;;;;;;;; LINEAR MEMORY MANAGEMENT ;;;;;;;;
 
-LockCow     MACRO
-    OsGate lock_cow_nr
-                    ENDM
-
-UnlockCow     MACRO
-    OsGate unlock_cow_nr
-                    ENDM
-
 InitProcessMem     MACRO
     OsGate init_process_mem_nr
                     ENDM

@@ -233,87 +233,12 @@ InitProgramBlock Proc near
     mov gs:pr_cow_counter,0
     mov gs:pr_fault_linear,-1
     mov gs:pr_fault_counter,0
-;
-    mov gs:pr_avail_mem,flat_size - local_page_linear
-    mov gs:pr_used_mem,0
-    mov gs:pr_mem_base,local_page_linear
-;
     InitSection gs:pr_section
     InitSection gs:pr_cow_section
     mov gs:pr_memmap_list,0
     InitSpinlock gs:pr_memmap_spinlock
     ret
 InitProgramBlock  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           LockCow
-;
-;       DESCRIPTION:    Lock cow section
-;
-;       RETURNS:        DS	Program sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lock_cow_name DB 'Lock Cow', 0
-
-lock_cow Proc far
-    push ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    cmp ax,ds:pr_cow_thread
-    jne lcSection
-;
-    inc ds:pr_cow_counter
-    jmp lcEnter
-
-lcSection:
-    EnterSection ds:pr_cow_section
-    mov ds:pr_cow_counter,0
-    mov ds:pr_cow_thread,ax
-
-lcEnter:
-    pop ax
-    ret
-lock_cow Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UnlockCow
-;
-;       DESCRIPTION:    Unlock cow section
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_cow_name DB 'Unlock Cow', 0
-
-unlock_cow Proc far
-    push ds
-    push ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ax,ds:pr_cow_counter
-    or ax,ax
-    jz ucLeave
-;
-    dec ds:pr_cow_counter
-    jmp ucDone
-
-ucLeave:
-    mov ds:pr_cow_thread,0
-    LeaveSection ds:pr_cow_section
-
-ucDone:
-    pop ax
-    pop ds
-    ret
-unlock_cow  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2419,9 +2344,9 @@ UnloadProcess:
     mov es,es:p_loader
     call fword ptr es:loader_detach_kernel_fork_proc
 ;
-    LockCow
+    EnterSection ds:pr_cow_section
     DetachFork
-    UnlockCow
+    LeaveSection ds:pr_cow_section
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2653,7 +2578,7 @@ removed_process    PROC far
     or ecx,ecx
     jz rpfEnd
 ;
-    LockCow
+    EnterSection ds:pr_cow_section
     push ds
     mov eax,es
     mov ds,eax
@@ -2673,7 +2598,7 @@ rpfEnd:
     jmp rpfDone
 
 rpfLeave:
-    UnlockCow
+    LeaveSection ds:pr_cow_section
     LeaveSection ds:pr_section
 
 rpfDone:
@@ -5543,18 +5468,6 @@ InitExec_    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET lock_cow
-    mov edi,OFFSET lock_cow_name
-    xor cl,cl
-    mov ax,lock_cow_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET unlock_cow
-    mov edi,OFFSET unlock_cow_name
-    xor cl,cl
-    mov ax,unlock_cow_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET register_loader
     mov edi,OFFSET register_loader_name
