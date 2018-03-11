@@ -395,8 +395,11 @@ ptEnter:
     test ax,400h
     jz ptUserDone
 ;
-    CrashGate
     call cs:fault_to_dir_proc
+    call cs:cow_dir_proc
+    mov eax,cr3
+    mov cr3,eax
+    jmp ptUserDone
 
 ptNoDir:
     call local_allocate_physical
