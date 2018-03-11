@@ -1883,8 +1883,20 @@ t13_int_call16:
     mov ax,flat_sel
     mov ds,ax
 ;
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
     mov al,0CDh
     xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+;
     pop edx
     pop ecx
     jmp t13_end
@@ -1914,8 +1926,20 @@ t13_int_user:
     mov ax,flat_sel
     mov ds,ax
 ;
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
     mov al,0CDh
     xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+;
     pop edx
     pop ecx
     jmp t13_end
@@ -1947,8 +1971,20 @@ t13_int_call32:
     mov ax,flat_sel
     mov ds,ax
 ;
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx 
+;
     mov al,0CDh
     xchg al,ds:[ebx]
+; 
+    pop edx
+    mov cr0,edx
+    popf
+;
     pop edx
     pop ecx
     jmp t13_end

@@ -292,6 +292,14 @@ do_oscall_in_range:
     mov ax,flat_sel
     mov ds,ax
 ;
+    push edx
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
     mov eax,es:[edi].os_gate_offset
     xchg eax,ds:[ebx+3]
 ;
@@ -300,6 +308,11 @@ do_oscall_in_range:
 ;    
     mov al,90h
     xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+    pop edx
     ret
 do_oscall   Endp
 

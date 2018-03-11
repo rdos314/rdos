@@ -699,6 +699,14 @@ do_user_in_range16:
     mov ax,flat_sel
     mov ds,ax
 ;
+    push edx
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
     mov eax,es:[edi].user_gate_entry_offset16
     xchg eax,ds:[ebx+3]
 ;
@@ -707,6 +715,11 @@ do_user_in_range16:
 ;    
     mov al,90h
     xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+    pop edx
     ret
 do_usercall16   Endp
 
@@ -756,6 +769,14 @@ do_user_in_range32:
     mov ax,flat_sel
     mov ds,ax
 ;
+    push edx
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
     mov eax,es:[edi].user_gate_entry_offset32
     xchg eax,ds:[ebx+3]
 ;
@@ -764,6 +785,11 @@ do_user_in_range32:
 ;    
     mov al,90h
     xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+    pop edx
     ret
 do_usercall32  Endp
 
@@ -825,6 +851,14 @@ do_usergate_in_range32:
     pop ds
 
 do_usergate32_defined:
+    push edx
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
     xor eax,eax
     xchg eax,ds:[ebx+2]
 ;
@@ -833,6 +867,11 @@ do_usergate32_defined:
 ;    
     mov al,90h
     xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+    pop edx
 
 do_usergate32_done:    
     ret
