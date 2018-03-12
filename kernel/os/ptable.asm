@@ -5060,7 +5060,7 @@ local_start_fork64  Proc near
 
 lsfuLoop64:
     mov eax,fs:[edi]
-    mov eax,fs:[edi+4]
+    mov ebx,fs:[edi+4]
     test al,1
     jz lsfuFree64
 ;

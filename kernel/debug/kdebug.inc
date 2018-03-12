@@ -184,6 +184,9 @@ fault_error     DD ?
 cpu_read_mem    DD ?
 cpu_write_mem   DD ?
 
+cpu_read_phys   DD ?
+cpu_write_phys  DD ?
+
 org_eip			DD ?,?
 org_esp			DD ?,?
 org_stack		DD ?

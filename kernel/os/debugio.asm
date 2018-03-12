@@ -1029,9 +1029,9 @@ data_next32:
     call NewLine
 ;
     mov word ptr gs:p_rflags+2,2
-    mov ax,es:p_vm_deb_sel
-    mov ebx,es:p_vm_deb_offs
-    call WriteDataRow
+    mov eax,es:p_deb_phys
+    mov ebx,es:p_deb_phys+4
+    call WritePhysRow
     pop word ptr gs:p_rflags+2
     ret
 WriteData32       ENDP
@@ -1135,9 +1135,9 @@ wd64_data:
     call WriteDataRow
     call NewLine
 ;
-    mov ax,es:p_vm_deb_sel
-    mov ebx,es:p_vm_deb_offs
-    call WriteDataRow64
+    mov eax,es:p_deb_phys
+    mov ebx,es:p_deb_phys+4
+    call WritePhysRow
     ret
 WriteData64       ENDP
 
@@ -2459,56 +2459,47 @@ change_pm_offs_error:
     ret
 change_pm_offs  ENDP
 
-mem_vm  PROC near
-    push word ptr gs:p_rflags+2
-    mov word ptr gs:p_rflags+2,2
+mem_phys  PROC near
     push gs
     pop es
-    mov dx,es:p_vm_deb_sel
-    mov esi,es:p_vm_deb_offs
-    call mem_do
-    pop word ptr gs:p_rflags+2
+    mov eax,es:p_phys_deb
+    mov ebx,es:p_phys_deb+4
+    call mem_phys
     ret
-mem_vm  ENDP
+mem_phys  ENDP
 
-change_vm_sel   PROC near
-    push word ptr gs:p_rflags+2
-    mov word ptr gs:p_rflags+2,0
+change_phys_high   PROC near
     mov dx,gs
     and cl,3
-    mov esi,OFFSET p_vm_deb_sel
+    mov esi,OFFSET p_deb_phys + 4
     push cx
-    push OFFSET change_vm_sel_ret
+    push OFFSET change_phys_low_ret
     push di
     ret
-change_vm_sel_ret:
+change_phys_low_ret:
     pop cx
     or cl,cl
-    jnz change_vm_sel_error
+    jnz change_phys_high_error
     inc byte ptr [bp].call_edx
-change_vm_sel_error:
-    pop word ptr gs:p_rflags+2
+change_phys_high_error:
     ret
-change_vm_sel   ENDP
+change_phys_high   ENDP
 
-change_vm_offs  PROC near
-    push word ptr gs:p_rflags+2
-    mov word ptr gs:p_rflags+2,0
+change_phys_low  PROC near
     mov dx,gs
-    mov esi,OFFSET p_vm_deb_offs
+    mov esi,OFFSET p_deb_phys
     push cx
-    push OFFSET change_vm_offs_ret
+    push OFFSET change_phys_low_ret
     push di
     ret
-change_vm_offs_ret:
+change_phys_low_ret:
     pop cx
     or cl,cl
-    jnz change_vm_offs_error
+    jnz change_phys_low_error
     inc byte ptr [bp].call_edx
-change_vm_offs_error:
-    pop word ptr gs:p_rflags+2
+change_phys_low_error:
     ret
-change_vm_offs  ENDP
+change_phys_low  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

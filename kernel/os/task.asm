@@ -7872,7 +7872,7 @@ sfAddNew:
 ;
     mov ds,es:p_prog_sel
     LeaveSection ds:pr_cow_section
-;
+
     popad
     pop gs
     pop ds
@@ -8075,8 +8075,8 @@ init_thread_block       PROC near
     xor eax,eax
     mov es:p_msb_tics,eax
     mov es:p_lsb_tics,eax
-    mov es:p_vm_deb_sel,ax
-    mov es:p_vm_deb_offs,eax
+    mov es:p_deb_phys,eax
+    mov es:p_deb_phys+4,eax
     mov es:p_pm_deb_sel,ax
     mov es:p_pm_deb_offs,eax
     mov es:p_events,0
@@ -9363,6 +9363,7 @@ fork_process  PROC far
 ;    
     call create_tss32
     call init_fork_regs
+    int 3
     NotifyCreateProcess
     mov es:p_cr3,eax
 ;
@@ -9603,8 +9604,8 @@ create_first_thread       PROC near
     mov es:p_prio,ax
     mov es:p_msb_tics,eax
     mov es:p_lsb_tics,eax
-    mov es:p_vm_deb_sel,ax
-    mov es:p_vm_deb_offs,eax
+    mov es:p_deb_phys,eax
+    mov es:p_deb_phys+4,eax
     mov es:p_pm_deb_sel,ax
     mov es:p_pm_deb_offs,eax
     mov es:p_prog_id,ax

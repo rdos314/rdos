@@ -69,6 +69,7 @@ code    SEGMENT byte use32 public 'CODE'
     extrn AddCodeAsciiz:near
     extrn AddProtDataRow:near
     extrn AddLongDataRow:near
+    extrn AddPhysDataRow:near
     extrn AddFreeMem:near
     extrn FloatToString:near
 
@@ -465,10 +466,9 @@ apdPtrOk:
     call AddProtDataRow
     call AddNewLine
 ;
-    mov ds:[ebp].reg_eflags,20000h
-    mov dx,gs:p_vm_deb_sel
-    mov esi,gs:p_vm_deb_offs
-    call AddProtDataRow
+    mov edx,gs:p_deb_phys+4
+    mov esi,gs:p_deb_phys
+    call AddPhysDataRow
 ;
     pop ecx
     mov ds:[ebp].reg_eflags,ecx
@@ -562,9 +562,9 @@ wd64_data:
     call AddProtDataRow
     call AddNewLine
 ;
-    mov dx,gs:p_vm_deb_sel
-    mov esi,gs:p_vm_deb_offs
-    call AddLongDataRow
+    mov edx,gs:p_deb_phys+4
+    mov esi,gs:p_deb_phys
+    call AddPhysDataRow
     ret
 AddLongData       ENDP
 
@@ -1115,6 +1115,105 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Read_phys
+;
+;           DESCRIPTION:    Read physical memory
+;
+;           PARAMETERS:     EDX:ESI     Physical address
+;
+;           RETURNS:        NC  AL  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_phys    Proc near
+    push ds
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov ebx,flat_sel
+    mov ds,ebx
+;
+    mov ebx,edx
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,esi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+;
+    and esi,0FFFh
+    mov al,ds:[edx+esi]
+;
+    push ax
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+    pop ax
+    clc
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+read_phys    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Write_phys
+;
+;           DESCRIPTION:    Write physical memory
+;
+;           PARAMETERS:     EDX:ESI     Physical address
+;                           AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_phys    Proc near
+    push ds
+    pushad
+;
+    mov ebx,flat_sel
+    mov ds,ebx
+;
+    mov ebx,edx
+    mov eax,1000h
+    AllocateBigLinear
+;
+    push ax
+    mov eax,esi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+    pop ax
+;
+    and esi,0FFFh
+    mov ds:[edx+esi],al
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+    clc
+;
+    popad
+    pop ds
+    ret
+write_phys    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetDebugThreadData
 ;
 ;           DESCRIPTION:    Get debug thread data
@@ -1135,6 +1234,9 @@ GetDebugThreadData      Proc near
 ;    
     mov es:[ebp].cpu_read_mem,OFFSET read_mem
     mov es:[ebp].cpu_write_mem,OFFSET write_mem
+;
+    mov es:[ebp].cpu_read_phys,OFFSET read_phys
+    mov es:[ebp].cpu_write_phys,OFFSET write_phys
 ;    
     mov bx,gs:p_cs
     mov es:[ebp].reg_cs.d_selector,bx
@@ -2369,64 +2471,64 @@ change_pm_offs_error:
     ret
 change_pm_offs  ENDP
 
-    public change_vm_sel
+    public change_phys_high
 
-change_vm_sel   PROC near
+change_phys_high   PROC near
     xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
     push edx
 ;    
     mov dx,gs
     and cl,3
-    mov esi,OFFSET p_vm_deb_sel
+    mov esi,OFFSET p_deb_phys + 4
     push cx
 ;    
-    push OFFSET change_vm_sel_ret
+    push OFFSET change_phys_high_ret
     push edi
     ret
     
-change_vm_sel_ret:
+change_phys_high_ret:
     pop cx
 ;    
     or cl,cl
-    jnz change_vm_sel_error
+    jnz change_phys_high_error
 ;    
     inc ds:sw_col
     
-change_vm_sel_error:
+change_phys_high_error:
     pop edx
     mov ds:[ebp].reg_eflags,edx
     ret
-change_vm_sel   ENDP
+change_phys_high   ENDP
 
-    public change_vm_offs
+    public change_phys_low
 
-change_vm_offs  PROC near
+change_phys_low  PROC near
     xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
     push edx
 ;    
     mov dx,gs
-    mov esi,OFFSET p_vm_deb_offs
+    mov esi,OFFSET p_deb_phys
     push cx
 ;    
-    push OFFSET change_vm_offs_ret
+    push OFFSET change_phys_low_ret
     push edi
     ret
     
-change_vm_offs_ret:
+change_phys_low_ret:
     pop cx
 ;    
     or cl,cl
-    jnz change_vm_offs_error
+    jnz change_phys_low_error
 ;    
     inc ds:sw_col
     
-change_vm_offs_error:
+change_phys_low_error:
     pop edx
     mov ds:[ebp].reg_eflags,edx
     ret
-change_vm_offs  ENDP
+change_phys_low  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2636,21 +2738,11 @@ mem_pm  PROC near
     ret
 mem_pm  ENDP
 
-    public mem_vm
+    public mem_phys
 
-mem_vm  PROC near
-    mov edx,20000h
-    xchg edx,ds:[ebp].reg_eflags
-    push edx
-;    
-    mov dx,gs:p_vm_deb_sel
-    mov esi,gs:p_vm_deb_offs
-    call mem_do
-;    
-    pop edx    
-    mov ds:[ebp].reg_eflags,edx
+mem_phys  PROC near
     ret
-mem_vm  ENDP
+mem_phys  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2715,9 +2807,9 @@ mdes32 DD 22,         14,         47,         OFFSET mem_es
 pms32  DD 23,         0,          4,          OFFSET change_pm_sel
 pmo32  DD 23,         5,          8,          OFFSET change_pm_offs
 pdat32 DD 23,         14,         47,         OFFSET mem_pm
-vms32  DD 24,         0,          4,          OFFSET change_vm_sel
-vmo32  DD 24,         5,          8,          OFFSET change_vm_offs
-vdat32 DD 24,         14,         47,         OFFSET mem_vm
+vms32  DD 24,         0,          4,          OFFSET change_phys_high
+vmo32  DD 24,         5,          8,          OFFSET change_phys_low
+vdat32 DD 24,         14,         47,         OFFSET mem_phys
 dend32 DD 0FFFFFFFFh, 0FFFFFFFFh
 
 debug_call_do32   PROC near
@@ -2874,9 +2966,9 @@ mdes64 DW 22,         14,         47,         OFFSET mem_es
 pms64  DW 23,         0,          4,          OFFSET change_pm_sel
 pmo64  DW 23,         5,          8,          OFFSET change_pm_offs
 pdat64 DW 23,         14,         47,         OFFSET mem_pm
-vms64  DW 24,         0,          4,          OFFSET change_vm_sel
-vmo64  DW 24,         5,          8,          OFFSET change_vm_offs
-vdat64 DW 24,         14,         47,         OFFSET mem_vm
+vms64  DW 24,         0,          4,          OFFSET change_phys_high
+vmo64  DW 24,         5,          8,          OFFSET change_phys_low
+vdat64 DW 24,         14,         47,         OFFSET mem_phys
 dend64 DW 0FFFFh, 0FFFFh
 
 debug_call_do64   PROC near

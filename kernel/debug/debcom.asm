@@ -419,6 +419,69 @@ AddCodeAsciiz   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddPhysDataRow
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     EDX:ESI     Physical address
+;                           DS:EBP      Cpu
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddPhysDataRow
+
+AddPhysDataRow    PROC near
+    mov ebx,esi
+    call AddHexPtr64
+;    
+    mov ecx,16
+    push esi
+
+aphdhLoop:
+    mov al,' '
+    stosb
+;
+    call ds:[ebp].cpu_read_phys    
+    jc aphdhInv
+;
+    call AddHexByte
+    jmp aphdhNext
+
+aphdhInv:
+    stosb
+    stosb
+
+aphdhNext:
+    inc esi
+    loop aphdhLoop
+;
+    pop esi
+    mov al,' '
+    stosb
+;
+    mov ecx,16
+
+aphdaLoop:
+    mov al,'!'
+    call ds:[ebp].cpu_read_phys    
+    cmp al,20h
+    jnc aphdaDo
+;    
+    mov al,' '
+
+aphdaDo:
+    stosb
+    inc esi
+    loop aphdaLoop
+    
+aphdEnd:
+    ret
+AddPhysDataRow    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddProtDataRow
 ;
 ;           DESCRIPTION:    

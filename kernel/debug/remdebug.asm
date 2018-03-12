@@ -1015,8 +1015,8 @@ data_next32:
     call NewLine
 ;
     mov word ptr gs:p_rflags+2,2
-    mov ax,fs:p_vm_deb_sel
-    mov ebx,fs:p_vm_deb_offs
+    xor ax,ax
+    xor ebx,ebx
     call WriteDataRow
     pop word ptr gs:p_rflags+2
     ret
@@ -1069,12 +1069,6 @@ data_next64_32:
     mov ebx,fs:p_pm_deb_offs
     call WriteDataRow
     call NewLine
-;
-    mov word ptr gs:p_rflags+2,2
-    mov ax,fs:p_vm_deb_sel
-    mov ebx,fs:p_vm_deb_offs
-    call WriteDataRow64
-    pop word ptr gs:p_rflags+2
     ret
 WriteData64_32       ENDP
 
@@ -1125,12 +1119,6 @@ data_next64:
     mov ebx,fs:p_pm_deb_offs
     call WriteDataRow
     call NewLine
-;
-    mov word ptr gs:p_rflags+2,2
-    mov ax,fs:p_vm_deb_sel
-    mov ebx,fs:p_vm_deb_offs
-    call WriteDataRow64
-    pop word ptr gs:p_rflags+2
     ret
 WriteData64       ENDP
 

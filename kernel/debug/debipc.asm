@@ -164,12 +164,12 @@ code    SEGMENT byte use32 public 'CODE'
     extrn mem_ss:near
     extrn mem_es:near
     extrn mem_pm:near
-    extrn mem_vm:near
+    extrn mem_phys:near
 
     extrn change_pm_sel:near
     extrn change_pm_offs:near
-    extrn change_vm_sel:near
-    extrn change_vm_offs:near
+    extrn change_phys_high:near
+    extrn change_phys_low:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -450,9 +450,9 @@ mdes32 DD 22,         14,         47,         OFFSET mem_es
 pms32  DD 23,         0,          4,          OFFSET change_pm_sel
 pmo32  DD 23,         5,          8,          OFFSET change_pm_offs
 pdat32 DD 23,         14,         47,         OFFSET mem_pm
-vms32  DD 24,         0,          4,          OFFSET change_vm_sel
-vmo32  DD 24,         5,          8,          OFFSET change_vm_offs
-vdat32 DD 24,         14,         47,         OFFSET mem_vm
+vms32  DD 24,         0,          4,          OFFSET change_phys_high
+vmo32  DD 24,         5,          8,          OFFSET change_phys_low
+vdat32 DD 24,         14,         47,         OFFSET mem_phys
 dend32 DD 0FFFFFFFFh, 0FFFFFFFFh
 
 DebugCallDo32     PROC near
@@ -635,9 +635,9 @@ mdes64 DD 22,         14,         47,         OFFSET mem_es
 pms64  DD 23,         0,          4,          OFFSET change_pm_sel
 pmo64  DD 23,         5,          8,          OFFSET change_pm_offs
 pdat64 DD 23,         14,         47,         OFFSET mem_pm
-vms64  DD 24,         0,          4,          OFFSET change_vm_sel
-vmo64  DD 24,         5,          8,          OFFSET change_vm_offs
-vdat64 DD 24,         14,         47,         OFFSET mem_vm
+vms64  DD 24,         0,          4,          OFFSET change_phys_high
+vmo64  DD 24,         5,          8,          OFFSET change_phys_low
+vdat64 DD 24,         14,         47,         OFFSET mem_phys
 dend64 DD 0FFFFFFFFh, 0FFFFFFFFh
 
 DebugCallDo64     PROC near
