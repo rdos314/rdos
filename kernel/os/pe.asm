@@ -832,7 +832,6 @@ p2:
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
-    mov [edx].fs_users,1
     mov [edx].fs_owner,0
     mov [edx].fs_sect_name,0
 ;
@@ -883,7 +882,6 @@ p2n:
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
-    mov [edx].fs_users,0
     mov [edx].fs_owner,0
     mov [edx].fs_sect_name,ebp
 ;
@@ -912,13 +910,6 @@ free_us_section   Proc near
     
 p3:
     add ebx,12345678h
-    mov eax,[ebx]
-    or eax,eax
-    jz fusDone
-;
-    sub [eax].fs_users,1
-    jnz fusDone
-;
     xor eax,eax
     xchg eax,[ebx]
     or eax,eax
