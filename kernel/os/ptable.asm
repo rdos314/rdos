@@ -561,10 +561,11 @@ local_create_process32       PROC near
     mov ds,ax
     xor ax,ax
     xor di,di
-    mov ecx,system_mem_start
+    mov ecx,sys_page_linear
     shr ecx,22
     rep stosd
-    mov eax,system_mem_start
+;
+    mov eax,sys_page_linear
     mov esi,eax
     shr esi,20
     shr eax,22
@@ -2155,7 +2156,7 @@ local_start_fork32  Proc near
     mov eax,flat_sel
     mov fs,eax
 ;
-    mov ecx,fork_mem_size SHR 22
+    mov ecx,process_page_linear SHR 22
 
 lsfuLoop32:
     mov eax,fs:[edi]
@@ -2183,16 +2184,6 @@ lsfuSave32:
     add esi,4
     add edi,4
     loop lsfuLoop32
-;
-    mov ecx,(process_page_linear - fork_mem_size) SHR 22
-
-lsfuCopy32:
-    mov eax,fs:[esi]
-    mov fs:[edi],eax
-;
-    add esi,4
-    add edi,4
-    loop lsfuCopy32
 ;
     popad
     pop fs
@@ -2479,7 +2470,7 @@ ldfProcNext32:
     int 3
 
 ldfProcDone32:
-    mov ecx,fork_mem_size SHR 22
+    mov ecx,process_page_linear SHR 22
     xor esi,esi
 
 ldfDirLoop32:
@@ -2532,7 +2523,7 @@ local_cleanup_fork32  Proc near
     mov esi,ds:pr_page_dir_arr
     mov eax,flat_sel
     mov ds,eax
-    mov ecx,fork_mem_size SHR 22
+    mov ecx,process_page_linear SHR 22
 
 cfLoop32:
     mov eax,ds:[esi]
@@ -2971,12 +2962,12 @@ local_create_process64       PROC near
     mov ax,sys_dir_sel
     mov ds,ax
     mov di,1000h
-    mov ecx,system_mem_start
+    mov ecx,sys_page_linear
     shr ecx,20
     xor eax,eax
     rep stosd
 ;    
-    mov eax,system_mem_start
+    mov eax,sys_page_linear
     mov esi,eax
     shr esi,18
     shr eax,20
@@ -5057,7 +5048,7 @@ local_start_fork64  Proc near
     mov eax,flat_sel
     mov fs,eax
 ;
-    mov ecx,fork_mem_size SHR 21
+    mov ecx,process_page_linear SHR 21
 
 lsfuLoop64:
     mov eax,fs:[edi]
@@ -5088,19 +5079,6 @@ lsfuSave64:
     add esi,8
     add edi,8
     loop lsfuLoop64
-;
-    mov ecx,(process_page_linear - fork_mem_size) SHR 21
-
-lsfuCopy64:
-    mov eax,fs:[esi]
-    mov ebx,fs:[esi+4]
-;
-    mov fs:[edi],eax
-    mov fs:[edi+4],ebx
-;
-    add esi,8
-    add edi,8
-    loop lsfuCopy64
 ;
     popad
     pop fs
@@ -5391,7 +5369,7 @@ ldfProcNext64:
     int 3
 
 ldfProcDone64:
-    mov ecx,fork_mem_size SHR 21
+    mov ecx,process_page_linear SHR 21
     xor esi,esi
 
 ldfDirLoop64:
@@ -5448,7 +5426,7 @@ local_cleanup_fork64  Proc near
     mov esi,ds:pr_page_dir_arr
     mov eax,flat_sel
     mov ds,eax
-    mov ecx,fork_mem_size SHR 21
+    mov ecx,process_page_linear SHR 21
 
 cfLoop64:
     mov eax,ds:[esi]
