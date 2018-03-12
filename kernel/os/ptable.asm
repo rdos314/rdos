@@ -4991,13 +4991,14 @@ local_delete_fork64  Endp
 MergeDirEntry64  Proc near
     pushad
 ;
-    xor ebx,ebx
     mov eax,fs:[esi]
+    mov ebx,fs:[esi+4]
     mov edx,ds:pf_page_table
     SetPageEntry
     mov esi,edx
 ;
     mov eax,fs:[edi]
+    mov ebx,fs:[edi+4]
     mov edx,es:pf_page_table
     SetPageEntry
     mov edi,edx
@@ -5064,7 +5065,6 @@ lsfuLoop64:
     test al,1
     jz lsfuFree64
 ;
-    int 3
     call MergeDirEntry64
     jmp lsfuSave64
 

@@ -9363,7 +9363,6 @@ fork_process  PROC far
 ;    
     call create_tss32
     call init_fork_regs
-    int 3
     NotifyCreateProcess
     mov es:p_cr3,eax
 ;
