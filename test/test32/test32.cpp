@@ -73,17 +73,8 @@ void main()
         id = RdosFork();
         if (id == 0)
         {
-            char *ptr = (char *)RdosAllocateMem(0x4000);
-            int i;
-            for (i = 0; i < 0x4000; i++)
-                ptr[i] = 123;
-
-
-            id = RdosFork();
-            if (id == 0)
-                exit(0);
-            else
-                exit(1);
+            RdosWaitMilli(150);
+            exit(1);
         }
 
 #ifdef LOAD_DLL

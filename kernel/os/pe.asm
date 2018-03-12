@@ -5189,7 +5189,7 @@ show_exception_text_name    DB 'Show Exception Text',0
 show_exception_text     PROC far
     push es
     push ebx
-;    
+;   
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
     mov es,ebx
