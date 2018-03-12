@@ -269,7 +269,8 @@ block_seg       ENDS
 futex_struc STRUC
 
 fs_handle       DD ?
-fs_counter      DD ?
+fs_counter      DW ?
+fs_users        DW ?
 fs_val          DW ?
 fs_owner        DW ?
 fs_sect_name    DD ?
