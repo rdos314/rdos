@@ -832,6 +832,7 @@ p2:
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
+    mov [edx].fs_users,1
     mov [edx].fs_owner,0
     mov [edx].fs_sect_name,0
 ;
@@ -882,6 +883,7 @@ p2n:
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
+    mov [edx].fs_users,0
     mov [edx].fs_owner,0
     mov [edx].fs_sect_name,ebp
 ;
