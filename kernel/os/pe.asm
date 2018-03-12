@@ -912,6 +912,13 @@ free_us_section   Proc near
     
 p3:
     add ebx,12345678h
+    mov eax,[ebx]
+    or eax,eax
+    jz fusDone
+;
+    sub [eax].fs_users,1
+    jnz fusDone
+;
     xor eax,eax
     xchg eax,[ebx]
     or eax,eax
