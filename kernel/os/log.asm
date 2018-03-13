@@ -44,7 +44,13 @@ log_section     section_typ <>
 log_handle      DW ?
 log_pos         DD ?
 
+buf_sel         DW ?
+buf_size        DD ?
+
+logger_thread   DW ?
+
 log_buf         DB 64 DUP(?)
+
 
 data    ENDS
 
@@ -53,6 +59,86 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Log thread
+;
+;       Description:    Logger
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_name  DB 'z:/log.txt', 0
+
+logger:
+    mov ax,SEG data
+    mov ds,ax
+    GetThread
+    mov ds:logger_thread,ax
+    mov ds:buf_sel,0
+;
+    WaitForSignal
+;
+    mov eax,100000h
+    AllocateGlobalMem
+;
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov ds:buf_size,0
+    mov ds:buf_sel,es
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET log_name
+    mov cx,O_RDWR OR O_CREAT OR O_TRUNC
+    OpenKernelFile
+
+logger_loop:
+    int 3
+    xor edx,edx
+    xor edi,edi
+    mov ecx,ds:buf_size   
+    mov es,ds:buf_sel
+    WriteCFile
+    mov ds:buf_size,0
+    jmp logger_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Log
+;
+;       Description:    Log
+;
+;       Parameters:     ES:EDI   Buffer
+;                       ECX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Log Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    mov ax,SEG data
+    mov es,ax
+    mov edi,es:buf_size
+    add es:buf_size,ecx
+    mov es,es:buf_sel
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    popad
+    pop es
+    pop ds
+    ret
+Log Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -73,12 +159,9 @@ LogChar  proc near
     mov es,di
     mov edi,OFFSET log_buf
     mov es:[di],al
-;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
     mov ecx,1
-    WriteCFile
-    mov es:log_pos,edx
+;
+    call Log
 ;
     popad
     pop es
@@ -104,13 +187,12 @@ LogCodeText  proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    mov bx,ds:log_handle
-    mov edx,ds:log_pos
 ;
+    movzx edi,di
     mov ax,cs
     mov es,ax
     mov si,di
-    xor cx,cx
+    xor ecx,ecx
 
 lctSizeLoop:
     lods byte ptr es:[si]
@@ -121,8 +203,7 @@ lctSizeLoop:
     jmp lctSizeLoop
 
 lctSizeOk:    
-    WriteCFile
-    mov ds:log_pos,edx
+    call Log
 ;
     popad
     pop es
@@ -272,13 +353,10 @@ ldLast:
     sub cx,di
     inc cx
 ;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
     movzx ecx,cx
     movzx edi,di
-    WriteCFile
-    mov es:log_pos,edx
-;
+    call Log
+ ;
     popad
     pop es
     ret    
@@ -320,11 +398,8 @@ ldcLoop:
     pop cx
     movzx ecx,cx
 ;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
     mov edi,OFFSET log_buf
-    WriteCFile
-    mov es:log_pos,edx
+    call Log
 ;
     popad
     pop es
@@ -401,7 +476,6 @@ LogDec4  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lock_log_name DB 'Lock Log', 0
-log_name  DB 'z:/log.txt', 0
 
 lock_log       Proc far
     push ds
@@ -411,24 +485,18 @@ lock_log       Proc far
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:log_section
-;
-    mov bx,ds:log_handle
-    or bx,bx
+
+llCheck:
+    mov ax,ds:buf_sel
+    or ax,ax
     jnz llOpen
 ;
-    push es
-    push edi
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET log_name
-    mov cx,O_RDWR OR O_CREAT OR O_TRUNC
-    OpenKernelFile
-    pop edi
-    pop es
-    jc llOpen
+    mov bx,ds:logger_thread
+    Signal
 ;
-    mov ds:log_handle,bx
-    mov ds:log_pos,0
+    mov ax,10
+    WaitMilliSec
+    jmp llCheck
 
 llOpen:
     GetTime
@@ -509,10 +577,7 @@ llSizeLoop:
     jmp llSizeLoop
 
 llSizeOk:    
-    mov bx,ds:log_handle
-    mov edx,ds:log_pos
-    WriteCFile
-    mov ds:log_pos,edx
+    call Log
 ;
     mov al,' '
     call LogChar
@@ -542,15 +607,12 @@ unlock_log       Proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov bx,ds:log_handle
-    mov edx,ds:log_pos
 ;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET new_line_text
     mov ecx,2
-    WriteCFile
-    mov ds:log_pos,edx
+    call Log
     LeaveSection ds:log_section
 ;
     popad
@@ -577,14 +639,11 @@ log_thread  proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov bx,ds:log_handle
-    mov edx,ds:log_pos
     GetThread
     mov es,ax
     mov edi,OFFSET thread_name
     mov ecx,30
-    WriteCFile
-    mov ds:log_pos,edx
+    call Log
 ;
     popad
     pop es
@@ -642,8 +701,6 @@ log_text  proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov bx,ds:log_handle
-    mov edx,ds:log_pos
 ;
     mov esi,edi
     xor ecx,ecx
@@ -657,8 +714,7 @@ ltSizeLoop:
     jmp ltSizeLoop
 
 ltSizeOk:    
-    WriteCFile
-    mov ds:log_pos,edx
+    call Log
 ;
     popad
     pop ds
@@ -687,12 +743,9 @@ log_hex_byte  proc far
     mov di,OFFSET log_buf
     call AddHexByte
 ;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
     mov ecx,2
     mov edi,OFFSET log_buf
-    WriteCFile
-    mov es:log_pos,edx
+    call Log
 ;
     popad
     pop es
@@ -721,12 +774,9 @@ log_hex_word  proc far
     mov di,OFFSET log_buf
     call AddHexWord
 ;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
     mov ecx,4
     mov edi,OFFSET log_buf
-    WriteCFile
-    mov es:log_pos,edx
+    call Log
 ;
     popad
     pop es
@@ -756,17 +806,49 @@ log_hex_dword  proc far
     mov di,OFFSET log_buf
     call AddHexDword
 ;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
     mov ecx,8
     mov edi,OFFSET log_buf
-    WriteCFile
-    mov es:log_pos,edx
+    call Log
 ;
     popad
     pop es
     retf32
 log_hex_dword  endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           create_log_thread
+;
+;           DESCRIPTION:    Create log thread
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+logger_name  DB 'Logger', 0
+   
+create_log_thread      Proc far
+    push ds
+    push es
+    pusha
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET logger_name
+    mov si,OFFSET logger
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;       
+    popa
+    pop es
+    pop ds
+    retf32
+create_log_thread     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -790,6 +872,9 @@ init_log    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET create_log_thread
+    HookInitTasking
 ;
     mov esi,OFFSET lock_log
     mov edi,OFFSET lock_log_name

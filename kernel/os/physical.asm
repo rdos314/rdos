@@ -61,6 +61,197 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LogAllocate
+;
+;       DESCRIPTION:    Log allocate
+;
+;       PARAMETERS:     EBX:EAX     Physical address
+;                       EBP         Calling address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+alloc_text DB 'Allocate  ', 0
+under_text DB '_', 0
+colon_text DB ':', 0
+space_text DB ' ', 0
+
+LogAllocate  Proc near
+    push ds
+    push es
+    push dx
+;
+    push ax
+    GetThread
+    mov es,ax
+    pop ax
+;
+    mov dx,es:p_proc_id
+    cmp dx,7
+    jb laSkip
+;
+    pushad
+;
+    push eax
+    push ebx
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET alloc_text
+    LockLog
+;
+    LogThread
+;
+    mov ax,[ebp]
+    cmp ax,OFFSET allocate_phys_ret
+    jne laKernel
+;
+    mov ax,[ebp+6]
+    LogHexWord
+;
+    mov edi,OFFSET colon_text
+    LogText
+;
+    mov ax,[ebp+2]
+    LogHexWord
+    jmp laAdsOk
+
+laKernel:
+    mov ax,cs
+    LogHexWord
+;
+    mov edi,OFFSET colon_text
+    LogText
+;
+    mov ax,[ebp]
+    LogHexWord
+
+laAdsOk:
+    mov edi,OFFSET space_text
+    LogText
+;
+    mov eax,cr2
+    LogHexDword
+;
+    mov edi,OFFSET space_text
+    LogText
+;
+    pop eax
+    LogHexDword
+;
+    mov edi,OFFSET under_text
+    LogText
+;
+    pop eax
+    LogHexDword
+;
+    UnlockLog
+;
+    popad
+
+laSkip:
+    pop dx
+    pop es
+    pop ds
+    ret
+LogAllocate  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LogFree
+;
+;       DESCRIPTION:    Log free
+;
+;       PARAMETERS:     EBX:EAX     Physical address
+;                       EBP         Calling address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_text DB 'Free      ', 0
+
+LogFree  Proc near
+    push ds
+    push es
+    push dx
+;
+    push ax
+    GetThread
+    mov es,ax
+    pop ax
+;
+    mov dx,es:p_proc_id
+    cmp dx,7
+    jb lfSkip
+;
+    pushad
+;
+    push eax
+    push ebx
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET free_text
+    LockLog
+;
+    LogThread
+;
+    mov ax,[ebp]
+    cmp ax,OFFSET free_phys_ret
+    jne lfKernel
+;
+    mov ax,[ebp+6]
+    LogHexWord
+;
+    mov edi,OFFSET colon_text
+    LogText
+;
+    mov ax,[ebp+2]
+    LogHexWord
+    jmp lfAdsOk
+
+lfKernel:
+    mov ax,cs
+    LogHexWord
+;
+    mov edi,OFFSET colon_text
+    LogText
+;
+    mov ax,[ebp]
+    LogHexWord
+
+lfAdsOk:
+    mov edi,OFFSET space_text
+    LogText
+;
+    mov eax,cr2
+    LogHexDword
+;
+    mov edi,OFFSET space_text
+    LogText
+;
+    pop eax
+    LogHexDword
+;
+    mov edi,OFFSET under_text
+    LogText
+;
+    pop eax
+    LogHexDword
+;
+    UnlockLog
+;
+    popad
+
+lfSkip:
+    pop dx
+    pop es
+    pop ds
+    ret
+LogFree  Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -350,6 +541,17 @@ apRetAds64:
     clc
 
 apDone64:
+    mov dx,phys_detect_sel
+    verr dx
+    jnz apLogDone64
+;
+    push ebp
+    mov ebp,esp
+    add ebp,22
+    call LogAllocate
+    pop ebp
+
+apLogDone64:
     pop edi
     pop esi
     pop edx
@@ -470,6 +672,17 @@ apRetAds32:
     clc
 
 apDone32:
+    mov dx,phys_detect_sel
+    verr dx
+    jnz apLogDone32
+;
+    push ebp
+    mov ebp,esp
+    add ebp,22
+    call LogAllocate
+    pop ebp
+
+apLogDone32:
     pop edi
     pop esi
     pop edx
@@ -493,6 +706,8 @@ allocate_physical64_name  DB 'Allocate Physical Memory64',0
 
 allocate_physical64       PROC far
     call local_allocate_physical
+
+allocate_phys_ret:
     retf32
 allocate_physical64       ENDP
 
@@ -572,6 +787,17 @@ local_free_physical   PROC near
     push esi
     push edi
 ;
+    mov si,phys_detect_sel
+    verr si
+    jnz lfpLogDone
+;
+    push ebp
+    mov ebp,esp
+    add ebp,26
+    call LogFree
+    pop ebp
+
+lfpLogDone:
     mov cx,phys_bit_sel
     mov ds,cx
 ;
@@ -629,6 +855,9 @@ free_physical_name      DB 'Free Physical Memory',0
 
 free_physical   PROC far
     call local_free_physical
+
+free_phys_ret:
+
     retf32
 free_physical   ENDP
 

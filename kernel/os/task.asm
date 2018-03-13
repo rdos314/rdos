@@ -2239,6 +2239,13 @@ stThreadLoop:
     call cs:lock_list_proc
     call RemoveBlock
     call cs:unlock_list_proc
+;    
+    push ds
+    GetThread
+    mov ds,ax
+    mov ax,es:p_proc_id
+    mov ds:p_proc_id,ax
+    pop ds
 ;
     call DeleteThread
     jmp stThreadLoop
@@ -2253,6 +2260,13 @@ stThreadOk:
     call RemoveBlock
     call cs:unlock_list_proc
 ;    
+    push ds
+    GetThread
+    mov ds,ax
+    mov ax,es:p_proc_id
+    mov ds:p_proc_id,ax
+    pop ds
+;
     call delete_process_sel
 ;
     push ds
@@ -4908,6 +4922,10 @@ preempt_timer_combined:
     xor cl,cl
     mov ax,stop_timer_nr
     RegisterOsGate
+;
+    mov eax,10h
+    mov bx,phys_detect_sel
+    AllocateFixedSystemMem
     jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
