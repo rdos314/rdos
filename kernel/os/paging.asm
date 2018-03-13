@@ -438,15 +438,20 @@ ptUserCheckPage:
 
 ptUserNotPresent:
     test al,2
-    jnz ptUserValid
+    jnz ptUserReserved
+;
+    cmp edx,section_linear
+    jae ptNormal
 ;
     cmp edx,local_page_linear
-    jae ptUserFlat
+    jae ptUserPossibleFault
 ;
     cmp edx,fixed_vm_linear
     jb ptUserPossibleFault
+;
+    jmp ptNormal
 
-ptUserValid:
+ptUserReserved:
     and al,7
     cmp al,6
     jne ptNormal
