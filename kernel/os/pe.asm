@@ -1124,6 +1124,44 @@ CreateSections  Proc near
     pop ds
     ret
 CreateSections     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ResetSections
+;
+;           DESCRIPTION:    Reset sections
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetSections     PROC near
+    push ds
+    pushad
+;
+    mov eax,flat_sel
+    mov ds,eax
+;
+    mov ebx,section_linear
+    mov ecx,MAX_SECTIONS
+
+rsLoop:
+    mov edx,[ebx]
+    or edx,edx
+    jz rsNext
+;
+    mov [edx].fs_handle,0
+    mov [edx].fs_val,-1
+    mov [edx].fs_counter,0
+    mov [edx].fs_owner,0
+
+rsNext:
+    add ebx,4
+    loop rsLoop
+;
+    popad
+    pop ds
+    ret
+ResetSections	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4076,6 +4114,8 @@ fork_child_completed:
     jmp fork_done
 
 fork_child:
+    call ResetSections
+;
     pop edx
     pop ecx
     AllocateLdt
