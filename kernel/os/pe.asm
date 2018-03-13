@@ -4052,7 +4052,7 @@ ftkNoTls:
     FreeMem
     ret
 free_thread_kernel     Endp
-                       
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4118,6 +4118,8 @@ fork_child:
 ;
     pop edx
     pop ecx
+    inc ecx
+;
     AllocateLdt
     or bl,7
     CreateDataSelector32
