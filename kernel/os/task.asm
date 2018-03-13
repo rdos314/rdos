@@ -4922,10 +4922,6 @@ preempt_timer_combined:
     xor cl,cl
     mov ax,stop_timer_nr
     RegisterOsGate
-;
-    mov eax,10h
-    mov bx,phys_detect_sel
-    AllocateFixedSystemMem
     jmp LoadThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
