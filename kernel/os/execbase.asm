@@ -2521,37 +2521,6 @@ fork_pr    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           IsForked
-;
-;           DESCRIPTION:    Check if thread is forked
-;
-;           RETURNS:        NC          Forked
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_forked_name   DB 'Is Forked',0
-
-is_forked    PROC far
-    push ds
-    push ax
-;
-    GetThread
-    mov ds,ax
-    test ds:p_flags,THREAD_FLAG_FORKED
-    stc
-    jz ifDone
-;
-    clc
-
-ifDone:
-    pop ax
-    pop ds
-    ret
-is_forked    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           RemovedProcess
 ;
 ;           DESCRIPTION:    Update program after removed process
@@ -5580,12 +5549,6 @@ InitExec_    Proc near
     mov edi,OFFSET fork_name
     xor dx,dx
     mov ax,fork_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET is_forked
-    mov edi,OFFSET is_forked_name
-    xor dx,dx
-    mov ax,is_forked_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET wait_for_exec

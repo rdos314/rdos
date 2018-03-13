@@ -70,7 +70,7 @@ void main()
     for (i = 0; i < 100000; i++)
     {
 
-        id = RdosFork();
+        id = fork();
         if (id == 0)
         {
             RdosWaitMilli(150);

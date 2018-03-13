@@ -1869,11 +1869,6 @@
     "movzx eax,ax"  \
     value [eax];
 
-#pragma aux RdosIsForked = \
-    CallGate_is_forked  \
-    CarryToBool \
-    value [eax];
-
 #pragma aux RdosUnloadExe = \
     CallGate_unload_exe  \
     parm [eax];

@@ -918,11 +918,6 @@ Fork    MACRO
         UserGate fork_nr
                                         ENDM
 
-; OUT NC        Is forked
-IsForked        MACRO
-        UserGate is_forked_nr
-                                        ENDM
-
 ; IN  AX                Exit code
 UnloadExe       MACRO
         UserGate unload_exe_nr

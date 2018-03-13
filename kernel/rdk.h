@@ -669,12 +669,11 @@
 #define osgate_open_kernel_file 596
 
 #define osgate_fork_process 597
-#define osgate_clone_app 599
 
 #define osgate_reset_process 601
 #define osgate_exec_app 602
 
-#define osgate_notify_clone_process 610
+#define osgate_create_fork 610
 
 #define osgate_dupl_c_file_to_file 611
 #define osgate_c_handle_to_file_sel 612
@@ -746,7 +745,17 @@
 #define osgate_create_handle_data 663
 #define osgate_destroy_handle_data 664
 
-#define osgate_setup_program_mem 665
+#define osgate_init_process_mem 665
+
+#define osgate_start_fork 666
+#define osgate_detach_fork 667
+#define osgate_cleanup_fork 668
+#define osgate_removed_process 669
+#define osgate_delete_fork 670
+
+#define osgate_create_env_sel 671
+#define osgate_delete_env_sel 672
+#define osgate_clone_env_sel 673
 
 
 
@@ -1421,12 +1430,11 @@
 #define OsGate_open_kernel_file 0x3E 0x67 0x9a 84 2 0 0 2 0
 
 #define OsGate_fork_process 0x3E 0x67 0x9a 85 2 0 0 2 0
-#define OsGate_clone_app 0x3E 0x67 0x9a 87 2 0 0 2 0
 
 #define OsGate_reset_process 0x3E 0x67 0x9a 89 2 0 0 2 0
 #define OsGate_exec_app 0x3E 0x67 0x9a 90 2 0 0 2 0
 
-#define OsGate_notify_clone_process 0x3E 0x67 0x9a 98 2 0 0 2 0
+#define OsGate_create_fork 0x3E 0x67 0x9a 98 2 0 0 2 0
 
 #define OsGate_dupl_c_file_to_file 0x3E 0x67 0x9a 99 2 0 0 2 0
 #define OsGate_c_handle_to_file_sel 0x3E 0x67 0x9a 100 2 0 0 2 0
@@ -1498,5 +1506,15 @@
 #define OsGate_create_handle_data 0x3E 0x67 0x9a 151 2 0 0 2 0
 #define OsGate_destroy_handle_data 0x3E 0x67 0x9a 152 2 0 0 2 0
 
-#define OsGate_setup_program_mem 0x3E 0x67 0x9a 153 2 0 0 2 0
+#define OsGate_init_process_mem 0x3E 0x67 0x9a 153 2 0 0 2 0
+
+#define OsGate_start_fork 0x3E 0x67 0x9a 154 2 0 0 2 0
+#define OsGate_detach_fork 0x3E 0x67 0x9a 155 2 0 0 2 0
+#define OsGate_cleanup_fork 0x3E 0x67 0x9a 156 2 0 0 2 0
+#define OsGate_removed_process 0x3E 0x67 0x9a 157 2 0 0 2 0
+#define OsGate_delete_fork 0x3E 0x67 0x9a 158 2 0 0 2 0
+
+#define OsGate_create_env_sel 0x3E 0x67 0x9a 159 2 0 0 2 0
+#define OsGate_delete_env_sel 0x3E 0x67 0x9a 160 2 0 0 2 0
+#define OsGate_clone_env_sel 0x3E 0x67 0x9a 161 2 0 0 2 0
 
