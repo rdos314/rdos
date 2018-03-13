@@ -87,6 +87,7 @@ global_page_linear      EQU 0C8000000h
 global_page_size        EQU 034000000h
 
 fixed_process_linear    EQU 0FC000000h
+fixed_process_size      EQU 001000000h
 
 phys_bitmap_linear      EQU 0FD000000h
 

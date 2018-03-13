@@ -2269,6 +2269,8 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnloadProgram:
+    ResetProcess
+;
     GetThread
     mov es,ax
 ;
@@ -2347,6 +2349,7 @@ UnloadProcess:
     EnterSection ds:pr_cow_section
     DetachFork
     LeaveSection ds:pr_cow_section
+    ResetProcess
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

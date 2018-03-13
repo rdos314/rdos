@@ -644,6 +644,7 @@ local_free_process32     Proc near
     mov ds,bx
     mov bx,process_dir_sel
     mov es,bx
+;
     xor esi,esi
     mov ecx,flat_size
     shr ecx,22
@@ -726,6 +727,51 @@ fpGlobalLoop32:
 fpGlobalNext32:
     add edi,4
     loop fpGlobalLoop32
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    mov bx,process_dir_sel
+    mov es,bx
+;
+    mov edi,fixed_process_linear SHR 20
+    mov ecx,fixed_process_size SHR 22
+    mov esi,fixed_process_linear SHR 10
+
+fpProcDirLoop32:
+    mov eax,es:[edi]
+    test al,1
+    jz fpProcNextDir32
+;
+    push cx
+    mov cx,400h
+
+fpProcPageLoop32:
+    xor eax,eax
+    xchg eax,[esi]
+    test al,1
+    jz fpProcNextPage32
+;
+    xor ebx,ebx
+    FreePhysical
+
+fpProcNextPage32:
+    add esi,4
+    loop fpProcPageLoop32
+;
+    pop cx
+    xor eax,eax
+    xchg eax,es:[edi]
+;
+    xor ebx,ebx
+    FreePhysical
+    jmp fpProcNextDirPage32
+    
+fpProcNextDir32:
+    add esi,1000h
+
+fpProcNextDirPage32:
+    add edi,4
+    loop fpProcDirLoop32
 ;
     ret
 local_free_process32     Endp
@@ -2487,11 +2533,6 @@ ldfDirNext32:
     add esi,4
     loop ldfDirLoop32
 ;
-    mov fs:[esi+edi],eax
-    add esi,4
-;
-    mov fs:[esi+edi],eax
-;
     popad
     pop gs
     pop fs
@@ -3286,6 +3327,54 @@ fpGlobalNext64:
     add edi,8
     sub cx,1
     jnz fpGlobalLoop64
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    mov bx,process_dir_sel
+    mov es,bx
+;
+    mov esi,fixed_process_linear SHR 9
+    mov edi,fixed_process_linear SHR 18
+    mov ecx,fixed_process_size SHR 21
+
+fpProcDirLoop64:
+    mov eax,es:[edi]
+    test al,1
+    jz fpProcNextDir64
+;
+    push cx
+    mov cx,200h
+
+fpProcPageLoop64:
+    xor eax,eax
+    xor ebx,ebx
+    xchg eax,[esi]
+    add esi,4
+    xchg ebx,[esi]
+    add esi,4
+    test al,1
+    jz fpProcNextPage64
+;
+    FreePhysical
+
+fpProcNextPage64:
+    loop fpProcPageLoop64
+;
+    pop cx
+    xor eax,eax
+    xchg eax,es:[edi]
+    xor ebx,ebx
+    xchg ebx,es:[edi+4]
+;
+    FreePhysical
+    jmp fpProcNextDirPage64
+    
+fpProcNextDir64:
+    add esi,1000h
+
+fpProcNextDirPage64:
+    add edi,8
+    loop fpProcDirLoop64
 ;
     ret
 local_free_process64     Endp
@@ -5387,13 +5476,6 @@ ldfDirNext64:
 ;
     add esi,8
     loop ldfDirLoop64
-;
-    mov fs:[esi+edi],eax
-    mov fs:[esi+edi+4],eax
-    add esi,8
-;
-    mov fs:[esi+edi],eax
-    mov fs:[esi+edi+4],eax
 ;
     popad
     pop gs
