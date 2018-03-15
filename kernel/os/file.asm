@@ -1263,8 +1263,8 @@ read_file_mem_ok:
     mov cl,ds:file_dir_shift
     shr esi,cl
     shl si,2
-    mov ebx,ds:[si].file_entries
     EnterSection ds:file_list_section
+    mov ebx,ds:[si].file_entries
     or ebx,ebx
     jnz read_file_check_mid
 ;
@@ -1517,6 +1517,7 @@ write_file_retry_entry:
 
 write_file_entries_ok:  
     shl si,2
+    EnterSection ds:file_list_section
     mov ebx,ds:[si].file_entries
     or ebx,ebx
     jnz write_file_check_mid
@@ -1557,6 +1558,8 @@ write_file_do_first:
     mov esi,es:[ebx+esi]
     inc es:[esi].fl_usage
     inc es:[esi].fl_ref_count
+    LeaveSection ds:file_list_section
+;
     push ds
     push es
     push edx

@@ -9393,7 +9393,7 @@ fork_process  PROC far
     call init_fork_thread
     call init_fork_stack
     call wake_new
-    mov ax,es
+    mov ax,es:p_proc_id
 
 fork_done:
     pop ebp

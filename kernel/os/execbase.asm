@@ -243,34 +243,6 @@ InitProgramBlock  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateProgram
-;
-;       DESCRIPTION:    Allocate program
-;
-;       PARAMETERS:     DX      Debug module ID
-;                       GS      Program sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateProgram Proc near    
-    push ds
-    pushad
-;
-    movzx ebx,dx
-    ModuleIdToSel
-    jc apDebugOk
-;    
-    mov gs:pr_debug_id,dx
-
-apDebugOk:
-    popad
-    pop ds
-    ret
-AllocateProgram  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CreateProg
 ;
 ;       DESCRIPTION:    Make global copy of program name
@@ -526,6 +498,75 @@ rpmDone:
     pop ds
     ret
 RemoveProgramModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveProgramProcess
+;
+;           DESCRIPTION:    Remove process from program
+;
+;           PARAMETERS:     BX      Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProgramProcess    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+;
+    push ebx
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    pop ebx
+    jc rppDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov ax,bx
+    movzx ecx,ds:pr_process_count
+    mov ebx,OFFSET pr_process_arr
+    or ecx,ecx
+    jz rppLeave
+
+rppLoop:
+    cmp ax,ds:[ebx]
+    je rppFound
+;
+    add bx,2
+    loop rppLoop
+;
+    jmp rppLeave
+
+rppFound:
+    dec ds:pr_process_count
+;
+    sub ecx,1
+    jz rppLeave
+
+rppMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rppMove
+
+rppLeave:
+    LeaveSection ds:pr_section
+            
+rppDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+RemoveProgramProcess    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1570,7 +1611,7 @@ get_exe_start32   Endp
 ;                       DX          Debug module handle
 ;
 ;       RETURN VALUE:   AX          Thread ID
-;                       DX          Program ID
+;                       DX          Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1597,10 +1638,16 @@ spawn_program   Proc near
 
 spLoaderOk:    
     call InitProgramBlock
-    call AllocateProgram
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
 ;
+    movzx ebx,dx
+    ModuleIdToSel
+    jc spDebugOk
+;    
+    mov gs:pr_debug_id,dx
+
+spDebugOk:
     GetThread
     mov gs:pr_parent_thread,ax
 ;
@@ -1761,7 +1808,6 @@ load_program   Proc near
 
 lpLoaderOk:    
     call InitProgramBlock
-    call AllocateProgram
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
 ;
@@ -1816,11 +1862,41 @@ lpEnvDone:
     ProgramCreated
     mov ebx,eax
 ;
+    int 3
     GetThread
     mov es,ax
-    lock and es:p_flags,NOT THREAD_FLAG_FORKED
+    mov ds,es:p_prog_sel
 ;
+    movzx ecx,ds:pr_process_count
+    cmp ecx,1
+    je lpDosExec
+
+lpForkExec:
+    mov ds,es:p_proc_sel
+
+lpForkFreeMod:
+    movzx ecx,ds:pf_module_count
+    cmp ecx,1
+    je lpForkModOk
+;
+    int 3
+
+lpForkModOk:
+    push ebx
+    movzx ebx,ds:pf_module_arr
+    call RemoveProcessModule
+;
+    movzx ebx,es:p_proc_id
+    call RemoveProgramProcess
+    pop ebx
+;    
     ResetProcess
+
+
+lpDosExec:
+    int 3
+
+;
 ;
     xor eax,eax
     push eax
@@ -1997,7 +2073,6 @@ run_program     PROC near
 
 rpLoaderOk:
     call InitProgramBlock
-    call AllocateProgram
     mov gs:pr_kernel_file,bx
     mov gs:pr_loader,ax
 ;
