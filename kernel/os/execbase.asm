@@ -1891,6 +1891,17 @@ lpForkModOk:
     pop ebx
 ;    
     ResetProcess
+;
+    mov es:p_prog_id,bx
+    mov es:p_prog_sel,gs
+;
+    mov ax,gs
+    mov ds,ax
+    EnterSection ds:pr_section
+    mov ax,es:p_proc_id
+    mov ds:pr_process_arr,ax
+    mov ds:pr_process_count,1
+    LeaveSection ds:pr_section
 
 
 lpDosExec:

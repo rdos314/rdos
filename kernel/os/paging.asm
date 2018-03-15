@@ -411,8 +411,9 @@ ptNotDir:
     test al,1
     jnz ptUserDirValid
 ;
-    int 3
-
+    call cs:create_page_dir_proc
+    jmp ptUserDone
+    
 ptUserDirValid:
     test ax,400h
     jz ptUserCheckPage

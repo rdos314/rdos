@@ -640,6 +640,10 @@ local_create_long_process32       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_process32     Proc near
+    push ds
+    push es
+    pushad
+;
     mov bx,process_page_sel
     mov ds,bx
     mov bx,process_dir_sel
@@ -773,6 +777,9 @@ fpProcNextDirPage32:
     add edi,4
     loop fpProcDirLoop32
 ;
+    popad
+    pop es
+    pop ds
     ret
 local_free_process32     Endp
 
@@ -3219,6 +3226,10 @@ local_create_long_process64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_process64     Proc near
+    push ds
+    push es
+    pushad
+;
     mov bx,process_page_sel
     mov ds,bx
     mov bx,process_dir_sel
@@ -3376,6 +3387,9 @@ fpProcNextDirPage64:
     add edi,8
     loop fpProcDirLoop64
 ;
+    popad
+    pop es
+    pop ds
     ret
 local_free_process64     Endp
 
