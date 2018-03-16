@@ -7559,6 +7559,57 @@ trap_create_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitProcess
+;
+;           DESCRIPTION:    Init process
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_process_name DB 'Init Process', 0
+
+init_process     PROC far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    InitProcessMem
+;
+    mov ax,hook_sel
+    mov ds,ax
+    mov cl,ds:create_process_hooks
+    or cl,cl
+    je init_process_done
+;
+    mov bx,OFFSET create_process_arr
+
+init_process_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz init_process_loop
+
+init_process_done:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    retf32
+init_process     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           TRAP_INIT_TASKING
 ;
 ;           DESCRIPTION:    Handle init-tasking hooks
@@ -8891,21 +8942,6 @@ terminate_app_handled:
     jmp cleanup_thread
 
 terminate_proc:
-    GetThread
-    mov ds,ax
-;
-    xor ax,ax
-    mov ds,ax
-    jmp terminate_pd_done    
-
-terminate_free_pd:
-    mov ax,ds
-    mov es,ax
-    xor ax,ax
-    mov ds,ax
-    FreeMem    
-
-terminate_pd_done:
     call trap_terminate_thread
     jmp cleanup_process
 
@@ -10165,6 +10201,12 @@ timer_free_list_create:
     mov edi,OFFSET start_tasking_name
     xor cl,cl
     mov ax,start_tasking_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET init_process
+    mov edi,OFFSET init_process_name
+    xor cl,cl
+    mov ax,init_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_core

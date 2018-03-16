@@ -1772,6 +1772,116 @@ spawn_program32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ForkStartup
+;
+;           DESCRIPTION:    Fork startup stub
+;
+;           PARAMETERS:     BX      Program ID
+;                           GS      Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fork_startup:
+    CreateLdt
+    CreateHandleData
+;
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    mov ebp,esp
+;
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    GetThread
+    mov gs:pr_thread,ax
+    mov ds,ax
+;
+    mov ax,gs:pr_loader
+    mov ds:p_loader,ax
+;
+    mov ax,ds:p_console
+    mov ds:p_parent_console,ax
+;
+    call SetupStartDir
+    call SetupEnv
+;       
+    mov bx,gs:pr_kernel_file
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:pr_name_sel
+    mov es,gs:pr_cmd_sel
+;
+    mov dx,gs:pr_debug_id
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_init_exe_proc
+    pop gs
+    jc fsCloseFail
+;
+    SetBitness
+;
+    push ds
+    push es
+    mov es,bx
+;
+    movzx ebx,bx
+    ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+    call AddProcessModule
+;
+    InitSection es:mod_section
+    mov es:mod_id,bx
+;
+    mov bx,es
+    pop es
+    pop ds
+;
+    mov dx,gs:pr_debug_id
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_fixup_exe_proc
+;
+    test byte ptr [ebp+2].load_eflags,2
+    jnz fsVm16
+;
+    mov ds,[ebp].load_ds
+    mov es,[ebp].load_es
+    mov fs,[ebp].load_fs
+    mov gs,[ebp].load_gs
+
+fsVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+fsCloseFail:
+    CloseCFile
+
+fsFail:
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           load_program16/32
 ;
 ;       DESCRIPTION:    Load executable file
@@ -1862,7 +1972,6 @@ lpEnvDone:
     ProgramCreated
     mov ebx,eax
 ;
-    int 3
     GetThread
     mov es,ax
     mov ds,es:p_prog_sel
@@ -1891,10 +2000,32 @@ lpForkModOk:
     pop ebx
 ;    
     ResetProcess
+    InitProcess    
 ;
     mov es:p_prog_id,bx
     mov es:p_prog_sel,gs
 ;
+    mov ds,gs:pr_name_sel
+    xor esi,esi
+    mov edi,OFFSET thread_name
+    mov ecx,32
+
+lpForkThreadNameLoop:
+    lodsb
+    or al,al
+    jz lpForkThreadNamePad
+;
+    stosb
+    loop lpForkThreadNameLoop
+
+lpForkThreadNamePad:
+    or ecx,ecx
+    jz lpForkThreadNameDone
+;
+    mov al,' '
+    rep stosb
+
+lpForkThreadNameDone:
     mov ax,gs
     mov ds,ax
     EnterSection ds:pr_section
@@ -1902,6 +2033,7 @@ lpForkModOk:
     mov ds:pr_process_arr,ax
     mov ds:pr_process_count,1
     LeaveSection ds:pr_section
+    jmp fork_startup
 
 
 lpDosExec:
@@ -2392,9 +2524,14 @@ ukDone:
 ;
     FreeMem
 ;
-    GetFocusConsole
     GetThread
     mov ds,eax
+;
+    mov bx,ds:p_console
+    cmp bx,ds:p_parent_console
+    je ukConsoleDone
+;
+    GetFocusConsole
     cmp bx,ds:p_console
     jne ukFocusOk
 ;
@@ -2407,6 +2544,8 @@ ukDone:
 ukFocusOk:
     mov bx,ds:p_console
     CloseConsole
+
+ukConsoleDone:
     DestroyHandleData
     DestroyLdt
     TerminateThread

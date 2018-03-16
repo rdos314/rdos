@@ -757,4 +757,6 @@ create_env_sel_nr           = 671
 delete_env_sel_nr           = 672
 clone_env_sel_nr            = 673
 
+init_process_nr             = 674
+
 osgate_entries              = 700
