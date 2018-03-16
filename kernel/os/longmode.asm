@@ -1123,13 +1123,13 @@ create_long_thread  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           InitProcess
+;       NAME:           InitLongProcess
 ;
 ;       DESCRIPTION:    Init process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitProcess   Proc near
+InitLongProcess   Proc near
     push ds
     pushad
 ;
@@ -1171,7 +1171,7 @@ init_ldt_loop:
     popad
     pop ds
     ret
-InitProcess Endp    
+InitLongProcess Endp    
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1218,7 +1218,7 @@ init_long_exe   Proc far
     push es
     pushad
 ;
-    call InitProcess
+    call InitLongProcess
 ;    
     mov ebp,long_process_linear
     push esi

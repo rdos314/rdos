@@ -1167,6 +1167,7 @@ ProcessCreated    MACRO
                     ENDM
 
 ;  IN  EBX  	Selector
+;  IN  EAX      Exit code
 ProcessTerminated    MACRO
     OsGate process_terminated_nr
                     ENDM

@@ -31,6 +31,7 @@
 
 #define MAX_MODULES             256
 #define MAX_PROCESSES           256
+#define MAX_EXIT_CODES          256
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -49,6 +50,12 @@ struct TProcess
     int Sel;
 };
 
+struct TExit
+{
+    int ID;
+    int ExitCode;
+};
+
 struct TKernelSection ModuleSection;
 struct TKernelSection ProcessSection;
 
@@ -58,8 +65,11 @@ int NextMid = 1;
 int ActiveProcesses = 0;
 int NextPid = 1;
 
+int CurrExitInd = 0;
+
 struct TModule ModuleArr[MAX_MODULES];
 struct TProcess ProcessArr[MAX_PROCESSES];
+struct TExit ExitArr[MAX_EXIT_CODES];
 
 extern void InitExec();
 
@@ -338,8 +348,8 @@ int __far ImplProcessCreated(int sel)
 #   Name       : ProcessTerminated
 #
 ##########################################################################*/
-#pragma aux ImplProcessTerminated "*" rdosdev parm routine [ebx]
-void __far ImplProcessTerminated(int sel)
+#pragma aux ImplProcessTerminated "*" rdosdev parm routine [ebx] [eax]
+void __far ImplProcessTerminated(int sel, int exit)
 {
     int i;
 
@@ -437,6 +447,11 @@ int __far ImplGetProcessId(int Index)
 ##########################################################################*/
 void InitGates()
 {
+    int i;
+
+    for (i = 0; i < MAX_EXIT_CODES; i++)
+        ExitArr[i].ID = 0;
+
     RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
     RdosRegisterOsGate(osgate_module_unloaded, (__rdos_gate_callback *)&ImplModuleUnloaded, "Module Unloaded");
     RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
