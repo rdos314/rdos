@@ -71,12 +71,11 @@ int TExecCommand::Execute(char *param)
     TPathName StartupDir;
     int ThreadId;
     int Handle;
+    int pid;
+    int WaitHandle;
     char *arg[] = {0, param, 0};
 
     arg[0] = (char *)FProgName.GetData();
-
-    if (RdosIs64BitExe(FProgName.GetData()))
-        FDetach = TRUE;
 
     if (FDetach)
     {
@@ -90,6 +89,19 @@ int TExecCommand::Execute(char *param)
             return -1;
      }
      else
-          return execv(arg[0], (char **)&arg);
+     {
+          pid = fork();
+          if (pid == 0)
+          {
+              execv(arg[0], (char **)&arg);
+              exit(-1);
+          }
+
+          WaitHandle = RdosCreateWait();
+          RdosAddWaitForProcessEnd(WaitHandle, pid, 0);
+          RdosWaitForever(WaitHandle);
+          RdosCloseWait(WaitHandle);
+          return RdosGetProcessExitCode(pid);          
+     }
 }
 

@@ -4225,6 +4225,7 @@ detach_user_fork_proc      Endp
 
 detach_kernel_fork_proc      Proc far
     push ds
+    push es
     pushad
 ;
     GetThread
@@ -4268,9 +4269,11 @@ dkfFreeLoop:
     jne dkfFreeLoop
 
 dkfFreeLeave:
+    mov ds:pf_mem_blocks,0
     LeaveSection ds:pf_mem_section     
 ;
     popad
+    pop es
     pop ds
     ret
 detach_kernel_fork_proc      Endp

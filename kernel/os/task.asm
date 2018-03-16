@@ -76,13 +76,6 @@ fh_lock     DW ?
 
 futex_handle_seg          ENDS
 
-proc_end_wait_header    STRUC
-
-pew_obj             wait_obj_header <>
-pew_proc_sel        DW ?
-
-proc_end_wait_header    ENDS
-
 process_callback_seg    STRUC
 cm_mode     DW ?
 cm_stack    DD ?
@@ -7285,125 +7278,6 @@ utDone:
     pop ds
     retf32
 update_time     ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StartWaitForProcEnd
-;
-;           DESCRIPTION:    Start a wait for process end event
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_wait_for_proc_end PROC far
-    retf32
-start_wait_for_proc_end Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StopWaitForProcEnd
-;
-;           DESCRIPTION:    Stop a wait for process end event
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_wait_for_proc_end  PROC far
-    retf32
-stop_wait_for_proc_end Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           DummyClearProcEnd
-;
-;           DESCRIPTION:    Clear process end event
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dummy_clear_proc_end    PROC far
-    retf32
-dummy_clear_proc_end Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           IsProcEndIdle
-;
-;           DESCRIPTION:    Check if proc end is idle
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_proc_end_idle    PROC far
-    clc
-    retf32
-is_proc_end_idle Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           AddWaitForProcEnd
-;
-;           DESCRIPTION:    Add a wait for process end
-;
-;           PARAMETERS:         AX      Process handle
-;               BX      Wait handle
-;               ECX     Signalled ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_proc_end_name      DB 'Add Wait For Process End',0
-
-add_wait_tab:
-aw0 DD OFFSET start_wait_for_proc_end,      task_code_sel
-aw1 DD OFFSET stop_wait_for_proc_end,       task_code_sel
-aw2 DD OFFSET dummy_clear_proc_end,         task_code_sel
-aw3 DD OFFSET is_proc_end_idle,             task_code_sel
-
-add_wait_for_proc_end   PROC far
-    push ds
-    push es
-    push eax
-    push dx
-    push edi
-;
-    int 3
-    push bx
-    mov bx,ax
-;    DerefProcHandle
-    pop bx
-    jc add_wait_done
-;
-    push ax
-    mov ax,cs
-    mov es,ax
-    mov ax,SIZE proc_end_wait_header - SIZE wait_obj_header
-    mov edi,OFFSET add_wait_tab
-    AddWait
-    pop ax
-    jc add_wait_done
-;    
-    mov es:pew_proc_sel,dx
-
-add_wait_done:
-    pop edi
-    pop dx
-    pop eax
-    pop es
-    pop ds
-    retf32
-add_wait_for_proc_end   ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10383,12 +10257,6 @@ timer_free_list_create:
     xor dx,dx
     mov ax,fault_reset_nr
     RegisterOsGate
-;
-    mov esi,OFFSET add_wait_for_proc_end
-    mov edi,OFFSET add_wait_for_proc_end_name
-    xor dx,dx
-    mov ax,add_wait_for_proc_end_nr
-    RegisterBimodalUserGate
 ;
     mov ebx,OFFSET create_thread16
     mov esi,OFFSET create_thread32

@@ -30,7 +30,8 @@
 #include "string.h"
 
 #define MAX_MODULES             256
-#define MAX_PROCESSES           256
+#define MAX_PROCESSES           100
+#define MAX_PROCESS_WAITS        10
 #define MAX_EXIT_CODES          256
 
 #define FALSE 0
@@ -48,6 +49,7 @@ struct TProcess
     int Valid;
     int ID;
     int Sel;
+    int WaitArr[MAX_PROCESS_WAITS];
 };
 
 struct TExit
@@ -275,6 +277,7 @@ int __far ImplGetProcessCount()
 int __far ImplProcessCreated(int sel)
 {
     int i;
+    int j;
     int ok = FALSE;
     int Index;
     int pid;
@@ -331,6 +334,9 @@ int __far ImplProcessCreated(int sel)
         ProcessArr[Index].Valid = TRUE;
         ProcessArr[Index].Sel = sel;
         ProcessArr[Index].ID = pid;
+
+        for (j = 0; j < MAX_PROCESS_WAITS; j++)
+            ProcessArr[Index].WaitArr[j] = 0;
     }
 
     RdosLeaveKernelSection(&ProcessSection);
@@ -352,6 +358,7 @@ int __far ImplProcessCreated(int sel)
 void __far ImplProcessTerminated(int sel, int exit)
 {
     int i;
+    int j;
 
     RdosEnterKernelSection(&ProcessSection);
 
@@ -360,6 +367,10 @@ void __far ImplProcessTerminated(int sel, int exit)
         if (ProcessArr[i].Valid && ProcessArr[i].Sel == sel)
         {
             ProcessArr[i].Valid = FALSE;
+
+            for (j = 0; j < MAX_PROCESS_WAITS; j++)
+                if (ProcessArr[i].WaitArr[j])
+                    RdosSignalWait(ProcessArr[i].WaitArr[j]);
 
             if (i == ActiveProcesses - 1)
                 ActiveProcesses--;
@@ -432,6 +443,85 @@ int __far ImplGetProcessId(int Index)
         RdosSetFailure();
 
     return ID;
+}
+
+/*##########################################################################
+#
+#   Name       : StartWaitProcess
+#
+#   Descr      : Start wait for process exit
+#
+##########################################################################*/
+#pragma aux StartWaitProcess "*" rdosdev parm routine [eax] [ebx]
+int StartWaitProcess(int WaitObj, int ID)
+{
+    int i;
+    int j;
+    int ok = FALSE;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID)
+        {
+            for (j = 0; j < MAX_PROCESS_WAITS; j++)
+            {
+                if (ProcessArr[i].WaitArr[j] == 0)
+                {
+                    ProcessArr[i].WaitArr[j] = WaitObj;
+                    ok = TRUE;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ProcessSection);
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return i;
+
+}
+
+/*##########################################################################
+#
+#   Name       : StopWaitProcess
+#
+#   Descr      : Start wait for process exit
+#
+##########################################################################*/
+#pragma aux StopWaitProcess "*" rdosdev parm routine [eax] [ebx]
+void StopWaitProcess(int WaitObj, int ID)
+{
+    int i;
+    int j;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID)
+        {
+            for (j = 0; j < MAX_PROCESS_WAITS; j++)
+            {
+                if (ProcessArr[i].WaitArr[j] == WaitObj)
+                {
+                    ProcessArr[i].WaitArr[j] = 0;
+                    break;
+                }
+            }
+          
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ProcessSection);
 }
 
 /*##########################################################################

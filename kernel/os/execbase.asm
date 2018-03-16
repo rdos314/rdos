@@ -41,6 +41,13 @@ INCLUDE chandle.inc
 
 .386p
 
+proc_end_wait_header    STRUC
+
+pew_obj             wait_obj_header <>
+pew_proc_id         DW ?
+
+proc_end_wait_header    ENDS
+
 debug_event_wait_header STRUC
 
 dew_obj             wait_obj_header <>
@@ -1968,14 +1975,19 @@ lpNoEnv:
     call CreateDefaultEnv
 
 lpEnvDone:
+    GetThread
+    mov es,ax
+;
+    push es
+    mov es,es:p_loader
+    call fword ptr es:loader_detach_kernel_fork_proc
+    pop es
+;
     mov ebx,gs
     ProgramCreated
     mov ebx,eax
 ;
-    GetThread
-    mov es,ax
     mov ds,es:p_prog_sel
-;
     movzx ecx,ds:pr_process_count
     cmp ecx,1
     je lpDosExec
@@ -2000,10 +2012,11 @@ lpForkModOk:
     pop ebx
 ;    
     ResetProcess
-    InitProcess    
 ;
     mov es:p_prog_id,bx
     mov es:p_prog_sel,gs
+;
+    InitProcess    
 ;
     mov ds,gs:pr_name_sel
     xor esi,esi
@@ -2829,6 +2842,159 @@ fatal_error_exit    PROC far
 feeDone:
     ret
 fatal_error_exit    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForProcEnd
+;
+;           DESCRIPTION:    Start a wait for process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn StartWaitProcess:near
+
+start_wait_for_proc_end PROC far
+    push eax
+    push ebx
+;
+    mov eax,es
+    movzx ebx,es:pew_proc_id
+    call StartWaitProcess
+    jnc swpDone
+;
+    int 3
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,es
+    movzx ebx,es:pew_proc_id
+    call StartWaitProcess
+    jnc swpDone
+;
+    SignalWait
+
+swpDone:
+    pop ebx
+    pop eax
+    ret
+start_wait_for_proc_end Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForProcEnd
+;
+;           DESCRIPTION:    Stop a wait for process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn StopWaitProcess:near
+
+stop_wait_for_proc_end  PROC far
+    push eax
+    push ebx
+;
+    mov eax,es
+    movzx ebx,es:pew_proc_id
+    call StopWaitProcess
+;
+    pop ebx
+    pop eax
+    ret
+stop_wait_for_proc_end Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DummyClearProcEnd
+;
+;           DESCRIPTION:    Clear process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_clear_proc_end    PROC far
+    ret
+dummy_clear_proc_end Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsProcEndIdle
+;
+;           DESCRIPTION:    Check if proc end is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_proc_end_idle    PROC far
+    push eax
+    push ebx
+;
+    int 3
+    movzx ebx,es:pew_proc_id
+    ProcessIdToSel
+;
+    pop ebx
+    pop eax
+    ret
+is_proc_end_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AddWaitForProcEnd
+;
+;   DESCRIPTION:    Add a wait for process end
+;
+;   PARAMETERS:     AX      Process handle
+;                   BX      Wait handle
+;                   ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_proc_end_name      DB 'Add Wait For Process End',0
+
+add_wait_proc_tab:
+awp0 DD OFFSET start_wait_for_proc_end,      SEG _TEXT
+awp1 DD OFFSET stop_wait_for_proc_end,       SEG _TEXT
+awp2 DD OFFSET dummy_clear_proc_end,         SEG _TEXT
+awp3 DD OFFSET is_proc_end_idle,             SEG _TEXT
+
+add_wait_for_proc_end   PROC far
+    push ds
+    push es
+    push eax
+    push dx
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE proc_end_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_proc_tab
+    AddWait
+    pop ax
+    jc awpeDone
+;    
+    mov es:pew_proc_id,ax
+
+awpeDone:
+    pop edi
+    pop dx
+    pop eax
+    pop es
+    pop ds
+    ret
+add_wait_for_proc_end   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4043,11 +4209,11 @@ is_debug_event_idle Endp
 
 add_wait_for_debug_event_name   DB 'Add Wait For Debug Event',0
 
-add_wait_tab:
-aw0 DD OFFSET start_wait_for_debug_event,   SEG _text
-aw1 DD OFFSET stop_wait_for_debug_event,    SEG _text
-aw2 DD OFFSET dummy_clear_debug_event,      SEG _text
-aw3 DD OFFSET is_debug_event_idle,          SEG _text
+add_wait_event_tab:
+awe0 DD OFFSET start_wait_for_debug_event,   SEG _text
+awe1 DD OFFSET stop_wait_for_debug_event,    SEG _text
+awe2 DD OFFSET dummy_clear_debug_event,      SEG _text
+awe3 DD OFFSET is_debug_event_idle,          SEG _text
 
 add_wait_for_debug_event    PROC far
     push ds
@@ -4067,7 +4233,7 @@ add_wait_for_debug_event    PROC far
     mov ax,cs
     mov es,ax
     mov ax,SIZE debug_event_wait_header - SIZE wait_obj_header
-    mov edi,OFFSET add_wait_tab
+    mov edi,OFFSET add_wait_event_tab
     AddWait
     pop ax
     jc add_wait_done
@@ -5810,6 +5976,12 @@ InitExec_    Proc near
     mov edi,OFFSET fatal_error_exit_name
     xor dx,dx
     mov ax,fatal_error_exit_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_proc_end
+    mov edi,OFFSET add_wait_for_proc_end_name
+    xor dx,dx
+    mov ax,add_wait_for_proc_end_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_module_focus_key
