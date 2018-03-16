@@ -2954,9 +2954,8 @@ is_proc_end_idle    PROC far
     push eax
     push ebx
 ;
-    int 3
     movzx ebx,es:pew_proc_id
-    ProcessIdToSel
+    IsProcessRunning
 ;
     pop ebx
     pop eax
@@ -3067,6 +3066,31 @@ get_exit_code   Proc far
     int 3
     ret
 get_exit_code   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProcessExitCode
+;
+;           DESCRIPTION:    Get process exit code
+;
+;           PARAMETERS:     BX          Process ID
+;
+;           RETURNS:        AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn GetProcExit:near
+
+get_proc_exit_code_name DB 'Get Process Exit Code',0
+    
+get_proc_exit_code   Proc far
+    push ebx
+    movzx ebx,bx
+    call GetProcExit    
+    pop ebx
+    ret
+get_proc_exit_code   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5965,6 +5989,12 @@ InitExec_    Proc near
     mov edi,OFFSET get_exit_code_name
     xor dx,dx
     mov ax,get_exit_code_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_proc_exit_code
+    mov edi,OFFSET get_proc_exit_code_name
+    xor dx,dx
+    mov ax,get_proc_exit_code_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_exe_name

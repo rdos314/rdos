@@ -531,6 +531,46 @@ void StopWaitProcess(int WaitObj, int ID)
     RdosLeaveKernelSection(&ProcessSection);
 }
 
+
+/*##########################################################################
+#
+#   Name       : GetProcExit
+#
+#   Descr      : Get process exit code
+#
+##########################################################################*/
+#pragma aux GetProcExit "*" rdosdev parm routine [ebx]
+int GetProcExit(int ID)
+{
+    int i;
+    int ok = FALSE;
+    int code;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    for (i = CurrExitInd - 1; i >= 0 && !ok; i--)
+    {
+        if (ExitArr[i].ID == ID)
+        {
+            code = ExitArr[i].ExitCode;
+            ok = TRUE;
+        }
+    }
+
+    for (i = MAX_EXIT_CODES - 1; i >= CurrExitInd && !ok; i--)
+    {
+        if (ExitArr[i].ID == ID)
+        {
+            code = ExitArr[i].ExitCode;
+            ok = TRUE;
+        }
+    }
+
+    RdosLeaveKernelSection(&ProcessSection);
+
+    return code;
+}
+
 /*##########################################################################
 #
 #   Name       : InitGates
