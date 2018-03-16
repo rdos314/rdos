@@ -793,7 +793,6 @@
 
 #define usergate_dup_ini 0x00000273
 
-#define usergate_wait_for_exec 0x00000275
 #define usergate_get_console_cursor_position 0x00000276
 #define usergate_set_console_cursor_position 0x00000277
 
@@ -1651,7 +1650,6 @@
 
 #define CallGate_dup_ini 0x55 0x67 0x9a 115 2 0 0 3 0 0x5d
 
-#define CallGate_wait_for_exec 0x55 0x67 0x9a 117 2 0 0 3 0 0x5d
 #define CallGate_get_console_cursor_position 0x55 0x67 0x9a 118 2 0 0 3 0 0x5d
 #define CallGate_set_console_cursor_position 0x55 0x67 0x9a 119 2 0 0 3 0 0x5d
 
@@ -2507,7 +2505,6 @@
 
 #define CallGate_dup_ini 0x3e 0x67 0x9a 115 2 0 0 3 0
 
-#define CallGate_wait_for_exec 0x3e 0x67 0x9a 117 2 0 0 3 0
 #define CallGate_get_console_cursor_position 0x3e 0x67 0x9a 118 2 0 0 3 0
 #define CallGate_set_console_cursor_position 0x3e 0x67 0x9a 119 2 0 0 3 0
 

@@ -3053,25 +3053,6 @@ app_patch Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WaitForExec
-;
-;           DESCRIPTION:    Wait for exec
-;
-;           PARAMETERS:     AX          Forked ID
-;
-;           RETURNS:        AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wait_for_exec_name DB 'Wait For Exec',0
-    
-wait_for_exec   Proc far
-    ret
-wait_for_exec   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetExitCode
 ;
 ;           DESCRIPTION:    Get exit code
@@ -5978,12 +5959,6 @@ InitExec_    Proc near
     mov edi,OFFSET fork_name
     xor dx,dx
     mov ax,fork_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET wait_for_exec
-    mov edi,OFFSET wait_for_exec_name
-    xor dx,dx
-    mov ax,wait_for_exec_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_exit_code

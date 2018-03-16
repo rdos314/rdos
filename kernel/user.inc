@@ -887,12 +887,6 @@ LoadExe MACRO
         UserGate load_exe_nr
                                         ENDM
 
-; IN  AX        Forked id
-; OUT AX        Exit code
-WaitForExec     MACRO
-        UserGate wait_for_exec_nr
-                                        ENDM
-
 ; IN  DS:(E)SI  Program name
 ; IN  ES:(E)DI  Parameters
 ;               +0  Command line

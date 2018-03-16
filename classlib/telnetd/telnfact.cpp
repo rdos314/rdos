@@ -162,7 +162,7 @@ int TTelnetSocketServerFactory::CheckFile(char *name, const char *ext)
     char *path;
     TEnv *env;
     int ok;
-        
+
     if (strchr(name, '\\'))
         if (CheckFileExt(name, ext))
             return TRUE;
@@ -213,10 +213,7 @@ int TTelnetSocketServerFactory::StartShell(const char *param)
 
     Handle = RdosSpawn(FFullPath.Get().GetData(), param, StartupDir.Get().GetData(), 0, &ThreadId);
     if (Handle)
-    {
-        RdosFreeProcessHandle(Handle);
         return TRUE;
-    }
     else
         return FALSE;
 }
@@ -248,7 +245,7 @@ TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
     {
         sprintf(IpcName, "TELNET.%d", SocketId);
         SocketId++;
-        
+
         ok = StartShell(IpcName);
     }
 
@@ -262,7 +259,7 @@ TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
             if (IpcHandle)
                 break;
         }
-               
+
         server = new TTelnetSocketServer("TELNET", 0x2000, Socket, IpcHandle);
         server->OnCommand = OnCommand;
     }

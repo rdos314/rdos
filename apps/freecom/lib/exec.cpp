@@ -81,11 +81,8 @@ int TExecCommand::Execute(char *param)
     {
         Handle = RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), 0, &ThreadId);
         if (Handle)
-        {
-            RdosFreeProcessHandle(Handle);
             return 0;
-         }
-         else
+        else
             return -1;
      }
      else

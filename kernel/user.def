@@ -447,7 +447,6 @@ is_tcp_connection_idle_nr       = 379
 
 set_codec_gpio0_nr              = 380
 
-free_proc_handle_nr         = 381
 add_wait_for_proc_end_nr    = 382
 get_proc_exit_code_nr       = 383
 
@@ -793,7 +792,6 @@ set_handle_time_nr              = 626
 
 dup_ini_nr                      = 627
 
-wait_for_exec_nr                = 629
 get_console_cursor_position_nr  = 630
 set_console_cursor_position_nr  = 631
 
