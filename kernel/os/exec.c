@@ -368,6 +368,13 @@ void __far ImplProcessTerminated(int sel, int exit)
         {
             ProcessArr[i].Valid = FALSE;
 
+            ExitArr[CurrExitInd].ID = ProcessArr[i].ID;
+            ExitArr[CurrExitInd].ExitCode = exit;
+
+            CurrExitInd++;
+            if (CurrExitInd == MAX_EXIT_CODES)
+                CurrExitInd = 0;
+
             for (j = 0; j < MAX_PROCESS_WAITS; j++)
                 if (ProcessArr[i].WaitArr[j])
                     RdosSignalWait(ProcessArr[i].WaitArr[j]);

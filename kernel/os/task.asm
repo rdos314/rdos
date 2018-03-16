@@ -2268,9 +2268,12 @@ stThreadOk:
     RemovedProcess
     pop ds
 ;
+    push ds
     movzx ebx,es:p_proc_sel
-    movzx eax,es:p_exit_code
+    mov ds,ebx
+    movzx eax,ds:pf_exit_code
     ProcessTerminated
+    pop ds
 ;
     push es
     mov es,ebx

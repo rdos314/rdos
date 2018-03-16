@@ -2677,6 +2677,15 @@ UnloadUser       Endp
 unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
+    push ds
+    push eax
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    pop eax
+    mov ds:pf_exit_code,ax
+    pop ds
+;
     pushfd
     push eax
     mov eax,[esp+12]

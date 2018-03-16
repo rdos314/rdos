@@ -67,6 +67,6 @@ int main(int argc, char **argv)
     ph = (int)phase;
     printf("Neptune Alt: %5.2Lf, Azi: %5.2Lf, Ph: %d%\r\n", altitude, azimuth, ph);
 
-    return 0;
+    return 0x1234;
 }
 

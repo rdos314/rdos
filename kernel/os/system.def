@@ -376,7 +376,6 @@ p_prog_id           DW ?
 p_prog_sel          DW ?
 p_proc_id           DW ?
 p_proc_sel          DW ?
-p_exit_code         DW ?
 p_console           DW ?
 p_parent_console    DW ?
 p_loader            DW ?
