@@ -851,6 +851,7 @@
 #define usergate_get_process_module_usage 0x0000029E
 
 #define usergate_get_free_ldt 0x0000029F
+#define usergate_is_process_running 0x000002A0
 
 
 
@@ -1708,6 +1709,7 @@
 #define CallGate_get_process_module_usage 0x55 0x67 0x9a 158 2 0 0 3 0 0x5d
 
 #define CallGate_get_free_ldt 0x55 0x67 0x9a 159 2 0 0 3 0 0x5d
+#define CallGate_is_process_running 0x55 0x67 0x9a 160 2 0 0 3 0 0x5d
 
 #else
 
@@ -2563,5 +2565,6 @@
 #define CallGate_get_process_module_usage 0x3e 0x67 0x9a 158 2 0 0 3 0
 
 #define CallGate_get_free_ldt 0x3e 0x67 0x9a 159 2 0 0 3 0
+#define CallGate_is_process_running 0x3e 0x67 0x9a 160 2 0 0 3 0
 
 #endif

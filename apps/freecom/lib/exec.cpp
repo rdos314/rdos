@@ -99,9 +99,12 @@ int TExecCommand::Execute(char *param)
 
           WaitHandle = RdosCreateWait();
           RdosAddWaitForProcessEnd(WaitHandle, pid, 0);
-          RdosWaitForever(WaitHandle);
+
+          while (RdosIsProcessRunning(pid))
+              RdosWaitForever(WaitHandle);
+
           RdosCloseWait(WaitHandle);
-          return RdosGetProcessExitCode(pid);          
+          return RdosGetProcessExitCode(pid);
      }
 }
 

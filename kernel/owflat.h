@@ -1728,6 +1728,12 @@
     parm [ebx] [edi] [ecx] \
     value [ecx];
 
+#pragma aux RdosIsProcessRunning = \
+    CallGate_is_process_running  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosGetProcessModules = \
     CallGate_get_process_modules  \
     "jnc Ok" \

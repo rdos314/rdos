@@ -2011,6 +2011,12 @@ lpForkModOk:
     call RemoveProgramProcess
     pop ebx
 ;    
+    mov eax,gs
+    mov ds,eax
+;
+    EnterSection ds:pr_cow_section
+    DetachFork
+    LeaveSection ds:pr_cow_section
     ResetProcess
 ;
     mov es:p_prog_id,bx
@@ -5282,6 +5288,29 @@ get_module_size    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsProcessRunning
+;
+;           DESCRIPTION:    Check if process is running
+;
+;           PARAMETERS:     BX          Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_process_running_name DB 'Is Process Running',0
+    
+is_process_running    Proc far
+    push ebx
+;
+    movzx ebx,bx
+    ProcessIdToSel
+;
+    pop ebx
+    ret
+is_process_running  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetProcessInfo
 ;
 ;           DESCRIPTION:    Get process info
@@ -6147,6 +6176,12 @@ InitExec_    Proc near
     mov edi,OFFSET get_module_size_name
     xor dx,dx
     mov ax,get_module_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_process_running
+    mov edi,OFFSET is_process_running_name
+    xor dx,dx
+    mov ax,is_process_running_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_process_info16
