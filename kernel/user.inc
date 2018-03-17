@@ -514,16 +514,21 @@ TerminateThread        MACRO
         UserGate terminate_thread_nr
                                                 ENDM
 
-; OUT AX                Thread handle
+; OUT AX                Thread selector
 GetThread       MACRO
         UserGate get_thread_nr
                                         ENDM
 
-
-; OUT AX                Thread handle
+; OUT AX                Thread ID
 GetThreadHandle MACRO
         UserGate get_thread_handle_nr
                                         ENDM
+
+; OUT AX                Process ID
+GetProcessHandle MACRO
+        UserGate get_process_handle_nr
+                                        ENDM
+
 
 ;   NC      Global timer
 HasGlobalTimer       MACRO

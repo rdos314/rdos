@@ -1652,9 +1652,11 @@ spLoaderOk:
     ProcessIdToSel
     jc spDebugOk
 ;    
+    push ds
     mov ds,ebx
     mov ax,ds:pf_module_arr
     mov gs:pr_debug_id,ax
+    pop ds
 
 spDebugOk:
     GetThread
@@ -2818,6 +2820,28 @@ rpfDone:
     pop ds    
     ret
 removed_process    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetProcessHandle
+;
+;           DESCRIPTION:    Get current process ID
+;
+;           RETURNS:        AX          Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_handle_name       DB 'Get Process Handle',0
+
+get_process_handle    PROC far
+    push ds
+    GetThread
+    mov ds,eax
+    movzx eax,ds:p_proc_id
+    pop ds
+    ret
+get_process_handle    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4047,7 +4071,7 @@ free_debug_app_mem      ENDP
 ;
 ;           DESCRIPTION:    Get primary module ID from program ID
 ;
-;       PARAMETERS:         BX          Program ID
+;       PARAMETERS:         BX          Process ID
 ;
 ;           RETURNS:        AX          Primary module ID
 ;
@@ -4057,15 +4081,15 @@ GetPrimaryModule  Proc near
     push ds
 ;
     movzx ebx,bx
-    GetProgramSel
+    ProcessIdToSel
     jc gpmodFail
 ;
-    mov ds,eax
-    mov ax,ds:pr_module_count
+    mov ds,ebx
+    mov ax,ds:pf_module_count
     or ax,ax
     jz gpmodFail
 ;
-    mov ax,ds:pr_module_arr
+    mov ax,ds:pf_module_arr
     clc
     jmp gpmodDone
 
@@ -4207,7 +4231,7 @@ is_debug_event_idle Endp
 ;
 ;           DESCRIPTION:    Add a wait for debug event
 ;
-;           PARAMETERS:     AX      Program handle
+;           PARAMETERS:     AX      Process ID
 ;                           BX      Wait handle
 ;                           ECX     Signalled ID
 ;
@@ -4263,7 +4287,7 @@ add_wait_for_debug_event    ENDP
 ;
 ;       DESCRIPTION:    Get current debug event
 ;
-;       PARAMETERS:     BX      Program handle
+;       PARAMETERS:     BX      Process handle
 ;
 ;       RETURNS:        AX      Thread ID
 ;                       BL      Event type  
@@ -4308,7 +4332,7 @@ get_debug_event  Endp
 ;
 ;           DESCRIPTION:    Get debug event data
 ;
-;       PARAMETERS:         BX          Handle
+;       PARAMETERS:         BX          Process ID
 ;                           ES:(E)DI    Event buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4386,7 +4410,7 @@ get_debug_event_data16  Endp
 ;
 ;           DESCRIPTION:    Clear debug event
 ;
-;       PARAMETERS:         BX          Module handle
+;       PARAMETERS:         BX          Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4432,7 +4456,7 @@ clear_debug_event  Endp
 ;
 ;           DESCRIPTION:    Continue debug event
 ;
-;       PARAMETERS:         BX          Module handle
+;       PARAMETERS:         BX      Process ID
 ;                           EAX     Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5937,6 +5961,12 @@ InitExec_    Proc near
     mov edi,OFFSET enable_focus_name
     xor dx,dx
     mov ax,enable_focus_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_process_handle
+    mov edi,OFFSET get_process_handle_name
+    xor dx,dx
+    mov ax,get_process_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET load_program16
