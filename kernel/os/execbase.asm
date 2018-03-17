@@ -1615,7 +1615,7 @@ get_exe_start32   Endp
 ;                           +0      command line
 ;                           +8      startdir
 ;                           +12     env
-;                       DX          Debug module handle
+;                       DX          Debug process ID
 ;
 ;       RETURN VALUE:   AX          Thread ID
 ;                       DX          Process ID
@@ -1649,10 +1649,12 @@ spLoaderOk:
     mov gs:pr_kernel_file,bx
 ;
     movzx ebx,dx
-    ModuleIdToSel
+    ProcessIdToSel
     jc spDebugOk
 ;    
-    mov gs:pr_debug_id,dx
+    mov ds,ebx
+    mov ax,ds:pf_module_arr
+    mov gs:pr_debug_id,ax
 
 spDebugOk:
     GetThread
@@ -1724,28 +1726,12 @@ spWait:
 ;
     mov es,ax
     mov ax,es:p_id
-;
-    mov dx,gs:pr_debug_id
-    or dx,dx
-    jz spLibOk
-;
-    push ebx
-    movzx ebx,gs:pr_module_arr
-    ModuleIdToSel
-    mov ax,bx
-    pop ebx
-
-spLibOk:
-    mov dx,bx
+    mov dx,es:p_proc_id
     clc
     jmp spDone
 
 spInvalid:
     stc
-    jmp spDone
-
-spOk:
-    clc   
 
 spDone:
     pop edi
