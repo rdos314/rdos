@@ -4260,15 +4260,15 @@ get_debug_event  Proc far
     jz gdeLeaveFail
 ;       
     mov es,ax
-    mov ax,es:debug_event_prev
+    mov ax,es:debug_event_next
     cmp ax,ds:pr_event_queue
     push ds
     mov ds:pr_event_queue,ax
-    mov si,es:debug_event_next
+    mov si,es:debug_event_prev
     mov ds,ax
-    mov ds:debug_event_next,si
+    mov ds:debug_event_prev,si
     mov ds,si
-    mov ds:debug_event_prev,ax
+    mov ds:debug_event_next,ax
     pop ds
     jne gdeRemoved
 ;

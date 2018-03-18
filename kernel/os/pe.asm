@@ -543,7 +543,6 @@ LoadDllEvent Proc near
     mov es:[di].ldeFile,ebx
 ;       
     movzx ebx,ds:mod_id
-    ModuleIdToSel
     mov es:[di].ldeHandle,ebx    
 ;
     mov eax,ds:mod_base
@@ -2094,10 +2093,12 @@ fixup_dll       PROC far
     or dx,dx
     jz fdNodeb
 ;
+    push bx
     mov ax,es
     mov ds,ax
     call LoadDllEvent
     SendDebugEvent
+    pop bx
 
 fdNodeb:
     mov edx,1
@@ -4755,6 +4756,7 @@ unload_dll    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll    Proc far
+    mov es,bx
     GetThread
     mov ds,ax
     mov gs,ds:p_prog_sel
