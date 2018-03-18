@@ -70,13 +70,6 @@ void main()
     for (i = 0; i < 100000; i++)
     {
 
-        id = fork();
-        if (id == 0)
-        {
-            RdosWaitMilli(150);
-            exit(1);
-        }
-
 #ifdef LOAD_DLL
         handle = RdosLoadDll("testlib.dll");
 #endif

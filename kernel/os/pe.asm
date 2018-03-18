@@ -455,9 +455,13 @@ TerminateProcessEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateThreadEvent Proc near
+    push ds
     push eax
     push ebx
     push di
+;
+    GetThread
+    mov ds,eax
 ;
     mov eax,SIZE create_thread_event_struc
     mov di,SIZE debug_event_struc
@@ -467,16 +471,18 @@ CreateThreadEvent Proc near
     mov es:debug_event_size,ax
     mov es:debug_event_code,EVENT_CREATE_THREAD
 ;
-    mov eax,fs:pvThreadHandle
+    movzx eax,ds:p_id
     mov es:[di].cteThread,eax
-    mov eax,fs:pvBase
-    mov es:[di].cteFsLinear,eax
+;
+    mov es:[di].cteFsLinear,0
+;
     mov es:[di].cteStartEip,edx
     mov es:[di].cteStartCs,flat_code_sel
 ;
     pop di
     pop ebx
     pop eax
+    pop ds
     ret
 CreateThreadEvent Endp
                       
@@ -3660,10 +3666,10 @@ start_thread    PROC far
 ;    
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
+    mov gs,ds:p_prog_sel
 ;
     mov edx,[ebp].load_eip
-    mov ax,ds:pr_debug_id
+    mov ax,gs:pr_debug_id
     or ax,ax
     jz start_thread_notify
 ;
@@ -3772,8 +3778,8 @@ free_thread_user     Endp
 free_thread_kernel     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov dx,ds:pr_debug_id
+    mov gs,ds:p_prog_sel
+    mov dx,gs:pr_debug_id
     or dx,dx
     jz ftkNoDebug
 ;
