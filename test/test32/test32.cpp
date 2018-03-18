@@ -19,8 +19,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-//#define LOAD_DLL  1
-#define CREATE_THREAD  1
+#define LOAD_DLL  1
+//#define CREATE_THREAD  1
 
 void TestThread(void *)
 {

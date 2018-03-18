@@ -2088,12 +2088,14 @@ fixup_dll       PROC far
     call Preload
 ;
     GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov dx,ds:pr_debug_id
+    mov gs,ax
+    mov gs,gs:p_prog_sel
+    mov dx,gs:pr_debug_id
     or dx,dx
     jz fdNodeb
 ;
+    mov ax,es
+    mov ds,ax
     call LoadDllEvent
     SendDebugEvent
 
@@ -4755,8 +4757,8 @@ unload_dll    Endp
 free_dll    Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ax,ds:pr_debug_id
+    mov gs,ds:p_prog_sel
+    mov ax,gs:pr_debug_id
     or ax,ax
     jz udNotifyDone
 ;
