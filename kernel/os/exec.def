@@ -162,6 +162,12 @@ pr_handle_sel        DW ?
 pr_memmap_list       DD ?
 pr_memmap_spinlock   spinlock_typ <>
 
+pr_debug_wait        DW ?
+pr_event_suppress    DW ?
+pr_curr_event        DW ?
+pr_event_queue       DW ?
+pr_event_spinlock    spinlock_typ <>
+
 pr_pm_int            DD 100h DUP(?,?)
 pr_pm_exc            DD 20h DUP(?,?)
 
@@ -243,9 +249,8 @@ loader_init_exe_proc           DD ?,?
 ; IN   ES:EDI             Thread name
 loader_create_process_proc     DD ?,?
 
-; IN   BX                 Module selector
-; IN   DX                 Debug lib sel
 ; IN   GS                 Program sel
+; IN   BX                 Module selector
 ; IN   EBP                Stack frame
 loader_fixup_exe_proc          DD ?,?
 
@@ -278,6 +283,9 @@ loader_start_thread_proc       DD ?,?
 loader_free_thread_user_proc   DD ?,?
 
 loader_free_thread_kernel_proc DD ?,?
+
+; IN   ES                 Thread
+loader_kernel_event_proc      DD ?,?
 
 ; IN  (E)AX               Size
 ; OUT (E)DX               Address
@@ -332,34 +340,6 @@ loader_get_resource_proc       DD ?,?
 ; OUT (E)AX               Name size
 loader_get_name_proc           DD ?,?
 
-; IN  ES                  Wait object
-; IN  BX                  Module sel
-loader_start_wait_for_debug_event_proc   DD ?,?
-
-; IN  ES                  Wait object
-; IN  BX                  Module sel
-loader_stop_wait_for_debug_event_proc   DD ?,?
-
-; IN  ES                  Wait object
-; IN  BX                  Module sel
-loader_is_debug_event_idle_proc   DD ?,?
-
-; IN  BX                  Module sel
-; OUT AX                  Thread ID
-; OUT BL                  Event type  
-loader_get_debug_event_proc   DD ?,?
-
-; IN  BX                  Module sel
-; IN  ES:(E)DI            Event buffer
-loader_get_debug_event_data_proc   DD ?,?
-
-; IN  BX                  Module sel
-loader_clear_debug_event_proc   DD ?,?
-
-; IN  BX                  Module sel
-; IN  AX                  Thread ID
-loader_continue_debug_event_proc   DD ?,?
-
 ; IN  EBP                 Stack frame
 ; OUT DS:ESI              User registers
 loader_regs_to_user_proc         DD ?,?
@@ -368,11 +348,11 @@ loader_regs_to_user_proc         DD ?,?
 ; IN  BX                  Gate sel
 loader_add_gate_proc         DD ?,?
 
-; IN   BX                 Module selector
+; IN   BX                 Program ID
 loader_stop_debug_proc       DD ?,?
 
 ; IN   BX                 Program #
-; IN   DX                 Debug module ID
+; IN   DX                 Debug program ID
 loader_attach_debug_proc     DD ?,?
 
 ; OUT  Child:  EAX = 0
@@ -393,7 +373,6 @@ mod_size                DD ?,?
 mod_sel                 DW ?
 mod_name_offs           DW ?
 mod_id                  DW ?
-mod_debug_id            DW ?
 
 mod_loader              DW ?
 mod_c_file_handle       DW ?
@@ -403,4 +382,12 @@ mod_key                 DB ?
 
 module_struc    ENDS
 
+debug_event_struc     STRUC
 
+debug_event_prev        DW ?
+debug_event_next        DW ?
+debug_event_thread      DW ?
+debug_event_size        DW ?
+debug_event_code        DB ?
+
+debug_event_struc ENDS

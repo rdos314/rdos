@@ -1726,6 +1726,17 @@ GetDebugThreadSel MACRO
     OsGate get_debug_thread_sel_nr
                         ENDM
 
+; IN  GS           Program selector
+; IN  ES           Event  
+SendDebugEvent MACRO
+    OsGate send_debug_event_nr
+                        ENDM
+
+; IN  ES           Thread
+KernelDebugEvent MACRO
+    OsGate kernel_debug_event_nr
+                        ENDM
+
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
 InitTrapGates  MACRO

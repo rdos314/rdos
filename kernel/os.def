@@ -759,4 +759,7 @@ clone_env_sel_nr            = 673
 
 init_process_nr             = 674
 
+send_debug_event_nr         = 675
+kernel_debug_event_nr       = 676
+
 osgate_entries              = 700

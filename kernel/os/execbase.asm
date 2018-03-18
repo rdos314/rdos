@@ -38,8 +38,14 @@ INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\wait.inc
 INCLUDE chandle.inc
+INCLUDE ..\debevent.inc
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 proc_end_wait_header    STRUC
 
@@ -51,7 +57,7 @@ proc_end_wait_header    ENDS
 debug_event_wait_header STRUC
 
 dew_obj             wait_obj_header <>
-dew_module_id       DW ?
+dew_prog_id         DW ?
 
 debug_event_wait_header ENDS
 
@@ -244,6 +250,9 @@ InitProgramBlock Proc near
     InitSection gs:pr_cow_section
     mov gs:pr_memmap_list,0
     InitSpinlock gs:pr_memmap_spinlock
+    mov gs:pr_event_queue,0
+    InitSpinlock gs:pr_event_spinlock
+    mov gs:pr_debug_wait,0
     ret
 InitProgramBlock  Endp
 
@@ -1554,7 +1563,6 @@ spawn_startup:
     pop es
     pop ds
 ;
-    mov dx,gs:pr_debug_id
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
  
@@ -1846,7 +1854,6 @@ fork_startup:
     pop es
     pop ds
 ;
-    mov dx,gs:pr_debug_id
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
 ;
@@ -3952,41 +3959,96 @@ free_debug_mem_done:
 free_debug_app_mem      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;           NAME:           KernelDebugEvent
 ;
-;           NAME:           GetPrimaryModule
+;           DESCRIPTION:    Kernel debug event
 ;
-;           DESCRIPTION:    Get primary module ID from program ID
-;
-;       PARAMETERS:         BX          Process ID
-;
-;           RETURNS:        AX          Primary module ID
+;           PARAMETERS:     ES          Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetPrimaryModule  Proc near
-    push ds
-;
-    movzx ebx,bx
-    ProcessIdToSel
-    jc gpmodFail
-;
-    mov ds,ebx
-    mov ax,ds:pf_module_count
+kernel_debug_event_name DB 'Kernel Debug Event',0
+
+kernel_debug_event      PROC far
+    mov ax,es:p_loader
     or ax,ax
-    jz gpmodFail
+    jz kdeDone
 ;
-    mov ax,ds:pf_module_arr
-    clc
-    jmp gpmodDone
+    mov ds,eax
+    call fword ptr ds:loader_kernel_event_proc
 
-gpmodFail:
-    stc
+kdeDone:
+    ret
+kernel_debug_event      ENDP
 
-gpmodDone:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SendDebugEvent
+;
+;           DESCRIPTION:    Send debug event
+;
+;           PARAMETERS:     GS          Program selector
+;                           ES          Debug event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_debug_event_name DB 'Send Debug Event',0
+
+send_debug_event      PROC far
+    push ds
+    push eax
+    push ebx
+    push esi
+;
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_id
+    mov es:debug_event_thread,ax
+;
+    RequestSpinlock gs:pr_event_spinlock
+;
+    mov ax,gs:pr_event_queue
+    or ax,ax
+    je sdeEmpty
+;
+    mov ds,ax
+    mov si,ds:debug_event_prev
+    mov ds:debug_event_prev,es
+    mov ds,si
+    mov ds:debug_event_next,es
+    mov es:debug_event_next,ax
+    mov es:debug_event_prev,si
+    jmp sdeInsDone
+
+sdeEmpty:
+    mov es:debug_event_next,es
+    mov es:debug_event_prev,es
+    mov gs:pr_event_queue,es
+
+sdeInsDone:
+    ReleaseSpinlock gs:pr_event_spinlock
+
+sdeSignalLoop:
+    mov ax,gs:pr_debug_wait
+    or ax,ax
+    jz sdeDone
+;
+    mov es,ax
+    SignalWait
+
+sdeDone:
+    xor eax,eax
+    mov es,eax
+;
+    pop esi
+    pop ebx
+    pop eax
     pop ds
     ret
-GetPrimaryModule  Endp
+send_debug_event Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4004,20 +4066,22 @@ start_wait_for_debug_event      PROC far
     push eax
     push bx
 ;
-    movzx ebx,es:dew_module_id
-    ModuleIdToSel
-    jc start_wait_for_done
+    movzx ebx,es:dew_prog_id
+    GetProgramSel
+    jc stawdDone
 ;
-    mov ds,bx
-    mov ax,ds:mod_loader
-    or ax,ax
     mov ds,ax
-    stc
-    jz start_wait_for_done
-;    
-    call fword ptr ds:loader_start_wait_for_debug_event_proc
+    ClearSignal
+    mov ds:pr_debug_wait,es
 
-start_wait_for_done:
+    mov ax,ds:pr_event_queue
+    or ax,ax
+    jz stawdDone
+;
+    mov ds:pr_debug_wait,0
+    SignalWait
+
+stawdDone:    
     pop bx
     pop eax
     pop ds
@@ -4040,20 +4104,14 @@ stop_wait_for_debug_event       PROC far
     push eax
     push bx
 ;
-    movzx ebx,es:dew_module_id
-    ModuleIdToSel
-    jc stop_wait_for_done
+    movzx ebx,es:dew_prog_id
+    GetProgramSel
+    jc stpwdDone
 ;
-    mov ds,bx
-    mov ax,ds:mod_loader
-    or ax,ax
     mov ds,ax
-    stc
-    jz stop_wait_for_done
-;    
-    call fword ptr ds:loader_stop_wait_for_debug_event_proc
+    mov ds:pr_debug_wait,0
 
-stop_wait_for_done:
+stpwdDone:       
     pop bx
     pop eax
     pop ds
@@ -4091,20 +4149,19 @@ is_debug_event_idle     PROC far
     push eax
     push bx
 ;
-    movzx ebx,es:dew_module_id
-    ModuleIdToSel
-    jc is_idle_done
+    movzx ebx,es:dew_prog_id
+    GetProgramSel
+    jc ideDone
 ;
-    mov ds,bx
-    mov ax,ds:mod_loader
-    or ax,ax
     mov ds,ax
+    mov ax,ds:pr_event_queue
+    or ax,ax
+    clc
+    je ideDone
+;
     stc
-    jz is_idle_done
-;    
-    call fword ptr ds:loader_is_debug_event_idle_proc
 
-is_idle_done:
+ideDone:
     pop bx
     pop eax
     pop ds
@@ -4140,22 +4197,22 @@ add_wait_for_debug_event    PROC far
     push edx
     push edi
 ;
-    push bx
-    mov bx,ax
-    call GetPrimaryModule
-    pop bx
+    push ebx
+    movzx ebx,ax
+    ProcessIdToSel
+    mov ds,ebx
+    pop ebx
     jc add_wait_done
 ;
-    push ax
     mov ax,cs
     mov es,ax
     mov ax,SIZE debug_event_wait_header - SIZE wait_obj_header
     mov edi,OFFSET add_wait_event_tab
     AddWait
-    pop ax
     jc add_wait_done
 ;    
-    mov es:dew_module_id,ax
+    mov ax,ds:pf_program_id
+    mov es:dew_prog_id,ax
 
 add_wait_done:
     pop edi
@@ -4185,29 +4242,60 @@ get_debug_event_name    DB 'Get Debug Event',0
 
 get_debug_event  Proc far
     push ds
+    push es
     push ecx
-    push dx
+    push edx
+    push esi
 ;    
-    call GetPrimaryModule
-    jc get_debug_event_done
+    movzx ebx,bx
+    ProcessIdToSel
+    jc gdeDone
 ;
-    movzx ebx,ax
-    ModuleIdToSel
-    jc get_debug_event_done
+    mov ds,ebx
+    mov ds,ds:pf_program_sel
 ;
-    mov eax,ebx
-    mov ds,eax
-    mov ax,ds:mod_loader
+    RequestSpinlock ds:pr_event_spinlock
+    mov ax,ds:pr_event_queue
     or ax,ax
+    jz gdeLeaveFail
+;       
+    mov es,ax
+    mov ax,es:debug_event_prev
+    cmp ax,ds:pr_event_queue
+    push ds
+    mov ds:pr_event_queue,ax
+    mov si,es:debug_event_next
     mov ds,ax
-    stc
-    jz get_debug_event_done
-;    
-    call fword ptr ds:loader_get_debug_event_proc
+    mov ds:debug_event_next,si
+    mov ds,si
+    mov ds:debug_event_prev,ax
+    pop ds
+    jne gdeRemoved
+;
+    mov ds:pr_event_queue,0
 
-get_debug_event_done:
-    pop dx
+gdeRemoved:
+    ReleaseSpinlock ds:pr_event_spinlock
+;
+    mov ds:pr_curr_event,es
+    mov bl,es:debug_event_code
+    mov ax,es:debug_event_thread
+    clc
+    jmp gdeDone
+
+gdeLeaveFail:
+    ReleaseSpinlock ds:pr_event_spinlock
+    xor bl,bl
+    xor ax,ax
+
+gdeFailed:
+    stc
+
+gdeDone:
+    pop esi
+    pop edx
     pop ecx
+    pop es
     pop ds
     ret
 get_debug_event  Endp
@@ -4228,60 +4316,45 @@ get_debug_event_data_name       DB 'Get Debug Event Data',0
 
 get_debug_event_data32  Proc far
     push ds
-    push eax
-    push ebx
-    push edx
-;    
-    call GetPrimaryModule
-    jc get_debug_event_data_done32
+    pushad
 ;
-    movzx ebx,ax
-    ModuleIdToSel
-    jc get_debug_event_data_done32
+    movzx ebx,bx
+    ProcessIdToSel
+    jc gdedDone32
 ;
-    mov eax,ebx
-    mov ds,eax
-    mov ax,ds:mod_loader
-    or ax,ax
-    mov ds,ax
-    stc
-    jz get_debug_event_data_done32
-;    
-    call fword ptr ds:loader_get_debug_event_data_proc
+    mov ds,ebx
+    mov ds,ds:pf_program_sel
+;
+    mov ds,ds:pr_curr_event       
+    mov esi,SIZE debug_event_struc
+    movzx ecx,ds:debug_event_size
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
 
-get_debug_event_data_done32:
-    pop edx
-    pop ebx
-    pop eax
+gdedDone32:
+    popad
     pop ds
     ret
 get_debug_event_data32  Endp
 
 get_debug_event_data16  Proc far
     push ds
-    push eax
-    push ebx
-    push edx
-    push edi
+    pushad
 ;    
-    call GetPrimaryModule
-    jc get_debug_event_data_done16
+    movzx ebx,bx
+    ProcessIdToSel
+    jc gdedDone16
 ;
-    movzx ebx,ax
-    ModuleIdToSel
-    jc get_debug_event_data_done16
+    mov ds,ebx
+    mov ds,ds:pf_program_sel
 ;
-    mov eax,ebx
-    mov ds,eax
-    mov ax,ds:mod_loader
-    or ax,ax
-    mov ds,ax
-    stc
-    jz get_debug_event_data_done16
-;    
-    call fword ptr ds:loader_get_debug_event_data_proc
+    mov ds,ds:pr_curr_event       
+    mov si,SIZE debug_event_struc
+    mov cx,ds:debug_event_size
+    rep movs byte ptr es:[di],ds:[si]
+    clc
 
-get_debug_event_data_done16:
+gdedDone16:
     pop edi
     pop edx
     pop ebx
@@ -4305,33 +4378,42 @@ clear_debug_event_name  DB 'Clear Debug Event',0
 
 clear_debug_event  Proc far
     push ds
+    push es
     push eax
     push ebx
-    push ecx
-    push edx
-;    
-    call GetPrimaryModule
-    jc clear_debug_event_done
 ;
-    movzx ebx,ax
-    ModuleIdToSel
-    jc clear_debug_event_done
+    movzx ebx,bx
+    ProcessIdToSel
+    jc cdeDone
 ;
-    mov eax,ebx
-    mov ds,eax
-    mov cx,ds:mod_loader
-    or cx,cx
-    mov ds,cx
-    stc
-    jz clear_debug_event_done
-;    
-    call fword ptr ds:loader_clear_debug_event_proc
+    mov ds,ebx
+    mov ds,ds:pf_program_sel
+;
+    xor bx,bx
+    xchg bx,ds:pr_curr_event
+    or bx,bx
+    jz cdeDone
+;
+    mov es,bx
+    mov al,es:debug_event_code
+    cmp al,EVENT_KERNEL
+    jne cdeFree
+; 
+    movzx ebx,es:debug_event_thread
+    ThreadToSel
+    jc cdeFree
+;
+    mov ds,bx
+    mov ds:p_debug_event,es
+    jmp cdeDone
 
-clear_debug_event_done:
-    pop edx
-    pop ecx
+cdeFree:
+    FreeMem
+
+cdeDone:
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 clear_debug_event  Endp
@@ -4344,7 +4426,7 @@ clear_debug_event  Endp
 ;           DESCRIPTION:    Continue debug event
 ;
 ;       PARAMETERS:         BX      Process ID
-;                           EAX     Thread ID
+;                           AX      Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4352,35 +4434,48 @@ continue_debug_event_name       DB 'Continue Debug Event',0
 
 continue_debug_event  Proc far
     push ds
-    push ebx
-    push ecx
-    push edx
-    push esi
+    push es
+    pushad
 ;    
-    mov esi,eax
-    call GetPrimaryModule
-    jc continue_debug_event_done
+    movzx ebx,bx
+    ProcessIdToSel
+    jc contDebugDone
 ;
-    movzx ebx,ax
-    ModuleIdToSel
-    jc continue_debug_event_done
+    mov ds,ebx
+    mov ds,ds:pf_program_sel
 ;
-    mov eax,ebx
-    mov ds,eax
-    mov eax,esi
-    mov cx,ds:mod_loader
-    or cx,cx
-    mov ds,cx
-    stc
-    jz continue_debug_event_done
-;    
-    call fword ptr ds:loader_continue_debug_event_proc
+    mov bx,ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov ax,[si]
+    or ax,ax
+    jz contDebugDone
+;
+    mov dx,ax
 
-continue_debug_event_done:
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
+contDebugLoop:
+    mov ds,ax
+    cmp bx,ds:p_id
+    je contDebugFound
+;
+    mov ax,ds:p_next
+    cmp ax,dx
+    jne contDebugLoop
+    jmp contDebugDone
+
+contDebugFound:
+    mov bx,ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    Wake
+    jmp contDebugDone
+
+contDebugDone:
+    popad
+    pop es
     pop ds
     ret
 continue_debug_event  Endp
@@ -4392,7 +4487,7 @@ continue_debug_event  Endp
 ;
 ;           DESCRIPTION:    Abort debugging
 ;
-;       PARAMETERS:         BX          Module handle
+;       PARAMETERS:         BX          Program ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4408,32 +4503,7 @@ abort_debug  Proc far
     jc adDone
 ;
     mov ds,eax
-    EnterSection ds:pr_section
-;
-    movzx ecx,ds:pr_module_count
-    mov esi,OFFSET pr_module_arr
-    
-adLoop:
-    movzx ebx,word ptr ds:[esi]
-    ModuleIdToSel
-    jc adNext
-;
-    mov es,ebx
-    mov es:mod_debug_id,0
-;
-    mov ax,es:mod_loader
-    or ax,ax
-    mov es,eax
-    stc
-    jz adNext
-;    
-    call fword ptr es:loader_stop_debug_proc
-
-adNext:
-    add esi,2
-    loop adLoop
-
-    LeaveSection ds:pr_section
+    mov ds:pr_debug_id,0
 
 adDone:
     popad
@@ -5836,6 +5906,18 @@ InitExec_    Proc near
     mov edi,OFFSET removed_process_name
     xor cl,cl
     mov ax,removed_process_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_debug_event
+    mov edi,OFFSET send_debug_event_name
+    xor cl,cl
+    mov ax,send_debug_event_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET kernel_debug_event
+    mov edi,OFFSET kernel_debug_event_name
+    xor cl,cl
+    mov ax,kernel_debug_event_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus

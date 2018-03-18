@@ -2794,11 +2794,12 @@ debug_block:
     mov gs,ax    
 ;    
     mov es,fs:ps_curr_thread
-    mov eax,es:p_debug_proc
-    or eax,eax
+    mov ds,es:p_prog_sel
+    mov ax,ds:pr_debug_id
+    or ax,ax
     jz debug_block_do
 ;
-    call es:p_debug_proc
+    KernelDebugEvent
 
 debug_block_do:
     mov fs:ps_curr_thread,0
@@ -8000,9 +8001,6 @@ init_thread_block       PROC near
     mov ax,ds:p_lib_sel
     mov es:p_lib_sel,ax
 ;
-    mov eax,ds:p_debug_proc
-    mov es:p_debug_proc,eax
-;
     mov es:p_debug_event,0
 ;
     mov es:p_signal,0
@@ -8984,7 +8982,6 @@ create_process  PROC far
     call allocate_thread_block
     mov dx,[ebp].cr_prio
     call init_thread_block
-    mov es:p_debug_proc,0
     mov es:p_debug_event,0
 ;
     mov ax,es
@@ -9283,9 +9280,6 @@ fork_process  PROC far
     shr dx,1
     call init_thread_block
 ;    
-    mov eax,fs:p_debug_proc
-    mov es:p_debug_proc,eax
-;    
     mov eax,es
     mov ds,eax
 ;    
@@ -9545,7 +9539,6 @@ create_first_thread       PROC near
     mov es:p_ldt_sel,ax
     mov es:p_lib_sel,ax
 ;
-    mov es:p_debug_proc,0
     mov es:p_debug_event,0
     mov es:p_flags,0
     mov es:p_signal_spinlock,0

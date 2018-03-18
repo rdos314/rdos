@@ -398,7 +398,6 @@ p_backcolor             DB ?
 p_row                       DW ?
 p_col                       DW ?
 
-p_debug_proc        DD ?
 p_debug_event       DW ?
 
 p_temp_word         DW ?

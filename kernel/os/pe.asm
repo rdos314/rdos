@@ -55,188 +55,7 @@ MAX_SECTIONS EQU 32768
 code    SEGMENT byte public 'CODE'
     
     assume cs:code
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NotifyKernelDebug
-;
-;           DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
-;
-;       PARAMETERS:     ES      Thread sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyKernelDebug   Proc far
-    push ds
-    push es
-    push ax
-    push dx
-    push di
-;    
-    movzx dx,es:p_fault_vector
-    mov ax,es:p_proc_sel
-    verr ax
-    jnz nkeDone
-;    
-    push ebx
-    mov ds,eax
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ax,bx
-    pop ebx
-    jz nkeDone
-;
-    mov ds,eax
-    mov ax,es:p_debug_event
-    or ax,ax
-    jz nkeDone
-;
-    mov es,ax    
-    mov di,SIZE event_struc
-    mov es:[di].kexcVector,dx
-    xor ax,ax
-    xchg ax,ds:lib_suppress
-    or ax,ax
-    jnz nkeDone
-;    
-    mov ax,ds:lib_events
-    or ax,ax
-    je nkeEmpty
-;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:event_prev
-    mov ds:event_prev,es
-    mov ds,si
-    mov ds:event_next,es
-    mov es:event_next,ax
-    mov es:event_prev,si
-    pop si
-    pop ds
-    jmp nkeInsDone
-
-nkeEmpty:
-    mov es:event_next,es
-    mov es:event_prev,es
-
-nkeInsDone:
-    mov ds:lib_events,es
-    xor ax,ax
-    mov es,ax
-;
-    mov ax,ds:lib_debug_wait
-    or ax,ax
-    jz nkeDone
-;       
-    mov es,ax
-    SignalWait
-
-nkeDone:
-    pop di
-    pop dx
-    pop ax
-    pop es
-    pop ds
-    retf16
-NotifyKernelDebug   Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SendEvent
-;
-;           DESCRIPTION:    Sent event to debugger
-;
-;           PARAMETERS:     DS          Lib
-;                           ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendEvent Proc near
-    push ds
-    push eax
-    push ebx
-    ClearSignal
-;
-    GetThread
-    push es
-    mov es,ax
-    mov ax,es:p_id
-    pop es  
-    mov es:event_thread_id,ax
-;
-    movzx ebx,ds:mod_debug_id
-    or bx,bx
-    jz seClear
-;
-    ModuleIdToSel
-    jc seClear
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
-    RequestSpinlock ds:lib_spinlock
-;
-    mov ax,ds:lib_events
-    or ax,ax
-    je seEmpty
-;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:event_prev
-    mov ds:event_prev,es
-    mov ds,si
-    mov ds:event_next,es
-    mov es:event_next,ax
-    mov es:event_prev,si
-    pop si
-    pop ds
-    jmp seInsDone
-
-seEmpty:
-    mov es:event_next,es
-    mov es:event_prev,es
-
-seInsDone:
-    mov ds:lib_events,es
-    xor ax,ax
-    mov es,ax
-    ReleaseSpinlock ds:lib_spinlock
-;
-    push es
-
-seSignalLoop:
-    mov ax,ds:lib_debug_wait
-    or ax,ax
-    jnz seSignalDo
-;
-    mov ax,10
-    WaitMilliSec
-    jmp seSignalLoop
-
-seClear:
-    mov ds:mod_debug_id,0
-    jmp seDone
-
-seSignalDo:
-    mov es,ax
-    SignalWait
-    pop es    
-    WaitForSignal
-
-seDone:
-    pop ebx
-    pop eax
-    pop ds
-    ret
-SendEvent Endp
-                      
+                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -254,50 +73,39 @@ SendAttachEvent Proc near
     push eax
     push bx
 ;
-    ClearSignal
-    GetThread
-    mov ds,ax
-    mov ax,ds:p_id
-    mov es:event_thread_id,ax
+    RequestSpinlock ds:pr_event_spinlock
 ;
-    movzx ebx,gs:pr_module_arr
-    ModuleIdToSel
-    jc saeDone
-;
-    mov ds,ebx
-    RequestSpinlock ds:lib_spinlock
-;
-    mov ax,ds:lib_events
+    mov ax,ds:pr_event_queue
     or ax,ax
     je saeEmpty
 ;
     push ds
     push si
     mov ds,ax
-    mov si,ds:event_prev
-    mov ds:event_prev,es
+    mov si,ds:debug_event_prev
+    mov ds:debug_event_prev,es
     mov ds,si
-    mov ds:event_next,es
-    mov es:event_next,ax
-    mov es:event_prev,si
+    mov ds:debug_event_next,es
+    mov es:debug_event_next,ax
+    mov es:debug_event_prev,si
     pop si
     pop ds
     jmp saeInsDone
 
 saeEmpty:
-    mov es:event_next,es
-    mov es:event_prev,es
+    mov es:debug_event_next,es
+    mov es:debug_event_prev,es
 
 saeInsDone:
-    mov ds:lib_events,es
+    mov ds:pr_event_queue,es
     xor ax,ax
     mov es,ax
-    ReleaseSpinlock ds:lib_spinlock
+    ReleaseSpinlock ds:pr_event_spinlock
 ;
     push es
 
 saeSignalLoop:
-    mov ax,ds:lib_debug_wait
+    mov ax,ds:pr_debug_wait
     or ax,ax
     jnz saeSignalDo
 ;
@@ -334,17 +142,15 @@ AllocateKernelEvent   Proc near
     push di
 ;
     mov eax,SIZE kernel_exception_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_KERNEL
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_KERNEL
 ;
     GetThread
     mov ds,ax
-    mov ax,ds:p_id
-    mov es:event_thread_id,ax
     mov ds:p_debug_event,es
 ;
     pop di
@@ -404,12 +210,12 @@ ExceptionEvent Proc near
 ;
     push eax
     mov eax,SIZE exception_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_EXCEPTION
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_EXCEPTION
     pop eax
     mov es:[di].excCode,eax
 ;
@@ -437,60 +243,60 @@ ExceptionEvent Endp
 ;
 ;           DESCRIPTION:    Create process debug event
 ;
-;           PARAMETERS:     DS          Lib
-;                           FS          TIB
-;                           EBP         Stack frame
+;           PARAMETERS:     GS          Program selector
 ;
 ;           RETURNS:        ES          Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateProcessEvent Proc near
-    push eax
-    push ebx
-    push di
+    push ds
+    pushad
 ;
     mov eax,SIZE create_process_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_CREATE_PROCESS
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_CREATE_PROCESS
+;
+    movzx ebx,gs:pr_process_arr
+    mov es:[di].cpeProcess,ebx
+;
+    ProcessIdToSel
+    mov ds,ebx
+    movzx ebx,ds:pf_thread_arr
+    mov es:[di].cpeThread,ebx       
+;
+    movzx ebx,ds:pf_module_arr
+    mov es:[di].cpeHandle,ebx
+;
+    ModuleIdToSel
+    mov ds,ebx
 ;
     movzx ebx,ds:mod_c_file_handle
     mov es:[di].cpeFile,ebx
-;       
-    movzx ebx,ds:mod_id
-    ModuleIdToSel
-    mov es:[di].cpeHandle,ebx
 ;
-    mov eax,fs:pvProcessHandle
-    mov es:[di].cpeProcess,eax
-    mov eax,fs:pvThreadHandle
-    mov es:[di].cpeThread,eax       
     mov eax,ds:mod_base
     mov es:[di].cpeImageBase,eax
     mov eax,ds:mod_size
     mov es:[di].cpeImageSize,eax
 ;
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov eax,ds:lib_objects
-    mov eax,es:[eax].o_va
-    pop es
-    mov es:[di].cpeObjectRva,eax
-;       
-    mov eax,fs:pvBase
-    mov es:[di].cpeFsLinear,eax
     mov es:[di].cpeStartCs,flat_code_sel
     mov eax,ds:lib_org_eip
     mov es:[di].cpeStartEip,eax
 ;
-    pop di
-    pop ebx
-    pop eax
+    mov ebx,ds:lib_objects
+    mov ax,flat_data_sel
+    mov ds,eax
+    mov eax,ds:[ebx].o_va
+    mov es:[di].cpeObjectRva,eax
+;       
+    mov es:[di].cpeFsLinear,0
+;
+    popad
+    pop ds
     ret
 CreateProcessEvent Endp
                       
@@ -515,12 +321,12 @@ CreateAttachProcessEvent Proc near
     push di
 ;
     mov eax,SIZE create_process_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_CREATE_PROCESS
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_CREATE_PROCESS
 ;
     movzx ebx,bx
     mov es:[di].cpeProcess,ebx
@@ -581,12 +387,12 @@ AttachExceptionEvent Proc near
     push edi
 ;
     mov eax,SIZE exception_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_EXCEPTION
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_EXCEPTION
     mov es:[di].excCode,80000003h
     mov es:[di].excPtr,0
 ;
@@ -606,7 +412,7 @@ AttachExceptionEvent Endp
 ;
 ;           DESCRIPTION:    Terminate process debug event
 ;
-;           PARAMETERS:         EAX         Exit code
+;           PARAMETERS:     EAX         Exit code
 ;
 ;           RETURNS:        ES          Event
 ;
@@ -618,12 +424,12 @@ TerminateProcessEvent Proc near
 ;
     push eax
     mov eax,SIZE terminate_process_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_TERMINATE_PROCESS
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_TERMINATE_PROCESS
     pop eax
 ;
     mov es:[di].tpeExitCode,eax
@@ -654,12 +460,12 @@ CreateThreadEvent Proc near
     push di
 ;
     mov eax,SIZE create_thread_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_CREATE_THREAD
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_CREATE_THREAD
 ;
     mov eax,fs:pvThreadHandle
     mov es:[di].cteThread,eax
@@ -692,10 +498,10 @@ TerminateThreadEvent Proc near
     push eax
     push ebx
 ;
-    mov eax,SIZE event_struc
+    mov eax,SIZE debug_event_struc
     AllocateSmallGlobalMem
-    mov es:event_size,0
-    mov es:event_code,EVENT_TERMINATE_THREAD
+    mov es:debug_event_size,0
+    mov es:debug_event_code,EVENT_TERMINATE_THREAD
 ;
     pop ebx
     pop eax
@@ -720,12 +526,12 @@ LoadDllEvent Proc near
     push di
 ;
     mov eax,SIZE load_dll_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_LOAD_DLL
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_LOAD_DLL
 ;
     movzx ebx,ds:mod_c_file_handle
     mov es:[di].ldeFile,ebx
@@ -771,12 +577,12 @@ FreeDllEvent Proc near
     push ebx
 ;
     mov eax,SIZE free_dll_event_struc
-    mov di,SIZE event_struc
+    mov di,SIZE debug_event_struc
     add ax,di
     AllocateSmallGlobalMem
     sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_FREE_DLL
+    mov es:debug_event_size,ax
+    mov es:debug_event_code,EVENT_FREE_DLL
 ;       
     movzx ebx,ds:mod_id
     mov es:[di].fdeHandle,ebx    
@@ -1161,7 +967,7 @@ rsNext:
     popad
     pop ds
     ret
-ResetSections	Endp
+ResetSections   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1470,13 +1276,9 @@ create_lib_size_ok:
     mov es:mod_base+4,0
     mov es:mod_size,0
     mov es:mod_size+4,0
-    mov es:mod_debug_id,0
-    mov es:lib_debug_wait,0
-    mov es:lib_events,0
     mov es:mod_c_file_handle,bx
     mov es:lib_file_pos,edx
     mov es:lib_init_param,0
-    InitSpinlock es:lib_spinlock
     mov es:mod_loader,pe_loader_sel
 ;
     pop edi
@@ -2266,7 +2068,6 @@ FreeImportedDlls    Endp
 ;           DESCRIPTION:    Fixup DLL
 ;
 ;           PARAMETERS:     BX          Module sel
-;                           DX          Debug module ID
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2276,19 +2077,19 @@ fixup_dll       PROC far
     mov es,bx
     call FixupImage
 ;
-    mov es:mod_debug_id,dx
     mov ecx,es:mod_size
     call LoadImportedDlls
     call Preload
 ;
-    mov dx,es:mod_debug_id
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov dx,ds:pr_debug_id
     or dx,dx
     jz fdNodeb
 ;
-    mov ax,es
-    mov ds,ax
     call LoadDllEvent
-    call SendEvent
+    SendDebugEvent
 
 fdNodeb:
     mov edx,1
@@ -3078,58 +2879,6 @@ imDone:
     pop ds
     ret
 init_module  Endp
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InitDebug
-;
-;           DESCRIPTION:    Pre DLL import debug setup
-;
-;           PARAMETERS:     DX      Debug module ID
-;                           EBP     Stack frame
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitDebug Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov esi,[ebp].load_eip
-    mov esi,ds:[esi-4]
-    mov es:lib_org_eip,esi
-    mov eax,ds:[esi+1]
-    add eax,esi
-    add eax,5
-    mov [ebp].load_eip,eax
-;
-    add esi,5
-    call InitDebugUserStack
-;
-    GetThread
-    mov ds,ax
-;
-    call AllocateKernelEvent
-    mov word ptr ds:p_debug_proc,OFFSET NotifyKernelDebug
-    mov word ptr ds:p_debug_proc+2,cs
-;
-    mov es:mod_debug_id,dx
-    mov es:lib_init_param,dx
-;
-    mov ax,es
-    mov ds,ax
-    mov fs,[ebp].load_fs
-    call CreateProcessEvent
-    call SendEvent
-;
-    popad
-    pop es
-    pop ds
-    ret
-InitDebug   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3138,8 +2887,7 @@ InitDebug   Endp
 ;
 ;           DESCRIPTION:    Post DLL import debug setup
 ;
-;           PARAMETERS:     DX      Debug sel
-;                           EBP     Stack frame
+;           PARAMETERS:     EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3183,8 +2931,7 @@ FixupDebug  Endp
 ;           DESCRIPTION:    Fixup exe
 ;
 ;           PARAMETERS:     BX      Module sel
-;                           DX      Debug sel
-;                           GS      PE process sel
+;                           GS      Program selector
 ;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3201,24 +2948,48 @@ fixup_exe Proc far
     mov ds,eax
     mov es,bx
 ;
-    push dx
     call CreateSections
     call FixupImage
     call InitStack
     call RunImage
-    pop dx
 ;
+    mov dx,gs:pr_debug_id
     or dx,dx
     jz feNoPreDebug
 ;
-    call InitDebug
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov esi,[ebp].load_eip
+    mov esi,ds:[esi-4]
+    mov es:lib_org_eip,esi
+    mov eax,ds:[esi+1]
+    add eax,esi
+    add eax,5
+    mov [ebp].load_eip,eax
+;
+    add esi,5
+    call InitDebugUserStack
+;
+    GetThread
+    mov ds,ax
+;
+    call AllocateKernelEvent
+    call CreateProcessEvent
+    SendDebugEvent
+;
+    popad
+    pop es
+    pop ds
 
 feNoPreDebug:
-    push dx
     call LoadImportedDlls
     call Preload
-    pop dx
 ;
+    mov dx,gs:pr_debug_id
     or dx,dx
     jz feNoPostDebug
 ;
@@ -3283,20 +3054,29 @@ unload_user_exe        Endp
 ;
 ;           DESCRIPTION:    Unload kernel exe
 ;
-;           PARAMETERS:     BX                 Module selector
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_kernel_exe        Proc far
-    mov ds,bx
-    mov ax,ds:mod_debug_id
+    push ds
+    push es
+    push gs
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov gs,ds:p_prog_sel
+    mov ax,gs:pr_debug_id
     or ax,ax
     jz ukDone
 ;
     call TerminateProcessEvent
-    call SendEvent
+    SendDebugEvent
 
 ukDone:
+    pop eax
+    pop gs
+    pop es
+    pop ds
     ret
 unload_kernel_exe        Endp
                                               
@@ -3880,20 +3660,16 @@ start_thread    PROC far
 ;    
     GetThread
     mov ds,ax
-    mov ds,ds:p_proc_sel
-;
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
+    mov ds,ds:p_prog_sel
 ;
     mov edx,[ebp].load_eip
-    mov ax,ds:mod_debug_id
+    mov ax,ds:pr_debug_id
     or ax,ax
     jz start_thread_notify
 ;
     call AllocateKernelEvent
     call CreateThreadEvent
-    call SendEvent
+    SendDebugEvent
 
 start_thread_notify:    
     call InitUserStack
@@ -3946,13 +3722,8 @@ start_thread    Endp
 free_thread_user     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_proc_sel
-;
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
-;
-    mov ax,ds:mod_debug_id
+    mov ds,ds:p_prog_sel
+    mov ax,ds:pr_debug_id
     or ax,ax
     jz ftuDebugOk
 ;
@@ -4001,17 +3772,13 @@ free_thread_user     Endp
 free_thread_kernel     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_proc_sel    
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
-;
-    mov ax,ds:mod_debug_id
-    or ax,ax
+    mov ds,ds:p_prog_sel
+    mov dx,ds:pr_debug_id
+    or dx,dx
     jz ftkNoDebug
 ;
     call TerminateThreadEvent
-    call SendEvent
+    SendDebugEvent
     
 ftkNoDebug:
     mov ax,system_data_sel
@@ -4132,12 +3899,8 @@ fork_child:
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
 ;
-    mov ds,ds:p_proc_sel
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
-;
-    mov ax,ds:mod_debug_id
+    mov ds,ds:p_prog_sel
+    mov ax,ds:pr_debug_id
     or ax,ax
     jz fork_notify_ok
 ;
@@ -4150,7 +3913,7 @@ fork_child:
 ;
     call AllocateKernelEvent
     call CreateThreadEvent
-    call SendEvent
+    SendDebugEvent
 ;
     popad
     pop es
@@ -4195,18 +3958,14 @@ detach_user_fork_proc      Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_proc_sel    
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
-;
-    mov ax,ds:mod_debug_id
+    mov ds,ds:p_prog_sel
+    mov ax,ds:pr_debug_id
     or ax,ax
     jz dufNoDebug
 ;
     call FreeKernelEvent
     call TerminateThreadEvent
-    call SendEvent
+    SendDebugEvent
     
 dufNoDebug:
     popad
@@ -4281,324 +4040,6 @@ detach_kernel_fork_proc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartWaitForDebugEvent
-;
-;           DESCRIPTION:    Start wait for an debug event from process
-;
-;           PARAMETERS:         BX    Debugged lib_sel
-;               ES    Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_wait_for_debug_event Proc far
-    push ds
-    push ax
-;
-    mov ds,bx
-    ClearSignal
-    mov ds:lib_debug_wait,es
-
-    mov ax,ds:lib_events
-    or ax,ax
-    jz start_wait_done
-;
-    mov ds:lib_debug_wait,0
-    SignalWait
-
-start_wait_done:    
-    pop ax
-    pop ds  
-    ret
-start_wait_for_debug_event Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           StopWaitForDebugEvent
-;
-;           DESCRIPTION:    Stop wait for an debug event from process
-;
-;           PARAMETERS:         BX      Debugged lib_sel
-;               ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_wait_for_debug_event Proc far
-    push ds
-;
-    mov ds,bx
-    mov ds:lib_debug_wait,0
-;       
-    pop ds  
-    ret
-stop_wait_for_debug_event Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsDebugEventIdle
-;
-;           DESCRIPTION:    Check if debug event is idle
-;
-;           PARAMETERS:         BX      Debugged lib_sel
-;               ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_debug_event_idle Proc far
-    push ds
-    push ax
-;
-    mov ds,bx
-    mov ax,ds:lib_events
-    or ax,ax
-    clc
-    je is_idle_done
-;
-    stc
-
-is_idle_done:
-    pop ax
-    pop ds  
-    ret
-is_debug_event_idle Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetDebugEvent
-;
-;           DESCRIPTION:    Get debug event from process
-;
-;           PARAMETERS:         BX    Debugged lib_sel
-;
-;       RETURNS:    AX    Thread ID
-;               BL    Event type  
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_debug_event Proc far
-    push ds
-    push es
-    push si
-;
-    mov ds,bx
-    RequestSpinlock ds:lib_spinlock
-    mov ax,ds:lib_events
-    or ax,ax
-    jz gdeLeaveFail
-;       
-    mov es,ax
-    mov ax,es:event_prev
-    cmp ax,ds:lib_events
-    push ds
-    mov ds:lib_events,ax
-    mov si,es:event_next
-    mov ds,ax
-    mov ds:event_next,si
-    mov ds,si
-    mov ds:event_prev,ax
-    pop ds
-    jne gdeRemoved
-;
-    mov ds:lib_events,0
-
-gdeRemoved:
-    ReleaseSpinlock ds:lib_spinlock
-;
-    mov ds:lib_curr_event,es
-    mov bl,es:event_code
-    mov ax,es:event_thread_id
-    clc
-    jmp gdeDone
-
-gdeLeaveFail:
-    ReleaseSpinlock ds:lib_spinlock
-    xor bl,bl
-    xor ax,ax
-    stc
-
-gdeDone:
-    pop si
-    pop es
-    pop ds  
-    ret
-get_debug_event Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetDebugEventData
-;
-;           DESCRIPTION:    Get event data
-;
-;           PARAMETERS:         BX    Debugged lib_sel
-;               ES:EDI     Event buffer
-;               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_debug_event_data Proc far
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push esi
-;       
-    mov ds,bx
-    mov ds,ds:lib_curr_event
-;       
-    mov esi,SIZE event_struc
-    movzx ecx,ds:event_size
-    push edi
-    rep movs byte ptr es:[edi],ds:[esi]
-    pop edi
-;
-    jmp gdedDone
-    
-    mov al,ds:event_code
-;    
-    cmp al,EVENT_CREATE_PROCESS
-    je gdedDuplFile
-    cmp al,EVENT_LOAD_DLL
-    jne gdedDone
-
-gdedDuplFile:
-    mov bx,es:[edi+4]
-    mov ds,bx
-    mov bx,ds:mod_id
-    mov es:[edi+4],bx   
-    mov ds:lib_local_handle,bx
-;
-    mov ax,es:[edi]
-    mov cx,es:[edi+2]
-    DuplFileInfo
-    movzx eax,bx
-    mov es:[edi],eax
-;
-    jmp gdedDone
-
-gdedDone:
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds  
-    ret
-get_debug_event_data Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClearDebugEvent
-;
-;           DESCRIPTION:    Clear debug event
-;
-;           PARAMETERS:         BX      Debugged lib_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_debug_event Proc far
-    push ds
-    push es
-    push bx
-;
-    mov ds,bx
-    mov bx,ds:lib_curr_event
-    or bx,bx
-    jz clear_debug_done
-;
-    mov es,bx   
-    mov al,es:event_code
-    cmp al,EVENT_KERNEL
-    je clear_debug_done
-;    
-    FreeMem
-
-clear_debug_done:
-    mov ds:lib_curr_event,0
-;       
-    pop bx
-    pop es
-    pop ds
-    ret
-clear_debug_event Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ContinueDebugEvent
-;
-;           DESCRIPTION:    Continue debugged thread
-;
-;           PARAMETERS:         EAX         Thread
-;               BX      Debugged lib_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-continue_debug_event Proc far
-    push es
-    push bx
-    push cx
-    push dx
-    push si
-;
-    mov bx,ax
-    mov ax,system_data_sel
-    mov ds,ax
-    mov si,OFFSET debug_list
-    mov ax,[si]
-    or ax,ax
-    jz continue_debug_signal
-;
-    mov dx,ax
-
-continue_debug_loop:
-    mov ds,ax
-    cmp bx,ds:p_id
-    je continue_debug_found
-;
-    mov ax,ds:p_next
-    cmp ax,dx
-    jne continue_debug_loop
-    jmp continue_debug_signal
-
-continue_debug_found:
-    mov bx,ds
-    mov ax,system_data_sel
-    mov ds,ax
-    mov si,OFFSET debug_list
-    mov [si],bx
-    Wake
-    jmp continue_debug_done
-    
-continue_debug_signal:
-    ThreadToSel
-    jc continue_debug_done
-;    
-    Signal
-
-continue_debug_done:
-    xor ax,ax
-    mov ds,ax
-;    
-    pop si
-    pop dx
-    pop cx
-    pop bx
-    pop es
-    ret
-continue_debug_event Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           NotifyPeException
 ;
 ;           DESCRIPTION:    Notify of a exception
@@ -4632,13 +4073,13 @@ notify_pe_exception     Proc far
     push ds
     push dx
 ;
-    push ebx
-    mov ebx,fs:pvModuleHandle
-    ModuleIdToSel
-    mov ds,ebx
-    pop ebx
-;       
-    mov dx,ds:mod_debug_id
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    pop ax
+;
+    mov dx,ds:pr_debug_id
     or dx,dx
     jz neDone
 ;       
@@ -4720,59 +4161,15 @@ find_exc_next:
     add ebx,8
     mov [ebp].trap_esp,ebx
 ;
-    GetThread
-    push es
-    mov es,ax
-    mov ax,es:p_id
-    pop es
-    mov es:event_thread_id,ax
-;
+    push gs
     GetThread
     mov ds,ax
-    mov ds,ds:p_proc_sel
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
+    mov gs,ds:p_prog_sel
 ;
     LockTask
-    RequestSpinlock ds:lib_spinlock
+    SendDebugEvent
+    pop gs
 ;
-    mov ax,ds:lib_events
-    or ax,ax
-    je neEmpty
-;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:event_prev
-    mov ds:event_prev,es
-    mov ds,si
-    mov ds:event_next,es
-    mov es:event_next,ax
-    mov es:event_prev,si
-    pop si
-    pop ds
-    jmp neInsDone
-
-neEmpty:
-    mov es:event_next,es
-    mov es:event_prev,es
-
-neInsDone:
-    mov ds:lib_events,es
-    ReleaseSpinlock ds:lib_spinlock
-    xor ax,ax
-    mov es,ax
-;
-    mov ax,ds:lib_debug_wait
-    or ax,ax
-    jz neSignalDone
-;       
-    mov es,ax
-    SignalWait
-
-neSignalDone:
-    mov ds:lib_suppress,1
     pop ax
     pop es
     LockedDebugException
@@ -5235,13 +4632,10 @@ show_exception_text     PROC far
     push es
     push ebx
 ;   
-    mov ebx,fs:pvModuleHandle
-    ModuleIdToSel
-    mov es,ebx
-    or ebx,ebx
-    jz setStop
-;
-    mov ax,es:mod_debug_id
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov ax,ds:pr_debug_id
     or ax,ax
     jnz setStop
 ;
@@ -5353,16 +4747,18 @@ unload_dll    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll    Proc far
-    mov es,bx
-    mov dx,es:mod_debug_id
-    or dx,dx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov ax,ds:pr_debug_id
+    or ax,ax
     jz udNotifyDone
 ;
     push es
     mov ax,es
     mov ds,ax
     call FreeDllEvent
-    call SendEvent
+    SendDebugEvent
     pop es
 
 udNotifyDone:
@@ -5860,6 +5256,39 @@ get_cmd_line_done:
     pop ds
     ret
 get_cmd_line    Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           kernel_event
+;
+;       DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
+;
+;       PARAMETERS:     ES      Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+kernel_event   Proc far
+    xor ax,ax
+    xchg ax,es:p_debug_event
+    or ax,ax
+    jz keDone
+;
+    push es
+    push gs
+;
+    mov gs,es:p_prog_sel
+    movzx dx,es:p_fault_vector
+    mov es,eax
+    mov di,SIZE debug_event_struc
+    mov es:[di].kexcVector,dx
+    SendDebugEvent
+;
+    pop gs
+    pop es
+
+keDone:
+    ret
+kernel_event   Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5868,7 +5297,7 @@ get_cmd_line    Endp
 ;
 ;           DESCRIPTION:    Stop debugging
 ;
-;           PARAMETERS:     BX      Module selector
+;           PARAMETERS:     BX      Program ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5877,44 +5306,49 @@ stop_debug  Proc far
     push es
     pushad
 ;
-    mov ds,bx
-    mov bx,ds:lib_curr_event
+    movzx ebx,bx
+    GetProgramSel
+    jc sdDone
+;
+    mov ds,ax
+    mov bx,ds:pr_curr_event
     mov es,bx   
     FreeMem
-    mov ds:lib_curr_event,0
+    mov ds:pr_curr_event,0
 
 sdLoop:
-    RequestSpinlock ds:lib_spinlock
-    mov ax,ds:lib_events
+    RequestSpinlock ds:pr_event_spinlock
+    mov ax,ds:pr_event_queue
     or ax,ax
     jz sdLeaveDone
 ;       
     mov es,ax
-    mov ax,es:event_prev
-    cmp ax,ds:lib_events
+    mov ax,es:debug_event_prev
+    cmp ax,ds:pr_event_queue
     push ds
-    mov ds:lib_events,ax
-    mov si,es:event_next
+    mov ds:pr_event_queue,ax
+    mov si,es:debug_event_next
     mov ds,ax
-    mov ds:event_next,si
+    mov ds:debug_event_next,si
     mov ds,si
-    mov ds:event_prev,ax
+    mov ds:debug_event_prev,ax
     pop ds
     jne sdRemoved
 ;
-    mov ds:lib_events,0
+    mov ds:pr_event_queue,0
 
 sdRemoved:
-    ReleaseSpinlock ds:lib_spinlock
+    ReleaseSpinlock ds:pr_event_spinlock
 ;
     FreeMem
     jmp sdLoop
 
 sdLeaveDone:
-    ReleaseSpinlock ds:lib_spinlock
+    ReleaseSpinlock ds:pr_event_spinlock
 ;
-    mov ds:lib_debug_wait,0
-;
+    mov ds:pr_debug_wait,0
+
+sdDone:
     popad
     pop es
     pop ds
@@ -5945,8 +5379,6 @@ attach_thread:
 ;
     call AttachExceptionEvent
     call SendAttachEvent
-;
-    mov ds:mod_debug_id,dx
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6005,32 +5437,26 @@ l11 DD OFFSET init_thread,                SEG code
 l12 DD OFFSET start_thread,               SEG code
 l13 DD OFFSET free_thread_user,           SEG code
 l14 DD OFFSET free_thread_kernel,         SEG code
-l15 DD OFFSET allocate_mem,               SEG code
-l16 DD OFFSET free_mem,                   SEG code
-l17 DD OFFSET debug_allocate_mem,         SEG code
-l18 DD OFFSET debug_free_mem,             SEG code
-l19 DD OFFSET init_module,                SEG code
-l20 DD OFFSET fixup_dll,                  SEG code
-l21 DD OFFSET unload_dll,                 SEG code
-l22 DD OFFSET free_dll,                   SEG code
-l23 DD OFFSET get_current_dll,            SEG code
-l24 DD OFFSET get_module_proc,            SEG code
-l25 DD OFFSET get_resource,               SEG code
-l26 DD OFFSET get_module_name,            SEG code
-l27 DD OFFSET start_wait_for_debug_event, SEG code
-l28 DD OFFSET stop_wait_for_debug_event,  SEG code
-l29 DD OFFSET is_debug_event_idle,        SEG code
-l30 DD OFFSET get_debug_event,            SEG code
-l31 DD OFFSET get_debug_event_data,       SEG code
-l32 DD OFFSET clear_debug_event,          SEG code
-l33 DD OFFSET continue_debug_event,       SEG code
-l34 DD OFFSET regs_to_user,               SEG code
-l35 DD OFFSET add_user_gate,              SEG code
-l36 DD OFFSET stop_debug,                 SEG code
-l37 DD OFFSET attach_debug,               SEG code
-l38 DD OFFSET fork_proc,                  SEG code
-l39 DD OFFSET detach_user_fork_proc,      SEG code
-l40 DD OFFSET detach_kernel_fork_proc,    SEG code
+l15 DD OFFSET kernel_event,               SEG code
+l16 DD OFFSET allocate_mem,               SEG code
+l17 DD OFFSET free_mem,                   SEG code
+l18 DD OFFSET debug_allocate_mem,         SEG code
+l19 DD OFFSET debug_free_mem,             SEG code
+l20 DD OFFSET init_module,                SEG code
+l21 DD OFFSET fixup_dll,                  SEG code
+l22 DD OFFSET unload_dll,                 SEG code
+l23 DD OFFSET free_dll,                   SEG code
+l24 DD OFFSET get_current_dll,            SEG code
+l25 DD OFFSET get_module_proc,            SEG code
+l26 DD OFFSET get_resource,               SEG code
+l27 DD OFFSET get_module_name,            SEG code
+l28 DD OFFSET regs_to_user,               SEG code
+l29 DD OFFSET add_user_gate,              SEG code
+l30 DD OFFSET stop_debug,                 SEG code
+l31 DD OFFSET attach_debug,               SEG code
+l32 DD OFFSET fork_proc,                  SEG code
+l33 DD OFFSET detach_user_fork_proc,      SEG code
+l34 DD OFFSET detach_kernel_fork_proc,    SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
