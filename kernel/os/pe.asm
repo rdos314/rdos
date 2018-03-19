@@ -2740,7 +2740,7 @@ RunImage    Endp
 ;
 ;           PARAMETERS:     BX      C file handle
 ;
-;           RETURNS:        GS      Process sel
+;           RETURNS:        GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3653,18 +3653,14 @@ FixupDebugUserStack   Endp
 ;           DESCRIPTION:    Start thread
 ;
 ;           PARAMETERS:     EBP                Stack frame
+;                           GS                 Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_thread    PROC far
     push ds
     push es
-    push gs
     pushad
-;    
-    GetThread
-    mov ds,ax
-    mov gs,ds:p_prog_sel
 ;
     mov edx,[ebp].load_eip
     mov ax,gs:pr_debug_id
@@ -3706,7 +3702,6 @@ start_thread_dlls_next:
 
 start_thread_done:
     popad
-    pop gs
     pop es
     pop ds
     ret

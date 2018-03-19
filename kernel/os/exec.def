@@ -277,6 +277,7 @@ loader_get_env_proc            DD ?,?
 ; IN   DS                 New thread block
 loader_init_thread_proc        DD ?,?
 
+; IN   GS                 Program sel
 ; IN   EBP                Stack frame
 loader_start_thread_proc       DD ?,?
 

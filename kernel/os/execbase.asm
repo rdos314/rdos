@@ -5596,7 +5596,8 @@ app_thread_started:
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_loader
+    mov gs,ds:p_prog_sel
+    mov ds,ds:p_loader   
     call fword ptr ds:loader_start_thread_proc
 ;
     pop gs
