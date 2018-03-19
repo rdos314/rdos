@@ -3908,8 +3908,9 @@ fork_child:
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
 ;
-    mov ds,ds:p_prog_sel
-    mov ax,ds:pr_debug_id
+    push gs
+    mov gs,ds:p_prog_sel
+    mov ax,gs:pr_debug_id
     or ax,ax
     jz fork_notify_ok
 ;
@@ -3929,6 +3930,8 @@ fork_child:
     pop ds
 
 fork_notify_ok:    
+    pop gs
+;
     pop ebx
     mov ds,bx
     lock or ds:p_flags,THREAD_FLAG_FORK_COMPLETED
@@ -3958,6 +3961,7 @@ fork_proc  Endp
 
 detach_user_fork_proc      Proc far
     push ds
+    push gs
     pushad
 ;
     mov bx,fs
@@ -3967,8 +3971,8 @@ detach_user_fork_proc      Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ax,ds:pr_debug_id
+    mov gs,ds:p_prog_sel
+    mov ax,gs:pr_debug_id
     or ax,ax
     jz dufNoDebug
 ;
@@ -3978,6 +3982,7 @@ detach_user_fork_proc      Proc far
     
 dufNoDebug:
     popad
+    pop gs
     pop ds
     ret
 detach_user_fork_proc      Endp
