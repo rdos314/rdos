@@ -604,7 +604,7 @@ FreeDllEvent Endp
 ;
 ;           DESCRIPTION:    New create section
 ;
-;           PARAMS:         GS      PE process selector
+;           PARAMS:         GS      Program selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3063,17 +3063,15 @@ unload_user_exe        Endp
 ;
 ;           DESCRIPTION:    Unload kernel exe
 ;
+;           PARAMETERS:     GS		Program selector
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_kernel_exe        Proc far
     push ds
     push es
-    push gs
     push eax
 ;
-    GetThread
-    mov ds,ax
-    mov gs,ds:p_prog_sel
     mov ax,gs:pr_debug_id
     or ax,ax
     jz ukDone
@@ -3083,7 +3081,6 @@ unload_kernel_exe        Proc far
 
 ukDone:
     pop eax
-    pop gs
     pop es
     pop ds
     ret

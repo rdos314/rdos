@@ -2396,6 +2396,7 @@ UnloadProgram:
 ;
     GetThread
     mov es,ax
+    mov gs,es:p_prog_sel
 ;
     mov ds,es:p_prog_sel
     EnterSection ds:pr_section

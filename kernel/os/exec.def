@@ -257,6 +257,7 @@ loader_fixup_exe_proc          DD ?,?
 ; IN   EBP                Stack frame
 loader_unload_exe_user_proc         DD ?,?
 
+; IN   GS                 Program sel
 ; IN   BX                 Module selector
 loader_unload_exe_kernel_proc       DD ?,?
 
