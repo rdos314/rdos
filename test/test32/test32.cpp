@@ -19,8 +19,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define LOAD_DLL  1
-//#define CREATE_THREAD  1
+//#define LOAD_DLL  1
+#define CREATE_THREAD  1
 
 void TestThread(void *)
 {
@@ -69,6 +69,13 @@ void main()
 
     for (i = 0; i < 100000; i++)
     {
+
+        id = fork();
+        if (id == 0)
+        {
+            RdosWaitMilli(150);
+            exit(1);
+        }
 
 #ifdef LOAD_DLL
         handle = RdosLoadDll("testlib.dll");
