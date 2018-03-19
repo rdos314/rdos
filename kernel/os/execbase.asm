@@ -2018,6 +2018,9 @@ lpForkModOk:
     mov es:p_prog_id,bx
     mov es:p_prog_sel,gs
 ;
+    mov eax,cr3
+    mov cr3,eax
+;
     InitProcess    
 ;
     mov ds,gs:pr_name_sel
