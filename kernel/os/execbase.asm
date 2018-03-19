@@ -253,6 +253,7 @@ InitProgramBlock Proc near
     mov gs:pr_event_queue,0
     InitSpinlock gs:pr_event_spinlock
     mov gs:pr_debug_wait,0
+    mov gs:pr_event_suppress,0
     ret
 InitProgramBlock  Endp
 
