@@ -2495,6 +2495,11 @@ void TDebug::FixupAfterTimeout(TDebugBreak *Bp)
     char str[80];
     unsigned char ch = 0xCC;
     TDebugThread *Thread;
+    TWaitDevice *wait;
+   
+    wait = UserSignal.WaitTimeout(5);
+    while (wait)
+        wait = UserSignal.WaitTimeout(5);
 
     Thread = CurrentThread;
     if (!Thread)
@@ -2843,8 +2848,6 @@ void TDebug::SignalNewData()
     int handle;
     char str[100];
 
-    RdosWaitMilli(5);
-
     debtype = RdosGetDebugEvent(FHandle, &ThreadId);
 
     switch (debtype)
@@ -2925,9 +2928,6 @@ void TDebug::SignalNewData()
             UserSignal.Signal();
             break;
 
-        default:
-            RdosContinueDebugEvent(FHandle, ThreadId);
-            break;
     }
 }
 
