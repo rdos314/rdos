@@ -307,8 +307,8 @@ loader_debug_free_mem_proc     DD ?,?
 ; OUT BX                  Module sel
 loader_init_dll_proc           DD ?,?
 
+; IN  GS                  Program sel
 ; IN  BX                  Module sel
-; IN  DX                  Debug sel
 ; IN  EBP                 Stack frame
 loader_fixup_dll_proc          DD ?,?
 

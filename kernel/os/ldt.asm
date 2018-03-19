@@ -303,6 +303,7 @@ al1:
     pop ds
     LeaveSection ds:pr_ldt_section
     mov ds,di
+    and bl,NOT 7
 ;
     pop di
     pop ax
@@ -500,6 +501,7 @@ free_ldt    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
+    and bl,NOT 7
 ;       
     EnterSection ds:pr_ldt_section
     mov es,ds:pr_ldt_data_sel

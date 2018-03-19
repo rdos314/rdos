@@ -14,7 +14,7 @@
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
 ;
-; You should have received a copy of the GNU General Public License
+; You should save received a copy of the GNU General Public License
 ; along with this program; if not, write to the Free Software
 ; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ;
@@ -2073,6 +2073,7 @@ FreeImportedDlls    Endp
 ;           DESCRIPTION:    Fixup DLL
 ;
 ;           PARAMETERS:     BX          Module sel
+;                           GS          Program sel
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2086,9 +2087,6 @@ fixup_dll       PROC far
     call LoadImportedDlls
     call Preload
 ;
-    GetThread
-    mov gs,ax
-    mov gs,gs:p_prog_sel
     mov dx,gs:pr_debug_id
     or dx,dx
     jz fdNodeb

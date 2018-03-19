@@ -3166,22 +3166,12 @@ load_dll        Proc  near
 ;
     GetThread
     mov es,ax
-    mov ax,es:p_loader
-    or ax,ax
-    mov gs,ax
-    jz ldllFail
-;
-    call fword ptr gs:loader_init_dll_proc
+    mov gs,es:p_prog_sel
+    mov es,es:p_loader
+    call fword ptr es:loader_init_dll_proc
     jc ldllFail
 ;
-    push ebx
-    movzx ebx,es:p_prog_id
-    GetProgramSel
-    mov es,ax
-    mov dx,es:pr_debug_id
-    pop ebx
     mov es,bx
-;
     movzx ebx,bx
     ModuleLoaded
 ;
@@ -3194,7 +3184,8 @@ load_dll        Proc  near
 ;
     push ebx
     mov ebx,es
-    call fword ptr gs:loader_fixup_dll_proc
+    mov es,gs:pr_loader
+    call fword ptr es:loader_fixup_dll_proc
     pop ebx
     clc
     jmp ldllDone
