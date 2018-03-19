@@ -284,6 +284,7 @@ loader_start_thread_proc       DD ?,?
 ; IN   EBP                Stack frame
 loader_free_thread_user_proc   DD ?,?
 
+; IN   GS                 Program sel
 loader_free_thread_kernel_proc DD ?,?
 
 ; IN   ES                 Thread

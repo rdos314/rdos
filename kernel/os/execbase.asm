@@ -5705,6 +5705,7 @@ create_app_thread       Endp
 terminate_app_thread_kernel:
     GetThread
     mov es,ax
+    mov gs,es:p_prog_sel
     mov es,es:p_loader
     call fword ptr es:loader_free_thread_kernel_proc
 ;

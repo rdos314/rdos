@@ -3766,12 +3766,11 @@ free_thread_user     Endp
 ;
 ;           DESCRIPTION:    Free thread, kernel part
 ;
+;           PARAMETERS:     GS        Program sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread_kernel     Proc far
-    GetThread
-    mov ds,ax
-    mov gs,ds:p_prog_sel
     mov dx,gs:pr_debug_id
     or dx,dx
     jz ftkNoDebug
