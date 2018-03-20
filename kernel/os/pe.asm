@@ -303,75 +303,6 @@ CreateProcessEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateAttachProcessEvent
-;
-;           DESCRIPTION:    Create attach process debug event
-;
-;           PARAMETERS:     BX          Program #
-;
-;           RETURNS:        DS          Lib sel
-;                           ES          Event
-;                           GS          Program sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateAttachProcessEvent Proc near
-    push eax
-    push ebx
-    push di
-;
-    mov eax,SIZE create_process_event_struc
-    mov di,SIZE debug_event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:debug_event_size,ax
-    mov es:debug_event_code,EVENT_CREATE_PROCESS
-;
-    movzx ebx,bx
-    mov es:[di].cpeProcess,ebx
-;
-    GetProgramSel
-    mov gs,eax
-;
-    mov ds,gs:pr_process_arr
-    movzx ebx,ds:pf_thread_arr
-    mov es:[di].cpeThread,eax       
-;
-    movzx ebx,gs:pr_module_arr
-    mov es:[di].cpeHandle,ebx
-    ModuleIdToSel
-    mov ds,ebx
-    movzx ebx,ds:mod_c_file_handle
-    mov es:[di].cpeFile,ebx
-;
-    mov eax,ds:mod_base
-    mov es:[di].cpeImageBase,eax
-    mov eax,ds:mod_size
-    mov es:[di].cpeImageSize,eax
-;
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov eax,ds:lib_objects
-    mov eax,es:[eax].o_va
-    pop es
-    mov es:[di].cpeObjectRva,eax
-;       
-    mov es:[di].cpeFsLinear,0
-    mov es:[di].cpeStartCs,flat_code_sel
-    mov eax,ds:lib_org_eip
-    mov es:[di].cpeStartEip,eax
-;
-    pop di
-    pop ebx
-    pop eax
-    ret
-CreateAttachProcessEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           AttachExceptionEvent
 ;
 ;           DESCRIPTION:    Attach exception event
@@ -5367,8 +5298,8 @@ stop_debug   Endp
 ;
 ;           DESCRIPTION:    Attach to debugger thread
 ;
-;           PARAMETERS:     BX      Debugged program #
-;                           DX      Debug module ID
+;           PARAMETERS:     BX      Debugged process ID
+;                           DX      Debugger process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5379,11 +5310,6 @@ attach_thread:
     mov ax,250
     WaitMilliSec
 ;
-    call CreateAttachProcessEvent
-    call SendAttachEvent
-;
-    call AttachExceptionEvent
-    call SendAttachEvent
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5392,8 +5318,8 @@ attach_thread:
 ;
 ;           DESCRIPTION:    Attach debugger
 ;
-;           PARAMETERS:     BX      Debugged program #
-;                           DX      Debug module ID
+;           PARAMETERS:     BX      Debugged process ID
+;                           DX      Debugger process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

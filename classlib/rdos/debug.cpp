@@ -2953,6 +2953,8 @@ int TDebug::AttachRunning(const char *FileName)
     const char *pname;
     const char *pptr;
     int ok;
+    int ProcessCount;
+    unsigned short int ProcessArr[10];
 
     sptr = FileName;
     Name = FileName;
@@ -2998,6 +3000,16 @@ int TDebug::AttachRunning(const char *FileName)
 
                 sptr++;
                 pptr++;
+
+            }
+
+            if (ok)
+            {
+                ProcessCount = RdosGetProgramProcesses(p, ProcessArr, 10);
+                if (ProcessCount)
+                    pid = ProcessArr[0];
+                else
+                    ok = FALSE;
             }
         }
     }
@@ -3026,9 +3038,7 @@ void TDebug::Execute()
         
     RdosWaitMilli(250);
 
-//    FHandle = AttachRunning(FProgram.GetData());
-
-    FHandle = 0;
+    FHandle = AttachRunning(FProgram.GetData());
 
     if (FHandle)
     {
