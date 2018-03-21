@@ -2300,8 +2300,8 @@ start_programs    Endp
 ;
 ;       DESCRIPTION:    Attach debugger to running thread
 ;
-;       PARAMETERS:     BX          Program ID
-;                       DX          Debug module handle
+;       PARAMETERS:     BX          Debugged process ID
+;                       DX          Debugger process ID
 ;
 ;       RETURN VALUE:   AX          Thread ID
 ;
@@ -2315,31 +2315,22 @@ attach_debugger   Proc far
     push ebx
     push ecx
 ;
+    int 3
     push ebx
-    movzx ebx,dx
-    ModuleIdToSel
+    movzx ebx,bx
+    ProcessIdToSel
+    mov fs,ebx
     pop ebx
     jc atdDone
-;    
-    GetProgramSel
-    jc atdDone
 ;
-    mov gs,eax
-    mov cx,gs:pr_module_count
-    or cx,cx
-    stc
-    jz atdDone
-;
-    mov cx,gs:pr_process_count
-    or cx,cx
-    stc
-    jz atdDone
-;
+    push fs
+    mov gs,fs:pf_program_sel
     mov fs,gs:pr_loader
     call fword ptr fs:loader_attach_debug_proc
+    pop fs
 ;
-    mov gs,gs:pr_process_arr
-    mov ax,gs:pf_thread_arr
+    mov ax,fs:pf_thread_arr
+    clc
 
 atdDone:
     pop ecx

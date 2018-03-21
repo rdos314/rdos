@@ -354,8 +354,8 @@ loader_add_gate_proc         DD ?,?
 ; IN   BX                 Program ID
 loader_stop_debug_proc       DD ?,?
 
-; IN   BX                 Program #
-; IN   DX                 Debug program ID
+; IN   BX                 Debugged process ID
+; IN   DX                 Debugger process ID
 loader_attach_debug_proc     DD ?,?
 
 ; OUT  Child:  EAX = 0

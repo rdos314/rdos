@@ -2951,12 +2951,6 @@
     parm [ebx] [edi] [ecx] \
     value [eax];
 
-#pragma aux RdosAttachDebugger = \
-    CallGate_attach_debugger  \
-    ValidateEax \
-    parm [ebx] [edx] \
-    value [eax];
-
 // ReadResource here
 // ReadBinaryResource here
 

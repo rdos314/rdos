@@ -55,77 +55,7 @@ MAX_SECTIONS EQU 32768
 code    SEGMENT byte public 'CODE'
     
     assume cs:code
-                                            
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SendAttachEvent
-;
-;           DESCRIPTION:    Sent attach event to debugger
-;
-;           PARAMETERS:     ES          Event
-;                           GS          Program sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendAttachEvent Proc near
-    push ds
-    push eax
-    push bx
-;
-    RequestSpinlock ds:pr_event_spinlock
-;
-    mov ax,ds:pr_event_queue
-    or ax,ax
-    je saeEmpty
-;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:debug_event_prev
-    mov ds:debug_event_prev,es
-    mov ds,si
-    mov ds:debug_event_next,es
-    mov es:debug_event_next,ax
-    mov es:debug_event_prev,si
-    pop si
-    pop ds
-    jmp saeInsDone
-
-saeEmpty:
-    mov es:debug_event_next,es
-    mov es:debug_event_prev,es
-
-saeInsDone:
-    mov ds:pr_event_queue,es
-    xor ax,ax
-    mov es,ax
-    ReleaseSpinlock ds:pr_event_spinlock
-;
-    push es
-
-saeSignalLoop:
-    mov ax,ds:pr_debug_wait
-    or ax,ax
-    jnz saeSignalDo
-;
-    mov ax,10
-    WaitMilliSec
-    jmp saeSignalLoop
-
-saeSignalDo:
-    mov es,ax
-    SignalWait
-    pop es    
-    WaitForSignal
-
-saeDone:
-    pop bx
-    pop eax
-    pop ds
-    ret
-SendAttachEvent Endp
-                      
+                                                                  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5298,7 +5228,7 @@ stop_debug   Endp
 ;
 ;           DESCRIPTION:    Attach to debugger thread
 ;
-;           PARAMETERS:     BX      Debugged process ID
+;           PARAMETERS:     GS      Debugged program sel
 ;                           DX      Debugger process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5307,9 +5237,13 @@ attach_name DB 'Debugger Attach', 0
 
 attach_thread:
     int 3
-    mov ax,250
-    WaitMilliSec
+    mov gs:pr_debug_id,dx
 ;
+    call CreateProcessEvent
+    SendDebugEvent
+;
+    int 3
+    
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5318,7 +5252,7 @@ attach_thread:
 ;
 ;           DESCRIPTION:    Attach debugger
 ;
-;           PARAMETERS:     BX      Debugged process ID
+;           PARAMETERS:     GS      Debugged program sel
 ;                           DX      Debugger process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

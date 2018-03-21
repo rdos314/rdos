@@ -905,8 +905,8 @@ SpawnExe        MACRO
                                         ENDM
 
 
-; IN  BX        Program ID
-; IN  DX        Debug module ID
+; IN  BX        Debugged process ID
+; IN  DX        Debugger process ID
 ; OUT AX        Thread ID
 AttachDebugger        MACRO
         UserGate attach_debugger_nr
