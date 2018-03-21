@@ -138,6 +138,7 @@ lib_mod             module_struc <>
 
 lib_header          DD ?
 lib_objects         DD ?
+lib_object_rva      DD ?
 lib_file_pos        DD ?
 lib_local_handle    DW ?
 lib_org_eip         DD ?

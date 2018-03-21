@@ -233,9 +233,9 @@ CreateProcessEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AttachExceptionEvent
+;           NAME:           CreateAttachException
 ;
-;           DESCRIPTION:    Attach exception event
+;           DESCRIPTION:    Create attach exception event
 ;
 ;           PARAMETERS:     GS          Program sel
 ;
@@ -243,10 +243,18 @@ CreateProcessEvent Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AttachExceptionEvent Proc near
-    push eax
-    push edi
+CreateAttachException Proc near
+    push ds
+    pushad
 ;
+    movzx ebx,gs:pr_process_arr
+    ProcessIdToSel
+    mov ds,ebx
+;
+    movzx ebx,ds:pf_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;    
     mov eax,SIZE exception_event_struc
     mov di,SIZE debug_event_struc
     add ax,di
@@ -261,10 +269,10 @@ AttachExceptionEvent Proc near
     mov es:[di].excEip,eax
     mov es:[di].excCs,flat_code_sel
 ;
-    pop edi
-    pop eax
+    popad
+    pop ds
     ret
-AttachExceptionEvent Endp
+CreateAttachException Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -409,12 +417,7 @@ LoadDllEvent Proc near
     mov eax,ds:mod_base
     mov es:[di].ldeImageBase,eax
 ;
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov eax,ds:lib_objects
-    mov eax,es:[eax].o_va
-    pop es
+    mov eax,ds:lib_object_rva
     mov es:[di].ldeObjectRva,eax
 ;       
     mov eax,ds:mod_size
@@ -1947,6 +1950,14 @@ fixup_dll       PROC far
     mov ecx,es:mod_size
     call LoadImportedDlls
     call Preload
+;
+    push ds
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov eax,es:lib_objects
+    mov eax,ds:[eax].o_va
+    mov es:lib_object_rva,eax
+    pop ds
 ;
     mov dx,gs:pr_debug_id
     or dx,dx
@@ -5242,6 +5253,35 @@ attach_thread:
     call CreateProcessEvent
     SendDebugEvent
 ;
+    call CreateAttachException
+    SendDebugEvent
+;
+    mov ebx,OFFSET pr_module_arr
+    movzx ecx,gs:pr_module_count
+    sub ecx,1
+    jz atModuleOk
+;
+    add ebx,2
+
+atModuleLoop:
+    push ebx
+    movzx ebx,word ptr gs:[ebx]
+    ModuleIdToSel
+    jc atModuleNext
+;
+    mov ds,ebx
+    call LoadDllEvent
+    SendDebugEvent
+
+atModuleNext:
+    pop ebx
+;
+    add ebx,2
+    loop atModuleLoop
+
+atModuleOk:
+
+
     int 3
     
             
