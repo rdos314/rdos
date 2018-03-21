@@ -2310,12 +2310,12 @@ start_programs    Endp
 attach_debugger_name  DB 'Attach Debugger',0
 
 attach_debugger   Proc far
+    push ds
     push fs
     push gs
     push ebx
     push ecx
 ;
-    int 3
     push ebx
     movzx ebx,bx
     ProcessIdToSel
@@ -2323,11 +2323,9 @@ attach_debugger   Proc far
     pop ebx
     jc atdDone
 ;
-    push fs
     mov gs,fs:pf_program_sel
-    mov fs,gs:pr_loader
-    call fword ptr fs:loader_attach_debug_proc
-    pop fs
+    mov ds,gs:pr_loader
+    call fword ptr ds:loader_attach_debug_proc
 ;
     mov ax,fs:pf_thread_arr
     clc
@@ -2337,6 +2335,7 @@ atdDone:
     pop ebx
     pop gs
     pop fs
+    pop ds
     ret
 attach_debugger   Endp
     

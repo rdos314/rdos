@@ -63,10 +63,11 @@ code    SEGMENT byte public 'CODE'
 ;
 ;           DESCRIPTION:    Pre-allocate kernel event
 ;
+;           PARAMETERS:     DS         Thread sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateKernelEvent   Proc near
-    push ds
     push es
     push eax
     push di
@@ -78,15 +79,11 @@ AllocateKernelEvent   Proc near
     sub ax,di
     mov es:debug_event_size,ax
     mov es:debug_event_code,EVENT_KERNEL
-;
-    GetThread
-    mov ds,ax
     mov ds:p_debug_event,es
 ;
     pop di
     pop eax 
     pop es
-    pop ds   
     ret
 AllocateKernelEvent   Endp
                       
@@ -315,8 +312,7 @@ TerminateProcessEvent Endp
 ;
 ;           DESCRIPTION:    Create thread debug event
 ;
-;           PARAMETERS:     DS          Lib
-;                           FS          TIB
+;           PARAMETERS:     DS          Thread
 ;                           EDX         EIP
 ;
 ;           RETURNS:        ES          Event
@@ -324,13 +320,9 @@ TerminateProcessEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateThreadEvent Proc near
-    push ds
     push eax
     push ebx
     push di
-;
-    GetThread
-    mov ds,eax
 ;
     mov eax,SIZE create_thread_event_struc
     mov di,SIZE debug_event_struc
@@ -351,7 +343,6 @@ CreateThreadEvent Proc near
     pop di
     pop ebx
     pop eax
-    pop ds
     ret
 CreateThreadEvent Endp
                       
@@ -2933,7 +2924,7 @@ unload_user_exe        Endp
 ;
 ;           DESCRIPTION:    Unload kernel exe
 ;
-;           PARAMETERS:     GS		Program selector
+;           PARAMETERS:     GS          Program selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3538,6 +3529,9 @@ start_thread    PROC far
     mov ax,gs:pr_debug_id
     or ax,ax
     jz start_thread_notify
+;
+    GetThread
+    mov ds,ax
 ;
     call AllocateKernelEvent
     call CreateThreadEvent
@@ -5239,7 +5233,8 @@ stop_debug   Endp
 ;
 ;           DESCRIPTION:    Attach to debugger thread
 ;
-;           PARAMETERS:     GS      Debugged program sel
+;           PARAMETERS:     FS      Debugged process sel
+;                           GS      Debugged program sel
 ;                           DX      Debugger process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5247,7 +5242,6 @@ stop_debug   Endp
 attach_name DB 'Debugger Attach', 0
 
 attach_thread:
-    int 3
     mov gs:pr_debug_id,dx
 ;
     call CreateProcessEvent
@@ -5280,9 +5274,48 @@ atModuleNext:
     loop atModuleLoop
 
 atModuleOk:
+    movzx ecx,fs:pf_thread_count
+    or ecx,ecx
+    jz atThreadOk
+;
+    mov ebx,OFFSET pf_thread_arr
+;
+    push ebx
+    movzx ebx,word ptr fs:[ebx]
+    ThreadToSel
+    jc atThreadFirstOk
+;
+    mov ds,ebx
+    call AllocateKernelEvent
 
+atThreadFirstOk:
+    pop ebx
+;
+    sub ecx,1
+    jz atThreadOk
+;
+    add ebx,2
 
-    int 3
+atThreadLoop:
+    push ebx
+    movzx ebx,word ptr fs:[ebx]
+    ThreadToSel
+    jc atThreadNext
+;
+    xor edx,edx
+    mov ds,ebx
+    call AllocateKernelEvent
+    call CreateThreadEvent
+    SendDebugEvent
+
+atThreadNext:
+    pop ebx
+;
+    add ebx,2
+    loop atThreadLoop
+
+atThreadOk:
+    TerminateThread
     
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5292,7 +5325,8 @@ atModuleOk:
 ;
 ;           DESCRIPTION:    Attach debugger
 ;
-;           PARAMETERS:     GS      Debugged program sel
+;           PARAMETERS:     FS      Debugged process sel
+;                           GS      Debugged program sel
 ;                           DX      Debugger process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
