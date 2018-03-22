@@ -1462,38 +1462,38 @@ SuspendAndSignalThread     MACRO
         UserGate suspend_and_signal_thread_nr
                                                 ENDM
 
-;  IN  AX   Program ID
+;  IN  AX   Process ID
 ;  IN  BX   Wait handle
 ;  IN  ECX  Signalled ID
 AddWaitForDebugEvent MACRO
         UserGate add_wait_for_debug_event_nr
                                                 ENDM
 
-;  IN  BX   Program ID
+;  IN  BX   Process ID
 ;  OUT AX   Thread ID
 ;  OUT BL   Event type  
 GetDebugEvent MACRO
         UserGate get_debug_event_nr
                                                 ENDM
 
-;  IN  BX       Program ID
+;  IN  BX       Process ID
 ;  IN  ES:EDI   Event buffer
 GetDebugEventData MACRO
         UserGate get_debug_event_data_nr
                                                 ENDM
 
-;  IN  BX       Program ID
+;  IN  BX       Process ID
 ClearDebugEvent MACRO
         UserGate clear_debug_event_nr
                                                 ENDM
 
-;  IN  BX       Program ID
+;  IN  BX       Process ID
 ;  IN  EAX      Thread ID
 ContinueDebugEvent MACRO
         UserGate continue_debug_event_nr
                                                 ENDM
 
-;  IN  BX       Program ID
+;  IN  BX       Process ID
 AbortDebug MACRO
         UserGate abort_debug_nr
                                                 ENDM

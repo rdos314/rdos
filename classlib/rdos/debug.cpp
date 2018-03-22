@@ -2343,6 +2343,7 @@ TDebugBreak *TDebug::PrepareToRun()
 ##########################################################################*/
 TDebugBreak *TDebug::DoTrace()
 {
+    int tries;
     TDebugBreak *bp = 0;
 
     if ((CurrentThread->Cs & 0x3) == 0x3)
@@ -2353,8 +2354,9 @@ TDebugBreak *TDebug::DoTrace()
     }
     else
     {
-        while (RdosGetDebugThread() != CurrentThread->ThreadID)
-            RdosDebugNext();
+        if (RdosGetDebugThread())
+            for (tries = 0; (RdosGetDebugThread() != CurrentThread->ThreadID) && tries < 100; tries++) 
+                RdosDebugNext();
         RdosDebugTrace();
     }
     return bp;
@@ -2373,6 +2375,7 @@ TDebugBreak *TDebug::DoTrace()
 ##########################################################################*/
 TDebugBreak *TDebug::DoGo()
 {
+    int tries;
     TDebugBreak *bp = 0;
     TDebugThread *thread = ThreadList;
 
@@ -2385,8 +2388,10 @@ TDebugBreak *TDebug::DoGo()
     }
     else
     {
-        while (RdosGetDebugThread() != CurrentThread->ThreadID)
-            RdosDebugNext();
+        if (RdosGetDebugThread())
+            for (tries = 0; (RdosGetDebugThread() != CurrentThread->ThreadID) && tries < 100; tries++) 
+                RdosDebugNext();
+
         CurrentThread->ActivateBreaks(HwBreakList, WatchList);
         RdosDebugRun();
     }

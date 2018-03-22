@@ -4473,7 +4473,7 @@ continue_debug_event  Endp
 ;
 ;           DESCRIPTION:    Abort debugging
 ;
-;       PARAMETERS:         BX          Program ID
+;       PARAMETERS:         BX          Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4482,17 +4482,67 @@ abort_debug_name  DB 'Abort Debug',0
 abort_debug  Proc far
     push ds
     push es
+    push fs
+    push gs
     pushad
 ;    
     movzx ebx,bx
-    GetProgramSel
+    ProcessIdToSel
     jc adDone
 ;
+    mov fs,ebx
+    mov ax,fs:pf_program_sel
     mov ds,eax
+    mov gs,eax
     mov ds:pr_debug_id,0
+;
+    mov bx,ds:pr_curr_event
+    or bx,bx
+    jz adLoop
+;
+    mov es,bx   
+    FreeMem
+    mov ds:pr_curr_event,0
+
+adLoop:
+    RequestSpinlock ds:pr_event_spinlock
+    mov ax,ds:pr_event_queue
+    or ax,ax
+    jz adLeaveDone
+;       
+    mov es,ax
+    mov ax,es:debug_event_prev
+    cmp ax,ds:pr_event_queue
+    push ds
+    mov ds:pr_event_queue,ax
+    mov si,es:debug_event_next
+    mov ds,ax
+    mov ds:debug_event_next,si
+    mov ds,si
+    mov ds:debug_event_prev,ax
+    pop ds
+    jne adRemoved
+;
+    mov ds:pr_event_queue,0
+
+adRemoved:
+    ReleaseSpinlock ds:pr_event_spinlock
+;
+    FreeMem
+    jmp adLoop
+
+adLeaveDone:
+    ReleaseSpinlock ds:pr_event_spinlock
+;
+    mov ds:pr_debug_wait,0
 
 adDone:
+    mov ds,ds:pr_loader
+    call fword ptr ds:loader_stop_debug_proc
+;
     popad
+    pop gs
+    pop fs
     pop es
     pop ds
     ret

@@ -94,15 +94,14 @@ AllocateKernelEvent   Endp
 ;
 ;           DESCRIPTION:    Free pre-allocated kernel event
 ;
+;           PARAMETERS:     DS     Thread sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeKernelEvent   Proc near
-    push ds
     push es
     push eax
 ;
-    GetThread
-    mov ds,ax
     xor ax,ax
     xchg ax,ds:p_debug_event
     mov es,ax
@@ -110,7 +109,6 @@ FreeKernelEvent   Proc near
 ;
     pop eax 
     pop es
-    pop ds   
     ret
 FreeKernelEvent   Endp
                       
@@ -3587,16 +3585,14 @@ start_thread    Endp
 free_thread_user     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ax,ds:pr_debug_id
+    mov gs,ds:p_prog_sel
+    mov ax,gs:pr_debug_id
     or ax,ax
     jz ftuDebugOk
 ;
     call FreeKernelEvent
 
 ftuDebugOk:
-    GetThread
-    mov ds,ax
     mov dx,ds:p_proc_id
     mov ax,1
 
@@ -5168,7 +5164,8 @@ kernel_event   Endp
 ;
 ;           DESCRIPTION:    Stop debugging
 ;
-;           PARAMETERS:     BX      Program ID
+;           PARAMETERS:     FS      Debugged process sel
+;                           GS      Debugged program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5177,49 +5174,28 @@ stop_debug  Proc far
     push es
     pushad
 ;
-    movzx ebx,bx
-    GetProgramSel
-    jc sdDone
+    movzx ecx,fs:pf_thread_count
+    or ecx,ecx
+    jz sdThreadOk
 ;
-    mov ds,ax
-    mov bx,ds:pr_curr_event
-    mov es,bx   
-    FreeMem
-    mov ds:pr_curr_event,0
+    mov ebx,OFFSET pf_thread_arr
 
-sdLoop:
-    RequestSpinlock ds:pr_event_spinlock
-    mov ax,ds:pr_event_queue
-    or ax,ax
-    jz sdLeaveDone
-;       
-    mov es,ax
-    mov ax,es:debug_event_prev
-    cmp ax,ds:pr_event_queue
-    push ds
-    mov ds:pr_event_queue,ax
-    mov si,es:debug_event_next
-    mov ds,ax
-    mov ds:debug_event_next,si
-    mov ds,si
-    mov ds:debug_event_prev,ax
-    pop ds
-    jne sdRemoved
+sdThreadLoop:
+    push ebx
+    movzx ebx,word ptr fs:[ebx]
+    ThreadToSel
+    jc sdThreadNext
 ;
-    mov ds:pr_event_queue,0
+    mov ds,ebx
+    call FreeKernelEvent
 
-sdRemoved:
-    ReleaseSpinlock ds:pr_event_spinlock
+sdThreadNext:
+    pop ebx
 ;
-    FreeMem
-    jmp sdLoop
+    add ebx,2
+    loop sdThreadLoop
 
-sdLeaveDone:
-    ReleaseSpinlock ds:pr_event_spinlock
-;
-    mov ds:pr_debug_wait,0
-
-sdDone:
+sdThreadOk:
     popad
     pop es
     pop ds
