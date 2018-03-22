@@ -1396,41 +1396,37 @@ void TWdSocketServer::ReqProgLoad()
             str =  GetFullPathName(name, ".exe");
     }
 
-    if (str.GetSize())
+    if (str.GetSize() == 0)
     {
-        argstr = name + strlen(name) + 1;
-        FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
-        FDebug->Owner = this;
-        FDebug->OnMsg = ::OnMsg;
+        str = name;
+        str += ".exe";
+    }
 
-        RdosWaitMilli(500);
-        FDebug->WaitForLoad(5000);
+    argstr = name + strlen(name) + 1;
+    FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
+    FDebug->Owner = this;
+    FDebug->OnMsg = ::OnMsg;
 
-        FMainThread = FDebug->GetMainThread();
-        FCurrentThread = FDebug->GetCurrentThread();
-        FMainModule = FDebug->GetMainModule();
+    RdosWaitMilli(500);
+    FDebug->WaitForLoad(5000);
 
-        if (FMainThread && FMainModule)
-        {
-            PutDword(0);
-            PutDword(FMainThread->ThreadID);
-            PutDword(FMainModule->Handle);
-            PutByte(0x10);
-        }
-        else
-        {
-            PutDword(MSG_LOAD_FAIL);
-            PutDword(0);
-            PutDword(0);
-            PutByte(0);
-        }
+    FMainThread = FDebug->GetMainThread();
+    FCurrentThread = FDebug->GetCurrentThread();
+    FMainModule = FDebug->GetMainModule();
+
+    if (FMainThread && FMainModule)
+    {
+        PutDword(0);
+        PutDword(FMainThread->ThreadID);
+        PutDword(FMainModule->Handle);
+        PutByte(0x10);
     }
     else
     {
         PutDword(MSG_LOAD_FAIL);
+        PutDword(0); 
         PutDword(0);
-        PutDword(0);
-        PutByte(0);
+        PutByte(0);     
     }
 }
 
