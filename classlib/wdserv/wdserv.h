@@ -43,9 +43,12 @@ friend class TWdSupplService;
 
 public:
     TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TTcpSocket *Socket);
-        ~TWdSocketServer();
+    ~TWdSocketServer();
 
     void AddSuppl(TWdSupplService *service);
+
+    void LogMsg(const char *msg);
+    void (*OnMsg)(TWdSocketServer *wd, const char *msg);
 
 protected:
     char GetByte();
@@ -61,7 +64,7 @@ protected:
     void PutString(const char *str);
     void PutData(void *ptr, int size);
 
-        TDebug *GetDebug();
+    TDebug *GetDebug();
 
     TString CheckFileExt(const char *path, const char *ext);
     TString CheckFileExt(const char *path, const char *name, const char *ext);

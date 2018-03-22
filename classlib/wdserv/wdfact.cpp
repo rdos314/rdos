@@ -39,6 +39,22 @@
 
 /*##########################################################################
 #
+#   Name       : OnMsg
+#
+#   Purpose....: Notification of message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void OnMsg(TWdSocketServer *serv, const char *msg)
+{
+    ((TWdSocketServerFactory *)(serv->Owner))->LogMsg(msg);
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServerFactory::TWdSocketServerFactory
 #
 #   Purpose....: Socket server factory constructor
@@ -48,11 +64,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TWdSocketServerFactory::TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *LogFile)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize),
-  FLogFile(LogFile)
+TWdSocketServerFactory::TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+  : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
     FSupplList = 0;
+    OnMsg = 0;
 }
 
 /*##########################################################################
@@ -77,6 +93,23 @@ TWdSocketServerFactory::~TWdSocketServerFactory()
         FSupplList = fact;
     }
 }        
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServerFactory::LogMsg
+#
+#   Purpose....: Log message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServerFactory::LogMsg(const char *msg)
+{
+    if (OnMsg)
+        (*OnMsg)(this, msg);
+}
 
 /*##########################################################################
 #
@@ -138,8 +171,10 @@ TWdSupplFactory *TWdSocketServerFactory::GetSuppl(const char *name)
 ##########################################################################*/
 TSocketServer *TWdSocketServerFactory::Create(TTcpSocket *Socket)
 {
-        TWdSocketServer *server;
-        server = new TWdSocketServer(this, "WD", 0x7000, Socket);
+    TWdSocketServer *server;
+    server = new TWdSocketServer(this, "WD", 0x7000, Socket);
+    server->OnMsg = ::OnMsg;
+    server->Owner = this;
 
-        return server;
+    return server;
 }

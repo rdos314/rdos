@@ -934,11 +934,10 @@ TDebugWatch::TDebugWatch(int sel, long offset, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, const char *LogFile)
+TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
  : FProgram(Program),
    FParam(Param),
    FStartDir(StartDir),
-   FLogFile(LogFile, 0),
    FSection("DebugSect")
 {
     ThreadList = 0;
@@ -956,6 +955,8 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     
     FWaitLoad = TRUE;
     FDone = FALSE;
+
+    OnMsg = 0;
     
     Start("Debug device", 0x4000);
 }
@@ -1046,32 +1047,15 @@ void TDebug::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TDebug::LogMsg(const char *Msg)
 {
-    char timestr[128];
     TString str(Msg);
-    unsigned long msb, lsb;
-    int year, month, day;
-    int hour, min, sec;
-    int ms, us;
 
     str += "\r\n";
 
     printf(str.GetData());
 
-    if (FLogFile.IsOpen())
+    if (OnMsg)
     {
-        RdosGetTime(&msb, &lsb);
-        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-        RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us); 
-
-        sprintf(timestr, "%4d-%02d-%02d %02d.%02d.%02d,%03d %03d ", 
-                                year, month, day,
-                                hour, min, sec,
-                                ms, us);
-        str = timestr;
-        str += Msg;
-        str += "\r\n";        
-        
-        FLogFile.Write(str.GetData());
+        (*OnMsg)(this, Msg);
     }
 }
 

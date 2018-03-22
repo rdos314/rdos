@@ -31,7 +31,6 @@
 #include "thread.h"
 #include "str.h"
 #include "sigdev.h"
-#include "file.h"
 #include "rdos.h"
 
 #define DEBUG_MEMORY_MODEL_FLAT     1
@@ -220,7 +219,7 @@ public:
 class TDebug : public TWaitDevice
 {
 public:
-    TDebug(const char *Program, const char *Param, const char *StartDir, const char *LogFile);
+    TDebug(const char *Program, const char *Param, const char *StartDir);
     ~TDebug();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
@@ -277,6 +276,8 @@ public:
     int GetMemoryModel();
 
     void LogMsg(const char *Msg);
+
+    void (*OnMsg)(TDebug *Deb, const char *Msg);
 
 protected:
     virtual void SignalNewData();
@@ -341,8 +342,6 @@ protected:
 
     int FConfigChange;
     int FMemoryModel;
-    
-    TFile FLogFile;
 };
 
 #endif

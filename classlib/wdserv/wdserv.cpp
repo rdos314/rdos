@@ -112,6 +112,23 @@ public:
         struct x86_xmm  xmm;
 };
 
+
+/*##########################################################################
+#
+#   Name       : OnMsg
+#
+#   Purpose....: Notification of message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void OnMsg(TDebug *deb, const char *msg)
+{
+    ((TWdSocketServer *)(deb->Owner))->LogMsg(msg);
+}
+
 /*##########################################################################
 #
 #   Name       : x86_mad_registers::Init
@@ -291,11 +308,13 @@ void x86_mad_registers::Write(TDebugThread *t)
 TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TTcpSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
-         FFactory = fact;
-         FSupplList = 0;
-         FDebug = 0;
-         FIs19 = FALSE;
-         FIs20 = FALSE;
+    FFactory = fact;
+    FSupplList = 0;
+    FDebug = 0;
+    FIs19 = FALSE;
+    FIs20 = FALSE;
+
+    OnMsg = 0;
 }
 
 /*##########################################################################
@@ -320,6 +339,23 @@ TWdSocketServer::~TWdSocketServer()
         FSupplList = service;
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::LogMsg
+#
+#   Purpose....: Log message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::LogMsg(const char *msg)
+{
+    if (OnMsg)
+        (*OnMsg)(this, msg);
+}        
 
 /*##########################################################################
 #
@@ -1363,7 +1399,9 @@ void TWdSocketServer::ReqProgLoad()
     if (str.GetSize())
     {
         argstr = name + strlen(name) + 1;
-        FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData(), FFactory->FLogFile.GetData());
+        FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
+        FDebug->Owner = this;
+        FDebug->OnMsg = ::OnMsg;
 
         RdosWaitMilli(500);
         FDebug->WaitForLoad(5000);

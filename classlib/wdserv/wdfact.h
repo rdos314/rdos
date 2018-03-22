@@ -36,20 +36,21 @@ class TWdSupplFactory;
 class TWdSocketServerFactory : public TSocketServerFactory
 {
 public:
-        TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *LogFile);
-        ~TWdSocketServerFactory();
+    TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TWdSocketServerFactory();
 
-        void AddSuppl(TWdSupplFactory *SupplFactory);
+    void AddSuppl(TWdSupplFactory *SupplFactory);
     TWdSupplFactory *GetSuppl(const char *name);
     
-        virtual TSocketServer *Create(TTcpSocket *Socket);
+    virtual TSocketServer *Create(TTcpSocket *Socket);
+    void LogMsg(const char *msg);
 
-        TString FLogFile;
+    void (*OnMsg)(TWdSocketServerFactory *wdf, const char *msg);
 
 protected:
-        void Init();
+    void Init();
 
-        TWdSupplFactory *FSupplList;
+    TWdSupplFactory *FSupplList;
 };
 
 #endif

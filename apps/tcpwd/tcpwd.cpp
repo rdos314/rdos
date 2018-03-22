@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "rdos.h"
 #include "wdfact.h"
@@ -36,20 +37,49 @@
 #include "wdcap.h"
 #include "wdasync.h"
 
+char LogFile[256];
+TFile *File = 0;
+
+static void OnMsg(TWdSocketServerFactory *fact, const char *msg)
+{
+    char timestr[128];
+    unsigned long msb, lsb;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+    TString str;
+
+    RdosGetTime(&msb, &lsb);
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us); 
+
+    sprintf(timestr, "%4d-%02d-%02d %02d.%02d.%02d,%03d %03d ", 
+                            year, month, day,
+                            hour, min, sec,
+                            ms, us);
+    str = timestr;
+    str += msg;
+    str += "\r\n";        
+
+    File->Write(str.GetData(), str.GetSize());
+}
+
 int main(int argc, char **argv)
 {
-    char LogFile[256];
-
     LogFile[0] = 0;
     
     if (argc > 1)
     {
         strcpy(LogFile, argv[1]);
         strlwr(LogFile);
+        File = new TFile(LogFile, 0);
     }
 
     TWdSupplFactory *suppl;
-    TWdSocketServerFactory fact(0xDEB, 16, 0x7000, LogFile);
+    TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+
+    if (File)
+        fact.OnMsg = OnMsg;
 
     suppl = new TWdFileFactory(&fact);
     suppl = new TWdFileInfoFactory(&fact);
