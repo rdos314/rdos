@@ -852,6 +852,10 @@
 #define usergate_is_process_running 0x000002A0
 #define usergate_get_process_handle 0x000002A1
 
+#define usergate_start_debugger 0x000002A2
+#define usergate_stop_debugger 0x000002A3
+#define usergate_kick_debugger 0x000002A4
+
 
 
 #ifdef __FLAT__
@@ -1709,6 +1713,10 @@
 #define CallGate_is_process_running 0x55 0x67 0x9a 160 2 0 0 3 0 0x5d
 #define CallGate_get_process_handle 0x55 0x67 0x9a 161 2 0 0 3 0 0x5d
 
+#define CallGate_start_debugger 0x55 0x67 0x9a 162 2 0 0 3 0 0x5d
+#define CallGate_stop_debugger 0x55 0x67 0x9a 163 2 0 0 3 0 0x5d
+#define CallGate_kick_debugger 0x55 0x67 0x9a 164 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2563,5 +2571,9 @@
 #define CallGate_get_free_ldt 0x3e 0x67 0x9a 159 2 0 0 3 0
 #define CallGate_is_process_running 0x3e 0x67 0x9a 160 2 0 0 3 0
 #define CallGate_get_process_handle 0x3e 0x67 0x9a 161 2 0 0 3 0
+
+#define CallGate_start_debugger 0x3e 0x67 0x9a 162 2 0 0 3 0
+#define CallGate_stop_debugger 0x3e 0x67 0x9a 163 2 0 0 3 0
+#define CallGate_kick_debugger 0x3e 0x67 0x9a 164 2 0 0 3 0
 
 #endif

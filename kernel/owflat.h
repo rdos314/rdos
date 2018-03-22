@@ -3257,6 +3257,16 @@
 #pragma aux RdosStopWatchdog = \
     CallGate_stop_watchdog;
 
+#pragma aux RdosStartDebugger = \
+    CallGate_start_debugger \
+    parm [eax];
+
+#pragma aux RdosKickDebugger = \
+    CallGate_kick_debugger;
+
+#pragma aux RdosStopDebugger = \
+    CallGate_stop_debugger;
+
 #pragma aux RdosStartNetCapture = \
     CallGate_start_net_capture \
     parm [ebx];

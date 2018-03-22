@@ -3316,6 +3316,19 @@ StopWatchdog      MACRO
 GetWatchdogTics      MACRO
         UserGate get_watchdog_tics_nr
                                                 ENDM
+
+;   IN  EAX     Timeout in milli seconds
+StartDebugger      MACRO
+        UserGate start_debugger_nr
+                                                ENDM
+
+StopDebugger      MACRO
+        UserGate stop_debugger_nr
+                                                ENDM
+
+KickDebugger      MACRO
+        UserGate kick_debugger_nr
+                                                ENDM
                                                 
 ;       IN  BX          File handle
 StartNetCapture      MACRO

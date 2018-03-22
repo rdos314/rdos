@@ -47,10 +47,14 @@ fault_sector_seg ENDS
 
 data    SEGMENT byte public 'DATA'
 
-wd_tics         DD ?
+wd_tics             DD ?
+
+debug_tics          DD ?
+debug_timeout       DD ?,?
+debug_active        DB ?
 
 fault_disc          DB ?
-fault_start_sector      DD ?
+fault_start_sector  DD ?
 fault_sectors       DD ?
 
 data    ENDS
@@ -60,6 +64,41 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckDebugger
+;
+;           DESCRIPTION:    Check debugger
+;
+;           RETURNS:        NC       Debugger active and ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDebugger Proc near
+    push ds
+    push eax
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:debug_active
+    or al,al
+    stc
+    jz cdDone
+;
+    GetSystemTime
+    sub eax,ds:debug_timeout
+    sbb edx,ds:debug_timeout+4
+    cmc
+
+cdDone:
+    pop edx
+    pop eax
+    pop ds
+    ret
+CheckDebugger Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -233,6 +272,9 @@ kick_watchdog   Proc far
     GetDebugThreadSel
     or ax,ax
     jz kw_kick
+;
+    call CheckDebugger
+    jnc kw_kick
 ;
     mov bp,ax
     mov bx,SEG data
@@ -494,6 +536,94 @@ get_watchdog_tics   Proc far
     retf32
 get_watchdog_tics   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartDebugger
+;
+;           DESCRIPTION:    Start debugger
+;
+;       PARAMETERS:     EAX      Timeout in milliseconds 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_debugger_name DB 'Start Debugger', 0
+
+start_debugger   Proc far
+    push es
+    pushad
+;   
+    mov bx,SEG data
+    mov es,bx
+    mov edx,1193
+    mul edx
+    mov es:debug_tics,eax
+;       
+    GetSystemTime
+    add eax,es:debug_tics
+    adc edx,0
+    mov es:debug_timeout,eax
+    mov es:debug_timeout+4,edx
+    mov es:debug_active,1
+;
+    popad
+    pop es      
+    retf32
+start_debugger   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           KickDebugger
+;
+;           DESCRIPTION:    Kick debugger
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+kick_debugger_name DB 'Kick Debugger', 0
+
+kick_debugger   Proc far
+    push es
+    pushad
+;   
+    mov bx,SEG data
+    mov es,bx
+;       
+    GetSystemTime
+    add eax,es:debug_tics
+    adc edx,0
+    mov es:debug_timeout,eax
+    mov es:debug_timeout+4,edx
+;
+    popad
+    pop es      
+    retf32
+kick_debugger   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StopDebugger
+;
+;           DESCRIPTION:    Stop debugger
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_debugger_name DB 'Stop Debugger', 0
+
+stop_debugger   Proc far
+    push es
+    push ebx
+;   
+    mov bx,SEG data
+    mov es,bx
+    mov es:debug_active,0
+;
+    pop ebx
+    pop es      
+    retf32
+stop_debugger   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -771,6 +901,7 @@ init    Proc far
     mov es,bx
     mov es:wd_tics,0
     mov es:fault_sectors,0
+    mov es:debug_active,0
 ;
     mov eax,1024
     mov bx,fault_sector_sel
@@ -802,6 +933,24 @@ init    Proc far
     mov edi,OFFSET get_watchdog_tics_name
     xor dx,dx
     mov ax,get_watchdog_tics_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET start_debugger
+    mov edi,OFFSET start_debugger_name
+    xor dx,dx
+    mov ax,start_debugger_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET stop_debugger
+    mov edi,OFFSET stop_debugger_name
+    xor dx,dx
+    mov ax,stop_debugger_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET kick_debugger
+    mov edi,OFFSET kick_debugger_name
+    xor dx,dx
+    mov ax,kick_debugger_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET define_fault_save

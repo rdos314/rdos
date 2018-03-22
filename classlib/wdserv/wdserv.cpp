@@ -2313,10 +2313,13 @@ void TWdSocketServer::HandleSocket()
 
     FRunning = TRUE;
 
+    RdosStartDebugger(10000);
+
     while (FSocket->IsOpen() && FRunning)
     {
         if (FSocket->WaitForData(10000))
         {
+            RdosKickDebugger();
 
             FInSize = 0;
             if (FSocket->Read((char *)&FInSize, 2) == 2)
@@ -2354,4 +2357,6 @@ void TWdSocketServer::HandleSocket()
         delete FDebug;
 
     FDebug = 0;
+
+    RdosStopDebugger();
 }

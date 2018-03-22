@@ -820,6 +820,10 @@ void RDOSAPI RdosStartWatchdog(int timeout);
 void RDOSAPI RdosKickWatchdog();
 void RDOSAPI RdosStopWatchdog();
 
+void RDOSAPI RdosStartDebugger(int timeout);
+void RDOSAPI RdosKickDebugger();
+void RDOSAPI RdosStopDebugger();
+
 void RDOSAPI RdosStartNetCapture(int FileHandle);
 void RDOSAPI RdosStopNetCapture();
 
