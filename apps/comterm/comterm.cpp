@@ -28,6 +28,7 @@ int main(int argc, char **argv)
     int State;
     int VirtKey;
     int ScanCode;
+    char str[10];
 
     switch (argc)
     {
@@ -49,7 +50,7 @@ int main(int argc, char **argv)
 
     if (port && baud)
     {
-        RdosWriteString("\r\n");
+        printf("\r\n");
         
         Serial = new TSerialDevice(port, baud, 'N', 8, 1);
 
@@ -58,7 +59,9 @@ int main(int argc, char **argv)
             while (Serial->WaitForChar(100))
             {
                 ch = Serial->Read();
-                RdosWriteChar(ch);
+                str[0] = ch;
+                str[1] = 0;
+                printf(str);
             }
 
             if (Keyboard.Poll())
