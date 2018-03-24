@@ -1938,7 +1938,7 @@ fixup_dll       PROC far
 ;
     mov ecx,es:mod_size
     call LoadImportedDlls
-    call Preload
+;    call Preload
 ;
     push ds
     mov ax,flat_data_sel
@@ -2855,7 +2855,7 @@ fixup_exe Proc far
 
 feNoPreDebug:
     call LoadImportedDlls
-    call Preload
+;    call Preload
 ;
     mov dx,gs:pr_debug_id
     or dx,dx
