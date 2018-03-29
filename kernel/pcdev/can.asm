@@ -136,7 +136,8 @@ can_send_pend           DD ?
 can_send_used           DD ?
 can_send_arr            DB 16 * 32 DUP(?)
 
-can_rec_pend            DD ?
+can_rec_insert          DB ?
+can_rec_remove          DB ?
 can_rec_arr             DB 32 * 32 DUP(?)
 
 can_id_hook_arr         DD 15 * 4 DUP(?)
@@ -267,16 +268,15 @@ ReadRxMsg  Proc near
     call WaitForIf2
 
 rmRetry:
-    mov eax,ds:can_rec_pend
-    not eax
-    or eax,eax
-    jz rmDone
+    movzx bx,ds:can_rec_insert
+    mov al,bl
+    inc al
+    and al,1Fh
+    cmp al,ds:can_rec_remove
+    je rmDone
 ;
-    bsf ebx,eax
-    lock bts ds:can_rec_pend,ebx
-    jc rmRetry 
-
-rmGet:            
+    mov ds:can_rec_insert,al
+;
     shl bx,5
     add bx,OFFSET can_rec_arr
     mov ds:[bx].cm_msg,dx
@@ -839,7 +839,6 @@ StartSend  Endp
 ;
 ;   PARAMETERS:     ES      Can sel
 ;                   DS:SI   Message struc
-;                   EDX     Message mask
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -853,8 +852,8 @@ HandleReceive   Proc near
     add di,OFFSET can_id_hook_arr
     mov ax,ds:[di].ih_sel
     or ax,ax
-    jz hrClear    
-      
+    jz hrDone
+;      
     push ds
     push es 
     push ebx     
@@ -879,11 +878,7 @@ HandleReceive   Proc near
     pop es
     pop ds
 
-hrClear:    
-    mov eax,edx
-    not eax
-    lock and ds:can_rec_pend,eax
-;
+hrDone:    
     pop di
     pop eax
     ret
@@ -928,39 +923,30 @@ ctNotError:
     xor ax,ax
     xchg ax,ds:can_reset
     or ax,ax
-    jz ctResetDone
+    jz ctRecRetry
 ;
     EnterSection ds:can_send_section
+    mov ds:can_rec_insert,0
+    mov ds:can_rec_remove,0
     call ResetDevice
     LeaveSection ds:can_send_section
-        
-ctResetDone: 
-    mov eax,ds:can_rec_pend
-    or eax,eax
-    jz ctTx
 
 ctRecRetry:
-    mov si,OFFSET can_rec_arr
-    mov bx,1
-    mov cx,20h
-    mov edx,1
+    mov bl,ds:can_rec_remove
 
 ctRecLoop:
-    mov eax,ds:can_rec_pend
-    test eax,edx
-    jz ctRecNext
+    cmp bl,ds:can_rec_insert
+    jz ctTx
 ;
+    movzx si,bl
+    shl si,5
+    add si,OFFSET can_rec_arr
     call HandleReceive    
-
-ctRecNext:    
-    inc bx
-    add si,32
-    shl edx,1
-    loop ctRecLoop
-;    
-    mov eax,ds:can_rec_pend
-    or eax,eax
-    jnz ctRecRetry
+;
+    inc bl
+    and bl,1Fh
+    mov ds:can_rec_remove,bl
+    jmp ctRecLoop
 
 ctTx:
     EnterSection ds:can_send_section
@@ -995,9 +981,9 @@ ctSendNext:
 ctSendOk:     
     LeaveSection ds:can_send_section
 ;    
-    mov eax,ds:can_rec_pend
-    or eax,eax
-    jnz ctRecRetry
+    mov bl,ds:can_rec_remove
+    cmp bl,ds:can_rec_insert
+    jne ctRecRetry
 ;
     jmp ctLoop
 
@@ -1721,7 +1707,8 @@ init    PROC far
     mov ds:can_send_used,0
     mov ds:can_send_clear,0
     mov ds:can_send_pend,0
-    mov ds:can_rec_pend,0
+    mov ds:can_rec_insert,0
+    mov ds:can_rec_remove,0
 ;
     mov di,OFFSET can_id_hook_arr
     mov cx,4 * 15

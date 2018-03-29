@@ -1318,7 +1318,11 @@ int TSerialDevice::WaitForChar(long Timeout)
 ##########################################################################*/
 int TSerialDevice::Poll()
 {
-    return WaitForChar(25);
+    if (RdosGetComRecCount(FHandle))
+        return TRUE;
+    else
+        return FALSE;
+//    return WaitForChar(25);
 }
 
 /*##########################################################################

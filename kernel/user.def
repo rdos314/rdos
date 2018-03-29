@@ -856,4 +856,6 @@ start_debugger_nr                = 674
 stop_debugger_nr                 = 675
 kick_debugger_nr                 = 676
 
+get_com_rec_count_nr             = 677
+
 usergate_entries                 = 700

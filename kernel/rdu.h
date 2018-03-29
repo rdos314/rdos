@@ -856,6 +856,8 @@
 #define usergate_stop_debugger 0x000002A3
 #define usergate_kick_debugger 0x000002A4
 
+#define usergate_get_com_rec_count 0x000002A5
+
 
 
 #ifdef __FLAT__
@@ -1717,6 +1719,8 @@
 #define CallGate_stop_debugger 0x55 0x67 0x9a 163 2 0 0 3 0 0x5d
 #define CallGate_kick_debugger 0x55 0x67 0x9a 164 2 0 0 3 0 0x5d
 
+#define CallGate_get_com_rec_count 0x55 0x67 0x9a 165 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2575,5 +2579,7 @@
 #define CallGate_start_debugger 0x3e 0x67 0x9a 162 2 0 0 3 0
 #define CallGate_stop_debugger 0x3e 0x67 0x9a 163 2 0 0 3 0
 #define CallGate_kick_debugger 0x3e 0x67 0x9a 164 2 0 0 3 0
+
+#define CallGate_get_com_rec_count 0x3e 0x67 0x9a 165 2 0 0 3 0
 
 #endif

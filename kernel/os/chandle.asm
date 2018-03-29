@@ -579,6 +579,12 @@ ohWrOnly:
     mov ax,IO_WRITE
 
 ohAccessOk:
+    test cx,O_BINARY
+    jz ohTextOk
+;
+    or ax,IO_BINARY
+
+ohTextOk:
     test cx,O_APPEND
     jz ohAppendOk
 ;
@@ -900,6 +906,11 @@ read_handle     Proc near
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    test si,IO_BINARY
+    jnz rhBinary
+;
+
+rhBinary:
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1
@@ -988,11 +999,15 @@ wt07  DW OFFSET write_dummy
 wt08  DW OFFSET write_dummy
 wt09  DW OFFSET write_dummy
 
+txt_cr_lf  DB 0dh, 0ah
+
 write_handle     Proc near
     push ds
     push ebx
+    push ecx
     push edx
     push esi
+    push edi
     push ebp
 ;
     GetThread
@@ -1045,11 +1060,104 @@ write_handle     Proc near
     mov edx,eax
 
 whPosOk:
+    test si,IO_BINARY
+    jnz whBinary
+;
+    push ecx
+    push edi
+;
+    or ecx,ecx
+    clc
+    jz whTextOk
+;
+    mov esi,edi
+
+whTextLoop:
+    mov al,es:[esi]
+    cmp al,0ah
+    jne whTextNext
+;
+    cmp esi,edi
+    jz whTextAddCrLf
+;
+    mov al,es:[esi-1]
+    cmp al,0dh
+    je whTextNext
+
+whTextAddCrLf:
+    mov eax,esi
+    sub eax,edi
+    or eax,eax
+;
+    push eax
+    push ebx
+    push ecx
+    push edi
+    push ebp
+    jz whTextBeforeOk
+;
+    push ebx
+    mov ecx,eax
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].write_tab
+    pop ebx
+
+whTextBeforeOk:
+    push es
+    mov ecx,cs
+    mov es,ecx
+    mov edi,OFFSET txt_cr_lf
+    mov ecx,2
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].write_tab
+    pop es
 ;
+    pop ebp
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+;
+    add edi,eax
+    sub ecx,1
+    clc
+    jz whTextOk
+;
+    inc edi
+    mov esi,edi
+    jmp whTextLoop
+    
+whTextNext:
+    inc esi
+    sub ecx,1
+    jnz whTextLoop
+;
+    mov ecx,esi
+    sub ecx,edi
+    clc
+    jz whTextOk
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].write_tab
+    
+whTextOk:
+    pop edi
+    pop eax
+    jmp whWriteOk
+
+whBinary:
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].write_tab
+
+whWriteOk:
     pop bx
     pop ds
     jc whFail
@@ -1062,8 +1170,10 @@ whFail:
 
 whDone:
     pop ebp
+    pop edi
     pop esi
     pop edx
+    pop ecx
     pop ebx
     pop ds    
     ret

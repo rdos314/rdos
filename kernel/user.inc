@@ -2620,6 +2620,12 @@ GetComSendSpace       MACRO
         UserGate get_com_send_space_nr
                                                 ENDM
 
+;   IN  BX      Port handle
+;   OUT EAX     Chars in buffer
+GetComRecCount       MACRO
+        UserGate get_com_rec_count_nr
+                                                ENDM
+
 ;       IN  BX          port handle
 ;   OUT NC      ON
 ;   OUT CY      OFF

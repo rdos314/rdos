@@ -57,6 +57,10 @@ void main()
     int diff_small;
     int diff_phys;
 
+    handle = open("test.txt", O_CREAT | O_TEXT | O_RDWR);
+    write(handle, "\ntest\n123\n4", 11);
+
+
     gdt_base = RdosGetFreeGdt();
     ldt_base = RdosGetFreeLdt();
     handlec_base = RdosGetFreeHandles();

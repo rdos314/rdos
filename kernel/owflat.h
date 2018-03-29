@@ -963,6 +963,12 @@
     parm [ebx]  \
     value [eax];
 
+#pragma aux RdosGetComRecCount = \
+    CallGate_get_com_rec_count  \
+    ValidateEax \
+    parm [ebx]  \
+    value [eax];
+
 #pragma aux RdosGetSendBufferSpace = \
     CallGate_get_com_send_space  \
     ValidateEax \

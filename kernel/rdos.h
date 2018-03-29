@@ -382,6 +382,7 @@ int RDOSAPI RdosGetReceiveBufferSpace(int Handle);
 int RDOSAPI RdosGetSendBufferSpace(int Handle);
 void RDOSAPI RdosWaitForSendCompletedCom(int Handle);
 void RDOSAPI RdosResetCom(int Handle);
+int RDOSAPI RdosGetComRecCount(int Handle);
 
 int RDOSAPI RdosGetMaxPrinters();
 int RDOSAPI RdosOpenPrinter(char ID);

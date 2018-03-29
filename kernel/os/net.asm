@@ -1319,7 +1319,7 @@ register_driver_done:
     mov si,OFFSET NetThread
     mov cx,stack0_size
 ;    mov ax,20
-    mov ax,2
+    mov ax,3
     CreateThread
 ;
     pop esi
