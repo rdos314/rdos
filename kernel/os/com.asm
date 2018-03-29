@@ -534,6 +534,41 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetComRecCount
+;
+;           DESCRIPTION:    Get bytes in receive buffer
+;
+;           PARAMETERS:     BX      Com handle
+;
+;           RETURNS:        EAX     Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_com_rec_count_name DB 'Get Com Received Count',0
+
+get_com_rec_count       PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc get_com_rec_done
+;
+    mov ds,[ebx].port_sel
+    movzx eax,ds:rec_count
+    clc
+
+get_com_rec_done:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+get_com_rec_count Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           ResetCom
 ;
 ;           DESCRIPTION:    Reset com
@@ -1584,6 +1619,12 @@ init    Proc far
     mov edi,OFFSET flush_com_name
     xor dx,dx
     mov ax,flush_com_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_com_rec_count
+    mov edi,OFFSET get_com_rec_count_name
+    xor dx,dx
+    mov ax,get_com_rec_count_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET reset_com
