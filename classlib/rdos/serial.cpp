@@ -1291,15 +1291,11 @@ int TSerialDevice::WaitForChar(long Timeout)
 
     if (FWait && FHandle)
     {
-        for (;;)
-        {
-            wd = FWait->WaitTimeout(Timeout);
-            if (wd == this)
-                return TRUE;
-
-            if (wd == 0)
-                return FALSE;
-        }        
+        wd = FWait->WaitTimeout(Timeout);
+        if (wd == this)
+            return TRUE;
+        else
+            return Poll();
     }
 
     return FALSE;

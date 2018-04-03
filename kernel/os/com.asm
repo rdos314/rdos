@@ -548,7 +548,6 @@ get_com_rec_count_name DB 'Get Com Received Count',0
 
 get_com_rec_count       PROC far
     push ds
-    push ax
     push ebx
 ;
     mov ax,SERIAL_HANDLE
@@ -561,7 +560,6 @@ get_com_rec_count       PROC far
 
 get_com_rec_done:
     pop ebx
-    pop ax
     pop ds
     retf32
 get_com_rec_count Endp
