@@ -1451,7 +1451,8 @@ update_conn_add:
 ;
     LeaveSection ds:udp_conn_section
 ;
-    mov ax,ds:udp_wait
+    xor ax,ax
+    xchg ax,ds:udp_wait
     or ax,ax
     jz update_conn_done
 ;
@@ -2246,7 +2247,8 @@ ulcFound:
     mov es:[di],dx        
     LeaveSection ds:udp_listen_section
 ;
-    mov ax,ds:udp_listen_wait_obj
+    xor ax,ax
+    xchg ax,ds:udp_listen_wait_obj
     or ax,ax
     jz ulcDone
 ;

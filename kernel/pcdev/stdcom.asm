@@ -320,13 +320,13 @@ io_rec_no_wrap:
     mov ds:rec_tail,bx
     ReleaseSpinlock ds:com_spinlock
 ;
-    mov bx,ds:avail_obj
+    xor bx,bx
+    xchg bx,ds:avail_obj
     or bx,bx
     jz io_rec_done
 ;
     mov es,bx
     SignalWait
-    mov ds:avail_obj,0
     jmp io_rec_done
     
 io_rec_exit:
@@ -638,13 +638,13 @@ mem_rec_no_wrap:
     mov ds:rec_tail,bx
     ReleaseSpinlock ds:com_spinlock
 ;
-    mov bx,ds:avail_obj
+    xor bx,bx
+    xchg bx,ds:avail_obj
     or bx,bx
     jz mem_rec_done
 ;
     mov es,bx
     SignalWait
-    mov ds:avail_obj,0
     jmp mem_rec_done
     
 mem_rec_exit:

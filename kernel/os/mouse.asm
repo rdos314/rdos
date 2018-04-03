@@ -458,13 +458,13 @@ update_mouse    PROC far
 mouse_int_signal:
     Signal
 ;
-    mov bx,ds:c_m_avail_obj
+    xor bx,bx
+    xchg bx,ds:c_m_avail_obj
     or bx,bx
     jz update_mouse_done
 ;
     mov es,bx
     SignalWait
-    mov ds:c_m_avail_obj,0
 
 update_mouse_done:
     pop bx
@@ -521,7 +521,8 @@ set_mouse       PROC far
 set_mouse_int_signal:
     Signal
 ;
-    mov bx,ds:c_m_avail_obj
+    xor bx,bx
+    xchg bx,ds:c_m_avail_obj
     or bx,bx
     jz set_mouse_done
 ;
@@ -530,7 +531,6 @@ set_mouse_int_signal:
 ;    
     mov es,bx
     SignalWait
-    mov ds:c_m_avail_obj,0
 
 set_mouse_done:
     pop bx

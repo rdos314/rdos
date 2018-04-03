@@ -3391,13 +3391,13 @@ prSignal:
     ReleaseSpinlock ds:com_spinlock
 
 prSigRel:
-    mov bx,ds:avail_obj
+    xor bx,bx
+    xchg bx,ds:avail_obj
     or bx,bx
     jz prDone
 ;
     mov es,bx
     SignalWait
-    mov ds:avail_obj,0
     
 prDone:
     pop fs

@@ -120,8 +120,8 @@ void TProtocolAnalyser::ShowLongTime(TDateTime *time)
 *##########################################################################*/
 int TProtocolAnalyser::GetMsg()
 {
-	int LastTime;
-	int Elapsed;
+        unsigned long long LastTime;
+        unsigned long long Elapsed;
 	char ch;
 	int count;
 	char *str;
@@ -146,9 +146,9 @@ int TProtocolAnalyser::GetMsg()
 
 		if (!FTime)
 		{
-			FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
+                        FTime = new TDateTime((unsigned long long)Debug.Time);
 			FChannel = Debug.Channel;
-			LastTime = Debug.TimeLSB;
+			LastTime = Debug.Time;
 		}
 
 		ch = Debug.ch;
@@ -159,14 +159,14 @@ int TProtocolAnalyser::GetMsg()
 			return TRUE;
 		}
 
-		Elapsed = Debug.TimeLSB - LastTime;
+		Elapsed = Debug.Time - LastTime;
 		if (Elapsed > 1193 * 100)
 		{
 			FRawFile->SetPos(Pos);
 			return TRUE;
 		}
 
-		LastTime = Debug.TimeLSB;
+		LastTime = Debug.Time;
 		ch = Debug.ch;
 
 		FSize++;

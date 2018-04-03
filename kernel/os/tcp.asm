@@ -1813,14 +1813,14 @@ retrans_close:
     Signal
 
 retrans_no_writer:
-    mov bx,ds:tcp_wait  
+    xor bx,bx
+    xchg bx,ds:tcp_wait  
     or bx,bx
     jz retrans_done
 ;
     push es
     mov es,bx
     SignalWait
-    mov ds:tcp_wait,0
     pop es
     jmp retrans_done
 
@@ -1963,14 +1963,14 @@ CheckRst    Proc near
     Signal
 
 check_rst_no_writer:
-    mov bx,ds:tcp_wait  
+    xor bx,bx
+    xchg bx,ds:tcp_wait  
     or bx,bx
     jz check_rst_ok
 ;
     push es
     mov es,bx
     SignalWait
-    mov ds:tcp_wait,0
     pop es
 
 check_rst_ok:
@@ -2611,14 +2611,14 @@ process_data_wake:
     mov bx,ds:tcp_owner
     Signal
 ;
-    mov bx,ds:tcp_wait  
+    xor bx,bx
+    xchg bx,ds:tcp_wait  
     or bx,bx
     jz process_data_done
 ;
     push es
     mov es,bx
     SignalWait
-    mov ds:tcp_wait,0
     pop es
 
 process_data_done:
@@ -3399,14 +3399,14 @@ receive_listen:
     LeaveSection ds:tcp_listen_section
     pop es
 ;
-    mov bx,ds:tcp_listen_wait   
+    xor bx,bx
+    xchg bx,ds:tcp_listen_wait   
     or bx,bx
     jz receive_free
 ;
     push es
     mov es,bx
     SignalWait
-    mov ds:tcp_listen_wait,0
     pop es
     jmp receive_free
 
@@ -4006,14 +4006,14 @@ close_tcp_no_writer:
     Signal
 
 close_tcp_owner_ok:
-    mov bx,ds:tcp_wait  
+    xor bx,bx
+    xchg bx,ds:tcp_wait  
     or bx,bx
     clc
     jz close_tcp_done
 ;
     mov es,bx
     SignalWait
-    mov ds:tcp_wait,0
     clc
 
 close_tcp_done:
@@ -5756,14 +5756,14 @@ tcp_delete_timeout_do:
     Signal
 
 tcp_delete_no_writer:
-    mov bx,ds:tcp_wait  
+    xor bx,bx
+    xchg bx,ds:tcp_wait  
     or bx,bx
     jz tcp_delete_timeout_done
 ;
     push es
     mov es,bx
     SignalWait
-    mov ds:tcp_wait,0
     pop es
 
 tcp_delete_timeout_done:

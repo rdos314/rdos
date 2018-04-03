@@ -44,11 +44,11 @@
 *##########################################################################*/
 void cdecl main()
 {
-        TFile RawFile("c:\\cap\\atg.sdd");
+        TFile RawFile("rec.dat");
 
         TProtocolAnalyser analyzer(&RawFile, 0x400);
 
-        analyzer.DefineLogFile("c:\\rdos\\apps\\canshow\\atg.txt");
+        analyzer.DefineLogFile("rec.txt");
 
         for (;;)
         {
