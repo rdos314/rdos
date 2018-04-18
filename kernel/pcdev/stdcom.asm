@@ -3039,6 +3039,94 @@ InitMemPci  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FintekStealFdc
+;
+;       DESCRIPTION:    Steal FDC IRQ
+;
+;       RETURNS:        NC		Stolen
+;                           CL          IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FintekStealFdc      Proc near
+    mov al,7
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,70h
+    out 2Eh,al
+    in al,2Fh
+    or al,al
+    jz fsfFail
+;
+    mov cl,al
+    mov al,30h
+    out 2Eh,al
+    in al,2Fh
+    test al,1
+    jnz fsfFail
+;
+    clc
+    jmp fsfDone
+
+fsfFail:
+    stc
+
+fsfDone:
+    ret
+FintekStealFdc      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FintekStealEpc
+;
+;       DESCRIPTION:    Steal EPC IRQ
+;
+;       RETURNS:        NC		Stolen
+;                           CL          IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FintekStealEpc      Proc near
+    mov al,7
+    out 2Eh,al
+    mov al,3
+    out 2Fh,al
+;
+    mov al,70h
+    out 2Eh,al
+    in al,2Fh
+    or al,al
+    jz fseFail
+;
+    mov cl,al
+    mov al,30h
+    out 2Eh,al
+    in al,2Fh
+    test al,1
+    jnz fseOk
+;
+    mov al,30
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+
+fseOk:
+    clc
+    jmp fsfDone
+
+fseFail:
+    stc
+
+fseDone:
+    ret
+FintekStealEpc      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupFintekPort
 ;
 ;       DESCRIPTION:    Setup Fintek port
@@ -3079,9 +3167,25 @@ SetupFintekPort      Proc near
     test ax,si
     jz sfpAdd
 ;
-    jmp sfpFail
+    call FintekStealFdc
+    jc sfpEpc
+;
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jz sfpAdd
+
+sfpEpc:
+    call FintekStealEpc
+    jc sfpFail
+;
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jnz sfpFail
 
 sfpAdd:
+    push bx
     push cx
     or si,ax
     mov al,cl
@@ -3089,6 +3193,12 @@ sfpAdd:
     call AddIoPort
     call InitDetect
     pop cx
+    pop bx
+;
+    mov al,7
+    out 2Eh,al
+    mov al,bl
+    out 2Fh,al
 ;
     mov al,70h
     out 2Eh,al
@@ -3221,60 +3331,6 @@ SetupSio        Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-test_name DB 'Com Debug', 0
-
-test_pr:
-    mov al,87h
-    out 2Eh,al
-    out 2Eh,al
-;
-    mov al,23h
-    out 2Eh,al
-    in al,2Fh
-    cmp al,19h
-    jne test_done
-;
-    mov al,24h
-    out 2Eh,al
-    in al,2Fh
-    cmp al,34h
-    jne test_done
-;
-    mov al,20h
-    out 2Eh,al
-    in al,2Fh
-    cmp al,10h
-    jne test_done
-;
-    mov al,21h
-    out 2Eh,al
-    in al,2Fh
-    cmp al,10h
-    jne test_done
-;
-    int 3
-    call SetupFintek
-
-test_done:
-    TerminateThread
-
-;
-
-    push ds
-    push es
-    pushad
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    mov ecx,stack0_size
-    mov ax,4
-    CreateThread
-    popad
-    pop es
-    pop ds
 
     
 init_pci    Proc far
