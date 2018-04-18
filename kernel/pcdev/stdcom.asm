@@ -3039,6 +3039,178 @@ InitMemPci  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupFintekPort
+;
+;       DESCRIPTION:    Setup Fintek port
+;
+;       PARAMETERS:     BL      Index (10h..15h)
+;                       SI      Used IRQs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupFintekPort      Proc near
+    mov al,7
+    out 2Eh,al
+    mov al,bl
+    out 2Fh,al
+;
+    mov al,60h
+    out 2Eh,al
+    in al,2Fh
+    mov dh,al
+;
+    mov al,61h
+    out 2Eh,al
+    in al,2Fh
+    mov dl,al
+;    
+    mov al,30h
+    out 2Eh,al
+    in al,2Fh
+    test al,1
+    jz sfpFail
+;
+    mov al,70h
+    out 2Eh,al
+    in al,2Fh
+    mov cl,al
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jz sfpAdd
+;
+    jmp sfpFail
+
+sfpAdd:
+    push cx
+    or si,ax
+    mov al,cl
+    mov ecx,115200
+    call AddIoPort
+    call InitDetect
+    pop cx
+;
+    mov al,70h
+    out 2Eh,al
+    mov al,cl
+    out 2Fh,al
+;
+    mov al,0F0h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0F2h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0F4h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0F5h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+    clc
+    jmp sfpDone
+
+sfpFail:
+    stc
+
+sfpDone:    
+    ret
+SetupFintekPort      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupFintek
+;
+;       DESCRIPTION:    Setup Fintek controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupFintek      Proc near
+    xor si,si
+;    
+    mov bl,10h
+    call SetupFintekPort
+;    
+    mov bl,11h
+    call SetupFintekPort
+;    
+    mov bl,12h
+    call SetupFintekPort
+;    
+    mov bl,13h
+    call SetupFintekPort
+;    
+    mov bl,14h
+    call SetupFintekPort
+;    
+    mov bl,15h
+    call SetupFintekPort
+;
+    mov al,0AAh
+    out 2Eh,al
+    ret
+SetupFintek     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupSio
+;
+;       DESCRIPTION:    Setup SIO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSio      Proc near
+    mov al,87h
+    out 2Eh,al
+    out 2Eh,al
+;
+    mov al,23h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,19h
+    jne ssFail
+;
+    mov al,24h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,34h
+    jne ssFail
+;
+    mov al,20h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,10h
+    jne ssFail
+;
+    mov al,21h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,10h
+    jne ssFail
+;
+    call SetupFintek
+    clc
+    jmp ssDone
+
+ssFail:
+    stc
+
+ssDone:
+    ret
+SetupSio        Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       Init_pci
 ;
 ;       DESCRIPTION:    inits adpater
@@ -3048,6 +3220,62 @@ InitMemPci  Endp
 ;       RETURNS:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+test_name DB 'Com Debug', 0
+
+test_pr:
+    mov al,87h
+    out 2Eh,al
+    out 2Eh,al
+;
+    mov al,23h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,19h
+    jne test_done
+;
+    mov al,24h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,34h
+    jne test_done
+;
+    mov al,20h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,10h
+    jne test_done
+;
+    mov al,21h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,10h
+    jne test_done
+;
+    int 3
+    call SetupFintek
+
+test_done:
+    TerminateThread
+
+;
+
+    push ds
+    push es
+    pushad
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+    popad
+    pop es
+    pop ds
+
     
 init_pci    Proc far
     push ds
@@ -3057,6 +3285,9 @@ init_pci    Proc far
     call InitMemPci
     jnc dtdone
 ;
+    call SetupSio
+    jnc dtpci
+;    
     mov ax,25
     WaitMilliSec
 ; 

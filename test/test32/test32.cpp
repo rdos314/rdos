@@ -29,6 +29,26 @@ void TestThread(void *)
 
 void main()
 {
+    char TestMsg[] = {0x1, 0x3, 0x0, 0x0, 0x0, 0x14, 0x45, 0xC5};
+    char Response[256];
+    int Pos = 0;
+    TSerialDevice serial(1, 192000);
+
+    serial.Open();
+    serial.Enable();
+
+    for (;;)
+    {
+        serial.Write(TestMsg, 8);
+
+        while (serial.WaitForChar(250))
+        {
+            Response[Pos] = serial.Read();
+            Pos++;
+        }
+    } 
+
+
     int i;
     int handle;
     int id;
@@ -56,6 +76,8 @@ void main()
     int diff_big;
     int diff_small;
     int diff_phys;
+
+
 
     handle = open("test.txt", O_CREAT | O_TEXT | O_RDWR);
     write(handle, "\ntest\n123\n4", 11);
