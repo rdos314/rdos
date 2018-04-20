@@ -8,6 +8,7 @@
 #include "section.h"
 #include "file.h"
 #include "rdos.h"
+#include "modbus.h"
 
 #include <math.h>
 #include "bignum.h"
@@ -27,12 +28,47 @@ void TestThread(void *)
     RdosWaitMilli(140);
 }
 
+char Crc16Modbus[2];
+
+void CalcModbusCRC(const char * str, int len)
+{
+    memset(Crc16Modbus, 0, sizeof Crc16Modbus);
+
+    int crc = 0xFFFF;
+    for (int pos = 0; pos < len; pos++)
+    {
+        crc ^= (int)str[pos];          // XOR byte into least sig. byte of crc
+
+        for (int i = 8; i != 0; i--)
+        {    // Loop over each bit
+            if ((crc & 0x0001) != 0)
+            {      // If the LSB is set
+                crc >>= 1;                    // Shift right and XOR 0xA001
+                crc ^= 0xA001;
+            }
+            else                            // Else LSB is not set
+                crc >>= 1;                    // Just shift right
+        }
+    }
+
+    Crc16Modbus[0] = (char)crc;
+    Crc16Modbus[1] = (char)(crc >> 8);
+}
+
+
 void main()
 {
-    char TestMsg[] = {0x1, 0x3, 0x0, 0x0, 0x0, 0x14, 0x45, 0xC5};
+    char TestMsg[10] = {0x1, 0x3, 0x0, 0x0, 0x0, 0xA};
     char Response[256];
     int Pos = 0;
-    TSerialDevice serial(1, 192000);
+    TSerialDevice serial(1, 19200);
+    TModbus(&serial, 1);
+
+    CalcModbusCRC(TestMsg, 6);    
+    TestMsg[6] = Crc16Modbus[0];
+    TestMsg[7] = Crc16Modbus[1];
+
+// 0xC5, 0xCD
 
     serial.Open();
     serial.Enable();
@@ -40,7 +76,7 @@ void main()
     for (;;)
     {
         serial.Write(TestMsg, 8);
-
+        Pos = 0;
         while (serial.WaitForChar(250))
         {
             Response[Pos] = serial.Read();
