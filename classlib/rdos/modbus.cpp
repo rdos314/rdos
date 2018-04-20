@@ -15,7 +15,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
+# along wit this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 # The author of this program may be contacted at leif@rdos.net
@@ -63,4 +63,68 @@ TModbus::TModbus(TSerialDevice *Serial, char Address)
 ##########################################################################*/
 TModbus::~TModbus()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::CalcCrc
+#
+#   Purpose....: Calc CRC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::CalcCrc(const char *buf, int size, char crc[2])
+{
+    int lcrc = 0xFFFF;
+    int pos;
+    int i;
+
+    for (pos = 0; pos < size; pos++)
+    {
+        lcrc ^= (int)buf[pos];
+
+        for (i = 8; i != 0; i--)
+        {
+            if ((lcrc & 0x0001) != 0)
+            { 
+                lcrc >>= 1;
+                lcrc ^= 0xA001;
+            }
+            else
+                lcrc >>= 1;
+        }
+    }
+
+    crc[0] = (char)lcrc;
+    crc[1] = (char)(lcrc >> 8);
+}
+
+
+/*##########################################################################
+#
+#   Name       : TModbus::SendMsg
+#
+#   Purpose....: Send message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::SendMsg(const char *buf, int size)
+{
+    char msg[256];
+    char crc[2];
+
+    if (size < 254)
+    {
+        CalcCrc(buf, size, crc);
+        memcpy(msg, buf, size);
+        memcpy(msg+size, crc, 2);
+
+        FSerial->Write(msg, size + 2);
+    }
 }
