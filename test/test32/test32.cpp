@@ -32,7 +32,7 @@ void main()
 {
     char TestMsg[] = {0x1, 0x3, 0x0, 0x0, 0x0, 0xA};
     char Response[256];
-    int Pos = 0;
+    int size;
     TSerialDevice serial(1, 19200);
     TModbus Modbus(&serial, 1);
 
@@ -40,15 +40,7 @@ void main()
     serial.Enable();
 
     for (;;)
-    {
-        Modbus.SendMsg(TestMsg, 6);
-        Pos = 0;
-        while (serial.WaitForChar(250))
-        {
-            Response[Pos] = serial.Read();
-            Pos++;
-        }
-    } 
+        size = Modbus.SendAndReceive(TestMsg, 6, Response);
 
 
     int i;

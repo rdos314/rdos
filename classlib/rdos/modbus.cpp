@@ -105,19 +105,24 @@ void TModbus::CalcCrc(const char *buf, int size, char crc[2])
 
 /*##########################################################################
 #
-#   Name       : TModbus::SendMsg
+#   Name       : TModbus::SendAndReceive
 #
-#   Purpose....: Send message
+#   Purpose....: Send message & receive answer
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbus::SendMsg(const char *buf, int size)
+int TModbus::SendAndReceive(const char *buf, int size, char *reply)
 {
     char msg[256];
     char crc[2];
+    char ch;
+    int pos;
+    int i;
+    int len;
+    int ok = FALSE;
 
     if (size < 254)
     {
@@ -126,5 +131,119 @@ void TModbus::SendMsg(const char *buf, int size)
         memcpy(msg+size, crc, 2);
 
         FSerial->Write(msg, size + 2);
+
+        ok = FSerial->WaitForChar(500);
+        if (ok)
+        {
+            ch = FSerial->Read();
+            while (ok && ch != msg[0])
+            {
+                ok = FSerial->WaitForChar(250);
+                if (ok)
+                    ch = FSerial->Read();
+            }
+
+            pos = 0;
+
+            while (ok && pos < size + 2 && ch == msg[pos])
+            {
+                ok = FSerial->WaitForChar(250);
+                if (ok)
+                {
+                    ch = FSerial->Read();
+                    pos++;
+                }
+            }
+
+            if (ok)
+            {
+                if (pos == size + 2)
+                {
+                    pos = 0;
+
+                    while (ok && pos < size + 2 && ch == msg[pos])
+                    {
+                        ok = FSerial->WaitForChar(250);
+                        if (ok)
+                        {
+                            ch = FSerial->Read();
+                            pos++;
+                        }
+                    }
+                }
+                else
+                   for (i = 0; i < pos; i++)
+                       reply[i] = msg[i];
+            }
+        }
+
+        if (pos < 2)
+            ok = FALSE;
+
+        if (pos == size + 2)
+            ok = FALSE;
+
+        if (ok)
+        {
+            reply[pos] = ch;
+            pos++;
+        }
+
+        while (ok && pos < 3)
+        {
+            ok = FSerial->WaitForChar(250);
+            if (ok)
+            {
+                reply[pos] = FSerial->Read();
+                pos++;
+            }
+        }
+
+        switch (reply[1])
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                len = 5 + (unsigned int)reply[2];
+                break;
+
+            case 5:
+            case 6:
+            case 15:
+            case 16:
+                len = 8;
+                break;
+
+            default:
+                ok = FALSE;
+                break;
+        }
+
+        while (ok && pos < len)
+        {
+            ok = FSerial->WaitForChar(250);
+            if (ok)
+            {
+                reply[pos] = FSerial->Read();
+                pos++;
+            }
+        }
+
+        if (ok)
+        {
+            CalcCrc(reply, len - 2, crc);
+
+            if (reply[len - 2] != crc[0])
+                ok = FALSE;
+
+            if (reply[len - 1] != crc[1])
+                ok = FALSE;
+        }
     }
+
+    if (ok)
+        return len;
+    else
+        return 0;
 }

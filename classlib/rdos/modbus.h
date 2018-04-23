@@ -36,7 +36,7 @@ public:
     TModbus(TSerialDevice *Serial, char Address);
     ~TModbus();
 
-    void SendMsg(const char *buf, int size);
+    int SendAndReceive(const char *buf, int size, char *reply);
 
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
