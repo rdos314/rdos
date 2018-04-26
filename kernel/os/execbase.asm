@@ -2082,12 +2082,12 @@ load_program16 Proc far
     pop edi
     pop esi
     pop ebx
-    retf32
+    ret
 load_program16  Endp
     
 load_program32 Proc far
     call load_program
-    retf32
+    ret
 load_program32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
