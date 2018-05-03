@@ -36,13 +36,24 @@ public:
     TModbus(TSerialDevice *Serial, char Address);
     ~TModbus();
 
-    int SendAndReceive(const char *buf, int size, char *reply);
+    void EnableEcho();
+    void DisableEcho();
+
+    int ReadCoilStatus(int Coil);
+    int ReadInputStatus(int Input);
+    int ReadHoldingRegister(int Reg);
+    int ReadInputRegister(int Reg);
+    int PresetRegister(int Reg, int Val);
 
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
+    int SendAndReceive(const char *buf, int size, char *reply);
+    int Session(char FunctionCode, const char *buf, int size, char *reply);
 
     TSerialDevice *FSerial;
     char FAddress;
+    int FBigEndian;
+    int FHasEcho;
 };
 
 #endif

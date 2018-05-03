@@ -31,23 +31,59 @@ void TestThread(void *)
 
 void main()
 {
-    char TestMsg[] = {0x1, 0x3, 0x0, 0x0, 0x0, 0xA};
-    char Response[256];
     int size;
+    int val;
+    int ok;
+    int i;
+    char str[40];
     TSerialDevice serial(1, 19200);
     TModbus Modbus(&serial, 1);
 
     serial.Open();
     serial.Enable();
 
+    ok = Modbus.ReadCoilStatus(1);
+    if (ok)
+        printf("Coil ON\n");
+    else
+        printf("Coil OFF\n");
+
+    val = Modbus.ReadInputStatus(10001);
+    printf("Input: %d\n", val);
+
+    val = Modbus.ReadInputRegister(30001);
+    printf("Inupt: %d\n", val);
+
+    ok = Modbus.PresetRegister(40009, 1234);
+
     for (;;)
     {
-        size = Modbus.SendAndReceive(TestMsg, 6, Response);
-        printf("Size: %d\n", size);
+        RdosSetCursorPosition(10, 0);
+
+        for (i = 40001; i <= 40020; i++)
+        {
+            val = Modbus.ReadHoldingRegister(i);
+            sprintf(str, "Register%d: %d\r\n", i, val);
+            RdosWriteString(str);
+
+            if (i == 40001)
+            {
+                switch (val)
+                {
+                    case 1:
+                        ok = Modbus.PresetRegister(40010, 5000);
+                        ok = Modbus.PresetRegister(40008, 1);
+                        break;
+
+                    case 3:
+                        ok = Modbus.PresetRegister(40008, 2);
+                        break;
+                }
+            }
+        }
     }
 
 
-    int i;
     int handle;
     int id;
 
