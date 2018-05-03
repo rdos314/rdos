@@ -17,6 +17,7 @@
 
 #include "testlib.h"
 
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -40,7 +41,10 @@ void main()
     serial.Enable();
 
     for (;;)
+    {
         size = Modbus.SendAndReceive(TestMsg, 6, Response);
+        printf("Size: %d\n", size);
+    }
 
 
     int i;
