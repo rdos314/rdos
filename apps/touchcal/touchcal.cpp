@@ -47,8 +47,9 @@ struct TCalPoint
 {
     int DispX;
     int DispY;
-    int TouchX;
-    int TouchY;
+    int Count;
+    int SumX;
+    int SumY;
 };
 
 TSprite *MouseSprite;
@@ -56,6 +57,7 @@ int CalState = 0;
 TCalPoint CalPoints[4];
 int DispX;
 int DispY;
+int Pressed;
 
 /*##########################################################################
 #
@@ -151,12 +153,12 @@ void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
     if (CalState < 4)
     {
-        CalPoints[CalState].DispX = DispX;
-        CalPoints[CalState].DispY = DispY;
-        CalPoints[CalState].TouchX = x;
-        CalPoints[CalState].TouchY = y;
-        CalState++;
+        CalPoints[CalState].SumX += x;
+        CalPoints[CalState].SumY += y;
+        CalPoints[CalState].Count++;
     }
+
+    Pressed = TRUE;
 }
 
 /*##########################################################################
@@ -182,6 +184,7 @@ void cdecl main()
     TMouseDevice *Mouse;
     TControlThread *ControlThread;
     TWait Wait;
+    int Count;
 
     Mouse = new TMouseDevice;
     Mouse->OnMove = MouseMove;
@@ -208,42 +211,57 @@ void cdecl main()
 
     MouseBitmap = CreateMouseBitmap(vbe, 255, 255, 255);
     MouseSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
-    MouseSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
-    MouseSprite->Show();
 
     Wait.Add(Mouse);
     Wait.StartThreadHandler("IO Thread", 0x1000);
 
+    Pressed = FALSE;
+    Count = 0;
+    CalState = 0;
+
+    CalPoints[0].DispX = x / 10;
+    CalPoints[0].DispY = y / 10;
+
+    CalPoints[1].DispX = x - x / 10;
+    CalPoints[1].DispY = y / 10;
+
+    CalPoints[2].DispX = x / 10;
+    CalPoints[2].DispY = y - y / 10;
+
+    CalPoints[3].DispX = x - x / 10;
+    CalPoints[3].DispY = y - y / 10;
+
+    for (i = 0; i < 4; i++)
+    {
+        CalPoints[i].Count = 0;
+        CalPoints[i].SumX = 0;
+        CalPoints[i].SumY = 0;
+    }
+
+
     for (;;)
     {
-        switch (CalState)
+        if (Pressed && CalState < 4)
         {
-            case 0:
-                DispX = x / 5;
-                DispY = y / 5;
-                Mouse->SetPosition(x, y);
-                break;
-
-            case 1:
-                DispX = x - x / 5;
-                DispY = y / 5;
-                Mouse->SetPosition(x, y);
-                break;
-
-            case 2:
-                DispX = x / 5;
-                DispY = y - y / 5;
-                Mouse->SetPosition(x, y);
-                break;
-
-            case 3:
-                DispX = x - x / 5;
-                DispY = y - y / 5;
-                Mouse->SetPosition(x, y);
-                break;
+            CalState++;
+            if (CalState == 4)
+            {
+                if (Count < 4)
+                {
+                    Count++;
+                    CalState = 0;
+                }
+            }
         }
+
+        if (CalState < 4)
+        {
+            MouseSprite->Move(CalPoints[CalState].DispX, CalPoints[CalState].DispY);
+            MouseSprite->Show();
+        }
+
+        Pressed = FALSE;
 
         Wait.WaitForever();
     }
 }
-
