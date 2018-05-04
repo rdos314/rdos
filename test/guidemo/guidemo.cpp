@@ -335,10 +335,20 @@ void LeftUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 
 void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
+        char str[120];
+
         MouseSprite->Hide();
         MouseSprite = LeftSprite;
         MouseSprite->Move(x, y);
         MouseSprite->Show();
+
+        sprintf(str, "x = %d, y = %d", x, y);
+        KeyVideo->SetFilledStyle();
+        KeyVideo->SetDrawColor(0, 0, 0);
+        KeyVideo->DrawRect(0, KeyVideo->GetHeight() - 35, KeyVideo->GetWidth(), KeyVideo->GetHeight());
+        KeyVideo->SetDrawColor(255, 255, 255);
+        KeyVideo->DrawString(0, KeyVideo->GetHeight() - 35, str);
+
 }
 
 void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
@@ -354,6 +364,15 @@ void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 
 void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
+        char str[120];
+
+        sprintf(str, "x = %d, y = %d", x, y);
+        KeyVideo->SetFilledStyle();
+        KeyVideo->SetDrawColor(0, 0, 0);
+        KeyVideo->DrawRect(0, KeyVideo->GetHeight() - 35, KeyVideo->GetWidth(), KeyVideo->GetHeight());
+        KeyVideo->SetDrawColor(255, 255, 255);
+        KeyVideo->DrawString(0, KeyVideo->GetHeight() - 35, str);
+
         MouseSprite->Hide();
         MouseSprite = RightSprite;
         MouseSprite->Move(x, y);
@@ -404,19 +423,19 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-        for (i = 0x10; i < 0x1000; i++)
-        {
-            if (RdosQueryVideoMode(i, &bits, &x, &y))
-                printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
-        }
+//        for (i = 0x10; i < 0x1000; i++)
+//        {
+//            if (RdosQueryVideoMode(i, &bits, &x, &y))
+//                printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
+//        }
 
-        RdosWaitMilli(2500);
+//        RdosWaitMilli(2500);
 
-        vbe = new TVideoGraphicDevice(24, 1366, 768);
+//        vbe = new TVideoGraphicDevice(24, 1266, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //      vbe = new TVideoGraphicDevice(24, 1280, 1024);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
-//      vbe = new TVideoGraphicDevice(24, 800, 600);
+      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 //        vbe = new TVideoGraphicDevice(24, 1920, 1080);
 
@@ -477,7 +496,8 @@ void cdecl main()
         sprintf(str, "Resolution: [%dx%d]", vbe->GetWidth(), vbe->GetHeight());
         vbe->DrawString(0, 0, str);
 
-        RdosWaitMilli(5000);
+        for (;;)
+            RdosWaitMilli(5000);
 
         vbe->SetHollowStyle();
         vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
@@ -500,8 +520,7 @@ void cdecl main()
 
         vbe->SetLgopNone();
         vbe->SetDrawColor(0, 255, 255);
-//        vbe->DrawString(40, 111, "RDOS operating system");
-        vbe->DrawString(40, 111, RusStr);
+        vbe->DrawString(40, 111, "RDOS operating system");
 
         delete font;
 

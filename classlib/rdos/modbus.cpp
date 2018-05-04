@@ -45,6 +45,7 @@
 #
 ##########################################################################*/
 TModbus::TModbus(TSerialDevice *Serial, char Address)
+ : FSection("Modbus")
 {
     FSerial = Serial;
     FAddress = Address;
@@ -65,6 +66,22 @@ TModbus::TModbus(TSerialDevice *Serial, char Address)
 ##########################################################################*/
 TModbus::~TModbus()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetSerial
+#
+#   Purpose....: Get serial device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialDevice *TModbus::GetSerial()
+{
+    return FSerial;
 }
 
 /*##########################################################################
@@ -157,6 +174,8 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
     int replylen;
     int datalen;
     int ok = FALSE;
+
+    FSection.Enter();
 
     if (size < 254)
     {
@@ -265,6 +284,8 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
             }
         }
     }
+
+    FSection.Leave();
 
     if (ok)
         return datalen;

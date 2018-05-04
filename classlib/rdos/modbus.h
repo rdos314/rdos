@@ -36,6 +36,8 @@ public:
     TModbus(TSerialDevice *Serial, char Address);
     ~TModbus();
 
+    TSerialDevice *GetSerial();
+
     void EnableEcho();
     void DisableEcho();
 
@@ -50,6 +52,7 @@ protected:
     int SendAndReceive(const char *buf, int size, char *reply);
     int Session(char FunctionCode, const char *buf, int size, char *reply);
 
+    TSection FSection;
     TSerialDevice *FSerial;
     char FAddress;
     int FBigEndian;
