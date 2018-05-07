@@ -858,4 +858,9 @@ kick_debugger_nr                 = 676
 
 get_com_rec_count_nr             = 677
 
+reset_touch_cal_nr               = 678
+set_touch_cal_dividend_nr        = 679
+set_touch_cal_x_nr               = 680
+set_touch_cal_y_nr               = 681
+
 usergate_entries                 = 700

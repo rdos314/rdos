@@ -4037,6 +4037,29 @@ HasTouch      MACRO
         UserGate has_touch_nr
                                                 ENDM
 
+ResetTouchCalibrate      MACRO
+        UserGate reset_touch_calibrate_nr
+                                                ENDM
+
+;  IN  EDX          Dividend
+SetTouchCalibrateDividend      MACRO
+        UserGate set_touch_calibrate_dividend_nr
+                                                ENDM
+
+;  IN  EDX          x offset
+;  IN  ESI          xx factor
+;  IN  EDI          xy factor
+SetTouchCalibrateX      MACRO
+        UserGate set_touch_calibrate_x_nr
+                                                ENDM
+
+;  IN  EDX          y offset
+;  IN  ESI          yx factor
+;  IN  EDI          yy factor
+SetTouchCalibrateY      MACRO
+        UserGate set_touch_calibrate_y_nr
+                                                ENDM
+
 ;;;;;;;;;;; Can modules ;;;;;;;;;;
 
 IsCanOnline      MACRO

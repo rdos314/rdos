@@ -858,6 +858,11 @@
 
 #define usergate_get_com_rec_count 0x000002A5
 
+#define usergate_reset_touch_cal 0x000002A6
+#define usergate_set_touch_cal_dividend 0x000002A7
+#define usergate_set_touch_cal_x 0x000002A8
+#define usergate_set_touch_cal_y 0x000002A9
+
 
 
 #ifdef __FLAT__
@@ -1721,6 +1726,11 @@
 
 #define CallGate_get_com_rec_count 0x55 0x67 0x9a 165 2 0 0 3 0 0x5d
 
+#define CallGate_reset_touch_cal 0x55 0x67 0x9a 166 2 0 0 3 0 0x5d
+#define CallGate_set_touch_cal_dividend 0x55 0x67 0x9a 167 2 0 0 3 0 0x5d
+#define CallGate_set_touch_cal_x 0x55 0x67 0x9a 168 2 0 0 3 0 0x5d
+#define CallGate_set_touch_cal_y 0x55 0x67 0x9a 169 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2581,5 +2591,10 @@
 #define CallGate_kick_debugger 0x3e 0x67 0x9a 164 2 0 0 3 0
 
 #define CallGate_get_com_rec_count 0x3e 0x67 0x9a 165 2 0 0 3 0
+
+#define CallGate_reset_touch_cal 0x3e 0x67 0x9a 166 2 0 0 3 0
+#define CallGate_set_touch_cal_dividend 0x3e 0x67 0x9a 167 2 0 0 3 0
+#define CallGate_set_touch_cal_x 0x3e 0x67 0x9a 168 2 0 0 3 0
+#define CallGate_set_touch_cal_y 0x3e 0x67 0x9a 169 2 0 0 3 0
 
 #endif

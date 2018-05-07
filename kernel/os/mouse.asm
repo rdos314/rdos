@@ -57,6 +57,14 @@ md_swap_y       DB ?
 md_area_x       DW ?
 md_area_y       DW ?
 
+md_div          DD ?
+md_xx           DD ?
+md_xy           DD ?
+md_xo           DD ?
+md_yx           DD ?
+md_yy           DD ?
+md_yo           DD ?
+
 data    ENDS
 
     .386p
@@ -496,6 +504,73 @@ set_mouse       PROC far
     mov ds,bx
     mov ds:md_buttons,ax
 ;
+    mov eax,ds:md_div
+    or eax,eax
+    jz set_mouse_not_cal
+;
+    int 3
+    pushad
+;
+    mov ds:md_x,cx
+    mov ds:md_y,dx
+    mov ecx,ds:md_div
+;
+    mov esi,ds:md_xo
+    xor edi,edi
+;
+    movzx edx,ds:md_x
+    imul edx,ds:md_xx
+    add esi,eax
+    adc edi,edx
+;
+    movzx edx,ds:md_y
+    imul edx,ds:md_xy
+    add eax,esi
+    adc edx,edi
+;
+    idiv ecx
+    mov ebx,eax
+;
+    test ebx,80000000h
+    jnz set_mouse_x_ok
+;
+    cmp ebx,8000h
+    jb set_mouse_x_ok
+;
+    mov bx,7FFFh
+
+set_mouse_x_ok:
+    mov esi,ds:md_yo
+    xor edi,edi
+;
+    movzx edx,ds:md_x
+    imul edx,ds:md_yx
+    add esi,eax
+    adc edi,edx
+;
+    movzx edx,ds:md_y
+    imul edx,ds:md_yy
+    add eax,esi
+    adc edx,edi
+;
+    idiv ecx
+;
+    test eax,80000000h
+    jnz set_mouse_y_ok
+;
+    cmp eax,8000h
+    jb set_mouse_x_ok
+;
+    mov ax,7FFFh
+
+set_mouse_y_ok:
+    mov ds:md_x,bx
+    mov ds:md_y,ax
+;
+    popad
+    jmp set_mouse_saved
+
+set_mouse_not_cal:
     mov ax,cx
     call RecalcX
     mov ds:md_x,ax
@@ -503,7 +578,8 @@ set_mouse       PROC far
     mov ax,dx
     call RecalcY
     mov ds:md_y,ax
-;       
+
+set_mouse_saved:       
     mov bx,ds:md_mouse_thread
 ;
     push bx
@@ -1290,6 +1366,122 @@ add_wait_done:
     pop ds
     ret
 add_wait_for_mouse      ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ResetTouchCalibrate
+;
+;           DESCRIPTION:    Reset touch calibration
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_touch_cal_name DB 'Reset Touch Calibrate',0
+
+reset_touch_cal	Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:md_div,1
+    mov ds:md_xx,1
+    mov ds:md_xy,0
+    mov ds:md_xo,0
+    mov ds:md_yx,0
+    mov ds:md_yy,1
+    mov ds:md_yo,0
+;
+    pop ax
+    pop ds
+    ret
+reset_touch_cal	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetTouchCalibrateDividend
+;
+;           DESCRIPTION:    Set touch calibration dividend
+;
+;           PARAMETERS:     EDX		Dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_touch_cal_dividend_name DB 'Set Touch Calibrate Dividend',0
+
+set_touch_cal_dividend	Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:md_div,edx
+;
+    pop ax
+    pop ds
+    ret
+set_touch_cal_dividend   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetTouchCalibrateX
+;
+;           DESCRIPTION:    Set touch calibration X factors
+;
+;           PARAMETERS:     ESI         xx factor
+;                           EDI         xy factor
+;                           EDX         x offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_touch_cal_x_name DB 'Set Touch Calibrate X',0
+
+set_touch_cal_x	Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:md_xx,esi
+    mov ds:md_xy,edi
+    mov ds:md_xo,edx
+;
+    pop ax
+    pop ds
+    ret
+set_touch_cal_x   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetTouchCalibrateY
+;
+;           DESCRIPTION:    Set touch calibration Y factors
+;
+;           PARAMETERS:     ESI         yx factor
+;                           EDI         yy factor
+;                           EDX         y offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_touch_cal_y_name DB 'Set Touch Calibrate Y',0
+
+set_touch_cal_y	Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:md_yx,esi
+    mov ds:md_yy,edi
+    mov ds:md_yo,edx
+;
+    pop ax
+    pop ds
+    ret
+set_touch_cal_y   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1390,6 +1582,13 @@ init_mouse_thread       PROC far
     mov ds:md_x,0FFFFh
     mov ds:md_y,0FFFFh
     mov ds:md_mouse_thread,0
+    mov ds:md_div,0
+    mov ds:md_xx,1
+    mov ds:md_xy,0
+    mov ds:md_xo,0
+    mov ds:md_yx,0
+    mov ds:md_yy,1
+    mov ds:md_yo,0
 ;
     mov ax,SEG code
     mov es,ax
@@ -1557,6 +1756,30 @@ init_mouse      PROC near
     mov edi,OFFSET get_right_button_release_position_name
     xor dx,dx
     mov ax,get_right_button_release_position_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET reset_touch_cal
+    mov edi,OFFSET reset_touch_cal_name
+    xor dx,dx
+    mov ax,reset_touch_cal_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_touch_cal_dividend
+    mov edi,OFFSET set_touch_cal_dividend_name
+    xor dx,dx
+    mov ax,set_touch_cal_dividend_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_touch_cal_x
+    mov edi,OFFSET set_touch_cal_x_name
+    xor dx,dx
+    mov ax,set_touch_cal_x_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_touch_cal_y
+    mov edi,OFFSET set_touch_cal_y_name
+    xor dx,dx
+    mov ax,set_touch_cal_y_nr
     RegisterBimodalUserGate
     ret
 init_mouse      ENDP

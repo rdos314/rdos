@@ -3646,6 +3646,21 @@
     CarryToBool \
     value [eax];
 
+#pragma aux RdosResetTouchCalibrate = \
+    CallGate_reset_touch_cal;
+
+#pragma aux RdosSetTouchCalibrateDividend = \
+    CallGate_set_touch_cal_dividend \
+    parm [edx];
+
+#pragma aux RdosSetTouchCalibrateX = \
+    CallGate_set_touch_cal_x \
+    parm [esi] [edi] [edx];
+
+#pragma aux RdosSetTouchCalibrateY = \
+    CallGate_set_touch_cal_y \
+    parm [esi] [edi] [edx];
+
 #pragma aux RdosCreateBigNum = \
     CallGate_create_bignum  \
     ValidateHandle \

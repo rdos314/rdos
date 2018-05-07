@@ -898,6 +898,10 @@ void RDOSAPI RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
 void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
 
 int RDOSAPI RdosHasTouch();
+void RDOSAPI RdosResetTouchCalibrate();
+void RDOSAPI RdosSetTouchCalibrateDividend(int div);
+void RDOSAPI RdosSetTouchCalibrateX(int xx, int xy, int xoffset);
+void RDOSAPI RdosSetTouchCalibrateY(int yx, int yy, int yoffset);
 
 int RDOSAPI RdosCreateBigNum();
 void RDOSAPI RdosDeleteBigNum(int handle);
