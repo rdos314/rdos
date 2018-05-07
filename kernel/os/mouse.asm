@@ -508,23 +508,24 @@ set_mouse       PROC far
     or eax,eax
     jz set_mouse_not_cal
 ;
-    int 3
     pushad
 ;
     mov ds:md_x,cx
     mov ds:md_y,dx
     mov ecx,ds:md_div
 ;
-    mov esi,ds:md_xo
-    xor edi,edi
+    mov eax,ds:md_xo
+    cdq
+    mov esi,eax
+    mov edi,edx
 ;
-    movzx edx,ds:md_x
-    imul edx,ds:md_xx
+    movzx eax,ds:md_x
+    imul ds:md_xx
     add esi,eax
     adc edi,edx
 ;
-    movzx edx,ds:md_y
-    imul edx,ds:md_xy
+    movzx eax,ds:md_y
+    imul ds:md_xy
     add eax,esi
     adc edx,edi
 ;
@@ -540,16 +541,18 @@ set_mouse       PROC far
     mov bx,7FFFh
 
 set_mouse_x_ok:
-    mov esi,ds:md_yo
-    xor edi,edi
+    mov eax,ds:md_yo
+    cdq
+    mov esi,eax
+    mov edi,edx
 ;
-    movzx edx,ds:md_x
-    imul edx,ds:md_yx
+    movzx eax,ds:md_x
+    imul ds:md_yx
     add esi,eax
     adc edi,edx
 ;
-    movzx edx,ds:md_y
-    imul edx,ds:md_yy
+    movzx eax,ds:md_y
+    imul ds:md_yy
     add eax,esi
     adc edx,edi
 ;
@@ -559,7 +562,7 @@ set_mouse_x_ok:
     jnz set_mouse_y_ok
 ;
     cmp eax,8000h
-    jb set_mouse_x_ok
+    jb set_mouse_y_ok
 ;
     mov ax,7FFFh
 

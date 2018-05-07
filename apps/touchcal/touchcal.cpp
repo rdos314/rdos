@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "touchcal.h"
 
 #include "bitdev.h"
 #include "videodev.h"
@@ -54,7 +55,7 @@ struct TCalPoint
 
 TSprite *MouseSprite;
 int CalState = 0;
-TCalPoint CalPoints[4];
+TCalPoint CalPoints[3];
 int DispX;
 int DispY;
 int Pressed;
@@ -185,6 +186,9 @@ void cdecl main()
     TControlThread *ControlThread;
     TWait Wait;
     int Count;
+    TTouchCalibration cal;
+
+    cal.Start();
 
     Mouse = new TMouseDevice;
     Mouse->OnMove = MouseMove;
@@ -219,19 +223,16 @@ void cdecl main()
     Count = 0;
     CalState = 0;
 
-    CalPoints[0].DispX = x / 10;
-    CalPoints[0].DispY = y / 10;
+    CalPoints[0].DispX = (x * 15) / 100;
+    CalPoints[0].DispY = (y * 15) / 100;
 
-    CalPoints[1].DispX = x - x / 10;
-    CalPoints[1].DispY = y / 10;
+    CalPoints[1].DispX = (x * 50) / 100;
+    CalPoints[1].DispY = (y * 85) / 100;
 
-    CalPoints[2].DispX = x / 10;
-    CalPoints[2].DispY = y - y / 10;
+    CalPoints[2].DispX = (x * 85) / 100;
+    CalPoints[2].DispY = (y * 50) / 100;
 
-    CalPoints[3].DispX = x - x / 10;
-    CalPoints[3].DispY = y - y / 10;
-
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 3; i++)
     {
         CalPoints[i].Count = 0;
         CalPoints[i].SumX = 0;
@@ -241,12 +242,19 @@ void cdecl main()
 
     for (;;)
     {
-        if (Pressed && CalState < 4)
+        if (Pressed && CalState < 3)
         {
             CalState++;
-            if (CalState == 4)
+            if (CalState == 3)
             {
-                if (Count < 4)
+                if (Count == 4)
+                {
+                    for (i = 0; i < 3; i++)
+                        cal.AddPoint(	CalPoints[i].DispX, CalPoints[i].DispY, 
+			                CalPoints[i].SumX / CalPoints[i].Count, CalPoints[i].SumY / CalPoints[i].Count);
+                    cal.Calibrate();
+                }
+                else
                 {
                     Count++;
                     CalState = 0;
@@ -254,7 +262,7 @@ void cdecl main()
             }
         }
 
-        if (CalState < 4)
+        if (CalState < 3)
         {
             MouseSprite->Move(CalPoints[CalState].DispX, CalPoints[CalState].DispY);
             MouseSprite->Show();

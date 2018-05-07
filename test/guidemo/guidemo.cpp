@@ -431,11 +431,11 @@ void cdecl main()
 
 //        RdosWaitMilli(2500);
 
-//        vbe = new TVideoGraphicDevice(24, 1266, 768);
+        vbe = new TVideoGraphicDevice(24, 1266, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //      vbe = new TVideoGraphicDevice(24, 1280, 1024);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
-      vbe = new TVideoGraphicDevice(24, 800, 600);
+//      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 //        vbe = new TVideoGraphicDevice(24, 1920, 1080);
 
@@ -495,9 +495,6 @@ void cdecl main()
         vbe->SetDrawColor(255, 127, 80);
         sprintf(str, "Resolution: [%dx%d]", vbe->GetWidth(), vbe->GetHeight());
         vbe->DrawString(0, 0, str);
-
-        for (;;)
-            RdosWaitMilli(5000);
 
         vbe->SetHollowStyle();
         vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 4, vbe->GetHeight() / 4);

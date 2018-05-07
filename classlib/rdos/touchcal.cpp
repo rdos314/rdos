@@ -159,7 +159,7 @@ void TTouchCalibration::Init()
 
         RdosSetTouchCalibrateDividend(div);
         RdosSetTouchCalibrateX(xx, xy, xo);
-        RdosSetTouchCalibrateX(yx, yy, yo);
+        RdosSetTouchCalibrateY(yx, yy, yo);
     }
     delete Ini;
 }
@@ -325,7 +325,7 @@ void TTouchCalibration::Calibrate()
 
             RdosSetTouchCalibrateDividend(div);
             RdosSetTouchCalibrateX(xx, xy, xo);
-            RdosSetTouchCalibrateX(yx, yy, yo);
+            RdosSetTouchCalibrateY(yx, yy, yo);
         }
     }
 }
