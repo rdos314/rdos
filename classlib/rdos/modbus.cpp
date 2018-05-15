@@ -784,7 +784,7 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
 
         len = Session(16, msg, 9, reply);
 
-        if (len == 6)
+        if (len == 4)
             if (memcmp(msg, &reply[2], 4) == 0)
                 return TRUE;
     }
