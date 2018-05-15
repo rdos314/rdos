@@ -486,6 +486,179 @@ int TModbus::ReadInputRegister(int Reg)
     return 0;
 }
 
+/*##########################################################################
+#
+#   Name       : TModbus::ReadCoilStatus
+#
+#   Purpose....: Read status of single coil
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadCoilStatus(int Coil, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+ 
+    if (Coil > 0)
+    {
+        temp = (short int)(Coil - 1);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(1, msg, 4, reply);
+
+        if (len > 0)
+        {
+            if (reply[3] & 1)
+                *Val = TRUE;
+            else
+                *Val = FALSE;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputStatus
+#
+#   Purpose....: Read status of single input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputStatus(int Input, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+ 
+    if (Input > 10000)
+    {
+        temp = (short int)(Input - 10001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(2, msg, 4, reply);
+
+        if (len >= 1)
+        {
+            temp = (unsigned char)reply[3];
+            *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadHoldingRegister
+#
+#   Purpose....: Read single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadHoldingRegister(int Reg, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+ 
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(3, msg, 4, reply);
+
+        if (len >= 2)
+        {
+            memcpy(&temp, &reply[3], 2);
+            if (FBigEndian)
+                temp = RdosSwapShort(temp);
+            *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputRegister
+#
+#   Purpose....: Read single input register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputRegister(int Reg, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+ 
+    if (Reg > 30000)
+    {
+        temp = (short int)(Reg - 30001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(4, msg, 4, reply);
+
+        if (len >= 2)
+        {
+            memcpy(&temp, &reply[3], 2);
+            if (FBigEndian)
+                temp = RdosSwapShort(temp);
+            *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 /*##########################################################################
 #

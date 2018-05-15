@@ -45,6 +45,12 @@ public:
     int ReadInputStatus(int Input);
     int ReadHoldingRegister(int Reg);
     int ReadInputRegister(int Reg);
+
+    int ReadCoilStatus(int Coil, int *val);
+    int ReadInputStatus(int Input, int *val);
+    int ReadHoldingRegister(int Reg, int *val);
+    int ReadInputRegister(int Reg, int *val);
+
     int PresetRegister(int Reg, int Val);
 
 protected:
