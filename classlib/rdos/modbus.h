@@ -53,6 +53,9 @@ public:
 
     int PresetRegister(int Reg, int Val);
 
+    int ReadHoldingRegisterABCD(int Reg, float *Val);
+    int PresetRegisterABCD(int Reg, float Val);
+
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
     int SendAndReceive(const char *buf, int size, char *reply);

@@ -698,3 +698,88 @@ int TModbus::PresetRegister(int Reg, int Val)
     }
     return FALSE;
 }
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadHoldingRegisterABCD
+#
+#   Purpose....: Read single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
+{
+    int len;
+    short int temp;
+    int itemp;
+    char msg[4];
+    char reply[100];
+ 
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 2;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(3, msg, 4, reply);
+
+        if (len >= 4)
+        {
+            memcpy(&itemp, &reply[3], 4);
+            if (FBigEndian)
+                itemp = RdosSwapLong(itemp);
+            memcpy(Val, &itemp, 4);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::PresetRegisterABCD
+#
+#   Purpose....: Preset single register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::PresetRegisterABCD(int Reg, float Val)
+{
+    int len;
+    short int temp;
+    int itemp;
+    char msg[4];
+    char reply[100];
+ 
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        memcpy(&itemp, &Val, 4);
+        if (FBigEndian)
+            itemp = RdosSwapLong(itemp);
+        memcpy(&msg[2], &temp, 4);
+
+        len = Session(6, msg, 6, reply);
+
+        if (len == 6)
+            if (memcmp(msg, &reply[2], 4) == 0)
+                return TRUE;
+    }
+    return FALSE;
+}
