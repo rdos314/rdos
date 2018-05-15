@@ -760,7 +760,7 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
     int len;
     short int temp;
     int itemp;
-    char msg[4];
+    char msg[9];
     char reply[100];
  
     if (Reg > 40000)
@@ -770,12 +770,19 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
             temp = RdosSwapShort(temp);
         memcpy(&msg[0], &temp, 2);
 
+        temp = 2;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        msg[4] = 4;
+
         memcpy(&itemp, &Val, 4);
         if (FBigEndian)
             itemp = RdosSwapLong(itemp);
-        memcpy(&msg[2], &temp, 4);
+        memcpy(&msg[5], &itemp, 4);
 
-        len = Session(6, msg, 6, reply);
+        len = Session(16, msg, 9, reply);
 
         if (len == 6)
             if (memcmp(msg, &reply[2], 4) == 0)
