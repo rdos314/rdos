@@ -165,15 +165,13 @@ void TModbus::CalcCrc(const char *buf, int size, char crc[2])
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::SendAndReceive(const char *buf, int size, char *reply)
+int TModbus::SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen)
 {
     char msg[256];
     char crc[2];
     char ch;
     int pos;
     int i;
-    int replylen;
-    int datalen;
     int ok = FALSE;
 
     FSection.Enter();
@@ -244,16 +242,16 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
                 case 2:
                 case 3:
                 case 4:
-                    datalen = (unsigned int)reply[2];
-                    replylen = datalen + 5;
+                    *datalen = (unsigned int)reply[2];
+                    *replylen = *datalen + 5;
                     break;
 
                 case 5:
                 case 6:
                 case 15:
                 case 16:
-                    datalen = 4;
-                    replylen = 8;
+                    *datalen = 4;
+                    *replylen = 8;
                     break;
 
                 default:
@@ -263,7 +261,7 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
 
             pos = 3;
 
-            while (ok && pos < replylen)
+            while (ok && pos < *replylen)
             {
                 ok = FSerial->WaitForChar(250);
                 if (ok)
@@ -275,12 +273,12 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
 
             if (ok)
             {
-                CalcCrc(reply, replylen - 2, crc);
+                CalcCrc(reply, *replylen - 2, crc);
   
-                if (reply[replylen - 2] != crc[0])
+                if (reply[*replylen - 2] != crc[0])
                     ok = FALSE;
 
-                if (reply[replylen - 1] != crc[1])
+                if (reply[*replylen - 1] != crc[1])
                     ok = FALSE;
             }
         }
@@ -288,10 +286,7 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
 
     FSection.Leave();
 
-    if (ok)
-        return datalen;
-    else
-        return 0;
+    return ok;
 }
 
 /*##########################################################################
@@ -308,7 +303,9 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply)
 int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
 {
     char msg[256];
-    int rlen = 0;
+    int datalen;
+    int replylen;
+    int ok = FALSE;
 
     msg[0] = FAddress;
     msg[1] = FunctionCode;
@@ -316,9 +313,13 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
     if (size < 252)
     {
         memcpy(&msg[2], buf, size);
-        rlen = SendAndReceive(msg, size + 2, reply);
+        ok = SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
     }
-    return rlen;
+    
+    if (ok)
+        return datalen;
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -806,24 +807,29 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
 int TModbus::ReqHoldingRegisters(int Reg, int Count)
 {
     int len;
-    char msg[4];
     short int temp;
+    char msg[256];
+    int datalen;
+    int ok = FALSE;
  
     if (Reg > 40000)
     {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
+        msg[0] = FAddress;
+        msg[1] = 3;
 
-        temp = Count;
+        temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
         memcpy(&msg[2], &temp, 2);
 
-        FReplySize = Session(3, msg, 4, FReplyBuf);
+        temp = Count;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[4], &temp, 2);
 
-        if (FReplySize >= 2)
+        ok = SendAndReceive(msg, 6, FReplyBuf, &datalen, &FReplySize);
+
+        if (ok && datalen >= 2)
         {
             FStartReg = Reg;
             FRegCount = Count;

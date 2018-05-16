@@ -65,7 +65,7 @@ public:
 
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
-    int SendAndReceive(const char *buf, int size, char *reply);
+    int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
     int Session(char FunctionCode, const char *buf, int size, char *reply);
 
     TSection FSection;
@@ -77,7 +77,7 @@ protected:
     int FStartReg;
     int FRegCount;
     char FReplyBuf[100];
-    char FReplySize;
+    int FReplySize;
 };
 
 #endif
