@@ -971,7 +971,7 @@ int TModbus::GetBufferedHoldingRegister(int Reg, int *Val)
     if (ok)
     {
         len = (unsigned int)FReplyBuf[2];
-        if (len != FRegCount)
+        if (len != 2 * FRegCount)
             ok = FALSE;
     }
 
@@ -1017,7 +1017,7 @@ int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
     if (ok)
     {
         len = (unsigned int)FReplyBuf[2];
-        if (len != FRegCount)
+        if (len != 2 * FRegCount)
             ok = FALSE;
     }
 
