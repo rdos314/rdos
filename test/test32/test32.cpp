@@ -42,11 +42,15 @@ void main()
     serial.Open();
     serial.Enable();
 
-    ok = Modbus.ReadCoilStatus(1);
-    if (ok)
-        printf("Coil ON\n");
-    else
-        printf("Coil OFF\n");
+    for (;;)
+    {
+        for (i = 0; i < 20; i++)
+        {
+            val = Modbus.ReadInputStatus(10001 + i);
+            printf("Input%d: %d\n", 10001 + i, val);
+        }
+        RdosWaitMilli(500);
+    }
 
     val = Modbus.ReadInputStatus(10001);
     printf("Input: %d\n", val);

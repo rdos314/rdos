@@ -51,6 +51,7 @@ TModbus::TModbus(TSerialDevice *Serial, char Address)
     FAddress = Address;
     FBigEndian = TRUE;
     FHasEcho = FALSE;
+    FReplySize = 0;
 }
 
 /*##########################################################################
@@ -789,4 +790,237 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
                 return TRUE;
     }
     return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReqHoldingRegisters
+#
+#   Purpose....: Read multiple holding registers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReqHoldingRegisters(int Reg, int Count)
+{
+    int len;
+    char msg[4];
+    short int temp;
+ 
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = Count;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        FReplySize = Session(3, msg, 4, FReplyBuf);
+
+        if (FReplySize >= 2)
+        {
+            FStartReg = Reg;
+            FRegCount = Count;
+            return TRUE;
+        }
+    }
+    FReplySize = 0;
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetReplySize
+#
+#   Purpose....: Get reply size (multiple registers)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::GetReplySize()
+{
+    return FReplySize;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetReplyBuf
+#
+#   Purpose....: Get reply buf (multiple registers)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::GetReplyBuf(char *buf)
+{
+    memcpy(buf, FReplyBuf, FReplySize);
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::SetBufferedRegisters
+#
+#   Purpose....: Set multiple registers buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
+{
+    int datalen = 0;
+    int replylen = 0;
+    int ok = FALSE;
+    char crc[2];
+
+    if (Size < 100 && Size >= 3)
+    {
+        switch (Buf[1])
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                datalen = (unsigned int)Buf[2];
+                replylen = datalen + 5;
+                break;
+
+            case 5:
+            case 6:
+            case 15:
+            case 16:
+                datalen = 4;
+                replylen = 8;
+                break;
+        }
+
+        if (replylen == Size)
+            ok = TRUE;
+
+        if (ok)
+        {
+            CalcCrc(Buf, replylen - 2, crc);
+  
+            if (Buf[replylen - 2] != crc[0])
+                ok = FALSE;
+
+            if (Buf[replylen - 1] != crc[1])
+                ok = FALSE;
+        }
+    }
+
+    if (ok)
+    {
+        FStartReg = Reg;
+        FRegCount = Count;
+        memcpy(FReplyBuf, Buf, Size);
+        FReplySize = Size;
+    }
+    else
+        FReplySize = 0;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetBufferedHoldingRegister
+#
+#   Purpose....: Read buffered holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::GetBufferedHoldingRegister(int Reg, int *Val)
+{
+    int ok = FALSE;
+    int RelReg = Reg - FStartReg;
+    int len;
+    short int temp;
+
+    if (FReplySize >= 3)
+        ok = TRUE;
+
+    if (ok)
+        if (FReplyBuf[1] != 3)
+            ok = FALSE;
+
+    if (ok)
+        if (RelReg < 0 || RelReg >= FRegCount)
+            ok = FALSE;
+
+    if (ok)
+    {
+        len = (unsigned int)FReplyBuf[2];
+        if (len != FRegCount)
+            ok = FALSE;
+    }
+
+    if (ok)
+    {
+        memcpy(&temp, &FReplyBuf[3 + 2 * RelReg], 2);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        *Val = temp;
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetBufferedHoldingRegisterABCD
+#
+#   Purpose....: Read buffered holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
+{
+    int ok = FALSE;
+    int RelReg = Reg - FStartReg;
+    int len;
+    int temp;
+
+    if (FReplySize >= 3)
+        ok = TRUE;
+
+    if (ok)
+        if (FReplyBuf[1] != 3)
+            ok = FALSE;
+
+    if (ok)
+        if (RelReg < 0 || RelReg + 1 >= FRegCount)
+            ok = FALSE;
+
+    if (ok)
+    {
+        len = (unsigned int)FReplyBuf[2];
+        if (len != FRegCount)
+            ok = FALSE;
+    }
+
+    if (ok)
+    {
+        memcpy(&temp, &FReplyBuf[3 + 2 * RelReg], 4);
+        if (FBigEndian)
+            temp = RdosSwapLong(temp);
+        memcpy(Val, &temp, 4);
+    }
+    return ok;
 }

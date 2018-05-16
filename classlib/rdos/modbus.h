@@ -56,6 +56,13 @@ public:
     int ReadHoldingRegisterABCD(int Reg, float *Val);
     int PresetRegisterABCD(int Reg, float Val);
 
+    int ReqHoldingRegisters(int Reg, int Count);
+    int GetReplySize();
+    void GetReplyBuf(char *Buf);
+    int SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size);
+    int GetBufferedHoldingRegister(int Reg, int *Val);
+    int GetBufferedHoldingRegisterABCD(int Reg, float *Val);
+
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
     int SendAndReceive(const char *buf, int size, char *reply);
@@ -66,6 +73,11 @@ protected:
     char FAddress;
     int FBigEndian;
     int FHasEcho;
+
+    int FStartReg;
+    int FRegCount;
+    char FReplyBuf[100];
+    char FReplySize;
 };
 
 #endif
