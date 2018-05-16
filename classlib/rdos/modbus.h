@@ -34,6 +34,7 @@ class TModbus
 {
 public:
     TModbus(TSerialDevice *Serial, char Address);
+    TModbus();
     ~TModbus();
 
     TSerialDevice *GetSerial();

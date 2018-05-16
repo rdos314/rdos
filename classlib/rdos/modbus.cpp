@@ -56,6 +56,27 @@ TModbus::TModbus(TSerialDevice *Serial, char Address)
 
 /*##########################################################################
 #
+#   Name       : TModbus::TModbus
+#
+#   Purpose....: Constructor for TModbus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TModbus::TModbus()
+ : FSection("Modbus")
+{
+    FSerial = 0;
+    FAddress = 0;
+    FBigEndian = TRUE;
+    FHasEcho = FALSE;
+    FReplySize = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TModbus::~TModbus
 #
 #   Purpose....: Destructor for TModbus
