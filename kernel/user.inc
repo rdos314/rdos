@@ -1999,6 +1999,19 @@ GetDiscVendorInfo     MACRO
         UserGate get_disc_vendor_info_nr
                                                 ENDM
 
+;       IN      AL              Disc #
+;       OUT     EAX             Cached sectors
+GetDiscCacheSize     MACRO
+        UserGate get_disc_cache_size_nr
+                                                ENDM
+
+
+;       OUT     EAX             Cached size
+GetFileCacheSize     MACRO
+        UserGate get_file_cache_size_nr
+                                                ENDM
+
+
 ;       OUT     AL              Drive #
 AllocateStaticDrive     MACRO
         UserGate allocate_static_drive_nr

@@ -863,4 +863,7 @@ set_touch_cal_dividend_nr        = 679
 set_touch_cal_x_nr               = 680
 set_touch_cal_y_nr               = 681
 
+get_disc_cache_size_nr           = 682
+get_file_cache_size_nr           = 683
+
 usergate_entries                 = 700

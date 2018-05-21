@@ -4629,6 +4629,50 @@ set_disc_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GET_DISC_CACHE_SIZE
+;
+;           DESCRIPTION:    Get disc cache size
+;
+;           PARAMETERS:     AL              Disc #
+;                           EAX             Cached sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_cache_size_name      DB 'Get Disc Cache Size',0
+
+get_disc_cache_size   PROC far
+    push ds
+    push ebx
+;
+    cmp al,MAX_DRIVES
+    jae get_disc_cache_size_fail
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov bx,ds:[bx].disc_def_arr
+    or bx,bx
+    jz get_disc_cache_size_fail
+;
+    mov ds,bx
+    mov eax,ds:disc_cached_sectors
+    clc
+    jmp get_disc_cache_size_done
+
+get_disc_cache_size_fail:
+    stc
+
+get_disc_cache_size_done:
+    pop ebx
+    pop ds  
+    retf32
+get_disc_cache_size   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GET_DISC_VENDOR_INFO
 ;
 ;           DESCRIPTION:    Get disc vendor info
@@ -6170,6 +6214,12 @@ init    PROC far
     mov edi,OFFSET set_disc_info_name
     xor dx,dx
     mov ax,set_disc_info_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_disc_cache_size
+    mov edi,OFFSET get_disc_cache_size_name
+    xor dx,dx
+    mov ax,get_disc_cache_size_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_disc_idle

@@ -1176,7 +1176,156 @@ swap_all_loop:
     pop ds
     ret
 swap_all    Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFileDirSize
+;
+;           DESCRIPTION:    Get size of file directory buffer
+;
+;           PARAMETERS:     DS         File selector
+;                           ES:EDI     Dir array
+;                           EBP        Size in
+;
+;           RETURNS:        EBP        Size out
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFileDirSize    Proc near
+    push eax
+    push ecx
+    push edi
+;
+    mov ecx,400h
+
+gfdsLoop:    
+    mov eax,es:[edi]
+    or eax,eax
+    jz gfdsNext
+;
+    mov eax,es:[eax].fl_base
+    or eax,eax
+    jz gfdsNext
+;
+    add ebp,ds:file_block_size
+
+gfdsNext:
+    add edi,4
+    loop gfdsLoop
+;
+    pop edi
+    pop ecx
+    pop eax
+    ret
+GetFileDirSize    Endp
    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetOneFileCacheSize
+;
+;           DESCRIPTION:    Get one file cache size
+;
+;           PARAMETERS:     DS      File selector
+;
+;           RETURNS:        EAX     Cache size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetOneFileCacheSize   Proc near
+    push es
+    push cx
+    push si
+    push edi
+    push ebp
+;    
+    xor ebp,ebp
+    EnterSection ds:file_list_section
+    mov ax,flat_sel
+    mov es,ax
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jnz gfcsDone
+;
+    mov cx,ds:file_dir_entries
+    mov si,OFFSET file_entries
+
+gfcsLoop:    
+    mov edi,ds:[si]
+    or edi,edi
+    jz gfcsNext
+;
+    call GetFileDirSize    
+    add ebp,1000h    
+    
+gfcsNext:
+    add si,4
+    loop gfcsLoop
+
+gfcsDone:
+    LeaveSection ds:file_list_section    
+    mov eax,ebp
+;
+    pop ebp
+    pop edi
+    pop si
+    pop cx
+    pop es
+    ret
+GetOneFileCacheSize   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFileCacheSize
+;
+;           DESCRIPTION:    Get cache size for all files
+;
+;           RETURNS:        EAX		Size of file cache
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_file_cache_size_name        DB 'Get File Cache Size', 0
+
+get_file_cache_size       Proc far
+    push ds
+    push es
+    push bx
+    push ebp
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;    
+    mov bx,ds:fs_file_list
+    xor ebp,ebp
+
+gfcLoop:  
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    call GetOneFileCacheSize
+    add ebp,eax
+    LeaveWriteSection ds:file_size_section
+    pop ds
+;
+    mov es,bx
+    mov bx,es:file_next
+    cmp bx,ds:fs_file_list
+    jne gfcLoop
+;    
+    xor ax,ax
+    mov es,ax
+    LeaveSection ds:fs_file_section
+    mov eax,ebp
+;
+
+    pop ebp
+    pop bx
+    pop es
+    pop ds
+    retf32
+get_file_cache_size    Endp 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3370,6 +3519,13 @@ init_file       PROC near
     mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
     mov ax,write_file_nr
     RegisterSyscall
+;
+    mov esi,OFFSET get_file_cache_size
+    mov edi,OFFSET get_file_cache_size_name
+    xor dx,dx
+    xor ecx,ecx
+    mov ax,get_file_cache_size_nr
+    RegisterBimodalSyscall
 ;
     mov ax,SEG data
     mov ds,ax   

@@ -2807,6 +2807,14 @@
     value [eax] \
     modify [ebx ecx edx esi edi];
 
+#pragma aux RdosGetDiscCacheSize = \
+    CallGate_get_disc_cache_size  \
+    "jnc Ok"\
+    "xor eax,eax"\
+    "Ok:"\
+    parm [eax] \
+    value [eax];
+
 #pragma aux RdosGetDiscVendorInfo = \
     CallGate_get_disc_vendor_info  \
     "jnc Ok" \
@@ -2841,6 +2849,13 @@
     "pop gs" \
     parm [esi] [edi] [ebx] \
     modify [ax];
+
+#pragma aux RdosGetFileCacheSize = \
+    CallGate_get_file_cache_size  \
+    "jnc Ok"\
+    "xor eax,eax"\
+    "Ok:"\
+    value [eax];
 
 #pragma aux RdosDemandLoadDrive = \
     CallGate_demand_load_drive  \

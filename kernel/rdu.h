@@ -863,6 +863,9 @@
 #define usergate_set_touch_cal_x 0x000002A8
 #define usergate_set_touch_cal_y 0x000002A9
 
+#define usergate_get_disc_cache_size 0x000002AA
+#define usergate_get_file_cache_size 0x000002AB
+
 
 
 #ifdef __FLAT__
@@ -1731,6 +1734,9 @@
 #define CallGate_set_touch_cal_x 0x55 0x67 0x9a 168 2 0 0 3 0 0x5d
 #define CallGate_set_touch_cal_y 0x55 0x67 0x9a 169 2 0 0 3 0 0x5d
 
+#define CallGate_get_disc_cache_size 0x55 0x67 0x9a 170 2 0 0 3 0 0x5d
+#define CallGate_get_file_cache_size 0x55 0x67 0x9a 171 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2596,5 +2602,8 @@
 #define CallGate_set_touch_cal_dividend 0x3e 0x67 0x9a 167 2 0 0 3 0
 #define CallGate_set_touch_cal_x 0x3e 0x67 0x9a 168 2 0 0 3 0
 #define CallGate_set_touch_cal_y 0x3e 0x67 0x9a 169 2 0 0 3 0
+
+#define CallGate_get_disc_cache_size 0x3e 0x67 0x9a 170 2 0 0 3 0
+#define CallGate_get_file_cache_size 0x3e 0x67 0x9a 171 2 0 0 3 0
 
 #endif
