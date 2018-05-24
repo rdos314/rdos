@@ -96,18 +96,20 @@ void cdecl main()
                         }
                 }
 
-                sprintf(Str, "%04hX", Debug.ch);
-                Str[0] = Str[2];
-                Str[1] = Str[3];
-                Str[2] = ' ';
-                Str[3] = ' ';
-                Str[4] = 0;
+//                sprintf(Str, "%04hX", Debug.ch);
+//                Str[0] = Str[2];
+//                Str[1] = Str[3];
+//                Str[2] = ' ';
+//                Str[3] = ' ';
+//                Str[4] = 0;
+                Str[0] = Debug.ch;
+                Str[1] = 0;
                 RdosWriteString(Str);
 
-                if (File->GetSize() > MAX_FILE_SIZE)
-                {
-                        delete File;
-                        File = GetFile();
-                }
+//                if (File->GetSize() > MAX_FILE_SIZE)
+//                {
+//                        delete File;
+//                        File = GetFile();
+//                }
         }
 }

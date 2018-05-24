@@ -52,6 +52,7 @@ TModbus::TModbus(TSerialDevice *Serial, char Address)
     FBigEndian = TRUE;
     FHasEcho = FALSE;
     FReplySize = 0;
+    FTimeout = 250;
 }
 
 /*##########################################################################
@@ -73,6 +74,7 @@ TModbus::TModbus()
     FBigEndian = TRUE;
     FHasEcho = FALSE;
     FReplySize = 0;
+    FTimeout = 250;
 }
 
 /*##########################################################################
@@ -136,6 +138,22 @@ void TModbus::EnableEcho()
 void TModbus::DisableEcho()
 {
     FHasEcho = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::SetTimeout
+#
+#   Purpose....: Set timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::SetTimeout(int ms)
+{
+    FTimeout = ms;
 }
 
 /*##########################################################################
@@ -210,7 +228,7 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply, int *datalen
             pos = 0;
             while (ok && pos < size + 2 && ch == msg[pos])
             {
-                ok = FSerial->WaitForChar(250);
+                ok = FSerial->WaitForChar(FTimeout);
                 if (ok)
                 {
                     ch = FSerial->Read();
@@ -228,14 +246,14 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply, int *datalen
             ch = FSerial->Read();
             while (ok && ch != msg[0])
             {
-                ok = FSerial->WaitForChar(250);
+                ok = FSerial->WaitForChar(FTimeout);
                 if (ok)
                     ch = FSerial->Read();
             }
 
             if (ok)
             {
-                ok = FSerial->WaitForChar(250);
+                ok = FSerial->WaitForChar(FTimeout);
                 if (ok)
                 {
                     ch = FSerial->Read();
@@ -304,6 +322,10 @@ int TModbus::SendAndReceive(const char *buf, int size, char *reply, int *datalen
             }
         }
     }
+
+    if (!ok)
+        while (FSerial->WaitForChar(2 * FTimeout))
+            FSerial->Read();
 
     FSection.Leave();
 

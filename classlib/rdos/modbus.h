@@ -42,6 +42,8 @@ public:
     void EnableEcho();
     void DisableEcho();
 
+    void SetTimeout(int ms);
+
     int ReadCoilStatus(int Coil);
     int ReadInputStatus(int Input);
     int ReadHoldingRegister(int Reg);
@@ -74,6 +76,7 @@ protected:
     char FAddress;
     int FBigEndian;
     int FHasEcho;
+    int FTimeout;
 
     int FStartReg;
     int FRegCount;
