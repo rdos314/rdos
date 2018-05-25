@@ -1073,3 +1073,121 @@ int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
     }
     return ok;
 }
+
+/*##########################################################################
+#
+#   Name       : TModbus::StartWritePresetRegisters
+#
+#   Purpose....: Start write multiple preset registers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
+{
+    int i;
+    short int temp;
+ 
+    if (Reg > 40000)
+    {
+        FStartReg = Reg;
+        FRegCount = Count;
+
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&FWriteBuf[0], &temp, 2);
+
+        temp = Count;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&FWriteBuf[2], &temp, 2);
+
+        FWriteBuf[4] = 2 * Count;
+
+        temp = Default;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+
+        for (i = 0; i < Count; i++)
+            memcpy(&FWriteBuf[5 + 2 * i], &temp, 2);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::AddPresetRegister
+#
+#   Purpose....: Add preset register to write req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::AddPresetRegister(int Reg, int Val)
+{
+    int RelReg = Reg - FStartReg;
+    short int temp;
+
+    if (RelReg < FRegCount)
+    {
+        temp = Val;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+
+        memcpy(&FWriteBuf[5 + 2 * RelReg], &temp, 2);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::AddPresetRegisterABCD
+#
+#   Purpose....: Add ABCD preset register to write req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::AddPresetRegisterABCD(int Reg, float Val)
+{
+    int RelReg = Reg - FStartReg;
+    int itemp;
+
+    if (RelReg < FRegCount - 1)
+    {
+        memcpy(&itemp, &Val, 4);
+        if (FBigEndian)
+            itemp = RdosSwapLong(itemp);
+        memcpy(&FWriteBuf[5 + 2 * RelReg], &itemp, 4);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::DoWritePresetRegisters
+#
+#   Purpose....: Do a multiple preset register write
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::DoWritePresetRegisters()
+{
+    int len;
+    char reply[100];
+
+    len = Session(16, FWriteBuf, 5 + 2 * FRegCount, reply);
+
+    if (len == 4)
+        if (memcmp(FWriteBuf, &reply[2], 4) == 0)
+            return TRUE;
+
+    return FALSE;
+}

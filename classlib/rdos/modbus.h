@@ -66,6 +66,11 @@ public:
     int GetBufferedHoldingRegister(int Reg, int *Val);
     int GetBufferedHoldingRegisterABCD(int Reg, float *Val);
 
+    void StartWritePresetRegisters(int Reg, int Count, int Default);
+    void AddPresetRegister(int Reg, int val);
+    void AddPresetRegisterABCD(int Reg, float val);
+    int DoWritePresetRegisters();
+
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
     int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
@@ -82,6 +87,9 @@ protected:
     int FRegCount;
     char FReplyBuf[100];
     int FReplySize;
+
+    char FWriteBuf[100];
+    int FWriteSize;
 };
 
 #endif
