@@ -3963,11 +3963,11 @@ bhRetry:
     mov ax,25
     WaitMilliSec
 ;
-;    test ds:[ebx+2],1
-;    jnz bhRetry
+    test ds:[ebx+2],1
+    jnz bhRetry
 ;
-;    test ds:[ebx+3],1
-;    jz bhDone
+    test ds:[ebx+3],1
+    jz bhRetry
     jmp bhDone
 
 bhNext:
@@ -3976,6 +3976,7 @@ bhNext:
     jz bhDone
 ;
     movzx ebx,al
+    shl ebx,2
     add ebx,ebp
     jmp bhLoop
     
