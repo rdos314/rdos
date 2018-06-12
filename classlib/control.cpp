@@ -3364,7 +3364,7 @@ void TDisplayControlThread::PutKey(char ch)
         FKeyboard->Put(ch);
     else
         NotifyKeyPressed(ch, ch, ch, ch);
-    }
+}
 
 /*##########################################################################
 #

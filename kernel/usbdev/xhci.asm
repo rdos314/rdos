@@ -3030,7 +3030,7 @@ rtDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-XhciInt Proc far    
+XhciInt Proc far 
     mov bx,ds:xhc_event_thread
     Signal
     retf32
@@ -3936,6 +3936,7 @@ BiosHandoff Proc near
     push ds
     push eax
     push ebx
+    push ebp
 ;    
     mov ax,flat_sel
     mov ds,ax
@@ -3944,18 +3945,42 @@ BiosHandoff Proc near
     or bx,bx
     jz bhDone
 ;
-    cmp bx,1000h
-    jae hbFail
-;
+    shl ebx,2
+    mov ebp,ebx
+
+bhLoop:
     mov al,ds:[edx+ebx]
     cmp al,1
-    jne hbFail
+    jne bhNext
 ;
-    mov ds:[edx+ebx+3],1            
-        
-hbFail:
+    add ebx,edx
+    test ds:[ebx+2],1
+    jz bhDone
 
+bhRetry:
+    or ds:[ebx+3],1
+;
+    mov ax,25
+    WaitMilliSec
+;
+;    test ds:[ebx+2],1
+;    jnz bhRetry
+;
+;    test ds:[ebx+3],1
+;    jz bhDone
+    jmp bhDone
+
+bhNext:
+    mov al,ds:[edx+ebx+1]
+    or al,al
+    jz bhDone
+;
+    movzx ebx,al
+    add ebx,ebp
+    jmp bhLoop
+    
 bhDone:    
+    pop ebp
     pop ebx
     pop eax
     pop ds
@@ -3985,19 +4010,29 @@ CreatePrimaryFunction  Proc near
 ;    
     mov ebx,edx
     push eax
-    mov eax,1000h
+    mov eax,10000h
     AllocateBigLinear
     pop eax
 ;
     push eax
+    push edx
+    mov ecx,10h
     and ax,0F000h
     or ax,813h
+
+cpfDevLoop:
     SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h
+    loop cpfDevLoop
+;
+    pop edx
     pop eax
     and eax,0FFFh
     or edx,eax
 ;
-    mov ecx,1000h
+    mov ecx,10000h
     mov bx,xhci_hcc_sel
     CreateDataSelector16
     mov ds,bx
@@ -4439,6 +4474,11 @@ InitPciAdapter  Proc near
     mov ch,30h
     FindPciClass
     jc init_pci_done
+;
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_busmstr
+    WritePciWord
 ;
     mov cl,10h
     ReadPciDword
