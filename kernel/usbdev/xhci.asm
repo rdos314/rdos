@@ -544,35 +544,49 @@ CreateScratchPad   Proc near
     or ax,ax
     jz cspDone
 ;
-    push fs
+    push es
     pushad
 ;
     push ax
-    mov eax,1000h
+    mov eax,2000h
     AllocateBigLinear
     AllocatePhysical64
     mov al,13h
     SetPageEntry
     xor al,al
     mov si,xhci_device_ptr_sel
-    mov fs,si
+    mov es,si
     xor si,si
-    mov fs:[si],eax
-    mov fs:[si+4],ebx
+    mov es:[si],eax
+    mov es:[si+4],ebx
+    pop cx
 ;
     mov ax,flat_sel
-    mov fs,ax
-    pop cx
+    mov es,ax
+;
+    mov ebp,edx
+    add edx,1000h
         
 cspLoop:
     AllocatePhysical64
-    mov fs:[edx],eax
-    mov fs:[edx+4],ebx
-    add edx,8
+    mov es:[ebp],eax
+    mov es:[ebp+4],ebx
+;
+    push ecx
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    xor eax,eax
+    mov ecx,400h
+    rep stos dword ptr es:[edi]
+    pop ecx
+;
+    add ebp,8
     loop cspLoop
 ;
     popad
-    pop fs    
+    pop es    
         
 cspDone:    
     pop ds
@@ -3817,11 +3831,17 @@ ifWaitReset:
     jmp ifWaitReset
 
 ifWaitReseted:        
+    GetPciMsiX
+    jc ifMsi
+;
+;    int 3
+
+ifMsi:
     GetPciMsi
     jc ifIrq
 ;
     push cx
-    mov cx,1
+    movzx cx,dl
     mov al,14h
     AllocateInts
     pop cx
@@ -3836,7 +3856,17 @@ ifWaitReseted:
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
+;
+    push cx
+    movzx cx,dl
+
+ifIntLoop:
     RequestMsiHandler
+    inc al
+    loop ifIntLoop
+;
+    pop cx
+;
     pop es
     pop ds
     jmp ifIntDone
@@ -3872,7 +3902,7 @@ ifIntDone:
     mov ds:orsDcbaap+4,eax
 ;    
     call CreateScratchPad
-;    
+;
     mov eax,es:xhc_crcr
     or al,1
     mov ds:orsCrCtrl,eax
@@ -3895,7 +3925,7 @@ ifIntDone:
 ;
     mov ds:rrsImod,400
     mov ds:rrsIman,3
-;
+;    
     mov ds,es:xhc_reg_sel
     or ds:orsUsbCmd,4    
 ;
