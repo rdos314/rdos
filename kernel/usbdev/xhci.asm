@@ -3831,24 +3831,44 @@ ifWaitReset:
     jmp ifWaitReset
 
 ifWaitReseted:        
-    GetPciMsiX
-    jc ifMsi
-;
-;    int 3
-
-ifMsi:
     GetPciMsi
-    jc ifIrq
+    jc ifCheckMsiX
 ;
     push cx
-    movzx cx,dl
+    mov cx,1
     mov al,14h
     AllocateInts
     pop cx
     jc ifIrq    
 ;
+    mov dl,1
     SetupPciMsi
-;    
+    jmp ifReg
+
+ifCheckMsiX:
+    GetPciMsiX
+    jc ifIrq
+;
+    push es
+    EnablePciMsiX
+    xor dl,dl
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jnc ifMsiX
+;
+    pop es
+    jc ifIrq
+
+ifMsiX:    
+    SetupPciMsiXEntry
+    pop es
+    jmp ifReg
+
+ifReg:    
     push ds
     push es
     mov di,es
@@ -3856,17 +3876,7 @@ ifMsi:
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
-;
-    push cx
-    movzx cx,dl
-
-ifIntLoop:
     RequestMsiHandler
-    inc al
-    loop ifIntLoop
-;
-    pop cx
-;
     pop es
     pop ds
     jmp ifIntDone
