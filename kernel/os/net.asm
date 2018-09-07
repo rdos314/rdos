@@ -1067,8 +1067,6 @@ receive_data_loop:
 
 receive_data_arp_rec:
     call fword ptr fs:d_receive
-    call fword ptr fs:d_remove
-;
     push ds
     mov esi,edi
     mov ax,es
@@ -1082,6 +1080,7 @@ receive_data_arp_rec:
     mov ax,ds
     mov es,ax
     pop ds
+    call fword ptr fs:d_remove
     FreeMem
     mov es,bx
 
@@ -1133,11 +1132,19 @@ receive_data_prot_loop:
     mov eax,ecx
     AllocateSmallGlobalMem
     xor di,di
-
-receive_data_norm_rec:
+;
     call fword ptr fs:d_receive
     call fword ptr fs:d_remove
     call fword ptr gs:p_callback
+;
+    xor ax,ax
+    mov es,ax
+    jmp receive_data_loop
+
+receive_data_norm_rec:
+    call fword ptr fs:d_receive
+    call fword ptr gs:p_callback
+    call fword ptr fs:d_remove
     xor ax,ax
     mov es,ax
     jmp receive_data_loop

@@ -26,7 +26,7 @@ TFile *GetFile()
 
         for (num = 0; num < 10000; num++)
         {
-                sprintf(FileName, "d:\\log\\raw%04d.dat", num);
+                sprintf(FileName, "d:\\comlog\\raw%04d.dat", num);
                 handle = RdosOpenFile(FileName, 0);
                 if (handle)
                         RdosCloseFile(handle);
@@ -53,18 +53,18 @@ void cdecl main()
         TWait Wait;
         TKeyboardDevice Keyboard;
 
-        TSerialDevice Port1(1, 9600, 'N', 8, 1);
-        TSerialDevice Port2(2, 9600, 'N', 8, 1);
+        TSerialDevice Port1(1, 9600, 'O', 8, 1);
+//        TSerialDevice Port2(2, 9600, 'N', 8, 1);
 
         Port1.Open();
-        Port2.Open();
+//        Port2.Open();
 
         Wait.Add(&Port1);
-        Wait.Add(&Port2);
+//        Wait.Add(&Port2);
         Wait.Add(&Keyboard);
 
-//        TFile *File = GetFile();
-        TFile *File = new TFile("d:\\cap\\raw.dat", 0);
+        TFile *File = GetFile();
+//        TFile *File = new TFile("d:\\cap\\raw.dat", 0);
 
         for (;;)
         {
@@ -78,14 +78,14 @@ void cdecl main()
                         RdosSetForeColor(9);
                 }
 
-                if (WaitDevice == &Port2)
-                {
-                        Debug.Time = RdosGetLongTime();
-                        Debug.Channel = 2;
-                        Debug.ch = Port2.Read();
-                        File->Write(&Debug, sizeof(Debug));
-                        RdosSetForeColor(11);
-                }
+//                if (WaitDevice == &Port2)
+//                {
+//                        Debug.Time = RdosGetLongTime();
+//                        Debug.Channel = 2;
+//                        Debug.ch = Port2.Read();
+//                        File->Write(&Debug, sizeof(Debug));
+//                        RdosSetForeColor(11);
+//                }
 
                 if (WaitDevice == &Keyboard)
                 {
@@ -96,20 +96,20 @@ void cdecl main()
                         }
                 }
 
-//                sprintf(Str, "%04hX", Debug.ch);
-//                Str[0] = Str[2];
-//                Str[1] = Str[3];
-//                Str[2] = ' ';
-//                Str[3] = ' ';
-//                Str[4] = 0;
-                Str[0] = Debug.ch;
-                Str[1] = 0;
+                sprintf(Str, "%04hX", Debug.ch);
+                Str[0] = Str[2];
+                Str[1] = Str[3];
+                Str[2] = ' ';
+                Str[3] = ' ';
+                Str[4] = 0;
+//                Str[0] = Debug.ch;
+//                Str[1] = 0;
                 RdosWriteString(Str);
 
-//                if (File->GetSize() > MAX_FILE_SIZE)
-//                {
-//                        delete File;
-//                        File = GetFile();
-//                }
+                if (File->GetSize() > MAX_FILE_SIZE)
+                {
+                        delete File;
+                        File = GetFile();
+                }
         }
 }
