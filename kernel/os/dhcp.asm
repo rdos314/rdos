@@ -1473,6 +1473,7 @@ discover_alloc_mac_do:
     mov fs:dre_hw_len,al
 ;
     movzx cx,al
+
     xor bp,bp
 
 discover_alloc_mac_copy:
@@ -1655,7 +1656,6 @@ discover_req_done:
     pop fs    
     pop es
     pop ds
-    FreeMem
     ret
 ReceiveDiscover Endp
 
@@ -1903,7 +1903,6 @@ req_req_done:
     pop fs    
     pop es
     pop ds
-    FreeMem
     ret
 ReceiveRequest Endp
         
@@ -2093,12 +2092,12 @@ receive_serv_ok:
 ;
     add bx,bx
     call word ptr cs:[bx].serv_receive_tab  
-    jmp receive_serv_done
 
 receive_serv_free:
+    xor ax,ax
+    mov ds,ax
     FreeMem
-
-receive_serv_done:
+;
     pop bx
     pop ax
     pop ds
@@ -3003,7 +3002,6 @@ IsDhcpEnabled      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveError    Proc near
-    FreeMem
     ret
 ReceiveError    Endp
 
@@ -3027,7 +3025,6 @@ ReceiveNak    Proc near
     mov ds:dhcp_server,0
     mov ds:dhcp_lease,1    
     inc ds:dhcp_ident
-    FreeMem
 ;
     pop ax
     pop ds
@@ -3101,9 +3098,6 @@ receive_offer_next:
     ja receive_offer_loop
 
 receive_offer_leave:
-    FreeMem
-
-receive_offer_done:
     pop si
     pop bx
     pop ax
@@ -3189,8 +3183,6 @@ receive_ack_leave:
     mov ds:dhcp_rebind,0
 
 receive_ack_done:
-    FreeMem
-;
     pop edx
     pop bx
     pop eax
@@ -3286,7 +3278,7 @@ receive_cl_dest_ok:
 receive_cl_relay:
     add bx,bx
     call word ptr cs:[bx].rl_receive_tab    
-    jmp receive_cl_done
+    jmp receive_cl_free
 
 receive_cl_local:
     mov eax,ds:dhcp_ident
@@ -3295,7 +3287,7 @@ receive_cl_local:
 ;
     add bx,bx
     call word ptr cs:[bx].cl_receive_tab    
-    jmp receive_cl_done
+    jmp receive_cl_free
 
 receive_cl_check:
     mov eax,ds:dhcp_server
@@ -3333,8 +3325,7 @@ receive_cl_free:
     xor ax,ax
     mov ds,ax
     FreeMem
-
-receive_cl_done:
+;
     pop dx
     pop bx
     pop ax
