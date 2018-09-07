@@ -3535,9 +3535,6 @@ receive_rst_done:
     mov es,ax
 
 receive_done:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
     retf32
 Receive Endp
 

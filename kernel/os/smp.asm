@@ -341,10 +341,6 @@ receive_responses:
     call HandleResponses
 
 receive_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
     pop di
     pop si
     pop dx

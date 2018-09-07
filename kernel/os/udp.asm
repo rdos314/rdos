@@ -2181,10 +2181,6 @@ receive_pop_free:
     pop es
 
 receive_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
     pop di
     pop si
     pop dx

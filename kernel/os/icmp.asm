@@ -313,10 +313,6 @@ Receive Proc far
     call word ptr cs:[bx].ReceiveTab
 
 receive_done:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
     pop bx
     pop ax
     retf32

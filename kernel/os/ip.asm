@@ -1420,6 +1420,10 @@ receive_prot_loop:
     sub ax,SIZE ip_header
     add di,ax
     call fword ptr fs:prot_callback
+;
+    xor ax,ax
+    mov ds,ax
+    FreeMem
     jmp receive_done
 
 receive_prot_next:
