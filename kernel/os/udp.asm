@@ -2053,14 +2053,26 @@ receive_not_dhcp:
     cmp ax,-1
     jne receive_free
 ;
+    push es
+    push ds
+;
+    mov ax,es
+    mov ds,ax
+    mov si,di
+;
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    xor di,di
+    rep movs byte ptr es:[di],ds:[si]
+; 
+    pop ds
+    mov ds:[bx].udp_query_offset,0
     mov ds:[bx].udp_query_sel,es
-    mov ds:[bx].udp_query_offset,di
     mov bx,ds:[bx].udp_query_thread
-    xor ax,ax
-    mov es,ax
     StopTimer
     Signal
-    jmp receive_done
+    pop es
+    jmp receive_free
 
 receive_not_query:
     push di
@@ -2172,8 +2184,7 @@ receive_free:
     xor ax,ax
     mov ds,ax
     FreeMem
-
-receive_done:
+;
     pop di
     pop si
     pop dx
