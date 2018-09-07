@@ -3325,7 +3325,7 @@ rt08 DW OFFSET ReceiveTimeWait
 
 Receive Proc far
     call ReceiveChecksum
-    jc receive_free
+    jc receive_done
 ;   
     push di
     mov ax,es:[di].tcp_dest
@@ -3361,13 +3361,13 @@ receive_wild_syn:
 receive_listen:
     mov al,es:[di].tcp_flags
     test al,RST
-    jnz receive_free
+    jnz receive_done
 ;
     test al,ACK
     jnz receive_no_connection
 ;
     test al,SYN
-    jz receive_free
+    jz receive_done
 ;
     push ds
     push ecx
@@ -3402,13 +3402,13 @@ receive_listen:
     xor bx,bx
     xchg bx,ds:tcp_listen_wait   
     or bx,bx
-    jz receive_free
+    jz receive_done
 ;
     push es
     mov es,bx
     SignalWait
     pop es
-    jmp receive_free
+    jmp receive_done
 
 receive_connection:
     push es
@@ -3444,7 +3444,7 @@ receive_leave:
 
 receive_no_writer:    
     LeaveSection ds:tcp_section
-    jmp receive_free
+    jmp receive_done
 
 no_options      DB 0
 
@@ -3455,10 +3455,10 @@ receive_no_connection:
 ;
     mov al,ds:[si].tcp_flags
     test al,RST
-    jnz receive_free
+    jnz receive_done
 ;
     test al,SYN
-    jnz receive_free
+    jnz receive_done
 ;
     push ds
     push cx
@@ -3534,7 +3534,7 @@ receive_rst_done:
     mov ax,ds
     mov es,ax
 
-receive_free:
+receive_done:
     xor ax,ax
     mov ds,ax
     FreeMem
