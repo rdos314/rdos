@@ -1316,7 +1316,7 @@ receive_net_add_ok:
 ;
     mov al,es:[di].ip_proto
     cmp al,17
-    jne receive_fail
+    jne receive_done
 ;
     mov al,es:[di].ip_hdr_ver
     and al,0Fh
@@ -1328,12 +1328,12 @@ receive_net_add_ok:
     mov ax,es:[si].udp_source
     xchg al,ah
     cmp ax,67
-    jne receive_fail
+    jne receive_done
 ;
     mov ax,es:[si].udp_dest
     xchg al,ah
     cmp ax,68
-    jne receive_fail
+    jne receive_done
     jmp receive_this_node
 
 receive_dhcp_done:
@@ -1355,7 +1355,7 @@ receive_dhcp_done:
 ;   
     rol eax,8
     cmp al,255
-    je receive_fail
+    je receive_done
 ;
     push es
     push gs    
@@ -1388,13 +1388,13 @@ receive_forward_fail:
     pop di
     pop gs
     pop es
-    jmp receive_fail
+    jmp receive_done
     
 receive_this_node:
     mov es:[0],bp
     mov cx,ds:protocol_count
     or cx,cx
-    jz receive_fail
+    jz receive_done
     mov bx,OFFSET protocol_arr
 
 receive_prot_loop:
@@ -1420,26 +1420,21 @@ receive_prot_loop:
     sub ax,SIZE ip_header
     add di,ax
     call fword ptr fs:prot_callback
-;
-    xor ax,ax
-    mov ds,ax
-    FreeMem
     jmp receive_done
 
 receive_prot_next:
     add bx,2
     loop receive_prot_loop
-    jmp receive_fail
+    jmp receive_done
 
 receive_pop_fail:
     pop edx
     
-receive_fail:
+receive_done:
     xor ax,ax
     mov ds,ax
     FreeMem
-    
-receive_done:
+;
     pop bp
     pop esi
     pop ecx
