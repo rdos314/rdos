@@ -1041,11 +1041,11 @@ ReceiveData     Proc near
     push ecx
     push dx
     push edi
-;
-    mov ax,SEG data
-    mov ds,ax
 
 receive_data_loop:
+    mov ax,SEG data
+    mov ds,ax
+;
     ClearSignal
     call fword ptr fs:d_preview
     jc receive_data_done
