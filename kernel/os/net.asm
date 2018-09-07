@@ -1136,6 +1136,9 @@ receive_data_prot_loop:
     call fword ptr fs:d_receive
     call fword ptr fs:d_remove
     call fword ptr gs:p_callback
+;
+    xor ax,ax
+    mov ds,ax
     FreeMem
     jmp receive_data_loop
 
@@ -1143,8 +1146,10 @@ receive_data_norm_rec:
     call fword ptr fs:d_receive
     call fword ptr gs:p_callback
     call fword ptr fs:d_remove
+;
     xor ax,ax
-    mov es,ax
+    mov ds,ax
+    FreeMem
     jmp receive_data_loop
 
 receive_data_prot_next:

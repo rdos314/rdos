@@ -701,6 +701,10 @@ send_self:
     xor ax,ax
     push ax
     call near ptr Receive
+;
+    xor ax,ax
+    mov ds,ax
+    FreeMem
     jmp send_done
 
 send_local_net:
@@ -1431,10 +1435,6 @@ receive_pop_fail:
     pop edx
     
 receive_done:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
     pop bp
     pop esi
     pop ecx
