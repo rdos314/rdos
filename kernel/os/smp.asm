@@ -344,8 +344,7 @@ receive_free:
     xor ax,ax
     mov ds,ax
     FreeMem
-
-receive_done:
+;
     pop di
     pop si
     pop dx
