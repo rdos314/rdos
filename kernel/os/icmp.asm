@@ -221,7 +221,6 @@ rerDone:
     mov es,ax
     xor ax,ax
     mov ds,ax
-    FreeMem    
     ret
 ReceiveEchoReq  Endp
 
@@ -263,7 +262,6 @@ ReceiveUnreachable    Proc near
 ruDone:
     xor ax,ax
     mov ds,ax
-    FreeMem
     ret
 ReceiveUnreachable    Endp
         
@@ -284,7 +282,6 @@ ReceiveUnreachable    Endp
 ReceiveDiscard  Proc near
     xor ax,ax
     mov ds,ax
-    FreeMem
     ret
 ReceiveDiscard  Endp
 
@@ -324,6 +321,7 @@ Receive Proc far
     call word ptr cs:[bx].ReceiveTab
 
 receive_done:
+    FreeMem
     pop bx
     pop ax
     retf32
