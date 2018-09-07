@@ -1143,7 +1143,8 @@ receive_data_norm_rec:
     call fword ptr fs:d_receive
     call fword ptr gs:p_callback
     call fword ptr fs:d_remove
-    FreeMem
+    xor ax,ax
+    mov es,ax
     jmp receive_data_loop
 
 receive_data_prot_next:

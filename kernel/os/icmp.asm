@@ -160,9 +160,6 @@ ReceiveEchoReply    Proc near
     Signal
 
 receive_echo_reply_done:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
     ret
 ReceiveEchoReply    Endp
 
@@ -181,6 +178,8 @@ ReceiveEchoReply    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveEchoReq  Proc near
+    push es
+;
     push es
     push edi
     mov si,es:[0]
@@ -217,10 +216,7 @@ ReceiveEchoReq  Proc near
     SendIp
 
 rerDone:
-    mov ax,ds
-    mov es,ax
-    xor ax,ax
-    mov ds,ax
+    pop es
     ret
 ReceiveEchoReq  Endp
 
@@ -260,8 +256,6 @@ ReceiveUnreachable    Proc near
     UpdateTcpMtu
     
 ruDone:
-    xor ax,ax
-    mov ds,ax
     ret
 ReceiveUnreachable    Endp
         
@@ -280,8 +274,6 @@ ReceiveUnreachable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveDiscard  Proc near
-    xor ax,ax
-    mov ds,ax
     ret
 ReceiveDiscard  Endp
 
@@ -321,7 +313,10 @@ Receive Proc far
     call word ptr cs:[bx].ReceiveTab
 
 receive_done:
+    xor ax,ax
+    mov ds,ax
     FreeMem
+;
     pop bx
     pop ax
     retf32
