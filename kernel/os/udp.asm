@@ -2028,14 +2028,14 @@ Receive Proc far
     jne receive_not_cl_dhcp
 ;
     call ReceiveClientDhcp
-    jmp receive_done
+    jmp receive_free
 
 receive_not_cl_dhcp:
     cmp ax,68
     jne receive_not_dhcp
 ;
     call ReceiveServerDhcp
-    jmp receive_done
+    jmp receive_free
 
 receive_not_dhcp:
     mov ax,es:[di].udp_dest

@@ -2094,10 +2094,6 @@ receive_serv_ok:
     call word ptr cs:[bx].serv_receive_tab  
 
 receive_serv_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
     pop bx
     pop ax
     pop ds
@@ -3322,10 +3318,6 @@ receive_cl_insp_next:
     ja receive_cl_insp_loop
 
 receive_cl_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
     pop dx
     pop bx
     pop ax
