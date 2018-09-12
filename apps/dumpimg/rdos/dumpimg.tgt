@@ -67,8 +67,8 @@ r????Include directories:
 1
 17
 WString
-78
-"\rdos\classlib\rdos;\rdos\classlib;\rdos\kernel;$(%watcom)/h;$(%watcom)/rdos"
+63
+"\rdos\classlib\rdos;\rdos\classlib;\rdos\kernel;$(%watcom)/rh"
 0
 18
 WVList

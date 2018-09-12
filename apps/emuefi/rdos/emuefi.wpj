@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-768
-0
+976
+827
 8320
 9216
 2
@@ -34,8 +34,8 @@ VComponent
 WRect
 0
 0
-5674
-4261
+5669
+4258
 0
 0
 10
@@ -43,15 +43,15 @@ WFileName
 10
 emuefi.tgt
 0
-1
+0
 11
 VComponent
 12
 WRect
-426
-419
+1072
+1518
 5680
-4291
+4283
 0
 0
 13
@@ -60,4 +60,4 @@ WFileName
 emrem.tgt
 0
 0
-11
+8

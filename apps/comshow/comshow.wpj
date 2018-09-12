@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-0
-0
-7931
-9200
+976
+827
+7930
+9198
 2
 MProject
 3
@@ -34,8 +34,8 @@ VComponent
 WRect
 0
 0
-5659
-4200
+5658
+4198
 0
 0
 10
@@ -48,10 +48,10 @@ rdos\comshow.tgt
 VComponent
 12
 WRect
-584
-573
-5659
-4200
+581
+571
+5658
+4198
 0
 0
 13
@@ -60,4 +60,4 @@ WFileName
 win32\comshow.tgt
 0
 0
-11
+8

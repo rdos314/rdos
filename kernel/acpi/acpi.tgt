@@ -199,8 +199,8 @@ r????Include directories:
 1
 49
 WString
-83
-"../../kernel;../../classlib;include;include/platform;$(%watcom)/h;$(%watcom)/rdos"
+68
+"../../kernel;../../classlib;include;include/platform;$(%watcom)/rh"
 0
 50
 MVState

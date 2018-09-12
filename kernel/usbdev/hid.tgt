@@ -225,8 +225,8 @@ r????Include directories:
 1
 54
 WString
-58
-"..\..\kernel;..\..\classlib;$(%watcom)/h;$(%watcom)/rdos"
+43
+"..\..\kernel;..\..\classlib;$(%watcom)/rh"
 0
 55
 WVList

@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-1152
-0
-8140
-9193
+976
+819
+8138
+9190
 2
 MProject
 3
@@ -29,9 +29,9 @@ VComponent
 8
 WRect
 576
-568
-5670
-4289
+563
+5669
+4283
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 10
 planet.tgt
 0
-3
+0
 7

@@ -67,8 +67,8 @@ r????Include directories:
 1
 17
 WString
-171
-"\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\emulate;\rdos\classlib\emulate\x86;\rdos\classlib\emulate\pc;\rdos\kernel;\rdos\apps\emrem;$(%watcom)/h;$(%watcom)/rdos"
+156
+"\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\emulate;\rdos\classlib\emulate\x86;\rdos\classlib\emulate\pc;\rdos\kernel;\rdos\apps\emrem;$(%watcom)/rh"
 0
 18
 WVList

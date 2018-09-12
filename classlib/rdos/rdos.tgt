@@ -67,8 +67,8 @@ r????Include directories:
 1
 17
 WString
-65
-"..\..\kernel;..\;..\libpng;..\zlib;$(%watcom)/h;$(%watcom)/rdos"
+50
+"..\..\kernel;..\;..\libpng;..\zlib;$(%watcom)/rh"
 0
 18
 WVList
@@ -389,8 +389,8 @@ r????Include directories:
 1
 89
 WString
-100
-"..\..\kernel;..\;..\jpeg;..\libpng;..\zlib;..\mad;..\widget;..\libtom;$(%watcom)/h;$(%watcom)/rdos"
+85
+"..\..\kernel;..\;..\jpeg;..\libpng;..\zlib;..\mad;..\widget;..\libtom;$(%watcom)/rh"
 0
 90
 WVList

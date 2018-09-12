@@ -171,8 +171,8 @@ r????Include directories:
 1
 42
 WString
-59
-"\rdos\kernel;\rdos\classlib;\$(%watcom)/h;$(%watcom)/rdos"
+44
+"\rdos\kernel;\rdos\classlib;\$(%watcom)/rh"
 0
 43
 WVList
