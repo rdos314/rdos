@@ -303,6 +303,9 @@ xms_local_sel           EQU 740h
 com_code_sel            EQU 750h
 com_data_sel        EQU 758h
 
+ioe_code_sel            EQU 760h
+ioe_data_sel            EQU 768h
+
 ramdrive_process_sel EQU 780h
 flashfs_code_sel        EQU 788h
 
