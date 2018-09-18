@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
 #include <string.h>
 #include "keyboard.h"
 
@@ -127,7 +128,7 @@ void TKeyboardDevice::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TKeyboardDevice::Clear()
 {
-        RdosClearKeyboard();
+    RdosClearKeyboard();
 }
 
 /*##########################################################################
@@ -226,13 +227,13 @@ int TKeyboardDevice::Poll() const
 
         while (ok && !IsStdKey(ExtKey, VirtualKey))
         {
+            RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+            ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+            while (ok && !IsStdKey(ExtKey, VirtualKey))
+            {
                 RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
                 ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-                while (ok && !IsStdKey(ExtKey, VirtualKey))
-                {
-                        RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-                        ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
-                }
+            }
         }
 
         return ok;
@@ -356,33 +357,33 @@ void TKeyboardDevice::KeyRelease(int ExtKey, int KeyState, int VirtualKey, int S
 ##########################################################################*/
 void TKeyboardDevice::SignalNewData()
 {
-        int ExtKey;
-        int KeyState;
-        int VirtualKey;
-        int ScanCode;
+    int ExtKey;
+    int KeyState;
+    int VirtualKey;
+    int ScanCode;
 
     if (KeyPreview)
     {
         if (RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
         {
-                if (IsStdKey(ExtKey, VirtualKey))
-                {
-                                if ((*KeyPreview)(this, VirtualKey))
+            if (IsStdKey(ExtKey, VirtualKey))
+            {
+                if ((*KeyPreview)(this, VirtualKey))
                     RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
             }
             else
-                    RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+                RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+            }
         }           
-    }
     
     if (OnKeyPress || OnKeyRelease)
     {
         if (RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
-            {
-                if (ExtKey & 0x8000)
-                        KeyRelease(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
-                    else
-                            KeyPress(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
+        {
+            if (ExtKey & 0x8000)
+                KeyRelease(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
+            else
+                KeyPress(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
         }
     }
 }
