@@ -407,6 +407,7 @@ ExcFar  Proc near
         je ExcFarPm32
 
 ExcFarPm16:
+        push ax
         GetExceptionStack16
 ;
         mov ax,[bp].reg_ss
@@ -458,6 +459,7 @@ exc16_stack_ok:
         jmp ExcFarDone
 
 ExcFarPm32:
+        push ax
         movzx eax,[bp].reg_ss
         mov ebx,[bp].reg_esp
         call PushDword
