@@ -26,7 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
-#include "socket.h"
+#include "sockobj.h"
 #include "rdos.h"
 
 #define FALSE 0

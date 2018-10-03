@@ -25,8 +25,8 @@
 #
 ########################################################################*/
 
-#ifndef _SOCKET_H
-#define _SOCKET_H
+#ifndef _SOCKOBJ_H
+#define _SOCKOBJ_H
 
 #include "waitdev.h"
 
