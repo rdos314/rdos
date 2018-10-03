@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include "rdos.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "realserv.h"
 #include "cotdata.h"
 

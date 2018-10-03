@@ -29,7 +29,7 @@
 #define _FTPSERV_H
 
 #include "str.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "ftplang.h"
 #include "ftpacc.h"
 

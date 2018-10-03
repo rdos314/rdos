@@ -29,7 +29,7 @@
 #define _FTPLANGSTR_H
 
 #include "str.h"
-#include "socket.h"
+#include "sockobj.h"
 
 class TFtpLangString : public TString
 {

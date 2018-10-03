@@ -28,7 +28,7 @@
 #ifndef _FTP_H
 #define _FTP_H
 
-#include "socket.h"
+#include "sockobj.h"
 #include "thread.h"
 #include "sigdev.h"
 #include "file.h"

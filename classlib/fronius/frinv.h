@@ -28,7 +28,7 @@
 #ifndef _FRINV_H
 #define _FRINV_H
 
-#include "socket.h"
+#include "sockobj.h"
 #include "thread.h"
 
 class TFroniusInverter : public TThread

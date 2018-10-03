@@ -28,7 +28,7 @@
 #ifndef _TEMPNU_H
 #define _TEMPNU_H
 
-#include "socket.h"
+#include "sockobj.h"
 #include "thread.h"
 
 class TTemperatureNu : public TThread

@@ -30,7 +30,7 @@
 
 #include "msgdev.h"
 #include "str.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "heatdata.h"
 
 class TCotexSocketServer : public TSocketServer

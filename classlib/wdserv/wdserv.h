@@ -29,7 +29,7 @@
 #define _WDSERV_H
 
 #include "str.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "debug.h"
 
 #define MAX_MSG_SIZE    1024

@@ -29,7 +29,7 @@
 #define _HTTPSERV_H
 
 #include "str.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "httpcust.h"
 
 enum InternalErrorCodes

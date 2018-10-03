@@ -33,7 +33,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "socket.h"
+#include "sockobj.h"
 #include "datastor.h"
 #include "cotdata.h"
 #include "bindata.h"

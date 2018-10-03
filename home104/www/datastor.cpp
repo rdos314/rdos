@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "socket.h"
+#include "sockobj.h"
 #include "datastor.h"
 #include "rdos.h"
 #include "cotdata.h"

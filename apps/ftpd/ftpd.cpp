@@ -31,7 +31,7 @@
 #include <ctype.h>
 
 #include "rdos.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "ftpfact.h"
 
 #define FALSE 0

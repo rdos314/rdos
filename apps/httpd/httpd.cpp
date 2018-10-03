@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 #include "rdos.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "httpfact.h"
 #include "httpcust.h"
 

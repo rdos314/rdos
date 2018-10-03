@@ -29,7 +29,7 @@
 #define _TELNSERV_H
 
 #include "str.h"
-#include "socket.h"
+#include "sockobj.h"
 
 class TTelnetSocketServer : public TSocketServer
 {

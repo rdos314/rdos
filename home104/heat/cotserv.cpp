@@ -31,7 +31,7 @@
 
 #include "rdos.h"
 #include "file.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "cotserv.h"
 #include "cotdata.h"
 

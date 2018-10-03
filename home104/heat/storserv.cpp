@@ -32,7 +32,7 @@
 #include "rdos.h"
 #include "file.h"
 #include "strlist.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "storserv.h"
 #include "cotdata.h"
 

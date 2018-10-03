@@ -32,7 +32,7 @@
 #include "rdos.h"
 #include "file.h"
 #include "strlist.h"
-#include "socket.h"
+#include "sockobj.h"
 #include "ftpserv.h"
 #include "ftplang.h"
 #include "ftpcmd.h"

@@ -28,7 +28,7 @@
 #ifndef _WDFACT_H
 #define _WDFACT_H
 
-#include "socket.h"
+#include "sockobj.h"
 #include "str.h"
 
 class TWdSupplFactory;
