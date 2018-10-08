@@ -74,11 +74,12 @@ disc_spinlock           spinlock_typ <>
 disc_pend_list          DD ?
 disc_pend_first         DD ?
 disc_awrite_list        DD ?
-disc_awrite_timer           DW ?
-disc_awrite_timeout         DD ?,?
+disc_awrite_timer       DW ?
+disc_awrite_count       DW ?
+disc_awrite_timeout     DD ?,?
 disc_seq_list           DW ?
-disc_param                  DD ?,?
-disc_handle                 DW ?
+disc_param              DD ?,?
+disc_handle             DW ?
 
 disc_pend_count     DW ?
 disc_io_count       DW ?
@@ -1161,7 +1162,6 @@ get_pend_done:
     ret
 get_pending     ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1199,6 +1199,7 @@ insert_awrite_do:
 insert_awrite_empty:
     mov es:[edi].dh_prev,edi
     mov es:[edi].dh_next,edi
+    mov ds:disc_awrite_count,1
     jmp insert_awrite_done
 
 insert_awrite_used:
@@ -1207,6 +1208,7 @@ insert_awrite_used:
     mov es:[ebx].dh_next,edi
     mov es:[edi].dh_prev,ebx
     mov es:[edi].dh_next,eax    
+    inc ds:disc_awrite_count
 
 insert_awrite_done:
     mov ds:disc_awrite_list,edi
@@ -1257,8 +1259,10 @@ update_async_loop:
     jne update_async_insert
 ;
     mov dword ptr ds:disc_awrite_list,0
+    mov ds:disc_awrite_count,1
 
 update_async_insert:
+    dec ds:disc_awrite_count
     and es:[edi].dh_flags, NOT FLAG_ASYNC_WRITE
     call insert_pending
     jmp update_async_loop
@@ -1301,6 +1305,7 @@ flush_async_insert:
     jmp flush_async_write
 
 flush_async_done:
+    mov ds:disc_awrite_count,0
     ret
 flush_async_write       ENDP
 
@@ -2799,6 +2804,7 @@ install_disc_loop:
     InitSpinlock ds:disc_spinlock
     mov ds:disc_pend_count,0
     mov ds:disc_io_count,0
+    mov ds:disc_awrite_count,0
     mov bx,ds
     mov al,ds:disc_nr
     clc
@@ -3591,7 +3597,7 @@ modify_clean:
 ;       
     test es:[edi].dh_flags, FLAG_IO_PENDING
     jnz modify_done
-;    
+;
     GetSystemTime
     mov es:[edi].dh_time_lsb,eax
     call insert_async_write
