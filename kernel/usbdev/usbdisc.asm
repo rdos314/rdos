@@ -1435,7 +1435,7 @@ SetupDrives Proc near
     mov fs:disc_drive_arr+4,0
     mov fs:disc_drive_arr+6,0
 ;
-    mov eax,1000h
+    mov eax,2000h
     AllocateBigLinear
     mov ax,flat_sel
     mov es,ax
@@ -1458,13 +1458,37 @@ sdLoop:
     jmp sdDone
     
 sdNotGpt:
+    cmp cl,0Ch
+    jne sdNormPart
+;
     push es
     push edi
+    mov edx,es:[esi+edi].part_start_sector
+    add edi,1000h
+    call ReadSector
+;
+    mov al,es:[edi+26h]
+    cmp al,29h
+    jne sdGetDefaultFs
+;
+    add edi,36h
+    IsFileSystemAvailable
+    pop edi
+    pop es
+    jnc sdHasFs
+    jmp sdNext
+
+sdNormPart:
+    push es
+    push edi
+
+sdGetDefaultFs:
     call GetFs
     pop edi
     pop es
     jc sdNext
-;    
+
+sdHasFs:    
     push es
     mov eax,SIZE drive_struc
     AllocateSmallGlobalMem
@@ -1481,7 +1505,16 @@ sdNotGpt:
     push es
     push edi
     mov cl,es:[esi+edi].part_type
+    cmp cl,0Ch
+    jne sdInstNorm
+;
+    add edi,1036h
+    jmp sdInstSpec
+
+sdInstNorm:
     call GetFs
+
+sdInstSpec:
     InstallFileSystem
     pop edi
     pop es
@@ -1493,7 +1526,7 @@ sdNext:
     jne sdLoop
 
 sdDone:
-    mov ecx,1000h
+    mov ecx,2000h
     mov edx,edi
     FreeLinear
     ret
