@@ -81,8 +81,11 @@ disc_seq_list           DW ?
 disc_param              DD ?,?
 disc_handle             DW ?
 
-disc_pend_count     DW ?
-disc_io_count       DW ?
+disc_pend_section       section_typ <>
+disc_pend_thread        DW ?
+
+disc_pend_count     DD ?
+disc_io_count       DD ?
 
 disc_change_proc        DD ?,?
 disc_vendor_str         DB 256 DUP(?)
@@ -989,6 +992,41 @@ endif
     ret
 allocate_handle ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WAIT_PENDING
+;
+;           DESCRIPTION:    Wait for pending list
+;
+;           PARAMETERS:     DS          DiscBuf handle
+;                           ES          Flat_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_pending  PROC near
+    push eax
+;
+    EnterSection ds:disc_pend_section
+
+wait_pending_retry:
+    mov eax,ds:disc_pend_count
+    cmp eax,disc_sectors_per_unit
+    jbe wait_pending_ok
+;
+    GetThread
+    mov ds:disc_pend_thread,ax
+    WaitForSignal
+    jmp wait_pending_retry
+
+wait_pending_ok:
+    mov ds:disc_pend_thread,0
+    LeaveSection ds:disc_pend_section
+;
+    pop eax
+    ret
+wait_pending ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2670,8 +2708,13 @@ get_disc_req_arr_read:
     jmp get_disc_req_arr_read
 
 get_disc_req_arr_unlink:
-    add ds:disc_io_count,cx
-    sub ds:disc_pend_count,cx
+    add ds:disc_io_count,ecx
+    sub ds:disc_pend_count,ecx
+;
+    push bx
+    mov bx,ds:disc_pend_thread
+    Signal
+    pop bx
 ;    
     mov esi,ebx
     mov edx,es:[esi]
@@ -2683,8 +2726,8 @@ get_disc_req_arr_unlink:
     cmp eax,edx
     jne get_disc_req_arr_unlinked
 ;
-    mov ax,ds:disc_pend_count
-    or ax,ax
+    mov eax,ds:disc_pend_count
+    or eax,eax
     jz get_disc_req_arr_pend_ok
 ;
     int 3
@@ -2802,6 +2845,8 @@ install_disc_loop:
     mov ds:disc_readahead,ecx
     InitSection ds:disc_section
     InitSpinlock ds:disc_spinlock
+    InitSection ds:disc_pend_section
+    mov ds:disc_pend_thread,0
     mov ds:disc_pend_count,0
     mov ds:disc_io_count,0
     mov ds:disc_awrite_count,0
@@ -3692,6 +3737,7 @@ write_sector   PROC far
     mov es,ax
     mov edi,ebx
     mov ds,es:[edi].dh_buf_sel
+    call wait_pending
     ClearSignal
     EnterSection ds:disc_section
 
