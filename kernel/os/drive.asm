@@ -3673,6 +3673,65 @@ flush_sector    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteSector
+;
+;           DESCRIPTION:    Write sector contents
+;
+;           PARAMETERS:         EBX         Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_sector_name      DB 'Write Sector',0
+
+write_sector   PROC far
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,ebx
+    mov ds,es:[edi].dh_buf_sel
+    ClearSignal
+    EnterSection ds:disc_section
+
+ifdef DEBUG     
+    call CheckBuffered
+endif
+
+write_try_again:
+    test es:[edi].dh_flags, FLAG_IO_BUSY
+    jz write_not_busy
+;
+    call block
+    jmp write_try_again
+
+write_not_busy:
+    mov al,es:[edi].dh_state
+    cmp al,STATE_USED
+    jne write_done
+
+write_clean:
+    mov es:[edi].dh_state,STATE_DIRTY
+;       
+    test es:[edi].dh_flags, FLAG_IO_PENDING
+    jnz write_done
+;
+    call insert_pending
+
+write_done:
+    LeaveSection ds:disc_section
+    clc
+;
+    popad
+    pop es
+    pop ds
+    retf32
+write_sector   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CREATE_DISC_SEQ
 ;
 ;           DESCRIPTION:    Create a sequence
@@ -4249,7 +4308,7 @@ erase_loop:
     rep stos dword ptr es:[edi]
     pop eax
     pop ecx 
-    ModifySector
+    WriteSector
     UnlockSector
 ;
     inc edx
@@ -4322,7 +4381,7 @@ erase_disc_loop:
     rep stos dword ptr es:[edi]
     pop eax
     pop ecx 
-    ModifySector
+    WriteSector
     UnlockSector
 ;
     inc edx
@@ -5530,7 +5589,7 @@ format_name_next:
     pop esi    
     pop cx
 ;       
-    ModifySector
+    WriteSector
     UnlockSector
     pop edx
     jmp format_do_sys
@@ -5576,7 +5635,7 @@ format_mbr_name_next:
     pop esi    
     pop cx
 ;       
-    ModifySector
+    WriteSector
     UnlockSector
     pop edx
 
@@ -6152,6 +6211,11 @@ init    PROC far
     mov esi,OFFSET unlock_sector
     mov edi,OFFSET unlock_sector_name
     mov ax,unlock_sector_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_sector
+    mov edi,OFFSET write_sector_name
+    mov ax,write_sector_nr
     RegisterOsGate
 ;
     mov esi,OFFSET modify_sector

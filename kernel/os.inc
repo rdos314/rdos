@@ -3007,6 +3007,12 @@ UnlockSector    MACRO
     OsGate unlock_sector_nr
                     ENDM
 
+
+;  IN   EBX         Handle
+WriteSector    MACRO
+    OsGate write_sector_nr
+                    ENDM
+
 ;  IN   EBX         Handle
 ModifySector    MACRO
     OsGate modify_sector_nr

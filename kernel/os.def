@@ -762,4 +762,6 @@ init_process_nr             = 674
 send_debug_event_nr         = 675
 kernel_debug_event_nr       = 676
 
+write_sector_nr             = 677
+
 osgate_entries              = 700

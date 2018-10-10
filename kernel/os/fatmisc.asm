@@ -369,7 +369,7 @@ format_cluster_ok12:
     mov cx,es:[esi].boot_fat_sectors16
     movzx edx,es:[esi].boot_resv_sectors
 ;    
-        ModifySector
+        WriteSector
         UnlockSector
 ;
     push cx
@@ -383,7 +383,7 @@ format_cluster_ok12:
     mov ecx,7Fh
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     
@@ -400,7 +400,7 @@ format_fat1_loop12:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     jmp format_fat1_loop12
@@ -416,7 +416,7 @@ format_fat1_done12:
     mov ecx,7Fh
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
 ;    
     pop cx
@@ -434,7 +434,7 @@ format_fat2_loop12:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     jmp format_fat2_loop12
@@ -452,7 +452,7 @@ format_root_dir_loop12:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     loop format_root_dir_loop12    
@@ -536,7 +536,7 @@ format_cluster_ok16:
     mov cx,es:[esi].boot_fat_sectors16
     movzx edx,es:[esi].boot_resv_sectors
 ;    
-        ModifySector
+        WriteSector
         UnlockSector
 ;
     push cx
@@ -550,7 +550,7 @@ format_cluster_ok16:
     mov ecx,7Fh
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     
@@ -567,7 +567,7 @@ format_fat1_loop16:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     jmp format_fat1_loop16    
@@ -583,7 +583,7 @@ format_fat1_done16:
     mov ecx,7Fh
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
 ;    
     pop cx
@@ -601,7 +601,7 @@ format_fat2_loop16:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     jmp format_fat2_loop16    
@@ -619,7 +619,7 @@ format_root_dir_loop16:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     loop format_root_dir_loop16    
@@ -717,12 +717,12 @@ format_cluster_ok32:
     mov ecx,80h
     rep movs dword ptr es:[edi],es:[esi]
     pop ecx
-    ModifySector
+    WriteSector
     UnlockSector
 ;
     pop esi
     pop ebx
-        ModifySector
+    WriteSector
         UnlockSector
 ;       
     push ecx
@@ -738,7 +738,7 @@ format_cluster_ok32:
     mov dword ptr es:[esi+1ECh],2
     mov dword ptr es:[esi+1F0h],0
     mov dword ptr es:[esi+1FCh],0AA550000h
-    ModifySector
+    WriteSector
     UnlockSector
     pop ecx
 ;
@@ -753,7 +753,7 @@ format_cluster_ok32:
     mov ecx,7Dh
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop ecx
     
@@ -769,7 +769,7 @@ format_fat1_loop32:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop ecx
     jmp format_fat1_loop32
@@ -786,7 +786,7 @@ format_fat1_done32:
     mov ecx,7Dh
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
 ;    
     pop ecx
@@ -804,7 +804,7 @@ format_fat2_loop32:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop ecx
     jmp format_fat2_loop32    
@@ -823,7 +823,7 @@ format_root_dir_loop32:
     mov ecx,80h
     xor eax,eax
     rep stos dword ptr es:[edi]
-    ModifySector
+    WriteSector
     UnlockSector
     pop cx
     loop format_root_dir_loop32
