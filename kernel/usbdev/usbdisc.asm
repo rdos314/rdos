@@ -189,7 +189,7 @@ CalcParam       Proc near
 
 calc_param_norm_loop:
     shl ebx,1
-    cmp ebx,10000h
+    cmp ebx,8000h
     je calc_param_done
 ;
     shr edx,1
@@ -208,9 +208,7 @@ calc_param_done:
     mov eax,0FFFFh
 
 calc_param_in_range:    
-    movzx ebx,ax
-
-    mov fs:disc_sectors_per_unit,ax
+    mov fs:disc_sectors_per_unit,bx
     mov eax,fs:disc_sectors
     xor edx,edx
     div ebx
@@ -222,51 +220,14 @@ calc_norm_loop:
     sub eax,fs:disc_sectors
     jnc calc_norm_ok
 ;
-    add fs:disc_sectors_per_unit,1
+    add fs:disc_units,1
     jnc calc_norm_loop
 ;
-    dec fs:disc_sectors_per_unit
-    inc fs:disc_units
+    dec fs:disc_units
+    inc fs:disc_sectors_per_unit
     jmp calc_norm_loop
 
 calc_norm_ok:
-    movzx eax,fs:disc_sectors_per_unit
-    mov esi,ebx
-    mov edi,-1
-    mov ecx,1000h
-
-calc_best_loop:    
-    xor edx,edx
-    mov eax,fs:disc_sectors
-    div ebx
-    mul ebx
-    sbb eax,fs:disc_sectors
-    neg eax
-;
-    cmp eax,edi
-    ja calc_best_next
-;
-    mov esi,ebx
-    mov edi,eax
-    or edi,edi
-    jz calc_best_done
-
-calc_best_next:
-    sub ebx,1
-    jz calc_best_done
-;    
-    loop calc_best_loop 
-
-calc_best_done:    
-    mov ebx,esi
-    mov fs:disc_sectors_per_unit,bx
-    xor edx,edx
-    mov eax,fs:disc_sectors
-    div ebx
-    mov fs:disc_units,eax
-    mul ebx
-    mov fs:disc_sectors,eax
-;    
     popad
     ret
 CalcParam       Endp
