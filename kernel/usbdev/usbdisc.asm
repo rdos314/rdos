@@ -202,10 +202,10 @@ calc_param_norm_loop:
     jc calc_param_norm_loop
 
 calc_param_done:
-    cmp eax,10000h
+    cmp ebx,10000h
     jc calc_param_in_range
 ;
-    mov eax,0FFFFh
+    mov ebx,0FFFFh
 
 calc_param_in_range:    
     mov fs:disc_sectors_per_unit,bx
