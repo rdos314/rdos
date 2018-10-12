@@ -51,6 +51,7 @@ drive_wait_struc    ENDS
 
 DISC_FLAG_STOPPED       = 1
 DISC_FLAG_USE32         = 2
+DISC_FLAG_IO            = 4
 
 disc_def_struc      STRUC
 
@@ -80,11 +81,16 @@ disc_awrite_timeout     DD ?,?
 disc_seq_list           DW ?
 disc_param              DD ?,?
 disc_handle             DW ?
+disc_pend_bitmap        DW ?
+disc_curr_unit          DD ?
+disc_curr_sector        DW ?
+disc_start_unit         DD ?
+disc_start_sector       DW ?
+disc_pend_low           DD ?
+disc_pend_high          DD ?
 
 disc_pend_count         DD ?
 disc_io_count           DD ?
-
-disc_pend_bitmap        DD ?
 
 disc_change_proc        DD ?,?
 disc_vendor_str         DB 256 DUP(?)
@@ -95,6 +101,9 @@ disc_def_struc      ENDS
 disc_unit_struc STRUC
 
 disc_sectors            DW ?
+disc_sector_pend_low    DW ?
+disc_sector_pend_high   DW ?
+disc_sector_pend_ptr    DD ?
 disc_sector_arr         DD ?
 
 disc_unit_struc ENDS
@@ -1005,110 +1014,58 @@ allocate_handle ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 insert_pending  PROC near
+    push es
     push eax
     push ebx
-    push ecx
-    push dx
-
-ifdef DEBUG
-    call CheckDeleted
-    call CheckAll
-    call CheckBuffered
-endif
-    
-    test es:[edi].dh_flags,FLAG_ASYNC_WRITE
-    jz insert_noaw
+    push edx
 ;
-    int 3
-
-insert_noaw:
-
-    test es:[edi].dh_flags,FLAG_IO_PENDING
-    jz insert_pend_do
-;
-    int 3
-    call CheckAll
-;       
-    mov eax,ds:disc_pend_first
-    or eax,eax
-    jz insert_pend_do
-;
-    mov ebx,eax
-    cmp eax,edi
-    je insert_pend_err
-
-insert_pend_check:
-    mov eax,es:[eax].dh_next
-    cmp eax,edi
-    je insert_pend_err
-;
-    cmp eax,ebx
-    jnz insert_pend_check
-    jmp insert_pend_do
-
-insert_pend_err:
-    int 3
-    jmp insert_pend_done
-
-insert_pend_do:
     or es:[edi].dh_flags,FLAG_IO_PENDING
+    mov ebx,es:[edi].dh_unit
+    mov edx,ds:[4*ebx].disc_unit_arr
+    movzx ebx,es:[edi].dh_sector
+    cmp bx,es:[edx].disc_sector_pend_low
+    jae inspSectorLowOk
 ;
-    mov eax,ds:disc_pend_first
-    or eax,eax
-    jne insert_pend_used
+    mov es:[edx].disc_sector_pend_low,bx
 
-insert_pend_empty:
-    mov es:[edi].dh_prev,edi
-    mov es:[edi].dh_next,edi
-    mov ds:disc_pend_list,edi
-    mov ds:disc_pend_first,edi
-    jmp insert_pend_done
-
-insert_pend_used:
-    mov ecx,es:[edi].dh_unit
-    mov dx,es:[edi].dh_sector
-    cmp ecx,es:[eax].dh_unit
-    jc insert_pend_first
+inspSectorLowOk:    
+    cmp bx,es:[edx].disc_sector_pend_high
+    jbe inspSectorHighOk
 ;
-    jnz insert_pend_search_loop
-    cmp dx,es:[eax].dh_sector
-    jnc insert_pend_search_loop
+    mov es:[edx].disc_sector_pend_high,bx
 
-insert_pend_first:
-    mov ds:disc_pend_first,edi
-    jmp insert_pend_link
-
-insert_pend_search_loop:
-    mov eax,es:[eax].dh_next
-    cmp eax,ds:disc_pend_first
-    je insert_pend_link
+inspSectorHighOk:
+    mov edx,es:[edx].disc_sector_pend_ptr
+    bts es:[edx],ebx
+    jc inspDone
 ;
-    cmp ecx,es:[eax].dh_unit
-    jc insert_pend_link
+    mov edx,es:[edi].dh_unit
+    cmp edx,ds:disc_pend_low
+    jae inspUnitLowOk
 ;
-    jnz insert_pend_search_loop
+    mov ds:disc_pend_low,edx
+
+inspUnitLowOk:
+    cmp edx,ds:disc_pend_high
+    jbe inspUnitHighOk
 ;
-    cmp dx,es:[eax].dh_sector
-    jnc insert_pend_search_loop
+    mov ds:disc_pend_high,edx
 
-insert_pend_link:       
-    mov ebx,es:[eax].dh_prev
-    mov es:[eax].dh_prev,edi
-    mov es:[ebx].dh_next,edi
-    mov es:[edi].dh_prev,ebx
-    mov es:[edi].dh_next,eax    
+inspUnitHighOk:
+    mov es,ds:disc_pend_bitmap
+    xor ebx,ebx
+    bts es:[ebx],edx
+    jc inspDone
+;
+    or ds:disc_flags,DISC_FLAG_IO
+    mov bx,ds:disc_thread
+    Signal
 
-insert_pend_done:
-    inc ds:disc_pend_count    
-
-ifdef DEBUG
-    call CheckAll
-endif
-    
-    pop dx
-    pop ecx
+inspDone:
+    pop edx
     pop ebx
     pop eax
+    pop es
     ret
 insert_pending  ENDP
 
@@ -1558,19 +1515,37 @@ endif
     or edx,edx
     jne insert_buf_used
 ;
+    push ebp
     push edi
+;
     mov edi,OFFSET disc_sector_arr
     movzx ecx,ds:disc_sectors_per_unit
     mov eax,ecx
     shl eax,2
     add eax,edi
+;
+    mov ebp,ecx
+    dec ebp
+    shr ebp,3
+    add ebp,5
+    add eax,ebp
+;
     AllocateSmallLinear
     mov ds:[4*esi].disc_unit_arr,edx
     mov es:[edx].disc_sectors,0
+    mov es:[edx].disc_sector_pend_low,-1
+    mov es:[edx].disc_sector_pend_high,0
     add edi,edx
     xor eax,eax
     rep stos dword ptr es:[edi]
+    mov es:[edx].disc_sector_pend_ptr,edi
+;
+    mov ecx,ebp
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
     pop edi
+    pop ebp
 
 insert_buf_used:
     mov eax,es:[edi].dh_unit
@@ -1932,22 +1907,16 @@ set_param_max:
     mov es,di
     FreeMem
 ;
-    int 3
-    mov ax,flat_sel
-    mov es,ax
     mov eax,ds:disc_units
     dec eax
     shr eax,3
-    add eax,2
-    AllocateSmallLinear
-    mov ds:disc_pend_bitmap,edx
-    mov edi,edx
+    add eax,5
+    AllocateSmallGlobalMem
+    mov ds:disc_pend_bitmap,es
+    xor edi,edi
     mov ecx,eax
-    dec ecx
     xor al,al
     rep stos byte ptr es:[edi]
-    mov al,-1
-    stos byte ptr es:[edi]
 ;
     pop edi
     pop si
@@ -2091,10 +2060,9 @@ wait_for_disc_req_loop:
     call update_async_timer
     LeaveSection ds:disc_section
 ;
-    mov ebx,ds:disc_pend_list
-    or ebx,ebx
+    test ds:disc_flags,DISC_FLAG_IO
     clc
-    jnz wait_for_disc_req_done    
+    jnz wait_for_disc_req_done
 ;
     test ds:disc_flags,DISC_FLAG_STOPPED
     stc
@@ -2567,8 +2535,8 @@ disc_request_retry  Proc far
     pop ds
     retf32
 disc_request_retry  Endp
-
     
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2589,6 +2557,7 @@ get_disc_request_array_name     DB 'Get Disc Request Array', 0
 get_disc_request_array  Proc far
     push ds
     push es
+    push fs
     push eax
     push ebx
     push edx
@@ -2596,18 +2565,276 @@ get_disc_request_array  Proc far
     push ebp
 ;
     mov ebp,ecx
-    mov ax,flat_sel
-    mov es,ax
     mov ds,bx
-    EnterSection ds:disc_section
+    mov fs,ds:disc_pend_bitmap
 
-ifdef DEBUG
-    call CheckAll
-endif
+gdraRetry:
+    mov edi,ds:disc_curr_unit
+    cmp edi,-1
+    je gdraSetupUnitScan
+;
+    mov ebx,edi
+    mov cl,bl
+    and cl,7
+    shr ebx,3
+    mov eax,fs:[ebx]
+    shr eax,cl
+    test al,1
+    jnz gdraHasUnit
+;
+    mov ds:disc_start_unit,edi
+    mov ds:disc_curr_sector,-1
+;
+    bsf eax,eax
+    jnz gdraFoundUnit
+;
+    add ebx,3
+    mov edi,ebx
+    shl edi,3
+;
+    mov ecx,ds:disc_pend_high
+    shr ecx,3
+    sub ecx,ebx
+    jc gdraSetupUnitScan
+;
+    shr ecx,2
+    inc ecx
+    jmp gdraUnitScan
+
+gdraSetupUnitScan:
+    mov ds:disc_curr_sector,-1
+    mov ebx,ds:disc_pend_low
+    mov ds:disc_start_unit,ebx
+    shr ebx,3
+    mov edi,ebx
+    shl edi,3
+;
+    mov ecx,ds:disc_pend_high
+    shr ecx,3
+    sub ecx,ebx
+    shr ecx,2
+    inc ecx
+
+gdraUnitScan:
+    mov eax,fs:[ebx]
+    bsf eax,eax
+    jnz gdraFoundUnit
+;
+    add ebx,4
+    add edi,32
+    sub ecx,1
+    jnz gdraUnitScan
+;
+    mov eax,ds:disc_pend_low
+    cmp eax,ds:disc_start_unit
+    jae gdraNoReq
+;
+    mov ds:disc_curr_unit,-1
+    mov eax,ds:disc_start_unit
+    mov ds:disc_pend_high,eax
+    jmp gdraRetry
+
+gdraNoReq:
+    mov ds:disc_pend_low,-1
+    mov ds:disc_pend_high,0
+    mov ds:disc_curr_unit,-1
+    and ds:disc_flags,NOT DISC_FLAG_IO
+    stc
+    jmp gdraDone
+
+gdraFoundUnit:
+    add edi,eax
+;
+    mov eax,ds:disc_start_unit
+    cmp eax,ds:disc_pend_low
+    jne gdraHasUnit
+;
+    mov ds:disc_pend_low,edi
+
+gdraHasUnit:
+    mov ds:disc_curr_unit,edi
+;
+    mov edi,ds:[4*edi].disc_unit_arr
+    mov edx,es:[edi].disc_sector_pend_ptr
+;
+    mov ax,ds:disc_curr_sector
+    cmp ax,-1
+    je gdraSetupSectorScan
+;
+    movzx ebx,ax
+    mov esi,ebx
+    mov cl,bl
+    and cl,7
+    shr ebx,3
+    mov eax,es:[ebx+edx]
+    shr eax,cl
+    test al,1
+    jnz gdraHasSector
+;
+    mov ds:disc_start_sector,si
+    bsf eax,eax
+    jnz gdraSectorFound
+;
+    add ebx,3
+    mov esi,ebx
+    shl esi,3
+;
+    movzx ecx,es:[edi].disc_sector_pend_high
+    shr ecx,3
+    sub ecx,ebx
+    jc gdraNextUnit
+;
+    shr ecx,2
+    inc ecx
+    jmp gdraSectorScan
+
+gdraSetupSectorScan:
+    movzx ebx,es:[edi].disc_sector_pend_low
+    mov ds:disc_start_sector,bx
+    movzx ecx,es:[edi].disc_sector_pend_high
+    shr ebx,3
+    mov esi,ebx
+    shl esi,3
+;
+    shr ecx,3
+    sub ecx,ebx
+    shr ecx,2
+    inc ecx
+
+gdraSectorScan:
+    mov eax,es:[ebx+edx]
+    bsf eax,eax
+    jnz gdraSectorFound
+;
+    add ebx,4
+    add esi,32
+    sub ecx,1
+    jnz gdraSectorScan
+;
+    mov ax,es:[edi].disc_sector_pend_low
+    cmp ax,ds:disc_start_sector
+    jae gdraClearSector
+;
+    mov ax,ds:disc_start_sector
+    mov es:[edi].disc_sector_pend_high,ax
+
+gdraNextUnit:
+    mov ds:disc_curr_sector,-1
+    inc ds:disc_curr_unit
+    jmp gdraRetry
+
+gdraClearSector:
+    mov edi,ds:disc_curr_unit
+    xor edx,edx
+    btr fs:[edx],edi
+    mov ds:disc_curr_sector,-1
+    jmp gdraRetry
+
+gdraSectorFound:
+    add esi,eax
+    cmp si,es:[edi].disc_sector_pend_high
+    ja gdraNextUnit
+;
+    mov ax,ds:disc_start_sector
+    cmp ax,es:[edi].disc_sector_pend_low
+    jne gdraHasSector
+;
+    mov es:[edi].disc_sector_pend_low,si
+
+gdraHasSector:
+    lea ebx,[4*esi+edi].disc_sector_arr
+    push ebx
+    xor ecx,ecx
+    mov edi,es:[ebx]
+    or edi,edi
+    jnz gdraHasBlock
+;
+    int 3
+
+gdraHasBlock:
+    test es:[edi].dh_flags,FLAG_IO_PENDING
+    jnz gdraHasPending
+;
+    int 3
+
+gdraHasPending:
+    btr es:[edx],esi
+    or es:[edi].dh_flags,FLAG_IO_BUSY
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je gdraRead
+
+gdraWrite:
+    inc ecx
+    inc esi
+    add ebx,4
+    sub ebp,1
+    jz gdraOk
+;
+    mov edi,es:[ebx]
+    or edi,edi
+    jz gdraOk
+;
+    mov al,es:[edi].dh_flags
+    test al,FLAG_IO_PENDING
+    jz gdraOk
+;
+    test al,FLAG_IO_BUSY
+    jnz gdraOk
+;
+    mov al,es:[edi].dh_state
+    cmp al,STATE_DIRTY
+    jne gdraOk
+;
+    btr es:[edx],esi
+    or es:[edi].dh_flags,FLAG_IO_BUSY
+    jmp gdraWrite
+
+gdraRead:
+    inc ecx
+    inc esi
+    add ebx,4
+    sub ebp,1
+    jz gdraOk
+;
+    mov edi,es:[ebx]
+    or edi,edi
+    jz gdraOk
+;
+    mov al,es:[edi].dh_flags
+    test al,FLAG_IO_PENDING
+    jz gdraOk
+;
+    test al,FLAG_IO_BUSY
+    jnz gdraOk
+;
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    jne gdraOk
+;
+    btr es:[edx],esi
+    or es:[edi].dh_flags,FLAG_IO_BUSY
+    jmp gdraRead
     
-    call update_async_write
-    call update_async_timer
-    call update_disc_seq
+gdraOk:
+    mov ds:disc_curr_sector,si
+    pop esi
+    clc
+    
+gdraDone:
+    pop ebp
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    retf32
+
+
+
+
     xor ecx,ecx
     mov edi,ds:disc_pend_list
     or edi,edi
@@ -2820,6 +3047,10 @@ install_disc_loop:
     mov ds:disc_readahead,ecx
     InitSection ds:disc_section
     InitSpinlock ds:disc_spinlock
+    mov ds:disc_curr_unit,-1
+    mov ds:disc_curr_sector,-1
+    mov ds:disc_pend_low,-1
+    mov ds:disc_pend_high,0
     mov ds:disc_pend_count,0
     mov ds:disc_io_count,0
     mov ds:disc_awrite_count,0
