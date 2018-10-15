@@ -2421,11 +2421,8 @@ gdraHasUnit:
 ;
     mov edi,ds:[4*edi].disc_unit_arr
     or edi,edi
-    jnz gdraUnitValid
+    jz gdraClearUnit
 ;
-
-
-gdraUnitValid:
     mov edx,es:[edi].disc_sector_pend_ptr
 ;
     mov ax,ds:disc_curr_sector
@@ -2484,7 +2481,7 @@ gdraSectorScan:
 ;
     mov ax,es:[edi].disc_sector_pend_low
     cmp ax,ds:disc_start_sector
-    jae gdraClearSector
+    jae gdraClearUnit
 ;
     mov ax,ds:disc_start_sector
     mov es:[edi].disc_sector_pend_high,ax
@@ -2494,7 +2491,7 @@ gdraNextUnit:
     inc ds:disc_curr_unit
     jmp gdraRetry
 
-gdraClearSector:
+gdraClearUnit:
     mov edi,ds:disc_curr_unit
     xor edx,edx
     btr fs:[edx],edi
@@ -2517,15 +2514,7 @@ gdraHasSector:
     push ebx
     xor ecx,ecx
     mov edi,es:[ebx]
-    or edi,edi
-    jz gdraClearSector
 ;
-    test es:[edi].dh_flags,FLAG_IO_PENDING
-    jnz gdraHasPending
-;
-    int 3
-
-gdraHasPending:
     btr es:[edx],esi
     or es:[edi].dh_flags,FLAG_IO_BUSY
     mov al,es:[edi].dh_state
