@@ -2905,18 +2905,6 @@ WaitForDiscRequest      MACRO
                     ENDM
 
 ;       IN      BX      Disc sel
-;       OUT     EDI     Disc handle
-GetDiscRequest  MACRO
-    OsGate get_disc_request_nr
-                    ENDM
-
-;       IN      BX      Disc sel
-;       OUT     EDI     Disc handle
-PollDiscRequest MACRO
-    OsGate poll_disc_request_nr
-                    ENDM
-
-;       IN      BX      Disc sel
 ;       IN      EDI     Disc handle
 DiscRequestCompleted    MACRO
     OsGate disc_request_completed_nr
@@ -3005,12 +2993,6 @@ LockSector      MACRO
 ;  IN   EBX         Handle
 UnlockSector    MACRO
     OsGate unlock_sector_nr
-                    ENDM
-
-
-;  IN   EBX         Handle
-WriteSector    MACRO
-    OsGate write_sector_nr
                     ENDM
 
 ;  IN   EBX         Handle

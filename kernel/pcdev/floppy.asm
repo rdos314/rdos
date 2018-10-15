@@ -1828,9 +1828,14 @@ write_drive     Endp
 perform_one     Proc near
 
 perform_one_loop:
-    GetDiscRequest
+    mov ecx,1
+    GetDiscRequestArray
     jc perform_one_done
 ;
+    cmp ecx,1
+    jne perform_one_done
+;
+    mov edi,es:[esi]
     mov al,fs:disc_sub_unit
     movzx bx,al
     mov bl,ds:[bx].BootValid

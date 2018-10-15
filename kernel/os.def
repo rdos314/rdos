@@ -195,8 +195,6 @@ start_disc_nr                           = 201
 stop_disc_nr                            = 202
 set_disc_param_nr                       = 203
 wait_for_disc_request_nr        = 204
-get_disc_request_nr                     = 205
-poll_disc_request_nr            = 206
 disc_request_completed_nr       = 207
 new_disc_request_nr                     = 208
 get_disc_request_array_nr       = 209
@@ -761,7 +759,5 @@ init_process_nr             = 674
 
 send_debug_event_nr         = 675
 kernel_debug_event_nr       = 676
-
-write_sector_nr             = 677
 
 osgate_entries              = 700

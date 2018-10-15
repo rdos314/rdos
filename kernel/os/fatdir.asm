@@ -1845,7 +1845,7 @@ extend_dir_entry_loop:
         test si,1FFh
         jnz extend_dir_entry_loop
 ;
-        WriteSector
+        ModifySector
         UnlockSector
 
 extend_dir_try_next:
@@ -3015,7 +3015,7 @@ init_dir_sector_loop:
         xor eax,eax
         rep stos dword ptr es:[edi]
 ;
-        WriteSector
+        ModifySector
         UnlockSector
 
 init_dir_try_next:
