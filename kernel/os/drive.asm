@@ -1045,6 +1045,8 @@ insert_async_write      ENDP
 
 update_async_write      PROC near
     GetSystemTime
+    mov esi,eax
+    sub esi,MIN_TIMEOUT
     sub eax,ds:disc_awrite_timeout
     sbb edx,ds:disc_awrite_timeout+4
     jc update_async_done
@@ -1054,11 +1056,8 @@ update_async_loop:
     or edi,edi
     jz update_async_done
 ;
-    GetSystemTime
-    sub eax,MIN_TIMEOUT
-    sbb edx,0
-;
     mov edi,es:[edi].dh_prev
+    mov eax,esi
     sub eax,es:[edi].dh_time_lsb
     jc update_async_done
 ;
@@ -5121,13 +5120,12 @@ write_long_disc_loop:
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
-    mov es:[edi].dh_state,STATE_EMPTY
+    mov es:[edi].dh_state,STATE_DIRTY
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_flags,0
     call insert_buf
-    call insert_pending
+    jmp write_long_disc_found
 
 write_long_disc_signal:
     mov al,es:[edi].dh_state
@@ -5142,10 +5140,6 @@ write_long_disc_block:
 write_long_disc_found:
     test es:[edi].dh_flags, FLAG_IO_BUSY
     jnz write_long_disc_block
-;
-    mov al,es:[edi].dh_state
-    cmp al,STATE_EMPTY
-    je write_long_disc_signal
 ;       
     mov ebx,edi
     mov edi,es:[edi].dh_data
