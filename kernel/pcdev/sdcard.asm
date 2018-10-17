@@ -3170,8 +3170,12 @@ InstallPartition    Proc near
     pushad
 ;
     cmp cl,7
-    jne install_check_type
+    je install_check_part
 ;
+    cmp cl,0Ch
+    jne install_check_type
+
+install_check_part:
     push eax
 ;
     push edx
@@ -3184,19 +3188,33 @@ InstallPartition    Proc near
     call ReadPioSector
 ;
     push ds
-    push edx
-;    
-    mov eax,10h
-    AllocateSmallGlobalMem
+    push edx    
+;
+    mov al,es:[edi+26h]
+    cmp al,29h
+    je install_use_part_fat
+;
+    mov ax,cs
+    mov ds,ax
+    movzx esi,cl
+    shl esi,1
+    jmp install_use_part_cont
+
+install_use_part_fat:
     mov ax,flat_sel
     mov ds,ax
-    mov edx,edi
     lea esi,[edi+36h]
+
+install_use_part_cont:
+    mov edx,edi
+    mov eax,10h
+    AllocateSmallGlobalMem
     xor edi,edi
     movs dword ptr es:[edi],ds:[esi]
     movs dword ptr es:[edi],ds:[esi]
     movs dword ptr es:[edi],ds:[esi]
     movs dword ptr es:[edi],ds:[esi]
+;
     mov ecx,1000h
     FreeLinear
 ;

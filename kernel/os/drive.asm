@@ -51,7 +51,6 @@ drive_wait_struc    ENDS
 
 DISC_FLAG_STOPPED       = 1
 DISC_FLAG_USE32         = 2
-DISC_FLAG_IO            = 4
 
 disc_def_struc      STRUC
 
@@ -963,7 +962,6 @@ inspUnitHighOk:
     bts es:[ebx],edx
     jc inspDone
 ;
-    or ds:disc_flags,DISC_FLAG_IO
     mov bx,ds:disc_thread
     Signal
 
@@ -1915,7 +1913,8 @@ wait_for_disc_req_loop:
     call update_async_timer
     LeaveSection ds:disc_section
 ;
-    test ds:disc_flags,DISC_FLAG_IO
+    mov eax,ds:disc_io_count
+    or eax,eax
     clc
     jnz wait_for_disc_req_done
 ;
@@ -2331,6 +2330,10 @@ get_disc_request_array  Proc far
 ;
     mov ebp,ecx
     mov ds,bx
+    EnterSection ds:disc_section
+    call update_async_write
+    call update_async_timer
+    call update_disc_seq
     mov fs,ds:disc_pend_bitmap
 
 gdraRetry:
@@ -2369,6 +2372,9 @@ gdraRetry:
 gdraSetupUnitScan:
     mov ds:disc_curr_sector,-1
     mov ebx,ds:disc_pend_low
+    cmp ebx,-1
+    je gdraNoReq
+;
     mov ds:disc_start_unit,ebx
     shr ebx,3
     mov edi,ebx
@@ -2403,7 +2409,6 @@ gdraNoReq:
     mov ds:disc_pend_low,-1
     mov ds:disc_pend_high,0
     mov ds:disc_curr_unit,-1
-    and ds:disc_flags,NOT DISC_FLAG_IO
     stc
     jmp gdraDone
 
@@ -2579,6 +2584,8 @@ gdraOk:
     clc
     
 gdraDone:
+    LeaveSection ds:disc_section
+;
     pop ebp
     pop edi
     pop edx
@@ -2717,7 +2724,8 @@ is_disc_idle    Proc far
     movzx bx,al
     shl bx,1
     mov ds,ds:[bx].disc_def_arr
-    test ds:disc_flags,DISC_FLAG_IO
+    mov ebx,ds:disc_io_count
+    or ebx,ebx
     jz is_disc_idle_ok
 ;
     stc
