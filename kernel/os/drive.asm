@@ -2334,6 +2334,10 @@ get_disc_request_array  Proc far
     call update_async_timer
     call update_disc_seq
     mov fs,ds:disc_pend_bitmap
+    mov eax,ds:disc_io_count
+    or eax,eax
+    stc
+    jz gdraDone
 
 gdraRetry:
     mov edi,ds:disc_curr_unit
