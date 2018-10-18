@@ -30,19 +30,16 @@
 
 #include "serial.h"
 
+class TModbusDevice;
+
 class TModbus
 {
 public:
-    TModbus(TSerialDevice *Serial, char Address);
+    TModbus(TModbusDevice *dev, char Address);
     TModbus();
     ~TModbus();
 
-    TSerialDevice *GetSerial();
-
-    void EnableEcho();
-    void DisableEcho();
-
-    void SetTimeout(int ms);
+    TModbusDevice *GetDevice();
 
     int ReadCoilStatus(int Coil);
     int ReadInputStatus(int Input);
@@ -72,16 +69,11 @@ public:
     int DoWritePresetRegisters();
 
 protected:
-    void CalcCrc(const char *buf, int size, char crc[2]);
-    int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
     int Session(char FunctionCode, const char *buf, int size, char *reply);
 
-    TSection FSection;
-    TSerialDevice *FSerial;
+    TModbusDevice *FDevice;
     char FAddress;
     int FBigEndian;
-    int FHasEcho;
-    int FTimeout;
 
     int FStartReg;
     int FRegCount;
@@ -90,6 +82,34 @@ protected:
 
     char FWriteBuf[100];
     int FWriteSize;
+};
+
+class TModbusDevice
+{
+friend class TModbus;
+public:
+    TModbusDevice(TSerialDevice *serial);
+    ~TModbusDevice();
+
+    void EnableEcho();
+    void DisableEcho();
+
+    void SetTimeout(int ms);
+
+    void Add(int Address, TModbus *Modbus);
+    int IsUsed(int Address);
+    TSerialDevice *GetSerial();
+
+protected:    
+    void CalcCrc(const char *buf, int size, char crc[2]);
+    int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
+
+    int FHasEcho;
+    int FTimeout;
+
+    TModbus *FModbusArr[0x80];
+    TSerialDevice *FSerial;
+    TSection FSection;
 };
 
 #endif

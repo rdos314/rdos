@@ -44,37 +44,12 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TModbus::TModbus(TSerialDevice *Serial, char Address)
- : FSection("Modbus")
+TModbus::TModbus(TModbusDevice *Device, char Address)
 {
-    FSerial = Serial;
+    FDevice = Device;
     FAddress = Address;
     FBigEndian = TRUE;
-    FHasEcho = FALSE;
     FReplySize = 0;
-    FTimeout = 250;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::TModbus
-#
-#   Purpose....: Constructor for TModbus
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TModbus::TModbus()
- : FSection("Modbus")
-{
-    FSerial = 0;
-    FAddress = 0;
-    FBigEndian = TRUE;
-    FHasEcho = FALSE;
-    FReplySize = 0;
-    FTimeout = 250;
 }
 
 /*##########################################################################
@@ -94,242 +69,18 @@ TModbus::~TModbus()
 
 /*##########################################################################
 #
-#   Name       : TModbus::GetSerial
+#   Name       : TModbus::GetDevice
 #
-#   Purpose....: Get serial device
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice *TModbus::GetSerial()
-{
-    return FSerial;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::EnableEcho
-#
-#   Purpose....: Enable echo
+#   Purpose....: Get modbus device
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbus::EnableEcho()
+TModbusDevice *TModbus::GetDevice()
 {
-    FHasEcho = TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::DisableEcho
-#
-#   Purpose....: Disable echo
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TModbus::DisableEcho()
-{
-    FHasEcho = FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::SetTimeout
-#
-#   Purpose....: Set timeout
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TModbus::SetTimeout(int ms)
-{
-    FTimeout = ms;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::CalcCrc
-#
-#   Purpose....: Calc CRC
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TModbus::CalcCrc(const char *buf, int size, char crc[2])
-{
-    int lcrc = 0xFFFF;
-    int pos;
-    int i;
-
-    for (pos = 0; pos < size; pos++)
-    {
-        lcrc ^= (int)buf[pos];
-
-        for (i = 8; i != 0; i--)
-        {
-            if ((lcrc & 0x0001) != 0)
-            { 
-                lcrc >>= 1;
-                lcrc ^= 0xA001;
-            }
-            else
-                lcrc >>= 1;
-        }
-    }
-
-    crc[0] = (char)lcrc;
-    crc[1] = (char)(lcrc >> 8);
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::SendAndReceive
-#
-#   Purpose....: Send message & receive answer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TModbus::SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen)
-{
-    char msg[256];
-    char crc[2];
-    char ch;
-    int pos;
-    int i;
-    int ok = FALSE;
-
-    FSection.Enter();
-
-    if (size < 254)
-    {
-        CalcCrc(buf, size, crc);
-        memcpy(msg, buf, size);
-        memcpy(msg+size, crc, 2);
-
-        FSerial->Write(msg, size + 2);
-
-        if (FHasEcho)
-        {
-            pos = 0;
-            while (ok && pos < size + 2 && ch == msg[pos])
-            {
-                ok = FSerial->WaitForChar(FTimeout);
-                if (ok)
-                {
-                    ch = FSerial->Read();
-                    pos++;
-                }
-            }
-        }
-
-        pos = 0;
-
-        ok = FSerial->WaitForChar(500);
-        if (ok)
-        {
-
-            ch = FSerial->Read();
-            while (ok && ch != msg[0])
-            {
-                ok = FSerial->WaitForChar(FTimeout);
-                if (ok)
-                    ch = FSerial->Read();
-            }
-
-            if (ok)
-            {
-                ok = FSerial->WaitForChar(FTimeout);
-                if (ok)
-                {
-                    ch = FSerial->Read();
-                    if (ch != msg[1])
-                        ok = FALSE;
-                }
-            }
-        }
-
-        if (ok)
-        {
-            reply[0] = msg[0];
-            reply[1] = msg[1];
-
-            ok = FSerial->WaitForChar(250);
-            if (ok)
-                reply[2] = FSerial->Read();
-        }
-
-        if (ok)
-        {
-            switch (reply[1])
-            {
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    *datalen = (unsigned int)reply[2];
-                    *replylen = *datalen + 5;
-                    break;
-
-                case 5:
-                case 6:
-                case 15:
-                case 16:
-                    *datalen = 4;
-                    *replylen = 8;
-                    break;
-
-                default:
-                    ok = FALSE;
-                    break;
-            }
-
-            pos = 3;
-
-            while (ok && pos < *replylen)
-            {
-                ok = FSerial->WaitForChar(250);
-                if (ok)
-                {
-                    reply[pos] = FSerial->Read();
-                    pos++;
-                }
-            }
-
-            if (ok)
-            {
-                CalcCrc(reply, *replylen - 2, crc);
-  
-                if (reply[*replylen - 2] != crc[0])
-                    ok = FALSE;
-
-                if (reply[*replylen - 1] != crc[1])
-                    ok = FALSE;
-            }
-        }
-    }
-
-    if (!ok)
-        while (FSerial->WaitForChar(2 * FTimeout))
-            FSerial->Read();
-
-    FSection.Leave();
-
-    return ok;
+    return FDevice;
 }
 
 /*##########################################################################
@@ -356,7 +107,7 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
     if (size < 252)
     {
         memcpy(&msg[2], buf, size);
-        ok = SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
+        ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
     }
     
     if (ok)
@@ -870,7 +621,7 @@ int TModbus::ReqHoldingRegisters(int Reg, int Count)
             temp = RdosSwapShort(temp);
         memcpy(&msg[4], &temp, 2);
 
-        ok = SendAndReceive(msg, 6, FReplyBuf, &datalen, &FReplySize);
+        ok = FDevice->SendAndReceive(msg, 6, FReplyBuf, &datalen, &FReplySize);
 
         if (ok && datalen >= 2)
         {
@@ -959,7 +710,7 @@ int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
 
         if (ok)
         {
-            CalcCrc(Buf, replylen - 2, crc);
+            FDevice->CalcCrc(Buf, replylen - 2, crc);
   
             if (Buf[replylen - 2] != crc[0])
                 ok = FALSE;
@@ -1190,4 +941,299 @@ int TModbus::DoWritePresetRegisters()
             return TRUE;
 
     return FALSE;
+}
+
+/*##################  TModbusDevice::TModbusDevice  ###############
+*   Purpose....: Constructor for TModbusDevice                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TModbusDevice::TModbusDevice(TSerialDevice *serial)
+ : FSection("Modbus")
+{
+    int i;
+
+    FSerial = serial;
+    FHasEcho = FALSE;
+    FTimeout = 250;
+
+    for (i = 0; i < 0x80; i++)
+        FModbusArr[i] = 0;
+}
+
+/*##################  TModbusDevice::TModbusDevice  ###############
+*   Purpose....: Destructor for TModbusDevice                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TModbusDevice::~TModbusDevice()
+{
+}
+
+/*##################  TModbusDevice::Add  ###############
+*   Purpose....: Add a specific address                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TModbusDevice::Add(int Address, TModbus *Modbus)
+{
+    if (Address < 0x80)
+        FModbusArr[Address] = Modbus;
+}
+
+/*##################  TModbusDevice::IsUsed  ###############
+*   Purpose....: Check if specific address is used                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int TModbusDevice::IsUsed(int Address)
+{
+    if (Address < 0x80)
+        if (FModbusArr[Address])
+            return TRUE;
+    return FALSE;
+}
+
+/*##################  TModbusDevice::GetSerial  ###############
+*   Purpose....: Get serial device                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TSerialDevice *TModbusDevice::GetSerial()
+{
+    return FSerial;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::EnableEcho
+#
+#   Purpose....: Enable echo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::EnableEcho()
+{
+    FHasEcho = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::DisableEcho
+#
+#   Purpose....: Disable echo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::DisableEcho()
+{
+    FHasEcho = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::SetTimeout
+#
+#   Purpose....: Set timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::SetTimeout(int ms)
+{
+    FTimeout = ms;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbusDevice::CalcCrc
+#
+#   Purpose....: Calc CRC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
+{
+    int lcrc = 0xFFFF;
+    int pos;
+    int i;
+
+    for (pos = 0; pos < size; pos++)
+    {
+        lcrc ^= (int)buf[pos];
+
+        for (i = 8; i != 0; i--)
+        {
+            if ((lcrc & 0x0001) != 0)
+            { 
+                lcrc >>= 1;
+                lcrc ^= 0xA001;
+            }
+            else
+                lcrc >>= 1;
+        }
+    }
+
+    crc[0] = (char)lcrc;
+    crc[1] = (char)(lcrc >> 8);
+}
+
+/*##########################################################################
+#
+#   Name       : TModbusDevice::SendAndReceive
+#
+#   Purpose....: Send message & receive answer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen)
+{
+    char msg[256];
+    char crc[2];
+    char ch;
+    int pos;
+    int i;
+    int ok = FALSE;
+
+    FSection.Enter();
+
+    if (size < 254)
+    {
+        CalcCrc(buf, size, crc);
+        memcpy(msg, buf, size);
+        memcpy(msg+size, crc, 2);
+
+        FSerial->Write(msg, size + 2);
+
+        if (FHasEcho)
+        {
+            pos = 0;
+            while (ok && pos < size + 2 && ch == msg[pos])
+            {
+                ok = FSerial->WaitForChar(FTimeout);
+                if (ok)
+                {
+                    ch = FSerial->Read();
+                    pos++;
+                }
+            }
+        }
+
+        pos = 0;
+
+        ok = FSerial->WaitForChar(500);
+        if (ok)
+        {
+
+            ch = FSerial->Read();
+            while (ok && ch != msg[0])
+            {
+                ok = FSerial->WaitForChar(FTimeout);
+                if (ok)
+                    ch = FSerial->Read();
+            }
+
+            if (ok)
+            {
+                ok = FSerial->WaitForChar(FTimeout);
+                if (ok)
+                {
+                    ch = FSerial->Read();
+                    if (ch != msg[1])
+                        ok = FALSE;
+                }
+            }
+        }
+
+        if (ok)
+        {
+            reply[0] = msg[0];
+            reply[1] = msg[1];
+
+            ok = FSerial->WaitForChar(250);
+            if (ok)
+                reply[2] = FSerial->Read();
+        }
+
+        if (ok)
+        {
+            switch (reply[1])
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    *datalen = (unsigned int)reply[2];
+                    *replylen = *datalen + 5;
+                    break;
+
+                case 5:
+                case 6:
+                case 15:
+                case 16:
+                    *datalen = 4;
+                    *replylen = 8;
+                    break;
+
+                default:
+                    ok = FALSE;
+                    break;
+            }
+
+            pos = 3;
+
+            while (ok && pos < *replylen)
+            {
+                ok = FSerial->WaitForChar(250);
+                if (ok)
+                {
+                    reply[pos] = FSerial->Read();
+                    pos++;
+                }
+            }
+
+            if (ok)
+            {
+                CalcCrc(reply, *replylen - 2, crc);
+  
+                if (reply[*replylen - 2] != crc[0])
+                    ok = FALSE;
+
+                if (reply[*replylen - 1] != crc[1])
+                    ok = FALSE;
+            }
+        }
+    }
+
+    if (!ok)
+        while (FSerial->WaitForChar(2 * FTimeout))
+            FSerial->Read();
+
+    FSection.Leave();
+
+    return ok;
 }
