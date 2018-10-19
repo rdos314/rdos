@@ -2878,6 +2878,9 @@ void __far InitTasking()
 
                 if (MaxVid > MinVid && MaxFid > MinFid)
                 {
+                    if (MinFid < MaxFid / 4)
+                        MinFid = MaxFid / 4;
+
                     RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
                     power_init_proc = InitEist;
                     power_update_proc = UpdateEist;
@@ -2886,6 +2889,9 @@ void __far InitTasking()
                 {
                     if (MaxFid > MinFid && MaxVid == MinVid)
                     {
+                        if (MinFid < MaxFid / 4)
+                            MinFid = MaxFid / 4;
+
                         RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
                         power_init_proc = InitEistFreq;
                         power_update_proc = UpdateEistFreq;
