@@ -54,6 +54,25 @@ TModbus::TModbus(TModbusDevice *Device, char Address)
 
 /*##########################################################################
 #
+#   Name       : TModbus::TModbus
+#
+#   Purpose....: Constructor for TModbus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TModbus::TModbus()
+{
+    FDevice = 0;
+    FAddress = 0;
+    FBigEndian = TRUE;
+    FReplySize = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TModbus::~TModbus
 #
 #   Purpose....: Destructor for TModbus
