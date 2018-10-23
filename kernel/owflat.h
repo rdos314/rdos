@@ -2829,6 +2829,14 @@
     parm [eax]  \
     value [eax];
 
+#pragma aux RdosOpenDisc = \
+    CallGate_open_disc  \
+    parm [eax];
+
+#pragma aux RdosCloseDisc = \
+    CallGate_close_disc  \
+    parm [eax];
+
 #pragma aux RdosReadDisc = \
     CallGate_read_long_disc  \
     CarryToBool \

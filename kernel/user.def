@@ -866,4 +866,7 @@ set_touch_cal_y_nr               = 681
 get_disc_cache_size_nr           = 682
 get_file_cache_size_nr           = 683
 
+open_disc_nr                     = 684
+close_disc_nr                    = 685
+
 usergate_entries                 = 700

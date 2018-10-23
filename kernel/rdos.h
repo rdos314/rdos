@@ -718,6 +718,8 @@ int RDOSAPI RdosPing(long Node, long Timeout);
 
 int RDOSAPI RdosGetIdeDisc(int UnitNr);
 int RDOSAPI RdosGetFloppyDisc(int UnitNr);
+void RDOSAPI RdosOpenDisc(int UnitNr);
+void RDOSAPI RdosCloseDisc(int UnitNr);
 
 int RDOSAPI RdosGetFileCacheSize();
 int RDOSAPI RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);

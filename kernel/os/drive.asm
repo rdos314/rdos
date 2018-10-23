@@ -2746,6 +2746,133 @@ is_disc_idle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           OpenDisc
+;
+;           DESCRIPTION:    Open disc
+;
+;           PARAMETERS:     AL          Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_disc_name       DB 'Open Disc',0
+
+open_disc    Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    cmp al,MAX_DRIVES
+    jae open_disc_done
+;
+    movzx bx,al
+    shl bx,1
+    mov bx,ds:[bx].disc_def_arr
+    or bx,bx
+    jz open_disc_done
+;
+    push ds
+    push bx
+    push cx
+    push esi
+;
+    mov ds,bx
+    mov bx,ds:disc_handle
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_drive_assign1_proc
+;
+    pop esi
+    pop cx
+    pop bx
+    pop ds
+;
+    push ds
+    push bx
+    push cx
+    push esi
+;
+    mov ds,bx
+    mov bx,ds:disc_handle
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_drive_assign2_proc
+;
+    pop esi
+    pop cx
+    pop bx
+    pop ds
+;
+    StartDisc
+
+open_disc_done:
+    pop ebx
+    pop ds
+    retf32
+open_disc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseDisc
+;
+;           DESCRIPTION:    Close disc
+;
+;           PARAMETERS:     AL          Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_disc_name       DB 'Close Disc',0
+
+close_disc    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    cmp al,MAX_DRIVES
+    jae close_disc_done
+;
+    movzx bx,al
+    shl bx,1
+    mov bx,ds:[bx].disc_def_arr
+;
+    mov cx,MAX_DRIVES
+    mov si,OFFSET drive_def_arr
+
+close_disc_drives_loop:
+    mov ax,[si]
+    or ax,ax
+    jz close_disc_drives_next
+;
+    cmp ax,-1
+    je close_disc_drives_next
+;
+    mov es,ax
+    cmp bx,es:drive_disc
+    jne close_disc_drives_next
+;
+    mov ax,si
+    sub ax,OFFSET drive_def_arr
+    shr ax,1
+    StopFileSystem
+    CloseDrive
+
+close_disc_drives_next:
+    add si,2
+    loop close_disc_drives_loop   
+
+close_disc_done:
+    popad
+    pop es
+    pop ds
+    retf32
+close_disc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ALLOCATE_FIXED_DRIVE
 ;
 ;           DESCRIPTION:    Allocate fixed drive
@@ -6090,6 +6217,18 @@ init    PROC far
     mov edi,OFFSET get_disc_cache_size_name
     xor dx,dx
     mov ax,get_disc_cache_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET open_disc
+    mov edi,OFFSET open_disc_name
+    xor dx,dx
+    mov ax,open_disc_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_disc
+    mov edi,OFFSET close_disc_name
+    xor dx,dx
+    mov ax,close_disc_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_disc_idle

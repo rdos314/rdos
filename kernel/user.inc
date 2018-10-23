@@ -2006,6 +2006,16 @@ GetDiscCacheSize     MACRO
                                                 ENDM
 
 
+;       IN      AL                      Disc #
+CloseDisc     MACRO
+        UserGate close_disc_nr
+                                                ENDM
+
+;       IN      AL                      Disc #
+OpenDisc     MACRO
+        UserGate open_disc_nr
+                                                ENDM
+
 ;       OUT     EAX             Cached size
 GetFileCacheSize     MACRO
         UserGate get_file_cache_size_nr

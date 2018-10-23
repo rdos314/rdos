@@ -866,6 +866,9 @@
 #define usergate_get_disc_cache_size 0x000002AA
 #define usergate_get_file_cache_size 0x000002AB
 
+#define usergate_open_disc 0x000002AC
+#define usergate_close_disc 0x000002AD
+
 
 
 #ifdef __FLAT__
@@ -1737,6 +1740,9 @@
 #define CallGate_get_disc_cache_size 0x55 0x67 0x9a 170 2 0 0 3 0 0x5d
 #define CallGate_get_file_cache_size 0x55 0x67 0x9a 171 2 0 0 3 0 0x5d
 
+#define CallGate_open_disc 0x55 0x67 0x9a 172 2 0 0 3 0 0x5d
+#define CallGate_close_disc 0x55 0x67 0x9a 173 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2605,5 +2611,8 @@
 
 #define CallGate_get_disc_cache_size 0x3e 0x67 0x9a 170 2 0 0 3 0
 #define CallGate_get_file_cache_size 0x3e 0x67 0x9a 171 2 0 0 3 0
+
+#define CallGate_open_disc 0x3e 0x67 0x9a 172 2 0 0 3 0
+#define CallGate_close_disc 0x3e 0x67 0x9a 173 2 0 0 3 0
 
 #endif
