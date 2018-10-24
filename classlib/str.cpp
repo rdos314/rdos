@@ -846,6 +846,125 @@ void TString::Append(char ch)
 
 /*##########################################################################
 #
+#   Name       : TString::ReplaceOne
+#
+#   Purpose....: Replace one occurence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::ReplaceOne(char *ptr, const char *src, const char *dest)
+{
+    int srclen = strlen(src);
+    int destlen = strlen(dest);
+    int newlen;
+    int i;
+    int pos;
+    int count;
+    char *srcptr;
+    char *destptr;
+    char *cpyptr;
+
+    if (srclen == destlen)
+    {
+        for (i = 0; i < destlen; i++)
+            ptr[i] = dest[i];
+    }
+    else
+    {
+        if (srclen > destlen)
+        {
+            for (i = 0; i < destlen; i++)
+                ptr[i] = dest[i];
+                    
+            srcptr = ptr + srclen;
+            destptr = ptr + destlen;
+
+            while (*srcptr)
+            {
+                *destptr = *srcptr;
+                srcptr++;
+                destptr++;
+            }
+            *destptr = 0;
+
+            FData->FDataSize = FData->FDataSize + destlen - srclen;
+        }
+        else
+        {
+            if (FData->FDataSize + destlen - srclen > FData->FAllocSize)
+            {
+                TShareObjectData* OldData = FData;
+                cpyptr = FBuf;
+                pos = ptr - FBuf;
+
+                AllocBuffer(OldData->FDataSize + 0x10 + destlen - srclen);
+                memcpy(FBuf, cpyptr, OldData->FDataSize);
+                FData->FDataSize = OldData->FDataSize;
+                Release(OldData);
+
+                ptr = FBuf + pos;
+            } 
+
+            srcptr = FBuf + FData->FDataSize - 1;
+            destptr = srcptr + destlen - srclen;
+
+            count = srcptr - ptr;
+            count = count - srclen;
+            count++;
+
+            for (i = 0; i < count; i++)
+            {
+                *destptr = *srcptr;
+                srcptr--;
+                destptr--;
+            }
+                
+            for (i = 0; i < destlen; i++)
+                ptr[i] = dest[i];
+
+            FData->FDataSize = FData->FDataSize + destlen - srclen;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TString::Replace
+#
+#   Purpose....: Replace one string with another
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::Replace(const char *src, const char *dest)
+{
+    char *ptr;
+    int pos;
+
+    FSection.Enter();
+
+    if (FData)
+    {
+        ptr = strstr(FBuf, src);
+        while (ptr)
+        {
+            pos = ptr - FBuf;
+            ReplaceOne(ptr, src, dest);
+            ptr = FBuf + pos + strlen(dest);
+            ptr = strstr(ptr, src);
+        }
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TString::Append
 #
 #   Purpose....: Append string

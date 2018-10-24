@@ -36,54 +36,56 @@ class TString : public TShareObject
 friend class TStringListNode;
 public:
     TString();
-	TString(const TString &source);
-	TString(const char *str);
-	TString(const char *str, int size);
-	virtual ~TString();
+    TString(const TString &source);
+    TString(const char *str);
+    TString(const char *str, int size);
+    virtual ~TString();
 
-	const TString &operator=(const TString &src);
-	const TString &operator=(const char *str);
-	const TString &operator+=(const char *str);
-	const TString &operator+=(char ch);
-	const TString &operator+=(const TString& str);
-	int operator==(const TString &dest) const;
-	int operator!=(const TString &dest) const;
-	int operator>(const TString &dest) const;
-	int operator>=(const TString &dest) const;
-	int operator<(const TString &dest) const;
-	int operator<=(const TString &dest) const;
-	char operator[](int n) const;
+    const TString &operator=(const TString &src);
+    const TString &operator=(const char *str);
+    const TString &operator+=(const char *str);
+    const TString &operator+=(char ch);
+    const TString &operator+=(const TString& str);
+    int operator==(const TString &dest) const;
+    int operator!=(const TString &dest) const;
+    int operator>(const TString &dest) const;
+    int operator>=(const TString &dest) const;
+    int operator<(const TString &dest) const;
+    int operator<=(const TString &dest) const;
+    char operator[](int n) const;
 
-	int printf(const char *frm, va_list args);
-	int printf(const char *fmt, ...);
+    int printf(const char *frm, va_list args);
+    int printf(const char *fmt, ...);
     
-	const char *GetData() const;
-	int GetSize() const;
+    const char *GetData() const;
+    int GetSize() const;
 
-	const char *Find(char ch) const;
-	const char *Find(const char *str) const;
-	void Upper();
-	void Lower();
-	void RemoveCrLf();
-	void Append(char ch);
-	void Append(const char *str);
+    const char *Find(char ch) const;
+    const char *Find(const char *str) const;
+    void Upper();
+    void Lower();
+    void RemoveCrLf();
+    void Append(char ch);
+    void Append(const char *str);
+    void Replace(const char *src, const char *dest);
 
-	void ConcatCopy(const char *str1, int len1, const char *str2, int len2);
+    void ConcatCopy(const char *str1, int len1, const char *str2, int len2);
 
     virtual int Compare(const TString &str) const;
 
 protected:
-	virtual char Upper(char ch); 
-	virtual char Lower(char ch); 
+    virtual char Upper(char ch); 
+    virtual char Lower(char ch); 
 
-	void Pad(int count, const char *str);
+    void Pad(int count, const char *str);
 
 #ifndef __RDOS__
 	int Number(long num, int base, int size, int precision, int type);
 #endif
 
-	void AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen) const;
-	void ConcatInPlace(const char *str, int size);
+    void ReplaceOne(char *ptr, const char *src, const char *dest);
+    void AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen) const;
+    void ConcatInPlace(const char *str, int size);
 };
 
 TString operator+(const TString& str1, const TString& str2);
