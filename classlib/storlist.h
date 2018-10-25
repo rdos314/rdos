@@ -78,6 +78,7 @@ public:
 	void AddLast(const void *data);
 	void AddAt(int n, const void *data);
     int Replace(int n, const void *data);
+	virtual void Update(TListBaseNode *ln);
 
     const void *Get();
     int GetFree();
@@ -94,7 +95,6 @@ protected:
 
 	virtual void Add(TListBaseNode *ln);
 	virtual void Remove(TListBaseNode *ln);
-	virtual void Update(TListBaseNode *ln);
 
 	virtual int Read(int entry, char *buf);
 	virtual int Write(int entry, const char *buf);
