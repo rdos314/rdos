@@ -274,6 +274,35 @@ int TKeyboardDevice::Get()
 
 /*##########################################################################
 #
+#   Name       : TKeyboardDevice::Peek
+#
+#   Purpose....: Peek pending key
+#
+#   In params.: *
+#   Out params.: *
+#   Returns....: Virtual key (alpha-num only)
+#
+##########################################################################*/
+int TKeyboardDevice::Peek()
+{
+    int ExtKey;
+    int KeyState;
+    int VirtualKey;
+    int ScanCode;
+    int ok;
+
+    ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
+    if (ok && !IsStdKey(ExtKey, VirtualKey))
+        ok = FALSE;
+
+    if (!ok)
+        VirtualKey = 0;
+
+    return VirtualKey;
+}
+
+/*##########################################################################
+#
 #   Name       : TKeyboardDevice::Put
 #
 #   Purpose....: Put a "standard key" in the buffer
