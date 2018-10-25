@@ -40,6 +40,7 @@ public:
 	virtual void Clear();
 	virtual int Poll() const;
 	virtual int Get();
+	virtual int Peek();
 	virtual void Put(int ch);
      
 protected:

@@ -146,6 +146,25 @@ int TUserKeyboardDevice::Get()
 
 /*##########################################################################
 #
+#   Name       : TUserKeyboardDevice::Peek
+#
+#   Purpose....: Peek one character from buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUserKeyboardDevice::Peek()
+{
+    if (FCurrentSize)
+        return *FOutPtr;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TUserKeyboardDevice::Clear
 #
 #   Purpose....: Clear keyboard buffer
