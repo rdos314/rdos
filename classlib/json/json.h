@@ -35,10 +35,12 @@ public:
     ~TJsonPrintBuf();
 
     void Extend(int min_size);
+    void MemAppend(const char *buf, int size);
+    void Memset(int offset, int charvalue, int len);
 
-    char *buf;
-    int bpos;
-    int size;
+    char *FBuf;
+    int FBpos;
+    int FSize;
 };
 
 class TJsonTokenList

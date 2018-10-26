@@ -86,10 +86,10 @@
 ##########################################################################*/
 TJsonPrintBuf::TJsonPrintBuf()
 {
-    size = 32;
-    bpos = 0;
-    buf = new char[size];
-    buf[0] = 0;
+    FSize = 32;
+    FBpos = 0;
+    FBuf = new char[FSize];
+    FBuf[0] = 0;
 }
 
 /*##########################################################################
@@ -105,7 +105,7 @@ TJsonPrintBuf::TJsonPrintBuf()
 ##########################################################################*/
 TJsonPrintBuf::~TJsonPrintBuf()
 {
-    delete buf;
+    delete FBuf;
 }
 
 /*##########################################################################
@@ -124,19 +124,68 @@ void TJsonPrintBuf::Extend(int min_size)
     char *t;
     int new_size;
 
-    if (size < min_size)
+    if (FSize < min_size)
     {
-        new_size = size * 2;
+        new_size = FSize * 2;
         if (new_size < min_size + 8)
             new_size =  min_size + 8;
 
         t = new char[new_size];
-        memcpy(t, buf, size);
-        delete buf;
+        memcpy(t, FBuf, FSize);
+        delete FBuf;
 
-        size = new_size;
-        buf = t;
+        FSize = new_size;
+        FBuf = t;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonPrintBuf::MemAppend
+#
+#   Purpose....: Append
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonPrintBuf::MemAppend(const char *buf, int size)
+{
+    if (FSize <= FBpos + size + 1) 
+        Extend(FBpos + size + 1);
+
+    memcpy(FBuf + FBpos, buf, size);
+    FBpos += size;
+    FBuf[FBpos]= 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonPrintBuf::MemSet
+#
+#   Purpose....: Set
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonPrintBuf::Memset(int offset, int charvalue, int len)
+{
+    int size_needed;
+
+    if (offset == -1)
+        offset = FBpos;
+
+    size_needed = offset + len;
+
+    if (FSize < size_needed)
+        Extend(size_needed);
+
+    memset(FBuf + offset, charvalue, len);
+    if (FBpos < size_needed)
+        FBpos = size_needed;
 }
 
 /*##########################################################################
