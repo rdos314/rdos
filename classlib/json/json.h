@@ -28,6 +28,32 @@
 #ifndef _JSON_H
 #define _JSON_H
 
+class TJsonPrintBuf 
+{
+public:
+    TJsonPrintBuf();
+    ~TJsonPrintBuf();
+
+    void Extend(int min_size);
+
+    char *buf;
+    int bpos;
+    int size;
+};
+
+class TJsonTokenList
+{
+public:
+    TJsonTokenList();
+    ~TJsonTokenList();
+
+    int state;
+    int saved_state;
+//    struct json_object *obj;
+//    struct json_object *current;
+    char *obj_field_name;
+};
+
 class TJsonDocument
 {
 public:
@@ -35,6 +61,22 @@ public:
     TJsonDocument(const char *doc);
     ~TJsonDocument();
 
+private:
+    int state;
+    int saved_state;
+
+    char *str;
+    TJsonPrintBuf *pb;
+    int max_depth;
+    int depth;
+    int is_double;
+    int st_pos;
+    int char_offset;
+    int err;
+    unsigned int ucs_char;
+    char quote_char;
+    TJsonTokenList *stack;
+    int flags;
 };
 
 #endif
