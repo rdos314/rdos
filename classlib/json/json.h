@@ -34,9 +34,14 @@ public:
     TJsonPrintBuf();
     ~TJsonPrintBuf();
 
+    void Reset();
+
     void Extend(int min_size);
     void MemAppend(const char *buf, int size);
     void Memset(int offset, int charvalue, int len);
+
+    int printf(const char *fmt, va_list args);
+    int printf(const char *fmt, ...);
 
     char *FBuf;
     int FBpos;

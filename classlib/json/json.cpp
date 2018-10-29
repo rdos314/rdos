@@ -27,6 +27,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <stdarg.h>
 
 #include "json.h"
 #include "rdos.h"
@@ -75,6 +77,23 @@
 
 /*##########################################################################
 #
+#   Name       : PrintfCallback
+#
+#   Purpose....: Printf callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintfCallback(void *param, char ch)
+{
+    TJsonPrintBuf *buf = (TJsonPrintBuf *)param;
+    buf->MemAppend(&ch, 1);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonPrintBuf::TJsonPrintBuf
 #
 #   Purpose....: Constructor for TJsonPrintBuf
@@ -106,6 +125,23 @@ TJsonPrintBuf::TJsonPrintBuf()
 TJsonPrintBuf::~TJsonPrintBuf()
 {
     delete FBuf;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonPrintBuf::Reset
+#
+#   Purpose....: Reset object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonPrintBuf::Reset()
+{
+    FBpos = 0;
+    FBuf[0] = 0;
 }
 
 /*##########################################################################
@@ -186,6 +222,49 @@ void TJsonPrintBuf::Memset(int offset, int charvalue, int len)
     memset(FBuf + offset, charvalue, len);
     if (FBpos < size_needed)
         FBpos = size_needed;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonPrintBuf::printf
+#
+#   Purpose....: printf
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonPrintBuf::printf(const char *fmt, va_list args)
+{
+    int n;
+
+    n = RdosPrintf(&PrintfCallback, this, fmt, args);
+        
+    return n;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonPrintBuf::printf
+#
+#   Purpose....: printf
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonPrintBuf::printf(const char *fmt, ...)
+{
+    va_list args;
+    int result;
+
+    va_start(args, fmt);
+    result = RdosPrintf(&PrintfCallback, this, fmt, args);
+    va_end(args);
+
+    return result;
 }
 
 /*##########################################################################
