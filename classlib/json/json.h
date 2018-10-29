@@ -48,42 +48,81 @@ public:
     int FSize;
 };
 
+class TJsonObject
+{
+public:
+    TJsonObject();
+    ~TJsonObject();
+
+    int o_type;
+    int _ref_count;
+    TJsonPrintBuf *pb;
+    bool c_boolean;
+    double c_double;
+    long long c_int64;
+//    struct lh_table *c_object;
+//    struct array_list *c_array;
+    char *str;
+    int len;
+};
+
+class TJsonArray : public TJsonObject
+{
+public:
+    TJsonArray();
+    ~TJsonArray();
+};
+
+class TJsonDocument;
+
 class TJsonTokenList
 {
+friend class TJsonDocument;
+
 public:
     TJsonTokenList();
     ~TJsonTokenList();
 
-    int state;
-    int saved_state;
-//    struct json_object *obj;
-//    struct json_object *current;
+    int HandleEatWs(TJsonDocument *doc);
+    int HandleStart(TJsonDocument *doc);
+
+protected:
+    TJsonPrintBuf pb;
+    TJsonObject *obj;
+    TJsonObject *current;
+    TJsonTokenList *stack;
     char *obj_field_name;
+
+    int char_offset;
+    int depth;
+    int err;
+    int st_pos;
+    unsigned int ucs_char;
+    char quote_char;
+    int max_depth;
+    int is_double;
+    int flags;
 };
 
 class TJsonDocument
 {
+friend class TJsonTokenList;
+
 public:
     TJsonDocument();
     TJsonDocument(const char *doc);
     ~TJsonDocument();
 
+protected:
+    bool PeekChar(TJsonTokenList *token);
+    bool AdvanceChar(TJsonTokenList *token);
+
 private:
+    char *str;
+    int len;
+
     int state;
     int saved_state;
-
-    char *str;
-    TJsonPrintBuf *pb;
-    int max_depth;
-    int depth;
-    int is_double;
-    int st_pos;
-    int char_offset;
-    int err;
-    unsigned int ucs_char;
-    char quote_char;
-    TJsonTokenList *stack;
-    int flags;
 };
 
 #endif

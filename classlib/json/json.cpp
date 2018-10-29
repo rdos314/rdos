@@ -75,6 +75,10 @@
 #define json_tokener_state_object_field_start_after_sep	24
 #define json_tokener_state_inf				25
 
+#define json_ret_out                                    1
+#define json_ret_redo                                   2
+#define json_ret_break                                  3
+
 /*##########################################################################
 #
 #   Name       : PrintfCallback
@@ -269,6 +273,156 @@ int TJsonPrintBuf::printf(const char *fmt, ...)
 
 /*##########################################################################
 #
+#   Name       : TJsonTokenList::TJsonTokenList
+#
+#   Purpose....: Constructor for TJsonTokenList
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonTokenList::TJsonTokenList()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonTokenList::~TJsonTokenList
+#
+#   Purpose....: Destructor for TJsonTokenList
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonTokenList::~TJsonTokenList()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonTokenList::HandleEatWs
+#
+#   Purpose....: Handle eat ws state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonTokenList::HandleEatWs(TJsonDocument *doc)
+{
+    while (isspace(*doc->str)) 
+    {
+	if (!doc->AdvanceChar(this) || !doc->PeekChar(this))
+	    return json_ret_out;
+    }
+
+    if (*doc->str == '/') 
+    {
+        pb.Reset();
+	pb.MemAppend(doc->str, 1);
+	doc->state = json_tokener_state_comment_start;
+    } 
+    else 
+    {
+        doc->state = doc->saved_state;
+        return json_ret_redo;
+    }
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonTokenList::HandleStart
+#
+#   Purpose....: Handle state state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonTokenList::HandleStart(TJsonDocument *doc)
+{
+    switch (*doc->str) 
+    {
+        case '{':
+	    doc->state = json_tokener_state_eatws;
+	    doc->saved_state = json_tokener_state_object_field_start;
+	    current = new TJsonObject();
+
+            if (current)
+                return json_ret_break;
+            else
+		return json_ret_out;         
+
+        case '[':
+            doc->state = json_tokener_state_eatws;
+            doc->saved_state = json_tokener_state_array;
+	    current = new TJsonArray();
+
+            if (current)
+                return json_ret_break;
+            else
+		return json_ret_out;         
+
+        case 'I':
+        case 'i':
+            doc->state = json_tokener_state_inf;
+            pb.Reset();
+	    st_pos = 0;
+            return json_ret_redo;
+
+        case 'N':
+        case 'n':
+	    doc->state = json_tokener_state_null; // or NaN
+            pb.Reset();
+	    st_pos = 0;
+	    return json_ret_redo;
+
+        case '\'':
+        case '"':
+	    doc->state = json_tokener_state_string;
+	    pb.Reset();
+	    quote_char = *doc->str;
+            return json_ret_break;
+
+        case 'T':
+        case 't':
+        case 'F':
+        case 'f':
+	    doc->state = json_tokener_state_boolean;
+	    pb.Reset();
+	    st_pos = 0;
+	    return json_ret_redo;
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '-':
+	    doc->state = json_tokener_state_number;
+	    pb.Reset();
+            is_double = 0;
+	    return json_ret_redo;
+
+        default:
+	    err = json_tokener_error_parse_unexpected;
+	    return json_ret_out;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDocument::TJsonDocument
 #
 #   Purpose....: Constructor for TJsonDocument
@@ -312,6 +466,55 @@ TJsonDocument::~TJsonDocument()
 {
 }
 
+/*##########################################################################
+#
+#   Name       : TJsonDocument::PeekChar
+#
+#   Purpose....: Peek next char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDocument::PeekChar(TJsonTokenList *token)
+{
+    if (token->char_offset == len)
+    {
+        if (token->depth == 0 && state == json_tokener_state_eatws && saved_state == json_tokener_state_finish)
+            token->err = json_tokener_success;
+        else
+            token->err = json_tokener_continue;
+
+        return false;
+    }
+    else
+        return true;
+}
+ 
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AdvanceChar
+#
+#   Purpose....: Advance to next char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDocument::AdvanceChar(TJsonTokenList *token)
+{
+    if (*str)
+    {
+        str++;
+        token->char_offset++;
+        return true;
+    }
+    else
+        return false;
+}
+
 /*
 struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 					  const char *str, int len)
@@ -319,7 +522,7 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
   struct json_object *obj = NULL;
   char c = '\1';
 
-  tok->char_offset = 0;
+  t*ok->char_offset = 0;
   tok->err = json_tokener_success;
 
   if ((len < -1) || (len == -1 && strlen(str) > INT32_MAX)) {
@@ -334,94 +537,13 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
     switch(state) 
     {
     case json_tokener_state_eatws:
-      while (isspace((unsigned char)c)) 
-      {
-	if ((!ADVANCE_CHAR(str, tok)) || (!PEEK_CHAR(c, tok)))
-	  goto out;
-      }
+        ret = HandleEatWs();
 
-      if(c == '/') 
-      {
-	printbuf_reset(tok->pb);
-	printbuf_memappend_fast(tok->pb, &c, 1);
-	state = json_tokener_state_comment_start;
-      } 
-      else 
-      {
-	state = saved_state;
-	goto redo_char;
-      }
-      break;
 
     case json_tokener_state_start:
-      switch(c) 
-      {
-      case '{':
-	state = json_tokener_state_eatws;
-	saved_state = json_tokener_state_object_field_start;
-	current = json_object_new_object();
-	if(current == NULL)
-		goto out;
-	break;
+        ret = HandleStart();
 
-      case '[':
-	state = json_tokener_state_eatws;
-	saved_state = json_tokener_state_array;
-	current = json_object_new_array();
-	if(current == NULL)
-	  goto out;
-	break;
 
-      case 'I':
-      case 'i':
-	state = json_tokener_state_inf;
-	printbuf_reset(tok->pb);
-	tok->st_pos = 0;
-	goto redo_char;
-
-      case 'N':
-      case 'n':
-	state = json_tokener_state_null; // or NaN
-	printbuf_reset(tok->pb);
-	tok->st_pos = 0;
-	goto redo_char;
-
-      case '\'':
-      case '"':
-	state = json_tokener_state_string;
-	printbuf_reset(tok->pb);
-	tok->quote_char = c;
-	break;
-
-      case 'T':
-      case 't':
-      case 'F':
-      case 'f':
-	state = json_tokener_state_boolean;
-	printbuf_reset(tok->pb);
-	tok->st_pos = 0;
-	goto redo_char;
-
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case '-':
-	state = json_tokener_state_number;
-	printbuf_reset(tok->pb);
-	tok->is_double = 0;
-	goto redo_char;
-
-      default:
-	tok->err = json_tokener_error_parse_unexpected;
-	goto out;
-      }
       break;
 
     case json_tokener_state_finish:
