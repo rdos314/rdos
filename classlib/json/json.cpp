@@ -1258,6 +1258,36 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleArray
+#
+#   Purpose....: Handle array state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleArray(TJsonDocument *doc)
+{
+    if (*doc->str == ']') 
+    {
+        saved_state = json_tokener_state_finish;
+        state = json_tokener_state_eatws;
+        return json_ret_break;
+    } 
+    else 
+    {
+	state = json_tokener_state_array_add;
+
+        if (AddLevel(doc, 0))
+            return json_ret_redo;
+        else
+            return json_ret_out;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1327,6 +1357,11 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_number:
             ret = HandleNumber(doc);
+            break;
+
+        case json_tokener_state_array_after_sep:
+        case json_tokener_state_array:
+            ret = HandleArray(doc);
             break;
     }
 
@@ -1498,31 +1533,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_array_after_sep:
-    case json_tokener_state_array:
-      if(c == ']') 
-      {
-	if (state == json_tokener_state_array_after_sep &&
-	    (tok->flags & JSON_TOKENER_STRICT))
-	  {
-	    tok->err = json_tokener_error_parse_unexpected;
-	    goto out;
-	  }
-	saved_state = json_tokener_state_finish;
-	state = json_tokener_state_eatws;
-      } 
-      else 
-      {
-	if(tok->depth >= tok->max_depth-1) {
-	  tok->err = json_tokener_error_depth;
-	  goto out;
-	}
-	state = json_tokener_state_array_add;
-	tok->depth++;
-	json_tokener_reset_level(tok, tok->depth);
-	goto redo_char;
-      }
-      break;
 
     case json_tokener_state_array_add:
       if( json_object_array_add(current, obj) != 0 )
