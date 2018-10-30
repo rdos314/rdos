@@ -778,6 +778,35 @@ int TJsonStackEntry::HandleCommentStart(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleComment
+#
+#   Purpose....: Handle comment state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleComment(TJsonDocument *doc)
+{
+    const char *case_start = doc->str;
+
+    while(*doc->str != '*') 
+    {
+        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+            return json_ret_out;
+        }
+    }
+
+    pb->MemAppend(case_start, 1 + doc->str - case_start);
+    state = json_tokener_state_comment_end;
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -815,6 +844,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_comment_start:
             ret = HandleCommentStart(doc);
+            break;
+
+        case json_tokener_state_comment:
+            ret = HandleComment(doc);
             break;
     }
 
@@ -986,19 +1019,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-
-    case json_tokener_state_comment:
-          const char *case_start = str;
-          while(c != '*') {
-            if (!ADVANCE_CHAR(str, tok) || !PEEK_CHAR(c, tok)) {
-              printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-              goto out;
-            }
-          }
-          printbuf_memappend_fast(tok->pb, case_start, 1+str-case_start);
-          state = json_tokener_state_comment_end;
-        }
-        break;
 
     case json_tokener_state_comment_eol:
 	const char *case_start = str;

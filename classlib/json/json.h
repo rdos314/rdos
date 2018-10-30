@@ -106,6 +106,7 @@ protected:
     int HandleInfinite(TJsonDocument *doc);
     int HandleNullNan(TJsonDocument *doc);
     int HandleCommentStart(TJsonDocument *doc);
+    int HandleComment(TJsonDocument *doc);
 
     int state;
     int saved_state;
