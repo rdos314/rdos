@@ -26,8 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <stdio.h>#include <ctype.h>
 #include <stdarg.h>
 #include <math.h>
 
@@ -60,8 +59,8 @@
 #define json_tokener_state_comment_end			8
 #define json_tokener_state_string			9
 #define json_tokener_state_string_escape		10
-#define json_tokener_state_escape_unicode		11
-#define json_tokener_state_boolean			12
+#define json_tokener_state_true	        		11
+#define json_tokener_state_false			12
 #define json_tokener_state_number			13
 #define json_tokener_state_array			14
 #define json_tokener_state_array_add			15
@@ -413,6 +412,37 @@ void TJsonDouble::SetNan()
 
 /*##########################################################################
 #
+#   Name       : TJsonBoolean::TJsonBoolean
+#
+#   Purpose....: Constructor for TJsonBoolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBoolean::TJsonBoolean(bool v)
+{
+    Val = v;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::~TJsonBoolean
+#
+#   Purpose....: Destructor for TJsonBoolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBoolean::~TJsonBoolean()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonString::TJsonString
 #
 #   Purpose....: Constructor for TJsonString
@@ -614,9 +644,14 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 
         case 'T':
         case 't':
+	    state = json_tokener_state_true;
+	    pb->Reset();
+	    doc->st_pos = 0;
+	    return json_ret_redo;
+
         case 'F':
         case 'f':
-	    state = json_tokener_state_boolean;
+	    state = json_tokener_state_false;
 	    pb->Reset();
 	    doc->st_pos = 0;
 	    return json_ret_redo;
@@ -991,6 +1026,94 @@ int TJsonStackEntry::HandleStringEscape(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleTrue
+#
+#   Purpose....: Handle true state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
+{
+    TJsonObject *o;
+    char ch;
+    const char *str = "true";
+    int len = strlen(str);
+
+    while (doc->st_pos < len)
+    {
+	ch = tolower((int)(*doc->str));
+        if (ch != str[doc->st_pos])
+        {
+            doc->err = json_tokener_error_parse_boolean;
+            return json_ret_out;
+        }
+
+        doc->st_pos++;
+	doc->AdvanceChar();
+        if (!doc->PeekChar(this))		
+            return json_ret_out;
+    }
+
+    saved_state = json_tokener_state_finish;
+    state = json_tokener_state_eatws;
+
+    o = new TJsonBoolean(true);
+
+    if (AddLevel(doc, o))
+        return json_ret_redo;
+    else
+        return json_ret_out;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::HandleFalse
+#
+#   Purpose....: Handle false state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
+{
+    TJsonObject *o;
+    char ch;
+    const char *str = "false";
+    int len = strlen(str);
+
+    while (doc->st_pos < len)
+    {
+	ch = tolower((int)(*doc->str));
+        if (ch != str[doc->st_pos])
+        {
+            doc->err = json_tokener_error_parse_boolean;
+            return json_ret_out;
+        }
+
+        doc->st_pos++;
+	doc->AdvanceChar();
+        if (!doc->PeekChar(this))		
+            return json_ret_out;
+    }
+
+    saved_state = json_tokener_state_finish;
+    state = json_tokener_state_eatws;
+
+    o = new TJsonBoolean(false);
+
+    if (AddLevel(doc, o))
+        return json_ret_redo;
+    else
+        return json_ret_out;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1048,6 +1171,14 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_string_escape:
             ret = HandleStringEscape(doc);
+            break;
+
+        case json_tokener_state_true:
+            ret = HandleTrue(doc);
+            break;
+
+        case json_tokener_state_false:
+            ret = HandleFalse(doc);
             break;
     }
 
@@ -1218,151 +1349,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
       break;
 
 
-    case json_tokener_state_escape_unicode:
-	{
-          unsigned int got_hi_surrogate = 0;
-
-	  while(1) 
-          {
-	    if (c && strchr(json_hex_chars, c)) 
-            {
-	      tok->ucs_char += ((unsigned int)jt_hexdigit(c) << ((3-tok->st_pos++)*4));
-	      if(tok->st_pos == 4) 
-              {
-		unsigned char unescaped_utf[4];
-
-                if (got_hi_surrogate) 
-                {
-		  if (IS_LOW_SURROGATE(tok->ucs_char)) 
-                    tok->ucs_char = DECODE_SURROGATE_PAIR(got_hi_surrogate, tok->ucs_char);
-                  else
-		    printbuf_memappend_fast(tok->pb, (char*)utf8_replacement_char, 3);
-                  got_hi_surrogate = 0;
-                }
-
-		if (tok->ucs_char < 0x80) 
-                {
-		  unescaped_utf[0] = tok->ucs_char;
-		  printbuf_memappend_fast(tok->pb, (char*)unescaped_utf, 1);
-		} 
-                else if (tok->ucs_char < 0x800) 
-                {
-		  unescaped_utf[0] = 0xc0 | (tok->ucs_char >> 6);
-		  unescaped_utf[1] = 0x80 | (tok->ucs_char & 0x3f);
-		  printbuf_memappend_fast(tok->pb, (char*)unescaped_utf, 2);
-		} 
-                else if (IS_HIGH_SURROGATE(tok->ucs_char)) 
-                {
-                  got_hi_surrogate = tok->ucs_char;
-                  if ((len == -1 || len > (tok->char_offset + 2)) &&
-                      // str[0] != '0' &&  // implied by json_hex_chars, above.
-                      (str[1] == '\\') &&
-                      (str[2] == 'u'))
-                  {
-	            if( !ADVANCE_CHAR(str, tok) || !ADVANCE_CHAR(str, tok) ) {
-                    printbuf_memappend_fast(tok->pb,
-					    (char*) utf8_replacement_char, 3);
-		    }
-	            if (!ADVANCE_CHAR(str, tok) || !PEEK_CHAR(c, tok)) {
-	              printbuf_memappend_fast(tok->pb,
-					      (char*) utf8_replacement_char, 3);
-	              goto out;
-                    }
-	            tok->ucs_char = 0;
-                    tok->st_pos = 0;
-                    continue;
-                  } 
-                  else 
-                  {
-		    printbuf_memappend_fast(tok->pb,
-					    (char*) utf8_replacement_char, 3);
-                  }
-		} 
-                else if (IS_LOW_SURROGATE(tok->ucs_char)) 
-                {
-		  printbuf_memappend_fast(tok->pb, (char*)utf8_replacement_char, 3);
-                } 
-                else if (tok->ucs_char < 0x10000) 
-                {
-		  unescaped_utf[0] = 0xe0 | (tok->ucs_char >> 12);
-		  unescaped_utf[1] = 0x80 | ((tok->ucs_char >> 6) & 0x3f);
-		  unescaped_utf[2] = 0x80 | (tok->ucs_char & 0x3f);
-		  printbuf_memappend_fast(tok->pb, (char*)unescaped_utf, 3);
-		} 
-                else if (tok->ucs_char < 0x110000) 
-                {
-		  unescaped_utf[0] = 0xf0 | ((tok->ucs_char >> 18) & 0x07);
-		  unescaped_utf[1] = 0x80 | ((tok->ucs_char >> 12) & 0x3f);
-		  unescaped_utf[2] = 0x80 | ((tok->ucs_char >> 6) & 0x3f);
-		  unescaped_utf[3] = 0x80 | (tok->ucs_char & 0x3f);
-		  printbuf_memappend_fast(tok->pb, (char*)unescaped_utf, 4);
-		} 
-                else 
-                {
-		  printbuf_memappend_fast(tok->pb, (char*)utf8_replacement_char, 3);
-                }
-		state = saved_state;
-		break;
-	      }
-	    } 
-            else 
-            {
-	      tok->err = json_tokener_error_parse_string;
-	      goto out;
-	    }
-	  if (!ADVANCE_CHAR(str, tok) || !PEEK_CHAR(c, tok)) 
-          {
-            if (got_hi_surrogate)
-	      printbuf_memappend_fast(tok->pb, (char*)utf8_replacement_char, 3);
-	    goto out;
-	  }
-	}
-      }
-      break;
-
-    case json_tokener_state_boolean:
-      {
-	int size1, size2;
-	printbuf_memappend_fast(tok->pb, &c, 1);
-	size1 = json_min(tok->st_pos+1, json_true_str_len);
-	size2 = json_min(tok->st_pos+1, json_false_str_len);
-	if((!(tok->flags & JSON_TOKENER_STRICT) &&
-	  strncasecmp(json_true_str, tok->pb->buf, size1) == 0)
-	  || (strncmp(json_true_str, tok->pb->buf, size1) == 0)
-	  ) 
-        {
-	  if(tok->st_pos == json_true_str_len) 
-          {
-	    current = json_object_new_boolean(1);
-	    if(current == NULL)
-		goto out;
-	    saved_state = json_tokener_state_finish;
-	    state = json_tokener_state_eatws;
-	    goto redo_char;
-	  }
-	} 
-        else if((!(tok->flags & JSON_TOKENER_STRICT) &&
-	  strncasecmp(json_false_str, tok->pb->buf, size2) == 0)
-	  || (strncmp(json_false_str, tok->pb->buf, size2) == 0)) 
-        {
-	  if(tok->st_pos == json_false_str_len) 
-          {
-	    current = json_object_new_boolean(0);
-	    if(current == NULL)
-		goto out;
-	    saved_state = json_tokener_state_finish;
-	    state = json_tokener_state_eatws;
-	    goto redo_char;
-	  }
-	} 
-        else 
-        {
-	  tok->err = json_tokener_error_parse_boolean;
-	  goto out;
-	}
-	tok->st_pos++;
-      }
-      break;
 
     case json_tokener_state_number:
       {

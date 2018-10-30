@@ -54,12 +54,11 @@ class TJsonObject
 {
 public:
     TJsonObject();
-    ~TJsonObject();
+    virtual ~TJsonObject();
 
     int o_type;
     int _ref_count;
     TJsonPrintBuf *pb;
-    bool c_boolean;
     long long c_int64;
 };
 
@@ -67,14 +66,14 @@ class TJsonArray : public TJsonObject
 {
 public:
     TJsonArray();
-    ~TJsonArray();
+    virtual ~TJsonArray();
 };
 
 class TJsonDouble : public TJsonObject
 {
 public:
     TJsonDouble();
-    ~TJsonDouble();
+    virtual ~TJsonDouble();
 
     void SetPosInfinite();
     void SetNegInfinite();
@@ -83,11 +82,20 @@ public:
     double Val;
 };
 
+class TJsonBoolean : public TJsonObject
+{
+public:
+    TJsonBoolean(bool val);
+    virtual ~TJsonBoolean();
+
+    bool Val;
+};
+
 class TJsonString : public TJsonObject
 {
 public:
     TJsonString(const char *str, int len);
-    ~TJsonString();
+    virtual ~TJsonString();
 
     char *Val;
 };
@@ -118,6 +126,8 @@ protected:
     int HandleCommentEnd(TJsonDocument *doc);
     int HandleString(TJsonDocument *doc);
     int HandleStringEscape(TJsonDocument *doc);
+    int HandleTrue(TJsonDocument *doc);
+    int HandleFalse(TJsonDocument *doc);
 
     int state;
     int saved_state;
