@@ -836,6 +836,29 @@ int TJsonStackEntry::HandleCommentEol(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleCommentEnd
+#
+#   Purpose....: Handle comment end state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
+{
+    pb->MemAppend(doc->str, 1);
+
+    if (*doc->str == '/')
+        state = json_tokener_state_eatws;
+    else
+        state = json_tokener_state_comment;
+
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -883,6 +906,9 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
             ret = HandleCommentEol(doc);
             break;
 
+        case json_tokener_state_comment_end:
+            ret = HandleCommentEnd(doc);
+            break;
     }
 
     return true;
@@ -1055,13 +1081,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_comment_end:
-      printbuf_memappend_fast(tok->pb, &c, 1);
-      if(c == '/')
-	state = json_tokener_state_eatws;
-      else
-	state = json_tokener_state_comment;
-      break;
 
     case json_tokener_state_string:
       {
