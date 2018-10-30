@@ -28,6 +28,8 @@
 #ifndef _JSON_H
 #define _JSON_H
 
+#define MAX_JSON_DEPTH	100
+
 class TJsonPrintBuf 
 {
 public:
@@ -60,8 +62,6 @@ public:
     bool c_boolean;
     double c_double;
     long long c_int64;
-//    struct lh_table *c_object;
-//    struct array_list *c_array;
     char *str;
     int len;
 };
@@ -75,38 +75,32 @@ public:
 
 class TJsonDocument;
 
-class TJsonTokenList
+class TJsonStackEntry
 {
 friend class TJsonDocument;
 
 public:
-    TJsonTokenList();
-    ~TJsonTokenList();
+    TJsonStackEntry(TJsonObject *object);
+    ~TJsonStackEntry();
 
+    bool AddLevel(TJsonDocument *doc, TJsonObject *object);
+    bool Parse(TJsonDocument *doc);
+
+protected:
     int HandleEatWs(TJsonDocument *doc);
     int HandleStart(TJsonDocument *doc);
 
-protected:
-    TJsonPrintBuf pb;
-    TJsonObject *obj;
-    TJsonObject *current;
-    TJsonTokenList *stack;
-    char *obj_field_name;
+    int state;
+    int saved_state;
 
-    int char_offset;
-    int depth;
-    int err;
-    int st_pos;
-    unsigned int ucs_char;
-    char quote_char;
-    int max_depth;
-    int is_double;
-    int flags;
+    TJsonPrintBuf *pb;
+    TJsonObject *obj;
+    char *obj_field_name;
 };
 
 class TJsonDocument
 {
-friend class TJsonTokenList;
+friend class TJsonStackEntry;
 
 public:
     TJsonDocument();
@@ -114,15 +108,24 @@ public:
     ~TJsonDocument();
 
 protected:
-    bool PeekChar(TJsonTokenList *token);
-    bool AdvanceChar(TJsonTokenList *token);
+    bool PeekChar(TJsonStackEntry *entry);
+    bool AdvanceChar();
+    bool AddLevel(TJsonObject *object);
 
 private:
     char *str;
     int len;
 
-    int state;
-    int saved_state;
+    int char_offset;
+    int depth;
+    int err;
+    int st_pos;
+    unsigned int ucs_char;
+    char quote_char;
+    int is_double;
+    int flags;
+
+    TJsonStackEntry *StackArr[MAX_JSON_DEPTH];
 };
 
 #endif

@@ -273,37 +273,121 @@ int TJsonPrintBuf::printf(const char *fmt, ...)
 
 /*##########################################################################
 #
-#   Name       : TJsonTokenList::TJsonTokenList
+#   Name       : TJsonObject::TJsonObject
 #
-#   Purpose....: Constructor for TJsonTokenList
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TJsonTokenList::TJsonTokenList()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonTokenList::~TJsonTokenList
-#
-#   Purpose....: Destructor for TJsonTokenList
+#   Purpose....: Constructor for TJsonObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonTokenList::~TJsonTokenList()
+TJsonObject::TJsonObject()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonTokenList::HandleEatWs
+#   Name       : TJsonObject::~TJsonObject
+#
+#   Purpose....: Destructor for TJsonObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject::~TJsonObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArray::TJsonArray
+#
+#   Purpose....: Constructor for TJsonArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArray::TJsonArray()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArray::~TJsonArray
+#
+#   Purpose....: Destructor for TJsonArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArray::~TJsonArray()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::TJsonStackEntry
+#
+#   Purpose....: Constructor for TJsonStackEntry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonStackEntry::TJsonStackEntry(TJsonObject *object)
+{
+    pb = new TJsonPrintBuf;
+    obj = object;
+    obj_field_name = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::~TJsonStackEntry
+#
+#   Purpose....: Destructor for TJsonStackEntry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonStackEntry::~TJsonStackEntry()
+{
+    if (pb)
+        delete pb;
+
+    if (obj_field_name)
+        delete obj_field_name;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::AddLevel
+#
+#   Purpose....: Add level
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonStackEntry::AddLevel(TJsonDocument *doc, TJsonObject *object)
+{
+    return doc->AddLevel(object);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::HandleEatWs
 #
 #   Purpose....: Handle eat ws state
 #
@@ -312,23 +396,23 @@ TJsonTokenList::~TJsonTokenList()
 #   Returns....: *
 #
 ##########################################################################*/
-int TJsonTokenList::HandleEatWs(TJsonDocument *doc)
+int TJsonStackEntry::HandleEatWs(TJsonDocument *doc)
 {
     while (isspace(*doc->str)) 
     {
-	if (!doc->AdvanceChar(this) || !doc->PeekChar(this))
+	if (!doc->AdvanceChar() || !doc->PeekChar(this))
 	    return json_ret_out;
     }
 
     if (*doc->str == '/') 
     {
-        pb.Reset();
-	pb.MemAppend(doc->str, 1);
-	doc->state = json_tokener_state_comment_start;
+        pb->Reset();
+	pb->MemAppend(doc->str, 1);
+	state = json_tokener_state_comment_start;
     } 
     else 
     {
-        doc->state = doc->saved_state;
+        state = saved_state;
         return json_ret_redo;
     }
     return json_ret_break;
@@ -336,7 +420,7 @@ int TJsonTokenList::HandleEatWs(TJsonDocument *doc)
 
 /*##########################################################################
 #
-#   Name       : TJsonTokenList::HandleStart
+#   Name       : TJsonStackEntry::HandleStart
 #
 #   Purpose....: Handle state state
 #
@@ -345,58 +429,58 @@ int TJsonTokenList::HandleEatWs(TJsonDocument *doc)
 #   Returns....: *
 #
 ##########################################################################*/
-int TJsonTokenList::HandleStart(TJsonDocument *doc)
+int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 {
+    TJsonObject *o;
+
     switch (*doc->str) 
     {
         case '{':
-	    doc->state = json_tokener_state_eatws;
-	    doc->saved_state = json_tokener_state_object_field_start;
-	    current = new TJsonObject();
-
-            if (current)
+	    state = json_tokener_state_eatws;
+	    saved_state = json_tokener_state_object_field_start;
+	    o = new TJsonObject();
+            if (AddLevel(doc, o))
                 return json_ret_break;
             else
-		return json_ret_out;         
+                return json_ret_out;
 
         case '[':
-            doc->state = json_tokener_state_eatws;
-            doc->saved_state = json_tokener_state_array;
-	    current = new TJsonArray();
-
-            if (current)
+            state = json_tokener_state_eatws;
+            saved_state = json_tokener_state_array;
+	    o = new TJsonArray();
+            if (AddLevel(doc, o))
                 return json_ret_break;
             else
-		return json_ret_out;         
+                return json_ret_out;
 
         case 'I':
         case 'i':
-            doc->state = json_tokener_state_inf;
-            pb.Reset();
-	    st_pos = 0;
+            state = json_tokener_state_inf;
+            pb->Reset();
+	    doc->st_pos = 0;
             return json_ret_redo;
 
         case 'N':
         case 'n':
-	    doc->state = json_tokener_state_null; // or NaN
-            pb.Reset();
-	    st_pos = 0;
+	    state = json_tokener_state_null; // or NaN
+            pb->Reset();
+	    doc->st_pos = 0;
 	    return json_ret_redo;
 
         case '\'':
         case '"':
-	    doc->state = json_tokener_state_string;
-	    pb.Reset();
-	    quote_char = *doc->str;
+	    state = json_tokener_state_string;
+	    pb->Reset();
+	    doc->quote_char = *doc->str;
             return json_ret_break;
 
         case 'T':
         case 't':
         case 'F':
         case 'f':
-	    doc->state = json_tokener_state_boolean;
-	    pb.Reset();
-	    st_pos = 0;
+	    state = json_tokener_state_boolean;
+	    pb->Reset();
+	    doc->st_pos = 0;
 	    return json_ret_redo;
 
         case '0':
@@ -410,15 +494,42 @@ int TJsonTokenList::HandleStart(TJsonDocument *doc)
         case '8':
         case '9':
         case '-':
-	    doc->state = json_tokener_state_number;
-	    pb.Reset();
-            is_double = 0;
+	    state = json_tokener_state_number;
+	    pb->Reset();
+            doc->is_double = 0;
 	    return json_ret_redo;
 
         default:
-	    err = json_tokener_error_parse_unexpected;
+	    doc->err = json_tokener_error_parse_unexpected;
 	    return json_ret_out;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::Parse
+#
+#   Purpose....: Parse object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonStackEntry::Parse(TJsonDocument *doc)
+{
+    int ret;
+
+    switch(state) 
+    {
+        case json_tokener_state_eatws:
+            ret = HandleEatWs(doc);
+
+        case json_tokener_state_start:
+            ret = HandleStart(doc);
+    }
+
+    return true;
 }
 
 /*##########################################################################
@@ -477,14 +588,14 @@ TJsonDocument::~TJsonDocument()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonDocument::PeekChar(TJsonTokenList *token)
+bool TJsonDocument::PeekChar(TJsonStackEntry *entry)
 {
-    if (token->char_offset == len)
+    if (char_offset == len)
     {
-        if (token->depth == 0 && state == json_tokener_state_eatws && saved_state == json_tokener_state_finish)
-            token->err = json_tokener_success;
+        if (depth == 0 && entry->state == json_tokener_state_eatws && entry->saved_state == json_tokener_state_finish)
+            err = json_tokener_success;
         else
-            token->err = json_tokener_continue;
+            err = json_tokener_continue;
 
         return false;
     }
@@ -503,13 +614,39 @@ bool TJsonDocument::PeekChar(TJsonTokenList *token)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonDocument::AdvanceChar(TJsonTokenList *token)
+bool TJsonDocument::AdvanceChar()
 {
     if (*str)
     {
         str++;
-        token->char_offset++;
+        char_offset++;
         return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddLevel
+#
+#   Purpose....: Add new level
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDocument::AddLevel(TJsonObject *object)
+{
+    TJsonStackEntry *entry;
+
+    if (depth < MAX_JSON_DEPTH)
+    {
+        entry = new TJsonStackEntry(object);
+        StackArr[depth] = entry;
+        depth++;
+        return entry->Parse(this);
     }
     else
         return false;
@@ -534,14 +671,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
   {
 
   redo_char:
-    switch(state) 
-    {
-    case json_tokener_state_eatws:
-        ret = HandleEatWs();
-
-
-    case json_tokener_state_start:
-        ret = HandleStart();
 
 
       break;
