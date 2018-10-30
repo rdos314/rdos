@@ -1413,6 +1413,7 @@ install_check_part:
     mov edi,edx
     pop edx
 ;
+    push ecx
     push edx
     mov eax,edx
     xor edx,edx
@@ -1423,6 +1424,7 @@ install_check_part:
     mov ecx,1
     call ReadDrive
     pop edx
+    pop ecx
 ;
     push ds
     push edx
@@ -1434,7 +1436,8 @@ install_check_part:
     mov ax,cs
     mov ds,ax
     movzx esi,cl
-    shl esi,1
+    shl si,1
+    mov si,cs:[si].FsTab
     jmp install_use_part_cont
 
 install_use_part_fat:
