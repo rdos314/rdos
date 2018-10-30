@@ -413,6 +413,40 @@ void TJsonDouble::SetNan()
 
 /*##########################################################################
 #
+#   Name       : TJsonString::TJsonString
+#
+#   Purpose....: Constructor for TJsonString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonString::TJsonString(const char *str, int size)
+{
+    Val = new char[size + 1];
+    memcpy(Val, str, size);
+    Val[size] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::~TJsonString
+#
+#   Purpose....: Destructor for TJsonString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonString::~TJsonString()
+{
+    delete Val;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::TJsonStackEntry
 #
 #   Purpose....: Constructor for TJsonStackEntry
@@ -859,6 +893,53 @@ int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleString
+#
+#   Purpose....: Handle string state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleString(TJsonDocument *doc)
+{
+    TJsonObject *o;
+    const char *case_start = doc->str;
+
+    for (;;)
+    {
+        if(*doc->str == doc->quote_char) 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+	    saved_state = json_tokener_state_finish;
+	    state = json_tokener_state_eatws;
+
+            o = new TJsonString(pb->FBuf, pb->FBpos);
+
+            if (AddLevel(doc, o))
+                return json_ret_break;
+            else
+                return json_ret_out;
+        } 
+        else if (*doc->str == '\\') 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+	    saved_state = json_tokener_state_string;
+	    state = json_tokener_state_string_escape;
+	    return json_ret_break;
+        }
+
+        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+	    return json_ret_out;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -908,6 +989,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_comment_end:
             ret = HandleCommentEnd(doc);
+            break;
+
+        case json_tokener_state_string:
+            ret = HandleString(doc);
             break;
     }
 
@@ -1077,42 +1162,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
       break;
 
-
-
-
-
-
-    case json_tokener_state_string:
-      {
-	const char *case_start = str;
-	while(1) 
-        {
-	  if(c == tok->quote_char) 
-          {
-	    printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-	    current = json_object_new_string_len(tok->pb->buf, tok->pb->bpos);
-	    if(current == NULL)
-		goto out;
-	    saved_state = json_tokener_state_finish;
-	    state = json_tokener_state_eatws;
-	    break;
-	  } 
-          else if(c == '\\') 
-          {
-	    printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-	    saved_state = json_tokener_state_string;
-	    state = json_tokener_state_string_escape;
-	    break;
-	  }
-
-	  if (!ADVANCE_CHAR(str, tok) || !PEEK_CHAR(c, tok)) 
-          {
-	    printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-	    goto out;
-	  }
-	}
-      }
-      break;
 
     case json_tokener_state_string_escape:
       switch(c) 

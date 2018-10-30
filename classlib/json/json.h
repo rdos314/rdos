@@ -61,8 +61,6 @@ public:
     TJsonPrintBuf *pb;
     bool c_boolean;
     long long c_int64;
-    char *str;
-    int len;
 };
 
 class TJsonArray : public TJsonObject
@@ -83,6 +81,15 @@ public:
     void SetNan();
 
     double Val;
+};
+
+class TJsonString : public TJsonObject
+{
+public:
+    TJsonString(const char *str, int len);
+    ~TJsonString();
+
+    char *Val;
 };
 
 class TJsonDocument;
@@ -109,6 +116,7 @@ protected:
     int HandleComment(TJsonDocument *doc);
     int HandleCommentEol(TJsonDocument *doc);
     int HandleCommentEnd(TJsonDocument *doc);
+    int HandleString(TJsonDocument *doc);
 
     int state;
     int saved_state;
