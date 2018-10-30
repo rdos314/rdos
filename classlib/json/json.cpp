@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "json.h"
 #include "rdos.h"
@@ -333,6 +334,69 @@ TJsonArray::~TJsonArray()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::TJsonDouble
+#
+#   Purpose....: Constructor for TJsonDouble
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDouble::TJsonDouble()
+{
+    Val = 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::~TJsonDouble
+#
+#   Purpose....: Destructor for TJsonDouble
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDouble::~TJsonDouble()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::SetPosInfinite
+#
+#   Purpose....: Set positive infinite value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetPosInfinite()
+{
+    Val = INFINITY;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::SetNegInfinite
+#
+#   Purpose....: Set negative infinite value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetNegInfinite()
+{
+    Val = -INFINITY;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::TJsonStackEntry
 #
 #   Purpose....: Constructor for TJsonStackEntry
@@ -548,6 +612,55 @@ int TJsonStackEntry::HandleFinish(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleInfinite
+#
+#   Purpose....: Handle infinite state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
+{
+    TJsonDouble *o;
+    char inf_char;
+    const char *inf_str = "infinity";
+    int len = strlen(inf_str);
+
+    while (doc->st_pos < len)
+    {
+	inf_char = tolower((int)(*doc->str));
+        if (inf_char != inf_str[doc->st_pos])
+        {
+            doc->err = json_tokener_error_parse_unexpected;
+            return json_ret_out;
+        }
+
+        doc->st_pos++;
+	doc->AdvanceChar();
+        if (!doc->PeekChar(this))		
+            return json_ret_out;
+    }
+
+    saved_state = json_tokener_state_finish;
+    state = json_tokener_state_eatws;
+
+    o = new TJsonDouble();
+
+    if (pb->FSize > 0 && pb->FBuf[0] == '-')
+        o->SetNegInfinite();
+    else
+        o->SetPosInfinite();
+
+    if (AddLevel(doc, o))
+        return json_ret_redo;
+    else
+        return json_ret_out;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -575,6 +688,9 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
             ret = HandleFinish(doc);
             break;
 
+        case json_tokener_state_inf:
+            ret = HandleInfinite(doc);
+            break;
     }
 
     return true;
@@ -744,44 +860,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
       break;
 
 
-    case json_tokener_state_inf:
-      {
-	int is_negative = 0;
-	const char *_json_inf_str = json_inf_str;
-	if (!(tok->flags & JSON_TOKENER_STRICT))
-		_json_inf_str = json_inf_str_lower;
-
-	while (tok->st_pos < (int)json_inf_str_len)
-	{
-		char inf_char = *str;
-		if (!(tok->flags & JSON_TOKENER_STRICT))
-			inf_char = tolower((int)*str);
-		if (inf_char != _json_inf_str[tok->st_pos])
-		{
-			tok->err = json_tokener_error_parse_unexpected;
-			goto out;
-		}
-		tok->st_pos++;
-		(void)ADVANCE_CHAR(str, tok);
-		if (!PEEK_CHAR(c, tok))
-		{
-			goto out;
-		}
-	}
-	if (printbuf_length(tok->pb) > 0 && *(tok->pb->buf) == '-')
-	{
-		is_negative = 1;
-	}
-	current = json_object_new_double(is_negative
-					 ? -INFINITY : INFINITY);
-	if (current == NULL)
-		goto out;
-	saved_state = json_tokener_state_finish;
-	state = json_tokener_state_eatws;
-	goto redo_char;
-	 
-      }
-      break;
 
     case json_tokener_state_null:
       {

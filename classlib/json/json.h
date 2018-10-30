@@ -60,7 +60,6 @@ public:
     int _ref_count;
     TJsonPrintBuf *pb;
     bool c_boolean;
-    double c_double;
     long long c_int64;
     char *str;
     int len;
@@ -71,6 +70,18 @@ class TJsonArray : public TJsonObject
 public:
     TJsonArray();
     ~TJsonArray();
+};
+
+class TJsonDouble : public TJsonObject
+{
+public:
+    TJsonDouble();
+    ~TJsonDouble();
+
+    void SetPosInfinite();
+    void SetNegInfinite();
+
+    double Val;
 };
 
 class TJsonDocument;
@@ -91,6 +102,7 @@ protected:
     int HandleEatWs(TJsonDocument *doc);
     int HandleStart(TJsonDocument *doc);
     int HandleFinish(TJsonDocument *doc);
+    int HandleInfinite(TJsonDocument *doc);
 
     int state;
     int saved_state;
