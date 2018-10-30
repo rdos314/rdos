@@ -1273,17 +1273,36 @@ int TJsonStackEntry::HandleArray(TJsonDocument *doc)
     {
         saved_state = json_tokener_state_finish;
         state = json_tokener_state_eatws;
-        return json_ret_break;
     } 
     else 
-    {
 	state = json_tokener_state_array_add;
 
-        if (AddLevel(doc, 0))
-            return json_ret_redo;
-        else
-            return json_ret_out;
-    }
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::HandleArrayAdd
+#
+#   Purpose....: Handle array add state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleArrayAdd(TJsonDocument *doc)
+{
+    TJsonObject *o;
+
+    saved_state = json_tokener_state_array_sep;
+    state = json_tokener_state_eatws;
+
+    o = new TJsonArray();
+    if (AddLevel(doc, o))
+        return json_ret_redo;
+    else
+        return json_ret_out;
 }
 
 /*##########################################################################
@@ -1363,6 +1382,11 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
         case json_tokener_state_array:
             ret = HandleArray(doc);
             break;
+
+        case json_tokener_state_array_add:
+            ret = HandleArrayAdd(doc);
+            break;
+
     }
 
     return true;
@@ -1534,12 +1558,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_array_add:
-      if( json_object_array_add(current, obj) != 0 )
-        goto out;
-      saved_state = json_tokener_state_array_sep;
-      state = json_tokener_state_eatws;
-      goto redo_char;
 
     case json_tokener_state_array_sep:
       if(c == ']') 

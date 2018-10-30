@@ -133,6 +133,7 @@ protected:
     int HandleFalse(TJsonDocument *doc);
     int HandleNumber(TJsonDocument *doc);
     int HandleArray(TJsonDocument *doc);
+    int HandleArrayAdd(TJsonDocument *doc);
 
     int state;
     int saved_state;
