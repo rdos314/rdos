@@ -117,6 +117,7 @@ protected:
     int HandleCommentEol(TJsonDocument *doc);
     int HandleCommentEnd(TJsonDocument *doc);
     int HandleString(TJsonDocument *doc);
+    int HandleStringEscape(TJsonDocument *doc);
 
     int state;
     int saved_state;

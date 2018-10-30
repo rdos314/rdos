@@ -940,6 +940,57 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleStringEscape
+#
+#   Purpose....: Handle string escape state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleStringEscape(TJsonDocument *doc)
+{
+    switch (*doc->str) 
+    {
+        case '"':
+        case '\\':
+        case '/':
+            pb->MemAppend(doc->str, 1);
+            break;
+
+        case 'b':
+            pb->MemAppend("\b", 1);
+            break;
+
+        case 'n':
+            pb->MemAppend("\n", 1);
+            break;
+
+        case 'r':
+            pb->MemAppend("\r", 1);
+            break;
+
+        case 't':
+            pb->MemAppend("\t", 1);
+            break;
+
+        case 'f':
+            pb->MemAppend("\f", 1);
+            break;
+
+        default:
+	    doc->err = json_tokener_error_parse_string;
+	    return json_ret_out;
+    }
+
+    state = saved_state;
+    return json_ret_break;
+
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -993,6 +1044,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_string:
             ret = HandleString(doc);
+            break;
+
+        case json_tokener_state_string_escape:
+            ret = HandleStringEscape(doc);
             break;
     }
 
@@ -1162,38 +1217,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
       break;
 
-
-    case json_tokener_state_string_escape:
-      switch(c) 
-      {
-      case '"':
-      case '\\':
-      case '/':
-	printbuf_memappend_fast(tok->pb, &c, 1);
-	state = saved_state;
-	break;
-      case 'b':
-      case 'n':
-      case 'r':
-      case 't':
-      case 'f':
-	if(c == 'b') printbuf_memappend_fast(tok->pb, "\b", 1);
-	else if(c == 'n') printbuf_memappend_fast(tok->pb, "\n", 1);
-	else if(c == 'r') printbuf_memappend_fast(tok->pb, "\r", 1);
-	else if(c == 't') printbuf_memappend_fast(tok->pb, "\t", 1);
-	else if(c == 'f') printbuf_memappend_fast(tok->pb, "\f", 1);
-	state = saved_state;
-	break;
-      case 'u':
-	tok->ucs_char = 0;
-	tok->st_pos = 0;
-	state = json_tokener_state_escape_unicode;
-	break;
-      default:
-	tok->err = json_tokener_error_parse_string;
-	goto out;
-      }
-      break;
 
     case json_tokener_state_escape_unicode:
 	{
