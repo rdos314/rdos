@@ -80,6 +80,7 @@ public:
 
     void SetPosInfinite();
     void SetNegInfinite();
+    void SetNan();
 
     double Val;
 };
@@ -103,6 +104,7 @@ protected:
     int HandleStart(TJsonDocument *doc);
     int HandleFinish(TJsonDocument *doc);
     int HandleInfinite(TJsonDocument *doc);
+    int HandleNullNan(TJsonDocument *doc);
 
     int state;
     int saved_state;

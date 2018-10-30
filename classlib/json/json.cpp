@@ -397,6 +397,22 @@ void TJsonDouble::SetNegInfinite()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::SetNan
+#
+#   Purpose....: Set NAN value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetNan()
+{
+    Val = NAN;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::TJsonStackEntry
 #
 #   Purpose....: Constructor for TJsonStackEntry
@@ -661,6 +677,80 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleNullNan
+#
+#   Purpose....: Handle null or nan state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
+{
+    TJsonDouble *o;
+    char ch;
+    int i;
+	
+    doc->st_pos++;
+    doc->AdvanceChar();
+    if (!doc->PeekChar(this))		
+        return json_ret_out;
+
+    ch = tolower((int)(*doc->str));
+
+    switch (ch)
+    {
+        case 'a':
+            doc->st_pos++;
+            doc->AdvanceChar();
+            if (!doc->PeekChar(this))		
+                return json_ret_out;
+            
+            ch = tolower((int)(*doc->str));
+            if (ch == 'n')
+            {
+                o = new TJsonDouble();
+                o->SetNan();
+
+                if (AddLevel(doc, o))
+                    return json_ret_redo;
+                else
+                    return json_ret_out;
+            }
+            else
+            {
+                doc->err = json_tokener_error_parse_null;
+                return json_ret_out;
+            }
+
+        case 'u':
+            for (i = 0; i < 2; i++)
+            {
+                doc->st_pos++;
+                doc->AdvanceChar();
+                if (!doc->PeekChar(this))		
+                    return json_ret_out;
+            
+                ch = tolower((int)(*doc->str));
+                if (ch != 'l')
+                {
+                    doc->err = json_tokener_error_parse_null;
+                    return json_ret_out;
+                }
+            }
+	    saved_state = json_tokener_state_finish;
+	    state = json_tokener_state_eatws;
+	    return json_ret_redo;
+
+        default:
+            doc->err = json_tokener_error_parse_null;
+            return json_ret_out;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -690,6 +780,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_inf:
             ret = HandleInfinite(doc);
+            break;
+
+        case json_tokener_state_null:
+            ret = HandleNullNan(doc);
             break;
     }
 
@@ -860,49 +954,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
       break;
 
 
-
-    case json_tokener_state_null:
-      {
-	int size;
-	int size_nan;
-	printbuf_memappend_fast(tok->pb, &c, 1);
-	size = json_min(tok->st_pos+1, json_null_str_len);
-	size_nan = json_min(tok->st_pos+1, json_nan_str_len);
-	if((!(tok->flags & JSON_TOKENER_STRICT) &&
-	  strncasecmp(json_null_str, tok->pb->buf, size) == 0)
-	  || (strncmp(json_null_str, tok->pb->buf, size) == 0)
-	  ) 
-        {
-	  if (tok->st_pos == json_null_str_len) {
-	    current = NULL;
-	    saved_state = json_tokener_state_finish;
-	    state = json_tokener_state_eatws;
-	    goto redo_char;
-	  }
-	}
-	else if ((!(tok->flags & JSON_TOKENER_STRICT) &&
-	          strncasecmp(json_nan_str, tok->pb->buf, size_nan) == 0) ||
-	         (strncmp(json_nan_str, tok->pb->buf, size_nan) == 0)
-	        )
-	{
-		if (tok->st_pos == json_nan_str_len)
-		{
-			current = json_object_new_double(NAN);
-			if (current == NULL)
-			    goto out;
-			saved_state = json_tokener_state_finish;
-			state = json_tokener_state_eatws;
-			goto redo_char;
-		}
-	} 
-        else 
-        {
-	  tok->err = json_tokener_error_parse_null;
-	  goto out;
-	}
-	tok->st_pos++;
-      }
-      break;
 
     case json_tokener_state_comment_start:
       if(c == '*') 
