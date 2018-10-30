@@ -751,6 +751,33 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleCommentStart
+#
+#   Purpose....: Handle comment start state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleCommentStart(TJsonDocument *doc)
+{
+    if (*doc->str == '*') 
+        state = json_tokener_state_comment;
+    else if(*doc->str == '/') 
+        state = json_tokener_state_comment_eol;
+    else 
+    {
+        doc->err = json_tokener_error_parse_comment;
+	return json_ret_out;
+    }
+
+    pb->MemAppend(doc->str, 1);
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -784,6 +811,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_null:
             ret = HandleNullNan(doc);
+            break;
+
+        case json_tokener_state_comment_start:
+            ret = HandleCommentStart(doc);
             break;
     }
 
@@ -955,22 +986,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_comment_start:
-      if(c == '*') 
-      {
-	state = json_tokener_state_comment;
-      } 
-      else if(c == '/') 
-      {
-	state = json_tokener_state_comment_eol;
-      } 
-      else 
-      {
-	tok->err = json_tokener_error_parse_comment;
-	goto out;
-      }
-      printbuf_memappend_fast(tok->pb, &c, 1);
-      break;
 
     case json_tokener_state_comment:
           const char *case_start = str;
