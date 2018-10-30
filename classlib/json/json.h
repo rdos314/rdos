@@ -84,11 +84,13 @@ public:
     ~TJsonStackEntry();
 
     bool AddLevel(TJsonDocument *doc, TJsonObject *object);
+    void DeleteLevel(TJsonDocument *doc);
     bool Parse(TJsonDocument *doc);
 
 protected:
     int HandleEatWs(TJsonDocument *doc);
     int HandleStart(TJsonDocument *doc);
+    int HandleFinish(TJsonDocument *doc);
 
     int state;
     int saved_state;
@@ -111,6 +113,7 @@ protected:
     bool PeekChar(TJsonStackEntry *entry);
     bool AdvanceChar();
     bool AddLevel(TJsonObject *object);
+    void DeleteLevel();
 
 private:
     char *str;

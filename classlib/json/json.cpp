@@ -387,6 +387,30 @@ bool TJsonStackEntry::AddLevel(TJsonDocument *doc, TJsonObject *object)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::DeleteLevel
+#
+#   Purpose....: Delete level
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonStackEntry::DeleteLevel(TJsonDocument *doc)
+{
+    obj->pb = pb;
+    pb = new TJsonPrintBuf;
+
+    if (obj_field_name)
+    {
+        delete obj_field_name;
+        obj_field_name = 0;
+    }
+    doc->DeleteLevel();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::HandleEatWs
 #
 #   Purpose....: Handle eat ws state
@@ -422,7 +446,7 @@ int TJsonStackEntry::HandleEatWs(TJsonDocument *doc)
 #
 #   Name       : TJsonStackEntry::HandleStart
 #
-#   Purpose....: Handle state state
+#   Purpose....: Handle start state
 #
 #   In params..: *
 #   Out params.: *
@@ -507,6 +531,23 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleFinish
+#
+#   Purpose....: Handle finish state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleFinish(TJsonDocument *doc)
+{
+    DeleteLevel(doc);    
+    return json_ret_out;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -524,9 +565,16 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
     {
         case json_tokener_state_eatws:
             ret = HandleEatWs(doc);
+            break;
 
         case json_tokener_state_start:
             ret = HandleStart(doc);
+            break;
+    
+        case json_tokener_state_finish:
+            ret = HandleFinish(doc);
+            break;
+
     }
 
     return true;
@@ -652,6 +700,26 @@ bool TJsonDocument::AddLevel(TJsonObject *object)
         return false;
 }
 
+/*##########################################################################
+#
+#   Name       : TJsonDocument::DeleteLevel
+#
+#   Purpose....: Delete level
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::DeleteLevel()
+{
+    if (depth)
+    {
+        depth--;
+        delete StackArr[depth];
+    }
+}
+
 /*
 struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 					  const char *str, int len)
@@ -675,12 +743,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
       break;
 
-    case json_tokener_state_finish:
-      if(tok->depth == 0) goto out;
-      obj = json_object_get(current);
-      json_tokener_reset_level(tok, tok->depth);
-      tok->depth--;
-      goto redo_char;
 
     case json_tokener_state_inf:
       {
