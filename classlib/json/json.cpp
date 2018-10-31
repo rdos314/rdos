@@ -1532,6 +1532,9 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
     doc->char_offset = 0;
     doc->err = json_tokener_success;
 
+    state = json_tokener_state_eatws;
+    saved_state = json_tokener_state_start;
+
     while (doc->PeekChar(this)) 
     {
 
@@ -1678,6 +1681,7 @@ TJsonDocument::TJsonDocument()
 ##########################################################################*/
 TJsonDocument::TJsonDocument(const char *doc)
 {
+    Parse(doc);
 }
 
 /*##########################################################################
@@ -1693,6 +1697,34 @@ TJsonDocument::TJsonDocument(const char *doc)
 ##########################################################################*/
 TJsonDocument::~TJsonDocument()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::Parse
+#
+#   Purpose....: Parse
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDocument::Parse(const char *doc)
+{
+    str = (char *)doc;
+    len = strlen(str);
+
+    char_offset = 0;
+    depth = 0;
+    err = 0;
+    st_pos = 0;
+    ucs_char = 0;
+    quote_char = 0;
+    is_double = 0;
+    flags = 0;
+
+    return AddLevel(0);
 }
 
 /*##########################################################################

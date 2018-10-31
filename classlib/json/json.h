@@ -159,6 +159,8 @@ public:
     TJsonDocument(const char *doc);
     ~TJsonDocument();
 
+    bool Parse(const char *doc);
+
 protected:
     bool PeekChar(TJsonStackEntry *entry);
     bool AdvanceChar();
