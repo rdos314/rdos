@@ -1462,6 +1462,28 @@ int TJsonStackEntry::HandleObjectValue(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleObjectValueAdd
+#
+#   Purpose....: Handle object value add state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleObjectValueAdd(TJsonDocument *doc)
+{
+//    json_object_object_add(current, obj_field_name, obj);
+//    free(obj_field_name);
+//    obj_field_name = NULL;
+
+    saved_state = json_tokener_state_object_sep;
+    state = json_tokener_state_eatws;
+    return json_ret_redo;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1561,6 +1583,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_object_value:
             ret = HandleObjectValue(doc);
+            break;
+
+        case json_tokener_state_object_value_add:
+            ret = HandleObjectValueAdd(doc);
             break;
     }
 
@@ -1735,13 +1761,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_object_value_add:
-      json_object_object_add(current, obj_field_name, obj);
-      free(obj_field_name);
-      obj_field_name = NULL;
-      saved_state = json_tokener_state_object_sep;
-      state = json_tokener_state_eatws;
-      goto redo_char;
 
     case json_tokener_state_object_sep:
       if(c == '}') 
