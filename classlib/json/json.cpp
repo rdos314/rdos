@@ -1307,6 +1307,72 @@ int TJsonStackEntry::HandleArrayAdd(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleArraySep
+#
+#   Purpose....: Handle array sep state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleArraySep(TJsonDocument *doc)
+{
+    switch (*doc->str)
+    {
+        case ']':
+            saved_state = json_tokener_state_finish;
+            state = json_tokener_state_eatws;
+            break;
+
+        case ',': 
+            saved_state = json_tokener_state_array_after_sep;
+            state = json_tokener_state_eatws;
+            break;
+
+        default:
+            doc->err = json_tokener_error_parse_array;
+	    return json_ret_out;
+    }
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::HandleObjectFieldStart
+#
+#   Purpose....: Handle object field start state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
+{
+    switch (*doc->str)
+    {
+        case '}': 
+            saved_state = json_tokener_state_finish;
+            state = json_tokener_state_eatws;
+            break;
+
+        case '"':
+        case '\'':
+            doc->quote_char = *doc->str;
+            pb->Reset();
+            state = json_tokener_state_object_field;
+            break;
+
+        default:
+            doc->err = json_tokener_error_parse_object_key_name;
+	    return json_ret_out;
+    }
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1385,6 +1451,15 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_array_add:
             ret = HandleArrayAdd(doc);
+            break;
+
+        case json_tokener_state_array_sep:
+            ret = HandleArraySep(doc);
+            break;
+
+        case json_tokener_state_object_field_start:
+        case json_tokener_state_object_field_start_after_sep:
+            ret = HandleObjectFieldStart(doc);
             break;
 
     }
@@ -1559,49 +1634,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_array_sep:
-      if(c == ']') 
-      {
-	saved_state = json_tokener_state_finish;
-	state = json_tokener_state_eatws;
-      } 
-      else if(c == ',') 
-      {
-	saved_state = json_tokener_state_array_after_sep;
-	state = json_tokener_state_eatws;
-      } 
-      else 
-      {
-	tok->err = json_tokener_error_parse_array;
-	goto out;
-      }
-      break;
-
-    case json_tokener_state_object_field_start:
-    case json_tokener_state_object_field_start_after_sep:
-      if(c == '}') 
-      {
-		if (state == json_tokener_state_object_field_start_after_sep &&
-		    (tok->flags & JSON_TOKENER_STRICT))
-		{
-			tok->err = json_tokener_error_parse_unexpected;
-			goto out;
-		}
-	saved_state = json_tokener_state_finish;
-	state = json_tokener_state_eatws;
-      } 
-      else if (c == '"' || c == '\'') 
-      {
-	tok->quote_char = c;
-	printbuf_reset(tok->pb);
-	state = json_tokener_state_object_field;
-      } 
-      else 
-      {
-	tok->err = json_tokener_error_parse_object_key_name;
-	goto out;
-      }
-      break;
 
     case json_tokener_state_object_field:
       {
