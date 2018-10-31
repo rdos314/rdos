@@ -1417,6 +1417,32 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleObjectFieldEnd
+#
+#   Purpose....: Handle object field end state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleObjectFieldEnd(TJsonDocument *doc)
+{
+    if (*doc->str == ':') 
+    {
+        saved_state = json_tokener_state_object_value;
+        state = json_tokener_state_eatws;
+    } 
+    else 
+    {
+        doc->err = json_tokener_error_parse_object_key_sep;
+	return json_ret_out;
+    }
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1508,6 +1534,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_object_field:
             ret = HandleObjectField(doc);
+            break;
+
+        case json_tokener_state_object_field_end:
+            ret = HandleObjectFieldEnd(doc);
             break;
     }
 
@@ -1681,20 +1711,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-
-
-    case json_tokener_state_object_field_end:
-      if(c == ':') 
-      {
-	saved_state = json_tokener_state_object_value;
-	state = json_tokener_state_eatws;
-      } 
-      else 
-      {
-	tok->err = json_tokener_error_parse_object_key_sep;
-	goto out;
-      }
-      break;
 
     case json_tokener_state_object_value:
       if(tok->depth >= tok->max_depth-1) 

@@ -137,6 +137,7 @@ protected:
     int HandleArraySep(TJsonDocument *doc);
     int HandleObjectFieldStart(TJsonDocument *doc);
     int HandleObjectField(TJsonDocument *doc);
+    int HandleObjectFieldEnd(TJsonDocument *doc);
 
     int state;
     int saved_state;
