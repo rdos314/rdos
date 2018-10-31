@@ -1484,6 +1484,38 @@ int TJsonStackEntry::HandleObjectValueAdd(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleObjectSep
+#
+#   Purpose....: Handle object sep state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleObjectSep(TJsonDocument *doc)
+{
+    switch (*doc->str)
+    {
+        case '}':
+            saved_state = json_tokener_state_finish;
+            state = json_tokener_state_eatws;
+            break;
+
+        case ',': 
+            saved_state = json_tokener_state_object_field_start_after_sep;
+            state = json_tokener_state_eatws;
+            break;
+
+        default:
+            doc->err = json_tokener_error_parse_object_value_sep;
+            return json_ret_out;
+    }
+    return json_ret_break;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1587,6 +1619,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_object_value_add:
             ret = HandleObjectValueAdd(doc);
+            break;
+
+        case json_tokener_state_object_sep:
+            ret = HandleObjectSep(doc);
             break;
     }
 
@@ -1762,27 +1798,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_object_sep:
-      if(c == '}') 
-      {
-	saved_state = json_tokener_state_finish;
-	state = json_tokener_state_eatws;
-      } 
-      else if(c == ',') 
-      {
-	saved_state = json_tokener_state_object_field_start_after_sep;
-	state = json_tokener_state_eatws;
-      } 
-      else 
-      {
-	tok->err = json_tokener_error_parse_object_value_sep;
-	goto out;
-      }
-      break;
-
-    }
-    if (!ADVANCE_CHAR(str, tok))
-      goto out;
   }
 
  out:
