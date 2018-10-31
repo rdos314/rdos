@@ -509,9 +509,9 @@ TJsonStackEntry::~TJsonStackEntry()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonStackEntry::AddLevel(TJsonDocument *doc, TJsonObject *object)
+bool TJsonStackEntry::AddLevel(TJsonDocument *doc, TJsonObject *object, int next_state)
 {
-    return doc->AddLevel(object);
+    return doc->AddLevel(object, next_state);
 }
 
 /*##########################################################################
@@ -590,18 +590,22 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case '{':
 	    state = json_tokener_state_eatws;
 	    saved_state = json_tokener_state_object_field_start;
+            doc->AdvanceChar();
+
 	    o = new TJsonObject();
-            if (AddLevel(doc, o))
-                return json_ret_break;
+            if (AddLevel(doc, o, json_tokener_state_object_field_start))
+                return json_ret_redo;
             else
                 return json_ret_out;
 
         case '[':
             state = json_tokener_state_eatws;
             saved_state = json_tokener_state_array;
+            doc->AdvanceChar();
+
 	    o = new TJsonArray();
-            if (AddLevel(doc, o))
-                return json_ret_break;
+            if (AddLevel(doc, o, json_tokener_state_array))
+                return json_ret_redo;
             else
                 return json_ret_out;
 
@@ -720,7 +724,7 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
     else
         o = new TJsonDouble(INFINITY);
 
-    if (AddLevel(doc, o))
+    if (AddLevel(doc, o, json_tokener_state_finish))
         return json_ret_redo;
     else
         return json_ret_out;
@@ -763,7 +767,9 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
             {
                 o = new TJsonDouble(NAN);
 
-                if (AddLevel(doc, o))
+                doc->AdvanceChar();
+
+                if (AddLevel(doc, o, json_tokener_state_finish))
                     return json_ret_redo;
                 else
                     return json_ret_out;
@@ -933,7 +939,9 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
 
             o = new TJsonString(pb->FBuf, pb->FBpos);
 
-            if (AddLevel(doc, o))
+            doc->AdvanceChar();
+
+            if (AddLevel(doc, o, json_tokener_state_finish))
                 return json_ret_break;
             else
                 return json_ret_out;
@@ -1043,7 +1051,7 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 
     o = new TJsonBoolean(true);
 
-    if (AddLevel(doc, o))
+    if (AddLevel(doc, o, json_tokener_state_finish))
         return json_ret_redo;
     else
         return json_ret_out;
@@ -1087,7 +1095,7 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 
     o = new TJsonBoolean(false);
 
-    if (AddLevel(doc, o))
+    if (AddLevel(doc, o, json_tokener_state_finish))
         return json_ret_redo;
     else
         return json_ret_out;
@@ -1115,7 +1123,7 @@ int TJsonStackEntry::DecodeInt(TJsonDocument *doc)
     {
         o = new TJsonInt(val);
 
-        if (AddLevel(doc, o))
+        if (AddLevel(doc, o, json_tokener_state_finish))
             return json_ret_redo;
         else
             return json_ret_out;
@@ -1148,7 +1156,7 @@ int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 
     o = new TJsonDouble(val);
 
-    if (AddLevel(doc, o))
+    if (AddLevel(doc, o, json_tokener_state_finish))
         return json_ret_redo;
     else
         return json_ret_out;
@@ -1299,7 +1307,7 @@ int TJsonStackEntry::HandleArrayAdd(TJsonDocument *doc)
     state = json_tokener_state_eatws;
 
     o = new TJsonArray();
-    if (AddLevel(doc, o))
+    if (AddLevel(doc, o, json_tokener_state_array_sep))
         return json_ret_redo;
     else
         return json_ret_out;
@@ -1455,9 +1463,11 @@ int TJsonStackEntry::HandleObjectFieldEnd(TJsonDocument *doc)
 int TJsonStackEntry::HandleObjectValue(TJsonDocument *doc)
 {
     state = json_tokener_state_object_value_add;
-//    tok->depth++;
-//    json_tokener_reset_level(tok, tok->depth);
-    return json_ret_redo;
+
+    if (AddLevel(doc, 0, json_tokener_state_start))
+        return json_ret_redo;
+    else
+        return json_ret_out;
 }
 
 /*##########################################################################
@@ -1525,7 +1535,7 @@ int TJsonStackEntry::HandleObjectSep(TJsonDocument *doc)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonStackEntry::Parse(TJsonDocument *doc)
+bool TJsonStackEntry::Parse(TJsonDocument *doc, int new_state)
 {
     int ret;
 
@@ -1533,7 +1543,7 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
     doc->err = json_tokener_success;
 
     state = json_tokener_state_eatws;
-    saved_state = json_tokener_state_start;
+    saved_state = new_state;
 
     while (doc->PeekChar(this)) 
     {
@@ -1724,7 +1734,7 @@ bool TJsonDocument::Parse(const char *doc)
     is_double = 0;
     flags = 0;
 
-    return AddLevel(0);
+    return AddLevel(0, json_tokener_state_start);
 }
 
 /*##########################################################################
@@ -1787,7 +1797,7 @@ bool TJsonDocument::AdvanceChar()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonDocument::AddLevel(TJsonObject *object)
+bool TJsonDocument::AddLevel(TJsonObject *object, int new_state)
 {
     TJsonStackEntry *entry;
 
@@ -1796,7 +1806,7 @@ bool TJsonDocument::AddLevel(TJsonObject *object)
         entry = new TJsonStackEntry(object);
         StackArr[depth] = entry;
         depth++;
-        return entry->Parse(this);
+        return entry->Parse(this, new_state);
     }
     else
         return false;
