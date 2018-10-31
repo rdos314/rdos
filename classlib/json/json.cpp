@@ -1443,6 +1443,25 @@ int TJsonStackEntry::HandleObjectFieldEnd(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleObjectValue
+#
+#   Purpose....: Handle object value state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleObjectValue(TJsonDocument *doc)
+{
+    state = json_tokener_state_object_value_add;
+//    tok->depth++;
+//    json_tokener_reset_level(tok, tok->depth);
+    return json_ret_redo;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1538,6 +1557,10 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 
         case json_tokener_state_object_field_end:
             ret = HandleObjectFieldEnd(doc);
+            break;
+
+        case json_tokener_state_object_value:
+            ret = HandleObjectValue(doc);
             break;
     }
 
@@ -1711,17 +1734,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-
-    case json_tokener_state_object_value:
-      if(tok->depth >= tok->max_depth-1) 
-      {
-	tok->err = json_tokener_error_depth;
-	goto out;
-      }
-      state = json_tokener_state_object_value_add;
-      tok->depth++;
-      json_tokener_reset_level(tok, tok->depth);
-      goto redo_char;
 
     case json_tokener_state_object_value_add:
       json_object_object_add(current, obj_field_name, obj);
