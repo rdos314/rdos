@@ -1183,8 +1183,6 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 
     while (!done)	
     {
-        case_len++;
-
         switch (*doc->str)
         {
             case '.':
@@ -1237,6 +1235,8 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 
         if (!done)
         {
+            case_len++;
+
             if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
             {
                 pb->MemAppend(case_start, case_len);
