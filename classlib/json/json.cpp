@@ -1373,6 +1373,50 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TJsonStackEntry::HandleObjectField
+#
+#   Purpose....: Handle object field state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
+{
+    const char *case_start = doc->str;
+	
+    while (true) 
+    {
+        if (*doc->str == doc->quote_char) 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+            obj_field_name = new char[pb->FBpos + 1];
+            memcpy(obj_field_name, pb->FBuf, pb->FBpos);
+            obj_field_name[pb->FBpos] = 0;
+
+	    saved_state = json_tokener_state_object_field_end;
+	    state = json_tokener_state_eatws;
+	    return json_ret_break;
+        } 
+        else if (*doc->str == '\\') 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+	    saved_state = json_tokener_state_object_field;
+	    state = json_tokener_state_string_escape;
+	    return json_ret_break;
+        }
+
+        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        {
+            pb->MemAppend(case_start, doc->str - case_start);
+	    return json_ret_out;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStackEntry::Parse
 #
 #   Purpose....: Parse object
@@ -1462,6 +1506,9 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
             ret = HandleObjectFieldStart(doc);
             break;
 
+        case json_tokener_state_object_field:
+            ret = HandleObjectField(doc);
+            break;
     }
 
     return true;
@@ -1635,34 +1682,6 @@ struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
 
 
 
-    case json_tokener_state_object_field:
-      {
-	const char *case_start = str;
-	while(1) 
-        {
-	  if(c == tok->quote_char) 
-          {
-	    printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-	    obj_field_name = strdup(tok->pb->buf);
-	    saved_state = json_tokener_state_object_field_end;
-	    state = json_tokener_state_eatws;
-	    break;
-	  } 
-          else if(c == '\\') 
-          {
-	    printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-	    saved_state = json_tokener_state_object_field;
-	    state = json_tokener_state_string_escape;
-	    break;
-	  }
-	  if (!ADVANCE_CHAR(str, tok) || !PEEK_CHAR(c, tok)) 
-          {
-	    printbuf_memappend_fast(tok->pb, case_start, str-case_start);
-	    goto out;
-	  }
-	}
-      }
-      break;
 
     case json_tokener_state_object_field_end:
       if(c == ':') 
