@@ -1529,102 +1529,123 @@ bool TJsonStackEntry::Parse(TJsonDocument *doc)
 {
     int ret;
 
-    switch(state) 
+    doc->char_offset = 0;
+    doc->err = json_tokener_success;
+
+    while (doc->PeekChar(this)) 
     {
-        case json_tokener_state_eatws:
-            ret = HandleEatWs(doc);
-            break;
 
-        case json_tokener_state_start:
-            ret = HandleStart(doc);
-            break;
+redo_char:
+
+        switch(state) 
+        {
+            case json_tokener_state_eatws:
+                ret = HandleEatWs(doc);
+                break;
+
+            case json_tokener_state_start:
+                ret = HandleStart(doc);
+                break;
     
-        case json_tokener_state_finish:
-            ret = HandleFinish(doc);
-            break;
+            case json_tokener_state_finish:
+                ret = HandleFinish(doc);
+                break;
 
-        case json_tokener_state_inf:
-            ret = HandleInfinite(doc);
-            break;
+            case json_tokener_state_inf:
+                ret = HandleInfinite(doc);
+                break;
 
-        case json_tokener_state_null:
-            ret = HandleNullNan(doc);
-            break;
+            case json_tokener_state_null:
+               ret = HandleNullNan(doc);
+               break;
 
-        case json_tokener_state_comment_start:
-            ret = HandleCommentStart(doc);
-            break;
+            case json_tokener_state_comment_start:
+                ret = HandleCommentStart(doc);
+                break;
 
-        case json_tokener_state_comment:
-            ret = HandleComment(doc);
-            break;
+            case json_tokener_state_comment:
+                ret = HandleComment(doc);
+                break;
 
-        case json_tokener_state_comment_eol:
-            ret = HandleCommentEol(doc);
-            break;
+            case json_tokener_state_comment_eol:
+                ret = HandleCommentEol(doc);
+                break;
 
-        case json_tokener_state_comment_end:
-            ret = HandleCommentEnd(doc);
-            break;
+            case json_tokener_state_comment_end:
+                ret = HandleCommentEnd(doc);
+                break;
 
-        case json_tokener_state_string:
-            ret = HandleString(doc);
-            break;
+            case json_tokener_state_string:
+                ret = HandleString(doc);
+                break;
 
-        case json_tokener_state_string_escape:
-            ret = HandleStringEscape(doc);
-            break;
+            case json_tokener_state_string_escape:
+                ret = HandleStringEscape(doc);
+                break;
 
-        case json_tokener_state_true:
-            ret = HandleTrue(doc);
-            break;
+            case json_tokener_state_true:
+                ret = HandleTrue(doc);
+                break;
 
-        case json_tokener_state_false:
-            ret = HandleFalse(doc);
-            break;
+            case json_tokener_state_false:
+                ret = HandleFalse(doc);
+                break;
 
-        case json_tokener_state_number:
-            ret = HandleNumber(doc);
-            break;
+            case json_tokener_state_number:
+                ret = HandleNumber(doc);
+                break;
 
-        case json_tokener_state_array_after_sep:
-        case json_tokener_state_array:
-            ret = HandleArray(doc);
-            break;
+            case json_tokener_state_array_after_sep:
+            case json_tokener_state_array:
+                ret = HandleArray(doc);
+                break;
 
-        case json_tokener_state_array_add:
-            ret = HandleArrayAdd(doc);
-            break;
+            case json_tokener_state_array_add:
+                ret = HandleArrayAdd(doc);
+                break;
 
-        case json_tokener_state_array_sep:
-            ret = HandleArraySep(doc);
-            break;
+            case json_tokener_state_array_sep:
+                ret = HandleArraySep(doc);
+                break;
 
-        case json_tokener_state_object_field_start:
-        case json_tokener_state_object_field_start_after_sep:
-            ret = HandleObjectFieldStart(doc);
-            break;
+            case json_tokener_state_object_field_start:
+            case json_tokener_state_object_field_start_after_sep:
+                ret = HandleObjectFieldStart(doc);
+                break;
 
-        case json_tokener_state_object_field:
-            ret = HandleObjectField(doc);
-            break;
+            case json_tokener_state_object_field:
+                ret = HandleObjectField(doc);
+                break;
 
-        case json_tokener_state_object_field_end:
-            ret = HandleObjectFieldEnd(doc);
-            break;
+            case json_tokener_state_object_field_end:
+                ret = HandleObjectFieldEnd(doc);
+                break;
 
-        case json_tokener_state_object_value:
-            ret = HandleObjectValue(doc);
-            break;
+            case json_tokener_state_object_value:
+                ret = HandleObjectValue(doc);
+                break;
 
-        case json_tokener_state_object_value_add:
-            ret = HandleObjectValueAdd(doc);
-            break;
+            case json_tokener_state_object_value_add:
+                ret = HandleObjectValueAdd(doc);
+                break;
 
-        case json_tokener_state_object_sep:
-            ret = HandleObjectSep(doc);
-            break;
+            case json_tokener_state_object_sep:
+                ret = HandleObjectSep(doc);
+                break;
+
+        }
+
+        if (ret == json_ret_redo)
+            goto redo_char;
+
+        if (!doc->AdvanceChar())
+            ret = json_ret_out;
+
+        if (ret == json_ret_out)
+            goto out;
     }
+
+out:
 
     return true;
 }
@@ -1768,63 +1789,3 @@ void TJsonDocument::DeleteLevel()
         delete StackArr[depth];
     }
 }
-
-/*
-struct json_object* json_tokener_parse_ex(struct json_tokener *tok,
-					  const char *str, int len)
-{
-  struct json_object *obj = NULL;
-  char c = '\1';
-
-  t*ok->char_offset = 0;
-  tok->err = json_tokener_success;
-
-  if ((len < -1) || (len == -1 && strlen(str) > INT32_MAX)) {
-    tok->err = json_tokener_error_size;
-    return NULL;
-  }
-
-  while (PEEK_CHAR(c, tok)) 
-  {
-
-  redo_char:
-
-
-      break;
-
-
-
-
-
-
-
-  }
-
- out:
-  if (c &&
-     (state == json_tokener_state_finish) &&
-     (tok->depth == 0) &&
-     (tok->flags & JSON_TOKENER_STRICT)) 
-  {
-      tok->err = json_tokener_error_parse_unexpected;
-  }
-  if (!c) { 
-    if(state != json_tokener_state_finish &&
-       saved_state != json_tokener_state_finish)
-      tok->err = json_tokener_error_parse_eof;
-  }
-
-  if (tok->err == json_tokener_success)
-  {
-    json_object *ret = json_object_get(current);
-	int ii;
-
-    for(ii = tok->depth; ii >= 0; ii--)
-      json_tokener_reset_level(tok, ii);
-    return ret;
-  }
-
-  return NULL;
-}
-
-*/

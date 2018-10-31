@@ -135,8 +135,7 @@ TBitmapGraphicDevice *CreateMouseBitmap(TGraphicDevice *dev, int r, int g, int b
 ##########################################################################*/
 void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    if (CalState == 4)
-        MouseSprite->Move(x, y);
+    MouseSprite->Move(x, y);
 }
 
 /*##########################################################################
@@ -152,14 +151,6 @@ void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 ##########################################################################*/
 void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    if (CalState < 4)
-    {
-        CalPoints[CalState].SumX += x;
-        CalPoints[CalState].SumY += y;
-        CalPoints[CalState].Count++;
-    }
-
-    Pressed = TRUE;
 }
 
 /*##########################################################################
@@ -186,15 +177,12 @@ void cdecl main()
     TControlThread *ControlThread;
     TWait Wait;
     int Count;
-    TTouchCalibration cal;
-
-    cal.Start();
 
     Mouse = new TMouseDevice;
     Mouse->OnMove = MouseMove;
     Mouse->OnLeftDown = LeftDown;
 
-    vbe = new TVideoGraphicDevice(24, 1266, 768);
+    vbe = new TVideoGraphicDevice(24, 640, 480);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //      vbe = new TVideoGraphicDevice(24, 1280, 1024);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
@@ -206,7 +194,6 @@ void cdecl main()
     y = vbe->GetHeight();
 
     ControlThread = new TDisplayControlThread("Control thread", vbe);
-    CalState = 0;
 
     Mouse->SetWindow(20, 20, x - 20, y - 20);
     Mouse->SetMickey(1, 1);
@@ -219,57 +206,10 @@ void cdecl main()
     Wait.Add(Mouse);
     Wait.StartThreadHandler("IO Thread", 0x1000);
 
-    Pressed = FALSE;
-    Count = 0;
-    CalState = 0;
-
-    CalPoints[0].DispX = (x * 15) / 100;
-    CalPoints[0].DispY = (y * 15) / 100;
-
-    CalPoints[1].DispX = (x * 50) / 100;
-    CalPoints[1].DispY = (y * 85) / 100;
-
-    CalPoints[2].DispX = (x * 85) / 100;
-    CalPoints[2].DispY = (y * 50) / 100;
-
-    for (i = 0; i < 3; i++)
-    {
-        CalPoints[i].Count = 0;
-        CalPoints[i].SumX = 0;
-        CalPoints[i].SumY = 0;
-    }
-
+    MouseSprite->Move(100, 100);
+    MouseSprite->Show();
 
     for (;;)
-    {
-        if (Pressed && CalState < 3)
-        {
-            CalState++;
-            if (CalState == 3)
-            {
-                if (Count == 4)
-                {
-                    for (i = 0; i < 3; i++)
-                        cal.AddPoint(	CalPoints[i].DispX, CalPoints[i].DispY, 
-			                CalPoints[i].SumX / CalPoints[i].Count, CalPoints[i].SumY / CalPoints[i].Count);
-                    cal.Calibrate();
-                }
-                else
-                {
-                    Count++;
-                    CalState = 0;
-                }
-            }
-        }
+        RdosWaitMilli(250);
 
-        if (CalState < 3)
-        {
-            MouseSprite->Move(CalPoints[CalState].DispX, CalPoints[CalState].DispY);
-            MouseSprite->Show();
-        }
-
-        Pressed = FALSE;
-
-        Wait.WaitForever();
-    }
 }
