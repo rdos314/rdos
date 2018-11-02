@@ -148,9 +148,6 @@ protected:
     int state;
     int saved_state;
 
-    bool has_add_level;
-    int start_state;
-
     TJsonPrintBuf *pb;
     TJsonObject *obj;
     char *obj_field_name;
@@ -169,7 +166,14 @@ public:
 
 protected:
     bool AddLevel();
-    void DeleteLevel();
+    bool DeleteLevel();
+
+    void SetFieldName(char *str);
+    void AddArray();
+    void AddString(char *str);
+    void AddInt(long long val);
+    void AddDouble(double val);
+    void AddBoolean(bool val);
 
     int start_state;
     const char *ptr;

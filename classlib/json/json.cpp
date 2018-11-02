@@ -476,7 +476,6 @@ TJsonString::~TJsonString()
 TJsonStackEntry::TJsonStackEntry()
 {
     pb = new TJsonPrintBuf;
-    obj_field_name = 0;
 }
 
 /*##########################################################################
@@ -494,9 +493,6 @@ TJsonStackEntry::~TJsonStackEntry()
 {
     if (pb)
         delete pb;
-
-    if (obj_field_name)
-        delete obj_field_name;
 }
 
 /*##########################################################################
@@ -586,29 +582,17 @@ int TJsonStackEntry::HandleEatWs(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 {
-    TJsonObject *o;
-
     switch (*str) 
     {
         case '{':
 	    state = json_tokener_state_eatws;
 	    saved_state = json_tokener_state_object_field_start;
-            AdvanceChar();
-
-	    o = new TJsonObject();
-
-            start_state = json_tokener_state_object_field_start;
-            return json_ret_add;
+            return json_ret_break;
 
         case '[':
             state = json_tokener_state_eatws;
             saved_state = json_tokener_state_array;
-            AdvanceChar();
-
-	    o = new TJsonArray();
-           
-            start_state = json_tokener_state_array;
-            return json_ret_add;
+            return json_ret_break;
 
         case 'I':
         case 'i':
@@ -696,7 +680,6 @@ int TJsonStackEntry::HandleFinish(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
 {
-    TJsonObject *o;
     char inf_char;
     const char *inf_str = "infinity";
     int len = strlen(inf_str);
@@ -716,16 +699,14 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
             return json_ret_out;
     }
 
+    if (pb->FSize > 0 && pb->FBuf[0] == '-')
+        doc->AddDouble(-INFINITY);
+    else
+        doc->AddDouble(INFINITY);
+
     saved_state = json_tokener_state_finish;
     state = json_tokener_state_eatws;
-
-    if (pb->FSize > 0 && pb->FBuf[0] == '-')
-        o = new TJsonDouble(-INFINITY);
-    else
-        o = new TJsonDouble(INFINITY);
-
-    start_state = json_tokener_state_finish;
-    return json_ret_add;
+    return json_ret_redo;
 }
 
 /*##########################################################################
@@ -741,7 +722,6 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
 {
-    TJsonObject *o;
     char ch;
     int i;
 	
@@ -763,12 +743,11 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
             ch = tolower((int)(*str));
             if (ch == 'n')
             {
-                o = new TJsonDouble(NAN);
+                doc->AddDouble(NAN);
 
-                AdvanceChar();
-
-                start_state = json_tokener_state_finish;
-                return json_ret_add;
+    	        saved_state = json_tokener_state_finish;
+    	        state = json_tokener_state_eatws;
+                return json_ret_break;
             }
             else
             {
@@ -793,7 +772,7 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
             }
 	    saved_state = json_tokener_state_finish;
 	    state = json_tokener_state_eatws;
-	    return json_ret_redo;
+	    return json_ret_break;
 
         default:
             doc->err = json_tokener_error_parse_null;
@@ -922,23 +901,22 @@ int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleString(TJsonDocument *doc)
 {
-    TJsonObject *o;
     const char *case_start = str;
+    char *val_str;
 
     for (;;)
     {
         if(*str == doc->quote_char) 
         {
             pb->MemAppend(case_start, str - case_start);
+            val_str = new char[pb->FBpos + 1];
+            memcpy(val_str, pb->FBuf, pb->FBpos);
+            val_str[pb->FBpos] = 0;
+            doc->AddString(val_str);
+
 	    saved_state = json_tokener_state_finish;
 	    state = json_tokener_state_eatws;
-
-            o = new TJsonString(pb->FBuf, pb->FBpos);
-
-            AdvanceChar();
-
-            start_state = json_tokener_state_finish;
-            return json_ret_add;
+            return json_ret_break;
         } 
         else if (*str == '\\') 
         {
@@ -1020,7 +998,6 @@ int TJsonStackEntry::HandleStringEscape(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 {
-    TJsonObject *o;
     char ch;
     const char *str = "true";
     int len = strlen(str);
@@ -1040,13 +1017,11 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
             return json_ret_out;
     }
 
+    doc->AddBoolean(true);
+
     saved_state = json_tokener_state_finish;
     state = json_tokener_state_eatws;
-
-    o = new TJsonBoolean(true);
-
-    start_state = json_tokener_state_finish;
-    return json_ret_add;
+    return json_ret_break;
 }
 
 /*##########################################################################
@@ -1062,7 +1037,6 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 {
-    TJsonObject *o;
     char ch;
     const char *str = "false";
     int len = strlen(str);
@@ -1082,13 +1056,11 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
             return json_ret_out;
     }
 
+    doc->AddBoolean(false);
+
     saved_state = json_tokener_state_finish;
     state = json_tokener_state_eatws;
-
-    o = new TJsonBoolean(false);
-
-    start_state = json_tokener_state_finish;
-    return json_ret_add;
+    return json_ret_break;
 }
 
 /*##########################################################################
@@ -1104,17 +1076,17 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::DecodeInt(TJsonDocument *doc)
 {
-    TJsonObject *o;
     long long val;
     char *end = NULL;
 
     val = strtoll(pb->FBuf, &end, 10);
     if (end != pb->FBuf)
     {
-        o = new TJsonInt(val);
+        doc->AddInt(val);
 
-        start_state = json_tokener_state_finish;
-        return json_ret_add;
+        saved_state = json_tokener_state_finish;
+        state = json_tokener_state_eatws;
+        return json_ret_redo;
     }
     else
     {
@@ -1136,16 +1108,16 @@ int TJsonStackEntry::DecodeInt(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 {
-    TJsonObject *o;
     double val;
     char *end;
 
     val = strtod(pb->FBuf, &end);
 
-    o = new TJsonDouble(val);
+    doc->AddDouble(val);
 
-    start_state = json_tokener_state_finish;
-    return json_ret_add;
+    saved_state = json_tokener_state_finish;
+    state = json_tokener_state_eatws;
+    return json_ret_redo;
 }
 
 /*##########################################################################
@@ -1240,9 +1212,6 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
         doc->st_pos = 0;
         return json_ret_redo;
     }
-
-    saved_state = json_tokener_state_finish;
-    state = json_tokener_state_eatws;
  
     if (doc->is_double)
         return DecodeDouble(doc);
@@ -1267,11 +1236,13 @@ int TJsonStackEntry::HandleArray(TJsonDocument *doc)
     {
         saved_state = json_tokener_state_finish;
         state = json_tokener_state_eatws;
+        return json_ret_break;
     } 
     else 
+    {
 	state = json_tokener_state_array_add;
-
-    return json_ret_break;
+        return json_ret_add;
+    }
 }
 
 /*##########################################################################
@@ -1287,14 +1258,11 @@ int TJsonStackEntry::HandleArray(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleArrayAdd(TJsonDocument *doc)
 {
-    TJsonObject *o;
+    doc->AddArray();
 
     saved_state = json_tokener_state_array_sep;
     state = json_tokener_state_eatws;
-
-    o = new TJsonArray();
-    start_state = json_tokener_state_array_sep;
-    return json_ret_add;
+    return json_ret_redo;
 }
 
 /*##########################################################################
@@ -1377,15 +1345,17 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
 int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 {
     const char *case_start = str;
+    char *val_str;
 	
     while (true) 
     {
         if (*str == doc->quote_char) 
         {
             pb->MemAppend(case_start, str - case_start);
-            obj_field_name = new char[pb->FBpos + 1];
-            memcpy(obj_field_name, pb->FBuf, pb->FBpos);
-            obj_field_name[pb->FBpos] = 0;
+            val_str = new char[pb->FBpos + 1];
+            memcpy(val_str, pb->FBuf, pb->FBpos);
+            val_str[pb->FBpos] = 0;
+            doc->SetFieldName(val_str);
 
 	    saved_state = json_tokener_state_object_field_end;
 	    state = json_tokener_state_eatws;
@@ -1447,8 +1417,6 @@ int TJsonStackEntry::HandleObjectFieldEnd(TJsonDocument *doc)
 int TJsonStackEntry::HandleObjectValue(TJsonDocument *doc)
 {
     state = json_tokener_state_object_value_add;
-
-    start_state = json_tokener_state_start;
     return json_ret_add;
 }
 
@@ -1465,10 +1433,6 @@ int TJsonStackEntry::HandleObjectValue(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleObjectValueAdd(TJsonDocument *doc)
 {
-//    json_object_object_add(current, obj_field_name, obj);
-//    free(obj_field_name);
-//    obj_field_name = NULL;
-
     saved_state = json_tokener_state_object_sep;
     state = json_tokener_state_eatws;
     return json_ret_redo;
@@ -1525,8 +1489,11 @@ int TJsonStackEntry::Parse(TJsonDocument *doc, const char *data, int start_state
 
     doc->err = json_tokener_success;
 
-    state = json_tokener_state_eatws;
-    saved_state = start_state;
+    if (start_state)
+    {
+        state = json_tokener_state_eatws;
+        saved_state = start_state;
+    }
 
     while (PeekChar()) 
     {
@@ -1753,9 +1720,15 @@ bool TJsonDocument::Parse(const char *doc)
         switch (ret)
         {
             case json_ret_add:
-                start_state = entry->start_state;
+                start_state = json_tokener_state_start;
                 ptr = entry->str;
                 ok = AddLevel();
+                break;
+
+            case json_ret_sub:
+                start_state = 0;
+                ptr = entry->str;
+                ok = DeleteLevel();
                 break;
 
             case json_ret_out:
@@ -1808,8 +1781,114 @@ bool TJsonDocument::AddLevel()
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::DeleteLevel()
+bool TJsonDocument::DeleteLevel()
 {
     if (depth)
         depth--;
+
+    if (depth)
+        return true;
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::SetFieldName
+#
+#   Purpose....: Set field name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::SetFieldName(char *str)
+{
+    printf("Field name: <%s>\r\n", str);
+    delete str;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddArray
+#
+#   Purpose....: Add array element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::AddArray()
+{
+    printf("Add array\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddString
+#
+#   Purpose....: Add string object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::AddString(char *str)
+{
+    printf("String object: <%s>\r\n", str);
+    delete str;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddInt
+#
+#   Purpose....: Add int object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::AddInt(long long val)
+{
+   printf("Int object: %lld\r\n", val);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddDouble
+#
+#   Purpose....: Add double object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::AddDouble(double val)
+{
+   printf("Double object: %5.3Lf\r\n", val);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddBoolean
+#
+#   Purpose....: Add boolean object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::AddBoolean(bool val)
+{
+    if (val)
+        printf("Boolean object: true\r\n");
+    else
+        printf("Boolean object: false\r\n");
 }
