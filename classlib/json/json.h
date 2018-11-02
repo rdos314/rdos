@@ -107,12 +107,10 @@ class TJsonStackEntry
 friend class TJsonDocument;
 
 public:
-    TJsonStackEntry(TJsonObject *object);
+    TJsonStackEntry();
     ~TJsonStackEntry();
 
-    bool AddLevel(TJsonDocument *doc, TJsonObject *object, int new_state);
-    void DeleteLevel(TJsonDocument *doc);
-    bool Parse(TJsonDocument *doc, int new_state);
+    int Parse(TJsonDocument *doc, const char *ptr, int start_state);
 
 protected:
     int DecodeInt(TJsonDocument *doc);
@@ -142,8 +140,16 @@ protected:
     int HandleObjectValueAdd(TJsonDocument *doc);
     int HandleObjectSep(TJsonDocument *doc);
 
+    bool PeekChar();
+    bool AdvanceChar();
+
+    const char *str;
+
     int state;
     int saved_state;
+
+    bool has_add_level;
+    int start_state;
 
     TJsonPrintBuf *pb;
     TJsonObject *obj;
@@ -162,16 +168,15 @@ public:
     bool Parse(const char *doc);
 
 protected:
-    bool PeekChar(TJsonStackEntry *entry);
-    bool AdvanceChar();
-    bool AddLevel(TJsonObject *object, int new_state);
+    bool AddLevel();
     void DeleteLevel();
 
-private:
-    char *str;
-    int len;
+    int start_state;
+    const char *ptr;
 
-    int char_offset;
+private:
+    void Init();
+
     int depth;
     int err;
     int st_pos;

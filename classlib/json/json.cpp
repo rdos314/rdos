@@ -80,6 +80,8 @@
 #define json_ret_out                                    1
 #define json_ret_redo                                   2
 #define json_ret_break                                  3
+#define json_ret_add                                    4
+#define json_ret_sub                                    5
 
 /*##########################################################################
 #
@@ -471,10 +473,9 @@ TJsonString::~TJsonString()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonStackEntry::TJsonStackEntry(TJsonObject *object)
+TJsonStackEntry::TJsonStackEntry()
 {
     pb = new TJsonPrintBuf;
-    obj = object;
     obj_field_name = 0;
 }
 
@@ -500,41 +501,43 @@ TJsonStackEntry::~TJsonStackEntry()
 
 /*##########################################################################
 #
-#   Name       : TJsonStackEntry::AddLevel
+#   Name       : TJsonStackEntry::PeekChar
 #
-#   Purpose....: Add level
+#   Purpose....: Peek next char
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonStackEntry::AddLevel(TJsonDocument *doc, TJsonObject *object, int next_state)
+bool TJsonStackEntry::PeekChar()
 {
-    return doc->AddLevel(object, next_state);
+    if (*str)
+        return true;
+    else
+        return false;
 }
-
+ 
 /*##########################################################################
 #
-#   Name       : TJsonStackEntry::DeleteLevel
+#   Name       : TJsonStackEntry::AdvanceChar
 #
-#   Purpose....: Delete level
+#   Purpose....: Advance to next char
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonStackEntry::DeleteLevel(TJsonDocument *doc)
+bool TJsonStackEntry::AdvanceChar()
 {
-    pb->Reset();
-
-    if (obj_field_name)
+    if (*str)
     {
-        delete obj_field_name;
-        obj_field_name = 0;
+        str++;
+        return true;
     }
-    doc->DeleteLevel();
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -550,16 +553,16 @@ void TJsonStackEntry::DeleteLevel(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleEatWs(TJsonDocument *doc)
 {
-    while (isspace(*doc->str)) 
+    while (isspace(*str)) 
     {
-	if (!doc->AdvanceChar() || !doc->PeekChar(this))
+	if (!AdvanceChar() || !PeekChar())
 	    return json_ret_out;
     }
 
-    if (*doc->str == '/') 
+    if (*str == '/') 
     {
         pb->Reset();
-	pb->MemAppend(doc->str, 1);
+	pb->MemAppend(str, 1);
 	state = json_tokener_state_comment_start;
     } 
     else 
@@ -585,29 +588,27 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 {
     TJsonObject *o;
 
-    switch (*doc->str) 
+    switch (*str) 
     {
         case '{':
 	    state = json_tokener_state_eatws;
 	    saved_state = json_tokener_state_object_field_start;
-            doc->AdvanceChar();
+            AdvanceChar();
 
 	    o = new TJsonObject();
-            if (AddLevel(doc, o, json_tokener_state_object_field_start))
-                return json_ret_redo;
-            else
-                return json_ret_out;
+
+            start_state = json_tokener_state_object_field_start;
+            return json_ret_add;
 
         case '[':
             state = json_tokener_state_eatws;
             saved_state = json_tokener_state_array;
-            doc->AdvanceChar();
+            AdvanceChar();
 
 	    o = new TJsonArray();
-            if (AddLevel(doc, o, json_tokener_state_array))
-                return json_ret_redo;
-            else
-                return json_ret_out;
+           
+            start_state = json_tokener_state_array;
+            return json_ret_add;
 
         case 'I':
         case 'i':
@@ -627,7 +628,7 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case '"':
 	    state = json_tokener_state_string;
 	    pb->Reset();
-	    doc->quote_char = *doc->str;
+	    doc->quote_char = *str;
             return json_ret_break;
 
         case 'T':
@@ -679,8 +680,7 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleFinish(TJsonDocument *doc)
 {
-    DeleteLevel(doc);    
-    return json_ret_out;
+    return json_ret_sub;
 }
 
 /*##########################################################################
@@ -703,7 +703,7 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
 
     while (doc->st_pos < len)
     {
-	inf_char = tolower((int)(*doc->str));
+	inf_char = tolower((int)(*str));
         if (inf_char != inf_str[doc->st_pos])
         {
             doc->err = json_tokener_error_parse_unexpected;
@@ -711,8 +711,8 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
         }
 
         doc->st_pos++;
-	doc->AdvanceChar();
-        if (!doc->PeekChar(this))		
+	AdvanceChar();
+        if (!PeekChar())		
             return json_ret_out;
     }
 
@@ -724,10 +724,8 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
     else
         o = new TJsonDouble(INFINITY);
 
-    if (AddLevel(doc, o, json_tokener_state_finish))
-        return json_ret_redo;
-    else
-        return json_ret_out;
+    start_state = json_tokener_state_finish;
+    return json_ret_add;
 }
 
 /*##########################################################################
@@ -748,31 +746,29 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
     int i;
 	
     doc->st_pos++;
-    doc->AdvanceChar();
-    if (!doc->PeekChar(this))		
+    AdvanceChar();
+    if (!PeekChar())		
         return json_ret_out;
 
-    ch = tolower((int)(*doc->str));
+    ch = tolower((int)(*str));
 
     switch (ch)
     {
         case 'a':
             doc->st_pos++;
-            doc->AdvanceChar();
-            if (!doc->PeekChar(this))		
+            AdvanceChar();
+            if (!PeekChar())		
                 return json_ret_out;
             
-            ch = tolower((int)(*doc->str));
+            ch = tolower((int)(*str));
             if (ch == 'n')
             {
                 o = new TJsonDouble(NAN);
 
-                doc->AdvanceChar();
+                AdvanceChar();
 
-                if (AddLevel(doc, o, json_tokener_state_finish))
-                    return json_ret_redo;
-                else
-                    return json_ret_out;
+                start_state = json_tokener_state_finish;
+                return json_ret_add;
             }
             else
             {
@@ -784,11 +780,11 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
             for (i = 0; i < 2; i++)
             {
                 doc->st_pos++;
-                doc->AdvanceChar();
-                if (!doc->PeekChar(this))		
+                AdvanceChar();
+                if (!PeekChar())		
                     return json_ret_out;
             
-                ch = tolower((int)(*doc->str));
+                ch = tolower((int)(*str));
                 if (ch != 'l')
                 {
                     doc->err = json_tokener_error_parse_null;
@@ -818,9 +814,9 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleCommentStart(TJsonDocument *doc)
 {
-    if (*doc->str == '*') 
+    if (*str == '*') 
         state = json_tokener_state_comment;
-    else if(*doc->str == '/') 
+    else if(*str == '/') 
         state = json_tokener_state_comment_eol;
     else 
     {
@@ -828,7 +824,7 @@ int TJsonStackEntry::HandleCommentStart(TJsonDocument *doc)
 	return json_ret_out;
     }
 
-    pb->MemAppend(doc->str, 1);
+    pb->MemAppend(str, 1);
     return json_ret_break;
 }
 
@@ -845,18 +841,18 @@ int TJsonStackEntry::HandleCommentStart(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleComment(TJsonDocument *doc)
 {
-    const char *case_start = doc->str;
+    const char *case_start = str;
 
-    while(*doc->str != '*') 
+    while(*str != '*') 
     {
-        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
             return json_ret_out;
         }
     }
 
-    pb->MemAppend(case_start, 1 + doc->str - case_start);
+    pb->MemAppend(case_start, 1 + str - case_start);
     state = json_tokener_state_comment_end;
     return json_ret_break;
 }
@@ -874,18 +870,18 @@ int TJsonStackEntry::HandleComment(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleCommentEol(TJsonDocument *doc)
 {
-    const char *case_start = doc->str;
+    const char *case_start = str;
 
-    while (*doc->str != '\n')
+    while (*str != '\n')
     {
-        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
 	    return json_ret_out;
         }
     }
 
-    pb->MemAppend(case_start, doc->str - case_start);
+    pb->MemAppend(case_start, str - case_start);
     state = json_tokener_state_eatws;
     return json_ret_break;
 }
@@ -903,9 +899,9 @@ int TJsonStackEntry::HandleCommentEol(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
 {
-    pb->MemAppend(doc->str, 1);
+    pb->MemAppend(str, 1);
 
-    if (*doc->str == '/')
+    if (*str == '/')
         state = json_tokener_state_eatws;
     else
         state = json_tokener_state_comment;
@@ -927,36 +923,34 @@ int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
 int TJsonStackEntry::HandleString(TJsonDocument *doc)
 {
     TJsonObject *o;
-    const char *case_start = doc->str;
+    const char *case_start = str;
 
     for (;;)
     {
-        if(*doc->str == doc->quote_char) 
+        if(*str == doc->quote_char) 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
 	    saved_state = json_tokener_state_finish;
 	    state = json_tokener_state_eatws;
 
             o = new TJsonString(pb->FBuf, pb->FBpos);
 
-            doc->AdvanceChar();
+            AdvanceChar();
 
-            if (AddLevel(doc, o, json_tokener_state_finish))
-                return json_ret_break;
-            else
-                return json_ret_out;
+            start_state = json_tokener_state_finish;
+            return json_ret_add;
         } 
-        else if (*doc->str == '\\') 
+        else if (*str == '\\') 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
 	    saved_state = json_tokener_state_string;
 	    state = json_tokener_state_string_escape;
 	    return json_ret_break;
         }
 
-        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
 	    return json_ret_out;
         }
     }
@@ -975,12 +969,12 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleStringEscape(TJsonDocument *doc)
 {
-    switch (*doc->str) 
+    switch (*str) 
     {
         case '"':
         case '\\':
         case '/':
-            pb->MemAppend(doc->str, 1);
+            pb->MemAppend(str, 1);
             break;
 
         case 'b':
@@ -1033,7 +1027,7 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 
     while (doc->st_pos < len)
     {
-	ch = tolower((int)(*doc->str));
+	ch = tolower((int)(*str));
         if (ch != str[doc->st_pos])
         {
             doc->err = json_tokener_error_parse_boolean;
@@ -1041,8 +1035,8 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
         }
 
         doc->st_pos++;
-	doc->AdvanceChar();
-        if (!doc->PeekChar(this))		
+	AdvanceChar();
+        if (!PeekChar())		
             return json_ret_out;
     }
 
@@ -1051,10 +1045,8 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 
     o = new TJsonBoolean(true);
 
-    if (AddLevel(doc, o, json_tokener_state_finish))
-        return json_ret_redo;
-    else
-        return json_ret_out;
+    start_state = json_tokener_state_finish;
+    return json_ret_add;
 }
 
 /*##########################################################################
@@ -1077,7 +1069,7 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 
     while (doc->st_pos < len)
     {
-	ch = tolower((int)(*doc->str));
+	ch = tolower((int)(*str));
         if (ch != str[doc->st_pos])
         {
             doc->err = json_tokener_error_parse_boolean;
@@ -1085,8 +1077,8 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
         }
 
         doc->st_pos++;
-	doc->AdvanceChar();
-        if (!doc->PeekChar(this))		
+	AdvanceChar();
+        if (!PeekChar())		
             return json_ret_out;
     }
 
@@ -1095,10 +1087,8 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 
     o = new TJsonBoolean(false);
 
-    if (AddLevel(doc, o, json_tokener_state_finish))
-        return json_ret_redo;
-    else
-        return json_ret_out;
+    start_state = json_tokener_state_finish;
+    return json_ret_add;
 }
 
 /*##########################################################################
@@ -1123,10 +1113,8 @@ int TJsonStackEntry::DecodeInt(TJsonDocument *doc)
     {
         o = new TJsonInt(val);
 
-        if (AddLevel(doc, o, json_tokener_state_finish))
-            return json_ret_redo;
-        else
-            return json_ret_out;
+        start_state = json_tokener_state_finish;
+        return json_ret_add;
     }
     else
     {
@@ -1156,10 +1144,8 @@ int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 
     o = new TJsonDouble(val);
 
-    if (AddLevel(doc, o, json_tokener_state_finish))
-        return json_ret_redo;
-    else
-        return json_ret_out;
+    start_state = json_tokener_state_finish;
+    return json_ret_add;
 }
 
 /*##########################################################################
@@ -1175,7 +1161,7 @@ int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 {
-    const char *case_start = doc->str;
+    const char *case_start = str;
     int case_len = 0;
     bool is_exponent = false;
     int negativesign_next_possible_location=1;
@@ -1183,7 +1169,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 
     while (!done)	
     {
-        switch (*doc->str)
+        switch (*str)
         {
             case '.':
                 if (doc->is_double != 0) 
@@ -1237,7 +1223,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
         {
             case_len++;
 
-            if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+            if (!AdvanceChar() || !PeekChar()) 
             {
                 pb->MemAppend(case_start, case_len);
 	        return json_ret_out;
@@ -1248,7 +1234,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
     if (case_len > 0)
         pb->MemAppend(case_start, case_len);
         
-    if (pb->FBuf[0] == '-' && case_len <= 1 && (*doc->str == 'i' || *doc->str == 'I'))
+    if (pb->FBuf[0] == '-' && case_len <= 1 && (*str == 'i' || *str == 'I'))
     {
         state = json_tokener_state_inf;
         doc->st_pos = 0;
@@ -1277,7 +1263,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleArray(TJsonDocument *doc)
 {
-    if (*doc->str == ']') 
+    if (*str == ']') 
     {
         saved_state = json_tokener_state_finish;
         state = json_tokener_state_eatws;
@@ -1307,10 +1293,8 @@ int TJsonStackEntry::HandleArrayAdd(TJsonDocument *doc)
     state = json_tokener_state_eatws;
 
     o = new TJsonArray();
-    if (AddLevel(doc, o, json_tokener_state_array_sep))
-        return json_ret_redo;
-    else
-        return json_ret_out;
+    start_state = json_tokener_state_array_sep;
+    return json_ret_add;
 }
 
 /*##########################################################################
@@ -1326,7 +1310,7 @@ int TJsonStackEntry::HandleArrayAdd(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleArraySep(TJsonDocument *doc)
 {
-    switch (*doc->str)
+    switch (*str)
     {
         case ']':
             saved_state = json_tokener_state_finish;
@@ -1358,7 +1342,7 @@ int TJsonStackEntry::HandleArraySep(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
 {
-    switch (*doc->str)
+    switch (*str)
     {
         case '}': 
             saved_state = json_tokener_state_finish;
@@ -1367,7 +1351,7 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
 
         case '"':
         case '\'':
-            doc->quote_char = *doc->str;
+            doc->quote_char = *str;
             pb->Reset();
             state = json_tokener_state_object_field;
             break;
@@ -1392,13 +1376,13 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 {
-    const char *case_start = doc->str;
+    const char *case_start = str;
 	
     while (true) 
     {
-        if (*doc->str == doc->quote_char) 
+        if (*str == doc->quote_char) 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
             obj_field_name = new char[pb->FBpos + 1];
             memcpy(obj_field_name, pb->FBuf, pb->FBpos);
             obj_field_name[pb->FBpos] = 0;
@@ -1407,17 +1391,17 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 	    state = json_tokener_state_eatws;
 	    return json_ret_break;
         } 
-        else if (*doc->str == '\\') 
+        else if (*str == '\\') 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
 	    saved_state = json_tokener_state_object_field;
 	    state = json_tokener_state_string_escape;
 	    return json_ret_break;
         }
 
-        if (!doc->AdvanceChar() || !doc->PeekChar(this)) 
+        if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, doc->str - case_start);
+            pb->MemAppend(case_start, str - case_start);
 	    return json_ret_out;
         }
     }
@@ -1436,7 +1420,7 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleObjectFieldEnd(TJsonDocument *doc)
 {
-    if (*doc->str == ':') 
+    if (*str == ':') 
     {
         saved_state = json_tokener_state_object_value;
         state = json_tokener_state_eatws;
@@ -1464,10 +1448,8 @@ int TJsonStackEntry::HandleObjectValue(TJsonDocument *doc)
 {
     state = json_tokener_state_object_value_add;
 
-    if (AddLevel(doc, 0, json_tokener_state_start))
-        return json_ret_redo;
-    else
-        return json_ret_out;
+    start_state = json_tokener_state_start;
+    return json_ret_add;
 }
 
 /*##########################################################################
@@ -1505,7 +1487,7 @@ int TJsonStackEntry::HandleObjectValueAdd(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleObjectSep(TJsonDocument *doc)
 {
-    switch (*doc->str)
+    switch (*str)
     {
         case '}':
             saved_state = json_tokener_state_finish;
@@ -1535,17 +1517,18 @@ int TJsonStackEntry::HandleObjectSep(TJsonDocument *doc)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonStackEntry::Parse(TJsonDocument *doc, int new_state)
+int TJsonStackEntry::Parse(TJsonDocument *doc, const char *data, int start_state)
 {
     int ret;
 
-    doc->char_offset = 0;
+    str = data;
+
     doc->err = json_tokener_success;
 
     state = json_tokener_state_eatws;
-    saved_state = new_state;
+    saved_state = start_state;
 
-    while (doc->PeekChar(this)) 
+    while (PeekChar()) 
     {
 
 redo_char:
@@ -1648,19 +1631,21 @@ redo_char:
 
         }
 
-        if (ret == json_ret_redo)
-            goto redo_char;
+        switch (ret)
+        {
+            case json_ret_out:
+            case json_ret_add:
+            case json_ret_sub:
+                return ret;
 
-        if (!doc->AdvanceChar())
-            ret = json_ret_out;
+            case json_ret_redo:
+                goto redo_char;
+        }
 
-        if (ret == json_ret_out)
-            goto out;
+        if (!AdvanceChar())
+            return json_ret_out;
     }
-
-out:
-
-    return true;
+    return json_ret_out;
 }
 
 /*##########################################################################
@@ -1676,6 +1661,7 @@ out:
 ##########################################################################*/
 TJsonDocument::TJsonDocument()
 {
+    Init();
 }
 
 /*##########################################################################
@@ -1691,6 +1677,7 @@ TJsonDocument::TJsonDocument()
 ##########################################################################*/
 TJsonDocument::TJsonDocument(const char *doc)
 {
+    Init();
     Parse(doc);
 }
 
@@ -1711,6 +1698,25 @@ TJsonDocument::~TJsonDocument()
 
 /*##########################################################################
 #
+#   Name       : TJsonDocument::Init
+#
+#   Purpose....: Initialize
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::Init()
+{
+    int level;
+
+    for (level = 0; level < MAX_JSON_DEPTH; level++)
+        StackArr[level] = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDocument::Parse
 #
 #   Purpose....: Parse
@@ -1722,10 +1728,10 @@ TJsonDocument::~TJsonDocument()
 ##########################################################################*/
 bool TJsonDocument::Parse(const char *doc)
 {
-    str = (char *)doc;
-    len = strlen(str);
+    bool ok;
+    TJsonStackEntry *entry;
+    int ret;
 
-    char_offset = 0;
     depth = 0;
     err = 0;
     st_pos = 0;
@@ -1734,56 +1740,32 @@ bool TJsonDocument::Parse(const char *doc)
     is_double = 0;
     flags = 0;
 
-    return AddLevel(0, json_tokener_state_start);
-}
+    start_state = json_tokener_state_start;
+    ptr = doc;
 
-/*##########################################################################
-#
-#   Name       : TJsonDocument::PeekChar
-#
-#   Purpose....: Peek next char
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TJsonDocument::PeekChar(TJsonStackEntry *entry)
-{
-    if (char_offset == len)
-    {
-        if (depth == 0 && entry->state == json_tokener_state_eatws && entry->saved_state == json_tokener_state_finish)
-            err = json_tokener_success;
-        else
-            err = json_tokener_continue;
+    ok = AddLevel();
 
-        return false;
-    }
-    else
-        return true;
-}
- 
-/*##########################################################################
-#
-#   Name       : TJsonDocument::AdvanceChar
-#
-#   Purpose....: Advance to next char
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TJsonDocument::AdvanceChar()
-{
-    if (*str)
+    while (ok)
     {
-        str++;
-        char_offset++;
-        return true;
+        entry = StackArr[depth - 1];
+        ret = entry->Parse(this, ptr, start_state);
+
+        switch (ret)
+        {
+            case json_ret_add:
+                start_state = entry->start_state;
+                ptr = entry->str;
+                ok = AddLevel();
+                break;
+
+            case json_ret_out:
+                ok = false;
+                break;
+        }
     }
-    else
-        return false;
+
+    return ok;
+
 }
 
 /*##########################################################################
@@ -1797,16 +1779,19 @@ bool TJsonDocument::AdvanceChar()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonDocument::AddLevel(TJsonObject *object, int new_state)
+bool TJsonDocument::AddLevel()
 {
     TJsonStackEntry *entry;
 
     if (depth < MAX_JSON_DEPTH)
     {
-        entry = new TJsonStackEntry(object);
-        StackArr[depth] = entry;
+        if (StackArr[depth] == 0)
+        {
+            entry = new TJsonStackEntry;
+            StackArr[depth] = entry;
+        }
         depth++;
-        return entry->Parse(this, new_state);
+        return true;
     }
     else
         return false;
@@ -1826,8 +1811,5 @@ bool TJsonDocument::AddLevel(TJsonObject *object, int new_state)
 void TJsonDocument::DeleteLevel()
 {
     if (depth)
-    {
         depth--;
-        delete StackArr[depth];
-    }
 }
