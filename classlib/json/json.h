@@ -150,7 +150,6 @@ protected:
 
     TJsonPrintBuf *pb;
     TJsonObject *obj;
-    char *obj_field_name;
 };
 
 class TJsonDocument
@@ -177,6 +176,7 @@ protected:
 
     int start_state;
     const char *ptr;
+    char *obj_field_name;
 
 private:
     void Init();

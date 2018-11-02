@@ -999,19 +999,19 @@ int TJsonStackEntry::HandleStringEscape(TJsonDocument *doc)
 int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 {
     char ch;
-    const char *str = "true";
-    int len = strlen(str);
+    const char *comp_str = "true";
+    int len = strlen(comp_str);
+    int i;
 
-    while (doc->st_pos < len)
+    for (i = 0; i < len; i++)
     {
 	ch = tolower((int)(*str));
-        if (ch != str[doc->st_pos])
+        if (ch != comp_str[i])
         {
             doc->err = json_tokener_error_parse_boolean;
             return json_ret_out;
         }
 
-        doc->st_pos++;
 	AdvanceChar();
         if (!PeekChar())		
             return json_ret_out;
@@ -1021,7 +1021,7 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 
     saved_state = json_tokener_state_finish;
     state = json_tokener_state_eatws;
-    return json_ret_break;
+    return json_ret_redo;
 }
 
 /*##########################################################################
@@ -1038,19 +1038,19 @@ int TJsonStackEntry::HandleTrue(TJsonDocument *doc)
 int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 {
     char ch;
-    const char *str = "false";
-    int len = strlen(str);
+    const char *comp_str = "false";
+    int len = strlen(comp_str);
+    int i;
 
-    while (doc->st_pos < len)
+    for (i = 0; i < len; i++)
     {
 	ch = tolower((int)(*str));
-        if (ch != str[doc->st_pos])
+        if (ch != comp_str[i])
         {
             doc->err = json_tokener_error_parse_boolean;
             return json_ret_out;
         }
 
-        doc->st_pos++;
 	AdvanceChar();
         if (!PeekChar())		
             return json_ret_out;
@@ -1060,7 +1060,7 @@ int TJsonStackEntry::HandleFalse(TJsonDocument *doc)
 
     saved_state = json_tokener_state_finish;
     state = json_tokener_state_eatws;
-    return json_ret_break;
+    return json_ret_redo;
 }
 
 /*##########################################################################
@@ -1136,7 +1136,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
     const char *case_start = str;
     int case_len = 0;
     bool is_exponent = false;
-    int negativesign_next_possible_location=1;
+    int negativesign_next_possible_location=0;
     bool done = false;
 
     while (!done)	
@@ -1680,6 +1680,8 @@ void TJsonDocument::Init()
 
     for (level = 0; level < MAX_JSON_DEPTH; level++)
         StackArr[level] = 0;
+
+    obj_field_name = 0;
 }
 
 /*##########################################################################
@@ -1805,8 +1807,10 @@ bool TJsonDocument::DeleteLevel()
 ##########################################################################*/
 void TJsonDocument::SetFieldName(char *str)
 {
-    printf("Field name: <%s>\r\n", str);
-    delete str;
+    if (obj_field_name)
+        delete obj_field_name;
+
+    obj_field_name = str;
 }
 
 /*##########################################################################
@@ -1838,7 +1842,7 @@ void TJsonDocument::AddArray()
 ##########################################################################*/
 void TJsonDocument::AddString(char *str)
 {
-    printf("String object: <%s>\r\n", str);
+    printf("%s: \"%s\"\r\n", obj_field_name, str);
     delete str;
 }
 
@@ -1855,7 +1859,7 @@ void TJsonDocument::AddString(char *str)
 ##########################################################################*/
 void TJsonDocument::AddInt(long long val)
 {
-   printf("Int object: %lld\r\n", val);
+   printf("%s: %lld\r\n", obj_field_name, val);
 }
 
 /*##########################################################################
@@ -1871,7 +1875,7 @@ void TJsonDocument::AddInt(long long val)
 ##########################################################################*/
 void TJsonDocument::AddDouble(double val)
 {
-   printf("Double object: %5.3Lf\r\n", val);
+   printf("%s: %5.3Lf\r\n", obj_field_name, val);
 }
 
 /*##########################################################################
@@ -1888,7 +1892,7 @@ void TJsonDocument::AddDouble(double val)
 void TJsonDocument::AddBoolean(bool val)
 {
     if (val)
-        printf("Boolean object: true\r\n");
+        printf("%s: true\r\n", obj_field_name);
     else
-        printf("Boolean object: false\r\n");
+        printf("%s: false\r\n", obj_field_name);
 }
