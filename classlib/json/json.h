@@ -37,6 +37,14 @@ class TJsonObject
 public:
     TJsonObject();
     virtual ~TJsonObject();
+
+protected:
+    void Grow();
+
+    int FObjArraySize;
+    int FObjArrayCount;
+
+    TJsonObject *FObjArr;
 };
 
 class TJsonArray : public TJsonObject
@@ -125,16 +133,16 @@ protected:
     bool PeekChar();
     bool AdvanceChar();
 
-    const char *str;
+    const char *FDataPtr;
 
-    bool is_array;
-    bool is_double;
-    char quote_char;
+    bool FIsArray;
+    bool FIsDouble;
+    char FQuoteChar;
 
-    int state;
-    int saved_state;
+    int FState;
+    int FSavedState;
 
-    TString pb;
+    TString FData;
 };
 
 class TJsonDocument
@@ -153,24 +161,24 @@ protected:
     bool DeleteLevel();
 
     bool IsArrayData();
-    void SetFieldName(char *str);
+    void SetFieldName(TString &name);
     void StartNesting();
     void EndNesting();
     void AddArray();
-    void AddString(char *str);
+    void AddString(TString &name);
     void AddInt(long long val);
     void AddDouble(double val);
     void AddBoolean(bool val);
 
-    int start_state;
-    const char *ptr;
-    char *obj_field_name;
+    int FStartState;
+    const char *FDocPtr;
+    TString FObjFieldName;
 
 private:
     void Init();
 
-    int depth;
-    int err;
+    int FDepth;
+    int FErr;
 
     TJsonStackEntry *StackArr[MAX_JSON_DEPTH];
 };

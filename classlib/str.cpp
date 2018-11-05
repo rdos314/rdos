@@ -540,7 +540,12 @@ const TString &TString::operator+=(const char *str)
 ##########################################################################*/
 const TString &TString::operator+=(char ch)
 {
-    ConcatInPlace(&ch, 1);
+    char str[2];
+
+    str[0] = ch;
+    str[1] = 0;
+
+    ConcatInPlace(str, 1);
     return *this;
 }
 
@@ -833,31 +838,33 @@ static int skip_atoi(const char **s)
 ##########################################################################*/
 void TString::Append(char ch)
 {
-    FSection.Enter();
+    char str[2];
+
+    str[0] = ch;
+    str[1] = 0;
+
+    ConcatInPlace(str, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : TString::Append
+#
+#   Purpose....: Append string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::Append(const char *str, int size)
+{
+    if (size)
+    {
+        ConcatInPlace(str, size);
+        FBuf[FData->FDataSize - 1] = 0;
+    }
     
-    if (FData == 0)
-    {
-        AllocBuffer(0x10);
-        *FBuf = 0;
-        FData->FDataSize = 1;
-    }
-
-    if (FData->FDataSize + 1 > FData->FAllocSize)
-    {
-        TShareObjectData* OldData = FData;
-        char *ptr = FBuf;
-
-        AllocBuffer(OldData->FDataSize + 0x10);
-        memcpy(FBuf, ptr, OldData->FDataSize);
-        FData->FDataSize = OldData->FDataSize;
-
-        Release(OldData);
-    }
-    *(FBuf+FData->FDataSize-1) = ch;
-    *(FBuf+FData->FDataSize) = 0;
-    FData->FDataSize++;
-
-    FSection.Leave();
 }
 
 /*##########################################################################
@@ -992,23 +999,7 @@ void TString::Replace(const char *src, const char *dest)
 ##########################################################################*/
 void TString::Append(const char *str)
 {
-    ConcatInPlace(str, strlen(str));
-}
-
-/*##########################################################################
-#
-#   Name       : TString::Append
-#
-#   Purpose....: Append string
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::Append(const char *str, int size)
-{
-    ConcatInPlace(str, size);
+    Append(str, strlen(str));
 }
 
 #ifndef __RDOS__
