@@ -188,7 +188,7 @@ private:
 
     int depth;
     int err;
-    int st_pos;
+
     unsigned int ucs_char;
     char quote_char;
     int is_double;

@@ -602,14 +602,12 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case 'i':
             state = json_tokener_state_inf;
             pb->Reset();
-	    doc->st_pos = 0;
             return json_ret_redo;
 
         case 'N':
         case 'n':
 	    state = json_tokener_state_null; // or NaN
             pb->Reset();
-	    doc->st_pos = 0;
 	    return json_ret_redo;
 
         case '\'':
@@ -623,14 +621,12 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case 't':
 	    state = json_tokener_state_true;
 	    pb->Reset();
-	    doc->st_pos = 0;
 	    return json_ret_redo;
 
         case 'F':
         case 'f':
 	    state = json_tokener_state_false;
 	    pb->Reset();
-	    doc->st_pos = 0;
 	    return json_ret_redo;
 
         case '0':
@@ -684,20 +680,20 @@ int TJsonStackEntry::HandleFinish(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
 {
+    int i = 0;
     char inf_char;
     const char *inf_str = "infinity";
     int len = strlen(inf_str);
 
-    while (doc->st_pos < len)
+    for (i = 0; i < len; i++)
     {
 	inf_char = tolower((int)(*str));
-        if (inf_char != inf_str[doc->st_pos])
+        if (inf_char != inf_str[i])
         {
             doc->err = json_tokener_error_parse_unexpected;
             return json_ret_out;
         }
 
-        doc->st_pos++;
 	AdvanceChar();
         if (!PeekChar())		
             return json_ret_out;
@@ -729,7 +725,6 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
     char ch;
     int i;
 	
-    doc->st_pos++;
     AdvanceChar();
     if (!PeekChar())		
         return json_ret_out;
@@ -739,7 +734,6 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
     switch (ch)
     {
         case 'a':
-            doc->st_pos++;
             AdvanceChar();
             if (!PeekChar())		
                 return json_ret_out;
@@ -762,7 +756,6 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
         case 'u':
             for (i = 0; i < 2; i++)
             {
-                doc->st_pos++;
                 AdvanceChar();
                 if (!PeekChar())		
                     return json_ret_out;
@@ -1213,7 +1206,6 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
     if (pb->FBuf[0] == '-' && case_len <= 1 && (*str == 'i' || *str == 'I'))
     {
         state = json_tokener_state_inf;
-        doc->st_pos = 0;
         return json_ret_redo;
     }
  
@@ -1711,7 +1703,6 @@ bool TJsonDocument::Parse(const char *doc)
 
     depth = 0;
     err = 0;
-    st_pos = 0;
     ucs_char = 0;
     quote_char = 0;
     is_double = 0;
