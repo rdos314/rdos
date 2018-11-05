@@ -56,7 +56,8 @@ public:
 
     int printf(const char *frm, va_list args);
     int printf(const char *fmt, ...);
-    
+
+    void Reset();    
     const char *GetData() const;
     int GetSize() const;
 
@@ -67,6 +68,7 @@ public:
     void RemoveCrLf();
     void Append(char ch);
     void Append(const char *str);
+    void Append(const char *str, int size);
     void Replace(const char *src, const char *dest);
 
     void ConcatCopy(const char *str1, int len1, const char *str2, int len2);

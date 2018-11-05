@@ -85,198 +85,6 @@
 
 /*##########################################################################
 #
-#   Name       : PrintfCallback
-#
-#   Purpose....: Printf callback
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void PrintfCallback(void *param, char ch)
-{
-    TJsonPrintBuf *buf = (TJsonPrintBuf *)param;
-    buf->MemAppend(&ch, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::TJsonPrintBuf
-#
-#   Purpose....: Constructor for TJsonPrintBuf
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TJsonPrintBuf::TJsonPrintBuf()
-{
-    FSize = 32;
-    FBpos = 0;
-    FBuf = new char[FSize];
-    FBuf[0] = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::~TJsonPrintBuf
-#
-#   Purpose....: Destructor for TJsonPrintBuf
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TJsonPrintBuf::~TJsonPrintBuf()
-{
-    delete FBuf;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::Reset
-#
-#   Purpose....: Reset object
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TJsonPrintBuf::Reset()
-{
-    FBpos = 0;
-    FBuf[0] = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::Extend
-#
-#   Purpose....: Extend buffer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TJsonPrintBuf::Extend(int min_size)
-{
-    char *t;
-    int new_size;
-
-    if (FSize < min_size)
-    {
-        new_size = FSize * 2;
-        if (new_size < min_size + 8)
-            new_size =  min_size + 8;
-
-        t = new char[new_size];
-        memcpy(t, FBuf, FSize);
-        delete FBuf;
-
-        FSize = new_size;
-        FBuf = t;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::MemAppend
-#
-#   Purpose....: Append
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TJsonPrintBuf::MemAppend(const char *buf, int size)
-{
-    if (FSize <= FBpos + size + 1) 
-        Extend(FBpos + size + 1);
-
-    memcpy(FBuf + FBpos, buf, size);
-    FBpos += size;
-    FBuf[FBpos]= 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::MemSet
-#
-#   Purpose....: Set
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TJsonPrintBuf::Memset(int offset, int charvalue, int len)
-{
-    int size_needed;
-
-    if (offset == -1)
-        offset = FBpos;
-
-    size_needed = offset + len;
-
-    if (FSize < size_needed)
-        Extend(size_needed);
-
-    memset(FBuf + offset, charvalue, len);
-    if (FBpos < size_needed)
-        FBpos = size_needed;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::printf
-#
-#   Purpose....: printf
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TJsonPrintBuf::printf(const char *fmt, va_list args)
-{
-    int n;
-
-    n = RdosPrintf(&PrintfCallback, this, fmt, args);
-        
-    return n;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonPrintBuf::printf
-#
-#   Purpose....: printf
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TJsonPrintBuf::printf(const char *fmt, ...)
-{
-    va_list args;
-    int result;
-
-    va_start(args, fmt);
-    result = RdosPrintf(&PrintfCallback, this, fmt, args);
-    va_end(args);
-
-    return result;
-}
-
-/*##########################################################################
-#
 #   Name       : TJsonObject::TJsonObject
 #
 #   Purpose....: Constructor for TJsonObject
@@ -475,7 +283,6 @@ TJsonString::~TJsonString()
 ##########################################################################*/
 TJsonStackEntry::TJsonStackEntry()
 {
-    pb = new TJsonPrintBuf;
 }
 
 /*##########################################################################
@@ -491,8 +298,6 @@ TJsonStackEntry::TJsonStackEntry()
 ##########################################################################*/
 TJsonStackEntry::~TJsonStackEntry()
 {
-    if (pb)
-        delete pb;
 }
 
 /*##########################################################################
@@ -557,8 +362,8 @@ int TJsonStackEntry::HandleEatWs(TJsonDocument *doc)
 
     if (*str == '/') 
     {
-        pb->Reset();
-	pb->MemAppend(str, 1);
+        pb.Reset();
+	pb += *str;
 	state = json_tokener_state_comment_start;
     } 
     else 
@@ -603,32 +408,32 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case 'I':
         case 'i':
             state = json_tokener_state_inf;
-            pb->Reset();
+            pb.Reset();
             return json_ret_redo;
 
         case 'N':
         case 'n':
 	    state = json_tokener_state_null; // or NaN
-            pb->Reset();
+            pb.Reset();
 	    return json_ret_redo;
 
         case '\'':
         case '"':
 	    state = json_tokener_state_string;
-	    pb->Reset();
+	    pb.Reset();
 	    quote_char = *str;
             return json_ret_break;
 
         case 'T':
         case 't':
 	    state = json_tokener_state_true;
-	    pb->Reset();
+	    pb.Reset();
 	    return json_ret_redo;
 
         case 'F':
         case 'f':
 	    state = json_tokener_state_false;
-	    pb->Reset();
+	    pb.Reset();
 	    return json_ret_redo;
 
         case '0':
@@ -643,7 +448,7 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case '9':
         case '-':
 	    state = json_tokener_state_number;
-	    pb->Reset();
+	    pb.Reset();
             is_double = 0;
 	    return json_ret_redo;
 
@@ -701,7 +506,7 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
             return json_ret_out;
     }
 
-    if (pb->FSize > 0 && pb->FBuf[0] == '-')
+    if (pb.GetSize() > 0 && pb[0] == '-')
         doc->AddDouble(-INFINITY);
     else
         doc->AddDouble(INFINITY);
@@ -802,7 +607,7 @@ int TJsonStackEntry::HandleCommentStart(TJsonDocument *doc)
 	return json_ret_out;
     }
 
-    pb->MemAppend(str, 1);
+    pb += *str;
     return json_ret_break;
 }
 
@@ -825,12 +630,12 @@ int TJsonStackEntry::HandleComment(TJsonDocument *doc)
     {
         if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, str - case_start);
+            pb.Append(case_start, str - case_start);
             return json_ret_out;
         }
     }
 
-    pb->MemAppend(case_start, 1 + str - case_start);
+    pb.Append(case_start, 1 + str - case_start);
     state = json_tokener_state_comment_end;
     return json_ret_break;
 }
@@ -854,12 +659,12 @@ int TJsonStackEntry::HandleCommentEol(TJsonDocument *doc)
     {
         if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, str - case_start);
+            pb.Append(case_start, str - case_start);
 	    return json_ret_out;
         }
     }
 
-    pb->MemAppend(case_start, str - case_start);
+    pb.Append(case_start, str - case_start);
     state = json_tokener_state_eatws;
     return json_ret_break;
 }
@@ -877,7 +682,7 @@ int TJsonStackEntry::HandleCommentEol(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
 {
-    pb->MemAppend(str, 1);
+    pb += *str;
 
     if (*str == '/')
         state = json_tokener_state_eatws;
@@ -902,15 +707,17 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
 {
     const char *case_start = str;
     char *val_str;
+    int size;
 
     for (;;)
     {
         if(*str == quote_char) 
         {
-            pb->MemAppend(case_start, str - case_start);
-            val_str = new char[pb->FBpos + 1];
-            memcpy(val_str, pb->FBuf, pb->FBpos);
-            val_str[pb->FBpos] = 0;
+            pb.Append(case_start, str - case_start);
+            size = pb.GetSize();
+            val_str = new char[size + 1];
+            memcpy(val_str, pb.GetData(), size);
+            val_str[size] = 0;
             doc->AddString(val_str);
 
 	    saved_state = json_tokener_state_finish;
@@ -919,7 +726,7 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
         } 
         else if (*str == '\\') 
         {
-            pb->MemAppend(case_start, str - case_start);
+            pb.Append(case_start, str - case_start);
 	    saved_state = json_tokener_state_string;
 	    state = json_tokener_state_string_escape;
 	    return json_ret_break;
@@ -927,7 +734,7 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
 
         if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, str - case_start);
+            pb.Append(case_start, str - case_start);
 	    return json_ret_out;
         }
     }
@@ -951,27 +758,27 @@ int TJsonStackEntry::HandleStringEscape(TJsonDocument *doc)
         case '"':
         case '\\':
         case '/':
-            pb->MemAppend(str, 1);
+            pb += *str;
             break;
 
         case 'b':
-            pb->MemAppend("\b", 1);
+            pb += '\b';
             break;
 
         case 'n':
-            pb->MemAppend("\n", 1);
+            pb += '\n';
             break;
 
         case 'r':
-            pb->MemAppend("\r", 1);
+            pb += '\r';
             break;
 
         case 't':
-            pb->MemAppend("\t", 1);
+            pb += '\t';
             break;
 
         case 'f':
-            pb->MemAppend("\f", 1);
+            pb += '\f';
             break;
 
         default:
@@ -1077,9 +884,10 @@ int TJsonStackEntry::DecodeInt(TJsonDocument *doc)
 {
     long long val;
     char *end = NULL;
+    const char *ptr = pb.GetData();
 
-    val = strtoll(pb->FBuf, &end, 10);
-    if (end != pb->FBuf)
+    val = strtoll(ptr, &end, 10);
+    if (end != ptr)
     {
         doc->AddInt(val);
 
@@ -1110,7 +918,7 @@ int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
     double val;
     char *end;
 
-    val = strtod(pb->FBuf, &end);
+    val = strtod(pb.GetData(), &end);
 
     doc->AddDouble(val);
 
@@ -1196,16 +1004,16 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
 
             if (!AdvanceChar() || !PeekChar()) 
             {
-                pb->MemAppend(case_start, case_len);
+                pb.Append(case_start, case_len);
 	        return json_ret_out;
             }
         }
     }
 
     if (case_len > 0)
-        pb->MemAppend(case_start, case_len);
+        pb.Append(case_start, case_len);
         
-    if (pb->FBuf[0] == '-' && case_len <= 1 && (*str == 'i' || *str == 'I'))
+    if (pb[0] == '-' && case_len <= 1 && (*str == 'i' || *str == 'I'))
     {
         state = json_tokener_state_inf;
         return json_ret_redo;
@@ -1324,7 +1132,7 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
         case '"':
         case '\'':
             quote_char = *str;
-            pb->Reset();
+            pb.Reset();
             state = json_tokener_state_object_field;
             break;
 
@@ -1350,15 +1158,17 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 {
     const char *case_start = str;
     char *val_str;
+    int size;
 	
     while (true) 
     {
         if (*str == quote_char) 
         {
-            pb->MemAppend(case_start, str - case_start);
-            val_str = new char[pb->FBpos + 1];
-            memcpy(val_str, pb->FBuf, pb->FBpos);
-            val_str[pb->FBpos] = 0;
+            pb.Append(case_start, str - case_start);
+            size = pb.GetSize();
+            val_str = new char[size + 1];
+            memcpy(val_str, pb.GetData(), size);
+            val_str[size] = 0;
             doc->SetFieldName(val_str);
 
 	    saved_state = json_tokener_state_object_field_end;
@@ -1367,7 +1177,7 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
         } 
         else if (*str == '\\') 
         {
-            pb->MemAppend(case_start, str - case_start);
+            pb.Append(case_start, str - case_start);
 	    saved_state = json_tokener_state_object_field;
 	    state = json_tokener_state_string_escape;
 	    return json_ret_break;
@@ -1375,7 +1185,7 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 
         if (!AdvanceChar() || !PeekChar()) 
         {
-            pb->MemAppend(case_start, str - case_start);
+            pb.Append(case_start, str - case_start);
 	    return json_ret_out;
         }
     }

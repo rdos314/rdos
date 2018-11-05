@@ -28,27 +28,9 @@
 #ifndef _JSON_H
 #define _JSON_H
 
+#include "str.h"
+
 #define MAX_JSON_DEPTH	100
-
-class TJsonPrintBuf 
-{
-public:
-    TJsonPrintBuf();
-    ~TJsonPrintBuf();
-
-    void Reset();
-
-    void Extend(int min_size);
-    void MemAppend(const char *buf, int size);
-    void Memset(int offset, int charvalue, int len);
-
-    int printf(const char *fmt, va_list args);
-    int printf(const char *fmt, ...);
-
-    char *FBuf;
-    int FBpos;
-    int FSize;
-};
 
 class TJsonObject
 {
@@ -152,8 +134,7 @@ protected:
     int state;
     int saved_state;
 
-    TJsonPrintBuf *pb;
-    TJsonObject *obj;
+    TString pb;
 };
 
 class TJsonDocument

@@ -563,6 +563,22 @@ const TString &TString::operator+=(const TString& str)
 
 /*##########################################################################
 #
+#   Name       : TString::Reset
+#
+#   Purpose....: Reset
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::Reset()
+{
+    AssignCopy(0, 0);
+}
+
+/*##########################################################################
+#
 #   Name       : TString::GetData
 #
 #   Purpose....: Get string buffer
@@ -976,11 +992,23 @@ void TString::Replace(const char *src, const char *dest)
 ##########################################################################*/
 void TString::Append(const char *str)
 {
-    while (*str)
-    {
-        Append(*str);
-        str++;
-    }
+    ConcatInPlace(str, strlen(str));
+}
+
+/*##########################################################################
+#
+#   Name       : TString::Append
+#
+#   Purpose....: Append string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::Append(const char *str, int size)
+{
+    ConcatInPlace(str, size);
 }
 
 #ifndef __RDOS__
