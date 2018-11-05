@@ -146,6 +146,7 @@ protected:
     const char *str;
 
     bool is_array;
+    char quote_char;
 
     int state;
     int saved_state;
@@ -189,8 +190,6 @@ private:
     int depth;
     int err;
 
-    unsigned int ucs_char;
-    char quote_char;
     int is_double;
     int flags;
 

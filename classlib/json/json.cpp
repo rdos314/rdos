@@ -614,7 +614,7 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case '"':
 	    state = json_tokener_state_string;
 	    pb->Reset();
-	    doc->quote_char = *str;
+	    quote_char = *str;
             return json_ret_break;
 
         case 'T':
@@ -903,7 +903,7 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
 
     for (;;)
     {
-        if(*str == doc->quote_char) 
+        if(*str == quote_char) 
         {
             pb->MemAppend(case_start, str - case_start);
             val_str = new char[pb->FBpos + 1];
@@ -1316,7 +1316,7 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
 
         case '"':
         case '\'':
-            doc->quote_char = *str;
+            quote_char = *str;
             pb->Reset();
             state = json_tokener_state_object_field;
             break;
@@ -1346,7 +1346,7 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
 	
     while (true) 
     {
-        if (*str == doc->quote_char) 
+        if (*str == quote_char) 
         {
             pb->MemAppend(case_start, str - case_start);
             val_str = new char[pb->FBpos + 1];
@@ -1488,6 +1488,7 @@ int TJsonStackEntry::Parse(TJsonDocument *doc, const char *data, int start_state
     str = data;
 
     doc->err = json_tokener_success;
+    quote_char = 0;
 
     if (start_state)
     {
@@ -1703,8 +1704,6 @@ bool TJsonDocument::Parse(const char *doc)
 
     depth = 0;
     err = 0;
-    ucs_char = 0;
-    quote_char = 0;
     is_double = 0;
     flags = 0;
 
