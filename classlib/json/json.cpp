@@ -585,11 +585,15 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
     switch (*str) 
     {
         case '{':
+            if (!doc->IsArrayData())
+                doc->StartNesting();
+
 	    state = json_tokener_state_eatws;
 	    saved_state = json_tokener_state_object_field_start;
             return json_ret_break;
 
         case '[':
+            is_array = true;
             state = json_tokener_state_eatws;
             saved_state = json_tokener_state_array;
             return json_ret_break;
@@ -1234,6 +1238,7 @@ int TJsonStackEntry::HandleArray(TJsonDocument *doc)
 {
     if (*str == ']') 
     {
+        is_array = false;
         saved_state = json_tokener_state_finish;
         state = json_tokener_state_eatws;
         return json_ret_break;
@@ -1454,6 +1459,9 @@ int TJsonStackEntry::HandleObjectSep(TJsonDocument *doc)
     switch (*str)
     {
         case '}':
+            if (!doc->IsArrayData())
+                doc->EndNesting();
+
             saved_state = json_tokener_state_finish;
             state = json_tokener_state_eatws;
             break;
@@ -1760,11 +1768,16 @@ bool TJsonDocument::AddLevel()
 
     if (depth < MAX_JSON_DEPTH)
     {
-        if (StackArr[depth] == 0)
+        entry = StackArr[depth];
+
+        if (entry == 0)
         {
             entry = new TJsonStackEntry;
             StackArr[depth] = entry;
         }
+
+        entry->is_array = false;
+        
         depth++;
         return true;
     }
@@ -1796,6 +1809,30 @@ bool TJsonDocument::DeleteLevel()
 
 /*##########################################################################
 #
+#   Name       : TJsonDocument::IsArrayData
+#
+#   Purpose....: Is array data?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDocument::IsArrayData()
+{
+    int ind;
+
+    if (depth > 1)
+    {
+        ind = depth - 2;
+        if (StackArr[ind]->is_array)
+            return true;
+    }
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDocument::SetFieldName
 #
 #   Purpose....: Set field name
@@ -1811,6 +1848,38 @@ void TJsonDocument::SetFieldName(char *str)
         delete obj_field_name;
 
     obj_field_name = str;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::StartNesting
+#
+#   Purpose....: Start nesting
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::StartNesting()
+{
+    printf("%s: object nesting\r\n", obj_field_name);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::EndNesting
+#
+#   Purpose....: End nesting
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::EndNesting()
+{
+    printf("Nesting end\r\n");
 }
 
 /*##########################################################################

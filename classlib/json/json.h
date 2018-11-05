@@ -145,6 +145,8 @@ protected:
 
     const char *str;
 
+    bool is_array;
+
     int state;
     int saved_state;
 
@@ -167,7 +169,10 @@ protected:
     bool AddLevel();
     bool DeleteLevel();
 
+    bool IsArrayData();
     void SetFieldName(char *str);
+    void StartNesting();
+    void EndNesting();
     void AddArray();
     void AddString(char *str);
     void AddInt(long long val);
