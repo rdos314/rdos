@@ -594,6 +594,8 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 
         case '[':
             is_array = true;
+            doc->StartNesting();
+
             state = json_tokener_state_eatws;
             saved_state = json_tokener_state_array;
             return json_ret_break;
@@ -642,7 +644,7 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case '-':
 	    state = json_tokener_state_number;
 	    pb->Reset();
-            doc->is_double = 0;
+            is_double = 0;
 	    return json_ret_redo;
 
         default:
@@ -1141,12 +1143,12 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
         switch (*str)
         {
             case '.':
-                if (doc->is_double != 0) 
+                if (is_double) 
                 {
                     doc->err = json_tokener_error_parse_number;
                     return json_ret_out;
                 }
-                doc->is_double = 1;
+                is_double = true;
                 break;
 
             case 'e':
@@ -1158,7 +1160,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
                 }
 
                 is_exponent = true;
-                doc->is_double = 1;
+                is_double = true;
 	        negativesign_next_possible_location = case_len + 1;
                 break;
 
@@ -1209,7 +1211,7 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
         return json_ret_redo;
     }
  
-    if (doc->is_double)
+    if (is_double)
         return DecodeDouble(doc);
     else
         return DecodeInt(doc);
@@ -1231,6 +1233,8 @@ int TJsonStackEntry::HandleArray(TJsonDocument *doc)
     if (*str == ']') 
     {
         is_array = false;
+        doc->EndNesting();
+
         saved_state = json_tokener_state_finish;
         state = json_tokener_state_eatws;
         return json_ret_break;
@@ -1278,6 +1282,9 @@ int TJsonStackEntry::HandleArraySep(TJsonDocument *doc)
     switch (*str)
     {
         case ']':
+            is_array = false;
+            doc->EndNesting();
+
             saved_state = json_tokener_state_finish;
             state = json_tokener_state_eatws;
             break;
@@ -1489,6 +1496,7 @@ int TJsonStackEntry::Parse(TJsonDocument *doc, const char *data, int start_state
 
     doc->err = json_tokener_success;
     quote_char = 0;
+    is_double = false;
 
     if (start_state)
     {
@@ -1704,8 +1712,6 @@ bool TJsonDocument::Parse(const char *doc)
 
     depth = 0;
     err = 0;
-    is_double = 0;
-    flags = 0;
 
     start_state = json_tokener_state_start;
     ptr = doc;

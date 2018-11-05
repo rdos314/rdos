@@ -146,6 +146,7 @@ protected:
     const char *str;
 
     bool is_array;
+    bool is_double;
     char quote_char;
 
     int state;
@@ -189,9 +190,6 @@ private:
 
     int depth;
     int err;
-
-    int is_double;
-    int flags;
 
     TJsonStackEntry *StackArr[MAX_JSON_DEPTH];
 };
