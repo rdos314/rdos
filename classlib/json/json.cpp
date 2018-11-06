@@ -97,9 +97,6 @@
 TJsonObject::TJsonObject(TString &FieldName)
  : FFieldName(FieldName)
 {
-    FObjArraySize = 0;
-    FObjArrayCount = 0;
-    FObjArr = 0;
 }
 
 /*##########################################################################
@@ -151,6 +148,195 @@ TString &TJsonObject::GetText()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::IsCollection
+#
+#   Purpose....: Is collection?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonObject::IsCollection()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonObject::GetBoolean()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetInt
+#
+#   Purpose....: Get int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TJsonObject::GetInt()
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonObject::GetDouble()
+{
+    return 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollectionData::TJsonCollectionData
+#
+#   Purpose....: Constructor for TJsonCollectionData
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollectionData::TJsonCollectionData()
+{
+    FObjArraySize = 0;
+    FObjArrayCount = 0;
+    FObjArr = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::~TJsonCollection
+#
+#   Purpose....: Destructor for TJsonCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollectionData::~TJsonCollectionData()
+{
+    if (FObjArr)
+        delete FObjArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::Grow
+#
+#   Purpose....: Grow array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollectionData::Grow()
+{
+    int i;
+    int NewSize;
+    TJsonObject **NewArr;    
+
+    if (FObjArr)
+    {
+        NewSize = 2 * FObjArraySize;
+        NewArr = new TJsonObject *[NewSize];
+
+        for (i = 0; i < FObjArrayCount; i++)
+            NewArr[i] = FObjArr[i];
+
+        for (i = FObjArrayCount; i < NewSize; i++)
+            NewArr[i] = 0;
+
+        delete FObjArr;
+    }
+    else
+    {
+        NewSize = 10;
+        NewArr = new TJsonObject *[NewSize];
+
+        for (i = 0; i < NewSize; i++)
+            NewArr[i] = 0;
+    }
+
+    FObjArr = NewArr;
+    FObjArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::TJsonCollection
+#
+#   Purpose....: Constructor for TJsonCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection::TJsonCollection(TString &FieldName)
+ : TJsonObject(FieldName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::~TJsonCollection
+#
+#   Purpose....: Destructor for TJsonCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection::~TJsonCollection()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::IsCollection
+#
+#   Purpose....: Is collection?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonCollection::IsCollection()
+{
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArray::TJsonArray
 #
 #   Purpose....: Constructor for TJsonArray
@@ -178,54 +364,6 @@ TJsonArray::TJsonArray(TString &FieldName)
 ##########################################################################*/
 TJsonArray::~TJsonArray()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonArray::GetBoolean
-#
-#   Purpose....: Get boolean
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TJsonArray::GetBoolean()
-{
-    return false;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonArray::GetInt
-#
-#   Purpose....: Get int
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TJsonArray::GetInt()
-{
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonArray::GetDouble
-#
-#   Purpose....: Get double
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-double TJsonArray::GetDouble()
-{
-    return 0.0;
 }
 
 /*##########################################################################
@@ -2058,6 +2196,8 @@ void TJsonDocument::SetFieldName(TString &str)
 ##########################################################################*/
 void TJsonDocument::StartNesting()
 {
+    TJsonCollection *c = new TJsonCollection(FObjFieldName);
+
     printf("%s: object nesting\r\n", FObjFieldName.GetData());
 }
 
@@ -2108,8 +2248,7 @@ void TJsonDocument::AddString(TString &str)
 {
     TJsonString *obj = new TJsonString(FObjFieldName, str);
 
-    double v = obj->GetDouble();
-    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -2127,8 +2266,8 @@ void TJsonDocument::AddInt(long long val)
 {
     TJsonInt *obj = new TJsonInt(FObjFieldName, val);
 
-    double v = obj->GetDouble();
-    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
+    long long v = obj->GetInt();
+    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
 }
 
 /*##########################################################################
@@ -2146,8 +2285,7 @@ void TJsonDocument::AddDouble(double val, TString &text)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, text);
 
-    double v = obj->GetDouble();
-    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -2165,8 +2303,7 @@ void TJsonDocument::AddDouble(double val, int decimals)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, decimals);
 
-    double v = obj->GetDouble();
-    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -2184,6 +2321,10 @@ void TJsonDocument::AddBoolean(bool val)
 {
     TJsonBoolean *obj = new TJsonBoolean(FObjFieldName, val);
 
-    double v = obj->GetDouble();
-    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
+    bool v = obj->GetBoolean();
+
+    if (v)
+        printf("%s: true\r\n", obj->GetFieldName().GetData());
+    else
+        printf("%s: false\r\n", obj->GetFieldName().GetData());
 }

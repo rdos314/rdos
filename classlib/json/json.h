@@ -41,20 +41,41 @@ public:
     TString &GetFieldName();
     TString &GetText();
 
-    virtual bool GetBoolean() = 0;
-    virtual long long GetInt() = 0;
-    virtual double GetDouble() = 0;
+    virtual bool IsCollection();
+
+    virtual bool GetBoolean();
+    virtual long long GetInt();
+    virtual double GetDouble();
 
 protected:
-    void Grow();
-
     TString FFieldName;
     TString FText;
+};
+
+class TJsonCollectionData
+{
+public:
+    TJsonCollectionData();
+    ~TJsonCollectionData();
+
+    void Grow();
 
     int FObjArraySize;
     int FObjArrayCount;
 
-    TJsonObject *FObjArr;
+    TJsonObject **FObjArr;
+};
+
+class TJsonCollection : public TJsonObject
+{
+public:
+    TJsonCollection(TString &FieldName);
+    virtual ~TJsonCollection();
+
+    virtual bool IsCollection();
+
+protected:
+    TJsonCollectionData FData;
 };
 
 class TJsonArray : public TJsonObject
@@ -62,10 +83,6 @@ class TJsonArray : public TJsonObject
 public:
     TJsonArray(TString &FieldName);
     virtual ~TJsonArray();
-
-    virtual bool GetBoolean();
-    virtual long long GetInt();
-    virtual double GetDouble();
 };
 
 class TJsonDouble : public TJsonObject
