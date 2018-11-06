@@ -182,6 +182,22 @@ TJsonArray::~TJsonArray()
 
 /*##########################################################################
 #
+#   Name       : TJsonArray::GetBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArray::GetBoolean()
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonInt::TJsonInt
 #
 #   Purpose....: Constructor for TJsonInt
@@ -212,6 +228,25 @@ TJsonInt::TJsonInt(TString &FieldName, long long v)
 ##########################################################################*/
 TJsonInt::~TJsonInt()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::GetBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonInt::GetBoolean()
+{
+    if (Val == 0)
+        return false;
+    else
+        return true;
 }
 
 /*##########################################################################
@@ -322,6 +357,25 @@ TJsonDouble::~TJsonDouble()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::GetBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDouble::GetBoolean()
+{
+    if (Val > 0)
+        return true;
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::TJsonBoolean
 #
 #   Purpose....: Constructor for TJsonBoolean
@@ -359,6 +413,22 @@ TJsonBoolean::~TJsonBoolean()
 
 /*##########################################################################
 #
+#   Name       : TJsonBoolean::GetBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonBoolean::GetBoolean()
+{
+    return Val;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonString::TJsonString
 #
 #   Purpose....: Constructor for TJsonString
@@ -387,6 +457,34 @@ TJsonString::TJsonString(TString &FieldName, TString &text)
 ##########################################################################*/
 TJsonString::~TJsonString()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::GetBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonString::GetBoolean()
+{
+    if (!strcmp(FText.GetData(), "true"))
+        return true;
+
+    if (!strcmp(FText.GetData(), "false"))
+        return false;
+
+    if (FText.GetSize() == 0)
+        return false;
+
+    if (!strcmp(FText.GetData(), "0"))
+        return false;
+    else
+        return true;
 }
 
 /*##########################################################################
@@ -1823,7 +1921,10 @@ void TJsonDocument::AddString(TString &str)
 {
     TJsonString *obj = new TJsonString(FObjFieldName, str);
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (obj->GetBoolean())
+        printf("%s: true\r\n", obj->GetFieldName().GetData());
+    else
+        printf("%s: false\r\n", obj->GetFieldName().GetData());
 }
 
 /*##########################################################################
@@ -1841,7 +1942,10 @@ void TJsonDocument::AddInt(long long val)
 {
     TJsonInt *obj = new TJsonInt(FObjFieldName, val);
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (obj->GetBoolean())
+        printf("%s: true\r\n", obj->GetFieldName().GetData());
+    else
+        printf("%s: false\r\n", obj->GetFieldName().GetData());
 }
 
 /*##########################################################################
@@ -1859,7 +1963,10 @@ void TJsonDocument::AddDouble(double val, TString &text)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, text);
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (obj->GetBoolean())
+        printf("%s: true\r\n", obj->GetFieldName().GetData());
+    else
+        printf("%s: false\r\n", obj->GetFieldName().GetData());
 }
 
 /*##########################################################################
@@ -1877,7 +1984,10 @@ void TJsonDocument::AddDouble(double val, int decimals)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, decimals);
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (obj->GetBoolean())
+        printf("%s: true\r\n", obj->GetFieldName().GetData());
+    else
+        printf("%s: false\r\n", obj->GetFieldName().GetData());
 }
 
 /*##########################################################################
@@ -1895,5 +2005,8 @@ void TJsonDocument::AddBoolean(bool val)
 {
     TJsonBoolean *obj = new TJsonBoolean(FObjFieldName, val);
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (obj->GetBoolean())
+        printf("%s: true\r\n", obj->GetFieldName().GetData());
+    else
+        printf("%s: false\r\n", obj->GetFieldName().GetData());
 }

@@ -41,6 +41,8 @@ public:
     TString &GetFieldName();
     TString &GetText();
 
+    virtual bool GetBoolean() = 0;
+
 protected:
     void Grow();
 
@@ -58,6 +60,8 @@ class TJsonArray : public TJsonObject
 public:
     TJsonArray(TString &FieldName);
     virtual ~TJsonArray();
+
+    virtual bool GetBoolean();
 };
 
 class TJsonDouble : public TJsonObject
@@ -67,6 +71,9 @@ public:
     TJsonDouble(TString &FieldName, double val, TString &data);
     virtual ~TJsonDouble();
 
+    virtual bool GetBoolean();
+
+protected:
     double Val;
 };
 
@@ -76,6 +83,9 @@ public:
     TJsonBoolean(TString &FieldName, bool val);
     virtual ~TJsonBoolean();
 
+    virtual bool GetBoolean();
+
+protected:
     bool Val;
 };
 
@@ -85,6 +95,9 @@ public:
     TJsonInt(TString &FieldName, long long val);
     virtual ~TJsonInt();
 
+    virtual bool GetBoolean();
+
+protected:
     long long Val;
 };
 
@@ -93,6 +106,10 @@ class TJsonString : public TJsonObject
 public:
     TJsonString(TString &FieldName, TString &data);
     virtual ~TJsonString();
+
+    virtual bool GetBoolean();
+
+protected:
 };
 
 class TJsonDocument;
