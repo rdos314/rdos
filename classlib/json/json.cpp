@@ -396,17 +396,18 @@ TJsonSingleCollection::~TJsonSingleCollection()
 
 /*##########################################################################
 #
-#   Name       : TJsonSingleCollection::AddArray
+#   Name       : TJsonSingleCollection::IsArray
 #
-#   Purpose....: Add array
+#   Purpose....: Is array?
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonSingleCollection::AddArray()
+bool TJsonSingleCollection::IsArray()
 {
+    return false;
 }
 
 /*##########################################################################
@@ -423,6 +424,22 @@ void TJsonSingleCollection::AddArray()
 void TJsonSingleCollection::Insert(TJsonObject *obj)
 {
     FData.Insert(obj);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::Get
+#
+#   Purpose....: Get collection data object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollectionData *TJsonSingleCollection::Get()
+{
+    return &FData;
 }
 
 /*##########################################################################
@@ -469,6 +486,22 @@ TJsonArrayCollection::~TJsonArrayCollection()
 
 /*##########################################################################
 #
+#   Name       : TJsonArrayCollection::IsArray
+#
+#   Purpose....: Is array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayCollection::IsArray()
+{
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArrayCollection::Grow
 #
 #   Purpose....: Grow array
@@ -510,7 +543,6 @@ void TJsonArrayCollection::Grow()
     FArraySize = NewSize;
 }
 
-
 /*##########################################################################
 #
 #   Name       : TJsonArrayCollection::AddArray
@@ -548,6 +580,41 @@ void TJsonArrayCollection::AddArray()
 void TJsonArrayCollection::Insert(TJsonObject *obj)
 {
     FArray[FCurrInd]->Insert(obj);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::GetSize
+#
+#   Purpose....: Get size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonArrayCollection::GetSize()
+{
+    return FArrayCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::operator[]
+#
+#   Purpose....: Get size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollectionData *TJsonArrayCollection::operator[](int n) const
+{
+    if (n >= 0 && n < FArrayCount)
+        return FArray[n];
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -2472,10 +2539,15 @@ void TJsonDocument::StartArray()
 ##########################################################################*/
 void TJsonDocument::AddArray()
 {
-    if (FCurrCollection)
-        FCurrCollection->AddArray();
+    TJsonArrayCollection *arr;
 
-    printf("Add array\r\n");
+    if (FCurrCollection && FCurrCollection->IsArray())
+    {
+        arr = (TJsonArrayCollection *)FCurrCollection;
+        arr->AddArray();
+
+        printf("Add array\r\n");
+    }
 }
 
 /*##########################################################################
@@ -2601,4 +2673,20 @@ void TJsonDocument::AddBoolean(bool val)
         else
             printf("%s: false\r\n", obj->GetFieldName().GetData());
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::GetRoot
+#
+#   Purpose....: Get root collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection *TJsonDocument::GetRoot()
+{
+    return FRootCollection;
 }

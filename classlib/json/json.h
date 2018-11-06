@@ -74,7 +74,7 @@ public:
     virtual ~TJsonCollection();
 
     virtual bool IsCollection();
-    virtual void AddArray() = 0;
+    virtual bool IsArray() = 0;
     virtual void Insert(TJsonObject *obj) = 0;
 
     TJsonCollection *FParent;
@@ -88,8 +88,9 @@ public:
     TJsonSingleCollection(TString &FieldName);
     virtual ~TJsonSingleCollection();
 
-    virtual void AddArray();
+    virtual bool IsArray();
     virtual void Insert(TJsonObject *obj);
+    TJsonCollectionData *Get();
 
 protected:
     TJsonCollectionData FData;
@@ -101,8 +102,12 @@ public:
     TJsonArrayCollection(TString &FieldName);
     virtual ~TJsonArrayCollection();
 
+    virtual bool IsArray();
     virtual void AddArray();
     virtual void Insert(TJsonObject *obj);
+
+    int GetSize();
+    TJsonCollectionData *operator[](int n) const;
 
 protected:
     void Grow();
@@ -235,6 +240,8 @@ public:
     ~TJsonDocument();
 
     bool Parse(const char *doc);
+
+    TJsonCollection *GetRoot();
 
 protected:
     bool AddLevel();
