@@ -74,19 +74,44 @@ public:
     virtual ~TJsonCollection();
 
     virtual bool IsCollection();
-    void Insert(TJsonObject *obj);
+    virtual void AddArray() = 0;
+    virtual void Insert(TJsonObject *obj) = 0;
 
     TJsonCollection *FParent;
+
+protected:
+};
+
+class TJsonSingleCollection : public TJsonCollection
+{
+public:
+    TJsonSingleCollection(TString &FieldName);
+    virtual ~TJsonSingleCollection();
+
+    virtual void AddArray();
+    virtual void Insert(TJsonObject *obj);
 
 protected:
     TJsonCollectionData FData;
 };
 
-class TJsonArray : public TJsonObject
+class TJsonArrayCollection : public TJsonCollection
 {
 public:
-    TJsonArray(TString &FieldName);
-    virtual ~TJsonArray();
+    TJsonArrayCollection(TString &FieldName);
+    virtual ~TJsonArrayCollection();
+
+    virtual void AddArray();
+    virtual void Insert(TJsonObject *obj);
+
+protected:
+    void Grow();
+
+    int FCurrInd;
+    int FArrayCount;
+    int FArraySize;
+
+    TJsonCollectionData **FArray;
 };
 
 class TJsonDouble : public TJsonObject
@@ -219,6 +244,7 @@ protected:
     void SetFieldName(TString &name);
     void StartNesting();
     void EndNesting();
+    void StartArray();
     void AddArray();
     void AddString(TString &str);
     void AddInt(long long val);

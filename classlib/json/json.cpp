@@ -230,9 +230,9 @@ TJsonCollectionData::TJsonCollectionData()
 
 /*##########################################################################
 #
-#   Name       : TJsonCollection::~TJsonCollection
+#   Name       : TJsonCollectionData::~TJsonCollectionData
 #
-#   Purpose....: Destructor for TJsonCollection
+#   Purpose....: Destructor for TJsonCollectionData
 #
 #   In params..: *
 #   Out params.: *
@@ -241,13 +241,20 @@ TJsonCollectionData::TJsonCollectionData()
 ##########################################################################*/
 TJsonCollectionData::~TJsonCollectionData()
 {
+    int i;
+
     if (FObjArr)
+    {
+        for (i = 0; i < FObjArrayCount; i++)
+            delete FObjArr[i];
+
         delete FObjArr;
+    }
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonCollection::Grow
+#   Name       : TJsonCollectionData::Grow
 #
 #   Purpose....: Grow array
 #
@@ -358,7 +365,53 @@ bool TJsonCollection::IsCollection()
 
 /*##########################################################################
 #
-#   Name       : TJsonCollection::Insert
+#   Name       : TJsonSingleCollection::TJsonSingleCollection
+#
+#   Purpose....: Constructor for TJsonSingleCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonSingleCollection::TJsonSingleCollection(TString &FieldName)
+ : TJsonCollection(FieldName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::~TJsonSingleCollection
+#
+#   Purpose....: Destructor for TJsonSingleCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonSingleCollection::~TJsonSingleCollection()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::AddArray
+#
+#   Purpose....: Add array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonSingleCollection::AddArray()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::Insert
 #
 #   Purpose....: Insert object
 #
@@ -367,40 +420,134 @@ bool TJsonCollection::IsCollection()
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonCollection::Insert(TJsonObject *obj)
+void TJsonSingleCollection::Insert(TJsonObject *obj)
 {
     FData.Insert(obj);
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonArray::TJsonArray
+#   Name       : TJsonArrayCollection::TJsonArrayCollection
 #
-#   Purpose....: Constructor for TJsonArray
+#   Purpose....: Constructor for TJsonArrayCollection
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArray::TJsonArray(TString &FieldName)
- : TJsonObject(FieldName)
+TJsonArrayCollection::TJsonArrayCollection(TString &FieldName)
+ : TJsonCollection(FieldName)
 {
+    FArrayCount = 0;
+    FArraySize = 0;
+    FArray = 0;
+
+    AddArray();
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonArray::~TJsonArray
+#   Name       : TJsonArrayCollection::~TJsonArrayCollection
 #
-#   Purpose....: Destructor for TJsonArray
+#   Purpose....: Destructor for TJsonArrayCollection
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArray::~TJsonArray()
+TJsonArrayCollection::~TJsonArrayCollection()
 {
+    int i;
+
+    for (i = 0; i < FArrayCount; i++)
+        delete FArray[i];
+
+    delete FArray;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::Grow
+#
+#   Purpose....: Grow array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonArrayCollection::Grow()
+{
+    int i;
+    int NewSize;
+    TJsonCollectionData **NewArr;    
+
+    if (FArray)
+    {
+        NewSize = 2 * FArraySize;
+        NewArr = new TJsonCollectionData *[NewSize];
+
+        for (i = 0; i < FArrayCount; i++)
+            NewArr[i] = FArray[i];
+
+        for (i = FArrayCount; i < NewSize; i++)
+            NewArr[i] = 0;
+
+        delete FArray;
+    }
+    else
+    {
+        NewSize = 10;
+        NewArr = new TJsonCollectionData *[NewSize];
+
+        for (i = 0; i < NewSize; i++)
+            NewArr[i] = 0;
+    }
+
+    FArray = NewArr;
+    FArraySize = NewSize;
+}
+
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::AddArray
+#
+#   Purpose....: Add array element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonArrayCollection::AddArray()
+{
+    TJsonCollectionData *entry = new TJsonCollectionData;
+
+    if (FArrayCount == FArraySize)
+        Grow();
+
+    FArray[FArrayCount] = entry;
+    FCurrInd = FArrayCount;
+    FArrayCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::Insert
+#
+#   Purpose....: Insert object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonArrayCollection::Insert(TJsonObject *obj)
+{
+    FArray[FCurrInd]->Insert(obj);
 }
 
 /*##########################################################################
@@ -978,7 +1125,7 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
 
         case '[':
             FIsArray = true;
-            doc->StartNesting();
+            doc->StartArray();
 
             FState = json_tokener_state_eatws;
             FSavedState = json_tokener_state_array;
@@ -2236,19 +2383,20 @@ void TJsonDocument::SetFieldName(TString &str)
 ##########################################################################*/
 void TJsonDocument::StartNesting()
 {
-    TJsonCollection *c;
+    TJsonSingleCollection *c;
 
     if (FCurrCollection)
     {
-        c = new TJsonCollection(FObjFieldName);
+        c = new TJsonSingleCollection(FObjFieldName);
         FCurrCollection->Insert(c);
+        c->FParent = FCurrCollection;
         FCurrCollection = c;
     }
     else
     {
         if (!FRootCollection)
         {
-            c = new TJsonCollection(FObjFieldName);
+            c = new TJsonSingleCollection(FObjFieldName);
             FRootCollection = c;
         }
         FCurrCollection = c;
@@ -2270,7 +2418,45 @@ void TJsonDocument::StartNesting()
 ##########################################################################*/
 void TJsonDocument::EndNesting()
 {
+    if (FCurrCollection)
+        FCurrCollection = FCurrCollection->FParent;
+
     printf("Nesting end\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::StartArray
+#
+#   Purpose....: Start array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::StartArray()
+{
+    TJsonArrayCollection *c;
+
+    if (FCurrCollection)
+    {
+        c = new TJsonArrayCollection(FObjFieldName);
+        FCurrCollection->Insert(c);
+        c->FParent = FCurrCollection;
+        FCurrCollection = c;
+    }
+    else
+    {
+        if (!FRootCollection)
+        {
+            c = new TJsonArrayCollection(FObjFieldName);
+            FRootCollection = c;
+        }
+        FCurrCollection = c;
+    }
+      
+    printf("%s: object array\r\n", FObjFieldName.GetData());
 }
 
 /*##########################################################################
@@ -2286,6 +2472,9 @@ void TJsonDocument::EndNesting()
 ##########################################################################*/
 void TJsonDocument::AddArray()
 {
+    if (FCurrCollection)
+        FCurrCollection->AddArray();
+
     printf("Add array\r\n");
 }
 
