@@ -214,6 +214,22 @@ long long TJsonArray::GetInt()
 
 /*##########################################################################
 #
+#   Name       : TJsonArray::GetDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonArray::GetDouble()
+{
+    return 0.0;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonInt::TJsonInt
 #
 #   Purpose....: Constructor for TJsonInt
@@ -279,6 +295,22 @@ bool TJsonInt::GetBoolean()
 long long TJsonInt::GetInt()
 {
     return Val;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::GetDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonInt::GetDouble()
+{
+    return (double)Val;
 }
 
 /*##########################################################################
@@ -441,6 +473,22 @@ long long TJsonDouble::GetInt()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::GetDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonDouble::GetDouble()
+{
+    return Val;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::TJsonBoolean
 #
 #   Purpose....: Constructor for TJsonBoolean
@@ -509,6 +557,25 @@ long long TJsonBoolean::GetInt()
         return 1;
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::GetDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonBoolean::GetDouble()
+{
+    if (Val)
+        return 1.0;
+    else
+        return 0.0;
 }
 
 /*##########################################################################
@@ -587,6 +654,24 @@ long long TJsonString::GetInt()
     char *end = NULL;
 
     return strtoll(FText.GetData(), &end, 10);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::GetDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonString::GetDouble()
+{
+    char *end;
+
+    return strtod(FText.GetData(), &end);
 }
 
 /*##########################################################################
@@ -2023,8 +2108,8 @@ void TJsonDocument::AddString(TString &str)
 {
     TJsonString *obj = new TJsonString(FObjFieldName, str);
 
-    long long v = obj->GetInt();
-    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    double v = obj->GetDouble();
+    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
 }
 
 /*##########################################################################
@@ -2042,8 +2127,8 @@ void TJsonDocument::AddInt(long long val)
 {
     TJsonInt *obj = new TJsonInt(FObjFieldName, val);
 
-    long long v = obj->GetInt();
-    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    double v = obj->GetDouble();
+    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
 }
 
 /*##########################################################################
@@ -2061,8 +2146,8 @@ void TJsonDocument::AddDouble(double val, TString &text)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, text);
 
-    long long v = obj->GetInt();
-    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    double v = obj->GetDouble();
+    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
 }
 
 /*##########################################################################
@@ -2080,8 +2165,8 @@ void TJsonDocument::AddDouble(double val, int decimals)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, decimals);
 
-    long long v = obj->GetInt();
-    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    double v = obj->GetDouble();
+    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
 }
 
 /*##########################################################################
@@ -2099,6 +2184,6 @@ void TJsonDocument::AddBoolean(bool val)
 {
     TJsonBoolean *obj = new TJsonBoolean(FObjFieldName, val);
 
-    long long v = obj->GetInt();
-    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    double v = obj->GetDouble();
+    printf("%s: %Lf\r\n", obj->GetFieldName().GetData(), v);
 }

@@ -43,6 +43,7 @@ public:
 
     virtual bool GetBoolean() = 0;
     virtual long long GetInt() = 0;
+    virtual double GetDouble() = 0;
 
 protected:
     void Grow();
@@ -64,6 +65,7 @@ public:
 
     virtual bool GetBoolean();
     virtual long long GetInt();
+    virtual double GetDouble();
 };
 
 class TJsonDouble : public TJsonObject
@@ -75,6 +77,7 @@ public:
 
     virtual bool GetBoolean();
     virtual long long GetInt();
+    virtual double GetDouble();
 
 protected:
     double Val;
@@ -88,6 +91,7 @@ public:
 
     virtual bool GetBoolean();
     virtual long long GetInt();
+    virtual double GetDouble();
 
 protected:
     bool Val;
@@ -101,6 +105,7 @@ public:
 
     virtual bool GetBoolean();
     virtual long long GetInt();
+    virtual double GetDouble();
 
 protected:
     long long Val;
@@ -114,6 +119,7 @@ public:
 
     virtual bool GetBoolean();
     virtual long long GetInt();
+    virtual double GetDouble();
 
 protected:
 };
