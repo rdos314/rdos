@@ -35,11 +35,14 @@
 class TJsonObject
 {
 public:
-    TJsonObject();
+    TJsonObject(TString &FieldName);
     virtual ~TJsonObject();
 
 protected:
     void Grow();
+
+    TString FFieldName;
+    TString FData;
 
     int FObjArraySize;
     int FObjArrayCount;
@@ -50,14 +53,15 @@ protected:
 class TJsonArray : public TJsonObject
 {
 public:
-    TJsonArray();
+    TJsonArray(TString &FieldName);
     virtual ~TJsonArray();
 };
 
 class TJsonDouble : public TJsonObject
 {
 public:
-    TJsonDouble(double val);
+    TJsonDouble(TString &FieldName, double val);
+    TJsonDouble(TString &FieldName, double val, int decimals);
     virtual ~TJsonDouble();
 
     double Val;
@@ -66,7 +70,7 @@ public:
 class TJsonBoolean : public TJsonObject
 {
 public:
-    TJsonBoolean(bool val);
+    TJsonBoolean(TString &FieldName, bool val);
     virtual ~TJsonBoolean();
 
     bool Val;
@@ -75,7 +79,7 @@ public:
 class TJsonInt : public TJsonObject
 {
 public:
-    TJsonInt(long long val);
+    TJsonInt(TString &FieldName, long long val);
     virtual ~TJsonInt();
 
     long long Val;
@@ -84,10 +88,8 @@ public:
 class TJsonString : public TJsonObject
 {
 public:
-    TJsonString(const char *str, int len);
+    TJsonString(TString &FieldName, TString &data);
     virtual ~TJsonString();
-
-    char *Val;
 };
 
 class TJsonDocument;
@@ -165,9 +167,10 @@ protected:
     void StartNesting();
     void EndNesting();
     void AddArray();
-    void AddString(TString &name);
+    void AddString(TString &str);
     void AddInt(long long val);
     void AddDouble(double val);
+    void AddDouble(double val, int decimals);
     void AddBoolean(bool val);
 
     int FStartState;
