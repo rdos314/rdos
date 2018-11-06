@@ -119,6 +119,38 @@ TJsonObject::~TJsonObject()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::GetFieldName
+#
+#   Purpose....: Get field name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString &TJsonObject::GetFieldName()
+{
+    return FFieldName;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetText
+#
+#   Purpose....: Get text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString &TJsonObject::GetText()
+{
+    return FText;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArray::TJsonArray
 #
 #   Purpose....: Constructor for TJsonArray
@@ -164,7 +196,7 @@ TJsonInt::TJsonInt(TString &FieldName, long long v)
 {
     Val = v;
 
-    FData.printf("%lld", v);
+    FText.printf("%lld", v);
 }
 
 /*##########################################################################
@@ -193,27 +225,11 @@ TJsonInt::~TJsonInt()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(TString &FieldName, double v)
+TJsonDouble::TJsonDouble(TString &FieldName, double v, TString &text)
  : TJsonObject(FieldName)
 {
-    bool done = false;
-
     Val = v;
-
-    if (v == INFINITY)
-    {
-        FData = "infinity";
-        done = true;
-    }
-
-    if (!done && v == -INFINITY)
-    {
-        FData = "-infinity";
-        done = true;
-    }
-    
-    if (!done)
-        FData.printf("%Lf", v);
+    FText = text;
 }
 
 /*##########################################################################
@@ -233,34 +249,43 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
     double temp;
     int digits;
     bool done = false;
-    char formstr[80];
+    char str[80];
+
+    if (decimals < 1)
+        decimals = 1;
 
     Val = v;
 
-    digits = 1;
-
-    temp = v;
-
-    if (temp == INFINITY)
+    if (v == INFINITY)
     {
-        FData = "infinity";
+        if (v == -INFINITY)
+            FText = "nan";
+        else
+            FText = "infinity";
         done = true;
     }
 
-    if (!done && temp == -INFINITY)
+    if (!done && v == -INFINITY)
     {
-        FData = "-infinity";
+        FText = "-infinity";
         done = true;
     }
-    
+
     if (!done)
     {
+        temp = v;
+
         if (temp < 0)
+        {
+            digits = 2;
             temp = -temp;
+        }
+        else
+            digits = 1;
 
         if (temp >= 1e+16)
         {
-            FData.printf("%Lf", v);
+            FText.printf("%Lf", v);
             done = true;
         }
     }
@@ -274,12 +299,9 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
             temp = temp / 10.0;
         }
 
-        if (decimals)
-            sprintf(formstr, "%d.%d%%Lf", digits + decimals + 1, decimals);
-        else
-            sprintf(formstr, "%d%%Lf", digits);
+        sprintf(str, "%%%d.%dLf", digits + decimals + 1, decimals);
 
-        FData.printf(formstr, v);
+        FText.printf(str, v);
     }
 }
 
@@ -315,9 +337,9 @@ TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
     Val = v;
 
     if (v)
-        FData = "true";
+        FText = "true";
     else
-        FData = "false";
+        FText = "false";
 }
 
 /*##########################################################################
@@ -346,10 +368,10 @@ TJsonBoolean::~TJsonBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonString::TJsonString(TString &FieldName, TString &data)
+TJsonString::TJsonString(TString &FieldName, TString &text)
  : TJsonObject(FieldName)
 {
-    FData = data;
+    FText = text;
 }
 
 /*##########################################################################
@@ -604,9 +626,9 @@ int TJsonStackEntry::HandleInfinite(TJsonDocument *doc)
     }
 
     if (FData.GetSize() > 0 && FData[0] == '-')
-        doc->AddDouble(-INFINITY);
+        doc->AddDouble(-INFINITY, 0);
     else
-        doc->AddDouble(INFINITY);
+        doc->AddDouble(INFINITY, 0);
 
     FSavedState = json_tokener_state_finish;
     FState = json_tokener_state_eatws;
@@ -645,7 +667,7 @@ int TJsonStackEntry::HandleNullNan(TJsonDocument *doc)
             ch = tolower((int)(*FDataPtr));
             if (ch == 'n')
             {
-                doc->AddDouble(NAN);
+                doc->AddDouble(NAN, 0);
 
     	        FSavedState = json_tokener_state_finish;
     	        FState = json_tokener_state_eatws;
@@ -1013,7 +1035,7 @@ int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 
     val = strtod(FData.GetData(), &end);
 
-    doc->AddDouble(val);
+    doc->AddDouble(val, FData);
 
     FSavedState = json_tokener_state_finish;
     FState = json_tokener_state_eatws;
@@ -1801,7 +1823,7 @@ void TJsonDocument::AddString(TString &str)
 {
     TJsonString *obj = new TJsonString(FObjFieldName, str);
 
-    printf("%s: \"%s\"\r\n", FObjFieldName.GetData(), str.GetData());
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -1819,7 +1841,7 @@ void TJsonDocument::AddInt(long long val)
 {
     TJsonInt *obj = new TJsonInt(FObjFieldName, val);
 
-   printf("%s: %lld\r\n", FObjFieldName.GetData(), val);
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -1833,11 +1855,11 @@ void TJsonDocument::AddInt(long long val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::AddDouble(double val)
+void TJsonDocument::AddDouble(double val, TString &text)
 {
-    TJsonDouble *obj = new TJsonDouble(FObjFieldName, val);
+    TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, text);
 
-    printf("%s: %Lf\r\n", FObjFieldName.GetData(), val);
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -1855,7 +1877,7 @@ void TJsonDocument::AddDouble(double val, int decimals)
 {
     TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, decimals);
 
-    printf("%s: %Lf\r\n", FObjFieldName.GetData(), val);
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }
 
 /*##########################################################################
@@ -1873,8 +1895,5 @@ void TJsonDocument::AddBoolean(bool val)
 {
     TJsonBoolean *obj = new TJsonBoolean(FObjFieldName, val);
 
-    if (val)
-        printf("%s: true\r\n", FObjFieldName.GetData());
-    else
-        printf("%s: false\r\n", FObjFieldName.GetData());
+    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
 }

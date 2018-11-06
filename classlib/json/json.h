@@ -38,11 +38,14 @@ public:
     TJsonObject(TString &FieldName);
     virtual ~TJsonObject();
 
+    TString &GetFieldName();
+    TString &GetText();
+
 protected:
     void Grow();
 
     TString FFieldName;
-    TString FData;
+    TString FText;
 
     int FObjArraySize;
     int FObjArrayCount;
@@ -60,8 +63,8 @@ public:
 class TJsonDouble : public TJsonObject
 {
 public:
-    TJsonDouble(TString &FieldName, double val);
     TJsonDouble(TString &FieldName, double val, int decimals);
+    TJsonDouble(TString &FieldName, double val, TString &data);
     virtual ~TJsonDouble();
 
     double Val;
@@ -169,7 +172,7 @@ protected:
     void AddArray();
     void AddString(TString &str);
     void AddInt(long long val);
-    void AddDouble(double val);
+    void AddDouble(double val, TString &text);
     void AddDouble(double val, int decimals);
     void AddBoolean(bool val);
 
