@@ -42,6 +42,7 @@ public:
     TString &GetText();
 
     virtual bool GetBoolean() = 0;
+    virtual long long GetInt() = 0;
 
 protected:
     void Grow();
@@ -62,6 +63,7 @@ public:
     virtual ~TJsonArray();
 
     virtual bool GetBoolean();
+    virtual long long GetInt();
 };
 
 class TJsonDouble : public TJsonObject
@@ -72,6 +74,7 @@ public:
     virtual ~TJsonDouble();
 
     virtual bool GetBoolean();
+    virtual long long GetInt();
 
 protected:
     double Val;
@@ -84,6 +87,7 @@ public:
     virtual ~TJsonBoolean();
 
     virtual bool GetBoolean();
+    virtual long long GetInt();
 
 protected:
     bool Val;
@@ -96,6 +100,7 @@ public:
     virtual ~TJsonInt();
 
     virtual bool GetBoolean();
+    virtual long long GetInt();
 
 protected:
     long long Val;
@@ -108,6 +113,7 @@ public:
     virtual ~TJsonString();
 
     virtual bool GetBoolean();
+    virtual long long GetInt();
 
 protected:
 };
