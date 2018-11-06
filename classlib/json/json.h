@@ -59,6 +59,7 @@ public:
     ~TJsonCollectionData();
 
     void Grow();
+    void Insert(TJsonObject *obj);
 
     int FObjArraySize;
     int FObjArrayCount;
@@ -73,6 +74,9 @@ public:
     virtual ~TJsonCollection();
 
     virtual bool IsCollection();
+    void Insert(TJsonObject *obj);
+
+    TJsonCollection *FParent;
 
 protected:
     TJsonCollectionData FData;
@@ -225,6 +229,9 @@ protected:
     int FStartState;
     const char *FDocPtr;
     TString FObjFieldName;
+
+    TJsonCollection *FRootCollection;
+    TJsonCollection *FCurrCollection;
 
 private:
     void Init();

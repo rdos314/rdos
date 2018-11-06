@@ -290,6 +290,26 @@ void TJsonCollectionData::Grow()
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::Insert
+#
+#   Purpose....: Insert object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollectionData::Insert(TJsonObject *obj)
+{
+    if (FObjArraySize == FObjArrayCount)
+        Grow();
+
+    FObjArr[FObjArrayCount] = obj;
+    FObjArrayCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollection::TJsonCollection
 #
 #   Purpose....: Constructor for TJsonCollection
@@ -302,6 +322,7 @@ void TJsonCollectionData::Grow()
 TJsonCollection::TJsonCollection(TString &FieldName)
  : TJsonObject(FieldName)
 {
+    FParent = 0;
 }
 
 /*##########################################################################
@@ -333,6 +354,22 @@ TJsonCollection::~TJsonCollection()
 bool TJsonCollection::IsCollection()
 {
     return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::Insert
+#
+#   Purpose....: Insert object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::Insert(TJsonObject *obj)
+{
+    FData.Insert(obj);
 }
 
 /*##########################################################################
@@ -2031,6 +2068,9 @@ void TJsonDocument::Init()
 
     for (level = 0; level < MAX_JSON_DEPTH; level++)
         StackArr[level] = 0;
+
+    FRootCollection = 0;
+    FCurrCollection = 0;
 }
 
 /*##########################################################################
@@ -2196,8 +2236,24 @@ void TJsonDocument::SetFieldName(TString &str)
 ##########################################################################*/
 void TJsonDocument::StartNesting()
 {
-    TJsonCollection *c = new TJsonCollection(FObjFieldName);
+    TJsonCollection *c;
 
+    if (FCurrCollection)
+    {
+        c = new TJsonCollection(FObjFieldName);
+        FCurrCollection->Insert(c);
+        FCurrCollection = c;
+    }
+    else
+    {
+        if (!FRootCollection)
+        {
+            c = new TJsonCollection(FObjFieldName);
+            FRootCollection = c;
+        }
+        FCurrCollection = c;
+    }
+      
     printf("%s: object nesting\r\n", FObjFieldName.GetData());
 }
 
@@ -2246,9 +2302,14 @@ void TJsonDocument::AddArray()
 ##########################################################################*/
 void TJsonDocument::AddString(TString &str)
 {
-    TJsonString *obj = new TJsonString(FObjFieldName, str);
+    TJsonString *obj;
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (FCurrCollection)
+    {
+        obj = new TJsonString(FObjFieldName, str);
+        FCurrCollection->Insert(obj);
+        printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    }
 }
 
 /*##########################################################################
@@ -2264,10 +2325,16 @@ void TJsonDocument::AddString(TString &str)
 ##########################################################################*/
 void TJsonDocument::AddInt(long long val)
 {
-    TJsonInt *obj = new TJsonInt(FObjFieldName, val);
+    TJsonInt *obj;
 
-    long long v = obj->GetInt();
-    printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    if (FCurrCollection)
+    {
+        obj = new TJsonInt(FObjFieldName, val);
+        FCurrCollection->Insert(obj);
+
+        long long v = obj->GetInt();
+        printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
+    }
 }
 
 /*##########################################################################
@@ -2283,9 +2350,15 @@ void TJsonDocument::AddInt(long long val)
 ##########################################################################*/
 void TJsonDocument::AddDouble(double val, TString &text)
 {
-    TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, text);
+    TJsonDouble *obj;
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (FCurrCollection)
+    {
+        obj = new TJsonDouble(FObjFieldName, val, text);
+        FCurrCollection->Insert(obj);
+
+        printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    }
 }
 
 /*##########################################################################
@@ -2301,9 +2374,15 @@ void TJsonDocument::AddDouble(double val, TString &text)
 ##########################################################################*/
 void TJsonDocument::AddDouble(double val, int decimals)
 {
-    TJsonDouble *obj = new TJsonDouble(FObjFieldName, val, decimals);
+    TJsonDouble *obj;
 
-    printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    if (FCurrCollection)
+    {
+        obj = new TJsonDouble(FObjFieldName, val, decimals);
+        FCurrCollection->Insert(obj);
+
+        printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
+    }
 }
 
 /*##########################################################################
@@ -2319,12 +2398,18 @@ void TJsonDocument::AddDouble(double val, int decimals)
 ##########################################################################*/
 void TJsonDocument::AddBoolean(bool val)
 {
-    TJsonBoolean *obj = new TJsonBoolean(FObjFieldName, val);
+    TJsonBoolean *obj;
 
-    bool v = obj->GetBoolean();
+    if (FCurrCollection)
+    {
+        obj = new TJsonBoolean(FObjFieldName, val);
+        FCurrCollection->Insert(obj);
 
-    if (v)
-        printf("%s: true\r\n", obj->GetFieldName().GetData());
-    else
-        printf("%s: false\r\n", obj->GetFieldName().GetData());
+        bool v = obj->GetBoolean();
+
+        if (v)
+            printf("%s: true\r\n", obj->GetFieldName().GetData());
+        else
+            printf("%s: false\r\n", obj->GetFieldName().GetData());
+    }
 }
