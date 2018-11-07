@@ -599,13 +599,11 @@ void TJsonSingleCollection::Write(TJsonDocument *doc, int indent, TString &str)
         AddIndent(doc, indent, str);
         str += "\"";
         str += FFieldName;
-        str += "\": {\r\n";
+        str += "\":\r\n";
     }
-    else
-    {
-        AddIndent(doc, indent, str);
-        str += "{\r\n";
-    }
+
+    AddIndent(doc, indent, str);
+    str += "{\r\n";
 
     size = FData.FObjArrayCount;
 
@@ -859,7 +857,10 @@ void TJsonArrayCollection::Write(TJsonDocument *doc, int indent, TString &str)
     AddIndent(doc, indent, str);
     str += "\"";
     str += FFieldName;
-    str += "\": [\r\n";
+    str += "\":\r\n";
+
+    AddIndent(doc, indent, str);
+    str += "[\r\n";
 
     for (a = 0; a < FArrayCount; a++)
     {
