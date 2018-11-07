@@ -526,6 +526,41 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           supervise_thread
+;
+;           DESCRIPTION:    Supervisor thread for FS
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+supervise_thread_name DB 'File System Supervisor', 0
+
+supervise_thread:
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+;
+    mov cx,4 * 20
+
+stRetry:
+    mov al,ds:fs_init_done
+    or al,al
+    jnz stDone
+;
+    mov ax,250
+    WaitMilliSec
+;
+    sub cx,1
+    jnz stRetry
+;    
+    SoftReset
+    
+stDone:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Hook_thread
 ;
 ;           DESCRIPTION:    Run all init file system hooks
@@ -537,6 +572,20 @@ rename_file16   ENDP
 hook_thread_name DB 'Init File System', 0
 
 hook_thread     PROC far
+    mov ax,wd_code_sel
+    verr ax
+    jnz hook_thread_supervise_ok
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET supervise_thread
+    mov di,OFFSET supervise_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+
+hook_thread_supervise_ok:
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
