@@ -365,6 +365,121 @@ bool TJsonCollection::IsCollection()
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::AddCollection
+#
+#   Purpose....: Add new collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonSingleCollection *TJsonCollection::AddCollection(const char *FieldName)
+{
+    TString fn(FieldName);
+    TJsonSingleCollection *col = new TJsonSingleCollection(fn);
+    Insert(col);
+    return col;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddArrayCollection
+#
+#   Purpose....: Add new array collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayCollection *TJsonCollection::AddArrayCollection(const char *FieldName)
+{
+    TString fn(FieldName);
+    TJsonArrayCollection *col = new TJsonArrayCollection(fn);
+    Insert(col);
+    return col;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddBoolean
+#
+#   Purpose....: Add new boolean object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonCollection::AddBoolean(const char *FieldName, bool Val)
+{
+    TString fn(FieldName);
+    TJsonObject *obj = new TJsonBoolean(fn, Val);
+    Insert(obj);
+    return obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddInt
+#
+#   Purpose....: Add new int object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonCollection::AddInt(const char *FieldName, long long Val)
+{
+    TString fn(FieldName);
+    TJsonObject *obj = new TJsonInt(fn, Val);
+    Insert(obj);
+    return obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddDouble
+#
+#   Purpose....: Add new double object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonCollection::AddDouble(const char *FieldName, double Val, int Decimals)
+{
+    TString fn(FieldName);
+    TJsonObject *obj = new TJsonDouble(fn, Val, Decimals);
+    Insert(obj);
+    return obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddString
+#
+#   Purpose....: Add new string object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonCollection::AddString(const char *FieldName, const char *Str)
+{
+    TString fn(FieldName);
+    TString str(Str);
+    TJsonObject *obj = new TJsonString(fn, str);
+    Insert(obj);
+    return obj;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonSingleCollection::TJsonSingleCollection
 #
 #   Purpose....: Constructor for TJsonSingleCollection
@@ -2770,6 +2885,27 @@ void TJsonDocument::AddBoolean(bool val)
         else
             printf("%s: false\r\n", obj->GetFieldName().GetData());
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::CreateRoot
+#
+#   Purpose....: Create root collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection *TJsonDocument::CreateRoot()
+{
+    TString fn;
+
+    if (!FRootCollection)
+        FRootCollection = new TJsonSingleCollection(fn);
+
+    return FRootCollection;
 }
 
 /*##########################################################################

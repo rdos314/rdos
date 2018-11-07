@@ -67,6 +67,9 @@ public:
     TJsonObject **FObjArr;
 };
 
+class TJsonSingleCollection;
+class TJsonArrayCollection;
+
 class TJsonCollection : public TJsonObject
 {
 public:
@@ -79,6 +82,13 @@ public:
     virtual int GetArrayCount() = 0;
     virtual int GetObjCount() = 0;
     virtual TJsonObject *GetObj(int n) = 0;
+
+    TJsonSingleCollection *AddCollection(const char *FieldName);
+    TJsonArrayCollection *AddArrayCollection(const char *FieldName);
+    TJsonObject *AddBoolean(const char *FieldName, bool Val);
+    TJsonObject *AddInt(const char *FieldName, long long Val);
+    TJsonObject *AddDouble(const char *FieldName, double Val, int Decimals);
+    TJsonObject *AddString(const char *FieldName, const char *Str);
 
     TJsonCollection *FParent;
 
@@ -252,6 +262,7 @@ public:
     bool Parse(const char *doc);
 
     TJsonCollection *GetRoot();
+    TJsonCollection *CreateRoot();
 
 protected:
     bool AddLevel();
