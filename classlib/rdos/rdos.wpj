@@ -5,7 +5,7 @@ VpeMain
 1
 WRect
 2016
-34
+0
 8192
 8704
 2
@@ -29,7 +29,7 @@ VComponent
 8
 WRect
 384
-392
+384
 5632
 4096
 0
@@ -38,6 +38,6 @@ WRect
 WFileName
 8
 rdos.tgt
-0
-0
+223
+241
 7
