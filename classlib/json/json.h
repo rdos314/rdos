@@ -76,6 +76,9 @@ public:
     virtual bool IsCollection();
     virtual bool IsArray() = 0;
     virtual void Insert(TJsonObject *obj) = 0;
+    virtual int GetArrayCount() = 0;
+    virtual int GetObjCount() = 0;
+    virtual TJsonObject *GetObj(int n) = 0;
 
     TJsonCollection *FParent;
 
@@ -90,9 +93,12 @@ public:
 
     virtual bool IsArray();
     virtual void Insert(TJsonObject *obj);
-    TJsonCollectionData *Get();
+    virtual int GetArrayCount();
+    virtual int GetObjCount();
+    virtual TJsonObject *GetObj(int n);
 
 protected:
+
     TJsonCollectionData FData;
 };
 
@@ -105,13 +111,17 @@ public:
     virtual bool IsArray();
     virtual void AddArray();
     virtual void Insert(TJsonObject *obj);
+    virtual int GetArrayCount();
+    virtual int GetObjCount();
+    virtual TJsonObject *GetObj(int n);
 
-    int GetSize();
-    TJsonCollectionData *operator[](int n) const;
+    void SelectArray(int n);
 
 protected:
     void Grow();
+    void DoAdd();
 
+    bool FReqAdd;
     int FCurrInd;
     int FArrayCount;
     int FArraySize;

@@ -428,18 +428,53 @@ void TJsonSingleCollection::Insert(TJsonObject *obj)
 
 /*##########################################################################
 #
-#   Name       : TJsonSingleCollection::Get
+#   Name       : TJsonSingleCollection::GetArrayCount
 #
-#   Purpose....: Get collection data object
+#   Purpose....: Get # of arrays
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollectionData *TJsonSingleCollection::Get()
+int TJsonSingleCollection::GetArrayCount()
 {
-    return &FData;
+    return 1;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::GetObjCount
+#
+#   Purpose....: Get # of objects
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonSingleCollection::GetObjCount()
+{
+    return FData.FObjArrayCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::GetObj
+#
+#   Purpose....: Get an object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonSingleCollection::GetObj(int n)
+{
+    if (n >= 0 && n < FData.FObjArrayCount)
+        return FData.FObjArr[n];
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -459,6 +494,7 @@ TJsonArrayCollection::TJsonArrayCollection(TString &FieldName)
     FArrayCount = 0;
     FArraySize = 0;
     FArray = 0;
+    FCurrInd = 0;
 
     AddArray();
 }
@@ -545,6 +581,31 @@ void TJsonArrayCollection::Grow()
 
 /*##########################################################################
 #
+#   Name       : TJsonArrayCollection::DoAdd
+#
+#   Purpose....: Do add array 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonArrayCollection::DoAdd()
+{
+    TJsonCollectionData *entry = new TJsonCollectionData;
+
+    if (FArrayCount == FArraySize)
+        Grow();
+
+    FArray[FArrayCount] = entry;
+    FCurrInd = FArrayCount;
+    FArrayCount++;
+
+    FReqAdd = false;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArrayCollection::AddArray
 #
 #   Purpose....: Add array element
@@ -556,14 +617,7 @@ void TJsonArrayCollection::Grow()
 ##########################################################################*/
 void TJsonArrayCollection::AddArray()
 {
-    TJsonCollectionData *entry = new TJsonCollectionData;
-
-    if (FArrayCount == FArraySize)
-        Grow();
-
-    FArray[FArrayCount] = entry;
-    FCurrInd = FArrayCount;
-    FArrayCount++;
+    FReqAdd = true;
 }
 
 /*##########################################################################
@@ -579,42 +633,94 @@ void TJsonArrayCollection::AddArray()
 ##########################################################################*/
 void TJsonArrayCollection::Insert(TJsonObject *obj)
 {
+    if (FReqAdd)
+        DoAdd();
+
     FArray[FCurrInd]->Insert(obj);
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonArrayCollection::GetSize
+#   Name       : TJsonArrayCollection::SelectArray
 #
-#   Purpose....: Get size
+#   Purpose....: Select current array
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TJsonArrayCollection::GetSize()
+void TJsonArrayCollection::SelectArray(int n)
 {
-    return FArrayCount;
+    if (n >= 0 && n < FArrayCount)
+        FCurrInd = n;
+    else
+        FCurrInd = 0;
+
+    FReqAdd = false;
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonArrayCollection::operator[]
+#   Name       : TJsonArrayCollection::GetObjCount
 #
-#   Purpose....: Get size
+#   Purpose....: Get # of objects
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollectionData *TJsonArrayCollection::operator[](int n) const
+int TJsonArrayCollection::GetObjCount()
 {
-    if (n >= 0 && n < FArrayCount)
-        return FArray[n];
+    if (FReqAdd)
+    {
+        FCurrInd = 0;
+        FReqAdd = false;
+    }
+
+    return FArray[FCurrInd]->FObjArrayCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::GetObj
+#
+#   Purpose....: Get an object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonArrayCollection::GetObj(int n)
+{
+    if (FReqAdd)
+    {
+        FCurrInd = 0;
+        FReqAdd = false;
+    }
+
+    if (n >= 0 && n < FArray[FCurrInd]->FObjArrayCount)
+        return FArray[FCurrInd]->FObjArr[n];
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::GetArrayCount
+#
+#   Purpose....: Get array count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonArrayCollection::GetArrayCount()
+{
+    return FArrayCount;
 }
 
 /*##########################################################################
@@ -2511,15 +2617,6 @@ void TJsonDocument::StartArray()
         c = new TJsonArrayCollection(FObjFieldName);
         FCurrCollection->Insert(c);
         c->FParent = FCurrCollection;
-        FCurrCollection = c;
-    }
-    else
-    {
-        if (!FRootCollection)
-        {
-            c = new TJsonArrayCollection(FObjFieldName);
-            FRootCollection = c;
-        }
         FCurrCollection = c;
     }
       
