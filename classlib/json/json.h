@@ -32,6 +32,8 @@
 
 #define MAX_JSON_DEPTH	100
 
+class TJsonDocument;
+
 class TJsonObject
 {
 public:
@@ -47,7 +49,11 @@ public:
     virtual long long GetInt();
     virtual double GetDouble();
 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+
 protected:
+    void AddIndent(TJsonDocument *doc, int indent, TString &str);
+
     TString FFieldName;
     TString FText;
 };
@@ -106,6 +112,7 @@ public:
     virtual int GetArrayCount();
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
 
@@ -124,6 +131,7 @@ public:
     virtual int GetArrayCount();
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
     void SelectArray(int n);
 
@@ -191,6 +199,7 @@ public:
     virtual bool GetBoolean();
     virtual long long GetInt();
     virtual double GetDouble();
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
 };
@@ -253,6 +262,7 @@ protected:
 class TJsonDocument
 {
 friend class TJsonStackEntry;
+friend class TJsonObject;
 
 public:
     TJsonDocument();
@@ -260,11 +270,14 @@ public:
     ~TJsonDocument();
 
     bool Parse(const char *doc);
+    void Write(TString &str);
 
     TJsonCollection *GetRoot();
     TJsonCollection *CreateRoot();
 
 protected:
+    void AddIndent(int indent, TString &str);
+
     bool AddLevel();
     bool DeleteLevel();
 

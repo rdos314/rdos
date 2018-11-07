@@ -212,6 +212,42 @@ double TJsonObject::GetDouble()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::AddIndent
+#
+#   Purpose....: Add indention
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::AddIndent(TJsonDocument *doc, int indent, TString &str)
+{
+    doc->AddIndent(indent, str);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    AddIndent(doc, indent, str);
+    str += "\"";
+    str += FFieldName;
+    str += "\": ";
+    str += FText;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollectionData::TJsonCollectionData
 #
 #   Purpose....: Constructor for TJsonCollectionData
@@ -543,6 +579,53 @@ void TJsonSingleCollection::Insert(TJsonObject *obj)
 
 /*##########################################################################
 #
+#   Name       : TJsonSingleCollection::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonSingleCollection::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    int i;
+    int size;
+    TJsonObject *obj;
+
+    if (FFieldName.GetSize())
+    {
+        AddIndent(doc, indent, str);
+        str += "\"";
+        str += FFieldName;
+        str += "\": {\r\n";
+    }
+    else
+    {
+        AddIndent(doc, indent, str);
+        str += "{\r\n";
+    }
+
+    size = FData.FObjArrayCount;
+
+    for (i = 0; i < size; i++)
+    {
+        obj = FData.FObjArr[i];
+        obj->Write(doc, indent + 1, str);
+
+        if (size == i + 1)
+            str += "\r\n";
+        else
+            str += ",\r\n";
+     }
+
+    AddIndent(doc, indent, str);
+    str += "}";
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonSingleCollection::GetArrayCount
 #
 #   Purpose....: Get # of arrays
@@ -752,6 +835,59 @@ void TJsonArrayCollection::Insert(TJsonObject *obj)
         DoAdd();
 
     FArray[FCurrInd]->Insert(obj);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonArrayCollection::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    int a;
+    int i;
+    int size;
+    int arrays;
+    TJsonObject *obj;
+
+    AddIndent(doc, indent, str);
+    str += "\"";
+    str += FFieldName;
+    str += "\": [\r\n";
+
+    for (a = 0; a < FArrayCount; a++)
+    {
+        size = FArray[a]->FObjArrayCount;
+
+        AddIndent(doc, indent + 1, str);
+        str += "{\r\n";
+
+        for (i = 0; i < size; i++)
+        {
+            obj = FArray[a]->FObjArr[i];
+            obj->Write(doc, indent + 2, str);
+
+            if (size == i + 1)
+                str += "\r\n";
+            else
+                str += ",\r\n";
+        }
+
+        AddIndent(doc, indent + 1, str);
+        if (FArrayCount == a + 1)
+            str += "}\r\n";
+        else
+            str += "},\r\n";
+    }
+
+    AddIndent(doc, indent, str);
+    str += "]";
 }
 
 /*##########################################################################
@@ -1282,6 +1418,27 @@ double TJsonString::GetDouble()
     char *end;
 
     return strtod(FText.GetData(), &end);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonString::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    AddIndent(doc, indent, str);
+    str += "\"";
+    str += FFieldName;
+    str += "\": \"";
+    str += FText;
+    str += "\"";
 }
 
 /*##########################################################################
@@ -2923,3 +3080,43 @@ TJsonCollection *TJsonDocument::GetRoot()
 {
     return FRootCollection;
 }
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::Write
+#
+#   Purpose....: Write document
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::Write(TString &str)
+{
+    if (FRootCollection)
+    {
+        FRootCollection->Write(this, 0, str);
+        str += "\r\n";
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::AddIndent
+#
+#   Purpose....: Add indent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::AddIndent(int indent, TString &str)
+{
+    int i;
+
+    for (i = 0; i < indent; i++)
+        str += "  ";
+}
+
