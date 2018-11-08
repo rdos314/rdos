@@ -269,6 +269,7 @@ public:
     TJsonDocument(const char *doc);
     ~TJsonDocument();
 
+    void Reset();
     bool Parse(const char *doc);
     void Write(TString &str);
 

@@ -2642,6 +2642,7 @@ TJsonDocument::TJsonDocument(const char *doc)
 ##########################################################################*/
 TJsonDocument::~TJsonDocument()
 {
+    Reset();
 }
 
 /*##########################################################################
@@ -2663,6 +2664,39 @@ void TJsonDocument::Init()
         StackArr[level] = 0;
 
     FRootCollection = 0;
+    FCurrCollection = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::Reset
+#
+#   Purpose....: Reset document
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::Reset()
+{
+    int level;
+
+    for (level = 0; level < MAX_JSON_DEPTH; level++)
+    {
+        if (StackArr[level])
+        {
+             delete StackArr[level];
+             StackArr[level] = 0;
+        }
+    }
+
+    if (FRootCollection)
+    {
+        delete FRootCollection;
+        FRootCollection = 0;
+    }
+
     FCurrCollection = 0;
 }
 
