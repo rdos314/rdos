@@ -52,9 +52,11 @@ public:
     THttpParam(const char *name, const char *value);
     ~THttpParam();
 
+    const char *GetParam(const char *Name);
+
     TString FName;
     TString FValue;
-	THttpParam *FList;
+    THttpParam *FList;
 };
 
 class THttpCommand : public THttpParser

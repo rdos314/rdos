@@ -183,6 +183,30 @@ THttpParam::~THttpParam()
 
 /*##########################################################################
 #
+#   Name       : THttpParam::GetParam
+#
+#   Purpose....: Get param name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *THttpParam::GetParam(const char *Name)
+{
+    if (FName == Name)
+        return FValue.GetData();
+    else
+    {
+        if (FList)
+            return FList->GetParam(Name);
+        else
+            return 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THttpArg::THttpArg
 #
 #   Purpose....: Constructor for THttpArg
