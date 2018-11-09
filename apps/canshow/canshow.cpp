@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 
 		Time = TDateTime(CanData.TimeMSB, CanData.TimeLSB);
 
-       	        printf("%04d-%02d-%02d %02d.%02d.%02d,%03d  ", 
+       	        printf("%04d-%02d-%02d, %02d:%02d:%02d.%03d,  ", 
 	                    Time.GetYear(), 
 	                    Time.GetMonth(),
 	                    Time.GetDay(),
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
                     printf(str);
                }
 
-               printf("\r\n");
+               printf("\n");
 
             }
         }        
