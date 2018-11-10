@@ -29,8 +29,9 @@
 #define _JSON_H
 
 #include "str.h"
+#include "sockobj.h"
 
-#define MAX_JSON_DEPTH	100
+#define MAX_JSON_DEPTH  100
 
 class TJsonDocument;
 
@@ -308,6 +309,20 @@ private:
     int FErr;
 
     TJsonStackEntry *StackArr[MAX_JSON_DEPTH];
+};
+
+class TJsonHttpClient
+{
+public:
+    TJsonHttpClient(const char *host);
+    ~TJsonHttpClient();
+
+    TJsonDocument *Get();
+
+protected:
+    TString FHost;
+    long FIp;
+    TSocket *FSocket;
 };
 
 #endif
