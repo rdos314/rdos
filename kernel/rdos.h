@@ -653,6 +653,14 @@ int RDOSAPI RdosClearUdpListen(int Handle);
 void RDOSAPI RdosCloseUdpListen(int Handle);
 void RDOSAPI RdosAddWaitForUdpListen(int Handle, int ConHandle, int ID);
 
+int RDOSAPI RdosCreateTcpSocket();
+int RDOSAPI RdosCreateUdpSocket();
+int RDOSAPI RdosIsIpv4Socket();
+int RDOSAPI RdosConnectIpv4Socket(int handle, long ip, short int port);
+int RDOSAPI RdosBindIpv4Socket(int handle, short int port);
+int RDOSAPI RdosListenSocket(int handle, int maxconn);
+int RDOSAPI RdosAcceptIpv4Socket(int handle, long *ip, short int *port);
+
 int RDOSAPI RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
 int RDOSAPI RdosWaitForTcpConnection(int Handle, long Timeout);
 void RDOSAPI RdosAddWaitForTcpConnection(int Handle, int ConHandle, int ID);

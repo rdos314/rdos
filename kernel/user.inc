@@ -1954,6 +1954,47 @@ ReadUdpConnection    MACRO
     UserGate read_udp_connection_nr
             ENDM
 
+; OUT BX                socket handle
+CreateTcpSocket               MACRO
+    UserGate create_tcp_socket_nr
+                        ENDM
+
+; OUT BX                socket handle
+CreateUdpSocket               MACRO
+    UserGate create_udp_socket_nr
+                        ENDM
+
+; IN  BX                socket handle
+IsIpv4Socket               MACRO
+    UserGate is_ipv4_socket_nr
+                        ENDM
+
+; IN  BX                socket handle
+; IN  EDX               IP
+; IN  SI                port
+ConnectIpv4Socket               MACRO
+    UserGate connect_ipv4_socket_nr
+                        ENDM
+
+; IN  BX                socket handle
+; IN  SI                port
+BindIpv4Socket               MACRO
+    UserGate bind_ipv4_socket_nr
+                        ENDM
+
+; IN  BX                socket handle
+; IN  ECX               max connections
+ListenSocket               MACRO
+    UserGate listen_socket_nr
+                        ENDM
+
+; IN  BX                socket handle
+; OUT EDX               IP
+; OUT AX                port
+AcceptIpv4Socket               MACRO
+    UserGate accept_ipv4_socket_nr
+                        ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 ; IN   BL           Unit #

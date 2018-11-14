@@ -869,6 +869,14 @@
 #define usergate_open_disc 0x000002AC
 #define usergate_close_disc 0x000002AD
 
+#define usergate_create_tcp_socket 0x000002AE
+#define usergate_create_udp_socket 0x000002AF
+#define usergate_is_ipv4_socket 0x000002B0
+#define usergate_connect_ipv4_socket 0x000002B1
+#define usergate_bind_ipv4_socket 0x000002B2
+#define usergate_listen_socket 0x000002B3
+#define usergate_accept_ipv4_socket 0x000002B4
+
 
 
 #ifdef __FLAT__
@@ -1743,6 +1751,14 @@
 #define CallGate_open_disc 0x55 0x67 0x9a 172 2 0 0 3 0 0x5d
 #define CallGate_close_disc 0x55 0x67 0x9a 173 2 0 0 3 0 0x5d
 
+#define CallGate_create_tcp_socket 0x55 0x67 0x9a 174 2 0 0 3 0 0x5d
+#define CallGate_create_udp_socket 0x55 0x67 0x9a 175 2 0 0 3 0 0x5d
+#define CallGate_is_ipv4_socket 0x55 0x67 0x9a 176 2 0 0 3 0 0x5d
+#define CallGate_connect_ipv4_socket 0x55 0x67 0x9a 177 2 0 0 3 0 0x5d
+#define CallGate_bind_ipv4_socket 0x55 0x67 0x9a 178 2 0 0 3 0 0x5d
+#define CallGate_listen_socket 0x55 0x67 0x9a 179 2 0 0 3 0 0x5d
+#define CallGate_accept_ipv4_socket 0x55 0x67 0x9a 180 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2614,5 +2630,13 @@
 
 #define CallGate_open_disc 0x3e 0x67 0x9a 172 2 0 0 3 0
 #define CallGate_close_disc 0x3e 0x67 0x9a 173 2 0 0 3 0
+
+#define CallGate_create_tcp_socket 0x3e 0x67 0x9a 174 2 0 0 3 0
+#define CallGate_create_udp_socket 0x3e 0x67 0x9a 175 2 0 0 3 0
+#define CallGate_is_ipv4_socket 0x3e 0x67 0x9a 176 2 0 0 3 0
+#define CallGate_connect_ipv4_socket 0x3e 0x67 0x9a 177 2 0 0 3 0
+#define CallGate_bind_ipv4_socket 0x3e 0x67 0x9a 178 2 0 0 3 0
+#define CallGate_listen_socket 0x3e 0x67 0x9a 179 2 0 0 3 0
+#define CallGate_accept_ipv4_socket 0x3e 0x67 0x9a 180 2 0 0 3 0
 
 #endif

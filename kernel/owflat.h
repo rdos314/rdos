@@ -2511,6 +2511,48 @@
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosCreateTcpSocket = \
+    CallGate_create_tcp_socket  \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosCreateUdpSocket = \
+    CallGate_create_udp_socket  \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosIsIpv4Socket = \
+    CallGate_is_ipv4_socket  \
+    ValidateEax \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosConnectIpv4Socket = \
+    CallGate_connect_ipv4_socket  \
+    ValidateEax \
+    parm [ebx] [edx] [si] \
+    value [eax];
+
+#pragma aux RdosBindIpv4Socket = \
+    CallGate_bind_ipv4_socket  \
+    ValidateEax \
+    parm [ebx] [si] \
+    value [eax];
+
+#pragma aux RdosListenSocket = \
+    CallGate_listen_socket  \
+    ValidateEax \
+    parm [ebx] [ecx] \
+    value [eax];
+
+#pragma aux RdosAcceptIpv4Socket = \
+    CallGate_accept_ipv4_socket  \
+    "mov [esi],edx" \
+    "mov [edi],ax" \
+    ValidateEax \
+    parm [esi] [edi] \
+    value [eax];
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \
