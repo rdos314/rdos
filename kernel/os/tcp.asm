@@ -5880,6 +5880,17 @@ create_tcp_socket    Endp
 close_tcp_socket_name DB 'Close Tcp Socket', 0
 
 close_tcp_socket    Proc far
+    push es
+    push bx
+;
+    mov es,bx
+    mov bx,es:tcp_conn_handle
+    PushTcpConnection
+    CloseTcpConnection
+    FreeMem
+;
+    pop bx
+    pop es
     retf32
 close_tcp_socket    Endp
 
@@ -6063,6 +6074,9 @@ connect_tcp_socket	Proc far
     jc ctdDone
 ;
     mov es:tcp_conn_handle,bx
+;
+    mov eax,20000
+    WaitForTcpConnection
 
 ctdDone:
     popad
