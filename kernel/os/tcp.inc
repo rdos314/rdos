@@ -153,3 +153,9 @@ tcp_resend_count        DB ?
 tcp_options			DB ?
 
 tcp_connection	ENDS
+
+tcp_socket_sel	STRUC
+
+tcp_conn_sel		DW ?
+
+tcp_socket_sel  ENDS

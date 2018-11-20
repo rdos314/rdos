@@ -2835,6 +2835,57 @@ UpdateTcpMtu    MACRO
     OsGate update_tcp_mtu_nr
                     ENDM
 
+
+; IN  BX        Tcp selector
+CloseTcpSocket MACRO
+    OsGate close_tcp_socket_nr
+                    ENDM
+
+; IN  BX        Tcp selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Read size
+; OUT EDX       New position
+ReadTcpSocket MACRO
+    OsGate read_tcp_socket_nr
+                    ENDM
+
+; IN  BX        Tcp selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Written size
+; OUT EDX       New position
+WriteTcpSocket MACRO
+    OsGate write_tcp_socket_nr
+                    ENDM
+
+; IN  BX        Udp selector
+CloseUdpSocket MACRO
+    OsGate close_udp_socket_nr
+                    ENDM
+
+; IN  BX        Udp selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Read size
+; OUT EDX       New position
+ReadUdpSocket MACRO
+    OsGate read_udp_socket_nr
+                    ENDM
+
+; IN  BX        Tcp selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Written size
+; OUT EDX       New position
+WriteUdpSocket MACRO
+    OsGate write_udp_socket_nr
+                    ENDM
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
 BeginDiscHandler    MACRO

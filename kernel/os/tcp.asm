@@ -5833,6 +5833,101 @@ update_tcp_mtu  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateTcpSocket
+;
+;       DESCRIPTION:    Create TCP socket
+;
+;       PARAMETERS:     OUT BX        Tcp handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_tcp_socket_name DB 'Create Tcp Socket', 0
+
+create_tcp_socket    Proc far
+    push es
+    push eax
+    push dx
+;
+    mov eax,SIZE tcp_socket_sel
+    AllocateSmallGlobalMem
+    mov es:tcp_conn_sel,0
+;
+    mov dx,es
+    mov ax,C_HANDLE_TCP_SOCKET
+    AllocateCHandle
+;
+    pop dx
+    pop eax
+    pop es
+    retf32
+create_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseTcpSocket
+;
+;       DESCRIPTION:    Close TCP socket
+;
+;       PARAMETERS:     IN  BX        Tcp selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_tcp_socket_name DB 'Close Tcp Socket', 0
+
+close_tcp_socket    Proc far
+    retf32
+close_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadTcpSocket
+;
+;       DESCRIPTION:    Read TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  EDX       Position
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Read size
+;                       OUT EDX       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_tcp_socket_name DB 'Read Tcp Socket', 0
+
+read_tcp_socket    Proc far
+    stc
+    retf32
+read_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteTcpSocket
+;
+;       DESCRIPTION:    Write TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  EDX       Position
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Written size
+;                       OUT EDX       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_tcp_socket_name DB 'Write Tcp Socket', 0
+
+write_tcp_socket    Proc far
+    stc
+    retf32
+write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_task_tcp
 ;
 ;           DESCRIPTION:    Init tcp driver, tasking part
@@ -5875,6 +5970,24 @@ init_task_tcp    PROC near
     mov edi,OFFSET update_tcp_mtu_name
     xor cl,cl
     mov ax,update_tcp_mtu_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_tcp_socket
+    mov edi,OFFSET close_tcp_socket_name
+    xor cl,cl
+    mov ax,close_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_tcp_socket
+    mov edi,OFFSET read_tcp_socket_name
+    xor cl,cl
+    mov ax,read_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_tcp_socket
+    mov edi,OFFSET write_tcp_socket_name
+    xor cl,cl
+    mov ax,write_tcp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection
@@ -5991,6 +6104,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET add_wait_for_tcp_listen_name
     xor dx,dx
     mov ax,add_wait_for_tcp_listen_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_tcp_socket
+    mov edi,OFFSET create_tcp_socket_name
+    xor dx,dx
+    mov ax,create_tcp_socket_nr
     RegisterBimodalUserGate
 ;
     mov al,6

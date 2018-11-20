@@ -57,3 +57,10 @@ udp_listen_wait_obj     DW ?
 udp_listen_callback		DD ?,?
 
 udp_listen	ENDS
+
+udp_socket_sel	STRUC
+
+udp_socket_ip		DD ?
+udp_socket_port		DW ?
+
+udp_socket_sel  ENDS

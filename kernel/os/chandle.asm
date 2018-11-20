@@ -675,13 +675,25 @@ close_file      Proc near
     ret
 close_file      Endp
 
+close_tcp_socket	Proc near
+    mov bx,ax
+    CloseTcpSocket
+    ret
+close_tcp_socket	Endp
+
+close_udp_socket	Proc near
+    mov bx,ax
+    CloseUdpSocket
+    ret
+close_udp_socket	Endp
+
 close_tab:
 ct00  DW OFFSET close_dummy
 ct01  DW OFFSET close_file
 ct02  DW OFFSET close_dummy
 ct03  DW OFFSET close_dummy
-ct04  DW OFFSET close_dummy
-ct05  DW OFFSET close_dummy
+ct04  DW OFFSET close_tcp_socket
+ct05  DW OFFSET close_udp_socket
 ct06  DW OFFSET close_dummy
 ct07  DW OFFSET close_dummy
 ct08  DW OFFSET close_dummy
@@ -851,13 +863,23 @@ read_file       Proc near
     ret
 read_file       Endp
 
+read_tcp_socket       Proc near
+    ReadTcpSocket
+    ret
+read_tcp_socket       Endp
+
+read_udp_socket       Proc near
+    ReadUdpSocket
+    ret
+read_udp_socket       Endp
+
 read_tab:
 rt00  DW OFFSET read_dummy
 rt01  DW OFFSET read_file
 rt02  DW OFFSET read_stdin
 rt03  DW OFFSET read_dummy
-rt04  DW OFFSET read_dummy
-rt05  DW OFFSET read_dummy
+rt04  DW OFFSET read_tcp_socket
+rt05  DW OFFSET read_udp_socket
 rt06  DW OFFSET read_dummy
 rt07  DW OFFSET read_dummy
 rt08  DW OFFSET read_dummy
@@ -987,13 +1009,23 @@ write_file      Proc near
     ret
 write_file      Endp
 
+write_tcp_socket      Proc near
+    WriteTcpSocket
+    ret
+write_tcp_socket      Endp
+
+write_udp_socket      Proc near
+    WriteUdpSocket
+    ret
+write_udp_socket      Endp
+
 write_tab:
 wt00  DW OFFSET write_dummy
 wt01  DW OFFSET write_file
 wt02  DW OFFSET write_dummy
 wt03  DW OFFSET write_stdout
-wt04  DW OFFSET write_dummy
-wt05  DW OFFSET write_dummy
+wt04  DW OFFSET write_tcp_socket
+wt05  DW OFFSET write_udp_socket
 wt06  DW OFFSET write_dummy
 wt07  DW OFFSET write_dummy
 wt08  DW OFFSET write_dummy

@@ -760,4 +760,12 @@ init_process_nr             = 674
 send_debug_event_nr         = 675
 kernel_debug_event_nr       = 676
 
+close_tcp_socket_nr         = 677
+read_tcp_socket_nr          = 678
+write_tcp_socket_nr         = 679
+
+close_udp_socket_nr         = 680
+read_udp_socket_nr          = 681
+write_udp_socket_nr         = 682
+
 osgate_entries              = 700

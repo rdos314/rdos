@@ -39,6 +39,7 @@ include ..\wait.inc
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE udp.inc
+INCLUDE chandle.inc
 
 BROADCAST_QUERY_PORT    EQU 4094
 
@@ -2949,6 +2950,102 @@ add_wait_for_udp_listen ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateUdpSocket
+;
+;       DESCRIPTION:    Create UDP socket
+;
+;       PARAMETERS:     OUT BX        Udp handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_udp_socket_name DB 'Create Udp Socket', 0
+
+create_udp_socket    Proc far
+    push es
+    push eax
+    push dx
+;
+    mov eax,SIZE udp_socket_sel
+    AllocateSmallGlobalMem
+    mov es:udp_socket_ip,0
+    mov es:udp_socket_port,0
+;
+    mov dx,es
+    mov ax,C_HANDLE_UDP_SOCKET
+    AllocateCHandle
+;
+    pop dx
+    pop eax
+    pop es
+    retf32
+create_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseUdpSocket
+;
+;       DESCRIPTION:    Close UDP socket
+;
+;       PARAMETERS:     IN  BX        Udp selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_udp_socket_name DB 'Close Udp Socket', 0
+
+close_udp_socket    Proc far
+    retf32
+close_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadUdpSocket
+;
+;       DESCRIPTION:    Read UDP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  EDX       Position
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Read size
+;                       OUT EDX       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_udp_socket_name DB 'Read Udp Socket', 0
+
+read_udp_socket    Proc far
+    stc
+    retf32
+read_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteUdpSocket
+;
+;       DESCRIPTION:    Write UDP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  EDX       Position
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Written size
+;                       OUT EDX       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_udp_socket_name DB 'Write Udp Socket', 0
+
+write_udp_socket    Proc far
+    stc
+    retf32
+write_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_task_udp
 ;
 ;           DESCRIPTION:    Init udp driver, tasking part
@@ -3010,6 +3107,24 @@ query_list_create:
     mov edi,OFFSET listen_udp_port_name
     xor cl,cl
     mov ax,listen_udp_port_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_udp_socket
+    mov edi,OFFSET close_udp_socket_name
+    xor cl,cl
+    mov ax,close_udp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_udp_socket
+    mov edi,OFFSET read_udp_socket_name
+    xor cl,cl
+    mov ax,read_udp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_udp_socket
+    mov edi,OFFSET write_udp_socket_name
+    xor cl,cl
+    mov ax,write_udp_socket_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET broadcast_udp16
@@ -3118,6 +3233,12 @@ query_list_create:
     mov edi,OFFSET add_wait_for_udp_connection_name
     xor dx,dx
     mov ax,add_wait_for_udp_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_udp_socket
+    mov edi,OFFSET create_udp_socket_name
+    xor dx,dx
+    mov ax,create_udp_socket_nr
     RegisterBimodalUserGate
 ;
     mov al,17
