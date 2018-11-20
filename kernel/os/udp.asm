@@ -2974,7 +2974,7 @@ create_udp_socket    Proc far
     mov ax,C_HANDLE_UDP_SOCKET
     AllocateCHandle
 ;
-    mov cx,O_RDWR
+    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
     xor edx,edx
     AllocateCProcHandle
 ;

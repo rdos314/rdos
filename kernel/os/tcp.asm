@@ -5856,7 +5856,7 @@ create_tcp_socket    Proc far
     mov ax,C_HANDLE_TCP_SOCKET
     AllocateCHandle
 ;
-    mov cx,O_RDWR
+    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
     xor edx,edx
     AllocateCProcHandle
 ;
@@ -5902,7 +5902,67 @@ close_tcp_socket    Endp
 read_tcp_socket_name DB 'Read Tcp Socket', 0
 
 read_tcp_socket    Proc far
+    push ds
+    push fs
+    push bx
+    push ecx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc rtsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
     stc
+    jz rtsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    movzx eax,ds:tcp_receive_count
+;
+    cmp eax,ecx
+    jae rtsDo
+;
+    mov ecx,eax
+
+rtsDo:
+    xor eax,eax
+    or ecx,ecx
+    clc
+    jz rtsLeave
+;
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,2000
+    movzx bx,ds:tcp_state
+    add bx,bx
+    call word ptr cs:[bx].read_tab
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+
+rtsLeave:
+    LeaveSection ds:tcp_section
+
+rtsDone:
+    pop ecx
+    pop bx
+    pop fs
+    pop ds
     retf32
 read_tcp_socket    Endp
 
@@ -5925,7 +5985,53 @@ read_tcp_socket    Endp
 write_tcp_socket_name DB 'Write Tcp Socket', 0
 
 write_tcp_socket    Proc far
+    push ds
+    push fs
+    push bx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc wtsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
     stc
+    jz wtsDone
+;
+    push es
+    pushad
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    movzx bx,ds:tcp_state
+    add bx,bx
+    call word ptr cs:[bx].write_tab
+    jc wtsLeave
+;
+    test ds:tcp_pending,FLAG_SEND_PUSH
+    clc
+    jnz wtsLeave
+;       
+    mov ds:tcp_push_timeout,5
+    or ds:tcp_pending,FLAG_SEND_PUSH
+    call SendData
+    clc
+
+wtsLeave:
+    LeaveSection ds:tcp_section
+;
+    popad
+    pop es
+;
+    mov eax,ecx
+
+wtsDone:
+    pop bx
+    pop fs
+    pop ds
     retf32
 write_tcp_socket    Endp
 
