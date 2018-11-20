@@ -2974,6 +2974,10 @@ create_udp_socket    Proc far
     mov ax,C_HANDLE_UDP_SOCKET
     AllocateCHandle
 ;
+    mov cx,O_RDWR
+    xor edx,edx
+    AllocateCProcHandle
+;
     pop dx
     pop eax
     pop es
@@ -3004,7 +3008,7 @@ close_udp_socket    Endp
 ;
 ;       DESCRIPTION:    Read UDP socket
 ;
-;       PARAMETERS;     IN  BX        Tcp selector
+;       PARAMETERS;     IN  BX        Udp selector
 ;                       IN  EDX       Position
 ;                       IN  ES:EDI    Buffer
 ;                       IN  ECX       Size
@@ -3027,7 +3031,7 @@ read_udp_socket    Endp
 ;
 ;       DESCRIPTION:    Write UDP socket
 ;
-;       PARAMETERS;     IN  BX        Tcp selector
+;       PARAMETERS;     IN  BX        Udp selector
 ;                       IN  EDX       Position
 ;                       IN  ES:EDI    Buffer
 ;                       IN  ECX       Size
@@ -3042,6 +3046,30 @@ write_udp_socket    Proc far
     stc
     retf32
 write_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ConnectUdpSocket
+;
+;           DESCRIPTION:    Connect UDP socket
+;
+;           PARAMETERS:    IN  BX                Udp selector
+;                          IN  EDX               IP
+;                          IN  SI                port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+connect_udp_socket_name  DB 'Connect Udp Socket', 0
+
+connect_udp_socket	Proc far
+    push es
+    mov es,bx
+    mov es:udp_socket_ip,edx
+    mov es:udp_socket_port,si
+    pop es
+    retf32
+connect_udp_socket	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3107,6 +3135,12 @@ query_list_create:
     mov edi,OFFSET listen_udp_port_name
     xor cl,cl
     mov ax,listen_udp_port_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET connect_udp_socket
+    mov edi,OFFSET connect_udp_socket_name
+    xor cl,cl
+    mov ax,connect_udp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_udp_socket

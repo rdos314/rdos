@@ -768,4 +768,9 @@ close_udp_socket_nr         = 680
 read_udp_socket_nr          = 681
 write_udp_socket_nr         = 682
 
+allocate_c_proc_handle_nr   = 683
+
+connect_udp_socket_nr       = 684
+connect_tcp_socket_nr       = 685
+
 osgate_entries              = 700

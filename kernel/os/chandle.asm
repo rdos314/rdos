@@ -522,6 +522,73 @@ aphDone:
     ret
 allocate_proc_handle  Endp   
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateCProcHandle
+;
+;           DESCRIPTION:    Allocate C process handle
+;
+;           PARAMETERS:     BX          C Handle
+;                           CX          Mode
+;                           EDX         Position
+;
+;           RETURNS:        BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_c_proc_handle_name DB 'Allocate C Proc Handle', 0
+
+
+allocate_c_proc_handle     Proc far
+    push ds
+    push ax
+    push cx
+    push dx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    mov ax,bx
+    push cx
+    mov cx,MAX_HANDLES
+    mov bx,OFFSET h_arr
+    EnterSection ds:h_section
+
+acphLoop:    
+    mov dx,ds:[bx].hp_handle
+    or dx,dx
+    jz acphFound
+;
+    add bx,SIZE handle_proc_struc
+    loop acphLoop
+;
+    pop cx
+    LeaveSection ds:h_section
+    stc
+    jmp acphDone
+
+acphFound:    
+    pop cx
+    mov ds:[bx].hp_handle,ax
+    mov ds:[bx].hp_access,cx
+    mov ds:[bx].hp_pos,edx
+    LeaveSection ds:h_section
+;
+    sub bx,OFFSET h_arr
+    shr bx,3
+    clc
+    movzx ebx,bx
+
+acphDone:   
+    pop dx
+    pop cx
+    pop ax
+    pop ds
+    retf32
+allocate_c_proc_handle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2156,6 +2223,150 @@ ihdDone:
     pop ds    
     retf32
 is_handle_device     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsIpv4Socket
+;
+;           DESCRIPTION:    Check for IPv4 socket
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        NC          IPv4 socket
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_ipv4_socket_name  DB 'Is IPv4 Socket', 0
+
+is_ipv4_socket	Proc far
+    push ds
+    push ax
+    push bx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae iisFail
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae iisFail
+;    
+    or ax,ax
+    jz iisFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+;
+    mov ax,chandle_data_sel
+    mov ds,ax
+    mov ax,ds:[bx].he_type
+    cmp ax,C_HANDLE_TCP_SOCKET
+    je iisOk
+;
+    cmp ax,C_HANDLE_UDP_SOCKET
+    jne iisFail
+
+iisOk:
+    clc
+    jmp iisDone
+
+iisFail:
+    stc
+
+iisDone:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+is_ipv4_socket	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ConnectIpv4Socket
+;
+;           DESCRIPTION:    Connect IPv4 socket
+;
+;           PARAMETERS:    IN  BX                socket handle
+;                          IN  EDX               IP
+;                          IN  SI                port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+connect_ipv4_socket_name  DB 'Connect IPv4 Socket', 0
+
+connect_ipv4_socket	Proc far
+    push ds
+    push ax
+    push bx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae cisFail
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae cisFail
+;    
+    or ax,ax
+    jz cisFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+;
+    mov ax,chandle_data_sel
+    mov ds,ax
+    mov ax,ds:[bx].he_type
+    cmp ax,C_HANDLE_TCP_SOCKET
+    je cisTcp
+;
+    cmp ax,C_HANDLE_UDP_SOCKET
+    jne cisFail
+
+cisUpd:
+    mov bx,ds:[bx].he_sel
+    ConnectUdpSocket
+    jmp cisDone
+
+cisTcp:
+    mov bx,ds:[bx].he_sel
+    ConnectTcpSocket
+    jmp cisDone
+
+cisFail:
+    stc
+
+cisDone:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+connect_ipv4_socket	Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2227,6 +2438,12 @@ init_chandle     PROC near
     mov edi,OFFSET ref_c_handle_name
     xor cl,cl
     mov ax,ref_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_c_proc_handle
+    mov edi,OFFSET allocate_c_proc_handle_name
+    xor cl,cl
+    mov ax,allocate_c_proc_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET c_handle_to_file_sel
@@ -2332,6 +2549,18 @@ init_chandle     PROC near
     mov edi,OFFSET set_handle_time_name
     xor cl,cl
     mov ax,set_handle_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_ipv4_socket
+    mov edi,OFFSET is_ipv4_socket_name
+    xor cl,cl
+    mov ax,is_ipv4_socket_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET connect_ipv4_socket
+    mov edi,OFFSET connect_ipv4_socket_name
+    xor cl,cl
+    mov ax,connect_ipv4_socket_nr
     RegisterBimodalUserGate
 ;
     popad

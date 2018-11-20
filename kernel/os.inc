@@ -2206,6 +2206,14 @@ OpenCFile MACRO
     OsGate open_c_file_nr
                     ENDM
 
+; IN  BX        C handle
+; IN  CX        Mode
+; IN  EDX       Position
+; OUT BX        Process handle
+AllocateCProcHandle MACRO
+    OsGate allocate_c_proc_handle_nr
+                    ENDM
+
 ; IN  ES:EDI    Filename
 ; IN  CX        Mode
 ; OUT BX        File selector
@@ -2837,6 +2845,13 @@ UpdateTcpMtu    MACRO
 
 
 ; IN  BX        Tcp selector
+; IN  EDX       IP
+; IN  SI        port
+ConnectTcpSocket               MACRO
+    OsGate connect_tcp_socket_nr
+                        ENDM
+
+; IN  BX        Tcp selector
 CloseTcpSocket MACRO
     OsGate close_tcp_socket_nr
                     ENDM
@@ -2860,6 +2875,13 @@ ReadTcpSocket MACRO
 WriteTcpSocket MACRO
     OsGate write_tcp_socket_nr
                     ENDM
+
+; IN  BX        Udp selector
+; IN  EDX       IP
+; IN  SI        port
+ConnectUdpSocket               MACRO
+    OsGate connect_udp_socket_nr
+                        ENDM
 
 ; IN  BX        Udp selector
 CloseUdpSocket MACRO

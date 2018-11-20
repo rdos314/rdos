@@ -156,6 +156,6 @@ tcp_connection	ENDS
 
 tcp_socket_sel	STRUC
 
-tcp_conn_sel		DW ?
+tcp_conn_handle		DW ?
 
 tcp_socket_sel  ENDS

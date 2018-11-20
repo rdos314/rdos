@@ -5850,11 +5850,15 @@ create_tcp_socket    Proc far
 ;
     mov eax,SIZE tcp_socket_sel
     AllocateSmallGlobalMem
-    mov es:tcp_conn_sel,0
+    mov es:tcp_conn_handle,0
 ;
     mov dx,es
     mov ax,C_HANDLE_TCP_SOCKET
     AllocateCHandle
+;
+    mov cx,O_RDWR
+    xor edx,edx
+    AllocateCProcHandle
 ;
     pop dx
     pop eax
@@ -5928,6 +5932,41 @@ write_tcp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ConnectTcpSocket
+;
+;           DESCRIPTION:    Connect TCP socket
+;
+;           PARAMETERS:    IN  BX                Tcp selector
+;                          IN  EDX               IP
+;                          IN  SI                port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+connect_tcp_socket_name  DB 'Connect Tcp Socket', 0
+
+connect_tcp_socket	Proc far
+    push es
+    pushad
+;
+    mov es,bx
+    mov eax,20000
+    mov ecx,1000h
+    mov di,si
+    xor si,si
+    OpenTcpConnection
+    jc ctdDone
+;
+    mov es:tcp_conn_handle,bx
+
+ctdDone:
+    popad
+    pop es
+    retf32
+connect_tcp_socket	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_task_tcp
 ;
 ;           DESCRIPTION:    Init tcp driver, tasking part
@@ -5970,6 +6009,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET update_tcp_mtu_name
     xor cl,cl
     mov ax,update_tcp_mtu_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET connect_tcp_socket
+    mov edi,OFFSET connect_tcp_socket_name
+    xor cl,cl
+    mov ax,connect_tcp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_tcp_socket
