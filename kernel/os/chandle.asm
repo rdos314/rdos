@@ -2367,6 +2367,228 @@ cisDone:
     pop ds
     retf32
 connect_ipv4_socket	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          AddWaitForHandleRead
+;
+;           DESCRIPTION:   Add wait for handle read
+;
+;           PARAMETERS:    IN  AX                Handle
+;                          IN  BX                Wait handle
+;                          IN  ECX               Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_handle_read_name  DB 'Add Wait For Handle Read', 0
+
+add_wait_for_handle_read	Proc far
+    retf32
+add_wait_for_handle_read	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          AddWaitForHandleWrite
+;
+;           DESCRIPTION:   Add wait for handle write
+;
+;           PARAMETERS:    IN  AX                Handle
+;                          IN  BX                Wait handle
+;                          IN  ECX               Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_handle_write_name  DB 'Add Wait For Handle Write', 0
+
+add_wait_for_handle_write	Proc far
+    retf32
+add_wait_for_handle_write	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          AddWaitForHandleException
+;
+;           DESCRIPTION:   Add wait for handle exception
+;
+;           PARAMETERS:    IN  AX                Handle
+;                          IN  BX                Wait handle
+;                          IN  ECX               Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_handle_exception_name  DB 'Add Wait For Handle Exception', 0
+
+add_wait_for_handle_exception	Proc far
+    retf32
+add_wait_for_handle_exception	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          GetHandleReadBufCount
+;
+;           DESCRIPTION:   Get number of bytes available input buffer
+;
+;           PARAMETERS:    IN  BX                Handle
+;                          OUT ECX               Bytes in input buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_read_buf_count_name  DB 'Get Handle Read Buffer Count', 0
+
+
+read_buf_dummy      Proc near
+    stc
+    ret
+read_buf_dummy      Endp
+
+read_buf_stdin       Proc near
+    PollKeyboard
+    jnc rbstdin1
+;
+    xor ecx,ecx
+    clc
+    ret
+
+rbstdin1:
+    mov ecx,1
+    clc
+    ret
+read_buf_stdin       Endp
+
+read_buf_file       Proc near
+    GetCFileSize
+    mov ecx,eax
+    sub ecx,edx
+    clc
+    ret
+read_buf_file       Endp
+
+read_buf_tcp_socket       Proc near
+    GetTcpSocketReadCount
+    ret
+read_buf_tcp_socket       Endp
+
+read_buf_udp_socket       Proc near
+    GetUdpSocketReadCount
+    ret
+read_buf_udp_socket       Endp
+
+read_buf_tab:
+rbt00  DW OFFSET read_buf_dummy
+rbt01  DW OFFSET read_buf_file
+rbt02  DW OFFSET read_buf_stdin
+rbt03  DW OFFSET read_buf_dummy
+rbt04  DW OFFSET read_buf_tcp_socket
+rbt05  DW OFFSET read_buf_udp_socket
+rbt06  DW OFFSET read_buf_dummy
+rbt07  DW OFFSET read_buf_dummy
+rbt08  DW OFFSET read_buf_dummy
+rbt09  DW OFFSET read_buf_dummy
+
+get_handle_read_buf_count	Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae rhbFail
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae rhbFail
+;    
+    or ax,ax
+    jz rhbFail
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].read_buf_tab
+;
+    pop bx
+    pop ds
+    jc rhbFail
+;
+    jmp rhbDone
+
+rhbFail:
+    xor ecx,ecx
+    stc
+
+rhbDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+get_handle_read_buf_count	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          GetHandleWriteBufSpace
+;
+;           DESCRIPTION:   Get number of bytes available output buffer
+;
+;           PARAMETERS:    IN  BX                Handle
+;                          OUT ECX               Space in output buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_write_buf_space_name  DB 'Get Handle Write Buffer Space', 0
+
+get_handle_write_buf_space	Proc far
+    retf32
+get_handle_write_buf_space	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          HasHandleException
+;
+;           DESCRIPTION:   Has handle exception
+;
+;           PARAMETERS:    IN  BX                Handle
+;                          OUT CY		 Has exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_handle_exception_name  DB 'Has Handle Exception', 0
+
+has_handle_exception	Proc far
+    retf32
+has_handle_exception	Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2561,6 +2783,42 @@ init_chandle     PROC near
     mov edi,OFFSET connect_ipv4_socket_name
     xor cl,cl
     mov ax,connect_ipv4_socket_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_handle_read
+    mov edi,OFFSET add_wait_for_handle_read_name
+    xor cl,cl
+    mov ax,add_wait_for_handle_read_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_handle_write
+    mov edi,OFFSET add_wait_for_handle_write_name
+    xor cl,cl
+    mov ax,add_wait_for_handle_write_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_handle_exception
+    mov edi,OFFSET add_wait_for_handle_exception_name
+    xor cl,cl
+    mov ax,add_wait_for_handle_exception_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_read_buf_count
+    mov edi,OFFSET get_handle_read_buf_count_name
+    xor cl,cl
+    mov ax,get_handle_read_buf_count_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_write_buf_space
+    mov edi,OFFSET get_handle_write_buf_space_name
+    xor cl,cl
+    mov ax,get_handle_write_buf_space_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET has_handle_exception
+    mov edi,OFFSET has_handle_exception_name
+    xor cl,cl
+    mov ax,has_handle_exception_nr
     RegisterBimodalUserGate
 ;
     popad

@@ -6049,6 +6049,49 @@ write_tcp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetTcpSocketReadCount
+;
+;       DESCRIPTION:    Get TCP socket read count
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       OUT ECX       Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_tcp_socket_read_count_name DB 'Get Tcp Socket Read Count', 0
+
+get_tcp_socket_read_count    Proc far
+    push ds
+    push fs
+    push bx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc gtsrcDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz gtsrcDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    movzx ecx,ds:tcp_receive_count
+    LeaveSection ds:tcp_section
+
+gtsrcDone:
+    pop bx
+    pop fs
+    pop ds
+    retf32
+get_tcp_socket_read_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ConnectTcpSocket
 ;
 ;           DESCRIPTION:    Connect TCP socket
@@ -6153,6 +6196,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET write_tcp_socket_name
     xor cl,cl
     mov ax,write_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_tcp_socket_read_count
+    mov edi,OFFSET get_tcp_socket_read_count_name
+    xor cl,cl
+    mov ax,tcp_socket_read_count_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection

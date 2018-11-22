@@ -3050,6 +3050,25 @@ write_udp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetUdpSocketReadCount
+;
+;       DESCRIPTION:    Get UDP socket read count
+;
+;       PARAMETERS;     IN  BX        Udp selector
+;                       OUT ECX       Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_udp_socket_read_count_name DB 'Get Udp Socket Read Count', 0
+
+get_udp_socket_read_count    Proc far
+    stc
+    retf32
+get_udp_socket_read_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ConnectUdpSocket
 ;
 ;           DESCRIPTION:    Connect UDP socket
@@ -3159,6 +3178,12 @@ query_list_create:
     mov edi,OFFSET write_udp_socket_name
     xor cl,cl
     mov ax,write_udp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_udp_socket_read_count
+    mov edi,OFFSET get_udp_socket_read_count_name
+    xor cl,cl
+    mov ax,udp_socket_read_count_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET broadcast_udp16

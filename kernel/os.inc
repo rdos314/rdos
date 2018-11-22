@@ -2876,6 +2876,12 @@ WriteTcpSocket MACRO
     OsGate write_tcp_socket_nr
                     ENDM
 
+; IN  BX        Tcp selector
+; IN  ECX       Bytes in buffer
+GetTcpSocketReadCount               MACRO
+    OsGate tcp_socket_read_count_nr
+                        ENDM
+
 ; IN  BX        Udp selector
 ; IN  EDX       IP
 ; IN  SI        port
@@ -2907,6 +2913,12 @@ ReadUdpSocket MACRO
 WriteUdpSocket MACRO
     OsGate write_udp_socket_nr
                     ENDM
+
+; IN  BX        Tcp selector
+; IN  ECX       Bytes in buffer
+GetUdpSocketReadCount               MACRO
+    OsGate udp_socket_read_count_nr
+                        ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
