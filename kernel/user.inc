@@ -1318,6 +1318,44 @@ SetHandleTime      MACRO
         UserGate set_handle_time_nr
                                                 ENDM
 
+; IN    BX              Handle
+; OUT   ECX             Buffer count
+GetHandleReadBufferCount     MACRO
+        UserGate get_handle_read_buf_count_nr
+                                                ENDM
+
+; IN    BX              Handle
+; OUT   ECX             Buffer space
+GetHandleWriteBufferSpace     MACRO
+        UserGate get_handle_write_buf_space_nr
+                                                ENDM
+
+; IN    BX              Handle
+HasHandleException     MACRO
+        UserGate has_handle_exception_nr
+                                                ENDM
+
+; IN  AX        Handle
+; IN  BX        Wait handle
+; IN  ECX       Object ID
+AddWaitForHandleRead       MACRO
+        UserGate add_wait_for_handle_read_nr
+                                                ENDM
+
+; IN  AX        Handle
+; IN  BX        Wait handle
+; IN  ECX       Object ID
+AddWaitForHandleWrite       MACRO
+        UserGate add_wait_for_handle_write_nr
+                                                ENDM
+
+; IN  AX        Handle
+; IN  BX        Wait handle
+; IN  ECX       Object ID
+AddWaitForHandleException       MACRO
+        UserGate add_wait_for_handle_exception_nr
+                                                ENDM
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle
