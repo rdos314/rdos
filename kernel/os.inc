@@ -2889,6 +2889,18 @@ StopReadTcpSocket               MACRO
                         ENDM
 
 ; IN  BX        Tcp selector
+; IN  ES        Wait object
+StartWriteTcpSocket               MACRO
+    OsGate start_write_tcp_socket_nr
+                        ENDM
+
+; IN  BX        Tcp selector
+; IN  ES        Wait object
+StopWriteTcpSocket               MACRO
+    OsGate stop_write_tcp_socket_nr
+                        ENDM
+
+; IN  BX        Tcp selector
 ; IN  ECX       Bytes in buffer
 GetTcpSocketReadCount               MACRO
     OsGate tcp_socket_read_count_nr

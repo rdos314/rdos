@@ -6279,6 +6279,113 @@ stop_read_tcp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartWriteTcpSocket
+;
+;       DESCRIPTION:    Start write TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_write_tcp_socket_name DB 'Start Write Tcp Socket', 0
+
+start_write_tcp_socket    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+    push ecx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc swtsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz swtsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    ja swtsSignal
+;
+    mov ds:tcp_write_wait,es
+    jmp swtsLeave
+
+swtsSignal:
+    SignalWait
+
+swtsLeave:
+    LeaveSection ds:tcp_section
+
+swtsDone:
+    pop ecx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+start_write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopWriteTcpSocket
+;
+;       DESCRIPTION:    Stop write TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_write_tcp_socket_name DB 'Stop Write Tcp Socket', 0
+
+stop_write_tcp_socket    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc ewtsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz ewtsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov ds:tcp_write_wait,0
+    LeaveSection ds:tcp_section
+    clc
+
+ewtsDone:
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+stop_write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetTcpSocketReadCount
 ;
 ;       DESCRIPTION:    Get TCP socket read count
@@ -6576,6 +6683,18 @@ init_task_tcp    PROC near
     mov edi,OFFSET stop_read_tcp_socket_name
     xor cl,cl
     mov ax,stop_read_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_write_tcp_socket
+    mov edi,OFFSET start_write_tcp_socket_name
+    xor cl,cl
+    mov ax,start_write_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_write_tcp_socket
+    mov edi,OFFSET stop_write_tcp_socket_name
+    xor cl,cl
+    mov ax,stop_write_tcp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection

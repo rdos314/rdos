@@ -3019,17 +3019,246 @@ add_wait_for_handle_read	Proc far
     mov edi,OFFSET add_wait_read_tab
     AddWait
     pop ax
-    jc add_wait_done
+    jc awrDone
 ;
     mov es:sw_handle,ax
 
-add_wait_done:
+awrDone:
     pop edi
     pop eax
     pop es
     pop ds
     retf32
 add_wait_for_handle_read	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForWrite
+;
+;           DESCRIPTION:    Start a wait for write data
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_write_dummy      Proc near
+    ret
+start_write_dummy      Endp
+
+start_write_tcp_socket       Proc near
+    StartWriteTcpSocket
+    ret
+start_write_tcp_socket       Endp
+
+start_wait_write_tab:
+swwt00  DW OFFSET start_write_dummy
+swwt01  DW OFFSET start_write_dummy
+swwt02  DW OFFSET start_write_dummy
+swwt03  DW OFFSET start_write_dummy
+swwt04  DW OFFSET start_write_tcp_socket
+swwt05  DW OFFSET start_write_dummy
+swwt06  DW OFFSET start_write_dummy
+swwt07  DW OFFSET start_write_dummy
+swwt08  DW OFFSET start_write_dummy
+swwt09  DW OFFSET start_write_dummy
+
+start_wait_for_write       PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bx,es:sw_handle
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae swfwDone
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae swfwDone
+;    
+    or ax,ax
+    jz swfwDone
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].start_wait_write_tab
+;
+    pop bx
+    pop ds
+
+swfwDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+start_wait_for_write Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForWrite
+;
+;           DESCRIPTION:    Stop a wait for socket write
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_write_dummy      Proc near
+    ret
+stop_write_dummy      Endp
+
+stop_write_tcp_socket       Proc near
+    StopWriteTcpSocket
+    ret
+stop_write_tcp_socket       Endp
+
+stop_wait_write_tab:
+ewwt00  DW OFFSET stop_write_dummy
+ewwt01  DW OFFSET stop_write_dummy
+ewwt02  DW OFFSET stop_write_dummy
+ewwt03  DW OFFSET stop_write_dummy
+ewwt04  DW OFFSET stop_write_tcp_socket
+ewwt05  DW OFFSET stop_write_dummy
+ewwt06  DW OFFSET stop_write_dummy
+ewwt07  DW OFFSET stop_write_dummy
+ewwt08  DW OFFSET stop_write_dummy
+ewwt09  DW OFFSET stop_write_dummy
+
+stop_wait_for_write    PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bx,es:sw_handle
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ewfwDone
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ewfwDone
+;    
+    or ax,ax
+    jz ewfwDone
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].stop_wait_write_tab
+;
+    pop bx
+    pop ds
+
+ewfwDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+stop_wait_for_write Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearWrite
+;
+;           DESCRIPTION:    Clear write
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_write    PROC far
+    retf32
+clear_write Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasWriteData
+;
+;           DESCRIPTION:    Check if write data is possible
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_write_data      PROC far
+    push bx
+    push ecx
+;
+    mov bx,es:sw_handle
+    GetHandleWriteBufferSpace
+    cmc
+    jnc hwdDone
+;
+    or ecx,ecx
+    stc
+    jz hwdDone
+;
+    clc
+
+hwdDone:
+    pop ecx
+    pop bx
+    retf32
+has_write_data Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3046,7 +3275,34 @@ add_wait_for_handle_read	Endp
 
 add_wait_for_handle_write_name  DB 'Add Wait For Handle Write', 0
 
+add_wait_write_tab:
+aww0 DD OFFSET start_wait_for_write,    SEG code
+aww1 DD OFFSET stop_wait_for_write,     SEG code
+aww2 DD OFFSET clear_write,             SEG code
+aww3 DD OFFSET has_write_data,          SEG code
+
 add_wait_for_handle_write	Proc far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE socket_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_write_tab
+    AddWait
+    pop ax
+    jc awwDone
+;
+    mov es:sw_handle,ax
+
+awwDone:
+    pop edi
+    pop eax
+    pop es
+    pop ds
     retf32
 add_wait_for_handle_write	Endp
 
