@@ -777,5 +777,6 @@ tcp_socket_read_count_nr    = 686
 udp_socket_read_count_nr    = 687
 
 tcp_socket_write_space_nr   = 688
+has_tcp_socket_exc_nr       = 689
 
 osgate_entries              = 700

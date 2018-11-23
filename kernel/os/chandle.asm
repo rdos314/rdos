@@ -2688,7 +2688,92 @@ get_handle_write_buf_space	Endp
 
 has_handle_exception_name  DB 'Has Handle Exception', 0
 
+exc_dummy      Proc near
+    clc
+    ret
+exc_dummy      Endp
+
+exc_stdin       Proc near
+    clc
+    ret
+exc_stdin       Endp
+
+exc_tcp_socket       Proc near
+    HasTcpSocketException
+    ret
+exc_tcp_socket       Endp
+
+exc_tab:
+eht00  DW OFFSET exc_dummy
+eht01  DW OFFSET exc_dummy
+eht02  DW OFFSET exc_stdin
+eht03  DW OFFSET exc_dummy
+eht04  DW OFFSET exc_tcp_socket
+eht05  DW OFFSET exc_dummy
+eht06  DW OFFSET exc_dummy
+eht07  DW OFFSET exc_dummy
+eht08  DW OFFSET exc_dummy
+eht09  DW OFFSET exc_dummy
+
 has_handle_exception	Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae heFail
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae heFail
+;    
+    or ax,ax
+    jz heFail
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].exc_tab
+;
+    pop bx
+    pop ds
+    jmp heDone
+
+heFail:
+    clc
+
+heDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
     retf32
 has_handle_exception	Endp
        

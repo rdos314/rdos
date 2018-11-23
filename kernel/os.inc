@@ -2888,6 +2888,11 @@ GetTcpSocketWriteSpace               MACRO
     OsGate tcp_socket_write_space_nr
                         ENDM
 
+; IN  BX        Tcp selector
+HasTcpSocketException               MACRO
+    OsGate has_tcp_socket_exc_nr
+                        ENDM
+
 ; IN  BX        Udp selector
 ; IN  EDX       IP
 ; IN  SI        port

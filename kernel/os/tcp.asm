@@ -6151,6 +6151,67 @@ get_tcp_socket_write_space    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HasTcpSocketException
+;
+;       DESCRIPTION:    Has TCP socket exception
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       OUT CY        Exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_tcp_socket_exception_name DB 'Has Tcp Socket Exception', 0
+
+has_tcp_socket_exception    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc hseFail
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    jz hseFail
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz hseExc
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz hseExc
+;
+    clc
+    jmp hseLeave
+
+hseExc:
+    stc
+
+hseLeave:
+    LeaveSection ds:tcp_section
+    jmp hseDone
+
+hseFail:
+    clc
+
+hseDone:
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+has_tcp_socket_exception    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ConnectTcpSocket
 ;
 ;           DESCRIPTION:    Connect TCP socket
@@ -6267,6 +6328,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET get_tcp_socket_write_space_name
     xor cl,cl
     mov ax,tcp_socket_write_space_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET has_tcp_socket_exception
+    mov edi,OFFSET has_tcp_socket_exception_name
+    xor cl,cl
+    mov ax,has_tcp_socket_exc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection
