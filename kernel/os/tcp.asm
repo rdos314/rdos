@@ -6041,42 +6041,6 @@ update_tcp_mtu  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateTcpSocket
-;
-;       DESCRIPTION:    Create TCP socket
-;
-;       PARAMETERS:     OUT BX        Tcp handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_tcp_socket_name DB 'Create Tcp Socket', 0
-
-create_tcp_socket    Proc far
-    push es
-    push eax
-    push dx
-;
-    mov eax,SIZE tcp_socket_sel
-    AllocateSmallGlobalMem
-    mov es:tcp_conn_handle,0
-;
-    mov dx,es
-    mov ax,C_HANDLE_TCP_SOCKET
-    AllocateCHandle
-;
-    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
-    xor edx,edx
-    AllocateCProcHandle
-;
-    pop dx
-    pop eax
-    pop es
-    retf32
-create_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CloseTcpSocket
 ;
 ;       DESCRIPTION:    Close TCP socket
@@ -6756,34 +6720,47 @@ has_tcp_socket_exception    Endp
 ;
 ;           DESCRIPTION:    Connect TCP socket
 ;
-;           PARAMETERS:    IN  BX                Tcp selector
-;                          IN  EDX               IP
+;           PARAMETERS:    IN  EDX               IP
 ;                          IN  SI                port
 ;
+;           RETURNS:       OUT AX                Tcp selector
+;                          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 connect_tcp_socket_name  DB 'Connect Tcp Socket', 0
 
 connect_tcp_socket	Proc far
-    push es
-    pushad
+    push ds
+    push ecx
+    push esi
+    push edi
+    push ebp
 ;
-    mov es,bx
-    mov eax,20000
+    mov ebp,20000
     mov ecx,1000h
     mov di,si
     xor si,si
-    OpenTcpConnection
-    jc ctdDone
+    call OpenConnection
+    jc ctdFail
 ;
-    mov es:tcp_conn_handle,bx
+    mov ebp,20000
+    call WaitForConnection
+    jc ctdFail
 ;
-    mov eax,20000
-    WaitForTcpConnection
+    mov ax,ds
+    clc
+    jmp ctdDone
+
+ctdFail:
+    xor ax,ax
+    stc
 
 ctdDone:
-    popad
-    pop es
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
     retf32
 connect_tcp_socket	Endp
 
@@ -7026,12 +7003,6 @@ init_task_tcp    PROC near
     mov edi,OFFSET add_wait_for_tcp_listen_name
     xor dx,dx
     mov ax,add_wait_for_tcp_listen_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET create_tcp_socket
-    mov edi,OFFSET create_tcp_socket_name
-    xor dx,dx
-    mov ax,create_tcp_socket_nr
     RegisterBimodalUserGate
 ;
     mov al,6

@@ -2950,43 +2950,6 @@ add_wait_for_udp_listen ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateUdpSocket
-;
-;       DESCRIPTION:    Create UDP socket
-;
-;       PARAMETERS:     OUT BX        Udp handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_udp_socket_name DB 'Create Udp Socket', 0
-
-create_udp_socket    Proc far
-    push es
-    push eax
-    push dx
-;
-    mov eax,SIZE udp_socket_sel
-    AllocateSmallGlobalMem
-    mov es:udp_socket_ip,0
-    mov es:udp_socket_port,0
-;
-    mov dx,es
-    mov ax,C_HANDLE_UDP_SOCKET
-    AllocateCHandle
-;
-    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
-    xor edx,edx
-    AllocateCProcHandle
-;
-    pop dx
-    pop eax
-    pop es
-    retf32
-create_udp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CloseUdpSocket
 ;
 ;       DESCRIPTION:    Close UDP socket
@@ -3109,20 +3072,18 @@ get_udp_socket_read_count    Endp
 ;
 ;           DESCRIPTION:    Connect UDP socket
 ;
-;           PARAMETERS:    IN  BX                Udp selector
-;                          IN  EDX               IP
+;           PARAMETERS:    IN  EDX               IP
 ;                          IN  SI                port
 ;
+;           RETURNS:       OUT AX                Udp selector
+;                          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 connect_udp_socket_name  DB 'Connect Udp Socket', 0
 
 connect_udp_socket	Proc far
-    push es
-    mov es,bx
-    mov es:udp_socket_ip,edx
-    mov es:udp_socket_port,si
-    pop es
+    xor ax,ax
+    stc
     retf32
 connect_udp_socket	Endp
 
@@ -3340,12 +3301,6 @@ query_list_create:
     mov edi,OFFSET add_wait_for_udp_connection_name
     xor dx,dx
     mov ax,add_wait_for_udp_connection_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET create_udp_socket
-    mov edi,OFFSET create_udp_socket_name
-    xor dx,dx
-    mov ax,create_udp_socket_nr
     RegisterBimodalUserGate
 ;
     mov al,17

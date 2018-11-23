@@ -2843,10 +2843,9 @@ UpdateTcpMtu    MACRO
     OsGate update_tcp_mtu_nr
                     ENDM
 
-
-; IN  BX        Tcp selector
 ; IN  EDX       IP
 ; IN  SI        port
+; OUT AX        Tcp selector
 ConnectTcpSocket               MACRO
     OsGate connect_tcp_socket_nr
                         ENDM
@@ -2929,9 +2928,9 @@ HasTcpSocketException               MACRO
     OsGate has_tcp_socket_exc_nr
                         ENDM
 
-; IN  BX        Udp selector
 ; IN  EDX       IP
 ; IN  SI        port
+; OUT AX        Udp selector
 ConnectUdpSocket               MACRO
     OsGate connect_udp_socket_nr
                         ENDM

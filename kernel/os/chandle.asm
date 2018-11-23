@@ -2357,13 +2357,13 @@ connect_ipv4_socket	Proc far
     jne cisFail
 
 cisUpd:
-    mov bx,ds:[bx].he_sel
     ConnectUdpSocket
+    mov ds:[bx].he_sel,ax
     jmp cisDone
 
 cisTcp:
-    mov bx,ds:[bx].he_sel
     ConnectTcpSocket
+    mov ds:[bx].he_sel,ax
     jmp cisDone
 
 cisFail:
@@ -3570,6 +3570,70 @@ aweDone:
     pop ds
     retf32
 add_wait_for_handle_exception	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateTcpSocket
+;
+;       DESCRIPTION:    Create TCP socket
+;
+;       PARAMETERS:     OUT BX        Tcp handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_tcp_socket_name DB 'Create Tcp Socket', 0
+
+create_tcp_socket    Proc far
+    push es
+    push eax
+    push dx
+;
+    xor dx,dx
+    mov ax,C_HANDLE_TCP_SOCKET
+    AllocateCHandle
+;
+    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
+    xor edx,edx
+    AllocateCProcHandle
+;
+    pop dx
+    pop eax
+    pop es
+    retf32
+create_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateUdpSocket
+;
+;       DESCRIPTION:    Create UDP socket
+;
+;       PARAMETERS:     OUT BX        Udp handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_udp_socket_name DB 'Create Udp Socket', 0
+
+create_udp_socket    Proc far
+    push es
+    push eax
+    push dx
+;
+    xor dx,dx
+    mov ax,C_HANDLE_UDP_SOCKET
+    AllocateCHandle
+;
+    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
+    xor edx,edx
+    AllocateCProcHandle
+;
+    pop dx
+    pop eax
+    pop es
+    retf32
+create_udp_socket    Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3800,6 +3864,18 @@ init_chandle     PROC near
     mov edi,OFFSET has_handle_exception_name
     xor cl,cl
     mov ax,has_handle_exception_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_tcp_socket
+    mov edi,OFFSET create_tcp_socket_name
+    xor dx,dx
+    mov ax,create_tcp_socket_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_udp_socket
+    mov edi,OFFSET create_udp_socket_name
+    xor dx,dx
+    mov ax,create_udp_socket_nr
     RegisterBimodalUserGate
 ;
     popad
