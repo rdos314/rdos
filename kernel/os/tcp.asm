@@ -3776,6 +3776,68 @@ close_tcp_listen    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           WaitForConnection
+;
+;       Purpose:        Wait for a connection
+;
+;       Parameters:     SI          local port
+;                       EBP         timeout
+;                       DS          connection sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForConnection Proc near
+    push es
+    pushad
+;
+    EnterSection ds:tcp_section
+    cmp ds:tcp_state,STATE_ESTAB
+    jae wtcOk
+;
+    mov eax,ebp
+    xor edx,edx
+    mov ecx,100
+    div ecx
+    mov ds:tcp_user_timeout,ax
+    ClearSignal
+    or ds:tcp_pending,FLAG_WAIT
+
+wtcRetry: 
+    GetThread
+    mov ds:tcp_owner,ax
+    LeaveSection ds:tcp_section
+;
+    WaitForSignal
+    mov ds:tcp_owner,0
+    EnterSection ds:tcp_section
+    cmp ds:tcp_state,STATE_ESTAB
+    jae wtcOk
+;
+    mov ax,ds:tcp_user_timeout
+    or ax,ax
+    jnz wtcRetry
+    jmp wtcFail
+
+wtcOk:
+    LeaveSection ds:tcp_section
+    clc
+    jmp wtcDone
+
+wtcFail:
+    mov ds:tcp_delete_timeout,240 * 10
+    mov ds:tcp_owner,0
+    LeaveSection ds:tcp_section
+    stc
+
+wtcDone:
+    popad
+    pop es
+    ret
+WaitForConnection Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           WaitForTcpConnection
 ;
 ;       Purpose:        Wait for a connection
@@ -3790,8 +3852,9 @@ wait_for_tcp_connection_name    DB 'Wait For TCP Connection',0
 
 wait_for_tcp_connection Proc far
     push ds
-    push es
-    pushad
+    push eax
+    push ebx
+    push ebp
 ;
     mov ebp,eax
     mov ax,TCP_SOCKET_HANDLE
@@ -3803,58 +3866,16 @@ wait_for_tcp_connection Proc far
     stc
     jz wait_tcp_done
 ;
-    push ebx
     mov ds,ax
-    EnterSection ds:tcp_section
-    cmp ds:tcp_state,STATE_ESTAB
-    jae wait_tcp_ok
-;
-    mov eax,ebp
-    xor edx,edx
-    mov ecx,100
-    div ecx
-    mov ds:tcp_user_timeout,ax
-    ClearSignal
-    or ds:tcp_pending,FLAG_WAIT
-
-wait_tcp_retry: 
-    GetThread
-    mov ds:tcp_owner,ax
-    LeaveSection ds:tcp_section
-;
-    WaitForSignal
-    mov ds:tcp_owner,0
-    EnterSection ds:tcp_section
-    cmp ds:tcp_state,STATE_ESTAB
-    jae wait_tcp_ok
-;
-    mov ax,ds:tcp_user_timeout
-    or ax,ax
-    jnz wait_tcp_retry
-    jmp wait_tcp_fail
-
-wait_tcp_ok:
-    LeaveSection ds:tcp_section
-    pop ebx
-    clc
-    jmp wait_tcp_done
-
-wait_tcp_fail:
-    mov ds:tcp_delete_timeout,240 * 10
-    mov ds:tcp_owner,0
-    LeaveSection ds:tcp_section
-    pop ebx
-    FreeHandle
-    stc
+    call WaitForConnection
 
 wait_tcp_done:
-    popad
-    pop es
+    pop ebp
+    pop ebx
+    pop eax
     pop ds  
     retf32
 wait_for_tcp_connection Endp
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
