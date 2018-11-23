@@ -6063,6 +6063,7 @@ get_tcp_socket_read_count_name DB 'Get Tcp Socket Read Count', 0
 get_tcp_socket_read_count    Proc far
     push ds
     push fs
+    push eax
     push bx
 ;
     mov fs,bx
@@ -6081,13 +6082,71 @@ get_tcp_socket_read_count    Proc far
     EnterSection ds:tcp_section
     movzx ecx,ds:tcp_receive_count
     LeaveSection ds:tcp_section
+    clc
 
 gtsrcDone:
     pop bx
+    pop eax
     pop fs
     pop ds
     retf32
 get_tcp_socket_read_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetTcpSocketWriteSpace
+;
+;       DESCRIPTION:    Get TCP socket write space
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       OUT ECX       Space in send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_tcp_socket_write_space_name DB 'Get Tcp Socket Write Space', 0
+
+get_tcp_socket_write_space    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc gtswsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz gtswsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    jnc gtswsSizeOk
+;
+    xor ecx,ecx
+
+gtswsSizeOk:
+    LeaveSection ds:tcp_section
+    clc
+
+gtswsDone:
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+get_tcp_socket_write_space    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6202,6 +6261,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET get_tcp_socket_read_count_name
     xor cl,cl
     mov ax,tcp_socket_read_count_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_tcp_socket_write_space
+    mov edi,OFFSET get_tcp_socket_write_space_name
+    xor cl,cl
+    mov ax,tcp_socket_write_space_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection

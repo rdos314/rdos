@@ -2439,7 +2439,6 @@ add_wait_for_handle_exception	Endp
 
 get_handle_read_buf_count_name  DB 'Get Handle Read Buffer Count', 0
 
-
 read_buf_dummy      Proc near
     stc
     ret
@@ -2568,7 +2567,110 @@ get_handle_read_buf_count	Endp
 
 get_handle_write_buf_space_name  DB 'Get Handle Write Buffer Space', 0
 
+write_buf_dummy      Proc near
+    stc
+    ret
+write_buf_dummy      Endp
+
+write_buf_stdout       Proc near
+    mov ecx,1
+    clc
+    ret
+write_buf_stdout       Endp
+
+write_buf_file       Proc near
+    GetCFileSize
+    mov ecx,7FFFFFFFh
+    sub ecx,eax
+    clc
+    ret
+write_buf_file       Endp
+
+write_buf_tcp_socket       Proc near
+    GetTcpSocketWriteSpace
+    ret
+write_buf_tcp_socket       Endp
+
+write_buf_udp_socket       Proc near
+    mov ecx,512
+    clc
+    ret
+write_buf_udp_socket       Endp
+
+write_buf_tab:
+wbt00  DW OFFSET write_buf_dummy
+wbt01  DW OFFSET write_buf_file
+wbt02  DW OFFSET write_buf_dummy
+wbt03  DW OFFSET write_buf_stdout
+wbt04  DW OFFSET write_buf_tcp_socket
+wbt05  DW OFFSET write_buf_udp_socket
+wbt06  DW OFFSET write_buf_dummy
+wbt07  DW OFFSET write_buf_dummy
+wbt08  DW OFFSET write_buf_dummy
+wbt09  DW OFFSET write_buf_dummy
+
 get_handle_write_buf_space	Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae whbFail
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae whbFail
+;    
+    or ax,ax
+    jz whbFail
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].write_buf_tab
+;
+    pop bx
+    pop ds
+    jc whbFail
+;
+    jmp whbDone
+
+whbFail:
+    xor ecx,ecx
+    stc
+
+whbDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
     retf32
 get_handle_write_buf_space	Endp
 

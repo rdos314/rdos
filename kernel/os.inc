@@ -2882,6 +2882,12 @@ GetTcpSocketReadCount               MACRO
     OsGate tcp_socket_read_count_nr
                         ENDM
 
+; IN  BX        Tcp selector
+; IN  ECX       Space in buffer
+GetTcpSocketWriteSpace               MACRO
+    OsGate tcp_socket_write_space_nr
+                        ENDM
+
 ; IN  BX        Udp selector
 ; IN  EDX       IP
 ; IN  SI        port
