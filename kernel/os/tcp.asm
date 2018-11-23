@@ -3793,6 +3793,7 @@ wait_for_tcp_connection Proc far
     push es
     pushad
 ;
+    mov ebp,eax
     mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc wait_tcp_done
@@ -3808,6 +3809,7 @@ wait_for_tcp_connection Proc far
     cmp ds:tcp_state,STATE_ESTAB
     jae wait_tcp_ok
 ;
+    mov eax,ebp
     xor edx,edx
     mov ecx,100
     div ecx
