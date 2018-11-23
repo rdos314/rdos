@@ -6205,6 +6205,13 @@ start_read_tcp_socket    Proc far
 ;
     mov ds,ax
     EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz srtsSignal
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz srtsSignal
+;
     mov cx,ds:tcp_receive_count
     or cx,cx
     jnz srtsSignal
@@ -6311,6 +6318,13 @@ start_write_tcp_socket    Proc far
 ;
     mov ds,ax
     EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz swtsSignal
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz swtsSignal
+;
     mov cx,ds:tcp_buffer_size
     sub cx,ds:tcp_send_count
     movzx ecx,cx
@@ -6382,6 +6396,111 @@ ewtsDone:
     pop ds
     retf32
 stop_write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartExceptionTcpSocket
+;
+;       DESCRIPTION:    Start exception TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_exception_tcp_socket_name DB 'Start Exception Tcp Socket', 0
+
+start_exception_tcp_socket    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+    push ecx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc setsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz setsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz setsSignal
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz setsSignal
+;
+    mov ds:tcp_exc_wait,es
+    jmp setsLeave
+
+setsSignal:
+    SignalWait
+
+setsLeave:
+    LeaveSection ds:tcp_section
+
+setsDone:
+    pop ecx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+start_exception_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopExceptionTcpSocket
+;
+;       DESCRIPTION:    Stop exception TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_exception_tcp_socket_name DB 'Stop Exception Tcp Socket', 0
+
+stop_exception_tcp_socket    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc eetsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz eetsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov ds:tcp_exc_wait,0
+    LeaveSection ds:tcp_section
+
+eetsDone:
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+stop_exception_tcp_socket    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6695,6 +6814,18 @@ init_task_tcp    PROC near
     mov edi,OFFSET stop_write_tcp_socket_name
     xor cl,cl
     mov ax,stop_write_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_exception_tcp_socket
+    mov edi,OFFSET start_exception_tcp_socket_name
+    xor cl,cl
+    mov ax,start_exc_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_exception_tcp_socket
+    mov edi,OFFSET stop_exception_tcp_socket_name
+    xor cl,cl
+    mov ax,stop_exc_tcp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection

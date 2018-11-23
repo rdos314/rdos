@@ -3307,6 +3307,225 @@ awwDone:
 add_wait_for_handle_write	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForExc
+;
+;           DESCRIPTION:    Start a wait for exception
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_exc_dummy      Proc near
+    ret
+start_exc_dummy      Endp
+
+start_exc_tcp_socket       Proc near
+    StartExceptionTcpSocket
+    ret
+start_exc_tcp_socket       Endp
+
+start_wait_exc_tab:
+swet00  DW OFFSET start_exc_dummy
+swet01  DW OFFSET start_exc_dummy
+swet02  DW OFFSET start_exc_dummy
+swet03  DW OFFSET start_exc_dummy
+swet04  DW OFFSET start_exc_tcp_socket
+swet05  DW OFFSET start_exc_dummy
+swet06  DW OFFSET start_exc_dummy
+swet07  DW OFFSET start_exc_dummy
+swet08  DW OFFSET start_exc_dummy
+swet09  DW OFFSET start_exc_dummy
+
+start_wait_for_exc       PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bx,es:sw_handle
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae swfeDone
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae swfeDone
+;    
+    or ax,ax
+    jz swfeDone
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].start_wait_exc_tab
+;
+    pop bx
+    pop ds
+
+swfeDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+start_wait_for_exc Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForExc
+;
+;           DESCRIPTION:    Stop a wait for socket exception
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_exc_dummy      Proc near
+    ret
+stop_exc_dummy      Endp
+
+stop_exc_tcp_socket       Proc near
+    StopExceptionTcpSocket
+    ret
+stop_exc_tcp_socket       Endp
+
+stop_wait_exc_tab:
+ewet00  DW OFFSET stop_exc_dummy
+ewet01  DW OFFSET stop_exc_dummy
+ewet02  DW OFFSET stop_exc_dummy
+ewet03  DW OFFSET stop_exc_dummy
+ewet04  DW OFFSET stop_exc_tcp_socket
+ewet05  DW OFFSET stop_exc_dummy
+ewet06  DW OFFSET stop_exc_dummy
+ewet07  DW OFFSET stop_exc_dummy
+ewet08  DW OFFSET stop_exc_dummy
+ewet09  DW OFFSET stop_exc_dummy
+
+stop_wait_for_exc    PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bx,es:sw_handle
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ewfeDone
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ewfeDone
+;    
+    or ax,ax
+    jz ewfeDone
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].stop_wait_exc_tab
+;
+    pop bx
+    pop ds
+
+ewfeDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+stop_wait_for_exc Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearExc
+;
+;           DESCRIPTION:    Clear exception
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_exc    PROC far
+    retf32
+clear_exc Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasExcData
+;
+;           DESCRIPTION:    Check for pending exception
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_exc_data      PROC far
+    push bx
+;
+    mov bx,es:sw_handle
+    HasHandleException
+    cmc
+;
+    pop bx
+    retf32
+has_exc_data Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:          AddWaitForHandleException
@@ -3321,7 +3540,34 @@ add_wait_for_handle_write	Endp
 
 add_wait_for_handle_exception_name  DB 'Add Wait For Handle Exception', 0
 
+add_wait_exc_tab:
+awe0 DD OFFSET start_wait_for_exc,    SEG code
+awe1 DD OFFSET stop_wait_for_exc,     SEG code
+awe2 DD OFFSET clear_exc,             SEG code
+awe3 DD OFFSET has_exc_data,          SEG code
+
 add_wait_for_handle_exception	Proc far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE socket_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_exc_tab
+    AddWait
+    pop ax
+    jc aweDone
+;
+    mov es:sw_handle,ax
+
+aweDone:
+    pop edi
+    pop eax
+    pop es
+    pop ds
     retf32
 add_wait_for_handle_exception	Endp
        
