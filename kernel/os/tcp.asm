@@ -6041,681 +6041,6 @@ update_tcp_mtu  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CloseTcpSocket
-;
-;       DESCRIPTION:    Close TCP socket
-;
-;       PARAMETERS:     IN  BX        Tcp selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_tcp_socket_name DB 'Close Tcp Socket', 0
-
-close_tcp_socket    Proc far
-    push es
-    push bx
-;
-    mov es,bx
-    mov bx,es:tcp_conn_handle
-    PushTcpConnection
-    CloseTcpConnection
-    FreeMem
-;
-    pop bx
-    pop es
-    retf32
-close_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReadTcpSocket
-;
-;       DESCRIPTION:    Read TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  EDX       Position
-;                       IN  ES:EDI    Buffer
-;                       IN  ECX       Size
-;                       OUT EAX       Read size
-;                       OUT EDX       New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_tcp_socket_name DB 'Read Tcp Socket', 0
-
-read_tcp_socket    Proc far
-    push ds
-    push fs
-    push bx
-    push ecx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc rtsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz rtsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    movzx eax,ds:tcp_receive_count
-;
-    cmp eax,ecx
-    jae rtsDo
-;
-    mov ecx,eax
-
-rtsDo:
-    xor eax,eax
-    or ecx,ecx
-    clc
-    jz rtsLeave
-;
-    push es
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov eax,2000
-    movzx bx,ds:tcp_state
-    add bx,bx
-    call word ptr cs:[bx].read_tab
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-
-rtsLeave:
-    LeaveSection ds:tcp_section
-
-rtsDone:
-    pop ecx
-    pop bx
-    pop fs
-    pop ds
-    retf32
-read_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteTcpSocket
-;
-;       DESCRIPTION:    Write TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  EDX       Position
-;                       IN  ES:EDI    Buffer
-;                       IN  ECX       Size
-;                       OUT EAX       Written size
-;                       OUT EDX       New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_tcp_socket_name DB 'Write Tcp Socket', 0
-
-write_tcp_socket    Proc far
-    push ds
-    push fs
-    push bx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc wtsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz wtsDone
-;
-    push es
-    pushad
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    movzx bx,ds:tcp_state
-    add bx,bx
-    call word ptr cs:[bx].write_tab
-    jc wtsLeave
-;
-    test ds:tcp_pending,FLAG_SEND_PUSH
-    clc
-    jnz wtsLeave
-;       
-    mov ds:tcp_push_timeout,5
-    or ds:tcp_pending,FLAG_SEND_PUSH
-    call SendData
-    clc
-
-wtsLeave:
-    LeaveSection ds:tcp_section
-;
-    popad
-    pop es
-;
-    mov eax,ecx
-
-wtsDone:
-    pop bx
-    pop fs
-    pop ds
-    retf32
-write_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartReadTcpSocket
-;
-;       DESCRIPTION:    Start read TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_read_tcp_socket_name DB 'Start Read Tcp Socket', 0
-
-start_read_tcp_socket    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-    push cx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc srtsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz srtsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-;
-    test ds:tcp_pending,FLAG_DELETE_NET
-    jnz srtsSignal
-;    
-    test ds:tcp_pending,FLAG_DELETE_USER
-    jnz srtsSignal
-;
-    mov cx,ds:tcp_receive_count
-    or cx,cx
-    jnz srtsSignal
-;
-    mov ds:tcp_read_wait,es
-    jmp srtsLeave
-
-srtsSignal:
-    SignalWait
-
-srtsLeave:
-    LeaveSection ds:tcp_section
-    clc
-
-srtsDone:
-    pop cx
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-start_read_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StopReadTcpSocket
-;
-;       DESCRIPTION:    Stop read TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_read_tcp_socket_name DB 'Stop Read Tcp Socket', 0
-
-stop_read_tcp_socket    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-    push cx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc ertsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz ertsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    mov ds:tcp_read_wait,0
-    LeaveSection ds:tcp_section
-    clc
-
-ertsDone:
-    pop cx
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-stop_read_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartWriteTcpSocket
-;
-;       DESCRIPTION:    Start write TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_write_tcp_socket_name DB 'Start Write Tcp Socket', 0
-
-start_write_tcp_socket    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-    push ecx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc swtsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz swtsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-;
-    test ds:tcp_pending,FLAG_DELETE_NET
-    jnz swtsSignal
-;    
-    test ds:tcp_pending,FLAG_DELETE_USER
-    jnz swtsSignal
-;
-    mov cx,ds:tcp_buffer_size
-    sub cx,ds:tcp_send_count
-    movzx ecx,cx
-    mov eax,ds:tcp_send_next
-    sub eax,ds:tcp_send_una
-    sub ecx,eax
-    ja swtsSignal
-;
-    mov ds:tcp_write_wait,es
-    jmp swtsLeave
-
-swtsSignal:
-    SignalWait
-
-swtsLeave:
-    LeaveSection ds:tcp_section
-
-swtsDone:
-    pop ecx
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-start_write_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StopWriteTcpSocket
-;
-;       DESCRIPTION:    Stop write TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_write_tcp_socket_name DB 'Stop Write Tcp Socket', 0
-
-stop_write_tcp_socket    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc ewtsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz ewtsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    mov ds:tcp_write_wait,0
-    LeaveSection ds:tcp_section
-    clc
-
-ewtsDone:
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-stop_write_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartExceptionTcpSocket
-;
-;       DESCRIPTION:    Start exception TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_exception_tcp_socket_name DB 'Start Exception Tcp Socket', 0
-
-start_exception_tcp_socket    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-    push ecx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc setsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz setsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-;
-    test ds:tcp_pending,FLAG_DELETE_NET
-    jnz setsSignal
-;    
-    test ds:tcp_pending,FLAG_DELETE_USER
-    jnz setsSignal
-;
-    mov ds:tcp_exc_wait,es
-    jmp setsLeave
-
-setsSignal:
-    SignalWait
-
-setsLeave:
-    LeaveSection ds:tcp_section
-
-setsDone:
-    pop ecx
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-start_exception_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StopExceptionTcpSocket
-;
-;       DESCRIPTION:    Stop exception TCP socket
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_exception_tcp_socket_name DB 'Stop Exception Tcp Socket', 0
-
-stop_exception_tcp_socket    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc eetsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz eetsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    mov ds:tcp_exc_wait,0
-    LeaveSection ds:tcp_section
-
-eetsDone:
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-stop_exception_tcp_socket    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetTcpSocketReadCount
-;
-;       DESCRIPTION:    Get TCP socket read count
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       OUT ECX       Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_tcp_socket_read_count_name DB 'Get Tcp Socket Read Count', 0
-
-get_tcp_socket_read_count    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc gtsrcDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz gtsrcDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    movzx ecx,ds:tcp_receive_count
-    LeaveSection ds:tcp_section
-    clc
-
-gtsrcDone:
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-get_tcp_socket_read_count    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetTcpSocketWriteSpace
-;
-;       DESCRIPTION:    Get TCP socket write space
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       OUT ECX       Space in send buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_tcp_socket_write_space_name DB 'Get Tcp Socket Write Space', 0
-
-get_tcp_socket_write_space    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc gtswsDone
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    stc
-    jz gtswsDone
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-    mov cx,ds:tcp_buffer_size
-    sub cx,ds:tcp_send_count
-    movzx ecx,cx
-    mov eax,ds:tcp_send_next
-    sub eax,ds:tcp_send_una
-    sub ecx,eax
-    jnc gtswsSizeOk
-;
-    xor ecx,ecx
-
-gtswsSizeOk:
-    LeaveSection ds:tcp_section
-    clc
-
-gtswsDone:
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-get_tcp_socket_write_space    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           HasTcpSocketException
-;
-;       DESCRIPTION:    Has TCP socket exception
-;
-;       PARAMETERS;     IN  BX        Tcp selector
-;                       OUT CY        Exception
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_tcp_socket_exception_name DB 'Has Tcp Socket Exception', 0
-
-has_tcp_socket_exception    Proc far
-    push ds
-    push fs
-    push eax
-    push bx
-;
-    mov fs,bx
-    mov bx,fs:tcp_conn_handle
-;
-    mov ax,TCP_SOCKET_HANDLE
-    DerefHandle
-    jc hseFail
-;    
-    mov ax,[ebx].tcp_handle_sel
-    or ax,ax
-    jz hseFail
-;
-    mov ds,ax
-    EnterSection ds:tcp_section
-;
-    test ds:tcp_pending,FLAG_DELETE_NET
-    jnz hseExc
-;    
-    test ds:tcp_pending,FLAG_DELETE_USER
-    jnz hseExc
-;
-    clc
-    jmp hseLeave
-
-hseExc:
-    stc
-
-hseLeave:
-    LeaveSection ds:tcp_section
-    jmp hseDone
-
-hseFail:
-    clc
-
-hseDone:
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-has_tcp_socket_exception    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ConnectTcpSocket
 ;
 ;           DESCRIPTION:    Connect TCP socket
@@ -6763,6 +6088,542 @@ ctdDone:
     pop ds
     retf32
 connect_tcp_socket	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseTcpSocket
+;
+;       DESCRIPTION:    Close TCP socket
+;
+;       PARAMETERS:     IN  BX        Tcp selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_tcp_socket_name DB 'Close Tcp Socket', 0
+
+close_tcp_socket    Proc far
+    push ds
+;
+    or bx,bx
+    jz ctsDone
+;
+    push es
+    pushad
+;
+    mov ds,bx
+    call PushConnection
+    call CloseConnection
+;
+    popad
+    pop es
+
+ctsDone:
+    pop ds
+    retf32
+close_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadTcpSocket
+;
+;       DESCRIPTION:    Read TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  EDX       Position
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Read size
+;                       OUT EDX       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_tcp_socket_name DB 'Read Tcp Socket', 0
+
+read_tcp_socket    Proc far
+    push ds
+;
+    xor eax,eax
+    or bx,bx
+    stc
+    jz rtsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    movzx eax,ds:tcp_receive_count
+;
+    cmp eax,ecx
+    jae rtsDo
+;
+    mov ecx,eax
+
+rtsDo:
+    xor eax,eax
+    or ecx,ecx
+    clc
+    jz rtsLeave
+;
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,2000
+    movzx bx,ds:tcp_state
+    add bx,bx
+    call word ptr cs:[bx].read_tab
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+
+rtsLeave:
+    LeaveSection ds:tcp_section
+
+rtsDone:
+    pop ds
+    retf32
+read_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteTcpSocket
+;
+;       DESCRIPTION:    Write TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  EDX       Position
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Written size
+;                       OUT EDX       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_tcp_socket_name DB 'Write Tcp Socket', 0
+
+write_tcp_socket    Proc far
+    push ds
+;
+    xor eax,eax
+    or bx,bx
+    jz wtsDone
+;
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    movzx bx,ds:tcp_state
+    add bx,bx
+    call word ptr cs:[bx].write_tab
+    jc wtsLeave
+;
+    test ds:tcp_pending,FLAG_SEND_PUSH
+    clc
+    jnz wtsLeave
+;       
+    mov ds:tcp_push_timeout,5
+    or ds:tcp_pending,FLAG_SEND_PUSH
+    call SendData
+    clc
+
+wtsLeave:
+    LeaveSection ds:tcp_section
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+;
+    mov eax,ecx
+
+wtsDone:
+    pop ds
+    retf32
+write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartReadTcpSocket
+;
+;       DESCRIPTION:    Start read TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_read_tcp_socket_name DB 'Start Read Tcp Socket', 0
+
+start_read_tcp_socket    Proc far
+    push ds
+    push cx
+;
+    or bx,bx
+    stc
+    jz srtsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz srtsSignal
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz srtsSignal
+;
+    mov cx,ds:tcp_receive_count
+    or cx,cx
+    jnz srtsSignal
+;
+    mov ds:tcp_read_wait,es
+    jmp srtsLeave
+
+srtsSignal:
+    SignalWait
+
+srtsLeave:
+    LeaveSection ds:tcp_section
+    clc
+
+srtsDone:
+    pop cx
+    pop ds
+    retf32
+start_read_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopReadTcpSocket
+;
+;       DESCRIPTION:    Stop read TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_read_tcp_socket_name DB 'Stop Read Tcp Socket', 0
+
+stop_read_tcp_socket    Proc far
+    push ds
+;
+    or bx,bx
+    stc
+    jz ertsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    mov ds:tcp_read_wait,0
+    LeaveSection ds:tcp_section
+    clc
+
+ertsDone:
+    pop ds
+    retf32
+stop_read_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartWriteTcpSocket
+;
+;       DESCRIPTION:    Start write TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_write_tcp_socket_name DB 'Start Write Tcp Socket', 0
+
+start_write_tcp_socket    Proc far
+    push ds
+    push eax
+    push ecx
+;
+    or bx,bx
+    jz swtsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz swtsSignal
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz swtsSignal
+;
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    ja swtsSignal
+;
+    mov ds:tcp_write_wait,es
+    jmp swtsLeave
+
+swtsSignal:
+    SignalWait
+
+swtsLeave:
+    LeaveSection ds:tcp_section
+
+swtsDone:
+    pop ecx
+    pop eax
+    pop ds
+    retf32
+start_write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopWriteTcpSocket
+;
+;       DESCRIPTION:    Stop write TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_write_tcp_socket_name DB 'Stop Write Tcp Socket', 0
+
+stop_write_tcp_socket    Proc far
+    push ds
+;
+    or bx,bx
+    jz ewtsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    mov ds:tcp_write_wait,0
+    LeaveSection ds:tcp_section
+
+ewtsDone:
+    pop ds
+    retf32
+stop_write_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartExceptionTcpSocket
+;
+;       DESCRIPTION:    Start exception TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_exception_tcp_socket_name DB 'Start Exception Tcp Socket', 0
+
+start_exception_tcp_socket    Proc far
+    push ds
+;
+    or bx,bx
+    jz setsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz setsSignal
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz setsSignal
+;
+    mov ds:tcp_exc_wait,es
+    jmp setsLeave
+
+setsSignal:
+    SignalWait
+
+setsLeave:
+    LeaveSection ds:tcp_section
+
+setsDone:
+    pop ds
+    retf32
+start_exception_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopExceptionTcpSocket
+;
+;       DESCRIPTION:    Stop exception TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_exception_tcp_socket_name DB 'Stop Exception Tcp Socket', 0
+
+stop_exception_tcp_socket    Proc far
+    push ds
+;
+    or bx,bx
+    jz eetsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    mov ds:tcp_exc_wait,0
+    LeaveSection ds:tcp_section
+
+eetsDone:
+    pop ds
+    retf32
+stop_exception_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetTcpSocketReadCount
+;
+;       DESCRIPTION:    Get TCP socket read count
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       OUT ECX       Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_tcp_socket_read_count_name DB 'Get Tcp Socket Read Count', 0
+
+get_tcp_socket_read_count    Proc far
+    push ds
+;
+    or bx,bx
+    stc
+    jz gtsrcDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    movzx ecx,ds:tcp_receive_count
+    LeaveSection ds:tcp_section
+    clc
+
+gtsrcDone:
+    pop ds
+    retf32
+get_tcp_socket_read_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetTcpSocketWriteSpace
+;
+;       DESCRIPTION:    Get TCP socket write space
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       OUT ECX       Space in send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_tcp_socket_write_space_name DB 'Get Tcp Socket Write Space', 0
+
+get_tcp_socket_write_space    Proc far
+    push ds
+    push eax
+;
+    or bx,bx
+    stc
+    jz gtswsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    jnc gtswsSizeOk
+;
+    xor ecx,ecx
+
+gtswsSizeOk:
+    LeaveSection ds:tcp_section
+    clc
+
+gtswsDone:
+    pop eax
+    pop ds
+    retf32
+get_tcp_socket_write_space    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasTcpSocketException
+;
+;       DESCRIPTION:    Has TCP socket exception
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       OUT CY        Exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_tcp_socket_exception_name DB 'Has Tcp Socket Exception', 0
+
+has_tcp_socket_exception    Proc far
+    push ds
+;
+    or bx,bx
+    clc
+    jz hseDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz hseExc
+;    
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jnz hseExc
+;
+    clc
+    jmp hseLeave
+
+hseExc:
+    stc
+
+hseLeave:
+    LeaveSection ds:tcp_section
+
+hseDone:
+    pop ds
+    retf32
+has_tcp_socket_exception    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
