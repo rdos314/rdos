@@ -4082,7 +4082,102 @@ CloseCloseWait  Proc near
     ret
 CloseCloseWait  Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CloseConnection
+;
+;       Purpose:        Close connection
+;
+;       Parameters:     DS          Connection sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+close_tab:
+cl0 DW OFFSET CloseDelete
+cl1 DW OFFSET CloseNormal
+cl2 DW OFFSET CloseNormal
+cl3 DW OFFSET IgnoreDummy
+cl4 DW OFFSET IgnoreDummy
+cl5 DW OFFSET CloseCloseWait
+cl6 DW OFFSET IgnoreDummy
+cl7 DW OFFSET IgnoreDummy
+cl8 DW OFFSET IgnoreDummy
+
+CloseConnection    Proc near
+    push ds
+    push es
+    pushad
+;
+    EnterSection ds:tcp_section
+    movzx bx,ds:tcp_state
+    add bx,bx
+    call word ptr cs:[bx].close_tab
+    LeaveSection ds:tcp_section
+;
+    xor bx,bx
+    xchg bx,ds:tcp_read_wait
+    or bx,bx
+    jz ctcNotRead
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+ctcNotRead:
+    xor bx,bx
+    xchg bx,ds:tcp_write_wait
+    or bx,bx
+    jz ctcNotWrite
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+ctcNotWrite:
+    xor bx,bx
+    xchg bx,ds:tcp_exc_wait
+    or bx,bx
+    jz ctcNotExc
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+ctcNotExc:
+    mov bx,ds:tcp_writer
+    or bx,bx
+    jz ctcNoWriter
+;
+    Signal
+
+ctcNoWriter:
+    mov bx,ds:tcp_owner
+    or bx,bx
+    jz ctcOwnerOk
+;
+    Signal
+
+ctcOwnerOk:
+    xor bx,bx
+    xchg bx,ds:tcp_wait  
+    or bx,bx
+    clc
+    jz ctcDone
+;
+    mov es,bx
+    SignalWait
+    clc
+
+ctcDone:
+    popad
+    pop es
+    pop ds
+    ret
+CloseConnection    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4096,21 +4191,10 @@ CloseCloseWait  Endp
 
 close_tcp_connection_name DB 'Close TCP Connection',0
 
-close_tab:
-cl0     DW OFFSET CloseDelete
-cl1 DW OFFSET CloseNormal
-cl2 DW OFFSET CloseNormal
-cl3     DW OFFSET IgnoreDummy
-cl4     DW OFFSET IgnoreDummy
-cl5 DW OFFSET CloseCloseWait
-cl6 DW OFFSET IgnoreDummy
-cl7 DW OFFSET IgnoreDummy
-cl8 DW OFFSET IgnoreDummy
-
 close_tcp_connection    Proc far
     push ds
-    push es
-    pushad
+    push eax
+    push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
     DerefHandle
@@ -4122,77 +4206,14 @@ close_tcp_connection    Proc far
     jz close_tcp_done
 ;
     mov ds,ax
-    EnterSection ds:tcp_section
-    movzx bx,ds:tcp_state
-    add bx,bx
-    call word ptr cs:[bx].close_tab
-    LeaveSection ds:tcp_section
-;
-    xor bx,bx
-    xchg bx,ds:tcp_read_wait
-    or bx,bx
-    jz close_tcp_not_read
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-close_tcp_not_read:
-    xor bx,bx
-    xchg bx,ds:tcp_write_wait
-    or bx,bx
-    jz close_tcp_not_write
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-close_tcp_not_write:
-    xor bx,bx
-    xchg bx,ds:tcp_exc_wait
-    or bx,bx
-    jz close_tcp_not_exc
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-close_tcp_not_exc:
-    mov bx,ds:tcp_writer
-    or bx,bx
-    jz close_tcp_no_writer
-;
-    Signal
-
-close_tcp_no_writer:
-    mov bx,ds:tcp_owner
-    or bx,bx
-    jz close_tcp_owner_ok
-;
-    Signal
-
-close_tcp_owner_ok:
-    xor bx,bx
-    xchg bx,ds:tcp_wait  
-    or bx,bx
-    clc
-    jz close_tcp_done
-;
-    mov es,bx
-    SignalWait
-    clc
+    call CloseConnection
 
 close_tcp_done:
-    popad
-    pop es
+    pop ebx
+    pop eax
     pop ds
     retf32
 close_tcp_connection    Endp
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
