@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     char *tempptr;
     int size;
     long ip;
+    int i;
     struct hostent *host;
     fd_set in_set;
     fd_set out_set;
@@ -110,8 +111,14 @@ int main(int argc, char **argv)
         FD_SET(s, &in_set);
         FD_SET(s, &exc_set);
 
-        ret = select(s+1, &in_set, 0, &exc_set, &tv);
-        size = recv(s, buf, 1024, 0);
+        size = 0;
+        for (i = 0; i < 2 && !size; i++)
+        {
+            ret = select(s+1, &in_set, 0, &exc_set, &tv);
+            size = recv(s, buf, 1000, 0);
+        }
+
+        buf[size] = 0;
 
         ptr = buf;
         while (ptr[1] != 0xd)
@@ -126,7 +133,7 @@ int main(int argc, char **argv)
         while (*ptr == 0xa || *ptr == 0xd)
             ptr++;
 
-        printf("received: %d\r\n", size);
+        printf(ptr);
 
         delete buf;
 
