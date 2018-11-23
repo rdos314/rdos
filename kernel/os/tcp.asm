@@ -772,6 +772,9 @@ CreateConnection    Proc near
     mov es:tcp_owner,0
     mov es:tcp_writer,0
     mov es:tcp_wait,0
+    mov es:tcp_read_wait,0
+    mov es:tcp_write_wait,0
+    mov es:tcp_exc_wait,0
     mov es:tcp_options,0
     mov es:tcp_port,si
     mov es:tcp_remote_ip,edx
@@ -1806,6 +1809,39 @@ retrans_close:
     mov bx,ds:tcp_owner
     Signal
 ;
+    xor bx,bx
+    xchg bx,ds:tcp_read_wait
+    or bx,bx
+    jz retrans_not_read
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+retrans_not_read:
+    xor bx,bx
+    xchg bx,ds:tcp_write_wait
+    or bx,bx
+    jz retrans_not_write
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+retrans_not_write:
+    xor bx,bx
+    xchg bx,ds:tcp_exc_wait
+    or bx,bx
+    jz retrans_not_exc
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+retrans_not_exc:
     mov bx,ds:tcp_writer
     or bx,bx
     jz retrans_no_writer
@@ -1956,6 +1992,39 @@ CheckRst    Proc near
     mov bx,ds:tcp_owner
     Signal
 ;
+    xor bx,bx
+    xchg bx,ds:tcp_read_wait
+    or bx,bx
+    jz check_rst_not_read
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+check_rst_not_read:
+    xor bx,bx
+    xchg bx,ds:tcp_write_wait
+    or bx,bx
+    jz check_rst_not_write
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+check_rst_not_write:
+    xor bx,bx
+    xchg bx,ds:tcp_exc_wait
+    or bx,bx
+    jz check_rst_not_exc
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+check_rst_not_exc:
     mov bx,ds:tcp_writer
     or bx,bx
     jz check_rst_no_writer
@@ -2608,6 +2677,17 @@ process_data_check_fin:
     or ds:tcp_pending, FLAG_DELAY_ACK OR FLAG_CLOSED
 
 process_data_wake:
+    xor bx,bx
+    xchg bx,ds:tcp_read_wait
+    or bx,bx
+    jz process_data_not_read
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+process_data_not_read:
     mov bx,ds:tcp_owner
     Signal
 ;
@@ -3437,6 +3517,17 @@ receive_no_ack:
     call SendData
 
 receive_leave:
+    xor bx,bx
+    xchg bx,ds:tcp_write_wait
+    or bx,bx
+    jz receive_not_write
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+receive_not_write:
     mov bx,ds:tcp_writer
     or bx,bx
     jz receive_no_writer
@@ -3989,6 +4080,39 @@ close_tcp_connection    Proc far
     call word ptr cs:[bx].close_tab
     LeaveSection ds:tcp_section
 ;
+    xor bx,bx
+    xchg bx,ds:tcp_read_wait
+    or bx,bx
+    jz close_tcp_not_read
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+close_tcp_not_read:
+    xor bx,bx
+    xchg bx,ds:tcp_write_wait
+    or bx,bx
+    jz close_tcp_not_write
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+close_tcp_not_write:
+    xor bx,bx
+    xchg bx,ds:tcp_exc_wait
+    or bx,bx
+    jz close_tcp_not_exc
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+close_tcp_not_exc:
     mov bx,ds:tcp_writer
     or bx,bx
     jz close_tcp_no_writer
@@ -6049,6 +6173,112 @@ write_tcp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartReadTcpSocket
+;
+;       DESCRIPTION:    Start read TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_read_tcp_socket_name DB 'Start Read Tcp Socket', 0
+
+start_read_tcp_socket    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+    push cx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc srtsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz srtsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov cx,ds:tcp_receive_count
+    or cx,cx
+    jnz srtsSignal
+;
+    mov ds:tcp_read_wait,es
+    jmp srtsLeave
+
+srtsSignal:
+    SignalWait
+
+srtsLeave:
+    LeaveSection ds:tcp_section
+    clc
+
+srtsDone:
+    pop cx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+start_read_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopReadTcpSocket
+;
+;       DESCRIPTION:    Stop read TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_read_tcp_socket_name DB 'Stop Read Tcp Socket', 0
+
+stop_read_tcp_socket    Proc far
+    push ds
+    push fs
+    push eax
+    push bx
+    push cx
+;
+    mov fs,bx
+    mov bx,fs:tcp_conn_handle
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc ertsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz ertsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov ds:tcp_read_wait,0
+    LeaveSection ds:tcp_section
+    clc
+
+ertsDone:
+    pop cx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+stop_read_tcp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetTcpSocketReadCount
 ;
 ;       DESCRIPTION:    Get TCP socket read count
@@ -6334,6 +6564,18 @@ init_task_tcp    PROC near
     mov edi,OFFSET has_tcp_socket_exception_name
     xor cl,cl
     mov ax,has_tcp_socket_exc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_read_tcp_socket
+    mov edi,OFFSET start_read_tcp_socket_name
+    xor cl,cl
+    mov ax,start_read_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_read_tcp_socket
+    mov edi,OFFSET stop_read_tcp_socket_name
+    xor cl,cl
+    mov ax,stop_read_tcp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection

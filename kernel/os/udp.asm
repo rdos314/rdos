@@ -3050,6 +3050,42 @@ write_udp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartReadUdpSocket
+;
+;       DESCRIPTION:    Start read UDP socket
+;
+;       PARAMETERS;     IN  BX        Udp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_read_udp_socket_name DB 'Start Read Udp Socket', 0
+
+start_read_udp_socket    Proc far
+    retf32
+start_read_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopReadUdpSocket
+;
+;       DESCRIPTION:    Stop read UDP socket
+;
+;       PARAMETERS;     IN  BX        Udp selector
+;                       IN  ES        Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_read_udp_socket_name DB 'Stop Read Udp Socket', 0
+
+stop_read_udp_socket    Proc far
+    retf32
+stop_read_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetUdpSocketReadCount
 ;
 ;       DESCRIPTION:    Get UDP socket read count
@@ -3184,6 +3220,18 @@ query_list_create:
     mov edi,OFFSET get_udp_socket_read_count_name
     xor cl,cl
     mov ax,udp_socket_read_count_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_read_udp_socket
+    mov edi,OFFSET start_read_udp_socket_name
+    xor cl,cl
+    mov ax,start_read_udp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_read_udp_socket
+    mov edi,OFFSET stop_read_udp_socket_name
+    xor cl,cl
+    mov ax,stop_read_udp_socket_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET broadcast_udp16

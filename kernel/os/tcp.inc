@@ -100,6 +100,9 @@ tcp_listen_link		DW ?
 tcp_owner			DW ?
 tcp_writer          DW ?
 tcp_wait            DW ?
+tcp_read_wait       DW ?
+tcp_write_wait      DW ?
+tcp_exc_wait        DW ?
 tcp_port			DW ?
 tcp_remote_ip		DD ?
 tcp_remote_port		DW ?

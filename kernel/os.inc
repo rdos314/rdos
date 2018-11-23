@@ -2877,6 +2877,18 @@ WriteTcpSocket MACRO
                     ENDM
 
 ; IN  BX        Tcp selector
+; IN  ES        Wait object
+StartReadTcpSocket               MACRO
+    OsGate start_read_tcp_socket_nr
+                        ENDM
+
+; IN  BX        Tcp selector
+; IN  ES        Wait object
+StopReadTcpSocket               MACRO
+    OsGate stop_read_tcp_socket_nr
+                        ENDM
+
+; IN  BX        Tcp selector
 ; IN  ECX       Bytes in buffer
 GetTcpSocketReadCount               MACRO
     OsGate tcp_socket_read_count_nr
@@ -2924,6 +2936,18 @@ ReadUdpSocket MACRO
 WriteUdpSocket MACRO
     OsGate write_udp_socket_nr
                     ENDM
+
+; IN  BX        Udp selector
+; IN  ES        Wait object
+StartReadUdpSocket               MACRO
+    OsGate start_read_udp_socket_nr
+                        ENDM
+
+; IN  BX        Udp selector
+; IN  ES        Wait object
+StopReadUdpSocket               MACRO
+    OsGate stop_read_udp_socket_nr
+                        ENDM
 
 ; IN  BX        Tcp selector
 ; IN  ECX       Bytes in buffer

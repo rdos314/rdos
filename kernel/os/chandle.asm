@@ -31,6 +31,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+include ..\wait.inc
 INCLUDE ..\driver.def
 INCLUDE chandle.inc
 INCLUDE exec.def
@@ -52,6 +53,13 @@ h_section       section_typ <>
 h_arr           DB MAX_HANDLES * size handle_proc_struc DUP(?)
 
 handle_struc    ENDS
+
+socket_wait_header STRUC
+
+sw_obj          wait_obj_header <>
+sw_handle       DW ?
+
+socket_wait_header ENDS
 
 
     .386p
@@ -2368,62 +2376,6 @@ cisDone:
     retf32
 connect_ipv4_socket	Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:          AddWaitForHandleRead
-;
-;           DESCRIPTION:   Add wait for handle read
-;
-;           PARAMETERS:    IN  AX                Handle
-;                          IN  BX                Wait handle
-;                          IN  ECX               Object ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_handle_read_name  DB 'Add Wait For Handle Read', 0
-
-add_wait_for_handle_read	Proc far
-    retf32
-add_wait_for_handle_read	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:          AddWaitForHandleWrite
-;
-;           DESCRIPTION:   Add wait for handle write
-;
-;           PARAMETERS:    IN  AX                Handle
-;                          IN  BX                Wait handle
-;                          IN  ECX               Object ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_handle_write_name  DB 'Add Wait For Handle Write', 0
-
-add_wait_for_handle_write	Proc far
-    retf32
-add_wait_for_handle_write	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:          AddWaitForHandleException
-;
-;           DESCRIPTION:   Add wait for handle exception
-;
-;           PARAMETERS:    IN  AX                Handle
-;                          IN  BX                Wait handle
-;                          IN  ECX               Object ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_handle_exception_name  DB 'Add Wait For Handle Exception', 0
-
-add_wait_for_handle_exception	Proc far
-    retf32
-add_wait_for_handle_exception	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2776,6 +2728,346 @@ heDone:
     pop ds    
     retf32
 has_handle_exception	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForRead
+;
+;           DESCRIPTION:    Start a wait for read data
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_read_dummy      Proc near
+    ret
+start_read_dummy      Endp
+
+start_read_stdin       Proc near
+    ret
+start_read_stdin       Endp
+
+start_read_file       Proc near
+    ret
+start_read_file       Endp
+
+start_read_tcp_socket       Proc near
+    StartReadTcpSocket
+    ret
+start_read_tcp_socket       Endp
+
+start_read_udp_socket       Proc near
+    StartReadUdpSocket
+    ret
+start_read_udp_socket       Endp
+
+start_wait_read_tab:
+swrt00  DW OFFSET start_read_dummy
+swrt01  DW OFFSET start_read_file
+swrt02  DW OFFSET start_read_stdin
+swrt03  DW OFFSET start_read_dummy
+swrt04  DW OFFSET start_read_tcp_socket
+swrt05  DW OFFSET start_read_udp_socket
+swrt06  DW OFFSET start_read_dummy
+swrt07  DW OFFSET start_read_dummy
+swrt08  DW OFFSET start_read_dummy
+swrt09  DW OFFSET start_read_dummy
+
+start_wait_for_read       PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bx,es:sw_handle
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae swfrDone
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae swfrDone
+;    
+    or ax,ax
+    jz swfrDone
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].start_wait_read_tab
+;
+    pop bx
+    pop ds
+
+swfrDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+start_wait_for_read Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForRead
+;
+;           DESCRIPTION:    Stop a wait for socket read
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_read_dummy      Proc near
+    ret
+stop_read_dummy      Endp
+
+stop_read_stdin       Proc near
+    ret
+stop_read_stdin       Endp
+
+stop_read_file       Proc near
+    ret
+stop_read_file       Endp
+
+stop_read_tcp_socket       Proc near
+    StopReadTcpSocket
+    ret
+stop_read_tcp_socket       Endp
+
+stop_read_udp_socket       Proc near
+    StartReadUdpSocket
+    ret
+stop_read_udp_socket       Endp
+
+stop_wait_read_tab:
+ewrt00  DW OFFSET stop_read_dummy
+ewrt01  DW OFFSET stop_read_file
+ewrt02  DW OFFSET stop_read_stdin
+ewrt03  DW OFFSET stop_read_dummy
+ewrt04  DW OFFSET stop_read_tcp_socket
+ewrt05  DW OFFSET stop_read_udp_socket
+ewrt06  DW OFFSET stop_read_dummy
+ewrt07  DW OFFSET stop_read_dummy
+ewrt08  DW OFFSET stop_read_dummy
+ewrt09  DW OFFSET stop_read_dummy
+
+stop_wait_for_read    PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bx,es:sw_handle
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ewfrDone
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ewfrDone
+;    
+    or ax,ax
+    jz ewfrDone
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].stop_wait_read_tab
+;
+    pop bx
+    pop ds
+
+ewfrDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+stop_wait_for_read Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearRead
+;
+;           DESCRIPTION:    Clear read
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_read    PROC far
+    retf32
+clear_read Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasReadData
+;
+;           DESCRIPTION:    Check if read data is available
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_read_data      PROC far
+    push bx
+    push ecx
+;
+    mov bx,es:sw_handle
+    GetHandleReadBufferCount
+    cmc
+    jnc hrdDone
+;
+    or ecx,ecx
+    stc
+    jz hrdDone
+;
+    clc
+
+hrdDone:
+    pop ecx
+    pop bx
+    retf32
+has_read_data Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          AddWaitForHandleRead
+;
+;           DESCRIPTION:   Add wait for handle read
+;
+;           PARAMETERS:    IN  AX                Handle
+;                          IN  BX                Wait handle
+;                          IN  ECX               Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_handle_read_name  DB 'Add Wait For Handle Read', 0
+
+add_wait_read_tab:
+awr0 DD OFFSET start_wait_for_read,    SEG code
+awr1 DD OFFSET stop_wait_for_read,     SEG code
+awr2 DD OFFSET clear_read,             SEG code
+awr3 DD OFFSET has_read_data,          SEG code
+
+add_wait_for_handle_read	Proc far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE socket_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_read_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;
+    mov es:sw_handle,ax
+
+add_wait_done:
+    pop edi
+    pop eax
+    pop es
+    pop ds
+    retf32
+add_wait_for_handle_read	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          AddWaitForHandleWrite
+;
+;           DESCRIPTION:   Add wait for handle write
+;
+;           PARAMETERS:    IN  AX                Handle
+;                          IN  BX                Wait handle
+;                          IN  ECX               Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_handle_write_name  DB 'Add Wait For Handle Write', 0
+
+add_wait_for_handle_write	Proc far
+    retf32
+add_wait_for_handle_write	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          AddWaitForHandleException
+;
+;           DESCRIPTION:   Add wait for handle exception
+;
+;           PARAMETERS:    IN  AX                Handle
+;                          IN  BX                Wait handle
+;                          IN  ECX               Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_handle_exception_name  DB 'Add Wait For Handle Exception', 0
+
+add_wait_for_handle_exception	Proc far
+    retf32
+add_wait_for_handle_exception	Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
