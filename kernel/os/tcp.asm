@@ -3879,49 +3879,40 @@ wait_for_tcp_connection Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           OpenTcpConnection
+;       Name:           OpenConnection
 ;
 ;       Purpose:        Open a tcp connection
 ;
-;       Parameters:         EAX         Timeout in milliseconds for connection
+;       Parameters:     EBP         Timeout in milliseconds for connection
 ;                       ECX         buffer size
 ;                       EDX         ip address
 ;                       SI          local port (or 0 for random port)
 ;                       DI          remote port (or 0 to accept any port)
 ;
 ;       Returns:        NC          ok
-;                       BX          connection handle
+;                       DS          connection sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_tcp_connection_name    DB 'Open TCP Connection',0
-
-open_tcp_connection     Proc far
-    push ds
+OpenConnection     Proc near
     push es
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
+    pushad
 ;
-    mov ebp,eax
     or si,si
-    jz open_tcp_dyn
+    jz otcDyn
 ;
     call FindConnection
-    jc open_tcp_create
+    jc otcCreate
 ;
     LeaveSection ds:tcp_section
     stc
-    jmp open_tcp_done
+    jmp otcDone
 
-open_tcp_dyn:
+otcDyn:
     call AllocatePort
-    jc open_tcp_done
+    jc otcDone
 
-open_tcp_create:
+otcCreate:
     call CreateConnection
     mov eax,ds:tcp_iss
     mov ds:tcp_send_una,eax
@@ -3942,11 +3933,11 @@ open_tcp_create:
     LeaveSection ds:tcp_section
 ;
     or di,di
-    jz open_tcp_handle
+    jz otcOk
 ;
     xor ecx,ecx
     call CreateSegment
-    jc open_tcp_arp_fail
+    jc otcArpFail
 ;       
     mov es:[di].tcp_flags, SYN
     mov eax,ds:tcp_iss
@@ -3958,25 +3949,19 @@ open_tcp_create:
     mov ds:tcp_owner,0
     EnterSection ds:tcp_section
     cmp ds:tcp_state,STATE_ESTAB
-    jne open_tcp_fail
+    jne otcFail
+;
     LeaveSection ds:tcp_section
 
-open_tcp_handle:
+otcOk:
     mov ds:tcp_owner,0
-    mov dx,ds
-    mov ax,TCP_SOCKET_HANDLE
-    mov cx,SIZE tcp_handle_seg
-    AllocateHandle
-    mov [ebx].tcp_handle_sel,dx
-    mov [ebx].hh_sign,TCP_SOCKET_HANDLE
-    mov bx,[ebx].hh_handle
     clc
-    jmp open_tcp_done
+    jmp otcDone
 
-open_tcp_fail:
+otcFail:
     LeaveSection ds:tcp_section
 
-open_tcp_arp_fail:
+otcArpFail:
     mov ax,SEG data
     mov es,ax
     RequestSpinlock es:ConnSpinlock
@@ -3989,19 +3974,59 @@ open_tcp_arp_fail:
     ReleaseSpinlock es:ConnSpinlock    
     stc
 
+otcDone:
+    popad
+    pop es
+    ret
+OpenConnection     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           OpenTcpConnection
+;
+;       Purpose:        Open a tcp connection
+;
+;       Parameters:         EAX         Timeout in milliseconds for connection
+;                       ECX         buffer size
+;                       EDX         ip address
+;                       SI          local port (or 0 for random port)
+;                       DI          remote port (or 0 to accept any port)
+;
+;       Returns:        NC          ok
+;                       BX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_tcp_connection_name    DB 'Open TCP Connection',0
+
+open_tcp_connection     Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+    push ebp
+;
+    mov ebp,eax
+    call OpenConnection
+    jc open_tcp_done
+;
+    mov dx,ds
+    mov ax,TCP_SOCKET_HANDLE
+    mov cx,SIZE tcp_handle_seg
+    AllocateHandle
+    mov [ebx].tcp_handle_sel,dx
+    mov [ebx].hh_sign,TCP_SOCKET_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+
 open_tcp_done:
     pop ebp
-    pop edi
-    pop esi
     pop edx
     pop ecx
     pop eax
-    pop es
     pop ds
     retf32
 open_tcp_connection     Endp
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
