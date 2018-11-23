@@ -5575,7 +5575,32 @@ write_tcp_done32:
     retf32
 write_tcp_connection32  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           PushConnection
+;
+;       Purpose:        Push (commit) data connection
+;
+;       Parameters:     DS          Connection sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+PushConnection     Proc near
+    push es
+    pushad
+;
+    test ds:tcp_pending,FLAG_SEND_PUSH
+    jnz ptcDone
+;       
+    mov ds:tcp_push_timeout,5
+    or ds:tcp_pending,FLAG_SEND_PUSH
+    call SendData
+
+ptcDone:
+    popad
+    pop es
+    ret
+PushConnection	Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5591,8 +5616,8 @@ push_tcp_connection_name DB 'Push TCP Connection',0
 
 push_tcp_connection     Proc far
     push ds
-    push es
-    pushad
+    push eax
+    push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
     DerefHandle
@@ -5604,24 +5629,14 @@ push_tcp_connection     Proc far
     jz push_tcp_done
 ;
     mov ds,ax
-    EnterSection ds:tcp_section
-    test ds:tcp_pending,FLAG_SEND_PUSH
-    jnz push_send_done
-;       
-    mov ds:tcp_push_timeout,5
-    or ds:tcp_pending,FLAG_SEND_PUSH
-    call SendData
-
-push_send_done:
-    LeaveSection ds:tcp_section
+    call PushConnection
 
 push_tcp_done:
-    popad
-    pop es
+    pop ebx
+    pop eax
     pop ds
     retf32
 push_tcp_connection     Endp
-
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
