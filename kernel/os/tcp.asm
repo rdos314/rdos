@@ -1830,10 +1830,7 @@ retrans_not_write:
     or bx,bx
     jz retrans_not_exc
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalExceptionHandle
 
 retrans_not_exc:
     mov bx,ds:tcp_writer
@@ -2007,10 +2004,7 @@ check_rst_not_write:
     or bx,bx
     jz check_rst_not_exc
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalExceptionHandle
 
 check_rst_not_exc:
     mov bx,ds:tcp_writer
@@ -4132,10 +4126,7 @@ ctcNotWrite:
     or bx,bx
     jz ctcNotExc
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalExceptionHandle
 
 ctcNotExc:
     mov bx,ds:tcp_writer
@@ -6434,7 +6425,7 @@ stop_write_tcp_socket    Endp
 ;       DESCRIPTION:    Start exception TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
+;                       IN  AX        Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6442,11 +6433,13 @@ start_exception_tcp_socket_name DB 'Start Exception Tcp Socket', 0
 
 start_exception_tcp_socket    Proc far
     push ds
+    push bx
 ;
     or bx,bx
     jz setsDone
 ;
     mov ds,bx
+    mov bx,ax
     EnterSection ds:tcp_section
 ;
     test ds:tcp_pending,FLAG_DELETE_NET
@@ -6459,12 +6452,13 @@ start_exception_tcp_socket    Proc far
     jmp setsLeave
 
 setsSignal:
-    SignalWait
+    SignalExceptionHandle
 
 setsLeave:
     LeaveSection ds:tcp_section
 
 setsDone:
+    pop bx
     pop ds
     retf32
 start_exception_tcp_socket    Endp
@@ -6477,7 +6471,6 @@ start_exception_tcp_socket    Endp
 ;       DESCRIPTION:    Stop exception TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

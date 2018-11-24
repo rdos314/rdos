@@ -2203,7 +2203,7 @@ SignalWriteHandle MACRO
 
 ; IN  BX        Handle
 SignalExceptionHandle MACRO
-    OsGate signal_exception_handle_nr
+    OsGate signal_exc_handle_nr
                     ENDM
 
 ; IN  AX        Entry type
@@ -2913,7 +2913,7 @@ StopWriteTcpSocket               MACRO
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Handle wait object
+; IN  AX        Handle
 StartExceptionTcpSocket               MACRO
     OsGate start_exc_tcp_socket_nr
                         ENDM

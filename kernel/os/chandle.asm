@@ -3637,6 +3637,70 @@ add_wait_for_handle_write	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SignalExceptionHandle
+;
+;           DESCRIPTION:    Signal exception handle
+;
+;           PARAMETERS:     BX	Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+signal_exc_handle_name	DB 'Signal Exception Handle', 0
+
+signal_exc_handle	Proc far
+    push ds
+    push ax
+    push dx
+;
+    mov ax,chandle_data_sel
+    mov ds,ax
+    mov ax,bx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+;
+    EnterSection ds:hd_section
+    xor ax,ax
+    xchg ax,ds:[bx].he_exc_wait_sel
+    or ax,ax
+    jz sehLeave
+;
+    push ds
+    push cx
+    push si
+;
+    mov ds,ax
+    mov cx,ds:hw_count
+    mov si,OFFSET hw_arr
+    
+sehLoop:
+    lodsw
+    mov es,ax
+    SignalWait
+    loop sehLoop
+;
+    mov ax,ds
+    pop si
+    pop cx
+    pop ds
+;
+    mov es,ax
+    FreeMem
+
+sehLeave:
+    LeaveSection ds:hd_section
+;
+    pop dx
+    pop ax
+    pop ds
+    retf32
+signal_exc_handle      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           StartWaitForExc
 ;
 ;           DESCRIPTION:    Start a wait for exception
@@ -3695,8 +3759,11 @@ start_wait_for_exc       PROC far
     jz swfeDone
 ;
     push ds
+    push es
     push bx
+    push di
 ;
+    mov di,ax
     push dx
     dec ax
     mov dx,SIZE handle_entry_struc
@@ -3707,12 +3774,45 @@ start_wait_for_exc       PROC far
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    EnterSection ds:hd_section
+;
+    mov bp,es
+    mov ax,ds:[bx].he_exc_wait_sel
+    or ax,ax
+    jnz swfeAdd
+;
+    mov eax,SIZE handle_wait_struc
+    AllocateSmallGlobalMem
+    mov es:hw_handle,di
+    mov es:hw_count,1
+    mov es:hw_arr,bp
+    mov ds:[bx].he_exc_wait_sel,es
+    LeaveSection ds:hd_section
+;
+    mov ax,di
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].start_wait_exc_tab
+    jmp swfeLinked
+
+swfeAdd:
+    mov es,ax
+    mov di,es:hw_count
+    cmp di,HANDLE_WAIT_OBJ_COUNT
+    je swfeLeave
 ;
+    shl di,1
+    mov es:[di].hw_arr,bp
+    inc es:hw_count
+
+swfeLeave:
+    LeaveSection ds:hd_section
+
+swfeLinked:
+    pop di
     pop bx
+    pop es
     pop ds
 
 swfeDone:
@@ -3798,11 +3898,74 @@ stop_wait_for_exc    PROC far
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    EnterSection ds:hd_section
+    mov ax,ds:[bx].he_exc_wait_sel
+    or ax,ax
+    jz ewfeLeave
+;
+    push ds
+    push cx
+    push dx
+    push si
+;
+    mov ds,ax
+    mov cx,ds:hw_count
+    mov si,OFFSET hw_arr
+    mov dx,es
+
+ewfeFindLoop:
+    lodsw
+    cmp ax,dx
+    je ewfeFound
+;
+    loop ewfeFindLoop
+    jmp ewfeRemoved
+
+ewfeFound:
+    sub cx,1
+    jz ewfeRemove
+
+ewfeMoveLoop:
+    mov ax,ds:[si]
+    mov ds:[si-2],ax
+    add si,2
+    loop ewfeMoveLoop
+
+ewfeRemove:
+    sub ds:hw_count,1
+    jnz ewfeRemoved
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+    pop es
+;
+    pop si
+    pop dx
+    pop cx
+    pop ds
+    mov ds:[bx].he_exc_wait_sel,0
+    LeaveSection ds:hd_section
+;
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].stop_wait_exc_tab
-;
+    jmp ewfePop
+
+ewfeRemoved:
+    pop si
+    pop dx
+    pop cx
+    pop ds
+
+ewfeLeave:
+    LeaveSection ds:hd_section
+
+ewfePop:
     pop bx
     pop ds
 
@@ -4063,6 +4226,12 @@ init_chandle     PROC near
     mov edi,OFFSET signal_write_handle_name
     xor cl,cl
     mov ax,signal_write_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET signal_exc_handle
+    mov edi,OFFSET signal_exc_handle_name
+    xor cl,cl
+    mov ax,signal_exc_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
