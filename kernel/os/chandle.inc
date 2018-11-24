@@ -66,12 +66,24 @@ O_EXCL          = 400h
 
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
+HANDLE_WAIT_OBJ_COUNT = 8
+
+handle_wait_struc     STRUC
+
+hw_handle            DW ?
+hw_count             DW ?
+hw_arr               DW HANDLE_WAIT_OBJ_COUNT DUP(?)
+
+handle_wait_struc     ENDS
 
 handle_entry_struc    STRUC
 
-he_type          DW ?
-he_sel           DW ?
-he_ref_count     DW ?
+he_type              DW ?
+he_sel               DW ?
+he_ref_count         DW ?
+he_read_wait_sel     DW ?
+he_write_wait_sel    DW ?
+he_exc_wait_sel      DW ?
 
 handle_entry_struc    ENDS
 

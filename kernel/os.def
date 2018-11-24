@@ -790,4 +790,8 @@ stop_write_tcp_socket_nr    = 695
 start_exc_tcp_socket_nr     = 696
 stop_exc_tcp_socket_nr      = 697
 
-osgate_entries              = 700
+signal_read_handle_nr       = 698
+signal_write_handle_nr      = 699
+signal_exc_handle_nr        = 700
+
+osgate_entries              = 750

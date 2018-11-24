@@ -3018,7 +3018,7 @@ write_udp_socket    Endp
 ;       DESCRIPTION:    Start read UDP socket
 ;
 ;       PARAMETERS;     IN  BX        Udp selector
-;                       IN  ES        Wait object
+;                       IN  AX        Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3036,7 +3036,6 @@ start_read_udp_socket    Endp
 ;       DESCRIPTION:    Stop read UDP socket
 ;
 ;       PARAMETERS;     IN  BX        Udp selector
-;                       IN  ES        Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

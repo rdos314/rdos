@@ -2191,6 +2191,21 @@ AllocateCHandle MACRO
     OsGate allocate_c_handle_nr
                     ENDM
 
+; IN  BX        Handle
+SignalReadHandle MACRO
+    OsGate signal_read_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+SignalWriteHandle MACRO
+    OsGate signal_write_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+SignalExceptionHandle MACRO
+    OsGate signal_exception_handle_nr
+                    ENDM
+
 ; IN  AX        Entry type
 ; IN  BX        Entry handle
 ; IN  DX        Selector
@@ -2876,37 +2891,34 @@ WriteTcpSocket MACRO
                     ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Wait object
+; IN  AX        Handle
 StartReadTcpSocket               MACRO
     OsGate start_read_tcp_socket_nr
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Wait object
 StopReadTcpSocket               MACRO
     OsGate stop_read_tcp_socket_nr
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Wait object
+; IN  ES        Handle wait object
 StartWriteTcpSocket               MACRO
     OsGate start_write_tcp_socket_nr
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Wait object
 StopWriteTcpSocket               MACRO
     OsGate stop_write_tcp_socket_nr
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Wait object
+; IN  ES        Handle wait object
 StartExceptionTcpSocket               MACRO
     OsGate start_exc_tcp_socket_nr
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Wait object
 StopExceptionTcpSocket               MACRO
     OsGate stop_exc_tcp_socket_nr
                         ENDM
@@ -2961,13 +2973,12 @@ WriteUdpSocket MACRO
                     ENDM
 
 ; IN  BX        Udp selector
-; IN  ES        Wait object
+; IN  AX        Handle
 StartReadUdpSocket               MACRO
     OsGate start_read_udp_socket_nr
                         ENDM
 
 ; IN  BX        Udp selector
-; IN  ES        Wait object
 StopReadUdpSocket               MACRO
     OsGate stop_read_udp_socket_nr
                         ENDM

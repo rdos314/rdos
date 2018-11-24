@@ -1814,10 +1814,7 @@ retrans_close:
     or bx,bx
     jz retrans_not_read
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalReadHandle
 
 retrans_not_read:
     xor bx,bx
@@ -1997,10 +1994,7 @@ CheckRst    Proc near
     or bx,bx
     jz check_rst_not_read
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalReadHandle
 
 check_rst_not_read:
     xor bx,bx
@@ -2677,15 +2671,16 @@ process_data_check_fin:
     or ds:tcp_pending, FLAG_DELAY_ACK OR FLAG_CLOSED
 
 process_data_wake:
+    mov bx,ds:tcp_receive_count
+    or bx,bx
+    jz process_data_not_read
+;
     xor bx,bx
     xchg bx,ds:tcp_read_wait
     or bx,bx
     jz process_data_not_read
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalReadHandle
 
 process_data_not_read:
     mov bx,ds:tcp_owner
@@ -4120,10 +4115,7 @@ CloseConnection    Proc near
     or bx,bx
     jz ctcNotRead
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalReadHandle
 
 ctcNotRead:
     xor bx,bx
@@ -6272,7 +6264,7 @@ write_tcp_socket    Endp
 ;       DESCRIPTION:    Start read TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
+;                       IN  AX        Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6299,11 +6291,14 @@ start_read_tcp_socket    Proc far
     or cx,cx
     jnz srtsSignal
 ;
-    mov ds:tcp_read_wait,es
+    mov ds:tcp_read_wait,ax
     jmp srtsLeave
 
 srtsSignal:
-    SignalWait
+    push bx
+    mov bx,ax
+    SignalReadHandle
+    pop bx
 
 srtsLeave:
     LeaveSection ds:tcp_section
@@ -6323,7 +6318,6 @@ start_read_tcp_socket    Endp
 ;       DESCRIPTION:    Stop read TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

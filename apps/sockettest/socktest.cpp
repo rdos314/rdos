@@ -112,11 +112,8 @@ int main(int argc, char **argv)
         FD_SET(s, &exc_set);
 
         size = 0;
-        for (i = 0; i < 2 && !size; i++)
-        {
-            ret = select(s+1, &in_set, 0, &exc_set, &tv);
-            size = recv(s, buf, 1000, 0);
-        }
+        ret = select(s+1, &in_set, 0, 0, &tv);
+        size = recv(s, buf, 1000, 0);
 
         buf[size] = 0;
 
