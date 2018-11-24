@@ -3199,6 +3199,70 @@ add_wait_for_handle_read	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SignalWriteHandle
+;
+;           DESCRIPTION:    Signal write handle
+;
+;           PARAMETERS:     BX	Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+signal_write_handle_name	DB 'Signal Write Handle', 0
+
+signal_write_handle	Proc far
+    push ds
+    push ax
+    push dx
+;
+    mov ax,chandle_data_sel
+    mov ds,ax
+    mov ax,bx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+;
+    EnterSection ds:hd_section
+    xor ax,ax
+    xchg ax,ds:[bx].he_write_wait_sel
+    or ax,ax
+    jz swhLeave
+;
+    push ds
+    push cx
+    push si
+;
+    mov ds,ax
+    mov cx,ds:hw_count
+    mov si,OFFSET hw_arr
+    
+swhLoop:
+    lodsw
+    mov es,ax
+    SignalWait
+    loop swhLoop
+;
+    mov ax,ds
+    pop si
+    pop cx
+    pop ds
+;
+    mov es,ax
+    FreeMem
+
+swhLeave:
+    LeaveSection ds:hd_section
+;
+    pop dx
+    pop ax
+    pop ds
+    retf32
+signal_write_handle      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           StartWaitForWrite
 ;
 ;           DESCRIPTION:    Start a wait for write data
@@ -3257,8 +3321,11 @@ start_wait_for_write       PROC far
     jz swfwDone
 ;
     push ds
+    push es
     push bx
+    push di
 ;
+    mov di,ax
     push dx
     dec ax
     mov dx,SIZE handle_entry_struc
@@ -3269,12 +3336,45 @@ start_wait_for_write       PROC far
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    EnterSection ds:hd_section
+;
+    mov bp,es
+    mov ax,ds:[bx].he_write_wait_sel
+    or ax,ax
+    jnz swfwAdd
+;
+    mov eax,SIZE handle_wait_struc
+    AllocateSmallGlobalMem
+    mov es:hw_handle,di
+    mov es:hw_count,1
+    mov es:hw_arr,bp
+    mov ds:[bx].he_write_wait_sel,es
+    LeaveSection ds:hd_section
+;
+    mov ax,di
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].start_wait_write_tab
+    jmp swfwLinked
+
+swfwAdd:
+    mov es,ax
+    mov di,es:hw_count
+    cmp di,HANDLE_WAIT_OBJ_COUNT
+    je swfwLeave
 ;
+    shl di,1
+    mov es:[di].hw_arr,bp
+    inc es:hw_count
+
+swfwLeave:
+    LeaveSection ds:hd_section
+
+swfwLinked:
+    pop di
     pop bx
+    pop es
     pop ds
 
 swfwDone:
@@ -3360,11 +3460,74 @@ stop_wait_for_write    PROC far
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    EnterSection ds:hd_section
+    mov ax,ds:[bx].he_write_wait_sel
+    or ax,ax
+    jz ewfwLeave
+;
+    push ds
+    push cx
+    push dx
+    push si
+;
+    mov ds,ax
+    mov cx,ds:hw_count
+    mov si,OFFSET hw_arr
+    mov dx,es
+
+ewfwFindLoop:
+    lodsw
+    cmp ax,dx
+    je ewfwFound
+;
+    loop ewfwFindLoop
+    jmp ewfwRemoved
+
+ewfwFound:
+    sub cx,1
+    jz ewfwRemove
+
+ewfwMoveLoop:
+    mov ax,ds:[si]
+    mov ds:[si-2],ax
+    add si,2
+    loop ewfwMoveLoop
+
+ewfwRemove:
+    sub ds:hw_count,1
+    jnz ewfwRemoved
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+    pop es
+;
+    pop si
+    pop dx
+    pop cx
+    pop ds
+    mov ds:[bx].he_write_wait_sel,0
+    LeaveSection ds:hd_section
+;
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].stop_wait_write_tab
-;
+    jmp ewfwPop
+
+ewfwRemoved:
+    pop si
+    pop dx
+    pop cx
+    pop ds
+
+ewfwLeave:
+    LeaveSection ds:hd_section
+
+ewfwPop:
     pop bx
     pop ds
 
@@ -3894,6 +4057,12 @@ init_chandle     PROC near
     mov edi,OFFSET signal_read_handle_name
     xor cl,cl
     mov ax,signal_read_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET signal_write_handle
+    mov edi,OFFSET signal_write_handle_name
+    xor cl,cl
+    mov ax,signal_write_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16

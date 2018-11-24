@@ -1822,10 +1822,7 @@ retrans_not_read:
     or bx,bx
     jz retrans_not_write
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalWriteHandle
 
 retrans_not_write:
     xor bx,bx
@@ -2002,10 +1999,7 @@ check_rst_not_read:
     or bx,bx
     jz check_rst_not_write
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalWriteHandle
 
 check_rst_not_write:
     xor bx,bx
@@ -3512,15 +3506,22 @@ receive_no_ack:
     call SendData
 
 receive_leave:
+    push ecx
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    pop ecx
+    jbe receive_not_write
+;
     xor bx,bx
     xchg bx,ds:tcp_write_wait
     or bx,bx
     jz receive_not_write
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalWriteHandle
 
 receive_not_write:
     mov bx,ds:tcp_writer
@@ -4123,10 +4124,7 @@ ctcNotRead:
     or bx,bx
     jz ctcNotWrite
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    SignalWriteHandle
 
 ctcNotWrite:
     xor bx,bx
@@ -6272,6 +6270,7 @@ start_read_tcp_socket_name DB 'Start Read Tcp Socket', 0
 
 start_read_tcp_socket    Proc far
     push ds
+    push bx
     push cx
 ;
     or bx,bx
@@ -6279,6 +6278,7 @@ start_read_tcp_socket    Proc far
     jz srtsDone
 ;
     mov ds,bx
+    mov bx,ax
     EnterSection ds:tcp_section
 ;
     test ds:tcp_pending,FLAG_DELETE_NET
@@ -6295,10 +6295,7 @@ start_read_tcp_socket    Proc far
     jmp srtsLeave
 
 srtsSignal:
-    push bx
-    mov bx,ax
     SignalReadHandle
-    pop bx
 
 srtsLeave:
     LeaveSection ds:tcp_section
@@ -6306,6 +6303,7 @@ srtsLeave:
 
 srtsDone:
     pop cx
+    pop bx
     pop ds
     retf32
 start_read_tcp_socket    Endp
@@ -6349,7 +6347,7 @@ stop_read_tcp_socket    Endp
 ;       DESCRIPTION:    Start write TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
+;                       IN  AX        Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6358,12 +6356,14 @@ start_write_tcp_socket_name DB 'Start Write Tcp Socket', 0
 start_write_tcp_socket    Proc far
     push ds
     push eax
+    push ebx
     push ecx
 ;
     or bx,bx
     jz swtsDone
 ;
     mov ds,bx
+    mov bx,ax
     EnterSection ds:tcp_section
 ;
     test ds:tcp_pending,FLAG_DELETE_NET
@@ -6384,13 +6384,14 @@ start_write_tcp_socket    Proc far
     jmp swtsLeave
 
 swtsSignal:
-    SignalWait
+    SignalWriteHandle
 
 swtsLeave:
     LeaveSection ds:tcp_section
 
 swtsDone:
     pop ecx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -6404,7 +6405,6 @@ start_write_tcp_socket    Endp
 ;       DESCRIPTION:    Stop write TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  ES        Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

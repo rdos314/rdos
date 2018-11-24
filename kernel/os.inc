@@ -2902,7 +2902,7 @@ StopReadTcpSocket               MACRO
                         ENDM
 
 ; IN  BX        Tcp selector
-; IN  ES        Handle wait object
+; IN  AX        Handle
 StartWriteTcpSocket               MACRO
     OsGate start_write_tcp_socket_nr
                         ENDM
