@@ -34,7 +34,7 @@
 #include <math.h>
 
 #include "frinv.h"
-#include "tempnu.h"
+#include "openweather.h"
 #include "rad.h"
 #include "datetime.h"
 #include "circ.h"
@@ -143,7 +143,7 @@ int main()
     TVp *Vp;
     TPower *Power;
     TFroniusInverter *SolarInv;
-    TTemperatureNu *TempNu;
+    TOpenWeather *w;
 //    TClimate *Climate;
     int i;
     int id;
@@ -277,7 +277,7 @@ int main()
     Store->Add(Vp);
 
     SolarInv = new TFroniusInverter(InvIp, INVERTER_IP);
-    TempNu = new TTemperatureNu("norra_faladen");
+    w = new TOpenWeather("2715946", "c88ba239c78cdbea4c1fe561ad4f7b3d");
 
 //    Climate = new TClimate(control);
 //    Store->Add(Climate);
@@ -364,7 +364,7 @@ int main()
     SolarUnitFactory.SetDrawColor(0, 0, 0);
     SolarUnitFactory.AlignLeft();
 
-    SolarTable = new TTableControl(control, 850, 50, 400, 150);
+    SolarTable = new TTableControl(control, 850, 50, 400, 200);
     SolarTable->SetBackColor(0, 20, 50);
     SolarTable->SetRowSpacing(5);
     SolarTable->SetColSpacing(8);
@@ -373,6 +373,9 @@ int main()
     SolarTable->AddLabelColumn(&SolarValueFactory, 100);
     SolarTable->AddLabelColumn(&SolarUnitFactory, 75);
 
+    SolarTable->AddRow(24, 45);
+    SolarTable->AddRow(24, 45);
+    SolarTable->AddRow(24, 45);
     SolarTable->AddRow(24, 45);
     SolarTable->AddRow(24, 45);
     SolarTable->AddRow(24, 45);
@@ -385,6 +388,16 @@ int main()
 
     SolarTable->SetText(2, 0, "Temperature");
     SolarTable->SetText(2, 2, "°C");
+
+    SolarTable->SetText(3, 0, "Wind");
+    SolarTable->SetText(3, 2, "m/s");
+
+    SolarTable->SetText(4, 0, "Pressure");
+    SolarTable->SetText(4, 2, "hPa");
+
+    SolarTable->SetText(5, 0, "Humidity");
+    SolarTable->SetText(5, 2, "%");
+
     SolarTable->Show();
 
     UnlockGUI();
@@ -496,13 +509,25 @@ int main()
             SolarTable->SetText(1, 1, str);
         }
 
-        if (TempNu->IsOnline())
+        if (w->IsOnline())
         {
-            val = TempNu->GetTemperature();
+            val = w->GetTemperature();
             sprintf(str, "%5.1Lf", val);
             SolarTable->SetText(2, 1, str);
 
             ambient = (int)(10.0 * val);
+
+            val = w->GetWindSpeed();
+            sprintf(str, "%5.1Lf", val);
+            SolarTable->SetText(3, 1, str);
+
+            ival = (int)w->GetPressure();
+            sprintf(str, "%d", ival);
+            SolarTable->SetText(4, 1, str);
+
+            ival = (int)w->GetHumidity();
+            sprintf(str, "%d", ival);
+            SolarTable->SetText(5, 1, str);
         }
         else
             ambient = 50;
