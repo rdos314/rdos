@@ -34,42 +34,27 @@
 class TFroniusInverter : public TThread
 {
 public:
-    TFroniusInverter(char *IpStr, long IP);
+    TFroniusInverter(char *HostStr);
     virtual ~TFroniusInverter();
 
     bool IsOnline();
 
-    long double GetCurrentPower();
-    long double GetDayEnergy();
-    long double GetYearEnergy();
-    long double GetTotalEnergy();
+    double GetCurrentPower();
+    double GetDayEnergy();
+    double GetYearEnergy();
+    double GetTotalEnergy();
 
 protected:
-    long double GetPowerFact(char *unit);
-    long double GetEnergyFact(char *unit);
-    void NotifyUnit(char *name, char *unit);
-    void NotifyValue(char *name, int index, int value);
-    void DecodeUnit(char *name, char *data);
-    void DecodeData(char *name, char *data);
-    void NotifyField(char *name, char *field, char *data);
-    void NotifyParam(char *name, char *data);
-    char *GetQuoted(char *str);
-    char *GetBlock(char *str);
     virtual void Execute();
 
-    long double FCurrP;
-    long double FDayE;
-    long double FYearE;
-    long double FTotalE;
-
-    long double FCurrFact;
-    long double FDayFact;
-    long double FYearFact;
-    long double FTotalFact;
+    double FCurrP;
+    double FDayE;
+    double FYearE;
+    double FTotalE;
 
     bool FOnline;
     long FIP;
-    char FIpStr[32];
+    char *FHostStr;
     TTcpSocket *FSocket;
     char FBuf[2048];
 

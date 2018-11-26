@@ -261,6 +261,8 @@ void TOpenWeather::Execute()
 
     FOnline = false;
     FIp = 0;
+
+    RdosWaitMilli(2000);
     
     while (FIp == 0)
     {

@@ -27,8 +27,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include "rdos.h"
 #include "frinv.h"
+#include "json.h"
 
 /*##########################################################################
 #
@@ -41,15 +44,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFroniusInverter::TFroniusInverter(char *IpStr, long IP)
+TFroniusInverter::TFroniusInverter(char *HostStr)
 {
-    FCurrFact = 1.0;
-    FDayFact = 0.001;
-    FYearFact = 0.001;
-    FTotalFact = 0.001;
+    int size = strlen(HostStr);
+
     FOnline = false;
-    strcpy(FIpStr, IpStr);
-    FIP = IP;
+
+    FHostStr = new char[size + 1];
+    strcpy(FHostStr, HostStr);
 
     Start("Fronius inverter", 0x8000);
 }
@@ -67,6 +69,7 @@ TFroniusInverter::TFroniusInverter(char *IpStr, long IP)
 ##########################################################################*/
 TFroniusInverter::~TFroniusInverter()
 {
+    delete FHostStr;
 }
 
 /*##########################################################################
@@ -96,7 +99,7 @@ bool TFroniusInverter::IsOnline()
 #   Returns....: *
 #
 ##########################################################################*/
-long double TFroniusInverter::GetCurrentPower()
+double TFroniusInverter::GetCurrentPower()
 {
     return FCurrP;
 }
@@ -112,7 +115,7 @@ long double TFroniusInverter::GetCurrentPower()
 #   Returns....: *
 #
 ##########################################################################*/
-long double TFroniusInverter::GetDayEnergy()
+double TFroniusInverter::GetDayEnergy()
 {
     return FDayE;
 }
@@ -128,7 +131,7 @@ long double TFroniusInverter::GetDayEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-long double TFroniusInverter::GetYearEnergy()
+double TFroniusInverter::GetYearEnergy()
 {
     return FYearE;
 }
@@ -144,396 +147,9 @@ long double TFroniusInverter::GetYearEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-long double TFroniusInverter::GetTotalEnergy()
+double TFroniusInverter::GetTotalEnergy()
 {
     return FTotalE;
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::GetPowerFact
-#
-#   Purpose....: Get power factor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TFroniusInverter::GetPowerFact(char *unit)
-{    
-    if (!strcmp(unit, "kW"))
-        return 1000.0;
-
-    if (!strcmp(unit, "MW"))
-        return 1000000.0;
-
-    return 1.0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::GetPowerFact
-#
-#   Purpose....: Get power factor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TFroniusInverter::GetEnergyFact(char *unit)
-{    
-    if (!strcmp(unit, "kWh"))
-        return 1.0;
-
-    if (!strcmp(unit, "MWh"))
-        return 1000.0;
-
-    return 0.001;
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::NotifyUnit
-#
-#   Purpose....: Notify unit used
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFroniusInverter::NotifyUnit(char *name, char *unit)
-{    
-    if (!strcmp(name, "PAC"))
-        FCurrFact = GetPowerFact(unit);
-
-    if (!strcmp(name, "DAY_ENERGY"))
-        FDayFact = GetEnergyFact(unit);
-    
-    if (!strcmp(name, "YEAR_ENERGY"))
-        FYearFact = GetEnergyFact(unit);
-    
-    if (!strcmp(name, "TOTAL_ENERGY"))
-        FTotalFact = GetEnergyFact(unit);
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::NotifyValue
-#
-#   Purpose....: Notify value
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFroniusInverter::NotifyValue(char *name, int index, int value)
-{
-    if (index == 1)
-    {
-        if (!strcmp(name, "PAC"))
-            FCurrP = (long double)value * FCurrFact;
-
-        if (!strcmp(name, "DAY_ENERGY"))
-            FDayE = (long double)value * FDayFact;
-    
-        if (!strcmp(name, "YEAR_ENERGY"))
-            FYearE = (long double)value * FYearFact;
-    
-        if (!strcmp(name, "TOTAL_ENERGY"))
-            FTotalE = (long double)value * FTotalFact;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::DecodeUnit
-#
-#   Purpose....: Decode unit
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFroniusInverter::DecodeUnit(char *name, char *data)
-{
-    char *ptr;
-    char *unit = strchr(data, 0x22);
-
-    if (unit)
-    {
-        unit++;
-        ptr = strchr(unit, 0x22);
-        if (ptr)
-        {
-            *ptr = 0;
-            NotifyUnit(name, unit);
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::DecodeData
-#
-#   Purpose....: Decode data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFroniusInverter::DecodeData(char *name, char *data)
-{
-    bool hasq = false;
-    char *ptr = data;
-    char *ip = 0;
-    char *vp = 0;
-
-    while (*ptr)
-    {
-        switch (*ptr)
-        {
-            case 0x22:
-                if (hasq)
-                {
-                    *ptr = 0;
-                    hasq = false;
-                }
-                else
-                {
-                    if (!ip)
-                    {
-                        ip = ptr + 1;
-                        hasq = true;
-                    }
-                }
-                break;
-
-            case ':':
-                vp = ptr + 1;
-                break;
-        }
-        ptr++;
-    }
-
-    if (ip && vp)
-        NotifyValue(name, atoi(ip), atoi(vp));
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::NotifyField
-#
-#   Purpose....: Notify field
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFroniusInverter::NotifyField(char *name, char *field, char *data)
-{
-    if (!strcmp(field, "Unit"))
-        DecodeUnit(name, data);
-
-    if (!strcmp(field, "Values"))
-        DecodeData(name, data);
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::NotifyParam
-#
-#   Purpose....: Notify parameter
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFroniusInverter::NotifyParam(char *name, char *data)
-{
-    int count = 0;
-    bool hasq = false;
-    char *ptr = data;
-    char *pp = 0;
-    char *pd = 0;
-
-    while (*ptr)
-    {
-        switch (*ptr)
-        {
-            case '{':
-                if (count == 0 && pp)
-                    pd = ptr + 1;
-                
-                count++;
-                break;
-
-            case '}':
-                count--;
-                if (count == 0 && pp && pd)
-                {
-                    *ptr = 0;
-                    NotifyField(name, pp, pd);
-                    pp = 0;
-                    pd = 0;
-                }
-                break;
-
-            case 0x22:
-                if (count == 0)
-                {
-                    if (hasq)
-                    {
-                        *ptr = 0;
-                        hasq = false;
-                    }
-                    else
-                    {
-                        if (!pp)
-                        {
-                            pp = ptr + 1;
-                            hasq = true;
-                        }
-                    }
-                }
-                break;
-
-            case ':':
-                if (count == 0)
-                    pd = ptr + 1;
-                break;
-
-            case ',':
-                if (pp && pd)
-                {
-                    *ptr = 0;
-                    NotifyField(name, pp, pd);
-                    pp = 0;
-                    pd = 0;
-                }
-                break;
-                
-            default:
-                break;                    
-        }
-        ptr++;
-    }
-
-    if (pp && pd)
-        NotifyField(name, pp, pd);
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::GetQuoted
-#
-#   Purpose....: Get quoted data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TFroniusInverter::GetQuoted(char *str)
-{
-    char *ptr = str;
-    int count = 0;
-    bool hasq = false;
-    char *dp = 0;
-    char *np = 0;
-
-    while (*ptr)
-    {
-        switch (*ptr)
-        {
-            case '{':
-                count++;
-                if (count == 1)
-                    dp = ptr + 1;
-                break;
-
-            case '}':
-                count--;
-                if (count == 0)
-                {
-                    *ptr = 0;
-                    if (np && dp)
-                        NotifyParam(np, dp);
-                    return ptr + 1;
-                }
-                break;
-
-            case 0x22:
-                if (count == 0)
-                {
-                    if (hasq)
-                    {
-                        *ptr = 0;
-                        hasq = false;
-                    }
-                    else
-                    {
-                        hasq = true;
-                        np = ptr + 1;
-                    }
-                }
-                break;
-
-            default:
-                break;            
-        }
-        ptr++;
-    }
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFroniusInverter::GetBlock
-#
-#   Purpose....: Get block
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TFroniusInverter::GetBlock(char *str)
-{
-    int count = 0;
-    char *ptr = str;
-
-    while (*ptr)
-    {
-        switch (*ptr)
-        {
-            case '{':
-                count++;
-                break;
-
-            case '}':
-                count--;
-                if (count == 0)
-                {
-                    *ptr = 0;
-                    return str + 1;
-                }
-                break;
-
-            default:
-                break;
-        }
-        ptr++;
-    }
-
-    return 0;
 }
 
 /*##########################################################################
@@ -552,8 +168,31 @@ void TFroniusInverter::Execute()
     char ch;
     int size;
     char *ptr;
+    char *tempptr;
+    struct hostent *host;
+    TJsonDocument *json;
+    TJsonCollection *root;
+    TJsonCollection *body;
+    TJsonCollection *data;
+    TJsonCollection *col;
+    TJsonCollection *values;
+    TJsonObject *obj;
+    TString str;
+    double fact;
 
     FOnline = false;
+    FIP = 0;
+
+    RdosWaitMilli(2000);
+
+    while (FIP == 0)
+    {
+        host = gethostbyname(FHostStr);
+        if (host)
+            FIP = *(long *)host->h_addr_list[0];
+        else
+            RdosWaitMilli(500);
+    }
 
     for (;;)
     {
@@ -563,15 +202,10 @@ void TFroniusInverter::Execute()
         {
             strcpy(FBuf, "GET /solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System HTTP/1.1\r\n");
             strcat(FBuf, "Host: ");
-            strcat(FBuf, FIpStr);
+            strcat(FBuf, FHostStr);
             strcat(FBuf, "\r\n");
-            strcat(FBuf, "Connection: keep-alive\r\n");
-            strcat(FBuf, "Accept: application/json, text/javascript, */*;q=0.01\r\n");
-            strcat(FBuf, "X-Requested-With: XMLHttpRequest\r\n");
+            strcat(FBuf, "Accept: application/json\r\n");
             strcat(FBuf, "User-Agent: RDOS\r\n");
-            strcat(FBuf, "Accept-Encoding: gzip\r\n");
-            strcat(FBuf, "Accept-Language: en-US,en;q=0.6\r\n");
-            strcat(FBuf, "Cookie: lang=en\r\n");
             strcat(FBuf, "\r\n");
             FSocket->Write(FBuf);
             FSocket->Push();
@@ -584,19 +218,174 @@ void TFroniusInverter::Execute()
             }
 
             FBuf[size] = 0;
-            ptr = strstr(FBuf, "Data");
-            if (ptr)
-                ptr = strchr(ptr, '{');
 
-            if (ptr)
-                ptr = GetBlock(ptr);
-
-            if (ptr)
+            ptr = FBuf;
+            while (ptr[1] != 0xd)
             {
-                while (ptr)
-                    ptr = GetQuoted(ptr);
+                tempptr = strchr(ptr + 1, 0xd);
+                if (tempptr)
+                    ptr = tempptr + 1;
+                else
+                    break;
+            }
 
-                FOnline = true;
+            while (*ptr != '{')
+                ptr++;
+
+            json = new TJsonDocument(ptr);
+
+            root = json->GetRoot();
+            if (root)
+            {
+                body = root->GetCollection("Body");
+                if (body)
+                {
+                    data = body->GetCollection("Data");
+                    if (data)
+                    {
+                        col = data->GetCollection("PAC");
+                        if (col)
+                        {
+                            fact = 0.0;
+                            obj = col->GetObj("Unit");
+                            if (obj)
+                            {
+                                str = obj->GetText();
+
+                                if (str == "W")
+                                    fact = 1.0;
+
+                                if (str == "kW")
+                                    fact = 1000.0;
+
+                                if (str == "MW")
+                                    fact = 1000000.0;
+                            }
+                                
+                            values = col->GetCollection("Values");
+                            if (values)
+                            {
+                                obj = values->GetObj("1");
+                                if (obj)
+                                    FCurrP = fact * obj->GetDouble();
+                            }
+                       }
+
+                        col = data->GetCollection("DAY_ENERGY");
+                        if (col)
+                        {
+                            fact = 0.0;
+                            obj = col->GetObj("Unit");
+                            if (obj)
+                            {
+                                str = obj->GetText();
+
+                                if (str == "Wh")
+                                    fact = 1.0;
+
+                                if (str == "kWh")
+                                    fact = 1000.0;
+
+                                if (str == "MWh")
+                                    fact = 1000000.0;
+                            }
+                                
+                            values = col->GetCollection("Values");
+                            if (values)
+                            {
+                                obj = values->GetObj("1");
+                                if (obj)
+                                    FDayE = fact * obj->GetDouble();
+                            }
+                        }
+
+                        col = data->GetCollection("YEAR_ENERGY");
+                        if (col)
+                        {
+                            fact = 0.0;
+                            obj = col->GetObj("Unit");
+                            if (obj)
+                            {
+                                str = obj->GetText();
+
+                                if (str == "Wh")
+                                    fact = 1.0;
+
+                                if (str == "kWh")
+                                    fact = 1000.0;
+
+                                if (str == "MWh")
+                                    fact = 1000000.0;
+                            }
+                                
+                            values = col->GetCollection("Values");
+                            if (values)
+                            {
+                                obj = values->GetObj("1");
+                                if (obj)
+                                    FYearE = fact * obj->GetDouble();
+                            }
+                        }
+
+                        col = data->GetCollection("YEAR_ENERGY");
+                        if (col)
+                        {
+                            fact = 0.0;
+                            obj = col->GetObj("Unit");
+                            if (obj)
+                            {
+                                str = obj->GetText();
+
+                                if (str == "Wh")
+                                    fact = 1.0;
+
+                                if (str == "kWh")
+                                    fact = 1000.0;
+
+                                if (str == "MWh")
+                                    fact = 1000000.0;
+                            }
+                                
+                            values = col->GetCollection("Values");
+                            if (values)
+                            {
+                                obj = values->GetObj("1");
+                                if (obj)
+                                    FYearE = fact * obj->GetDouble();
+                            }
+                        }
+
+                        col = data->GetCollection("TOTAL_ENERGY");
+                        if (col)
+                        {
+                            fact = 0.0;
+                            obj = col->GetObj("Unit");
+                            if (obj)
+                            {
+                                str = obj->GetText();
+
+                                if (str == "Wh")
+                                    fact = 1.0;
+
+                                if (str == "kWh")
+                                    fact = 1000.0;
+
+                                if (str == "MWh")
+                                    fact = 1000000.0;
+                            }
+                                
+                            values = col->GetCollection("Values");
+                            if (values)
+                            {
+                                obj = values->GetObj("1");
+                                if (obj)
+                                    FTotalE = fact * obj->GetDouble();
+                            }
+                        }
+
+                        FOnline = true;
+                    }
+                }
             }
 
             RdosWaitMilli(15000);

@@ -54,9 +54,6 @@
 #define WIDTH 240
 #define HEIGHT 15
 
-#define  INVERTER_IP 0x3301A8C0
-#define InvIp "192.168.1.51"
-
 TControlThread *control;
 TSection FGuiSection;
 
@@ -276,7 +273,7 @@ int main()
     Vp = new TVp(control);
     Store->Add(Vp);
 
-    SolarInv = new TFroniusInverter(InvIp, INVERTER_IP);
+    SolarInv = new TFroniusInverter("192.168.1.51");
     w = new TOpenWeather("2715946", "c88ba239c78cdbea4c1fe561ad4f7b3d");
 
 //    Climate = new TClimate(control);
@@ -504,7 +501,7 @@ int main()
             sprintf(str, "%d", ival);
             SolarTable->SetText(0, 1, str);
 
-            val = SolarInv->GetDayEnergy();
+            val = SolarInv->GetDayEnergy() / 1000.0;
             sprintf(str, "%7.3Lf", val);
             SolarTable->SetText(1, 1, str);
         }

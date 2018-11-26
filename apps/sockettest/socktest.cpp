@@ -40,17 +40,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-int fh;
-
-void WriteThread(void *param)
-{
-    char str[] = "Added content";
-
-    RdosWaitMilli(2500);
-
-    write(fh, str, strlen(str));
-}
-
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
 *   In params..: *                                                          #
@@ -82,9 +71,7 @@ int main(int argc, char **argv)
     double dval;
     long long val;
     TFile *file;
-    char HostStr[] = "api.openweathermap.org";
-
-    fh = open("json.log", O_RDWR);
+    char HostStr[] = "192.168.1.51";
 
     host = gethostbyname(HostStr);
     if (host)
@@ -111,30 +98,12 @@ int main(int argc, char **argv)
     {
         buf = new char[1024];
 
-        FD_SET(STDIN_FILENO, &in_set);
-        FD_SET(s, &in_set);
-        FD_SET(fh, &in_set);
-        ret = select(s+1, &in_set, 0, 0, 0);
-
-        ret = read(fh, buf, 1024);
-
-        RdosCreateThread(&WriteThread, "Writer", 0, 0x4000);
-
-        FD_SET(STDIN_FILENO, &in_set);
-        FD_SET(s, &in_set);
-        FD_SET(fh, &in_set);
-        ret = select(s+1, &in_set, 0, 0, 0);
-
-        strcpy(buf, "GET /data/2.5/weather?id=2715946&appid=c88ba239c78cdbea4c1fe561ad4f7b3d HTTP/1.1\r\n");
+        strcpy(buf, "GET /solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System HTTP/1.1\r\n");
         strcat(buf, "Host: ");
         strcat(buf, HostStr);
         strcat(buf, "\r\n");
-        strcat(buf, "Connection: keep-alive\r\n");
-        strcat(buf, "Accept: application/json, */*;q=0.01\r\n");
+        strcat(buf, "Accept: application/json\r\n");
         strcat(buf, "User-Agent: RDOS\r\n");
-        strcat(buf, "Accept-Encoding: gzip\r\n");
-        strcat(buf, "Accept-Language: en-US,en;q=0.6\r\n");
-        strcat(buf, "Cookie: lang=en\r\n");
         strcat(buf, "\r\n");
 
         FD_SET(s, &out_set);
@@ -167,10 +136,12 @@ int main(int argc, char **argv)
         while (*ptr == 0xa || *ptr == 0xd)
             ptr++;
 
+        ptr += 5;
+
         json = new TJsonDocument(ptr);
         json->Write(str);
 
-        file = new TFile("w.json", 0);
+        file = new TFile("inv.json", 0);
         file->Write(str.GetData(), str.GetSize());
 
         root = json->GetRoot();
