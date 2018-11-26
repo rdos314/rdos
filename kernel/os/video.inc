@@ -301,6 +301,7 @@ c_key_buffer_start    DW 3 * 256 DUP(?)
 c_key_buffer_end      DW ?
 
 c_key_avail_obj       DW ?
+c_read_handle         DW ?
 
 c_m_cursor_flag       DW ?
 

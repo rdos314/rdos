@@ -794,4 +794,7 @@ signal_read_handle_nr       = 698
 signal_write_handle_nr      = 699
 signal_exc_handle_nr        = 700
 
+start_read_stdin_nr         = 701
+stop_read_stdin_nr          = 702
+
 osgate_entries              = 750

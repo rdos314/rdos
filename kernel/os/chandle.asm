@@ -2812,6 +2812,7 @@ start_read_dummy      Proc near
 start_read_dummy      Endp
 
 start_read_stdin       Proc near
+    StartReadStdin
     ret
 start_read_stdin       Endp
 
@@ -2952,6 +2953,7 @@ stop_read_dummy      Proc near
 stop_read_dummy      Endp
 
 stop_read_stdin       Proc near
+    StopReadStdin
     ret
 stop_read_stdin       Endp
 

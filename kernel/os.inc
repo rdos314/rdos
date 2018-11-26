@@ -2467,6 +2467,15 @@ PollKeyboardSerial      MACRO
     OsGate poll_keyboard_serial_nr
                     ENDM
 
+; IN  AX        Handle
+StartReadStdin               MACRO
+    OsGate start_read_stdin_nr
+                        ENDM
+
+StopReadStdin               MACRO
+    OsGate stop_read_stdin_nr
+                        ENDM
+
 ;;;;;;;;;; Environment ;;;;;;;;;;;;;
 
 

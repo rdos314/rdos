@@ -174,6 +174,14 @@ keyboard_thread_no_circ:
     mov ds:c_key_buffer_tail,bx
     LeaveSection ds:c_key_section
 ;
+    xor bx,bx
+    xchg bx,ds:c_read_handle
+    or bx,bx
+    jz keyboard_handle_ok
+;
+    SignalReadHandle
+
+keyboard_handle_ok:
     mov bx,ds:c_key_avail_obj
     or bx,bx
     jz keyboard_wake
@@ -699,6 +707,69 @@ set_keyboard_state      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           StartReadStdin
+;
+;           DESCRIPTION:    Start wait for stdin handle
+;
+;           PARAMETERS:     IN  AX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_read_stdin_name     DB 'Start Read Stdin',0
+
+start_read_stdin  PROC far
+    push ds
+    push bx
+;
+    call GetLocalConsole
+    EnterSection ds:c_key_section
+;
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
+    jne srsSignal
+;
+    mov ds:c_read_handle,ax
+    jmp srsLeave
+
+srsSignal:
+    SignalReadHandle
+    
+srsLeave:
+    LeaveSection ds:c_key_section
+;
+    pop bx
+    pop ds
+    ret
+start_read_stdin  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopReadStdin
+;
+;           DESCRIPTION:    Stop wait for stdin handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_read_stdin_name     DB 'Stop Read Stdin',0
+
+stop_read_stdin  PROC far
+    push ds
+    push bx
+;
+    call GetLocalConsole
+    EnterSection ds:c_key_section
+    mov ds:c_read_handle,0
+    LeaveSection ds:c_key_section
+;
+    pop bx
+    pop ds
+    ret
+stop_read_stdin  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_local_sel
 ;
 ;           DESCRIPTION:    Init keyboard console
@@ -717,6 +788,7 @@ InitKeyboardConsole  PROC near
     mov es:c_key_buffer_tail,ax
     mov es:c_key_proc_wait,0
     mov es:c_key_avail_obj,0
+    mov es:c_read_handle,0
     ret
 InitKeyboardConsole  ENDP
     
@@ -835,6 +907,18 @@ init_keyboard   PROC near
     mov edi,OFFSET set_keyboard_state_name
     xor cl,cl
     mov ax,set_keyboard_state_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_read_stdin
+    mov edi,OFFSET start_read_stdin_name
+    xor cl,cl
+    mov ax,start_read_stdin_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_read_stdin
+    mov edi,OFFSET stop_read_stdin_name
+    xor cl,cl
+    mov ax,stop_read_stdin_nr
     RegisterOsGate
 ;
     mov ax,SEG data

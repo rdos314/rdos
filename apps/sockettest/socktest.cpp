@@ -112,6 +112,10 @@ int main(int argc, char **argv)
         strcat(buf, "Cookie: lang=en\r\n");
         strcat(buf, "\r\n");
 
+        FD_SET(STDIN_FILENO, &in_set);
+        FD_SET(s, &in_set);
+        ret = select(s+1, &in_set, 0, 0, 0);
+
         FD_SET(s, &out_set);
         FD_SET(s, &exc_set);
 
