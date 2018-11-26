@@ -2747,6 +2747,7 @@ signal_read_handle_name	DB 'Signal Read Handle', 0
 
 signal_read_handle	Proc far
     push ds
+    push es
     push ax
     push dx
 ;
@@ -2792,6 +2793,7 @@ srhLeave:
 ;
     pop dx
     pop ax
+    pop es
     pop ds
     retf32
 signal_read_handle      Endp
@@ -2808,6 +2810,7 @@ signal_read_handle      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_read_dummy      Proc near
+    SignalReadHandle
     ret
 start_read_dummy      Endp
 
@@ -2817,6 +2820,7 @@ start_read_stdin       Proc near
 start_read_stdin       Endp
 
 start_read_file       Proc near
+    StartReadCFile
     ret
 start_read_file       Endp
 
@@ -2886,6 +2890,21 @@ start_wait_for_read       PROC far
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    mov ax,ds:[bx].he_type
+    cmp ax,C_HANDLE_FILE
+    jne swfrNotFile
+;
+    push bx
+    mov bx,ds:[bx].he_sel
+    GetCFileSize
+    pop bx
+    cmp eax,edx
+    jbe swfrNotFile
+;
+    SignalWait
+    jmp swfrLinked
+
+swfrNotFile:
     EnterSection ds:hd_section
 ;
     mov bp,es
@@ -2958,6 +2977,7 @@ stop_read_stdin       Proc near
 stop_read_stdin       Endp
 
 stop_read_file       Proc near
+    StopReadCFile
     ret
 stop_read_file       Endp
 

@@ -87,6 +87,8 @@ file_usage		DW ?
 file_drive	        DB ?
 file_attrib	        DB ?
 file_c_handle           DW ?
+file_read_handle        DW ?
+file_read_pos           DD ?
 file_cache_entry	DD ?
 file_cache_ads		DD ?
 file_size		DD ?

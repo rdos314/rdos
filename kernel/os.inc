@@ -2297,6 +2297,18 @@ SetCFileTime MACRO
     OsGate set_c_file_time_nr
                     ENDM
 
+; IN  BX        File selector
+; IN  AX        Handle
+StartReadCFile               MACRO
+    OsGate start_read_c_file_nr
+                        ENDM
+
+; IN  BX        File selector
+StopReadCFile               MACRO
+    OsGate stop_read_c_file_nr
+                        ENDM
+
+
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
 ; OUT EAX       Read size

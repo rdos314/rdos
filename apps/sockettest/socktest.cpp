@@ -40,7 +40,16 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+int fh;
 
+void WriteThread(void *param)
+{
+    char str[] = "Added content";
+
+    RdosWaitMilli(2500);
+
+    write(fh, str, strlen(str));
+}
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
@@ -74,6 +83,8 @@ int main(int argc, char **argv)
     long long val;
     TFile *file;
     char HostStr[] = "api.openweathermap.org";
+
+    fh = open("json.log", O_RDWR);
 
     host = gethostbyname(HostStr);
     if (host)
@@ -114,6 +125,16 @@ int main(int argc, char **argv)
 
         FD_SET(STDIN_FILENO, &in_set);
         FD_SET(s, &in_set);
+        FD_SET(fh, &in_set);
+        ret = select(s+1, &in_set, 0, 0, 0);
+
+        ret = read(fh, buf, 1024);
+
+        RdosCreateThread(&WriteThread, "Writer", 0, 0x4000);
+
+        FD_SET(STDIN_FILENO, &in_set);
+        FD_SET(s, &in_set);
+        FD_SET(fh, &in_set);
         ret = select(s+1, &in_set, 0, 0, 0);
 
         FD_SET(s, &out_set);
@@ -123,6 +144,7 @@ int main(int argc, char **argv)
         size = send(s, buf, strlen(buf), 0);
         printf("sent: %d\r\n", size);
 
+        FD_ZERO(&in_set);
         FD_SET(s, &in_set);
         FD_SET(s, &exc_set);
 

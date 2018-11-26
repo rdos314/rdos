@@ -594,6 +594,7 @@ req_file_init:
     InitSection ds:file_list_section
     mov ds:file_usage,1
     mov ds:file_c_handle,0
+    mov ds:file_read_handle,0
     mov ds:file_drive,bl
     mov ds:file_dir_entry,esi
 ;
@@ -1629,6 +1630,17 @@ write_file_extend:
     mov al,ds:file_drive
     CallFileSystem fs_set_file_size_proc
     pop edx
+;
+    push bx
+    xor bx,bx
+    xchg bx,ds:file_read_handle
+    or bx,bx
+    jz write_file_signal_ok
+;
+    SignalReadHandle
+
+write_file_signal_ok:
+    pop bx
 
 write_file_size_ok:
     or ecx,ecx
@@ -2981,6 +2993,66 @@ write_file16    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartReadCFile
+;
+;       DESCRIPTION:    Start read file
+;
+;       PARAMETERS;     IN  BX        File selector
+;                       IN  AX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_read_c_file_name DB 'Start Read C File', 0
+
+start_read_c_file    Proc far
+    push ds
+;
+    or bx,bx
+    jz srcfDone
+;
+    mov ds,bx
+    mov ds:file_read_handle,ax
+    jmp srcfDone
+
+srcfSignal:
+    SignalReadHandle
+
+srcfDone:
+    pop ds
+    retf32
+start_read_c_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopReadCFile
+;
+;       DESCRIPTION:    Stop read file
+;
+;       PARAMETERS;     IN  BX        File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_read_c_file_name DB 'Stop Read C File', 0
+
+stop_read_c_file    Proc far
+    push ds
+;
+    or bx,bx
+    stc
+    jz ercfDone
+;
+    mov ds,bx
+    mov ds:file_read_handle,0
+
+ercfDone:
+    pop ds
+    retf32
+stop_read_c_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           map_to_file
@@ -3440,6 +3512,18 @@ init_file       PROC near
     mov edi,OFFSET set_c_file_time_name
     xor cl,cl
     mov ax,set_c_file_time_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_read_c_file
+    mov edi,OFFSET start_read_c_file_name
+    xor cl,cl
+    mov ax,start_read_c_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_read_c_file
+    mov edi,OFFSET stop_read_c_file_name
+    xor cl,cl
+    mov ax,stop_read_c_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file
