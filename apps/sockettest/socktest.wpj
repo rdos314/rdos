@@ -4,9 +4,9 @@ projectIdent
 VpeMain
 1
 WRect
-1893
-554
-8346
+1888
+520
+8341
 9216
 2
 MProject
@@ -28,10 +28,10 @@ WVList
 VComponent
 8
 WRect
-181
-170
-5685
-4317
+176
+162
+5680
+4309
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 12
 socktest.tgt
 0
-1
+0
 7

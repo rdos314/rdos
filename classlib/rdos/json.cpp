@@ -402,6 +402,90 @@ bool TJsonCollection::IsCollection()
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::GetBoolean
+#
+#   Purpose....: Get field as boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonCollection::GetBoolean(const char *FieldName, bool Default)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        return obj->GetBoolean();
+    else
+        return Default;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::GetInt
+#
+#   Purpose....: Get field as int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TJsonCollection::GetInt(const char *FieldName, long long Default)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        return obj->GetInt();
+    else
+        return Default;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::GetDouble
+#
+#   Purpose....: Get field as double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonCollection::GetDouble(const char *FieldName, double Default)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        return obj->GetDouble();
+    else
+        return Default;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::GetText
+#
+#   Purpose....: Get field as text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString &TJsonCollection::GetText(const char *FieldName, TString &Default)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        return obj->GetText();
+    else
+        return Default;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollection::AddCollection
 #
 #   Purpose....: Add new collection
@@ -672,6 +756,62 @@ TJsonObject *TJsonSingleCollection::GetObj(int n)
         return FData.FObjArr[n];
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::GetObj
+#
+#   Purpose....: Get an object with a given name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonSingleCollection::GetObj(const char *FieldName)
+{
+    int n;
+    TJsonObject *obj;
+    TString name(FieldName);
+
+    for (n = 0; n < FData.FObjArrayCount; n++)
+    {
+        obj = FData.FObjArr[n];
+        if (!obj->IsCollection())
+            if (obj->GetFieldName() == name)
+                return obj;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::GetCollection
+#
+#   Purpose....: Get a collection with a given name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection *TJsonSingleCollection::GetCollection(const char *FieldName)
+{
+    int n;
+    TJsonObject *obj;
+    TString name(FieldName);
+
+    for (n = 0; n < FData.FObjArrayCount; n++)
+    {
+        obj = FData.FObjArr[n];
+        if (obj->IsCollection())
+            if (obj->GetFieldName() == name)
+                return (TJsonCollection *)obj;
+    }
+
+    return 0;
 }
 
 /*##########################################################################
@@ -958,6 +1098,74 @@ TJsonObject *TJsonArrayCollection::GetObj(int n)
         return FArray[FCurrInd]->FObjArr[n];
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::GetObj
+#
+#   Purpose....: Get an object with a given name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonArrayCollection::GetObj(const char *FieldName)
+{
+    int n;
+    TJsonObject *obj;
+    TString name(FieldName);
+
+    if (FReqAdd)
+    {
+        FCurrInd = 0;
+        FReqAdd = false;
+    }
+
+    for (n = 0; n < FArray[FCurrInd]->FObjArrayCount; n++)
+    {
+        obj = FArray[FCurrInd]->FObjArr[n];
+        if (!obj->IsCollection())
+            if (obj->GetFieldName() == name)
+                return obj;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::GetCollection
+#
+#   Purpose....: Get a collection with a given name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection *TJsonArrayCollection::GetCollection(const char *FieldName)
+{
+    int n;
+    TJsonObject *obj;
+    TString name(FieldName);
+
+    if (FReqAdd)
+    {
+        FCurrInd = 0;
+        FReqAdd = false;
+    }
+
+    for (n = 0; n < FArray[FCurrInd]->FObjArrayCount; n++)
+    {
+        obj = FArray[FCurrInd]->FObjArr[n];
+        if (obj->IsCollection())
+            if (obj->GetFieldName() == name)
+                return (TJsonCollection *)obj;
+    }
+
+    return 0;
 }
 
 /*##########################################################################
@@ -2882,8 +3090,6 @@ void TJsonDocument::StartNesting()
         }
         FCurrCollection = c;
     }
-
-    printf("%s: object nesting\r\n", FObjFieldName.GetData());
 }
 
 /*##########################################################################
@@ -2901,8 +3107,6 @@ void TJsonDocument::EndNesting()
 {
     if (FCurrCollection)
         FCurrCollection = FCurrCollection->FParent;
-
-    printf("Nesting end\r\n");
 }
 
 /*##########################################################################
@@ -2927,8 +3131,6 @@ void TJsonDocument::StartArray()
         c->FParent = FCurrCollection;
         FCurrCollection = c;
     }
-
-    printf("%s: object array\r\n", FObjFieldName.GetData());
 }
 
 /*##########################################################################
@@ -2950,8 +3152,6 @@ void TJsonDocument::AddArray()
     {
         arr = (TJsonArrayCollection *)FCurrCollection;
         arr->AddArray();
-
-        printf("Add array\r\n");
     }
 }
 
@@ -2974,7 +3174,6 @@ void TJsonDocument::AddString(TString &str)
     {
         obj = new TJsonString(FObjFieldName, str);
         FCurrCollection->Insert(obj);
-        printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
     }
 }
 
@@ -2999,7 +3198,6 @@ void TJsonDocument::AddInt(long long val)
         FCurrCollection->Insert(obj);
 
         long long v = obj->GetInt();
-        printf("%s: %lld\r\n", obj->GetFieldName().GetData(), v);
     }
 }
 
@@ -3022,8 +3220,6 @@ void TJsonDocument::AddDouble(double val, TString &text)
     {
         obj = new TJsonDouble(FObjFieldName, val, text);
         FCurrCollection->Insert(obj);
-
-        printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
     }
 }
 
@@ -3046,8 +3242,6 @@ void TJsonDocument::AddDouble(double val, int decimals)
     {
         obj = new TJsonDouble(FObjFieldName, val, decimals);
         FCurrCollection->Insert(obj);
-
-        printf("%s: %s\r\n", obj->GetFieldName().GetData(), obj->GetText().GetData());
     }
 }
 
@@ -3070,13 +3264,6 @@ void TJsonDocument::AddBoolean(bool val)
     {
         obj = new TJsonBoolean(FObjFieldName, val);
         FCurrCollection->Insert(obj);
-
-        bool v = obj->GetBoolean();
-
-        if (v)
-            printf("%s: true\r\n", obj->GetFieldName().GetData());
-        else
-            printf("%s: false\r\n", obj->GetFieldName().GetData());
     }
 }
 

@@ -34,10 +34,13 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include "json.h"
 #include "rdos.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
@@ -57,11 +60,19 @@ int main(int argc, char **argv)
     int size;
     long ip;
     int i;
+    TString str;
     struct hostent *host;
     fd_set in_set;
     fd_set out_set;
     fd_set exc_set;
     struct timeval tv;
+    TJsonDocument *json;
+    TJsonObject *obj;
+    TJsonCollection *col;
+    TJsonCollection *root;
+    double dval;
+    long long val;
+    TFile *file;
     char HostStr[] = "api.openweathermap.org";
 
     host = gethostbyname(HostStr);
@@ -130,7 +141,48 @@ int main(int argc, char **argv)
         while (*ptr == 0xa || *ptr == 0xd)
             ptr++;
 
-        printf(ptr);
+        json = new TJsonDocument(ptr);
+        json->Write(str);
+
+        file = new TFile("w.json", 0);
+        file->Write(str.GetData(), str.GetSize());
+
+        root = json->GetRoot();
+        col = root->GetCollection("main");
+        if (col)
+        {
+            dval = col->GetDouble("temp", 0.0) - 273.15;
+            printf("Temp %3.1Lf (", dval);
+
+            dval = col->GetDouble("temp_min", 0.0)  - 273.15;
+            printf("%3.1Lf to ", dval);
+
+            dval = col->GetDouble("temp_max", 0.0)  - 273.15;
+            printf("%3.1Lf) C\r\n", dval);
+            
+            val = col->GetInt("pressure", 0);
+            printf("Pressure %lld hPa\r\n", val);
+        }
+
+        col = root->GetCollection("wind");
+        if (col)
+        {
+            dval = col->GetDouble("speed", 0.0);
+            printf("Wind %3.1Lf m/s, ", dval);
+
+            val = col->GetInt("deg", 0);
+            printf("%lld deg\r\n", val);
+        }
+
+        col = root->GetCollection("clouds");
+        if (col)
+        {
+            val = col->GetInt("all", 0);
+            printf("Clouds %lld%%\r\n", val);
+        }
+
+        delete file;
+        delete json;
 
         delete buf;
 

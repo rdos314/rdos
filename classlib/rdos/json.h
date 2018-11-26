@@ -90,6 +90,14 @@ public:
     virtual int GetObjCount() = 0;
     virtual TJsonObject *GetObj(int n) = 0;
 
+    virtual TJsonObject *GetObj(const char *FieldName) = 0;
+    virtual TJsonCollection *GetCollection(const char *FieldName) = 0;
+
+    bool GetBoolean(const char *FieldName, bool Default);
+    long long GetInt(const char *FieldName, long long Default);
+    double GetDouble(const char *FieldName, double Default);
+    TString &GetText(const char *FieldName, TString &Default);
+
     TJsonSingleCollection *AddCollection(const char *FieldName);
     TJsonArrayCollection *AddArrayCollection(const char *FieldName);
     TJsonObject *AddBoolean(const char *FieldName, bool Val);
@@ -115,6 +123,9 @@ public:
     virtual TJsonObject *GetObj(int n);
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
+    virtual TJsonObject *GetObj(const char *FieldName);
+    virtual TJsonCollection *GetCollection(const char *FieldName);
+
 protected:
 
     TJsonCollectionData FData;
@@ -133,6 +144,9 @@ public:
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+
+    virtual TJsonObject *GetObj(const char *FieldName);
+    virtual TJsonCollection *GetCollection(const char *FieldName);
 
     void SelectArray(int n);
 
