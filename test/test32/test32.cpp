@@ -11,6 +11,7 @@
 #include "modbus.h"
 #include "sockobj.h"
 #include "websock.h"
+#include "json.h"
 
 #include <math.h>
 #include "bignum.h"
@@ -162,6 +163,12 @@ const char *TOcppSocketServer::GetProtocol()
 ##########################################################################*/
 void TOcppSocketServer::NotifyJson(char *str)
 {
+    TString text;
+    TFile file("ocpp.json", 0);
+    TJsonDocument json(str);
+
+    json.Write(text);
+    file.Write(text.GetData(), text.GetSize());
 }
 
 /*##########################################################################
