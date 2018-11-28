@@ -41,10 +41,16 @@ protected:
     TString GetUrl(char *str);
     TString GetValue(char *str);
     void CalcAccept(const char *str);
-    void SendReply();
+    void SendAccept(const char *prot);
+    void SendReject();
+    void SendHttpError();
+    void HandleWebSocket();
 
     virtual void HandleSocket();
-    virtual void HandleWebSocket() = 0;
+    
+    virtual const char *GetProtocol() = 0;
+    virtual void ReceivedText(const char *str) = 0;
+    virtual void ReceivedBinary(const char *str, int size) = 0;
 
     TString FReqUrl;
     TString FProtocol;

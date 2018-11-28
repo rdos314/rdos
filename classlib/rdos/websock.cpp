@@ -168,16 +168,16 @@ void TWebSocketServer::CalcAccept(const char *str)
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::SendReply
+#   Name       : TWebSocketServer::SendAccept
 #
-#   Purpose....: Send reply
+#   Purpose....: Send accept
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::SendReply()
+void TWebSocketServer::SendAccept(const char *prot)
 {
     strcpy(FBuf, "HTTP/1.1 101 Switching Protocols\r\n");
     strcat(FBuf, "Upgrade: websocket\r\n");
@@ -185,11 +185,133 @@ void TWebSocketServer::SendReply()
     strcat(FBuf, "Sec-Websocket-Accept: ");
     strcat(FBuf, FAcceptStr);
     strcat(FBuf, "\r\n");
+    strcat(FBuf, "Sec-Websocket-Protocol: ");
+    strcat(FBuf, prot);
+    strcat(FBuf, "\r\n");
+    strcat(FBuf, "\r\n");
+
+    FSocket->Write(FBuf, strlen(FBuf));
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendReject
+#
+#   Purpose....: Send reject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendReject()
+{
+    strcpy(FBuf, "HTTP/1.1 101 Switching Protocols\r\n");
+    strcat(FBuf, "Upgrade: websocket\r\n");
+    strcat(FBuf, "Connection: Upgrade\r\n");
+    strcat(FBuf, "Sec-Websocket-Accept: ");
+    strcat(FBuf, FAcceptStr);
+    strcat(FBuf, "\r\n");
+    strcat(FBuf, "\r\n");
+
+    FSocket->Write(FBuf, strlen(FBuf));
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendHttpError
+#
+#   Purpose....: Send HTTP error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendHttpError()
+{
+    strcpy(FBuf, "HTTP/1.1 404 NOT FOUND\r\n");
+    strcat(FBuf, "\r\n");
 
     FSocket->Write(FBuf, strlen(FBuf));
     FSocket->Push();
 }
    
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::HandleWebSocket
+#
+#   Purpose....: Handle web socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::HandleWebSocket()
+{
+    int size;
+    int len;
+    char frame;
+    bool masked;
+    char mask[4];
+    bool ok;
+
+    while (FSocket->IsOpen())
+    {
+        if (FSocket->WaitForData(5000))
+        {
+            size = FSocket->Read(FBuf, 2);
+
+            if (size == 2)
+            {
+                ok = true;
+
+                frame = FBuf[0];
+
+                if (FBuf[1] & 0x80)
+                    masked = true;
+                else
+                    masked = false;
+
+                len = FBuf[1] & 0x7F;
+
+                if (len == 126)
+                {
+                    size = FSocket->Read(FBuf, 2);
+                    if (size == 2)
+                        len = RdosSwapShort(*(short int*)FBuf);
+                    else
+                        ok = false;
+                }
+                else
+                {
+                    if (len == 127)
+                    {
+                        size = FSocket->Read(FBuf, 4);
+                        if (size == 4)
+                            len = RdosSwapLong(*(int *)FBuf);
+                        else
+                            ok = false;
+                    }
+                }
+            }
+            else
+                ok = false;
+
+            if (ok)
+            {
+                if (masked)
+                    FSocket->Read(mask, 4);
+
+                size = FSocket->Read(FBuf, len);
+            }
+        }
+    }
+}
+                  
 /*##########################################################################
 #
 #   Name       : TWebSocketServer::HandleSocket
@@ -205,6 +327,7 @@ void TWebSocketServer::HandleSocket()
 {
     int size;
     char *ptr;
+    const char *prot;
     TString key;
     TString str;
     bool ok = false;
@@ -255,9 +378,18 @@ void TWebSocketServer::HandleSocket()
             if (ok)
             {
                 CalcAccept(key.GetData());
-                SendReply();
-                HandleWebSocket();
+
+                prot = GetProtocol();
+                if (prot)
+                {
+                    SendAccept(prot);
+                    HandleWebSocket();
+                }
+                else
+                    SendReject();
             }
+            else
+                SendHttpError();
                 
             FSocket->Close();
             break;

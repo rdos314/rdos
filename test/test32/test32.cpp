@@ -10,6 +10,7 @@
 #include "rdos.h"
 #include "modbus.h"
 #include "sockobj.h"
+#include "websock.h"
 
 #include <math.h>
 #include "bignum.h"
@@ -21,42 +22,31 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-class TWebSocketServerFactory : public TSocketServerFactory
+class TOcppSocketServerFactory : public TSocketServerFactory
 {
 public:
-    TWebSocketServerFactory(const char *Name, int Port, int MaxConnections, int BufferSize);
-    ~TWebSocketServerFactory();
+    TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TOcppSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
 };
 
-class TWebSocketServer : public TSocketServer
+class TOcppSocketServer : public TWebSocketServer
 {
 public:
-    TWebSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
-    virtual ~TWebSocketServer();
+    TOcppSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    virtual ~TOcppSocketServer();
     
 protected:
-    TString GetUrl(char *str);
-    TString GetValue(char *str);
-    void CalcAccept(const char *str);
-    void SendReply();
-
-    virtual void HandleSocket();
-    virtual void HandleWebSocket();
-
-    TString FReqUrl;
-    TString FProtocol;
-    int FVersion;
-    char FBuf[512];
-    char FHashStr[512];
-    char FAcceptStr[30];
+    virtual const char *GetProtocol();
+    virtual void ReceivedText(const char *str);
+    virtual void ReceivedBinary(const char *str, int size);
 };
 
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServerFactory::TWebSocketServerFactory
+#   Name       : TOcppSocketServerFactory::TOcppSocketServerFactory
 #
 #   Purpose....: Constructor
 #
@@ -65,15 +55,15 @@ protected:
 #   Returns....: *
 #
 ##########################################################################*/
-TWebSocketServerFactory::TWebSocketServerFactory(const char *Name, int Port, int MaxConnections, int BufferSize)
+TOcppSocketServerFactory::TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-    Start(Name, 0x10000);
+    Start("OCPP Listen", 0x10000);
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServerFactory::~TWebSocketServerFactory
+#   Name       : TOcppSocketServerFactory::~TOcppSocketServerFactory
 #
 #   Purpose....: Destructor
 #
@@ -82,13 +72,13 @@ TWebSocketServerFactory::TWebSocketServerFactory(const char *Name, int Port, int
 #   Returns....: *
 #
 ##########################################################################*/
-TWebSocketServerFactory::~TWebSocketServerFactory()
+TOcppSocketServerFactory::~TOcppSocketServerFactory()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServerFactory::Create
+#   Name       : TOcppSocketServerFactory::Create
 #
 #   Purpose....: Create web socket server
 #
@@ -97,14 +87,14 @@ TWebSocketServerFactory::~TWebSocketServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TWebSocketServerFactory::Create(TTcpSocket *Socket)
+TSocketServer *TOcppSocketServerFactory::Create(TTcpSocket *Socket)
 {
-    return new TWebSocketServer("Web socket", 0x10000, Socket);
+    return new TOcppSocketServer("OCPP", 0x10000, Socket);
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::TWebSocketServer
+#   Name       : TOcppSocketServer::TOcppSocketServer
 #
 #   Purpose....: Constructor
 #
@@ -113,14 +103,14 @@ TSocketServer *TWebSocketServerFactory::Create(TTcpSocket *Socket)
 #   Returns....: *
 #
 ##########################################################################*/
-TWebSocketServer::TWebSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
-  : TSocketServer(Name, StackSize, Socket)
+TOcppSocketServer::TOcppSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
+  : TWebSocketServer(Name, StackSize, Socket)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::~TWebSocketServer
+#   Name       : TOcppSocketServer::~TOcppSocketServer
 #
 #   Purpose....: Destructor
 #
@@ -129,230 +119,60 @@ TWebSocketServer::TWebSocketServer(const char *Name, int StackSize, TTcpSocket *
 #   Returns....: *
 #
 ##########################################################################*/
-TWebSocketServer::~TWebSocketServer()
+TOcppSocketServer::~TOcppSocketServer()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::GetUrl
+#   Name       : TOcppSocketServer::GetProtocol
 #
-#   Purpose....: Get URL as a string value
+#   Purpose....: Get protocol to use
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TString TWebSocketServer::GetUrl(char *str)
+const char *TOcppSocketServer::GetProtocol()
 {
-    TString valstr;
-    char *start;
-    char ch;
-    char *ptr = str;
+    const char *prot = FProtocol.GetData();
 
-    while (*ptr != ' ' && *ptr != 0x9)
-        ptr++;
-
-    while (*ptr == ' ' || *ptr == 0x9)
-        ptr++;
-
-    start = ptr;
-
-    while (*ptr != ' ' && *ptr != 0xd && *ptr != 0xa)
-        ptr++;
-
-    ch = *ptr;
-    *ptr = 0;
-    valstr = start;
-    *ptr = ch;
-
-    return valstr;
+    if (strstr(prot, "ocpp1.6"))
+        return "ocpp1.6";
+    else
+        return 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::GetValue
+#   Name       : TOcppSocketServer::ReceivedText
 #
-#   Purpose....: Get a string value
+#   Purpose....: Received text message
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TString TWebSocketServer::GetValue(char *str)
+void TOcppSocketServer::ReceivedText(const char *str)
 {
-    TString valstr;
-    char *start;
-    char ch;
-    char *ptr = str;
-
-    if (ptr)
-        ptr = strchr(ptr, ':');
-
-    if (ptr)
-    {
-        ptr++;
-
-        while (*ptr == ' ' || *ptr == 0x9)
-            ptr++;
-
-        start = ptr;
-
-        while (*ptr != ' ' && *ptr != 0xd && *ptr != 0xa)
-            ptr++;
-
-        ch = *ptr;
-        *ptr = 0;
-        valstr = start;
-        *ptr = ch;
-    }
-
-    return valstr;
 }
 
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::CalcAccept
+#   Name       : TOcppSocketServer::ReceivedBinary
 #
-#   Purpose....: Calc accept string
+#   Purpose....: Received binary message
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::CalcAccept(const char *str)
-{
-    TSha1Hash sha1;
-    char data[20];
-
-    strcpy(FHashStr, str);
-    strcat(FHashStr, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-
-    sha1.Add(FHashStr, strlen(FHashStr));
-    sha1.GetHashData(data);
-
-    CodeBase64(data, FAcceptStr, 20);
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::SendReply
-#
-#   Purpose....: Send reply
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWebSocketServer::SendReply()
-{
-    strcpy(FBuf, "HTTP/1.1 101 Switching Protocols\r\n");
-    strcat(FBuf, "Upgrade: websocket\r\n");
-    strcat(FBuf, "Connection: Upgrade\r\n");
-    strcat(FBuf, "Sec-Websocket-Accept: ");
-    strcat(FBuf, FAcceptStr);
-    strcat(FBuf, "\r\n");
-
-    FSocket->Write(FBuf, strlen(FBuf));
-    FSocket->Push();
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::HandleWebSocket
-#
-#   Purpose....: Default handle web socket
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWebSocketServer::HandleWebSocket()
+void TOcppSocketServer::ReceivedBinary(const char *str, int size)
 {
 }
-   
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::HandleSocket
-#
-#   Purpose....: Handle socket
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWebSocketServer::HandleSocket()
-{
-    int size;
-    char *ptr;
-    TString key;
-    TString str;
-    bool ok = false;
-
-    while (FSocket->IsOpen())
-    {
-        if (FSocket->WaitForData(5000))
-        {
-            size = FSocket->Read(FBuf, 512);
-            FBuf[size] = 0;
-
-            ptr = FBuf;
-            FReqUrl = GetUrl(ptr);
-
-            ptr = strstr(FBuf, "Sec-WebSocket-Key");
-
-            if (ptr)
-                key = GetValue(ptr);
-
-            if (key.GetSize())
-                ok = true;
-            else
-                ok = false;
-
-            if (ok)
-            {
-                ptr = strstr(FBuf, "Sec-WebSocket-Protocol");
-  
-                if (ptr)
-                    FProtocol = GetValue(ptr);
-                else
-                    ok = false;
-            }
-
-            if (ok)
-            {
-                ptr = strstr(FBuf, "Sec-WebSocket-Version");
-
-                if (ptr)
-                {
-                    str = GetValue(ptr);
-                    FVersion = atoi(str.GetData());
-                }
-                else
-                    ok = false;
-            }
-
-            if (ok)
-            {
-                CalcAccept(key.GetData());
-                SendReply();
-                HandleWebSocket();
-            }
-            else
-                FSocket->Close();
-        }
-
-        RdosWaitMilli(250);
-    }
-}
-
-
 
 /*##########################################################################
 #
@@ -367,7 +187,7 @@ void TWebSocketServer::HandleSocket()
 ##########################################################################*/
 void main()
 {
-    TWebSocketServerFactory fact("OCCP Listen", 7000, 16, 1024);
+    TOcppSocketServerFactory fact(7000, 16, 1024);
 
     for (;;)
         RdosWaitMilli(250);

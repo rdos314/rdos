@@ -1381,6 +1381,7 @@ endif
     shr ebp,3
     add ebp,5
     add eax,ebp
+    add eax,4
 ;
     AllocateSmallLinear
     mov ds:[4*esi].disc_unit_arr,edx
@@ -1389,6 +1390,7 @@ endif
     mov es:[edx].disc_sector_pend_high,0
     add edi,edx
     xor eax,eax
+    inc ecx
     rep stos dword ptr es:[edi]
     mov es:[edx].disc_sector_pend_ptr,edi
 ;
@@ -1448,6 +1450,7 @@ endif
 ;
     mov ds:[4*esi].disc_unit_arr,0
     movzx ecx,ds:disc_sectors_per_unit
+    inc ecx
     shl ecx,2
     add ecx,OFFSET disc_sector_arr
     FreeLinear
@@ -3181,6 +3184,7 @@ flush_sector_loop:
 ;
     mov ds:[4*esi].disc_unit_arr,0
     movzx ecx,ds:disc_sectors_per_unit
+    inc ecx
     shl ecx,2
     add ecx,OFFSET disc_sector_arr
     FreeLinear
