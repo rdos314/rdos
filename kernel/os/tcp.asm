@@ -5144,7 +5144,71 @@ add_wait_listen_done:
     retf32
 add_wait_for_tcp_listen ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           PollNormal
+;
+;       Purpose:        Poll connection
+;
+;       Parameters:     DS          connection sel
+;                       ECX         wanted number of bytes
+;                       ES:EDI      data buffer
+;
+;       Returns:        NC          ok
+;                       EAX         size of received data
+;                       CY          connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+PollNormal      Proc near
+    mov fs,ds:tcp_receive_buffer
+    xor ebp,ebp
+
+pnLoop:
+    or ecx,ecx
+    clc
+    jz pnDone
+;
+    mov edx,ecx
+    movzx eax,ds:tcp_receive_count
+    or eax,eax
+    jnz pnHasBytes
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    stc
+    jnz pnDone
+
+pnHasBytes:
+    cmp ecx,eax
+    jb pnSizeOk
+;
+    mov ecx,eax
+
+pnSizeOk:
+    add ebp,ecx
+    sub ds:tcp_receive_count,cx
+    mov bx,ds:tcp_receive_head
+    call CopyFromBuffer
+;
+    xchg ecx,edx
+    sub ecx,edx
+    clc
+
+pnDone:
+    mov eax,ebp
+    ret
+PollNormal      Endp
+
+poll_tab:
+pd0 DW OFFSET Failed
+pd1 DW OFFSET Failed
+pd2 DW OFFSET PollNormal
+pd3 DW OFFSET PollNormal
+pd4 DW OFFSET PollNormal
+pd5 DW OFFSET PollNormal
+pd6 DW OFFSET Failed
+pd7 DW OFFSET Failed
+pd8 DW OFFSET Failed
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6103,6 +6167,76 @@ ctsDone:
     pop ds
     retf32
 close_tcp_socket    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PollTcpSocket
+;
+;       DESCRIPTION:    Poll TCP socket
+;
+;       PARAMETERS;     IN  BX        Tcp selector
+;                       IN  ES:EDI    Buffer
+;                       IN  ECX       Size
+;                       OUT EAX       Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_tcp_socket_name DB 'Poll Tcp Socket', 0
+
+poll_tcp_socket    Proc far
+    push ds
+;
+    xor eax,eax
+    or bx,bx
+    stc
+    jz ptsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    movzx eax,ds:tcp_receive_count
+;
+    cmp eax,ecx
+    jae ptsDo
+;
+    mov ecx,eax
+
+ptsDo:
+    xor eax,eax
+    or ecx,ecx
+    clc
+    jz ptsLeave
+;
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,2000
+    movzx bx,ds:tcp_state
+    add bx,bx
+    call word ptr cs:[bx].poll_tab
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+
+ptsLeave:
+    LeaveSection ds:tcp_section
+
+ptsDone:
+    pop ds
+    retf32
+poll_tcp_socket	   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6669,6 +6803,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET close_tcp_socket_name
     xor cl,cl
     mov ax,close_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET poll_tcp_socket
+    mov edi,OFFSET poll_tcp_socket_name
+    xor cl,cl
+    mov ax,poll_tcp_socket_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_tcp_socket

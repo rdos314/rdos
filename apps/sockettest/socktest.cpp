@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     double dval;
     long long val;
     TFile *file;
-    char HostStr[] = "192.168.1.51";
+    char HostStr[] = "api.openweathermap.org";
 
     host = gethostbyname(HostStr);
     if (host)
@@ -98,13 +98,21 @@ int main(int argc, char **argv)
     {
         buf = new char[1024];
 
-        strcpy(buf, "GET /solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System HTTP/1.1\r\n");
+        strcpy(buf, "GET /data/2.5/weather?id=2715946&appid=c88ba239c78cdbea4c1fe561ad4f7b3d HTTP/1.1\r\n");
         strcat(buf, "Host: ");
         strcat(buf, HostStr);
         strcat(buf, "\r\n");
-        strcat(buf, "Accept: application/json\r\n");
+        strcat(buf, "Connection: keep-alive\r\n");
+        strcat(buf, "Accept: application/json, */*;q=0.01\r\n");
         strcat(buf, "User-Agent: RDOS\r\n");
+        strcat(buf, "Accept-Encoding: gzip\r\n");
+        strcat(buf, "Accept-Language: en-US,en;q=0.6\r\n");
+        strcat(buf, "Cookie: lang=en\r\n");
         strcat(buf, "\r\n");
+
+        FD_SET(STDIN_FILENO, &in_set);
+        FD_SET(s, &in_set);
+        ret = select(s+1, &in_set, 0, 0, 0);
 
         FD_SET(s, &out_set);
         FD_SET(s, &exc_set);
@@ -119,6 +127,8 @@ int main(int argc, char **argv)
 
         size = 0;
         ret = select(s+1, &in_set, 0, 0, &tv);
+        size = recv(s, buf, 100, MSG_PEEK);
+
         size = recv(s, buf, 1000, 0);
 
         buf[size] = 0;

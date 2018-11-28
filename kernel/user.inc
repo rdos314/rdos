@@ -1219,6 +1219,15 @@ CloseHandle     MACRO
         UserGate close_handle_nr
                                         ENDM
 
+
+; IN  BX        Handle
+; IN  ES:(E)DI  Buffer
+; IN  (E)CX     Number of bytes to read
+; OUT (E)AX     Number of bytes read
+PollHandle        MACRO
+        UserGate poll_handle_nr
+                                        ENDM
+
 ; IN  BX        Handle
 ; IN  ES:(E)DI  Buffer
 ; IN  (E)CX     Number of bytes to read

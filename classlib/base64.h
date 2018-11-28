@@ -1,11 +1,13 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2012, Leif Ekblad
+# Copyright (C) 1988-2018, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,39 +18,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# LibTomCrypt, modular cryptographic library -- Tom St Denis was ported to
-# a C++ class-interface
-# Tom St Denis, tomstdenis@gmail.com, http://libtom.org
+# The author of this program may be contacted at leif@rdos.net
 #
-# The C++ porter of this program may be contacted at leif@rdos.net
-#
-# hash.h
-# Hashing base class
+# base64.h
+# base64 support
 #
 ########################################################################*/
 
-#ifndef _HASH_H
-#define _HASH_H
+#ifndef _BASE64_H
+#define _BASE64_H
 
-class THash
-{
-public:
-    THash(int buf_size);
-    virtual ~THash();
-    
-    virtual void Reset() = 0;
-    void Add(char *buf, int size);
-    virtual int GetHashSize() = 0;
-    virtual void GetHashData(char *buf) = 0;
-
-protected:
-    virtual void Compress(unsigned char *buf) = 0;
-
-    unsigned int length;
-    unsigned int curlen;
-    unsigned char *buf;
-    int block_size;
-};
+void CodeBase64(const char *inp, char *outp, int size);
 
 #endif
 

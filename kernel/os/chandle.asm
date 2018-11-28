@@ -911,6 +911,140 @@ c_handle_to_file_sel     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PollHandle
+;
+;           DESCRIPTION:    Poll C handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_handle_name  DB 'Poll C Handle', 0
+
+poll_dummy      Proc near
+    stc
+    ret
+poll_dummy      Endp
+
+poll_file       Proc near
+    push edx
+    ReadCFile
+    pop edx
+    ret
+poll_file       Endp
+
+poll_tcp_socket       Proc near
+    PollTcpSocket
+    ret
+poll_tcp_socket       Endp
+
+poll_udp_socket       Proc near
+    PollUdpSocket
+    ret
+poll_udp_socket       Endp
+
+poll_tab:
+pt00  DW OFFSET poll_dummy
+pt01  DW OFFSET poll_file
+pt02  DW OFFSET poll_dummy
+pt03  DW OFFSET poll_dummy
+pt04  DW OFFSET poll_tcp_socket
+pt05  DW OFFSET poll_udp_socket
+pt06  DW OFFSET poll_dummy
+pt07  DW OFFSET poll_dummy
+pt08  DW OFFSET poll_dummy
+pt09  DW OFFSET poll_dummy
+
+poll_handle     Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae phFail
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov si,ds:[bx].hp_access
+    test si,IO_READ
+    jz phFail
+;
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae phFail
+;    
+    or ax,ax
+    jz phFail
+;
+    push ds
+    push bx
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].poll_tab
+;
+    pop bx
+    pop ds
+    jc phFail
+;
+    jmp phDone
+
+phFail:
+    mov eax,-1
+
+phDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop ds    
+    ret
+poll_handle     Endp
+
+poll_handle16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call poll_handle
+;
+    pop edi
+    pop ecx
+    retf32
+poll_handle16    ENDP
+
+poll_handle32    PROC far
+    call poll_handle
+    retf32
+poll_handle32    ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadHandle
 ;
 ;           DESCRIPTION:    Read C handle
@@ -1052,7 +1186,6 @@ read_handle32    PROC far
     call read_handle
     retf32
 read_handle32    ENDP
-        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4268,6 +4401,13 @@ init_chandle     PROC near
     xor cl,cl
     mov ax,close_handle_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET poll_handle16
+    mov esi,OFFSET poll_handle32
+    mov edi,OFFSET poll_handle_name
+    mov dx,virt_es_in
+    mov ax,poll_handle_nr
+    RegisterUserGate
 ;
     mov ebx,OFFSET read_handle16
     mov esi,OFFSET read_handle32

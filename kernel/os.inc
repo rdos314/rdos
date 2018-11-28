@@ -2892,6 +2892,14 @@ CloseTcpSocket MACRO
                     ENDM
 
 ; IN  BX        Tcp selector
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Read size
+PollTcpSocket MACRO
+    OsGate poll_tcp_socket_nr
+                    ENDM
+
+; IN  BX        Tcp selector
 ; IN  EDX       Position
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
@@ -2971,6 +2979,14 @@ ConnectUdpSocket               MACRO
 ; IN  BX        Udp selector
 CloseUdpSocket MACRO
     OsGate close_udp_socket_nr
+                    ENDM
+
+; IN  BX        Udp selector
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Read size
+PollUdpSocket MACRO
+    OsGate poll_udp_socket_nr
                     ENDM
 
 ; IN  BX        Udp selector

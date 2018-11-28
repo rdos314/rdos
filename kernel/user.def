@@ -885,4 +885,6 @@ get_handle_read_buf_count_nr     = 696
 get_handle_write_buf_space_nr    = 697
 has_handle_exception_nr          = 698
 
-usergate_entries                 = 700
+poll_handle_nr                   = 699
+
+usergate_entries                 = 750
