@@ -340,6 +340,7 @@ void TWebSocketServer::HandleWebSocket()
                     switch (op)
                     {
                         case 1:
+                            FBuf[size] = 0;
                             ReceivedText(FBuf);
                             break;
 

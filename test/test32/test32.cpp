@@ -38,9 +38,14 @@ public:
     virtual ~TOcppSocketServer();
     
 protected:
+    void NotifyJson(char *str);
+
     virtual const char *GetProtocol();
-    virtual void ReceivedText(const char *str);
-    virtual void ReceivedBinary(const char *str, int size);
+    virtual void ReceivedText(char *str);
+    virtual void ReceivedBinary(char *str, int size);
+
+    TString FId;
+    TString FAction;
 };
 
 
@@ -146,6 +151,21 @@ const char *TOcppSocketServer::GetProtocol()
 
 /*##########################################################################
 #
+#   Name       : TOcppSocketServer::NotifyJson
+#
+#   Purpose....: Notify json message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::NotifyJson(char *str)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppSocketServer::ReceivedText
 #
 #   Purpose....: Received text message
@@ -155,8 +175,65 @@ const char *TOcppSocketServer::GetProtocol()
 #   Returns....: *
 #
 ##########################################################################*/
-void TOcppSocketServer::ReceivedText(const char *str)
+void TOcppSocketServer::ReceivedText(char *str)
 {
+    int size = strlen(str);
+    int id;
+    char *ptr;
+    char *tempptr;
+
+    if (str[0] != '[')
+        return;
+
+    if (str[size - 1] != ']')
+        return;
+
+    str[size - 1] = 0;
+    ptr = str + 1;
+
+    tempptr = strchr(ptr, ',');
+    if (!tempptr)
+        return;
+
+    *tempptr = 0;
+    id = atoi(ptr);
+    
+    if (id != 2)
+        return;
+
+    ptr = tempptr + 1;
+
+    tempptr = strchr(ptr, '"');
+    if (!tempptr)
+        return;
+
+    ptr = tempptr + 1;
+    tempptr = strchr(ptr, '"');
+    if (!tempptr)
+        return;
+
+    *tempptr = 0;
+    FId = ptr;
+
+    ptr = tempptr + 1;
+
+    tempptr = strchr(ptr, '"');
+    if (!tempptr)
+        return;
+
+    ptr = tempptr + 1;
+    tempptr = strchr(ptr, '"');
+    if (!tempptr)
+        return;
+
+    *tempptr = 0;
+    FAction = ptr;
+
+    ptr = tempptr + 1;
+
+    tempptr = strchr(ptr, '{');
+    if (tempptr)
+        NotifyJson(tempptr);
 }
 
 /*##########################################################################
@@ -170,7 +247,7 @@ void TOcppSocketServer::ReceivedText(const char *str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TOcppSocketServer::ReceivedBinary(const char *str, int size)
+void TOcppSocketServer::ReceivedBinary(char *str, int size)
 {
 }
 

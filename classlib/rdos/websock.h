@@ -50,8 +50,8 @@ protected:
     virtual void HandleSocket();
     
     virtual const char *GetProtocol() = 0;
-    virtual void ReceivedText(const char *str) = 0;
-    virtual void ReceivedBinary(const char *str, int size) = 0;
+    virtual void ReceivedText(char *str) = 0;
+    virtual void ReceivedBinary(char *str, int size) = 0;
 
     TString FReqUrl;
     TString FProtocol;
