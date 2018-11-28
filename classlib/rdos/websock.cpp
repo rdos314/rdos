@@ -238,6 +238,31 @@ void TWebSocketServer::SendHttpError()
     FSocket->Write(FBuf, strlen(FBuf));
     FSocket->Push();
 }
+
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::Unmask
+#
+#   Purpose....: Unmask message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::Unmask(char *buf, int size, char *mask)
+{
+    int i;
+    int m = 0;
+
+    for (i = 0; i < size; i++)
+    {
+        buf[i] = buf[i] ^ mask[m];
+        m++;
+        if (m == 4)
+            m = 0;
+    }
+}
    
 /*##########################################################################
 #
@@ -254,7 +279,7 @@ void TWebSocketServer::HandleWebSocket()
 {
     int size;
     int len;
-    char frame;
+    char op;
     bool masked;
     char mask[4];
     bool ok;
@@ -269,7 +294,7 @@ void TWebSocketServer::HandleWebSocket()
             {
                 ok = true;
 
-                frame = FBuf[0];
+                op = FBuf[0] & 0xF;
 
                 if (FBuf[1] & 0x80)
                     masked = true;
@@ -307,6 +332,22 @@ void TWebSocketServer::HandleWebSocket()
                     FSocket->Read(mask, 4);
 
                 size = FSocket->Read(FBuf, len);
+                if (len == size)
+                {
+                    if (masked)
+                        Unmask(FBuf, size, mask);
+
+                    switch (op)
+                    {
+                        case 1:
+                            ReceivedText(FBuf);
+                            break;
+
+                        case 2:
+                            ReceivedBinary(FBuf, size);
+                            break;
+                    }
+                }
             }
         }
     }

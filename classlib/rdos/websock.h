@@ -45,6 +45,7 @@ protected:
     void SendReject();
     void SendHttpError();
     void HandleWebSocket();
+    void Unmask(char *buf, int size, char *mask);
 
     virtual void HandleSocket();
     
