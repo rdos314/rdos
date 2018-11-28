@@ -1,106 +1,35 @@
-#include <rdos.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2018, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# websock.cpp
+# Web socket class
+#
+########################################################################*/
+
 #include <string.h>
-#include <unistd.h>
-#include "serial.h"
-#include "section.h"
-#include "file.h"
 #include "rdos.h"
-#include "modbus.h"
-#include "sockobj.h"
-
-#include <math.h>
-#include "bignum.h"
-
-#include "section.h"
-
-#include "testlib.h"
-
-#define FALSE 0
-#define TRUE !FALSE
-
-class TWebSocketServerFactory : public TSocketServerFactory
-{
-public:
-    TWebSocketServerFactory(const char *Name, int Port, int MaxConnections, int BufferSize);
-    ~TWebSocketServerFactory();
-
-    virtual TSocketServer *Create(TTcpSocket *Socket);
-};
-
-class TWebSocketServer : public TSocketServer
-{
-public:
-    TWebSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
-    virtual ~TWebSocketServer();
-    
-protected:
-    TString GetUrl(char *str);
-    TString GetValue(char *str);
-    void CalcAccept(const char *str);
-    void SendReply();
-
-    virtual void HandleSocket();
-    virtual void HandleWebSocket();
-
-    TString FReqUrl;
-    TString FProtocol;
-    int FVersion;
-    char FBuf[512];
-    char FHashStr[512];
-    char FAcceptStr[30];
-};
-
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServerFactory::TWebSocketServerFactory
-#
-#   Purpose....: Constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TWebSocketServerFactory::TWebSocketServerFactory(const char *Name, int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
-{
-    Start(Name, 0x10000);
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServerFactory::~TWebSocketServerFactory
-#
-#   Purpose....: Destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TWebSocketServerFactory::~TWebSocketServerFactory()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServerFactory::Create
-#
-#   Purpose....: Create web socket server
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketServer *TWebSocketServerFactory::Create(TTcpSocket *Socket)
-{
-    return new TWebSocketServer("Web socket", 0x10000, Socket);
-}
+#include "base64.h"
+#include "sha1.h"
+#include "websock.h"
 
 /*##########################################################################
 #
@@ -260,21 +189,6 @@ void TWebSocketServer::SendReply()
     FSocket->Write(FBuf, strlen(FBuf));
     FSocket->Push();
 }
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::HandleWebSocket
-#
-#   Purpose....: Default handle web socket
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWebSocketServer::HandleWebSocket()
-{
-}
    
 /*##########################################################################
 #
@@ -344,32 +258,11 @@ void TWebSocketServer::HandleSocket()
                 SendReply();
                 HandleWebSocket();
             }
-            else
-                FSocket->Close();
+                
+            FSocket->Close();
+            break;
         }
-
-        RdosWaitMilli(250);
+        else
+            RdosWaitMilli(250);
     }
-}
-
-
-
-/*##########################################################################
-#
-#   Name       : main
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void main()
-{
-    TWebSocketServerFactory fact("OCCP Listen", 7000, 16, 1024);
-
-    for (;;)
-        RdosWaitMilli(250);
-
 }
