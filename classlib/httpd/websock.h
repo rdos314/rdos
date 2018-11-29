@@ -28,33 +28,31 @@
 #ifndef _WEBSOCK_H
 #define _WEBSOCK_H
 
-#include "sockobj.h"
+#include "httpserv.h"
+#include "httpopt.h"
 #include "str.h"
 
-class TWebSocketServer : public TSocketServer
+class TWebSocketServer : public THttpSocketServer
 {
 public:
     TWebSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
     virtual ~TWebSocketServer();
     
 protected:
-    TString GetUrl(char *str);
-    TString GetValue(char *str);
     void CalcAccept(const char *str);
     void SendAccept(const char *prot);
     void SendReject();
-    void SendHttpError();
     void HandleWebSocket();
     void Unmask(char *buf, int size, char *mask);
 
-    virtual void HandleSocket();
+    virtual void HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *prot);
     
     virtual const char *GetProtocol() = 0;
     virtual void ReceivedText(char *str) = 0;
     virtual void ReceivedBinary(char *str, int size) = 0;
 
     TString FReqUrl;
-    TString FProtocol;
+    THttpOption *FProtocols;
     int FVersion;
     char FBuf[512];
     char FHashStr[512];

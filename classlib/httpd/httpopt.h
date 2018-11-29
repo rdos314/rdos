@@ -36,15 +36,18 @@ class THttpArg;
 
 class THttpOption : public THttpParser
 {
-	friend class THttpCommand;
+    friend class THttpCommand;
 
 public:
     THttpOption(const char *Name, char *Param);
-	virtual ~THttpOption();
+    virtual ~THttpOption();
 
-	virtual int IsArgDelim(char ch);
+    virtual int IsArgDelim(char ch);
 
-	static int ErrorLevel;
+    int GetArgCount();
+    TString GetArg(int Nr);
+
+    static int ErrorLevel;
 
 protected:
     void AddArg(const char *name);
@@ -54,11 +57,11 @@ protected:
     int ScanCmdLine(char *line, void *arg);
     TDateTime GetModifiedSince();
 
-	TString FName;
-	THttpOption *FList;
+    TString FName;
+    THttpOption *FList;
 	
-	THttpArg *FArgList;
-	int FArgCount;
+    THttpArg *FArgList;
+    int FArgCount;
 };
 
 #endif

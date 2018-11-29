@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+#include "base64.h"
 
 #include "httpcmd.h"
 #include "httpserv.h"
@@ -41,112 +42,6 @@ static char MonthNames[12][4] = {
                                     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
                                 };                                    
-
-static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-/*##########################################################################
-#
-#   Name       : IsBase64
-#
-#   Purpose....: Check for base64 char
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static int IsBase64(char c)
-{
-    return (isalnum(c) || (c == '+') || (c == '/'));
-}
-
-/*##########################################################################
-#
-#   Name       : FindBase64
-#
-#   Purpose....: Find base64 char
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static int FindBase64(char c)
-{
-    int k;
-
-    for (k = 0; k < 64; k++)
-        if (base64_chars[k] == c)
-            return k;
-
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : DecodeBase64
-#
-#   Purpose....: Decode base64
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void DecodeBase64(const char *instr, char *outstr)
-{
-    int in_len = strlen(instr);
-    int i = 0;
-    int j = 0;
-    int in_ = 0;
-    int out_ = 0;
-    char char_array_4[4];
-    char char_array_3[3];
-
-    while (in_len-- && ( instr[in_] != '=') && IsBase64(instr[in_]))
-    {
-        char_array_4[i++] = instr[in_];
-        in_++;
-
-        if (i == 4)
-        {
-            for (i = 0; i < 4; i++)
-                char_array_4[i] = FindBase64(char_array_4[i]);
-
-            char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
-
-            for (i = 0; (i < 3); i++)
-            {
-                outstr[out_] = char_array_3[i];
-                out_++;
-            }
-            
-            i = 0;
-        }
-    }
-
-    if (i)
-    {
-        for (j = i; j < 4; j++)
-            char_array_4[j] = 0;
-
-        for (j = 0; j < 4; j++)
-            char_array_4[j] = FindBase64(char_array_4[j]);
-
-        char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
-
-        for (j = 0; (j < i - 1); j++)
-        {
-            outstr[out_] = (char_array_3[j]);
-            out_++;
-        }
-    }
-    outstr[out_] = 0;
-}
 
 /*##########################################################################
 #
@@ -254,14 +149,14 @@ THttpCommand::THttpCommand(THttpSocketServer *Server, TString Method, TString Pa
   : FMethod(Method),
         FCmdLine(Param)
 {
-        FServer = Server;
-        FArgList = 0;
-        FParamList = 0;
-        FOptCount = 0;
-        FOptList = 0;
-        FContentData = 0;
-        FContentSize = 0;
-        FAuthOk = FALSE;
+    FServer = Server;
+    FArgList = 0;
+    FParamList = 0;
+    FOptCount = 0;
+    FOptList = 0;
+    FContentData = 0;
+    FContentSize = 0;
+    FAuthOk = FALSE;
 }
 
 /*##########################################################################
@@ -322,30 +217,30 @@ THttpCommand::~THttpCommand()
 ##########################################################################*/
 char *THttpCommand::SkipOptDelim(char *p)
 {
-        int ch, quote;
-        int more;
+    int ch, quote;
+    int more;
 
-        quote = 0;
-        for (;;)
-        {
-                ch = *p;
+    quote = 0;
+    for (;;)
+    {
+        ch = *p;
 
-                if (!ch)
-                        break;
+        if (!ch)
+            break;
 
-                more = !(iscntrl(ch) || ch == ':');
+        more = !(iscntrl(ch) || ch == ':');
 
-                if (!quote && !more)
-                        break;
+        if (!quote && !more)
+            break;
 
-                if (quote == ch)
-                        quote = 0;
-                else
-                        if (strchr("\"", ch))
-                                quote = ch;
-                p++;
-        }
-        return p;
+        if (quote == ch)
+            quote = 0;
+        else
+            if (strchr("\"", ch))
+                quote = ch;
+        p++;
+    }
+    return p;
 }
 
 /*##########################################################################
@@ -361,11 +256,11 @@ char *THttpCommand::SkipOptDelim(char *p)
 ##########################################################################*/
 TDateTime THttpCommand::DecodeTime(THttpOption *opt)
 {
-        char str[40];
-        const char *ptr;
+    char str[40];
+    const char *ptr;
     int year, month, day;
-        int hour, min, sec;
-        int ok;
+    int hour, min, sec;
+    int ok;
 
     if (opt->FArgList && opt->FArgList->FList)
         ptr = opt->FArgList->FList->FName.GetData();
@@ -377,7 +272,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
         ok = (sscanf(ptr, "%d", &day) == 1);
         if (ok)
         {
-                    while (*ptr && (isdigit(*ptr) || *ptr == ' '))
+            while (*ptr && (isdigit(*ptr) || *ptr == ' '))
                 ptr++;
 
             memcpy(str, ptr, 3);
@@ -396,7 +291,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
             ptr += 3;
             ok = (sscanf(ptr, "%04d %02d:%02d:%02d", 
                                 &year, &hour, &min, &sec) == 4);
-                }
+        }
     }    
     else
         ok = FALSE;
@@ -421,7 +316,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
 THttpOption *THttpCommand::FindOption(const char *name)
 {
     THttpOption *curr;
-        TString Name(name);
+    TString Name(name);
 
     curr = FOptList;
 
@@ -1069,9 +964,9 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::WriteResponse
+#   Name       : THttpCommand::SendData
 #
-#   Purpose....: Write response
+#   Purpose....: Send data
 #
 #   In params..: *
 #   Out params.: *
@@ -1342,10 +1237,25 @@ void THttpCommand::Post(const char *Name)
 ##########################################################################*/
 void THttpCommand::Execute(const char *Name)
 {
-    if (FMethod == "POST")
-        Post(Name);
+    THttpOption *opt;
+    TString param;
+
+    if (FMethod == "GET")
+    {
+        opt = FindOption("Upgrade");
+        if (opt)
+        {
+            param = opt->GetArg(0);
+            FServer->HandleUpgrade(Name, this, param.GetData());
+        }
+        else
+            Get(Name);
+    }
     else
-        Get(Name);
+    {
+        if (FMethod == "POST")
+            Post(Name);
+    }
 }
 
 /*##########################################################################

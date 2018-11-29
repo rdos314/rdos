@@ -843,3 +843,17 @@ void THttpSocketServer::HandleSocket()
     }
 }
 
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::HandleUpgrade
+#
+#   Purpose....: Handle upgrade
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServer::HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *prot)
+{
+}

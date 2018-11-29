@@ -43,7 +43,7 @@ public:
     char *ptr;
 
     TString FName;
-	THttpArg *FList;
+    THttpArg *FList;
 };
 
 class THttpParam
@@ -66,77 +66,77 @@ friend class THttpCustomPageFactory;
 friend class THttpCustomDirFactory;
 
 public:
-	THttpCommand(THttpSocketServer *Server, TString Method, TString Param);
-	virtual ~THttpCommand();
+    THttpCommand(THttpSocketServer *Server, TString Method, TString Param);
+    virtual ~THttpCommand();
 
-	void Run();
-	int IsOpen();
-	int IsEmpty();
-	int IsMSIE();
+    void Run();
+    int IsOpen();
+    int IsEmpty();
+    int IsMSIE();
 
-	static int ErrorLevel;
+    THttpOption *FindOption(const char *name);
+    void WriteError(int ErrorCode);
+
+    static int ErrorLevel;
 
 protected:
     void HandlePost(THttpCustomPage *page, const char *name);
-	void GetFile(const char *Name);
-	void Get(const char *Name);
+    void GetFile(const char *Name);
+    void Get(const char *Name);
     void Post(const char *Name);
-	void Execute(const char *Name);
+    void Execute(const char *Name);
 
     void CheckAuthorization(const char *param);
-	void AddArg(const char *name);
-	void AddArg(char *sBeg, char **sEnd);
-	void Split(char *s);
-	int Parse(void *arg);
-	int ScanCmdLine(char *line, void *arg);
+    void AddArg(const char *name);
+    void AddArg(char *sBeg, char **sEnd);
+    void Split(char *s);
+    int Parse(void *arg);
+    int ScanCmdLine(char *line, void *arg);
 
-	TDateTime DecodeTime(THttpOption *opt);
-	THttpOption *FindOption(const char *name);
-	TDateTime GetModifiedSince();
+    TDateTime DecodeTime(THttpOption *opt);
+    TDateTime GetModifiedSince();
 
-	const char *GetErrorText(int ErrorCode);
+    const char *GetErrorText(int ErrorCode);
 
-	void WriteStartHeader(int ErrorCode);
-	void WriteEndHeader();
-	void WriteOption(const char *option, const char *val);
-	void WriteLongOption(const char *option, long value);
-	void WriteTimeOption(const char *option, TDateTime &time);
+    void WriteStartHeader(int ErrorCode);
+    void WriteEndHeader();
+    void WriteOption(const char *option, const char *val);
+    void WriteLongOption(const char *option, long value);
+    void WriteTimeOption(const char *option, TDateTime &time);
 
-	void WriteFile(TPathName &path, const char *ContentType);
-	void WriteError(int ErrorCode);
+    void WriteFile(TPathName &path, const char *ContentType);
 
     void SendData(const char *Data, const char *ContentType);
 
-	void StartPush();
-	int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
+    void StartPush();
+    int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
 
-	char *SkipOptDelim(char *p);
-	void AddOpt(char *name, char *param);
-	char *AddParam(char *p);
+    char *SkipOptDelim(char *p);
+    void AddOpt(char *name, char *param);
+    char *AddParam(char *p);
 
-	THttpCommand *FList;
+    THttpCommand *FList;
+    THttpParam *FParamList;
 
-	THttpParam *FParamList;
+    THttpArg *FArgList;
+    int FArgCount;
 
-	THttpArg *FArgList;
-	int FArgCount;
+    THttpOption *FOptList;
+    int FOptCount;
 
-	THttpOption *FOptList;
-	int FOptCount;
+    int FAuthOk;
 
-	int FAuthOk;
-
-	int FMajor;
-	int FMinor;
+    int FMajor;
+    int FMinor;
 
     TString FUserAgent;
     int FContentSize;
     char *FContentData;
 
-	TString FMethod;
-	TString FCmdLine;
-	TString FUser;
-	THttpSocketServer *FServer;
+    TString FMethod;
+    TString FCmdLine;
+    TString FUser;
+    THttpSocketServer *FServer;
 };
 
 #endif

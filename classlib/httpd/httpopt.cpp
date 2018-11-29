@@ -53,7 +53,7 @@ THttpOption::THttpOption(const char *Name, char *Param)
 {
     FArgList = 0;
 
-	ScanCmdLine(Param, 0);
+    ScanCmdLine(Param, 0);
 }
 
 /*##########################################################################
@@ -77,7 +77,48 @@ THttpOption::~THttpOption()
         FArgList = arg->FList;
         delete arg;
         arg = FArgList;
-	}
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THttpOption::GetArgCount
+#
+#   Purpose....: Get argument count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpOption::GetArgCount()
+{
+    return FArgCount;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpOption::GetArg
+#
+#   Purpose....: Get argument 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString THttpOption::GetArg(int n)
+{
+    int i;
+    THttpArg *arg = FArgList;
+
+    for (i = 0; i < n && arg; i++)
+        arg = arg->FList;
+
+    if (arg)
+        return arg->FName;
+    else
+        return "";
 }
 
 /*##########################################################################
@@ -93,7 +134,7 @@ THttpOption::~THttpOption()
 ##########################################################################*/
 int THttpOption::IsArgDelim(char ch)
 {
-	return iscntrl(ch) || ch == ',';
+    return iscntrl(ch) || ch == ',';
 }
 
 /*##########################################################################
@@ -113,17 +154,17 @@ void THttpOption::AddArg(const char *name)
     THttpArg *curr;
 
     arg->FList = 0;
-	curr = FArgList;
+    curr = FArgList;
    
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
+    if (curr)
+    {
+        while (curr->FList)
+            curr = curr->FList;
 
-		curr->FList = arg;
-	}
-	else
-		FArgList = arg;    
+        curr->FList = arg;
+    }
+    else
+        FArgList = arg;    
 }
 
 /*##########################################################################
@@ -163,17 +204,17 @@ void THttpOption::AddArg(char *sBeg, char **sEnd)
 ##########################################################################*/
 void THttpOption::Split(char *s)
 {
-	char *start;
+    char *start;
 
     if (s)
     {
         start = SkipDelim(s);
         while (*start)
         {
-			AddArg(start, &s);
-			start = SkipDelim(s);
-		}
-	}
+            AddArg(start, &s);
+            start = SkipDelim(s);
+        }
+    }
 }
 
 /*##########################################################################
@@ -191,16 +232,16 @@ int THttpOption::Parse(void *arg)
 {
     THttpArg *argv;
 
-	FArgCount = 0;
+    FArgCount = 0;
 
     argv = FArgList;	
-	while (argv)
-	{
+    while (argv)
+    {
     	FArgCount++;	
-		argv = argv->FList;
-	}
+        argv = argv->FList;
+    }
 
-	return E_None;
+    return E_None;
 }
 
 /*##########################################################################
@@ -216,11 +257,10 @@ int THttpOption::Parse(void *arg)
 ##########################################################################*/
 int THttpOption::ScanCmdLine(char *line, void *arg)
 {
-	Split(line);
+    Split(line);
 
-	if (Parse(arg) != E_None)
-		return FALSE;
-	else
-	    return TRUE;
+    if (Parse(arg) != E_None)
+        return FALSE;
+    else
+        return TRUE;
 }
-

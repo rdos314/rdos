@@ -30,6 +30,7 @@
 #include "base64.h"
 #include "sha1.h"
 #include "websock.h"
+#include "httpcmd.h"
 
 /*##########################################################################
 #
@@ -43,7 +44,7 @@
 #
 ##########################################################################*/
 TWebSocketServer::TWebSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
-  : TSocketServer(Name, StackSize, Socket)
+  : THttpSocketServer(Name, StackSize, Socket)
 {
 }
 
@@ -60,85 +61,6 @@ TWebSocketServer::TWebSocketServer(const char *Name, int StackSize, TTcpSocket *
 ##########################################################################*/
 TWebSocketServer::~TWebSocketServer()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::GetUrl
-#
-#   Purpose....: Get URL as a string value
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TString TWebSocketServer::GetUrl(char *str)
-{
-    TString valstr;
-    char *start;
-    char ch;
-    char *ptr = str;
-
-    while (*ptr != ' ' && *ptr != 0x9)
-        ptr++;
-
-    while (*ptr == ' ' || *ptr == 0x9)
-        ptr++;
-
-    start = ptr;
-
-    while (*ptr != ' ' && *ptr != 0xd && *ptr != 0xa)
-        ptr++;
-
-    ch = *ptr;
-    *ptr = 0;
-    valstr = start;
-    *ptr = ch;
-
-    return valstr;
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::GetValue
-#
-#   Purpose....: Get a string value
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TString TWebSocketServer::GetValue(char *str)
-{
-    TString valstr;
-    char *start;
-    char ch;
-    char *ptr = str;
-
-    if (ptr)
-        ptr = strchr(ptr, ':');
-
-    if (ptr)
-    {
-        ptr++;
-
-        while (*ptr == ' ' || *ptr == 0x9)
-            ptr++;
-
-        start = ptr;
-
-        while (*ptr != ' ' && *ptr != 0xd && *ptr != 0xa)
-            ptr++;
-
-        ch = *ptr;
-        *ptr = 0;
-        valstr = start;
-        *ptr = ch;
-    }
-
-    return valstr;
 }
 
 /*##########################################################################
@@ -213,26 +135,6 @@ void TWebSocketServer::SendReject()
     strcat(FBuf, "Sec-Websocket-Accept: ");
     strcat(FBuf, FAcceptStr);
     strcat(FBuf, "\r\n");
-    strcat(FBuf, "\r\n");
-
-    FSocket->Write(FBuf, strlen(FBuf));
-    FSocket->Push();
-}
-
-/*##########################################################################
-#
-#   Name       : TWebSocketServer::SendHttpError
-#
-#   Purpose....: Send HTTP error
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWebSocketServer::SendHttpError()
-{
-    strcpy(FBuf, "HTTP/1.1 404 NOT FOUND\r\n");
     strcat(FBuf, "\r\n");
 
     FSocket->Write(FBuf, strlen(FBuf));
@@ -365,8 +267,9 @@ void TWebSocketServer::HandleWebSocket()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::HandleSocket()
+void TWebSocketServer::HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *upgrade)
 {
+    THttpOption *opt;
     int size;
     char *ptr;
     const char *prot;
@@ -374,69 +277,55 @@ void TWebSocketServer::HandleSocket()
     TString str;
     bool ok = false;
 
-    while (FSocket->IsOpen())
+    if (strstr(upgrade, "websocket"))
+        ok = true;
+    else
+        ok = false;
+
+    if (ok)
     {
-        if (FSocket->WaitForData(5000))
+        FReqUrl = Name;
+
+        opt = Cmd->FindOption("Sec-WebSocket-Key");
+        if (opt)
+            key = opt->GetArg(0);
+
+         if (key.GetSize() == 0)
+            ok = false;
+    }
+
+    if (ok)
+    {
+        FProtocols = Cmd->FindOption("Sec-WebSocket-Protocol");
+        if (!FProtocols)
+            ok = false;
+    }
+
+    if (ok)
+    {
+        opt = Cmd->FindOption("Sec-WebSocket-Version");
+        if (opt)
         {
-            size = FSocket->Read(FBuf, 512);
-            FBuf[size] = 0;
-
-            ptr = FBuf;
-            FReqUrl = GetUrl(ptr);
-
-            ptr = strstr(FBuf, "Sec-WebSocket-Key");
-
-            if (ptr)
-                key = GetValue(ptr);
-
-            if (key.GetSize())
-                ok = true;
-            else
-                ok = false;
-
-            if (ok)
-            {
-                ptr = strstr(FBuf, "Sec-WebSocket-Protocol");
-  
-                if (ptr)
-                    FProtocol = GetValue(ptr);
-                else
-                    ok = false;
-            }
-
-            if (ok)
-            {
-                ptr = strstr(FBuf, "Sec-WebSocket-Version");
-
-                if (ptr)
-                {
-                    str = GetValue(ptr);
-                    FVersion = atoi(str.GetData());
-                }
-                else
-                    ok = false;
-            }
-
-            if (ok)
-            {
-                CalcAccept(key.GetData());
-
-                prot = GetProtocol();
-                if (prot)
-                {
-                    SendAccept(prot);
-                    HandleWebSocket();
-                }
-                else
-                    SendReject();
-            }
-            else
-                SendHttpError();
-                
-            FSocket->Close();
-            break;
+            str = opt->GetArg(0);
+            FVersion = atoi(str.GetData());
         }
         else
-            RdosWaitMilli(250);
+            ok = false;
     }
+
+    if (ok)
+    {
+        CalcAccept(key.GetData());
+
+        prot = GetProtocol();
+        if (prot)
+        {
+            SendAccept(prot);
+            HandleWebSocket();
+        }
+        else
+            SendReject();
+    }
+    else
+        Cmd->WriteError(404);
 }

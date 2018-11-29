@@ -54,51 +54,53 @@ enum InternalErrorCodes
 class THttpSocketServer : public TSocketServer
 {
 public:
-        THttpSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
-        ~THttpSocketServer();
+    THttpSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    ~THttpSocketServer();
 
-        virtual void HandleSocket();
+    virtual void HandleSocket();
 
     void Write(char ch);
     void Write(const char *str);
     void Write(const char *buf, int size);
     void Push();
 
-        int IsOpen();
-        int IsEmpty();
+    int IsOpen();
+    int IsEmpty();
         
-        int Read(char *buf, int size);
-        char *ReadLine();
+    int Read(char *buf, int size);
+    char *ReadLine();
 
-        THttpCustomPageFactory *FindPage(const char *FileName);
-        THttpCustomDirFactory *FindDir(const char *FileName);
-        TString CreateUniqueFile();
+    THttpCustomPageFactory *FindPage(const char *FileName);
+    THttpCustomDirFactory *FindDir(const char *FileName);
+    TString CreateUniqueFile();
 
-        void (*OnCommand)(THttpSocketServer *server, const char *str);
-        int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
+    virtual void HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *prot);
 
-        static int IsEmpty(const char *s);
-        static int IsArgDelim(char ch);
-        static int IsFileNameChar(char c);
-        static const char *LTrimsp(const char *str);
-        static const char *LTrim(const char *str);
-        static void RTrim(char *str);
-        static char *Unquote(const char *str, const char *end);
-        static int MatchToken(char **Xp, const char *word, int len);
+    void (*OnCommand)(THttpSocketServer *server, const char *str);
+    int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
 
-        TString RootDir;
-        int KeepAlive;
-        THttpCustomPageFactory *FPageList;
-        THttpCustomDirFactory *FDirList;
+    static int IsEmpty(const char *s);
+    static int IsArgDelim(char ch);
+    static int IsFileNameChar(char c);
+    static const char *LTrimsp(const char *str);
+    static const char *LTrim(const char *str);
+    static void RTrim(char *str);
+    static char *Unquote(const char *str, const char *end);
+    static int MatchToken(char **Xp, const char *word, int len);
+
+    TString RootDir;
+    int KeepAlive;
+    THttpCustomPageFactory *FPageList;
+    THttpCustomDirFactory *FDirList;
 
 protected:
     int IsMatch(const char *Search, const char *FileName);
     THttpCommand *Parse(const char *line);
 
-        TString FMethod;
+    TString FMethod;
     char *FSocketBuf;
     int FBufCount;
-        int FBufPos;
+    int FBufPos;
     
 };
 

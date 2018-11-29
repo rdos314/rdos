@@ -25,19 +25,115 @@
 #
 ########################################################################*/
 
+#include <ctype.h>
 #include <memory.h>
 #include "rdos.h"
 
-static char Base64[] = {
-                        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                        'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                        'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                        'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                        'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                        '8', '9', '+', '/'
-                       };
+static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+/*##########################################################################
+#
+#   Name       : IsBase64
+#
+#   Purpose....: Check for base64 char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static int IsBase64(char c)
+{
+    return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+/*##########################################################################
+#
+#   Name       : FindBase64
+#
+#   Purpose....: Find base64 char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static int FindBase64(char c)
+{
+    int k;
+
+    for (k = 0; k < 64; k++)
+        if (base64_chars[k] == c)
+            return k;
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : DecodeBase64
+#
+#   Purpose....: Decode base64
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DecodeBase64(const char *instr, char *outstr)
+{
+    int in_len = strlen(instr);
+    int i = 0;
+    int j = 0;
+    int in_ = 0;
+    int out_ = 0;
+    char char_array_4[4];
+    char char_array_3[3];
+
+    while (in_len-- && ( instr[in_] != '=') && IsBase64(instr[in_]))
+    {
+        char_array_4[i++] = instr[in_];
+        in_++;
+
+        if (i == 4)
+        {
+            for (i = 0; i < 4; i++)
+                char_array_4[i] = FindBase64(char_array_4[i]);
+
+            char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+            for (i = 0; (i < 3); i++)
+            {
+                outstr[out_] = char_array_3[i];
+                out_++;
+            }
+            
+            i = 0;
+        }
+    }
+
+    if (i)
+    {
+        for (j = i; j < 4; j++)
+            char_array_4[j] = 0;
+
+        for (j = 0; j < 4; j++)
+            char_array_4[j] = FindBase64(char_array_4[j]);
+
+        char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+        for (j = 0; (j < i - 1); j++)
+        {
+            outstr[out_] = (char_array_3[j]);
+            out_++;
+        }
+    }
+    outstr[out_] = 0;
+}
 
 /*##########################################################################
 #
@@ -63,7 +159,7 @@ static void CodeOneBase64(const char *inp, char *outp, int size)
     for (i = 3; i >= 0; i--)
     {
         ch = (char)val & 0x3F;
-        outp[i] = Base64[ch];
+        outp[i] = base64_chars[ch];
         val = val >> 6;
     }
 
