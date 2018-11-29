@@ -77,6 +77,16 @@ public:
     THttpOption *FindOption(const char *name);
     void WriteError(int ErrorCode);
 
+    void WriteStartHeader(int ErrorCode);
+    void WriteEndHeader();
+    void WriteOption(const char *option, const char *val);
+    void WriteLongOption(const char *option, long value);
+    void WriteTimeOption(const char *option, TDateTime &time);
+
+    static int IsOptDelim(char ch);
+    static const char *LTrim(const char *str);
+    static void RTrim(char *str);
+
     static int ErrorLevel;
 
 protected:
@@ -93,16 +103,11 @@ protected:
     int Parse(void *arg);
     int ScanCmdLine(char *line, void *arg);
 
+
     TDateTime DecodeTime(THttpOption *opt);
     TDateTime GetModifiedSince();
 
     const char *GetErrorText(int ErrorCode);
-
-    void WriteStartHeader(int ErrorCode);
-    void WriteEndHeader();
-    void WriteOption(const char *option, const char *val);
-    void WriteLongOption(const char *option, long value);
-    void WriteTimeOption(const char *option, TDateTime &time);
 
     void WriteFile(TPathName &path, const char *ContentType);
 

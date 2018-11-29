@@ -185,8 +185,8 @@ void THttpOption::AddArg(char *sBeg, char **sEnd)
 
     *sEnd = SkipWord(sBeg);
     arg = THttpSocketServer::Unquote(sBeg, *sEnd);
-    tempstr = (char *)THttpSocketServer::LTrim(arg);
-    THttpSocketServer::RTrim(tempstr);
+    tempstr = (char *)THttpCommand::LTrim(arg);
+    THttpCommand::RTrim(tempstr);
     AddArg(tempstr);
     delete arg;
 }

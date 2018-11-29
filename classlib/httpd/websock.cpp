@@ -32,6 +32,8 @@
 #include "websock.h"
 #include "httpcmd.h"
 
+static const char sign[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
 /*##########################################################################
 #
 #   Name       : TWebSocketServer::TWebSocketServer
@@ -78,14 +80,20 @@ void TWebSocketServer::CalcAccept(const char *str)
 {
     TSha1Hash sha1;
     char data[20];
+    char *buf;
+    int size;
 
-    strcpy(FHashStr, str);
-    strcat(FHashStr, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+    size = strlen(str) + strlen(sign) + 1;
+    buf = new char[size];
 
-    sha1.Add(FHashStr, strlen(FHashStr));
+    strcpy(buf, str);
+    strcat(buf, sign);
+
+    sha1.Add(buf, strlen(buf));
     sha1.GetHashData(data);
-
     CodeBase64(data, FAcceptStr, 20);
+
+    delete buf;
 }
 
 /*##########################################################################
@@ -99,20 +107,14 @@ void TWebSocketServer::CalcAccept(const char *str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::SendAccept(const char *prot)
+void TWebSocketServer::SendAccept(THttpCommand *Cmd, const char *prot)
 {
-    strcpy(FBuf, "HTTP/1.1 101 Switching Protocols\r\n");
-    strcat(FBuf, "Upgrade: websocket\r\n");
-    strcat(FBuf, "Connection: Upgrade\r\n");
-    strcat(FBuf, "Sec-Websocket-Accept: ");
-    strcat(FBuf, FAcceptStr);
-    strcat(FBuf, "\r\n");
-    strcat(FBuf, "Sec-Websocket-Protocol: ");
-    strcat(FBuf, prot);
-    strcat(FBuf, "\r\n");
-    strcat(FBuf, "\r\n");
-
-    FSocket->Write(FBuf, strlen(FBuf));
+    Cmd->WriteStartHeader(101);
+    Cmd->WriteOption("Upgrade", "websocket");
+    Cmd->WriteOption("Connection", "Upgrade");
+    Cmd->WriteOption("Sec-Websocket-Accept", FAcceptStr);
+    Cmd->WriteOption("Sec-Websocket-Protocol", prot);
+    Cmd->WriteEndHeader();
     FSocket->Push();
 }
 
@@ -127,17 +129,13 @@ void TWebSocketServer::SendAccept(const char *prot)
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::SendReject()
+void TWebSocketServer::SendReject(THttpCommand *Cmd)
 {
-    strcpy(FBuf, "HTTP/1.1 101 Switching Protocols\r\n");
-    strcat(FBuf, "Upgrade: websocket\r\n");
-    strcat(FBuf, "Connection: Upgrade\r\n");
-    strcat(FBuf, "Sec-Websocket-Accept: ");
-    strcat(FBuf, FAcceptStr);
-    strcat(FBuf, "\r\n");
-    strcat(FBuf, "\r\n");
-
-    FSocket->Write(FBuf, strlen(FBuf));
+    Cmd->WriteStartHeader(101);
+    Cmd->WriteOption("Upgrade", "websocket");
+    Cmd->WriteOption("Connection", "Upgrade");
+    Cmd->WriteOption("Sec-Websocket-Accept", FAcceptStr);
+    Cmd->WriteEndHeader();
     FSocket->Push();
 }
 
@@ -184,32 +182,34 @@ void TWebSocketServer::HandleWebSocket()
     char op;
     bool masked;
     char mask[4];
+    char str[10];
     bool ok;
+    char *buf;
 
     while (FSocket->IsOpen())
     {
         if (FSocket->WaitForData(5000))
         {
-            size = FSocket->Read(FBuf, 2);
+            size = FSocket->Read(str, 2);
 
             if (size == 2)
             {
                 ok = true;
 
-                op = FBuf[0] & 0xF;
+                op = str[0] & 0xF;
 
-                if (FBuf[1] & 0x80)
+                if (str[1] & 0x80)
                     masked = true;
                 else
                     masked = false;
 
-                len = FBuf[1] & 0x7F;
+                len = str[1] & 0x7F;
 
                 if (len == 126)
                 {
-                    size = FSocket->Read(FBuf, 2);
+                    size = FSocket->Read(str, 2);
                     if (size == 2)
-                        len = RdosSwapShort(*(short int*)FBuf);
+                        len = RdosSwapShort(*(short int*)str);
                     else
                         ok = false;
                 }
@@ -217,9 +217,9 @@ void TWebSocketServer::HandleWebSocket()
                 {
                     if (len == 127)
                     {
-                        size = FSocket->Read(FBuf, 4);
+                        size = FSocket->Read(str, 4);
                         if (size == 4)
-                            len = RdosSwapLong(*(int *)FBuf);
+                            len = RdosSwapLong(*(int *)str);
                         else
                             ok = false;
                     }
@@ -233,24 +233,26 @@ void TWebSocketServer::HandleWebSocket()
                 if (masked)
                     FSocket->Read(mask, 4);
 
-                size = FSocket->Read(FBuf, len);
+                buf = new char[len + 1];
+                size = FSocket->Read(buf, len);
                 if (len == size)
                 {
                     if (masked)
-                        Unmask(FBuf, size, mask);
+                        Unmask(buf, size, mask);
 
                     switch (op)
                     {
                         case 1:
-                            FBuf[size] = 0;
-                            ReceivedText(FBuf);
+                            buf[size] = 0;
+                            ReceivedText(buf);
                             break;
 
                         case 2:
-                            ReceivedBinary(FBuf, size);
+                            ReceivedBinary(buf, size);
                             break;
                     }
                 }
+                delete buf;
             }
         }
     }
@@ -275,6 +277,7 @@ void TWebSocketServer::HandleUpgrade(const char *Name, THttpCommand *Cmd, const 
     const char *prot;
     TString key;
     TString str;
+    long ip;
     bool ok = false;
 
     if (strstr(upgrade, "websocket"))
@@ -320,12 +323,12 @@ void TWebSocketServer::HandleUpgrade(const char *Name, THttpCommand *Cmd, const 
         prot = GetProtocol();
         if (prot)
         {
-            SendAccept(prot);
+            SendAccept(Cmd, prot);
             HandleWebSocket();
         }
         else
-            SendReject();
+            SendReject(Cmd);
     }
     else
-        Cmd->WriteError(404);
+        THttpSocketServer::HandleUpgrade(Name, Cmd, upgrade);
 }

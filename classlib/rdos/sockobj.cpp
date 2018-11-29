@@ -26,11 +26,49 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 #include "sockobj.h"
 #include "rdos.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : IpToString
+#
+#   Purpose....: returns a string with the ip in the format "x.x.x.x"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void IpToString(char *str, int Ip)
+{
+    sprintf(str, "%d.%d.%d.%d", Ip & 0xff, (Ip >> 8) & 0xff, (Ip >> 16) & 0xff, (unsigned int)(Ip) >> 24);
+}
+
+/*##########################################################################
+#
+#   Name       : StringToIp
+#
+#   Purpose....: decodes ip from the format "x.x.x.x"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int StringToIp(const char *str)
+{
+    int n0,n1,n2,n3;
+
+    if (sscanf(str, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
+        return n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
+    else
+        return 0;
+}
 
 /*##########################################################################
 #
@@ -649,6 +687,10 @@ int TUdpSocket::Read(char *buf, int size)
 ##########################################################################*/
 TSocketServer::TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
 {
+    int ip = Socket->GetRemoteIP();
+
+    IpToString(FRemoteIp, ip);
+
     FSocket = Socket;
     FNext = 0;
 

@@ -824,6 +824,9 @@ const char *THttpCommand::GetErrorText(int ErrorCode)
 {
     switch (ErrorCode)
     {
+        case 101:
+            return "Switching Protocols";
+
         case 200:
             return "OK";
 
@@ -864,9 +867,11 @@ void THttpCommand::WriteStartHeader(int ErrorCode)
         FServer->Write(GetErrorText(ErrorCode));
         FServer->Write("\r\n");
 
-        WriteTimeOption("Date", CurrTime);
-        WriteOption("Server", "RDOS");
-        
+        if (ErrorCode != 101)
+        {
+            WriteTimeOption("Date", CurrTime);
+            WriteOption("Server", "RDOS");
+        }
     }
 }
 
@@ -1258,6 +1263,70 @@ void THttpCommand::Execute(const char *Name)
     }
 }
 
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::IsOptDelim
+#
+#   Purpose....: Check for option delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpCommand::IsOptDelim(char ch)
+{
+    return isspace(ch) || iscntrl(ch) || strchr(",;", ch);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::LTrim
+#
+#   Purpose....: Remove leading "spaces"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *THttpCommand::LTrim(const char *str)
+{
+    while (*str)
+    {
+        if (IsOptDelim(*str))
+            str++;
+        else
+            break;
+    }
+    return str;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::RTrim
+#
+#   Purpose....: Remove trailing "spaces"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::RTrim(char *str)
+{
+    char *p;
+
+    p = strchr(str, 0);
+    p--;
+
+    while (p >= str && IsOptDelim(*p))
+        p--;
+
+    p[1] = 0;
+}
+
 /*##########################################################################
 #
 #   Name       : THttpCommand::Run
@@ -1286,11 +1355,11 @@ void THttpCommand::Run()
         {
             *start = 0;
             start++;
-            start = (char *)THttpSocketServer::LTrim(start);
-            THttpSocketServer::RTrim(start);
+            start = (char *)LTrim(start);
+            RTrim(start);
 
-            ptr = (char *)THttpSocketServer::LTrim(ptr);
-            THttpSocketServer::RTrim(ptr);
+            ptr = (char *)LTrim(ptr);
+            RTrim(ptr);
 
             AddOpt(ptr, start);
         }

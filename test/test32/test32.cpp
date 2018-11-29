@@ -11,6 +11,7 @@
 #include "modbus.h"
 #include "sockobj.h"
 #include "websock.h"
+#include "httpfact.h"
 #include "json.h"
 
 #include <math.h>
@@ -23,7 +24,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-class TOcppSocketServerFactory : public TSocketServerFactory
+class TOcppSocketServerFactory : public THttpSocketServerFactory
 {
 public:
     TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize);
@@ -62,7 +63,7 @@ protected:
 #
 ##########################################################################*/
 TOcppSocketServerFactory::TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : THttpSocketServerFactory(Port, MaxConnections, BufferSize)
 {
     Start("OCPP Listen", 0x10000);
 }
@@ -142,12 +143,19 @@ TOcppSocketServer::~TOcppSocketServer()
 ##########################################################################*/
 const char *TOcppSocketServer::GetProtocol()
 {
-    const char *prot = FProtocol.GetData();
+    int i;
+    int count = FProtocols->GetArgCount();
+    TString str;
 
-    if (strstr(prot, "ocpp1.6"))
-        return "ocpp1.6";
-    else
-        return 0;
+    for (i = 0; i < count; i++)
+    {
+        str = FProtocols->GetArg(i);
+
+        if (strstr(str.GetData(), "ocpp1.6"))
+            return "ocpp1.6";
+    }
+
+    return 0;
 }
 
 /*##########################################################################

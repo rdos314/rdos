@@ -151,8 +151,25 @@ static void CodeOneBase64(const char *inp, char *outp, int size)
     int val;
     char ch;
     int i;
+    char cp[3];
 
-    memcpy(&val, inp, 3);
+    if (size != 3)
+    {
+        memcpy(cp, inp, 3);
+
+        switch (size)
+        {
+            case 1:
+                cp[1] = 0;
+
+            case 2:
+                cp[2] = 0;
+        }
+        memcpy(&val, cp, 3);
+    }
+    else
+        memcpy(&val, inp, 3);
+
     val = RdosSwapLong(val);
     val = val >> 8;
 

@@ -28,7 +28,11 @@
 #ifndef _SOCKOBJ_H
 #define _SOCKOBJ_H
 
+#include "str.h"
 #include "waitdev.h"
+
+void IpToString(char *str, int Ip);
+int StringToIp(const char *str);
 
 class TSocketServerFactory;
 
@@ -123,6 +127,8 @@ friend class TSocketServerFactory;
 public:
     TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
     virtual ~TSocketServer();
+
+    char FRemoteIp[30];
     
 protected:
     virtual void HandleSocket() = 0;

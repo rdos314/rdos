@@ -40,8 +40,8 @@ public:
     
 protected:
     void CalcAccept(const char *str);
-    void SendAccept(const char *prot);
-    void SendReject();
+    void SendAccept(THttpCommand *Cmd, const char *prot);
+    void SendReject(THttpCommand *Cmd);
     void HandleWebSocket();
     void Unmask(char *buf, int size, char *mask);
 
@@ -51,11 +51,10 @@ protected:
     virtual void ReceivedText(char *str) = 0;
     virtual void ReceivedBinary(char *str, int size) = 0;
 
+    TString FHost;
     TString FReqUrl;
     THttpOption *FProtocols;
     int FVersion;
-    char FBuf[512];
-    char FHashStr[512];
     char FAcceptStr[30];
 };
 

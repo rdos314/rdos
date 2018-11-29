@@ -856,4 +856,5 @@ void THttpSocketServer::HandleSocket()
 ##########################################################################*/
 void THttpSocketServer::HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *prot)
 {
+    Cmd->WriteError(404);
 }
