@@ -166,6 +166,36 @@ void TWebSocketServer::Unmask(char *buf, int size, char *mask)
    
 /*##########################################################################
 #
+#   Name       : TWebSocketServer::StartWebSocket
+#
+#   Purpose....: Start web socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::StartWebSocket()
+{
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::EndWebSocket
+#
+#   Purpose....: End web socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::EndWebSocket()
+{
+}
+   
+/*##########################################################################
+#
 #   Name       : TWebSocketServer::HandleWebSocket
 #
 #   Purpose....: Handle web socket
@@ -186,9 +216,11 @@ void TWebSocketServer::HandleWebSocket()
     bool ok;
     char *buf;
 
+    StartWebSocket();
+
     while (FSocket->IsOpen())
     {
-        if (FSocket->WaitForData(5000))
+        if (FSocket->WaitForData(500))
         {
             size = FSocket->Read(str, 2);
 
@@ -255,7 +287,10 @@ void TWebSocketServer::HandleWebSocket()
                 delete buf;
             }
         }
+        PollWebSocket();
     }
+
+    EndWebSocket();
 }
                   
 /*##########################################################################

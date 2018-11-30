@@ -29,6 +29,7 @@
 #define _JSON_H
 
 #include "str.h"
+#include "datetime.h"
 #include "sockobj.h"
 
 #define MAX_JSON_DEPTH  100
@@ -103,6 +104,7 @@ public:
     TJsonObject *AddBoolean(const char *FieldName, bool Val);
     TJsonObject *AddInt(const char *FieldName, long long Val);
     TJsonObject *AddDouble(const char *FieldName, double Val, int Decimals);
+    TJsonObject *AddDateTime(const char *FieldName, TDateTime &time);
     TJsonObject *AddString(const char *FieldName, const char *Str);
 
     TJsonCollection *FParent;

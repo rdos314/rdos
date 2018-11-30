@@ -46,6 +46,9 @@ protected:
     void Unmask(char *buf, int size, char *mask);
 
     virtual void HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *prot);
+    virtual void StartWebSocket();
+    virtual void EndWebSocket();
+    virtual void PollWebSocket();
     
     virtual const char *GetProtocol() = 0;
     virtual void ReceivedText(char *str) = 0;
