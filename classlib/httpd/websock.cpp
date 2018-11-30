@@ -46,7 +46,8 @@ static const char sign[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 #
 ##########################################################################*/
 TWebSocketServer::TWebSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
-  : THttpSocketServer(Name, StackSize, Socket)
+  : THttpSocketServer(Name, StackSize, Socket),
+    FSection("WebSocket")
 {
 }
 
@@ -291,11 +292,11 @@ void TWebSocketServer::HandleWebSocket()
                     {
                         case 1:
                             buf[size] = 0;
-                            ReceivedText(buf);
+                            ReceivedTextReq(buf);
                             break;
 
                         case 2:
-                            ReceivedBinary(buf, size);
+                            ReceivedBinaryReq(buf, size);
                             break;
                     }
                 }
@@ -305,7 +306,128 @@ void TWebSocketServer::HandleWebSocket()
         PollWebSocket();
     }
 
+    FSection.Enter();
     EndWebSocket();
+    FSection.Leave();
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendTextReply
+#
+#   Purpose....: Send text reply
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendTextReply(const char *str)
+{
+    int size = strlen(str);
+    int hsize;
+    short int ssize;
+    int lsize;
+    char header[16];
+
+    header[0] = 0x81;
+
+    if (size >= 65536)
+    {
+        header[1] = 127;
+        header[2] = 0xFF;
+        header[3] = 0xFF;
+
+        lsize = RdosSwapLong(size);
+        memcpy(header + 4, &lsize, 4);
+        hsize = 6;
+    }
+    else
+    {
+        if (size >= 126)
+        {
+            header[1] = 127;
+
+            ssize = RdosSwapShort((short int)size);
+            memcpy(header + 2, &ssize, 2);
+            hsize = 4;
+        }
+        else
+        {
+            header[1] = (char)size;
+            hsize = 2;
+        }
+    }
+
+    FSection.Enter();
+    
+    if (FSocket && FSocket->IsOpen())
+    {
+        FSocket->Write(header, hsize);
+        FSocket->Write(str, size);
+        FSocket->Push();
+    }
+
+    FSection.Leave();
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendBinaryReply
+#
+#   Purpose....: Send binary reply
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendBinaryReply(const char *str, int size)
+{
+    int hsize;
+    short int ssize;
+    int lsize;
+    char header[16];
+
+    header[0] = 0x82;
+
+    if (size >= 65536)
+    {
+        header[1] = 127;
+        header[2] = 0xFF;
+        header[3] = 0xFF;
+
+        lsize = RdosSwapLong(size);
+        memcpy(header + 4, &ssize, 4);
+        hsize = 6;
+    }
+    else
+    {
+        if (size >= 126)
+        {
+            header[1] = 127;
+
+            ssize = RdosSwapShort((short int)size);
+            memcpy(header + 2, &ssize, 2);
+            hsize = 4;
+        }
+        else
+        {
+            header[1] = (char)size;
+            hsize = 2;
+        }
+    }
+
+    FSection.Enter();
+    
+    if (FSocket && FSocket->IsOpen())
+    {
+        FSocket->Write(header, hsize);
+        FSocket->Write(str, size);
+        FSocket->Push();
+    }
+
+    FSection.Leave();
 }
                   
 /*##########################################################################

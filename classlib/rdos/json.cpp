@@ -595,7 +595,7 @@ TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time
     TString str;
     TString fn(FieldName);
 
-    str.printf("%04d-%02d-%02T%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+    str.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
     TJsonObject *obj = new TJsonString(fn, str);
     Insert(obj);
     return obj;
