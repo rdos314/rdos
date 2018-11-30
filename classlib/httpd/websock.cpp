@@ -196,6 +196,21 @@ void TWebSocketServer::EndWebSocket()
    
 /*##########################################################################
 #
+#   Name       : TWebSocketServer::PollWebSocket
+#
+#   Purpose....: Poll web socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::PollWebSocket()
+{
+}
+   
+/*##########################################################################
+#
 #   Name       : TWebSocketServer::HandleWebSocket
 #
 #   Purpose....: Handle web socket
