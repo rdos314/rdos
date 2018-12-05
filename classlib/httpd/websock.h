@@ -52,11 +52,11 @@ protected:
     virtual void PollWebSocket();
     
     virtual const char *GetProtocol() = 0;
-    virtual void ReceivedTextReq(char *str) = 0;
-    virtual void ReceivedBinaryReq(char *str, int size) = 0;
+    virtual void ReceivedText(char *str) = 0;
+    virtual void ReceivedBinary(char *str, int size) = 0;
 
-    void SendTextReply(const char *str);
-    void SendBinaryReply(const char *str, int size);
+    void SendText(const char *str);
+    void SendBinary(const char *str, int size);
 
     TString FHost;
     TString FReqUrl;

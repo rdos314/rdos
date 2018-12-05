@@ -292,11 +292,11 @@ void TWebSocketServer::HandleWebSocket()
                     {
                         case 1:
                             buf[size] = 0;
-                            ReceivedTextReq(buf);
+                            ReceivedText(buf);
                             break;
 
                         case 2:
-                            ReceivedBinaryReq(buf, size);
+                            ReceivedBinary(buf, size);
                             break;
                     }
                 }
@@ -313,16 +313,16 @@ void TWebSocketServer::HandleWebSocket()
    
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::SendTextReply
+#   Name       : TWebSocketServer::SendText
 #
-#   Purpose....: Send text reply
+#   Purpose....: Send text 
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::SendTextReply(const char *str)
+void TWebSocketServer::SendText(const char *str)
 {
     int size = strlen(str);
     int hsize;
@@ -373,16 +373,16 @@ void TWebSocketServer::SendTextReply(const char *str)
    
 /*##########################################################################
 #
-#   Name       : TWebSocketServer::SendBinaryReply
+#   Name       : TWebSocketServer::SendBinary
 #
-#   Purpose....: Send binary reply
+#   Purpose....: Send binary
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWebSocketServer::SendBinaryReply(const char *str, int size)
+void TWebSocketServer::SendBinary(const char *str, int size)
 {
     int hsize;
     short int ssize;
