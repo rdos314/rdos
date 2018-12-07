@@ -974,6 +974,8 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
 ##########################################################################*/
 TDebug::~TDebug()
 {
+    TDebugBreak *b;
+
     while (ThreadList)
         RemoveThread(ThreadList->ThreadID);
 
@@ -981,10 +983,20 @@ TDebug::~TDebug()
         RemoveModule(ModuleList->Handle);
 
     while (HwBreakList)
-        RemoveBreak(HwBreakList);
+    {
+        b = HwBreakList;
+        RemoveBreak(b);
+        HwBreakList = b->Next;
+        delete b;
+    }
 
     while (SwBreakList)
-        RemoveBreak(SwBreakList);
+    {
+        b = SwBreakList;
+        RemoveBreak(b);
+        SwBreakList = b->Next;
+        delete b;
+    }
 
     while (WatchList)
         ClearWatch(WatchList->Sel, WatchList->Offset, WatchList->Size);

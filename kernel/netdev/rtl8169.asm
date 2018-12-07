@@ -2287,6 +2287,7 @@ niLoop:
     test ax,IR_RDU OR IR_FOVW
     jz niNotOv
 ;
+    int 3
     mov bx,ds:SuperThread
     Signal
 
@@ -2355,6 +2356,7 @@ ntLoop:
     test ax,IR_RDU OR IR_FOVW
     jz ntNotOv
 ;
+    int 3
     mov bx,ds:SuperThread
     Signal
 
