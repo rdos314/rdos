@@ -497,33 +497,60 @@ int main()
         if (SolarInv->IsOnline())
         {
             val = SolarInv->GetCurrentPower();
-            ival = (int)val;
-            sprintf(str, "%d", ival);
+            if (val < 11000.0 && val >= 0.0)
+            {
+                ival = (int)val;
+                sprintf(str, "%d", ival);
+            }
+            else
+                strcpy(str, "err");
             SolarTable->SetText(0, 1, str);
 
             val = SolarInv->GetDayEnergy() / 1000.0;
-            sprintf(str, "%7.3Lf", val);
+            if (val < 100.0 && val >= 0)
+                sprintf(str, "%7.3Lf", val);
+            else
+                strcpy(str, "err");
             SolarTable->SetText(1, 1, str);
         }
 
         if (w->IsOnline())
         {
             val = w->GetTemperature();
-            sprintf(str, "%5.1Lf", val);
+            if (val < 100.0 && val > -100.0)  
+            {
+                sprintf(str, "%5.1Lf", val);
+                ambient = (int)(10.0 * val);
+            }
+            else
+                strcpy(str, "err");
             SolarTable->SetText(2, 1, str);
 
-            ambient = (int)(10.0 * val);
-
             val = w->GetWindSpeed();
-            sprintf(str, "%5.1Lf", val);
+            if (val < 100.0 && val >= 0.0)
+                sprintf(str, "%5.1Lf", val);
+            else
+                strcpy(str, "err");
             SolarTable->SetText(3, 1, str);
 
-            ival = (int)w->GetPressure();
-            sprintf(str, "%d", ival);
+            val = w->GetPressure();
+            if (val < 2000.0 && val > 0.0)
+            {
+                ival = (int)val;
+                sprintf(str, "%d", ival);
+            }
+            else
+                strcpy(str, "err");
             SolarTable->SetText(4, 1, str);
 
-            ival = (int)w->GetHumidity();
-            sprintf(str, "%d", ival);
+            val = w->GetHumidity();
+            if (val <= 100.0 && val >= 0)
+            {
+                ival = (int)val;
+                sprintf(str, "%d", ival);
+            }
+            else
+                strcpy(str, "err");
             SolarTable->SetText(5, 1, str);
         }
         else
