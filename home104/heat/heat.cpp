@@ -201,8 +201,9 @@ int main()
 
     RdosWriteSerialRaw(0x10, 0, 1);
 
-    NtpIp = RdosNameToIp("ntp.lth.se");
-    RdosSyncTime(NtpIp);
+    NtpIp = RdosNameToIp("pool.ntp.org");
+    if (NtpIp)
+        RdosSyncTime(NtpIp);
 
     vbe = new TVideoGraphicDevice(32, 1280, 1024);
 //    vbe = new TVideoGraphicDevice(32, 1280, 768);
@@ -669,7 +670,9 @@ int main()
 
         if (SyncCount == 300)
         {
-             RdosSyncTime(NtpIp);
+            NtpIp = RdosNameToIp("pool.ntp.org");
+            if (NtpIp)
+                RdosSyncTime(NtpIp);
              SyncCount = 0;
         }
         else
