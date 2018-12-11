@@ -520,6 +520,9 @@ void TWdAsyncService::NotifyMsg()
             break;
 
         default:
+            char str[40];
+            sprintf(str, "AsyncErr: %02hX", ch);
+            LogMsg(str);
             ReqError();
             break;
     }

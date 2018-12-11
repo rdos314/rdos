@@ -251,6 +251,22 @@ void TWdSupplService::PutData(void *ptr, int size)
 
 /*##########################################################################
 #
+#   Name       : TWdSupplService::LogMsg
+#
+#   Purpose....: Log message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::LogMsg(const char *msg)
+{
+    FServer->LogMsg(msg);
+}        
+
+/*##########################################################################
+#
 #   Name       : TWdSupplService::GetDebug
 #
 #   Purpose....: Get debug object

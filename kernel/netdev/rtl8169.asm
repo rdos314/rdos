@@ -2287,7 +2287,7 @@ niLoop:
     test ax,IR_RDU OR IR_FOVW
     jz niNotOv
 ;
-    int 3
+    and di,NOT (IR_RDU OR IR_ROK OR IR_FOVW)
     mov bx,ds:SuperThread
     Signal
 
@@ -3207,17 +3207,34 @@ stNoTimeout:
 stHandle:    
     xor ax,ax
     xchg ax,ds:Isr
-;    
-    test ax,IR_RDU OR IR_FOVW
-    jz stRecOk
+;
+    test ax,IR_FOVW
+    jz stOvOk
 ;
     push ax
     EnterSection ds:TxSection
     call ResetHardware    
     LeaveSection ds:TxSection
     pop ax
+    jmp stRecOk
 
-stRecOk:    
+stOvOk:    
+    test ax,IR_RDU
+    jz stRecOk
+;
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    mov ax,IR_RDU OR IR_ROK OR IR_FOVW
+    out dx,ax
+;
+    mov dx,ds:IoBase
+    add dx,REG_IMR
+    in ax,dx
+    or ax,IR_RDU OR IR_ROK OR IR_FOVW
+    out dx,ax
+    jmp stOvOk
+
+stRecOk:
     call UpdateLink
     jmp stLoop
 

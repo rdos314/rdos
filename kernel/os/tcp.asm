@@ -5634,6 +5634,7 @@ PushConnection     Proc near
     push es
     pushad
 ;
+    EnterSection ds:tcp_section
     test ds:tcp_pending,FLAG_SEND_PUSH
     jnz ptcDone
 ;       
@@ -5642,6 +5643,7 @@ PushConnection     Proc near
     call SendData
 
 ptcDone:
+    LeaveSection ds:tcp_section
     popad
     pop es
     ret

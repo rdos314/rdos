@@ -597,6 +597,9 @@ void TWdRunThreadService::NotifyMsg()
             break;
 
         default:
+            char str[40];
+            sprintf(str, "ThreadErr: %02hX", ch);
+            LogMsg(str);
             ReqError();
             break;
     }

@@ -2225,6 +2225,9 @@ void TWdSocketServer::NotifyMsg20()
             break;
 
         default:
+            char str[40];
+            sprintf(str, "Req Error: %02hX", ch);
+            LogMsg(str);
             ReqError();
             break;
     }
@@ -2287,6 +2290,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         default:
+            LogMsg("Error req");
             ReqError();
             break;
     }

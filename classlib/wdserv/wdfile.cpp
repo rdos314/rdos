@@ -456,6 +456,9 @@ void TWdFileService::NotifyMsg()
             break;
 
         default:
+            char str[40];
+            sprintf(str, "FileError: %02hX", ch);
+            LogMsg(str);
             ReqError();
             break;
     }

@@ -57,6 +57,8 @@ public:
     TWdSupplService *FNext;
 
 protected:
+    void LogMsg(const char *msg);
+
     char GetByte();
     short int GetWord();
     long GetDword();
