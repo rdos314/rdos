@@ -223,6 +223,7 @@ void TWebSocketServer::PollWebSocket()
 ##########################################################################*/
 void TWebSocketServer::HandleWebSocket()
 {
+    int start;
     int size;
     int len;
     char op;
@@ -283,6 +284,19 @@ void TWebSocketServer::HandleWebSocket()
 
                 buf = new char[len + 1];
                 size = FSocket->Read(buf, len);
+
+                if (size < len)
+                {
+                    start = size;
+
+                    while (FSocket->WaitForData(500) && start < len)
+                    {
+                        size = FSocket->Read(buf + start, len - start);
+                        start += size;
+                    }
+                    size = start;
+                }
+
                 if (len == size)
                 {
                     if (masked)
