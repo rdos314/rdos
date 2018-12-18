@@ -30,6 +30,7 @@
 
 #include "sockobj.h"
 #include "thread.h"
+#include "json.h"
 
 class TOpenWeather : public TThread
 {
@@ -49,6 +50,7 @@ public:
     int GetVisibility();
 
 protected:
+    void HandleJson(const char *str);
     virtual void Execute();
     
     void ResolveIp();

@@ -29,7 +29,6 @@
 #include <string.h>
 #include "rdos.h"
 #include "openweather.h"
-#include "json.h"
 
 /*##########################################################################
 #
@@ -239,6 +238,73 @@ int TOpenWeather::GetVisibility()
 
 /*##########################################################################
 #
+#   Name       : TOpenWeather::HandleJson
+#
+#   Purpose....: Handle json
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOpenWeather::HandleJson(const char *str)
+{
+    TJsonDocument json(str);
+    TJsonCollection *root = json.GetRoot();
+    TJsonObject *obj;
+    TJsonCollection *col;
+
+    if (root)
+    {
+        col = root->GetCollection("main");
+        if (col)
+        {
+            obj = col->GetObj("temp");
+            if (obj)
+                FTemp = obj->GetDouble() - 273.15;
+
+            obj = col->GetObj("pressure");
+            if (obj)
+                FPressure = obj->GetDouble();
+
+            obj = col->GetObj("humidity");
+            if (obj)
+                FHumidity = obj->GetDouble();
+        }
+    
+        col = root->GetCollection("wind");
+        if (col)
+        {
+            obj = col->GetObj("speed");
+            if (obj)
+                FWindSpeed = obj->GetDouble();
+
+            obj = col->GetObj("deg");
+            if (obj)
+                FWindDir = (int)obj->GetInt();
+        }
+
+        col = root->GetCollection("clouds");
+        if (col)
+        {
+            obj = col->GetObj("all");
+            if (obj)
+                FCloud = (int)obj->GetInt();
+        }
+                
+        obj = root->GetObj("visibility");
+        if (obj)
+            FVisibility = (int)obj->GetInt();
+
+        FOnline = true;
+        FNewData = true;
+    }
+    else
+        FOnline = false;
+}
+
+/*##########################################################################
+#
 #   Name       : TOpenWeather::Execute
 #
 #   Purpose....: Execute method
@@ -254,10 +320,6 @@ void TOpenWeather::Execute()
     char *tempptr;
     int size;
     int i;
-    TJsonDocument *json;
-    TJsonObject *obj;
-    TJsonCollection *col;
-    TJsonCollection *root;
 
     FOnline = false;
     FIp = 0;
@@ -315,59 +377,8 @@ void TOpenWeather::Execute()
             while (*ptr == 0xa || *ptr == 0xd)
                 ptr++;
 
-            json = new TJsonDocument(ptr);
-
-            root = json->GetRoot();
-
-            if (root)
-            {
-                col = root->GetCollection("main");
-                if (col)
-                {
-                    obj = col->GetObj("temp");
-                    if (obj)
-                        FTemp = obj->GetDouble() - 273.15;
-
-                    obj = col->GetObj("pressure");
-                    if (obj)
-                        FPressure = obj->GetDouble();
-
-                    obj = col->GetObj("humidity");
-                    if (obj)
-                        FHumidity = obj->GetDouble();
-                }
-    
-                col = root->GetCollection("wind");
-                if (col)
-                {
-                    obj = col->GetObj("speed");
-                    if (obj)
-                        FWindSpeed = obj->GetDouble();
-
-                    obj = col->GetObj("deg");
-                    if (obj)
-                        FWindDir = (int)obj->GetInt();
-                }
-
-                col = root->GetCollection("clouds");
-                if (col)
-                {
-                    obj = col->GetObj("all");
-                    if (obj)
-                        FCloud = (int)obj->GetInt();
-                }
-                
-                obj = root->GetObj("visibility");
-                if (obj)
-                    FVisibility = (int)obj->GetInt();
-
-                FOnline = true;
-                FNewData = true;
-            }
-            else
-                FOnline = false;
-
-            delete json;
+            if (*ptr)
+                HandleJson(ptr);
             
             for (i = 0; i < 60 * 10; i++)
                 RdosWaitMilli(1000);
