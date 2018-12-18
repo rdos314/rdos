@@ -30,6 +30,7 @@
 
 #include "sockobj.h"
 #include "thread.h"
+#include "json.h"
 
 class TFroniusInverter : public TThread
 {
@@ -45,6 +46,9 @@ public:
     double GetTotalEnergy();
 
 protected:
+    TJsonObject *GetPowerObj(TJsonCollection *data, int index, double *fact);
+    TJsonObject *GetEnergyObj(TJsonCollection *data, int index, double *fact);
+    void HandleJson(const char *str);
     virtual void Execute();
 
     double FCurrP;

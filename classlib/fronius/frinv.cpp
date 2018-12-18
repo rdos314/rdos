@@ -31,7 +31,6 @@
 #include <netdb.h>
 #include "rdos.h"
 #include "frinv.h"
-#include "json.h"
 
 /*##########################################################################
 #
@@ -154,6 +153,169 @@ double TFroniusInverter::GetTotalEnergy()
 
 /*##########################################################################
 #
+#   Name       : TFroniusInverter::DecodePower
+#
+#   Purpose....: Decode power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TFroniusInverter::GetPowerObj(TJsonCollection *data, int index, double *fact)
+{
+    TJsonCollection *values;
+    TJsonObject *obj;
+    TString str;
+ 
+    *fact = 0.0;
+                                
+    obj = data->GetObj("Unit");
+    if (obj)
+    {
+        str = obj->GetText();
+ 
+        if (str == "W")
+            *fact = 1.0;
+
+        if (str == "kW")
+            *fact = 1000.0;
+
+        if (str == "MW")
+            *fact = 1000000.0;
+    }
+
+    if (*fact)
+    {
+        values = data->GetCollection("Values");
+        if (values)
+        {
+            str.printf("%d", index);
+            obj = values->GetObj(str.GetData());
+            if (obj)
+                return obj;
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFroniusInverter::GetEnergyObj
+#
+#   Purpose....: Get energy object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TFroniusInverter::GetEnergyObj(TJsonCollection *data, int index, double *fact)
+{
+    TJsonCollection *values;
+    TJsonObject *obj;
+    TString str;
+ 
+    *fact = 0.0;
+                                
+    obj = data->GetObj("Unit");
+    if (obj)
+    {
+        str = obj->GetText();
+
+        if (str == "Wh")
+            *fact = 1.0;
+  
+        if (str == "kWh")
+            *fact = 1000.0;
+
+        if (str == "MWh")
+            *fact = 1000000.0;
+    }
+                                
+    if (*fact)
+    {
+        values = data->GetCollection("Values");
+        if (values)
+        {
+            str.printf("%d", index);
+            obj = values->GetObj(str.GetData());
+            if (obj)
+                return obj;
+        }
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFroniusInverter::HandleJson
+#
+#   Purpose....: Handle json data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFroniusInverter::HandleJson(const char *str)
+{
+    TJsonDocument json(str);
+    TJsonCollection *root = json.GetRoot();
+    TJsonCollection *body;
+    TJsonCollection *data;
+    TJsonCollection *col;
+    TJsonObject *obj;
+    double fact;
+
+    if (root)
+    {
+        body = root->GetCollection("Body");
+        if (body)
+        {
+            data = body->GetCollection("Data");
+            if (data)
+            {
+                col = data->GetCollection("PAC");
+                if (col)
+                {
+                    obj = GetPowerObj(col, 1, &fact);
+                    if (obj)
+                        FCurrP = fact * obj->GetDouble();
+                }
+
+                col = data->GetCollection("DAY_ENERGY");
+                if (col)
+                {
+                    obj = GetEnergyObj(col, 1, &fact);
+                    if (obj)
+                        FDayE = fact * obj->GetDouble();
+                }
+
+                col = data->GetCollection("YEAR_ENERGY");
+                if (col)
+                {
+                    obj = GetEnergyObj(col, 1, &fact);
+                    if (obj)
+                        FYearE = fact * obj->GetDouble();
+                }
+
+                col = data->GetCollection("TOTAL_ENERGY");
+                if (col)
+                {
+                    obj = GetEnergyObj(col, 1, &fact);
+                    if (obj)
+                        FTotalE = fact * obj->GetDouble();
+                }
+                FOnline = true;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFroniusInverter::Execute
 #
 #   Purpose....: Execute method
@@ -170,15 +332,6 @@ void TFroniusInverter::Execute()
     char *ptr;
     char *tempptr;
     struct hostent *host;
-    TJsonDocument *json;
-    TJsonCollection *root;
-    TJsonCollection *body;
-    TJsonCollection *data;
-    TJsonCollection *col;
-    TJsonCollection *values;
-    TJsonObject *obj;
-    TString str;
-    double fact;
 
     FOnline = false;
     FIP = 0;
@@ -229,164 +382,11 @@ void TFroniusInverter::Execute()
                     break;
             }
 
-            while (*ptr != '{')
+            while (*ptr && *ptr != '{')
                 ptr++;
 
-            json = new TJsonDocument(ptr);
-
-            root = json->GetRoot();
-            if (root)
-            {
-                body = root->GetCollection("Body");
-                if (body)
-                {
-                    data = body->GetCollection("Data");
-                    if (data)
-                    {
-                        col = data->GetCollection("PAC");
-                        if (col)
-                        {
-                            fact = 0.0;
-                            obj = col->GetObj("Unit");
-                            if (obj)
-                            {
-                                str = obj->GetText();
-
-                                if (str == "W")
-                                    fact = 1.0;
-
-                                if (str == "kW")
-                                    fact = 1000.0;
-
-                                if (str == "MW")
-                                    fact = 1000000.0;
-                            }
-                                
-                            values = col->GetCollection("Values");
-                            if (values)
-                            {
-                                obj = values->GetObj("1");
-                                if (obj)
-                                    FCurrP = fact * obj->GetDouble();
-                            }
-                       }
-
-                        col = data->GetCollection("DAY_ENERGY");
-                        if (col)
-                        {
-                            fact = 0.0;
-                            obj = col->GetObj("Unit");
-                            if (obj)
-                            {
-                                str = obj->GetText();
-
-                                if (str == "Wh")
-                                    fact = 1.0;
-
-                                if (str == "kWh")
-                                    fact = 1000.0;
-
-                                if (str == "MWh")
-                                    fact = 1000000.0;
-                            }
-                                
-                            values = col->GetCollection("Values");
-                            if (values)
-                            {
-                                obj = values->GetObj("1");
-                                if (obj)
-                                    FDayE = fact * obj->GetDouble();
-                            }
-                        }
-
-                        col = data->GetCollection("YEAR_ENERGY");
-                        if (col)
-                        {
-                            fact = 0.0;
-                            obj = col->GetObj("Unit");
-                            if (obj)
-                            {
-                                str = obj->GetText();
-
-                                if (str == "Wh")
-                                    fact = 1.0;
-
-                                if (str == "kWh")
-                                    fact = 1000.0;
-
-                                if (str == "MWh")
-                                    fact = 1000000.0;
-                            }
-                                
-                            values = col->GetCollection("Values");
-                            if (values)
-                            {
-                                obj = values->GetObj("1");
-                                if (obj)
-                                    FYearE = fact * obj->GetDouble();
-                            }
-                        }
-
-                        col = data->GetCollection("YEAR_ENERGY");
-                        if (col)
-                        {
-                            fact = 0.0;
-                            obj = col->GetObj("Unit");
-                            if (obj)
-                            {
-                                str = obj->GetText();
-
-                                if (str == "Wh")
-                                    fact = 1.0;
-
-                                if (str == "kWh")
-                                    fact = 1000.0;
-
-                                if (str == "MWh")
-                                    fact = 1000000.0;
-                            }
-                                
-                            values = col->GetCollection("Values");
-                            if (values)
-                            {
-                                obj = values->GetObj("1");
-                                if (obj)
-                                    FYearE = fact * obj->GetDouble();
-                            }
-                        }
-
-                        col = data->GetCollection("TOTAL_ENERGY");
-                        if (col)
-                        {
-                            fact = 0.0;
-                            obj = col->GetObj("Unit");
-                            if (obj)
-                            {
-                                str = obj->GetText();
-
-                                if (str == "Wh")
-                                    fact = 1.0;
-
-                                if (str == "kWh")
-                                    fact = 1000.0;
-
-                                if (str == "MWh")
-                                    fact = 1000000.0;
-                            }
-                                
-                            values = col->GetCollection("Values");
-                            if (values)
-                            {
-                                obj = values->GetObj("1");
-                                if (obj)
-                                    FTotalE = fact * obj->GetDouble();
-                            }
-                        }
-
-                        FOnline = true;
-                    }
-                }
-            }
+            if (*ptr == '{')
+                HandleJson(ptr);
 
             RdosWaitMilli(15000);
         }        
