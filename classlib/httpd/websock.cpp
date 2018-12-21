@@ -232,13 +232,18 @@ void TWebSocketServer::HandleWebSocket()
     char str[10];
     bool ok;
     char *buf;
+    int count;
 
     StartWebSocket();
+
+    count = 0;
 
     while (FSocket->IsOpen())
     {
         if (FSocket->WaitForData(500))
         {
+            count = 0;
+
             size = FSocket->Read(str, 2);
 
             if (size == 2)
@@ -317,6 +322,17 @@ void TWebSocketServer::HandleWebSocket()
                 delete buf;
             }
         }
+        else
+        {
+            count++;
+
+            if (count == 30)
+            {
+                count = 0;
+                FSocket->Push();
+            }
+        }
+
         PollWebSocket();
     }
 
