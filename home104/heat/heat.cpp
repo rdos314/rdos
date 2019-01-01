@@ -59,6 +59,32 @@ TSection FGuiSection;
 
 /*##########################################################################
 #
+#   Name       : CalcWindChill
+#
+#   Purpose....: Calculate windchill
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double CalcWindChill(double temp, double wind)
+{
+    double p;
+    double val;
+
+    if (wind < 1.3 || temp > 15.0)
+        return temp;
+    else
+    {
+        p = pow(wind, 0.16);
+        val = 13.12 + 0.6215 * temp + (0.4863 * temp - 13.94) * p;
+        return val;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : LockGUI
 #
 #   Purpose....: Lock GUI
@@ -377,6 +403,7 @@ int main()
     SolarTable->AddRow(24, 45);
     SolarTable->AddRow(24, 45);
     SolarTable->AddRow(24, 45);
+    SolarTable->AddRow(24, 45);
 
     SolarTable->SetText(0, 0, "Effekt");
     SolarTable->SetText(0, 2, "W");
@@ -395,6 +422,9 @@ int main()
 
     SolarTable->SetText(5, 0, "Humidity");
     SolarTable->SetText(5, 2, "%");
+
+    SolarTable->SetText(6, 0, "Wind Chill");
+    SolarTable->SetText(6, 2, "°C");
 
     SolarTable->Show();
 
@@ -517,11 +547,17 @@ int main()
 
         if (w->IsOnline())
         {
+            bool valid = false;
+            double temp;
+
             val = w->GetTemperature();
             if (val < 100.0 && val > -100.0)  
             {
                 sprintf(str, "%5.1Lf", val);
                 ambient = (int)(10.0 * val);
+
+                temp = val;
+                valid = true;
             }
             else
                 strcpy(str, "err");
@@ -529,10 +565,27 @@ int main()
 
             val = w->GetWindSpeed();
             if (val < 100.0 && val >= 0.0)
+            {
                 sprintf(str, "%5.1Lf", val);
+                
+                if (valid)
+                    temp = CalcWindChill(temp, val);
+            }
+            else
+            {
+                strcpy(str, "err");
+                valid = false;
+            }
+            SolarTable->SetText(3, 1, str);
+
+            if (valid)
+            {
+                ambient = (int)(10.0 * temp);
+                sprintf(str, "%5.1Lf", temp);
+            }
             else
                 strcpy(str, "err");
-            SolarTable->SetText(3, 1, str);
+            SolarTable->SetText(6, 1, str);
 
             val = w->GetPressure();
             if (val < 2000.0 && val > 0.0)
