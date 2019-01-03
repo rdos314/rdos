@@ -34,6 +34,7 @@ INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 INCLUDE ..\handle.inc
 include hid.inc
+INCLUDE ..\os\carddev.inc
 
 hid_card   STRUC
 
@@ -53,6 +54,12 @@ hid_32_index        DW ?
 
 hid_card   ENDS
 
+data    SEGMENT byte public 'DATA'
+
+card_dev            DW ?
+
+data	ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -60,6 +67,207 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           get_carddev_name
+;
+;       DESCRIPTION:    Get cardreader name
+;
+;       PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_carddev_name DB 'USB Card Reader', 0
+
+get_carddev_name    Proc far
+    push eax
+    push esi
+    push edi
+;
+    mov esi,OFFSET usb_carddev_name
+
+gcnLoop:
+    lods byte ptr cs:[esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz gcnLoop
+;
+    pop edi
+    pop esi
+    pop eax
+    ret
+get_carddev_name    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           is_ok
+;
+;       DESCRIPTION:    Check if cardreader is online
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_ok    Proc far
+    clc
+    ret
+is_ok    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           is_busy
+;
+;       DESCRIPTION:    Check if cardreader is busy
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_busy    Proc far
+    stc
+    ret
+is_busy    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           is_inserted
+;
+;       DESCRIPTION:    Check if card is inserted
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_inserted    Proc far
+    stc
+    ret
+is_inserted    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           had_inserted
+;
+;       DESCRIPTION:    Check if card is inserted changed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+had_inserted    Proc far
+    stc
+    ret
+had_inserted    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           clear_inserted
+;
+;       DESCRIPTION:    Clear card is inserted changed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_inserted    Proc far
+    ret
+clear_inserted    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           wait_for_card
+;
+;       DESCRIPTION:    Wait for card
+;
+;       PARAMETERS:     ES:EDI      Strip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_card    Proc far
+    ret
+wait_for_card    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddCardReader
+;
+;       DESCRIPTION:    Add card reader device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCardReader	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,SIZE carddev_struc
+    AllocateSmallGlobalMem
+    mov es:cd_device,0
+;    
+    xor ax,ax
+    xor dx,dx
+    mov bx,es
+    mov ds,bx
+    AddCardDev
+;
+    mov word ptr es:cd_get_name_proc,OFFSET get_carddev_name
+    mov word ptr es:cd_get_name_proc+2,cs
+;    
+    mov word ptr es:cd_ok_proc,OFFSET is_ok
+    mov word ptr es:cd_ok_proc+2,cs
+;    
+    mov word ptr es:cd_busy_proc,OFFSET is_busy
+    mov word ptr es:cd_busy_proc+2,cs
+;    
+    mov word ptr es:cd_inserted_proc,OFFSET is_inserted
+    mov word ptr es:cd_inserted_proc+2,cs
+;    
+    mov word ptr es:cd_had_inserted_proc,OFFSET had_inserted
+    mov word ptr es:cd_had_inserted_proc+2,cs
+;    
+    mov word ptr es:cd_clear_inserted_proc,OFFSET clear_inserted
+    mov word ptr es:cd_clear_inserted_proc+2,cs
+;    
+    mov word ptr es:cd_wait_for_card_proc,OFFSET wait_for_card
+    mov word ptr es:cd_wait_for_card_proc+2,cs
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ds:card_dev,es
+;
+    popad
+    pop es
+    pop ds
+    ret
+AddCardReader	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleGoodCard
+;
+;   DESCRIPTION:    Handle good card
+;
+;   PARAMETERS:     FS:EBX  Card strip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleGoodCard   Proc near
+    int 3
+    ret
+HandleGoodCard	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleBadCard
+;
+;   DESCRIPTION:    Handle bad card
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleBadCard   Proc near
+    int 3
+    ret
+HandleBadCard	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -286,7 +494,6 @@ hid_define   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_end   Proc far
-    int 3
     push es
     push eax
     mov es,ebx
@@ -304,6 +511,16 @@ hid_end   Proc far
     cmp ax,-1
     je heFail
 ;
+    int 3
+    mov ax,SEG data
+    mov es,eax
+    mov ax,es:card_dev
+    or ax,ax
+    jnz heHasDev
+;
+    call AddCardReader
+
+heHasDev:
     clc
     jmp heDone
 
@@ -349,7 +566,37 @@ hid_close   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_handle_report   Proc far
+    push es
+    push eax
+    push ebx
+    mov es,ebx
+;
+    movzx ebx,es:hid_29_index
+    mov al,fs:[ebx+esi]
+    or al,al
+    jz hhrNotGood2
+;
+    movzx ebx,es:hid_31_index
+    add ebx,esi
+    call HandleGoodCard
+    jmp hhrDone
+
+hhrNotGood2:
+    movzx ebx,es:hid_38_index
+    mov al,fs:[ebx+esi]
+    or al,al
+    jz hhrNotBad
+;
+    call HandleBadCard
+    jmp hhrDone
+
+hhrNotBad:
     int 3
+
+hhrDone:
+    pop ebx
+    pop eax
+    pop es
     ret
 hid_handle_report   Endp
 
@@ -431,6 +678,10 @@ h03 DD OFFSET hid_close,        SEG code
 h04 DD OFFSET hid_handle_report,SEG code
 
 Init    Proc far
+    mov ax,SEG data
+    mov ds,eax
+    mov ds:card_dev,0
+;
     mov eax,cs
     mov ds,eax
     mov es,eax
