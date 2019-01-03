@@ -223,12 +223,12 @@ get_carddev_name16       Proc far
 ;
     movzx edi,di
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_get_name_proc
-    or eax,eax
+    mov eax,ds:cd_get_name_proc+4
+    or ax,ax
     clc
     jz get_carddev_name_done16
 ;       
-    call ds:cd_get_name_proc
+    call fword ptr ds:cd_get_name_proc
 
 get_carddev_name_done16:
     pop edi
@@ -248,12 +248,12 @@ get_carddev_name32       Proc far
     jc get_carddev_name_done32
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_get_name_proc
-    or eax,eax
+    mov eax,ds:cd_get_name_proc+4
+    or ax,ax
     clc
     jz get_carddev_name_done32
 ;       
-    call ds:cd_get_name_proc
+    call fword ptr ds:cd_get_name_proc
 
 get_carddev_name_done32:
     pop ebx
@@ -287,12 +287,12 @@ is_carddev_ok       Proc far
     jc is_carddev_ok_done
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_ok_proc
-    or eax,eax
+    mov eax,ds:cd_ok_proc+4
+    or ax,ax
     stc
     jz is_carddev_ok_done
 ;       
-    call ds:cd_ok_proc
+    call fword ptr ds:cd_ok_proc
 
 is_carddev_ok_done:
     pop ebx
@@ -326,12 +326,12 @@ is_carddev_busy       Proc far
     jc is_carddev_busy_done
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_busy_proc
-    or eax,eax
+    mov eax,ds:cd_busy_proc+4
+    or ax,ax
     stc
     jz is_carddev_busy_done
 ;       
-    call ds:cd_busy_proc
+    call fword ptr ds:cd_busy_proc
 
 is_carddev_busy_done:
     pop ebx
@@ -365,12 +365,12 @@ is_carddev_inserted       Proc far
     jc is_carddev_inserted_done
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_inserted_proc
-    or eax,eax
+    mov eax,ds:cd_inserted_proc+4
+    or ax,ax
     stc
     jz is_carddev_inserted_done
 ;       
-    call ds:cd_inserted_proc
+    call fword ptr ds:cd_inserted_proc
 
 is_carddev_inserted_done:
     pop ebx
@@ -404,12 +404,12 @@ had_carddev_inserted       Proc far
     jc had_carddev_inserted_done
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_had_inserted_proc
-    or eax,eax
+    mov eax,ds:cd_had_inserted_proc+4
+    or ax,ax
     stc
     jz had_carddev_inserted_done
 ;       
-    call ds:cd_had_inserted_proc
+    call fword ptr ds:cd_had_inserted_proc
 
 had_carddev_inserted_done:
     pop ebx
@@ -441,12 +441,12 @@ clear_carddev_inserted       Proc far
     jc clear_carddev_inserted_done
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_clear_inserted_proc
-    or eax,eax
+    mov eax,ds:cd_clear_inserted_proc+4
+    or ax,ax
     stc
     jz clear_carddev_inserted_done
 ;       
-    call ds:cd_clear_inserted_proc
+    call fword ptr ds:cd_clear_inserted_proc
 
 clear_carddev_inserted_done:
     pop ebx
@@ -481,12 +481,12 @@ wait_for_card16       Proc far
 ;
     movzx edi,di
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_wait_for_card_proc
-    or eax,eax
+    mov eax,ds:cd_wait_for_card_proc+4
+    or ax,ax
     clc
     jz wait_for_card_done16
 ;       
-    call ds:cd_wait_for_card_proc
+    call fword ptr ds:cd_wait_for_card_proc
 
 wait_for_card_done16:
     pop edi
@@ -506,12 +506,12 @@ wait_for_card32       Proc far
     jc wait_for_card_done32
 ;
     mov ds,[ebx].carddev_sel
-    mov eax,ds:cd_wait_for_card_proc
-    or eax,eax
+    mov eax,ds:cd_wait_for_card_proc+4
+    or ax,ax
     clc
     jz wait_for_card_done32
 ;       
-    call ds:cd_wait_for_card_proc
+    call fword ptr ds:cd_wait_for_card_proc
 
 wait_for_card_done32:
     pop ebx
@@ -541,12 +541,19 @@ add_carddev    Proc far
     push dx
 ;
     mov ds:cd_ok_proc,0
+    mov ds:cd_ok_proc+4,0
     mov ds:cd_busy_proc,0
+    mov ds:cd_busy_proc+4,0
     mov ds:cd_inserted_proc,0
+    mov ds:cd_inserted_proc+4,0
     mov ds:cd_had_inserted_proc,0
+    mov ds:cd_had_inserted_proc+4,0
     mov ds:cd_clear_inserted_proc,0
+    mov ds:cd_clear_inserted_proc+4,0
     mov ds:cd_wait_for_card_proc,0
+    mov ds:cd_wait_for_card_proc+4,0
     mov ds:cd_get_name_proc,0
+    mov ds:cd_get_name_proc+4,0
 ;
     mov dx,ds
     mov bx,SEG data

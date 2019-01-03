@@ -27,23 +27,23 @@
 
 carddev_struc	STRUC
 
-cd_ok_proc                  DD ?
+cd_ok_proc                  DD ?,?
 
-cd_busy_proc                DD ?
+cd_busy_proc                DD ?,?
 
-cd_inserted_proc            DD ?
+cd_inserted_proc            DD ?,?
 
-cd_had_inserted_proc        DD ?
+cd_had_inserted_proc        DD ?,?
 
-cd_clear_inserted_proc      DD ?
+cd_clear_inserted_proc      DD ?,?
 
 ; IN  ES:EDI    Name
-cd_get_name_proc            DD ?
+cd_get_name_proc            DD ?,?
 
 ; IN  ES:EDI    Strip buffer
-cd_wait_for_card_proc       DD ?
+cd_wait_for_card_proc       DD ?,?
 
-cd_device                   DW ?
+cd_device                   DW ?,?
 
 carddev_struc	ENDS
 
