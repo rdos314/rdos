@@ -36,6 +36,9 @@ INCLUDE ..\handle.inc
 include hid.inc
 INCLUDE ..\os\carddev.inc
 
+CARD_STATE_GOOD = 1
+CARD_STATE_BAD = 2
+
 hid_card   STRUC
 
 hid_report_offset   DD ?
@@ -56,7 +59,11 @@ hid_card   ENDS
 
 data    SEGMENT byte public 'DATA'
 
+card_hid_handle     DW ?
 card_dev            DW ?
+carddev_thread      DW ?
+card_state          DB ?
+track2              DB 40 DUP(?)
 
 data	ENDS
 
@@ -82,6 +89,7 @@ code    SEGMENT byte public 'CODE'
 usb_carddev_name DB 'USB Card Reader', 0
 
 get_carddev_name    Proc far
+    int 3
     push eax
     push esi
     push edi
@@ -110,7 +118,25 @@ get_carddev_name    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_ok    Proc far
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:card_hid_handle
+    or ax,ax
+    jz ioOffline
+
+ioOnline:
     clc
+    jmp ioDone
+
+ioOffline:
+    stc
+
+ioDone:
+    pop eax
+    pop ds
     ret
 is_ok    Endp
 
@@ -181,6 +207,51 @@ clear_inserted    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wait_for_card    Proc far
+    push ds
+    push eax
+    push esi
+    push edi
+;    
+    int 3
+    mov ax,SEG data
+    mov ds,eax
+    GetThread
+    mov ds:carddev_thread,ax
+
+wfcRetry:
+    test ds:card_state,CARD_STATE_GOOD
+    jz wfcNotGood
+;    
+    and ds:card_state,NOT CARD_STATE_GOOD
+    mov esi,OFFSET track2
+
+wfcLoop:
+    lodsb
+    stos byte ptr es:[edi]
+    or al,al
+    jnz wfcLoop
+;
+    clc 
+    jmp wfcDone
+
+wfcNotGood:
+    test ds:card_state,CARD_STATE_BAD
+    jnz wfcBad
+;
+    WaitForSignal
+    jmp wfcRetry
+
+wfcBad:
+    and ds:card_state,NOT CARD_STATE_BAD
+    stc
+
+wfcDone:
+    mov ds:carddev_thread,0
+;
+    pop edi
+    pop esi
+    pop eax
+    pop ds        
     ret
 wait_for_card    Endp
 
@@ -251,7 +322,56 @@ AddCardReader	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleGoodCard   Proc near
-    int 3
+    push ds
+    push eax
+    push ebx
+    push esi
+;
+    mov al,fs:[ebx]
+    cmp al,';'
+    jne hgcDone
+;
+    mov ax,SEG data
+    mov ds,eax
+    inc ebx
+    mov ecx,40
+    mov esi,OFFSET track2
+
+hgcLoop:
+    mov al,fs:[ebx]
+    cmp al,'='
+    jne hgcNotSep
+;
+    mov al,'D'
+    jmp hgcNorm
+
+hgcNotSep:
+    cmp al,'?'
+    je hgcEnd
+;
+    or al,al
+    je hgcEnd
+
+hgcNorm:
+    mov ds:[esi],al
+;
+    inc ebx
+    inc esi
+    loop hgcLoop
+
+hgcEnd:
+    xor al,al
+    mov ds:[esi],al
+    or ds:card_state,CARD_STATE_GOOD
+;
+    mov bx,ds:carddev_thread
+    Signal
+
+hgcDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
     ret
 HandleGoodCard	Endp
 
@@ -511,7 +631,6 @@ hid_end   Proc far
     cmp ax,-1
     je heFail
 ;
-    int 3
     mov ax,SEG data
     mov es,eax
     mov ax,es:card_dev
@@ -521,6 +640,7 @@ hid_end   Proc far
     call AddCardReader
 
 heHasDev:
+    mov es:card_hid_handle,bx 
     clc
     jmp heDone
 
@@ -547,8 +667,16 @@ hid_end   Endp
 
 hid_close   Proc far
     push es
+    push ebx
+;
     mov es,ebx
     FreeMem
+;
+    mov bx,SEG data
+    mov es,ebx
+    mov es:card_hid_handle,0
+;
+    pop ebx
     pop es
     ret
 hid_close   Endp
@@ -680,7 +808,10 @@ h04 DD OFFSET hid_handle_report,SEG code
 Init    Proc far
     mov ax,SEG data
     mov ds,eax
+    mov ds:card_hid_handle,0
     mov ds:card_dev,0
+    mov ds:carddev_thread,0
+    mov ds:card_state,0
 ;
     mov eax,cs
     mov ds,eax
