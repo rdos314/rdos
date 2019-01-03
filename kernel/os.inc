@@ -3979,6 +3979,12 @@ IsAudioOutCompleted      MACRO
 
 ;;;;;;;;;; Hid ;;;;;;;;;
 
+; IN    ES:EDI        Check procedure
+;           FS:ESI    Hid device
+RegisterCustomHid      MACRO
+    OsGate register_custom_hid_nr
+                        ENDM
+
 ; IN    ES:EDI  Hid table
 RegisterHidInput      MACRO
     OsGate register_hid_input_nr

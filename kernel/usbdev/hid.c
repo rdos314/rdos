@@ -61,6 +61,9 @@ extern void OpenIntrPipe(struct THidDevice *dev);
 extern char *WaitForReport(struct THidDevice *dev);
 #pragma aux WaitForReport parm routine [fs esi] value [es edi]
 
+extern int HasCustomDriver(struct THidDevice *dev);
+#pragma aux HasCustomDriver parm routine [fs esi] value [eax]
+
 extern int GetHidTableCount();
 #pragma aux GetHidTableCount value [eax]
 
@@ -1845,16 +1848,16 @@ int GetOutputReportSize(struct THidReportIdEntry *report)
 
 /*##########################################################################
 #
-#   Name       : IsValidHid
+#   Name       : IsCustomHid
 #
-#   Purpose....: Check if usable hid device
+#   Purpose....: Check if custom hid
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int IsValidHid(struct THidDevice *dev)
+int IsCustomHid(struct THidDevice *dev)
 {
     int r;
     int i;
@@ -1870,18 +1873,18 @@ int IsValidHid(struct THidDevice *dev)
             {
                 entry = &report->InputArr[i];
                 if (entry->UsagePage < 0xFF00)
-                    return TRUE;
+                    return FALSE;
             }
 
             for (i = 0; i < report->OutputCount; i++)
             {
                 entry = &report->OutputArr[i];
                 if (entry->UsagePage < 0xFF00)
-                    return TRUE;
+                    return FALSE;
             }
         }
     }
-    return FALSE;
+    return TRUE;
 }        
 
 /*##########################################################################
@@ -2779,7 +2782,13 @@ void __far HidThread(void *param)
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
 
-        ok = IsValidHid(dev);
+        _asm int 3
+
+        if (IsCustomHid(dev))
+        {
+            ok = HasCustomDriver(dev);
+        }
+
         if (ok)
         {
             StartInputReports(dev);
@@ -2875,7 +2884,6 @@ void CreateHid(int controller, int device, char *config)
             dev->StopReq = FALSE;
             dev->ConfigBuf = config;
             dev->Thread = 0;
-
             sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
             RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
 

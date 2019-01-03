@@ -81,12 +81,17 @@ ho_buf          DB ?
 hid_output_struc        ENDS
 
 MAX_TABLES  = 32
+MAX_CUSTOM  = 16
 
 data    SEGMENT byte public 'DATA'
 
 hid_table_count DW ?
 
 hid_table_arr   DD 2 * MAX_TABLES DUP(?)
+
+hid_custom_count DW ?
+
+hid_custom_arr   DD 2 * MAX_CUSTOM DUP(?)
 
 data    ENDS
 
@@ -1659,6 +1664,36 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           register_custom_hid
+;
+;           DESCRIPTION:    Register custom HID
+;
+;           PARAMETERS:     ES:EDI      Callback procedure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_custom_hid_name     DB 'Register Custom HID',0
+
+register_custom_hid  Proc far
+    push ds
+    push ebx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    movzx ebx,ds:hid_custom_count
+    shl ebx,3
+    mov ds:[ebx].hid_custom_arr,edi
+    mov ds:[ebx+4].hid_custom_arr,es
+    inc ds:hid_custom_count
+;    
+    pop ebx
+    pop ds
+    ret
+register_custom_hid  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           register_hid_input
 ;
 ;           DESCRIPTION:    Register HID input
@@ -1732,6 +1767,26 @@ wfrDone:
 WaitForReport_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasCustomDriver
+;
+;           DESCRIPTION:    Check for custom driver
+;
+;           parameters:     FS:ESI      Device
+;
+;           RETURNS:        EAX         1 = use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HasCustomDriver_
+
+HasCustomDriver_    Proc near
+    mov eax,0
+    ret
+HasCustomDriver_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           init
@@ -1750,6 +1805,7 @@ InitHid_    Proc near
     mov eax,SEG data
     mov ds,eax
     mov ds:hid_table_count,0
+    mov ds:hid_custom_count,0
 ;
     mov eax,cs
     mov ds,eax
@@ -1764,6 +1820,12 @@ InitHid_    Proc near
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    mov esi,OFFSET register_custom_hid
+    mov edi,OFFSET register_custom_hid_name
+    xor dx,dx
+    mov ax,register_custom_hid_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET register_hid_input
     mov edi,OFFSET register_hid_input_name
