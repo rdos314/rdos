@@ -1782,7 +1782,38 @@ WaitForReport_    Endp
     public HasCustomDriver_
 
 HasCustomDriver_    Proc near
-    mov eax,0
+    push ds
+    push ebx
+    push ecx
+;
+    mov eax,SEG data
+    mov ds,eax
+    movzx ecx,ds:hid_custom_count
+    or ecx,ecx
+    jz hcdFail
+;
+    mov ebx,OFFSET hid_custom_arr
+
+hcdLoop:
+    call fword ptr ds:[ebx]
+    jnc hcdOk
+;
+    add ebx,8
+    loop hcdLoop
+;
+    jmp hcdFail
+
+hcdOk:
+    mov eax,1
+    jmp hcdDone
+
+hcdFail:
+    xor eax,eax
+
+hcdDone:
+    pop ecx
+    pop ebx
+    pop ds
     ret
 HasCustomDriver_    Endp
 

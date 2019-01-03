@@ -1616,18 +1616,21 @@ void StartInputReports(struct THidDevice *dev)
             {
                 Handle = HidBegin(Index, dev, report);
 
-                for (Inp = 0; Inp < report->InputCount; Inp++)
+                if (Handle)
                 {
-                    entry = &report->InputArr[Inp];
-                    HidDefine(Index, Handle, Inp, entry->UsagePage, entry->UsageIdLow + (entry->UsageIdHigh << 8), entry->ItemParams);
-                }
+                    for (Inp = 0; Inp < report->InputCount; Inp++)
+                    {
+                        entry = &report->InputArr[Inp];
+                        HidDefine(Index, Handle, Inp, entry->UsagePage, entry->UsageIdLow + (entry->UsageIdHigh << 8), entry->ItemParams);
+                    }
 
-                ok = HidEnd(Index, Handle);        
-                if (ok)
-                {
-                    report->TableArr[report->TableCount].Index = Index;
-                    report->TableArr[report->TableCount].Handle = Handle; 
-                    report->TableCount++;
+                    ok = HidEnd(Index, Handle);        
+                    if (ok)
+                    {
+                        report->TableArr[report->TableCount].Index = Index;
+                        report->TableArr[report->TableCount].Handle = Handle; 
+                        report->TableCount++;
+                    }
                 }
             }
         }
@@ -2782,12 +2785,8 @@ void __far HidThread(void *param)
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
 
-        _asm int 3
-
         if (IsCustomHid(dev))
-        {
             ok = HasCustomDriver(dev);
-        }
 
         if (ok)
         {

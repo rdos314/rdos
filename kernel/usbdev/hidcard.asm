@@ -58,6 +58,7 @@ code    SEGMENT byte public 'CODE'
 ;   DESCRIPTION:    Begin initialization
 ;
 ;   Parameters:     FS:ESI    Report struct
+;                   GS:EBX    Device
 ;
 ;   RETURNS:        BX        Handle
 ;
@@ -66,6 +67,31 @@ code    SEGMENT byte public 'CODE'
 hid_begin   Proc far
     push es
     push eax
+    push ecx
+    push edi
+;
+    int 3
+    mov eax,SIZE usb_device_descr
+    AllocateSmallGlobalMem
+;
+    mov bx,gs:hid_controller
+    mov al,gs:hid_device
+;
+    mov ecx,SIZE usb_device_descr
+    xor edi,edi
+    GetUsbDevice
+    cmp eax,ecx
+    jne hbFail
+;
+    mov ax,es:udd_vendor
+    cmp ax,801h
+    jne hbFail
+;
+    mov ax,es:udd_prod
+    cmp ax,3
+    jne hbFail
+;
+    FreeMem
 ;    
     mov eax,SIZE hid_card
     AllocateSmallGlobalMem
@@ -73,9 +99,17 @@ hid_begin   Proc far
     mov es:hid_report_offset,esi
     mov es:hid_report_sel,fs    
     mov ebx,es
-;
+    jmp hbDone
+
+hbFail:
+    FreeMem
+    xor ebx,ebx
+
+hbDone:
+    pop edi
+    pop ecx
     pop eax
-    pop es    
+    pop es
     ret
 hid_begin   Endp
 
@@ -183,8 +217,46 @@ hid_handle_report   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 valid_custom_hid   Proc far
-    int 3
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    mov eax,SIZE usb_device_descr
+    AllocateSmallGlobalMem
+;
+    mov bx,fs:hid_controller
+    mov al,fs:hid_device
+;
+    mov ecx,SIZE usb_device_descr
+    xor edi,edi
+    GetUsbDevice
+    cmp eax,ecx
+    jne vchFail
+;
+    mov ax,es:udd_vendor
+    cmp ax,801h
+    jne vchFail
+;
+    mov ax,es:udd_prod
+    cmp ax,3
+    jne vchFail
+;
+    FreeMem
+    clc
+    jmp vchDone
+
+vchFail:
+    FreeMem
     stc
+
+vchDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
     ret
 valid_custom_hid   Endp
 
