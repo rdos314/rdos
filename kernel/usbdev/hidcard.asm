@@ -40,6 +40,17 @@ hid_card   STRUC
 hid_report_offset   DD ?
 hid_report_sel      DW ?
 
+hid_20_index        DW ?
+hid_21_index        DW ?
+hid_22_index        DW ?
+hid_28_index        DW ?
+hid_29_index        DW ?
+hid_2A_index        DW ?
+hid_38_index        DW ?
+hid_30_index        DW ?
+hid_31_index        DW ?
+hid_32_index        DW ?
+
 hid_card   ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -70,7 +81,6 @@ hid_begin   Proc far
     push ecx
     push edi
 ;
-    int 3
     mov eax,SIZE usb_device_descr
     AllocateSmallGlobalMem
 ;
@@ -98,6 +108,16 @@ hid_begin   Proc far
 ;
     mov es:hid_report_offset,esi
     mov es:hid_report_sel,fs    
+    mov es:hid_20_index,-1
+    mov es:hid_21_index,-1
+    mov es:hid_22_index,-1
+    mov es:hid_28_index,-1
+    mov es:hid_29_index,-1
+    mov es:hid_2A_index,-1
+    mov es:hid_38_index,-1
+    mov es:hid_30_index,-1
+    mov es:hid_31_index,-1
+    mov es:hid_32_index,-1
     mov ebx,es
     jmp hbDone
 
@@ -131,10 +151,122 @@ hid_begin   Endp
 
 hid_define   Proc far
     push ds
+    push ebx
     mov ds,ebx
 ;
-    int 3
+    cmp cx,0FF00h
+    jne hdDone
 ;
+    cmp al,20h
+    jne hdNot20
+;
+    mov bx,ds:hid_20_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_20_index,si
+    jmp hdDone
+
+hdNot20:
+    cmp al,21h
+    jne hdNot21
+;
+    mov bx,ds:hid_21_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_21_index,si
+    jmp hdDone
+
+hdNot21:
+    cmp al,22h
+    jne hdNot22
+;
+    mov bx,ds:hid_22_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_22_index,si
+    jmp hdDone
+
+hdNot22:
+    cmp al,28h
+    jne hdNot28
+;
+    mov bx,ds:hid_28_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_28_index,si
+    jmp hdDone
+
+hdNot28:
+    cmp al,29h
+    jne hdNot29
+;
+    mov bx,ds:hid_29_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_29_index,si
+    jmp hdDone
+
+hdNot29:
+    cmp al,2Ah
+    jne hdNot2A
+;
+    mov bx,ds:hid_2A_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_2A_index,si
+    jmp hdDone
+
+hdNot2A:
+    cmp al,38h
+    jne hdNot38
+;
+    mov bx,ds:hid_38_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_38_index,si
+    jmp hdDone
+
+hdNot38:
+    cmp al,30h
+    jne hdNot30
+;
+    mov bx,ds:hid_30_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_30_index,si
+    jmp hdDone
+
+hdNot30:
+    cmp al,31h
+    jne hdNot31
+;
+    mov bx,ds:hid_31_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_31_index,si
+    jmp hdDone
+
+hdNot31:
+    cmp al,32h
+    jne hdDone
+;
+    mov bx,ds:hid_32_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_32_index,si
+
+hdDone:
+    pop ebx
     pop ds
     ret
 hid_define   Endp
@@ -154,10 +286,28 @@ hid_define   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_end   Proc far
+    int 3
     push es
     push eax
-;
     mov es,ebx
+;
+    mov ax,es:hid_20_index
+    and ax,es:hid_21_index
+    and ax,es:hid_22_index
+    and ax,es:hid_28_index
+    and ax,es:hid_29_index
+    and ax,es:hid_2A_index
+    and ax,es:hid_38_index
+    and ax,es:hid_30_index
+    and ax,es:hid_31_index
+    and ax,es:hid_32_index
+    cmp ax,-1
+    je heFail
+;
+    clc
+    jmp heDone
+
+heFail:
     FreeMem
     stc
         
