@@ -89,7 +89,6 @@ code    SEGMENT byte public 'CODE'
 usb_carddev_name DB 'USB Card Reader', 0
 
 get_carddev_name    Proc far
-    int 3
     push eax
     push esi
     push edi
@@ -212,7 +211,6 @@ wait_for_card    Proc far
     push esi
     push edi
 ;    
-    int 3
     mov ax,SEG data
     mov ds,eax
     GetThread
@@ -279,26 +277,26 @@ AddCardReader	Proc near
     mov ds,bx
     AddCardDev
 ;
-    mov word ptr es:cd_get_name_proc,OFFSET get_carddev_name
-    mov word ptr es:cd_get_name_proc+2,cs
+    mov es:cd_get_name_proc,OFFSET get_carddev_name
+    mov es:cd_get_name_proc+4,cs
 ;    
-    mov word ptr es:cd_ok_proc,OFFSET is_ok
-    mov word ptr es:cd_ok_proc+2,cs
+    mov es:cd_ok_proc,OFFSET is_ok
+    mov es:cd_ok_proc+4,cs
 ;    
-    mov word ptr es:cd_busy_proc,OFFSET is_busy
-    mov word ptr es:cd_busy_proc+2,cs
+    mov es:cd_busy_proc,OFFSET is_busy
+    mov es:cd_busy_proc+4,cs
 ;    
-    mov word ptr es:cd_inserted_proc,OFFSET is_inserted
-    mov word ptr es:cd_inserted_proc+2,cs
+    mov es:cd_inserted_proc,OFFSET is_inserted
+    mov es:cd_inserted_proc+4,cs
 ;    
-    mov word ptr es:cd_had_inserted_proc,OFFSET had_inserted
-    mov word ptr es:cd_had_inserted_proc+2,cs
+    mov es:cd_had_inserted_proc,OFFSET had_inserted
+    mov es:cd_had_inserted_proc+4,cs
 ;    
-    mov word ptr es:cd_clear_inserted_proc,OFFSET clear_inserted
-    mov word ptr es:cd_clear_inserted_proc+2,cs
+    mov es:cd_clear_inserted_proc,OFFSET clear_inserted
+    mov es:cd_clear_inserted_proc+4,cs
 ;    
-    mov word ptr es:cd_wait_for_card_proc,OFFSET wait_for_card
-    mov word ptr es:cd_wait_for_card_proc+2,cs
+    mov es:cd_wait_for_card_proc,OFFSET wait_for_card
+    mov es:cd_wait_for_card_proc+4,cs
 ;
     mov ax,SEG data
     mov ds,eax
@@ -385,7 +383,21 @@ HandleGoodCard	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleBadCard   Proc near
-    int 3
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    or ds:card_state,CARD_STATE_BAD
+;
+    mov bx,ds:carddev_thread
+    Signal
+;
+    pop ebx
+    pop eax
+    pop ds
     ret
 HandleBadCard	Endp
 
