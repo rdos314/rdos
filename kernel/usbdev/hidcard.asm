@@ -221,27 +221,18 @@ wait_for_card    Proc far
     GetThread
     mov ds:carddev_thread,ax
 
-
     int 3
-    push ds
     push es
     push fs
     pushad
 ;
-    mov ax,SEG data
-    mov ds,ax
     mov es,ds:card_hid_handle
-    mov bx,es:hid_device_sel
-    mov cx,0FF00h
-    mov dl,20h
-    FindHidFeatureReport
-    mov es:hid_feature_offset,esi
-    mov es:hid_feature_sel,dx
+    mov esi,es:hid_feature_offset
+    mov fs,es:hid_feature_sel
 ;
     popad
     pop fs
     pop es
-    pop ds
 
 wfcRetry:
     test ds:card_state,CARD_STATE_GOOD
@@ -656,6 +647,9 @@ hid_define   Endp
 hid_end   Proc far
     push es
     push eax
+    push ecx
+    push edx
+    push esi
     mov es,ebx
 ;
     mov ax,es:hid_20_index
@@ -670,6 +664,17 @@ hid_end   Proc far
     and ax,es:hid_32_index
     cmp ax,-1
     je heFail
+;
+    push ebx
+    mov bx,es:hid_device_sel
+    mov cx,0FF00h
+    mov dl,20h
+    FindHidFeatureReport
+    pop ebx
+    jc heFail
+;
+    mov es:hid_feature_offset,esi
+    mov es:hid_feature_sel,dx
 ;
     mov ax,SEG data
     mov es,eax
@@ -689,6 +694,9 @@ heFail:
     stc
         
 heDone:
+    pop esi
+    pop edx
+    pop ecx
     pop eax    
     pop es
     ret
