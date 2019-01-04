@@ -94,14 +94,17 @@ extern void SetIdle(struct THidDevice *dev, int ReportId, int Value);
 extern int CreateOutputReport(struct THidDevice *dev, int ReportId, int Size);
 #pragma aux CreateOutputReport parm routine [fs esi] [ebx] [ecx] value [eax]
 
-extern void FreeOutputReport(int Handle);
-#pragma aux FreeOutputReport parm routine [ebx]
+extern int CreateFeatureReport(struct THidDevice *dev, int ReportId, int Size);
+#pragma aux CreateFeatureReport parm routine [fs esi] [ebx] [ecx] value [eax]
+
+extern void FreeReport(int Handle);
+#pragma aux FreeReport parm routine [ebx]
 
 extern void *GetOutputBuf(int Handle);
 #pragma aux GetOutputBuf parm routine [ebx] value [es edi]
 
-extern void SetValue(int Handle, int StartBit, int BitCount, int Value);
-#pragma aux SetValue parm routine [ebx] [edx] [ecx] [eax]
+extern void SetReportValue(int Handle, int StartBit, int BitCount, int Value);
+#pragma aux SetReportValue parm routine [ebx] [edx] [ecx] [eax]
 
 extern void SendOutputReport(int Handle);
 #pragma aux SendOutputReport parm routine [ebx]
@@ -186,7 +189,7 @@ struct THidReportIdEntry
     int TableCount;
     struct THidTable TableArr[MAX_HID_TABLES];
 
-    int OutputHandle;
+    int ReportHandle;
     
     struct THidReportEntry *InputArr;
     struct THidReportEntry *OutputArr;
@@ -413,8 +416,8 @@ void CloseHid(struct THidDevice *dev)
             if (report->FeatureCount)
                 RdosFreeMem(RdosPointerToSelector(report->FeatureArr));
 
-            if (report->OutputHandle)
-                FreeOutputReport(report->OutputHandle);
+            if (report->ReportHandle)
+                FreeReport(report->ReportHandle);
 
             RdosFreeMem(RdosPointerToSelector(report));
         }
@@ -724,7 +727,7 @@ void PrepareReportIds(struct THidDevice *dev)
                 CurrReport->OutputArr = 0;
                 CurrReport->FeatureArr = 0;
 
-                CurrReport->OutputHandle = 0;
+                CurrReport->ReportHandle = 0;
             }
             else
                 CurrReport = 0;
@@ -753,7 +756,7 @@ void PrepareReportIds(struct THidDevice *dev)
                     CurrReport->OutputArr = 0;
                     CurrReport->FeatureArr = 0;
 
-                    CurrReport->OutputHandle = 0;                
+                    CurrReport->ReportHandle = 0;                
                 }
                 break;
 
@@ -1835,7 +1838,75 @@ int GetOutputReportSize(struct THidReportIdEntry *report)
     
     if (report && report->OutputCount)
     {
-        entry = &report->InputArr[report->OutputCount - 1];
+        entry = &report->OutputArr[report->OutputCount - 1];
+        size = entry->StartBit + entry->BitCount;
+    }
+
+    if (size)
+    {
+        size--;
+        size = size / 8;
+        size++;
+    }
+
+    return size;
+}
+
+/*##########################################################################
+#
+#   Name       : GetFeatureReport
+#
+#   Purpose....: Get feature report
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct THidReportIdEntry *GetFeatureReport(struct THidDevice *dev, int UsagePage, int UsageId)
+{
+    int ReportId;
+    int Index;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+
+    for (ReportId = 0; ReportId < MAX_REPORT_IDS; ReportId++)
+    {
+        report = dev->ReportIdArr[ReportId];
+        
+        if (report)
+        {
+            for (Index = 0; Index < report->FeatureCount; Index++)
+            {
+                entry = &report->FeatureArr[Index];
+
+                if (entry->UsagePage == UsagePage && entry->UsageIdLow == UsageId)
+                    return report;
+            }
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : GetFeatureReportSize
+#
+#   Purpose....: Get feature report size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetFeatureReportSize(struct THidReportIdEntry *report)
+{
+    int size = 0;
+    struct THidReportEntry *entry;
+    
+    if (report && report->FeatureCount)
+    {
+        entry = &report->FeatureArr[report->FeatureCount - 1];
         size = entry->StartBit + entry->BitCount;
     }
 
@@ -1912,10 +1983,10 @@ struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Usage)
 
     report = GetOutputReport(dev, UsagePage, UsageId);
 
-    if (report && !report->OutputHandle)
+    if (report && !report->ReportHandle)
     {
         size = GetOutputReportSize(report);
-        report->OutputHandle = CreateOutputReport(dev, report->ReportId, size);
+        report->ReportHandle = CreateOutputReport(dev, report->ReportId, size);
     }    
 
     if (report)
@@ -1964,7 +2035,7 @@ void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Val
             if (BitCount > 32)
                 BitCount = 32;
     
-            SetValue(Report->OutputHandle, StartBit, BitCount, Value);    
+            SetReportValue(Report->ReportHandle, StartBit, BitCount, Value);    
             break;
         }
     }
@@ -1986,7 +2057,43 @@ void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Val
 #pragma aux ImplUpdateHidOutput "*" rdosdev parm routine [fs esi]
 void __far ImplUpdateHidOutput(struct THidReportIdEntry *Report)
 {
-    SendOutputReport(Report->OutputHandle);
+    SendOutputReport(Report->ReportHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : ImplFindHidFeature
+#
+#   Purpose....: Find HID feature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplFindHidFeature "*" rdosdev parm routine [ebx] [ecx] value [fs esi]
+struct THidReportIdEntry * __far ImplFindHidFeature(int DevSel, int Usage)
+{
+    struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
+    int UsagePage = (Usage >> 8) & 0xFF;
+    int UsageId = Usage & 0xFF;
+    int size;
+    struct THidReportIdEntry *report;
+
+    report = GetFeatureReport(dev, UsagePage, UsageId);
+
+    if (report && !report->ReportHandle)
+    {
+        size = GetFeatureReportSize(report);
+        report->ReportHandle = CreateFeatureReport(dev, report->ReportId, size);
+    }    
+
+    if (report)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return report;
 }
 
 /*##########################################################################

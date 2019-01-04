@@ -68,15 +68,15 @@ hid_handle_struc       ENDS
 
 hid_output_struc        STRUC
 
-ho_dev          DW ?
-ho_size         DW ?
-ho_req_type     DB ?
-ho_req          DB ?
-ho_report_id    DB ?
-ho_report_type  DB ?
-ho_interface    DW ?
-ho_report_len   DW ?
-ho_buf          DB ?
+h_dev          DW ?
+h_size         DW ?
+h_req_type     DB ?
+h_req          DB ?
+h_report_id    DB ?
+h_report_type  DB ?
+h_interface    DW ?
+h_report_len   DW ?
+h_buf          DB ?
 
 hid_output_struc        ENDS
 
@@ -480,26 +480,26 @@ CreateOutputReport_   Proc near
 ;    
     movzx eax,cx
     add eax,4
-    add eax,OFFSET ho_buf
+    add eax,OFFSET h_buf
     AllocateSmallGlobalMem
 ;
-    mov es:ho_dev,fs
-    mov es:ho_size,cx
+    mov es:h_dev,fs
+    mov es:h_size,cx
 ;
     push ecx
     movzx ecx,cx
-    mov edi,OFFSET ho_buf
+    mov edi,OFFSET h_buf
     xor al,al
     rep stosb    
     pop ecx
 ;
-    mov es:ho_req_type,21h
-    mov es:ho_req,9
-    mov es:ho_report_id,bl
-    mov es:ho_report_type,2
+    mov es:h_req_type,21h
+    mov es:h_req,9
+    mov es:h_report_id,bl
+    mov es:h_report_type,2
     movzx ax,fs:hid_interface
-    mov es:ho_interface,ax
-    mov es:ho_report_len,cx
+    mov es:h_interface,ax
+    mov es:h_report_len,cx
 ;
     mov eax,es    
 ;
@@ -512,28 +512,81 @@ CreateOutputReport_ Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           FreeOutputReport
+;   NAME:           CreateFeatureReport
 ;
-;   Description:    Free output report
+;   Description:    Create feature report
+;
+;   Parameters:     FS:ESI  Device
+;                   BX      Report ID
+;                   CX      Report size
+;
+;   Returns:        EAX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateFeatureReport_
+
+CreateFeatureReport_   Proc near
+    push es
+    push ecx
+    push edi
+;    
+    movzx eax,cx
+    add eax,4
+    add eax,OFFSET h_buf
+    AllocateSmallGlobalMem
+;
+    mov es:h_dev,fs
+    mov es:h_size,cx
+;
+    push ecx
+    movzx ecx,cx
+    mov edi,OFFSET h_buf
+    xor al,al
+    rep stosb    
+    pop ecx
+;
+    mov es:h_req_type,21h
+    mov es:h_req,9
+    mov es:h_report_id,bl
+    mov es:h_report_type,3
+    movzx ax,fs:hid_interface
+    mov es:h_interface,ax
+    mov es:h_report_len,cx
+;
+    mov eax,es    
+;
+    pop edi
+    pop ecx
+    pop es
+    ret
+CreateFeatureReport_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           FreeReport
+;
+;   Description:    Free report
 ;
 ;   Parameters:     EBX     Handle
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public FreeOutputReport_
+    public FreeReport_
 
-FreeOutputReport_   Proc near
+FreeReport_   Proc near
     push es
     mov es,ebx
     FreeMem
     pop es
     ret
-FreeOutputReport_ Endp
+FreeReport_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SetValue
+;   NAME:           SetReportValue
 ;
 ;   Description:    Set output value
 ;
@@ -544,14 +597,14 @@ FreeOutputReport_ Endp
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public SetValue_
+    public SetReportValue_
 
-SetValue_   Proc near
+SetReportValue_   Proc near
     push es
     pushad
 ;    
     mov es,ebx
-    mov edi,OFFSET ho_buf
+    mov edi,OFFSET h_buf
 ;
     mov esi,ecx
     mov ecx,edx
@@ -572,7 +625,7 @@ SetValue_   Proc near
     popad
     pop es
     ret
-SetValue_ Endp
+SetReportValue_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -593,15 +646,15 @@ SendOutputReport_   Proc near
     pushad
 ;   
     mov es,ebx
-    mov ds,es:ho_dev
+    mov ds,es:h_dev
     mov bx,ds:hid_control_handle
 ;
-    mov edi,OFFSET ho_req_type
+    mov edi,OFFSET h_req_type
     mov ecx,8
     WriteUsbControl
 ;
-    mov edi,OFFSET ho_buf
-    mov cx,ds:ho_size
+    mov edi,OFFSET h_buf
+    mov cx,ds:h_size
     WriteUsbData
 ;    
     ReqUsbStatus
@@ -1156,6 +1209,154 @@ usb_detach  Proc far
     pop ds
     ret
 usb_detach  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetHidReport
+;
+;       Description:    Set hid report
+;
+;       Paramters:      FS      HID device selector
+;                       AL      Report type
+;                       BL      Report ID
+;                       CX      Report size
+;                       ES:EDI  Report data
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_hid_report_name DB 'Set HID Report', 0
+    
+set_hid_report   Proc far
+    push eax
+    push ebx
+    push edx
+;    
+    push es
+    push ecx
+    push edi
+;
+    mov ah,al
+    mov al,bl
+    push ax
+    mov eax,8
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,21h
+    mov es:usd_req,9
+    pop ax
+    mov es:usd_value,ax
+    movzx ax,fs:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,cx
+;    
+    xor edi,edi
+    mov bx,fs:hid_control_handle
+    mov ecx,8
+    WriteUsbControl
+    FreeMem
+;
+    pop edi
+    pop ecx
+    pop es    
+;
+    mov bx,fs:hid_control_handle
+    WriteUsbData
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:hid_control_handle
+    WasUsbTransactionOk
+;
+    pop edx
+    pop ebx
+    pop eax
+    ret
+set_hid_report Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetHidReport
+;
+;       Description:    Get report
+;
+;       Paramters:      FS      HID device selector
+;                       AL      Report type
+;                       BL      Report ID
+;                       CX      Report size
+;                       ES:EDI  Report data
+;
+;       RETURNS:        EAX     Read size
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_hid_report_name DB 'Get HID Report', 0
+    
+get_hid_report   Proc far
+    push ebx
+    push edx
+;    
+    push es
+    push ecx
+    push edi
+;
+    mov ah,al
+    mov al,bl
+    push ax
+    mov eax,8
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,0A1h
+    mov es:usd_req,1
+    pop ax
+    mov es:usd_value,ax
+    movzx ax,fs:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,cx
+;    
+    xor edi,edi
+    mov bx,fs:hid_control_handle
+    mov ecx,8
+    WriteUsbControl
+    FreeMem
+;
+    pop edi
+    pop ecx
+    pop es    
+;
+    mov bx,fs:hid_control_handle
+    ReqUsbData    
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:hid_control_handle
+    WasUsbTransactionOk
+    jc ghrFail
+;
+    GetUsbDataSize
+    jmp ghrDone
+
+ghrFail:
+    xor eax,eax
+
+ghrDone:
+    pop edx
+    pop ebx
+    ret
+get_hid_report Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
