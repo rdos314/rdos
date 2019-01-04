@@ -112,6 +112,12 @@ extern void SetReportValue(int Handle, int StartBit, int BitCount, int Value);
 extern void SendOutputReport(int Handle);
 #pragma aux SendOutputReport parm routine [ebx]
 
+extern void ReadFeatureReport(int Handle);
+#pragma aux ReadFeatureReport parm routine [ebx]
+
+extern void WriteFeatureReport(int Handle);
+#pragma aux WriteFeatureReport parm routine [ebx]
+
 struct THidDescriptor
 {
     unsigned char Len;
@@ -2141,6 +2147,40 @@ char * __far ImplGetHidReportBuf(struct THidReportIdEntry *Report)
 
 /*##########################################################################
 #
+#   Name       : ImplReadHidFeature
+#
+#   Purpose....: Read HID feature report
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplReadHidFeature "*" rdosdev parm routine [fs esi]
+void __far ImplReadHidFeature(struct THidReportIdEntry *Report)
+{
+    ReadFeatureReport(Report->ReportHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : ImplWriteHidFeature
+#
+#   Purpose....: Write HID feature report
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplWriteHidFeature "*" rdosdev parm routine [fs esi]
+void __far ImplWriteHidFeature(struct THidReportIdEntry *Report)
+{
+    WriteFeatureReport(Report->ReportHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : ImplSetHidIdle
 #
 #   Purpose....: Set HID idle time
@@ -3171,6 +3211,8 @@ int main()
     RdosRegisterOsGate(osgate_update_hid_output, (__rdos_gate_callback *)&ImplUpdateHidOutput, "Update Hid Output"); 
 
     RdosRegisterOsGate(osgate_find_hid_feature_report, (__rdos_gate_callback *)&ImplFindHidFeature, "Find Hid Feature"); 
+    RdosRegisterOsGate(osgate_read_hid_feature, (__rdos_gate_callback *)&ImplReadHidFeature, "Read Hid Feature"); 
+    RdosRegisterOsGate(osgate_write_hid_feature, (__rdos_gate_callback *)&ImplWriteHidFeature, "Write Hid Feature"); 
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 

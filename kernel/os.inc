@@ -4069,6 +4069,16 @@ GetHidReportBuf      MACRO
     OsGate get_hid_report_buf_nr
                         ENDM
 
+; IN    FS:ESI  Report
+ReadHidFeature      MACRO
+    OsGate read_hid_feature_nr
+                        ENDM
+
+; IN    FS:ESI  Report
+WriteHidFeature      MACRO
+    OsGate write_hid_feature_nr
+                        ENDM
+
 ;;;;;;;;;; Printer ;;;;;;;;;
 
 ;   AX      Controller #

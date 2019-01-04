@@ -720,6 +720,104 @@ SendOutputReport_   Proc near
     pop ds    
     ret
 SendOutputReport_ Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ReadFeatureReport
+;
+;   Description:    Read feature report
+;
+;   Parameters:     EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadFeatureReport_
+
+ReadFeatureReport_   Proc near
+    push ds
+    push es
+    pushad
+;   
+    mov es,ebx
+    mov ds,es:h_dev
+    mov bx,ds:hid_control_handle
+;
+    mov es:h_req_type,0a1h
+    mov es:h_req,1
+    mov edi,OFFSET h_req_type
+    mov ecx,8
+    WriteUsbControl
+;
+    mov edi,OFFSET h_buf
+    mov cx,ds:h_size
+    ReqUsbData    
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    pop ds    
+    ret
+ReadFeatureReport_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           WriteFeatureReport
+;
+;   Description:    Write feature report
+;
+;   Parameters:     EBX     Handle
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteFeatureReport_
+
+WriteFeatureReport_   Proc near
+    push ds
+    push es
+    pushad
+;   
+    mov es,ebx
+    mov ds,es:h_dev
+    mov bx,ds:hid_control_handle
+;
+    mov es:h_req_type,21h
+    mov es:h_req,9
+    mov edi,OFFSET h_req_type
+    mov ecx,8
+    WriteUsbControl
+;
+    mov edi,OFFSET h_buf
+    mov cx,ds:h_size
+    WriteUsbData    
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    pop ds    
+    ret
+WriteFeatureReport_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1255,154 +1353,6 @@ usb_detach  Proc far
     pop ds
     ret
 usb_detach  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetHidReport
-;
-;       Description:    Set hid report
-;
-;       Paramters:      FS      HID device selector
-;                       AL      Report type
-;                       BL      Report ID
-;                       CX      Report size
-;                       ES:EDI  Report data
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_hid_report_name DB 'Set HID Report', 0
-    
-set_hid_report   Proc far
-    push eax
-    push ebx
-    push edx
-;    
-    push es
-    push ecx
-    push edi
-;
-    mov ah,al
-    mov al,bl
-    push ax
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,21h
-    mov es:usd_req,9
-    pop ax
-    mov es:usd_value,ax
-    movzx ax,fs:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,cx
-;    
-    xor edi,edi
-    mov bx,fs:hid_control_handle
-    mov ecx,8
-    WriteUsbControl
-    FreeMem
-;
-    pop edi
-    pop ecx
-    pop es    
-;
-    mov bx,fs:hid_control_handle
-    WriteUsbData
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:hid_control_handle
-    WasUsbTransactionOk
-;
-    pop edx
-    pop ebx
-    pop eax
-    ret
-set_hid_report Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetHidReport
-;
-;       Description:    Get report
-;
-;       Paramters:      FS      HID device selector
-;                       AL      Report type
-;                       BL      Report ID
-;                       CX      Report size
-;                       ES:EDI  Report data
-;
-;       RETURNS:        EAX     Read size
-;      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_hid_report_name DB 'Get HID Report', 0
-    
-get_hid_report   Proc far
-    push ebx
-    push edx
-;    
-    push es
-    push ecx
-    push edi
-;
-    mov ah,al
-    mov al,bl
-    push ax
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,0A1h
-    mov es:usd_req,1
-    pop ax
-    mov es:usd_value,ax
-    movzx ax,fs:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,cx
-;    
-    xor edi,edi
-    mov bx,fs:hid_control_handle
-    mov ecx,8
-    WriteUsbControl
-    FreeMem
-;
-    pop edi
-    pop ecx
-    pop es    
-;
-    mov bx,fs:hid_control_handle
-    ReqUsbData    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:hid_control_handle
-    WasUsbTransactionOk
-    jc ghrFail
-;
-    GetUsbDataSize
-    jmp ghrDone
-
-ghrFail:
-    xor eax,eax
-
-ghrDone:
-    pop edx
-    pop ebx
-    ret
-get_hid_report Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
