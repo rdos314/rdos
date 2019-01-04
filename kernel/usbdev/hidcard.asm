@@ -231,15 +231,9 @@ wait_for_card    Proc far
     pushad
 ;
     mov es,ds:card_hid_handle
-    mov esi,es:hid_feature_offset
-    mov fs,es:hid_feature_sel
-;
-    GetHidReportSize
-    mov es:hid_buf_size,ecx
-;
-    GetHidReportBuf
-    mov es:hid_buf_offset,eax
-    mov es:hid_buf_sel,dx
+    mov ecx,es:hid_buf_size
+    mov esi,es:hid_buf_offset
+    mov fs,es:hid_buf_sel
 ;
     popad
     pop fs
@@ -656,6 +650,7 @@ hid_define   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hid_end   Proc far
+    push fs
     push es
     push eax
     push ecx
@@ -686,6 +681,14 @@ hid_end   Proc far
 ;
     mov es:hid_feature_offset,esi
     mov es:hid_feature_sel,dx
+    mov fs,dx
+;
+    GetHidReportSize
+    mov es:hid_buf_size,ecx
+;
+    GetHidReportBuf
+    mov es:hid_buf_offset,eax
+    mov es:hid_buf_sel,dx
 ;
     mov ax,SEG data
     mov es,eax
@@ -710,6 +713,7 @@ heDone:
     pop ecx
     pop eax    
     pop es
+    pop fs
     ret
 hid_end   Endp
 
