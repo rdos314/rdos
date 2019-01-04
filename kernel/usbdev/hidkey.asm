@@ -430,16 +430,19 @@ clOff:
 clSet: 
     push fs
     push ecx
+    push edx
     push esi
 ;           
     mov esi,ds:hid_output_offset
     mov fs,ds:hid_output_sel
 ;    
-    mov cx,802h
+    mov cx,8
+    mov dl,2
     SetHidOutput
     UpdateHidOutput    
 ;
     pop esi
+    pop edx
     pop ecx
     pop fs    
 ;    
@@ -486,16 +489,19 @@ nlOff:
 nlSet: 
     push fs
     push ecx
+    push edx
     push esi
 ;           
     mov esi,ds:hid_output_offset
     mov fs,ds:hid_output_sel
 ;    
-    mov cx,801h
+    mov cx,8
+    mov dl,1
     SetHidOutput
     UpdateHidOutput    
 ;
     pop esi
+    pop edx
     pop ecx
     pop fs    
     xor ax,ax
@@ -1295,6 +1301,7 @@ hid_end   Proc far
     push eax
     push ebx
     push ecx
+    push edx
     push esi
 ;
     mov es,ebx
@@ -1319,22 +1326,27 @@ heOk:
     pop es
 ;
     mov bx,es:hid_device_sel
-    mov cx,801h
+    mov cx,8
+    mov dl,1
     FindHidOutputReport
     jc heNoOut
 ;    
+    mov fs,dx
     mov es:hid_output_offset,esi
     mov es:hid_output_sel,fs
 ;    
-    mov cx,801h
+    mov cx,8
+    mov dl,1
     xor al,al
     SetHidOutput
 ;        
-    mov cx,802h
+    mov cx,8
+    mov dl,2
     xor al,al
     SetHidOutput
 ;        
-    mov cx,803h
+    mov cx,8
+    mov dl,3
     xor al,al
     SetHidOutput
 ;
@@ -1349,6 +1361,7 @@ heNoOut:
         
 heDone:
     pop esi
+    pop edx
     pop ecx
     pop ebx
     pop eax    

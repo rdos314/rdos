@@ -1972,12 +1972,12 @@ int IsCustomHid(struct THidDevice *dev)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplFindHidOutput "*" rdosdev parm routine [ebx] [ecx] value [fs esi]
-struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Usage)
+#pragma aux ImplFindHidOutput "*" rdosdev parm routine [ebx] [ecx] [edx] value [dx esi]
+struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Page, int ID)
 {
     struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
-    int UsagePage = (Usage >> 8) & 0xFF;
-    int UsageId = Usage & 0xFF;
+    int UsagePage = Page & 0xFFFF;
+    int UsageId = ID & 0xFF;
     int size;
     struct THidReportIdEntry *report;
 
@@ -2008,11 +2008,11 @@ struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Usage)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplSetHidOutput "*" rdosdev parm routine [fs esi] [ecx] [eax]
-void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Usage, int Value)
+#pragma aux ImplSetHidOutput "*" rdosdev parm routine [fs esi] [ecx] [edx] [eax]
+void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Page, int ID, int Value)
 {
-    int UsagePage = (Usage >> 8) & 0xFF;
-    int UsageId = Usage & 0xFF;
+    int UsagePage = Page & 0xFFFF;
+    int UsageId = ID & 0xFF;
     int Index;
     struct THidReportEntry *entry;
     int StartBit;
@@ -2071,12 +2071,12 @@ void __far ImplUpdateHidOutput(struct THidReportIdEntry *Report)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplFindHidFeature "*" rdosdev parm routine [ebx] [ecx] value [fs esi]
-struct THidReportIdEntry * __far ImplFindHidFeature(int DevSel, int Usage)
+#pragma aux ImplFindHidFeature "*" rdosdev parm routine [ebx] [ecx] [edx] value [dx esi]
+struct THidReportIdEntry * __far ImplFindHidFeature(int DevSel, int Page, int ID)
 {
     struct THidDevice *dev = (struct THidDevice *)RdosSelectorToPointer(DevSel);
-    int UsagePage = (Usage >> 8) & 0xFF;
-    int UsageId = Usage & 0xFF;
+    int UsagePage = Page & 0xFFFF;
+    int UsageId = ID & 0xFF;
     int size;
     struct THidReportIdEntry *report;
 
@@ -3123,6 +3123,8 @@ int main()
     RdosRegisterOsGate(osgate_find_hid_output_report, (__rdos_gate_callback *)&ImplFindHidOutput, "Find Hid Output"); 
     RdosRegisterOsGate(osgate_set_hid_output, (__rdos_gate_callback *)&ImplSetHidOutput, "Set Hid Output"); 
     RdosRegisterOsGate(osgate_update_hid_output, (__rdos_gate_callback *)&ImplUpdateHidOutput, "Update Hid Output"); 
+
+    RdosRegisterOsGate(osgate_find_hid_feature_report, (__rdos_gate_callback *)&ImplFindHidFeature, "Find Hid Feature"); 
 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 

@@ -41,8 +41,13 @@ CARD_STATE_BAD = 2
 
 hid_card   STRUC
 
+hid_device_sel      DW ?
+
 hid_report_offset   DD ?
 hid_report_sel      DW ?
+
+hid_feature_offset  DD ?
+hid_feature_sel     DW ?
 
 hid_20_index        DW ?
 hid_21_index        DW ?
@@ -215,6 +220,28 @@ wait_for_card    Proc far
     mov ds,eax
     GetThread
     mov ds:carddev_thread,ax
+
+
+    int 3
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ds:card_hid_handle
+    mov bx,es:hid_device_sel
+    mov cx,0FF00h
+    mov dl,20h
+    FindHidFeatureReport
+    mov es:hid_feature_offset,esi
+    mov es:hid_feature_sel,dx
+;
+    popad
+    pop fs
+    pop es
+    pop ds
 
 wfcRetry:
     test ds:card_state,CARD_STATE_GOOD
@@ -448,6 +475,7 @@ hid_begin   Proc far
 ;
     mov es:hid_report_offset,esi
     mov es:hid_report_sel,fs    
+    mov es:hid_device_sel,gs
     mov es:hid_20_index,-1
     mov es:hid_21_index,-1
     mov es:hid_22_index,-1

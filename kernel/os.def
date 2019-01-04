@@ -805,4 +805,6 @@ poll_tcp_socket_nr          = 706
 
 register_custom_hid_nr      = 707
 
+find_hid_feature_report_nr  = 708
+
 osgate_entries              = 750
