@@ -49,6 +49,10 @@ hid_report_sel      DW ?
 hid_feature_offset  DD ?
 hid_feature_sel     DW ?
 
+hid_buf_size        DD ?
+hid_buf_offset      DD ?
+hid_buf_sel         DW ?
+
 hid_20_index        DW ?
 hid_21_index        DW ?
 hid_22_index        DW ?
@@ -229,6 +233,13 @@ wait_for_card    Proc far
     mov es,ds:card_hid_handle
     mov esi,es:hid_feature_offset
     mov fs,es:hid_feature_sel
+;
+    GetHidReportSize
+    mov es:hid_buf_size,ecx
+;
+    GetHidReportBuf
+    mov es:hid_buf_offset,eax
+    mov es:hid_buf_sel,dx
 ;
     popad
     pop fs

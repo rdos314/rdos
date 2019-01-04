@@ -100,8 +100,11 @@ extern int CreateFeatureReport(struct THidDevice *dev, int ReportId, int Size);
 extern void FreeReport(int Handle);
 #pragma aux FreeReport parm routine [ebx]
 
-extern void *GetOutputBuf(int Handle);
-#pragma aux GetOutputBuf parm routine [ebx] value [es edi]
+extern int GetReportSize(int Handle);
+#pragma aux GetReportSize parm routine [ebx] value [ecx]
+
+extern char *GetReportBuf(int Handle);
+#pragma aux GetReportBuf parm routine [ebx] value [es edi]
 
 extern void SetReportValue(int Handle, int StartBit, int BitCount, int Value);
 #pragma aux SetReportValue parm routine [ebx] [edx] [ecx] [eax]
@@ -2098,6 +2101,46 @@ struct THidReportIdEntry * __far ImplFindHidFeature(int DevSel, int Page, int ID
 
 /*##########################################################################
 #
+#   Name       : ImplGetHidReportSize
+#
+#   Purpose....: Get HID report size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidReportSize "*" rdosdev parm routine [fs esi] value [ecx]
+int __far ImplGetHidReportSize(struct THidReportIdEntry *Report)
+{
+    if (Report->ReportHandle)
+        return GetReportSize(Report->ReportHandle);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : ImplGetHidReportBuf
+#
+#   Purpose....: Get HID report buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetHidReportBuf "*" rdosdev parm routine [fs esi] value [dx eax]
+char * __far ImplGetHidReportBuf(struct THidReportIdEntry *Report)
+{
+    if (Report->ReportHandle)
+        return GetReportBuf(Report->ReportHandle);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : ImplSetHidIdle
 #
 #   Purpose....: Set HID idle time
@@ -3119,6 +3162,9 @@ int main()
 
     RdosRegisterOsGate(osgate_get_hid_log_min, (__rdos_gate_callback *)&ImplGetHidLogMin, "Get Hid Log Min"); 
     RdosRegisterOsGate(osgate_get_hid_log_max, (__rdos_gate_callback *)&ImplGetHidLogMax, "Get Hid Log Max"); 
+
+    RdosRegisterOsGate(osgate_get_hid_report_size, (__rdos_gate_callback *)&ImplGetHidReportSize, "Get Hid Report Size"); 
+    RdosRegisterOsGate(osgate_get_hid_report_buf, (__rdos_gate_callback *)&ImplGetHidReportBuf, "Get Hid Report Buf"); 
 
     RdosRegisterOsGate(osgate_find_hid_output_report, (__rdos_gate_callback *)&ImplFindHidOutput, "Find Hid Output"); 
     RdosRegisterOsGate(osgate_set_hid_output, (__rdos_gate_callback *)&ImplSetHidOutput, "Set Hid Output"); 

@@ -4057,6 +4057,18 @@ FindHidFeatureReport      MACRO
     OsGate find_hid_feature_report_nr
                         ENDM
 
+; IN    FS:ESI  Report
+; OUT   ECX     Size
+GetHidReportSize      MACRO
+    OsGate get_hid_report_size_nr
+                        ENDM
+
+; IN    FS:ESI  Report
+; OUT   DX:EAX  Buffer
+GetHidReportBuf      MACRO
+    OsGate get_hid_report_buf_nr
+                        ENDM
+
 ;;;;;;;;;; Printer ;;;;;;;;;
 
 ;   AX      Controller #

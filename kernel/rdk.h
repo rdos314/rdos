@@ -806,6 +806,8 @@
 #define osgate_register_custom_hid 707
 
 #define osgate_find_hid_feature_report 708
+#define osgate_get_hid_report_size 709
+#define osgate_get_hid_report_buf 710
 
 
 
@@ -1617,4 +1619,6 @@
 #define OsGate_register_custom_hid 0x3E 0x67 0x9a 195 2 0 0 2 0
 
 #define OsGate_find_hid_feature_report 0x3E 0x67 0x9a 196 2 0 0 2 0
+#define OsGate_get_hid_report_size 0x3E 0x67 0x9a 197 2 0 0 2 0
+#define OsGate_get_hid_report_buf 0x3E 0x67 0x9a 198 2 0 0 2 0
 

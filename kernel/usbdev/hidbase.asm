@@ -586,6 +586,52 @@ FreeReport_ Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetReportSize
+;
+;   Description:    Get report size
+;
+;   PARAMETERS:     EBX     Handle
+;
+;   RETURNS:        ECX     Size
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetReportSize_
+
+GetReportSize_   Proc near
+    push es
+;    
+    mov es,ebx
+    movzx ecx,es:h_size
+;
+    pop es
+    ret
+GetReportSize_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetReportBuf
+;
+;   Description:    Get report buf
+;
+;   PARAMETERS:     EBX     Handle
+;
+;   RETURNS:        ES:EDI  Buffer pointer
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetReportBuf_
+
+GetReportBuf_   Proc near
+    mov es,ebx
+    mov edi,OFFSET h_buf
+    ret
+GetReportBuf_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetReportValue
 ;
 ;   Description:    Set output value
