@@ -557,6 +557,85 @@ GetPropertyByte	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetPropertyByte
+;
+;   DESCRIPTION:    Set property byte
+;
+;   Parameters:     BL        ID
+;                   AL        Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPropertyByte   Proc near
+    push ds
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov edx,SEG data
+    mov es,edx
+    mov es,es:card_hid_handle
+;
+    push es
+;
+    mov ecx,es:hid_buf_size
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+;
+    push eax
+;
+    push edi
+    xor al,al
+    rep stosb
+    pop edi
+;
+    mov al,1
+    stosb
+;
+    mov al,2
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    pop eax
+    stosb
+;
+    pop es
+;
+    mov esi,es:hid_feature_offset
+    mov fs,es:hid_feature_sel
+    WriteHidFeature
+    ReadHidFeature
+;
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+    mov al,es:[edi]
+    or al,al
+    stc
+    jnz spbDone
+;
+    clc
+
+spbDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+SetPropertyByte	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ResetDevice
 ;
 ;   DESCRIPTION:    Reset
@@ -884,16 +963,26 @@ heHasDev:
     int 3
     mov bl,3
     call GetPropertyByte
+    cmp al,3
+    je heConfigOk
 ;
     mov bl,2
-    call GetPropertyByte
-;
-    mov bl,4
-    call GetPropertyByte
+    mov al,1
+    call SetPropertyByte
 ;
     mov bl,5
-    call GetPropertyByte
+    mov al,32
+    call SetPropertyByte
 ;
+    mov bl,3
+    mov al,3
+    call SetPropertyByte
+;
+    call ResetDevice
+    clc
+    jmp heDone
+
+heConfigOk:
     clc
     jmp heDone
 
