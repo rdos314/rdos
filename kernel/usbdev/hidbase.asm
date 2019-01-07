@@ -743,14 +743,14 @@ ReadFeatureReport_   Proc near
     mov ds,es:h_dev
     mov bx,ds:hid_control_handle
 ;
-    mov es:h_req_type,0a1h
+    mov es:h_req_type,0A1h
     mov es:h_req,1
     mov edi,OFFSET h_req_type
     mov ecx,8
     WriteUsbControl
 ;
     mov edi,OFFSET h_buf
-    mov cx,ds:h_size
+    mov cx,es:h_size
     ReqUsbData    
     WriteUsbStatus
     StartUsbTransaction
@@ -799,7 +799,7 @@ WriteFeatureReport_   Proc near
     WriteUsbControl
 ;
     mov edi,OFFSET h_buf
-    mov cx,ds:h_size
+    mov cx,es:h_size
     WriteUsbData    
     ReqUsbStatus
     StartUsbTransaction

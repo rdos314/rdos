@@ -225,20 +225,6 @@ wait_for_card    Proc far
     GetThread
     mov ds:carddev_thread,ax
 
-    int 3
-    push es
-    push fs
-    pushad
-;
-    mov es,ds:card_hid_handle
-    mov ecx,es:hid_buf_size
-    mov esi,es:hid_buf_offset
-    mov fs,es:hid_buf_sel
-;
-    popad
-    pop fs
-    pop es
-
 wfcRetry:
     test ds:card_state,CARD_STATE_GOOD
     jz wfcNotGood
@@ -423,6 +409,200 @@ HandleBadCard   Proc near
     pop ds
     ret
 HandleBadCard	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetPropertyString
+;
+;   DESCRIPTION:    Get property string
+;
+;   Parameters:     BL        ID
+;
+;   RETURNS:        AL        Result code
+;                   ECX       Data size
+;                   ES:EDI    Property data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPropertyString   Proc near
+    push ds
+    push fs
+    push ebx
+    push edx
+    push esi
+;
+    mov eax,SEG data
+    mov es,eax
+    mov es,es:card_hid_handle
+;
+    push es
+;
+    mov ecx,es:hid_buf_size
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+;
+    push edi
+    xor al,al
+    rep stosb
+    pop edi
+;
+    xor al,al
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    pop es
+;
+    mov esi,es:hid_feature_offset
+    mov fs,es:hid_feature_sel
+    WriteHidFeature
+    ReadHidFeature
+;
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+    mov al,es:[edi]
+    movzx ecx,byte ptr es:[edi+1]
+    add edi,2
+;
+    pop esi
+    pop edx
+    pop ebx
+    pop fs
+    pop ds
+    ret
+GetPropertyString	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetPropertyByte
+;
+;   DESCRIPTION:    Get property byte
+;
+;   Parameters:     BL        ID
+;
+;   RETURNS:        NC
+;                       AL        Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPropertyByte   Proc near
+    push ds
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov eax,SEG data
+    mov es,eax
+    mov es,es:card_hid_handle
+;
+    push es
+;
+    mov ecx,es:hid_buf_size
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+;
+    push edi
+    xor al,al
+    rep stosb
+    pop edi
+;
+    xor al,al
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    pop es
+;
+    mov esi,es:hid_feature_offset
+    mov fs,es:hid_feature_sel
+    WriteHidFeature
+    ReadHidFeature
+;
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+    mov al,es:[edi]
+    or al,al
+    stc
+    jnz gpbDone
+;
+    mov al,es:[edi+2]
+    clc
+
+gpbDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+GetPropertyByte	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetDevice
+;
+;   DESCRIPTION:    Reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetDevice   Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ebx,SEG data
+    mov es,ebx
+    mov es,es:card_hid_handle
+;
+    push es
+;
+    mov ecx,es:hid_buf_size
+    mov edi,es:hid_buf_offset
+    mov es,es:hid_buf_sel
+;
+    push edi
+    xor al,al
+    rep stosb
+    pop edi
+;
+    mov al,2
+    stosb
+;
+    xor al,al
+    stosb
+;
+    pop es
+;
+    mov esi,es:hid_feature_offset
+    mov fs,es:hid_feature_sel
+    WriteHidFeature
+    ReadHidFeature
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+ResetDevice	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -700,6 +880,20 @@ hid_end   Proc far
 
 heHasDev:
     mov es:card_hid_handle,bx 
+;
+    int 3
+    mov bl,3
+    call GetPropertyByte
+;
+    mov bl,2
+    call GetPropertyByte
+;
+    mov bl,4
+    call GetPropertyByte
+;
+    mov bl,5
+    call GetPropertyByte
+;
     clc
     jmp heDone
 
