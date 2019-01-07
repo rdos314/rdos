@@ -64,6 +64,8 @@ hid_30_index        DW ?
 hid_31_index        DW ?
 hid_32_index        DW ?
 
+hid_inserted        DB ?
+
 hid_card   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -959,8 +961,8 @@ hid_end   Proc far
 
 heHasDev:
     mov es:card_hid_handle,bx 
+    mov es,ebx
 ;
-    int 3
     mov bl,3
     call GetPropertyByte
     cmp al,3
@@ -983,6 +985,9 @@ heHasDev:
     jmp heDone
 
 heConfigOk:
+    mov bl,4
+    call GetPropertyByte
+    mov es:hid_inserted,al
     clc
     jmp heDone
 
