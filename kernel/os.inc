@@ -4027,6 +4027,11 @@ SetHidIdle      MACRO
                         ENDM
 
 ; IN    BX      Device
+ResetHid      MACRO
+    OsGate reset_hid_nr
+                        ENDM
+
+; IN    BX      Device
 ; IN    CX      Usage page
 ; IN    DL      Usage ID
 ; OUT   NC      Found

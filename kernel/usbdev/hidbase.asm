@@ -1891,6 +1891,32 @@ register_custom_hid  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           reset_hid
+;
+;           DESCRIPTION:    Reset hid device
+;
+;           parameters:     BX      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_hid_name     DB 'Reset HID',0
+
+reset_hid  Proc far
+    push ds
+    push ebx
+;
+    mov ds,ebx
+    mov bx,ds:hid_control_handle
+    ResetUsbPipe    
+;
+    pop ebx
+    pop ds
+    ret
+reset_hid  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           register_hid_input
 ;
 ;           DESCRIPTION:    Register HID input
@@ -2059,6 +2085,12 @@ InitHid_    Proc near
     mov edi,OFFSET register_hid_input_name
     xor dx,dx
     mov ax,register_hid_input_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reset_hid
+    mov edi,OFFSET reset_hid_name
+    xor dx,dx
+    mov ax,reset_hid_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_hid

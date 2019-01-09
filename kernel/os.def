@@ -810,5 +810,6 @@ get_hid_report_size_nr      = 709
 get_hid_report_buf_nr       = 710
 read_hid_feature_nr         = 711
 write_hid_feature_nr        = 712
+reset_hid_nr                = 713
 
 osgate_entries              = 750

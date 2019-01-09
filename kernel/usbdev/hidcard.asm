@@ -53,16 +53,17 @@ hid_buf_size        DD ?
 hid_buf_offset      DD ?
 hid_buf_sel         DW ?
 
-hid_20_index        DW ?
-hid_21_index        DW ?
-hid_22_index        DW ?
-hid_28_index        DW ?
-hid_29_index        DW ?
-hid_2A_index        DW ?
-hid_38_index        DW ?
-hid_30_index        DW ?
-hid_31_index        DW ?
-hid_32_index        DW ?
+hid_stat1_index        DW ?
+hid_stat2_index        DW ?
+hid_stat3_index        DW ?
+hid_len1_index        DW ?
+hid_len2_index        DW ?
+hid_len3_index        DW ?
+hid_track1_index        DW ?
+hid_track2_index        DW ?
+hid_track3_index        DW ?
+hid_encode_index        DW ?
+hid_status_index        DW ?
 
 hid_inserted        DB ?
 
@@ -174,7 +175,29 @@ is_busy    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_inserted    Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:card_hid_handle
+    or ax,ax
+    jz iiFail
+;
+    mov ds,eax
+    mov al,ds:hid_inserted
+    or al,al
+    jz iiFail
+;
+    clc
+    jmp iiDone
+
+iiFail:
     stc
+
+iiDone:
+    pop eax
+    pop ds
     ret
 is_inserted    Endp
 
@@ -733,16 +756,17 @@ hid_begin   Proc far
     mov es:hid_report_offset,esi
     mov es:hid_report_sel,fs    
     mov es:hid_device_sel,gs
-    mov es:hid_20_index,-1
-    mov es:hid_21_index,-1
-    mov es:hid_22_index,-1
-    mov es:hid_28_index,-1
-    mov es:hid_29_index,-1
-    mov es:hid_2A_index,-1
-    mov es:hid_38_index,-1
-    mov es:hid_30_index,-1
-    mov es:hid_31_index,-1
-    mov es:hid_32_index,-1
+    mov es:hid_stat1_index,-1
+    mov es:hid_stat2_index,-1
+    mov es:hid_stat3_index,-1
+    mov es:hid_len1_index,-1
+    mov es:hid_len2_index,-1
+    mov es:hid_len3_index,-1
+    mov es:hid_track1_index,-1
+    mov es:hid_track2_index,-1
+    mov es:hid_track3_index,-1
+    mov es:hid_encode_index,-1
+    mov es:hid_status_index,-1
     mov ebx,es
     jmp hbDone
 
@@ -785,110 +809,121 @@ hid_define   Proc far
     cmp al,20h
     jne hdNot20
 ;
-    mov bx,ds:hid_20_index
+    mov bx,ds:hid_stat1_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_20_index,si
+    mov ds:hid_stat1_index,si
     jmp hdDone
 
 hdNot20:
     cmp al,21h
     jne hdNot21
 ;
-    mov bx,ds:hid_21_index
+    mov bx,ds:hid_stat2_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_21_index,si
+    mov ds:hid_stat2_index,si
     jmp hdDone
 
 hdNot21:
     cmp al,22h
     jne hdNot22
 ;
-    mov bx,ds:hid_22_index
+    mov bx,ds:hid_stat3_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_22_index,si
+    mov ds:hid_stat3_index,si
     jmp hdDone
 
 hdNot22:
     cmp al,28h
     jne hdNot28
 ;
-    mov bx,ds:hid_28_index
+    mov bx,ds:hid_len1_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_28_index,si
+    mov ds:hid_len1_index,si
     jmp hdDone
 
 hdNot28:
     cmp al,29h
     jne hdNot29
 ;
-    mov bx,ds:hid_29_index
+    mov bx,ds:hid_len2_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_29_index,si
+    mov ds:hid_len2_index,si
     jmp hdDone
 
 hdNot29:
     cmp al,2Ah
     jne hdNot2A
 ;
-    mov bx,ds:hid_2A_index
+    mov bx,ds:hid_len3_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_2A_index,si
+    mov ds:hid_len3_index,si
     jmp hdDone
 
 hdNot2A:
-    cmp al,38h
-    jne hdNot38
-;
-    mov bx,ds:hid_38_index
-    cmp bx,-1
-    jne hdDone
-;
-    mov ds:hid_38_index,si
-    jmp hdDone
-
-hdNot38:
     cmp al,30h
     jne hdNot30
 ;
-    mov bx,ds:hid_30_index
+    mov bx,ds:hid_track1_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_30_index,si
+    mov ds:hid_track1_index,si
     jmp hdDone
 
 hdNot30:
     cmp al,31h
     jne hdNot31
 ;
-    mov bx,ds:hid_31_index
+    mov bx,ds:hid_track2_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_31_index,si
+    mov ds:hid_track2_index,si
     jmp hdDone
 
 hdNot31:
     cmp al,32h
-    jne hdDone
+    jne hdNot32
 ;
-    mov bx,ds:hid_32_index
+    mov bx,ds:hid_track3_index
     cmp bx,-1
     jne hdDone
 ;
-    mov ds:hid_32_index,si
+    mov ds:hid_track3_index,si
+    jmp hdDone
+
+hdNot32:
+    cmp al,38h
+    jne hdNot38
+;
+    mov bx,ds:hid_encode_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_encode_index,si
+    jmp hdDone
+
+hdNot38:
+    cmp al,39h
+    jne hdDone
+;
+    mov bx,ds:hid_status_index
+    cmp bx,-1
+    jne hdDone
+;
+    mov ds:hid_status_index,si
 
 hdDone:
     pop ebx
@@ -919,16 +954,17 @@ hid_end   Proc far
     push esi
     mov es,ebx
 ;
-    mov ax,es:hid_20_index
-    and ax,es:hid_21_index
-    and ax,es:hid_22_index
-    and ax,es:hid_28_index
-    and ax,es:hid_29_index
-    and ax,es:hid_2A_index
-    and ax,es:hid_38_index
-    and ax,es:hid_30_index
-    and ax,es:hid_31_index
-    and ax,es:hid_32_index
+    mov ax,es:hid_stat1_index
+    and ax,es:hid_stat2_index
+    and ax,es:hid_stat3_index
+    and ax,es:hid_len1_index
+    and ax,es:hid_len2_index
+    and ax,es:hid_len3_index
+    and ax,es:hid_track1_index
+    and ax,es:hid_track2_index
+    and ax,es:hid_track3_index
+    and ax,es:hid_encode_index
+    and ax,es:hid_status_index
     cmp ax,-1
     je heFail
 ;
@@ -1050,18 +1086,34 @@ hid_handle_report   Proc far
     push ebx
     mov es,ebx
 ;
-    movzx ebx,es:hid_29_index
+    movzx ebx,es:hid_status_index
+    cmp ebx,-1
+    je hhrNoStatus
+;
+    mov al,fs:[ebx+esi]
+    test al,0FEh
+    jz hhrValid
+;
+    mov bx,es:hid_device_sel
+    ResetHid
+    jmp hhrDone
+
+hhrValid:
+    mov es:hid_inserted,al
+    
+hhrNoStatus:
+    movzx ebx,es:hid_len2_index
     mov al,fs:[ebx+esi]
     or al,al
     jz hhrNotGood2
 ;
-    movzx ebx,es:hid_31_index
+    movzx ebx,es:hid_track2_index
     add ebx,esi
     call HandleGoodCard
     jmp hhrDone
 
 hhrNotGood2:
-    movzx ebx,es:hid_38_index
+    movzx ebx,es:hid_encode_index
     mov al,fs:[ebx+esi]
     or al,al
     jz hhrNotBad
