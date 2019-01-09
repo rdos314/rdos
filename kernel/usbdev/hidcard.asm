@@ -66,6 +66,7 @@ hid_encode_index        DW ?
 hid_status_index        DW ?
 
 hid_inserted        DB ?
+hid_was_inserted    DB ?
 
 hid_card   ENDS
 
@@ -161,7 +162,29 @@ is_ok    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_busy    Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:card_hid_handle
+    or ax,ax
+    jz ibFail
+;
+    mov ds,eax
+    mov al,ds:hid_inserted
+    or al,al
+    jz ibFail
+;
+    clc
+    jmp iiDone
+
+ibFail:
     stc
+
+ibDone:
+    pop eax
+    pop ds
     ret
 is_busy    Endp
 
@@ -211,7 +234,29 @@ is_inserted    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 had_inserted    Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:card_hid_handle
+    or ax,ax
+    jz hiFail
+;
+    mov ds,eax
+    mov al,ds:hid_was_inserted
+    or al,al
+    jz hiFail
+;
+    clc
+    jmp iiDone
+
+hiFail:
     stc
+
+hiDone:
+    pop eax
+    pop ds
     ret
 had_inserted    Endp
 
@@ -225,6 +270,21 @@ had_inserted    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_inserted    Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:card_hid_handle
+    or ax,ax
+    jz ciDone
+;
+    mov ds,eax
+    mov ds:hid_was_inserted,0
+
+ciDone:
+    pop eax
+    pop ds
     ret
 clear_inserted    Endp
 
@@ -1024,6 +1084,7 @@ heConfigOk:
     mov bl,4
     call GetPropertyByte
     mov es:hid_inserted,al
+    mov es:hid_was_inserted,al
     clc
     jmp heDone
 
@@ -1099,6 +1160,12 @@ hid_handle_report   Proc far
     jmp hhrDone
 
 hhrValid:
+    or al,al
+    jz hhrSaveInserted
+;
+    mov es:hid_was_inserted,al
+
+hhrSaveInserted:
     mov es:hid_inserted,al
     
 hhrNoStatus:
