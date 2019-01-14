@@ -52,6 +52,7 @@ copy ..\..\kernel\usbdev\ehci.rdv files
 copy ..\..\kernel\usbdev\xhci.rdv files
 copy ..\..\kernel\usbdev\hub.rdv files
 copy ..\..\kernel\usbdev\hid.rdv files
+copy ..\..\kernel\usbdev\hidcard.rdv files
 copy ..\..\kernel\usbdev\usbcom.rdv files
 copy ..\..\kernel\usbdev\usbcan.rdv files
 copy ..\..\kernel\usbdev\usbdisc.rdv files
