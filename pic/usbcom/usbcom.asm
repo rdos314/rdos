@@ -32,6 +32,12 @@ counter_high  equ 0x66
 
 temp          equ 0x67
 
+setup_len     equ 0x68
+descr_low     equ 0x69
+descr_high    equ 0x6A
+descr_size    equ 0x6B
+count         equ 0x6C
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Interupt
@@ -71,20 +77,14 @@ NotTmr2:
 ; position dependent code ends here
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TestTblr:
-    movlw low ConfigDescr
-    movwf TBLPTRL
-    movlw high ConfigDescr
-    movwf TBLPTRH
-    movlw upper ConfigDescr
-    movwf TBLPTRU
-    tblrd *+
-    movf TABLAT,W
-    return
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; InitUsb
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitUsb:
-    movlw 0xF
-    movwf BSR
+    movlb 0xF
     movlw 0x17
     movwf UCFG
     lfsr 0, usb_ram
@@ -97,7 +97,7 @@ InitUsb:
     movlw high usb_cout
     movwf POSTINC0
 ;
-    movlw 0x88
+    movlw 0x8
     movwf POSTINC0
     movlw 8
     movwf POSTINC0
@@ -112,9 +112,177 @@ InitUsb:
     movlw 0x48
     movwf UCON
 ;
-    movlw 0
-    movwf BSR
+    movlb 0
     return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CopyDescr
+;
+; W  bytes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyDescr:
+    movwf temp
+
+cdLoop:
+    tblrd *+
+    movf TABLAT,W
+    movwf POSTINC0
+;
+    incf count,F
+;
+    decfsz setup_len,F
+    bra cdNext
+    bra cdDone
+
+cdNext:
+    decfsz temp,F
+    bra cdLoop
+
+cdDone:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetDescr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDescr:
+    tblrd *+
+    movf TABLAT,W
+    movwf descr_size
+;
+    lfsr 0,usb_cin
+    movwf POSTINC0
+    decf descr_size
+;
+    movlw 1
+    movwf count
+    decf setup_len,F
+;
+    movlw 7
+    call CopyDescr
+;
+    movff TBLPTRL, descr_low
+    movff TBLPTRH, descr_high
+;
+    lfsr 0,usb_ram+4
+    movlw 0x48
+    movwf POSTINC0
+    movff count,POSTDEC0
+    bsf INDF0,7
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleGetDeviceDescr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleGetDeviceDescr:
+    movlw low DeviceDescr
+    movwf TBLPTRL
+    movlw high DeviceDescr
+    movwf TBLPTRH
+    movlw upper DeviceDescr
+    movwf TBLPTRU
+    goto GetDescr
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleGetDescr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleGetDescr:
+    movf POSTINC0, W
+    movlw 6
+    cpfseq POSTINC0
+    return
+;
+    movf POSTINC0, W
+    decfsz INDF0,F
+    bra NotGetDeviceDescr
+;
+    goto HandleGetDeviceDescr
+
+NotGetDeviceDescr:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; DecodeUsabSetup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecodeUsbSetup:
+    lfsr 0, usb_cout+6
+    movff INDF0, setup_len
+;
+    lfsr 0, usb_cout
+    btfss INDF0, 7
+    bra DecodeHostSetup
+
+DecodeDeviceSetup:
+    movlw 0x80
+    cpfseq INDF0
+    bra DecodeNotGetDescr
+    goto HandleGetDescr
+    
+DecodeNotGetDescr: 
+    return
+
+DecodeHostSetup:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleControlComplete
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleControlComplete:
+    btfss USTAT, DIR
+    goto HandleControlOut
+
+HandleControlIn:
+    lfsr 0, usb_ram+4
+    goto HandleUsbCompleteDone
+
+HandleControlOut:
+    lfsr 0, usb_ram
+    btfsc INDF0,5
+    goto HandleControlSetup
+    goto HandleUsbCompleteDone
+
+HandleControlSetup:
+    call DecodeUsbSetup
+    lfsr 0, usb_ram
+    bsf INDF0, 7
+    goto HandleUsbCompleteDone
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleUsbComplete
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleUsbComplete:
+    movf USTAT, W
+    andlw 0x38
+    bz HandleControlComplete
+
+HandleUsbCompleteDone:
+    bcf UIR, TRNIF
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Program start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProgStart:
     clrf counter_ov
@@ -143,6 +311,9 @@ ProgStart:
     call InitUsb
     
 Loop:
+    btfsc UIR, TRNIF
+    call HandleUsbComplete
+;
     movf counter_ov,W
     bz Loop
 ;
@@ -168,6 +339,26 @@ Loop:
     movwf counter_high
 ;
     goto Loop
+
+DeviceDescr:
+    db 0x12   ; len
+    db 1      ; device descriptor
+    db 0
+    db 1      ; full speed
+    db 0xFF   ; vendor class
+    db 0      ; sub class
+    db 0      ; no device protocol
+    db 8      ; max 8 byte packet size for control endpoint
+    db 0x56 
+    db 0x65   ; vendor id
+    db 0xAA
+    db 0xAA   ; product id
+    db 0
+    db 1      ; device version
+    db 0      ; no manufacturer id
+    db 0      ; no product id
+    db 0      ; no serial #
+    db 1      ; one configuration
 
 ConfigDescr:
     db 0x55
