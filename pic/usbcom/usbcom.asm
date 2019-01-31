@@ -4,9 +4,23 @@
  config BOREN=SBORDIS, BORV=19, WDTEN=OFF, WDTPS=32768, HFOFST=ON, MCLRE=ON, STVREN=ON, LVP=OFF, BBSIZ=OFF, XINST=OFF
  config CP0=OFF, CP1=OFF, CPB=OFF, CPD=OFF, WRT0=OFF, WRT1=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF, EBTR0=OFF, EBTR1=OFF, EBTRB=OFF
 
-usb_ram   equ 0x200
-usb_cout  equ 0x240
-usb_cin   equ 0x248
+usb_ram            equ 0x200
+
+usb_buf_page       equ 2
+
+control_out_stat   equ 0x200
+control_out_size   equ 0x201
+control_out_low    equ 0x202
+control_out_high   equ 0x203
+
+control_in_stat    equ 0x204
+control_in_size    equ 0x205
+control_in_low     equ 0x206
+control_in_high    equ 0x207
+
+usb_cout           equ 0x240
+usb_cin            equ 0x248
+
 
     org 0
 
@@ -85,32 +99,58 @@ NotTmr2:
 
 InitUsb:
     movlb 0xF
-    movlw 0x17
+    movlw 0x14
     movwf UCFG
-    lfsr 0, usb_ram
-    movlw 0x88
-    movwf POSTINC0
-    movlw 8
-    movwf POSTINC0
-    movlw low usb_cout
-    movwf POSTINC0
-    movlw high usb_cout
-    movwf POSTINC0
 ;
-    movlw 0x8
-    movwf POSTINC0
     movlw 8
-    movwf POSTINC0
+    movwf UCON
+;
+    bcf UIR, TRNF
+    bcf UIR, TRNF
+    bcf UIR, TRNF
+    bcf UIR, TRNF
+;
+    clrf UEP0
+    clrf UEP1
+    clrf UEP2
+    clrf UEP3
+    clrf UEP4
+    clrf UEP5
+    clrf UEP6
+    clrf UEP7
+    clrf UEP8
+    clrf UEP9
+    clrf UEP10
+    clrf UEP11
+    clrf UEP12
+    clrf UEP13
+    clrf UEP14
+    clrf UEP15
+;
+    movlb usb_buf_page
+    movlw 8
+    movwf control_out_size
+    movlw low usb_cout
+    movwf control_out_low
+    movlw high usb_cout
+    movwf control_out_high
+    movlw 0x88
+    movwf control_out_stat
+;
+    movlw 8
+    movwf control_in_size
     movlw low usb_cin
-    movwf POSTINC0
+    movwf control_in_low
     movlw high usb_cin
-    movwf POSTINC0
+    movwf control_in_high
+    movlw 0x8
+    movwf control_in_stat
+;
+    movlb 0xF
+    clrf UADDR
 ;
     movlw 0x16
     movwf UEP0
-;
-    movlw 0x48
-    movwf UCON
 ;
     movlb 0
     return
@@ -168,11 +208,14 @@ GetDescr:
     movff TBLPTRL, descr_low
     movff TBLPTRH, descr_high
 ;
-    lfsr 0,usb_ram+4
-    movlw 0x48
-    movwf POSTINC0
-    movff count,POSTDEC0
-    bsf INDF0,7
+    movlb usb_buf_page
+    movff count,control_in_size
+;
+    movlw 0x40
+    xorwf control_in_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf control_in_stat
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
