@@ -46,11 +46,20 @@ counter_high  equ 0x66
 
 temp          equ 0x67
 
-setup_len     equ 0x68
-descr_low     equ 0x69
-descr_high    equ 0x6A
-descr_size    equ 0x6B
-count         equ 0x6C
+b_req_type    equ 0x68
+b_req         equ 0x69
+b_val_low     equ 0x6A
+b_val_high    equ 0x6B
+b_index_low   equ 0x6C
+b_index_high  equ 0x6D
+b_len_low     equ 0x6E
+b_len_high    equ 0x6F
+
+setup_len     equ 0x70
+descr_low     equ 0x71
+descr_high    equ 0x72
+descr_size    equ 0x73
+count         equ 0x74
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -99,12 +108,38 @@ NotTmr2:
 
 InitUsb:
     movlb 0xF
+    clrf UIE
+    clrf UIR
+;
     movlw 0x14
     movwf UCFG
 ;
     movlw 8
     movwf UCON
 ;
+    clrf USB_USWSTAT
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleUsbError
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleUsbError:
+    movlb 0xF
+    clrf UEIR
+    bcf UIR, UERRIF
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleUsbReset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleUsbReset:
+    movlb 0xF
     bcf UIR, TRNF
     bcf UIR, TRNF
     bcf UIR, TRNF
@@ -148,11 +183,139 @@ InitUsb:
 ;
     movlb 0xF
     clrf UADDR
+    clrf UIR
 ;
     movlw 0x16
     movwf UEP0
 ;
+    movlb 0xF
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetupDeviceDescr
+;
+; OUT: W size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDeviceDescr:
+    movlw low DeviceDescr
+    movwf TBLPTRL
+    movlw high DeviceDescr
+    movwf TBLPTRH
+    movlw upper DeviceDescr
+    movwf TBLPTRU
+    tblrd *
+    movf TABLAT, W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetupConfigDescr
+;
+; OUT: W size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupConfigDescr:
+    movlw low ConfigTotalSize
+    movwf TBLPTRL
+    movlw high ConfigTotalSize
+    movwf TBLPTRH
+    movlw upper ConfigTotalSize
+    movwf TBLPTRU
+    tblrd *
+;
+    movlw low ConfigDescr
+    movwf TBLPTRL
+    movlw high ConfigDescr
+    movwf TBLPTRH
+    movlw upper ConfigDescr
+    movwf TBLPTRU
+;
+    movf TABLAT, W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetupString0
+;
+; OUT: W size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupString0:
+    movlw low String0
+    movwf TBLPTRL
+    movlw high String0
+    movwf TBLPTRH
+    movlw upper String0
+    movwf TBLPTRU
+    tblrd *
+    movf TABLAT, W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetupString1
+;
+; OUT: W size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupString1:
+    movlw low String1
+    movwf TBLPTRL
+    movlw high String1
+    movwf TBLPTRH
+    movlw upper String1
+    movwf TBLPTRU
+    tblrd *
+    movf TABLAT, W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetupString2
+;
+; OUT: W size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupString2:
+    movlw low String2
+    movwf TBLPTRL
+    movlw high String2
+    movwf TBLPTRH
+    movlw upper String2
+    movwf TBLPTRU
+    tblrd *
+    movf TABLAT, W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; DecideSize
+;
+; IN:  W object size
+; OUT: W used size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecideSize:
     movlb 0
+    movwf temp
+    movf b_len_high, W
+    btfss STATUS, Z
+    goto DecideWhole
+;
+    movf b_len_low, w
+    cpfsgt temp
+    return
+
+DecideWhole:
+    movf temp, W
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -240,19 +403,19 @@ HandleGetDeviceDescr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleGetDescr:
-    movf POSTINC0, W
     movlw 6
-    cpfseq POSTINC0
-    return
+    cpfseq b_req
+    goto NotGetDescr
 ;
-    movf POSTINC0, W
-    decfsz INDF0,F
-    bra NotGetDeviceDescr
-;
+    movlw 1
+    cpfseq b_val_low
+    goto NotGetDeviceDescr
     goto HandleGetDeviceDescr
 
 NotGetDeviceDescr:
     return
+
+NotGetDescr:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -261,17 +424,23 @@ NotGetDeviceDescr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DecodeUsbSetup:
-    lfsr 0, usb_cout+6
-    movff INDF0, setup_len
+    movff usb_cout, b_req_type
+    movff usb_cout+1, b_req
+    movff usb_cout+2, b_val_low
+    movff usb_cout+3, b_val_high
+    movff usb_cout+4, b_index_low
+    movff usb_cout+5, b_index_high
+    movff usb_cout+6, b_len_low
+    movff usb_cout+7, b_len_high
 ;
-    lfsr 0, usb_cout
-    btfss INDF0, 7
-    bra DecodeHostSetup
+    movlb 0
+    btfss b_req_type, 7
+    goto DecodeHostSetup
 
 DecodeDeviceSetup:
     movlw 0x80
-    cpfseq INDF0
-    bra DecodeNotGetDescr
+    cpfseq p_req_type
+    goto DecodeNotGetDescr
     goto HandleGetDescr
     
 DecodeNotGetDescr: 
@@ -354,6 +523,24 @@ ProgStart:
     call InitUsb
     
 Loop:
+    btfsc UIR, UERRIF
+    call HandleUsbError
+;
+    btfsc UIR, SOFIF
+    bcf UIR, SOFIF
+;
+    btfsc UIR, IDLEIF
+    bcf UIR, IDLEIF
+;
+    btfsc UIR, ACTVIF
+    bcf UIR, ACTVIF
+;
+    btfsc UIR, STALLIF
+    bcf UIR, STALLIF
+;
+    btfsc UIR, URSTIF
+    call HandleUsbReset
+;
     btfsc UIR, TRNIF
     call HandleUsbComplete
 ;
@@ -384,26 +571,86 @@ Loop:
     goto Loop
 
 DeviceDescr:
-    db 0x12   ; len
-    db 1      ; device descriptor
-    db 0
-    db 1      ; full speed
-    db 0xFF   ; vendor class
-    db 0      ; sub class
-    db 0      ; no device protocol
-    db 8      ; max 8 byte packet size for control endpoint
-    db 0x56 
-    db 0x65   ; vendor id
-    db 0xAA
-    db 0xAA   ; product id
-    db 0
-    db 1      ; device version
-    db 0      ; no manufacturer id
-    db 0      ; no product id
-    db 0      ; no serial #
-    db 1      ; one configuration
+    db 0x12        ; len
+    db 1           ; device descriptor
+    db 0x10, 1     ; USB ver (full speed)
+    db 0           ; class
+    db 0           ; sub class
+    db 0           ; no device protocol
+    db 8           ; 8 byte packet size for control endpoint
+    db 0x4D, 0x5   ; vendor id 
+    db 1, 0x10     ; product id
+    db 0, 1        ; version
+    db 1           ; manufacturer id
+    db 2           ; product id
+    db 0           ; no serial #
+    db 1           ; one configuration
 
 ConfigDescr:
-    db 0x55
+    db 0x9         ; len
+    db 2           ; config descriptor
+
+ConfigTotalSize:
+    db ConfigEnd - ConfigDescr, 0   ; total size (must be less than 256 bytes)
+    db 1           ; number of interfaces
+    db 1           ; configuration value
+    db 0           ; config string id
+    db 0x80        ; bus powered
+    db 0x32        ; max 100mA 
+
+Interface:
+    db 0x9         ; len
+    db 4           ; interface descriptor
+    db 0           ; interface #
+    db 0           ; alt setting
+    db 0           ; endpoint entries
+    db 0xFF        ; class
+    db 0           ; subclass
+    db 0xFF        ; vendor protocol
+    db 0           ; interface string id
+
+Endpoint1:
+
+ConfigEnd:
+
+String0:
+    db String1 - String0
+    db 3
+    db 0x9, 0xC
+
+String1:
+    db String2 - String 1
+    db 3
+    db 'R', 0
+    db 'D', 0
+    db 'O', 0
+    db 'S', 0
+    db ' ', 0
+    db 'D', 0
+    db 'e', 0
+    db 'v', 0
+    db 'e', 0
+    db 'l', 0
+    db 'o', 0
+    db 'p', 0
+    db 'm', 0
+    db 'e', 0
+    db 'n', 0
+    db 't', 0
+    db '.', 0
+String2:
+    db String3 - String 2
+    db 3
+    db 'S', 0
+    db 'e', 0
+    db 'r', 0
+    db 'i', 0
+    db 'a', 0
+    db 'l', 0
+    db ' ', 0
+    db 'b', 0
+    db 'u', 0
+    db 's', 0
+String3:
 
     end
