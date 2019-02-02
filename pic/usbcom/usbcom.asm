@@ -21,6 +21,8 @@ control_in_high    equ 0x207
 usb_cout           equ 0x240
 usb_cin            equ 0x248
 
+DESCR_FLAG_MORE    equ 0
+USB_HANDLED        equ 1
 
     org 0
 
@@ -46,20 +48,24 @@ counter_high  equ 0x66
 
 temp          equ 0x67
 
-b_req_type    equ 0x68
-b_req         equ 0x69
-b_val_low     equ 0x6A
-b_val_high    equ 0x6B
-b_index_low   equ 0x6C
-b_index_high  equ 0x6D
-b_len_low     equ 0x6E
-b_len_high    equ 0x6F
+d_curr_stat   equ 0x68
+d_curr_count  equ 0x69
+d_curr_low    equ 0x6A
+d_curr_high   equ 0x6B
 
-setup_len     equ 0x70
-descr_low     equ 0x71
-descr_high    equ 0x72
-descr_size    equ 0x73
-count         equ 0x74
+b_req_type    equ 0x6C
+b_req         equ 0x6D
+b_val_low     equ 0x6E
+b_val_high    equ 0x6F
+b_index_low   equ 0x70
+b_index_high  equ 0x71
+b_len_low     equ 0x72
+b_len_high    equ 0x73
+
+remain_size   equ 0x74
+count         equ 0x75
+usb_flags     equ 0x76
+usb_stat      equ 0x77
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -67,13 +73,11 @@ count         equ 0x74
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Intr:	
-    movwf w_isr
+Intr:
     movff STATUS, status_isr
     movff BSR, bsr_isr
-;
-    movlw 0
-    movwf BSR
+    movlb 0
+    movwf w_isr
 ;
     btfss PIR1,TMR2IF
     bra NotTmr2
@@ -87,8 +91,8 @@ Intr:
     movwf counter_low
 
 NotTmr2:
-    movff bsr_isr, BSR
     movf w_isr, W
+    movff bsr_isr, BSR
     movff status_isr, STATUS
     retfie
     
@@ -116,6 +120,9 @@ InitUsb:
 ;
     movlw 8
     movwf UCON
+;
+    movlb 0
+    clrf usb_flags
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,10 +182,14 @@ HandleUsbReset:
     clrf UADDR
     clrf UIR
 ;
+    movlw 0xFF
+    movwf UIE
+;
     movlw 0x16
     movwf UEP0
 ;
-    movlb 0xF
+    movlb 0
+    clrf usb_flags
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -295,6 +306,7 @@ SetupString2:
 
 DecideSize:
     movlb 0
+    bsf usb_flags, DESCR_FLAG_MORE
     movwf temp
     movf b_len_high, W
     btfss STATUS, Z
@@ -310,30 +322,20 @@ DecideWhole:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; CopyDescr
+; DecideFragSize
 ;
-; W  bytes
+; OUT: W used size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CopyDescr:
-    movwf temp
+DecideFragSize:
+    movlw 8
+    cpfslt remain_size
+    return
 
-cdLoop:
-    tblrd *+
-    movf TABLAT,W
-    movwf POSTINC0
-;
-    incf count,F
-;
-    decfsz setup_len,F
-    bra cdNext
-    bra cdDone
-
-cdNext:
-    decfsz temp,F
-    bra cdLoop
-
-cdDone:
+DecideFragWhole:
+    movf remain_size, W
+    bcf usb_flags, DESCR_FLAG_MORE
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -343,27 +345,24 @@ cdDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDescr:
-    tblrd *+
-    movf TABLAT,W
-    movwf descr_size
+    movlb 0
+    call DecideFragSize
+    movwf temp
+    movwf count
 ;
     lfsr 0,usb_cin
+
+gdLoop:
+    tblrd *+
+    movf TABLAT,W
     movwf POSTINC0
-    decf descr_size
 ;
-    movlw 1
-    movwf count
-    decf setup_len,F
+    decfsz temp,F
+    goto gdLoop
 ;
-    movlw 7
-    call CopyDescr
-;
-    movff TBLPTRL, descr_low
-    movff TBLPTRH, descr_high
-;
-    movlb usb_buf_page
     movff count,control_in_size
 ;
+    movlb usb_buf_page
     movlw 0x40
     xorwf control_in_stat,W
     andlw 0x40
@@ -380,6 +379,9 @@ GetDescr:
 HandleGetDeviceDescr:
     call SetupDeviceDescr
     call DecideSize
+    movwf remain_size
+    call GetDescr
+    bsf usb_flags, USB_HANDLED
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -419,6 +421,13 @@ DecodeUsbSetup:
     movff usb_cout+6, b_len_low
     movff usb_cout+7, b_len_high
 ;
+    movlb usb_buf_page
+    movlw 0x88
+    movwf control_out_stat
+    movlw 8
+    movwf control_out_size
+    bcf UCON, PKTDIS
+;
     movlb 0
     btfss b_req_type, 7
     goto DecodeHostSetup
@@ -442,23 +451,19 @@ DecodeHostSetup:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleControlComplete:
-    btfss USTAT, DIR
+    btfss usb_stat, DIR
     goto HandleControlOut
 
 HandleControlIn:
-    lfsr 0, usb_ram+4
     goto HandleUsbCompleteDone
 
 HandleControlOut:
-    lfsr 0, usb_ram
-    btfsc INDF0,5
+    btfsc d_curr_stat,5
     goto HandleControlSetup
     goto HandleUsbCompleteDone
 
 HandleControlSetup:
     call DecodeUsbSetup
-    lfsr 0, usb_ram
-    bsf INDF0, 7
     goto HandleUsbCompleteDone
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -468,12 +473,36 @@ HandleControlSetup:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleUsbComplete:
+    movlb 0
+    movlw usb_buf_page
+    movwf FSR0H
     movf USTAT, W
+    movwf usb_stat
+    andlw 0x7C
+    movwf FSR0L
+;
+    movf POSTINC0, W
+    movwf d_curr_stat
+;
+    movf POSTINC0, W
+    movwf d_curr_count
+;
+    movf POSTINC0, W
+    movwf d_curr_low
+;
+    movf POSTINC0, W
+    movwf d_curr_high
+;
+    bcf UIR, TRNIF
+;
+    movf usb_stat, W
     andlw 0x38
     bz HandleControlComplete
 
 HandleUsbCompleteDone:
-    bcf UIR, TRNIF
+    btfsc usb_flags, USB_HANDLED
+    return
+;
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
