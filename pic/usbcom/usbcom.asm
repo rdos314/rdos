@@ -356,6 +356,7 @@ gdLoop:
     tblrd *+
     movf TABLAT,W
     movwf POSTINC0
+    decf remain_size, F
 ;
     decfsz temp,F
     goto gdLoop
@@ -382,6 +383,20 @@ HandleGetDeviceDescr:
     movwf remain_size
     call GetDescr
     bsf usb_flags, USB_HANDLED
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ContinueControlOut
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ContinueControlOut:
+    bsf usb_flags, USB_HANDLED
+    btfss usb_flags, DESCR_FLAG_MORE
+    return
+;
+    call GetDescr
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -455,6 +470,7 @@ HandleControlComplete:
     goto HandleControlOut
 
 HandleControlIn:
+    call ContinueControlOut
     goto HandleUsbCompleteDone
 
 HandleControlOut:
@@ -588,56 +604,39 @@ Loop:
     goto Loop
 
 DeviceDescr:
-    db 0x12        ; len
-    db 1           ; device descriptor
+    db 0x12, 1     ; len + device descriptor
     db 0x10, 1     ; USB ver (full speed)
-    db 0           ; class
-    db 0           ; sub class
-    db 0           ; no device protocol
-    db 8           ; 8 byte packet size for control endpoint
+    db 0, 0        ; class + sub class
+    db 0, 8        ; no device protocol + 8 byte packet size
     db 0x4D, 0x5   ; vendor id 
     db 1, 0x10     ; product id
     db 0, 1        ; version
-    db 1           ; manufacturer id
-    db 2           ; product id
-    db 0           ; no serial #
-    db 1           ; one configuration
+    db 1, 2        ; manufacturer id + product id
+    db 0, 1        ; no serial # + one configuration
 
 ConfigDescr:
-    db 0x9         ; len
-    db 2           ; config descriptor
+    db 0x9, 2      ; len + config descriptor
 
 ConfigTotalSize:
     db ConfigEnd - ConfigDescr, 0   ; total size (must be less than 256 bytes)
-    db 1           ; number of interfaces
-    db 1           ; configuration value
-    db 0           ; config string id
-    db 0x80        ; bus powered
-    db 0x32        ; max 100mA 
-
-Interface:
-    db 0x9         ; len
-    db 4           ; interface descriptor
-    db 0           ; interface #
-    db 0           ; alt setting
-    db 0           ; endpoint entries
-    db 0xFF        ; class
-    db 0           ; subclass
-    db 0xFF        ; vendor protocol
-    db 0           ; interface string id
+    db 1, 1        ; number of interfaces + config value
+    db 0, 0x80     ; config string id + bus powered
+    db 0x32, 0x9   ; max 100mA + interface len
+    db 4, 0        ; interface descriptor + interface #
+    db 0, 0        ; alt setting + endpoint entries
+    db 0xFF, 0     ; class + sub class
+    db 0xFF, 0     ; vendor protocol + interface string id
 
 Endpoint1:
 
 ConfigEnd:
 
 String0:
-    db String1 - String0
-    db 3
+    db String1 - String0, 3
     db 0x9, 0xC
 
 String1:
-    db String2 - String1
-    db 3
+    db String2 - String1, 3
     db 'R', 0
     db 'D', 0
     db 'O', 0
@@ -656,8 +655,7 @@ String1:
     db 't', 0
     db '.', 0
 String2:
-    db String3 - String2
-    db 3
+    db String3 - String2, 3
     db 'S', 0
     db 'e', 0
     db 'r', 0
