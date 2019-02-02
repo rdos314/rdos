@@ -301,7 +301,7 @@ DecideSize:
     goto DecideWhole
 ;
     movf b_len_low, w
-    cpfsgt temp
+    cpfslt temp
     return
 
 DecideWhole:
@@ -378,13 +378,9 @@ GetDescr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleGetDeviceDescr:
-    movlw low DeviceDescr
-    movwf TBLPTRL
-    movlw high DeviceDescr
-    movwf TBLPTRH
-    movlw upper DeviceDescr
-    movwf TBLPTRU
-    goto GetDescr
+    call SetupDeviceDescr
+    call DecideSize
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
