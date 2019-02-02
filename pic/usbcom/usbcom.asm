@@ -398,7 +398,7 @@ HandleGetDescr:
     goto NotGetDescr
 ;
     movlw 1
-    cpfseq b_val_low
+    cpfseq b_val_high
     goto NotGetDeviceDescr
     goto HandleGetDeviceDescr
 
