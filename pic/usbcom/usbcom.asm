@@ -116,8 +116,6 @@ InitUsb:
 ;
     movlw 8
     movwf UCON
-;
-    clrf USB_USWSTAT
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -140,10 +138,10 @@ HandleUsbError:
 
 HandleUsbReset:
     movlb 0xF
-    bcf UIR, TRNF
-    bcf UIR, TRNF
-    bcf UIR, TRNF
-    bcf UIR, TRNF
+    bcf UIR, TRNIF
+    bcf UIR, TRNIF
+    bcf UIR, TRNIF
+    bcf UIR, TRNIF
 ;
     clrf UEP0
     clrf UEP1
@@ -153,14 +151,6 @@ HandleUsbReset:
     clrf UEP5
     clrf UEP6
     clrf UEP7
-    clrf UEP8
-    clrf UEP9
-    clrf UEP10
-    clrf UEP11
-    clrf UEP12
-    clrf UEP13
-    clrf UEP14
-    clrf UEP15
 ;
     movlb usb_buf_page
     movlw 8
@@ -439,7 +429,7 @@ DecodeUsbSetup:
 
 DecodeDeviceSetup:
     movlw 0x80
-    cpfseq p_req_type
+    cpfseq b_req_type
     goto DecodeNotGetDescr
     goto HandleGetDescr
     
@@ -523,6 +513,7 @@ ProgStart:
     call InitUsb
     
 Loop:
+    movlb 0xF
     btfsc UIR, UERRIF
     call HandleUsbError
 ;
@@ -544,6 +535,7 @@ Loop:
     btfsc UIR, TRNIF
     call HandleUsbComplete
 ;
+    movlb 0
     movf counter_ov,W
     bz Loop
 ;
@@ -619,7 +611,7 @@ String0:
     db 0x9, 0xC
 
 String1:
-    db String2 - String 1
+    db String2 - String1
     db 3
     db 'R', 0
     db 'D', 0
@@ -639,7 +631,7 @@ String1:
     db 't', 0
     db '.', 0
 String2:
-    db String3 - String 2
+    db String3 - String2
     db 3
     db 'S', 0
     db 'e', 0
