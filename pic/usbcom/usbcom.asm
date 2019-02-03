@@ -518,14 +518,6 @@ HandleControlFromDevice:
     cpfseq b_req
     goto NotGetDescrIn
 ;
-    movlw 2
-    cpfseq b_val_high
-    goto ContDeb
-;
-    movlw 0x55
-
-ContDeb:
-
     btfsc usb_flags, DESCR_FLAG_MORE
     call GetDescr
 
@@ -606,6 +598,7 @@ RecControlSetup:
     movlw 0xC8
     movwf control_out_stat
     bcf UCON, PKTDIS
+    bcf control_in_stat,6
 ;
     movlb 0
 
