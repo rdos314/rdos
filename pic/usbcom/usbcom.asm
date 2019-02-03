@@ -574,8 +574,10 @@ RecControlComplete:
     goto RecControlOut
 
 RecControlIn:
-    movf b_req,W
-    movwf POSTINC1
+;    movf b_req,W
+;    movwf POSTINC1
+;    movlw 0x55
+;    movwf POSTINC1
     call HandleControlIn
     return
 
@@ -583,8 +585,8 @@ RecControlOut:
     btfsc d_curr_stat,5
     goto RecControlSetup
 ;
-    movf b_req,W
-    movwf POSTINC1
+;    movf b_req,W
+;    movwf POSTINC1
     call HandleControlOut
     return
 
@@ -607,8 +609,8 @@ RecControlSetup:
 ;
     movlb 0
 
-    movf b_req,W
-    movwf POSTINC1
+;    movf b_req,W
+;    movwf POSTINC1
 
     call HandleControlSetup
     return
