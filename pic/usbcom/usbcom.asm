@@ -315,13 +315,24 @@ SetupString2:
 DecideSize:
     movlb 0
     bsf usb_flags, DESCR_FLAG_MORE
+    bcf usb_flags, DESCR_FLAG_FULL
     movwf temp
     movf b_len_high, W
     btfss STATUS, Z
     goto DecideWhole
 ;
     movf b_len_low, w
+    cpfseq temp
+    goto DecideCompLow
+    goto DecideFull
+
+DecideCompLow:
     cpfslt temp
+    goto DecideFull
+    goto DecideWhole
+
+DecideFull:
+    bsf usb_flags, DESCR_FLAG_FULL
     return
 
 DecideWhole:
@@ -359,9 +370,15 @@ GetDescr:
     movwf count
 ;
     movf count, W
-    btfsc STATUS,Z
-    goto gdSetup
+    btfss STATUS,Z
+    goto gdCopy
 ;
+    btfsc usb_flags, DESCR_FLAG_FULL
+    return
+;
+    goto gdSetup
+
+gdCopy:
     lfsr 0,usb_cin
 
 gdLoop:
