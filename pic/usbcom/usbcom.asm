@@ -66,6 +66,7 @@ remain_size   equ 0x74
 count         equ 0x75
 usb_flags     equ 0x76
 usb_stat      equ 0x77
+usb_ep        equ 0x78
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -387,11 +388,54 @@ HandleGetDeviceDescr:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ContinueControlOut
+; HandleGetDescr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ContinueControlOut:
+HandleGetDescr:
+    btfss b_req_type, 7
+    return
+;
+    movlw 1
+    cpfseq b_val_high
+    goto NotGetDeviceDescr
+    goto HandleGetDeviceDescr
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleControlSetup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleControlSetup:
+    btfsc b_req_type,6
+    return
+;
+    btfsc b_req_type,5
+    return
+;
+    movlw 6
+    cpfseq b_req
+    goto NotGetDescr
+;
+    call HandleGetDescr
+
+NotGetDeviceDescr:
+    return
+
+NotGetDescr:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleControlIn
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleControlIn:
+    btfss b_req_type, 7
+    return
+;
     bsf usb_flags, USB_HANDLED
     btfss usb_flags, DESCR_FLAG_MORE
     return
@@ -401,32 +445,35 @@ ContinueControlOut:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; HandleGetDescr
+; HandleControlOut
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleGetDescr:
-    movlw 6
-    cpfseq b_req
-    goto NotGetDescr
-;
-    movlw 1
-    cpfseq b_val_high
-    goto NotGetDeviceDescr
-    goto HandleGetDeviceDescr
-
-NotGetDeviceDescr:
+HandleControlOut:
     return
 
-NotGetDescr:
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; DecodeUsabSetup
+; RecControlComplete
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DecodeUsbSetup:
+RecControlComplete:
+    btfss usb_stat, DIR
+    goto RecControlOut
+
+RecControlIn:
+    call HandleControlIn
+    return
+
+RecControlOut:
+    btfsc d_curr_stat,5
+    goto RecControlSetup
+;
+    call HandleControlOut
+    return
+
+RecControlSetup:
     movff usb_cout, b_req_type
     movff usb_cout+1, b_req
     movff usb_cout+2, b_val_low
@@ -444,43 +491,8 @@ DecodeUsbSetup:
     bcf UCON, PKTDIS
 ;
     movlb 0
-    btfss b_req_type, 7
-    goto DecodeHostSetup
-
-DecodeDeviceSetup:
-    movlw 0x80
-    cpfseq b_req_type
-    goto DecodeNotGetDescr
-    goto HandleGetDescr
-    
-DecodeNotGetDescr: 
+    call HandleControlSetup
     return
-
-DecodeHostSetup:
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; HandleControlComplete
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleControlComplete:
-    btfss usb_stat, DIR
-    goto HandleControlOut
-
-HandleControlIn:
-    call ContinueControlOut
-    goto HandleUsbCompleteDone
-
-HandleControlOut:
-    btfsc d_curr_stat,5
-    goto HandleControlSetup
-    goto HandleUsbCompleteDone
-
-HandleControlSetup:
-    call DecodeUsbSetup
-    goto HandleUsbCompleteDone
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -513,7 +525,16 @@ HandleUsbComplete:
 ;
     movf usb_stat, W
     andlw 0x38
-    bz HandleControlComplete
+    movwf usb_ep
+;
+    movlw 0
+    cpfseq usb_ep
+    goto HandleUsbNotControl
+;
+    call RecControlComplete
+    goto HandleUsbCompleteDone
+
+HandleUsbNotControl:
 
 HandleUsbCompleteDone:
     btfsc usb_flags, USB_HANDLED
