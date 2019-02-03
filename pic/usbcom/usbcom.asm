@@ -24,6 +24,9 @@ usb_cin            equ 0x248
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
 
+SET_ADDRESS        equ 5
+GET_DESCRIPTOR     equ 6
+
     org 0
 
     goto ProgStart
@@ -67,6 +70,7 @@ count         equ 0x75
 usb_flags     equ 0x76
 usb_stat      equ 0x77
 usb_ep        equ 0x78
+usb_adr       equ 0x79
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -124,6 +128,7 @@ InitUsb:
 ;
     movlb 0
     clrf usb_flags
+    clrf usb_adr
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -191,6 +196,7 @@ HandleUsbReset:
 ;
     movlb 0
     clrf usb_flags
+    clrf usb_adr
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -351,6 +357,10 @@ GetDescr:
     movwf temp
     movwf count
 ;
+    movf count, W
+    btfsc STATUS,Z
+    goto gdSetup
+;
     lfsr 0,usb_cin
 
 gdLoop:
@@ -361,7 +371,8 @@ gdLoop:
 ;
     decfsz temp,F
     goto gdLoop
-;
+
+gdSetup:
     movff count,control_in_size
 ;
     movlb usb_buf_page
@@ -370,6 +381,37 @@ gdLoop:
     andlw 0x40
     iorlw 0x88
     movwf control_in_stat
+    movlb 0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SendEmpty
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendEmpty:
+    movlb usb_buf_page
+    clrf control_in_size
+    movlw 0xC8
+    movwf control_in_stat
+    movlb 0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSetAddr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSetAddr:
+    btfsc b_req_type, 7
+    return
+;
+    movf b_val_low, W
+    movwf usb_adr
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -380,6 +422,20 @@ gdLoop:
 
 HandleGetDeviceDescr:
     call SetupDeviceDescr
+    call DecideSize
+    movwf remain_size
+    call GetDescr
+    bsf usb_flags, USB_HANDLED
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleGetConfigDescr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleGetConfigDescr:
+    call SetupConfigDescr
     call DecideSize
     movwf remain_size
     call GetDescr
@@ -399,7 +455,20 @@ HandleGetDescr:
     movlw 1
     cpfseq b_val_high
     goto NotGetDeviceDescr
-    goto HandleGetDeviceDescr
+;
+    call HandleGetDeviceDescr
+    return
+
+NotGetDeviceDescr:
+    movlw 2
+    cpfseq b_val_high
+    goto NotGetConfigDescr
+;
+    call HandleGetConfigDescr
+    return
+
+NotGetConfigDescr:
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -414,13 +483,19 @@ HandleControlSetup:
     btfsc b_req_type,5
     return
 ;
-    movlw 6
+    movlw SET_ADDRESS
+    cpfseq b_req
+    goto NotSetAddr
+;
+    call HandleSetAddr
+    return
+
+NotSetAddr:
+    movlw GET_DESCRIPTOR
     cpfseq b_req
     goto NotGetDescr
 ;
     call HandleGetDescr
-
-NotGetDeviceDescr:
     return
 
 NotGetDescr:
@@ -434,13 +509,42 @@ NotGetDescr:
 
 HandleControlIn:
     btfss b_req_type, 7
-    return
-;
+    goto HandleControlToDevice
+
+HandleControlFromDevice:
     bsf usb_flags, USB_HANDLED
-    btfss usb_flags, DESCR_FLAG_MORE
-    return
 ;
+    movlw GET_DESCRIPTOR
+    cpfseq b_req
+    goto NotGetDescrIn
+;
+    movlw 2
+    cpfseq b_val_high
+    goto ContDeb
+;
+    movlw 0x55
+
+ContDeb:
+
+    btfsc usb_flags, DESCR_FLAG_MORE
     call GetDescr
+
+NotGetDescrIn:
+    return
+
+HandleControlToDevice:
+    bsf usb_flags, USB_HANDLED
+;
+    movlw SET_ADDRESS
+    cpfseq b_req
+    goto NotSetAddrIn
+;
+    movf usb_adr, W
+    movlb 0xF
+    movwf UADDR
+    return
+
+NotSetAddrIn:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -450,6 +554,13 @@ HandleControlIn:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleControlOut:
+    movlb usb_buf_page
+    movlw 8
+    movwf control_out_size
+    movlw 0x88
+    movwf control_out_stat
+    movlb 0
+    bsf usb_flags, USB_HANDLED
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -463,6 +574,8 @@ RecControlComplete:
     goto RecControlOut
 
 RecControlIn:
+    movf b_req,W
+    movwf POSTINC1
     call HandleControlIn
     return
 
@@ -470,6 +583,8 @@ RecControlOut:
     btfsc d_curr_stat,5
     goto RecControlSetup
 ;
+    movf b_req,W
+    movwf POSTINC1
     call HandleControlOut
     return
 
@@ -484,13 +599,17 @@ RecControlSetup:
     movff usb_cout+7, b_len_high
 ;
     movlb usb_buf_page
-    movlw 0x88
-    movwf control_out_stat
     movlw 8
     movwf control_out_size
+    movlw 0xC8
+    movwf control_out_stat
     bcf UCON, PKTDIS
 ;
     movlb 0
+
+    movf b_req,W
+    movwf POSTINC1
+
     call HandleControlSetup
     return
 
@@ -502,6 +621,8 @@ RecControlSetup:
 
 HandleUsbComplete:
     movlb 0
+    bcf usb_flags, USB_HANDLED
+;
     movlw usb_buf_page
     movwf FSR0H
     movf USTAT, W
@@ -527,6 +648,8 @@ HandleUsbComplete:
     andlw 0x38
     movwf usb_ep
 ;
+
+retry:
     movlw 0
     cpfseq usb_ep
     goto HandleUsbNotControl
@@ -537,9 +660,11 @@ HandleUsbComplete:
 HandleUsbNotControl:
 
 HandleUsbCompleteDone:
+    movlb 0
     btfsc usb_flags, USB_HANDLED
     return
 ;
+    goto retry
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -571,6 +696,9 @@ ProgStart:
     movwf INTCON
     movlw 0
     movwf temp
+;
+    lfsr 1,0x250
+   
 ;
     call InitUsb
     
