@@ -889,7 +889,7 @@ ConfigTotalSize:
     db ConfigEnd - ConfigDescr, 0   ; total size (must be less than 256 bytes)
     db 1, 1        ; number of interfaces + config value
     db 0, 0x80     ; config string id + bus powered
-    db 0x32, 0x9   ; max 100mA + interface len
+    db 0x31, 0x9   ; max 100mA + interface len
     db 4, 0        ; interface descriptor + interface #
     db 0, 4        ; alt setting + endpoint entries
     db 0xFF, 0     ; class + sub class
