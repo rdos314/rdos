@@ -18,8 +18,34 @@ control_in_size    equ 0x205
 control_in_low     equ 0x206
 control_in_high    equ 0x207
 
-usb_cout           equ 0x240
-usb_cin            equ 0x248
+ser_out_stat       equ 0x208
+ser_out_size       equ 0x209
+ser_out_low        equ 0x20A
+ser_out_high       equ 0x20B
+
+ser_in_stat        equ 0x20C
+ser_in_size        equ 0x20D
+ser_in_low         equ 0x20E
+ser_in_high        equ 0x20F
+
+bus_out_stat       equ 0x210
+bus_out_size       equ 0x211
+bus_out_low        equ 0x212
+bus_out_high       equ 0x213
+
+bus_in_stat        equ 0x214
+bus_in_size        equ 0x215
+bus_in_low         equ 0x216
+bus_in_high        equ 0x217
+
+usb_cout           equ 0x220
+usb_cin            equ 0x228
+
+usb_ser_out        equ 0x230
+usb_ser_in         equ 0x270
+
+usb_bus_out        equ 0x2B0
+usb_bus_in         equ 0x2D0
 
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
@@ -185,6 +211,42 @@ HandleUsbReset:
     movlw 0x8
     movwf control_in_stat
 ;
+    movlw 0x40
+    movwf ser_out_size
+    movlw low usb_ser_out
+    movwf ser_out_low
+    movlw high usb_ser_out
+    movwf ser_out_high
+    movlw 0x88
+    movwf ser_out_stat
+;
+    movlw 0x40
+    movwf ser_in_size
+    movlw low usb_ser_in
+    movwf ser_in_low
+    movlw high usb_ser_in
+    movwf ser_in_high
+    movlw 0x8
+    movwf ser_in_stat
+;
+    movlw 0x20
+    movwf bus_out_size
+    movlw low usb_bus_out
+    movwf bus_out_low
+    movlw high usb_bus_out
+    movwf bus_out_high
+    movlw 0x88
+    movwf bus_out_stat
+;
+    movlw 0x20
+    movwf bus_in_size
+    movlw low usb_bus_in
+    movwf bus_in_low
+    movlw high usb_bus_in
+    movwf bus_in_high
+    movlw 0x8
+    movwf bus_in_stat
+;
     movlb 0xF
     clrf UADDR
     clrf UIR
@@ -194,6 +256,12 @@ HandleUsbReset:
 ;
     movlw 0x16
     movwf UEP0
+;
+    movlw 0x1E
+    movwf UEP1
+;
+    movlw 0x1E
+    movwf UEP2
 ;
     movlb 0
     clrf usb_flags
@@ -823,11 +891,27 @@ ConfigTotalSize:
     db 0, 0x80     ; config string id + bus powered
     db 0x32, 0x9   ; max 100mA + interface len
     db 4, 0        ; interface descriptor + interface #
-    db 0, 0        ; alt setting + endpoint entries
+    db 0, 4        ; alt setting + endpoint entries
     db 0xFF, 0     ; class + sub class
     db 0xFF, 0     ; vendor protocol + interface string id
 
 Endpoint1:
+    db 7, 5        ; size + endpoint 1 OUT
+    db 0x1, 0x2    ; OUT endpoint 1 + bulk
+    db 0x40, 0     ; max packet size (64 bytes)
+    db 0, 7        ; max NAKs, endpoint 1 IN 
+    db 5, 0x81     ; IN endpoint 1
+    db 0x2, 0x40   ; bulk + max packet size low
+    db 0, 0        ; max packet size high + max NAKs
+
+Endpoint2:
+    db 7, 5        ; size + endpoint 2 OUT
+    db 0x2, 0x2    ; OUT endpoint 2 + bulk
+    db 0x20, 0     ; max packet size (64 bytes)
+    db 0, 7        ; max NAKs, endpoint 2 IN 
+    db 5, 0x82     ; IN endpoint 2
+    db 0x2, 0x20   ; bulk + max packet size low
+    db 0, 0        ; max packet size high + max NAKs
 
 ConfigEnd:
 
