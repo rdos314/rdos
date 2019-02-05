@@ -82,7 +82,6 @@ uds_out_buffer      DW ?
 uds_in_req          DW ?
 uds_out_req         DW ?
 uds_link            DW ?
-uds_port_offset     DW ?
 uds_flag            DB ?
 uds_port_nr         DW ?
 
@@ -338,6 +337,7 @@ CreatePort  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort Proc far
+    int 3
     mov bx,ds:cd_controller
     mov ax,ds:cd_device
     mov dl,ds:uds_bulk_in
@@ -872,9 +872,6 @@ cdDescrLoop:
     jnz cdBulkIn
 
 cdBulkOut:
-    cmp si,2
-    jae cdDescrNext
-;
     inc si
     and cl,0Fh
     mov dl,cl
@@ -882,15 +879,15 @@ cdBulkOut:
     jmp cdDescrNext
 
 cdBulkIn:
-    cmp si,2
-    jae cdDescrNext
-;
     inc si
     and cl,8Fh
     mov dh,cl
     mov bp,es:[di].ued_maxsize
     
 cdDescrNext:    
+    cmp si,2
+    je cdDescrDone
+;
     movzx cx,es:[di].ucd_len
     add di,cx
     cmp di,es:ucd_size
@@ -967,8 +964,6 @@ cdNoRecover:
     pop ds
 ;
     mov ds:sd_port,es
-    mov es:uds_port_offset,si
-;
     mov dx,es
     mov ds,dx
     mov dword ptr ds:cd_create_proc,OFFSET OpenPort
@@ -1006,7 +1001,6 @@ usb_attach  Proc far
     push es
     pushad
 ;    
-    int 3
     push ax
     mov eax,1000h
     AllocateSmallGlobalMem
@@ -1062,7 +1056,6 @@ uaDescrLoop:
     cmp cl,4
     jne uaDescrNext
 ; 
-    mov dx,si
     call CreateDevice
     jmp uaDone
 
@@ -1225,8 +1218,8 @@ Init    Proc far
     mov ds,eax
     mov ds:sd_thread,0
     mov ds:sd_port,0
-    mov es:sd_dead,0
-    InitSpinlock es:sd_spinlock
+    mov ds:sd_dead,0
+    InitSpinlock ds:sd_spinlock
 ;
     mov eax,cs
     mov ds,eax
