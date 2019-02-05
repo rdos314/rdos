@@ -481,6 +481,9 @@ bignum_data_sel     EQU 0BE8h
 hid_card_code_sel   EQU 0BF0h
 hid_card_data_sel   EQU 0BF8h
 
+usb_bus_code_sel    EQU 0C00h
+usb_bus_data_sel    EQU 0C08h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 
