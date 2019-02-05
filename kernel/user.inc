@@ -2635,6 +2635,12 @@ GetUsbComPar       MACRO
         UserGate get_usb_com_par_nr
                                                 ENDM
 
+;   IN AL      Port #
+;   NC         OK
+GetUsbBusPar       MACRO
+        UserGate get_usb_bus_par_nr
+                                                ENDM
+
 ;       IN  AL          Port #
 ;       IN  AH          # of data bits
 ;       IN  BL          # of stop bits

@@ -887,6 +887,8 @@
 
 #define usergate_poll_handle 0x000002BB
 
+#define usergate_get_usb_bus_par 0x000002BC
+
 
 
 #ifdef __FLAT__
@@ -1779,6 +1781,8 @@
 
 #define CallGate_poll_handle 0x55 0x67 0x9a 187 2 0 0 3 0 0x5d
 
+#define CallGate_get_usb_bus_par 0x55 0x67 0x9a 188 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2668,5 +2672,7 @@
 #define CallGate_has_handle_exception 0x3e 0x67 0x9a 186 2 0 0 3 0
 
 #define CallGate_poll_handle 0x3e 0x67 0x9a 187 2 0 0 3 0
+
+#define CallGate_get_usb_bus_par 0x3e 0x67 0x9a 188 2 0 0 3 0
 
 #endif

@@ -363,6 +363,7 @@ int RDOSAPI RdosGetMaxComPort();
 int RDOSAPI RdosIsComAvailable(char ID); 
 int RDOSAPI RdosGetStdComPar(char ID, int *Irq, int *Io, int *Baud); 
 int RDOSAPI RdosGetUsbComPar(char ID, int *Type); 
+int RDOSAPI RdosGetUsbBusPar(char ID); 
 int RDOSAPI RdosOpenCom(char ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
 void RDOSAPI RdosCloseCom(int Handle);
 void RDOSAPI RdosFlushCom(int Handle);

@@ -874,6 +874,17 @@
     parm [al] [esi] \
     value [eax];
 
+#pragma aux RdosGetUsbBusPar = \
+    CallGate_get_usb_bus_par  \
+    "jc fail" \
+    "mov eax,1" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    parm [al] \
+    value [eax];
+
 #pragma aux RdosOpenCom = \
     CallGate_open_com  \
     ValidateHandle  \

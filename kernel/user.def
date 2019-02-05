@@ -887,4 +887,6 @@ has_handle_exception_nr          = 698
 
 poll_handle_nr                   = 699
 
+get_usb_bus_par_nr               = 700
+
 usergate_entries                 = 750

@@ -1158,47 +1158,46 @@ usb_detach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           test_thread
+;   NAME:           GetComPar
 ;
-;           DESCRIPTION:    test thread
+;   DESCRIPTION:    Get com param
 ;
-;       PARAMETERS:     
+;   PARAMETERS:     AL      Port #
 ;
-;           RETURNS:        
+;   RETURNS:        NC      OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_thread:
-    int 3
-    mov bx,ds:cd_controller
-    mov ax,ds:cd_device
-    mov dl,ds:uds_bulk_in
-    OpenUsbPipe
-    mov ds:uds_in_handle,bx
-;
-    CreateUsbReq
-    mov ds:uds_in_req,bx    
-;    
-    mov cx,ds:uds_in_size
-    xor ax,ax
-    AddReadUsbDataReq
-    mov ds:uds_in_buffer,es
-;
-    mov bx,ds:cd_controller
-    mov ax,ds:cd_device
-    mov dl,ds:uds_bulk_out
-    OpenUsbPipe    
-    mov ds:uds_out_handle,bx
-;
-    CreateUsbReq
-    mov ds:uds_out_req,bx
-;    
-    mov cx,ds:uds_out_size
-    mov ax,1
-    AddWriteUsbDataReq
-    mov ds:uds_out_buffer,es
-;
+get_com_par_name    DB 'Get USB Bus Param', 0
 
+get_com_par Proc far
+    push ds
+    push es
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:sd_port
+    or bx,bx
+    jz gcpFail
+;
+    mov es,bx
+    cmp ax,es:uds_port_nr
+    je gcpFound
+
+gcpFail:
+    stc
+    jmp gcpDone
+
+gcpFound:
+    clc
+
+gcpDone:
+    pop bx
+    pop es
+    pop ds
+    ret
+get_com_par     ENDP    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1230,6 +1229,12 @@ Init    Proc far
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    mov esi,OFFSET get_com_par
+    mov edi,OFFSET get_com_par_name
+    xor dx,dx
+    mov ax,get_usb_bus_par_nr
+    RegisterBimodalUserGate
     clc
     ret
 Init    Endp

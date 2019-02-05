@@ -211,7 +211,12 @@ int TComCommand::Execute(char *param)
                     }
                 }
                 else
-                    sprintf(txt, "Com%d: Unknown type\r\n", i + 1);
+                {
+                    if (RdosGetUsbBusPar(i))
+                        sprintf(txt, "Com%d: USB serial bus\r\n", i + 1);
+                    else
+                        sprintf(txt, "Com%d: Unknown type\r\n", i + 1);
+                 }
             }
         }
         Write(txt);
