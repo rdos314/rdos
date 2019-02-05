@@ -53,6 +53,7 @@ DESCR_FLAG_FULL    equ 2
 
 SET_ADDRESS        equ 5
 GET_DESCRIPTOR     equ 6
+SET_CONFIGURATION  equ 9
 
     org 0
 
@@ -606,6 +607,24 @@ NotGetStringDescr:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; HandleSetConfig
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSetConfig:
+    btfsc b_req_type, 7
+    return
+;
+    movlw 1
+    cpfseq b_val_low
+    return
+;
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; HandleControlSetup
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -633,6 +652,14 @@ NotSetAddr:
     return
 
 NotGetDescr:
+    movlw SET_CONFIGURATION
+    cpfseq b_req
+    goto NotSetConf
+;
+    call HandleSetConfig
+    return
+
+NotSetConf:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
