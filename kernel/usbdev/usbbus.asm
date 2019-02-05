@@ -55,7 +55,6 @@ ups_device          DW ?
 ups_control_wait    DW ?
 ups_control_pipe    DW ?
 ups_index           DW ?
-ups_device_type     DW ?
 ups_divisor         DD ?
 ups_timer_active    DB ?
 ups_data_bits       DB ?
@@ -71,7 +70,6 @@ uds_base_struc      com_device_struc <>
 
 uds_section         section_typ <>
 uds_port_sel        DW ?
-uds_device_type     DW ?
 uds_in_size         DW ?
 uds_out_size        DW ?
 uds_interface       DB ?
@@ -105,6 +103,228 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
     
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitCom
+;
+;           description:    Init com port
+;
+;           PARAMETERS:         DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitCom   Proc near
+    ret
+InitCom   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           open_com
+;
+;           description:    Open a serial port
+;
+;           PARAMETERS:         DS      Port selector
+;                       ES          Device selector
+;                           AH          # of data bits
+;                           BL          # of stop bits
+;                           BH          parity
+;                           ECX         baudrate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_com    Proc far
+    push ds
+    pushad
+;
+    mov ds:ups_timer_active,0
+    mov ds:ups_data_bits,ah
+    mov ds:ups_stop_bits,bl
+    mov ds:ups_parity,bh
+;
+    CreateWait
+    mov ds:ups_control_wait,bx
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;    
+    call InitCom
+;    
+    mov ds:ups_device_sel,es
+    mov dx,ds
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:uds_section
+    mov ds:uds_port_sel,dx
+    LeaveSection ds:uds_section       
+;
+    mov ax,SEG data
+    mov ds,ax    
+    mov bx,ds:sd_thread
+    Signal    
+    clc
+;
+    popad
+    pop ds
+    ret
+open_com Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           close_com
+;
+;           description:    Close serial port
+;
+;           PARAMETERS:         DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_com   Proc far
+    push ds
+    push bx
+;
+    int 3
+;
+    pop bx
+    pop ds    
+    ret
+close_com   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ResetPort
+;
+;           DESCRIPTION:    Reset com
+;
+;           PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_port       PROC far
+    push ds
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    ResetUsbPipe
+    CloseUsbPipe
+;
+    pop di
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    ret
+reset_port Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_send
+;
+;           description:    Start send
+;
+;           PARAMETERS:         DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_send      PROC far
+    push es
+    push ax
+;    
+    mov ax,ds:ups_device_sel
+    or ax,ax
+    jz ssDone
+;    
+    mov es,ax
+    test es:uds_flag,FLAG_UDS_DISCONNECT
+    jz ssOk
+;
+    mov ds:send_count,0
+    jmp ssDone
+
+ssOk:    
+    call StartSendTimer
+
+ssDone:
+    pop ax
+    pop es    
+    ret
+start_send      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       CreatePort
+;
+;           description:    Create port selector
+;
+;           RETURNS:        ES      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+error_req	Proc near
+    ret
+error_req	Endp
+
+port_tab:
+pt00 DD OFFSET open_com,               SEG code
+pt01 DD OFFSET close_com,              SEG code
+pt02 DD OFFSET error_req,              SEG code
+pt03 DD OFFSET error_req,              SEG code
+pt04 DD OFFSET error_req,              SEG code
+pt05 DD OFFSET error_req,              SEG code
+pt06 DD OFFSET error_req,              SEG code
+pt07 DD OFFSET error_req,              SEG code
+pt08 DD OFFSET error_req,              SEG code
+pt09 DD OFFSET error_req,              SEG code
+pt10 DD OFFSET error_req,              SEG code
+pt11 DD OFFSET start_send,             SEG code
+pt12 DD OFFSET reset_port,             SEG code
+
+CreatePort  Proc far
+    pushad
+;
+    mov eax,SIZE usbcom_port_struc
+    AllocateSmallGlobalMem
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+;
+    mov si,OFFSET port_tab
+    xor di,di
+    mov cx,2 * 13
+    rep movs dword ptr es:[di],cs:[si]
+;
+    movzx ax,ds:uds_interface
+    mov es:ups_index,ax    
+    mov ax,ds:cd_controller
+    mov es:ups_controller,ax
+    mov ax,ds:cd_device
+    mov es:ups_device,ax
+;    
+    popad
+    retf32
+CreatePort  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -220,6 +440,8 @@ ReInit    Proc near
     mov bx,ds:ups_control_wait
     movzx ecx,bx
     AddWaitForUsbPipe
+;
+    call InitCom
 ;
     pop di
     pop cx
