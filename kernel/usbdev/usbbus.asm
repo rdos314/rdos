@@ -35,7 +35,12 @@ include usb.inc
 INCLUDE ..\os\protseg.def
 include ..\os\com.inc
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 FLAG_UDS_DISCONNECT = 2
 FLAG_UDS_REINIT = 4
@@ -99,6 +104,443 @@ data	ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       OpenPort
+;
+;           description:    Open port selector
+;
+;           RETURNS:        ES      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenPort Proc far
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    mov dl,ds:uds_bulk_in
+    OpenUsbPipe
+    mov ds:uds_in_handle,bx
+;
+    CreateUsbReq
+    mov ds:uds_in_req,bx    
+;    
+    mov cx,ds:uds_in_size
+    xor ax,ax
+    AddReadUsbDataReq
+    mov ds:uds_in_buffer,es
+;
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    mov dl,ds:uds_bulk_out
+    OpenUsbPipe    
+    mov ds:uds_out_handle,bx
+;
+    CreateUsbReq
+    mov ds:uds_out_req,bx
+;    
+    mov cx,ds:uds_out_size
+    mov ax,1
+    AddWriteUsbDataReq
+    mov ds:uds_out_buffer,es
+    ret
+OpenPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ClosePort
+;
+;           DESCRIPTION:    Close port
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePort    Proc near
+    mov ax,50
+    WaitMilliSec
+;    
+    xor ax,ax
+    mov es,ax
+;    
+    mov bx,ds:uds_in_req
+    CloseUsbReq
+    mov ds:uds_in_req,0
+;
+    mov bx,ds:uds_in_handle
+    CloseUsbPipe    
+    mov ds:uds_in_handle,0
+;
+    mov bx,ds:uds_out_req
+    CloseUsbReq
+    mov ds:uds_out_req,0
+;
+    mov bx,ds:uds_out_handle
+    CloseUsbPipe    
+    mov ds:uds_out_handle,0
+    mov ds:uds_in_buffer,0
+    mov ds:uds_out_buffer,0
+    ret
+ClosePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReInit
+;
+;           DESCRIPTION:    Reinit port
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReInit    Proc near
+    push ds
+    push es
+    push cx
+    push di
+;    
+    mov ax,ds
+    mov es,ax
+    mov ds,es:uds_port_sel
+;
+    mov bx,es:cd_controller
+    mov ax,es:cd_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    CreateWait
+    mov ds:ups_control_wait,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    pop di
+    pop cx
+    pop es
+    pop ds
+    ret
+ReInit  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendSignal
+;
+;           description:    Sends signal to USB-handler thread
+;
+;       Parameters:     CX      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendSignal  Proc far
+    push ds
+    push ax
+    push bx
+;    
+    verw cx
+    jnz ssiDone
+;    
+    mov ds,cx
+    mov ds:ups_timer_active,0
+;    
+    mov ax,SEG data
+    mov ds,ax    
+    mov bx,ds:sd_thread
+    Signal    
+
+ssiDone:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+SendSignal  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartSendTimer
+;
+;           description:    Starts send timeout
+;
+;       Parameters:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartSendTimer Proc near
+    push es
+    pushad
+;       
+    mov al,1    
+    xchg al,ds:ups_timer_active
+    or al,al
+    jnz sstDone
+;
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+;       
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET SendSignal
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+
+sstDone:
+    popad
+    pop es
+    ret
+StartSendTimer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PollRead
+;
+;           DESCRIPTION:    Poll input-buffer
+;
+;       PARAMETERS:     FS      SEG data
+;               DS      Function sel
+;               SI      Buffer offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollRead    Proc near
+    push ds
+    push fs
+    mov fs,ds:uds_in_buffer
+    mov ds,ds:uds_port_sel
+    mov es,ds:rec_buf
+
+prGetLoop:
+    lods byte ptr fs:[si]
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:rec_count
+    cmp dx,ds:rec_size
+    je prSignal
+;       
+    inc dx
+    mov ds:rec_count,dx
+    mov bx,ds:rec_tail
+    mov es:[bx],al
+    inc bx
+    cmp bx,ds:rec_size
+    jnz prWrapOk
+;
+    xor bx,bx
+    
+prWrapOk:
+    mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
+    loop prGetLoop
+    jmp prSigRel
+
+prSignal:
+    ReleaseSpinlock ds:com_spinlock
+
+prSigRel:
+    xor bx,bx
+    xchg bx,ds:avail_obj
+    or bx,bx
+    jz prDone
+;
+    mov es,bx
+    SignalWait
+    
+prDone:
+    pop fs
+    pop ds
+    ret
+PollRead    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PollWrite
+;
+;           DESCRIPTION:    Poll output-buffer
+;
+;       PARAMETERS:     FS      SEG data
+;               DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollWrite    Proc near
+    push ds
+    push fs
+;   
+    xor cx,cx
+    mov bp,ds:uds_out_size
+    mov ax,ds:uds_out_buffer
+    or ax,ax
+    jz pwDone
+;    
+    mov es,ax
+    mov ds,ds:uds_port_sel
+    mov al,ds:ups_timer_active
+    or al,al
+    jnz pwDone
+;    
+    xor di,di
+    mov fs,ds:send_buf
+    mov dx,ds:send_count
+    or dx,dx
+    jz pwDone
+
+pwLoop:
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:send_count
+    or dx,dx
+    jz pwSend
+;       
+    dec dx
+    mov ds:send_count,dx
+    mov bx,ds:send_head
+    mov al,fs:[bx]
+    stosb
+    inc bx
+    cmp bx,ds:send_size
+    jnz pwWrapOk
+;       
+    xor bx,bx
+
+pwWrapOk:
+    mov ds:send_head,bx
+    ReleaseSpinlock ds:com_spinlock
+;
+    inc cx
+    cmp cx,bp
+    jb pwLoop
+    jmp pwSendRel
+
+pwSend:
+    ReleaseSpinlock ds:com_spinlock
+
+pwSendRel:
+    mov ax,ds:send_size    
+    or ax,ax
+    jz pwDone
+;
+    call StartSendTimer    
+
+pwDone:
+    pop fs
+    pop ds    
+    ret
+PollWrite   Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleDevice
+;
+;           DESCRIPTION:    Handle device
+;
+;       PARAMETERS:     FS      SEG data
+;               DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleDevice    Proc near
+    push ds
+;
+    test ds:uds_flag,FLAG_UDS_DISCONNECT
+    jnz hdDone
+
+hdConn:
+    mov ax,ds:uds_port_sel
+    or ax,ax
+    jz hdClosed
+
+hdOpen:
+    mov bx,ds:uds_in_req
+    or bx,bx
+    jnz hdIsOpen
+;
+    call OpenPort    
+;
+    test ds:uds_flag,FLAG_UDS_REINIT
+    jz hdIsOpen    
+;
+    call ReInit
+    and ds:uds_flag,NOT FLAG_UDS_REINIT
+
+hdIsOpen:    
+    mov bx,ds:uds_in_req
+    IsUsbReqStarted
+    jnc hdOpenOk
+;
+    StartUsbReq
+
+hdOpenOk:    
+    mov bx,ds:uds_in_req
+    IsUsbReqReady
+    jc hdReadDone
+;
+    GetUsbReqData
+    jc hdReadRestart
+;    
+    xor si,si
+    or cx,cx
+    jz hdReadRestart
+;    
+    call PollRead
+
+hdReadRestart:
+    mov bx,ds:uds_in_req
+    StartUsbReq
+
+hdReadDone:
+    mov bx,ds:uds_out_req
+    IsUsbReqStarted
+    jc hdCheckWrite
+;    
+    IsUsbReqReady
+    jc hdDone
+;
+    push ds
+    mov ds,ds:uds_port_sel
+    mov bx,ds:send_wait
+    pop ds
+    or bx,bx
+    jz hdCheckWrite
+;    
+    Signal
+
+hdCheckWrite:
+    call PollWrite
+    or cx,cx
+    jz hdDone
+;
+    mov bx,ds:uds_out_req
+    StartUsbReq
+    jmp hdDone
+
+hdClosed:
+    and ds:uds_flag,NOT FLAG_UDS_REINIT
+;
+    mov bx,ds:uds_in_req
+    or bx,bx
+    jz hdDone
+
+hdIsClosed:
+    call ClosePort
+    
+hdDone:
+    xor ax,ax
+    mov es,ax
+    pop ds
+    ret
+HandleDevice    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -128,29 +570,13 @@ utLoop:
     push cx
     push si
 ;
-;    EnterSection ds:uds_section
-;    call HandleDevice
-;    LeaveSection ds:uds_section
+    EnterSection ds:uds_section
+    call HandleDevice
+    LeaveSection ds:uds_section
 ;
     pop si
     pop cx
     jmp utLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       OpenPort
-;
-;           description:    Open port selector
-;
-;           RETURNS:        ES      Port selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenPort Proc far
-    int 3
-    ret
-OpenPort Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -341,45 +767,6 @@ CreateDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CloseDevice
-;
-;           DESCRIPTION:    Close device
-;
-;       PARAMETERS:     DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseDevice    Proc near
-    mov ax,50
-    WaitMilliSec
-;    
-    xor ax,ax
-    mov es,ax
-;    
-    mov bx,ds:uds_in_req
-    CloseUsbReq
-    mov ds:uds_in_req,0
-;
-    mov bx,ds:uds_in_handle
-    CloseUsbPipe    
-    mov ds:uds_in_handle,0
-;
-    mov bx,ds:uds_out_req
-    CloseUsbReq
-    mov ds:uds_out_req,0
-;
-    mov bx,ds:uds_out_handle
-    CloseUsbPipe    
-    mov ds:uds_out_handle,0
-    mov ds:uds_in_buffer,0
-    mov ds:uds_out_buffer,0
-    ret
-CloseDevice   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:       usb_attach
 ;
 ;           description:    USB attach callback
@@ -516,7 +903,7 @@ usb_detach  Proc far
 ;
     mov ax,es
     mov ds,ax
-    call CloseDevice
+    call ClosePort
 ;
     mov ax,ds:uds_port_sel
     or ax,ax
