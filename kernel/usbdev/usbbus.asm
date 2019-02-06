@@ -45,6 +45,12 @@ ENDIF
 FLAG_UDS_DISCONNECT = 2
 FLAG_UDS_REINIT = 4
 
+SET_BAUD      = 1
+SET_DATA_BITS = 2
+SET_PARITY    = 3
+START_SERIAL  = 4
+STOP_SERIAL   = 5
+
 usbcom_port_struc       STRUC
 
 ups_base_struc  com_port_struc <>
@@ -55,7 +61,7 @@ ups_device          DW ?
 ups_control_wait    DW ?
 ups_control_pipe    DW ?
 ups_index           DW ?
-ups_divisor         DD ?
+ups_divisor         DW ?
 ups_timer_active    DB ?
 ups_data_bits       DB ?
 ups_stop_bits       DB ?
@@ -102,7 +108,6 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -115,8 +120,149 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitCom   Proc near
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,0
+;
+    mov es:usd_req,SET_DATA_BITS
+    movzx ax,ds:ups_data_bits
+    mov es:usd_value,ax
+    xor di,di
+;
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    jc icDone
+;
+    mov es:usd_req,SET_PARITY
+    movzx ax,ds:ups_parity
+    mov es:usd_value,ax
+    xor di,di
+;
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    jc icDone
+;
+    mov es:usd_req,SET_BAUD
+    mov ax,ds:ups_divisor
+    mov es:usd_value,ax
+    xor di,di
+;
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    jc icDone
+;
+    mov es:usd_req,START_SERIAL
+    mov es:usd_value,0
+    xor di,di
+;
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+
+icDone:
+    pushf
+    FreeMem
+    popf
+;
+    popad
+    pop es
     ret
 InitCom   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetBaudDivisor
+;
+;           description:    Get baud-rate divisor
+;
+;           PARAMETERS:     DS      Port selector
+;                           ECX     baudrate
+;
+;       RETURNS:            AX      Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBaudDivisor Proc near
+    push ecx
+    push edx
+;    
+    cmp ecx,300
+    jb gbdFail
+;
+    xor edx,edx
+    mov eax,48000000
+    div ecx
+    test eax,0FFFF0000h
+    jnz gbdFail
+;
+    or ax,ax
+    jz gbdFail
+;
+    dec ax
+    clc
+    jmp gbdDone
+
+gbdFail:
+    stc
+
+gbdDone:    
+    pop edx
+    pop ecx    
+    ret
+GetBaudDivisor Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -142,6 +288,11 @@ open_com    Proc far
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
+;
+    call GetBaudDivisor
+    jc ocDone
+;
+    mov ds:ups_divisor,ax
 ;
     CreateWait
     mov ds:ups_control_wait,bx
@@ -172,7 +323,8 @@ open_com    Proc far
     mov bx,ds:sd_thread
     Signal    
     clc
-;
+
+ocDone:
     popad
     pop ds
     ret
@@ -193,8 +345,59 @@ open_com Endp
 close_com   Proc far
     push ds
     push bx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,STOP_SERIAL
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,0
 ;
-    int 3
+    xor di,di
+;
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+;    
+    mov bx,ds:ups_control_wait
+    CloseWait
+;
+    mov bx,ds:ups_control_pipe
+    CloseUsbPipe    
+;    
+    mov ax,ds
+    mov bx,ds:ups_device_sel
+    or bx,bx
+    jz ccfNoDevice
+;
+    mov ds,bx    
+    EnterSection ds:uds_section
+    mov ds:uds_port_sel,0
+    LeaveSection ds:uds_section       
+
+ccfNoDevice:    
+    mov ds,ax
+    mov ds:ups_device_sel,0
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:sd_thread
+    Signal    
+;
+    mov ax,150
+    WaitMilliSec    
 ;
     pop bx
     pop ds    
