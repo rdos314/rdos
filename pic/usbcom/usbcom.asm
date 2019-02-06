@@ -750,13 +750,13 @@ HandleSetParity:
     return
 ;
     movlw 'n'
-    cpfseq b_req
+    cpfseq b_val_low
     goto NotLowerNone
     goto HandleParNone
 
 NotLowerNone:
     movlw 'N'
-    cpfseq b_req
+    cpfseq b_val_low
     goto NotUpperNone
 
 HandleParNone:
@@ -766,13 +766,13 @@ HandleParNone:
 
 NotUpperNone:
     movlw 'e'
-    cpfseq b_req
+    cpfseq b_val_low
     goto NotLowerEven
     goto HandleParEven
 
 NotLowerEven:
     movlw 'E'
-    cpfseq b_req
+    cpfseq b_val_low
     goto NotUpperEven
 
 HandleParEven:
@@ -782,13 +782,13 @@ HandleParEven:
 
 NotUpperEven:
     movlw 'o'
-    cpfseq b_req
+    cpfseq b_val_low
     goto NotLowerOdd
     goto HandleParOdd
 
 NotLowerOdd:
     movlw 'O'
-    cpfseq b_req
+    cpfseq b_val_low
     return
 
 HandleParOdd:
@@ -842,6 +842,9 @@ StartSerial:
     bsf RCSTA, CREN
     bsf TXSTA, TXEN
     bsf ser_state, SER_STATE_ACTIVE
+;
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -855,6 +858,9 @@ HandleStopSerial:
     return
 ;
     call InitSerial
+;
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -913,10 +919,10 @@ NotStopSerial:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleControlSetup:
-    btfsc b_req_type,6
+    btfsc b_req_type,5
     return
 ;
-    btfsc b_req_type,5
+    btfsc b_req_type,6
     goto HandleControlVendor
 ;
     movlw SET_ADDRESS

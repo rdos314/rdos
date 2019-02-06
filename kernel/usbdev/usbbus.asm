@@ -483,7 +483,7 @@ start_send      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-error_req	Proc near
+error_req	Proc far
     ret
 error_req	Endp
 
@@ -525,7 +525,7 @@ CreatePort  Proc far
     mov es:ups_device,ax
 ;    
     popad
-    retf32
+    ret
 CreatePort  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -684,7 +684,7 @@ ssiDone:
     pop bx
     pop ax
     pop ds
-    retf32
+    ret
 SendSignal  Endp
 
 
@@ -1169,7 +1169,7 @@ cdNoRecover:
     mov ds:sd_port,es
     mov dx,es
     mov ds,dx
-    mov dword ptr ds:cd_create_proc,OFFSET OpenPort
+    mov dword ptr ds:cd_create_proc,OFFSET CreatePort
     mov dword ptr ds:cd_create_proc+4,cs
 ;    
     movzx dx,al
