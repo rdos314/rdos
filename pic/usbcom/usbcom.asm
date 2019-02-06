@@ -4,6 +4,21 @@
  config BOREN=SBORDIS, BORV=19, WDTEN=OFF, WDTPS=32768, HFOFST=ON, MCLRE=ON, STVREN=ON, LVP=OFF, BBSIZ=OFF, XINST=OFF
  config CP0=OFF, CP1=OFF, CPB=OFF, CPD=OFF, WRT0=OFF, WRT1=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF, EBTR0=OFF, EBTR1=OFF, EBTRB=OFF
 
+ser_ram            equ 0x100
+ser_buf_page       equ 1
+
+rx_count           equ 0x100
+rx_in_pos          equ 0x101
+rx_out_pos         equ 0x102
+
+tx_count           equ 0x103
+tx_in_pos          equ 0x104
+tx_out_pos         equ 0x105
+
+ser_buf_size       equ 0x78
+rx_buf             equ 0x110
+tx_buf             equ 0x188
+
 usb_ram            equ 0x200
 
 usb_buf_page       equ 2
@@ -47,6 +62,11 @@ usb_ser_in         equ 0x270
 usb_bus_out        equ 0x2B0
 usb_bus_in         equ 0x2D0
 
+SER_STATE_ACTIVE   equ 0
+SER_STATE_ODD      equ 1
+SER_STATE_EVEN     equ 2
+SER_STATE_PAR9     equ 3
+
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
 DESCR_FLAG_FULL    equ 2
@@ -54,6 +74,12 @@ DESCR_FLAG_FULL    equ 2
 SET_ADDRESS        equ 5
 GET_DESCRIPTOR     equ 6
 SET_CONFIGURATION  equ 9
+
+SET_BAUD           equ 1
+SET_DATA_BITS      equ 2
+SET_PARITY         equ 3
+START_SERIAL       equ 4
+STOP_SERIAL        equ 5
 
     org 0
 
@@ -99,6 +125,9 @@ usb_flags     equ 0x76
 usb_stat      equ 0x77
 usb_ep        equ 0x78
 usb_adr       equ 0x79
+
+ser_state     equ 0x7A
+ser_mask      equ 0x7C
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -157,6 +186,29 @@ InitUsb:
     movlb 0
     clrf usb_flags
     clrf usb_adr
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; InitSerial
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitSerial:
+    movlb ser_buf_page
+    clrf rx_count
+    clrf rx_in_pos 
+    clrf rx_out_pos
+    clrf tx_count
+    clrf tx_in_pos
+    clrf tx_out_pos
+    movlb 0
+    clrf ser_state
+    bsf ser_state, SER_STATE_PAR9
+    movlw 0xFF
+    movwf ser_mask
+    clrf RCSTA
+    clrf TXSTA
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -625,6 +677,237 @@ HandleSetConfig:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; HandleSetBaud
+;
+;  Value = ser baud
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSetBaud:
+    btfsc b_req_type, 7
+    return
+;
+    bsf BAUDCON, BRG16
+    bsf TXSTA, BRGH
+;
+    movf b_val_low, W
+    movwf SPBRG
+;
+    movf b_val_high, W
+    movwf SPBRGH
+;
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSetDataBits
+;
+;  Value = ser data bits (7 or 8)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSetDataBits:
+    btfsc b_req_type, 7
+    return
+;
+    movlw 7
+    cpfseq b_val_low
+    goto NotData7
+
+Data7:
+    movlw 0x7F
+    movwf ser_mask
+    bcf ser_state, SER_STATE_PAR9
+    goto HandleBitsOk
+
+NotData7:
+    movlw 8
+    cpfseq b_val_low
+    return
+
+Data8:
+    movlw 0xFF
+    movwf ser_mask
+    bsf ser_state, SER_STATE_PAR9
+
+HandleBitsOk:
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSetParity
+;
+;  Value = ser parity ('n', 'e', 'o')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSetParity:
+    btfsc b_req_type, 7
+    return
+;
+    movlw 'n'
+    cpfseq b_req
+    goto NotLowerNone
+    goto HandleParNone
+
+NotLowerNone:
+    movlw 'N'
+    cpfseq b_req
+    goto NotUpperNone
+
+HandleParNone:
+    bcf ser_state, SER_STATE_ODD
+    bcf ser_state, SER_STATE_EVEN
+    goto HandleParOk
+
+NotUpperNone:
+    movlw 'e'
+    cpfseq b_req
+    goto NotLowerEven
+    goto HandleParEven
+
+NotLowerEven:
+    movlw 'E'
+    cpfseq b_req
+    goto NotUpperEven
+
+HandleParEven:
+    bcf ser_state, SER_STATE_ODD
+    bsf ser_state, SER_STATE_EVEN
+    goto HandleParOk
+
+NotUpperEven:
+    movlw 'o'
+    cpfseq b_req
+    goto NotLowerOdd
+    goto HandleParOdd
+
+NotLowerOdd:
+    movlw 'O'
+    cpfseq b_req
+    return
+
+HandleParOdd:
+    bsf ser_state, SER_STATE_ODD
+    bcf ser_state, SER_STATE_EVEN
+
+HandleParOk:
+    call SendEmpty
+    bsf usb_flags, USB_HANDLED
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleStartSerial
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleStartSerial:
+    btfsc b_req_type, 7
+    return
+;
+    btfsc ser_state, SER_STATE_PAR9
+    goto StartData8
+
+StartData7:
+    btfsc ser_state, SER_STATE_ODD
+    goto Start8
+;
+    btfss ser_state, SER_STATE_EVEN
+    return
+    goto Start8
+
+StartData8:
+    btfsc ser_state, SER_STATE_ODD
+    goto Start9
+;
+    btfsc ser_state, SER_STATE_EVEN
+    goto Start9
+
+Start8:
+    bcf RCSTA, RX9
+    bcf TXSTA, TX9
+    goto StartSerial
+
+Start9:
+    bsf RCSTA, RX9
+    bsf TXSTA, TX9
+
+StartSerial:
+    bsf RCSTA, SPEN
+    bsf RCSTA, CREN
+    bsf TXSTA, TXEN
+    bsf ser_state, SER_STATE_ACTIVE
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleStopSerial
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleStopSerial:
+    btfsc b_req_type, 7
+    return
+;
+    call InitSerial
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleControlVendor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleControlVendor:
+    movlw SET_BAUD
+    cpfseq b_req
+    goto NotSetBaud
+;
+    call HandleSetBaud
+    return
+
+NotSetBaud:
+    movlw SET_DATA_BITS
+    cpfseq b_req
+    goto NotSetDataBits
+;
+    call HandleSetDataBits
+    return
+
+NotSetDataBits:
+    movlw SET_PARITY
+    cpfseq b_req
+    goto NotSetParity
+;
+    call HandleSetParity
+    return
+
+NotSetParity:
+    movlw START_SERIAL
+    cpfseq b_req
+    goto NotStartSerial
+;
+    call HandleStartSerial
+    return
+
+NotStartSerial:
+    movlw STOP_SERIAL
+    cpfseq b_req
+    goto NotStopSerial
+;
+    call HandleStopSerial
+    return
+
+NotStopSerial:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; HandleControlSetup
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -634,7 +917,7 @@ HandleControlSetup:
     return
 ;
     btfsc b_req_type,5
-    return
+    goto HandleControlVendor
 ;
     movlw SET_ADDRESS
     cpfseq b_req
@@ -847,6 +1130,7 @@ ProgStart:
    
 ;
     call InitUsb
+    call InitSerial
     
 Loop:
     movlb 0xF
