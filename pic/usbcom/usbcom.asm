@@ -1077,7 +1077,7 @@ BufferToUsb:
 ;
     lfsr 0,rx_buf
     movf rx_in_pos, W
-    addwf FSR0, F
+    addwf FSR0L, F
     lfsr 1,usb_ser_in
 ;
     movlw SER_USB_SIZE
@@ -1156,7 +1156,7 @@ utbProcess:
     lfsr 0,usb_ser_out
     lfsr 1,tx_buf
     movf tx_out_pos, W
-    addwf FSR1, F
+    addwf FSR1L, F
 
 utbLoop:
     movf POSTINC0, W
@@ -1363,6 +1363,32 @@ GetRecPar8:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; SetSendParity
+;
+; Set send parity
+;
+; IN:  temp = RCREG
+; IN:  W parity
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSendParity:
+    btfss ser_state, SER_STATE_PAR9
+    goto SetSendPar8
+
+SetSendPar9:
+    bcf TXSTA, TX9D
+    btfsc parity, 0
+    bsf TXSTA, TX9D
+    return
+
+SetSendPar8:
+    btfsc parity, 0
+    bsf temp, 7
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; HandleSerReceive
 ;
 ; Handle serial receive
@@ -1384,12 +1410,12 @@ HandleSerReceive:
 SerRecSpace:
     movlb 0
     btfsc ser_state, SER_STATE_ODD
-    goto CheckOdd
+    goto SerRecOdd
 ;
     btfss ser_state, SER_STATE_EVEN
     goto SerRecParOk
 
-CheckEven:
+SerRecEven:
     movf temp, W
     call GetSetBits
     call GetRecParity
@@ -1399,7 +1425,7 @@ CheckEven:
 ;
     goto SerRecParOk
 
-CheckOdd:
+SerRecOdd:
     movf temp, W
     call GetSetBits
     call GetRecParity
@@ -1419,6 +1445,53 @@ SerRecParOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleSerSend:
+    movlb ser_buf_page
+    movf tx_count, W
+    btfsc STATUS, Z
+    return
+;
+    lfsr 0,tx_buf
+    movf tx_in_pos, W
+    addwf FSR0L, F
+    movf INDF0, W
+;
+    movlb 0
+    andwf ser_mask, W
+    movwf temp
+    btfsc ser_state, SER_STATE_ODD
+    goto SendOdd
+;
+    btfss ser_state, SER_STATE_EVEN
+    goto SerSendParOk
+
+SendEven:
+    movf temp, W
+    call GetSetBits
+    call SetSendParity
+    goto SerSendParOk
+
+SendOdd:
+    movf temp, W
+    call GetSetBits
+    movlw 1
+    xorwf parity,F 
+    call SetSendParity
+
+SerSendParOk:
+    movf temp, W
+    movwf TXREG
+;
+    movlb ser_buf_page
+    incf tx_in_pos, F
+    movlw SER_COM_SIZE
+    cpfseq tx_in_pos
+    goto hssNext
+;
+    clrf tx_in_pos
+
+hssNext:
+    decf tx_count, F
+    movlb 0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
