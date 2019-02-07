@@ -540,7 +540,6 @@ CreatePort  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort Proc far
-    int 3
     mov bx,ds:cd_controller
     mov ax,ds:cd_device
     mov dl,ds:uds_bulk_in

@@ -4,6 +4,9 @@
  config BOREN=SBORDIS, BORV=19, WDTEN=OFF, WDTPS=32768, HFOFST=ON, MCLRE=ON, STVREN=ON, LVP=OFF, BBSIZ=OFF, XINST=OFF
  config CP0=OFF, CP1=OFF, CPB=OFF, CPD=OFF, WRT0=OFF, WRT1=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF, EBTR0=OFF, EBTR1=OFF, EBTRB=OFF
 
+SER_COM_SIZE       equ 0x78
+SER_USB_SIZE       equ 0x40
+
 ser_ram            equ 0x100
 ser_buf_page       equ 1
 
@@ -15,7 +18,10 @@ tx_count           equ 0x103
 tx_in_pos          equ 0x104
 tx_out_pos         equ 0x105
 
-ser_buf_size       equ 0x78
+ser_curr_count     equ 0x106
+ser_rem_count      equ 0x107
+ser_temp           equ 0x108
+
 rx_buf             equ 0x110
 tx_buf             equ 0x188
 
@@ -66,6 +72,8 @@ SER_STATE_ACTIVE   equ 0
 SER_STATE_ODD      equ 1
 SER_STATE_EVEN     equ 2
 SER_STATE_PAR9     equ 3
+SER_STATE_IN_BUSY  equ 4
+SER_STATE_OUT_BUSY equ 5
 
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
@@ -128,6 +136,7 @@ usb_adr       equ 0x79
 
 ser_state     equ 0x7A
 ser_mask      equ 0x7C
+parity        equ 0x7D
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -264,7 +273,7 @@ HandleUsbReset:
     movlw 0x8
     movwf control_in_stat
 ;
-    movlw 0x40
+    movlw SER_USB_SIZE
     movwf ser_out_size
     movlw low usb_ser_out
     movwf ser_out_low
@@ -273,13 +282,13 @@ HandleUsbReset:
     movlw 0x88
     movwf ser_out_stat
 ;
-    movlw 0x40
+    movlw SER_USB_SIZE
     movwf ser_in_size
     movlw low usb_ser_in
     movwf ser_in_low
     movlw high usb_ser_in
     movwf ser_in_high
-    movlw 0x8
+    movlw 0x48
     movwf ser_in_stat
 ;
     movlw 0x20
@@ -1051,6 +1060,153 @@ RecControlSetup:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; BufferToUsb
+;
+; Move serial buffer to USB device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BufferToUsb:
+    movlb ser_buf_page
+    movf rx_count, W
+    btfsc STATUS, Z
+    goto btuRet
+;
+    lfsr 0,rx_buf
+    movf rx_in_pos, W
+    addwf FSR0, F
+    lfsr 1,usb_ser_in
+;
+    movlw SER_USB_SIZE
+    movwf ser_rem_count
+    clrf ser_curr_count
+
+btuLoop:
+    movf POSTINC0, W
+    movwf POSTINC1
+;
+    incf rx_in_pos, F
+    movlw SER_COM_SIZE
+    cpfseq rx_in_pos
+    goto btuNext
+;
+    lfsr 0,rx_buf
+    clrf rx_in_pos
+
+btuNext:        
+    incf ser_curr_count, F
+;
+    decfsz rx_count, F
+    goto btuMore
+    goto btuDone
+
+btuMore:
+    decfsz ser_rem_count, F
+    goto btuLoop
+
+btuDone:
+    movf ser_curr_count, W
+    movlb usb_buf_page
+    movwf ser_in_size
+;
+    movlw 0x40
+    xorwf ser_in_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf ser_in_stat
+;
+    movlb 0
+    bsf ser_state, SER_STATE_IN_BUSY
+    return
+
+btuRet:
+    movlb 0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UsbToBuffer
+;
+; Move USB data to com buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UsbToBuffer:
+    movlb ser_buf_page
+    movf tx_count, W
+    movwf ser_curr_count
+;
+    movlb usb_buf_page
+    movf ser_out_size, W
+    movlb ser_buf_page
+    movwf ser_rem_count
+    addwf ser_curr_count, F
+;
+    movlw SER_COM_SIZE
+    cpfsgt ser_curr_count
+    goto utbProcess
+;
+    movlb 0
+    return
+
+utbProcess:
+    lfsr 0,usb_ser_out
+    lfsr 1,tx_buf
+    movf tx_out_pos, W
+    addwf FSR1, F
+
+utbLoop:
+    movf POSTINC0, W
+    movwf POSTINC1
+;
+    incf tx_out_pos, F
+    movlw SER_COM_SIZE
+    cpfseq tx_out_pos
+    goto utbNext
+;
+    lfsr 1,tx_buf
+    clrf tx_out_pos
+
+utbNext:        
+    incf tx_count, F
+    decfsz ser_rem_count, F
+    goto utbLoop
+;
+    movlb usb_buf_page
+    movlw SER_USB_SIZE
+    movwf ser_out_size
+;
+    movlw 0x40
+    xorwf ser_out_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf ser_out_stat
+    movlb 0
+    bcf ser_state, SER_STATE_OUT_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSerialIn
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSerialIn:
+    bcf ser_state, SER_STATE_IN_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSerialOut
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSerialOut:
+    bsf ser_state, SER_STATE_OUT_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; HandleUsbComplete
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1083,23 +1239,181 @@ HandleUsbComplete:
     movf usb_stat, W
     andlw 0x38
     movwf usb_ep
-
-retry:
+;
     movlw 0
     cpfseq usb_ep
     goto HandleUsbNotControl
 ;
     call RecControlComplete
-    goto HandleUsbCompleteDone
-
-HandleUsbNotControl:
-
-HandleUsbCompleteDone:
+;
     movlb 0
     btfsc usb_flags, USB_HANDLED
     return
 ;
-    goto retry
+    movlb usb_buf_page
+    movlw 8
+    movwf control_out_size
+    movlw 0x84
+    movwf control_out_stat
+    movwf control_in_stat
+    movlb 0
+    return
+
+HandleUsbNotControl:
+    movlw 0
+    cpfseq usb_ep
+    goto HandleUsbNotSerial
+;
+    btfss usb_stat, DIR
+    goto HandleSerialOut
+    goto HandleSerialIn
+
+HandleUsbNotSerial:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetSetBits
+;
+; Get number of set bits
+;
+; IN:  W value
+; OUT: W set bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSetBits:
+    movwf temp
+    clrf parity
+;
+    btfss ser_state, SER_STATE_PAR9
+    goto GetBits8
+
+GetBits9:
+    btfsc temp,0
+    incf parity, F
+    btfsc temp,1
+    incf parity, F
+    btfsc temp,2
+    incf parity, F
+    btfsc temp,3
+    incf parity, F
+    btfsc temp,4
+    incf parity, F
+    btfsc temp,5
+    incf parity, F
+    btfsc temp,6
+    incf parity, F
+    btfsc temp,7
+    incf parity, F
+    movf parity, W
+    return
+
+GetBits8:
+    btfsc temp,0
+    incf parity, F
+    btfsc temp,1
+    incf parity, F
+    btfsc temp,2
+    incf parity, F
+    btfsc temp,3
+    incf parity, F
+    btfsc temp,4
+    incf parity, F
+    btfsc temp,5
+    incf parity, F
+    btfsc temp,6
+    incf parity, F
+    movf parity, W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetRecParity
+;
+; Get received parity
+;
+; IN:  temp = RCREG
+; OUT: W parity
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRecParity:
+    btfss ser_state, SER_STATE_PAR9
+    goto GetRecPar8
+
+GetRecPar9:
+    movlw 0
+    btfss RCSTA, RX9D
+    return
+;
+    movlw 1
+    return
+
+GetRecPar8:
+    movlw 0
+    btfss temp, 7
+    return
+;
+    movlw 1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSerReceive
+;
+; Handle serial receive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSerReceive:
+    movf RCREG, W
+    movwf temp
+;
+    movlb ser_buf_page
+    movlw SER_COM_SIZE
+    cpfseq rx_count
+    goto SerRecSpace
+;
+    movlb 0
+    return
+
+SerRecSpace:
+    movlb 0
+    btfsc ser_state, SER_STATE_ODD
+    goto CheckOdd
+;
+    btfss ser_state, SER_STATE_EVEN
+    goto SerRecParOk
+
+CheckEven:
+    call GetSetBits
+    call GetRecParity
+    xorwf parity, F
+    btfsc parity, 0
+    return
+;
+    goto SerRecParOk
+
+CheckOdd:
+    call GetSetBits
+    call GetRecParity
+    xorwf parity, F
+    btfss parity, 0
+    return
+
+SerRecParOk:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleSerSend
+;
+; Handle serial send
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSerSend:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1132,9 +1446,6 @@ ProgStart:
     movlw 0
     movwf temp
 ;
-    lfsr 1,0x250
-   
-;
     call InitUsb
     call InitSerial
     
@@ -1162,6 +1473,22 @@ Loop:
     call HandleUsbComplete
 ;
     movlb 0
+    btfss ser_state, SER_STATE_ACTIVE
+    goto SerDone
+;
+    btfss ser_state, SER_STATE_IN_BUSY
+    call UsbToBuffer
+;
+    btfsc ser_state, SER_STATE_OUT_BUSY
+    call BufferToUsb
+;
+    btfss PIR1, RCIF
+    call HandleSerReceive
+;
+    btfss PIR1, TXIF
+    call HandleSerSend
+
+SerDone:
     movf counter_ov,W
     bz Loop
 ;
