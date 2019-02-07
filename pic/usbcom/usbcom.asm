@@ -7,6 +7,9 @@
 SER_COM_SIZE       equ 0x78
 SER_USB_SIZE       equ 0x40
 
+EP0                equ 0
+EP1                equ 8
+
 ser_ram            equ 0x100
 ser_buf_page       equ 1
 
@@ -1240,7 +1243,7 @@ HandleUsbComplete:
     andlw 0x38
     movwf usb_ep
 ;
-    movlw 0
+    movlw EP0
     cpfseq usb_ep
     goto HandleUsbNotControl
 ;
@@ -1260,7 +1263,7 @@ HandleUsbComplete:
     return
 
 HandleUsbNotControl:
-    movlw 0
+    movlw EP1
     cpfseq usb_ep
     goto HandleUsbNotSerial
 ;
@@ -1387,6 +1390,7 @@ SerRecSpace:
     goto SerRecParOk
 
 CheckEven:
+    movf temp, W
     call GetSetBits
     call GetRecParity
     xorwf parity, F
@@ -1396,6 +1400,7 @@ CheckEven:
     goto SerRecParOk
 
 CheckOdd:
+    movf temp, W
     call GetSetBits
     call GetRecParity
     xorwf parity, F
@@ -1428,6 +1433,9 @@ ProgStart:
     movwf counter_low
     movwf counter_mid
     movwf counter_high
+;
+    movlw 0x70
+    movwf TRISB
 ;
     movlw 0xF0
     movwf TRISC
@@ -1477,15 +1485,15 @@ Loop:
     goto SerDone
 ;
     btfss ser_state, SER_STATE_IN_BUSY
-    call UsbToBuffer
-;
-    btfsc ser_state, SER_STATE_OUT_BUSY
     call BufferToUsb
 ;
-    btfss PIR1, RCIF
+    btfsc ser_state, SER_STATE_OUT_BUSY
+    call UsbToBuffer
+;
+    btfsc PIR1, RCIF
     call HandleSerReceive
 ;
-    btfss PIR1, TXIF
+    btfsc PIR1, TXIF
     call HandleSerSend
 
 SerDone:

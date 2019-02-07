@@ -61,7 +61,7 @@ int main(int argc, char **argv)
                 ch = Serial->Read();
                 str[0] = ch;
                 str[1] = 0;
-                printf(str);
+                RdosWriteString(str);
             }
 
             if (Keyboard.Poll())
