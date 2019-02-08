@@ -377,6 +377,7 @@ int TTcpSocket::GetSize()
     else
         return 0;
 }
+
 /*##################  TTcpSocket::GetWriteSpace  ############################
 *   Purpose....: Check free bytes in send buffer                        #
 *   In params..: *                                                          #
@@ -631,6 +632,18 @@ int TUdpSocket::GetSize()
         return RdosPeekUdpConnection(FHandle);
     else
         return 0;
+}
+
+/*##################  TUdpSocket::GetWriteSpace  ############################
+*   Purpose....: Check free bytes in send buffer                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TUdpSocket::GetWriteSpace()
+{
+    return 0;
 }
 
 /*##########################################################################
