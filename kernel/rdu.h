@@ -889,6 +889,8 @@
 
 #define usergate_get_usb_bus_par 0x000002BC
 
+#define usergate_get_tcp_connection_write_space 0x000002BD
+
 
 
 #ifdef __FLAT__
@@ -1783,6 +1785,8 @@
 
 #define CallGate_get_usb_bus_par 0x55 0x67 0x9a 188 2 0 0 3 0 0x5d
 
+#define CallGate_get_tcp_connection_write_space 0x55 0x67 0x9a 189 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2674,5 +2678,7 @@
 #define CallGate_poll_handle 0x3e 0x67 0x9a 187 2 0 0 3 0
 
 #define CallGate_get_usb_bus_par 0x3e 0x67 0x9a 188 2 0 0 3 0
+
+#define CallGate_get_tcp_connection_write_space 0x3e 0x67 0x9a 189 2 0 0 3 0
 
 #endif

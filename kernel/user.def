@@ -889,4 +889,6 @@ poll_handle_nr                   = 699
 
 get_usb_bus_par_nr               = 700
 
+get_tcp_connection_write_space_nr = 701
+
 usergate_entries                 = 750

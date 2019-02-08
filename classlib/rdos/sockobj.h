@@ -51,6 +51,7 @@ public:
 
     virtual int IsIdle() = 0;
     virtual int GetSize() = 0;
+    virtual int GetWriteSpace() = 0;
     virtual void Write(const char *buf, int count) = 0;
     virtual void Write(const char *str) = 0;
     virtual int Read(char *buf, int size) = 0;
@@ -82,6 +83,7 @@ public:
 
     virtual int IsIdle();
     virtual int GetSize();
+    virtual int GetWriteSpace();
     virtual void Write(const char *buf, int count);
     virtual void Write(const char *str);
     virtual int Read(char *buf, int size);
@@ -107,6 +109,7 @@ public:
 
     virtual int IsIdle();
     virtual int GetSize();
+    virtual int GetWriteSpace();
     virtual void Write(const char *buf, int count);
     virtual void Write(const char *str);
     virtual int Read(char *buf, int size);

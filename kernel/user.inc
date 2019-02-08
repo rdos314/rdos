@@ -1853,6 +1853,12 @@ PollTcpConnection               MACRO
         UserGate poll_tcp_connection_nr
                         ENDM
 
+; IN  BX                connection handle
+; OUT (E)AX             number of free bytes in write buffer
+GetTcpConnectionWriteSpace               MACRO
+        UserGate get_tcp_connection_write_space_nr
+                        ENDM
+
 ; OUT EDX               My IP address
 GetIpAddress    MACRO
         UserGate get_ip_address_nr

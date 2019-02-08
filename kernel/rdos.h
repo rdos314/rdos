@@ -684,6 +684,7 @@ int RDOSAPI RdosGetLocalTcpConnectionPort(int Handle);
 int RDOSAPI RdosReadTcpConnection(int Handle, void *Buf, int Size);
 int RDOSAPI RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
 int RDOSAPI RdosPollTcpConnection(int Handle);
+int RDOSAPI RdosGetTcpConnectionWriteSpace(int Handle);
 
 int RDOSAPI RdosGetLocalMailslot(const char *Name);
 int RDOSAPI RdosGetRemoteMailslot(long Ip, const char *Name);

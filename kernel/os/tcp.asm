@@ -5738,6 +5738,58 @@ poll_tcp_connection     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetTcpConnectionWriteSpace
+;
+;       DESCRIPTION:    Get TCP connection write space
+;
+;       PARAMETERS;     IN  BX        Connection handle
+;                       OUT EAX       Space in send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_tcp_connection_write_space_name DB 'Get Tcp connection Write Space', 0
+
+get_tcp_connection_write_space    Proc far
+    push ds
+    push ebx
+    push ecx
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc gtcwsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz gtcwsDone
+;
+    mov ds,bx
+    EnterSection ds:tcp_section
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    jnc gtcwsSizeOk
+;
+    xor ecx,ecx
+
+gtcwsSizeOk:
+    LeaveSection ds:tcp_section
+    clc
+
+gtcwsDone:
+    mov eax,ecx
+    pop ecx
+    pop ebx
+    pop ds
+    retf32
+get_tcp_connection_write_space    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateConnection
 ;
 ;           DESCRIPTION:    Update a connection
@@ -6981,6 +7033,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET poll_tcp_connection_name
     xor dx,dx
     mov ax,poll_tcp_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_tcp_connection_write_space
+    mov edi,OFFSET get_tcp_connection_write_space_name
+    xor dx,dx
+    mov ax,get_tcp_connection_write_space_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_tcp_connection

@@ -2556,6 +2556,12 @@
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosGetTcpConnectionWriteSpace = \
+    CallGate_get_tcp_connection_write_space  \
+    ValidateEax \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosCreateTcpSocket = \
     CallGate_create_tcp_socket  \
     ValidateHandle \
