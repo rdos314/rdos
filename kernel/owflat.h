@@ -2558,7 +2558,9 @@
 
 #pragma aux RdosGetTcpConnectionWriteSpace = \
     CallGate_get_tcp_connection_write_space  \
-    ValidateEax \
+    "jnc ok" \ 
+    "mov eax,07FFFFFFFh" \
+    "ok:" \
     parm [ebx] \
     value [eax];
 

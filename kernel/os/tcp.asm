@@ -5763,7 +5763,7 @@ get_tcp_connection_write_space    Proc far
     stc
     jz gtcwsDone
 ;
-    mov ds,bx
+    mov ds,ax
     EnterSection ds:tcp_section
     mov cx,ds:tcp_buffer_size
     sub cx,ds:tcp_send_count
