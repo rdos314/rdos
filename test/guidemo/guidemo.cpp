@@ -423,18 +423,18 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-//        for (i = 0x10; i < 0x1000; i++)
-//        {
-//            if (RdosQueryVideoMode(i, &bits, &x, &y))
-//                printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
-//        }
+        for (i = 0x10; i < 0x1000; i++)
+        {
+            if (RdosQueryVideoMode(i, &bits, &x, &y))
+                printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
+        }
 
-//        RdosWaitMilli(2500);
+        RdosWaitMilli(2500);
 
-//        vbe = new TVideoGraphicDevice(24, 1266, 768);
+        vbe = new TVideoGraphicDevice(32, 1366, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //      vbe = new TVideoGraphicDevice(24, 1280, 1024);
-        vbe = new TVideoGraphicDevice(24, 640, 480);
+//        vbe = new TVideoGraphicDevice(24, 640, 480);
 //      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 //        vbe = new TVideoGraphicDevice(32, 1920, 1080);
@@ -471,9 +471,6 @@ void cdecl main()
         Wait.Add(Keyboard);
         Wait.Add(Mouse);
         Wait.StartThreadHandler("IO Thread", 0x1000);
-
-        for (;;)
-            RdosWaitMilli(250); 
 
         bitmap = new TBitmapGraphicDevice(8, 1366, 768);
         
