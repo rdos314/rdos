@@ -463,6 +463,22 @@ ptUserReserved:
     int 3
 
 ptLoader:
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov ax,ds:pr_cow_counter
+    or ax,ax
+    pop ax
+    jz ptLoaderLeave
+;
+    CrashGate
+
+ptLoaderLeave:
+    mov ds:pr_cow_thread,0
+    mov ds:pr_cow_counter,0
+    LeaveSection ds:pr_cow_section
+;
     shr eax,16
     mov es,ax
 ;
@@ -508,9 +524,6 @@ ptUserFaultRetry:
     mov cr3,eax
     jmp ptUserDone
 
-ptLoaderCheck:
-    jnc ptUserDone
-
 ptUserFault:
     GetThread
     mov ds,ax
@@ -545,6 +558,9 @@ ptKernel:
     mov eax,cr3
     mov cr3,eax
     jmp ptRetry
+
+ptLoaderCheck:
+    jnc ptRetry
 
 ptFault:
     pop edi
