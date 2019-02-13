@@ -70,6 +70,28 @@ hid_was_inserted    DB ?
 
 hid_card   ENDS
 
+mcp_frame	STRUC
+
+mf_da               DB ?
+mf_sa               DB ?
+mf_pcb              DB ?
+mf_len_high         DB ?
+mf_len_low          DB ?
+mf_hedc             DB ?
+
+mcp_frame	ENDS
+
+mcp_msg         STRUC
+
+ms_header       mcp_frame <>
+
+ms_mtype        DB ?
+ms_appl         DB ?
+ms_cmnd         DB ?
+ms_rc           DB ?
+
+mcp_msg         ENDS
+
 data    SEGMENT byte public 'DATA'
 
 mcp_card_thread     DW ?
@@ -95,6 +117,9 @@ mcp_device          DB ?
 mcp_intr            DB ?
 mcp_bulk_in         DB ?
 mcp_bulk_out        DB ?
+
+mcp_pcb             DB ?
+mcp_rec_start       DB ?
 
 card_hid_handle     DW ?
 card_dev            DW ?
@@ -1404,6 +1429,422 @@ close_mcp	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           McpCheckFrame
+;
+;           DESCRIPTION:    Check received frame
+;
+;           PARAMETERS:     CX Frame size
+;                           FS Frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mcp_check_frame	Proc near
+    pushad
+;
+    mov dx,cx
+;
+    xor al,al
+    xor si,si
+    mov cx,OFFSET mf_hedc
+    cmp cx,dx
+    jae mcfFail
+
+mcfHeaderLrcLoop:
+    xor al,fs:[si]
+    inc si
+    loop mcfHeaderLrcLoop
+;
+    xor al,fs:[si]
+    jnz mcfFail
+;
+    mov al,fs:mf_pcb
+    shr al,6
+    and al,3
+    cmp al,2
+    je mcfCheckLrc
+;
+    or al,al
+    jz mcfCheckI
+;
+    int 3
+
+mcfCheckI:
+    mov al,fs:mf_pcb
+    shr al,4
+    and al,3
+    jz mcfCheckLrcDone
+;
+    int 3
+
+mcfCheckLrc:
+    mov cl,fs:mf_len_low
+    mov ch,fs:mf_len_high
+    add cx,SIZE mcp_frame
+    cmp cx,dx
+    jae mcfFail
+;
+    xor al,al
+    xor si,si
+
+mcfWholeLrcLoop:
+    xor al,fs:[si]
+    inc si
+    loop mcfWholeLrcLoop
+;
+    xor al,fs:[si]
+    jnz mcfFail
+
+mcfCheckLrcDone:
+
+mcfOk:
+    clc
+    jmp mcfDone
+
+mcfFail:
+    stc
+
+mcfDone:
+    popad
+    ret
+mcp_check_frame Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           McpWaitForResponse
+;
+;           DESCRIPTION:    Wait for response
+;
+;           PARAMETERS:     FS  Answer frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mcp_wait_for_response	Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov bx,ds:mcp_in_req
+    IsUsbReqStarted
+    jnc mwfrStarted
+;
+    mov ax,ds:mcp_card_thread
+    StartUsbReq
+
+mwfrStarted:
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov bx,ds:mcp_in_req
+    IsUsbReqReady
+    jc mwfrDone
+;
+    mov ds:mcp_rec_start,1
+    GetUsbReqData
+    mov fs,ds:mcp_in_buffer
+    call mcp_check_frame
+
+mwfrDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+mcp_wait_for_response	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mcp_session
+;
+;           DESCRIPTION:    MCP session
+;
+;           PARAMETERS:     ES	Frame to send
+;
+;           RETURNS:        FS answer frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mcp_session	Proc near
+    xor al,al
+    xor si,si
+    mov cx,OFFSET mf_hedc
+
+msHeaderLrcLoop:
+    xor al,es:[si]
+    inc si
+    loop msHeaderLrcLoop
+;
+    mov es:[si],al
+;
+    mov cl,es:mf_len_low
+    mov ch,es:mf_len_high
+    add cx,SIZE mcp_frame
+;
+    mov dl,es:mf_pcb
+    shr dl,6
+    and dl,3
+    cmp dl,2
+    jne msSend
+
+msAddLrc:
+    push cx
+    xor al,al
+    xor si,si
+
+msWholeLrcLoop:
+    xor al,es:[si]
+    inc si
+    loop msWholeLrcLoop
+;
+    mov es:[si],al
+    pop cx
+    inc cx
+
+msSend:
+    xor al,al
+    xchg al,ds:mcp_rec_start
+    or al,al
+    jz msRecStarted
+;
+    mov bx,ds:mcp_in_req
+    IsUsbReqStarted
+    jnc msRecStarted
+;
+    StartUsbReq
+
+msRecStarted:
+    mov bx,ds:mcp_out_req
+    StartUsbReq
+
+msWait:
+    call mcp_wait_for_response
+    jc msDone
+;
+    mov es,ds:mcp_out_buffer
+    cmp dl,2
+    je msCheckS
+;
+    or dl,dl
+    jz msCheckI
+
+msCheckS:
+    mov al,fs:mf_pcb
+    shr al,6
+    and al,3
+    cmp al,2
+    je msCompS
+;
+    int 3
+    jmp msWait
+
+msCompS:
+    mov al,es:mf_pcb
+    and al,0Fh
+    mov ah,fs:mf_pcb
+    and ah,0Fh
+    cmp al,ah
+    je msOk
+    jmp msFail
+
+msCheckI:
+    mov al,fs:ms_mtype
+    cmp al,40h
+    jne msFail
+;
+    mov al,es:ms_appl
+    cmp al,fs:ms_appl
+    jne msFail
+;
+    mov al,es:ms_cmnd
+    cmp al,fs:ms_cmnd
+    jne msFail
+;
+    jmp msOk
+
+msFail:
+    int 3
+    mov es,ds:mcp_out_buffer
+    stc
+    jmp msDone
+
+msOk:
+    clc
+
+msDone:
+    ret
+mcp_session Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendMcpResync
+;
+;           DESCRIPTION:    Send resync
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_mcp_resync	Proc near
+    mov es,ds:mcp_out_buffer
+    mov es:mf_da,1
+    mov es:mf_sa,0
+    mov es:mf_pcb,90h
+    mov es:mf_len_high,0
+    mov es:mf_len_low,0
+    call mcp_session
+    ret
+send_mcp_resync Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitMcpMsg
+;
+;           DESCRIPTION:    Init mcp message
+;
+;           PARAMETERS:     AL    Application
+;                           DL    Command
+;                           CX    Size of data
+;
+;           RETURNS:        ES:DI Data buffer
+;                           CX    Send size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_mcp_msg	Proc near
+    push ax
+    push dx
+;
+    add cx,4
+    mov es,ds:mcp_out_buffer
+    mov es:mf_da,1
+    mov es:mf_sa,0
+    mov es:mf_len_high,ch
+    mov es:mf_len_low,cl
+    mov es:ms_mtype,0
+    mov es:ms_appl,al
+    mov es:ms_cmnd,dl
+    add cx,SIZE mcp_frame
+    mov di,SIZE mcp_msg
+;
+    mov al,ds:mcp_pcb
+    mov es:mf_pcb,al
+    xor al,2
+    mov ds:mcp_pcb,al
+;
+    pop dx
+    pop ax
+    ret
+init_mcp_msg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetMcpDevStringProp
+;
+;           DESCRIPTION:    Get mcp device string property
+;
+;           PARAMETERS:     AL    property ID
+;
+;           RETURNS:        ES:DI Property string
+;                           CX    Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_mcp_dev_string_prop	Proc near
+    push fs
+    push ax
+    push dx
+;
+    mov al,0
+    mov dl,0
+    mov cx,2
+    call init_mcp_msg
+;
+    pop dx
+    pop ax
+;
+    mov byte ptr es:[di],2
+    mov es:[di+1],al
+;
+    call mcp_session
+    jc gmdspDone
+;
+    mov es,ds:mcp_in_buffer
+    mov al,es:ms_rc
+    or al,al
+    stc
+    jnz gmdspDone
+;
+    mov cl,es:mf_len_low
+    mov ch,es:mf_len_high
+    sub cx,6
+    mov di,SIZE mcp_msg
+    add di,2
+    clc
+
+gmdspDone:
+    pop fs
+    ret
+get_mcp_dev_string_prop     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetMcpStripDwordProp
+;
+;           DESCRIPTION:    Get mcp strip dword property
+;
+;           PARAMETERS:     AL    property ID
+;
+;           RETURNS:        EAX   Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_mcp_strip_dword_prop	Proc near
+    push fs
+;
+    push ax
+    push dx
+;
+    mov al,1
+    mov dl,0
+    mov cx,2
+    call init_mcp_msg
+;
+    pop dx
+    pop ax
+;
+    mov byte ptr es:[di],1
+    mov es:[di+1],al
+;
+    call mcp_session
+    jc gmsdpDone
+;
+    mov es,ds:mcp_in_buffer
+    mov al,es:ms_rc
+    or al,al
+    stc
+    jnz gmsdpDone
+;
+    mov cl,es:mf_len_low
+    mov ch,es:mf_len_high
+    sub cx,6
+    mov di,SIZE mcp_msg
+    add di,2
+    clc
+
+gmsdpDone:
+    pop fs
+    ret
+get_mcp_strip_dword_prop     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           McpCardThread
 ;
 ;           DESCRIPTION:    USB MCP card thread
@@ -1420,7 +1861,36 @@ mcp_card_thread_pr:
     mov ds:mcp_card_thread,ax
 ;
     call open_mcp
+
+mctLoop:
+    mov bx,ds:mcp_in_req
+    IsUsbReqStarted
+    jnc mctIntrStarted
 ;
+    StartUsbReq
+
+mctIntrStarted:
+    mov bx,ds:mcp_in_req
+    IsUsbReqReady
+    jc mctNext
+;
+    int 3
+    GetUsbReqData
+    mov es,ds:mcp_in_buffer
+
+mctNext:
+    call send_mcp_resync
+;
+    mov al,0
+    call get_mcp_dev_string_prop
+;
+    mov al,0
+    call get_mcp_strip_dword_prop
+
+    jmp mctLoop
+
+
+
     call close_mcp
     TerminateThread
 
@@ -1566,8 +2036,8 @@ uaStart:
     or cl,cl
     jz uaDone
 ;
-    mov mcp_controller,bx
-    mov mcp_device,al
+    mov ds:mcp_controller,bx
+    mov ds:mcp_device,al
 ;
     mov ax,ds:mcp_card_thread
     or ax,ax
@@ -1666,6 +2136,8 @@ Init    Proc far
     mov ds:carddev_thread,0
     mov ds:card_state,0
     mov ds:mcp_card_thread,0
+    mov ds:mcp_pcb,0
+    mov ds:mcp_rec_start,0
 ;
     mov eax,cs
     mov ds,eax
