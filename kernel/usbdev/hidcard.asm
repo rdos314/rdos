@@ -72,6 +72,15 @@ hid_card   ENDS
 
 data    SEGMENT byte public 'DATA'
 
+mcp_card_thread     DW ?
+bulk_in_size        DW ?
+bulk_out_size       DW ?
+mcp_controller      DW ?
+mcp_device          DB ?
+intr_pipe           DB ?
+bulk_in_pipe        DB ?
+bulk_out_pipe       DB ?
+
 card_hid_handle     DW ?
 card_dev            DW ?
 carddev_thread      DW ?
@@ -1258,6 +1267,237 @@ valid_custom_hid   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           McpCardThread
+;
+;           DESCRIPTION:    USB MCP card thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mcp_card_thread_name  DB 'USB MCP Card Reader', 0
+
+mcp_card_thread_pr:
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    GetThread
+    mov ds:mcp_card_thread,ax
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       usb_attach
+;
+;           description:    USB attach callback
+;
+;           Parameters:     BX      Controller #
+;               AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+devTab:
+dt00    DW 0801h,       0Ah
+
+usb_attach  Proc far
+    push ds
+    push es
+    pushad
+;    
+    push ax
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    mov cx,SIZE usb_device_descr
+    pop ax
+    xor di,di
+    push ax
+    GetUsbDevice
+    cmp ax,cx
+    pop ax
+    jne uaDone
+;
+    mov si,es:udd_vendor
+    mov di,es:udd_prod
+
+    mov cx,1
+    mov bp,OFFSET devTab
+
+uaLoop:
+    cmp si,cs:[bp]
+    jne uaNext
+;
+    cmp di,cs:[bp+2]
+    je uaFound
+
+uaNext:
+    add bp,4
+    loop uaLoop    
+;
+    jmp uaDone    
+
+uaFound:
+    xor dl,dl
+    mov cx,1000h
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    jz uaDone
+;
+    mov dl,es:ucd_config_id
+    ConfigUsbDevice
+    jc uaDone
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov ds:intr_pipe,0
+    mov ds:bulk_in_pipe,0
+    mov ds:bulk_out_pipe,0
+    mov ds:bulk_in_size,0
+    mov ds:bulk_out_size,0
+;
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+uaDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,4
+    jne uaDescrNext
+; 
+    movzx cx,es:[di].uid_len
+    add di,cx
+
+uaIntLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,5
+    jne uaStart
+;
+    mov cl,es:[di].ued_attrib
+    and cl,3
+    cmp cl,3
+    je uaIntr
+;
+    cmp cl,2
+    jne uaIntNext
+;
+    mov cl,es:[di].ued_address
+    test cl,80h    
+    jnz uaBulkIn
+
+uaBulkOut:
+    and cl,0Fh
+    mov ds:bulk_out_pipe,cl
+    mov cx,es:[di].ued_maxsize
+    mov ds:bulk_out_size,cx
+    jmp uaIntNext
+
+uaBulkIn:
+    and cl,8Fh
+    mov ds:bulk_in_pipe,cl
+    mov cx,es:[di].ued_maxsize
+    mov ds:bulk_in_size,cx
+    jmp uaIntNext
+
+uaIntr:
+    mov cl,es:[di].ued_address
+    and cl,8Fh
+    mov ds:intr_pipe,cl
+    
+uaIntNext:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb uaIntLoop    
+
+uaStart:
+    mov cl,ds:bulk_in_pipe
+    or cl,cl
+    jz uaDone
+;
+    mov cl,ds:bulk_out_pipe
+    or cl,cl
+    jz uaDone
+;
+    mov cl,ds:intr_pipe
+    or cl,cl
+    jz uaDone
+;
+    mov mcp_controller,bx
+    mov mcp_device,al
+;
+    mov ax,ds:mcp_card_thread
+    or ax,ax
+    jnz uaThreadStarted
+;
+    mov ds:mcp_card_thread,-1
+    push ds
+    push es
+    push eax
+    push esi
+    push edi    
+;    
+    mov edx,cs
+    mov ds,edx
+    mov es,edx
+    mov edi,OFFSET mcp_card_thread_name
+    mov esi,OFFSET mcp_card_thread_pr
+    mov ax,2
+    mov ecx,stack0_size
+    CreateThread
+;
+    pop edi
+    pop esi
+    pop eax
+    pop es
+    pop ds
+        
+uaThreadStarted:
+    jmp uaDone
+
+uaDescrNext:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb uaDescrLoop    
+
+uaDone:
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+usb_attach  Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       usb_detach
+;
+;           description:    USB detach callback
+;
+;           Parameters:     BX      Controller #
+;               AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_detach  Proc far
+    push ds
+    push es
+    pushad
+;    
+;
+    popad
+    pop es
+    pop ds
+    ret
+usb_detach  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -1282,6 +1522,7 @@ Init    Proc far
     mov ds:card_dev,0
     mov ds:carddev_thread,0
     mov ds:card_state,0
+    mov ds:mcp_card_thread,0
 ;
     mov eax,cs
     mov ds,eax
@@ -1292,6 +1533,12 @@ Init    Proc far
 ;
     mov edi,OFFSET hid_tab
     RegisterHidInput
+;
+    mov edi,OFFSET usb_attach
+    HookUsbAttach
+;
+    mov edi,OFFSET usb_detach
+    HookUsbDetach
     ret
 Init    Endp
         
