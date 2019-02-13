@@ -73,13 +73,28 @@ hid_card   ENDS
 data    SEGMENT byte public 'DATA'
 
 mcp_card_thread     DW ?
-bulk_in_size        DW ?
-bulk_out_size       DW ?
+
+mcp_in_size         DW ?
+mcp_out_size        DW ?
+
+mcp_control_handle  DW ?
+mcp_in_handle       DW ?
+mcp_in_req          DW ?
+mcp_in_buffer       DW ?
+
+mcp_out_handle      DW ?
+mcp_out_req         DW ?
+mcp_out_buffer      DW ?
+
+mcp_intr_handle     DW ?
+mcp_intr_req        DW ?
+mcp_intr_buffer     DW ?
+
 mcp_controller      DW ?
 mcp_device          DB ?
-intr_pipe           DB ?
-bulk_in_pipe        DB ?
-bulk_out_pipe       DB ?
+mcp_intr            DB ?
+mcp_bulk_in         DB ?
+mcp_bulk_out        DB ?
 
 card_hid_handle     DW ?
 card_dev            DW ?
@@ -1267,6 +1282,128 @@ valid_custom_hid   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           OpenMcp
+;
+;           DESCRIPTION:    Open MCP pipes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_mcp	Proc near
+    push es
+    pushad
+;
+    mov bx,ds:mcp_controller
+    mov al,ds:mcp_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:mcp_control_handle,bx
+;
+    mov bx,ds:mcp_controller
+    mov al,ds:mcp_device
+    mov dl,ds:mcp_bulk_in
+    OpenUsbPipe
+    mov ds:mcp_in_handle,bx
+;
+    CreateUsbReq
+    mov ds:mcp_in_req,bx    
+;    
+    mov cx,ds:mcp_in_size
+    xor ax,ax
+    AddReadUsbDataReq
+    mov ds:mcp_in_buffer,es
+;
+    mov bx,ds:mcp_controller
+    mov al,ds:mcp_device
+    mov dl,ds:mcp_bulk_out
+    OpenUsbPipe    
+    mov ds:mcp_out_handle,bx
+;
+    CreateUsbReq
+    mov ds:mcp_out_req,bx
+;    
+    mov cx,ds:mcp_out_size
+    mov ax,1
+    AddWriteUsbDataReq
+    mov ds:mcp_out_buffer,es
+;
+    mov bx,ds:mcp_controller
+    mov al,ds:mcp_device
+    mov dl,ds:mcp_intr
+    OpenUsbPipe    
+    mov ds:mcp_intr_handle,bx
+;    
+    CreateUsbReq
+    mov ds:mcp_intr_req,bx
+;
+    mov cx,ds:mcp_in_size
+    xor ax,ax
+    AddReadUsbDataReq
+    mov ds:mcp_intr_buffer,es
+;
+    popad
+    pop es
+    ret
+open_mcp	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseMcp
+;
+;           DESCRIPTION:    Close MCP pipes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_mcp	Proc near
+    push es
+    pushad
+;
+    mov ax,50
+    WaitMilliSec
+;    
+    xor ax,ax
+    mov es,ax
+;    
+    mov bx,ds:mcp_in_req
+    CloseUsbReq
+    mov ds:mcp_in_req,0
+;
+    mov bx,ds:mcp_in_handle
+    CloseUsbPipe    
+    mov ds:mcp_in_handle,0
+;
+    mov bx,ds:mcp_out_req
+    CloseUsbReq
+    mov ds:mcp_out_req,0
+;
+    mov bx,ds:mcp_out_handle
+    CloseUsbPipe    
+    mov ds:mcp_out_handle,0
+;
+    mov bx,ds:mcp_intr_req
+    CloseUsbReq
+    mov ds:mcp_intr_req,0
+;
+    mov bx,ds:mcp_intr_handle
+    CloseUsbPipe
+    mov ds:mcp_intr_handle,0
+;
+    mov bx,ds:mcp_control_handle
+    CloseUsbPipe    
+    mov ds:mcp_control_handle,0
+;
+    mov ds:mcp_in_buffer,0
+    mov ds:mcp_out_buffer,0
+    mov ds:mcp_intr_buffer,0
+;
+    popad
+    pop es
+    ret
+close_mcp	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           McpCardThread
 ;
 ;           DESCRIPTION:    USB MCP card thread
@@ -1281,6 +1418,12 @@ mcp_card_thread_pr:
     mov ds,ax
     GetThread
     mov ds:mcp_card_thread,ax
+;
+    call open_mcp
+;
+    call close_mcp
+    TerminateThread
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1350,11 +1493,11 @@ uaFound:
 ;
     mov dx,SEG data
     mov ds,dx
-    mov ds:intr_pipe,0
-    mov ds:bulk_in_pipe,0
-    mov ds:bulk_out_pipe,0
-    mov ds:bulk_in_size,0
-    mov ds:bulk_out_size,0
+    mov ds:mcp_intr,0
+    mov ds:mcp_bulk_in,0
+    mov ds:mcp_bulk_out,0
+    mov ds:mcp_in_size,0
+    mov ds:mcp_out_size,0
 ;
     xor di,di
     movzx cx,es:ucd_len
@@ -1387,22 +1530,22 @@ uaIntLoop:
 
 uaBulkOut:
     and cl,0Fh
-    mov ds:bulk_out_pipe,cl
+    mov ds:mcp_bulk_out,cl
     mov cx,es:[di].ued_maxsize
-    mov ds:bulk_out_size,cx
+    mov ds:mcp_out_size,cx
     jmp uaIntNext
 
 uaBulkIn:
     and cl,8Fh
-    mov ds:bulk_in_pipe,cl
+    mov ds:mcp_bulk_in,cl
     mov cx,es:[di].ued_maxsize
-    mov ds:bulk_in_size,cx
+    mov ds:mcp_in_size,cx
     jmp uaIntNext
 
 uaIntr:
     mov cl,es:[di].ued_address
     and cl,8Fh
-    mov ds:intr_pipe,cl
+    mov ds:mcp_intr,cl
     
 uaIntNext:    
     movzx cx,es:[di].ucd_len
@@ -1411,15 +1554,15 @@ uaIntNext:
     jb uaIntLoop    
 
 uaStart:
-    mov cl,ds:bulk_in_pipe
+    mov cl,ds:mcp_bulk_in
     or cl,cl
     jz uaDone
 ;
-    mov cl,ds:bulk_out_pipe
+    mov cl,ds:mcp_bulk_out
     or cl,cl
     jz uaDone
 ;
-    mov cl,ds:intr_pipe
+    mov cl,ds:mcp_intr
     or cl,cl
     jz uaDone
 ;
