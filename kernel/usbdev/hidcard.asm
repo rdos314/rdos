@@ -1539,6 +1539,23 @@ mcfDone:
     ret
 mcp_check_frame Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mcp_received
+;
+;           DESCRIPTION:    MCP received msg
+;
+;           PARAMETERS:     ES	Msg
+;                           CX  Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mcp_received	Proc near
+    int 3
+mcp_received	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1552,7 +1569,8 @@ mcp_check_frame Endp
 
 mcp_wait_for_response	Proc near
     pushad
-;
+
+mwfrRetry:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
@@ -1586,6 +1604,7 @@ mwfrRestart:
 ;
     mov cx,ds:mcp_rec_size
     call mcp_check_frame
+    jc mwfrRetry
 
 mwfrDone:
     popad
@@ -1678,17 +1697,21 @@ msCompS:
 msCheckI:
     mov al,fs:ms_mtype
     cmp al,40h
-    jne msFail
+    jne msOther
 ;
     mov al,es:ms_appl
     cmp al,fs:ms_appl
-    jne msFail
+    jne msOther
 ;
     mov al,es:ms_cmnd
     cmp al,fs:ms_cmnd
-    jne msFail
-;
-    jmp msOk
+    je msOk
+
+msOther:
+    mov cx,ds:mcp_rec_size
+    mov es,ds:mcp_rec_buf
+    call mcp_received
+    jmp msWait
 
 msFail:
     int 3
@@ -1901,10 +1924,15 @@ mctLoop:
     jc mctNext
 ;
     int 3
+    GetUsbReqData
     mov es,ds:mcp_in_buffer
+    call mcp_received
 
 mctNext:
     call send_mcp_resync
+;
+    mov al,0
+    call get_mcp_dev_string_prop
 ;
     mov al,0
     call get_mcp_dev_string_prop
