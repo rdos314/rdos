@@ -119,7 +119,9 @@ mcp_bulk_in         DB ?
 mcp_bulk_out        DB ?
 
 mcp_pcb             DB ?
-mcp_rec_start       DB ?
+
+mcp_rec_size        DW ?
+mcp_rec_buf         DW ?
 
 card_hid_handle     DW ?
 card_dev            DW ?
@@ -1317,6 +1319,10 @@ open_mcp	Proc near
     push es
     pushad
 ;
+    movzx eax,ds:mcp_in_size
+    AllocateSmallGlobalMem
+    mov ds:mcp_rec_buf,es
+;
     mov bx,ds:mcp_controller
     mov al,ds:mcp_device
     xor dl,dl
@@ -1421,6 +1427,10 @@ close_mcp	Proc near
     mov ds:mcp_out_buffer,0
     mov ds:mcp_intr_buffer,0
 ;
+    mov es,ds:mcp_rec_buf
+    FreeMem
+    mov ds:mcp_rec_buf,0
+;
     popad
     pop es
     ret
@@ -1495,6 +1505,27 @@ mcfWholeLrcLoop:
     jnz mcfFail
 
 mcfCheckLrcDone:
+    mov al,fs:mf_pcb
+    shr al,6
+    and al,3
+    jnz mcfOk
+;
+    mov al,fs:mf_pcb
+    test al,2
+    jz mcfSent0
+
+mcfSent1:
+    test ds:mcp_pcb,1
+    jz mcfFail
+;
+    xor ds:mcp_pcb,1
+    jmp mcfOk
+
+mcfSent0:
+    test ds:mcp_pcb,1
+    jnz mcfFail
+;
+    xor ds:mcp_pcb,1
 
 mcfOk:
     clc
@@ -1515,24 +1546,13 @@ mcp_check_frame Endp
 ;
 ;           DESCRIPTION:    Wait for response
 ;
-;           PARAMETERS:     FS  Answer frame
+;           RETURNS:        FS rec buf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mcp_wait_for_response	Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
+    pushad
 ;
-    mov bx,ds:mcp_in_req
-    IsUsbReqStarted
-    jnc mwfrStarted
-;
-    mov ax,ds:mcp_card_thread
-    StartUsbReq
-
-mwfrStarted:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
@@ -1542,16 +1562,33 @@ mwfrStarted:
     IsUsbReqReady
     jc mwfrDone
 ;
-    mov ds:mcp_rec_start,1
     GetUsbReqData
-    mov fs,ds:mcp_in_buffer
+    mov ds:mcp_rec_size,cx
+    movzx ecx,cx
+;
+    mov es,ds:mcp_in_buffer
+    mov fs,ds:mcp_rec_buf
+    xor si,si
+    xor di,di
+    or cx,cx
+    jz mwfrRestart
+
+mwfrCopy:
+    mov al,es:[si]
+    mov fs:[di],al
+    inc si
+    inc di
+    loop mwfrCopy
+
+mwfrRestart:
+    mov bx,ds:mcp_in_req
+    StartUsbReq
+;
+    mov cx,ds:mcp_rec_size
     call mcp_check_frame
 
 mwfrDone:
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     ret
 mcp_wait_for_response	Endp
 
@@ -1605,18 +1642,6 @@ msWholeLrcLoop:
     inc cx
 
 msSend:
-    xor al,al
-    xchg al,ds:mcp_rec_start
-    or al,al
-    jz msRecStarted
-;
-    mov bx,ds:mcp_in_req
-    IsUsbReqStarted
-    jnc msRecStarted
-;
-    StartUsbReq
-
-msRecStarted:
     mov bx,ds:mcp_out_req
     StartUsbReq
 
@@ -1695,6 +1720,11 @@ send_mcp_resync	Proc near
     mov es:mf_len_high,0
     mov es:mf_len_low,0
     call mcp_session
+    jc smrDone
+;
+    mov ds:mcp_pcb,0
+
+smrDone:
     ret
 send_mcp_resync Endp
 
@@ -1861,21 +1891,16 @@ mcp_card_thread_pr:
     mov ds:mcp_card_thread,ax
 ;
     call open_mcp
-
-mctLoop:
-    mov bx,ds:mcp_in_req
-    IsUsbReqStarted
-    jnc mctIntrStarted
 ;
+    mov bx,ds:mcp_in_req
     StartUsbReq
 
-mctIntrStarted:
+mctLoop:
     mov bx,ds:mcp_in_req
     IsUsbReqReady
     jc mctNext
 ;
     int 3
-    GetUsbReqData
     mov es,ds:mcp_in_buffer
 
 mctNext:
@@ -2137,7 +2162,6 @@ Init    Proc far
     mov ds:card_state,0
     mov ds:mcp_card_thread,0
     mov ds:mcp_pcb,0
-    mov ds:mcp_rec_start,0
 ;
     mov eax,cs
     mov ds,eax
