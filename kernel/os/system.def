@@ -205,6 +205,9 @@ multiboot_sel       DW ?
 
 core_dump_sel       DW ?
 
+load_param_offset   DD ?
+load_param_sel      DW ?
+
 has_phys64          DB ?
 
 efi_lfb             DD ?,?

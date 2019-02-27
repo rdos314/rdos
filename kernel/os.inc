@@ -2456,6 +2456,12 @@ WriteDosString  MACRO
     OsGate write_dos_string_nr
                     ENDM
 
+;  ES:EDI	Command line
+GetDeviceCmdLine  MACRO
+    OsGate get_device_cmd_line_nr
+                    ENDM
+
+
 ;;;;;;;;;;;;; Keyboard ;;;;;;;;;;;;;;;;;;;
 
 ;       AL      Scan code

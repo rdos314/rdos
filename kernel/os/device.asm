@@ -490,6 +490,11 @@ install_device16_cr_code:
     CreateDataSelector16
 
 install_device16_sel_ok:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:load_param_offset,edi
+    mov es:load_param_sel,ds
+;
     mov ax,ds
     mov es,ax
     mov ax,[esi].dev16_init_ip
@@ -561,6 +566,11 @@ install_device32_cr_code:
     CreateDataSelector32
 
 install_device32_sel_ok:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:load_param_offset,edi
+    mov es:load_param_sel,ds
+;
     mov ax,ds
     mov es,ax
     mov eax,[esi].dev32_init_ip
@@ -1073,6 +1083,27 @@ load_device32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetDeviceCmdLine
+;
+;           DESCRIPTION:    Get device cmd line
+;
+;           RETURNS:        ES:EDI	Command line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_device_cmd_line_name DB 'Get Device Cmd Line', 0
+
+get_device_cmd_line    Proc far
+    mov ax,system_data_sel
+    mov es,ax
+    mov edi,es:load_param_offset
+    mov es,es:load_param_sel
+    retf32
+get_device_cmd_line    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_device
 ;
 ;           DESCRIPTION:    Init module (devices)
@@ -1091,6 +1122,12 @@ init_device     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET get_device_cmd_line
+    mov edi,OFFSET get_device_cmd_line_name
+    xor cl,cl
+    mov ax,get_device_cmd_line_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET load_device32
     mov edi,OFFSET load_device32_name
