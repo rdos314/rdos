@@ -4239,6 +4239,24 @@ WaitForCanModuleProgramming      MACRO
         UserGate wait_for_can_module_progamming_nr
                                                 ENDM
 
+;   OUT AL          Minor version
+;   OUT AH          Major version
+;   OUT DL          Sub version
+GetCanBridgeVersion      MACRO
+        UserGate get_can_bridge_version_nr
+                                                ENDM
+
+;   IN  ES:(E)DI    Program file
+ProgramCanBridge      MACRO
+        UserGate program_can_bridge_nr
+                                                ENDM
+
+;   OUT AX          Result (0 = ok)
+;   OUT DX          Error code
+;   OUT ECX         Position 
+WaitForCanBridgeProgramming      MACRO
+        UserGate wait_for_can_bridge_progamming_nr
+                                                ENDM
 
 ;;;;;;;;;;; Big numbers ;;;;;;;;;;
 

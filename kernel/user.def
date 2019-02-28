@@ -891,4 +891,8 @@ get_usb_bus_par_nr               = 700
 
 get_tcp_connection_write_space_nr = 701
 
+get_can_bridge_version_nr         = 702
+program_can_bridge_nr             = 703
+wait_for_can_bridge_programming_nr = 704
+
 usergate_entries                 = 750

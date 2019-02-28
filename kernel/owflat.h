@@ -1269,6 +1269,43 @@
     parm [eax] [edi] \
     value [eax];
 
+#pragma aux RdosWaitForCanModuleProgramming = \
+    CallGate_wait_for_can_module_programming  \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    "mov [edi],ecx" \
+    parm [eax] [esi] [edi] \
+    value [eax] \
+    modify [edx];
+
+#pragma aux RdosGetCanBridgeVersion = \
+    CallGate_get_can_bridge_version  \
+    "movzx ecx,ah" \
+    "mov [esi],ecx" \
+    "movzx ecx,al" \
+    "mov [edi],ecx" \
+    "movzx ecx,dl" \
+    "mov [ebx],ecx" \
+    CarryToBool \
+    parm [esi] [edi] [ebx] \
+    value [eax] \
+    modify [ecx edx];
+
+#pragma aux RdosProgramCanBridge = \
+    CallGate_program_can_bridge  \
+    CarryToBool \
+    parm [edi] \
+    value [eax];
+
+#pragma aux RdosWaitForCanBridgeProgramming = \
+    CallGate_wait_for_can_bridge_programming  \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    "mov [edi],ecx" \
+    parm [esi] [edi] \
+    value [eax] \
+    modify [edx];
+
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \
     parm [edi] [ecx] \
@@ -1393,15 +1430,6 @@
     ValidateHandle  \
     parm [edi] [cl] \
     value [ebx];
-
-#pragma aux RdosWaitForCanModuleProgramming = \
-    CallGate_wait_for_can_module_programming  \
-    "movzx edx,dx" \
-    "mov [esi],edx" \
-    "mov [edi],ecx" \
-    parm [eax] [esi] [edi] \
-    value [eax] \
-    modify [edx];
 
 #pragma aux RdosCreateFile = \
     CallGate_create_file  \

@@ -435,6 +435,10 @@ int RDOSAPI RdosCheckCanSerialPort(int ComPort, int *ModuleId, int *PortNr);
 int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
 int RDOSAPI RdosWaitForCanModuleProgramming(int Module, int *ErrorCode, int *Position);
 
+int RDOSAPI RdosGetCanBridgeVersion(int *MajorVersion, int *MinorVersion, int *SubVersion);
+int RDOSAPI RdosProgramCanBridge(const char *ProgramName);
+int RDOSAPI RdosWaitForCanBridgeProgramming(int *ErrorCode, int *Position);
+
 int RDOSAPI RdosOpenHandle(const char *Name, int Mode);
 int RDOSAPI RdosCloseHandle(int Handle);
 int RDOSAPI RdosPollHandle(int Handle, void *Buf, int Size);
