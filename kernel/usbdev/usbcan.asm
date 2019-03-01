@@ -101,13 +101,18 @@ can_restart      DB ?
 rec_sel          DW ?
 rec_pos          DW ?
 
+can_prog_sel     DW ?
+can_prog_size    DD ?
+
 hw_id            DB ?
-rdos_major       DB ?
-rdos_minor       DB ?
+hw_major         DB ?
+hw_minor         DB ?
 ver_major        DB ?
 ver_minor        DB ?
 ver_sub          DB ?
 req_reset        DB ?
+
+prog_state       DB ?
 
 default_send_buf DW ?
 send_buf_arr     DW 15 DUP(?)
@@ -740,14 +745,14 @@ GetSoftwareVersion   Proc near
     mov al,[bx]
     mov ds:hw_id,al
     mov al,[bx+1]
-    mov ds:rdos_major,al
+    mov ds:hw_major,al
     mov al,[bx+2]
-    mov ds:rdos_minor,al
-    mov al,[bx+4]
+    mov ds:hw_minor,al
+    mov al,[bx+3]
     mov ds:ver_major,al
-    mov al,[bx+5]
+    mov al,[bx+4]
     mov ds:ver_minor,al
-    mov al,[bx+6]
+    mov al,[bx+5]
     mov ds:ver_sub,al
 
 gsvDone:
@@ -899,6 +904,98 @@ StartModules   Proc near
     ret
 StartModules  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartDownload
+;
+;       DESCRIPTION:    Start download
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartDownload   Proc near
+    mov bx,ds:cd_control_pipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,41h
+    mov es:[di].usd_req,90h
+    mov es:[di].usd_value,1
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    WriteUsbControl
+;    
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    ret
+StartDownload  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetDownloadStatus
+;
+;       DESCRIPTION:    Get download status
+;
+;       RETURNS:        AL         Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDownloadStatus   Proc near
+    push es
+    push ecx
+    push edi
+;
+    mov ax,SEG data
+    mov es,ax
+    mov bx,ds:cd_control_pipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,0C1h
+    mov es:[di].usd_req,96h
+    mov es:[di].usd_value,0
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,1
+    WriteUsbControl
+;
+    mov cx,1
+    mov di,OFFSET cd_data
+    ReqUsbData
+;
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    jc gdsDone
+;
+    mov bx,OFFSET cd_data
+    mov al,[bx]
+    clc
+
+gdsDone:
+    pop edi
+    pop ecx
+    pop es
+    ret
+GetDownloadStatus  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1340,6 +1437,10 @@ usuLoop:
     jc usuEnd
 
 usuPipeOk:
+    mov ax,ds:can_prog_sel
+    or ax,ax
+    jnz usuProg
+;
     mov al,ds:cd_active
     or al,al
     jz usuEnd
@@ -1416,6 +1517,104 @@ usuRestartOk:
     adc edx,0
     WaitForSignalWithTimeout
     jmp usuPipeOk
+
+usuProg:
+    mov ds:prog_state,0
+
+usuProgStart:
+    mov ds:cd_active,0
+    mov bx,ds:cd_rec_thread
+    or bx,bx
+    jz usuProgRecDead
+;
+    Signal
+    jmp usuProgWaitDead
+
+usuProgRecDead:
+    mov al,ds:prog_state
+    cmp al,-1
+    je usuProgAllDead
+    
+    mov bx,ds:cd_send_thread
+    Signal
+
+usuProgWaitDead:
+    mov ax,25
+    WaitMilliSec
+    jmp usuProgStart
+
+usuProgAllDead:
+    mov bx,ds:cd_in_pipe
+    CloseUsbPipe
+;
+    mov ax,100
+    WaitMilliSec
+;
+    mov ds:cd_in_pipe,0
+;
+    call StartDownload
+    jc usuProgDone
+
+usuProgRetry:
+    call GetDownloadStatus    
+    jc usuProgDone
+;
+    mov ds:prog_state,al
+    or al,al
+    jz usuSendNext
+;
+    cmp al,11h
+    jne usuProgDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp usuProgRetry
+
+usuSendNext:
+    mov bx,ds:cd_send_thread
+    Signal
+
+usuWaitSend:
+    WaitForSignal
+    mov al,ds:prog_state
+    or al,al
+    jz usuWaitSend
+;
+    cmp al,-1
+    jne usuProgDone
+;
+    mov ecx,ds:can_prog_size
+    or ecx,ecx
+    jnz usuProgRetry
+
+usuProgEndRetry:
+    call GetDownloadStatus    
+    jc usuProgDone
+;
+    mov ds:prog_state,al
+    cmp al,10h
+    je usuProgDone
+;
+    cmp al,11h
+    jne usuProgDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp usuProgEndRetry
+
+usuProgDone:
+    mov ds:req_reset,1
+    mov ax,25
+    WaitMilliSec
+;
+    xor ax,ax
+    xchg ax,ds:can_prog_sel
+    mov es,ax
+    FreeMem
+;
+    mov bx,ds:cd_out_pipe
+    CloseUsbPipe
+    jmp usuWaitDead
 
 usuEnd:
     mov bx,ds:cd_in_pipe
@@ -1526,6 +1725,11 @@ usActive:
     jmp usLoop
 
 usEnd:
+    mov ax,ds:can_prog_sel
+    or ax,ax
+    jnz usProg
+
+usProgEnd:
     mov ds:cd_send_thread,0
 
 usWaitClose:
@@ -1536,6 +1740,95 @@ usWaitClose:
     mov ax,25
     WaitMilliSec
     jmp usWaitClose
+
+usProg:
+    mov ds:prog_state,-1
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    or al,67h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es,bx
+;
+    mov fs,ds:can_prog_sel
+    xor esi,esi
+
+usProgLoop:
+    WaitForSignal
+    mov al,ds:prog_state
+    cmp al,-1
+    je usProgLoop
+;
+    cmp al,11h
+    je usProgLoop
+;
+    cmp al,10h
+    je usProgFree
+;
+    or al,al
+    jnz usProgFail
+
+usSendNext:
+    mov ecx,ds:can_prog_size
+    cmp ecx,10
+    jbe usSendDo
+;
+    mov ecx,10
+
+usSendDo:    
+    xor edi,edi
+    sub ds:can_prog_size,ecx
+    rep movs byte ptr es:[edi],fs:[esi]    
+;
+    mov ecx,10
+    xor edi,edi
+    mov bx,ds:cd_out_pipe
+    WriteUsbData
+;
+    StartUsbTransaction        
+;
+    mov ecx,10
+
+usWaitLoop:
+    push ecx
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,ds:cd_out_wait
+    WaitWithTimeout
+;
+    mov bx,ds:cd_out_pipe
+    IsUsbTransactionDone
+    pop ecx
+    jnc usProgDone
+;
+    loop usWaitLoop
+;
+    jmp usProgFail
+
+usProgDone:
+    mov bx,ds:cd_out_pipe
+    WasUsbTransactionOk
+    jc usProgFail
+
+usSignal:
+    mov ds:prog_state,-1
+    mov bx,ds:cd_super_thread
+    Signal
+    jmp usProgLoop
+
+usProgFail:
+    mov ds:prog_state,12h
+
+usProgFree:
+    FreeMem
+    jmp usProgEnd
 
 usTerm:
     TerminateThread
@@ -1990,6 +2283,171 @@ sncThreadDone:
     pop ds    
     retf32
 stop_can_capture    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetCanBridgeVersion
+;
+;   DESCRIPTION:    Get can bridge version
+;
+;   RETURNS:        AL      Minor version
+;                   AH      Major version
+;                   DL      Sub version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_can_bridge_version_name  DB 'Get CAN Bridge Version', 0
+
+get_can_bridge_version Proc far
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:can_active
+    or al,al
+    jz gcbvFail
+;
+    mov al,ds:ver_minor
+    mov ah,ds:ver_major
+    mov dl,ds:ver_sub
+    clc
+    jmp gcbvDone
+
+gcbvFail:
+    stc    
+
+gcbvDone:    
+    pop ds
+    retf32
+get_can_bridge_version Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ProgramCanBridge
+;
+;   DESCRIPTION:    Program can bridge
+;
+;   PARAMETERS:     ES:(E)DI    Filename
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+program_can_bridge_name  DB 'Program CAN Bridge', 0
+
+program_can_bridge Proc near
+    push ds
+    push es
+    push bx
+    push ecx
+    push edi
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:can_active
+    or al,al
+    jz pcbFail
+;
+    xor cl,cl
+    UserGateForce32 open_file_nr
+    jc pcbFail
+;
+    GetFileSize
+    mov ds:can_prog_size,eax
+    mov ecx,eax
+    add eax,8
+    AllocateGlobalMem
+;    
+    xor edi,edi
+    UserGateForce32 read_file_nr
+    jc pcbFailFree
+;
+    CloseFile
+    mov ds:can_prog_sel,es
+;    
+    mov bx,ds:cd_super_thread
+    Signal   
+    clc
+    jmp pcbDone
+
+pcbFailFree:
+    FreeMem
+    CloseFile
+
+pcbFail:
+    stc
+
+pcbDone:    
+    pop edi
+    pop ecx
+    pop bx
+    pop es
+    pop ds
+    ret
+program_can_bridge Endp
+
+program_can_bridge16    Proc far
+    push edi
+    movzx edi,di
+    call program_can_bridge
+    pop edi
+    retf32
+program_can_bridge16    Endp
+
+program_can_bridge32    Proc far
+    call program_can_bridge
+    retf32
+program_can_bridge32    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           WaitForCanBridgeProgramming
+;
+;   DESCRIPTION:    Wait for can bridge programming
+;
+;   RETURNS:        AX      Result
+;                   DX      Error code
+;                   ECX     Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_can_bridge_programming_name  DB 'Wait For CAN Bridge Programming', 0
+
+wait_for_can_bridge_programming Proc far
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+
+wfcbpLoop:
+    mov ax,ds:can_prog_sel
+    or ax,ax
+    jz wfcbpOk
+;
+    mov ax,200
+    WaitMilliSec
+    jmp wfcbpLoop
+
+wfcbpOk:    
+    mov al,ds:prog_state
+    cmp al,10h
+    jne wfcbFail
+;
+    xor ax,ax
+    xor dx,dx
+    xor ecx,ecx
+    jmp wfcbDone
+
+wfcbFail:
+    movzx dx,al
+    mov ax,-1
+    mov ecx,ds:can_prog_size
+
+wfcbDone:
+    pop ds
+    retf32
+wait_for_can_bridge_programming Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2019,6 +2477,8 @@ init    Proc far
     mov es:capture_handle,0
     mov es:capture_thread,0
     mov es:capture_list,0
+    mov ds:can_prog_sel,0
+    mov ds:can_prog_size,0
     call InitBuf
 ;
     mov di,OFFSET can_id_hook_arr
@@ -2076,6 +2536,23 @@ init    Proc far
     mov edi,OFFSET stop_can_capture_name
     xor dx,dx
     mov ax,stop_can_capture_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_can_bridge_version
+    mov edi,OFFSET get_can_bridge_version_name
+    mov ax,get_can_bridge_version_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET program_can_bridge16
+    mov esi,OFFSET program_can_bridge32
+    mov edi,OFFSET program_can_bridge_name
+    mov dx,virt_es_in
+    mov ax,program_can_bridge_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET wait_for_can_bridge_programming
+    mov edi,OFFSET wait_for_can_bridge_programming_name
+    mov ax,wait_for_can_bridge_programming_nr
     RegisterBimodalUserGate
 ;
     mov edi,OFFSET usb_attach
