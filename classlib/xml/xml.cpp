@@ -4359,6 +4359,11 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             }
 	}
 
+	void XMLElement::AddContentString(TString str)
+	{
+                AddContent(str.GetData(), -1, 0);
+	}
+
 
 	unsigned int XMLElement::GetAllChildren(XMLElement** x, unsigned int deep)
 	{

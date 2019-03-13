@@ -368,6 +368,7 @@ class XMLElement
                 unsigned int GetContentsNum();
 
                 TString GetContentString(const char *def);
+		void AddContentString(TString str);
 
 
                 // Children Stuff
