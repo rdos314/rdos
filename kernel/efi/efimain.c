@@ -1580,6 +1580,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
                 if (ConvertMemoryMap())
                 {
+                    BS->SetWatchdogTimer(0, 0, 0, NULL);
                     if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
                         StartLoader();
                     else
