@@ -75,6 +75,8 @@ extern int GetAmdTemp();
 #define MAX_PROCESSOR_PSTATES   32
 #define MAX_PROCESSOR_TSTATES   32
 
+#define AMD_WATCHDOG         0xC0010074
+
 #define AMD8_PERF_STATUS     0xC0010042
 #define AMD8_PERF_CTL        0xC0010041
 
@@ -714,6 +716,8 @@ void InitAmdK10()
 {
     int i;
     int StateId = (int)ReadMsr(AMD10_PERF_STATUS) & 0xFFFF;
+
+    WriteMsr(AMD_WATCHDOG, 0);
 
     PowerState = 0;
 
