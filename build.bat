@@ -57,12 +57,12 @@ ide2make -p kernel/bios/loader/loader 1>nul
 wmake -f kernel/bios/loader/loader.mk -h -e 1>nul
 
 echo "Building EFI 32-bit loader"
-ide2make -p kernel/efi/loader/boot32 1>nul
-wmake -f kernel/efi/loader/boot32.mk -h -e 1>nul
+ide2make -p kernel/efi/loader/ia32/boot32 1>nul
+wmake -f kernel/efi/loader/ia32/boot32.mk -h -e 1>nul
 
 echo "Building EFI 64-bit loader"
-ide2make -p kernel/efi/loader/boot64 1>nul
-wmake -f kernel/efi/loader/boot64.mk -h -e 1>nul
+ide2make -p kernel/efi/loader/x64/boot64 1>nul
+wmake -f kernel/efi/loader/x64/boot64.mk -h -e 1>nul
 
 echo "Building Rdos classlib"
 ide2make -p classlib/rdos/rdos 1>nul

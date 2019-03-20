@@ -1251,7 +1251,7 @@ start:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-    mov ds:efi_text_row,1
+    mov ds:efi_text_row,5
     mov ds:efi_text_col,0
     mov ds:efi_fore_col,0FFFFFFh
     mov ds:efi_back_col,0
