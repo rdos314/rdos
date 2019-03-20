@@ -1785,25 +1785,173 @@ set_disc_param  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SET_DISC_TOTAL_SECTORS
+;       NAME:           CalcParam
 ;
-;           DESCRIPTION:    Set disc total sectors
+;       DESCRIPTION:    Calculate various parameters
 ;
-;           PARAMETERS:     BX          Disc sel
-;                           EDX:EAX     Total sectors
+;       PARAMETERS:     DS      Disc sel
+;                       EDX:EAX	Sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_disc_total_sectors_name     DB 'Set Disc Total Sectors',0
-
-set_disc_total_sectors  Proc far
-    push ds
-    mov ds,bx
+CalcParam       Proc near
+    pushad
+;
+    mov ebx,1
     mov ds:disc_total_sectors,eax
     mov ds:disc_total_sectors+4,edx
+
+calc_param_norm_loop:
+    shl ebx,1
+    cmp ebx,10000h
+    je calc_param_done
+;
+    shr edx,1
+    rcr eax,1
+;
+    or edx,edx
+    jnz calc_param_norm_loop
+;    
+    cmp ebx,eax
+    jc calc_param_norm_loop
+
+calc_param_done:
+    cmp eax,10000h
+    jc calc_param_in_range
+;
+    mov eax,0FFFFh
+
+calc_param_in_range:    
+    movzx ebx,ax
+    mov ds:disc_sectors_per_unit,ax
+    mov eax,ds:disc_total_sectors
+    mov edx,ds:disc_total_sectors+4
+    div ebx
+    mov ds:disc_units,eax
+
+calc_norm_loop:
+    movzx eax,ds:disc_sectors_per_unit
+    mul ds:disc_units
+    sub edx,ds:disc_total_sectors+4
+    sbb eax,ds:disc_total_sectors 
+    jnc calc_norm_ok
+;
+    add ds:disc_sectors_per_unit,1
+    jnc calc_norm_loop
+;
+    dec ds:disc_sectors_per_unit
+    inc ds:disc_units
+    jmp calc_norm_loop
+
+calc_norm_ok:    
+    popad
+    ret
+CalcParam       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SET_DISC_LBA_PARAM
+;
+;           DESCRIPTION:    Set disc LBA params
+;
+;           PARAMETERS:     BX          Disc sel
+;                           CX          Bytes per sector
+;                           EDX:EAX     Total sectors
+;
+;           RETURNS:        AX		Sectors per unit
+;                           EDX		Units
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_disc_lba_param_name     DB 'Set Disc LBA Param',0
+
+set_disc_lba_param  Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov ds,bx
+    mov ds:disc_bytes_per_sector,cx
+    mov ds:disc_sectors_per_cyl,-1
+    mov ds:disc_heads,-1
+    call CalcParam
+;
+    GetFreePhysical
+    or edx,edx
+    jz set_lba_param_low
+;
+    mov eax,0FFFFFFFFh
+
+set_lba_param_low:
+    mov edx,ds:disc_units
+    shr eax,5           ; use 1/32 of physical memory per disc
+    cmp eax,10000h      ; use a minimum of 64k per disc
+    ja set_lba_param_max
+;
+    mov eax,10000h
+
+set_lba_param_max:
+    shr eax,9
+    mov ds:disc_cache_limit,eax
+    mov ds:disc_cached_sectors,0
+;
+    mov ecx,OFFSET disc_unit_arr
+    mov eax,edx
+    shl eax,2
+    add eax,ecx
+    AllocateSmallGlobalMem
+    xor di,di
+    xor si,si
+    rep movsb
+;
+    xor eax,eax
+    movzx edi,di
+    mov ecx,edx
+    rep stos dword ptr es:[edi]
+;
+    mov si,ds
+    mov di,es
+    mov ax,gdt_sel
+    mov ds,ax
+    cli
+    mov eax,[si]
+    xchg eax,[di]
+    mov [si],eax
+    mov eax,[si+4]
+    xchg eax,[di+4]
+    mov [si+4],eax
+    sti
+    jmp short $+2
+    mov ds,si
+    mov es,di
+    FreeMem
+;
+    mov eax,ds:disc_units
+    dec eax
+    shr eax,3
+    add eax,5
+    AllocateSmallGlobalMem
+    mov ds:disc_pend_bitmap,es
+    xor edi,edi
+    mov ecx,eax
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov ax,ds:disc_sectors_per_unit
+    mov edx,ds:disc_units
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop es
     pop ds
     retf32
-set_disc_total_sectors  Endp
+set_disc_lba_param  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6063,9 +6211,9 @@ init    PROC far
     mov ax,set_disc_param_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET set_disc_total_sectors
-    mov edi,OFFSET set_disc_total_sectors_name
-    mov ax,set_disc_total_sectors_nr
+    mov esi,OFFSET set_disc_lba_param
+    mov edi,OFFSET set_disc_lba_param_name
+    mov ax,set_disc_lba_param_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_disc_vendor_info_buf

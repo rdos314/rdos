@@ -3091,9 +3091,12 @@ SetDiscParam    MACRO
                     ENDM
 
 ;       IN  BX      Disc sel
+;       IN  CX      Bytes per sector
 ;       IN  EDX:EAX Total sectors
-SetDiscTotalSectors    MACRO
-    OsGate set_disc_total_sectors_nr
+;       OUT AX      Sectors per unit
+;       OUT EDX     Units
+SetDiscLbaParam    MACRO
+    OsGate set_disc_lba_param_nr
                     ENDM
 
 ;       IN  BX      Disc sel

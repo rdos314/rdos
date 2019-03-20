@@ -109,7 +109,6 @@ disc_handle             DW ?
 
 disc_sectors            DD ?
 disc_sectors_per_unit   DW ?
-disc_units              DD ?
 
 disc_drive_arr          DW 4 DUP(?)
 
@@ -168,69 +167,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     .386p
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       CalcParam
-;
-;       DESCRIPTION:    Calculate various parameters
-;
-;       PARAMETERS:     FS      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcParam       Proc near
-    pushad
-;
-    mov ebx,1
-    mov eax,fs:disc_sectors
-    xor edx,edx
-
-calc_param_norm_loop:
-    shl ebx,1
-    cmp ebx,8000h
-    je calc_param_done
-;
-    shr edx,1
-    rcr eax,1
-;
-    or edx,edx
-    jnz calc_param_norm_loop
-;    
-    cmp ebx,eax
-    jc calc_param_norm_loop
-
-calc_param_done:
-    cmp ebx,10000h
-    jc calc_param_in_range
-;
-    mov ebx,0FFFFh
-
-calc_param_in_range:    
-    mov fs:disc_sectors_per_unit,bx
-    mov eax,fs:disc_sectors
-    xor edx,edx
-    div ebx
-    mov fs:disc_units,eax
-
-calc_norm_loop:
-    movzx eax,fs:disc_sectors_per_unit
-    mul fs:disc_units
-    sub eax,fs:disc_sectors
-    jnc calc_norm_ok
-;
-    add fs:disc_units,1
-    jnc calc_norm_loop
-;
-    dec fs:disc_units
-    inc fs:disc_sectors_per_unit
-    jmp calc_norm_loop
-
-calc_norm_ok:
-    popad
-    ret
-CalcParam       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1989,18 +1925,12 @@ dtOk:
     mov fs:disc_nr,al
     mov fs:disc_handle,bx
 ;
-    call CalcParam
-    mov ax,fs:disc_sectors_per_unit
-    mov edx,fs:disc_units
-    mov cx,512
-    mov si,-1
-    mov di,-1
-    mov bx,fs:disc_handle
-    SetDiscParam
-;
-    mov eax,fs:disc_sectors
+    int 3
     xor edx,edx
-    SetDiscTotalSectors
+    mov eax,fs:disc_sectors
+    mov cx,512
+    SetDiscLbaParam
+    mov fs:disc_sectors_per_unit,ax
 ;
     push es
     push cx
