@@ -118,7 +118,6 @@ sd_func6            DB ?
 
 sd_total_sectors    DD ?
 sd_sectors_per_unit DW ?
-sd_units            DW ?
 
 sd_device_struc ENDS
 
@@ -2342,69 +2341,6 @@ discbuf_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       CalcParam
-;
-;       DESCRIPTION:    Calculate various parameters
-;
-;       PARAMETERS:     DS      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcParam       Proc near
-    pushad
-;
-    mov eax,1
-    mov edx,ds:sd_total_sectors
-
-calc_param_norm_loop:
-    shl eax,1
-    shr edx,1
-    cmp eax,edx
-    jc calc_param_norm_loop
-;
-    mov esi,edx
-    mov ebx,esi
-    mov ecx,edx
-
-calc_param_chs_loop:
-    xor edx,edx
-    mov eax,ds:sd_total_sectors
-    div esi
-    cmp ecx,edx
-    jc calc_param_chs_next
-;       
-    mov ecx,edx
-    mov ebx,esi
-    or edx,edx
-    jz calc_param_chs_ok
-
-calc_param_chs_next:
-    inc esi
-    cmp esi,eax
-    jbe calc_param_chs_loop
-;
-    xor edx,edx
-    mov eax,ds:sd_total_sectors
-    div ebx
-
-calc_param_chs_ok:
-    mov edx,eax
-    mov eax,ebx
-;
-    mov ds:sd_sectors_per_unit,ax
-    mov ds:sd_units,dx
-    mul dx
-    push dx
-    push ax
-    pop ds:sd_total_sectors
-;
-    popad
-    ret
-CalcParam       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           Install unit
 ;
 ;       PARAMETERS:     AL      UNIT #
@@ -2487,14 +2423,11 @@ InstallUnit    Proc near
     mov ds:sd_disc_nr,al
     mov ds:sd_disc_sel,bx
 ;
-    call CalcParam
-    mov ax,ds:sd_sectors_per_unit
-    movzx edx,ds:sd_units
+    mov eax,ds:sd_total_sectors
+    xor edx,edx
     mov cx,512
-    mov si,-1
-    mov di,-1
-    mov bx,ds:sd_disc_sel
-    SetDiscParam
+    SetDiscLbaParam
+    mov ds:sd_sectors_per_unit,ax
 ;
     push es
     push edi
