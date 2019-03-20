@@ -1231,7 +1231,7 @@ static void WaitKey(int ms)
     EFI_EVENT   TimerEvent;
     EFI_EVENT   WaitList[2];
 
-    Status = BS->CreateEvent(EFI_EVENT_TIMER. 0, NULL, NULL, &TimerEvent);
+    Status = BS->CreateEvent(EVT_TIMER. 0, NULL, NULL, &TimerEvent);
     Status = BS->SetTimer(TimerEvent, TimerRelative, 10000 * ms);
     WaitList[0] = ST->ConIn->WaitForKey;
     WaitList[1] = TimerEvent;
