@@ -56,6 +56,7 @@ disc_def_struc      STRUC
 
 disc_nr                 DB ?
 disc_flags              DB ?
+disc_total_sectors      DD ?,?
 disc_units              DD ?
 disc_bytes_per_sector   DW ?
 disc_sectors_per_unit   DW ?
@@ -1699,10 +1700,7 @@ set_disc_param_name     DB 'Set Disc Param',0
 set_disc_param  Proc far
     push ds
     push es
-    push eax
-    push ecx
-    push si
-    push edi
+    pushad
 ;
     mov ds,bx
     mov ds:disc_sectors_per_unit,ax
@@ -1773,14 +1771,39 @@ set_param_max:
     xor al,al
     rep stos byte ptr es:[edi]
 ;
-    pop edi
-    pop si
-    pop ecx
-    pop eax
+    movzx eax,ds:disc_sectors_per_unit
+    mul ds:disc_units
+    mov ds:disc_total_sectors,eax
+    mov ds:disc_total_sectors+4,edx
+;
+    popad
     pop es
     pop ds
     retf32
 set_disc_param  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SET_DISC_TOTAL_SECTORS
+;
+;           DESCRIPTION:    Set disc total sectors
+;
+;           PARAMETERS:     BX          Disc sel
+;                           EDX:EAX     Total sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_disc_total_sectors_name     DB 'Set Disc Total Sectors',0
+
+set_disc_total_sectors  Proc far
+    push ds
+    mov ds,bx
+    mov ds:disc_total_sectors,eax
+    mov ds:disc_total_sectors+4,edx
+    pop ds
+    retf32
+set_disc_total_sectors  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4493,11 +4516,7 @@ get_old_disc_info   PROC far
     jz get_old_disc_info_fail
 ;
     mov ds,bx
-    mov eax,ds:disc_units
-    mul ds:disc_sectors_per_unit
-    push dx
-    push ax
-    pop edx
+    mov edx,ds:disc_total_sectors
     mov cx,ds:disc_bytes_per_sector
     mov si,ds:disc_sectors_per_cyl
     mov di,ds:disc_heads
@@ -4553,8 +4572,8 @@ get_disc_info   PROC far
     jz get_disc_info_fail
 ;
     mov ds,bx
-    movzx eax,ds:disc_sectors_per_unit
-    mul ds:disc_units
+    mov eax,ds:disc_total_sectors
+    mov edx,ds:disc_total_sectors+4
     mov cx,ds:disc_bytes_per_sector
     mov si,ds:disc_sectors_per_cyl
     mov di,ds:disc_heads
@@ -6042,6 +6061,11 @@ init    PROC far
     mov esi,OFFSET set_disc_param
     mov edi,OFFSET set_disc_param_name
     mov ax,set_disc_param_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_disc_total_sectors
+    mov edi,OFFSET set_disc_total_sectors_name
+    mov ax,set_disc_total_sectors_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_disc_vendor_info_buf

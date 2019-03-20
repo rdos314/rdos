@@ -3091,6 +3091,12 @@ SetDiscParam    MACRO
                     ENDM
 
 ;       IN  BX      Disc sel
+;       IN  EDX:EAX Total sectors
+SetDiscTotalSectors    MACRO
+    OsGate set_disc_total_sectors_nr
+                    ENDM
+
+;       IN  BX      Disc sel
 ;       OUT ES:DI   Vendor buffer
 GetDiscVendorInfoBuf    MACRO
     OsGate get_disc_vendor_info_buf_nr

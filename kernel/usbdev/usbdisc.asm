@@ -1998,6 +1998,10 @@ dtOk:
     mov bx,fs:disc_handle
     SetDiscParam
 ;
+    mov eax,fs:disc_sectors
+    xor edx,edx
+    SetDiscTotalSectors
+;
     push es
     push cx
     push si

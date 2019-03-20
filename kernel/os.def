@@ -814,4 +814,6 @@ reset_hid_nr                = 713
 
 get_device_cmd_line_nr      = 714
 
+set_disc_total_sectors_nr   = 715
+
 osgate_entries              = 750
