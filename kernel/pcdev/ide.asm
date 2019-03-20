@@ -968,52 +968,6 @@ CalcParam       Proc near
     mul edi
     mov edi,eax
 ;
-    test fs:drive_lba_flags,LBA_MODE
-    jz calc_param_chs
-;
-    cmp edi,fs:drive_lba_sectors
-    jae calc_param_chs
-;
-    mov eax,1
-    mov edx,fs:drive_lba_sectors
-
-calc_param_lba_norm_loop:
-    shl eax,1
-    shr edx,1
-    cmp eax,edx
-    jc calc_param_lba_norm_loop
-;
-    mov esi,edx
-    mov ebx,esi
-    mov ecx,edx
-
-calc_param_lba_chs_loop:
-    xor edx,edx
-    mov eax,fs:drive_lba_sectors
-    div esi
-    cmp ecx,edx
-    jc calc_param_lba_chs_next
-;       
-    mov ecx,edx
-    mov ebx,esi
-    or edx,edx
-    jz calc_param_lba_chs_ok
-
-calc_param_lba_chs_next:
-    inc esi
-    cmp esi,eax
-    jbe calc_param_lba_chs_loop
-;
-    xor edx,edx
-    mov eax,fs:drive_lba_sectors
-    div ebx
-
-calc_param_lba_chs_ok:
-    mov edx,eax
-    mov eax,ebx
-    jmp calc_param_chs_ok
-    
-calc_param_chs:
     xor edx,edx
     mov eax,edi
     div esi
@@ -2012,6 +1966,19 @@ install_unit_ok:
     mov fs:disc_nr,al
     mov fs:disc_ide_sel,ds
 ;
+    test fs:drive_lba_flags,LBA_MODE
+    jz install_chs
+
+install_lba:
+    mov eax,fs:drive_lba_sectors
+    xor edx,edx
+    mov cx,512
+    SetDiscLbaParam
+    mov fs:drive_sectors_per_unit,ax
+    mov fs:drive_units,dx
+    jmp install_common
+
+install_chs:
     call CalcParam
     mov ax,fs:drive_sectors_per_unit
     movzx edx,fs:drive_units
@@ -2020,7 +1987,8 @@ install_unit_ok:
     mov di,fs:drive_heads
     mov bx,fs:disc_sel
     SetDiscParam
-;
+
+install_common:
     GetDiscVendorInfoBuf
     mov al,'I'
     stosb
@@ -2202,6 +2170,19 @@ install_pci_unit_ok:
     mov fs:disc_nr,al
     mov fs:disc_ide_sel,ds
 ;
+    test fs:drive_lba_flags,LBA_MODE
+    jz install_pci_chs
+
+install_pci_lba:
+    mov eax,fs:drive_lba_sectors
+    xor edx,edx
+    mov cx,512
+    SetDiscLbaParam
+    mov fs:drive_sectors_per_unit,ax
+    mov fs:drive_units,dx
+    jmp install_pci_common
+
+install_pci_chs:
     call CalcParam
     mov ax,fs:drive_sectors_per_unit
     movzx edx,fs:drive_units
@@ -2210,7 +2191,8 @@ install_pci_unit_ok:
     mov di,fs:drive_heads
     mov bx,fs:disc_sel
     SetDiscParam
-;
+
+install_pci_common:
     push ds
     mov ax,cs
     mov ds,ax
