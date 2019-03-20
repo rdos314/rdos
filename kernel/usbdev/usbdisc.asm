@@ -1925,7 +1925,6 @@ dtOk:
     mov fs:disc_nr,al
     mov fs:disc_handle,bx
 ;
-    int 3
     xor edx,edx
     mov eax,fs:disc_sectors
     mov cx,512
