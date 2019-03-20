@@ -1225,7 +1225,39 @@ static void SetupMenu()
     ST->ConOut->SetAttribute(ST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
 }
 
-static void WaitForKey(int ms)
+static bool UpdateKey()
+{
+    switch (Key.ScanCode)
+    {
+        case SCAN_UP:
+            if (SelectedRow > 0)
+            {
+                SelectedRow--;
+                DrawRow(SelectedRow);
+                DrawRow(SelectedRow + 1);
+            }
+            break;
+
+        case SCAN_DOWN:
+            if (SelectedRow < MenuRows - 1)
+            {
+                SelectedRow++;
+                DrawRow(SelectedRow);
+                DrawRow(SelectedRow - 1);
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)
+        return true;
+    else
+        return false;
+}
+
+static bool WaitForKey(int ms)
 {
     EFI_STATUS  Status;
     EFI_EVENT   TimerEvent;
@@ -1239,14 +1271,19 @@ static void WaitForKey(int ms)
 
     Status = BS->WaitForEvent(2, WaitList, &Index);
     BS->CloseEvent(TimerEvent);
+
+    if (Index == 0)
+    {
+        ST->ConIn->ReadKeyStroke(ST->ConIn, &Key);
+        return UpdateKey();
+    }
+    else
+        return true;
 }
 
 static void HandleMenu()
 {
-    WaitForKey(2000);
-
-    Status = ST->ConIn->ReadKeyStroke(ST->ConIn, &Key);
-    if (Status == EFI_NOT_READY)
+    if (WaitForKey(2500))
         SelectedRow = 0;
     else
     {
@@ -1255,31 +1292,7 @@ static void HandleMenu()
             while ((Status = ST->ConIn->ReadKeyStroke(ST->ConIn, &Key)) == EFI_NOT_READY)
                 ;
 
-            switch (Key.ScanCode)
-            {
-                case SCAN_UP:
-                    if (SelectedRow > 0)
-                    {
-                        SelectedRow--;
-                        DrawRow(SelectedRow);
-                        DrawRow(SelectedRow + 1);
-                    }
-                    break;
-
-                case SCAN_DOWN:
-                    if (SelectedRow < MenuRows - 1)
-                    {
-                        SelectedRow++;
-                        DrawRow(SelectedRow);
-                        DrawRow(SelectedRow - 1);
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-
-            if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)
+            if (UpdateKey())
                 break;
         }
     }
