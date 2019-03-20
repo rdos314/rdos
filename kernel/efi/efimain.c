@@ -57,7 +57,7 @@ struct BootEntry
     EFI_FILE_IO_INTERFACE *Volume;
     CHAR16 FileName[256];
     unsigned int FileSize;
-    char MenuStr[MENU_WIDTH + 1];    
+    char MenuStr[MENU_WIDTH + 1];
 };
 
 int StartRow;
@@ -114,7 +114,7 @@ unsigned int MemDescrSize;
 unsigned int MemDescrVersion;
 
 unsigned int MemMapCount;
-struct MemMapEntry *MemMapArr;    
+struct MemMapEntry *MemMapArr;
 
 //
 // Root device path
@@ -230,7 +230,7 @@ static void WriteChar(char ch)
 {
     CHAR16 wstr[] = { 0, 0 };
 
-    wstr[0] = (CHAR16)ch;            
+    wstr[0] = (CHAR16)ch;
     ST->ConOut->OutputString(ST->ConOut, wstr);
 }
 
@@ -351,7 +351,7 @@ void reverse(char *s)
 {
      int i, j;
      char c;
- 
+
      for (i = 0, j = strlen(s)-1; i<j; i++, j--)
      {
          c = s[i];
@@ -363,7 +363,7 @@ void reverse(char *s)
 static void itoa(int n, char *s)
 {
      int i, sign;
- 
+
      if ((sign = n) < 0)  /* record sign */
          n = -n;          /* make n positive */
      i = 0;
@@ -395,7 +395,7 @@ static char *strstr(char *string, char *substring)
             if (*b == 0)
                 return string;
 
-            if (*a++ != *b++) 
+            if (*a++ != *b++)
                 break;
         }
         b = substring;
@@ -819,7 +819,7 @@ static int ShowMode(int Mode)
     if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
     {
         printf("Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
-        
+
         switch (Info->PixelFormat)
         {
             case PixelRedGreenBlueReserved8BitPerColor:
@@ -844,9 +844,9 @@ static int ShowMode(int Mode)
 }
 
 static void ShowUsedMode()
-{        
+{
     printf("GOP: %dx%d, ", Width, Height);
-        
+
     switch (PixelFormat)
     {
         case PixelRedGreenBlueReserved8BitPerColor:
@@ -977,7 +977,7 @@ static void GetNormalFile(EFI_FILE_HANDLE DirHandle)
     while (Size)
     {
         Size = 1024;
-        
+
         if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
         {
             if (Size)
@@ -989,7 +989,7 @@ static void GetNormalFile(EFI_FILE_HANDLE DirHandle)
 
                     if (!strcmp(str, "rdos.bin"))
                     {
-                        strcpy(str, "RDOS - normal boot"); 
+                        strcpy(str, "RDOS - normal boot");
                         if (CurrFs)
                         {
                             strcat(str, " (part");
@@ -1016,7 +1016,7 @@ static void GetSafeFile(EFI_FILE_HANDLE DirHandle)
     while (Size)
     {
         Size = 1024;
-        
+
         if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
         {
             if (Size)
@@ -1028,7 +1028,7 @@ static void GetSafeFile(EFI_FILE_HANDLE DirHandle)
 
                     if (!strcmp(str, "safe.bin"))
                     {
-                        strcpy(str, "RDOS - safe mode boot"); 
+                        strcpy(str, "RDOS - safe mode boot");
                         if (CurrFs)
                         {
                             strcat(str, " (part");
@@ -1056,7 +1056,7 @@ static void GetOtherFiles(EFI_FILE_HANDLE DirHandle)
     while (Size)
     {
         Size = 1024;
-        
+
         if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
         {
             if (Size)
@@ -1116,7 +1116,7 @@ static void CheckFs(EFI_HANDLE handle)
             GetOtherFiles(Root);
             Root->Close(Root);
         }
-    } 
+    }
 }
 
 static void InitFs()
@@ -1225,13 +1225,14 @@ static void SetupMenu()
     ST->ConOut->SetAttribute(ST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
 }
 
-static void WaitKey(int ms)
+static void WaitForKey(int ms)
 {
     EFI_STATUS  Status;
     EFI_EVENT   TimerEvent;
     EFI_EVENT   WaitList[2];
+    int         Index;
 
-    Status = BS->CreateEvent(EVT_TIMER. 0, NULL, NULL, &TimerEvent);
+    Status = BS->CreateEvent(EVT_TIMER, 0, NULL, NULL, &TimerEvent);
     Status = BS->SetTimer(TimerEvent, TimerRelative, 10000 * ms);
     WaitList[0] = ST->ConIn->WaitForKey;
     WaitList[1] = TimerEvent;
@@ -1273,7 +1274,7 @@ static void HandleMenu()
                         DrawRow(SelectedRow - 1);
                     }
                     break;
-  
+
                 default:
                     break;
             }
@@ -1307,7 +1308,7 @@ static int LoadRdosBinary()
 
                 FileHandle->SetPosition(FileHandle, 0);
                 FileHandle->Read(FileHandle, &FileSize, RdosImageBase);
-                
+
 //                for (i = 0; i < RdosImagePages; i++)
 //                {
 //                    FileHandle->Read(FileHandle, 0x1000, RdosImageBase);
@@ -1323,7 +1324,7 @@ static int LoadRdosBinary()
         }
         else
             printf("Cannot open file\n\r");
-            
+
         Root->Close(Root);
     }
     else
@@ -1378,7 +1379,7 @@ static int LoadBootLoader()
         }
         else
             printf("Cannot open loader file\n\r");
-            
+
         Root->Close(Root);
     }
     else
@@ -1434,8 +1435,8 @@ static int ConvertMemoryMap()
     EFI_PHYSICAL_ADDRESS RdosMemBase = RDOS_MEM;
 
     MemMapCount = 0;
-    MemMapArr = (struct MemMapEntry *)RdosMemBase;    
-    
+    MemMapArr = (struct MemMapEntry *)RdosMemBase;
+
     if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
     {
         ptr = (char *)MemMap;
@@ -1446,7 +1447,7 @@ static int ConvertMemoryMap()
         for (i = 0; i < count; i++)
         {
             memptr = (EFI_MEMORY_DESCRIPTOR *)ptr;
-            
+
             switch (memptr->Type)
             {
                 case EfiLoaderCode:
@@ -1493,7 +1494,7 @@ static int ConvertMemoryMap()
 
         return 1;
     }
-                        
+
     return 0;
 }
 
@@ -1525,8 +1526,8 @@ static void GetAcpiTable()
     for (i = 0; i < ConfigTableCount; i++)
         if (CompareGUIDs(ConfigTableArr[i].VendorGuid, AcpiTableGuid))
             AcpiTable = ConfigTableArr[i].VendorTable;
- 
-}                        
+
+}
 
 static void StartLoader()
 {
@@ -1557,7 +1558,7 @@ static void StartLoader()
 
     (*StartLoaderProc)();
 }
-            
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
     /* Store the system table for future use in other functions */
@@ -1619,22 +1620,22 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         }
     }
 
-    printf("Failed to load, press any key to continue\n\r");    
-  
+    printf("Failed to load, press any key to continue\n\r");
+
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
- 
+
        First, we need to empty the console input buffer to flush
        out any keystrokes entered before this point */
     Status = ST->ConIn->Reset(ST->ConIn, FALSE);
     if (EFI_ERROR(Status))
         return Status;
 
- 
+
     /* Now wait until a key becomes available.  This is a simple
        polling implementation.  You could try and use the WaitForKey
        event instead if you like */
     while ((Status = ST->ConIn->ReadKeyStroke(ST->ConIn, &Key)) == EFI_NOT_READY) ;
- 
+
     return Status;
 }
