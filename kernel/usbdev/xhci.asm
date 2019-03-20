@@ -4281,20 +4281,30 @@ CreateSecondaryFunction  Proc near
 ;    
     mov ebx,edx
     push eax
-    mov eax,1000h
+    mov eax,10000h
     AllocateBigLinear
     pop eax
 ;
     push eax
+    push edx
+    mov ecx,10h
     and ax,0F000h
     or ax,813h
+
+csfDevLoop:
     SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h
+    loop csfDevLoop
+;
+    pop edx
     pop eax
     and eax,0FFFh
     or edx,eax
 ;
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,10000h
     CreateDataSelector16
     mov ds,bx
 ;
@@ -4318,13 +4328,14 @@ csf64Ok:
     mov es:xhc_slot_count,al
 ;
     mov al,ds:[7]
-    cmp al,0B0h
+    cmp al,20h
     jb csfPortsOk
 ;
-    mov al,0B0h
+    mov al,20h
 
 csfPortsOk:    
     mov es:xhc_port_count,al
+    mov es:xhc_port_change_mask,0
 ;
     mov cx,20h
     mov eax,ds:hccCap1
@@ -4379,6 +4390,9 @@ csfContextSizeOk:
 ;
     pop eax
     pop ebx
+;
+    push ebx
+    push eax
 ;
     mov ecx,ds:hccDbOff
     and cl,0FCh
@@ -4549,14 +4563,32 @@ init_pci_next_device:
     mov ch,30h
     FindPciClass
     jc init_pci_done
-;       
+;   
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_busmstr
+    WritePciWord
+;
+    mov si,dx
     mov cl,10h
     ReadPciDword
-    and ax,0F000h
+    xor edx,edx
+    test al,4
+    jz init_pci_next_base_ok
+;
+    push eax    
+    mov cl,14h
+    ReadPciDword
+    mov edx,eax
+    pop eax
+
+init_pci_next_base_ok:
+    and ax,0FFF0h
     cmp eax,ebp
     je init_pci_done
 ;       
     call CreateSecondaryFunction
+    mov dx,si
     inc dx
     jc init_pci_next_device
 ;
