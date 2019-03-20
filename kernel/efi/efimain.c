@@ -1225,7 +1225,7 @@ static void SetupMenu()
     ST->ConOut->SetAttribute(ST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
 }
 
-static bool UpdateKey()
+static int UpdateKey()
 {
     switch (Key.ScanCode)
     {
@@ -1252,12 +1252,12 @@ static bool UpdateKey()
     }
 
     if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)
-        return true;
+        return 1;
     else
-        return false;
+        return 0;
 }
 
-static bool WaitForKey(int ms)
+static int WaitForKey(int ms)
 {
     EFI_STATUS  Status;
     EFI_EVENT   TimerEvent;
@@ -1278,7 +1278,7 @@ static bool WaitForKey(int ms)
         return UpdateKey();
     }
     else
-        return true;
+        return 1;
 }
 
 static void HandleMenu()
