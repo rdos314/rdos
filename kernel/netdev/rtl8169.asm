@@ -2601,23 +2601,23 @@ mt02 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
 mt01 DW 0FC80h, 0000h, 1,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
 mt00 DW 00000h, 0000h, 0,  OFFSET ReadPhy8169,     OFFSET WritePhy8169 
 
-FindHardware    Proc near
+IoFindHardware    Proc near
     mov dx,ds:IoBase
     add dx,REG_TCR
     in eax,dx
     shr eax,16
     mov bx,OFFSET mac_tab
 
-fhLoop:    
+iofhLoop:    
     mov dx,ax
     and dx,cs:[bx]
     cmp dx,cs:[bx+2]
-    je fhOk
+    je iofhOk
 ;
     add bx,10  
-    jmp fhLoop
+    jmp iofhLoop
 
-fhOk:
+iofhOk:
     mov ax,cs:[bx+4]
     mov ds:HwId,ax
     mov ax,cs:[bx+6]
@@ -2625,7 +2625,39 @@ fhOk:
     mov ax,cs:[bx+8]
     mov ds:WritePhyProc,ax
     ret
-FindHardware   Endp
+IoFindHardware   Endp
+
+MemFindHardware    Proc near
+    mov eax,fs:mem_tcr
+    shr eax,16
+    mov bx,OFFSET mac_tab
+
+mfhLoop:    
+    mov dx,ax
+    and dx,cs:[bx]
+    cmp dx,cs:[bx+2]
+    je mfhOk
+;
+    add bx,10  
+    jmp mfhLoop
+
+mfhOk:
+    mov ax,cs:[bx+4]
+    mov ds:HwId,ax
+    mov ax,cs:[bx+6]
+    mov ds:ReadPhyProc,ax
+    mov ax,cs:[bx+8]
+    mov ds:WritePhyProc,ax
+    ret
+MemFindHardware   Endp
+
+FindHardware    Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoFindHardware
+    jmp MemFindHardware
+
+FindHardware    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
