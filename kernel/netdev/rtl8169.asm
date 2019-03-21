@@ -167,14 +167,15 @@ tx_descr    ENDS
 
 mem_struc	STRUC
 
-mem_idr0      DD ?,?
+mem_idr0      DD ?
+mem_idr1      DD ?
 mem_mar0      DD ?,?
 mem_dtccr     DD ?, ?, ?, ?
 mem_tnpds     DD ?,?
 mem_thpds     DD ?,?
 mem_resv1     DB ?, ?, ?, ?, ?, ?, ?
 mem_cr        DB ?
-mem_tppoll    DD ?
+mem_tppoll    DB ?, ?, ?, ?
 mem_imr       DW ?
 mem_isr       DW ?
 mem_tcr       DD ?
@@ -205,9 +206,9 @@ mem_res7      DD ?, ?, ?, ?
 mem_res8      DW ?, ?, ?, ?, ?
 mem_rms       DW ?
 mem_res9      DD ?
-mem_ccr       DD ?
+mem_ccr       DW ?, ?
 mem_rdsar     DD ?, ?
-mem_mtps      DD ?             
+mem_mtps      DB ?, ?, ?, ?             
 mem_res10     DD ?, ?, ?, ?
 
 mem_struc	ENDS
@@ -2252,7 +2253,7 @@ Config  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitHardware
+;       NAME:           IoInitHardware
 ;
 ;       DESCRIPTION:    Initialize hardware
 ;
@@ -2262,7 +2263,7 @@ Config  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitHardware    Proc near
+IoInitHardware    Proc near
     mov dx,ds:IoBase
     add dx,REG_CR
     in al,dx
@@ -2273,19 +2274,19 @@ InitHardware    Proc near
     push cx
     mov cx,10000
 
-ihResetWait:
+ioihResetWait:
     in al,dx
     test al,10h
-    jz ihResetDone
+    jz ioihResetDone
 ;
     pause
-    loop ihResetWait
+    loop ioihResetWait
 ;
     pop cx
     stc
-    jmp ihDone
+    jmp ioihDone
 
-ihResetDone:
+ioihResetDone:
     pop cx
 ;
     mov dx,ds:IoBase
@@ -2380,7 +2381,7 @@ ihResetDone:
     out dx,eax
     clc
 
-ihDone:
+ioihDone:
     mov ds:Isr,0
     mov ds:RxCurrDescr,0
 ;    
@@ -2394,6 +2395,134 @@ ihDone:
     mov al,1
     out dx,al    
     ret
+IoInitHardware    Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemInitHardware
+;
+;       DESCRIPTION:    Initialize hardware
+;
+;       PARAMETERS:         BH    Bus
+;                           BL    Device
+;                           CH    Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemInitHardware    Proc near
+    mov al,fs:mem_cr
+    and al,NOT 0Ch
+    or al,10h
+    mov fs:mem_cr,al
+;
+    push cx
+    mov cx,10000
+
+mihResetWait:
+    mov al,fs:mem_cr
+    test al,10h
+    jz mihResetDone
+;
+    pause
+    loop mihResetWait
+;
+    pop cx
+    stc
+    jmp mihDone
+
+mihResetDone:
+    pop cx
+;
+    mov eax,fs:mem_idr0
+    mov dword ptr ds:EthernetAddress,eax
+    mov eax,fs:mem_idr1
+    mov word ptr ds:EthernetAddress+4,ax
+;
+    mov al,0C0h
+    mov fs:mem_9346cr,al
+;
+    mov ax,fs:mem_ccr
+    and ax,NOT 260h
+    or al,8
+    mov fs:mem_ccr,ax
+;
+    call CreateRxRing
+    mov eax,ds:RxRingPhys
+    mov fs:mem_rdsar,eax
+    xor eax,eax
+    mov fs:mem_rdsar+4,eax
+;
+    call CreateTxRing    
+    mov eax,ds:TxRingPhys
+    mov fs:mem_tnpds,eax
+    xor eax,eax
+    mov fs:mem_tnpds+4,eax
+;    
+    mov ax,IR_MASK
+    mov fs:mem_imr,ax
+;
+    mov ax,2000h
+    mov fs:mem_rms,ax
+;
+    mov al,3Bh
+    mov fs:mem_mtps,al
+;
+    mov al,fs:mem_config3
+    or al,40h
+    mov fs:mem_config3,al
+;    
+    mov al,0
+    mov fs:mem_9346cr,al
+;    
+    mov al,fs:mem_cr
+    or al,0Ch
+    mov fs:mem_cr,al
+;    
+    mov eax,fs:mem_tcr
+    and ax,NOT 700h
+    or ax,600h
+    mov fs:mem_tcr,eax
+;
+    mov eax,fs:mem_rcr
+    or eax,10000h
+    and ax,1FFFh    
+    or ax,0E000h
+    and ax,NOT 700h
+    or ax,600h
+    and al,0C0h
+    or al,0Ah
+    mov fs:mem_rcr,eax
+    clc
+
+mihDone:
+    mov ds:Isr,0
+    mov ds:RxCurrDescr,0
+;
+    mov al,1
+    mov fs:mem_tppoll,al
+    ret
+MemInitHardware    Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitHardware
+;
+;       DESCRIPTION:    Initialize hardware
+;
+;       PARAMETERS:         BH    Bus
+;                           BL    Device
+;                           CH    Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitHardware    Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoInitHardware
+    jmp MemInitHardware
+
 InitHardware    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
