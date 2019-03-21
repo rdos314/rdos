@@ -164,10 +164,58 @@ tx_low_ads  DD ?
 tx_high_ads DD ?
 
 tx_descr    ENDS
+
+mem_struc	STRUC
+
+mem_idr0      DD ?,?
+mem_mar0      DD ?,?
+mem_dtccr     DD ?, ?, ?, ?
+mem_tnpds     DD ?,?
+mem_thpds     DD ?,?
+mem_resv1     DB ?, ?, ?, ?, ?, ?, ?
+mem_cr        DB ?
+mem_tppoll    DD ?
+mem_imr       DW ?
+mem_isr       DW ?
+mem_tcr       DD ?
+mem_rcr       DD ?
+mem_tctr      DD ?
+mem_mpc       DD ?
+mem_9346cr    DB ?
+mem_config0   DB ?
+mem_config1   DB ?
+mem_config2   DB ?
+mem_config3   DB ?
+mem_config4   DB ?
+mem_config5   DB ?
+mem_resv2     DB ?
+mem_timerint  DD ?, ?
+mem_phyar     DD ?
+mem_tbicsr0   DD ?
+mem_tbi_anar  DW ?
+mem_tbi_lpar  DW ?
+mem_phy_stat  DD ?
+mem_eridr     DD ?
+mem_eriar     DD ?                   
+mem_res3      DD ?, ?, ?, ?, ?, ?
+mem_res4      DD ?, ?, ?, ? 
+mem_res5      DD ?, ?, ?, ?
+mem_res6      DD ?, ?, ?, ?
+mem_res7      DD ?, ?, ?, ?
+mem_res8      DW ?, ?, ?, ?, ?
+mem_rms       DW ?
+mem_res9      DD ?
+mem_ccr       DD ?
+mem_rdsar     DD ?, ?
+mem_mtps      DD ?             
+mem_res10     DD ?, ?, ?, ?
+
+mem_struc	ENDS
  
 data    STRUC
 
 IoBase              DW ?
+MemSel              DW ?
 IoCfg               DW ?
 Handle              DW ?
 Isr                 DW ?
@@ -209,7 +257,7 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadEe
+;           NAME:           IoReadEe
 ;
 ;           DESCRIPTION:    Read Ee location
 ;
@@ -219,7 +267,7 @@ ENDIF
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadEe  Proc near
+IoReadEe  Proc near
     push bx
     push cx
     push si
@@ -243,19 +291,19 @@ ReadEe  Proc near
     shl si,cl
     inc cx
 
-reSetupLoop:
+ioreSetupLoop:
     test bx,si
-    jz reSetup0
+    jz ioreSetup0
 ;
     mov al,EE_DATA_WRITE + EE_ENB
     out dx,al
-    jmp reSetupShift
+    jmp ioreSetupShift
 
-reSetup0:
+ioreSetup0:
     mov al,EE_ENB
     out dx,al
 
-reSetupShift:
+ioreSetupShift:
     push ax
     in eax,dx
     pop ax
@@ -265,7 +313,7 @@ reSetupShift:
     in eax,dx
 ;
     shr si,1
-    loop reSetupLoop
+    loop ioreSetupLoop
 ;
     mov al,EE_ENB
     out dx,al
@@ -274,7 +322,7 @@ reSetupShift:
     mov cx,16
     xor bx,bx
 
-reReadLoop:
+ioreReadLoop:
     shl bx,1
 ;
     mov al,EE_ENB + EE_CLK
@@ -283,16 +331,16 @@ reReadLoop:
 ;
     in al,dx
     test al,EE_DATA_READ
-    jz reReadNext
+    jz ioreReadNext
 ;
     or bx,1
 
-reReadNext:
+ioreReadNext:
     mov al,EE_ENB
     out dx,al
     in eax,dx
 ;
-    loop reReadLoop
+    loop ioreReadLoop
 ;
     mov al,NOT EE_CS
     out dx,al
@@ -303,7 +351,7 @@ reReadNext:
     pop cx
     pop bx
     ret
-ReadEe  Endp
+IoReadEe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -317,7 +365,7 @@ ReadEe  Endp
 ReadEthernetAddress     Proc near
     mov ds:EeAdrLen,8 
     xor bx,bx
-    call ReadEe
+    call IoReadEe
     cmp ax,8129h
     jz reaReadAdr
 ;
@@ -328,7 +376,7 @@ reaReadAdr:
     mov si,OFFSET EthernetAddress
 
 reaReadLoop:
-    call ReadEe
+    call IoReadEe
     mov ds:[si],ax
     add si,2
     inc bx
