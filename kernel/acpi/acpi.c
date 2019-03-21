@@ -349,14 +349,14 @@ long long StateArr[MAX_PROCESSOR_COUNT];
 
 void __far ImplTestGate(const char *msg)
 {
-    ACPI_EVENT_STATUS status;
     ACPI_STATUS ok;
+    ACPI_TABLE_HEADER *wdat;
 
+    ok = AcpiGetTable(ACPI_SIG_WDAT, 0, &wdat);            
+    ok = AcpiGetTable(ACPI_SIG_HPET, 0, &wdat);            
 
-    ok = AcpiGetEventStatus(ACPI_EVENT_POWER_BUTTON, &status);
-    if (status & ACPI_EVENT_FLAG_SET)
-        RdosSoftReset();
-            
+    if (ok)
+        wdat = 0;
 }
     
 /*##########################################################################
@@ -2966,5 +2966,5 @@ int main()
     RdosRegisterOsGate(osgate_init_freq, (__rdos_gate_callback *)&ImplInitFreq, "Init Frequency");
     RdosRegisterOsGate(osgate_update_freq, (__rdos_gate_callback *)&ImplUpdateFreq, "Update Frequency");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }
