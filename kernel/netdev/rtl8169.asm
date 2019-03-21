@@ -356,35 +356,103 @@ IoReadEe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadEthernetAddress
+;           NAME:           MemReadEe
 ;
-;           DESCRIPTION:    Read the ethernet address
+;           DESCRIPTION:    Read Ee location
+;
+;       PARAMETERS:         FS          Registers
+;                           BX          Location
+;
+;           RETURNS:        AX          Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadEthernetAddress     Proc near
-    mov ds:EeAdrLen,8 
+MemReadEe  Proc near
+    push bx
+    push cx
+    push si
+;
+    mov si,bx
+    mov dx,ds:IoBase
+    add dx,REG_9346CR
+;
+    mov al,EE_DIS
+    mov fs:mem_9346cr,al
+;
+    mov al,EE_ENB
+    mov fs:mem_9346cr,al
+;
+    mov bx,EE_READ_CMD
+    movzx cx,ds:EeAdrLen
+    shl bx,cl
+    or bx,si
+;
+    add cx,4
+    mov si,1
+    shl si,cl
+    inc cx
+
+mreSetupLoop:
+    test bx,si
+    jz mreSetup0
+;
+    mov al,EE_DATA_WRITE + EE_ENB
+    mov fs:mem_9346cr,al
+    jmp mreSetupShift
+
+mreSetup0:
+    mov al,EE_ENB
+    mov fs:mem_9346cr,al
+
+mreSetupShift:
+    push ax
+    mov al,fs:mem_9346cr
+    pop ax
+;
+    or al,EE_CLK
+    mov fs:mem_9346cr,al
+    mov al,fs:mem_9346cr
+;
+    shr si,1
+    loop mreSetupLoop
+;
+    mov al,EE_ENB
+    mov fs:mem_9346cr,al
+    mov al,fs:mem_9346cr
+;
+    mov cx,16
     xor bx,bx
-    call IoReadEe
-    cmp ax,8129h
-    jz reaReadAdr
-;
-    mov ds:EeAdrLen,6
 
-reaReadAdr:
-    mov bx,7
-    mov si,OFFSET EthernetAddress
-
-reaReadLoop:
-    call IoReadEe
-    mov ds:[si],ax
-    add si,2
-    inc bx
-    cmp bx,10
-    jne reaReadLoop
+mreReadLoop:
+    shl bx,1
 ;
+    mov al,EE_ENB + EE_CLK
+    mov fs:mem_9346cr,al
+    mov al,fs:mem_9346cr
+;
+    mov al,fs:mem_9346cr
+    test al,EE_DATA_READ
+    jz mreReadNext
+;
+    or bx,1
+
+mreReadNext:
+    mov al,EE_ENB
+    mov fs:mem_9346cr,al
+    mov al,fs:mem_9346cr
+;
+    loop mreReadLoop
+;
+    mov al,NOT EE_CS
+    mov fs:mem_9346cr,al
+;
+    mov ax,bx
+;
+    pop si
+    pop cx
+    pop bx
     ret
-ReadEthernetAddress     Endp
+MemReadEe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
