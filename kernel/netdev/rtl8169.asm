@@ -682,7 +682,7 @@ ResetTxRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WritePhy8169
+;           NAME:           IoWritePhy8169
 ;
 ;           DESCRIPTION:    Write to phy, 8169 version
 ;
@@ -691,7 +691,7 @@ ResetTxRing   Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePhy8169    Proc near
+IoWritePhy8169    Proc near
     push eax
     push cx
     push dx
@@ -708,14 +708,14 @@ WritePhy8169    Proc near
     out dx,eax
     xor cx,cx
 
-wpWait8169:    
+iowpWait8169:    
     pause
     in eax,dx
     test eax,80000000h
-    jz wpDone8169
-    loop wpWait8169
+    jz iowpDone8169
+    loop iowpWait8169
 
-wpDone8169:
+iowpDone8169:
     mov ax,20
     WaitMicroSec
 ;    
@@ -723,7 +723,157 @@ wpDone8169:
     pop cx
     pop eax
     ret
-WritePhy8169    Endp    
+IoWritePhy8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWritePhy8169
+;
+;           DESCRIPTION:    Write to phy, 8169 version
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWritePhy8169    Proc near
+    push eax
+    push cx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;
+    mov fs:mem_phyar,eax
+    xor cx,cx
+
+mwpWait8169:    
+    pause
+    mov eax,fs:mem_phyar
+    test eax,80000000h
+    jz mwpDone8169
+    loop mwpWait8169
+
+mwpDone8169:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop cx
+    pop eax
+    ret
+MemWritePhy8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePhy8169
+;
+;           DESCRIPTION:    Write to phy, 8169 version
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhy8169:
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWritePhy8169
+    jmp MemWritePhy8169
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadPhy8169
+;
+;           DESCRIPTION:    Read from phy, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadPhy8169    Proc near
+    push cx
+    push dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iorpWait8169:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iorpDone8169
+;
+    loop iorpWait8169
+
+iorpDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadPhy8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadPhy8169
+;
+;           DESCRIPTION:    Read from phy, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadPhy8169    Proc near
+    push cx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;
+    mov fs:mem_phyar,eax
+    xor cx,cx
+
+mrpWait8169:    
+    pause
+    mov eax,fs:mem_phyar
+    test eax,80000000h
+    jnz mrpDone8169
+;
+    loop mrpWait8169
+
+mrpDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop cx
+    ret
+MemReadPhy8169    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -738,38 +888,11 @@ WritePhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPhy8169    Proc near
-    push cx
-    push dx
-;    
-    xor eax,eax
-    mov ah,dl
-    rol eax,8
-;    
-    mov dx,ds:IoBase
-    add dx,REG_PHYAR
-;
-    out dx,eax
-    xor cx,cx
-
-rpWait8169:    
-    pause
-    in eax,dx
-    test eax,80000000h
-    jnz rpDone8169
-;
-    loop rpWait8169
-
-rpDone8169:
-    push eax
-    mov ax,20
-    WaitMicroSec
-    pop eax
-;    
-    pop dx
-    pop cx
-    ret
-ReadPhy8169    Endp    
+ReadPhy8169:
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadPhy8169
+    jmp MemReadPhy8169
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3410,6 +3533,7 @@ init_pci1_found:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
+    mov ds:MemSel,0
     mov si,cs:[si+4]
     mov ds:IoCfg,si
 ;    
@@ -3499,6 +3623,7 @@ init_pci2_found:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
+    mov ds:MemSel,0
     mov si,cs:[si+4]
     mov ds:IoCfg,si
 ;
