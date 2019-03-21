@@ -373,8 +373,6 @@ MemReadEe  Proc near
     push si
 ;
     mov si,bx
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
 ;
     mov al,EE_DIS
     mov fs:mem_9346cr,al
@@ -780,13 +778,15 @@ MemWritePhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePhy8169:
+WritePhy8169	Proc near
     push ax
     mov ax,ds:MemSel
     or ax,ax
     pop ax
     jz IoWritePhy8169
     jmp MemWritePhy8169
+
+WritePhy8169	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -888,11 +888,13 @@ MemReadPhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPhy8169:
+ReadPhy8169	Proc near
     mov ax,ds:MemSel
     or ax,ax
     jz IoReadPhy8169
     jmp MemReadPhy8169
+
+ReadPhy8169	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1002,7 +1004,7 @@ ReadPhy8168dp2    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadEri
+;       NAME:           IoReadEri
 ;
 ;       DESCRIPTION:    Read eri register
 ;
@@ -1015,7 +1017,7 @@ ReadPhy8168dp2    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadEri   Proc near
+IoReadEri   Proc near
     mov dx,ds:IoBase
     add dx,REG_ERIAR
     mov ax,cx
@@ -1031,7 +1033,120 @@ ReadEri   Proc near
     add dx,REG_ERIDR
     in eax,dx       
     ret
-ReadEri     Endp
+IoReadEri     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemReadEri
+;
+;       DESCRIPTION:    Read eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       CX      Type
+;
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadEri   Proc near
+    mov ax,cx
+    shl eax,16
+    or ax,bx
+    or ax,ERIAR_MASK_1111
+    mov fs:mem_eriar,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov eax,fs:mem_eridr
+    ret
+MemReadEri     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadEri
+;
+;       DESCRIPTION:    Read eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       CX      Type
+;
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEri	Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadEri
+    jmp MemReadEri
+
+ReadEri	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IoWriteEri
+;
+;       DESCRIPTION:    Write eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       ECX     Type & mask
+;                       EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWriteEri   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_ERIDR
+    out dx,eax
+;    
+    mov dx,ds:IoBase
+    add dx,REG_ERIAR
+    mov eax,ecx
+    or ax,bx
+    or eax,ERIAR_WRITE_CMD
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+    ret
+IoWriteEri     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemWriteEri
+;
+;       DESCRIPTION:    Write eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       ECX     Type & mask
+;                       EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWriteEri   Proc near
+    mov fs:mem_eridr,eax
+;    
+    mov eax,ecx
+    or ax,bx
+    or eax,ERIAR_WRITE_CMD
+    mov fs:mem_eriar,eax
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+    ret
+MemWriteEri     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1048,21 +1163,14 @@ ReadEri     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteEri   Proc near
-    mov dx,ds:IoBase
-    add dx,REG_ERIDR
-    out dx,eax
-;    
-    mov dx,ds:IoBase
-    add dx,REG_ERIAR
-    mov eax,ecx
-    or ax,bx
-    or eax,ERIAR_WRITE_CMD
-    out dx,eax
-;
-    mov ax,1
-    WaitMilliSec
-    ret
-WriteEri     Endp
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWriteEri
+    jmp MemWriteEri
+
+WriteEri	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
