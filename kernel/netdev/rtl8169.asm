@@ -2662,13 +2662,13 @@ FindHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ResetHardware
+;       NAME:           IoResetHardware
 ;
 ;       DESCRIPTION:    Reset hardware
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ResetHardware    Proc near
+IoResetHardware    Proc near
     mov ds:Isr,0
 ;
     mov dx,ds:IoBase
@@ -2681,22 +2681,22 @@ ResetHardware    Proc near
     push cx
     mov cx,10000
 
-rhResetWait:
+iorhResetWait:
     in al,dx
     test al,10h
-    jz rhResetDone
+    jz iorhResetDone
 ;
     pause
-    loop rhResetWait
+    loop iorhResetWait
 ;
     pop cx
     stc
-    jmp rhDone
+    jmp iorhDone
 
-rhResetDone:
+iorhResetDone:
     pop cx
 
-rhDone:    
+iorhDone:    
     call ResetRxRing
     call ResetTxRing        
 ;
@@ -2757,6 +2757,99 @@ rhDone:
     add dx,REG_ISR
     in ax,dx
     ret
+IoResetHardware    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemResetHardware
+;
+;       DESCRIPTION:    Reset hardware
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemResetHardware    Proc near
+    mov ds:Isr,0
+;
+    mov al,fs:mem_cr
+    and al,NOT 0Ch
+    or al,10h
+    mov fs:mem_cr,al
+;
+    push cx
+    mov cx,10000
+
+mrhResetWait:
+    mov al,fs:mem_cr
+    test al,10h
+    jz mrhResetDone
+;
+    pause
+    loop mrhResetWait
+;
+    pop cx
+    stc
+    jmp mrhDone
+
+mrhResetDone:
+    pop cx
+
+mrhDone:    
+    call ResetRxRing
+    call ResetTxRing        
+;
+    mov eax,ds:RxRingPhys
+    mov fs:mem_rdsar,eax
+    xor eax,eax
+    mov fs:mem_rdsar+4,eax
+;
+    mov eax,ds:TxRingPhys
+    mov fs:mem_tnpds,eax
+    xor eax,eax
+    mov fs:mem_tnpds+4,eax
+;    
+    mov ax,IR_MASK
+    mov fs:mem_imr,ax
+;
+    mov ax,2000h
+    mov fs:mem_rms,ax
+;
+    mov al,3Bh
+    mov fs:mem_mtps,al
+;
+    mov al,fs:mem_cr
+    or al,0Ch
+    mov fs:mem_cr,al
+;    
+    mov ax,fs:mem_isr
+    mov fs:mem_isr,ax
+    xor ax,ax
+    mov fs:mem_isr,ax
+;
+    mov al,40h
+    mov fs:mem_tppoll,al
+;
+    mov ds:RxCurrDescr,0
+    mov ds:Isr,0
+    mov ax,fs:mem_isr
+    ret
+MemResetHardware    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ResetHardware
+;
+;       DESCRIPTION:    Reset hardware
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetHardware    Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoResetHardware
+    jmp MemResetHardware
+
 ResetHardware    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
