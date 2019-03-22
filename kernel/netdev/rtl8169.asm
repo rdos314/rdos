@@ -2838,23 +2838,6 @@ MemResetHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ResetHardware
-;
-;       DESCRIPTION:    Reset hardware
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetHardware    Proc near
-    mov ax,ds:MemSel
-    or ax,ax
-    jz IoResetHardware
-    jmp MemResetHardware
-
-ResetHardware    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           NetInt
 ;
 ;           DESCRIPTION:    Network card interrupt
@@ -3971,7 +3954,7 @@ SetSpeed    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdateLink
+;           NAME:           IoUpdateLink
 ;
 ;           DESCRIPTION:    Update link state
 ;
@@ -3979,27 +3962,27 @@ SetSpeed    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateLink  Proc near
+IoUpdateLink  Proc near
     push ax
 ;    
     mov dx,ds:IoBase
     add dx,REG_PHYStatus
     in al,dx
     test al,2
-    jnz ulPatch
+    jnz ioulPatch
 ;
     GetSystemTime
     sub eax,ds:PhyTimeout
     sbb edx,ds:PhyTimeout+4
-    jc ulDone 
+    jc ioulDone 
 ;
     mov ax,ADV_10_HALF OR ADV_10_FULL OR ADV_100_HALF OR ADV_100_FULL
     cmp ds:IoCfg,2
-    je ulNoHigh
+    je ioulNoHigh
 ;
     or ax,ADV_1000_HALF OR ADV_1000_FULL
 
-ulNoHigh:    
+ioulNoHigh:    
     call SetSpeed
 ;
     GetSystemTime
@@ -4007,38 +3990,38 @@ ulNoHigh:
     adc edx,0
     mov ds:PhyTimeout,eax
     mov ds:PhyTimeout+4,edx
-    jmp ulDone
+    jmp ioulDone
 
-ulPatch:
+ioulPatch:
     mov ax,ds:HwId
     cmp ax,34
-    je ul34_38
+    je ioul34_38
 ;    
     cmp ax,38
-    je ul34_38
+    je ioul34_38
 ;
     cmp ax,35
-    je ul35_36
+    je ioul35_36
 ;
     cmp ax,36
-    je ul35_36    
+    je ioul35_36    
 ;    
     cmp ax,37
-    je ul37
+    je ioul37
 ;
-    jmp ulDone 
+    jmp ioulDone 
 
-ul34_38:
+ioul34_38:
     mov dx,ds:IoBase
     add dx,REG_PHYStatus    
     in al,dx
     test al,PHY_1000
-    jnz ul34_38_1000
+    jnz ioul34_38_1000
 ;
     test al,PHY_100
-    jnz ul34_38_100    
+    jnz ioul34_38_100    
 
-ul34_38_10:
+ioul34_38_10:
     mov bx,1BCh
     mov ecx,ERIAR_MASK_1111
     mov eax,1Fh
@@ -4048,9 +4031,9 @@ ul34_38_10:
     mov ecx,ERIAR_MASK_1111
     mov eax,3Fh
     call WriteEri
-    jmp ulDone
+    jmp ioulDone
 
-ul34_38_100:
+ioul34_38_100:
     mov bx,1BCh
     mov ecx,ERIAR_MASK_1111
     mov eax,1Fh
@@ -4060,9 +4043,9 @@ ul34_38_100:
     mov ecx,ERIAR_MASK_1111
     mov eax,5
     call WriteEri
-    jmp ulDone
+    jmp ioulDone
 
-ul34_38_1000:
+ioul34_38_1000:
     mov bx,1BCh
     mov ecx,ERIAR_MASK_1111
     mov eax,11h
@@ -4072,16 +4055,16 @@ ul34_38_1000:
     mov ecx,ERIAR_MASK_1111
     mov eax,5h
     call WriteEri
-    jmp ulDone
+    jmp ioulDone
 
-ul35_36:
+ioul35_36:
     mov dx,ds:IoBase
     add dx,REG_PHYStatus    
     in al,dx
     test al,PHY_1000
-    jnz ul35_36_1000
+    jnz ioul35_36_1000
 
-ul35_36_10_100:
+ioul35_36_10_100:
     mov bx,1BCh
     mov ecx,ERIAR_MASK_1111
     mov eax,1Fh
@@ -4091,9 +4074,9 @@ ul35_36_10_100:
     mov ecx,ERIAR_MASK_1111
     mov eax,3Fh
     call WriteEri
-    jmp ulDone
+    jmp ioulDone
 
-ul35_36_1000:
+ioul35_36_1000:
     mov bx,1BCh
     mov ecx,ERIAR_MASK_1111
     mov eax,11h
@@ -4103,23 +4086,23 @@ ul35_36_1000:
     mov ecx,ERIAR_MASK_1111
     mov eax,5h
     call WriteEri
-    jmp ulDone
+    jmp ioulDone
 
-ul37:
+ioul37:
     mov dx,ds:IoBase
     add dx,REG_PHYStatus    
     in al,dx
     test al,PHY_10
-    jnz ul37_10
+    jnz ioul37_10
 
-ul37_100:
+ioul37_100:
     mov bx,1D0h
     mov ecx,ERIAR_MASK_0011
     xor eax,eax
     call WriteEri
-    jmp ulDone
+    jmp ioulDone
 
-ul37_10:
+ioul37_10:
     mov bx,1D0h
     mov ecx,ERIAR_MASK_0011
     mov eax,4D02h
@@ -4130,19 +4113,179 @@ ul37_10:
     mov eax,60h
     call WriteEri
 
-ulDone:
+ioulDone:
     pop ax
     ret
-UpdateLink  Endp
+IoUpdateLink  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemUpdateLink
+;
+;           DESCRIPTION:    Update link state
+;
+;       PARAMETERS:         DS      Data
+;                           FS      Mem sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemUpdateLink  Proc near
+    push ax
+;    
+    mov al,fs:mem_phy_stat
+    test al,2
+    jnz mulPatch
+;
+    GetSystemTime
+    sub eax,ds:PhyTimeout
+    sbb edx,ds:PhyTimeout+4
+    jc mulDone 
+;
+    mov ax,ADV_10_HALF OR ADV_10_FULL OR ADV_100_HALF OR ADV_100_FULL
+    cmp ds:IoCfg,2
+    je mulNoHigh
+;
+    or ax,ADV_1000_HALF OR ADV_1000_FULL
+
+mulNoHigh:    
+    call SetSpeed
+;
+    GetSystemTime
+    add eax,1193 * 5000
+    adc edx,0
+    mov ds:PhyTimeout,eax
+    mov ds:PhyTimeout+4,edx
+    jmp mulDone
+
+mulPatch:
+    mov ax,ds:HwId
+    cmp ax,34
+    je mul34_38
+;    
+    cmp ax,38
+    je mul34_38
+;
+    cmp ax,35
+    je mul35_36
+;
+    cmp ax,36
+    je mul35_36    
+;    
+    cmp ax,37
+    je mul37
+;
+    jmp mulDone 
+
+mul34_38:
+    mov al,fs:mem_phy_stat
+    test al,PHY_1000
+    jnz mul34_38_1000
+;
+    test al,PHY_100
+    jnz mul34_38_100    
+
+mul34_38_10:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,3Fh
+    call WriteEri
+    jmp mulDone
+
+mul34_38_100:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5
+    call WriteEri
+    jmp mulDone
+
+mul34_38_1000:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,11h
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5h
+    call WriteEri
+    jmp mulDone
+
+mul35_36:
+    mov al,fs:mem_phy_stat
+    test al,PHY_1000
+    jnz mul35_36_1000
+
+mul35_36_10_100:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,3Fh
+    call WriteEri
+    jmp mulDone
+
+mul35_36_1000:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,11h
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5h
+    call WriteEri
+    jmp mulDone
+
+mul37:
+    mov al,fs:mem_phy_stat
+    test al,PHY_10
+    jnz mul37_10
+
+mul37_100:
+    mov bx,1D0h
+    mov ecx,ERIAR_MASK_0011
+    xor eax,eax
+    call WriteEri
+    jmp mulDone
+
+mul37_10:
+    mov bx,1D0h
+    mov ecx,ERIAR_MASK_0011
+    mov eax,4D02h
+    call WriteEri
+;
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_0011
+    mov eax,60h
+    call WriteEri
+
+mulDone:
+    pop ax
+    ret
+MemUpdateLink  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           supervisor_thread
+;           NAME:           IO supervisor_thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-super_thread:
+io_super_thread:
     mov ds,bx
     GetThread
     mov ds:SuperThread,ax
@@ -4154,39 +4297,39 @@ super_thread:
     mov ds:PhyTimeout,eax
     mov ds:PhyTimeout+4,edx
     
-stLoop:
+iostLoop:
     mov dx,ds:IoBase
     add dx,REG_PHYStatus
     in al,dx
     test al,2
-    jnz stNoTimeout
+    jnz iostNoTimeout
 
-stTimeout:
+iostTimeout:
     mov eax,ds:PhyTimeout
     mov edx,ds:PhyTimeout+4
     WaitForSignalWithTimeout
-    jmp stHandle
+    jmp iostHandle
 
-stNoTimeout:
+iostNoTimeout:
     WaitForSignal
 
-stHandle:    
+iostHandle:    
     xor ax,ax
     xchg ax,ds:Isr
 ;
     test ax,IR_FOVW
-    jz stOvOk
+    jz iostOvOk
 ;
     push ax
     EnterSection ds:TxSection
-    call ResetHardware    
+    call IoResetHardware    
     LeaveSection ds:TxSection
     pop ax
-    jmp stRecOk
+    jmp iostRecOk
 
-stOvOk:    
+iostOvOk:    
     test ax,IR_RDU
-    jz stRecOk
+    jz iostRecOk
 ;
     mov dx,ds:IoBase
     add dx,REG_ISR
@@ -4198,11 +4341,75 @@ stOvOk:
     in ax,dx
     or ax,IR_RDU OR IR_ROK OR IR_FOVW
     out dx,ax
-    jmp stOvOk
+    jmp iostOvOk
 
-stRecOk:
-    call UpdateLink
-    jmp stLoop
+iostRecOk:
+    call IoUpdateLink
+    jmp iostLoop
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mem_supervisor_thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_super_thread:
+    mov ds,bx
+    GetThread
+    mov ds:SuperThread,ax
+;    call Config
+;    
+    GetSystemTime    
+    add eax,119300
+    adc edx,0
+    mov ds:PhyTimeout,eax
+    mov ds:PhyTimeout+4,edx
+    mov fs,ds:MemSel
+    
+mstLoop:
+    mov al,fs:mem_phy_stat
+    test al,2
+    jnz mstNoTimeout
+
+mstTimeout:
+    mov eax,ds:PhyTimeout
+    mov edx,ds:PhyTimeout+4
+    WaitForSignalWithTimeout
+    jmp mstHandle
+
+mstNoTimeout:
+    WaitForSignal
+
+mstHandle:    
+    xor ax,ax
+    xchg ax,ds:Isr
+;
+    test ax,IR_FOVW
+    jz mstOvOk
+;
+    push ax
+    EnterSection ds:TxSection
+    call MemResetHardware    
+    LeaveSection ds:TxSection
+    pop ax
+    jmp mstRecOk
+
+mstOvOk:    
+    test ax,IR_RDU
+    jz mstRecOk
+;
+    mov ax,IR_RDU OR IR_ROK OR IR_FOVW
+    mov fs:mem_isr,ax
+;
+    mov ax,fs:mem_imr
+    or ax,IR_RDU OR IR_ROK OR IR_FOVW
+    mov fs:mem_imr,ax
+    jmp mstOvOk
+
+mstRecOk:
+    call MemUpdateLink
+    jmp mstLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4309,7 +4516,7 @@ init_pci1_int_ok:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET super_thread
+    mov esi,OFFSET io_super_thread
     mov edi,OFFSET SupervisorName1
     mov ax,2
     mov cx,1000h
@@ -4397,7 +4604,7 @@ init_pci2_int_ok:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET super_thread
+    mov esi,OFFSET io_super_thread
     mov edi,OFFSET SupervisorName2
     mov ax,2
     mov cx,1000h
