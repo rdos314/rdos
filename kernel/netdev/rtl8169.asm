@@ -195,7 +195,7 @@ mem_phyar     DD ?
 mem_tbicsr0   DD ?
 mem_tbi_anar  DW ?
 mem_tbi_lpar  DW ?
-mem_phy_stat  DD ?
+mem_phy_stat  DB ?, ?, ?, ?
 mem_eridr     DD ?
 mem_eriar     DD ?                   
 mem_res3      DD ?, ?, ?, ?, ?, ?
@@ -3727,7 +3727,7 @@ GetPktAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetLinkState
+;           NAME:           IoGetLinkState
 ;
 ;           DESCRIPTION:    Get link state
 ;
@@ -3735,7 +3735,7 @@ GetPktAddress   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetLinkState1  Proc far
+IoGetLinkState1  Proc far
     push ds
     push ax
     push dx
@@ -3747,18 +3747,18 @@ GetLinkState1  Proc far
     in al,dx
     test al,2
     clc
-    jnz gls1Ok
+    jnz iogls1Ok
 ;
     stc
 
-gls1Ok:
+iogls1Ok:
     pop dx
     pop ax
     pop ds
     retf32
-GetLinkState1     Endp
+IoGetLinkState1     Endp
 
-GetLinkState2  Proc far
+IoGetLinkState2  Proc far
     push ds
     push ax
     push dx
@@ -3770,16 +3770,67 @@ GetLinkState2  Proc far
     in al,dx
     test al,2
     clc
-    jnz gls2Ok
+    jnz iogls2Ok
 ;
     stc
 
-gls2Ok:
+iogls2Ok:
     pop dx
     pop ax
     pop ds
     retf32
-GetLinkState2     Endp
+IoGetLinkState2     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemGetLinkState
+;
+;           DESCRIPTION:    Get link state
+;
+;           RETURNS:        NC      Link up
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemGetLinkState1  Proc far
+    push ds
+    push ax
+;    
+    mov ax,ether_data_sel
+    mov ds,ax
+    mov ds,ds:MemSel
+    mov al,ds:mem_phy_stat
+    test al,2
+    clc
+    jnz mgls1Ok
+;
+    stc
+
+mgls1Ok:
+    pop ax
+    pop ds
+    retf32
+MemGetLinkState1     Endp
+
+MemGetLinkState2  Proc far
+    push ds
+    push ax
+;    
+    mov ax,ether_data2_sel
+    mov ds,ax
+    mov ds,ds:MemSel
+    mov al,ds:mem_phy_stat
+    test al,2
+    clc
+    jnz mgls2Ok
+;
+    stc
+
+mgls2Ok:
+    pop ax
+    pop ds
+    retf32
+MemGetLinkState2     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3800,7 +3851,7 @@ DispTable1:
     DD OFFSET IoSend1,          SEG code
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
-    DD OFFSET GetLinkState1,    SEG code
+    DD OFFSET IoGetLinkState1,  SEG code
 
 DispTable2:
     DD OFFSET IoPreview2,       SEG code
@@ -3810,7 +3861,7 @@ DispTable2:
     DD OFFSET IoSend2,          SEG code
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
-    DD OFFSET GetLinkState2,    SEG code
+    DD OFFSET IoGetLinkState2,  SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
