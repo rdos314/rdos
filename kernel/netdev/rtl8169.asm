@@ -4416,15 +4416,19 @@ mstRecOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateMemSel	Proc near
+    and ax,0FFE0h
     push eax
     mov eax,1000h
     AllocateBigLinear
     pop eax
 ;
-    and ax,0FFE0h
+    mov si,ax
+    and ax,0F000h
     or ax,813h
     SetPageEntry
 ;
+    and si,0FFFh
+    or dx,si
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
