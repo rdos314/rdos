@@ -4405,6 +4405,35 @@ mstRecOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateMemSel
+;
+;           DESCRIPTION:    Create mem sel
+;
+;       PARAMETERS:         EBX:EAX		Physical address
+;
+;       RETURNS:            BX			Mem sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMemSel	Proc near
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    and ax,0FFE0h
+    or ax,813h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    ret
+CreateMemSel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -4522,10 +4551,21 @@ ioinit_pci1_int_ok:
     jmp init_pci1_done
 
 m_pci1:
-    mov dx,ax
-    and dx,0FFE0h
-    mov ds:IoBase,dx
-    mov ds:MemSel,0
+    xor ebx,ebx
+    test al,4
+    jz minit_pci1_next_base_ok
+;
+    push eax    
+    mov cl,14h
+    ReadPciDword
+    mov ebx,eax
+    pop eax
+
+minit_pci1_next_base_ok:
+    call CreateMemSel
+    mov fs,bx
+    mov ds:IoBase,0
+    mov ds:MemSel,bx
     mov si,cs:[si+4]
     mov ds:IoCfg,si
 ;    
@@ -4676,10 +4716,21 @@ ioinit_pci2_int_ok:
     jmp init_pci2_done
 
 m_pci2:
-    mov dx,ax
-    and dx,0FFE0h
-    mov ds:IoBase,dx
-    mov ds:MemSel,0
+    xor ebx,ebx
+    test al,4
+    jz minit_pci2_next_base_ok
+;
+    push eax    
+    mov cl,14h
+    ReadPciDword
+    mov ebx,eax
+    pop eax
+
+minit_pci2_next_base_ok:
+    call CreateMemSel
+    mov fs,bx
+    mov ds:IoBase,0
+    mov ds:MemSel,bx
     mov si,cs:[si+4]
     mov ds:IoCfg,si
 ;
