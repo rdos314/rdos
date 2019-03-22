@@ -3111,7 +3111,7 @@ NetTimeout  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Preview
+;           NAME:           IoPreview
 ;
 ;           DESCRIPTION:    Return size of block or no more data
 ;
@@ -3121,7 +3121,7 @@ NetTimeout  Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Preview1:
+IoPreview1:
     push ds
     push es
     push bx
@@ -3129,9 +3129,9 @@ Preview1:
 ;
     mov ax,ether_data_sel
     mov ds,ax
-    jmp preview_do
+    jmp iopreview_do
     
-Preview2:
+IoPreview2:
     push ds
     push es
     push bx
@@ -3140,7 +3140,7 @@ Preview2:
     mov ax,ether_data2_sel
     mov ds,ax
 
-preview_do:
+iopreview_do:
     mov es,ds:RxRingSel
     mov cx,RX_DESCR_COUNT
     mov bx,ds:RxCurrDescr
@@ -3148,37 +3148,37 @@ preview_do:
     mov si,bx
     shr si,4
     
-preview_loop:
+iopreview_loop:
     cmp si,RX_DESCR_COUNT
-    jb preview_no_wrap
+    jb iopreview_no_wrap
 ;
     xor bx,bx
     xor si,si
 
-preview_no_wrap:    
+iopreview_no_wrap:    
     test es:[bx].rx_flags,RX_OWN
-    jnz preview_next
+    jnz iopreview_next
 ;
     mov ax,es:[bx].rx_fl_size
     and ax,1FFFh    
-    jnz preview_found
+    jnz iopreview_found
 ;
     mov es:[bx].rx_fl_size,1FF8h
     mov es:[bx].rx_flags,RX_OWN
 
-preview_next:
+iopreview_next:
     inc si
     add bx,16
-    loop preview_loop
+    loop iopreview_loop
 ;    
     mov dx,ds:IoBase
     add dx,REG_IMR
     mov ax,IR_MASK
     out dx,ax
     stc
-    jmp preview_done        
+    jmp iopreview_done        
 
-preview_found:
+iopreview_found:
     shl si,2
     add si,OFFSET RxLinearArr
     mov ax,flat_sel
@@ -3191,9 +3191,102 @@ preview_found:
     xor ecx,ecx
     clc
         
-preview_done:
+iopreview_done:
     pop si
     pop bx
+    pop es
+    pop ds
+    retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemPreview
+;
+;           DESCRIPTION:    Return size of block or no more data
+;
+;           RETURNS:        NC          Data available
+;                           ECX         Size of data (0)
+;                           DX          Packet type
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemPreview1:
+    push ds
+    push es
+    push fs
+    push bx
+    push si
+;
+    mov ax,ether_data_sel
+    mov ds,ax
+    jmp mpreview_do
+    
+MemPreview2:
+    push ds
+    push es
+    push fs
+    push bx
+    push si
+;
+    mov ax,ether_data2_sel
+    mov ds,ax
+
+mpreview_do:
+    mov fs,ds:MemSel
+    mov es,ds:RxRingSel
+    mov cx,RX_DESCR_COUNT
+    mov bx,ds:RxCurrDescr
+    add bx,16
+    mov si,bx
+    shr si,4
+    
+mpreview_loop:
+    cmp si,RX_DESCR_COUNT
+    jb mpreview_no_wrap
+;
+    xor bx,bx
+    xor si,si
+
+mpreview_no_wrap:    
+    test es:[bx].rx_flags,RX_OWN
+    jnz mpreview_next
+;
+    mov ax,es:[bx].rx_fl_size
+    and ax,1FFFh    
+    jnz mpreview_found
+;
+    mov es:[bx].rx_fl_size,1FF8h
+    mov es:[bx].rx_flags,RX_OWN
+
+mpreview_next:
+    inc si
+    add bx,16
+    loop mpreview_loop
+;    
+ 
+    mov ax,IR_MASK
+    mov fs:mem_imr,ax
+    stc
+    jmp mpreview_done        
+
+mpreview_found:
+    shl si,2
+    add si,OFFSET RxLinearArr
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,ds:[si]
+    mov ds:RxCurrDescr,bx
+    mov ds:RxCurrLinear,edx
+    mov dx,es:[edx+12]
+    xchg dl,dh
+    xor ecx,ecx
+    clc
+        
+mpreview_done:
+    pop si
+    pop bx
+    pop fs
     pop es
     pop ds
     retf32
@@ -3588,7 +3681,7 @@ GetLinkState2     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DispTable1:
-    DD OFFSET Preview1,         SEG code
+    DD OFFSET IoPreview1,       SEG code
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
     DD OFFSET GetBuffer1,       SEG code
@@ -3598,7 +3691,7 @@ DispTable1:
     DD OFFSET GetLinkState1,    SEG code
 
 DispTable2:
-    DD OFFSET Preview2,         SEG code
+    DD OFFSET IoPreview2,       SEG code
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
     DD OFFSET GetBuffer2,       SEG code
