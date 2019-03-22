@@ -4551,6 +4551,7 @@ ioinit_pci1_int_ok:
     jmp init_pci1_done
 
 m_pci1:
+    int 3
     xor ebx,ebx
     test al,4
     jz minit_pci1_next_base_ok
