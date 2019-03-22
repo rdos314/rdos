@@ -2866,6 +2866,60 @@ ResetHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt  Proc far
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoInt
+
+MemInt:
+    push fs
+    mov fs,ax
+    mov ax,fs:mem_imr
+    mov di,ax
+    xor ax,ax
+    mov fs:mem_imr,ax
+
+mniLoop:
+    mov ax,fs:mem_isr
+    or ax,ax
+    jz mniDone
+;
+    NotifyIrqActivity
+    mov si,1
+    mov fs:mem_isr,ax
+    and ax,di
+    or ds:Isr,ax
+    test ax,IR_RDU OR IR_FOVW
+    jz mniNotOv
+;
+    and di,NOT (IR_RDU OR IR_ROK OR IR_FOVW)
+    mov bx,ds:SuperThread
+    Signal
+
+mniNotOv:    
+    test ax,IR_ROK OR IR_SER
+    jz mniNotRx
+;    
+    mov bx,ds:Handle
+    or bx,bx
+    jz mniNotRx
+;
+    NetReceived
+    jmp mniLoop
+
+mniNotRx:
+    test ax,IR_LinkChg
+    jz mniDone
+;
+    mov bx,ds:SuperThread
+    Signal
+
+mniDone:
+    mov ax,di
+    mov fs:mem_imr,ax
+    pop fs
+    retf32
+
+IoInt:
     mov dx,ds:IoBase
     add dx,REG_IMR
     in ax,dx
@@ -2873,12 +2927,12 @@ NetInt  Proc far
     xor ax,ax
     out dx,ax
 
-niLoop:
+ioniLoop:
     mov dx,ds:IoBase
     add dx,REG_ISR
     in ax,dx
     or ax,ax
-    jz niDone
+    jz ioniDone
 ;
     NotifyIrqActivity
     mov si,1
@@ -2886,31 +2940,31 @@ niLoop:
     and ax,di
     or ds:Isr,ax
     test ax,IR_RDU OR IR_FOVW
-    jz niNotOv
+    jz ioniNotOv
 ;
     and di,NOT (IR_RDU OR IR_ROK OR IR_FOVW)
     mov bx,ds:SuperThread
     Signal
 
-niNotOv:    
+ioniNotOv:    
     test ax,IR_ROK OR IR_SER
-    jz niNotRx
+    jz ioniNotRx
 ;    
     mov bx,ds:Handle
     or bx,bx
-    jz niNotRx
+    jz ioniNotRx
 ;
     NetReceived
-    jmp niLoop
+    jmp ioniLoop
 
-niNotRx:
+ioniNotRx:
     test ax,IR_LinkChg
-    jz niDone
+    jz ioniDone
 ;
     mov bx,ds:SuperThread
     Signal
         
-niDone:
+ioniDone:
     mov dx,ds:IoBase
     add dx,REG_IMR
     mov ax,di
@@ -2935,7 +2989,61 @@ NetTimeout  Proc far
     push eax
     push cx
     push edx
-;    
+;
+    mov di,ds:MemSel
+    or di,di
+    jz IoTimeout
+
+MemTimeout:
+    push fs
+    mov fs,di
+    mov ds,cx
+;
+    mov ax,fs:mem_imr
+    mov di,ax
+    xor ax,ax
+    mov fs:mem_imr,ax
+
+mntLoop:
+    mov ax,fs:mem_isr
+    or ax,ax
+    jz mntDone
+;
+    mov si,1
+    or ds:Isr,ax
+    mov fs:mem_isr,ax
+    test ax,IR_RDU OR IR_FOVW
+    jz mntNotOv
+;
+    int 3
+    mov bx,ds:SuperThread
+    Signal
+
+mntNotOv:    
+    test ax,IR_ROK OR IR_SER
+    jz mntNotRx
+;
+    mov bx,ds:Handle
+    or bx,bx
+    jz mntNotRx
+;
+    NetReceived
+    jmp mntLoop
+
+mntNotRx:
+    test ax,IR_LinkChg
+    jz mntDone
+;
+    mov bx,ds:SuperThread
+    Signal
+        
+mntDone:
+    mov ax,di
+    mov fs:mem_imr,ax
+    pop fs
+    jmp ntRet
+
+IoTimeout:    
     mov ds,cx
     mov dx,ds:IoBase
     add dx,REG_IMR
@@ -2944,47 +3052,48 @@ NetTimeout  Proc far
     xor ax,ax
     out dx,ax
 
-ntLoop:
+iontLoop:
     mov dx,ds:IoBase
     add dx,REG_ISR
     in ax,dx
     or ax,ax
-    jz ntDone
+    jz iontDone
 ;
     mov si,1
     or ds:Isr,ax
     out dx,ax
     test ax,IR_RDU OR IR_FOVW
-    jz ntNotOv
+    jz iontNotOv
 ;
     int 3
     mov bx,ds:SuperThread
     Signal
 
-ntNotOv:    
+iontNotOv:    
     test ax,IR_ROK OR IR_SER
-    jz ntNotRx
+    jz iontNotRx
 ;
     mov bx,ds:Handle
     or bx,bx
-    jz ntNotRx
+    jz iontNotRx
 ;
     NetReceived
-    jmp ntLoop
+    jmp iontLoop
 
-ntNotRx:
+iontNotRx:
     test ax,IR_LinkChg
-    jz ntDone
+    jz iontDone
 ;
     mov bx,ds:SuperThread
     Signal
         
-ntDone:
+iontDone:
     mov dx,ds:IoBase
     add dx,REG_IMR
     mov ax,di
     out dx,ax
-;
+
+ntRet:
     pop edx
     pop cx
     pop eax
