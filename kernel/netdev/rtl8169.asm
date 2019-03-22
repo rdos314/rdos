@@ -2503,28 +2503,7 @@ mihDone:
     mov fs:mem_tppoll,al
     ret
 MemInitHardware    Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitHardware
-;
-;       DESCRIPTION:    Initialize hardware
-;
-;       PARAMETERS:         BH    Bus
-;                           BL    Device
-;                           CH    Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitHardware    Proc near
-    mov ax,ds:MemSel
-    or ax,ax
-    jz IoInitHardware
-    jmp MemInitHardware
-
-InitHardware    Endp
-
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2650,14 +2629,6 @@ mfhOk:
     mov ds:WritePhyProc,ax
     ret
 MemFindHardware   Endp
-
-FindHardware    Proc near
-    mov ax,ds:MemSel
-    or ax,ax
-    jz IoFindHardware
-    jmp MemFindHardware
-
-FindHardware    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3826,7 +3797,7 @@ MemGetLinkState2     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DispTable1:
+IoDispTable1:
     DD OFFSET IoPreview1,       SEG code
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
@@ -3836,7 +3807,7 @@ DispTable1:
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET IoGetLinkState1,  SEG code
 
-DispTable2:
+IoDispTable2:
     DD OFFSET IoPreview2,       SEG code
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
@@ -3845,6 +3816,26 @@ DispTable2:
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET IoGetLinkState2,  SEG code
+
+MemDispTable1:
+    DD OFFSET MemPreview1,      SEG code
+    DD OFFSET Receive1,         SEG code
+    DD OFFSET Remove1,          SEG code
+    DD OFFSET GetBuffer1,       SEG code
+    DD OFFSET MemSend1,         SEG code
+    DD OFFSET GetAddress1,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET MemGetLinkState1, SEG code
+
+MemDispTable2:
+    DD OFFSET MemPreview2,      SEG code
+    DD OFFSET Receive2,         SEG code
+    DD OFFSET Remove2,          SEG code
+    DD OFFSET GetBuffer2,       SEG code
+    DD OFFSET MemSend2,         SEG code
+    DD OFFSET GetAddress2,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET MemGetLinkState2, SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4464,6 +4455,10 @@ init_pci1_found:
     mov bp,bx
     mov cx,PCI_card_ExCa_base
     ReadPciDword
+    test al,1
+    jz m_pci1
+
+io_pci1:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
@@ -4472,10 +4467,9 @@ init_pci1_found:
     mov ds:IoCfg,si
 ;    
     call SetupInts
-    call InitHardware
-    call FindHardware
+    call IoInitHardware
+    call IoFindHardware
     call Config
-;
     mov ax,25
     WaitMilliSec
 ;    
@@ -4483,7 +4477,7 @@ init_pci1_found:
     add dx,REG_ISR
     in eax,dx
     test eax,IR_SWInt
-    jz init_pci1_int_ok
+    jz ioinit_pci1_int_ok
 ;
     int 3
 ;    
@@ -4497,12 +4491,12 @@ init_pci1_found:
     mov cx,bx
     StartTimer
 
-init_pci1_int_ok:        
+ioinit_pci1_int_ok:        
     push ds
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET DispTable1
+    mov esi,OFFSET IoDispTable1
     mov edi,OFFSET DriverName1
     mov al,1
     mov dx,0
@@ -4517,6 +4511,68 @@ init_pci1_int_ok:
     mov ds,ax
     mov es,ax
     mov esi,OFFSET io_super_thread
+    mov edi,OFFSET SupervisorName1
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    pop ds
+;    
+    mov ax,bp   
+    clc
+    jmp init_pci1_done
+
+m_pci1:
+    mov dx,ax
+    and dx,0FFE0h
+    mov ds:IoBase,dx
+    mov ds:MemSel,0
+    mov si,cs:[si+4]
+    mov ds:IoCfg,si
+;    
+    call SetupInts
+    call MemInitHardware
+    call MemFindHardware
+    call Config
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov ax,fs:mem_isr
+    test ax,IR_SWInt
+    jz minit_pci1_int_ok
+;
+    int 3
+;    
+    GetSystemTime    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetTimeout
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+
+minit_pci1_int_ok:        
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET MemDispTable1
+    mov edi,OFFSET DriverName1
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    push ds
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mem_super_thread
     mov edi,OFFSET SupervisorName1
     mov ax,2
     mov cx,1000h
@@ -4554,6 +4610,10 @@ init_pci2_found:
     mov bp,bx
     mov cx,PCI_card_ExCa_base
     ReadPciDword
+    test al,1
+    jz m_pci2
+
+io_pci2:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
@@ -4562,8 +4622,8 @@ init_pci2_found:
     mov ds:IoCfg,si
 ;
     call SetupInts
-    call InitHardware
-    call FindHardware
+    call IoInitHardware
+    call IoFindHardware
     call Config
 ;
     mov ax,1
@@ -4573,7 +4633,7 @@ init_pci2_found:
     add dx,REG_ISR
     in eax,dx
     test eax,IR_SWInt
-    jz init_pci2_int_ok
+    jz ioinit_pci2_int_ok
 ;
     GetSystemTime    
     add eax,1193
@@ -4585,12 +4645,12 @@ init_pci2_found:
     mov cx,bx
     StartTimer
 
-init_pci2_int_ok:        
+ioinit_pci2_int_ok:        
     push ds
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET DispTable2
+    mov esi,OFFSET IoDispTable2
     mov edi,OFFSET DriverName2
     mov al,1
     mov dx,0
@@ -4605,6 +4665,66 @@ init_pci2_int_ok:
     mov ds,ax
     mov es,ax
     mov esi,OFFSET io_super_thread
+    mov edi,OFFSET SupervisorName2
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    pop ds
+;
+    mov ax,bp   
+    clc
+    jmp init_pci2_done
+
+m_pci2:
+    mov dx,ax
+    and dx,0FFE0h
+    mov ds:IoBase,dx
+    mov ds:MemSel,0
+    mov si,cs:[si+4]
+    mov ds:IoCfg,si
+;
+    call SetupInts
+    call MemInitHardware
+    call MemFindHardware
+    call Config
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov ax,fs:mem_isr
+    test ax,IR_SWInt
+    jz minit_pci2_int_ok
+;
+    GetSystemTime    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetTimeout
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+
+minit_pci2_int_ok:        
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET MemDispTable2
+    mov edi,OFFSET DriverName2
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    push ds
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mem_super_thread
     mov edi,OFFSET SupervisorName2
     mov ax,2
     mov cx,1000h
