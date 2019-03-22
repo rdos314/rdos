@@ -3438,11 +3438,25 @@ get_buffer_save_curr:
 ;
     LeaveSection ds:TxSection
     int 3
+    mov dx,ds:MemSel
+    or dx,dx
+    jz ioget_poll
+
+mget_poll:
+    push fs
+    mov fs,dx
+    mov al,40h
+    mov fs:mem_tppoll,al
+    pop fs
+    jmp get_buffer_polled
+
+ioget_poll:
     mov dx,ds:IoBase
     add dx,REG_TPPoll
     mov al,40h
     out dx,al    
-;
+
+get_buffer_polled:
     mov ax,5
     WaitMilliSec    
     jmp get_buffer_retry
@@ -3475,7 +3489,7 @@ get_buffer_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Send
+;           NAME:           IoSend
 ;
 ;           DESCRIPTION:    Send data
 ;
@@ -3486,7 +3500,7 @@ get_buffer_done:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Send1:
+IoSend1:
     push ds
     push bx
     push dx
@@ -3503,9 +3517,9 @@ Send1:
 ;
     mov ax,ether_data_sel
     mov ds,ax
-    jmp send_do
+    jmp iosend_do
     
-Send2:
+IoSend2:
     push ds
     push bx
     push dx
@@ -3523,7 +3537,7 @@ Send2:
     mov ax,ether_data2_sel
     mov ds,ax
 
-send_do:
+iosend_do:
     mov ax,word ptr ds:EthernetAddress
     stosw
     mov ax,word ptr ds:EthernetAddress+2
@@ -3543,11 +3557,11 @@ send_do:
     FreeMem
 ;    
     cmp ecx,60
-    jae sPadOk
+    jae iosPadOk
 ;
     mov ecx,60
 
-sPadOk: 
+iosPadOk: 
     mov es,ds:TxRingSel
     mov es:[si].tx_size,cx
     or es:[si].tx_flags,TX_OWN
@@ -3564,6 +3578,104 @@ sPadOk:
     pop si
     pop dx
     pop bx
+    pop ds
+    retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemSend
+;
+;           DESCRIPTION:    Send data
+;
+;       PARAMETERS:     ECX         size
+;                           DX          packet type
+;                           DS:ESI  dest address
+;                           ES:EDI  data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemSend1:
+    push ds
+    push fs
+    push bx
+    push dx
+    push si
+    push edi
+;
+    xor di,di
+    mov ax,ds:[esi]
+    stosw
+    mov ax,[esi+2]
+    stosw
+    mov ax,[esi+4]
+    stosw
+;
+    mov ax,ether_data_sel
+    mov ds,ax
+    mov fs,ds:MemSel
+    jmp msend_do
+    
+MemSend2:
+    push ds
+    push fs
+    push bx
+    push dx
+    push si
+    push edi
+;
+    xor di,di
+    mov ax,ds:[esi]
+    stosw
+    mov ax,[esi+2]
+    stosw
+    mov ax,[esi+4]
+    stosw
+;
+    mov ax,ether_data2_sel
+    mov ds,ax
+    mov fs,ds:MemSel
+
+msend_do:
+    mov ax,word ptr ds:EthernetAddress
+    stosw
+    mov ax,word ptr ds:EthernetAddress+2
+    stosw
+    mov ax,word ptr ds:EthernetAddress+4
+    stosw
+;    
+    mov ax,dx
+    xchg al,ah
+    xchg ax,es:[di]
+    add di,2
+    mov si,ax
+;
+    add ecx,14
+    xor edi,edi
+    NotifyEthernetPacket
+    FreeMem
+;    
+    cmp ecx,60
+    jae msPadOk
+;
+    mov ecx,60
+
+msPadOk: 
+    mov es,ds:TxRingSel
+    mov es:[si].tx_size,cx
+    or es:[si].tx_flags,TX_OWN
+;
+    xor ax,ax
+    mov es,ax
+;
+    mov al,40h
+    mov fs:mem_tppoll,al
+;
+    pop edi
+    pop si
+    pop dx
+    pop bx
+    pop fs
     pop ds
     retf32
 
@@ -3685,7 +3797,7 @@ DispTable1:
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
     DD OFFSET GetBuffer1,       SEG code
-    DD OFFSET Send1,            SEG code
+    DD OFFSET IoSend1,          SEG code
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET GetLinkState1,    SEG code
@@ -3695,7 +3807,7 @@ DispTable2:
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
     DD OFFSET GetBuffer2,       SEG code
-    DD OFFSET Send2,            SEG code
+    DD OFFSET IoSend2,          SEG code
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET GetLinkState2,    SEG code
