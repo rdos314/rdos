@@ -4430,7 +4430,7 @@ CreateMemSel	Proc near
     and si,0FFFh
     or dx,si
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,SIZE mem_struc
     CreateDataSelector16
     ret
 CreateMemSel	Endp
@@ -4486,6 +4486,12 @@ init_pci1_loop:
 
 init_pci1_found:
     mov bp,bx
+    int 3
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_busmstr
+    WritePciWord
+;
     mov cx,PCI_card_ExCa_base
     ReadPciDword
     test al,1
@@ -4556,6 +4562,7 @@ ioinit_pci1_int_ok:
 
 m_pci1:
     int 3
+    push ebx
     xor ebx,ebx
     test al,4
     jz minit_pci1_next_base_ok
@@ -4573,6 +4580,7 @@ minit_pci1_next_base_ok:
     mov ds:MemSel,bx
     mov si,cs:[si+4]
     mov ds:IoCfg,si
+    pop ebx
 ;    
     call SetupInts
     call MemInitHardware
@@ -4721,6 +4729,7 @@ ioinit_pci2_int_ok:
     jmp init_pci2_done
 
 m_pci2:
+    push ebx
     xor ebx,ebx
     test al,4
     jz minit_pci2_next_base_ok
@@ -4738,6 +4747,7 @@ minit_pci2_next_base_ok:
     mov ds:MemSel,bx
     mov si,cs:[si+4]
     mov ds:IoCfg,si
+    pop ebx
 ;
     call SetupInts
     call MemInitHardware
