@@ -816,4 +816,6 @@ get_device_cmd_line_nr      = 714
 
 set_disc_lba_param_nr       = 715
 
+pci_power_on_nr             = 716
+
 osgate_entries              = 750

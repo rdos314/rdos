@@ -857,6 +857,51 @@ find_pci_cap    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PciPowerOn
+;
+;           DESCRIPTION:    Set PCI device to D0 power state
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pci_power_on_name       DB 'PCI Power On',0
+
+pci_power_on    Proc far
+    push ax
+;
+    mov al,1
+    FindPciCapability
+    jc ppoDone
+;
+    mov cl,al
+    add cl,4
+    ReadPciWord
+    and al,3
+    jz ppoInD0
+;
+    mov ax,8000h
+    WritePciWord
+;
+    mov ax,10
+    WaitMilliSec
+    jmp ppoDone
+
+ppoInD0:
+    mov ax,8000h
+    WritePciWord
+
+ppoDone:
+    pop ax
+    retf32
+pci_power_on	Endp
+        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPciMsi
 ;
 ;           DESCRIPTION:    Get PCI MSI interface
@@ -2022,6 +2067,12 @@ init    Proc far
     mov edi,OFFSET find_pci_cap_name
     xor cl,cl
     mov ax,find_pci_cap_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET pci_power_on
+    mov edi,OFFSET pci_power_on_name
+    xor cl,cl
+    mov ax,pci_power_on_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_msi
