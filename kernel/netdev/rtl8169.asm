@@ -4485,14 +4485,16 @@ init_pci1_loop:
     jmp init_pci1_loop
 
 init_pci1_found:
-    mov bp,bx
     int 3
+    PciPowerOn
+;
+    mov bp,bx
     mov cl,PCI_command_reg
     ReadPciWord
     or al,PCI_command_busmstr
     WritePciWord
 ;
-    mov cx,PCI_card_ExCa_base
+    mov cl,PCI_card_ExCa_base
     ReadPciDword
     test al,1
     jz m_pci1
@@ -4660,8 +4662,15 @@ init_pci2_loop:
     jmp init_pci2_loop
 
 init_pci2_found:
+    PciPowerOn
+;
     mov bp,bx
-    mov cx,PCI_card_ExCa_base
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_busmstr
+    WritePciWord
+;
+    mov cl,PCI_card_ExCa_base
     ReadPciDword
     test al,1
     jz m_pci2
