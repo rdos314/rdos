@@ -3262,30 +3262,6 @@ int __far ImplGetDacRate()
     return rate;
 }
 
-
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
-{
-    int val;
-    int verb;
-    struct TFunction *function = FunctionArr[0];
-    struct TCodec *codec = function->CodecArr[0];
-    
-    val = GetParam(codec, 1, 8);
-
-    verb = 0x70A00;
-    verb |= 40;    
-    val = QueryCodec(codec->Id, codec->Address, 1, verb);    
-
-    verb = 0x37080;
-    QueryCodec(codec->Id, codec->Address, 1, verb);
-
-    verb = 0x3B000;
-    QueryCodec(codec->Id, codec->Address, 1, verb);
-
-}
-
 /*##########################################################################
 #
 #   Name       : HdaThread

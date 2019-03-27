@@ -2966,5 +2966,5 @@ int main()
     RdosRegisterOsGate(osgate_init_freq, (__rdos_gate_callback *)&ImplInitFreq, "Init Frequency");
     RdosRegisterOsGate(osgate_update_freq, (__rdos_gate_callback *)&ImplUpdateFreq, "Update Frequency");
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

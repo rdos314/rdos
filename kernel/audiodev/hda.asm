@@ -1675,6 +1675,7 @@ init_pci_probe_found:
     test al,1
     jnz init_pci_probe_done
 ;    
+    PciPowerOn
     and ax,0FFF0h
     mov ebp,eax
     call AddFunction
@@ -1692,6 +1693,7 @@ init_pci_probe_done:
     test al,1
     jnz init_pci_more
 ;    
+    PciPowerOn
     and ax,0FFF0h
     mov ebp,eax
     call AddFunction
@@ -1716,6 +1718,7 @@ init_pci_loop:
     cmp eax,ebp
     je init_pci_done
 ;       
+    PciPowerOn
     call AddFunction
 
 init_pci_next:
