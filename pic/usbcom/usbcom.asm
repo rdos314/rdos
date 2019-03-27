@@ -33,46 +33,46 @@ tx_buf             equ 0x188
 
 usb_ram            equ 0x200
 
-usb_buf_page       equ 2
+usb_buf_page       equ 4
 
-control_out_stat   equ 0x200
-control_out_size   equ 0x201
-control_out_low    equ 0x202
-control_out_high   equ 0x203
+control_out_stat   equ 0x400
+control_out_size   equ 0x401
+control_out_low    equ 0x402
+control_out_high   equ 0x403
 
-control_in_stat    equ 0x204
-control_in_size    equ 0x205
-control_in_low     equ 0x206
-control_in_high    equ 0x207
+control_in_stat    equ 0x404
+control_in_size    equ 0x405
+control_in_low     equ 0x406
+control_in_high    equ 0x407
 
-ser_out_stat       equ 0x208
-ser_out_size       equ 0x209
-ser_out_low        equ 0x20A
-ser_out_high       equ 0x20B
+ser_out_stat       equ 0x408
+ser_out_size       equ 0x409
+ser_out_low        equ 0x40A
+ser_out_high       equ 0x40B
 
-ser_in_stat        equ 0x20C
-ser_in_size        equ 0x20D
-ser_in_low         equ 0x20E
-ser_in_high        equ 0x20F
+ser_in_stat        equ 0x40C
+ser_in_size        equ 0x40D
+ser_in_low         equ 0x40E
+ser_in_high        equ 0x40F
 
-bus_out_stat       equ 0x210
-bus_out_size       equ 0x211
-bus_out_low        equ 0x212
-bus_out_high       equ 0x213
+bus_out_stat       equ 0x410
+bus_out_size       equ 0x411
+bus_out_low        equ 0x412
+bus_out_high       equ 0x413
 
-bus_in_stat        equ 0x214
-bus_in_size        equ 0x215
-bus_in_low         equ 0x216
-bus_in_high        equ 0x217
+bus_in_stat        equ 0x414
+bus_in_size        equ 0x415
+bus_in_low         equ 0x416
+bus_in_high        equ 0x417
 
-usb_cout           equ 0x220
-usb_cin            equ 0x228
+usb_cout           equ 0x420
+usb_cin            equ 0x428
 
-usb_ser_out        equ 0x230
-usb_ser_in         equ 0x270
+usb_ser_out        equ 0x430
+usb_ser_in         equ 0x470
 
-usb_bus_out        equ 0x2B0
-usb_bus_in         equ 0x2D0
+usb_bus_out        equ 0x4B0
+usb_bus_in         equ 0x4D0
 
 SER_STATE_ACTIVE   equ 0
 SER_STATE_ODD      equ 1
@@ -1510,13 +1510,27 @@ ProgStart:
     movwf counter_mid
     movwf counter_high
 ;
-    movlw 0x70
-    movwf TRISB
+    movlw 0xFF
+    movwf TRISA
+;
+    movlw 0xF
+    movwf LATB
 ;
     movlw 0xF0
+    movwf TRISB
+;
+    movlw 0x42
+    movwf LATC
+;
+    movlw 0xBD
     movwf TRISC
-    movlw 0
-    movwf PORTC
+;
+    movlw 0xF
+    movwf LATD
+;
+    movlw 0xF0
+    movwf TRISD
+;
     movlw 0
     movwf BSR
     movlw 0xD
