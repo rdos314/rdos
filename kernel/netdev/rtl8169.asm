@@ -4485,7 +4485,6 @@ init_pci1_loop:
     jmp init_pci1_loop
 
 init_pci1_found:
-    int 3
     PciPowerOn
 ;
     mov bp,bx

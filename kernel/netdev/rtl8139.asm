@@ -1044,13 +1044,12 @@ init_pci1_loop:
 
 init_pci1_found:
     mov bp,bx
-    mov cx,PCI_card_ExCa_base
+    mov cl,PCI_card_ExCa_base
     ReadPciDword
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
 ;
-    xor ch,ch
     mov cl,PCI_interrupt_line
     ReadPciByte
     mov ah,14h
@@ -1104,13 +1103,12 @@ init_pci2_loop:
 
 init_pci2_found:
     mov bp,bx
-    mov cx,PCI_card_ExCa_base
+    mov cl,PCI_card_ExCa_base
     ReadPciDword
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
 ;
-    xor ch,ch
     mov cl,PCI_interrupt_line
     ReadPciByte
     mov ah,14h
