@@ -1598,12 +1598,7 @@ SerDone:
     movlw 0x64
     movwf counter_mid
 ;
-
-
-    btg temp,0
-    movf temp,W
-    movwf PORTC
-
+    btg LATB,1
 
     decf counter_high,f
     bnz Loop
