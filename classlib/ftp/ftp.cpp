@@ -1240,6 +1240,7 @@ void TFtp::HandleResponse(int code, const char *param)
 {
     switch (code)
     {
+        case 125:
         case 150:
             if (FWriteFile && FWriteWait)
                 FStorSent = TRUE;
