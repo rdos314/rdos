@@ -1944,6 +1944,12 @@ RequestIrqHandler    MACRO
     OsGate request_irq_handler_nr
                     ENDM
 
+; IN  DS        Data passed to handler
+; IN  ES:EDI    Handler address
+SetupNmiHandler    MACRO
+    OsGate setup_nmi_handler_nr
+                    ENDM
+
 ; IN  AL        Global int #
 ForceLevelIrq    MACRO
     OsGate force_level_irq_nr

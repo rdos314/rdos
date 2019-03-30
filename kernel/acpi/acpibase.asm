@@ -43,6 +43,13 @@ acpi_table_arr      DD ?
 
 acpi_data_seg ENDS
 
+acpi_int_seg	STRUC
+
+acpi_proc       DD ?,?
+acpi_context	DD ?,?
+
+acpi_int_seg	ENDS
+
 _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
@@ -1370,6 +1377,61 @@ uarOk:
     pop es    
     ret
 UseAcpiReset_     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LinkIrq
+;
+;           DESCRIPTION:    Link IRQ
+;
+;           PARAMETERS:     AL		Irq
+;                           FS:ESI      Handler
+;                           ES:EDI      Context
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LinkIrq_
+
+NmiEntry:
+
+LinkIrq_    Proc near
+    push ds
+    push es
+    push edi
+;    
+    push es
+    push eax
+    mov eax,SIZE acpi_int_seg
+    AllocateSmallGlobalMem
+    mov eax,es
+    mov ds,eax
+    pop eax
+    pop es
+;
+    mov ds:acpi_proc,esi
+    mov ds:acpi_proc+4,fs
+    mov ds:acpi_context,edi
+    mov ds:acpi_context+4,es
+;
+    cmp al,2
+    je liNmi
+;
+    int 3
+    jmp liDone
+
+liNmi:
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET NmiEntry
+    SetupNmiHandler
+
+liDone:
+    pop edi
+    pop es
+    pop ds    
+    ret
+LinkIrq_    Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

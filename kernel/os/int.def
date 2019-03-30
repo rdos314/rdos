@@ -60,7 +60,10 @@ call_vm_ret_seg		DW ?
 call_pm16_ret_sel	DW ?
 
 v86_raw_offs		DW ?
-v86_raw_seg			DW ?
+v86_raw_seg             DW ?
+
+nmi_data                DW ?
+nmi_proc                DD ?, ?
 
 int_seg_size		DB ?
 

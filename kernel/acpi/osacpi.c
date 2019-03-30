@@ -59,6 +59,9 @@ void WriteBytePort(short int address, char val);
 void WriteWordPort(short int address, short int val);
 void WriteDwordPort(short int address, long val);
 
+extern void LinkIrq(int Irq, void *Handler, void *Context);
+#pragma aux LinkIrq parm routine [eax] [fs esi] [es edi] 
+
 void Load();
 
 #pragma aux ReadBytePort = \
@@ -835,16 +838,7 @@ void __far IrqStub()
 ##########################################################################*/
 ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler, void *Context)
 {
-    struct TIntReq *req;
-    int sel;
-
-    req = (struct TIntReq *)RdosAllocateSmallGlobalMem(sizeof(struct TIntReq));
-    req->Handler = Handler;
-    req->Context = Context;
-                
-    sel = RdosPointerToSelector(req);        
-
-//    RdosRequestIrqHandler(Level, 0x10, &IrqStub, sel);
+    LinkIrq(Level, Handler, Context);
     return AE_OK;
 }
     
