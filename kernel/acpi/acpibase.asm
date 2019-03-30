@@ -1381,6 +1381,28 @@ UseAcpiReset_     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IrqEntry
+;
+;           DESCRIPTION:    IRQ entrypoint
+;
+;           PARAMETERS:     DS		ACPI int seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn IrqStart:near
+
+IrqEntry	Proc far
+    mov esi,ds:acpi_proc
+    mov fs,ds:acpi_proc+4
+    mov edi,ds:acpi_context
+    mov es,ds:acpi_context+4
+    call IrqStart    
+    ret
+IrqEntry	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LinkIrq
 ;
 ;           DESCRIPTION:    Link IRQ
@@ -1392,8 +1414,6 @@ UseAcpiReset_     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public LinkIrq_
-
-NmiEntry:
 
 LinkIrq_    Proc near
     push ds
@@ -1423,10 +1443,11 @@ LinkIrq_    Proc near
 liNmi:
     mov eax,cs
     mov es,eax
-    mov edi,OFFSET NmiEntry
+    mov edi,OFFSET IrqEntry
     SetupNmiHandler
 
 liDone:
+    int 2
     pop edi
     pop es
     pop ds    

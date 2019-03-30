@@ -2601,6 +2601,37 @@ hook_set_vm_int ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           NmiHandler
+;
+;           DESCRIPTION:    NMI handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nmi_handler:
+    int 3
+    cli
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,int_data_sel
+    mov es,ax
+    mov ds,es:nmi_data
+    call fword ptr es:nmi_proc
+
+nmi_ret:    
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupNmiHandler
 ;
 ;           DESCRIPTION:    Setup NMI handler
@@ -2613,8 +2644,10 @@ hook_set_vm_int ENDP
 setup_nmi_handler_name  DB 'Setup NMI Handler',0
 
 setup_nmi_handler       Proc far
+    push ds
+    push es
     push fs
-    push ax
+    pushad
 ;
     mov ax,int_data_sel
     mov fs,ax
@@ -2622,8 +2655,18 @@ setup_nmi_handler       Proc far
     mov fs:nmi_proc,edi
     mov fs:nmi_proc+4,es
 ;
-    pop ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    SetupIntGate
+;
+    popad
     pop fs
+    pop es
+    pop ds
     retf32
 setup_nmi_handler	Endp
 

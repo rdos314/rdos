@@ -814,21 +814,13 @@ void AcpiOsVprintf(const char *Format, va_list Args)
     
 /*##########################################################################
 #
-#   Name       : IrqStub
+#   Name       : IrqStart
 #
 ##########################################################################*/
-#pragma aux IrqStub "*" rdosdev parm routine
-void __far IrqStub()
+#pragma aux IrqStart "*" rdosdev parm routine [fs esi] [es edi]
+void IrqStart(ACPI_OSD_HANDLER Handler, void *Context)
 {
-    int sel;
-    struct TIntReq *req;
-
-    _asm int 3
-
-    sel = RdosGetGateDs();
-    req = (struct TIntReq *)RdosSelectorToPointer(sel);
-
-    (*req->Handler)(req->Context);
+    (*Handler)(Context);
 }
     
 /*##########################################################################
