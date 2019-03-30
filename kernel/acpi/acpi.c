@@ -356,7 +356,7 @@ void __far ImplTestGate(const char *msg)
     ACPI_STATUS ok;
     ACPI_TABLE_HEADER *wdat;
 
-    ok = AcpiOsInstallInterruptHandler(2, NmiHandler, 0);
+    ok = AcpiOsInstallInterruptHandler(0x21, NmiHandler, 0);
 
     if (ok)
         wdat = 0;

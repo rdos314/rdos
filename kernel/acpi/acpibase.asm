@@ -1437,7 +1437,11 @@ LinkIrq_    Proc near
     cmp al,2
     je liNmi
 ;
-    int 3
+    mov ah,10h
+    mov edi,cs
+    mov es,edi
+    mov edi,OFFSET IrqEntry
+    RequestIrqHandler
     jmp liDone
 
 liNmi:
@@ -1447,7 +1451,6 @@ liNmi:
     SetupNmiHandler
 
 liDone:
-    int 2
     pop edi
     pop es
     pop ds    

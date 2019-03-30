@@ -133,7 +133,7 @@ AcpiEvSciXruptHandler (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiEvSciHandler
+ * FUNCTION:    AcpiEvSciXruptHandler
 *
  * RETURN:      Status code indicates whether interrupt was handled.
  *
@@ -142,12 +142,12 @@ AcpiEvSciXruptHandler (
  *
  ******************************************************************************/
 
-#pragma aux AcpiEvSciHandler "*" rdosdev parm routine
-void __far AcpiEvSciHandler()
+UINT32 ACPI_SYSTEM_XFACE
+AcpiEvSciXruptHandler (
+    void                    *Context)
 {
-    ACPI_GPE_XRUPT_INFO     *GpeXruptList = AcpiGbl_GpeXruptListHead;
+    ACPI_GPE_XRUPT_INFO     *GpeXruptList = Context;
     UINT32                  InterruptHandled = ACPI_INTERRUPT_NOT_HANDLED;
-
 
     ACPI_FUNCTION_TRACE (EvSciXruptHandler);
 
@@ -229,10 +229,8 @@ AcpiEvInstallSciHandler (
 
     ACPI_FUNCTION_TRACE (EvInstallSciHandler);
 
-//    RdosRequestIrqHandler(Level, 0x10, AcpiEvSciHandler);
-    return AE_OK;
+    return AcpiOsInstallInterruptHandler(Level, AcpiEvSciXruptHandler, AcpiGbl_GpeXruptListHead);
 }
-
 
 /******************************************************************************
  *
