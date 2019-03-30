@@ -229,7 +229,6 @@ AcpiEvInstallSciHandler (
 
     ACPI_FUNCTION_TRACE (EvInstallSciHandler);
 
-//    RdosForceLevelIrq(Level);
     RdosRequestIrqHandler(Level, 0x10, AcpiEvSciHandler);
     return AE_OK;
 }
