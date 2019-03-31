@@ -221,6 +221,8 @@ efi_fore_col        DD ?
 efi_back_col        DD ?
 efi_acpi            DD ?,?
 
+nmi_data            DW ?
+nmi_proc            DD ?, ?
 
 system_size                     DB ?
 

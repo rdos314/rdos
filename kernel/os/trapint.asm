@@ -563,44 +563,6 @@ t1_ret:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TRAP_2
-;
-;           DESCRIPTION:    NMI
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_2:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    sti
-    push eax
-    push ebx
-    mov ax,2
-    push ax
-    push ds
-;
-    test byte ptr [ebp+2].trap_eflags,2
-    jnz t2_vm
-    call prot_exception
-    jmp t2_ret
-t2_vm:
-    call virt_exception
-t2_ret:
-    pop eax
-    mov ds,ax
-    pop ebx
-    pop eax
-    and byte ptr [ebp+2].trap_eflags, NOT 1
-    pop ebp
-    add sp,4
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           TRAP_3
 ;
 ;           DESCRIPTION:    Breakpoint
@@ -2181,6 +2143,42 @@ init_trap_gates ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           TRAP_2
+;
+;           DESCRIPTION:    NMI
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_nmi:
+    retf32
+
+nmi_handler:
+    cli
+    jmp nmi_handler
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,system_data_sel
+    mov es,ax
+    mov ds,es:nmi_data
+    call fword ptr es:nmi_proc
+
+nmi_ret:    
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           PRETASKING_GATE0, PRETASKING_GATE4
 ;
 ;           DESCRIPTION:    Pretasking gates
@@ -2208,18 +2206,6 @@ pretask1:
     push eax
     push ebx
     mov ax,1
-    push ax
-    push ds
-    mov ax,-1
-    ShutDownPreTask
-
-pretask2:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,2
     push ax
     push ds
     mov ax,-1
@@ -2479,7 +2465,7 @@ pretask_int_tab:
 ;
 pg0         DW      0,          OFFSET pretask0,        kernel_code,    0
 pg1         DW      1,          OFFSET pretask1,        kernel_code,    0
-pg2         DW      2,          OFFSET pretask2,        kernel_code,    0
+pg2         DW      2,          OFFSET nmi_handler,     kernel_code,    0
 pg3         DW      3,          OFFSET pretask3,        kernel_code,    0
 pg4         DW      4,          OFFSET pretask4,        kernel_code,    0
 pg5         DW      5,          OFFSET pretask5,        kernel_code,    0
@@ -2565,6 +2551,12 @@ init_idt    Proc near
     push ds
     push es
     pusha
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:nmi_data,0
+    mov ds:nmi_proc,OFFSET default_nmi
+    mov ds:nmi_proc+4,cs
 ;
     mov bx,idt_sel
     mov ds,bx
@@ -2888,6 +2880,47 @@ free_int    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupNmiHandler
+;
+;           DESCRIPTION:    Setup NMI handler
+;
+;           PARAMETERS:     DS		Data
+;                           ES:EDI      Handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_nmi_handler_name  DB 'Setup NMI Handler',0
+
+setup_nmi_handler       Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,system_data_sel
+    mov fs,ax
+    mov fs:nmi_data,ds
+    mov fs:nmi_proc,edi
+    mov fs:nmi_proc+4,es
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    SetupIntGate
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    retf32
+setup_nmi_handler	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           INIT_TRAP_VECTORS
 ;
 ;           DESCRIPTION:    Init default software ints
@@ -3025,6 +3058,12 @@ init_avail_irq_loop:
     mov edi,OFFSET notify_thread_suspend_name
     xor cl,cl
     mov ax,notify_thread_suspend_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_nmi_handler
+    mov edi,OFFSET setup_nmi_handler_name
+    xor cl,cl
+    mov ax,setup_nmi_handler_nr
     RegisterOsGate
     ret
 init_trap_vectors       ENDP

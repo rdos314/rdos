@@ -257,9 +257,6 @@ sim_get_flags   ENDP
 
     public init_int
 
-default_nmi:
-    retf32
-
 call_vm_ret_op:
     CallVMRet
 
@@ -297,12 +294,6 @@ init_int    PROC near
     mov eax,400h
     mov bx,vm_int_sel
     AllocateFixedProcessMem
-;
-    mov ax,int_data_sel
-    mov ds,ax
-    mov ds:nmi_data,0
-    mov ds:nmi_proc,OFFSET default_nmi
-    mov ds:nmi_proc+4,cs
 ;
     mov eax,400h
     AllocateFixedVMLinear
@@ -626,12 +617,6 @@ init_exc_loop:
     mov edi,OFFSET call_pm32_name
     xor cl,cl
     mov ax,call_pm32_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_nmi_handler
-    mov edi,OFFSET setup_nmi_handler_name
-    xor cl,cl
-    mov ax,setup_nmi_handler_nr
     RegisterOsGate
 ;
     mov edi,OFFSET init_thread_int
@@ -2597,77 +2582,6 @@ hook_set_vm_int PROC far
     pop ds
     retf32
 hook_set_vm_int ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NmiHandler
-;
-;           DESCRIPTION:    NMI handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-nmi_handler:
-    cli
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
-    mov ax,int_data_sel
-    mov es,ax
-    mov ds,es:nmi_data
-    call fword ptr es:nmi_proc
-
-nmi_ret:    
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupNmiHandler
-;
-;           DESCRIPTION:    Setup NMI handler
-;
-;           PARAMETERS:     DS		Data
-;                           ES:EDI      Handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_nmi_handler_name  DB 'Setup NMI Handler',0
-
-setup_nmi_handler       Proc far
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,int_data_sel
-    mov fs,ax
-    mov fs:nmi_data,ds
-    mov fs:nmi_proc,edi
-    mov fs:nmi_proc+4,es
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_handler
-    SetupIntGate
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    retf32
-setup_nmi_handler	Endp
 
 code    ENDS
 
