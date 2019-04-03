@@ -9,7 +9,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -113,8 +113,6 @@
  * such license, approval or letter.
  *
  *****************************************************************************/
-
-#define __HWREGS_C__
 
 #include "acpi.h"
 #include "accommon.h"
@@ -382,17 +380,19 @@ AcpiHwClearAcpiStatus (
 
     Status = AcpiHwRegisterWrite (ACPI_REGISTER_PM1_STATUS,
                 ACPI_BITMASK_ALL_FIXED_STATUS);
+
+    AcpiOsReleaseLock (AcpiGbl_HardwareLock, LockFlags);
+
     if (ACPI_FAILURE (Status))
     {
-        goto UnlockAndExit;
+        goto Exit;
     }
 
     /* Clear the GPE Bits in all GPE registers in all GPE blocks */
 
     Status = AcpiEvWalkGpeList (AcpiHwClearGpeBlock, NULL);
 
-UnlockAndExit:
-    AcpiOsReleaseLock (AcpiGbl_HardwareLock, LockFlags);
+Exit:
     return_ACPI_STATUS (Status);
 }
 

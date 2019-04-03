@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __NSXFINIT_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
@@ -201,9 +198,8 @@ AcpiNsInitializeObjects (
         Info.PackageInit,   Info.PackageCount, Info.ObjectCount));
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Control Methods found\n", Info.MethodCount));
-    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Op Regions found\n", Info.OpRegionCount));
+        "%u Control Methods found\n%u Op Regions found\n",
+        Info.MethodCount, Info.OpRegionCount));
 
     return_ACPI_STATUS (AE_OK);
 }

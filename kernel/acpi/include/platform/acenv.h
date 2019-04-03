@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -149,9 +149,10 @@
 #define ACPI_LARGE_NAMESPACE_NODE
 #define ACPI_DATA_TABLE_DISASSEMBLY
 #define ACPI_SINGLE_THREADED
+#define ACPI_32BIT_PHYSICAL_ADDRESS
 #endif
 
-/* AcpiExec and AcpiBin configuration */
+/* AcpiExec configuration. Multithreaded with full AML debugger */
 
 #ifdef ACPI_EXEC_APP
 #define ACPI_APPLICATION
@@ -404,8 +405,12 @@ typedef char *va_list;
 #ifdef ACPI_APPLICATION
 #include <stdio.h>
 #define ACPI_FILE              FILE *
+#define ACPI_FILE_OUT          stdout
+#define ACPI_FILE_ERR          stderr
 #else
 #define ACPI_FILE              void *
+#define ACPI_FILE_OUT          NULL
+#define ACPI_FILE_ERR          NULL
 #endif /* ACPI_APPLICATION */
 #endif /* ACPI_FILE */
 

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -112,8 +112,6 @@
  * such license, approval or letter.
  *
  *****************************************************************************/
-
-#define __UTOBJECT_C__
 
 #include "acpi.h"
 #include "accommon.h"
@@ -472,7 +470,7 @@ AcpiUtValidInternalObject (
     default:
 
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-                "%p is not not an ACPI operand obj [%s]\n",
+                "%p is not an ACPI operand obj [%s]\n",
                 Object, AcpiUtGetDescriptorName (Object)));
         break;
     }

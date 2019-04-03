@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -113,9 +113,6 @@
  *
  *****************************************************************************/
 
-
-#define __UTMISC_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
@@ -159,6 +156,7 @@ AcpiUtIsPciRootBridge (
 }
 
 
+#if (defined ACPI_ASL_COMPILER || defined ACPI_EXEC_APP)
 /*******************************************************************************
  *
  * FUNCTION:    AcpiUtIsAmlTable
@@ -189,6 +187,7 @@ AcpiUtIsAmlTable (
 
     return (FALSE);
 }
+#endif
 
 
 /*******************************************************************************

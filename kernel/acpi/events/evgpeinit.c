@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -113,7 +113,6 @@
  *
  *****************************************************************************/
 
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acevents.h"
@@ -211,7 +210,9 @@ AcpiEvGpeInitialize (
         /* Install GPE Block 0 */
 
         Status = AcpiEvCreateGpeBlock (AcpiGbl_FadtGpeDevice,
-                    &AcpiGbl_FADT.XGpe0Block, RegisterCount0, 0,
+                    AcpiGbl_FADT.XGpe0Block.Address,
+                    AcpiGbl_FADT.XGpe0Block.SpaceId,
+                    RegisterCount0, 0,
                     AcpiGbl_FADT.SciInterrupt, &AcpiGbl_GpeFadtBlocks[0]);
 
         if (ACPI_FAILURE (Status))
@@ -249,7 +250,9 @@ AcpiEvGpeInitialize (
             /* Install GPE Block 1 */
 
             Status = AcpiEvCreateGpeBlock (AcpiGbl_FadtGpeDevice,
-                        &AcpiGbl_FADT.XGpe1Block, RegisterCount1,
+                        AcpiGbl_FADT.XGpe1Block.Address,
+                        AcpiGbl_FADT.XGpe1Block.SpaceId,
+                        RegisterCount1,
                         AcpiGbl_FADT.Gpe1Base,
                         AcpiGbl_FADT.SciInterrupt, &AcpiGbl_GpeFadtBlocks[1]);
 
@@ -488,15 +491,17 @@ AcpiEvMatchGpeMethod (
         return_ACPI_STATUS (AE_OK);
     }
 
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
-            ACPI_GPE_DISPATCH_HANDLER)
+    if ((ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+            ACPI_GPE_DISPATCH_HANDLER) ||
+        (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+            ACPI_GPE_DISPATCH_RAW_HANDLER))
     {
         /* If there is already a handler, ignore this GPE method */
 
         return_ACPI_STATUS (AE_OK);
     }
 
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
+    if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
             ACPI_GPE_DISPATCH_METHOD)
     {
         /*
@@ -511,6 +516,10 @@ AcpiEvMatchGpeMethod (
         }
         return_ACPI_STATUS (AE_OK);
     }
+
+    /* Disable the GPE in case it's been enabled already. */
+
+    (void) AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_DISABLE);
 
     /*
      * Add the GPE information from above to the GpeEventInfo block for

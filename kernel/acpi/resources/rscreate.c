@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2015, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -113,8 +113,6 @@
  *
  *****************************************************************************/
 
-#define __RSCREATE_C__
-
 #include "acpi.h"
 #include "accommon.h"
 #include "acresrc.h"
@@ -149,6 +147,10 @@ AcpiBufferToResource (
     void                    *Resource;
     void                    *CurrentResourcePtr;
 
+
+    ACPI_FUNCTION_TRACE (AcpiBufferToResource);
+
+
     /*
      * Note: we allow AE_AML_NO_RESOURCE_END_TAG, since an end tag
      * is not required here.
@@ -164,7 +166,7 @@ AcpiBufferToResource (
     }
     if (ACPI_FAILURE (Status))
     {
-        return (Status);
+        return_ACPI_STATUS (Status);
     }
 
     /* Allocate a buffer for the converted resource */
@@ -173,7 +175,7 @@ AcpiBufferToResource (
     CurrentResourcePtr = Resource;
     if (!Resource)
     {
-        return (AE_NO_MEMORY);
+        return_ACPI_STATUS (AE_NO_MEMORY);
     }
 
     /* Perform the AML-to-Resource conversion */
@@ -193,8 +195,10 @@ AcpiBufferToResource (
         *ResourcePtr = Resource;
     }
 
-    return (Status);
+    return_ACPI_STATUS (Status);
 }
+
+ACPI_EXPORT_SYMBOL (AcpiBufferToResource)
 
 
 /*******************************************************************************
@@ -369,7 +373,7 @@ AcpiRsCreatePciRoutingTable (
          */
         UserPrt->Length = (sizeof (ACPI_PCI_ROUTING_TABLE) - 4);
 
-        /* Each sub-package must be of length 4 */
+        /* Each subpackage must be of length 4 */
 
         if ((*TopObjectList)->Package.Count != 4)
         {
@@ -380,7 +384,7 @@ AcpiRsCreatePciRoutingTable (
         }
 
         /*
-         * Dereference the sub-package.
+         * Dereference the subpackage.
          * The SubObjectList will now point to an array of the four IRQ
          * elements: [Address, Pin, Source, SourceIndex]
          */
@@ -389,7 +393,7 @@ AcpiRsCreatePciRoutingTable (
         /* 1) First subobject: Dereference the PRT.Address */
 
         ObjDesc = SubObjectList[0];
-        if (ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
+        if (!ObjDesc || ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
             ACPI_ERROR ((AE_INFO, "(PRT[%u].Address) Need Integer, found %s",
                 Index, AcpiUtGetObjectTypeName (ObjDesc)));
@@ -401,7 +405,7 @@ AcpiRsCreatePciRoutingTable (
         /* 2) Second subobject: Dereference the PRT.Pin */
 
         ObjDesc = SubObjectList[1];
-        if (ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
+        if (!ObjDesc || ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
             ACPI_ERROR ((AE_INFO, "(PRT[%u].Pin) Need Integer, found %s",
                 Index, AcpiUtGetObjectTypeName (ObjDesc)));
@@ -482,7 +486,7 @@ AcpiRsCreatePciRoutingTable (
         /* 4) Fourth subobject: Dereference the PRT.SourceIndex */
 
         ObjDesc = SubObjectList[3];
-        if (ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
+        if (!ObjDesc || ObjDesc->Common.Type != ACPI_TYPE_INTEGER)
         {
             ACPI_ERROR ((AE_INFO,
                 "(PRT[%u].SourceIndex) Need Integer, found %s",
