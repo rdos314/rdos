@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -463,7 +463,7 @@ AcpiExDigitsNeeded (
 
     if (Value == 0)
     {
-        return_VALUE (1);
+        return_UINT32 (1);
     }
 
     CurrentValue = Value;
@@ -477,7 +477,7 @@ AcpiExDigitsNeeded (
         NumDigits++;
     }
 
-    return_VALUE (NumDigits);
+    return_UINT32 (NumDigits);
 }
 
 

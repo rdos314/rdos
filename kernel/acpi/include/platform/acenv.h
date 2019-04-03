@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -399,5 +399,14 @@ typedef char *va_list;
 #define ACPI_TOLOWER(c)         AcpiUtToLower ((int) (c))
 
 #endif /* ACPI_USE_SYSTEM_CLIBRARY */
+
+#ifndef ACPI_FILE
+#ifdef ACPI_APPLICATION
+#include <stdio.h>
+#define ACPI_FILE              FILE *
+#else
+#define ACPI_FILE              void *
+#endif /* ACPI_APPLICATION */
+#endif /* ACPI_FILE */
 
 #endif /* __ACENV_H__ */

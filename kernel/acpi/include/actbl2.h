@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -146,11 +146,13 @@
 #define ACPI_SIG_IVRS           "IVRS"      /* I/O Virtualization Reporting Structure */
 #define ACPI_SIG_MCFG           "MCFG"      /* PCI Memory Mapped Configuration table */
 #define ACPI_SIG_MCHI           "MCHI"      /* Management Controller Host Interface table */
+#define ACPI_SIG_MTMR           "MTMR"      /* MID Timer table */
 #define ACPI_SIG_SLIC           "SLIC"      /* Software Licensing Description Table */
 #define ACPI_SIG_SPCR           "SPCR"      /* Serial Port Console Redirection table */
 #define ACPI_SIG_SPMI           "SPMI"      /* Server Platform Management Interface table */
 #define ACPI_SIG_TCPA           "TCPA"      /* Trusted Computing Platform Alliance table */
 #define ACPI_SIG_UEFI           "UEFI"      /* Uefi Boot Optimization Table */
+#define ACPI_SIG_VRTC           "VRTC"      /* Virtual Real Time Clock Table */
 #define ACPI_SIG_WAET           "WAET"      /* Windows ACPI Emulated devices Table */
 #define ACPI_SIG_WDAT           "WDAT"      /* Watchdog Action Table */
 #define ACPI_SIG_WDDT           "WDDT"      /* Watchdog Timer Description Table */
@@ -441,6 +443,14 @@ typedef struct acpi_table_dbg2
     UINT32                  InfoCount;
 
 } ACPI_TABLE_DBG2;
+
+
+typedef struct acpi_dbg2_header
+{
+    UINT32                  InfoOffset;
+    UINT32                  InfoCount;
+
+} ACPI_DBG2_HEADER;
 
 
 /* Debug Device Information Subtable */
@@ -1055,6 +1065,34 @@ typedef struct acpi_table_mchi
 
 /*******************************************************************************
  *
+ * MTMR - MID Timer Table
+ *        Version 1
+ *
+ * Conforms to "Simple Firmware Interface Specification",
+ * Draft 0.8.2, Oct 19, 2010
+ * NOTE: The ACPI MTMR is equivalent to the SFI MTMR table.
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_mtmr
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_MTMR;
+
+/* MTMR entry */
+
+typedef struct acpi_mtmr_entry
+{
+    ACPI_GENERIC_ADDRESS    PhysicalAddress;
+    UINT32                  Frequency;
+    UINT32                  Irq;
+
+} ACPI_MTMR_ENTRY;
+
+
+/*******************************************************************************
+ *
  * SLIC - Software Licensing Description Table
  *        Version 1
  *
@@ -1250,6 +1288,33 @@ typedef struct acpi_table_uefi
     UINT16                  DataOffset;         /* Offset of remaining data in table */
 
 } ACPI_TABLE_UEFI;
+
+
+/*******************************************************************************
+ *
+ * VRTC - Virtual Real Time Clock Table
+ *        Version 1
+ *
+ * Conforms to "Simple Firmware Interface Specification",
+ * Draft 0.8.2, Oct 19, 2010
+ * NOTE: The ACPI VRTC is equivalent to The SFI MRTC table.
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_vrtc
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_VRTC;
+
+/* VRTC entry */
+
+typedef struct acpi_vrtc_entry
+{
+    ACPI_GENERIC_ADDRESS    PhysicalAddress;
+    UINT32                  Irq;
+
+} ACPI_VRTC_ENTRY;
 
 
 /*******************************************************************************

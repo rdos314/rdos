@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -122,7 +122,7 @@ extern const UINT8                      AcpiGbl_ResourceAmlSerialBusSizes[];
 
 /* Strings used by the disassembler and debugger resource dump routines */
 
-#if defined(ACPI_DISASSEMBLER) || defined (ACPI_DEBUGGER)
+#if defined(ACPI_DEBUG_OUTPUT) || defined (ACPI_DISASSEMBLER) || defined (ACPI_DEBUGGER)
 
 extern const char                       *AcpiGbl_BmDecode[];
 extern const char                       *AcpiGbl_ConfigDecode[];
@@ -160,6 +160,49 @@ extern const char                       *AcpiGbl_FcDecode[];
 extern const char                       *AcpiGbl_PtDecode[];
 #endif
 
+/*
+ * For the iASL compiler case, the output is redirected to stderr so that
+ * any of the various ACPI errors and warnings do not appear in the output
+ * files, for either the compiler or disassembler portions of the tool.
+ */
+#ifdef ACPI_ASL_COMPILER
+
+#include <stdio.h>
+extern FILE                 *AcpiGbl_OutputFile;
+
+#define ACPI_MSG_REDIRECT_BEGIN \
+    FILE                    *OutputFile = AcpiGbl_OutputFile; \
+    AcpiOsRedirectOutput (stderr);
+
+#define ACPI_MSG_REDIRECT_END \
+    AcpiOsRedirectOutput (OutputFile);
+
+#else
+/*
+ * non-iASL case - no redirection, nothing to do
+ */
+#define ACPI_MSG_REDIRECT_BEGIN
+#define ACPI_MSG_REDIRECT_END
+#endif
+
+/*
+ * Common error message prefixes
+ */
+#define ACPI_MSG_ERROR          "ACPI Error: "
+#define ACPI_MSG_EXCEPTION      "ACPI Exception: "
+#define ACPI_MSG_WARNING        "ACPI Warning: "
+#define ACPI_MSG_INFO           "ACPI: "
+
+#define ACPI_MSG_BIOS_ERROR     "ACPI BIOS Error (bug): "
+#define ACPI_MSG_BIOS_WARNING   "ACPI BIOS Warning (bug): "
+
+/*
+ * Common message suffix
+ */
+#define ACPI_MSG_SUFFIX \
+    AcpiOsPrintf (" (%8.8X/%s-%u)\n", ACPI_CA_VERSION, ModuleName, LineNumber)
+
+
 /* Types for Resource descriptor entries */
 
 #define ACPI_INVALID_RESOURCE           0
@@ -191,9 +234,10 @@ typedef struct acpi_pkg_info
 
 } ACPI_PKG_INFO;
 
+/* Object reference counts */
+
 #define REF_INCREMENT       (UINT16) 0
 #define REF_DECREMENT       (UINT16) 1
-#define REF_FORCE_DELETE    (UINT16) 2
 
 /* AcpiUtDumpBuffer */
 
@@ -686,7 +730,7 @@ ACPI_STATUS
 AcpiUtInitializeInterfaces (
     void);
 
-void
+ACPI_STATUS
 AcpiUtInterfaceTerminate (
     void);
 
@@ -698,6 +742,10 @@ ACPI_STATUS
 AcpiUtRemoveInterface (
     ACPI_STRING             InterfaceName);
 
+ACPI_STATUS
+AcpiUtUpdateInterfaces (
+    UINT8                   Action);
+
 ACPI_INTERFACE_INFO *
 AcpiUtGetInterface (
     ACPI_STRING             InterfaceName);
@@ -705,6 +753,38 @@ AcpiUtGetInterface (
 ACPI_STATUS
 AcpiUtOsiImplementation (
     ACPI_WALK_STATE         *WalkState);
+
+
+/*
+ * utpredef - support for predefined names
+ */
+const ACPI_PREDEFINED_INFO *
+AcpiUtGetNextPredefinedMethod (
+    const ACPI_PREDEFINED_INFO  *ThisName);
+
+const ACPI_PREDEFINED_INFO *
+AcpiUtMatchPredefinedMethod (
+    char                        *Name);
+
+const ACPI_PREDEFINED_INFO *
+AcpiUtMatchResourceName (
+    char                        *Name);
+
+void
+AcpiUtDisplayPredefinedMethod (
+    char                        *Buffer,
+    const ACPI_PREDEFINED_INFO  *ThisName,
+    BOOLEAN                     MultiLine);
+
+void
+AcpiUtGetExpectedReturnTypes (
+    char                    *Buffer,
+    UINT32                  ExpectedBtypes);
+
+UINT32
+AcpiUtGetResourceBitWidth (
+    char                    *Buffer,
+    UINT16                  Types);
 
 
 /*
@@ -778,10 +858,11 @@ AcpiUtShortDivide (
     UINT64                  *OutQuotient,
     UINT32                  *OutRemainder);
 
+
 /*
  * utmisc
  */
-const char *
+const ACPI_EXCEPTION_INFO *
 AcpiUtValidateException (
     ACPI_STATUS             Status);
 
@@ -898,7 +979,7 @@ AcpiUtStrtoul64 (
 void
 AcpiUtPrintString (
     char                    *String,
-    UINT8                   MaxLength);
+    UINT16                  MaxLength);
 
 void
 UtConvertBackslashes (
@@ -906,7 +987,7 @@ UtConvertBackslashes (
 
 BOOLEAN
 AcpiUtValidAcpiName (
-    UINT32                  Name);
+    char                    *Name);
 
 BOOLEAN
 AcpiUtValidAcpiChar (
@@ -916,6 +997,27 @@ AcpiUtValidAcpiChar (
 void
 AcpiUtRepairName (
     char                    *Name);
+
+#if defined (ACPI_DEBUGGER) || defined (ACPI_APPLICATION)
+BOOLEAN
+AcpiUtSafeStrcpy (
+    char                    *Dest,
+    ACPI_SIZE               DestSize,
+    char                    *Source);
+
+BOOLEAN
+AcpiUtSafeStrcat (
+    char                    *Dest,
+    ACPI_SIZE               DestSize,
+    char                    *Source);
+
+BOOLEAN
+AcpiUtSafeStrncat (
+    char                    *Dest,
+    ACPI_SIZE               DestSize,
+    char                    *Source,
+    ACPI_SIZE               MaxTransferLength);
+#endif
 
 
 /*
@@ -957,20 +1059,6 @@ ACPI_STATUS
 AcpiUtInitializeBuffer (
     ACPI_BUFFER             *Buffer,
     ACPI_SIZE               RequiredLength);
-
-void *
-AcpiUtAllocate (
-    ACPI_SIZE               Size,
-    UINT32                  Component,
-    const char              *Module,
-    UINT32                  Line);
-
-void *
-AcpiUtAllocateZeroed (
-    ACPI_SIZE               Size,
-    UINT32                  Component,
-    const char              *Module,
-    UINT32                  Line);
 
 #ifdef ACPI_DBG_TRACK_ALLOCATIONS
 void *
@@ -1051,6 +1139,15 @@ AcpiUtPredefinedWarning (
 
 void ACPI_INTERNAL_VAR_XFACE
 AcpiUtPredefinedInfo (
+    const char              *ModuleName,
+    UINT32                  LineNumber,
+    char                    *Pathname,
+    UINT8                   NodeFlags,
+    const char              *Format,
+    ...);
+
+void ACPI_INTERNAL_VAR_XFACE
+AcpiUtPredefinedBiosError (
     const char              *ModuleName,
     UINT32                  LineNumber,
     char                    *Pathname,

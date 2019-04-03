@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -165,14 +165,9 @@ AcpiTbVerifyTable (
         }
     }
 
-    /* FACS is the odd table, has no standard ACPI header and no checksum */
+    /* Always calculate checksum, ignore bad checksum if requested */
 
-    if (!ACPI_COMPARE_NAME (&TableDesc->Signature, ACPI_SIG_FACS))
-    {
-        /* Always calculate checksum, ignore bad checksum if requested */
-
-        Status = AcpiTbVerifyChecksum (TableDesc->Pointer, TableDesc->Length);
-    }
+    Status = AcpiTbVerifyChecksum (TableDesc->Pointer, TableDesc->Length);
 
     return_ACPI_STATUS (Status);
 }
@@ -232,7 +227,7 @@ AcpiTbAddTable (
         ACPI_BIOS_ERROR ((AE_INFO,
             "Table has invalid signature [%4.4s] (0x%8.8X), "
             "must be SSDT or OEMx",
-            AcpiUtValidAcpiName (*(UINT32 *) TableDesc->Pointer->Signature) ?
+            AcpiUtValidAcpiName (TableDesc->Pointer->Signature) ?
                 TableDesc->Pointer->Signature : "????",
             *(UINT32 *) TableDesc->Pointer->Signature));
 
@@ -392,9 +387,10 @@ AcpiTbTableOverride (
         if (!NewTable)
         {
             ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
-                "%4.4s %p Attempted physical table override failed",
+                "%4.4s " ACPI_PRINTF_UINT
+                " Attempted physical table override failed",
                 TableHeader->Signature,
-                ACPI_CAST_PTR (void, TableDesc->Address)));
+                ACPI_FORMAT_TO_UINT (TableDesc->Address)));
             return (NULL);
         }
 
@@ -408,11 +404,11 @@ AcpiTbTableOverride (
 
 FinishOverride:
 
-    ACPI_INFO ((AE_INFO,
-        "%4.4s %p %s table override, new table: %p",
+    ACPI_INFO ((AE_INFO, "%4.4s " ACPI_PRINTF_UINT
+        " %s table override, new table: " ACPI_PRINTF_UINT,
         TableHeader->Signature,
-        ACPI_CAST_PTR (void, TableDesc->Address),
-        OverrideType, NewTable));
+        ACPI_FORMAT_TO_UINT (TableDesc->Address),
+        OverrideType, ACPI_FORMAT_TO_UINT (NewTable)));
 
     /* We can now unmap/delete the original table (if fully mapped) */
 
@@ -586,16 +582,19 @@ AcpiTbDeleteTable (
     switch (TableDesc->Flags & ACPI_TABLE_ORIGIN_MASK)
     {
     case ACPI_TABLE_ORIGIN_MAPPED:
+
         AcpiOsUnmapMemory (TableDesc->Pointer, TableDesc->Length);
         break;
 
     case ACPI_TABLE_ORIGIN_ALLOCATED:
+
         ACPI_FREE (TableDesc->Pointer);
         break;
 
     /* Not mapped or allocated, there is nothing we can do */
 
     default:
+
         return;
     }
 

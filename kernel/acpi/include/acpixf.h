@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -119,7 +119,7 @@
 
 /* Current ACPICA subsystem version in YYYYMMDD format */
 
-#define ACPI_CA_VERSION                 0x20130117
+#define ACPI_CA_VERSION                 0x20140114
 
 #include "acconfig.h"
 #include "actypes.h"
@@ -133,6 +133,7 @@ extern UINT32               AcpiCurrentGpeCount;
 extern ACPI_TABLE_FADT      AcpiGbl_FADT;
 extern BOOLEAN              AcpiGbl_SystemAwakeAndRunning;
 extern BOOLEAN              AcpiGbl_ReducedHardware;        /* ACPI 5.0 */
+extern UINT8                AcpiGbl_OsiData;
 
 /* Runtime configuration of debug print levels */
 
@@ -141,16 +142,19 @@ extern UINT32               AcpiDbgLayer;
 
 /* ACPICA runtime options */
 
-extern UINT8                AcpiGbl_EnableInterpreterSlack;
 extern UINT8                AcpiGbl_AllMethodsSerialized;
-extern UINT8                AcpiGbl_CreateOsiMethod;
-extern UINT8                AcpiGbl_UseDefaultRegisterWidths;
-extern ACPI_NAME            AcpiGbl_TraceMethodName;
-extern UINT32               AcpiGbl_TraceFlags;
-extern UINT8                AcpiGbl_EnableAmlDebugObject;
 extern UINT8                AcpiGbl_CopyDsdtLocally;
-extern UINT8                AcpiGbl_TruncateIoAddresses;
+extern UINT8                AcpiGbl_CreateOsiMethod;
 extern UINT8                AcpiGbl_DisableAutoRepair;
+extern UINT8                AcpiGbl_DisableSsdtTableLoad;
+extern UINT8                AcpiGbl_DoNotUseXsdt;
+extern UINT8                AcpiGbl_EnableAmlDebugObject;
+extern UINT8                AcpiGbl_EnableInterpreterSlack;
+extern UINT32               AcpiGbl_TraceFlags;
+extern ACPI_NAME            AcpiGbl_TraceMethodName;
+extern UINT8                AcpiGbl_TruncateIoAddresses;
+extern UINT8                AcpiGbl_Use32BitFadtAddresses;
+extern UINT8                AcpiGbl_UseDefaultRegisterWidths;
 
 
 /*
@@ -176,7 +180,7 @@ extern UINT8                AcpiGbl_DisableAutoRepair;
     static ACPI_INLINE Prototype {return(AE_OK);}
 
 #define ACPI_HW_DEPENDENT_RETURN_VOID(Prototype) \
-    static ACPI_INLINE Prototype {}
+    static ACPI_INLINE Prototype {return;}
 
 #endif /* !ACPI_REDUCED_HARDWARE */
 
@@ -248,6 +252,10 @@ ACPI_STATUS
 AcpiRemoveInterface (
     ACPI_STRING             InterfaceName);
 
+ACPI_STATUS
+AcpiUpdateInterfaces (
+    UINT8                   Action);
+
 UINT32
 AcpiCheckAddressRange (
     ACPI_ADR_SPACE_TYPE     SpaceId,
@@ -260,21 +268,6 @@ AcpiDecodePldBuffer (
     UINT8                   *InBuffer,
     ACPI_SIZE               Length,
     ACPI_PLD_INFO           **ReturnBuffer);
-
-/*
- * ACPI Memory management
- */
-void *
-AcpiAllocate (
-    UINT32                  Size);
-
-void *
-AcpiCallocate (
-    UINT32                  Size);
-
-void
-AcpiFree (
-    void                    *Address);
 
 
 /*
@@ -339,8 +332,8 @@ AcpiWalkNamespace (
     ACPI_OBJECT_TYPE        Type,
     ACPI_HANDLE             StartObject,
     UINT32                  MaxDepth,
-    ACPI_WALK_CALLBACK      PreOrderVisit,
-    ACPI_WALK_CALLBACK      PostOrderVisit,
+    ACPI_WALK_CALLBACK      DescendingCallback,
+    ACPI_WALK_CALLBACK      AscendingCallback,
     void                    *Context,
     void                    **ReturnValue);
 
@@ -440,6 +433,17 @@ ACPI_STATUS
 AcpiInstallInitializationHandler (
     ACPI_INIT_HANDLER       Handler,
     UINT32                  Function);
+
+ACPI_HW_DEPENDENT_RETURN_STATUS (
+ACPI_STATUS
+AcpiInstallSciHandler (
+    ACPI_SCI_HANDLER        Address,
+    void                    *Context))
+
+ACPI_HW_DEPENDENT_RETURN_STATUS (
+ACPI_STATUS
+AcpiRemoveSciHandler (
+    ACPI_SCI_HANDLER        Address))
 
 ACPI_HW_DEPENDENT_RETURN_STATUS (
 ACPI_STATUS
@@ -821,48 +825,54 @@ AcpiGetTimerDuration (
 /*
  * Error/Warning output
  */
+ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiError (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(3);
+    ...);
 
+ACPI_PRINTF_LIKE(4)
 void  ACPI_INTERNAL_VAR_XFACE
 AcpiException (
     const char              *ModuleName,
     UINT32                  LineNumber,
     ACPI_STATUS             Status,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(4);
+    ...);
 
+ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiWarning (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(3);
+    ...);
 
+ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiInfo (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(3);
+    ...);
 
+ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiBiosError (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(3);
+    ...);
 
+ACPI_PRINTF_LIKE(3)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiBiosWarning (
     const char              *ModuleName,
     UINT32                  LineNumber,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(3);
+    ...);
 
 
 /*
@@ -870,6 +880,7 @@ AcpiBiosWarning (
  */
 #ifdef ACPI_DEBUG_OUTPUT
 
+ACPI_PRINTF_LIKE(6)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiDebugPrint (
     UINT32                  RequestedDebugLevel,
@@ -878,8 +889,9 @@ AcpiDebugPrint (
     const char              *ModuleName,
     UINT32                  ComponentId,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(6);
+    ...);
 
+ACPI_PRINTF_LIKE(6)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiDebugPrintRaw (
     UINT32                  RequestedDebugLevel,
@@ -888,7 +900,7 @@ AcpiDebugPrintRaw (
     const char              *ModuleName,
     UINT32                  ComponentId,
     const char              *Format,
-    ...) ACPI_PRINTF_LIKE(6);
+    ...);
 #endif
 
 #endif /* __ACXFACE_H__ */

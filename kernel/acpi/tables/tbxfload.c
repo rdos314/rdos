@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -114,6 +114,7 @@
  *****************************************************************************/
 
 #define __TBXFLOAD_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -164,7 +165,7 @@ AcpiLoadTables (
     return_ACPI_STATUS (Status);
 }
 
-ACPI_EXPORT_SYMBOL (AcpiLoadTables)
+ACPI_EXPORT_SYMBOL_INIT (AcpiLoadTables)
 
 
 /*******************************************************************************
@@ -261,6 +262,18 @@ AcpiTbLoadNamespace (
              ACPI_FAILURE (AcpiTbVerifyTable (
                 &AcpiGbl_RootTableList.Tables[i])))
         {
+            continue;
+        }
+
+        /*
+         * Optionally do not load any SSDTs from the RSDT/XSDT. This can
+         * be useful for debugging ACPI problems on some machines.
+         */
+        if (AcpiGbl_DisableSsdtTableLoad)
+        {
+            ACPI_INFO ((AE_INFO, "Ignoring %4.4s at %p",
+                AcpiGbl_RootTableList.Tables[i].Signature.Ascii,
+                ACPI_CAST_PTR (void, AcpiGbl_RootTableList.Tables[i].Address)));
             continue;
         }
 

@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -375,12 +375,57 @@ typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
 #endif
 
 /*
- * All ACPICA functions that are available to the rest of the kernel are
- * tagged with this macro which can be defined as appropriate for the host.
+ * All ACPICA external functions that are available to the rest of the kernel
+ * are tagged with thes macros which can be defined as appropriate for the host.
+ *
+ * Notes:
+ * ACPI_EXPORT_SYMBOL_INIT is used for initialization and termination
+ * interfaces that may need special processing.
+ * ACPI_EXPORT_SYMBOL is used for all other public external functions.
  */
+#ifndef ACPI_EXPORT_SYMBOL_INIT
+#define ACPI_EXPORT_SYMBOL_INIT(Symbol)
+#endif
+
 #ifndef ACPI_EXPORT_SYMBOL
 #define ACPI_EXPORT_SYMBOL(Symbol)
 #endif
+
+/*
+ * Compiler/Clibrary-dependent debug initialization. Used for ACPICA
+ * utilities only.
+ */
+#ifndef ACPI_DEBUG_INITIALIZE
+#define ACPI_DEBUG_INITIALIZE()
+#endif
+
+
+/*******************************************************************************
+ *
+ * Configuration
+ *
+ ******************************************************************************/
+
+#ifdef ACPI_DBG_TRACK_ALLOCATIONS
+/*
+ * Memory allocation tracking (used by AcpiExec to detect memory leaks)
+ */
+#define ACPI_MEM_PARAMETERS             _COMPONENT, _AcpiModuleName, __LINE__
+#define ACPI_ALLOCATE(a)                AcpiUtAllocateAndTrack ((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
+#define ACPI_ALLOCATE_ZEROED(a)         AcpiUtAllocateZeroedAndTrack ((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
+#define ACPI_FREE(a)                    AcpiUtFreeAndTrack (a, ACPI_MEM_PARAMETERS)
+#define ACPI_MEM_TRACKING(a)            a
+
+#else
+/*
+ * Normal memory allocation directly via the OS services layer
+ */
+#define ACPI_ALLOCATE(a)                AcpiOsAllocate ((ACPI_SIZE) (a))
+#define ACPI_ALLOCATE_ZEROED(a)         AcpiOsAllocateZeroed ((ACPI_SIZE) (a))
+#define ACPI_FREE(a)                    AcpiOsFree (a)
+#define ACPI_MEM_TRACKING(a)
+
+#endif /* ACPI_DBG_TRACK_ALLOCATIONS */
 
 
 /******************************************************************************
@@ -399,6 +444,7 @@ typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
 #define ACPI_PM1_REGISTER_WIDTH         16
 #define ACPI_PM2_REGISTER_WIDTH         8
 #define ACPI_PM_TIMER_WIDTH             32
+#define ACPI_RESET_REGISTER_WIDTH       8
 
 /* Names within the namespace are 4 bytes long */
 
@@ -551,6 +597,11 @@ typedef UINT64                          ACPI_INTEGER;
 #define ACPI_COMPARE_NAME(a,b)          (!ACPI_STRNCMP (ACPI_CAST_PTR (char, (a)), ACPI_CAST_PTR (char, (b)), ACPI_NAME_SIZE))
 #define ACPI_MOVE_NAME(dest,src)        (ACPI_STRNCPY (ACPI_CAST_PTR (char, (dest)), ACPI_CAST_PTR (char, (src)), ACPI_NAME_SIZE))
 #endif
+
+/* Support for the special RSDP signature (8 characters) */
+
+#define ACPI_VALIDATE_RSDP_SIG(a)       (!ACPI_STRNCMP (ACPI_CAST_PTR (char, (a)), ACPI_SIG_RSDP, 8))
+#define ACPI_MAKE_RSDP_SIG(dest)        (ACPI_MEMCPY (ACPI_CAST_PTR (char, (dest)), ACPI_SIG_RSDP, 8))
 
 
 /*******************************************************************************
@@ -743,13 +794,6 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 #define ACPI_EVENT_FLAG_ENABLED         (ACPI_EVENT_STATUS) 0x01
 #define ACPI_EVENT_FLAG_WAKE_ENABLED    (ACPI_EVENT_STATUS) 0x02
 #define ACPI_EVENT_FLAG_SET             (ACPI_EVENT_STATUS) 0x04
-
-/*
- * General Purpose Events (GPE)
- */
-#define ACPI_GPE_INVALID                0xFF
-#define ACPI_GPE_MAX                    0xFF
-#define ACPI_NUM_GPE                    256
 
 /* Actions for AcpiSetGpe, AcpiGpeWakeup, AcpiHwLowSetGpe */
 
@@ -982,8 +1026,8 @@ typedef struct acpi_object_list
  * Miscellaneous common Data Structures used by the interfaces
  */
 #define ACPI_NO_BUFFER              0
-#define ACPI_ALLOCATE_BUFFER        (ACPI_SIZE) (-1)
-#define ACPI_ALLOCATE_LOCAL_BUFFER  (ACPI_SIZE) (-2)
+#define ACPI_ALLOCATE_BUFFER        (ACPI_SIZE) (-1)    /* Let ACPICA allocate buffer */
+#define ACPI_ALLOCATE_LOCAL_BUFFER  (ACPI_SIZE) (-2)    /* For internal use only (enables tracking) */
 
 typedef struct acpi_buffer
 {
@@ -991,10 +1035,6 @@ typedef struct acpi_buffer
     void                            *Pointer;       /* pointer to buffer */
 
 } ACPI_BUFFER;
-
-/* Free a buffer created in an ACPI_BUFFER via ACPI_ALLOCATE_LOCAL_BUFFER */
-
-#define ACPI_FREE_BUFFER(b)         ACPI_FREE(b.Pointer)
 
 
 /*
@@ -1076,6 +1116,10 @@ typedef void
 /*
  * Various handlers and callback procedures
  */
+typedef
+UINT32 (*ACPI_SCI_HANDLER) (
+    void                            *Context);
+
 typedef
 void (*ACPI_GBL_EVENT_HANDLER) (
     UINT32                          EventType,
@@ -1298,7 +1342,6 @@ typedef struct acpi_memory_list
     UINT16                          ObjectSize;
     UINT16                          MaxDepth;
     UINT16                          CurrentDepth;
-    UINT16                          LinkOffset;
 
 #ifdef ACPI_DBG_TRACK_ALLOCATIONS
 
@@ -1314,6 +1357,34 @@ typedef struct acpi_memory_list
 #endif
 
 } ACPI_MEMORY_LIST;
+
+
+/* Definitions of _OSI support */
+
+#define ACPI_VENDOR_STRINGS                 0x01
+#define ACPI_FEATURE_STRINGS                0x02
+#define ACPI_ENABLE_INTERFACES              0x00
+#define ACPI_DISABLE_INTERFACES             0x04
+
+#define ACPI_DISABLE_ALL_VENDOR_STRINGS     (ACPI_DISABLE_INTERFACES | ACPI_VENDOR_STRINGS)
+#define ACPI_DISABLE_ALL_FEATURE_STRINGS    (ACPI_DISABLE_INTERFACES | ACPI_FEATURE_STRINGS)
+#define ACPI_DISABLE_ALL_STRINGS            (ACPI_DISABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
+#define ACPI_ENABLE_ALL_VENDOR_STRINGS      (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS)
+#define ACPI_ENABLE_ALL_FEATURE_STRINGS     (ACPI_ENABLE_INTERFACES | ACPI_FEATURE_STRINGS)
+#define ACPI_ENABLE_ALL_STRINGS             (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
+
+#define ACPI_OSI_WIN_2000               0x01
+#define ACPI_OSI_WIN_XP                 0x02
+#define ACPI_OSI_WIN_XP_SP1             0x03
+#define ACPI_OSI_WINSRV_2003            0x04
+#define ACPI_OSI_WIN_XP_SP2             0x05
+#define ACPI_OSI_WINSRV_2003_SP1        0x06
+#define ACPI_OSI_WIN_VISTA              0x07
+#define ACPI_OSI_WINSRV_2008            0x08
+#define ACPI_OSI_WIN_VISTA_SP1          0x09
+#define ACPI_OSI_WIN_VISTA_SP2          0x0A
+#define ACPI_OSI_WIN_7                  0x0B
+#define ACPI_OSI_WIN_8                  0x0C
 
 
 #endif /* __ACTYPES_H__ */

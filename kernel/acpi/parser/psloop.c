@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -246,7 +246,6 @@ AcpiPsGetArguments (
             case AML_IF_OP:
             case AML_ELSE_OP:
             case AML_WHILE_OP:
-
                 /*
                  * Currently supported module-level opcodes are:
                  * IF/ELSE/WHILE. These appear to be the most common,
@@ -352,6 +351,7 @@ AcpiPsGetArguments (
         default:
 
             /* No action for all other opcodes */
+
             break;
         }
 

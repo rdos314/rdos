@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -273,7 +273,7 @@ AcpiDsIsResultUsed (
     if (!Op)
     {
         ACPI_ERROR ((AE_INFO, "Null Op"));
-        return_VALUE (TRUE);
+        return_UINT8 (TRUE);
     }
 
     /*
@@ -303,7 +303,7 @@ AcpiDsIsResultUsed (
         ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
             "At Method level, result of [%s] not used\n",
             AcpiPsGetOpcodeName (Op->Common.AmlOpcode)));
-        return_VALUE (FALSE);
+        return_UINT8 (FALSE);
     }
 
     /* Get info on the parent. The RootOp is AML_SCOPE */
@@ -313,7 +313,7 @@ AcpiDsIsResultUsed (
     {
         ACPI_ERROR ((AE_INFO,
             "Unknown parent opcode Op=%p", Op));
-        return_VALUE (FALSE);
+        return_UINT8 (FALSE);
     }
 
     /*
@@ -336,7 +336,6 @@ AcpiDsIsResultUsed (
 
         case AML_IF_OP:
         case AML_WHILE_OP:
-
             /*
              * If we are executing the predicate AND this is the predicate op,
              * we will use the return value
@@ -349,7 +348,9 @@ AcpiDsIsResultUsed (
             break;
 
         default:
+
             /* Ignore other control opcodes */
+
             break;
         }
 
@@ -357,15 +358,12 @@ AcpiDsIsResultUsed (
 
         goto ResultNotUsed;
 
-
     case AML_CLASS_CREATE:
-
         /*
          * These opcodes allow TermArg(s) as operands and therefore
          * the operands can be method calls. The result is used.
          */
         goto ResultUsed;
-
 
     case AML_CLASS_NAMED_OBJECT:
 
@@ -386,9 +384,7 @@ AcpiDsIsResultUsed (
 
         goto ResultNotUsed;
 
-
     default:
-
         /*
          * In all other cases. the parent will actually use the return
          * object, so keep it.
@@ -403,7 +399,7 @@ ResultUsed:
         AcpiPsGetOpcodeName (Op->Common.AmlOpcode),
         AcpiPsGetOpcodeName (Op->Common.Parent->Common.AmlOpcode), Op));
 
-    return_VALUE (TRUE);
+    return_UINT8 (TRUE);
 
 
 ResultNotUsed:
@@ -412,7 +408,7 @@ ResultNotUsed:
         AcpiPsGetOpcodeName (Op->Common.AmlOpcode),
         AcpiPsGetOpcodeName (Op->Common.Parent->Common.AmlOpcode), Op));
 
-    return_VALUE (FALSE);
+    return_UINT8 (FALSE);
 }
 
 
@@ -855,16 +851,16 @@ AcpiDsCreateOperands (
         Index++;
     }
 
+    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+        "NumOperands %d, ArgCount %d, Index %d\n",
+        WalkState->NumOperands, ArgCount, Index));
+
+    /* Create the interpreter arguments, in reverse order */
+
     Index--;
-
-    /* It is the appropriate order to get objects from the Result stack */
-
     for (i = 0; i < ArgCount; i++)
     {
         Arg = Arguments[Index];
-
-        /* Force the filling of the operand stack in inverse order */
-
         WalkState->OperandIndex = (UINT8) Index;
 
         Status = AcpiDsCreateOperand (WalkState, Arg, Index);
@@ -873,10 +869,10 @@ AcpiDsCreateOperands (
             goto Cleanup;
         }
 
+        ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+            "Created Arg #%u (%p) %u args total\n",
+            Index, Arg, ArgCount));
         Index--;
-
-        ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH, "Arg #%u (%p) done, Arg1=%p\n",
-            Index, Arg, FirstArg));
     }
 
     return_ACPI_STATUS (Status);

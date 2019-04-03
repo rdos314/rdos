@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -556,7 +556,6 @@ AcpiExLoadOp (
         TableDesc.Address = ObjDesc->Region.Address;
         break;
 
-
     case ACPI_TYPE_BUFFER: /* Buffer or resolved RegionField */
 
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
@@ -599,8 +598,8 @@ AcpiExLoadOp (
         TableDesc.Address = ACPI_TO_INTEGER (TableDesc.Pointer);
         break;
 
-
     default:
+
         return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
     }
 
@@ -716,7 +715,7 @@ AcpiExUnloadTable (
         (DdbHandle->Common.Type != ACPI_TYPE_LOCAL_REFERENCE) ||
         (!(DdbHandle->Common.Flags & AOPOBJ_DATA_VALID)))
     {
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
+        return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
     }
 
     /* Get the table index from the DdbHandle */

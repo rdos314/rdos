@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -132,7 +132,7 @@ extern UINT8        AcpiGbl_DefaultAddressSpaces[];
 
 static void
 AcpiEvOrphanEcRegMethod (
-    void);
+    ACPI_NAMESPACE_NODE     *EcDeviceNode);
 
 static ACPI_STATUS
 AcpiEvRegRun (
@@ -306,18 +306,12 @@ AcpiEvAddressSpaceDispatch (
         {
             RegionObj->Region.Flags |= AOPOBJ_SETUP_COMPLETE;
 
-            if (RegionObj2->Extra.RegionContext)
+            /*
+             * Save the returned context for use in all accesses to
+             * the handler for this particular region
+             */
+            if (!(RegionObj2->Extra.RegionContext))
             {
-                /* The handler for this region was already installed */
-
-                ACPI_FREE (RegionContext);
-            }
-            else
-            {
-                /*
-                 * Save the returned context for use in all accesses to
-                 * this particular region
-                 */
                 RegionObj2->Extra.RegionContext = RegionContext;
             }
         }
@@ -332,7 +326,6 @@ AcpiEvAddressSpaceDispatch (
         &RegionObj->Region.Handler->AddressSpace, Handler,
         ACPI_FORMAT_NATIVE_UINT (RegionObj->Region.Address + RegionOffset),
         AcpiUtGetRegionName (RegionObj->Region.SpaceId)));
-
 
     /*
      * Special handling for GenericSerialBus and GeneralPurposeIo:
@@ -496,6 +489,15 @@ AcpiEvDetachRegion(
                 Status = RegionSetup (RegionObj, ACPI_REGION_DEACTIVATE,
                     HandlerObj->AddressSpace.Context, RegionContext);
 
+                /*
+                 * RegionContext should have been released by the deactivate
+                 * operation. We don't need access to it anymore here.
+                 */
+                if (RegionContext)
+                {
+                    *RegionContext = NULL;
+                }
+
                 /* Init routine may fail, Just ignore errors */
 
                 if (ACPI_FAILURE (Status))
@@ -636,7 +638,7 @@ AcpiEvExecuteRegMethod (
     }
 
     Info->PrefixNode = RegionObj2->Extra.Method_REG;
-    Info->Pathname = NULL;
+    Info->RelativePathname = NULL;
     Info->Parameters = Args;
     Info->Flags = ACPI_IGNORE_RETURN_VALUE;
 
@@ -722,7 +724,7 @@ AcpiEvExecuteRegMethods (
 
     if (SpaceId == ACPI_ADR_SPACE_EC)
     {
-        AcpiEvOrphanEcRegMethod ();
+        AcpiEvOrphanEcRegMethod (Node);
     }
 
     return_ACPI_STATUS (Status);
@@ -800,7 +802,7 @@ AcpiEvRegRun (
  *
  * FUNCTION:    AcpiEvOrphanEcRegMethod
  *
- * PARAMETERS:  None
+ * PARAMETERS:  EcDeviceNode        - Namespace node for an EC device
  *
  * RETURN:      None
  *
@@ -812,41 +814,30 @@ AcpiEvRegRun (
  *              detected by providing a _REG method object underneath the
  *              Embedded Controller device."
  *
- *              To quickly access the EC device, we use the EC_ID that appears
- *              within the ECDT. Otherwise, we would need to perform a time-
- *              consuming namespace walk, executing _HID methods to find the
- *              EC device.
+ *              To quickly access the EC device, we use the EcDeviceNode used
+ *              during EC handler installation. Otherwise, we would need to
+ *              perform a time consuming namespace walk, executing _HID
+ *              methods to find the EC device.
+ *
+ *  MUTEX:      Assumes the namespace is locked
  *
  ******************************************************************************/
 
 static void
 AcpiEvOrphanEcRegMethod (
-    void)
+    ACPI_NAMESPACE_NODE     *EcDeviceNode)
 {
-    ACPI_TABLE_ECDT         *Table;
+    ACPI_HANDLE             RegMethod;
+    ACPI_NAMESPACE_NODE     *NextNode;
     ACPI_STATUS             Status;
     ACPI_OBJECT_LIST        Args;
     ACPI_OBJECT             Objects[2];
-    ACPI_NAMESPACE_NODE     *EcDeviceNode;
-    ACPI_NAMESPACE_NODE     *RegMethod;
-    ACPI_NAMESPACE_NODE     *NextNode;
 
 
     ACPI_FUNCTION_TRACE (EvOrphanEcRegMethod);
 
 
-    /* Get the ECDT (if present in system) */
-
-    Status = AcpiGetTable (ACPI_SIG_ECDT, 0,
-        ACPI_CAST_INDIRECT_PTR (ACPI_TABLE_HEADER, &Table));
-    if (ACPI_FAILURE (Status))
-    {
-        return_VOID;
-    }
-
-    /* We need a valid EC_ID string */
-
-    if (!(*Table->Id))
+    if (!EcDeviceNode)
     {
         return_VOID;
     }
@@ -855,23 +846,12 @@ AcpiEvOrphanEcRegMethod (
 
     (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
 
-    /* Get a handle to the EC device referenced in the ECDT */
-
-    Status = AcpiGetHandle (NULL,
-        ACPI_CAST_PTR (char, Table->Id),
-        ACPI_CAST_PTR (ACPI_HANDLE, &EcDeviceNode));
-    if (ACPI_FAILURE (Status))
-    {
-        goto Exit;
-    }
-
     /* Get a handle to a _REG method immediately under the EC device */
 
-    Status = AcpiGetHandle (EcDeviceNode,
-        METHOD_NAME__REG, ACPI_CAST_PTR (ACPI_HANDLE, &RegMethod));
+    Status = AcpiGetHandle (EcDeviceNode, METHOD_NAME__REG, &RegMethod);
     if (ACPI_FAILURE (Status))
     {
-        goto Exit;
+        goto Exit; /* There is no _REG method present */
     }
 
     /*
@@ -879,7 +859,7 @@ AcpiEvOrphanEcRegMethod (
      * this scope with the Embedded Controller space ID. Otherwise, it
      * will already have been executed. Note, this allows for Regions
      * with other space IDs to be present; but the code below will then
-     * execute the _REG method with the EC space ID argument.
+     * execute the _REG method with the EmbeddedControl SpaceID argument.
      */
     NextNode = AcpiNsGetNextNode (EcDeviceNode, NULL);
     while (NextNode)
@@ -888,12 +868,13 @@ AcpiEvOrphanEcRegMethod (
             (NextNode->Object) &&
             (NextNode->Object->Region.SpaceId == ACPI_ADR_SPACE_EC))
         {
-            goto Exit; /* Do not execute _REG */
+            goto Exit; /* Do not execute the _REG */
         }
+
         NextNode = AcpiNsGetNextNode (EcDeviceNode, NextNode);
     }
 
-    /* Evaluate the _REG(EC,Connect) method */
+    /* Evaluate the _REG(EmbeddedControl,Connect) method */
 
     Args.Count = 2;
     Args.Pointer = Objects;

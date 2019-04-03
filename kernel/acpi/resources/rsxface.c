@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -115,6 +115,7 @@
 
 
 #define __RSXFACE_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -524,6 +525,7 @@ AcpiResourceToAddress64 (
         break;
 
     default:
+
         return (AE_BAD_PARAMETER);
     }
 
@@ -702,12 +704,19 @@ AcpiWalkResourceBuffer (
 
     while (Resource < ResourceEnd)
     {
-        /* Sanity check the resource */
+        /* Sanity check the resource type */
 
         if (Resource->Type > ACPI_RESOURCE_TYPE_MAX)
         {
             Status = AE_AML_INVALID_RESOURCE_TYPE;
             break;
+        }
+
+        /* Sanity check the length. It must not be zero, or we loop forever */
+
+        if (!Resource->Length)
+        {
+            return_ACPI_STATUS (AE_AML_BAD_RESOURCE_LENGTH);
         }
 
         /* Invoke the user function, abort on any error returned */

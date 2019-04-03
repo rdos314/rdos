@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Module Name: tbutils   - table utilities
+ * Module Name: tbutils - ACPI Table utilities
  *
  *****************************************************************************/
 
@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -125,15 +125,9 @@
 
 /* Local prototypes */
 
-static void
-AcpiTbFixString (
-    char                    *String,
-    ACPI_SIZE               Length);
-
-static void
-AcpiTbCleanupTableHeader (
-    ACPI_TABLE_HEADER       *OutHeader,
-    ACPI_TABLE_HEADER       *Header);
+static ACPI_STATUS
+AcpiTbValidateXsdt (
+    ACPI_PHYSICAL_ADDRESS   Address);
 
 static ACPI_PHYSICAL_ADDRESS
 AcpiTbGetRootTableEntry (
@@ -201,207 +195,6 @@ AcpiTbTablesLoaded (
     }
 
     return (FALSE);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiTbFixString
- *
- * PARAMETERS:  String              - String to be repaired
- *              Length              - Maximum length
- *
- * RETURN:      None
- *
- * DESCRIPTION: Replace every non-printable or non-ascii byte in the string
- *              with a question mark '?'.
- *
- ******************************************************************************/
-
-static void
-AcpiTbFixString (
-    char                    *String,
-    ACPI_SIZE               Length)
-{
-
-    while (Length && *String)
-    {
-        if (!ACPI_IS_PRINT (*String))
-        {
-            *String = '?';
-        }
-        String++;
-        Length--;
-    }
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiTbCleanupTableHeader
- *
- * PARAMETERS:  OutHeader           - Where the cleaned header is returned
- *              Header              - Input ACPI table header
- *
- * RETURN:      Returns the cleaned header in OutHeader
- *
- * DESCRIPTION: Copy the table header and ensure that all "string" fields in
- *              the header consist of printable characters.
- *
- ******************************************************************************/
-
-static void
-AcpiTbCleanupTableHeader (
-    ACPI_TABLE_HEADER       *OutHeader,
-    ACPI_TABLE_HEADER       *Header)
-{
-
-    ACPI_MEMCPY (OutHeader, Header, sizeof (ACPI_TABLE_HEADER));
-
-    AcpiTbFixString (OutHeader->Signature, ACPI_NAME_SIZE);
-    AcpiTbFixString (OutHeader->OemId, ACPI_OEM_ID_SIZE);
-    AcpiTbFixString (OutHeader->OemTableId, ACPI_OEM_TABLE_ID_SIZE);
-    AcpiTbFixString (OutHeader->AslCompilerId, ACPI_NAME_SIZE);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiTbPrintTableHeader
- *
- * PARAMETERS:  Address             - Table physical address
- *              Header              - Table header
- *
- * RETURN:      None
- *
- * DESCRIPTION: Print an ACPI table header. Special cases for FACS and RSDP.
- *
- ******************************************************************************/
-
-void
-AcpiTbPrintTableHeader (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    ACPI_TABLE_HEADER       *Header)
-{
-    ACPI_TABLE_HEADER       LocalHeader;
-
-
-    /*
-     * The reason that the Address is cast to a void pointer is so that we
-     * can use %p which will work properly on both 32-bit and 64-bit hosts.
-     */
-    if (ACPI_COMPARE_NAME (Header->Signature, ACPI_SIG_FACS))
-    {
-        /* FACS only has signature and length fields */
-
-        ACPI_INFO ((AE_INFO, "%4.4s %p %05X",
-            Header->Signature, ACPI_CAST_PTR (void, Address),
-            Header->Length));
-    }
-    else if (ACPI_COMPARE_NAME (Header->Signature, ACPI_SIG_RSDP))
-    {
-        /* RSDP has no common fields */
-
-        ACPI_MEMCPY (LocalHeader.OemId,
-            ACPI_CAST_PTR (ACPI_TABLE_RSDP, Header)->OemId, ACPI_OEM_ID_SIZE);
-        AcpiTbFixString (LocalHeader.OemId, ACPI_OEM_ID_SIZE);
-
-        ACPI_INFO ((AE_INFO, "RSDP %p %05X (v%.2d %6.6s)",
-            ACPI_CAST_PTR (void, Address),
-            (ACPI_CAST_PTR (ACPI_TABLE_RSDP, Header)->Revision > 0) ?
-                ACPI_CAST_PTR (ACPI_TABLE_RSDP, Header)->Length : 20,
-            ACPI_CAST_PTR (ACPI_TABLE_RSDP, Header)->Revision,
-            LocalHeader.OemId));
-    }
-    else
-    {
-        /* Standard ACPI table with full common header */
-
-        AcpiTbCleanupTableHeader (&LocalHeader, Header);
-
-        ACPI_INFO ((AE_INFO,
-            "%4.4s %p %05X (v%.2d %6.6s %8.8s %08X %4.4s %08X)",
-            LocalHeader.Signature, ACPI_CAST_PTR (void, Address),
-            LocalHeader.Length, LocalHeader.Revision, LocalHeader.OemId,
-            LocalHeader.OemTableId, LocalHeader.OemRevision,
-            LocalHeader.AslCompilerId, LocalHeader.AslCompilerRevision));
-    }
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiTbValidateChecksum
- *
- * PARAMETERS:  Table               - ACPI table to verify
- *              Length              - Length of entire table
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Verifies that the table checksums to zero. Optionally returns
- *              exception on bad checksum.
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiTbVerifyChecksum (
-    ACPI_TABLE_HEADER       *Table,
-    UINT32                  Length)
-{
-    UINT8                   Checksum;
-
-
-    /* Compute the checksum on the table */
-
-    Checksum = AcpiTbChecksum (ACPI_CAST_PTR (UINT8, Table), Length);
-
-    /* Checksum ok? (should be zero) */
-
-    if (Checksum)
-    {
-        ACPI_BIOS_WARNING ((AE_INFO,
-            "Incorrect checksum in table [%4.4s] - 0x%2.2X, "
-            "should be 0x%2.2X",
-            Table->Signature, Table->Checksum,
-            (UINT8) (Table->Checksum - Checksum)));
-
-#if (ACPI_CHECKSUM_ABORT)
-        return (AE_BAD_CHECKSUM);
-#endif
-    }
-
-    return (AE_OK);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiTbChecksum
- *
- * PARAMETERS:  Buffer          - Pointer to memory region to be checked
- *              Length          - Length of this memory region
- *
- * RETURN:      Checksum (UINT8)
- *
- * DESCRIPTION: Calculates circular checksum of memory region.
- *
- ******************************************************************************/
-
-UINT8
-AcpiTbChecksum (
-    UINT8                   *Buffer,
-    UINT32                  Length)
-{
-    UINT8                   Sum = 0;
-    UINT8                   *End = Buffer + Length;
-
-
-    while (Buffer < End)
-    {
-        Sum = (UINT8) (Sum + *(Buffer++));
-    }
-
-    return (Sum);
 }
 
 
@@ -636,7 +429,7 @@ AcpiTbGetRootTableEntry (
      * Get the table physical address (32-bit for RSDT, 64-bit for XSDT):
      * Note: Addresses are 32-bit aligned (not 64) in both RSDT and XSDT
      */
-    if (TableEntrySize == sizeof (UINT32))
+    if (TableEntrySize == ACPI_RSDT_ENTRY_SIZE)
     {
         /*
          * 32-bit platform, RSDT: Return 32-bit table entry
@@ -666,6 +459,92 @@ AcpiTbGetRootTableEntry (
 #endif
         return ((ACPI_PHYSICAL_ADDRESS) (Address64));
     }
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbValidateXsdt
+ *
+ * PARAMETERS:  Address             - Physical address of the XSDT (from RSDP)
+ *
+ * RETURN:      Status. AE_OK if the table appears to be valid.
+ *
+ * DESCRIPTION: Validate an XSDT to ensure that it is of minimum size and does
+ *              not contain any NULL entries. A problem that is seen in the
+ *              field is that the XSDT exists, but is actually useless because
+ *              of one or more (or all) NULL entries.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiTbValidateXsdt (
+    ACPI_PHYSICAL_ADDRESS   XsdtAddress)
+{
+    ACPI_TABLE_HEADER       *Table;
+    UINT8                   *NextEntry;
+    ACPI_PHYSICAL_ADDRESS   Address;
+    UINT32                  Length;
+    UINT32                  EntryCount;
+    ACPI_STATUS             Status;
+    UINT32                  i;
+
+
+    /* Get the XSDT length */
+
+    Table = AcpiOsMapMemory (XsdtAddress, sizeof (ACPI_TABLE_HEADER));
+    if (!Table)
+    {
+        return (AE_NO_MEMORY);
+    }
+
+    Length = Table->Length;
+    AcpiOsUnmapMemory (Table, sizeof (ACPI_TABLE_HEADER));
+
+    /*
+     * Minimum XSDT length is the size of the standard ACPI header
+     * plus one physical address entry
+     */
+    if (Length < (sizeof (ACPI_TABLE_HEADER) + ACPI_XSDT_ENTRY_SIZE))
+    {
+        return (AE_INVALID_TABLE_LENGTH);
+    }
+
+    /* Map the entire XSDT */
+
+    Table = AcpiOsMapMemory (XsdtAddress, Length);
+    if (!Table)
+    {
+        return (AE_NO_MEMORY);
+    }
+
+    /* Get the number of entries and pointer to first entry */
+
+    Status = AE_OK;
+    NextEntry = ACPI_ADD_PTR (UINT8, Table, sizeof (ACPI_TABLE_HEADER));
+    EntryCount = (UINT32) ((Table->Length - sizeof (ACPI_TABLE_HEADER)) /
+        ACPI_XSDT_ENTRY_SIZE);
+
+    /* Validate each entry (physical address) within the XSDT */
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        Address = AcpiTbGetRootTableEntry (NextEntry, ACPI_XSDT_ENTRY_SIZE);
+        if (!Address)
+        {
+            /* Detected a NULL entry, XSDT is invalid */
+
+            Status = AE_NULL_ENTRY;
+            break;
+        }
+
+        NextEntry += ACPI_XSDT_ENTRY_SIZE;
+    }
+
+    /* Unmap table */
+
+    AcpiOsUnmapMemory (Table, Length);
+    return (Status);
 }
 
 
@@ -704,9 +583,8 @@ AcpiTbParseRootTable (
     ACPI_FUNCTION_TRACE (TbParseRootTable);
 
 
-    /*
-     * Map the entire RSDP and extract the address of the RSDT or XSDT
-     */
+    /* Map the entire RSDP and extract the address of the RSDT or XSDT */
+
     Rsdp = AcpiOsMapMemory (RsdpAddress, sizeof (ACPI_TABLE_RSDP));
     if (!Rsdp)
     {
@@ -716,24 +594,26 @@ AcpiTbParseRootTable (
     AcpiTbPrintTableHeader (RsdpAddress,
         ACPI_CAST_PTR (ACPI_TABLE_HEADER, Rsdp));
 
-    /* Differentiate between RSDT and XSDT root tables */
+    /* Use XSDT if present and not overridden. Otherwise, use RSDT */
 
-    if (Rsdp->Revision > 1 && Rsdp->XsdtPhysicalAddress)
+    if ((Rsdp->Revision > 1) &&
+        Rsdp->XsdtPhysicalAddress &&
+        !AcpiGbl_DoNotUseXsdt)
     {
         /*
-         * Root table is an XSDT (64-bit physical addresses). We must use the
-         * XSDT if the revision is > 1 and the XSDT pointer is present, as per
-         * the ACPI specification.
+         * RSDP contains an XSDT (64-bit physical addresses). We must use
+         * the XSDT if the revision is > 1 and the XSDT pointer is present,
+         * as per the ACPI specification.
          */
         Address = (ACPI_PHYSICAL_ADDRESS) Rsdp->XsdtPhysicalAddress;
-        TableEntrySize = sizeof (UINT64);
+        TableEntrySize = ACPI_XSDT_ENTRY_SIZE;
     }
     else
     {
         /* Root table is an RSDT (32-bit physical addresses) */
 
         Address = (ACPI_PHYSICAL_ADDRESS) Rsdp->RsdtPhysicalAddress;
-        TableEntrySize = sizeof (UINT32);
+        TableEntrySize = ACPI_RSDT_ENTRY_SIZE;
     }
 
     /*
@@ -742,6 +622,24 @@ AcpiTbParseRootTable (
      */
     AcpiOsUnmapMemory (Rsdp, sizeof (ACPI_TABLE_RSDP));
 
+    /*
+     * If it is present and used, validate the XSDT for access/size
+     * and ensure that all table entries are at least non-NULL
+     */
+    if (TableEntrySize == ACPI_XSDT_ENTRY_SIZE)
+    {
+        Status = AcpiTbValidateXsdt (Address);
+        if (ACPI_FAILURE (Status))
+        {
+            ACPI_BIOS_WARNING ((AE_INFO, "XSDT is invalid (%s), using RSDT",
+                AcpiFormatException (Status)));
+
+            /* Fall back to the RSDT */
+
+            Address = (ACPI_PHYSICAL_ADDRESS) Rsdp->RsdtPhysicalAddress;
+            TableEntrySize = ACPI_RSDT_ENTRY_SIZE;
+        }
+    }
 
     /* Map the RSDT/XSDT table header to get the full table length */
 
@@ -753,12 +651,14 @@ AcpiTbParseRootTable (
 
     AcpiTbPrintTableHeader (Address, Table);
 
-    /* Get the length of the full table, verify length and map entire table */
-
+    /*
+     * Validate length of the table, and map entire table.
+     * Minimum length table must contain at least one entry.
+     */
     Length = Table->Length;
     AcpiOsUnmapMemory (Table, sizeof (ACPI_TABLE_HEADER));
 
-    if (Length < sizeof (ACPI_TABLE_HEADER))
+    if (Length < (sizeof (ACPI_TABLE_HEADER) + TableEntrySize))
     {
         ACPI_BIOS_ERROR ((AE_INFO,
             "Invalid table length 0x%X in RSDT/XSDT", Length));
@@ -780,22 +680,21 @@ AcpiTbParseRootTable (
         return_ACPI_STATUS (Status);
     }
 
-    /* Calculate the number of tables described in the root table */
+    /* Get the number of entries and pointer to first entry */
 
     TableCount = (UINT32) ((Table->Length - sizeof (ACPI_TABLE_HEADER)) /
         TableEntrySize);
+    TableEntry = ACPI_ADD_PTR (UINT8, Table, sizeof (ACPI_TABLE_HEADER));
 
     /*
      * First two entries in the table array are reserved for the DSDT
      * and FACS, which are not actually present in the RSDT/XSDT - they
      * come from the FADT
      */
-    TableEntry = ACPI_CAST_PTR (UINT8, Table) + sizeof (ACPI_TABLE_HEADER);
     AcpiGbl_RootTableList.CurrentTableCount = 2;
 
-    /*
-     * Initialize the root table array from the RSDT/XSDT
-     */
+    /* Initialize the root table array from the RSDT/XSDT */
+
     for (i = 0; i < TableCount; i++)
     {
         if (AcpiGbl_RootTableList.CurrentTableCount >=
@@ -837,7 +736,7 @@ AcpiTbParseRootTable (
         AcpiTbInstallTable (AcpiGbl_RootTableList.Tables[i].Address,
             NULL, i);
 
-        /* Special case for FADT - get the DSDT and FACS */
+        /* Special case for FADT - validate it then get the DSDT and FACS */
 
         if (ACPI_COMPARE_NAME (
                 &AcpiGbl_RootTableList.Tables[i].Signature, ACPI_SIG_FADT))

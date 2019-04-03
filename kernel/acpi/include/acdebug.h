@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -231,6 +231,15 @@ AcpiDbGenerateGpe (
     char                    *GpeArg,
     char                    *BlockArg))
 
+ACPI_HW_DEPENDENT_RETURN_VOID (
+void
+AcpiDbGenerateSci (
+    void))
+
+void
+AcpiDbExecuteTest (
+    char                    *TypeArg);
+
 
 /*
  * dbconvert - miscellaneous conversion routines
@@ -304,6 +313,10 @@ void
 AcpiDbDumpNamespace (
     char                    *StartArg,
     char                    *DepthArg);
+
+void
+AcpiDbDumpNamespacePaths (
+    void);
 
 void
 AcpiDbDumpNamespaceByOwner (
@@ -456,6 +469,10 @@ AcpiDbDisplayHistory (
 char *
 AcpiDbGetFromHistory (
     char                    *CommandNumArg);
+
+char *
+AcpiDbGetHistoryByIndex (
+    UINT32                  CommanddNum);
 
 
 /*

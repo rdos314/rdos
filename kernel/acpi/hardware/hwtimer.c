@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -113,6 +113,8 @@
  *
  *****************************************************************************/
 
+#define EXPORT_ACPI_INTERFACES
+
 #include "acpi.h"
 #include "accommon.h"
 
@@ -187,8 +189,14 @@ AcpiGetTimer (
         return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
 
-    Status = AcpiHwRead (Ticks, &AcpiGbl_FADT.XPmTimerBlock);
+    /* ACPI 5.0A: PM Timer is optional */
 
+    if (!AcpiGbl_FADT.XPmTimerBlock.Address)
+    {
+        return_ACPI_STATUS (AE_SUPPORT);
+    }
+
+    Status = AcpiHwRead (Ticks, &AcpiGbl_FADT.XPmTimerBlock);
     return_ACPI_STATUS (Status);
 }
 
@@ -241,6 +249,13 @@ AcpiGetTimerDuration (
     if (!TimeElapsed)
     {
         return_ACPI_STATUS (AE_BAD_PARAMETER);
+    }
+
+    /* ACPI 5.0A: PM Timer is optional */
+
+    if (!AcpiGbl_FADT.XPmTimerBlock.Address)
+    {
+        return_ACPI_STATUS (AE_SUPPORT);
     }
 
     /*

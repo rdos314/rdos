@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -369,16 +369,6 @@ AcpiRsCreatePciRoutingTable (
          */
         UserPrt->Length = (sizeof (ACPI_PCI_ROUTING_TABLE) - 4);
 
-        /* Each element of the top-level package must also be a package */
-
-        if ((*TopObjectList)->Common.Type != ACPI_TYPE_PACKAGE)
-        {
-            ACPI_ERROR ((AE_INFO,
-                "(PRT[%u]) Need sub-package, found %s",
-                Index, AcpiUtGetObjectTypeName (*TopObjectList)));
-            return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
-        }
-
         /* Each sub-package must be of length 4 */
 
         if ((*TopObjectList)->Package.Count != 4)
@@ -421,23 +411,6 @@ AcpiRsCreatePciRoutingTable (
         UserPrt->Pin = (UINT32) ObjDesc->Integer.Value;
 
         /*
-         * If the BIOS has erroneously reversed the _PRT SourceName (index 2)
-         * and the SourceIndex (index 3), fix it. _PRT is important enough to
-         * workaround this BIOS error. This also provides compatibility with
-         * other ACPI implementations.
-         */
-        ObjDesc = SubObjectList[3];
-        if (!ObjDesc || (ObjDesc->Common.Type != ACPI_TYPE_INTEGER))
-        {
-            SubObjectList[3] = SubObjectList[2];
-            SubObjectList[2] = ObjDesc;
-
-            ACPI_WARNING ((AE_INFO,
-                "(PRT[%X].Source) SourceName and SourceIndex are reversed, fixed",
-                Index));
-        }
-
-        /*
          * 3) Third subobject: Dereference the PRT.SourceName
          * The name may be unresolved (slack mode), so allow a null object
          */
@@ -472,7 +445,6 @@ AcpiRsCreatePciRoutingTable (
                 UserPrt->Length += (UINT32) ACPI_STRLEN (UserPrt->Source) + 1;
                 break;
 
-
             case ACPI_TYPE_STRING:
 
                 ACPI_STRCPY (UserPrt->Source, ObjDesc->String.Pointer);
@@ -484,7 +456,6 @@ AcpiRsCreatePciRoutingTable (
                 UserPrt->Length += ObjDesc->String.Length + 1;
                 break;
 
-
             case ACPI_TYPE_INTEGER:
                 /*
                  * If this is a number, then the Source Name is NULL, since the
@@ -494,7 +465,6 @@ AcpiRsCreatePciRoutingTable (
                  */
                 UserPrt->Length += sizeof (UINT32);
                 break;
-
 
             default:
 
@@ -537,23 +507,22 @@ AcpiRsCreatePciRoutingTable (
  *
  * FUNCTION:    AcpiRsCreateAmlResources
  *
- * PARAMETERS:  LinkedListBuffer        - Pointer to the resource linked list
- *              OutputBuffer            - Pointer to the user's buffer
+ * PARAMETERS:  ResourceList            - Pointer to the resource list buffer
+ *              OutputBuffer            - Where the AML buffer is returned
  *
  * RETURN:      Status  AE_OK if okay, else a valid ACPI_STATUS code.
  *              If the OutputBuffer is too small, the error will be
  *              AE_BUFFER_OVERFLOW and OutputBuffer->Length will point
  *              to the size buffer needed.
  *
- * DESCRIPTION: Takes the linked list of device resources and
- *              creates a bytestream to be used as input for the
- *              _SRS control method.
+ * DESCRIPTION: Converts a list of device resources to an AML bytestream
+ *              to be used as input for the _SRS control method.
  *
  ******************************************************************************/
 
 ACPI_STATUS
 AcpiRsCreateAmlResources (
-    ACPI_RESOURCE           *LinkedListBuffer,
+    ACPI_BUFFER             *ResourceList,
     ACPI_BUFFER             *OutputBuffer)
 {
     ACPI_STATUS             Status;
@@ -563,17 +532,15 @@ AcpiRsCreateAmlResources (
     ACPI_FUNCTION_TRACE (RsCreateAmlResources);
 
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "LinkedListBuffer = %p\n",
-        LinkedListBuffer));
+    /* Params already validated, no need to re-validate here */
 
-    /*
-     * Params already validated, so we don't re-validate here
-     *
-     * Pass the LinkedListBuffer into a module that calculates
-     * the buffer size needed for the byte stream.
-     */
-    Status = AcpiRsGetAmlLength (LinkedListBuffer,
-                &AmlSizeNeeded);
+    ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "ResourceList Buffer = %p\n",
+        ResourceList->Pointer));
+
+    /* Get the buffer size needed for the AML byte stream */
+
+    Status = AcpiRsGetAmlLength (ResourceList->Pointer,
+                ResourceList->Length, &AmlSizeNeeded);
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "AmlSizeNeeded=%X, %s\n",
         (UINT32) AmlSizeNeeded, AcpiFormatException (Status)));
@@ -592,14 +559,14 @@ AcpiRsCreateAmlResources (
 
     /* Do the conversion */
 
-    Status = AcpiRsConvertResourcesToAml (LinkedListBuffer, AmlSizeNeeded,
-                    OutputBuffer->Pointer);
+    Status = AcpiRsConvertResourcesToAml (ResourceList->Pointer,
+                AmlSizeNeeded, OutputBuffer->Pointer);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "OutputBuffer %p Length %X\n",
-            OutputBuffer->Pointer, (UINT32) OutputBuffer->Length));
+        OutputBuffer->Pointer, (UINT32) OutputBuffer->Length));
     return_ACPI_STATUS (AE_OK);
 }

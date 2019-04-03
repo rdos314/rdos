@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -115,6 +115,7 @@
 
 
 #define __EVXFEVNT_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -152,6 +153,13 @@ AcpiEnable (
     if (!AcpiTbTablesLoaded ())
     {
         return_ACPI_STATUS (AE_NO_ACPI_TABLES);
+    }
+
+    /* If the Hardware Reduced flag is set, machine is always in acpi mode */
+
+    if (AcpiGbl_ReducedHardware)
+    {
+        return_ACPI_STATUS (AE_OK);
     }
 
     /* Check current mode */
@@ -202,6 +210,13 @@ AcpiDisable (
 
     ACPI_FUNCTION_TRACE (AcpiDisable);
 
+
+    /* If the Hardware Reduced flag is set, machine is always in acpi mode */
+
+    if (AcpiGbl_ReducedHardware)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
 
     if (AcpiHwGetMode() == ACPI_SYS_MODE_LEGACY)
     {

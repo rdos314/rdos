@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -115,6 +115,7 @@
 
 
 #define __EVXFGPE_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -322,14 +323,17 @@ AcpiSetGpe (
     switch (Action)
     {
     case ACPI_GPE_ENABLE:
+
         Status = AcpiEvEnableGpe (GpeEventInfo);
         break;
 
     case ACPI_GPE_DISABLE:
+
         Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_DISABLE);
         break;
 
     default:
+
         Status = AE_BAD_PARAMETER;
         break;
     }
@@ -559,14 +563,17 @@ AcpiSetGpeWakeMask (
     switch (Action)
     {
     case ACPI_GPE_ENABLE:
+
         ACPI_SET_BIT (GpeRegisterInfo->EnableForWake, (UINT8) RegisterBit);
         break;
 
     case ACPI_GPE_DISABLE:
+
         ACPI_CLEAR_BIT (GpeRegisterInfo->EnableForWake, (UINT8) RegisterBit);
         break;
 
     default:
+
         ACPI_ERROR ((AE_INFO, "%u, Invalid action", Action));
         Status = AE_BAD_PARAMETER;
         break;
@@ -856,6 +863,20 @@ AcpiInstallGpeBlock (
         goto UnlockAndExit;
     }
 
+    /* Validate the parent device */
+
+    if (Node->Type != ACPI_TYPE_DEVICE)
+    {
+        Status = AE_TYPE;
+        goto UnlockAndExit;
+    }
+
+    if (Node->Object)
+    {
+        Status = AE_ALREADY_EXISTS;
+        goto UnlockAndExit;
+    }
+
     /*
      * For user-installed GPE Block Devices, the GpeBlockBaseNumber
      * is always zero
@@ -946,6 +967,14 @@ AcpiRemoveGpeBlock (
     if (!Node)
     {
         Status = AE_BAD_PARAMETER;
+        goto UnlockAndExit;
+    }
+
+    /* Validate the parent device */
+
+    if (Node->Type != ACPI_TYPE_DEVICE)
+    {
+        Status = AE_TYPE;
         goto UnlockAndExit;
     }
 

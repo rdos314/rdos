@@ -137,6 +137,7 @@
 #define ACPI_INTERNAL_VAR_XFACE
 
 #define ACPI_MACHINE_WIDTH      32
+#define ACPI_MISALIGNMENT_NOT_SUPPORTED   1
 
 #define ACPI_USE_SYSTEM_CLIBRARY 
 #define ACPI_USE_STANDARD_HEADERS
@@ -155,23 +156,6 @@ struct TSemaphore
 #define ACPI_SPINLOCK struct TSpinlock *
 #define ACPI_MUTEX struct TKernelSection *
 #define ACPI_SEMAPHORE struct TSemaphore *
-
-void ACPI_DIV_64_BY_32(unsigned int n_hi, unsigned int n_lo, unsigned int d32, unsigned int *q32, unsigned int *r32);
-
-#pragma aux ACPI_DIV_64_BY_32 = \
-    "div ecx" \
-    "mov fs:[esi],eax" \
-    "mov es:[edi],edx" \
-    parm [edx] [eax] [ecx] [fs esi] [es edi];
-
-void ACPI_SHIFT_RIGHT_64(unsigned int *n_hi, unsigned int *n_lo);
-
-#pragma aux ACPI_SHIFT_RIGHT_64 = \
-    "shr dword ptr fs:[esi],1" \
-    "rcr dword ptr es:[edi],1" \
-    parm [fs esi] [es edi];
-
-/*! [End] no source code translation !*/
 
 #endif /* __ACRDOS_H__ */
 

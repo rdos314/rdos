@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -621,6 +621,7 @@ AcpiEvAsynchExecuteGpeMethod (
     Status = AcpiUtAcquireMutex (ACPI_MTX_EVENTS);
     if (ACPI_FAILURE (Status))
     {
+        ACPI_FREE (LocalGpeEventInfo);
         return_VOID;
     }
 
@@ -629,6 +630,7 @@ AcpiEvAsynchExecuteGpeMethod (
     if (!AcpiEvValidGpeEvent (GpeEventInfo))
     {
         Status = AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
+        ACPI_FREE (LocalGpeEventInfo);
         return_VOID;
     }
 
@@ -642,6 +644,7 @@ AcpiEvAsynchExecuteGpeMethod (
     Status = AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
     if (ACPI_FAILURE (Status))
     {
+        ACPI_FREE (LocalGpeEventInfo);
         return_VOID;
     }
 
@@ -650,7 +653,6 @@ AcpiEvAsynchExecuteGpeMethod (
     switch (LocalGpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK)
     {
     case ACPI_GPE_DISPATCH_NOTIFY:
-
         /*
          * Implicit notify.
          * Dispatch a DEVICE_WAKE notify to the appropriate handler.
@@ -700,10 +702,10 @@ AcpiEvAsynchExecuteGpeMethod (
                 "while evaluating GPE method [%4.4s]",
                 AcpiUtGetNodeName (LocalGpeEventInfo->Dispatch.MethodNode)));
         }
-
         break;
 
     default:
+
         return_VOID; /* Should never happen */
     }
 
@@ -842,7 +844,7 @@ AcpiEvGpeDispatch (
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
                 "Unable to clear GPE%02X", GpeNumber));
-            return_VALUE (ACPI_INTERRUPT_NOT_HANDLED);
+            return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
         }
     }
 
@@ -860,7 +862,7 @@ AcpiEvGpeDispatch (
     {
         ACPI_EXCEPTION ((AE_INFO, Status,
             "Unable to disable GPE%02X", GpeNumber));
-        return_VALUE (ACPI_INTERRUPT_NOT_HANDLED);
+        return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
     }
 
     /*
@@ -890,7 +892,6 @@ AcpiEvGpeDispatch (
 
     case ACPI_GPE_DISPATCH_METHOD:
     case ACPI_GPE_DISPATCH_NOTIFY:
-
         /*
          * Execute the method associated with the GPE
          * NOTE: Level-triggered GPEs are cleared after the method completes.
@@ -906,7 +907,6 @@ AcpiEvGpeDispatch (
         break;
 
     default:
-
         /*
          * No handler or method to run!
          * 03/2010: This case should no longer be possible. We will not allow
@@ -918,7 +918,7 @@ AcpiEvGpeDispatch (
         break;
     }
 
-    return_VALUE (ACPI_INTERRUPT_HANDLED);
+    return_UINT32 (ACPI_INTERRUPT_HANDLED);
 }
 
 #endif /* !ACPI_REDUCED_HARDWARE */

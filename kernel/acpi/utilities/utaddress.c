@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -309,7 +309,7 @@ AcpiUtCheckAddressRange (
     if ((SpaceId != ACPI_ADR_SPACE_SYSTEM_MEMORY) &&
         (SpaceId != ACPI_ADR_SPACE_SYSTEM_IO))
     {
-        return_VALUE (0);
+        return_UINT32 (0);
     }
 
     RangeInfo = AcpiGbl_AddressRangeList[SpaceId];
@@ -320,10 +320,11 @@ AcpiUtCheckAddressRange (
     while (RangeInfo)
     {
         /*
-         * Check if the requested Address/Length overlaps this AddressRange.
-         * Four cases to consider:
+         * Check if the requested address/length overlaps this
+         * address range. There are four cases to consider:
          *
-         * 1) Input address/length is contained completely in the address range
+         * 1) Input address/length is contained completely in the
+         *    address range
          * 2) Input address/length overlaps range at the range start
          * 3) Input address/length overlaps range at the range end
          * 4) Input address/length completely encompasses the range
@@ -339,10 +340,13 @@ AcpiUtCheckAddressRange (
                 Pathname = AcpiNsGetExternalPathname (RangeInfo->RegionNode);
 
                 ACPI_WARNING ((AE_INFO,
-                    "0x%p-0x%p %s conflicts with Region %s %d",
+                    "%s range 0x%p-0x%p conflicts with OpRegion 0x%p-0x%p (%s)",
+                    AcpiUtGetRegionName (SpaceId),
                     ACPI_CAST_PTR (void, Address),
                     ACPI_CAST_PTR (void, EndAddress),
-                    AcpiUtGetRegionName (SpaceId), Pathname, OverlapCount));
+                    ACPI_CAST_PTR (void, RangeInfo->StartAddress),
+                    ACPI_CAST_PTR (void, RangeInfo->EndAddress),
+                    Pathname));
                 ACPI_FREE (Pathname);
             }
         }
@@ -350,7 +354,7 @@ AcpiUtCheckAddressRange (
         RangeInfo = RangeInfo->Next;
     }
 
-    return_VALUE (OverlapCount);
+    return_UINT32 (OverlapCount);
 }
 
 

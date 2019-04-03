@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -169,10 +169,9 @@ AcpiEvInstallGpeBlock (
         return_ACPI_STATUS (Status);
     }
 
-    GpeXruptBlock = AcpiEvGetGpeXruptBlock (InterruptNumber);
-    if (!GpeXruptBlock)
+    Status = AcpiEvGetGpeXruptBlock (InterruptNumber, &GpeXruptBlock);
+    if (ACPI_FAILURE (Status))
     {
-        Status = AE_NO_MEMORY;
         goto UnlockAndExit;
     }
 
@@ -200,7 +199,7 @@ AcpiEvInstallGpeBlock (
 
 
 UnlockAndExit:
-    Status = AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
+    (void) AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
     return_ACPI_STATUS (Status);
 }
 
@@ -492,6 +491,8 @@ AcpiEvCreateGpeBlock (
     Status = AcpiEvInstallGpeBlock (GpeBlock, InterruptNumber);
     if (ACPI_FAILURE (Status))
     {
+        ACPI_FREE (GpeBlock->RegisterInfo);
+        ACPI_FREE (GpeBlock->EventInfo);
         ACPI_FREE (GpeBlock);
         return_ACPI_STATUS (Status);
     }

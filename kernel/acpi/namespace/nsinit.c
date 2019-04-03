@@ -8,7 +8,7 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
@@ -270,7 +270,7 @@ AcpiNsInitializeDevices (
      * part of the ACPI specification.
      */
     Info.EvaluateInfo->PrefixNode = AcpiGbl_RootNode;
-    Info.EvaluateInfo->Pathname = METHOD_NAME__INI;
+    Info.EvaluateInfo->RelativePathname = METHOD_NAME__INI;
     Info.EvaluateInfo->Parameters = NULL;
     Info.EvaluateInfo->Flags = ACPI_IGNORE_RETURN_VALUE;
 
@@ -368,28 +368,34 @@ AcpiNsInitOneObject (
     switch (Type)
     {
     case ACPI_TYPE_REGION:
+
         Info->OpRegionCount++;
         break;
 
     case ACPI_TYPE_BUFFER_FIELD:
+
         Info->FieldCount++;
         break;
 
     case ACPI_TYPE_LOCAL_BANK_FIELD:
+
         Info->FieldCount++;
         break;
 
     case ACPI_TYPE_BUFFER:
+
         Info->BufferCount++;
         break;
 
     case ACPI_TYPE_PACKAGE:
+
         Info->PackageCount++;
         break;
 
     default:
 
         /* No init required, just exit now */
+
         return (AE_OK);
     }
 
@@ -441,7 +447,9 @@ AcpiNsInitOneObject (
         break;
 
     default:
+
         /* No other types can get here */
+
         break;
     }
 
@@ -528,6 +536,7 @@ AcpiNsFindIniMethods (
         break;
 
     default:
+
         break;
     }
 
@@ -681,8 +690,9 @@ AcpiNsInitOneDevice (
     ACPI_DEBUG_EXEC (AcpiUtDisplayInitPathname (
         ACPI_TYPE_METHOD, DeviceNode, METHOD_NAME__INI));
 
+    ACPI_MEMSET (Info, 0, sizeof (ACPI_EVALUATE_INFO));
     Info->PrefixNode = DeviceNode;
-    Info->Pathname = METHOD_NAME__INI;
+    Info->RelativePathname = METHOD_NAME__INI;
     Info->Parameters = NULL;
     Info->Flags = ACPI_IGNORE_RETURN_VALUE;
 
@@ -697,7 +707,7 @@ AcpiNsInitOneDevice (
     {
         /* Ignore error and move on to next device */
 
-        char *ScopeName = AcpiNsGetExternalPathname (Info->ResolvedNode);
+        char *ScopeName = AcpiNsGetExternalPathname (Info->Node);
 
         ACPI_EXCEPTION ((AE_INFO, Status, "during %s._INI execution",
             ScopeName));
