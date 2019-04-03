@@ -47,7 +47,7 @@ rk???Code selector:
 12
 WString
 5
-0xC10
+0xB00
 0
 13
 MVState
@@ -63,7 +63,7 @@ rk???Data selector:
 16
 WString
 5
-0xC18
+0xB08
 0
 17
 MCState
