@@ -178,6 +178,11 @@ static ACPI_INTERFACE_INFO    AcpiDefaultSupportedInterfaces[] =
     {"Windows 2012",        NULL, 0, ACPI_OSI_WIN_8},            /* Windows 8 and Server 2012 - Added 08/2012 */
     {"Windows 2013",        NULL, 0, ACPI_OSI_WIN_8},            /* Windows 8.1 and Server 2012 R2 - Added 01/2014 */
     {"Windows 2015",        NULL, 0, ACPI_OSI_WIN_10},           /* Windows 10 - Added 03/2015 */
+    {"Windows 2016",        NULL, 0, ACPI_OSI_WIN_10_RS1},       /* Windows 10 version 1607 */
+    {"Windows 2017",        NULL, 0, ACPI_OSI_WIN_10_RS2},       /* Windows 10 version 1703 */
+    {"Windows 2017.2",      NULL, 0, ACPI_OSI_WIN_10_RS3},       /* Windows 10 version 1709 */
+    {"Windows 2018",        NULL, 0, ACPI_OSI_WIN_10_RS4},       /* Windows 10 version 1803 */
+    {"Windows 2018.2",      NULL, 0, ACPI_OSI_WIN_10_RS5},       /* Windows 10 version 1809 */
 
     /* Feature Group Strings */
 
