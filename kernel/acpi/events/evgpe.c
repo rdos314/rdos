@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -120,6 +120,8 @@
 
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evgpe")
+
+#if (!ACPI_REDUCED_HARDWARE) /* Entire module */
 
 /* Local prototypes */
 
@@ -162,7 +164,7 @@ AcpiEvUpdateGpeEnableMask (
         return_ACPI_STATUS (AE_NOT_EXIST);
     }
 
-    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo, GpeRegisterInfo);
+    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo);
 
     /* Clear the run bit up front */
 
@@ -494,6 +496,23 @@ AcpiEvGpeDetect (
 
             GpeRegisterInfo = &GpeBlock->RegisterInfo[i];
 
+            /*
+             * Optimization: If there are no GPEs enabled within this
+             * register, we can safely ignore the entire register.
+             */
+            if (!(GpeRegisterInfo->EnableForRun |
+                  GpeRegisterInfo->EnableForWake))
+            {
+                ACPI_DEBUG_PRINT ((ACPI_DB_INTERRUPTS,
+                    "Ignore disabled registers for GPE%02X-GPE%02X: "
+                    "RunEnable=%02X, WakeEnable=%02X\n",
+                    GpeRegisterInfo->BaseGpeNumber,
+                    GpeRegisterInfo->BaseGpeNumber + (ACPI_GPE_REGISTER_WIDTH - 1),
+                    GpeRegisterInfo->EnableForRun,
+                    GpeRegisterInfo->EnableForWake));
+                continue;
+            }
+
             /* Read the Status Register */
 
             Status = AcpiHwRead (&StatusReg, &GpeRegisterInfo->StatusAddress);
@@ -511,8 +530,13 @@ AcpiEvGpeDetect (
             }
 
             ACPI_DEBUG_PRINT ((ACPI_DB_INTERRUPTS,
-                "Read GPE Register at GPE%02X: Status=%02X, Enable=%02X\n",
-                GpeRegisterInfo->BaseGpeNumber, StatusReg, EnableReg));
+                "Read registers for GPE%02X-GPE%02X: Status=%02X, Enable=%02X, "
+                "RunEnable=%02X, WakeEnable=%02X\n",
+                GpeRegisterInfo->BaseGpeNumber,
+                GpeRegisterInfo->BaseGpeNumber + (ACPI_GPE_REGISTER_WIDTH - 1),
+                StatusReg, EnableReg,
+                GpeRegisterInfo->EnableForRun,
+                GpeRegisterInfo->EnableForWake));
 
             /* Check if there is anything active at all in this register */
 
@@ -578,6 +602,7 @@ AcpiEvAsynchExecuteGpeMethod (
     ACPI_STATUS             Status;
     ACPI_GPE_EVENT_INFO     *LocalGpeEventInfo;
     ACPI_EVALUATE_INFO      *Info;
+    ACPI_GPE_NOTIFY_INFO    *Notify;
 
 
     ACPI_FUNCTION_TRACE (EvAsynchExecuteGpeMethod);
@@ -633,10 +658,18 @@ AcpiEvAsynchExecuteGpeMethod (
          * completes. The notify handlers are NOT invoked synchronously
          * from this thread -- because handlers may in turn run other
          * control methods.
+         *
+         * June 2012: Expand implicit notify mechanism to support
+         * notifies on multiple device objects.
          */
-        Status = AcpiEvQueueNotifyRequest (
-                    LocalGpeEventInfo->Dispatch.DeviceNode,
-                    ACPI_NOTIFY_DEVICE_WAKE);
+        Notify = LocalGpeEventInfo->Dispatch.NotifyList;
+        while (ACPI_SUCCESS (Status) && Notify)
+        {
+            Status = AcpiEvQueueNotifyRequest (Notify->DeviceNode,
+                        ACPI_NOTIFY_DEVICE_WAKE);
+
+            Notify = Notify->Next;
+        }
         break;
 
     case ACPI_GPE_DISPATCH_METHOD:
@@ -809,7 +842,7 @@ AcpiEvGpeDispatch (
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
                 "Unable to clear GPE%02X", GpeNumber));
-            return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
+            return_VALUE (ACPI_INTERRUPT_NOT_HANDLED);
         }
     }
 
@@ -827,7 +860,7 @@ AcpiEvGpeDispatch (
     {
         ACPI_EXCEPTION ((AE_INFO, Status,
             "Unable to disable GPE%02X", GpeNumber));
-        return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
+        return_VALUE (ACPI_INTERRUPT_NOT_HANDLED);
     }
 
     /*
@@ -885,6 +918,7 @@ AcpiEvGpeDispatch (
         break;
     }
 
-    return_UINT32 (ACPI_INTERRUPT_HANDLED);
+    return_VALUE (ACPI_INTERRUPT_HANDLED);
 }
 
+#endif /* !ACPI_REDUCED_HARDWARE */

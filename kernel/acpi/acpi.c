@@ -297,6 +297,11 @@ struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
 int PciDevCount = 0;
 struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
+struct TDeviceEntry *IrqArr[256];
+
+int PciLinkDevCount = 0;
+struct TDeviceEntry *PciLinkDevArr[MAX_PCI_DEV_COUNT];
+
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
@@ -344,23 +349,6 @@ power_update_callback *power_update_proc;
 char TempResourceBuf[0x4000];
 
 long long StateArr[MAX_PROCESSOR_COUNT];
-
-UINT32 ACPI_SYSTEM_XFACE NmiHandler(void *context)
-{
-}
-    
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
-{
-    ACPI_STATUS ok;
-    ACPI_TABLE_HEADER *wdat;
-
-    ok = AcpiOsInstallInterruptHandler(0x21, NmiHandler, 0);
-
-    if (ok)
-        wdat = 0;
-}
     
 /*##########################################################################
 #
@@ -372,6 +360,7 @@ UINT32 ReadReg(ACPI_GENERIC_ADDRESS *Reg)
     ACPI_STATUS             Status;
     int                     Width;
     UINT32                  Value = 0;
+    UINT64                  Value64 = 0;
 
     Width = Reg->BitWidth;
 
@@ -391,7 +380,8 @@ UINT32 ReadReg(ACPI_GENERIC_ADDRESS *Reg)
     switch (Reg->SpaceId)
     {
         case ACPI_ADR_SPACE_SYSTEM_MEMORY:
-            Status = AcpiOsReadMemory ((ACPI_PHYSICAL_ADDRESS)Reg->Address, &Value, Width);
+            Status = AcpiOsReadMemory ((ACPI_PHYSICAL_ADDRESS)Reg->Address, &Value64, Width);
+            Value = (UINT32)Value64;
             break;            
 
         case ACPI_ADR_SPACE_SYSTEM_IO:
@@ -2001,6 +1991,9 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
     int CopyLen;
     int AllocLen;
     char *ptr;
+    int count;
+    int i;
+    int irq;
     ACPI_RESOURCE *Resource;
     struct TResourceIrq *IrqResource;
     struct TResourceExtendedIrq *ExtendedIrqResource;
@@ -2029,6 +2022,14 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
                     memcpy(&IrqResource->Data, &Resource->Data, CopyLen);
                     IrqResource->Next = DevEntry->IrqResourceList;
                     DevEntry->IrqResourceList = IrqResource;
+
+                    count = IrqResource->Data.InterruptCount;
+                    for (i = 0; i < count; i++)
+                    {
+                        irq = IrqResource->Data.Interrupts[i];
+                        if (irq)
+                            IrqArr[irq] = DevEntry;
+                    }
                     break;
                             
                 case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
@@ -2102,6 +2103,30 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
         ptr += Resource->Length;
         Resource = (ACPI_RESOURCE *)ptr;        
     }
+}
+
+/*##########################################################################
+#
+#   Name       : SetIrqMode
+#
+#   Purpose....: Set IRQ mode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetIrqMode()
+{
+   ACPI_OBJECT arg1;
+   ACPI_OBJECT_LIST args;
+
+   arg1.Type = ACPI_TYPE_INTEGER;
+   arg1.Integer.Value = 1;            /* 0 - PIC, 1 - IOAPIC, 2 - IOSAPIC */
+   args.Count = 1;
+   args.Pointer = &arg1;
+
+   AcpiEvaluateObject(ACPI_ROOT_OBJECT, "_PIC", &args, NULL);
 }
 
 /*##########################################################################
@@ -2323,6 +2348,7 @@ void GetIrqRouting()
     int Device;
     int Pin;
     int Irq;
+    int found;
 
     for (i = 0; i < PciRootCount; i++)
     {
@@ -2348,6 +2374,7 @@ void GetIrqRouting()
 
                     if (Pin >= 0 && Pin < 4)
                     {
+                        LnkDev = 0;
                         Irq = RouteEntry->SourceIndex;
 
                         if (!Irq)
@@ -2360,6 +2387,8 @@ void GetIrqRouting()
                                     LnkDev = HardwareArr[j];
                                     if (LnkDev->Handle == Object)
                                         break;
+                                    else
+                                        LnkDev = 0;
                                 }
 
                                 if (LnkDev)
@@ -2435,10 +2464,99 @@ void GetIrqRouting()
                                 PciDevCount++;
                             }                                          
                         }
+                        else
+                        {
+                            if (LnkDev)
+                            {
+                                TargDev = 0;
+                            
+                                for (j = 0; j < PciDevCount && !TargDev; j++)
+                                {
+                                    PciDev = PciDevArr[j];
+                                    if (PciDev)
+                                        if (PciDev->PciId.Bus == Bus && PciDev->PciId.Device == Device)
+                                            TargDev = PciDev;
+                                }       
+
+                                if (TargDev)
+                                {
+                                    found = 0;
+
+                                    for (j = 0; j < PciLinkDevCount && !found; j++)
+                                        if (PciLinkDevArr[j] == LnkDev)
+                                            found = 1;
+
+                                    if (!found && PciLinkDevCount < MAX_PCI_DEV_COUNT)
+                                    {
+                                        PciLinkDevArr[PciLinkDevCount] = LnkDev;
+                                        PciLinkDevCount++;
+                                    }
+                                }
+                            }
+                        }
                     }
                     ptr +=  RouteEntry->Length;
                     RouteEntry = (ACPI_PCI_ROUTING_TABLE *)ptr;
                 }   
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessPciLnkIrqs
+#
+#   Purpose....: Process PCI link IRQs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ProcessPciLnkIrqs()
+{
+    int i;
+    int j;
+    int irq;
+    struct TDeviceEntry *LnkDev;
+    ACPI_BUFFER Buffer;
+    ACPI_STATUS Status;
+    char *ptr;
+    int size;
+    ACPI_RESOURCE *Resource;
+    ACPI_RESOURCE_IRQ *IrqResource;
+
+    for (i = 0; i < PciLinkDevCount; i++)
+    {
+        LnkDev = PciLinkDevArr[i];
+
+        Buffer.Length = 0x4000;
+        Buffer.Pointer = TempResourceBuf;
+
+        Status = AcpiGetPossibleResources(LnkDev->Handle, &Buffer);
+
+        if (Status == AE_OK)
+        {
+            ptr = &TempResourceBuf;
+            Resource = (ACPI_RESOURCE *)ptr;
+
+            size = Buffer.Length;
+            while (size > 0)
+            {            
+                if (Resource->Type == ACPI_RESOURCE_TYPE_IRQ)
+                {
+                    IrqResource = (ACPI_RESOURCE_IRQ *)&Resource->Data;
+
+                    for (j = 0; j < IrqResource->InterruptCount; j++)
+                    {
+                        irq = IrqResource->Interrupts[j];
+                    }
+                }
+
+                size -= Resource->Length;
+                ptr += Resource->Length;
+                Resource = (ACPI_RESOURCE *)ptr;        
             }
         }
     }
@@ -2760,7 +2878,7 @@ void GlobalEvent(UINT32 type, ACPI_HANDLE device, UINT32 event, void *Param)
             break;
     }
 }
-
+    
 /*##########################################################################
 #
 #   Name       : Load
@@ -2775,6 +2893,9 @@ void GlobalEvent(UINT32 type, ACPI_HANDLE device, UINT32 event, void *Param)
 void Load()
 {
     int i;
+
+    for (i = 0; i < 256; i++)
+        IrqArr[i] = 0;
 
     if (Status == 0)
     {
@@ -2796,12 +2917,16 @@ void Load()
         if (Status != 0)
             Status |= 0x40000;
     }
+
     if (Status == 0)
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
+
+        SetIrqMode();
         GetHardware();        
         GetPciDevices();
         GetIrqRouting();
+        ProcessPciLnkIrqs();
 
         AcpiInstallGlobalEventHandler(&GlobalEvent, 0);
         AcpiEnableEvent(ACPI_EVENT_POWER_BUTTON, 0);
@@ -2816,7 +2941,6 @@ void Load()
         }
     }
 }
-
 
 /*##########################################################################
 #
@@ -2926,6 +3050,12 @@ void __far InitTasking()
 
     ProcessorCount = RdosGetCoreCount();
 } 
+    
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+}
 
 /*##########################################################################
 #

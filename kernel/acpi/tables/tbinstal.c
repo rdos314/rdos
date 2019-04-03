@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -200,7 +200,6 @@ AcpiTbAddTable (
 {
     UINT32                  i;
     ACPI_STATUS             Status = AE_OK;
-    ACPI_TABLE_HEADER       *OverrideTable = NULL;
 
 
     ACPI_FUNCTION_TRACE (TbAddTable);
@@ -216,12 +215,29 @@ AcpiTbAddTable (
     }
 
     /*
-     * Originally, we checked the table signature for "SSDT" or "PSDT" here.
-     * Next, we added support for OEMx tables, signature "OEM".
-     * Valid tables were encountered with a null signature, so we've just
-     * given up on validating the signature, since it seems to be a waste
-     * of code. The original code was removed (05/2008).
+     * Validate the incoming table signature.
+     *
+     * 1) Originally, we checked the table signature for "SSDT" or "PSDT".
+     * 2) We added support for OEMx tables, signature "OEM".
+     * 3) Valid tables were encountered with a null signature, so we just
+     *    gave up on validating the signature, (05/2008).
+     * 4) We encountered non-AML tables such as the MADT, which caused
+     *    interpreter errors and kernel faults. So now, we once again allow
+     *    only "SSDT", "OEMx", and now, also a null signature. (05/2011).
      */
+    if ((TableDesc->Pointer->Signature[0] != 0x00) &&
+       (!ACPI_COMPARE_NAME (TableDesc->Pointer->Signature, ACPI_SIG_SSDT)) &&
+       (ACPI_STRNCMP (TableDesc->Pointer->Signature, "OEM", 3)))
+    {
+        ACPI_BIOS_ERROR ((AE_INFO,
+            "Table has invalid signature [%4.4s] (0x%8.8X), "
+            "must be SSDT or OEMx",
+            AcpiUtValidAcpiName (*(UINT32 *) TableDesc->Pointer->Signature) ?
+                TableDesc->Pointer->Signature : "????",
+            *(UINT32 *) TableDesc->Pointer->Signature));
+
+        return_ACPI_STATUS (AE_BAD_SIGNATURE);
+    }
 
     (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
 
@@ -298,26 +314,10 @@ AcpiTbAddTable (
     /*
      * ACPI Table Override:
      * Allow the host to override dynamically loaded tables.
+     * NOTE: the table is fully mapped at this point, and the mapping will
+     * be deleted by TbTableOverride if the table is actually overridden.
      */
-    Status = AcpiOsTableOverride (TableDesc->Pointer, &OverrideTable);
-    if (ACPI_SUCCESS (Status) && OverrideTable)
-    {
-        ACPI_INFO ((AE_INFO,
-            "%4.4s @ 0x%p Table override, replaced with:",
-            TableDesc->Pointer->Signature,
-            ACPI_CAST_PTR (void, TableDesc->Address)));
-
-        /* We can delete the table that was passed as a parameter */
-
-        AcpiTbDeleteTable (TableDesc);
-
-        /* Setup descriptor for the new table */
-
-        TableDesc->Address = ACPI_PTR_TO_PHYSADDR (OverrideTable);
-        TableDesc->Pointer = OverrideTable;
-        TableDesc->Length = OverrideTable->Length;
-        TableDesc->Flags = ACPI_TABLE_ORIGIN_OVERRIDE;
-    }
+    (void) AcpiTbTableOverride (TableDesc->Pointer, TableDesc);
 
     /* Add the table to the global root table list */
 
@@ -339,6 +339,98 @@ Release:
 
 /*******************************************************************************
  *
+ * FUNCTION:    AcpiTbTableOverride
+ *
+ * PARAMETERS:  TableHeader         - Header for the original table
+ *              TableDesc           - Table descriptor initialized for the
+ *                                    original table. May or may not be mapped.
+ *
+ * RETURN:      Pointer to the entire new table. NULL if table not overridden.
+ *              If overridden, installs the new table within the input table
+ *              descriptor.
+ *
+ * DESCRIPTION: Attempt table override by calling the OSL override functions.
+ *              Note: If the table is overridden, then the entire new table
+ *              is mapped and returned by this function.
+ *
+ ******************************************************************************/
+
+ACPI_TABLE_HEADER *
+AcpiTbTableOverride (
+    ACPI_TABLE_HEADER       *TableHeader,
+    ACPI_TABLE_DESC         *TableDesc)
+{
+    ACPI_STATUS             Status;
+    ACPI_TABLE_HEADER       *NewTable = NULL;
+    ACPI_PHYSICAL_ADDRESS   NewAddress = 0;
+    UINT32                  NewTableLength = 0;
+    UINT8                   NewFlags;
+    char                    *OverrideType;
+
+
+    /* (1) Attempt logical override (returns a logical address) */
+
+    Status = AcpiOsTableOverride (TableHeader, &NewTable);
+    if (ACPI_SUCCESS (Status) && NewTable)
+    {
+        NewAddress = ACPI_PTR_TO_PHYSADDR (NewTable);
+        NewTableLength = NewTable->Length;
+        NewFlags = ACPI_TABLE_ORIGIN_OVERRIDE;
+        OverrideType = "Logical";
+        goto FinishOverride;
+    }
+
+    /* (2) Attempt physical override (returns a physical address) */
+
+    Status = AcpiOsPhysicalTableOverride (TableHeader,
+        &NewAddress, &NewTableLength);
+    if (ACPI_SUCCESS (Status) && NewAddress && NewTableLength)
+    {
+        /* Map the entire new table */
+
+        NewTable = AcpiOsMapMemory (NewAddress, NewTableLength);
+        if (!NewTable)
+        {
+            ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
+                "%4.4s %p Attempted physical table override failed",
+                TableHeader->Signature,
+                ACPI_CAST_PTR (void, TableDesc->Address)));
+            return (NULL);
+        }
+
+        OverrideType = "Physical";
+        NewFlags = ACPI_TABLE_ORIGIN_MAPPED;
+        goto FinishOverride;
+    }
+
+    return (NULL); /* There was no override */
+
+
+FinishOverride:
+
+    ACPI_INFO ((AE_INFO,
+        "%4.4s %p %s table override, new table: %p",
+        TableHeader->Signature,
+        ACPI_CAST_PTR (void, TableDesc->Address),
+        OverrideType, NewTable));
+
+    /* We can now unmap/delete the original table (if fully mapped) */
+
+    AcpiTbDeleteTable (TableDesc);
+
+    /* Setup descriptor for the new table */
+
+    TableDesc->Address = NewAddress;
+    TableDesc->Pointer = NewTable;
+    TableDesc->Length = NewTableLength;
+    TableDesc->Flags = NewFlags;
+
+    return (NewTable);
+}
+
+
+/*******************************************************************************
+ *
  * FUNCTION:    AcpiTbResizeRootTableList
  *
  * PARAMETERS:  None
@@ -354,6 +446,7 @@ AcpiTbResizeRootTableList (
     void)
 {
     ACPI_TABLE_DESC         *Tables;
+    UINT32                  TableCount;
 
 
     ACPI_FUNCTION_TRACE (TbResizeRootTableList);
@@ -369,9 +462,17 @@ AcpiTbResizeRootTableList (
 
     /* Increase the Table Array size */
 
+    if (AcpiGbl_RootTableList.Flags & ACPI_ROOT_ORIGIN_ALLOCATED)
+    {
+        TableCount = AcpiGbl_RootTableList.MaxTableCount;
+    }
+    else
+    {
+        TableCount = AcpiGbl_RootTableList.CurrentTableCount;
+    }
+
     Tables = ACPI_ALLOCATE_ZEROED (
-        ((ACPI_SIZE) AcpiGbl_RootTableList.MaxTableCount +
-            ACPI_ROOT_TABLE_SIZE_INCREMENT) *
+        ((ACPI_SIZE) TableCount + ACPI_ROOT_TABLE_SIZE_INCREMENT) *
         sizeof (ACPI_TABLE_DESC));
     if (!Tables)
     {
@@ -384,7 +485,7 @@ AcpiTbResizeRootTableList (
     if (AcpiGbl_RootTableList.Tables)
     {
         ACPI_MEMCPY (Tables, AcpiGbl_RootTableList.Tables,
-            (ACPI_SIZE) AcpiGbl_RootTableList.MaxTableCount * sizeof (ACPI_TABLE_DESC));
+            (ACPI_SIZE) TableCount * sizeof (ACPI_TABLE_DESC));
 
         if (AcpiGbl_RootTableList.Flags & ACPI_ROOT_ORIGIN_ALLOCATED)
         {
@@ -393,8 +494,9 @@ AcpiTbResizeRootTableList (
     }
 
     AcpiGbl_RootTableList.Tables = Tables;
-    AcpiGbl_RootTableList.MaxTableCount += ACPI_ROOT_TABLE_SIZE_INCREMENT;
-    AcpiGbl_RootTableList.Flags |= (UINT8) ACPI_ROOT_ORIGIN_ALLOCATED;
+    AcpiGbl_RootTableList.MaxTableCount =
+        TableCount + ACPI_ROOT_TABLE_SIZE_INCREMENT;
+    AcpiGbl_RootTableList.Flags |= ACPI_ROOT_ORIGIN_ALLOCATED;
 
     return_ACPI_STATUS (AE_OK);
 }
@@ -491,8 +593,10 @@ AcpiTbDeleteTable (
         ACPI_FREE (TableDesc->Pointer);
         break;
 
+    /* Not mapped or allocated, there is nothing we can do */
+
     default:
-        break;
+        return;
     }
 
     TableDesc->Pointer = NULL;
@@ -545,6 +649,8 @@ AcpiTbTerminate (
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO, "ACPI Tables freed\n"));
     (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
+
+    return_VOID;
 }
 
 
@@ -784,4 +890,3 @@ AcpiTbSetTableLoadedFlag (
 
     (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
 }
-

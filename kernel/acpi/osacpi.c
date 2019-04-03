@@ -138,6 +138,17 @@ ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *Table, ACPI_TABLE_HEADER **Ne
 
 /*##########################################################################
 #
+#   Name       : AcpiOsPhysicalTableOverride
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsPhysicalTableOverride(ACPI_TABLE_HEADER *ExistingTable, ACPI_PHYSICAL_ADDRESS *NewAddress, UINT32 *NewTableLength)
+{
+    *NewAddress = 0;
+    return AE_OK;
+}
+
+/*##########################################################################
+#
 #   Name       : AcpiOsMapMemory
 #
 ##########################################################################*/
@@ -239,6 +250,7 @@ ACPI_STATUS AcpiOsGetPhysicalAddress(void *LogicalAddress, ACPI_PHYSICAL_ADDRESS
 void *AcpiOsAllocate(ACPI_SIZE Size)
 {
     long linear;
+    char *ptr;
 
     if (Size <= 0 || Size > 0x100000)
         return 0;
@@ -246,10 +258,13 @@ void *AcpiOsAllocate(ACPI_SIZE Size)
     if (Size < 0x1000)
     {
         linear = RdosAllocateSmallGlobalLinear(Size);
-        return RdosLinearToPointer(linear);
+        ptr = (char *)RdosLinearToPointer(linear);
     }
     else
-        return RdosAllocateBigGlobalMem(Size);
+        ptr = (char *)RdosAllocateBigGlobalMem(Size);
+
+    memset(ptr, 0, Size);
+    return ptr;
 }
 
 /*##########################################################################
@@ -606,13 +621,13 @@ UINT64 AcpiOsGetTimer()
 #   Name       : AcpiOsReadMemory
 #
 ##########################################################################*/
-ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT32 Width)
+ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT64 *Value, UINT32 Width)
 {
     ACPI_CPU_FLAGS flags;
     long long page;
     long offset;
     void *ptr;
-    long res = 0;
+    long long res = 0;
 
     page = Address & 0xFFFFFFFFFFFFF000;
     offset = Address & 0xFFF;
@@ -626,15 +641,19 @@ ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT3
     switch (Width)
     {
         case 8:
-            (char)res = *(char *)ptr;
+            res = *(char *)ptr;
             break;
 
         case 16:
-            (short int)res = *(short int *)ptr;
+            res = *(short int *)ptr;
             break;
 
         case 32:
             res = *(long *)ptr;
+            break;
+
+        case 64:
+            res = *(long long *)ptr;
             break;
     }
 
@@ -650,7 +669,7 @@ ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT3
 #   Name       : AcpiOsWriteMemory
 #
 ##########################################################################*/
-ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 Value, UINT32 Width)
+ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT64 Value, UINT32 Width)
 {
     ACPI_CPU_FLAGS flags;
     long long page;
@@ -677,7 +696,11 @@ ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 Value, UINT3
             break;
 
         case 32:
-            *(long *)ptr = Value;
+            *(long *)ptr = (long)Value;
+            break;
+
+        case 64:
+            *(long long *)ptr = Value;
             break;
     }
 
@@ -881,6 +904,17 @@ void __far AcpiThread(void *param)
         RdosWaitForSignal();
 //        RdosWaitMilli(100);
     }
+}
+
+    /*##########################################################################
+#
+#   Name       : AcpiWaitEventsComplete
+#
+##########################################################################*/
+void AcpiOsWaitEventsComplete()
+{
+    while (ExecList)
+        RdosWaitMilli(100);
 }
     
 /*##########################################################################

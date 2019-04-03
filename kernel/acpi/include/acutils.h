@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -118,6 +118,7 @@
 
 
 extern const UINT8                      AcpiGbl_ResourceAmlSizes[];
+extern const UINT8                      AcpiGbl_ResourceAmlSerialBusSizes[];
 
 /* Strings used by the disassembler and debugger resource dump routines */
 
@@ -141,6 +142,22 @@ extern const char                       *AcpiGbl_SizDecode[];
 extern const char                       *AcpiGbl_TrsDecode[];
 extern const char                       *AcpiGbl_TtpDecode[];
 extern const char                       *AcpiGbl_TypDecode[];
+extern const char                       *AcpiGbl_PpcDecode[];
+extern const char                       *AcpiGbl_IorDecode[];
+extern const char                       *AcpiGbl_DtsDecode[];
+extern const char                       *AcpiGbl_CtDecode[];
+extern const char                       *AcpiGbl_SbtDecode[];
+extern const char                       *AcpiGbl_AmDecode[];
+extern const char                       *AcpiGbl_SmDecode[];
+extern const char                       *AcpiGbl_WmDecode[];
+extern const char                       *AcpiGbl_CphDecode[];
+extern const char                       *AcpiGbl_CpoDecode[];
+extern const char                       *AcpiGbl_DpDecode[];
+extern const char                       *AcpiGbl_EdDecode[];
+extern const char                       *AcpiGbl_BpbDecode[];
+extern const char                       *AcpiGbl_SbDecode[];
+extern const char                       *AcpiGbl_FcDecode[];
+extern const char                       *AcpiGbl_PtDecode[];
 #endif
 
 /* Types for Resource descriptor entries */
@@ -156,7 +173,7 @@ ACPI_STATUS (*ACPI_WALK_AML_CALLBACK) (
     UINT32                  Length,
     UINT32                  Offset,
     UINT8                   ResourceIndex,
-    void                    *Context);
+    void                    **Context);
 
 typedef
 ACPI_STATUS (*ACPI_PKG_CALLBACK) (
@@ -184,7 +201,6 @@ typedef struct acpi_pkg_info
 #define DB_WORD_DISPLAY     2
 #define DB_DWORD_DISPLAY    4
 #define DB_QWORD_DISPLAY    8
-
 
 /*
  * utglobal - Global data structures and procedures
@@ -481,17 +497,18 @@ AcpiUtPtrExit (
     UINT8                   *Ptr);
 
 void
+AcpiUtDebugDumpBuffer (
+    UINT8                   *Buffer,
+    UINT32                  Count,
+    UINT32                  Display,
+    UINT32                  ComponentId);
+
+void
 AcpiUtDumpBuffer (
     UINT8                   *Buffer,
     UINT32                  Count,
     UINT32                  Display,
-    UINT32                  componentId);
-
-void
-AcpiUtDumpBuffer2 (
-    UINT8                   *Buffer,
-    UINT32                  Count,
-    UINT32                  Display);
+    UINT32                  Offset);
 
 void
 AcpiUtReportError (
@@ -567,17 +584,22 @@ AcpiUtExecutePowerMethods (
 ACPI_STATUS
 AcpiUtExecute_HID (
     ACPI_NAMESPACE_NODE     *DeviceNode,
-    ACPI_DEVICE_ID          **ReturnId);
+    ACPI_PNP_DEVICE_ID      **ReturnId);
 
 ACPI_STATUS
 AcpiUtExecute_UID (
     ACPI_NAMESPACE_NODE     *DeviceNode,
-    ACPI_DEVICE_ID          **ReturnId);
+    ACPI_PNP_DEVICE_ID      **ReturnId);
+
+ACPI_STATUS
+AcpiUtExecute_SUB (
+    ACPI_NAMESPACE_NODE     *DeviceNode,
+    ACPI_PNP_DEVICE_ID      **ReturnId);
 
 ACPI_STATUS
 AcpiUtExecute_CID (
     ACPI_NAMESPACE_NODE     *DeviceNode,
-    ACPI_DEVICE_ID_LIST     **ReturnCidList);
+    ACPI_PNP_DEVICE_ID_LIST **ReturnCidList);
 
 
 /*
@@ -772,51 +794,12 @@ AcpiUtIsAmlTable (
     ACPI_TABLE_HEADER       *Table);
 
 ACPI_STATUS
-AcpiUtAllocateOwnerId (
-    ACPI_OWNER_ID           *OwnerId);
-
-void
-AcpiUtReleaseOwnerId (
-    ACPI_OWNER_ID           *OwnerId);
-
-ACPI_STATUS
 AcpiUtWalkPackageTree (
     ACPI_OPERAND_OBJECT     *SourceObject,
     void                    *TargetObject,
     ACPI_PKG_CALLBACK       WalkCallback,
     void                    *Context);
 
-void
-AcpiUtStrupr (
-    char                    *SrcString);
-
-void
-AcpiUtStrlwr (
-    char                    *SrcString);
-
-void
-AcpiUtPrintString (
-    char                    *String,
-    UINT8                   MaxLength);
-
-BOOLEAN
-AcpiUtValidAcpiName (
-    UINT32                  Name);
-
-void
-AcpiUtRepairName (
-    char                    *Name);
-
-BOOLEAN
-AcpiUtValidAcpiChar (
-    char                    Character,
-    UINT32                  Position);
-
-ACPI_STATUS
-AcpiUtStrtoul64 (
-    char                    *String,
-    UINT32                  Base,
-    UINT64                  *RetInteger);
 
 /* Values for Base above (16=Hex, 10=Decimal) */
 
@@ -840,17 +823,31 @@ AcpiUtDisplayInitPathname (
 
 
 /*
+ * utownerid - Support for Table/Method Owner IDs
+ */
+ACPI_STATUS
+AcpiUtAllocateOwnerId (
+    ACPI_OWNER_ID           *OwnerId);
+
+void
+AcpiUtReleaseOwnerId (
+    ACPI_OWNER_ID           *OwnerId);
+
+
+/*
  * utresrc
  */
 ACPI_STATUS
 AcpiUtWalkAmlResources (
+    ACPI_WALK_STATE         *WalkState,
     UINT8                   *Aml,
     ACPI_SIZE               AmlLength,
     ACPI_WALK_AML_CALLBACK  UserFunction,
-    void                    *Context);
+    void                    **Context);
 
 ACPI_STATUS
 AcpiUtValidateResource (
+    ACPI_WALK_STATE         *WalkState,
     void                    *Aml,
     UINT8                   *ReturnIndex);
 
@@ -874,6 +871,51 @@ ACPI_STATUS
 AcpiUtGetResourceEndTag (
     ACPI_OPERAND_OBJECT     *ObjDesc,
     UINT8                   **EndTag);
+
+
+/*
+ * utstring - String and character utilities
+ */
+void
+AcpiUtStrupr (
+    char                    *SrcString);
+
+void
+AcpiUtStrlwr (
+    char                    *SrcString);
+
+int
+AcpiUtStricmp (
+    char                    *String1,
+    char                    *String2);
+
+ACPI_STATUS
+AcpiUtStrtoul64 (
+    char                    *String,
+    UINT32                  Base,
+    UINT64                  *RetInteger);
+
+void
+AcpiUtPrintString (
+    char                    *String,
+    UINT8                   MaxLength);
+
+void
+UtConvertBackslashes (
+    char                    *Pathname);
+
+BOOLEAN
+AcpiUtValidAcpiName (
+    UINT32                  Name);
+
+BOOLEAN
+AcpiUtValidAcpiChar (
+    char                    Character,
+    UINT32                  Position);
+
+void
+AcpiUtRepairName (
+    char                    *Name);
 
 
 /*
@@ -969,6 +1011,31 @@ AcpiUtCreateList (
 
 #endif /* ACPI_DBG_TRACK_ALLOCATIONS */
 
+/*
+ * utaddress - address range check
+ */
+ACPI_STATUS
+AcpiUtAddAddressRange (
+    ACPI_ADR_SPACE_TYPE     SpaceId,
+    ACPI_PHYSICAL_ADDRESS   Address,
+    UINT32                  Length,
+    ACPI_NAMESPACE_NODE     *RegionNode);
+
+void
+AcpiUtRemoveAddressRange (
+    ACPI_ADR_SPACE_TYPE     SpaceId,
+    ACPI_NAMESPACE_NODE     *RegionNode);
+
+UINT32
+AcpiUtCheckAddressRange (
+    ACPI_ADR_SPACE_TYPE     SpaceId,
+    ACPI_PHYSICAL_ADDRESS   Address,
+    UINT32                  Length,
+    BOOLEAN                 Warn);
+
+void
+AcpiUtDeleteAddressLists (
+    void);
 
 /*
  * utxferror - various error/warning output functions

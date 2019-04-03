@@ -2156,7 +2156,6 @@ default_nmi:
 
 nmi_handler:
     cli
-    jmp nmi_handler
     push ds
     push es
     push fs

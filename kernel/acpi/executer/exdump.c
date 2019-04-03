@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -203,8 +203,8 @@ static ACPI_EXDUMP_INFO     AcpiExDumpDevice[4] =
 {
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpDevice),         NULL},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Device.Handler),               "Handler"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Device.SystemNotify),          "System Notify"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Device.DeviceNotify),          "Device Notify"}
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Device.NotifyList[0]),         "System Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Device.NotifyList[1]),         "Device Notify"}
 };
 
 static ACPI_EXDUMP_INFO     AcpiExDumpEvent[2] =
@@ -251,8 +251,8 @@ static ACPI_EXDUMP_INFO     AcpiExDumpPower[5] =
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpPower),          NULL},
     {ACPI_EXD_UINT32,   ACPI_EXD_OFFSET (PowerResource.SystemLevel),    "System Level"},
     {ACPI_EXD_UINT32,   ACPI_EXD_OFFSET (PowerResource.ResourceOrder),  "Resource Order"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (PowerResource.SystemNotify),   "System Notify"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (PowerResource.DeviceNotify),   "Device Notify"}
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (PowerResource.NotifyList[0]),  "System Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (PowerResource.NotifyList[1]),  "Device Notify"}
 };
 
 static ACPI_EXDUMP_INFO     AcpiExDumpProcessor[7] =
@@ -261,16 +261,16 @@ static ACPI_EXDUMP_INFO     AcpiExDumpProcessor[7] =
     {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Processor.ProcId),             "Processor ID"},
     {ACPI_EXD_UINT8 ,   ACPI_EXD_OFFSET (Processor.Length),             "Length"},
     {ACPI_EXD_ADDRESS,  ACPI_EXD_OFFSET (Processor.Address),            "Address"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Processor.SystemNotify),       "System Notify"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Processor.DeviceNotify),       "Device Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Processor.NotifyList[0]),      "System Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Processor.NotifyList[1]),      "Device Notify"},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Processor.Handler),            "Handler"}
 };
 
 static ACPI_EXDUMP_INFO     AcpiExDumpThermal[4] =
 {
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpThermal),        NULL},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (ThermalZone.SystemNotify),     "System Notify"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (ThermalZone.DeviceNotify),     "Device Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (ThermalZone.NotifyList[0]),    "System Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (ThermalZone.NotifyList[1]),    "Device Notify"},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (ThermalZone.Handler),          "Handler"}
 };
 
@@ -281,11 +281,13 @@ static ACPI_EXDUMP_INFO     AcpiExDumpBufferField[3] =
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (BufferField.BufferObj),        "Buffer Object"}
 };
 
-static ACPI_EXDUMP_INFO     AcpiExDumpRegionField[3] =
+static ACPI_EXDUMP_INFO     AcpiExDumpRegionField[5] =
 {
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpRegionField),    NULL},
     {ACPI_EXD_FIELD,    0,                                              NULL},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Field.RegionObj),              "Region Object"}
+    {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Field.AccessLength),           "AccessLength"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Field.RegionObj),              "Region Object"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Field.ResourceBuffer),         "ResourceBuffer"}
 };
 
 static ACPI_EXDUMP_INFO     AcpiExDumpBankField[5] =
@@ -328,11 +330,15 @@ static ACPI_EXDUMP_INFO     AcpiExDumpAddressHandler[6] =
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (AddressSpace.Context),         "Context"}
 };
 
-static ACPI_EXDUMP_INFO     AcpiExDumpNotify[3] =
+static ACPI_EXDUMP_INFO     AcpiExDumpNotify[7] =
 {
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpNotify),         NULL},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Notify.Node),                  "Node"},
-    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Notify.Context),               "Context"}
+    {ACPI_EXD_UINT32,   ACPI_EXD_OFFSET (Notify.HandlerType),           "Handler Type"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Notify.Handler),               "Handler"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Notify.Context),               "Context"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Notify.Next[0]),               "Next System Notify"},
+    {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Notify.Next[1]),               "Next Device Notify"}
 };
 
 
@@ -549,7 +555,9 @@ AcpiExDumpOperand (
     ACPI_FUNCTION_NAME (ExDumpOperand)
 
 
-    if (!((ACPI_LV_EXEC & AcpiDbgLevel) && (_COMPONENT & AcpiDbgLayer)))
+    /* Check if debug output enabled */
+
+    if (!ACPI_IS_DEBUG_ENABLED (ACPI_LV_EXEC, _COMPONENT))
     {
         return;
     }
@@ -894,7 +902,7 @@ AcpiExDumpOperands (
  * PARAMETERS:  Title               - Descriptive text
  *              Value               - Value to be displayed
  *
- * DESCRIPTION: Object dump output formatting functions.  These functions
+ * DESCRIPTION: Object dump output formatting functions. These functions
  *              reduce the number of format strings required and keeps them
  *              all in one place for easy modification.
  *
@@ -939,7 +947,9 @@ AcpiExDumpNamespaceNode (
 
     if (!Flags)
     {
-        if (!((ACPI_LV_OBJECTS & AcpiDbgLevel) && (_COMPONENT & AcpiDbgLayer)))
+        /* Check if debug output enabled */
+
+        if (!ACPI_IS_DEBUG_ENABLED (ACPI_LV_OBJECTS, _COMPONENT))
         {
             return;
         }
@@ -1071,10 +1081,7 @@ AcpiExDumpPackageObj (
     case ACPI_TYPE_STRING:
 
         AcpiOsPrintf ("[String]  Value: ");
-        for (i = 0; i < ObjDesc->String.Length; i++)
-        {
-            AcpiOsPrintf ("%c", ObjDesc->String.Pointer[i]);
-        }
+        AcpiUtPrintString (ObjDesc->String.Pointer, ACPI_UINT8_MAX);
         AcpiOsPrintf ("\n");
         break;
 
@@ -1084,7 +1091,7 @@ AcpiExDumpPackageObj (
         AcpiOsPrintf ("[Buffer] Length %.2X = ", ObjDesc->Buffer.Length);
         if (ObjDesc->Buffer.Length)
         {
-            AcpiUtDumpBuffer (ACPI_CAST_PTR (UINT8, ObjDesc->Buffer.Pointer),
+            AcpiUtDebugDumpBuffer (ACPI_CAST_PTR (UINT8, ObjDesc->Buffer.Pointer),
                 ObjDesc->Buffer.Length, DB_DWORD_DISPLAY, _COMPONENT);
         }
         else
@@ -1149,7 +1156,9 @@ AcpiExDumpObjectDescriptor (
 
     if (!Flags)
     {
-        if (!((ACPI_LV_OBJECTS & AcpiDbgLevel) && (_COMPONENT & AcpiDbgLayer)))
+        /* Check if debug output enabled */
+
+        if (!ACPI_IS_DEBUG_ENABLED (ACPI_LV_OBJECTS, _COMPONENT))
         {
             return_VOID;
         }
@@ -1191,4 +1200,3 @@ AcpiExDumpObjectDescriptor (
 }
 
 #endif
-

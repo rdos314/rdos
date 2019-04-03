@@ -36,8 +36,8 @@ INCLUDE ..\driver.def
 INCLUDE ..\pcdev\apic.inc
 INCLUDE system.inc
 
-MAJOR_VERSION = 11
-MINOR_VERSION = 1
+MAJOR_VERSION = 12
+MINOR_VERSION = 0
 RELEASE = 0
 
 IFDEF __WASM__

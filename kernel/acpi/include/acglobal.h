@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -144,7 +144,7 @@
 
 /*
  * Enable "slack" in the AML interpreter?  Default is FALSE, and the
- * interpreter strictly follows the ACPI specification.  Setting to TRUE
+ * interpreter strictly follows the ACPI specification. Setting to TRUE
  * allows the interpreter to ignore certain errors and/or bad AML constructs.
  *
  * Currently, these features are enabled by this flag:
@@ -200,6 +200,12 @@ UINT8       ACPI_INIT_GLOBAL (AcpiGbl_CopyDsdtLocally, FALSE);
  */
 UINT8       ACPI_INIT_GLOBAL (AcpiGbl_TruncateIoAddresses, FALSE);
 
+/*
+ * Disable runtime checking and repair of values returned by control methods.
+ * Use only if the repair is causing a problem on a particular machine.
+ */
+UINT8       ACPI_INIT_GLOBAL (AcpiGbl_DisableAutoRepair, FALSE);
+
 
 /* AcpiGbl_FADT is a local copy of the FADT, converted to a common format. */
 
@@ -209,7 +215,18 @@ UINT32                      AcpiGbl_TraceFlags;
 ACPI_NAME                   AcpiGbl_TraceMethodName;
 BOOLEAN                     AcpiGbl_SystemAwakeAndRunning;
 
-#endif
+/*
+ * ACPI 5.0 introduces the concept of a "reduced hardware platform", meaning
+ * that the ACPI hardware is no longer required. A flag in the FADT indicates
+ * a reduced HW machine, and that flag is duplicated here for convenience.
+ */
+BOOLEAN                     AcpiGbl_ReducedHardware;
+
+#endif /* DEFINE_ACPI_GLOBALS */
+
+/* Do not disassemble buffers to resource descriptors */
+
+ACPI_EXTERN UINT8       ACPI_INIT_GLOBAL (AcpiGbl_NoResourceDisassembly, FALSE);
 
 /*****************************************************************************
  *
@@ -222,7 +239,11 @@ BOOLEAN                     AcpiGbl_SystemAwakeAndRunning;
  * found in the RSDT/XSDT.
  */
 ACPI_EXTERN ACPI_TABLE_LIST             AcpiGbl_RootTableList;
+
+#if (!ACPI_REDUCED_HARDWARE)
 ACPI_EXTERN ACPI_TABLE_FACS            *AcpiGbl_FACS;
+
+#endif /* !ACPI_REDUCED_HARDWARE */
 
 /* These addresses are calculated from the FADT Event Block addresses */
 
@@ -249,7 +270,7 @@ ACPI_EXTERN UINT8                       AcpiGbl_IntegerNybbleWidth;
 
 /*****************************************************************************
  *
- * Mutual exlusion within ACPICA subsystem
+ * Mutual exclusion within ACPICA subsystem
  *
  ****************************************************************************/
 
@@ -262,13 +283,16 @@ ACPI_EXTERN ACPI_MUTEX_INFO             AcpiGbl_MutexInfo[ACPI_NUM_MUTEX];
 
 /*
  * Global lock mutex is an actual AML mutex object
- * Global lock semaphore works in conjunction with the HW global lock
+ * Global lock semaphore works in conjunction with the actual global lock
+ * Global lock spinlock is used for "pending" handshake
  */
 ACPI_EXTERN ACPI_OPERAND_OBJECT        *AcpiGbl_GlobalLockMutex;
 ACPI_EXTERN ACPI_SEMAPHORE              AcpiGbl_GlobalLockSemaphore;
+ACPI_EXTERN ACPI_SPINLOCK               AcpiGbl_GlobalLockPendingLock;
 ACPI_EXTERN UINT16                      AcpiGbl_GlobalLockHandle;
 ACPI_EXTERN BOOLEAN                     AcpiGbl_GlobalLockAcquired;
 ACPI_EXTERN BOOLEAN                     AcpiGbl_GlobalLockPresent;
+ACPI_EXTERN BOOLEAN                     AcpiGbl_GlobalLockPending;
 
 /*
  * Spinlocks are used for interfaces that can be possibly called at
@@ -302,8 +326,7 @@ ACPI_EXTERN ACPI_CACHE_T               *AcpiGbl_OperandCache;
 
 /* Global handlers */
 
-ACPI_EXTERN ACPI_OBJECT_NOTIFY_HANDLER  AcpiGbl_DeviceNotify;
-ACPI_EXTERN ACPI_OBJECT_NOTIFY_HANDLER  AcpiGbl_SystemNotify;
+ACPI_EXTERN ACPI_GLOBAL_NOTIFY_HANDLER  AcpiGbl_GlobalNotify[2];
 ACPI_EXTERN ACPI_EXCEPTION_HANDLER      AcpiGbl_ExceptionHandler;
 ACPI_EXTERN ACPI_INIT_HANDLER           AcpiGbl_InitHandler;
 ACPI_EXTERN ACPI_TABLE_HANDLER          AcpiGbl_TableHandler;
@@ -316,6 +339,10 @@ ACPI_EXTERN ACPI_INTERFACE_HANDLER      AcpiGbl_InterfaceHandler;
 ACPI_EXTERN UINT32                      AcpiGbl_OwnerIdMask[ACPI_NUM_OWNERID_MASKS];
 ACPI_EXTERN UINT8                       AcpiGbl_LastOwnerIdIndex;
 ACPI_EXTERN UINT8                       AcpiGbl_NextOwnerIdOffset;
+
+/* Initialization sequencing */
+
+ACPI_EXTERN BOOLEAN                     AcpiGbl_RegMethodsExecuted;
 
 /* Misc */
 
@@ -330,17 +357,9 @@ ACPI_EXTERN BOOLEAN                     AcpiGbl_AcpiHardwarePresent;
 ACPI_EXTERN BOOLEAN                     AcpiGbl_EventsInitialized;
 ACPI_EXTERN UINT8                       AcpiGbl_OsiData;
 ACPI_EXTERN ACPI_INTERFACE_INFO        *AcpiGbl_SupportedInterfaces;
-
+ACPI_EXTERN ACPI_ADDRESS_RANGE         *AcpiGbl_AddressRangeList[ACPI_ADDRESS_RANGE_MAX];
 
 #ifndef DEFINE_ACPI_GLOBALS
-
-/* Exception codes */
-
-extern char const                       *AcpiGbl_ExceptionNames_Env[];
-extern char const                       *AcpiGbl_ExceptionNames_Pgm[];
-extern char const                       *AcpiGbl_ExceptionNames_Tbl[];
-extern char const                       *AcpiGbl_ExceptionNames_Aml[];
-extern char const                       *AcpiGbl_ExceptionNames_Ctrl[];
 
 /* Other miscellaneous */
 
@@ -402,7 +421,6 @@ ACPI_EXTERN UINT32                      AcpiGbl_DeepestNesting;
  *
  ****************************************************************************/
 
-
 ACPI_EXTERN ACPI_THREAD_STATE          *AcpiGbl_CurrentWalkList;
 
 /* Control method single step flag */
@@ -427,6 +445,8 @@ ACPI_EXTERN UINT8                       AcpiGbl_SleepTypeB;
  *
  ****************************************************************************/
 
+#if (!ACPI_REDUCED_HARDWARE)
+
 ACPI_EXTERN UINT8                       AcpiGbl_AllGpesInitialized;
 ACPI_EXTERN ACPI_GPE_XRUPT_INFO        *AcpiGbl_GpeXruptListHead;
 ACPI_EXTERN ACPI_GPE_BLOCK_INFO        *AcpiGbl_GpeFadtBlocks[ACPI_MAX_GPE_BLOCKS];
@@ -435,6 +455,7 @@ ACPI_EXTERN void                       *AcpiGbl_GlobalEventHandlerContext;
 ACPI_EXTERN ACPI_FIXED_EVENT_HANDLER    AcpiGbl_FixedEventHandlers[ACPI_NUM_FIXED_EVENTS];
 extern      ACPI_FIXED_EVENT_INFO       AcpiGbl_FixedEventInfo[ACPI_NUM_FIXED_EVENTS];
 
+#endif /* !ACPI_REDUCED_HARDWARE */
 
 /*****************************************************************************
  *
@@ -463,13 +484,15 @@ ACPI_EXTERN UINT32                      AcpiGbl_TraceDbgLayer;
 
 /*****************************************************************************
  *
- * Debugger globals
+ * Debugger and Disassembler globals
  *
  ****************************************************************************/
 
 ACPI_EXTERN UINT8                       AcpiGbl_DbOutputFlags;
 
 #ifdef ACPI_DISASSEMBLER
+
+BOOLEAN     ACPI_INIT_GLOBAL (AcpiGbl_IgnoreNoopOperator, FALSE);
 
 ACPI_EXTERN BOOLEAN                     AcpiGbl_DbOpt_disasm;
 ACPI_EXTERN BOOLEAN                     AcpiGbl_DbOpt_verbose;
@@ -490,10 +513,11 @@ ACPI_EXTERN BOOLEAN                     AcpiGbl_DbOpt_ini_methods;
 ACPI_EXTERN BOOLEAN                     AcpiGbl_DbOpt_NoRegionSupport;
 
 ACPI_EXTERN char                       *AcpiGbl_DbArgs[ACPI_DEBUGGER_MAX_ARGS];
-ACPI_EXTERN char                        AcpiGbl_DbLineBuf[80];
-ACPI_EXTERN char                        AcpiGbl_DbParsedBuf[80];
-ACPI_EXTERN char                        AcpiGbl_DbScopeBuf[40];
-ACPI_EXTERN char                        AcpiGbl_DbDebugFilename[40];
+ACPI_EXTERN ACPI_OBJECT_TYPE            AcpiGbl_DbArgTypes[ACPI_DEBUGGER_MAX_ARGS];
+ACPI_EXTERN char                        AcpiGbl_DbLineBuf[ACPI_DB_LINE_BUFFER_SIZE];
+ACPI_EXTERN char                        AcpiGbl_DbParsedBuf[ACPI_DB_LINE_BUFFER_SIZE];
+ACPI_EXTERN char                        AcpiGbl_DbScopeBuf[80];
+ACPI_EXTERN char                        AcpiGbl_DbDebugFilename[80];
 ACPI_EXTERN BOOLEAN                     AcpiGbl_DbOutputToFile;
 ACPI_EXTERN char                       *AcpiGbl_DbBuffer;
 ACPI_EXTERN char                       *AcpiGbl_DbFilename;
@@ -518,5 +542,15 @@ ACPI_EXTERN UINT32                      AcpiGbl_SizeOfNodeEntries;
 ACPI_EXTERN UINT32                      AcpiGbl_SizeOfAcpiObjects;
 
 #endif /* ACPI_DEBUGGER */
+
+
+/*****************************************************************************
+ *
+ * Info/help support
+ *
+ ****************************************************************************/
+
+extern const AH_PREDEFINED_NAME     AslPredefinedInfo[];
+
 
 #endif /* __ACGLOBAL_H__ */

@@ -2299,36 +2299,6 @@ spurious_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           nmi_int
-;
-;               DESCRIPTION:    Default NMI handler
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-nmi_int:
-    iretd
-
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           TimerInt
 ;
 ;               DESCRIPTION:    Timer interrupt
@@ -2584,10 +2554,6 @@ SetupInts Proc near
     mov ax,cs
     mov ds,ax
     xor bl,bl
-;
-    mov al,2
-    mov esi,OFFSET nmi_int
-    SetupIntGate
 ;
     mov al,0Fh
     mov esi,OFFSET spurious_int

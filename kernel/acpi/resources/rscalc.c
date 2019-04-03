@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2013, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -417,6 +417,26 @@ AcpiRsGetAmlLength (
             break;
 
 
+        case ACPI_RESOURCE_TYPE_GPIO:
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize + (Resource->Data.Gpio.PinTableLength * 2) +
+                Resource->Data.Gpio.ResourceSource.StringLength +
+                Resource->Data.Gpio.VendorLength);
+
+            break;
+
+
+        case ACPI_RESOURCE_TYPE_SERIAL_BUS:
+
+            TotalSize = AcpiGbl_AmlResourceSerialBusSizes [Resource->Data.CommonSerialBus.Type];
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize +
+                Resource->Data.I2cSerialBus.ResourceSource.StringLength +
+                Resource->Data.I2cSerialBus.VendorLength);
+
+            break;
+
+
         default:
             break;
         }
@@ -467,12 +487,13 @@ AcpiRsGetListLength (
     UINT32                  ExtraStructBytes;
     UINT8                   ResourceIndex;
     UINT8                   MinimumAmlResourceLength;
+    AML_RESOURCE            *AmlResource;
 
 
     ACPI_FUNCTION_TRACE (RsGetListLength);
 
 
-    *SizeNeeded = 0;
+    *SizeNeeded = ACPI_RS_SIZE_MIN;         /* Minimum size is one EndTag */
     EndAml = AmlBuffer + AmlBufferLength;
 
     /* Walk the list of AML resource descriptors */
@@ -481,11 +502,17 @@ AcpiRsGetListLength (
     {
         /* Validate the Resource Type and Resource Length */
 
-        Status = AcpiUtValidateResource (AmlBuffer, &ResourceIndex);
+        Status = AcpiUtValidateResource (NULL, AmlBuffer, &ResourceIndex);
         if (ACPI_FAILURE (Status))
         {
+            /*
+             * Exit on failure. Cannot continue because the descriptor length
+             * may be bogus also.
+             */
             return_ACPI_STATUS (Status);
         }
+
+        AmlResource = (void *) AmlBuffer;
 
         /* Get the resource length and base (minimum) AML size */
 
@@ -527,15 +554,23 @@ AcpiRsGetListLength (
              * Get the number of vendor data bytes
              */
             ExtraStructBytes = ResourceLength;
+
+            /*
+             * There is already one byte included in the minimum
+             * descriptor size. If there are extra struct bytes,
+             * subtract one from the count.
+             */
+            if (ExtraStructBytes)
+            {
+                ExtraStructBytes--;
+            }
             break;
 
 
         case ACPI_RESOURCE_NAME_END_TAG:
             /*
-             * End Tag:
-             * This is the normal exit, add size of EndTag
+             * End Tag: This is the normal exit
              */
-            *SizeNeeded += ACPI_RS_SIZE_MIN;
             return_ACPI_STATUS (AE_OK);
 
 
@@ -566,6 +601,30 @@ AcpiRsGetListLength (
                 ResourceLength - ExtraStructBytes, MinimumAmlResourceLength);
             break;
 
+        case ACPI_RESOURCE_NAME_GPIO:
+
+            /* Vendor data is optional */
+
+            if (AmlResource->Gpio.VendorLength)
+            {
+                ExtraStructBytes += AmlResource->Gpio.VendorOffset -
+                    AmlResource->Gpio.PinTableOffset + AmlResource->Gpio.VendorLength;
+            }
+            else
+            {
+                ExtraStructBytes += AmlResource->LargeHeader.ResourceLength +
+                    sizeof (AML_RESOURCE_LARGE_HEADER) -
+                    AmlResource->Gpio.PinTableOffset;
+            }
+            break;
+
+        case ACPI_RESOURCE_NAME_SERIAL_BUS:
+
+            MinimumAmlResourceLength = AcpiGbl_ResourceAmlSerialBusSizes[
+                AmlResource->CommonSerialBus.Type];
+            ExtraStructBytes += AmlResource->CommonSerialBus.ResourceLength -
+                MinimumAmlResourceLength;
+            break;
 
         default:
             break;
@@ -577,8 +636,16 @@ AcpiRsGetListLength (
          * Important: Round the size up for the appropriate alignment. This
          * is a requirement on IA64.
          */
-        BufferSize = AcpiGbl_ResourceStructSizes[ResourceIndex] +
+        if (AcpiUtGetResourceType (AmlBuffer) == ACPI_RESOURCE_NAME_SERIAL_BUS)
+        {
+            BufferSize = AcpiGbl_ResourceStructSerialBusSizes[
+                AmlResource->CommonSerialBus.Type] + ExtraStructBytes;
+        }
+        else
+        {
+            BufferSize = AcpiGbl_ResourceStructSizes[ResourceIndex] +
                         ExtraStructBytes;
+        }
         BufferSize = (UINT32) ACPI_ROUND_UP_TO_NATIVE_WORD (BufferSize);
 
         *SizeNeeded += BufferSize;
@@ -641,7 +708,7 @@ AcpiRsGetPciRoutingTableLength (
     /*
      * Calculate the size of the return buffer.
      * The base size is the number of elements * the sizes of the
-     * structures.  Additional space for the strings is added below.
+     * structures. Additional space for the strings is added below.
      * The minus one is to subtract the size of the UINT8 Source[1]
      * member because it is added below.
      *
