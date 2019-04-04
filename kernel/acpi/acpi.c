@@ -292,11 +292,12 @@ int HardwareCount = 0;
 int HardwareSize = 0;
 struct TDeviceEntry **HardwareArr;
 
+int PciDevCount = 0;
+int PciDevSize = 0;
+struct TDeviceEntry **PciDevArr;
+
 int PciRootCount = 0;
 struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
-
-int PciDevCount = 0;
-struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
@@ -2218,8 +2219,8 @@ void GetHardware()
 
                     HwList = (struct TDeviceEntry **)AcpiOsAllocate(HardwareSize * sizeof(struct TDeviceEntry *));
   
-                    for (i = 0; i < HardwareCount; i++)
-                        HwList[i] = HardwareArr[i];
+                    for (j = 0; j < HardwareCount; j++)
+                        HwList[j] = HardwareArr[j];
 
                     if (HardwareCount)
                         AcpiOsFree(HardwareArr);
@@ -2270,6 +2271,45 @@ void GetHardware()
     }
 }
 
+
+/*##########################################################################
+#
+#   Name       : AddPciDev
+#
+#   Purpose....: Add PCI device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPciDev(struct TDeviceEntry *PciDev)
+{
+    struct TDeviceEntry **DevList;
+    int i;
+
+    if (PciDevCount == PciDevSize)
+    {
+        if (PciDevSize)
+            PciDevSize = 2 * PciDevSize;
+        else
+            PciDevSize = 8;
+
+        DevList = (struct TDeviceEntry **)AcpiOsAllocate(PciDevSize * sizeof(struct TDeviceEntry *));
+  
+        for (i = 0; i < PciDevCount; i++)
+            DevList[i] = PciDevArr[i];
+
+        if (PciDevCount)
+            AcpiOsFree(PciDevArr);
+    
+        PciDevArr = DevList;
+    }                
+
+    PciDevArr[PciDevCount] = PciDev;
+    PciDevCount++;
+}
+
 /*##########################################################################
 #
 #   Name       : AddPciObject
@@ -2302,8 +2342,8 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
                     DeviceArr[i]->PciId.Device   = ACPI_HIWORD (ACPI_LODWORD (DevInfo->Address));
                     DeviceArr[i]->PciId.Function = ACPI_LOWORD (ACPI_LODWORD (DevInfo->Address));
                     DeviceArr[i]->IsPci = TRUE;
-                    PciDevArr[PciDevCount] = DeviceArr[i];
-                    PciDevCount++;
+
+                    AddPciDev(DeviceArr[i]);
 
                     PciVal = 0;
                     AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 10, &PciVal, 16);
@@ -2491,8 +2531,7 @@ void GetIrqRouting()
                                 TargDev->PciId.Function = 0;
                                 TargDev->PciIrq[Pin] = Irq;
 
-                                PciDevArr[PciDevCount] = TargDev;
-                                PciDevCount++;
+                                AddPciDev(TargDev);
                             }                                          
                         }
                         else
