@@ -69,7 +69,6 @@ extern int GetAmdTemp();
 
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
-#define MAX_PCI_DEV_COUNT       256
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_PROCESSOR_PSTATES   32
 #define MAX_PROCESSOR_TSTATES   32
@@ -295,6 +294,10 @@ struct TDeviceEntry **HardwareArr;
 int PciDevCount = 0;
 int PciDevSize = 0;
 struct TDeviceEntry **PciDevArr;
+
+int PciLnkDevCount = 0;
+int PciLnkDevSize = 0;
+struct TDeviceEntry **PciLnkDevArr;
 
 int PciRootCount = 0;
 struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
@@ -2271,7 +2274,6 @@ void GetHardware()
     }
 }
 
-
 /*##########################################################################
 #
 #   Name       : AddPciDev
@@ -2309,6 +2311,45 @@ void AddPciDev(struct TDeviceEntry *PciDev)
     PciDevArr[PciDevCount] = PciDev;
     PciDevCount++;
 }
+
+/*##########################################################################
+#
+#   Name       : AddPciLnkDev
+#
+#   Purpose....: Add PCI link device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPciLnkDev(struct TDeviceEntry *PciDev)
+{
+    struct TDeviceEntry **DevList;
+    int i;
+
+    if (PciLnkDevCount == PciLnkDevSize)
+    {
+        if (PciLnkDevSize)
+            PciLnkDevSize = 2 * PciLnkDevSize;
+        else
+            PciLnkDevSize = 2;
+
+        DevList = (struct TDeviceEntry **)AcpiOsAllocate(PciLnkDevSize * sizeof(struct TDeviceEntry *));
+  
+        for (i = 0; i < PciLnkDevCount; i++)
+            DevList[i] = PciLnkDevArr[i];
+
+        if (PciLnkDevCount)
+            AcpiOsFree(PciLnkDevArr);
+    
+        PciLnkDevArr = DevList;
+    }                
+
+    PciLnkDevArr[PciLnkDevCount] = PciDev;
+    PciLnkDevCount++;
+}
+
 
 /*##########################################################################
 #
@@ -2550,17 +2591,14 @@ void GetIrqRouting()
 
                                 if (TargDev)
                                 {
-//                                    found = 0;
+                                    found = 0;
 
-//                                    for (j = 0; j < PciLinkDevCount && !found; j++)
-//                                        if (PciLinkDevArr[j] == LnkDev)
-//                                            found = 1;
+                                    for (j = 0; j < PciLnkDevCount && !found; j++)
+                                        if (PciLnkDevArr[j] == LnkDev)
+                                            found = 1;
 
-//                                    if (!found && PciLinkDevCount < MAX_PCI_DEV_COUNT)
-//                                    {
-//                                        PciLinkDevArr[PciLinkDevCount] = LnkDev;
-//                                        PciLinkDevCount++;
-//                                    }
+                                    if (!found)
+                                        AddPciLnkDev(LnkDev);
                                 }
                             }
                         }
