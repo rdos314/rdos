@@ -67,7 +67,6 @@ extern int GetIntelTermOffset();
 extern int GetAmdTemp();
 #pragma aux GetAmdTemp value [eax]
 
-#define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
 #define MAX_PCI_DEV_COUNT       256
@@ -290,7 +289,8 @@ int DeviceSize = 0;
 struct TDeviceEntry **DeviceArr;
 
 int HardwareCount = 0;
-struct TDeviceEntry *HardwareArr[MAX_DEVICE_COUNT];
+int HardwareSize = 0;
+struct TDeviceEntry **HardwareArr;
 
 int PciRootCount = 0;
 struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
@@ -2164,6 +2164,7 @@ void GetHardware()
     ACPI_HANDLE Handle;
     struct TResourceList *List;
     struct TDeviceEntry *DevEntry;
+    struct TDeviceEntry **HwList;
     int i;
     int j;
 
@@ -2207,6 +2208,24 @@ void GetHardware()
             if (Status == AE_OK)
             {
                 AddResource(DevEntry, Buffer.Length);
+
+                if (HardwareCount == HardwareSize)
+                {
+                    if (HardwareSize)
+                        HardwareSize = 2 * HardwareSize;
+                    else
+                        HardwareSize = 16;
+
+                    HwList = (struct TDeviceEntry **)AcpiOsAllocate(HardwareSize * sizeof(struct TDeviceEntry *));
+  
+                    for (i = 0; i < HardwareCount; i++)
+                        HwList[i] = HardwareArr[i];
+
+                    if (HardwareCount)
+                        AcpiOsFree(HardwareArr);
+    
+                    HardwareArr = HwList;
+                }                
 
                 HardwareArr[HardwareCount] = DevEntry;
                 HardwareCount++;
