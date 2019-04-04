@@ -286,7 +286,8 @@ UINT16 CurrBus;
 struct TDeviceEntry *Root;
 
 int DeviceCount = 0;
-struct TDeviceEntry *DeviceArr[MAX_DEVICE_COUNT];
+int DeviceSize = 0;
+struct TDeviceEntry **DeviceArr;
 
 int HardwareCount = 0;
 struct TDeviceEntry *HardwareArr[MAX_DEVICE_COUNT];
@@ -1875,6 +1876,8 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
     struct TProcessorEntry *ProcEntry;
     struct TDeviceEntry *OwnerDev;
     struct TProcessorEntry *OwnerProc;
+    struct TDeviceEntry **DevList;
+    int i;
         
     Status = AcpiGetType(Object, &Type);
 
@@ -1903,11 +1906,27 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                     Root = DevEntry;
             }
 
-            if (DeviceCount < MAX_DEVICE_COUNT)
+            if (DeviceCount == DeviceSize)
             {
-                DeviceArr[DeviceCount] = DevEntry;
-                DeviceCount++;
-            }
+                if (DeviceSize)
+                    DeviceSize = 2 * DeviceSize;
+                else
+                    DeviceSize = 16;
+
+                DevList = (struct TDeviceEntry **)AcpiOsAllocate(DeviceSize * sizeof(struct TDeviceEntry *));
+
+                for (i = 0; i < DeviceCount; i++)
+                    DevList[i] = DeviceArr[i];
+
+                if (DeviceCount)
+                    AcpiOsFree(DeviceArr);
+
+                DeviceArr = DevList;
+            }                
+
+            DeviceArr[DeviceCount] = DevEntry;
+            DeviceCount++;
+
             return AE_OK;
         }
         else
@@ -2151,84 +2170,82 @@ void GetHardware()
     while (ProcessorCount > 1 && ProcessorArr[ProcessorCount-1]->ObjectList == 0)
         ProcessorCount--;
 
-    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    for (i = 0; i < DeviceCount; i++)
     {
         DevEntry = DeviceArr[i];
-        if (DevEntry)
-        {        
-            for (j = 0; j < 4; j++)
-                DevEntry->PciIrq[j] = 0;
 
-            DevEntry->IsPci = FALSE;
-            DevEntry->DevNr = i;
-            DevEntry->IrqResourceList = 0;
-            DevEntry->ExtendedIrqResourceList = 0;
-            DevEntry->DmaResourceList = 0;
-            DevEntry->IoResourceList = 0;
-            DevEntry->FixedIoResourceList = 0;
-            DevEntry->Memory24ResourceList = 0;
-            DevEntry->Memory32ResourceList = 0;
-            DevEntry->FixedMemory32ResourceList = 0;
-            DevEntry->Address16ResourceList = 0;
-            DevEntry->Address32ResourceList = 0;
+        for (j = 0; j < 4; j++)
+            DevEntry->PciIrq[j] = 0;
+
+        DevEntry->IsPci = FALSE;
+        DevEntry->DevNr = i;
+        DevEntry->IrqResourceList = 0;
+        DevEntry->ExtendedIrqResourceList = 0;
+        DevEntry->DmaResourceList = 0;
+        DevEntry->IoResourceList = 0;
+        DevEntry->FixedIoResourceList = 0;
+        DevEntry->Memory24ResourceList = 0;
+        DevEntry->Memory32ResourceList = 0;
+        DevEntry->FixedMemory32ResourceList = 0;
+        DevEntry->Address16ResourceList = 0;
+        DevEntry->Address32ResourceList = 0;
             
-            Buffer.Length = 0x10;
-            Buffer.Pointer = TempResourceBuf;
-            Status = AcpiGetName(DevEntry->Handle, ACPI_SINGLE_NAME, &Buffer);
+        Buffer.Length = 0x10;
+        Buffer.Pointer = TempResourceBuf;
+        Status = AcpiGetName(DevEntry->Handle, ACPI_SINGLE_NAME, &Buffer);
 
-            if (strstr(TempResourceBuf, "MEM"))
-                Status = -1;
+        if (strstr(TempResourceBuf, "MEM"))
+            Status = -1;
+
+        if (Status == AE_OK)
+        {
+            Buffer.Length = 0x4000;
+            Buffer.Pointer = TempResourceBuf;
+
+            Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
 
             if (Status == AE_OK)
             {
-                Buffer.Length = 0x4000;
-                Buffer.Pointer = TempResourceBuf;
+                AddResource(DevEntry, Buffer.Length);
 
-                Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
+                HardwareArr[HardwareCount] = DevEntry;
+                HardwareCount++;
+            }
 
-                if (Status == AE_OK)
+            Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
+            if (Status == AE_OK)
+            { 
+                if (DevInfo->HardwareId.String)
                 {
-                    AddResource(DevEntry, Buffer.Length);
-
-                    HardwareArr[HardwareCount] = DevEntry;
-                    HardwareCount++;
+                    strncpy(DevEntry->PnpName, DevInfo->HardwareId.String, 8);
+                    DevEntry->PnpName[8] = 0;
                 }
-
-                Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
-                if (Status == AE_OK)
-                { 
-                    if (DevInfo->HardwareId.String)
-                    {
-                        strncpy(DevEntry->PnpName, DevInfo->HardwareId.String, 8);
-                        DevEntry->PnpName[8] = 0;
-                    }
-                    else
-                        DevEntry->PnpName[0] = 0;
+                else
+                    DevEntry->PnpName[0] = 0;
                 
-                    if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
-                    {
-                        Handle = DevEntry->Handle;
+                if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
+                {
+                    Handle = DevEntry->Handle;
         
-                        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
+                    DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
 
-                        if (DevStatus == AE_OK)
-                            CurrSegment = ACPI_LOWORD (PciValue);
-                        else
-                            CurrSegment = 0;
+                    if (DevStatus == AE_OK)
+                        CurrSegment = ACPI_LOWORD (PciValue);
+                    else
+                        CurrSegment = 0;
 
-                        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
+                    DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
 
-                        if (DevStatus == AE_OK)
-                            DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
-                        else
-                            DevEntry->PciId.Bus = 0;
+                    if (DevStatus == AE_OK)
+                        DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
+                    else
+                        DevEntry->PciId.Bus = 0;
                             
-                        DevEntry->SecondaryBus = DevEntry->PciId.Bus;
+                    DevEntry->SecondaryBus = DevEntry->PciId.Bus;
 
-                        PciRootArr[PciRootCount] = DevEntry;
-                        PciRootCount++;
-                    }        
-                }
+                    PciRootArr[PciRootCount] = DevEntry;
+                    PciRootCount++;
+                }        
             }
         }
     }
@@ -2985,17 +3002,6 @@ void __far InitTasking()
 
 void __far ImplTestGate(const char *msg)
 {
-    int ok;
-    long long status;
-
-    if (UseAcpiReset())
-    {
-        RdosRegisterBimodalUserGate(usergate_soft_reset, (__rdos_gate_callback *)&ImplSoftReset, "Soft Reset");
-        RdosRegisterOsGate(osgate_fault_reset, (__rdos_gate_callback *)&ImplSoftReset, "Fault Reset");
-    }        
-
-    InitOsAcpi();
-    Load();
 }
 
 /*##########################################################################
