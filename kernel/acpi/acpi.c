@@ -68,8 +68,6 @@ extern int GetAmdTemp();
 #pragma aux GetAmdTemp value [eax]
 
 #define MAX_PCI_IRQ_COUNT       256
-#define MAX_PROCESSOR_PSTATES   32
-#define MAX_PROCESSOR_TSTATES   32
 
 #define AMD_WATCHDOG         0xC0010074
 
@@ -310,13 +308,15 @@ ACPI_GENERIC_ADDRESS *PowerControl = 0;
 ACPI_GENERIC_ADDRESS *PowerStatus = 0;
 
 int PowerStateCount = 0;
-struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
+int PowerStateSize = 0;
+struct TProcessorState* *PowerStateArr;
 
 ACPI_GENERIC_ADDRESS *ThrottlingControl = 0;
 ACPI_GENERIC_ADDRESS *ThrottlingStatus = 0;
 
 int ThrottlingStateCount = 0;
-struct TThrottlingState *ThrottlingStateArr[MAX_PROCESSOR_TSTATES];
+int ThrottlingStateSize = 0;
+struct TThrottlingState **ThrottlingStateArr;
 
 int PowerState;
 int ThrottleState;
@@ -2815,6 +2815,44 @@ void GetPct()
 
 /*##########################################################################
 #
+#   Name       : AddPowerState
+#
+#   Purpose....: Add power state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPowerState(struct TProcessorState *State)
+{
+    struct TProcessorState **StateList;
+    int i;
+
+    if (PowerStateCount == PowerStateSize)
+    {
+        if (PowerStateSize)
+            PowerStateSize = 2 * PowerStateSize;
+        else
+            PowerStateSize = 8;
+
+        StateList = (struct TProcessorState **)AllocateSelector(PowerStateSize * sizeof(struct TProcessorState *));
+  
+        for (i = 0; i < PowerStateCount; i++)
+            StateList[i] = PowerStateArr[i];
+
+        if (PowerStateCount)
+            AcpiOsFree(PowerStateArr);
+    
+        PowerStateArr = StateList;
+    }                
+
+    PowerStateArr[PowerStateCount] = State;
+    PowerStateCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : GetPss
 #
 #   Purpose....: Get PSS resource
@@ -2847,9 +2885,6 @@ void GetPss()
         if (Pss->Type == ACPI_TYPE_PACKAGE)
         {
             Count = Pss->Package.Count;
-
-            if (Count > MAX_PROCESSOR_PSTATES)
-                Count = MAX_PROCESSOR_PSTATES;
                 
             ok = TRUE;
 
@@ -2898,15 +2933,51 @@ void GetPss()
                             }
                         }
                     }
+
                     if (ok)
-                        PowerStateArr[j] = State;
+                        AddPowerState(State);
                 }
             }
-
-            if (ok)
-                PowerStateCount = Count;
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : AddThrottlingState
+#
+#   Purpose....: Add throttling state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddThrottlingState(struct TThrottlingState *State)
+{
+    struct TThrottlingState **StateList;
+    int i;
+
+    if (ThrottlingStateCount == ThrottlingStateSize)
+    {
+        if (ThrottlingStateSize)
+            ThrottlingStateSize = 2 * ThrottlingStateSize;
+        else
+            ThrottlingStateSize = 8;
+
+        StateList = (struct TThrottlingState **)AllocateSelector(ThrottlingStateSize * sizeof(struct TThrottlingState *));
+  
+        for (i = 0; i < ThrottlingStateCount; i++)
+            StateList[i] = ThrottlingStateArr[i];
+
+        if (ThrottlingStateCount)
+            AcpiOsFree(ThrottlingStateArr);
+    
+        ThrottlingStateArr = StateList;
+    }                
+
+    ThrottlingStateArr[ThrottlingStateCount] = State;
+    ThrottlingStateCount++;
 }
 
 /*##########################################################################
@@ -2943,9 +3014,6 @@ void GetTss()
         if (Tss->Type == ACPI_TYPE_PACKAGE)
         {
             Count = Tss->Package.Count;
-
-            if (Count > MAX_PROCESSOR_TSTATES)
-                Count = MAX_PROCESSOR_TSTATES;
                 
             ok = TRUE;
 
@@ -2990,13 +3058,11 @@ void GetTss()
                             }
                         }
                     }
+
                     if (ok)
-                        ThrottlingStateArr[j] = State;
+                        AddThrottlingState(State);
                 }
             }
-
-            if (ok)
-                ThrottlingStateCount = Count;
         }
     }
 }
