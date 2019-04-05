@@ -68,7 +68,6 @@ extern int GetAmdTemp();
 #pragma aux GetAmdTemp value [eax]
 
 #define MAX_PCI_IRQ_COUNT       256
-#define MAX_PROCESSOR_COUNT     32
 #define MAX_PROCESSOR_PSTATES   32
 #define MAX_PROCESSOR_TSTATES   32
 
@@ -303,7 +302,9 @@ int PciRootSize = 0;
 struct TDeviceEntry **PciRootArr;
 
 int ProcessorCount = 0;
-struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
+int ProcessorSize = 0;
+struct TProcessorEntry **ProcessorArr;
+long long *StateArr;
 
 ACPI_GENERIC_ADDRESS *PowerControl = 0;
 ACPI_GENERIC_ADDRESS *PowerStatus = 0;
@@ -348,7 +349,25 @@ power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
 
-long long StateArr[MAX_PROCESSOR_COUNT];
+    
+/*##########################################################################
+#
+#   Name       : AllocateSelector
+#
+##########################################################################*/
+void *AllocateSelector(ACPI_SIZE Size)
+{
+    long linear;
+    char *ptr;
+
+    if (Size <= 0 || Size > 0x100000)
+        return 0;
+    
+    ptr = (char *)RdosAllocateBigGlobalMem(Size);
+
+    memset(ptr, 0, Size);
+    return ptr;
+}
     
 /*##########################################################################
 #
@@ -1859,6 +1878,50 @@ void AddProcObject(struct TProcessorEntry *Parent, struct TObjectEntry *Object)
 
 /*##########################################################################
 #
+#   Name       : AddProcessor
+#
+#   Purpose....: Add processor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddProcessor(struct TProcessorEntry *Proc)
+{
+    struct TProcessorEntry **ProcList;
+    long long *StateList;
+    int i;
+
+    if (ProcessorCount == ProcessorSize)
+    {
+        if (ProcessorSize)
+            ProcessorSize = 2 * ProcessorSize;
+        else
+            ProcessorSize = 2;
+
+        ProcList = (struct TProcessorEntry **)AllocateSelector(ProcessorSize * sizeof(struct TProcessorEntry *));
+        StateList = (long long *)AllocateSelector(ProcessorSize * sizeof(long long));
+  
+        for (i = 0; i < ProcessorCount; i++)
+            ProcList[i] = ProcessorArr[i];
+
+        if (ProcessorCount)
+        {
+            AcpiOsFree(ProcessorArr);
+            AcpiOsFree(StateArr);
+        }
+
+        ProcessorArr = ProcList;
+        StateArr = StateList;
+    }                
+
+    ProcessorArr[ProcessorCount] = Proc;
+    ProcessorCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : AddAcpiObject
 #
 #   Purpose....: Walk callback for creating device-tree
@@ -1917,7 +1980,7 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                 else
                     DeviceSize = 16;
 
-                DevList = (struct TDeviceEntry **)AcpiOsAllocate(DeviceSize * sizeof(struct TDeviceEntry *));
+                DevList = (struct TDeviceEntry **)AllocateSelector(DeviceSize * sizeof(struct TDeviceEntry *));
 
                 for (i = 0; i < DeviceCount; i++)
                     DevList[i] = DeviceArr[i];
@@ -1949,12 +2012,8 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                 ProcEntry->Id = ProcObj->ProcId;
                 ProcEntry->PblkAds = (unsigned char *)&ProcObj->Address;
                 ProcEntry->PblkLen = ProcObj->Length; 
-    
-                if (ProcessorCount < MAX_PROCESSOR_COUNT)
-                {
-                    ProcessorArr[ProcessorCount] = ProcEntry;
-                    ProcessorCount++;
-                }
+
+                AddProcessor(ProcEntry);
                 return AE_OK;
             }
             else
@@ -2170,7 +2229,7 @@ void AddPciRoot(struct TDeviceEntry *PciDev)
         else
             PciRootSize = 2;
 
-        DevList = (struct TDeviceEntry **)AcpiOsAllocate(PciRootSize * sizeof(struct TDeviceEntry *));
+        DevList = (struct TDeviceEntry **)AllocateSelector(PciRootSize * sizeof(struct TDeviceEntry *));
   
         for (i = 0; i < PciRootCount; i++)
             DevList[i] = PciRootArr[i];
@@ -2258,7 +2317,7 @@ void GetHardware()
                     else
                         HardwareSize = 16;
 
-                    HwList = (struct TDeviceEntry **)AcpiOsAllocate(HardwareSize * sizeof(struct TDeviceEntry *));
+                    HwList = (struct TDeviceEntry **)AllocateSelector(HardwareSize * sizeof(struct TDeviceEntry *));
   
                     for (j = 0; j < HardwareCount; j++)
                         HwList[j] = HardwareArr[j];
@@ -2334,7 +2393,7 @@ void AddPciDev(struct TDeviceEntry *PciDev)
         else
             PciDevSize = 8;
 
-        DevList = (struct TDeviceEntry **)AcpiOsAllocate(PciDevSize * sizeof(struct TDeviceEntry *));
+        DevList = (struct TDeviceEntry **)AllocateSelector(PciDevSize * sizeof(struct TDeviceEntry *));
   
         for (i = 0; i < PciDevCount; i++)
             DevList[i] = PciDevArr[i];
@@ -2372,7 +2431,7 @@ void AddPciLnkDev(struct TDeviceEntry *PciDev)
         else
             PciLnkDevSize = 2;
 
-        DevList = (struct TDeviceEntry **)AcpiOsAllocate(PciLnkDevSize * sizeof(struct TDeviceEntry *));
+        DevList = (struct TDeviceEntry **)AllocateSelector(PciLnkDevSize * sizeof(struct TDeviceEntry *));
   
         for (i = 0; i < PciLnkDevCount; i++)
             DevList[i] = PciLnkDevArr[i];
