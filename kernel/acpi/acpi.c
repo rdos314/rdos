@@ -46,6 +46,9 @@ extern void InitOsAcpi();
 extern int UseAcpiReset();
 #pragma aux UseAcpiReset value [eax]
 
+extern int GetPicMode();
+#pragma aux GetPicMode value [eax]
+
 extern int GetTermalLimit();
 #pragma aux GetTermalLimit value [eax]
 
@@ -2199,7 +2202,7 @@ void SetIrqMode()
    ACPI_OBJECT_LIST args;
 
    arg1.Type = ACPI_TYPE_INTEGER;
-   arg1.Integer.Value = 1;            /* 0 - PIC, 1 - IOAPIC, 2 - IOSAPIC */
+   arg1.Integer.Value = GetPicMode();            /* 0 - PIC, 1 - IOAPIC, 2 - IOSAPIC */
    args.Count = 1;
    args.Pointer = &arg1;
 
