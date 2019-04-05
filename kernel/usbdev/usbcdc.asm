@@ -42,6 +42,20 @@ ELSE
     .386p
 ENDIF
 
+cdc_struc	STRUC
+
+cdc_control_sub_type      DB ?
+cdc_control_cap           DB ?
+
+cdc_union_sub_type        DB ?
+cdc_com_class_interface   DB ?
+cdc_data_class_interface  DB ?
+
+cdc_call_sub_type         DB ?
+cdc_call_cap              DB ?
+cdc_data_interface        DB ?
+
+cdc_struc	ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -72,8 +86,140 @@ usb_attach  Proc far
     push es
     pushad
 ;    
-    int 3
+    push eax
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    mov cx,SIZE usb_device_descr
+    pop eax
 ;
+    xor edi,edi
+    push ax
+    GetUsbDevice
+    cmp ax,cx
+    pop ax
+    jne uaFail
+;
+    mov cl,es:udd_class
+    cmp cl,2
+    jne uaFail
+
+uaCdc:
+    int 3    
+    xor dl,dl
+    mov ecx,1000h
+    xor edi,edi
+    push eax
+    GetUsbConfig
+    mov ecx,eax
+    pop eax
+    or ecx,ecx
+    jz uaFail
+;
+    mov dl,es:ucd_config_id
+    xor edi,edi
+    movzx ecx,es:ucd_len
+    add edi,ecx
+
+uaCheckLoop:
+    mov cl,es:[edi].ucd_type
+    cmp cl,4
+    jne uaCheckNext
+;    
+    mov cl,es:[edi].uid_class
+    cmp cl,2
+    jne uaCheckNext
+;
+    mov cl,es:[edi].uid_sub_class
+    cmp cl,2
+    je uaFound
+
+uaCheckNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz uaFail
+;    
+    add edi,ecx
+    cmp di,es:ucd_size
+    jb uaCheckLoop
+
+uaFail:
+    FreeMem    
+    jmp uaDone
+
+uaFound:
+    xor dh,dh
+    push es
+    push eax
+    mov eax,SIZE cdc_struc
+    AllocateSmallGlobalMem
+    mov eax,es
+    mov fs,eax
+    pop eax
+    pop es
+
+uaDevLoop:
+    mov cl,es:[edi].ucd_type
+    cmp cl,24h
+    jne uaDevNext
+;
+    lea esi,[edi+1].ucd_type    
+    cmp dh,0
+    je uaDevGet0
+;
+    cmp dh,1
+    je uaDevGet1
+;
+    cmp dh,2
+    je uaDevGet2
+;
+    cmp dh,3
+    je uaDevGet3
+;
+    jmp uaFail
+
+uaDevGet0:
+    inc dh
+    jmp uaDevNext
+
+uaDevGet1:
+    mov cx,es:[esi]
+    mov fs:cdc_control_sub_type,cl
+    mov fs:cdc_control_cap,ch
+    inc dh
+    jmp uaDevNext
+
+uaDevGet2:
+    mov cx,es:[esi]
+    mov fs:cdc_union_sub_type,cl
+    mov fs:cdc_com_class_interface,ch
+    mov cl,es:[esi+2]
+    mov fs:cdc_data_class_interface,cl
+    inc dh
+    jmp uaDevNext
+
+uaDevGet3:
+    mov cx,es:[esi]
+    mov fs:cdc_call_sub_type,cl
+    mov fs:cdc_call_cap,ch
+    mov cl,es:[esi+2]
+    mov fs:cdc_data_interface,cl
+    inc dh
+    jmp uaDevOk
+
+uaDevNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz uaFail
+;    
+    add edi,ecx
+    cmp di,es:ucd_size
+    jb uaDevLoop
+    jmp uaFail
+
+uaDevOk:
+    ConfigUsbDevice
+
+uaDone:
     popad
     pop es
     pop ds
