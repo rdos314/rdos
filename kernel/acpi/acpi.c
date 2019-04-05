@@ -67,7 +67,6 @@ extern int GetIntelTermOffset();
 extern int GetAmdTemp();
 #pragma aux GetAmdTemp value [eax]
 
-#define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_PROCESSOR_PSTATES   32
@@ -300,7 +299,8 @@ int PciLnkDevSize = 0;
 struct TDeviceEntry **PciLnkDevArr;
 
 int PciRootCount = 0;
-struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
+int PciRootSize = 0;
+struct TDeviceEntry **PciRootArr;
 
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
@@ -2149,6 +2149,44 @@ void SetIrqMode()
 
 /*##########################################################################
 #
+#   Name       : AddPciRoot
+#
+#   Purpose....: Add PCI root
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPciRoot(struct TDeviceEntry *PciDev)
+{
+    struct TDeviceEntry **DevList;
+    int i;
+
+    if (PciRootCount == PciRootSize)
+    {
+        if (PciRootSize)
+            PciRootSize = 2 * PciRootSize;
+        else
+            PciRootSize = 2;
+
+        DevList = (struct TDeviceEntry **)AcpiOsAllocate(PciRootSize * sizeof(struct TDeviceEntry *));
+  
+        for (i = 0; i < PciRootCount; i++)
+            DevList[i] = PciRootArr[i];
+
+        if (PciRootCount)
+            AcpiOsFree(PciRootArr);
+    
+        PciRootArr = DevList;
+    }                
+
+    PciRootArr[PciRootCount] = PciDev;
+    PciRootCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : GetHardware
 #
 #   Purpose....: Get hardware devices
@@ -2263,11 +2301,10 @@ void GetHardware()
                         DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
                     else
                         DevEntry->PciId.Bus = 0;
+
                             
                     DevEntry->SecondaryBus = DevEntry->PciId.Bus;
-
-                    PciRootArr[PciRootCount] = DevEntry;
-                    PciRootCount++;
+                    AddPciRoot(DevEntry);
                 }        
             }
         }
@@ -2393,9 +2430,8 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
                         PciVal = 0;
                         AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 25, &PciVal, 8);
                         DeviceArr[i]->SecondaryBus = PciVal;
-                        
-                        PciRootArr[PciRootCount] = DeviceArr[i];
-                        PciRootCount++;
+
+                        AddPciRoot(DeviceArr[i]);
                     }
                     break;
                 }
