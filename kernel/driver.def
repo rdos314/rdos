@@ -484,8 +484,8 @@ hid_card_data_sel   EQU 0BF8h
 usb_bus_code_sel    EQU 0C00h
 usb_bus_data_sel    EQU 0C08h
 
-acpi_deb_code_sel   EQU 0C10h
-acpi_deb_data_sel   EQU 0C18h
+usb_cdc_code_sel    EQU 0C10h
+usb_cdc_data_sel    EQU 0C18h
 
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
