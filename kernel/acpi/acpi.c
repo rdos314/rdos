@@ -71,6 +71,7 @@ extern int GetAmdTemp();
 #pragma aux GetAmdTemp value [eax]
 
 #define MAX_PCI_IRQ_COUNT       256
+#define MAX_PROCESSOR_COUNT     32
 
 #define AMD_WATCHDOG         0xC0010074
 
@@ -305,7 +306,7 @@ struct TDeviceEntry **PciRootArr;
 int ProcessorCount = 0;
 int ProcessorSize = 0;
 struct TProcessorEntry **ProcessorArr;
-long long *StateArr;
+
 
 ACPI_GENERIC_ADDRESS *PowerControl = 0;
 ACPI_GENERIC_ADDRESS *PowerStatus = 0;
@@ -352,6 +353,7 @@ power_update_callback *power_update_proc;
 
 char TempResourceBuf[0x4000];
 
+long long StateArr[MAX_PROCESSOR_COUNT];
     
 /*##########################################################################
 #
@@ -1893,7 +1895,6 @@ void AddProcObject(struct TProcessorEntry *Parent, struct TObjectEntry *Object)
 void AddProcessor(struct TProcessorEntry *Proc)
 {
     struct TProcessorEntry **ProcList;
-    long long *StateList;
     int i;
 
     if (ProcessorCount == ProcessorSize)
@@ -1904,19 +1905,14 @@ void AddProcessor(struct TProcessorEntry *Proc)
             ProcessorSize = 2;
 
         ProcList = (struct TProcessorEntry **)AllocateSelector(ProcessorSize * sizeof(struct TProcessorEntry *));
-        StateList = (long long *)AllocateSelector(ProcessorSize * sizeof(long long));
   
         for (i = 0; i < ProcessorCount; i++)
             ProcList[i] = ProcessorArr[i];
 
         if (ProcessorCount)
-        {
             AcpiOsFree(ProcessorArr);
-            AcpiOsFree(StateArr);
-        }
 
         ProcessorArr = ProcList;
-        StateArr = StateList;
     }                
 
     ProcessorArr[ProcessorCount] = Proc;
