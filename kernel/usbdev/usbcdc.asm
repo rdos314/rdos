@@ -75,6 +75,12 @@ unit_struc      STRUC
 
 unit_interface  DB ?
 
+unit_in_pipe    DB ?
+unit_out_pipe   DB ?
+
+unit_in_size    DW ?
+unit_out_size   DW ?
+
 unit_struc	ENDS
 
 cdc_struc	STRUC
@@ -106,6 +112,117 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           FindInterfaces
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     DS      CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindInterfaces	Proc near
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    mov cx,SIZE usb_device_descr
+;
+    mov bx,ds:cdc_controller
+    mov al,ds:cdc_device
+    xor dl,dl
+    mov ecx,1000h
+    xor edi,edi
+    GetUsbConfig
+    mov ecx,eax
+    or ecx,ecx
+    stc
+    jz fiFail
+;
+    xor edi,edi
+    movzx ecx,es:ucd_len
+    add edi,ecx
+
+fiDescrLoop:
+    mov al,es:[edi].udd_type
+    cmp al,4
+    jne fiDescrNext
+
+fiInterface:
+    movzx ecx,ds:cdc_unit_count
+    mov ebx,OFFSET cdc_unit_arr
+
+fiIntLoop:
+    mov fs,ds:[ebx]
+    mov al,fs:unit_interface
+    cmp al,es:[edi].uid_id
+    je fiPipeNext
+    jmp fiIntNext
+
+fiPipeLoop:
+    mov al,es:[edi].udd_type
+    cmp al,4
+    je fiDescrLoop
+;
+    cmp al,5
+    jne fiPipeNext
+;
+    mov al,es:[edi].ued_attrib
+    and al,3
+    cmp al,2
+    jne fiPipeNext
+
+fiIsBulk:
+    mov dl,es:[edi].ued_address
+    test dl,80h
+    jz fiIsBulkOut
+
+fiIsBulkIn:
+    mov fs:unit_in_pipe,dl
+    mov ax,es:[edi].ued_maxsize
+    mov fs:unit_in_size,ax
+    jmp fiPipeNext
+
+fiIsBulkOut:
+    mov fs:unit_out_pipe,dl
+    mov ax,es:[edi].ued_maxsize
+    mov fs:unit_out_size,ax
+
+fiPipeNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz fiOk
+;
+    add edi,ecx
+    cmp di,es:ucd_size
+    jb fiPipeLoop
+    jmp fiOk
+
+fiIntNext:
+    add ebx,2
+    sub ecx,1
+    jnz fiIntLoop
+
+fiDescrNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz fiOk
+;
+    add edi,ecx
+    cmp di,es:ucd_size
+    jb fiDescrLoop
+
+fiOk:
+    clc
+    jmp fiDone
+
+fiFail:
+    stc
+
+fiDone:
+    ret
+FindInterfaces	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CDC Thread
 ;
 ;   DESCRIPTION:    
@@ -117,7 +234,7 @@ code    SEGMENT byte public 'CODE'
 cdc_thread_handler:
     int 3
     mov ds,ebx
-
+    call FindInterfaces
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -236,6 +353,8 @@ fudLoop:
 ;
     mov al,es:[edi]
     mov gs:unit_interface,al
+    mov gs:unit_in_pipe,0
+    mov gs:unit_out_pipe,0
 ;
     mov fs:[esi],gs
     add esi,2
