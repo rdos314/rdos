@@ -79,6 +79,9 @@ unit_struc	ENDS
 
 cdc_struc	STRUC
 
+cdc_controller          DW ?
+cdc_device              DB ?
+
 cdc_sub_class		DB ?
 cdc_protocol            DB ?
 cdc_abs_control_cap     DB ?
@@ -99,6 +102,60 @@ data	ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CDC Thread
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     BX      CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cdc_thread_handler:
+    int 3
+    mov ds,ebx
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -111,6 +168,8 @@ code    SEGMENT byte public 'CODE'
 ;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cdc_name    DB 'Usb Cdc ', 0
 
 error_descr	Proc near
     stc
@@ -230,8 +289,10 @@ udt1F DD OFFSET error_descr
 usb_attach  Proc far
     push ds
     push es
+    push fs
+    push gs
     pushad
-;    
+;
     push eax
     mov eax,1000h
     AllocateSmallGlobalMem
@@ -284,7 +345,6 @@ uaCheckNext:
     jb uaCheckLoop
 
 uaFound:
-    int 3    
     push es
     push eax
     mov eax,SIZE cdc_struc
@@ -294,6 +354,8 @@ uaFound:
     pop eax
     pop es
 ;
+    mov fs:cdc_controller,bx
+    mov fs:cdc_device,al
     mov fs:cdc_abs_control_cap,0
     mov fs:cdc_unit_count,0
 ;
@@ -302,8 +364,6 @@ uaFound:
 ;
     mov cl,es:[edi].uid_proto
     mov fs:cdc_protocol,cl
-;
-    xor dl,dl
     jmp uaDevNext
 
 uaDevLoop:
@@ -311,7 +371,6 @@ uaDevLoop:
     cmp cl,24h
     jne uaDevNext
 ;
-    int 3
     mov cl,es:[edi].ucdc_sub_type
     cmp cl,20h
     jae uaFreeFail
@@ -320,20 +379,64 @@ uaDevLoop:
     shl esi,2
     call dword ptr cs:[esi].udesc_tab
     jc uaFreeFail
-;
 
 uaDevNext:
     movzx ecx,es:[edi].ucd_len
     or ecx,ecx
-    jz uaFail
+    jz uaFreeFail
 ;    
     add edi,ecx
     cmp di,es:ucd_size
     jb uaDevLoop
-    jmp uaFail
 
 uaDevOk:
+    mov bx,fs:cdc_controller
+    mov al,fs:cdc_device
     ConfigUsbDevice
+    jc uaFreeFail
+;
+    FreeMem
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET cdc_name
+
+uaCopyCdc:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz uaCopyDone
+;
+    stosb
+    jmp uaCopyCdc
+
+uaCopyDone:
+    mov ax,fs:cdc_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,fs:cdc_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;            
+    mov ebx,fs
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET cdc_thread_handler
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+    jmp uaDone
 
 uaFreeFail:
     FreeMem
@@ -345,6 +448,8 @@ uaFail:
 
 uaDone:
     popad
+    pop gs
+    pop fs
     pop es
     pop ds
     ret
