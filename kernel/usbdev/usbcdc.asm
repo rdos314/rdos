@@ -42,6 +42,8 @@ ELSE
     .386p
 ENDIF
 
+MAX_CDC_UNITS =	16
+
 usb_cdc_descr	STRUC
 
 ucdc_len	DB ?
@@ -59,12 +61,30 @@ ucdcc_cap       DB ?
 
 usb_cdc_control_descr	ENDS
 
+usb_cdc_call_descr	STRUC
+
+ucdccall_len	   DB ?
+ucdccall_type	   DB ?
+ucdccall_sub_type  DB ?
+ucdccall_cap       DB ?
+ucdccall_interface DB ?
+
+usb_cdc_call_descr	ENDS
+
+unit_struc      STRUC
+
+unit_interface  DB ?
+
+unit_struc	ENDS
 
 cdc_struc	STRUC
 
 cdc_sub_class		DB ?
 cdc_protocol            DB ?
 cdc_abs_control_cap     DB ?
+
+cdc_unit_count          DB ?
+cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
 
 cdc_struc	ENDS
 
@@ -102,6 +122,21 @@ header_descr	Proc near
     ret
 header_descr	Endp
 
+call_descr	Proc near
+    mov cl,es:[edi].ucdccall_cap
+    test cl,1
+    jz cdOk
+;
+    stc
+    jmp cdDone
+
+cdOk:
+    clc
+
+cdDone:
+    ret
+call_descr	Endp
+
 abs_control_descr	Proc near
     mov cl,es:[edi].ucdcc_cap
     mov fs:cdc_abs_control_cap,cl
@@ -109,16 +144,63 @@ abs_control_descr	Proc near
     ret
 abs_control_descr	Endp
 
+function_union_descr	Proc near
+    push gs
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov al,es:[edi+3]
+    or al,al
+    stc
+    jnz fudDone
+;
+    mov cl,es:[edi].ucdc_len
+    sub cl,4
+    movzx ecx,cl
+    or ecx,ecx
+    stc
+    jz fudDone
+;
+    mov fs:cdc_unit_count,cl
+    mov esi,OFFSET cdc_unit_arr
+    add edi,4
 
+fudLoop:
+    push es
+    mov eax,SIZE unit_struc
+    AllocateSmallGlobalMem
+    mov eax,es
+    mov gs,eax
+    pop es
+;
+    mov al,es:[edi]
+    mov gs:unit_interface,al
+;
+    mov fs:[esi],gs
+    add esi,2
+    loop fudLoop
+;    
+    clc
+
+fudDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop gs
+    ret
+function_union_descr	Endp
 
 udesc_tab:
 udt00 DD OFFSET header_descr
-udt01 DD OFFSET error_descr
+udt01 DD OFFSET call_descr
 udt02 DD OFFSET abs_control_descr
 udt03 DD OFFSET error_descr
 udt04 DD OFFSET error_descr
 udt05 DD OFFSET error_descr
-udt06 DD OFFSET error_descr
+udt06 DD OFFSET function_union_descr
 udt07 DD OFFSET error_descr
 udt08 DD OFFSET error_descr
 udt09 DD OFFSET error_descr
@@ -213,6 +295,7 @@ uaFound:
     pop es
 ;
     mov fs:cdc_abs_control_cap,0
+    mov fs:cdc_unit_count,0
 ;
     mov cl,es:[edi].uid_sub_class
     mov fs:cdc_sub_class,cl
