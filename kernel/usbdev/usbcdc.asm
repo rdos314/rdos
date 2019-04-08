@@ -42,18 +42,29 @@ ELSE
     .386p
 ENDIF
 
+usb_cdc_descr	STRUC
+
+ucdc_len	DB ?
+ucdc_type	DB ?
+ucdc_sub_type	DB ?
+
+usb_cdc_descr	ENDS
+
+usb_cdc_control_descr	STRUC
+
+ucdcc_len	DB ?
+ucdcc_type	DB ?
+ucdcc_sub_type	DB ?
+ucdcc_cap       DB ?
+
+usb_cdc_control_descr	ENDS
+
+
 cdc_struc	STRUC
 
-cdc_control_sub_type      DB ?
-cdc_control_cap           DB ?
-
-cdc_union_sub_type        DB ?
-cdc_com_class_interface   DB ?
-cdc_data_class_interface  DB ?
-
-cdc_call_sub_type         DB ?
-cdc_call_cap              DB ?
-cdc_data_interface        DB ?
+cdc_sub_class		DB ?
+cdc_protocol            DB ?
+cdc_abs_control_cap     DB ?
 
 cdc_struc	ENDS
 
@@ -81,6 +92,59 @@ code    SEGMENT byte public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+error_descr	Proc near
+    stc
+    ret
+error_descr	Endp
+
+header_descr	Proc near
+    clc
+    ret
+header_descr	Endp
+
+abs_control_descr	Proc near
+    mov cl,es:[edi].ucdcc_cap
+    mov fs:cdc_abs_control_cap,cl
+    clc
+    ret
+abs_control_descr	Endp
+
+
+
+udesc_tab:
+udt00 DD OFFSET header_descr
+udt01 DD OFFSET error_descr
+udt02 DD OFFSET abs_control_descr
+udt03 DD OFFSET error_descr
+udt04 DD OFFSET error_descr
+udt05 DD OFFSET error_descr
+udt06 DD OFFSET error_descr
+udt07 DD OFFSET error_descr
+udt08 DD OFFSET error_descr
+udt09 DD OFFSET error_descr
+udt0A DD OFFSET error_descr
+udt0B DD OFFSET error_descr
+udt0C DD OFFSET error_descr
+udt0D DD OFFSET error_descr
+udt0E DD OFFSET error_descr
+udt0F DD OFFSET error_descr
+udt10 DD OFFSET error_descr
+udt11 DD OFFSET error_descr
+udt12 DD OFFSET error_descr
+udt13 DD OFFSET error_descr
+udt14 DD OFFSET error_descr
+udt15 DD OFFSET error_descr
+udt16 DD OFFSET error_descr
+udt17 DD OFFSET error_descr
+udt18 DD OFFSET error_descr
+udt19 DD OFFSET error_descr
+udt1A DD OFFSET error_descr
+udt1B DD OFFSET error_descr
+udt1C DD OFFSET error_descr
+udt1D DD OFFSET error_descr
+udt1E DD OFFSET error_descr
+udt1F DD OFFSET error_descr
+
 usb_attach  Proc far
     push ds
     push es
@@ -104,7 +168,6 @@ usb_attach  Proc far
     jne uaFail
 
 uaCdc:
-    int 3    
     xor dl,dl
     mov ecx,1000h
     xor edi,edi
@@ -127,10 +190,6 @@ uaCheckLoop:
 ;    
     mov cl,es:[edi].uid_class
     cmp cl,2
-    jne uaCheckNext
-;
-    mov cl,es:[edi].uid_sub_class
-    cmp cl,2
     je uaFound
 
 uaCheckNext:
@@ -142,12 +201,8 @@ uaCheckNext:
     cmp di,es:ucd_size
     jb uaCheckLoop
 
-uaFail:
-    FreeMem    
-    jmp uaDone
-
 uaFound:
-    xor dh,dh
+    int 3    
     push es
     push eax
     mov eax,SIZE cdc_struc
@@ -156,55 +211,33 @@ uaFound:
     mov fs,eax
     pop eax
     pop es
+;
+    mov fs:cdc_abs_control_cap,0
+;
+    mov cl,es:[edi].uid_sub_class
+    mov fs:cdc_sub_class,cl
+;
+    mov cl,es:[edi].uid_proto
+    mov fs:cdc_protocol,cl
+;
+    xor dl,dl
+    jmp uaDevNext
 
 uaDevLoop:
     mov cl,es:[edi].ucd_type
     cmp cl,24h
     jne uaDevNext
 ;
-    lea esi,[edi+1].ucd_type    
-    cmp dh,0
-    je uaDevGet0
+    int 3
+    mov cl,es:[edi].ucdc_sub_type
+    cmp cl,20h
+    jae uaFreeFail
 ;
-    cmp dh,1
-    je uaDevGet1
+    movzx esi,cl
+    shl esi,2
+    call dword ptr cs:[esi].udesc_tab
+    jc uaFreeFail
 ;
-    cmp dh,2
-    je uaDevGet2
-;
-    cmp dh,3
-    je uaDevGet3
-;
-    jmp uaFail
-
-uaDevGet0:
-    inc dh
-    jmp uaDevNext
-
-uaDevGet1:
-    mov cx,es:[esi]
-    mov fs:cdc_control_sub_type,cl
-    mov fs:cdc_control_cap,ch
-    inc dh
-    jmp uaDevNext
-
-uaDevGet2:
-    mov cx,es:[esi]
-    mov fs:cdc_union_sub_type,cl
-    mov fs:cdc_com_class_interface,ch
-    mov cl,es:[esi+2]
-    mov fs:cdc_data_class_interface,cl
-    inc dh
-    jmp uaDevNext
-
-uaDevGet3:
-    mov cx,es:[esi]
-    mov fs:cdc_call_sub_type,cl
-    mov fs:cdc_call_cap,ch
-    mov cl,es:[esi+2]
-    mov fs:cdc_data_interface,cl
-    inc dh
-    jmp uaDevOk
 
 uaDevNext:
     movzx ecx,es:[edi].ucd_len
@@ -218,6 +251,14 @@ uaDevNext:
 
 uaDevOk:
     ConfigUsbDevice
+
+uaFreeFail:
+    FreeMem
+    mov eax,fs
+    mov es,eax
+
+uaFail:
+    FreeMem
 
 uaDone:
     popad
