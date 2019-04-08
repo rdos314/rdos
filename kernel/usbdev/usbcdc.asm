@@ -75,11 +75,17 @@ unit_struc      STRUC
 
 unit_interface  DB ?
 
-unit_in_pipe    DB ?
-unit_out_pipe   DB ?
+unit_in_endp    DB ?
+unit_out_endp   DB ?
 
 unit_in_size    DW ?
 unit_out_size   DW ?
+
+unit_in_wait    DW ?
+unit_out_wait   DW ?
+
+unit_in_pipe    DW ?
+unit_out_pipe   DW ?
 
 unit_struc	ENDS
 
@@ -91,6 +97,9 @@ cdc_device              DB ?
 cdc_sub_class		DB ?
 cdc_protocol            DB ?
 cdc_abs_control_cap     DB ?
+
+cdc_control_wait        DW ?
+cdc_control_pipe        DW ?
 
 cdc_unit_count          DB ?
 cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
@@ -175,13 +184,13 @@ fiIsBulk:
     jz fiIsBulkOut
 
 fiIsBulkIn:
-    mov fs:unit_in_pipe,dl
+    mov fs:unit_in_endp,dl
     mov ax,es:[edi].ued_maxsize
     mov fs:unit_in_size,ax
     jmp fiPipeNext
 
 fiIsBulkOut:
-    mov fs:unit_out_pipe,dl
+    mov fs:unit_out_endp,dl
     mov ax,es:[edi].ued_maxsize
     mov fs:unit_out_size,ax
 
@@ -210,15 +219,130 @@ fiDescrNext:
     jb fiDescrLoop
 
 fiOk:
+    FreeMem
     clc
     jmp fiDone
 
 fiFail:
+    FreeMem
     stc
 
 fiDone:
     ret
 FindInterfaces	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CheckInterfaces
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     DS      CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckInterfaces	Proc near
+    movzx ecx,ds:cdc_unit_count
+    mov ebx,OFFSET cdc_unit_arr
+
+ciLoop:
+    mov fs,ds:[ebx]
+    mov al,fs:unit_in_endp
+    or al,al
+    jz ciFail
+;
+    mov al,fs:unit_out_endp
+    or al,al
+    jz ciFail
+;
+    add ebx,2
+    loop ciLoop
+;
+    clc
+    jmp ciDone
+
+ciFail:
+    stc
+
+ciDone:
+    ret
+CheckInterfaces	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           OpenControl
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     DS		CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenControl	Proc near
+    CreateWait
+    mov ds:cdc_control_wait,bx
+;
+    mov bx,ds:cdc_controller
+    mov al,ds:cdc_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:cdc_control_pipe,bx
+;
+    mov ax,ds:cdc_control_pipe
+    mov bx,ds:cdc_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+    ret
+OpenControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           OpenInterface
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     DS		CDC selector
+;                   FS		Interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenInterface	Proc near
+    pushad
+;
+    CreateWait
+    mov fs:unit_in_wait,bx
+;
+    mov bx,ds:cdc_controller
+    mov al,ds:cdc_device
+    mov dl,fs:unit_in_endp
+    OpenUsbPipe
+    mov fs:unit_in_pipe,bx
+;
+    mov ax,fs:unit_in_pipe
+    mov bx,fs:unit_in_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    CreateWait
+    mov fs:unit_out_wait,bx
+;
+    mov bx,ds:cdc_controller
+    mov al,ds:cdc_device
+    mov dl,fs:unit_out_endp
+    OpenUsbPipe
+    mov fs:unit_out_pipe,bx
+;
+    mov ax,fs:unit_out_pipe
+    mov bx,fs:unit_out_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    popad
+    ret
+OpenInterface	Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -235,6 +359,25 @@ cdc_thread_handler:
     int 3
     mov ds,ebx
     call FindInterfaces
+    jc tFail
+;
+    call CheckInterfaces
+    jc tFail
+;
+    call OpenControl
+;
+    movzx ecx,ds:cdc_unit_count
+    mov ebx,OFFSET cdc_unit_arr
+
+tOpenLoop:
+    mov fs,ds:[ebx]
+    call OpenInterface
+;
+    add ebx,2
+    loop tOpenLoop
+;
+
+tFail:
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -353,8 +496,8 @@ fudLoop:
 ;
     mov al,es:[edi]
     mov gs:unit_interface,al
-    mov gs:unit_in_pipe,0
-    mov gs:unit_out_pipe,0
+    mov gs:unit_in_endp,0
+    mov gs:unit_out_endp,0
 ;
     mov fs:[esi],gs
     add esi,2
