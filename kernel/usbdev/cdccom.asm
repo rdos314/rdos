@@ -811,10 +811,12 @@ OpenPort    Proc near
     CreateUsbReq
     mov ds:ucd_in_req,bx    
 ;    
+    push es
     mov cx,fs:unit_in_size
     xor ax,ax
     AddReadUsbDataReq
     mov ds:ucd_in_buffer,es
+    pop es
 ;
     mov bx,es:cdc_controller
     mov al,es:cdc_device
@@ -825,10 +827,12 @@ OpenPort    Proc near
     CreateUsbReq
     mov ds:ucd_out_req,bx
 ;    
+    push es
     mov cx,fs:unit_out_size
     mov ax,1
     AddWriteUsbDataReq
     mov ds:ucd_out_buffer,es
+    pop es
     ret
 OpenPort    Endp
 
@@ -1108,7 +1112,6 @@ hdIsClosed:
     call ClosePort
     
 hdDone:
-    pop ds
     ret
 HandleDevice    Endp
         
@@ -1148,7 +1151,6 @@ tOpenLoop:
     add ebx,2
     loop tOpenLoop
 ;
-    int 3
     mov eax,ds
     mov es,eax
     mov ds,ds:cdc_com_dev_sel
