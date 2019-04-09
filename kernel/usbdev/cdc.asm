@@ -20,7 +20,7 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; USBCDCASM
+; CDC.ASM
 ; Implements USB CDC class
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -33,7 +33,7 @@ include ..\user.inc
 include ..\driver.def
 include usb.inc
 INCLUDE ..\os\protseg.def
-include ..\os\com.inc
+include cdc.inc
 
 IFDEF __WASM__
     .686p
@@ -41,46 +41,6 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
-
-MAX_CDC_UNITS =	16
-
-usb_cdc_port_struc       STRUC
-
-ucp_base_struc  com_port_struc <>
-
-ucp_device_sel      DW ?
-ucp_cdc_sel         DW ?
-
-ucp_in_size         DW ?
-ucp_out_size        DW ?
-
-ucp_in_handle       DW ?
-ucp_out_handle      DW ?
-
-ucp_in_buffer       DW ?
-ucp_out_buffer      DW ?
-
-ucp_in_req          DW ?
-ucp_out_req         DW ?
-
-ucp_port_nr         DW ?
-
-usb_cdc_port_struc       ENDS
-
-usb_cdc_device_struc   STRUC
-
-ucd_base_struc      com_device_struc <>
-
-ucd_port_sel        DW ?
-ucd_cdc_unit_sel    DW ?
-
-ucp_control_wait    DW ?
-ucp_control_pipe    DW ?
-
-ucp_controller      DW ?
-ucp_device          DB ?
-
-usbcom_device_struc   ENDS
 
 usb_cdc_descr	STRUC
 
@@ -109,33 +69,6 @@ ucdccall_interface DB ?
 
 usb_cdc_call_descr	ENDS
 
-unit_struc      STRUC
-
-unit_com_sel    DW ?
-
-unit_interface  DB ?
-
-unit_bulk_in    DB ?
-unit_bulk_out   DB ?
-
-unit_struc	ENDS
-
-cdc_struc	STRUC
-
-cdc_controller          DW ?
-cdc_device              DB ?
-
-cdc_sub_class		DB ?
-cdc_protocol            DB ?
-cdc_abs_control_cap     DB ?
-
-cdc_com_dev_sel         DW ?
-
-cdc_unit_count          DB ?
-cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
-
-cdc_struc	ENDS
-
 data    SEGMENT byte public 'DATA'
 
 tmp DB ?
@@ -147,267 +80,6 @@ data	ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           FindInterfaces
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     DS      CDC selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindInterfaces	Proc near
-    mov eax,1000h
-    AllocateSmallGlobalMem
-    mov cx,SIZE usb_device_descr
-;
-    mov bx,ds:cdc_controller
-    mov al,ds:cdc_device
-    xor dl,dl
-    mov ecx,1000h
-    xor edi,edi
-    GetUsbConfig
-    mov ecx,eax
-    or ecx,ecx
-    stc
-    jz fiFail
-;
-    xor edi,edi
-    movzx ecx,es:ucd_len
-    add edi,ecx
-
-fiDescrLoop:
-    mov al,es:[edi].udd_type
-    cmp al,4
-    jne fiDescrNext
-
-fiInterface:
-    movzx ecx,ds:cdc_unit_count
-    mov ebx,OFFSET cdc_unit_arr
-
-fiIntLoop:
-    mov fs,ds:[ebx]
-    mov al,fs:unit_interface
-    cmp al,es:[edi].uid_id
-    je fiPipeNext
-    jmp fiIntNext
-
-fiPipeLoop:
-    mov al,es:[edi].udd_type
-    cmp al,4
-    je fiDescrLoop
-;
-    cmp al,5
-    jne fiPipeNext
-;
-    mov al,es:[edi].ued_attrib
-    and al,3
-    cmp al,2
-    jne fiPipeNext
-
-fiIsBulk:
-    mov dl,es:[edi].ued_address
-    test dl,80h
-    jz fiIsBulkOut
-
-fiIsBulkIn:
-    mov fs:unit_in_endp,dl
-    mov ax,es:[edi].ued_maxsize
-    mov fs:unit_in_size,ax
-    jmp fiPipeNext
-
-fiIsBulkOut:
-    mov fs:unit_out_endp,dl
-    mov ax,es:[edi].ued_maxsize
-    mov fs:unit_out_size,ax
-
-fiPipeNext:
-    movzx ecx,es:[edi].ucd_len
-    or ecx,ecx
-    jz fiOk
-;
-    add edi,ecx
-    cmp di,es:ucd_size
-    jb fiPipeLoop
-    jmp fiOk
-
-fiIntNext:
-    add ebx,2
-    sub ecx,1
-    jnz fiIntLoop
-
-fiDescrNext:
-    movzx ecx,es:[edi].ucd_len
-    or ecx,ecx
-    jz fiOk
-;
-    add edi,ecx
-    cmp di,es:ucd_size
-    jb fiDescrLoop
-
-fiOk:
-    FreeMem
-    clc
-    jmp fiDone
-
-fiFail:
-    FreeMem
-    stc
-
-fiDone:
-    ret
-FindInterfaces	Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CheckInterfaces
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     DS      CDC selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckInterfaces	Proc near
-    movzx ecx,ds:cdc_unit_count
-    mov ebx,OFFSET cdc_unit_arr
-
-ciLoop:
-    mov fs,ds:[ebx]
-    mov al,fs:unit_in_endp
-    or al,al
-    jz ciFail
-;
-    mov al,fs:unit_out_endp
-    or al,al
-    jz ciFail
-;
-    add ebx,2
-    loop ciLoop
-;
-    clc
-    jmp ciDone
-
-ciFail:
-    stc
-
-ciDone:
-    ret
-CheckInterfaces	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           OpenControl
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     DS		CDC selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenControl	Proc near
-    CreateWait
-    mov ds:cdc_control_wait,bx
-;
-    mov bx,ds:cdc_controller
-    mov al,ds:cdc_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:cdc_control_pipe,bx
-;
-    mov ax,ds:cdc_control_pipe
-    mov bx,ds:cdc_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-    ret
-OpenControl	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           OpenInterface
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     DS		CDC selector
-;                   FS		Interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenInterface	Proc near
-    pushad
-;
-    CreateWait
-    mov fs:unit_in_wait,bx
-;
-    mov bx,ds:cdc_controller
-    mov al,ds:cdc_device
-    mov dl,fs:unit_in_endp
-    OpenUsbPipe
-    mov fs:unit_in_pipe,bx
-;
-    mov ax,fs:unit_in_pipe
-    mov bx,fs:unit_in_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    CreateWait
-    mov fs:unit_out_wait,bx
-;
-    mov bx,ds:cdc_controller
-    mov al,ds:cdc_device
-    mov dl,fs:unit_out_endp
-    OpenUsbPipe
-    mov fs:unit_out_pipe,bx
-;
-    mov ax,fs:unit_out_pipe
-    mov bx,fs:unit_out_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    popad
-    ret
-OpenInterface	Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CDC Thread
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     BX      CDC selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-cdc_thread_handler:
-    int 3
-    mov ds,ebx
-    call FindInterfaces
-    jc tFail
-;
-    call CheckInterfaces
-    jc tFail
-;
-    call OpenControl
-;
-    movzx ecx,ds:cdc_unit_count
-    mov ebx,OFFSET cdc_unit_arr
-
-tOpenLoop:
-    mov fs,ds:[ebx]
-    call OpenInterface
-;
-    add ebx,2
-    loop tOpenLoop
-;
-
-tFail:
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -459,7 +131,9 @@ HexToAscii      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cdc_name    DB 'Usb Cdc ', 0
+    extern cdc_com_thread:near
+
+cdc_name    DB 'Cdc Com ', 0
 
 error_descr	Proc near
     stc
@@ -526,8 +200,9 @@ fudLoop:
 ;
     mov al,es:[edi]
     mov gs:unit_interface,al
-    mov gs:unit_in_endp,0
-    mov gs:unit_out_endp,0
+    mov gs:unit_com_sel,0
+    mov gs:unit_bulk_in,0
+    mov gs:unit_bulk_out,0
 ;
     mov fs:[esi],gs
     add esi,2
@@ -650,6 +325,7 @@ uaFound:
     mov fs:cdc_device,al
     mov fs:cdc_abs_control_cap,0
     mov fs:cdc_unit_count,0
+    mov fs:cdc_com_dev_sel,0
 ;
     mov cl,es:[edi].uid_sub_class
     mov fs:cdc_sub_class,cl
@@ -722,7 +398,7 @@ uaCopyDone:
     xor edi,edi
     mov edx,cs
     mov ds,edx
-    mov esi,OFFSET cdc_thread_handler
+    mov esi,OFFSET cdc_com_thread
     mov eax,3
     mov ecx,stack0_size
     CreateThread
@@ -747,16 +423,15 @@ uaDone:
     ret
 usb_attach  Endp
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       usb_detach
+;           NAME:           usb_detach
 ;
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -788,6 +463,8 @@ usb_detach  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern init_cdc_com:near
+
 Init    Proc far
     mov ax,SEG data
     mov ds,eax
@@ -801,6 +478,8 @@ Init    Proc far
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    call init_cdc_com
     clc
     ret
 Init    Endp
