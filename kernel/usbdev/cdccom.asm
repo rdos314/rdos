@@ -619,7 +619,6 @@ CreateComDevice	Endp
     public cdc_com_thread
 
 cdc_com_thread:
-    int 3
     mov ds,ebx
     call FindInterfaces
     jc tFail
@@ -639,6 +638,7 @@ tOpenLoop:
     add ebx,2
     loop tOpenLoop
 ;
+    int 3
 
 tFail:
         
