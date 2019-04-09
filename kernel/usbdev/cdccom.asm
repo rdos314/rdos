@@ -95,6 +95,63 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetUsbCdcComPar
+;
+;   DESCRIPTION:    Get USB cdc com param
+;
+;   PARAMETERS:     AL      Port #
+;
+;   RETURNS:        NC      OK
+;                       DX  Vendor
+;                       AX  Product
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_cdc_com_par_name    DB 'Get USB CDC Com Param', 0
+
+get_usb_cdc_com_par Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    mov ebx,OFFSET sd_port_arr
+    movzx ecx,ds:sd_ports
+    movzx ax,al
+    or ecx,ecx
+    jz gscpFail
+
+gscpLoop:
+    mov es,ds:[ebx]
+    cmp ax,es:ucd_port_nr
+    je gscpFound
+;
+    add ebx,2
+    loop gscpLoop
+
+gscpFail:
+    stc
+    jmp gscpDone
+
+gscpFound:
+    mov ds,es:ucd_cdc_sel
+    mov dx,ds:cdc_vendor
+    mov ax,ds:cdc_product
+    clc
+
+gscpDone:
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+get_usb_cdc_com_par     ENDP    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           open_com
 ;
 ;           description:    Open a serial port
@@ -654,11 +711,18 @@ tFail:
     public init_cdc_com
 
 init_cdc_com	Proc near
-    push ds
     mov eax,SEG data
     mov ds,eax
     mov ds:sd_ports,0
-    pop ds
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET get_usb_cdc_com_par
+    mov edi,OFFSET get_usb_cdc_com_par_name
+    xor dx,dx
+    mov ax,get_usb_cdc_com_par_nr
+    RegisterBimodalUserGate
     ret
 init_cdc_com	Endp
         

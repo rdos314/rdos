@@ -278,6 +278,9 @@ usb_attach  Proc far
     jne uaFail
 
 uaCdc:
+    mov si,es:udd_vendor
+    mov bp,es:udd_prod
+;
     xor dl,dl
     mov ecx,1000h
     xor edi,edi
@@ -321,6 +324,8 @@ uaFound:
     pop eax
     pop es
 ;
+    mov fs:cdc_vendor,si
+    mov fs:cdc_product,bp
     mov fs:cdc_controller,bx
     mov fs:cdc_device,al
     mov fs:cdc_abs_control_cap,0

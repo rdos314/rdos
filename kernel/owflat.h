@@ -874,6 +874,21 @@
     parm [al] [esi] \
     value [eax];
 
+#pragma aux RdosGetUsbCdcComPar = \
+    CallGate_get_usb_cdc_com_par  \
+    "jc fail" \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    "movzx eax,ax" \
+    "mov [edi],eax" \
+    "mov eax,1" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    parm [al] [esi] [edi] \
+    value [eax];
+
 #pragma aux RdosGetUsbBusPar = \
     CallGate_get_usb_bus_par  \
     "jc fail" \

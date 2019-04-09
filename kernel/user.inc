@@ -2643,6 +2643,15 @@ GetUsbComPar       MACRO
 
 ;   IN AL      Port #
 ;   NC         OK
+;   OUT DX     Vendor
+;   OUT AX     Product
+GetUsbCdcComPar       MACRO
+        UserGate get_usb_cdc_com_par_nr
+                                                ENDM
+
+
+;   IN AL      Port #
+;   NC         OK
 GetUsbBusPar       MACRO
         UserGate get_usb_bus_par_nr
                                                 ENDM

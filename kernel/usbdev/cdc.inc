@@ -43,6 +43,8 @@ unit_struc	ENDS
 
 cdc_struc	STRUC
 
+cdc_vendor              DW ?
+cdc_product             DW ?
 cdc_controller          DW ?
 cdc_device              DB ?
 

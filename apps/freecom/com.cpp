@@ -160,6 +160,8 @@ int TComCommand::Execute(char *param)
         int base;
         int baud;
         int typ;
+        int vendor;
+        int product;
 
         if (RdosCheckCanSerialPort(i, &moduleNr, &portNr))
             sprintf(txt, "Com%d: Module: %d, Port: %d\r\n", i + 1, moduleNr, portNr);
@@ -212,10 +214,15 @@ int TComCommand::Execute(char *param)
                 }
                 else
                 {
-                    if (RdosGetUsbBusPar(i))
-                        sprintf(txt, "Com%d: USB serial bus\r\n", i + 1);
+                    if (RdosGetUsbCdcComPar(i, &vendor, &product))
+                        sprintf(txt, "Com%d: USB CDC, Vendor: %04hX, Product: %04hX\r\n", i + 1, vendor, product);
                     else
-                        sprintf(txt, "Com%d: Unknown type\r\n", i + 1);
+                    {
+                        if (RdosGetUsbBusPar(i))
+                            sprintf(txt, "Com%d: USB serial bus\r\n", i + 1);
+                        else
+                            sprintf(txt, "Com%d: Unknown type\r\n", i + 1);
+                    }
                  }
             }
         }
