@@ -45,6 +45,9 @@ ENDIF
 
 MAX_PORTS       = 32
 
+FLAG_CDC_DISCONNECT = 2
+FLAG_CDC_REINIT = 4
+
 usb_cdc_port_struc       STRUC
 
 ucp_base_struc  com_port_struc <>
@@ -61,6 +64,8 @@ ucp_out_buffer      DW ?
 
 ucp_in_req          DW ?
 ucp_out_req         DW ?
+
+ucp_timer_active    DB ?
 
 usb_cdc_port_struc       ENDS
 
@@ -152,6 +157,76 @@ get_usb_cdc_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SendSignal
+;
+;           description:    Sends signal to USB-handler thread
+;
+;       Parameters:         CX      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendSignal  Proc far
+    push ds
+    push ax
+    push bx
+;    
+    verw cx
+    jnz ssiDone
+;    
+    mov ds,cx
+    mov ds:ucp_timer_active,0
+;    
+    mov ds,ds:ucp_cdc_sel
+    mov bx,ds:cdc_thread
+    Signal    
+
+ssiDone:
+    pop bx
+    pop ax
+    pop ds
+    ret
+SendSignal  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartSendTimer
+;
+;       description:    Starts send timeout
+;
+;       Parameters:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartSendTimer Proc near
+    push es
+    pushad
+;       
+    mov al,1    
+    xchg al,ds:ucp_timer_active
+    or al,al
+    jnz sstDone
+;
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+;       
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET SendSignal
+    mov bx,ds
+    mov cx,bx
+    StartTimer
+
+sstDone:
+    popad
+    pop es
+    ret
+StartSendTimer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           open_com
 ;
 ;           description:    Open a serial port
@@ -168,6 +243,8 @@ get_usb_cdc_com_par     ENDP
 open_com   Proc far
     push ds
     pushad
+;
+    mov ds:ucp_timer_active,0
 ;
     mov edx,ds
     mov eax,es
@@ -198,7 +275,15 @@ open_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_com  Proc far
-    stc
+    mov al,ds:ucp_timer_active
+    or al,al
+    jz ccfTimerClosed
+;
+    mov ebx,ds
+    StopTimer
+    mov ds:ucp_timer_active,0
+
+ccfTimerClosed:
     ret
 close_com  Endp
 
@@ -355,6 +440,26 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_send      PROC far
+    push es
+    push ax
+;    
+    mov ax,ds:ucp_cdc_sel
+    or ax,ax
+    jz ssDone
+;    
+    mov es,ax
+    test es:cdc_flags,FLAG_CDC_DISCONNECT
+    jz ssOk
+;
+    mov ds:send_count,0
+    jmp ssDone
+
+ssOk:    
+    call StartSendTimer
+
+ssDone:
+    pop ax
+    pop es    
     ret
 start_send      Endp
     

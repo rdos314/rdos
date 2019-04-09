@@ -331,6 +331,7 @@ uaFound:
     mov fs:cdc_abs_control_cap,0
     mov fs:cdc_unit_count,0
     mov fs:cdc_com_dev_sel,0
+    mov fs:cdc_flags,0
 ;
     mov cl,es:[edi].uid_sub_class
     mov fs:cdc_sub_class,cl

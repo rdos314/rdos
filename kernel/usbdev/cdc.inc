@@ -59,6 +59,8 @@ cdc_thread              DW ?
 
 cdc_com_dev_sel         DW ?
 
+cdc_flags               DW ?
+
 cdc_unit_count          DB ?
 cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
 
