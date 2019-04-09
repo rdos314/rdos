@@ -653,6 +653,7 @@ CreateComDevice	Proc near
     mov ax,ds:cdc_controller
     movzx dx,ds:cdc_device
 ;
+    push ds
     mov esi,SEG data
     mov ds,esi
     movzx esi,ds:sd_ports
@@ -667,12 +668,31 @@ CreateComDevice	Proc near
 ;    
     AddComPort
     mov ds:ucd_port_nr,ax
+    pop ds
+    mov ds:cdc_com_dev_sel,es
 ;
     popad
     pop es
     pop ds
     ret
 CreateComDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleDevice
+;
+;   DESCRIPTION:    Handle device
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   FS          CDC unit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleDevice    Proc near
+    ret
+HandleDevice    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -711,8 +731,38 @@ tOpenLoop:
     loop tOpenLoop
 ;
     int 3
+    mov eax,ds
+    mov es,eax
+    mov ds,ds:cdc_com_dev_sel
+
+tLoop:
+    WaitForSignal
+;
+    movzx ecx,es:cdc_unit_count
+    mov ebx,OFFSET cdc_unit_arr
+
+tDevLoop:
+    push es
+    push ebx
+    push ecx
+;
+    mov fs,es:[ebx]
+    EnterSection ds:ucd_section
+    push ds
+    call HandleDevice
+    pop ds
+    LeaveSection ds:ucd_section
+;
+    pop ecx
+    pop ebx
+    pop es    
+    add ebx,2
+    loop tDevLoop
+;    
+    jmp tLoop
 
 tFail:
+    TerminateThread
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
