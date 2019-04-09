@@ -44,6 +44,44 @@ ENDIF
 
 MAX_CDC_UNITS =	16
 
+usb_cdc_port_struc       STRUC
+
+ucp_base_struc  com_port_struc <>
+
+ucp_device_sel      DW ?
+ucp_cdc_sel         DW ?
+
+ucp_in_size         DW ?
+ucp_out_size        DW ?
+
+ucp_in_handle       DW ?
+ucp_out_handle      DW ?
+
+ucp_in_buffer       DW ?
+ucp_out_buffer      DW ?
+
+ucp_in_req          DW ?
+ucp_out_req         DW ?
+
+ucp_port_nr         DW ?
+
+usb_cdc_port_struc       ENDS
+
+usb_cdc_device_struc   STRUC
+
+ucd_base_struc      com_device_struc <>
+
+ucd_port_sel        DW ?
+ucd_cdc_unit_sel    DW ?
+
+ucp_control_wait    DW ?
+ucp_control_pipe    DW ?
+
+ucp_controller      DW ?
+ucp_device          DB ?
+
+usbcom_device_struc   ENDS
+
 usb_cdc_descr	STRUC
 
 ucdc_len	DB ?
@@ -73,19 +111,12 @@ usb_cdc_call_descr	ENDS
 
 unit_struc      STRUC
 
+unit_com_sel    DW ?
+
 unit_interface  DB ?
 
-unit_in_endp    DB ?
-unit_out_endp   DB ?
-
-unit_in_size    DW ?
-unit_out_size   DW ?
-
-unit_in_wait    DW ?
-unit_out_wait   DW ?
-
-unit_in_pipe    DW ?
-unit_out_pipe   DW ?
+unit_bulk_in    DB ?
+unit_bulk_out   DB ?
 
 unit_struc	ENDS
 
@@ -98,8 +129,7 @@ cdc_sub_class		DB ?
 cdc_protocol            DB ?
 cdc_abs_control_cap     DB ?
 
-cdc_control_wait        DW ?
-cdc_control_pipe        DW ?
+cdc_com_dev_sel         DW ?
 
 cdc_unit_count          DB ?
 cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
