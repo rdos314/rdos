@@ -56,15 +56,6 @@ ucp_device_sel      DW ?
 ucp_cdc_sel         DW ?
 ucp_cdc_unit_sel    DW ?
 
-ucp_in_handle       DW ?
-ucp_out_handle      DW ?
-
-ucp_in_buffer       DW ?
-ucp_out_buffer      DW ?
-
-ucp_in_req          DW ?
-ucp_out_req         DW ?
-
 ucp_timer_active    DB ?
 
 usb_cdc_port_struc       ENDS
@@ -79,6 +70,15 @@ ucd_cdc_unit_sel    DW ?
 
 ucd_port_offset     DD ?
 ucd_port_nr         DW ?
+
+ucd_in_handle       DW ?
+ucd_out_handle      DW ?
+
+ucd_in_buffer       DW ?
+ucd_out_buffer      DW ?
+
+ucd_in_req          DW ?
+ucd_out_req         DW ?
 
 ucd_section         section_typ <>
 
@@ -751,6 +751,12 @@ CreateComDevice	Proc near
     mov es:ucd_port_sel,0
     mov es:ucd_cdc_sel,ds
     mov es:ucd_cdc_unit_sel,fs
+    mov es:ucd_in_handle,0
+    mov es:ucd_out_handle,0
+    mov es:ucd_in_buffer,0
+    mov es:ucd_out_buffer,0
+    mov es:ucd_in_req,0
+    mov es:ucd_out_req,0
 ;
     mov dword ptr es:cd_create_proc,OFFSET CreateComPort
     mov dword ptr es:cd_create_proc+4,cs
@@ -785,6 +791,233 @@ CreateComDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           OpenPort
+;
+;   DESCRIPTION:    Open port
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   FS          CDC unit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenPort    Proc near
+    mov bx,es:cdc_controller
+    mov al,es:cdc_device
+    mov dl,fs:unit_bulk_in
+    OpenUsbPipe
+    mov ds:ucd_in_handle,bx
+;
+    CreateUsbReq
+    mov ds:ucd_in_req,bx    
+;    
+    mov cx,fs:unit_in_size
+    xor ax,ax
+    AddReadUsbDataReq
+    mov ds:ucd_in_buffer,es
+;
+    mov bx,es:cdc_controller
+    mov al,es:cdc_device
+    mov dl,fs:unit_bulk_out
+    OpenUsbPipe    
+    mov ds:ucd_out_handle,bx
+;
+    CreateUsbReq
+    mov ds:ucd_out_req,bx
+;    
+    mov cx,fs:unit_out_size
+    mov ax,1
+    AddWriteUsbDataReq
+    mov ds:ucd_out_buffer,es
+    ret
+OpenPort    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClosePort
+;
+;   DESCRIPTION:    Close port
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   FS          CDC unit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePort    Proc near
+    mov ax,50
+    WaitMilliSec
+;    
+    mov bx,ds:ucd_in_req
+    CloseUsbReq
+    mov ds:ucd_in_req,0
+;
+    mov bx,ds:ucd_in_handle
+    CloseUsbPipe    
+    mov ds:ucd_in_handle,0
+;
+    mov bx,ds:ucd_out_req
+    CloseUsbReq
+    mov ds:ucd_out_req,0
+;
+    mov bx,ds:ucd_out_handle
+    CloseUsbPipe    
+    mov ds:ucd_out_handle,0
+;
+    mov ds:ucd_in_buffer,0
+    mov ds:ucd_out_buffer,0
+    ret
+ClosePort   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           PollRead
+;
+;   DESCRIPTION:    Poll input-buffer
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   FS          CDC unit
+;                   CX          Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollRead    Proc near
+    push ds
+    push fs
+;
+    xor si,si
+    mov fs,ds:ucd_in_buffer
+    mov ds,ds:ucd_port_sel
+    mov es,ds:rec_buf
+
+prGetLoop:
+    lods byte ptr fs:[si]
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:rec_count
+    cmp dx,ds:rec_size
+    je prSignal
+;       
+    inc dx
+    mov ds:rec_count,dx
+    mov bx,ds:rec_tail
+    mov es:[bx],al
+    inc bx
+    cmp bx,ds:rec_size
+    jnz prWrapOk
+;
+    xor bx,bx
+    
+prWrapOk:
+    mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
+    loop prGetLoop
+    jmp prSigRel
+
+prSignal:
+    ReleaseSpinlock ds:com_spinlock
+
+prSigRel:
+    xor bx,bx
+    xchg bx,ds:avail_obj
+    or bx,bx
+    jz prDone
+;
+    mov es,bx
+    SignalWait
+    
+prDone:
+    pop fs
+    pop ds
+    ret
+PollRead    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           PollWrite
+;
+;   DESCRIPTION:    Poll output-buffer
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   FS          CDC unit
+;
+;   RETURNS:        CX          Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollWrite    Proc near
+    push ds
+    push fs
+;   
+    xor cx,cx
+    mov bp,fs:unit_out_size
+    mov ax,ds:ucd_out_buffer
+    or ax,ax
+    jz pwDone
+;    
+    mov es,ax
+    mov ds,ds:ucd_port_sel
+    mov al,ds:ucp_timer_active
+    or al,al
+    jnz pwDone
+;    
+    xor di,di
+    mov fs,ds:send_buf
+    mov dx,ds:send_count
+    or dx,dx
+    jz pwDone
+
+pwLoop:
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:send_count
+    or dx,dx
+    jz pwSend
+;       
+    dec dx
+    mov ds:send_count,dx
+    mov bx,ds:send_head
+    mov al,fs:[bx]
+    stosb
+    inc bx
+    cmp bx,ds:send_size
+    jnz pwWrapOk
+;       
+    xor bx,bx
+
+pwWrapOk:
+    mov ds:send_head,bx
+    ReleaseSpinlock ds:com_spinlock
+;
+    inc cx
+    cmp cx,bp
+    jb pwLoop
+    jmp pwSendRel
+
+pwSend:
+    ReleaseSpinlock ds:com_spinlock
+
+pwSendRel:
+    mov ax,ds:send_size    
+    or ax,ax
+    jz pwDone
+;
+    call StartSendTimer    
+
+pwDone:
+    pop fs
+    pop ds    
+    ret
+PollWrite   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandleDevice
 ;
 ;   DESCRIPTION:    Handle device
@@ -796,6 +1029,86 @@ CreateComDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleDevice    Proc near
+    test es:cdc_flags,FLAG_CDC_DISCONNECT
+    jnz hdDone
+
+hdConn:
+    mov ax,ds:ucd_port_sel
+    or ax,ax
+    jz hdClosed
+
+hdOpen:
+    mov bx,ds:ucd_in_req
+    or bx,bx
+    jnz hdIsOpen
+;
+    call OpenPort    
+;
+    test es:cdc_flags,FLAG_CDC_REINIT
+    jz hdIsOpen    
+;
+;    call ReInit
+    and es:cdc_flags,NOT FLAG_CDC_REINIT
+
+hdIsOpen:    
+    mov bx,ds:ucd_in_req
+    IsUsbReqStarted
+    jnc hdOpenOk
+;
+    StartUsbReq
+
+hdOpenOk:    
+    mov bx,ds:ucd_in_req
+    IsUsbReqReady
+    jc hdReadDone
+;
+    GetUsbReqData
+    jc hdReadRestart
+;    
+    call PollRead
+
+hdReadRestart:
+    mov bx,ds:ucd_in_req
+    StartUsbReq
+
+hdReadDone:
+    mov bx,ds:ucd_out_req
+    IsUsbReqStarted
+    jc hdCheckWrite
+;    
+    IsUsbReqReady
+    jc hdDone
+;
+    push ds
+    mov ds,ds:ucd_port_sel
+    mov bx,ds:send_wait
+    pop ds
+    or bx,bx
+    jz hdCheckWrite
+;    
+    Signal
+
+hdCheckWrite:
+    call PollWrite
+    or cx,cx
+    jz hdDone
+;
+    mov bx,ds:ucd_out_req
+    StartUsbReq
+    jmp hdDone
+
+hdClosed:
+    and es:cdc_flags,NOT FLAG_CDC_REINIT
+;
+    mov bx,ds:ucd_in_req
+    or bx,bx
+    jz hdDone
+
+hdIsClosed:
+    call ClosePort
+    
+hdDone:
+    pop ds
     ret
 HandleDevice    Endp
         
