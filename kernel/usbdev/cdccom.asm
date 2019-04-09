@@ -72,7 +72,7 @@ ucd_port_sel        DW ?
 ucd_cdc_sel         DW ?
 ucd_cdc_unit_sel    DW ?
 
-ucd_port_offset     DW ?
+ucd_port_offset     DD ?
 ucd_port_nr         DW ?
 
 ucd_section         section_typ <>
@@ -586,11 +586,11 @@ CreateComDevice	Proc near
 ;
     mov esi,SEG data
     mov ds,esi
-    mov si,ds:sd_ports
-    add si,si
-    mov ds:[si].sd_port_arr,es
+    movzx esi,ds:sd_ports
+    add esi,esi
+    mov ds:[esi].sd_port_arr,es
     inc ds:sd_ports
-    mov es:ucd_port_offset,si
+    mov es:ucd_port_offset,esi
 ;
     mov esi,es
     mov ds,esi
