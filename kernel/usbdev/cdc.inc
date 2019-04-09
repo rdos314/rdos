@@ -55,6 +55,8 @@ cdc_abs_control_cap     DB ?
 cdc_control_wait        DW ?
 cdc_control_pipe        DW ?
 
+cdc_thread              DW ?
+
 cdc_com_dev_sel         DW ?
 
 cdc_unit_count          DB ?

@@ -156,7 +156,7 @@ get_usb_cdc_com_par     ENDP
 ;
 ;           description:    Open a serial port
 ;
-;           PARAMETERS:     DS      Port selector
+;           PARAMETERS:     DS          Port selector
 ;                           ES          Device selector
 ;                           AH          # of data bits
 ;                           BL          # of stop bits
@@ -166,11 +166,23 @@ get_usb_cdc_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_com   Proc far
+    push ds
     pushad
 ;
-    stc
+    mov edx,ds
+    mov eax,es
+    mov ds,eax
+    EnterSection ds:ucd_section
+    mov ds:ucd_port_sel,dx
+    LeaveSection ds:ucd_section       
+;
+    mov ds,ds:ucd_cdc_sel
+    mov bx,ds:cdc_thread
+    Signal    
+    clc
 ;
     popad
+    pop ds
     ret
 open_com   Endp
 
@@ -684,6 +696,9 @@ cdc_com_thread:
     jc tFail
 ;
     call OpenControl
+;
+    GetThread
+    mov ds:cdc_thread,ax
 ;
     movzx ecx,ds:cdc_unit_count
     mov ebx,OFFSET cdc_unit_arr
