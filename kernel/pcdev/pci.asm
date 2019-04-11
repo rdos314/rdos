@@ -870,7 +870,7 @@ find_pci_cap    Endp
 pci_power_on_name       DB 'PCI Power On',0
 
 pci_power_on    Proc far
-    push ax
+    push eax
 ;
     mov al,1
     FindPciCapability
@@ -894,7 +894,7 @@ ppoInD0:
     WritePciWord
 
 ppoDone:
-    pop ax
+    pop eax
     retf32
 pci_power_on	Endp
         
