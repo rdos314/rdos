@@ -59,6 +59,7 @@ cdc_thread              DW ?
 
 cdc_com_dev_sel         DW ?
 
+cdc_dev_offset          DD ?
 cdc_flags               DW ?
 
 cdc_unit_count          DB ?

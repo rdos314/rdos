@@ -170,6 +170,7 @@ get_usb_com_par Proc far
     push ds
     push es
     push bx
+    push dx
 ;
     mov bx,SEG data
     mov ds,bx
@@ -180,10 +181,15 @@ get_usb_com_par Proc far
     jz gscpFail
 
 gscpLoop:
-    mov es,ds:[bx]
+    mov dx,ds:[bx]
+    or dx,dx
+    jz gdcpNext
+;    
+    mov es,dx
     cmp ax,es:uds_port_nr
     je gscpFound
-;
+
+gdcpNext:
     add bx,2
     loop gscpLoop
 
@@ -196,6 +202,7 @@ gscpFound:
     clc
 
 gscpDone:
+    pop dx
     pop bx
     pop es
     pop ds

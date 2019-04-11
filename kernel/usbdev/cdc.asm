@@ -42,6 +42,8 @@ ELSE
     .386p
 ENDIF
 
+MAX_DEVICES	= 16
+
 usb_cdc_descr	STRUC
 
 ucdc_len	DB ?
@@ -71,7 +73,11 @@ usb_cdc_call_descr	ENDS
 
 data    SEGMENT byte public 'DATA'
 
-tmp DB ?
+sd_dead_list    DW ?
+sd_section      section_typ <>
+
+sd_dev_count    DW ?
+sd_dev_arr      DW MAX_DEVICES DUP(?)
 
 data	ENDS
 
@@ -400,6 +406,14 @@ uaCopyDone:
     xor al,al
     stosb
 ;            
+    mov edi,SEG data
+    mov ds,edi
+    movzx esi,ds:sd_dev_count
+    add esi,esi
+    mov ds:[esi].sd_dev_arr,fs
+    inc ds:sd_dev_count
+    mov fs:cdc_dev_offset,esi
+;
     mov ebx,fs
     xor edi,edi
     mov edx,cs
@@ -441,12 +455,43 @@ usb_attach  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern cdc_com_detach:near
+
 usb_detach  Proc far
     push ds
     push es
     pushad
 ;    
+    movzx ax,al
+    mov edx,SEG data
+    mov ds,edx
+    mov esi,OFFSET sd_dev_arr
+    movzx ecx,ds:sd_dev_count
+    or ecx,ecx
+    jz udDone
+;
     int 3
+
+udCheckLoop:
+    mov dx,[esi]
+    or dx,dx
+    jz udCheckNext
+;
+    mov es,dx
+    cmp bx,es:cdc_controller
+    jne udCheckNext
+;
+    cmp al,es:cdc_device
+    jne udCheckNext
+;
+    mov bx,es
+    call cdc_com_detach
+    jmp udDone
+
+udCheckNext:
+    add esi,2    
+    sub ecx,1
+    jnz udCheckLoop
 
 udDone:
     popad
@@ -454,7 +499,6 @@ udDone:
     pop ds
     ret
 usb_detach  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -474,6 +518,9 @@ usb_detach  Endp
 Init    Proc far
     mov ax,SEG data
     mov ds,eax
+    mov ds:sd_dev_count,0
+    mov ds:sd_dead_list,0
+    InitSection ds:sd_section
 ;
     mov eax,cs
     mov ds,eax

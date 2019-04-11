@@ -80,6 +80,7 @@ ucd_out_buffer      DW ?
 ucd_in_req          DW ?
 ucd_out_req         DW ?
 
+
 ucd_section         section_typ <>
 
 usb_cdc_device_struc   ENDS
@@ -129,10 +130,15 @@ get_usb_cdc_com_par Proc far
     jz gscpFail
 
 gscpLoop:
-    mov es,ds:[ebx]
+    mov dx,ds:[ebx]
+    or dx,dx
+    jz gscpNext
+;
+    mov es,edx
     cmp ax,es:ucd_port_nr
     je gscpFound
-;
+
+gscpNext:
     add ebx,2
     loop gscpLoop
 
@@ -732,6 +738,26 @@ OpenControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CloseControl
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     DS		CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseControl	Proc near
+    mov bx,ds:cdc_control_pipe
+    CloseUsbPipe
+;
+    mov bx,ds:cdc_control_wait
+    CloseWait
+    ret
+CloseControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CreateComDevice
 ;
 ;   DESCRIPTION:    
@@ -897,6 +923,8 @@ PollRead    Proc near
     mov fs,ds:ucd_in_buffer
     mov ds,ds:ucd_port_sel
     mov es,ds:rec_buf
+    or cx,cx
+    jz prDone
 
 prGetLoop:
     lods byte ptr fs:[si]
@@ -1051,6 +1079,7 @@ hdOpen:
     test es:cdc_flags,FLAG_CDC_REINIT
     jz hdIsOpen    
 ;
+    int 3
 ;    call ReInit
     and es:cdc_flags,NOT FLAG_CDC_REINIT
 
@@ -1158,6 +1187,9 @@ tOpenLoop:
 tLoop:
     WaitForSignal
 ;
+    test es:cdc_flags,FLAG_CDC_DISCONNECT
+    jnz tExit
+;
     movzx ecx,es:cdc_unit_count
     mov ebx,OFFSET cdc_unit_arr
 
@@ -1181,9 +1213,85 @@ tDevLoop:
 ;    
     jmp tLoop
 
+tExit:
+    int 3
+
+
+    push ds
+    push es
+    push fs
+    pushad
+;
+    int 3
+;
+    mov ds,dx
+    EnterSection ds:ucd_section
+;    
+    push ds
+    mov edx,SEG data
+    mov ds,edx
+    mov word ptr [esi],0
+;    
+;    RequestSpinlock ds:sd_spinlock
+;    mov ax,ds:sd_dead_list
+;    mov es:ucd_link,ax
+;    mov ds:sd_dead_list,es
+;    ReleaseSpinlock ds:sd_spinlock
+    pop ds
+;
+    mov es,ds:ucd_cdc_sel
+    mov fs,ds:ucd_cdc_unit_sel
+    or es:cdc_flags,FLAG_CDC_DISCONNECT
+;
+    push ds
+    mov ds,ds:ucd_cdc_sel
+    call CloseControl
+    pop ds
+;
+    mov ax,ds:ucd_port_sel
+    or ax,ax
+    jz udPortHandleOk
+;
+    call ClosePort
+
+udPortHandleOk:    
+    LeaveSection ds:ucd_section    
+;    
+    popad
+    pop fs
+    pop es
+    pop ds
+
 tFail:
     TerminateThread
-        
+                
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CDC com detach
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     BX      CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public cdc_com_detach
+
+cdc_com_detach	Proc near
+    push ds
+    push ebx
+;
+    mov ds,ebx
+    or ds:cdc_flags,FLAG_CDC_DISCONNECT
+    mov bx,ds:cdc_thread
+    Signal
+;
+    pop ebx
+    pop ds
+    ret
+cdc_com_detach	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
