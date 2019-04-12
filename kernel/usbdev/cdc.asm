@@ -168,7 +168,7 @@ call_descr	Endp
 
 abs_control_descr	Proc near
     mov cl,es:[edi].ucdcc_cap
-    mov fs:cdc_abs_control_cap,cl
+    mov es:cdc_abs_control_cap,cl
     clc
     ret
 abs_control_descr	Endp
@@ -192,7 +192,7 @@ function_union_descr	Proc near
     stc
     jz fudDone
 ;
-    mov fs:cdc_unit_count,cl
+    mov es:cdc_unit_count,cl
     mov esi,OFFSET cdc_unit_arr
     add edi,4
 
@@ -210,7 +210,7 @@ fudLoop:
     mov gs:unit_bulk_in,0
     mov gs:unit_bulk_out,0
 ;
-    mov fs:[esi],gs
+    mov es:[esi],gs
     add esi,2
     loop fudLoop
 ;    
@@ -262,8 +262,6 @@ udt1F DD OFFSET error_descr
 usb_attach  Proc far
     push ds
     push es
-    push fs
-    push gs
     pushad
 ;
     push eax
@@ -285,7 +283,8 @@ usb_attach  Proc far
 
 uaCdc:
     mov si,es:udd_vendor
-    mov bp,es:udd_prod
+    shl esi,16
+    mov si,es:udd_prod
 ;
     xor dl,dl
     mov ecx,1000h
@@ -297,6 +296,7 @@ uaCdc:
     or ecx,ecx
     jz uaFail
 ;
+    mov ebp,ecx
     mov dl,es:ucd_config_id
     xor edi,edi
     movzx ecx,es:ucd_len
@@ -321,29 +321,57 @@ uaCheckNext:
     jb uaCheckLoop
 
 uaFound:
-    push es
+    push ds
     push eax
-    mov eax,SIZE cdc_struc
-    AllocateSmallGlobalMem
+    push ebx
+    push esi
+;
+    mov ebx,edi
     mov eax,es
-    mov fs,eax
-    pop eax
+    mov ds,eax
+;
+    mov eax,OFFSET cdc_dev_descr_buf
+    add eax,ebp
+    AllocateSmallGlobalMem
+;
+    mov ecx,ebp
+    xor esi,esi
+    mov edi,OFFSET cdc_dev_descr_buf
+    rep movsb
+;
+    push es
+    mov eax,ds
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
+    FreeMem
     pop es
 ;
-    mov fs:cdc_vendor,si
-    mov fs:cdc_product,bp
-    mov fs:cdc_controller,bx
-    mov fs:cdc_device,al
-    mov fs:cdc_abs_control_cap,0
-    mov fs:cdc_unit_count,0
-    mov fs:cdc_com_dev_sel,0
-    mov fs:cdc_flags,0
+    mov es:cdc_dev_descr_size,bp
+    mov edi,ebx
+    add edi,OFFSET cdc_dev_descr_buf
+    add ebp,OFFSET cdc_dev_descr_buf
+;
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+;
+    mov es:cdc_product,si
+    shr esi,16
+    mov es:cdc_vendor,si
+    mov es:cdc_controller,bx
+    mov es:cdc_device,al
+    mov es:cdc_abs_control_cap,0
+    mov es:cdc_unit_count,0
+    mov es:cdc_com_dev_sel,0
+    mov es:cdc_flags,0
 ;
     mov cl,es:[edi].uid_sub_class
-    mov fs:cdc_sub_class,cl
+    mov es:cdc_sub_class,cl
 ;
     mov cl,es:[edi].uid_proto
-    mov fs:cdc_protocol,cl
+    mov es:cdc_protocol,cl
     jmp uaDevNext
 
 uaDevLoop:
@@ -353,38 +381,47 @@ uaDevLoop:
 ;
     mov cl,es:[edi].ucdc_sub_type
     cmp cl,20h
-    jae uaFreeFail
+    jae uaFail
 ;
     movzx esi,cl
     shl esi,2
     call dword ptr cs:[esi].udesc_tab
-    jc uaFreeFail
+    jc uaFail
 
 uaDevNext:
     movzx ecx,es:[edi].ucd_len
     or ecx,ecx
-    jz uaFreeFail
+    jz uaFail
 ;    
     add edi,ecx
-    cmp di,es:ucd_size
+    cmp edi,ebp
     jb uaDevLoop
 
 uaDevOk:
-    mov bx,fs:cdc_controller
-    mov al,fs:cdc_device
+    mov bx,es:cdc_controller
+    mov al,es:cdc_device
     ConfigUsbDevice
-    jc uaFreeFail
+    jc uaFail
 ;
-    FreeMem
+    mov edi,SEG data
+    mov ds,edi
+    movzx esi,ds:sd_dev_count
+    add esi,esi
+    mov ds:[esi].sd_dev_arr,es
+    inc ds:sd_dev_count
+    mov es:cdc_dev_offset,esi
+;
+    mov ebx,es
+    mov ds,ebx
 ;
     mov eax,100h
     AllocateSmallGlobalMem
-    xor di,di
-    mov si,OFFSET cdc_name
+    xor edi,edi
+    mov esi,OFFSET cdc_name
 
 uaCopyCdc:
-    mov al,cs:[si]
-    inc si
+    mov al,cs:[esi]
+    inc esi
     or al,al
     jz uaCopyDone
 ;
@@ -392,29 +429,20 @@ uaCopyCdc:
     jmp uaCopyCdc
 
 uaCopyDone:
-    mov ax,fs:cdc_controller
+    mov ax,ds:cdc_controller
     call HexToAscii
     stosw
 ;
     mov al,'.'
     stosb
 ;
-    mov al,fs:cdc_device
+    mov al,ds:cdc_device
     call HexToAscii
     stosw
 ;
     xor al,al
     stosb
-;            
-    mov edi,SEG data
-    mov ds,edi
-    movzx esi,ds:sd_dev_count
-    add esi,esi
-    mov ds:[esi].sd_dev_arr,fs
-    inc ds:sd_dev_count
-    mov fs:cdc_dev_offset,esi
 ;
-    mov ebx,fs
     xor edi,edi
     mov edx,cs
     mov ds,edx
@@ -426,18 +454,11 @@ uaCopyDone:
     FreeMem
     jmp uaDone
 
-uaFreeFail:
-    FreeMem
-    mov eax,fs
-    mov es,eax
-
 uaFail:
     FreeMem
 
 uaDone:
     popad
-    pop gs
-    pop fs
     pop es
     pop ds
     ret
