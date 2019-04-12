@@ -490,8 +490,6 @@ usb_detach  Proc far
     movzx ecx,ds:sd_dev_count
     or ecx,ecx
     jz udDone
-;
-    int 3
 
 udCheckLoop:
     mov dx,[esi]
@@ -504,6 +502,35 @@ udCheckLoop:
 ;
     cmp al,es:cdc_device
     jne udCheckNext
+;
+    int 3
+    EnterSection ds:sd_section
+    mov di,ds:sd_dead_list
+    or di,di
+    je udInsEmpty
+;
+    push ds
+    push si
+;
+    mov ds,di
+    mov si,ds:cdc_prev
+    mov ds:cdc_prev,es
+    mov ds,si
+    mov ds:cdc_next,es
+    mov es:cdc_next,di
+    mov es:cdc_prev,si
+;
+    pop si
+    pop ds
+    jmp udInsDone
+    
+udInsEmpty:
+    mov es:cdc_next,es
+    mov es:cdc_prev,es
+    mov ds:sd_dead_list,es
+
+udInsDone:
+    LeaveSection ds:sd_section
 ;
     mov bx,es
     call cdc_com_detach

@@ -80,7 +80,6 @@ ucd_out_buffer      DW ?
 ucd_in_req          DW ?
 ucd_out_req         DW ?
 
-
 ucd_section         section_typ <>
 
 usb_cdc_device_struc   ENDS
@@ -1168,6 +1167,7 @@ cdc_com_thread:
     call OpenControl
 ;
     GetThread
+    mov ds:cdc_detach,0
     mov ds:cdc_thread,ax
 ;
     movzx ecx,ds:cdc_unit_count
@@ -1215,39 +1215,17 @@ tDevLoop:
 
 tExit:
     int 3
+    movzx ecx,es:cdc_unit_count
+    mov ebx,OFFSET cdc_unit_arr
 
-
-    push ds
+tCloseLoop:
     push es
-    push fs
-    pushad
+    push ebx
+    push ecx
 ;
-    int 3
-;
-    mov ds,dx
+    mov fs,es:[ebx]
     EnterSection ds:ucd_section
-;    
     push ds
-    mov edx,SEG data
-    mov ds,edx
-    mov word ptr [esi],0
-;    
-;    RequestSpinlock ds:sd_spinlock
-;    mov ax,ds:sd_dead_list
-;    mov es:ucd_link,ax
-;    mov ds:sd_dead_list,es
-;    ReleaseSpinlock ds:sd_spinlock
-    pop ds
-;
-    mov es,ds:ucd_cdc_sel
-    mov fs,ds:ucd_cdc_unit_sel
-    or es:cdc_flags,FLAG_CDC_DISCONNECT
-;
-    push ds
-    mov ds,ds:ucd_cdc_sel
-    call CloseControl
-    pop ds
-;
     mov ax,ds:ucd_port_sel
     or ax,ax
     jz udPortHandleOk
@@ -1255,12 +1233,22 @@ tExit:
     call ClosePort
 
 udPortHandleOk:    
-    LeaveSection ds:ucd_section    
-;    
-    popad
-    pop fs
-    pop es
     pop ds
+    LeaveSection ds:ucd_section
+;
+    pop ecx
+    pop ebx
+    pop es    
+    add ebx,2
+    loop tCloseLoop
+;    
+    mov eax,es
+    mov ds,eax
+    call CloseControl
+;
+    mov ds:cdc_thread,0
+    mov bx,ds:cdc_detach
+    Signal
 
 tFail:
     TerminateThread
@@ -1280,14 +1268,21 @@ tFail:
 
 cdc_com_detach	Proc near
     push ds
+    push eax
     push ebx
 ;
     mov ds,ebx
+    GetThread
+    mov ds:cdc_detach,ax
+;
     or ds:cdc_flags,FLAG_CDC_DISCONNECT
     mov bx,ds:cdc_thread
     Signal
 ;
+    WaitForSignal
+;
     pop ebx
+    pop eax
     pop ds
     ret
 cdc_com_detach	Endp

@@ -56,11 +56,15 @@ cdc_control_wait        DW ?
 cdc_control_pipe        DW ?
 
 cdc_thread              DW ?
+cdc_detach              DW ?
 
 cdc_com_dev_sel         DW ?
 
 cdc_dev_offset          DD ?
 cdc_flags               DW ?
+
+cdc_prev                DW ?
+cdc_next                DW ?
 
 cdc_unit_count          DB ?
 cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
