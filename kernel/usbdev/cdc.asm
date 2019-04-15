@@ -128,6 +128,81 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;    NAME:           FindDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     ES   	Descriptor
+;                    ESI        Vendor & product
+;                    EBP	Descriptor size
+;
+;    Returns:        ECX	Number of matches
+;                    GS         CDC sel of last match
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindDevice	Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    xor ecx,ecx
+    mov ebx,SEG data
+    mov ds,ebx
+;
+    mov bx,ds:sd_dead_list
+    or bx,bx
+    jz fdDone
+;
+    mov dx,bx
+
+fdLoop:
+    mov ds,ebx
+    mov ax,ds:cdc_vendor
+    shl eax,16
+    mov ax,ds:cdc_product
+    cmp eax,esi
+    jne fdNext
+;
+    movzx eax,ds:cdc_dev_descr_size
+    cmp eax,ebp
+    jne fdNext
+;
+    push ecx
+    push esi
+;
+    mov ecx,ebp
+    mov esi,OFFSET cdc_dev_descr_buf
+    xor edi,edi
+    repe cmpsb
+;
+    pop esi
+    pop ecx
+    jnz fdNext
+;
+    inc ecx
+    mov eax,ds
+    mov gs,eax
+
+fdNext:
+    mov bx,ds:cdc_next
+    cmp bx,dx
+    jne fdLoop
+
+fdDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+FindDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:       usb_attach
 ;
 ;           description:    USB attach callback
@@ -137,7 +212,8 @@ HexToAscii      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern cdc_com_thread:near
+    extern cdc_com_start:near
+    extern cdc_com_recreate:near
 
 cdc_name    DB 'Cdc Com ', 0
 
@@ -262,6 +338,7 @@ udt1F DD OFFSET error_descr
 usb_attach  Proc far
     push ds
     push es
+    push gs
     pushad
 ;
     push eax
@@ -321,6 +398,66 @@ uaCheckNext:
     jb uaCheckLoop
 
 uaFound:
+    call FindDevice
+    or ecx,ecx
+    jz uaNotDead
+;
+    cmp ecx,1
+    je uaRecreate
+;
+    int 3
+
+uaRecreate:
+    ConfigUsbDevice
+    jc uaFail
+;
+    mov gs:cdc_controller,bx
+    mov gs:cdc_device,al
+;
+    mov ebx,gs
+    mov ds,ebx
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov esi,OFFSET cdc_name
+
+uaReCopyCdc:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz uaReCopyDone
+;
+    stosb
+    jmp uaReCopyCdc
+
+uaReCopyDone:
+    mov ax,ds:cdc_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:cdc_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET cdc_com_recreate
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+    jmp uaDone
+
+uaNotDead:
     push ds
     push eax
     push ebx
@@ -446,7 +583,7 @@ uaCopyDone:
     xor edi,edi
     mov edx,cs
     mov ds,edx
-    mov esi,OFFSET cdc_com_thread
+    mov esi,OFFSET cdc_com_start
     mov eax,3
     mov ecx,stack0_size
     CreateThread
@@ -459,6 +596,7 @@ uaFail:
 
 uaDone:
     popad
+    pop gs
     pop es
     pop ds
     ret
@@ -503,7 +641,9 @@ udCheckLoop:
     cmp al,es:cdc_device
     jne udCheckNext
 ;
-    int 3
+    mov bx,es
+    call cdc_com_detach
+;
     EnterSection ds:sd_section
     mov di,ds:sd_dead_list
     or di,di
@@ -531,9 +671,6 @@ udInsEmpty:
 
 udInsDone:
     LeaveSection ds:sd_section
-;
-    mov bx,es
-    call cdc_com_detach
     jmp udDone
 
 udCheckNext:

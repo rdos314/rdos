@@ -816,6 +816,23 @@ CreateComDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           Reinit
+;
+;   DESCRIPTION:    Reinit unit
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   FS          CDC unit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Reinit  Proc near
+    ret
+Reinit	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           OpenPort
 ;
 ;   DESCRIPTION:    Open port
@@ -1078,8 +1095,7 @@ hdOpen:
     test es:cdc_flags,FLAG_CDC_REINIT
     jz hdIsOpen    
 ;
-    int 3
-;    call ReInit
+    call ReInit
     and es:cdc_flags,NOT FLAG_CDC_REINIT
 
 hdIsOpen:    
@@ -1146,7 +1162,7 @@ HandleDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           CDC com thread
+;   NAME:           CDC com threads
 ;
 ;   DESCRIPTION:    
 ;
@@ -1154,9 +1170,10 @@ HandleDevice    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public cdc_com_thread
+    public cdc_com_start
+    public cdc_com_recreate
 
-cdc_com_thread:
+cdc_com_recreate:
     mov ds,ebx
     call FindInterfaces
     jc tFail
@@ -1169,7 +1186,28 @@ cdc_com_thread:
     GetThread
     mov ds:cdc_detach,0
     mov ds:cdc_thread,ax
+    or ds:cdc_flags,FLAG_CDC_REINIT
+    and ds:cdc_flags,NOT FLAG_CDC_DISCONNECT
 ;
+    mov eax,ds
+    mov es,eax
+    mov ds,ds:cdc_com_dev_sel
+    jmp tSignalled
+
+cdc_com_start:
+    mov ds,ebx
+    call FindInterfaces
+    jc tFail
+;
+    call CheckInterfaces
+    jc tFail
+;
+    call OpenControl
+;
+    GetThread
+    mov ds:cdc_detach,0
+    mov ds:cdc_thread,ax
+
     movzx ecx,ds:cdc_unit_count
     mov ebx,OFFSET cdc_unit_arr
 
@@ -1186,7 +1224,8 @@ tOpenLoop:
 
 tLoop:
     WaitForSignal
-;
+
+tSignalled:
     test es:cdc_flags,FLAG_CDC_DISCONNECT
     jnz tExit
 ;
@@ -1214,7 +1253,6 @@ tDevLoop:
     jmp tLoop
 
 tExit:
-    int 3
     movzx ecx,es:cdc_unit_count
     mov ebx,OFFSET cdc_unit_arr
 
@@ -1277,9 +1315,14 @@ cdc_com_detach	Proc near
 ;
     or ds:cdc_flags,FLAG_CDC_DISCONNECT
     mov bx,ds:cdc_thread
+
+ccdSignal:
     Signal
 ;
     WaitForSignal
+    mov bx,ds:cdc_thread
+    or bx,bx
+    jnz ccdSignal
 ;
     pop ebx
     pop eax
