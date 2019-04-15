@@ -128,11 +128,12 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;    NAME:           FindDevice
+;    NAME:           FindAnyDevice
 ;
 ;    Description:    Search for dead device
 ;
-;    Parameters:     ES   	Descriptor
+;    Parameters:     DS         Data seg
+;                    ES   	Descriptor
 ;                    ESI        Vendor & product
 ;                    EBP	Descriptor size
 ;
@@ -141,7 +142,7 @@ HexToAscii      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindDevice	Proc near
+FindAnyDevice	Proc near
     push ds
     push eax
     push ebx
@@ -149,26 +150,24 @@ FindDevice	Proc near
     push edi
 ;
     xor ecx,ecx
-    mov ebx,SEG data
-    mov ds,ebx
 ;
     mov bx,ds:sd_dead_list
     or bx,bx
-    jz fdDone
+    jz fadDone
 ;
     mov dx,bx
 
-fdLoop:
+fadLoop:
     mov ds,ebx
     mov ax,ds:cdc_vendor
     shl eax,16
     mov ax,ds:cdc_product
     cmp eax,esi
-    jne fdNext
+    jne fadNext
 ;
     movzx eax,ds:cdc_dev_descr_size
     cmp eax,ebp
-    jne fdNext
+    jne fadNext
 ;
     push ecx
     push esi
@@ -180,25 +179,80 @@ fdLoop:
 ;
     pop esi
     pop ecx
-    jnz fdNext
+    jnz fadNext
 ;
     inc ecx
     mov eax,ds
     mov gs,eax
 
-fdNext:
+fadNext:
     mov bx,ds:cdc_next
     cmp bx,dx
-    jne fdLoop
+    jne fadLoop
 
-fdDone:
+fadDone:
     pop edi
     pop edx
     pop ebx
     pop eax
     pop ds
     ret
-FindDevice	Endp
+FindAnyDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindSpecificDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS      Data seg
+;                    BX      Controller #
+;                    AL      Device address
+;
+;    Returns:        NC	     Found
+;                        GS  CDC sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindSpecificDevice	Proc near
+    push ds
+    push ecx
+    push edx
+;
+    mov cx,ds:sd_dead_list
+    or cx,cx
+    stc
+    jz fsdDone
+;
+    mov dx,cx
+
+fsdLoop:
+    mov ds,ecx
+    cmp bx,ds:cdc_controller
+    jne fsdNext
+;
+    cmp al,ds:cdc_device
+    jne fsdNext
+;
+    mov ecx,ds
+    mov gs,ecx
+    clc
+    jmp fsdDone
+
+fsdNext:
+    mov cx,ds:cdc_next
+    cmp cx,dx
+    jne fsdLoop
+;
+    stc
+
+fsdDone:
+    pop edx
+    pop ecx    
+    pop ds
+    ret
+FindSpecificDevice	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -398,16 +452,39 @@ uaCheckNext:
     jb uaCheckLoop
 
 uaFound:
-    call FindDevice
+    mov cx,SEG data
+    mov ds,ecx
+    EnterSection ds:sd_section
+;
+    call FindAnyDevice
     or ecx,ecx
     jz uaNotDead
 ;
     cmp ecx,1
     je uaRecreate
 ;
-    int 3
+    call FindSpecificDevice
+    jc uaNotDead
 
 uaRecreate:
+    push ds
+    mov si,gs
+    mov di,gs:cdc_next
+    cmp di,si
+    mov ds:sd_dead_list,di
+    mov si,gs:cdc_prev
+    mov ds,di
+    mov ds:cdc_prev,si
+    mov ds,si
+    mov ds:cdc_next,di
+    pop ds
+    jne uaReConfig
+;    
+    mov ds:sd_dead_list,0
+
+uaReConfig:
+    LeaveSection ds:sd_section
+;
     ConfigUsbDevice
     jc uaFail
 ;
@@ -458,7 +535,8 @@ uaReCopyDone:
     jmp uaDone
 
 uaNotDead:
-    push ds
+    LeaveSection ds:sd_section
+;
     push eax
     push ebx
     push esi
@@ -492,7 +570,6 @@ uaNotDead:
     pop esi
     pop ebx
     pop eax
-    pop ds
 ;
     mov es:cdc_product,si
     shr esi,16
