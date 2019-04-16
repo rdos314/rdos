@@ -41,7 +41,6 @@ INCLUDE kdebug.inc
 
 code_page_linear  = 100000h
 map_page_linear   = 1FF000h
-lfb_page_linear   = 0C0000000h
 
 data    SEGMENT byte public 'DATA'
 
@@ -1341,16 +1340,6 @@ SwitchToMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
-    mov bx,system_data_sel
-    mov ds,bx
-    mov ebx,ds:efi_acpi
-    or ebx,ds:efi_acpi+4
-    jz apLfbDone
-;
-    mov ds:efi_lfb,lfb_page_linear    
-    mov ds:efi_lfb+4,0
-    
-apLfbDone:
     mov ebx,ebp
     cmp ax,-1
     je kernel_pretask
