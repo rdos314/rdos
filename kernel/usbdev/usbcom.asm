@@ -3716,14 +3716,16 @@ utEnd:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddPort
+;   NAME:           AddPort
 ;
-;           DESCRIPTION:    Add port to list of available ports
+;   DESCRIPTION:    Add port to list of available ports
 ;
-;       PARAMETERS:     AL      Device address
-;               BX      Controller id
-;               DX      Device type
-;               ES:DI   Interface descriptor + endpoints
+;   PARAMETERS:     AL      Device address
+;                   BX      Controller id
+;                   DX      Device type
+;                   ES      Device sel
+;
+;   RETURNS:        DS      Unit sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3739,7 +3741,6 @@ cpt02 DD OFFSET CreatePortPl2303
 cpt03 DD OFFSET CreatePortMct
 
 AddPort Proc near
-    push ds
     push es
     pushad
 ;    
@@ -3956,10 +3957,43 @@ apNoRecover:
 apDone:
     popad
     pop es
-    pop ds      
     ret
 AddPort Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddUnit
+;
+;   DESCRIPTION:    Add unit
+;
+;   PARAMETERS:     DX      Device type
+;                   ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddUnit	Proc near
+    push ds
+    push ax
+    push bx
+    push si
+;
+    mov bx,es:uc_controller
+    mov al,es:uc_device
+    call AddPort
+;
+    movzx si,es:uc_unit_count
+    shl si,1
+    add si,OFFSET uc_unit_arr
+    mov es:[si],ds
+    inc es:uc_unit_count
+;
+    pop si
+    pop bx
+    pop ax
+    pop ds
+    ret
+AddUnit	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4222,7 +4256,7 @@ aftDescrLoop:
     jae aftNotSio
 ; 
     mov dx,DEVICE_TYPE_SIO
-    call AddPort
+    call AddUnit
     jmp aftDone
 
 aftNotSio:
@@ -4230,7 +4264,7 @@ aftNotSio:
     jae aftNotAm
 ;
     mov dx,DEVICE_TYPE_FT232AM
-    call AddPort
+    call AddUnit
     jmp aftDone
 
 aftNotAm:
@@ -4239,12 +4273,12 @@ aftNotAm:
     ja aftMore
 ;
     mov dx,DEVICE_TYPE_FT232BM
-    call AddPort
+    call AddUnit
     jmp aftDone
 
 aftMore:
     mov dx,DEVICE_TYPE_FT2232C 
-    call AddPort
+    call AddUnit
 
 aftDescrNext:
     movzx cx,es:[di].ucd_len
@@ -4393,7 +4427,7 @@ aplDescrLoop:
     jne aplDescrNext
 ; 
     mov dx,si
-    call AddPort
+    call AddUnit
     jmp aplDone
 
 aplDescrNext:    
@@ -4520,7 +4554,7 @@ amctDescrLoop:
     jne amctDescrNext
 ; 
     mov dx,si
-    call AddPort
+    call AddUnit
     jmp amctDone
 
 amctDescrNext:    
