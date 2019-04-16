@@ -589,6 +589,7 @@ move_efi_lfb Proc near
     mov ds,ax
     mov ds:fixed_lfb_phys,0
     mov ds:fixed_lfb_phys+4,0
+    mov ds:mon_fixed_lfb,0
 ;    
     mov edx,ds:efi_acpi
     or edx,ds:efi_acpi+4

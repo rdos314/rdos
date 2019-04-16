@@ -2032,6 +2032,7 @@ end_get_video_modes  PROC far
     mov ebx,es:fixed_lfb_phys+4
     mov al,67h
     mov es:fixed_lfb_linear,edx
+    mov es:mon_fixed_lfb,edx
 
 egvMoveLoop:
     SetPageEntry

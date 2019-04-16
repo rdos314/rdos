@@ -223,6 +223,7 @@ efi_acpi            DD ?,?
 
 fixed_lfb_phys      DD ?,?
 fixed_lfb_linear    DD ?
+mon_fixed_lfb       DD ?
 
 nmi_data            DW ?
 nmi_proc            DD ?, ?
