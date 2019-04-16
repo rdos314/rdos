@@ -1,7 +1,7 @@
 #include p18f4550.inc   
 
   config PLLDIV=3,  CPUDIV = OSC2_PLL3, USBDIV = 2, FOSC = HSPLL_HS, FCMEN = OFF, IESO = OFF, PWRT = ON
-  config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON, MCLRE = ON, STVREN = ON
+  config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON, MCLRE = OFF, STVREN = ON
   config LVP = OFF, ICPRT = OFF,  XINST = OFF
   config CP0=OFF, CP1=OFF, CP2=OFF, CP3=OFF, CPB=OFF, CPD=OFF
   config WRT0=OFF, WRT1=OFF, WRT2=OFF, WRT3=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF
@@ -1530,6 +1530,12 @@ ProgStart:
 ;
     movlw 0xF0
     movwf TRISD
+;
+    movlw 0x3
+    movwf LATE
+;
+    movlw 0xFC
+    movwf TRISE
 ;
     movlw 0
     movwf BSR
