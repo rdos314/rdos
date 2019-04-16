@@ -907,6 +907,12 @@ dfPae:
     or ds:switch_flags,PM_FLAG_PAE
 
 dfProt:
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_lfb
+    or eax,ds:efi_lfb+4
+    jnz dfVideoOk
+;
     mov ax,flat_sel
     mov es,ax
     xor eax,eax
@@ -922,8 +928,6 @@ dfVectLoop:
     jz dfVideoOk
 ;
     or ds:switch_flags,PM_FLAG_VIDEO
-    mov ax,system_data_sel
-    mov ds,ax
     xor eax,eax
     mov ds:efi_acpi,eax
     mov ds:efi_acpi+4,eax
@@ -2329,6 +2333,25 @@ start_smp_core_dump     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+test_gate_name DB 'test',0
+
+test_gate	Proc far
+    push ds
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_lfb
+    mov ebx,ds:efi_lfb+4
+    mov edx,eax
+    GetPageEntry
+;
+    popad
+    pop ds
+    ret
+test_gate	Endp
+
+
     public init_crash_driver
 
 init_crash_driver    Proc near
@@ -2366,6 +2389,13 @@ init_crash_driver    Proc near
     xor cl,cl
     mov ax,notify_core_dump_nr
     RegisterOsGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+
     ret
 init_crash_driver       Endp
 

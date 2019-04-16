@@ -55,8 +55,6 @@ long_map_size           EQU 000010000h
 
 local_page_linear       EQU 000200000h
 
-boot_efi_linear         EQU 040000000h
-
 long_buf_linear         EQU 040000000h
 long_buf_size           EQU 07F000000h
 
