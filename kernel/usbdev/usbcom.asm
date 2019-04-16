@@ -4174,7 +4174,7 @@ GetFTDIType  Endp
 ;
 ;   Description:    Attach FTDI devices
 ;
-;   Parameters:     ES	    Device descritor
+;   Parameters:     ES	    Config descritor
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4182,20 +4182,6 @@ GetFTDIType  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachFTDI  Proc near
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz aftDone
-;
-    mov dl,es:ucd_config_id
-    ConfigUsbDevice
-    jc aftDone
-;
     xor di,di
     movzx cx,es:ucd_len
     add di,cx
@@ -4346,7 +4332,7 @@ GetPL2303Type  Endp
 ;
 ;   Description:    Attach PL2303 devices
 ;
-;   Parameters:     ES	    Device descritor
+;   Parameters:     ES	    Config descritor
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4354,16 +4340,6 @@ GetPL2303Type  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 AttachPL2303  Proc near
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbDevice
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz aplDone
-;
     mov cl,es:[di].udd_class
     cmp cl,2
     je aplDescrType01
@@ -4510,7 +4486,7 @@ GetMctType  Endp
 ;
 ;   Description:    Attach MCT devices
 ;
-;   Parameters:     ES	    Device descritor
+;   Parameters:     ES	    Config descritor
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4518,20 +4494,6 @@ GetMctType  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachMct  Proc near
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz amctDone
-;
-    mov dl,es:ucd_config_id
-    ConfigUsbDevice
-    jc amctDone
-;
     xor di,di
     movzx cx,es:ucd_len
     add di,cx
@@ -4555,6 +4517,45 @@ amctDone:
     FreeMem
     ret
 AttachMct  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigDevice
+;
+;   Description:    USB attach callback
+;
+;   Parameters:     ES      Descriptor buffer
+;                   BX      Controller #
+;                   AL      Device address
+;
+;   Returns:        ES      Config descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice  Proc near
+    push cx
+    push dx
+;    
+    xor dl,dl
+    mov cx,1000h
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    stc
+    jz cdDone
+;
+    mov dl,es:ucd_config_id
+    ConfigUsbDevice
+
+cdDone:
+    pop dx
+    pop cx
+    ret
+ConfigDevice  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4593,7 +4594,8 @@ usb_attach  Proc far
 ;
     call IsMct
     jnc uaMct
-;
+
+uaFail:
     FreeMem
     jmp uaDone
 
@@ -4602,6 +4604,9 @@ uaFTDI:
     shl ebp,16
     mov bp,es:udd_prod
     call GetFTDIType
+    call ConfigDevice
+    jc uaFail
+;
     call AttachFTDI
     jmp uaDone
 
@@ -4610,6 +4615,9 @@ uaPL2303:
     shl ebp,16
     mov bp,es:udd_prod
     call GetPL2303Type
+    call ConfigDevice
+    jc uaFail
+;
     call AttachPL2303
     jmp uaDone
 
@@ -4618,6 +4626,9 @@ uaMCT:
     shl ebp,16
     mov bp,es:udd_prod
     call GetMctType
+    call ConfigDevice
+    jc uaFail
+;
     call AttachMct
 
 uaDone:
