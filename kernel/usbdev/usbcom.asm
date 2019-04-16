@@ -3839,7 +3839,9 @@ apBulkIn:
 apDescrNext:    
     movzx cx,es:[di].ucd_len
     add di,cx
-    cmp di,es:ucd_size
+    mov cx,OFFSET uc_dev_descr_buf
+    add cx,es:uc_dev_descr_size
+    cmp di,cx
     jb apDescrLoop    
     
 apDescrDone:
@@ -4198,8 +4200,7 @@ GetFTDIType  Endp
 ;
 ;   Description:    Attach FTDI devices
 ;
-;   Parameters:     ES:DI   Config descritor
-;                   CX      Descriptor size
+;   Parameters:     ES      Device sel
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4207,9 +4208,10 @@ GetFTDIType  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachFTDI  Proc near
-    mov bp,cx
-    movzx cx,es:[di].ucd_len
-    add di,cx
+    mov di,OFFSET uc_dev_descr_buf
+    mov bp,es:uc_dev_descr_size
+    add bp,di
+    jmp aftDescrNext
 
 aftDescrLoop:
     mov cl,es:[di].udd_type
@@ -4380,9 +4382,10 @@ GetPL2303Type  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 AttachPL2303  Proc near
-    mov bp,cx
-    movzx cx,es:[di].ucd_len
-    add di,cx
+    mov di,OFFSET uc_dev_descr_buf
+    mov bp,es:uc_dev_descr_size
+    add bp,di
+    jmp aplDescrNext
 
 aplDescrLoop:
     mov cl,es:[di].udd_type
@@ -4506,9 +4509,10 @@ GetMctType  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachMct  Proc near
-    mov bp,cx
-    movzx cx,es:[di].ucd_len
-    add di,cx
+    mov di,OFFSET uc_dev_descr_buf
+    mov bp,es:uc_dev_descr_size
+    add bp,di
+    jmp amctDescrNext
 
 amctDescrLoop:
     mov cl,es:[di].udd_type
@@ -4540,9 +4544,9 @@ AttachMct  Endp
 ;   Parameters:     ES      Descriptor buffer
 ;                   BX      Controller #
 ;                   AL      Device address
+;                   EBP     Vendor +´device
 ;
-;   Returns:        ES:DI   Config descriptor
-;                   CX      Descriptor size
+;   Returns:        ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4564,8 +4568,46 @@ ConfigDevice  Proc near
     ConfigUsbDevice
     jc cdDone
 ;
-    xor di,di
-    mov cx,es:ucd_size
+    push eax
+    push ebx
+    push esi
+    push ebp
+;
+    movzx ebp,es:ucd_size
+    mov ax,es
+    mov ds,ax
+;
+    mov eax,OFFSET uc_dev_descr_buf
+    add eax,ebp
+    AllocateSmallGlobalMem
+;
+    mov ecx,ebp
+    xor esi,esi
+    mov edi,OFFSET uc_dev_descr_buf
+    rep movsb
+;
+    push es
+    mov eax,ds
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
+    FreeMem
+    pop es
+;
+    mov es:uc_dev_descr_size,bp
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop eax
+;
+    mov es:uc_product,bp
+    shr ebp,16
+    mov es:uc_vendor,bp
+    mov es:uc_controller,bx
+    mov es:uc_device,al
+    mov es:uc_unit_count,0
+    mov es:uc_flags,0
 
 cdDone:
     pop dx
