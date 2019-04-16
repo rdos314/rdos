@@ -544,7 +544,7 @@ cfeYOk:
 ;    
     push es
     mov al,32
-    mov edi,ds:efi_lfb
+    mov edi,ds:fixed_lfb_linear
     mov es:c_lfb,edi
     mov cx,ds:efi_width
     mov es:c_width,cx
@@ -1251,7 +1251,7 @@ ccRetry:
 ccDo:    
     mov ax,system_data_sel
     mov ds,ax    
-    mov eax,ds:efi_lfb
+    mov eax,ds:fixed_lfb_linear
     or eax,eax
     jz ccText
 
@@ -1582,7 +1582,7 @@ get_video_mode  Proc far
 ;
     mov bx,system_data_sel
     mov ds,bx    
-    mov ebx,ds:efi_lfb
+    mov ebx,ds:fixed_lfb_linear
     or ebx,ebx
     jz get_video_bios
 ;
@@ -1715,7 +1715,7 @@ set_video_mode  PROC far
 ;
     mov bx,system_data_sel
     mov ds,bx    
-    mov ebx,ds:efi_lfb
+    mov ebx,ds:fixed_lfb_linear
     or ebx,ebx
     jnz svmFixedText
 ;
@@ -1958,8 +1958,8 @@ avPart:
     cmp bp,cx
     je avSet
 ;
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:fixed_lfb_phys
+    or eax,ds:fixed_lfb_phys+4
     jz avSet
 ;    
     cmp bp,ds:efi_width
@@ -1967,8 +1967,8 @@ avPart:
     jmp avCmp
 
 avHighest:
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:fixed_lfb_phys
+    or eax,ds:fixed_lfb_phys+4
     jz avSet
 
 avCmp:
@@ -1976,8 +1976,8 @@ avCmp:
     jc avDone
 
 avSet:
-    mov ds:efi_lfb,edi
-    mov ds:efi_lfb+4,0
+    mov ds:fixed_lfb_phys,edi
+    mov ds:fixed_lfb_phys+4,0
     mov ds:efi_width,cx
     mov ds:efi_height,dx
     movzx esi,si
@@ -2019,15 +2019,19 @@ end_get_video_modes  PROC far
 ;   
     mov ax,system_data_sel
     mov es,ax
+    mov eax,es:efi_lfb
+    or eax,es:efi_lfb+4
+    jnz egvDone
+;
     mov edx,es:efi_scan_size
     movzx eax,es:efi_height
     mul edx
     AllocateBigLinear
 ;
-    mov eax,es:efi_lfb
-    mov ebx,es:efi_lfb+4
+    mov eax,es:fixed_lfb_phys
+    mov ebx,es:fixed_lfb_phys+4
     mov al,67h
-    mov es:efi_lfb,edx
+    mov es:fixed_lfb_linear,edx
 
 egvMoveLoop:
     SetPageEntry

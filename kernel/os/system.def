@@ -221,6 +221,9 @@ efi_fore_col        DD ?
 efi_back_col        DD ?
 efi_acpi            DD ?,?
 
+fixed_lfb_phys      DD ?,?
+fixed_lfb_linear    DD ?
+
 nmi_data            DW ?
 nmi_proc            DD ?, ?
 
