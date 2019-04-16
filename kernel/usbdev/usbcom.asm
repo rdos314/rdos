@@ -3938,12 +3938,11 @@ AddPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       AttachFTDI
+;    NAME:           IsFTDI
 ;
-;           description:    Attach FTDI devices
+;    Description:    Check for FTDI device
 ;
-;           Parameters:     BX      Controller #
-;               AL      Device address
+;    Parameters:     ES		Device descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4116,20 +4115,11 @@ ftAA    DW 5050h,       00400h  ; PAPOUCH
 ftAB    DW 0403h,       0DD20h  ; ACG_HFDUAL
 ftAC    DW 0856h,       0AC27h  ; 232USB9M
 
-AttachFTDI  Proc near
-    push es
-;    
-    push ax
-    mov eax,1000h
-    AllocateSmallGlobalMem
-    mov cx,SIZE usb_device_descr
-    pop ax
-    xor di,di
-    push ax
-    GetUsbDevice
-    cmp ax,cx
-    pop ax
-    jne aftDone
+IsFTDI	Proc near
+    push cx
+    push si
+    push di
+    push bp
 ;
     mov si,es:udd_vendor
     mov di,es:udd_prod
@@ -4137,20 +4127,42 @@ AttachFTDI  Proc near
     mov cx,0ADh
     mov bp,OFFSET ftTab
 
-aftLoop:
+iftLoop:
     cmp si,cs:[bp]
-    jne aftNext
+    jne iftNext
 ;
     cmp di,cs:[bp+2]
-    je aftFound
+    clc
+    je iftDone
 
-aftNext:
+iftNext:
     add bp,4
-    loop aftLoop    
+    loop iftLoop    
 ;
-    jmp aftDone    
+    stc
 
-aftFound:
+iftDone:
+    pop bp
+    pop di
+    pop si
+    pop bp
+    ret
+IsFTDI	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachFTDI
+;
+;   Description:    Attach FTDI devices
+;
+;   Parameters:     ES	    Device descritor
+;                   BX      Controller #
+;                   AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AttachFTDI  Proc near
     mov si,es:udd_device
 ;    
     xor dl,dl
@@ -4212,21 +4224,17 @@ aftDescrNext:
     
 aftDone:
     FreeMem
-;
-    pop es    
     ret
 AttachFTDI  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       AttachPL2303
+;    NAME:           IsPL2303
 ;
-;           description:    Attach PL2303 devices
+;    Description:    Check for PL2303 device
 ;
-;           Parameters:     BX      Controller #
-;               AL      Device address
+;    Parameters:     ES		Device descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4261,21 +4269,12 @@ pl1A    DW 0413h,       02101h  ; LEADTEK
 pl1B    DW 0E55h,       0110Bh  ; SPEEDDRAGON
 pl1C    DW 0EA0h,       06858h  ; OTI
 pl1D    DW 067Bh,       02303h  ; PL2303
- 
-AttachPL2303  Proc near
-    push es
-;    
-    push ax
-    mov eax,1000h
-    AllocateSmallGlobalMem
-    mov cx,SIZE usb_device_descr
-    pop ax
-    xor di,di
-    push ax
-    GetUsbDevice
-    cmp ax,cx
-    pop ax
-    jne aplDone
+
+IsPL2303	Proc near
+    push cx
+    push si
+    push di
+    push bp
 ;
     mov si,es:udd_vendor
     mov di,es:udd_prod
@@ -4283,20 +4282,42 @@ AttachPL2303  Proc near
     mov cx,01Eh
     mov bp,OFFSET plTab
 
-aplLoop:
+iplLoop:
     cmp si,cs:[bp]
-    jne aplNext
+    jne iplNext
 ;
     cmp di,cs:[bp+2]
-    je aplFound
+    clc
+    je iplDone
 
-aplNext:
+iplNext:
     add bp,4
-    loop aplLoop    
+    loop iplLoop    
 ;
-    jmp aplDone    
+    stc
 
-aplFound:
+iplDone:
+    pop bp
+    pop di
+    pop si
+    pop bp
+    ret
+IsPL2303	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachPL2303
+;
+;   Description:    Attach PL2303 devices
+;
+;   Parameters:     ES	    Device descritor
+;                   BX      Controller #
+;                   AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+AttachPL2303  Proc near
     mov si,es:udd_device
     xor dl,dl
     mov cx,1000h
@@ -4358,21 +4379,17 @@ aplDescrNext:
     
 aplDone:
     FreeMem
-;
-    pop es    
     ret
 AttachPL2303  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       AttachMct
+;   NAME:           IsMct
 ;
-;           description:    Attach MCT devices
+;   Description:    Check for MCT device
 ;
-;           Parameters:     BX      Controller #
-;               AL      Device address
+;   Parameters:     ES		Device descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4381,21 +4398,11 @@ mc00    DW 0711h,       0210h   ; Original
 mc01    DW 0711h,       0230h   ; Sitecom
 mc02    DW 0711h,       0200h   ; D-link
 mc03    DW 050Dh,       0109h   ; Belkin
- 
-AttachMct  Proc near
-    push es
-;    
-    push ax
-    mov eax,1000h
-    AllocateSmallGlobalMem
-    mov cx,SIZE usb_device_descr
-    pop ax
-    xor di,di
-    push ax
-    GetUsbDevice
-    cmp ax,cx
-    pop ax
-    jne amctDone
+
+IsMct	Proc near
+    push cx
+    push di
+    push bp
 ;
     mov si,es:udd_vendor
     mov di,es:udd_prod
@@ -4403,20 +4410,44 @@ AttachMct  Proc near
     mov cx,4
     mov bp,OFFSET mctTab
 
-amctLoop:
+imctLoop:
     cmp si,cs:[bp]
-    jne amctNext
+    jne imctNext
 ;
     cmp di,cs:[bp+2]
-    je amctFound
+    clc
+    jne imctDone
 
-amctNext:
+imctNext:
     add bp,4
-    loop amctLoop    
+    loop imctLoop    
 ;
-    jmp amctDone    
+    stc
 
-amctFound:
+imctDone:
+    pop bp
+    pop di
+    pop bp
+    ret
+IsMct	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachMct
+;
+;   Description:    Attach MCT devices
+;
+;   Parameters:     ES	    Device descritor
+;                   BX      Controller #
+;                   AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AttachMct  Proc near
+    mov si,es:udd_vendor
+    mov di,es:udd_prod
+;
     cmp si,50Dh
     je amctBelkin
 ;    
@@ -4466,28 +4497,65 @@ amctDescrNext:
     
 amctDone:
     FreeMem
-;
-    pop es    
     ret
 AttachMct  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       usb_attach
+;   NAME:           usb_attach
 ;
-;           description:    USB attach callback
+;   Description:    USB attach callback
 ;
-;           Parameters:     BX      Controller #
-;               AL      Device address
+;   Parameters:     BX      Controller #
+;                   AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_attach  Proc far
+    push ds
+    push es
+    pushad
+;
+    push ax
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    mov cx,SIZE usb_device_descr
+    pop ax
+    xor di,di
+    push ax
+    GetUsbDevice
+    cmp ax,cx
+    pop ax
+    jne uaDone
+;
+    call IsFTDI
+    jnc uaFTDI
+;
+    call IsPL2303
+    jnc uaPL2303
+;
+    call IsMct
+    jnc uaMct
+;
+    FreeMem
+    jmp uaDone
+
+uaFTDI:
     call AttachFTDI
+    jmp uaDone
+
+uaPL2303:
     call AttachPL2303
+    jmp uaDone
+
+uaMCT:
     call AttachMct
+
+uaDone:
+    popad
+    pop es
+    pop ds
     retf32
 usb_attach  Endp
     
