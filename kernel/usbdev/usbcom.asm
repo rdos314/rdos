@@ -123,6 +123,7 @@ uds_port_offset     DW ?
 uds_flag            DB ?
 uds_intr_interval   DB ?
 uds_port_nr         DW ?
+uds_device_sel      DW ?
 
 usbcom_device_struc   ENDS
 
@@ -3382,8 +3383,7 @@ ReInit  Endp
 ;
 ;           DESCRIPTION:    Poll input-buffer
 ;
-;       PARAMETERS:     FS      SEG data
-;               DS      Function sel
+;       PARAMETERS:     DS      Function sel
 ;               SI      Buffer offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3444,8 +3444,7 @@ PollRead    Endp
 ;
 ;           DESCRIPTION:    Poll output-buffer
 ;
-;       PARAMETERS:     FS      SEG data
-;               DS      Function sel
+;       PARAMETERS:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3712,6 +3711,11 @@ utDevNext:
 
 utEnd:
     retf
+
+usb_com_create:
+    int 3
+    TerminateThread
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3982,6 +3986,7 @@ AddUnit	Proc near
     mov al,es:uc_device
     call AddPort
 ;
+    mov ds:uds_device_sel,es
     movzx si,es:uc_unit_count
     shl si,1
     add si,OFFSET uc_unit_arr
@@ -4696,10 +4701,6 @@ ConfigDevice  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 com_name  DB 'USB Com ', 0
-
-usb_com_create:
-    int 3
-    TerminateThread
 
 CreateServerThread    Proc near
     push ds
