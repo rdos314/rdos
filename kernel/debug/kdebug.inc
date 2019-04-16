@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+lfb_linear  = 0C0000000h
+
 STATE_RESET		EQU	0
 STATE_IDLE		EQU 1
 STATE_BUSY		EQU 2

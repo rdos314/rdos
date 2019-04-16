@@ -2042,7 +2042,7 @@ scLfb:
     push eax
     mov eax,ds:efi_scan_size
     mul edx
-    mov edi,ds:efi_lfb
+    mov edi,lfb_linear
     add edi,eax
     pop eax
     shl eax,2
@@ -2142,7 +2142,7 @@ icLfb:
     push eax
     mov eax,ds:efi_scan_size
     mul edx
-    mov edi,ds:efi_lfb
+    mov edi,lfb_linear
     add edi,eax
     pop eax
     shl eax,2
@@ -2324,7 +2324,7 @@ cLfb:
     mov ax,mon_flat_sel
     mov es,ax
 ;
-    mov edi,ds:efi_lfb
+    mov edi,lfb_linear
     movzx ecx,ds:efi_height
 
 cLoop:
