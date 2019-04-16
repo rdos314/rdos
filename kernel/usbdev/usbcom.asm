@@ -4287,7 +4287,6 @@ aftDescrNext:
     jb aftDescrLoop    
     
 aftDone:
-    FreeMem
     ret
 AttachFTDI  Endp
 
@@ -4437,7 +4436,6 @@ aplDescrNext:
     jb aplDescrLoop    
     
 aplDone:
-    FreeMem
     ret
 AttachPL2303  Endp
 
@@ -4564,9 +4562,46 @@ amctDescrNext:
     jb amctDescrLoop    
     
 amctDone:
-    FreeMem
     ret
 AttachMct  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4651,6 +4686,77 @@ ConfigDevice  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateServerThread
+;
+;   Description:    Create server thread
+;
+;   Parameters:     ES      Device sel
+;                   EBP     Thread start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+com_name  DB 'USB Com ', 0
+
+usb_com_create:
+    int 3
+    TerminateThread
+
+CreateServerThread    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,es
+    mov ds,bx
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov esi,OFFSET com_name
+
+cstCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cstCopyDone
+;
+    stosb
+    jmp cstCopyLoop
+
+cstCopyDone:
+    mov ax,ds:uc_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:uc_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,ebp
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreateServerThread   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           usb_attach
 ;
 ;   Description:    USB attach callback
@@ -4698,6 +4804,8 @@ uaFTDI:
     call ConfigDevice
     jc uaFail
 ;
+    mov ebp,OFFSET usb_com_create
+    call CreateServerThread
     call AttachFTDI
     jmp uaDone
 
@@ -4709,6 +4817,8 @@ uaPL2303:
     call ConfigDevice
     jc uaFail
 ;
+    mov ebp,OFFSET usb_com_create
+    call CreateServerThread
     call AttachPL2303
     jmp uaDone
 
@@ -4720,6 +4830,8 @@ uaMCT:
     call ConfigDevice
     jc uaFail
 ;
+    mov ebp,OFFSET usb_com_create
+    call CreateServerThread
     call AttachMct
 
 uaDone:
