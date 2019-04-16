@@ -4152,19 +4152,36 @@ IsFTDI	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetFTDIType
+;
+;   Description:    Get FTDI device type
+;
+;   Parameters:     ES	    Device descritor
+;
+;   Returns:        SI	    Device type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFTDIType  Proc near
+    mov si,es:udd_device
+    ret
+GetFTDIType  Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           AttachFTDI
 ;
 ;   Description:    Attach FTDI devices
 ;
 ;   Parameters:     ES	    Device descritor
+;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachFTDI  Proc near
-    mov si,es:udd_device
-;    
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -4307,18 +4324,36 @@ IsPL2303	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetPL2303Type
+;
+;   Description:    Attach PL2303 devices
+;
+;   Parameters:     ES	    Device descritor
+;
+;   Returns:        SI      Device type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+GetPL2303Type  Proc near
+    mov si,es:udd_device
+    ret
+GetPL2303Type  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           AttachPL2303
 ;
 ;   Description:    Attach PL2303 devices
 ;
 ;   Parameters:     ES	    Device descritor
+;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 AttachPL2303  Proc near
-    mov si,es:udd_device
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -4434,34 +4469,55 @@ IsMct	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetMctType
+;
+;   Description:    Get MCT type
+;
+;   Parameters:     ES	    Device descritor
+;
+;   Returns:        SI      Device type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMctType  Proc near
+    push di
+;
+    mov si,es:udd_vendor
+    mov di,es:udd_prod
+;
+    cmp si,50Dh
+    je gmctBelkin
+;    
+    mov si,DEVICE_TYPE_MCT
+    cmp di,230h
+    jne gmctDeviceOk
+;
+    mov si,DEVICE_TYPE_MCT_SITECOM
+    jmp gmctDeviceOk
+
+gmctBelkin:
+    mov si,DEVICE_TYPE_MCT_BELKIN
+
+gmctDeviceOk:
+    pop di
+    ret
+GetMctType  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           AttachMct
 ;
 ;   Description:    Attach MCT devices
 ;
 ;   Parameters:     ES	    Device descritor
+;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachMct  Proc near
-    mov si,es:udd_vendor
-    mov di,es:udd_prod
-;
-    cmp si,50Dh
-    je amctBelkin
-;    
-    mov si,DEVICE_TYPE_MCT
-    cmp di,230h
-    jne amctDeviceOk
-;
-    mov si,DEVICE_TYPE_MCT_SITECOM
-    jmp amctDeviceOk
-
-amctBelkin:
-    mov si,DEVICE_TYPE_MCT_BELKIN
-
-amctDeviceOk:
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -4542,14 +4598,26 @@ usb_attach  Proc far
     jmp uaDone
 
 uaFTDI:
+    mov bp,es:udd_vendor
+    shl ebp,16
+    mov bp,es:udd_prod
+    call GetFTDIType
     call AttachFTDI
     jmp uaDone
 
 uaPL2303:
+    mov bp,es:udd_vendor
+    shl ebp,16
+    mov bp,es:udd_prod
+    call GetPL2303Type
     call AttachPL2303
     jmp uaDone
 
 uaMCT:
+    mov bp,es:udd_vendor
+    shl ebp,16
+    mov bp,es:udd_prod
+    call GetMctType
     call AttachMct
 
 uaDone:
