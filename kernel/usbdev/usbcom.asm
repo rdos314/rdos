@@ -4541,12 +4541,12 @@ AttachMct  Endp
 ;                   BX      Controller #
 ;                   AL      Device address
 ;
-;   Returns:        ES      Config descriptor
+;   Returns:        ES:DI   Config descriptor
+;                   CX      Descriptor size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ConfigDevice  Proc near
-    push cx
     push dx
 ;    
     xor dl,dl
@@ -4562,10 +4562,13 @@ ConfigDevice  Proc near
 ;
     mov dl,es:ucd_config_id
     ConfigUsbDevice
+    jc cdDone
+;
+    xor di,di
+    mov cx,es:ucd_size
 
 cdDone:
     pop dx
-    pop cx
     ret
 ConfigDevice  Endp
 
@@ -4619,8 +4622,6 @@ uaFTDI:
     call ConfigDevice
     jc uaFail
 ;
-    xor di,di
-    mov cx,es:ucd_size
     call AttachFTDI
     jmp uaDone
 
@@ -4632,8 +4633,6 @@ uaPL2303:
     call ConfigDevice
     jc uaFail
 ;
-    xor di,di
-    mov cx,es:ucd_size
     call AttachPL2303
     jmp uaDone
 
@@ -4645,8 +4644,6 @@ uaMCT:
     call ConfigDevice
     jc uaFail
 ;
-    xor di,di
-    mov cx,es:ucd_size
     call AttachMct
 
 uaDone:
