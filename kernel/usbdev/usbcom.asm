@@ -36,6 +36,7 @@ INCLUDE ..\os\protseg.def
 include ..\os\com.inc
 
 MAX_PORTS       = 16
+MAX_COM_UNITS   = 2
 
 FLAG_UDS_DISCONNECT = 2
 FLAG_UDS_REINIT = 4
@@ -124,6 +125,29 @@ uds_intr_interval   DB ?
 uds_port_nr         DW ?
 
 usbcom_device_struc   ENDS
+
+usb_com_struc	STRUC
+
+uc_vendor               DW ?
+uc_product              DW ?
+uc_controller           DW ?
+uc_device               DB ?
+
+uc_thread               DW ?
+uc_detach               DW ?
+
+uc_flags                DW ?
+
+uc_prev                 DW ?
+uc_next                 DW ?
+ 
+uc_unit_count           DB ?
+uc_unit_arr             DW MAX_COM_UNITS DUP(?)
+ 
+uc_dev_descr_size       DW ?
+uc_dev_descr_buf        DB ?
+
+usb_com_struc	ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -4174,7 +4198,8 @@ GetFTDIType  Endp
 ;
 ;   Description:    Attach FTDI devices
 ;
-;   Parameters:     ES	    Config descritor
+;   Parameters:     ES:DI   Config descritor
+;                   CX      Descriptor size
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4182,8 +4207,8 @@ GetFTDIType  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachFTDI  Proc near
-    xor di,di
-    movzx cx,es:ucd_len
+    mov bp,cx
+    movzx cx,es:[di].ucd_len
     add di,cx
 
 aftDescrLoop:
@@ -4222,7 +4247,7 @@ aftMore:
 aftDescrNext:
     movzx cx,es:[di].ucd_len
     add di,cx
-    cmp di,es:ucd_size
+    cmp di,bp
     jb aftDescrLoop    
     
 aftDone:
@@ -4321,7 +4346,21 @@ IsPL2303	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 GetPL2303Type  Proc near
-    mov si,es:udd_device
+    mov cl,es:udd_class
+    cmp cl,2
+    je gplDescrType01
+;
+    mov cl,es:udd_maxlen
+    cmp cl,40h
+    jne gplDescrType01
+;    
+    mov si,DEVICE_TYPE_PL_HX
+    jmp gplDescrDeviceOk    
+
+gplDescrType01:
+    mov si,DEVICE_TYPE_PL_01
+
+gplDescrDeviceOk:    
     ret
 GetPL2303Type  Endp
 
@@ -4332,7 +4371,8 @@ GetPL2303Type  Endp
 ;
 ;   Description:    Attach PL2303 devices
 ;
-;   Parameters:     ES	    Config descritor
+;   Parameters:     ES:DI   Config descritor
+;                   CX      Descriptor size
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4340,37 +4380,8 @@ GetPL2303Type  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 AttachPL2303  Proc near
-    mov cl,es:[di].udd_class
-    cmp cl,2
-    je aplDescrType01
-;
-    mov cl,es:[di].udd_maxlen
-    cmp cl,40h
-    jne aplDescrType01
-;    
-    mov si,DEVICE_TYPE_PL_HX
-    jmp aplDescrDeviceOk    
-
-aplDescrType01:
-    mov si,DEVICE_TYPE_PL_01
-
-aplDescrDeviceOk:    
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz aplDone
-;
-    mov dl,es:ucd_config_id
-    ConfigUsbDevice
-    jc aplDone
-;
-    xor di,di
-    movzx cx,es:ucd_len
+    mov bp,cx
+    movzx cx,es:[di].ucd_len
     add di,cx
 
 aplDescrLoop:
@@ -4385,7 +4396,7 @@ aplDescrLoop:
 aplDescrNext:    
     movzx cx,es:[di].ucd_len
     add di,cx
-    cmp di,es:ucd_size
+    cmp di,bp
     jb aplDescrLoop    
     
 aplDone:
@@ -4486,7 +4497,8 @@ GetMctType  Endp
 ;
 ;   Description:    Attach MCT devices
 ;
-;   Parameters:     ES	    Config descritor
+;   Parameters:     ES:DI   Config descritor
+;                   CX      Descriptor size
 ;                   SI      Device type
 ;                   BX      Controller #
 ;                   AL      Device address
@@ -4494,8 +4506,8 @@ GetMctType  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AttachMct  Proc near
-    xor di,di
-    movzx cx,es:ucd_len
+    mov bp,cx
+    movzx cx,es:[di].ucd_len
     add di,cx
 
 amctDescrLoop:
@@ -4510,7 +4522,7 @@ amctDescrLoop:
 amctDescrNext:    
     movzx cx,es:[di].ucd_len
     add di,cx
-    cmp di,es:ucd_size
+    cmp di,bp
     jb amctDescrLoop    
     
 amctDone:
@@ -4607,6 +4619,8 @@ uaFTDI:
     call ConfigDevice
     jc uaFail
 ;
+    xor di,di
+    mov cx,es:ucd_size
     call AttachFTDI
     jmp uaDone
 
@@ -4618,6 +4632,8 @@ uaPL2303:
     call ConfigDevice
     jc uaFail
 ;
+    xor di,di
+    mov cx,es:ucd_size
     call AttachPL2303
     jmp uaDone
 
@@ -4629,6 +4645,8 @@ uaMCT:
     call ConfigDevice
     jc uaFail
 ;
+    xor di,di
+    mov cx,es:ucd_size
     call AttachMct
 
 uaDone:
