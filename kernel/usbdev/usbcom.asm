@@ -36,6 +36,7 @@ INCLUDE ..\os\protseg.def
 include ..\os\com.inc
 
 MAX_PORTS       = 16
+MAX_DEVICES     = 32
 MAX_COM_UNITS   = 2
 
 FLAG_UDS_DISCONNECT = 2
@@ -120,7 +121,6 @@ uds_in_req          DW ?
 uds_out_req         DW ?
 uds_link            DW ?
 uds_port_offset     DW ?
-uds_flag            DB ?
 uds_intr_interval   DB ?
 uds_port_nr         DW ?
 uds_device_sel      DW ?
@@ -138,6 +138,7 @@ uc_thread               DW ?
 uc_detach               DW ?
 
 uc_flags                DW ?
+uc_dev_offset           DW ?
 
 uc_prev                 DW ?
 uc_next                 DW ?
@@ -152,9 +153,12 @@ usb_com_struc	ENDS
 
 data    SEGMENT byte public 'DATA'
 
-sd_dead_list    DW ?
 
-sd_spinlock     spinlock_typ <>
+sd_dead_list    DW ?
+sd_section      section_typ <>
+
+sd_dev_count    DW ?
+sd_dev_arr      DW MAX_DEVICES DUP(?)
 
 sd_ports        DW ?
 sd_port_arr     DW MAX_PORTS DUP(?)
@@ -3014,7 +3018,8 @@ start_send      PROC far
     jz ssDone
 ;    
     mov es,ax
-    test es:uds_flag,FLAG_UDS_DISCONNECT
+    mov es,es:uds_device_sel
+    test es:uc_flags,FLAG_UDS_DISCONNECT
     jz ssOk
 ;
     mov ds:send_count,0
@@ -3529,13 +3534,14 @@ PollWrite   Endp
 ;       DESCRIPTION:    Handle device
 ;
 ;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleDevice    Proc near
     push ds
 ;
-    test ds:uds_flag,FLAG_UDS_DISCONNECT
+    test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz hdDone
 
 hdConn:
@@ -3550,11 +3556,11 @@ hdOpen:
 ;
     call OpenPort    
 ;
-    test ds:uds_flag,FLAG_UDS_REINIT
+    test es:uc_flags,FLAG_UDS_REINIT
     jz hdIsOpen    
 ;
     call ReInit
-    and ds:uds_flag,NOT FLAG_UDS_REINIT
+    and es:uc_flags,NOT FLAG_UDS_REINIT
 
 hdIsOpen:    
     mov bx,ds:uds_in_req
@@ -3635,7 +3641,7 @@ hdCheckWrite:
     jmp hdDone
 
 hdClosed:
-    and ds:uds_flag,NOT FLAG_UDS_REINIT
+    and es:uc_flags,NOT FLAG_UDS_REINIT
 ;
     mov bx,ds:uds_in_req
     or bx,bx
@@ -3662,25 +3668,25 @@ HandleDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_com_create:
-    mov ds,bx
+    mov es,bx
     GetThread
-    mov ds:uc_thread,ax
+    mov es:uc_thread,ax
 
 utLoop:
     WaitForSignal
 ;
-    movzx cx,ds:uc_unit_count
+    movzx cx,es:uc_unit_count
     or cx,cx
     jz utEnd
 ;
     xor si,si
 
 utDevLoop:
-    mov ax,ds:[si].uc_unit_arr
+    mov ax,es:[si].uc_unit_arr
     or ax,ax
     jz utDevNext
 ;
-    push ds
+    push es
     push cx
     push si
     mov ds,ax
@@ -3691,7 +3697,7 @@ utDevLoop:
 ;
     pop si
     pop cx
-    pop ds
+    pop es
     
 utDevNext:
     add si,2
@@ -3700,6 +3706,25 @@ utDevNext:
     jmp utLoop
 
 utEnd:
+    int 3
+    call ClosePort
+;
+    mov ax,ds:uds_port_sel
+    or ax,ax
+    jz utTerm
+;
+    mov es,ax
+    mov bx,es:ups_control_wait
+    CloseWait
+    mov es:ups_control_wait,0
+;    
+    mov bx,es:ups_control_pipe
+    CloseUsbPipe    
+    mov es:ups_control_pipe,0
+;
+    mov es:send_count,0
+
+utTerm:
     TerminateThread
 
 
@@ -3886,7 +3911,6 @@ apNoRecover:
     mov es:uds_intr_handle,0
     mov es:uds_intr_buffer,0
     mov es:uds_intr_req,0
-    mov es:uds_flag,0
     InitSection es:uds_section
 ;
     mov si,SEG data
@@ -4711,6 +4735,34 @@ CreateServerThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           InsertDevice
+;
+;   Description:    Insert device
+;
+;   Parameters:     ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertDevice	Proc near
+    push ds
+    push si
+;
+    mov si,SEG data
+    mov ds,si
+    mov si,ds:sd_dev_count
+    add si,si
+    mov ds:[si].sd_dev_arr,es
+    inc ds:sd_dev_count
+    mov es:uc_dev_offset,si
+;
+    pop si
+    pop ds
+    ret
+InsertDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           usb_attach
 ;
 ;   Description:    USB attach callback
@@ -4758,6 +4810,7 @@ uaFTDI:
     call ConfigDevice
     jc uaFail
 ;
+    call InsertDevice
     mov ebp,OFFSET usb_com_create
     call CreateServerThread
     call AttachFTDI
@@ -4771,6 +4824,7 @@ uaPL2303:
     call ConfigDevice
     jc uaFail
 ;
+    call InsertDevice
     mov ebp,OFFSET usb_com_create
     call CreateServerThread
     call AttachPL2303
@@ -4784,6 +4838,7 @@ uaMCT:
     call ConfigDevice
     jc uaFail
 ;
+    call InsertDevice
     mov ebp,OFFSET usb_com_create
     call CreateServerThread
     call AttachMct
@@ -4816,10 +4871,12 @@ usb_detach  Proc far
     movzx ax,al
     mov dx,SEG data
     mov ds,dx
-    mov si,OFFSET sd_port_arr
-    mov cx,ds:sd_ports
+    mov si,OFFSET sd_dev_arr
+    mov cx,ds:sd_dev_count
     or cx,cx
     jz udDone
+;
+    int 3
 
 udCheckLoop:
     mov dx,[si]
@@ -4827,65 +4884,57 @@ udCheckLoop:
     jz udCheckNext
 ;
     mov es,dx
-    cmp bx,es:cd_controller
+    cmp bx,es:uc_controller
     jne udCheckNext
 ;
-    cmp ax,es:cd_device
+    cmp al,es:uc_device
     jne udCheckNext
+;
+    GetThread
+    mov ds:uc_detach,ax
+;
+    or ds:uc_flags,FLAG_UDS_DISCONNECT
+    mov bx,ds:uc_thread
+
+udSignal:
+    Signal
+    WaitForSignal
+    mov bx,ds:uc_thread
+    or bx,bx
+    jnz udSignal
+;
+    EnterSection ds:sd_section
+    mov di,ds:sd_dead_list
+    or di,di
+    je udInsEmpty
 ;
     push ds
-    pushad
-    mov ds,dx
-    EnterSection ds:uds_section
-    or ds:uds_flag,FLAG_UDS_DISCONNECT
-;    
-    mov dx,SEG data
-    mov ds,dx
-    mov word ptr [si],0
-;    
-    RequestSpinlock ds:sd_spinlock
-    mov ax,ds:sd_dead_list
-    mov es:uds_link,ax
-    mov ds:sd_dead_list,es
-    ReleaseSpinlock ds:sd_spinlock
+    push si
 ;
-    mov ax,es
-    mov ds,ax
-    call ClosePort
+    mov ds,di
+    mov si,ds:uc_prev
+    mov ds:uc_prev,es
+    mov ds,si
+    mov ds:uc_next,es
+    mov es:uc_next,di
+    mov es:uc_prev,si
 ;
-    mov ax,ds:uds_port_sel
-    or ax,ax
-    jz udPortHandleOk
-;
-    push es
-    mov es,ax
-    mov bx,es:ups_control_wait
-    CloseWait
-    mov es:ups_control_wait,0
-;    
-    mov bx,es:ups_control_pipe
-    CloseUsbPipe    
-    mov es:ups_control_pipe,0
-;
-    mov es:send_count,0
-    mov bx,es:send_wait
-    or bx,bx
-    jz udPortSendOk
-;
-    Signal    
-
-udPortSendOk:
-    pop es
-
-udPortHandleOk:    
-    LeaveSection ds:uds_section    
-;    
-    popad
+    pop si
     pop ds
+    jmp udInsDone
+    
+udInsEmpty:
+    mov es:uc_next,es
+    mov es:uc_prev,es
+    mov ds:sd_dead_list,es
+
+udInsDone:
+    LeaveSection ds:sd_section
+    jmp udDone
 
 udCheckNext:
-    add si,2    
-    sub cx,1
+    add esi,2    
+    sub ecx,1
     jnz udCheckLoop
 
 udDone:
@@ -4909,8 +4958,9 @@ init    Proc far
     mov bx,SEG data
     mov es,bx
     mov es:sd_ports,0
+    mov es:sd_dev_count,0
     mov es:sd_dead_list,0
-    InitSpinlock es:sd_spinlock
+    InitSection ds:sd_section
 ;       
     mov ax,cs
     mov ds,ax
