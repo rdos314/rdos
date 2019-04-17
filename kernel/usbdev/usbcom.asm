@@ -3672,19 +3672,22 @@ usb_com_create:
     GetThread
     mov es:uc_thread,ax
 
-utLoop:
+tLoop:
     WaitForSignal
+;
+    test es:uc_flags,FLAG_UDS_DISCONNECT
+    jnz tExit
 ;
     movzx cx,es:uc_unit_count
     or cx,cx
-    jz utEnd
+    jz tEnd
 ;
     xor si,si
 
-utDevLoop:
+tDevLoop:
     mov ax,es:[si].uc_unit_arr
     or ax,ax
-    jz utDevNext
+    jz tDevNext
 ;
     push es
     push cx
@@ -3699,20 +3702,37 @@ utDevLoop:
     pop cx
     pop es
     
-utDevNext:
+tDevNext:
     add si,2
-    loop utDevLoop
+    loop tDevLoop
 ;    
-    jmp utLoop
+    jmp tLoop
 
-utEnd:
-    int 3
+tExit:
+    movzx cx,es:uc_unit_count
+    or cx,cx
+    jz tEnd
+;
+    xor si,si
+
+tCloseLoop:
+    mov ax,es:[si].uc_unit_arr
+    or ax,ax
+    jz tCloseNext
+;
+    push es
+    push cx
+    push si
+    mov ds,ax
+;
+    EnterSection ds:uds_section
     call ClosePort
 ;
     mov ax,ds:uds_port_sel
     or ax,ax
-    jz utTerm
+    jz tLeave
 ;
+    push es
     mov es,ax
     mov bx,es:ups_control_wait
     CloseWait
@@ -3723,8 +3743,25 @@ utEnd:
     mov es:ups_control_pipe,0
 ;
     mov es:send_count,0
+    pop es
 
-utTerm:
+tLeave:
+    LeaveSection ds:uds_section
+;
+    pop si
+    pop cx
+    pop es
+    
+tCloseNext:
+    add si,2
+    sub cx,1
+    jnz tCloseLoop
+;
+    mov es:uc_thread,0
+    mov bx,es:uc_detach
+    Signal
+
+tEnd:
     TerminateThread
 
 
@@ -4875,8 +4912,6 @@ usb_detach  Proc far
     mov cx,ds:sd_dev_count
     or cx,cx
     jz udDone
-;
-    int 3
 
 udCheckLoop:
     mov dx,[si]
@@ -4891,15 +4926,15 @@ udCheckLoop:
     jne udCheckNext
 ;
     GetThread
-    mov ds:uc_detach,ax
+    mov es:uc_detach,ax
 ;
-    or ds:uc_flags,FLAG_UDS_DISCONNECT
-    mov bx,ds:uc_thread
+    or es:uc_flags,FLAG_UDS_DISCONNECT
+    mov bx,es:uc_thread
 
 udSignal:
     Signal
     WaitForSignal
-    mov bx,ds:uc_thread
+    mov bx,es:uc_thread
     or bx,bx
     jnz udSignal
 ;
