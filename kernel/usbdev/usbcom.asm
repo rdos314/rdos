@@ -152,7 +152,6 @@ usb_com_struc	ENDS
 
 data    SEGMENT byte public 'DATA'
 
-sd_thread       DW ?
 sd_dead_list    DW ?
 
 sd_spinlock     spinlock_typ <>
@@ -257,9 +256,9 @@ SendSignal  Proc far
     mov ds,cx
     mov ds:ups_timer_active,0
 ;    
-    mov ax,SEG data
-    mov ds,ax    
-    mov bx,ds:sd_thread
+    mov ds,ds:ups_device_sel
+    mov ds,ds:uds_device_sel
+    mov bx,ds:uc_thread
     Signal    
 
 ssiDone:
@@ -928,9 +927,8 @@ open_com_ftdi   Proc far
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-    mov ax,SEG data
-    mov ds,ax    
-    mov bx,ds:sd_thread
+    mov ds,ds:uds_device_sel
+    mov bx,ds:uc_thread
     Signal    
     clc
 
@@ -985,12 +983,10 @@ ccfTimerClosed:
     LeaveSection ds:uds_section       
 
 ccfNoDevice:    
+    mov ds,ds:uds_device_sel
+    mov bx,ds:uc_thread
     mov ds,ax
     mov ds:ups_device_sel,0
-;
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:sd_thread
     Signal    
 ;
     mov ax,150
@@ -1846,9 +1842,8 @@ open_com_pl     Proc far
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-    mov ax,SEG data
-    mov ds,ax    
-    mov bx,ds:sd_thread
+    mov ds,ds:uds_device_sel
+    mov bx,ds:uc_thread
     Signal    
     clc
 
@@ -1903,12 +1898,10 @@ ccpTimerClosed:
     LeaveSection ds:uds_section       
 
 ccpNoDevice:    
+    mov ds,ds:uds_device_sel
+    mov bx,ds:uc_thread
     mov ds,ax
     mov ds:ups_device_sel,0
-;
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:sd_thread
     Signal    
 ;
     mov ax,150
@@ -2729,9 +2722,8 @@ icmDivisorOk:
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-    mov ax,SEG data
-    mov ds,ax    
-    mov bx,ds:sd_thread
+    mov ds,ds:uds_device_sel
+    mov bx,ds:uc_thread
     Signal    
     clc
 ;
@@ -3532,12 +3524,11 @@ PollWrite   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           HandleDevice
+;       NAME:           HandleDevice
 ;
-;           DESCRIPTION:    Handle device
+;       DESCRIPTION:    Handle device
 ;
-;       PARAMETERS:     FS      SEG data
-;               DS      Function sel
+;       PARAMETERS:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3670,31 +3661,29 @@ HandleDevice    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcom_thread_name  DB 'USB Com', 0
-
-usbcom_thread:
-    mov ax,SEG data
-    mov fs,ax
+usb_com_create:
+    mov ds,bx
     GetThread
-    mov fs:sd_thread,ax
+    mov ds:uc_thread,ax
 
 utLoop:
     WaitForSignal
 ;
-    mov cx,fs:sd_ports
+    movzx cx,ds:uc_unit_count
     or cx,cx
     jz utEnd
 ;
     xor si,si
 
 utDevLoop:
-    mov ax,fs:[si].sd_port_arr
+    mov ax,ds:[si].uc_unit_arr
     or ax,ax
     jz utDevNext
 ;
-    mov ds,ax
+    push ds
     push cx
     push si
+    mov ds,ax
 ;
     EnterSection ds:uds_section
     call HandleDevice
@@ -3702,6 +3691,7 @@ utDevLoop:
 ;
     pop si
     pop cx
+    pop ds
     
 utDevNext:
     add si,2
@@ -3710,10 +3700,6 @@ utDevNext:
     jmp utLoop
 
 utEnd:
-    retf
-
-usb_com_create:
-    int 3
     TerminateThread
 
 
@@ -3747,38 +3733,9 @@ cpt03 DD OFFSET CreatePortMct
 AddPort Proc near
     push es
     pushad
-;    
+;
     push dx
     push di
-    mov dx,SEG data
-    mov ds,dx
-    mov dx,ds:sd_thread
-    or dx,dx
-    jnz apThreadStarted
-;
-    mov ds:sd_thread,-1
-    push ds
-    push es
-    push ax
-    push si
-    push di    
-;    
-    mov dx,cs
-    mov ds,dx
-    mov es,dx
-    mov di,OFFSET usbcom_thread_name
-    mov si,OFFSET usbcom_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    pop di
-    pop si
-    pop ax
-    pop es
-    pop ds
-        
-apThreadStarted:
     push bx
     xor bx,bx
     xor bp,bp
@@ -3864,41 +3821,40 @@ apDescrDone:
     or ch,ch
     jz apDone
 ;    
-    push ax
-    mov ax,ds:sd_dead_list
-    or ax,ax
-    pop ax
-    jz apNoRecover
+;    push ax
+;    mov ax,ds:sd_dead_list
+;    or ax,ax
+;    pop ax
+;    jz apNoRecover
 ;
-    RequestSpinlock ds:sd_spinlock
-    mov es,ds:sd_dead_list
-    mov dx,es:uds_link
-    mov ds:sd_dead_list,dx
-    ReleaseSpinlock ds:sd_spinlock
+;    RequestSpinlock ds:sd_spinlock
+;    mov es,ds:sd_dead_list
+;    mov dx,es:uds_link
+;    mov ds:sd_dead_list,dx
+;    ReleaseSpinlock ds:sd_spinlock
 ;
-    mov dx,es
-    mov ds,dx
-    EnterSection ds:uds_section
-    mov al,ds:uds_flag
-    or al,FLAG_UDS_REINIT
-    and al,NOT FLAG_UDS_DISCONNECT
-    mov ds:uds_flag,al
+;    mov dx,es
+;    mov ds,dx
+;    EnterSection ds:uds_section
+;    mov al,ds:uds_flag
+;    or al,FLAG_UDS_REINIT
+;    and al,NOT FLAG_UDS_DISCONNECT
+;    mov ds:uds_flag,al
 ;    
-    mov ax,SEG data
-    mov ds,ax
-    mov es,dx
-    mov si,es:uds_port_offset
-    mov ds:[si].sd_port_arr,es
+;    mov ax,SEG data
+;    mov ds,ax
+;    mov es,dx
+;    mov si,es:uds_port_offset
+;    mov ds:[si].sd_port_arr,es
 ;
-    mov dx,es
-    mov ds,dx    
-    LeaveSection ds:uds_section
+;    mov dx,es
+;    mov ds,dx    
+;    LeaveSection ds:uds_section
 ;    
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:sd_thread
-    Signal    
-    jmp apDone
+;    mov ds,ds:uds_device_sel
+;    mov bx,ds:uc_thread
+;    Signal    
+;    jmp apDone
     
 apNoRecover:
     push cx
@@ -3931,13 +3887,10 @@ apNoRecover:
     mov es:uds_intr_buffer,0
     mov es:uds_intr_req,0
     mov es:uds_flag,0
+    InitSection es:uds_section
 ;
-    push ds
-    mov si,es
+    mov si,SEG data
     mov ds,si
-    InitSection ds:uds_section
-    pop ds
-;
     mov si,ds:sd_ports
     add si,si
     mov ds:[si].sd_port_arr,es
@@ -4956,7 +4909,6 @@ init    Proc far
     mov bx,SEG data
     mov es,bx
     mov es:sd_ports,0
-    mov es:sd_thread,0
     mov es:sd_dead_list,0
     InitSpinlock es:sd_spinlock
 ;       

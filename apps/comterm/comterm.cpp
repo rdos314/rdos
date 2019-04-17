@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     {
         printf("\r\n");
         
-        Serial = new TSerialDevice(port, baud, 'O', 7, 1);
+        Serial = new TSerialDevice(port, baud, 'N', 8, 1);
 
         for (;;)
         {
