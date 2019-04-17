@@ -151,6 +151,13 @@ uc_dev_descr_buf        DB ?
 
 usb_com_struc	ENDS
 
+com_setup	STRUC
+
+cs_dev_type_proc	DD ?,?
+cs_dev_attach_proc      DD ?,?
+
+com_setup       ENDS
+
 data    SEGMENT byte public 'DATA'
 
 
@@ -3555,14 +3562,15 @@ hdOpen:
     jnz hdIsOpen
 ;
     call OpenPort    
-;
+
+hdIsOpen:    
     test es:uc_flags,FLAG_UDS_REINIT
-    jz hdIsOpen    
+    jz hdInitOk
 ;
     call ReInit
     and es:uc_flags,NOT FLAG_UDS_REINIT
 
-hdIsOpen:    
+hdInitOk:
     mov bx,ds:uds_in_req
     IsUsbReqStarted
     jnc hdOpenOk
@@ -3667,14 +3675,26 @@ HandleDevice    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+usb_com_recreate:
+    mov es,bx
+;
+    GetThread
+    mov es:uc_detach,0
+    mov es:uc_thread,ax
+;
+    mov es:uc_flags,FLAG_UDS_REINIT
+    jmp tSignalled
+
 usb_com_create:
     mov es,bx
     GetThread
+    mov es:uc_detach,0
     mov es:uc_thread,ax
 
 tLoop:
     WaitForSignal
-;
+
+TSignalled:
     test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
@@ -3882,43 +3902,7 @@ apDescrDone:
 ;
     or ch,ch
     jz apDone
-;    
-;    push ax
-;    mov ax,ds:sd_dead_list
-;    or ax,ax
-;    pop ax
-;    jz apNoRecover
 ;
-;    RequestSpinlock ds:sd_spinlock
-;    mov es,ds:sd_dead_list
-;    mov dx,es:uds_link
-;    mov ds:sd_dead_list,dx
-;    ReleaseSpinlock ds:sd_spinlock
-;
-;    mov dx,es
-;    mov ds,dx
-;    EnterSection ds:uds_section
-;    mov al,ds:uds_flag
-;    or al,FLAG_UDS_REINIT
-;    and al,NOT FLAG_UDS_DISCONNECT
-;    mov ds:uds_flag,al
-;    
-;    mov ax,SEG data
-;    mov ds,ax
-;    mov es,dx
-;    mov si,es:uds_port_offset
-;    mov ds:[si].sd_port_arr,es
-;
-;    mov dx,es
-;    mov ds,dx    
-;    LeaveSection ds:uds_section
-;    
-;    mov ds,ds:uds_device_sel
-;    mov bx,ds:uc_thread
-;    Signal    
-;    jmp apDone
-    
-apNoRecover:
     push cx
     mov cl,es:[di].uid_id
     push ax
@@ -4241,9 +4225,9 @@ IsFTDI	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetFTDIType  Proc near
+GetFTDIType  Proc far
     mov si,es:udd_device
-    ret
+    retf32
 GetFTDIType  Endp 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4260,7 +4244,9 @@ GetFTDIType  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AttachFTDI  Proc near
+AttachFTDI  Proc far
+    pushad
+;
     mov di,OFFSET uc_dev_descr_buf
     mov bp,es:uc_dev_descr_size
     add bp,di
@@ -4306,7 +4292,9 @@ aftDescrNext:
     jb aftDescrLoop    
     
 aftDone:
-    ret
+    clc
+    popad
+    retf32
 AttachFTDI  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4399,7 +4387,7 @@ IsPL2303	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
-GetPL2303Type  Proc near
+GetPL2303Type  Proc far
     mov cl,es:udd_class
     cmp cl,2
     je gplDescrType01
@@ -4415,7 +4403,7 @@ gplDescrType01:
     mov si,DEVICE_TYPE_PL_01
 
 gplDescrDeviceOk:    
-    ret
+    retf32
 GetPL2303Type  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4433,7 +4421,9 @@ GetPL2303Type  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
-AttachPL2303  Proc near
+AttachPL2303  Proc far
+    pushad
+;
     mov di,OFFSET uc_dev_descr_buf
     mov bp,es:uc_dev_descr_size
     add bp,di
@@ -4455,7 +4445,9 @@ aplDescrNext:
     jb aplDescrLoop    
     
 aplDone:
-    ret
+    clc
+    popad
+    retf32
 AttachPL2303  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4520,7 +4512,7 @@ IsMct	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetMctType  Proc near
+GetMctType  Proc far
     push di
 ;
     mov si,es:udd_vendor
@@ -4541,7 +4533,7 @@ gmctBelkin:
 
 gmctDeviceOk:
     pop di
-    ret
+    retf32
 GetMctType  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4559,7 +4551,9 @@ GetMctType  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AttachMct  Proc near
+AttachMct  Proc far
+    pushad
+;
     mov di,OFFSET uc_dev_descr_buf
     mov bp,es:uc_dev_descr_size
     add bp,di
@@ -4581,7 +4575,9 @@ amctDescrNext:
     jb amctDescrLoop    
     
 amctDone:
-    ret
+    clc
+    popad
+    retf32
 AttachMct  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4621,86 +4617,6 @@ ok_high1:
     add ah,30h
     ret
 HexToAscii      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ConfigDevice
-;
-;   Description:    USB attach callback
-;
-;   Parameters:     ES      Descriptor buffer
-;                   BX      Controller #
-;                   AL      Device address
-;                   EBP     Vendor +´device
-;
-;   Returns:        ES      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConfigDevice  Proc near
-    push dx
-;    
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    stc
-    jz cdDone
-;
-    mov dl,es:ucd_config_id
-    ConfigUsbDevice
-    jc cdDone
-;
-    push eax
-    push ebx
-    push esi
-    push ebp
-;
-    movzx ebp,es:ucd_size
-    mov ax,es
-    mov ds,ax
-;
-    mov eax,OFFSET uc_dev_descr_buf
-    add eax,ebp
-    AllocateSmallGlobalMem
-;
-    mov ecx,ebp
-    xor esi,esi
-    mov edi,OFFSET uc_dev_descr_buf
-    rep movsb
-;
-    push es
-    mov eax,ds
-    mov es,eax
-    xor eax,eax
-    mov ds,eax
-    FreeMem
-    pop es
-;
-    mov es:uc_dev_descr_size,bp
-;
-    pop ebp
-    pop esi
-    pop ebx
-    pop eax
-;
-    mov es:uc_product,bp
-    shr ebp,16
-    mov es:uc_vendor,bp
-    mov es:uc_controller,bx
-    mov es:uc_device,al
-    mov es:uc_unit_count,0
-    mov es:uc_flags,0
-
-cdDone:
-    pop dx
-    ret
-ConfigDevice  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4776,16 +4692,14 @@ CreateServerThread   Endp
 ;
 ;   Description:    Insert device
 ;
-;   Parameters:     ES      Device sel
+;   Parameters:     DS	    Data segment
+;                   ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertDevice	Proc near
-    push ds
     push si
 ;
-    mov si,SEG data
-    mov ds,si
     mov si,ds:sd_dev_count
     add si,si
     mov ds:[si].sd_dev_arr,es
@@ -4793,9 +4707,315 @@ InsertDevice	Proc near
     mov es:uc_dev_offset,si
 ;
     pop si
-    pop ds
     ret
 InsertDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           CheckDevice
+;
+;    Description:    Search device
+;
+;    Parameters:     DS         Device sel
+;                    ES   	Descriptor
+;                    ESI        Vendor & product
+;                    BP	        Descriptor size
+;
+;    Returns:        NC         Match
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDevice	Proc near
+    push eax
+;
+    mov ax,ds:uc_vendor
+    shl eax,16
+    mov ax,ds:uc_product
+    cmp eax,esi
+    jne chdFail
+;
+    mov ax,ds:uc_dev_descr_size
+    cmp ax,bp
+    jne chdFail
+;
+    push cx
+    push si
+;
+    mov cx,bp
+    mov si,OFFSET uc_dev_descr_buf
+    xor di,di
+    repe cmpsb
+;
+    pop si
+    pop cx
+    clc
+    jz chdDone
+
+chdFail:
+    stc
+
+chdDone:
+    pop eax
+    ret
+CheckDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindAnyDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS         Data seg
+;                    ES   	Descriptor
+;                    ESI        Vendor & product
+;                    BP	        Descriptor size
+;
+;    Returns:        ECX	Number of matches
+;                    GS         Device sel of last match
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindAnyDevice	Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    xor ecx,ecx
+;
+    mov bx,ds:sd_dead_list
+    or bx,bx
+    jz fadDone
+;
+    mov dx,bx
+
+fadLoop:
+    mov ds,bx
+    call CheckDevice
+    jc fadNext
+;
+    inc cx
+    mov ax,ds
+    mov gs,ax
+
+fadNext:
+    mov bx,ds:uc_next
+    cmp bx,dx
+    jne fadLoop
+
+fadDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+FindAnyDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindSpecificDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS      Data seg
+;                    BX      Controller #
+;                    AL      Device address
+;
+;    Returns:        NC	     Found
+;                        GS  Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindSpecificDevice	Proc near
+    push ds
+    push ecx
+    push edx
+;
+    mov cx,ds:sd_dead_list
+    or cx,cx
+    stc
+    jz fsdDone
+;
+    mov dx,cx
+
+fsdLoop:
+    mov ds,cx
+    cmp bx,ds:uc_controller
+    jne fsdNext
+;
+    cmp al,ds:uc_device
+    jne fsdNext
+;
+    call CheckDevice
+    jc fsdNext
+;
+    mov cx,ds
+    mov gs,cx
+    clc
+    jmp fsdDone
+
+fsdNext:
+    mov cx,ds:uc_next
+    cmp cx,dx
+    jne fsdLoop
+;
+    stc
+
+fsdDone:
+    pop edx
+    pop ecx    
+    pop ds
+    ret
+FindSpecificDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigDevice
+;
+;   Description:    USB attach callback
+;
+;   Parameters:     DS      Data segment
+;                   ES      Descriptor buffer
+;                   BX      Controller #
+;                   AL      Device address
+;                   ESI     Vendor + device
+;                   FS:EBP  Device table
+;
+;   Returns:        ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice  Proc near
+    push gs
+    pushad
+;    
+    call fword ptr fs:[ebp].cs_dev_type_proc
+;
+    xor dl,dl
+    mov cx,1000h
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    stc
+    jz cdDone
+;
+    mov dl,es:ucd_config_id
+    ConfigUsbDevice
+    jc cdDone
+;
+    push ebp
+;
+    EnterSection ds:sd_section
+    mov bp,cx
+    call FindAnyDevice
+    or cx,cx
+    jz cdAdd
+;
+    cmp cx,1
+    je cdRecreate
+;
+    call FindSpecificDevice
+    jnc cdRecreate
+
+cdAdd:
+    push ds
+    push eax
+    push ebx
+    push esi
+;
+    movzx ebp,es:ucd_size
+    mov ax,es
+    mov ds,ax
+;
+    mov eax,OFFSET uc_dev_descr_buf
+    add eax,ebp
+    AllocateSmallGlobalMem
+;
+    mov cx,bp
+    xor si,si
+    mov di,OFFSET uc_dev_descr_buf
+    rep movsb
+;
+    push es
+    mov eax,ds
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
+    FreeMem
+    pop es
+;
+    mov es:uc_dev_descr_size,bp
+;
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+;
+    pop ebp
+;
+    mov es:uc_product,si
+    shr esi,16
+    mov es:uc_vendor,si
+    mov es:uc_controller,bx
+    mov es:uc_device,al
+    mov es:uc_unit_count,0
+    mov es:uc_flags,0
+;
+    call InsertDevice
+    LeaveSection ds:sd_section
+;
+    push ebp
+    mov ebp,OFFSET usb_com_create
+    call CreateServerThread
+    pop ebp
+;
+    call fword ptr fs:[ebp].cs_dev_attach_proc
+    jmp cdDone
+
+cdRecreate:
+    push ds
+    mov si,gs
+    mov di,gs:uc_next
+    cmp di,si
+    mov ds:sd_dead_list,di
+    mov si,gs:uc_prev
+    mov ds,di
+    mov ds:uc_prev,si
+    mov ds,si
+    mov ds:uc_next,di
+    pop ds
+    jne cdDeadOk
+;    
+    mov ds:sd_dead_list,0
+
+cdDeadOk:
+    pop ebp
+;
+    LeaveSection ds:sd_section
+;
+    mov cx,gs
+    mov es,cx
+    mov es:uc_controller,bx
+    mov es:uc_device,al
+;
+    mov ebp,OFFSET usb_com_recreate
+    call CreateServerThread
+    clc
+
+cdDone:
+    popad
+    pop gs
+    ret
+ConfigDevice  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4809,10 +5029,26 @@ InsertDevice   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ftdi_attach_tab:
+fa00  DD OFFSET GetFTDIType, SEG code
+fa01  DD OFFSET AttachFTDI,  SEG code
+
+pl2303_attach_tab:
+pla00  DD OFFSET GetPL2303Type, SEG code
+pla01  DD OFFSET AttachPL2303,  SEG code
+
+mct_attach_tab:
+mcta00  DD OFFSET GetMctType, SEG code
+mcta01  DD OFFSET AttachMct,  SEG code
+
 usb_attach  Proc far
     push ds
     push es
+    push fs
     pushad
+;
+    mov cx,SEG data
+    mov ds,cx
 ;
     push ax
     mov eax,1000h
@@ -4840,48 +5076,31 @@ uaFail:
     jmp uaDone
 
 uaFTDI:
-    mov bp,es:udd_vendor
-    shl ebp,16
-    mov bp,es:udd_prod
-    call GetFTDIType
-    call ConfigDevice
-    jc uaFail
-;
-    call InsertDevice
-    mov ebp,OFFSET usb_com_create
-    call CreateServerThread
-    call AttachFTDI
-    jmp uaDone
+    mov si,cs
+    mov fs,si
+    mov ebp,OFFSET ftdi_attach_tab
+    jmp uaConfig
 
 uaPL2303:
-    mov bp,es:udd_vendor
-    shl ebp,16
-    mov bp,es:udd_prod
-    call GetPL2303Type
-    call ConfigDevice
-    jc uaFail
-;
-    call InsertDevice
-    mov ebp,OFFSET usb_com_create
-    call CreateServerThread
-    call AttachPL2303
-    jmp uaDone
+    mov si,cs
+    mov fs,si
+    mov ebp,OFFSET pl2303_attach_tab
+    jmp uaConfig
 
 uaMCT:
-    mov bp,es:udd_vendor
-    shl ebp,16
-    mov bp,es:udd_prod
-    call GetMctType
+    mov si,cs
+    mov fs,si
+    mov ebp,OFFSET mct_attach_tab
+
+uaConfig:
+    mov si,es:udd_vendor
+    shl esi,16
+    mov si,es:udd_prod
     call ConfigDevice
-    jc uaFail
-;
-    call InsertDevice
-    mov ebp,OFFSET usb_com_create
-    call CreateServerThread
-    call AttachMct
 
 uaDone:
     popad
+    pop fs
     pop es
     pop ds
     retf32
