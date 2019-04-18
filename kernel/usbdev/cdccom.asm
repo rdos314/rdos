@@ -457,6 +457,8 @@ start_send      PROC far
     jz ssOk
 ;
     mov ds:send_count,0
+    mov ds:send_head,0
+    mov ds:send_tail,0
     jmp ssDone
 
 ssOk:    

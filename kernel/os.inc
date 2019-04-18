@@ -3932,6 +3932,20 @@ WriteUsbDataNoCopy      MACRO
     OsGate write_usb_data_no_copy_nr
                         ENDM
 
+; IN  DS      Port sel
+; OUT BX      Control handle
+; OUT SI      Wait handle
+LockUsbComControl MACRO
+    OsGate lock_usb_com_control_nr
+                    ENDM
+
+; IN  DS      Port sel
+; IN  BX      Control handle
+; IN  SI      Wait handle
+UnlockUsbComControl MACRO
+    OsGate unlock_usb_com_control_nr
+                    ENDM
+
 ;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register
