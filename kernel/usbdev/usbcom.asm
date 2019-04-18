@@ -3269,10 +3269,12 @@ OpenPort    Proc near
     CreateUsbReq
     mov ds:uds_in_req,bx    
 ;    
+    push es
     mov cx,ds:uds_in_size
     xor ax,ax
     AddReadUsbDataReq
     mov ds:uds_in_buffer,es
+    pop es
 ;
     mov bx,es:uc_controller
     mov al,es:uc_device
@@ -3283,10 +3285,12 @@ OpenPort    Proc near
     CreateUsbReq
     mov ds:uds_out_req,bx
 ;    
+    push es
     mov cx,ds:uds_out_size
     mov ax,1
     AddWriteUsbDataReq
     mov ds:uds_out_buffer,es
+    pop es
 ;
     mov dl,ds:uds_intr_in
     or dl,dl
@@ -3300,10 +3304,12 @@ OpenPort    Proc near
     CreateUsbReq
     mov ds:uds_intr_req,bx
 ;
+    push es
     mov cx,ds:uds_in_size
     xor ax,ax
     AddReadUsbDataReq
     mov ds:uds_intr_buffer,es
+    pop es
 
 opDone:        
     ret
