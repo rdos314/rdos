@@ -1,7 +1,8 @@
 #include p18f4550.inc   
 
   config PLLDIV=3,  CPUDIV = OSC2_PLL3, USBDIV = 2, FOSC = HSPLL_HS, FCMEN = OFF, IESO = OFF, PWRT = ON
-  config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON, MCLRE = OFF, STVREN = ON
+  config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON
+  config MCLRE = OFF, STVREN = ON
   config LVP = OFF, ICPRT = OFF,  XINST = OFF
   config CP0=OFF, CP1=OFF, CP2=OFF, CP3=OFF, CPB=OFF, CPD=OFF
   config WRT0=OFF, WRT1=OFF, WRT2=OFF, WRT3=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF
@@ -99,23 +100,12 @@ STOP_SERIAL        equ 5
 
     goto ProgStart
 
-    org 0x8
-
-    goto Intr
-
-    org 0x18
-
-    goto Intr
-
 w_isr         equ 0x60
 status_isr    equ 0x61
 bsr_isr       equ 0x62
 
-counter_low   equ 0x63
-counter_ov    equ 0x64
-
-counter_mid   equ 0x65
-counter_high  equ 0x66
+counter_ms   equ 0x63
+counter_ds    equ 0x64
 
 temp          equ 0x67
 
@@ -143,35 +133,6 @@ usb_adr       equ 0x79
 ser_state     equ 0x7A
 ser_mask      equ 0x7C
 parity        equ 0x7D
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Interupt
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Intr:
-    movff STATUS, status_isr
-    movff BSR, bsr_isr
-    movlb 0
-    movwf w_isr
-;
-    btfss PIR1,TMR2IF
-    bra NotTmr2
-;
-    bcf PIR1,TMR2IF
-    decf counter_low,f
-    bnz NotTmr2
-;
-    incf counter_ov,f
-    movlw 0x64
-    movwf counter_low
-
-NotTmr2:
-    movf w_isr, W
-    movff bsr_isr, BSR
-    movff status_isr, STATUS
-    retfie
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; position dependent code starts here
@@ -1437,6 +1398,31 @@ SerRecOdd:
     return
 
 SerRecParOk:
+    movlb 0
+    movf temp, W
+    andwf ser_mask, W
+    movwf temp
+;
+    movlb ser_buf_page
+    lfsr 0,rx_buf
+    movf rx_out_pos, W
+    addwf FSR0L, F
+;
+    movlb 0
+    movf temp, W
+    movwf INDF0
+;
+    movlb ser_buf_page
+    incf rx_out_pos, F
+    movlw SER_COM_SIZE
+    cpfseq rx_out_pos
+    goto SerRecOutOk
+;
+    clrf rx_out_pos
+
+SerRecOutOk:
+    incf rx_count, F
+    movlb 0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1452,6 +1438,8 @@ HandleSerSend:
     movf tx_count, W
     btfsc STATUS, Z
     return
+;
+    bsf LATC,1
 ;
     lfsr 0,tx_buf
     movf tx_in_pos, W
@@ -1499,16 +1487,33 @@ hssNext:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; HandleSendIdle
+;
+; Handle serial send idle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleSendIdle:
+    movlb ser_buf_page
+    movf tx_count, W
+    btfss STATUS, Z
+    return
+;
+    bcf LATC,1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; Program start
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProgStart:
-    clrf counter_ov
     movlw 0x64
-    movwf counter_low
-    movwf counter_mid
-    movwf counter_high
+    movwf counter_ms
+;
+    movlw 0xA
+    movwf counter_ds
 ;
     movlw 0xFF
     movwf TRISA
@@ -1539,14 +1544,15 @@ ProgStart:
 ;
     movlw 0
     movwf BSR
-    movlw 0xD
+;
+    movlw 0x26
     movwf T2CON
-    movlw 0x96
+;
+    movlw 0x64
     movwf PR2
-    bsf PIE1,TMR2IE
+;
     bcf PIR1,TMR2IF
-    movlw 0xC0
-    movwf INTCON
+;
     movlw 0
     movwf temp
 ;
@@ -1591,27 +1597,29 @@ Loop:
 ;
     btfsc PIR1, TXIF
     call HandleSerSend
+;
+    btfsc TXSTA,TRMT
+    call HandleSendIdle
 
 SerDone:
-    movf counter_ov,W
-    bz Loop
+    btfss PIR1,TMR2IF
+    bra Loop
 ;
-    decf counter_ov,f
+    bcf PIR1,TMR2IF
 ;
-    decf counter_mid,f
-    bnz Loop
+    decfsz counter_ms,F
+    bra Loop
 ;
     movlw 0x64
-    movwf counter_mid
+    movwf counter_ms
+;
+    decfsz counter_ds,F
+    bra Loop
+;
+    movlw 0xA
+    movwf counter_ds
 ;
     btg LATB,1
-
-    decf counter_high,f
-    bnz Loop
-;
-    movlw 0x64
-    movwf counter_high
-;
     goto Loop
 
 DeviceDescr:

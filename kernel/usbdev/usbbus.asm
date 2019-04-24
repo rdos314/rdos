@@ -243,7 +243,7 @@ GetBaudDivisor Proc near
     jb gbdFail
 ;
     xor edx,edx
-    mov eax,12000000
+    mov eax,8000000
     div ecx
     test eax,0FFFF0000h
     jnz gbdFail
