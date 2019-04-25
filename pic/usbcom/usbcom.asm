@@ -1504,6 +1504,100 @@ HandleSendIdle:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; Poll
+;
+; Poll USB & serial port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Poll:
+    movff STATUS, status_isr
+    movff BSR, bsr_isr
+;
+    movlb 0xF
+    btfsc UIR, UERRIF
+    call HandleUsbError
+;
+    btfsc UIR, SOFIF
+    bcf UIR, SOFIF
+;
+    btfsc UIR, IDLEIF
+    bcf UIR, IDLEIF
+;
+    btfsc UIR, ACTVIF
+    bcf UIR, ACTVIF
+;
+    btfsc UIR, STALLIF
+    bcf UIR, STALLIF
+;
+    btfsc UIR, URSTIF
+    call HandleUsbReset
+;
+    btfsc UIR, TRNIF
+    call HandleUsbComplete
+;
+    movlb 0
+    btfss ser_state, SER_STATE_ACTIVE
+    goto SerDone
+;
+    btfss ser_state, SER_STATE_IN_BUSY
+    call BufferToUsb
+;
+    btfsc ser_state, SER_STATE_OUT_BUSY
+    call UsbToBuffer
+;
+    btfsc PIR1, RCIF
+    call HandleSerReceive
+;
+    btfsc PIR1, TXIF
+    call HandleSerSend
+;
+    btfsc TXSTA,TRMT
+    call HandleSendIdle
+
+SerDone:
+    movff bsr_isr, BSR
+    movff status_isr, STATUS
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WaitMs
+;
+; Delay 1ms
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitMs:
+    call Poll
+    btfss PIR1,TMR2IF
+    bra WaitMs
+;
+    bcf PIR1,TMR2IF
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WaitDs
+;
+; Delay 0.1s
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitDs:
+    movlw 0x64
+    movwf counter_ms
+
+wdLoop:
+    call WaitMs
+;
+    decfsz counter_ms,F
+    bra wdLoop
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; Program start
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1560,64 +1654,16 @@ ProgStart:
     call InitSerial
     
 Loop:
-    movlb 0xF
-    btfsc UIR, UERRIF
-    call HandleUsbError
-;
-    btfsc UIR, SOFIF
-    bcf UIR, SOFIF
-;
-    btfsc UIR, IDLEIF
-    bcf UIR, IDLEIF
-;
-    btfsc UIR, ACTVIF
-    bcf UIR, ACTVIF
-;
-    btfsc UIR, STALLIF
-    bcf UIR, STALLIF
-;
-    btfsc UIR, URSTIF
-    call HandleUsbReset
-;
-    btfsc UIR, TRNIF
-    call HandleUsbComplete
-;
-    movlb 0
-    btfss ser_state, SER_STATE_ACTIVE
-    goto SerDone
-;
-    btfss ser_state, SER_STATE_IN_BUSY
-    call BufferToUsb
-;
-    btfsc ser_state, SER_STATE_OUT_BUSY
-    call UsbToBuffer
-;
-    btfsc PIR1, RCIF
-    call HandleSerReceive
-;
-    btfsc PIR1, TXIF
-    call HandleSerSend
-;
-    btfsc TXSTA,TRMT
-    call HandleSendIdle
-
-SerDone:
-    btfss PIR1,TMR2IF
-    bra Loop
-;
-    bcf PIR1,TMR2IF
-;
-    decfsz counter_ms,F
-    bra Loop
-;
-    movlw 0x64
-    movwf counter_ms
-;
-    decfsz counter_ds,F
-    bra Loop
-;
-    movlw 0xA
-    movwf counter_ds
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
 ;
     btg LATB,1
     goto Loop
