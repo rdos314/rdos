@@ -93,12 +93,30 @@ uds_port_nr         DW ?
 
 usbcom_device_struc   ENDS
 
+digio_queue_entry   STRUC
+
+dqe_prev        DW ?
+dqe_next        DW ?
+
+dqe_out_size    DB ?
+dqe_out_buf     DB 6 DUP(?)
+
+dqe_in_size     DB ?
+dqe_in_buf      DB 4 DUP(?)
+
+dqe_result      DB ?
+
+digio_queue_entry   ENDS
+
 data    SEGMENT byte public 'DATA'
 
 sd_thread       DW ?
 sd_dead         DW ?
 sd_spinlock     spinlock_typ <>
 sd_port         DW ?
+
+dio_list        DW ?
+dio_section     section_typ <>
 
 data	ENDS
 
@@ -1403,6 +1421,272 @@ get_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateReq
+;
+;       Description:    Create dio req
+;
+;       PARAMETERS:     BL      Cmd #
+;                       DL      Line #
+;                       DH      Node #
+;
+;       RETURNS:        ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateReq   Proc near
+    push eax
+    mov eax,SIZE digio_queue_entry
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:dqe_out_buf,dh    
+    mov al,dl
+    shl al,3
+    or al,bl
+    mov es:dqe_out_buf+1,al
+    mov es:dqe_out_size,2
+    mov es:dqe_result,-1
+    ret
+CreateReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DioInsert
+;
+;       DESCRIPTION:    Insert entry into digital-io queue
+;
+;       PARAMETERS:     ES          Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertReq       Proc near
+    push ds    
+    push esi
+    push edi
+;
+    mov eax,SEG data
+    mov ds,ax
+    EnterSection ds:dio_section
+;
+    mov di,ds:dio_list
+    or di,di
+    je irqEmpty
+;       
+    push ds
+    mov ds,di
+    mov si,ds:dqe_prev
+    mov ds:dqe_prev,es
+    mov ds,si
+    mov ds:dqe_next,es
+    mov es:dqe_next,di
+    mov es:dqe_prev,si
+    pop ds
+    jmp irqDone
+        
+irqEmpty:
+    mov es:dqe_next,es
+    mov es:dqe_prev,es
+
+irqDone:
+    mov ds:dio_list,es
+    LeaveSection ds:dio_section
+    ret
+InsertReq   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:               ToggleSerialLine
+;
+;       DESCRIPTION:        Toggle serial input line
+;
+;       PARAMETERS:         DH              Device #
+;                           DL              Line #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+toggle_serial_line_name DB 'Toggle Serial Line', 0
+
+toggle_serial_line      Proc far
+    push es
+    push ebx
+;    
+    mov bl,4
+    call CreateReq
+    call InsertReq
+;
+    FreeMem   
+    clc
+
+tslDone:
+    pop ebx
+    pop es   
+    ret
+toggle_serial_line  Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:               ReadSerialLines
+;
+;       DESCRIPTION:        Read serial lines
+;
+;       PARAMETERS:         DH              Device #
+;
+;       RETURNS:            AL              State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_lines_name  DB 'Read Serial Lines', 0
+
+read_serial_lines       Proc far
+    push es
+    push ebx
+    push edx
+;
+    mov bl,5
+    xor dl,dl
+    call CreateReq
+    call InsertReq
+;
+    mov al,es:dqe_in_buf
+    FreeMem
+    clc
+;
+    pop edx
+    pop ebx
+    pop es
+    ret
+read_serial_lines       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:               WriteSerialVal
+;
+;       DESCRIPTION:        Write serial value
+;
+;       PARAMETERS:         DL              Line #
+;                           DH              Device #
+;                           EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_serial_val_name   DB 'Write Serial Value', 0
+
+write_serial_val        Proc far
+    push es
+    push eax
+    push ebx
+    push edi
+;
+    mov bl,3
+    call CreateReq
+    mov edi,2
+;
+    mov bl,al
+    and bl,3Fh
+    mov es:[edi].dqe_out_buf,bl
+    inc edi
+    inc es:dqe_out_size
+;    
+    shr eax,6
+    mov bl,al
+    and bl,3Fh
+    mov es:[edi].dqe_out_buf,bl
+    inc edi
+    inc es:dqe_out_size
+;    
+    shr eax,6
+    mov bl,al
+    and bl,3Fh
+    mov es:[edi].dqe_out_buf,bl
+    inc edi
+    inc es:dqe_out_size
+;    
+    shr eax,6
+    mov bl,al
+    and bl,3Fh
+    mov es:[edi].dqe_out_buf,bl
+    inc edi
+    inc es:dqe_out_size
+;
+    call InsertReq
+    FreeMem
+    clc
+
+wsvDone:
+    pop edi
+    pop ebx
+    pop eax
+    pop es
+    ret
+write_serial_val        Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:               ReadSerialVal
+;
+;       DESCRIPTION:        Read serial val
+;
+;       PARAMETERS:         DL              Line #
+;                           DH              Device #
+;
+;       RETURNS:            EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_val_name    DB 'Read Serial Value', 0
+
+read_serial_val Proc far
+    push es
+    push ebx
+    push edx
+    push edi
+;
+    mov bl,2
+    call CreateReq
+    call InsertReq
+;
+    xor eax,eax
+    mov edi,OFFSET dqe_in_buf + 3
+    mov al,es:[edi]
+    and al,3Fh
+    dec edi
+;
+    shl eax,6
+    mov dl,es:[edi]
+    and dl,3Fh
+    or al,dl
+    dec edi
+;
+    shl eax,6
+    mov dl,es:[edi]
+    and dl,3Fh
+    or al,dl
+    dec edi
+;
+    shl eax,6
+    mov dl,es:[edi]
+    and dl,3Fh
+    or al,dl
+;
+    FreeMem
+    clc
+
+rsvDone:    
+    pop edi
+    pop edx
+    pop ebx
+    pop es
+    ret
+read_serial_val Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -1421,6 +1705,9 @@ Init    Proc far
     mov ds:sd_dead,0
     InitSpinlock ds:sd_spinlock
 ;
+    mov ds:dio_list,0
+    InitSection ds:dio_section
+;
     mov eax,cs
     mov ds,eax
     mov es,eax
@@ -1435,6 +1722,26 @@ Init    Proc far
     mov edi,OFFSET get_com_par_name
     xor dx,dx
     mov ax,get_usb_bus_par_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET read_serial_lines
+    mov edi,OFFSET read_serial_lines_name
+    mov ax,read_serial_lines_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET toggle_serial_line
+    mov edi,OFFSET toggle_serial_line_name
+    mov ax,toggle_serial_line_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET write_serial_val
+    mov edi,OFFSET write_serial_val_name
+    mov ax,write_serial_val_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET read_serial_val
+    mov edi,OFFSET read_serial_val_name
+    mov ax,read_serial_val_nr
     RegisterBimodalUserGate
     clc
     ret
