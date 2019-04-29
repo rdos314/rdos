@@ -487,6 +487,9 @@ usb_bus_data_sel    EQU 0C08h
 usb_cdc_code_sel    EQU 0C10h
 usb_cdc_data_sel    EQU 0C18h
 
+usb_hub_code_sel    EQU 0C20h
+usb_hub_data_sel    EQU 0C28h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 
