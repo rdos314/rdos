@@ -29,6 +29,8 @@
 
 HUB_BUF_SIZE    = 40h
 
+FLAG_HUB_DISCONNECT = 1
+
 usb_hub_descr   STRUC
 
 uhd_len             DB ?
@@ -65,6 +67,9 @@ usb_dev_base            usb_dev_struc <>
 hub_prev                DW ?
 hub_next                DW ?
 
+hub_thread              DW ?
+hub_detach              DW ?
+
 hub_vendor              DW ?
 hub_product             DW ?
 hub_controller          DW ?
@@ -74,6 +79,7 @@ hub_ports               DW ?
 
 hub_status_size         DW ?
 hub_intr                DB ?
+hub_flags               DB ?
 
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)

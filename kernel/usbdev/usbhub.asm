@@ -88,6 +88,25 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           Usb hub threads
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     BX      Hub selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_hub_recreate:
+    int 3
+    mov ds,ebx
+
+usb_hub_start:
+    int 3
+    mov ds,ebx
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HexToAscii
 ;
 ;   DESCRIPTION:    
@@ -288,7 +307,6 @@ usb_attach  Proc far
     cmp cl,9
     jne uaDone
 ;
-    int 3
     mov si,es:udd_vendor
     shl esi,16
     mov si,es:udd_prod
@@ -400,15 +418,13 @@ uaReCopyDone:
     xor al,al
     stosb
 ;
-;    xor edi,edi
-;    mov edx,cs
-;    mov ds,edx
-;    mov esi,OFFSET cdc_com_recreate
-;    mov eax,3
-;    mov ecx,stack0_size
-;    CreateThread
-;
-    FreeMem
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET usb_hub_recreate
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
     jmp uaDone
 
 uaNotDead:
@@ -454,6 +470,9 @@ uaNotDead:
     mov es:hub_controller,bx
     mov es:hub_device,al
     mov es:hub_intr,0
+    mov es:hub_detach,0
+    mov es:hub_flags,0
+    mov es:hub_thread,0
     jmp uaDevNext
 
 uaDevLoop:
@@ -484,7 +503,7 @@ uaDevNext:
 uaDevOk:
     mov al,es:hub_intr
     or al,al
-    jnz uaFail
+    jz uaFail
 ;
     mov bx,es:hub_controller
     mov al,es:hub_device
@@ -530,19 +549,16 @@ uaCopyDone:
     xor al,al
     stosb
 ;
-;    xor edi,edi
-;    mov edx,cs
-;    mov ds,edx
-;    mov esi,OFFSET cdc_com_start
-;    mov eax,3
-;    mov ecx,stack0_size
-;    CreateThread
-;
-    FreeMem
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET usb_hub_start
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
     jmp uaDone
 
 uaFail:
-    FreeMem
 
 uaDone:    
     FreeMem
@@ -568,6 +584,89 @@ usb_attach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_detach  Proc far
+    push ds
+    push es
+    pushad
+;    
+    movzx ax,al
+    mov edx,SEG data
+    mov ds,edx
+    mov esi,OFFSET hub_dev_arr
+    movzx ecx,ds:hub_dev_count
+    or ecx,ecx
+    jz udDone
+
+udCheckLoop:
+    mov dx,[esi]
+    or dx,dx
+    jz udCheckNext
+;
+    mov es,dx
+    cmp bx,es:hub_controller
+    jne udCheckNext
+;
+    cmp al,es:hub_device
+    jne udCheckNext
+;
+    GetThread
+    mov es:hub_detach,ax
+;
+    or es:hub_flags,FLAG_HUB_DISCONNECT
+    mov bx,es:hub_thread
+    or bx,bx
+    jz udRemove
+;
+    mov ecx,10
+
+udSignal:
+    Signal
+;
+    WaitForSignal
+    mov bx,es:hub_thread
+    or bx,bx
+    jz udRemove
+;
+    loop udSignal
+
+udRemove:
+    EnterSection ds:hub_section
+    mov di,ds:hub_dead_list
+    or di,di
+    je udInsEmpty
+;
+    push ds
+    push si
+;
+    mov ds,di
+    mov si,ds:hub_prev
+    mov ds:hub_prev,es
+    mov ds,si
+    mov ds:hub_next,es
+    mov es:hub_next,di
+    mov es:hub_prev,si
+;
+    pop si
+    pop ds
+    jmp udInsDone
+    
+udInsEmpty:
+    mov es:hub_next,es
+    mov es:hub_prev,es
+    mov ds:hub_dead_list,es
+
+udInsDone:
+    LeaveSection ds:hub_section
+    jmp udDone
+
+udCheckNext:
+    add esi,2    
+    sub ecx,1
+    jnz udCheckLoop
+
+udDone:
+    popad
+    pop es
+    pop ds
     ret
 usb_detach  Endp
 
