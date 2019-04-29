@@ -30,6 +30,7 @@
 HUB_BUF_SIZE    = 40h
 
 FLAG_HUB_DISCONNECT = 1
+FLAG_HUB_REINIT     = 2
 
 usb_hub_descr   STRUC
 

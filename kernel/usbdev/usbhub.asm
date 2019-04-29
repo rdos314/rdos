@@ -97,13 +97,45 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_hub_recreate:
-    int 3
     mov ds,ebx
+;
+    GetThread
+    mov ds:hub_thread,ax
+    or ds:hub_flags,FLAG_HUB_REINIT
+    and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
+;
+    mov eax,ds
+    mov es,eax
+    jmp tSignalled
 
 usb_hub_start:
-    int 3
     mov ds,ebx
-        
+;
+    GetThread
+    mov ds:hub_detach,0
+    mov ds:hub_thread,ax
+;
+    mov eax,ds
+    mov es,eax
+
+tLoop:
+    WaitForSignal
+
+tSignalled:
+    test es:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tExit
+;
+    jmp tLoop
+
+tExit:
+    mov ds:hub_thread,0
+    mov bx,ds:hub_detach
+    Signal
+
+tFail:
+    TerminateThread
+
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
