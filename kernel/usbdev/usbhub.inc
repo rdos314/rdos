@@ -62,6 +62,14 @@ usb_hub_dev_struc   STRUC
 
 usb_dev_base            usb_dev_struc <>
 
+hub_prev                DW ?
+hub_next                DW ?
+
+hub_vendor              DW ?
+hub_product             DW ?
+hub_controller          DW ?
+hub_device              DB ?
+
 hub_ports               DW ?
 
 hub_status_size         DW ?
@@ -70,6 +78,7 @@ hub_intr                DB ?
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)
 
-hub_descr               DB ?
+hub_dev_descr_size      DW ?
+hub_dev_descr_buf       DB ?
 
 usb_hub_dev_struc   ENDS

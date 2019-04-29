@@ -42,6 +42,8 @@ ELSE
     .386p
 ENDIF
 
+MAX_DEVICES = 256
+
 GET_STATUS = 0
 CLEAR_FEATURE = 1
 SET_FEATURE = 3
@@ -69,7 +71,11 @@ PORT_INDICATOR      = 22
 
 data    SEGMENT byte public 'DATA'
 
-hub_list        DW ?
+hub_dead_list    DW ?
+hub_section      section_typ <>
+
+hub_dev_count    DW ?
+hub_dev_arr      DW MAX_DEVICES DUP(?)
 
 data    ENDS
 
@@ -78,6 +84,173 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindAnyDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS         Data seg
+;                    ES   	Descriptor
+;                    ESI        Vendor & product
+;                    EBP	Descriptor size
+;
+;    Returns:        ECX	Number of matches
+;                    GS         CDC sel of last match
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindAnyDevice	Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    xor ecx,ecx
+;
+    mov bx,ds:hub_dead_list
+    or bx,bx
+    jz fadDone
+;
+    mov dx,bx
+
+fadLoop:
+    mov ds,ebx
+    mov ax,ds:hub_vendor
+    shl eax,16
+    mov ax,ds:hub_product
+    cmp eax,esi
+    jne fadNext
+;
+    movzx eax,ds:hub_dev_descr_size
+    cmp eax,ebp
+    jne fadNext
+;
+    push ecx
+    push esi
+;
+    mov ecx,ebp
+    mov esi,OFFSET hub_dev_descr_buf
+    xor edi,edi
+    repe cmpsb
+;
+    pop esi
+    pop ecx
+    jnz fadNext
+;
+    inc ecx
+    mov eax,ds
+    mov gs,eax
+
+fadNext:
+    mov bx,ds:hub_next
+    cmp bx,dx
+    jne fadLoop
+
+fadDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+FindAnyDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindSpecificDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS      Data seg
+;                    BX      Controller #
+;                    AL      Device address
+;
+;    Returns:        NC	     Found
+;                        GS  CDC sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindSpecificDevice	Proc near
+    push ds
+    push ecx
+    push edx
+;
+    mov cx,ds:hub_dead_list
+    or cx,cx
+    stc
+    jz fsdDone
+;
+    mov dx,cx
+
+fsdLoop:
+    mov ds,ecx
+    cmp bx,ds:hub_controller
+    jne fsdNext
+;
+    cmp al,ds:hub_device
+    jne fsdNext
+;
+    mov ecx,ds
+    mov gs,ecx
+    clc
+    jmp fsdDone
+
+fsdNext:
+    mov cx,ds:hub_next
+    cmp cx,dx
+    jne fsdLoop
+;
+    stc
+
+fsdDone:
+    pop edx
+    pop ecx    
+    pop ds
+    ret
+FindSpecificDevice	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -116,103 +289,260 @@ usb_attach  Proc far
     jne uaDone
 ;
     int 3
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz uaDone
+    mov si,es:udd_vendor
+    shl esi,16
+    mov si,es:udd_prod
 ;
+    xor dl,dl
+    mov ecx,1000h
+    xor edi,edi
+    push eax
+    GetUsbConfig
+    mov ecx,eax
+    pop eax
+    or ecx,ecx
+    jz uaFail
+;
+    mov ebp,ecx
     mov dl,es:ucd_config_id
-    xor di,di
-    movzx cx,es:ucd_len
-    add di,cx
+    xor edi,edi
+    movzx ecx,es:ucd_len
+    add edi,ecx
 
 uaCheckLoop:
-    mov cl,es:[di].ucd_type
+    mov cl,es:[edi].ucd_type
     cmp cl,4
     jne uaCheckNext
 ;    
-    mov cl,es:[di].uid_class
+    mov cl,es:[edi].uid_class
     cmp cl,9
     je uaConfig
 
 uaCheckNext:
-    movzx cx,es:[di].ucd_len
-    or cx,cx
-    jz uaDone
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz uaFail
 ;    
-    add di,cx
+    add edi,ecx
     cmp di,es:ucd_size
     jb uaCheckLoop
-    jmp uaDone
+    jmp uaFail
 
 uaConfig:
-    ConfigUsbDevice
-    jc uaDone
+    mov cx,SEG data
+    mov ds,ecx
+    EnterSection ds:hub_section
 ;
-    push es 
-    push ax
-    push ax
-    mov eax,SIZE usb_hub_dev_struc
+    call FindAnyDevice
+    or ecx,ecx
+    jz uaNotDead
+;
+    cmp ecx,1
+    je uaRecreate
+;
+    call FindSpecificDevice
+    jc uaNotDead
+
+uaRecreate:
+    push ds
+    mov si,gs
+    mov di,gs:hub_next
+    cmp di,si
+    mov ds:hub_dead_list,di
+    mov si,gs:hub_prev
+    mov ds,di
+    mov ds:hub_prev,si
+    mov ds,si
+    mov ds:hub_next,di
+    pop ds
+    jne uaReConfig
+;    
+    mov ds:hub_dead_list,0
+
+uaReConfig:
+    LeaveSection ds:hub_section
+;
+    ConfigUsbDevice
+    jc uaFail
+;
+    mov gs:hub_controller,bx
+    mov gs:hub_device,al
+;
+    mov ebx,gs
+    mov ds,ebx
+;
+    mov eax,100h
     AllocateSmallGlobalMem
-    pop ax
-;    mov es:hub_controller,bx
-;    mov es:hub_device,al
-;    mov es:hub_dev_sel,ds
-    mov ax,es
-    mov gs,ax
-    pop ax
+    xor edi,edi
+    mov esi,OFFSET hub_name
+
+uaReCopyCdc:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz uaReCopyDone
+;
+    stosb
+    jmp uaReCopyCdc
+
+uaReCopyDone:
+    mov ax,ds:hub_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:hub_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+;    xor edi,edi
+;    mov edx,cs
+;    mov ds,edx
+;    mov esi,OFFSET cdc_com_recreate
+;    mov eax,3
+;    mov ecx,stack0_size
+;    CreateThread
+;
+    FreeMem
+    jmp uaDone
+
+uaNotDead:
+    LeaveSection ds:hub_section
+;
+    push eax
+    push ebx
+    push esi
+;
+    mov ebx,edi
+    mov eax,es
+    mov ds,eax
+;
+    mov eax,OFFSET hub_dev_descr_buf
+    add eax,ebp
+    AllocateSmallGlobalMem
+;
+    mov ecx,ebp
+    xor esi,esi
+    mov edi,OFFSET hub_dev_descr_buf
+    rep movsb
+;
+    push es
+    mov eax,ds
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
+    FreeMem
     pop es
 ;
-    xor di,di
-    movzx cx,es:ucd_len
-    add di,cx
+    mov es:hub_dev_descr_size,bp
+    mov edi,ebx
+    add edi,OFFSET hub_dev_descr_buf
+    add ebp,OFFSET hub_dev_descr_buf
+;
+    pop esi
+    pop ebx
+    pop eax
+;
+    mov es:hub_product,si
+    shr esi,16
+    mov es:hub_vendor,si
+    mov es:hub_controller,bx
+    mov es:hub_device,al
+    mov es:hub_intr,0
+    jmp uaDevNext
 
-uaDescrLoop:
-    mov cl,es:[di].udd_type
+uaDevLoop:
+    mov cl,es:[edi].ucd_type
     cmp cl,5
-    jne uaDescrNext
-
-uaDescrDo:
+    jne uaDevNext
+;
     mov cl,es:[di].ued_attrib
     and cl,3
     cmp cl,3
-    jne uaDescrNext
+    jne uaDevNext
 ;
     mov cl,es:[di].ued_address
-    mov gs:hub_intr,cl
+    mov es:hub_intr,cl
 ;
     mov cx,es:[di].ued_maxsize
-    mov gs:hub_status_size,cx
+    mov es:hub_status_size,cx
 
-uaDescrNext:
-    movzx cx,es:[di].ucd_len
-    add di,cx
-    cmp di,es:ucd_size
-    jb uaDescrLoop    
+uaDevNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz uaFail
+;    
+    add edi,ecx
+    cmp edi,ebp
+    jb uaDevLoop
 
-uaOk:
-    mov al,gs:hub_intr
+uaDevOk:
+    mov al,es:hub_intr
     or al,al
-    jnz uaValid
+    jnz uaFail
 ;
-    push es
-    mov ax,gs
-    mov es,ax
-    xor ax,ax
-    mov gs,ax
+    mov bx,es:hub_controller
+    mov al,es:hub_device
+    ConfigUsbDevice
+    jc uaFail
+;
+    mov edi,SEG data
+    mov ds,edi
+    movzx esi,ds:hub_dev_count
+    add esi,esi
+    mov ds:[esi].hub_dev_arr,es
+    inc ds:hub_dev_count
+;
+    mov ebx,es
+    mov ds,ebx
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov esi,OFFSET hub_name
+
+uaCopyCdc:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz uaCopyDone
+;
+    stosb
+    jmp uaCopyCdc
+
+uaCopyDone:
+    mov ax,ds:hub_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:hub_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+;    xor edi,edi
+;    mov edx,cs
+;    mov ds,edx
+;    mov esi,OFFSET cdc_com_start
+;    mov eax,3
+;    mov ecx,stack0_size
+;    CreateThread
+;
     FreeMem
-    pop es
     jmp uaDone
 
-uaValid:
-;
+uaFail:
     FreeMem
-    pop es
 
 uaDone:    
     FreeMem
@@ -251,12 +581,15 @@ usb_detach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
-    mov bx,SEG data
-    mov ds,bx
+    mov ebx,SEG data
+    mov ds,ebx
+    mov ds:hub_dead_list,0
+    mov ds:hub_dev_count,0
+    InitSection ds:hub_section
 ;       
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach
