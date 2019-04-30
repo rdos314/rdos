@@ -608,6 +608,433 @@ ht1B DD 0,                          0
 ht1C DD OFFSET SetMaxLen,           SEG code
 ht1D DD OFFSET CloseControlPipe,    SEG code
 hc1E DD OFFSET IssueOne,            SEG code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HubAttach
+;
+;   description:    Hub attach event
+;
+;   Parameters:     DS      Function sel
+;                   DX      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HubAttach    Proc near
+    stc
+    ret
+HubAttach    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HubDetach
+;
+;   description:    Hub detach event
+;
+;   Parameters:     DS      Function sel
+;                   DX      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HubDetach    Proc near
+    stc
+    ret
+HubDetach    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetPortFeature
+;
+;   description:    Set port feature
+;
+;   Parameters:     DS      Function sel
+;                   DX      Port
+;                   AX      Feature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPortFeature  Proc near
+    push es
+    pushad
+;    
+    mov bx,ds
+    mov es,bx
+    mov bx,ds:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,23h
+    mov es:[di].usd_req,SET_FEATURE
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,dx
+    mov es:[di].usd_len,0
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,ds:hub_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hub_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    ret
+SetPortFeature Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearPortFeature
+;
+;   description:    Clear port feature
+;
+;   Parameters:     DS      Function sel
+;                   DX      Port
+;                   AX      Feature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPortFeature  Proc near
+    push es
+    pushad
+;    
+    mov bx,ds
+    mov es,bx
+    mov bx,ds:hub_control_handle
+;    
+    mov di,OFFSET hub_control_data
+    mov es:[di].usd_type,23h
+    mov es:[di].usd_req,CLEAR_FEATURE
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,dx
+    mov es:[di].usd_len,0
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,ds:hub_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hub_control_handle
+    WasUsbTransactionOk
+;
+    popad
+    pop es
+    ret
+ClearPortFeature Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachThread
+;
+;   DESCRIPTION:    Attach thread
+;
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_thread_name  DB 'EHCI Attach ', 0
+
+attach_thread:
+    mov cl,dl
+    mov ds,bx
+;    
+    movzx edi,cl
+    add edi,edi
+;    
+    EnterSection ds:usb_section    
+    GetThread
+    mov ds:[edi].usb_attach_thread_arr,ax
+    LeaveSection ds:usb_section
+;
+    LockUsb
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    movzx dx,cl
+    mov ax,PORT_RESET
+    call SetPortFeature
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    mov ax,25
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    movzx dx,cl
+    call HubAttach 
+    jnc atDone
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    mov ax,250
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    mov ax,ds:hub_power_time
+    WaitMilliSec
+
+atUnlock:
+    UnlockUsb
+
+atDone:
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_attach_thread_arr,0
+    LeaveSection ds:usb_section
+;
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DetachThread
+;
+;   DESCRIPTION:    Detach thread
+;
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_thread_name  DB 'EHCI Detach ', 0
+
+detach_thread:
+    mov cl,dl
+    mov ds,bx
+;
+    movzx edi,cl
+    add edi,edi
+;    
+    EnterSection ds:usb_section
+    GetThread
+    mov ds:[edi].usb_detach_thread_arr,ax
+    LeaveSection ds:usb_section
+;
+    movzx dx,cl
+    call HubDetach
+;
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_detach_thread_arr,0
+    LeaveSection ds:usb_section    
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetThread
+;
+;   DESCRIPTION:    Reset thread
+;
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_thread_name  DB 'EHCI Reset ', 0
+
+reset_thread:
+    mov cl,dl
+    mov ds,bx
+;
+    movzx edi,cl
+    add edi,edi
+;    
+    EnterSection ds:usb_section
+    GetThread
+    mov ds:[edi].usb_reset_thread_arr,ax
+    LeaveSection ds:usb_section
+;
+    movzx dx,cl
+    call HubDetach
+;
+    LockUsb
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    mov ax,250
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    mov ax,ds:hub_power_time
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    movzx dx,cl
+    mov ax,PORT_RESET
+    call SetPortFeature
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    mov ax,25
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    movzx dx,cl
+    call HubAttach 
+    jnc rtDone
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    mov ax,250
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    mov ax,ds:hub_power_time
+    WaitMilliSec
+
+rtUnlock:
+    UnlockUsb
+
+rtDone:
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_reset_thread_arr,0
+    LeaveSection ds:usb_section    
+    TerminateThread
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ProcessHubDescr
+;
+;   description:    Process Hub descriptor
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessHubDescr  Proc near
+    push es
+    pushad
+;    
+    mov ax,ds
+    mov es,ax
+    mov bx,ds:hub_control_handle
+;    
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,0A0h
+    mov es:[edi].usd_req,GET_DESCR
+    mov es:[edi].usd_value,2900h
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,HUB_BUF_SIZE
+    mov ecx,8
+    WriteUsbControl
+;
+    mov ecx,HUB_BUF_SIZE
+    mov edi,OFFSET hub_buf
+    mov es:[edi].uhd_type,0
+    ReqUsbData    
+;    
+    WriteUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,ds:hub_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hub_control_handle
+    WasUsbTransactionOk
+    jc ghdDone
+;
+    mov cl,es:[edi].uhd_type
+    cmp cl,29h
+    stc
+    jne ghdDone
+;
+    movzx cx,es:[edi].uhd_ports
+    mov ds:hub_ports,cx
+;
+    mov cx,es:[edi].uhd_info
+    mov ds:hub_info,cx
+;
+    movzx cx,es:[edi].uhd_power_time
+    shl cx,1
+    mov ds:hub_power_time,cx        
+;
+    movzx ecx,ds:hub_ports
+    mov ebx,OFFSET hub_port_arr
+
+phdLoop:
+    mov ds:[ebx].hps_status,0
+    mov ds:[ebx].hps_failed,0
+    mov ds:[ebx].hps_retry,0
+    add ebx,32
+    loop phdLoop
+;               
+    clc    
+
+ghdDone:    
+    popad
+    pop es
+    ret
+ProcessHubDescr Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -658,7 +1085,6 @@ tExit:
 
 tFail:
     TerminateThread
-
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
