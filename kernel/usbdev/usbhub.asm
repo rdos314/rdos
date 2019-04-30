@@ -1161,12 +1161,13 @@ InitPorts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usb_hub_recreate:
+usb_hub_start:
+    int 3
     mov ds,ebx
 ;
     GetThread
+    mov ds:hub_detach,0
     mov ds:hub_thread,ax
-    or ds:hub_flags,FLAG_HUB_REINIT
     and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
 ;
     call CreateHub
@@ -1175,32 +1176,17 @@ usb_hub_recreate:
 ;
     call InitPorts
 ;
-    mov eax,ds
-    mov es,eax
-    jmp tSignalled
-
-usb_hub_start:
-    int 3
-    mov ds,ebx
+    mov ax,ds:hub_power_time
+    WaitMilliSec
 ;
-    GetThread
-    mov ds:hub_detach,0
-    mov ds:hub_thread,ax
-;
-    call CreateHub
-    call ProcessHubDescr
-    jc tExit
-;
-    call InitPorts
-;
-    mov eax,ds
-    mov es,eax
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tExit
 
 tLoop:
     WaitForSignal
 
 tSignalled:
-    test es:hub_flags,FLAG_HUB_DISCONNECT
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz tExit
 ;
     jmp tLoop
@@ -1532,7 +1518,7 @@ uaReCopyDone:
     xor edi,edi
     mov edx,cs
     mov ds,edx
-    mov esi,OFFSET usb_hub_recreate
+    mov esi,OFFSET usb_hub_start
     mov eax,3
     mov ecx,stack0_size
     CreateThread
