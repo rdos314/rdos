@@ -651,7 +651,7 @@ HubDetach    Endp
 ;   description:    Set port feature
 ;
 ;   Parameters:     DS      Function sel
-;                   DX      Port
+;                   DX      Port [0..ports]
 ;                   AX      Feature
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -660,6 +660,7 @@ SetPortFeature  Proc near
     push es
     pushad
 ;    
+    inc dx
     mov bx,ds
     mov es,bx
     mov bx,ds:hub_control_handle
@@ -697,7 +698,7 @@ SetPortFeature Endp
 ;   description:    Clear port feature
 ;
 ;   Parameters:     DS      Function sel
-;                   DX      Port
+;                   DX      Port [0..ports]
 ;                   AX      Feature
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -706,6 +707,7 @@ ClearPortFeature  Proc near
     push es
     pushad
 ;    
+    inc dx
     mov bx,ds
     mov es,bx
     mov bx,ds:hub_control_handle
@@ -1113,6 +1115,40 @@ ghdDone:
     pop es
     ret
 ProcessHubDescr Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitPorts
+;
+;   description:    Init ports
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPorts    Proc near
+    push ax
+    push dx
+;
+    xor dx,dx
+
+ipLoop:
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz ipDone
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb ipLoop
+
+ipDone:           
+    pop dx
+    pop ax
+    ret
+InitPorts    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1137,11 +1173,14 @@ usb_hub_recreate:
     call ProcessHubDescr
     jc tExit
 ;
+    call InitPorts
+;
     mov eax,ds
     mov es,eax
     jmp tSignalled
 
 usb_hub_start:
+    int 3
     mov ds,ebx
 ;
     GetThread
@@ -1151,6 +1190,8 @@ usb_hub_start:
     call CreateHub
     call ProcessHubDescr
     jc tExit
+;
+    call InitPorts
 ;
     mov eax,ds
     mov es,eax
