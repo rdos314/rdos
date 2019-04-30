@@ -905,22 +905,42 @@ attach_thread:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
+    test ds:[edi].hub_status_arr,1
+    jz atUnlock
+;
     movzx dx,cl
     mov ax,PORT_RESET
     call SetPortFeature
 ;        
+    mov cx,40
+
+atWaitLoop:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz atUnlock
+;
+    test ax,2
+    jnz atIsEnabled
+;
     mov ax,25
     WaitMilliSec
+    loop atWaitLoop
+;
+    jmp atUnlock    
+
+atIsEnabled:
+    movzx dx,cl
+    call HubAttach 
+    jnc atDone
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
-    movzx dx,cl
-    call HubAttach 
-    jnc atDone
+    test ds:[edi].hub_status_arr,1
+    jz atUnlock
 ;
     movzx dx,cl
     mov ax,PORT_POWER
@@ -929,11 +949,17 @@ attach_thread:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
+    test ds:[edi].hub_status_arr,1
+    jz atUnlock
+;
     mov ax,250
     WaitMilliSec
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
+;
+    test ds:[edi].hub_status_arr,1
+    jz atUnlock
 ;
     movzx dx,cl
     mov ax,PORT_POWER
@@ -1019,49 +1045,46 @@ reset_thread:
     call HubDetach
 ;
     LockUsb
-;
-    movzx dx,cl
-    mov ax,PORT_POWER
-    call ClearPortFeature    
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
 ;
-    mov ax,250
-    WaitMilliSec
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
-;
-    movzx dx,cl
-    mov ax,PORT_POWER
-    call SetPortFeature    
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
-;
-    mov ax,ds:hub_power_time
-    WaitMilliSec
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
+    test ds:[edi].hub_status_arr,1
+    jz rtUnlock
 ;
     movzx dx,cl
     mov ax,PORT_RESET
     call SetPortFeature
 ;        
+    mov cx,40
+
+rtWaitLoop:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
 ;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz rtUnlock
+;
+    test ax,2
+    jnz rtIsEnabled
+;
     mov ax,25
     WaitMilliSec
+    loop rtWaitLoop
+;
+    jmp rtUnlock    
+
+rtIsEnabled:
+    movzx dx,cl
+    call HubAttach 
+    jnc rtDone
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
 ;
-    movzx dx,cl
-    call HubAttach 
-    jnc rtDone
+    test ds:[edi].hub_status_arr,1
+    jz rtUnlock
 ;
     movzx dx,cl
     mov ax,PORT_POWER
@@ -1070,11 +1093,17 @@ reset_thread:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
 ;
+    test ds:[edi].hub_status_arr,1
+    jz rtUnlock
+;
     mov ax,250
     WaitMilliSec
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtUnlock
 ;
     movzx dx,cl
     mov ax,PORT_POWER
@@ -1082,6 +1111,9 @@ reset_thread:
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtUnlock
 ;
     mov ax,ds:hub_power_time
     WaitMilliSec
