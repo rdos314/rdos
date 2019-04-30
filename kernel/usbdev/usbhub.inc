@@ -47,7 +47,6 @@ usb_hub_descr   ENDS
 
 hub_port_status STRUC
 
-hps_status          DW ?
 hps_retry           DW ?
 hps_failed          DB ?
 
@@ -81,7 +80,10 @@ hub_status_size         DW ?
 hub_intr                DB ?
 hub_flags               DB ?
 
+hub_section             section_typ <>
+
 hub_ports               DW ?
+hub_status_arr          DW MAX_USB_HUB_PORTS DUP(?)
 hub_port_arr            DB 8 * MAX_USB_HUB_PORTS DUP(?)
 
 hub_control_data        DB 8 DUP (?)

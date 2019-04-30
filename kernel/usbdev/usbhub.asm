@@ -72,7 +72,7 @@ PORT_INDICATOR      = 22
 data    SEGMENT byte public 'DATA'
 
 hub_dead_list    DW ?
-hub_section      section_typ <>
+hub_list_section section_typ <>
 
 hub_dev_count    DW ?
 hub_dev_arr      DW MAX_DEVICES DUP(?)
@@ -660,18 +660,19 @@ SetPortFeature  Proc near
     push es
     pushad
 ;    
+    EnterSection ds:hub_section
     inc dx
-    mov bx,ds
-    mov es,bx
+    mov ebx,ds
+    mov es,ebx
     mov bx,ds:hub_control_handle
 ;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,23h
-    mov es:[di].usd_req,SET_FEATURE
-    mov es:[di].usd_value,ax
-    mov es:[di].usd_index,dx
-    mov es:[di].usd_len,0
-    mov cx,8
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,23h
+    mov es:[edi].usd_req,SET_FEATURE
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,0
+    mov ecx,8
     WriteUsbControl
     ReqUsbStatus
     StartUsbTransaction
@@ -684,6 +685,7 @@ SetPortFeature  Proc near
 ;    
     mov bx,ds:hub_control_handle
     WasUsbTransactionOk
+    LeaveSection ds:hub_section
 ;
     popad
     pop es
@@ -707,18 +709,19 @@ ClearPortFeature  Proc near
     push es
     pushad
 ;    
+    EnterSection ds:hub_section
     inc dx
-    mov bx,ds
-    mov es,bx
+    mov ebx,ds
+    mov es,ebx
     mov bx,ds:hub_control_handle
 ;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,23h
-    mov es:[di].usd_req,CLEAR_FEATURE
-    mov es:[di].usd_value,ax
-    mov es:[di].usd_index,dx
-    mov es:[di].usd_len,0
-    mov cx,8
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,23h
+    mov es:[edi].usd_req,CLEAR_FEATURE
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,0
+    mov ecx,8
     WriteUsbControl
     ReqUsbStatus
     StartUsbTransaction
@@ -731,11 +734,145 @@ ClearPortFeature  Proc near
 ;    
     mov bx,ds:hub_control_handle
     WasUsbTransactionOk
+    LeaveSection ds:hub_section
 ;
     popad
     pop es
     ret
 ClearPortFeature Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearPortChange
+;
+;   description:    Clear port change
+;
+;   Parameters:     GS      Hub
+;                   DX      Port #
+;                   AX      Status change
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPortChange  Proc near
+    push eax
+;
+    shr eax,16
+    test ax,1
+    jz cpcConnectOk
+;
+    push ax
+    mov ax,16
+    call ClearPortFeature
+    pop ax
+
+cpcConnectOk:    
+    test ax,2
+    jz cpcEnableOk
+;
+    push ax
+    mov ax,17
+    call ClearPortFeature
+    pop ax
+
+cpcEnableOk:
+    test ax,4
+    jz cpcSuspendOk
+;
+    push ax
+    mov ax,18
+    call ClearPortFeature
+    pop ax
+
+cpcSuspendOk:
+    test ax,8
+    jz cpcOverCurrentOk
+;
+    push ax
+    mov ax,19
+    call ClearPortFeature
+    pop ax
+
+cpcOverCurrentOk:
+    test ax,10h
+    jz cpcResetOk
+;
+    push ax
+    mov ax,20
+    call ClearPortFeature
+    pop ax
+                
+cpcResetOk:
+    pop eax
+    ret
+ClearPortChange Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;
+;   NAME:           GetPortStatus
+;
+;   description:    Get port status
+;
+;   Parameters:     GS      Hub
+;                   DX      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPortStatus  Proc near
+    push es
+    pushad
+;    
+    EnterSection ds:hub_section
+    inc dx
+    mov eax,ds
+    mov es,eax
+    mov bx,ds:hub_control_handle
+;    
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,0A3h
+    mov es:[edi].usd_req,GET_STATUS
+    mov es:[edi].usd_value,0
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,4
+    mov ecx,8
+    WriteUsbControl
+;
+    mov ecx,4
+    mov edi,OFFSET hub_buf
+    mov es:[edi].uhd_type,0
+    ReqUsbData    
+;    
+    WriteUsbStatus
+    StartUsbTransaction
+;
+    push edx
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,es:hub_control_wait
+    WaitWithTimeout
+    pop edx
+;    
+    mov bx,es:hub_control_handle
+    WasUsbTransactionOk
+    LeaveSection ds:hub_section
+    jc gpsDone
+;    
+    dec dx
+    mov eax,dword ptr ds:hub_buf
+    call ClearPortChange
+;
+    movzx edi,dx
+    add edi,edi
+    mov ds:[edi].hub_status_arr,ax
+    clc    
+
+gpsDone:    
+    popad
+    pop es
+    ret
+GetPortStatus Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1102,7 +1239,6 @@ ProcessHubDescr  Proc near
     mov ebx,OFFSET hub_port_arr
 
 phdLoop:
-    mov ds:[ebx].hps_status,0
     mov ds:[ebx].hps_failed,0
     mov ds:[ebx].hps_retry,0
     add ebx,8
@@ -1149,6 +1285,37 @@ ipDone:
     pop ax
     ret
 InitPorts    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdatePorts
+;
+;   description:    Update ports
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePorts    Proc near
+    push ax
+    push dx
+;
+    xor dx,dx
+
+upLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz upDone
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb upLoop
+
+upDone:           
+    pop dx
+    pop ax
+    ret
+UpdatePorts    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1162,7 +1329,6 @@ InitPorts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_hub_start:
-    int 3
     mov ds,ebx
 ;
     GetThread
@@ -1179,11 +1345,71 @@ usb_hub_start:
     mov ax,ds:hub_power_time
     WaitMilliSec
 ;
+    xor dx,dx
+
+tStatusLoop:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz tExit
+    jnz tLoop
+;
+    call GetPortStatus
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb tStatusLoop
 
 tLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tExit
+;    
+    mov bx,ds:hub_status_req
+    IsUsbReqStarted
+    jnc tWaitSignal
+;
+    GetThread
+    StartUsbReq    
+
+tWaitSignal:
     WaitForSignal
+;
+    mov bx,ds:hub_status_req
+    IsUsbReqReady
+    jc tNext
+;
+    GetUsbReqData
+    cmp cx,ds:hub_status_size
+    jne tNext
+;
+    mov bx,cx
+    mov es,ds:hub_status_sel
+    xor edi,edi
+    mov al,es:[edi]
+    shr al,1
+    xor dx,dx
+
+tChangeByteLoop:
+    mov ecx,8
+
+tChangeBitLoop:
+    test al,1
+    jz tChangeNext
+;
+    call GetPortStatus
+
+tChangeNext:
+    shr al,1
+    inc dx
+    loop tChangeBitLoop
+;
+    sub bx,1
+    jz tNext
+;
+    inc edi
+    mov al,es:[edi]
+    jmp tChangeByteLoop
+
+tNext:
+    call UpdatePorts
+    jmp tLoop
 
 tSignalled:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
@@ -1446,7 +1672,7 @@ uaCheckNext:
 uaConfig:
     mov cx,SEG data
     mov ds,ecx
-    EnterSection ds:hub_section
+    EnterSection ds:hub_list_section
 ;
     call FindAnyDevice
     or ecx,ecx
@@ -1475,7 +1701,7 @@ uaRecreate:
     mov ds:hub_dead_list,0
 
 uaReConfig:
-    LeaveSection ds:hub_section
+    LeaveSection ds:hub_list_section
 ;
     ConfigUsbDevice
     jc uaFail
@@ -1525,7 +1751,7 @@ uaReCopyDone:
     jmp uaDone
 
 uaNotDead:
-    LeaveSection ds:hub_section
+    LeaveSection ds:hub_list_section
 ;
     push eax
     push ebx
@@ -1570,6 +1796,7 @@ uaNotDead:
     mov es:hub_detach,0
     mov es:hub_flags,0
     mov es:hub_thread,0
+    InitSection es:hub_section
     jmp uaDevNext
 
 uaDevLoop:
@@ -1737,7 +1964,7 @@ udSignal:
     loop udSignal
 
 udRemove:
-    EnterSection ds:hub_section
+    EnterSection ds:hub_list_section
     mov di,ds:hub_dead_list
     or di,di
     je udInsEmpty
@@ -1763,7 +1990,7 @@ udInsEmpty:
     mov ds:hub_dead_list,es
 
 udInsDone:
-    LeaveSection ds:hub_section
+    LeaveSection ds:hub_list_section
     jmp udDone
 
 udCheckNext:
@@ -1792,7 +2019,7 @@ init    Proc far
     mov ds,ebx
     mov ds:hub_dead_list,0
     mov ds:hub_dev_count,0
-    InitSection ds:hub_section
+    InitSection ds:hub_list_section
 ;       
     mov eax,cs
     mov ds,eax
