@@ -956,6 +956,84 @@ rtDone:
     LeaveSection ds:usb_section    
     TerminateThread
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateHub
+;
+;   description:    Create hub
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateHub  Proc near
+    push es
+    pushad
+;
+    CreateWait
+    mov ds:hub_control_wait,bx
+;
+    mov bx,ds:hub_controller
+    mov al,ds:hub_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:hub_control_handle,bx
+;
+    mov ax,ds:hub_control_handle
+    mov bx,ds:hub_control_wait
+    xor ecx,ecx
+    AddWaitForUsbPipe
+;    
+    mov bx,ds:hub_controller
+    mov al,ds:hub_device
+    mov dl,ds:hub_intr
+    OpenUsbPipe
+    mov ds:hub_status_handle,bx
+;
+    mov bx,ds:hub_status_handle
+    CreateUsbReq
+    mov ds:hub_status_req,bx
+;
+    mov cx,ds:hub_status_size
+    xor ax,ax
+    AddReadUsbDataReq
+    mov ds:hub_status_sel,es
+;
+    popad
+    pop es
+    ret
+CreateHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CloseHub
+;
+;   description:    Close hub
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseHub  Proc near
+    push bx
+;
+    mov bx,ds:hub_status_req
+    CloseUsbReq
+;    
+    mov bx,ds:hub_status_handle
+    CloseUsbPipe
+;    
+    mov bx,ds:hub_control_handle
+    CloseUsbPipe
+;    
+    mov bx,ds:hub_control_wait
+    CloseWait
+;
+    pop bx
+    ret
+CloseHub   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1025,7 +1103,7 @@ phdLoop:
     mov ds:[ebx].hps_status,0
     mov ds:[ebx].hps_failed,0
     mov ds:[ebx].hps_retry,0
-    add ebx,32
+    add ebx,8
     loop phdLoop
 ;               
     clc    
@@ -1055,6 +1133,10 @@ usb_hub_recreate:
     or ds:hub_flags,FLAG_HUB_REINIT
     and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
 ;
+    call CreateHub
+    call ProcessHubDescr
+    jc tExit
+;
     mov eax,ds
     mov es,eax
     jmp tSignalled
@@ -1065,6 +1147,10 @@ usb_hub_start:
     GetThread
     mov ds:hub_detach,0
     mov ds:hub_thread,ax
+;
+    call CreateHub
+    call ProcessHubDescr
+    jc tExit
 ;
     mov eax,ds
     mov es,eax
@@ -1079,6 +1165,8 @@ tSignalled:
     jmp tLoop
 
 tExit:
+    call CloseHub
+;
     mov ds:hub_thread,0
     mov bx,ds:hub_detach
     Signal

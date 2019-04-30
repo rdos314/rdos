@@ -71,6 +71,10 @@ hub_device              DB ?
 hub_control_handle      DW ?
 hub_control_wait        DW ?
 
+hub_status_handle       DW ?
+hub_status_req          DW ?
+hub_status_sel          DW ?
+
 hub_power_time          DW ?
 hub_info                DW ?
 hub_status_size         DW ?
