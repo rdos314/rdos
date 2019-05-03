@@ -78,7 +78,6 @@ hub_section             section_typ <>
 
 hub_ports               DW ?
 hub_status_arr          DW MAX_USB_HUB_PORTS DUP(?)
-hub_port_arr            DW MAX_USB_HUB_PORTS DUP(?)
 
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)

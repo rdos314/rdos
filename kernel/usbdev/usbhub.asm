@@ -622,7 +622,59 @@ hc1E DD OFFSET IssueOne,            SEG code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HubAttach    Proc near
-    stc
+    int 3
+    push ds
+    push eax
+    push ebx
+;    
+    movzx ebx,dx
+    add ebx,ebx
+    mov ax,ds:[ebx].hub_status_arr
+;
+    test ax,200h
+    jnz haLowSpeed
+;
+    test ax,400h
+    jnz haHighSpeed
+
+haFullSpeed:
+    mov ah,1
+    jmp haAttach
+
+haHighSpeed:
+    mov ah,2
+    jmp haAttach
+
+haLowSpeed:
+    mov ah,0
+        
+haAttach:
+    push eax
+    push ecx    
+    push edi
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov ecx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    pop edi
+    pop ecx
+    pop eax
+;    
+    mov es:usbf_port,dl
+    mov es:usbf_speed,ah
+;    
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+    NotifyUsbAttach
+
+haDone:    
+    pop ebx
+    pop eax
+    pop ds
     ret
 HubAttach    Endp
 
@@ -962,11 +1014,10 @@ attach_thread:
     test ds:[edi].hub_status_arr,1
     jz atUnlock
 ;
-    movzx dx,cl
     mov ax,PORT_RESET
     call SetPortFeature
 ;        
-    mov cx,5
+    mov ecx,5
 
 atWaitLoop:
     WaitForSignal
@@ -986,8 +1037,6 @@ atWaitLoop:
     jmp atUnlock    
 
 atIsEnabled:
-    int 3
-    movzx dx,cl
     call HubAttach 
     jnc atDone
 ;        
@@ -1279,7 +1328,7 @@ UpdatePort   Proc near
     test al,1
     jz upNoReset
 ;
-    mov bx,ds:[edi].hub_port_arr
+    mov bx,ds:[edi].usb_port_arr
     or bx,bx
     jz upNoReset
 ;    
@@ -1309,7 +1358,7 @@ upNoReset:
     jz upDetach
     
 upAttach:
-    mov bx,ds:[edi].hub_port_arr
+    mov bx,ds:[edi].usb_port_arr
     or bx,bx
     jnz upCheckTimeout
 ;    
@@ -1334,7 +1383,7 @@ upAttach:
     jmp upDone
 
 upDetach:
-    mov bx,ds:[edi].hub_port_arr
+    mov bx,ds:[edi].usb_port_arr
     or bx,bx
     jz upCheckTimeout
 ;    
@@ -1597,15 +1646,6 @@ ProcessHubDescr  Proc near
     movzx cx,es:[edi].uhd_power_time
     shl cx,1
     mov ds:hub_power_time,cx        
-;
-    movzx ecx,ds:hub_ports
-    mov ebx,OFFSET hub_port_arr
-    xor ax,ax
-
-phdLoop:
-    mov ds:[ebx],ax
-    add ebx,2
-    loop phdLoop
 ;               
     clc    
 
