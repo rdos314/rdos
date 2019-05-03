@@ -102,6 +102,7 @@ disc_bulk_in_wait       DW ?
 disc_bulk_out_wait      DW ?
 
 disc_controller         DW ?
+disc_port               DB ?
 disc_device             DB ?
 
 disc_nr                 DB ?
@@ -2081,6 +2082,7 @@ HexToAscii      ENDP
 ;   description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   DS      USB device
 ;
@@ -2179,6 +2181,7 @@ uaFound:
     AllocateSmallGlobalMem
     pop eax
     mov es:disc_controller,bx
+    mov es:disc_port,ah
     mov es:disc_device,al
     mov ax,es
     mov gs,ax
@@ -2246,7 +2249,7 @@ uaCopyDone:
     mov al,'.'
     stosb
 ;
-    mov al,gs:disc_device
+    mov al,gs:disc_port
     call HexToAscii
     stosw
 ;
