@@ -2284,6 +2284,7 @@ usb_attach  Endp
 ;   description:    USB detach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   DS      USB device
 ;
@@ -2309,7 +2310,7 @@ udCheckLoop:
     cmp bx,es:disc_controller
     jne udCheckNext
 ;
-    cmp al,es:disc_device
+    cmp ah,es:disc_port
     jne udCheckNext
 ;
     mov bx,es:disc_handle

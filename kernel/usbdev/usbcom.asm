@@ -128,6 +128,7 @@ usb_com_struc	STRUC
 uc_vendor               DW ?
 uc_product              DW ?
 uc_controller           DW ?
+uc_port                 DB ?
 uc_device               DB ?
 
 uc_section              section_typ <>
@@ -3827,6 +3828,7 @@ tEnd:
 ;   DESCRIPTION:    Add port to list of available ports
 ;
 ;   PARAMETERS:     AL      Device address
+;                   AH      Port #
 ;                   BX      Controller id
 ;                   DX      Device type
 ;                   ES      Device sel
@@ -3985,7 +3987,7 @@ apDescrDone:
     mov dword ptr ds:cd_create_proc,edi
     mov dword ptr ds:cd_create_proc+4,cs
 ;    
-    movzx dx,al
+    movzx dx,ah
     mov ax,bx
     AddComPort
     mov ds:uds_port_nr,ax
@@ -4016,6 +4018,7 @@ AddUnit	Proc near
 ;
     mov bx,es:uc_controller
     mov al,es:uc_device
+    mov ah,es:uc_port
     call AddPort
 ;
     mov ds:uds_device_sel,es
@@ -4696,7 +4699,7 @@ cstCopyDone:
     mov al,'.'
     stosb
 ;
-    mov al,ds:uc_device
+    mov al,ds:uc_port
     call HexToAscii
     stosw
 ;
@@ -4858,6 +4861,7 @@ FindAnyDevice	Endp
 ;
 ;    Parameters:     DS      Data seg
 ;                    BX      Controller #
+;                    AH      Port #
 ;                    AL      Device address
 ;
 ;    Returns:        NC	     Found
@@ -4882,7 +4886,7 @@ fsdLoop:
     cmp bx,ds:uc_controller
     jne fsdNext
 ;
-    cmp al,ds:uc_device
+    cmp al,ds:uc_port
     jne fsdNext
 ;
     call CheckDevice
@@ -4917,6 +4921,7 @@ FindSpecificDevice	Endp
 ;   Parameters:     DS      Data segment
 ;                   ES      Descriptor buffer
 ;                   BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   ESI     Vendor + device
 ;                   FS:EBP  Device table
@@ -5001,6 +5006,7 @@ cdAdd:
     shr esi,16
     mov es:uc_vendor,si
     mov es:uc_controller,bx
+    mov es:uc_port,ah
     mov es:uc_device,al
     mov es:uc_unit_count,0
     mov es:uc_flags,0
@@ -5040,6 +5046,7 @@ cdDeadOk:
     mov cx,gs
     mov es,cx
     mov es:uc_controller,bx
+    mov es:uc_port,ah
     mov es:uc_device,al
 ;
     mov ebp,OFFSET usb_com_recreate
@@ -5060,6 +5067,7 @@ ConfigDevice  Endp
 ;   Description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5150,7 +5158,8 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AH      Port #
+;                           AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5159,7 +5168,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    movzx ax,al
     mov dx,SEG data
     mov ds,dx
     mov si,OFFSET sd_dev_arr
@@ -5176,7 +5184,7 @@ udCheckLoop:
     cmp bx,es:uc_controller
     jne udCheckNext
 ;
-    cmp al,es:uc_device
+    cmp ah,es:uc_port
     jne udCheckNext
 ;
     GetThread

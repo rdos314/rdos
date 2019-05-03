@@ -1728,7 +1728,6 @@ InitPorts    Endp
 hub_port_name    DB 'Usb Hub Port ', 0
 
 usb_hub_port:
-    int 3
     mov ds,ebx
 ;
     GetThread
@@ -2406,6 +2405,7 @@ usb_attach  Endp
 ;   description:    USB detach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   DS      USB device
 ;
@@ -2416,7 +2416,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    movzx ax,al
     mov edx,SEG data
     mov ds,edx
     mov esi,OFFSET hub_dev_arr

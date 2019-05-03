@@ -1083,6 +1083,7 @@ trap_usb_attach ENDP
 ;           DESCRIPTION:    Run notification handlers for detach
 ;
 ;           PARAMETERS:     BX      Controller #
+;                           AH      Port #
 ;                           AL      Device address (1..128)
 ;                           DS      USB device
 ;                           
@@ -1524,6 +1525,7 @@ notify_usb_detach       Proc far
     push es
     pushad
 ;
+    mov ah,al
     call RemoveUsbFunction
     jc nudDone
 ; 
