@@ -1372,7 +1372,12 @@ tpLoop:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz tpExit
 ;    
-    WaitForSignal
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    call UpdatePorts
     jmp tpLoop
 
 tpExit:
