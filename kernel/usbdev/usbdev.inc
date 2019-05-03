@@ -115,12 +115,12 @@ obs_lock_enum_proc         DD ?,?
 
 obs_unlock_enum_proc       DD ?,?
 
-; IN  GS        Hub selector
+; IN  BX        Hub selector
 ; IN  DX        Hub port
 ; OUT AL        Port
 allocate_hub_port_proc DD ?,?
 
-; IN  GS        Hub selector
+; IN  BX        Hub selector
 ; IN  AL        Port
 free_hub_port_proc     DD ?,?
 

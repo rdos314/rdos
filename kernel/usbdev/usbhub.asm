@@ -669,6 +669,7 @@ haAttach:
 ;    
     mov es:usbf_slot,0
     mov es:usbf_address,0
+    mov al,dl
     NotifyUsbAttach
 
 haDone:    
@@ -998,6 +999,7 @@ attach_thread:
     mov cl,dl
     mov ds,bx
 ;    
+    movzx esi,cl
     movzx edi,cl
     add edi,edi
 ;    
@@ -1037,9 +1039,25 @@ atWaitLoop:
     jmp atUnlock    
 
 atIsEnabled:
+    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:allocate_hub_port_proc
+    pop ds
+    jc atUnlock
+;
+    mov ds:[esi].hub_parent_arr,al
+;
     call HubAttach 
     jnc atDone
 ;        
+    push ds
+    xor al,al
+    xchg al,ds:[esi].hub_parent_arr
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_hub_port_proc
+    pop ds
+;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
@@ -1667,25 +1685,32 @@ ProcessHubDescr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPorts    Proc near
-    push ax
-    push dx
+    push eax
+    push edx
+    push esi
 ;
     xor dx,dx
+    mov esi,OFFSET hub_parent_arr
 
 ipLoop:
     mov ax,PORT_POWER
     call SetPortFeature    
+;
+    xor al,al
+    mov ds:[esi],al
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz ipDone
 ;
     inc dx
+    inc esi
     cmp dx,ds:hub_ports
     jb ipLoop
 
 ipDone:           
-    pop dx
-    pop ax
+    pop esi
+    pop edx
+    pop eax
     ret
 InitPorts    Endp
             
@@ -1768,7 +1793,7 @@ cptCopyDone:
     mov al,'.'
     stosb
 ;
-    mov al,ds:hub_device
+    mov al,ds:hub_port
     call HexToAscii
     stosw
 ;
@@ -2010,7 +2035,7 @@ FindAnyDevice	Endp
 ;
 ;    Parameters:     DS      Data seg
 ;                    BX      Controller #
-;                    AL      Device address
+;                    AH      Port #
 ;
 ;    Returns:        NC	     Found
 ;                        GS  CDC sel
@@ -2034,7 +2059,7 @@ fsdLoop:
     cmp bx,ds:hub_controller
     jne fsdNext
 ;
-    cmp al,ds:hub_device
+    cmp ah,ds:hub_port
     jne fsdNext
 ;
     mov ecx,ds
@@ -2095,7 +2120,7 @@ cstCopyDone:
     mov al,'.'
     stosb
 ;
-    mov al,ds:hub_device
+    mov al,ds:hub_port
     call HexToAscii
     stosw
 ;
@@ -2127,6 +2152,7 @@ CreateStatusThread	Endp
 ;   description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   DS      USB device
 ;
@@ -2135,18 +2161,24 @@ CreateStatusThread	Endp
 usb_attach  Proc far
     push ds
     push es
+    push fs
+    push gs
     pushad
 ;
-    push ax
+    push eax
+    mov eax,ds
+    mov fs,eax
+;
     mov eax,1000h
     AllocateSmallGlobalMem
     mov cx,SIZE usb_device_descr
-    pop ax
+    pop eax
+;
     xor di,di
-    push ax
+    push eax
     GetUsbDevice
     cmp ax,cx
-    pop ax
+    pop eax
     jne uaDone
 ;
     mov cl,es:udd_class
@@ -2230,7 +2262,9 @@ uaReConfig:
     jc uaFail
 ;
     mov gs:hub_controller,bx
+    mov gs:hub_port,ah
     mov gs:hub_device,al
+    mov gs:hub_parent_sel,fs
 ;
     mov ebx,gs
     mov ds,ebx
@@ -2279,6 +2313,7 @@ uaNotDead:
     shr esi,16
     mov es:hub_vendor,si
     mov es:hub_controller,bx
+    mov es:hub_port,ah
     mov es:hub_device,al
     mov es:hub_intr,0
     mov es:hub_detach,0
@@ -2341,6 +2376,8 @@ uaTabLoop:
     add edi,4
     loop uaTabLoop    
 ;
+    mov es:hub_parent_sel,fs
+;
     mov ebx,es
     mov ds,ebx
     InitUsbDevice
@@ -2353,6 +2390,8 @@ uaFail:
 
 uaDone:    
     popad
+    pop gs
+    pop fs
     pop es
     pop ds
     ret
@@ -2394,7 +2433,7 @@ udCheckLoop:
     cmp bx,es:hub_controller
     jne udCheckNext
 ;
-    cmp al,es:hub_device
+    cmp ah,es:hub_port
     jne udCheckNext
 ;
     GetThread

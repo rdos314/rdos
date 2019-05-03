@@ -59,6 +59,7 @@ hub_detach              DW ?
 hub_vendor              DW ?
 hub_product             DW ?
 hub_controller          DW ?
+hub_port                DB ?
 hub_device              DB ?
 
 hub_control_handle      DW ?
@@ -76,8 +77,11 @@ hub_flags               DB ?
 
 hub_section             section_typ <>
 
+hub_parent_sel          DW ?
+
 hub_ports               DW ?
 hub_status_arr          DW MAX_USB_HUB_PORTS DUP(?)
+hub_parent_arr          DB MAX_USB_HUB_PORTS DUP(?)
 
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)

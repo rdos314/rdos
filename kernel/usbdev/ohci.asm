@@ -2736,6 +2736,7 @@ atWaitNotify:
     mov es:usbf_port,cl
     mov es:usbf_slot,0
     mov es:usbf_address,0
+    mov al,cl
     NotifyUsbAttach
     pop es
     jnc atDone
@@ -2883,6 +2884,7 @@ rtWaitNotify:
     mov es:usbf_port,cl
     mov es:usbf_slot,0
     mov es:usbf_address,0
+    mov al,cl
     NotifyUsbAttach
     pop es
     jnc rtDone

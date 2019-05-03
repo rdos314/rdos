@@ -2728,6 +2728,7 @@ atSlotAlloc:
     mov ax,25
     WaitMilliSec
 ;
+    mov al,cl
     NotifyUsbAttach
     jnc atDone
 ;
@@ -2985,6 +2986,7 @@ rtSlotAlloc:
     mov ax,25
     WaitMilliSec
 ;
+    mov al,cl
     NotifyUsbAttach
     jnc rtDone
 ;

@@ -1028,6 +1028,7 @@ CloseDevice Endp
 ;           DESCRIPTION:    Run notification handlers for attach
 ;
 ;           PARAMETERS:     BX      Controller #
+;                           AH      Port #
 ;                           AL      Device address (1..128)
 ;                           DS      USB device
 ;                           
@@ -1328,6 +1329,7 @@ RemoveUsbFunction	Endp
 ;
 ;       Parameters:     DS      USB device selector
 ;                       ES      USB function selector
+;                       AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1341,6 +1343,7 @@ notify_usb_attach       Proc far
     push es
     pushad
 ;
+    mov bp,ax
     mov al,es:usbf_slot
     or al,al
     jnz nuaSlot
@@ -1469,6 +1472,8 @@ nuaNotify:
     xor ax,ax
     mov gs,ax
     mov bx,ds:usb_controller_id
+    mov ax,bp
+    mov ah,al
     mov al,fs:usbp_address
     call trap_usb_attach
     clc

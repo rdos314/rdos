@@ -2855,7 +2855,6 @@ atNotify:
     mov es:usbf_port,al
     mov es:usbf_slot,0
     mov es:usbf_address,0
-;
     NotifyUsbAttach
     jnc atDone
 ;
@@ -3004,7 +3003,6 @@ rtNotify:
     mov es:usbf_port,al
     mov es:usbf_slot,0
     mov es:usbf_address,0
-;
     NotifyUsbAttach
     jnc rtDone
 ;

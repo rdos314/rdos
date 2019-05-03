@@ -3793,6 +3793,7 @@ InitUsbDevice   MACRO
 
 ; IN  DS      Usb device selector
 ; IN  ES      Usb function selector
+; IN  AL      Port #
 NotifyUsbAttach MACRO
     OsGate notify_usb_attach_nr
                     ENDM
