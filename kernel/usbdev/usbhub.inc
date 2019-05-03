@@ -43,21 +43,14 @@ uhd_current     DB ?
 
 usb_hub_descr   ENDS
 
-; must be less than 8 bytes!
-
-hub_port_status STRUC
-
-hps_retry           DW ?
-hps_failed          DB ?
-
-hub_port_status ENDS
-
 usb_hub_dev_struc   STRUC
 
 usb_dev_base            usb_dev_struc <>
 
 hub_prev                DW ?
 hub_next                DW ?
+
+hub_reset               DD ?
 
 hub_status_thread       DW ?
 hub_port_thread         DW ?
@@ -85,7 +78,7 @@ hub_section             section_typ <>
 
 hub_ports               DW ?
 hub_status_arr          DW MAX_USB_HUB_PORTS DUP(?)
-hub_port_arr            DB 8 * MAX_USB_HUB_PORTS DUP(?)
+hub_port_arr            DW MAX_USB_HUB_PORTS DUP(?)
 
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)

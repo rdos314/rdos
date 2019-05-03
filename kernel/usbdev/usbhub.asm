@@ -642,6 +642,45 @@ HubDetach    Proc near
     stc
     ret
 HubDetach    Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -886,9 +925,10 @@ GetPortStatus Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-attach_thread_name  DB 'EHCI Attach ', 0
+attach_thread_name  DB 'Hub Attach ', 0
 
 attach_thread:
+    int 3
     mov cl,dl
     mov ds,bx
 ;    
@@ -993,7 +1033,7 @@ atDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-detach_thread_name  DB 'EHCI Detach ', 0
+detach_thread_name  DB 'Hub Detach ', 0
 
 detach_thread:
     mov cl,dl
@@ -1027,7 +1067,7 @@ detach_thread:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_thread_name  DB 'EHCI Reset ', 0
+reset_thread_name  DB 'Hub Reset ', 0
 
 reset_thread:
     mov cl,dl
@@ -1126,6 +1166,282 @@ rtDone:
     mov ds:[edi].usb_reset_thread_arr,0
     LeaveSection ds:usb_section    
     TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Function sel (passed as bx)
+;                       DX      Passed through
+;                       AX      Prio
+;                       ESI     Entry
+;                       EDI     Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push es            
+    push ax
+;
+    push esi
+;
+    mov esi,edi
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+sfCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,dl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    pop esi         
+;
+    mov ebx,ds
+    xor edi,edi
+    mov eax,cs
+    mov ds,eax
+    pop ax
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartThread Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdatePort
+;
+;       DESCRIPTION:    Update root-hub port status
+;
+;       PARAMETERS:     DS      Function selector
+;                       DX      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePort   Proc near
+    push ds
+    pushad
+;    
+    movzx edi,dx
+    add edi,edi
+;    
+    mov eax,1
+    mov cx,dx
+    shl eax,cl
+    test eax,ds:hub_reset
+    jz upNoReset
+;
+    not eax
+    lock and ds:hub_reset,eax
+;        
+    mov ax,ds:[edi].hub_status_arr
+    test al,1
+    jz upNoReset
+;
+    mov bx,ds:[edi].hub_port_arr
+    or bx,bx
+    jz upNoReset
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_reset_thread_arr,-1
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET reset_thread
+    mov edi,OFFSET reset_thread_name
+    mov ax,2
+    call StartThread
+    jmp upDone
+    
+upNoReset:
+    mov ax,ds:[edi].hub_status_arr
+    test al,1
+    jz upDetach
+    
+upAttach:
+    mov bx,ds:[edi].hub_port_arr
+    or bx,bx
+    jnz upCheckTimeout
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_attach_thread_arr,-1
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET attach_thread
+    mov edi,OFFSET attach_thread_name
+    mov ax,2
+    call StartThread
+    jmp upDone
+
+upDetach:
+    mov bx,ds:[edi].hub_port_arr
+    or bx,bx
+    jz upCheckTimeout
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_detach_thread_arr,-1    
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET detach_thread
+    mov edi,OFFSET detach_thread_name
+    mov ax,2
+    call StartThread
+    jmp upDone
+
+upCheckTimeout:
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jz upDone
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc upDone
+;
+    mov ax,ds:[edi].usb_retry_arr
+    inc ax
+    mov ds:[edi].usb_retry_arr,ax
+;
+    cmp ax,100
+    jb upNotFatal
+;
+    int 3
+
+upNotFatal:
+    cmp ax,10
+    jnz upDoSignal
+;   
+;    mov eax,es:[2*edi].HcPortSc
+;    and al,NOT 4
+;    mov es:[2*edi].HcPortSc,eax
+
+upDoSignal:
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,bx
+    jz upCheckDetach
+;
+    Signal
+    jmp upLeave
+
+upCheckDetach:    
+    mov bx,ds:[edi].usb_detach_thread_arr
+    or bx,bx
+    jz upCheckReset
+;
+    Signal
+    jmp upLeave
+            
+upCheckReset:    
+    mov bx,ds:[edi].usb_reset_thread_arr
+    or bx,bx
+    jz upLeave
+;
+    Signal
+
+upLeave:
+    LeaveSection ds:usb_section
+                
+upDone:    
+    popad
+    pop ds    
+    ret
+UpdatePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdatePorts
+;
+;   description:    Update ports
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePorts    Proc near
+    push ax
+    push dx
+;
+    xor dx,dx
+
+uhpLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz uhpDone
+;
+    call UpdatePort
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb uhpLoop
+
+uhpDone:           
+    pop dx
+    pop ax
+    ret
+UpdatePorts    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1269,11 +1585,11 @@ ProcessHubDescr  Proc near
 ;
     movzx ecx,ds:hub_ports
     mov ebx,OFFSET hub_port_arr
+    xor ax,ax
 
 phdLoop:
-    mov ds:[ebx].hps_failed,0
-    mov ds:[ebx].hps_retry,0
-    add ebx,8
+    mov ds:[ebx],ax
+    add ebx,2
     loop phdLoop
 ;               
     clc    
@@ -1317,38 +1633,7 @@ ipDone:
     pop ax
     ret
 InitPorts    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdatePorts
-;
-;   description:    Update ports
-;
-;   Parameters:     DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePorts    Proc near
-    push ax
-    push dx
-;
-    xor dx,dx
-
-upLoop:
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz upDone
-;
-    inc dx
-    cmp dx,ds:hub_ports
-    jb upLoop
-
-upDone:           
-    pop dx
-    pop ax
-    ret
-UpdatePorts    Endp
-        
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1363,6 +1648,7 @@ UpdatePorts    Endp
 hub_port_name    DB 'Usb Hub Port ', 0
 
 usb_hub_port:
+    int 3
     mov ds,ebx
 ;
     GetThread
@@ -1585,44 +1871,6 @@ tsPortDone:
 
 tsFail:
     TerminateThread
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HexToAscii
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     AL      Number to convert
-;
-;   RETURNS:        AX      Ascii result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HexToAscii      PROC near
-    mov ah,al
-    and al,0F0h
-    rol al,1
-    rol al,1
-    rol al,1
-    rol al,1
-    cmp al,0Ah
-    jb ok_low1
-;
-    add al,7
-
-ok_low1:
-    add al,30h
-    and ah,0Fh
-    cmp ah,0Ah
-    jb ok_high1
-;
-    add ah,7
-
-ok_high1:
-    add ah,30h
-    ret
-HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1982,6 +2230,7 @@ uaNotDead:
     mov es:hub_flags,0
     mov es:hub_status_thread,0
     mov es:hub_port_thread,0
+    mov es:hub_reset,0
     InitSection es:hub_section
     jmp uaDevNext
 
