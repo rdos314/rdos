@@ -1352,7 +1352,7 @@ UpdatePorts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           Usb hub threads
+;   NAME:           Usb hub port
 ;
 ;   DESCRIPTION:    
 ;
@@ -1360,17 +1360,116 @@ UpdatePorts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usb_hub_start:
+hub_port_name    DB 'Usb Hub Port ', 0
+
+usb_hub_port:
+    mov ds,ebx
+;
+    GetThread
+    mov ds:hub_port_thread,ax
+
+tpLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tpExit
+;    
+    WaitForSignal
+    jmp tpLoop
+
+tpExit:
+    mov ds:hub_port_thread,0
+    mov bx,ds:hub_detach
+    Signal
+
+tpFail:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreatePortThread
+;
+;   description:    Create hub port thread
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePortThread	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET hub_port_name
+
+cptCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cptCopyDone
+;
+    stosb
+    jmp cptCopyLoop
+
+cptCopyDone:
+    mov ax,ds:hub_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:hub_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    mov ebx,ds
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET usb_hub_port
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreatePortThread	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           Usb hub status
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     BX      Hub selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_status_name    DB 'Usb Hub Status ', 0
+
+usb_hub_status:
     mov ds,ebx
 ;
     GetThread
     mov ds:hub_detach,0
-    mov ds:hub_thread,ax
+    mov ds:hub_status_thread,ax
     and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
 ;
     call CreateHub
     call ProcessHubDescr
-    jc tExit
+    jc tsExit
 ;
     call InitPorts
 ;
@@ -1379,37 +1478,39 @@ usb_hub_start:
 ;
     xor dx,dx
 
-tStatusLoop:
+tsStatusLoop:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz tLoop
+    jnz tsLoop
 ;
     call GetPortStatus
 ;
     inc dx
     cmp dx,ds:hub_ports
-    jb tStatusLoop
+    jb tsStatusLoop
+;
+    call CreatePortThread
 
-tLoop:
+tsLoop:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz tExit
+    jnz tsExit
 ;    
     mov bx,ds:hub_status_req
     IsUsbReqStarted
-    jnc tWaitSignal
+    jnc tsWaitSignal
 ;
     GetThread
     StartUsbReq    
 
-tWaitSignal:
+tsWaitSignal:
     WaitForSignal
 ;
     mov bx,ds:hub_status_req
     IsUsbReqReady
-    jc tNext
+    jc tsNext
 ;
     GetUsbReqData
     cmp cx,ds:hub_status_size
-    jne tNext
+    jne tsNext
 ;
     mov bx,cx
     mov es,ds:hub_status_sel
@@ -1418,45 +1519,66 @@ tWaitSignal:
     shr al,1
     xor dx,dx
 
-tChangeByteLoop:
+tsChangeByteLoop:
     mov ecx,8
 
-tChangeBitLoop:
+tsChangeBitLoop:
     test al,1
-    jz tChangeNext
+    jz tsChangeNext
 ;
     call GetPortStatus
+;
+    push ebx
+    mov bx,ds:hub_port_thread
+    Signal
+    pop ebx
 
-tChangeNext:
+tsChangeNext:
     shr al,1
     inc dx
-    loop tChangeBitLoop
+    loop tsChangeBitLoop
 ;
     sub bx,1
-    jz tNext
+    jz tsNext
 ;
     inc edi
     mov al,es:[edi]
-    jmp tChangeByteLoop
+    jmp tsChangeByteLoop
 
-tNext:
-    call UpdatePorts
-    jmp tLoop
+tsNext:
+    jmp tsLoop
 
-tSignalled:
+tsSignalled:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz tExit
+    jnz tsExit
 ;
-    jmp tLoop
+    jmp tsLoop
 
-tExit:
+tsExit:
+    mov bx,ds:hub_port_thread
+    or bx,bx
+    jz tsPortDone
+;
+    mov ecx,10
+
+tsPortSignal:
+    Signal
+;
+    WaitForSignal
+    mov bx,ds:hub_port_thread
+    or bx,bx
+    jz tsPortDone
+;
+    loop tsPortSignal
+
+tsPortDone:
     call CloseHub
 ;
-    mov ds:hub_thread,0
+    mov ds:hub_status_thread,0
     mov bx,ds:hub_detach
     Signal
 
-tFail:
+tsFail:
     TerminateThread
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1629,6 +1751,69 @@ FindSpecificDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateStatusThread
+;
+;   description:    Create hub status thread
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateStatusThread	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET hub_status_name
+
+cstCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cstCopyDone
+;
+    stosb
+    jmp cstCopyLoop
+
+cstCopyDone:
+    mov ax,ds:hub_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:hub_device
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    mov ebx,ds
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET usb_hub_status
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreateStatusThread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           usb_attach
 ;
 ;   description:    USB attach callback
@@ -1638,8 +1823,6 @@ FindSpecificDevice	Endp
 ;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hub_name    DB 'Usb Hub ', 0
 
 usb_attach  Proc far
     push ds
@@ -1744,42 +1927,7 @@ uaReConfig:
     mov ebx,gs
     mov ds,ebx
 ;
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov esi,OFFSET hub_name
-
-uaReCopyCdc:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz uaReCopyDone
-;
-    stosb
-    jmp uaReCopyCdc
-
-uaReCopyDone:
-    mov ax,ds:hub_controller
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,ds:hub_device
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;
-    xor edi,edi
-    mov edx,cs
-    mov ds,edx
-    mov esi,OFFSET usb_hub_start
-    mov eax,3
-    mov ecx,stack0_size
-    CreateThread
+    call CreateStatusThread
     jmp uaDone
 
 uaNotDead:
@@ -1827,7 +1975,8 @@ uaNotDead:
     mov es:hub_intr,0
     mov es:hub_detach,0
     mov es:hub_flags,0
-    mov es:hub_thread,0
+    mov es:hub_status_thread,0
+    mov es:hub_port_thread,0
     InitSection es:hub_section
     jmp uaDevNext
 
@@ -1887,49 +2036,13 @@ uaTabLoop:
     mov ds,ebx
     InitUsbDevice
 ;
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov esi,OFFSET hub_name
-
-uaCopyCdc:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz uaCopyDone
-;
-    stosb
-    jmp uaCopyCdc
-
-uaCopyDone:
-    mov ax,ds:hub_controller
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,ds:hub_device
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;
-    xor edi,edi
-    mov edx,cs
-    mov ds,edx
-    mov esi,OFFSET usb_hub_start
-    mov eax,3
-    mov ecx,stack0_size
-    CreateThread
+    call CreateStatusThread
     jmp uaDone
 
 uaFail:
+    FreeMem
 
 uaDone:    
-    FreeMem
-;
     popad
     pop es
     pop ds
@@ -1979,23 +2092,24 @@ udCheckLoop:
     mov es:hub_detach,ax
 ;
     or es:hub_flags,FLAG_HUB_DISCONNECT
-    mov bx,es:hub_thread
+;
+    mov bx,es:hub_status_thread
     or bx,bx
-    jz udRemove
+    jz udStatusOk
 ;
     mov ecx,10
 
-udSignal:
+udStatusSignal:
     Signal
 ;
     WaitForSignal
-    mov bx,es:hub_thread
+    mov bx,es:hub_status_thread
     or bx,bx
-    jz udRemove
+    jz udStatusOk
 ;
-    loop udSignal
+    loop udStatusSignal
 
-udRemove:
+udStatusOk:
     EnterSection ds:hub_list_section
     mov di,ds:hub_dead_list
     or di,di

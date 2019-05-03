@@ -59,7 +59,8 @@ usb_dev_base            usb_dev_struc <>
 hub_prev                DW ?
 hub_next                DW ?
 
-hub_thread              DW ?
+hub_status_thread       DW ?
+hub_port_thread         DW ?
 hub_detach              DW ?
 
 hub_vendor              DW ?
