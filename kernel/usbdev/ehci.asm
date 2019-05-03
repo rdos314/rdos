@@ -619,7 +619,7 @@ InitQh  PROC near
     mov es:[edx].qh_link,1
     mov es:[edx].qh_adress,0
     mov es:[edx].qh_endpoint,0
-    mov es:[edx].qh_max_packet,3000h
+    mov es:[edx].qh_max_packet,0A000h
     mov es:[edx].qh_s_mask,0
     mov es:[edx].qh_c_mask,0
     mov es:[edx].qh_hub_port,4000h
@@ -801,7 +801,7 @@ AddControlQh    PROC near
 ;
     mov es:[edx].qh_endpoint,60h
 ;    
-    mov ax,3008h
+    mov ax,0A008h
     mov es:[edx].qh_max_packet,ax
 ;
     mov al,fs:usbp_speed
@@ -838,7 +838,7 @@ acqSetSpeed:
 ;
     mov es:[edx].qh_c_mask,2
 ;    
-    mov ax,3808h
+    mov ax,0A808h
     mov es:[edx].qh_max_packet,ax
     
 acqSpeedOk:
@@ -997,7 +997,7 @@ AddBulkQh    PROC near
 ;
     mov es:[edx].qh_endpoint,20h
 ;    
-    mov ax,3008h
+    mov ax,0A008h
     mov es:[edx].qh_max_packet,ax
 ;
     mov al,fs:usbp_speed
@@ -1029,7 +1029,7 @@ abqSetSpeed:
 ;
     mov es:[edx].qh_c_mask,2
 ;    
-    mov ax,3008h
+    mov ax,0A008h
     mov es:[edx].qh_max_packet,ax
     
 abqSpeedOk:
@@ -1176,7 +1176,7 @@ aieQhOk:
 ;
     mov es:[edx].qh_endpoint,20h
 ;    
-    mov ax,3008h
+    mov ax,8h
     mov es:[edx].qh_max_packet,ax
 ;
     mov al,fs:usbp_speed
