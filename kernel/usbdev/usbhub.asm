@@ -840,6 +840,21 @@ cpcOverCurrentOk:
     mov ax,20
     call ClearPortFeature
     pop ax
+;
+    push ebx
+    push edi
+;
+    movzx edi,dx
+    add edi,edi
+;
+    mov bx,ds:[edi].usb_attach_thread_arr
+    Signal
+;
+    mov bx,ds:[edi].usb_reset_thread_arr
+    Signal
+;
+    pop edi
+    pop ebx
                 
 cpcResetOk:
     pop eax
@@ -899,12 +914,12 @@ GetPortStatus  Proc near
     jc gpsDone
 ;    
     dec dx
-    mov eax,dword ptr ds:hub_buf
-    call ClearPortChange
-;
     movzx edi,dx
     add edi,edi
+    mov eax,dword ptr ds:hub_buf
     mov ds:[edi].hub_status_arr,ax
+;
+    call ClearPortChange
     clc    
 
 gpsDone:    
@@ -928,7 +943,6 @@ GetPortStatus Endp
 attach_thread_name  DB 'Hub Attach ', 0
 
 attach_thread:
-    int 3
     mov cl,dl
     mov ds,bx
 ;    
@@ -952,9 +966,11 @@ attach_thread:
     mov ax,PORT_RESET
     call SetPortFeature
 ;        
-    mov cx,40
+    mov cx,5
 
 atWaitLoop:
+    WaitForSignal
+;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
@@ -965,13 +981,12 @@ atWaitLoop:
     test ax,2
     jnz atIsEnabled
 ;
-    mov ax,25
-    WaitMilliSec
     loop atWaitLoop
 ;
     jmp atUnlock    
 
 atIsEnabled:
+    int 3
     movzx dx,cl
     call HubAttach 
     jnc atDone
@@ -1096,9 +1111,11 @@ reset_thread:
     mov ax,PORT_RESET
     call SetPortFeature
 ;        
-    mov cx,40
+    mov cx,5
 
 rtWaitLoop:
+    WaitForSignal
+;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
 ;
@@ -1109,8 +1126,6 @@ rtWaitLoop:
     test ax,2
     jnz rtIsEnabled
 ;
-    mov ax,25
-    WaitMilliSec
     loop rtWaitLoop
 ;
     jmp rtUnlock    
