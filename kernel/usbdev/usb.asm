@@ -1176,6 +1176,70 @@ unlock_usb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateUsbAddress
+;
+;       Description:    Allocate USB address
+;
+;       PARAMETERS:     DS	Function sel
+;
+;       RETURNS:        AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_usb_address_name DB 'Allocate USB Address', 0
+
+allocate_usb_address       Proc far
+    push es
+    push cx
+    push di
+;
+    mov ax,ds
+    mov es,ax
+;
+    mov di,OFFSET usb_addr_arr
+    mov cx,128
+    add di,2
+    xor ax,ax
+    repnz scasw
+    sub di,2
+    sub di,OFFSET usb_addr_arr
+    shr di,1
+    mov ax,di
+;
+    pop di
+    pop cx
+    pop es
+    retf32
+allocate_usb_address      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeUsbAddress
+;
+;       Description:    Free USB address
+;
+;       PARAMETERS:     DS	Function sel
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_usb_address_name DB 'Free USB Address', 0
+
+free_usb_address       Proc far
+    push bx
+;
+    movzx bx,al
+    add bx,bx
+    mov ds:[bx].usb_addr_arr,0
+;
+    pop bx
+    retf32
+free_usb_address       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddUsbFunction
 ;
 ;       Description:    Add USB function
@@ -4701,6 +4765,18 @@ init    Proc far
     mov edi,OFFSET hook_usb_detach_name
     xor cl,cl
     mov ax,hook_usb_detach_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_usb_address
+    mov edi,OFFSET allocate_usb_address_name
+    xor cl,cl
+    mov ax,allocate_usb_address_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_usb_address
+    mov edi,OFFSET free_usb_address_name
+    xor cl,cl
+    mov ax,free_usb_address_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usb_pipe_sel

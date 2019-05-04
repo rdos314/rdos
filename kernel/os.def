@@ -823,4 +823,7 @@ setup_nmi_handler_nr        = 717
 lock_usb_com_control_nr     = 718
 unlock_usb_com_control_nr   = 719
 
+allocate_usb_address_nr     = 720
+free_usb_address_nr         = 721
+
 osgate_entries              = 750

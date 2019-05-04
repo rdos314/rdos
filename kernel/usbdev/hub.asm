@@ -628,7 +628,7 @@ attach_thread:
     jnz atHasPort
 ;
     mov dx,si
-    call fword ptr ds:allocate_hub_port_proc
+    call fword ptr ds:allocate_hub_address_proc
     jc atDone
 ;
     mov gs:[bx].hps_dev_port,al
@@ -682,7 +682,7 @@ atFreeUnlock:
     or al,al
     jz atUnlock
 ;    
-    call fword ptr ds:free_hub_port_proc
+    call fword ptr ds:free_hub_address_proc
     mov gs:[bx].hps_dev_port,0
 
 atUnlock:   
@@ -723,7 +723,7 @@ detach_thread:
     call HubDetach
 ;   
     mov al,gs:[bx].hps_dev_port
-    call fword ptr ds:free_hub_port_proc
+    call fword ptr ds:free_hub_address_proc
     mov gs:[bx].hps_dev_port,0
 
 dtDone:

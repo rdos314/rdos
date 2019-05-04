@@ -35,8 +35,7 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
-INCLUDE usbdev.inc
-INCLUDE hub.inc
+INCLUDE usbhub.inc
 
 MAX_USB_DEVICES = 16
 
@@ -80,6 +79,13 @@ ehc_qh          DD ?
 
 count_struc ENDS
 
+ehci_hub_struc   STRUC
+
+eh_port         DW ?
+eh_sel          DW ?
+
+ehci_hub_struc   ENDS
+
 ehci_func_sel   STRUC
 
 usb_dev_base        usb_dev_struc <>
@@ -112,7 +118,7 @@ ehc_pipe_section    section_typ <>
 ehc_enum_section    section_typ <>
 ehc_hub_section     section_typ <>
 
-ehc_hub_port_arr    DD 256 DUP(?)
+ehc_hub_arr         DD 256 DUP(?)
 
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
@@ -590,10 +596,10 @@ SetupHub  Proc near
 shHub:
     movzx si,al
     shl si,2
-    mov ax,word ptr ds:[si].ehc_hub_port_arr
+    mov ax,word ptr ds:[si].ehc_hub_arr.eh_sel
     mov fs:usbp_hub_sel,ax
 ;    
-    mov ax,word ptr ds:[si+2].ehc_hub_port_arr
+    mov ax,word ptr ds:[si+2].ehc_hub_arr.eh_port
     mov fs:usbp_hub_port,ax
 
 shDone:    
@@ -2625,73 +2631,65 @@ UnlockEnum   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateHubPort
+;           NAME:           AllocateHubAddress
 ;
-;           DESCRIPTION:    Allocate Hub port
+;           DESCRIPTION:    Allocate Hub address
 ;
 ;       PARAMETERS:         DS      Function selector
-;                           GS      Hub Selector
+;                           BX      Hub Selector
 ;                           DX      Hub port
 ;
-;       RETURNS:            AL      Port
+;       RETURNS:            AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateHubPort   Proc far
-    push bx
+AllocateHubAddress   Proc far
     push si
 ;    
-    xor al,al
-    mov bx,OFFSET ehc_hub_port_arr
-    EnterSection ds:ehc_hub_section
-
-ahpLoop:
-    mov si,[bx]
-    or si,si
-    jz ahpOk
+    AllocateUsbAddress
 ;
-    add bx,4
-    inc al
-    jmp ahpLoop      
-
-ahpOk:
-    mov [bx],gs
-    mov [bx+2],dx
+    EnterSection ds:ehc_hub_section
+    movzx si,al
+    shl si,2
+    add si,OFFSET ehc_hub_arr
+    mov ds:[si].eh_sel,bx
+    mov ds:[si].eh_port,dx
     LeaveSection ds:ehc_hub_section
     clc
 ;
     pop si
-    pop bx
     retf32
-AllocateHubPort     Endp
+AllocateHubAddress     Endp
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeHubPort
+;           NAME:           FreeHubAddress
 ;
-;           DESCRIPTION:    Free Hub port
+;           DESCRIPTION:    Free Hub address
 ;
 ;       PARAMETERS:         DS      Function selector
 ;                           AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeHubPort   Proc far
+FreeHubAddress   Proc far
     push bx
 ;    
     movzx bx,al
     shl bx,2
-    add bx,OFFSET ehc_hub_port_arr
+    add bx,OFFSET ehc_hub_arr
     EnterSection ds:ehc_hub_section
-    mov dword ptr [bx],0
+    mov dword ptr [bx].eh_sel,0
+    mov dword ptr [bx].eh_port,0
     LeaveSection ds:ehc_hub_section
+;
+    FreeUsbAddress
     clc
 ;
     pop bx
     retf32
-FreeHubPort     Endp
+FreeHubAddress     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3860,37 +3858,37 @@ StartFunctionThread Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ehci_tab:
-et00 DD OFFSET CreateControl,       SEG code
-et01 DD OFFSET CreateBulk,          SEG code
-et02 DD OFFSET CreateIntr,          SEG code
-et03 DD OFFSET AddSetup,        SEG code
-et04 DD OFFSET AddOut,          SEG code
-et05 DD OFFSET AddIn,           SEG code
-et06 DD OFFSET AddStatusOut,    SEG code
-et07 DD OFFSET AddStatusIn,         SEG code
-et08 DD OFFSET IssueTransfer,       SEG code
-et09 DD OFFSET IsTransferDone,      SEG code
-et0A DD OFFSET EndTransfer,     SEG code
-et0B DD OFFSET WasTransferOk,       SEG code
-et0C DD OFFSET GetDataSize,     SEG code
-et0D DD OFFSET ClosePipe,       SEG code
-et0E DD OFFSET WaitForCompletion,   SEG code
-et0F DD OFFSET ChangeAddress,       SEG code
-et10 DD OFFSET IsConnected,     SEG code
-et11 DD OFFSET ResetPipe,       SEG code
-et12 DD OFFSET LockEnum,        SEG code
-et13 DD OFFSET UnlockEnum,      SEG code
-et14 DD OFFSET AllocateHubPort, SEG code
-et15 DD OFFSET FreeHubPort,     SEG code
-et16 DD OFFSET Has64Bit,        SEG code
-et17 DD OFFSET IsStalled,       SEG code
-et18 DD OFFSET ClearStalled,    SEG code
-et19 DD OFFSET GetMaxLen,       SEG code
-et1A DD 0,                      0
-et1B DD 0,                      0
-et1C DD OFFSET SetMaxLen,       SEG code
-et1D DD OFFSET CloseControlPipe, SEG code
-ec1E DD OFFSET IssueOne,        SEG code
+et00 DD OFFSET CreateControl,      SEG code
+et01 DD OFFSET CreateBulk,         SEG code
+et02 DD OFFSET CreateIntr,         SEG code
+et03 DD OFFSET AddSetup,           SEG code
+et04 DD OFFSET AddOut,             SEG code
+et05 DD OFFSET AddIn,              SEG code
+et06 DD OFFSET AddStatusOut,       SEG code
+et07 DD OFFSET AddStatusIn,        SEG code
+et08 DD OFFSET IssueTransfer,      SEG code
+et09 DD OFFSET IsTransferDone,     SEG code
+et0A DD OFFSET EndTransfer,        SEG code
+et0B DD OFFSET WasTransferOk,      SEG code
+et0C DD OFFSET GetDataSize,        SEG code
+et0D DD OFFSET ClosePipe,          SEG code
+et0E DD OFFSET WaitForCompletion,  SEG code
+et0F DD OFFSET ChangeAddress,      SEG code
+et10 DD OFFSET IsConnected,        SEG code
+et11 DD OFFSET ResetPipe,          SEG code
+et12 DD OFFSET LockEnum,           SEG code
+et13 DD OFFSET UnlockEnum,         SEG code
+et14 DD OFFSET AllocateHubAddress, SEG code
+et15 DD OFFSET FreeHubAddress,     SEG code
+et16 DD OFFSET Has64Bit,           SEG code
+et17 DD OFFSET IsStalled,          SEG code
+et18 DD OFFSET ClearStalled,       SEG code
+et19 DD OFFSET GetMaxLen,          SEG code
+et1A DD 0,                         0
+et1B DD 0,                         0
+et1C DD OFFSET SetMaxLen,          SEG code
+et1D DD OFFSET CloseControlPipe,   SEG code
+ec1E DD OFFSET IssueOne,           SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4200,14 +4198,6 @@ afCompOk:
 afPowerOk:
     and al,0Fh
     mov ds:ehc_ports,al
-;
-    movzx cx,al
-    mov bx,OFFSET ehc_hub_port_arr
-
-afAllocPorts:
-    mov dword ptr ds:[bx],-1
-    add bx,4
-    loop afAllocPorts        
 ;
     mov bx,es
     GetSelectorBaseSize

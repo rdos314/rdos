@@ -117,12 +117,12 @@ obs_unlock_enum_proc       DD ?,?
 
 ; IN  BX        Hub selector
 ; IN  DX        Hub port
-; OUT AL        Port
-allocate_hub_port_proc DD ?,?
+; OUT AL        Address
+allocate_hub_address_proc DD ?,?
 
 ; IN  BX        Hub selector
-; IN  AL        Port
-free_hub_port_proc     DD ?,?
+; IN  AL        Address
+free_hub_address_proc     DD ?,?
 
 has_64bit_proc         DD ?,?
 

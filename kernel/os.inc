@@ -3826,6 +3826,18 @@ HookUsbDetach   MACRO
     OsGate hook_usb_detach_nr
                     ENDM
 
+; IN  DS      Function sel
+; OUT AL      Address
+AllocateUsbAddress MACRO
+    OsGate allocate_usb_address_nr
+                    ENDM
+
+; IN  DS      Function sel
+; IN  AL      Address
+FreeUsbAddress MACRO
+    OsGate free_usb_address_nr
+                    ENDM
+
 ; IN  GS      Hub selector
 ; IN  DX      Hub port
 IsUsbHubPortConnected   MACRO

@@ -996,6 +996,7 @@ GetPortStatus Endp
 attach_thread_name  DB 'Hub Attach ', 0
 
 attach_thread:
+    int 3
     mov cl,dl
     mov ds,bx
 ;    
@@ -1040,9 +1041,13 @@ atWaitLoop:
 
 atIsEnabled:
     int 3
+    mov cl,dl
+;
     push ds
+    mov ebx,ds
+    movzx dx,cl
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:allocate_hub_port_proc
+    call fword ptr ds:allocate_hub_address_proc
     pop ds
     jc atUnlock
 ;
@@ -1055,7 +1060,7 @@ atIsEnabled:
     xor al,al
     xchg al,ds:[esi].hub_parent_arr
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_hub_port_proc
+    call fword ptr ds:free_hub_address_proc
     pop ds
 ;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
@@ -1121,6 +1126,7 @@ detach_thread:
     mov cl,dl
     mov ds,bx
 ;
+    movzx esi,cl
     movzx edi,cl
     add edi,edi
 ;    
@@ -1128,6 +1134,13 @@ detach_thread:
     GetThread
     mov ds:[edi].usb_detach_thread_arr,ax
     LeaveSection ds:usb_section
+;        
+    push ds
+    xor al,al
+    xchg al,ds:[esi].hub_parent_arr
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_hub_address_proc
+    pop ds
 ;
     movzx dx,cl
     call HubDetach
@@ -1155,6 +1168,7 @@ reset_thread:
     mov cl,dl
     mov ds,bx
 ;
+    movzx esi,cl
     movzx edi,cl
     add edi,edi
 ;    
@@ -1198,9 +1212,28 @@ rtWaitLoop:
     jmp rtUnlock    
 
 rtIsEnabled:
+    mov cl,dl
+;
+    push ds
+    mov ebx,ds
+    movzx dx,cl
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:allocate_hub_address_proc
+    pop ds
+    jc rtUnlock
+;
+    mov ds:[esi].hub_parent_arr,al
+;
     movzx dx,cl
     call HubAttach 
     jnc rtDone
+;        
+    push ds
+    xor al,al
+    xchg al,ds:[esi].hub_parent_arr
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_hub_address_proc
+    pop ds
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
@@ -1728,6 +1761,7 @@ InitPorts    Endp
 hub_port_name    DB 'Usb Hub Port ', 0
 
 usb_hub_port:
+    int 3
     mov ds,ebx
 ;
     GetThread
