@@ -2611,7 +2611,85 @@ ioDone:
     pop ds
     retf32
 IssueOne   Endp
-   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDev
+;
+;       DESCRIPTION:    Create device sel
+;
+;       PARAMETERS:     DS        Function sel
+;                       DX        Port #
+;
+;       RETURNS:        ES        Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    push fs
+    pushad
+;
+    mov cl,dl
+    call EnableSlot
+    jc cdFail
+;
+    mov es,ds:xhc_port_sel
+    movzx si,cl
+    shl si,4
+;
+    push eax
+    mov dx,100
+
+cdSlotLoop:
+    mov eax,es:[si]
+    call PortToSpeed
+    cmp al,-1
+    jne cdSlotAlloc
+;
+    sub dx,1
+    jz cdFail
+;
+    mov ax,25
+    WaitMilliSec
+    jmp cdSlotLoop    
+
+cdSlotAlloc:
+    call AllocateDevice
+    pop eax
+;
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].xhc_func_sel_arr,es
+;
+    movzx bx,cl    
+    mov ds:[bx].xhc_port_slot_arr,al
+;
+    mov bx,xhci_device_ptr_sel
+    mov fs,bx
+    movzx bx,al
+    shl bx,3
+    movzx edx,es:xd_output_context_offset
+    add edx,es:xd_phys
+    mov fs:[bx],edx
+    mov edx,es:xd_phys+4
+    mov fs:[bx+4],edx
+;
+    mov es:usbf_port,cl
+    mov es:usbf_slot,al
+    mov es:usbf_address,al
+    clc
+    jmp cdDone
+
+cdFail:
+    stc
+
+cdDone:
+    popad
+    pop fs
+    retf32   
+CreateDev	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2675,55 +2753,9 @@ atResetDone:
     mov bx,ds:xhc_port_thread
     Signal
 ;    
-    call EnableSlot
-    jnc atSlotOk
-
-atUnlock:
-    UnlockUsb
-    jmp atDone
-
-atSlotOk:
-    push eax
-    mov dx,100
-
-atSlotLoop:
-    mov eax,es:[si]
-    call PortToSpeed
-    cmp al,-1
-    jne atSlotAlloc
-;
-    sub dx,1
-    jz atUnlock
-;
-    mov ax,25
-    WaitMilliSec
-    jmp atSlotLoop    
-
-atSlotAlloc:
-    call AllocateDevice
-    mov al,es:usbf_speed
-    pop eax
-;
-    movzx bx,al
-    shl bx,1
-    mov ds:[bx].xhc_func_sel_arr,es
-;
-    movzx bx,cl    
-    mov ds:[bx].xhc_port_slot_arr,al
-;
-    mov bx,xhci_device_ptr_sel
-    mov fs,bx
-    movzx bx,al
-    shl bx,3
-    movzx edx,es:xd_output_context_offset
-    add edx,es:xd_phys
-    mov fs:[bx],edx
-    mov edx,es:xd_phys+4
-    mov fs:[bx+4],edx
-;
-    mov es:usbf_port,cl
-    mov es:usbf_slot,al
-    mov es:usbf_address,0
+    movzx dx,cl
+    call fword ptr ds:create_dev_proc
+    jc atUnlock
 ;
     mov ax,25
     WaitMilliSec
@@ -2760,6 +2792,10 @@ atSlotAlloc:
     and eax,0EE03E1h
     or al,10h
     mov es:[si],eax
+    jmp atDone
+
+atUnlock:
+    UnlockUsb
 
 atDone:
     mov eax,1
@@ -2934,54 +2970,9 @@ rtResetDone:
     mov bx,ds:xhc_port_thread
     Signal
 ;
-    call EnableSlot
-    jnc rtEnableOk
-
-rtUnlock:
-    UnlockUsb
-    jmp rtDone
-    
-rtEnableOk: 
-    push eax
-    mov dx,100
-
-rtSlotLoop:
-    mov eax,es:[si]
-    call PortToSpeed
-    cmp al,-1
-    jne rtSlotAlloc
-;
-    sub dx,1
-    jz rtUnlock
-;
-    mov ax,25
-    WaitMilliSec
-    jmp rtSlotLoop    
-
-rtSlotAlloc:
-    call AllocateDevice
-    pop eax
-;
-    movzx bx,al
-    shl bx,1
-    mov ds:[bx].xhc_func_sel_arr,es
-;
-    movzx bx,cl    
-    mov ds:[bx].xhc_port_slot_arr,al
-;
-    mov bx,xhci_device_ptr_sel
-    mov fs,bx
-    movzx bx,al
-    shl bx,3
-    movzx edx,es:xd_output_context_offset
-    add edx,es:xd_phys
-    mov fs:[bx],edx
-    mov edx,es:xd_phys+4
-    mov fs:[bx+4],edx
-;
-    mov es:usbf_port,cl
-    mov es:usbf_slot,al
-    mov es:usbf_address,0
+    movzx dx,cl
+    call fword ptr ds:create_dev_proc
+    jc rtUnlock
 ;
     mov ax,25
     WaitMilliSec
@@ -3018,6 +3009,10 @@ rtSlotAlloc:
     and eax,0EE03E1h
     or al,10h
     mov es:[si],eax
+    jmp rtDone
+
+rtUnlock:
+    UnlockUsb
 
 rtDone:
     mov eax,1
@@ -3799,6 +3794,7 @@ et1B DD OFFSET ConfigDevice,    SEG code
 et1C DD OFFSET SetMaxLen,       SEG code
 et1D DD OFFSET CloseControlPipe,  SEG code
 et1E DD OFFSET IssueOne,        SEG code
+et1F DD OFFSET CreateDev,       SEG code
 
 InitFunction    Proc near
     push es
@@ -3945,7 +3941,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

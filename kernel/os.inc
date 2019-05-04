@@ -3827,6 +3827,7 @@ HookUsbDetach   MACRO
                     ENDM
 
 ; IN  DS      Function sel
+; IN  ES      Device sel
 ; OUT AL      Address
 AllocateUsbAddress MACRO
     OsGate allocate_usb_address_nr

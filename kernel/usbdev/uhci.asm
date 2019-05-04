@@ -2765,6 +2765,43 @@ iotDone:
     pop es
     retf32
 IssueOne   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDev
+;
+;       DESCRIPTION:    Create device sel
+;
+;       PARAMETERS:     DS	Function sel
+;                       DX      Port #
+;
+;       RETURNS:        ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    push eax
+    push cx
+    push di
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    AllocateUsbAddress
+    mov es:usbf_port,dl
+    mov es:usbf_slot,0
+    mov es:usbf_address,al
+;
+    pop di
+    pop cx
+    pop eax
+    retf32
+CreateDev   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2836,25 +2873,16 @@ atNotify:
     test al,1
     jz atUnlock
 ;
+    push dx
+    movzx dx,bl
+    call fword ptr ds:create_dev_proc
+    pop dx
+;
     xor ah,1
     and ah,1
-    mov al,bl
-;
-    push ax
-    push di
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-    pop di
-    pop ax
-;
     mov es:usbf_speed,ah
-    mov es:usbf_port,al
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
+;
+    mov al,bl
     NotifyUsbAttach
     jnc atDone
 ;
@@ -2984,25 +3012,16 @@ rtNotify:
     test al,1
     jz rtUnlock
 ;
+    push dx
+    movzx dx,bl
+    call fword ptr ds:create_dev_proc
+    pop dx
+;
     xor ah,1
     and ah,1
-    mov al,cl
-;
-    push ax
-    push di
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-    pop di
-    pop ax
-;
     mov es:usbf_speed,ah
-    mov es:usbf_port,al
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
+;
+    mov al,bl
     NotifyUsbAttach
     jnc rtDone
 ;
@@ -3336,6 +3355,7 @@ ut1B DD 0,                      0
 ut1C DD OFFSET SetMaxLen,       SEG code
 ut1D DD OFFSET CloseControlPipe, SEG code
 ut1E DD OFFSET IssueOne,      SEG code
+ut1F DD OFFSET CreateDev,     SEG code
 
 InitFunction    Proc near
     push ds
@@ -3357,7 +3377,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

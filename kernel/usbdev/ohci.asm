@@ -2606,6 +2606,43 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateDev
+;
+;       DESCRIPTION:    Create device sel
+;
+;       PARAMETERS:     DS          Function sel
+;                       DX          Port #
+;
+;       RETURNS:        ES          Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    push eax
+    push cx    
+    push di
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    AllocateUsbAddress
+    mov es:usbf_port,dl
+    mov es:usbf_slot,0
+    mov es:usbf_address,al
+;
+    pop di
+    pop cx
+    pop eax
+    retf32
+CreateDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -2711,31 +2748,15 @@ atWaitNotify:
     mov ax,25
     WaitMilliSec
 ;
-    mov eax,es:[si].HcRhPortStatus
     push es
-    push eax
-    push cx    
-    push di
-;
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-;
-    pop di
-    pop cx
-    pop eax
-;
+    mov eax,es:[si].HcRhPortStatus
+    movzx dx,cl
+    call fword ptr ds:create_dev_proc
     shr ah,1
     and ah,1
     xor ah,1
     mov es:usbf_speed,ah
 ;
-    mov es:usbf_port,cl
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
     mov al,cl
     NotifyUsbAttach
     pop es
@@ -2858,32 +2879,16 @@ rtWaitNotify:
 ;
     sub dx,1
     jnz rtWaitNotify
-;    
-    mov eax,es:[si].HcRhPortStatus
+;
     push es
-    push eax
-    push cx    
-    push di
-;
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-;
-    pop di
-    pop cx
-    pop eax
-;
+    mov eax,es:[si].HcRhPortStatus
+    movzx dx,cl
+    call fword ptr ds:create_dev_proc
     shr ah,1
     and ah,1
     xor ah,1
     mov es:usbf_speed,ah
 ;
-    mov es:usbf_port,cl
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
     mov al,cl
     NotifyUsbAttach
     pop es
@@ -3557,6 +3562,7 @@ ot1B DD 0,                      0
 ot1C DD OFFSET SetMaxLen,       SEG code
 ot1D DD OFFSET CloseControlPipe, SEG code
 ot1E DD OFFSET IssueOne,        SEG code
+ot1F DD OFFSET CreateDev,       SEG code
 
 InitFunction    Proc near
     push ds
@@ -3614,7 +3620,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

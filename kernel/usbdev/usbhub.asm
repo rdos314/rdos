@@ -612,11 +612,48 @@ hc1E DD OFFSET IssueOne,            SEG code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AllocateHubDev
+;
+;   description:    Allocate hub device
+;
+;   PARAMETERS:     AL          Address
+;                   DX          Port #
+;
+;   RETURNS:        ES		Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateHubDev	Proc near
+    push ecx
+    push edi
+;
+    push eax
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov ecx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+    pop eax
+;
+    mov es:usbf_slot,0
+    mov es:usbf_port,dl
+    mov es:usbf_address,al
+;
+    pop edi
+    pop ecx
+    ret
+AllocateHubDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HubAttach
 ;
 ;   description:    Hub attach event
 ;
 ;   Parameters:     DS      Function sel
+;                   ES      Device
 ;                   DX      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -649,26 +686,9 @@ haLowSpeed:
     mov ah,0
         
 haAttach:
-    push eax
-    push ecx    
-    push edi
-;
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov ecx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-;
-    pop edi
-    pop ecx
-    pop eax
-;    
-    mov es:usbf_port,dl
     mov es:usbf_speed,ah
-;    
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
+; 
+    int 3   
     mov al,dl
     NotifyUsbAttach
 
@@ -996,7 +1016,6 @@ GetPortStatus Endp
 attach_thread_name  DB 'Hub Attach ', 0
 
 attach_thread:
-    int 3
     mov cl,dl
     mov ds,bx
 ;    
@@ -1051,14 +1070,15 @@ atIsEnabled:
     pop ds
     jc atUnlock
 ;
-    mov ds:[esi].hub_parent_arr,al
+    mov ds:[esi].hub_adr_arr,al
+    call AllocateHubDev
 ;
     call HubAttach 
     jnc atDone
 ;        
     push ds
     xor al,al
-    xchg al,ds:[esi].hub_parent_arr
+    xchg al,ds:[esi].hub_adr_arr
     mov ds,ds:hub_parent_sel
     call fword ptr ds:free_hub_address_proc
     pop ds
@@ -1137,7 +1157,7 @@ detach_thread:
 ;        
     push ds
     xor al,al
-    xchg al,ds:[esi].hub_parent_arr
+    xchg al,ds:[esi].hub_adr_arr
     mov ds,ds:hub_parent_sel
     call fword ptr ds:free_hub_address_proc
     pop ds
@@ -1222,7 +1242,8 @@ rtIsEnabled:
     pop ds
     jc rtUnlock
 ;
-    mov ds:[esi].hub_parent_arr,al
+    mov ds:[esi].hub_adr_arr,al
+    call AllocateHubDev
 ;
     movzx dx,cl
     call HubAttach 
@@ -1230,7 +1251,7 @@ rtIsEnabled:
 ;        
     push ds
     xor al,al
-    xchg al,ds:[esi].hub_parent_arr
+    xchg al,ds:[esi].hub_adr_arr
     mov ds,ds:hub_parent_sel
     call fword ptr ds:free_hub_address_proc
     pop ds
@@ -1723,7 +1744,7 @@ InitPorts    Proc near
     push esi
 ;
     xor dx,dx
-    mov esi,OFFSET hub_parent_arr
+    mov esi,OFFSET hub_adr_arr
 
 ipLoop:
     mov ax,PORT_POWER

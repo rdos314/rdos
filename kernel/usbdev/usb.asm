@@ -527,6 +527,7 @@ cdcSendAddress:
     pop ax
 ;
     push ax
+    movzx ax,al
     mov es:usd_value,ax
     mov es:usd_index,0
     mov es:usd_len,0
@@ -1181,6 +1182,7 @@ unlock_usb    Endp
 ;       Description:    Allocate USB address
 ;
 ;       PARAMETERS:     DS	Function sel
+;                       ES      Device sel
 ;
 ;       RETURNS:        AL      Address
 ;
@@ -1191,8 +1193,10 @@ allocate_usb_address_name DB 'Allocate USB Address', 0
 allocate_usb_address       Proc far
     push es
     push cx
+    push si
     push di
 ;
+    mov si,es
     mov ax,ds
     mov es,ax
 ;
@@ -1202,11 +1206,14 @@ allocate_usb_address       Proc far
     xor ax,ax
     repnz scasw
     sub di,2
+    mov ds:[di],si
+;
     sub di,OFFSET usb_addr_arr
     shr di,1
     mov ax,di
 ;
     pop di
+    pop si
     pop cx
     pop es
     retf32
@@ -1409,32 +1416,7 @@ notify_usb_attach       Proc far
     pushad
 ;
     mov bp,ax
-    mov al,es:usbf_slot
-    or al,al
-    jnz nuaSlot
-;
-    push es
-    mov ax,ds
-    mov es,ax
-;
-    mov di,OFFSET usb_addr_arr
-    mov cx,128
-    add di,2
-    xor ax,ax
-    repnz scasw
-    sub di,2
-    sub di,OFFSET usb_addr_arr
-    shr di,1
-    mov ax,di
-    pop es
-    
-nuaSlot:
-    mov es:usbf_address,al
-    movzx di,al
-    add di,di
-    add di,OFFSET usb_addr_arr
-    mov ds:[di],es
-;
+    mov al,es:usbf_address
     call AddUsbFunction
 ;
     push ax

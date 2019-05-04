@@ -151,6 +151,10 @@ close_control_pipe_proc DD ?,?
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?
 
+; IN  DX        Port #
+; OUT ES        Device sel
+create_dev_proc       DD ?,?
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?

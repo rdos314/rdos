@@ -81,7 +81,7 @@ hub_parent_sel          DW ?
 
 hub_ports               DW ?
 hub_status_arr          DW MAX_USB_HUB_PORTS DUP(?)
-hub_parent_arr          DB MAX_USB_HUB_PORTS DUP(?)
+hub_adr_arr             DB MAX_USB_HUB_PORTS DUP(?)
 
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)

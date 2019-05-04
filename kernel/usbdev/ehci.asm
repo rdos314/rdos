@@ -2864,6 +2864,43 @@ ccpDone:
     pop es
     retf32
 CloseControlPipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               CreateDev
+;
+;       DESCRIPTION:        Create device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           DX      Port #
+;
+;       RETURNS:            ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    push eax
+    push cx    
+    push di
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    AllocateUsbAddress    
+    mov es:usbf_port,dl
+    mov es:usbf_slot,0
+    mov es:usbf_address,al
+;
+    pop di
+    pop cx
+    pop eax
+    retf32
+CreateDev  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3006,22 +3043,13 @@ atWaitNotify:
     jnz atWaitNotify
 ;
     push es
-    push cx    
-    push edi
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-    pop edi
-    pop cx
-;    
-    mov es:usbf_port,cl
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
+    push dx
+    movzx dx,cl
+    call fword ptr ds:create_dev_proc
+    pop dx
     mov es:usbf_speed,2
-    mov al,cl
+;
+    movzx ax,cl
     NotifyUsbAttach
     pop es
     jnc atDone
@@ -3139,21 +3167,10 @@ rtWaitNotify:
     jnz rtWaitNotify
 ;
     push es
-    push cx    
-    push edi
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-    pop edi
-    pop cx
-;    
-    mov es:usbf_port,cl
-    mov es:usbf_slot,0
-    mov es:usbf_address,0
+    movzx dx,cl
+    call fword ptr ds:create_dev_proc
     mov es:usbf_speed,2
+;
     mov al,cl
     NotifyUsbAttach
     pop es
@@ -3889,6 +3906,7 @@ et1B DD 0,                         0
 et1C DD OFFSET SetMaxLen,          SEG code
 et1D DD OFFSET CloseControlPipe,   SEG code
 ec1E DD OFFSET IssueOne,           SEG code
+ec1F DD OFFSET CreateDev,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3910,7 +3928,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]
