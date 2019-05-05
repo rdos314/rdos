@@ -2553,44 +2553,6 @@ UnlockEnum   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateHubPort
-;
-;           DESCRIPTION:    Allocate Hub port
-;
-;       PARAMETERS:         DS      Function selector
-;                           GS      Hub
-;
-;       RETURNS:            AL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateHubPort   Proc far
-    stc
-    retf32
-AllocateHubPort     Endp
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeHubPort
-;
-;           DESCRIPTION:    Free Hub port
-;
-;       PARAMETERS:         DS      Function selector
-;                           GS      Hub
-;                           AL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeHubPort   Proc far
-    stc
-    retf32
-FreeHubPort     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Has64Bit
 ;
 ;           DESCRIPTION:    Check for 64-bit support
@@ -2769,11 +2731,49 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateAddress
+;
+;       DESCRIPTION:    Allocate address
+;
+;       PARAMETERS:     DS	Function sel
+;
+;       RETURNS:        AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateAddress   Proc far
+    AllocateUsbAddress
+    retf32
+AllocateAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeAddress
+;
+;       DESCRIPTION:    Free address
+;
+;       PARAMETERS:     DS	Function sel
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    FreeUsbAddress
+    retf32
+FreeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateDev
 ;
 ;       DESCRIPTION:    Create device sel
 ;
 ;       PARAMETERS:     DS	Function sel
+;                       AL      Address
+;                       AH      Speed
+;                       BX      Hub sel
 ;                       DX      Port #
 ;
 ;       RETURNS:        ES      Device sel
@@ -2792,14 +2792,11 @@ CreateDev   Proc far
     xor al,al
     rep stosb
 ;
-    AllocateUsbAddress
-    mov es:usbf_port,dl
-    mov es:usbf_slot,0
-    mov es:usbf_address,al
-;
     pop di
     pop cx
     pop eax
+;
+    InitUsbDev
     retf32
 CreateDev   Endp
     
@@ -2873,14 +2870,23 @@ atNotify:
     test al,1
     jz atUnlock
 ;
-    push dx
-    movzx dx,bl
-    call fword ptr ds:create_dev_proc
-    pop dx
-;
     xor ah,1
     and ah,1
-    mov es:usbf_speed,ah
+    mov bh,ah
+;
+    call fword ptr ds:allocate_address_proc
+    jc atUnlock
+;
+    push bx
+    push dx
+;
+    mov ah,bh
+    movzx dx,bl
+    xor bx,bx
+    call fword ptr ds:create_dev_proc
+;
+    pop dx
+    pop bx
 ;
     mov al,bl
     NotifyUsbAttach
@@ -3012,14 +3018,23 @@ rtNotify:
     test al,1
     jz rtUnlock
 ;
-    push dx
-    movzx dx,bl
-    call fword ptr ds:create_dev_proc
-    pop dx
-;
     xor ah,1
     and ah,1
-    mov es:usbf_speed,ah
+    mov bh,ah
+;
+    call fword ptr ds:allocate_address_proc
+    jc rtUnlock
+;
+    push bx
+    push dx
+;
+    mov ah,bh
+    movzx dx,bl
+    xor bx,bx
+    call fword ptr ds:create_dev_proc
+;
+    pop dx
+    pop bx
 ;
     mov al,bl
     NotifyUsbAttach
@@ -3324,38 +3339,38 @@ BiosHandoff Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uhci_tab:
-ut00 DD OFFSET CreateControl,       SEG code
-ut01 DD OFFSET CreateBulk,          SEG code
-ut02 DD OFFSET CreateIntr,          SEG code
-ut03 DD OFFSET AddSetup,        SEG code
-ut04 DD OFFSET AddOut,          SEG code
-ut05 DD OFFSET AddIn,           SEG code
-ut06 DD OFFSET AddStatusOut,    SEG code
-gut07 DD OFFSET AddStatusIn,         SEG code
-ut08 DD OFFSET IssueTransfer,       SEG code
-ut09 DD OFFSET IsTransferDone,      SEG code
-ut0A DD OFFSET EndTransfer,     SEG code
-ut0B DD OFFSET WasTransferOk,       SEG code
-ut0C DD OFFSET GetDataSize,     SEG code
-ut0D DD OFFSET ClosePipe,       SEG code
-ut0E DD OFFSET WaitForCompletion,   SEG code
-ut0F DD OFFSET ChangeAddress,       SEG code
-ut10 DD OFFSET IsConnected,     SEG code
-ut11 DD OFFSET ResetPipe,       SEG code
-ut12 DD OFFSET LockEnum,        SEG code
-ut13 DD OFFSET UnlockEnum,      SEG code
-ut14 DD OFFSET AllocateHubPort, SEG code
-ut15 DD OFFSET FreeHubPort,     SEG code
-ut16 DD OFFSET Has64Bit,        SEG code
-ut17 DD OFFSET IsStalled,       SEG code
-ut18 DD OFFSET ClearStalled,    SEG code
-ut19 DD OFFSET GetMaxLen,       SEG code
-ut1A DD 0,                      0
-ut1B DD 0,                      0
-ut1C DD OFFSET SetMaxLen,       SEG code
-ut1D DD OFFSET CloseControlPipe, SEG code
-ut1E DD OFFSET IssueOne,      SEG code
-ut1F DD OFFSET CreateDev,     SEG code
+ut00 DD OFFSET AllocateAddress,     SEG code
+ut01 DD OFFSET FreeAddress,         SEG code
+ut02 DD OFFSET CreateDev,           SEG code
+ut03 DD OFFSET CreateControl,       SEG code
+ut04 DD OFFSET CreateBulk,          SEG code
+ut05 DD OFFSET CreateIntr,          SEG code
+ut06 DD OFFSET AddSetup,            SEG code
+ut07 DD OFFSET AddOut,              SEG code
+ut08 DD OFFSET AddIn,               SEG code
+ut09 DD OFFSET AddStatusOut,        SEG code
+ut0A DD OFFSET AddStatusIn,         SEG code
+ut0B DD OFFSET IssueTransfer,       SEG code
+ut0C DD OFFSET IsTransferDone,      SEG code
+ut0D DD OFFSET EndTransfer,         SEG code
+ut0E DD OFFSET WasTransferOk,       SEG code
+ut0F DD OFFSET GetDataSize,         SEG code
+ut10 DD OFFSET ClosePipe,           SEG code
+ut11 DD OFFSET WaitForCompletion,   SEG code
+ut12 DD OFFSET ChangeAddress,       SEG code
+ut13 DD OFFSET IsConnected,         SEG code
+ut14 DD OFFSET ResetPipe,           SEG code
+ut15 DD OFFSET LockEnum,            SEG code
+ut16 DD OFFSET UnlockEnum,          SEG code
+ut17 DD OFFSET Has64Bit,            SEG code
+ut18 DD OFFSET IsStalled,           SEG code
+ut19 DD OFFSET ClearStalled,        SEG code
+ut1A DD OFFSET GetMaxLen,           SEG code
+ut1B DD 0,                          0
+ut1C DD 0,                          0
+ut1D DD OFFSET SetMaxLen,           SEG code
+ut1E DD OFFSET CloseControlPipe,    SEG code
+ut1F DD OFFSET IssueOne,            SEG code
 
 InitFunction    Proc near
     push ds

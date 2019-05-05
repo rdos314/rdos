@@ -1182,7 +1182,6 @@ unlock_usb    Endp
 ;       Description:    Allocate USB address
 ;
 ;       PARAMETERS:     DS	Function sel
-;                       ES      Device sel
 ;
 ;       RETURNS:        AL      Address
 ;
@@ -1196,7 +1195,6 @@ allocate_usb_address       Proc far
     push si
     push di
 ;
-    mov si,es
     mov ax,ds
     mov es,ax
 ;
@@ -1206,11 +1204,12 @@ allocate_usb_address       Proc far
     xor ax,ax
     repnz scasw
     sub di,2
-    mov ds:[di],si
+    mov word ptr ds:[di],-1
 ;
     sub di,OFFSET usb_addr_arr
     shr di,1
     mov ax,di
+    clc
 ;
     pop di
     pop si
@@ -1243,6 +1242,54 @@ free_usb_address       Proc far
     pop bx
     retf32
 free_usb_address       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitUsbDev
+;
+;       Description:    Init usb device
+;
+;       PARAMETERS:     DS	Function sel
+;                       ES      Device sel
+;                       AL      Address
+;                       AH      Speed
+;                       BX      Hub selector
+;                       DX      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_usb_dev_name DB 'Init USB Device', 0
+
+init_usb_dev       Proc far
+    pusha
+;
+    mov es:usbf_port,dl
+    mov es:usbf_address,al
+    mov es:usbf_speed,ah
+;
+    movzx bx,al
+    add bx,bx
+    mov ds:[bx].usb_addr_arr,es
+;
+    mov cx,MAX_USB_HUB_PORTS
+    mov di,OFFSET usbf_port_sel_arr    
+    xor ax,ax
+    rep stosw
+;    
+    mov cx,16
+    mov di,OFFSET usbf_in_endpoint_arr
+    xor ax,ax
+    rep stosw
+;    
+    mov cx,16
+    mov di,OFFSET usbf_out_endpoint_arr
+    xor ax,ax
+    rep stosw
+;
+    popa
+    retf32
+init_usb_dev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1418,23 +1465,6 @@ notify_usb_attach       Proc far
     mov bp,ax
     mov al,es:usbf_address
     call AddUsbFunction
-;
-    push ax
-    mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usbf_port_sel_arr    
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,16
-    mov di,OFFSET usbf_in_endpoint_arr
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,16
-    mov di,OFFSET usbf_out_endpoint_arr
-    xor ax,ax
-    rep stosw
-    pop ax
 ;
     call CreateDefaultControl
     jc nuaDone
@@ -4759,6 +4789,12 @@ init    Proc far
     mov edi,OFFSET free_usb_address_name
     xor cl,cl
     mov ax,free_usb_address_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET init_usb_dev
+    mov edi,OFFSET init_usb_dev_name
+    xor cl,cl
+    mov ax,init_usb_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usb_pipe_sel

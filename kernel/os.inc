@@ -3839,6 +3839,16 @@ FreeUsbAddress MACRO
     OsGate free_usb_address_nr
                     ENDM
 
+; IN  DS      Function sel
+; IN  ES      Dev sel
+; IN  AL      Address
+; IN  AH      Speed
+; IN  BX      Hub selector
+; IN  DX      Port #
+InitUsbDev MACRO
+    OsGate init_usb_dev_nr
+                    ENDM
+
 ; IN  GS      Hub selector
 ; IN  DX      Hub port
 IsUsbHubPortConnected   MACRO

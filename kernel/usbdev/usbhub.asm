@@ -85,6 +85,62 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateAddress
+;
+;       DESCRIPTION:    Allocate address
+;
+;       PARAMETERS:     DS      Device selector
+;
+;       RETURNS:        AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateAddress   Proc far
+    int 3
+    ret
+AllocateAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeAddress
+;
+;       DESCRIPTION:    Free address
+;
+;       PARAMETERS:     DS      Device selector
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    int 3
+    ret
+FreeAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDev
+;
+;       DESCRIPTION:    Create device
+;
+;       PARAMETERS:     DS      Device selector
+;                       AL      Address
+;                       AH      Speed
+;                       BX      Hub sel
+;                       DX      Port #
+;
+;       RETURNS:        ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    int 3
+    ret
+CreateDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -577,144 +633,38 @@ CloseControlPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hub_tab:
-ht00 DD OFFSET CreateControl,       SEG code
-ht01 DD OFFSET CreateBulk,          SEG code
-ht02 DD OFFSET CreateIntr,          SEG code
-ht03 DD OFFSET AddSetup,            SEG code
-ht04 DD OFFSET AddOut,              SEG code
-ht05 DD OFFSET AddIn,               SEG code
-ht06 DD OFFSET AddStatusOut,        SEG code
-ht07 DD OFFSET AddStatusIn,         SEG code
-ht08 DD OFFSET IssueTransfer,       SEG code
-ht09 DD OFFSET IsTransferDone,      SEG code
-ht0A DD OFFSET EndTransfer,         SEG code
-ht0B DD OFFSET WasTransferOk,       SEG code
-ht0C DD OFFSET GetDataSize,         SEG code
-ht0D DD OFFSET ClosePipe,           SEG code
-ht0E DD OFFSET WaitForCompletion,   SEG code
-ht0F DD OFFSET ChangeAddress,       SEG code
-ht10 DD OFFSET IsConnected,         SEG code
-ht11 DD OFFSET ResetPipe,           SEG code
-ht12 DD OFFSET LockEnum,            SEG code
-ht13 DD OFFSET UnlockEnum,          SEG code
-ht14 DD 0,                          0
-ht15 DD 0,                          0
-ht16 DD OFFSET Has64Bit,            SEG code
-ht17 DD OFFSET IsStalled,           SEG code
-ht18 DD OFFSET ClearStalled,        SEG code
-ht19 DD OFFSET GetMaxLen,           SEG code
-ht1A DD 0,                          0
+ht00 DD OFFSET AllocateAddress,     SEG code
+ht01 DD OFFSET FreeAddress,         SEG code
+ht02 DD OFFSET CreateDev,           SEG code
+ht03 DD OFFSET CreateControl,       SEG code
+ht04 DD OFFSET CreateBulk,          SEG code
+ht05 DD OFFSET CreateIntr,          SEG code
+ht06 DD OFFSET AddSetup,            SEG code
+ht07 DD OFFSET AddOut,              SEG code
+ht08 DD OFFSET AddIn,               SEG code
+ht09 DD OFFSET AddStatusOut,        SEG code
+ht0A DD OFFSET AddStatusIn,         SEG code
+ht0B DD OFFSET IssueTransfer,       SEG code
+ht0C DD OFFSET IsTransferDone,      SEG code
+ht0D DD OFFSET EndTransfer,         SEG code
+ht0E DD OFFSET WasTransferOk,       SEG code
+ht0F DD OFFSET GetDataSize,         SEG code
+ht10 DD OFFSET ClosePipe,           SEG code
+ht11 DD OFFSET WaitForCompletion,   SEG code
+ht12 DD OFFSET ChangeAddress,       SEG code
+ht13 DD OFFSET IsConnected,         SEG code
+ht14 DD OFFSET ResetPipe,           SEG code
+ht15 DD OFFSET LockEnum,            SEG code
+ht16 DD OFFSET UnlockEnum,          SEG code
+ht17 DD OFFSET Has64Bit,            SEG code
+ht18 DD OFFSET IsStalled,           SEG code
+ht19 DD OFFSET ClearStalled,        SEG code
+ht1A DD OFFSET GetMaxLen,           SEG code
 ht1B DD 0,                          0
-ht1C DD OFFSET SetMaxLen,           SEG code
-ht1D DD OFFSET CloseControlPipe,    SEG code
-hc1E DD OFFSET IssueOne,            SEG code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           AllocateHubDev
-;
-;   description:    Allocate hub device
-;
-;   PARAMETERS:     AL          Address
-;                   DX          Port #
-;
-;   RETURNS:        ES		Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateHubDev	Proc near
-    push ecx
-    push edi
-;
-    push eax
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov ecx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-    pop eax
-;
-    mov es:usbf_slot,0
-    mov es:usbf_port,dl
-    mov es:usbf_address,al
-;
-    pop edi
-    pop ecx
-    ret
-AllocateHubDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HubAttach
-;
-;   description:    Hub attach event
-;
-;   Parameters:     DS      Function sel
-;                   ES      Device
-;                   DX      Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HubAttach    Proc near
-    int 3
-    push ds
-    push eax
-    push ebx
-;    
-    movzx ebx,dx
-    add ebx,ebx
-    mov ax,ds:[ebx].hub_status_arr
-;
-    test ax,200h
-    jnz haLowSpeed
-;
-    test ax,400h
-    jnz haHighSpeed
-
-haFullSpeed:
-    mov ah,1
-    jmp haAttach
-
-haHighSpeed:
-    mov ah,2
-    jmp haAttach
-
-haLowSpeed:
-    mov ah,0
-        
-haAttach:
-    mov es:usbf_speed,ah
-; 
-    int 3   
-    mov al,dl
-    NotifyUsbAttach
-
-haDone:    
-    pop ebx
-    pop eax
-    pop ds
-    ret
-HubAttach    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HubDetach
-;
-;   description:    Hub detach event
-;
-;   Parameters:     DS      Function sel
-;                   DX      Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HubDetach    Proc near
-    stc
-    ret
-HubDetach    Endp
+ht1C DD 0,                          0
+ht1D DD OFFSET SetMaxLen,           SEG code
+ht1E DD OFFSET CloseControlPipe,    SEG code
+ht1F DD OFFSET IssueOne,            SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1060,63 +1010,79 @@ atWaitLoop:
 
 atIsEnabled:
     int 3
-    mov cl,dl
-;
     push ds
-    mov ebx,ds
-    movzx dx,cl
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:allocate_hub_address_proc
+    call fword ptr ds:allocate_address_proc
     pop ds
     jc atUnlock
 ;
-    mov ds:[esi].hub_adr_arr,al
-    call AllocateHubDev
+    mov ax,ds:[edi].hub_status_arr
+    test ax,200h
+    jnz atLowSpeed
 ;
-    call HubAttach 
-    jnc atDone
-;        
+    test ax,400h
+    jnz atHighSpeed
+
+atFullSpeed:
+    mov ah,1
+    jmp atCreate
+
+atHighSpeed:
+    mov ah,2
+    jmp atCreate
+
+atLowSpeed:
+    mov ah,0
+        
+atCreate:
+    mov al,bl
+;
     push ds
-    xor al,al
-    xchg al,ds:[esi].hub_adr_arr
+    mov bx,ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_hub_address_proc
+    movzx dx,dl
+    call fword ptr ds:create_dev_proc
     pop ds
 ;
+    mov al,dl
+    NotifyUsbAttach
+    jnc atDone
+;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atUnlock
+    jnz atDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz atUnlock
+    jz atDone
 ;
     movzx dx,cl
     mov ax,PORT_POWER
     call ClearPortFeature    
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atUnlock
+    jnz atDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz atUnlock
+    jz atDone
 ;
     mov ax,250
     WaitMilliSec
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atUnlock
+    jnz atDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz atUnlock
+    jz atDone
 ;
     movzx dx,cl
     mov ax,PORT_POWER
     call SetPortFeature    
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atUnlock
+    jnz atDone
 ;
     mov ax,ds:hub_power_time
     WaitMilliSec
+    jmp atDone
 
 atUnlock:
     UnlockUsb
@@ -1154,16 +1120,9 @@ detach_thread:
     GetThread
     mov ds:[edi].usb_detach_thread_arr,ax
     LeaveSection ds:usb_section
-;        
-    push ds
-    xor al,al
-    xchg al,ds:[esi].hub_adr_arr
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_hub_address_proc
-    pop ds
 ;
-    movzx dx,cl
-    call HubDetach
+    mov al,cl
+    NotifyUsbDetach
 ;
     EnterSection ds:usb_section
     mov ds:[edi].usb_detach_thread_arr,0
@@ -1197,8 +1156,8 @@ reset_thread:
     mov ds:[edi].usb_reset_thread_arr,ax
     LeaveSection ds:usb_section
 ;
-    movzx dx,cl
-    call HubDetach
+    mov al,cl
+    NotifyUsbDetach
 ;
     LockUsb
 ;        
@@ -1232,67 +1191,82 @@ rtWaitLoop:
     jmp rtUnlock    
 
 rtIsEnabled:
-    mov cl,dl
-;
     push ds
-    mov ebx,ds
-    movzx dx,cl
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:allocate_hub_address_proc
+    call fword ptr ds:allocate_address_proc
     pop ds
     jc rtUnlock
 ;
-    mov ds:[esi].hub_adr_arr,al
-    call AllocateHubDev
+    mov ax,ds:[edi].hub_status_arr
+    test ax,200h
+    jnz rtLowSpeed
 ;
-    movzx dx,cl
-    call HubAttach 
+    test ax,400h
+    jnz rtHighSpeed
+
+rtFullSpeed:
+    mov ah,1
+    jmp rtCreate
+
+rtHighSpeed:
+    mov ah,2
+    jmp rtCreate
+
+rtLowSpeed:
+    mov ah,0
+        
+rtCreate:
+    mov al,bl
+;
+    push ds
+    mov bx,ds
+    mov ds,ds:hub_parent_sel
+    movzx dx,dl
+    call fword ptr ds:create_dev_proc
+    pop ds
+;
+    mov al,dl
+    NotifyUsbAttach
     jnc rtDone
 ;        
-    push ds
-    xor al,al
-    xchg al,ds:[esi].hub_adr_arr
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_hub_address_proc
-    pop ds
-;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
+    jnz rtDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz rtUnlock
+    jz rtDone
 ;
     movzx dx,cl
     mov ax,PORT_POWER
     call ClearPortFeature    
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
+    jnz rtDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz rtUnlock
+    jz rtDone
 ;
     mov ax,250
     WaitMilliSec
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
+    jnz rtDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz rtUnlock
+    jz rtDone
 ;
     movzx dx,cl
     mov ax,PORT_POWER
     call SetPortFeature    
 ;        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtUnlock
+    jnz rtDone
 ;
     test ds:[edi].hub_status_arr,1
-    jz rtUnlock
+    jz rtDone
 ;
     mov ax,ds:hub_power_time
     WaitMilliSec
+    jmp rtDone
 
 rtUnlock:
     UnlockUsb

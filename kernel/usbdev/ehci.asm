@@ -1605,6 +1605,77 @@ iqLinked:
     ret
 InsertQtd   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               AllocateAddress
+;
+;       DESCRIPTION:        Allocate address
+;
+;       PARAMETERS:         DS      Function selector
+;
+;       RETURNS:            AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateAddress   Proc far
+    AllocateUsbAddress    
+    retf32
+AllocateAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               FreeAddress
+;
+;       DESCRIPTION:        Free address
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    FreeUsbAddress    
+    retf32
+FreeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               CreateDev
+;
+;       DESCRIPTION:        Create device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;                           AH      Speed
+;                           BX      Hub selector
+;                           DX      Port #
+;
+;       RETURNS:            ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    push cx    
+    push di
+    push eax
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    pop eax
+    pop di
+    pop cx
+;
+    InitUsbDev
+    retf32
+CreateDev  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2864,43 +2935,6 @@ ccpDone:
     pop es
     retf32
 CloseControlPipe Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               CreateDev
-;
-;       DESCRIPTION:        Create device sel
-;
-;       PARAMETERS:         DS      Function selector
-;                           DX      Port #
-;
-;       RETURNS:            ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateDev   Proc far
-    push eax
-    push cx    
-    push di
-;
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_function_struc
-    xor al,al
-    rep stosb
-;
-    AllocateUsbAddress    
-    mov es:usbf_port,dl
-    mov es:usbf_slot,0
-    mov es:usbf_address,al
-;
-    pop di
-    pop cx
-    pop eax
-    retf32
-CreateDev  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3042,12 +3076,17 @@ atWaitNotify:
     sub dx,1
     jnz atWaitNotify
 ;
+    call fword ptr ds:allocate_address_proc
+    jc atUnlock
+;
     push es
+;
     push dx
+    mov ah,2
+    xor bx,bx
     movzx dx,cl
     call fword ptr ds:create_dev_proc
     pop dx
-    mov es:usbf_speed,2
 ;
     movzx ax,cl
     NotifyUsbAttach
@@ -3166,10 +3205,17 @@ rtWaitNotify:
     sub dx,1
     jnz rtWaitNotify
 ;
+    call fword ptr ds:allocate_address_proc
+    jc rtUnlock
+;
     push es
+;
+    push dx
+    mov ah,2
+    xor bx,bx
     movzx dx,cl
     call fword ptr ds:create_dev_proc
-    mov es:usbf_speed,2
+    pop dx
 ;
     mov al,cl
     NotifyUsbAttach
@@ -3875,38 +3921,38 @@ StartFunctionThread Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ehci_tab:
-et00 DD OFFSET CreateControl,      SEG code
-et01 DD OFFSET CreateBulk,         SEG code
-et02 DD OFFSET CreateIntr,         SEG code
-et03 DD OFFSET AddSetup,           SEG code
-et04 DD OFFSET AddOut,             SEG code
-et05 DD OFFSET AddIn,              SEG code
-et06 DD OFFSET AddStatusOut,       SEG code
-et07 DD OFFSET AddStatusIn,        SEG code
-et08 DD OFFSET IssueTransfer,      SEG code
-et09 DD OFFSET IsTransferDone,     SEG code
-et0A DD OFFSET EndTransfer,        SEG code
-et0B DD OFFSET WasTransferOk,      SEG code
-et0C DD OFFSET GetDataSize,        SEG code
-et0D DD OFFSET ClosePipe,          SEG code
-et0E DD OFFSET WaitForCompletion,  SEG code
-et0F DD OFFSET ChangeAddress,      SEG code
-et10 DD OFFSET IsConnected,        SEG code
-et11 DD OFFSET ResetPipe,          SEG code
-et12 DD OFFSET LockEnum,           SEG code
-et13 DD OFFSET UnlockEnum,         SEG code
-et14 DD OFFSET AllocateHubAddress, SEG code
-et15 DD OFFSET FreeHubAddress,     SEG code
-et16 DD OFFSET Has64Bit,           SEG code
-et17 DD OFFSET IsStalled,          SEG code
-et18 DD OFFSET ClearStalled,       SEG code
-et19 DD OFFSET GetMaxLen,          SEG code
-et1A DD 0,                         0
+et00 DD OFFSET AllocateAddress,    SEG code
+et01 DD OFFSET FreeAddress,        SEG code
+ec02 DD OFFSET CreateDev,          SEG code
+et03 DD OFFSET CreateControl,      SEG code
+et04 DD OFFSET CreateBulk,         SEG code
+et05 DD OFFSET CreateIntr,         SEG code
+et06 DD OFFSET AddSetup,           SEG code
+et07 DD OFFSET AddOut,             SEG code
+et08 DD OFFSET AddIn,              SEG code
+et09 DD OFFSET AddStatusOut,       SEG code
+et0A DD OFFSET AddStatusIn,        SEG code
+et0B DD OFFSET IssueTransfer,      SEG code
+et0C DD OFFSET IsTransferDone,     SEG code
+et0D DD OFFSET EndTransfer,        SEG code
+et0E DD OFFSET WasTransferOk,      SEG code
+et0F DD OFFSET GetDataSize,        SEG code
+et10 DD OFFSET ClosePipe,          SEG code
+et11 DD OFFSET WaitForCompletion,  SEG code
+et12 DD OFFSET ChangeAddress,      SEG code
+et13 DD OFFSET IsConnected,        SEG code
+et14 DD OFFSET ResetPipe,          SEG code
+et15 DD OFFSET LockEnum,           SEG code
+et16 DD OFFSET UnlockEnum,         SEG code
+et17 DD OFFSET Has64Bit,           SEG code
+et18 DD OFFSET IsStalled,          SEG code
+et19 DD OFFSET ClearStalled,       SEG code
+et1A DD OFFSET GetMaxLen,          SEG code
 et1B DD 0,                         0
-et1C DD OFFSET SetMaxLen,          SEG code
-et1D DD OFFSET CloseControlPipe,   SEG code
-ec1E DD OFFSET IssueOne,           SEG code
-ec1F DD OFFSET CreateDev,          SEG code
+et1C DD 0,                         0
+et1D DD OFFSET SetMaxLen,          SEG code
+et1E DD OFFSET CloseControlPipe,   SEG code
+ec1F DD OFFSET IssueOne,           SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus

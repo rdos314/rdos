@@ -43,6 +43,19 @@ USBF_XHCI   = 1
 
 usb_dev_struc   STRUC
 
+; OUT AL        Address
+allocate_address_proc DD ?,?
+
+; IN  AL        Address
+free_address_proc     DD ?,?
+
+; IN  AL        Address
+; IN  AH        Speed
+; IN  BX        Hub selector
+; IN  DX        Port
+; OUT ES        Device sel
+create_dev_proc       DD ?,?
+
 ; IN  AH        Speed
 ; OUT FS        Pipe selector
 create_control_proc	DD ?,?
@@ -115,15 +128,6 @@ obs_lock_enum_proc         DD ?,?
 
 obs_unlock_enum_proc       DD ?,?
 
-; IN  BX        Hub selector
-; IN  DX        Hub port
-; OUT AL        Address
-allocate_hub_address_proc DD ?,?
-
-; IN  BX        Hub selector
-; IN  AL        Address
-free_hub_address_proc     DD ?,?
-
 has_64bit_proc         DD ?,?
 
 ;  IN FS        Is stalled?
@@ -151,10 +155,6 @@ close_control_pipe_proc DD ?,?
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?
 
-; IN  DX        Port #
-; OUT ES        Device sel
-create_dev_proc       DD ?,?
-
 usb_section            section_typ <>
 
 usb_controller_id      DW ?
@@ -171,7 +171,6 @@ usb_dev_struc   ENDS
 usb_function_struc  STRUC
 
 usbf_port               DB ?
-usbf_slot               DB ?
 usbf_address            DB ?
 usbf_speed              DB ?
 usbf_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
