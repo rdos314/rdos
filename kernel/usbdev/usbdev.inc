@@ -178,7 +178,6 @@ usbf_address            DB ?
 usbf_speed              DB ?
 usbf_pad                DB ?
 
-usbf_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
 usbf_in_endpoint_arr    DW 16 DUP(?)
 usbf_out_endpoint_arr   DW 16 DUP(?)
 

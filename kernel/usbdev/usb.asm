@@ -955,23 +955,6 @@ CloseDevice Proc near
     push cx
     push dx
 ;    
-    mov cx,MAX_USB_HUB_PORTS
-    mov bx,OFFSET usbf_port_sel_arr
-
-cdCloseHubLoop:
-    mov ax,es:[bx]
-    or ax,ax
-    jz cdCloseHubNext
-;
-    push es
-    mov es,ax
-    call CloseDevice
-    pop es        
-
-cdCloseHubNext:
-    add bx,2
-    loop cdCloseHubLoop
-;
     movzx bx,es:usbf_address
     add bx,bx
     mov ds:[bx].usb_addr_arr,0
@@ -1270,11 +1253,6 @@ init_usb_dev       Proc far
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,es
-;
-    mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usbf_port_sel_arr    
-    xor ax,ax
-    rep stosw
 ;    
     mov cx,16
     mov di,OFFSET usbf_in_endpoint_arr
