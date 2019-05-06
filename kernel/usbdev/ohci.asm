@@ -1231,7 +1231,7 @@ CreateControl   Proc far
     push es
     pushad
 ;    
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
@@ -1282,7 +1282,7 @@ CreateBulk   Proc far
     push es
     pushad
 ;    
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
@@ -1327,7 +1327,7 @@ CreateIntr   Proc far
     push es
     pushad
 ;    
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
@@ -2265,7 +2265,7 @@ LocalIsConnected   Proc near
     push si
 ;    
     mov es,fs:usbp_function_sel
-    movzx si,es:usbf_port
+    movzx si,es:usbd_port
 ;    
     shl si,2
     mov es,ds:ohc_reg_sel
@@ -2281,7 +2281,7 @@ LocalIsConnected   Proc near
 icDisabled:
     push cx
     mov es,fs:usbp_function_sel
-    mov cl,es:usbf_port
+    mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
     lock or ds:ohc_reset,ax
@@ -2334,7 +2334,7 @@ ResetPipe   Proc far
     push cx
 ;    
     mov es,fs:usbp_function_sel
-    mov cl,es:usbf_port
+    mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
     lock or ds:ohc_reset,ax
@@ -2480,7 +2480,7 @@ CloseControlPipe   Proc far
     pushad
 ;    
     mov es,fs:usbp_function_sel
-    mov cl,es:usbf_port
+    mov cl,es:usbd_port
     movzx si,cl
     shl si,2
     mov eax,1

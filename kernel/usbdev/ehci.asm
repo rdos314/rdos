@@ -1661,13 +1661,13 @@ CreateControl   Proc far
     pop ax
     pop es    
 ;
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     mov fs:usbp_speed,ah
 ;    
     push ax
-    mov ax,es:usbf_hub_sel
+    mov ax,es:usbd_hub_sel
     mov fs:usbp_hub_sel,ax
-    movzx ax,es:usbf_port
+    movzx ax,es:usbd_port
     mov fs:usbp_hub_port,ax
     pop ax
 ;    
@@ -1715,13 +1715,13 @@ CreateBulk   Proc far
     pop ax
     pop es    
 ;
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     mov fs:usbp_speed,ah
 ;    
     push ax
-    mov ax,es:usbf_hub_sel
+    mov ax,es:usbd_hub_sel
     mov fs:usbp_hub_sel,ax
-    movzx ax,es:usbf_port
+    movzx ax,es:usbd_port
     mov fs:usbp_hub_port,ax
     pop ax
 ;    
@@ -1770,13 +1770,13 @@ CreateIntr   Proc far
     pop ax
     pop es
 ;
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     mov fs:usbp_speed,ah
 ;    
     push ax
-    mov ax,es:usbf_hub_sel
+    mov ax,es:usbd_hub_sel
     mov fs:usbp_hub_sel,ax
-    movzx ax,es:usbf_port
+    movzx ax,es:usbd_port
     mov fs:usbp_hub_port,ax
     pop ax
 ;    
@@ -2563,7 +2563,7 @@ icHub:
 icLocal:    
     push es
     mov es,fs:usbp_function_sel
-    movzx si,es:usbf_port
+    movzx si,es:usbd_port
     shl si,2
     mov es,ds:ehc_reg_sel
     mov eax,es:[si].HcPortSc
@@ -2632,7 +2632,7 @@ ResetPipe   Proc far
 repNoHub:
     int 3
     mov es,fs:usbp_function_sel
-    mov cl,es:usbf_port
+    mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
     or ds:ehc_reset,ax
@@ -2833,7 +2833,7 @@ CloseControlPipe   Proc far
        
 ccpNoHub:
     mov es,fs:usbp_function_sel
-    mov cl,es:usbf_port
+    mov cl,es:usbd_port
     movzx edi,cl
     add edi,edi
 ;

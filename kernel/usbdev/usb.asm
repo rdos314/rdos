@@ -485,8 +485,8 @@ CreateDefaultControl    Proc near
     push ax
     call fword ptr ds:create_control_proc
 ;    
-    mov es:usbf_in_endpoint_arr,fs    
-    mov es:usbf_out_endpoint_arr,fs    
+    mov es:usbd_in_endpoint_arr,fs    
+    mov es:usbd_out_endpoint_arr,fs    
     mov fs:usbp_function_sel,es
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
@@ -610,16 +610,16 @@ CreateBulk    Proc near
     jz cbOut
 
 cbIn:
-    mov es:[bx].usbf_in_endpoint_arr,fs
+    mov es:[bx].usbd_in_endpoint_arr,fs
     jmp cbEndpointOK
 
 cbOut:
-    mov es:[bx].usbf_out_endpoint_arr,fs
+    mov es:[bx].usbd_out_endpoint_arr,fs
 
 cbEndpointOk:    
     and dl,0Fh
     mov fs:usbp_function_sel,es
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     mov fs:usbp_address,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
@@ -667,16 +667,16 @@ CreateInterrupt    Proc near
     push dx
 ;    
     mov al,dh
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     call fword ptr ds:create_interrupt_proc    
     movzx bx,dl
     and bx,0Fh
     add bx,bx    
-    mov es:[bx].usbf_in_endpoint_arr,fs
+    mov es:[bx].usbd_in_endpoint_arr,fs
 ;    
     and dl,0Fh
     mov fs:usbp_function_sel,es
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     mov fs:usbp_address,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
@@ -847,7 +847,7 @@ ivupFunctionLoop:
     jz ivupFunctionNext
 ;
     mov es,cx
-    mov bx,OFFSET usbf_in_endpoint_arr
+    mov bx,OFFSET usbd_in_endpoint_arr
     mov cx,16
 
 ivupCheckIn:
@@ -857,7 +857,7 @@ ivupCheckIn:
     add bx,2
     loop ivupCheckIn
 ;
-    mov bx,OFFSET usbf_out_endpoint_arr
+    mov bx,OFFSET usbd_out_endpoint_arr
     mov cx,16            
 
 ivupCheckOut:
@@ -910,13 +910,13 @@ CloseEndpoint   Proc near
     jz cOut
 
 cIn:
-    mov ax,es:[bx].usbf_in_endpoint_arr
-    mov es:[bx].usbf_in_endpoint_arr,0
+    mov ax,es:[bx].usbd_in_endpoint_arr
+    mov es:[bx].usbd_in_endpoint_arr,0
     jmp cEndpointOK
 
 cOut:
-    mov ax,es:[bx].usbf_out_endpoint_arr
-    mov es:[bx].usbf_out_endpoint_arr,0
+    mov ax,es:[bx].usbd_out_endpoint_arr
+    mov es:[bx].usbd_out_endpoint_arr,0
 
 cEndpointOk:    
     verr ax
@@ -955,12 +955,12 @@ CloseDevice Proc near
     push cx
     push dx
 ;    
-    movzx bx,es:usbf_address
+    movzx bx,es:usbd_address
     add bx,bx
     mov ds:[bx].usb_addr_arr,0
 ;
     mov cx,16
-    mov bx,OFFSET usbf_out_endpoint_arr
+    mov bx,OFFSET usbd_out_endpoint_arr
     xor al,al
 
 cdCloseOutEndpointLoop:
@@ -976,7 +976,7 @@ cdCloseOutEndpointNext:
     loop cdCloseOutEndpointLoop       
 ;
     mov cx,15
-    mov bx,OFFSET usbf_in_endpoint_arr
+    mov bx,OFFSET usbd_in_endpoint_arr
     add bx,2
     mov al,81h
 
@@ -1245,22 +1245,22 @@ init_usb_dev_name DB 'Init USB Device', 0
 init_usb_dev       Proc far
     pusha
 ;
-    mov es:usbf_hub_sel,bx
-    mov es:usbf_port,dl
-    mov es:usbf_address,al
-    mov es:usbf_speed,ah
+    mov es:usbd_hub_sel,bx
+    mov es:usbd_port,dl
+    mov es:usbd_address,al
+    mov es:usbd_speed,ah
 ;
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,es
 ;    
     mov cx,16
-    mov di,OFFSET usbf_in_endpoint_arr
+    mov di,OFFSET usbd_in_endpoint_arr
     xor ax,ax
     rep stosw
 ;    
     mov cx,16
-    mov di,OFFSET usbf_out_endpoint_arr
+    mov di,OFFSET usbd_out_endpoint_arr
     xor ax,ax
     rep stosw
 ;
@@ -1287,7 +1287,7 @@ AddUsbFunction       Proc near
     push cx
     push di
 ;
-    movzx bx,es:usbf_port
+    movzx bx,es:usbd_port
     add bx,bx
     mov ax,ds:[bx].usb_port_arr
     or ax,ax
@@ -1440,7 +1440,7 @@ notify_usb_attach       Proc far
     pushad
 ;
     mov bp,ax
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     call AddUsbFunction
 ;
     call CreateDefaultControl
@@ -1583,7 +1583,7 @@ notify_usb_detach       Proc far
     jc nudDone
 ; 
     mov bx,ds:usb_controller_id
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     call trap_usb_detach      
     call CloseDevice
 
@@ -2521,7 +2521,7 @@ get_usb_device  Proc near
     jz gudFail
 ;
     mov ds,si
-    mov si,ds:usbf_in_endpoint_arr
+    mov si,ds:usbd_in_endpoint_arr
     or si,si
     jz gudFail
 ;
@@ -2625,7 +2625,7 @@ get_usb_config  Proc near
     jz gucFail
 ;
     mov ds,si
-    mov si,ds:usbf_in_endpoint_arr
+    mov si,ds:usbd_in_endpoint_arr
     or si,si
     jz gucFail
 ;
@@ -2738,11 +2738,11 @@ config_usb_device       Proc near
     jz cudFail
 ;
     mov fs,si
-    movzx si,fs:usbf_port
+    movzx si,fs:usbd_port
     add si,si
     mov bp,ds:[si].usb_port_arr
 ;
-    mov si,fs:usbf_in_endpoint_arr
+    mov si,fs:usbd_in_endpoint_arr
     or si,si
     jz cudFail
 ;
@@ -2852,7 +2852,7 @@ cudNextDescr:
 ;
     mov cx,16
     mov si,OFFSET usb_in_pipe_arr
-    mov di,OFFSET usbf_in_endpoint_arr
+    mov di,OFFSET usbd_in_endpoint_arr
 
 cudInLoop:
     mov ax,ds:[si]
@@ -2874,7 +2874,7 @@ cudInNext:
 ;
     mov cx,16
     mov si,OFFSET usb_out_pipe_arr
-    mov di,OFFSET usbf_out_endpoint_arr
+    mov di,OFFSET usbd_out_endpoint_arr
 
 cudOutLoop:
     mov ax,ds:[si]
@@ -2974,7 +2974,7 @@ get_usb_interface       Proc far
     jz guiFail
 ;
     mov fs,si
-    mov si,fs:usbf_in_endpoint_arr
+    mov si,fs:usbd_in_endpoint_arr
     or si,si
     jz guiFail
 ;
@@ -3075,7 +3075,7 @@ set_usb_interface       Proc far
     jz suiFail
 ;
     mov fs,si
-    mov si,fs:usbf_in_endpoint_arr
+    mov si,fs:usbd_in_endpoint_arr
     or si,si
     jz suiFail
 ;
@@ -3169,13 +3169,13 @@ cupIn:
     movzx si,dl
     and si,0Fh
     add si,si
-    mov ax,ds:[si].usbf_in_endpoint_arr
+    mov ax,ds:[si].usbd_in_endpoint_arr
     jmp cupSave
 
 cupOut:
     movzx si,dl
     add si,si
-    mov ax,ds:[si].usbf_out_endpoint_arr
+    mov ax,ds:[si].usbd_out_endpoint_arr
     jmp cupSave
 
 cupSave:
@@ -3237,7 +3237,7 @@ open_usb_pipe    Proc far
     jz oupFail
 ;
     mov ds,si
-    movzx bx,ds:usbf_port
+    movzx bx,ds:usbd_port
     add bx,bx
     mov bx,es:[bx].usb_port_arr
     or bx,bx

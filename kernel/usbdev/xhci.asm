@@ -923,7 +923,7 @@ AllocateDevice    Proc near
     mov es:xd_dev_sel,ds
 ;
     pop eax
-    mov es:usbf_speed,al
+    mov es:usbd_speed,al
 ;    
     mov bx,SIZE xhci_dev_struc
     add bx,40h
@@ -1236,19 +1236,19 @@ StopEndpoint   Endp
 CreateControl   Proc far
     pushad
 ;
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     call SpeedToPsi
-    mov cl,es:usbf_port
+    mov cl,es:usbd_port
     call SetupRootDevice
     call CreateEndpointRing
 ;
     push ax
     mov fs:xp_dev_sel,es
-    mov al,es:usbf_port
+    mov al,es:usbd_port
     mov fs:xp_port_nr,al
     mov ax,ds:xhc_port_sel
     mov fs:xp_port_sel,ax
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     mov fs:xp_slot,al
     mov fs:xp_db_target,1
     mov es:xd_ep_sel_arr,fs
@@ -1405,7 +1405,7 @@ ConfigDevice   Endp
 CreateBulk   Proc far
     pushad
 ;   
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     call CreateEndpointRing
 ;
     movzx bx,dl
@@ -1420,11 +1420,11 @@ cbDirOk:
     mov fs:xp_db_target,bl
 ;        
     mov fs:xp_dev_sel,es
-    mov al,es:usbf_port
+    mov al,es:usbd_port
     mov fs:xp_port_nr,al
     mov ax,ds:xhc_port_sel
     mov fs:xp_port_sel,ax
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     mov fs:xp_slot,al
 ;
     dec bx
@@ -1475,7 +1475,7 @@ CreateBulk   Endp
 CreateIntr   Proc far
     pushad
 ;   
-    mov ah,es:usbf_speed
+    mov ah,es:usbd_speed
     call CreateEndpointRing
 ;
     movzx bx,dl
@@ -1485,11 +1485,11 @@ CreateIntr   Proc far
 ;        
     push ax
     mov fs:xp_dev_sel,es
-    mov al,es:usbf_port
+    mov al,es:usbd_port
     mov fs:xp_port_nr,al
     mov ax,ds:xhc_port_sel
     mov fs:xp_port_sel,ax
-    mov al,es:usbf_address
+    mov al,es:usbd_address
     mov fs:xp_slot,al
     pop ax
 ;

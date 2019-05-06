@@ -524,10 +524,10 @@ haAttach:
     pop ax
 ;    
     mov al,gs:[bx].hps_dev_port
-    mov es:usbf_port,al
-    mov es:usbf_speed,ah
+    mov es:usbd_port,al
+    mov es:usbd_speed,ah
 ;    
-    mov es:usbf_address,0
+    mov es:usbd_address,0
     NotifyUsbAttach
 
 haDone:    

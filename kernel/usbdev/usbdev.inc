@@ -172,14 +172,14 @@ usb_dev_struc   ENDS
 
 usb_function_struc  STRUC
 
-usbf_hub_sel            DW ?
-usbf_port               DB ?
-usbf_address            DB ?
-usbf_speed              DB ?
-usbf_pad                DB ?
+usbd_hub_sel            DW ?
+usbd_port               DB ?
+usbd_address            DB ?
+usbd_speed              DB ?
+usbd_pad                DB ?
 
-usbf_in_endpoint_arr    DW 16 DUP(?)
-usbf_out_endpoint_arr   DW 16 DUP(?)
+usbd_in_endpoint_arr    DW 16 DUP(?)
+usbd_out_endpoint_arr   DW 16 DUP(?)
 
 usb_function_struc  ENDS
 
