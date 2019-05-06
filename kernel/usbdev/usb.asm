@@ -602,7 +602,6 @@ CreateBulk    Proc near
     push bx
     push dx
 ;    
-    mov ah,es:usbf_speed
     call fword ptr ds:create_bulk_proc    
     movzx bx,dl
     and bx,0Fh

@@ -1270,7 +1270,7 @@ CreateControl   Endp
 ;           DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       AH      Speed
+;                       ES      Device sel
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1280,6 +1280,7 @@ CreateBulk   Proc far
     push es
     pushad
 ;    
+    mov ah,es:usbf_speed
     push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem

@@ -1707,6 +1707,7 @@ CreateControl   Proc far
     mov fs,ax
     pop ax
     pop es    
+;
     mov ah,es:usbf_speed
     mov fs:usbp_speed,ah
 ;    
@@ -1731,7 +1732,7 @@ CreateControl   Endp
 ;           DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       AH      Speed
+;                       ES      Device sel
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1753,6 +1754,8 @@ CreateBulk   Proc far
     mov fs,ax
     pop ax
     pop es    
+;
+    mov ah,es:usbf_speed
     mov fs:usbp_speed,ah
 ;    
     call SetupHub

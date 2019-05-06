@@ -1395,7 +1395,6 @@ ConfigDevice   Endp
 ;
 ;       PARAMETERS:     DS      Device selector
 ;                       ES      Function selector
-;                       AH      Speed
 ;                       DL      Pipe #, bit 7 IN.
 ;
 ;       RETURNS:    FS      Pipe selector
@@ -1405,6 +1404,7 @@ ConfigDevice   Endp
 CreateBulk   Proc far
     pushad
 ;   
+    mov ah,es:usbf_speed
     call CreateEndpointRing
 ;
     movzx bx,dl

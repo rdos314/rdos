@@ -60,7 +60,8 @@ create_dev_proc       DD ?,?
 ; OUT FS        Pipe selector
 create_control_proc	DD ?,?
 
-; IN  AH        Speed
+; IN  ES        Device sel
+; IN  DL        Pipe #, bit 7 IN.
 ; OUT FS        Pipe selector
 create_bulk_proc	DD ?,?
 
