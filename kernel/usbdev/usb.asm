@@ -398,17 +398,17 @@ HandlePipeWrite  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitUsbDevice
+;           NAME:           InitUsbFunction
 ;
-;           description:    Init USB device selector
+;           description:    Init USB function selector
 ;
-;       parameters:     DS      USB device selector
+;       parameters:     DS      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_usb_device_name DB 'Init USB Device', 0
+init_usb_function_name DB 'Init USB Function', 0
 
-init_usb_device Proc far
+init_usb_function Proc far
     push ds
     push es
     push ax
@@ -459,7 +459,7 @@ init_usb_device Proc far
     pop es
     pop ds
     retf32
-init_usb_device   Endp
+init_usb_function   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1262,6 +1262,7 @@ init_usb_dev_name DB 'Init USB Device', 0
 init_usb_dev       Proc far
     pusha
 ;
+    mov es:usbf_hub_sel,bx
     mov es:usbf_port,dl
     mov es:usbf_address,al
     mov es:usbf_speed,ah
@@ -4735,10 +4736,10 @@ init    Proc far
     mov edi,OFFSET delete_handle
     RegisterHandle
 ;
-    mov esi,OFFSET init_usb_device
-    mov edi,OFFSET init_usb_device_name
+    mov esi,OFFSET init_usb_function
+    mov edi,OFFSET init_usb_function_name
     xor cl,cl
-    mov ax,init_usb_device_nr
+    mov ax,init_usb_function_nr
     RegisterOsGate
 ;
     mov esi,OFFSET lock_usb

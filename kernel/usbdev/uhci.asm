@@ -3407,7 +3407,7 @@ ifTabLoop:
     add di,4
     loop ifTabLoop    
 ;
-    InitUsbDevice
+    InitUsbFunction
 ;
     WaitForEhci
 ;    

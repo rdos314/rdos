@@ -3991,7 +3991,7 @@ ifTabLoop:
     add di,4
     loop ifTabLoop    
 ;
-    InitUsbDevice
+    InitUsbFunction
     InitSection ds:ehc_section
 ;
     mov bh,ds:ehc_bus

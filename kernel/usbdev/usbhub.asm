@@ -149,9 +149,8 @@ CreateDev   Endp
 ;
 ;       DESCRIPTION:    Create control pipe
 ;
-;       PARAMETERS:     DS      Device selector
-;                       ES      Function selector
-;                       AH      Speed
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device selector
 ;
 ;       RETURNS:        FS      Pipe selector
 ;
@@ -170,7 +169,9 @@ CreateControl	Endp
 ;       DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       AH      Speed
+;                       ES      Device selector
+;                       DL      Pipe # (bit 7 IN)
+;                       CX      Max packet size
 ;
 ;       RETURNS:        FS      Pipe selector
 ;
@@ -189,8 +190,10 @@ CreateBulk   Endp
 ;   DESCRIPTION:    Create interrupt pipe
 ;
 ;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
 ;                   AL      Interval
-;                   AH      Speed
+;                   DL      Pipe # (bit 7 IN)
+;                   CX      Max packet size
 ;
 ;   RETURNS:        FS      Pipe selector
 ;
@@ -2408,7 +2411,7 @@ uaTabLoop:
 ;
     mov ebx,es
     mov ds,ebx
-    InitUsbDevice
+    InitUsbFunction
 ;
     call CreateStatusThread
     jmp uaDone

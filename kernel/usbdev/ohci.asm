@@ -3642,7 +3642,7 @@ ifTabLoop:
     add di,4
     loop ifTabLoop    
 ;
-    InitUsbDevice
+    InitUsbFunction
 ;    
     InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel

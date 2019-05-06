@@ -3971,7 +3971,7 @@ ifTabLoop:
 ;
     mov ax,es
     mov ds,ax
-    InitUsbDevice
+    InitUsbFunction
 
 ifDone:
     popad
