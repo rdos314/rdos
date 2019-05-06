@@ -130,7 +130,7 @@ ohci_pipe   ENDS
 
 ohci_func_sel   STRUC
 
-usb_dev_base    usb_dev_struc <>
+usb_func_base    usb_function_struc <>
 
 ohc_reg_sel     DW ?
 ohc_map_sel     DW ?

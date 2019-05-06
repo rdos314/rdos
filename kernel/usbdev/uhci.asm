@@ -64,7 +64,7 @@ int_struc   ENDS
 
 uhci_func_sel    STRUC
 
-usb_dev_base     usb_dev_struc <>
+usb_func_base     usb_function_struc <>
 
 uhc_hw_phys      DD ?
 uhc_hw_linear    DD ?

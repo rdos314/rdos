@@ -43,9 +43,9 @@ uhd_current     DB ?
 
 usb_hub_descr   ENDS
 
-usb_hub_dev_struc   STRUC
+usb_hub_func_struc   STRUC
 
-usb_dev_base            usb_dev_struc <>
+hub_func_base           usb_function_struc <>
 
 hub_prev                DW ?
 hub_next                DW ?
@@ -89,4 +89,4 @@ hub_buf                 DB HUB_BUF_SIZE DUP(?)
 hub_dev_descr_size      DW ?
 hub_dev_descr_buf       DB ?
 
-usb_hub_dev_struc   ENDS
+usb_hub_func_struc   ENDS

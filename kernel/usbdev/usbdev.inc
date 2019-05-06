@@ -41,7 +41,7 @@ DIR_OUT = 0
 
 USBF_XHCI   = 1
 
-usb_dev_struc   STRUC
+usb_function_struc   STRUC
 
 ; OUT AL        Address
 allocate_address_proc DD ?,?
@@ -168,7 +168,7 @@ usb_retry_arr          DW MAX_USB_HUB_PORTS DUP(?)
 usb_timeout_arr        DD MAX_USB_HUB_PORTS DUP(?,?)
 usb_addr_arr           DW 128 DUP(?)
 
-usb_dev_struc   ENDS
+usb_function_struc   ENDS
 
 usb_device_struc  STRUC
 

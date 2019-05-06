@@ -179,7 +179,7 @@ port_stat_struc ENDS
 
 xhci_func_sel   STRUC
 
-usb_dev_base        usb_dev_struc <>
+usb_func_base        usb_function_struc <>
 
 xhc_hcc_sel         DW ?
 xhc_reg_sel         DW ?

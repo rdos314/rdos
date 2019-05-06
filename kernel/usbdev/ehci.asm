@@ -81,7 +81,7 @@ count_struc ENDS
 
 ehci_func_sel   STRUC
 
-usb_dev_base        usb_dev_struc <>
+usb_func_base        usb_function_struc <>
 
 ehc_reg_sel         DW ?
 ehc_thread          DW ?
