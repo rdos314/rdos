@@ -79,13 +79,6 @@ ehc_qh          DD ?
 
 count_struc ENDS
 
-ehci_hub_struc   STRUC
-
-eh_port         DW ?
-eh_sel          DW ?
-
-ehci_hub_struc   ENDS
-
 ehci_func_sel   STRUC
 
 usb_dev_base        usb_dev_struc <>
@@ -116,9 +109,6 @@ ehc_async_head_va   DD ?
 
 ehc_pipe_section    section_typ <>
 ehc_enum_section    section_typ <>
-ehc_hub_section     section_typ <>
-
-ehc_hub_arr         DD 256 DUP(?)
 
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
@@ -2689,69 +2679,6 @@ UnlockEnum   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateHubAddress
-;
-;           DESCRIPTION:    Allocate Hub address
-;
-;       PARAMETERS:         DS      Function selector
-;                           BX      Hub Selector
-;                           DX      Hub port
-;
-;       RETURNS:            AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateHubAddress   Proc far
-    push si
-;    
-    AllocateUsbAddress
-;
-    EnterSection ds:ehc_hub_section
-    movzx si,al
-    shl si,2
-    add si,OFFSET ehc_hub_arr
-    mov ds:[si].eh_sel,bx
-    mov ds:[si].eh_port,dx
-    LeaveSection ds:ehc_hub_section
-    clc
-;
-    pop si
-    retf32
-AllocateHubAddress     Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeHubAddress
-;
-;           DESCRIPTION:    Free Hub address
-;
-;       PARAMETERS:         DS      Function selector
-;                           AL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeHubAddress   Proc far
-    push bx
-;    
-    movzx bx,al
-    shl bx,2
-    add bx,OFFSET ehc_hub_arr
-    EnterSection ds:ehc_hub_section
-    mov dword ptr [bx].eh_sel,0
-    mov dword ptr [bx].eh_port,0
-    LeaveSection ds:ehc_hub_section
-;
-    FreeUsbAddress
-    clc
-;
-    pop bx
-    retf32
-FreeHubAddress     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Has64Bit
 ;
 ;           DESCRIPTION:    Check for 64-bit support
@@ -4199,7 +4126,6 @@ AddFunction  Proc near
     mov ds:ehc_async_head_va,0
     InitSection ds:ehc_pipe_section
     InitSection ds:ehc_enum_section
-    InitSection ds:ehc_hub_section
 ;
     mov es,bp
     mov cl,es:hcp_CAPLEN
