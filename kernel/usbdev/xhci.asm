@@ -1396,6 +1396,7 @@ ConfigDevice   Endp
 ;       PARAMETERS:     DS      Device selector
 ;                       ES      Function selector
 ;                       DL      Pipe #, bit 7 IN.
+;                       CX      Max data size
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1474,6 +1475,7 @@ CreateBulk   Endp
 CreateIntr   Proc far
     pushad
 ;   
+    mov ah,es:usbf_speed
     call CreateEndpointRing
 ;
     movzx bx,dl

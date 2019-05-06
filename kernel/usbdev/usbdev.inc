@@ -62,11 +62,12 @@ create_control_proc	DD ?,?
 
 ; IN  ES        Device sel
 ; IN  DL        Pipe #, bit 7 IN.
+; IN  CX        Max packet size
 ; OUT FS        Pipe selector
 create_bulk_proc	DD ?,?
 
+; IN  ES        Device sel
 ; IN  AL        Interval
-; IN  AH        Speed
 ; IN  DL        Pipe #
 ; IN  CX        Max packet size
 ; OUT FS        Pipe selector

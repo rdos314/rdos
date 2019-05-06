@@ -1634,6 +1634,8 @@ CreateControl   Endp
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device sel
+;                       DL      Pipe # (bit 7, IN)
+;                       CX      Max data size
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1678,8 +1680,10 @@ CreateBulk   Endp
 ;           DESCRIPTION:    Create interrupt pipe
 ;
 ;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
 ;                       AL      Interval
-;                       AH      Speed
+;                       DL      Pipe # (bit 7, IN)
+;                       CX      Max data size
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1690,6 +1694,7 @@ CreateIntr   Proc far
     push gs
     pushad
 ;    
+    mov ah,es:usbf_speed
     push ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
