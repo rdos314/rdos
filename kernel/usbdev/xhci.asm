@@ -1228,7 +1228,6 @@ StopEndpoint   Endp
 ;
 ;       PARAMETERS:     DS      Device selector
 ;                       ES      Function selector
-;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1237,6 +1236,7 @@ StopEndpoint   Endp
 CreateControl   Proc far
     pushad
 ;
+    mov ah,es:usbf_speed
     call SpeedToPsi
     mov cl,es:usbf_port
     call SetupRootDevice

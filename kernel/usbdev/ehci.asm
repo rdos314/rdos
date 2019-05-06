@@ -1684,9 +1684,8 @@ CreateDev  Endp
 ;
 ;           DESCRIPTION:    Create control pipe
 ;
-;       PARAMETERS:     DS      Device selector
-;                       ES      Function selector
-;                       AH      Speed
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device selector
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1708,6 +1707,7 @@ CreateControl   Proc far
     mov fs,ax
     pop ax
     pop es    
+    mov ah,es:usbf_speed
     mov fs:usbp_speed,ah
 ;    
     call SetupHub

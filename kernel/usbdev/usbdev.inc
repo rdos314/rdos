@@ -56,7 +56,7 @@ free_address_proc     DD ?,?
 ; OUT ES        Device sel
 create_dev_proc       DD ?,?
 
-; IN  AH        Speed
+; IN  ES        Device sel
 ; OUT FS        Pipe selector
 create_control_proc	DD ?,?
 

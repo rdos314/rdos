@@ -483,7 +483,6 @@ CreateDefaultControl    Proc near
     push edi
 ;    
     push ax
-    mov ah,es:usbf_speed
     call fword ptr ds:create_control_proc
 ;    
     mov es:usbf_in_endpoint_arr,fs    
