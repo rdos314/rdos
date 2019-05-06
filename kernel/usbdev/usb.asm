@@ -487,7 +487,7 @@ CreateDefaultControl    Proc near
 ;    
     mov es:usbd_in_endpoint_arr,fs    
     mov es:usbd_out_endpoint_arr,fs    
-    mov fs:usbp_function_sel,es
+    mov fs:usbp_dev_sel,es
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
     mov fs:usbp_seq,0
@@ -618,7 +618,7 @@ cbOut:
 
 cbEndpointOk:    
     and dl,0Fh
-    mov fs:usbp_function_sel,es
+    mov fs:usbp_dev_sel,es
     mov al,es:usbd_address
     mov fs:usbp_address,al
     mov fs:usbp_endpoint,dl
@@ -675,7 +675,7 @@ CreateInterrupt    Proc near
     mov es:[bx].usbd_in_endpoint_arr,fs
 ;    
     and dl,0Fh
-    mov fs:usbp_function_sel,es
+    mov fs:usbp_dev_sel,es
     mov al,es:usbd_address
     mov fs:usbp_address,al
     mov fs:usbp_endpoint,dl
@@ -2777,7 +2777,7 @@ config_usb_device       Proc near
 ;
     mov cx,16
     xor si,si
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
 
 cudFindConfigLoop:
     mov ax,fs:[si].usbp_config_sel

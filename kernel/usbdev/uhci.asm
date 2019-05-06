@@ -2452,7 +2452,7 @@ LocalIsConnected   Proc near
     push dx
     push si
 ;    
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
     movzx si,es:usbd_port
 ;    
     mov dx,ds:uhc_io_base
@@ -2513,7 +2513,7 @@ ResetPipe   Proc far
     push ax
     push cx
 ;    
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
@@ -2658,7 +2658,7 @@ CloseControlPipe   Proc far
     push es
     pushad
 ;    
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
 ;
     movzx di,cl
@@ -2792,10 +2792,10 @@ CreateDev   Proc far
     push cx
     push di
 ;
-    mov eax,SIZE usb_function_struc
+    mov eax,SIZE usb_device_struc
     AllocateSmallGlobalMem
     xor di,di
-    mov cx,SIZE usb_function_struc
+    mov cx,SIZE usb_device_struc
     xor al,al
     rep stosb
 ;

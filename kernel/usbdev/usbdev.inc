@@ -170,7 +170,7 @@ usb_addr_arr           DW 128 DUP(?)
 
 usb_dev_struc   ENDS
 
-usb_function_struc  STRUC
+usb_device_struc  STRUC
 
 usbd_hub_sel            DW ?
 usbd_port               DB ?
@@ -181,11 +181,11 @@ usbd_pad                DB ?
 usbd_in_endpoint_arr    DW 16 DUP(?)
 usbd_out_endpoint_arr   DW 16 DUP(?)
 
-usb_function_struc  ENDS
+usb_device_struc  ENDS
 
 usb_pipe_struc      STRUC
 
-usbp_function_sel   DW ?
+usbp_dev_sel        DW ?
 usbp_address        DB ?
 usbp_endpoint       DB ?
 usbp_seq            DB ?

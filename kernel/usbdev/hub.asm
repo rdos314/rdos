@@ -513,10 +513,10 @@ haAttach:
     push ax
     push cx    
     push di
-    mov eax,SIZE usb_function_struc
+    mov eax,SIZE usb_device_struc
     AllocateSmallGlobalMem
     xor di,di
-    mov cx,SIZE usb_function_struc
+    mov cx,SIZE usb_device_struc
     xor al,al
     rep stosb
     pop di

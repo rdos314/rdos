@@ -1615,10 +1615,10 @@ CreateDev   Proc far
     push di
     push eax
 ;
-    mov eax,SIZE usb_function_struc
+    mov eax,SIZE usb_device_struc
     AllocateSmallGlobalMem
     xor di,di
-    mov cx,SIZE usb_function_struc
+    mov cx,SIZE usb_device_struc
     xor al,al
     rep stosb
 ;
@@ -2562,7 +2562,7 @@ icHub:
 
 icLocal:    
     push es
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
     movzx si,es:usbd_port
     shl si,2
     mov es,ds:ehc_reg_sel
@@ -2631,7 +2631,7 @@ ResetPipe   Proc far
        
 repNoHub:
     int 3
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
@@ -2832,7 +2832,7 @@ CloseControlPipe   Proc far
     jmp ccpDone
        
 ccpNoHub:
-    mov es,fs:usbp_function_sel
+    mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
     movzx edi,cl
     add edi,edi

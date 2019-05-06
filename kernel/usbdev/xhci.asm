@@ -223,7 +223,7 @@ xhci_func_sel   ENDS
 
 xhci_dev_struc   STRUC
 
-usb_function_base        usb_function_struc <>
+usb_dev_base             usb_device_struc <>
 
 xd_phys                  DD ?,?
 xd_linear                DD ?
