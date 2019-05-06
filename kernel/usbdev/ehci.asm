@@ -574,43 +574,6 @@ RemovePipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupHub
-;
-;       DESCRIPTION:    Setup hub in pipe
-;
-;       PARAMETERS:     DS      Device
-;                       ES      Function
-;                       FS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupHub  Proc near
-    push ax
-    push si
-;    
-    mov fs:usbp_hub_sel,0
-    mov al,es:usbf_port
-    cmp al,ds:ehc_ports
-    jb shDone
-
-shHub:
-    movzx si,al
-    shl si,2
-    mov ax,word ptr ds:[si].ehc_hub_arr.eh_sel
-    mov fs:usbp_hub_sel,ax
-;    
-    mov ax,word ptr ds:[si+2].ehc_hub_arr.eh_port
-    mov fs:usbp_hub_port,ax
-
-shDone:    
-    pop si
-    pop ax
-    ret
-SetupHub    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           InitQh
 ;
 ;       DESCRIPTION:    Initialize an already allocated qh
@@ -1711,7 +1674,12 @@ CreateControl   Proc far
     mov ah,es:usbf_speed
     mov fs:usbp_speed,ah
 ;    
-    call SetupHub
+    push ax
+    mov ax,es:usbf_hub_sel
+    mov fs:usbp_hub_sel,ax
+    movzx ax,es:usbf_port
+    mov fs:usbp_hub_port,ax
+    pop ax
 ;    
     mov dx,flat_sel
     mov es,dx
@@ -1760,7 +1728,12 @@ CreateBulk   Proc far
     mov ah,es:usbf_speed
     mov fs:usbp_speed,ah
 ;    
-    call SetupHub
+    push ax
+    mov ax,es:usbf_hub_sel
+    mov fs:usbp_hub_sel,ax
+    movzx ax,es:usbf_port
+    mov fs:usbp_hub_port,ax
+    pop ax
 ;    
     mov dx,flat_sel
     mov es,dx
@@ -1810,7 +1783,12 @@ CreateIntr   Proc far
     mov ah,es:usbf_speed
     mov fs:usbp_speed,ah
 ;    
-    call SetupHub
+    push ax
+    mov ax,es:usbf_hub_sel
+    mov fs:usbp_hub_sel,ax
+    movzx ax,es:usbf_port
+    mov fs:usbp_hub_port,ax
+    pop ax
 ;    
     mov dx,flat_sel
     mov es,dx
