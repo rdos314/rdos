@@ -20,13 +20,17 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; hub.INC
+; usbhub.INC
 ; Hub common types & constants
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#include "usbdev.inc"
+
 HUB_BUF_SIZE    = 40h
-MAX_HUB_PORTS   = 16
+
+FLAG_HUB_DISCONNECT = 1
+FLAG_HUB_REINIT     = 2
 
 usb_hub_descr   STRUC
 
@@ -39,52 +43,50 @@ uhd_current     DB ?
 
 usb_hub_descr   ENDS
 
-; must be less than 32 bytes!
+usb_hub_func_struc   STRUC
 
-hub_port_status STRUC
+hub_func_base           usb_function_struc <>
 
-hps_timeout         DD ?,?
-hps_attach_thread   DW ?
-hps_detach_thread   DW ?
-hps_power_timeout   DD ?,?
-
-hps_status          DW ?
-hps_retry           DW ?
-hps_dev_port        DB ?
-hps_req_reset       DB ?
-hps_ext_reset       DB ?
-hps_failed          DB ?
-
-hub_port_status ENDS
-
-hub_struc   STRUC
-
+hub_prev                DW ?
 hub_next                DW ?
 
-hub_thread              DW ?
-hub_attached            DW ?
+hub_reset               DD ?
 
+hub_status_thread       DW ?
+hub_port_thread         DW ?
+hub_detach              DW ?
+
+hub_vendor              DW ?
+hub_product             DW ?
 hub_controller          DW ?
+hub_port                DB ?
 hub_device              DB ?
-hub_intr                DB ?
 
-hub_control_wait        DW ?
 hub_control_handle      DW ?
+hub_control_wait        DW ?
 
 hub_status_handle       DW ?
-hub_status_size         DW ?
-hub_status_sel          DW ?
 hub_status_req          DW ?
+hub_status_sel          DW ?
 
 hub_power_time          DW ?
 hub_info                DW ?
+hub_status_size         DW ?
+hub_intr                DB ?
+hub_flags               DB ?
 
-hub_dev_sel             DW ?
+hub_section             section_typ <>
+
+hub_parent_sel          DW ?
 
 hub_ports               DW ?
-hub_port_arr            DB 32 * MAX_HUB_PORTS DUP(?)
+hub_status_arr          DW MAX_USB_HUB_PORTS DUP(?)
+hub_adr_arr             DB MAX_USB_HUB_PORTS DUP(?)
 
 hub_control_data        DB 8 DUP (?)
 hub_buf                 DB HUB_BUF_SIZE DUP(?)
 
-hub_struc   ENDS
+hub_dev_descr_size      DW ?
+hub_dev_descr_buf       DB ?
+
+usb_hub_func_struc   ENDS

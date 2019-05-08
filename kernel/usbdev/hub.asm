@@ -33,8 +33,16 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
-include ..\usbdev\usbdev.inc
 include ..\usbdev\hub.inc
+
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
+
+MAX_DEVICES = 256
 
 GET_STATUS = 0
 CLEAR_FEATURE = 1
@@ -63,9 +71,11 @@ PORT_INDICATOR      = 22
 
 data    SEGMENT byte public 'DATA'
 
-hub_list        DW ?
+hub_dead_list    DW ?
+hub_list_section section_typ <>
 
-hub_section     section_typ <>
+hub_dev_count    DW ?
+hub_dev_arr      DW MAX_DEVICES DUP(?)
 
 data    ENDS
 
@@ -75,97 +85,627 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    .386p
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           ProcessHubDescr
+;       NAME:           AllocateAddress
 ;
-;   description:    Process Hub descriptor
+;       DESCRIPTION:    Allocate address
 ;
-;   Parameters:     GS      Hub
+;       PARAMETERS:     DS      Device selector
+;
+;       RETURNS:        AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ProcessHubDescr  Proc near
-    push es
-    pushad
-;    
-    mov ax,gs
-    mov es,ax
-    mov bx,gs:hub_control_handle
-;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,0A0h
-    mov es:[di].usd_req,GET_DESCR
-    mov es:[di].usd_value,2900h
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,HUB_BUF_SIZE
-    mov cx,8
-    WriteUsbControl
-;
-    mov cx,HUB_BUF_SIZE
-    mov di,OFFSET hub_buf
-    mov es:[di].uhd_type,0
-    ReqUsbData    
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,gs:hub_control_wait
-    WaitWithTimeout
-;    
-    mov bx,gs:hub_control_handle
-    WasUsbTransactionOk
-    jc ghdDone
-;
-    mov cl,es:[di].uhd_type
-    cmp cl,29h
-    stc
-    jne ghdDone
-;
-    movzx cx,es:[di].uhd_ports
-    mov gs:hub_ports,cx
-;
-    mov cx,es:[di].uhd_info
-    mov gs:hub_info,cx
-;
-    movzx cx,es:[di].uhd_power_time
-    shl cx,1
-    mov gs:hub_power_time,cx        
-;
-    mov cx,gs:hub_ports
-    mov bx,OFFSET hub_port_arr
-
-phdLoop:
-    mov gs:[bx].hps_status,0
-    mov gs:[bx].hps_req_reset,0
-    mov gs:[bx].hps_ext_reset,0
-    mov gs:[bx].hps_failed,0
-    mov gs:[bx].hps_retry,0
-    mov gs:[bx].hps_dev_port,0
-    mov gs:[bx].hps_attach_thread,0
-    mov gs:[bx].hps_detach_thread,0
-    mov gs:[bx].hps_timeout,0
-    mov gs:[bx].hps_timeout+4,0
-    mov gs:[bx].hps_power_timeout,0
-    mov gs:[bx].hps_power_timeout+4,0
-    add bx,32
-    loop phdLoop
-;               
-    mov gs:hub_attached,1
-    clc    
-
-ghdDone:    
-    popad
-    pop es
+AllocateAddress   Proc far
+    int 3
     ret
-ProcessHubDescr Endp
+AllocateAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeAddress
+;
+;       DESCRIPTION:    Free address
+;
+;       PARAMETERS:     DS      Device selector
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    int 3
+    ret
+FreeAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDev
+;
+;       DESCRIPTION:    Create device
+;
+;       PARAMETERS:     DS      Device selector
+;                       AL      Address
+;                       AH      Speed
+;                       BX      Hub sel
+;                       DX      Port #
+;
+;       RETURNS:        ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    int 3
+    ret
+CreateDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateControl
+;
+;       DESCRIPTION:    Create control pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device selector
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControl   Proc far
+    int 3
+    ret
+CreateControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateBulk
+;
+;       DESCRIPTION:    Create bulk pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device selector
+;                       DL      Pipe # (bit 7 IN)
+;                       CX      Max packet size
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBulk   Proc far
+    int 3
+    ret
+CreateBulk   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateIntr
+;
+;   DESCRIPTION:    Create interrupt pipe
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;                   AL      Interval
+;                   DL      Pipe # (bit 7 IN)
+;                   CX      Max packet size
+;
+;   RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntr   Proc far
+    int 3
+    ret
+CreateIntr   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddSetup
+;
+;       DESCRIPTION:    Add setup transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       CX      Buffer size
+;                       ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddSetup    Proc far
+    int 3
+    ret 
+AddSetup    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddOut
+;
+;       DESCRIPTION:    Add out transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       CX      Buffer size
+;                       ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddOut    Proc far
+    int 3
+    ret
+AddOut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddIn
+;
+;   DESCRIPTION:    Add in transaction to queue
+;
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;                   CX      Buffer size
+;                   ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIn    Proc far
+    int 3
+    ret
+AddIn    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddStatusOut
+;
+;       DESCRIPTION:    Add status OUT transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatusOut    Proc far
+    int 3
+    ret
+AddStatusOut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddStatusIn
+;
+;       DESCRIPTION:    Add status IN transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatusIn    Proc far
+    int 3
+    ret
+AddStatusIn    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IssueTransfer
+;
+;       DESCRIPTION:    Issue transfer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     Queue handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IssueTransfer    Proc far
+    int 3
+    ret
+IssueTransfer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsTransferDone
+;
+;       DESCRIPTION:    Check if transfer is done
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        NC      Transfer is done
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsTransferDone   Proc far
+    int 3
+    ret
+IsTransferDone   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForCompletion
+;
+;       DESCRIPTION:    Wait for transfer to complete
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCompletion   Proc far
+    int 3
+    ret
+WaitForCompletion   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           EndTransfer
+;
+;       DESCRIPTION:    End transfer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EndTransfer   Proc far
+    int 3
+    ret
+EndTransfer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WasTransferOk
+;
+;       DESCRIPTION:    Was transfer ok
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        NC      Transfer ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WasTransferOk   Proc far
+    int 3
+    ret
+WasTransferOk   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetDataSize
+;
+;       DESCRIPTION:    Get data size
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        CX      Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDataSize   Proc far
+    int 3
+    ret
+GetDataSize   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IssueOne
+;
+;       DESCRIPTION:    Issue one transfer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IssueOne   Proc far
+    int 3
+    ret
+IssueOne   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClosePipe
+;
+;       DESCRIPTION:    Close pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePipe   Proc far
+    int 3
+    ret
+ClosePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ChangeAddress
+;
+;   DESCRIPTION:    Change address for pipe
+;
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;                   AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChangeAddress   Proc far
+    int 3
+    ret
+ChangeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsConnected
+;
+;       DESCRIPTION:    Check if pipe is connected
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsConnected   Proc far
+    int 3
+    ret
+IsConnected   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ResetPipe
+;
+;       DESCRIPTION:    Reset port for pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetPipe   Proc far
+    int 3
+    ret
+ResetPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LockEnum
+;
+;       DESCRIPTION:    Lock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockEnum   Proc far
+    int 3
+    ret
+LockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlockEnum
+;
+;       DESCRIPTION:    Unlock enumeration process
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockEnum   Proc far
+    int 3
+    ret
+UnlockEnum   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Has64Bit
+;
+;       DESCRIPTION:    Check for 64-bit support
+;
+;       PARAMETERS:         DS      Function selector
+;
+;       RETURNS:            NC      Supports 64-bit addresses
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Has64Bit   Proc far
+    int 3
+    ret
+Has64Bit   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               IsStalled
+;
+;       DESCRIPTION:        Check if pipe is stalled
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;       RETURNS:            CY      Stalled
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsStalled   Proc far
+    int 3
+    ret
+IsStalled   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               ClearStalled
+;
+;       DESCRIPTION:        Clear stalled pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;       RETURNS:            CY      Stalled
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearStalled   Proc far
+    int 3
+    ret
+ClearStalled   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetMaxLen
+;
+;           DESCRIPTION:    Get max len
+;
+;           RETURNS:        AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMaxLen   Proc far
+    int 3
+    ret
+GetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetMaxLen
+;
+;           DESCRIPTION:    Set max len
+;
+;           PARAMETERS:     FS      Pipe
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMaxLen   Proc far
+    int 3
+    ret
+SetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               CloseControlPipe
+;
+;       DESCRIPTION:        Close control pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseControlPipe   Proc far
+    int 3
+    ret
+CloseControlPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           hub table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_tab:
+ht00 DD OFFSET AllocateAddress,     SEG code
+ht01 DD OFFSET FreeAddress,         SEG code
+ht02 DD OFFSET CreateDev,           SEG code
+ht03 DD OFFSET CreateControl,       SEG code
+ht04 DD OFFSET CreateBulk,          SEG code
+ht05 DD OFFSET CreateIntr,          SEG code
+ht06 DD OFFSET AddSetup,            SEG code
+ht07 DD OFFSET AddOut,              SEG code
+ht08 DD OFFSET AddIn,               SEG code
+ht09 DD OFFSET AddStatusOut,        SEG code
+ht0A DD OFFSET AddStatusIn,         SEG code
+ht0B DD OFFSET IssueTransfer,       SEG code
+ht0C DD OFFSET IsTransferDone,      SEG code
+ht0D DD OFFSET EndTransfer,         SEG code
+ht0E DD OFFSET WasTransferOk,       SEG code
+ht0F DD OFFSET GetDataSize,         SEG code
+ht10 DD OFFSET ClosePipe,           SEG code
+ht11 DD OFFSET WaitForCompletion,   SEG code
+ht12 DD OFFSET ChangeAddress,       SEG code
+ht13 DD OFFSET IsConnected,         SEG code
+ht14 DD OFFSET ResetPipe,           SEG code
+ht15 DD OFFSET LockEnum,            SEG code
+ht16 DD OFFSET UnlockEnum,          SEG code
+ht17 DD OFFSET Has64Bit,            SEG code
+ht18 DD OFFSET IsStalled,           SEG code
+ht19 DD OFFSET ClearStalled,        SEG code
+ht1A DD OFFSET GetMaxLen,           SEG code
+ht1B DD 0,                          0
+ht1C DD 0,                          0
+ht1D DD OFFSET SetMaxLen,           SEG code
+ht1E DD OFFSET CloseControlPipe,    SEG code
+ht1F DD OFFSET IssueOne,            SEG code
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,8 +715,8 @@ ProcessHubDescr Endp
 ;
 ;   description:    Set port feature
 ;
-;   Parameters:     GS      Hub
-;                   DX      Port
+;   Parameters:     DS      Function sel
+;                   DX      Port [0..ports]
 ;                   AX      Feature
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -185,17 +725,19 @@ SetPortFeature  Proc near
     push es
     pushad
 ;    
-    mov bx,gs
-    mov es,bx
-    mov bx,gs:hub_control_handle
+    EnterSection ds:hub_section
+    inc dx
+    mov ebx,ds
+    mov es,ebx
+    mov bx,ds:hub_control_handle
 ;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,23h
-    mov es:[di].usd_req,SET_FEATURE
-    mov es:[di].usd_value,ax
-    mov es:[di].usd_index,dx
-    mov es:[di].usd_len,0
-    mov cx,8
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,23h
+    mov es:[edi].usd_req,SET_FEATURE
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,0
+    mov ecx,8
     WriteUsbControl
     ReqUsbStatus
     StartUsbTransaction
@@ -203,17 +745,17 @@ SetPortFeature  Proc near
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    mov bx,gs:hub_control_wait
+    mov bx,ds:hub_control_wait
     WaitWithTimeout
 ;    
-    mov bx,gs:hub_control_handle
+    mov bx,ds:hub_control_handle
     WasUsbTransactionOk
+    LeaveSection ds:hub_section
 ;
     popad
     pop es
     ret
 SetPortFeature Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -222,8 +764,8 @@ SetPortFeature Endp
 ;
 ;   description:    Clear port feature
 ;
-;   Parameters:     GS      Hub
-;                   DX      Port
+;   Parameters:     DS      Function sel
+;                   DX      Port [0..ports]
 ;                   AX      Feature
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -232,17 +774,19 @@ ClearPortFeature  Proc near
     push es
     pushad
 ;    
-    mov bx,gs
-    mov es,bx
-    mov bx,gs:hub_control_handle
+    EnterSection ds:hub_section
+    inc dx
+    mov ebx,ds
+    mov es,ebx
+    mov bx,ds:hub_control_handle
 ;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,23h
-    mov es:[di].usd_req,CLEAR_FEATURE
-    mov es:[di].usd_value,ax
-    mov es:[di].usd_index,dx
-    mov es:[di].usd_len,0
-    mov cx,8
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,23h
+    mov es:[edi].usd_req,CLEAR_FEATURE
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,0
+    mov ecx,8
     WriteUsbControl
     ReqUsbStatus
     StartUsbTransaction
@@ -250,17 +794,17 @@ ClearPortFeature  Proc near
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    mov bx,gs:hub_control_wait
+    mov bx,ds:hub_control_wait
     WaitWithTimeout
 ;    
-    mov bx,gs:hub_control_handle
+    mov bx,ds:hub_control_handle
     WasUsbTransactionOk
+    LeaveSection ds:hub_section
 ;
     popad
     pop es
     ret
 ClearPortFeature Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -270,12 +814,15 @@ ClearPortFeature Endp
 ;   description:    Clear port change
 ;
 ;   Parameters:     GS      Hub
-;                   DX      Port
+;                   DX      Port #
 ;                   AX      Status change
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearPortChange  Proc near
+    push eax
+;
+    shr eax,16
     test ax,1
     jz cpcConnectOk
 ;
@@ -319,8 +866,24 @@ cpcOverCurrentOk:
     mov ax,20
     call ClearPortFeature
     pop ax
+;
+    push ebx
+    push edi
+;
+    movzx edi,dx
+    add edi,edi
+;
+    mov bx,ds:[edi].usb_attach_thread_arr
+    Signal
+;
+    mov bx,ds:[edi].usb_reset_thread_arr
+    Signal
+;
+    pop edi
+    pop ebx
                 
 cpcResetOk:
+    pop eax
     ret
 ClearPortChange Endp
 
@@ -332,35 +895,32 @@ ClearPortChange Endp
 ;   description:    Get port status
 ;
 ;   Parameters:     GS      Hub
-;                   DX      Port
-;
-;   Returns:        AX      Port status
-;                   DX      Status change
+;                   DX      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPortStatus  Proc near
     push es
-    push bx
-    push cx
-    push di
+    pushad
 ;    
-    mov ax,gs
-    mov es,ax
-    mov bx,gs:hub_control_handle
+    EnterSection ds:hub_section
+    inc dx
+    mov eax,ds
+    mov es,eax
+    mov bx,ds:hub_control_handle
 ;    
-    mov di,OFFSET hub_control_data
-    mov es:[di].usd_type,0A3h
-    mov es:[di].usd_req,GET_STATUS
-    mov es:[di].usd_value,0
-    mov es:[di].usd_index,dx
-    mov es:[di].usd_len,4
-    mov cx,8
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,0A3h
+    mov es:[edi].usd_req,GET_STATUS
+    mov es:[edi].usd_value,0
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,4
+    mov ecx,8
     WriteUsbControl
 ;
-    mov cx,4
-    mov di,OFFSET hub_buf
-    mov es:[di].uhd_type,0
+    mov ecx,4
+    mov edi,OFFSET hub_buf
+    mov es:[edi].uhd_type,0
     ReqUsbData    
 ;    
     WriteUsbStatus
@@ -370,28 +930,631 @@ GetPortStatus  Proc near
     GetSystemTime
     add eax,1000 * 1193    
     adc edx,0
-    mov bx,gs:hub_control_wait
+    mov bx,es:hub_control_wait
     WaitWithTimeout
     pop edx
 ;    
-    mov bx,gs:hub_control_handle
+    mov bx,es:hub_control_handle
     WasUsbTransactionOk
+    LeaveSection ds:hub_section
     jc gpsDone
 ;    
-    mov di,OFFSET hub_buf
-    mov ax,es:[di+2]
-    call ClearPortChange
+    dec dx
+    movzx edi,dx
+    add edi,edi
+    mov eax,dword ptr ds:hub_buf
+    mov ds:[edi].hub_status_arr,ax
 ;
-    mov ax,es:[di]        
+    call ClearPortChange
     clc    
 
 gpsDone:    
-    pop di
-    pop cx
-    pop bx
+    popad
     pop es
     ret
 GetPortStatus Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AttachThread
+;
+;   DESCRIPTION:    Attach thread
+;
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_thread_name  DB 'Hub Attach ', 0
+
+attach_thread:
+    mov cl,dl
+    mov ds,bx
+;    
+    movzx esi,cl
+    movzx edi,cl
+    add edi,edi
+;    
+    EnterSection ds:usb_section    
+    GetThread
+    mov ds:[edi].usb_attach_thread_arr,ax
+    LeaveSection ds:usb_section
+;
+    LockUsb
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    test ds:[edi].hub_status_arr,1
+    jz atUnlock
+;
+    mov ax,PORT_RESET
+    call SetPortFeature
+;        
+    mov ecx,5
+
+atWaitLoop:
+    WaitForSignal
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atUnlock
+;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz atUnlock
+;
+    test ax,2
+    jnz atIsEnabled
+;
+    loop atWaitLoop
+;
+    jmp atUnlock    
+
+atIsEnabled:
+    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:allocate_address_proc
+    pop ds
+    jc atUnlock
+;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,200h
+    jnz atLowSpeed
+;
+    test ax,400h
+    jnz atHighSpeed
+
+atFullSpeed:
+    mov ah,1
+    jmp atCreate
+
+atHighSpeed:
+    mov ah,2
+    jmp atCreate
+
+atLowSpeed:
+    mov ah,0
+        
+atCreate:
+    mov al,bl
+;
+    push ds
+    mov bx,ds
+    mov ds,ds:hub_parent_sel
+    movzx dx,dl
+    call fword ptr ds:create_dev_proc
+    pop ds
+;
+    mov al,dl
+    NotifyUsbAttach
+    jnc atDone
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz atDone
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz atDone
+;
+    mov ax,250
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz atDone
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz atDone
+;
+    mov ax,ds:hub_power_time
+    WaitMilliSec
+    jmp atDone
+
+atUnlock:
+    UnlockUsb
+
+atDone:
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_attach_thread_arr,0
+    LeaveSection ds:usb_section
+;
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DetachThread
+;
+;   DESCRIPTION:    Detach thread
+;
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_thread_name  DB 'Hub Detach ', 0
+
+detach_thread:
+    mov cl,dl
+    mov ds,bx
+;
+    movzx esi,cl
+    movzx edi,cl
+    add edi,edi
+;    
+    EnterSection ds:usb_section
+    GetThread
+    mov ds:[edi].usb_detach_thread_arr,ax
+    LeaveSection ds:usb_section
+;
+    mov al,cl
+    NotifyUsbDetach
+;
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_detach_thread_arr,0
+    LeaveSection ds:usb_section    
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetThread
+;
+;   DESCRIPTION:    Reset thread
+;
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_thread_name  DB 'Hub Reset ', 0
+
+reset_thread:
+    mov cl,dl
+    mov ds,bx
+;
+    movzx esi,cl
+    movzx edi,cl
+    add edi,edi
+;    
+    EnterSection ds:usb_section
+    GetThread
+    mov ds:[edi].usb_reset_thread_arr,ax
+    LeaveSection ds:usb_section
+;
+    mov al,cl
+    NotifyUsbDetach
+;
+    LockUsb
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtUnlock
+;
+    movzx dx,cl
+    mov ax,PORT_RESET
+    call SetPortFeature
+;        
+    mov cx,5
+
+rtWaitLoop:
+    WaitForSignal
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtUnlock
+;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz rtUnlock
+;
+    test ax,2
+    jnz rtIsEnabled
+;
+    loop rtWaitLoop
+;
+    jmp rtUnlock    
+
+rtIsEnabled:
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:allocate_address_proc
+    pop ds
+    jc rtUnlock
+;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,200h
+    jnz rtLowSpeed
+;
+    test ax,400h
+    jnz rtHighSpeed
+
+rtFullSpeed:
+    mov ah,1
+    jmp rtCreate
+
+rtHighSpeed:
+    mov ah,2
+    jmp rtCreate
+
+rtLowSpeed:
+    mov ah,0
+        
+rtCreate:
+    mov al,bl
+;
+    push ds
+    mov bx,ds
+    mov ds,ds:hub_parent_sel
+    movzx dx,dl
+    call fword ptr ds:create_dev_proc
+    pop ds
+;
+    mov al,dl
+    NotifyUsbAttach
+    jnc rtDone
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtDone
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtDone
+;
+    mov ax,250
+    WaitMilliSec
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtDone
+;
+    movzx dx,cl
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz rtDone
+;
+    test ds:[edi].hub_status_arr,1
+    jz rtDone
+;
+    mov ax,ds:hub_power_time
+    WaitMilliSec
+    jmp rtDone
+
+rtUnlock:
+    UnlockUsb
+
+rtDone:
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_reset_thread_arr,0
+    LeaveSection ds:usb_section    
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Function sel (passed as bx)
+;                       DX      Passed through
+;                       AX      Prio
+;                       ESI     Entry
+;                       EDI     Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push es            
+    push ax
+;
+    push esi
+;
+    mov esi,edi
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+sfCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,dl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    pop esi         
+;
+    mov ebx,ds
+    xor edi,edi
+    mov eax,cs
+    mov ds,eax
+    pop ax
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartThread Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdatePort
+;
+;       DESCRIPTION:    Update root-hub port status
+;
+;       PARAMETERS:     DS      Function selector
+;                       DX      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePort   Proc near
+    push ds
+    pushad
+;    
+    movzx edi,dx
+    add edi,edi
+;    
+    mov eax,1
+    mov cx,dx
+    shl eax,cl
+    test eax,ds:hub_reset
+    jz upNoReset
+;
+    not eax
+    lock and ds:hub_reset,eax
+;        
+    mov ax,ds:[edi].hub_status_arr
+    test al,1
+    jz upNoReset
+;
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz upNoReset
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_reset_thread_arr,-1
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET reset_thread
+    mov edi,OFFSET reset_thread_name
+    mov ax,2
+    call StartThread
+    jmp upDone
+    
+upNoReset:
+    mov ax,ds:[edi].hub_status_arr
+    test al,1
+    jz upDetach
+    
+upAttach:
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jnz upCheckTimeout
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_attach_thread_arr,-1
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET attach_thread
+    mov edi,OFFSET attach_thread_name
+    mov ax,2
+    call StartThread
+    jmp upDone
+
+upDetach:
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz upCheckTimeout
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_detach_thread_arr,-1    
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET detach_thread
+    mov edi,OFFSET detach_thread_name
+    mov ax,2
+    call StartThread
+    jmp upDone
+
+upCheckTimeout:
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jz upDone
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc upDone
+;
+    mov ax,ds:[edi].usb_retry_arr
+    inc ax
+    mov ds:[edi].usb_retry_arr,ax
+;
+    cmp ax,100
+    jb upNotFatal
+;
+    int 3
+
+upNotFatal:
+    cmp ax,10
+    jnz upDoSignal
+;   
+;    mov eax,es:[2*edi].HcPortSc
+;    and al,NOT 4
+;    mov es:[2*edi].HcPortSc,eax
+
+upDoSignal:
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,bx
+    jz upCheckDetach
+;
+    Signal
+    jmp upLeave
+
+upCheckDetach:    
+    mov bx,ds:[edi].usb_detach_thread_arr
+    or bx,bx
+    jz upCheckReset
+;
+    Signal
+    jmp upLeave
+            
+upCheckReset:    
+    mov bx,ds:[edi].usb_reset_thread_arr
+    or bx,bx
+    jz upLeave
+;
+    Signal
+
+upLeave:
+    LeaveSection ds:usb_section
+                
+upDone:    
+    popad
+    pop ds    
+    ret
+UpdatePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdatePorts
+;
+;   description:    Update ports
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePorts    Proc near
+    push ax
+    push dx
+;
+    xor dx,dx
+
+uhpLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz uhpDone
+;
+    call UpdatePort
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb uhpLoop
+
+uhpDone:           
+    pop dx
+    pop ax
+    ret
+UpdatePorts    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -400,7 +1563,7 @@ GetPortStatus Endp
 ;
 ;   description:    Create hub
 ;
-;   Parameters:     GS      Hub
+;   Parameters:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -409,33 +1572,33 @@ CreateHub  Proc near
     pushad
 ;
     CreateWait
-    mov gs:hub_control_wait,bx
+    mov ds:hub_control_wait,bx
 ;
-    mov bx,gs:hub_controller
-    mov al,gs:hub_device
+    mov bx,ds:hub_controller
+    mov al,ds:hub_device
     xor dl,dl
     OpenUsbPipe
-    mov gs:hub_control_handle,bx
+    mov ds:hub_control_handle,bx
 ;
-    mov ax,gs:hub_control_handle
-    mov bx,gs:hub_control_wait
+    mov ax,ds:hub_control_handle
+    mov bx,ds:hub_control_wait
     xor ecx,ecx
     AddWaitForUsbPipe
 ;    
-    mov bx,gs:hub_controller
-    mov al,gs:hub_device
-    mov dl,gs:hub_intr
+    mov bx,ds:hub_controller
+    mov al,ds:hub_device
+    mov dl,ds:hub_intr
     OpenUsbPipe
-    mov gs:hub_status_handle,bx
+    mov ds:hub_status_handle,bx
 ;
-    mov bx,gs:hub_status_handle
+    mov bx,ds:hub_status_handle
     CreateUsbReq
-    mov gs:hub_status_req,bx
+    mov ds:hub_status_req,bx
 ;
-    mov cx,gs:hub_status_size
+    mov cx,ds:hub_status_size
     xor ax,ax
     AddReadUsbDataReq
-    mov gs:hub_status_sel,es
+    mov ds:hub_status_sel,es
 ;
     popad
     pop es
@@ -449,120 +1612,97 @@ CreateHub   Endp
 ;
 ;   description:    Close hub
 ;
-;   Parameters:     GS      Hub
+;   Parameters:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseHub  Proc near
     push bx
 ;
-    mov bx,gs:hub_status_req
+    mov bx,ds:hub_status_req
     CloseUsbReq
 ;    
-    mov bx,gs:hub_status_handle
+    mov bx,ds:hub_status_handle
     CloseUsbPipe
 ;    
-    mov bx,gs:hub_control_handle
+    mov bx,ds:hub_control_handle
     CloseUsbPipe
 ;    
-    mov bx,gs:hub_control_wait
+    mov bx,ds:hub_control_wait
     CloseWait
 ;
     pop bx
     ret
 CloseHub   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           HubAttach
+;   NAME:           ProcessHubDescr
 ;
-;   description:    Hub attach event
+;   description:    Process Hub descriptor
 ;
-;   Parameters:     GS      Hub
-;                   DS      Device sel
-;                   BX      Port array
-;                   DX      Port #
+;   Parameters:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HubAttach    Proc near
-    push ds
-    push ax
-    push bx
+ProcessHubDescr  Proc near
+    push es
+    pushad
 ;    
-    test gs:[bx].hps_status,200h
-    jnz haLowSpeed
+    mov ax,ds
+    mov es,ax
+    mov bx,ds:hub_control_handle
+;    
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,0A0h
+    mov es:[edi].usd_req,GET_DESCR
+    mov es:[edi].usd_value,2900h
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,HUB_BUF_SIZE
+    mov ecx,8
+    WriteUsbControl
 ;
-    test gs:[bx].hps_status,400h
-    jnz haHighSpeed
-
-haFullSpeed:
-    mov ah,1
-    jmp haAttach
-
-haHighSpeed:
-    mov ah,2
-    jmp haAttach
-
-haLowSpeed:
-    mov ah,0
-        
-haAttach:
-    push ax
-    push cx    
-    push di
-    mov eax,SIZE usb_device_struc
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE usb_device_struc
-    xor al,al
-    rep stosb
-    pop di
-    pop cx
-    pop ax
+    mov ecx,HUB_BUF_SIZE
+    mov edi,OFFSET hub_buf
+    mov es:[edi].uhd_type,0
+    ReqUsbData    
 ;    
-    mov al,gs:[bx].hps_dev_port
-    mov es:usbd_port,al
-    mov es:usbd_speed,ah
+    WriteUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,ds:hub_control_wait
+    WaitWithTimeout
 ;    
-    mov es:usbd_address,0
-    NotifyUsbAttach
+    mov bx,ds:hub_control_handle
+    WasUsbTransactionOk
+    jc ghdDone
+;
+    mov cl,es:[edi].uhd_type
+    cmp cl,29h
+    stc
+    jne ghdDone
+;
+    movzx cx,es:[edi].uhd_ports
+    mov ds:hub_ports,cx
+;
+    mov cx,es:[edi].uhd_info
+    mov ds:hub_info,cx
+;
+    movzx cx,es:[edi].uhd_power_time
+    shl cx,1
+    mov ds:hub_power_time,cx        
+;               
+    clc    
 
-haDone:    
-    pop bx
-    pop ax
-    pop ds
+ghdDone:    
+    popad
+    pop es
     ret
-HubAttach   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HubDetach
-;
-;   description:    Hub detach event
-;
-;   Parameters:     GS      Hub
-;                   DS      Device sel
-;                   DX      Port array
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HubDetach    Proc near
-    push ds
-    push ax
-    push bx
-;    
-    mov al,gs:[bx].hps_dev_port
-    NotifyUsbDetach
-;
-    pop bx
-    pop ax
-    pop ds
-    ret
-HubDetach   Endp
+ProcessHubDescr Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -571,705 +1711,469 @@ HubDetach   Endp
 ;
 ;   description:    Init ports
 ;
-;   Parameters:     GS      Hub
-;                   DS      Device sel
+;   Parameters:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPorts    Proc near
-    pushad
+    push eax
+    push edx
+    push esi
 ;
-    mov cx,gs:hub_ports
-    mov bx,OFFSET hub_port_arr
-    mov si,1
+    xor dx,dx
+    mov esi,OFFSET hub_adr_arr
 
 ipLoop:
-    mov dx,si
     mov ax,PORT_POWER
     call SetPortFeature    
 ;
-    add bx,16
-    inc si
-    loop ipLoop
-;           
-    popad
+    xor al,al
+    mov ds:[esi],al
+;        
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz ipDone
+;
+    inc dx
+    inc esi
+    cmp dx,ds:hub_ports
+    jb ipLoop
+
+ipDone:           
+    pop esi
+    pop edx
+    pop eax
     ret
 InitPorts    Endp
-    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           AttachThread
+;   NAME:           Usb hub port
 ;
-;   DESCRIPTION:    Attach thread
-;
-;   PARAMETERS:     BX      Port #
-;                   DX      Hub selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-attach_thread_name  DB 'Hub Attach', 0
-
-attach_thread:
-    mov gs,dx
-    mov ds,gs:hub_dev_sel
-;    
-    mov si,bx
-    dec bx
-    shl bx,5
-    add bx,OFFSET hub_port_arr
-;
-    GetThread
-    mov gs:[bx].hps_attach_thread,ax
-;
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jnz atHasPort
-;
-    mov dx,si
-;    call fword ptr ds:allocate_hub_address_proc
-    jc atDone
-;
-    mov gs:[bx].hps_dev_port,al
-
-atHasPort:
-    LockUsb
-;        
-    mov ax,gs:hub_attached
-    or ax,ax
-    jz atFreeUnlock
-;
-    mov gs:[bx].hps_req_reset,1
-
-atWaitReset:
-    mov ax,5
-    WaitMilliSec
-;
-    mov al,gs:[bx].hps_req_reset
-    or al,al
-    jnz atWaitReset    
-;    
-    mov cx,40
-
-atWaitLoop:
-    mov ax,gs:hub_attached
-    or ax,ax
-    jz atFreeUnlock
-;
-    mov ax,gs:[bx].hps_status
-    test ax,1
-    jz atFreeUnlock
-;
-    test ax,2
-    jnz atIsEnabled
-;
-    mov ax,25
-    WaitMilliSec
-    loop atWaitLoop
-;
-    jmp atFreeUnlock    
- 
-atIsEnabled:
-    mov dx,si
-    call HubAttach 
-    jnc atDone
-
-atFreeUnlock:
-    mov gs:[bx].hps_ext_reset,1
-;
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jz atUnlock
-;    
-;    call fword ptr ds:free_hub_address_proc
-    mov gs:[bx].hps_dev_port,0
-
-atUnlock:   
-    UnlockUsb
-
-atDone:
-    mov gs:[bx].hps_attach_thread,0
-;
-    TerminateThread
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           DetachThread
-;
-;   DESCRIPTION:    Detach thread
-;
-;   PARAMETERS:     BX      Port #
-;                   DX      Hub selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-detach_thread_name  DB 'Hub Detach', 0
-
-detach_thread:
-    mov gs,dx
-    mov ds,gs:hub_dev_sel
-;
-    mov si,bx
-    dec bx
-    shl bx,5
-    add bx,OFFSET hub_port_arr
-;    
-    GetThread
-    mov gs:[bx].hps_detach_thread,ax
-;
-    mov dx,si
-    call HubDetach
-;   
-    mov al,gs:[bx].hps_dev_port
-;    call fword ptr ds:free_hub_address_proc
-    mov gs:[bx].hps_dev_port,0
-
-dtDone:
-    mov gs:[bx].hps_detach_thread,0
-;
-    TerminateThread
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdateOnePort
-;
-;   description:    Update ports
-;
-;   Parameters:     GS      Hub
-;                   DS      Device sel
-;                   BX      Port arr
-;                   SI      Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateOnePort    Proc near
-    mov ax,gs:hub_attached
-    or ax,ax
-    jz uopDone
-;
-    mov al,gs:[bx].hps_ext_reset
-    or al,al
-    jz uopCheckReset
-;
-    mov eax,gs:[bx].hps_power_timeout
-    or eax,gs:[bx].hps_power_timeout+4
-    jnz uopCheckPowerTimeout
-;    
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    mov gs:[bx].hps_power_timeout,eax
-    mov gs:[bx].hps_power_timeout+4,edx
-;
-    mov dx,si
-    mov ax,PORT_POWER
-    call ClearPortFeature    
-    jmp uopNotConnected
-
-uopCheckPowerTimeout:
-    GetSystemTime
-    sub eax,gs:[bx].hps_power_timeout
-    sbb edx,gs:[bx].hps_power_timeout+4
-    jc uopCheckReset
-;
-    mov dx,si
-    mov ax,PORT_POWER
-    call SetPortFeature    
-;
-    mov ax,gs:hub_power_time
-    WaitMilliSec
-    mov gs:[bx].hps_ext_reset,0
-    mov gs:[bx].hps_power_timeout,0
-    mov gs:[bx].hps_power_timeout+4,0
-
-uopCheckReset:
-    mov al,gs:[bx].hps_req_reset    
-    or al,al
-    jz uopResetOk
-
-uopDoReset:    
-    mov dx,si
-    mov ax,PORT_RESET
-    call SetPortFeature
-;
-    mov ax,25
-    WaitMilliSec
-
-uopResetDone:
-    mov gs:[bx].hps_req_reset,0
-    jmp uopDone
-
-uopResetOk:
-    mov dx,si
-    call GetPortStatus
-    jc uopDone
-;    
-    mov gs:[bx].hps_status,ax
-;
-    test ax,100h
-    jz uopDone
-;
-    test ax,1
-    jz uopNotConnected
-;
-    test ax,2
-    jnz uopCheckTimeout
-;
-    mov ax,gs:[bx].hps_attach_thread
-    or ax,gs:[bx].hps_detach_thread
-    jnz uopCheckTimeout
-;
-    mov gs:[bx].hps_attach_thread,-1
-    mov gs:[bx].hps_retry,0
-    mov gs:[bx].hps_failed,0
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-;
-    mov dx,gs
-    mov bx,si
-;
-    push ds
-    push si
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET attach_thread_name
-    mov esi,OFFSET attach_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-    pop si
-    pop ds
-    jmp uopDone
-
-uopNotConnected:
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jz uopDone
-;
-    mov ax,gs:[bx].hps_attach_thread
-    or ax,gs:[bx].hps_detach_thread
-    jnz uopCheckTimeout
-;
-    mov gs:[bx].hps_detach_thread,-1
-    mov gs:[bx].hps_retry,0
-    mov gs:[bx].hps_failed,0
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-;
-    mov dx,gs
-    mov bx,si
-;
-    push ds
-    push si
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET detach_thread_name
-    mov esi,OFFSET detach_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-    pop si
-    pop ds
-    jmp uopDone
-
-uopCheckTimeout:
-    mov ax,gs:[bx].hps_attach_thread
-    or ax,gs:[bx].hps_detach_thread
-    jz uopDone
-;
-    GetSystemTime
-    sub eax,gs:[bx].hps_timeout
-    sbb edx,gs:[bx].hps_timeout+4
-    jc uopDone
-;    
-    mov ax,gs:[bx].hps_retry
-    inc ax
-    mov gs:[bx].hps_retry,ax
-;
-    cmp ax,100
-    jb uopNotFatal
-;
-    int 3
-
-uopNotFatal:
-    cmp ax,10
-    jnz uopDoSignal
-;   
-    mov gs:[bx].hps_failed,1
-
-uopDoSignal:
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-;
-    push bx
-    mov bx,gs:[bx].hps_attach_thread
-    or bx,bx
-    jz uopAttachSignalOk
-;    
-    Signal
-
-uopAttachSignalOk:
-    pop bx
-;
-    push bx
-    mov bx,gs:[bx].hps_detach_thread
-    or bx,bx
-    jz uopDetachSignalOk
-;    
-    Signal
-
-uopDetachSignalOk:
-    pop bx
-
-uopDone:    
-    ret
-UpdateOnePort    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdateClosedPort
-;
-;   description:    Update closed port
-;
-;   Parameters:     GS      Hub
-;                   DS      Device sel
-;                   BX      Port arr
-;                   SI      Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateClosedPort    Proc near
-    mov gs:[bx].hps_status,0
-;
-    mov al,gs:[bx].hps_dev_port
-    or al,al
-    jz ucpCheckTimeout
-;
-    mov ax,gs:[bx].hps_attach_thread
-    or ax,gs:[bx].hps_detach_thread
-    jnz ucpCheckTimeout
-;
-    mov gs:[bx].hps_detach_thread,-1
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-;
-    mov dx,gs
-    mov bx,si
-;
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET detach_thread_name
-    mov esi,OFFSET detach_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-    pop ds
-    jmp ucpDone
-
-ucpCheckTimeout:
-    mov ax,gs:[bx].hps_attach_thread
-    or ax,ax
-    jz ucpCheckDetach
-;
-    cmp ax,-1
-    jnz ucpTimeoutAttach
-;    
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-    jmp ucpDone
-
-ucpTimeoutAttach:    
-    GetSystemTime
-    sub eax,gs:[bx].hps_timeout
-    sbb edx,gs:[bx].hps_timeout+4
-    jc ucpDone
-;
-    push bx
-    mov bx,gs:[bx].hps_attach_thread
-    Signal
-    pop bx
-    jmp ucpDone    
-
-ucpCheckDetach:    
-    mov ax,gs:[bx].hps_detach_thread
-    or ax,ax
-    jz ucpDone
-;
-    cmp ax,-1
-    jnz ucpTimeoutDetach
-;    
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-    jmp ucpDone
-
-ucpTimeoutDetach:    
-    GetSystemTime
-    sub eax,gs:[bx].hps_timeout
-    sbb edx,gs:[bx].hps_timeout+4
-    jc ucpDone
-;
-    push bx
-    mov bx,gs:[bx].hps_detach_thread
-    Signal
-    pop bx
-
-ucpDone:    
-    ret
-UpdateClosedPort    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdatePorts
-;
-;   description:    Update ports
-;
-;   Parameters:     GS      Hub
-;                   DS      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePorts    Proc near
-    pushad
-;
-    mov cx,gs:hub_ports
-    mov bx,OFFSET hub_port_arr
-    mov si,1
-
-upLoop:
-    push bx
-    push cx
-    push si
-;    
-    call UpdateOnePort
-;
-    pop si
-    pop cx
-    pop bx 
-;      
-    add bx,32
-    inc si
-    loop upLoop
-;           
-    popad
-    ret
-UpdatePorts    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           hub_thread
-;
-;   DESCRIPTION:    HUB thread
+;   DESCRIPTION:    
 ;
 ;   PARAMETERS:     BX      Hub selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_thread_handler:
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-;    
-    mov gs,bx
+hub_port_name    DB 'Usb Hub Port ', 0
+
+usb_hub_port:
+    int 3
+    mov ds,ebx
+;
     GetThread
-    mov gs:hub_thread,ax
-;
-    call CreateHub
-    call ProcessHubDescr
-    jc hub_exit
-;
-    mov ds,gs:hub_dev_sel
-    call InitPorts
-;
-    mov ax,gs:hub_power_time
-    WaitMilliSec
+    mov ds:hub_port_thread,ax
 
-hub_thread_wait:
-    mov ax,gs:hub_attached
-    or ax,ax
-    jz hub_exit
+tpLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tpExit
 ;    
-    mov bx,gs:hub_status_req
-    IsUsbReqStarted
-    jnc hub_thread_wait_signal
-
-hub_thread_restart:
-    ClearSignal
-    GetThread
-    mov cx,gs:hub_status_size
-    StartUsbReq    
-
-hub_thread_wait_signal:
     GetSystemTime
-    add eax,250 * 1193    
+    add eax,1193 * 250
     adc edx,0
-;    WaitForSignal
     WaitForSignalWithTimeout
 ;
-    mov bx,gs:hub_status_req
-    IsUsbReqReady
-    jnc hub_thread_is_ready
-;
     call UpdatePorts
-    jmp hub_thread_wait_signal
+    jmp tpLoop
 
-hub_thread_is_ready:    
-    GetUsbReqData
-    cmp cx,gs:hub_status_size
-    je hub_thread_handle
-;
-    call UpdatePorts
-    jmp hub_thread_wait
+tpExit:
+    mov ds:hub_port_thread,0
+    mov bx,ds:hub_detach
+    Signal
 
-hub_thread_handle:
-    mov es,gs:hub_status_sel
-    mov bp,cx
-    mov bx,OFFSET hub_port_arr
-    mov si,1
-    xor di,di
-    mov al,es:[di]
-    shr al,1
-    mov cx,7
-            
-hub_thread_port_loop:    
-    test al,1
-    jz hub_thread_port_next
-;
-    push ax
-    push bx
-    push si
-    push di
-    push bp
-    call UpdateOnePort
-    pop bp
-    pop di
-    pop si
-    pop bx
-    pop ax
+tpFail:
+    TerminateThread
 
-hub_thread_port_next:
-    add bx,32
-    inc si
-    shr al,1
-    loop hub_thread_port_loop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    sub bp,1
-    jz hub_thread_wait    
 ;
-    inc di
-    mov al,es:[di]
-    mov cx,8
-    jmp hub_thread_port_loop    
+;   NAME:           CreatePortThread
+;
+;   description:    Create hub port thread
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_exit:
-    mov gs:hub_attached,0
-
-hub_wait_retry:
-    mov cx,gs:hub_ports
-    mov bx,OFFSET hub_port_arr
-    mov si,1
-    xor dx,dx
-
-hub_wait_port_loop:
-    movzx ax,gs:[bx].hps_dev_port
-    or ax,gs:[bx].hps_attach_thread
-    or ax,gs:[bx].hps_detach_thread
-    jz hub_wait_next_port
+CreatePortThread	Proc near
+    push ds
+    push es
+    pushad
 ;
-    inc dx
-    pusha
-    call UpdateClosedPort
-    popa
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET hub_port_name
 
-hub_wait_next_port:    
-    add bx,32
-    inc si
-    loop hub_wait_port_loop
-;   
-    or dx,dx
-    jz hub_wait_done
+cptCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cptCopyDone
 ;
-    mov ax,10
-    WaitMilliSec
-    jmp hub_wait_retry
+    stosb
+    jmp cptCopyLoop
 
-hub_wait_done:
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    call CloseHub
-;    
-    mov gs:hub_attached,-1
+cptCopyDone:
+    mov ax,ds:hub_controller
+    call HexToAscii
+    stosw
 ;
-    mov ax,25
-    WaitMilliSec    
+    mov al,'.'
+    stosb
 ;
-    TerminateThread    
+    mov al,ds:hub_port
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    mov ebx,ds
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET usb_hub_port
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreatePortThread	Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           HexToAscii
+;   NAME:           Usb hub status
 ;
 ;   DESCRIPTION:    
 ;
-;   PARAMETERS:     AL      Number to convert
-;
-;   RETURNS:        AX      Ascii result
+;   PARAMETERS:     BX      Hub selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HexToAscii      PROC near
-    mov ah,al
-    and al,0F0h
-    rol al,1
-    rol al,1
-    rol al,1
-    rol al,1
-    cmp al,0Ah
-    jb ok_low1
-;
-    add al,7
+hub_status_name    DB 'Usb Hub Status ', 0
 
-ok_low1:
-    add al,30h
-    and ah,0Fh
-    cmp ah,0Ah
-    jb ok_high1
+usb_hub_status:
+    mov ds,ebx
 ;
-    add ah,7
+    GetThread
+    mov ds:hub_detach,0
+    mov ds:hub_status_thread,ax
+    and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
+;
+    call CreateHub
+    call ProcessHubDescr
+    jc tsExit
+;
+    call InitPorts
+;
+    mov ax,ds:hub_power_time
+    WaitMilliSec
+;
+    xor dx,dx
 
-ok_high1:
-    add ah,30h
+tsStatusLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tsLoop
+;
+    call GetPortStatus
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb tsStatusLoop
+;
+    call CreatePortThread
+
+tsLoop:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tsExit
+;    
+    mov bx,ds:hub_status_req
+    IsUsbReqStarted
+    jnc tsWaitSignal
+;
+    GetThread
+    StartUsbReq    
+
+tsWaitSignal:
+    WaitForSignal
+;
+    mov bx,ds:hub_status_req
+    IsUsbReqReady
+    jc tsNext
+;
+    GetUsbReqData
+    cmp cx,ds:hub_status_size
+    jne tsNext
+;
+    mov bx,cx
+    mov es,ds:hub_status_sel
+    xor edi,edi
+    mov al,es:[edi]
+    shr al,1
+    xor dx,dx
+
+tsChangeByteLoop:
+    mov ecx,8
+
+tsChangeBitLoop:
+    test al,1
+    jz tsChangeNext
+;
+    call GetPortStatus
+;
+    push ebx
+    mov bx,ds:hub_port_thread
+    Signal
+    pop ebx
+
+tsChangeNext:
+    shr al,1
+    inc dx
+    loop tsChangeBitLoop
+;
+    sub bx,1
+    jz tsNext
+;
+    inc edi
+    mov al,es:[edi]
+    jmp tsChangeByteLoop
+
+tsNext:
+    jmp tsLoop
+
+tsSignalled:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tsExit
+;
+    jmp tsLoop
+
+tsExit:
+    mov bx,ds:hub_port_thread
+    or bx,bx
+    jz tsPortDone
+;
+    mov ecx,10
+
+tsPortSignal:
+    Signal
+;
+    WaitForSignal
+    mov bx,ds:hub_port_thread
+    or bx,bx
+    jz tsPortDone
+;
+    loop tsPortSignal
+
+tsPortDone:
+    call CloseHub
+;
+    mov ds:hub_status_thread,0
+    mov bx,ds:hub_detach
+    Signal
+
+tsFail:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindAnyDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS         Data seg
+;                    ES   	Descriptor
+;                    ESI        Vendor & product
+;                    EBP	Descriptor size
+;
+;    Returns:        ECX	Number of matches
+;                    GS         CDC sel of last match
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindAnyDevice	Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    xor ecx,ecx
+;
+    mov bx,ds:hub_dead_list
+    or bx,bx
+    jz fadDone
+;
+    mov dx,bx
+
+fadLoop:
+    mov ds,ebx
+    mov ax,ds:hub_vendor
+    shl eax,16
+    mov ax,ds:hub_product
+    cmp eax,esi
+    jne fadNext
+;
+    movzx eax,ds:hub_dev_descr_size
+    cmp eax,ebp
+    jne fadNext
+;
+    push ecx
+    push esi
+;
+    mov ecx,ebp
+    mov esi,OFFSET hub_dev_descr_buf
+    xor edi,edi
+    repe cmpsb
+;
+    pop esi
+    pop ecx
+    jnz fadNext
+;
+    inc ecx
+    mov eax,ds
+    mov gs,eax
+
+fadNext:
+    mov bx,ds:hub_next
+    cmp bx,dx
+    jne fadLoop
+
+fadDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
     ret
-HexToAscii      ENDP
+FindAnyDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           FindSpecificDevice
+;
+;    Description:    Search for dead device
+;
+;    Parameters:     DS      Data seg
+;                    BX      Controller #
+;                    AH      Port #
+;
+;    Returns:        NC	     Found
+;                        GS  CDC sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindSpecificDevice	Proc near
+    push ds
+    push ecx
+    push edx
+;
+    mov cx,ds:hub_dead_list
+    or cx,cx
+    stc
+    jz fsdDone
+;
+    mov dx,cx
+
+fsdLoop:
+    mov ds,ecx
+    cmp bx,ds:hub_controller
+    jne fsdNext
+;
+    cmp ah,ds:hub_port
+    jne fsdNext
+;
+    mov ecx,ds
+    mov gs,ecx
+    clc
+    jmp fsdDone
+
+fsdNext:
+    mov cx,ds:hub_next
+    cmp cx,dx
+    jne fsdLoop
+;
+    stc
+
+fsdDone:
+    pop edx
+    pop ecx    
+    pop ds
+    ret
+FindSpecificDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateStatusThread
+;
+;   description:    Create hub status thread
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateStatusThread	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET hub_status_name
+
+cstCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cstCopyDone
+;
+    stosb
+    jmp cstCopyLoop
+
+cstCopyDone:
+    mov ax,ds:hub_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:hub_port
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    mov ebx,ds
+    xor edi,edi
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET usb_hub_status
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreateStatusThread	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1279,207 +2183,249 @@ HexToAscii      ENDP
 ;   description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_name    DB 'Usb Hub ', 0
-
 usb_attach  Proc far
     push ds
     push es
+    push fs
+    push gs
     pushad
 ;
-    push ax
+    push eax
+    mov eax,ds
+    mov fs,eax
+;
     mov eax,1000h
     AllocateSmallGlobalMem
     mov cx,SIZE usb_device_descr
-    pop ax
+    pop eax
+;
     xor di,di
-    push ax
+    push eax
     GetUsbDevice
     cmp ax,cx
-    pop ax
+    pop eax
     jne uaDone
 ;
     mov cl,es:udd_class
     cmp cl,9
     jne uaDone
 ;
-    xor dl,dl
-    mov cx,1000h
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz uaDone
+    mov si,es:udd_vendor
+    shl esi,16
+    mov si,es:udd_prod
 ;
+    xor dl,dl
+    mov ecx,1000h
+    xor edi,edi
+    push eax
+    GetUsbConfig
+    mov ecx,eax
+    pop eax
+    or ecx,ecx
+    jz uaFail
+;
+    mov ebp,ecx
     mov dl,es:ucd_config_id
-    xor di,di
-    movzx cx,es:ucd_len
-    add di,cx
+    xor edi,edi
+    movzx ecx,es:ucd_len
+    add edi,ecx
 
 uaCheckLoop:
-    mov cl,es:[di].ucd_type
+    mov cl,es:[edi].ucd_type
     cmp cl,4
     jne uaCheckNext
 ;    
-    mov cl,es:[di].uid_class
+    mov cl,es:[edi].uid_class
     cmp cl,9
     je uaConfig
 
 uaCheckNext:
-    movzx cx,es:[di].ucd_len
-    or cx,cx
-    jz uaDone
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz uaFail
 ;    
-    add di,cx
+    add edi,ecx
     cmp di,es:ucd_size
     jb uaCheckLoop
-    jmp uaDone
+    jmp uaFail
 
 uaConfig:
-    ConfigUsbDevice
-    jc uaDone
+    mov cx,SEG data
+    mov ds,ecx
+    EnterSection ds:hub_list_section
 ;
-    push es 
-    push ax
-    push ax
-    mov eax,SIZE hub_struc
+    call FindAnyDevice
+    or ecx,ecx
+    jz uaNotDead
+;
+    cmp ecx,1
+    je uaRecreate
+;
+    call FindSpecificDevice
+    jc uaNotDead
+
+uaRecreate:
+    push ds
+    mov si,gs
+    mov di,gs:hub_next
+    cmp di,si
+    mov ds:hub_dead_list,di
+    mov si,gs:hub_prev
+    mov ds,di
+    mov ds:hub_prev,si
+    mov ds,si
+    mov ds:hub_next,di
+    pop ds
+    jne uaReConfig
+;    
+    mov ds:hub_dead_list,0
+
+uaReConfig:
+    LeaveSection ds:hub_list_section
+;
+    ConfigUsbDevice
+    jc uaFail
+;
+    mov gs:hub_controller,bx
+    mov gs:hub_port,ah
+    mov gs:hub_device,al
+    mov gs:hub_parent_sel,fs
+;
+    mov ebx,gs
+    mov ds,ebx
+;
+    call CreateStatusThread
+    jmp uaDone
+
+uaNotDead:
+    LeaveSection ds:hub_list_section
+;
+    push eax
+    push ebx
+    push esi
+;
+    mov ebx,edi
+    mov eax,es
+    mov ds,eax
+;
+    mov eax,OFFSET hub_dev_descr_buf
+    add eax,ebp
     AllocateSmallGlobalMem
-    pop ax
-    mov es:hub_controller,bx
-    mov es:hub_device,al
-    mov es:hub_status_size,0
-    mov es:hub_intr,0
-    mov es:hub_info,0
-    mov es:hub_power_time,0
-    mov es:hub_dev_sel,ds
-    mov ax,es
-    mov gs,ax
-    pop ax
+;
+    mov ecx,ebp
+    xor esi,esi
+    mov edi,OFFSET hub_dev_descr_buf
+    rep movsb
+;
+    push es
+    mov eax,ds
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
+    FreeMem
     pop es
 ;
-    xor di,di
-    movzx cx,es:ucd_len
-    add di,cx
+    mov es:hub_dev_descr_size,bp
+    mov edi,ebx
+    add edi,OFFSET hub_dev_descr_buf
+    add ebp,OFFSET hub_dev_descr_buf
+;
+    pop esi
+    pop ebx
+    pop eax
+;
+    mov es:hub_product,si
+    shr esi,16
+    mov es:hub_vendor,si
+    mov es:hub_controller,bx
+    mov es:hub_port,ah
+    mov es:hub_device,al
+    mov es:hub_intr,0
+    mov es:hub_detach,0
+    mov es:hub_flags,0
+    mov es:hub_status_thread,0
+    mov es:hub_port_thread,0
+    mov es:hub_reset,0
+    InitSection es:hub_section
+    jmp uaDevNext
 
-uaDescrLoop:
-    mov cl,es:[di].udd_type
+uaDevLoop:
+    mov cl,es:[edi].ucd_type
     cmp cl,5
-    jne uaDescrNext
-
-uaDescrDo:
+    jne uaDevNext
+;
     mov cl,es:[di].ued_attrib
     and cl,3
     cmp cl,3
-    jne uaDescrNext
+    jne uaDevNext
 ;
     mov cl,es:[di].ued_address
-    mov gs:hub_intr,cl
+    mov es:hub_intr,cl
 ;
     mov cx,es:[di].ued_maxsize
-    mov gs:hub_status_size,cx
+    mov es:hub_status_size,cx
 
-uaDescrNext:
-    movzx cx,es:[di].ucd_len
-    add di,cx
-    cmp di,es:ucd_size
-    jb uaDescrLoop    
+uaDevNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz uaFail
+;    
+    add edi,ecx
+    cmp edi,ebp
+    jb uaDevLoop
 
-uaOk:
-    mov al,gs:hub_intr
+uaDevOk:
+    mov al,es:hub_intr
     or al,al
-    jnz uaValid
+    jz uaFail
 ;
-    push es
-    mov ax,gs
-    mov es,ax
-    xor ax,ax
-    mov gs,ax
-    FreeMem
-    pop es
+    mov bx,es:hub_controller
+    mov al,es:hub_device
+    ConfigUsbDevice
+    jc uaFail
+;
+    mov eax,SEG data
+    mov ds,eax
+    movzx esi,ds:hub_dev_count
+    add esi,esi
+    mov ds:[esi].hub_dev_arr,es
+    inc ds:hub_dev_count
+;
+    mov esi,OFFSET hub_tab
+    xor edi,edi
+    mov ecx,2*1Fh
+
+uaTabLoop:
+    lods dword ptr cs:[esi]
+    mov es:[edi],eax
+    add edi,4
+    loop uaTabLoop    
+;
+    mov es:hub_parent_sel,fs
+;
+    mov ebx,es
+    mov ds,ebx
+    InitUsbFunction
+;
+    call CreateStatusThread
     jmp uaDone
 
-uaValid:
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,gs
-;
-    EnterSection ds:hub_section   
-    mov ax,ds:hub_list
-    or ax,ax
-    jz uaInsEmpty
-
-uaInsLoop:
-    mov gs,ax
-    mov ax,gs:hub_next
-    or ax,ax
-    jnz uaInsLoop
-;
-    mov gs:hub_next,bx
-    jmp uaInsDone
-
-uaInsEmpty:
-    mov ds:hub_list,bx
-
-uaInsDone:    
-    mov gs,bx
-    mov gs:hub_next,0
-    LeaveSection ds:hub_section
-;
-    push es            
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor di,di
-    mov si,OFFSET hub_name
-
-uaCopyHub:
-    mov al,cs:[si]
-    inc si
-    or al,al
-    jz uaCopyDone
-;
-    stosb
-    jmp uaCopyHub
-
-uaCopyDone:
-    mov ax,gs:hub_controller
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,gs:hub_device
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;            
-    mov bx,gs
-    xor di,di
-    mov dx,cs
-    mov ds,dx
-    mov si,OFFSET hub_thread_handler
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
-;
+uaFail:
     FreeMem
-    pop es
 
 uaDone:    
-    FreeMem
-;
     popad
+    pop gs
+    pop fs
     pop es
     pop ds
-    retf32
+    ret
 usb_attach  Endp
     
 
@@ -1491,6 +2437,7 @@ usb_attach  Endp
 ;   description:    USB detach callback
 ;
 ;   Parameters:     BX      Controller #
+;                   AH      Port #
 ;                   AL      Device address
 ;                   DS      USB device
 ;
@@ -1499,153 +2446,89 @@ usb_attach  Endp
 usb_detach  Proc far
     push ds
     push es
-    push gs
     pushad
 ;    
-    mov dx,SEG data
-    mov ds,dx
-    xor dx,dx
-    mov es,dx
-;
-    EnterSection ds:hub_section   
-    mov dx,ds:hub_list
-    xor si,si
+    mov edx,SEG data
+    mov ds,edx
+    mov esi,OFFSET hub_dev_arr
+    movzx ecx,ds:hub_dev_count
+    or ecx,ecx
+    jz udDone
 
-udLoop:    
+udCheckLoop:
+    mov dx,[esi]
     or dx,dx
-    jz udNotMe
+    jz udCheckNext
 ;
-    mov gs,dx
-    cmp bx,gs:hub_controller
-    jne udNext
+    mov es,dx
+    cmp bx,es:hub_controller
+    jne udCheckNext
 ;
-    cmp al,gs:hub_device
-    je udFound
-
-udNext:
-    mov si,dx
-    mov dx,gs:hub_next    
-    jmp udLoop
-
-udFound:    
-    or si,si
-    jz udFirst
+    cmp ah,es:hub_port
+    jne udCheckNext
 ;
-    push es
-    mov ax,gs:hub_next
-    mov es,si
-    mov es:hub_next,ax
-    pop es
-    jmp udClose
-
-udFirst:    
-    mov ax,gs:hub_next
-    mov ds:hub_list,ax
-
-udClose:        
-    mov ax,gs:hub_attached
-    cmp ax,-1
-    je udLeave
+    GetThread
+    mov es:hub_detach,ax
 ;
-    mov gs:hub_attached,0    
+    or es:hub_flags,FLAG_HUB_DISCONNECT
+;
+    mov bx,es:hub_status_thread
+    or bx,bx
+    jz udStatusOk
+;
+    mov ecx,10
 
-udLeave:    
-    LeaveSection ds:hub_section   
-
-udSignal:    
-    mov bx,gs:hub_thread
+udStatusSignal:
     Signal
 ;
-    mov ax,25
-    WaitMilliSec    
+    WaitForSignal
+    mov bx,es:hub_status_thread
+    or bx,bx
+    jz udStatusOk
 ;
-    mov ax,gs:hub_attached
-    cmp ax,-1
-    jne udSignal    
-;    
-    mov ax,gs
-    mov es,ax
-    xor ax,ax
-    mov gs,ax
-    FreeMem
+    loop udStatusSignal
+
+udStatusOk:
+    EnterSection ds:hub_list_section
+    mov di,ds:hub_dead_list
+    or di,di
+    je udInsEmpty
+;
+    push ds
+    push si
+;
+    mov ds,di
+    mov si,ds:hub_prev
+    mov ds:hub_prev,es
+    mov ds,si
+    mov ds:hub_next,es
+    mov es:hub_next,di
+    mov es:hub_prev,si
+;
+    pop si
+    pop ds
+    jmp udInsDone
+    
+udInsEmpty:
+    mov es:hub_next,es
+    mov es:hub_prev,es
+    mov ds:hub_dead_list,es
+
+udInsDone:
+    LeaveSection ds:hub_list_section
     jmp udDone
 
-udNotMe:    
-    LeaveSection ds:hub_section   
-    
-udDone:    
+udCheckNext:
+    add esi,2    
+    sub ecx,1
+    jnz udCheckLoop
+
+udDone:
     popad
-    pop gs
     pop es
     pop ds
-    retf32
+    ret
 usb_detach  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           IsUsbHubPortConnected
-;
-;   description:    Check if Hub port is connected
-;
-;   Parameters:     GS      Hub selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_usb_hub_port_connected_name  DB 'Is Usb Hub Port Connected', 0
-
-is_usb_hub_port_connected  Proc far
-    push ax
-    push si
-;    
-    mov si,dx
-    dec si
-    shl si,5
-    mov al,gs:[si].hub_port_arr.hps_failed
-    or al,al
-    jnz iuhFail
-;
-    mov ax,gs:[si].hub_port_arr.hps_status
-    test al,1
-    clc
-    jnz iuhDone
-
-iuhFail:    
-    stc
-
-iuhDone:
-    pop si
-    pop ax    
-    retf32
-is_usb_hub_port_connected  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ResetUsbHubPort
-;
-;   description:    Reset Hub port
-;
-;   Parameters:     GS      Hub selector
-;                   DX      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reset_usb_hub_port_name  DB 'Reset Usb Hub Port', 0
-
-reset_usb_hub_port  Proc far
-    push ax
-    push si
-;    
-    mov si,dx
-    dec si
-    shl si,5
-    mov gs:[si].hub_port_arr.hps_ext_reset,1
-;
-    pop si
-    pop ax    
-    retf32
-reset_usb_hub_port  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1657,26 +2540,15 @@ reset_usb_hub_port  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
-    mov bx,SEG data
-    mov ds,bx
-    mov ds:hub_list,0
-    InitSection ds:hub_section
+    mov ebx,SEG data
+    mov ds,ebx
+    mov ds:hub_dead_list,0
+    mov ds:hub_dev_count,0
+    InitSection ds:hub_list_section
 ;       
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
-    mov esi,OFFSET is_usb_hub_port_connected
-    mov edi,OFFSET is_usb_hub_port_connected_name
-    xor cl,cl
-    mov ax,is_usb_hub_port_connected_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reset_usb_hub_port
-    mov edi,OFFSET reset_usb_hub_port_name
-    xor cl,cl
-    mov ax,reset_usb_hub_port_nr
-    RegisterOsGate
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach
