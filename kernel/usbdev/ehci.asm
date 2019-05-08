@@ -1633,6 +1633,23 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               AddressDev
+;
+;       DESCRIPTION:        Address usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev   Proc far
+    AddressUsbDev    
+    retf32
+AddressDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateControl
 ;
 ;           DESCRIPTION:    Create control pipe
@@ -2105,9 +2122,6 @@ LocalIsTransferDone   Proc near
     test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;    
-    call LocalIsConnected
-    jc itdOk
-;    
     mov ax,flat_sel
     mov es,ax
 ;
@@ -2535,7 +2549,7 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LocalIsConnected
+;           NAME:           IsConnected
 ;
 ;           DESCRIPTION:    Check if pipe is connected
 ;
@@ -2544,23 +2558,10 @@ ChangeAddress   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LocalIsConnected   Proc near
+IsConnected   Proc far
     push eax
     push si
 ;    
-    mov ax,fs:usbp_hub_sel
-    or ax,ax
-    jz icLocal    
-
-icHub:
-    push gs
-    mov gs,ax
-    mov dx,fs:usbp_hub_port
-    IsUsbHubPortConnected
-    pop gs
-    jmp icDone
-
-icLocal:    
     push es
     mov es,fs:usbp_dev_sel
     movzx si,es:usbd_port
@@ -2581,23 +2582,6 @@ icFail:
 icDone:
     pop si
     pop eax
-    ret
-LocalIsConnected Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    call LocalIsConnected
     retf32
 IsConnected Endp
 
@@ -3862,7 +3846,7 @@ et17 DD OFFSET Has64Bit,           SEG code
 et18 DD OFFSET IsStalled,          SEG code
 et19 DD OFFSET ClearStalled,       SEG code
 et1A DD OFFSET GetMaxLen,          SEG code
-et1B DD 0,                         0
+et1B DD OFFSET AddressDev,         SEG code
 et1C DD 0,                         0
 et1D DD OFFSET SetMaxLen,          SEG code
 et1E DD OFFSET CloseControlPipe,   SEG code

@@ -2647,6 +2647,23 @@ CreateDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               AddressDev
+;
+;       DESCRIPTION:        Address usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev   Proc far
+    AddressUsbDev    
+    retf32
+AddressDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -3572,7 +3589,7 @@ ot17 DD OFFSET Has64Bit,            SEG code
 ot18 DD OFFSET IsStalled,           SEG code
 ot19 DD OFFSET ClearStalled,        SEG code
 ot1A DD OFFSET GetMaxLen,           SEG code
-ot1B DD 0,                          0
+ot1B DD OFFSET AddressDev,          SEG code
 ot1C DD 0,                          0
 ot1D DD OFFSET SetMaxLen,           SEG code
 ot1E DD OFFSET CloseControlPipe,    SEG code

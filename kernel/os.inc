@@ -3849,6 +3849,12 @@ InitUsbDev MACRO
     OsGate init_usb_dev_nr
                     ENDM
 
+; IN  DS      Usb function selector
+; IN  AL      Address
+AddressUsbDev   MACRO
+    OsGate address_usb_dev_nr
+                    ENDM
+
 ; IN  GS      Hub selector
 ; IN  DX      Hub port
 IsUsbHubPortConnected   MACRO

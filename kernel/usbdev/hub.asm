@@ -99,7 +99,10 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateAddress   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:allocate_address_proc
+    pop ds
     ret
 AllocateAddress	Endp
 
@@ -116,7 +119,10 @@ AllocateAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeAddress   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_address_proc
+    pop ds
     ret
 FreeAddress	Endp
 
@@ -157,7 +163,10 @@ CreateDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:create_control_proc
+    pop ds
     ret
 CreateControl	Endp
 
@@ -219,7 +228,10 @@ CreateIntr   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddSetup    Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:add_setup_proc
+    pop ds
     ret 
 AddSetup    Endp
 
@@ -257,7 +269,10 @@ AddOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIn    Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:add_in_proc
+    pop ds
     ret
 AddIn    Endp
 
@@ -274,7 +289,10 @@ AddIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusOut    Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:add_status_out_proc
+    pop ds
     ret
 AddStatusOut    Endp
 
@@ -291,7 +309,10 @@ AddStatusOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusIn    Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:add_status_in_proc
+    pop ds
     ret
 AddStatusIn    Endp
 
@@ -309,7 +330,10 @@ AddStatusIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueTransfer    Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:issue_transfer_proc
+    pop ds
     ret
 IssueTransfer    Endp
 
@@ -328,7 +352,10 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsTransferDone   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:is_transfer_done_proc
+    pop ds
     ret
 IsTransferDone   Endp
 
@@ -345,7 +372,10 @@ IsTransferDone   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:wait_for_completion_proc
+    pop ds
     ret
 WaitForCompletion   Endp
 
@@ -400,7 +430,10 @@ WasTransferOk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:get_data_size_proc
+    pop ds
     ret
 GetDataSize   Endp
 
@@ -452,7 +485,10 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:change_address_proc
+    pop ds
     ret
 ChangeAddress   Endp
 
@@ -469,7 +505,28 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsConnected   Proc far
-    int 3
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz icFail
+;
+    push es
+    push ebx
+;
+    mov es,fs:usbp_dev_sel
+    movzx ebx,es:usbd_port
+    add ebx,ebx
+    test ds:[ebx].hub_status_arr,1
+;
+    pop ebx
+    pop es
+    jz icFail
+;
+    clc
+    jmp icDone
+
+icFail:
+    stc
+
+icDone:
     ret
 IsConnected   Endp
 
@@ -536,7 +593,10 @@ UnlockEnum   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Has64Bit   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:has_64bit_proc
+    pop ds
     ret
 Has64Bit   Endp
 
@@ -608,6 +668,10 @@ GetMaxLen   Endp
 
 SetMaxLen   Proc far
     int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:set_max_len_proc
+    pop ds
     ret
 SetMaxLen   Endp
 
@@ -1012,11 +1076,7 @@ atWaitLoop:
     jmp atUnlock    
 
 atIsEnabled:
-    int 3
-    push ds
-    mov ds,ds:hub_parent_sel
     call fword ptr ds:allocate_address_proc
-    pop ds
     jc atUnlock
 ;
     mov ax,ds:[edi].hub_status_arr
@@ -1194,10 +1254,7 @@ rtWaitLoop:
     jmp rtUnlock    
 
 rtIsEnabled:
-    push ds
-    mov ds,ds:hub_parent_sel
     call fword ptr ds:allocate_address_proc
-    pop ds
     jc rtUnlock
 ;
     mov ax,ds:[edi].hub_status_arr
@@ -1759,7 +1816,6 @@ InitPorts    Endp
 hub_port_name    DB 'Usb Hub Port ', 0
 
 usb_hub_port:
-    int 3
     mov ds,ebx
 ;
     GetThread

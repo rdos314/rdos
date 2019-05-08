@@ -1945,48 +1945,6 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LocalIsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LocalIsConnected   Proc near
-    push es
-    push eax
-    push si
-;
-    test fs:xp_flags,XP_FLAG_CLOSED
-    stc
-    jnz licDone
-;
-    movzx si,fs:xp_port_nr
-    shl si,4
-    mov es,fs:xp_port_sel
-    mov eax,es:[si]
-    test al,10h
-    jnz licFail
-;
-    test al,1
-    clc
-    jnz licDone
-
-licFail:    
-    stc
-
-licDone:
-    pop si
-    pop eax
-    pop es
-    ret
-LocalIsConnected Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LocalIsTransferDone
 ;
 ;           DESCRIPTION:    Check if transfer is done
@@ -2005,9 +1963,6 @@ LocalIsTransferDone   Proc near
 ;
     test fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     jz itdOk
-;    
-    call LocalIsConnected
-    jc itdOk
 ;
     test fs:xp_flags, XP_FLAG_SINGLE
     jz itdNotSingle
@@ -2259,6 +2214,23 @@ icDone:
     pop es
     retf32
 IsConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ChangeAddress
+;
+;           DESCRIPTION:    Change address
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChangeAddress   Proc far
+    clc
+    retf32
+ChangeAddress  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3802,7 +3774,7 @@ et0E DD OFFSET WasTransferOk,       SEG code
 et0F DD OFFSET GetDataSize,         SEG code
 et10 DD OFFSET ClosePipe,           SEG code
 et11 DD OFFSET WaitForCompletion,   SEG code
-et12 DD 0,                          0
+et12 DD OFFSET ChangeAddress,       SEG code
 et13 DD OFFSET IsConnected,         SEG code
 et14 DD OFFSET ResetPipe,           SEG code
 et15 DD OFFSET LockEnum,            SEG code

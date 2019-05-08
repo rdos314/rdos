@@ -507,61 +507,12 @@ CreateDefaultControl    Proc near
     InitSection ds:usbp_section
     pop ds
 ;    
-    mov ax,word ptr ds:address_device_proc+4
-    or ax,ax
-    jz cdcSendAddress
-;
     pop ax
-    mov fs:usbp_address,al
+;
     call fword ptr ds:address_device_proc
-    pushf
-    jmp cdcDone        
-
-cdcSendAddress:    
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    mov es:usd_type,0
-    mov es:usd_req,SET_ADDRESS
-    pop ax
-;
-    push ax
-    movzx ax,al
-    mov es:usd_value,ax
-    mov es:usd_index,0
-    mov es:usd_len,0
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    call fword ptr ds:add_status_in_proc
-    call fword ptr ds:issue_transfer_proc
-    pop ax
-;  
     mov fs:usbp_address,al
-;
-    mov cx,10
-
-cdcLoop:
-    call fword ptr ds:is_transfer_done_proc
-    jnc cdcOk
-;
-    call fword ptr ds:is_connected_proc
-    jc cdcFail
-;
-    mov ax,25
-    WaitMilliSec
-;
-    loop cdcLoop
-
-cdcFail:
-    stc
     pushf
-    FreeMem
-    jmp cdcDone
-            
-cdcOk:    
-    call fword ptr ds:wait_for_completion_proc
-    pushf
-    FreeMem
+;
     call fword ptr ds:change_address_proc
 
 cdcDone:
@@ -1223,6 +1174,53 @@ free_usb_address       Proc far
     pop bx
     retf32
 free_usb_address       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddressUsbDevice
+;
+;       Description:    Address usb device
+;
+;       PARAMETERS:     DS	Function sel
+;                       ES      Device sel
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+address_usb_dev_name DB 'Address USB Device', 0
+
+address_usb_dev       Proc far
+    push es
+    pushad
+;
+    push ax
+    mov eax,8
+    call AllocateBufSel
+    xor edi,edi
+    pop ax
+;
+    movzx ax,al
+    mov es:usd_type,0
+    mov es:usd_req,SET_ADDRESS
+    mov es:usd_value,ax
+    mov es:usd_index,0
+    mov es:usd_len,0
+    mov cx,8
+    call fword ptr ds:add_setup_proc
+    call fword ptr ds:add_status_in_proc
+    call fword ptr ds:issue_transfer_proc
+    call fword ptr ds:wait_for_completion_proc
+;
+    pushf
+    FreeMem
+    popf
+
+audDone:
+    popad
+    pop es
+    retf32
+address_usb_dev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4772,6 +4770,12 @@ init    Proc far
     mov edi,OFFSET init_usb_dev_name
     xor cl,cl
     mov ax,init_usb_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET address_usb_dev
+    mov edi,OFFSET address_usb_dev_name
+    xor cl,cl
+    mov ax,address_usb_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usb_pipe_sel

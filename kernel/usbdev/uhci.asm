@@ -2806,6 +2806,23 @@ CreateDev   Proc far
     InitUsbDev
     retf32
 CreateDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               AddressDev
+;
+;       DESCRIPTION:        Address usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev   Proc far
+    AddressUsbDev    
+    retf32
+AddressDev   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3373,7 +3390,7 @@ ut17 DD OFFSET Has64Bit,            SEG code
 ut18 DD OFFSET IsStalled,           SEG code
 ut19 DD OFFSET ClearStalled,        SEG code
 ut1A DD OFFSET GetMaxLen,           SEG code
-ut1B DD 0,                          0
+ut1B DD OFFSET AddressDev,          SEG code
 ut1C DD 0,                          0
 ut1D DD OFFSET SetMaxLen,           SEG code
 ut1E DD OFFSET CloseControlPipe,    SEG code
