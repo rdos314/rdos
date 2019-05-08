@@ -2823,6 +2823,22 @@ AddressDev   Proc far
     AddressUsbDev    
     retf32
 AddressDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               ConfigDev
+;
+;       DESCRIPTION:        Config usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDev   Proc far
+    clc
+    retf32
+ConfigDev   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3391,7 +3407,7 @@ ut18 DD OFFSET IsStalled,           SEG code
 ut19 DD OFFSET ClearStalled,        SEG code
 ut1A DD OFFSET GetMaxLen,           SEG code
 ut1B DD OFFSET AddressDev,          SEG code
-ut1C DD 0,                          0
+ut1C DD OFFSET ConfigDev,           SEG code
 ut1D DD OFFSET SetMaxLen,           SEG code
 ut1E DD OFFSET CloseControlPipe,    SEG code
 ut1F DD OFFSET IssueOne,            SEG code

@@ -1650,6 +1650,22 @@ AddressDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               ConfigDev
+;
+;       DESCRIPTION:        Config usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDev   Proc far
+    clc
+    retf32
+ConfigDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateControl
 ;
 ;           DESCRIPTION:    Create control pipe
@@ -3847,7 +3863,7 @@ et18 DD OFFSET IsStalled,          SEG code
 et19 DD OFFSET ClearStalled,       SEG code
 et1A DD OFFSET GetMaxLen,          SEG code
 et1B DD OFFSET AddressDev,         SEG code
-et1C DD 0,                         0
+et1C DD OFFSET ConfigDev,          SEG code
 et1D DD OFFSET SetMaxLen,          SEG code
 et1E DD OFFSET CloseControlPipe,   SEG code
 ec1F DD OFFSET IssueOne,           SEG code

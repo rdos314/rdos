@@ -2664,6 +2664,22 @@ AddressDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               ConfigDev
+;
+;       DESCRIPTION:        Config usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDev   Proc far
+    clc
+    retf32
+ConfigDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -3590,7 +3606,7 @@ ot18 DD OFFSET IsStalled,           SEG code
 ot19 DD OFFSET ClearStalled,        SEG code
 ot1A DD OFFSET GetMaxLen,           SEG code
 ot1B DD OFFSET AddressDev,          SEG code
-ot1C DD 0,                          0
+ot1C DD OFFSET ConfigDev,           SEG code
 ot1D DD OFFSET SetMaxLen,           SEG code
 ot1E DD OFFSET CloseControlPipe,    SEG code
 ot1F DD OFFSET IssueOne,            SEG code

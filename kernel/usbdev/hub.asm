@@ -151,6 +151,45 @@ CreateDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddressDev
+;
+;       DESCRIPTION:    Address device
+;
+;       PARAMETERS:     DS      Device selector
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:address_device_proc
+    pop ds
+    ret
+AddressDev	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigDev
+;
+;       DESCRIPTION:    Config device
+;
+;       PARAMETERS:     DS      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDev   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:config_device_proc
+    pop ds
+    ret
+ConfigDev	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateControl
 ;
 ;       DESCRIPTION:    Create control pipe
@@ -667,7 +706,6 @@ GetMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetMaxLen   Proc far
-    int 3
     push ds
     mov ds,ds:hub_parent_sel
     call fword ptr ds:set_max_len_proc
@@ -727,8 +765,8 @@ ht17 DD OFFSET Has64Bit,            SEG code
 ht18 DD OFFSET IsStalled,           SEG code
 ht19 DD OFFSET ClearStalled,        SEG code
 ht1A DD OFFSET GetMaxLen,           SEG code
-ht1B DD 0,                          0
-ht1C DD 0,                          0
+ht1B DD OFFSET AddressDev,          SEG code
+ht1C DD OFFSET ConfigDev,           SEG code
 ht1D DD OFFSET SetMaxLen,           SEG code
 ht1E DD OFFSET CloseControlPipe,    SEG code
 ht1F DD OFFSET IssueOne,            SEG code

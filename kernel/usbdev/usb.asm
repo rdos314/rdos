@@ -2897,11 +2897,6 @@ cudOutNext:
     pop ds
 
 cudConfig:
-    mov ax,word ptr ds:config_device_proc+4
-    or ax,ax
-    clc
-    jz cudDone
-;
     call fword ptr ds:config_device_proc
     jmp cudDone
 
