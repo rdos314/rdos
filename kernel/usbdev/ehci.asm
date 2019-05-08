@@ -791,7 +791,7 @@ acqSetSpeed:
     mov ax,fs:usbp_hub_port
     shl ax,7
     or ax,4000h    
-    or al,gs:hub_device
+    or al,gs:hub_address
     pop gs        
     mov es:[edx].qh_hub_port,ax
 ;
@@ -982,7 +982,7 @@ abqSetSpeed:
     shl ax,7
     or ax,4000h    
     mov gs,fs:usbp_hub_sel
-    or al,gs:hub_device
+    or al,gs:hub_address
     pop gs        
     mov es:[edx].qh_hub_port,ax
 ;
@@ -1161,7 +1161,7 @@ aieSetSpeed:
     shl ax,7
     or ax,4000h    
     mov gs,fs:usbp_hub_sel
-    or al,gs:hub_device
+    or al,gs:hub_address
     pop gs        
     mov es:[edx].qh_hub_port,ax
     

@@ -60,7 +60,7 @@ hub_vendor              DW ?
 hub_product             DW ?
 hub_controller          DW ?
 hub_port                DB ?
-hub_device              DB ?
+hub_address             DB ?
 
 hub_control_handle      DW ?
 hub_control_wait        DW ?

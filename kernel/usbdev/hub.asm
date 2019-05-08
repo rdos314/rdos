@@ -1575,7 +1575,7 @@ CreateHub  Proc near
     mov ds:hub_control_wait,bx
 ;
     mov bx,ds:hub_controller
-    mov al,ds:hub_device
+    mov al,ds:hub_address
     xor dl,dl
     OpenUsbPipe
     mov ds:hub_control_handle,bx
@@ -1586,7 +1586,7 @@ CreateHub  Proc near
     AddWaitForUsbPipe
 ;    
     mov bx,ds:hub_controller
-    mov al,ds:hub_device
+    mov al,ds:hub_address
     mov dl,ds:hub_intr
     OpenUsbPipe
     mov ds:hub_status_handle,bx
@@ -2294,7 +2294,7 @@ uaReConfig:
 ;
     mov gs:hub_controller,bx
     mov gs:hub_port,ah
-    mov gs:hub_device,al
+    mov gs:hub_address,al
     mov gs:hub_parent_sel,fs
 ;
     mov ebx,gs
@@ -2345,7 +2345,7 @@ uaNotDead:
     mov es:hub_vendor,si
     mov es:hub_controller,bx
     mov es:hub_port,ah
-    mov es:hub_device,al
+    mov es:hub_address,al
     mov es:hub_intr,0
     mov es:hub_detach,0
     mov es:hub_flags,0
@@ -2386,7 +2386,7 @@ uaDevOk:
     jz uaFail
 ;
     mov bx,es:hub_controller
-    mov al,es:hub_device
+    mov al,es:hub_address
     ConfigUsbDevice
     jc uaFail
 ;
