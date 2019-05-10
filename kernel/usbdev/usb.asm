@@ -514,8 +514,10 @@ CreateDefaultControl    Proc near
     pushf
 ;
     call fword ptr ds:change_address_proc
-
-cdcDone:
+;
+    mov ax,10
+    WaitMilliSec
+;
     push ds
     mov cx,SEG data
     mov ds,cx

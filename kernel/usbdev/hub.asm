@@ -226,7 +226,10 @@ CreateControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBulk   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:create_bulk_proc
+    pop ds
     ret
 CreateBulk   Endp
 
@@ -248,7 +251,10 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntr   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:create_interrupt_proc
+    pop ds
     ret
 CreateIntr   Endp
 
@@ -289,7 +295,10 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOut    Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:add_out_proc
+    pop ds
     ret
 AddOut    Endp
 
@@ -431,7 +440,10 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EndTransfer   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:end_transfer_proc
+    pop ds
     ret
 EndTransfer   Endp
 
@@ -450,7 +462,10 @@ EndTransfer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WasTransferOk   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:was_transfer_ok_proc
+    pop ds
     ret
 WasTransferOk   Endp
 
@@ -489,7 +504,10 @@ GetDataSize   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueOne   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:issue_one_proc
+    pop ds
     ret
 IssueOne   Endp
 
@@ -506,7 +524,10 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePipe   Proc far
-    int 3
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:close_pipe_proc
+    pop ds
     ret
 ClosePipe   Endp
 
@@ -2494,7 +2515,7 @@ uaDevOk:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Fh
+    mov ecx,2*20h
 
 uaTabLoop:
     lods dword ptr cs:[esi]
