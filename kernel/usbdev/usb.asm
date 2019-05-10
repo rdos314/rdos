@@ -1248,6 +1248,17 @@ init_usb_dev       Proc far
     mov es:usbd_address,al
     mov es:usbd_speed,ah
 ;
+    or bx,bx
+    jz usdNoHub
+;
+    push ds
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov ds:[bx].usb_addr_arr,es
+    pop ds
+
+usdNoHub:
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,es

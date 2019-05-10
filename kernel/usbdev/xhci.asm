@@ -2632,16 +2632,6 @@ CreateDev   Proc far
 ;
     InitUsbDev
 ;
-    or bx,bx
-    jz cdDone
-;
-    push ds
-    mov ds,bx
-    xor bx,bx
-    InitUsbDev
-    pop ds
-
-cdDone:
     popad
     pop fs
     retf32   
