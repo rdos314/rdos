@@ -151,9 +151,6 @@ config_device_proc	DD ?,?
 ; IN  AL        Max len
 set_max_len_proc        DD ?,?
 
-; IN  FS        Control pipe selector
-close_control_pipe_proc DD ?,?
-
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?
 
@@ -172,6 +169,7 @@ usb_function_struc   ENDS
 
 usb_device_struc  STRUC
 
+usbd_func_sel           DW ?
 usbd_hub_sel            DW ?
 usbd_port               DB ?
 usbd_address            DB ?

@@ -3849,22 +3849,16 @@ InitUsbDev MACRO
     OsGate init_usb_dev_nr
                     ENDM
 
+; IN  FS      Pipe sel
+; OUT NC      Connected
+IsUsbPipeConnected MACRO
+    OsGate is_usb_pipe_connected_nr
+                    ENDM
+
 ; IN  DS      Usb function selector
 ; IN  AL      Address
 AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
-                    ENDM
-
-; IN  GS      Hub selector
-; IN  DX      Hub port
-IsUsbHubPortConnected   MACRO
-    OsGate is_usb_hub_port_connected_nr
-                    ENDM
-
-; IN  GS      Hub selector
-; IN  DX      Hub port
-ResetUsbHubPort   MACRO
-    OsGate reset_usb_hub_port_nr
                     ENDM
 
 ; IN  ES      Usb function selector

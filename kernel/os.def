@@ -562,8 +562,6 @@ create_long_thread_info_nr  = 515
 
 has_long_mode_nr            = 516
 
-is_usb_hub_port_connected_nr = 517
-
 wait_for_ehci_nr            = 518
 wait_for_ohci_nr            = 519
 wait_for_uhci_nr            = 520
@@ -590,7 +588,6 @@ hook_can_gen_bus_msg_nr     = 537
 create_can_id_hook_nr       = 538
 delete_can_id_hook_nr       = 539
 
-reset_usb_hub_port_nr       = 540
 add_lon_module_nr           = 541
 
 get_acpi_pnp_device_mem_nr  = 542
@@ -827,5 +824,7 @@ allocate_usb_address_nr     = 720
 free_usb_address_nr         = 721
 init_usb_dev_nr             = 722
 address_usb_dev_nr          = 723
+
+is_usb_pipe_connected_nr    = 724
 
 osgate_entries              = 750

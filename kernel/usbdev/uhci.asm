@@ -2078,7 +2078,7 @@ LocalIsTransferDone   Proc near
     test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;    
-    call LocalIsConnected
+    IsUsbPipeConnected
     jc itdOk
 ;    
     mov ax,flat_sel
@@ -2437,7 +2437,7 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LocalIsConnected
+;           NAME:           IsConnected
 ;
 ;           DESCRIPTION:    Check if pipe is connected
 ;
@@ -2446,7 +2446,7 @@ ChangeAddress   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LocalIsConnected   Proc near
+IsConnected   Proc far
     push es
     push ax
     push dx
@@ -2476,23 +2476,6 @@ icDone:
     pop dx
     pop ax
     pop es
-    ret
-LocalIsConnected   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    call LocalIsConnected
     retf32
 IsConnected   Endp
 
@@ -2641,44 +2624,6 @@ GetMaxLen   Endp
 SetMaxLen   Proc far
     retf32
 SetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseControlPipe
-;
-;           DESCRIPTION:    Close control pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseControlPipe   Proc far
-    push es
-    pushad
-;    
-    mov es,fs:usbp_dev_sel
-    mov cl,es:usbd_port
-;
-    movzx di,cl
-    add di,di
-;
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    add dx,di    
-;
-    in ax,dx
-    or ax,200h
-    out dx,ax
-;
-    mov ax,150
-    WaitMillisec
-;
-    popad
-    pop es
-    retf32
-CloseControlPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3409,8 +3354,7 @@ ut1A DD OFFSET GetMaxLen,           SEG code
 ut1B DD OFFSET AddressDev,          SEG code
 ut1C DD OFFSET ConfigDev,           SEG code
 ut1D DD OFFSET SetMaxLen,           SEG code
-ut1E DD OFFSET CloseControlPipe,    SEG code
-ut1F DD OFFSET IssueOne,            SEG code
+ut1E DD OFFSET IssueOne,            SEG code
 
 InitFunction    Proc near
     push ds
@@ -3432,7 +3376,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -1245,6 +1245,7 @@ init_usb_dev_name DB 'Init USB Device', 0
 init_usb_dev       Proc far
     pusha
 ;
+    mov es:usbd_func_sel,ds
     mov es:usbd_hub_sel,bx
     mov es:usbd_port,dl
     mov es:usbd_address,al
@@ -1252,6 +1253,8 @@ init_usb_dev       Proc far
 ;
     or bx,bx
     jz usdNoHub
+;
+    mov es:usbd_func_sel,bx
 ;
     push ds
     mov ds,bx
@@ -1278,6 +1281,28 @@ usdNoHub:
     popa
     retf32
 init_usb_dev       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsUsbPipeConnected
+;
+;       Description:    Is usb pipe connected
+;
+;       PARAMETERS:     FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_pipe_connected_name DB 'Is Usb Pipe Connected', 0
+
+is_usb_pipe_connected       Proc far
+    push ds
+    mov ds,fs:usbp_dev_sel
+    mov ds,ds:usbd_func_sel
+    call fword ptr ds:is_connected_proc
+    pop ds
+    retf32
+is_usb_pipe_connected       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1555,7 +1580,10 @@ nuaDone:
     call fword ptr ds:is_connected_proc
     jc nuaDoClose
 ;
-    call fword ptr ds:close_control_pipe_proc
+    call fword ptr ds:reset_pipe_proc
+;
+    mov ax,200
+    WaitMilliSec
 
 nuaDoClose:
     call ClosePipe
@@ -4784,6 +4812,12 @@ init    Proc far
     mov edi,OFFSET address_usb_dev_name
     xor cl,cl
     mov ax,address_usb_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET is_usb_pipe_connected
+    mov edi,OFFSET is_usb_pipe_connected_name
+    xor cl,cl
+    mov ax,is_usb_pipe_connected_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usb_pipe_sel

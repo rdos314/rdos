@@ -2138,6 +2138,9 @@ LocalIsTransferDone   Proc near
     test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;    
+    IsUsbPipeConnected
+    jc itdOk
+;
     mov ax,flat_sel
     mov es,ax
 ;
@@ -2618,26 +2621,12 @@ ResetPipe   Proc far
     push ax
     push cx
 ;    
-    mov ax,fs:usbp_hub_sel
-    or ax,ax
-    jz repNoHub
-;
-    push gs
-    mov gs,ax
-    mov dx,fs:usbp_hub_port
-    ResetUsbHubPort
-    pop gs
-    jmp repDone
-       
-repNoHub:
-    int 3
     mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
     or ds:ehc_reset,ax
-
-repDone:
+;
     pop cx
     pop ax
     pop es
@@ -2803,52 +2792,6 @@ GetMaxLen   Endp
 SetMaxLen   Proc far
     retf32
 SetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               CloseControlPipe
-;
-;       DESCRIPTION:        Close control pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseControlPipe   Proc far
-    push es
-    pushad
-;    
-    mov ax,fs:usbp_hub_sel
-    or ax,ax
-    jz ccpNoHub
-;
-    push gs
-    mov gs,ax
-    mov dx,fs:usbp_hub_port
-    ResetUsbHubPort
-    pop gs
-    jmp ccpDone
-       
-ccpNoHub:
-    mov es,fs:usbp_dev_sel
-    mov cl,es:usbd_port
-    movzx edi,cl
-    add edi,edi
-;
-    mov eax,es:[2*edi].HcPortSc
-    and al,NOT 4
-    mov es:[2*edi].HcPortSc,eax
-
-ccpDone:
-    mov ax,50
-    WaitMilliSec
-;
-    popad
-    pop es
-    retf32
-CloseControlPipe Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3865,8 +3808,7 @@ et1A DD OFFSET GetMaxLen,          SEG code
 et1B DD OFFSET AddressDev,         SEG code
 et1C DD OFFSET ConfigDev,          SEG code
 et1D DD OFFSET SetMaxLen,          SEG code
-et1E DD OFFSET CloseControlPipe,   SEG code
-ec1F DD OFFSET IssueOne,           SEG code
+ec1E DD OFFSET IssueOne,           SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3888,7 +3830,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

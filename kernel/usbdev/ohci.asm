@@ -1702,7 +1702,7 @@ LocalIsTransferDone   Proc near
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;
-    call LocalIsConnected
+    IsUsbPipeConnected    
     jc itdOk
 ;    
     mov ax,flat_sel
@@ -2157,7 +2157,7 @@ cpFreeEdList:
     cmp eax,es:[edx].oes_tailp
     je cpFreeTd
 ;    
-    call LocalIsConnected
+    IsUsbPipeConnected
     jc cpFreeTd
 ;    
     mov ax,10
@@ -2249,7 +2249,7 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LocalIsConnected
+;           NAME:           IsConnected
 ;
 ;           DESCRIPTION:    Check if pipe is connected
 ;
@@ -2258,7 +2258,7 @@ ChangeAddress   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LocalIsConnected   Proc near
+IsConnected   Proc far
     push es
     push eax
     push dx
@@ -2290,29 +2290,11 @@ icDisabled:
 icFail:
     stc
 
-
 icDone:
     pop si
     pop dx
     pop eax
     pop es
-    ret
-LocalIsConnected Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    call LocalIsConnected
     retf32
 IsConnected Endp
 
@@ -2462,37 +2444,6 @@ GetMaxLen   Endp
 SetMaxLen   Proc far
     retf32
 SetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseControlPipe
-;
-;           DESCRIPTION:    Close control pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseControlPipe   Proc far
-    push es
-    pushad
-;    
-    mov es,fs:usbp_dev_sel
-    mov cl,es:usbd_port
-    movzx si,cl
-    shl si,2
-    mov eax,1
-    mov es:[si].HcRhPortStatus,eax
-;
-    mov ax,150
-    WaitMilliSec
-;
-    popad
-    pop es
-    retf32
-CloseControlPipe   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3608,8 +3559,7 @@ ot1A DD OFFSET GetMaxLen,           SEG code
 ot1B DD OFFSET AddressDev,          SEG code
 ot1C DD OFFSET ConfigDev,           SEG code
 ot1D DD OFFSET SetMaxLen,           SEG code
-ot1E DD OFFSET CloseControlPipe,    SEG code
-ot1F DD OFFSET IssueOne,            SEG code
+ot1E DD OFFSET IssueOne,            SEG code
 
 InitFunction    Proc near
     push ds
@@ -3667,7 +3617,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

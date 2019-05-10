@@ -603,7 +603,20 @@ IsConnected   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetPipe   Proc far
+    push es
+    push eax
+    push ecx
+;
     int 3
+    mov es,fs:usbp_dev_sel
+    mov cl,es:usbd_port
+    mov eax,1
+    shl eax,cl
+    or ds:hub_reset,eax
+;
+    pop ecx
+    pop eax
+    pop es
     ret
 ResetPipe   Endp
 
@@ -737,23 +750,6 @@ SetMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:               CloseControlPipe
-;
-;       DESCRIPTION:        Close control pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseControlPipe   Proc far
-    int 3
-    ret
-CloseControlPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           hub table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -789,8 +785,7 @@ ht1A DD OFFSET GetMaxLen,           SEG code
 ht1B DD OFFSET AddressDev,          SEG code
 ht1C DD OFFSET ConfigDev,           SEG code
 ht1D DD OFFSET SetMaxLen,           SEG code
-ht1E DD OFFSET CloseControlPipe,    SEG code
-ht1F DD OFFSET IssueOne,            SEG code
+ht1E DD OFFSET IssueOne,            SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1105,7 +1100,8 @@ attach_thread:
     LeaveSection ds:usb_section
 ;
     LockUsb
-;        
+
+atReset:        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz atUnlock
 ;
@@ -1132,9 +1128,15 @@ atWaitLoop:
 ;
     loop atWaitLoop
 ;
-    jmp atUnlock    
+    jmp atReset
 
 atIsEnabled:
+    mov ax,50
+    WaitMilliSec
+;
+    test ds:[edi].hub_status_arr,2
+    jz atReset
+;
     call fword ptr ds:allocate_address_proc
     jc atUnlock
 ;
@@ -1283,7 +1285,8 @@ reset_thread:
     NotifyUsbDetach
 ;
     LockUsb
-;        
+
+rtReset:        
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz rtUnlock
 ;
@@ -1311,12 +1314,19 @@ rtWaitLoop:
 ;
     loop rtWaitLoop
 ;
-    jmp rtUnlock    
+    jmp rtReset
 
 rtIsEnabled:
+    mov ax,50
+    WaitMilliSec
+;
+    test ds:[edi].hub_status_arr,2
+    jz atReset
+;
     call fword ptr ds:allocate_address_proc
     jc rtUnlock
 ;
+    mov bl,al
     mov ax,ds:[edi].hub_status_arr
     test ax,200h
     jnz rtLowSpeed
@@ -2515,7 +2525,7 @@ uaDevOk:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*20h
+    mov ecx,2*1Fh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

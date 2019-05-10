@@ -1964,6 +1964,9 @@ LocalIsTransferDone   Proc near
     test fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;
+    IsUsbPipeConnected
+    jc itdOk
+;
     test fs:xp_flags, XP_FLAG_SINGLE
     jz itdNotSingle
 ;
@@ -2431,42 +2434,6 @@ smlDone:
     pop es
     retf32
 SetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseControlPipe
-;
-;           DESCRIPTION:    Close control pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseControlPipe   Proc far
-    push es
-    push ax
-    push bx
-    push cx
-;    
-    mov cl,fs:xp_port_nr
-    mov eax,1
-    shl eax,cl
-    lock or ds:xhc_reset,eax
-;
-    mov bx,ds:xhc_port_thread
-    Signal  
-;
-    mov ax,250
-    WaitMilliSec
-;
-    pop cx
-    pop bx
-    pop ax
-    pop es
-    retf32
-CloseControlPipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3786,8 +3753,7 @@ et1A DD OFFSET GetMaxLen,           SEG code
 et1B DD OFFSET AddressDevice,       SEG code
 et1C DD OFFSET ConfigDevice,        SEG code
 et1D DD OFFSET SetMaxLen,           SEG code
-et1E DD OFFSET CloseControlPipe,    SEG code
-et1F DD OFFSET IssueOne,            SEG code
+et1E DD OFFSET IssueOne,            SEG code
 
 InitFunction    Proc near
     push es
@@ -3934,7 +3900,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]
