@@ -1117,6 +1117,7 @@ atIsEnabled:
     call fword ptr ds:allocate_address_proc
     jc atUnlock
 ;
+    mov bl,al
     mov ax,ds:[edi].hub_status_arr
     test ax,200h
     jnz atLowSpeed
