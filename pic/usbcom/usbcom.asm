@@ -75,6 +75,49 @@ usb_ser_in         equ 0x470
 usb_bus_out        equ 0x4B0
 usb_bus_in         equ 0x4D0
 
+io_page            equ 5
+
+io_crc0            equ 0x500
+io_adr0            equ 0x501
+io_cmd0            equ 0x502
+io_v00             equ 0x503               
+io_v10             equ 0x504               
+io_v20             equ 0x505               
+io_v30             equ 0x506               
+io_out0            equ 0x507
+
+io_crc1            equ 0x510
+io_adr1            equ 0x511
+io_cmd1            equ 0x512
+io_v01             equ 0x513               
+io_v11             equ 0x514               
+io_v21             equ 0x515               
+io_v31             equ 0x516               
+io_out1            equ 0x517
+
+io_crc2            equ 0x520
+io_adr2            equ 0x521
+io_cmd2            equ 0x522
+io_v02             equ 0x523               
+io_v12             equ 0x524               
+io_v22             equ 0x525               
+io_v32             equ 0x526               
+io_out2            equ 0x527
+
+io_crc3            equ 0x530
+io_adr3            equ 0x531
+io_cmd3            equ 0x532
+io_v03             equ 0x533               
+io_v13             equ 0x534               
+io_v23             equ 0x535               
+io_v33             equ 0x536               
+io_out3            equ 0x537
+
+io_chans           equ 0x540
+io_temp1           equ 0x541
+io_temp2           equ 0x542
+io_count           equ 0x543
+
 SER_STATE_ACTIVE   equ 0
 SER_STATE_ODD      equ 1
 SER_STATE_EVEN     equ 2
@@ -107,7 +150,9 @@ bsr_isr       equ 0x62
 counter_ms   equ 0x63
 counter_ds    equ 0x64
 
-temp          equ 0x67
+temp1         equ 0x65
+temp2         equ 0x66
+temp3         equ 0x67
 
 d_curr_stat   equ 0x68
 d_curr_count  equ 0x69
@@ -141,7 +186,620 @@ parity        equ 0x7D
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; position dependent code ends here
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteOutput0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+WriteOutput0:
+    btfss io_out0,0
+    goto WriteOutClear0
+
+WriteOutSet0:
+    bcf LATB,1
+    return
+
+WriteOutClear0:
+    bsf LATB,1
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteOutput1
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteOutput1:
+    btfss io_out1,0
+    goto WriteOutClear1
+
+WriteOutSet1:
+    bcf LATB,3
+    return
+
+WriteOutClear1:
+    bsf LATB,3
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteOutput2
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteOutput2:
+    btfss io_out2,0
+    goto WriteOutClear2
+
+WriteOutSet2:
+    bcf LATD,1
+    return
+
+WriteOutClear2:
+    bsf LATD,1
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteOutput3
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteOutput3:
+    btfss io_out3,0
+    goto WriteOutClear3
+
+WriteOutSet3:
+    bcf LATD,3
+    return
+
+WriteOutClear3:
+    bsf LATD,3
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadInput0
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadInput0:
+    btfsc PORTD,4
+    retlw 0
+    retlw 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadInput1
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadInput1:
+    btfsc PORTD,5
+    retlw 0
+    retlw 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadInput2
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadInput2:
+    btfsc PORTD,6
+    retlw 0
+    retlw 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadInput3
+;
+;   W   bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadInput3:
+    btfsc PORTD,7
+    retlw 0
+    retlw 1
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckInput0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckInput0:
+    btfsc PORTD,4
+    bcf io_chans,0
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckInput1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckInput1:
+    btfsc PORTD,5
+    bcf io_chans,1
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckInput2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckInput2:
+    btfsc PORTD,6
+    bcf io_chans,2
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckInput3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckInput3:
+    btfsc PORTD,7
+    bcf io_chans,3
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkActive0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkActive0:
+    bcf LATB,0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkInactive0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkInactive0:
+    bsf LATB,0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkActive1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkActive1:
+    bcf LATB,2
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkInactive1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkInactive1:
+    bsf LATB,2
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkActive2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkActive2:
+    bcf LATD,0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkInactive2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkInactive2:
+    bsf LATD,0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkActive3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkActive3:
+    bcf LATD,2
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetClkInactive3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetClkInactive3:
+    bsf LATD,2
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateCrc0
+;
+;   W       value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCrc0:	
+    andlw 1
+    movwf io_temp1
+    clrf io_temp2
+    bcf STATUS, C
+    rlcf io_crc0,F
+    rlcf io_temp2,W
+    xorwf io_temp1,W
+    btfsc STATUS, Z
+    return
+;
+    movlw 0x26
+    xorwf io_crc0,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateCrc1
+;
+;   W       value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCrc1:	
+    andlw 1
+    movwf io_temp1
+    clrf io_temp2
+    bcf STATUS, C
+    rlcf io_crc1,F
+    rlcf io_temp2,W
+    xorwf io_temp1,W
+    btfsc STATUS, Z
+    return
+;
+    movlw 0x26
+    xorwf io_crc1,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateCrc2
+;
+;   W       value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCrc2:	
+    andlw 1
+    movwf io_temp1
+    clrf io_temp2
+    bcf STATUS, C
+    rlcf io_crc2,F
+    rlcf io_temp2,W
+    xorwf io_temp1,W
+    btfsc STATUS, Z
+    return
+;
+    movlw 0x26
+    xorwf io_crc2,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateCrc3
+;
+;   W       value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCrc3:	
+    andlw 1
+    movwf io_temp1
+    clrf io_temp2
+    bcf STATUS, C
+    rlcf io_crc3,F
+    rlcf io_temp2,W
+    xorwf io_temp1,W
+    btfsc STATUS, Z
+    return
+;
+    movlw 0x26
+    xorwf io_crc3,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; OutputBit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputBit:
+    movlb io_page
+;
+    btfsc io_chans,0
+    call WriteOutput0
+;
+    btfsc io_chans,1
+    call WriteOutput1
+;
+    btfsc io_chans,2
+    call WriteOutput2
+;
+    btfsc io_chans,3
+    call WriteOutput3
+;
+    call Delay
+    movlb io_page
+;
+    btfsc io_chans,0
+    call SetClkActive0
+;
+    btfsc io_chans,1
+    call SetClkActive1
+;
+    btfsc io_chans,2
+    call SetClkActive2
+;
+    btfsc io_chans,3
+    call SetClkActive3
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive0
+    call SetClkInactive1
+    call SetClkInactive2
+    call SetClkInactive3
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateOutputCrc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateOutputCrc:
+    movlb io_page
+;
+    movf io_out0,W
+    call UpdateCrc0
+;
+    movf io_out1,W
+    call UpdateCrc1
+;
+    movf io_out2,W
+    call UpdateCrc2
+;
+    movf io_out3,W
+    call UpdateCrc3
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; OutputActive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputActive:
+    clrf io_out0
+    clrf io_out1
+    clrf io_out2
+    clrf io_out3
+    call OutputBit
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; OutputCrc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputCrc:
+    movf io_crc0,W
+    movwf io_out0
+;
+    movf io_crc1,W
+    movwf io_out1
+;
+    movf io_crc2,W
+    movwf io_out2
+;
+    movf io_crc3,W
+    movwf io_out3
+;
+    movlw 6
+    movwf io_count
+
+OutCrcLoop:
+    call OutputBit
+;
+    rrncf io_out0,F
+    rrncf io_out1,F
+    rrncf io_out2,F
+    rrncf io_out3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto OutCrcLoop
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLine
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLine:
+    btfsc io_chans,0
+    call CheckInput0
+;
+    btfsc io_chans,1
+    call CheckInput1
+;
+    btfsc io_chans,2
+    call CheckInput2
+;
+    btfsc io_chans,3
+    call CheckInput3
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Activate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Activate:
+    movlb io_page
+    btfsc io_chans,0
+    goto Active01
+;
+    btfss io_chans,1
+    goto ActiveCheck23
+
+Active01:
+    bcf LATE,0
+
+ActiveCheck23:
+    btfsc io_chans,2
+    goto Active23
+;
+    btfss io_chans,3
+    return
+
+Active23:
+    bcf LATE,1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Preamp
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Preamp:
+    call Delay
+;
+    movlb io_page
+    movlw 14
+    movwf io_count
+;
+    movlw 1
+    movwf io_out0
+    movwf io_out1
+    movwf io_out2
+    movwf io_out3
+
+PreampLoop:
+    call OutputBit
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto PreampLoop
+;
+    call OutputActive
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; OutputAdr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputAdr:
+    movlb io_page
+;
+    movf io_adr0,W
+    movwf io_out0
+;
+    movf io_adr1,W
+    movwf io_out1
+;
+    movf io_adr2,W
+    movwf io_out2
+;
+    movf io_adr3,W
+    movwf io_out3
+;
+    clrf io_crc0
+    clrf io_crc1
+    clrf io_crc2
+    clrf io_crc3
+;
+    movlw 6
+    movwf io_count
+
+OutAdrLoop:
+    call OutputBit
+    call UpdateOutputCrc
+;
+    rrncf io_out0,F
+    rrncf io_out1,F
+    rrncf io_out2,F
+    rrncf io_out3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto OutAdrLoop
+;
+    call OutputActive
+    call OutputCrc
+    call UpdateLine
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; TestIo
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TestIo:
+    movlb io_page
+;
+    movlw 0x25
+    movwf io_adr0
+    movwf io_adr1
+    movwf io_adr2
+    movwf io_adr3
+;
+    movlw 0xF
+    movwf io_chans
+;
+    call Activate
+    call Preamp
+    call OutputAdr    
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; InitUsb
@@ -413,18 +1071,18 @@ DecideSize:
     movlb 0
     bsf usb_flags, DESCR_FLAG_MORE
     bcf usb_flags, DESCR_FLAG_FULL
-    movwf temp
+    movwf temp1
     movf b_len_high, W
     btfss STATUS, Z
     goto DecideWhole
 ;
     movf b_len_low, w
-    cpfseq temp
+    cpfseq temp1
     goto DecideCompLow
     goto DecideFull
 
 DecideCompLow:
-    cpfslt temp
+    cpfslt temp1
     goto DecideFull
     goto DecideWhole
 
@@ -433,7 +1091,7 @@ DecideFull:
     return
 
 DecideWhole:
-    movf temp, W
+    movf temp1, W
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -463,7 +1121,7 @@ DecideFragWhole:
 GetDescr:
     movlb 0
     call DecideFragSize
-    movwf temp
+    movwf temp1
     movwf count
 ;
     movf count, W
@@ -484,7 +1142,7 @@ gdLoop:
     movwf POSTINC0
     decf remain_size, F
 ;
-    decfsz temp,F
+    decfsz temp1,F
     goto gdLoop
 
 gdSetup:
@@ -1250,46 +1908,46 @@ HandleUsbNotSerial:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetSetBits:
-    movwf temp
+    movwf temp1
     clrf parity
 ;
     btfss ser_state, SER_STATE_PAR9
     goto GetBits8
 
 GetBits9:
-    btfsc temp,0
+    btfsc temp1,0
     incf parity, F
-    btfsc temp,1
+    btfsc temp1,1
     incf parity, F
-    btfsc temp,2
+    btfsc temp1,2
     incf parity, F
-    btfsc temp,3
+    btfsc temp1,3
     incf parity, F
-    btfsc temp,4
+    btfsc temp1,4
     incf parity, F
-    btfsc temp,5
+    btfsc temp1,5
     incf parity, F
-    btfsc temp,6
+    btfsc temp1,6
     incf parity, F
-    btfsc temp,7
+    btfsc temp1,7
     incf parity, F
     movf parity, W
     return
 
 GetBits8:
-    btfsc temp,0
+    btfsc temp1,0
     incf parity, F
-    btfsc temp,1
+    btfsc temp1,1
     incf parity, F
-    btfsc temp,2
+    btfsc temp1,2
     incf parity, F
-    btfsc temp,3
+    btfsc temp1,3
     incf parity, F
-    btfsc temp,4
+    btfsc temp1,4
     incf parity, F
-    btfsc temp,5
+    btfsc temp1,5
     incf parity, F
-    btfsc temp,6
+    btfsc temp1,6
     incf parity, F
     movf parity, W
     return
@@ -1300,7 +1958,7 @@ GetBits8:
 ;
 ; Get received parity
 ;
-; IN:  temp = RCREG
+; IN:  temp1 = RCREG
 ; OUT: W parity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1319,7 +1977,7 @@ GetRecPar9:
 
 GetRecPar8:
     movlw 0
-    btfss temp, 7
+    btfss temp1, 7
     return
 ;
     movlw 1
@@ -1331,7 +1989,7 @@ GetRecPar8:
 ;
 ; Set send parity
 ;
-; IN:  temp = RCREG
+; IN:  temp1 = RCREG
 ; IN:  W parity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1348,7 +2006,7 @@ SetSendPar9:
 
 SetSendPar8:
     btfsc parity, 0
-    bsf temp, 7
+    bsf temp1, 7
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1361,7 +2019,7 @@ SetSendPar8:
 
 HandleSerReceive:
     movf RCREG, W
-    movwf temp
+    movwf temp1
 ;
     movlb ser_buf_page
     movlw SER_COM_SIZE
@@ -1380,7 +2038,7 @@ SerRecSpace:
     goto SerRecParOk
 
 SerRecEven:
-    movf temp, W
+    movf temp1, W
     call GetSetBits
     call GetRecParity
     xorwf parity, F
@@ -1390,7 +2048,7 @@ SerRecEven:
     goto SerRecParOk
 
 SerRecOdd:
-    movf temp, W
+    movf temp1, W
     call GetSetBits
     call GetRecParity
     xorwf parity, F
@@ -1399,9 +2057,9 @@ SerRecOdd:
 
 SerRecParOk:
     movlb 0
-    movf temp, W
+    movf temp1, W
     andwf ser_mask, W
-    movwf temp
+    movwf temp1
 ;
     movlb ser_buf_page
     lfsr 0,rx_buf
@@ -1409,7 +2067,7 @@ SerRecParOk:
     addwf FSR0L, F
 ;
     movlb 0
-    movf temp, W
+    movf temp1, W
     movwf INDF0
 ;
     movlb ser_buf_page
@@ -1448,7 +2106,7 @@ HandleSerSend:
 ;
     movlb 0
     andwf ser_mask, W
-    movwf temp
+    movwf temp1
     btfsc ser_state, SER_STATE_ODD
     goto SendOdd
 ;
@@ -1456,20 +2114,20 @@ HandleSerSend:
     goto SerSendParOk
 
 SendEven:
-    movf temp, W
+    movf temp1, W
     call GetSetBits
     call SetSendParity
     goto SerSendParOk
 
 SendOdd:
-    movf temp, W
+    movf temp1, W
     call GetSetBits
     movlw 1
     xorwf parity,F 
     call SetSendParity
 
 SerSendParOk:
-    movf temp, W
+    movf temp1, W
     movwf TXREG
 ;
     movlb ser_buf_page
@@ -1501,7 +2159,7 @@ HandleSendIdle:
 ;
     bcf LATC,1
     return
-
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Poll
@@ -1598,6 +2256,18 @@ wdLoop:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; Delay
+;
+; IO delay (1ms)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Delay:
+    call WaitMs
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; Program start
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1647,13 +2317,13 @@ ProgStart:
 ;
     bcf PIR1,TMR2IF
 ;
-    movlw 0
-    movwf temp
+    clrf temp1
 ;
     call InitUsb
     call InitSerial
     
 Loop:
+    call TestIo
     call WaitDs
     call WaitDs
     call WaitDs
