@@ -2,7 +2,7 @@
 
   config PLLDIV=3,  CPUDIV = OSC2_PLL3, USBDIV = 2, FOSC = HSPLL_HS, FCMEN = OFF, IESO = OFF, PWRT = ON
   config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON
-  config MCLRE = ON, STVREN = ON
+  config MCLRE = OFF, STVREN = ON
   config LVP = OFF, ICPRT = OFF,  XINST = OFF
   config CP0=OFF, CP1=OFF, CP2=OFF, CP3=OFF, CPB=OFF, CPD=OFF
   config WRT0=OFF, WRT1=OFF, WRT2=OFF, WRT3=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF
@@ -84,7 +84,7 @@ io_v00             equ 0x503
 io_v10             equ 0x504               
 io_v20             equ 0x505               
 io_v30             equ 0x506               
-io_out0            equ 0x507
+io_val0            equ 0x507
 
 io_crc1            equ 0x510
 io_adr1            equ 0x511
@@ -93,7 +93,7 @@ io_v01             equ 0x513
 io_v11             equ 0x514               
 io_v21             equ 0x515               
 io_v31             equ 0x516               
-io_out1            equ 0x517
+io_val1            equ 0x517
 
 io_crc2            equ 0x520
 io_adr2            equ 0x521
@@ -102,7 +102,7 @@ io_v02             equ 0x523
 io_v12             equ 0x524               
 io_v22             equ 0x525               
 io_v32             equ 0x526               
-io_out2            equ 0x527
+io_val2            equ 0x527
 
 io_crc3            equ 0x530
 io_adr3            equ 0x531
@@ -111,7 +111,7 @@ io_v03             equ 0x533
 io_v13             equ 0x534               
 io_v23             equ 0x535               
 io_v33             equ 0x536               
-io_out3            equ 0x537
+io_val3            equ 0x537
 
 io_chans           equ 0x540
 io_temp1           equ 0x541
@@ -193,7 +193,7 @@ parity        equ 0x7D
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteOutput0:
-    btfss io_out0,0
+    btfss io_val0,0
     goto WriteOutClear0
 
 WriteOutSet0:
@@ -213,7 +213,7 @@ WriteOutClear0:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteOutput1:
-    btfss io_out1,0
+    btfss io_val1,0
     goto WriteOutClear1
 
 WriteOutSet1:
@@ -233,7 +233,7 @@ WriteOutClear1:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteOutput2:
-    btfss io_out2,0
+    btfss io_val2,0
     goto WriteOutClear2
 
 WriteOutSet2:
@@ -253,7 +253,7 @@ WriteOutClear2:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteOutput3:
-    btfss io_out3,0
+    btfss io_val3,0
     goto WriteOutClear3
 
 WriteOutSet3:
@@ -273,9 +273,10 @@ WriteOutClear3:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInput0:
-    btfsc PORTD,4
-    retlw 0
-    retlw 1
+    bcf io_val0,0
+    btfss PORTD,4
+    bsf io_val0,0
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -286,9 +287,10 @@ ReadInput0:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInput1:
-    btfsc PORTD,5
-    retlw 0
-    retlw 1
+    bcf io_val1,0
+    btfss PORTD,5
+    bsf io_val1,0
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -299,9 +301,10 @@ ReadInput1:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInput2:
-    btfsc PORTD,6
-    retlw 0
-    retlw 1
+    bcf io_val2,0
+    btfss PORTD,6
+    bsf io_val2,0
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -312,9 +315,10 @@ ReadInput2:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInput3:
-    btfsc PORTD,7
-    retlw 0
-    retlw 1
+    bcf io_val3,0
+    btfss PORTD,7
+    bsf io_val3,0
+    return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -582,25 +586,71 @@ OutputBit:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; UpdateOutputCrc
+; UpdateCrc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateOutputCrc:
+UpdateCrc:
     movlb io_page
 ;
-    movf io_out0,W
+    movf io_val0,W
     call UpdateCrc0
 ;
-    movf io_out1,W
+    movf io_val1,W
     call UpdateCrc1
 ;
-    movf io_out2,W
+    movf io_val2,W
     call UpdateCrc2
 ;
-    movf io_out3,W
+    movf io_val3,W
     call UpdateCrc3
 ;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; InputBit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InputBit:
+    call Delay
+    movlb io_page
+;
+    btfsc io_chans,0
+    call ReadInput0
+;
+    btfsc io_chans,1
+    call ReadInput1
+;
+    btfsc io_chans,2
+    call ReadInput2
+;
+    btfsc io_chans,3
+    call ReadInput3
+;
+    btfsc io_chans,0
+    call SetClkActive0
+;
+    btfsc io_chans,1
+    call SetClkActive1
+;
+    btfsc io_chans,2
+    call SetClkActive2
+;
+    btfsc io_chans,3
+    call SetClkActive3
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive0
+    call SetClkInactive1
+    call SetClkInactive2
+    call SetClkInactive3
+;
+    call Delay
+    movlb io_page
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -610,10 +660,10 @@ UpdateOutputCrc:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OutputActive:
-    clrf io_out0
-    clrf io_out1
-    clrf io_out2
-    clrf io_out3
+    clrf io_val0
+    clrf io_val1
+    clrf io_val2
+    clrf io_val3
     call OutputBit
     return
 
@@ -625,16 +675,16 @@ OutputActive:
 
 OutputCrc:
     movf io_crc0,W
-    movwf io_out0
+    movwf io_val0
 ;
     movf io_crc1,W
-    movwf io_out1
+    movwf io_val1
 ;
     movf io_crc2,W
-    movwf io_out2
+    movwf io_val2
 ;
     movf io_crc3,W
-    movwf io_out3
+    movwf io_val3
 ;
     movlw 6
     movwf io_count
@@ -642,10 +692,10 @@ OutputCrc:
 OutCrcLoop:
     call OutputBit
 ;
-    rrncf io_out0,F
-    rrncf io_out1,F
-    rrncf io_out2,F
-    rrncf io_out3,F
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
 ;
     decf io_count,F
     btfss STATUS,Z
@@ -728,10 +778,10 @@ Preamp:
     movwf io_count
 ;
     movlw 1
-    movwf io_out0
-    movwf io_out1
-    movwf io_out2
-    movwf io_out3
+    movwf io_val0
+    movwf io_val1
+    movwf io_val2
+    movwf io_val3
 
 PreampLoop:
     call OutputBit
@@ -753,16 +803,16 @@ OutputAdr:
     movlb io_page
 ;
     movf io_adr0,W
-    movwf io_out0
+    movwf io_val0
 ;
     movf io_adr1,W
-    movwf io_out1
+    movwf io_val1
 ;
     movf io_adr2,W
-    movwf io_out2
+    movwf io_val2
 ;
     movf io_adr3,W
-    movwf io_out3
+    movwf io_val3
 ;
     clrf io_crc0
     clrf io_crc1
@@ -774,12 +824,12 @@ OutputAdr:
 
 OutAdrLoop:
     call OutputBit
-    call UpdateOutputCrc
+    call UpdateCrc
 ;
-    rrncf io_out0,F
-    rrncf io_out1,F
-    rrncf io_out2,F
-    rrncf io_out3,F
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
 ;
     decf io_count,F
     btfss STATUS,Z
@@ -788,6 +838,207 @@ OutAdrLoop:
     call OutputActive
     call OutputCrc
     call UpdateLine
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; OutputCmd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputCmd:
+    movlb io_page
+;
+    movf io_cmd0,W
+    movwf io_val0
+;
+    movf io_cmd1,W
+    movwf io_val1
+;
+    movf io_cmd2,W
+    movwf io_val2
+;
+    movf io_cmd3,W
+    movwf io_val3
+;
+    clrf io_crc0
+    clrf io_crc1
+    clrf io_crc2
+    clrf io_crc3
+;
+    movlw 6
+    movwf io_count
+
+OutCmdLoop:
+    call OutputBit
+    call UpdateCrc
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto OutCmdLoop
+;
+    call OutputActive
+    call OutputCrc
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Read6
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Read6:
+    movlb io_page
+;
+    clrf io_val0
+    clrf io_val1
+    clrf io_val2
+    clrf io_val3
+;
+    movlw 6
+    movwf io_count
+
+ReadInnerLoop:
+    call InputBit
+    call UpdateCrc
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto ReadInnerLoop
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadCrc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCrc:
+    movlb io_page
+;
+    clrf io_val0
+    clrf io_val1
+    clrf io_val2
+    clrf io_val3
+;
+    movlw 8
+    movwf io_count
+
+ReadCrcLoop:
+    call InputBit
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto ReadCrcLoop
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Read24
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Read24:
+    clrf io_crc0
+    clrf io_crc1
+    clrf io_crc2
+    clrf io_crc3
+;
+    call Read6
+;
+    movf io_val0,W
+    movwf io_v00
+;
+    movf io_val1,W
+    movwf io_v01
+;
+    movf io_val2,W
+    movwf io_v02
+;
+    movf io_val3,W
+    movwf io_v03
+;
+    call Read6
+;
+    movf io_val0,W
+    movwf io_v10
+;
+    movf io_val1,W
+    movwf io_v11
+;
+    movf io_val2,W
+    movwf io_v12
+;
+    movf io_val3,W
+    movwf io_v13
+;
+    call Read6
+;
+    movf io_val0,W
+    movwf io_v20
+;
+    movf io_val1,W
+    movwf io_v21
+;
+    movf io_val2,W
+    movwf io_v22
+;
+    movf io_val3,W
+    movwf io_v23
+;
+    call Read6
+;
+    movf io_val0,W
+    movwf io_v30
+;
+    movf io_val1,W
+    movwf io_v31
+;
+    movf io_val2,W
+    movwf io_v32
+;
+    movf io_val3,W
+    movwf io_v33
+;
+    call ReadCrc
+;
+    movlw 0xA5
+    xorwf io_val0,F
+;
+    movlw 0xA5
+    xorwf io_val1,F
+;
+    movlw 0xA5
+    xorwf io_val2,F
+;
+    movlw 0xA5
+    xorwf io_val3,F
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -805,21 +1056,28 @@ TestIo:
     movwf io_adr2
     movwf io_adr3
 ;
+    movlw 0xA 
+    movwf io_cmd0
+    movwf io_cmd1
+    movwf io_cmd2
+    movwf io_cmd3
+;
     movlw 0xF
     movwf io_chans
 ;
     call Activate
     call Preamp
     call OutputAdr    
-;
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
-;
-    call Preamp
+    call OutputCmd
+    call Read24
     call Deactivate
+;
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+;
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
