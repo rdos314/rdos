@@ -2,7 +2,7 @@
 
   config PLLDIV=3,  CPUDIV = OSC2_PLL3, USBDIV = 2, FOSC = HSPLL_HS, FCMEN = OFF, IESO = OFF, PWRT = ON
   config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON
-  config MCLRE = OFF, STVREN = ON
+  config MCLRE = ON, STVREN = ON
   config LVP = OFF, ICPRT = OFF,  XINST = OFF
   config CP0=OFF, CP1=OFF, CP2=OFF, CP3=OFF, CPB=OFF, CPD=OFF
   config WRT0=OFF, WRT1=OFF, WRT2=OFF, WRT3=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF
@@ -651,6 +651,7 @@ OutCrcLoop:
     btfss STATUS,Z
     goto OutCrcLoop
 ;
+    call OutputActive
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -700,6 +701,17 @@ ActiveCheck23:
 
 Active23:
     bcf LATE,1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Deactivate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Deactivate:
+    bsf LATE,0
+    bsf LATE,1
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -787,7 +799,7 @@ OutAdrLoop:
 TestIo:
     movlb io_page
 ;
-    movlw 0x25
+    movlw 0x20
     movwf io_adr0
     movwf io_adr1
     movwf io_adr2
@@ -799,6 +811,16 @@ TestIo:
     call Activate
     call Preamp
     call OutputAdr    
+;
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+    call WaitDs
+;
+    call Preamp
+    call Deactivate
+    return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2335,7 +2357,6 @@ Loop:
     call WaitDs
     call WaitDs
 ;
-    btg LATB,1
     goto Loop
 
 DeviceDescr:
