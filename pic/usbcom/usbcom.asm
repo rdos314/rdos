@@ -77,46 +77,75 @@ usb_bus_in         equ 0x4D0
 
 io_page            equ 5
 
-io_crc0            equ 0x500
-io_adr0            equ 0x501
-io_cmd0            equ 0x502
-io_v00             equ 0x503               
-io_v10             equ 0x504               
-io_v20             equ 0x505               
-io_v30             equ 0x506               
-io_val0            equ 0x507
+;
+; io structure
+;
 
-io_crc1            equ 0x510
-io_adr1            equ 0x511
-io_cmd1            equ 0x512
-io_v01             equ 0x513               
-io_v11             equ 0x514               
-io_v21             equ 0x515               
-io_v31             equ 0x516               
-io_val1            equ 0x517
+io_id              equ 0
+io_state           equ 1
+io_adr             equ 2
+io_cmd             equ 3
+io_d0              equ 4
+io_d1              equ 5
+io_d2              equ 6
+io_d3              equ 7
 
-io_crc2            equ 0x520
-io_adr2            equ 0x521
-io_cmd2            equ 0x522
-io_v02             equ 0x523               
-io_v12             equ 0x524               
-io_v22             equ 0x525               
-io_v32             equ 0x526               
-io_val2            equ 0x527
+io_id0             equ 0x500
+io_state0          equ 0x501
+io_adr0            equ 0x502
+io_cmd0            equ 0x503
+io_v00             equ 0x504               
+io_v10             equ 0x505               
+io_v20             equ 0x506               
+io_v30             equ 0x507               
 
-io_crc3            equ 0x530
-io_adr3            equ 0x531
-io_cmd3            equ 0x532
-io_v03             equ 0x533               
-io_v13             equ 0x534               
-io_v23             equ 0x535               
-io_v33             equ 0x536               
-io_val3            equ 0x537
+io_val0            equ 0x508
+io_crc0            equ 0x509
+
+io_id1             equ 0x510
+io_state1          equ 0x511
+io_adr1            equ 0x512
+io_cmd1            equ 0x513
+io_v01             equ 0x514               
+io_v11             equ 0x515               
+io_v21             equ 0x516               
+io_v31             equ 0x517
+               
+io_val1            equ 0x518
+io_crc1            equ 0x519
+
+io_id2             equ 0x520
+io_state2          equ 0x521
+io_adr2            equ 0x522
+io_cmd2            equ 0x523
+io_v02             equ 0x524               
+io_v12             equ 0x525               
+io_v22             equ 0x526               
+io_v32             equ 0x527
+               
+io_val2            equ 0x528
+io_crc2            equ 0x529
+
+io_id3             equ 0x530
+io_state3          equ 0x531
+io_adr3            equ 0x532
+io_cmd3            equ 0x533
+io_v03             equ 0x534               
+io_v13             equ 0x535               
+io_v23             equ 0x536               
+io_v33             equ 0x537               
+
+io_val3            equ 0x538
+io_crc3            equ 0x539
 
 io_chans           equ 0x540
 io_temp1           equ 0x541
 io_temp2           equ 0x542
 io_count           equ 0x543
+io_curr_chan       equ 0x544
+io_val             equ 0x545
+io_crc             equ 0x546
+io_base            equ 0x547
 
 SER_STATE_ACTIVE   equ 0
 SER_STATE_ODD      equ 1
@@ -147,7 +176,7 @@ w_isr         equ 0x60
 status_isr    equ 0x61
 bsr_isr       equ 0x62
 
-counter_ms   equ 0x63
+counter_ms    equ 0x63
 counter_ds    equ 0x64
 
 temp1         equ 0x65
@@ -176,16 +205,27 @@ usb_ep        equ 0x78
 usb_adr       equ 0x79
 
 ser_state     equ 0x7A
+counter_dms   equ 0x7B
 ser_mask      equ 0x7C
 parity        equ 0x7D
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; position dependent code starts here
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; position dependent code ends here
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Case
+;
+;  W   table entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Case:
+   rlncf WREG,F
+   rlncf WREG,F
+   addwf TOSL,F
+   movlw 0
+   addwfc TOSH,F
+   addwfc TOSU,F
+   return
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; WriteOutput0
@@ -263,61 +303,142 @@ WriteOutSet3:
 WriteOutClear3:
     bsf LATD,3
     return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteComOutput0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteComOutput0:
+    btfss io_val,0
+    goto WriteComOutClear0
+
+WriteComOutSet0:
+    bcf LATB,1
+    return
+
+WriteComOutClear0:
+    bsf LATB,1
+    return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ReadInput0
+; WriteComOutput1
 ;
 ;   W   bit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadInput0:
-    bcf io_val0,0
+WriteComOutput1:
+    btfss io_val,0
+    goto WriteComOutClear1
+
+WriteComOutSet1:
+    bcf LATB,3
+    return
+
+WriteComOutClear1:
+    bsf LATB,3
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteComOutput2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteComOutput2:
+    btfss io_val,0
+    goto WriteComOutClear2
+
+WriteComOutSet2:
+    bcf LATD,1
+    return
+
+WriteComOutClear2:
+    bsf LATD,1
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteComOutput3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteComOutput3:
+    btfss io_val,0
+    goto WriteComOutClear3
+
+WriteComOutSet3:
+    bcf LATD,3
+    return
+
+WriteComOutClear3:
+    bsf LATD,3
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCurr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCurr:
+    movf io_curr_chan, W
+    andlw 3
+    call Case
+    goto WriteComOutput0
+    goto WriteComOutput1
+    goto WriteComOutput2
+    goto WriteComOutput3
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadComInput0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadComInput0:
+    bcf io_val,0
     btfss PORTD,4
-    bsf io_val0,0
+    bsf io_val,0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ReadInput1
-;
-;   W   bit
+; ReadComInput1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadInput1:
-    bcf io_val1,0
+ReadComInput1:
+    bcf io_val,0
     btfss PORTD,5
-    bsf io_val1,0
+    bsf io_val,0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ReadInput2
-;
-;   W   bit
+; ReadComInput2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadInput2:
-    bcf io_val2,0
+ReadComInput2:
+    bcf io_val,0
     btfss PORTD,6
-    bsf io_val2,0
+    bsf io_val,0
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ReadInput3
-;
-;   W   bit
+; ReadComInput3
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadInput3:
-    bcf io_val3,0
+ReadComInput3:
+    bcf io_val,0
     btfss PORTD,7
-    bsf io_val3,0
+    bsf io_val,0
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -609,52 +730,6 @@ UpdateCrc:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; InputBit
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InputBit:
-    call Delay
-    movlb io_page
-;
-    btfsc io_chans,0
-    call ReadInput0
-;
-    btfsc io_chans,1
-    call ReadInput1
-;
-    btfsc io_chans,2
-    call ReadInput2
-;
-    btfsc io_chans,3
-    call ReadInput3
-;
-    btfsc io_chans,0
-    call SetClkActive0
-;
-    btfsc io_chans,1
-    call SetClkActive1
-;
-    btfsc io_chans,2
-    call SetClkActive2
-;
-    btfsc io_chans,3
-    call SetClkActive3
-;
-    call Delay
-    movlb io_page
-;
-    call SetClkInactive0
-    call SetClkInactive1
-    call SetClkInactive2
-    call SetClkInactive3
-;
-    call Delay
-    movlb io_page
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; OutputActive
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -723,6 +798,245 @@ UpdateLine:
     btfsc io_chans,3
     call CheckInput3
 ;
+    return
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCom0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCom0:
+    movlb io_page
+;
+    call WriteComOutput0
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkActive0
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive0
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCom1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCom1:
+    movlb io_page
+;
+    call WriteComOutput1
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkActive1
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive1
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCom2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCom2:
+    movlb io_page
+;
+    call WriteComOutput2
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkActive2
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive2
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCom3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCom3:
+    movlb io_page
+;
+    call WriteComOutput3
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkActive3
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive3
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; OutputCurrBit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputCurrBit:
+    movf io_curr_chan, W
+    andlw 3
+    call Case
+    goto WriteCom0
+    goto WriteCom1
+    goto WriteCom2
+    goto WriteCom3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadCom0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCom0:
+    call Delay
+    movlb io_page
+;
+    call ReadComInput0
+    call SetClkActive0
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive0
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadCom1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCom1:
+    call Delay
+    movlb io_page
+;
+    call ReadComInput1
+    call SetClkActive1
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive1
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadCom2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCom2:
+    call Delay
+    movlb io_page
+;
+    call ReadComInput2
+    call SetClkActive2
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive2
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadCom3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCom3:
+    call Delay
+    movlb io_page
+;
+    call ReadComInput3
+    call SetClkActive3
+;
+    call Delay
+    movlb io_page
+;
+    call SetClkInactive3
+;
+    call Delay
+    movlb io_page
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; InputCurrBit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InputCurrBit:
+    movf io_curr_chan, W
+    andlw 3
+    call Case
+    goto ReadCom0
+    goto ReadCom1
+    goto ReadCom2
+    goto ReadCom3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateComCrc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateComCrc:
+    movf io_val,W	
+    andlw 1
+    movwf io_temp1
+    clrf io_temp2
+    bcf STATUS, C
+    rlcf io_crc,F
+    rlcf io_temp2,W
+    xorwf io_temp1,W
+    btfsc STATUS, Z
+    return
+;
+    movlw 0x26
+    xorwf io_crc,F
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -895,36 +1209,23 @@ OutCmdLoop:
 Read6:
     movlb io_page
 ;
-    clrf io_val0
-    clrf io_val1
-    clrf io_val2
-    clrf io_val3
+    clrf io_val
 ;
     movlw 6
     movwf io_count
 
 ReadInnerLoop:
-    call InputBit
-    call UpdateCrc
+    call InputCurrBit
+    call UpdateComCrc
 ;
-    rrncf io_val0,F
-    rrncf io_val1,F
-    rrncf io_val2,F
-    rrncf io_val3,F
+    rrncf io_val,F
 ;
     decf io_count,F
     btfss STATUS,Z
     goto ReadInnerLoop
 ;
-    rrncf io_val0,F
-    rrncf io_val1,F
-    rrncf io_val2,F
-    rrncf io_val3,F
-;
-    rrncf io_val0,F
-    rrncf io_val1,F
-    rrncf io_val2,F
-    rrncf io_val3,F
+    rrncf io_val,F
+    rrncf io_val,F
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -936,21 +1237,15 @@ ReadInnerLoop:
 ReadCrc:
     movlb io_page
 ;
-    clrf io_val0
-    clrf io_val1
-    clrf io_val2
-    clrf io_val3
+    clrf io_val
 ;
     movlw 8
     movwf io_count
 
 ReadCrcLoop:
-    call InputBit
+    call InputCurrBit
 ;
-    rrncf io_val0,F
-    rrncf io_val1,F
-    rrncf io_val2,F
-    rrncf io_val3,F
+    rrncf io_val,F
 ;
     decf io_count,F
     btfss STATUS,Z
@@ -965,80 +1260,60 @@ ReadCrcLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Read24:
-    clrf io_crc0
-    clrf io_crc1
-    clrf io_crc2
-    clrf io_crc3
+    clrf io_crc
 ;
     call Read6
 ;
-    movf io_val0,W
-    movwf io_v00
+    movlw io_page
+    movwf FSR2H
 ;
-    movf io_val1,W
-    movwf io_v01
+    movf io_base, W
+    addlw io_d0
+    movwf FSR2L
 ;
-    movf io_val2,W
-    movwf io_v02
-;
-    movf io_val3,W
-    movwf io_v03
+    movf io_val,W
+    movwf INDF2
 ;
     call Read6
 ;
-    movf io_val0,W
-    movwf io_v10
+    movlw io_page
+    movwf FSR2H
 ;
-    movf io_val1,W
-    movwf io_v11
+    movf io_base, W
+    addlw io_d1
+    movwf FSR2L
 ;
-    movf io_val2,W
-    movwf io_v12
-;
-    movf io_val3,W
-    movwf io_v13
+    movf io_val,W
+    movwf INDF2
 ;
     call Read6
 ;
-    movf io_val0,W
-    movwf io_v20
+    movlw io_page
+    movwf FSR2H
 ;
-    movf io_val1,W
-    movwf io_v21
+    movf io_base, W
+    addlw io_d2
+    movwf FSR2L
 ;
-    movf io_val2,W
-    movwf io_v22
-;
-    movf io_val3,W
-    movwf io_v23
+    movf io_val,W
+    movwf INDF2
 ;
     call Read6
 ;
-    movf io_val0,W
-    movwf io_v30
+    movlw io_page
+    movwf FSR2H
 ;
-    movf io_val1,W
-    movwf io_v31
+    movf io_base, W
+    addlw io_d3
+    movwf FSR2L
 ;
-    movf io_val2,W
-    movwf io_v32
-;
-    movf io_val3,W
-    movwf io_v33
+    movf io_val,W
+    movwf INDF2
 ;
     call ReadCrc
 ;
     movlw 0xA5
-    xorwf io_val0,F
-;
-    movlw 0xA5
-    xorwf io_val1,F
-;
-    movlw 0xA5
-    xorwf io_val2,F
-;
-    movlw 0xA5
-    xorwf io_val3,F
+    xorwf io_val,F
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1069,14 +1344,36 @@ TestIo:
     call Preamp
     call OutputAdr    
     call OutputCmd
-    call Read24
-    call Deactivate
 ;
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
+    movlw 0
+    movwf io_base
+    clrf io_curr_chan
+;
+    btfsc io_chans,0
+    call Read24
+;
+    movlw 0x10
+    movwf io_base
+    incf io_curr_chan,F
+;
+    btfsc io_chans,1
+    call Read24
+;
+    movlw 0x20
+    movwf io_base
+    incf io_curr_chan,F
+;
+    btfsc io_chans,2
+    call Read24
+;
+    movlw 0x30
+    movwf io_base
+    incf io_curr_chan,F
+;
+    btfsc io_chans,3
+    call Read24
+
+    call Deactivate
 ;
     return
     
@@ -2500,6 +2797,22 @@ SerDone:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; Delay
+;
+; IO delay (1ms)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Delay:
+    call Poll
+    btfss PIR1,TMR2IF
+    bra Delay
+;
+    bcf PIR1,TMR2IF
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; WaitMs
 ;
 ; Delay 1ms
@@ -2507,11 +2820,15 @@ SerDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitMs:
-    call Poll
-    btfss PIR1,TMR2IF
-    bra WaitMs
+    movlw 0xA
+    movwf counter_dms
+
+wmLoop:
+    call Delay
 ;
-    bcf PIR1,TMR2IF
+    decfsz counter_dms,F
+    bra wmLoop
+;
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2532,18 +2849,6 @@ wdLoop:
     decfsz counter_ms,F
     bra wdLoop
 ;
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Delay
-;
-; IO delay (1ms)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Delay:
-    call WaitMs
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2592,7 +2897,7 @@ ProgStart:
     movlw 0x26
     movwf T2CON
 ;
-    movlw 0x64
+    movlw 0xA
     movwf PR2
 ;
     bcf PIR1,TMR2IF
@@ -2604,11 +2909,6 @@ ProgStart:
     
 Loop:
     call TestIo
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
     call WaitDs
     call WaitDs
     call WaitDs
