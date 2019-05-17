@@ -392,6 +392,44 @@ DetachBus Proc near
     int 3
     ret
 DetachBus Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AllocateBusReq
+;
+;   DESCRIPTION:    Allocate bus req entry
+;
+;   PARAMETERS:     DS  IO bus sel
+;
+;   RETURNS:        BX	Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBusReq Proc near
+    push eax
+;
+    EnterSection ds:io_section
+    movzx bx,ds:io_insert_id
+    shl bx,4
+    mov ax,ds:[bx].io_entry_arr.io_thread
+    or ax,ax
+    stc
+    jnz abrDone
+;
+    GetThread
+    mov ds:[bx].io_entry_arr.io_thread,ax
+    movzx bx,ds:io_insert_id
+    mov ax,bx
+    inc al
+    mov ds:io_insert_id,al
+
+abrDone:
+    LeaveSection ds:io_section
+;
+    pop eax
+    ret
+AllocateBusReq Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -466,6 +504,43 @@ write_serial_val        Endp
 read_serial_val_name    DB 'Read Serial Value', 0
 
 read_serial_val Proc far
+    push ds
+    push ebx
+    push ecx
+;
+    int 3
+    mov ebx,SEG data
+    mov ds,ebx
+    mov bx,ds:io_sel
+    or bx,bx
+    stc
+    jz rsvDone
+;
+    mov ds,bx
+    call AllocateBusReq
+    jc rsvDone
+;
+    mov cl,bl
+    shl bx,4
+    add bx,OFFSET io_entry_arr
+    mov ds:[bx].io_id,cl
+    mov ds:[bx].io_status,-1
+    mov ds:[bx].io_adr,dh
+;
+    mov al,dl
+    shl al,3
+    or al,2
+    mov ds:[bx].io_cmd,dh
+;
+    mov bx,ds:io_thread
+    Signal
+;
+    WaitForSignal
+
+rsvDone:
+    pop ecx
+    pop ebx
+    pop ds
     ret
 read_serial_val Endp
     
