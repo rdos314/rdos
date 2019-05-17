@@ -262,6 +262,7 @@ FindSpecificDevice	Endp
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
+;               AH      Port
 ;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -489,6 +490,7 @@ uaReConfig:
     jc uaFail
 ;
     mov gs:cdc_controller,bx
+    mov gs:cdc_port,ah
     mov gs:cdc_device,al
 ;
     mov ebx,gs
@@ -516,7 +518,7 @@ uaReCopyDone:
     mov al,'.'
     stosb
 ;
-    mov al,ds:cdc_device
+    mov al,ds:cdc_port
     call HexToAscii
     stosw
 ;
@@ -575,6 +577,7 @@ uaNotDead:
     shr esi,16
     mov es:cdc_vendor,si
     mov es:cdc_controller,bx
+    mov es:cdc_port,ah
     mov es:cdc_device,al
     mov es:cdc_abs_control_cap,0
     mov es:cdc_unit_count,0
@@ -650,7 +653,7 @@ uaCopyDone:
     mov al,'.'
     stosb
 ;
-    mov al,ds:cdc_device
+    mov al,ds:cdc_port
     call HexToAscii
     stosw
 ;
@@ -687,6 +690,7 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
+;                           AH      Port
 ;                           AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -698,7 +702,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    movzx ax,al
     mov edx,SEG data
     mov ds,edx
     mov esi,OFFSET sd_dev_arr
@@ -715,7 +718,7 @@ udCheckLoop:
     cmp bx,es:cdc_controller
     jne udCheckNext
 ;
-    cmp al,es:cdc_device
+    cmp ah,es:cdc_port
     jne udCheckNext
 ;
     mov bx,es

@@ -46,6 +46,7 @@ cdc_struc	STRUC
 cdc_vendor              DW ?
 cdc_product             DW ?
 cdc_controller          DW ?
+cdc_port                DB ?
 cdc_device              DB ?
 
 cdc_sub_class		DB ?
