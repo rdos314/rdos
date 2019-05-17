@@ -13,6 +13,7 @@ SER_USB_SIZE       equ 0x40
 
 EP0                equ 0
 EP1                equ 8
+EP2                equ 0x10
 
 ser_ram            equ 0x100
 ser_buf_page       equ 1
@@ -72,8 +73,8 @@ usb_cin            equ 0x428
 usb_ser_out        equ 0x430
 usb_ser_in         equ 0x470
 
-usb_bus_out        equ 0x4B0
-usb_bus_in         equ 0x4D0
+usb_bus_out        equ 0x4F0
+usb_bus_in         equ 0x4F8
 
 io_page            equ 5
 
@@ -154,6 +155,9 @@ SER_STATE_PAR9     equ 3
 SER_STATE_IN_BUSY  equ 4
 SER_STATE_OUT_BUSY equ 5
 
+BUS_STATE_IN_BUSY  equ 0
+BUS_STATE_OUT_BUSY equ 1
+
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
 DESCR_FLAG_FULL    equ 2
@@ -208,6 +212,8 @@ ser_state     equ 0x7A
 counter_dms   equ 0x7B
 ser_mask      equ 0x7C
 parity        equ 0x7D
+
+bus_state     equ 0x7E
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1424,6 +1430,18 @@ InitSerial:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; InitBus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitBus:
+    movlb 0
+    clrf bus_state
+    bsf bus_state, BUS_STATE_IN_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; HandleUsbError
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1493,7 +1511,7 @@ HandleUsbReset:
     movlw 0x48
     movwf ser_in_stat
 ;
-    movlw 0x20
+    movlw 0x8
     movwf bus_out_size
     movlw low usb_bus_out
     movwf bus_out_low
@@ -1502,7 +1520,7 @@ HandleUsbReset:
     movlw 0x88
     movwf bus_out_stat
 ;
-    movlw 0x20
+    movlw 0x8
     movwf bus_in_size
     movlw low usb_bus_in
     movwf bus_in_low
@@ -2389,6 +2407,51 @@ utbNext:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; HostToIo
+;
+; Move host req to io buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HostToIo:
+    movlb usb_buf_page
+    movlw 8
+    movwf bus_in_size
+;
+    movlw 0x40
+    xorwf bus_in_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf bus_in_stat
+;
+    movlb 0
+    bsf bus_state, BUS_STATE_IN_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; IoToHost
+;
+; Move IO result to host
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoToHost:
+    movlb usb_buf_page
+    movlw 8
+    movwf bus_out_size
+;
+    movlw 0x40
+    xorwf bus_out_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf bus_out_stat
+    movlb 0
+    bcf bus_state, BUS_STATE_OUT_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; HandleSerialIn
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2405,6 +2468,26 @@ HandleSerialIn:
 
 HandleSerialOut:
     bsf ser_state, SER_STATE_OUT_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleBusIn
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleBusIn:
+    bcf bus_state, BUS_STATE_IN_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleBusOut
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleBusOut:
+    bsf bus_state, BUS_STATE_OUT_BUSY
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2471,6 +2554,15 @@ HandleUsbNotControl:
     goto HandleSerialIn
 
 HandleUsbNotSerial:
+    movlw EP2
+    cpfseq usb_ep
+    goto HandleUsbNotBus
+;
+    btfss usb_stat, DIR
+    goto HandleBusOut
+    goto HandleBusIn
+
+HandleUsbNotBus:
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2781,6 +2873,12 @@ Poll:
     btfsc ser_state, SER_STATE_OUT_BUSY
     call UsbToBuffer
 ;
+    btfss bus_state, BUS_STATE_IN_BUSY
+    call HostToIo
+;
+    btfsc bus_state, BUS_STATE_OUT_BUSY
+    call IoToHost
+;
     btfsc PIR1, RCIF
     call HandleSerReceive
 ;
@@ -2906,6 +3004,7 @@ ProgStart:
 ;
     call InitUsb
     call InitSerial
+    call InitBus
     
 Loop:
     call TestIo
