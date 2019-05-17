@@ -93,12 +93,48 @@ uds_port_nr         DW ?
 
 usbcom_device_struc   ENDS
 
+io_entry	STRUC
+
+io_id               DB ?
+io_status           DB ?
+io_adr              DB ?
+io_cmd              DB ?
+io_val              DB 4 DUP(?)
+
+io_thread           DW ?
+
+io_entry	ENDS
+
+io_seg	STRUC
+
+io_thread           DW ?
+io_controller       DW ?
+io_address          DB ?
+io_port             DB ?
+
+io_intr_in          DB ?
+io_bulk_out         DB ?
+io_in_handle        DW ?
+io_out_handle       DW ?
+io_in_buffer        DW ?
+io_out_buffer       DW ?
+io_in_req           DW ?
+io_out_req          DW ?
+
+io_insert_id        DB ?
+
+io_entry_arr        DB 16 * 256 DUP (?)
+
+io_seg  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 sd_thread       DW ?
 sd_dead         DW ?
 sd_spinlock     spinlock_typ <>
 sd_port         DW ?
+
+io_sel          DW ?
 
 data	ENDS
 
@@ -122,9 +158,23 @@ bus_thread_name  DB 'USB Bus IO', 0
 
 bus_thread:
     int 3
-    mov ax,SEG data
-    mov ds,ax
+    mov eax, SIZE io_seg
+    mov ecx,eax
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    xor al,al
+    rep stosb
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:io_sel,es
+;
     GetThread
+    mov es:io_thread,ax
+;
+    WaitForSignal
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -134,6 +184,7 @@ bus_thread:
 ;   DESCRIPTION:    Attach bus
 ;
 ;   PARAMETERS:     AL      Device address
+;                   AH      Port
 ;                   BX      Controller id
 ;                   ES:DI   Interface descriptor + endpoints
 ;
@@ -1590,6 +1641,7 @@ Init    Proc far
     mov ds:sd_port,0
     mov ds:sd_dead,0
     InitSpinlock ds:sd_spinlock
+    mov ds:io_sel,0
 ;
     mov eax,cs
     mov ds,eax
