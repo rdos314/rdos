@@ -112,6 +112,8 @@ io_controller       DW ?
 io_address          DB ?
 io_port             DB ?
 
+io_section          section_typ <>
+
 io_in_size          DW ?
 io_out_size         DW ?
 io_intr_in          DB ?
@@ -149,6 +151,21 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           StartReq
+;
+;   DESCRIPTION:    Start req
+;
+;   PARAMETERS:     BX		Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartReq	Proc near
+    ret
+StartReq	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           BusThread
 ;
 ;   DESCRIPTION:    Bus thread
@@ -171,12 +188,76 @@ bus_thread:
     mov ds,eax
     mov ds:io_sel,es
 ;
-    GetThread
-    mov es:io_thread,ax
+    mov eax,es
+    mov ds,eax
+    InitSection ds:io_section
 ;
+    GetThread
+    mov ds:io_thread,ax
+
+btOff:
     WaitForSignal
+;
     int 3
-    mov al,es:io_bulk_out
+    mov al,ds:io_bulk_out
+    or al,al
+    jz btOff
+
+btCreate:
+    mov bx,ds:io_controller
+    movzx ax,ds:io_address
+    mov dl,ds:io_intr_in
+    OpenUsbPipe
+    mov ds:io_in_handle,bx
+;
+    CreateUsbReq
+    mov ds:io_in_req,bx    
+;    
+    mov cx,ds:io_in_size
+    xor ax,ax
+    AddReadUsbDataReq
+    mov ds:io_in_buffer,es
+;
+    mov bx,ds:io_controller
+    movzx ax,ds:io_address
+    mov dl,ds:io_bulk_out
+    OpenUsbPipe    
+    mov ds:io_out_handle,bx
+;
+    CreateUsbReq
+    mov ds:io_out_req,bx
+;    
+    mov cx,ds:io_out_size
+    xor ax,ax
+    AddWriteUsbDataReq
+    mov ds:io_out_buffer,es
+
+btRestart:
+    EnterSection ds:io_section
+;
+    movzx bx,ds:io_insert_id
+    shl bx,4
+    mov ecx,100h
+
+btRestartLoop:
+    mov ax,ds:[bx].io_entry_arr.io_thread
+    or ax,ax
+    jz btRestartNext
+;
+    call StartReq
+
+btRestartNext:
+    add bx,10h
+    cmp bx,1000h
+    jne btRestartNoWrap
+;
+    xor bx,bx
+
+btRestartNoWrap:
+    loop btRestartLoop
+;
+    LeaveSection ds:io_section
+;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -826,7 +907,7 @@ OpenPort Proc far
     mov ds:uds_out_req,bx
 ;    
     mov cx,ds:uds_out_size
-    mov ax,1
+    xor ax,ax
     AddWriteUsbDataReq
     mov ds:uds_out_buffer,es
     ret
