@@ -198,7 +198,6 @@ bus_thread:
 btOff:
     WaitForSignal
 ;
-    int 3
     mov al,ds:io_bulk_out
     or al,al
     jz btOff
@@ -258,7 +257,26 @@ btRestartNoWrap:
 ;
     LeaveSection ds:io_section
 ;
+    int 3
+    mov bx,ds:io_in_req
+    StartUsbReq
 
+btOn:
+    mov bx,ds:io_in_req
+    IsUsbReqReady
+    jc btReadDone
+;
+    GetUsbReqData
+
+btReadDone:
+    WaitForSignal
+    int 3
+;
+    mov al,ds:io_bulk_out
+    or al,al
+    jnz btOn
+;
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
