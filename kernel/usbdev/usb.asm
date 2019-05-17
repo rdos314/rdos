@@ -908,9 +908,8 @@ CloseDevice Proc near
     push cx
     push dx
 ;    
-    movzx bx,es:usbd_address
-    add bx,bx
-    mov ds:[bx].usb_addr_arr,0
+    mov al,es:usbd_address
+    call fword ptr ds:free_address_proc
 ;
     mov cx,16
     mov bx,OFFSET usbd_out_endpoint_arr
@@ -1132,6 +1131,7 @@ allocate_usb_address       Proc far
     mov ax,ds
     mov es,ax
 ;
+    EnterSection ds:usb_section
     mov di,OFFSET usb_addr_arr
     mov cx,128
     add di,2
@@ -1139,6 +1139,7 @@ allocate_usb_address       Proc far
     repnz scasw
     sub di,2
     mov word ptr ds:[di],-1
+    LeaveSection ds:usb_section
 ;
     sub di,OFFSET usb_addr_arr
     shr di,1
@@ -1169,9 +1170,11 @@ free_usb_address_name DB 'Free USB Address', 0
 free_usb_address       Proc far
     push bx
 ;
+    EnterSection ds:usb_section
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,0
+    LeaveSection ds:usb_section
 ;
     pop bx
     retf32
