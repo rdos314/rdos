@@ -112,6 +112,8 @@ io_controller       DW ?
 io_address          DB ?
 io_port             DB ?
 
+io_in_size          DW ?
+io_out_size         DW ?
 io_intr_in          DB ?
 io_bulk_out         DB ?
 io_in_handle        DW ?
@@ -157,7 +159,6 @@ code    SEGMENT byte public 'CODE'
 bus_thread_name  DB 'USB Bus IO', 0
 
 bus_thread:
-    int 3
     mov eax, SIZE io_seg
     mov ecx,eax
     AllocateSmallGlobalMem
@@ -175,6 +176,8 @@ bus_thread:
 ;
     WaitForSignal
     int 3
+    mov al,es:io_bulk_out
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -193,11 +196,85 @@ bus_thread:
 AttachBus Proc near
     push ds
     push es
+    push fs
     pushad
 ;
-    int 3
+    mov edx,SEG data
+    mov ds,edx
+    mov dx,ds:io_sel
+    or dx,dx
+    jz abDone
 ;
+    mov fs,edx
+    mov fs:io_controller,bx
+    mov fs:io_address,al
+    mov fs:io_port,ah
+;
+    mov fs:io_bulk_out,0
+    mov fs:io_intr_in,0
+;
+    xor dx,dx
+    movzx cx,es:[di].uid_len
+    add di,cx
+
+abDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,5
+    jne abDescrDone
+;
+    mov cl,es:[di].ued_attrib
+    and cl,3
+    cmp cl,2
+    je abBulk
+;
+    cmp cl,3
+    jne abDescrNext
+
+abIntr:
+    inc dh
+    mov cl,es:[di].ued_address
+    and cl,8Fh
+    mov fs:io_intr_in,cl
+;
+    mov cx,es:[di].ued_maxsize
+    mov fs:io_in_size,cx
+    jmp abDescrNext
+
+abBulk:
+    mov cl,es:[di].ued_address
+    test cl,80h    
+    jnz abDescrNext
+
+abBulkOut:
+    inc dl
+    cmp dl,1
+    je abDescrNext
+;
+    and cl,0Fh
+    mov fs:io_bulk_out,cl
+;
+    mov cx,es:[di].ued_maxsize
+    mov fs:io_out_size,cx
+    jmp abDescrNext
+    
+abDescrNext:    
+    cmp dx,102h
+    je abDescrDone
+;
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb abDescrLoop    
+;
+    jmp abDone
+    
+abDescrDone:
+    mov bx,fs:io_thread
+    Signal
+
+abDone:
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -1443,7 +1520,6 @@ uaDescrLoop:
     cmp cl,4
     jne uaDescrNext
 ; 
-    int 3
     call AttachBus
     call CreateDevice
     jmp uaDone
