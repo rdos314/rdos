@@ -2953,11 +2953,11 @@ Endpoint1:
 Endpoint2:
     db 7, 5        ; size + endpoint 2 OUT
     db 0x2, 0x2    ; OUT endpoint 2 + bulk
-    db 0x20, 0     ; max packet size (64 bytes)
+    db 0x8, 0      ; max packet size (8 bytes)
     db 0, 7        ; max NAKs, endpoint 2 IN 
     db 5, 0x82     ; IN endpoint 2
-    db 0x2, 0x20   ; bulk + max packet size low
-    db 0, 0        ; max packet size high + max NAKs
+    db 0x3, 0x8    ; interrupt + max packet size low
+    db 0, 1        ; max packet size high + interval
 
 ConfigEnd:
 
