@@ -145,7 +145,22 @@ FreeAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDev   Proc far
-    int 3
+    push ecx    
+    push edi
+    push eax
+;
+    mov eax,SIZE usb_device_struc
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov ecx,SIZE usb_device_struc
+    xor al,al
+    rep stosb
+;
+    pop eax
+    pop edi
+    pop ecx
+;
+    InitUsbDev
     ret
 CreateDev   Endp
 
