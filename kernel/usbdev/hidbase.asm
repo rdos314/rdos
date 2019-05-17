@@ -1239,6 +1239,7 @@ OpenIntrPipe_   Endp
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
+;               AH      Port
 ;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1309,7 +1310,8 @@ uaFail:
 
 uaFound:
     ConfigUsbDevice
-    
+;
+    movzx edx,ah
     movzx eax,al
     movzx ebx,bx
     call CreateHid

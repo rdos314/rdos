@@ -3030,8 +3030,8 @@ void __far HidThread(void *param)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CreateHid "*" rdosdev parm routine [ebx] [eax] [es edi]
-void CreateHid(int controller, int device, char *config)
+#pragma aux CreateHid "*" rdosdev parm routine [ebx] [eax] [edx] [es edi]
+void CreateHid(int controller, int device, int port, char *config)
 {
     int i;
     int j;
@@ -3073,7 +3073,7 @@ void CreateHid(int controller, int device, char *config)
             dev->StopReq = FALSE;
             dev->ConfigBuf = config;
             dev->Thread = 0;
-            sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
+            sprintf(ThreadName, "Hid %02hX.%02hX", controller, port);
             RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
 
             break;
