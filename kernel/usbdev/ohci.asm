@@ -3077,7 +3077,7 @@ upDoSignal:
 ;
     EnterSection ds:usb_section
     mov bx,ds:[edi].usb_attach_thread_arr
-    or bx,bx
+    cmp bx,-1
     jz upCheckDetach
 ;
     Signal
@@ -3085,7 +3085,7 @@ upDoSignal:
 
 upCheckDetach:    
     mov bx,ds:[edi].usb_detach_thread_arr
-    or bx,bx
+    cmp bx,-1
     jz upCheckReset
 ;
     Signal
@@ -3093,7 +3093,7 @@ upCheckDetach:
             
 upCheckReset:    
     mov bx,ds:[edi].usb_reset_thread_arr
-    or bx,bx
+    cmp bx,-1
     jz upLeave
 ;
     Signal

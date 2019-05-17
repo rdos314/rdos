@@ -1008,11 +1008,19 @@ cpcOverCurrentOk:
     add edi,edi
 ;
     mov bx,ds:[edi].usb_attach_thread_arr
-    Signal
+    cmp bx,-1
+    je cpcSigAttachOK
 ;
+    Signal
+
+cpcSigAttachOk:
     mov bx,ds:[edi].usb_reset_thread_arr
-    Signal
+    cmp bx,-1
+    je cpcSigResetOk
 ;
+    Signal
+
+cpcSigResetOk:
     pop edi
     pop ebx
                 
@@ -1653,7 +1661,7 @@ upDoSignal:
 ;
     EnterSection ds:usb_section
     mov bx,ds:[edi].usb_attach_thread_arr
-    or bx,bx
+    cmp bx,-1
     jz upCheckDetach
 ;
     Signal
@@ -1661,7 +1669,7 @@ upDoSignal:
 
 upCheckDetach:    
     mov bx,ds:[edi].usb_detach_thread_arr
-    or bx,bx
+    cmp bx,-1
     jz upCheckReset
 ;
     Signal
@@ -1669,7 +1677,7 @@ upCheckDetach:
             
 upCheckReset:    
     mov bx,ds:[edi].usb_reset_thread_arr
-    or bx,bx
+    cmp bx,-1
     jz upLeave
 ;
     Signal
@@ -1716,6 +1724,161 @@ uhpDone:
     pop ax
     ret
 UpdatePorts    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClosePort
+;
+;       DESCRIPTION:    Close root-hub port
+;
+;       PARAMETERS:     DS      Function selector
+;                       DX      Port # (0..ports)
+;
+;       RETURNS:        NC      Closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePort   Proc near
+    push ds
+    push fs
+    pushad
+;    
+    movzx edi,dx
+    add edi,edi
+    mov cx,dx
+;    
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz cpCheckTimeout
+;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
+    or bx,bx
+    jz cpCheckTimeout
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz cpCheckTimeout
+;
+    mov ds:[edi].usb_detach_thread_arr,-1    
+    mov ds:[edi].usb_retry_arr,0
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov dx,cx
+    mov esi,OFFSET detach_thread
+    mov edi,OFFSET detach_thread_name
+    mov ax,2
+    call StartThread
+    stc
+    jmp cpDone
+
+cpCheckTimeout:
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz cpSignal
+;
+    mov bx,ds:[edi].usb_detach_thread_arr
+    or bx,bx
+    clc
+    jz cpDone
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc cpDone
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_attach_thread_arr
+    cmp bx,-1
+    jz cpSigDetachOk
+;
+    Signal
+
+cpSigDetachOk:
+    LeaveSection ds:usb_section
+;
+    stc
+    jmp cpDone
+
+cpSignal:
+    EnterSection ds:usb_section
+;
+    mov bx,ds:[edi].usb_attach_thread_arr
+    cmp bx,-1
+    jz cpSigAttachOk
+;
+    Signal
+
+cpSigAttachOk:
+    mov bx,ds:[edi].usb_reset_thread_arr
+    cmp bx,-1
+    jz cpSigResetOk
+;
+    Signal
+
+cpSigResetOk:
+    LeaveSection ds:usb_section
+    stc
+                
+cpDone:    
+    popad
+    pop fs
+    pop ds    
+    ret
+ClosePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClosePorts
+;
+;   description:    Update ports
+;
+;   Parameters:     DS      Function sel
+;
+;   Returns:        NC      All ports closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePorts    Proc near
+    push ax
+    push dx
+;
+    xor dx,dx
+
+chpoLoop:
+    call ClosePort
+    jc chpfNext
+;
+    inc dx
+    cmp dx,ds:hub_ports
+    jb chpoLoop
+;
+    clc
+    jmp chpDone
+
+chpfLoop:
+    call ClosePort
+
+chpfNext:
+    inc dx
+    cmp dx,ds:hub_ports
+    jb chpfLoop
+;
+    stc
+
+chpDone:           
+    pop dx
+    pop ax
+    ret
+ClosePorts    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1938,6 +2101,14 @@ tpLoop:
     jmp tpLoop
 
 tpExit:
+    call ClosePorts
+    jnc tpClosed
+;
+    mov ax,100
+    WaitMilliSec
+    jmp tpExit
+
+tpClosed:
     mov ds:hub_port_thread,0
     mov bx,ds:hub_detach
     Signal
