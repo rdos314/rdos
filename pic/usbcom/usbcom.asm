@@ -2,7 +2,7 @@
 
   config PLLDIV=3,  CPUDIV = OSC2_PLL3, USBDIV = 2, FOSC = HSPLL_HS, FCMEN = OFF, IESO = OFF, PWRT = ON
   config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON
-  config MCLRE = ON, STVREN = ON
+  config MCLRE = OFF, STVREN = ON
   config LVP = OFF, ICPRT = OFF,  XINST = OFF
   config CP0=OFF, CP1=OFF, CP2=OFF, CP3=OFF, CPB=OFF, CPD=OFF
   config WRT0=OFF, WRT1=OFF, WRT2=OFF, WRT3=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF
@@ -1433,8 +1433,18 @@ GetBusReqOk:
 
 SetupAllReq:
     movlb io_page
-    movlw io_adr
-    addwf FSR0L,F
+;
+    movf POSTINC0,W
+    movwf io_id0
+    movwf io_id1
+    movwf io_id2
+    movwf io_id3
+;
+    movf POSTINC0,W
+    movwf io_state0
+    movwf io_state1
+    movwf io_state2
+    movwf io_state3
 ;
     movf POSTINC0,W
     movwf io_adr0
@@ -1447,6 +1457,30 @@ SetupAllReq:
     movwf io_cmd1
     movwf io_cmd2
     movwf io_cmd3
+;
+    movf POSTINC0,W
+    movwf io_v00
+    movwf io_v01
+    movwf io_v02
+    movwf io_v03
+;
+    movf POSTINC0,W
+    movwf io_v10
+    movwf io_v11
+    movwf io_v12
+    movwf io_v13
+;
+    movf POSTINC0,W
+    movwf io_v20
+    movwf io_v21
+    movwf io_v22
+    movwf io_v23
+;
+    movf POSTINC0,W
+    movwf io_v30
+    movwf io_v31
+    movwf io_v32
+    movwf io_v33
 ;
     movlw 0xF
     movwf io_chans
