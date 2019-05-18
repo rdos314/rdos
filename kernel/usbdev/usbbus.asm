@@ -101,13 +101,13 @@ io_adr              DB ?
 io_cmd              DB ?
 io_val              DB 4 DUP(?)
 
-io_thread           DW ?
+io_wait_thread      DW ?
 
 io_entry	ENDS
 
 io_seg	STRUC
 
-io_thread           DW ?
+io_serv_thread      DW ?
 io_controller       DW ?
 io_address          DB ?
 io_port             DB ?
@@ -126,6 +126,7 @@ io_in_req           DW ?
 io_out_req          DW ?
 
 io_insert_id        DB ?
+io_process_id       DB ?
 
 io_entry_arr        DB 16 * 256 DUP (?)
 
@@ -155,11 +156,12 @@ code    SEGMENT byte public 'CODE'
 ;
 ;   DESCRIPTION:    Start req
 ;
-;   PARAMETERS:     BX		Entry #
+;   PARAMETERS:     BX		Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartReq	Proc near
+    int 3
     ret
 StartReq	Endp
 
@@ -193,7 +195,7 @@ bus_thread:
     InitSection ds:io_section
 ;
     GetThread
-    mov ds:io_thread,ax
+    mov ds:io_serv_thread,ax
 
 btOff:
     WaitForSignal
@@ -233,31 +235,11 @@ btCreate:
 
 btRestart:
     EnterSection ds:io_section
-;
-    movzx bx,ds:io_insert_id
-    shl bx,4
-    mov ecx,100h
-
-btRestartLoop:
-    mov ax,ds:[bx].io_entry_arr.io_thread
-    or ax,ax
-    jz btRestartNext
-;
-    call StartReq
-
-btRestartNext:
-    add bx,10h
-    cmp bx,1000h
-    jne btRestartNoWrap
-;
-    xor bx,bx
-
-btRestartNoWrap:
-    loop btRestartLoop
-;
+    mov al,ds:io_insert_id
+    inc al
+    mov ds:io_process_id,al
     LeaveSection ds:io_section
 ;
-    int 3
     mov bx,ds:io_in_req
     StartUsbReq
 
@@ -266,12 +248,38 @@ btOn:
     IsUsbReqReady
     jc btReadDone
 ;
+    int 3
     GetUsbReqData
 
 btReadDone:
+    EnterSection ds:io_section
+;
+    mov cl,ds:io_process_id
+    cmp cl,ds:io_insert_id
+    je btWaitActive
+;
+    movzx bx,cl
+    shl bx,4
+    add bx,OFFSET io_entry_arr
+    mov ax,ds:[bx].io_wait_thread
+    or ax,ax
+    jz btReadNext
+;
+    call StartReq
+
+btReadNext:
+    inc cl
+    mov ds:io_process_id,cl
+    LeaveSection ds:io_section
+    jmp btCheckOn
+
+btWaitActive:
+    LeaveSection ds:io_section
+;
     WaitForSignal
     int 3
-;
+
+btCheckOn:
     mov al,ds:io_bulk_out
     or al,al
     jnz btOn
@@ -368,7 +376,7 @@ abDescrNext:
     jmp abDone
     
 abDescrDone:
-    mov bx,fs:io_thread
+    mov bx,fs:io_serv_thread
     Signal
 
 abDone:
@@ -402,31 +410,34 @@ DetachBus Endp
 ;
 ;   PARAMETERS:     DS  IO bus sel
 ;
-;   RETURNS:        BX	Entry #
+;   RETURNS:        BX	Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateBusReq Proc near
     push eax
+    push ecx
 ;
-    EnterSection ds:io_section
-    movzx bx,ds:io_insert_id
+    mov cl,ds:io_insert_id
+    movzx bx,cl
     shl bx,4
-    mov ax,ds:[bx].io_entry_arr.io_thread
+    add bx,OFFSET io_entry_arr
+    mov ax,ds:[bx].io_wait_thread
     or ax,ax
     stc
     jnz abrDone
 ;
     GetThread
-    mov ds:[bx].io_entry_arr.io_thread,ax
-    movzx bx,ds:io_insert_id
-    mov ax,bx
-    inc al
-    mov ds:io_insert_id,al
+    mov ds:[bx].io_wait_thread,ax
+    mov ds:[bx].io_id,cl
+    mov ds:[bx].io_status,-1
+;
+    inc cl
+    mov ds:io_insert_id,cl
+    clc
 
 abrDone:
-    LeaveSection ds:io_section
-;
+    pop ecx
     pop eax
     ret
 AllocateBusReq Endp
@@ -508,7 +519,6 @@ read_serial_val Proc far
     push ebx
     push ecx
 ;
-    int 3
     mov ebx,SEG data
     mov ds,ebx
     mov bx,ds:io_sel
@@ -517,25 +527,29 @@ read_serial_val Proc far
     jz rsvDone
 ;
     mov ds,bx
+    EnterSection ds:io_section
     call AllocateBusReq
-    jc rsvDone
+    jc rsvFail
 ;
-    mov cl,bl
-    shl bx,4
-    add bx,OFFSET io_entry_arr
-    mov ds:[bx].io_id,cl
-    mov ds:[bx].io_status,-1
     mov ds:[bx].io_adr,dh
 ;
     mov al,dl
     shl al,3
     or al,2
-    mov ds:[bx].io_cmd,dh
+    mov ds:[bx].io_cmd,al
+    LeaveSection ds:io_section
 ;
-    mov bx,ds:io_thread
+    mov bx,ds:io_serv_thread
     Signal
 ;
     WaitForSignal
+    int 3
+    clc
+    jmp rsvDone
+
+rsvFail:
+    LeaveSection ds:io_section
+    stc
 
 rsvDone:
     pop ecx
