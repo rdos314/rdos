@@ -161,7 +161,22 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartReq	Proc near
+    push es
+    pushad
+;
     int 3
+    mov es,ds:io_out_buffer
+    xor edi,edi
+    movzx esi,bx
+    movsd
+    movsd
+;
+    mov ecx,8
+    mov bx,ds:io_out_req
+    StartUsbReq
+;
+    popad
+    pop es
     ret
 StartReq	Endp
 
@@ -240,6 +255,7 @@ btRestart:
     mov ds:io_process_id,al
     LeaveSection ds:io_section
 ;
+    mov cx,8
     mov bx,ds:io_in_req
     StartUsbReq
 
@@ -252,11 +268,19 @@ btOn:
     GetUsbReqData
 
 btReadDone:
+    mov bx,ds:io_out_req
+    IsUsbReqStarted
+    jc btCheckReq
+;    
+    IsUsbReqReady
+    jc btWaitOn
+
+btCheckReq:
     EnterSection ds:io_section
 ;
     mov cl,ds:io_process_id
     cmp cl,ds:io_insert_id
-    je btWaitActive
+    je btWaitLeave
 ;
     movzx bx,cl
     shl bx,4
@@ -273,9 +297,10 @@ btReadNext:
     LeaveSection ds:io_section
     jmp btCheckOn
 
-btWaitActive:
+btWaitLeave:
     LeaveSection ds:io_section
-;
+
+btWaitOn:
     WaitForSignal
     int 3
 
