@@ -76,11 +76,11 @@ usb_ser_in         equ 0x470
 usb_bus_out        equ 0x4F0
 usb_bus_in         equ 0x4F8
 
-io_page            equ 5
-
 ;
 ; io structure
 ;
+
+io_page            equ 5
 
 io_id              equ 0
 io_state           equ 1
@@ -148,6 +148,15 @@ io_val             equ 0x545
 io_crc             equ 0x546
 io_base            equ 0x547
 
+;
+; io buffers
+;
+
+io_buf_page        equ 6
+
+io_buf_base        equ 0x600
+
+
 SER_STATE_ACTIVE   equ 0
 SER_STATE_ODD      equ 1
 SER_STATE_EVEN     equ 2
@@ -157,7 +166,8 @@ SER_STATE_OUT_BUSY equ 5
 
 BUS_STATE_IN_BUSY  equ 0
 BUS_STATE_OUT_BUSY equ 1
-BUS_STATE_ACTIVE   equ 2
+BUS_STATE_REQ      equ 2
+BUS_STATE_REPLY    equ 3
 
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
@@ -1325,11 +1335,139 @@ Read24:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; InitBus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitBus:
+    movlb 0
+    clrf bus_state
+    bsf bus_state, BUS_STATE_IN_BUSY
+;
+    clrf count
+    lfsr 0,io_buf_base
+
+InitBusReqLoop:
+    clrf POSTINC0
+    decfsz count,F
+    goto InitBusReqLoop
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; AllocateBusReq
+;
+;   FSR0 = buffer start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBusReq:
+    movlb 0
+    clrf count
+    lfsr 0,io_buf_base + io_cmd
+
+AllocateBusReqLoop:
+    movf INDF0,W
+    btfsc STATUS,Z
+    goto AllocateBusReqOk
+;
+    movlw 8
+    addwf FSR0L,F
+;
+    decfsz count,F
+    goto AllocateBusReqLoop
+;
+    bsf STATUS,C
+    return
+
+AllocateBusReqOk:
+    movlw -io_cmd
+    addwf FSR0L,F
+;
+    bcf STATUS,C
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetBusReq
+;
+;   FSR0 = buffer start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBusReq:
+    movlb 0
+    clrf count
+    lfsr 0,io_buf_base + io_cmd
+
+GetBusReqLoop:
+    movf INDF0,W
+    btfss STATUS,Z
+    goto GetBusReqOk
+;
+    movlw 8
+    addwf FSR0L,F
+;
+    movlb 0
+    decfsz count,F
+    goto GetBusReqLoop
+;
+    bsf STATUS,C
+    return
+
+GetBusReqOk:
+    movlb 0xF
+    movlw -io_cmd
+    addwf FSR0L,F
+;
+    bcf STATUS,C
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; SetupAllReq
+;
+;   FSR0 = buffer start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupAllReq:
+    movlb io_page
+    movlw io_adr
+    addwf FSR0L,F
+;
+    movf POSTINC0,W
+    movwf io_adr0
+    movwf io_adr1
+    movwf io_adr2
+    movwf io_adr3
+;
+    movf POSTINC0,W
+    movwf io_cmd0
+    movwf io_cmd1
+    movwf io_cmd2
+    movwf io_cmd3
+;
+    movlw 0xF
+    movwf io_chans
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; RunIo
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunIo:
+    call GetBusReq
+    btfss STATUS,C
+    goto RunIt
+;
+    movlb 0
+    bcf bus_state, BUS_STATE_REQ
+
+RunIt:
+    call SetupAllReq
     call Activate
     call Preamp
     call OutputAdr    
@@ -1364,11 +1502,7 @@ RunIo:
     call Read24
 ;
     call Deactivate
-;
-    movlb 0
-    bcf bus_state, BUS_STATE_ACTIVE
-;
-    return
+    goto RunIo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1379,18 +1513,9 @@ RunIo:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IoToHost:
-    movlb usb_buf_page
-    movlw 8
-    movwf bus_in_size
+    btfss bus_state, BUS_STATE_REPLY
+    return
 ;
-    movlw 0x40
-    xorwf bus_in_stat,W
-    andlw 0x40
-    iorlw 0x88
-    movwf bus_in_stat
-;
-    movlb 0
-    bsf bus_state, BUS_STATE_IN_BUSY
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1402,22 +1527,21 @@ IoToHost:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HostToIo:
-    movlb io_page
+    call AllocateBusReq
+    btfsc STATUS,C
+    return
 ;
-    movlw 0x20
-    movwf io_adr0
-    movwf io_adr1
-    movwf io_adr2
-    movwf io_adr3
+    movlb 0
+    movlw 8
+    movwf count
+    lfsr 1,usb_bus_out
+
+HostToIoMoveLoop:
+    movf POSTINC1,W
+    movwf POSTINC0
 ;
-    movlw 0xA 
-    movwf io_cmd0
-    movwf io_cmd1
-    movwf io_cmd2
-    movwf io_cmd3
-;
-    movlw 0xF
-    movwf io_chans
+    decfsz count,F
+    goto HostToIoMoveLoop
 ;
     movlb usb_buf_page
     movlw 8
@@ -1430,7 +1554,7 @@ HostToIo:
     movwf bus_out_stat
     movlb 0
     bcf bus_state, BUS_STATE_OUT_BUSY
-    bsf bus_state, BUS_STATE_ACTIVE
+    bsf bus_state, BUS_STATE_REQ
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1476,18 +1600,6 @@ InitSerial:
     movwf ser_mask
     clrf RCSTA
     clrf TXSTA
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; InitBus
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitBus:
-    movlb 0
-    clrf bus_state
-    bsf bus_state, BUS_STATE_IN_BUSY
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3012,9 +3124,9 @@ ProgStart:
     call InitBus
     
 Loop:
-    btfsc bus_state,BUS_STATE_ACTIVE
-    call RunIo
     call Poll
+    btfsc bus_state, BUS_STATE_REQ
+    call RunIo
     goto Loop
 
 DeviceDescr:
