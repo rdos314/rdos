@@ -2,7 +2,7 @@
 
   config PLLDIV=3,  CPUDIV = OSC2_PLL3, USBDIV = 2, FOSC = HSPLL_HS, FCMEN = OFF, IESO = OFF, PWRT = ON
   config BOR = ON, BORV = 3, VREGEN = OFF, WDT = OFF, WDTPS = 32768, CCP2MX = OFF, PBADEN = ON, LPT1OSC = ON
-  config MCLRE = OFF, STVREN = ON
+  config MCLRE = ON, STVREN = ON
   config LVP = OFF, ICPRT = OFF,  XINST = OFF
   config CP0=OFF, CP1=OFF, CP2=OFF, CP3=OFF, CPB=OFF, CPD=OFF
   config WRT0=OFF, WRT1=OFF, WRT2=OFF, WRT3=OFF, WRTC=OFF, WRTB=OFF, WRTD=OFF
@@ -157,6 +157,7 @@ SER_STATE_OUT_BUSY equ 5
 
 BUS_STATE_IN_BUSY  equ 0
 BUS_STATE_OUT_BUSY equ 1
+BUS_STATE_ACTIVE   equ 2
 
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
@@ -1324,28 +1325,11 @@ Read24:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; TestIo
+; RunIo
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TestIo:
-    movlb io_page
-;
-    movlw 0x20
-    movwf io_adr0
-    movwf io_adr1
-    movwf io_adr2
-    movwf io_adr3
-;
-    movlw 0xA 
-    movwf io_cmd0
-    movwf io_cmd1
-    movwf io_cmd2
-    movwf io_cmd3
-;
-    movlw 0xF
-    movwf io_chans
-;
+RunIo:
     call Activate
     call Preamp
     call OutputAdr    
@@ -1378,9 +1362,75 @@ TestIo:
 ;
     btfsc io_chans,3
     call Read24
-
+;
     call Deactivate
 ;
+    movlb 0
+    bcf bus_state, BUS_STATE_ACTIVE
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; IoToHost
+;
+; Move data back to host
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoToHost:
+    movlb usb_buf_page
+    movlw 8
+    movwf bus_in_size
+;
+    movlw 0x40
+    xorwf bus_in_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf bus_in_stat
+;
+    movlb 0
+    bsf bus_state, BUS_STATE_IN_BUSY
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HostToIo
+;
+; Move req from host to IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HostToIo:
+    movlb io_page
+;
+    movlw 0x20
+    movwf io_adr0
+    movwf io_adr1
+    movwf io_adr2
+    movwf io_adr3
+;
+    movlw 0xA 
+    movwf io_cmd0
+    movwf io_cmd1
+    movwf io_cmd2
+    movwf io_cmd3
+;
+    movlw 0xF
+    movwf io_chans
+;
+    movlb usb_buf_page
+    movlw 8
+    movwf bus_out_size
+;
+    movlw 0x40
+    xorwf bus_out_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf bus_out_stat
+    movlb 0
+    bcf bus_state, BUS_STATE_OUT_BUSY
+    bsf bus_state, BUS_STATE_ACTIVE
     return
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2407,51 +2457,6 @@ utbNext:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; HostToIo
-;
-; Move host req to io buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HostToIo:
-    movlb usb_buf_page
-    movlw 8
-    movwf bus_in_size
-;
-    movlw 0x40
-    xorwf bus_in_stat,W
-    andlw 0x40
-    iorlw 0x88
-    movwf bus_in_stat
-;
-    movlb 0
-    bsf bus_state, BUS_STATE_IN_BUSY
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; IoToHost
-;
-; Move IO result to host
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IoToHost:
-    movlb usb_buf_page
-    movlw 8
-    movwf bus_out_size
-;
-    movlw 0x40
-    xorwf bus_out_stat,W
-    andlw 0x40
-    iorlw 0x88
-    movwf bus_out_stat
-    movlb 0
-    bcf bus_state, BUS_STATE_OUT_BUSY
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; HandleSerialIn
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2873,12 +2878,6 @@ Poll:
     btfsc ser_state, SER_STATE_OUT_BUSY
     call UsbToBuffer
 ;
-    btfss bus_state, BUS_STATE_IN_BUSY
-    call HostToIo
-;
-    btfsc bus_state, BUS_STATE_OUT_BUSY
-    call IoToHost
-;
     btfsc PIR1, RCIF
     call HandleSerReceive
 ;
@@ -2889,6 +2888,12 @@ Poll:
     call HandleSendIdle
 
 SerDone:
+    btfss bus_state, BUS_STATE_IN_BUSY
+    call IoToHost
+;
+    btfsc bus_state, BUS_STATE_OUT_BUSY
+    call HostToIo
+;
     movff bsr_isr, BSR
     movff status_isr, STATUS
     return
@@ -3007,13 +3012,9 @@ ProgStart:
     call InitBus
     
 Loop:
-    call TestIo
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
-    call WaitDs
-;
+    btfsc bus_state,BUS_STATE_ACTIVE
+    call RunIo
+    call Poll
     goto Loop
 
 DeviceDescr:
