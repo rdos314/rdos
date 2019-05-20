@@ -1059,17 +1059,7 @@ LoadDaDataNext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCharge:	
-	movf T2,W
-	iorwf T0,W
-	btfsc STATUS,Z
-    goto WriteChargeOff
-
-WriteChargeOn:
     bcf PORTE,1
-    return
-
-WriteChargeOff:
-    bsf PORTE,1
     return    	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
