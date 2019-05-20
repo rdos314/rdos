@@ -140,13 +140,15 @@ io_val3            equ 0x538
 io_crc3            equ 0x539
 
 io_chans           equ 0x540
-io_temp1           equ 0x541
-io_temp2           equ 0x542
-io_count           equ 0x543
-io_curr_chan       equ 0x544
-io_val             equ 0x545
-io_crc             equ 0x546
-io_base            equ 0x547
+io_init_chans      equ 0x541
+io_temp1           equ 0x542
+io_temp2           equ 0x543
+io_count           equ 0x544
+io_curr_chan       equ 0x545
+io_val             equ 0x546
+io_crc             equ 0x547
+io_base            equ 0x548
+io_curr_id         equ 0x549
 
 ;
 ; io buffers
@@ -168,6 +170,7 @@ BUS_STATE_IN_BUSY  equ 0
 BUS_STATE_OUT_BUSY equ 1
 BUS_STATE_REQ      equ 2
 BUS_STATE_REPLY    equ 3
+BUS_STATE_ALL      equ 4
 
 DESCR_FLAG_MORE    equ 0
 USB_HANDLED        equ 1
@@ -1342,7 +1345,6 @@ Read24:
 InitBus:
     movlb 0
     clrf bus_state
-    bsf bus_state, BUS_STATE_IN_BUSY
 ;
     clrf count
     lfsr 0,io_buf_base
@@ -1363,7 +1365,8 @@ InitBusReqLoop:
 
 AllocateBusReq:
     movlb 0
-    clrf count
+    movlw 0x20
+    movwf count
     lfsr 0,io_buf_base + io_cmd
 
 AllocateBusReqLoop:
@@ -1397,7 +1400,8 @@ AllocateBusReqOk:
 
 GetBusReq:
     movlb 0
-    clrf count
+    movlw 0x20
+    movwf count
     lfsr 0,io_buf_base + io_cmd
 
 GetBusReqLoop:
@@ -1408,7 +1412,6 @@ GetBusReqLoop:
     movlw 8
     addwf FSR0L,F
 ;
-    movlb 0
     decfsz count,F
     goto GetBusReqLoop
 ;
@@ -1416,11 +1419,60 @@ GetBusReqLoop:
     return
 
 GetBusReqOk:
-    movlb 0xF
     movlw -io_cmd
     addwf FSR0L,F
 ;
     bcf STATUS,C
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; RemoveBusReq
+;
+; W = id
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveBusReq:
+    movlb 0
+    movwf temp1
+;
+    movlw 0x20
+    movwf count
+    lfsr 0,io_buf_base + io_cmd
+
+RemoveBusReqLoop:
+    movf INDF0,W
+    btfsc STATUS,Z
+    goto RemoveBusReqNext
+;
+    movlw -io_cmd
+    addwf FSR0L,F
+    movf INDF0,W
+    cpfseq temp1
+    goto RemoveBusReqNextMove
+
+RemoveBusReqDo:
+    movlw 8
+    movwf count
+
+RemoveBusReqDoLoop:
+    clrf POSTINC0
+    decfsz count,F
+    goto RemoveBusReqDoLoop
+;
+    return
+
+RemoveBusReqNextMove:        
+    movlw -io_id
+    addwf FSR0L,F
+
+RemoveBusReqNext:
+    movlw 8
+    addwf FSR0L,F
+;
+    decfsz count,F
+    goto RemoveBusReqLoop
+;
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1432,6 +1484,9 @@ GetBusReqOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupAllReq:
+    movlb 0
+    bsf bus_state,BUS_STATE_ALL
+;
     movlb io_page
 ;
     movf POSTINC0,W
@@ -1488,6 +1543,102 @@ SetupAllReq:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; CopyResult
+;
+;  FSR0 = source of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyResult:
+    movlb io_page
+    movf INDF0, W
+    movwf io_curr_id
+;
+    movlb 0
+    btfss bus_state, BUS_STATE_IN_BUSY
+    goto DoCopy
+;
+    call Poll
+    goto CopyResult
+
+DoCopy:
+    movlw 8
+    movwf count
+    lfsr 1,usb_bus_in
+
+CopyResultLoop:
+    movf POSTINC0,W
+    movwf POSTINC1
+;
+    decfsz count,F
+    goto CopyResultLoop
+;
+    movlb usb_buf_page
+    movlw 8
+    movwf bus_in_size
+;
+    movlw 0x40
+    xorwf bus_in_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf bus_in_stat
+;
+    movlb 0
+    bsf bus_state, BUS_STATE_IN_BUSY
+    call Poll
+;
+    movlb io_page
+    movf io_curr_id, W
+    call RemoveBusReq
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ProcessSingle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessSingle:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ProcessAll
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessAll:
+    movlb io_page
+;
+    lfsr 0,io_id0
+    btfsc io_chans,0
+    goto CopyResult
+;
+    lfsr 0,io_id1
+    btfsc io_chans,1
+    goto CopyResult
+;
+    lfsr 0,io_id2
+    btfsc io_chans,2
+    goto CopyResult
+;
+    lfsr 0,io_id3
+    goto CopyResult
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ProcessResult
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessResult:
+    movlb 0
+    btfss bus_state,BUS_STATE_ALL
+    goto ProcessSingle
+    goto ProcessAll
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; RunIo
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1499,6 +1650,7 @@ RunIo:
 ;
     movlb 0
     bcf bus_state, BUS_STATE_REQ
+    return
 
 RunIt:
     call SetupAllReq
@@ -1536,21 +1688,8 @@ RunIt:
     call Read24
 ;
     call Deactivate
+    call ProcessResult
     goto RunIo
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; IoToHost
-;
-; Move data back to host
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IoToHost:
-    btfss bus_state, BUS_STATE_REPLY
-    return
-;
-    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3034,9 +3173,6 @@ Poll:
     call HandleSendIdle
 
 SerDone:
-    btfss bus_state, BUS_STATE_IN_BUSY
-    call IoToHost
-;
     btfsc bus_state, BUS_STATE_OUT_BUSY
     call HostToIo
 ;
