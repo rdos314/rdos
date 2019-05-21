@@ -91,6 +91,7 @@
 #include "unzipc.h"
 #include "wipedir.h"
 #include "showcrash.h"
+#include "switch.h"
 #include "temp.h"
 
 #include "file.h"
@@ -160,6 +161,7 @@ static TCommandFactory *rmdirc;
 static TCommandFactory *rmpart;
 static TCommandFactory *set;
 static TCommandFactory *state;
+static TCommandFactory *switchcmd;
 static TCommandFactory *type;
 static TCommandFactory *timev;
 static TCommandFactory *temp;
@@ -206,6 +208,7 @@ TSession::TSession()
         type = new TTypeFactory;
         timev = new TTimeFactory;
         temp = new TTempFactory;
+        switchcmd = new TSwitchFactory;
         sysinfo = new TSysinfoFactory;
         synctime = new TSyncTimeFactory;
         state = new TStateFactory;
@@ -323,6 +326,7 @@ TSession::~TSession()
         delete timev;
         delete type;
         delete temp;
+        delete switchcmd;
         delete synctime;
         delete state;
         delete set;

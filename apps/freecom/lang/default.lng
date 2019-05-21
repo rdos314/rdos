@@ -1816,6 +1816,12 @@ Shows contents of RDOS image file, or running configuration
 SYSINFO <image file base>
 .
 
+:TEXT_CMDHELP_SWITCH
+Switch console
+
+SWITCH func-key #
+.
+
 :TEXT_CMDHELP_KEYB
 Show or set keyboard map
 
