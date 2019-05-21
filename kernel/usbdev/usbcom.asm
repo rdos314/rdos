@@ -5193,6 +5193,8 @@ udCheckLoop:
 ;
     or es:uc_flags,FLAG_UDS_DISCONNECT
     mov bx,es:uc_thread
+    or bx,bx
+    jz udUnlink
 
 udSignal:
     Signal
@@ -5200,7 +5202,8 @@ udSignal:
     mov bx,es:uc_thread
     or bx,bx
     jnz udSignal
-;
+
+udUnlink:
     EnterSection ds:sd_section
     mov di,ds:sd_dead_list
     or di,di
