@@ -4214,6 +4214,7 @@ ftA9    DW 0C26h,       00004h  ; ICOM_ID1
 ftAA    DW 5050h,       00400h  ; PAPOUCH
 ftAB    DW 0403h,       0DD20h  ; ACG_HFDUAL
 ftAC    DW 0856h,       0AC27h  ; 232USB9M
+ftAD    DW 0403h,       06015h  ; Vera
 
 IsFTDI	Proc near
     push cx
@@ -4224,7 +4225,7 @@ IsFTDI	Proc near
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,0ADh
+    mov cx,0AEh
     mov bp,OFFSET ftTab
 
 iftLoop:
