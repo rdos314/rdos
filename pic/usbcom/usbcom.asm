@@ -1333,7 +1333,15 @@ Read24:
     call ReadCrc
 ;
     movlw 0xA5
-    xorwf io_val,F
+    xorwf io_val,W
+    xorwf io_crc,W
+    btfss STATUS,Z
+    return
+;
+    movf io_base, W
+    addlw io_state
+    movwf FSR2L
+    clrf INDF2
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

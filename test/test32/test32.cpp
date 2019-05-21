@@ -42,12 +42,17 @@ void main()
     int ok;
     int val;
 
-    ok = RdosReadSerialRaw(0x20, 1, &val);
+    for (;;)
+    {
+        ok = RdosReadSerialRaw(0x20, 1, &val);
 
-    if (ok)
-        printf("Read: %d\r\n", val);
-    else
-        printf("Read failed\r\n");
+        if (ok)
+            printf("Read: %d\r\n", val);
+        else
+            printf("Read failed\r\n");
+
+        RdosWaitMilli(200);
+    }
 
 //    RdosTestGate("");
 }

@@ -614,12 +614,24 @@ read_serial_val Proc far
     pop bx
 ;
     WaitForSignal
-    int 3
     mov al,ds:[bx].io_status
     cmp al,-1
     stc
     je rsvDone
 ;
+    movzx eax,ds:[bx].io_val
+;
+    movzx ecx,ds:[bx].io_val+1
+    shl ecx,6
+    add eax,ecx
+;
+    movzx ecx,ds:[bx].io_val+2
+    shl ecx,12
+    add eax,ecx
+;
+    movzx ecx,ds:[bx].io_val+3
+    shl ecx,18
+    add eax,ecx
     clc
     jmp rsvDone
 
