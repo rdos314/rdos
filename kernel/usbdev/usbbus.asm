@@ -152,6 +152,47 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AllocateBusReq
+;
+;   DESCRIPTION:    Allocate bus req entry
+;
+;   PARAMETERS:     DS  IO bus sel
+;
+;   RETURNS:        BX	Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBusReq Proc near
+    push eax
+    push ecx
+;
+    mov cl,ds:io_insert_id
+    movzx bx,cl
+    shl bx,4
+    add bx,OFFSET io_entry_arr
+    mov ax,ds:[bx].io_wait_thread
+    or ax,ax
+    stc
+    jnz abrDone
+;
+    GetThread
+    mov ds:[bx].io_wait_thread,ax
+    mov ds:[bx].io_id,cl
+    mov ds:[bx].io_status,-1
+;
+    inc cl
+    mov ds:io_insert_id,cl
+    clc
+
+abrDone:
+    pop ecx
+    pop eax
+    ret
+AllocateBusReq Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           StartReq
 ;
 ;   DESCRIPTION:    Start req
@@ -164,7 +205,6 @@ StartReq	Proc near
     push es
     pushad
 ;
-    int 3
     mov es,ds:io_out_buffer
     xor edi,edi
     movzx esi,bx
@@ -179,6 +219,45 @@ StartReq	Proc near
     pop es
     ret
 StartReq	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleReply
+;
+;   DESCRIPTION:    Handle USB reply
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleReply	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,ds
+    mov es,eax
+;
+    mov ds,ds:io_in_buffer
+    mov cl,ds:io_id
+    movzx ebx,cl
+    shl ebx,4
+    add ebx,OFFSET io_entry_arr
+;
+    xor esi,esi
+    mov edi,ebx
+    movsd
+    movsd
+;
+    mov edi,ebx
+    xor bx,bx
+    xchg bx,es:[edi].io_wait_thread
+    Signal    
+;
+    popad
+    pop es
+    pop ds
+    ret
+HandleReply	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -264,8 +343,15 @@ btOn:
     IsUsbReqReady
     jc btReadDone
 ;
-    int 3
     GetUsbReqData
+    jc btDataDone
+;
+    call HandleReply
+
+btDataDone:
+    mov cx,8
+    mov bx,ds:io_in_req
+    StartUsbReq
 
 btReadDone:
     mov bx,ds:io_out_req
@@ -302,7 +388,6 @@ btWaitLeave:
 
 btWaitOn:
     WaitForSignal
-    int 3
 
 btCheckOn:
     mov al,ds:io_bulk_out
@@ -425,47 +510,6 @@ DetachBus Proc near
     int 3
     ret
 DetachBus Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           AllocateBusReq
-;
-;   DESCRIPTION:    Allocate bus req entry
-;
-;   PARAMETERS:     DS  IO bus sel
-;
-;   RETURNS:        BX	Entry offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateBusReq Proc near
-    push eax
-    push ecx
-;
-    mov cl,ds:io_insert_id
-    movzx bx,cl
-    shl bx,4
-    add bx,OFFSET io_entry_arr
-    mov ax,ds:[bx].io_wait_thread
-    or ax,ax
-    stc
-    jnz abrDone
-;
-    GetThread
-    mov ds:[bx].io_wait_thread,ax
-    mov ds:[bx].io_id,cl
-    mov ds:[bx].io_status,-1
-;
-    inc cl
-    mov ds:io_insert_id,cl
-    clc
-
-abrDone:
-    pop ecx
-    pop eax
-    ret
-AllocateBusReq Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -564,11 +608,18 @@ read_serial_val Proc far
     mov ds:[bx].io_cmd,al
     LeaveSection ds:io_section
 ;
+    push bx
     mov bx,ds:io_serv_thread
     Signal
+    pop bx
 ;
     WaitForSignal
     int 3
+    mov al,ds:[bx].io_status
+    cmp al,-1
+    stc
+    je rsvDone
+;
     clc
     jmp rsvDone
 
