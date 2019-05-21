@@ -628,7 +628,6 @@ ResetPipe   Proc far
     push eax
     push ecx
 ;
-    int 3
     mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
     mov eax,1
