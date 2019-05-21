@@ -1861,7 +1861,7 @@ HandleUsbReset:
     movwf bus_in_low
     movlw high usb_bus_in
     movwf bus_in_high
-    movlw 0x8
+    movlw 0x48
     movwf bus_in_stat
 ;
     movlb 0xF
