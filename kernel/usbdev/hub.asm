@@ -581,20 +581,22 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsConnected   Proc far
+    push es
+    push eax
+    push ebx
+;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz icFail
-;
-    push es
-    push ebx
 ;
     mov es,fs:usbp_dev_sel
     movzx ebx,es:usbd_port
     add ebx,ebx
     test ds:[ebx].hub_status_arr,1
-;
-    pop ebx
-    pop es
     jz icFail
+;
+    mov ax,ds:[ebx].usb_retry_arr
+    cmp ax,10
+    jae icFail
 ;
     clc
     jmp icDone
@@ -603,6 +605,9 @@ icFail:
     stc
 
 icDone:
+    pop ebx
+    pop eax
+    pop es
     ret
 IsConnected   Endp
 
@@ -1197,40 +1202,22 @@ atCreate:
     NotifyUsbAttach
     jnc atDone
 ;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atDone
-;
-    test ds:[edi].hub_status_arr,1
-    jz atDone
-;
-    movzx dx,cl
+    movzx dx,dl
     mov ax,PORT_POWER
     call ClearPortFeature    
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atDone
-;
-    test ds:[edi].hub_status_arr,1
-    jz atDone
 ;
     mov ax,250
     WaitMilliSec
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atDone
 ;
-    test ds:[edi].hub_status_arr,1
-    jz atDone
-;
-    movzx dx,cl
+    movzx dx,dl
     mov ax,PORT_POWER
     call SetPortFeature    
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz atDone
 ;
     mov ax,ds:hub_power_time
     WaitMilliSec
+;
+    mov al,dl
+    NotifyUsbDetach
     jmp atDone
 
 atUnlock:
@@ -1382,44 +1369,23 @@ rtCreate:
     mov al,dl
     NotifyUsbAttach
     jnc rtDone
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtDone
 ;
-    test ds:[edi].hub_status_arr,1
-    jz rtDone
-;
-    movzx dx,cl
+    movzx dx,dl
     mov ax,PORT_POWER
     call ClearPortFeature    
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtDone
-;
-    test ds:[edi].hub_status_arr,1
-    jz rtDone
 ;
     mov ax,250
     WaitMilliSec
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtDone
 ;
-    test ds:[edi].hub_status_arr,1
-    jz rtDone
-;
-    movzx dx,cl
+    movzx dx,dl
     mov ax,PORT_POWER
     call SetPortFeature    
-;        
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz rtDone
-;
-    test ds:[edi].hub_status_arr,1
-    jz rtDone
 ;
     mov ax,ds:hub_power_time
     WaitMilliSec
+;
+    mov al,dl
+    NotifyUsbDetach
     jmp rtDone
 
 rtUnlock:
@@ -1645,14 +1611,6 @@ upCheckTimeout:
     int 3
 
 upNotFatal:
-    cmp ax,10
-    jnz upDoSignal
-;   
-;    mov eax,es:[2*edi].HcPortSc
-;    and al,NOT 4
-;    mov es:[2*edi].HcPortSc,eax
-
-upDoSignal:
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
