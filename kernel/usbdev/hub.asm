@@ -1202,17 +1202,10 @@ atCreate:
     jnc atDone
 ;
     movzx dx,dl
-    mov ax,PORT_POWER
+    mov ax,PORT_ENABLE
     call ClearPortFeature    
 ;
-    mov ax,250
-    WaitMilliSec
-;
-    movzx dx,dl
-    mov ax,PORT_POWER
-    call SetPortFeature    
-;
-    mov ax,ds:hub_power_time
+    mov ax,200
     WaitMilliSec
 ;
     mov al,dl
@@ -1220,6 +1213,13 @@ atCreate:
     jmp atDone
 
 atUnlock:
+    movzx dx,dl
+    mov ax,PORT_ENABLE
+    call ClearPortFeature    
+;
+    mov ax,20
+    WaitMilliSec
+;
     UnlockUsb
 
 atDone:
@@ -1370,17 +1370,10 @@ rtCreate:
     jnc rtDone
 ;
     movzx dx,dl
-    mov ax,PORT_POWER
+    mov ax,PORT_ENABLE
     call ClearPortFeature    
 ;
-    mov ax,250
-    WaitMilliSec
-;
-    movzx dx,dl
-    mov ax,PORT_POWER
-    call SetPortFeature    
-;
-    mov ax,ds:hub_power_time
+    mov ax,200
     WaitMilliSec
 ;
     mov al,dl
@@ -1388,6 +1381,13 @@ rtCreate:
     jmp rtDone
 
 rtUnlock:
+    movzx dx,dl
+    mov ax,PORT_ENABLE
+    call ClearPortFeature    
+;
+    mov ax,20
+    WaitMilliSec
+;
     UnlockUsb
 
 rtDone:
