@@ -158,6 +158,13 @@ io_buf_page        equ 6
 
 io_buf_base        equ 0x600
 
+;
+; address mapping
+;
+
+io_adr_page        equ 7
+
+io_adr_base        equ 0x700
 
 SER_STATE_ACTIVE   equ 0
 SER_STATE_ODD      equ 1
@@ -1361,6 +1368,16 @@ InitBusReqLoop:
     clrf POSTINC0
     decfsz count,F
     goto InitBusReqLoop
+;
+    movlw 0x40
+    movwf count
+    lfsr 0,io_adr_base
+
+InitBusAdsLoop:
+    clrf POSTINC0
+    decfsz count,F
+    goto InitBusAdsLoop
+;
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1485,6 +1502,96 @@ RemoveBusReqNext:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; GetReqChannel
+;
+;   FSR0 = buffer start
+;
+;   W = channel (00 = not assigned)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetReqChannel:
+    movlw io_adr
+    addwf FSR0L,F
+;
+    movf INDF0,W
+    lfsr 1,io_adr_base
+    addwf FSR1L,F
+;
+    movlw -io_adr
+    addwf FSR0L,F
+;
+    movf INDF1,W
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; LinkChannel
+;
+;   FSR0 = buffer start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinkChannel:
+    movf FSR0L,W
+    movwf io_temp1
+;
+    movlw 1
+    movwf io_count
+;
+    movlw -io_id0
+    addwf io_temp1,F
+;
+    btfsc STATUS,Z
+    goto LinkChannelDo
+
+LinkChannelLoop:
+    incf io_count,F
+    movlw -0x10
+    addwf io_temp1,F
+;
+    btfss STATUS,Z
+    goto LinkChannelLoop
+
+LinkChannelDo:
+    movlw io_adr
+    addwf FSR0L,F
+    movf INDF0,W
+;
+    lfsr 1,io_adr_base
+    addwf FSR1L,F
+;
+    movf io_count,W
+    movwf INDF1
+;
+    movlw -io_adr
+    addwf FSR0L,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UnlinkChannel
+;
+;   FSR0 = buffer start
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkChannel:
+    movlw io_adr
+    addwf FSR0L,F
+    movf INDF0,W
+;
+    lfsr 1,io_adr_base
+    addwf FSR1L,F
+;
+    clrf INDF1
+;
+    movlw -io_adr
+    addwf FSR0L,F
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; SetupAllReq
 ;
 ;   FSR0 = buffer start
@@ -1551,6 +1658,51 @@ SetupAllReq:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; SetupOneReq
+;
+;   FSR0 = buffer start
+;   W  = channel (1..4)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupOneReq:
+    movlb 0
+    bcf bus_state,BUS_STATE_ALL
+;
+    movlb io_page
+    movwf io_count
+    movlw 1
+    movwf io_chans
+    lfsr 1,io_id0
+
+SetupOneChannelLoop:
+    decfsz io_count,F
+    goto SetupOneChannelNext
+    goto SetupOneChannelDo
+
+SetupOneChannelNext:
+    movlw 0x10
+    addwf FSR1L,F
+    rlncf io_chans,F
+    goto SetupOneChannelLoop
+
+SetupOneChannelDo:
+    movlw 8
+    movwf io_count
+
+SetupOneCopyLoop:
+    movf POSTINC0,W
+    movwf POSTINC1
+;
+    decfsz io_count,F
+    goto SetupOneCopyLoop
+;
+    movf io_chans,W
+    movwf io_init_chans
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; CopyResult
 ;
 ;  FSR0 = source of data
@@ -1558,6 +1710,8 @@ SetupAllReq:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyResult:
+    call LinkChannel
+;
     movlb io_page
     movf INDF0, W
     movwf io_curr_id
@@ -1607,7 +1761,58 @@ CopyResultLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProcessSingle:
+    movlb io_page
+;
+    lfsr 0,io_id0
+    btfss io_init_chans,0
+    goto ProcessSingleCheck1
+;
+    btfsc io_chans,0
+    goto ProcessSingleOk0
+;
+    call UnlinkChannel
+    goto ProcessSingleCheck1
+
+ProcessSingleOk0:
+    call CopyResult
+
+ProcessSingleCheck1:
+    lfsr 0,io_id1
+    btfss io_init_chans,1
+    goto ProcessSingleCheck2
+;
+    btfsc io_chans,1
+    goto ProcessSingleOk1
+;
+    call UnlinkChannel
+    goto ProcessSingleCheck2
+
+ProcessSingleOk1:
+    call CopyResult
+
+ProcessSingleCheck2:
+    lfsr 0,io_id2
+    btfss io_init_chans,2
+    goto ProcessSingleCheck3
+;
+    btfsc io_chans,2
+    goto ProcessSingleOk2
+;
+    call UnlinkChannel
+    goto ProcessSingleCheck3
+
+ProcessSingleOk2:
+    call CopyResult
+
+ProcessSingleCheck3:
+    lfsr 0,io_id3
+    btfss io_init_chans,3
     return
+;
+    btfsc io_chans,3
+    goto CopyResult
+;
+    goto UnlinkChannel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1631,7 +1836,11 @@ ProcessAll:
     goto CopyResult
 ;
     lfsr 0,io_id3
+    btfsc io_chans,3
     goto CopyResult
+;
+    lfsr 0,io_id0
+    goto UnlinkChannel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1661,7 +1870,18 @@ RunIo:
     return
 
 RunIt:
+    call GetReqChannel
+    btfsc STATUS,Z
+    goto RunAll
+
+RunOne:
+    call SetupOneReq
+    goto RunActivate
+
+RunAll:
     call SetupAllReq
+
+RunActivate:
     call Activate
     call Preamp
     call OutputAdr    
