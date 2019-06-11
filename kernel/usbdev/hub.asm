@@ -1033,6 +1033,59 @@ cpcResetOk:
     ret
 ClearPortChange Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearControlTT
+;
+;   description:    Clear control TT
+;
+;   Parameters:     DS      Function sel
+;                   AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearControlTT  Proc near
+    push es
+    pushad
+;    
+    EnterSection ds:hub_section
+    inc dx
+    mov ebx,ds
+    mov es,ebx
+    mov bx,ds:hub_control_handle
+;    
+    mov edi,OFFSET hub_control_data
+    mov es:[edi].usd_type,23h
+    mov es:[edi].usd_req,CLEAR_TT
+;
+    movzx ax,al
+    shl ax,4
+    mov es:[edi].usd_value,ax
+;
+    mov es:[edi].usd_index,1
+    mov es:[edi].usd_len,0
+    mov ecx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+;
+    GetSystemTime
+    add eax,1000 * 1193    
+    adc edx,0
+    mov bx,ds:hub_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hub_control_handle
+    WasUsbTransactionOk
+    LeaveSection ds:hub_section
+;
+    popad
+    pop es
+    ret
+ClearControlTT Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;
@@ -1197,10 +1250,22 @@ atCreate:
     call fword ptr ds:create_dev_proc
     pop ds
 ;
-    mov al,dl
-    NotifyUsbAttach
-    jnc atDone
+    StartUsbDevice
+    jc atFail
 ;
+    ReadUsbDescriptors
+    jnc atAttach
+
+atFail:
+    cmp ah,2
+    je atDetach
+;
+    call ClearControlTT
+;
+    xor al,al
+    call ClearControlTT
+
+atDetach:
     movzx dx,dl
     mov ax,PORT_ENABLE
     call ClearPortFeature    
@@ -1208,8 +1273,16 @@ atCreate:
     mov ax,200
     WaitMilliSec
 ;
+    UnlockUsb
+;
     mov al,dl
     NotifyUsbDetach
+    jmp atDone
+
+atAttach:
+    mov al,dl
+    UnlockUsb
+    NotifyUsbAttach
     jmp atDone
 
 atUnlock:
@@ -1365,19 +1438,31 @@ rtCreate:
     call fword ptr ds:create_dev_proc
     pop ds
 ;
-    mov al,dl
-    NotifyUsbAttach
-    jnc rtDone
+    StartUsbDevice
+    jc rtFail
 ;
-    movzx dx,dl
-    mov ax,PORT_ENABLE
-    call ClearPortFeature    
+    ReadUsbDescriptors
+    jnc rtAttach
+
+rtFail:
+    cmp ah,2
+    je rtDetach
 ;
-    mov ax,200
-    WaitMilliSec
+    call ClearControlTT
 ;
+    xor al,al
+    call ClearControlTT
+
+rtDetach:
+    UnlockUsb
     mov al,dl
     NotifyUsbDetach
+    jmp rtDone
+
+rtAttach:
+    mov al,dl
+    UnlockUsb
+    NotifyUsbAttach
     jmp rtDone
 
 rtUnlock:

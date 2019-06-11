@@ -2873,16 +2873,27 @@ atNotify:
     pop dx
     pop bx
 ;
-    mov al,bl
-    NotifyUsbAttach
-    jnc atDone
+    StartUsbDevice
+    pushf
+    UnlockUsb
+    popf
+    jc atFail
 ;
+    ReadUsbDescriptors
+    jnc atAttach
+
+atFail:
     in ax,dx
     or ax,200h
     out dx,ax
 ;
     mov al,bl
     NotifyUsbDetach
+    jmp atDone
+
+atAttach:
+    mov al,bl
+    NotifyUsbAttach
     jmp atDone
 
 atUnlock:
@@ -3021,16 +3032,27 @@ rtNotify:
     pop dx
     pop bx
 ;
-    mov al,bl
-    NotifyUsbAttach
-    jnc rtDone
+    StartUsbDevice
+    pushf
+    UnlockUsb
+    popf
+    jc rtFail
 ;
+    ReadUsbDescriptors
+    jnc rtAttach
+
+rtFail:
     in ax,dx
     or ax,200h
     out dx,ax
 ;
     mov al,bl
     NotifyUsbDetach
+    jmp rtDone
+
+rtAttach:
+    mov al,bl
+    NotifyUsbAttach
     jmp rtDone
 
 rtUnlock:

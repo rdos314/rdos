@@ -826,5 +826,7 @@ init_usb_dev_nr             = 722
 address_usb_dev_nr          = 723
 
 is_usb_pipe_connected_nr    = 724
+start_usb_dev_nr            = 725
+read_usb_descriptors_nr     = 726
 
 osgate_entries              = 750

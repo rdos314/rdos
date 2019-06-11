@@ -465,24 +465,21 @@ init_usb_function   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateDefaultControl
+;       NAME:           CreateDefaultControl
 ;
-;           description:    Create default control-pipe
+;       description:    Create default control-pipe
 ;
-;       parameters:     AL      Future device address
-;               DS      USB device selector
-;               ES      Function selector
+;       parameters:     DS      USB device selector
+;                       ES      Function selector
 ;
-;       RETURNS:    FS      Pipe control selector
+;       RETURNS:        FS      Pipe control selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDefaultControl    Proc near    
-    push es
-    push cx
-    push edi
-;    
+    push ds
     push ax
+;
     call fword ptr ds:create_control_proc
 ;    
     mov es:usbd_in_endpoint_arr,fs    
@@ -501,37 +498,14 @@ CreateDefaultControl    Proc near
     GetThread
     mov fs:usbp_signal,ax
 ;    
-    push ds
     mov ax,fs
     mov ds,ax
     InitSection ds:usbp_section
-    pop ds
 ;    
     pop ax
-;
-    call fword ptr ds:address_device_proc
-    mov fs:usbp_address,al
-    pushf
-;
-    call fword ptr ds:change_address_proc
-;
-    mov ax,10
-    WaitMilliSec
-;
-    push ds
-    mov cx,SEG data
-    mov ds,cx
-    LeaveSection ds:usb_enum_section
     pop ds
-;        
-    popf
-;
-    pop edi
-    pop cx
-    pop es
     ret
 CreateDefaultControl    Endp    
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1458,39 +1432,70 @@ RemoveUsbFunction	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           NotifyUsbAttach
+;       NAME:           StartUsbDevice
 ;
-;       Description:    Notify USB attach event
+;       Description:    Start USB device
 ;
 ;       Parameters:     DS      USB device selector
 ;                       ES      USB function selector
-;                       AL      Port
+;
+;       Returns:        FS      Control pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_usb_attach_name DB 'Notify USB Attach', 0
+start_usb_device_name DB 'Start USB Device', 0
 
-attach_text DB 'Attach', 0
-
-notify_usb_attach       Proc far
-    push gs
-    push fs
-    push es
-    pushad
+start_usb_device       Proc far
+    push ax
 ;
-    mov bp,ax
     mov al,es:usbd_address
     call AddUsbFunction
 ;
     call CreateDefaultControl
-    jc nuaDone
+;
+    call fword ptr ds:address_device_proc
+    jc sudFail
+;
+    mov fs:usbp_address,al
+;
+    call fword ptr ds:change_address_proc
+    jnc sudDone
+
+sudFail:
+    call ClosePipe
+    stc
+
+sudDone:
+    pop ax
+    retf32
+start_usb_device	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadUsbDescriptors
+;
+;       Description:    Read USB descriptors
+;
+;       Parameters:     DS      USB device selector
+;                       ES      USB function selector
+;                       FS      Control pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_usb_descriptors_name DB 'Read USB Descriptors', 0
+
+read_usb_descriptors       Proc far
+    push gs
+    push es
+    pushad
 ;
     mov eax,8
     call AllocateBufSel
 
-nuaRetry:
+rudRetry:
     call fword ptr ds:is_connected_proc
-    jc nuaFreeDone
+    jc rudFreeDone
 ;
     xor edi,edi
     mov cx,8
@@ -1498,20 +1503,20 @@ nuaRetry:
     call GetDescr
     movzx ax,es:udd_maxlen
     or ax,ax
-    jz nuaRetry
+    jz rudRetry
 ;
     cmp ax,fs:usbp_maxlen
-    je nuaLenOk
+    je rudLenOk
 ;    
     mov fs:usbp_maxlen,ax
     call fword ptr ds:set_max_len_proc
     
-nuaLenOk:
+rudLenOk:
     movzx eax,es:udd_len
     FreeMem
 ;
     call fword ptr ds:is_connected_proc
-    jc nuaDone
+    jc rudDone
 ;    
     call AllocateBufSel
     xor edi,edi
@@ -1524,9 +1529,9 @@ nuaLenOk:
 ;
     xor bx,bx
 
-nuaLoop:
+rudLoop:
     call fword ptr ds:is_connected_proc
-    jc nuaDone
+    jc rudDone
 ;    
     mov eax,8
     call AllocateBufSel
@@ -1539,7 +1544,7 @@ nuaLoop:
     FreeMem
 ;
     call fword ptr ds:is_connected_proc
-    jc nuaDone
+    jc rudDone
 ;
     call AllocateBufSel
     xor edi,edi
@@ -1553,50 +1558,72 @@ nuaLoop:
 ;
     inc bl
     cmp bl,16
-    je nuaNotify
+    je rudNotify
 ;    
     cmp bl,gs:udd_configs
-    jb nuaLoop
+    jb rudLoop
 
-nuaNotify:
+rudNotify:
     call fword ptr ds:is_connected_proc
-    jc nuaDone
-;    
-    xor ax,ax
-    mov gs,ax
-    mov bx,ds:usb_controller_id
-    mov ax,bp
-    mov ah,al
-    mov al,fs:usbp_address
-    call trap_usb_attach
-    clc
-    jmp nuaDone
+    jmp rudDone
 
-nuaFreeDone:
+rudFreeDone:
     FreeMem    
     stc
     
-nuaDone:
+rudDone:
     mov fs:usbp_signal,0
-    jnc nuaPipeOk
+    jnc rudPipeOk
 ;
     call fword ptr ds:is_connected_proc
-    jc nuaDoClose
+    jc rudDoClose
 ;
     call fword ptr ds:reset_pipe_proc
 ;
     mov ax,200
     WaitMilliSec
 
-nuaDoClose:
+rudDoClose:
     call ClosePipe
     stc
 
-nuaPipeOk:
+rudPipeOk:
     popad
     pop es
-    pop fs
     pop gs
+    retf32
+read_usb_descriptors   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyUsbAttach
+;
+;       Description:    Notify USB attach event
+;
+;       Parameters:     DS      USB device selector
+;                       ES      USB function selector
+;                       FS      Control pipe
+;                       AL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_usb_attach_name DB 'Notify USB Attach', 0
+
+attach_text DB 'Attach', 0
+
+notify_usb_attach       Proc far
+    push es
+    pushad
+;
+    mov ah,al
+    mov al,fs:usbp_address
+    mov bx,ds:usb_controller_id
+    call trap_usb_attach
+    clc
+;
+    popad
+    pop es
     retf32
 notify_usb_attach   Endp
 
@@ -3862,13 +3889,13 @@ req_usb_data    Proc far
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
-    jc rudDone
+    jc rrudDone
 ;
     mov ds,ds:[ebx].up_pipe_sel
     mov al,ds:usbu_deleted
     or al,al
     stc
-    jnz rudDone
+    jnz rrudDone
 ;
     push es
     push edi
@@ -3893,7 +3920,7 @@ rudLeave:
     pop edi
     pop es    
 
-rudDone:
+rrudDone:
     pop ebx
     pop ax
     pop fs
@@ -4767,6 +4794,18 @@ init    Proc far
     mov edi,OFFSET unlock_usb_name
     xor cl,cl
     mov ax,unlock_usb_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_usb_device
+    mov edi,OFFSET start_usb_device_name
+    xor cl,cl
+    mov ax,start_usb_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_usb_descriptors
+    mov edi,OFFSET read_usb_descriptors_name
+    xor cl,cl
+    mov ax,read_usb_descriptors_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_attach

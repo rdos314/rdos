@@ -2945,10 +2945,17 @@ atWaitNotify:
     call fword ptr ds:create_dev_proc
     pop dx
 ;
-    movzx ax,cl
-    NotifyUsbAttach
+    StartUsbDevice
+    pushf
+    UnlockUsb
+    popf
+    jc atFail
+;
+    ReadUsbDescriptors
+    jnc atAttach
+
+atFail:
     pop es
-    jnc atDone
 ;
     mov eax,es:[2*edi].HcPortSc
     and al,NOT 4
@@ -2956,6 +2963,12 @@ atWaitNotify:
 ;
     mov al,cl
     NotifyUsbDetach
+    jmp atDone
+
+atAttach:
+    movzx ax,cl
+    NotifyUsbAttach
+    pop es
     jmp atDone
 
 atUnlock:
@@ -3074,10 +3087,17 @@ rtWaitNotify:
     call fword ptr ds:create_dev_proc
     pop dx
 ;
-    mov al,cl
-    NotifyUsbAttach
+    StartUsbDevice
+    pushf
+    UnlockUsb
+    popf
+    jc rtFail
+;
+    ReadUsbDescriptors
+    jnc rtAttach
+
+rtFail:
     pop es
-    jnc rtDone
 ;
     mov eax,es:[2*edi].HcPortSc
     and al,NOT 4
@@ -3085,6 +3105,12 @@ rtWaitNotify:
 ;
     mov al,cl
     NotifyUsbDetach
+    jmp rtDone
+
+rtAttach:
+    mov al,cl
+    NotifyUsbAttach
+    pop es
     jmp rtDone
 
 rtUnlock:

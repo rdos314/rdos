@@ -2697,10 +2697,16 @@ atSlotAlloc:
     mov ax,25
     WaitMilliSec
 ;
-    mov al,cl
-    NotifyUsbAttach
-    jnc atDone
+    StartUsbDevice
+    pushf
+    UnlockUsb
+    popf
+    jc atFail
 ;
+    ReadUsbDescriptors
+    jnc atAttach
+
+atFail:
     mov bx,ds:xhc_port_thread
     Signal
 ;    
@@ -2729,6 +2735,11 @@ atSlotAlloc:
     and eax,0EE03E1h
     or al,10h
     mov es:[si],eax
+    jmp atDone
+
+atAttach:
+    mov al,cl
+    NotifyUsbAttach
     jmp atDone
 
 atUnlock:
@@ -2937,10 +2948,16 @@ rtSlotAlloc:
     mov ax,25
     WaitMilliSec
 ;
-    mov al,cl
-    NotifyUsbAttach
-    jnc rtDone
+    StartUsbDevice
+    pushf
+    UnlockUsb
+    popf
+    jc rtFail
 ;
+    ReadUsbDescriptors
+    jnc rtAttach
+
+rtFail:
     mov bx,ds:xhc_port_thread
     Signal
 ;    
@@ -2969,6 +2986,11 @@ rtSlotAlloc:
     and eax,0EE03E1h
     or al,10h
     mov es:[si],eax
+    jmp rtDone
+
+rtAttach:
+    mov al,cl
+    NotifyUsbAttach
     jmp rtDone
 
 rtUnlock:
