@@ -1051,7 +1051,6 @@ ClearControlTT  Proc near
     pushad
 ;    
     EnterSection ds:hub_section
-    inc dx
     mov ebx,ds
     mov es,ebx
     mov bx,ds:hub_control_handle
@@ -1212,7 +1211,7 @@ atWaitLoop:
     jmp atReset
 
 atIsEnabled:
-    mov ax,50
+    mov ax,25
     WaitMilliSec
 ;
     test ds:[edi].hub_status_arr,2
@@ -1270,8 +1269,19 @@ atDetach:
     mov ax,PORT_ENABLE
     call ClearPortFeature    
 ;
+    mov ax,50
+    WaitMilliSec
+;
+    movzx dx,dl
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;
     mov ax,200
     WaitMilliSec
+;
+    movzx dx,dl
+    mov ax,PORT_POWER
+    call SetPortFeature    
 ;
     UnlockUsb
 ;

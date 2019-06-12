@@ -789,6 +789,7 @@ acqSetSpeed:
     push gs
     mov gs,ax
     mov ax,fs:usbp_hub_port
+    inc ax
     shl ax,7
     or ax,4000h    
     or al,gs:hub_address
@@ -979,6 +980,7 @@ abqSetSpeed:
 ;
     push gs
     mov ax,fs:usbp_hub_port
+    inc ax
     shl ax,7
     or ax,4000h    
     mov gs,fs:usbp_hub_sel
@@ -1158,6 +1160,7 @@ aieSetSpeed:
 ;
     push gs
     mov ax,fs:usbp_hub_port
+    inc ax
     shl ax,7
     or ax,4000h    
     mov gs,fs:usbp_hub_sel
