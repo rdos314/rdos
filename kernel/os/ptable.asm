@@ -6940,12 +6940,23 @@ create_paging32     PROC near
 create_paging_ram32:
     mov edx,es:efi_acpi
     or edx,es:efi_acpi+4
-    jnz create_paging_done32
+    jnz create_paging_efi32
 ;    
     mov edx,0A0000h
     mov ecx,100000h
     sub ecx,edx
     call map_flat_user32
+    jmp create_paging_done32
+    
+create_paging_efi32:
+    mov edx,es:efi_scan_size
+    movzx eax,es:efi_height
+    mul edx
+    shl eax,2
+    mov ecx,eax
+    mov eax,es:efi_lfb
+    mov edx,boot_efi_linear
+    call map_user32
     
 create_paging_done32:
     ret
@@ -7533,12 +7544,23 @@ create_paging64     PROC near
 create_paging_ram64:
     mov edx,es:efi_acpi
     or edx,es:efi_acpi+4
-    jnz create_paging_done64
+    jnz create_paging_efi64
 ;    
     mov edx,0A0000h
     mov ecx,100000h
     sub ecx,edx
     call map_flat_user64
+    jmp create_paging_done64
+    
+create_paging_efi64:
+    mov edx,es:efi_scan_size
+    movzx eax,es:efi_height
+    mul edx
+    shl eax,2
+    mov ecx,eax
+    mov eax,es:efi_lfb
+    mov edx,boot_efi_linear
+    call map_user64
     
 create_paging_done64:
     ret
