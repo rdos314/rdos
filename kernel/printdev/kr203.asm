@@ -84,7 +84,8 @@ usb_printer_struc       ENDS
 data    SEGMENT byte public 'DATA'
 
 kr_controller       DW ?
-kr_device           DW ?
+kr_device           DB ?
+kr_port             DB ?
 
 kr_max_in           DW ?
 
@@ -558,7 +559,7 @@ nsReset:
     lock and ds:kr_flag,NOT FLAG_ATTACHED
     pushad
     mov bx,ds:kr_controller
-    mov ax,ds:kr_device
+    mov al,ds:kr_device
     xor dl,dl
     OpenUsbPipe
     ResetUsbPipe
@@ -977,7 +978,7 @@ ClearReceiver    Endp
 
 OpenPipes   Proc near
     mov bx,ds:kr_controller
-    mov ax,ds:kr_device
+    mov al,ds:kr_device
     mov dl,ds:kr_in_pipe
     OpenUsbPipe
     mov ds:kr_in_handle,bx
@@ -989,7 +990,7 @@ OpenPipes   Proc near
     mov ds:kr_in_buffer,es
 ;
     mov bx,ds:kr_controller
-    mov ax,ds:kr_device
+    mov al,ds:kr_device
     mov dl,ds:kr_out_pipe
     OpenUsbPipe    
     mov ds:kr_out_handle,bx
@@ -2091,7 +2092,7 @@ reset_printer   Proc far
 ;    
     lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_controller
-    mov ax,ds:kr_device
+    mov al,ds:kr_device
     xor dl,dl
     OpenUsbPipe
     ResetUsbPipe
@@ -2148,7 +2149,7 @@ StatusTimeout  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread_name  DB 'Init KR203', 0
+init_thread_name  DB 'Init KR203 ', 0
 
 init_thread Proc far
     mov ax,SEG data
@@ -2213,6 +2214,111 @@ init_done:
     lock and ds:kr_flag, NOT FLAG_INIT
     ret
 init_thread Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Data seg
+;                       AX      Prio
+;                       ESI     Entry
+;                       EDI     Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push ds
+    push es            
+;
+    push ax
+    push esi
+;
+    mov esi,edi
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+sfCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:kr_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:kr_port
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    pop esi         
+;
+    mov ebx,ds
+    xor edi,edi
+    mov eax,cs
+    mov ds,eax
+    pop ax
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    pop es
+    pop ds
+    ret
+StartThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2223,7 +2329,7 @@ init_thread Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-kr203_thread_name  DB 'KR203', 0
+kr203_thread_name  DB 'KR203 ', 0
 
 kr203_thread:
     mov ax,SEG data
@@ -2236,7 +2342,7 @@ kr203_thread:
     mov es:printer_device,0
 ;    
     mov ax,ds:kr_controller
-    mov dx,ds:kr_device
+    movzx dx,ds:kr_device
     push ds
     mov bx,es
     mov ds,bx
@@ -2314,17 +2420,10 @@ krRestart:
     lock or ds:kr_flag, FLAG_INIT
     lock or ds:kr_status,STATUS_OFFLINE
 ;    
-    mov dx,cs
-    mov ds,dx
-    mov es,dx
-    mov di,OFFSET init_thread_name
-    mov si,OFFSET init_thread
+    mov esi,OFFSET init_thread
+    mov edi,OFFSET init_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    mov ax,SEG data
-    mov ds,ax
+    call StartThread
     
 krLoop:
     test ds:kr_flag,FLAG_ATTACHED
@@ -2432,6 +2531,7 @@ krWaitAttach:
 ;       description:    Create printer pipes
 ;
 ;       PARAMETERS:     AL      Device address
+;                       AH      Port #
 ;                       BX      Controller id
 ;                       DX      Device type
 ;                       ES:DI   Interface descriptor + endpoints
@@ -2446,9 +2546,9 @@ OpenPrinterPipes Proc near
     mov si,SEG data
     mov ds,si
 ;    
-    movzx ax,al
     mov ds:kr_controller,bx
-    mov ds:kr_device,ax
+    mov ds:kr_device,al
+    mov ds:kr_port,ah
     mov ds:kr_out_pipe,0
     mov ds:kr_in_pipe,0
     mov ds:kr_max_in,0
@@ -2505,14 +2605,10 @@ opDescrDone:
 ;
     lock or ds:kr_flag,FLAG_STARTED    
 ;
-    mov dx,cs
-    mov ds,dx
-    mov es,dx
-    mov di,OFFSET kr203_thread_name
-    mov si,OFFSET kr203_thread
+    mov esi,OFFSET kr203_thread
+    mov edi,OFFSET kr203_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     
 opDone:
     popad
