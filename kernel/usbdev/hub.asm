@@ -2132,7 +2132,7 @@ InitPorts    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_port_name    DB 'Usb Hub Port ', 0
+hub_port_name    DB 'Hub Port ', 0
 
 usb_hub_port:
     mov ds,ebx
@@ -2200,6 +2200,13 @@ cptCopyLoop:
     jmp cptCopyLoop
 
 cptCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,' '
+    stosb
+;
     mov ax,ds:hub_controller
     call HexToAscii
     stosw
@@ -2242,7 +2249,7 @@ CreatePortThread	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hub_status_name    DB 'Usb Hub Status ', 0
+hub_status_name    DB 'Hub Status ', 0
 
 usb_hub_status:
     mov ds,ebx
@@ -2527,6 +2534,13 @@ cstCopyLoop:
     jmp cstCopyLoop
 
 cstCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,' '
+    stosb
+;
     mov ax,ds:hub_controller
     call HexToAscii
     stosw
