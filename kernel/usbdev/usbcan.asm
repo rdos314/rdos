@@ -91,6 +91,7 @@ cd_in_wait       DW ?
 cd_out_pipe      DW ?
 cd_out_wait      DW ?
 cd_device        DB ?
+cd_port          DB ?
 cd_active        DB ?
 
 in_buf           DB 10 DUP(?)
@@ -1289,7 +1290,7 @@ HandleMsg   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcan_rec_thread_name DB 'USB Can Rec', 0
+usbcan_rec_thread_name DB 'USB Can Rec ', 0
 
 usbcan_rec_thread:
     mov ax,SEG data
@@ -1399,7 +1400,7 @@ ureTerm:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcan_super_thread_name DB 'USB Can Super', 0
+usbcan_super_thread_name DB 'USB Can Super ', 0
 
 usbcan_super_thread:
     mov ax,SEG data
@@ -1685,7 +1686,7 @@ usuResetDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcan_send_thread_name DB 'USB Can Send', 0
+usbcan_send_thread_name DB 'USB Can Send ', 0
 
 usbcan_send_thread:
     mov ax,SEG data
@@ -1832,6 +1833,110 @@ usProgFree:
 
 usTerm:
     TerminateThread
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Data
+;                       AX      Prio
+;                       ESI     Entry
+;                       EDI     Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push ds
+    push es            
+;
+    push ax
+    push esi
+;
+    mov esi,edi
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+sfCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:cd_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:cd_port
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    pop esi         
+;
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    pop ax
+    mov ecx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    pop es
+    pop ds
+    ret
+StartThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1841,6 +1946,7 @@ usTerm:
 ;       DESCRIPTION:    Add device
 ;
 ;       PARAMETERS:     AL      Device address
+;                       AH      Port #
 ;                       BX      Controller id
 ;                       ES:DI   Interface descriptor + endpoints
 ;
@@ -1854,6 +1960,7 @@ AddDevice Proc near
     mov dx,SEG data
     mov ds,dx
     mov ds:cd_device,al
+    mov ds:cd_port,ah
     mov ds:cd_controller,bx
     mov ds:cd_active,1
 ;
@@ -1865,26 +1972,21 @@ AddDevice Proc near
     mov ds:cd_super_thread,-1    
     mov ds:cd_rec_thread,-1    
     mov ds:cd_send_thread,-1    
-    mov dx,cs
-    mov ds,dx
-    mov es,dx
-    mov di,OFFSET usbcan_super_thread_name
-    mov si,OFFSET usbcan_super_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
 ;
-    mov di,OFFSET usbcan_rec_thread_name
-    mov si,OFFSET usbcan_rec_thread
+    mov esi,OFFSET usbcan_super_thread
+    mov edi,OFFSET usbcan_super_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
 ;
-    mov di,OFFSET usbcan_send_thread_name
-    mov si,OFFSET usbcan_send_thread
+    mov esi,OFFSET usbcan_rec_thread
+    mov edi,OFFSET usbcan_rec_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
+;
+    mov esi,OFFSET usbcan_send_thread
+    mov edi,OFFSET usbcan_send_thread_name
+    mov ax,2
+    call StartThread
         
 adThreadStarted:
     popad
@@ -1897,12 +1999,13 @@ AddDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       usb_attach
+;       NAME:           usb_attach
 ;
-;           description:    USB attach callback
+;       description:    USB attach callback
 ;
-;           Parameters:     BX      Controller #
-;               AL      Device address
+;       Parameters:     BX      Controller #
+;                       AH      Device port
+;                       AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
