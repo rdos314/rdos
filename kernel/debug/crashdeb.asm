@@ -540,7 +540,6 @@ MapLfbProt  PROC near
     or eax,ds:efi_acpi+4
     jz meProtDone
 ;
-    mov ds:mon_fixed_lfb,lfb_linear
     mov ax,SEG data
     mov ds,ax
     mov ax,flat_sel
@@ -677,8 +676,6 @@ MapLfbPae  PROC near
     mov eax,ds:efi_acpi
     or eax,ds:efi_acpi+4
     jz mePaeDone
-;
-    mov ds:mon_fixed_lfb,lfb_linear
 ;
     mov ax,SEG data
     mov ds,ax
@@ -910,12 +907,6 @@ dfPae:
     or ds:switch_flags,PM_FLAG_PAE
 
 dfProt:
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:mon_fixed_lfb
-    or eax,eax
-    jnz dfVideoOk
-;
     mov ax,flat_sel
     mov es,ax
     xor eax,eax

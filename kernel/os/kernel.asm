@@ -587,9 +587,6 @@ setup_global_paging Endp
 move_efi_lfb Proc near
     mov ax,system_data_sel
     mov ds,ax
-    mov ds:fixed_lfb_phys,0
-    mov ds:fixed_lfb_phys+4,0
-    mov ds:mon_fixed_lfb,0
 ;    
     mov edx,ds:efi_acpi
     or edx,ds:efi_acpi+4
@@ -597,7 +594,6 @@ move_efi_lfb Proc near
 ;
     mov ds:efi_lfb,0
     mov ds:efi_lfb+4,0
-    mov ds:fixed_lfb_linear,0
     jmp move_efi_lfb_done        
 
 move_efi_lfb_do:        
@@ -611,9 +607,6 @@ move_efi_lfb_do:
     mov ebx,ds:efi_lfb+4
     mov al,67h
     mov ds:efi_lfb,edx
-    mov ds:fixed_lfb_phys,eax
-    mov ds:fixed_lfb_phys+4,ebx
-    mov ds:fixed_lfb_linear,edx
 
 move_efi_loop:
     SetPageEntry

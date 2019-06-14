@@ -544,7 +544,7 @@ cfeYOk:
 ;    
     push es
     mov al,32
-    mov edi,ds:fixed_lfb_linear
+    mov edi,ds:efi_lfb
     mov es:c_lfb,edi
     mov cx,ds:efi_width
     mov es:c_width,cx
