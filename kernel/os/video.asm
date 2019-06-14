@@ -1251,7 +1251,7 @@ ccRetry:
 ccDo:    
     mov ax,system_data_sel
     mov ds,ax    
-    mov eax,ds:fixed_lfb_linear
+    mov eax,ds:efi_lfb
     or eax,eax
     jz ccText
 
