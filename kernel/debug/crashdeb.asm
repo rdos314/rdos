@@ -931,6 +931,8 @@ dfVectLoop:
     jz dfVideoOk
 ;
     or ds:switch_flags,PM_FLAG_VIDEO
+    mov ax,system_data_sel
+    mov ds,ax
     xor eax,eax
     mov ds:efi_acpi,eax
     mov ds:efi_acpi+4,eax
@@ -1344,6 +1346,16 @@ SwitchToMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
+    mov bx,system_data_sel
+    mov ds,bx
+    mov ebx,ds:efi_acpi
+    or ebx,ds:efi_acpi+4
+    jz apLfbDone
+;
+    mov ds:efi_lfb,lfb_page_linear    
+    mov ds:efi_lfb+4,0
+    
+apLfbDone:
     mov ebx,ebp
     cmp ax,-1
     je kernel_pretask
