@@ -2142,7 +2142,7 @@ icLfb:
     push eax
     mov eax,ds:efi_scan_size
     mul edx
-    mov edi,lfb_linear
+    mov edi,ds:mon_fixed_lfb
     add edi,eax
     pop eax
     shl eax,2
