@@ -877,6 +877,7 @@ DetectFlags Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:switch_flags,0
+    mov ds:mon_fixed_lfb,0
 ;
     pushfd
     pop eax
@@ -912,9 +913,6 @@ dfProt:
     mov eax,ds:efi_acpi
     or eax,ds:efi_acpi+4
     jnz dfVideoAcpi
-;
-    mov eax,ds:efi_lfb
-    mov ds:mon_fixed_lfb,eax
 ;
     mov ax,flat_sel
     mov es,ax
