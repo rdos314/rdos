@@ -1955,8 +1955,8 @@ move_cursor Proc near
     mov ds:efi_text_row,cx
     mov ds:efi_text_col,dx    
 ;
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
     pop ax
     jnz mcDone
 ;    
@@ -2005,8 +2005,8 @@ ShowChar Proc near
     push eax
     mov ax,mon_system_data_sel
     mov ds,ax
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
     pop eax
     jnz scLfb
 
@@ -2042,7 +2042,7 @@ scLfb:
     push eax
     mov eax,ds:efi_scan_size
     mul edx
-    mov edi,ds:efi_lfb
+    mov edi,ds:mon_fixed_lfb
     add edi,eax
     pop eax
     shl eax,2
@@ -2121,8 +2121,8 @@ InvertChar Proc near
 ;   
     mov ax,mon_system_data_sel
     mov ds,ax
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
     jz icDone
 
 icLfb:
@@ -2142,7 +2142,7 @@ icLfb:
     push eax
     mov eax,ds:efi_scan_size
     mul edx
-    mov edi,ds:efi_lfb
+    mov edi,lfb_linear
     add edi,eax
     pop eax
     shl eax,2
@@ -2194,8 +2194,8 @@ ShowMarker Proc near
 ;
     mov ax,mon_system_data_sel
     mov ds,ax
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
     jnz smLfb
 
 smText:
@@ -2252,8 +2252,8 @@ HideMarker Proc near
 ;
     mov ax,mon_system_data_sel
     mov ds,ax
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
     jnz hmLfb
 
 hmText:
@@ -2307,8 +2307,8 @@ Clear Proc near
 ;    
     mov ax,mon_system_data_sel
     mov ds,ax 
-    mov eax,ds:efi_lfb
-    or eax,ds:efi_lfb+4
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
     jnz cLfb
 
 cText:
@@ -2324,7 +2324,7 @@ cLfb:
     mov ax,mon_flat_sel
     mov es,ax
 ;
-    mov edi,ds:efi_lfb
+    mov edi,ds:mon_fixed_lfb
     movzx ecx,ds:efi_height
 
 cLoop:

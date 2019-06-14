@@ -544,7 +544,7 @@ cfeYOk:
 ;    
     push es
     mov al,32
-    mov edi,ds:efi_lfb
+    mov edi,ds:fixed_lfb_linear
     mov es:c_lfb,edi
     mov cx,ds:efi_width
     mov es:c_width,cx
@@ -1978,6 +1978,7 @@ avCmp:
 avSet:
     mov ds:efi_lfb,edi
     mov ds:efi_lfb+4,0
+    mov ds:mon_fixed_lfb,edi
     mov ds:efi_width,cx
     mov ds:efi_height,dx
     movzx esi,si
