@@ -908,12 +908,6 @@ dfPae:
     or ds:switch_flags,PM_FLAG_PAE
 
 dfProt:
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:efi_acpi
-    or eax,ds:efi_acpi+4
-    jnz dfVideoAcpi
-;
     mov ax,flat_sel
     mov es,ax
     xor eax,eax
@@ -926,10 +920,7 @@ dfVectLoop:
     loop dfVectLoop
 ;
     or eax,eax
-    jz dfVideoOk
-;
-    mov ax,SEG data
-    mov ds,ax
+    jz dfVideoAcpi
 ;
     or ds:switch_flags,PM_FLAG_VIDEO
     mov ax,system_data_sel
