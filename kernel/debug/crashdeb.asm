@@ -540,6 +540,7 @@ MapLfbProt  PROC near
     or eax,ds:efi_acpi+4
     jz meProtDone
 ;
+    mov ds:mon_fixed_lfb,lfb_linear
     mov ax,SEG data
     mov ds,ax
     mov ax,flat_sel
@@ -676,6 +677,8 @@ MapLfbPae  PROC near
     mov eax,ds:efi_acpi
     or eax,ds:efi_acpi+4
     jz mePaeDone
+;
+    mov ds:mon_fixed_lfb,lfb_linear
 ;
     mov ax,SEG data
     mov ds,ax
@@ -907,6 +910,12 @@ dfPae:
     or ds:switch_flags,PM_FLAG_PAE
 
 dfProt:
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
+    jnz dfVideoOk
+;
     mov ax,flat_sel
     mov es,ax
     xor eax,eax
@@ -922,8 +931,6 @@ dfVectLoop:
     jz dfVideoOk
 ;
     or ds:switch_flags,PM_FLAG_VIDEO
-    mov ax,system_data_sel
-    mov ds,ax
     xor eax,eax
     mov ds:efi_acpi,eax
     mov ds:efi_acpi+4,eax
@@ -1337,16 +1344,6 @@ SwitchToMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
-    mov bx,system_data_sel
-    mov ds,bx
-    mov ebx,ds:efi_acpi
-    or ebx,ds:efi_acpi+4
-    jz apLfbDone
-;
-    mov ds:efi_lfb,lfb_page_linear    
-    mov ds:efi_lfb+4,0
-    
-apLfbDone:
     mov ebx,ebp
     cmp ax,-1
     je kernel_pretask
