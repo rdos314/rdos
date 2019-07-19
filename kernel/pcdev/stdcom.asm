@@ -213,6 +213,21 @@ get_std_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FullDuplex
+;
+;           DESCRIPTION:    Check for full duplex (always true)
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+full_duplex PROC far
+    stc
+    retf32
+full_duplex Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           io_modem
 ;
 ;           DESCRIPTION:    Modem signals changed, IO version
@@ -1939,6 +1954,7 @@ ipt09 DD OFFSET io_disable_auto_rts,SEG code
 ipt10 DD OFFSET io_flush_com,       SEG code
 ipt11 DD OFFSET io_start_send,      SEG code
 ipt12 DD OFFSET io_reset_port,      SEG code
+ipt13 DD OFFSET full_duplex,        SEG code
 
 io_create_port Proc far
     push eax
@@ -1955,7 +1971,7 @@ io_create_port Proc far
 ;
     mov si,OFFSET io_port_tab
     xor di,di
-    mov cx,2 * 13
+    mov cx,2 * 14
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov ax,ds:iopds_base
@@ -2141,6 +2157,7 @@ mpt09 DD OFFSET mem_disable_auto_rts,SEG code
 mpt10 DD OFFSET mem_flush_com,       SEG code
 mpt11 DD OFFSET mem_start_send,      SEG code
 mpt12 DD OFFSET mem_reset_port,      SEG code
+mpt13 DD OFFSET full_duplex,         SEG code
 
 mem_create_port Proc far
     push eax
@@ -2157,7 +2174,7 @@ mem_create_port Proc far
 ;
     mov si,OFFSET mem_port_tab
     xor di,di
-    mov cx,2 * 13
+    mov cx,2 * 14
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov eax,ds:mempds_offset

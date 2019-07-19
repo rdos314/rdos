@@ -1080,6 +1080,22 @@ ccfNoDevice:
     retf32
 close_com_ftdi  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           full_duplex
+;
+;           DESCRIPTION:    Chkeck for full duplex
+;
+;           PARAMETERS:         DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+full_duplex PROC near
+    stc
+    retf32
+full_duplex Endp  
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3126,6 +3142,7 @@ fpt09 DD OFFSET disable_auto_rts,       SEG code
 fpt10 DD OFFSET flush_com,          SEG code
 fpt11 DD OFFSET start_send,         SEG code
 fpt12 DD OFFSET reset_port,         SEG code
+fpt13 DD OFFSET full_duplex,        SEG code
 
 CreatePortFtdi  Proc far
     pushad
@@ -3139,7 +3156,7 @@ CreatePortFtdi  Proc far
 ;
     mov si,OFFSET ftdi_port_tab
     xor di,di
-    mov cx,2 * 13
+    mov cx,2 * 14
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3175,6 +3192,7 @@ ppt09 DD OFFSET disable_auto_rts,    SEG code
 ppt10 DD OFFSET flush_com,       SEG code
 ppt11 DD OFFSET start_send,      SEG code
 ppt12 DD OFFSET reset_port,      SEG code
+ppt13 DD OFFSET full_duplex,     SEG code
 
 CreatePortPl2303    Proc far
     pushad
@@ -3188,7 +3206,7 @@ CreatePortPl2303    Proc far
 ;
     mov si,OFFSET pl2303_port_tab
     xor di,di
-    mov cx,2 * 13
+    mov cx,2 * 14
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3224,6 +3242,7 @@ mct09 DD OFFSET disable_auto_rts,       SEG code
 mct10 DD OFFSET flush_com,          SEG code
 mct11 DD OFFSET start_send,         SEG code
 mct12 DD OFFSET reset_port,         SEG code
+mct13 DD OFFSET full_duplex,        SEG code
 
 CreatePortMct   Proc far
     pushad
@@ -3237,7 +3256,7 @@ CreatePortMct   Proc far
 ;
     mov si,OFFSET mct_port_tab
     xor di,di
-    mov cx,2 * 13
+    mov cx,2 * 14
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface

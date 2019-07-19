@@ -101,7 +101,7 @@ start_send_com_proc   DD ?,?
 reset_com_proc   DD ?,?
 
 ;   IN  DS      Com port selector
-supports_full_duplex_com_proc   DD ?,?
+supports_full_duplex_proc   DD ?,?
 
 send_count		DW ?
 rec_count	  	DW ?

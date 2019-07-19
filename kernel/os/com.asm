@@ -852,6 +852,40 @@ get_com_send_space      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           supports_full_duplex
+;
+;           description:    Check for support for full duplex
+;
+;           PARAMETERS:     BX          Port handle
+;
+;           RETURNS:        CY		Has full duplex
+;                           NC          No full duplex support
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+supports_full_duplex_name DB 'Supports Full Duplex',0
+
+supports_full_duplex      PROC far
+    push ds
+    push ebx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    cmc
+    jnc sfdDone
+;
+    mov ds,[ebx].port_sel
+    call fword ptr ds:supports_full_duplex_proc
+
+sfdDone:
+    pop ebx
+    pop ds
+    retf32
+supports_full_duplex      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           get_cts
 ;
 ;           description:    Get CTS signal
@@ -1719,6 +1753,12 @@ init    Proc far
     mov edi,OFFSET get_com_send_space_name
     xor dx,dx
     mov ax,get_com_send_space_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET supports_full_duplex
+    mov edi,OFFSET supports_full_duplex_name
+    xor dx,dx
+    mov ax,supports_full_duplex_nr
     RegisterBimodalUserGate
 ;
     mov bx,SEG data

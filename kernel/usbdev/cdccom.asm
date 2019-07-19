@@ -434,6 +434,22 @@ flush_com       PROC far
 flush_com Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           full_duplex
+;
+;           DESCRIPTION:    Check for full duplex
+;
+;           PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+full_duplex PROC far
+    stc
+    ret
+full_duplex Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           start_send
@@ -532,6 +548,7 @@ cpt09 DD OFFSET disable_auto_rts,   SEG code
 cpt10 DD OFFSET flush_com,          SEG code
 cpt11 DD OFFSET start_send,         SEG code
 cpt12 DD OFFSET reset_port,         SEG code
+cpt13 DD OFFSET full_duplex,        SEG code
 
 CreateComPort	Proc far
     pushad
@@ -545,7 +562,7 @@ CreateComPort	Proc far
 ;
     mov esi,OFFSET com_port_tab
     xor edi,edi
-    mov ecx,2 * 13
+    mov ecx,2 * 14
     rep movs dword ptr es:[edi],cs:[esi]
 ;
     mov ax,ds:ucd_cdc_sel
