@@ -95,6 +95,7 @@ public:
     int Poll();
     char Read();
     int WaitForChar(long Timeout);
+    int SupportsFullDuplex();
 
     void EnableCts();
     void DisableCts();
@@ -125,6 +126,7 @@ private:
     int FDataMask;
     int FAutoRts;
     int FUseCts;
+    int FSupportsFullDuplex;
         
     TFile *FDebugFile;
     int FInChannel;

@@ -53,6 +53,7 @@ public:
         virtual int Poll();
         virtual char Read();
         virtual int WaitForChar(long MaxWait);
+        virtual int SupportsFullDuplex();
 
 
 protected:

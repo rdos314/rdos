@@ -740,6 +740,8 @@ void TSerialDevice::OpenPort()
         
     if (FHandle)
     {
+        FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
+
         if (FUseCts)
             RdosEnableCts(FHandle);
         else
@@ -974,6 +976,22 @@ int TSerialDevice::GetSendBufferSpace()
 int TSerialDevice::GetReceiveBufferSpace()
 {
     return 1000;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::SupportsFullDuplex
+#
+#   Purpose....: Check if port supports full duplex
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Number of bytes free space
+#
+##########################################################################*/
+int TSerialDevice::SupportsFullDuplex()
+{
+    return FSupportsFullDuplex;
 }
 
 /*##########################################################################

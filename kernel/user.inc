@@ -2772,6 +2772,14 @@ GetDsr       MACRO
         UserGate read_dsr_nr
                                                 ENDM
 
+;       IN  BX          port handle
+;   NC         No support
+;   CY         Support
+SupporsFullDuplex       MACRO
+        UserGate supports_full_duplex_nr
+                                                ENDM
+
+
 ;;;;;;;;;;;;;; PRINTER ;;;;;;;;;;;;
 
 ;   OUT AL      Printer #

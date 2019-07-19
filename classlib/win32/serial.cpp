@@ -924,3 +924,15 @@ int TSerialDevice::WaitForChar(long MaxWait)
     return TRUE;
 }
 
+
+/*##################  TSerialDevice::SupportsFullDuplex    ###########################
+*   Purpose....: Check for full duplex suppport                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSerialDevice::SupportsFullDuplex()
+{
+    return TRUE;
+}

@@ -945,6 +945,13 @@
     CallGate_disable_auto_rts  \
     parm [ebx];
 
+#pragma aux RdosSupportsFullDuplex = \
+    CallGate_supports_full_duplex  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosGetCts = \
     CallGate_get_cts  \
     "jc CtsOff" \
@@ -3457,7 +3464,7 @@
 
 #pragma aux RdosIsCanOnline = \
     CallGate_is_can_online \
-    ValidateEax \
+    CarryToBool \
     value [eax];
 
 #pragma aux RdosGetUsbDevice = \
