@@ -63,9 +63,9 @@
 62	unterdurchschnittlich
 63	durchschnittlich
 64	überdurchschnittlich
-65	Nein
+65	Number
 66	Frage
-67	Auswahlmöglichkeit
+67	Auswahl
 68	Aspie
 69	NT
 70	Detaillierte Ergebnisse zum Ausdrucken (pdf)
@@ -79,7 +79,7 @@
 78	Kommunikation
 79	Beziehung
 80	Sozialverhalten
-81	neurodiveres Talent
+81	neurodiverses Talent
 82	neurotypisches Talent
 83	neurodiverse Wahrnehmung
 84	neurotypische Wahrnehmung
@@ -105,13 +105,13 @@
 104	Keine direkte Diagnose. Jedoch sollte man bedenken, dass auch Menschen im Autismusspektrum unterschiedlich wahrnehmen.
 105	Eine unterdurchschnittliche Punktzahl deutet auf Dyspraxie ( Koordinations- und Entwicklungsstörung) hin.
 106	Keine direkte Diagnose. Jedoch deutet eine überdurchschnittliche Punktzahl auf Stimming (unterbewusst selbststimulierendes Verhalten) und untypische Kommunikation hin.
-107	Eine niedrige Punktzahl deutet auf eine Autismus-Spektrum-Störung hin.
+107	Eine unterdurchschnittliche Punktzahl deutet auf eine Autismus-Spektrum-Störung hin.
 108	Eine überdurchschnittliche Punktzahl deutet auf Bindungsstörungen und Paraphilien hin. 
-109	Eine unterdurschnittliche Punktzahl deutet auf Intimitätsprobleme hin.
+109	Eine unterdurchschnittliche Punktzahl deutet auf Intimitätsprobleme hin.
 110	Keine.
 111	Deine Punktzahl in diesem Bereich: %01.1f von 10 (%s).
-112	Detaillierte Informationen über weitere neurodiverse und neurotypische Messwerte
-113	Neigst du dazu dich so auf deine Spezialinteressen zu konzentrieren, daß du alles um dich herum vergißt oder ignorierst?
+112	Detaillierte Informationen über deine neurodiversen und neurotypischen Messwerte
+113	Neigst du dazu dich so auf deine Spezialinteressen zu konzentrieren, dass du alles um dich herum vergisst oder ignorierst?
 114	Hast du eifrige Ausdauer im Ansammeln und Katalogisieren von Informationen bezüglich eines für dich interessanten Themas?
 115	Ist es wichtig für dich eine außergewöhnliche Nische zu finden, in der du außergewöhnliche Kompetenzen erreichen kannst?
 116	Erkennst du ständig Muster in Dingen oder Situationen?
@@ -123,18 +123,18 @@
 122	Hast Probleme damit Formulare auszufüllen?
 123	Findest du es schwierig Telefonnummern zu erkennen, wenn diese auf eine andere Art aufgesagt werden?
 124	Findest du es schwierig in Unterrichtsstunden oder bei Vorträgen Notizen zu machen?
-125	Mußt du alles selbst machen, damit du dich später daran erinnerst?
+125	Musst du alles selbst machen, damit du dich später daran erinnerst?
 126	Bist du leicht abgelenkt?
 127	Wenn du unterbrochen wirst, kannst du dann schnell zu dem zurückkehren, was du vor der Unterbrechung gemacht hast?
 128	Brauchst du viel Motivation um Dinge umzusetzen?
 129	Hast du Probleme den Weg zu neuen Orten zu finden?
 130	Arbeitest du an Aufgaben, die dir nicht gefallen, langsamer als sonst?
 131	Hast du Schwierigkeiten damit Uhren abzulesen?
-132	Mußt du dir ein geistiges Bild machen, was passieren wird, bevor du etwas tust oder du irgendwohin gehst, damit du dich erstmal mental darauf vorbereiten kannst? 
+132	Musst du dir ein geistiges Bild machen, was passieren wird, bevor du etwas tust oder du irgendwohin gehst, damit du dich mental darauf vorbereiten kannst? 
 133	Findest du es verwirrend oder bist du verärgert, wenn andere entweder früher oder später als verabredet erscheinen? 
 134	Hast du eine Abneigung dagegen, wenn Leute hinter dir laufen?
-135	Hast du bestimmte Routinen, denen du folgen mußt?
-136	Neigst du dazu abzuschalten oder einen Overload zu bekommen, wenn du gesteßt oder überwältigt bist?
+135	Hast du bestimmte Routinen, denen du folgen musst?
+136	Neigst du dazu abzuschalten oder einen Overload zu bekommen, wenn du gestresst oder überwältigt bist?
 137	Stören dich Schilder an deiner Kleidung oder stören dich leichte Berührungen?
 138	Bist du sensibel für Luftdruck- oder Luftfeuchtigkeitsänderungen?
 139	Bist du manchmal ängstlich in sicheren Situationen?
@@ -152,7 +152,7 @@
 151	Hast du Schwierigkeiten damit Entfernungen, Höhen, Tiefen oder Geschwindigkeiten abzuschätzen?
 152	Verdrehst du deine Hände, reibst sie gegeneinander oder verdrehst du deine Finger?
 153	Benutzt du in Gesprächen Füllwörter, die andere nicht zu benutzen scheinen?
-154	Schaukelst du vor und zurück oder seitwärts (zB zur Entspannung oder um dich zu beruhigen oder wenn du aufgeregt oder überreizt bist)?
+154	Schaukelst du vor und zurück oder seitwärts (z.B. zur Entspannung oder um dich zu beruhigen oder wenn du aufgeregt oder überreizt bist)?
 155	Klopfst du auf deine Ohren, oder presst du deine Augen zusammen ( z.B. wenn du intensiv überlegst, du gestresst oder verzweifelt bist)?
 156	Spielst du mit Gegenständen herum?
 157	Verwechselst du Geräusche mit Stimmen?
@@ -162,7 +162,7 @@
 161	Übt langsam fließendes Wasser eine Faszination auf dich aus?
 162	Magst du es, wenn du dich im Kreis drehst?
 163	Hast du manchmal den Drang Dinge zu überspringen?
-164	Kaust du auf deinen Lippen, Wange oder Zunge (zB beim Nachdenken, wenn du besorgt oder nervös bist)?
+164	Kaust du auf deinen Lippen, deiner Wange oder Zunge (z.B. beim Nachdenken, wenn du besorgt oder nervös bist)?
 165	Geht du auf und ab (z.B. beim Nachdenken oder wenn du besorgt bist)?
 166	Verspürst du ein angenehmes Kribbeln im Kopf, auf der Kopfhaut oder auf der Hinterseite deines Körpers beim Hören bestimmter Geräusche?
 167	Redest du mit dir selbst?
@@ -217,7 +217,7 @@
 216	Tendierst du dazu ins Stocken zu kommen, wenn dir in sozialen Situationen Fragen gestellt werden?
 217	Ist es für dich schwerer als für andere Freundschaften aufrecht zu erhalten?
 218	Bist du gut in Teamarbeit?
-219	Bevorzugst du es dich ausschließlich mit Menschen zu treffen, die du kennst (bei einem Einzeltreffen oder in kleineren Gruppen)?
+219	Bevorzugst du es, dich ausschließlich mit Menschen zu treffen, die du kennst (bei einem Einzeltreffen oder in kleineren Gruppen)?
 220	Gefallen dir große Veranstaltungen, selbst wenn dort große Menschenmengen sind?
 221	Benötigst du in Unterhaltungen zusätzliche Zeit, um deine Antwort genau zu durchdenken, sodass es sein kann, dass eine Pause vor deiner Antwort entsteht?
 222	Vermeidest du Situationen, in denen andere eventuell dir gegenüber Zuneigung zeigen könnten?
@@ -232,12 +232,12 @@
 231	Kannst du dich leicht an verbale Anweisungen erinnern?
 232	Akzeptierst du Kritik, Korrektur und Führung?
 233	Findest du es leicht, das Alter von Menschen zu schätzen?
-234	Haftungsausschluss: Dieser Frageboden ist kein Ersatz für eine professionelle Diagnostik.
+234	Haftungsausschluss: Dieser Fragebogen ist kein Ersatz für eine professionelle Diagnostik.
 235	Einige der Fragen in diesem Test sind so gestellt, dass die neurodiverse Antwort "ja" ist und einige so, dass die neurodiverse Antwort "nein" ist.
 236	Publikationen in Verbindung mit dem Aspie Quiz
 237	Das Ziel dieses Tests ist es, eine Einschätzung über sowohl neurodiverse als auch neurotypische Eigenschaften bei Erwachsenenen zu bekommen. Die hier dargebotene Einschätzung der Neurodiversität kann gezielte Hinweise auf definitive Eigenschaften aus dem Autismusspektrum geben für eine eventuell folgende Diagnose.
-238	Solltest du Interesse an unserer Langzeitstudie haben, die sich mit der Veränderung der Messwerte über die Zeit beschäftigt, kannst du uns gern bei der Verbesserung des Tests helfen (hierfür musst du dich mit einer gültigen Benutzer-ID einloggen oder eine neue Benutzer-ID registrieren). Ansonsten kann du natürlich auch direkt den vereinfachten Test machen.
+238	Solltest du Interesse an unserer Langzeitstudie haben, die sich mit der Veränderung der Messwerte über die Zeit beschäftigt, kannst du uns gern bei der Verbesserung des Tests helfen (hierfür musst du dich mit einer gültigen Benutzer-ID einloggen oder eine neue Benutzer-ID registrieren). Ansonsten kannst du natürlich auch direkt den vereinfachten Test machen.
 239	Deine Statistiken/Ergebnisse sind in einer Datenbank gesichert. Sie könnten veröffentlicht, als Untersuchungsdaten benutzt oder zur Kalibrierung des Tests genutzt werden. Wir speichern jedoch keine IP Adressen oder andere persönliche Informationen.
 240	Um an unserer Langzeitstudie teilzunehmen und uns damit zu helfen den Test zu verbessern, musst du dich registrieren/einloggen. (Bitte beachte, dass dafür Familienmitglieder oder andere Personen nicht die selbe User-ID benutzen sollten)
 241	Jetzt mit dem Test starten
-242	Ich akzeptiere
+242	Test starten
