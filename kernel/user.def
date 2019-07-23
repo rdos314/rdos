@@ -898,5 +898,6 @@ wait_for_can_bridge_programming_nr = 704
 get_usb_cdc_com_par_nr            = 705
 
 supports_full_duplex_nr           = 706
+is_auto_rts_on_nr                 = 707
 
 usergate_entries                 = 750

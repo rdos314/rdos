@@ -45,6 +45,7 @@ FLAG_UDS_REINIT = 4
 CONTROL_DTR = 1
 CONTROL_RTS = 2
 CONTROL_CTS = 4
+CONTROL_AUTO_RTS = 8
 
 FLAG_CTS    = 10h
 FLAG_DSR    = 20h
@@ -73,6 +74,8 @@ DEVICE_TYPE_PL_HX = DEVICE_TYPE_PL2303 + 2
 
 DEVICE_TYPE_MCT_SITECOM = DEVICE_TYPE_MCT + 1
 DEVICE_TYPE_MCT_BELKIN = DEVICE_TYPE_MCT + 2
+
+FLG_ENABLE_AUTO_RTS  = 1
 
 usbcom_port_struc       STRUC
 
@@ -3007,6 +3010,7 @@ far_reset_rts_mct   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_auto_rts PROC far
+    or ds:ups_control,CONTROL_AUTO_RTS
     retf32
 enable_auto_rts Endp
 
@@ -3023,9 +3027,34 @@ enable_auto_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disable_auto_rts    PROC far
+    and ds:ups_control,NOT CONTROL_AUTO_RTS
     retf32
 disable_auto_rts Endp
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsAutoRtsOn
+;
+;           DESCRIPTION:    Check for automatic RTS on send
+;
+;           PARAMETERS:         DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_auto_rts_on    PROC far
+    test ds:ups_control,CONTROL_AUTO_RTS
+    jz iarOff
+
+iarOn:
+    clc
+    retf32
+
+iarOff:
+    stc
+    retf32
+is_auto_rts_on Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3143,6 +3172,7 @@ fpt10 DD OFFSET flush_com,          SEG code
 fpt11 DD OFFSET start_send,         SEG code
 fpt12 DD OFFSET reset_port,         SEG code
 fpt13 DD OFFSET full_duplex,        SEG code
+fpt14 DD OFFSET is_auto_rts_on,         SEG code
 
 CreatePortFtdi  Proc far
     pushad
@@ -3156,7 +3186,7 @@ CreatePortFtdi  Proc far
 ;
     mov si,OFFSET ftdi_port_tab
     xor di,di
-    mov cx,2 * 14
+    mov cx,2 * 15
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3193,6 +3223,7 @@ ppt10 DD OFFSET flush_com,       SEG code
 ppt11 DD OFFSET start_send,      SEG code
 ppt12 DD OFFSET reset_port,      SEG code
 ppt13 DD OFFSET full_duplex,     SEG code
+ppt14 DD OFFSET is_auto_rts_on,     SEG code
 
 CreatePortPl2303    Proc far
     pushad
@@ -3206,7 +3237,7 @@ CreatePortPl2303    Proc far
 ;
     mov si,OFFSET pl2303_port_tab
     xor di,di
-    mov cx,2 * 14
+    mov cx,2 * 15
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface
@@ -3243,6 +3274,7 @@ mct10 DD OFFSET flush_com,          SEG code
 mct11 DD OFFSET start_send,         SEG code
 mct12 DD OFFSET reset_port,         SEG code
 mct13 DD OFFSET full_duplex,        SEG code
+mct14 DD OFFSET is_auto_rts_on,        SEG code
 
 CreatePortMct   Proc far
     pushad
@@ -3256,7 +3288,7 @@ CreatePortMct   Proc far
 ;
     mov si,OFFSET mct_port_tab
     xor di,di
-    mov cx,2 * 14
+    mov cx,2 * 15
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface

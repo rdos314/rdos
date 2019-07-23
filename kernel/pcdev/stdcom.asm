@@ -1213,6 +1213,29 @@ io_disable_auto_rts    PROC far
     retf32
 io_disable_auto_rts Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           IoIsAutoRtsOn
+;
+;       DESCRIPTION:    Check for automatic RTS on send, IO version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+io_is_auto_rts_on PROC far
+    test ds:iopps_flgs,FLG_ENABLE_AUTO_RTS
+    jz iiarOff
+
+iiarOn:
+    clc
+    retf32
+
+iiarOff:
+    stc
+    retf32
+io_is_auto_rts_on Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
@@ -1697,6 +1720,29 @@ mem_disable_auto_rts    PROC far
     retf32
 mem_disable_auto_rts Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemIsAutoRtsOn
+;
+;       DESCRIPTION:    Check for automatic RTS on send, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_is_auto_rts_on PROC far
+    test ds:mempps_flgs,FLG_ENABLE_AUTO_RTS
+    jz miarOff
+
+miarOn:
+    clc
+    retf32
+
+miarOff:
+    stc
+    retf32
+mem_is_auto_rts_on Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
@@ -1955,6 +2001,7 @@ ipt10 DD OFFSET io_flush_com,       SEG code
 ipt11 DD OFFSET io_start_send,      SEG code
 ipt12 DD OFFSET io_reset_port,      SEG code
 ipt13 DD OFFSET full_duplex,        SEG code
+ipt14 DD OFFSET io_is_auto_rts_on,  SEG code
 
 io_create_port Proc far
     push eax
@@ -1971,7 +2018,7 @@ io_create_port Proc far
 ;
     mov si,OFFSET io_port_tab
     xor di,di
-    mov cx,2 * 14
+    mov cx,2 * 15
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov ax,ds:iopds_base
@@ -2158,6 +2205,7 @@ mpt10 DD OFFSET mem_flush_com,       SEG code
 mpt11 DD OFFSET mem_start_send,      SEG code
 mpt12 DD OFFSET mem_reset_port,      SEG code
 mpt13 DD OFFSET full_duplex,         SEG code
+mpt14 DD OFFSET mem_is_auto_rts_on,  SEG code
 
 mem_create_port Proc far
     push eax
@@ -2174,7 +2222,7 @@ mem_create_port Proc far
 ;
     mov si,OFFSET mem_port_tab
     xor di,di
-    mov cx,2 * 14
+    mov cx,2 * 15
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov eax,ds:mempds_offset

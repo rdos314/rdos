@@ -86,8 +86,11 @@ public:
     void SetDtr();
     void ResetRts();
     void SetRts();
+
     void EnableAutoRts();
     void DisableAutoRts();
+    int IsAutoRtsOn();
+
     void Write(char ch);
     void Write(const char *buf, int count);
     void Write(const char *str);

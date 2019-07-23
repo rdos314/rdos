@@ -103,6 +103,9 @@ reset_com_proc   DD ?,?
 ;   IN  DS      Com port selector
 supports_full_duplex_proc   DD ?,?
 
+;   IN  DS      Com port selector
+is_auto_rts_on_proc   DD ?,?
+
 send_count		DW ?
 rec_count	  	DW ?
 

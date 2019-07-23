@@ -48,6 +48,8 @@ MAX_PORTS       = 32
 FLAG_CDC_DISCONNECT = 2
 FLAG_CDC_REINIT = 4
 
+FLG_ENABLE_AUTO_RTS  = 1
+
 usb_cdc_port_struc       STRUC
 
 ucp_base_struc  com_port_struc <>
@@ -55,6 +57,7 @@ ucp_base_struc  com_port_struc <>
 ucp_device_sel      DW ?
 ucp_cdc_sel         DW ?
 ucp_cdc_unit_sel    DW ?
+ucp_flgs            DB ?
 
 ucp_timer_active    DB ?
 
@@ -400,6 +403,7 @@ reset_rts  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_auto_rts PROC far
+    or ds:ucp_flgs,FLG_ENABLE_AUTO_RTS
     ret
 enable_auto_rts Endp
     
@@ -415,10 +419,35 @@ enable_auto_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disable_auto_rts    PROC far
+    and ds:ucp_flgs,NOT FLG_ENABLE_AUTO_RTS
     ret
 disable_auto_rts Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsAutoRtsOn
+;
+;           DESCRIPTION:    Check for automatic RTS on send
+;
+;           PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+is_auto_rts_on PROC far
+    test ds:ucp_flgs,FLG_ENABLE_AUTO_RTS
+    jz iarOff
+
+iarOn:
+    clc
+    ret
+
+iarOff:
+    stc
+    ret
+is_auto_rts_on Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           FlushCom
@@ -549,6 +578,7 @@ cpt10 DD OFFSET flush_com,          SEG code
 cpt11 DD OFFSET start_send,         SEG code
 cpt12 DD OFFSET reset_port,         SEG code
 cpt13 DD OFFSET full_duplex,        SEG code
+cpt14 DD OFFSET is_auto_rts_on,     SEG code
 
 CreateComPort	Proc far
     pushad
@@ -562,13 +592,14 @@ CreateComPort	Proc far
 ;
     mov esi,OFFSET com_port_tab
     xor edi,edi
-    mov ecx,2 * 14
+    mov ecx,2 * 15
     rep movs dword ptr es:[edi],cs:[esi]
 ;
     mov ax,ds:ucd_cdc_sel
     mov es:ucp_cdc_sel,ax
     mov ax,ds:ucd_cdc_unit_sel
     mov es:ucp_cdc_unit_sel,ax
+    mov es:ucp_flgs,0
 ;    
     popad
     ret

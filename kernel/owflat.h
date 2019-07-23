@@ -945,6 +945,12 @@
     CallGate_disable_auto_rts  \
     parm [ebx];
 
+#pragma aux RdosIsAutoRtsOn = \
+    CallGate_is_auto_rts_on  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosSupportsFullDuplex = \
     CallGate_supports_full_duplex  \
     "cmc" \

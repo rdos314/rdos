@@ -1191,6 +1191,25 @@ void TSerialDevice::DisableAutoRts()
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::IsAutoRtsOn
+#
+#   Purpose....: Check if automatic RTS generation during send is on
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDevice::IsAutoRtsOn()
+{
+    if (FHandle)
+        return RdosIsAutoRtsOn(FHandle);
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::Write
 #
 #   Purpose....: Write a char

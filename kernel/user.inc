@@ -2741,6 +2741,11 @@ DisableAutoRts       MACRO
                                                 ENDM
 
 ;       IN  BX          port handle
+IsAutoRtsOn       MACRO
+        UserGate is_auto_rts_on_nr
+                                                ENDM
+
+;       IN  BX          port handle
 ;   OUT EAX     free space
 GetComReceiveSpace       MACRO
         UserGate get_com_receive_space_nr

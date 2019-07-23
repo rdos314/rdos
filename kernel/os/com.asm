@@ -489,6 +489,40 @@ disable_auto_rts_done:
     retf32
 disable_auto_rts Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           is_auto_rts_on
+;
+;           description:    Check if auto RTS is on
+;
+;           PARAMETERS:     BX          Port handle
+;
+;           RETURNS:        CY		Auto RTS off
+;                           NC          Auto RTS on
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_auto_rts_on_name DB 'Is Auto RTS On',0
+
+is_auto_rts_on      PROC far
+    push ds
+    push ebx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc iaroDone
+;
+    mov ds,[ebx].port_sel
+    call fword ptr ds:is_auto_rts_on_proc
+
+iaroDone:
+    pop ebx
+    pop ds
+    retf32
+is_auto_rts_on      ENDP
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1705,6 +1739,12 @@ init    Proc far
     mov edi,OFFSET disable_auto_rts_name
     xor dx,dx
     mov ax,disable_auto_rts_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_auto_rts_on
+    mov edi,OFFSET is_auto_rts_on_name
+    xor dx,dx
+    mov ax,is_auto_rts_on_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_cts
