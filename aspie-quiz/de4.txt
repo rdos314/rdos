@@ -1,0 +1,243 @@
+﻿	German
+1	Finale Version 4
+2	Benutzer-ID registrieren
+3	Registrieren
+4	Mit registrierter Benutzer-ID einloggen
+5	Login
+6	Passwort zurücksetzen
+7	Zurücksetzen
+8	Benutzer-ID
+9	Passwort
+10	Passwort bestätigen
+11	Dieser Benutzername ist schon vergeben
+12	Die eingegebenen Passwörter stimmen nicht überein
+13	Ungültige Benutzer-ID und/oder ungültiges Passwort.
+14	Ungültiges Geburtsdatum und/oder Geschlecht.
+15	Eingeloggt als
+16	Danke für das Ausfüllen dieses Fragebogens.
+17	Auswählen
+18	gemischte Fragen
+19	? - weiß nicht
+20	0 - nein/nie
+21	1 - ein bisschen/manchmal
+22	2 - ja/oft
+23	Diagnose oder vermutete Diagnose
+24	Nein
+25	vermutete Diagnose/ Selbstdiagnose
+26	Offizielle Diagnose
+27	Asperger/HFA/tiefgreifende Entwicklungsstörung
+28	ADS / ADHS (Aufmerksamkeitsdefizit(-Hyperaktivitäts)-Syndrom)
+29	Zwangsstörung
+30	Soziale Phobie
+31	Geburtsjahr
+32	Geburtsjahr auswählen
+33	Geburtsmonat
+34	Geburtsmonat auswählen
+35	Januar
+36	Februar
+37	März
+38	April
+39	Mai
+40	Juni
+41	Juli
+42	August
+43	September
+44	Oktober
+45	November
+46	Dezember
+47	Geschlecht
+48	Biologisches Geschlecht auswählen:
+49	männlich
+50	weiblich
+51	Test starten
+52	Du bist sehr wahrscheinlich neurotypisch.
+53	Du hast sehr wahrscheinlich sowohl neurodiverse als auch neurotypische Eigenschaften.
+54	Du bist sehr wahrscheinlich neurodivers (Aspie).
+55	Du hast zu wenige Fragen beantwortet, sodass kein Testergebnis berechnet werden kann.
+56	Du hast zu viele Kontrollfragen widersprüchlich beantwortet.
+57	Deine neurodiverse (Aspie) Punktzahl:
+58	Deine neurotypische (nicht-autistische) Punktzahl:
+59	 von
+60	Du kannst den folgenden Text kopieren, um deine Auswertung in einem Forum zu posten:
+61	Berechnen
+62	unterdurchschnittlich
+63	durchschnittlich
+64	überdurchschnittlich
+65	Nein
+66	Frage
+67	Auswahlmöglichkeit
+68	Aspie
+69	NT
+70	Detaillierte Ergebnisse zum Ausdrucken (pdf)
+71	Diese Auswertung wird nur für eine Stunde gespeichert. Wenn du sie behalten willst, dann lade sie herunter.
+72	neurotypisch
+73	neurodivers
+74	intellektuelle Fähigkeiten
+75	soziale Fähigkeiten
+76	Talent
+77	Wahrnehmung
+78	Kommunikation
+79	Beziehung
+80	Sozialverhalten
+81	neurodiveres Talent
+82	neurotypisches Talent
+83	neurodiverse Wahrnehmung
+84	neurotypische Wahrnehmung
+85	neurodiverse Kommunikation
+86	neurotypische Kommunikation
+87	neurodiverse Beziehungen
+88	neurotypische Beziehungen
+89	neurodiverses Sozialverhalten
+90	neurotypisches Sozialverhalten
+91	Verhältnis zur Diagnose
+92	Dieser Bereich umfasst neurodivers-intellektuelle Eigenschaften. Diese Fähigkeiten sind mit starken Interessen verknüpft, die teilweise zwanghaft ausgeübt werden ( z.B.: Spezialinteressen, Hyperfokus, Sammeln von Informationen, interessenbezogenes Langzeitgedächtnis, logisch-analytische Fähigkeiten). Andere informationsverarbeitende Fähigkeiten sind z.B.: Erkennen von Details und Mustern, untypische Fantasie, eigensinnige Ideen). Einige haben außergewöhnliche Talente (z.B.: Zahlen, Sprachen, Informatik, Musik)
+93	Dieser Bereich umfasst neurotypisch-intellektuelle Eigenschaften. Sie äußern sich meist als Einschränkungen im Alltag. Typische Fähigkeiten/Einschränkungen sind: verbale Kommunikation, Lernen durch  Imitation, Fokus trotz Langeweile, Probleme beim Platzieren von Dingen und schlechtes Zeitmanagement.
+94	Dieser Bereich umfasst neurodiverse Eigenschaften bezüglich der Wahrnehmung. Diese Eigenschaften/Einschränkungen können sensorische Reizüberflutungen/Overloads oder sogar Shutdowns verursachen. In Bezug auf die direkte Wahrnehmung und das damit verbundene Risiko eines sensorischen Overloads spielen scheinbar die Faktoren Routine und Berechenbarkeit eine große Rolle. Die Kernmerkmale sind Hypersensibilität bei Berührung, Geräuschen, Geruch, Geschmack, starkem Licht, Luftfeuchtigkeit, Wind, Hitze und elektromagnetischen Feldern. Manche sind zusätzlich auch weniger schmerzempfindlich.
+95	Dieser Bereich umfasst neurotypische Eigenschaften bezüglich der Wahrnehmung. Typische Fähigkeiten/Einschränkungen sind: Mimik lesen, Menschen wiedererkennen und Einschätzen des Alters aufgrund des Gesichts. Andere Fähigkeiten/ Einschränkungen sind: Beurteilen von Distanz und Geschwindigkeit, Beschleunigung, Druck und Zeit.
+96	Dieser Bereich umfasst neurodiverse Eigenschaften bezüglich der Kommunikation. Schlüsselmerkmale in diesem Bereich sind mit einer untypischen nonverbalen Kommunikation verknüpft (z.B.: reduzierte Mimik, beschuldigt werden zu Starren, Nutzen von ungewöhnlichen Geräuschen während eines Gesprächs, Zwinkern oder Augenrollen, Fäusteballen, Zähneknirschen, Zungerausstrecken, Rotwerden). Zusätzliche Merkmale äußern sich durch unterbewusst selbststimulierendes Verhalten (z.B.: Händepressen, Händereiben, Fingerdrehen, Schaukeln, Augenkneifen, mit Gegenständen herumspielen, Auf und ab gehen, Hautfetzen abknibbeln).
+97	Dieser Bereich umfasst neurotypische Eigenschaften bezüglich der Kommunikation. Die Schlüsselmerkmale sind die Interpretationsfähigkeit und Umsetzungsfähigkeit in Bezug auf typische nonverbale Kommunikation (z.B.: Mimik, Körpersprache, Auftreten, Satzrhythmus). Die Abwesenheit der genannten Fähigkeiten führt zu weiteren Problemen (z.B.: Fehleinschätzen von eigenem Verhalten und Grenzen,  Missverstandenwerden, Verfehlen von gesellschaftlichen Konventionen, die Intentionen anderer nicht zu erkennen, Fehleinschätzen von rhetorischen Mitteln, alles wörtlich zu nehmen, nicht zu wissen, wann man sich entschuldigen soll, unangemessene Sprache verwenden, scheinbar wenig Empathie).
+98	Dieser Bereich umfasst neurodiverse Eigenschaften bezüglich Beziehungen und Bindungen im Allgemeinen. Das Hauptmerkmal ist eine starke Bindung, die über einen langen Zeitraum entstanden ist und oftmals ein Leben lang hält, trotz keinem stetigen Kontakt. In Verbindung mit dieser starken Bindung stehen außerdem: fürsorglich und beschützend sein, Routinen übernehmen, hinter der Person herlaufen, und ihre Haare begutachten. Des Weiteren gehen manche Menschen mehrere Bindungen ein (Polyamorie), während andere imaginäre Bindungen eingehen, weil ihnen der passende Partner fehlt. Merkmale in der Kontaktphase sind zum Beispiel ungewöhnliche sexuelle Vorlieben und sich mehr zu Fremden hingezogen fühlen. Merkwürdige Haare können möglicherweise in der Kontaktphase eine wichtige Rolle spielen, um Aufmerksamkeit zu erregen.
+99	Dieser Bereich umfasst neurotypische Eigenschaften bezüglich Beziehungen und Bindungen im Allgemeinen. Diese Merkmale sind auf den typischen Prozess bezogen, um einen Partner zu finden ( Dating, Flirtverhalten und sexuelle Intimität). Der Begriff der Intimität umfasst innerhalb dieses Bereichs die gesellschaftlichen Normen, die dazu beitragen eine Bindung zu einem Geschlecht entstehen zu lassen und aufrecht zu erhalten. Menschen die sich mit diesen Normen nicht identifizieren können, sind meist asexuell.
+100	Dieser Bereich umfasst neurodiverse Eigenschaften bezüglich des Sozialverhaltens. Typische Merkmale wären: sich selbst in den Mittelpunkt zu stellen und in einem kleinen sozialen Umfeld zu leben. Weitere Merkmale können Probleme mit Autorität, Streit und Rache sein.
+101	Dieser Bereich umfasst neurotypische Eigenschaften bezüglich des Sozialverhaltens. Merkmale sind: Vergesellschaftung mit Fremden und oberflächlichen Bekanntschaften durch Anpassung und Freundschaften und Bündnisse schließen. Ein weiteres wichtiges Merkmal ist das Mitteilen und Besprechen von Gefühlen mit Fremden und oberflächlichen Bekanntschaften, da dies ein Weg ist, um sozial zu sein und Informationen auszutauschen. Umarmen, Winken oder Händeschütteln sind Vorgänge, die bei der Interaktion mit anderen eingesetzt werden.
+102	Eine überdurchschnittliche Punktzahl deutet auf das Asperger-Syndrom und/oder eine Zwangsstörung (OCD) hin.
+103	Eine unterdurchschnittliche Punktzahl deutet auf eine Dyslexie und/oder Dyskalkulie oder aber auf Diagnosen wie ADS oder ADHS hin.
+104	Keine direkte Diagnose. Jedoch sollte man bedenken, dass auch Menschen im Autismusspektrum unterschiedlich wahrnehmen.
+105	Eine unterdurchschnittliche Punktzahl deutet auf Dyspraxie ( Koordinations- und Entwicklungsstörung) hin.
+106	Keine direkte Diagnose. Jedoch deutet eine überdurchschnittliche Punktzahl auf Stimming (unterbewusst selbststimulierendes Verhalten) und untypische Kommunikation hin.
+107	Eine niedrige Punktzahl deutet auf eine Autismus-Spektrum-Störung hin.
+108	Eine überdurchschnittliche Punktzahl deutet auf Bindungsstörungen und Paraphilien hin. 
+109	Eine unterdurschnittliche Punktzahl deutet auf Intimitätsprobleme hin.
+110	Keine.
+111	Deine Punktzahl in diesem Bereich: %01.1f von 10 (%s).
+112	Detaillierte Informationen über weitere neurodiverse und neurotypische Messwerte
+113	Neigst du dazu dich so auf deine Spezialinteressen zu konzentrieren, daß du alles um dich herum vergißt oder ignorierst?
+114	Hast du eifrige Ausdauer im Ansammeln und Katalogisieren von Informationen bezüglich eines für dich interessanten Themas?
+115	Ist es wichtig für dich eine außergewöhnliche Nische zu finden, in der du außergewöhnliche Kompetenzen erreichen kannst?
+116	Erkennst du ständig Muster in Dingen oder Situationen?
+117	Hast du ein spezielles Talent, worauf du viel Wert legst und woran du intensiv gearbeitet hast?
+118	Kommst du durch verbale Anweisungen durcheinander - besonders bei mehreren verbalen Anweisungen gleichzeitig?
+119	Findest du es schwer Nachrichten am Telefon entgegen zu nehmen und sie danach korrekt weiterzugeben?
+120	Findest du es sehr schwer Dinge zu lernen, die dich nicht interessieren?
+121	Hast du Schwierigkeiten beim Beschreiben oder Zusammenfassen von Dingen, z.B. von Veranstaltungen, Gesprächen oder von etwas, das du gelesen hast?
+122	Hast Probleme damit Formulare auszufüllen?
+123	Findest du es schwierig Telefonnummern zu erkennen, wenn diese auf eine andere Art aufgesagt werden?
+124	Findest du es schwierig in Unterrichtsstunden oder bei Vorträgen Notizen zu machen?
+125	Mußt du alles selbst machen, damit du dich später daran erinnerst?
+126	Bist du leicht abgelenkt?
+127	Wenn du unterbrochen wirst, kannst du dann schnell zu dem zurückkehren, was du vor der Unterbrechung gemacht hast?
+128	Brauchst du viel Motivation um Dinge umzusetzen?
+129	Hast du Probleme den Weg zu neuen Orten zu finden?
+130	Arbeitest du an Aufgaben, die dir nicht gefallen, langsamer als sonst?
+131	Hast du Schwierigkeiten damit Uhren abzulesen?
+132	Mußt du dir ein geistiges Bild machen, was passieren wird, bevor du etwas tust oder du irgendwohin gehst, damit du dich erstmal mental darauf vorbereiten kannst? 
+133	Findest du es verwirrend oder bist du verärgert, wenn andere entweder früher oder später als verabredet erscheinen? 
+134	Hast du eine Abneigung dagegen, wenn Leute hinter dir laufen?
+135	Hast du bestimmte Routinen, denen du folgen mußt?
+136	Neigst du dazu abzuschalten oder einen Overload zu bekommen, wenn du gesteßt oder überwältigt bist?
+137	Stören dich Schilder an deiner Kleidung oder stören dich leichte Berührungen?
+138	Bist du sensibel für Luftdruck- oder Luftfeuchtigkeitsänderungen?
+139	Bist du manchmal ängstlich in sicheren Situationen?
+140	Hast du ein hochsensibles Geräuschempfinden?
+141	Sind deine Augen sehr empfindlich für sehr helles oder blendenes Licht? 
+142	Hast du eine Abneigung dagegen, wenn Leute mit ihren Füßen auf dem Boden stampfen?
+143	Bekommst du instinktiv Angst, wenn du den Klang eines Motorrades hörst?
+144	Benötigst du Listen oder Pläne, damit du Dinge getan bekommst?
+145	Weißt du beim Telefonieren instiktiv wann du an der Reihe bist mit reden?
+146	Hast du in Gesprächen Probleme und weisst nicht, wann du reden darfst?
+147	Hast du Probleme damit Gesichter zu erkennen (Prosopagnosie)?
+148	Bist du gut darin Gesichtsausdrücke zu interpretieren?
+149	Hast du ein gutes Gespür wie viel Druck du ausüben kannst, wenn du deine Hände benutzt?
+150	Findest du es schwierig das Alter von Leuten einzuschätzen?
+151	Hast du Schwierigkeiten damit Entfernungen, Höhen, Tiefen oder Geschwindigkeiten abzuschätzen?
+152	Verdrehst du deine Hände, reibst sie gegeneinander oder verdrehst du deine Finger?
+153	Benutzt du in Gesprächen Füllwörter, die andere nicht zu benutzen scheinen?
+154	Schaukelst du vor und zurück oder seitwärts (zB zur Entspannung oder um dich zu beruhigen oder wenn du aufgeregt oder überreizt bist)?
+155	Klopfst du auf deine Ohren, oder presst du deine Augen zusammen ( z.B. wenn du intensiv überlegst, du gestresst oder verzweifelt bist)?
+156	Spielst du mit Gegenständen herum?
+157	Verwechselst du Geräusche mit Stimmen?
+158	Wurdest du beschuldigt, du würdest jemanden oder etwas anstarren?
+159	Neigst du dazu grade gehörte Musik oder Rhythmen zu verinnerlichen und immer wieder im Kopf zu wiederholen (Ohrwurm)?
+160	Waren deine Gedanken jemals so klar beziehungsweise lebhaft, dass du befürchtet hast, dass andere sie hören konnten?
+161	Übt langsam fließendes Wasser eine Faszination auf dich aus?
+162	Magst du es, wenn du dich im Kreis drehst?
+163	Hast du manchmal den Drang Dinge zu überspringen?
+164	Kaust du auf deinen Lippen, Wange oder Zunge (zB beim Nachdenken, wenn du besorgt oder nervös bist)?
+165	Geht du auf und ab (z.B. beim Nachdenken oder wenn du besorgt bist)?
+166	Verspürst du ein angenehmes Kribbeln im Kopf, auf der Kopfhaut oder auf der Hinterseite deines Körpers beim Hören bestimmter Geräusche?
+167	Redest du mit dir selbst?
+168	Verspürst du den Drang Krümel oder Flusen bei dir oder bei anderen zu entfernen?
+169	Neigst du dazu sozial unangemessene Dinge zu sagen, wenn du müde oder frustriert bist und wenn du ohne zu überlegen einfach du selbst bist?
+170	Tendierst du dazu deine Gefühle auf eine Art auszudrücken, die andere verblüfft?
+171	Verstehen andere dich häufig falsch?
+172	Ist dein Sinn für Humor anders als der der meisten Menschen oder wird dieser als merkwürdig bezeichnet?
+173	Warst du dir als Jugendlicher sozialer Regeln und Grenzen nicht bewusst, bis man sie dir deutlich aufzeigte?
+174	Denken Menschen von dir, dass du in den falschen Momenten lächelst?
+175	Vergisst du, dass du in einer sozialen Situation bist, wenn irgendetwas anderes deine Aufmerksamkeit erregt?
+176	Ist es schwer für dich nachzuvollziehen, weshalb manche Dinge einige Menschen so aufregen?
+177	Neigst du dazu Dinge wörtlich zu nehmen?
+178	Neigst du während eines Gesprächs eher dazu dich auf deine eigenen Gedanken zu konzentrieren anstatt auf das, was dein Gegenüber vielleicht denken könnte?
+179	Haben andere dir gesagt, dass du eine merkwürdige Haltung oder einen merkwürdigen Gang hast?
+180	Bemerkst du erst Stunden später, dass jemand, zu dem du dich hingezogen fühlst, Anzeichen von Interesse gezeigt hat und fühlst du dich aufgrund der verpassten Chance aufeinander zuzugehen dann schlecht?
+181	Hast du eine monotone Stimme?
+182	Findest du es leichter merkwürdige und ungewöhnliche Leute zu verstehen und dich mit ihnen zu unterhalten als mit normalen Leuten?
+183	Erlebst du stärkere Verbundenheit zu bestimmten Personen als gesellschaftlich üblich? 
+184	Hast du eine andere Vorstellung davon was am anderen Geschlecht attraktiv ist?
+185	Hast du den Drang dazu, die Routine von dir bekannten Menschen zu lernen?
+186	Magst du es Menschen, denen du dich zugehörig fühlst, zu folgen oder direkt hinter ihnen zu gehen?
+187	Hast du den Drang dazu, Gewohnheiten von Mensch und/oder Tier zu beobachten?
+188	Nutzen dich dir nahestehende Menschen öfter aus?
+189	Hast du ungewöhnliche sexuelle Vorlieben?
+190	Magst du es dich um Menschen zu kümmern, um deine Zuneigung zu zeigen, selbst wenn sie dich nicht darum gebeten haben?
+191	Fühlst du dich wie eine sehr spezielle oder außergewöhnliche Person?
+192	Musterst du gern Haare von Menschen, die du magst?
+193	Hast du imaginäre Beziehungen (gehabt)?
+194	Tendierst du dazu Leute, die du magst, viel anzusehen und Leute, die du nicht magst, wenig oder gar nicht anzusehen?
+195	Hast du merkwürdiges Haar (z.B. mehrere Wirbel, abstehende kurze Haare oder andere Besonderheiten)?
+196	Bevorzugst du es deinen eigenen Glauben aufzubauen statt existierenden Religionen oder Glaubensrichtungen zu folgen?
+197	Fühlst du dich sexuell eher zu Fremden hingezogen als zu dir bekannten Personen?
+198	Neigst du dazu romantische Gefühle für jemanden zu entwickeln, der anhaltendes Interesse dir gegenüber zeigt?
+199	Magst du konventionelles Ausgehen (Dating)?
+200	Fühlst du dich in romantischen Situationen ungezwungen?
+201	Bist du asexuell?
+202	Magst du Zungenküsse?
+203	Verreist du gern?
+204	Bist du stolz auf dein Auftreten / deine Erscheinung?
+205	Empfindest du deine Handlungen als wichtiger als die der anderen?
+206	Wirst du schnell ungeduldig und gereizt, wenn du keine Lösung für ein vorliegendes Problem findest?
+207	Findest du des öfteren Fehler in Meinungen, die nicht deine eigenen sind?
+208	Erwartest du von anderen Leuten, dass sie deine Gedanken, Erfahrungen oder Meinungen kennen, ohne dass du sie ihnen mitteilst?
+209	Fühlst du dich auf irgendeine Art und Weise verfolgt?
+210	Hast du Schwierigkeiten Kritik, Korrekturen oder Anweisungen anzunehmen?
+211	Gibst du Freunde auf, wenn deine Vorstellungen (des Handelns oder der Ideale) nicht mit ihren übereinstimmen?
+212	Durchkreuzt du häufiger Pläne von anderen?
+213	Bist du irritiert durch eine Aussage innerhalb eines Gesprächs, wenn sie nicht der allgemeinen Meinung entspricht? 
+214	Bevorzugst du es für dich zu bleiben?
+215	Findest du es schwer anderen Menschen emotional nah zu sein?
+216	Tendierst du dazu ins Stocken zu kommen, wenn dir in sozialen Situationen Fragen gestellt werden?
+217	Ist es für dich schwerer als für andere Freundschaften aufrecht zu erhalten?
+218	Bist du gut in Teamarbeit?
+219	Bevorzugst du es dich ausschließlich mit Menschen zu treffen, die du kennst (bei einem Einzeltreffen oder in kleineren Gruppen)?
+220	Gefallen dir große Veranstaltungen, selbst wenn dort große Menschenmengen sind?
+221	Benötigst du in Unterhaltungen zusätzliche Zeit, um deine Antwort genau zu durchdenken, sodass es sein kann, dass eine Pause vor deiner Antwort entsteht?
+222	Vermeidest du Situationen, in denen andere eventuell dir gegenüber Zuneigung zeigen könnten?
+223	Ziehst du es vor Dinge alleine zu tun - auch wenn du die Hilfe oder die Fachkenntnisse anderer gebrauchen könntest?
+224	Findest du es leicht deine Gefühle zu beschreiben?
+225	Hast du eine Abneigung dagegen, wenn Leute unangemeldet (oder ohne Einladung) vorbeikommen und dich besuchen?
+226	Findest du es schwer auf jemanden zu zu gehen, zu dem du dich hingezogen fühlst?
+227	Findest du es natürlich zu winken oder ""Hallo"" zu sagen, wenn du Leute triffst?
+228	Bist du schüchtern?
+229	Bevorzugst du es ausschließlich deinen Partner zu umarmen?
+230	Hast du einen gewöhnlichen Sinn für Humor?
+231	Kannst du dich leicht an verbale Anweisungen erinnern?
+232	Akzeptierst du Kritik, Korrektur und Führung?
+233	Findest du es leicht, das Alter von Menschen zu schätzen?
+234	Haftungsausschluss: Dieser Frageboden ist kein Ersatz für eine professionelle Diagnostik.
+235	Einige der Fragen in diesem Test sind so gestellt, dass die neurodiverse Antwort "ja" ist und einige so, dass die neurodiverse Antwort "nein" ist.
+236	Publikationen in Verbindung mit dem Aspie Quiz
+237	Das Ziel dieses Tests ist es, eine Einschätzung über sowohl neurodiverse als auch neurotypische Eigenschaften bei Erwachsenenen zu bekommen. Die hier dargebotene Einschätzung der Neurodiversität kann gezielte Hinweise auf definitive Eigenschaften aus dem Autismusspektrum geben für eine eventuell folgende Diagnose.
+238	Solltest du Interesse an unserer Langzeitstudie haben, die sich mit der Veränderung der Messwerte über die Zeit beschäftigt, kannst du uns gern bei der Verbesserung des Tests helfen (hierfür musst du dich mit einer gültigen Benutzer-ID einloggen oder eine neue Benutzer-ID registrieren). Ansonsten kann du natürlich auch direkt den vereinfachten Test machen.
+239	Deine Statistiken/Ergebnisse sind in einer Datenbank gesichert. Sie könnten veröffentlicht, als Untersuchungsdaten benutzt oder zur Kalibrierung des Tests genutzt werden. Wir speichern jedoch keine IP Adressen oder andere persönliche Informationen.
+240	Um an unserer Langzeitstudie teilzunehmen und uns damit zu helfen den Test zu verbessern, musst du dich registrieren/einloggen. (Bitte beachte, dass dafür Familienmitglieder oder andere Personen nicht die selbe User-ID benutzen sollten)
+241	Jetzt mit dem Test starten
+242	Ich akzeptiere
