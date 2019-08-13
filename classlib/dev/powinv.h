@@ -52,7 +52,7 @@ protected:
     long FIP;
     char FIpStr[32];
     TTcpSocket *FSocket;
-    char FBuf[2048];
+    char FBuf[8192];
 
 };
 

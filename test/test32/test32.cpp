@@ -8,19 +8,7 @@
 #include "section.h"
 #include "file.h"
 #include "rdos.h"
-#include "modbus.h"
-#include "sockobj.h"
-#include "websock.h"
-#include "httpfact.h"
-#include "json.h"
-#include "xml.h"
-
-#include <math.h>
-#include "bignum.h"
-
-#include "section.h"
-
-#include "testlib.h"
+#include "powinv.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -39,20 +27,7 @@
 ##########################################################################*/
 void main()
 {
-    int ok;
-    int val;
-
-    for (;;)
-    {
-        ok = RdosReadSerialRaw(0x20, 1, &val);
-
-        if (ok)
-            printf("Read: %d\r\n", val);
-        else
-            printf("Read failed\r\n");
-
-        RdosWaitMilli(200);
-    }
+    TSmartPowInverter("192.168.1.100", 0x6401A8C0);
 
 //    RdosTestGate("");
 }

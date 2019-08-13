@@ -140,23 +140,21 @@ void TSmartPowInverter::Execute()
         FSocket->WaitForConnection(5000);
         while (FSocket->IsOpen())
         {
-            strcpy(FBuf, "GET /index.htm HTTP/1.1\r\n");
+            strcpy(FBuf, "GET / HTTP/1.1\r\n");
             strcat(FBuf, "Host: ");
             strcat(FBuf, FIpStr);
             strcat(FBuf, "\r\n");
             strcat(FBuf, "Connection: keep-alive\r\n");
             strcat(FBuf, "Accept: text/html, */*;q=0.01\r\n");
-            strcat(FBuf, "X-Requested-With: XMLHttpRequest\r\n");
             strcat(FBuf, "User-Agent: RDOS\r\n");
             strcat(FBuf, "Accept-Encoding: gzip\r\n");
             strcat(FBuf, "Accept-Language: en-US,en;q=0.6\r\n");
-            strcat(FBuf, "Cookie: lang=en\r\n");
             strcat(FBuf, "\r\n");
             FSocket->Write(FBuf);
             FSocket->Push();
 
             size = 0;
-            while (FSocket->WaitForData(1000) && size < 2047)
+            while (FSocket->WaitForData(1000) && size < 8191)
             { 
                 FBuf[size] = FSocket->Read();
                 size++;
