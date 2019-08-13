@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Smart!Wind Webserver</title>
+<style type="text/css">
+body                { background-color:###FFFFFF; color:###0090E0;            }
+a                                { color:##0090E0;}
+table                { border-style:none; border-collapse:collapse;        }
+td                        { border-style:none;    }
+p{font-family:"Helvetica";font-size:12px;text-allign:left; color:White}
+h1{font-family:"Helvetica";font-size:30px;color:#00AFFF}
+h2{font-family:"Helvetica";font-size:30px;color:blue;text-allign:center}
+h3{font-family:"Helvetica";font-size:25px;position:center;
+color:#000000
+}
+h4{font-family:"Helvetica";font-size:25px;text-allign:center;
+color:White}
+a:link { text-decoration:none; 		font-weight:bold; color:#000000; }
+a:visited { text-decoration:none; 	font-weight:bold; color:#000000; }
+a:hover { text-decoration:none; 	font-weight:bold; color:#FFFFFF; background-color:Blue; }
+span.blue {color:lightskyblue;font-weight:bold}
+span.black{color:black;font-weight:bold}
+input{font-family:Helvetica;font-size:18px;text-allign:right}
+</style>
+<meta http-equiv="refresh" content="5" >
+</head>
+<body>
+<div align="center">
+<table style="width:800px; margin:0px;">
+<thead>
+<tr>
+<td style="width:140px; height:84px; background-color:#ADD8E6; text-align:center;">
+<img style="width:120px; height:84px;" src="images/SPE.jpg" alt="SPE Logo" >
+</td>
+<td style="width:1px; background-color:#ADD8E6;">&nbsp;</td>
+<td style="width:1px;">&nbsp;</td>
+<td style="width:650px; text-align:center;">
+<html>
+<h1><span class="blue">Smart!</span><span class="black">wind</span></h1>
+<h3>webserver</h3>
+<p>&nbsp;<a href="index.html"><b>home</b></a>&nbsp;&nbsp;<a href="page2.html"><b>Diagnostics</b></a>&nbsp;&nbsp;<a href="page3.html"><b>Counter</b></a></p>
+<hr style="text-align:right;" noshade="noshade"; color="#1E90FF" >
+</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="width:100px; background-color:#ADD8E6;">
+<p>&nbsp;<a href="index.html"><b>home</b></a></p>
+<p>&nbsp;<a href="page2.html"><b>Diagnostics</b></a></p>
+<p>&nbsp;<a href="page3.html"><b>Counter</b></a></p>
+<p>&nbsp;&copy; by SPE 2011</p>
+</td>
+<td style="width:1px; background-color:LightSkyBlue">&nbsp;</td>
+<td style="width:1px;">&nbsp;</td>
+<td style="width:650px; text-align:left;">
+<left>
+<table style="table-layout:fixed;color:white;text-align:left;background-color:Blue;font-family:Helvetica;font-size:18px;width=650">
+<tr><td style="width:110px"></td>				<td style="width:60px"></td>												<td style="width:40px"></td>		<td style="width:110px"></td>				<td style="width:60px"></td>										<td style="width:40px"></td>	<td style="width:110px"></td>				<td style="width:60px"></td>										<td style="width:40px"></td></tr>
+<tr><th colspan="9"> <h2 style="text-align:center;color:white">SW5.5</h2></th></tr>
+<tr><td style="text-align:right">State:</td>			<th colspan="3"><input type="text" size="10" readonly="readonly" value="RUN_GRID"></th>													<td></td>												<td></td>			<td style="text-align:right"></td>			<td></td>												<td></td>		</tr>
+<tr><td style="text-align:right">Error:</td>			<th colspan="3"><input type="text" size="10" readonly="readonly" value="----"></th>														<td></td>												<td></td>			<td style="text-align:right"></td>			<td></td>												<td></td>		</tr>
+<tr><td style="text-align:right">Energy total:</td>		<td><input type="text" size="2" readonly="readonly" value="60,4"></td>			<td>kWh</td>				<td style="text-align:right">Month:</td>		<td><input type="text" size="2" readonly="readonly" value="---"></td>	<td>Wh</td>			<td style="text-align:right">Day:</td>			<td><input type="text" size="2" readonly="readonly" value="1,5"></td>	<td>Wh</td>		</tr>
+<tr><td style="text-align:right">Power Grid:</td>		<td><input type="text" size="2" readonly="readonly" value="105"></td>			<td>W</td>				<td style="text-align:right">Resistor:</td>		<td><input type="text" size="2" readonly="readonly" value="0"></td>	<td>W</td>			<td style="text-align:right">Charge:</td>		<td><input type="text" size="2" readonly="readonly" value="---"></td>	<td>W</td>		</tr>
+<tr><td style="text-align:right">Wind Speed:</td>		<td><input type="text" size="2" readonly="readonly" value="0"></td>			<td>m/s</td>				<td style="text-align:right">Average:</td>		<td><input type="text" size="2" readonly="readonly" value="---"></td>	<td>m/s</td>			<td style="text-align:right">Direction:</td>		<td><input type="text" size="2" readonly="readonly" value="0"></td>	<td>&deg</td>		</tr>
+<tr><td style="text-align:right">Rotor:</td>			<td><input type="text" size="2" readonly="readonly" value="118,6"></td>			<td>rpm</td>				<td></td>						<td></td>												<td></td>			<td></td>						<td></td>												<td></td>		</tr>
+<tr><td style="text-align:right">Gen. Freq.:</td>		<td><input type="text" size="2" readonly="readonly" value="19,55"></td>			<td>Hz</td>				<td></td>						<td></td>												<td></td>			<td></td>						<td></td>												<td></td>		</tr>
+<tr><td>&#160;</td></tr>
+</table>
+</left>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
