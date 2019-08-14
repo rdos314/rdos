@@ -46,8 +46,16 @@ TSmartPowInverter::TSmartPowInverter(char *IpStr, long IP)
     FOnline = false;
     strcpy(FIpStr, IpStr);
     FIP = IP;
-    FCurrP = 0.0;
+
+    FCurrState[0] = 0;
+    FCurrError[0] = 0;
+
+    FCurrGrid = 0.0;
+    FCurrDump = 0.0;
+    FCurrRpm = 0.0;
+
     FDayE = 0.0;
+    FTotalE = 0.0;
 
     Start("SmartPow inverter", 0x8000);
 }
@@ -85,18 +93,82 @@ bool TSmartPowInverter::IsOnline()
 
 /*##########################################################################
 #
-#   Name       : TSmartPowInverter::GetCurrentPower
+#   Name       : TSmartPowInverter::GetCurrentState
 #
-#   Purpose....: Get current power
+#   Purpose....: Get current state
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-long double TSmartPowInverter::GetCurrentPower()
+void TSmartPowInverter::GetCurrentState(char *buf)
 {
-    return FCurrP;
+    strcpy(buf, FCurrState);
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::GetCurrentError
+#
+#   Purpose....: Get current error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmartPowInverter::GetCurrentError(char *buf)
+{
+    strcpy(buf, FCurrError);
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::GetCurrentGrid
+#
+#   Purpose....: Get current grid power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TSmartPowInverter::GetCurrentGrid()
+{
+    return FCurrGrid;
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::GetCurrentDump
+#
+#   Purpose....: Get current dump power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TSmartPowInverter::GetCurrentDump()
+{
+    return FCurrDump;
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::GetCurrentRpm
+#
+#   Purpose....: Get current rpm
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TSmartPowInverter::GetCurrentRpm()
+{
+    return FCurrRpm;
 }
 
 /*##########################################################################
@@ -117,6 +189,276 @@ long double TSmartPowInverter::GetDayEnergy()
 
 /*##########################################################################
 #
+#   Name       : TSmartPowInverter::GetTotalEnergy
+#
+#   Purpose....: Get total energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TSmartPowInverter::GetTotalEnergy()
+{
+    return FDayE;
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::FindTag
+#
+#   Purpose....: Find tag and return null-terminated
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TSmartPowInverter::FindTag(char *str, const char *tag)
+{
+    char stag[40];
+    char *ptr;
+    char *eptr;
+
+    strcpy(stag, "<");
+    strcat(stag, tag);
+
+    ptr = strstr(str, stag);
+
+    if (ptr)
+    {
+        strcpy(stag, "</");
+        strcat(stag, tag);
+        strcat(stag, ">");
+
+        eptr = strstr(ptr, stag);
+
+        if (eptr)
+            *eptr = 0;
+        else
+            ptr = 0;
+    }
+
+    if (ptr)
+        ptr = strchr(ptr, '>');
+
+    if (ptr)
+        ptr++;
+
+    return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::GetValue
+#
+#   Purpose....: Get value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TSmartPowInverter::GetValue(char *str)
+{
+    char *ptr;
+    char *eptr;
+
+    ptr = strstr(str, "value=");
+
+    if (ptr)
+        ptr = strchr(ptr, '"');
+
+    if (ptr)
+    {
+        ptr++;
+        eptr = strchr(ptr, '"');
+
+        if (eptr)
+            *eptr = 0;
+        else
+            ptr = 0;
+    }
+
+    return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::ConvertFloat
+#
+#   Purpose....: Convert , to .
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmartPowInverter::ConvertFloat(char *str)
+{
+    int i;
+    int len = strlen(str);
+
+    for (i = 0; i < len; i++)
+        if (str[i] == ',')
+            str[i] = '.';
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::NotifyData
+#
+#   Purpose....: Notify data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmartPowInverter::NotifyData(char *tag, char *value, char *unit)
+{
+    int count;
+    long double val;
+
+    if (strstr(tag, "State"))
+        strcpy(FCurrState, value);
+
+    if (strstr(tag, "Error"))
+        strcpy(FCurrError, value);
+
+    if (strstr(tag, "Power Grid"))
+    {
+        count = sscanf(value, "%Lf", &val);
+        if (count)
+            FCurrGrid = val;
+    }
+
+    if (strstr(tag, "Resistor"))
+    {
+        count = sscanf(value, "%Lf", &val);
+        if (count)
+            FCurrDump = val;
+    }
+
+    if (strstr(tag, "Rotor"))
+    {
+        count = sscanf(value, "%Lf", &val);
+        if (count)
+            FCurrRpm = val;
+    }
+
+    if (strstr(tag, "Day"))
+    {
+        count = sscanf(value, "%Lf", &val);
+        if (count)
+            FDayE = val;
+    }
+
+    if (strstr(tag, "Energy total"))
+    {
+        count = sscanf(value, "%Lf", &val);
+        if (count)
+            FTotalE = val;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::HandleTr
+#
+#   Purpose....: Handle tr object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmartPowInverter::HandleTr(char *str)
+{
+    char *ptr = str;
+    char *pptr;
+    char *vptr;
+    int len;
+    bool dec;
+
+    ptr = FindTag(ptr, "td");
+
+    while (ptr)
+    {
+        len = strlen(ptr) + 2;
+        pptr = ptr;
+
+        ptr = pptr + len;
+        ptr = FindTag(ptr, "th");
+
+        if (ptr == 0)
+        {
+            ptr = pptr + len;
+            ptr = FindTag(ptr, "td");
+            dec = true;
+        }
+        else
+            dec = false;
+
+        if (ptr)
+        {
+            len = strlen(ptr) + 2;
+            vptr = GetValue(ptr);
+
+            if (vptr)
+            {
+                if (dec)
+                    ConvertFloat(vptr);
+
+                ptr += len;
+                ptr = FindTag(ptr, "td");
+
+                if (ptr)
+                {
+                    NotifyData(pptr, vptr, ptr);
+
+                    len = strlen(ptr) + 2;
+                    ptr += len;
+                    ptr = FindTag(ptr, "td");
+                }
+            }
+            else
+                ptr = 0;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TSmartPowInverter::HandleTable
+#
+#   Purpose....: Handle table object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmartPowInverter::HandleTable(char *str)
+{
+    char *ptr = str;
+    int len;
+
+    ptr = FindTag(ptr, "tr");
+
+    while (ptr)
+    {
+        len = strlen(ptr) + 2;
+
+        HandleTr(ptr);
+
+        ptr += len;
+        ptr = FindTag(ptr, "tr");
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TSmartPowInverter::Execute
 #
 #   Purpose....: Execute method
@@ -131,6 +473,7 @@ void TSmartPowInverter::Execute()
     char ch;
     int size;
     char *ptr;
+    TFile File("index.html");
 
     FOnline = false;
 
@@ -161,8 +504,13 @@ void TSmartPowInverter::Execute()
             }
 
             FBuf[size] = 0;
+
+            ptr = FindTag(FBuf, "table");
+            if (ptr)
+                HandleTable(ptr);
+ 
             RdosWaitMilli(15000);
-        }        
+        }
 
         FOnline = false;
         delete FSocket;

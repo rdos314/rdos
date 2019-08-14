@@ -39,14 +39,32 @@ public:
 
     bool IsOnline();
 
-    long double GetCurrentPower();
+    void GetCurrentState(char *buf);
+    void GetCurrentError(char *buf);
+    long double GetCurrentGrid();
+    long double GetCurrentDump();
+    long double GetCurrentRpm();
     long double GetDayEnergy();
+    long double GetTotalEnergy();
 
 protected:
+    char *FindTag(char *str, const char *tag);
+    char *GetValue(char *str);
+    void ConvertFloat(char *str);
+    void HandleTr(char *str);
+    void HandleTable(char *str);
+
+    void NotifyData(char *Tag, char *Value, char *Unit);
+
     virtual void Execute();
 
-    long double FCurrP;
+    char FCurrState[40];
+    char FCurrError[40];
+    long double FCurrGrid;
+    long double FCurrDump;
+    long double FCurrRpm;
     long double FDayE;
+    long double FTotalE;
 
     bool FOnline;
     long FIP;
