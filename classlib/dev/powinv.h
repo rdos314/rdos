@@ -34,7 +34,7 @@
 class TSmartPowInverter : public TThread
 {
 public:
-    TSmartPowInverter(char *IpStr, long IP);
+    TSmartPowInverter(char *HostStr);
     virtual ~TSmartPowInverter();
 
     bool IsOnline();
@@ -68,7 +68,7 @@ protected:
 
     bool FOnline;
     long FIP;
-    char FIpStr[32];
+    char *FHostStr;
     TTcpSocket *FSocket;
     char FBuf[8192];
 

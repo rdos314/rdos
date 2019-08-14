@@ -34,6 +34,7 @@
 #include <math.h>
 
 #include "frinv.h"
+#include "powinv.h"
 #include "openweather.h"
 #include "rad.h"
 #include "datetime.h"
@@ -166,6 +167,7 @@ int main()
     TVp *Vp;
     TPower *Power;
     TFroniusInverter *SolarInv;
+    TSmartPowInverter *WindInv;
     TOpenWeather *w;
 //    TClimate *Climate;
     int i;
@@ -219,6 +221,7 @@ int main()
     TLabelFactory SolarUnitFactory;
 
     TTableControl *SolarTable;
+    TTableControl *WindTable;
     
     RdosWaitMilli(2500);
 
@@ -301,6 +304,7 @@ int main()
     Store->Add(Vp);
 
     SolarInv = new TFroniusInverter("192.168.1.51");
+    WindInv = new TSmartPowInverter("192.168.1.100");
     w = new TOpenWeather("2715946", "c88ba239c78cdbea4c1fe561ad4f7b3d");
 
 //    Climate = new TClimate(control);
@@ -343,7 +347,7 @@ int main()
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
 
-    Table = new TTableControl(control, 850, 300, 400, 220);
+    Table = new TTableControl(control, 850, 500, 400, 220);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);
@@ -427,6 +431,42 @@ int main()
     SolarTable->SetText(6, 2, "°C");
 
     SolarTable->Show();
+
+    WindTable = new TTableControl(control, 850, 300, 400, 200);
+    WindTable->SetBackColor(0, 20, 50);
+    WindTable->SetRowSpacing(5);
+    WindTable->SetColSpacing(8);
+    WindTable->SetSpacingColor(0, 20, 50);
+    WindTable->AddLabelColumn(&SolarCommentFactory, 120);
+    WindTable->AddLabelColumn(&SolarValueFactory, 100);
+    WindTable->AddLabelColumn(&SolarUnitFactory, 75);
+
+    WindTable->AddRow(24, 45);
+    WindTable->AddRow(24, 45);
+    WindTable->AddRow(24, 45);
+    WindTable->AddRow(24, 45);
+    WindTable->AddRow(24, 45);
+    WindTable->AddRow(24, 45);
+
+    WindTable->SetText(0, 0, "State");
+    WindTable->SetText(0, 2, "");
+
+    WindTable->SetText(1, 0, "Error");
+    WindTable->SetText(1, 2, "");
+
+    WindTable->SetText(2, 0, "Grid");
+    WindTable->SetText(2, 2, "W");
+
+    WindTable->SetText(3, 0, "Dump");
+    WindTable->SetText(3, 2, "W");
+
+    WindTable->SetText(4, 0, "Rotor");
+    WindTable->SetText(4, 2, "rpm");
+
+    WindTable->SetText(5, 0, "Day");
+    WindTable->SetText(5, 2, "kWh");
+
+    WindTable->Show();
 
     UnlockGUI();
 
@@ -543,6 +583,33 @@ int main()
             else
                 strcpy(str, "err");
             SolarTable->SetText(1, 1, str);
+        }
+
+        if (WindInv->IsOnline())
+        {
+            WindInv->GetCurrentState(str);
+            WindTable->SetText(0, 1, str);
+
+            WindInv->GetCurrentError(str);
+            WindTable->SetText(1, 1, str);
+
+            val = WindInv->GetCurrentGrid();
+            ival = (int)val;
+            sprintf(str, "%d", ival);
+            WindTable->SetText(2, 1, str);
+
+            val = WindInv->GetCurrentDump();
+            ival = (int)val;
+            sprintf(str, "%d", ival);
+            WindTable->SetText(3, 1, str);
+
+            val = WindInv->GetCurrentRpm();
+            sprintf(str, "%7.1Lf", val);
+            WindTable->SetText(4, 1, str);
+
+            val = WindInv->GetDayEnergy();
+            sprintf(str, "%7.1Lf", val);
+            WindTable->SetText(5, 1, str);
         }
 
         if (w->IsOnline())

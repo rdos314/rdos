@@ -701,7 +701,7 @@ void TVp::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 850, 530, 400, 250);
+    Table = new TTableControl(FControl, 850, 725, 400, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(5);
     Table->SetColSpacing(8);

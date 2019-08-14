@@ -27,6 +27,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include "rdos.h"
 #include "powinv.h"
 
@@ -41,11 +43,16 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSmartPowInverter::TSmartPowInverter(char *IpStr, long IP)
+TSmartPowInverter::TSmartPowInverter(char *HostStr)
 {
+    int size = strlen(HostStr);
+
     FOnline = false;
-    strcpy(FIpStr, IpStr);
-    FIP = IP;
+
+    FHostStr = new char[size + 1];
+    strcpy(FHostStr, HostStr);
+
+    FIP = 0;
 
     FCurrState[0] = 0;
     FCurrError[0] = 0;
@@ -473,9 +480,18 @@ void TSmartPowInverter::Execute()
     char ch;
     int size;
     char *ptr;
-    TFile File("index.html");
+    struct hostent *host;
 
     FOnline = false;
+
+    while (FIP == 0)
+    {
+        host = gethostbyname(FHostStr);
+        if (host)
+            FIP = *(long *)host->h_addr_list[0];
+        else
+            RdosWaitMilli(500);
+    }
 
     for (;;)
     {
@@ -485,7 +501,7 @@ void TSmartPowInverter::Execute()
         {
             strcpy(FBuf, "GET / HTTP/1.1\r\n");
             strcat(FBuf, "Host: ");
-            strcat(FBuf, FIpStr);
+            strcat(FBuf, FHostStr);
             strcat(FBuf, "\r\n");
             strcat(FBuf, "Connection: keep-alive\r\n");
             strcat(FBuf, "Accept: text/html, */*;q=0.01\r\n");
@@ -507,12 +523,16 @@ void TSmartPowInverter::Execute()
 
             ptr = FindTag(FBuf, "table");
             if (ptr)
+            {
+                FOnline = true;
                 HandleTable(ptr);
+            }
+            else
+                FOnline = false;
  
             RdosWaitMilli(15000);
         }
 
-        FOnline = false;
         delete FSocket;
     }    
 }
