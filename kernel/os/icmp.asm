@@ -195,6 +195,7 @@ ReceiveEchoReq  Proc near
     jc rerDone
 ;
     mov es:[di].icmp_type,0
+    mov es:[di].icmp_code,0
     mov es:[di].icmp_checksum,0
 ;
     push cx
