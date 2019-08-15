@@ -2203,13 +2203,14 @@ Receive Endp
 ;                   EDX     IP
 ;                   AX      Source
 ;
+;   Returns:        CX      Reply size 
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;o
 
 UdpListenCallback   Proc far
     push ds
     push es
     push bx
-    push cx
     push si
     push di
 ;    
@@ -2264,9 +2265,10 @@ ulcFound:
     SignalWait    
         
 ulcDone:
+    xor cx,cx
+;
     pop di
     pop si
-    pop cx
     pop bx
     pop es
     pop ds
