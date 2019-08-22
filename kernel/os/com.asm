@@ -1570,6 +1570,8 @@ add_com_port    Proc far
     mov bx,SEG data
     mov es,bx
     mov bx,es:s_port_count
+    cmp bx,MAX_PORTS
+    je add_com_port_done
 ;
     mov ds:cd_set_dtr_proc,0
     mov ds:cd_set_dtr_proc+4,0
@@ -1589,7 +1591,8 @@ add_com_port    Proc far
     add bx,bx
     mov es:[bx].s_port_arr,ds
     inc es:s_port_count
-;
+
+add_com_port_done:
     pop bx
     pop es
     pop ds    
