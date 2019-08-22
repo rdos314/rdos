@@ -35,7 +35,7 @@ include ..\handle.inc
 include ..\wait.inc
 include com.inc
 
-MAX_PORTS = 32
+MAX_PORTS = 128
 
 serial_wait_header      STRUC
 
