@@ -58,12 +58,16 @@ public:
     void SetSpace(int xspace, int yspace);
 
     void SetSize(int rows, int cols);
+    int GetRowCount();
+    int GetColCount();
     
     void SetChar(int Row, int Col, char ForeColor, char BackColor, char ch);
+    int GetChar(int Row, int Col, char *ForeColor, char *BackColor, char *ch);
+    
+    static void ConvColor(char color, int *r, int *g, int *b);
     
 protected:
     void ResetDisp();
-    void ConvColor(char color, int *r, int *g, int *b);
 
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
 

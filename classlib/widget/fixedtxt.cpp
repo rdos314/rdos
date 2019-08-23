@@ -265,6 +265,38 @@ void TFixedTextControl::SetSize(int rows, int cols)
 
 /*##########################################################################
 #
+#   Name       : TFixedTextControl::SetRowCount
+#
+#   Purpose....: Get row count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFixedTextControl::GetRowCount()
+{
+    return FRows;
+}
+
+/*##########################################################################
+#
+#   Name       : TFixedTextControl::SetColCount
+#
+#   Purpose....: Get col count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFixedTextControl::GetColCount()
+{
+    return FCols;
+}
+
+/*##########################################################################
+#
 #   Name       : TFixedTextControl::SetChar
 #
 #   Purpose....: Set character
@@ -282,6 +314,30 @@ void TFixedTextControl::SetChar(int Row, int Col, char ForeColor, char BackColor
         FDisp->RowArr[Row][Col].BackColor = BackColor;
         FDisp->RowArr[Row][Col].ch = ch;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFixedTextControl::GetChar
+#
+#   Purpose....: Get character
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFixedTextControl::GetChar(int Row, int Col, char *ForeColor, char *BackColor, char *ch)
+{
+    if (Row < FRows && Row >= 0 && Col < FCols && Col >= 0)
+    {
+        *ForeColor = FDisp->RowArr[Row][Col].ForeColor;
+        *BackColor = FDisp->RowArr[Row][Col].BackColor;
+        *ch = FDisp->RowArr[Row][Col].ch;
+        return TRUE;
+    }
+    else
+        return FALSE;
 }
 
 /*##########################################################################
