@@ -63,6 +63,8 @@ public:
     
     void SetChar(int Row, int Col, char ForeColor, char BackColor, char ch);
     int GetChar(int Row, int Col, char *ForeColor, char *BackColor, char *ch);
+
+    void GetTextArea(int *x, int *y, int *width, int *height);
     
     static void ConvColor(char color, int *r, int *g, int *b);
     

@@ -342,6 +342,58 @@ int TFixedTextControl::GetChar(int Row, int Col, char *ForeColor, char *BackColo
 
 /*##########################################################################
 #
+#   Name       : TFixedTextControl::GetTextArea
+#
+#   Purpose....: Get text area
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFixedTextControl::GetTextArea(int *x, int *y, int *width, int *height)
+{
+
+    int xstart;
+    int ystart;
+    int xsize;
+    int ysize;
+    int xmin, ymin;
+    int xmax, ymax;
+    int xoffs, yoffs;
+    int xdiff, ydiff;
+
+    GetAbsPos(&xmin, &ymin);
+    GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
+
+    xmin += xoffs;
+    ymin += yoffs;
+
+    GetSize(&xsize, &ysize);
+
+    xsize -= xdiff;
+    ysize -= ydiff;
+
+    xmax = xmin + xsize - 1;
+    ymax = ymin + ysize - 1;
+
+    xdiff = xmax - xmin + 1;
+    ydiff = ymax - ymin + 1;
+
+    xdiff = (xdiff - FCellWidth * FCols) / 2;
+    ydiff = (ydiff - FFontHeight * FRows) / 2;
+
+    xmin += xdiff;
+    ymin += ydiff;
+
+    *x = xmin;
+    *y = ymin;
+    *width = FCellWidth * FCols;
+    *height = FFontHeight * FRows;
+}
+
+/*##########################################################################
+#
 #   Name       : TFixedTextControl::ConvColor
 #
 #   Purpose....: Convert CGA colors
