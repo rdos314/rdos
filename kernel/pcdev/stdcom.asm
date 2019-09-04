@@ -1458,6 +1458,22 @@ io_reset_com   Proc far
 io_reset_com   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           IoSendBreak
+;
+;       DESCRIPTION:    Send break, IO version
+;
+;       PARAMETERS:     DS      Port selector
+;                       AL      Break characters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+io_send_break   PROC far
+    retf32
+io_send_break  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           mem_open_com
@@ -1788,6 +1804,22 @@ mem_flush_com Endp
 mem_reset_port   PROC far
     retf32
 mem_reset_port  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemSendBreak
+;
+;       DESCRIPTION:    Send break, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;                       AL      Break characters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_send_break   PROC far
+    retf32
+mem_send_break  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2002,6 +2034,7 @@ ipt11 DD OFFSET io_start_send,      SEG code
 ipt12 DD OFFSET io_reset_port,      SEG code
 ipt13 DD OFFSET full_duplex,        SEG code
 ipt14 DD OFFSET io_is_auto_rts_on,  SEG code
+ipt15 DD OFFSET io_send_break,      SEG code
 
 io_create_port Proc far
     push eax
@@ -2018,7 +2051,7 @@ io_create_port Proc far
 ;
     mov si,OFFSET io_port_tab
     xor di,di
-    mov cx,2 * 15
+    mov cx,2 * 16
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov ax,ds:iopds_base
@@ -2206,6 +2239,7 @@ mpt11 DD OFFSET mem_start_send,      SEG code
 mpt12 DD OFFSET mem_reset_port,      SEG code
 mpt13 DD OFFSET full_duplex,         SEG code
 mpt14 DD OFFSET mem_is_auto_rts_on,  SEG code
+mpt15 DD OFFSET mem_send_break,      SEG code
 
 mem_create_port Proc far
     push eax
@@ -2222,7 +2256,7 @@ mem_create_port Proc far
 ;
     mov si,OFFSET mem_port_tab
     xor di,di
-    mov cx,2 * 15
+    mov cx,2 * 16
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov eax,ds:mempds_offset

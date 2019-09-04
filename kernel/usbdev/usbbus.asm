@@ -1041,6 +1041,7 @@ pt11 DD OFFSET start_send,             SEG code
 pt12 DD OFFSET reset_port,             SEG code
 pt13 DD OFFSET error_req,              SEG code
 pt14 DD OFFSET error_req,              SEG code
+pt15 DD OFFSET error_req,              SEG code
 
 CreatePort  Proc far
     pushad
@@ -1054,7 +1055,7 @@ CreatePort  Proc far
 ;
     mov si,OFFSET port_tab
     xor di,di
-    mov cx,2 * 15
+    mov cx,2 * 16
     rep movs dword ptr es:[di],cs:[si]
 ;
     movzx ax,ds:uds_interface

@@ -465,6 +465,22 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           send_break
+;
+;           DESCRIPTION:    Send break
+;
+;           PARAMETERS:     DS      Port selector
+;                           AL      Break characters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_break PROC far
+    ret
+send_break Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           full_duplex
 ;
 ;           DESCRIPTION:    Check for full duplex
@@ -579,6 +595,7 @@ cpt11 DD OFFSET start_send,         SEG code
 cpt12 DD OFFSET reset_port,         SEG code
 cpt13 DD OFFSET full_duplex,        SEG code
 cpt14 DD OFFSET is_auto_rts_on,     SEG code
+cpt15 DD OFFSET send_break,         SEG code
 
 CreateComPort	Proc far
     pushad
@@ -592,7 +609,7 @@ CreateComPort	Proc far
 ;
     mov esi,OFFSET com_port_tab
     xor edi,edi
-    mov ecx,2 * 15
+    mov ecx,2 * 16
     rep movs dword ptr es:[edi],cs:[esi]
 ;
     mov ax,ds:ucd_cdc_sel

@@ -882,6 +882,38 @@ get_com_send_space_done:
     retf32
 get_com_send_space      ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           send_com_break
+;
+;           description:    Send com break
+;
+;           PARAMETERS:     BX              Port handle
+;                           AL              Break characters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_com_break_name DB 'Send Com Break',0
+
+send_com_break      PROC far
+    push ds
+    push ebx
+;
+    push ax
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    pop ax
+    jc send_com_break_done
+;
+    mov ds,[ebx].port_sel
+    call fword ptr ds:send_com_break_proc
+
+send_com_break_done:
+    pop ebx
+    pop ds
+    retf32
+send_com_break      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1802,6 +1834,12 @@ init    Proc far
     mov edi,OFFSET supports_full_duplex_name
     xor dx,dx
     mov ax,supports_full_duplex_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET send_com_break
+    mov edi,OFFSET send_com_break_name
+    xor dx,dx
+    mov ax,send_com_break_nr
     RegisterBimodalUserGate
 ;
     mov bx,SEG data
