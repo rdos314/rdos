@@ -1210,7 +1210,7 @@ int TSerialDevice::IsAutoRtsOn()
 
 /*##########################################################################
 #
-#   Name       : TSerialDevice::SendComBreak
+#   Name       : TSerialDevice::SendBreak
 #
 #   Purpose....: Send com break
 #
@@ -1219,7 +1219,7 @@ int TSerialDevice::IsAutoRtsOn()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSerialDevice::SendComBreak(char CharCount)
+void TSerialDevice::SendBreak(char CharCount)
 {
     if (FHandle && CharCount > 0)
         RdosSendComBreak(FHandle, CharCount);
