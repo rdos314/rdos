@@ -91,6 +91,8 @@ public:
     void DisableAutoRts();
     int IsAutoRtsOn();
 
+    void SendComBreak(char CharCount);
+
     void Write(char ch);
     void Write(const char *buf, int count);
     void Write(const char *str);

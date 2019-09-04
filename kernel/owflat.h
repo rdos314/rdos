@@ -1018,6 +1018,10 @@
     CallGate_wait_for_send_completed_com  \
     parm [ebx];
 
+#pragma aux RdosSendComBreak = \
+    CallGate_send_com_break  \
+    parm [ebx] [al];
+
 #pragma aux RdosGetMaxPrinters = \
     CallGate_get_max_printer  \
     "jc fail" \

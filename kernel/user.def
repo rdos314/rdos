@@ -900,4 +900,6 @@ get_usb_cdc_com_par_nr            = 705
 supports_full_duplex_nr           = 706
 is_auto_rts_on_nr                 = 707
 
+send_com_break_nr                 = 708
+
 usergate_entries                 = 750

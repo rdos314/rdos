@@ -2784,6 +2784,11 @@ SupporsFullDuplex       MACRO
         UserGate supports_full_duplex_nr
                                                 ENDM
 
+;       IN  BX          port handle
+;       IN  AL          character count
+SendComBreak       MACRO
+        UserGate send_com_break_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; PRINTER ;;;;;;;;;;;;
 

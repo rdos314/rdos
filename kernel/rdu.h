@@ -900,6 +900,8 @@
 #define usergate_supports_full_duplex 0x000002C2
 #define usergate_is_auto_rts_on 0x000002C3
 
+#define usergate_send_com_break 0x000002C4
+
 
 
 #ifdef __FLAT__
@@ -1805,6 +1807,8 @@
 #define CallGate_supports_full_duplex 0x55 0x67 0x9a 194 2 0 0 3 0 0x5d
 #define CallGate_is_auto_rts_on 0x55 0x67 0x9a 195 2 0 0 3 0 0x5d
 
+#define CallGate_send_com_break 0x55 0x67 0x9a 196 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2707,5 +2711,7 @@
 
 #define CallGate_supports_full_duplex 0x3e 0x67 0x9a 194 2 0 0 3 0
 #define CallGate_is_auto_rts_on 0x3e 0x67 0x9a 195 2 0 0 3 0
+
+#define CallGate_send_com_break 0x3e 0x67 0x9a 196 2 0 0 3 0
 
 #endif
