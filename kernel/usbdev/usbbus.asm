@@ -564,6 +564,70 @@ read_serial_lines       Endp
 write_serial_val_name   DB 'Write Serial Value', 0
 
 write_serial_val        Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    mov bx,ds:io_sel
+    or bx,bx
+    stc
+    jz wsvDone
+;
+    mov ds,bx
+    EnterSection ds:io_section
+    call AllocateBusReq
+    jc wsvFail
+;
+    mov ds:[bx].io_adr,dh
+;
+    mov cl,al
+    and cl,3Fh
+    mov ds:[bx].io_val,cl
+;
+    shr eax,6
+    and cl,3Fh
+    mov ds:[bx].io_val+1,cl
+;
+    shr eax,6
+    and cl,3Fh
+    mov ds:[bx].io_val+2,cl
+;
+    shr eax,6
+    and cl,3Fh
+    mov ds:[bx].io_val+3,cl
+;
+    mov al,dl
+    shl al,3
+    or al,3
+    mov ds:[bx].io_cmd,al
+    LeaveSection ds:io_section
+;
+    push bx
+    mov bx,ds:io_serv_thread
+    Signal
+    pop bx
+;
+    WaitForSignal
+    mov al,ds:[bx].io_status
+    cmp al,-1
+    stc
+    je wsvDone
+;
+    clc
+    jmp wsvDone
+
+wsvFail:
+    LeaveSection ds:io_section
+    stc
+
+wsvDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
     ret
 write_serial_val        Endp
         
