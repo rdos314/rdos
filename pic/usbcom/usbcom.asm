@@ -1353,6 +1353,37 @@ Read24:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; RunCmd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Run0:
+    return
+
+Run1:
+    return
+
+Write23:
+    return
+
+RunCmd:
+    movlw io_page
+    movwf FSR2H
+;
+    movf io_base, W
+    addlw io_cmd
+    movwf FSR2L
+;
+    movf INDF2,W
+    andlw 3
+    call Case
+    goto Run0
+    goto Run1
+    goto Read24
+    goto Write24
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; InitBus
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1892,28 +1923,28 @@ RunActivate:
     clrf io_curr_chan
 ;
     btfsc io_chans,0
-    call Read24
+    call RunCmd
 ;
     movlw 0x10
     movwf io_base
     incf io_curr_chan,F
 ;
     btfsc io_chans,1
-    call Read24
+    call RunCmd
 ;
     movlw 0x20
     movwf io_base
     incf io_curr_chan,F
 ;
     btfsc io_chans,2
-    call Read24
+    call RunCmd
 ;
     movlw 0x30
     movwf io_base
     incf io_curr_chan,F
 ;
     btfsc io_chans,3
-    call Read24
+    call RunCmd
 ;
     call Deactivate
     call ProcessResult
