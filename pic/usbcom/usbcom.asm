@@ -1353,17 +1353,121 @@ Read24:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; Write6
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Write6:
+    movlb io_page
+;
+    movlw 6
+    movwf io_count
+
+WriteInnerLoop:
+    call OutputBit
+    call UpdateCrc
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto WriteInnerLoop
+;
+    call OutputActive
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Write24
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Write24:
+    clrf io_crc
+;
+    movf io_v00,W
+    movwf io_val0
+;
+    movf io_v01,W
+    movwf io_val1
+;
+    movf io_v02,W
+    movwf io_val2
+;
+    movf io_v03,W
+    movwf io_val3
+;
+    call Write6
+    call UpdateLine
+;
+    movf io_v10,W
+    movwf io_val0
+;
+    movf io_v11,W
+    movwf io_val1
+;
+    movf io_v12,W
+    movwf io_val2
+;
+    movf io_v13,W
+    movwf io_val3
+;
+    call Write6
+    call UpdateLine
+;
+    movf io_v20,W
+    movwf io_val0
+;
+    movf io_v21,W
+    movwf io_val1
+;
+    movf io_v22,W
+    movwf io_val2
+;
+    movf io_v23,W
+    movwf io_val3
+;
+    call Write6
+    call UpdateLine
+;
+    movf io_v30,W
+    movwf io_val0
+;
+    movf io_v31,W
+    movwf io_val1
+;
+    movf io_v32,W
+    movwf io_val2
+;
+    movf io_v33,W
+    movwf io_val3
+;
+    call Write6
+;
+    call OutputCrc
+    call OutputActive
+    call OutputActive
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; RunCmd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Run0:
-    return
-
 Run1:
+Run6:
+Run7:
     return
 
-Write23:
+ToggleLine:
+    return
+
+ReadLine:
     return
 
 RunCmd:
@@ -1375,12 +1479,16 @@ RunCmd:
     movwf FSR2L
 ;
     movf INDF2,W
-    andlw 3
+    andlw 7
     call Case
     goto Run0
     goto Run1
     goto Read24
     goto Write24
+    goto ToggleLine
+    goto ReadLine
+    goto Run6
+    goto Run7
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
