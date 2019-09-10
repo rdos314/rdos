@@ -144,11 +144,8 @@ io_init_chans      equ 0x541
 io_temp1           equ 0x542
 io_temp2           equ 0x543
 io_count           equ 0x544
-io_curr_chan       equ 0x545
-io_crc             equ 0x547
-io_base            equ 0x548
-io_curr_id         equ 0x549
-io_run_cmd         equ 0x54A
+io_curr_id         equ 0x545
+io_run_cmd         equ 0x546
 
 ;
 ; io buffers
