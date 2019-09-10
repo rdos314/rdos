@@ -3395,7 +3395,7 @@ SerDone:
 ;
 ; Delay
 ;
-; IO delay (1ms)
+; IO delay (50 us)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3416,7 +3416,7 @@ Delay:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitMs:
-    movlw 0xA
+    movlw 0x14
     movwf counter_dms
 
 wmLoop:
@@ -3490,10 +3490,10 @@ ProgStart:
     movlw 0
     movwf BSR
 ;
-    movlw 0x26
+    movlw 0x25
     movwf T2CON
 ;
-    movlw 0xA
+    movlw 0x14
     movwf PR2
 ;
     bcf PIR1,TMR2IF
