@@ -145,7 +145,6 @@ io_temp1           equ 0x542
 io_temp2           equ 0x543
 io_count           equ 0x544
 io_curr_chan       equ 0x545
-io_val             equ 0x546
 io_crc             equ 0x547
 io_base            equ 0x548
 io_curr_id         equ 0x549
@@ -892,28 +891,6 @@ UpdateIoState:
     btfsc io_chans,3
     clrf io_state3
 ;
-    return
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; UpdateComCrc
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateComCrc:
-    movf io_val,W	
-    andlw 1
-    movwf io_temp1
-    clrf io_temp2
-    bcf STATUS, C
-    rlcf io_crc,F
-    rlcf io_temp2,W
-    xorwf io_temp1,W
-    btfsc STATUS, Z
-    return
-;
-    movlw 0x26
-    xorwf io_crc,F
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
