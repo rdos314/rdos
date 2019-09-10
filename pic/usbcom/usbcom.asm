@@ -1766,6 +1766,52 @@ CopyResultLoop:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; SignalFailure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalFailure:
+    movlb 0
+    btfss bus_state, BUS_STATE_IN_BUSY
+    goto DoSignalFail
+;
+    call Poll
+    goto SignalFailure
+
+DoSignalFail:
+    movlw 8
+    movwf count
+    lfsr 0,io_id0
+    lfsr 1,usb_bus_in
+
+CopyFailLoop:
+    movf POSTINC0,W
+    movwf POSTINC1
+;
+    decfsz count,F
+    goto CopyFailLoop
+;
+    movlb usb_buf_page
+    movlw 8
+    movwf bus_in_size
+;
+    movlw 0x40
+    xorwf bus_in_stat,W
+    andlw 0x40
+    iorlw 0x88
+    movwf bus_in_stat
+;
+    movlb 0
+    bsf bus_state, BUS_STATE_IN_BUSY
+    call Poll
+;
+    movlb io_page
+    movf io_id0, W
+    call RemoveBusReq
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; ProcessSingle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1895,11 +1941,22 @@ RunActivate:
     call Activate
     call Preamp
     call OutputAdr    
+;
+    movlb io_page
+    movf io_chans,W
+    btfsc STATUS,Z
+    goto RunFail
+;    
     call OutputCmd
     call RunCmd
     call UpdateIoState
     call Deactivate
     call ProcessResult
+    goto RunIo
+
+RunFail:
+    call Deactivate
+    call SignalFailure
     goto RunIo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

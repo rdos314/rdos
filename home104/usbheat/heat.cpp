@@ -242,7 +242,7 @@ int main()
 
     id = 0;
     
-    for (i = 0; i < 1; i++)
+    for (i = 0; i < 2; i++)
     {
         str[0] = 0;
         
@@ -710,7 +710,7 @@ int main()
         temperrmax = 255;
         refsum = 0;
 
-        for (i = 0; i < 1; i++)
+        for (i = 0; i < 2; i++)
         {
             if (i != 4 && RadArr[i] && RadArr[i]->IsOnline())
             {
