@@ -15,6 +15,80 @@ EP0                equ 0
 EP1                equ 8
 EP2                equ 0x10
 
+SER_STATE_ACTIVE   equ 0
+SER_STATE_ODD      equ 1
+SER_STATE_EVEN     equ 2
+SER_STATE_PAR9     equ 3
+SER_STATE_IN_BUSY  equ 4
+SER_STATE_OUT_BUSY equ 5
+
+BUS_STATE_IN_BUSY  equ 0
+BUS_STATE_OUT_BUSY equ 1
+BUS_STATE_REQ      equ 2
+BUS_STATE_REPLY    equ 3
+BUS_STATE_ALL      equ 4
+
+DESCR_FLAG_MORE    equ 0
+USB_HANDLED        equ 1
+DESCR_FLAG_FULL    equ 2
+
+SET_ADDRESS        equ 5
+GET_DESCRIPTOR     equ 6
+SET_CONFIGURATION  equ 9
+
+SET_BAUD           equ 1
+SET_DATA_BITS      equ 2
+SET_PARITY         equ 3
+START_SERIAL       equ 4
+STOP_SERIAL        equ 5
+
+;
+; common page
+;
+
+w_isr              equ 0x60
+status_isr         equ 0x61
+bsr_isr            equ 0x62
+
+counter_ms         equ 0x63
+counter_ds         equ 0x64
+
+temp1              equ 0x65
+temp2              equ 0x66
+temp3              equ 0x67
+
+d_curr_stat        equ 0x68
+d_curr_count       equ 0x69
+d_curr_low         equ 0x6A
+d_curr_high        equ 0x6B
+
+b_req_type         equ 0x6C
+b_req              equ 0x6D
+b_val_low          equ 0x6E
+b_val_high         equ 0x6F
+b_index_low        equ 0x70
+b_index_high       equ 0x71
+b_len_low          equ 0x72
+b_len_high         equ 0x73
+
+remain_size        equ 0x74
+count              equ 0x75
+usb_flags          equ 0x76
+usb_stat           equ 0x77
+usb_ep             equ 0x78
+usb_adr            equ 0x79
+
+ser_state          equ 0x7A
+counter_dms        equ 0x7B
+ser_mask           equ 0x7C
+parity             equ 0x7D
+
+bus_state          equ 0x7E
+
+;
+; serial page
+;
+
 ser_ram            equ 0x100
 ser_buf_page       equ 1
 
@@ -33,7 +107,15 @@ ser_temp           equ 0x108
 rx_buf             equ 0x110
 tx_buf             equ 0x188
 
+;
+; USB ram page
+;
+
 usb_ram            equ 0x200
+
+;
+; USB buf page
+;
 
 usb_buf_page       equ 4
 
@@ -77,7 +159,7 @@ usb_bus_out        equ 0x4F0
 usb_bus_in         equ 0x4F8
 
 ;
-; io structure
+; io page
 ;
 
 io_page            equ 5
@@ -163,75 +245,9 @@ io_adr_page        equ 7
 
 io_adr_base        equ 0x700
 
-SER_STATE_ACTIVE   equ 0
-SER_STATE_ODD      equ 1
-SER_STATE_EVEN     equ 2
-SER_STATE_PAR9     equ 3
-SER_STATE_IN_BUSY  equ 4
-SER_STATE_OUT_BUSY equ 5
-
-BUS_STATE_IN_BUSY  equ 0
-BUS_STATE_OUT_BUSY equ 1
-BUS_STATE_REQ      equ 2
-BUS_STATE_REPLY    equ 3
-BUS_STATE_ALL      equ 4
-
-DESCR_FLAG_MORE    equ 0
-USB_HANDLED        equ 1
-DESCR_FLAG_FULL    equ 2
-
-SET_ADDRESS        equ 5
-GET_DESCRIPTOR     equ 6
-SET_CONFIGURATION  equ 9
-
-SET_BAUD           equ 1
-SET_DATA_BITS      equ 2
-SET_PARITY         equ 3
-START_SERIAL       equ 4
-STOP_SERIAL        equ 5
-
     org 0
 
     goto ProgStart
-
-w_isr         equ 0x60
-status_isr    equ 0x61
-bsr_isr       equ 0x62
-
-counter_ms    equ 0x63
-counter_ds    equ 0x64
-
-temp1         equ 0x65
-temp2         equ 0x66
-temp3         equ 0x67
-
-d_curr_stat   equ 0x68
-d_curr_count  equ 0x69
-d_curr_low    equ 0x6A
-d_curr_high   equ 0x6B
-
-b_req_type    equ 0x6C
-b_req         equ 0x6D
-b_val_low     equ 0x6E
-b_val_high    equ 0x6F
-b_index_low   equ 0x70
-b_index_high  equ 0x71
-b_len_low     equ 0x72
-b_len_high    equ 0x73
-
-remain_size   equ 0x74
-count         equ 0x75
-usb_flags     equ 0x76
-usb_stat      equ 0x77
-usb_ep        equ 0x78
-usb_adr       equ 0x79
-
-ser_state     equ 0x7A
-counter_dms   equ 0x7B
-ser_mask      equ 0x7C
-parity        equ 0x7D
-
-bus_state     equ 0x7E
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
