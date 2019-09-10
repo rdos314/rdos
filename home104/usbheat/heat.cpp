@@ -242,7 +242,7 @@ int main()
 
     id = 0;
     
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < 8; i++)
     {
         str[0] = 0;
         
@@ -277,11 +277,13 @@ int main()
                 break;
         }
 
-        if (strlen(str))
+        if (strlen(str) && i == 0)
         {
             RadArr[id] = new TRad(str, RadControl, id, 0x20 + i);
             id++;
         }
+        else
+            RadArr[id] = 0;
     }
 
     RdosWaitMilli(1000);
@@ -710,7 +712,7 @@ int main()
         temperrmax = 255;
         refsum = 0;
 
-        for (i = 0; i < 2; i++)
+        for (i = 0; i < 8; i++)
         {
             if (i != 4 && RadArr[i] && RadArr[i]->IsOnline())
             {
