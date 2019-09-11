@@ -1768,9 +1768,15 @@ CopyResultLoop:
 ;
 ; SignalFailure
 ;
+;  FSR0 = source of data
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SignalFailure:
+    movlb io_page
+    movf INDF0, W
+    movwf io_curr_id
+;
     movlb 0
     btfss bus_state, BUS_STATE_IN_BUSY
     goto DoSignalFail
@@ -1781,7 +1787,6 @@ SignalFailure:
 DoSignalFail:
     movlw 8
     movwf count
-    lfsr 0,io_id0
     lfsr 1,usb_bus_in
 
 CopyFailLoop:
@@ -1806,7 +1811,7 @@ CopyFailLoop:
     call Poll
 ;
     movlb io_page
-    movf io_id0, W
+    movf io_curr_id, W
     call RemoveBusReq
     return
 
@@ -1827,6 +1832,7 @@ ProcessSingle:
     goto ProcessSingleOk0
 ;
     call UnlinkChannel
+    call SignalFailure
     goto ProcessSingleCheck1
 
 ProcessSingleOk0:
@@ -1841,6 +1847,7 @@ ProcessSingleCheck1:
     goto ProcessSingleOk1
 ;
     call UnlinkChannel
+    call SignalFailure
     goto ProcessSingleCheck2
 
 ProcessSingleOk1:
@@ -1855,6 +1862,7 @@ ProcessSingleCheck2:
     goto ProcessSingleOk2
 ;
     call UnlinkChannel
+    call SignalFailure
     goto ProcessSingleCheck3
 
 ProcessSingleOk2:
@@ -1868,7 +1876,8 @@ ProcessSingleCheck3:
     btfsc io_chans,3
     goto CopyResult
 ;
-    goto UnlinkChannel
+    call UnlinkChannel
+    goto SignalFailure
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1896,7 +1905,8 @@ ProcessAll:
     goto CopyResult
 ;
     lfsr 0,io_id0
-    goto UnlinkChannel
+    call UnlinkChannel
+    goto SignalFailure
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1941,22 +1951,11 @@ RunActivate:
     call Activate
     call Preamp
     call OutputAdr    
-;
-    movlb io_page
-    movf io_chans,W
-    btfsc STATUS,Z
-    goto RunFail
-;    
     call OutputCmd
     call RunCmd
     call UpdateIoState
     call Deactivate
     call ProcessResult
-    goto RunIo
-
-RunFail:
-    call Deactivate
-    call SignalFailure
     goto RunIo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
