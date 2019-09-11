@@ -322,124 +322,153 @@ int TRad::GetAuxTemp()
 ##########################################################################*/
 void TRad::Execute()
 {
-	int val;
+    int val;
+    int ok;
 
-	while (FInstalled)
-	{
-		 FSection.Enter();
+    while (FInstalled)
+    {
+        FSection.Enter();
 
-		if (FUpdateRef)
-		{
-			val = Ref;
-			FUpdateRef = !RdosWriteSerialRaw(FAddress, 0, val);
-		}
+        ok = TRUE;
 
-		if (FUpdateAmbient)
-		{
-			val = 127 + (Ambient - Ref) / 10;
-			FUpdateAmbient = !RdosWriteSerialRaw(FAddress, 4, val);
-		}
+        if (!IsOnline())
+            ok = RdosReadSerialRaw(FAddress, 0, &val);
 
-		if (FUpdateRefType)
-			FUpdateRefType = !RdosWriteSerialRaw(FAddress, 5, RefType);
+        if (ok)
+        {
+            if (FUpdateRef)
+            {
+                val = Ref;
+                FUpdateRef = !RdosWriteSerialRaw(FAddress, 0, val);
+            }
 
-		if (RdosReadSerialRaw(FAddress, 0, &val))
-		{
-			FRefSum += val;
-			FRefCount++;
+            if (FUpdateAmbient)
+            {
+                val = 127 + (Ambient - Ref) / 10;
+                FUpdateAmbient = !RdosWriteSerialRaw(FAddress, 4, val);
+            }
 
-			if (FRefCount == 20)
-			{
-				 Ref = FRefSum / FRefCount;
-				 FRefSum = 0;
-				 FRefCount = 0;
-			}
-			FControl->SetRef(FIndex, val);
+            if (FUpdateRefType)
+                FUpdateRefType = !RdosWriteSerialRaw(FAddress, 5, RefType);
+
+            ok = RdosReadSerialRaw(FAddress, 0, &val);
+
+            if (ok)
+            {
+                FRefSum += val;
+                FRefCount++;
+
+                if (FRefCount == 20)
+                {
+                    Ref = FRefSum / FRefCount;
+                    FRefSum = 0;
+                    FRefCount = 0;
+                }
+                FControl->SetRef(FIndex, val);
+            }
+            else
+                FControl->SetRef(FIndex);
+
+            if (ok)
+            {
+                ok = RdosReadSerialRaw(FAddress, 1, &val);
+
+                if (ok)
+                {
+                    if (val < 50)
+                        val += 256;
+
+                    FTempSum += val;
+                    FTempCount++;
+
+                    if (FTempCount == 20)
+                    {
+                        Temp = FTempSum / FTempCount;
+                        FTempSum = 0;
+                        FTempCount = 0;
+                    }
+                    FControl->SetTemp(FIndex, val);
+                }
+		else
+                    FControl->SetTemp(FIndex);
+            }
+
+            if (ok)
+            {
+                ok = RdosReadSerialRaw(FAddress, 2, &val);
+
+                if (ok)
+                {
+                    val = val * 10 / 25;
+
+                    FMotorSum += val;
+                    FMotorCount++;
+
+                    if (FMotorCount == 20)
+                    {
+                        Motor = FMotorSum / FMotorCount;
+                        FMotorSum = 0;
+                        FMotorCount = 0;
+                    }
+                    FControl->SetMotor(FIndex, val);
 		}
 		else
-		    FControl->SetRef(FIndex);
+                    FControl->SetMotor(FIndex);
+            }
 
-		if (RdosReadSerialRaw(FAddress, 1, &val))
-		{
-			if (val < 50)
-				val += 256;
+            if (ok)
+            {
+                ok = RdosReadSerialRaw(FAddress, 3, &val);
 
-			 FTempSum += val;
-			 FTempCount++;
+                if (ok)
+                {
+                    FLightSum += val;
+                    FLightCount++;
 
-			 if (FTempCount == 20)
-			 {
-				  Temp = FTempSum / FTempCount;
-				  FTempSum = 0;
-				  FTempCount = 0;
-			 }
-			 FControl->SetTemp(FIndex, val);
-		 }
-		else
-	        FControl->SetTemp(FIndex);
-
-		if (RdosReadSerialRaw(FAddress, 2, &val))
-		{
-			 Online();
-
-			val = val * 10 / 25;
-
-			 FMotorSum += val;
-			 FMotorCount++;
-
-			 if (FMotorCount == 20)
-			 {
-				  Motor = FMotorSum / FMotorCount;
-				  FMotorSum = 0;
-				  FMotorCount = 0;
-			 }
-			 FControl->SetMotor(FIndex, val);
-		}
-		else
-		{
-			 Offline();
-			 FControl->SetMotor(FIndex);
-		}
-
-		if (RdosReadSerialRaw(FAddress, 3, &val))
-		{
-			 FLightSum += val;
-			 FLightCount++;
-
-			 if (FLightCount == 20)
-			 {
-				  Light = FLightSum / FLightCount;
-				  FLightSum = 0;
-				  FLightCount = 0;
-			 }
-			 FControl->SetLight(FIndex, val);
-		 }
-		else
+                    if (FLightCount == 20)
+                    {
+                        Light = FLightSum / FLightCount;
+                        FLightSum = 0;
+                        FLightCount = 0;
+                    }
+                    FControl->SetLight(FIndex, val);
+                }
+                else
 		    FControl->SetLight(FIndex);
+            }
 
-		if (RdosReadSerialRaw(FAddress, 4, &val))
-		{
-			if (val < 50)
-				val += 256;
+            if (ok)
+            {
+                ok = RdosReadSerialRaw(FAddress, 4, &val);
 
-			FAuxTempSum += val;
-			FAuxTempCount++;
+                if (ok)
+                {
+                    if (val < 50)
+                        val += 256;
 
-			if (FAuxTempCount == 20)
-			{
-				AuxTemp = FAuxTempSum / FAuxTempCount;
-				FAuxTempSum = 0;
-				FAuxTempCount = 0;
-			}
-			FControl->SetAuxTemp(FIndex, val);
-		}
-		else
-		    FControl->SetAuxTemp(FIndex);
+                    FAuxTempSum += val;
+                    FAuxTempCount++;
 
-		FSection.Leave();
+                    if (FAuxTempCount == 20)
+                    {
+                        AuxTemp = FAuxTempSum / FAuxTempCount;
+                        FAuxTempSum = 0;
+                        FAuxTempCount = 0;
+                    }
+                    FControl->SetAuxTemp(FIndex, val);
+                }
+                else
+                    FControl->SetAuxTemp(FIndex);
+            }
+        }
 
+        if (ok)
+            Online();
+        else
+            Offline();
 
-		RdosWaitMilli(1000);
+        FSection.Leave();
 
-	}
+        RdosWaitMilli(1000);
+    }
 }

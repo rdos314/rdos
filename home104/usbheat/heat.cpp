@@ -277,13 +277,10 @@ int main()
                 break;
         }
 
-        if (strlen(str) && i == 0)
-        {
-            RadArr[id] = new TRad(str, RadControl, id, 0x20 + i);
-            id++;
-        }
+        if (strlen(str))
+            RadArr[i] = new TRad(str, RadControl, i, 0x20 + i);
         else
-            RadArr[id] = 0;
+            RadArr[i] = 0;
     }
 
     RdosWaitMilli(1000);
@@ -656,7 +653,7 @@ int main()
 
         str[0] = 0;
 
-/*        if (RdosReadSerialLines(1, &diostat))
+        if (RdosReadSerialLines(1, &diostat))
         {
             mask = 0x80;
             for (i = 0; i < 8; i++)
@@ -689,7 +686,6 @@ int main()
 
         Label->SetText(str);
 
-*/
         summer = FALSE;
 
         if (CurrTime->GetMonth() >= 6 && CurrTime->GetMonth() <= 8)
