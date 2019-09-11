@@ -526,6 +526,54 @@ DetachBus Endp
 toggle_serial_line_name DB 'Toggle Serial Line', 0
 
 toggle_serial_line      Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    mov bx,ds:io_sel
+    or bx,bx
+    stc
+    jz tslDone
+;
+    mov ds,bx
+    EnterSection ds:io_section
+    call AllocateBusReq
+    jc tslFail
+;
+    mov ds:[bx].io_adr,dh
+;
+    mov al,dl
+    shl al,3
+    or al,4
+    mov ds:[bx].io_cmd,al
+    LeaveSection ds:io_section
+;
+    push bx
+    mov bx,ds:io_serv_thread
+    Signal
+    pop bx
+;
+    WaitForSignal
+    mov al,ds:[bx].io_status
+    cmp al,-1
+    stc
+    je tslDone
+;
+    clc
+    jmp tslDone
+
+tslFail:
+    LeaveSection ds:io_section
+    stc
+
+tslDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
     ret
 toggle_serial_line  Endp
        
@@ -545,6 +593,53 @@ toggle_serial_line  Endp
 read_serial_lines_name  DB 'Read Serial Lines', 0
 
 read_serial_lines       Proc far
+    push ds
+    push ebx
+    push ecx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    mov bx,ds:io_sel
+    or bx,bx
+    stc
+    jz rslDone
+;
+    mov ds,bx
+    EnterSection ds:io_section
+    call AllocateBusReq
+    jc rslFail
+;
+    mov ds:[bx].io_adr,dh
+;
+    mov al,dl
+    shl al,3
+    or al,5
+    mov ds:[bx].io_cmd,al
+    LeaveSection ds:io_section
+;
+    push bx
+    mov bx,ds:io_serv_thread
+    Signal
+    pop bx
+;
+    WaitForSignal
+    mov al,ds:[bx].io_status
+    cmp al,-1
+    stc
+    je rslDone
+;
+    mov al,ds:[bx].io_val
+    clc
+    jmp rslDone
+
+rslFail:
+    LeaveSection ds:io_section
+    stc
+
+rslDone:
+    pop ecx
+    pop ebx
+    pop ds
     ret
 read_serial_lines       Endp
         

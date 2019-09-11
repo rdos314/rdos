@@ -1443,6 +1443,18 @@ ReadLineLoop:
     btfss STATUS,Z
     goto ReadLineLoop
 ;
+    movf io_val0,W
+    movwf io_v00
+;
+    movf io_val1,W
+    movwf io_v01
+;
+    movf io_val2,W
+    movwf io_v02
+;
+    movf io_val3,W
+    movwf io_v03
+;
     call ReadCrc
     call CheckLineCrc
     return
