@@ -394,7 +394,22 @@ btCheckOn:
     or al,al
     jnz btOn
 ;
-    int 3
+    mov bx,ds:io_in_req
+    CloseUsbReq
+    mov ds:io_in_req,0
+;
+    mov bx,ds:io_in_handle
+    CloseUsbPipe
+    mov ds:io_in_handle,0
+;
+    mov bx,ds:io_out_req
+    CloseUsbReq
+    mov ds:io_out_req,0
+;
+    mov bx,ds:io_out_handle
+    CloseUsbPipe
+    mov ds:io_out_handle,0
+    jmp btOff
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -507,7 +522,28 @@ AttachBus Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DetachBus Proc near
-    int 3
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov edx,SEG data
+    mov ds,edx
+    mov dx,ds:io_sel
+    or dx,dx
+    jz dbDone
+;
+    mov fs:io_intr_in,0
+    mov fs:io_bulk_out,0
+;
+    mov bx,fs:io_serv_thread
+    Signal
+
+dbDone:
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 DetachBus Endp
         
@@ -2021,8 +2057,6 @@ usb_detach  Proc far
     mov ax,es
     mov ds,ax
     call ClosePort
-;
-    int 3
     call DetachBus
 ;
     mov ax,ds:uds_port_sel
