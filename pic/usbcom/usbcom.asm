@@ -887,6 +887,91 @@ CheckCrc:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; CheckLineCrc0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckLineCrc0:
+    movlw 0x5A
+    xorwf io_val0,W
+    xorwf io_crc0,W
+    btfsc STATUS,Z
+    return
+;
+    clrf io_chans,0
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckLineCrc1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckLineCrc1:
+    movlw 0x5A
+    xorwf io_val1,W
+    xorwf io_crc1,W
+    btfsc STATUS,Z
+    return
+;
+    clrf io_chans,1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckLineCrc2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckLineCrc2:
+    movlw 0x5A
+    xorwf io_val2,W
+    xorwf io_crc2,W
+    btfsc STATUS,Z
+    return
+;
+    clrf io_chans,2
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckLineCrc3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckLineCrc3:
+    movlw 0x5A
+    xorwf io_val3,W
+    xorwf io_crc3,W
+    btfsc STATUS,Z
+    return
+;
+    clrf io_chans,3
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; CheckLineCrc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckLineCrc:
+    btfsc io_chans,0
+    call CheckLineCrc0
+;
+    btfsc io_chans,1
+    call CheckLineCrc1
+;
+    btfsc io_chans,2
+    call CheckLineCrc2
+;
+    btfsc io_chans,3
+    call CheckLineCrc3
+;
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; UpdateIoState
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1317,6 +1402,53 @@ Write24:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; ToggleLine
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToggleLine:
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadLine
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadLine:
+    movlb io_page
+    clrf io_crc0
+    clrf io_crc1
+    clrf io_crc2
+    clrf io_crc3
+;
+    clrf io_val0
+    clrf io_val1
+    clrf io_val2
+    clrf io_val3
+;
+    movlw 8
+    movwf io_count
+
+ReadLineLoop:
+    call InputBit
+    call UpdateCrc
+;
+    rrncf io_val0,F
+    rrncf io_val1,F
+    rrncf io_val2,F
+    rrncf io_val3,F
+;
+    decf io_count,F
+    btfss STATUS,Z
+    goto ReadLineLoop
+;
+    call ReadCrc
+    call CheckLineCrc
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; RunCmd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1325,12 +1457,6 @@ Run0:
 Run1:
 Run6:
 Run7:
-    return
-
-ToggleLine:
-    return
-
-ReadLine:
     return
 
 RunCmd:
