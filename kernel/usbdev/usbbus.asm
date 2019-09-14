@@ -181,6 +181,12 @@ AllocateBusReq Proc near
     mov ds:[bx].io_status,-1
 ;
     inc cl
+    or cl,cl
+    jnz abrSave
+;
+    inc cl
+
+abrSave:
     mov ds:io_insert_id,cl
     clc
 
@@ -287,6 +293,8 @@ bus_thread:
     mov eax,es
     mov ds,eax
     InitSection ds:io_section
+    mov ds:io_insert_id,1
+    mov ds:io_process_id,1
 ;
     GetThread
     mov ds:io_serv_thread,ax
@@ -379,6 +387,12 @@ btCheckReq:
 
 btReadNext:
     inc cl
+    or cl,cl
+    jnz btReadSave
+;
+    inc cl
+
+btReadSave:
     mov ds:io_process_id,cl
     LeaveSection ds:io_section
     jmp btCheckOn
