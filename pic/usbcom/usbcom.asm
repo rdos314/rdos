@@ -1588,56 +1588,6 @@ GetBusReqOk:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; RemoveBusReq
-;
-; W = id
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveBusReq:
-    movlb 0
-    movwf temp1
-;
-    movlw 0x20
-    movwf count
-    lfsr 0,io_buf_base + io_cmd
-
-RemoveBusReqLoop:
-    movf INDF0,W
-    btfsc STATUS,Z
-    goto RemoveBusReqNext
-;
-    movlw -io_cmd
-    addwf FSR0L,F
-    movf INDF0,W
-    cpfseq temp1
-    goto RemoveBusReqNextMove
-
-RemoveBusReqDo:
-    movlw 8
-    movwf count
-
-RemoveBusReqDoLoop:
-    clrf POSTINC0
-    decfsz count,F
-    goto RemoveBusReqDoLoop
-;
-    return
-
-RemoveBusReqNextMove:        
-    movlw -io_id
-    addwf FSR0L,F
-
-RemoveBusReqNext:
-    movlw 8
-    addwf FSR0L,F
-;
-    decfsz count,F
-    goto RemoveBusReqLoop
-;
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; GetReqChannel
 ;
 ;   FSR0 = buffer start
@@ -1740,50 +1690,58 @@ SetupAllReq:
 ;
     movlb io_page
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_id0
     movwf io_id1
     movwf io_id2
     movwf io_id3
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_state0
     movwf io_state1
     movwf io_state2
     movwf io_state3
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_adr0
     movwf io_adr1
     movwf io_adr2
     movwf io_adr3
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_run_cmd
     movwf io_cmd0
     movwf io_cmd1
     movwf io_cmd2
     movwf io_cmd3
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_v00
     movwf io_v01
     movwf io_v02
     movwf io_v03
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_v10
     movwf io_v11
     movwf io_v12
     movwf io_v13
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_v20
     movwf io_v21
     movwf io_v22
     movwf io_v23
 ;
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf io_v30
     movwf io_v31
     movwf io_v32
@@ -1839,7 +1797,8 @@ SetupOneChannelDo:
     movwf io_count
 
 SetupOneCopyLoop:
-    movf POSTINC0,W
+    movf INDF0,W
+    clrf POSTINC0
     movwf POSTINC1
 ;
     decfsz io_count,F
@@ -1896,10 +1855,6 @@ CopyResultLoop:
     movlb 0
     bsf bus_state, BUS_STATE_IN_BUSY
     call Poll
-;
-    movlb io_page
-    movf io_curr_id, W
-    call RemoveBusReq
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1947,10 +1902,6 @@ CopyFailLoop:
     movlb 0
     bsf bus_state, BUS_STATE_IN_BUSY
     call Poll
-;
-    movlb io_page
-    movf io_curr_id, W
-    call RemoveBusReq
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -133,8 +133,8 @@ void TimeThread(void *Param)
 
     LockGUI();
 
-    Label = new TLabelControl(control, 5, 330, 200, 30);
-    Label->SetFont(20);
+    Label = new TLabelControl(control, 1600, 5, 300, 35);
+    Label->SetFont(35);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
     Label->Show();
@@ -217,10 +217,11 @@ int main()
     TLabelFactory AziLabelFactory;
     TLabelFactory PhLabelFactory;
 
-    TLabelFactory SolarCommentFactory;
-    TLabelFactory SolarValueFactory;
-    TLabelFactory SolarUnitFactory;
+    TLabelFactory CommentFactory;
+    TLabelFactory ValueFactory;
+    TLabelFactory UnitFactory;
 
+    TTableControl *WeatherTable;
     TTableControl *SolarTable;
     TTableControl *WindTable;
     
@@ -230,7 +231,7 @@ int main()
     if (NtpIp)
         RdosSyncTime(NtpIp);
 
-    vbe = new TVideoGraphicDevice(32, 1080, 720);
+    vbe = new TVideoGraphicDevice(32, 1920, 1080);
     control = new TDisplayControlThread("Control", vbe);
     vbe->SetFont(&Font);
 
@@ -238,7 +239,7 @@ int main()
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
 
-    RadControl = new TRadControl(control, 5, 500, 785, 30 * 7);
+    RadControl = new TRadControl(control, 5, 640, 1150, 35 * 8);
 
     id = 0;
     
@@ -292,54 +293,54 @@ int main()
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
     LockGUI();
-    Label = new TLabelControl(control, 5, 300, 200, 30);
-    Label->SetFont(20);
+    Label = new TLabelControl(control, 1700, 50, 200, 35);
+    Label->SetFont(35);
     Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(255, 255, 255);
     Label->SetText("");
     Label->Show();
 
     CommentLabelFactory.SetSpace(4, 4);
-    CommentLabelFactory.SetFont(20);
+    CommentLabelFactory.SetFont(35);
     CommentLabelFactory.SetBackTransparent();
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
     
     AltLabelFactory.SetSpace(4, 4);
-    AltLabelFactory.SetFont(20);
+    AltLabelFactory.SetFont(35);
     AltLabelFactory.SetBackColor(100, 100, 100);
     AltLabelFactory.SetDrawColor(0, 0, 0);
     AltLabelFactory.AlignRight();
     
     AziLabelFactory.SetSpace(4, 4);
-    AziLabelFactory.SetFont(20);
+    AziLabelFactory.SetFont(35);
     AziLabelFactory.SetBackColor(100, 100, 100);
     AziLabelFactory.SetDrawColor(0, 0, 0);
     AziLabelFactory.AlignRight();
     
     PhLabelFactory.SetSpace(4, 4);
-    PhLabelFactory.SetFont(20);
+    PhLabelFactory.SetFont(35);
     PhLabelFactory.SetBackColor(100, 100, 100);
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
 
-    Table = new TTableControl(control, 850, 500, 400, 220);
+    Table = new TTableControl(control, 1250, 675, 800, 400);
     Table->SetBackColor(0, 20, 50);
-    Table->SetRowSpacing(5);
-    Table->SetColSpacing(8);
+    Table->SetRowSpacing(10);
+    Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 120);
-    Table->AddLabelColumn(&AltLabelFactory, 75);
-    Table->AddLabelColumn(&AziLabelFactory, 75);
-    Table->AddLabelColumn(&PhLabelFactory, 75);
+    Table->AddLabelColumn(&CommentLabelFactory, 150);
+    Table->AddLabelColumn(&AltLabelFactory, 125);
+    Table->AddLabelColumn(&AziLabelFactory, 125);
+    Table->AddLabelColumn(&PhLabelFactory, 125);
 
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
-    Table->AddRow(24, 45);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
 
     Table->SetText(0, 0, "Solen");
     Table->SetText(1, 0, "Månen");
@@ -350,40 +351,67 @@ int main()
     Table->SetText(6, 0, "Saturnus");
     Table->Show();
 
-    SolarCommentFactory.SetSpace(4, 4);
-    SolarCommentFactory.SetFont(20);
-    SolarCommentFactory.SetBackTransparent();
-    SolarCommentFactory.SetDrawColor(0, 0, 0);
-    SolarCommentFactory.AlignLeft();
+    CommentFactory.SetSpace(4, 4);
+    CommentFactory.SetFont(35);
+    CommentFactory.SetBackTransparent();
+    CommentFactory.SetDrawColor(0, 0, 0);
+    CommentFactory.AlignLeft();
     
-    SolarValueFactory.SetSpace(4, 4);
-    SolarValueFactory.SetFont(20);
-    SolarValueFactory.SetBackColor(100, 100, 100);
-    SolarValueFactory.SetDrawColor(0, 0, 0);
-    SolarValueFactory.AlignRight();
+    ValueFactory.SetSpace(4, 4);
+    ValueFactory.SetFont(35);
+    ValueFactory.SetBackColor(100, 100, 100);
+    ValueFactory.SetDrawColor(0, 0, 0);
+    ValueFactory.AlignRight();
 
-    SolarUnitFactory.SetSpace(4, 4);
-    SolarUnitFactory.SetFont(20);
-    SolarUnitFactory.SetBackTransparent();
-    SolarUnitFactory.SetDrawColor(0, 0, 0);
-    SolarUnitFactory.AlignLeft();
+    UnitFactory.SetSpace(4, 4);
+    UnitFactory.SetFont(35);
+    UnitFactory.SetBackTransparent();
+    UnitFactory.SetDrawColor(0, 0, 0);
+    UnitFactory.AlignLeft();
 
-    SolarTable = new TTableControl(control, 850, 50, 400, 200);
+    WeatherTable = new TTableControl(control, 5, 5, 500, 300);
+    WeatherTable->SetBackColor(0, 20, 50);
+    WeatherTable->SetRowSpacing(10);
+    WeatherTable->SetColSpacing(16);
+    WeatherTable->SetSpacingColor(0, 20, 50);
+    WeatherTable->AddLabelColumn(&CommentFactory, 200);
+    WeatherTable->AddLabelColumn(&ValueFactory, 125);
+    WeatherTable->AddLabelColumn(&UnitFactory, 125);
+
+    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
+
+    WeatherTable->SetText(0, 0, "Temperature");
+    WeatherTable->SetText(0, 2, "°C");
+
+    WeatherTable->SetText(1, 0, "Wind");
+    WeatherTable->SetText(1, 2, "m/s");
+
+    WeatherTable->SetText(2, 0, "Pressure");
+    WeatherTable->SetText(2, 2, "hPa");
+
+    WeatherTable->SetText(3, 0, "Humidity");
+    WeatherTable->SetText(3, 2, "%");
+
+    WeatherTable->SetText(4, 0, "Wind Chill");
+    WeatherTable->SetText(4, 2, "°C");
+
+    WeatherTable->Show();
+
+    SolarTable = new TTableControl(control, 550, 350, 500, 150);
     SolarTable->SetBackColor(0, 20, 50);
-    SolarTable->SetRowSpacing(5);
-    SolarTable->SetColSpacing(8);
+    SolarTable->SetRowSpacing(10);
+    SolarTable->SetColSpacing(16);
     SolarTable->SetSpacingColor(0, 20, 50);
-    SolarTable->AddLabelColumn(&SolarCommentFactory, 120);
-    SolarTable->AddLabelColumn(&SolarValueFactory, 100);
-    SolarTable->AddLabelColumn(&SolarUnitFactory, 75);
+    SolarTable->AddLabelColumn(&CommentFactory, 175);
+    SolarTable->AddLabelColumn(&ValueFactory, 175);
+    SolarTable->AddLabelColumn(&UnitFactory, 100);
 
-    SolarTable->AddRow(24, 45);
-    SolarTable->AddRow(24, 45);
-    SolarTable->AddRow(24, 45);
-    SolarTable->AddRow(24, 45);
-    SolarTable->AddRow(24, 45);
-    SolarTable->AddRow(24, 45);
-    SolarTable->AddRow(24, 45);
+    SolarTable->AddRow(35, 55);
+    SolarTable->AddRow(35, 55);
 
     SolarTable->SetText(0, 0, "Effekt");
     SolarTable->SetText(0, 2, "W");
@@ -391,38 +419,23 @@ int main()
     SolarTable->SetText(1, 0, "Idag");
     SolarTable->SetText(1, 2, "kWh");
 
-    SolarTable->SetText(2, 0, "Temperature");
-    SolarTable->SetText(2, 2, "°C");
-
-    SolarTable->SetText(3, 0, "Wind");
-    SolarTable->SetText(3, 2, "m/s");
-
-    SolarTable->SetText(4, 0, "Pressure");
-    SolarTable->SetText(4, 2, "hPa");
-
-    SolarTable->SetText(5, 0, "Humidity");
-    SolarTable->SetText(5, 2, "%");
-
-    SolarTable->SetText(6, 0, "Wind Chill");
-    SolarTable->SetText(6, 2, "°C");
-
     SolarTable->Show();
 
-    WindTable = new TTableControl(control, 850, 300, 400, 200);
+    WindTable = new TTableControl(control, 550, 5, 500, 300);
     WindTable->SetBackColor(0, 20, 50);
-    WindTable->SetRowSpacing(5);
-    WindTable->SetColSpacing(8);
+    WindTable->SetRowSpacing(10);
+    WindTable->SetColSpacing(16);
     WindTable->SetSpacingColor(0, 20, 50);
-    WindTable->AddLabelColumn(&SolarCommentFactory, 120);
-    WindTable->AddLabelColumn(&SolarValueFactory, 100);
-    WindTable->AddLabelColumn(&SolarUnitFactory, 75);
+    WindTable->AddLabelColumn(&CommentFactory, 175);
+    WindTable->AddLabelColumn(&ValueFactory, 175);
+    WindTable->AddLabelColumn(&UnitFactory, 100);
 
-    WindTable->AddRow(24, 45);
-    WindTable->AddRow(24, 45);
-    WindTable->AddRow(24, 45);
-    WindTable->AddRow(24, 45);
-    WindTable->AddRow(24, 45);
-    WindTable->AddRow(24, 45);
+    WindTable->AddRow(35, 55);
+    WindTable->AddRow(35, 55);
+    WindTable->AddRow(35, 55);
+    WindTable->AddRow(35, 55);
+    WindTable->AddRow(35, 55);
+    WindTable->AddRow(35, 55);
 
     WindTable->SetText(0, 0, "State");
     WindTable->SetText(0, 2, "");
@@ -602,7 +615,7 @@ int main()
             }
             else
                 strcpy(str, "err");
-            SolarTable->SetText(2, 1, str);
+            WeatherTable->SetText(0, 1, str);
 
             val = w->GetWindSpeed();
             if (val < 100.0 && val >= 0.0)
@@ -617,7 +630,7 @@ int main()
                 strcpy(str, "err");
                 valid = false;
             }
-            SolarTable->SetText(3, 1, str);
+            WeatherTable->SetText(1, 1, str);
 
             if (valid)
             {
@@ -626,7 +639,7 @@ int main()
             }
             else
                 strcpy(str, "err");
-            SolarTable->SetText(6, 1, str);
+            WeatherTable->SetText(4, 1, str);
 
             val = w->GetPressure();
             if (val < 2000.0 && val > 0.0)
@@ -636,7 +649,7 @@ int main()
             }
             else
                 strcpy(str, "err");
-            SolarTable->SetText(4, 1, str);
+            WeatherTable->SetText(2, 1, str);
 
             val = w->GetHumidity();
             if (val <= 100.0 && val >= 0)
@@ -646,7 +659,7 @@ int main()
             }
             else
                 strcpy(str, "err");
-            SolarTable->SetText(5, 1, str);
+            WeatherTable->SetText(3, 1, str);
         }
         else
             ambient = 50;

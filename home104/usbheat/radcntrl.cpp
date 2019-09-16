@@ -39,9 +39,9 @@
 #define TEXT_G  0
 #define TEXT_B  0
 
-#define WIDTH 100
+#define WIDTH 125
 #define SPACE 15
-#define HEIGHT 22
+#define HEIGHT 35
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -471,7 +471,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
         int x;
     int y;
     char str[80];
-    TFont Font(20);
+    TFont Font(35);
 
     if (IsVisible())
     {
@@ -486,11 +486,11 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 
         if (FDrawHeader)
         {
-            dev->DrawString(xmin + 300, ymin, "   Ref");
-            dev->DrawString(xmin + 400, ymin, "  Temp");
-            dev->DrawString(xmin + 500, ymin, "Pådrag");
-            dev->DrawString(xmin + 600, ymin, "  Ljus");
-            dev->DrawString(xmin + 700, ymin, "Temp 2");
+            dev->DrawString(xmin + 475, ymin, "   Ref");
+            dev->DrawString(xmin + 600, ymin, "  Temp");
+            dev->DrawString(xmin + 725, ymin, "Pådrag");
+            dev->DrawString(xmin + 850, ymin, "  Ljus");
+            dev->DrawString(xmin + 975, ymin, "Temp 2");
 
             FDrawHeader = FALSE;
         }
@@ -501,7 +501,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
             {
                 FSection.Enter();
 
-                x = xmin + 300;        
+                x = xmin + 475;        
                 y = ymin + (HEIGHT + 5) * (i + 1);
 
                 if (FChangedName[i])
