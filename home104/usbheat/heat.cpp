@@ -38,9 +38,11 @@
 #include "openweather.h"
 #include "rad.h"
 #include "datetime.h"
+#include "circ.h"
+#include "vp.h"
 #include "videodev.h"
-#include "solar.h"
 #include "radcntrl.h"
+#include "solar.h"
 #include "table.h"
 #include "jpeg.h"
 
@@ -169,6 +171,8 @@ void TimeThread(void *Param)
 int main()
 {
     TRad *RadArr[8];
+    TCirc *Circ;
+    TVp *Vp;
     TFroniusInverter *SolarInv;
     TSmartPowInverter *WindInv;
     TOpenWeather *w;
@@ -226,6 +230,11 @@ int main()
     TTableControl *WindTable;
     
     RdosWaitMilli(2500);
+
+    RdosWriteSerialVal(2, 0, 0);
+    RdosWriteSerialVal(2, 1, 0);
+
+    RdosWriteSerialRaw(0x10, 0, 1);
 
     NtpIp = RdosNameToIp("pool.ntp.org");
     if (NtpIp)
@@ -285,6 +294,9 @@ int main()
     }
 
     RdosWaitMilli(1000);
+
+    Circ = new TCirc(vbe);
+    Vp = new TVp(control);
 
     SolarInv = new TFroniusInverter("192.168.1.51");
     WindInv = new TSmartPowInverter("192.168.1.100");
@@ -369,12 +381,12 @@ int main()
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    WeatherTable = new TTableControl(control, 5, 5, 500, 300);
+    WeatherTable = new TTableControl(control, 5, 5, 500, 250);
     WeatherTable->SetBackColor(0, 20, 50);
     WeatherTable->SetRowSpacing(10);
     WeatherTable->SetColSpacing(16);
     WeatherTable->SetSpacingColor(0, 20, 50);
-    WeatherTable->AddLabelColumn(&CommentFactory, 200);
+    WeatherTable->AddLabelColumn(&CommentFactory, 250);
     WeatherTable->AddLabelColumn(&ValueFactory, 125);
     WeatherTable->AddLabelColumn(&UnitFactory, 125);
 
@@ -758,6 +770,19 @@ int main()
 
                 RadArr[i]->SetAmbient(ambient);
              }
+        }
+
+        if (count)
+            Circ->SetMaxMotor(circmax);
+
+        if (count)
+            Circ->SetMaxTempError(temperrmax);
+
+        if (count)
+        {
+            Vp->SetTempError(temperrmax);
+            Vp->SetAmbient(refsum / count, ambient);
+            Vp->SetCirc(circmax, Circ->GetSpeed());
         }
 
         RdosWaitMilli(1000);
