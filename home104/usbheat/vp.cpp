@@ -343,29 +343,95 @@ void TVp::SetAmbient(int ref, int ambient)
 
 /*##########################################################################
 #
-#   Name       : TVp::SetCirc
+#   Name       : TVp::SetMaxMotor
 #
-#   Purpose....: Set current max circulation value
+#   Purpose....: Set current max motor
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TVp::SetCirc(int circ, long double speed)
+void TVp::SetMaxMotor(int motor)
 {
     FSection.Enter();
-
-    FCirc = circ;
-    FCircSpeed = speed;
-    FHasCirc = TRUE;
     
-    if (FCirc < 25)
-        FVpOn = FALSE;
+    FMotorCount++;
+    FMotorSum += motor;
 
-    if (FCirc > 75 && FTankTemp <= FMaxTank)
-        FVpOn = TRUE;
-        
     FSection.Leave();    
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::WriteCircValve
+#
+#   Purpose....: Write Circ valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::WriteCircValve(long double value)
+{
+    int temp;
+
+    temp = (int)(value / 10.0 * (long double)0x7FFFFFFF);
+    if (temp < 0)
+        temp = 0x7FFFFFFF;
+
+    RdosWriteSerialVal(1, 0, temp);
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::UpdateCirc
+#
+#   Purpose....: Update circ
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::UpdateCirc(int diostat)
+{
+    int on;
+
+    if ((diostat & 0x10) == 0)
+        on = FALSE;
+    else
+        on = TRUE;
+
+    if (FTankTemp > 300)
+    {                
+        if (FCirc == 0)
+        {
+            if (on)
+            {
+                RdosToggleSerialLine(1, 4);
+
+                if (RdosReadSerialLines(1, &diostat))
+                    if ((diostat & 0x10) == 0)
+                        on = FALSE;
+            }
+        }
+
+        if (FCirc > 25)
+        {
+            if (!on)
+            {
+                RdosToggleSerialLine(1, 4);
+
+                if (RdosReadSerialLines(1, &diostat))
+                    if ((diostat & 0x10) != 0)
+                        on = TRUE;
+            }                    
+        }
+    }
+
+    if (on)
+        WriteCircValve((long double)FCirc);
+    else
+        WriteCircValve(0.0);
 }
 
 /*##########################################################################
@@ -449,18 +515,10 @@ void TVp::UpdateVp(int diff)
                 RdosToggleSerialLine(1, 6);   // heat
                                                
         }
-
-        if (FTankTemp > 300)
-        {                
-            if (FCirc == 0)
-                if ((diostat & 0x10) != 0)
-                    RdosToggleSerialLine(1, 4);
-
-            if (FCirc > 25)
-                if ((diostat & 0x10) == 0)
-                    RdosToggleSerialLine(1, 4);
-        }
     }
+
+    UpdateCirc(diostat);
+
 
     FSection.Leave();
 }
@@ -738,6 +796,9 @@ void TVp::Execute()
     FCurrTurbulence = 0;
     PTank = 0;
 
+    FMotorSum = 0;
+    FMotorCount = 0;
+
     RdosGetTime(&msb, &lsb);
     RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
     RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
@@ -806,11 +867,38 @@ void TVp::Execute()
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
         RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
+        if (LastMin != min)
+        {
+            FSection.Enter();
+
+            if (FMotorCount)
+            {
+                if (month >= 6 && month <= 8)
+                    FCirc = 99;
+                else
+                    FCirc = FMotorSum / FMotorCount;
+
+                FHasCirc = TRUE;
+
+               if (FCirc < 25)
+                   FVpOn = FALSE;
+
+               if (FCirc > 75 && FTankTemp <= FMaxTank)
+                   FVpOn = TRUE;
+        
+            }
+
+            FMotorSum = 0;
+            FMotorCount = 0;
+
+            FSection.Leave();    
+        }
+
         if (LastMin != min && TempCount)
         {
             if (FHasCirc)
             {
-                sprintf(str, "%4.1Lf", FCircSpeed);
+                sprintf(str, "%4.1Lf", FCirc);
                 Table->SetText(3, 1, str);
             }
 

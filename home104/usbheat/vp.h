@@ -53,13 +53,15 @@ public:
         int HasValidHeatP();
         long double GetHeatP();
 
-        void SetSolarAlt(long double val);
-        void SetTempError(int temp);
-        void SetAmbient(int ref, int ambient);
-        void SetCirc(int circ, long double speed);
+    void SetMaxMotor(int motor);
+    void SetSolarAlt(long double val);
+    void SetTempError(int temp);
+    void SetAmbient(int ref, int ambient);
 
 protected:
+    void UpdateCirc(int diostat);
     void UpdateVp(int diff);
+    void WriteCircValve(long double value);
     void CalcLinearRegression(int Size);
     void UpdateHistory(long double val);
 
@@ -69,6 +71,9 @@ protected:
          int TempCount;
          long double AmbientSum;
          int AmbientCount;
+
+    int FMotorCount;
+    int FMotorSum;
 
     long double FSolarAlt;
          

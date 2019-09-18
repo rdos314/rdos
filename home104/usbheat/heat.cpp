@@ -38,7 +38,6 @@
 #include "openweather.h"
 #include "rad.h"
 #include "datetime.h"
-#include "circ.h"
 #include "vp.h"
 #include "videodev.h"
 #include "radcntrl.h"
@@ -171,7 +170,6 @@ void TimeThread(void *Param)
 int main()
 {
     TRad *RadArr[8];
-    TCirc *Circ;
     TVp *Vp;
     TFroniusInverter *SolarInv;
     TSmartPowInverter *WindInv;
@@ -295,7 +293,6 @@ int main()
 
     RdosWaitMilli(1000);
 
-    Circ = new TCirc(vbe);
     Vp = new TVp(control);
 
     SolarInv = new TFroniusInverter("192.168.1.51");
@@ -773,16 +770,12 @@ int main()
         }
 
         if (count)
-            Circ->SetMaxMotor(circmax);
-
-        if (count)
-            Circ->SetMaxTempError(temperrmax);
+            Vp->SetMaxMotor(circmax);
 
         if (count)
         {
             Vp->SetTempError(temperrmax);
             Vp->SetAmbient(refsum / count, ambient);
-            Vp->SetCirc(circmax, Circ->GetSpeed());
         }
 
         RdosWaitMilli(1000);
