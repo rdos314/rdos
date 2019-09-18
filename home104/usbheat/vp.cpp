@@ -284,21 +284,6 @@ void TVp::SetSolarAlt(long double val)
 
 /*##########################################################################
 #
-#   Name       : TVp::SetSolarPower
-#
-#   Purpose....: Set solar power
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TVp::SetSolarPower(long double val)
-{
-    FSolarPower = val;
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::SetAmbientDiff
 #
 #   Purpose....: Set ambient temp diff
@@ -408,7 +393,20 @@ void TVp::UpdateVp(int diff)
         {
             on = FPrevOn;
             
-            if (diff < 0)
+            if (diff > 0)
+            {
+                FOffCounter = 30;
+                
+                if (FIncCount)
+                {
+                    FLowTemp = FTankTemp - 30;
+                    FHasLowTemp = TRUE;
+                    on = TRUE;
+                }
+
+                FIncCount++;
+            }
+            else
             {
                 if (FOffCounter)
                     FOffCounter--;
@@ -427,19 +425,6 @@ void TVp::UpdateVp(int diff)
                     on = TRUE;
             }
 
-            if (diff > 0)
-            {
-                FOffCounter = 30;
-                
-                if (FIncCount)
-                {
-                    FLowTemp = FTankTemp - 30;
-                    FHasLowTemp = TRUE;
-                    on = TRUE;
-                }
-
-                FIncCount++;
-            }
         }
     }
 
