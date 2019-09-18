@@ -530,7 +530,7 @@ void TSmartPowInverter::Execute()
             else
                 FOnline = false;
  
-            RdosWaitMilli(15000);
+            RdosWaitMilli(1000);
         }
 
         delete FSocket;
