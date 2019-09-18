@@ -47,6 +47,14 @@ public:
     long double GetDayEnergy();
     long double GetTotalEnergy();
 
+    void (*OnState)(TSmartPowInverter *Device, const char *buf);
+    void (*OnError)(TSmartPowInverter *Device, const char *buf);
+    void (*OnGridPower)(TSmartPowInverter *Device, long double val);
+    void (*OnDumpPower)(TSmartPowInverter *Device, long double val);
+    void (*OnRpm)(TSmartPowInverter *Device, long double val);
+    void (*OnDayEnergy)(TSmartPowInverter *Device, long double val);
+
+
 protected:
     char *FindTag(char *str, const char *tag);
     char *GetValue(char *str);

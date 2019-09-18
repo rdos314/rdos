@@ -64,6 +64,13 @@ TSmartPowInverter::TSmartPowInverter(char *HostStr)
     FDayE = 0.0;
     FTotalE = 0.0;
 
+    OnState = 0;
+    OnError = 0;
+    OnGridPower = 0;
+    OnDumpPower = 0;
+    OnRpm = 0;
+    OnDayEnergy = 0;
+
     Start("SmartPow inverter", 0x8000);
 }
 
@@ -328,37 +335,61 @@ void TSmartPowInverter::NotifyData(char *tag, char *value, char *unit)
     long double val;
 
     if (strstr(tag, "State"))
+    {
         strcpy(FCurrState, value);
+        if (OnState)
+            (*OnState)(this, value);
+    }
 
     if (strstr(tag, "Error"))
+    {
         strcpy(FCurrError, value);
+        if (OnError)
+            (*OnError)(this, value);
+    }
 
     if (strstr(tag, "Power Grid"))
     {
         count = sscanf(value, "%Lf", &val);
         if (count)
+        {
             FCurrGrid = val;
+            if (OnGridPower)
+                (*OnGridPower)(this, val);
+        }
     }
 
     if (strstr(tag, "Resistor"))
     {
         count = sscanf(value, "%Lf", &val);
         if (count)
+        {
             FCurrDump = val;
+            if (OnDumpPower)
+                (*OnDumpPower)(this, val);
+        }
     }
 
     if (strstr(tag, "Rotor"))
     {
         count = sscanf(value, "%Lf", &val);
         if (count)
+        {
             FCurrRpm = val;
+            if (OnRpm)
+                (*OnRpm)(this, val);
+        }
     }
 
     if (strstr(tag, "Day"))
     {
         count = sscanf(value, "%Lf", &val);
         if (count)
+        {
             FDayE = val;
+            if (OnDayEnergy)
+                (*OnDayEnergy)(this, val);
+        }
     }
 
     if (strstr(tag, "Energy total"))
@@ -530,7 +561,7 @@ void TSmartPowInverter::Execute()
             else
                 FOnline = false;
  
-            RdosWaitMilli(1000);
+            RdosWaitMilli(2500);
         }
 
         delete FSocket;

@@ -44,15 +44,350 @@
 #include "solar.h"
 #include "table.h"
 #include "jpeg.h"
+#include "file.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
+
+#define ROOT_DIR "e:/data"
+#define CSV_DAY_HEADER "time;grid;dump\r\n"
+#define CSV_MONTH_HEADER "day;wind\r\n"
 
 #define WIDTH 240
 #define HEIGHT 15
 
 TControlThread *control;
 TSection FGuiSection;
+
+TSection FDataSection;
+static TFile *DayFile = 0;
+
+static int WindGridCount;
+static int WindGridSum;
+
+static int WindDumpCount;
+static int WindDumpSum;
+
+static int WindDayE = 0;
+static int WindNewDayE = 0;
+
+/*##########################################################################
+#
+#   Name       : NotifyWindGridPower
+#
+#   Purpose....: Notify wind grid power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyWindGridPower(TSmartPowInverter *Device, long double val)
+{
+    FDataSection.Enter();
+
+    WindGridSum += (int)val;
+    WindGridCount++;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyWindDumpPower
+#
+#   Purpose....: Notify wind dump power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyWindDumpPower(TSmartPowInverter *Device, long double val)
+{
+    FDataSection.Enter();
+
+    WindDumpSum += (int)val;
+    WindDumpCount++;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyWindDayEnergy
+#
+#   Purpose....: Notify wind day energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyWindDayEnergy(TSmartPowInverter *Device, long double val)
+{
+    int curr = (int)(10.0 * val);
+
+    FDataSection.Enter();
+
+    if (curr < WindDayE)
+        WindNewDayE = WindDayE;
+
+    WindDayE = curr;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : ResetWind
+#
+#   Purpose....: Reset wind counters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ResetWind()
+{
+    WindGridCount = 0;
+    WindGridSum = 0;
+
+    WindDumpCount = 0;
+    WindDumpSum = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : GetWindGridPower
+#
+#   Purpose....: Get wind grid power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void GetWindGridPower(char *str)
+{
+    int val;
+
+    if (WindGridCount == 0)
+        str[0] = 0;
+    else
+    {
+        val = 10 * WindGridSum / WindGridCount;
+        sprintf(str, "%d.%01d", val / 10, val % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetWindDumpPower
+#
+#   Purpose....: Get wind dump power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void GetWindDumpPower(char *str)
+{
+    int val;
+
+    if (WindDumpCount == 0)
+        str[0] = 0;
+    else
+    {
+        val = 10 * WindDumpSum / WindDumpCount;
+        sprintf(str, "%d.%01d", val / 10, val % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : CreateDayFile
+#
+#   Purpose....: Create/open a day-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void CreateDayFile(int year, int month, int day)
+{
+    char str[20];
+    char filename[256];
+    int i, j;
+    int filesize;
+
+    if (!RdosSetCurDir(ROOT_DIR))
+        RdosMakeDir(ROOT_DIR);
+
+    sprintf(str, "%d", year);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d", year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d/%d.csv", year, month, day);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (DayFile)
+        delete DayFile;
+
+    DayFile = new TFile(filename);
+    
+    if (!DayFile->IsOpen())
+    {
+        delete DayFile;
+        DayFile = new TFile(filename, 0);
+        DayFile->Write(CSV_DAY_HEADER, strlen(CSV_DAY_HEADER));
+    }
+
+    if (DayFile->IsOpen())
+        DayFile->SetPos(DayFile->GetSize());
+}
+
+/*##########################################################################
+#
+#   Name       : CreateMonthFile
+#
+#   Purpose....: Create/open a month-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static TFile *CreateMonthFile(int year, int month)
+{
+    char str[20];
+    char filename[256];
+    int i, j;
+    int filesize;
+    TFile *File;
+
+    if (!RdosSetCurDir(ROOT_DIR))
+        RdosMakeDir(ROOT_DIR);
+
+    sprintf(str, "%d", year);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d", year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d/total.csv", year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    File = new TFile(filename);
+    
+    if (!File->IsOpen())
+    {
+        delete File;
+        File = new TFile(filename, 0);
+        File->Write(CSV_MONTH_HEADER, strlen(CSV_MONTH_HEADER));
+    }
+
+    if (File->IsOpen())
+        File->SetPos(File->GetSize());
+
+    return File;
+}
+
+/*##########################################################################
+#
+#   Name       : UpdateDataStore
+#
+#   Purpose....: Update data store
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void UpdateDataStore(int hour, int min)
+{
+    char str[50];
+
+    FDataSection.Enter();
+
+    sprintf(str, "%02d:%02d;", hour, min);
+    DayFile->Write(str, strlen(str));
+
+    GetWindGridPower(str);
+    strcat(str, ";");
+    DayFile->Write(str, strlen(str));
+
+    GetWindDumpPower(str);
+    strcat(str, "\r\n");
+    DayFile->Write(str, strlen(str));
+
+    FDataSection.Leave();
+
+    ResetWind();
+}
+
+/*##########################################################################
+#
+#   Name       : UpdateMonthData
+#
+#   Purpose....: Update month data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void UpdateMonthData()
+{
+    TDateTime time;
+    TFile *File;
+    char str[50];
+    int val;
+
+    time.AddHour(-6);
+
+    File = CreateMonthFile(time.GetYear(), time.GetMonth());
+
+    sprintf(str, "%d;", time.GetDay());
+    File->Write(str, strlen(str));
+
+    val = (int)(10.0 * WindNewDayE);
+    sprintf(str, "%d.%01d\r\n", val / 10, val % 10);
+    File->Write(str, strlen(str));
+
+    delete File;
+
+    WindNewDayE = 0;
+}
 
 /*##########################################################################
 #
@@ -179,6 +514,9 @@ int main()
     int diostat;
     int mask;
     TDateTime *CurrTime;
+    int LastMin;
+    int LastDay;
+    int UsedDay;
     int mot;
     int circmax;
     int temp;
@@ -298,6 +636,12 @@ int main()
     SolarInv = new TFroniusInverter("192.168.1.51");
     WindInv = new TSmartPowInverter("192.168.1.100");
     w = new TOpenWeather("2715946", "c88ba239c78cdbea4c1fe561ad4f7b3d");
+
+    ResetWind();
+
+    WindInv->OnGridPower = NotifyWindGridPower;
+    WindInv->OnDumpPower = NotifyWindDumpPower;
+    WindInv->OnDayEnergy = NotifyWindDayEnergy;
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
 
@@ -467,6 +811,13 @@ int main()
     WindTable->Show();
 
     UnlockGUI();
+
+    CurrTime = new TDateTime;
+    LastMin = CurrTime->GetMin();
+    LastDay = CurrTime->GetDay();
+    UsedDay = LastDay;
+    CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
+    delete CurrTime;
 
     for (;;)
     {
@@ -707,6 +1058,21 @@ int main()
             strcpy(str, "------");
 
         Label->SetText(str);
+
+        if (LastMin != CurrTime->GetMin())
+        {
+            if (LastDay != CurrTime->GetDay())
+            {
+                LastDay = CurrTime->GetDay();
+                CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
+            }
+
+            LastMin = CurrTime->GetMin();
+            UpdateDataStore(CurrTime->GetHour(), CurrTime->GetMin());
+
+            if (WindNewDayE)
+                UpdateMonthData();
+        }
 
         summer = FALSE;
 
