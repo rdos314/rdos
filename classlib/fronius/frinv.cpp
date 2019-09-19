@@ -49,6 +49,9 @@ TFroniusInverter::TFroniusInverter(char *HostStr)
 
     FOnline = false;
 
+    OnPower = 0;
+    OnDayEnergy = 0;
+
     FHostStr = new char[size + 1];
     strcpy(FHostStr, HostStr);
 
@@ -282,7 +285,11 @@ void TFroniusInverter::HandleJson(const char *str)
                 {
                     obj = GetPowerObj(col, 1, &fact);
                     if (obj)
-                        FCurrP = fact * obj->GetDouble();
+                    {
+                        FCurrP = fact * obj->GetDouble();                       
+                        if (OnPower)
+                            (*OnPower)(this, FCurrP);
+                    }
                 }
 
                 col = data->GetCollection("DAY_ENERGY");
@@ -290,7 +297,11 @@ void TFroniusInverter::HandleJson(const char *str)
                 {
                     obj = GetEnergyObj(col, 1, &fact);
                     if (obj)
+                    {
                         FDayE = fact * obj->GetDouble();
+                        if (OnDayEnergy)
+                            (*OnDayEnergy)(this, FDayE);
+                    }
                 }
 
                 col = data->GetCollection("YEAR_ENERGY");

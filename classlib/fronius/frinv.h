@@ -45,6 +45,9 @@ public:
     double GetYearEnergy();
     double GetTotalEnergy();
 
+    void (*OnPower)(TFroniusInverter *Device, long double val);
+    void (*OnDayEnergy)(TFroniusInverter *Device, long double val);
+
 protected:
     TJsonObject *GetPowerObj(TJsonCollection *data, int index, double *fact);
     TJsonObject *GetEnergyObj(TJsonCollection *data, int index, double *fact);

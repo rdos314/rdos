@@ -50,8 +50,8 @@
 #define TRUE    !FALSE
 
 #define ROOT_DIR "e:/data"
-#define CSV_DAY_HEADER "time;grid;dump\r\n"
-#define CSV_MONTH_HEADER "day;wind\r\n"
+#define CSV_DAY_HEADER "time;solar;grid;dump\r\n"
+#define CSV_MONTH_HEADER "day;solar;wind\r\n"
 
 #define WIDTH 240
 #define HEIGHT 15
@@ -62,14 +62,64 @@ TSection FGuiSection;
 TSection FDataSection;
 static TFile *DayFile = 0;
 
+static int SolarPowerCount;
+static int SolarPowerSum;
+
+static long double SolarDayE = 0.0;
+static long double SolarNewDayE = 0.0;
+
 static int WindGridCount;
 static int WindGridSum;
 
 static int WindDumpCount;
 static int WindDumpSum;
 
-static int WindDayE = 0;
-static int WindNewDayE = 0;
+static long double WindDayE = 0.0;
+static long double WindNewDayE = 0.0;
+
+/*##########################################################################
+#
+#   Name       : NotifySolarPower
+#
+#   Purpose....: Notify solar power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifySolarPower(TFroniusInverter *Device, long double val)
+{
+    FDataSection.Enter();
+
+    SolarPowerSum += (int)val;
+    SolarPowerCount++;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifySolarDayEnergy
+#
+#   Purpose....: Notify solar day energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifySolarDayEnergy(TFroniusInverter *Device, long double val)
+{
+    FDataSection.Enter();
+
+    if (val < SolarDayE)
+        SolarNewDayE = SolarDayE;
+
+    SolarDayE = val;
+
+    FDataSection.Leave();
+}
 
 /*##########################################################################
 #
@@ -126,21 +176,19 @@ static void NotifyWindDumpPower(TSmartPowInverter *Device, long double val)
 ##########################################################################*/
 static void NotifyWindDayEnergy(TSmartPowInverter *Device, long double val)
 {
-    int curr = (int)(10.0 * val);
-
     FDataSection.Enter();
 
-    if (curr < WindDayE)
+    if (val < WindDayE)
         WindNewDayE = WindDayE;
 
-    WindDayE = curr;
+    WindDayE = val;
 
     FDataSection.Leave();
 }
 
 /*##########################################################################
 #
-#   Name       : ResetWind
+#   Name       : ResetSolarWind
 #
 #   Purpose....: Reset wind counters
 #
@@ -149,13 +197,40 @@ static void NotifyWindDayEnergy(TSmartPowInverter *Device, long double val)
 #   Returns....: *
 #
 ##########################################################################*/
-static void ResetWind()
+static void ResetSolarWind()
 {
+    SolarPowerCount = 0;
+    SolarPowerSum = 0;
+
     WindGridCount = 0;
     WindGridSum = 0;
 
     WindDumpCount = 0;
     WindDumpSum = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : GetSolarPower
+#
+#   Purpose....: Get solar power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void GetSolarPower(char *str)
+{
+    int val;
+
+    if (SolarPowerCount == 0)
+        str[0] = 0;
+    else
+    {
+        val = 10 * SolarPowerSum / SolarPowerCount;
+        sprintf(str, "%d.%01d", val / 10, val % 10);
+    }
 }
 
 /*##########################################################################
@@ -342,6 +417,10 @@ static void UpdateDataStore(int hour, int min)
     sprintf(str, "%02d:%02d;", hour, min);
     DayFile->Write(str, strlen(str));
 
+    GetSolarPower(str);
+    strcat(str, ";");
+    DayFile->Write(str, strlen(str));
+
     GetWindGridPower(str);
     strcat(str, ";");
     DayFile->Write(str, strlen(str));
@@ -352,7 +431,7 @@ static void UpdateDataStore(int hour, int min)
 
     FDataSection.Leave();
 
-    ResetWind();
+    ResetSolarWind();
 }
 
 /*##########################################################################
@@ -380,12 +459,17 @@ static void UpdateMonthData()
     sprintf(str, "%d;", time.GetDay());
     File->Write(str, strlen(str));
 
+    val = (int)(10.0 * SolarNewDayE);
+    sprintf(str, "%d.%01d\r\n", val / 10, val % 10);
+    File->Write(str, strlen(str));
+
     val = (int)(10.0 * WindNewDayE);
     sprintf(str, "%d.%01d\r\n", val / 10, val % 10);
     File->Write(str, strlen(str));
 
     delete File;
 
+    SolarNewDayE = 0;
     WindNewDayE = 0;
 }
 
@@ -637,7 +721,10 @@ int main()
     WindInv = new TSmartPowInverter("192.168.1.100");
     w = new TOpenWeather("2715946", "c88ba239c78cdbea4c1fe561ad4f7b3d");
 
-    ResetWind();
+    ResetSolarWind();
+
+    SolarInv->OnPower = NotifySolarPower;
+    SolarInv->OnDayEnergy = NotifySolarDayEnergy;
 
     WindInv->OnGridPower = NotifyWindGridPower;
     WindInv->OnDumpPower = NotifyWindDumpPower;
@@ -1070,7 +1157,7 @@ int main()
             LastMin = CurrTime->GetMin();
             UpdateDataStore(CurrTime->GetHour(), CurrTime->GetMin());
 
-            if (WindNewDayE)
+            if (SolarNewDayE && WindNewDayE)
                 UpdateMonthData();
         }
 
