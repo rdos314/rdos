@@ -144,6 +144,8 @@ uc_dev_offset           DW ?
 
 uc_prev                 DW ?
 uc_next                 DW ?
+
+uc_interface_count      DB ?
  
 uc_unit_count           DB ?
 uc_unit_arr             DW MAX_COM_UNITS DUP(?)
@@ -4382,7 +4384,7 @@ aftNotSio:
     jmp aftDone
 
 aftNotAm:
-    mov cl,es:ucd_interface_count
+    mov cl,es:uc_interface_count
     cmp cl,1
     ja aftMore
 ;
@@ -5041,9 +5043,11 @@ cdAdd:
     push ds
     push eax
     push ebx
+    push edx
     push esi
 ;
     movzx ebp,es:ucd_size
+    mov dl,es:ucd_interface_count
     mov ax,es
     mov ds,ax
 ;
@@ -5065,8 +5069,10 @@ cdAdd:
     pop es
 ;
     mov es:uc_dev_descr_size,bp
+    mov es:uc_interface_count,dl
 ;
     pop esi
+    pop edx
     pop ebx
     pop eax
     pop ds
