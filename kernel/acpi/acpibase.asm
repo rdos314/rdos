@@ -1016,7 +1016,12 @@ GetIntelTermOffset_    Proc near
 ;
     shr eax,16
     and eax,7Fh
-;    
+    cmp ax,7Fh - 0Ah
+    jbe gitoDone
+;
+    or eax,0FFFFFF00h
+
+gitoDone:    
     pop edx
     pop ecx
     ret
