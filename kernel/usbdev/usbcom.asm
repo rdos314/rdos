@@ -267,6 +267,8 @@ lock_usb_com_control_name    DB 'Lock USB Com Control', 0
 
 lock_usb_com_control Proc far
     push ds
+    push ax
+    push dx
 ;
     mov ds,ds:ups_device_sel
     mov ds,ds:uds_device_sel
@@ -282,7 +284,6 @@ lock_usb_com_control Proc far
     CreateWait
     xchg bx,si
 ;
-    push ax
     push bx
 ;
     mov ax,bx
@@ -291,10 +292,11 @@ lock_usb_com_control Proc far
     AddWaitForUsbPipe
 ;
     pop bx
-    pop ax
     clc
 
 luccDone:
+    pop dx
+    pop ax
     pop ds
     retf32
 lock_usb_com_control Endp
@@ -316,6 +318,8 @@ unlock_usb_com_control_name    DB 'Unlock USB Com Control', 0
 
 unlock_usb_com_control Proc far
     push ds
+    push bx
+    push si
     pushf
 ;
     xchg bx,si
@@ -332,6 +336,8 @@ unlock_usb_com_control Proc far
     LeaveSection ds:uc_section
 ;
     popf
+    pop si
+    pop bx
     pop ds
     retf32
 unlock_usb_com_control Endp
