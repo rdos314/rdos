@@ -459,8 +459,8 @@ static void UpdateMonthData()
     sprintf(str, "%d;", time.GetDay());
     File->Write(str, strlen(str));
 
-    val = (int)(10.0 * SolarNewDayE);
-    sprintf(str, "%d.%01d\r\n", val / 10, val % 10);
+    val = (int)(SolarNewDayE / 100.0 + 0.5);
+    sprintf(str, "%d.%01d;", val / 10, val % 10);
     File->Write(str, strlen(str));
 
     val = (int)(10.0 * WindNewDayE);
