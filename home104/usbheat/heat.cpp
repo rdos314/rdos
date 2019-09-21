@@ -49,7 +49,7 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
-#define ROOT_DIR "e:/data"
+#define ROOT_DIR "e:/data/power"
 #define CSV_DAY_HEADER "time;solar;grid;dump\r\n"
 #define CSV_MONTH_HEADER "day;solar;wind\r\n"
 
