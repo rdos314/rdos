@@ -20,39 +20,55 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# httpfact.h
-# HTTP Command factory base class
+# web.h
+# Heat pump class
 #
 ########################################################################*/
 
-#ifndef _HTTPFACT_H
-#define _HTTPFACT_H
+#ifndef WEB_H
+#define WEB_H
 
-#include "httpcmd.h"
+#include "httpfact.h"
 
-class THttpSocketServerFactory : public TSocketServerFactory
+void InitWeb();
+
+class THeatHttpServerFactory : public THttpSocketServerFactory
 {
 public:
-    THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~THttpSocketServerFactory();
-
-    void AddCustomPage(THttpCustomPageFactory *page);
-    void AddCustomDir(THttpCustomDirFactory *dir);
+    THeatHttpServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~THeatHttpServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
 
-    void (*OnCommand)(THttpSocketServer *server, const char *str);
-    int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
+protected:
+};
 
-    TString RootDir;
-    int KeepAlive;
+class THeatHttpServer : public THttpSocketServer
+{
+public:
+    THeatHttpServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    ~THeatHttpServer();
+};
+
+class THeatJsonDirFactory : public THttpCustomDirFactory
+{
+public:
+    THeatJsonDirFactory(const char *ReqName);
+    virtual ~THeatJsonDirFactory();
+
+    virtual THttpCustomPage *Create(THttpCommand *cmd);
+};
+
+class THeatJsonPage : public THttpCustomPage
+{
+public:
+    THeatJsonPage(THttpCommand *Cmd);
+    virtual ~THeatJsonPage();
 
 protected:
-    void LinkServer(THttpSocketServer *server);
-    void Init();
-
-    THttpCustomPageFactory *FPageList;
-    THttpCustomDirFactory *FDirList;
+    virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
+    virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
+    virtual void Post(const char *Var, const char *Val);
 };
 
 #endif

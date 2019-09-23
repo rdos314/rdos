@@ -45,6 +45,7 @@
 #include "table.h"
 #include "jpeg.h"
 #include "file.h"
+#include "web.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -650,6 +651,8 @@ int main()
     TTableControl *WindTable;
     
     RdosWaitMilli(2500);
+
+    InitWeb();
 
     RdosWriteSerialVal(2, 0, 0);
     RdosWriteSerialVal(2, 1, 0);

@@ -152,6 +152,27 @@ void THttpSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
 
 /*##########################################################################
 #
+#   Name       : THttpSocketServerFactory::LinkServer
+#
+#   Purpose....: Setup server links
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServerFactory::LinkServer(THttpSocketServer *server)
+{
+    server->OnCommand = OnCommand;
+    server->OnAuthorize = OnAuthorize;
+    server->RootDir = RootDir;
+    server->KeepAlive = KeepAlive;
+    server->FPageList = FPageList;
+    server->FDirList = FDirList;
+}
+
+/*##########################################################################
+#
 #   Name       : THttpSocketServerFactory::Create
 #
 #   Purpose....: Create a socket server instance
@@ -163,15 +184,10 @@ void THttpSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
 ##########################################################################*/
 TSocketServer *THttpSocketServerFactory::Create(TTcpSocket *Socket)
 {
-	THttpSocketServer *server;
+    THttpSocketServer *server;
 
-	server = new THttpSocketServer("HTTP", 0x2000, Socket);
-	server->OnCommand = OnCommand;
-	server->OnAuthorize = OnAuthorize;
-	server->RootDir = RootDir;
-	server->KeepAlive = KeepAlive;
-	server->FPageList = FPageList;
-	server->FDirList = FDirList;
+    server = new THttpSocketServer("HTTP", 0x2000, Socket);
+    LinkServer(server);
 
-	return server;
+    return server;
 }
