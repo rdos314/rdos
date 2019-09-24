@@ -165,6 +165,22 @@ bool TJsonObject::IsCollection()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::IsArrayObject
+#
+#   Purpose....: Is array object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonObject::IsArrayObject()
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::GetBoolean
 #
 #   Purpose....: Get boolean
@@ -262,6 +278,624 @@ void TJsonObject::Write(TJsonDocument *doc, int indent, TString &str)
     str += FFieldName;
     str += "\": ";
     str += FText;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::TJsonArrayObject
+#
+#   Purpose....: Constructor for TJsonArrayObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayObject::TJsonArrayObject(TString &FieldName)
+ : TJsonObject(FieldName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::~TJsonArrayObject
+#
+#   Purpose....: Destructor for TJsonArrayObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayObject::~TJsonArrayObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::IsArrayObject
+#
+#   Purpose....: Is array object?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayObject::IsArrayObject()
+{
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::IsBooleanArray
+#
+#   Purpose....: Is boolean array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayObject::IsBooleanArray()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::IsIntArray
+#
+#   Purpose....: Is int array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayObject::IsIntArray()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::IsDoubleArray
+#
+#   Purpose....: Is double array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayObject::IsDoubleArray()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::IsStringArray
+#
+#   Purpose....: Is string array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayObject::IsStringArray()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::TJsonBooleanArray
+#
+#   Purpose....: Constructor for TJsonBooleanArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBooleanArray::TJsonBooleanArray(TString &FieldName)
+ : TJsonArrayObject(FieldName)
+{
+    FArraySize = 0;
+    FArrayCount = 0;
+    FArr = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::~TJsonBooleanArray
+#
+#   Purpose....: Destructor for TJsonBooleanArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBooleanArray::~TJsonBooleanArray()
+{
+    int i;
+
+    if (FArr)
+        delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::IsBooleanArray
+#
+#   Purpose....: Is boolean array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonBooleanArray::IsBooleanArray()
+{
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::Grow
+#
+#   Purpose....: Grow array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBooleanArray::Grow()
+{
+    int i;
+    int NewSize;
+    bool *NewArr;
+
+    if (FArr)
+    {
+        NewSize = 2 * FArraySize;
+        NewArr = new bool[NewSize];
+
+        for (i = 0; i < FArrayCount; i++)
+            NewArr[i] = FArr[i];
+
+        for (i = FArrayCount; i < NewSize; i++)
+            NewArr[i] = false;
+
+        delete FArr;
+    }
+    else
+    {
+        NewSize = 10;
+        NewArr = new bool[NewSize];
+
+        for (i = 0; i < NewSize; i++)
+            NewArr[i] = false;
+    }
+
+    FArr = NewArr;
+    FArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::Add
+#
+#   Purpose....: Add value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBooleanArray::Add(bool val)
+{
+    if (FArraySize == FArrayCount)
+        Grow();
+
+    FArr[FArrayCount] = val;
+    FArrayCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBooleanArray::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    int i;
+
+    AddIndent(doc, indent, str);
+    str += "\"";
+    str += FFieldName;
+    str += "\": [";
+
+    for (i = 0; i < FArrayCount; i++)
+    {
+        if (i)
+            str += ",";
+
+        if (FArr[i])
+            str += "true";
+        else
+            str += "false";
+    }
+
+    str += "]";
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::TJsonIntArray
+#
+#   Purpose....: Constructor for TJsonIntArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonIntArray::TJsonIntArray(TString &FieldName)
+ : TJsonArrayObject(FieldName)
+{
+    FArraySize = 0;
+    FArrayCount = 0;
+    FArr = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::~TJsonIntArray
+#
+#   Purpose....: Destructor for TJsonIntArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonIntArray::~TJsonIntArray()
+{
+    int i;
+
+    if (FArr)
+        delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::IsIntArray
+#
+#   Purpose....: Is int array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonIntArray::IsIntArray()
+{
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::Grow
+#
+#   Purpose....: Grow array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonIntArray::Grow()
+{
+    int i;
+    int NewSize;
+    long long *NewArr;
+
+    if (FArr)
+    {
+        NewSize = 2 * FArraySize;
+        NewArr = new long long[NewSize];
+
+        for (i = 0; i < FArrayCount; i++)
+            NewArr[i] = FArr[i];
+
+        for (i = FArrayCount; i < NewSize; i++)
+            NewArr[i] = 0;
+
+        delete FArr;
+    }
+    else
+    {
+        NewSize = 10;
+        NewArr = new long long[NewSize];
+
+        for (i = 0; i < NewSize; i++)
+            NewArr[i] = 0;
+    }
+
+    FArr = NewArr;
+    FArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::Add
+#
+#   Purpose....: Add value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonIntArray::Add(long long val)
+{
+    if (FArraySize == FArrayCount)
+        Grow();
+
+    FArr[FArrayCount] = val;
+    FArrayCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonIntArray::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    int i;
+    char buf[40];
+
+    AddIndent(doc, indent, str);
+    str += "\"";
+    str += FFieldName;
+    str += "\": [";
+
+    for (i = 0; i < FArrayCount; i++)
+    {
+        if (i)
+            str += ",";
+
+        sprintf(buf, "%lld", FArr[i]);
+        str += buf;
+    }
+
+    str += "]";
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::TJsonDoubleArray
+#
+#   Purpose....: Constructor for TJsonDoubleArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDoubleArray::TJsonDoubleArray(TString &FieldName, int Decimals)
+ : TJsonArrayObject(FieldName)
+{
+    FArraySize = 0;
+    FArrayCount = 0;
+    FArr = 0;
+
+    if (Decimals < 1)
+        FDecimals = 1;
+    else
+        FDecimals = Decimals;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::~TJsonDoubleArray
+#
+#   Purpose....: Destructor for TJsonDoubleArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDoubleArray::~TJsonDoubleArray()
+{
+    int i;
+
+    if (FArr)
+        delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::IsDoubleArray
+#
+#   Purpose....: Is double array?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonDoubleArray::IsDoubleArray()
+{
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::Grow
+#
+#   Purpose....: Grow array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDoubleArray::Grow()
+{
+    int i;
+    int NewSize;
+    double *NewArr;
+
+    if (FArr)
+    {
+        NewSize = 2 * FArraySize;
+        NewArr = new double[NewSize];
+
+        for (i = 0; i < FArrayCount; i++)
+            NewArr[i] = FArr[i];
+
+        for (i = FArrayCount; i < NewSize; i++)
+            NewArr[i] = INFINITY;
+
+        delete FArr;
+    }
+    else
+    {
+        NewSize = 10;
+        NewArr = new double[NewSize];
+
+        for (i = 0; i < NewSize; i++)
+            NewArr[i] = INFINITY;
+    }
+
+    FArr = NewArr;
+    FArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::Add
+#
+#   Purpose....: Add value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDoubleArray::Add(double val)
+{
+    if (FArraySize == FArrayCount)
+        Grow();
+
+    FArr[FArrayCount] = val;
+    FArrayCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::AddNone
+#
+#   Purpose....: Add none
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDoubleArray::AddNone()
+{
+    if (FArraySize == FArrayCount)
+        Grow();
+
+    FArr[FArrayCount] = INFINITY;
+    FArrayCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::Write
+#
+#   Purpose....: Write object data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDoubleArray::Write(TJsonDocument *doc, int indent, TString &str)
+{
+    int i;
+    double temp;
+    int digits;
+    bool done = false;
+    char buf[80];
+    char format[20];
+
+    AddIndent(doc, indent, str);
+    str += "\"";
+    str += FFieldName;
+    str += "\": [";
+
+    for (i = 0; i < FArrayCount; i++)
+    {
+        if (i)
+            str += ",";
+
+        if (FArr[i] == INFINITY)
+            str += "none";
+        else
+        {
+            temp = FArr[i];
+
+            if (temp < 0)
+            {
+                digits = 2;
+                temp = -temp;
+            }
+            else
+                digits = 1;
+
+            if (temp >= 1e+16)
+                sprintf(buf, "%Lf", FArr[i]);
+            else
+            {
+                while (temp >= 10.0)
+                {
+                    digits++;
+                    temp = temp / 10.0;
+                }
+
+                sprintf(format, "%%%d.%dLf", digits + FDecimals + 1, FDecimals);
+                sprintf(buf, format, FArr[i]);
+            }
+            str += buf;
+        }
+    }
+
+    str += "]";
 }
 
 /*##########################################################################
@@ -558,6 +1192,63 @@ TJsonArrayCollection *TJsonCollection::AddArrayCollection(const char *FieldName)
     TJsonArrayCollection *col = new TJsonArrayCollection(fn);
     Insert(col);
     return col;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddBooleanArray
+#
+#   Purpose....: Add new boolean array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBooleanArray *TJsonCollection::AddBooleanArray(const char *FieldName)
+{
+    TString fn(FieldName);
+    TJsonBooleanArray *arr = new TJsonBooleanArray(fn);
+    Insert(arr);
+    return arr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddIntArray
+#
+#   Purpose....: Add new int array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonIntArray *TJsonCollection::AddIntArray(const char *FieldName)
+{
+    TString fn(FieldName);
+    TJsonIntArray *arr = new TJsonIntArray(fn);
+    Insert(arr);
+    return arr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddDoubleArray
+#
+#   Purpose....: Add new double array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDoubleArray *TJsonCollection::AddDoubleArray(const char *FieldName, int Decimals)
+{
+    TString fn(FieldName);
+    TJsonDoubleArray *arr = new TJsonDoubleArray(fn, Decimals);
+    Insert(arr);
+    return arr;
 }
 
 /*##########################################################################

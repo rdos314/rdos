@@ -461,9 +461,15 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 ##########################################################################*/
 void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 {
-    TJsonArrayCollection *arr;
+    TJsonDoubleArray *arr;
 
-    arr = obj->AddArrayCollection("values");
+    arr = obj->AddDoubleArray("values", 2);
+    arr->Add(123.34);
+    arr->Add(-3.14);
+    arr->Add(123334.45);
+    arr->Add(0.0);
+    arr->Add(567.8);
+    arr->Add(-56.78);
 
     obj->AddString("lineColor", "#E3E3E5");    
 }

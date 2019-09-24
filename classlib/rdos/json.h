@@ -46,6 +46,7 @@ public:
     TString &GetText();
 
     virtual bool IsCollection();
+    virtual bool IsArrayObject();
 
     virtual bool GetBoolean();
     virtual long long GetInt();
@@ -59,6 +60,80 @@ protected:
 
     TString FFieldName;
     TString FText;
+};
+
+class TJsonArrayObject : public TJsonObject
+{
+public:
+    TJsonArrayObject(TString &FieldName);
+    virtual ~TJsonArrayObject();
+
+    virtual bool IsArrayObject();
+
+    virtual bool IsBooleanArray();
+    virtual bool IsIntArray();
+    virtual bool IsDoubleArray();
+    virtual bool IsStringArray();
+};
+
+class TJsonBooleanArray : public TJsonArrayObject
+{
+public:
+    TJsonBooleanArray(TString &FieldName);
+    virtual ~TJsonBooleanArray();
+
+    virtual bool IsBooleanArray();
+    void Add(bool val);
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+
+protected:
+    void Grow();
+
+    int FArraySize;
+    int FArrayCount;
+
+    bool *FArr;
+};
+
+class TJsonIntArray : public TJsonArrayObject
+{
+public:
+    TJsonIntArray(TString &FieldName);
+    virtual ~TJsonIntArray();
+
+    virtual bool IsIntArray();
+    void Add(long long val);
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+
+protected:
+    void Grow();
+
+    int FArraySize;
+    int FArrayCount;
+
+    long long *FArr;
+};
+
+class TJsonDoubleArray : public TJsonArrayObject
+{
+public:
+    TJsonDoubleArray(TString &FieldName, int Decimals);
+    virtual ~TJsonDoubleArray();
+
+    virtual bool IsDoubleArray();
+    void Add(double val);
+    void AddNone();
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+
+protected:
+    void Grow();
+
+    int FDecimals;
+
+    int FArraySize;
+    int FArrayCount;
+
+    double *FArr;
 };
 
 class TJsonCollectionData
@@ -103,6 +178,10 @@ public:
 
     TJsonSingleCollection *AddCollection(const char *FieldName);
     TJsonArrayCollection *AddArrayCollection(const char *FieldName);
+    TJsonBooleanArray *AddBooleanArray(const char *FieldName);
+    TJsonIntArray *AddIntArray(const char *FieldName);
+    TJsonDoubleArray *AddDoubleArray(const char *FieldName, int Decimals);
+
     TJsonObject *AddBoolean(const char *FieldName, bool Val);
     TJsonObject *AddInt(const char *FieldName, long long Val);
     TJsonObject *AddDouble(const char *FieldName, double Val, int Decimals);
