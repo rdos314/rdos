@@ -31,61 +31,62 @@
 class TDateTime
 {
 public:
-	TDateTime();
-	TDateTime(const TDateTime &Source);
-	TDateTime(unsigned long Msb, unsigned long Lsb);
-	TDateTime(unsigned long long Raw);
+    TDateTime();
+    TDateTime(const TDateTime &Source);
+    TDateTime(unsigned long Msb, unsigned long Lsb);
+    TDateTime(unsigned long long Raw);
     TDateTime(long double real);
-	TDateTime(int Year, int Month, int Day);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms, int us);
+    TDateTime(int Year, int Month, int Day);
+    TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
+    TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms, int us);
 
-	operator long double () const;
+    operator long double () const;
 
     void SetCurrent();
 
-	long GetMsb() const;
-	long GetLsb() const;
-	void SetRaw(unsigned long Msb, unsigned long Lsb);
-	int HasExpired() const;
-	void AddTics(long tics);
-	void AddMicro(long us);
-	void AddMilli(long ms);
-	void AddSec(long sec);
-	void AddMin(long min);
-	void AddHour(long hour);
-	void AddDay(long day);
-	void AddMonth(long month);
-	void AddYear(long year);
+    long GetMsb() const;
+    long GetLsb() const;
+    void SetRaw(unsigned long Msb, unsigned long Lsb);
+    int HasExpired() const;
+    void AddTics(long tics);
+    void AddMicro(long us);
+    void AddMilli(long ms);
+    void AddSec(long sec);
+    void AddMin(long min);
+    void AddHour(long hour);
+    void AddDay(long day);
+    void AddMonth(long month);
+    void AddYear(long year);
 
-	void NextDay();
+    void NextDay();
 
-	int GetDayOfWeek() const;
-	int GetYear() const;
-	int GetMonth() const;
-	int GetDay() const;
-	int GetHour() const;
-	int GetMin() const;
-	int GetSec() const;
-	int GetMilliSec() const;
-	int GetMicroSec() const;
+    int GetDayOfWeek() const;
+    int GetYear() const;
+    int GetMonth() const;
+    int GetDay() const;
+    int GetHour() const;
+    int GetMin() const;
+    int GetSec() const;
+    int GetMilliSec() const;
+    int GetMicroSec() const;
+    long long GetLinuxTimestamp() const;
 
-	void Set();
+    void Set();
 
 protected:
-	void RawToRecord();
-	void RecordToRaw();
+    void RawToRecord();
+    void RecordToRaw();
 
 private:
-	unsigned long FMsb;
-	unsigned long FLsb;
-	int FYear;
-	int FMonth;
-	int FDay;
-	int FHour;
-	int FMin;
-	int FSec;
-	int FMilli;
+    unsigned long FMsb;
+    unsigned long FLsb;
+    int FYear;
+    int FMonth;
+    int FDay;
+    int FHour;
+    int FMin;
+    int FSec;
+    int FMilli;
     int FMicro;
 };
 

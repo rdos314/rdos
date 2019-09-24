@@ -47,8 +47,8 @@
 ##########################################################################*/
 TDateTime::TDateTime()
 {
-        RdosGetTime(&FMsb, &FLsb);
-        RawToRecord();
+    RdosGetTime(&FMsb, &FLsb);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -64,9 +64,9 @@ TDateTime::TDateTime()
 ##########################################################################*/
 TDateTime::TDateTime(const TDateTime &source)
 {
-        FMsb = source.FMsb;
-        FLsb = source.FLsb;
-        RawToRecord();
+    FMsb = source.FMsb;
+    FLsb = source.FLsb;     
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -82,9 +82,9 @@ TDateTime::TDateTime(const TDateTime &source)
 ##########################################################################*/
 TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
 {
-        FMsb = Msb;
-        FLsb = Lsb;
-        RawToRecord();
+    FMsb = Msb;
+    FLsb = Lsb;
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -123,12 +123,12 @@ TDateTime::TDateTime(unsigned long long Raw)
 TDateTime::TDateTime(long double real)
 {
 #if defined( __GNUC__) || defined( __WATCOMC__)
-        FMsb = (unsigned long)floor(real);
+    FMsb = (unsigned long)floor(real);
 #else
-        FMsb = (unsigned long)floorl(real);
+    FMsb = (unsigned long)floorl(real);
 #endif
-        FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
-        RawToRecord();
+    FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -144,15 +144,15 @@ TDateTime::TDateTime(long double real)
 ##########################################################################*/
 TDateTime::TDateTime(int Year, int Month, int Day)
 {
-        FYear = Year;
-        FMonth = Month;
-        FDay = Day;
-        FHour = 0;
-        FMin = 0;
-        FSec = 0;
-        FMilli = 0;
-        FMicro = 0;
-        RecordToRaw();
+    FYear = Year;
+    FMonth = Month;
+    FDay = Day;
+    FHour = 0;
+    FMin = 0;
+    FSec = 0;
+    FMilli = 0;
+    FMicro = 0;
+    RecordToRaw();
 }
 
 /*##########################################################################
@@ -168,15 +168,15 @@ TDateTime::TDateTime(int Year, int Month, int Day)
 ##########################################################################*/
 TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 {
-        FYear = Year;
-        FMonth = Month;
-        FDay = Day;
-        FHour = Hour;
-        FMin = Min;
-        FSec = Sec;
-        FMilli = 0;
-        FMicro = 0;
-        RecordToRaw();
+    FYear = Year;
+    FMonth = Month;
+    FDay = Day;
+    FHour = Hour;
+    FMin = Min;
+    FSec = Sec;
+    FMilli = 0;
+    FMicro = 0;
+    RecordToRaw();
 }
 
 /*##########################################################################
@@ -192,15 +192,15 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 ##########################################################################*/
 TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int Milli, int Micro)
 {
-        FYear = Year;
-        FMonth = Month;
-        FDay = Day;
-        FHour = Hour;
-        FMin = Min;
-        FSec = Sec;
-        FMilli = Milli;
-        FMicro = Micro;
-        RecordToRaw();
+    FYear = Year;
+    FMonth = Month;
+    FDay = Day;
+    FHour = Hour;
+    FMin = Min;
+    FSec = Sec;
+    FMilli = Milli;
+    FMicro = Micro;
+    RecordToRaw();
 }
 
 /*##########################################################################
@@ -216,10 +216,10 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 ##########################################################################*/
 TDateTime::operator long double () const
 {
-        long double fract;
+    long double fract;
 
-        fract = (long double)FLsb / 65536.0 / 65536.0;
-        return (long double)FMsb + fract;
+    fract = (long double)FLsb / 65536.0 / 65536.0;
+    return (long double)FMsb + fract;
 }
 
 /*##########################################################################
@@ -252,9 +252,9 @@ void TDateTime::SetCurrent()
 ##########################################################################*/
 void TDateTime::SetRaw(unsigned long Msb, unsigned long Lsb)
 {
-        FMsb = Msb;
-        FLsb = Lsb;
-        RawToRecord();
+    FMsb = Msb;
+    FLsb = Lsb;
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -270,7 +270,7 @@ void TDateTime::SetRaw(unsigned long Msb, unsigned long Lsb)
 ##########################################################################*/
 long TDateTime::GetMsb() const
 {
-        return FMsb;
+    return FMsb;
 }
 
 /*##########################################################################
@@ -286,7 +286,7 @@ long TDateTime::GetMsb() const
 ##########################################################################*/
 long TDateTime::GetLsb() const
 {
-        return FLsb;
+    return FLsb;
 }
 
 /*##########################################################################
@@ -302,20 +302,20 @@ long TDateTime::GetLsb() const
 ##########################################################################*/
 int TDateTime::HasExpired() const
 {
-        unsigned long msb, lsb;
+    unsigned long msb, lsb;
 
-        RdosGetTime(&msb, &lsb);
+    RdosGetTime(&msb, &lsb);
 
-        if (msb > FMsb)
-                return TRUE;
+    if (msb > FMsb)
+        return TRUE;
 
-        if (msb < FMsb)
-                return FALSE;
+    if (msb < FMsb)
+        return FALSE;
 
-        if (lsb > FLsb)
-                return TRUE;
-        else
-                return FALSE;
+    if (lsb > FLsb)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -331,7 +331,7 @@ int TDateTime::HasExpired() const
 ##########################################################################*/
 int TDateTime::GetDayOfWeek() const
 {
-        return RdosDayOfWeek(FYear, FMonth, FDay);
+    return RdosDayOfWeek(FYear, FMonth, FDay);
 }
 
 /*##########################################################################
@@ -347,7 +347,7 @@ int TDateTime::GetDayOfWeek() const
 ##########################################################################*/
 int TDateTime::GetYear() const
 {
-        return FYear;
+    return FYear;
 }
 
 /*##########################################################################
@@ -363,7 +363,7 @@ int TDateTime::GetYear() const
 ##########################################################################*/
 int TDateTime::GetMonth() const
 {
-        return FMonth;
+    return FMonth;
 }
 
 /*##########################################################################
@@ -379,7 +379,7 @@ int TDateTime::GetMonth() const
 ##########################################################################*/
 int TDateTime::GetDay() const
 {
-        return FDay;
+    return FDay;
 }
 
 /*##########################################################################
@@ -395,7 +395,7 @@ int TDateTime::GetDay() const
 ##########################################################################*/
 int TDateTime::GetHour() const
 {
-        return FHour;
+    return FHour;
 }
 
 /*##########################################################################
@@ -411,7 +411,7 @@ int TDateTime::GetHour() const
 ##########################################################################*/
 int TDateTime::GetMin() const
 {
-        return FMin;
+    return FMin;
 }
 
 /*##########################################################################
@@ -427,7 +427,7 @@ int TDateTime::GetMin() const
 ##########################################################################*/
 int TDateTime::GetSec() const
 {
-        return FSec;
+    return FSec;
 }
 
 /*##########################################################################
@@ -443,7 +443,7 @@ int TDateTime::GetSec() const
 ##########################################################################*/
 int TDateTime::GetMilliSec() const
 {
-        return FMilli;
+    return FMilli;
 }
 
 /*##########################################################################
@@ -459,7 +459,31 @@ int TDateTime::GetMilliSec() const
 ##########################################################################*/
 int TDateTime::GetMicroSec() const
 {
-        return FMicro;
+    return FMicro;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetLinuxTimestamp
+#
+#   Purpose....: Get Linux timestamp value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDateTime::GetLinuxTimestamp() const
+{
+    int ival;
+    long long val;
+
+    ival = 1000 * (60 * (60 * FMin + FSec)) + FMilli;
+    val = (long long)RdosCodeMsbTics(1970, 1, 1, 0);
+    val = (long long)FMsb - val;
+    val = 3600 * 1000 * val + (long long)ival;
+
+    return val;
 }
 
 /*##########################################################################
@@ -475,7 +499,7 @@ int TDateTime::GetMicroSec() const
 ##########################################################################*/
 void TDateTime::Set()
 {
-        RdosSetTime(FMsb, FLsb);
+    RdosSetTime(FMsb, FLsb);
 }
 
 /*##########################################################################
@@ -491,8 +515,8 @@ void TDateTime::Set()
 ##########################################################################*/
 void TDateTime::RawToRecord()
 {
-        RdosDecodeMsbTics(FMsb, &FYear, &FMonth, &FDay, &FHour);
-        RdosDecodeLsbTics(FLsb, &FMin, &FSec, &FMilli, &FMicro);
+    RdosDecodeMsbTics(FMsb, &FYear, &FMonth, &FDay, &FHour);
+    RdosDecodeLsbTics(FLsb, &FMin, &FSec, &FMilli, &FMicro);
 }
 
 /*##########################################################################
@@ -508,8 +532,8 @@ void TDateTime::RawToRecord()
 ##########################################################################*/
 void TDateTime::RecordToRaw()
 {
-        FMsb = RdosCodeMsbTics(FYear, FMonth, FDay, FHour);
-        FLsb = RdosCodeLsbTics(FMin, FSec, FMilli, FMicro);
+    FMsb = RdosCodeMsbTics(FYear, FMonth, FDay, FHour);
+    FLsb = RdosCodeLsbTics(FMin, FSec, FMilli, FMicro);
 }
 
 /*##########################################################################
@@ -525,8 +549,8 @@ void TDateTime::RecordToRaw()
 ##########################################################################*/
 void TDateTime::AddTics(long tics)
 {
-        RdosAddTics(&FMsb, &FLsb, tics);
-        RawToRecord();
+    RdosAddTics(&FMsb, &FLsb, tics);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -542,8 +566,8 @@ void TDateTime::AddTics(long tics)
 ##########################################################################*/
 void TDateTime::AddMilli(long ms)
 {
-        RdosAddMilli(&FMsb, &FLsb, ms);
-        RawToRecord();
+    RdosAddMilli(&FMsb, &FLsb, ms);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -559,8 +583,8 @@ void TDateTime::AddMilli(long ms)
 ##########################################################################*/
 void TDateTime::AddMicro(long us)
 {
-        RdosAddMicro(&FMsb, &FLsb, us);
-        RawToRecord();
+    RdosAddMicro(&FMsb, &FLsb, us);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -576,8 +600,8 @@ void TDateTime::AddMicro(long us)
 ##########################################################################*/
 void TDateTime::AddSec(long sec)
 {
-        RdosAddSec(&FMsb, &FLsb, sec);
-        RawToRecord();
+    RdosAddSec(&FMsb, &FLsb, sec);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -593,8 +617,8 @@ void TDateTime::AddSec(long sec)
 ##########################################################################*/
 void TDateTime::AddMin(long min)
 {
-        RdosAddMin(&FMsb, &FLsb, min);
-        RawToRecord();
+    RdosAddMin(&FMsb, &FLsb, min);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -610,8 +634,8 @@ void TDateTime::AddMin(long min)
 ##########################################################################*/
 void TDateTime::AddHour(long hour)
 {
-        RdosAddHour(&FMsb, &FLsb, hour);
-        RawToRecord();
+    RdosAddHour(&FMsb, &FLsb, hour);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -627,8 +651,8 @@ void TDateTime::AddHour(long hour)
 ##########################################################################*/
 void TDateTime::AddDay(long day)
 {
-        RdosAddDay(&FMsb, &FLsb, day);
-        RawToRecord();
+    RdosAddDay(&FMsb, &FLsb, day);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -663,7 +687,7 @@ void TDateTime::AddMonth(long month)
             FMonth += 12;
         }
     }
-        RecordToRaw();
+    RecordToRaw();
 }
 
 /*##########################################################################
@@ -680,7 +704,7 @@ void TDateTime::AddMonth(long month)
 void TDateTime::AddYear(long year)
 {
     FYear += year;
-        RecordToRaw();
+    RecordToRaw();
 }
 
 /*##########################################################################
