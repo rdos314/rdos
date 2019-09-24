@@ -42,6 +42,9 @@ public:
 
     operator long double () const;
 
+    void SetLinuxTimestamp(long long val);
+    void SetLinuxMilliTimestamp(long long val);
+
     void SetCurrent();
 
     long GetMsb() const;
@@ -70,6 +73,7 @@ public:
     int GetMilliSec() const;
     int GetMicroSec() const;
     long long GetLinuxTimestamp() const;
+    long long GetLinuxMilliTimestamp() const;
 
     void Set();
 

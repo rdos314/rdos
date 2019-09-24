@@ -224,6 +224,70 @@ TDateTime::operator long double () const
 
 /*##########################################################################
 #
+#   Name       : TDateTime::SetLinuxTimestamp
+#
+#   Purpose....: Set Linux timestamp in seconds
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::SetLinuxTimestamp(long long val)
+{
+    long long temp;
+    int ival;
+    int min;
+    int sec;
+
+    temp = val / 3600 + 17269032;
+    FMsb = (unsigned long)temp;
+
+    ival = (int)(val % 3600);
+
+    sec = ival % 60;
+    min = ival / 60;
+
+    FLsb = RdosCodeLsbTics(min, sec, 0, 0);
+    RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::SetLinuxMilliTimestamp
+#
+#   Purpose....: Set Linux timestamp in milliseconds
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::SetLinuxMilliTimestamp(long long val)
+{
+    long long temp;
+    int ival;
+    int min;
+    int sec;
+    int milli;
+
+    temp = val / 3600 / 1000 + 17269032;
+    FMsb = (unsigned long)temp;
+
+    ival = (int)(val % 3600000);
+
+    milli = ival % 1000;
+    ival = ival / 1000;
+
+    sec = ival % 60;
+    min = ival / 60;
+
+    FLsb = RdosCodeLsbTics(min, sec, milli, 0);
+    RawToRecord();
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::SetCurrent
 #
 #   Purpose....: Set current data & time
@@ -466,7 +530,7 @@ int TDateTime::GetMicroSec() const
 #
 #   Name       : TDateTime::GetLinuxTimestamp
 #
-#   Purpose....: Get Linux timestamp value
+#   Purpose....: Get Linux timestamp in seconds
 #
 #   In params..: *
 #   Out params.: *
@@ -478,9 +542,36 @@ long long TDateTime::GetLinuxTimestamp() const
     int ival;
     long long val;
 
-    ival = 1000 * (60 * (60 * FMin + FSec)) + FMilli;
-    val = (long long)RdosCodeMsbTics(1970, 1, 1, 0);
-    val = (long long)FMsb - val;
+    ival = FMin;
+    ival = 60 * ival + FSec;
+
+    val = (long long)FMsb - 17269032;
+    val = 3600 * val + (long long)ival;
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetLinuxMilliTimestamp
+#
+#   Purpose....: Get Linux timestamp in milliseconds
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDateTime::GetLinuxMilliTimestamp() const
+{
+    int ival;
+    long long val;
+
+    ival = FMin;
+    ival = 60 * ival + FSec;
+    ival = 1000 * ival + FMilli;
+
+    val = (long long)FMsb - 17269032;
     val = 3600 * 1000 * val + (long long)ival;
 
     return val;
