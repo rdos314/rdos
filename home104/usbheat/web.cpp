@@ -198,6 +198,96 @@ THeatJsonPage::~THeatJsonPage()
 
 /*##########################################################################
 #
+#   Name       : THeatJsonPage::CreateTitle
+#
+#   Purpose....: Create title
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateTitle(TJsonCollection *obj)
+{
+    obj->AddString("text", "Wind power");
+    obj->AddBoolean("adjustLayout", true);
+    obj->AddString("marginTop", "7px");
+    obj->AddString("fontColor", "#E3E3E5");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateLegend
+#
+#   Purpose....: Create legend
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateLegend(TJsonCollection *obj)
+{
+    TJsonCollection *item;
+    TJsonCollection *marker;
+
+    obj->AddString("align", "center");
+    obj->AddString("backgroundColor", "none");
+    obj->AddString("borderWidth", "0px");
+
+    item = obj->AddCollection("item");
+    item->AddString("cursor", "hand");
+    item->AddString("fontColor", "#E3E3E5");
+
+    marker = obj->AddCollection("marker");
+    marker->AddString("type", "circle");
+    marker->AddString("borderWidth", "0px");
+    marker->AddString("cursor", "hand");
+
+    obj->AddString("verticalAlign", "top");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreatePlot
+#
+#   Purpose....: Create plot
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreatePlot(TJsonCollection *obj)
+{
+    TJsonCollection *marker;
+
+    obj->AddString("aspect", "spline");
+    obj->AddString("lineWidth", "2px");
+
+    marker = obj->AddCollection("marker");
+    marker->AddString("borderWidth", "0px");
+    marker->AddString("size", "5px");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreatePlotArea
+#
+#   Purpose....: Create plot area
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreatePlotArea(TJsonCollection *obj)
+{
+    obj->AddString("margin", "dynamic 70");
+}
+
+/*##########################################################################
+#
 #   Name       : THeatJsonPage::Get
 #
 #   Purpose....: Get page
@@ -209,6 +299,24 @@ THeatJsonPage::~THeatJsonPage()
 ##########################################################################*/
 void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
+    TJsonDocument json;
+    TJsonCollection *root = json.CreateRoot();
+    TJsonCollection *obj;
+
+    root->AddString("type", "line");
+    root->AddString("backgroundColor", "#2C2C39");
+
+    obj = root->AddCollection("title");
+    CreateTitle(obj);    
+
+    obj = root->AddCollection("legend");
+    CreateLegend(obj);    
+
+    obj = root->AddCollection("plot");
+    CreatePlot(obj);    
+
+    obj = root->AddCollection("plotarea");
+    CreatePlotArea(obj);    
 }
 
 /*##########################################################################

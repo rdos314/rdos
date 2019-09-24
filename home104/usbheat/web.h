@@ -29,6 +29,7 @@
 #define WEB_H
 
 #include "httpfact.h"
+#include "json.h"
 
 void InitWeb();
 
@@ -66,6 +67,11 @@ public:
     virtual ~THeatJsonPage();
 
 protected:
+    void CreateTitle(TJsonCollection *obj);
+    void CreateLegend(TJsonCollection *obj);
+    void CreatePlot(TJsonCollection *obj);
+    void CreatePlotArea(TJsonCollection *obj);
+
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *Var, const char *Val);
