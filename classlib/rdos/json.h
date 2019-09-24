@@ -136,6 +136,26 @@ protected:
     double *FArr;
 };
 
+class TJsonStringArray : public TJsonArrayObject
+{
+public:
+    TJsonStringArray(TString &FieldName);
+    virtual ~TJsonStringArray();
+
+    virtual bool IsStringArray();
+    void Add(TString &str);
+    void Add(const char *str);
+    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+
+protected:
+    void Grow();
+
+    int FArraySize;
+    int FArrayCount;
+
+    char **FArr;
+};
+
 class TJsonCollectionData
 {
 public:
@@ -181,6 +201,7 @@ public:
     TJsonBooleanArray *AddBooleanArray(const char *FieldName);
     TJsonIntArray *AddIntArray(const char *FieldName);
     TJsonDoubleArray *AddDoubleArray(const char *FieldName, int Decimals);
+    TJsonStringArray *AddStringArray(const char *FieldName);
 
     TJsonObject *AddBoolean(const char *FieldName, bool Val);
     TJsonObject *AddInt(const char *FieldName, long long Val);
