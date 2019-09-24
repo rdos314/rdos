@@ -205,6 +205,33 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 
 /*##########################################################################
 #
+#   Name       : TDateTime::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TDateTime &TDateTime::operator=(const TDateTime &src)
+{
+    FYear = src.FYear;
+    FMonth = src.FMonth;
+    FDay = src.FDay;
+    FHour = src.FHour;
+    FMin = src.FMin;
+    FSec = src.FSec;
+    FMilli = src.FMilli;
+    FMicro = src.FMicro;
+    FMsb = src.FMsb;
+    FLsb = src.FLsb;
+
+    return *this;
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::operator long double
 #
 #   Purpose....: Convert to long double

@@ -213,6 +213,23 @@ double TJsonObject::GetDouble()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::GetDateTime
+#
+#   Purpose....: Get date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonObject::GetDateTime()
+{
+    TDateTime time;
+    return time;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::AddIndent
 #
 #   Purpose....: Add indention
@@ -465,6 +482,27 @@ double TJsonCollection::GetDouble(const char *FieldName, double Default)
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::GetDateTime
+#
+#   Purpose....: Get field as date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonCollection::GetDateTime(const char *FieldName, TDateTime &Default)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        return obj->GetDateTime();
+    else
+        return Default;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollection::GetText
 #
 #   Purpose....: Get field as text
@@ -590,13 +628,20 @@ TJsonObject *TJsonCollection::AddDouble(const char *FieldName, double Val, int D
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time)
+TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time, int UseText)
 {
-    TString str;
     TString fn(FieldName);
+    TJsonObject *obj;
 
-    str.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
-    TJsonObject *obj = new TJsonString(fn, str);
+    if (UseText)
+    {
+        TString str;
+        str.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+        obj = new TJsonString(fn, str);
+    }
+    else
+        obj = new TJsonInt(fn, time.GetLinuxMilliTimestamp());
+
     Insert(obj);
     return obj;
 }
@@ -1293,6 +1338,29 @@ double TJsonInt::GetDouble()
 
 /*##########################################################################
 #
+#   Name       : TJsonInt::GetDateTime
+#
+#   Purpose....: Get date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonInt::GetDateTime()
+{
+    TDateTime time;
+
+    if (Val > 5000000000)
+        time.SetLinuxMilliTimestamp(Val);
+    else
+        time.SetLinuxTimestamp(Val);
+
+    return time;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDouble::TJsonDouble
 #
 #   Purpose....: Constructor for TJsonDouble
@@ -1467,6 +1535,23 @@ double TJsonDouble::GetDouble()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::GetDateTime
+#
+#   Purpose....: Get date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonDouble::GetDateTime()
+{
+    TDateTime time((long double)Val);
+    return time;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::TJsonBoolean
 #
 #   Purpose....: Constructor for TJsonBoolean
@@ -1554,6 +1639,23 @@ double TJsonBoolean::GetDouble()
         return 1.0;
     else
         return 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::GetDateTime
+#
+#   Purpose....: Get date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonBoolean::GetDateTime()
+{
+    TDateTime time;
+    return time;
 }
 
 /*##########################################################################
@@ -1650,6 +1752,36 @@ double TJsonString::GetDouble()
     char *end;
 
     return strtod(FText.GetData(), &end);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::GetDateTime
+#
+#   Purpose....: Get date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonString::GetDateTime()
+{
+    int year, month, day;
+    int hour, min, sec;
+    int count;
+
+    year = 1970;
+    month = 1;
+    day = 1;
+    hour = 0;
+    min = 0;
+    sec = 0;
+
+    count = sscanf(FText.GetData(), "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+
+    TDateTime time(year, month, day, hour, min, sec);
+    return time;
 }
 
 /*##########################################################################

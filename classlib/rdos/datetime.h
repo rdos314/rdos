@@ -40,6 +40,7 @@ public:
     TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
     TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms, int us);
 
+    const TDateTime &operator=(const TDateTime &src);
     operator long double () const;
 
     void SetLinuxTimestamp(long long val);

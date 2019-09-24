@@ -50,6 +50,7 @@ public:
     virtual bool GetBoolean();
     virtual long long GetInt();
     virtual double GetDouble();
+    virtual TDateTime GetDateTime();
 
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
@@ -97,6 +98,7 @@ public:
     bool GetBoolean(const char *FieldName, bool Default);
     long long GetInt(const char *FieldName, long long Default);
     double GetDouble(const char *FieldName, double Default);
+    TDateTime GetDateTime(const char *FieldName, TDateTime &Default);
     TString &GetText(const char *FieldName, TString &Default);
 
     TJsonSingleCollection *AddCollection(const char *FieldName);
@@ -104,7 +106,7 @@ public:
     TJsonObject *AddBoolean(const char *FieldName, bool Val);
     TJsonObject *AddInt(const char *FieldName, long long Val);
     TJsonObject *AddDouble(const char *FieldName, double Val, int Decimals);
-    TJsonObject *AddDateTime(const char *FieldName, TDateTime &time);
+    TJsonObject *AddDateTime(const char *FieldName, TDateTime &time, int UseText);
     TJsonObject *AddString(const char *FieldName, const char *Str);
 
     TJsonCollection *FParent;
@@ -174,6 +176,7 @@ public:
     virtual bool GetBoolean();
     virtual long long GetInt();
     virtual double GetDouble();
+    virtual TDateTime GetDateTime();
 
 protected:
     double Val;
@@ -188,6 +191,7 @@ public:
     virtual bool GetBoolean();
     virtual long long GetInt();
     virtual double GetDouble();
+    virtual TDateTime GetDateTime();
 
 protected:
     bool Val;
@@ -202,6 +206,7 @@ public:
     virtual bool GetBoolean();
     virtual long long GetInt();
     virtual double GetDouble();
+    virtual TDateTime GetDateTime();
 
 protected:
     long long Val;
@@ -216,6 +221,7 @@ public:
     virtual bool GetBoolean();
     virtual long long GetInt();
     virtual double GetDouble();
+    virtual TDateTime GetDateTime();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
