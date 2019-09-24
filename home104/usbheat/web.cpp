@@ -288,6 +288,188 @@ void THeatJsonPage::CreatePlotArea(TJsonCollection *obj)
 
 /*##########################################################################
 #
+#   Name       : THeatJsonPage::CreateScaleX
+#
+#   Purpose....: Create X scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
+{
+    TJsonCollection *item;
+    TJsonCollection *transform;
+
+    item = obj->AddCollection("item");
+    item->AddString("fontColor", "#E3E3E5");
+
+    obj->AddString("lineColor", "#E3E3E5");
+    obj->AddDateTime("minValue", time, false);
+    obj->AddString("step", "minute");
+
+    transform = obj->AddCollection("transform");
+    transform->AddString("type", "date");
+    transform->AddString("all", "%h:%i");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateScaleY
+#
+#   Purpose....: Create Y scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
+{
+    TJsonCollection *guide;
+    TJsonCollection *item;
+    TJsonCollection *transform;
+
+    guide = obj->AddCollection("guide");
+    guide->AddString("lineStyle", "dashed");
+
+    item = obj->AddCollection("item");
+    item->AddString("fontColor", "#E3E3E5");
+
+    obj->AddString("lineColor", "#E3E3E5");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateCrosshairX
+#
+#   Purpose....: Create crosshair X
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateCrosshairX(TJsonCollection *obj)
+{
+    TJsonCollection *marker;
+    TJsonCollection *plotlabel;
+    TJsonCollection *scalelabel;
+
+    marker = obj->AddCollection("marker");
+    marker->AddDouble("alpha", 0.5, 1);
+    marker->AddString("size", "7px");
+
+    plotlabel = obj->AddCollection("plotLabel");
+    plotlabel->AddString("borderRadius", "3px");
+    plotlabel->AddBoolean("multiple", true);
+
+    scalelabel = obj->AddCollection("scaleLabel");
+    scalelabel->AddString("backgroundColor", "#53535E");
+    scalelabel->AddString("borderRadius", "3px");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateCrosshairY
+#
+#   Purpose....: Create crosshair y
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateCrosshairY(TJsonCollection *obj)
+{
+    TJsonCollection *scalelabel;
+
+    obj->AddString("type", "multiple");
+    obj->AddString("lineColor", "#E3E3E5");
+
+    scalelabel = obj->AddCollection("scaleLabel");
+    scalelabel->AddBoolean("bold", true);
+    scalelabel->AddString("borderRadius", "3px");
+    scalelabel->AddInt("decimals", 2);
+    scalelabel->AddString("fontColor", "#2C2C39");
+    scalelabel->AddString("offsetX", "-5px");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateShapes
+#
+#   Purpose....: Create shapes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateShapes(TJsonCollection *obj)
+{
+    TJsonCollection *label;
+
+    obj->AddString("type", "rectangle");
+    obj->AddString("id", "view_all");
+    obj->AddString("backgroundColor", "#53535E");
+    obj->AddString("borderColor", "#E3E3E5");
+    obj->AddString("borderRadius", "3px");
+    obj->AddString("borderWidth", "1px");
+    obj->AddString("cursor", "hand");
+
+    label = obj->AddCollection("label");
+    label->AddString("text", "View All");
+    label->AddBoolean("bold", true);
+    label->AddString("fontColor", "#E3E3E5");
+    label->AddString("fontSize", "12px");
+
+    obj->AddString("width", "75px");
+    obj->AddString("height", "20px");
+    obj->AddString("x", "85%");
+    obj->AddString("y", "11%");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateToolTip
+#
+#   Purpose....: Create tool tips
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
+{
+    obj->AddString("borderRadius", "3px");
+    obj->AddString("borderWidth", "0px");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateSeries
+#
+#   Purpose....: Create data series
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
+{
+    TJsonArrayCollection *arr;
+
+    arr = obj->AddArrayCollection("values");
+
+    obj->AddString("lineColor", "#E3E3E5");    
+}
+
+/*##########################################################################
+#
 #   Name       : THeatJsonPage::Get
 #
 #   Purpose....: Get page
@@ -299,9 +481,12 @@ void THeatJsonPage::CreatePlotArea(TJsonCollection *obj)
 ##########################################################################*/
 void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
+    TDateTime time;
     TJsonDocument json;
     TJsonCollection *root = json.CreateRoot();
     TJsonCollection *obj;
+    TJsonArrayCollection *arr;
+    TString str;
 
     root->AddString("type", "line");
     root->AddString("backgroundColor", "#2C2C39");
@@ -317,6 +502,32 @@ void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *
 
     obj = root->AddCollection("plotarea");
     CreatePlotArea(obj);    
+
+    obj = root->AddCollection("scaleX");
+    CreateScaleX(obj, time);    
+
+    obj = root->AddCollection("scaleY");
+    CreateScaleY(obj);    
+
+    obj = root->AddCollection("crosshairX");
+    CreateCrosshairX(obj);    
+
+    obj = root->AddCollection("crosshairY");
+    CreateCrosshairY(obj);    
+
+    obj = root->AddCollection("shapes");
+    CreateShapes(obj);    
+
+    obj = root->AddCollection("tooltip");
+    CreateToolTip(obj);    
+
+    arr = root->AddArrayCollection("series");
+    CreateDataSerie(arr);    
+
+    json.Write(str);
+    Write(str.GetData());
+
+    SendData("application/json");
 }
 
 /*##########################################################################

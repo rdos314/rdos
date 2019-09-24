@@ -71,6 +71,13 @@ protected:
     void CreateLegend(TJsonCollection *obj);
     void CreatePlot(TJsonCollection *obj);
     void CreatePlotArea(TJsonCollection *obj);
+    void CreateScaleX(TJsonCollection *obj, TDateTime &time);
+    void CreateScaleY(TJsonCollection *obj);
+    void CreateCrosshairX(TJsonCollection *obj);
+    void CreateCrosshairY(TJsonCollection *obj);
+    void CreateShapes(TJsonCollection *obj);
+    void CreateToolTip(TJsonCollection *obj);
+    void CreateDataSerie(TJsonArrayCollection *obj);
 
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
