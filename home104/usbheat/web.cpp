@@ -461,15 +461,15 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 ##########################################################################*/
 void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 {
-    TJsonStringArray *arr;
+    TJsonDoubleArray *arr;
 
-    arr = obj->AddStringArray("values");
-    arr->Add("xyz");
-    arr->Add("");
-    arr->Add("kf");
-    arr->Add("testing");
-    arr->Add("567.8");
-    arr->Add("-56.78");
+    arr = obj->AddDoubleArray("values", 1);
+    arr->Add(0.5);
+    arr->Add(-0.5);
+    arr->Add(-1.5);
+    arr->Add(1.6);
+    arr->Add(15);
+    arr->Add(17);
 
     obj->AddString("lineColor", "#E3E3E5");    
 }
@@ -582,6 +582,7 @@ static void WebSocketThread(void *ptr)
     THeatHttpServerFactory fact(80, 10, BUF_SIZE);
     THeatJsonDirFactory dir("json");
     fact.AddCustomDir(&dir);
+    fact.RootDir = "d:/www";
 
     for (;;)
         fact.WaitForever();
