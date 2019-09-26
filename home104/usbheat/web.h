@@ -30,6 +30,7 @@
 
 #include "httpfact.h"
 #include "json.h"
+#include "file.h"
 
 void InitWeb();
 
@@ -81,6 +82,7 @@ protected:
 
     bool DecodeReq(const char *ReqStr);
     void SendAnswer();
+    TFile *GetDayFile(int *col);
 
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);

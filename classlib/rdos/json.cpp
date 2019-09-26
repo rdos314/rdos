@@ -859,7 +859,7 @@ void TJsonDoubleArray::Write(TJsonDocument *doc, int indent, TString &str)
             str += ",";
 
         if (FArr[i] == INFINITY)
-            str += "none";
+            str += "nan";
         else
         {
             temp = FArr[i];

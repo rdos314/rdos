@@ -472,6 +472,39 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 
 /*##########################################################################
 #
+#   Name       : THeatJsonPage::GetDayFile
+#
+#   Purpose....: Get day file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *THeatJsonPage::GetDayFile(int *col)
+{
+    char str[80];
+    char root[40];
+
+    switch (FReqType)
+    {
+        case REQ_WIND:
+            strcpy(root, "e:/data/power");
+            *col = 1;
+            break;
+
+       case REQ_SOLAR:
+            strcpy(root, "e:/data/power");
+            *col = 0;
+            break;
+    }
+
+    sprintf(str, "%s/%d/%d/%d.csv", root, FYear, FMonth, FDay);
+    return new TFile(str);
+}
+
+/*##########################################################################
+#
 #   Name       : THeatJsonPage::CreateSeries
 #
 #   Purpose....: Create data series
@@ -484,14 +517,92 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 {
     TJsonDoubleArray *arr;
+    TFile *file;
+    int i;
+    int col;
+    int size;
+    char *text;
+    char *ptr;
+    char *next;
+    char *rptr;
+    double val = 0.0;
+    int count;
+    int hour = 0;
+    int min = 0;
+    int ntime;
+    int time = 0;
+    char *end;
 
     arr = obj->AddDoubleArray("values", 1);
-    arr->Add(0.5);
-    arr->Add(-0.5);
-    arr->Add(-1.5);
-    arr->Add(1.6);
-    arr->Add(15);
-    arr->Add(17);
+
+    file = GetDayFile(&col);
+    if (file->IsOpen())
+    {
+        size = file->GetSize();
+        text = new char[size + 1];
+        file->Read(text, size);
+        text[size] = 0;
+
+        ptr = text;
+        while (ptr)
+        {
+            next = strchr(ptr, 0xd);
+            if (next)
+            {
+                *next = 0;
+                next++;
+            }
+
+            rptr = strchr(ptr, ':');
+            if (rptr)
+            {
+                hour = atoi(ptr);
+                ptr = rptr + 1;
+
+                rptr = strchr(ptr, ';');
+            }
+
+            if (rptr)
+            {
+                min = atoi(ptr);
+                ptr = rptr + 1;
+
+                rptr = strchr(ptr, ';');
+            }
+
+            if (rptr)
+            {
+                for (i = 0; rptr && i < col; i++)
+                {
+                    ptr = rptr + 1;
+                    rptr = strchr(ptr, ';');
+                }
+
+                if (i == col)
+                {
+                    ntime = 60 * hour + min;
+
+                    while (ntime > time)
+                    {
+                        arr->Add(val);
+                        time++;
+                    }
+
+                    if (time == ntime)
+                    {
+                        *rptr = 0;
+                        val = strtod(ptr, &end);
+                        arr->Add(val);
+                        time++;
+                    }
+                }
+            }
+            ptr = next;
+        }
+        delete text;
+    }
+
+    delete file;
 
     obj->AddString("lineColor", "#E3E3E5");    
 }
