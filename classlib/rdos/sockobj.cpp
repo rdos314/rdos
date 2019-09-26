@@ -788,13 +788,10 @@ void TSocketServer::Execute()
 
     NotifyStarted();
         
-        if (FSocket->WaitForConnection(6000))
-        {
+    if (FSocket->WaitForConnection(6000))
         HandleSocket();
-        FSocket->Push();
-    }
     
-        FSocket->Close();
+    FSocket->Close();
     delete FSocket;
     FSocket = 0;        
 

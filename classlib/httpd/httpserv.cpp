@@ -256,6 +256,7 @@ THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TTcpSocket
     FSocketBuf = 0;
     FPageList = 0;
     FDirList = 0;
+    KeepAlive = 15;
 }
 
 /*##########################################################################
@@ -820,25 +821,22 @@ void THttpSocketServer::HandleSocket()
     THttpCommand *cmd;
     char *ptr;
 
-    if (FSocket->WaitForConnection(6000))
+    while (FSocket->IsOpen() || !IsEmpty())
     {
-        while (FSocket->IsOpen() || !IsEmpty())
+        ptr = ReadLine();
+        if (ptr)
         {
-            ptr = ReadLine();
-            if (ptr)
+            cmd = Parse(ptr);
+            if (cmd)
             {
-                cmd = Parse(ptr);
-                if (cmd)
-                {
-                    cmd->Run();
-                    delete cmd;
-                }
+                cmd->Run();
+                delete cmd;
             }
-            else
-            {
-                if (KeepAlive == 0 || !FSocket->WaitForData(KeepAlive * 1000))
-                    break;
-            }
+        }
+        else
+        {
+            if (KeepAlive == 0 || !FSocket->WaitForData(KeepAlive * 1000))
+                break;
         }
     }
 }
