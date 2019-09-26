@@ -38,6 +38,9 @@
 #define BUF_SIZE	0x4000
 #define STACK_SIZE      0x4000
 
+#define REQ_WIND	1
+#define REQ_SOLAR	2
+
 /*##########################################################################
 #
 #   Name       : THeatHttpServerFactory::THeatHttpServerFactory
@@ -209,7 +212,17 @@ THeatJsonPage::~THeatJsonPage()
 ##########################################################################*/
 void THeatJsonPage::CreateTitle(TJsonCollection *obj)
 {
-    obj->AddString("text", "Wind power");
+    switch (FReqType)
+    {
+        case REQ_WIND:
+            obj->AddString("text", "Wind power");
+            break;
+
+        case REQ_SOLAR:
+            obj->AddString("text", "Solar power");
+            break;
+    }
+
     obj->AddBoolean("adjustLayout", true);
     obj->AddString("marginTop", "7px");
     obj->AddString("fontColor", "#E3E3E5");
@@ -307,7 +320,16 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 
     obj->AddString("lineColor", "#E3E3E5");
     obj->AddDateTime("minValue", time, false);
-    obj->AddString("step", "minute");
+
+    if (FUseDay)
+        obj->AddString("step", "minute");
+    else
+    {
+        if (FUseMonth)
+            obj->AddString("step", "day");
+        else
+            obj->AddString("step", "month");
+    }
 
     transform = obj->AddCollection("transform");
     transform->AddString("type", "date");
@@ -476,18 +498,18 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::Get
+#   Name       : THeatJsonPage::SendAnswer
 #
-#   Purpose....: Get page
+#   Purpose....: Send answer
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
+void THeatJsonPage::SendAnswer()
 {
-    TDateTime time;
+    TDateTime time (FYear, FMonth, FDay);
     TJsonDocument json;
     TJsonCollection *root = json.CreateRoot();
     TJsonCollection *obj;
@@ -534,6 +556,124 @@ void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *
     Write(str.GetData());
 
     SendData("application/json");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::DecodeReq
+#
+#   Purpose....: Decode req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatJsonPage::DecodeReq(const char *ReqStr)
+{
+    const char *ptr;
+    const char *bptr;
+    bool ok = false;
+
+    ptr = strstr(ReqStr, "json");
+    if (ptr)
+    {
+        ptr += 4;
+        if (*ptr == '/' || *ptr == '\\')
+        {
+            ptr++;
+            bptr = ptr;
+            ptr = strstr(bptr, "wind");
+            if (ptr && ptr == bptr)
+            {
+                FReqType = REQ_WIND;
+                ok = true;
+                ptr += strlen("wind");
+            }
+            
+            if (!ok)
+            {
+                ptr = strstr(bptr, "solar");
+                if (ptr && ptr == bptr)
+                {
+                    FReqType = REQ_SOLAR;
+                    ok = true;
+                    ptr += strlen("solar");
+                }
+            }
+
+            if (ok)
+            {
+                if (strlen(ptr) <= 1)
+                {
+                    TDateTime currtime;
+                    FYear = currtime.GetYear();
+                    FMonth = currtime.GetMonth();
+                    FDay = currtime.GetDay();
+                    FUseDay = true;
+                    FUseMonth = true;
+                }
+                else
+                {
+                    FUseDay = false;
+                    FUseMonth = false;
+
+                    ptr++;
+                    FYear = atoi(ptr);
+                    if (FYear < 2019 || FYear > 2100)
+                        ok = false;
+
+                    if (ok)
+                    {
+                        ptr = strchr(ptr, '/');
+                        if (ptr)
+                        {
+                            ptr++;
+                            FMonth = atoi(ptr);
+                            FUseMonth = true;
+
+                            if (FMonth < 1 || FMonth > 12)
+                                ok = false;
+
+                            if (ok)
+                            {
+                                ptr = strchr(ptr, '/');
+                                if (ptr)
+                                {
+                                    ptr++;
+                                    FDay = atoi(ptr);
+                                    FUseDay = true;
+
+                                    if (FDay < 1 || FDay > 31)
+                                        ok = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::Get
+#
+#   Purpose....: Get page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
+{
+    if (DecodeReq(MatchName))
+        SendAnswer();
+    else
+        WriteError(400);
 }
 
 /*##########################################################################

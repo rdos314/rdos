@@ -79,9 +79,19 @@ protected:
     void CreateToolTip(TJsonCollection *obj);
     void CreateDataSerie(TJsonArrayCollection *obj);
 
+    bool DecodeReq(const char *ReqStr);
+    void SendAnswer();
+
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *Var, const char *Val);
+
+    int FReqType;
+    int FYear;
+    int FMonth;
+    int FDay;
+    bool FUseDay;
+    bool FUseMonth;
 };
 
 #endif
