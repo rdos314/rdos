@@ -314,12 +314,17 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 {
     TJsonCollection *item;
     TJsonCollection *transform;
+    TDateTime endtime = time;
+
+    endtime.AddDay(1);
 
     item = obj->AddCollection("item");
     item->AddString("fontColor", "#E3E3E5");
 
     obj->AddString("lineColor", "#E3E3E5");
-    obj->AddDateTime("minValue", time, false);
+    obj->AddDateTime("min-Value", time, false);
+    obj->AddDateTime("max-Value", endtime, false);
+    obj->AddInt("max-items", 9);
 
     if (FUseDay)
         obj->AddString("step", "minute");
@@ -333,7 +338,7 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 
     transform = obj->AddCollection("transform");
     transform->AddString("type", "date");
-    transform->AddString("all", "%h:%i");
+    transform->AddString("all", "%G:%i");
 }
 
 /*##########################################################################
@@ -349,9 +354,17 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 ##########################################################################*/
 void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
 {
+    TJsonCollection *label;
     TJsonCollection *guide;
     TJsonCollection *item;
     TJsonCollection *transform;
+
+    label = obj->AddCollection("label");
+
+    if (FUseDay)
+        label->AddString("text", "Power");
+    else
+        label->AddString("text", "Energy");
 
     guide = obj->AddCollection("guide");
     guide->AddString("lineStyle", "dashed");
@@ -359,7 +372,16 @@ void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
     item = obj->AddCollection("item");
     item->AddString("fontColor", "#E3E3E5");
 
+    obj->AddInt("min-value", 0);
+
+    if (FUseDay)
+        obj->AddString("format", "%vW");
+    else
+        obj->AddString("format", "%vkWh");
+
+    obj->AddString("format", "#E3E3E5");
     obj->AddString("lineColor", "#E3E3E5");
+
 }
 
 /*##########################################################################
@@ -584,7 +606,7 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 
                     while (ntime > time)
                     {
-                        arr->Add(val);
+                        arr->AddNone();
                         time++;
                     }
 
@@ -633,8 +655,8 @@ void THeatJsonPage::SendAnswer()
     obj = root->AddCollection("title");
     CreateTitle(obj);    
 
-    obj = root->AddCollection("legend");
-    CreateLegend(obj);    
+//    obj = root->AddCollection("legend");
+//    CreateLegend(obj);    
 
     obj = root->AddCollection("plot");
     CreatePlot(obj);    
