@@ -832,6 +832,336 @@ void THeatJsonPage::Post(const char *Var, const char *Val)
 
 /*##########################################################################
 #
+#   Name       : THeatWebDirFactory::THeatWebDirFactory
+#
+#   Purpose....: Web factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THeatWebDirFactory::THeatWebDirFactory(const char *ReqName)
+  : THttpCustomDirFactory(ReqName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebDirFactory::~THeatWebDirFactory
+#
+#   Purpose....: Web factory destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THeatWebDirFactory::~THeatWebDirFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebDirFactory::Create
+#
+#   Purpose....: Create web page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomPage *THeatWebDirFactory::Create(THttpCommand *cmd)
+{
+    return new THeatWebPage(cmd);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::THeatWebPage
+#
+#   Purpose....: Web page constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THeatWebPage::THeatWebPage(THttpCommand *Cmd)
+  : THttpCustomPage(Cmd)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::~THeatWebPage
+#
+#   Purpose....: Web page destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THeatWebPage::~THeatWebPage()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::DecodeReq
+#
+#   Purpose....: Decode req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::DecodeReq(const char *ReqStr)
+{
+    const char *ptr;
+    const char *bptr;
+    bool ok = false;
+
+    ptr = strstr(ReqStr, "web");
+    if (ptr)
+    {
+        ptr += 3;
+        if (*ptr == '/' || *ptr == '\\')
+        {
+            ptr++;
+            bptr = ptr;
+            ptr = strstr(bptr, "wind");
+            if (ptr && ptr == bptr)
+            {
+                FReqType = REQ_WIND;
+                ok = true;
+            }
+            
+            if (!ok)
+            {
+                ptr = strstr(bptr, "solar");
+                if (ptr && ptr == bptr)
+                {
+                    FReqType = REQ_SOLAR;
+                    ok = true;
+                }
+            }
+        }
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::DecodeTime
+#
+#   Purpose....: Decode time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::DecodeTime(THttpParam *Param)
+{
+    bool def = true;
+    const char *ptr;
+
+    if (Param)
+    {
+        ptr = Param->GetParam("year");
+        if (ptr)
+        {
+            def = false;
+            FYear = atoi(ptr);
+            FMonth = 1;
+            FDay = 1;
+            FUseMonth = false;
+            FUseDay = false;
+
+            ptr = Param->GetParam("month");
+            if (ptr)
+            {
+                FMonth = atoi(ptr);
+                FUseMonth = true;
+
+                ptr = Param->GetParam("day");
+                if (ptr)
+                {
+                    FDay = atoi(ptr);
+                    FUseDay = true;
+                }
+            }
+        }
+    }
+
+    if (def)
+    {
+        TDateTime time;
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+        FDay = time.GetDay();
+        FUseMonth = true;
+        FUseDay = true;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::SendAnswer
+#
+#   Purpose....: Send answer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::SendAnswer()
+{
+    char str[80];
+
+    Write("<!DOCTYPE html>\r\n");
+    Write("<html>\r\n");
+    Write("<head>\r\n");
+    Write(" <meta charset=\"utf-8\">\r\n");
+    Write(" <title>Heat control system</title>\r\n");
+    Write(" <script src=\"https://cdn.zingchart.com/zingchart.min.js\"></script>\r\n");
+    Write(" <style>\r\n");
+    Write("  html,\r\n");
+    Write("  body {\r\n");
+    Write("  height: 100%;\r\n");
+    Write("  width: 100%;\r\n");
+    Write("  margin: 0;\r\n");
+    Write("  padding: 0;\r\n");
+    Write(" }\r\n\r\n");
+    Write(" .chart--container {\r\n");
+    Write("  height: 100%;\r\n");
+    Write("  width: 100%;\r\n");
+    Write("  min-height: 150px;\r\n");
+    Write(" }\r\n\r\n");
+    Write(" .zc-ref {\r\n");
+    Write("  display: none;\r\n");
+    Write(" }\r\n\r\n");
+    Write(" zing-grid[loading] {\r\n");
+    Write("  height: 450px;\r\n");
+    Write(" }\r\n");
+    Write(" </style>\r\n");
+    Write("</head>\r\n\r\n");
+    Write("<body>\r\n");
+    Write(" <!-- CHART CONTAINER -->\r\n");
+    Write(" <div id=\"myChart\" class=\"chart--container\">\r\n");
+    Write("  <a class=\"zc-ref\" href=\"https://www.zingchart.com\">Heat control system</a>\r\n");
+    Write(" </div>\r\n");
+    Write(" <script>\r\n");
+    Write("  ZC.LICENSE = [\"569d52cefae586f634c54f86dc99e6a9\", \"b55b025e438fa8a98e32482b5f768ff5\"];\r\n");
+    Write("  window.addEventListener('load', () => {\r\n");
+    Write("   zingchart.render({\r\n");
+    Write("    id: 'myChart',\r\n");
+    Write("    dataurl: '/json/");
+
+    switch (FReqType)
+    {
+        case REQ_WIND:
+            Write("wind");
+            break;
+
+        case REQ_SOLAR:
+            Write("solar");
+            break;
+    }
+
+/*
+    sprintf(str, "/%d", FYear);        
+    Write(str);
+
+    if (FUseMonth)
+    {
+        sprintf(str, "/%d", FMonth);        
+        Write(str);
+
+        if (FUseDay)
+        {
+            sprintf(str, "/%d", FDay);        
+            Write(str);
+        }
+    }
+
+*/
+
+    Write("',\r\n");
+
+    Write("    height: 100%,\r\n");
+    Write("    width: 100%\r\n");
+    Write("   });\r\n");
+    Write("  });\r\n");
+    Write(" </script>\r\n");
+    Write("</body>\r\n");
+    Write("</html>\r\n");
+
+    SendData("text/html");
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::Get
+#
+#   Purpose....: Get page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
+{
+    bool ok;
+
+    ok = DecodeReq(MatchName);
+    if (ok)
+    {
+        DecodeTime(Param);
+        SendAnswer();
+    }
+    else
+        WriteError(400);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::Post
+#
+#   Purpose....: Post page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *Param)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::Post
+#
+#   Purpose....: Post page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::Post(const char *Var, const char *Val)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : WebSocketThread
 #
 #   Purpose....: Web socket thread
@@ -844,8 +1174,11 @@ void THeatJsonPage::Post(const char *Var, const char *Val)
 static void WebSocketThread(void *ptr)
 {
     THeatHttpServerFactory fact(80, 10, BUF_SIZE);
-    THeatJsonDirFactory dir("json");
-    fact.AddCustomDir(&dir);
+    THeatJsonDirFactory jsondir("json");
+    THeatWebDirFactory webdir("web");
+
+    fact.AddCustomDir(&jsondir);
+    fact.AddCustomDir(&webdir);
     fact.RootDir = "d:/www";
 
     for (;;)

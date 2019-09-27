@@ -96,4 +96,36 @@ protected:
     bool FUseMonth;
 };
 
+class THeatWebDirFactory : public THttpCustomDirFactory
+{
+public:
+    THeatWebDirFactory(const char *ReqName);
+    virtual ~THeatWebDirFactory();
+
+    virtual THttpCustomPage *Create(THttpCommand *cmd);
+};
+
+class THeatWebPage : public THttpCustomPage
+{
+public:
+    THeatWebPage(THttpCommand *Cmd);
+    virtual ~THeatWebPage();
+
+protected:
+    bool DecodeReq(const char *ReqStr);
+    void DecodeTime(THttpParam *Param);
+    void SendAnswer();
+
+    virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
+    virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
+    virtual void Post(const char *Var, const char *Val);
+
+    int FReqType;
+    int FYear;
+    int FMonth;
+    int FDay;
+    bool FUseDay;
+    bool FUseMonth;
+};
+
 #endif
