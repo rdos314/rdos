@@ -314,17 +314,12 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 {
     TJsonCollection *item;
     TJsonCollection *transform;
-    TDateTime endtime = time;
-
-    endtime.AddDay(1);
 
     item = obj->AddCollection("item");
     item->AddString("fontColor", "#E3E3E5");
 
     obj->AddString("lineColor", "#E3E3E5");
     obj->AddDateTime("min-Value", time, false);
-    obj->AddDateTime("max-Value", endtime, false);
-    obj->AddInt("max-items", 9);
 
     if (FUseDay)
         obj->AddString("step", "minute");
@@ -361,11 +356,6 @@ void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
 
     label = obj->AddCollection("label");
 
-    if (FUseDay)
-        label->AddString("text", "Power");
-    else
-        label->AddString("text", "Energy");
-
     guide = obj->AddCollection("guide");
     guide->AddString("lineStyle", "dashed");
 
@@ -379,7 +369,6 @@ void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
     else
         obj->AddString("format", "%vkWh");
 
-    obj->AddString("format", "#E3E3E5");
     obj->AddString("lineColor", "#E3E3E5");
 
 }
@@ -648,6 +637,8 @@ void THeatJsonPage::SendAnswer()
     TJsonCollection *obj;
     TJsonArrayCollection *arr;
     TString str;
+
+    time.AddHour(-1);
 
     root->AddString("type", "line");
     root->AddString("backgroundColor", "#2C2C39");
