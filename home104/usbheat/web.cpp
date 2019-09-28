@@ -40,6 +40,7 @@
 
 #define REQ_WIND	1
 #define REQ_SOLAR	2
+#define REQ_SOLAR_WIND	3
 
 /*##########################################################################
 #
@@ -220,6 +221,10 @@ void THeatJsonPage::CreateTitle(TJsonCollection *obj)
         case REQ_SOLAR:
             obj->AddString("text", "Solar power");
             break;
+
+        case REQ_SOLAR_WIND:
+            obj->AddString("text", "Power");
+            break;
     }
 
     obj->AddBoolean("adjustLayout", true);
@@ -313,6 +318,8 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 {
     TJsonCollection *item;
     TJsonCollection *transform;
+    char str[80];
+    char month[40];
 
     item = obj->AddCollection("item");
     item->AddString("fontColor", "#E3E3E5");
@@ -324,6 +331,9 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
         obj->AddDateTime("minValue", time, false);
         obj->AddString("step", "minute");
 
+        sprintf(str, "%04d-%02d-%02d", FYear, FMonth, FDay);
+        obj->AddString("label", str);        
+
         transform = obj->AddCollection("transform");
         transform->AddString("type", "date");
         transform->AddString("all", "%G:%i");
@@ -332,6 +342,63 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
     {
         obj->AddInt("minValue", 1);
         obj->AddInt("step", 1);
+
+        switch (FMonth)
+        {
+            case 1:
+                strcpy(month, "Jan");
+                break;
+
+            case 2:
+                strcpy(month, "Feb");
+                break;
+
+            case 3:
+                strcpy(month, "Mar");
+                break;
+
+            case 4:
+                strcpy(month, "Apr");
+                break;
+
+            case 5:
+                strcpy(month, "May");
+                break;
+
+            case 6:
+                strcpy(month, "Jun");
+                break;
+
+            case 7:
+                strcpy(month, "Jul");
+                break;
+
+            case 8:
+                strcpy(month, "Aug");
+                break;
+
+            case 9:
+                strcpy(month, "Sep");
+                break;
+
+            case 10:
+                strcpy(month, "Oct");
+                break;
+
+            case 11:
+                strcpy(month, "Nov");
+                break;
+
+            case 12:
+                strcpy(month, "Dec");
+                break;
+
+            default:
+                month[0] = 0;
+                break;
+        }
+        sprintf(str, "%s %d", month, FYear);
+        obj->AddString("label", str);        
     }
 }
 
@@ -491,24 +558,12 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *THeatJsonPage::GetDayFile(int *col)
+TFile *THeatJsonPage::GetDayFile()
 {
     char str[80];
     char root[40];
 
-    switch (FReqType)
-    {
-        case REQ_WIND:
-            strcpy(root, "e:/data/power");
-            *col = 1;
-            break;
-
-       case REQ_SOLAR:
-            strcpy(root, "e:/data/power");
-            *col = 0;
-            break;
-    }
-
+    strcpy(root, "e:/data/power");
     sprintf(str, "%s/%d/%d/%d.csv", root, FYear, FMonth, FDay);
     return new TFile(str);
 }
@@ -524,23 +579,12 @@ TFile *THeatJsonPage::GetDayFile(int *col)
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *THeatJsonPage::GetMonthFile(int *col)
+TFile *THeatJsonPage::GetMonthFile()
 {
     char str[80];
     char root[40];
 
-    switch (FReqType)
-    {
-        case REQ_WIND:
-            strcpy(root, "e:/data/power");
-            *col = 1;
-            break;
-
-       case REQ_SOLAR:
-            strcpy(root, "e:/data/power");
-            *col = 0;
-            break;
-    }
+    strcpy(root, "e:/data/power");
     sprintf(str, "%s/%d/%d/total.csv", root, FYear, FMonth);
     return new TFile(str);
 }
@@ -556,14 +600,10 @@ TFile *THeatJsonPage::GetMonthFile(int *col)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::AddDayData(TJsonArrayCollection *obj)
+void THeatJsonPage::AddDayData(TJsonArrayCollection *obj, char *text, int col)
 {
     TJsonDoubleArray *arr;
-    TFile *file;
     int i;
-    int col;
-    int size;
-    char *text;
     char *ptr;
     char *next;
     char *rptr;
@@ -577,78 +617,63 @@ void THeatJsonPage::AddDayData(TJsonArrayCollection *obj)
 
     arr = obj->AddDoubleArray("values", 1);
 
-    file = GetDayFile(&col);
-
-    if (file->IsOpen())
+    ptr = text;
+    while (ptr)
     {
-        size = file->GetSize();
-        text = new char[size + 1];
-        file->Read(text, size);
-        text[size] = 0;
-
-        ptr = text;
-        while (ptr)
+        next = strchr(ptr, 0xd);
+        if (next)
         {
-            next = strchr(ptr, 0xd);
-            if (next)
-            {
-                *next = 0;
-                next++;
-            }
-
-            rptr = strchr(ptr, ':');
-            if (rptr)
-            {
-                hour = atoi(ptr);
-                ptr = rptr + 1;
-
-                rptr = strchr(ptr, ';');
-            }
-
-            if (rptr)
-            {
-                min = atoi(ptr);
-                ptr = rptr + 1;
-
-                rptr = strchr(ptr, ';');
-            }
-
-            if (rptr)
-            {
-                for (i = 0; rptr && i < col; i++)
-                {
-                    ptr = rptr + 1;
-                    rptr = strchr(ptr, ';');
-                }
-
-                if (i == col)
-                {
-                    ntime = 60 * hour + min;
-
-                    while (ntime > time)
-                    {
-                        arr->AddNone();
-                        time++;
-                    }
-
-                    if (time == ntime)
-                    {
-                        if (rptr)
-                            *rptr = 0;
-                        val = strtod(ptr, &end);
-                        arr->Add(val);
-                        time++;
-                    }
-                }
-            }
-            ptr = next;
+            *next = 0;
+            next++;
         }
-        delete text;
+
+        rptr = strchr(ptr, ':');
+        if (rptr)
+        {
+            hour = atoi(ptr);
+            ptr = rptr + 1;
+
+            rptr = strchr(ptr, ';');
+        }
+
+        if (rptr)
+        {
+            min = atoi(ptr);
+            ptr = rptr + 1;
+
+            rptr = strchr(ptr, ';');
+        }
+
+        if (rptr)
+        {
+            for (i = 0; rptr && i < col; i++)
+            {
+                ptr = rptr + 1;
+                rptr = strchr(ptr, ';');
+            }
+
+            if (i == col)
+            {
+                ntime = 60 * hour + min;
+
+                while (ntime > time)
+                {
+                    arr->AddNone();
+                    time++;
+                }
+
+                if (time == ntime)
+                {
+                    if (rptr)
+                        *rptr = 0;
+                    val = strtod(ptr, &end);
+                    arr->Add(val);
+                    time++;
+                }
+            }
+        }
+        ptr = next;
     }
-
-    delete file;
-
-    obj->AddString("lineColor", "#E3E3E5");    
 }
 
 /*##########################################################################
@@ -662,14 +687,10 @@ void THeatJsonPage::AddDayData(TJsonArrayCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj)
+void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj, char *text, int col)
 {
     TJsonDoubleArray *arr;
-    TFile *file;
     int i;
-    int col;
-    int size;
-    char *text;
     char *ptr;
     char *next;
     char *rptr;
@@ -681,68 +702,78 @@ void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj)
 
     arr = obj->AddDoubleArray("values", 1);
 
-    file = GetMonthFile(&col);
-
-    if (file->IsOpen())
+    ptr = text;
+    while (ptr)
     {
-        size = file->GetSize();
-        text = new char[size + 1];
-        file->Read(text, size);
-        text[size] = 0;
-
-        ptr = text;
-        while (ptr)
+        next = strchr(ptr, 0xd);
+        if (next)
         {
-            next = strchr(ptr, 0xd);
-            if (next)
-            {
-                *next = 0;
-                next++;
-            }
+            *next = 0;
+            next++;
+        }
+
+        rptr = strchr(ptr, ';');
+        if (rptr)
+        {
+            day = atoi(ptr);
+            ptr = rptr + 1;
 
             rptr = strchr(ptr, ';');
-            if (rptr)
-            {
-                day = atoi(ptr);
-                ptr = rptr + 1;
+        }
 
+        if (rptr)
+        {
+            for (i = 0; rptr && i < col; i++)
+            {
+                ptr = rptr + 1;
                 rptr = strchr(ptr, ';');
             }
 
-            if (rptr)
+            if (i == col)
             {
-                for (i = 0; rptr && i < col; i++)
+                while (day > currday)
                 {
-                    ptr = rptr + 1;
-                    rptr = strchr(ptr, ';');
+                    arr->AddNone();
+                    currday++;
                 }
 
-                if (i == col)
+                if (currday == day)
                 {
-                    while (day > currday)
-                    {
-                        arr->AddNone();
-                        currday++;
-                    }
-
-                    if (currday == day)
-                    {
-                        if (rptr)
-                            *rptr = 0;
-                        val = strtod(ptr, &end);
-                        arr->Add(val);
-                        currday++;
-                    }
+                    if (rptr)
+                        *rptr = 0;
+                    val = strtod(ptr, &end);
+                    arr->Add(val);
+                    currday++;
                 }
             }
-            ptr = next;
         }
-        delete text;
+        ptr = next;
     }
+}
 
-    delete file;
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::ReadData
+#
+#   Purpose....: Read data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *THeatJsonPage::ReadFile(TFile *file)
+{
+    int size;
+    char *text;
 
-    obj->AddString("lineColor", "#E3E3E5");    
+    file->SetPos(0);
+    size = file->GetSize();
+    text = new char[size + 1];
+    file->Read(text, size);
+    text[size] = 0;
+
+    return text;
 }
 
 /*##########################################################################
@@ -758,10 +789,79 @@ void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj)
 ##########################################################################*/
 void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 {
+    TFile *file;
+    char *text;
+
     if (FUseDay)
-        AddDayData(obj);
+    {
+        file = GetDayFile();
+
+        if (file->IsOpen())
+        {
+            text = ReadFile(file);
+            
+            switch (FReqType)
+            {
+                case REQ_SOLAR:
+                    obj->AddString("legendText", "solar");
+                    AddDayData(obj, text, 0);
+                    break;
+
+                case REQ_WIND:
+                    obj->AddString("legendText", "wind");
+                    AddDayData(obj, text, 1);
+                    break;
+
+                case REQ_SOLAR_WIND:
+                    obj->AddString("legendText", "solar");
+                    AddDayData(obj, text,  0);
+                    delete text;
+
+                    obj->AddArray();
+                    text = ReadFile(file);
+                    obj->AddString("legendText", "wind");
+                    AddDayData(obj, text, 1);
+                    break;
+             }
+            delete text;
+        }
+        delete file;
+    }
     else
-        AddMonthData(obj);
+    {
+        file = GetMonthFile();
+
+        if (file->IsOpen())
+        {
+            text = ReadFile(file);
+                        
+            switch (FReqType)
+            {
+                case REQ_SOLAR:
+                    obj->AddString("legendText", "solar");
+                    AddMonthData(obj, text, 0);
+                    break;
+
+                case REQ_WIND:
+                    obj->AddString("legendText", "wind");
+                    AddMonthData(obj, text, 1);
+                    break;
+
+                case REQ_SOLAR_WIND:
+                    obj->AddString("legendText", "solar");
+                    AddMonthData(obj, text, 0);
+                    delete text;
+
+                    obj->AddArray();
+                    text = ReadFile(file);
+                    obj->AddString("legendText", "wind");
+                    AddMonthData(obj, text, 1);
+                    break;
+            }
+            delete text;
+        }
+        delete file;
+    }
 }
 
 /*##########################################################################
@@ -784,20 +884,23 @@ void THeatJsonPage::SendAnswer()
     TJsonArrayCollection *arr;
     TString str;
 
-    time.AddHour(-1);
-
     if (FUseDay)
         root->AddString("type", "line");
     else
         root->AddString("type", "bar");
+
+    root->AddBoolean("utc", true);
 
     root->AddString("backgroundColor", "#2C2C39");
 
     obj = root->AddCollection("title");
     CreateTitle(obj);    
 
-//    obj = root->AddCollection("legend");
-//    CreateLegend(obj);    
+    if (FReqType == REQ_SOLAR_WIND)
+    {
+        obj = root->AddCollection("legend");
+        CreateLegend(obj);    
+    }
 
     obj = root->AddCollection("plot");
     CreatePlot(obj);    
@@ -873,6 +976,17 @@ bool THeatJsonPage::DecodeReq(const char *ReqStr)
                     FReqType = REQ_SOLAR;
                     ok = true;
                     ptr += strlen("solar");
+                }
+            }
+
+            if (!ok)
+            {
+                ptr = strstr(bptr, "power");
+                if (ptr && ptr == bptr)
+                {
+                    FReqType = REQ_SOLAR_WIND;
+                    ok = true;
+                    ptr += strlen("power");
                 }
             }
 
@@ -1099,6 +1213,16 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
                     ok = true;
                 }
             }
+
+            if (!ok)
+            {
+                ptr = strstr(bptr, "power");
+                if (ptr && ptr == bptr)
+                {
+                    FReqType = REQ_SOLAR_WIND;
+                    ok = true;
+                }
+            }
         }
     }
     return ok;
@@ -1221,6 +1345,10 @@ void THeatWebPage::SendAnswer()
 
         case REQ_SOLAR:
             Write("solar");
+            break;
+
+        case REQ_SOLAR_WIND:
+            Write("power");
             break;
     }
 

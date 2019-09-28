@@ -82,11 +82,12 @@ protected:
 
     bool DecodeReq(const char *ReqStr);
     void SendAnswer();
-    TFile *GetDayFile(int *col);
-    TFile *GetMonthFile(int *col);
+    TFile *GetDayFile();
+    TFile *GetMonthFile();
+    char *ReadFile(TFile *file);
 
-    void AddDayData(TJsonArrayCollection *obj);
-    void AddMonthData(TJsonArrayCollection *obj);
+    void AddDayData(TJsonArrayCollection *obj, char *text, int col);
+    void AddMonthData(TJsonArrayCollection *obj, char *text, int col);
 
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
