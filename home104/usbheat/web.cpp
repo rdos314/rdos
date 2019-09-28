@@ -56,7 +56,6 @@ THeatHttpServerFactory::THeatHttpServerFactory(int Port, int MaxConnections, int
   : THttpSocketServerFactory(Port, MaxConnections, BufferSize)
 {
 }
-
 /*##########################################################################
 #
 #   Name       : THeatHttpServerFactory::~THeatHttpServerFactory
@@ -1029,7 +1028,7 @@ void THeatWebPage::SendAnswer()
     Write("<head>\r\n");
     Write(" <meta charset=\"utf-8\">\r\n");
     Write(" <title>Heat control system</title>\r\n");
-    Write(" <script src=\"https://cdn.zingchart.com/zingchart.min.js\"></script>\r\n");
+    Write(" <script src=\"/zingchart.min.js\"></script>\r\n");
     Write(" <style>\r\n");
     Write("  html,\r\n");
     Write("  body {\r\n");
@@ -1094,8 +1093,8 @@ void THeatWebPage::SendAnswer()
 
     Write("',\r\n");
 
-    Write("    height: 100%,\r\n");
-    Write("    width: 100%\r\n");
+    Write("    height: '100%',\r\n");
+    Write("    width: '100%'\r\n");
     Write("   });\r\n");
     Write("  });\r\n");
     Write(" </script>\r\n");
