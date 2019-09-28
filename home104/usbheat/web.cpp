@@ -318,21 +318,21 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
     item->AddString("fontColor", "#E3E3E5");
 
     obj->AddString("lineColor", "#E3E3E5");
-    obj->AddDateTime("min-Value", time, false);
 
     if (FUseDay)
+    {
+        obj->AddDateTime("minValue", time, false);
         obj->AddString("step", "minute");
+
+        transform = obj->AddCollection("transform");
+        transform->AddString("type", "date");
+        transform->AddString("all", "%G:%i");
+    }
     else
     {
-        if (FUseMonth)
-            obj->AddString("step", "day");
-        else
-            obj->AddString("step", "month");
+        obj->AddInt("minValue", 1);
+        obj->AddInt("step", 1);
     }
-
-    transform = obj->AddCollection("transform");
-    transform->AddString("type", "date");
-    transform->AddString("all", "%G:%i");
 }
 
 /*##########################################################################
@@ -361,7 +361,7 @@ void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
     item = obj->AddCollection("item");
     item->AddString("fontColor", "#E3E3E5");
 
-    obj->AddInt("min-value", 0);
+    obj->AddInt("minValue", 0);
 
     if (FUseDay)
         obj->AddString("format", "%vW");
@@ -515,16 +515,48 @@ TFile *THeatJsonPage::GetDayFile(int *col)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateSeries
+#   Name       : THeatJsonPage::GetMonthFile
 #
-#   Purpose....: Create data series
+#   Purpose....: Get month file
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
+TFile *THeatJsonPage::GetMonthFile(int *col)
+{
+    char str[80];
+    char root[40];
+
+    switch (FReqType)
+    {
+        case REQ_WIND:
+            strcpy(root, "e:/data/power");
+            *col = 1;
+            break;
+
+       case REQ_SOLAR:
+            strcpy(root, "e:/data/power");
+            *col = 0;
+            break;
+    }
+    sprintf(str, "%s/%d/%d/total.csv", root, FYear, FMonth);
+    return new TFile(str);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::AddDayData
+#
+#   Purpose....: Add day data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::AddDayData(TJsonArrayCollection *obj)
 {
     TJsonDoubleArray *arr;
     TFile *file;
@@ -546,6 +578,7 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
     arr = obj->AddDoubleArray("values", 1);
 
     file = GetDayFile(&col);
+
     if (file->IsOpen())
     {
         size = file->GetSize();
@@ -600,7 +633,8 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 
                     if (time == ntime)
                     {
-                        *rptr = 0;
+                        if (rptr)
+                            *rptr = 0;
                         val = strtod(ptr, &end);
                         arr->Add(val);
                         time++;
@@ -615,6 +649,119 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
     delete file;
 
     obj->AddString("lineColor", "#E3E3E5");    
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::AddMonthData
+#
+#   Purpose....: Add month data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj)
+{
+    TJsonDoubleArray *arr;
+    TFile *file;
+    int i;
+    int col;
+    int size;
+    char *text;
+    char *ptr;
+    char *next;
+    char *rptr;
+    double val = 0.0;
+    int count;
+    int day = 0;
+    int currday = 1;
+    char *end;
+
+    arr = obj->AddDoubleArray("values", 1);
+
+    file = GetMonthFile(&col);
+
+    if (file->IsOpen())
+    {
+        size = file->GetSize();
+        text = new char[size + 1];
+        file->Read(text, size);
+        text[size] = 0;
+
+        ptr = text;
+        while (ptr)
+        {
+            next = strchr(ptr, 0xd);
+            if (next)
+            {
+                *next = 0;
+                next++;
+            }
+
+            rptr = strchr(ptr, ';');
+            if (rptr)
+            {
+                day = atoi(ptr);
+                ptr = rptr + 1;
+
+                rptr = strchr(ptr, ';');
+            }
+
+            if (rptr)
+            {
+                for (i = 0; rptr && i < col; i++)
+                {
+                    ptr = rptr + 1;
+                    rptr = strchr(ptr, ';');
+                }
+
+                if (i == col)
+                {
+                    while (day > currday)
+                    {
+                        arr->AddNone();
+                        currday++;
+                    }
+
+                    if (currday == day)
+                    {
+                        if (rptr)
+                            *rptr = 0;
+                        val = strtod(ptr, &end);
+                        arr->Add(val);
+                        currday++;
+                    }
+                }
+            }
+            ptr = next;
+        }
+        delete text;
+    }
+
+    delete file;
+
+    obj->AddString("lineColor", "#E3E3E5");    
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::CreateSeries
+#
+#   Purpose....: Create data series
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
+{
+    if (FUseDay)
+        AddDayData(obj);
+    else
+        AddMonthData(obj);
 }
 
 /*##########################################################################
@@ -639,7 +786,11 @@ void THeatJsonPage::SendAnswer()
 
     time.AddHour(-1);
 
-    root->AddString("type", "line");
+    if (FUseDay)
+        root->AddString("type", "line");
+    else
+        root->AddString("type", "bar");
+
     root->AddString("backgroundColor", "#2C2C39");
 
     obj = root->AddCollection("title");
@@ -1073,7 +1224,6 @@ void THeatWebPage::SendAnswer()
             break;
     }
 
-/*
     sprintf(str, "/%d", FYear);        
     Write(str);
 
@@ -1088,8 +1238,6 @@ void THeatWebPage::SendAnswer()
             Write(str);
         }
     }
-
-*/
 
     Write("',\r\n");
 
