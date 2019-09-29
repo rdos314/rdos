@@ -119,12 +119,14 @@ public:
 protected:
     bool DecodeReq(const char *ReqStr);
     void DecodeTime(THttpParam *Param);
+    void HandleSubmit();
     void SendAnswer();
 
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *Var, const char *Val);
 
+    int FSubmitType;
     int FReqType;
     int FYear;
     int FMonth;

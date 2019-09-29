@@ -42,6 +42,9 @@
 #define REQ_SOLAR	2
 #define REQ_SOLAR_WIND	3
 
+#define SUBMIT_NONE	0
+#define SUBMIT_MONTH	1
+
 /*##########################################################################
 #
 #   Name       : THeatHttpServerFactory::THeatHttpServerFactory
@@ -1155,6 +1158,7 @@ THttpCustomPage *THeatWebDirFactory::Create(THttpCommand *cmd)
 THeatWebPage::THeatWebPage(THttpCommand *Cmd)
   : THttpCustomPage(Cmd)
 {
+    FSubmitType = SUBMIT_NONE;
 }
 
 /*##########################################################################
@@ -1285,6 +1289,27 @@ void THeatWebPage::DecodeTime(THttpParam *Param)
 
 /*##########################################################################
 #
+#   Name       : THeatWebPage::HandleSubmit
+#
+#   Purpose....: Handle submit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::HandleSubmit()
+{
+    switch (FSubmitType)
+    {
+        case SUBMIT_MONTH:
+            FUseDay = false;
+            break;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THeatWebPage::SendAnswer
 #
 #   Purpose....: Send answer
@@ -1313,9 +1338,13 @@ void THeatWebPage::SendAnswer()
     Write("  padding: 0;\r\n");
     Write(" }\r\n\r\n");
     Write(" .chart--container {\r\n");
-    Write("  height: 100%;\r\n");
+    Write("  height: 90%;\r\n");
     Write("  width: 100%;\r\n");
     Write("  min-height: 150px;\r\n");
+    Write(" }\r\n\r\n");
+    Write(" .nav {\r\n");
+    Write("  height: 10%;\r\n");
+    Write("  width: 100%;\r\n");
     Write(" }\r\n\r\n");
     Write(" .zc-ref {\r\n");
     Write("  display: none;\r\n");
@@ -1329,6 +1358,49 @@ void THeatWebPage::SendAnswer()
     Write(" <!-- CHART CONTAINER -->\r\n");
     Write(" <div id=\"myChart\" class=\"chart--container\">\r\n");
     Write("  <a class=\"zc-ref\" href=\"https://www.zingchart.com\">Heat control system</a>\r\n");
+    Write(" </div>\r\n");
+    Write(" <div id=\"nav\" name=\"nav\">\r\n");
+
+    Write("<form method=\"POST\" action=\"/web/");
+
+    switch (FReqType)
+    {
+        case REQ_WIND:
+            Write("wind");
+            break;
+
+        case REQ_SOLAR:
+            Write("solar");
+            break;
+
+        case REQ_SOLAR_WIND:
+            Write("power");
+            break;
+    }
+
+    sprintf(str, "/%d", FYear);        
+    Write(str);
+
+    if (FUseMonth)
+    {
+        sprintf(str, "/%d", FMonth);        
+        Write(str);
+
+        if (FUseDay)
+        {
+            sprintf(str, "/%d", FDay);        
+            Write(str);
+        }
+    }
+
+    Write("\">\r\n");
+
+    Write("<p>");
+    Write("<input type=\"Submit\" value=\"month\" name=\"submit\">");
+    Write("</p>");
+
+    Write("</form>\r\n");
+
     Write(" </div>\r\n");
     Write(" <script>\r\n");
     Write("  ZC.LICENSE = [\"569d52cefae586f634c54f86dc99e6a9\", \"b55b025e438fa8a98e32482b5f768ff5\"];\r\n");
@@ -1418,6 +1490,17 @@ void THeatWebPage::Get(const char *MatchName, const char *UrlName, THttpParam *P
 ##########################################################################*/
 void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
+    bool ok;
+
+    ok = DecodeReq(MatchName);
+    if (ok)
+    {
+        DecodeTime(Param);
+        HandleSubmit();
+        SendAnswer();
+    }
+    else
+        WriteError(400);
 }
 
 /*##########################################################################
@@ -1433,6 +1516,11 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 ##########################################################################*/
 void THeatWebPage::Post(const char *Var, const char *Val)
 {
+    if (!strcmp(Var, "submit"))
+    {
+        if (!strcmp(Val, "month"))
+            FSubmitType = SUBMIT_MONTH;
+    }
 }
 
 /*##########################################################################
