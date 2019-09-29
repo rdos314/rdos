@@ -44,6 +44,10 @@
 
 #define SUBMIT_NONE	0
 #define SUBMIT_MONTH	1
+#define SUBMIT_DAY	2
+#define SUBMIT_POWER    3
+#define SUBMIT_SOLAR    4
+#define SUBMIT_WIND     5
 
 /*##########################################################################
 #
@@ -1305,6 +1309,23 @@ void THeatWebPage::HandleSubmit()
         case SUBMIT_MONTH:
             FUseDay = false;
             break;
+
+        case SUBMIT_DAY:
+            FUseDay = true;
+            FDay = 1;
+            break;
+
+        case SUBMIT_POWER:
+            FReqType = REQ_SOLAR_WIND;
+            break;
+
+        case SUBMIT_SOLAR:
+            FReqType = REQ_SOLAR;
+            break;
+
+        case SUBMIT_WIND:
+            FReqType = REQ_WIND;
+            break;
     }
 }
 
@@ -1354,7 +1375,7 @@ void THeatWebPage::SendAnswer()
     Write(" }\r\n");
     Write(" </style>\r\n");
     Write("</head>\r\n\r\n");
-    Write("<body>\r\n");
+    Write("<body background=\"/blue.jpg\">\r\n");
     Write(" <!-- CHART CONTAINER -->\r\n");
     Write(" <div id=\"myChart\" class=\"chart--container\">\r\n");
     Write("  <a class=\"zc-ref\" href=\"https://www.zingchart.com\">Heat control system</a>\r\n");
@@ -1395,9 +1416,28 @@ void THeatWebPage::SendAnswer()
 
     Write("\">\r\n");
 
-    Write("<p>");
-    Write("<input type=\"Submit\" value=\"month\" name=\"submit\">");
-    Write("</p>");
+    switch (FReqType)
+    {
+        case REQ_SOLAR:
+            Write("<input type=\"Submit\" value=\"solar & wind\" name=\"power\">");
+            Write("<input type=\"Submit\" value=\"wind only\" name=\"wind\">");
+            break;
+
+        case REQ_WIND:
+            Write("<input type=\"Submit\" value=\"solar & wind\" name=\"power\">");
+            Write("<input type=\"Submit\" value=\"solar only\" name=\"solar\">");
+            break;
+
+        case REQ_SOLAR_WIND:
+            Write("<input type=\"Submit\" value=\"solar only\" name=\"solar\">");
+            Write("<input type=\"Submit\" value=\"wind only\" name=\"wind\">");
+            break;
+    }
+
+    if (FUseDay)
+        Write("<input type=\"Submit\" value=\"month\" name=\"month\">");
+    else
+        Write("<input type=\"Submit\" value=\"day\" name=\"day\">");
 
     Write("</form>\r\n");
 
@@ -1516,11 +1556,20 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 ##########################################################################*/
 void THeatWebPage::Post(const char *Var, const char *Val)
 {
-    if (!strcmp(Var, "submit"))
-    {
-        if (!strcmp(Val, "month"))
-            FSubmitType = SUBMIT_MONTH;
-    }
+    if (!strcmp(Var, "month"))
+        FSubmitType = SUBMIT_MONTH;
+
+    if (!strcmp(Var, "day"))
+        FSubmitType = SUBMIT_DAY;
+
+    if (!strcmp(Var, "wind"))
+        FSubmitType = SUBMIT_WIND;
+
+    if (!strcmp(Var, "solar"))
+        FSubmitType = SUBMIT_SOLAR;
+
+    if (!strcmp(Var, "power"))
+        FSubmitType = SUBMIT_POWER;
 }
 
 /*##########################################################################
