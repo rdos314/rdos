@@ -1162,7 +1162,15 @@ THttpCustomPage *THeatWebDirFactory::Create(THttpCommand *cmd)
 THeatWebPage::THeatWebPage(THttpCommand *Cmd)
   : THttpCustomPage(Cmd)
 {
+    TDateTime currtime;
+
     FSubmitType = SUBMIT_NONE;
+    FReqType = REQ_SOLAR_WIND;
+    FYear = currtime.GetYear();
+    FMonth = currtime.GetMonth();
+    FDay = currtime.GetDay();
+    FUseDay = true;
+    FUseMonth = true;
 }
 
 /*##########################################################################
@@ -1201,7 +1209,9 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
     if (ptr)
     {
         ptr += 3;
-        if (*ptr == '/' || *ptr == '\\')
+        if (*ptr == 0)
+            ok = true;
+        else if (*ptr == '/' || *ptr == '\\')
         {
             ptr++;
             bptr = ptr;
@@ -1210,6 +1220,7 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
             {
                 FReqType = REQ_WIND;
                 ok = true;
+                ptr += strlen("wind");
             }
             
             if (!ok)
@@ -1219,6 +1230,7 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
                 {
                     FReqType = REQ_SOLAR;
                     ok = true;
+                    ptr += strlen("solar");
                 }
             }
 
@@ -1229,6 +1241,60 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
                 {
                     FReqType = REQ_SOLAR_WIND;
                     ok = true;
+                    ptr += strlen("power");
+                }
+            }
+
+            if (ok)
+            {
+                if (strlen(ptr) <= 1)
+                {
+                    TDateTime currtime;
+
+                    FYear = currtime.GetYear();
+                    FMonth = currtime.GetMonth();
+                    FDay = currtime.GetDay();
+                    FUseDay = true;
+                    FUseMonth = true;
+                }
+                else
+                {
+                    FUseDay = false;
+                    FUseMonth = false;
+
+                    ptr++;
+                    FYear = atoi(ptr);
+                    if (FYear < 2019 || FYear > 2100)
+                        ok = false;
+
+                    if (ok)
+                    {
+                        ptr = strchr(ptr, '/');
+                        if (ptr)
+                        {
+                            ptr++;
+                            FMonth = atoi(ptr);
+                            FUseMonth = true;
+
+                            if (FMonth < 1 || FMonth > 12)
+                                ok = false;
+
+                            if (ok)
+                            {
+                                ptr = strchr(ptr, '/');
+
+                                if (ptr)
+                                {
+                                    ptr++;
+                                    FDay = atoi(ptr);
+                                    FUseDay = true;
+
+                                    if (FDay < 1 || FDay > 31)
+                                        ok = false;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1249,7 +1315,6 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
 ##########################################################################*/
 void THeatWebPage::DecodeTime(THttpParam *Param)
 {
-    bool def = true;
     const char *ptr;
 
     if (Param)
@@ -1257,12 +1322,9 @@ void THeatWebPage::DecodeTime(THttpParam *Param)
         ptr = Param->GetParam("year");
         if (ptr)
         {
-            def = false;
             FYear = atoi(ptr);
             FMonth = 1;
             FDay = 1;
-            FUseMonth = false;
-            FUseDay = false;
 
             ptr = Param->GetParam("month");
             if (ptr)
@@ -1278,54 +1340,6 @@ void THeatWebPage::DecodeTime(THttpParam *Param)
                 }
             }
         }
-    }
-
-    if (def)
-    {
-        TDateTime time;
-        FYear = time.GetYear();
-        FMonth = time.GetMonth();
-        FDay = time.GetDay();
-        FUseMonth = true;
-        FUseDay = true;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : THeatWebPage::HandleSubmit
-#
-#   Purpose....: Handle submit
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THeatWebPage::HandleSubmit()
-{
-    switch (FSubmitType)
-    {
-        case SUBMIT_MONTH:
-            FUseDay = false;
-            break;
-
-        case SUBMIT_DAY:
-            FUseDay = true;
-            FDay = 1;
-            break;
-
-        case SUBMIT_POWER:
-            FReqType = REQ_SOLAR_WIND;
-            break;
-
-        case SUBMIT_SOLAR:
-            FReqType = REQ_SOLAR;
-            break;
-
-        case SUBMIT_WIND:
-            FReqType = REQ_WIND;
-            break;
     }
 }
 
@@ -1382,62 +1396,47 @@ void THeatWebPage::SendAnswer()
     Write(" </div>\r\n");
     Write(" <div id=\"nav\" name=\"nav\">\r\n");
 
-    Write("<form method=\"POST\" action=\"/web/");
+    Write("<form method=\"POST\" action=\"/web\">\r\n");
 
-    switch (FReqType)
-    {
-        case REQ_WIND:
-            Write("wind");
-            break;
+    if (FUseDay)
+        Write("<input type=\"hidden\" name=\"daydia\" value=\"1\">\r\n");
+    else
+        Write("<input type=\"hidden\" name=\"monthdia\" value=\"1\">\r\n");
 
-        case REQ_SOLAR:
-            Write("solar");
-            break;
-
-        case REQ_SOLAR_WIND:
-            Write("power");
-            break;
-    }
-
-    sprintf(str, "/%d", FYear);        
+    sprintf(str, "<input type=\"hidden\" name=\"year\" value=\"%d\">\r\n", FYear);
     Write(str);
 
-    if (FUseMonth)
-    {
-        sprintf(str, "/%d", FMonth);        
-        Write(str);
+    sprintf(str, "<input type=\"hidden\" name=\"month\" value=\"%d\">\r\n", FMonth);
+    Write(str);
 
-        if (FUseDay)
-        {
-            sprintf(str, "/%d", FDay);        
-            Write(str);
-        }
-    }
-
-    Write("\">\r\n");
+    sprintf(str, "<input type=\"hidden\" name=\"day\" value=\"%d\">\r\n", FDay);
+    Write(str);
 
     switch (FReqType)
     {
         case REQ_SOLAR:
-            Write("<input type=\"Submit\" value=\"solar & wind\" name=\"power\">");
-            Write("<input type=\"Submit\" value=\"wind only\" name=\"wind\">");
+            Write("<input type=\"hidden\" name=\"solar\" value=\"1\">\r\n");
+            Write("<input type=\"Submit\" value=\"solar & wind\" name=\"power\">\r\n");
+            Write("<input type=\"Submit\" value=\"wind only\" name=\"wind\">\r\n");
             break;
 
         case REQ_WIND:
-            Write("<input type=\"Submit\" value=\"solar & wind\" name=\"power\">");
-            Write("<input type=\"Submit\" value=\"solar only\" name=\"solar\">");
+            Write("<input type=\"hidden\" name=\"wind\" value=\"1\">\r\n");
+            Write("<input type=\"Submit\" value=\"solar & wind\" name=\"power\">\r\n");
+            Write("<input type=\"Submit\" value=\"solar only\" name=\"solar\">\r\n");
             break;
 
         case REQ_SOLAR_WIND:
-            Write("<input type=\"Submit\" value=\"solar only\" name=\"solar\">");
-            Write("<input type=\"Submit\" value=\"wind only\" name=\"wind\">");
+            Write("<input type=\"hidden\" name=\"power\" value=\"1\">\r\n");
+            Write("<input type=\"Submit\" value=\"solar only\" name=\"solar\">\r\n");
+            Write("<input type=\"Submit\" value=\"wind only\" name=\"wind\">\r\n");
             break;
     }
 
     if (FUseDay)
-        Write("<input type=\"Submit\" value=\"month\" name=\"month\">");
+        Write("<input type=\"Submit\" value=\"month\" name=\"monthdia\">\r\n");
     else
-        Write("<input type=\"Submit\" value=\"day\" name=\"day\">");
+        Write("<input type=\"Submit\" value=\"day\" name=\"daydia\">\r\n");
 
     Write("</form>\r\n");
 
@@ -1536,7 +1535,6 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
     if (ok)
     {
         DecodeTime(Param);
-        HandleSubmit();
         SendAnswer();
     }
     else
@@ -1556,20 +1554,22 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 ##########################################################################*/
 void THeatWebPage::Post(const char *Var, const char *Val)
 {
-    if (!strcmp(Var, "month"))
-        FSubmitType = SUBMIT_MONTH;
-
-    if (!strcmp(Var, "day"))
-        FSubmitType = SUBMIT_DAY;
-
-    if (!strcmp(Var, "wind"))
-        FSubmitType = SUBMIT_WIND;
-
-    if (!strcmp(Var, "solar"))
-        FSubmitType = SUBMIT_SOLAR;
-
-    if (!strcmp(Var, "power"))
-        FSubmitType = SUBMIT_POWER;
+    if (!strcmp(Var, "monthdia"))
+        FUseDay = false;
+    else if (!strcmp(Var, "daydia"))
+        FUseDay = true;
+    else if (!strcmp(Var, "wind"))
+        FReqType = REQ_WIND;
+    else if (!strcmp(Var, "solar"))
+        FReqType = REQ_SOLAR;
+    else if (!strcmp(Var, "power"))
+        FReqType = REQ_SOLAR_WIND;
+    else if (!strcmp(Var, "year"))
+        FYear = atoi(Val);
+    else if (!strcmp(Var, "month"))
+        FMonth = atoi(Val);
+    else if (!strcmp(Var, "day"))
+        FDay = atoi(Val);
 }
 
 /*##########################################################################

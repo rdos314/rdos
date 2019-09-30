@@ -119,7 +119,6 @@ public:
 protected:
     bool DecodeReq(const char *ReqStr);
     void DecodeTime(THttpParam *Param);
-    void HandleSubmit();
     void SendAnswer();
 
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
