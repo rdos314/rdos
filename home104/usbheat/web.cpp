@@ -219,20 +219,92 @@ THeatJsonPage::~THeatJsonPage()
 ##########################################################################*/
 void THeatJsonPage::CreateTitle(TJsonCollection *obj)
 {
+    char dstr[60];
+    char str[100];
+
+    if (FUseDay)
+        sprintf(dstr, "%04d-%02d-%02d", FYear, FMonth, FDay);
+    else
+    {
+        switch (FMonth)
+        {
+            case 1:
+                strcpy(dstr, "Jan");
+                break;
+    
+            case 2:
+                strcpy(dstr, "Feb");
+                break;
+    
+            case 3:
+                strcpy(dstr, "Mar");
+                break;
+    
+            case 4:
+                strcpy(dstr, "Apr");
+                break;
+    
+            case 5:
+                strcpy(dstr, "May");
+                break;
+    
+            case 6:
+                strcpy(dstr, "Jun");
+                break;    
+
+            case 7:
+                strcpy(dstr, "Jul");
+                break;
+    
+            case 8:
+                strcpy(dstr, "Aug");
+                break;
+    
+            case 9:
+                strcpy(dstr, "Sep");
+                break;
+    
+            case 10:
+                strcpy(dstr, "Oct");
+                break;
+    
+            case 11:
+                strcpy(dstr, "Nov");
+                break;
+    
+            case 12:
+                strcpy(dstr, "Dec");
+                break;
+    
+            default:
+                dstr[0] = 0;
+                break;
+        }
+        sprintf(str, " %04d", FYear);
+        strcat(dstr, str);
+    }
+
     switch (FReqType)
     {
         case REQ_WIND:
-            obj->AddString("text", "Wind power");
+            strcpy(str, "Wind power");
             break;
 
         case REQ_SOLAR:
-            obj->AddString("text", "Solar power");
+            strcpy(str, "Solar power");
             break;
 
         case REQ_SOLAR_WIND:
-            obj->AddString("text", "Power");
+            strcpy(str, "Power");
+            break;
+
+        default:
+            str[0] = 0;
             break;
     }
+
+    strcat(str, dstr);
+    obj->AddString("text", str);
 
     obj->AddBoolean("adjustLayout", true);
     obj->AddString("marginTop", "7px");
@@ -338,9 +410,6 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
         obj->AddDateTime("minValue", time, false);
         obj->AddString("step", "minute");
 
-        sprintf(str, "%04d-%02d-%02d", FYear, FMonth, FDay);
-        obj->AddString("label", str);        
-
         transform = obj->AddCollection("transform");
         transform->AddString("type", "date");
         transform->AddString("all", "%G:%i");
@@ -422,12 +491,9 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 ##########################################################################*/
 void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
 {
-    TJsonCollection *label;
     TJsonCollection *guide;
     TJsonCollection *item;
     TJsonCollection *transform;
-
-    label = obj->AddCollection("label");
 
     guide = obj->AddCollection("guide");
     guide->AddString("lineStyle", "dashed");
