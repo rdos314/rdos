@@ -121,6 +121,18 @@ protected:
     void DecodeTime(THttpParam *Param);
     void SendAnswer();
 
+    bool HasDayFile(TDateTime &time);
+    bool HasMonthFile(TDateTime &time);
+
+    bool HasNextDay();
+    bool HasPrevDay();
+    bool HasPrevMonth();
+    bool HasNextMonth();
+
+    void GotoPrev();
+    void GotoNext();
+    void Fixup();
+
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *Var, const char *Val);

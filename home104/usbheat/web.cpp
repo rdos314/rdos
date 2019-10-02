@@ -287,15 +287,15 @@ void THeatJsonPage::CreateTitle(TJsonCollection *obj)
     switch (FReqType)
     {
         case REQ_WIND:
-            strcpy(str, "Wind power");
+            strcpy(str, "Wind power  ");
             break;
 
         case REQ_SOLAR:
-            strcpy(str, "Solar power");
+            strcpy(str, "Solar power  ");
             break;
 
         case REQ_SOLAR_WIND:
-            strcpy(str, "Power");
+            strcpy(str, "Power  ");
             break;
 
         default:
@@ -1256,6 +1256,249 @@ THeatWebPage::~THeatWebPage()
 
 /*##########################################################################
 #
+#   Name       : THeatWebPage::HasDayFile
+#
+#   Purpose....: Has day file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasDayFile(TDateTime &time)
+{
+    char str[80];
+    char root[40];
+    TFile *file;
+    bool ok;
+
+    strcpy(root, "e:/data/power");
+    sprintf(str, "%s/%d/%d/%d.csv", root, time.GetYear(), time.GetMonth(), time.GetDay());
+    file =  new TFile(str);
+    ok = file->IsOpen();
+    delete file;
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::HasNextDay
+#
+#   Purpose....: Has next day file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasNextDay()
+{
+    TDateTime time(FYear, FMonth, FDay);
+
+    time.AddDay(1);
+    return HasDayFile(time);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::HasPrevDay
+#
+#   Purpose....: Has previous day file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasPrevDay()
+{
+    TDateTime time(FYear, FMonth, FDay);
+
+    time.AddDay(-1);
+    return HasDayFile(time);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::HasNextMonth
+#
+#   Purpose....: Has next month file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasNextMonth()
+{
+    TDateTime time(FYear, FMonth, 1);
+
+    time.AddMonth(1);
+    return HasMonthFile(time);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::HasPrevMonth
+#
+#   Purpose....: Has previous month file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasPrevMonth()
+{
+    TDateTime time(FYear, FMonth, 1);
+
+    time.AddMonth(-1);
+    return HasMonthFile(time);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::HasMonthFile
+#
+#   Purpose....: Get month file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasMonthFile(TDateTime &time)
+{
+    char str[80];
+    char root[40];
+    TFile *file;
+    bool ok;
+
+    strcpy(root, "e:/data/power");
+    sprintf(str, "%s/%d/%d/total.csv", root, time.GetYear(), time.GetMonth());
+    file =  new TFile(str);
+    ok = file->IsOpen();
+    delete file;
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::GotoPrev
+#
+#   Purpose....: Goto previous page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::GotoPrev()
+{
+    if (FUseDay)
+    {
+        TDateTime time(FYear, FMonth, FDay);
+        time.AddDay(-1);
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+        FDay = time.GetDay();
+    }
+    else
+    {
+        TDateTime time(FYear, FMonth, 1);
+        time.AddMonth(-1);
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::GotoNext
+#
+#   Purpose....: Goto next page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::GotoNext()
+{
+    if (FUseDay)
+    {
+        TDateTime time(FYear, FMonth, FDay);
+        time.AddDay(1);
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+        FDay = time.GetDay();
+    }
+    else
+    {
+        TDateTime time(FYear, FMonth, 1);
+        time.AddMonth(1);
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::Fixup
+#
+#   Purpose....: Fixup date
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatWebPage::Fixup()
+{
+    TDateTime currtime;
+
+    if (FUseDay)
+    {
+        TDateTime time(FYear, FMonth, FDay);
+
+        if (!HasDayFile(time))
+        {
+            if (time > currtime)
+                time = currtime;
+            else
+                while (!HasDayFile(time))
+                    time.AddDay(1);
+        }
+
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+        FDay = time.GetDay();
+    }
+    else
+    {
+        TDateTime time(FYear, FMonth, 1);
+
+        if (!HasMonthFile(time))
+        {
+            if (time > currtime)
+            {
+                time = currtime;
+ 
+                if (!HasMonthFile(time))
+                    time.AddMonth(-1);
+            }
+            else
+                while (!HasMonthFile(time))
+                    time.AddMonth(1);
+        }
+
+        FYear = time.GetYear();
+        FMonth = time.GetMonth();
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THeatWebPage::DecodeReq
 #
 #   Purpose....: Decode req
@@ -1500,9 +1743,29 @@ void THeatWebPage::SendAnswer()
     }
 
     if (FUseDay)
+    {
+        Write("<br>\r\n");
         Write("<input type=\"Submit\" value=\"month\" name=\"monthdia\">\r\n");
+        Write("<br>\r\n");
+
+        if (HasPrevDay())
+            Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
+
+        if (HasNextDay())
+            Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
+    }
     else
+    {
+        Write("<br>\r\n");
         Write("<input type=\"Submit\" value=\"day\" name=\"daydia\">\r\n");
+        Write("<br>\r\n");
+
+        if (HasPrevMonth())
+            Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
+
+        if (HasNextMonth())
+            Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
+    }
 
     Write("</form>\r\n");
 
@@ -1621,9 +1884,16 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 void THeatWebPage::Post(const char *Var, const char *Val)
 {
     if (!strcmp(Var, "monthdia"))
+    {
         FUseDay = false;
+        FDay = 1;
+        Fixup();
+    }
     else if (!strcmp(Var, "daydia"))
+    {
         FUseDay = true;
+        Fixup();
+    }
     else if (!strcmp(Var, "wind"))
         FReqType = REQ_WIND;
     else if (!strcmp(Var, "solar"))
@@ -1636,6 +1906,10 @@ void THeatWebPage::Post(const char *Var, const char *Val)
         FMonth = atoi(Val);
     else if (!strcmp(Var, "day"))
         FDay = atoi(Val);
+    else if (!strcmp(Var, "prev"))
+        GotoPrev();
+    else if (!strcmp(Var, "next"))
+        GotoNext();
 }
 
 /*##########################################################################
