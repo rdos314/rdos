@@ -29,22 +29,23 @@
 #define RAD_H
 
 #include "device.h"
+#include "file.h"
 #include "radcntrl.h"
 
 class TRad : public TDevice
 {
 public:
-	TRad(const char *name, TRadControl *control, int rad, int address);
-	~TRad();
+    TRad(const char *name, TRadControl *control, int rad, int address);
+    ~TRad();
 
-	void DeviceName(char *Name, int Size) const;
+    void DeviceName(char *Name, int Size) const;
 
-	void SetDayRef();
-	void SetNightRef();
-	void SetWinterRef();
-	void SetSummerRef();
-	void SetRef(int Temp);
-	void SetAmbient(int rel);
+    void SetDayRef();
+    void SetNightRef();
+    void SetWinterRef();
+    void SetSummerRef();
+    void SetRef(int Temp);
+    void SetAmbient(int rel);
 
     int GetAddress();
 
@@ -55,36 +56,46 @@ public:
     int GetAuxTemp();
             
 protected:
-	virtual void Execute();
+    void CreateDayFile(int year, int month, int day);
+    void GetRef(char *str);
+    void GetTemp(char *str);
+    void GetAuxTemp(char *str);
+    void GetMotor(char *str);
+    void GetLight(char *str);
+    void UpdateDataStore(int hour, int min);
+
+    virtual void Execute();
 
     TRadControl *FControl;
     int FIndex;
-	int FAddress;
+    int FAddress;
 
-	int FUpdateRefType;
-	int FUpdateRef;
-	int FUpdateAmbient;
+    int FUpdateRefType;
+    int FUpdateRef;
+    int FUpdateAmbient;
 
     int Ref;
     int Temp;
     int Motor;
     int Light;
     int AuxTemp;
-	int Ambient;
-	int RefType;
+    int Ambient;
+    int RefType;
 
-	int FRefSum;
-	int FRefCount;
-	int FTempSum;
-	int FTempCount;
-	int FMotorSum;
-	int FMotorCount;
-	int FLightSum;
-	int FLightCount;
-	int FAuxTempSum;
-	int FAuxTempCount;
+    int FRefSum;
+    int FRefCount;
+    int FTempSum;
+    int FTempCount;
+    int FMotorSum;
+    int FMotorCount;
+    int FLightSum;
+    int FLightCount;
+    int FAuxTempSum;
+    int FAuxTempCount;
 
-	TSection FSection;
+    TFile *FDayFile;
+
+    TSection FSection;
 
 };
 

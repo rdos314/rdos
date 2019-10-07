@@ -38,6 +38,9 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define ROOT_DIR "e:/data/rad"
+#define CSV_DAY_HEADER "time;ref;temp1;temp2;motor;light\r\n"
+
 /*##########################################################################
 #
 #   Name       : TRad::TRad
@@ -51,24 +54,24 @@
 ##########################################################################*/
 TRad::TRad(const char *name, TRadControl *control, int rad, int Address)
 {
-	char str[40];
+    char str[40];
 
     FControl = control;
     FIndex = rad;
-	FAddress = Address;
-	Offline();
-	Ref = 200;
-	Temp = 200;
-	Motor = 51;
-	Light = 0;
-	AuxTemp = 200;
-	RefType = 0;
+    FAddress = Address;
+    Offline();
+    Ref = 200;
+    Temp = 200;
+    Motor = 51;
+    Light = 0;
+    AuxTemp = 200;
+    RefType = 0;
 
     FControl->Define(FIndex, name);
 
-	 FUpdateRefType = FALSE;
-	FUpdateRef = FALSE;
-	FUpdateAmbient = FALSE;
+    FUpdateRefType = FALSE;
+    FUpdateRef = FALSE;
+    FUpdateAmbient = FALSE;
 
     FRefSum = 0;
     FRefCount = 0;
@@ -76,13 +79,15 @@ TRad::TRad(const char *name, TRadControl *control, int rad, int Address)
     FTempCount = 0;
     FMotorSum = 0;
     FMotorCount = 0;
-	 FLightSum = 0;
+    FLightSum = 0;
     FLightCount = 0;
-	 FAuxTempSum = 0;
-	 FAuxTempCount = 0;
+    FAuxTempSum = 0;
+    FAuxTempCount = 0;
 
-	sprintf(str, "RAD %d", Address);
-	Start(str, 0x2000);
+    FDayFile = 0;
+
+    sprintf(str, "RAD %d", Address);
+    Start(str, 0x2000);
 }
 
 /*##########################################################################
@@ -113,7 +118,237 @@ TRad::~TRad()
 ##########################################################################*/
 void TRad::DeviceName(char *Name, int Size) const
 {
-	strcpy(Name, "RAD");
+    strcpy(Name, "RAD");
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::CreateDayFile
+#
+#   Purpose....: Create/open a day-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::CreateDayFile(int year, int month, int day)
+{
+    char str[20];
+    char filename[256];
+    int i, j;
+    int filesize;
+
+    if (!RdosSetCurDir(ROOT_DIR))
+        RdosMakeDir(ROOT_DIR);
+
+    sprintf(str, "%02hX", FAddress);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%02hX/%d", FAddress, year);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%02hX/%d/%d", FAddress, year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%02hX/%d/%d/%d.csv", FAddress, year, month, day);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (FDayFile)
+        delete FDayFile;
+
+    FDayFile = new TFile(filename);
+    
+    if (!FDayFile->IsOpen())
+    {
+        delete FDayFile;
+        FDayFile = new TFile(filename, 0);
+        FDayFile->Write(CSV_DAY_HEADER, strlen(CSV_DAY_HEADER));
+    }
+
+    if (FDayFile->IsOpen())
+        FDayFile->SetPos(FDayFile->GetSize());
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetRef
+#
+#   Purpose....: Get ref
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::GetRef(char *str)
+{
+    if (FRefCount == 0)
+        str[0] = 0;
+    else
+    {
+        Ref = FRefSum / FRefCount;
+        FRefSum = 0;
+        FRefCount = 0;
+
+        sprintf(str, "%d.%01d", Ref / 10, Ref % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetTemp
+#
+#   Purpose....: Get temp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::GetTemp(char *str)
+{
+    if (FTempCount == 0)
+        str[0] = 0;
+    else
+    {
+        Temp = FTempSum / FTempCount;
+        FTempSum = 0;
+        FTempCount = 0;
+
+        sprintf(str, "%d.%01d", Temp / 10, Temp % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetAuxTemp
+#
+#   Purpose....: Get aux temp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::GetAuxTemp(char *str)
+{
+    if (FAuxTempCount == 0)
+        str[0] = 0;
+    else
+    {
+        AuxTemp = FAuxTempSum / FAuxTempCount;
+        FAuxTempSum = 0;
+        FAuxTempCount = 0;
+
+        sprintf(str, "%d.%01d", AuxTemp / 10, AuxTemp % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetMotor
+#
+#   Purpose....: Get motor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::GetMotor(char *str)
+{
+    if (FMotorCount == 0)
+        str[0] = 0;
+    else
+    {
+        Motor = FMotorSum / FMotorCount;
+        FMotorSum = 0;
+        FMotorCount = 0;
+
+        sprintf(str, "%d.%01d", Motor / 10, Motor % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetLight
+#
+#   Purpose....: Get light
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::GetLight(char *str)
+{
+    if (FLightCount == 0)
+        str[0] = 0;
+    else
+    {
+        Light = FLightSum / FLightCount;
+        FLightSum = 0;
+        FLightCount = 0;
+
+        sprintf(str, "%d.%01d", Light / 10, Light % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::UpdateDataStore
+#
+#   Purpose....: Update data store
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::UpdateDataStore(int hour, int min)
+{
+    char str[50];
+
+    sprintf(str, "%02d:%02d;", hour, min);
+    FDayFile->Write(str, strlen(str));
+
+    GetRef(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetTemp(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetAuxTemp(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetMotor(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetLight(str);
+    strcat(str, "\r\n");
+    FDayFile->Write(str, strlen(str));
 }
 
 /*##########################################################################
@@ -128,8 +363,8 @@ void TRad::DeviceName(char *Name, int Size) const
 ##########################################################################*/
 void TRad::SetDayRef()
 {
-	RefType = 0;
-	FUpdateRefType = TRUE;
+    RefType = 0;
+    FUpdateRefType = TRUE;
 }
 
 /*##########################################################################
@@ -144,8 +379,8 @@ void TRad::SetDayRef()
 ##########################################################################*/
 void TRad::SetNightRef()
 {
-	RefType = 1;
-	FUpdateRefType = TRUE;
+    RefType = 1;
+    FUpdateRefType = TRUE;
 }
 
 /*##########################################################################
@@ -160,8 +395,8 @@ void TRad::SetNightRef()
 ##########################################################################*/
 void TRad::SetWinterRef()
 {
-	RefType = 2;
-	FUpdateRefType = TRUE;
+    RefType = 2;
+    FUpdateRefType = TRUE;
 }
 
 /*##########################################################################
@@ -176,8 +411,8 @@ void TRad::SetWinterRef()
 ##########################################################################*/
 void TRad::SetSummerRef()
 {
-	RefType = 3;
-	FUpdateRefType = TRUE;
+    RefType = 3;
+    FUpdateRefType = TRUE;
 }
 
 /*##########################################################################
@@ -192,8 +427,8 @@ void TRad::SetSummerRef()
 ##########################################################################*/
 void TRad::SetRef(int Temp)
 {
-	Ref = Temp;
-	FUpdateRef = TRUE;
+    Ref = Temp;
+    FUpdateRef = TRUE;
 }
 
 /*##########################################################################
@@ -208,8 +443,8 @@ void TRad::SetRef(int Temp)
 ##########################################################################*/
 void TRad::SetAmbient(int temp)
 {
-	Ambient = temp;
-	FUpdateAmbient = TRUE;
+    Ambient = temp;
+    FUpdateAmbient = TRUE;
 }
 
 /*##########################################################################
@@ -241,7 +476,7 @@ int TRad::GetAddress()
 ##########################################################################*/
 int TRad::GetRef()
 {
-	 return Ref;
+    return Ref;
 }
 
 /*##########################################################################
@@ -273,7 +508,7 @@ int TRad::GetTemp()
 ##########################################################################*/
 int TRad::GetMotor()
 {
-	 return Motor;
+    return Motor;
 }
 
 /*##########################################################################
@@ -324,6 +559,17 @@ void TRad::Execute()
 {
     int val;
     int ok;
+    TDateTime *CurrTime;
+    int LastMin;
+    int LastDay;
+    int UsedDay;
+
+    CurrTime = new TDateTime;
+    LastMin = CurrTime->GetMin();
+    LastDay = CurrTime->GetDay();
+    UsedDay = LastDay;
+    CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
+    delete CurrTime;
 
     while (FInstalled)
     {
@@ -358,12 +604,6 @@ void TRad::Execute()
                 FRefSum += val;
                 FRefCount++;
 
-                if (FRefCount == 20)
-                {
-                    Ref = FRefSum / FRefCount;
-                    FRefSum = 0;
-                    FRefCount = 0;
-                }
                 FControl->SetRef(FIndex, val);
             }
             else
@@ -381,12 +621,6 @@ void TRad::Execute()
                     FTempSum += val;
                     FTempCount++;
 
-                    if (FTempCount == 20)
-                    {
-                        Temp = FTempSum / FTempCount;
-                        FTempSum = 0;
-                        FTempCount = 0;
-                    }
                     FControl->SetTemp(FIndex, val);
                 }
 		else
@@ -404,12 +638,6 @@ void TRad::Execute()
                     FMotorSum += val;
                     FMotorCount++;
 
-                    if (FMotorCount == 20)
-                    {
-                        Motor = FMotorSum / FMotorCount;
-                        FMotorSum = 0;
-                        FMotorCount = 0;
-                    }
                     FControl->SetMotor(FIndex, val);
 		}
 		else
@@ -425,12 +653,6 @@ void TRad::Execute()
                     FLightSum += val;
                     FLightCount++;
 
-                    if (FLightCount == 20)
-                    {
-                        Light = FLightSum / FLightCount;
-                        FLightSum = 0;
-                        FLightCount = 0;
-                    }
                     FControl->SetLight(FIndex, val);
                 }
                 else
@@ -449,12 +671,6 @@ void TRad::Execute()
                     FAuxTempSum += val;
                     FAuxTempCount++;
 
-                    if (FAuxTempCount == 20)
-                    {
-                        AuxTemp = FAuxTempSum / FAuxTempCount;
-                        FAuxTempSum = 0;
-                        FAuxTempCount = 0;
-                    }
                     FControl->SetAuxTemp(FIndex, val);
                 }
                 else
@@ -466,6 +682,22 @@ void TRad::Execute()
             Online();
         else
             Offline();
+
+        CurrTime = new TDateTime;
+
+        if (LastMin != CurrTime->GetMin())
+        {
+            if (LastDay != CurrTime->GetDay())
+            {
+                LastDay = CurrTime->GetDay();
+                CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
+            }
+
+            LastMin = CurrTime->GetMin();
+            UpdateDataStore(CurrTime->GetHour(), CurrTime->GetMin());
+        }
+
+        delete CurrTime;
 
         FSection.Leave();
 
