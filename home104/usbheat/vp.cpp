@@ -898,7 +898,8 @@ void TVp::Execute()
         {
             if (FHasCirc)
             {
-                sprintf(str, "%4.1Lf", FCirc);
+                val = (long double)FCirc / 10;
+                sprintf(str, "%4.1Lf", val);
                 Table->SetText(3, 1, str);
             }
 
