@@ -764,8 +764,20 @@ void TVp::CreateDayFile(int year, int month, int day)
 ##########################################################################*/
 void TVp::GetTemp(char *str)
 {
+    int val;
+
     if (FValidTank)
-        sprintf(str, "%d.%01d", FAmbient / 10, FAmbient % 10);
+    {
+        val = FAmbient;
+
+        if (val >= 0)
+            sprintf(str, "%d.%01d", val / 10, val % 10);
+        else
+        {
+            val = -val;
+            sprintf(str, "-%d.%01d", val / 10, val % 10);
+        }
+    }
     else
         str[0] = 0;
 }
