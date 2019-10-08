@@ -28,6 +28,7 @@
 #ifndef VP_H
 #define VP_H
 
+#include "file.h"
 #include "fuzzy.h"
 #include "control.h"
 
@@ -36,22 +37,22 @@
 class TVp : public TFuzzy
 {
 public:
-        TVp(TControlThread *control);
-        ~TVp();
+    TVp(TControlThread *control);
+    ~TVp();
 
-        void DeviceName(char *Name, int Size) const;
+    void DeviceName(char *Name, int Size) const;
 
-        int GetTankTemp();
-        int GetHeatTemp();
+    int GetTankTemp();
+    int GetHeatTemp();
 
-        int HasValidTankTemp();
-        int HasValidHeatTemp();
+    int HasValidTankTemp();
+    int HasValidHeatTemp();
 
-        int HasValidTankP();
-        long double GetTankP();
+    int HasValidTankP();
+    long double GetTankP();
 
-        int HasValidHeatP();
-        long double GetHeatP();
+    int HasValidHeatP();
+    long double GetHeatP();
 
     void SetMaxMotor(int motor);
     void SetSolarAlt(long double val);
@@ -65,12 +66,20 @@ protected:
     void CalcLinearRegression(int Size);
     void UpdateHistory(long double val);
 
-        virtual void Execute();
+    void GetTemp(char *str);
+    void GetTank(char *str);
+    void GetCirc(char *str);
+    void GetTurbolence(char *str);
+    void GetOn(char *str);
+    void CreateDayFile(int year, int month, int day);
+    void UpdateDataStore(int hour, int min);
 
-         int TempSum;
-         int TempCount;
-         long double AmbientSum;
-         int AmbientCount;
+    virtual void Execute();
+
+    int TempSum;
+    int TempCount;
+    long double AmbientSum;
+    int AmbientCount;
 
     int FMotorCount;
     int FMotorSum;
@@ -90,46 +99,48 @@ protected:
 
     int FOffCounter;
 
-        int FValidTank;
-        int FValidHeat;
+    int FValidTank;
+    int FValidHeat;
 
-        int FTankTemp;
-        int FHeatTemp;
+    int FTankTemp;
+    int FHeatTemp;
 
-        int FHeatSum;
-        int FHeatCount;
+    int FHeatSum;
+    int FHeatCount;
 
-        int FValidPTank;
-        long double PTank;
+    int FValidPTank;
+    long double PTank;
 
-        int FValidPHeat;
-        long double PHeat;
+    int FValidPHeat;
+    long double PHeat;
 
-        int ValidHeatArr[20];
-        long double HeatArr[20];
+    int ValidHeatArr[20];
+    long double HeatArr[20];
 
-        long double FRawHistory[MAX_LEVEL_HISTORY];
-        int FHistoryIndex;
+    long double FRawHistory[MAX_LEVEL_HISTORY];
+    int FHistoryIndex;
 
-        long double FHistory[MAX_LEVEL_HISTORY];
-        int FHistoryCount;
-        long double FCurrMean;
-        long double FCurrSl2;
-        long double FCurrFlow;
-        long double FCurrSlope;
-        long double FCurrSd2;
-        long double FCurrTurbulence;
-        long double FCurrTemp;
+    long double FHistory[MAX_LEVEL_HISTORY];
+    int FHistoryCount;
+    long double FCurrMean;
+    long double FCurrSl2;
+    long double FCurrFlow;
+    long double FCurrSlope;
+    long double FCurrSd2;
+    long double FCurrTurbulence;
+    long double FCurrTemp;
 
-         int FValidAmbient;
-         int FAmbient;
-         int FRef;
+    TFile *FDayFile;
 
-         int FMaxTank;
+    int FValidAmbient;
+    int FAmbient;
+    int FRef;
 
-         TControlThread *FControl;
+    int FMaxTank;
 
-         TSection FSection;
+    TControlThread *FControl;
+
+    TSection FSection;
 };
 
 #endif

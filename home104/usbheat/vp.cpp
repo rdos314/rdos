@@ -50,6 +50,9 @@ void UnlockGUI();
 
 const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0};
 
+#define ROOT_DIR "e:/data/vp"
+#define CSV_DAY_HEADER "time;temp;tank;circ;turb;on\r\n"
+
 /*##########################################################################
 #
 #   Name       : TVp::TVp
@@ -81,6 +84,8 @@ TVp::TVp(TControlThread *control)
     FHistoryCount = 0;
     FMaxTank = 450;
     FOffCounter = 30;
+
+    FDayFile = 0;
 
     for (i = 0; i < 20; i++)
         ValidHeatArr[i] = FALSE;
@@ -690,6 +695,203 @@ void TVp::UpdateHistory(long double val)
 
 /*##########################################################################
 #
+#   Name       : TVp::CreateDayFile
+#
+#   Purpose....: Create/open a day-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::CreateDayFile(int year, int month, int day)
+{
+    char str[20];
+    char filename[256];
+    int i, j;
+    int filesize;
+
+    if (!RdosSetCurDir(ROOT_DIR))
+        RdosMakeDir(ROOT_DIR);
+
+    sprintf(str, "%d", year);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d", year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d/%d.csv", year, month, day);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (FDayFile)
+        delete FDayFile;
+
+    FDayFile = new TFile(filename);
+    
+    if (!FDayFile->IsOpen())
+    {
+        delete FDayFile;
+        FDayFile = new TFile(filename, 0);
+        FDayFile->Write(CSV_DAY_HEADER, strlen(CSV_DAY_HEADER));
+    }
+
+    if (FDayFile->IsOpen())
+        FDayFile->SetPos(FDayFile->GetSize());
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetTemp
+#
+#   Purpose....: Get ambient temp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::GetTemp(char *str)
+{
+    if (FValidTank)
+        sprintf(str, "%d.%01d", FAmbient / 10, FAmbient % 10);
+    else
+        str[0] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetTank
+#
+#   Purpose....: Get tank temp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::GetTank(char *str)
+{
+    if (FValidTank)
+        sprintf(str, "%d.%01d", FTankTemp / 10, FTankTemp % 10);
+    else
+        str[0] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetCirc
+#
+#   Purpose....: Get circ
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::GetCirc(char *str)
+{
+    if (FHasCirc)
+        sprintf(str, "%d.%01d", FCirc / 10, FCirc % 10);
+    else
+        str[0] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetTurbolence
+#
+#   Purpose....: Get turbolence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::GetTurbolence(char *str)
+{
+    int val;
+
+    if (FHistoryCount > 60)
+    {
+        val = (int)(10.0 * FCurrTurbulence);
+        sprintf(str, "%d.%01d", val / 10, val % 10);
+    }
+    else
+        str[0] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetOn
+#
+#   Purpose....: Get on
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::GetOn(char *str)
+{
+    if (FVpOn)
+        strcpy(str, "1");
+    else
+        strcpy(str, "0");
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::UpdateDataStore
+#
+#   Purpose....: Update data store
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::UpdateDataStore(int hour, int min)
+{
+    char str[50];
+
+    sprintf(str, "%02d:%02d;", hour, min);
+    FDayFile->Write(str, strlen(str));
+
+    GetTemp(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetTank(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetCirc(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetTurbolence(str);
+    strcat(str, ";");
+    FDayFile->Write(str, strlen(str));
+
+    GetOn(str);
+    strcat(str, "\r\n");
+    FDayFile->Write(str, strlen(str));
+}
+
+/*##########################################################################
+#
 #   Name       : TVp::Execute
 #
 #   Purpose....: Handler thread
@@ -701,11 +903,10 @@ void TVp::UpdateHistory(long double val)
 void TVp::Execute()
 {
     int i;
-    int year, month, day;
-    int hour, min, sec;
-    int ms, us;
-    unsigned long msb, lsb;
+    TDateTime *CurrTime;
     int LastMin;
+    int LastDay;
+    int UsedDay;
     long double val;
     long double dT;
     int ival;
@@ -799,9 +1000,12 @@ void TVp::Execute()
     FMotorSum = 0;
     FMotorCount = 0;
 
-    RdosGetTime(&msb, &lsb);
-    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-    RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
+    CurrTime = new TDateTime;
+    LastMin = CurrTime->GetMin();
+    LastDay = CurrTime->GetDay();
+    UsedDay = LastDay;
+    CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
+    delete CurrTime;
 
     while (FInstalled)
     {
@@ -821,7 +1025,6 @@ void TVp::Execute()
     {
         if (RdosReadSerialRaw(1, 5, &ival))
         {
-
             val = (long double)ival / 10;
             UpdateHistory(val);
 
@@ -863,17 +1066,15 @@ void TVp::Execute()
             }
         }
 
-        RdosGetTime(&msb, &lsb);
-        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-        RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+        CurrTime = new TDateTime;
 
-        if (LastMin != min)
+        if (LastMin != CurrTime->GetMin())
         {
             FSection.Enter();
 
             if (FMotorCount)
             {
-                if (month >= 6 && month <= 8)
+                if (CurrTime->GetMonth() >= 6 && CurrTime->GetMonth() <= 8)
                     FCirc = 99;
                 else
                     FCirc = FMotorSum / FMotorCount;
@@ -894,7 +1095,7 @@ void TVp::Execute()
             FSection.Leave();    
         }
 
-        if (LastMin != min && TempCount)
+        if (LastMin != CurrTime->GetMin() && TempCount)
         {
             if (FHasCirc)
             {
@@ -902,8 +1103,6 @@ void TVp::Execute()
                 sprintf(str, "%4.1Lf", val);
                 Table->SetText(3, 1, str);
             }
-
-            LastMin = min;
 
             if (FHasLowTemp)
             {
@@ -978,8 +1177,19 @@ void TVp::Execute()
             AmbientSum = 0;
             AmbientCount = 0;
 
+            if (LastDay != CurrTime->GetDay())
+            {
+                LastDay = CurrTime->GetDay();
+                CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
+            }
+
+            LastMin = CurrTime->GetMin();
+            UpdateDataStore(CurrTime->GetHour(), CurrTime->GetMin());
+
             FSection.Leave();
         }
+
+        delete CurrTime;
 
         RdosWaitMilli(1000);
     }
