@@ -857,7 +857,7 @@ void TVp::GetTurbolence(char *str)
 ##########################################################################*/
 void TVp::GetOn(char *str)
 {
-    if (FVpOn)
+    if (FPrevOn)
         strcpy(str, "1");
     else
         strcpy(str, "0");
