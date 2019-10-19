@@ -226,62 +226,67 @@ void THeatJsonPage::CreateTitle(TJsonCollection *obj)
         sprintf(dstr, "%04d-%02d-%02d", FYear, FMonth, FDay);
     else
     {
-        switch (FMonth)
+        if (FUseMonth)
         {
-            case 1:
-                strcpy(dstr, "Jan");
-                break;
+            switch (FMonth)
+            {
+                case 1:
+                    strcpy(dstr, "Jan");
+                    break;
     
-            case 2:
-                strcpy(dstr, "Feb");
-                break;
+                case 2:
+                    strcpy(dstr, "Feb");
+                    break;
     
-            case 3:
-                strcpy(dstr, "Mar");
-                break;
+                case 3:
+                    strcpy(dstr, "Mar");
+                    break;
     
-            case 4:
-                strcpy(dstr, "Apr");
-                break;
+                case 4:
+                    strcpy(dstr, "Apr");
+                    break;
     
-            case 5:
-                strcpy(dstr, "May");
-                break;
+                case 5:
+                    strcpy(dstr, "May");
+                    break;
     
-            case 6:
-                strcpy(dstr, "Jun");
-                break;    
+                case 6:
+                    strcpy(dstr, "Jun");
+                    break;    
 
-            case 7:
-                strcpy(dstr, "Jul");
-                break;
+                case 7:
+                    strcpy(dstr, "Jul");
+                    break;
     
-            case 8:
-                strcpy(dstr, "Aug");
-                break;
+                case 8:
+                    strcpy(dstr, "Aug");
+                    break;
     
-            case 9:
-                strcpy(dstr, "Sep");
-                break;
+                case 9:
+                    strcpy(dstr, "Sep");
+                    break;
     
-            case 10:
-                strcpy(dstr, "Oct");
-                break;
+                case 10:
+                    strcpy(dstr, "Oct");
+                    break;
     
-            case 11:
-                strcpy(dstr, "Nov");
-                break;
+                case 11:
+                    strcpy(dstr, "Nov");
+                    break;
     
-            case 12:
-                strcpy(dstr, "Dec");
-                break;
+                case 12:
+                    strcpy(dstr, "Dec");
+                    break;
     
-            default:
-                dstr[0] = 0;
-                break;
+                default:
+                    dstr[0] = 0;
+                    break;
+            }
+            sprintf(str, " %04d", FYear);
+            strcat(dstr, str);
         }
-        sprintf(str, " %04d", FYear);
-        strcat(dstr, str);
+        else
+            sprintf(dstr, "%04d", FYear);
     }
 
     switch (FReqType)
@@ -397,6 +402,7 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 {
     TJsonCollection *item;
     TJsonCollection *transform;
+    TJsonStringArray *arr;
     char str[80];
     char month[40];
 
@@ -416,65 +422,87 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
     }
     else
     {
-        obj->AddInt("minValue", 1);
-        obj->AddInt("step", 1);
-
-        switch (FMonth)
+        if (FUseMonth)
         {
-            case 1:
-                strcpy(month, "Jan");
-                break;
+            obj->AddInt("minValue", 1);
+            obj->AddInt("step", 1);
 
-            case 2:
-                strcpy(month, "Feb");
-                break;
+            switch (FMonth)
+            {
+                case 1:
+                    strcpy(month, "Jan");
+                    break;
 
-            case 3:
-                strcpy(month, "Mar");
-                break;
+                case 2:
+                    strcpy(month, "Feb");
+                    break;
 
-            case 4:
-                strcpy(month, "Apr");
-                break;
+                case 3:
+                    strcpy(month, "Mar");
+                    break;
 
-            case 5:
-                strcpy(month, "May");
-                break;
+                case 4:
+                    strcpy(month, "Apr");
+                    break;
 
-            case 6:
-                strcpy(month, "Jun");
-                break;
+                case 5:
+                    strcpy(month, "May");
+                    break;
 
-            case 7:
-                strcpy(month, "Jul");
-                break;
+                case 6:
+                    strcpy(month, "Jun");
+                    break;
 
-            case 8:
-                strcpy(month, "Aug");
-                break;
+                case 7:
+                    strcpy(month, "Jul");
+                    break;
 
-            case 9:
-                strcpy(month, "Sep");
-                break;
+                case 8:
+                    strcpy(month, "Aug");
+                    break;
 
-            case 10:
-                strcpy(month, "Oct");
-                break;
+                case 9:
+                    strcpy(month, "Sep");
+                    break;
 
-            case 11:
-                strcpy(month, "Nov");
-                break;
+                case 10:
+                    strcpy(month, "Oct");
+                    break;
 
-            case 12:
-                strcpy(month, "Dec");
-                break;
+                case 11:
+                    strcpy(month, "Nov");
+                    break;
 
-            default:
-                month[0] = 0;
-                break;
+                case 12:
+                    strcpy(month, "Dec");
+                    break;
+
+                default:
+                    month[0] = 0;
+                    break;
+            }
+            sprintf(str, "%s %d", month, FYear);
+            obj->AddString("label", str);        
         }
-        sprintf(str, "%s %d", month, FYear);
-        obj->AddString("label", str);        
+        else
+        {
+            sprintf(str, "%d", FYear);
+            obj->AddString("label", str);        
+
+            arr = obj->AddStringArray("values");
+            arr->Add("Jan");
+            arr->Add("Feb");
+            arr->Add("Mar");
+            arr->Add("Apr");
+            arr->Add("May");
+            arr->Add("Jun");
+            arr->Add("Jul");
+            arr->Add("Aug");
+            arr->Add("Sep");
+            arr->Add("Oct");
+            arr->Add("Nov");
+            arr->Add("Dec");
+        }
     }
 }
 
@@ -826,6 +854,90 @@ void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj, char *text, int col)
 
 /*##########################################################################
 #
+#   Name       : THeatJsonPage::AddYearData
+#
+#   Purpose....: Add year data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeatJsonPage::AddYearData(TJsonArrayCollection *obj, double val[12], bool valid[12])
+{
+    TJsonDoubleArray *arr;
+    int i;
+
+    arr = obj->AddDoubleArray("values", 1);
+
+    for (i = 0; i < 12; i++)
+    {
+        if (valid[i])
+            arr->Add(val[i]);
+        else
+            arr->AddNone();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THeatJsonPage::GetMonthTotal
+#
+#   Purpose....: Get month total
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double THeatJsonPage::GetMonthTotal(char *text, int col)
+{
+    int i;
+    char *ptr;
+    char *next;
+    char *rptr;
+    char *end;
+    double val = 0.0;
+
+    ptr = text;
+    while (ptr)
+    {
+        next = strchr(ptr, 0xd);
+        if (next)
+        {
+            *next = 0;
+            next++;
+        }
+
+        rptr = strchr(ptr, ';');
+        if (rptr)
+        {
+            ptr = rptr + 1;
+            rptr = strchr(ptr, ';');
+        }
+
+        if (rptr)
+        {
+            for (i = 0; rptr && i < col; i++)
+            {
+                ptr = rptr + 1;
+                rptr = strchr(ptr, ';');
+            }
+
+            if (i == col)
+            {
+                if (rptr)
+                    *rptr = 0;
+                val += strtod(ptr, &end);
+            }
+        }
+        ptr = next;
+    }
+    return val;
+}
+
+/*##########################################################################
+#
 #   Name       : THeatJsonPage::ReadData
 #
 #   Purpose....: Read data
@@ -902,38 +1014,105 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
     }
     else
     {
-        file = GetMonthFile();
-
-        if (file->IsOpen())
+        if (FUseMonth)
         {
-            text = ReadFile(file);
+            file = GetMonthFile();
+
+            if (file->IsOpen())
+            {
+                text = ReadFile(file);
                         
+                switch (FReqType)
+                {
+                    case REQ_SOLAR:
+                        obj->AddString("legendText", "solar");
+                        AddMonthData(obj, text, 0);
+                        break;
+
+                    case REQ_WIND:
+                        obj->AddString("legendText", "wind");
+                        AddMonthData(obj, text, 1);
+                        break;
+
+                    case REQ_SOLAR_WIND:
+                        obj->AddString("legendText", "solar");
+                        AddMonthData(obj, text, 0);
+                        delete text;
+
+                        obj->AddArray();
+                        text = ReadFile(file);
+                        obj->AddString("legendText", "wind");
+                        AddMonthData(obj, text, 1);
+                        break;
+                }
+                delete text;
+            }
+            delete file;
+        }
+        else
+        {
+            double valA[12];
+            double valB[12];
+            bool Valid[12];
+
+            for (FMonth = 1; FMonth <= 12; FMonth++)
+            {
+                file = GetMonthFile();
+
+                if (file->IsOpen())
+                {
+                    Valid[FMonth - 1] = true;
+
+                    text = ReadFile(file);
+                        
+                    switch (FReqType)
+                    {
+                        case REQ_SOLAR:
+                            valA[FMonth - 1] = GetMonthTotal(text, 0);
+                            break;
+
+                        case REQ_WIND:
+                            valA[FMonth - 1] = GetMonthTotal(text, 1);
+                            break;
+
+                        case REQ_SOLAR_WIND:
+                            valA[FMonth - 1] = GetMonthTotal(text, 0);
+                            delete text;
+
+                            text = ReadFile(file);
+                            valB[FMonth - 1] = GetMonthTotal(text, 1);
+                            break;
+                    }
+                    delete text;
+                }
+                else
+                    Valid[FMonth - 1] = false;
+                
+                delete file;
+            }
+
             switch (FReqType)
             {
                 case REQ_SOLAR:
                     obj->AddString("legendText", "solar");
-                    AddMonthData(obj, text, 0);
+                    AddYearData(obj, valA, Valid);
                     break;
 
                 case REQ_WIND:
                     obj->AddString("legendText", "wind");
-                    AddMonthData(obj, text, 1);
+                    AddYearData(obj, valA, Valid);
                     break;
 
                 case REQ_SOLAR_WIND:
                     obj->AddString("legendText", "solar");
-                    AddMonthData(obj, text, 0);
-                    delete text;
+                    AddYearData(obj, valA, Valid);
 
                     obj->AddArray();
-                    text = ReadFile(file);
                     obj->AddString("legendText", "wind");
-                    AddMonthData(obj, text, 1);
+                    AddYearData(obj, valB, Valid);
                     break;
             }
-            delete text;
         }
-        delete file;
     }
 }
 
@@ -1358,6 +1537,44 @@ bool THeatWebPage::HasPrevMonth()
 
 /*##########################################################################
 #
+#   Name       : THeatWebPage::HasNextYear
+#
+#   Purpose....: Has next year file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasNextYear()
+{
+    TDateTime time(FYear, 1, 1);
+
+    time.AddYear(1);
+    return HasMonthFile(time);
+}
+
+/*##########################################################################
+#
+#   Name       : THeatWebPage::HasPrevYear
+#
+#   Purpose....: Has previous year file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THeatWebPage::HasPrevYear()
+{
+    TDateTime time(FYear, 12, 1);
+
+    time.AddYear(-1);
+    return HasMonthFile(time);
+}
+
+/*##########################################################################
+#
 #   Name       : THeatWebPage::HasMonthFile
 #
 #   Purpose....: Get month file
@@ -1405,10 +1622,15 @@ void THeatWebPage::GotoPrev()
     }
     else
     {
-        TDateTime time(FYear, FMonth, 1);
-        time.AddMonth(-1);
-        FYear = time.GetYear();
-        FMonth = time.GetMonth();
+        if (FUseMonth)
+        {
+            TDateTime time(FYear, FMonth, 1);
+            time.AddMonth(-1);
+            FYear = time.GetYear();
+            FMonth = time.GetMonth();
+        }
+        else
+            FYear--;
     }
 }
 
@@ -1435,10 +1657,15 @@ void THeatWebPage::GotoNext()
     }
     else
     {
-        TDateTime time(FYear, FMonth, 1);
-        time.AddMonth(1);
-        FYear = time.GetYear();
-        FMonth = time.GetMonth();
+        if (FUseMonth)
+        {
+            TDateTime time(FYear, FMonth, 1);
+            time.AddMonth(1);
+            FYear = time.GetYear();
+            FMonth = time.GetMonth();
+        }
+        else
+            FYear++;
     }
 }
 
@@ -1476,24 +1703,47 @@ void THeatWebPage::Fixup()
     }
     else
     {
-        TDateTime time(FYear, FMonth, 1);
-
-        if (!HasMonthFile(time))
+        if (FUseMonth)
         {
-            if (time > currtime)
-            {
-                time = currtime;
- 
-                if (!HasMonthFile(time))
-                    time.AddMonth(-1);
-            }
-            else
-                while (!HasMonthFile(time))
-                    time.AddMonth(1);
-        }
+            TDateTime time(FYear, FMonth, 1);
 
-        FYear = time.GetYear();
-        FMonth = time.GetMonth();
+            if (!HasMonthFile(time))
+            {
+                if (time > currtime)
+                {
+                    time = currtime;
+ 
+                    if (!HasMonthFile(time))
+                        time.AddMonth(-1);
+                }
+                else
+                    while (!HasMonthFile(time))
+                        time.AddMonth(1);
+            }
+
+            FYear = time.GetYear();
+            FMonth = time.GetMonth();
+        }
+        else
+        {
+            TDateTime time(FYear, 12, 1);
+
+            if (!HasMonthFile(time))
+            {
+                if (time > currtime)
+                {
+                    time = currtime;
+ 
+                    if (!HasMonthFile(time))
+                        time.AddYear(-1);
+                }
+                else
+                    while (!HasMonthFile(time))
+                        time.AddYear(1);
+            }
+
+            FYear = time.GetYear();
+        }
     }
 }
 
@@ -1710,7 +1960,12 @@ void THeatWebPage::SendAnswer()
     if (FUseDay)
         Write("<input type=\"hidden\" name=\"daydia\" value=\"1\">\r\n");
     else
-        Write("<input type=\"hidden\" name=\"monthdia\" value=\"1\">\r\n");
+    {
+        if (FUseMonth)
+            Write("<input type=\"hidden\" name=\"monthdia\" value=\"1\">\r\n");
+        else
+            Write("<input type=\"hidden\" name=\"yeardia\" value=\"1\">\r\n");
+    }
 
     sprintf(str, "<input type=\"hidden\" name=\"year\" value=\"%d\">\r\n", FYear);
     Write(str);
@@ -1746,6 +2001,7 @@ void THeatWebPage::SendAnswer()
     {
         Write("<br>\r\n");
         Write("<input type=\"Submit\" value=\"month\" name=\"monthdia\">\r\n");
+        Write("<input type=\"Submit\" value=\"year\" name=\"yeardia\">\r\n");
         Write("<br>\r\n");
 
         if (HasPrevDay())
@@ -1756,15 +2012,32 @@ void THeatWebPage::SendAnswer()
     }
     else
     {
-        Write("<br>\r\n");
-        Write("<input type=\"Submit\" value=\"day\" name=\"daydia\">\r\n");
-        Write("<br>\r\n");
+        if (FUseMonth)
+        {
+            Write("<br>\r\n");
+            Write("<input type=\"Submit\" value=\"day\" name=\"daydia\">\r\n");
+            Write("<input type=\"Submit\" value=\"year\" name=\"yeardia\">\r\n");
+            Write("<br>\r\n");
 
-        if (HasPrevMonth())
-            Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
+            if (HasPrevMonth())
+                Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
+   
+            if (HasNextMonth())
+                Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
+        }
+        else
+        {
+            Write("<br>\r\n");
+            Write("<input type=\"Submit\" value=\"day\" name=\"daydia\">\r\n");
+            Write("<input type=\"Submit\" value=\"month\" name=\"monthdia\">\r\n");
+            Write("<br>\r\n");
 
-        if (HasNextMonth())
-            Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
+            if (HasPrevYear())
+                Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
+   
+            if (HasNextYear())
+                Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
+        }
     }
 
     Write("</form>\r\n");
@@ -1883,15 +2156,25 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 ##########################################################################*/
 void THeatWebPage::Post(const char *Var, const char *Val)
 {
+    if (!strcmp(Var, "yeardia"))
+    {
+        FUseDay = false;
+        FUseMonth = false;
+        FDay = 1;
+        FMonth = 1;
+        Fixup();
+    }
     if (!strcmp(Var, "monthdia"))
     {
         FUseDay = false;
+        FUseMonth = true;
         FDay = 1;
         Fixup();
     }
     else if (!strcmp(Var, "daydia"))
     {
         FUseDay = true;
+        FUseMonth = true;
         Fixup();
     }
     else if (!strcmp(Var, "wind"))

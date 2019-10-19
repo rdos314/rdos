@@ -88,6 +88,8 @@ protected:
 
     void AddDayData(TJsonArrayCollection *obj, char *text, int col);
     void AddMonthData(TJsonArrayCollection *obj, char *text, int col);
+    void AddYearData(TJsonArrayCollection *obj, double val[12], bool valid[12]);
+    double GetMonthTotal(char *text, int col);
 
     virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
     virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
@@ -128,6 +130,8 @@ protected:
     bool HasPrevDay();
     bool HasPrevMonth();
     bool HasNextMonth();
+    bool HasPrevYear();
+    bool HasNextYear();
 
     void GotoPrev();
     void GotoNext();
