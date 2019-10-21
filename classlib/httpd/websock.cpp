@@ -312,6 +312,19 @@ void TWebSocketServer::HandleWebSocket()
                         case 2:
                             ReceivedBinary(buf, size);
                             break;
+
+                        case 0x9:
+                            buf[size] = 0;
+                            ReceivedPing(buf);
+                            break;
+
+                        case 0xA:
+                            buf[size] = 0;
+                            ReceivedPong(buf);
+                            break;
+
+                        default:
+                            break;
                     }
                 }
                 delete buf;
@@ -443,6 +456,129 @@ void TWebSocketServer::SendBinary(const char *str, int size)
     }
 
     FSection.Leave();
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendControl
+#
+#   Purpose....: Send control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendControl(char op, const char *str)
+{
+    int size = strlen(str);
+    int hsize;
+    short int ssize;
+    int lsize;
+    char header[16];
+
+    header[0] = op;
+
+    if (size >= 65536)
+    {
+        header[1] = 127;
+        header[2] = 0xFF;
+        header[3] = 0xFF;
+
+        lsize = RdosSwapLong(size);
+        memcpy(header + 4, &lsize, 4);
+        hsize = 6;
+    }
+    else
+    {
+        if (size >= 126)
+        {
+            header[1] = 127;
+
+            ssize = RdosSwapShort((short int)size);
+            memcpy(header + 2, &ssize, 2);
+            hsize = 4;
+        }
+        else
+        {
+            header[1] = (char)size;
+            hsize = 2;
+        }
+    }
+
+    FSection.Enter();
+    
+    if (FSocket && FSocket->IsOpen())
+    {
+        FSocket->Write(header, hsize);
+        FSocket->Write(str, size);
+        FSocket->Push();
+    }
+
+    FSection.Leave();
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendPing
+#
+#   Purpose....: Send ping
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendPing(const char *str)
+{
+    SendControl(0x89, str);
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::SendPong
+#
+#   Purpose....: Send ping
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::SendPong(const char *str)
+{
+    SendControl(0x8A, str);
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::ReceivedPing
+#
+#   Purpose....: Received ping
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::ReceivedPing(char *str)
+{
+    SendPong(str);
+}
+   
+/*##########################################################################
+#
+#   Name       : TWebSocketServer::ReceivedPong
+#
+#   Purpose....: Received pong
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWebSocketServer::ReceivedPong(char *str)
+{
 }
                   
 /*##########################################################################

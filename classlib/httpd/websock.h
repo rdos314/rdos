@@ -54,9 +54,15 @@ protected:
     virtual const char *GetProtocol() = 0;
     virtual void ReceivedText(char *str) = 0;
     virtual void ReceivedBinary(char *str, int size) = 0;
+    virtual void ReceivedPing(char *str);
+    virtual void ReceivedPong(char *str);
 
     void SendText(const char *str);
     void SendBinary(const char *str, int size);
+
+    void SendControl(char op, const char *str);
+    void SendPing(const char *str);
+    void SendPong(const char *str);
 
     TString FHost;
     TString FReqUrl;
