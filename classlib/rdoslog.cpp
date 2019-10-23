@@ -464,7 +464,6 @@ TRdosLog::TRdosLog(TRdosLogThread *logdev, const char *cl)
   : FClass(cl)
 {
     FDev = logdev;
-    Init();
 }
 
 /*##########################################################################
@@ -489,8 +488,6 @@ TRdosLog::TRdosLog(const char *cl)
     Section.Leave();
 
     FDev = LogThread;
-
-    Init();
 }
 
 /*##########################################################################
@@ -506,23 +503,6 @@ TRdosLog::TRdosLog(const char *cl)
 ##########################################################################*/
 TRdosLog::~TRdosLog() 
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosLog::Init
-#
-#   Purpose....: Init
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosLog::Init()
-{
-    FEntryCount = 0;
-    FFileCount = 0;
 }
 
 /*##########################################################################
@@ -559,82 +539,18 @@ TRdosLogThread *TRdosLog::GetLogger()
 
 /*##########################################################################
 #
-#   Name       : TRdosLog::Setup
+#   Name       : TRdosLog::Add
 #
-#   Purpose....: Setup log location
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosLog::Setup(const char *Path, int FileCount, int FileSize)
-{
-    FDev->Setup(Path, FileCount, FileSize);
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosLog::DefineLogLevel
-#
-#   Purpose....: Define log level
+#   Purpose....: Add log msg
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::DefineLogLevel(int Level, const char *name)
+void TRdosLog::Add(int level, TString &str)
 {
-    FDev->DefineLogLevel(Level, name);
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosLog::SetLogLevel
-#
-#   Purpose....: Set log level
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosLog::SetLogLevel(int Level)
-{
-    FDev->SetLogLevel(Level);
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosLog::GetLogLevel
-#
-#   Purpose....: Get log level
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TRdosLog::GetLogLevel()
-{
-    return FDev->GetLogLevel();
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosLog::ShutDown
-#
-#   Purpose....: Shutdown log thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosLog::ShutDown()
-{
-    FDev->Stop();
+    FDev->Add(level, str);
 }
 
 /*##########################################################################
@@ -678,23 +594,7 @@ void TRdosLog::Write(int level, const char *label, const char *msg)
     str += label;
     str += "]";
 
-    FDev->Add(level, str);
-
-    if (FFileCount && FEntryCount)
-    {
-        FEventSection->Enter();
-
-        if (FEntryArr[FNextPos])
-            *FEntryArr[FNextPos] = str;
-        else
-            FEntryArr[FNextPos] = new TString(str);
-
-        FNextPos++;
-        if (FNextPos >= FEntryCount)
-            FNextPos = 0;
-
-        FEventSection->Leave();
-    }
+    Add(level, str);
 }
 
 /*##########################################################################
@@ -722,25 +622,109 @@ void TRdosLog::printf(int level, const char *label, const char *msg, ...)
 
 /*##########################################################################
 #
-#   Name       : TRdosLog::DefineEventDebug
+#   Name       : TRdosDefaultLog::TRdosDefaultLog
 #
-#   Purpose....: Define event debug
+#   Purpose....: Default log constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount)
+TRdosDefaultLog::TRdosDefaultLog(const char *path, int filecount, int filesize)
+ : TRdosLog(0, "Root"),
+   TRdosLogThread(path, filecount, filesize)
+{
+    Section.Enter();
+    LogThread = this;
+    Section.Leave();
+
+    FDev = LogThread;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDefaultLog::~TRdosDefaultLog
+#
+#   Purpose....: Default log destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDefaultLog::~TRdosDefaultLog()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosEventLog::TRdosEventLog
+#
+#   Purpose....: Event log constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosEventLog::TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, TRdosLogThread *logdev, const char *cl)
+ : TRdosLog(logdev, cl),
+   FLogPath(LogPath),
+   FEventSection("EventLog")
+{
+    Init(DumpFiles, EntryCount);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosEventLog::TRdosEventLog
+#
+#   Purpose....: Event log constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosEventLog::TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, const char *cl)
+ : TRdosLog(cl),
+   FLogPath(LogPath),
+   FEventSection("EventLog")
+{
+    Init(DumpFiles, EntryCount);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosEventLog::~TRdosEventLog
+#
+#   Purpose....: Event log destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosEventLog::~TRdosEventLog()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::Init
+#
+#   Purpose....: Init
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosEventLog::Init(int DumpFiles, int EntryCount)
 {
     int i;
     TString str;
-
-    str = "EventLog.";
-    str += FClass;
-    FEventSection = new TSection(str.GetData());
-
-    FLogPath = LogPath;
 
     FEntryCount = EntryCount;
     FEntryArr = new TString *[EntryCount];
@@ -754,7 +738,36 @@ void TRdosLog::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCou
 
 /*##########################################################################
 #
-#   Name       : TRdosLog::DumpEvents
+#   Name       : TRdosEventLog::Add
+#
+#   Purpose....: Add log msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosEventLog::Add(int level, TString &str)
+{
+    TRdosLog::Add(level, str);
+
+    FEventSection.Enter();
+
+    if (FEntryArr[FNextPos])
+        *FEntryArr[FNextPos] = str;
+    else
+        FEntryArr[FNextPos] = new TString(str);
+
+    FNextPos++;
+    if (FNextPos >= FEntryCount)
+        FNextPos = 0;
+
+    FEventSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosEventLog::DumpEvents
 #
 #   Purpose....: Dump buffer to file
 #
@@ -763,15 +776,21 @@ void TRdosLog::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCou
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::DumpEvents()
+void TRdosEventLog::DumpEvents()
 {
+    TString str;
+
     if (FFileCount && !IsRunning())
-        Start("Log Dump", 0x4000);
+    {
+        str = "EvLog ";
+        str += FClass;
+        Start(str.GetData(), 0x4000);
+    }
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosLog::CheckFileCount
+#   Name       : TRdosEventLog::CheckFileCount
 #
 #   Purpose....: Check file count
 #
@@ -780,7 +799,7 @@ void TRdosLog::DumpEvents()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::CheckFileCount()
+void TRdosEventLog::CheckFileCount()
 {
     TDirList FileList;
     TDirEntry entry;
@@ -811,7 +830,7 @@ void TRdosLog::CheckFileCount()
 
 /*##########################################################################
 #
-#   Name       : TRdosLog::InitFiles
+#   Name       : TRdosEventLog::InitFiles
 #
 #   Purpose....: Init files
 #
@@ -820,7 +839,7 @@ void TRdosLog::CheckFileCount()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::InitFiles()
+void TRdosEventLog::InitFiles()
 {
     bool ok;
     TDirList FileList;
@@ -831,13 +850,16 @@ void TRdosLog::InitFiles()
     char *ptr;
     int index;
     TString str;
+    TString LogPath(FLogPath);
+
+    LogPath += "/*.ldd";
 
     FCurrId = 0;
 
     file = new char[256];
 
     FileList.AddSortByTime();
-    FileList.Add(FLogPath);
+    FileList.Add(LogPath);
     FileList.Sort();
 
     ok = FileList.GotoFirst();
@@ -871,14 +893,14 @@ void TRdosLog::InitFiles()
     CheckFileCount();        
 }
 
-/*##################  TRdosLog::Execute  #######################
+/*##################  TRdosEventLog::Execute  #######################
 *   Purpose....: Dump thread                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TRdosLog::Execute()
+void TRdosEventLog::Execute()
 {
     int i;
     int pos;
@@ -891,7 +913,7 @@ void TRdosLog::Execute()
 
         DumpArr = new TString *[FEntryCount];
 
-        FEventSection->Enter();
+        FEventSection.Enter();
 
         pos = FNextPos;
 
@@ -901,7 +923,7 @@ void TRdosLog::Execute()
             else
                 DumpArr[i] = 0;
         
-        FEventSection->Leave();
+        FEventSection.Leave();
         
         for (i = pos; i < FEntryCount; i++) 
             if (FEntryArr[i])

@@ -50,18 +50,12 @@ protected:
     int FRowNum;
 };
 
-class TRdosLog : public TThread
+class TRdosLog
 {
 public:
     TRdosLog(TRdosLogThread *logdev, const char *cl);
     TRdosLog(const char *cl);
     ~TRdosLog();
-
-    void Setup(const char *path, int filecount, int filesize);
-    void DefineLogLevel(int Level, const char *name);
-    void SetLogLevel(int Level);
-    int GetLogLevel();
-    void ShutDown();
 
     void Write(int level, const char *label, const char *msg);
     void printf(int level, const char *label, const char *msg, ...);
@@ -69,26 +63,46 @@ public:
     TString GetClass();
     TRdosLogThread *GetLogger();
 
-    void DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount);
-    void DumpEvents();
-
 protected:
-    void Init();
-    void CheckFileCount();
-    void InitFiles();
-    virtual void Execute();
+    virtual void Add(int level, TString &str);
 
     TRdosLogThread *FDev;
     TString FClass;
+};
+
+class TRdosDefaultLog : public TRdosLog, TRdosLogThread
+{
+public:
+    TRdosDefaultLog(const char *path, int filecount, int filesize);
+    ~TRdosDefaultLog();
+};
+
+class TRdosEventLog : public TRdosLog, TThread
+{
+public:
+    TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, TRdosLogThread *logdev, const char *cl);
+    TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, const char *cl);
+    ~TRdosEventLog();
+
+    void DumpEvents();
+
+protected:
+    void Init(int DumpFiles, int EntryCount);
+    void CheckFileCount();
+    void InitFiles();
+
+    virtual void Add(int level, TString &str);
+    virtual void Execute();
+
+    TString FLogPath;
+    int FFileCount;
 
     int FEntryCount;
     TString **FEntryArr;
 
-    TSection *FEventSection;
+    TSection FEventSection;
     TSignalDevice FDumpSignal;
-    int FFileCount;
     int FNextPos;
-    TString FLogPath;
     int FCurrId;
     TFile *FCurrFile;
 };
