@@ -424,26 +424,30 @@ void TRdosLogThread::SwitchFile()
 void TRdosLogThread::Execute()
 {
     TString str;
+    TPathName path(FLogPath);
 
-    InitFiles();
+    if (path.MakeDir())
+    {        
+        InitFiles();
 
-    while (FInstalled) 
-    {
-        while (FInstalled && FList.GotoFirst())
+        while (FInstalled) 
         {
-            str = FList.Get();
-            Write(str);
-            FList.RemoveFirst();
+            while (FInstalled && FList.GotoFirst())
+            {
+                str = FList.Get();
+                Write(str);
+                FList.RemoveFirst();
+            }
+
+            if (FInstalled)
+                FSigDev.WaitForever();
         }
 
-        if (FInstalled)
-            FSigDev.WaitForever();
-    }
-
-    if (FCurrFile)
-    {
-        delete FCurrFile;
-        FCurrFile = 0;
+        if (FCurrFile)
+        {
+            delete FCurrFile;
+            FCurrFile = 0;
+        }
     }
 }
 
@@ -881,36 +885,40 @@ void TRdosLog::Execute()
     int i;
     int pos;
     TString **DumpArr;
+    TPathName path(FLogPath);
 
-    InitFiles();
+    if (path.MakeDir())
+    {        
+        InitFiles();
 
-    DumpArr = new TString *[FEntryCount];
+        DumpArr = new TString *[FEntryCount];
 
-    FEventSection->Enter();
+        FEventSection->Enter();
 
-    pos = FNextPos;
+        pos = FNextPos;
 
-    for (i = 0; i < FEntryCount; i++)
-        if (FEntryArr[i])
-            DumpArr[i] = new TString(*FEntryArr[i]);
-        else
-            DumpArr[i] = 0;
+        for (i = 0; i < FEntryCount; i++)
+            if (FEntryArr[i])
+                DumpArr[i] = new TString(*FEntryArr[i]);
+            else
+                DumpArr[i] = 0;
         
-    FEventSection->Leave();
+        FEventSection->Leave();
         
-    for (i = pos; i < FEntryCount; i++) 
-        if (FEntryArr[i])
-            FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
+        for (i = pos; i < FEntryCount; i++) 
+            if (FEntryArr[i])
+                FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
 
-    for (i = 0; i < pos; i++)
-        if (FEntryArr[i])
-            FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
+        for (i = 0; i < pos; i++)
+            if (FEntryArr[i])
+                FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
 
-    for (i = 0; i < FEntryCount; i++)
-        if (DumpArr[i])
-            delete DumpArr[i];
+        for (i = 0; i < FEntryCount; i++)
+            if (DumpArr[i])
+                delete DumpArr[i];
 
-    delete DumpArr;
-    delete FCurrFile;
-    FCurrFile = 0;
+        delete DumpArr;
+        delete FCurrFile;
+        FCurrFile = 0;
+    }
 }
