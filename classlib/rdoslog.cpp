@@ -125,14 +125,12 @@ void TRdosLogThread::Init()
 void TRdosLogThread::Setup(const char *path, int filecount, int filesize)
 {
     if (IsRunning())
-    {
         Stop();
 
-        FLogPath = path;
-        FFileCount = filecount;
-        FFileSize = filesize;
-        StartLog();
-    }
+    FLogPath = path;
+    FFileCount = filecount;
+    FFileSize = filesize;
+    StartLog();
 }
 
 /*##########################################################################

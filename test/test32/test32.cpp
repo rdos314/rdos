@@ -8,7 +8,7 @@
 #include "section.h"
 #include "file.h"
 #include "rdos.h"
-#include "powinv.h"
+#include "rdoslog.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -27,7 +27,10 @@
 ##########################################################################*/
 void main()
 {
-    TSmartPowInverter("192.168.1.100", 0x6401A8C0);
+    TRdosLog log("Test");
+
+    log.Setup("d:/rdoslog", 50, 0x10000);
+    log.Write(0, "Label", "Some text");
 
 //    RdosTestGate("");
 }
