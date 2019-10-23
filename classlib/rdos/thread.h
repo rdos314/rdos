@@ -40,7 +40,7 @@ public:
 
     virtual void Run();
     virtual void Terminated();
-    void Stop();
+    virtual void Stop();
     bool IsRunning();
 
     void *Owner;
