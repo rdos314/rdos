@@ -519,6 +519,8 @@ TRdosLog::~TRdosLog()
 ##########################################################################*/
 void TRdosLog::Init()
 {
+    FEntryCount = 0;
+    FFileCount = 0;
 }
 
 /*##########################################################################
@@ -675,6 +677,22 @@ void TRdosLog::Write(int level, const char *label, const char *msg)
     str += "]";
 
     FDev->Add(level, str);
+
+    if (FFileCount && FEntryCount)
+    {
+        FEventSection->Enter();
+
+        if (FEntryArr[FNextPos])
+            *FEntryArr[FNextPos] = str;
+        else
+            FEntryArr[FNextPos] = new TString(str);
+
+        FNextPos++;
+        if (FNextPos >= FEntryCount)
+            FNextPos = 0;
+
+        FEventSection->Leave();
+    }
 }
 
 /*##########################################################################
@@ -698,4 +716,201 @@ void TRdosLog::printf(int level, const char *label, const char *msg, ...)
     va_end(args);
 
     Write(level, label, str.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::DefineEventDebug
+#
+#   Purpose....: Define event debug
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosLog::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount)
+{
+    int i;
+    TString str;
+
+    str = "EventLog.";
+    str += FClass;
+    FEventSection = new TSection(str.GetData());
+
+    FLogPath = LogPath;
+
+    FEntryCount = EntryCount;
+    FEntryArr = new TString *[EntryCount];
+
+    for (i = 0; i < EntryCount; i++)
+        FEntryArr[i] = 0;
+
+    FFileCount = DumpFiles;
+    FNextPos = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::DumpEvents
+#
+#   Purpose....: Dump buffer to file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosLog::DumpEvents()
+{
+    if (FFileCount && !IsRunning())
+        Start("Log Dump", 0x4000);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::CheckFileCount
+#
+#   Purpose....: Check file count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosLog::CheckFileCount()
+{
+    TDirList FileList;
+    TDirEntry entry;
+    TPathName path;
+    int count;
+    TString LogPath(FLogPath);
+
+    LogPath += "/*.ldd";
+
+    FileList.AddSortByTime();
+    FileList.Add(LogPath);
+    FileList.Sort();
+
+    count = FileList.GetSize();
+
+    FileList.GotoFirst();
+
+    while (count > FFileCount)
+    {
+        entry = FileList.Get();
+        path = entry.GetPathName();
+        path.DeleteFile();
+
+        count--;
+        FileList.GotoNext();
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::InitFiles
+#
+#   Purpose....: Init files
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosLog::InitFiles()
+{
+    bool ok;
+    TDirList FileList;
+    TDirEntry entry;
+    TString basename;
+    TPathName path;
+    char *file;
+    char *ptr;
+    int index;
+    TString str;
+
+    FCurrId = 0;
+
+    file = new char[256];
+
+    FileList.AddSortByTime();
+    FileList.Add(FLogPath);
+    FileList.Sort();
+
+    ok = FileList.GotoFirst();
+
+    while (ok)
+    {
+        entry = FileList.Get();
+        basename = entry.GetEntryName();
+        strcpy(file, basename.GetData());
+        if (strstr(file, ".ldd"))
+        {
+            ptr = strchr(file, '.');
+            if (ptr)
+                *ptr = 0;
+
+            index = atoi(file);            
+
+            if (index > FCurrId)
+                FCurrId = index;
+        }
+            
+        ok = FileList.GotoNext();
+    }    
+
+    delete file;
+
+    FCurrId++;
+    str.printf("%s/%d.log", FLogPath.GetData(), FCurrId);
+    FCurrFile = new TFile(str.GetData(), 0);
+
+    CheckFileCount();        
+}
+
+/*##################  TRdosLog::Execute  #######################
+*   Purpose....: Dump thread                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRdosLog::Execute()
+{
+    int i;
+    int pos;
+    TString **DumpArr;
+
+    InitFiles();
+
+    DumpArr = new TString *[FEntryCount];
+
+    FEventSection->Enter();
+
+    pos = FNextPos;
+
+    for (i = 0; i < FEntryCount; i++)
+        if (FEntryArr[i])
+            DumpArr[i] = new TString(*FEntryArr[i]);
+        else
+            DumpArr[i] = 0;
+        
+    FEventSection->Leave();
+        
+    for (i = pos; i < FEntryCount; i++) 
+        if (FEntryArr[i])
+            FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
+
+    for (i = 0; i < pos; i++)
+        if (FEntryArr[i])
+            FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
+
+    for (i = 0; i < FEntryCount; i++)
+        if (DumpArr[i])
+            delete DumpArr[i];
+
+    delete DumpArr;
+    delete FCurrFile;
+    FCurrFile = 0;
 }

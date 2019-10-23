@@ -50,7 +50,7 @@ protected:
     int FRowNum;
 };
 
-class TRdosLog
+class TRdosLog : public TThread
 {
 public:
     TRdosLog(TRdosLogThread *logdev, const char *cl);
@@ -69,11 +69,28 @@ public:
     TString GetClass();
     TRdosLogThread *GetLogger();
 
+    void DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount);
+    void DumpEvents();
+
 protected:
     void Init();
+    void CheckFileCount();
+    void InitFiles();
+    virtual void Execute();
 
     TRdosLogThread *FDev;
     TString FClass;
+
+    int FEntryCount;
+    TString **FEntryArr;
+
+    TSection *FEventSection;
+    TSignalDevice FDumpSignal;
+    int FFileCount;
+    int FNextPos;
+    TString FLogPath;
+    int FCurrId;
+    TFile *FCurrFile;
 };
 
 #endif
