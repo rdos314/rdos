@@ -26,11 +26,9 @@
 ########################################################################*/
 
 #include "thread.h"
+#include "sigdev.h"
 
 #include <rdos.h>
-
-#define FALSE 0
-#define TRUE !FALSE
 
 /*##########################################################################
 #
@@ -60,9 +58,11 @@ static void ThreadStartup(void *ptr)
 #
 ##########################################################################*/
 TThread::TThread()
+  : FStopSection("Thread.Stop")
 {
-    FInstalled = TRUE;
-    FThreadRunning = FALSE;
+    FInstalled = true;
+    FThreadRunning = false;
+    FStopSignal = 0;
 }
 
 /*##########################################################################
@@ -77,9 +77,11 @@ TThread::TThread()
 #
 ##########################################################################*/
 TThread::TThread(const char *ThreadName, int StackSize)
+  : FStopSection("Thread.Stop")
 {
-    FInstalled = TRUE;
-    FThreadRunning = FALSE;
+    FInstalled = true;
+    FThreadRunning = false;
+    FStopSignal = 0;
     
     Start(ThreadName, StackSize);
 }
@@ -96,9 +98,10 @@ TThread::TThread(const char *ThreadName, int StackSize)
 #
 ##########################################################################*/
 TThread::TThread(const char *ThreadName, int StackSize, bool Run)
+  : FStopSection("Thread.Stop")
 {
-    FInstalled = TRUE;
-    FThreadRunning = FALSE;
+    FInstalled = true;
+    FThreadRunning = false;
 
     if (Run)
         Start(ThreadName, StackSize);
@@ -148,9 +151,26 @@ void TThread::Terminated()
 ##########################################################################*/
 void TThread::Stop()
 {
-    FInstalled = FALSE;
-    while (FThreadRunning)
-        RdosWaitMilli(250);
+    if (FThreadRunning)
+    {
+        TSignalDevice FSignal;
+
+        FStopSection.Enter();
+
+        FStopSignal = &FSignal;
+        FInstalled = false;
+
+        while (FThreadRunning)
+        {
+            FStopSection.Leave();
+            FSignal.WaitForever();
+            FStopSection.Enter();
+        }
+
+        FStopSignal = 0;
+
+        FStopSection.Leave();
+    }
 }
 
 /*##########################################################################
@@ -234,12 +254,21 @@ void TThread::Start(const char *ThreadName, int Prio, int StackSize)
 ##########################################################################*/
 void TThread::Run()
 {
-    FInstalled = TRUE;
+    FInstalled = true;
     if (!FThreadRunning)
     {
-        FThreadRunning = TRUE;
+        FThreadRunning = true;
         Execute();
-        FThreadRunning = FALSE;
+
+        FStopSection.Enter();
+
+        FThreadRunning = false;
+
+        if (FStopSignal)
+            FStopSignal->Signal();
+
+        FStopSection.Leave();
+
         Terminated();
     }
 }
@@ -259,4 +288,3 @@ void TThread::Run()
 void TThread::Execute()
 {
 }
-

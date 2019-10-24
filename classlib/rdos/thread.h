@@ -30,6 +30,8 @@
 
 #include "section.h"
 
+class TSignalDevice;
+
 class TThread
 {
 public:
@@ -52,10 +54,12 @@ protected:
     void Start(const char *ThreadName, int Prio, int StackSize);
     virtual void Execute();
 
-    int FInstalled;
+    bool FInstalled;
+    TSignalDevice *FStopSignal;
+    TSection FStopSection;
 
 private:
-    int FThreadRunning;
+    bool FThreadRunning;
 };
 
 #endif

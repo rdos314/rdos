@@ -27,10 +27,14 @@
 ##########################################################################*/
 void main()
 {
+    TRdosDefaultLog def("d:/rdoslog", 50, 0x10000, "System");
     TRdosLog log("Test");
 
-    log.Setup("d:/rdoslog", 50, 0x10000);
+    def.printf(0, "main", "Started, %d", 150);
     log.Write(0, "Label", "Some text");
+
+    def.Stop();
+    log.Write(0, "Label", "After stopped");
 
 //    RdosTestGate("");
 }

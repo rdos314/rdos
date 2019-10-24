@@ -70,14 +70,14 @@ protected:
     TString FClass;
 };
 
-class TRdosDefaultLog : public TRdosLog, TRdosLogThread
+class TRdosDefaultLog : public TRdosLog, public TRdosLogThread
 {
 public:
-    TRdosDefaultLog(const char *path, int filecount, int filesize);
+    TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl);
     ~TRdosDefaultLog();
 };
 
-class TRdosEventLog : public TRdosLog, TThread
+class TRdosEventLog : public TRdosLog, public TThread
 {
 public:
     TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, TRdosLogThread *logdev, const char *cl);

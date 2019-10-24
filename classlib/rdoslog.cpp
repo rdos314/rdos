@@ -76,6 +76,7 @@ TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize)
     FFileSize = filesize;
 
     Init();
+    StartLog();
 }
 
 /*##########################################################################
@@ -260,11 +261,12 @@ void TRdosLogThread::Stop()
 ##########################################################################*/
 void TRdosLogThread::Write(TString &str)
 {
-    char rowstr[10];
+    TString wrstr;
 
-    sprintf(rowstr, "%04d ", FRowNum);
-    FCurrFile->Write(rowstr, strlen(rowstr));
-    FCurrFile->Write(str.GetData(), str.GetSize());
+    wrstr.printf("%04d ", FRowNum);
+    wrstr += str;
+    wrstr += "\r\n";
+    FCurrFile->Write(wrstr.GetData(), wrstr.GetSize());
 
     FRowNum++;
     if (FRowNum == 10000)
@@ -631,8 +633,8 @@ void TRdosLog::printf(int level, const char *label, const char *msg, ...)
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDefaultLog::TRdosDefaultLog(const char *path, int filecount, int filesize)
- : TRdosLog(0, "Root"),
+TRdosDefaultLog::TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl)
+ : TRdosLog(0, cl),
    TRdosLogThread(path, filecount, filesize)
 {
     Section.Enter();
