@@ -90,6 +90,7 @@ protected:
     void Init(int DumpFiles, int EntryCount);
     void CheckFileCount();
     void InitFiles();
+    void DumpOne(TString *entry);
 
     virtual void Add(int level, TString &str);
     virtual void Execute();

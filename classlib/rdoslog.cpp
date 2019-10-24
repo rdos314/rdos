@@ -805,29 +805,40 @@ void TRdosEventLog::CheckFileCount()
 {
     TDirList FileList;
     TDirEntry entry;
+    TString basename;
     TPathName path;
-    int count;
-    TString LogPath(FLogPath);
+    char *file;
+    int count = 0;
+    bool ok;
 
-    LogPath += "/*.ldd";
+    file = new char[256];
 
     FileList.AddSortByTime();
-    FileList.Add(LogPath);
+    FileList.Add(FLogPath);
     FileList.Sort();
 
-    count = FileList.GetSize();
+    ok = FileList.GotoLast();
 
-    FileList.GotoFirst();
-
-    while (count > FFileCount)
+    while (ok)
     {
         entry = FileList.Get();
-        path = entry.GetPathName();
-        path.DeleteFile();
-
-        count--;
-        FileList.GotoNext();
+        basename = entry.GetEntryName();
+        strcpy(file, basename.GetData());
+        if (strstr(file, ".ldd"))
+        {
+            count++;
+            if (count > FFileCount)
+            {
+                path = entry.GetPathName();
+                if (path.IsFile())
+                    path.DeleteFile();
+            }
+        }
+            
+        ok = FileList.GotoPrev();
     }    
+
+    delete file;
 }
 
 /*##########################################################################
@@ -852,16 +863,13 @@ void TRdosEventLog::InitFiles()
     char *ptr;
     int index;
     TString str;
-    TString LogPath(FLogPath);
-
-    LogPath += "/*.ldd";
 
     FCurrId = 0;
 
     file = new char[256];
 
     FileList.AddSortByTime();
-    FileList.Add(LogPath);
+    FileList.Add(FLogPath);
     FileList.Sort();
 
     ok = FileList.GotoFirst();
@@ -873,14 +881,23 @@ void TRdosEventLog::InitFiles()
         strcpy(file, basename.GetData());
         if (strstr(file, ".ldd"))
         {
-            ptr = strchr(file, '.');
-            if (ptr)
-                *ptr = 0;
+            if (entry.GetFileSize() == 0)
+            {
+                path = entry.GetPathName();
+                if (path.IsFile())
+                    path.DeleteFile();
+            }
+            else
+            {
+                ptr = strchr(file, '.');
+                if (ptr)
+                    *ptr = 0;
 
-            index = atoi(file);            
+                index = atoi(file);            
 
-            if (index > FCurrId)
-                FCurrId = index;
+                if (index > FCurrId)
+                    FCurrId = index;
+            }
         }
             
         ok = FileList.GotoNext();
@@ -889,10 +906,24 @@ void TRdosEventLog::InitFiles()
     delete file;
 
     FCurrId++;
-    str.printf("%s/%d.log", FLogPath.GetData(), FCurrId);
+    str.printf("%s/%d.ldd", FLogPath.GetData(), FCurrId);
     FCurrFile = new TFile(str.GetData(), 0);
 
     CheckFileCount();        
+}
+
+/*##################  TRdosEventLog::DumpOne  #######################
+*   Purpose....: Write dump entry                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRdosEventLog::DumpOne(TString *entry)
+{
+    TString str(*entry);
+    str += "\r\n";
+    FCurrFile->Write(str.GetData(), str.GetSize());
 }
 
 /*##################  TRdosEventLog::Execute  #######################
@@ -928,12 +959,12 @@ void TRdosEventLog::Execute()
         FEventSection.Leave();
         
         for (i = pos; i < FEntryCount; i++) 
-            if (FEntryArr[i])
-                FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
+            if (DumpArr[i])
+                DumpOne(DumpArr[i]);
 
         for (i = 0; i < pos; i++)
-            if (FEntryArr[i])
-                FCurrFile->Write(DumpArr[i]->GetData(), DumpArr[i]->GetSize());
+            if (DumpArr[i])
+                DumpOne(DumpArr[i]);
 
         for (i = 0; i < FEntryCount; i++)
             if (DumpArr[i])
