@@ -578,7 +578,7 @@ void TRdosLog::Add(int level, TString &str)
 
 /*##########################################################################
 #
-#   Name       : TRdosLog::Write
+#   Name       : TRdosLog::Log
 #
 #   Purpose....: Write log entry
 #
@@ -587,7 +587,7 @@ void TRdosLog::Add(int level, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::Write(int level, const char *label, const char *msg) 
+void TRdosLog::Log(int level, const char *label, const char *msg) 
 {
     TString str;
     TDateTime time;
@@ -652,7 +652,7 @@ void TRdosLog::printf(int level, const char *label, const char *msg, ...)
     str.printf(msg, args);
     va_end(args);
 
-    Write(level, label, str.GetData());
+    Log(level, label, str.GetData());
 }
 
 /*##########################################################################

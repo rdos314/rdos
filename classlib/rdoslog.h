@@ -16,7 +16,7 @@ public:
     TRdosLogThread(const char *path, int filecount, int filesize, const char *ThreadName);
     TRdosLogThread(const char *path, int filecount, int filesize);
     TRdosLogThread();
-    ~TRdosLogThread();
+    virtual ~TRdosLogThread();
 
     void Setup(const char *path, int filecount, int filesize);
     void DefineLogLevel(int Level, const char *name);
@@ -56,9 +56,9 @@ class TRdosLog
 public:
     TRdosLog(TRdosLogThread *logdev, const char *cl);
     TRdosLog(const char *cl);
-    ~TRdosLog();
+    virtual ~TRdosLog();
 
-    void Write(int level, const char *label, const char *msg);
+    void Log(int level, const char *label, const char *msg);
     void printf(int level, const char *label, const char *msg, ...);
 
     TString GetClass();
@@ -76,7 +76,7 @@ class TRdosDefaultLog : public TRdosLog, public TRdosLogThread
 public:
     TRdosDefaultLog(const char *path, int filecount, int filesize, const char *threadname, const char *cl);
     TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl);
-    ~TRdosDefaultLog();
+    virtual ~TRdosDefaultLog();
 };
 
 class TRdosEventLog : public TRdosLog, public TThread
@@ -84,7 +84,7 @@ class TRdosEventLog : public TRdosLog, public TThread
 public:
     TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, TRdosLogThread *logdev, const char *cl);
     TRdosEventLog(const char *LogPath, int DumpFiles, int EntryCount, const char *cl);
-    ~TRdosEventLog();
+    virtual ~TRdosEventLog();
 
     void DumpEvents();
 
