@@ -76,7 +76,28 @@ TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize)
     FFileSize = filesize;
 
     Init();
-    StartLog();
+    StartLog("Log Thread");
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLogThread::TRdosLogThread
+#
+#   Purpose....: TRdosLogThread constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize, const char *name)
+  : FLogPath(path)
+{
+    FFileCount = filecount;
+    FFileSize = filesize;
+
+    Init();
+    StartLog(name);
 }
 
 /*##########################################################################
@@ -131,7 +152,7 @@ void TRdosLogThread::Setup(const char *path, int filecount, int filesize)
     FLogPath = path;
     FFileCount = filecount;
     FFileSize = filesize;
-    StartLog();
+    StartLog("Log Thread");
 }
 
 /*##########################################################################
@@ -194,10 +215,10 @@ int TRdosLogThread::GetLogLevel()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLogThread::StartLog()
+void TRdosLogThread::StartLog(const char *ThreadName)
 {
     if (!IsRunning() && FFileCount && FFileSize)
-        Start("Log Thread", 0x8000);
+        Start(ThreadName, 0x8000);
 }
 
 /*##########################################################################
@@ -590,11 +611,23 @@ void TRdosLog::Write(int level, const char *label, const char *msg)
     else
         str += "Too long msg";
 
-    str += " [";
-    str += FClass;
-    str += ":";
-    str += label;
-    str += "]";
+    if (FClass.GetSize())
+    {
+        str += " [";
+        str += FClass;
+        str += ":";
+        str += label;
+        str += "]";
+    }
+    else
+    {
+        if (strlen(label))
+        {
+            str += " [";
+            str += label;
+            str += "]";
+        }
+    }
 
     Add(level, str);
 }
@@ -620,6 +653,28 @@ void TRdosLog::printf(int level, const char *label, const char *msg, ...)
     va_end(args);
 
     Write(level, label, str.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDefaultLog::TRdosDefaultLog
+#
+#   Purpose....: Default log constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDefaultLog::TRdosDefaultLog(const char *path, int filecount, int filesize, const char *threadname, const char *cl)
+ : TRdosLog(0, cl),
+   TRdosLogThread(path, filecount, filesize, threadname)
+{
+    Section.Enter();
+    LogThread = this;
+    Section.Leave();
+
+    FDev = LogThread;
 }
 
 /*##########################################################################

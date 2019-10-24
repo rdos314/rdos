@@ -13,6 +13,7 @@ class TRdosLogThread : public TThread
 {
     friend class TRdosLog;
 public:
+    TRdosLogThread(const char *path, int filecount, int filesize, const char *ThreadName);
     TRdosLogThread(const char *path, int filecount, int filesize);
     TRdosLogThread();
     ~TRdosLogThread();
@@ -22,7 +23,7 @@ public:
     void SetLogLevel(int Level);
     int GetLogLevel();
 
-    void StartLog();
+    void StartLog(const char *ThreadName);
     void Add(int level, TString &str);
 
     virtual void Stop();
@@ -73,6 +74,7 @@ protected:
 class TRdosDefaultLog : public TRdosLog, public TRdosLogThread
 {
 public:
+    TRdosDefaultLog(const char *path, int filecount, int filesize, const char *threadname, const char *cl);
     TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl);
     ~TRdosDefaultLog();
 };
