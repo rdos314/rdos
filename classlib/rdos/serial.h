@@ -116,8 +116,8 @@ protected:
 private:
     void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
     void OpenPort();
-    int GetNextDumpFile();
-    void DumpOnce();
+    void CheckFileCount();
+    void InitFiles();
 
     TSection FSection;
     int FHandle;
@@ -141,10 +141,9 @@ private:
     struct TSerialDebug *FEntryArr;
 
     TSection FEventSection;
-    TSignalDevice FDumpSignal;
-    int FDumpFiles;
-    int FWriteDump;
-    int FDumpStarted;
+    int FCurrId;
+    TFile *FCurrFile;
+    int FFileCount;
     int FNextPos;
     TString FLogPath;
 };

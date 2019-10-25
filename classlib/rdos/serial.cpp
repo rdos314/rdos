@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include "serial.h"
 #include "rdos.h"
+#include "path.h"
+#include "direntry.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -294,10 +296,10 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
     FDataBits = DataBits;
     FStopBits = StopBits;
     FDebugFile = 0;
-    FDumpStarted = FALSE;
-    FWriteDump = FALSE;
+    FCurrFile = 0;
+    FCurrId = 0;
     FEntryCount = 0;
-    FDumpFiles = 0;
+    FFileCount = 0;
     FUseCts = FALSE;
     FBufferSize = 0x4000;
        
@@ -402,11 +404,7 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits,
 ##########################################################################*/
 TSerialDevice::~TSerialDevice()
 {
-    if (FDumpStarted)
-    {
-        FInstalled = FALSE;
-        FDumpSignal.Signal();
-    }        
+    Stop();
 
     if (FHandle)
         RdosCloseCom(FHandle);
@@ -528,6 +526,128 @@ void TSerialDevice::StopDebug()
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::CheckFileCount
+#
+#   Purpose....: Check file count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::CheckFileCount()
+{
+    TDirList FileList;
+    TDirEntry entry;
+    TString basename;
+    TPathName path;
+    char *file;
+    int count = 0;
+    bool ok;
+
+    file = new char[256];
+
+    FileList.AddSortByTime();
+    FileList.Add(FLogPath);
+    FileList.Sort();
+
+    ok = FileList.GotoLast();
+
+    while (ok)
+    {
+        entry = FileList.Get();
+        basename = entry.GetEntryName();
+        strcpy(file, basename.GetData());
+        if (strstr(file, ".sdd"))
+        {
+            if (entry.GetFileSize() == 0)
+            {
+                path = entry.GetPathName();
+                if (path.IsFile())
+                    path.DeleteFile();
+            }
+            else
+            {
+                count++;
+                if (count > FFileCount)
+                {
+                    path = entry.GetPathName();
+                    if (path.IsFile())
+                        path.DeleteFile();
+                }
+            }
+        }
+            
+        ok = FileList.GotoPrev();
+    }    
+
+    delete file;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::InitFiles
+#
+#   Purpose....: Init files
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::InitFiles()
+{
+    bool ok;
+    TDirList FileList;
+    TDirEntry entry;
+    TString basename;
+    TPathName path;
+    char *file;
+    char *ptr;
+    int index;
+    TString str;
+
+    CheckFileCount();        
+
+    FCurrId = 0;
+
+    file = new char[256];
+
+    FileList.AddSortByTime();
+    FileList.Add(FLogPath);
+    FileList.Sort();
+
+    ok = FileList.GotoFirst();
+
+    while (ok)
+    {
+        entry = FileList.Get();
+        basename = entry.GetEntryName();
+        strcpy(file, basename.GetData());
+        if (strstr(file, ".sdd"))
+        {
+            ptr = strchr(file, '.');
+            if (ptr)
+                *ptr = 0;
+
+            index = atoi(file);            
+
+            if (index > FCurrId)
+                FCurrId = index;
+        }
+            
+        ok = FileList.GotoNext();
+    }    
+
+    delete file;
+
+    FCurrId++;
+    str.printf("%s/%d.sdd", FLogPath.GetData(), FCurrId);
+    FCurrFile = new TFile(str.GetData(), 0);
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::DefineEventDebug
 #
 #   Purpose....: Define event debug
@@ -540,48 +660,36 @@ void TSerialDevice::StopDebug()
 int TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
 {
     int i;
-    char str[256];
-    int dir = RdosOpenDir(LogPath);
-
-    if (!dir)
-        return FALSE;
-
-    RdosCloseDir(dir);
-
-    // make sure there are the correct number of file stumps
-    for (i = 1; i < DumpFiles; i++) 
-    {
-        sprintf(str, "%s/%d.sdd", LogPath, i);
-
-        int fileHandle = RdosOpenFile(str, 0);
-        if (fileHandle == 0) 
-            fileHandle = RdosCreateFile(str, 0);
-        
-        if (fileHandle == 0) 
-            return FALSE;
-        else
-            RdosCloseFile(fileHandle);
-    }
 
     FLogPath = LogPath;
     FInChannel = InChannel;
     FOutChannel = OutChannel;
-    FNextPos = 0;
+    FFileCount = DumpFiles;
 
-    FEntryCount = EntryCount;
-    FEntryArr = new struct TSerialDebug[EntryCount];
+    TPathName path(FLogPath);
 
-    // initialize cache to empty
-    for (i = 0; i < EntryCount; i++) 
-    {
-        FEntryArr[i].Channel = 0;
-        FEntryArr[i].Time = 0;
-        FEntryArr[i].ch = 0;
+    if (path.MakeDir())
+    {        
+        CheckFileCount();
+
+        FEntryCount = EntryCount;
+        FEntryArr = new struct TSerialDebug[EntryCount];
+
+        // initialize cache to empty
+        for (i = 0; i < EntryCount; i++) 
+        {
+            FEntryArr[i].Channel = 0;
+            FEntryArr[i].Time = 0;
+            FEntryArr[i].ch = 0;
+        }
+
+        return TRUE;
     }
-
-    FDumpFiles = DumpFiles;
-
-    return TRUE;
+    else
+    {
+        FFileCount = 0;
+        return FALSE;
+    }
 }
 
 /*##########################################################################
@@ -597,111 +705,16 @@ int TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int Entr
 ##########################################################################*/
 int TSerialDevice::DumpEvents()
 {
-    if (FDumpFiles && FInChannel && FOutChannel)
+    TString str;
+
+    if (FFileCount && FInChannel && FOutChannel && !IsRunning())
     {
-        Block();
-
-        if (!FDumpStarted)
-        {
-            FDumpStarted = TRUE;
-            Start("Serial Dump", 0x4000);
-        }
-
-        FWriteDump = TRUE;
-        FDumpSignal.Signal();
-
-        Unblock();
+        str.printf("ComLog %d", FPort);
+        Start(str.GetData(), 0x4000);
         return TRUE;
-    
     }
     else
         return FALSE;
-}
-
-/*##################  TSerialDevice::GetNextDumpFile  #######################
-*   Purpose....: Get next dump file                                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TSerialDevice::GetNextDumpFile()
-{
-    char OldestName[256];
-    char filename[256];
-    int dir;
-    unsigned long long OldestTime = 0xFFFFFFFFFFFFFFFF;
-    long long time;
-    int idx = 0;
-    long filesize;
-    int attributes;
-
-    dir = RdosOpenDir(FLogPath.GetData());
-
-    if (dir) 
-    {
-        OldestName[0] = 0;
-
-        // now loop over all files to find the oldest file
-        do {
-            time = RdosReadLongDir(dir, idx, 255, filename, &filesize, &attributes);
-            idx++;
-            if (time >= 0 && OldestTime > time && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-            { 
-                OldestTime = time;
-                strcpy(OldestName, filename);
-            }
-        } while (time >= 0);
-        
-        RdosCloseDir(dir);
-
-        sprintf(filename, "%s/%s", FLogPath.GetData(), OldestName);
-        return RdosOpenFile(filename, 0);
-    }
-    return 0;
-}
-
-/*##################  TSerialDevice::DumpOnce  #######################
-*   Purpose....: Dump once to file                                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TSerialDevice::DumpOnce()
-{
-    int pos;
-    int fileHandle = GetNextDumpFile();
-    struct TSerialDebug *DumpArr;
-    
-    if (fileHandle)
-    {
-        DumpArr = new struct TSerialDebug[FEntryCount];
-
-        FEventSection.Enter();
-
-        pos = FNextPos;
-
-        for (int i = 0; i < FEntryCount; i++)
-            DumpArr[i] = FEntryArr[i];
-        
-        FEventSection.Leave();
-        
-        RdosSetFileSize(fileHandle, 0);
-
-        for (int i = pos; i < FEntryCount; i++) 
-            if (FEntryArr[i].Time)
-                RdosWriteFile(fileHandle, &DumpArr[i], sizeof(struct TSerialDebug));
-
-        for (int i = 0; i < pos; i++)
-            if (FEntryArr[i].Time)
-                RdosWriteFile(fileHandle, &DumpArr[i], sizeof(struct TSerialDebug));
-
-        RdosCloseFile(fileHandle);
-
-        delete DumpArr;
-
-    }
 }
 
 /*##################  TSerialDevice::Execute  #######################
@@ -713,14 +726,36 @@ void TSerialDevice::DumpOnce()
 *##########################################################################*/
 void TSerialDevice::Execute()
 {
-    while (FInstalled)
-    {
-        if (FWriteDump)
-        {
-            FWriteDump = FALSE;
-            DumpOnce();
-        }
-        FDumpSignal.WaitForever();
+    int pos;
+    struct TSerialDebug *DumpArr;
+    TPathName path(FLogPath);
+
+    if (path.MakeDir())
+    {        
+        InitFiles();
+
+        DumpArr = new struct TSerialDebug[FEntryCount];
+
+        FEventSection.Enter();
+
+        pos = FNextPos;
+
+        for (int i = 0; i < FEntryCount; i++)
+            DumpArr[i] = FEntryArr[i];
+        
+        FEventSection.Leave();
+        
+        for (int i = pos; i < FEntryCount; i++) 
+            if (DumpArr[i].Time)
+                FCurrFile->Write(&DumpArr[i], sizeof(struct TSerialDebug));
+
+        for (int i = 0; i < pos; i++)
+            if (DumpArr[i].Time)
+                FCurrFile->Write(&DumpArr[i], sizeof(struct TSerialDebug));
+
+        delete DumpArr;
+        delete FCurrFile;
+        FCurrFile = 0;
     }
 }
 
@@ -1252,7 +1287,7 @@ void TSerialDevice::Write(char ch)
             FDebugFile->Write(&Debug, sizeof(Debug));
         }
 
-        if (FDumpFiles && FEntryCount && FOutChannel)
+        if (FFileCount && FEntryCount && FOutChannel)
         {
             FEntryArr[FNextPos].Time = RdosGetLongTime();
             FEntryArr[FNextPos].Channel = FOutChannel;
@@ -1403,7 +1438,7 @@ char TSerialDevice::Read()
             FDebugFile->Write(&Debug, sizeof(Debug));
         }   
 
-        if (FDumpFiles && FEntryCount && FInChannel)
+        if (FFileCount && FEntryCount && FInChannel)
         {
             FEntryArr[FNextPos].Time = RdosGetLongTime();
             FEntryArr[FNextPos].Channel = FInChannel;
