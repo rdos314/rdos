@@ -366,7 +366,8 @@ TSerialDevice::TSerialDevice(int Port)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate)
-  : FSection("Serial")
+  : FSection("Serial"),
+    FEventSection("EvSerial")
 {
         Init(Port, Baudrate, 'N', 8, 1);
 }
@@ -387,7 +388,8 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
-  : FSection("Serial")
+  : FSection("Serial"),
+    FEventSection("EvSerial")
 {
         Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
