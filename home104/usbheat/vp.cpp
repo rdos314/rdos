@@ -65,6 +65,7 @@ const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0
 #
 ##########################################################################*/
 TVp::TVp(TControlThread *control)
+  : FLog("TVp")
 {
     int i;
     
@@ -412,6 +413,7 @@ void TVp::UpdateCirc(int diostat)
         {
             if (on)
             {
+                FLog.Log(0, "UpdateCirc", "Circ on");
                 RdosToggleSerialLine(1, 4);
 
                 if (RdosReadSerialLines(1, &diostat))
@@ -424,6 +426,7 @@ void TVp::UpdateCirc(int diostat)
         {
             if (!on)
             {
+                FLog.Log(0, "UpdateCirc", "Circ off");
                 RdosToggleSerialLine(1, 4);
 
                 if (RdosReadSerialLines(1, &diostat))
@@ -472,6 +475,8 @@ void TVp::UpdateVp(int diff)
                 {
                     FLowTemp = FTankTemp - 30;
                     FHasLowTemp = TRUE;
+                    if (!on)
+                        FLog.Log(0, "UpdateVp", "Inc on");
                     on = TRUE;
                 }
 
@@ -491,9 +496,17 @@ void TVp::UpdateVp(int diff)
                 }
 
                 if (FOffCounter == 0 && FTankTemp > FLowTemp + 5)
+                {
+                    if (on)
+                        FLog.Log(0, "UpdateVp", "Dec off");
                     on = FALSE;                
+                }
                 else
+                {
+                    if (!on)
+                        FLog.Log(0, "UpdateVp", "Dec on");
                     on = TRUE;
+                }
             }
 
         }

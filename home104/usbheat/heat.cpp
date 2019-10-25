@@ -46,6 +46,7 @@
 #include "jpeg.h"
 #include "file.h"
 #include "web.h"
+#include "rdoslog.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -651,6 +652,9 @@ int main()
     TTableControl *WindTable;
     
     RdosWaitMilli(2500);
+
+    TRdosDefaultLog Log("d:/log", 50, 128 * 1024, "Log", "");
+    Log.Log(0, "", "Started");
 
     InitWeb();
 

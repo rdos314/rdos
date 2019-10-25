@@ -31,6 +31,7 @@
 #include "file.h"
 #include "fuzzy.h"
 #include "control.h"
+#include "rdoslog.h"
 
 #define MAX_LEVEL_HISTORY   601
 
@@ -141,6 +142,7 @@ protected:
     TControlThread *FControl;
 
     TSection FSection;
+    TRdosLog FLog;
 };
 
 #endif
