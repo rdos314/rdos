@@ -145,6 +145,7 @@ private:
     TFile *FCurrFile;
     int FFileCount;
     int FNextPos;
+    bool FNewData;
     TString FLogPath;
 };
 

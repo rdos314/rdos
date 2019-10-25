@@ -298,6 +298,7 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
     FDebugFile = 0;
     FCurrFile = 0;
     FCurrId = 0;
+    FNextPos = 0;
     FEntryCount = 0;
     FFileCount = 0;
     FUseCts = FALSE;
@@ -707,7 +708,7 @@ int TSerialDevice::DumpEvents()
 {
     TString str;
 
-    if (FFileCount && FInChannel && FOutChannel && !IsRunning())
+    if (FFileCount && FInChannel && FOutChannel && !IsRunning() && FNewData)
     {
         str.printf("ComLog %d", FPort);
         Start(str.GetData(), 0x4000);
@@ -742,6 +743,8 @@ void TSerialDevice::Execute()
 
         for (int i = 0; i < FEntryCount; i++)
             DumpArr[i] = FEntryArr[i];
+
+        FNewData = false;
         
         FEventSection.Leave();
         
@@ -1289,6 +1292,8 @@ void TSerialDevice::Write(char ch)
 
         if (FFileCount && FEntryCount && FOutChannel)
         {
+            FEventSection.Enter();
+
             FEntryArr[FNextPos].Time = RdosGetLongTime();
             FEntryArr[FNextPos].Channel = FOutChannel;
             FEntryArr[FNextPos].ch = ch;
@@ -1296,8 +1301,11 @@ void TSerialDevice::Write(char ch)
             FNextPos++;
             if (FNextPos >= FEntryCount)
                 FNextPos = 0;
-        }
-        
+
+            FNewData = true;
+
+            FEventSection.Leave();
+        }        
     }       
 }
 
@@ -1440,6 +1448,8 @@ char TSerialDevice::Read()
 
         if (FFileCount && FEntryCount && FInChannel)
         {
+            FEventSection.Enter();
+
             FEntryArr[FNextPos].Time = RdosGetLongTime();
             FEntryArr[FNextPos].Channel = FInChannel;
             FEntryArr[FNextPos].ch = ch;
@@ -1447,6 +1457,10 @@ char TSerialDevice::Read()
             FNextPos++;
             if (FNextPos >= FEntryCount)
                 FNextPos = 0;
+
+            FNewData = true;
+
+            FEventSection.Leave();
         }
     }
     
