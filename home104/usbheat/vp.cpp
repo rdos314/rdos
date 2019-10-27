@@ -45,6 +45,8 @@
 #define VOLUME_TANK 500
 #define VOLUME_HEAT 100
 
+#define OFF_TIMEOUT   5 * 60
+
 void LockGUI();
 void UnlockGUI();
 
@@ -84,7 +86,7 @@ TVp::TVp(TControlThread *control)
     FHasCirc = FALSE;
     FHistoryCount = 0;
     FMaxTank = 450;
-    FOffCounter = 30;
+    FOffCounter = OFF_TIMEOUT;
 
     FDayFile = 0;
 
@@ -462,22 +464,23 @@ void TVp::UpdateVp(int diff)
     if (on)
     {
         if (FTankTemp > FMaxTank)
+        {
+            if (on)
+                FLog.Log(0, "UpdateVp", "Temp off");
             on = FALSE;
+        }
         else
         {
             on = FPrevOn;
             
             if (diff > 0)
             {
-                FOffCounter = 30;
+                FOffCounter = OFF_TIMEOUT;
                 
                 if (FIncCount)
                 {
                     FLowTemp = FTankTemp - 30;
                     FHasLowTemp = TRUE;
-                    if (!on)
-                        FLog.Log(0, "UpdateVp", "Inc on");
-                    on = TRUE;
                 }
 
                 FIncCount++;
@@ -495,17 +498,17 @@ void TVp::UpdateVp(int diff)
                     FHasLowTemp = TRUE;
                 }
 
-                if (FOffCounter == 0 && FTankTemp > FLowTemp + 5)
+                if (FOffCounter == 0)
                 {
-                    if (on)
-                        FLog.Log(0, "UpdateVp", "Dec off");
-                    on = FALSE;                
-                }
-                else
-                {
-                    if (!on)
-                        FLog.Log(0, "UpdateVp", "Dec on");
-                    on = TRUE;
+                    if (FTankTemp <= FLowTemp + 5)
+                    {
+                        if (!on)
+                        {
+                            FLog.Log(0, "UpdateVp", "Limit on");
+                            FOffCounter = OFF_TIMEOUT;
+                        }
+                        on = TRUE;
+                    }
                 }
             }
 
