@@ -2,7 +2,7 @@
 MagicCookie={0b13fe8c-dfe0-40eb-8900-6712719559a7}
 Version=1.0
 [File000]
-Location=F:\rdos\pic\usbcom\usbcom.o
+Location=C:\rdos\pic\usbcom\usbcom.o
 Folder=Intermediary
 DeviceName=PIC18F4550
 LanguageToolSuiteID={6B3DAA78-59C1-46DD-B6AA-DBDAE4E06484}
@@ -15,7 +15,7 @@ ToolArgsString=
 TraceCmdString=
 DebugOptions=
 [File001]
-Location=F:\rdos\pic\usbcom\usbcom.err
+Location=C:\rdos\pic\usbcom\usbcom.err
 Folder=Intermediary
 DeviceName=PIC18F4550
 LanguageToolSuiteID={6B3DAA78-59C1-46DD-B6AA-DBDAE4E06484}
@@ -28,7 +28,7 @@ ToolArgsString=
 TraceCmdString=
 DebugOptions=
 [File002]
-Location=F:\rdos\pic\usbcom\usbcom.hex
+Location=C:\rdos\pic\usbcom\usbcom.hex
 Folder=Output
 DeviceName=PIC18F4550
 LanguageToolSuiteID={6B3DAA78-59C1-46DD-B6AA-DBDAE4E06484}
@@ -41,7 +41,7 @@ ToolArgsString=
 TraceCmdString=
 DebugOptions=
 [File003]
-Location=F:\rdos\pic\usbcom\usbcom.lst
+Location=C:\rdos\pic\usbcom\usbcom.lst
 Folder=Output
 DeviceName=PIC18F4550
 LanguageToolSuiteID={6B3DAA78-59C1-46DD-B6AA-DBDAE4E06484}
@@ -54,7 +54,7 @@ ToolArgsString=
 TraceCmdString=
 DebugOptions=
 [File004]
-Location=F:\rdos\pic\usbcom\usbcom.cof
+Location=C:\rdos\pic\usbcom\usbcom.cof
 Folder=Output
 DeviceName=PIC18F4550
 LanguageToolSuiteID={6B3DAA78-59C1-46DD-B6AA-DBDAE4E06484}
