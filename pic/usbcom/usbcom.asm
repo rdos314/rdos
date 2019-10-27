@@ -2150,95 +2150,9 @@ HandleUsbError:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleUsbReset:
-    movlb 0xF
-    bcf UIR, TRNIF
-    bcf UIR, TRNIF
-    bcf UIR, TRNIF
-    bcf UIR, TRNIF
-;
-    clrf UEP0
-    clrf UEP1
-    clrf UEP2
-    clrf UEP3
-    clrf UEP4
-    clrf UEP5
-    clrf UEP6
-    clrf UEP7
-;
-    movlb usb_buf_page
-    movlw 8
-    movwf control_out_size
-    movlw low usb_cout
-    movwf control_out_low
-    movlw high usb_cout
-    movwf control_out_high
-    movlw 0x88
-    movwf control_out_stat
-;
-    movlw 8
-    movwf control_in_size
-    movlw low usb_cin
-    movwf control_in_low
-    movlw high usb_cin
-    movwf control_in_high
-    movlw 0x8
-    movwf control_in_stat
-;
-    movlw SER_USB_SIZE
-    movwf ser_out_size
-    movlw low usb_ser_out
-    movwf ser_out_low
-    movlw high usb_ser_out
-    movwf ser_out_high
-    movlw 0x88
-    movwf ser_out_stat
-;
-    movlw SER_USB_SIZE
-    movwf ser_in_size
-    movlw low usb_ser_in
-    movwf ser_in_low
-    movlw high usb_ser_in
-    movwf ser_in_high
-    movlw 0x48
-    movwf ser_in_stat
-;
-    movlw 0x8
-    movwf bus_out_size
-    movlw low usb_bus_out
-    movwf bus_out_low
-    movlw high usb_bus_out
-    movwf bus_out_high
-    movlw 0x88
-    movwf bus_out_stat
-;
-    movlw 0x8
-    movwf bus_in_size
-    movlw low usb_bus_in
-    movwf bus_in_low
-    movlw high usb_bus_in
-    movwf bus_in_high
-    movlw 0x48
-    movwf bus_in_stat
-;
-    movlb 0xF
-    clrf UADDR
-    clrf UIR
-;
-    movlw 0xFF
-    movwf UIE
-;
-    movlw 0x16
-    movwf UEP0
-;
-    movlw 0x1E
-    movwf UEP1
-;
-    movlw 0x1E
-    movwf UEP2
-;
-    movlb 0
-    clrf usb_flags
-    clrf usb_adr
+    call InitUsb
+    call InitSerial
+    call InitBus
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
