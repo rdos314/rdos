@@ -1260,7 +1260,7 @@ bool THeatJsonPage::DecodeReq(const char *ReqStr)
 
                     ptr++;
                     FYear = atoi(ptr);
-                    if (FYear < 2019 || FYear > 2100)
+                    if (FYear < 2010 || FYear > 2100)
                         ok = false;
 
                     if (ok)
@@ -1823,7 +1823,7 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
 
                     ptr++;
                     FYear = atoi(ptr);
-                    if (FYear < 2019 || FYear > 2100)
+                    if (FYear < 2010 || FYear > 2100)
                         ok = false;
 
                     if (ok)
