@@ -58,10 +58,6 @@
 
 #define MAX_FAULT_THREADS   128
 
-int FaultThreads;
-ThreadActionState FaultStateArr[MAX_FAULT_THREADS];
-Tss FaultTssArr[MAX_FAULT_THREADS];
-
 long Timeout = 0;
 
 TRdosLog *Log;
@@ -129,32 +125,6 @@ void SetupFaultSave()
             break;
         }
     }    
-}
-
-/*##################  HandleFaultSave  #####################################
-*   Purpose....: Handle fault save                                                                                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void HandleFaultSave()
-{
-    int ok;
-
-    FaultThreads = 0;
-
-    for (;;)
-    {
-        ok = RdosGetFaultThreadState(FaultThreads, &FaultStateArr[FaultThreads]);
-        if (ok)
-            ok = RdosGetFaultThreadTss(FaultThreads, &FaultTssArr[FaultThreads]);
-
-        if (ok)
-            FaultThreads++;
-        else
-            break;        
-    }
 }
 
 /*##################  AddFaultState  #####################################
@@ -539,43 +509,58 @@ void AddCore(TString &fstr, int core, TCrashCoreInfo *info)
 void LogFault()
 {
     int i;    
-    TFile File("d:/heat/error.txt");
-    int size;
-    TString FaultStr;
+    int ok;
+    bool clear = false;
 
     if (RdosHasCrashInfo())
     {
         TCrashInfo info;
         int core;
 
+        clear = true;
+
         for (core = 0; core < MAX_CRASH_INFO_CORES; core++)
         {
             if (info.CrashInfo[core])
-                AddCore(FaultStr, core, info.CrashInfo[core]);
-        }
+            {
+                TString str;
 
-        if (FaultStr.GetSize())
+                str = "\r\n";
+                AddCore(str, core, info.CrashInfo[core]);
+                Log->Log(0, "CoreFault", str.GetData());
+            }
+        }
+    }
+
+    ok = TRUE;
+
+    for (i = 0; i < 256 && ok; i++)
+    {
+        TString str;
+        ThreadActionState FaultState;
+        Tss FaultTss;
+
+        ok = RdosGetFaultThreadState(i, &FaultState);
+        if (ok)
+            ok = RdosGetFaultThreadTss(i, &FaultTss);
+
+        if (ok)
         {
-            Log->Log(0, "CoreFault", FaultStr.GetData());
-            FaultStr = "";
+            clear = true;
+
+            str = "\r\n";
+            AddFaultState(str, &FaultState);
+            AddFaultTss(str, &FaultTss);
+            AddFaultCallStack(str, &FaultState);
+            Log->Log(0, "Fault", str.GetData());
         }
     }
 
+    if (clear)
+        RdosClearFaultSave();
 
-    for (i = 0; i < FaultThreads; i++)
-    {
-        AddFaultState(FaultStr, &FaultStateArr[i]);
-        AddFaultTss(FaultStr, &FaultTssArr[i]);
-        AddFaultCallStack(FaultStr, &FaultStateArr[i]);
-    }
-
-    if (FaultStr.GetSize())
-    {
-        Log->Log(0, "Fault", FaultStr.GetData());
-        FaultStr = "";
-    }
-
-    size = File.GetSize();
+    TFile File("d:/heat/error.txt");
+    int size = File.GetSize();
 
     if (size > 0xFF00)
         size = 0xFF00;
@@ -738,18 +723,14 @@ int main()
 
     RdosWaitMilli(1000);
 
-    Log = new TRdosDefaultLog("d:/log", 200, 0x20000, "Loader Log", "");
+    Log = new TRdosDefaultLog("d:/log", 200, 0x20000, "Loader Log", "Sys");
 
     Timeout = 2 * 90 * 60;
 
     RdosCreateThread(WatchdogThread, "Loader WD", 0, 0x2000);
 
     SetupFaultSave();
-    HandleFaultSave();
     LogFault();
-
-    if (FaultThreads || RdosHasCrashInfo())
-        RdosClearFaultSave();
 
     Timeout = 2 * 60;
 
