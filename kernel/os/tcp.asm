@@ -3306,6 +3306,124 @@ ProcessOptions  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           InitSyn
+;
+;       Purpose:        Init SYN struc
+;
+;       Parameters:     DS:EBX      SYN entry
+;                       EDX         remote ip address
+;                       DI          remote port
+;                       ES:SI       TCP data
+;                       ES:DI       TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitSyn    Proc near
+    mov ds:[ebx].tcp_syn_ip,edx
+    mov ds:[ebx].tcp_syn_port,di
+    mov ds:[ebx].tcp_syn_mtu,1400
+;
+    mov eax,es:[di].tcp_seq
+    Reverse
+    mov ds:[ebx].tcp_syn_seq,eax
+;
+    GetSystemTime
+    mov ds:[ebx].tcp_syn_time,eax
+    mov ds:[ebx].tcp_syn_time+4,edx
+;
+    rcr edx,1
+    rcr eax,1
+    rcr edx,1
+    rcr eax,1
+    rcr edx,1
+    rcr eax,1
+    mov ds:[ebx].tcp_syn_iss,eax
+;
+    ret
+InitSyn	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ProcessSynOptions
+;
+;       Purpose:        Process SYN options
+;
+;       Parameters:     DS:EBX  Syn struc
+;                       CX      Size of data & header
+;                       EDX     Source IP address
+;                       ES:SI   IP options
+;                       ES:DI   TCP header
+;
+;       Returns:        ES:ESI  TCP data
+;                       CX      Size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessSynOptions  Proc near
+    movzx dx,es:[di].tcp_header_len
+    shr dx,2
+    sub dx,SIZE tcp_header
+    or dx,dx
+    jz process_syn_options_done
+;
+    mov si,di
+    add si,SIZE tcp_header
+
+process_syn_options_next:
+    sub dx,1
+    jz process_syn_options_done
+;
+    lods byte ptr es:[si]
+    or al,al
+    jz process_syn_options_done
+;
+    cmp al,1
+    jz process_syn_options_next
+;
+    cmp al,2
+    je process_syn_mtu
+;
+    jmp process_syn_options_adv
+
+process_syn_mtu:
+    mov al,es:[si]
+    cmp al,4
+    jne process_syn_options_adv
+;       
+    inc si
+    sub dx,3
+    jc process_syn_options_done
+;
+    lods word ptr es:[si]
+    xchg al,ah
+    mov ds:[ebx].tcp_syn_mtu,ax
+
+process_syn_options_ignore_mtu:
+    or dx,dx
+    jz process_syn_options_done
+    jmp process_syn_options_next
+
+process_syn_options_adv:
+    sub dx,1
+    jz process_syn_options_done
+    lods byte ptr es:[si]
+    movzx ax,al
+    sub al,2
+    add si,ax
+    sub dx,ax
+    ja process_syn_options_next
+
+process_syn_options_done:
+    movzx ax,es:[di].tcp_header_len
+    shr ax,2
+    sub cx,ax
+    mov si,di
+    add si,ax
+    ret
+ProcessSynOptions  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           ReceiveChecksum
 ;
 ;       Purpose:        Check receive checksum

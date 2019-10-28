@@ -79,16 +79,32 @@ tcp_urgent		DW ?
 
 tcp_header	ENDS
 
+tcp_syn_sel     STRUC
+
+tcp_syn_time            DD ?,?
+tcp_syn_ip              DD ?
+tcp_syn_seq             DD ?
+tcp_syn_iss             DD ?
+tcp_syn_port            DW ?
+tcp_syn_mtu             DW ?
+
+tcp_syn_sel     ENDS
+
 tcp_listen	STRUC
 
-tcp_listen_section		section_typ <>
-tcp_listen_next			DW ?
-tcp_listen_port			DW ?
-tcp_listen_buffer_size	DD ?
-tcp_listen_list			DW ?
-tcp_listen_wait 		DW ?
+tcp_listen_section      section_typ <>
+tcp_listen_next         DW ?
+tcp_listen_port         DW ?
+tcp_listen_buffer_size  DD ?
+tcp_listen_list         DW ?
+tcp_listen_wait         DW ?
 tcp_listen_max_conn     DW ?
 tcp_listen_conn_count   DW ?
+
+tcp_listen_syn_count    DW ?
+tcp_listen_syn_in       DW ?
+tcp_listen_syn_out      DW ?
+tcp_listen_syn_sel      DW ?
 
 tcp_listen	ENDS
 
