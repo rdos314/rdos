@@ -64,9 +64,7 @@ Tss FaultTssArr[MAX_FAULT_THREADS];
 
 long Timeout = 0;
 
-TRdosLogThread *FaultDev;
-TRdosLog *FaultLog;
-TString FaultStr;
+TRdosLog *Log;
 
 /*##################  OnMsg  #####################################
 *   Purpose....: Debug message                                                                                        #
@@ -77,7 +75,7 @@ TString FaultStr;
 *##########################################################################*/
 void OnMsg(TWdSocketServerFactory *fact, const char *msg)
 {
-//    Log.Write(TLog::INFO, "Debugger", msg);
+    Log->Log(0, "Debugger", msg);
 }
 
 /*##################  WriteCommand ##########################
@@ -89,7 +87,7 @@ void OnMsg(TWdSocketServerFactory *fact, const char *msg)
 *##########################################################################*/
 void WriteCommand(TFtpSocketServer *server, const char *str)
 {
-//    printf(str);
+    Log->Log(0, "Ftpd", str);
 }
 
 /*##################  SetupFaultSave  #####################################
@@ -531,18 +529,19 @@ void AddCore(TString &fstr, int core, TCrashCoreInfo *info)
     fstr += "\r\n";
 }
 
-/*##################  CreateFaultString  #####################################
-*   Purpose....: Create fault string                                                                                       #
+/*##################  LogFault  #####################################
+*   Purpose....: Log fault                                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void CreateFaultString()
+void LogFault()
 {
     int i;    
     TFile File("d:/heat/error.txt");
     int size;
+    TString FaultStr;
 
     if (RdosHasCrashInfo())
     {
@@ -554,13 +553,26 @@ void CreateFaultString()
             if (info.CrashInfo[core])
                 AddCore(FaultStr, core, info.CrashInfo[core]);
         }
+
+        if (FaultStr.GetSize())
+        {
+            Log->Log(0, "CoreFault", FaultStr.GetData());
+            FaultStr = "";
+        }
     }
+
 
     for (i = 0; i < FaultThreads; i++)
     {
         AddFaultState(FaultStr, &FaultStateArr[i]);
         AddFaultTss(FaultStr, &FaultTssArr[i]);
         AddFaultCallStack(FaultStr, &FaultStateArr[i]);
+    }
+
+    if (FaultStr.GetSize())
+    {
+        Log->Log(0, "Fault", FaultStr.GetData());
+        FaultStr = "";
     }
 
     size = File.GetSize();
@@ -573,7 +585,7 @@ void CreateFaultString()
         char *buf = new char[size + 1];
         File.Read(buf, size);
         buf[size] = 0;
-        FaultStr += buf;
+        Log->Log(0, "Error", buf);
         delete buf;
     }
 }
@@ -726,13 +738,15 @@ int main()
 
     RdosWaitMilli(1000);
 
+    Log = new TRdosDefaultLog("d:/log", 200, 0x20000, "Loader Log", "");
+
     Timeout = 2 * 90 * 60;
 
     RdosCreateThread(WatchdogThread, "Loader WD", 0, 0x2000);
 
     SetupFaultSave();
     HandleFaultSave();
-    CreateFaultString();
+    LogFault();
 
     if (FaultThreads || RdosHasCrashInfo())
         RdosClearFaultSave();
