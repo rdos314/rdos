@@ -42,6 +42,8 @@
 #include "rdosimg.h"
 #include "rdoslog.h"
 #include "crash.h"
+#include "ftpfact.h"
+#include "sockobj.h"
 
 #include "wdfact.h"
 #include "wdfile.h"
@@ -74,6 +76,18 @@ int IsLoading = FALSE;
 void OnMsg(TWdSocketServerFactory *fact, const char *msg)
 {
 //    Log.Write(TLog::INFO, "Debugger", msg);
+}
+
+/*##################  WriteCommand ##########################
+*   Purpose....: Write command echo                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCommand(TFtpSocketServer *server, const char *str)
+{
+//    printf(str);
 }
 
 /*##################  SetupFaultSave  #####################################
@@ -636,6 +650,40 @@ void DebuggerThread(void *ptr)
         fact.WaitForever();
 }
 
+/*##################  FtpThread  ##############################################
+ *   Purpose....: Ftp thread                                                                           #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *   Created....: 96-10-02 le                                                #
+ *##########################################################################*/
+void FtpThread(void *ptr)
+{    
+    TFtpSocketServerFactory Factory(21, 50, 0x4000);
+
+    Factory.AddUser("b-drive", "rdos", "b:\\");
+    Factory.AddUser("c-drive", "rdos", "c:\\");
+    Factory.AddUser("d-drive", "rdos", "d:\\");
+    Factory.AddUser("e-drive", "rdos", "e:\\");
+    Factory.AddUser("f-drive", "rdos", "f:\\");
+    Factory.AddUser("g-drive", "rdos", "g:\\");
+    Factory.AddUser("h-drive", "rdos", "h\\");
+    Factory.AddUser("i-drive", "rdos", "i:\\");
+    Factory.AddUser("j-drive", "rdos", "j:\\");
+    Factory.AddUser("k-drive", "rdos", "k:\\");
+    Factory.AddUser("l-drive", "rdos", "l:\\");
+    Factory.AddUser("m-drive", "rdos", "m:\\");
+    Factory.AddUser("n-drive", "rdos", "n:\\");
+    Factory.AddUser("x-drive", "rdos", "x:\\");
+    Factory.AddUser("y-drive", "rdos", "y:\\");
+    Factory.AddUser("z-drive", "rdos", "z:\\");
+    Factory.OnCommand = WriteCommand;
+    Factory.SetDataPort(2100);
+
+    for (;;)
+        Factory.WaitForever();
+}
+
 /*##################  StartApp  #####################################
 *   Purpose....: Start application program                                                                                        #
 *   In params..: *                                                          #
@@ -652,6 +700,7 @@ void StartApp()
 
     RdosSetCurDir("d:/heat");
     RdosCreateThread(DebuggerThread, "Debug server", 0, 0x2000);
+    RdosCreateThread(FtpThread, "Ftp server", 0, 0x2000);
 
     PrevOutput = dup(1);
     PrevError = dup(2);
