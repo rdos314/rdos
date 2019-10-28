@@ -64,7 +64,9 @@ Tss FaultTssArr[MAX_FAULT_THREADS];
 
 long Timeout = 0;
 
-int IsLoading = FALSE;
+TRdosLogThread *FaultDev;
+TRdosLog *FaultLog;
+TString FaultStr;
 
 /*##################  OnMsg  #####################################
 *   Purpose....: Debug message                                                                                        #
@@ -157,271 +159,267 @@ void HandleFaultSave()
     }
 }
 
-/*##################  WriteFaultState  #####################################
-*   Purpose....: Write fault state info to file                                                                                        #
+/*##################  AddFaultState  #####################################
+*   Purpose....: Add fault state info to string                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteFaultState(TFile &file, ThreadActionState *state)
+void AddFaultState(TString &fstr, ThreadActionState *state)
 {
     char str[128];
         
     sprintf(str, "Thread %04hX:", state->ID);
-    file.Write(str);    
+    fstr += str;
 
     strncpy(str, state->Name, 32);
     str[31] = 0;
-    file.Write(str);    
 
-    file.Write("\r\n");
+    fstr += str;
+    fstr += "\r\n";
 }
 
-/*##################  WriteFaultTss  #####################################
-*   Purpose....: Write fault TSS info to file                                                                                        #
+/*##################  AddFaultTss  #####################################
+*   Purpose....: Add fault TSS info to file                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteFaultTss(TFile &file, Tss *tss)
+void AddFaultTss(TString &fstr, Tss *tss)
 {
-    char str[128];
+    TString str;
     
-    sprintf(str, "CS:EIP = %04hX:%08lX\r\n", tss->cs, tss->eip);
-    file.Write(str);
+    str.printf("CS:EIP = %04hX:%08lX\r\n", tss->cs, tss->eip);
+    fstr += str;
     
-    sprintf(str, "SS:ESP = %04hX:%08lX\r\n", tss->ss, tss->esp);    
-    file.Write(str);
+    str.printf("SS:ESP = %04hX:%08lX\r\n", tss->ss, tss->esp);    
+    fstr += str;
 
+    str.printf("EAX = %08lX ", tss->eax);    
+    fstr += str;
 
-    sprintf(str,"EAX = %08lX ", tss->eax);    
-    file.Write(str);
+    str.printf("EBX = %08lX ", tss->ebx);    
+    fstr += str;
 
-    sprintf(str, "EBX = %08lX ", tss->ebx);    
-    file.Write(str);
+    str.printf("ECX = %08lX ", tss->ecx);    
+    fstr += str;
 
-    sprintf(str, "ECX = %08lX ", tss->ecx);    
-    file.Write(str);
+    str.printf("EDX = %08lX\r\n", tss->edx);    
+    fstr += str;
 
-    sprintf(str, "EDX = %08lX\r\n", tss->edx);    
-    file.Write(str);
+    str.printf("ESI = %08lX ", tss->esi);    
+    fstr += str;
 
+    str.printf("EDI = %08lX ", tss->edi);    
+    fstr += str;
 
-    sprintf(str, "ESI = %08lX ", tss->esi);    
-    file.Write(str);
+    str.printf("EBP = %08lX ", tss->ebp);    
+    fstr += str;
 
-    sprintf(str, "EDI = %08lX ", tss->edi);    
-    file.Write(str);
+    str.printf("EFL = %08lX\r\n", tss->eflags);        
+    fstr += str;
 
-    sprintf(str, "EBP = %08lX ", tss->ebp);    
-    file.Write(str);
+    str.printf("DS = %04hX ", tss->ds);    
+    fstr += str;
 
-    sprintf(str, "EFL = %08lX\r\n", tss->eflags);        
-    file.Write(str);
+    str.printf("ES = %04hX ", tss->es);    
+    fstr += str;
 
+    str.printf("FS = %04hX ", tss->fs);    
+    fstr += str;
 
-    sprintf(str, "DS = %04hX ", tss->ds);    
-    file.Write(str);
-
-    sprintf(str, "ES = %04hX ", tss->es);    
-    file.Write(str);
-
-    sprintf(str, "FS = %04hX ", tss->fs);    
-    file.Write(str);
-
-    sprintf(str, "GS = %04hX\r\n", tss->gs);    
-    file.Write(str);
+    str.printf("GS = %04hX\r\n", tss->gs);    
+    fstr += str;
 }
 
-/*##################  WriteFaultCallStack  #####################################
-*   Purpose....: Write fault call stack                                                                                        #
+/*##################  AddFaultCallStack  #####################################
+*   Purpose....: Add fault call stack                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteFaultCallStack(TFile &file, ThreadActionState *state)
+void AddFaultCallStack(TString &fstr, ThreadActionState *state)
 {
     int i;
-    char str[128];
+    TString str;
 
     if (state->UserCount)
     {
-        file.Write("Calls:");
+        fstr += "Calls:";
 
         for (i = 0; i < state->UserCount; i++)
         {
-            file.Write(" ");
+            fstr += " ";
             if (state->UserCall[i].Sel != 0x1B3)
             {
-                sprintf(str, "%04hX:", state->UserCall[i].Sel);
-                file.Write(str);
+                str.printf("%04hX:", state->UserCall[i].Sel);
+                fstr += str;
             }
 
-            sprintf(str, "%08lX", state->UserCall[i].Offset);
-            file.Write(str);
+            str.printf("%08lX", state->UserCall[i].Offset);
+            fstr += str;
         }
-        file.Write("\r\n");
+        fstr += "\r\n";
     }
-    file.Write("\r\n");
+    fstr += "\r\n";
 }
 
-/*##################  WriteSelector  #####################################
-*   Purpose....: Write core selector                                                                                        #
+/*##################  AddCoreSelector  #####################################
+*   Purpose....: Add core selector                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteSelector(TFile &file, const char *Name, TCrashSelectorInfo *info)
+void AddCoreSelector(TString &fstr, const char *Name, TCrashSelectorInfo *info)
 {
-    char str[81];
+    TString str;
 
-    file.Write(Name);
-    file.Write("=");
+    fstr += Name;
+    fstr += "=";
 
-    sprintf(str,"%04hX", info->Selector);    
-    file.Write(str);
+    str.printf("%04hX", info->Selector);    
+    fstr += str;
 
     if (info->Valid)
     {    
-        sprintf(str," %08lX (%08lX) ", info->Base, info->Limit);    
-        file.Write(str);
-
-        file.Write(info->InfoText);
+        str.printf(" %08lX (%08lX) ", info->Base, info->Limit);    
+        fstr += str;
+        fstr += info->InfoText;
     }
-    file.Write("\r\n");
+    fstr += "\r\n";
 }
 
-/*##################  WriteDt  #####################################
-*   Purpose....: Write core descriptor table                                                                                        #
+/*##################  AddCoreDt  #####################################
+*   Purpose....: Add core descriptor table                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteDt(TFile &file, const char *Name, TCrashSelectorInfo *info)
+void AddCoreDt(TString &fstr, const char *Name, TCrashSelectorInfo *info)
 {
-    char str[81];
+    TString str;
 
-    file.Write(Name);
-    file.Write("=");
+    fstr += Name;
+    fstr += "=";
 
-    sprintf(str,"%08lX (%08lX)\r\n", info->Base, info->Limit);    
-    file.Write(str);
+    str.printf("%08lX (%08lX)\r\n", info->Base, info->Limit);    
+    fstr += str;
 }
 
-/*##################  WriteFlags  #####################################
-*   Purpose....: Write core flags                                                                                        #
+/*##################  AddCoreFlags  #####################################
+*   Purpose....: Add core flags                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteFlags(TFile &file, long long flags)
+void AddCoreFlags(TString &fstr, long long flags)
 {
     int iopl = (((int)flags) >> 12) & 0x3;
-    char str[10];
+    TString str;
      
     if (flags & 0x1)
-        file.Write("CY ");
+        fstr += "CY ";
     else
-        file.Write("NC ");
+        fstr += "NC ";
 
     if (flags & 0x40)
-        file.Write("ZR ");
+        fstr += "ZR ";
     else
-        file.Write("NZ ");
+        fstr += "NZ ";
 
     if (flags & 0x200)
-        file.Write("EI ");
+        fstr += "EI ";
     else
-        file.Write("DI ");
+        fstr += "DI ";
 
     if (flags & 0x4000)
-        file.Write("NT ");
+        fstr += "NT ";
      else
-        file.Write("PR ");
+        fstr += "PR ";
 
     if (flags & 0x20000)
-        file.Write("VM ");
+        fstr += "VM ";
     else
-        file.Write("PM ");
+        fstr += "PM ";
 
-    sprintf(str, "IOPL=%d\r\n", iopl);
-    file.Write(str);
+    str.printf("IOPL=%d\r\n", iopl);
+    fstr += str;
 }
 
-/*##################  WriteThread  #####################################
-*   Purpose....: Write core thread                                                                                        #
+/*##################  AddCoreThread  #####################################
+*   Purpose....: Add core thread                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteThread(TFile &file, TCrashThreadInfo *info)
+void AddCoreThread(TString &fstr, TCrashThreadInfo *info)
 {
-    char str[81];
+    TString str;
 
-    sprintf(str,"%04hX ", info->Selector);    
-    file.Write(str);
+    str.printf("%04hX ", info->Selector);    
+    fstr += str;
 
-    sprintf(str,"PRIO=%d ", info->Prio);    
-    file.Write(str);
+    str.printf("PRIO=%d ", info->Prio);    
+    fstr += str;
 
     if (info->Core)
     {
-        sprintf(str,"CORE=%d ", info->Core);    
-        file.Write(str);
+        str.printf("CORE=%d ", info->Core);    
+        fstr += str;
     }
 
     if (info->WantedCore)
     {
-        sprintf(str,"WCORE=%d ", info->WantedCore);    
-        file.Write(str);
+        str.printf("WCORE=%d ", info->WantedCore);    
+        fstr += str;
     }
 
-    file.Write(info->NameText);
-    file.Write(" ");
-    file.Write(info->StateText);
-    file.Write("\r\n");
+    fstr += info->NameText;
+    fstr += " ";
+    fstr += info->StateText;
+    fstr += "\r\n";
 }
 
-/*##################  WriteStack  #####################################
-*   Purpose....: Write core stack                                                                                        #
+/*##################  AddCoreStack  #####################################
+*   Purpose....: Add core stack                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteStack(TFile &file, char *data, int sel, int base, int size)
+void AddCoreStack(TString &fstr, char *data, int sel, int base, int size)
 {
     int ads;
     char *ptr;
-    char str[10];
     int i;
     short int sval;
+    TString str;
     
     while (size >= 16)
     {
         ads = base + size - 16;
         ptr = data + size - 16;
 
-        sprintf(str,"%04hX:%04hX ", sel, ads);
-        file.Write(str);
+        str.printf("%04hX:%04hX ", sel, ads);
+        fstr += str;
 
         for (i = 0; i < 8; i++)
         {
             sval = *((short int *)(ptr + 2 * i));
-            sprintf(str,"%04hX", sval);
-            file.Write(str);
+            str.printf("%04hX", sval);
+            fstr += str;
 
             if (i == 7)
-                file.Write("\r\n");
+                fstr += "\r\n";
             else
-                file.Write(" ");
+                fstr += " ";
         }
         size -= 16;                
     }
@@ -431,119 +429,120 @@ void WriteStack(TFile &file, char *data, int sel, int base, int size)
         ads = base + size - 16;
         ptr = data + size - 16;
 
-        sprintf(str,"%04hX:%04hX ", sel, ads);
-        file.Write(str);
+        str.printf("%04hX:%04hX ", sel, ads);
+        fstr += str;
 
         size = size / 2;
     
         for (i = 0; i < 8 - size; i++)
-            file.Write("     ");
+            fstr += "     ";
 
         for (i = 8 - size; i < 8; i++)
         {
             sval = *((short int *)(ptr + 2 * i));
-            sprintf(str,"%04hX", sval);
-            file.Write(str);
+            str.printf("%04hX", sval);
+            fstr += str;
 
             if (i == 7)
-                file.Write("\r\n");
+                fstr += "\r\n";
             else
-                file.Write(" ");
+                fstr += " ";
         }        
     }
 }
 
-/*##################  WriteCore  #####################################
-*   Purpose....: Write core fault                                                                                        #
+/*##################  AddCore  #####################################
+*   Purpose....: Add core fault                                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteCore(TFile &file, int core, TCrashCoreInfo *info)
+void AddCore(TString &fstr, int core, TCrashCoreInfo *info)
 {
     int i;
-    char str[81];
+    TString str;
 
-    sprintf(str, "Core=%d (%04hX)\r\n", core, info->Core);
-    file.Write(str);
+    str.printf("Core=%d (%04hX)\r\n", core, info->Core);
+    fstr += str;
     
-    sprintf(str, "CS:EIP=%04hX:%08lX\r\n", info->Cs.Selector, (int)info->Rip);
-    file.Write(str);
+    str.printf("CS:EIP=%04hX:%08lX\r\n", info->Cs.Selector, (int)info->Rip);
+    fstr += str;
     
-    sprintf(str, "SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp); 
-    file.Write(str);
+    str.printf("SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp); 
+    fstr += str;
 
-    sprintf(str,"EAX=%08lX ", (int)info->Rax);    
-    file.Write(str);
+    str.printf("EAX=%08lX ", (int)info->Rax);    
+    fstr += str;
 
-    sprintf(str, "EBX=%08lX ", (int)info->Rbx);    
-    file.Write(str);
+    str.printf("EBX=%08lX ", (int)info->Rbx);    
+    fstr += str;
 
-    sprintf(str, "ECX=%08lX ", (int)info->Rcx);    
-    file.Write(str);
+    str.printf("ECX=%08lX ", (int)info->Rcx);    
+    fstr += str;
 
-    sprintf(str, "EDX=%08lX\r\n", (int)info->Rdx);    
-    file.Write(str);
+    str.printf("EDX=%08lX\r\n", (int)info->Rdx);    
+    fstr += str;
 
-    sprintf(str, "ESI=%08lX ", (int)info->Rsi);    
-    file.Write(str);
+    str.printf("ESI=%08lX ", (int)info->Rsi);    
+    fstr += str;
 
-    sprintf(str, "EDI=%08lX ", (int)info->Rdi);    
-    file.Write(str);
+    str.printf("EDI=%08lX ", (int)info->Rdi);    
+    fstr += str;
 
-    sprintf(str, "EBP=%08lX\r\n", (int)info->Rbp);    
-    file.Write(str);
+    str.printf("EBP=%08lX\r\n", (int)info->Rbp);    
+    fstr += str;
 
-    WriteFlags(file, info->Rflags);
+    AddCoreFlags(fstr, info->Rflags);
 
-    WriteSelector(file, "CS", &info->Cs);
-    WriteSelector(file, "DS", &info->Ds);
-    WriteSelector(file, "ES", &info->Es);
-    WriteSelector(file, "FS", &info->Fs);
-    WriteSelector(file, "GS", &info->Gs);
-    WriteSelector(file, "SS", &info->Ss);
-    WriteSelector(file, "LDT", &info->Ldt);
-    WriteDt(file, "GDT", &info->Gdt);
-    WriteDt(file, "IDT", &info->Idt);
+    AddCoreSelector(fstr, "CS", &info->Cs);
+    AddCoreSelector(fstr, "DS", &info->Ds);
+    AddCoreSelector(fstr, "ES", &info->Es);
+    AddCoreSelector(fstr, "FS", &info->Fs);
+    AddCoreSelector(fstr, "GS", &info->Gs);
+    AddCoreSelector(fstr, "SS", &info->Ss);
+    AddCoreSelector(fstr, "LDT", &info->Ldt);
+    AddCoreDt(fstr, "GDT", &info->Gdt);
+    AddCoreDt(fstr, "IDT", &info->Idt);
 
-    sprintf(str, "CR0=%08lX ", info->Cr0);    
-    file.Write(str);
+    str.printf("CR0=%08lX ", info->Cr0);    
+    fstr += str;
 
-    sprintf(str, "CR2=%08lX ", info->Cr2);    
-    file.Write(str);
+    str.printf("CR2=%08lX ", info->Cr2);    
+    fstr += str;
 
-    sprintf(str, "CR3=%08lX ", info->Cr3);    
-    file.Write(str);
+    str.printf("CR3=%08lX ", info->Cr3);    
+    fstr += str;
 
-    sprintf(str, "CR4=%08lX\r\n", info->Cr4);    
-    file.Write(str);
+    str.printf("CR4=%08lX\r\n", info->Cr4);    
+    fstr += str;
 
-    sprintf(str, "NEST=%d\r\n", (int)info->Nesting);    
-    file.Write(str);
+    str.printf("NEST=%d\r\n", (int)info->Nesting);    
+    fstr += str;
 
-    WriteSelector(file, "TR", &info->Tr);
+    AddCoreSelector(fstr, "TR", &info->Tr);
 
     for (i = 0; i < info->ThreadCount; i++)
-        WriteThread(file, info->ThreadArr[i]);
+        AddCoreThread(fstr, info->ThreadArr[i]);
 
     if (info->StackData)
-        WriteStack(file, info->StackData, info->Ss.Selector, (int)info->Rsp, info->StackSize);
+        AddCoreStack(fstr, info->StackData, info->Ss.Selector, (int)info->Rsp, info->StackSize);
 
-    file.Write("\r\n");
+    fstr += "\r\n";
 }
 
-/*##################  CreateFaultFile  #####################################
-*   Purpose....: Create fault file                                                                                        #
+/*##################  CreateFaultString  #####################################
+*   Purpose....: Create fault string                                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void CreateFaultFile()
+void CreateFaultString()
 {
     int i;    
-    TFile File("d:\\boot\\temp.dat", 0);
+    TFile File("d:/heat/error.txt");
+    int size;
 
     if (RdosHasCrashInfo())
     {
@@ -553,41 +552,30 @@ void CreateFaultFile()
         for (core = 0; core < MAX_CRASH_INFO_CORES; core++)
         {
             if (info.CrashInfo[core])
-                WriteCore(File, core, info.CrashInfo[core]);
+                AddCore(FaultStr, core, info.CrashInfo[core]);
         }
     }
 
     for (i = 0; i < FaultThreads; i++)
     {
-        WriteFaultState(File, &FaultStateArr[i]);
-        WriteFaultTss(File, &FaultTssArr[i]);
-        WriteFaultCallStack(File, &FaultStateArr[i]);
+        AddFaultState(FaultStr, &FaultStateArr[i]);
+        AddFaultTss(FaultStr, &FaultTssArr[i]);
+        AddFaultCallStack(FaultStr, &FaultStateArr[i]);
     }
-}
-
-/*##################  GetRuntimeError  #####################################
-*   Purpose....: Get for runtime error text                                                                              #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-TString GetRuntimeError()
-{
-    char *str;
-    int size;
-    TFile File("d:/heat/error.txt");
 
     size = File.GetSize();
 
     if (size > 0xFF00)
         size = 0xFF00;
 
-    str = new char[size + 1];
-    File.Read(str, size);
-    str[size] = 0;
-
-    return TString(str);
+    if (size)
+    {
+        char *buf = new char[size + 1];
+        File.Read(buf, size);
+        buf[size] = 0;
+        FaultStr += buf;
+        delete buf;
+    }
 }
 
 /*##################  WatchdogThread  ##############################################
@@ -734,8 +722,6 @@ void StartApp()
 *##########################################################################*/
 int main()
 {
-    TString FaultText;
-
     printf("Starting loader\r\n");
 
     RdosWaitMilli(1000);
@@ -746,13 +732,9 @@ int main()
 
     SetupFaultSave();
     HandleFaultSave();
+    CreateFaultString();
 
     if (FaultThreads || RdosHasCrashInfo())
-        CreateFaultFile();
-
-    FaultText = GetRuntimeError();
-
-    if (FaultThreads || RdosHasCrashInfo() || FaultText.GetSize())
         RdosClearFaultSave();
 
     Timeout = 2 * 60;
