@@ -465,7 +465,7 @@ void TVp::UpdateVp(int diff)
     {
         if (FTankTemp > FMaxTank)
         {
-            if (on)
+            if (FPrevOn)
                 FLog.Log(0, "UpdateVp", "Temp off");
             on = FALSE;
         }
