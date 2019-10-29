@@ -46,7 +46,8 @@ Reverse MACRO
     xchg al,ah
         ENDM
 
-SYN_TIMEOUT = 20
+SYN_TIMEOUT = 5
+SYN_ENTRIES = 100
 
 tcp_wait_header STRUC
 
@@ -1643,17 +1644,12 @@ CreateListen    Proc near
     push edi
 ;
     push eax
-    push edx
 ;
-    movzx eax,ax
-    shl eax,4
-    mov edx,SIZE tcp_syn_struc
-    mul edx
+    mov eax,SYN_ENTRIES * SIZE tcp_syn_struc
     add eax,OFFSET tcp_listen_syn_data
     mov edi,eax
 ;
     AllocateSmallGlobalMem
-    pop ebx
     pop eax
 ;       
     push si
