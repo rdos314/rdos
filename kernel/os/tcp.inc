@@ -135,7 +135,6 @@ tcp_send_buffer		DW ?
 tcp_send_count		DW ?
 tcp_send_head		DW ?
 tcp_send_tail		DW ?
-tcp_id				DW ?
 tcp_iss				DD ?
 tcp_state			DB ?
 tcp_has_time            DB ?

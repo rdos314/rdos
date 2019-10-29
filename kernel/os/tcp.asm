@@ -378,7 +378,6 @@ GetIss  Proc near
     rcr eax,1
     mov ds:tcp_iss,eax
     mov ds:tcp_time_seq,eax
-    mov ds:tcp_id,ax
 ;
     pop eax
     pop edx
@@ -408,10 +407,6 @@ CreateSegment   Proc near
 ;
     mov al,6
     mov ah,60
-    mov bx,ds:tcp_id
-    inc bx
-    mov ds:tcp_id,bx
-    xchg bl,bh
     add ecx,SIZE tcp_header
     mov edx,ds:tcp_remote_ip
     mov esi,OFFSET tcp_options
