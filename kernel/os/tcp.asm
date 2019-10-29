@@ -46,6 +46,8 @@ Reverse MACRO
     xchg al,ah
         ENDM
 
+SYN_TIMEOUT = 20
+
 tcp_wait_header STRUC
 
 tw_obj          wait_obj_header <>
@@ -440,7 +442,6 @@ csDone:
     pop ax
     ret
 CreateSegment   Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -476,6 +477,92 @@ SendSegment     Proc near
     ret
 SendSegment     Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           SendSynSegment
+;
+;       Purpose:        Create and send a tcp segment for SYN
+;
+;       Parameters:     DS          listen sel
+;                       EBX         Syn entry
+;
+;       Returns:        ES:DI   segment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendSynSegment   Proc near
+    push ax
+    push bx
+    push ecx
+    push edx
+    push esi
+;
+    mov al,6
+    mov ah,60
+    mov edx,ds:[ebx].tcp_syn_ip
+    mov ecx,SIZE tcp_header
+    mov esi,OFFSET tcp_listen_options
+    CreateIpHeader
+    jc sssDone
+;
+    mov ax,ds:tcp_listen_port
+    xchg al,ah
+    mov es:[di].tcp_source,ax
+    mov ax,ds:[ebx].tcp_syn_port
+    xchg al,ah
+    mov es:[di].tcp_dest,ax
+    mov es:[di].tcp_seq,0
+    mov es:[di].tcp_ack,0
+    mov es:[di].tcp_header_len,50h
+    mov es:[di].tcp_flags,0
+    mov ax,ds:[ebx].tcp_syn_mtu
+    xchg al,ah
+    mov es:[di].tcp_window,ax
+    mov es:[di].tcp_urgent,0
+;
+    mov es:[di].tcp_flags, SYN OR ACK
+;
+    mov eax,ds:[ebx].tcp_syn_iss
+    Reverse
+    mov es:[di].tcp_seq,eax
+;
+    mov eax,ds:[ebx].tcp_syn_seq
+    inc eax
+    Reverse
+    mov es:[di].tcp_ack,eax
+;
+    GetIpAddress
+    push edx
+    pop ax
+    pop dx
+;
+    add ax,dx
+    adc ax,word ptr ds:[ebx].tcp_syn_ip
+    adc ax,word ptr ds:[ebx].tcp_syn_ip+2
+    adc ax,600h
+    mov ecx,SIZE tcp_header
+    xchg cl,ch
+    adc ax,cx
+    adc ax,0
+    adc ax,0
+;
+    xchg cl,ch
+    mov es:[di].tcp_checksum,0
+    call CalcChecksum
+;
+    not ax
+    mov es:[di].tcp_checksum,ax
+    SendIp
+
+sssDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop bx
+    pop ax
+    ret
+SendSynSegment   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1078,7 +1165,244 @@ find_wild_connection_done:
     pop es
     ret
 FindWildConnection      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           InitSynEntry
+;
+;       Purpose:        Init SYN entry
+;
+;       Parameters:     DS          Listen sel
+;                       EBX         SYN entry
+;                       EDX         remote ip address
+;                       ES:SI       TCP data
+;                       ES:DI       TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+InitSynEntry    Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov ds:[ebx].tcp_syn_ip,edx
+    mov ax,es:[di].tcp_source
+    xchg al,ah
+    mov ds:[ebx].tcp_syn_port,ax
+    mov ds:[ebx].tcp_syn_mtu,1400
+;
+    mov eax,es:[di].tcp_seq
+    Reverse
+    mov ds:[ebx].tcp_syn_seq,eax
+;
+    GetSystemTime
+    push eax
+    push edx
+;
+    add eax,1193000 * SYN_TIMEOUT
+    adc edx,0
+    mov ds:[ebx].tcp_syn_time,eax
+    mov ds:[ebx].tcp_syn_time+4,edx
+;
+    pop edx
+    pop eax
+;
+    rcr edx,1
+    rcr eax,1
+    rcr edx,1
+    rcr eax,1
+    rcr edx,1
+    rcr eax,1
+    mov ds:[ebx].tcp_syn_iss,eax
+;
+    add ebx,SIZE tcp_syn_struc
+    cmp ebx,ds:tcp_listen_syn_size
+    jb iseTailSave
+;
+    mov ebx,OFFSET tcp_listen_syn_data
+
+iseTailSave:
+    mov ds:tcp_listen_syn_tail,ebx
+;
+    cmp ebx,ds:tcp_listen_syn_head
+    jne iseDone
+;
+    add ebx,SIZE tcp_syn_struc
+    cmp ebx,ds:tcp_listen_syn_size
+    jb iseHeadSave
+;
+    mov ebx,OFFSET tcp_listen_syn_data
+
+iseHeadSave:
+    mov ds:tcp_listen_syn_head,ebx
+    
+iseDone:
+    pop edx
+    pop ebx
+    pop eax
+    ret
+InitSynEntry	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           AllocateSynEntry
+;
+;       Purpose:        Allocate SYN entry
+;
+;       Parameters:     DS          Listen selector
+;                       EDX         remote ip address
+;                       DI          remote port
+;
+;       Returns:        EBX         SYN entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateSynEntry    Proc near
+    push eax
+;
+    mov ebx,ds:tcp_listen_syn_head
+
+aseAdvLoop:
+    cmp ebx,ds:tcp_listen_syn_tail
+    je aseInsert
+;
+    mov eax,ds:[ebx].tcp_syn_time
+    or eax,ds:[ebx].tcp_syn_time+4
+    jnz aseCheck
+
+aseAdvNext:
+    add ebx,SIZE tcp_syn_struc
+    cmp ebx,ds:tcp_listen_syn_size
+    jb aseAdvSave
+;
+    mov ebx,OFFSET tcp_listen_syn_data
+
+aseAdvSave:
+    mov ds:tcp_listen_syn_head,ebx
+    jmp aseAdvLoop
+
+aseCheckLoop:
+    cmp ebx,ds:tcp_listen_syn_tail
+    je aseInsert
+;
+    mov eax,ds:[ebx].tcp_syn_time
+    or eax,ds:[ebx].tcp_syn_time+4
+    jz aseCheckNext
+
+aseCheck:
+    push edx
+    GetSystemTime
+    sub eax,ds:[ebx].tcp_syn_time
+    sbb edx,ds:[ebx].tcp_syn_time+4
+    pop edx
+    jnc aseClear
+;
+    cmp edx,ds:[ebx].tcp_syn_ip
+    jne aseCheckNext
+;
+    cmp di,ds:[ebx].tcp_syn_port
+    jne aseCheckNext
+
+aseClear:
+    mov ds:[ebx].tcp_syn_time,0
+    mov ds:[ebx].tcp_syn_time+4,0
+
+aseCheckNext:
+    add ebx,SIZE tcp_syn_struc
+    cmp ebx,ds:tcp_listen_syn_size
+    jb aseCheckSave
+;
+    mov ebx,OFFSET tcp_listen_syn_data
+
+aseCheckSave:
+    mov ds:tcp_listen_syn_head,ebx
+    jmp aseCheckLoop
+
+aseInsert:
+    pop eax
+    ret
+AllocateSynEntry    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ProcessSynOptions
+;
+;       Purpose:        Process SYN options
+;
+;       Parameters:     DS      Listen sel
+;                       EBX     Syn struc
+;                       CX      Size of data & header
+;                       EDX     Source IP address
+;                       ES:SI   IP options
+;                       ES:DI   TCP header
+;
+;       Returns:        ES:ESI  TCP data
+;                       CX      Size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessSynOptions  Proc near
+    movzx dx,es:[di].tcp_header_len
+    shr dx,2
+    sub dx,SIZE tcp_header
+    or dx,dx
+    jz process_syn_options_done
+;
+    mov si,di
+    add si,SIZE tcp_header
+
+process_syn_options_next:
+    sub dx,1
+    jz process_syn_options_done
+;
+    lods byte ptr es:[si]
+    or al,al
+    jz process_syn_options_done
+;
+    cmp al,1
+    jz process_syn_options_next
+;
+    cmp al,2
+    je process_syn_mtu
+;
+    jmp process_syn_options_adv
+
+process_syn_mtu:
+    mov al,es:[si]
+    cmp al,4
+    jne process_syn_options_adv
+;       
+    inc si
+    sub dx,3
+    jc process_syn_options_done
+;
+    lods word ptr es:[si]
+    xchg al,ah
+    mov ds:[ebx].tcp_syn_mtu,ax
+
+process_syn_options_ignore_mtu:
+    or dx,dx
+    jz process_syn_options_done
+    jmp process_syn_options_next
+
+process_syn_options_adv:
+    sub dx,1
+    jz process_syn_options_done
+    lods byte ptr es:[si]
+    movzx ax,al
+    sub al,2
+    add si,ax
+    sub dx,ax
+    ja process_syn_options_next
+
+process_syn_options_done:
+    movzx ax,es:[di].tcp_header_len
+    shr ax,2
+    sub cx,ax
+    mov si,di
+    add si,ax
+    ret
+ProcessSynOptions  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1086,7 +1410,7 @@ FindWildConnection      Endp
 ;
 ;       Purpose:        Create a listen and link it
 ;
-;       Parameters:         AX      Max connections
+;       Parameters:     AX          Max connections
 ;                       ECX         buffer size
 ;                       SI          local port
 ;
@@ -1094,13 +1418,24 @@ FindWildConnection      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 CreateListen    Proc near
     push es
-    push dx
+    push edx
+    push edi
 ;
     push eax
-    mov eax,SIZE tcp_listen
+    push edx
+;
+    movzx eax,ax
+    shl eax,4
+    mov edx,SIZE tcp_syn_struc
+    mul edx
+    add eax,OFFSET tcp_listen_syn_data
+    mov edi,eax
+;
     AllocateSmallGlobalMem
+    pop ebx
     pop eax
 ;       
     push si
@@ -1115,6 +1450,12 @@ CreateListen    Proc near
     mov es:tcp_listen_buffer_size,ecx
     mov es:tcp_listen_list,0
     mov es:tcp_listen_wait,0
+    mov es:tcp_listen_options,0
+;
+    mov es:tcp_listen_syn_size,edi
+    mov es:tcp_listen_syn_head,OFFSET tcp_listen_syn_data
+    mov es:tcp_listen_syn_tail,OFFSET tcp_listen_syn_data
+;
     mov dx,SEG data
     mov ds,dx
     EnterSection ds:ListSection
@@ -1125,7 +1466,8 @@ CreateListen    Proc near
     mov dx,es
     mov ds,dx
 ;
-    pop dx
+    pop edi
+    pop edx
     pop es
     ret 
 CreateListen    Endp
@@ -2687,52 +3029,6 @@ process_data_not_read:
 process_data_done:
     ret
 ProcessData     Endp
-
-
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           ReceiveListen
-;
-;       Purpose:        Received data in LISTEN state
-;
-;       Parameters:         DS          Connection
-;                       CX          Size of data
-;                       EDX         Source IP address
-;                       ES:SI   TCP data
-;                       ES:DI   TCP header
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReceiveListen   Proc near
-    mov eax,es:[di].tcp_seq
-    Reverse
-    inc eax
-    mov ds:tcp_rcv_next,eax
-;
-    mov eax,ds:tcp_iss
-    mov ds:tcp_send_una,eax
-    inc eax
-    mov ds:tcp_send_next,eax    
-    mov ds:tcp_state,STATE_SYN_RCVD
-;
-    GetSystemTime
-    mov ds:tcp_time_val,eax
-;
-    xor ecx,ecx
-    call CreateSegment
-    mov es:[di].tcp_flags, SYN OR ACK
-    mov eax,ds:tcp_iss
-    Reverse
-    mov es:[di].tcp_seq,eax
-    mov eax,ds:tcp_rcv_next
-    Reverse
-    mov es:[di].tcp_ack,eax
-    call SendSegment
-    ret
-ReceiveListen   Endp
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3306,124 +3602,6 @@ ProcessOptions  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           InitSyn
-;
-;       Purpose:        Init SYN struc
-;
-;       Parameters:     DS:EBX      SYN entry
-;                       EDX         remote ip address
-;                       DI          remote port
-;                       ES:SI       TCP data
-;                       ES:DI       TCP header
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitSyn    Proc near
-    mov ds:[ebx].tcp_syn_ip,edx
-    mov ds:[ebx].tcp_syn_port,di
-    mov ds:[ebx].tcp_syn_mtu,1400
-;
-    mov eax,es:[di].tcp_seq
-    Reverse
-    mov ds:[ebx].tcp_syn_seq,eax
-;
-    GetSystemTime
-    mov ds:[ebx].tcp_syn_time,eax
-    mov ds:[ebx].tcp_syn_time+4,edx
-;
-    rcr edx,1
-    rcr eax,1
-    rcr edx,1
-    rcr eax,1
-    rcr edx,1
-    rcr eax,1
-    mov ds:[ebx].tcp_syn_iss,eax
-;
-    ret
-InitSyn	Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           ProcessSynOptions
-;
-;       Purpose:        Process SYN options
-;
-;       Parameters:     DS:EBX  Syn struc
-;                       CX      Size of data & header
-;                       EDX     Source IP address
-;                       ES:SI   IP options
-;                       ES:DI   TCP header
-;
-;       Returns:        ES:ESI  TCP data
-;                       CX      Size of data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessSynOptions  Proc near
-    movzx dx,es:[di].tcp_header_len
-    shr dx,2
-    sub dx,SIZE tcp_header
-    or dx,dx
-    jz process_syn_options_done
-;
-    mov si,di
-    add si,SIZE tcp_header
-
-process_syn_options_next:
-    sub dx,1
-    jz process_syn_options_done
-;
-    lods byte ptr es:[si]
-    or al,al
-    jz process_syn_options_done
-;
-    cmp al,1
-    jz process_syn_options_next
-;
-    cmp al,2
-    je process_syn_mtu
-;
-    jmp process_syn_options_adv
-
-process_syn_mtu:
-    mov al,es:[si]
-    cmp al,4
-    jne process_syn_options_adv
-;       
-    inc si
-    sub dx,3
-    jc process_syn_options_done
-;
-    lods word ptr es:[si]
-    xchg al,ah
-    mov ds:[ebx].tcp_syn_mtu,ax
-
-process_syn_options_ignore_mtu:
-    or dx,dx
-    jz process_syn_options_done
-    jmp process_syn_options_next
-
-process_syn_options_adv:
-    sub dx,1
-    jz process_syn_options_done
-    lods byte ptr es:[si]
-    movzx ax,al
-    sub al,2
-    add si,ax
-    sub dx,ax
-    ja process_syn_options_next
-
-process_syn_options_done:
-    movzx ax,es:[di].tcp_header_len
-    shr ax,2
-    sub cx,ax
-    mov si,di
-    add si,ax
-    ret
-ProcessSynOptions  Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ;       Name:           ReceiveChecksum
 ;
 ;       Purpose:        Check receive checksum
@@ -3548,49 +3726,20 @@ receive_listen:
     jnz receive_no_connection
 ;
     test al,SYN
-    jz receive_done
+    jz receive_syn_activate
 ;
-    push ds
-    push ecx
-    push di
-    mov ax,es:[di].tcp_source
-    xchg al,ah
-    mov di,ax
-    mov eax,120
-    mov ecx,ds:tcp_listen_buffer_size
-    call CreateConnection
-    pop di
-    pop ecx
-;
-    push es
-    call ProcessOptions
-    call ReceiveListen
-    pop es
-    LeaveSection ds:tcp_section
-;
-    mov bx,ds
-    pop ds
-;
-    push es
-    mov es,bx
     EnterSection ds:tcp_listen_section
-    mov ax,ds:tcp_listen_list
-    mov es:tcp_listen_link,ax
-    mov ds:tcp_listen_list,es
+    call AllocateSynEntry
+    call InitSynEntry
     LeaveSection ds:tcp_listen_section
-    pop es
 ;
-    xor bx,bx
-    xchg bx,ds:tcp_listen_wait   
-    or bx,bx
-    jz receive_done
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    call ProcessSynOptions
+    call SendSynSegment
     jmp receive_done
 
+receive_syn_activate:
+    jmp receive_done
+    
 receive_connection:
     push es
     call ProcessOptions
