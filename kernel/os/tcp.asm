@@ -1441,10 +1441,10 @@ aseClear:
 aseCheckNext:
     add ebx,SIZE tcp_syn_struc
     cmp ebx,ds:tcp_listen_syn_size
-    jb aseCheck
+    jb aseCheckLoop
 ;
     mov ebx,OFFSET tcp_listen_syn_data
-    jmp aseCheck
+    jmp aseCheckLoop
 
 aseDone:
     pop eax
