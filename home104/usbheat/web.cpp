@@ -1922,7 +1922,7 @@ void THeatWebPage::SendAnswer()
     Write("<head>\r\n");
     Write(" <meta charset=\"utf-8\">\r\n");
     Write(" <title>Heat control system</title>\r\n");
-    Write(" <script src=\"/zingchart.min.js\"></script>\r\n");
+    Write(" <script src=\"https://cdn.zingchart.com/zingchart.min.js\"></script>\r\n");
     Write(" <style>\r\n");
     Write("  html,\r\n");
     Write("  body {\r\n");
@@ -2044,7 +2044,7 @@ void THeatWebPage::SendAnswer()
 
     Write(" </div>\r\n");
     Write(" <script>\r\n");
-    Write("  ZC.LICENSE = [\"569d52cefae586f634c54f86dc99e6a9\", \"b55b025e438fa8a98e32482b5f768ff5\"];\r\n");
+//    Write("  ZC.LICENSE = [\"569d52cefae586f634c54f86dc99e6a9\", \"b55b025e438fa8a98e32482b5f768ff5\"];\r\n");
     Write("  window.addEventListener('load', () => {\r\n");
     Write("   zingchart.render({\r\n");
     Write("    id: 'myChart',\r\n");
