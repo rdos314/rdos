@@ -516,11 +516,12 @@ SendSynSegment   Proc near
     mov es:[di].tcp_ack,0
     mov es:[di].tcp_header_len,50h
     mov es:[di].tcp_flags,0
-    mov ax,ds:[ebx].tcp_syn_mtu
+;
+    mov eax,ds:tcp_listen_buffer_size
     xchg al,ah
     mov es:[di].tcp_window,ax
-    mov es:[di].tcp_urgent,0
 ;
+    mov es:[di].tcp_urgent,0
     mov es:[di].tcp_flags, SYN OR ACK
 ;
     mov eax,ds:[ebx].tcp_syn_iss
@@ -942,6 +943,140 @@ CreateConnection    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           CreateSynConnection
+;
+;       Purpose:        Create a connection and link it
+;
+;       Parameters:     EAX         Timeout in seconds for connection
+;                       DS          Listen sel
+;                       EBX         Syn entry
+;
+;       Returns:        DS          connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSynConnection    Proc near
+    push es
+    push ax
+    push ecx
+    push edx
+;
+    mov ecx,ds:tcp_listen_buffer_size
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    push eax
+    mov eax,SIZE tcp_connection
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:tcp_owner,0
+    mov es:tcp_writer,0
+    mov es:tcp_wait,0
+    mov es:tcp_read_wait,0
+    mov es:tcp_write_wait,0
+    mov es:tcp_exc_wait,0
+    mov es:tcp_timeout,eax
+    mov es:tcp_buffer_size,cx
+    mov es:tcp_rcv_wnd,cx
+    mov es:tcp_state,-1
+    mov es:tcp_has_time,0
+    mov es:tcp_pending,0
+    mov es:tcp_push_timeout,0
+    mov es:tcp_rtt,1193 * 10   ; 10 ms
+    mov es:tcp_rto,1193 * 300  ; 300 ms
+    mov es:tcp_rts,1193 * 300  ; 300 ms
+    mov es:tcp_rtm,0
+    mov es:tcp_reorder_count,0
+    mov es:tcp_send_timeout,0
+    mov es:tcp_delete_timeout,0
+    mov es:tcp_resend_count,0
+    mov es:tcp_resend_timeout,1
+;
+    call CreateBuffer
+    mov es:tcp_receive_buffer,ax
+    mov es:tcp_receive_count,0
+    mov es:tcp_receive_head,0
+    mov es:tcp_receive_tail,0
+;
+    call CreateBuffer
+    mov es:tcp_send_buffer,ax
+    mov es:tcp_send_count,0
+    mov es:tcp_send_head,0
+    mov es:tcp_send_tail,0
+;
+    mov ax,ds:tcp_listen_port
+    mov es:tcp_port,ax
+;
+    mov eax,ds:[ebx].tcp_syn_ip
+    mov es:tcp_remote_ip,eax
+;
+    mov ax,ds:[ebx].tcp_syn_port
+    mov es:tcp_remote_port,ax
+;
+    mov ax,ds:[ebx].tcp_syn_mtu
+    mov es:tcp_mtu,ax
+;
+    mov ax,ds:tcp_listen_options
+    mov es:tcp_options,al
+;
+    mov eax,ds:[ebx].tcp_syn_seq
+    inc eax
+    mov es:tcp_rcv_next,eax
+;
+    mov eax,ds:[ebx].tcp_syn_iss
+    mov es:tcp_iss,eax
+    mov es:tcp_time_seq,eax
+    mov es:tcp_send_una,eax
+    inc eax
+    mov es:tcp_send_next,eax
+    mov es:tcp_state,STATE_SYN_RCVD
+;
+    GetSystemTime
+    mov es:tcp_time_val,eax
+;       
+    mov ax,es
+    mov ds,ax
+    InitSection ds:tcp_section
+    EnterSection ds:tcp_section
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:ListSection
+    mov dx,ds:ConnectionList
+    mov es:tcp_next,dx
+    mov ds:ConnectionList,es
+    inc ds:ConnectionCount
+    call CheckConnectionList
+    LeaveSection ds:ListSection
+;
+    mov ax,es
+    mov ds,ax
+;
+    GetIpAddress
+    push edx
+    pop ax
+    pop dx
+;
+    add dx,ax
+    adc dx,word ptr ds:tcp_remote_ip
+    adc dx,word ptr ds:tcp_remote_ip+2
+    adc dx,600h
+    adc dx,0
+    adc dx,0
+    mov ds:tcp_checksum_base,dx
+    LeaveSection ds:tcp_section
+;
+    pop edx
+    pop ecx
+    pop ax
+    pop es
+    ret
+CreateSynConnection    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           DeleteConnection
 ;
 ;       Purpose:        Delete a connection. ListSection & connection section
@@ -1264,7 +1399,7 @@ AllocateSynEntry    Proc near
 
 aseAdvLoop:
     cmp ebx,ds:tcp_listen_syn_tail
-    je aseInsert
+    je aseDone
 ;
     mov eax,ds:[ebx].tcp_syn_time
     or eax,ds:[ebx].tcp_syn_time+4
@@ -1283,7 +1418,7 @@ aseAdvSave:
 
 aseCheckLoop:
     cmp ebx,ds:tcp_listen_syn_tail
-    je aseInsert
+    je aseDone
 ;
     mov eax,ds:[ebx].tcp_syn_time
     or eax,ds:[ebx].tcp_syn_time+4
@@ -1310,18 +1445,106 @@ aseClear:
 aseCheckNext:
     add ebx,SIZE tcp_syn_struc
     cmp ebx,ds:tcp_listen_syn_size
-    jb aseCheckSave
+    jb aseCheck
 ;
     mov ebx,OFFSET tcp_listen_syn_data
+    jmp aseCheck
 
-aseCheckSave:
-    mov ds:tcp_listen_syn_head,ebx
-    jmp aseCheckLoop
-
-aseInsert:
+aseDone:
     pop eax
     ret
 AllocateSynEntry    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FindSynEntry
+;
+;       Purpose:        Find SYN entry
+;
+;       Parameters:     DS          Listen selector
+;                       EDX         remote ip address
+;                       ES:SI       TCP data
+;                       ES:DI       TCP header
+;
+;       Returns:        EBX         SYN entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindSynEntry    Proc near
+    push eax
+;
+    mov ebx,ds:tcp_listen_syn_head
+
+fseAdvLoop:
+    cmp ebx,ds:tcp_listen_syn_tail
+    je fseFail
+;
+    mov eax,ds:[ebx].tcp_syn_time
+    or eax,ds:[ebx].tcp_syn_time+4
+    jnz fseCheck
+
+fseAdvNext:
+    add ebx,SIZE tcp_syn_struc
+    cmp ebx,ds:tcp_listen_syn_size
+    jb fseAdvSave
+;
+    mov ebx,OFFSET tcp_listen_syn_data
+
+fseAdvSave:
+    mov ds:tcp_listen_syn_head,ebx
+    jmp fseAdvLoop
+
+fseCheckLoop:
+    cmp ebx,ds:tcp_listen_syn_tail
+    je fseFail
+
+fseCheck:
+    cmp edx,ds:[ebx].tcp_syn_ip
+    jne fseCheckTime
+;
+    mov ax,es:[di].tcp_source
+    xchg al,ah
+    cmp ax,ds:[ebx].tcp_syn_port
+    jne fseCheckTime
+;
+    mov eax,es:[di].tcp_seq
+    Reverse
+    dec eax
+    cmp eax,ds:[ebx].tcp_syn_seq
+    je fseOk
+
+fseCheckTime:
+    push edx
+    GetSystemTime
+    sub eax,ds:[ebx].tcp_syn_time
+    sbb edx,ds:[ebx].tcp_syn_time+4
+    pop edx
+    jc fseCheckNext
+;
+    mov ds:[ebx].tcp_syn_time,0
+    mov ds:[ebx].tcp_syn_time+4,0
+
+fseCheckNext:
+    add ebx,SIZE tcp_syn_struc
+    cmp ebx,ds:tcp_listen_syn_size
+    jb fseCheckLoop
+;
+    mov ebx,OFFSET tcp_listen_syn_data
+    jmp fseCheckLoop
+
+fseFail:
+    stc
+    jmp fseDone
+    
+fseOk:
+    mov ds:[ebx].tcp_syn_time,0
+    mov ds:[ebx].tcp_syn_time+4,0
+    clc
+
+fseDone:
+    pop eax
+    ret
+FindSynEntry    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3722,9 +3945,6 @@ receive_listen:
     test al,RST
     jnz receive_done
 ;
-    test al,ACK
-    jnz receive_no_connection
-;
     test al,SYN
     jz receive_syn_activate
 ;
@@ -3738,6 +3958,43 @@ receive_listen:
     jmp receive_done
 
 receive_syn_activate:
+    EnterSection ds:tcp_listen_section
+    call FindSynEntry
+    jc receive_syn_fail
+;
+    push ds
+    mov eax,120
+    call CreateSynConnection
+    mov bx,ds
+    pop ds
+;
+    push bx
+;
+    push es
+    mov es,bx
+    mov ax,ds:tcp_listen_list
+    mov es:tcp_listen_link,ax
+    mov ds:tcp_listen_list,es
+    pop es
+;
+    LeaveSection ds:tcp_listen_section
+;
+    xor bx,bx
+    xchg bx,ds:tcp_listen_wait   
+    or bx,bx
+    jz receive_syn_process
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+receive_syn_process:
+    pop ds
+    jmp receive_connection
+
+receive_syn_fail:
+    LeaveSection ds:tcp_listen_section
     jmp receive_done
     
 receive_connection:
