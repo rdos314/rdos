@@ -56,7 +56,7 @@ public:
     long double GetHeatP();
 
     void SetMaxMotor(int motor);
-    void SetSolarAlt(long double val);
+    void SetPower(long double val);
     void SetTempError(int temp);
     void SetAmbient(int ref, int ambient);
 
@@ -85,7 +85,7 @@ protected:
     int FMotorCount;
     int FMotorSum;
 
-    long double FSolarAlt;
+    long double FPower;
          
     int FVpOn;
     int FPrevOn;

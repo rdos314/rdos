@@ -611,6 +611,8 @@ int main()
     int temperr;
     int temperrmax;
     long double val;
+    long double PowerSum = 0.0;
+    int PowerCount = 0;
     int ival;
     long double winddir;
     long NtpIp;
@@ -1011,6 +1013,7 @@ int main()
             val = SolarInv->GetCurrentPower();
             if (val < 11000.0 && val >= 0.0)
             {
+                PowerSum += val;
                 ival = (int)val;
                 sprintf(str, "%d", ival);
             }
@@ -1038,6 +1041,9 @@ int main()
             ival = (int)val;
             sprintf(str, "%d", ival);
             WindTable->SetText(2, 1, str);
+
+            PowerSum += val;
+            PowerCount++;
 
             val = WindInv->GetCurrentDump();
             ival = (int)val;
@@ -1155,6 +1161,13 @@ int main()
 
         if (LastMin != CurrTime->GetMin())
         {
+            if (PowerCount)
+            {
+                Vp->SetPower(PowerSum / PowerCount);
+                PowerSum = 0;
+                PowerCount = 0;
+            }
+
             if (LastDay != CurrTime->GetDay())
             {
                 LastDay = CurrTime->GetDay();

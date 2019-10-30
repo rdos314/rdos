@@ -277,17 +277,17 @@ void TVp::SetTempError(int diff)
 
 /*##########################################################################
 #
-#   Name       : TVp::SetSolarAlt
+#   Name       : TVp::SetPower
 #
-#   Purpose....: Set solar position
+#   Purpose....: Set power
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TVp::SetSolarAlt(long double val)
+void TVp::SetPower(long double val)
 {
-    FSolarAlt = val;
+    FPower = val;
 }
 
 /*##########################################################################
@@ -328,13 +328,13 @@ void TVp::SetAmbient(int ref, int ambient)
 
         if (ambient < 150)
         {
-            if (FSolarAlt >= 10.0)
-                FMaxTank = 500 - ambient;
+            if (FPower >= 1000.0)
+                FMaxTank = 450 - ambient;
             else
-                FMaxTank = 400 - ambient;
+                FMaxTank = 350 - ambient;
 
-            if (FMaxTank > 450)
-                FMaxTank = 450;
+            if (FMaxTank > 410)
+                FMaxTank = 410;
         }
         else
             FMaxTank = 200;
