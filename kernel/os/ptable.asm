@@ -1888,6 +1888,11 @@ local_get_thread_page_entry32    Proc near
     RequestSpinlock ds:page_spinlock
 ;
     and dx,0F000h
+    mov ax,es
+    or ax,ax
+    stc
+    jz get_thread_fail32
+;
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
@@ -1910,7 +1915,8 @@ local_get_thread_page_entry32    Proc near
     mov eax,[edx]
     test al,1
     jnz get_thread_phys_do32
-;
+
+get_thread_fail32:
     xor eax,eax
     xor ebx,ebx
     jmp get_thread_phys_done32
@@ -4570,6 +4576,11 @@ local_get_thread_page_entry64    Proc near
     mov ds,ax
     RequestSpinlock ds:page_spinlock
 ;    
+    mov ax,es
+    or ax,ax
+    stc
+    jz get_thread_page_fail64
+;
     mov ax,process_dir_sel
     mov ds,ax
     mov eax,es:p_cr3
@@ -4581,7 +4592,7 @@ local_get_thread_page_entry64    Proc near
 ;
     or cx,cx
     jz gtpBaseOk
-;    
+;
     stc
     jmp get_thread_page_fail64
 
