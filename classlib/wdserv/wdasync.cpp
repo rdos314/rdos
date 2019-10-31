@@ -496,26 +496,32 @@ void TWdAsyncService::NotifyMsg()
     switch (ch)
     {
         case 0:
+            DebugLog("AsyncGo");
             ReqAsyncGo();
             break;
 
         case 1:
+            DebugLog("AsyncStep");
             ReqAsyncStep();
             break;
 
         case 2:
+            DebugLog("AsyncPoll");
             ReqAsyncPoll();
             break;
 
         case 3:
+            DebugLog("AsyncStop");
             ReqAsyncStop();
             break;
 
         case 4:
+            DebugLog("AsyncAddBreak");
             ReqAsyncAddBreak();
             break;
 
         case 5:
+            DebugLog("AsyncRemoveBreak");
             ReqAsyncRemoveBreak();
             break;
 

@@ -48,6 +48,7 @@ public:
     void AddSuppl(TWdSupplService *service);
 
     void LogMsg(const char *msg);
+    void DebugLog(const char *msg);
     void (*OnMsg)(TWdSocketServer *wd, const char *msg);
 
 protected:

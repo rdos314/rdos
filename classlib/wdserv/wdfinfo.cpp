@@ -128,6 +128,8 @@ void TWdFileInfoService::NotifyMsg()
 {
     char ch;
 
+    DebugLog("WdFileInfo");
+
     ch = GetByte();
 
     _asm int 3

@@ -128,6 +128,8 @@ void TWdRfxService::NotifyMsg()
 {
     char ch;
 
+    DebugLog("WdRfx");
+
     ch = GetByte();
 
     _asm int 3

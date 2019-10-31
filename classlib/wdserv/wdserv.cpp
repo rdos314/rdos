@@ -359,6 +359,22 @@ void TWdSocketServer::LogMsg(const char *msg)
 
 /*##########################################################################
 #
+#   Name       : TWdSocketServer::DebugLog
+#
+#   Purpose....: Log debug message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::DebugLog(const char *msg)
+{
+//    LogMsg(msg);
+}        
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServer::GetByte
 #
 #   Purpose....: Read byte from input
@@ -894,7 +910,7 @@ void TWdSocketServer::ReqGetSupplService()
 ##########################################################################*/
 void TWdSocketServer::ReqPerformSupplService()
 {
-         int done = FALSE;
+    int done = FALSE;
     TWdSupplService *service;
     TWdSupplService *ID;
 
@@ -911,7 +927,7 @@ void TWdSocketServer::ReqPerformSupplService()
     }
 
     if (done)
-                  service->NotifyMsg();
+       service->NotifyMsg();
 }
 
 /*##########################################################################
@@ -957,6 +973,7 @@ void TWdSocketServer::ReqMapAddr()
     int Sel = GetWord();
     int Handle = GetDword();
     TDebugModule *mod;
+    TString str("MapAddr ID=%, not found", Handle);
 
     if (FDebug)
     {
@@ -966,6 +983,8 @@ void TWdSocketServer::ReqMapAddr()
             switch (Sel)
             {
                 case -2:
+                    str.printf("Module ID=%d, Base: 0x1B3:%08lX, RVA: %08lX, Offset: %08lX, Size: %08lX", Handle, mod->ImageBase, mod->ObjectRva, Offset, mod->ImageSize);
+
                     PutDword(mod->ImageBase + mod->ObjectRva + Offset);
                     PutWord(0x1BB);
                     PutDword(0);
@@ -973,6 +992,8 @@ void TWdSocketServer::ReqMapAddr()
                     break;
 
                 case -1:
+                    str.printf("Module ID=%d, Base: 0x1B3:%08lX, RVA: %08lX, Offset: %08lX, Size: %08lX", Handle, mod->ImageBase, mod->ObjectRva, Offset, mod->ImageSize);
+
                     PutDword(mod->ImageBase + mod->ObjectRva + Offset);
                     PutWord(0x1B3);
                     PutDword(0);
@@ -981,6 +1002,8 @@ void TWdSocketServer::ReqMapAddr()
 
                 case 0:
                 case 1:
+                    str.printf("MapAddr ID=%d, Code base: %04hX:%08lX, Size: %08lX", Handle, mod->CodeSel, Offset, mod->ImageSize);
+
                     PutDword(Offset);
                     PutWord(mod->CodeSel);
                     PutDword(0);
@@ -989,6 +1012,8 @@ void TWdSocketServer::ReqMapAddr()
 
                 case 2:
                 case 3:
+                    str.printf("MapAddr ID=%d, Data base: %04hX:%08lX, Size: %08lX", Handle, mod->DataSel, Offset, mod->DataSize);
+
                     PutDword(Offset);
                     PutWord(mod->DataSel);
                     PutDword(0);
@@ -999,6 +1024,8 @@ void TWdSocketServer::ReqMapAddr()
                     break;
 
                 default:
+                    str.printf("MapAddr ID=%d, default", Handle);
+
                     if (Sel == mod->CodeSel)
                     {
                         PutDword(Offset);
@@ -1031,6 +1058,7 @@ void TWdSocketServer::ReqMapAddr()
         }
         FDebug->UnlockModule();
     }
+    DebugLog(str.GetData());
 }
 
 /*##########################################################################
@@ -1091,6 +1119,11 @@ void TWdSocketServer::ReqReadMem()
     Data = new char[Size];
 
     Count = FDebug->ReadMem(Sel, Offset, Data, Size);
+
+    TString str;
+
+    str.printf("ReadMem %04hX:%08lX, Req %d bytes, Read %d bytes", Sel, Offset, Size, Count);
+    DebugLog(str.GetData());
 
     if (Count)
         PutData(Data, Count);
@@ -1622,6 +1655,7 @@ void TWdSocketServer::ReqReadUserKeyboard()
 ##########################################################################*/
 void TWdSocketServer::ReqGetLibName()
 {
+    TString str;
     int Handle = GetDword();
     TDebugModule *Module;
 
@@ -1634,6 +1668,9 @@ void TWdSocketServer::ReqGetLibName()
             Module = FDebug->LockModule(Handle);
             if (Module)
             {
+                str.printf("LibName '%s' ID=%d", Module->ModuleName.GetData(), Handle);
+                DebugLog(str.GetData());
+
                 PutDword(Handle);
                 PutString(Module->ModuleName.GetData());
             }
@@ -1647,7 +1684,10 @@ void TWdSocketServer::ReqGetLibName()
         Handle = 0;
 
     if (!Handle)
+    {
+        DebugLog("LibName failed");
         PutDword(Handle);
+    }
 }
 
 /*##########################################################################
@@ -2089,22 +2129,27 @@ void TWdSocketServer::NotifyMsg20()
     switch (ch & 0x7F)
     {
         case 0:
+            DebugLog("Connect");
             ReqConnect();
             break;
 
         case 1:
+            DebugLog("Disonnect");
             ReqDisconnect();
             break;
 
         case 2:
+            DebugLog("Suspend");
             ReqSuspend();
             break;
 
         case 3:
+            DebugLog("Resume");
             ReqResume();
             break;
 
         case 4:
+            DebugLog("Req suppl");
             ReqGetSupplService();
             break;
 
@@ -2113,6 +2158,7 @@ void TWdSocketServer::NotifyMsg20()
             break;
 
         case 6:
+            DebugLog("GetSysConfig");
             ReqGetSysConfig();
             break;
 
@@ -2121,6 +2167,7 @@ void TWdSocketServer::NotifyMsg20()
             break;
 
         case 8:
+            DebugLog("ChecksumMem");
             ReqChecksumMem();
             break;
 
@@ -2129,62 +2176,77 @@ void TWdSocketServer::NotifyMsg20()
             break;
 
         case 10:
+            DebugLog("WriteMem");
             ReqWriteMem();
             break;
 
         case 11:
+            DebugLog("Readio");
             ReqReadIo();
             break;
 
         case 12:
+            DebugLog("WriteIo");
             ReqWriteIo();
             break;
 
         case 13:
+            DebugLog("Go");
             ReqProgGo();
             break;
 
         case 14:
+            DebugLog("Step");
             ReqProgStep();
             break;
 
         case 15:
+            DebugLog("LoadProg");
             ReqProgLoad();
             break;
 
         case 16:
+            DebugLog("Kill");
             ReqProgKill();
             break;
 
         case 17:
+            DebugLog("SetWatch");
             ReqSetWatch();
             break;
 
         case 18:
+            DebugLog("ClearWatch");
             ReqClearWatch();
             break;
 
         case 19:
+            DebugLog("SetBreak");
             ReqSetBreak();
             break;
 
         case 20:
+            DebugLog("ClearBreak");
             ReqClearBreak();
             break;
 
         case 21:
+            DebugLog("NextAlias");
             ReqGetNextAlias();
             break;
 
         case 22:
+            DebugLog("UserScreen");
             ReqSetUserScreen();
             break;
 
         case 23:
+            DebugLog("DebugScreen");
             ReqSetDebugScreen();
             break;
 
         case 24:
+            DebugLog("UserKey");
             ReqReadUserKeyboard();
             break;
 
@@ -2193,34 +2255,42 @@ void TWdSocketServer::NotifyMsg20()
             break;
 
         case 26:
+            DebugLog("ErrorText");
             ReqGetErrText();
             break;
 
         case 27:
+            DebugLog("MsgText");
             ReqGetMsgText();
             break;
 
         case 28:
+            DebugLog("RedirIn");
             ReqRedirStdin();
             break;
 
         case 29:
+            DebugLog("RedirOut");
             ReqRedirStdout();
             break;
 
         case 30:
+            DebugLog("SplitCmd");
             ReqSplitCmd();
             break;
 
         case 31:
+            DebugLog("ReadReg");
             ReqReadReg();
             break;
 
         case 32:
+            DebugLog("WriteReg");
             ReqWriteReg();
             break;
 
         case 33:
+            DebugLog("MachineData");
             ReqMachineData();
             break;
 
@@ -2314,6 +2384,7 @@ void TWdSocketServer::NotifyMsg()
 void TWdSocketServer::HandleSocket()
 {
     int count;
+    TString str;
 
     FRunning = TRUE;
 
@@ -2328,39 +2399,67 @@ void TWdSocketServer::HandleSocket()
             FInSize = 0;
             if (FSocket->Read((char *)&FInSize, 2) == 2)
             {
-                count = FSocket->Read(FInBuf, FInSize);
 
-                if (count == FInSize)
+                if (FSocket->WaitForData(1000))
                 {
-                    FInPtr = FInBuf;
-                    FOutPtr = FOutBuf;
-                    FOutSize = 0;
-                    FSuppressAnswer = FALSE;
+                    count = FSocket->Read(FInBuf, FInSize);
 
-                    NotifyMsg();
-
-                    if (!FSuppressAnswer)
+                    if (count == FInSize)
                     {
-                        FSocket->Write((char *)&FOutSize, 2);
-                        FSocket->Write(FOutBuf, FOutSize);
-                        FSocket->Push();
+                        FInPtr = FInBuf;
+                        FOutPtr = FOutBuf;
+                        FOutSize = 0;
+                        FSuppressAnswer = FALSE;
+
+                        NotifyMsg();
+
+                        if (!FSuppressAnswer)
+                        {
+                            FSocket->Write((char *)&FOutSize, 2);
+                            FSocket->Write(FOutBuf, FOutSize);
+                            FSocket->Push();
+                        }
+                    }
+                    else
+                    {
+                        str.printf("Expected %d, Received %d", FInSize, count);
+                        LogMsg(str.GetData());
                     }
                 }
+                else
+                    LogMsg("Data timeout");
             }
+            else
+                LogMsg("Read failed");
         }
         else
+        {
+            LogMsg("Push socket");
             FSocket->Push();
+        }
     }
+
+    if (!FRunning)
+        LogMsg("Not running");
+
+    if (!FSocket->IsOpen())
+        LogMsg("Socket closed");
 
     FDebug->Stop();
 
+    LogMsg("Wait for debug done");
+
     while (!FDebug->IsDone())
         RdosWaitMilli(250);
+
+    LogMsg("Debug done");
 
     if (FDebug)
         delete FDebug;
 
     FDebug = 0;
+
+    LogMsg("Stop debugger");
 
     RdosStopDebugger();
 }

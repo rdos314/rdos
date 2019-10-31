@@ -196,6 +196,8 @@ void TWdCapService::NotifyMsg()
 {
     char ch;
 
+    DebugLog("WdCap");
+
     ch = GetByte();
 
     switch (ch)

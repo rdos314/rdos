@@ -267,6 +267,22 @@ void TWdSupplService::LogMsg(const char *msg)
 
 /*##########################################################################
 #
+#   Name       : TWdSupplService::DebugLog
+#
+#   Purpose....: Log debug message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::DebugLog(const char *msg)
+{
+    FServer->DebugLog(msg);
+}        
+
+/*##########################################################################
+#
 #   Name       : TWdSupplService::GetDebug
 #
 #   Purpose....: Get debug object

@@ -58,6 +58,7 @@ public:
 
 protected:
     void LogMsg(const char *msg);
+    void DebugLog(const char *msg);
 
     char GetByte();
     short int GetWord();

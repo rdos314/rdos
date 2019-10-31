@@ -2868,7 +2868,7 @@ void TDebug::SignalNewData()
 
         case EVENT_CREATE_PROCESS:
             RdosGetDebugEventData(FHandle, &cpe);
-            sprintf(str, "Create process, ID: %d", cpe.Handle);
+            sprintf(str, "Create process, ID: %d, base: %08lX, size: %08lX", cpe.Handle, cpe.ImageBase, cpe.ImageSize);
             LogMsg(str);
             HandleCreateProcess(&cpe);
             break;
@@ -2893,7 +2893,7 @@ void TDebug::SignalNewData()
 
         case EVENT_LOAD_DLL:
             RdosGetDebugEventData(FHandle, &lde);
-            sprintf(str, "Load Dll, ID: %d", lde.Handle);
+            sprintf(str, "Load Dll, ID: %d, base: %08lX, size: %08lX", lde.Handle, lde.ImageBase, lde.ImageSize);
             LogMsg(str);
             HandleLoadDll(&lde);
             break;

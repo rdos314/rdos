@@ -128,6 +128,8 @@ void TWdEnvService::NotifyMsg()
 {
     char ch;
 
+    DebugLog("WdEnv");
+
     ch = GetByte();
 
     _asm int 3

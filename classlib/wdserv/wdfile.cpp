@@ -151,6 +151,7 @@ void TWdFileService::ReqOpen()
     int handle;
     char fname[256];
     char mode = GetByte();
+    TString str;
 
     GetString(fname, 255);
 
@@ -158,14 +159,17 @@ void TWdFileService::ReqOpen()
 
     if (handle)
     {
+        str.printf("Open '%s', ID=%d", fname, handle);
         PutDword(0);
         PutDword(handle);
     }
     else
     {
+        str.printf("Open '%s' failed", fname);
         PutDword(MSG_FILE_NOT_FOUND);
         PutDword(0);
     }        
+    DebugLog(str.GetData());
 }
 
 /*##########################################################################
@@ -416,6 +420,7 @@ void TWdFileService::NotifyMsg()
     switch (ch)
     {
         case 0:
+            DebugLog("GetConfig");
             ReqGetConfig();
             break;
 
@@ -424,34 +429,42 @@ void TWdFileService::NotifyMsg()
             break;
 
         case 2:
+            DebugLog("Seek");
             ReqSeek();
             break;
 
         case 3:
+            DebugLog("Read");
             ReqRead();
             break;
 
         case 4:
+            DebugLog("Write");
             ReqWrite();
             break;
 
         case 5:
+            DebugLog("WriteConsole");
             ReqWriteConsole();
             break;
 
         case 6:
+            DebugLog("Close");
             ReqClose();
             break;
 
         case 7:
+            DebugLog("Delete");
             ReqErase();
             break;
 
         case 8:
+            DebugLog("FullPath");
             ReqStrToFullPath();
             break;
 
         case 9:
+            DebugLog("Run");
             ReqRun();
             break;
 

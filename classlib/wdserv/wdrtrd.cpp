@@ -565,34 +565,42 @@ void TWdRunThreadService::NotifyMsg()
     switch (ch)
     {
         case 0:
+            DebugLog("TrInfo");
             ReqInfo();
             break;
 
         case 1:
+            DebugLog("TrNext");
             ReqGetNext();
             break;
 
         case 2:
+            DebugLog("TrRuntime");
             ReqGetRuntime();
             break;
 
         case 3:
+            DebugLog("TrPoll");
             ReqPoll();
             break;
 
         case 4:
+            DebugLog("TrSet");
             ReqSet();
             break;
 
         case 5:
+            DebugLog("TrName");
             ReqGetName();
             break;
 
         case 6:
+            DebugLog("TrStop");
             ReqStop();
             break;
 
         case 7:
+            DebugLog("TrSignalStop");
             ReqSignalStop();
             break;
 
