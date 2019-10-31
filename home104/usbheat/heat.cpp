@@ -546,14 +546,66 @@ void UnlockGUI()
 ##########################################################################*/
 void TimeThread(void *Param)
 {
+    TTableControl *Table;
+    TLabelFactory CommentFactory;
+    TLabelFactory ValueFactory;
+    TLabelFactory ChangeFactory;
     TLabelControl *Label;
     int year, month, day;
     int hour, min, sec;
     int ms, us;
     unsigned long msb, lsb;
     char str[100];
+    int Gdt;
+    int GdtBase;
+    int Handle;
+    int HandleBase;
+    int Mem;
+    int MemBase;
+
+    RdosWaitMilli(5000);
+
+    GdtBase = RdosGetFreeGdt();
+    HandleBase = RdosGetFreeHandles();
+    MemBase = RdosGetFreeBigLocalLinear();
 
     LockGUI();
+
+    CommentFactory.SetSpace(4, 4);
+    CommentFactory.SetFont(35);
+    CommentFactory.SetBackTransparent();
+    CommentFactory.SetDrawColor(0, 0, 0);
+    CommentFactory.AlignLeft();
+    
+    ValueFactory.SetSpace(4, 4);
+    ValueFactory.SetFont(35);
+    ValueFactory.SetBackColor(100, 100, 100);
+    ValueFactory.SetDrawColor(0, 0, 0);
+    ValueFactory.AlignRight();
+
+    ChangeFactory.SetSpace(4, 4);
+    ChangeFactory.SetFont(35);
+    ChangeFactory.SetBackColor(100, 100, 100);
+    ChangeFactory.SetDrawColor(0, 0, 0);
+    ChangeFactory.AlignRight();
+
+    Table = new TTableControl(control, 1400, 100, 500, 400);
+    Table->SetBackColor(0, 20, 50);
+    Table->SetRowSpacing(10);
+    Table->SetColSpacing(16);
+    Table->SetSpacingColor(0, 20, 50);
+    Table->AddLabelColumn(&CommentFactory, 150);
+    Table->AddLabelColumn(&ValueFactory, 150);
+    Table->AddLabelColumn(&ChangeFactory, 150);
+
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+
+    Table->SetText(0, 0, "GDT");
+    Table->SetText(1, 0, "Handles");
+    Table->SetText(2, 0, "App mem");
+    Table->Show();
 
     Label = new TLabelControl(control, 1600, 5, 300, 35);
     Label->SetFont(35);
@@ -565,6 +617,24 @@ void TimeThread(void *Param)
 
     for (;;)
     {
+        Gdt = RdosGetFreeGdt();
+        sprintf(str, "%d", Gdt);
+        Table->SetText(0, 1, str);
+        sprintf(str, "%d", Gdt - GdtBase);
+        Table->SetText(0, 2, str);
+
+        Handle = RdosGetFreeHandles();
+        sprintf(str, "%d", Handle);
+        Table->SetText(1, 1, str);
+        sprintf(str, "%d", Handle - HandleBase);
+        Table->SetText(1, 2, str);
+
+        Mem = RdosGetFreeBigLocalLinear();
+        sprintf(str, "%d", Mem / 1024);
+        Table->SetText(2, 1, str);
+        sprintf(str, "%d", (Mem - MemBase) / 1024);
+        Table->SetText(2, 2, str);
+
         RdosGetTime(&msb, &lsb);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
         RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);

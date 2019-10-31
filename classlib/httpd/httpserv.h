@@ -55,7 +55,7 @@ class THttpSocketServer : public TSocketServer
 {
 public:
     THttpSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
-    ~THttpSocketServer();
+    virtual ~THttpSocketServer();
 
     virtual void HandleSocket();
 
