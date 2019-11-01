@@ -1693,8 +1693,13 @@ void THeatWebPage::Fixup()
             if (time > currtime)
                 time = currtime;
             else
-                while (!HasDayFile(time))
+            {
+                while (!HasDayFile(time) && time < currtime)
                     time.AddDay(1);
+
+                while (!HasDayFile(time))
+                    time.AddDay(-1);
+            }
         }
 
         FYear = time.GetYear();
@@ -1717,8 +1722,13 @@ void THeatWebPage::Fixup()
                         time.AddMonth(-1);
                 }
                 else
-                    while (!HasMonthFile(time))
+                {
+                    while (!HasMonthFile(time) && time < currtime)
                         time.AddMonth(1);
+
+                    while (!HasMonthFile(time))
+                        time.AddMonth(-1);
+                }
             }
 
             FYear = time.GetYear();
@@ -1738,8 +1748,13 @@ void THeatWebPage::Fixup()
                         time.AddYear(-1);
                 }
                 else
-                    while (!HasMonthFile(time))
+                {
+                    while (!HasMonthFile(time) && time < currtime)
                         time.AddYear(1);
+
+                    while (!HasMonthFile(time))
+                        time.AddYear(-1);
+                }
             }
 
             FYear = time.GetYear();
