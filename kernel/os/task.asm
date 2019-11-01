@@ -2651,7 +2651,7 @@ InsertWakeupMultiple  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSignalSingle  PROC near
-    cli
+    sti
     ret
 LockSignalSingle  Endp
 
@@ -5147,9 +5147,17 @@ signal_thread   PROC far
     or bx,bx
     jz signal_done
 ;
+    cli
     mov es,bx
     call TryLockCore
-    sti
+;
+    mov bx,es
+    or bx,bx
+    jz signal_unlock_core
+;
+    test es:p_flags,THREAD_FLAG_TERMINATED
+    jnz signal_unlock_core    
+;
     call cs:lock_signal_proc
     mov es:p_signal,1
 ;    
@@ -5194,8 +5202,8 @@ wait_for_signal PROC far
     push fs
     push ax
 ;
+    cli
     call LockCore
-    sti
     mov es,fs:ps_curr_thread
     call cs:lock_signal_proc
 ;    
@@ -5264,8 +5272,8 @@ wait_for_signal_timeout PROC far
     push cx
     push edi
 ;
+    cli
     call LockCore
-    sti
     mov es,fs:ps_curr_thread
     call cs:lock_signal_proc
 ;    
@@ -8782,6 +8790,8 @@ terminate_thread_not_user:
     GetThread
     mov ds,ax
     mov es,ax
+    lock or es:p_flags,THREAD_FLAG_TERMINATED
+;
     call remove_process_thread
 ;
     mov es,ds:p_thread_sel
