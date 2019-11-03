@@ -58,8 +58,6 @@
 
 #define MAX_FAULT_THREADS   128
 
-long Timeout = 0;
-
 TRdosLog *Log;
 
 /*##################  OnMsg  #####################################
@@ -72,18 +70,6 @@ TRdosLog *Log;
 void OnMsg(TWdSocketServerFactory *fact, const char *msg)
 {
     Log->Log(0, "Debugger", msg);
-}
-
-/*##################  WriteCommand ##########################
-*   Purpose....: Write command echo                                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void WriteCommand(TFtpSocketServer *server, const char *str)
-{
-    Log->Log(0, "Ftpd", str);
 }
 
 /*##################  SetupFaultSave  #####################################
@@ -573,41 +559,6 @@ void LogFault()
     }
 }
 
-/*##################  WatchdogThread  ##############################################
- *   Purpose....: Watchdog thread                                                                           #
- *   In params..: *                                                          #
- *   Out params.: *                                                          #
- *   Returns....: *                                                          #
- *   Created....: 96-10-02 le                                                #
- *##########################################################################*/
-void WatchdogThread(void *ptr)
-{    
-    int kick;
-    
-    RdosStartWatchdog(5000);
-
-    for (;;)
-    {
-        if (Timeout)
-        {
-            if (Timeout > 1)
-            {
-                Timeout--;
-                kick = TRUE;
-            }
-            else
-                kick = FALSE;
-        }
-        else
-            kick = TRUE;
-
-        if (kick)
-            RdosKickWatchdog();
-
-        RdosWaitMilli(500);
-    }
-}
-
 /*##################  DebuggerThread  ##############################################
  *   Purpose....: Debugger thread                                                                           #
  *   In params..: *                                                          #
@@ -617,20 +568,6 @@ void WatchdogThread(void *ptr)
  *##########################################################################*/
 void DebuggerThread(void *ptr)
 {    
-    TWdSupplFactory *suppl;
-    TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
-
-    fact.OnMsg = OnMsg;
-
-    suppl = new TWdFileFactory(&fact);
-    suppl = new TWdFileInfoFactory(&fact);
-    suppl = new TWdEnvFactory(&fact);
-    suppl = new TWdRunThreadFactory(&fact);
-    suppl = new TWdCapFactory(&fact);
-    suppl = new TWdAsyncFactory(&fact);
-
-    for (;;)
-        fact.WaitForever();
 }
 
 /*##################  StartApp  #####################################
@@ -648,7 +585,6 @@ void StartApp()
     int AppHandle;
 
     RdosSetCurDir("d:/heat");
-    RdosCreateThread(DebuggerThread, "Debug server", 0, 0x2000);
 
     PrevOutput = dup(1);
     PrevError = dup(2);
@@ -684,26 +620,32 @@ void StartApp()
 *##########################################################################*/
 int main()
 {
+    TWdSupplFactory *suppl;
+    TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+
     printf("Starting loader\r\n");
 
     RdosWaitMilli(1000);
 
+    RdosStartWatchdog(5000);
+
     Log = new TRdosDefaultLog("d:/bootlog", 200, 0x20000, "Loader Log", "Sys");
     Log->Log(0, "main", "Started");
-
-    Timeout = 2 * 90 * 60;
-
-    RdosCreateThread(WatchdogThread, "Loader WD", 0, 0x2000);
 
     SetupFaultSave();
     LogFault();
 
-    Timeout = 2 * 60;
-
     StartApp();
 
-    Timeout = 0;
+    fact.OnMsg = OnMsg;
+
+    suppl = new TWdFileFactory(&fact);
+    suppl = new TWdFileInfoFactory(&fact);
+    suppl = new TWdEnvFactory(&fact);
+    suppl = new TWdRunThreadFactory(&fact);
+    suppl = new TWdCapFactory(&fact);
+    suppl = new TWdAsyncFactory(&fact);
 
     for (;;)
-        RdosWaitMilli(250);
+        fact.WaitForever();
 }

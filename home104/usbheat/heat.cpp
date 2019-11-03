@@ -79,6 +79,52 @@ static int WindDumpSum;
 static long double WindDayE = 0.0;
 static long double WindNewDayE = 0.0;
 
+int WdTimeout;
+
+/*##################  WatchdogThread  ##############################################
+ *   Purpose....: Watchdog thread                                                                           #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *   Created....: 96-10-02 le                                                #
+ *##########################################################################*/
+void WatchdogThread(void *ptr)
+{    
+    TRdosLog Log("");
+
+    bool kick;
+    bool prevk = true;
+
+    WdTimeout = 2 * 100;
+
+    for (;;)
+    {
+        kick = false;
+
+        if (RdosGetFreeGdt() > 1000)
+        {
+            if (WdTimeout)
+            {
+                WdTimeout--;
+                kick = true;
+            }
+            else
+                if (prevk)
+                    Log.Log(0, "", "Watchdog timeout");
+        }
+        else
+            if (prevk)
+                Log.Log(0, "", "GDT too low");
+
+        if (kick)
+            RdosKickWatchdog();
+
+        prevk = kick;
+
+        RdosWaitMilli(500);
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : NotifySolarPower
@@ -723,7 +769,13 @@ int main()
     TTableControl *SolarTable;
     TTableControl *WindTable;
     
+    RdosCreateThread(WatchdogThread, "Watdog", 0, 0x2000);
+
     RdosWaitMilli(2500);
+
+    NtpIp = RdosNameToIp("pool.ntp.org");
+    if (NtpIp)
+        RdosSyncTime(NtpIp);
 
     TRdosDefaultLog Log("d:/log", 50, 128 * 1024, "Log", "");
     Log.Log(0, "", "Started");
@@ -734,10 +786,6 @@ int main()
     RdosWriteSerialVal(2, 1, 0);
 
     RdosWriteSerialRaw(0x10, 0, 1);
-
-    NtpIp = RdosNameToIp("pool.ntp.org");
-    if (NtpIp)
-        RdosSyncTime(NtpIp);
 
     vbe = new TVideoGraphicDevice(32, 1920, 1080);
     control = new TDisplayControlThread("Control", vbe);
@@ -1231,6 +1279,8 @@ int main()
 
         if (LastMin != CurrTime->GetMin())
         {
+            WdTimeout = 2 * 100;
+
             if (PowerCount)
             {
                 Vp->SetPower(PowerSum / PowerCount);
