@@ -52,6 +52,8 @@
 #include "linyaxis.h"
 #include "png.h"
 
+int GetWebConnectionCount();
+
 #define FALSE   0
 #define TRUE    !FALSE
 
@@ -610,6 +612,7 @@ void TimeThread(void *Param)
     int ms, us;
     unsigned long msb, lsb;
     char str[100];
+    int count;
     int Gdt;
     int GdtBase;
     int Handle;
@@ -655,10 +658,12 @@ void TimeThread(void *Param)
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
 
     Table->SetText(0, 0, "GDT");
     Table->SetText(1, 0, "Handles");
     Table->SetText(2, 0, "App mem");
+    Table->SetText(3, 0, "Connections");
     Table->Show();
 
     Label = new TLabelControl(control, 1600, 5, 300, 35);
@@ -697,6 +702,11 @@ void TimeThread(void *Param)
                         year, month, day,
                         hour, min, sec);
         Label->SetText(str);
+
+        count = GetWebConnectionCount();
+        sprintf(str, "%d", count);
+        Table->SetText(3, 1, str);
+
         RdosWaitMilli(200);
     }  
 }
@@ -717,6 +727,9 @@ void PerfThread(void *ptr)
     TChart *PerfChart[MAX_CORES];
     TTimeXAxis *XAxis[MAX_CORES];
     TLinYAxis *YAxis[MAX_CORES];
+    TChart *FreqChart;
+    TTimeXAxis *FreqXAxis;
+    TLinYAxis *FreqYAxis;
     long long CoreTicsArr[MAX_CORES];
     long long NullTicsArr[MAX_CORES];
     long long CoreTics;
@@ -727,11 +740,23 @@ void PerfThread(void *ptr)
     long double YVal;
     unsigned long Msb, Lsb;
     int Count = 0;
-    TBitmapGraphicDevice *bitmap;
-    TPngBitmapDevice *png;
-    int Handle;
-    int Index;
-    char FileName[255];
+    char CpuVendor[80];
+    int CpuVer;
+    int FeatureBits;
+    int Freq;
+
+    FreqXAxis = new TTimeXAxis(&AxisFont);
+    FreqXAxis->SetBackColor(0, 0, 0);
+    FreqXAxis->SetForeColor(255, 255, 255);
+    FreqYAxis = new TLinYAxis(&AxisFont);
+    FreqYAxis->SetBackColor(0, 0, 0);
+    FreqYAxis->SetForeColor(255, 255, 255);
+    FreqChart = new TChart(vbe, FreqXAxis, FreqYAxis);
+
+    FreqChart->SetWindow(1500, 470, 1790, 610);
+    FreqChart->SetBackColor(0, 0, 0);
+    FreqChart->SetLineColor(0, 50, 200, 100);
+    FreqChart->SetYAxis(1000.0, 3000.0);
 
     for (Cores = 0; Cores < MAX_CORES; Cores++)
     {
@@ -759,12 +784,21 @@ void PerfThread(void *ptr)
     for (;;)
     {
         RdosWaitMilli(1000);
+
+        RdosGetTime(&Msb, &Lsb);
+        XVal = (long double)Lsb / 65536.0 / 65536.0;
+        XVal += (long double)Msb;
+
+        CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureBits, &Freq);
+        YVal = (long double)Freq;
+        if (Count == MAX_SAMPLES)
+            FreqChart->Remove(0);
+
+        FreqChart->Add(0, XVal, YVal);                    
+        FreqChart->Draw();
+
         for (i = 0; i < Cores; i++)
         {
-            RdosGetTime(&Msb, &Lsb);
-            XVal = (long double)Lsb / 65536.0 / 65536.0;
-            XVal += (long double)Msb;
-            
             RdosGetCoreLoad(i, &NullTics, &CoreTics);
             CoreDiff = CoreTics - CoreTicsArr[i];
             NullDiff = NullTics - NullTicsArr[i];

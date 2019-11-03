@@ -151,6 +151,7 @@ public:
 
     virtual TSocketServer *Create(TTcpSocket *Socket) = 0;
     void CloseAllSockets();
+    int GetConnectionCount();
 
 protected:
     void Cleanup();
@@ -161,6 +162,7 @@ protected:
 
     TSocketServer *FList;
     int FListenHandle;
+    int FServerCount;
 };
 
 class TUdpSocketListner : public TWaitDevice

@@ -810,8 +810,9 @@ void TSocketServer::Execute()
 ##########################################################################*/
 TSocketServerFactory::TSocketServerFactory(int Port, int MaxConnections, int BufferSize)
 {
+    FServerCount = 0;
     FList = 0;
-        FListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
+    FListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
 }
 
 /*##########################################################################
@@ -827,7 +828,24 @@ TSocketServerFactory::TSocketServerFactory(int Port, int MaxConnections, int Buf
 ##########################################################################*/
 TSocketServerFactory::~TSocketServerFactory()
 {
-         RdosCloseTcpListen(FListenHandle);
+     RdosCloseTcpListen(FListenHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::GetConnectionCount
+#
+#   Purpose....: Get connection count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSocketServerFactory::GetConnectionCount()
+{
+    Cleanup();
+    return FServerCount;
 }
 
 /*##########################################################################
@@ -843,30 +861,32 @@ TSocketServerFactory::~TSocketServerFactory()
 ##########################################################################*/
 void TSocketServerFactory::Cleanup()
 {
-        TSocketServer *ptr;
-        TSocketServer *prev;
-        TSocketServer *temp;
+    TSocketServer *ptr;
+    TSocketServer *prev;
+    TSocketServer *temp;
 
-        prev = 0;
-        ptr = FList;
-        while (ptr)
+    prev = 0;
+    ptr = FList;
+    while (ptr)
+    {
+        if (ptr->FSocket == 0)
         {
-                if (ptr->FSocket == 0)
-                {
-                        temp = ptr->FNext;
-                        delete ptr;
-                        if (prev == 0)
-                                FList = temp;
-                        else
-                                prev->FNext = temp;
-                        ptr = temp;
-                }
-                else
-                {
-                        prev = ptr;
-                        ptr = ptr->FNext;
-                }
+            FServerCount--;
+
+            temp = ptr->FNext;
+            delete ptr;
+            if (prev == 0)
+                FList = temp;
+            else
+                prev->FNext = temp;
+            ptr = temp;
         }
+        else
+        {
+            prev = ptr;
+            ptr = ptr->FNext;
+        }
+    }
 }
 
 /*##########################################################################
@@ -882,8 +902,10 @@ void TSocketServerFactory::Cleanup()
 ##########################################################################*/
 void TSocketServerFactory::Insert(TSocketServer *server)
 {
-        server->FNext = FList;
-        FList = server;
+    FServerCount++;
+
+    server->FNext = FList;
+    FList = server;
 }
 
 /*##########################################################################
@@ -898,7 +920,7 @@ void TSocketServerFactory::Insert(TSocketServer *server)
 ##########################################################################*/
 void TSocketServerFactory::Add(TWait *Wait)
 {
-        RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, (int)this);
+    RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, (int)this);
 }
 
 /*##########################################################################
@@ -914,16 +936,16 @@ void TSocketServerFactory::Add(TWait *Wait)
 ##########################################################################*/
 void TSocketServerFactory::SignalNewData()
 {
-        int handle;
-        TTcpSocket *socket;
+    int handle;
+    TTcpSocket *socket;
 
     Cleanup();
-        handle = RdosGetTcpListen(FListenHandle);
-        if (handle)
-        {
-            socket = new TTcpSocket(handle);
-            Insert(Create(socket));
-        }
+    handle = RdosGetTcpListen(FListenHandle);
+    if (handle)
+    {
+        socket = new TTcpSocket(handle);
+        Insert(Create(socket));
+    }
 }
 
 /*##########################################################################

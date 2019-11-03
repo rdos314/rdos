@@ -49,6 +49,27 @@
 #define SUBMIT_SOLAR    4
 #define SUBMIT_WIND     5
 
+static TSocketServerFactory *sockfact = 0;
+
+/*##########################################################################
+#
+#   Name       : GetWebConnectionCount
+#
+#   Purpose....: Get web connection count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetWebConnectionCount()
+{
+    if (sockfact)
+        return sockfact->GetConnectionCount();
+    else
+        return 0;
+}
+
 /*##########################################################################
 #
 #   Name       : THeatHttpServerFactory::THeatHttpServerFactory
@@ -64,6 +85,7 @@ THeatHttpServerFactory::THeatHttpServerFactory(int Port, int MaxConnections, int
   : THttpSocketServerFactory(Port, MaxConnections, BufferSize)
 {
 }
+
 /*##########################################################################
 #
 #   Name       : THeatHttpServerFactory::~THeatHttpServerFactory
@@ -2230,6 +2252,8 @@ static void WebSocketThread(void *ptr)
     fact.AddCustomDir(&jsondir);
     fact.AddCustomDir(&webdir);
     fact.RootDir = "d:/www";
+
+    sockfact = &fact;
 
     for (;;)
         fact.WaitForever();
