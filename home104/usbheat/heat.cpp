@@ -617,31 +617,37 @@ void TimeThread(void *Param)
     int GdtBase;
     int Handle;
     int HandleBase;
-    int Mem;
-    int MemBase;
+    unsigned int Mem;
+    unsigned int MemBase;
+    long long PhysMem;
+    long long PhysBase;
+    long long PhysDiff;
+    int mb;
+    int kb;
 
     RdosWaitMilli(5000);
 
     GdtBase = RdosGetFreeGdt();
     HandleBase = RdosGetFreeHandles();
-    MemBase = RdosGetFreeBigLocalLinear();
+    MemBase = (unsigned int)RdosGetFreeBigLocalLinear();
+    PhysBase = RdosGetFreePhysical();
 
     LockGUI();
 
     CommentFactory.SetSpace(4, 4);
-    CommentFactory.SetFont(35);
+    CommentFactory.SetFont(30);
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
     
     ValueFactory.SetSpace(4, 4);
-    ValueFactory.SetFont(35);
+    ValueFactory.SetFont(30);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
 
     ChangeFactory.SetSpace(4, 4);
-    ChangeFactory.SetFont(35);
+    ChangeFactory.SetFont(30);
     ChangeFactory.SetBackColor(100, 100, 100);
     ChangeFactory.SetDrawColor(0, 0, 0);
     ChangeFactory.AlignRight();
@@ -659,15 +665,17 @@ void TimeThread(void *Param)
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
 
     Table->SetText(0, 0, "GDT");
     Table->SetText(1, 0, "Handles");
     Table->SetText(2, 0, "App mem");
-    Table->SetText(3, 0, "Connections");
+    Table->SetText(3, 0, "Phys mem");
+    Table->SetText(4, 0, "Connections");
     Table->Show();
 
     Label = new TLabelControl(control, 1600, 5, 300, 35);
-    Label->SetFont(35);
+    Label->SetFont(30);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
     Label->Show();
@@ -688,11 +696,35 @@ void TimeThread(void *Param)
         sprintf(str, "%d", Handle - HandleBase);
         Table->SetText(1, 2, str);
 
-        Mem = RdosGetFreeBigLocalLinear();
-        sprintf(str, "%d", Mem / 1024);
+        Mem = (unsigned int)RdosGetFreeBigLocalLinear();
+        mb = Mem / 1024 / 1024;
+        kb = Mem - mb * 1024 * 1024;
+        kb = kb * 1000 / 1024;
+        kb = kb * 100 / 1024;
+        sprintf(str, "%d.%05d", mb, kb);
         Table->SetText(2, 1, str);
-        sprintf(str, "%d", (Mem - MemBase) / 1024);
+
+        kb = Mem - MemBase;
+        kb = kb / 1024;
+        sprintf(str, "%d", kb);
         Table->SetText(2, 2, str);
+
+        PhysMem = RdosGetFreePhysical();
+        mb = (int)(PhysMem / 1024LL / 1024LL);
+        kb = PhysMem - (long long)mb * 1024LL * 1024LL;
+        kb = kb * 1000 / 1024;
+        kb = kb * 100 / 1024;
+        sprintf(str, "%d.%05d", mb, kb);
+        Table->SetText(3, 1, str);
+
+        PhysDiff = (PhysMem - PhysBase) / 1024;
+        kb = (int)PhysDiff;
+        sprintf(str, "%d", kb);
+        Table->SetText(3, 2, str);
+
+        count = GetWebConnectionCount();
+        sprintf(str, "%d", count);
+        Table->SetText(4, 1, str);
 
         RdosGetTime(&msb, &lsb);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
@@ -702,10 +734,6 @@ void TimeThread(void *Param)
                         year, month, day,
                         hour, min, sec);
         Label->SetText(str);
-
-        count = GetWebConnectionCount();
-        sprintf(str, "%d", count);
-        Table->SetText(3, 1, str);
 
         RdosWaitMilli(200);
     }  
