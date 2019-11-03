@@ -4032,8 +4032,6 @@ CloseDelete     Proc near
     or ds:tcp_pending,FLAG_DELETE_NET
     ret
 CloseDelete     Endp
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4085,7 +4083,7 @@ CloseCloseWait  Endp
 
 close_tab:
 cl0 DW OFFSET CloseDelete
-cl1 DW OFFSET CloseNormal
+cl1 DW OFFSET CloseDelete
 cl2 DW OFFSET CloseNormal
 cl3 DW OFFSET IgnoreDummy
 cl4 DW OFFSET IgnoreDummy
