@@ -47,9 +47,16 @@
 #include "file.h"
 #include "web.h"
 #include "rdoslog.h"
+#include "chart.h"
+#include "timeaxis.h"
+#include "linyaxis.h"
+#include "png.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
+
+#define MAX_CORES   4
+#define MAX_SAMPLES 5 * 60
 
 #define ROOT_DIR "e:/data/power"
 #define CSV_DAY_HEADER "time;solar;grid;dump\r\n"
@@ -58,6 +65,7 @@
 #define WIDTH 240
 #define HEIGHT 15
 
+TGraphicDevice *vbe;
 TControlThread *control;
 TSection FGuiSection;
 
@@ -693,6 +701,91 @@ void TimeThread(void *Param)
     }  
 }
 
+/*##################  PerfThread  ##############################################
+ *   Purpose....: Watchdog thread                                                                           #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *   Created....: 96-10-02 le                                                #
+ *##########################################################################*/
+void PerfThread(void *ptr)
+{    
+    int width, height;
+    int i;
+    int Cores;
+    TFont AxisFont(15);
+    TChart *PerfChart[MAX_CORES];
+    TTimeXAxis *XAxis[MAX_CORES];
+    TLinYAxis *YAxis[MAX_CORES];
+    long long CoreTicsArr[MAX_CORES];
+    long long NullTicsArr[MAX_CORES];
+    long long CoreTics;
+    long long NullTics;
+    long long CoreDiff;
+    long long NullDiff;
+    long double XVal;
+    long double YVal;
+    unsigned long Msb, Lsb;
+    int Count = 0;
+    TBitmapGraphicDevice *bitmap;
+    TPngBitmapDevice *png;
+    int Handle;
+    int Index;
+    char FileName[255];
+
+    for (Cores = 0; Cores < MAX_CORES; Cores++)
+    {
+        if (RdosGetCoreLoad(Cores, &NullTicsArr[Cores], &CoreTicsArr[Cores]))
+        {
+            XAxis[Cores] = new TTimeXAxis(&AxisFont);
+            XAxis[Cores]->SetBackColor(0, 0, 0);
+            XAxis[Cores]->SetForeColor(255, 255, 255);
+            YAxis[Cores] = new TLinYAxis(&AxisFont);
+            YAxis[Cores]->SetBackColor(0, 0, 0);
+            YAxis[Cores]->SetForeColor(255, 255, 255);
+            PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
+            PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
+
+            PerfChart[Cores]->SetWindow(1100, 20 + Cores * 150, 1390, 160 + Cores * 150);
+
+            PerfChart[Cores]->SetBackColor(0, 0, 0);
+            PerfChart[Cores]->SetLineColor(0, 50, 200, 100);
+            PerfChart[Cores]->SetYAxis(0.0, 100.0);
+        }
+        else
+            break;
+    }
+
+    for (;;)
+    {
+        RdosWaitMilli(1000);
+        for (i = 0; i < Cores; i++)
+        {
+            RdosGetTime(&Msb, &Lsb);
+            XVal = (long double)Lsb / 65536.0 / 65536.0;
+            XVal += (long double)Msb;
+            
+            RdosGetCoreLoad(i, &NullTics, &CoreTics);
+            CoreDiff = CoreTics - CoreTicsArr[i];
+            NullDiff = NullTics - NullTicsArr[i];
+            CoreTicsArr[i] = CoreTics;
+            NullTicsArr[i] = NullTics;
+            if (CoreDiff > 1192 * 500)
+            {
+                YVal = 100.0 - (long double)NullDiff / (long double)CoreDiff * 100.0;
+                if (Count == MAX_SAMPLES)
+                    PerfChart[i]->Remove(0);
+
+                PerfChart[i]->Add(0, XVal, YVal);                    
+                PerfChart[i]->Draw();
+            }            
+        }
+        if (Count < MAX_SAMPLES)
+            Count++;
+
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : main
@@ -739,7 +832,6 @@ int main()
     int night;
     int summer;
     int refsum;
-    TGraphicDevice *vbe;
     TFont Font(25);
     char str[80];
     int width;
@@ -858,6 +950,7 @@ int main()
     WindInv->OnDayEnergy = NotifyWindDayEnergy;
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
+    RdosCreateThread(PerfThread, "Perf", vbe, 0x4000);
 
     LockGUI();
     Label = new TLabelControl(control, 1700, 50, 200, 35);
