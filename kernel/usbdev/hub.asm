@@ -2010,75 +2010,6 @@ CloseHub  Proc near
     pop bx
     ret
 CloseHub   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ProcessHubDescr
-;
-;   description:    Process Hub descriptor
-;
-;   Parameters:     DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessHubDescr  Proc near
-    push es
-    pushad
-;    
-    mov ax,ds
-    mov es,ax
-    mov bx,ds:hub_control_handle
-;    
-    mov edi,OFFSET hub_control_data
-    mov es:[edi].usd_type,0A0h
-    mov es:[edi].usd_req,GET_DESCR
-    mov es:[edi].usd_value,2900h
-    mov es:[edi].usd_index,0
-    mov es:[edi].usd_len,HUB_BUF_SIZE
-    mov ecx,8
-    WriteUsbControl
-;
-    mov ecx,HUB_BUF_SIZE
-    mov edi,OFFSET hub_buf
-    mov es:[edi].uhd_type,0
-    ReqUsbData    
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,ds:hub_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hub_control_handle
-    WasUsbTransactionOk
-    jc ghdDone
-;
-    mov cl,es:[edi].uhd_type
-    cmp cl,29h
-    stc
-    jne ghdDone
-;
-    movzx cx,es:[edi].uhd_ports
-    mov ds:hub_ports,cx
-;
-    mov cx,es:[edi].uhd_info
-    mov ds:hub_info,cx
-;
-    movzx cx,es:[edi].uhd_power_time
-    shl cx,1
-    mov ds:hub_power_time,cx        
-;               
-    clc    
-
-ghdDone:    
-    popad
-    pop es
-    ret
-ProcessHubDescr Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2260,9 +2191,6 @@ usb_hub_status:
     and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
 ;
     call CreateHub
-    call ProcessHubDescr
-    jc tsExit
-;
     call InitPorts
 ;
     mov ax,ds:hub_power_time
@@ -2575,6 +2503,52 @@ CreateStatusThread	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ProcessHubDescr
+;
+;   description:    Process Hub descriptor
+;
+;   Parameters:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessHubDescr  Proc near
+    push es
+    pushad
+;    
+    mov ax,ds
+    mov es,ax
+    mov bx,ds:hub_controller
+    mov al,ds:hub_address
+    mov ecx,SIZE usb_hub_descr
+    mov edi,OFFSET hub_buf
+    GetUsbHubDescriptor
+    jc ghdDone
+;
+    mov cl,es:[edi].uhd_type
+    cmp cl,29h
+    stc
+    jne ghdDone
+;
+    movzx cx,es:[edi].uhd_ports
+    mov ds:hub_ports,cx
+;
+    mov cx,es:[edi].uhd_info
+    mov ds:hub_info,cx
+;
+    movzx cx,es:[edi].uhd_power_time
+    shl cx,1
+    mov ds:hub_power_time,cx                       
+    clc    
+
+ghdDone:    
+    popad
+    pop es
+    ret
+ProcessHubDescr Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           usb_attach
 ;
 ;   description:    USB attach callback
@@ -2782,17 +2756,28 @@ uaDevOk:
     or al,al
     jz uaFail
 ;
-    mov bx,es:hub_controller
-    mov al,es:hub_address
-    ConfigUsbDevice
-    jc uaFail
+    mov eax,es
+    mov ds,eax
+    call ProcessHubDescr
+    jc uaFailDs
+
+uaDevConfig:
+    InitUsbFunction
 ;
+    mov ds:usb_hub_id,-1
+    mov bx,ds:hub_controller
+    mov al,ds:hub_address
+    ConfigUsbDevice
+    jc uaFailDs
+;
+    mov ebx,ds
     mov eax,SEG data
     mov ds,eax
     movzx esi,ds:hub_dev_count
     add esi,esi
-    mov ds:[esi].hub_dev_arr,es
+    mov ds:[esi].hub_dev_arr,bx
     inc ds:hub_dev_count
+    mov ds,ebx
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
@@ -2800,18 +2785,20 @@ uaDevOk:
 
 uaTabLoop:
     lods dword ptr cs:[esi]
-    mov es:[edi],eax
+    mov ds:[edi],eax
     add edi,4
     loop uaTabLoop    
 ;
-    mov es:hub_parent_sel,fs
-;
-    mov ebx,es
-    mov ds,ebx
-    InitUsbFunction
+    mov ds:hub_parent_sel,fs
 ;
     call CreateStatusThread
     jmp uaDone
+
+uaFailDs:
+    mov eax,ds
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
 
 uaFail:
     FreeMem

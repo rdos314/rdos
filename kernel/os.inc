@@ -3842,6 +3842,15 @@ HookUsbDetach   MACRO
     OsGate hook_usb_detach_nr
                     ENDM
 
+; IN  BX       Controller #
+; IN  AL       Device address (1..128)
+; IN  CX       Buffer size
+; IN  ES:EDI   Buffer
+; OUT AX       Size of descriptor
+GetUsbHubDescriptor MACRO
+    OsGate get_usb_hub_descriptor_nr
+                    ENDM
+
 ; IN  DS      Function sel
 ; IN  ES      Device sel
 ; OUT AL      Address

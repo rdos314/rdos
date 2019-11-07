@@ -157,6 +157,7 @@ issue_one_proc       DD ?,?
 usb_section            section_typ <>
 
 usb_controller_id      DW ?
+usb_hub_id             DW ?
 usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
 usb_attach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
 usb_detach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
