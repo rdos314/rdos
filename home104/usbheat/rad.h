@@ -31,6 +31,7 @@
 #include "device.h"
 #include "file.h"
 #include "radcntrl.h"
+#include "rdoslog.h"
 
 class TRad : public TDevice
 {
@@ -96,6 +97,7 @@ protected:
     TFile *FDayFile;
 
     TSection FSection;
+    TRdosLog FLog;
 
 };
 

@@ -1053,12 +1053,16 @@ void TVp::Execute()
     {
         if (RdosReadSerialRaw(1, 5, &ival))
         {
-            val = (long double)ival / 10;
-            UpdateHistory(val);
+            if (ival > 100 && ival < 600)
+            {
+                val = (long double)ival / 10;
+                UpdateHistory(val);
 
-            sprintf(str, "%5.2Lf", val);
-            Table->SetText(0, 1, str);
-
+                sprintf(str, "%5.2Lf", val);
+                Table->SetText(0, 1, str);
+            }
+            else
+                FLog.printf(0, "", "Invalid heat %d", ival);
 
             if (FHistoryCount > 60)
             {

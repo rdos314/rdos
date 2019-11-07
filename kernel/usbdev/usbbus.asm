@@ -841,6 +841,14 @@ read_serial_val Proc far
     movzx ecx,ds:[bx].io_val+3
     shl ecx,18
     add eax,ecx
+
+    cmp eax,920797h
+    jne rsvNotErr
+;
+    mov eax,dword ptr ds:[bx].io_val
+    int 3
+
+rsvNotErr:
     clc
     jmp rsvDone
 

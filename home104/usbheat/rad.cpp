@@ -53,6 +53,7 @@
 #
 ##########################################################################*/
 TRad::TRad(const char *name, TRadControl *control, int rad, int Address)
+  : FLog("TRad")
 {
     char str[40];
 
@@ -601,10 +602,14 @@ void TRad::Execute()
 
             if (ok)
             {
-                FRefSum += val;
-                FRefCount++;
-
-                FControl->SetRef(FIndex, val);
+                if (val > 100 && val < 255)
+                {
+                    FRefSum += val;
+                    FRefCount++;
+                    FControl->SetRef(FIndex, val);
+                }
+                else
+                    FLog.printf(0, "", "Ref: %d", val);
             }
             else
                 FControl->SetRef(FIndex);
@@ -615,13 +620,14 @@ void TRad::Execute()
 
                 if (ok)
                 {
-                    if (val < 50)
-                        val += 256;
-
-                    FTempSum += val;
-                    FTempCount++;
-
-                    FControl->SetTemp(FIndex, val);
+                    if (val > 100 && val < 255)
+                    {
+                        FTempSum += val;
+                        FTempCount++;
+                        FControl->SetTemp(FIndex, val);
+                    }
+                    else
+                        FLog.printf(0, "", "Temp: %d", val);
                 }
 		else
                     FControl->SetTemp(FIndex);
@@ -633,12 +639,15 @@ void TRad::Execute()
 
                 if (ok)
                 {
-                    val = val * 10 / 25;
-
-                    FMotorSum += val;
-                    FMotorCount++;
-
-                    FControl->SetMotor(FIndex, val);
+                    if (val >= 0 && val < 500)
+                    {
+                        val = val * 10 / 25;
+                        FMotorSum += val;
+                        FMotorCount++;
+                        FControl->SetMotor(FIndex, val);
+                    }
+                    else
+                        FLog.printf(0, "", "Motor: %d", val);
 		}
 		else
                     FControl->SetMotor(FIndex);
@@ -650,10 +659,14 @@ void TRad::Execute()
 
                 if (ok)
                 {
-                    FLightSum += val;
-                    FLightCount++;
-
-                    FControl->SetLight(FIndex, val);
+                    if (val >= 0 && val < 4096)
+                    {
+                        FLightSum += val;
+                        FLightCount++;
+                        FControl->SetLight(FIndex, val);
+                    }
+                    else
+                        FLog.printf(0, "", "Light: %d", val);
                 }
                 else
 		    FControl->SetLight(FIndex);
@@ -665,13 +678,14 @@ void TRad::Execute()
 
                 if (ok)
                 {
-                    if (val < 50)
-                        val += 256;
-
-                    FAuxTempSum += val;
-                    FAuxTempCount++;
-
-                    FControl->SetAuxTemp(FIndex, val);
+                    if (val > 100 && val < 255)
+                    {
+                        FAuxTempSum += val;
+                        FAuxTempCount++;
+                        FControl->SetAuxTemp(FIndex, val);
+                    }
+                    else
+                        FLog.printf(0, "", "Aux: %d", val);
                 }
                 else
                     FControl->SetAuxTemp(FIndex);
