@@ -322,6 +322,7 @@ AddDump	Proc near
     jnz adWrite
 ;
     push es
+    push ecx
     push edi
 ;
     mov ax,cs
@@ -335,6 +336,7 @@ AddDump	Proc near
     mov ds:dump_file,bx
 ;
     pop edi
+    pop ecx
     pop es
 
 adWrite:
@@ -407,6 +409,7 @@ adHigh1:
     pop ecx
     pop es
 ;
+    inc edi
     loop adLoop
 
 adCrLf:
@@ -1512,6 +1515,8 @@ AddressDevice   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+config_text DB 'Config ', 0
+
 ConfigDevice   Proc far
     push es
     push gs
@@ -1556,6 +1561,13 @@ ConfigDevice   Proc far
     mov es:[bx].s_ttt_int,ax
 ;
     pop gs
+;
+    pushad
+    mov esi,OFFSET config_text
+    movzx edi,es:xd_input_slot_offset
+    mov ecx,SIZE slot_struc
+    call AddDump
+    popad
 
 cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
