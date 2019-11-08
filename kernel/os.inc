@@ -3853,8 +3853,8 @@ GetUsbHubDescriptor MACRO
 
 ; IN  BX       Controller #
 ; IN  AL       Device address (1..128)
+; IN  CX       Hub sel
 ; IN  DL       Config #
-; IN  DS       Hub sel
 ConfigUsbHub MACRO
     OsGate config_usb_hub_nr
                     ENDM

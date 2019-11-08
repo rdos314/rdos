@@ -1343,6 +1343,7 @@ AddressDevice   Endp
 ;
 ;   PARAMETERS:     DS      Device selector
 ;                   ES      Function selector
+;                   CX      Hub sel
 ;                   DL      Config #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1355,6 +1356,12 @@ ConfigDevice   Proc far
     push ecx
     push edi
 ;
+    or cx,cx
+    jz cdDo
+;
+    int 3
+
+cdDo:
     call WaitForCommandTrb
     movzx eax,es:xd_input_context_offset
     add eax,es:xd_phys

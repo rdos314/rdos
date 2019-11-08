@@ -2762,7 +2762,6 @@ uaDevOk:
     jc uaFailDs
 
 uaDevConfig:
-    int 3
     InitUsbFunction
 ;
     mov ds:usb_hub_id,-1

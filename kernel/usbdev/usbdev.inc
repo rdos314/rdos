@@ -145,6 +145,7 @@ get_max_len_proc        DD ?,?
 address_device_proc	DD ?,?
 
 ; IN  FS        Pipe selector
+; IN  CX        Hub sel
 ; IN  DL        Configuration #
 config_device_proc	DD ?,?
 
