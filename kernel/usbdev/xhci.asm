@@ -1343,6 +1343,7 @@ AddressDevice   Endp
 ;
 ;   PARAMETERS:     DS      Device selector
 ;                   ES      Function selector
+;                   DL      Config #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

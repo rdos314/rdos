@@ -829,5 +829,6 @@ is_usb_pipe_connected_nr    = 724
 start_usb_dev_nr            = 725
 read_usb_descriptors_nr     = 726
 get_usb_hub_descriptor_nr   = 727
+config_usb_hub_nr           = 728
 
 osgate_entries              = 750

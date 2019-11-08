@@ -1658,6 +1658,7 @@ AddressDev   Endp
 ;       DESCRIPTION:        Config usb dev
 ;
 ;       PARAMETERS:         DS      Function selector
+;                           DL      Config #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

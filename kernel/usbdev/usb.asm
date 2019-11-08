@@ -448,6 +448,7 @@ init_usb_function Proc far
     mov ds,ax
     mov bx,ds:usb_dev_count
     mov es:usb_controller_id,bx
+    mov es:usb_hub_id,0
     add bx,bx
     mov ds:[bx].usb_dev_arr,es
     inc ds:usb_dev_count
@@ -2867,30 +2868,29 @@ get_usb_config16    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ConfigUsbDevice
+;       NAME:           ConfigUsb
 ;
-;           description:    Configure USB device
+;       description:    Configure USB
 ;
 ;       parameters:     BX      Controller #
-;               AL      Device address (1..128)
-;               DL      Config #
+;                       AL      Device address (1..128)
+;                       CX      Hub sel
+;                       DL      Config #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-config_usb_device_name DB 'Config USB Device', 0
-
-config_usb_device       Proc near
+ConfigUsb      Proc near
     push ds
     push es
     push fs
     push gs
     push ax
     push bx
-    push cx
     push esi
     push edi
     push bp
-;   
+    push cx
+;
     mov si,SEG data
     mov ds,si
     mov si,ds:usb_dev_count
@@ -3075,25 +3075,72 @@ cudOutNext:
     pop ds
 
 cudConfig:
+    pop cx
     call fword ptr ds:config_device_proc
     jmp cudDone
 
 cudFail:
+    pop cx
     stc
     
 cudDone: 
     pop bp
     pop edi
     pop esi
-    pop cx
     pop bx
     pop ax
     pop gs
     pop fs
     pop es
     pop ds
+    ret
+ConfigUsb    Endp    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigUsbDevice
+;
+;       description:    Configure USB device
+;
+;       parameters:     BX      Controller #
+;                       AL      Device address (1..128)
+;                       DL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_usb_device_name DB 'Config USB Device', 0
+
+config_usb_device       Proc near
+    push cx
+    xor cx,cx
+    call ConfigUsb
+    pop cx
     retf32
 config_usb_device    Endp    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigUsbHub
+;
+;       description:    Configure USB dhub
+;
+;       parameters:     BX      Controller #
+;                       AL      Device address (1..128)
+;                       CX      Hub sel
+;                       DL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_usb_hub_name DB 'Config USB Hub', 0
+
+config_usb_hub       Proc near
+    call ConfigUsb
+    retf32
+config_usb_hub    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4919,6 +4966,12 @@ init    Proc far
     mov edi,OFFSET read_usb_descriptors_name
     xor cl,cl
     mov ax,read_usb_descriptors_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET config_usb_hub
+    mov edi,OFFSET config_usb_hub_name
+    xor cl,cl
+    mov ax,config_usb_hub_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_attach

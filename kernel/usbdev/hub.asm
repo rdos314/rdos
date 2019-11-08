@@ -2762,12 +2762,14 @@ uaDevOk:
     jc uaFailDs
 
 uaDevConfig:
+    int 3
     InitUsbFunction
 ;
     mov ds:usb_hub_id,-1
     mov bx,ds:hub_controller
     mov al,ds:hub_address
-    ConfigUsbDevice
+    mov cx,ds
+    ConfigUsbHub
     jc uaFailDs
 ;
     mov ebx,ds

@@ -145,6 +145,7 @@ get_max_len_proc        DD ?,?
 address_device_proc	DD ?,?
 
 ; IN  FS        Pipe selector
+; IN  DL        Configuration #
 config_device_proc	DD ?,?
 
 ; IN  FS        Pipe selector
