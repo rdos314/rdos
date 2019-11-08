@@ -35,6 +35,7 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
+include hub.inc
 
 TRB_TYPE_NORMAL         = 1
 TRB_TYPE_SETUP          = 2
@@ -1356,12 +1357,6 @@ ConfigDevice   Proc far
     push ecx
     push edi
 ;
-    or cx,cx
-    jz cdDo
-;
-    int 3
-
-cdDo:
     call WaitForCommandTrb
     movzx eax,es:xd_input_context_offset
     add eax,es:xd_phys
@@ -1373,6 +1368,33 @@ cdDo:
     xor al,al
     mov gs:[edi].trb_control,ax
 ;
+    or cx,cx
+    jz cdDo
+;
+    push gs
+;
+    mov gs,ecx
+    mov al,fs:xp_slot
+    mov gs:usb_hub_id,al
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,2
+;
+    mov bx,es:xd_input_slot_offset
+    mov eax,es:[bx].s_misc
+    or eax,04000000h
+    mov es:[bx].s_misc,eax
+;
+    mov ax,gs:hub_ports
+    mov es:[bx].s_hub_ports,al
+;
+    mov ax,es:[bx].s_ttt_int
+    or al,3
+    mov es:[bx].s_ttt_int,ax
+;
+    pop gs
+
+cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
     call SendCommandTrb
 ;

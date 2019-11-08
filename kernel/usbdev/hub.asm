@@ -33,7 +33,8 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
-include ..\usbdev\hub.inc
+include usbdev.inc
+include hub.inc
 
 IFDEF __WASM__
     .686p

@@ -449,6 +449,8 @@ init_usb_function Proc far
     mov bx,ds:usb_dev_count
     mov es:usb_controller_id,bx
     mov es:usb_hub_id,0
+    mov es:usb_route_depth,0
+    mov es:usb_route_str,0
     add bx,bx
     mov ds:[bx].usb_dev_arr,es
     inc ds:usb_dev_count

@@ -25,8 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#include "usbdev.inc"
-
 HUB_BUF_SIZE    = 40h
 
 FLAG_HUB_DISCONNECT = 1
