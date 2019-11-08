@@ -3155,19 +3155,27 @@ CreateRoute      Proc near
     or si,si
     jz crrDone
 ;
-    mov ds,si
-    mov dl,ds:usb_hub_id
-    or dl,dl
-    jz crrDone
-;
     push es
     push eax
     push ecx
 ;
     mov es,ecx
+    mov ds,si
+    mov dl,ds:usb_hub_id
+    or dl,dl
+    jnz crrAdd
+;
+    mov es:usb_root_port,ah
+    jmp crrPop
+
+crrAdd:
+    mov al,ds:usb_root_port
+    mov es:usb_root_port,al
+;
     mov cl,ds:usb_route_depth
     shl cl,2
     movzx eax,ah
+    inc eax
     shl eax,cl
     or eax,ds:usb_route_str
     mov es:usb_route_str,eax
@@ -3175,7 +3183,8 @@ CreateRoute      Proc near
     shr cl,2
     inc cl
     mov es:usb_route_depth,cl
-;
+
+crrPop:
     pop ecx    
     pop eax
     pop es

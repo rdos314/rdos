@@ -991,11 +991,11 @@ AllocateDevice    Endp
 
 SetupRootDevice    Proc near
     pushad
-;    
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
 ;    
+    mov ch,al
     mov bx,es:xd_input_slot_offset
     movzx eax,al
     shl eax,20
@@ -1004,7 +1004,37 @@ SetupRootDevice    Proc near
     mov al,cl
     inc al
     mov es:[bx].s_root_hub,al
-;    
+;
+    mov dx,es:usbd_hub_sel
+    or dx,dx
+    jz srdDone
+;
+    push gs
+    mov gs,dx
+;
+    cmp ch,3
+    jae srdSpeedOk
+;
+    mov al,es:[bx].s_root_hub
+    mov es:[bx].s_tt_port_nr,al
+    mov al,gs:usb_hub_id
+    mov es:[bx].s_tt_slot_id,al
+
+srdSpeedOk:
+    movzx eax,es:[bx].s_root_hub
+    mov cl,gs:usb_route_depth
+    shl cl,2
+    shl eax,cl
+    or eax,gs:usb_route_str
+    and eax,0FFFFFFh
+    or es:[bx].s_misc,eax
+;
+    mov al,gs:usb_root_port
+    mov es:[bx].s_root_hub,al
+;
+    pop gs
+
+srdDone:
     popad
     ret
 SetupRootDevice     Endp
@@ -1239,6 +1269,7 @@ CreateControl   Proc far
 ;
     mov ah,es:usbd_speed
     call SpeedToPsi
+;
     mov cl,es:usbd_port
     call SetupRootDevice
     call CreateEndpointRing
