@@ -3108,6 +3108,7 @@ ConfigUsb    Endp
 ;
 ;       parameters:     BX      Controller #
 ;                       AL      Device address (1..128)
+;                       AH      Port
 ;                       DL      Config #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3122,6 +3123,69 @@ config_usb_device       Proc near
     retf32
 config_usb_device    Endp    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateRoute
+;
+;       description:    Create route string
+;
+;       parameters:     BX      Controller #
+;                       AH      Port
+;                       AL      Device address (1..128)
+;                       CX      Hub sel
+;                       DL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRoute      Proc near
+    push ds
+    push edx
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    mov si,ds:usb_dev_count
+    cmp bx,si
+    jae crrDone
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz crrDone
+;
+    mov ds,si
+    mov dl,ds:usb_hub_id
+    or dl,dl
+    jz crrDone
+;
+    push es
+    push eax
+    push ecx
+;
+    mov es,ecx
+    mov cl,ds:usb_route_depth
+    shl cl,2
+    movzx eax,ah
+    shl eax,cl
+    or eax,ds:usb_route_str
+    mov es:usb_route_str,eax
+;
+    shr cl,2
+    inc cl
+    mov es:usb_route_depth,cl
+;
+    pop ecx    
+    pop eax
+    pop es
+
+crrDone:
+    pop esi
+    pop edx
+    pop ds
+    ret
+CreateRoute  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3140,6 +3204,7 @@ config_usb_device    Endp
 config_usb_hub_name DB 'Config USB Hub', 0
 
 config_usb_hub       Proc near
+    call CreateRoute
     call ConfigUsb
     retf32
 config_usb_hub    Endp    

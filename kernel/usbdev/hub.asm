@@ -2661,6 +2661,7 @@ uaRecreate:
 uaReConfig:
     LeaveSection ds:hub_list_section
 ;
+    mov cx,gs
     ConfigUsbDevice
     jc uaFail
 ;
@@ -2768,6 +2769,7 @@ uaDevConfig:
     mov ds:usb_hub_id,-1
     mov bx,ds:hub_controller
     mov al,ds:hub_address
+    mov ah,ds:hub_port
     mov cx,ds
     ConfigUsbHub
     jc uaFailDs
