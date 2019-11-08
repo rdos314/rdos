@@ -278,6 +278,8 @@ data    SEGMENT byte public 'DATA'
 
 dummy   DB ?
 
+dump_file  DW ?
+dump_buf   DB 3 DUP(?)
 
 data    ENDS
 
@@ -293,6 +295,136 @@ ELSE
     .386p
 ENDIF
  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddDump
+;
+;           DESCRIPTION:    Create dump file
+;
+;           Parameters:     CS:ESI	Text
+;                           ES:EDI      Data
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+my_dump_file DB 'c:/xhci.txt', 0
+
+AddDump	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:dump_file
+    or bx,bx
+    jnz adWrite
+;
+    push es
+    push edi
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET my_dump_file
+    xor cx,cx
+    CreateFile
+;
+    xor eax,eax
+    SetFileSize
+    mov ds:dump_file,bx
+;
+    pop edi
+    pop es
+
+adWrite:
+    push es
+    push ecx
+    push edi
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,esi
+    xor ecx,ecx
+
+adSizeLoop:
+    mov al,es:[edi]
+    or al,al
+    jz adSizeOk
+;
+    inc edi
+    inc ecx
+    jmp adSizeLoop
+
+adSizeOk:
+    mov edi,esi
+    WriteFile
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    or ecx,ecx
+    jz adCrLf
+
+adLoop:
+    mov al,es:[edi]
+    mov ah,al
+    and al,0F0h
+    rol al,4
+    cmp al,0Ah
+    jb adLow1
+;    
+    add al,7
+
+adLow1:
+    add al,'0'
+    mov ds:dump_buf,al
+;
+    mov al,ah
+    and al,0Fh
+    cmp al,0Ah
+    jb adHigh1
+;    
+    add al,7
+
+adHigh1:
+    add al,'0'
+    mov ds:dump_buf+1,al
+    mov ds:dump_buf+2,' '
+;
+    push es
+    push ecx
+    push edi
+;
+    mov ecx,3
+    mov ax,SEG data
+    mov es,ax
+    mov edi,OFFSET dump_buf
+    WriteFile
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    loop adLoop
+
+adCrLf:
+    mov ds:dump_buf,0dh
+    mov ds:dump_buf+1,0ah
+;
+    mov ecx,2
+    mov ax,SEG data
+    mov es,ax
+    mov edi,OFFSET dump_buf
+    WriteFile
+;
+    popad
+    pop es
+    pop ds 
+    ret
+AddDump	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4683,6 +4815,7 @@ init_usb    Endp
 Init    Proc far
     mov bx,SEG data
     mov ds,bx
+    mov ds:dump_file,0
 ;
     mov ax,cs
     mov ds,ax
