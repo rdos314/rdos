@@ -328,10 +328,15 @@ void TVp::SetAmbient(int ref, int ambient)
 
         if (ambient < 150)
         {
-            if (FPower >= 1000.0)
-                FMaxTank = 450 - ambient;
+            if (FPower >= 2000.0)
+                FMaxTank = 480 - ambient;
             else
-                FMaxTank = 350 - ambient;
+            {
+                if (FPower >= 1000.0)
+                    FMaxTank = 440 - ambient;
+                else
+                    FMaxTank = 400 - ambient;
+            }
 
             if (FMaxTank > 410)
                 FMaxTank = 410;
@@ -409,13 +414,13 @@ void TVp::UpdateCirc(int diostat)
     else
         on = TRUE;
 
-    if (FTankTemp > 300)
+    if (FTankTemp > 270)
     {                
         if (FCirc == 0)
         {
             if (on)
             {
-                FLog.Log(0, "UpdateCirc", "Circ on");
+                FLog.Log(0, "UpdateCirc", "Circ off");
                 RdosToggleSerialLine(1, 4);
 
                 if (RdosReadSerialLines(1, &diostat))
@@ -428,7 +433,7 @@ void TVp::UpdateCirc(int diostat)
         {
             if (!on)
             {
-                FLog.Log(0, "UpdateCirc", "Circ off");
+                FLog.Log(0, "UpdateCirc", "Circ on");
                 RdosToggleSerialLine(1, 4);
 
                 if (RdosReadSerialLines(1, &diostat))

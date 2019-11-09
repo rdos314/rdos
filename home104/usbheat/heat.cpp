@@ -867,7 +867,7 @@ int main()
     TSmartPowInverter *WindInv;
     TOpenWeather *w;
     int i;
-    int id;
+    int index;
     int diostat;
     int mask;
     TDateTime *CurrTime;
@@ -951,7 +951,7 @@ int main()
 
     RadControl = new TRadControl(control, 5, 640, 1150, 35 * 8);
 
-    id = 0;
+    index = 0;
     
     for (i = 0; i < 8; i++)
     {
@@ -976,7 +976,7 @@ int main()
                 break;
 
             case 4:
-                strcpy(str, "Kök");
+//                strcpy(str, "Kök");
                 break;
 
             case 5:
@@ -989,10 +989,14 @@ int main()
         }
 
         if (strlen(str))
-            RadArr[i] = new TRad(str, RadControl, i, 0x20 + i);
-        else
-            RadArr[i] = 0;
+        {
+            RadArr[index] = new TRad(str, RadControl, index, 0x20 + i);
+            index++;
+        }
     }
+
+    for (i = index; i < 8; i++)
+        RadArr[i] = 0;
 
     RdosWaitMilli(1000);
 
@@ -1504,7 +1508,7 @@ int main()
                 {
                     if (night)
                     {
-                        if (ambient < 0)
+                        if (ambient < 50)
                             RadArr[i]->SetWinterRef();
                         else
                             RadArr[i]->SetNightRef();
