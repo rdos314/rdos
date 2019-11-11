@@ -2662,7 +2662,7 @@ uaReConfig:
     LeaveSection ds:hub_list_section
 ;
     mov cx,gs
-    ConfigUsbDevice
+    ConfigUsbHub
     jc uaFail
 ;
     mov gs:hub_controller,bx

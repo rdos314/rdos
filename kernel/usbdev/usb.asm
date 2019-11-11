@@ -3165,7 +3165,9 @@ CreateRoute      Proc near
     or dl,dl
     jnz crrAdd
 ;
-    mov es:usb_root_port,ah
+    mov al,ah
+    inc al
+    mov es:usb_root_port,al
     jmp crrPop
 
 crrAdd:

@@ -234,6 +234,7 @@ xd_dev_sel               DW ?
 xd_input_context_offset  DW ?
 xd_input_slot_offset     DW ?
 xd_output_context_offset DW ?
+xd_ep_size               DW ?
 xd_input_ep_arr_offset   DW 32 DUP (?)
 xd_output_ep_arr_offset  DW 32 DUP (?)
 
@@ -309,6 +310,7 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 my_dump_file DB 'c:/xhci.txt', 0
+start_text   DB 'Start', 0dh, 0ah
 
 AddDump	Proc near
     push ds
@@ -328,12 +330,21 @@ AddDump	Proc near
     mov ax,cs
     mov es,ax
     mov edi,OFFSET my_dump_file
+    OpenFile
+    jnc adInit
+;
     xor cx,cx
     CreateFile
-;
-    xor eax,eax
-    SetFileSize
+
+adInit:
     mov ds:dump_file,bx
+;
+    GetFileSize
+    SetFilePos
+;
+    mov ecx,7
+    mov edi,OFFSET start_text
+    WriteFile
 ;
     pop edi
     pop ecx
@@ -1066,6 +1077,7 @@ AllocateDevice    Proc near
     dec bx
     and bx,0FFC0h
     mov dx,ds:xhc_context_size
+    mov es:xd_ep_size,dx
 ;    
     mov es:xd_input_context_offset,bx
 ;
@@ -1444,6 +1456,139 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           DumpInputContext
+;
+;   DESCRIPTION:    Dump input context
+;
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;                   ESI     Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+input_context_text   DB 'Context:   ', 0
+slot_text            DB 'Slot:      ', 0
+control_text         DB 'Control:   ', 0
+input1_text          DB 'Input 1:   ', 0
+input2_text          DB 'Input 2:   ', 0
+input3_text          DB 'Input 3:   ', 0
+input4_text          DB 'Input 4:   ', 0
+input5_text          DB 'Input 5:   ', 0
+input6_text          DB 'Input 6:   ', 0
+input7_text          DB 'Input 7:   ', 0
+input8_text          DB 'Input 8:   ', 0
+input9_text          DB 'Input 9:   ', 0
+input10_text         DB 'Input 10;  ', 0
+input11_text         DB 'Input 11:  ', 0
+input12_text         DB 'Input 12:  ', 0
+input13_text         DB 'Input 13:  ', 0
+input14_text         DB 'Input 14:  ', 0
+input15_text         DB 'Input 15:  ', 0
+output1_text         DB 'Output 1:  ', 0
+output2_text         DB 'Output 2:  ', 0
+output3_text         DB 'Output 3:  ', 0
+output4_text         DB 'Output 4:  ', 0
+output5_text         DB 'Output 5:  ', 0
+output6_text         DB 'Output 6:  ', 0
+output7_text         DB 'Output 7:  ', 0
+output8_text         DB 'Output 8:  ', 0
+output9_text         DB 'Output 9:  ', 0
+output10_text        DB 'Output 10: ', 0
+output11_text        DB 'Output 11: ', 0
+output12_text        DB 'Output 12: ', 0
+output13_text        DB 'Output 13: ', 0
+output14_text        DB 'Output 14: ', 0
+output15_text        DB 'Output 15:', 0
+
+input_ep_tab:
+iet00   DD OFFSET control_text
+iet01   DD OFFSET output1_text
+iet02   DD OFFSET input1_text
+iet03   DD OFFSET output2_text
+iet04   DD OFFSET input2_text
+iet05   DD OFFSET output3_text
+iet06   DD OFFSET input3_text
+iet07   DD OFFSET output4_text
+iet08   DD OFFSET input4_text
+iet09   DD OFFSET output5_text
+iet10   DD OFFSET input5_text
+iet11   DD OFFSET output6_text
+iet12   DD OFFSET input6_text
+iet13   DD OFFSET output7_text
+iet14   DD OFFSET input7_text
+iet15   DD OFFSET output8_text
+iet16   DD OFFSET input8_text
+iet17   DD OFFSET output9_text
+iet18   DD OFFSET input9_text
+iet19   DD OFFSET output10_text
+iet20   DD OFFSET input10_text
+iet21   DD OFFSET output11_text
+iet22   DD OFFSET input11_text
+iet23   DD OFFSET output12_text
+iet24   DD OFFSET input12_text
+iet25   DD OFFSET output13_text
+iet26   DD OFFSET input13_text
+iet27   DD OFFSET output14_text
+iet28   DD OFFSET input14_text
+iet29   DD OFFSET output15_text
+iet30   DD OFFSET input15_text
+ietLast DD 0
+
+DumpInputContext	Proc near
+    pushad
+;
+    push es
+    mov es,fs:usbp_dev_sel
+    mov edi,OFFSET usbd_port
+    mov ecx,OFFSET usbd_pad
+    sub ecx,edi
+    call AddDump
+    pop es
+;
+    movzx edi,es:xd_input_context_offset
+    mov eax,es:[edi].icc_add_mask
+    test al,1
+    jz dicSlotOk
+;
+    mov esi,OFFSET slot_text
+    movzx edi,es:xd_input_slot_offset
+    mov ecx,SIZE slot_struc
+    call AddDump
+
+dicSlotok:
+    movzx edi,es:xd_input_context_offset
+    mov ebp,OFFSET input_ep_tab
+    mov edx,2
+    mov eax,es:[edi].icc_add_mask
+
+dicEpLoop:
+    test eax,edx
+    jz dicEpNext
+;
+    push eax
+    push edx
+;
+    mov esi,cs:[ebp]
+    mov ecx,SIZE endpoint_context_struc
+    call AddDump
+;
+    pop edx
+    pop eax
+
+dicEpNext:
+    shl edx,1
+    add di,es:xd_ep_size
+    add ebp,4
+    cmp ebp,OFFSET ietLast
+    jne dicEploop
+;
+    popad
+    ret
+DumpInputContext	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           AddressDevice
 ;
 ;   DESCRIPTION:    Address device
@@ -1452,6 +1597,8 @@ CreateControl   Endp
 ;                   FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+address_text DB 'Address ',0
 
 AddressDevice   Proc far
     push es
@@ -1477,6 +1624,11 @@ AddressDevice   Proc far
 ;
     mov al,TRB_TYPE_ADDRESS_DEV
     call SendCommandTrb
+;
+    push esi
+    mov esi,OFFSET address_text
+    call DumpInputContext
+    pop esi
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
@@ -1546,7 +1698,7 @@ ConfigDevice   Proc far
     mov gs:usb_hub_id,al
 ;
     mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,2
+    or es:[bx].icc_add_mask,1
 ;
     mov bx,es:xd_input_slot_offset
     mov eax,es:[bx].s_misc
@@ -1561,17 +1713,15 @@ ConfigDevice   Proc far
     mov es:[bx].s_ttt_int,ax
 ;
     pop gs
-;
-    pushad
-    mov esi,OFFSET config_text
-    movzx edi,es:xd_input_slot_offset
-    mov ecx,SIZE slot_struc
-    call AddDump
-    popad
 
 cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
     call SendCommandTrb
+;
+    push esi
+    mov esi,OFFSET config_text
+    call DumpInputContext
+    pop esi
 ;
     mov al,gs:[edi+100Bh]
     cmp al,1
@@ -2590,6 +2740,8 @@ GetMaxLen   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+maxlen_text  DB 'MaxLen ', 0
+
 SetMaxLen   Proc far
     push es
     push gs
@@ -2618,6 +2770,11 @@ SetMaxLen   Proc far
 ;
     mov al,TRB_TYPE_EVALUATE
     call SendCommandTrb
+;
+    push esi
+    mov esi,OFFSET maxlen_text
+    call DumpInputContext
+    pop esi
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
