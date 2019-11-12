@@ -1625,10 +1625,10 @@ AddressDevice   Proc far
     mov al,TRB_TYPE_ADDRESS_DEV
     call SendCommandTrb
 ;
-    push esi
-    mov esi,OFFSET address_text
-    call DumpInputContext
-    pop esi
+;    push esi
+;    mov esi,OFFSET address_text
+;    call DumpInputContext
+;    pop esi
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
@@ -1718,10 +1718,10 @@ cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
     call SendCommandTrb
 ;
-    push esi
-    mov esi,OFFSET config_text
-    call DumpInputContext
-    pop esi
+;    push esi
+;    mov esi,OFFSET config_text
+;    call DumpInputContext
+;    pop esi
 ;
     mov al,gs:[edi+100Bh]
     cmp al,1
@@ -2771,10 +2771,10 @@ SetMaxLen   Proc far
     mov al,TRB_TYPE_EVALUATE
     call SendCommandTrb
 ;
-    push esi
-    mov esi,OFFSET maxlen_text
-    call DumpInputContext
-    pop esi
+;    push esi
+;    mov esi,OFFSET maxlen_text
+;    call DumpInputContext
+;    pop esi
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
