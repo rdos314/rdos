@@ -72,6 +72,7 @@ copy \rdosdev\src\itc.rdv files
 copy \rdosdev\src\pem.rdv files
 copy \rdosdev\src\cancom.rdv files
 copy \rdosdev\src\ioe2.rdv files
+copy \rdosdev\src\ioekey.rdv files
 copy ..\..\apps\freecom\command.exe files
 copy ..\..\apps\ftpd\ftpd.exe files
 copy ..\..\apps\tcpwd\tcpwd.exe files
