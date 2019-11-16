@@ -1225,11 +1225,12 @@ bool TPowerJsonPage::DecodeReq(const char *ReqStr)
     const char *ptr;
     const char *bptr;
     bool ok = false;
+    char SearchName[] = "power/json";
 
-    ptr = strstr(ReqStr, "json");
+    ptr = strstr(ReqStr, SearchName);
     if (ptr)
     {
-        ptr += 4;
+        ptr += strlen(SearchName);
         if (*ptr == '/' || *ptr == '\\')
         {
             ptr++;
@@ -1800,11 +1801,12 @@ bool TPowerWebPage::DecodeReq(const char *ReqStr)
     const char *ptr;
     const char *bptr;
     bool ok = false;
+    char SearchName[] = "power/web";
 
-    ptr = strstr(ReqStr, "web");
+    ptr = strstr(ReqStr, SearchName);
     if (ptr)
     {
-        ptr += 3;
+        ptr += strlen(SearchName);
         if (*ptr == 0)
             ok = true;
         else if (*ptr == '/' || *ptr == '\\')
@@ -1992,7 +1994,7 @@ void TPowerWebPage::SendAnswer()
     Write(" </div>\r\n");
     Write(" <div id=\"nav\" name=\"nav\">\r\n");
 
-    Write("<form method=\"POST\" action=\"/web\">\r\n");
+    Write("<form method=\"POST\" action=\"/power/web\">\r\n");
 
     if (FUseDay)
         Write("<input type=\"hidden\" name=\"daydia\" value=\"1\">\r\n");
@@ -2085,7 +2087,7 @@ void TPowerWebPage::SendAnswer()
     Write("  window.addEventListener('load', () => {\r\n");
     Write("   zingchart.render({\r\n");
     Write("    id: 'myChart',\r\n");
-    Write("    dataurl: '/json/");
+    Write("    dataurl: '/power/json/");
 
     switch (FReqType)
     {
@@ -2246,8 +2248,8 @@ void TPowerWebPage::Post(const char *Var, const char *Val)
 static void WebSocketThread(void *ptr)
 {
     TPowerHttpServerFactory fact(80, 10, BUF_SIZE);
-    TPowerJsonDirFactory jsondir("json");
-    TPowerWebDirFactory webdir("web");
+    TPowerJsonDirFactory jsondir("power/json");
+    TPowerWebDirFactory webdir("power/web");
 
     fact.AddCustomDir(&jsondir);
     fact.AddCustomDir(&webdir);
