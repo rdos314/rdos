@@ -88,6 +88,11 @@ TVp::TVp(TControlThread *control)
     FMaxTank = 450;
     FOffCounter = OFF_TIMEOUT;
 
+    FCurrPower = 0;
+    FPowerSum = 0.0;
+    FPowerCount = 0;
+    FPowerIndex = 0;
+
     FDayFile = 0;
 
     for (i = 0; i < 20; i++)
@@ -287,7 +292,33 @@ void TVp::SetTempError(int diff)
 ##########################################################################*/
 void TVp::SetPower(long double val)
 {
-    FPower = val;
+    int i;
+
+    if (FPowerCount == POWER_COUNT)
+    {
+        FPowerSum -= FPowerArr[FPowerIndex];
+        FPowerSum += val;
+        FPowerArr[FPowerIndex] = val;
+
+        FPowerIndex++;
+        if (FPowerIndex == POWER_COUNT)
+        {
+            FPowerIndex = 0;
+            FPowerSum = 0;
+            for (i = 0; i < POWER_COUNT; i++)
+                FPowerSum += FPowerArr[i];
+        }
+    }
+    else
+    {
+        FPowerArr[FPowerCount] = val;
+        FPowerSum += val;
+        FPowerCount++;
+    }
+
+    FCurrPower = (int)(FPowerSum / FPowerCount);
+
+    FLog.printf(0, "SetPower", "%d", FCurrPower);
 }
 
 /*##########################################################################
@@ -328,11 +359,11 @@ void TVp::SetAmbient(int ref, int ambient)
 
         if (ambient < 150)
         {
-            if (FPower >= 2000.0)
+            if (FCurrPower >= 2000)
                 FMaxTank = 480 - ambient;
             else
             {
-                if (FPower >= 1000.0)
+                if (FCurrPower >= 1000)
                     FMaxTank = 440 - ambient;
                 else
                     FMaxTank = 400 - ambient;

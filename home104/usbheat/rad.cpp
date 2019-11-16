@@ -684,8 +684,6 @@ void TRad::Execute()
                         FAuxTempCount++;
                         FControl->SetAuxTemp(FIndex, val);
                     }
-                    else
-                        FLog.printf(0, "", "Aux: %d", val);
                 }
                 else
                     FControl->SetAuxTemp(FIndex);

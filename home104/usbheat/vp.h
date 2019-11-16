@@ -34,6 +34,7 @@
 #include "rdoslog.h"
 
 #define MAX_LEVEL_HISTORY   601
+#define POWER_COUNT          30
 
 class TVp : public TFuzzy
 {
@@ -85,7 +86,11 @@ protected:
     int FMotorCount;
     int FMotorSum;
 
-    long double FPower;
+    long double FPowerArr[POWER_COUNT];
+    long double FPowerSum;
+    int FCurrPower;
+    int FPowerCount;
+    int FPowerIndex;
          
     int FVpOn;
     int FPrevOn;
