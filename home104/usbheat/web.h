@@ -34,38 +34,38 @@
 
 void InitWeb();
 
-class THeatHttpServerFactory : public THttpSocketServerFactory
+class TPowerHttpServerFactory : public THttpSocketServerFactory
 {
 public:
-    THeatHttpServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~THeatHttpServerFactory();
+    TPowerHttpServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TPowerHttpServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
 
 protected:
 };
 
-class THeatHttpServer : public THttpSocketServer
+class TPowerHttpServer : public THttpSocketServer
 {
 public:
-    THeatHttpServer(const char *Name, int StackSize, TTcpSocket *Socket);
-    ~THeatHttpServer();
+    TPowerHttpServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    ~TPowerHttpServer();
 };
 
-class THeatJsonDirFactory : public THttpCustomDirFactory
+class TPowerJsonDirFactory : public THttpCustomDirFactory
 {
 public:
-    THeatJsonDirFactory(const char *ReqName);
-    virtual ~THeatJsonDirFactory();
+    TPowerJsonDirFactory(const char *ReqName);
+    virtual ~TPowerJsonDirFactory();
 
     virtual THttpCustomPage *Create(THttpCommand *cmd);
 };
 
-class THeatJsonPage : public THttpCustomPage
+class TPowerJsonPage : public THttpCustomPage
 {
 public:
-    THeatJsonPage(THttpCommand *Cmd);
-    virtual ~THeatJsonPage();
+    TPowerJsonPage(THttpCommand *Cmd);
+    virtual ~TPowerJsonPage();
 
 protected:
     void CreateTitle(TJsonCollection *obj);
@@ -103,20 +103,20 @@ protected:
     bool FUseMonth;
 };
 
-class THeatWebDirFactory : public THttpCustomDirFactory
+class TPowerWebDirFactory : public THttpCustomDirFactory
 {
 public:
-    THeatWebDirFactory(const char *ReqName);
-    virtual ~THeatWebDirFactory();
+    TPowerWebDirFactory(const char *ReqName);
+    virtual ~TPowerWebDirFactory();
 
     virtual THttpCustomPage *Create(THttpCommand *cmd);
 };
 
-class THeatWebPage : public THttpCustomPage
+class TPowerWebPage : public THttpCustomPage
 {
 public:
-    THeatWebPage(THttpCommand *Cmd);
-    virtual ~THeatWebPage();
+    TPowerWebPage(THttpCommand *Cmd);
+    virtual ~TPowerWebPage();
 
 protected:
     bool DecodeReq(const char *ReqStr);

@@ -72,7 +72,7 @@ int GetWebConnectionCount()
 
 /*##########################################################################
 #
-#   Name       : THeatHttpServerFactory::THeatHttpServerFactory
+#   Name       : TPowerHttpServerFactory::TPowerHttpServerFactory
 #
 #   Purpose....: server factory constructor
 #
@@ -81,14 +81,14 @@ int GetWebConnectionCount()
 #   Returns....: *
 #
 ##########################################################################*/
-THeatHttpServerFactory::THeatHttpServerFactory(int Port, int MaxConnections, int BufferSize)
+TPowerHttpServerFactory::TPowerHttpServerFactory(int Port, int MaxConnections, int BufferSize)
   : THttpSocketServerFactory(Port, MaxConnections, BufferSize)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatHttpServerFactory::~THeatHttpServerFactory
+#   Name       : TPowerHttpServerFactory::~TPowerHttpServerFactory
 #
 #   Purpose....: Heat server factory destructor
 #
@@ -97,13 +97,13 @@ THeatHttpServerFactory::THeatHttpServerFactory(int Port, int MaxConnections, int
 #   Returns....: *
 #
 ##########################################################################*/
-THeatHttpServerFactory::~THeatHttpServerFactory()
+TPowerHttpServerFactory::~TPowerHttpServerFactory()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatHttpServerFactory::Create
+#   Name       : TPowerHttpServerFactory::Create
 #
 #   Purpose....: Create socket server
 #
@@ -112,16 +112,16 @@ THeatHttpServerFactory::~THeatHttpServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *THeatHttpServerFactory::Create(TTcpSocket *Socket)
+TSocketServer *TPowerHttpServerFactory::Create(TTcpSocket *Socket)
 {
-    THttpSocketServer *server = new THeatHttpServer("Web socket", 0x10000, Socket);
+    THttpSocketServer *server = new TPowerHttpServer("Web socket", 0x10000, Socket);
     LinkServer(server);
     return server;
 }
 
 /*##########################################################################
 #
-#   Name       : THeatHttpServer::THeatHttpServer
+#   Name       : TPowerHttpServer::TPowerHttpServer
 #
 #   Purpose....: server constructor
 #
@@ -130,14 +130,14 @@ TSocketServer *THeatHttpServerFactory::Create(TTcpSocket *Socket)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatHttpServer::THeatHttpServer(const char *Name, int StackSize, TTcpSocket *Socket)
+TPowerHttpServer::TPowerHttpServer(const char *Name, int StackSize, TTcpSocket *Socket)
   : THttpSocketServer(Name, StackSize, Socket)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatHttpServer::~THeatHttpServer
+#   Name       : TPowerHttpServer::~TPowerHttpServer
 #
 #   Purpose....: Heat server destructor
 #
@@ -146,13 +146,13 @@ THeatHttpServer::THeatHttpServer(const char *Name, int StackSize, TTcpSocket *So
 #   Returns....: *
 #
 ##########################################################################*/
-THeatHttpServer::~THeatHttpServer()
+TPowerHttpServer::~TPowerHttpServer()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonDirFactory::THeatJsonDirFactory
+#   Name       : TPowerJsonDirFactory::TPowerJsonDirFactory
 #
 #   Purpose....: JSON factory constructor
 #
@@ -161,14 +161,14 @@ THeatHttpServer::~THeatHttpServer()
 #   Returns....: *
 #
 ##########################################################################*/
-THeatJsonDirFactory::THeatJsonDirFactory(const char *ReqName)
+TPowerJsonDirFactory::TPowerJsonDirFactory(const char *ReqName)
   : THttpCustomDirFactory(ReqName)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonDirFactory::~THeatJsonDirFactory
+#   Name       : TPowerJsonDirFactory::~TPowerJsonDirFactory
 #
 #   Purpose....: JSON factory destructor
 #
@@ -177,13 +177,13 @@ THeatJsonDirFactory::THeatJsonDirFactory(const char *ReqName)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatJsonDirFactory::~THeatJsonDirFactory()
+TPowerJsonDirFactory::~TPowerJsonDirFactory()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonDirFactory::Create
+#   Name       : TPowerJsonDirFactory::Create
 #
 #   Purpose....: Create JSON page
 #
@@ -192,14 +192,14 @@ THeatJsonDirFactory::~THeatJsonDirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THeatJsonDirFactory::Create(THttpCommand *cmd)
+THttpCustomPage *TPowerJsonDirFactory::Create(THttpCommand *cmd)
 {
-    return new THeatJsonPage(cmd);
+    return new TPowerJsonPage(cmd);
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::THeatJsonPage
+#   Name       : TPowerJsonPage::TPowerJsonPage
 #
 #   Purpose....: JSON page constructor
 #
@@ -208,14 +208,14 @@ THttpCustomPage *THeatJsonDirFactory::Create(THttpCommand *cmd)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatJsonPage::THeatJsonPage(THttpCommand *Cmd)
+TPowerJsonPage::TPowerJsonPage(THttpCommand *Cmd)
   : THttpCustomPage(Cmd)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::~THeatJsonPage
+#   Name       : TPowerJsonPage::~TPowerJsonPage
 #
 #   Purpose....: JSON page destructor
 #
@@ -224,13 +224,13 @@ THeatJsonPage::THeatJsonPage(THttpCommand *Cmd)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatJsonPage::~THeatJsonPage()
+TPowerJsonPage::~TPowerJsonPage()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateTitle
+#   Name       : TPowerJsonPage::CreateTitle
 #
 #   Purpose....: Create title
 #
@@ -239,7 +239,7 @@ THeatJsonPage::~THeatJsonPage()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateTitle(TJsonCollection *obj)
+void TPowerJsonPage::CreateTitle(TJsonCollection *obj)
 {
     char dstr[60];
     char str[100];
@@ -340,7 +340,7 @@ void THeatJsonPage::CreateTitle(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateLegend
+#   Name       : TPowerJsonPage::CreateLegend
 #
 #   Purpose....: Create legend
 #
@@ -349,7 +349,7 @@ void THeatJsonPage::CreateTitle(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateLegend(TJsonCollection *obj)
+void TPowerJsonPage::CreateLegend(TJsonCollection *obj)
 {
     TJsonCollection *item;
     TJsonCollection *marker;
@@ -372,7 +372,7 @@ void THeatJsonPage::CreateLegend(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreatePlot
+#   Name       : TPowerJsonPage::CreatePlot
 #
 #   Purpose....: Create plot
 #
@@ -381,7 +381,7 @@ void THeatJsonPage::CreateLegend(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreatePlot(TJsonCollection *obj)
+void TPowerJsonPage::CreatePlot(TJsonCollection *obj)
 {
     TJsonCollection *marker;
 
@@ -395,7 +395,7 @@ void THeatJsonPage::CreatePlot(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreatePlotArea
+#   Name       : TPowerJsonPage::CreatePlotArea
 #
 #   Purpose....: Create plot area
 #
@@ -404,14 +404,14 @@ void THeatJsonPage::CreatePlot(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreatePlotArea(TJsonCollection *obj)
+void TPowerJsonPage::CreatePlotArea(TJsonCollection *obj)
 {
     obj->AddString("margin", "dynamic 70");
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateScaleX
+#   Name       : TPowerJsonPage::CreateScaleX
 #
 #   Purpose....: Create X scale
 #
@@ -420,7 +420,7 @@ void THeatJsonPage::CreatePlotArea(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
+void TPowerJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 {
     TJsonCollection *item;
     TJsonCollection *transform;
@@ -530,7 +530,7 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateScaleY
+#   Name       : TPowerJsonPage::CreateScaleY
 #
 #   Purpose....: Create Y scale
 #
@@ -539,7 +539,7 @@ void THeatJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
+void TPowerJsonPage::CreateScaleY(TJsonCollection *obj)
 {
     TJsonCollection *guide;
     TJsonCollection *item;
@@ -564,7 +564,7 @@ void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateCrosshairX
+#   Name       : TPowerJsonPage::CreateCrosshairX
 #
 #   Purpose....: Create crosshair X
 #
@@ -573,7 +573,7 @@ void THeatJsonPage::CreateScaleY(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateCrosshairX(TJsonCollection *obj)
+void TPowerJsonPage::CreateCrosshairX(TJsonCollection *obj)
 {
     TJsonCollection *marker;
     TJsonCollection *plotlabel;
@@ -594,7 +594,7 @@ void THeatJsonPage::CreateCrosshairX(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateCrosshairY
+#   Name       : TPowerJsonPage::CreateCrosshairY
 #
 #   Purpose....: Create crosshair y
 #
@@ -603,7 +603,7 @@ void THeatJsonPage::CreateCrosshairX(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateCrosshairY(TJsonCollection *obj)
+void TPowerJsonPage::CreateCrosshairY(TJsonCollection *obj)
 {
     TJsonCollection *scalelabel;
 
@@ -620,7 +620,7 @@ void THeatJsonPage::CreateCrosshairY(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateShapes
+#   Name       : TPowerJsonPage::CreateShapes
 #
 #   Purpose....: Create shapes
 #
@@ -629,7 +629,7 @@ void THeatJsonPage::CreateCrosshairY(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateShapes(TJsonCollection *obj)
+void TPowerJsonPage::CreateShapes(TJsonCollection *obj)
 {
     TJsonCollection *label;
 
@@ -655,7 +655,7 @@ void THeatJsonPage::CreateShapes(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateToolTip
+#   Name       : TPowerJsonPage::CreateToolTip
 #
 #   Purpose....: Create tool tips
 #
@@ -664,7 +664,7 @@ void THeatJsonPage::CreateShapes(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
+void TPowerJsonPage::CreateToolTip(TJsonCollection *obj)
 {
     obj->AddString("borderRadius", "3px");
     obj->AddString("borderWidth", "0px");
@@ -672,7 +672,7 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::GetDayFile
+#   Name       : TPowerJsonPage::GetDayFile
 #
 #   Purpose....: Get day file
 #
@@ -681,7 +681,7 @@ void THeatJsonPage::CreateToolTip(TJsonCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *THeatJsonPage::GetDayFile()
+TFile *TPowerJsonPage::GetDayFile()
 {
     char str[80];
     char root[40];
@@ -693,7 +693,7 @@ TFile *THeatJsonPage::GetDayFile()
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::GetMonthFile
+#   Name       : TPowerJsonPage::GetMonthFile
 #
 #   Purpose....: Get month file
 #
@@ -702,7 +702,7 @@ TFile *THeatJsonPage::GetDayFile()
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *THeatJsonPage::GetMonthFile()
+TFile *TPowerJsonPage::GetMonthFile()
 {
     char str[80];
     char root[40];
@@ -714,7 +714,7 @@ TFile *THeatJsonPage::GetMonthFile()
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::AddDayData
+#   Name       : TPowerJsonPage::AddDayData
 #
 #   Purpose....: Add day data
 #
@@ -723,7 +723,7 @@ TFile *THeatJsonPage::GetMonthFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::AddDayData(TJsonArrayCollection *obj, char *text, int col)
+void TPowerJsonPage::AddDayData(TJsonArrayCollection *obj, char *text, int col)
 {
     TJsonDoubleArray *arr;
     int i;
@@ -801,7 +801,7 @@ void THeatJsonPage::AddDayData(TJsonArrayCollection *obj, char *text, int col)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::AddMonthData
+#   Name       : TPowerJsonPage::AddMonthData
 #
 #   Purpose....: Add month data
 #
@@ -810,7 +810,7 @@ void THeatJsonPage::AddDayData(TJsonArrayCollection *obj, char *text, int col)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj, char *text, int col)
+void TPowerJsonPage::AddMonthData(TJsonArrayCollection *obj, char *text, int col)
 {
     TJsonDoubleArray *arr;
     int i;
@@ -876,7 +876,7 @@ void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj, char *text, int col)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::AddYearData
+#   Name       : TPowerJsonPage::AddYearData
 #
 #   Purpose....: Add year data
 #
@@ -885,7 +885,7 @@ void THeatJsonPage::AddMonthData(TJsonArrayCollection *obj, char *text, int col)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::AddYearData(TJsonArrayCollection *obj, double val[12], bool valid[12])
+void TPowerJsonPage::AddYearData(TJsonArrayCollection *obj, double val[12], bool valid[12])
 {
     TJsonDoubleArray *arr;
     int i;
@@ -903,7 +903,7 @@ void THeatJsonPage::AddYearData(TJsonArrayCollection *obj, double val[12], bool 
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::GetMonthTotal
+#   Name       : TPowerJsonPage::GetMonthTotal
 #
 #   Purpose....: Get month total
 #
@@ -912,7 +912,7 @@ void THeatJsonPage::AddYearData(TJsonArrayCollection *obj, double val[12], bool 
 #   Returns....: *
 #
 ##########################################################################*/
-double THeatJsonPage::GetMonthTotal(char *text, int col)
+double TPowerJsonPage::GetMonthTotal(char *text, int col)
 {
     int i;
     char *ptr;
@@ -960,7 +960,7 @@ double THeatJsonPage::GetMonthTotal(char *text, int col)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::ReadData
+#   Name       : TPowerJsonPage::ReadData
 #
 #   Purpose....: Read data
 #
@@ -969,7 +969,7 @@ double THeatJsonPage::GetMonthTotal(char *text, int col)
 #   Returns....: *
 #
 ##########################################################################*/
-char *THeatJsonPage::ReadFile(TFile *file)
+char *TPowerJsonPage::ReadFile(TFile *file)
 {
     int size;
     char *text;
@@ -985,7 +985,7 @@ char *THeatJsonPage::ReadFile(TFile *file)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::CreateSeries
+#   Name       : TPowerJsonPage::CreateSeries
 #
 #   Purpose....: Create data series
 #
@@ -994,7 +994,7 @@ char *THeatJsonPage::ReadFile(TFile *file)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
+void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 {
     TFile *file;
     char *text;
@@ -1140,7 +1140,7 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::SendAnswer
+#   Name       : TPowerJsonPage::SendAnswer
 #
 #   Purpose....: Send answer
 #
@@ -1149,7 +1149,7 @@ void THeatJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::SendAnswer()
+void TPowerJsonPage::SendAnswer()
 {
     TDateTime time (FYear, FMonth, FDay);
     TJsonDocument json;
@@ -1211,7 +1211,7 @@ void THeatJsonPage::SendAnswer()
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::DecodeReq
+#   Name       : TPowerJsonPage::DecodeReq
 #
 #   Purpose....: Decode req
 #
@@ -1220,7 +1220,7 @@ void THeatJsonPage::SendAnswer()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatJsonPage::DecodeReq(const char *ReqStr)
+bool TPowerJsonPage::DecodeReq(const char *ReqStr)
 {
     const char *ptr;
     const char *bptr;
@@ -1321,7 +1321,7 @@ bool THeatJsonPage::DecodeReq(const char *ReqStr)
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::Get
+#   Name       : TPowerJsonPage::Get
 #
 #   Purpose....: Get page
 #
@@ -1330,7 +1330,7 @@ bool THeatJsonPage::DecodeReq(const char *ReqStr)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
+void TPowerJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
     if (DecodeReq(MatchName))
         SendAnswer();
@@ -1340,7 +1340,7 @@ void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::Post
+#   Name       : TPowerJsonPage::Post
 #
 #   Purpose....: Post page
 #
@@ -1349,13 +1349,13 @@ void THeatJsonPage::Get(const char *MatchName, const char *UrlName, THttpParam *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::Post(const char *MatchName, const char *UrlName, THttpParam *Param)
+void TPowerJsonPage::Post(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatJsonPage::Post
+#   Name       : TPowerJsonPage::Post
 #
 #   Purpose....: Post page
 #
@@ -1364,13 +1364,13 @@ void THeatJsonPage::Post(const char *MatchName, const char *UrlName, THttpParam 
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatJsonPage::Post(const char *Var, const char *Val)
+void TPowerJsonPage::Post(const char *Var, const char *Val)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatWebDirFactory::THeatWebDirFactory
+#   Name       : TPowerWebDirFactory::TPowerWebDirFactory
 #
 #   Purpose....: Web factory constructor
 #
@@ -1379,14 +1379,14 @@ void THeatJsonPage::Post(const char *Var, const char *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatWebDirFactory::THeatWebDirFactory(const char *ReqName)
+TPowerWebDirFactory::TPowerWebDirFactory(const char *ReqName)
   : THttpCustomDirFactory(ReqName)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatWebDirFactory::~THeatWebDirFactory
+#   Name       : TPowerWebDirFactory::~TPowerWebDirFactory
 #
 #   Purpose....: Web factory destructor
 #
@@ -1395,13 +1395,13 @@ THeatWebDirFactory::THeatWebDirFactory(const char *ReqName)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatWebDirFactory::~THeatWebDirFactory()
+TPowerWebDirFactory::~TPowerWebDirFactory()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatWebDirFactory::Create
+#   Name       : TPowerWebDirFactory::Create
 #
 #   Purpose....: Create web page
 #
@@ -1410,14 +1410,14 @@ THeatWebDirFactory::~THeatWebDirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THeatWebDirFactory::Create(THttpCommand *cmd)
+THttpCustomPage *TPowerWebDirFactory::Create(THttpCommand *cmd)
 {
-    return new THeatWebPage(cmd);
+    return new TPowerWebPage(cmd);
 }
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::THeatWebPage
+#   Name       : TPowerWebPage::TPowerWebPage
 #
 #   Purpose....: Web page constructor
 #
@@ -1426,7 +1426,7 @@ THttpCustomPage *THeatWebDirFactory::Create(THttpCommand *cmd)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatWebPage::THeatWebPage(THttpCommand *Cmd)
+TPowerWebPage::TPowerWebPage(THttpCommand *Cmd)
   : THttpCustomPage(Cmd)
 {
     TDateTime currtime;
@@ -1442,7 +1442,7 @@ THeatWebPage::THeatWebPage(THttpCommand *Cmd)
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::~THeatWebPage
+#   Name       : TPowerWebPage::~TPowerWebPage
 #
 #   Purpose....: Web page destructor
 #
@@ -1451,13 +1451,13 @@ THeatWebPage::THeatWebPage(THttpCommand *Cmd)
 #   Returns....: *
 #
 ##########################################################################*/
-THeatWebPage::~THeatWebPage()
+TPowerWebPage::~TPowerWebPage()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasDayFile
+#   Name       : TPowerWebPage::HasDayFile
 #
 #   Purpose....: Has day file
 #
@@ -1466,7 +1466,7 @@ THeatWebPage::~THeatWebPage()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasDayFile(TDateTime &time)
+bool TPowerWebPage::HasDayFile(TDateTime &time)
 {
     char str[80];
     char root[40];
@@ -1483,7 +1483,7 @@ bool THeatWebPage::HasDayFile(TDateTime &time)
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasNextDay
+#   Name       : TPowerWebPage::HasNextDay
 #
 #   Purpose....: Has next day file
 #
@@ -1492,7 +1492,7 @@ bool THeatWebPage::HasDayFile(TDateTime &time)
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasNextDay()
+bool TPowerWebPage::HasNextDay()
 {
     TDateTime time(FYear, FMonth, FDay);
 
@@ -1502,7 +1502,7 @@ bool THeatWebPage::HasNextDay()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasPrevDay
+#   Name       : TPowerWebPage::HasPrevDay
 #
 #   Purpose....: Has previous day file
 #
@@ -1511,7 +1511,7 @@ bool THeatWebPage::HasNextDay()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasPrevDay()
+bool TPowerWebPage::HasPrevDay()
 {
     TDateTime time(FYear, FMonth, FDay);
 
@@ -1521,7 +1521,7 @@ bool THeatWebPage::HasPrevDay()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasNextMonth
+#   Name       : TPowerWebPage::HasNextMonth
 #
 #   Purpose....: Has next month file
 #
@@ -1530,7 +1530,7 @@ bool THeatWebPage::HasPrevDay()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasNextMonth()
+bool TPowerWebPage::HasNextMonth()
 {
     TDateTime time(FYear, FMonth, 1);
 
@@ -1540,7 +1540,7 @@ bool THeatWebPage::HasNextMonth()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasPrevMonth
+#   Name       : TPowerWebPage::HasPrevMonth
 #
 #   Purpose....: Has previous month file
 #
@@ -1549,7 +1549,7 @@ bool THeatWebPage::HasNextMonth()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasPrevMonth()
+bool TPowerWebPage::HasPrevMonth()
 {
     TDateTime time(FYear, FMonth, 1);
 
@@ -1559,7 +1559,7 @@ bool THeatWebPage::HasPrevMonth()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasNextYear
+#   Name       : TPowerWebPage::HasNextYear
 #
 #   Purpose....: Has next year file
 #
@@ -1568,7 +1568,7 @@ bool THeatWebPage::HasPrevMonth()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasNextYear()
+bool TPowerWebPage::HasNextYear()
 {
     TDateTime time(FYear, 1, 1);
 
@@ -1578,7 +1578,7 @@ bool THeatWebPage::HasNextYear()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasPrevYear
+#   Name       : TPowerWebPage::HasPrevYear
 #
 #   Purpose....: Has previous year file
 #
@@ -1587,7 +1587,7 @@ bool THeatWebPage::HasNextYear()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasPrevYear()
+bool TPowerWebPage::HasPrevYear()
 {
     TDateTime time(FYear, 12, 1);
 
@@ -1597,7 +1597,7 @@ bool THeatWebPage::HasPrevYear()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::HasMonthFile
+#   Name       : TPowerWebPage::HasMonthFile
 #
 #   Purpose....: Get month file
 #
@@ -1606,7 +1606,7 @@ bool THeatWebPage::HasPrevYear()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::HasMonthFile(TDateTime &time)
+bool TPowerWebPage::HasMonthFile(TDateTime &time)
 {
     char str[80];
     char root[40];
@@ -1623,7 +1623,7 @@ bool THeatWebPage::HasMonthFile(TDateTime &time)
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::GotoPrev
+#   Name       : TPowerWebPage::GotoPrev
 #
 #   Purpose....: Goto previous page
 #
@@ -1632,7 +1632,7 @@ bool THeatWebPage::HasMonthFile(TDateTime &time)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::GotoPrev()
+void TPowerWebPage::GotoPrev()
 {
     if (FUseDay)
     {
@@ -1658,7 +1658,7 @@ void THeatWebPage::GotoPrev()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::GotoNext
+#   Name       : TPowerWebPage::GotoNext
 #
 #   Purpose....: Goto next page
 #
@@ -1667,7 +1667,7 @@ void THeatWebPage::GotoPrev()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::GotoNext()
+void TPowerWebPage::GotoNext()
 {
     if (FUseDay)
     {
@@ -1693,7 +1693,7 @@ void THeatWebPage::GotoNext()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::Fixup
+#   Name       : TPowerWebPage::Fixup
 #
 #   Purpose....: Fixup date
 #
@@ -1702,7 +1702,7 @@ void THeatWebPage::GotoNext()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::Fixup()
+void TPowerWebPage::Fixup()
 {
     TDateTime currtime;
 
@@ -1786,7 +1786,7 @@ void THeatWebPage::Fixup()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::DecodeReq
+#   Name       : TPowerWebPage::DecodeReq
 #
 #   Purpose....: Decode req
 #
@@ -1795,7 +1795,7 @@ void THeatWebPage::Fixup()
 #   Returns....: *
 #
 ##########################################################################*/
-bool THeatWebPage::DecodeReq(const char *ReqStr)
+bool TPowerWebPage::DecodeReq(const char *ReqStr)
 {
     const char *ptr;
     const char *bptr;
@@ -1900,7 +1900,7 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::DecodeTime
+#   Name       : TPowerWebPage::DecodeTime
 #
 #   Purpose....: Decode time
 #
@@ -1909,7 +1909,7 @@ bool THeatWebPage::DecodeReq(const char *ReqStr)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::DecodeTime(THttpParam *Param)
+void TPowerWebPage::DecodeTime(THttpParam *Param)
 {
     const char *ptr;
 
@@ -1941,7 +1941,7 @@ void THeatWebPage::DecodeTime(THttpParam *Param)
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::SendAnswer
+#   Name       : TPowerWebPage::SendAnswer
 #
 #   Purpose....: Send answer
 #
@@ -1950,7 +1950,7 @@ void THeatWebPage::DecodeTime(THttpParam *Param)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::SendAnswer()
+void TPowerWebPage::SendAnswer()
 {
     char str[80];
 
@@ -2132,7 +2132,7 @@ void THeatWebPage::SendAnswer()
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::Get
+#   Name       : TPowerWebPage::Get
 #
 #   Purpose....: Get page
 #
@@ -2141,7 +2141,7 @@ void THeatWebPage::SendAnswer()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
+void TPowerWebPage::Get(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
     bool ok;
 
@@ -2157,7 +2157,7 @@ void THeatWebPage::Get(const char *MatchName, const char *UrlName, THttpParam *P
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::Post
+#   Name       : TPowerWebPage::Post
 #
 #   Purpose....: Post page
 #
@@ -2166,7 +2166,7 @@ void THeatWebPage::Get(const char *MatchName, const char *UrlName, THttpParam *P
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *Param)
+void TPowerWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *Param)
 {
     bool ok;
 
@@ -2182,7 +2182,7 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 
 /*##########################################################################
 #
-#   Name       : THeatWebPage::Post
+#   Name       : TPowerWebPage::Post
 #
 #   Purpose....: Post page
 #
@@ -2191,7 +2191,7 @@ void THeatWebPage::Post(const char *MatchName, const char *UrlName, THttpParam *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeatWebPage::Post(const char *Var, const char *Val)
+void TPowerWebPage::Post(const char *Var, const char *Val)
 {
     if (!strcmp(Var, "yeardia"))
     {
@@ -2245,9 +2245,9 @@ void THeatWebPage::Post(const char *Var, const char *Val)
 ##########################################################################*/
 static void WebSocketThread(void *ptr)
 {
-    THeatHttpServerFactory fact(80, 10, BUF_SIZE);
-    THeatJsonDirFactory jsondir("json");
-    THeatWebDirFactory webdir("web");
+    TPowerHttpServerFactory fact(80, 10, BUF_SIZE);
+    TPowerJsonDirFactory jsondir("json");
+    TPowerWebDirFactory webdir("web");
 
     fact.AddCustomDir(&jsondir);
     fact.AddCustomDir(&webdir);
