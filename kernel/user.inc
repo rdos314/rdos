@@ -4253,6 +4253,12 @@ GetCanSerialNumber      MACRO
                                                 ENDM
 
 ;   IN  EAX         Device #
+;   OUT ECX         Restart count
+GetCanModuleRestarts      MACRO
+        UserGate get_can_module_restarts_nr
+                                                ENDM
+
+;   IN  EAX         Device #
 ;   IN  ES:(E)DI    Program file
 ProgramCanModule      MACRO
         UserGate program_can_module_nr

@@ -1293,7 +1293,13 @@
 #pragma aux RdosGetCanSerialNumber = \
     CallGate_get_can_serial_number  \
     CarryToBool \
-    parm [eax] [edi]
+    parm [eax] [edi];
+
+#pragma aux RdosGetCanModuleRestarts = \
+    "xor ecx,ecx" \
+    CallGate_get_can_module_restarts  \
+    parm [eax] \
+    value [ecx];
 
 #pragma aux RdosProgramCanModule = \
     CallGate_program_can_module  \
