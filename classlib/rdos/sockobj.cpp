@@ -714,10 +714,6 @@ int TUdpSocket::Read(char *buf, int size)
 ##########################################################################*/
 TSocketServer::TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
 {
-    int ip = Socket->GetRemoteIP();
-
-    IpToString(FRemoteIp, ip);
-
     FSocket = Socket;
     FNext = 0;
 
@@ -739,6 +735,25 @@ TSocketServer::~TSocketServer()
 {
     if (FSocket)
         delete FSocket;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::GetRemoteip
+#
+#   Purpose....: Get remote IP
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long TSocketServer::GetRemoteIP()
+{
+    if (FSocket)
+        return FSocket->GetRemoteIP();
+    else
+        return 0;
 }
 
 /*##########################################################################

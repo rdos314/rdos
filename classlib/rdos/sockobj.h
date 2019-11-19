@@ -131,7 +131,7 @@ public:
     TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
     virtual ~TSocketServer();
 
-    char FRemoteIp[30];
+    long GetRemoteIP();
     
 protected:
     virtual void HandleSocket() = 0;
