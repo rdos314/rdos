@@ -317,8 +317,6 @@ void TVp::SetPower(long double val)
     }
 
     FCurrPower = (int)(FPowerSum / FPowerCount);
-
-    FLog.printf(0, "SetPower", "%d", FCurrPower);
 }
 
 /*##########################################################################
