@@ -1961,7 +1961,7 @@ void TPowerWebPage::SendAnswer()
     Write("<head>\r\n");
     Write(" <meta charset=\"utf-8\">\r\n");
     Write(" <title>Heat control system</title>\r\n");
-    Write(" <script src=\"https://cdn.zingchart.com/zingchart.min.js\"></script>\r\n");
+    Write(" <script src=\"/zingchart.min.js\"></script>\r\n");
     Write(" <style>\r\n");
     Write("  html,\r\n");
     Write("  body {\r\n");

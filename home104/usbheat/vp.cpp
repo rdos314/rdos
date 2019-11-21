@@ -85,7 +85,7 @@ TVp::TVp(TControlThread *control)
     FIncCount = 0;
     FHasCirc = FALSE;
     FHistoryCount = 0;
-    FMaxTank = 450;
+    FMaxTank = 370;
     FOffCounter = OFF_TIMEOUT;
 
     FCurrPower = 0;

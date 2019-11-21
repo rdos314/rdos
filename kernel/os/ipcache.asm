@@ -292,7 +292,6 @@ update_host_loop:
     jmp update_host_loop
 
 update_host_do:
-    int 3
     push ds
     push cx
     push si
@@ -302,6 +301,7 @@ update_host_do:
     xor di,di
     rep movs byte ptr es:[di],fs:[si]
     mov ax,gdt_sel
+    mov ds,ax
     mov si,fs
     mov di,es
     mov eax,[si]
