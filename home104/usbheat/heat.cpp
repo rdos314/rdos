@@ -1532,7 +1532,7 @@ int main()
 
         RdosWaitMilli(1000);
 
-        if (SyncCount == 300)
+        if (SyncCount == 3600)
         {
             NtpIp = RdosNameToIp("pool.ntp.org");
             if (NtpIp)
