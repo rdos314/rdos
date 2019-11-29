@@ -1509,7 +1509,7 @@ int main()
                     if (night)
                     {
                         if (ambient < 50)
-                            RadArr[i]->SetWinterRef();
+                            RadArr[i]->SetDayRef();
                         else
                             RadArr[i]->SetNightRef();
                     }
