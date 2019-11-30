@@ -329,7 +329,7 @@ void TVp::SetPower(long double val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TVp::SetAmbient(int ref, int ambient)
+void TVp::SetAmbient(int ref, int ambient, bool night)
 {
     long double fact;
     long double ambdiff;
@@ -358,13 +358,28 @@ void TVp::SetAmbient(int ref, int ambient)
         if (ambient < 150)
         {
             if (FCurrPower >= 2000)
-                FMaxTank = 480 - ambient;
+            {
+                if (night)
+                    FMaxTank = 450 - ambient;
+                else
+                    FMaxTank = 480 - ambient;
+            }
             else
             {
                 if (FCurrPower >= 1000)
-                    FMaxTank = 440 - ambient;
+                {
+                    if (night)
+                        FMaxTank = 400 - ambient;
+                    else
+                        FMaxTank = 440 - ambient;
+                }
                 else
-                    FMaxTank = 400 - ambient;
+                {
+                    if (night)
+                        FMaxTank = 350 - ambient;
+                    else
+                        FMaxTank = 400 - ambient;
+                }
             }
 
             if (FMaxTank > 410)

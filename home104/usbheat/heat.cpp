@@ -891,8 +891,8 @@ int main()
     TFile *file;
     int init = 0x8000;
     int ambient;
-    int night;
-    int summer;
+    bool night;
+    bool summer;
     int refsum;
     TFont Font(25);
     char str[80];
@@ -1460,19 +1460,19 @@ int main()
                 UpdateMonthData();
         }
 
-        summer = FALSE;
+        summer = false;
 
         if (CurrTime->GetMonth() >= 6 && CurrTime->GetMonth() <= 8)
-            summer = TRUE;
+            summer = true;
 
         if (!summer)
         {
-            night = FALSE;
+            night = false;
             if (CurrTime->GetHour() >= 19)
-                night = TRUE;
+                night = true;
             else
                 if (CurrTime->GetHour() < 5)
-                    night = TRUE;
+                    night = true;
         }
 
         delete CurrTime;
@@ -1527,7 +1527,7 @@ int main()
         if (count)
         {
             Vp->SetTempError(temperrmax);
-            Vp->SetAmbient(refsum / count, ambient);
+            Vp->SetAmbient(refsum / count, ambient, night);
         }
 
         RdosWaitMilli(1000);

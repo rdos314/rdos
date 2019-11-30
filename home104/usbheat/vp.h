@@ -59,7 +59,7 @@ public:
     void SetMaxMotor(int motor);
     void SetPower(long double val);
     void SetTempError(int temp);
-    void SetAmbient(int ref, int ambient);
+    void SetAmbient(int ref, int ambient, bool night);
 
 protected:
     void UpdateCirc(int diostat);
