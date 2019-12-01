@@ -51,6 +51,7 @@
 #include "timeaxis.h"
 #include "linyaxis.h"
 #include "png.h"
+#include "ddns.h"
 
 int GetWebConnectionCount();
 
@@ -863,6 +864,7 @@ int main()
 {
     TRad *RadArr[8];
     TVp *Vp;
+    TDdns *Ddns;
     TFroniusInverter *SolarInv;
     TSmartPowInverter *WindInv;
     TOpenWeather *w;
@@ -926,6 +928,9 @@ int main()
     RdosCreateThread(WatchdogThread, "Watdog", 0, 0x2000);
 
     RdosWaitMilli(2500);
+
+    Ddns = new TDdns;
+//    Ddns->UpdateIp();
 
     NtpIp = RdosNameToIp("pool.ntp.org");
     if (NtpIp)
