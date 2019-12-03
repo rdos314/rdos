@@ -827,7 +827,8 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
                 se_fallback.s_proto = proto;
                 se = &se_fallback;
             } else if (endp == service) {
-                se = getservbyname(service, proto);
+//                se = getservbyname(service, proto);
+                se = NULL;
 
                 if (se == NULL) {
 #ifndef OPENSSL_SYS_WINDOWS

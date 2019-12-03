@@ -237,6 +237,9 @@ void *CRYPTO_zalloc(size_t num, const char *file, int line)
 
 void *CRYPTO_realloc(void *str, size_t num, const char *file, int line)
 {
+    char *s;
+    char *d;
+
     INCREMENT(realloc_count);
     if (realloc_impl != NULL && realloc_impl != &CRYPTO_realloc)
         return realloc_impl(str, num, file, line);
@@ -261,7 +264,14 @@ void *CRYPTO_realloc(void *str, size_t num, const char *file, int line)
 #else
     (void)(file); (void)(line);
 #endif
-    return realloc(str, num);
+
+    s = (char *)str;
+    d = malloc(num);
+    memcpy(d, s, num);
+    free(s);
+    return d;
+
+/*    return realloc(str, num); */
 
 }
 
@@ -299,6 +309,9 @@ void CRYPTO_free(void *str, const char *file, int line)
         free_impl(str, file, line);
         return;
     }
+
+    if (str == 0)
+        return;
 
 #ifndef OPENSSL_NO_CRYPTO_MDEBUG
     if (call_malloc_debug) {
