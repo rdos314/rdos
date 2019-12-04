@@ -15,7 +15,7 @@ new_certs_dir	= $dir/new_cert 	# default place for new certs.
 certificate	= $dir/cacert.pem 	# The CA certificate
 serial		= $dir/serial.txt 	# The current serial number
 crl		= $dir/crl.pem 		# The current CRL
-private_key	= $dir/cakey.pem        # The private key
+private_key	= $dir/cakey.key        # The private key
 
 default_days	= 3650	   	        # how long to certify for
 default_crl_days= 30			# how long before next CRL
@@ -64,7 +64,7 @@ stateOrProvinceName_default	=
 stateOrProvinceName_value	=
 
 localityName			= Locality Name (eg, city)
-localityName_value		= Eslöv
+localityName_value		= EslÃ¶v
 
 organizationName		= Organization Name (eg, company)
 organizationName_default	= 
