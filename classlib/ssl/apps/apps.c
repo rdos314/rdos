@@ -2240,6 +2240,39 @@ double app_tminterval(int stop, int usertime)
     return ret;
 }
 
+#elif defined(OPENSSL_SYS_RDOS)
+# include <time.h>
+
+double app_tminterval(int stop, int usertime)
+{
+    double ret = 0;
+# ifdef CLOCK_REALTIME
+    static struct timespec tmstart;
+    struct timespec now;
+# else
+    static unsigned long tmstart;
+    unsigned long now;
+# endif
+    static int warning = 1;
+
+    if (usertime && warning) {
+        BIO_printf(bio_err, "To get meaningful results, run "
+                   "this program on idle system.\n");
+        warning = 0;
+    }
+# ifdef CLOCK_REALTIME
+    clock_gettime(CLOCK_REALTIME, &now);
+    if (stop == TM_START)
+        tmstart = now;
+    else
+        ret = ((now.tv_sec + now.tv_nsec * 1e-9)
+               - (tmstart.tv_sec + tmstart.tv_nsec * 1e-9));
+# else
+    ret = 0;
+# endif
+    return ret;
+}
+
 #elif defined(OPENSSL_SYSTEM_VMS)
 # include <time.h>
 # include <times.h>
@@ -2667,7 +2700,7 @@ BIO *bio_open_default_quiet(const char *filename, char mode, int format)
 void wait_for_async(SSL *s)
 {
     /* On Windows select only works for sockets, so we simply don't wait  */
-#ifndef OPENSSL_SYS_WINDOWS
+#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_RDOS)
     int width = 0;
     fd_set asyncfds;
     OSSL_ASYNC_FD *fds;
