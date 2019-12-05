@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -242,6 +242,13 @@ int EVP_CIPHER_iv_length(const EVP_CIPHER *cipher)
 
 int EVP_CIPHER_CTX_iv_length(const EVP_CIPHER_CTX *ctx)
 {
+    int i, rv;
+
+    if ((EVP_CIPHER_flags(ctx->cipher) & EVP_CIPH_CUSTOM_IV_LENGTH) != 0) {
+        rv = EVP_CIPHER_CTX_ctrl((EVP_CIPHER_CTX *)ctx, EVP_CTRL_GET_IVLEN,
+                                 0, &i);
+        return (rv == 1) ? i : -1;
+    }
     return ctx->cipher->iv_len;
 }
 
@@ -458,6 +465,25 @@ const EVP_MD *EVP_MD_CTX_md(const EVP_MD_CTX *ctx)
 EVP_PKEY_CTX *EVP_MD_CTX_pkey_ctx(const EVP_MD_CTX *ctx)
 {
     return ctx->pctx;
+}
+
+void EVP_MD_CTX_set_pkey_ctx(EVP_MD_CTX *ctx, EVP_PKEY_CTX *pctx)
+{
+    /*
+     * it's reasonable to set NULL pctx (a.k.a clear the ctx->pctx), so
+     * we have to deal with the cleanup job here.
+     */
+    if (!EVP_MD_CTX_test_flags(ctx, EVP_MD_CTX_FLAG_KEEP_PKEY_CTX))
+        EVP_PKEY_CTX_free(ctx->pctx);
+
+    ctx->pctx = pctx;
+
+    if (pctx != NULL) {
+        /* make sure pctx is not freed when destroying EVP_MD_CTX */
+        EVP_MD_CTX_set_flags(ctx, EVP_MD_CTX_FLAG_KEEP_PKEY_CTX);
+    } else {
+        EVP_MD_CTX_clear_flags(ctx, EVP_MD_CTX_FLAG_KEEP_PKEY_CTX);
+    }
 }
 
 void *EVP_MD_CTX_md_data(const EVP_MD_CTX *ctx)

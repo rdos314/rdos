@@ -1092,7 +1092,27 @@ int TUnzipFile::NeedUpdate(const char *filename)
         
     }
     else
-        return TRUE;
+    {
+        size = strlen(filename);
+        if (size)
+        {
+            if (filename[size - 1] == '/' || filename[size - 1] == '\\')
+                return FALSE;
+            else
+            {
+                handle = RdosOpenDir(filename);
+                if (handle)
+                {
+                    RdosCloseDir(handle);
+                    return FALSE;
+                }
+                else
+                    return TRUE;
+            }
+        }
+        else
+            return FALSE;
+    }
 
 } /* end function check_for_newer() */
 

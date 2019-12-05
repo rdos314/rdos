@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -40,12 +40,19 @@
 #endif
 #include <openssl/bn.h>
 #include <openssl/ssl.h>
-#include "s_apps.h"
 #include "apps.h"
 
 #ifdef _WIN32
 static int WIN32_rename(const char *from, const char *to);
 # define rename(from,to) WIN32_rename((from),(to))
+#endif
+
+#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
+# include <conio.h>
+#endif
+
+#if defined(OPENSSL_SYS_MSDOS) && !defined(_WIN32)
+# define _kbhit kbhit
 #endif
 
 typedef struct {
@@ -1561,7 +1568,7 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
 #else
     BIO_snprintf(buf, sizeof(buf), "%s-attr", dbfile);
 #endif
-    dbattr_conf = app_load_config(buf);
+    dbattr_conf = app_load_config_quiet(buf);
 
     retdb = app_malloc(sizeof(*retdb), "new DB");
     retdb->db = tmpdb;
@@ -1768,8 +1775,14 @@ X509_NAME *parse_name(const char *cp, long chtype, int canmulti)
     char *work;
     X509_NAME *n;
 
-    if (*cp++ != '/')
+    if (*cp++ != '/') {
+        BIO_printf(bio_err,
+                   "name is expected to be in the format "
+                   "/type0=value0/type1=value1/type2=... where characters may "
+                   "be escaped by \\. This name is not in that format: '%s'\n",
+                   --cp);
         return NULL;
+    }
 
     n = X509_NAME_new();
     if (n == NULL)
@@ -1823,6 +1836,12 @@ X509_NAME *parse_name(const char *cp, long chtype, int canmulti)
         if (nid == NID_undef) {
             BIO_printf(bio_err, "%s: Skipping unknown attribute \"%s\"\n",
                       opt_getprog(), typestr);
+            continue;
+        }
+        if (*valstr == '\0') {
+            BIO_printf(bio_err,
+                       "%s: No value provided for Subject Attribute %s, skipped\n",
+                       opt_getprog(), typestr);
             continue;
         }
         if (!X509_NAME_add_entry_by_NID(n, nid, chtype,
@@ -2184,7 +2203,7 @@ double app_tminterval(int stop, int usertime)
 
     return ret;
 }
-#elif defined(OPENSSL_SYSTEM_VXWORKS)
+#elif defined(OPENSSL_SYS_VXWORKS)
 # include <time.h>
 
 double app_tminterval(int stop, int usertime)
@@ -2217,39 +2236,6 @@ double app_tminterval(int stop, int usertime)
         tmstart = now;
     else
         ret = (now - tmstart) / (double)sysClkRateGet();
-# endif
-    return ret;
-}
-
-#elif defined(OPENSSL_SYS_RDOS)
-# include <time.h>
-
-double app_tminterval(int stop, int usertime)
-{
-    double ret = 0;
-# ifdef CLOCK_REALTIME
-    static struct timespec tmstart;
-    struct timespec now;
-# else
-    static unsigned long tmstart;
-    unsigned long now;
-# endif
-    static int warning = 1;
-
-    if (usertime && warning) {
-        BIO_printf(bio_err, "To get meaningful results, run "
-                   "this program on idle system.\n");
-        warning = 0;
-    }
-# ifdef CLOCK_REALTIME
-    clock_gettime(CLOCK_REALTIME, &now);
-    if (stop == TM_START)
-        tmstart = now;
-    else
-        ret = ((now.tv_sec + now.tv_nsec * 1e-9)
-               - (tmstart.tv_sec + tmstart.tv_nsec * 1e-9));
-# else
-    ret = 0;
 # endif
     return ret;
 }
@@ -2681,7 +2667,7 @@ BIO *bio_open_default_quiet(const char *filename, char mode, int format)
 void wait_for_async(SSL *s)
 {
     /* On Windows select only works for sockets, so we simply don't wait  */
-#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_RDOS)
+#ifndef OPENSSL_SYS_WINDOWS
     int width = 0;
     fd_set asyncfds;
     OSSL_ASYNC_FD *fds;

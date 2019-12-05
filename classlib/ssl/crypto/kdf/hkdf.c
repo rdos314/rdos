@@ -175,6 +175,18 @@ static int pkey_hkdf_ctrl_str(EVP_PKEY_CTX *ctx, const char *type,
     return -2;
 }
 
+static int pkey_hkdf_derive_init(EVP_PKEY_CTX *ctx)
+{
+    HKDF_PKEY_CTX *kctx = ctx->data;
+
+    OPENSSL_clear_free(kctx->key, kctx->key_len);
+    OPENSSL_clear_free(kctx->salt, kctx->salt_len);
+    OPENSSL_cleanse(kctx->info, kctx->info_len);
+    memset(kctx, 0, sizeof(*kctx));
+
+    return 1;
+}
+
 static int pkey_hkdf_derive(EVP_PKEY_CTX *ctx, unsigned char *key,
                             size_t *keylen)
 {
@@ -236,7 +248,7 @@ const EVP_PKEY_METHOD hkdf_pkey_meth = {
 
     0, 0,
 
-    0,
+    pkey_hkdf_derive_init,
     pkey_hkdf_derive,
     pkey_hkdf_ctrl,
     pkey_hkdf_ctrl_str
@@ -281,6 +293,7 @@ static unsigned char *HKDF_Expand(const EVP_MD *evp_md,
                                   unsigned char *okm, size_t okm_len)
 {
     HMAC_CTX *hmac;
+    unsigned char *ret = NULL;
 
     unsigned int i;
 
@@ -330,11 +343,10 @@ static unsigned char *HKDF_Expand(const EVP_MD *evp_md,
 
         done_len += copy_len;
     }
-
-    HMAC_CTX_free(hmac);
-    return okm;
+    ret = okm;
 
  err:
+    OPENSSL_cleanse(prev, sizeof(prev));
     HMAC_CTX_free(hmac);
-    return NULL;
+    return ret;
 }

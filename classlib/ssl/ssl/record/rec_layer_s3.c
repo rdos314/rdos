@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -374,6 +374,13 @@ int ssl3_write_bytes(SSL *s, int type, const void *buf_, size_t len,
     s->rlayer.wnum = 0;
 
     /*
+     * If we are supposed to be sending a KeyUpdate then go into init unless we
+     * have writes pending - in which case we should finish doing that first.
+     */
+    if (wb->left == 0 && s->key_update != SSL_KEY_UPDATE_NONE)
+        ossl_statem_set_in_init(s, 1);
+
+    /*
      * When writing early data on the server side we could be "in_init" in
      * between receiving the EoED and the CF - but we don't want to handle those
      * messages yet.
@@ -628,8 +635,9 @@ int ssl3_write_bytes(SSL *s, int type, const void *buf_, size_t len,
              */
             s->s3->empty_fragment_done = 0;
 
-            if ((i == (int)n) && s->mode & SSL_MODE_RELEASE_BUFFERS &&
-                !SSL_IS_DTLS(s))
+            if (tmpwrit == n
+                    && (s->mode & SSL_MODE_RELEASE_BUFFERS) != 0
+                    && !SSL_IS_DTLS(s))
                 ssl3_release_write_buffer(s);
 
             *written = tot + tmpwrit;
@@ -1315,6 +1323,14 @@ int ssl3_read_bytes(SSL *s, int type, int *recvd_type, unsigned char *buf,
     } while (num_recs == 0);
     rr = &rr[curr_rec];
 
+    if (s->rlayer.handshake_fragment_len > 0
+            && SSL3_RECORD_get_type(rr) != SSL3_RT_HANDSHAKE
+            && SSL_IS_TLS13(s)) {
+        SSLfatal(s, SSL_AD_UNEXPECTED_MESSAGE, SSL_F_SSL3_READ_BYTES,
+                 SSL_R_MIXED_HANDSHAKE_AND_NON_HANDSHAKE_DATA);
+        return -1;
+    }
+
     /*
      * Reset the count of consecutive warning alerts if we've got a non-empty
      * record that isn't an alert.
@@ -1554,30 +1570,30 @@ int ssl3_read_bytes(SSL *s, int type, int *recvd_type, unsigned char *buf,
         return -1;
     }
 
-    /*
-     * If we've sent a close_notify but not yet received one back then ditch
-     * anything we read.
-     */
     if ((s->shutdown & SSL_SENT_SHUTDOWN) != 0) {
-        /*
-         * In TLSv1.3 this could get problematic if we receive a KeyUpdate
-         * message after we sent a close_notify because we're about to ditch it,
-         * so we won't be able to read a close_notify sent afterwards! We don't
-         * support that.
-         */
-        SSL3_RECORD_set_length(rr, 0);
-        SSL3_RECORD_set_read(rr);
-
         if (SSL3_RECORD_get_type(rr) == SSL3_RT_HANDSHAKE) {
             BIO *rbio;
 
-            if ((s->mode & SSL_MODE_AUTO_RETRY) != 0)
-                goto start;
+            /*
+             * We ignore any handshake messages sent to us unless they are
+             * TLSv1.3 in which case we want to process them. For all other
+             * handshake messages we can't do anything reasonable with them
+             * because we are unable to write any response due to having already
+             * sent close_notify.
+             */
+            if (!SSL_IS_TLS13(s)) {
+                SSL3_RECORD_set_length(rr, 0);
+                SSL3_RECORD_set_read(rr);
 
-            s->rwstate = SSL_READING;
-            rbio = SSL_get_rbio(s);
-            BIO_clear_retry_flags(rbio);
-            BIO_set_retry_read(rbio);
+                if ((s->mode & SSL_MODE_AUTO_RETRY) != 0)
+                    goto start;
+
+                s->rwstate = SSL_READING;
+                rbio = SSL_get_rbio(s);
+                BIO_clear_retry_flags(rbio);
+                BIO_set_retry_read(rbio);
+                return -1;
+            }
         } else {
             /*
              * The peer is continuing to send application data, but we have
@@ -1586,10 +1602,12 @@ int ssl3_read_bytes(SSL *s, int type, int *recvd_type, unsigned char *buf,
              * above.
              * No alert sent because we already sent close_notify
              */
+            SSL3_RECORD_set_length(rr, 0);
+            SSL3_RECORD_set_read(rr);
             SSLfatal(s, SSL_AD_NO_ALERT, SSL_F_SSL3_READ_BYTES,
                      SSL_R_APPLICATION_DATA_AFTER_CLOSE_NOTIFY);
+            return -1;
         }
-        return -1;
     }
 
     /*

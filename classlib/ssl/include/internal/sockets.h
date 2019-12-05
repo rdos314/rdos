@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -78,11 +78,7 @@ struct servent *PASCAL getservbyname(const char *, const char *);
 #  else
 #   include <sys/socket.h>
 #   ifndef NO_SYS_UN_H
-#    ifdef OPENSSL_SYS_VXWORKS
-#     include <streams/un.h>
-#    else
-#     include <sys/un.h>
-#    endif
+#    include <sys/un.h>
 #    ifndef UNIX_PATH_MAX
 #     define UNIX_PATH_MAX sizeof(((struct sockaddr_un *)NULL)->sun_path)
 #    endif
@@ -101,7 +97,7 @@ struct servent *PASCAL getservbyname(const char *, const char *);
 
 #  ifndef VMS
 #   if !defined(OPENSSL_SYS_RDOS)
-#     include <sys/ioctl.h>
+#   include <sys/ioctl.h>
 #   endif
 #  else
 #   if !defined(TCPIP_TYPE_SOCKETSHR) && defined(__VMS_VER) && (__VMS_VER > 70000000)

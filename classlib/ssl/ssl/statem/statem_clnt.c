@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  * Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved
  * Copyright 2005 Nokia. All rights reserved.
  *
@@ -423,11 +423,19 @@ static WRITE_TRAN ossl_statem_client13_write_transition(SSL *s)
             st->hand_state = TLS_ST_CW_CERT;
             return WRITE_TRAN_CONTINUE;
         }
-        /* Shouldn't happen - same as default case */
-        SSLfatal(s, SSL_AD_INTERNAL_ERROR,
-                 SSL_F_OSSL_STATEM_CLIENT13_WRITE_TRANSITION,
-                 ERR_R_INTERNAL_ERROR);
-        return WRITE_TRAN_ERROR;
+        /*
+         * We should only get here if we received a CertificateRequest after
+         * we already sent close_notify
+         */
+        if (!ossl_assert((s->shutdown & SSL_SENT_SHUTDOWN) != 0)) {
+            /* Shouldn't happen - same as default case */
+            SSLfatal(s, SSL_AD_INTERNAL_ERROR,
+                     SSL_F_OSSL_STATEM_CLIENT13_WRITE_TRANSITION,
+                     ERR_R_INTERNAL_ERROR);
+            return WRITE_TRAN_ERROR;
+        }
+        st->hand_state = TLS_ST_OK;
+        return WRITE_TRAN_CONTINUE;
 
     case TLS_ST_CR_FINISHED:
         if (s->early_data_state == SSL_EARLY_DATA_WRITE_RETRY
@@ -465,12 +473,6 @@ static WRITE_TRAN ossl_statem_client13_write_transition(SSL *s)
         return WRITE_TRAN_CONTINUE;
 
     case TLS_ST_CR_KEY_UPDATE:
-        if (s->key_update != SSL_KEY_UPDATE_NONE) {
-            st->hand_state = TLS_ST_CW_KEY_UPDATE;
-            return WRITE_TRAN_CONTINUE;
-        }
-        /* Fall through */
-
     case TLS_ST_CW_KEY_UPDATE:
     case TLS_ST_CR_SESSION_TICKET:
     case TLS_ST_CW_FINISHED:
@@ -1087,6 +1089,7 @@ WORK_STATE ossl_statem_client_post_process_message(SSL *s, WORK_STATE wst)
                  ERR_R_INTERNAL_ERROR);
         return WORK_ERROR;
 
+    case TLS_ST_CR_CERT_VRFY:
     case TLS_ST_CR_CERT_REQ:
         return tls_prepare_client_certificate(s, wst);
     }
@@ -1102,13 +1105,6 @@ int tls_construct_client_hello(SSL *s, WPACKET *pkt)
 #endif
     SSL_SESSION *sess = s->session;
     unsigned char *session_id;
-
-    if (!WPACKET_set_max_size(pkt, SSL3_RT_MAX_PLAIN_LENGTH)) {
-        /* Should not happen */
-        SSLfatal(s, SSL_AD_INTERNAL_ERROR,
-                 SSL_F_TLS_CONSTRUCT_CLIENT_HELLO, ERR_R_INTERNAL_ERROR);
-        return 0;
-    }
 
     /* Work out what SSL/TLS/DTLS version to use */
     protverr = ssl_set_client_hello_version(s);
@@ -1611,10 +1607,7 @@ MSG_PROCESS_RETURN tls_process_server_hello(SSL *s, PACKET *pkt)
          * so the PAC-based session secret is always preserved. It'll be
          * overwritten if the server refuses resumption.
          */
-        if (s->session->session_id_length > 0
-                || (SSL_IS_TLS13(s)
-                    && s->session->ext.tick_identity
-                       != TLSEXT_PSK_BAD_IDENTITY)) {
+        if (s->session->session_id_length > 0) {
             tsan_counter(&s->session_ctx->stats.sess_miss);
             if (!ssl_get_new_session(s, 0)) {
                 /* SSLfatal() already called */
@@ -1705,6 +1698,7 @@ MSG_PROCESS_RETURN tls_process_server_hello(SSL *s, PACKET *pkt)
     if (SSL_IS_DTLS(s) && s->hit) {
         unsigned char sctpauthkey[64];
         char labelbuffer[sizeof(DTLS1_SCTP_AUTH_LABEL)];
+        size_t labellen;
 
         /*
          * Add new shared key for SCTP-Auth, will be ignored if
@@ -1713,10 +1707,15 @@ MSG_PROCESS_RETURN tls_process_server_hello(SSL *s, PACKET *pkt)
         memcpy(labelbuffer, DTLS1_SCTP_AUTH_LABEL,
                sizeof(DTLS1_SCTP_AUTH_LABEL));
 
+        /* Don't include the terminating zero. */
+        labellen = sizeof(labelbuffer) - 1;
+        if (s->mode & SSL_MODE_DTLS_SCTP_LABEL_LENGTH_BUG)
+            labellen += 1;
+
         if (SSL_export_keying_material(s, sctpauthkey,
                                        sizeof(sctpauthkey),
                                        labelbuffer,
-                                       sizeof(labelbuffer), NULL, 0, 0) <= 0) {
+                                       labellen, NULL, 0, 0) <= 0) {
             SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_F_TLS_PROCESS_SERVER_HELLO,
                      ERR_R_INTERNAL_ERROR);
             goto err;
@@ -2344,7 +2343,8 @@ MSG_PROCESS_RETURN tls_process_key_exchange(SSL *s, PACKET *pkt)
         }
 #ifdef SSL_DEBUG
         if (SSL_USE_SIGALGS(s))
-            fprintf(stderr, "USING TLSv1.2 HASH %s\n", EVP_MD_name(md));
+            fprintf(stderr, "USING TLSv1.2 HASH %s\n",
+                    md == NULL ? "n/a" : EVP_MD_name(md));
 #endif
 
         if (!PACKET_get_length_prefixed_2(pkt, &signature)
@@ -2446,6 +2446,15 @@ MSG_PROCESS_RETURN tls_process_certificate_request(SSL *s, PACKET *pkt)
         PACKET reqctx, extensions;
         RAW_EXTENSION *rawexts = NULL;
 
+        if ((s->shutdown & SSL_SENT_SHUTDOWN) != 0) {
+            /*
+             * We already sent close_notify. This can only happen in TLSv1.3
+             * post-handshake messages. We can't reasonably respond to this, so
+             * we just ignore it
+             */
+            return MSG_PROCESS_FINISHED_READING;
+        }
+
         /* Free and zero certificate types: it is not present in TLS 1.3 */
         OPENSSL_free(s->s3->tmp.ctype);
         s->s3->tmp.ctype = NULL;
@@ -2545,6 +2554,17 @@ MSG_PROCESS_RETURN tls_process_certificate_request(SSL *s, PACKET *pkt)
 
     /* we should setup a certificate to return.... */
     s->s3->tmp.cert_req = 1;
+
+    /*
+     * In TLSv1.3 we don't prepare the client certificate yet. We wait until
+     * after the CertificateVerify message has been received. This is because
+     * in TLSv1.3 the CertificateRequest arrives before the Certificate message
+     * but in TLSv1.2 it is the other way around. We want to make sure that
+     * SSL_get_peer_certificate() returns something sensible in
+     * client_cert_cb.
+     */
+    if (SSL_IS_TLS13(s) && s->post_handshake_auth != SSL_PHA_REQUESTED)
+        return MSG_PROCESS_CONTINUE_READING;
 
     return MSG_PROCESS_CONTINUE_PROCESSING;
 }
@@ -2710,7 +2730,7 @@ MSG_PROCESS_RETURN tls_process_new_session_ticket(SSL *s, PACKET *pkt)
                                PACKET_data(&nonce),
                                PACKET_remaining(&nonce),
                                s->session->master_key,
-                               hashlen)) {
+                               hashlen, 1)) {
             /* SSLfatal() already called */
             goto err;
         }
@@ -3374,6 +3394,7 @@ int tls_client_key_exchange_post_work(SSL *s)
     if (SSL_IS_DTLS(s)) {
         unsigned char sctpauthkey[64];
         char labelbuffer[sizeof(DTLS1_SCTP_AUTH_LABEL)];
+        size_t labellen;
 
         /*
          * Add new shared key for SCTP-Auth, will be ignored if no SCTP
@@ -3382,9 +3403,14 @@ int tls_client_key_exchange_post_work(SSL *s)
         memcpy(labelbuffer, DTLS1_SCTP_AUTH_LABEL,
                sizeof(DTLS1_SCTP_AUTH_LABEL));
 
+        /* Don't include the terminating zero. */
+        labellen = sizeof(labelbuffer) - 1;
+        if (s->mode & SSL_MODE_DTLS_SCTP_LABEL_LENGTH_BUG)
+            labellen += 1;
+
         if (SSL_export_keying_material(s, sctpauthkey,
                                        sizeof(sctpauthkey), labelbuffer,
-                                       sizeof(labelbuffer), NULL, 0, 0) <= 0) {
+                                       labellen, NULL, 0, 0) <= 0) {
             SSLfatal(s, SSL_AD_INTERNAL_ERROR,
                      SSL_F_TLS_CLIENT_KEY_EXCHANGE_POST_WORK,
                      ERR_R_INTERNAL_ERROR);

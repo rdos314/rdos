@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2019 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -97,7 +97,7 @@ RSA *RSA_new_method(ENGINE *engine)
 
     return ret;
 
-err:
+ err:
     RSA_free(ret);
     return NULL;
 }
@@ -115,7 +115,7 @@ void RSA_free(RSA *r)
         return;
     REF_ASSERT_ISNT(i < 0);
 
-    if (r->meth->finish)
+    if (r->meth != NULL && r->meth->finish != NULL)
         r->meth->finish(r);
 #ifndef OPENSSL_NO_ENGINE
     ENGINE_finish(r->engine);
@@ -125,8 +125,8 @@ void RSA_free(RSA *r)
 
     CRYPTO_THREAD_lock_free(r->lock);
 
-    BN_clear_free(r->n);
-    BN_clear_free(r->e);
+    BN_free(r->n);
+    BN_free(r->e);
     BN_clear_free(r->d);
     BN_clear_free(r->p);
     BN_clear_free(r->q);
@@ -196,8 +196,9 @@ int RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d)
         r->e = e;
     }
     if (d != NULL) {
-        BN_free(r->d);
+        BN_clear_free(r->d);
         r->d = d;
+        BN_set_flags(r->d, BN_FLG_CONSTTIME);
     }
 
     return 1;
@@ -213,12 +214,14 @@ int RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q)
         return 0;
 
     if (p != NULL) {
-        BN_free(r->p);
+        BN_clear_free(r->p);
         r->p = p;
+        BN_set_flags(r->p, BN_FLG_CONSTTIME);
     }
     if (q != NULL) {
-        BN_free(r->q);
+        BN_clear_free(r->q);
         r->q = q;
+        BN_set_flags(r->q, BN_FLG_CONSTTIME);
     }
 
     return 1;
@@ -235,16 +238,19 @@ int RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *iqmp)
         return 0;
 
     if (dmp1 != NULL) {
-        BN_free(r->dmp1);
+        BN_clear_free(r->dmp1);
         r->dmp1 = dmp1;
+        BN_set_flags(r->dmp1, BN_FLG_CONSTTIME);
     }
     if (dmq1 != NULL) {
-        BN_free(r->dmq1);
+        BN_clear_free(r->dmq1);
         r->dmq1 = dmq1;
+        BN_set_flags(r->dmq1, BN_FLG_CONSTTIME);
     }
     if (iqmp != NULL) {
-        BN_free(r->iqmp);
+        BN_clear_free(r->iqmp);
         r->iqmp = iqmp;
+        BN_set_flags(r->iqmp, BN_FLG_CONSTTIME);
     }
 
     return 1;
@@ -276,12 +282,15 @@ int RSA_set0_multi_prime_params(RSA *r, BIGNUM *primes[], BIGNUM *exps[],
         if (pinfo == NULL)
             goto err;
         if (primes[i] != NULL && exps[i] != NULL && coeffs[i] != NULL) {
-            BN_free(pinfo->r);
-            BN_free(pinfo->d);
-            BN_free(pinfo->t);
+            BN_clear_free(pinfo->r);
+            BN_clear_free(pinfo->d);
+            BN_clear_free(pinfo->t);
             pinfo->r = primes[i];
             pinfo->d = exps[i];
             pinfo->t = coeffs[i];
+            BN_set_flags(pinfo->r, BN_FLG_CONSTTIME);
+            BN_set_flags(pinfo->d, BN_FLG_CONSTTIME);
+            BN_set_flags(pinfo->t, BN_FLG_CONSTTIME);
         } else {
             rsa_multip_info_free(pinfo);
             goto err;
