@@ -19,6 +19,8 @@
 #include <openssl/bio.h>
 #include <openssl/opensslconf.h>
 #include "internal/thread_once.h"
+#include "internal/ctype.h"
+#include "internal/constant_time_locl.h"
 
 static int err_load_strings(const ERR_STRING_DATA *str);
 
@@ -204,7 +206,6 @@ static void build_SYS_str_reasons(void)
     size_t cnt = 0;
     static int init = 1;
     int i;
-    int saveerrno = get_last_sys_error();
 
     CRYPTO_THREAD_write_lock(err_string_lock);
     if (!init) {
@@ -252,8 +253,6 @@ static void build_SYS_str_reasons(void)
     init = 0;
 
     CRYPTO_THREAD_unlock(err_string_lock);
-    /* openssl_strerror_r could change errno, but we want to preserve it */
-    set_sys_error(saveerrno);
     err_load_strings(SYS_str_reasons);
 }
 #endif
@@ -712,7 +711,6 @@ DEFINE_RUN_ONCE_STATIC(err_do_init)
 ERR_STATE *ERR_get_state(void)
 {
     ERR_STATE *state;
-    int saveerrno = get_last_sys_error();
 
     if (!OPENSSL_init_crypto(OPENSSL_INIT_BASE_ONLY, NULL))
         return NULL;
@@ -744,7 +742,6 @@ ERR_STATE *ERR_get_state(void)
         OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
     }
 
-    set_sys_error(saveerrno);
     return state;
 }
 
@@ -754,20 +751,6 @@ ERR_STATE *ERR_get_state(void)
  */
 int err_shelve_state(void **state)
 {
-    int saveerrno = get_last_sys_error();
-
-    /*
-     * Note, at present our only caller is OPENSSL_init_crypto(), indirectly
-     * via ossl_init_load_crypto_nodelete(), by which point the requested
-     * "base" initialization has already been performed, so the below call is a
-     * NOOP, that re-enters OPENSSL_init_crypto() only to quickly return.
-     *
-     * If are no other valid callers of this function, the call below can be
-     * removed, avoiding the re-entry into OPENSSL_init_crypto().  If there are
-     * potential uses that are not from inside OPENSSL_init_crypto(), then this
-     * call is needed, but some care is required to make sure that the re-entry
-     * remains a NOOP.
-     */
     if (!OPENSSL_init_crypto(OPENSSL_INIT_BASE_ONLY, NULL))
         return 0;
 
@@ -778,7 +761,6 @@ int err_shelve_state(void **state)
     if (!CRYPTO_THREAD_set_local(&err_thread_local, (ERR_STATE*)-1))
         return 0;
 
-    set_sys_error(saveerrno);
     return 1;
 }
 
