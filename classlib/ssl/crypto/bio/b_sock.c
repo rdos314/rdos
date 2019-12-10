@@ -162,12 +162,10 @@ int BIO_socket_ioctl(int fd, long type, void *arg)
 {
     int i;
 
-#ifdef __RDOS__
-    return -1;
-#else
-
-#  ifdef __DJGPP__
+#  if defined ( __DJGPP__ )
     i = ioctlsocket(fd, type, (char *)arg);
+#  elif defined(OPENSSL_SYS_RDOS)
+    i = ioctlsocket(fd, type, arg);
 #  else
 #   if defined(OPENSSL_SYS_VMS)
     /*-
@@ -198,7 +196,6 @@ int BIO_socket_ioctl(int fd, long type, void *arg)
     if (i < 0)
         SYSerr(SYS_F_IOCTLSOCKET, get_last_socket_error());
     return i;
-#endif
 }
 
 # if OPENSSL_API_COMPAT < 0x10100000L

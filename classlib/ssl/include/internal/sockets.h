@@ -154,7 +154,6 @@ struct servent *PASCAL getservbyname(const char *, const char *);
 #  define readsocket(s,b,n)           read((s),(b),(n))
 #  define writesocket(s,b,n)          write((s),(char *)(b),(n))
 # elif defined(OPENSSL_SYS_RDOS)
-#  define ioctlsocket(a,b,c)      
 #  define closesocket(s)          close(s)
 #  define readsocket(s,b,n)       read((s),(b),(n))
 #  define writesocket(s,b,n)      write((s),(b),(n))

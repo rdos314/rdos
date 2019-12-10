@@ -2684,7 +2684,7 @@
 
 #pragma aux RdosSelect = \
     CallGate_select  \
-    __parm [__edi] [__ecx] \
+    __parm [__edi] [__ecx] [__edx] \
     __value [__ecx]
 
 #pragma aux RdosGetLocalMailslot = \

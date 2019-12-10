@@ -11,7 +11,6 @@
 #include <errno.h>
 #include "bio_lcl.h"
 #include "internal/cryptlib.h"
-#include "rdos.h"
 
 #ifndef OPENSSL_NO_SOCK
 
@@ -94,18 +93,10 @@ static int sock_free(BIO *a)
 static int sock_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
-    int i;
 
     if (out != NULL) {
         clear_socket_error();
         ret = readsocket(b->num, out, outl);
-
-        for (i = 0; i < 50 && !ret; i++)
-        {
-            RdosWaitMilli(25);
-            ret = readsocket(b->num, out, outl);
-        }
-
         BIO_clear_retry_flags(b);
         if (ret <= 0) {
             if (BIO_sock_should_retry(ret))
