@@ -903,6 +903,8 @@
 #define usergate_send_com_break 0x000002C4
 #define usergate_get_can_module_restarts 0x000002C5
 
+#define usergate_select 0x000002C6
+
 
 
 #ifdef __FLAT__
@@ -1811,6 +1813,8 @@
 #define CallGate_send_com_break 0x55 0x67 0x9a 196 2 0 0 3 0 0x5d
 #define CallGate_get_can_module_restarts 0x55 0x67 0x9a 197 2 0 0 3 0 0x5d
 
+#define CallGate_select 0x55 0x67 0x9a 198 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2716,5 +2720,7 @@
 
 #define CallGate_send_com_break 0x3e 0x67 0x9a 196 2 0 0 3 0
 #define CallGate_get_can_module_restarts 0x3e 0x67 0x9a 197 2 0 0 3 0
+
+#define CallGate_select 0x3e 0x67 0x9a 198 2 0 0 3 0
 
 #endif

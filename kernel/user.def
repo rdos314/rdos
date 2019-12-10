@@ -903,4 +903,6 @@ is_auto_rts_on_nr                 = 707
 send_com_break_nr                 = 708
 get_can_module_restarts_nr        = 709
 
+select_nr                         = 710
+
 usergate_entries                 = 750

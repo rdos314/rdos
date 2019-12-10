@@ -2521,7 +2521,9 @@ connect_ipv4_socket	Endp
 ;           DESCRIPTION:   Get number of bytes available input buffer
 ;
 ;           PARAMETERS:    IN  BX                Handle
-;                          OUT ECX               Bytes in input buffer
+;
+;           RETURNS:       NC 
+;                              OUT ECX           Bytes in input buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2576,21 +2578,15 @@ rbt07  DW OFFSET read_buf_dummy
 rbt08  DW OFFSET read_buf_dummy
 rbt09  DW OFFSET read_buf_dummy
 
-get_handle_read_buf_count	Proc far
-    push ds
+GetReadBufCount	Proc near
     push eax
     push ebx
     push edx
     push esi
     push ebp
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae rhbFail
+    jae grbcFail
 ;   
     shl bx,3
     add bx,OFFSET h_arr
@@ -2598,10 +2594,10 @@ get_handle_read_buf_count	Proc far
     mov ax,ds:[bx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
-    jae rhbFail
+    jae grbcFail
 ;    
     or ax,ax
-    jz rhbFail
+    jz grbcFail
 ;
     push ds
     push bx
@@ -2623,21 +2619,35 @@ get_handle_read_buf_count	Proc far
 ;
     pop bx
     pop ds
-    jc rhbFail
+    jc grbcFail
 ;
-    jmp rhbDone
+    jmp grbcDone
 
-rhbFail:
+grbcFail:
     xor ecx,ecx
     stc
 
-rhbDone:
+grbcDone:
     pop ebp
     pop esi
     pop edx
     pop ebx
     pop eax
-    pop ds    
+    ret
+GetReadBufCount	Endp
+
+get_handle_read_buf_count	Proc far
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    call GetReadBufCount
+;
+    pop eax
+    pop ds
     retf32
 get_handle_read_buf_count	Endp
 
@@ -2649,7 +2659,9 @@ get_handle_read_buf_count	Endp
 ;           DESCRIPTION:   Get number of bytes available output buffer
 ;
 ;           PARAMETERS:    IN  BX                Handle
-;                          OUT ECX               Space in output buffer
+;
+;           RETURNS:       NC
+;                              OUT ECX           Space in output buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2697,21 +2709,15 @@ wbt07  DW OFFSET write_buf_dummy
 wbt08  DW OFFSET write_buf_dummy
 wbt09  DW OFFSET write_buf_dummy
 
-get_handle_write_buf_space	Proc far
-    push ds
+GetWriteBufSpace	Proc near
     push eax
     push ebx
     push edx
     push esi
     push ebp
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae whbFail
+    jae gwbsFail
 ;   
     shl bx,3
     add bx,OFFSET h_arr
@@ -2719,10 +2725,10 @@ get_handle_write_buf_space	Proc far
     mov ax,ds:[bx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
-    jae whbFail
+    jae gwbsFail
 ;    
     or ax,ax
-    jz whbFail
+    jz gwbsFail
 ;
     push ds
     push bx
@@ -2744,19 +2750,33 @@ get_handle_write_buf_space	Proc far
 ;
     pop bx
     pop ds
-    jc whbFail
+    jc gwbsFail
 ;
-    jmp whbDone
+    jmp gwbsDone
 
-whbFail:
+gwbsFail:
     xor ecx,ecx
     stc
 
-whbDone:
+gwbsDone:
     pop ebp
     pop esi
     pop edx
     pop ebx
+    pop eax
+    ret
+GetWriteBufSpace	Endp
+
+get_handle_write_buf_space	Proc far
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    call GetWriteBufSpace
+;    
     pop eax
     pop ds    
     retf32
@@ -2803,19 +2823,13 @@ eht07  DW OFFSET exc_dummy
 eht08  DW OFFSET exc_dummy
 eht09  DW OFFSET exc_dummy
 
-has_handle_exception	Proc far
-    push ds
+HasException	Proc near
     push eax
     push ebx
     push edx
     push esi
     push ebp
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
-;    
     cmp bx,MAX_HANDLES
     jae heFail
 ;   
@@ -2860,6 +2874,20 @@ heDone:
     pop esi
     pop edx
     pop ebx
+    pop eax
+    ret
+HasException	Endp
+
+has_handle_exception	Proc far
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    call HasException
+;
     pop eax
     pop ds    
     retf32
@@ -4280,6 +4308,27 @@ create_udp_socket    Proc far
     pop es
     retf32
 create_udp_socket    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Select
+;
+;       DESCRIPTION:    Select implementation
+;
+;       PARAMETERS:     ES:(E)DI    Read, write and exception masks
+;                       (E)CX       Mask size
+;
+;       RETURNS:        ECX         Number of available handles
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+select_name DB 'Select', 0
+
+select    Proc far
+    int 3
+    retf32
+select    Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4553,6 +4602,12 @@ init_chandle     PROC near
     mov edi,OFFSET create_udp_socket_name
     xor dx,dx
     mov ax,create_udp_socket_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET select
+    mov edi,OFFSET select_name
+    xor dx,dx
+    mov ax,select_nr
     RegisterBimodalUserGate
 ;
     popad

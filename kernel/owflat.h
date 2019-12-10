@@ -2672,6 +2672,11 @@
     parm [esi] [edi] \
     value [eax];
 
+#pragma aux RdosSelect = \
+    CallGate_select  \
+    parm [edi] [ecx] \
+    value [ecx];
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \

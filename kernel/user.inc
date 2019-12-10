@@ -2048,6 +2048,13 @@ AcceptIpv4Socket               MACRO
     UserGate accept_ipv4_socket_nr
                         ENDM
 
+; IN  ES:(E)DI          read, write and exception masks
+; IN  ECX               number of bytes in mask
+; OUT ECX               number of non-blocking handles
+SelectBase               MACRO
+    UserGate select_nr
+                        ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 ; IN   BL           Unit #
