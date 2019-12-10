@@ -904,5 +904,7 @@ send_com_break_nr                 = 708
 get_can_module_restarts_nr        = 709
 
 select_nr                         = 710
+set_handle_blocking_mode_nr       = 711
+set_handle_nonblocking_mode_nr    = 712
 
 usergate_entries                 = 750

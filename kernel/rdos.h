@@ -467,6 +467,10 @@ int RDOSAPI RdosHasHandleException(int Handle);
 int RDOSAPI RdosAddWaitForHandleRead(int WaitHandle, int Handle, void *ID);
 int RDOSAPI RdosAddWaitForHandleWrite(int WaitHandle, int Handle, void *ID);
 int RDOSAPI RdosAddWaitForHandleException(int WaitHandle, int Handle, void *ID);
+int RDOSAPI RdosSelect(void *HandleMaskArr, int MaskSize);
+int RDOSAPI RdosSetBlockingMode(int Handle);
+int RDOSAPI RdosSetNonblockingMode(int Handle);
+
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
@@ -677,7 +681,6 @@ int RDOSAPI RdosConnectIpv4Socket(int handle, long ip, short int port);
 int RDOSAPI RdosBindIpv4Socket(int handle, short int port);
 int RDOSAPI RdosListenSocket(int handle, int maxconn);
 int RDOSAPI RdosAcceptIpv4Socket(int handle, long *ip, short int *port);
-int RDOSAPI RdosSelect(void *HandleMaskArr, int MaskSize);
 
 int RDOSAPI RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
 int RDOSAPI RdosWaitForTcpConnection(int Handle, long Timeout);

@@ -1463,6 +1463,16 @@
     CallGate_add_wait_for_handle_exception  \
     __parm [__ebx] [__eax] [__ecx]
 
+#pragma aux RdosSetHandleBlockingMode = \
+    CallGate_set_handle_blocking_mode  \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosSetHandleNonblockingMode = \
+    CallGate_set_handle_nonblocking_mode  \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \

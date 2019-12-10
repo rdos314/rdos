@@ -1365,6 +1365,26 @@ AddWaitForHandleException       MACRO
         UserGate add_wait_for_handle_exception_nr
                                                 ENDM
 
+
+; IN  ES:(E)DI          read, write and exception masks
+; IN  ECX               number of bytes in mask
+; OUT ECX               number of non-blocking handles
+SelectBase               MACRO
+    UserGate select_nr
+                        ENDM
+
+; IN    BX              Handle
+SetHandleBlockingMode     MACRO
+        UserGate set_handle_blocking_mode_nr
+                                                ENDM
+
+
+; IN    BX              Handle
+SetHandleNonblockingMode     MACRO
+        UserGate set_handle_nonblocking_mode_nr
+                                                ENDM
+
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle
@@ -2046,13 +2066,6 @@ ListenSocket               MACRO
 ; OUT AX                port
 AcceptIpv4Socket               MACRO
     UserGate accept_ipv4_socket_nr
-                        ENDM
-
-; IN  ES:(E)DI          read, write and exception masks
-; IN  ECX               number of bytes in mask
-; OUT ECX               number of non-blocking handles
-SelectBase               MACRO
-    UserGate select_nr
                         ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;

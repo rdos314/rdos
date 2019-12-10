@@ -904,6 +904,8 @@
 #define usergate_get_can_module_restarts 0x000002C5
 
 #define usergate_select 0x000002C6
+#define usergate_set_handle_blocking_mode 0x000002C7
+#define usergate_set_handle_nonblocking_mode 0x000002C8
 
 
 
@@ -1814,6 +1816,8 @@
 #define CallGate_get_can_module_restarts 0x55 0x67 0x9a 197 2 0 0 3 0 0x5d
 
 #define CallGate_select 0x55 0x67 0x9a 198 2 0 0 3 0 0x5d
+#define CallGate_set_handle_blocking_mode 0x55 0x67 0x9a 199 2 0 0 3 0 0x5d
+#define CallGate_set_handle_nonblocking_mode 0x55 0x67 0x9a 200 2 0 0 3 0 0x5d
 
 #else
 
@@ -2722,5 +2726,7 @@
 #define CallGate_get_can_module_restarts 0x3e 0x67 0x9a 197 2 0 0 3 0
 
 #define CallGate_select 0x3e 0x67 0x9a 198 2 0 0 3 0
+#define CallGate_set_handle_blocking_mode 0x3e 0x67 0x9a 199 2 0 0 3 0
+#define CallGate_set_handle_nonblocking_mode 0x3e 0x67 0x9a 200 2 0 0 3 0
 
 #endif
