@@ -4312,6 +4312,400 @@ create_udp_socket    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CheckSelect
+;
+;       DESCRIPTION:    Check for active handle
+;
+;       PARAMETERS:     DS        Handle sel
+;                       ES:EDI    Read, write and exception masks
+;                       CX        Handle count
+;
+;       RETURNS:        NC        Some active handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckSelect    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edi
+    push ebp
+;
+    or cx,cx
+    jz csFail
+;
+    mov bp,cx
+    xor bx,bx
+
+csReadLoop:
+    mov ah,1
+    mov al,es:[edi]
+    cmp cx,8
+    jb csReadBit
+;
+    or al,al
+    jnz csReadBit
+;
+    add bx,8
+    sub cx,8
+    jz csWrite
+;
+    inc edi
+    jmp csReadLoop
+
+csReadBit:
+    test al,ah
+    jz csReadNext
+;
+    push ecx
+    call GetReadBufCount
+    jc csReadPopNext
+;
+    or ecx,ecx
+    stc
+    jz csReadPopNext
+;
+    clc
+
+csReadPopNext:
+    pop ecx
+    jnc csDone
+
+csReadNext:
+    inc bx
+    shl ah,1
+    sub cx,1
+    test cx,7
+    jnz csReadBit
+;
+    or cx,cx
+    jz csWrite
+;
+    inc edi
+    jmp csReadLoop
+
+csWrite:
+    mov cx,bp
+    inc edi
+    xor bx,bx
+
+csWriteLoop:
+    mov ah,1
+    mov al,es:[edi]
+    cmp cx,8
+    jb csWriteBit
+;
+    or al,al
+    jnz csWriteBit
+;
+    add bx,8
+    sub cx,8
+    jz csExc
+;
+    inc edi
+    jmp csWriteLoop
+
+csWriteBit:
+    test al,ah
+    jz csWriteNext
+;
+    push ecx
+    call GetWriteBufSpace
+    jc csWritePopNext
+;
+    or ecx,ecx
+    stc
+    jz csWritePopNext
+;
+    clc
+
+csWritePopNext:
+    pop ecx
+    jnc csDone
+
+csWriteNext:
+    inc bx
+    shl ah,1
+    sub cx,1
+    test cx,7
+    jnz csWriteBit
+;
+    or cx,cx
+    jz csExc
+;
+    inc edi
+    jmp csWriteLoop
+
+csExc:
+    mov cx,bp
+    inc edi
+    xor bx,bx
+
+csExcLoop:
+    mov ah,1
+    mov al,es:[edi]
+    cmp cx,8
+    jb csExcBit
+;
+    or al,al
+    jnz csExcBit
+;
+    add bx,8
+    sub cx,8
+    jz csFail
+;
+    inc edi
+    jmp csExcLoop
+
+csExcBit:
+    test al,ah
+    jz csExcNext
+;
+    push ecx
+    call HasException
+    jc csExcPopNext
+;
+    or ecx,ecx
+    stc
+    jz csExcPopNext
+;
+    clc
+
+csExcPopNext:
+    pop ecx
+    jnc csDone
+
+csExcNext:
+    inc bx
+    shl ah,1
+    sub cx,1
+    test cx,7
+    jnz csExcBit
+;
+    or cx,cx
+    jz csFail
+;
+    inc edi
+    jmp csExcLoop
+
+csFail:
+    stc
+
+csDone:
+    pop ebp
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+CheckSelect    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateSelect
+;
+;       DESCRIPTION:    Update select states
+;
+;       PARAMETERS:     DS        Handle sel
+;                       ES:EDI    Read, write and exception masks
+;                       CX        Handle count
+;
+;       RETURNS:        ECX       Non blocked handles
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSelect    Proc near
+    push eax
+    push ebx
+    push edx
+    push edi
+    push ebp
+;
+    xor edx,edx
+    or cx,cx
+    jz usDone
+;
+    mov bp,cx
+    xor bx,bx
+
+usReadLoop:
+    mov ah,1
+    mov al,es:[edi]
+    cmp cx,8
+    jb usReadBit
+;
+    or al,al
+    jnz usReadBit
+;
+    add bx,8
+    sub cx,8
+    jz usWrite
+;
+    inc edi
+    jmp usReadLoop
+
+usReadBit:
+    test al,ah
+    jz usReadNext
+;
+    push ecx
+    call GetReadBufCount
+    jc usReadClear
+;
+    or ecx,ecx
+    jz usReadClear
+;
+    inc edx
+    jmp usReadPopNext
+
+usReadClear:
+    mov cl,ah
+    not cl
+    and al,cl
+
+usReadPopNext:
+    pop ecx
+
+usReadNext:
+    inc bx
+    shl ah,1
+    sub cx,1
+    test cx,7
+    jnz usReadBit
+;
+    mov es:[edi],al
+    or cx,cx
+    jz usWrite
+;
+    inc edi
+    jmp usReadLoop
+
+usWrite:
+    mov cx,bp
+    inc edi
+    xor bx,bx
+
+usWriteLoop:
+    mov ah,1
+    mov al,es:[edi]
+    cmp cx,8
+    jb usWriteBit
+;
+    or al,al
+    jnz usWriteBit
+;
+    add bx,8
+    sub cx,8
+    jz usWrite
+;
+    inc edi
+    jmp usWriteLoop
+
+usWriteBit:
+    test al,ah
+    jz usWriteNext
+;
+    push ecx
+    call GetWriteBufSpace
+    jc usWriteClear
+;
+    or ecx,ecx
+    jz usWriteClear
+;
+    inc edx
+    jmp usWritePopNext
+
+usWriteClear:
+    mov cl,ah
+    not cl
+    and al,cl
+
+usWritePopNext:
+    pop ecx
+
+usWriteNext:
+    inc bx
+    shl ah,1
+    sub cx,1
+    test cx,7
+    jnz usWriteBit
+;
+    mov es:[edi],al
+    or cx,cx
+    jz usExc
+;
+    inc edi
+    jmp usWriteLoop
+
+usExc:
+    mov cx,bp
+    inc edi
+    xor bx,bx
+
+usExcLoop:
+    mov ah,1
+    mov al,es:[edi]
+    cmp cx,8
+    jb usExcBit
+;
+    or al,al
+    jnz usExcBit
+;
+    add bx,8
+    sub cx,8
+    jz usDone
+;
+    inc edi
+    jmp usExcLoop
+
+usExcBit:
+    test al,ah
+    jz usExcNext
+;
+    push ecx
+    call HasException
+    jc usExcClear
+;
+    inc edx
+    jmp usExcPopNext
+
+usExcClear:
+    mov cl,ah
+    not cl
+    and al,cl
+
+usExcPopNext:
+    pop ecx
+
+usExcNext:
+    inc bx
+    shl ah,1
+    sub cx,1
+    test cx,7
+    jnz usExcBit
+;
+    mov es:[edi],al
+    or cx,cx
+    jz usDone
+;
+    inc edi
+    jmp usExcLoop
+
+usDone:
+    mov ecx,edx
+;
+    pop ebp
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    ret
+UpdateSelect    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           Select
 ;
 ;       DESCRIPTION:    Select implementation
@@ -4325,10 +4719,50 @@ create_udp_socket    Endp
 
 select_name DB 'Select', 0
 
-select    Proc far
+select    Proc near
+    call CheckSelect
+    jnc sUpdate
+;
     int 3
-    retf32
+
+sUpdate:
+    call UpdateSelect
+    ret
 select    Endp
+
+select16    Proc far
+    push ds
+    push eax
+    push edi
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    movzx ecx,cx
+    movzx edi,di
+    call select
+;
+    pop edi
+    pop eax
+    pop ds
+    retf32
+select16    Endp
+
+select32    Proc far
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    call select
+;
+    pop eax
+    pop ds
+    retf32
+select32    Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4604,11 +5038,12 @@ init_chandle     PROC near
     mov ax,create_udp_socket_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET select
+    mov ebx,OFFSET select16
+    mov esi,OFFSET select32
     mov edi,OFFSET select_name
-    xor dx,dx
+    mov dx,virt_es_in
     mov ax,select_nr
-    RegisterBimodalUserGate
+    RegisterUserGate
 ;
     popad
     pop es
