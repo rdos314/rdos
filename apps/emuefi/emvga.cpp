@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include "dispmsg.h"
 
-char FocusKey;
 int VideoHandle;
 
 unsigned char VkToKeyTab[256] =
@@ -78,7 +77,6 @@ unsigned char VkToKeyTab[256] =
 *##########################################################################*/
 void HandleFocus()
 {
-    RdosReplyMailslot(&FocusKey, 1);
 }
 
 /*##################  HandleVideo  ###############
@@ -144,8 +142,6 @@ void main(void)
     int yres = 480;
     int linesize = 0;
     
-    FocusKey = RdosGetFocus();
-
     RdosDefineMailslot("emdisp", 0x1000);
 
     VideoHandle = RdosSetVideoMode(&BitsPerPixel, &xres, &yres, &linesize, &buf);

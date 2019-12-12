@@ -29,8 +29,6 @@
 #include <stdio.h>
 #include "dispmsg.h"
 
-char FocusKey;
-
 unsigned char VkToKeyTab[256] =
 {
         0,      0,      0,      0,      0,      0,      0,      0,   // 00
@@ -76,7 +74,6 @@ unsigned char VkToKeyTab[256] =
 *##########################################################################*/
 void HandleFocus()
 {
-    RdosReplyMailslot(&FocusKey, 1);
 }
 
 /*##################  HandleVideo  ###############
@@ -135,8 +132,6 @@ void main(void)
     char *msg = new char[0x1000];
     int size;
     struct TBaseReq *BaseReq = (struct TBaseReq *)msg;
-
-    FocusKey = RdosGetFocus();
 
     RdosDefineMailslot("emdisp", 0x1000);
 

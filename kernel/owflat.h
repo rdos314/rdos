@@ -3980,3 +3980,40 @@
     __modify [__ecx] \
     __parm [__ebx] [__esi] \
     __value [__ebx]
+
+
+#pragma aux RdosReadPhysicalByte = \
+    CallGate_read_phys_byte  \
+    __parm [__edx __ebx] \
+    __value [__al]
+
+#pragma aux RdosReadPhysicalWord = \
+    CallGate_read_phys_word  \
+    __parm [__edx __ebx] \
+    __value [__ax]
+
+#pragma aux RdosReadPhysicalDword = \
+    CallGate_read_phys_dword  \
+    __parm [__edx __ebx] \
+    __value [__eax]
+
+#pragma aux RdosReadPhysicalQword = \
+    CallGate_read_phys_qword  \
+    __parm [__edx __ebx] \
+    __value [__ecx __eax]
+
+#pragma aux RdosWritePhysicalByte = \
+    CallGate_write_phys_byte  \
+    __parm [__edx __ebx] [__al]
+
+#pragma aux RdosWritePhysicalWord = \
+    CallGate_write_phys_word  \
+    __parm [__edx __ebx] [__ax]
+
+#pragma aux RdosWritePhysicalDword = \
+    CallGate_write_phys_dword  \
+    __parm [__edx __ebx] [__eax]
+
+#pragma aux RdosWritePhysicalQword = \
+    CallGate_write_phys_qword  \
+    __parm [__edx __ebx] [__eax __eax]

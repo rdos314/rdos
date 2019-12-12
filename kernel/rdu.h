@@ -907,6 +907,15 @@
 #define usergate_set_handle_blocking_mode 0x000002C7
 #define usergate_set_handle_nonblocking_mode 0x000002C8
 
+#define usergate_read_phys_byte 0x000002C9
+#define usergate_read_phys_word 0x000002CA
+#define usergate_read_phys_dword 0x000002CB
+#define usergate_read_phys_qword 0x000002CC
+#define usergate_write_phys_byte 0x000002CD
+#define usergate_write_phys_word 0x000002CE
+#define usergate_write_phys_dword 0x000002CF
+#define usergate_write_phys_qword 0x000002D0
+
 
 
 #ifdef __FLAT__
@@ -1819,6 +1828,15 @@
 #define CallGate_set_handle_blocking_mode 0x55 0x67 0x9a 199 2 0 0 3 0 0x5d
 #define CallGate_set_handle_nonblocking_mode 0x55 0x67 0x9a 200 2 0 0 3 0 0x5d
 
+#define CallGate_read_phys_byte 0x55 0x67 0x9a 201 2 0 0 3 0 0x5d
+#define CallGate_read_phys_word 0x55 0x67 0x9a 202 2 0 0 3 0 0x5d
+#define CallGate_read_phys_dword 0x55 0x67 0x9a 203 2 0 0 3 0 0x5d
+#define CallGate_read_phys_qword 0x55 0x67 0x9a 204 2 0 0 3 0 0x5d
+#define CallGate_write_phys_byte 0x55 0x67 0x9a 205 2 0 0 3 0 0x5d
+#define CallGate_write_phys_word 0x55 0x67 0x9a 206 2 0 0 3 0 0x5d
+#define CallGate_write_phys_dword 0x55 0x67 0x9a 207 2 0 0 3 0 0x5d
+#define CallGate_write_phys_qword 0x55 0x67 0x9a 208 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2728,5 +2746,14 @@
 #define CallGate_select 0x3e 0x67 0x9a 198 2 0 0 3 0
 #define CallGate_set_handle_blocking_mode 0x3e 0x67 0x9a 199 2 0 0 3 0
 #define CallGate_set_handle_nonblocking_mode 0x3e 0x67 0x9a 200 2 0 0 3 0
+
+#define CallGate_read_phys_byte 0x3e 0x67 0x9a 201 2 0 0 3 0
+#define CallGate_read_phys_word 0x3e 0x67 0x9a 202 2 0 0 3 0
+#define CallGate_read_phys_dword 0x3e 0x67 0x9a 203 2 0 0 3 0
+#define CallGate_read_phys_qword 0x3e 0x67 0x9a 204 2 0 0 3 0
+#define CallGate_write_phys_byte 0x3e 0x67 0x9a 205 2 0 0 3 0
+#define CallGate_write_phys_word 0x3e 0x67 0x9a 206 2 0 0 3 0
+#define CallGate_write_phys_dword 0x3e 0x67 0x9a 207 2 0 0 3 0
+#define CallGate_write_phys_qword 0x3e 0x67 0x9a 208 2 0 0 3 0
 
 #endif

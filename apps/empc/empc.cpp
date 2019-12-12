@@ -61,7 +61,6 @@ TSignalDevice RemoteSignal;
 
 int VideoChange[25];
 
-char MyFocus;
 char DispFocus;
 
 /*##################  StartRemote  ###############
@@ -320,8 +319,6 @@ void main(void)
     TCpu Cpu;
     TPciIde PciIde(&Pci);
     int Key;
-
-    MyFocus = RdosGetFocus();
     
     PciIde.AddDisc(1);
 

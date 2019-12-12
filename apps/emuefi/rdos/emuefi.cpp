@@ -151,12 +151,9 @@ int StartRemote()
     int Handle;
     char env[2] = {0, 0};
 
-    Handle = RdosSpawn("emrem.exe", "", StartupDir.Get().GetData(), 0, 0, &ThreadId);
+    Handle = RdosSpawn("emrem.exe", "", StartupDir.Get().GetData(), 0, &ThreadId);
     if (Handle)
-    {
-        RdosFreeProcessHandle(Handle);
         return TRUE;
-    }
     return FALSE;
 }
 
@@ -457,8 +454,6 @@ void Start()
     int count;
 
     int Key;
-
-    MyFocus = RdosGetFocus();
 
     RdosCreateThread(RemoteThread, "empc remote", 0, 0x4000);
 

@@ -907,4 +907,13 @@ select_nr                         = 710
 set_handle_blocking_mode_nr       = 711
 set_handle_nonblocking_mode_nr    = 712
 
+read_phys_byte_nr                 = 713
+read_phys_word_nr                 = 714
+read_phys_dword_nr                = 715
+read_phys_qword_nr                = 716
+write_phys_byte_nr                = 717
+write_phys_word_nr                = 718
+write_phys_dword_nr               = 719
+write_phys_qword_nr               = 720
+
 usergate_entries                 = 750

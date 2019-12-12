@@ -966,6 +966,15 @@ int RDOSAPI RdosCreateRandomBigNum(int bits);
 int RDOSAPI RdosCreateRandomOddBigNum(int bits);
 int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 
+char RDOSAPI RdosReadPhysicalByte(unsigned long long Address);
+short int RDOSAPI RdosReadPhysicalWord(unsigned long long Address);
+long RDOSAPI RdosReadPhysicalDword(unsigned long long Address);
+long long RDOSAPI RdosReadPhysicalQword(unsigned long long Address);
+void RDOSAPI RdosWritePhysicalByte(unsigned long long Address, char Value);
+void RDOSAPI RdosWritePhysicalWord(unsigned long long Address, short int Value);
+void RDOSAPI RdosWritePhysicalDword(unsigned long long Address, long Value);
+void RDOSAPI RdosWritePhysicalQword(unsigned long long Address, long long Value);
+
 #ifdef __cplusplus
 }
 #endif
