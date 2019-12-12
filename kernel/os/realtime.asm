@@ -49,6 +49,18 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           StartRealtime
+;
+;           DESCRIPTION:    Realtime core boot-up code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_realtime:
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           MapPhysical
 ;
 ;           DESCRIPTION:    Map physical address
@@ -320,8 +332,11 @@ emulate_realtime     PROC far
     push es
     pushad
 ;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET start_realtime
     mov al,7
-    StartupRealtimeCore
+    BootRealtimeCore
 ;
     popad
     pop es

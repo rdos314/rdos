@@ -329,6 +329,40 @@ prot_start:
     dw SEG code
 
 prot_end:
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           RtMode
+;
+;               DESCRIPTION:    Unpaged, protected mode AP processor init
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code is loaded at 01400. It should contain no near jumps!
+    
+rt_start:
+    mov ax,20h
+    mov es,ax
+;    
+    mov eax,es:ap_cr4
+    mov cr4,eax
+;
+    mov eax,es:ap_cr3
+    mov cr3,eax
+;    
+    db 66h
+    lgdt fword ptr es:ap_gdt
+;    
+    db 66h
+    lidt fword ptr es:ap_idt
+;    
+    mov eax,es:ap_cr0
+    mov cr0,eax
+;
+    jmp fword ptr es:ap_stack_offset
+
+rt_end:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3134,19 +3168,98 @@ sdcDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           StartupRealtimeCore
+;               NAME:           BootRealtimeCore
 ;
-;               DESCRIPTION:    Startup realtime core
+;               DESCRIPTION:    Boot realtime core
 ;
 ;               PARAMETERS:     AL	Apic ID
+;                               ES:EDI  Realtime startup proc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-startup_realtime_core_name	DB 'Startup Realtime Core', 0
+boot_realtime_core_name	DB 'Boot Realtime Core', 0
 
-startup_realtime_core    Proc far
+boot_realtime_core    Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,es
+    mov fs,ax
+    mov ebp,edi
+;
+    xor edx,edx
+    GetPageEntry
+    push eax
+    push ebx
+;    
+    mov eax,63h
+    SetPageEntry
+;    
+    mov edx,1000h
+    GetPageEntry
+    push eax
+    push ebx
+;    
+    mov eax,1063h
+    SetPageEntry
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov edi,0F80h
+    mov esi,OFFSET table_start
+    mov ecx,OFFSET table_end - OFFSET table_start
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    mov edi,1000h
+    mov esi,OFFSET real_start
+    mov ecx,OFFSET real_end - OFFSET real_start
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    mov edi,1400h
+    mov esi,OFFSET rt_start
+    mov ecx,OFFSET rt_end - OFFSET rt_start
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov edi,1800h
+    mov eax,cr0
+    mov es:[edi].ap_cr0,eax
+    mov eax,cr3
+    mov es:[edi].ap_cr3,eax
+;
+    mov eax,cr4
+    mov es:[edi].ap_cr4,eax
+;
+    db 66h
+    sidt fword ptr es:[edi].ap_idt
+;
+    db 66h
+    sgdt fword ptr es:[edi].ap_gdt
+;
+    mov es:[edi].ap_stack_offset,ebp
+    mov es:[edi].ap_stack_sel,fs
+;
+    pop ebx
+    pop eax
+    mov edx,1000h
+;    SetPageEntry
+;
+    pop ebx
+    pop eax
+    xor edx,edx
+;    SetPageEntry
+;
+    popad
+    pop fs
+    pop es
+    pop ds
     retf32
-startup_realtime_core   Endp
+boot_realtime_core   Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3616,10 +3729,10 @@ init    PROC far
     mov ax,shutdown_core_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET startup_realtime_core
-    mov edi,OFFSET startup_realtime_core_name
+    mov esi,OFFSET boot_realtime_core
+    mov edi,OFFSET boot_realtime_core_name
     xor cl,cl
-    mov ax,startup_realtime_core_nr
+    mov ax,boot_realtime_core_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int

@@ -1087,8 +1087,9 @@ ShutdownCore    MACRO
                     ENDM
 
 ;   IN  AL	Apic ID
-StartupRealtimeCore    MACRO
-    OsGate startup_realtime_core_nr
+;   IN  ES:EDI  Boot startup code
+BootRealtimeCore    MACRO
+    OsGate boot_realtime_core_nr
                     ENDM
 
 EnterC3    MACRO
