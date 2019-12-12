@@ -1086,6 +1086,11 @@ ShutdownCore    MACRO
     OsGate shutdown_core_nr
                     ENDM
 
+;   IN  AL	Apic ID
+StartupRealtimeCore    MACRO
+    OsGate startup_realtime_core_nr
+                    ENDM
+
 EnterC3    MACRO
     OsGate enter_c3_nr
                     ENDM

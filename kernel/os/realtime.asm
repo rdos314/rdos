@@ -307,6 +307,31 @@ write_phys_qword     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           EmulateRealtime
+;
+;           DESCRIPTION:    Emulate realtime load
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+emulate_realtime_name    DB 'Emulate Realtime',0
+
+emulate_realtime     PROC far
+    push ds
+    push es
+    pushad
+;
+    mov al,7
+    StartupRealtimeCore
+;
+    popad
+    pop es
+    pop ds
+    ret
+emulate_realtime     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    Init module
@@ -376,6 +401,12 @@ init    PROC far
     mov edi,OFFSET write_phys_qword_name
     xor dx,dx
     mov ax,write_phys_qword_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET emulate_realtime
+    mov edi,OFFSET emulate_realtime_name
+    xor dx,dx
+    mov ax,emulate_realtime_nr
     RegisterBimodalUserGate
     ret
 init    ENDP

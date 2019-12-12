@@ -831,4 +831,6 @@ read_usb_descriptors_nr     = 726
 get_usb_hub_descriptor_nr   = 727
 config_usb_hub_nr           = 728
 
+startup_realtime_core_nr    = 729
+
 osgate_entries              = 750

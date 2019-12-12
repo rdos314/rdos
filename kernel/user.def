@@ -915,5 +915,6 @@ write_phys_byte_nr                = 717
 write_phys_word_nr                = 718
 write_phys_dword_nr               = 719
 write_phys_qword_nr               = 720
+emulate_realtime_nr               = 721
 
 usergate_entries                 = 750

@@ -154,7 +154,12 @@ void main(void)
     Cpu.OnWriteMemoryDword = WriteMemoryDword;
     Cpu.OnWriteMemoryQword = WriteMemoryQword;
     Cpu.Reset();
-    
+    Cpu.CpuState.Reg_cs.base = 0x1000;
+    Cpu.CpuState.Reg_cs.selector = 0x100;
+    Cpu.CpuState.Reg_eip = 0;
+   
+    RdosEmulateRealtime();
+ 
     while (1)
     {
         Cpu.Show();

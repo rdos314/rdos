@@ -3130,6 +3130,23 @@ sdcCombined:
 
 sdcDone:
     RunApCore
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           StartupRealtimeCore
+;
+;               DESCRIPTION:    Startup realtime core
+;
+;               PARAMETERS:     AL	Apic ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+startup_realtime_core_name	DB 'Startup Realtime Core', 0
+
+startup_realtime_core    Proc far
+    retf32
+startup_realtime_core   Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3597,6 +3614,12 @@ init    PROC far
     mov edi,OFFSET shutdown_core_name
     xor cl,cl
     mov ax,shutdown_core_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET startup_realtime_core
+    mov edi,OFFSET startup_realtime_core_name
+    xor cl,cl
+    mov ax,startup_realtime_core_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int

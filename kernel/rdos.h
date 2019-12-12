@@ -974,6 +974,7 @@ void RDOSAPI RdosWritePhysicalByte(unsigned long long Address, char Value);
 void RDOSAPI RdosWritePhysicalWord(unsigned long long Address, short int Value);
 void RDOSAPI RdosWritePhysicalDword(unsigned long long Address, long Value);
 void RDOSAPI RdosWritePhysicalQword(unsigned long long Address, long long Value);
+void RDOSAPI RdosEmulateRealtime();
 
 #ifdef __cplusplus
 }
