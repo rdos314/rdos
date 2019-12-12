@@ -46,6 +46,7 @@ ipause   MACRO
 
 IRQ_TYPE_ISA    = 5Ch
 IRQ_TYPE_PCI    = 9Ah
+IA32_EFER       = 0C0000080h
 
 ; PCI IRQs active low, edge triggered
 
@@ -347,6 +348,11 @@ rt_start:
 ;    
     mov eax,es:ap_cr4
     mov cr4,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    or eax,101h
+    wrmsr
 ;
     mov eax,es:ap_cr3
     mov cr3,eax
