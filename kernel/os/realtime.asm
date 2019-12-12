@@ -42,6 +42,9 @@ data    SEGMENT byte public 'DATA'
 map_sel	        DW ?
 map_linear	DD ?
 
+uni_linear      DD ?
+uni_phys        DD ?
+
 data    ENDS
 
 code    SEGMENT byte public use32 'CODE'
@@ -319,6 +322,78 @@ write_phys_qword     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SetupUniPml4
+;
+;           DESCRIPTION:    Setup plm4 entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupUniPml4     PROC near
+    GetHighestPhysical
+    ret
+SetupUniPml4	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateUniMap
+;
+;           DESCRIPTION:    Create uni mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateUniMap     PROC near
+    push ds
+    push edx
+;
+    mov edx,SEG data
+    mov ds,edx
+;
+    mov edx,ds:uni_linear
+    or edx,edx
+    jnz cuDone
+;
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:uni_linear,edx
+;
+    AllocatePhysical32
+    mov ds:uni_phys,eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;    
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+;
+    call SetupUniPml4
+
+cuDone:
+    pop edx
+    pop ds
+    ret
+CreateUniMap     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           EmulateRealtime
 ;
 ;           DESCRIPTION:    Emulate realtime load
@@ -331,6 +406,8 @@ emulate_realtime     PROC far
     push ds
     push es
     pushad
+;
+    call CreateUniMap
 ;
     mov eax,cs
     mov es,eax
@@ -356,6 +433,7 @@ emulate_realtime     Endp
 init    PROC far
     mov eax,SEG data
     mov ds,eax
+    mov ds:uni_linear,0
 ;
     mov eax,1000h
     AllocateBigLinear

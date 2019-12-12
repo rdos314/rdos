@@ -991,6 +991,11 @@ FreePhysical    MACRO
     OsGate free_physical_nr
                     ENDM
 
+; OUT EBX:EAX       Highest physical address
+GetHighestPhysical    MACRO
+    OsGate get_highest_physical_nr
+                    ENDM
+
 
 ;       ES:EDI      Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)

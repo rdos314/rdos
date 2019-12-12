@@ -1429,6 +1429,35 @@ gfpLoop:
     pop ds
     retf32
 get_free_physical_mem   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHighestPhysical
+;
+;           DESCRIPTION:    Get highest physical address
+;
+;           RETURNS:        EBX:EAX         Highest physical address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_highest_physical_name  DB 'Get Highest Physical Memory',0
+
+get_highest_physical   PROC far
+    push ds
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;    
+    movzx ebx,ds:phys_bitmap_count
+    inc ebx
+    mov eax,ebx
+    shl eax,27
+    shr ebx,5
+;
+    pop ds
+    retf32
+get_highest_physical	ENDP
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1907,6 +1936,12 @@ init_physical_gates     PROC near
     mov edi,OFFSET allocate_multiple_physical32_name
     xor cl,cl
     mov ax,allocate_multiple_physical64_nr
+    RegisterOsGate
+;       
+    mov esi,OFFSET get_highest_physical
+    mov edi,OFFSET get_highest_physical_name
+    xor cl,cl
+    mov ax,get_highest_physical_nr
     RegisterOsGate
 ;    
     pop ds
