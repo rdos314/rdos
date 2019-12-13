@@ -86,7 +86,7 @@ MapPhysical     PROC near
     and ax,0F000h
 ;   
     mov edx,ds:map_linear 
-    mov al,13h
+    mov al,3
     SetPageEntry
 ;
     mov ds,ds:map_sel
@@ -322,6 +322,163 @@ write_phys_qword     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SetupUniDir
+;
+;           DESCRIPTION:    Setup ptr entries
+;
+;           PARAMETERS:     ES:EDI	Ptr entry data
+;                           ESI         Ptr entry #
+;                           EBX:EAX     Max address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupUniDir     PROC near
+    pushad
+;
+    push eax
+    push ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,es:[edi]
+    mov ebx,es:[edi+4]
+    mov al,3
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+;
+    mov ebp,esi
+    shr ebp,2
+    shl esi,30
+    or si,83h
+;
+    mov edi,edx
+    mov ecx,200h
+
+sudLoop:
+    mov es:[edi],esi
+    mov es:[edi+4],ebp
+;
+    add edi,8
+    add esi,200000h
+    sub eax,200000h
+    sbb ebx,0
+    jc sudPad
+;
+    loop sudLoop
+    jmp sudFree
+
+sudPad:
+    sub ecx,1
+    jz sudFree
+;
+    xor eax,eax
+
+sudPadLoop:
+    mov es:[edi],eax
+    mov es:[edi+4],eax
+;
+    add edi,8
+    loop sudPadLoop
+
+sudFree:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    ret
+SetupUniDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetupUniPtr
+;
+;           DESCRIPTION:    Setup ptr entries
+;
+;           PARAMETERS:     ES:EDI	PML4 entry data
+;                           ESI         PML4 entry #
+;                           EBX:EAX     Max address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupUniPtr     PROC near
+    pushad
+;
+    push eax
+    push ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,es:[edi]
+    mov ebx,es:[edi+4]
+    mov al,3
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+;
+    shl esi,9
+    mov edi,edx
+    mov ecx,200h
+
+supLoop:
+    push ebx
+    push eax
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    pop eax
+    pop ebx
+    call SetupUniDir
+;
+    inc esi
+    add edi,8
+    sub eax,40000000h
+    sbb ebx,0
+    jc supPad
+;
+    loop supLoop
+    jmp supFree
+
+supPad:
+    sub ecx,1
+    jz supFree
+;
+    xor eax,eax
+
+supPadLoop:
+    mov es:[edi],eax
+    mov es:[edi+4],eax
+;
+    add edi,8
+    loop supPadLoop
+
+supFree:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    ret
+SetupUniPtr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetupUniPml4
 ;
 ;           DESCRIPTION:    Setup plm4 entries
@@ -329,7 +486,50 @@ write_phys_qword     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupUniPml4     PROC near
+    pushad
+;
     GetHighestPhysical
+;
+    xor esi,esi
+    mov edi,ds:uni_linear
+    mov ecx,200h
+
+sup4Loop:
+    push ebx
+    push eax
+;    
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    pop eax
+    pop ebx
+    call SetupUniPtr
+;
+    inc esi
+    add edi,8
+    sub ebx,80h
+    jc sup4Pad
+;
+    loop sup4Loop
+    jmp sup4Done
+
+sup4Pad:
+    sub ecx,1
+    jz sup4Done
+;
+    xor eax,eax
+
+sup4PadLoop:
+    mov es:[edi],eax
+    mov es:[edi+4],eax
+;
+    add edi,8
+    loop sup4PadLoop
+
+sup4Done:    
+    popad
     ret
 SetupUniPml4	Endp
 
@@ -339,6 +539,8 @@ SetupUniPml4	Endp
 ;           NAME:           CreateUniMap
 ;
 ;           DESCRIPTION:    Create uni mapping
+;
+;           RETURNS:        EBX		CR3
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -369,23 +571,21 @@ CreateUniMap     PROC near
     AllocatePhysical32
     mov ds:uni_phys,eax
 ;
-    mov al,13h
+    mov al,3
     SetPageEntry
-;
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
 ;    
+    call SetupUniPml4
+;
     pop edi
     pop ecx
     pop ebx
     pop eax
     pop es
 ;
-    call SetupUniPml4
 
 cuDone:
+    mov ebx,ds:uni_phys
+;
     pop edx
     pop ds
     ret

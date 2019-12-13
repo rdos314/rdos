@@ -3179,6 +3179,7 @@ sdcDone:
 ;               DESCRIPTION:    Boot realtime core
 ;
 ;               PARAMETERS:     AL	Apic ID
+;                               EBX     CR3
 ;                               ES:EDI  Realtime startup proc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3191,9 +3192,7 @@ boot_realtime_core    Proc far
     push fs
     pushad
 ;
-    mov ax,es
-    mov fs,ax
-    mov ebp,edi
+    mov esi,ebx
 ;
     xor edx,edx
     GetPageEntry
@@ -3211,8 +3210,32 @@ boot_realtime_core    Proc far
     mov eax,1063h
     SetPageEntry
 ;
+    mov ax,es
+    mov fs,ax
+    mov ebp,edi
+;
+    mov ax,SEG data
+    mov ds,ax
+;
     mov ax,flat_sel
     mov es,ax
+;    
+    mov edi,1800h
+    mov eax,cr0
+    mov es:[edi].ap_cr0,eax
+    mov es:[edi].ap_cr3,esi
+;
+    mov eax,cr4
+    mov es:[edi].ap_cr4,eax
+;
+    db 66h
+    sidt fword ptr es:[edi].ap_idt
+;
+    db 66h
+    sgdt fword ptr es:[edi].ap_gdt
+;
+    mov es:[edi].ap_stack_offset,ebp
+    mov es:[edi].ap_stack_sel,fs
 ;
     mov edi,0F80h
     mov esi,OFFSET table_start
@@ -3228,27 +3251,6 @@ boot_realtime_core    Proc far
     mov esi,OFFSET rt_start
     mov ecx,OFFSET rt_end - OFFSET rt_start
     rep movs byte ptr es:[edi],cs:[esi]
-;
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov edi,1800h
-    mov eax,cr0
-    mov es:[edi].ap_cr0,eax
-    mov eax,cr3
-    mov es:[edi].ap_cr3,eax
-;
-    mov eax,cr4
-    mov es:[edi].ap_cr4,eax
-;
-    db 66h
-    sidt fword ptr es:[edi].ap_idt
-;
-    db 66h
-    sgdt fword ptr es:[edi].ap_gdt
-;
-    mov es:[edi].ap_stack_offset,ebp
-    mov es:[edi].ap_stack_sel,fs
 ;
     pop ebx
     pop eax
