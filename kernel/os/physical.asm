@@ -1450,7 +1450,6 @@ get_highest_physical   PROC far
     mov ds,ax
 ;    
     movzx ebx,ds:phys_bitmap_count
-    inc ebx
     mov eax,ebx
     shl eax,27
     shr ebx,5
