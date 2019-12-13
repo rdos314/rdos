@@ -1269,6 +1269,26 @@ LinearToPhysicalDirOk64:
         pop esi
 
 LinearToPhysicalDirAccessed64:
+        mov ch,byte ptr [esi].t_address
+        test ch,80h
+        jz LinearToPhysicalGetPage
+;
+        pop ecx
+;
+        mov edx,[esi].t_tag
+        and dx,0F000h
+        mov [esi].t_tag,edx
+	and edx,03FFFFFFFh
+;       
+        mov eax,[esi].t_address
+        and ax,0F000h
+        or eax,edx
+        or al,cl
+        mov [esi].t_address,eax
+        mov edx,[esi].t_address+4
+	jmp LinearToPhysicalDone64
+	
+LinearToPhysicalGetPage:
         mov ebx,[esi].t_tag
         shr ebx,9
         and ebx,0FF8h
@@ -1675,6 +1695,27 @@ CondLinearToPhysicalDirOk64:
         pop esi
 
 CondLinearToPhysicalDirAccessed64:
+        mov ch,byte ptr [esi].t_address
+        test ch,80h
+        jz CondLinearToPhysicalGetPage
+;
+        pop ecx
+;
+        mov edx,[esi].t_tag
+        and dx,0F000h
+        mov [esi].t_tag,edx
+	and edx,03FFFFFFFh
+;       
+        mov eax,[esi].t_address
+        and ax,0F000h
+        or eax,edx
+        or al,cl
+        mov [esi].t_address,eax
+        mov edx,[esi].t_address+4
+        clc
+	jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalGetPage:
         mov ebx,[esi].t_tag
         shr ebx,9
         and ebx,0FF8h

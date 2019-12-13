@@ -347,6 +347,7 @@ rt_start:
     mov es,ax
 ;    
     mov eax,es:ap_cr4
+    or al,20h
     mov cr4,eax
 ;
     mov ecx,IA32_EFER
