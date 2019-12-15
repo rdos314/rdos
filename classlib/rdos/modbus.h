@@ -100,7 +100,7 @@ public:
     int IsUsed(int Address);
     TSerialDevice *GetSerial();
 
-protected:    
+protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
     int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
 

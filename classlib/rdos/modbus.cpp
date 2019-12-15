@@ -128,7 +128,7 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
         memcpy(&msg[2], buf, size);
         ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
     }
-    
+
     if (ok)
         return datalen;
     else
@@ -152,7 +152,7 @@ int TModbus::ReadCoilStatus(int Coil)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Coil > 0)
     {
         temp = (short int)(Coil - 1);
@@ -191,7 +191,7 @@ int TModbus::ReadInputStatus(int Input)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Input > 10000)
     {
         temp = (short int)(Input - 10001);
@@ -232,7 +232,7 @@ int TModbus::ReadHoldingRegister(int Reg)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
@@ -275,7 +275,7 @@ int TModbus::ReadInputRegister(int Reg)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Reg > 30000)
     {
         temp = (short int)(Reg - 30001);
@@ -318,7 +318,7 @@ int TModbus::ReadCoilStatus(int Coil, int *Val)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Coil > 0)
     {
         temp = (short int)(Coil - 1);
@@ -362,7 +362,7 @@ int TModbus::ReadInputStatus(int Input, int *Val)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Input > 10000)
     {
         temp = (short int)(Input - 10001);
@@ -404,7 +404,7 @@ int TModbus::ReadHoldingRegister(int Reg, int *Val)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
@@ -448,7 +448,7 @@ int TModbus::ReadInputRegister(int Reg, int *Val)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Reg > 30000)
     {
         temp = (short int)(Reg - 30001);
@@ -492,7 +492,7 @@ int TModbus::PresetRegister(int Reg, int Val)
     short int temp;
     char msg[4];
     char reply[100];
- 
+
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
@@ -532,7 +532,7 @@ int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
     int itemp;
     char msg[4];
     char reply[100];
- 
+
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
@@ -577,7 +577,7 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
     int itemp;
     char msg[9];
     char reply[100];
- 
+
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
@@ -624,7 +624,7 @@ int TModbus::ReqHoldingRegisters(int Reg, int Count)
     char msg[256];
     int datalen;
     int ok = FALSE;
- 
+
     if (Reg > 40000)
     {
         msg[0] = FAddress;
@@ -730,7 +730,7 @@ int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
         if (ok)
         {
             FDevice->CalcCrc(Buf, replylen - 2, crc);
-  
+
             if (Buf[replylen - 2] != crc[0])
                 ok = FALSE;
 
@@ -859,7 +859,7 @@ void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
 {
     int i;
     short int temp;
- 
+
     if (Reg > 40000)
     {
         FStartReg = Reg;
@@ -1105,7 +1105,7 @@ void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
         for (i = 8; i != 0; i--)
         {
             if ((lcrc & 0x0001) != 0)
-            { 
+            {
                 lcrc >>= 1;
                 lcrc ^= 0xA001;
             }
@@ -1238,7 +1238,7 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
             if (ok)
             {
                 CalcCrc(reply, *replylen - 2, crc);
-  
+
                 if (reply[*replylen - 2] != crc[0])
                     ok = FALSE;
 

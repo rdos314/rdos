@@ -52,6 +52,7 @@
 #include "linyaxis.h"
 #include "png.h"
 #include "ddns.h"
+#include "ech200.h"
 
 int GetWebConnectionCount();
 
@@ -100,7 +101,7 @@ int WdTimeout;
  *   Created....: 96-10-02 le                                                #
  *##########################################################################*/
 void WatchdogThread(void *ptr)
-{    
+{
     TRdosLog Log("");
 
     bool kick;
@@ -386,7 +387,7 @@ static void CreateDayFile(int year, int month, int day)
         delete DayFile;
 
     DayFile = new TFile(filename);
-    
+
     if (!DayFile->IsOpen())
     {
         delete DayFile;
@@ -442,7 +443,7 @@ static TFile *CreateMonthFile(int year, int month)
     strcat(filename, str);
 
     File = new TFile(filename);
-    
+
     if (!File->IsOpen())
     {
         delete File;
@@ -640,7 +641,7 @@ void TimeThread(void *Param)
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
-    
+
     ValueFactory.SetSpace(4, 4);
     ValueFactory.SetFont(30);
     ValueFactory.SetBackColor(100, 100, 100);
@@ -730,14 +731,14 @@ void TimeThread(void *Param)
         RdosGetTime(&msb, &lsb);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
         RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
-    
+
         sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d",
                         year, month, day,
                         hour, min, sec);
         Label->SetText(str);
 
         RdosWaitMilli(200);
-    }  
+    }
 }
 
 /*##################  PerfThread  ##############################################
@@ -748,7 +749,7 @@ void TimeThread(void *Param)
  *   Created....: 96-10-02 le                                                #
  *##########################################################################*/
 void PerfThread(void *ptr)
-{    
+{
     int width, height;
     int i;
     int Cores;
@@ -823,7 +824,7 @@ void PerfThread(void *ptr)
         if (Count == MAX_SAMPLES)
             FreqChart->Remove(0);
 
-        FreqChart->Add(0, XVal, YVal);                    
+        FreqChart->Add(0, XVal, YVal);
         FreqChart->Draw();
 
         for (i = 0; i < Cores; i++)
@@ -839,9 +840,9 @@ void PerfThread(void *ptr)
                 if (Count == MAX_SAMPLES)
                     PerfChart[i]->Remove(0);
 
-                PerfChart[i]->Add(0, XVal, YVal);                    
+                PerfChart[i]->Add(0, XVal, YVal);
                 PerfChart[i]->Draw();
-            }            
+            }
         }
         if (Count < MAX_SAMPLES)
             Count++;
@@ -924,7 +925,12 @@ int main()
     TTableControl *WeatherTable;
     TTableControl *SolarTable;
     TTableControl *WindTable;
-    
+    TTableControl *EchTable;
+
+    TSerialDevice serial(1, 9600, 'E', 8, 1);
+    TModbusDevice moddev(&serial);
+    TEch200 Ech(&moddev, 1);
+
     RdosCreateThread(WatchdogThread, "Watdog", 0, 0x2000);
 
     RdosWaitMilli(2500);
@@ -954,14 +960,14 @@ int main()
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
 
-    RadControl = new TRadControl(control, 5, 640, 1150, 35 * 8);
+    RadControl = new TRadControl(control, 5, 700, 1150, 35 * 8);
 
     index = 0;
-    
+
     for (i = 0; i < 8; i++)
     {
         str[0] = 0;
-        
+
         switch (i)
         {
             case 0:
@@ -1036,19 +1042,19 @@ int main()
     CommentLabelFactory.SetBackTransparent();
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
-    
+
     AltLabelFactory.SetSpace(4, 4);
     AltLabelFactory.SetFont(35);
     AltLabelFactory.SetBackColor(100, 100, 100);
     AltLabelFactory.SetDrawColor(0, 0, 0);
     AltLabelFactory.AlignRight();
-    
+
     AziLabelFactory.SetSpace(4, 4);
     AziLabelFactory.SetFont(35);
     AziLabelFactory.SetBackColor(100, 100, 100);
     AziLabelFactory.SetDrawColor(0, 0, 0);
     AziLabelFactory.AlignRight();
-    
+
     PhLabelFactory.SetSpace(4, 4);
     PhLabelFactory.SetFont(35);
     PhLabelFactory.SetBackColor(100, 100, 100);
@@ -1087,7 +1093,7 @@ int main()
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
-    
+
     ValueFactory.SetSpace(4, 4);
     ValueFactory.SetFont(35);
     ValueFactory.SetBackColor(100, 100, 100);
@@ -1132,27 +1138,7 @@ int main()
 
     WeatherTable->Show();
 
-    SolarTable = new TTableControl(control, 550, 350, 500, 150);
-    SolarTable->SetBackColor(0, 20, 50);
-    SolarTable->SetRowSpacing(10);
-    SolarTable->SetColSpacing(16);
-    SolarTable->SetSpacingColor(0, 20, 50);
-    SolarTable->AddLabelColumn(&CommentFactory, 175);
-    SolarTable->AddLabelColumn(&ValueFactory, 175);
-    SolarTable->AddLabelColumn(&UnitFactory, 100);
-
-    SolarTable->AddRow(35, 55);
-    SolarTable->AddRow(35, 55);
-
-    SolarTable->SetText(0, 0, "Effekt");
-    SolarTable->SetText(0, 2, "W");
-
-    SolarTable->SetText(1, 0, "Idag");
-    SolarTable->SetText(1, 2, "kWh");
-
-    SolarTable->Show();
-
-    WindTable = new TTableControl(control, 550, 5, 500, 300);
+    WindTable = new TTableControl(control, 550, 5, 500, 270);
     WindTable->SetBackColor(0, 20, 50);
     WindTable->SetRowSpacing(10);
     WindTable->SetColSpacing(16);
@@ -1185,8 +1171,59 @@ int main()
 
     WindTable->SetText(5, 0, "Day");
     WindTable->SetText(5, 2, "kWh");
-
     WindTable->Show();
+
+    SolarTable = new TTableControl(control, 550, 300, 500, 100);
+    SolarTable->SetBackColor(0, 20, 50);
+    SolarTable->SetRowSpacing(10);
+    SolarTable->SetColSpacing(16);
+    SolarTable->SetSpacingColor(0, 20, 50);
+    SolarTable->AddLabelColumn(&CommentFactory, 175);
+    SolarTable->AddLabelColumn(&ValueFactory, 175);
+    SolarTable->AddLabelColumn(&UnitFactory, 100);
+
+    SolarTable->AddRow(35, 55);
+    SolarTable->AddRow(35, 55);
+
+    SolarTable->SetText(0, 0, "Effekt");
+    SolarTable->SetText(0, 2, "W");
+
+    SolarTable->SetText(1, 0, "Idag");
+    SolarTable->SetText(1, 2, "kWh");
+
+    SolarTable->Show();
+
+    EchTable = new TTableControl(control, 550, 400, 500, 275);
+    EchTable->SetBackColor(0, 20, 50);
+    EchTable->SetRowSpacing(10);
+    EchTable->SetColSpacing(16);
+    EchTable->SetSpacingColor(0, 20, 50);
+    EchTable->AddLabelColumn(&CommentFactory, 175);
+    EchTable->AddLabelColumn(&ValueFactory, 175);
+    EchTable->AddLabelColumn(&UnitFactory, 100);
+
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+
+    EchTable->SetText(0, 0, "Heat in");
+    EchTable->SetText(0, 2, "°C");
+
+    EchTable->SetText(1, 0, "Heat out");
+    EchTable->SetText(1, 2, "°C");
+
+    EchTable->SetText(2, 0, "Cold in");
+    EchTable->SetText(2, 2, "°C");
+
+    EchTable->SetText(3, 0, "Auto larm");
+    EchTable->SetText(3, 2, "");
+
+    EchTable->SetText(4, 0, "Manual larm");
+    EchTable->SetText(4, 2, "");
+
+    EchTable->Show();
 
     UnlockGUI();
 
@@ -1200,7 +1237,7 @@ int main()
     for (;;)
     {
         CurrTime = new TDateTime;
-            
+
         solar.SetTime(currtime, 1);
         solar.GetSunPosition(&altitude, &azimuth);
 
@@ -1341,13 +1378,36 @@ int main()
             WindTable->SetText(5, 1, str);
         }
 
+        if (Ech.IsOn())
+        {
+            ival = Ech.GetHeatInlet();
+            sprintf(str, "%d.%01d", ival / 10, ival % 10);
+            EchTable->SetText(0, 1, str);
+
+            ival = Ech.GetHeatOutlet();
+            sprintf(str, "%d.%01d", ival / 10, ival % 10);
+            EchTable->SetText(1, 1, str);
+
+            ival = Ech.GetColdInlet();
+            sprintf(str, "%d.%01d", ival / 10, ival % 10);
+            EchTable->SetText(2, 1, str);
+        }
+
+        ival = Ech.GetAutoAlarms();
+        sprintf(str, "%06hX", ival);
+        EchTable->SetText(3, 1, str);
+
+        ival = Ech.GetManualAlarms();
+        sprintf(str, "%06hX", ival);
+        EchTable->SetText(4, 1, str);
+
         if (w->IsOnline())
         {
             bool valid = false;
             double temp;
 
             val = w->GetTemperature();
-            if (val < 100.0 && val > -100.0)  
+            if (val < 100.0 && val > -100.0)
             {
                 sprintf(str, "%5.1Lf", val);
                 ambient = (int)(10.0 * val);
@@ -1363,7 +1423,7 @@ int main()
             if (val < 100.0 && val >= 0.0)
             {
                 sprintf(str, "%5.1Lf", val);
-                
+
                 if (valid)
                     temp = CalcWindChill(temp, val);
             }
@@ -1421,7 +1481,7 @@ int main()
             }
 
             currtime = TDateTime();
-            
+
             solar.SetTime(currtime, 1);
             solar.GetSunPosition(&altitude, &azimuth);
 
