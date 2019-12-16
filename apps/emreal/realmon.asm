@@ -31,21 +31,164 @@ include \rdos\kernel\os\realtime.def
 
 Code64 segment byte public use64 'code64'
 
-    org realtime_mon_base
+boot:
+    jmp init
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           LocalWriteChar
+;   NAME:           SetupIntGate
 ;
-;   DESCRIPTION:    Write a char to screen
+;   DESCRIPTION:    Setup int gate
 ;
-;   PARAMETERS:     DL          Char
-;                   DH          Attrib
-;                   AL          Row
-;                   AH          Col
-;                   R8          Screen base
+;   PARAMETERS:     RAX     Interrupt #
+;                   ESI     Entry point
 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+SetupIntGate  proc near
+    push rax
+    push rdx
+    push rdi
+;
+    add rax,rax
+    add rax,rax
+    add rax,rax
+    mov rdi,realtime_mon_base
+    mov rdx,OFFSET rtm_idt
+    add rdi,rdx
+    add rdi,rax
+;
+    mov rdx,realtime_mon_header_size
+    add rsi,rdx
+;
+    mov edx,esi
+    mov [rdi],dx
+;
+    shr edx,16
+    mov [rdi+6],dx
+;
+    mov dx,28h
+    mov [rdi+2],dx
+;
+    mov edx,0FFFFFF80h
+    mov [rdi+8],edx
+;
+    xor edx,edx    
+    mov [rdi+12],edx
+;
+    mov ax,8Eh
+    mov [rdi+4],ax
+;
+    pop rdi
+    pop rdx
+    pop rax
+    ret
+SetupIntGate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupTrapGate
+;
+;   DESCRIPTION:    Setup trap gate
+;
+;   PARAMETERS:     RAX      Interrupt #
+;                   ESI     Entry point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+SetupTrapGate  proc near
+    push rax
+    push rdx
+    push rdi
+;
+    add rax,rax
+    add rax,rax
+    add rax,rax
+    mov rdi,realtime_mon_base
+    mov rdx,OFFSET rtm_idt
+    add rdi,rdx
+    add rdi,rax
+;
+    mov rdx,realtime_mon_header_size
+    add rsi,rdx
+;
+    mov edx,esi
+    mov [rdi],dx
+;
+    shr edx,16
+    mov [rdi+6],dx
+;
+    mov dx,28h
+    mov [rdi+2],dx
+;
+    mov edx,0FFFFFF80h
+    mov [rdi+8],edx
+;
+    xor edx,edx    
+    mov [rdi+12],edx
+;
+    mov ax,8Fh
+    mov [rdi+4],ax
+;
+    pop rdi
+    pop rdx
+    pop rax
+    ret
+SetupTrapGate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InitIdt
+;
+;   DESCRIPTION:    Init IDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+div_0:
+trap_1:
+trap_3:
+invalid_opcode:
+protection_fault:
+page_fault:
+    iret
+
+InitIdt proc near
+    xor rax,rax
+;
+    mov eax,0
+    mov rsi,OFFSET div_0
+    call SetupTrapGate
+;
+    mov eax,1
+    mov rsi,OFFSET trap_1
+    call SetupTrapGate
+;
+    mov eax,3
+    mov rsi,OFFSET trap_3
+    call SetupTrapGate
+;
+    mov eax,6
+    mov rsi,OFFSET invalid_opcode
+    call SetupTrapGate
+;
+    mov eax,13
+    mov rsi,OFFSET protection_fault
+    call SetupTrapGate
+;
+    mov eax,14
+    mov rsi,OFFSET page_fault
+    call SetupTrapGate
+;
+    ret
+InitIdt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           init
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -54,6 +197,7 @@ init:
     mov rbx,OFFSET rtm_stack
     add rax,rbx
     mov rsp,[rax]
+    call InitIdt
 
 Code64  Ends
 
