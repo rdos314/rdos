@@ -550,14 +550,58 @@ LongLgdtMem       Proc near
     jnz PrivilegeFault
 ;
     mov [ebp].em_modrm,al
-    call LoadLongFwordMem
+    call LoadLongTbyteMem
     mov word ptr [ebp].reg_gdt.d_limit,ax
-    ror edx,16
-    ror eax,16
-    mov dx,ax
-    mov [ebp].reg_gdt.d_base,edx
+;
+    shr eax,16
+    push dx
+    push ax
+;
+    shr edx,16
+    push cx
+    push dx
+;
+    pop eax
+    mov [ebp+4].reg_gdt.d_base,eax
+;
+    pop eax
+    mov [ebp].reg_gdt.d_base,eax
     ret
 LongLgdtMem       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongLidtMem
+;
+;               DESCRIPTION:    EMULATE lidt mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+     public LongLidtMem
+
+LongLidtMem       Proc near
+    test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+    jnz PrivilegeFault
+;
+    mov [ebp].em_modrm,al
+    call LoadLongTbyteMem
+    mov word ptr [ebp].reg_idt.d_limit,ax
+;
+    shr eax,16
+    push dx
+    push ax
+;
+    shr edx,16
+    push cx
+    push dx
+;
+    pop eax
+    mov [ebp+4].reg_idt.d_base,eax
+;
+    pop eax
+    mov [ebp].reg_idt.d_base,eax
+    ret
+LongLidtMem       Endp
 
         END

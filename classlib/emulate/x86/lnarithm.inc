@@ -35,3 +35,4 @@
 	extrn LongOrWordRegMem:near
 
     extrn LongLgdtMem:near
+    extrn LongLidtMem:near

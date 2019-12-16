@@ -99,7 +99,7 @@ typedef struct
 
 typedef struct
 {
-        unsigned long base;
+        unsigned long long base;
         unsigned long limit;
         unsigned short int selector;
         unsigned short int access;
@@ -222,7 +222,7 @@ public:
 
         TCpu *Cpu;
         TBus *Bus;
-        
+
 };
 
 class TCpu
@@ -240,7 +240,7 @@ public:
     void SetMemAccessTime(int ns);
     void SetIoAccessTime(int ns);
     void SetExtClkTime(int ns);
-    
+
     void Show();
     void ShowFpu();
 
@@ -286,7 +286,7 @@ public:
     virtual void Fint();
 
     virtual void UpdateTime(int ns);
-    
+
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
     void ClearBreakpoints();
@@ -311,7 +311,7 @@ public:
     void (*OnWriteIoByte)(TCpu *Cpu, unsigned short Port, char val);
     void (*OnWriteIoWord)(TCpu *Cpu, unsigned short Port, short int val);
     void (*OnWriteIoDword)(TCpu *Cpu, unsigned short Port, long val);
-    
+
     void (*OnSysCall)(TCpu *Cpu);
 
     TInterrupt *FInterrupt;

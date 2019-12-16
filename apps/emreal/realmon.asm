@@ -54,6 +54,7 @@ SetupIntGate  proc near
     add rax,rax
     add rax,rax
     add rax,rax
+    add rax,rax
     mov rdi,realtime_mon_base
     mov rdx,OFFSET rtm_idt
     add rdi,rdx
@@ -62,10 +63,9 @@ SetupIntGate  proc near
     mov rdx,realtime_mon_header_size
     add rsi,rdx
 ;
-    mov edx,esi
-    mov [rdi],dx
+    mov [rdi],esi
 ;
-    shr edx,16
+    mov dx,[rdi+2]
     mov [rdi+6],dx
 ;
     mov dx,28h
@@ -74,10 +74,10 @@ SetupIntGate  proc near
     mov edx,0FFFFFF80h
     mov [rdi+8],edx
 ;
-    xor edx,edx    
+    mov edx,0
     mov [rdi+12],edx
 ;
-    mov ax,8Eh
+    mov ax,8E00h
     mov [rdi+4],ax
 ;
     pop rdi
@@ -106,6 +106,7 @@ SetupTrapGate  proc near
     add rax,rax
     add rax,rax
     add rax,rax
+    add rax,rax
     mov rdi,realtime_mon_base
     mov rdx,OFFSET rtm_idt
     add rdi,rdx
@@ -114,10 +115,9 @@ SetupTrapGate  proc near
     mov rdx,realtime_mon_header_size
     add rsi,rdx
 ;
-    mov edx,esi
-    mov [rdi],dx
+    mov [rdi],esi
 ;
-    shr edx,16
+    mov dx,[rdi+2]
     mov [rdi+6],dx
 ;
     mov dx,28h
@@ -126,10 +126,10 @@ SetupTrapGate  proc near
     mov edx,0FFFFFF80h
     mov [rdi+8],edx
 ;
-    xor edx,edx    
+    mov edx,0
     mov [rdi+12],edx
 ;
-    mov ax,8Fh
+    mov ax,8F00h
     mov [rdi+4],ax
 ;
     pop rdi
@@ -155,32 +155,42 @@ protection_fault:
 page_fault:
     iret
 
+idt_size   DW 1FFh
+idt_base   DQ realtime_mon_base + rtm_idt
+
 InitIdt proc near
-    xor rax,rax
+    mov rax,OFFSET boot
 ;
-    mov eax,0
+    mov al,0
     mov rsi,OFFSET div_0
     call SetupTrapGate
 ;
-    mov eax,1
+    mov al,1
     mov rsi,OFFSET trap_1
     call SetupTrapGate
 ;
-    mov eax,3
+    mov al,3
     mov rsi,OFFSET trap_3
     call SetupTrapGate
 ;
-    mov eax,6
+    mov al,6
     mov rsi,OFFSET invalid_opcode
     call SetupTrapGate
 ;
-    mov eax,13
+    mov al,13
     mov rsi,OFFSET protection_fault
     call SetupTrapGate
 ;
-    mov eax,14
+    mov al,14
     mov rsi,OFFSET page_fault
     call SetupTrapGate
+;
+    mov rdi,realtime_mon_base
+    mov rax,OFFSET idt_size
+    add rdi,rax
+    mov rax,realtime_mon_header_size
+    add rdi,rax
+    lidt [rdi]
 ;
     ret
 InitIdt Endp

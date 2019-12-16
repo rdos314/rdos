@@ -1339,7 +1339,7 @@ Long0F01Tab:
 ln0F01_000      DD OFFSET EmulateError
 ln0F01_001      DD OFFSET EmulateError
 ln0F01_010      DD OFFSET LongLgdtMem
-ln0F01_011      DD OFFSET EmulateError
+ln0F01_011      DD OFFSET LongLidtMem
 ln0F01_100      DD OFFSET EmulateError
 ln0F01_101      DD OFFSET EmulateError
 ln0F01_110      DD OFFSET EmulateError
@@ -1629,7 +1629,7 @@ lnt80   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt82   DD OFFSET EmulateError,             OFFSET Long83
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt86   DD OFFSET LongXchgByteRegMem,       OFFSET LongXchgWordRegMem
-lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt88   DD OFFSET EmulateError,             OFFSET LongEmMoveWordRegToMem
 lnt8A   DD OFFSET LongMoveByteMemToReg,     OFFSET LongMoveWordMemToReg
 lnt8C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt8E   DD OFFSET LongMoveMemToSreg,        OFFSET EmulateError

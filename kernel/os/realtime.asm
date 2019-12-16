@@ -531,7 +531,7 @@ SetupUniPml4	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-mon_file DB 'realmon.bin', 0
+mon_file DB 'z:/realmon.bin', 0
 
 AddMonitor     PROC near
     push ds

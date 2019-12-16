@@ -112,7 +112,7 @@ seg_def = 7
 
 descriptor_struc STRUC
 
-d_base		DD ?
+d_base		DD ?,?
 d_limit		DD ?
 d_selector	DW ?
 d_access	DW ?

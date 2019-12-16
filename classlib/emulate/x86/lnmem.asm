@@ -1906,4 +1906,45 @@ LoadFwordMemIndOk:
     ret
 LoadLongFwordMem    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LoadLongTbyteMem
+;
+;               DESCRIPTION:    Load tbyte from memory
+;
+;               PARAMETERS:     BL               op-code
+;
+;               RETURNS:        CX:EDX:EAX      DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LoadLongTbyteMem
+
+LoadLongTbyteMem    Proc near
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shr bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz LoadTByteMemIndOk
+;
+    or bl,40h
+
+LoadTByteMemIndOk:
+    movzx esi,bl
+    call dword ptr [4*esi].LongMemTab
+    call ReadLinearTByte
+    ret
+LoadLongTbyteMem    Endp
+
         END

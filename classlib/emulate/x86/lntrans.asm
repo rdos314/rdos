@@ -186,6 +186,45 @@ LongMoveWordImToMem      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           LongEmMoveWordRegToMem
+;
+;               DESCRIPTION:    EMULATE mov word ptr mem,Reg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LongEmMoveWordRegToMem
+
+LongEmMoveWordRegToMem      Proc near
+    test [ebp].em_rex,8
+    jnz LongMoveQwordRegToMem
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveDwordRegToMem
+;
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongWordReg
+    call SaveLongWordMemReg
+    ret
+
+LongMoveDwordRegToMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongDwordReg
+    call SaveLongDwordMemReg
+    ret
+
+LongMoveQwordRegToMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongQwordReg
+    call SaveLongQwordMemReg
+    ret
+LongEmMoveWordRegToMem      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           LongMoveMemToSreg
 ;
 ;   DESCRIPTION:    EMULATE mov sreg,Mem

@@ -405,7 +405,7 @@ void Fint(TCpuState *CpuState)
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
 TCpuState::TCpuState()
-{    
+{
     Reset();
 }
 
@@ -417,7 +417,7 @@ TCpuState::TCpuState()
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
 TCpuState::~TCpuState()
-{    
+{
 }
 
 /*##################  TCpuState::TCpuState  ###############
@@ -428,7 +428,7 @@ TCpuState::~TCpuState()
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
 void TCpuState::Reset()
-{    
+{
         Reg_eax = 0x12345678;
         Reg_ebx = 0x12345678;
         Reg_ecx = 0x12345678;
@@ -488,7 +488,7 @@ void TCpuState::Reset()
 
         CodeStart = 0xFFFFFFFFFFFFFFFF;
 
-        Tag = 0xFFFF; 
+        Tag = 0xFFFF;
         MathControl = 0;
         MathStatus = 0;
 
@@ -534,7 +534,7 @@ TCpu::TCpu()
         OnWriteMemoryWord = 0;
         OnWriteMemoryDword = 0;
         OnWriteMemoryQword = 0;
-        
+
         OnReadIoByte = 0;
         OnReadIoWord = 0;
         OnReadIoDword = 0;
@@ -542,7 +542,7 @@ TCpu::TCpu()
         OnWriteIoByte = 0;
         OnWriteIoWord = 0;
         OnWriteIoDword = 0;
-        
+
         Reset();
         CpuState.CpuType = 5;
         CpuState.EflagsMask = 0x3FFFD7;
@@ -1033,7 +1033,7 @@ void TCpu::UpdateTime(int ns)
 int TCpu::EmulateOne()
 {
     int ns;
-    
+
     CpuState.MemCount = 0;
     CpuState.IoCount = 0;
 
@@ -1126,9 +1126,9 @@ void TCpu::Pace()
                         BreakCs = CpuState.Reg_cs.selector;
                         if (CpuState.Reg_cs.access & ACCESS_32)
                             BreakEip = CpuState.Reg_eip + 5;
-                        else                        
+                        else
                             BreakEip = CpuState.Reg_eip + 3;
-                            
+
                         EmulateOne();
                         ReadInstruction(&CpuState);
                         Done = FALSE;
@@ -1209,7 +1209,7 @@ void TCpu::Go()
                         }
                         else
                             ch = CpuState.CodeCache[offset];
-                            
+
                         if (ch == 0xCC)
                         {
                                 Done = TRUE;
@@ -1243,7 +1243,7 @@ void TCpu::ShowData(int Sel, int Offset)
     unsigned long long Base;
     int Size;
     int i;
-    
+
     if (LoadDescriptor(&CpuState, Sel, &UserDescriptor))
     {
         Base = UserDescriptor.base;
@@ -1252,7 +1252,7 @@ void TCpu::ShowData(int Sel, int Offset)
         Base += Offset;
         memset(CpuState.CodeCache, 0, 0x20);
         FillCache(&CpuState, Base);
-            
+
         printf("%04lX:%08lX ", Sel, Offset);
 
         Size -= Offset;
@@ -1260,9 +1260,9 @@ void TCpu::ShowData(int Sel, int Offset)
             Size = 16;
         else
             Size++;
-            
+
         for (i = 0; i < Size; i++)
-            printf("%02hX ", CpuState.CodeCache[i]);            
+            printf("%02hX ", CpuState.CodeCache[i]);
 
     }
     printf("\r\n");
@@ -1315,13 +1315,13 @@ void TCpu::ShowInstruction()
     else
         FillCache(&CpuState, CpuState.Reg_cs.base + CpuState.Reg_eip);
 
-    size = DisAsmCodeCache(&CpuState, codesize);    
+    size = DisAsmCodeCache(&CpuState, codesize);
 
     if (codesize == 2)
         printf("%04lX_%08lX ", (long)(CpuState.Reg_eip >> 32), (long)CpuState.Reg_eip);
     else
         printf("%04lX:%08lX ", CpuState.Reg_cs.selector, CpuState.Reg_eip);
-    
+
     for (i = 0; i < size; i++)
         printf("%02hX ", CpuState.CodeCache[i]);
 
@@ -1343,44 +1343,44 @@ void TCpu::ShowInstruction()
             ok = TRUE;
         }
         else
-        {        
+        {
             ok = FALSE;
-        
+
             if (CpuState.Reg_cs.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_cs.base;
                 Limit = CpuState.Reg_cs.limit;
                 ok = TRUE;
             }
-        
+
             if (CpuState.Reg_ss.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_ss.base;
                 Limit = CpuState.Reg_ss.limit;
                 ok = TRUE;
             }
-        
+
             if (CpuState.Reg_ds.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_ds.base;
                 Limit = CpuState.Reg_ds.limit;
                 ok = TRUE;
             }
-        
+
             if (CpuState.Reg_es.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_es.base;
                 Limit = CpuState.Reg_es.limit;
                 ok = TRUE;
             }
-        
+
             if (CpuState.Reg_fs.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_fs.base;
                 Limit = CpuState.Reg_fs.limit;
                 ok = TRUE;
             }
-        
+
             if (CpuState.Reg_gs.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_gs.base;
@@ -1396,7 +1396,7 @@ void TCpu::ShowInstruction()
         {
             memset(CpuState.CodeCache, 0, 0x20);
             FillCache(&CpuState, Base);
-            
+
             if (codesize == 2)
                 printf("%04lX_%08lX ", (long)(CpuState.DataOffset >> 32) , (long)CpuState.DataOffset);
             else
@@ -1412,9 +1412,9 @@ void TCpu::ShowInstruction()
             }
             else
                 size = 0;
-                        
+
             for (i = 0; i < size; i++)
-                printf("%02hX ", CpuState.CodeCache[i]);            
+                printf("%02hX ", CpuState.CodeCache[i]);
         }
         printf("\r\n");
     }
@@ -1441,7 +1441,7 @@ void TCpu::ShowFpu()
         reg--;
     else
         reg = 0;
-       
+
     for (i = 7; i >= 0; i--)
     {
         mask = 0x3 << 2 * reg;
@@ -1497,14 +1497,14 @@ void TCpu::ShowDescriptor(const char *str, TDescriptor *des)
 
     if (des->access & 0x60)
     {
-        printf("BASE=%08lX LIMIT=%08lX ", des->base, des->limit);
+        printf("BASE=%08lX LIMIT=%08lX ", (long)des->base, des->limit);
 
         rpl = des->access & 3;
         printf("RPL=%d ", rpl);
 
         if (des->access & 0x10)
             printf("DN ");
-            
+
         if (des->access & 0x20)
             printf("RD ");
 
@@ -1534,8 +1534,8 @@ void TCpu::ShowDescriptor(const char *str, TDescriptor *des)
 *##########################################################################*/
 void TCpu::ShowCpu()
 {
-    printf("GDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_gdt.base, CpuState.Reg_gdt.limit);
-    printf("IDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_idt.base, CpuState.Reg_idt.limit);
+    printf("GDT BASE=%08lX_%08lX LIMIT=%04lX\r\n", (long)(CpuState.Reg_gdt.base >> 32), (long)CpuState.Reg_gdt.base, CpuState.Reg_gdt.limit);
+    printf("IDT BASE=%08lX_%08lX LIMIT=%04lX\r\n", (long)(CpuState.Reg_idt.base >> 32), (long)CpuState.Reg_idt.base, CpuState.Reg_idt.limit);
 
     ShowDescriptor(" TR", &CpuState.Reg_tr);
     ShowDescriptor("LDT", &CpuState.Reg_ldt);
@@ -1586,13 +1586,13 @@ void TCpu::ShowCpu()
         printf(" ECX=%08lX", (long)CpuState.Reg_ecx);
         printf(" EDX=%08lX", (long)CpuState.Reg_edx);
         printf("\r\n");
-    
+
         printf(" ESI=%08lX", (long)CpuState.Reg_esi);
         printf(" EDI=%08lX", (long)CpuState.Reg_edi);
         printf(" ESP=%08lX", (long)CpuState.Reg_esp);
         printf(" EBP=%08lX", (long)CpuState.Reg_ebp);
         printf("\r\n");
-    
+
         printf(" EIP=%08lX", (long)CpuState.Reg_eip);
         printf(" CR2=%08lX", (long)CpuState.Reg_cr2);
         printf(" CR3=%08lX", (long)CpuState.Reg_cr3);
@@ -1682,14 +1682,14 @@ void TCpu::ShowExecTime()
     int remain;
     char str[20];
 
-    val = FTotalNs;    
+    val = FTotalNs;
     remain = val % 1000;
     val = val / 1000;
     if (val)
         sprintf(&str[16], "%03ld", remain);
     else
         sprintf(&str[16], "%3ld", remain);
-    
+
 // us
 
     if (val)

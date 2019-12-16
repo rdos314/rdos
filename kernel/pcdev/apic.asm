@@ -348,10 +348,12 @@ prot_end:
 ; this code is loaded at 01400. It should contain no near jumps!
     
 rt_start:
-    mov ax,18h
+    xor ax,ax
     mov ds,ax
     mov fs,ax
     mov gs,ax
+;
+    mov ax,18h
     mov ss,ax
     mov esp,OFFSET rt_end - rt_start + 1400h + 10h
 ;
@@ -373,6 +375,9 @@ rt_start:
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax
+;
+    xor ax,ax
+    mov es,ax
 ;
     db 0EAh
     dw OFFSET rt_init64 - rt_start + 1400h

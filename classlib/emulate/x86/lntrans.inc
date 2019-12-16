@@ -50,6 +50,7 @@
 	extrn LongMoveWordMemToReg:near
 	extrn LongMoveByteMemToReg:near
     extrn LongMoveWordImToMem:near
+	extrn LongEmMoveWordRegToMem:near
     
 	extrn LongMoveMemToSreg:near
 

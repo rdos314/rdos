@@ -48,3 +48,4 @@
 	extrn SaveLongQwordMemReg:near
 
 	extrn LoadLongFwordMem:near
+	extrn LoadLongTbyteMem:near
