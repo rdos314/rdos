@@ -20,41 +20,17 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; realmon.ASM
-; Long mode realtime monitor
+; realtime.def
+; Realtime common area
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.x64
+realtime_mon_base = 0FFFFFF8000000000h
 
-include \rdos\kernel\os\realtime.def
+realtime_mon_header	STRUC
 
-Code64 segment byte public use64 'code64'
+rtm_stack	DQ 200 DUP(?)
 
-    org realtime_mon_base
+realtime_mon_header	ENDS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           LocalWriteChar
-;
-;   DESCRIPTION:    Write a char to screen
-;
-;   PARAMETERS:     DL          Char
-;                   DH          Attrib
-;                   AL          Row
-;                   AH          Col
-;                   R8          Screen base
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init:
-    mov rax,realtime_mon_base
-    mov rbx,OFFSET rtm_stack
-    add rax,rbx
-    mov rsp,[rax]
-
-Code64  Ends
-
-    end
+realtime_mon_header_size = 2000h

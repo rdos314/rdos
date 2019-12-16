@@ -34,6 +34,7 @@ INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
 INCLUDE ..\acpi\acpi.inc
+INCLUDE ..\os\realtime.def
 
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
@@ -380,7 +381,7 @@ rt_start:
 rt_init64:
     db 49h  ; mov r10,0FFFFFF8000000000h
     db 0BAh
-    dd 0
+    dd realtime_mon_header_size
     dd 0FFFFFF80h
 ;
     db 41h  ; push r10

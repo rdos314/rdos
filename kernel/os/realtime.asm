@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
+INCLUDE realtime.def
 
 .386p
 
@@ -551,20 +552,37 @@ AddMonitor     PROC near
     mov es,eax
 ;
     GetFileSize
+    add eax,realtime_mon_header_size
     dec eax
     and ax,0F000h
     add eax,1000h
     AllocateBigLinear
 ;
+    push eax
+    xor al,al
+    mov ecx,realtime_mon_header_size
+    mov edi,edx
+    rep stos byte ptr es:[edi]
+;
+    mov edi,edx
+    mov eax,OFFSET rtm_stack + 1000h
+    mov es:[edi],eax
+;
+    mov eax,0FFFFFF80h
+    mov es:[edi+4],eax
+;
+    pop eax
+;
     mov ecx,eax
     mov edi,edx
+    add edi,realtime_mon_header_size
     ReadFile
 ;
     CloseFile
 ;
     shr ecx,12
     push ecx
-    push edi
+    push edx
 ;
     mov edx,ds:uni_linear
     AllocatePhysical64
