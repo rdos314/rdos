@@ -1554,11 +1554,6 @@ CondLinearToPhysical64    Proc near
         shr eax,16
         test di,8000h
         jz CondLinearToPhysicalLow64
-;
-        mov [esi].t_tag,-1
-        pop esi
-        stc
-        jmp CondLinearToPhysicalDone64
 
 CondLinearToPhysicalHigh64:
         cmp ax,-1

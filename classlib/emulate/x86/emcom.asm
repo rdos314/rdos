@@ -2175,12 +2175,22 @@ _ReadInstruction Proc near
         mov ebp,[ebp+8]
 ;
         mov esi,OFFSET reg_cs
+        test word ptr [ebp+esi].d_access,ACCESS_64
+        jnz read_instr_byte64
+;
         test word ptr [ebp+esi].d_access,ACCESS_32
         jz read_instr_byte16
 
 read_instr_byte32:
         mov ebx,[ebp].reg_eip
         jmp read_instr_read
+
+read_instr_byte64:
+        mov ebx,[ebp].reg_eip
+        mov edi,[ebp].reg_eip+4
+        mov ecx,16
+        call CondReadLinear
+        jmp read_instr_done
 
 read_instr_byte16:
         movzx ebx,word ptr [ebp].reg_eip

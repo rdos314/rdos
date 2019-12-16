@@ -378,10 +378,10 @@ rt_start:
     dw 28h
 
 rt_init64:
-    db 49h  ; mov r10,0FF80000000000000h
+    db 49h  ; mov r10,0FFFFFF8000000000h
     db 0BAh
     dd 0
-    dd 0FF800000h
+    dd 0FFFFFF80h
 ;
     db 41h  ; push r10
     db 52h

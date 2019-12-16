@@ -27,9 +27,11 @@
 
 .x64
 
+base = 0FFFFFF8000000000h
+
 Code64 segment byte public use64 'code64'
 
-    org 0FF80000000000000h
+    org base
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -48,11 +50,16 @@ Code64 segment byte public use64 'code64'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
-    mov rsp,1400h    
-    mov r10,0FF80000000000000h
-    push r10
-    ret
+    mov rax,base
+    mov rbx,OFFSET stack_top
+    and eax,0FFFFFFF8h
+    add rax,rbx
+    mov rsp,rax
 
+stack_space:
+    dq 100h DUP(?)
+
+stack_top:
 
 Code64  Ends
 

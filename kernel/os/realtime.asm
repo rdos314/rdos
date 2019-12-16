@@ -52,18 +52,6 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           StartRealtime
-;
-;           DESCRIPTION:    Realtime core boot-up code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_realtime:
-    int 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           MapPhysical
 ;
 ;           DESCRIPTION:    Map physical address
@@ -536,6 +524,128 @@ SetupUniPml4	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddMonitor
+;
+;           DESCRIPTION:    Add and map monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mon_file DB 'realmon.bin', 0
+
+AddMonitor     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET mon_file
+    xor cl,cl
+    OpenFile
+    jc amDone
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    GetFileSize
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear
+;
+    mov ecx,eax
+    mov edi,edx
+    ReadFile
+;
+    CloseFile
+;
+    shr ecx,12
+    push ecx
+    push edi
+;
+    mov edx,ds:uni_linear
+    AllocatePhysical64
+    mov al,3
+    mov es:[edx+0FF8h],eax  ; pml4
+    mov es:[edx+0FFCh],ebx
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax   ; ptr
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    xor eax,eax
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax   ; dir
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    xor eax,eax
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    pop edx
+    pop ecx
+;
+    mov ebp,200h
+
+amCopyMonLoop:    
+    GetPageEntry
+;
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    dec ebp
+    add edx,1000h
+    add edi,8
+    sub ecx,1
+    jnz amCopyMonLoop
+
+amPadMonLoop:
+    xor eax,eax
+    stos dword ptr es:[edi]
+    stos dword ptr es:[edi]
+;
+    sub ebp,1
+    jnz amPadMonLoop
+    
+amDone:
+    popad
+    pop es
+    pop ds
+    ret
+AddMonitor     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CreateUniMap
 ;
 ;           DESCRIPTION:    Create uni mapping
@@ -582,6 +692,7 @@ CreateUniMap     PROC near
     pop eax
     pop es
 ;
+    call AddMonitor
 
 cuDone:
     mov ebx,ds:uni_phys
@@ -609,9 +720,6 @@ emulate_realtime     PROC far
 ;
     call CreateUniMap
 ;
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET start_realtime
     mov al,7
     BootRealtimeCore
 ;
