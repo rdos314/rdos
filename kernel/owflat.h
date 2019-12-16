@@ -4016,7 +4016,7 @@
 
 #pragma aux RdosWritePhysicalQword = \
     CallGate_write_phys_qword  \
-    __parm [__edx __ebx] [__eax __eax]
+    __parm [__edx __ebx] [__ecx __eax]
 
 #pragma aux RdosEmulateRealtime = \
     CallGate_emulate_realtime  \

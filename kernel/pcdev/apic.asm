@@ -229,7 +229,7 @@ gdt0:
     dd 0
     dw 0
 gdt8:
-    dw 28h-1
+    dw 30h-1
     dd 92000F80h
     dw 0
 gdt10:
@@ -244,6 +244,10 @@ gdt20:
     dw 0FFFFh
     dd 92001800h
     dw 0
+gdt28:
+    dw 0FFFFh
+    dd 9A000000h
+    dw 0AFh
 
 table_end:
     
@@ -343,6 +347,13 @@ prot_end:
 ; this code is loaded at 01400. It should contain no near jumps!
     
 rt_start:
+    mov ax,18h
+    mov ds,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov esp,OFFSET rt_end - rt_start + 1400h + 10h
+;
     mov ax,20h
     mov es,ax
 ;    
@@ -358,16 +369,24 @@ rt_start:
     mov eax,es:ap_cr3
     mov cr3,eax
 ;    
-    db 66h
-    lgdt fword ptr es:ap_gdt
-;    
-    db 66h
-    lidt fword ptr es:ap_idt
-;    
-    mov eax,es:ap_cr0
+    mov eax,cr0
+    or eax,80000000h
     mov cr0,eax
 ;
-    jmp fword ptr es:ap_stack_offset
+    db 0EAh
+    dw OFFSET rt_init64 - rt_start + 1400h
+    dw 28h
+
+rt_init64:
+    db 49h  ; mov r10,0FF80000000000000h
+    db 0BAh
+    dd 0
+    dd 0FF800000h
+;
+    db 41h  ; push r10
+    db 52h
+;
+    db 0C3h ; ret
 
 rt_end:
     
@@ -3228,15 +3247,6 @@ boot_realtime_core    Proc far
 ;
     mov eax,cr4
     mov es:[edi].ap_cr4,eax
-;
-    db 66h
-    sidt fword ptr es:[edi].ap_idt
-;
-    db 66h
-    sgdt fword ptr es:[edi].ap_gdt
-;
-    mov es:[edi].ap_stack_offset,ebp
-    mov es:[edi].ap_stack_sel,fs
 ;
     mov edi,0F80h
     mov esi,OFFSET table_start
