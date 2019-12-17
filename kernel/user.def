@@ -917,4 +917,6 @@ write_phys_dword_nr               = 719
 write_phys_qword_nr               = 720
 emulate_realtime_nr               = 721
 
+is_can_module_online_nr           = 722
+
 usergate_entries                 = 750

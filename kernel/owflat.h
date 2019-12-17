@@ -1316,6 +1316,12 @@
     __value [__eax] \
     __modify [__edx]
 
+#pragma aux RdosIsCanModuleOnline = \
+    CallGate_is_can_module_online  \
+    CarryToBool \
+    __parm [__eax] \
+    __value [__eax]
+
 #pragma aux RdosGetCanBridgeVersion = \
     CallGate_get_can_bridge_version  \
     "movzx ecx,ah" \

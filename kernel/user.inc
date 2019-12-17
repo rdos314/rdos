@@ -4292,6 +4292,12 @@ WaitForCanModuleProgramming      MACRO
         UserGate wait_for_can_module_progamming_nr
                                                 ENDM
 
+;   IN  EAX         Device #
+;   OUT NC          Online
+IsCanModuleOnline      MACRO
+        UserGate is_can_module_online_nr
+                                                ENDM
+
 ;   OUT AL          Minor version
 ;   OUT AH          Major version
 ;   OUT DL          Sub version

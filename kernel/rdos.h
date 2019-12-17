@@ -439,6 +439,7 @@ int RDOSAPI RdosGetCanModuleRestarts(int Module);
 int RDOSAPI RdosCheckCanSerialPort(int ComPort, int *ModuleId, int *PortNr);
 int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
 int RDOSAPI RdosWaitForCanModuleProgramming(int Module, int *ErrorCode, int *Position);
+int RDOSAPI RdosIsCanModuleOnline(int Module);
 
 int RDOSAPI RdosGetCanBridgeVersion(int *MajorVersion, int *MinorVersion, int *SubVersion);
 int RDOSAPI RdosProgramCanBridge(const char *ProgramName);

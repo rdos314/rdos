@@ -167,7 +167,7 @@ LoadIt:
         movzx ebx,bx
         and bl,0F8h
         add ebx,[ebp+edi].d_base
-        xor edi,edi
+        mov edi,[ebp+edi+4].d_base
         call ReadLinearQword
         mov edi,ebx
         pop bx
@@ -2006,7 +2006,7 @@ cond_load_descr_limit_ok:
         push ebx
         push edi
         mov ebx,ecx
-        xor edi,edi
+        mov edi,[ebp+edi+4].d_base
         call ReadLinearQword
         pop edi
         pop ebx
@@ -2022,7 +2022,7 @@ cond_load_descr_present:
         push ebx
         push edi
         mov ebx,ecx
-        xor edi,edi
+        mov edi,[ebp+edi+4].d_base
         call WriteLinearQword
         pop edi
         pop ebx
@@ -2728,7 +2728,7 @@ ExcLongIdt:
         push ebx
         add ebx,8
         push edi
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearDword
         pop edi
         pop ebx
@@ -2802,7 +2802,7 @@ ExcLoadDesc64:
         movzx ebx,bx
         and bl,0F8h
         add ebx,[ebp+edi].d_base
-        xor edi,edi
+        mov edi,[ebp+edi+4].d_base
         call ReadLinearQword
         mov edi,ebx
         pop bx
@@ -2858,7 +2858,7 @@ ExcProtIdt:
         add ecx,[ebp].reg_idt.d_base
         mov ebx,ecx
         push edi
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearQword
         pop edi
         test dh,80h
@@ -2966,7 +2966,7 @@ ExcRealErrorOk:
         shl ebx,2
         add ebx,[ebp].reg_idt.d_base
         push edi
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearDword
         pop edi
         movzx esi,ax
@@ -3016,7 +3016,7 @@ HwInt   Proc near
         add ecx,[ebp].reg_idt.d_base
         push edi
         mov ebx,ecx
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearQword
         pop edi
         test dh,80h                     ;Is the descriptor present ?
@@ -3097,7 +3097,7 @@ IntFarPm:
         add ecx,[ebp].reg_idt.d_base
         push edi
         mov ebx,ecx
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearQword
         pop edi
         test dh,80h                     ;Is the descriptor present ?
@@ -3208,7 +3208,7 @@ IntFarReal:
         shl ebx,2
         add ebx,[ebp].reg_idt.d_base
         push edi
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearDword
         pop edi
         movzx esi,ax
@@ -3429,7 +3429,7 @@ ldLoadIt:
         movzx ebx,bx
         and bl,0F8h
         add ebx,[ebp+edi].d_base
-        xor edi,edi
+        mov edi,[ebp+edi+4].d_base
         mov ecx,8
         push esi
         call CondReadLinear

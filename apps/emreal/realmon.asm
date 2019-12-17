@@ -37,6 +37,51 @@ boot:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           InitGdt
+;
+;   DESCRIPTION:    Init GDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gdt_size   DW 17h
+gdt_base   DQ realtime_mon_base + rtm_gdt
+
+InitGdt proc near
+    mov rdi,realtime_mon_base
+    mov rdx,OFFSET rtm_gdt
+    add rdi,rdx
+;
+    mov rax,OFFSET boot
+    mov [rdi],rax
+;
+    add edi,8
+    mov ax,0FFFFh
+    mov [rdi],ax
+    mov eax,9A000000h
+    mov [rdi+2],eax
+    mov ax,0AFh
+    mov [rdi+6],ax
+;
+    add edi,8
+    mov ax,0FFFFh
+    mov [rdi],ax
+    mov eax,92000000h
+    mov [rdi+2],eax
+    mov ax,0
+    mov [rdi+6],ax
+;
+    mov rdi,realtime_mon_base
+    mov rax,OFFSET gdt_size
+    add rdi,rax
+    mov rax,realtime_mon_header_size
+    add rdi,rax
+    lgdt [rdi]
+    ret
+InitGdt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetupIntGate
 ;
 ;   DESCRIPTION:    Setup int gate
@@ -207,6 +252,7 @@ init:
     mov rbx,OFFSET rtm_stack
     add rax,rbx
     mov rsp,[rax]
+    call InitGdt
     call InitIdt
 
 Code64  Ends

@@ -372,6 +372,7 @@ EmLgdtMem       Proc near
 
 EmLgdtMem32:
         mov [ebp].reg_gdt.d_base,edx
+        mov [ebp+4].reg_gdt.d_base,0        
         ret
 EmLgdtMem       Endp
         
@@ -424,6 +425,7 @@ EmLidtMem       Proc near
 
 EmLidtMem32:
         mov [ebp].reg_idt.d_base,edx
+        mov [ebp+4].reg_idt.d_base,0
         ret
 EmLidtMem       Endp
         

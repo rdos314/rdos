@@ -30,6 +30,7 @@ realtime_mon_base = 0FFFFFF8000000000h
 realtime_mon_header     STRUC
 
 rtm_stack       DQ 200h DUP(?)
+rtm_gdt         DQ 4 DUP(?)
 rtm_idt         DQ 2*20h DUP(?)
 
 realtime_mon_header     ENDS
