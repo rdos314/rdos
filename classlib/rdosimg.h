@@ -33,7 +33,7 @@
 #include "crc.h"
 #include "str.h"
 
-class TRdosObject 
+class TRdosObject
 {
 public:
     TRdosObject();
@@ -42,7 +42,7 @@ public:
 #ifdef __RDOS__
     TRdosObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosObject();
 
     unsigned short int CalcCrc(TCrc *Crc);
@@ -64,7 +64,7 @@ protected:
     char *FData;
     int FSize;
     short int FType;
-    
+
 };
 
 class TRdosSimpleDeviceBaseObject : public TRdosObject
@@ -76,13 +76,13 @@ public:
 #ifdef __RDOS__
     TRdosSimpleDeviceBaseObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosSimpleDeviceBaseObject();
 
 protected:
     int LoadDeviceFile(const char *FileName);
 
-    TRdosSimpleDeviceHeader *FDeviceHeader;    
+    TRdosSimpleDeviceHeader *FDeviceHeader;
     char *FDeviceData;
     int FDeviceSize;
 };
@@ -96,13 +96,13 @@ public:
 #ifdef __RDOS__
     TRdosDosDeviceBaseObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosDosDeviceBaseObject();
 
 protected:
     int LoadDeviceFile(const char *FileName, const char *Param);
 
-    TRdosDosDeviceHeader *FDeviceHeader;    
+    TRdosDosDeviceHeader *FDeviceHeader;
     char *FDeviceData;
     int FDeviceSize;
 };
@@ -116,13 +116,13 @@ public:
 #ifdef __RDOS__
     TRdosDevice16BaseObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosDevice16BaseObject();
 
 protected:
     int LoadDeviceFile(const char *FileName, const char *Param);
 
-    TRdosDevice16Header *FDeviceHeader;    
+    TRdosDevice16Header *FDeviceHeader;
     char *FDeviceData;
     int FDeviceSize;
 };
@@ -136,17 +136,17 @@ public:
 #ifdef __RDOS__
     TRdosDevice32BaseObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosDevice32BaseObject();
 
 protected:
     int LoadDeviceFile(const char *FileName, const char *Param);
 
-    TRdosDevice32Header *FDeviceHeader;    
+    TRdosDevice32Header *FDeviceHeader;
     char *FDeviceData;
     int FDeviceSize;
 };
-    
+
 class TRdosKernelObject : public TRdosSimpleDeviceBaseObject
 {
 public:
@@ -156,12 +156,12 @@ public:
 #ifdef __RDOS__
     TRdosKernelObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosKernelObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosLongModeObject : public TRdosObject
 {
 public:
@@ -171,7 +171,7 @@ public:
 #ifdef __RDOS__
     TRdosLongModeObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosLongModeObject();
 
     virtual TString GetInfo();
@@ -179,11 +179,33 @@ public:
 protected:
     int LoadFile(const char *FileName);
 
-    TRdosLongModeHeader *FDeviceHeader;    
+    TRdosLongModeHeader *FDeviceHeader;
     char *FDeviceData;
     int FDeviceSize;
 };
-    
+
+class TRdosRealTimeObject : public TRdosObject
+{
+public:
+    TRdosRealTimeObject(const char *FileName);
+    TRdosRealTimeObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosRealTimeObject(int adapter, int entry, int size);
+#endif
+
+    virtual ~TRdosRealTimeObject();
+
+    virtual TString GetInfo();
+
+protected:
+    int LoadFile(const char *FileName);
+
+    TRdosRealTimeHeader *FDeviceHeader;
+    char *FDeviceData;
+    int FDeviceSize;
+};
+
 class TRdosFontObject : public TRdosObject
 {
 public:
@@ -193,12 +215,12 @@ public:
 #ifdef __RDOS__
     TRdosFontObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosFontObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosSimpleDeviceObject : public TRdosSimpleDeviceBaseObject
 {
 public:
@@ -208,12 +230,12 @@ public:
 #ifdef __RDOS__
     TRdosSimpleDeviceObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosSimpleDeviceObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosDosDeviceObject : public TRdosDosDeviceBaseObject
 {
 public:
@@ -223,12 +245,12 @@ public:
 #ifdef __RDOS__
     TRdosDosDeviceObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosDosDeviceObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosDevice16Object : public TRdosDevice16BaseObject
 {
 public:
@@ -238,12 +260,12 @@ public:
 #ifdef __RDOS__
     TRdosDevice16Object(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosDevice16Object();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosDevice32Object : public TRdosDevice32BaseObject
 {
 public:
@@ -253,12 +275,12 @@ public:
 #ifdef __RDOS__
     TRdosDevice32Object(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosDevice32Object();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosShutdownObject : public TRdosSimpleDeviceBaseObject
 {
 public:
@@ -268,12 +290,12 @@ public:
 #ifdef __RDOS__
     TRdosShutdownObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosShutdownObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosOldFileObject : public TRdosObject
 {
 public:
@@ -283,7 +305,7 @@ public:
 #ifdef __RDOS__
     TRdosOldFileObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosOldFileObject();
 
     virtual TString GetInfo();
@@ -293,9 +315,9 @@ protected:
 
     TRdosOldFileHeader *FFileHeader;
     char *FFileData;
-    int FFileSize;    
+    int FFileSize;
 };
-    
+
 class TRdosFileObject : public TRdosObject
 {
 public:
@@ -305,7 +327,7 @@ public:
 #ifdef __RDOS__
     TRdosFileObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosFileObject();
 
     virtual TString GetInfo();
@@ -315,9 +337,9 @@ protected:
 
     TRdosFileHeader *FFileHeader;
     char *FFileData;
-    int FFileSize;    
+    int FFileSize;
 };
-    
+
 class TRdosCommandObject : public TRdosObject
 {
 public:
@@ -327,12 +349,12 @@ public:
 #ifdef __RDOS__
     TRdosCommandObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosCommandObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosSetObject : public TRdosObject
 {
 public:
@@ -342,12 +364,12 @@ public:
 #ifdef __RDOS__
     TRdosSetObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosSetObject();
 
     virtual TString GetInfo();
 };
-    
+
 class TRdosPathObject : public TRdosObject
 {
 public:
@@ -357,7 +379,7 @@ public:
 #ifdef __RDOS__
     TRdosPathObject(int adapter, int entry, int size);
 #endif
-    
+
     virtual ~TRdosPathObject();
 
     virtual TString GetInfo();

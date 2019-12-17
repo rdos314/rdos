@@ -56,7 +56,7 @@ struct TExeHeader
     short int Sp;
     short int Checksum;
     short int Ip;
-    short int Cs;    
+    short int Cs;
     short int RelocOffs;
     short int OvNo;
 };
@@ -88,6 +88,13 @@ struct TBinLongModeHeader
     long ImageBase;
     long ImageSize;
     long IdtBase;
+};
+
+struct TBinRealTimeHeader
+{
+    short int Signature;
+    long long Eip;
+    long long ImageBase;
 };
 
 #pragma pack( pop )
@@ -351,7 +358,7 @@ TRdosSimpleDeviceBaseObject::TRdosSimpleDeviceBaseObject(TFile *File, int Size)
 {
     FDeviceSize = FSize - sizeof(TRdosSimpleDeviceHeader);
     FDeviceHeader = (TRdosSimpleDeviceHeader *)FData;
-    FDeviceData = FData + sizeof(TRdosSimpleDeviceHeader);    
+    FDeviceData = FData + sizeof(TRdosSimpleDeviceHeader);
 }
 
 #ifdef __RDOS__
@@ -372,7 +379,7 @@ TRdosSimpleDeviceBaseObject::TRdosSimpleDeviceBaseObject(int adapter, int entry,
 {
     FDeviceSize = FSize - sizeof(TRdosSimpleDeviceHeader);
     FDeviceHeader = (TRdosSimpleDeviceHeader *)FData;
-    FDeviceData = FData + sizeof(TRdosSimpleDeviceHeader);    
+    FDeviceData = FData + sizeof(TRdosSimpleDeviceHeader);
 }
 
 #endif
@@ -423,9 +430,9 @@ int TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
         if (ExeHeader.Signature != 0x5A4D)
             return FALSE;
 
-        HeaderSize = ExeHeader.HeaderSize << 4;        
+        HeaderSize = ExeHeader.HeaderSize << 4;
         File.SetPos(HeaderSize);
-        
+
         Size = ExeHeader.MsbSize << 5;
         Size += (ExeHeader.LsbSize >> 4) + 1;
         Size -= ExeHeader.HeaderSize;
@@ -476,9 +483,9 @@ TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject()
 TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject(TFile *File, int Size)
  : TRdosObject(File, Size)
 {
-    FDeviceHeader = (TRdosDosDeviceHeader *)FData; 
+    FDeviceHeader = (TRdosDosDeviceHeader *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
 }
 
 #ifdef __RDOS__
@@ -497,9 +504,9 @@ TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject(TFile *File, int Size)
 TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject(int adapter, int entry, int size)
   : TRdosObject(adapter, entry, size)
 {
-    FDeviceHeader = (TRdosDosDeviceHeader *)FData; 
+    FDeviceHeader = (TRdosDosDeviceHeader *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
 }
 
 #endif
@@ -551,9 +558,9 @@ int TRdosDosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *P
         if (ExeHeader.Signature != 0x5A4D)
             return FALSE;
 
-        HeaderSize = ExeHeader.HeaderSize << 4;        
+        HeaderSize = ExeHeader.HeaderSize << 4;
         File.SetPos(HeaderSize);
-        
+
         Size = ExeHeader.MsbSize << 5;
         Size += (ExeHeader.LsbSize >> 4) + 1;
         Size -= ExeHeader.HeaderSize;
@@ -578,7 +585,7 @@ int TRdosDosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *P
         ptr = &FDeviceHeader->NameParam;
         strcpy(ptr, FileName);
         ptr += strlen(FileName);
-        ptr++;        
+        ptr++;
         strcpy(ptr, Param);
 
         File.Read(FDeviceData, FDeviceSize);
@@ -617,9 +624,9 @@ TRdosDevice16BaseObject::TRdosDevice16BaseObject()
 TRdosDevice16BaseObject::TRdosDevice16BaseObject(TFile *File, int Size)
  : TRdosObject(File, Size)
 {
-    FDeviceHeader = (TRdosDevice16Header *)FData; 
+    FDeviceHeader = (TRdosDevice16Header *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
 }
 
 #ifdef __RDOS__
@@ -638,9 +645,9 @@ TRdosDevice16BaseObject::TRdosDevice16BaseObject(TFile *File, int Size)
 TRdosDevice16BaseObject::TRdosDevice16BaseObject(int adapter, int entry, int size)
   : TRdosObject(adapter, entry, size)
 {
-    FDeviceHeader = (TRdosDevice16Header *)FData; 
+    FDeviceHeader = (TRdosDevice16Header *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
 }
 
 #endif
@@ -714,7 +721,7 @@ int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
         ptr = &FDeviceHeader->NameParam;
         strcpy(ptr, FileName);
         ptr += strlen(FileName);
-        ptr++;        
+        ptr++;
         strcpy(ptr, Param);
 
         File.Read(FDeviceData, FDeviceSize);
@@ -753,9 +760,9 @@ TRdosDevice32BaseObject::TRdosDevice32BaseObject()
 TRdosDevice32BaseObject::TRdosDevice32BaseObject(TFile *File, int Size)
  : TRdosObject(File, Size)
 {
-    FDeviceHeader = (TRdosDevice32Header *)FData; 
+    FDeviceHeader = (TRdosDevice32Header *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
 }
 
 #ifdef __RDOS__
@@ -774,9 +781,9 @@ TRdosDevice32BaseObject::TRdosDevice32BaseObject(TFile *File, int Size)
 TRdosDevice32BaseObject::TRdosDevice32BaseObject(int adapter, int entry, int size)
   : TRdosObject(adapter, entry, size)
 {
-    FDeviceHeader = (TRdosDevice32Header *)FData; 
+    FDeviceHeader = (TRdosDevice32Header *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
 }
 
 #endif
@@ -850,7 +857,7 @@ int TRdosDevice32BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
         ptr = &FDeviceHeader->NameParam;
         strcpy(ptr, FileName);
         ptr += strlen(FileName);
-        ptr++;        
+        ptr++;
         strcpy(ptr, Param);
 
         File.Read(FDeviceData, FDeviceSize);
@@ -891,9 +898,9 @@ TRdosLongModeObject::TRdosLongModeObject(const char *FileName)
 TRdosLongModeObject::TRdosLongModeObject(TFile *File, int Size)
  : TRdosObject(File, Size)
 {
-    FDeviceHeader = (TRdosLongModeHeader *)FData; 
+    FDeviceHeader = (TRdosLongModeHeader *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
     FType = RDOS_OBJECT_LONG_MODE;
 }
 
@@ -913,9 +920,9 @@ TRdosLongModeObject::TRdosLongModeObject(TFile *File, int Size)
 TRdosLongModeObject::TRdosLongModeObject(int adapter, int entry, int size)
   : TRdosObject(adapter, entry, size)
 {
-    FDeviceHeader = (TRdosLongModeHeader *)FData; 
+    FDeviceHeader = (TRdosLongModeHeader *)FData;
     FDeviceSize = FSize - FDeviceHeader->Size;
-    FDeviceData = FData + FDeviceHeader->Size;    
+    FDeviceData = FData + FDeviceHeader->Size;
     FType = RDOS_OBJECT_LONG_MODE;
 }
 
@@ -1019,7 +1026,158 @@ TString TRdosLongModeObject::GetInfo()
 
     ptr = &FDeviceHeader->NameParam;
     strcat(str, ptr);
-    
+
+    return TString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosRealTimeObject::TRdosRealTimeObject
+#
+#   Purpose....: Constructor for TRdosRealTimeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosRealTimeObject::TRdosRealTimeObject(const char *FileName)
+{
+    if (LoadFile(FileName))
+        FType = RDOS_OBJECT_REAL_TIME;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosRealTimeObject::TRdosRealTimeObject
+#
+#   Purpose....: Constructor for TRdosRealTimeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosRealTimeObject::TRdosRealTimeObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FDeviceHeader = (TRdosRealTimeHeader *)FData;
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;
+    FType = RDOS_OBJECT_REAL_TIME;
+}
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : TRdosRealTimeObject::TRdosRealTimeObject
+#
+#   Purpose....: Constructor for TRdosRealTimeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosRealTimeObject::TRdosRealTimeObject(int adapter, int entry, int size)
+  : TRdosObject(adapter, entry, size)
+{
+    FDeviceHeader = (TRdosRealTimeHeader *)FData;
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;
+    FType = RDOS_OBJECT_REAL_TIME;
+}
+
+#endif
+
+/*##########################################################################
+#
+#   Name       : TRdosRealTimeObject::~TRdosRealTimeObject
+#
+#   Purpose....: Destructor for TRdosRealTimeObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosRealTimeObject::~TRdosRealTimeObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosRealTimeObject::LoadFile
+#
+#   Purpose....: Load file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosRealTimeObject::LoadFile(const char *FileName)
+{
+    TBinRealTimeHeader ExeHeader;
+    TFile File(FileName);
+    int HeaderSize;
+    int Size;
+    char *ptr;
+
+    if (FData)
+        delete FData;
+    FData = 0;
+    FSize = 0;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TBinRealTimeHeader));
+
+        if (ExeHeader.Signature != 0x657A)
+            return FALSE;
+
+        HeaderSize = sizeof(TRdosRealTimeHeader);
+        HeaderSize += strlen(FileName);
+        HeaderSize++;
+
+        FDeviceSize = File.GetSize();
+        FSize = FDeviceSize + HeaderSize;
+        FData = new char[FSize];
+        memset(FData, 0xFF, FSize);
+        FDeviceHeader = (TRdosRealTimeHeader *)FData;
+        FDeviceData = FData + HeaderSize;
+
+        FDeviceHeader->Size = HeaderSize;
+        FDeviceHeader->StartIp = ExeHeader.Eip;
+        FDeviceHeader->ImageBase = ExeHeader.ImageBase;
+
+        File.Read(FDeviceData, FDeviceSize);
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosRealTimeObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosRealTimeObject::GetInfo()
+{
+    char str[256];
+    char *ptr;
+
+    strcpy(str, "RealTime");
+
     return TString(str);
 }
 
@@ -1376,7 +1534,7 @@ TString TRdosDosDeviceObject::GetInfo()
     ptr += strlen(ptr);
     ptr++;
     strcat(str, ptr);
-    
+
     return TString(str);
 }
 
@@ -1475,7 +1633,7 @@ TString TRdosDevice16Object::GetInfo()
     ptr += strlen(ptr);
     ptr++;
     strcat(str, ptr);
-    
+
     return TString(str);
 }
 
@@ -1574,7 +1732,7 @@ TString TRdosDevice32Object::GetInfo()
     ptr += strlen(ptr);
     ptr++;
     strcat(str, ptr);
-    
+
     return TString(str);
 }
 
@@ -1698,7 +1856,7 @@ TRdosOldFileObject::TRdosOldFileObject(TFile *File, int Size)
 {
     FFileSize = FSize - sizeof(TRdosOldFileHeader);
     FFileHeader = (TRdosOldFileHeader *)FData;
-    FFileData = FData + sizeof(TRdosOldFileHeader);    
+    FFileData = FData + sizeof(TRdosOldFileHeader);
     FType = RDOS_OBJECT_OLD_FILE;
 }
 
@@ -1720,7 +1878,7 @@ TRdosOldFileObject::TRdosOldFileObject(int adapter, int entry, int size)
 {
     FFileSize = FSize - sizeof(TRdosOldFileHeader);
     FFileHeader = (TRdosOldFileHeader *)FData;
-    FFileData = FData + sizeof(TRdosOldFileHeader);    
+    FFileData = FData + sizeof(TRdosOldFileHeader);
     FType = RDOS_OBJECT_OLD_FILE;
 }
 
@@ -1774,7 +1932,7 @@ TString TRdosOldFileObject::GetInfo()
 
     *ptr = '.';
     ptr++;
-    
+
     for (i = 0; i < 3; i++)
         if (FFileHeader->Ext[i] != ' ')
         {
@@ -1784,9 +1942,9 @@ TString TRdosOldFileObject::GetInfo()
         else
             break;
 
-    *ptr = 0;            
+    *ptr = 0;
     strcat(str, name);
-        
+
     return TString(str);
 }
 
@@ -1815,7 +1973,7 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
         memset(FData, 0xFF, FSize);
         FFileHeader = (TRdosOldFileHeader *)FData;
         FFileData = FData + sizeof(TRdosOldFileHeader);
-                    
+
         ptr = FileName + strlen(FileName) - 1;
 
         while (ptr != FileName && *ptr != '\\' && *ptr != '/')
@@ -1826,7 +1984,7 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
 
         for (i = 0; i < 8; i++)
             FFileHeader->Base[i] = ' ';
-            
+
         for (i = 0; i < 8; i++)
         {
             if (*ptr == '.')
@@ -1841,13 +1999,13 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
                 ptr++;
             }
             else
-                break;            
+                break;
         }
 
 
         for (i = 0; i < 3; i++)
             FFileHeader->Ext[i] = ' ';
-            
+
         for (i = 0; i < 3; i++)
         {
             if (*ptr)
@@ -1856,7 +2014,7 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
                 ptr++;
             }
             else
-                break;            
+                break;
         }
 
         FFileHeader->Attrib = 0;
@@ -1902,7 +2060,7 @@ TRdosFileObject::TRdosFileObject(TFile *File, int Size)
 {
     FFileHeader = (TRdosFileHeader *)FData;
     FFileSize = FSize - FFileHeader->Size;
-    FFileData = FData + FFileHeader->Size;    
+    FFileData = FData + FFileHeader->Size;
     FType = RDOS_OBJECT_FILE;
 }
 
@@ -1924,7 +2082,7 @@ TRdosFileObject::TRdosFileObject(int adapter, int entry, int size)
 {
     FFileHeader = (TRdosFileHeader *)FData;
     FFileSize = FSize - FFileHeader->Size;
-    FFileData = FData + FFileHeader->Size;    
+    FFileData = FData + FFileHeader->Size;
     FType = RDOS_OBJECT_FILE;
 }
 
@@ -1965,7 +2123,7 @@ TString TRdosFileObject::GetInfo()
 
     ptr = &FFileHeader->FileName;
     strcat(str, ptr);
-    
+
     return TString(str);
 }
 
@@ -1996,10 +2154,10 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
 
         if (*ptr == '\\' || *ptr == '/')
             ptr++;
-    
+
         HeaderSize = sizeof(TRdosFileHeader);
         HeaderSize += strlen(ptr);
-    
+
         FFileSize = File.GetSize();
         FSize = FFileSize + HeaderSize;
         FData = new char[FSize];
@@ -2013,7 +2171,7 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
         FFileHeader->Attrib = 0;
         FFileHeader->FileSize = File.GetSize();
 
-        time = File.GetTime();        
+        time = File.GetTime();
         FFileHeader->LsbTime = time.GetLsb();
         FFileHeader->MsbTime = time.GetMsb();
 
@@ -2350,7 +2508,7 @@ TRdosImage::~TRdosImage()
 void TRdosImage::Clear()
 {
     TRdosObject *obj;
-    
+
     while (FObjectList)
     {
         obj = FObjectList->FLink;
@@ -2447,7 +2605,7 @@ void TRdosImage::AddImage(const char *ImageFile)
 
     if (File.IsOpen())
     {
-        size = File.Read(&Header, sizeof(Header));        
+        size = File.Read(&Header, sizeof(Header));
         while (size == sizeof(Header) && Header.sign == RDOS_SIGN)
         {
             size = Header.len - sizeof(Header);
@@ -2463,6 +2621,10 @@ void TRdosImage::AddImage(const char *ImageFile)
 
                     case RDOS_OBJECT_LONG_MODE:
                         obj = new TRdosLongModeObject(&File, size);
+                        break;
+
+                    case RDOS_OBJECT_REAL_TIME:
+                        obj = new TRdosRealTimeObject(&File, size);
                         break;
 
                     case RDOS_OBJECT_FONT:
@@ -2509,12 +2671,12 @@ void TRdosImage::AddImage(const char *ImageFile)
                         obj = new TRdosPathObject(&File, size);
                         break;
 
-                }                
+                }
 
                 if (obj)
                 {
                     crc = obj->CalcCrc(&FCrc);
-                    if (crc == Header.crc)   
+                    if (crc == Header.crc)
                         Add(obj);
                     else
                     {
@@ -2523,7 +2685,7 @@ void TRdosImage::AddImage(const char *ImageFile)
                     }
                 }
             }
-            size = File.Read(&Header, sizeof(Header));        
+            size = File.Read(&Header, sizeof(Header));
         }
     }
 }
@@ -2570,6 +2732,10 @@ void TRdosImage::AddRunning()
                             obj = new TRdosLongModeObject(adapter, entry, size);
                             break;
 
+                        case RDOS_OBJECT_REAL_TIME:
+                            obj = new TRdosRealTimeObject(adapter, entry, size);
+                            break;
+
                         case RDOS_OBJECT_FONT:
                             obj = new TRdosFontObject(adapter, entry, size);
                             break;
@@ -2614,7 +2780,7 @@ void TRdosImage::AddRunning()
                             obj = new TRdosPathObject(adapter, entry, size);
                             break;
 
-                    }                
+                    }
 
                     if (obj)
                         Add(obj);
@@ -2652,7 +2818,7 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
     for (i = 0; i < 63 && *ptr; i++)
     {
         ch = tolower(*ptr);
-    
+
         if (ch == ' ' || ch == 0x8 || ch == '=')
             break;
         else
@@ -2662,7 +2828,7 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
         }
     }
 
-    file[i] = 0;    
+    file[i] = 0;
 
     while (*ptr == ' ' || *ptr == 0x8 || *ptr == '=')
         ptr++;
@@ -2672,10 +2838,13 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
 
     if (!strcmp(cmd, "longmode"))
         obj = new TRdosLongModeObject(file);
-    
+
+    if (!strcmp(cmd, "realtime"))
+        obj = new TRdosRealTimeObject(file);
+
     if (!strcmp(cmd, "font"))
         obj = new TRdosFontObject(file);
-    
+
     if (!strcmp(cmd, "device"))
     {
         _fullpath(fullname, file, _MAX_PATH);
@@ -2684,34 +2853,34 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
         {
             delete obj;
             obj = new TRdosDevice16Object(fullname, ptr);
-        } 
+        }
 
         if (obj->GetType() != RDOS_OBJECT_DEVICE16)
         {
             delete obj;
             obj = new TRdosDevice32Object(fullname, ptr);
-        } 
+        }
     }
-    
+
     if (!strcmp(cmd, "shutdown"))
         obj = new TRdosShutdownObject(file);
-    
+
     if (!strcmp(cmd, "file"))
         obj = new TRdosFileObject(file);
-    
+
     if (!strcmp(cmd, "run"))
         obj = new TRdosCommandObject(param);
-    
+
     if (!strcmp(cmd, "set"))
         obj = new TRdosSetObject(param);
-    
+
     if (!strcmp(cmd, "path"))
         obj = new TRdosPathObject(param);
 
     if (obj)
     {
         if (obj->GetSize() > 0)
-            Add(obj);        
+            Add(obj);
         else
         {
             printf("Cannot find <");
@@ -2751,7 +2920,7 @@ void TRdosImage::AddConfigRow(const char *Row)
     for (i = 0; i < 63 && *ptr; i++)
     {
         ch = tolower(*ptr);
-    
+
         if (ch == ' ' || ch == 0x8 || ch == '=')
             break;
         else
@@ -2761,12 +2930,12 @@ void TRdosImage::AddConfigRow(const char *Row)
         }
     }
 
-    cmd[i] = 0;    
+    cmd[i] = 0;
 
     while (*ptr == ' ' || *ptr == 0x8 || *ptr == '=')
         ptr++;
 
-    AddConfigCmd(cmd, ptr);        
+    AddConfigCmd(cmd, ptr);
 }
 
 /*##########################################################################
@@ -2799,7 +2968,7 @@ void TRdosImage::AddConfig(const char *ConfigFile)
             if (size)
             {
                 CurrentRow[size] = 0;
-    
+
                 ptr = CurrentRow;
                 size = 0;
                 while (*ptr == 0xd || *ptr == 0xa || *ptr == ' ' || *ptr == 0x8)
@@ -2836,8 +3005,8 @@ void TRdosImage::AddConfig(const char *ConfigFile)
             }
             else
                 break;
-                
-        }                   
+
+        }
     }
 }
 
@@ -2910,7 +3079,7 @@ int TRdosImage::IsIdentical(TRdosImage &img)
 
         if (crc1 != crc2)
             return FALSE;
-            
+
         obj1 = obj1->FLink;
         obj2 = obj2->FLink;
     }
@@ -2942,7 +3111,7 @@ int TRdosImage::HasKernel()
     {
         if (obj->GetType() == RDOS_OBJECT_KERNEL)
             return TRUE;
-            
+
         obj = obj->FLink;
     }
 
@@ -2970,7 +3139,7 @@ int TRdosImage::HasShutdown()
     {
         if (obj->GetType() == RDOS_OBJECT_SHUTDOWN)
             return TRUE;
-            
+
         obj = obj->FLink;
     }
 
@@ -2994,7 +3163,7 @@ int TRdosImage::HasDevice(const char *name)
     const char *devname;
     TRdosObject *obj;
     const char *matchstr;
-    
+
     obj = FObjectList;
 
     while (obj)
@@ -3021,8 +3190,8 @@ int TRdosImage::HasDevice(const char *name)
                     }
                 }
                 break;
-        }                
-            
+        }
+
         obj = obj->FLink;
     }
 

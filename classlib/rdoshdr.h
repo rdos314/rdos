@@ -47,6 +47,7 @@
 #define RDOS_OBJECT_DEVICE16        18
 #define RDOS_OBJECT_DEVICE32        19
 #define RDOS_OBJECT_LONG_MODE       20
+#define RDOS_OBJECT_REAL_TIME       21
 
 #define RDOS_SIGN    0x5A1E75D4
 
@@ -55,7 +56,7 @@ typedef struct TRdosObjectHeader
     long sign;
     long len;
     short int type;
-    unsigned short int crc;    
+    unsigned short int crc;
 } TRdosObjectHeader;
 
 typedef struct TRdosSimpleDeviceHeader
@@ -102,6 +103,13 @@ typedef struct TRdosLongModeHeader
     long IdtBase;
     char NameParam;
 } TRdosLongModeHeader;
+
+typedef struct TRdosRealTimeHeader
+{
+    long Size;
+    long long StartIp;
+    long long ImageBase;
+} TRdosRealTimeHeader;
 
 typedef struct TRdosOldFileHeader
 {
