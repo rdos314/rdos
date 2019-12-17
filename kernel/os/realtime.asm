@@ -315,111 +315,6 @@ write_phys_qword     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AddMonitor
-;
-;           DESCRIPTION:    Add and map monitor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddMonitor     PROC near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,eax
-    mov ax,flat_sel
-    mov es,eax
-;
-    mov edx,ds:mon_linear
-    or edx,edx
-    jz amDone
-;
-    mov ecx,ds:mon_size
-    shr ecx,12
-    push ecx
-    push edx
-;
-    mov edx,ds:uni_linear
-    AllocatePhysical64
-    mov al,3
-    mov es:[edx+0FF8h],eax  ; pml4
-    mov es:[edx+0FFCh],ebx
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax   ; ptr
-    mov es:[edi+4],ebx
-    add edi,8
-;
-    push eax
-    xor eax,eax
-    mov ecx,3FEh
-    rep stos dword ptr es:[edi]
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax   ; dir
-    mov es:[edi+4],ebx
-    add edi,8
-;
-    push eax
-    xor eax,eax
-    mov ecx,3FEh
-    rep stos dword ptr es:[edi]
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    pop edx
-    pop ecx
-;
-    mov ebp,200h
-
-amCopyMonLoop:    
-    GetPageEntry
-;
-    mov al,3
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-;
-    dec ebp
-    add edx,1000h
-    add edi,8
-    sub ecx,1
-    jnz amCopyMonLoop
-
-amPadMonLoop:
-    xor eax,eax
-    stos dword ptr es:[edi]
-    stos dword ptr es:[edi]
-;
-    sub ebp,1
-    jnz amPadMonLoop
-    
-amDone:
-    popad
-    pop es
-    pop ds
-    ret
-AddMonitor     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           EmulateRealtime
 ;
 ;           DESCRIPTION:    Emulate realtime load
@@ -432,8 +327,6 @@ emulate_realtime     PROC far
     push ds
     push es
     pushad
-;
-    call AddMonitor
 ;
     mov ax,SEG data
     mov ds,eax
@@ -769,6 +662,102 @@ InitMonitor	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddMonitor
+;
+;           DESCRIPTION:    Add and map monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddMonitor     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov edx,ds:uni_linear
+    AllocatePhysical64
+    mov al,3
+    mov es:[edx+0FF8h],eax  ; pml4
+    mov es:[edx+0FFCh],ebx
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax   ; ptr
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    xor eax,eax
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax   ; dir
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    xor eax,eax
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    mov ebp,200h
+    mov edx,ds:mon_linear
+    mov ecx,ds:mon_size
+    shr ecx,12
+
+amCopyMonLoop:    
+    GetPageEntry
+;
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    dec ebp
+    add edx,1000h
+    add edi,8
+    sub ecx,1
+    jnz amCopyMonLoop
+
+amPadMonLoop:
+    xor eax,eax
+    stos dword ptr es:[edi]
+    stos dword ptr es:[edi]
+;
+    sub ebp,1
+    jnz amPadMonLoop
+    
+amDone:
+    popad
+    pop es
+    pop ds
+    ret
+AddMonitor     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           load_adapter_monitor
 ;
 ;           DESCRIPTION:    install adapter monitor
@@ -802,6 +791,7 @@ load_adapter_mon_loop:
     sub ecx,SIZE rdos_header
     call InitMonitor
     call CreateUniMap
+    call AddMonitor
     pop ecx
     pop es
     pop ds
