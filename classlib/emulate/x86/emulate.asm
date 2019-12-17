@@ -170,6 +170,20 @@ EmHlt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:                   LongEmHlt
+;
+;               DESCRIPTION:    hlt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LongEmHlt   Proc near
+	call TrapFault
+        ret
+LongEmHlt   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   EmOverrideData
 ;
 ;               DESCRIPTION:    change size of data between 16 & 32
@@ -1683,7 +1697,7 @@ lntEC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEE   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF2   DD OFFSET EmulateError,             OFFSET EmulateError
-lntF4   DD OFFSET EmulateError,             OFFSET EmulateError
+lntF4   DD OFFSET LongEmHlt,                OFFSET EmulateError
 lntF6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF8   DD OFFSET EmulateError,             OFFSET EmulateError
 lntFA   DD OFFSET EmCli,                    OFFSET EmSti

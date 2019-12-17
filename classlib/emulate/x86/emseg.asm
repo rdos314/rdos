@@ -2735,7 +2735,7 @@ ExcLongIdt:
         mov edi,eax
 ;       
         push edi
-        xor edi,edi
+        mov edi,[ebp+4].reg_idt.d_base
         call ReadLinearQword
         pop edi
 ;

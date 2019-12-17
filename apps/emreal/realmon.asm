@@ -113,7 +113,7 @@ SetupIntGate  proc near
     mov dx,[rdi+2]
     mov [rdi+6],dx
 ;
-    mov dx,28h
+    mov dx,8
     mov [rdi+2],dx
 ;
     mov edx,0FFFFFF80h
@@ -165,7 +165,7 @@ SetupTrapGate  proc near
     mov dx,[rdi+2]
     mov [rdi+6],dx
 ;
-    mov dx,28h
+    mov dx,8
     mov [rdi+2],dx
 ;
     mov edx,0FFFFFF80h
