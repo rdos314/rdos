@@ -37,6 +37,7 @@
 	extrn HwInt:near
 	extrn IretFar16:near
 	extrn IretFar32:near
+	extrn IretFar64:near
 	extrn IretTss:near
 	extrn LoadSegment:near
 	extrn ValidateTssLdt:near

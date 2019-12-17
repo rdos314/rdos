@@ -247,5 +247,21 @@ LongJmpFar       Proc near
     call JmpFar
     ret
 LongJmpFar       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   LongEmIret
+;
+;               DESCRIPTION:    EMULATE iretq
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LongEmIret
+
+LongEmIret  proc near
+        call IretFar64
+        ret
+LongEmIret  endp
 
         END

@@ -64,4 +64,5 @@
 	extrn LongRetNear:near
 
 	extrn LongCallFarMem:near
+	extrn LongEmIret:near
 

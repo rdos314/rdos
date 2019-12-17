@@ -3342,6 +3342,61 @@ IretFar32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:                   IretFar64
+;
+;               DESCRIPTION:    Emulate protected mode iret64
+;
+;               PARAMETERS:             SS:EBP          CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public IretFar64
+
+IretFar64       Proc near
+        call PopLong
+	mov [ebp].reg_eip,eax
+	mov [ebp+4].reg_eip,edx
+;
+        call PopLong
+        mov bx,ax
+;
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
+;
+	mov [ebp].reg_cs.d_limit,ecx
+	mov [ebp].reg_cs.d_base,eax
+	mov [ebp].reg_cs.d_selector,bx
+;
+        call PopLong
+	mov [ebp].reg_eflags,eax
+	mov [ebp].reg_eflags+4,edx
+;
+        call PopLong
+        push eax
+	push edx
+;
+        call PopLong
+        mov bx,ax
+;
+	pop edx
+	pop eax
+	mov [ebp].reg_esp,eax
+	mov [ebp+4].reg_esp,edx
+;
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
+;
+	mov [ebp].reg_ss.d_limit,ecx
+	mov [ebp].reg_ss.d_base,eax
+	mov [ebp].reg_ss.d_selector,bx
+        ret
+IretFar64       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   IretTss
 ;
 ;               DESCRIPTION:    IRET back to a TSS

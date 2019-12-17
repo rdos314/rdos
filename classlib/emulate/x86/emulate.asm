@@ -1664,7 +1664,7 @@ lntC6   DD OFFSET EmulateError,             OFFSET LongMoveWordImToMem
 lntC8   DD OFFSET EmulateError,             OFFSET EmulateError
 lntCA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntCC   DD OFFSET EmulateError,             OFFSET EmulateError
-lntCE   DD OFFSET EmulateError,             OFFSET EmulateError
+lntCE   DD OFFSET EmulateError,             OFFSET LongEmIret
 lntD0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntD2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntD4   DD OFFSET EmulateError,             OFFSET EmulateError

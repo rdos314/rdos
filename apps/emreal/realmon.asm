@@ -67,7 +67,7 @@ InitGdt proc near
     mov [rdi],ax
     mov eax,92000000h
     mov [rdi+2],eax
-    mov ax,0
+    mov ax,0AFh
     mov [rdi+6],ax
 ;
     mov rdi,realtime_mon_base
@@ -254,6 +254,31 @@ init:
     mov rsp,[rax]
     call InitGdt
     call InitIdt
+;
+    mov rbx,rsp
+    mov rax,OFFSET boot
+    mov ax,10h
+    push rax
+    push rbx
+;
+    mov rbx,realtime_mon_base
+    mov rax,OFFSET start
+    add rbx,rax
+    mov rax,realtime_mon_header_size
+    add rbx,rax
+    mov ax,8
+    pushf
+    push rax
+    push rbx
+;
+    iretq
+
+start:
+    mov ax,10h
+    mov ds,ax
+    mov es,ax
+    sti
+    hlt
 
 Code64  Ends
 
