@@ -67,7 +67,7 @@ InitGdt proc near
     mov [rdi],ax
     mov eax,92000000h
     mov [rdi+2],eax
-    mov ax,0AFh
+    mov ax,0CFh
     mov [rdi+6],ax
 ;
     mov rdi,realtime_mon_base

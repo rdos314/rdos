@@ -240,7 +240,7 @@ gdt10:
 gdt18:
     dw 0FFFFh
     dd 92000000h
-    dw 0AFh
+    dw 0CFh
 gdt20:
     dw 0FFFFh
     dd 92001800h
