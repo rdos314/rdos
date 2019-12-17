@@ -107,8 +107,6 @@ typedef struct TRdosLongModeHeader
 typedef struct TRdosRealTimeHeader
 {
     long Size;
-    long long StartIp;
-    long long ImageBase;
 } TRdosRealTimeHeader;
 
 typedef struct TRdosOldFileHeader

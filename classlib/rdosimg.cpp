@@ -1139,8 +1139,6 @@ int TRdosRealTimeObject::LoadFile(const char *FileName)
             return FALSE;
 
         HeaderSize = sizeof(TRdosRealTimeHeader);
-        HeaderSize += strlen(FileName);
-        HeaderSize++;
 
         FDeviceSize = File.GetSize();
         FSize = FDeviceSize + HeaderSize;
@@ -1149,10 +1147,9 @@ int TRdosRealTimeObject::LoadFile(const char *FileName)
         FDeviceHeader = (TRdosRealTimeHeader *)FData;
         FDeviceData = FData + HeaderSize;
 
-        FDeviceHeader->Size = HeaderSize;
-        FDeviceHeader->StartIp = ExeHeader.Eip;
-        FDeviceHeader->ImageBase = ExeHeader.ImageBase;
+        FDeviceHeader->Size = FDeviceSize;
 
+        File.SetPos(0);
         File.Read(FDeviceData, FDeviceSize);
 
         return TRUE;

@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
+INCLUDE system.def
 INCLUDE realtime.def
 
 .386p
@@ -46,10 +47,12 @@ map_linear	DD ?
 uni_linear      DD ?
 uni_phys        DD ?
 
+mon_linear      DD ?
+mon_size        DD ?
+
 data    ENDS
 
 code    SEGMENT byte public use32 'CODE'
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -531,8 +534,6 @@ SetupUniPml4	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-mon_file DB 'z:/realmon.bin', 0
-
 AddMonitor     PROC near
     push ds
     push es
@@ -540,46 +541,14 @@ AddMonitor     PROC near
 ;
     mov ax,SEG data
     mov ds,eax
-;
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET mon_file
-    xor cl,cl
-    OpenFile
-    jc amDone
-;
     mov ax,flat_sel
     mov es,eax
 ;
-    GetFileSize
-    add eax,realtime_mon_header_size
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-    AllocateBigLinear
+    mov eax,ds:mon_linear
+    or eax,eax
+    jz amDone
 ;
-    push eax
-    xor al,al
-    mov ecx,realtime_mon_header_size
-    mov edi,edx
-    rep stos byte ptr es:[edi]
-;
-    mov edi,edx
-    mov eax,OFFSET rtm_stack + 1000h
-    mov es:[edi],eax
-;
-    mov eax,0FFFFFF80h
-    mov es:[edi+4],eax
-;
-    pop eax
-;
-    mov ecx,eax
-    mov edi,edx
-    add edi,realtime_mon_header_size
-    ReadFile
-;
-    CloseFile
-;
+    mov ecx,ds:mon_size
     shr ecx,12
     push ecx
     push edx
@@ -750,6 +719,126 @@ emulate_realtime     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           InitMonitor
+;
+;           DESCRIPTION:    install monitor
+;
+;           PARAMETERS:     EDI         base address
+;                           ECX         size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitMonitor      Proc near
+    push ds
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    mov esi,edi
+    mov ecx,es:[esi].rt_size
+    add esi,SIZE real_time_header
+    mov ebp,ecx
+;
+    mov eax,ecx
+    add eax,realtime_mon_header_size
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov ds:mon_size,eax
+    AllocateBigLinear
+    mov ds:mon_linear,edx
+;
+    xor al,al
+    mov ecx,realtime_mon_header_size
+    mov edi,edx
+    rep stos byte ptr es:[edi]
+;
+    mov edi,edx
+    mov eax,OFFSET rtm_stack + 1000h
+    mov es:[edi],eax
+;
+    mov eax,0FFFFFF80h
+    mov es:[edi+4],eax
+;
+    mov ecx,ebp
+    mov edi,edx
+    add edi,realtime_mon_header_size
+    rep movs byte ptr es:[edi],es:[esi]
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:map_linear,edx
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:map_sel,bx
+;
+    popad
+    pop ds
+    ret
+InitMonitor	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           load_adapter_monitor
+;
+;           DESCRIPTION:    install adapter monitor
+;
+;           PARAMETERS:     edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_adapter_monitor      Proc near
+    push ds
+    push ax
+    push bx
+    push edx
+;    
+    mov ax,flat_sel
+    mov ds,ax
+
+load_adapter_mon_loop:
+    mov ax,[edx].typ
+    cmp ax,RdosRealTime
+    jne not_install_mon
+;
+    push ds
+    push es
+    push ecx
+    mov ecx,[edx].len
+    mov ax,ds
+    mov es,ax
+    mov edi,edx
+    add edi,SIZE rdos_header
+    sub ecx,SIZE rdos_header
+    call InitMonitor
+    pop ecx
+    pop es
+    pop ds
+    jmp load_adapter_mon_done
+
+not_install_mon:
+    cmp ax,RdosEnd
+    je load_adapter_mon_done
+
+load_adapter_mon_next:
+    add edx,[edx].len
+    jmp load_adapter_mon_loop
+
+load_adapter_mon_done:
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
+load_adapter_monitor      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    Init module
@@ -760,15 +849,21 @@ init    PROC far
     mov eax,SEG data
     mov ds,eax
     mov ds:uni_linear,0
+    mov ds:mon_linear,0
+    mov ds:mon_size,0
+    mov ds:map_linear,0
+    mov ds:map_sel,0
 ;
-    mov eax,1000h
-    AllocateBigLinear
-    mov ds:map_linear,edx
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:map_sel,bx
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+init_mon_loop:
+    mov edx,[bx].adapter_base
+    call load_adapter_monitor
+    add bx,SIZE adapter_typ
+    loop init_mon_loop     
 ;
     mov ax,cs
     mov ds,ax
