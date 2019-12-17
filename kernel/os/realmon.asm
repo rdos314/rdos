@@ -31,6 +31,8 @@ include \rdos\kernel\os\realtime.def
 
 Code64 segment byte public use64 'code64'
 
+boot:
+
 sgn  dw 657Ah
 eip  dq OFFSET init
 ib   dq realtime_mon_base
