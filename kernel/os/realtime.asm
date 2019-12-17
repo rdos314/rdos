@@ -53,6 +53,7 @@ mon_size        DD ?
 data    ENDS
 
 code    SEGMENT byte public use32 'CODE'
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -314,6 +315,142 @@ write_phys_qword     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddMonitor
+;
+;           DESCRIPTION:    Add and map monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddMonitor     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov edx,ds:mon_linear
+    or edx,edx
+    jz amDone
+;
+    mov ecx,ds:mon_size
+    shr ecx,12
+    push ecx
+    push edx
+;
+    mov edx,ds:uni_linear
+    AllocatePhysical64
+    mov al,3
+    mov es:[edx+0FF8h],eax  ; pml4
+    mov es:[edx+0FFCh],ebx
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax   ; ptr
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    xor eax,eax
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax   ; dir
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    xor eax,eax
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+;
+    pop edx
+    pop ecx
+;
+    mov ebp,200h
+
+amCopyMonLoop:    
+    GetPageEntry
+;
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    dec ebp
+    add edx,1000h
+    add edi,8
+    sub ecx,1
+    jnz amCopyMonLoop
+
+amPadMonLoop:
+    xor eax,eax
+    stos dword ptr es:[edi]
+    stos dword ptr es:[edi]
+;
+    sub ebp,1
+    jnz amPadMonLoop
+    
+amDone:
+    popad
+    pop es
+    pop ds
+    ret
+AddMonitor     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           EmulateRealtime
+;
+;           DESCRIPTION:    Emulate realtime load
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+emulate_realtime_name    DB 'Emulate Realtime',0
+
+emulate_realtime     PROC far
+    push ds
+    push es
+    pushad
+;
+    call AddMonitor
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ebx,ds:uni_phys
+;
+    mov al,7
+    BootRealtimeCore
+;
+    popad
+    pop es
+    pop ds
+    ret
+emulate_realtime     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetupUniDir
 ;
 ;           DESCRIPTION:    Setup ptr entries
@@ -528,111 +665,6 @@ SetupUniPml4	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AddMonitor
-;
-;           DESCRIPTION:    Add and map monitor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddMonitor     PROC near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,eax
-    mov ax,flat_sel
-    mov es,eax
-;
-    mov eax,ds:mon_linear
-    or eax,eax
-    jz amDone
-;
-    mov ecx,ds:mon_size
-    shr ecx,12
-    push ecx
-    push edx
-;
-    mov edx,ds:uni_linear
-    AllocatePhysical64
-    mov al,3
-    mov es:[edx+0FF8h],eax  ; pml4
-    mov es:[edx+0FFCh],ebx
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax   ; ptr
-    mov es:[edi+4],ebx
-    add edi,8
-;
-    push eax
-    xor eax,eax
-    mov ecx,3FEh
-    rep stos dword ptr es:[edi]
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax   ; dir
-    mov es:[edi+4],ebx
-    add edi,8
-;
-    push eax
-    xor eax,eax
-    mov ecx,3FEh
-    rep stos dword ptr es:[edi]
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    pop edx
-    pop ecx
-;
-    mov ebp,200h
-
-amCopyMonLoop:    
-    GetPageEntry
-;
-    mov al,3
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-;
-    dec ebp
-    add edx,1000h
-    add edi,8
-    sub ecx,1
-    jnz amCopyMonLoop
-
-amPadMonLoop:
-    xor eax,eax
-    stos dword ptr es:[edi]
-    stos dword ptr es:[edi]
-;
-    sub ebp,1
-    jnz amPadMonLoop
-    
-amDone:
-    popad
-    pop es
-    pop ds
-    ret
-AddMonitor     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           CreateUniMap
 ;
 ;           DESCRIPTION:    Create uni mapping
@@ -643,20 +675,11 @@ AddMonitor     Endp
 
 CreateUniMap     PROC near
     push ds
-    push edx
+    push es
+    pushad
 ;
     mov edx,SEG data
     mov ds,edx
-;
-    mov edx,ds:uni_linear
-    or edx,edx
-    jnz cuDone
-;
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edi
 ;
     mov eax,flat_sel
     mov es,eax
@@ -673,48 +696,11 @@ CreateUniMap     PROC near
 ;    
     call SetupUniPml4
 ;
-    pop edi
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-;
-    call AddMonitor
-
-cuDone:
-    mov ebx,ds:uni_phys
-;
-    pop edx
-    pop ds
-    ret
-CreateUniMap     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           EmulateRealtime
-;
-;           DESCRIPTION:    Emulate realtime load
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-emulate_realtime_name    DB 'Emulate Realtime',0
-
-emulate_realtime     PROC far
-    push ds
-    push es
-    pushad
-;
-    call CreateUniMap
-;
-    mov al,7
-    BootRealtimeCore
-;
     popad
     pop es
     pop ds
     ret
-emulate_realtime     Endp
+CreateUniMap     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -815,6 +801,7 @@ load_adapter_mon_loop:
     add edi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     call InitMonitor
+    call CreateUniMap
     pop ecx
     pop es
     pop ds
