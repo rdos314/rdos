@@ -37,6 +37,12 @@ sgn  dw 657Ah
 eip  dq OFFSET init
 ib   dq realtime_mon_base
 
+    mov rbx,0FFFFFF8000000000h + realtime_mon_header_size
+    mov rax,[rbx+2]
+    add rbx,rax
+    push rbx
+    ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;

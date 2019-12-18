@@ -384,13 +384,21 @@ rt_start:
     dw 28h
 
 rt_init64:
-    db 49h  ; mov r10,0FFFFFF8000000000h
-    db 0BAh
+    db 48h  ; mov rbx,0FFFFFF8000000000h
+    db 0BBh
     dd realtime_mon_header_size
     dd 0FFFFFF80h
 ;
-    db 41h  ; push r10
-    db 52h
+    db 48h   ; mov rax,[rbx+2]
+    db 8Bh
+    db 43h
+    db 2
+;
+    db 48h   ; add rbx,rax
+    db 3
+    db 0D8h
+;
+    db 53h  ; push rbx
 ;
     db 0C3h ; ret
 

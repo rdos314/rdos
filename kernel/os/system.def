@@ -144,6 +144,13 @@ rt_size             DD ?
 
 real_time_header   ENDS
 
+real_mon_header   STRUC
+
+rtm_sign           DW ?
+rtm_start          DD ?,?
+
+real_mon_header   ENDS
+
 boot64_pages        = 16
 
 system_seg      STRUC
