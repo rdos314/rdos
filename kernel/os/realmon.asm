@@ -35,13 +35,16 @@ boot:
 
 sgn  dw 657Ah
 eip  dq OFFSET init
+stt  dq OFFSET mon_stack_top
 ib   dq realtime_mon_base
 
-    mov rbx,0FFFFFF8000000000h + realtime_mon_header_size
-    mov rax,[rbx+2]
-    add rbx,rax
-    push rbx
-    ret
+pad  db 6 DUP(?)
+
+mon_stack       DQ 200h DUP(?)
+mon_stack_top   DQ 10h DUP(?)
+
+rtm_gdt         DQ 4 DUP(?)
+rtm_idt         DQ 2*20h DUP(?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -82,8 +85,6 @@ InitGdt proc near
     mov rdi,realtime_mon_base
     mov rax,OFFSET gdt_size
     add rdi,rax
-    mov rax,realtime_mon_header_size
-    add rdi,rax
     lgdt [rdi]
     ret
 InitGdt Endp
@@ -113,9 +114,6 @@ SetupIntGate  proc near
     mov rdx,OFFSET rtm_idt
     add rdi,rdx
     add rdi,rax
-;
-    mov rdx,realtime_mon_header_size
-    add rsi,rdx
 ;
     mov [rdi],esi
 ;
@@ -165,9 +163,6 @@ SetupTrapGate  proc near
     mov rdx,OFFSET rtm_idt
     add rdi,rdx
     add rdi,rax
-;
-    mov rdx,realtime_mon_header_size
-    add rsi,rdx
 ;
     mov [rdi],esi
 ;
@@ -242,8 +237,6 @@ InitIdt proc near
     mov rdi,realtime_mon_base
     mov rax,OFFSET idt_size
     add rdi,rax
-    mov rax,realtime_mon_header_size
-    add rdi,rax
     lidt [rdi]
 ;
     ret
@@ -257,10 +250,6 @@ InitIdt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
-    mov rax,realtime_mon_base
-    mov rbx,OFFSET rtm_stack
-    add rax,rbx
-    mov rsp,[rax]
     call InitGdt
     call InitIdt
 ;
@@ -272,8 +261,6 @@ init:
 ;
     mov rbx,realtime_mon_base
     mov rax,OFFSET start
-    add rbx,rax
-    mov rax,realtime_mon_header_size
     add rbx,rax
     mov ax,8
     pushf

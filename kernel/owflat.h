@@ -1309,6 +1309,7 @@
 
 #pragma aux RdosWaitForCanModuleProgramming = \
     CallGate_wait_for_can_module_programming  \
+    "movzx eax,ax" \
     "movzx edx,dx" \
     "mov [esi],edx" \
     "mov [edi],ecx" \
