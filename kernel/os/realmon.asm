@@ -36,9 +36,8 @@ boot:
 sgn  dw 657Ah
 eip  dq OFFSET init
 stt  dq OFFSET mon_stack_top
-ib   dq realtime_mon_base
 
-pad  db 6 DUP(?)
+pad  db 14 DUP(?)
 
 mon_stack       DQ 200h DUP(?)
 mon_stack_top   DQ 10h DUP(?)
@@ -195,7 +194,7 @@ trap_3:
 invalid_opcode:
 protection_fault:
 page_fault:
-    iret
+    iretq
 
 idt_size   DW 1FFh
 idt_base   DQ 0

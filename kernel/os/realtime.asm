@@ -313,6 +313,123 @@ write_phys_qword     PROC far
 write_phys_qword     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ToHex
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     AL          Number
+;
+;           RETURNS:        AX          Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToHex      PROC near
+
+hex_conv_low:
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;    
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+ToHex      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateMonitorThread
+;
+;           DESCRIPTION:    Create monitor thread
+;
+;           PARAMETERS:     AL		Core #
+;
+;           RETURNS:        ES          Thread sel
+;                           EDX         Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+core_name DB 'Core #', 0
+
+CreateMonitorThread      Proc near
+    push ds
+    push eax
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    push eax
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,SIZE thread_seg
+    add eax,1000h
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov ebp,eax
+    AllocateBigLinear
+;
+    mov ecx,ebp
+    mov edi,edx
+    rep stos byte ptr es:[edi]
+;
+    mov edi,edx
+    add edi,1000h
+    add edi,OFFSET thread_name
+    mov esi,OFFSET core_name
+
+cmtCopyName:
+    lods byte ptr cs:[esi]
+    or al,al
+    jz cmtCopyDone
+;
+    stos byte ptr es:[edi]
+    jmp cmtCopyName
+
+cmtCopyDone:
+    pop eax
+    call ToHex
+    stos word ptr es:[edi]
+    xor ax,ax
+    stos word ptr es:[edi]
+;
+    push edx
+    mov ecx,ebp
+    AllocateGdt
+    add edx,1000h    
+    CreateDataSelector16
+    mov es,ebx
+    pop edx
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop ds
+    ret
+CreateMonitorThread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           EmulateRealtime
@@ -330,9 +447,12 @@ emulate_realtime     PROC far
 ;
     mov ax,SEG data
     mov ds,eax
-    mov ebx,ds:uni_phys
 ;
     mov al,7
+    call CreateMonitorThread
+;
+    mov al,7
+    mov ebx,ds:uni_phys
     BootRealtimeCore
 ;
     popad
