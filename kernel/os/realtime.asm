@@ -620,7 +620,6 @@ InitMonitor      Proc near
     mov ebp,ecx
 ;
     mov eax,ecx
-    add eax,realtime_mon_header_size
     dec eax
     and ax,0F000h
     add eax,1000h
@@ -628,21 +627,8 @@ InitMonitor      Proc near
     AllocateBigLinear
     mov ds:mon_linear,edx
 ;
-    xor al,al
-    mov ecx,realtime_mon_header_size
-    mov edi,edx
-    rep stos byte ptr es:[edi]
-;
-    mov edi,edx
-    mov eax,OFFSET rtm_stack + 1000h
-    mov es:[edi],eax
-;
-    mov eax,0FFFFFF80h
-    mov es:[edi+4],eax
-;
     mov ecx,ebp
     mov edi,edx
-    add edi,realtime_mon_header_size
     rep movs byte ptr es:[edi],es:[esi]
 ;
     mov eax,1000h

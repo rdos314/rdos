@@ -93,8 +93,6 @@ struct TBinLongModeHeader
 struct TBinRealTimeHeader
 {
     short int Signature;
-    long long Eip;
-    long long ImageBase;
 };
 
 #pragma pack( pop )

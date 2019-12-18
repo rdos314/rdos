@@ -43,7 +43,19 @@ pad  db 6 DUP(?)
 mon_stack       DQ 200h DUP(?)
 mon_stack_top   DQ 10h DUP(?)
 
-rtm_gdt         DQ 4 DUP(?)
+rtm_gdt:
+     dq 0
+;
+     dw 0FFFFh
+     dd 9A000000h
+     dw 0AFh
+;
+     dw 0FFFFh
+     dd 92000000h
+     dw 0CFh
+;
+     dq 0
+
 rtm_idt         DQ 2*20h DUP(?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -56,35 +68,16 @@ rtm_idt         DQ 2*20h DUP(?)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 gdt_size   DW 17h
-gdt_base   DQ realtime_mon_base + rtm_gdt
+gdt_base   DQ 0
 
 InitGdt proc near
     mov rdi,realtime_mon_base
     mov rdx,OFFSET rtm_gdt
-    add rdi,rdx
+    add rdx,rdi
 ;
-    mov rax,OFFSET boot
-    mov [rdi],rax
-;
-    add edi,8
-    mov ax,0FFFFh
-    mov [rdi],ax
-    mov eax,9A000000h
-    mov [rdi+2],eax
-    mov ax,0AFh
-    mov [rdi+6],ax
-;
-    add edi,8
-    mov ax,0FFFFh
-    mov [rdi],ax
-    mov eax,92000000h
-    mov [rdi+2],eax
-    mov ax,0CFh
-    mov [rdi+6],ax
-;
-    mov rdi,realtime_mon_base
     mov rax,OFFSET gdt_size
     add rdi,rax
+    mov [rdi+2],rdx
     lgdt [rdi]
     ret
 InitGdt Endp
@@ -205,7 +198,7 @@ page_fault:
     iret
 
 idt_size   DW 1FFh
-idt_base   DQ realtime_mon_base + rtm_idt
+idt_base   DQ 0
 
 InitIdt proc near
     mov rax,OFFSET boot
@@ -234,9 +227,14 @@ InitIdt proc near
     mov rsi,OFFSET page_fault
     call SetupTrapGate
 ;
+    mov rdx,realtime_mon_base
+    mov rax,OFFSET rtm_idt
+    add rdx,rax
+;
     mov rdi,realtime_mon_base
     mov rax,OFFSET idt_size
     add rdi,rax
+    mov [rdi+2],rdx
     lidt [rdi]
 ;
     ret
