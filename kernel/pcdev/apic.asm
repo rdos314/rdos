@@ -384,23 +384,19 @@ rt_start:
     dw 28h
 
 rt_init64:
+    db 48h  ; mov rbx,0FFFFFF8000201000h
+    db 0BBh
+    dd 201000h
+    dd 0FFFFFF80h
+;  
+    db 48h   ; mov rsp,rbx
+    db 8Bh
+    db 0E3h
+;
     db 48h  ; mov rbx,0FFFFFF8000000000h
     db 0BBh
     dd 0
     dd 0FFFFFF80h
-;
-    db 48h   ; mov rax,[rbx+10}
-    db 8Bh
-    db 43h
-    db 0Ah
-;
-    db 48h   ; add rax,rbx
-    db 3
-    db 0C3h 
-;  
-    db 48h   ; mov rsp,rax
-    db 8Bh
-    db 0E0h
 ;
     db 48h   ; mov rax,[rbx+2]
     db 8Bh

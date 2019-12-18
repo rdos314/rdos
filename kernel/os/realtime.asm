@@ -553,6 +553,7 @@ CreateMonitor      Proc near
 ;
     push edx
 ;
+    mov edi,edx
     mov edx,ds:rc_core_linear
     shr ecx,12
     mov ebp,200h
@@ -560,7 +561,7 @@ CreateMonitor      Proc near
 cmCopyLoop:
     GetPageEntry
     mov es:[edi],eax
-    mov es:[edi+4],edx
+    mov es:[edi+4],ebx
 ;
     add edx,1000h
     add edi,8
