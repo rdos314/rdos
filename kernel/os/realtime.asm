@@ -467,6 +467,8 @@ CreateMonitor      Proc near
     mov ds:rc_core_linear,edx
 ;
     push es
+    push ecx
+;
     mov eax,flat_sel
     mov es,eax
 ;
@@ -486,6 +488,103 @@ CreateMonitor      Proc near
     mov esi,ds:uni_linear
     mov ecx,400h
     rep movs dword ptr es:[edi],es:[esi]
+;
+    mov esi,edx
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,es:[esi+0FF8h]
+    mov ebx,es:[esi+0FFCh]
+    SetPageEntry
+;
+    push eax
+    push ebx
+;
+    AllocatePhysical64
+    or al,3
+    mov es:[esi+0FF8h],eax
+    mov es:[esi+0FFCh],ebx
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+;
+    mov es:[edx],eax
+    mov es:[edx+4],ebx
+;
+    push eax
+    mov ecx,3FEh
+    xor eax,eax
+    mov edi,edx
+    add edi,8
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov eax,es:[edx]
+    mov ebx,es:[edx+4]
+;
+    push eax
+    push ebx
+;
+    AllocatePhysical64
+    or al,3
+    mov es:[edx],eax
+    mov es:[edx],ebx
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+;
+    mov es:[edx],eax
+    mov es:[edx+4],ebx
+;
+    push eax
+    mov ecx,3FEh
+    xor eax,eax
+    mov edi,edx
+    add edi,8
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+    mov eax,es:[edx]
+    mov ebx,es:[edx+4]
+;
+    push eax
+    push ebx
+;
+    AllocatePhysical64
+    or al,3
+    mov es:[edx],eax
+    mov es:[edx],ebx
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+;
+    mov es:[edx],eax
+    mov es:[edx+4],ebx
+;
+    AllocatePhysical64
+    or al,3
+    mov es:[edx+8],eax
+    mov es:[edx+12],ebx
+;
+    push eax
+    mov ecx,3FCh
+    xor eax,eax
+    mov edi,edx
+    add edi,16
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    pop ecx
+    pop ds
+;
+    mov esi,edx
+    mov edx,ds:rc_core_linear
+    shr ecx,2
 ;
     pop es
     ret
