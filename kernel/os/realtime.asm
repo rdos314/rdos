@@ -457,12 +457,37 @@ CreateMonitor      Proc near
     push eax
     mov eax,SIZE real_core_struc
     AllocateSmallGlobalMem
+    mov eax,es
+    mov ds,eax
     pop eax
 ;
-    mov es:rc_core,al
+    mov ds:rc_core,al
     call CreateMonitorThread
-    mov es:rc_thread_sel,bx
-    mov es:rc_core_linear,edx
+    mov ds:rc_thread_sel,bx
+    mov ds:rc_core_linear,edx
+;
+    push es
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:rc_linear,edx
+;
+    AllocatePhysical32
+    mov ds:rc_cr3,eax
+;
+    mov al,3
+    SetPageEntry
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov edi,edx
+    mov esi,ds:uni_linear
+    mov ecx,400h
+    rep movs dword ptr es:[edi],es:[esi]
+;
+    pop es
     ret
 CreateMonitor	Endp
 
