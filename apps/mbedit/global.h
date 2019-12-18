@@ -442,7 +442,6 @@ pubext char str_synt [BUF_256];         /* for "mbedit.syn"           */
 /* 11.09.03 - disp_hnd.c: bugfix: is_inside_comment_single() from start of line with <lf> */
 /* 15.09.03 - commands.c: bugfix: ^K: Ada, nested "if, end if" */
 /* 04.10.03 - switches.c: 'S' 'V': BOT_ROW --> MAX_ROW */
-/* 28.10.03 - disp_hnd.c, ansi_out.[ch]: comment characters "//" replaced by "/*" */
 /* 29.10.03 - disp_hnd.c: show_status_line_2(): bugfix extreme long/short lines */
 /* 02.11.03 - disp_hnd.c, commands.c: has_single_quote_string():
               Visual Basic uses single quote for comments, not strings */

@@ -54,7 +54,7 @@
 #include <malloc.h>
 #include <conio.h>
 #include <fcntl.h>
-#include <dos.h>
+// #include <dos.h>
 #include <sys\types.h>
 #include <sys\stat.h>
 
