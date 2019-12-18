@@ -39,6 +39,16 @@ INCLUDE realtime.def
 
 .386p
 
+real_core_struc	STRUC
+
+rc_linear       DD ?
+rc_cr3          DD ?
+rc_core_linear  DD ?
+rc_thread_sel	DW ?
+rc_core         DB ?
+
+real_core_struc ENDS
+
 data    SEGMENT byte public 'DATA'
 
 map_sel	        DW ?
@@ -361,17 +371,18 @@ ToHex      ENDP
 ;
 ;           PARAMETERS:     AL		Core #
 ;
-;           RETURNS:        ES          Thread sel
+;           RETURNS:        BX          Thread sel
+;                           ECX         Linear size
 ;                           EDX         Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-core_name DB 'Core #', 0
+core_name DB 'Core ', 0
 
 CreateMonitorThread      Proc near
     push ds
+    push es
     push eax
-    push ecx
     push esi
     push edi
     push ebp
@@ -417,17 +428,43 @@ cmtCopyDone:
     AllocateGdt
     add edx,1000h    
     CreateDataSelector16
-    mov es,ebx
     pop edx
+    mov ecx,ebp
 ;
     pop ebp
     pop edi
     pop esi
-    pop ecx
     pop eax
+    pop es
     pop ds
     ret
 CreateMonitorThread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateMonitor
+;
+;           DESCRIPTION:    Create monitor
+;
+;           PARAMETERS:     AL		Core #
+;
+;           RETURNS:        ES          Real core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMonitor      Proc near
+    push eax
+    mov eax,SIZE real_core_struc
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:rc_core,al
+    call CreateMonitorThread
+    mov es:rc_thread_sel,bx
+    mov es:rc_core_linear,edx
+    ret
+CreateMonitor	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -449,7 +486,7 @@ emulate_realtime     PROC far
     mov ds,eax
 ;
     mov al,7
-    call CreateMonitorThread
+    call CreateMonitor
 ;
     mov al,7
     mov ebx,ds:uni_phys
