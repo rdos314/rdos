@@ -7298,7 +7298,7 @@ update_time     ENDP
 ;
 ;           DESCRIPTION:    Allocate thread control block
 ;
-;           PARAMETERS:         ES          Thread control block
+;           RETURNS:        ES          Thread control block
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -7320,6 +7320,42 @@ allocate_thread_block   PROC near
     pop ebx    
     ret
 allocate_thread_block   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ALLOCATE_NULL_THREAD_BLOCK
+;
+;           DESCRIPTION:    Allocate thread control block for null process (4k page aligned)
+;
+;           RETURNS:        ES          Thread control block
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_null_thread_block   PROC near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov eax,SIZE thread_seg
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    push eax
+    AllocateBigLinear
+    pop ecx
+    AllocateGdt
+    CreateDataSelector32
+    mov es,bx
+    mov es:p_linear,edx
+;
+    pop edx
+    pop ecx
+    pop ebx    
+    pop eax
+    ret
+allocate_null_thread_block   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8618,7 +8654,16 @@ create_thread   PROC near
     mov [ebp].cr_mode,dx
     mov [ebp].cr_name,edi
     mov [ebp+4].cr_name,es
+    or al,al
+    jz create_null
+
     call allocate_thread_block
+    jmp create_block_ok
+
+create_null:
+    call allocate_null_thread_block
+
+create_block_ok:
     mov dx,[ebp].cr_prio
     call init_thread_block
     mov ax,es
@@ -9685,7 +9730,7 @@ init_first_process      Proc near
 ;
     mov ax,virt_thread_sel
     mov es,ax
-    call allocate_thread_block
+    call allocate_null_thread_block
 ;
     mov ax,es
     mov ds,ax
