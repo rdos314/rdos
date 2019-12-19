@@ -2050,6 +2050,8 @@ run_ap_core:
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
+    mov es,fs:ps_null_thread
+    mov es:p_active,1
 ;
     StartSyscall
 
@@ -6993,6 +6995,8 @@ wait_micro_sec  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+Inactive_state  DB 'Inactive',0
+Realtime_state  DB 'Realtime',0
 Wait_state      DB 'Wait',0
 Ready_state     DB 'Ready',0
 Signal_state    DB 'Signal',0
@@ -7018,12 +7022,12 @@ check_cpu_loop:
     mov ax,dx
     GetCoreNumber
     jc check_not_cpu
-;    
-    cmp bx,fs:ps_curr_thread
-    je check_curr_ok
 ;
     cmp bx,fs:ps_null_thread
     je check_null_ok
+;    
+    cmp bx,fs:ps_curr_thread
+    je check_curr_ok
 ;   
     mov ax,fs
     mov fs,bx
@@ -7048,9 +7052,31 @@ check_curr_ok:
     mov si,OFFSET Run_state
     jmp check_copy_id
     
-check_null_ok:
+check_null_ok:    
+    cmp bx,fs:ps_curr_thread
+    mov si,OFFSET Run_state
+    je check_copy_id
+;
+    mov fs,bx
+    mov al,fs:p_active
     mov si,OFFSET Ready_cpu_state
-    jmp check_copy_id
+    or al,al
+    jnz check_copy_id
+;
+    mov al,fs:p_realtime
+    mov si,OFFSET Realtime_state
+    jnz check_copy_no_id
+;
+    mov si,OFFSET Inactive_state
+
+check_copy_no_id:
+    mov al,cs:[si]
+    or al,al
+    jz check_copy_end
+;
+    inc si
+    stos byte ptr es:[edi]
+    jmp check_copy_no_id
 
 check_wakeup_ok:
     mov si,OFFSET Wakeup_state
@@ -7073,6 +7099,8 @@ check_copy_id_done:
     mov al,'0'
     add al,dl
     stos byte ptr es:[edi]
+
+check_copy_end:
     xor al,al
     stos byte ptr es:[edi]
 ;
@@ -7358,6 +7386,8 @@ allocate_thread_block   PROC near
     mov bx,es
     GetSelectorBaseSize
     mov es:p_linear,edx
+    mov es:p_active,1
+    mov es:p_realtime,0
 ;
     pop edx
     pop ecx
@@ -7393,6 +7423,8 @@ allocate_null_thread_block   PROC near
     CreateDataSelector32
     mov es,bx
     mov es:p_linear,edx
+    mov es:p_active,0
+    mov es:p_realtime,0
 ;
     pop edx
     pop ecx
@@ -9775,6 +9807,7 @@ init_first_process      Proc near
     mov ax,virt_thread_sel
     mov es,ax
     call allocate_null_thread_block
+    mov es:p_active,1
 ;
     mov ax,es
     mov ds,ax
