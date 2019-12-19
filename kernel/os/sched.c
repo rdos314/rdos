@@ -586,15 +586,13 @@ int __far ImplAllocateRealTimeCore()
 {
     int ok = FALSE;
     int Core;
-    int CoreId = 0;
 
-    for (Core = 0; Core < ProcessorCount; Core++)
+    for (Core = 0; Core < ProcessorCount && !ok; Core++)
     {
         if (!CoreArr[Core].Realtime && !CoreArr[Core].Active)
         {
             CoreArr[Core].Realtime = TRUE;
-            CoreId = RdosGetCoreNum(Core);
-            break;
+            ok = TRUE;
         }
     }
 
@@ -603,7 +601,7 @@ int __far ImplAllocateRealTimeCore()
     else
         RdosSetFailure();
 
-    return CoreId;
+    return Core;
 }
 
 /*##########################################################################
@@ -612,15 +610,11 @@ int __far ImplAllocateRealTimeCore()
 #
 ##########################################################################*/
 #pragma aux ImplFreeRealTimeCore "*" rdosdev parm routine [eax]
-void __far ImplFreeRealTimeCore(int CoreId)
+void __far ImplFreeRealTimeCore(int Core)
 {
-    int i;
-    int Core;
-
-    for (Core = 0; Core < ProcessorCount; Core++)
+    if (Core >= 0 && Core < ProcessorCount)
         if (CoreArr[Core].Realtime)
-            if (CoreId == RdosGetCoreNum(Core))
-                CoreArr[Core].Realtime = FALSE;
+            CoreArr[Core].Realtime = FALSE;
 
     RdosSetSuccess();
 }

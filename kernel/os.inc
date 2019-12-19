@@ -1091,12 +1091,12 @@ ShutdownCore    MACRO
     OsGate shutdown_core_nr
                     ENDM
 
-;   OUT AL	Apic ID
+;   OUT AX     Processor #
 AllocateRealtimeCore    MACRO
     OsGate allocate_realtime_core_nr
                     ENDM
 
-;   IN  AL	Apic ID
+;   IN  AX	Processor #
 FreeRealtimeCore    MACRO
     OsGate free_realtime_core_nr
                     ENDM
