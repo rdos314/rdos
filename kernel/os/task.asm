@@ -2286,6 +2286,46 @@ stThreadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ToHex
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     AL          Number
+;
+;           RETURNS:        AX          Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToHex      PROC near
+
+hex_conv_low:
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;    
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+ToHex      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartProcessorNullThreads
 ;
 ;           DESCRIPTION:    Start each of the null threads for a processor
@@ -2334,12 +2374,14 @@ start_locks_ok:
     mov ax,1
     CreateThread
 ;    
-    mov eax,10
+    mov eax,16
     AllocateSmallGlobalMem
     xor di,di
-    mov eax,cs:dword ptr null_base
+    mov eax,cs:dword ptr core_name_base
     stosd
     mov al,' '
+    stosb
+    mov al,'0'
     stosb
     mov al,'1'
     stosb
@@ -2362,9 +2404,11 @@ create_null_loop:
     CreateThread
     pop cx
 ;
-    mov di,5
-    inc byte ptr es:[di]
     inc bx
+    mov al,bl
+    call ToHex
+    mov di,5
+    mov es:[di],ax
     loop create_null_loop
 
 start_processor_free:
@@ -2372,7 +2416,7 @@ start_processor_free:
     ret
 start_processor_null_threads    Endp
 
-null_base   DB 'Null'
+core_name_base   DB 'Core'
 
 null_thread0:
     mov ax,core_data_sel
@@ -9573,7 +9617,7 @@ create_callback_frame_done:
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-null_name       DB 'Null 0',0
+null_name       DB 'Core 00',0
 
 create_first_thread       PROC near
     xor eax,eax
