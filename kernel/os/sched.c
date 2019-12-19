@@ -59,6 +59,8 @@ struct TCore
 {
     long long NullBaseTics;
     long long CoreBaseTics;
+    int Active;
+    int Realtime;
 };
 
 struct TThreadState
@@ -116,13 +118,19 @@ extern int GetThreadIntCount(int ThreadHandle);
 ##########################################################################*/
 void StartCore()
 {
+    int Core;
     int CoreId;
 
-    if (ActiveProcessors < ProcessorCount)
+    for (Core = 0; Core < ProcessorCount; Core++)
     {
-        CoreId = RdosGetCoreNum(ActiveProcessors);
-        RdosStartCore(CoreId);
-        ActiveProcessors++;
+        if (!CoreArr[Core].Realtime && !CoreArr[Core].Active)
+        {
+            CoreArr[Core].Active = TRUE;
+            CoreId = RdosGetCoreNum(Core);
+            RdosStartCore(CoreId);
+            ActiveProcessors++;
+            break;
+        }
     }
 }
 
@@ -347,16 +355,16 @@ int CreateTid()
 void MoveThread(int Core, int ThreadId)
 {
     int i;
+    int ok = FALSE;
 
     if (Core < RdosGetCoreCount())
+        ok = TRUE;
+
+    if (ok)
+        ok = CoreArr[Core].Active;
+
+    if (ok)
     {
-        RdosEnterKernelSection(&CoreSection);
-
-        while (ActiveProcessors <= Core)
-            StartCore();
-
-        RdosLeaveKernelSection(&CoreSection);
-
         RdosEnterKernelSection(&ThreadSection);
 
         for (i = 0; i < ActiveThreads; i++)
@@ -604,6 +612,11 @@ void __far SchedulerThread(void *param)
         RdosGetCoreLoad(Core, &NullTics, &CoreTics);
         CoreArr[Core].CoreBaseTics = CoreTics;
         CoreArr[Core].NullBaseTics = NullTics;
+        CoreArr[Core].Realtime = FALSE;
+        if (Core == 0)
+            CoreArr[Core].Active = TRUE;
+        else
+            CoreArr[Core].Active = FALSE;
     }
 
     for (;;)
@@ -628,29 +641,32 @@ void __far SchedulerThread(void *param)
         NullSum = 0;
         CoreSum = 0;
 
-        for (Core = 0; Core < ActiveProcessors; Core++)
+        for (Core = 0; Core < ProcessorCount; Core++)
         {
-            NullTime = CoreStatArr[Core].NullTics;
-            CoreTime = CoreStatArr[Core].CoreTics;
+            if (CoreArr[Core].Active)
+            {
+                NullTime = CoreStatArr[Core].NullTics;
+                CoreTime = CoreStatArr[Core].CoreTics;
 
-            NullSum += NullTime;
-            CoreSum += CoreTime;
+                NullSum += NullTime;
+                CoreSum += CoreTime;
 
-            if (CoreTime)
-                Load = 1000 - 1000 * NullTime / CoreTime;
-            else
-                Load = 0;
+                if (CoreTime)
+                    Load = 1000 - 1000 * NullTime / CoreTime;
+                else
+                    Load = 0;
 
-            if (Load < 0)
-                Load = 0;
+                if (Load < 0)
+                    Load = 0;
 
-            if (Load > 1000)
-                Load = 1000;
+                if (Load > 1000)
+                    Load = 1000;
 
-            if (Load > MaxLoad)
-                MaxLoad = Load;
+                if (Load > MaxLoad)
+                    MaxLoad = Load;
 
-            CoreStatArr[Core].Load = Load;
+                CoreStatArr[Core].Load = Load;
+            }
         }
 
         if (CoreSum)
@@ -724,26 +740,28 @@ void __far SchedulerThread(void *param)
         if (CurrLoad > 400)
             StartCore();
 
-
         if (ActiveProcessors > 1)
         {
             HighestLoad = -1;
             LowestLoad = 1100;
 
-            for (Core = 0; Core < ActiveProcessors; Core++)
+            for (Core = 0; Core < ProcessorCount; Core++)
             {
-                Load = CoreStatArr[Core].Load;
-
-                if (Load > HighestLoad)
+                if (CoreArr[Core].Active)
                 {
-                    HighestCore = Core;
-                    HighestLoad = Load;
-                }
+                    Load = CoreStatArr[Core].Load;
 
-                if (Load < LowestLoad)
-                {
-                    LowestCore = Core;
-                    LowestLoad =  Load;
+                    if (Load > HighestLoad)
+                    {
+                        HighestCore = Core;
+                        HighestLoad = Load;
+                    }
+
+                    if (Load < LowestLoad)
+                    {
+                        LowestCore = Core;
+                        LowestLoad =  Load;
+                    }
                 }
             }
 
