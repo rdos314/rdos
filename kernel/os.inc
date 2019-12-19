@@ -1091,6 +1091,16 @@ ShutdownCore    MACRO
     OsGate shutdown_core_nr
                     ENDM
 
+;   OUT AL	Apic ID
+AllocateRealtimeCore    MACRO
+    OsGate allocate_realtime_core_nr
+                    ENDM
+
+;   IN  AL	Apic ID
+FreeRealtimeCore    MACRO
+    OsGate free_realtime_core_nr
+                    ENDM
+
 ;   IN  AL	Apic ID
 ;   IN  EBX     CR3
 ;   IN  ES:EDI  Boot startup code

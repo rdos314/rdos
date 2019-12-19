@@ -578,6 +578,55 @@ int __far ImplGetProgramID(int Index)
 
 /*##########################################################################
 #
+#   Name       : AllocateRealTimeCore
+#
+##########################################################################*/
+#pragma aux ImplAllocateRealTimeCore "*" rdosdev parm routine value [eax]
+int __far ImplAllocateRealTimeCore()
+{
+    int ok = FALSE;
+    int Core;
+    int CoreId = 0;
+
+    for (Core = 0; Core < ProcessorCount; Core++)
+    {
+        if (!CoreArr[Core].Realtime && !CoreArr[Core].Active)
+        {
+            CoreArr[Core].Realtime = TRUE;
+            CoreId = RdosGetCoreNum(Core);
+            break;
+        }
+    }
+
+    if (ok)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return CoreId;
+}
+
+/*##########################################################################
+#
+#   Name       : FreeRealTimeCore
+#
+##########################################################################*/
+#pragma aux ImplFreeRealTimeCore "*" rdosdev parm routine [eax]
+void __far ImplFreeRealTimeCore(int CoreId)
+{
+    int i;
+    int Core;
+
+    for (Core = 0; Core < ProcessorCount; Core++)
+        if (CoreArr[Core].Realtime)
+            if (CoreId == RdosGetCoreNum(Core))
+                CoreArr[Core].Realtime = FALSE;
+
+    RdosSetSuccess();
+}
+
+/*##########################################################################
+#
 #   Name       : Scheduler thread
 #
 ##########################################################################*/
@@ -885,6 +934,8 @@ int main()
     RdosRegisterOsGate(osgate_program_terminated, (__rdos_gate_callback *)&ImplProgramTerminated, "Program Terminated");
     RdosRegisterOsGate(osgate_get_program_sel, (__rdos_gate_callback *)&ImplGetProgramSel, "Get Program Selector");
     RdosRegisterOsGate(osgate_get_program_id, (__rdos_gate_callback *)&ImplGetProgramID, "Get Program ID");
+    RdosRegisterOsGate(osgate_allocate_realtime_core, (__rdos_gate_callback *)&ImplAllocateRealTimeCore, "Allocate Realtime Core");
+    RdosRegisterOsGate(osgate_free_realtime_core, (__rdos_gate_callback *)&ImplFreeRealTimeCore, "Free Realtime Core");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");

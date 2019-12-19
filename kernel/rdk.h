@@ -303,7 +303,7 @@
 
 #define osgate_notify_ethernet_packet 300
 
-#define osgate_init_usb_device 301
+#define osgate_init_usb_function 301
 #define osgate_notify_usb_attach 302
 #define osgate_notify_usb_detach 304
 
@@ -562,8 +562,6 @@
 
 #define osgate_has_long_mode 516
 
-#define osgate_is_usb_hub_port_connected 517
-
 #define osgate_wait_for_ehci 518
 #define osgate_wait_for_ohci 519
 #define osgate_wait_for_uhci 520
@@ -590,7 +588,6 @@
 #define osgate_create_can_id_hook 538
 #define osgate_delete_can_id_hook 539
 
-#define osgate_reset_usb_hub_port 540
 #define osgate_add_lon_module 541
 
 #define osgate_get_acpi_pnp_device_mem 542
@@ -810,6 +807,35 @@
 #define osgate_get_hid_report_buf 710
 #define osgate_read_hid_feature 711
 #define osgate_write_hid_feature 712
+#define osgate_reset_hid 713
+
+#define osgate_get_device_cmd_line 714
+
+#define osgate_set_disc_lba_param 715
+
+#define osgate_pci_power_on 716
+
+#define osgate_setup_nmi_handler 717
+
+#define osgate_lock_usb_com_control 718
+#define osgate_unlock_usb_com_control 719
+
+#define osgate_allocate_usb_address 720
+#define osgate_free_usb_address 721
+#define osgate_init_usb_dev 722
+#define osgate_address_usb_dev 723
+
+#define osgate_is_usb_pipe_connected 724
+#define osgate_start_usb_dev 725
+#define osgate_read_usb_descriptors 726
+#define osgate_get_usb_hub_descriptor 727
+#define osgate_config_usb_hub 728
+
+#define osgate_boot_realtime_core 729
+#define osgate_get_highest_physical 730
+
+#define osgate_allocate_realtime_core 731
+#define osgate_free_realtime_core 732
 
 
 
@@ -1118,7 +1144,7 @@
 
 #define OsGate_notify_ethernet_packet 0x3E 0x67 0x9a 44 1 0 0 2 0
 
-#define OsGate_init_usb_device 0x3E 0x67 0x9a 45 1 0 0 2 0
+#define OsGate_init_usb_function 0x3E 0x67 0x9a 45 1 0 0 2 0
 #define OsGate_notify_usb_attach 0x3E 0x67 0x9a 46 1 0 0 2 0
 #define OsGate_notify_usb_detach 0x3E 0x67 0x9a 48 1 0 0 2 0
 
@@ -1377,8 +1403,6 @@
 
 #define OsGate_has_long_mode 0x3E 0x67 0x9a 4 2 0 0 2 0
 
-#define OsGate_is_usb_hub_port_connected 0x3E 0x67 0x9a 5 2 0 0 2 0
-
 #define OsGate_wait_for_ehci 0x3E 0x67 0x9a 6 2 0 0 2 0
 #define OsGate_wait_for_ohci 0x3E 0x67 0x9a 7 2 0 0 2 0
 #define OsGate_wait_for_uhci 0x3E 0x67 0x9a 8 2 0 0 2 0
@@ -1405,7 +1429,6 @@
 #define OsGate_create_can_id_hook 0x3E 0x67 0x9a 26 2 0 0 2 0
 #define OsGate_delete_can_id_hook 0x3E 0x67 0x9a 27 2 0 0 2 0
 
-#define OsGate_reset_usb_hub_port 0x3E 0x67 0x9a 28 2 0 0 2 0
 #define OsGate_add_lon_module 0x3E 0x67 0x9a 29 2 0 0 2 0
 
 #define OsGate_get_acpi_pnp_device_mem 0x3E 0x67 0x9a 30 2 0 0 2 0
@@ -1625,4 +1648,33 @@
 #define OsGate_get_hid_report_buf 0x3E 0x67 0x9a 198 2 0 0 2 0
 #define OsGate_read_hid_feature 0x3E 0x67 0x9a 199 2 0 0 2 0
 #define OsGate_write_hid_feature 0x3E 0x67 0x9a 200 2 0 0 2 0
+#define OsGate_reset_hid 0x3E 0x67 0x9a 201 2 0 0 2 0
+
+#define OsGate_get_device_cmd_line 0x3E 0x67 0x9a 202 2 0 0 2 0
+
+#define OsGate_set_disc_lba_param 0x3E 0x67 0x9a 203 2 0 0 2 0
+
+#define OsGate_pci_power_on 0x3E 0x67 0x9a 204 2 0 0 2 0
+
+#define OsGate_setup_nmi_handler 0x3E 0x67 0x9a 205 2 0 0 2 0
+
+#define OsGate_lock_usb_com_control 0x3E 0x67 0x9a 206 2 0 0 2 0
+#define OsGate_unlock_usb_com_control 0x3E 0x67 0x9a 207 2 0 0 2 0
+
+#define OsGate_allocate_usb_address 0x3E 0x67 0x9a 208 2 0 0 2 0
+#define OsGate_free_usb_address 0x3E 0x67 0x9a 209 2 0 0 2 0
+#define OsGate_init_usb_dev 0x3E 0x67 0x9a 210 2 0 0 2 0
+#define OsGate_address_usb_dev 0x3E 0x67 0x9a 211 2 0 0 2 0
+
+#define OsGate_is_usb_pipe_connected 0x3E 0x67 0x9a 212 2 0 0 2 0
+#define OsGate_start_usb_dev 0x3E 0x67 0x9a 213 2 0 0 2 0
+#define OsGate_read_usb_descriptors 0x3E 0x67 0x9a 214 2 0 0 2 0
+#define OsGate_get_usb_hub_descriptor 0x3E 0x67 0x9a 215 2 0 0 2 0
+#define OsGate_config_usb_hub 0x3E 0x67 0x9a 216 2 0 0 2 0
+
+#define OsGate_boot_realtime_core 0x3E 0x67 0x9a 217 2 0 0 2 0
+#define OsGate_get_highest_physical 0x3E 0x67 0x9a 218 2 0 0 2 0
+
+#define OsGate_allocate_realtime_core 0x3E 0x67 0x9a 219 2 0 0 2 0
+#define OsGate_free_realtime_core 0x3E 0x67 0x9a 220 2 0 0 2 0
 

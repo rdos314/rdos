@@ -834,4 +834,7 @@ config_usb_hub_nr           = 728
 boot_realtime_core_nr       = 729
 get_highest_physical_nr     = 730
 
+allocate_realtime_core_nr   = 731
+free_realtime_core_nr       = 732
+
 osgate_entries              = 750

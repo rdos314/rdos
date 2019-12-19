@@ -2089,13 +2089,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     __parm [__al] \
     __value [__al]
 
-#pragma aux RdosInitUsbDevice = \
-    "push ds" \
-    "mov ds,edx" \
-    OsGate_init_usb_device \
-    "pop ds" \
-    __parm [__edx]
-
 #pragma aux RdosNotifyUsbDetach = \
     "push ds" \
     "mov ds,edx" \
