@@ -40,16 +40,6 @@ INCLUDE realtime.def
 
 .386p
 
-real_core_struc	STRUC
-
-rc_linear       DD ?
-rc_cr3          DD ?
-rc_core_linear  DD ?
-rc_thread_sel	DW ?
-rc_core         DB ?
-
-real_core_struc ENDS
-
 data    SEGMENT byte public 'DATA'
 
 map_sel	        DW ?
@@ -324,164 +314,31 @@ write_phys_qword     PROC far
 write_phys_qword     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ToHex
-;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:     AL          Number
-;
-;           RETURNS:        AX          Result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ToHex      PROC near
-
-hex_conv_low:
-    mov ah,al
-    and al,0F0h
-    rol al,1
-    rol al,1
-    rol al,1
-    rol al,1
-    cmp al,0Ah
-    jb ok_low1
-;
-    add al,7
-
-ok_low1:
-    add al,30h
-    and ah,0Fh
-    cmp ah,0Ah
-    jb ok_high1
-;    
-    add ah,7
-
-ok_high1:
-    add ah,30h
-    ret
-ToHex      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CreateMonitorThread
-;
-;           DESCRIPTION:    Create monitor thread
-;
-;           PARAMETERS:     AL		Core #
-;
-;           RETURNS:        BX          Thread sel
-;                           ECX         Linear size
-;                           EDX         Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-core_name DB 'Core ', 0
-
-CreateMonitorThread      Proc near
-    push ds
-    push es
-    push eax
-    push esi
-    push edi
-    push ebp
-;
-    push eax
-    mov ax,flat_sel
-    mov es,eax
-;
-    mov eax,SIZE thread_seg
-    add eax,1000h
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-    mov ebp,eax
-    AllocateBigLinear
-;
-    mov ecx,ebp
-    mov edi,edx
-    rep stos byte ptr es:[edi]
-;
-    mov edi,edx
-    add edi,1000h
-    add edi,OFFSET thread_name
-    mov esi,OFFSET core_name
-
-cmtCopyName:
-    lods byte ptr cs:[esi]
-    or al,al
-    jz cmtCopyDone
-;
-    stos byte ptr es:[edi]
-    jmp cmtCopyName
-
-cmtCopyDone:
-    pop eax
-    call ToHex
-    stos word ptr es:[edi]
-    xor ax,ax
-    stos word ptr es:[edi]
-;
-    push edx
-    mov ecx,ebp
-    AllocateGdt
-    add edx,1000h    
-    CreateDataSelector16
-    pop edx
-    mov ecx,ebp
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop eax
-    pop es
-    pop ds
-    ret
-CreateMonitorThread	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           CreateMonitor
 ;
 ;           DESCRIPTION:    Create monitor
 ;
-;           PARAMETERS:     AL		Core #
-;
-;           RETURNS:        ES          Real core sel
+;           PARAMETERS:     FS          Processor sel
+;                           ES          Thread sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateMonitor      Proc near
     push ds
-    pushad
-;
-    push eax
-    mov eax,SIZE real_core_struc
-    AllocateSmallGlobalMem
-    mov eax,es
-    mov ds,eax
-    pop eax
-;
-    mov ds:rc_core,al
-    call CreateMonitorThread
-    mov ds:rc_thread_sel,bx
-    mov ds:rc_core_linear,edx
-;
     push es
-    push ecx
+    pushad
 ;
     mov eax,flat_sel
     mov es,eax
 ;
     mov eax,1000h
     AllocateBigLinear
-    mov ds:rc_linear,edx
+    mov fs:ps_mon_linear,edx
 ;
     AllocatePhysical32
-    mov ds:rc_cr3,eax
+    mov fs:ps_cr3,eax
 ;
     mov al,3
     SetPageEntry
@@ -549,38 +406,31 @@ CreateMonitor      Proc near
     pop eax
     SetPageEntry
 ;
-    pop ecx
-    pop ds
-;
-    push edx
-;
     mov edi,edx
-    mov edx,ds:rc_core_linear
-    shr ecx,12
-    mov ebp,200h
-
-cmCopyLoop:
-    GetPageEntry
+    AllocatePhysical64
+    or al,3
     mov es:[edi],eax
     mov es:[edi+4],ebx
-;
-    add edx,1000h
     add edi,8
-    dec ebp
-    sub ecx,1
-    jnz cmCopyLoop
 ;
     xor eax,eax
-
-cmPadLoop:
-    mov es:[edi],eax
-    mov es:[edi+4],eax
+    mov ecx,2
+    rep stos dword ptr es:[edi]
 ;
-    add edi,8
-    sub ebp,1
-    jnz cmPadLoop
-;    
+    push edx
+    mov ds,fs:ps_null_thread
+    mov edx,ds:p_linear
+    GetPageEntry
     pop edx
+;
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    mov ecx,3FAh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;    
     xor eax,eax
     xor edx,edx
     SetPageEntry
@@ -588,10 +438,8 @@ cmPadLoop:
     mov ecx,1000h
     FreeLinear
 ;
-    mov eax,ds
-    mov es,eax
-;
     popad
+    pop es
     pop ds
     ret
 CreateMonitor	Endp
@@ -623,14 +471,11 @@ emulate_realtime     PROC far
     jc erDone
 ;
     mov es,fs:ps_null_thread
-    mov edx,es:p_linear
     mov es:p_realtime,1
-;
-    mov al,7
     call CreateMonitor
 ;
-    mov al,7
-    mov ebx,es:rc_cr3
+    mov ax,fs:ps_id
+    mov ebx,fs:ps_cr3
     BootRealtimeCore
 
 erDone:

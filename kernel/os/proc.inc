@@ -148,6 +148,7 @@ ps_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
 ps_irq_count_arr        DD 256 DUP(?)
 
 ps_cr3                  DD ?
+ps_mon_linear           DD ?
 ps_tlb                  proc_tlb32_struc <>
 ps_work_tlb             proc_tlb32_struc <>
 
