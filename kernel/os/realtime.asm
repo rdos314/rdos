@@ -472,6 +472,7 @@ emulate_realtime     PROC far
 ;
     mov es,fs:ps_null_thread
     mov es:p_realtime,1
+    mov es:p_tss_sel,0
     call CreateMonitor
 ;
     mov ebx,fs:ps_cr3
