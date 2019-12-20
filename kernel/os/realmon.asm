@@ -192,6 +192,50 @@ invalid_opcode:
 protection_fault:
 page_fault:
 
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+;
+    pop rax
+    mov [rbx].p_rbx,rax
+;
+    pop rax
+    mov [rbx].p_rax,rax
+;
+    pop rax
+    mov [rbx].p_rip,rax
+;
+    pop rax
+    mov [rbx].p_cs,ax
+;
+    pop rax
+    mov [rbx].p_rflags,rax
+;
+    pop rax
+    mov [rbx].p_rsp,rax
+;
+    pop rax
+    mov [rbx].p_ss,ax
+;
+    mov [rbx].p_rcx,rcx
+    mov [rbx].p_rdx,rdx
+    mov [rbx].p_rsi,rsi
+    mov [rbx].p_rdi,rdi
+    mov [rbx].p_rbp,rbp
+    mov [rbx].p_r8,r8
+    mov [rbx].p_r9,r9
+    mov [rbx].p_r10,r10
+    mov [rbx].p_r11,r11
+    mov [rbx].p_r12,r12
+    mov [rbx].p_r13,r13
+    mov [rbx].p_r14,r14
+    mov [rbx].p_r15,r15
+;
+    mov [rbx].p_ds,ds
+    mov [rbx].p_es,es
+    mov [rbx].p_fs,fs
+    mov [rbx].p_gs,gs
+
 stl:
     jmp stl
 
@@ -251,71 +295,14 @@ init:
     call InitGdt
     call InitIdt
 ;
-    mov rbx,rsp
-    mov rax,OFFSET boot
-    mov ax,10h
-    push rax
-    push rbx
-;
-    mov rbx,realtime_mon_base
-    mov rax,OFFSET start
-    add rbx,rax
-    mov ax,8
-    pushf
-    push rax
-    push rbx
-;
     mov ax,10h
     mov ds,ax
     mov es,ax
-;
-    push rax
-    push rbx
-    mov rbx,realtime_thread_base
-;
-    pop rax
-    mov [rbx].p_rbx,rax
-;
-    pop rax
-    mov [rbx].p_rax,rax
-;
-    pop rax
-    mov [rbx].p_rip,rax
-;
-    pop rax
-    mov [rbx].p_cs,ax
-;
-    pop rax
-    mov [rbx].p_rflags,rax
-;
-    pop rax
-    mov [rbx].p_rsp,rax
-;
-    pop rax
-    mov [rbx].p_ss,ax
-;
-    mov [rbx].p_rcx,rcx
-    mov [rbx].p_rdx,rdx
-    mov [rbx].p_rsi,rsi
-    mov [rbx].p_rdi,rdi
-    mov [rbx].p_rbp,rbp
-    mov [rbx].p_r8,r8
-    mov [rbx].p_r9,r9
-    mov [rbx].p_r10,r10
-    mov [rbx].p_r11,r11
-    mov [rbx].p_r12,r12
-    mov [rbx].p_r13,r13
-    mov [rbx].p_r14,r14
-    mov [rbx].p_r15,r15
-;
-    mov [rbx].p_ds,ds
-    mov [rbx].p_es,es
-    mov [rbx].p_fs,fs
-    mov [rbx].p_gs,gs
+    int 3
 
-start:
+stop:
     hlt
-    jmp start
+    jmp stop
 
 Code64  Ends
 
