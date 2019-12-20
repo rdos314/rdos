@@ -360,7 +360,8 @@ rt_start:
     mov ax,20h
     mov es,ax
 ;    
-    mov eax,es:ap_cr4
+    mov eax,12345678h
+    xchg eax,es:ap_cr4
     or al,20h
     mov cr4,eax
 ;
@@ -3253,10 +3254,6 @@ boot_realtime_core    Proc far
     mov eax,1063h
     SetPageEntry
 ;
-    mov ax,es
-    mov fs,ax
-    mov ebp,edi
-;
     mov ax,SEG data
     mov ds,ax
 ;
@@ -3285,6 +3282,60 @@ boot_realtime_core    Proc far
     mov esi,OFFSET rt_start
     mov ecx,OFFSET rt_end - OFFSET rt_start
     rep movs byte ptr es:[edi],cs:[esi]
+;
+    mov edi,1800h
+;
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    mov al,0Ah
+    out 71h,al
+    jmp short $+2
+;
+    mov edx,fs:ps_apic
+    call SendInit
+;
+    mov eax,es:[edi].ap_cr4
+    cmp eax,12345678h
+    je brcDone
+;    
+    mov al,1
+    call SendStartup
+    
+    mov cx,250
+
+brcLoop1:
+    mov eax,es:[edi].ap_cr4
+    cmp eax,12345678h
+    je brcDone
+;    
+    mov ax,1
+    call DelayMs
+    loop brcLoop1
+;
+    mov al,1    
+    call SendStartup
+;    
+    mov cx,250
+
+brcLoop2:
+    mov eax,es:[edi].ap_cr4
+    cmp eax,12345678h
+    je brcDone
+;    
+    mov ax,1
+    call DelayMs
+    loop brcLoop2
+
+brcDone:
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    xor al,al
+    out 71h,al
+    jmp short $+2
 ;
     pop ebx
     pop eax
