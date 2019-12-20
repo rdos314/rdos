@@ -7065,6 +7065,7 @@ check_null_ok:
 ;
     mov al,fs:p_realtime
     mov si,OFFSET Realtime_state
+    or al,al
     jnz check_copy_no_id
 ;
     mov si,OFFSET Inactive_state

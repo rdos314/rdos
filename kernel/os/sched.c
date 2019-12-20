@@ -587,12 +587,13 @@ int __far ImplAllocateRealTimeCore()
     int ok = FALSE;
     int Core;
 
-    for (Core = 0; Core < ProcessorCount && !ok; Core++)
+    for (Core = 0; Core < ProcessorCount; Core++)
     {
         if (!CoreArr[Core].Realtime && !CoreArr[Core].Active)
         {
             CoreArr[Core].Realtime = TRUE;
             ok = TRUE;
+            break;
         }
     }
 

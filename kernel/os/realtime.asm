@@ -35,6 +35,7 @@ INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE system.def
+INCLUDE proc.inc
 INCLUDE realtime.def
 
 .386p
@@ -609,10 +610,21 @@ emulate_realtime_name    DB 'Emulate Realtime',0
 emulate_realtime     PROC far
     push ds
     push es
+    push fs
     pushad
 ;
     mov ax,SEG data
     mov ds,eax
+;
+    AllocateRealtimeCore
+    jc erDone
+;
+    GetCoreNumber
+    jc erDone
+;
+    mov es,fs:ps_null_thread
+    mov edx,es:p_linear
+    mov es:p_realtime,1
 ;
     mov al,7
     call CreateMonitor
@@ -620,8 +632,10 @@ emulate_realtime     PROC far
     mov al,7
     mov ebx,es:rc_cr3
     BootRealtimeCore
-;
+
+erDone:
     popad
+    pop fs
     pop es
     pop ds
     ret
