@@ -185,6 +185,10 @@ SetupTrapGate  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+trap_4:
+    add rsp,40
+    int 3
+
 div_0:
 trap_1:
 trap_3:
@@ -259,6 +263,10 @@ InitIdt proc near
     mov rsi,OFFSET trap_3
     call SetupTrapGate
 ;
+    mov al,4
+    mov rsi,OFFSET trap_4
+    call SetupTrapGate
+;
     mov al,6
     mov rsi,OFFSET invalid_opcode
     call SetupTrapGate
@@ -298,7 +306,7 @@ init:
     mov ax,10h
     mov ds,ax
     mov es,ax
-    int 3
+    int 4
 
 stop:
     hlt
