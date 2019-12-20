@@ -836,5 +836,6 @@ get_highest_physical_nr     = 730
 
 allocate_realtime_core_nr   = 731
 free_realtime_core_nr       = 732
+debug_realtime_nr           = 733
 
 osgate_entries              = 750

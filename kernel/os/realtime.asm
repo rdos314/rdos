@@ -474,9 +474,9 @@ emulate_realtime     PROC far
     mov es:p_realtime,1
     call CreateMonitor
 ;
-    mov ax,fs:ps_id
     mov ebx,fs:ps_cr3
     BootRealtimeCore
+    DebugRealtime
 
 erDone:
     popad

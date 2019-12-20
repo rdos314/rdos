@@ -3221,7 +3221,7 @@ sdcDone:
 ;
 ;               DESCRIPTION:    Boot realtime core
 ;
-;               PARAMETERS:     AL	Apic ID
+;               PARAMETERS:     FS      Processor sel
 ;                               EBX     CR3
 ;                               ES:EDI  Realtime startup proc
 ;

@@ -2866,6 +2866,37 @@ debug_block_do:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           DebugRealtime
+;
+;       DESCRIPTION:    Put realtime task in debug list
+;
+;       PARAMETERS:     FS  Core block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_realtime_name        DB 'Debug Realtime', 0
+
+debug_realtime	Proc far
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov edi,OFFSET debug_list       
+    mov es,fs:ps_null_thread
+    call cs:lock_list_proc
+    call InsertBlock32
+    call cs:unlock_list_proc
+    mov es:p_sleep_type,SLEEP_TYPE_DEBUG
+;
+    popad
+    pop es
+    retf32
+debug_realtime	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PreemptNotify
 ;
 ;       DESCRIPTION:    Default preempt procedure
@@ -10331,6 +10362,12 @@ timer_free_list_create:
     mov edi,OFFSET debug_block_name
     xor cl,cl
     mov ax,debug_block_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET debug_realtime
+    mov edi,OFFSET debug_realtime_name
+    xor cl,cl
+    mov ax,debug_realtime_nr
     RegisterOsGate
 ;
     mov esi,OFFSET wake_thread

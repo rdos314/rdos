@@ -1101,6 +1101,10 @@ FreeRealtimeCore    MACRO
     OsGate free_realtime_core_nr
                     ENDM
 
+DebugRealtime    MACRO
+    OsGate debug_realtime_nr
+                    ENDM
+
 ;   IN  AL	Apic ID
 ;   IN  EBX     CR3
 ;   IN  ES:EDI  Boot startup code
