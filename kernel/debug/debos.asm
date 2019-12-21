@@ -1763,16 +1763,66 @@ interact_incr   ENDP
     public interact_decr
     
 interact_decr   PROC near
+    int 3
     push eax
     push bx
     push esi
+;
     xor eax,eax
     clc
     rcr cl,1
     mov al,cl
     pushf
     add esi,eax
+;
     mov bx,gs
+    cmp bx,dx
+    jne interact_dec_norm_mem
+;
+    mov al,gs:[esi]
+    popf
+    jnc dec_reg_low
+
+dec_reg_hi:
+    sub al,10h
+    jmp dec_reg_j
+
+dec_reg_low:
+    mov ah,al
+    dec al
+    and al,0Fh
+    and ah,0F0h
+    or al,ah
+    
+dec_reg_j:
+    mov gs:[esi],al
+    jmp interact_dec_write_done
+
+interact_dec_norm_mem:
+    mov al,gs:p_realtime
+    or al,al
+    jz interact_set_local_mem
+;
+    call read_real_mem
+    popf
+    jnc dec_real_low
+
+dec_real_hi:
+    sub al,10h
+    jmp dec_real_j
+
+dec_real_low:
+    mov ah,al
+    dec al
+    and al,0Fh
+    and ah,0F0h
+    or al,ah
+    
+dec_real_j:
+    call write_real_mem
+    jmp interact_dec_write_done
+
+interact_dec_local_mem:
     test word ptr ds:[ebp].reg_eflags+2,2
     jz interact_dec_read_prot
 
@@ -1846,7 +1896,7 @@ interact_set_value     PROC near
 ;
     mov bx,gs
     cmp bx,dx
-    jne interact_norm_mem
+    jne interact_set_norm_mem
 ;
     mov al,gs:[esi]
     popf
@@ -1867,10 +1917,10 @@ set_reg_j:
     mov gs:[esi],al
     jmp interact_set_write_done
 
-interact_norm_mem:
+interact_set_norm_mem:
     mov al,gs:p_realtime
     or al,al
-    jz interact_local_mem
+    jz interact_set_local_mem
 ;
     call read_real_mem
     popf
@@ -1891,7 +1941,7 @@ set_real_j:
     call write_real_mem
     jmp interact_set_write_done
 
-interact_local_mem:
+interact_set_local_mem:
     test word ptr ds:[ebp].reg_eflags+2,2
     jz interact_set_read_prot
 
