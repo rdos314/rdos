@@ -629,6 +629,10 @@ AddFreeMem    PROC near
     GetFreePhysical
     call AddHexQword
 ;
+    mov al,gs:p_realtime
+    or al,al
+    jnz afmDone
+;
     mov esi,OFFSET global_mem_comment
     call AddCodeAsciiz
 ;    
@@ -647,7 +651,8 @@ AddFreeMem    PROC near
     mov bx,gs
     UsedLocalLinearThread
     call AddHexDword
-;    
+
+afmDone:    
     call AddNewLine
     ret
 AddFreeMem    ENDP

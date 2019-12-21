@@ -477,6 +477,7 @@ emulate_realtime     PROC far
 ;
     mov ebx,fs:ps_cr3
     mov es:p_cr3,ebx
+    mov es:p_fault_vector,3
     BootRealtimeCore
     DebugRealtime
 

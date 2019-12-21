@@ -463,7 +463,6 @@ real_no_wait_debug:
     jz real_debug_end
 
 real_debug_do:
-    int 3
     movzx ebx,al
     shl ebx,2
     call dword ptr cs:[ebx].virt_sw_func_tab

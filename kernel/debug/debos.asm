@@ -1032,6 +1032,40 @@ GetLongCpu    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetRealCpu
+;
+;           DESCRIPTION:    Get realtime CPU info
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRealCpu    PROC near
+    mov ecx,5
+
+grcPadLoop:
+    push ecx
+    mov ecx,70
+    call AddBlanks
+    call AddNewLine
+    pop ecx
+    loop grcPadLoop
+;    
+    call AddDelimiter
+    call AddLongCpuReg
+    call AddDelimiter
+    call AddFreeMem
+    call AddStatus
+    call AddInstr
+    call AddThreadInfo
+    call AddDelimiter
+    call AddLongData
+    ret
+GetRealCpu    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -1424,7 +1458,7 @@ gcLong:
 
 gcReal:
     int 3
-    call GetLongCpu
+    call GetRealCpu
 
 gcDone:
     xor al,al
