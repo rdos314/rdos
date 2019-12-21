@@ -169,7 +169,7 @@ mrlPaged:
 mrlProt:
     mov esi,edx
     shr esi,20
-    and si,0FFFCh
+    and esi,0FFCh
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -198,7 +198,7 @@ mrlProt:
 mrlPae:
     mov esi,edx
     shr esi,27
-    and si,0FFF8h
+    and esi,0FF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -238,7 +238,7 @@ mrlPae:
 mrlLong:
     mov esi,edi
     shr esi,4
-    and si,0FFF8h
+    and esi,0FF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -252,7 +252,7 @@ mrlLong:
     mov eax,edi
     shl eax,5
     or si,ax
-    and si,0FFF8h
+    and esi,0FF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -359,7 +359,7 @@ mwlPaged:
 mwlProt:
     mov esi,edx
     shr esi,20
-    and si,0FFFCh
+    and esi,0FFCh
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -394,7 +394,7 @@ mwlProt:
 mwlPae:
     mov esi,edx
     shr esi,27
-    and si,0FFF8h
+    and esi,0FF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -440,7 +440,7 @@ mwlPae:
 mwlLong:
     mov esi,edi
     shr esi,4
-    and si,0FFF8h
+    and esi,0FF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
@@ -457,7 +457,7 @@ mwlLong:
     mov eax,edi
     shl eax,5
     or si,ax
-    and si,0FFF8h
+    and esi,0FF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1

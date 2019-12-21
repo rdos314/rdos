@@ -493,8 +493,6 @@ real_debug_call_pr   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFunc  PROC near
-    push edi
-;
     HideMouse
     shr cx,3
     shr dx,3
@@ -509,8 +507,6 @@ DoFunc  PROC near
     shl dx,3
     SetMousePosition
     ShowMouse
-;
-    pop edi
     ret
 DoFunc  ENDP
 
@@ -528,8 +524,6 @@ DoFunc  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RealDoFunc  PROC near
-    push edi
-;
     HideMouse
     shr cx,3
     shr dx,3
@@ -544,8 +538,6 @@ RealDoFunc  PROC near
     shl dx,3
     SetMousePosition
     ShowMouse
-;
-    pop edi
     ret
 RealDoFunc  ENDP
 
@@ -561,6 +553,8 @@ RealDoFunc  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleKeyboard  Proc near
+    push edi
+;
     mov eax,25
     WaitMilliSec
 ;
@@ -614,6 +608,7 @@ right_arrow:
     SetMousePosition
 
 handle_key_end:
+    pop edi
     ret
 HandleKeyboard  Endp
 
@@ -629,6 +624,8 @@ HandleKeyboard  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleMouse     Proc near
+    push edi
+;
     GetLeftButton
     jc handle_not_left
 
@@ -657,6 +654,7 @@ right_rel_loop:
     jnc right_rel_loop
 
 handle_mouse_done:
+    pop edi
     ret
 HandleMouse     Endp
 
