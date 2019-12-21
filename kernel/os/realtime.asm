@@ -476,6 +476,7 @@ emulate_realtime     PROC far
     call CreateMonitor
 ;
     mov ebx,fs:ps_cr3
+    mov es:p_cr3,ebx
     BootRealtimeCore
     DebugRealtime
 

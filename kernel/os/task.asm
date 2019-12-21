@@ -2882,7 +2882,7 @@ debug_realtime	Proc far
 ;    
     mov ax,system_data_sel
     mov ds,ax
-    mov edi,OFFSET debug_list       
+    mov edi,OFFSET realtime_debug_list       
     mov es,fs:ps_null_thread
     call cs:lock_list_proc
     call InsertBlock32

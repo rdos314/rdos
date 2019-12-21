@@ -1232,6 +1232,10 @@ GetDebugThreadData      Proc near
     mov ax,ds
     mov es,ax
 ;    
+    mov al,gs:p_realtime
+    or al,al
+    jnz getreal
+;    
     mov es:[ebp].cpu_read_mem,OFFSET read_mem
     mov es:[ebp].cpu_write_mem,OFFSET write_mem
 ;
@@ -1257,6 +1261,18 @@ dis32:
 
 dis16:
     mov es:[ebp].reg_cs.d_access,ACCESS_READ
+    jmp disdo
+
+getreal:
+    mov es:[ebp].cpu_read_mem,OFFSET read_mem
+    mov es:[ebp].cpu_write_mem,OFFSET write_mem
+;
+    mov es:[ebp].cpu_read_phys,OFFSET read_phys
+    mov es:[ebp].cpu_write_phys,OFFSET write_phys
+;    
+    mov bx,gs:p_cs
+    mov es:[ebp].reg_cs.d_selector,bx
+    mov es:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_64
 
 disdo:    
     mov eax,dword ptr gs:p_rflags
@@ -1365,7 +1381,6 @@ disdo:
     mov eax,dword ptr gs:p_r15+4
     mov es:[ebp].reg_r15+4,eax
 ;
-;
     popad
     pop es
     ret
@@ -1391,6 +1406,10 @@ GetCpu  Proc near
     mov ebp,OFFSET cpu
     call GetDebugThreadData
 ;    
+    mov al,gs:p_realtime
+    or al,al
+    jnz gcReal
+;
     mov ax,gs:p_tss_sel
     or ax,ax
     jz gcLong
@@ -1400,6 +1419,11 @@ gcProt:
     jmp gcDone
 
 gcLong:
+    call GetLongCpu
+    jmp gcDone
+
+gcReal:
+    int 3
     call GetLongCpu
 
 gcDone:

@@ -432,6 +432,54 @@ debug_end:
     ret
 debug_call_pr   ENDP
 
+real_debug_call_pr   PROC near
+    push ebx
+;
+    call set_os_pos
+;
+    cmp al,'r'
+    jz real_wait_regs
+    cmp al,'R'
+    jnz real_no_wait_debug
+
+real_wait_regs:
+    push eax
+    mov ax,10
+    WaitMilliSec
+    pop eax
+
+real_no_wait_debug:
+    cmp al,'n'
+    je real_debug_do
+;
+    cmp al,'N'
+    je real_debug_do
+;
+    push ax
+    GetRealTimeDebugThreadSel
+    mov gs,ax
+    or ax,ax
+    pop ax
+    jz real_debug_end
+
+real_debug_do:
+    int 3
+    movzx ebx,al
+    shl ebx,2
+    call dword ptr cs:[ebx].virt_sw_func_tab
+
+real_debug_end:
+    xor bx,bx
+    mov es,bx
+    mov fs,bx
+    mov gs,bx
+;
+    call get_os_pos
+;    
+    pop ebx
+    ret
+real_debug_call_pr   ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -446,6 +494,8 @@ debug_call_pr   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFunc  PROC near
+    push edi
+;
     HideMouse
     shr cx,3
     shr dx,3
@@ -460,8 +510,45 @@ DoFunc  PROC near
     shl dx,3
     SetMousePosition
     ShowMouse
+;
+    pop edi
     ret
 DoFunc  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RealDoFunc
+;
+;           DESCRIPTION:    Do realtime function
+;
+;           PARAMETERS:     CX          X
+;                           DX          Y
+;                           AL          CHAR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RealDoFunc  PROC near
+    push edi
+;
+    HideMouse
+    shr cx,3
+    shr dx,3
+    mov dh,dl
+    mov dl,cl
+    call real_debug_call_pr
+    mov al,'r'
+    call real_debug_call_pr
+    movzx cx,dl
+    movzx dx,dh
+    shl cx,3
+    shl dx,3
+    SetMousePosition
+    ShowMouse
+;
+    pop edi
+    ret
+RealDoFunc  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -470,7 +557,7 @@ DoFunc  ENDP
 ;
 ;           DESCRIPTION:    Keyboard
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     EDI	Func    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -485,7 +572,7 @@ HandleKeyboard  Proc near
     or al,al
     jz handle_key_special
 ;
-    call DoFunc
+    call near ptr cs:[edi]
     jmp handle_key_end
 
 handle_key_special:  
@@ -538,7 +625,7 @@ HandleKeyboard  Endp
 ;
 ;           DESCRIPTION:    Mouse handler
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     EDI	Func    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -549,7 +636,7 @@ HandleMouse     Proc near
 left_button:
     GetLeftButtonPressPosition
     mov al,'+'
-    call DoFunc
+    call near ptr cs:[edi]
 
 left_rel_loop:
     call HandleKeyboard
@@ -563,7 +650,7 @@ handle_not_left:
 right_button:
     GetRightButtonPressPosition
     mov al,'-'
-    call DoFunc
+    call near ptr cs:[edi]
 
 right_rel_loop:
     call HandleKeyboard
@@ -586,6 +673,8 @@ HandleMouse     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 debug_name          DB 'Debug',0
+
+do_func	DD OFFSET DoFunc
 
 debug_process:
     sti
@@ -610,11 +699,57 @@ debug_process:
     ShowMouse
 
 marker_loop:
+    mov edi,OFFSET do_func
     call HandleKeyboard
     call HandleMouse
     GetMousePosition
     SetMousePosition
     jmp marker_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Debug process
+;
+;           DESCRIPTION:    Debug process
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+real_debug_name          DB 'Realtime debug',0
+
+real_do_func	DD OFFSET RealDoFunc
+
+real_debug_process:
+    sti
+    mov ax,41h
+    EnableFocus
+;
+    mov ax,250
+    WaitMilliSec
+;   
+    mov ax,SEG data
+    mov ds,ax
+;     
+    xor ax,ax
+    xor bx,bx
+    mov cx,639
+    mov dx,199
+    SetMouseWindow
+    mov cx,8
+    mov dx,8
+    SetMouseMickey
+;       
+    ShowMouse
+
+real_marker_loop:
+    mov edi,OFFSET real_do_func
+    call HandleKeyboard
+    call HandleMouse
+    GetMousePosition
+    SetMousePosition
+    jmp real_marker_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -633,6 +768,13 @@ init_local_debug      PROC near
     mov es,ax
     mov esi,OFFSET debug_process
     mov edi,OFFSET debug_name
+    mov ecx,stack0_size
+    mov ax,26
+    mov bx,1
+    CreateProcess
+;
+    mov esi,OFFSET real_debug_process
+    mov edi,OFFSET real_debug_name
     mov ecx,stack0_size
     mov ax,26
     mov bx,1
