@@ -1158,8 +1158,7 @@ write_mem    Endp
 ;
 ;           DESCRIPTION:    Map linear address for read
 ;
-;           PARAMETERS:     DS:EBP      Registers
-;                           EDX         Map address
+;           PARAMETERS:     EDX         Map address
 ;                           EDI:ESI     Linear address
 ;                           GS          Thread
 ;                           ES          Flat sel
@@ -1252,7 +1251,6 @@ MapLinear       Endp
 ;           DESCRIPTION:    Read realtime memory
 ;
 ;           PARAMETERS:     DX:ESI      Address
-;                           DS:EBP      Cpu
 ;                           GS          Thread
 ;
 ;           RETURNS:        NC  AL  Value
@@ -1278,9 +1276,10 @@ read_real_mem    Proc near
     jmp rrmDone
 
 rrmFail:
-    xor al,al
+    mov al,'%'
 
 rrmDone:
+    pushf
     push eax
     xor eax,eax
     xor ebx,ebx
@@ -1289,6 +1288,7 @@ rrmDone:
 ;
     mov ecx,1000h
     FreeLinear
+    popf
 ;
     pop edi
     pop edx
@@ -1307,7 +1307,6 @@ read_real_mem    Endp
 ;
 ;           PARAMETERS:     DX:ESI      Address
 ;                           GS          Thread
-;                           DS:EBP      Cpu
 ;                           AL          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1319,11 +1318,14 @@ write_real_mem    Proc near
     push edx
     push edi
 ;
+    push eax
     mov ax,flat_sel
     mov es,eax
     mov edi,edx
     mov eax,1000h
     AllocateBigLinear
+    pop eax
+;
     call MapLinear
     jc wrrmFail
 ;
@@ -1331,9 +1333,10 @@ write_real_mem    Proc near
     jmp wrrmDone
 
 wrrmFail:
-    xor al,al
+    mov al,'%'
 
 wrrmDone:
+    pushf
     push eax
     xor eax,eax
     xor ebx,ebx
@@ -1342,6 +1345,7 @@ wrrmDone:
 ;
     mov ecx,1000h
     FreeLinear
+    popf
 ;
     pop edi
     pop edx
@@ -1829,7 +1833,6 @@ interact_decr   ENDP
     public interact_set_value
 
 interact_set_value     PROC near
-    int 3
     push eax
     push bx
     push esi
@@ -1865,6 +1868,30 @@ set_reg_j:
     jmp interact_set_write_done
 
 interact_norm_mem:
+    mov al,gs:p_realtime
+    or al,al
+    jz interact_local_mem
+;
+    call read_real_mem
+    popf
+    jnc set_real_low
+
+set_real_hi:
+    and al,0Fh
+    mov ah,ch
+    shl ah,4
+    or al,ah
+    jmp set_real_j
+
+set_real_low:
+    and al,0F0h
+    or al,ch
+
+set_real_j:
+    call write_real_mem
+    jmp interact_set_write_done
+
+interact_local_mem:
     test word ptr ds:[ebp].reg_eflags+2,2
     jz interact_set_read_prot
 
@@ -2986,9 +3013,23 @@ mem_ads ENDP
     public mem_cs
     
 mem_cs  PROC near
+    mov al,gs:p_realtime
+    or al,al
+    jnz mem_cs64
+;
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jc mem_cs32
+
+mem_cs64:    
+    mov edx,dword ptr gs:p_rip+4
+    mov esi,dword ptr gs:p_rip
+    call mem_do
+    ret
+
+mem_cs32:
     mov dx,gs:p_cs
-    mov esi,OFFSET p_rip
-    mov esi,gs:[esi]
+    mov esi,dword ptr gs:p_rip
     call mem_do
     ret
 mem_cs  ENDP
@@ -2996,9 +3037,23 @@ mem_cs  ENDP
     public mem_ss
 
 mem_ss  PROC near
+    mov al,gs:p_realtime
+    or al,al
+    jnz mem_ss64
+;
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jc mem_ss32
+
+mem_ss64:    
+    mov edx,dword ptr gs:p_rsp+4
+    mov esi,dword ptr gs:p_rsp
+    call mem_do
+    ret
+
+mem_ss32:
     mov dx,gs:p_ss
-    mov esi,OFFSET p_rsp
-    mov esi,gs:[esi]
+    mov esi,dword ptr gs:p_rsp
     call mem_do
     ret
 mem_ss  ENDP
@@ -3006,6 +3061,21 @@ mem_ss  ENDP
     public mem_es
 
 mem_es  PROC near
+    mov al,gs:p_realtime
+    or al,al
+    jnz mem_es64
+;
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    jc mem_es32
+
+mem_es64:    
+    mov edx,dword ptr gs:p_rdi+4
+    mov esi,dword ptr gs:p_rdi
+    call mem_do
+    ret
+
+mem_es32:
     mov dx,gs:p_es
     xor esi,esi
     call mem_do
@@ -3282,7 +3352,6 @@ d_c_loop64:
     xor cl,7
     and cl,7
     mov ax,ds:sw_func_code
-    int 3
     jmp dword ptr cs:[ebx+debug_call]
     
 not_this_entry64:
