@@ -46,6 +46,7 @@ debug_size      EQU 16
 data    SEGMENT byte public 'DATA'
 
 cpu cpu_struc <>
+real_cpu cpu_struc <>
 
 sw_func_code     DW ?
 sw_col           DB ?
@@ -1149,6 +1150,206 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MapLinear
+;
+;           DESCRIPTION:    Map linear address for read
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDX         Map address
+;                           EDI:ESI     Linear address
+;                           GS          Thread
+;                           ES          Flat sel
+;
+;           RETURNS:        NC
+;                               ES:EBX  Mapping
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapLinear       Proc near
+    push eax
+    push ebp
+    push edi
+    push esi
+    mov ebp,esp
+;
+    mov eax,gs:p_cr3
+    xor ebx,ebx
+    or al,7
+    SetPageEntry
+;
+    mov esi,[ebp+4]
+    shr esi,4
+    and esi,0FF8h
+    add esi,edx
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    SetPageEntry
+;    
+    mov esi,[ebp]
+    shr esi,27
+    mov eax,[ebp+4]
+    shl eax,5
+    or si,ax
+    and esi,0FF8h
+    add esi,edx
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    SetPageEntry
+;
+    mov esi,[ebp]
+    shr esi,18
+    and esi,0FF8h
+    add esi,edx
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    SetPageEntry
+;
+    mov esi,[ebp]
+    shr esi,9
+    and esi,0FF8h
+    add esi,edx
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    SetPageEntry
+    mov ebx,[ebp]
+    and ebx,0FFFh    
+    add ebx,edx
+    clc
+    jmp mlDone
+
+mlFail:
+    stc
+
+mlDone: 
+    pop esi
+    pop edi
+    pop ebp
+    pop eax
+    ret
+MapLinear       Endp           
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Read_real_mem
+;
+;           DESCRIPTION:    Read realtime memory
+;
+;           PARAMETERS:     DX:ESI      Address
+;                           DS:EBP      Cpu
+;                           GS          Thread
+;
+;           RETURNS:        NC  AL  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_real_mem    Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,eax
+    mov edi,edx
+    mov eax,1000h
+    AllocateBigLinear
+    call MapLinear
+    jc rrmFail
+;
+    mov al,es:[ebx]
+    jmp rrmDone
+
+rrmFail:
+    xor al,al
+
+rrmDone:
+    push eax
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+    pop eax
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+read_real_mem    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Write_real_mem
+;
+;           DESCRIPTION:    Write realtime memory
+;
+;           PARAMETERS:     DX:ESI      Address
+;                           GS          Thread
+;                           DS:EBP      Cpu
+;                           AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_real_mem    Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,eax
+    mov edi,edx
+    mov eax,1000h
+    AllocateBigLinear
+    call MapLinear
+    jc wrrmFail
+;
+    mov es:[ebx],al
+    jmp wrrmDone
+
+wrrmFail:
+    xor al,al
+
+wrrmDone:
+    push eax
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+    pop eax
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+write_real_mem    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_phys
 ;
 ;           DESCRIPTION:    Read physical memory
@@ -1298,8 +1499,8 @@ dis16:
     jmp disdo
 
 getreal:
-    mov es:[ebp].cpu_read_mem,OFFSET read_mem
-    mov es:[ebp].cpu_write_mem,OFFSET write_mem
+    mov es:[ebp].cpu_read_mem,OFFSET read_real_mem
+    mov es:[ebp].cpu_write_mem,OFFSET write_real_mem
 ;
     mov es:[ebp].cpu_read_phys,OFFSET read_phys
     mov es:[ebp].cpu_write_phys,OFFSET write_phys
@@ -1436,13 +1637,13 @@ GetDebugThreadData      Endp
     
 GetCpu  Proc near
     pushad
-;
-    mov ebp,OFFSET cpu
-    call GetDebugThreadData
 ;    
     mov al,gs:p_realtime
     or al,al
     jnz gcReal
+;
+    mov ebp,OFFSET cpu
+    call GetDebugThreadData
 ;
     mov ax,gs:p_tss_sel
     or ax,ax
@@ -1457,7 +1658,8 @@ gcLong:
     jmp gcDone
 
 gcReal:
-    int 3
+    mov ebp,OFFSET real_cpu
+    call GetDebugThreadData
     call GetRealCpu
 
 gcDone:
