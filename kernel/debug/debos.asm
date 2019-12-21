@@ -490,7 +490,7 @@ AddProtData       ENDP
 AddLongData       PROC near
     mov al,gs:p_realtime
     or al,al
-    jnz wd64_64
+    jnz wd64_real
 ;
     mov bx,gs:p_cs
     IsLongCodeSelector
@@ -529,6 +529,44 @@ data_next64_64:
     call AddNewLine
     jmp wd64_data
 
+wd64_real:    
+    mov al,ds:[ebp].data_valid
+    or al,al
+    jz data_no_good64_real
+;
+    mov esi,ds:[ebp].data_offset
+    mov edx,ds:[ebp].data_offset+4
+    call AddLongDataRow
+    jmp data_next64_real
+
+data_no_good64_real:
+    mov ecx,79
+    call AddBlanks
+
+data_next64_real:
+    call AddNewLine
+;
+    mov esi,dword ptr gs:p_rip
+    mov edx,dword ptr gs:p_rip+4
+    call AddLongDataRow
+    call AddNewLine
+;
+    mov esi,dword ptr gs:p_rsp
+    mov edx,dword ptr gs:p_rsp+4
+    call AddLongDataRow
+    call AddNewLine
+;
+    mov esi,dword ptr gs:p_rdi
+    mov edx,dword ptr gs:p_rdi+4
+    call AddLongDataRow
+    call AddNewLine
+;
+    mov dx,gs:p_pm_deb_sel
+    mov esi,gs:p_pm_deb_offs
+    call AddLongDataRow
+    call AddNewLine
+    jmp wd64_phys
+
 wd64_32:
     mov al,ds:[ebp].data_valid
     or al,al
@@ -566,7 +604,8 @@ wd64_data:
     mov esi,gs:p_pm_deb_offs
     call AddProtDataRow
     call AddNewLine
-;
+
+wd64_phys:
     mov edx,gs:p_deb_phys+4
     mov esi,gs:p_deb_phys
     call AddPhysDataRow
@@ -3183,6 +3222,10 @@ mem_es  ENDP
     public mem_pm
 
 mem_pm  PROC near
+    mov al,gs:p_realtime
+    or al,al
+    jnz mem_real
+;
     xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
     push edx
@@ -3193,6 +3236,12 @@ mem_pm  PROC near
 ;
     pop edx    
     mov ds:[ebp].reg_eflags,edx
+    ret
+
+mem_real:
+    movsx edx,gs:p_pm_deb_sel
+    mov esi,gs:p_pm_deb_offs
+    call mem_do
     ret
 mem_pm  ENDP
 
