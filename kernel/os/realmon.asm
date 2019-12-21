@@ -40,157 +40,269 @@ eip  dq OFFSET init
 pad  db 6 DUP(?)
 
 rtm_gdt:
+gdt0:
      dq 0
-;
+
+gdt8:
      dw 0FFFFh
      dd 9A000000h
      dw 0AFh
-;
+
+gdt10:
      dw 0FFFFh
      dd 92000000h
      dw 0CFh
-;
+
+gdt18:
      dq 0
 
-rtm_idt         DQ 2*20h DUP(?)
+rtm_idt:
+idt0:
+    dw OFFSET div_0
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt1:
+    dw OFFSET trap_1
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt2:
+    dw OFFSET trap_nmi
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt3:
+    dw OFFSET trap_3
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt4:
+    dq 0,0
+
+idt5:
+    dq 0,0
+
+idt6:
+    dw OFFSET invalid_opcode
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt7:
+    dq 0,0
+
+idt8:
+    dq 0,0
+
+idt9:
+    dq 0,0
+
+idt0A:
+    dq 0,0
+
+idt0B:
+    dq 0,0
+
+idt0C:
+    dq 0,0
+
+idt0D:
+    dw OFFSET protection_fault
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt0E:
+    dw OFFSET page_fault
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt0F:
+    dq 0,0
+
+idt10:
+    dq 0,0
+
+idt11:
+    dq 0,0
+
+idt12:
+    dq 0,0
+
+idt13:
+    dq 0,0
+
+idt14:
+    dq 0,0
+
+idt15:
+    dq 0,0
+
+idt16:
+    dq 0,0
+
+idt17:
+    dq 0,0
+
+idt18:
+    dq 0,0
+
+idt19:
+    dq 0,0
+
+idt1A:
+    dq 0,0
+
+idt1B:
+    dq 0,0
+
+idt1C:
+    dq 0,0
+
+idt1D:
+    dq 0,0
+
+idt1E:
+    dq 0,0
+
+idt1F:
+    dq 0,0
+
+idt20:
+    dw OFFSET reset_int
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
+
+idt21:
+    dq 0,0
+
+idt22:
+    dq 0,0
+
+idt23:
+    dq 0,0
+
+idt24:
+    dq 0,0
+
+idt25:
+    dq 0,0
+
+idt26:
+    dq 0,0
+
+idt27:
+    dq 0,0
+
+idt28:
+    dq 0,0
+
+idt29:
+    dq 0,0
+
+idt2A:
+    dq 0,0
+
+idt2B:
+    dq 0,0
+
+idt2C:
+    dq 0,0
+
+idt2D:
+    dq 0,0
+
+idt2E:
+    dq 0,0
+
+idt2F:
+    dq 0,0
+
+idt30:
+    dq 0,0
+
+idt31:
+    dq 0,0
+
+idt32:
+    dq 0,0
+
+idt33:
+    dq 0,0
+
+idt34:
+    dq 0,0
+
+idt35:
+    dq 0,0
+
+idt36:
+    dq 0,0
+
+idt37:
+    dq 0,0
+
+idt38:
+    dq 0,0
+
+idt39:
+    dq 0,0
+
+idt3A:
+    dq 0,0
+
+idt3B:
+    dq 0,0
+
+idt3C:
+    dq 0,0
+
+idt3D:
+    dq 0,0
+
+idt3E:
+    dq 0,0
+
+idt3F:
+    dq 0,0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           InitGdt
-;
-;   DESCRIPTION:    Init GDT
+;   NAME:           Interrupt handlers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-gdt_size   DW 17h
-gdt_base   DQ 0
-
-InitGdt proc near
-    mov rdi,realtime_mon_base
-    mov rdx,OFFSET rtm_gdt
-    add rdx,rdi
-;
-    mov rax,OFFSET gdt_size
-    add rdi,rax
-    mov [rdi+2],rdx
-    lgdt [rdi]
-    ret
-InitGdt Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SetupIntGate
-;
-;   DESCRIPTION:    Setup int gate
-;
-;   PARAMETERS:     RAX     Interrupt #
-;                   ESI     Entry point
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-SetupIntGate  proc near
-    push rax
-    push rdx
-    push rdi
-;
-    add rax,rax
-    add rax,rax
-    add rax,rax
-    add rax,rax
-    mov rdi,realtime_mon_base
-    mov rdx,OFFSET rtm_idt
-    add rdi,rdx
-    add rdi,rax
-;
-    mov [rdi],esi
-;
-    mov dx,[rdi+2]
-    mov [rdi+6],dx
-;
-    mov dx,8
-    mov [rdi+2],dx
-;
-    mov edx,0FFFFFF80h
-    mov [rdi+8],edx
-;
-    mov edx,0
-    mov [rdi+12],edx
-;
-    mov ax,8E00h
-    mov [rdi+4],ax
-;
-    pop rdi
-    pop rdx
-    pop rax
-    ret
-SetupIntGate  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SetupTrapGate
-;
-;   DESCRIPTION:    Setup trap gate
-;
-;   PARAMETERS:     RAX      Interrupt #
-;                   ESI     Entry point
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-SetupTrapGate  proc near
-    push rax
-    push rdx
-    push rdi
-;
-    add rax,rax
-    add rax,rax
-    add rax,rax
-    add rax,rax
-    mov rdi,realtime_mon_base
-    mov rdx,OFFSET rtm_idt
-    add rdi,rdx
-    add rdi,rax
-;
-    mov [rdi],esi
-;
-    mov dx,[rdi+2]
-    mov [rdi+6],dx
-;
-    mov dx,8
-    mov [rdi+2],dx
-;
-    mov edx,0FFFFFF80h
-    mov [rdi+8],edx
-;
-    mov edx,0
-    mov [rdi+12],edx
-;
-    mov ax,8F00h
-    mov [rdi+4],ax
-;
-    pop rdi
-    pop rdx
-    pop rax
-    ret
-SetupTrapGate  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           InitIdt
-;
-;   DESCRIPTION:    Init IDT
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_4:
+reset_int:
     add rsp,40
     int 3
 
 div_0:
 trap_1:
+trap_nmi:
 trap_3:
 invalid_opcode:
 protection_fault:
@@ -245,53 +357,6 @@ stl:
 
     iretq
 
-idt_size   DW 1FFh
-idt_base   DQ 0
-
-InitIdt proc near
-    mov rax,OFFSET boot
-;
-    mov al,0
-    mov rsi,OFFSET div_0
-    call SetupTrapGate
-;
-    mov al,1
-    mov rsi,OFFSET trap_1
-    call SetupTrapGate
-;
-    mov al,3
-    mov rsi,OFFSET trap_3
-    call SetupTrapGate
-;
-    mov al,4
-    mov rsi,OFFSET trap_4
-    call SetupTrapGate
-;
-    mov al,6
-    mov rsi,OFFSET invalid_opcode
-    call SetupTrapGate
-;
-    mov al,13
-    mov rsi,OFFSET protection_fault
-    call SetupTrapGate
-;
-    mov al,14
-    mov rsi,OFFSET page_fault
-    call SetupTrapGate
-;
-    mov rdx,realtime_mon_base
-    mov rax,OFFSET rtm_idt
-    add rdx,rax
-;
-    mov rdi,realtime_mon_base
-    mov rax,OFFSET idt_size
-    add rdi,rax
-    mov [rdi+2],rdx
-    lidt [rdi]
-;
-    ret
-InitIdt Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -299,14 +364,37 @@ InitIdt Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+gdt_descr:
+gdt_size:
+    dw 17h
+
+gdt_base:
+    dd OFFSET rtm_gdt
+    dd 0FFFFFF80h
+
+idt_descr:
+idt_size:
+    dw 3FFh
+
+idt_base:
+    dd OFFSET rtm_idt
+    dd 0FFFFFF80h
+
 init:
-    call InitGdt
-    call InitIdt
+    mov rdi,realtime_mon_base
+    mov rdx,OFFSET gdt_descr
+    add rdi,rdx
+    lgdt [rdi]
+;
+    mov rdi,realtime_mon_base
+    mov rdx,OFFSET idt_descr
+    add rdi,rdx
+    lidt [rdi]
 ;
     mov ax,10h
     mov ds,ax
     mov es,ax
-    int 4
+    int 20h
 
 stop:
     hlt
