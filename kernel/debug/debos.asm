@@ -1252,6 +1252,24 @@ MapLinear       Proc near
     test al,1
     jz mlFail
 ;
+    test al,80h
+    jz mlGetPage
+;
+    mov ebx,es:[esi+4]
+    mov esi,[ebp]
+    shr esi,9
+    and esi,0FF8h
+    shl esi,9
+    add eax,esi
+    SetPageEntry
+;
+    mov ebx,[ebp]
+    and ebx,0FFFh    
+    add ebx,edx
+    clc
+    jmp mlDone
+
+mlGetPage:
     mov ebx,es:[esi+4]
     SetPageEntry
 ;
