@@ -4001,7 +4001,7 @@ debug_trace_go:
     jz debug_trace_local
 ;
     push fs
-    mov fs,gs:p_proc_sel
+    mov fs,gs:p_core
     mov al,21h
     SendInt
     pop fs
