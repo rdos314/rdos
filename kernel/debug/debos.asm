@@ -3928,6 +3928,53 @@ DebugWriteWord	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DebugWakeup
+;
+;           DESCRIPTION:    Wakeup debugged thread
+;
+;           PARAMETERS:     GS      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DebugWakeup    Proc near
+    push ax
+;
+    mov al,gs:p_realtime
+    or al,al
+    jz dwLocal
+;
+    push fs
+    mov fs,gs:p_core
+    mov al,21h
+    SendInt
+    pop fs
+    jmp dwDone
+
+dwLocal:
+    push ds
+    push es
+    pushad
+;
+    mov bx,gs
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
+;
+    popad
+    pop es
+    pop ds
+
+dwDone:
+    pop ax
+    ret
+DebugWakeup	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           do_trace
 ;
 ;           DESCRIPTION:    Trace
@@ -3996,31 +4043,7 @@ debug_trace_trace:
     mov word ptr gs:p_rflags,ax
 
 debug_trace_go:
-    mov al,gs:p_realtime
-    or al,al
-    jz debug_trace_local
-;
-    push fs
-    mov fs,gs:p_core
-    mov al,21h
-    SendInt
-    pop fs
-    jmp debug_trace_done
-
-debug_trace_local:
-    push ds
-    push es
-;
-    mov bx,gs
-    mov ax,system_data_sel
-    mov ds,ax
-    mov si,OFFSET debug_list
-    mov [si],bx
-    mov es,ax
-    Wake
-;
-    pop es
-    pop ds
+    call DebugWakeup
 
 debug_trace_done:
     popad
@@ -4249,37 +4272,58 @@ debug_pace_trace:
     mov word ptr gs:p_rflags,ax
 
 debug_pace_go:
-    mov al,gs:p_realtime
-    or al,al
-    jz debug_pace_go_local
-;
-    push fs
-    mov fs,gs:p_core
-    mov al,21h
-    SendInt
-    pop fs
-    jmp debug_pace_done
-
-debug_pace_go_local:
-    push ds
-    push es
-;
-    mov bx,gs
-    mov ax,system_data_sel
-    mov ds,ax
-    mov si,OFFSET debug_list
-    mov [si],bx
-    mov es,ax
-    Wake
-;
-    pop es
-    pop ds
+    call DebugWakeup
 
 debug_pace_done:
     popad
     ret
 do_pace	Endp
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_go
+;
+;           DESCRIPTION:    Go
+;
+;           PARAMETERS:     GS      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_go
+
+do_go    Proc near
+    pushad
+;
+    push fs
+    mov fs,gs:p_core
+    mov bx,fs:ps_null_thread
+    pop fs
+;
+    mov ax,gs
+    cmp ax,bx
+    jne debug_go_normal
+;
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_go_done
+
+debug_go_normal:
+    mov eax,dword ptr gs:p_dr7
+    and ax,0FFFCh
+    mov dword ptr gs:p_dr7,eax
+    mov ax,word ptr gs:p_rflags
+    and ax,NOT 100h
+    mov word ptr gs:p_rflags,ax
+
+debug_go_go:
+    call DebugWakeup
+
+debug_go_done:
+    popad
+    ret
+do_go     ENDP
+
 code    ENDS
 
     END

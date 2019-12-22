@@ -68,6 +68,7 @@ code    SEGMENT byte use32 public 'CODE'
 
     extrn do_trace:near
     extrn do_pace:near
+    extrn do_go:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -488,6 +489,17 @@ real_pace:
     jmp real_debug_end
 
 real_not_pace:
+    cmp al,'g'
+    je real_go
+;
+    cmp al,'G'
+    jne real_not_go
+
+real_go:
+    call do_go
+    jmp real_debug_end
+
+real_not_go:
     movzx ebx,al
     shl ebx,2
     call dword ptr cs:[ebx].virt_sw_func_tab
