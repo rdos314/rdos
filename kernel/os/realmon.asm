@@ -33,8 +33,6 @@ include ..\pcdev\apic.inc
 
 Code64 segment byte public use64 'code64'
 
-boot:
-
 sgn  dw 657Ah
 eip  dq OFFSET init
 
@@ -215,7 +213,7 @@ idt20:
     dd 0
 
 idt21:
-    dw OFFSET trace_int
+    dw OFFSET run_int
     dw 8
     dw 8E00h
     dw 0
@@ -324,10 +322,10 @@ reset_int:
     add rsp,40
     int 3
     mov al,20h
+    mov rax,1235h
 
-trace_int:
-    int 3
-    mov al,21h
+run_int:
+    jmp load_and_restart
 
 div_0:
     push 0
@@ -441,6 +439,72 @@ waitl:
     sti
     hlt
     jmp waitl
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           Load and restart
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_and_restart:
+    mov rbx,realtime_apic_base
+    xor eax,eax
+    mov [rbx].APIC_EOI,eax    
+;
+    mov rbx,realtime_thread_base
+    mov ax,[rbx].p_ss
+    push rax
+;
+    mov rax,[rbx].p_rsp
+    push rax
+;
+    mov rax,[rbx].p_rflags
+    push rax
+;
+    mov ax,[rbx].p_cs
+    push rax
+;
+    mov rax,[rbx].p_rip
+    push rax
+;
+    mov rcx,[rbx].p_rcx
+    mov rdx,[rbx].p_rdx
+    mov rsi,[rbx].p_rsi
+    mov rdi,[rbx].p_rdi
+    mov rbp,[rbx].p_rbp
+    mov r8,[rbx].p_r8
+    mov r9,[rbx].p_r9
+    mov r10,[rbx].p_r10
+    mov r11,[rbx].p_r11
+    mov r12,[rbx].p_r12
+    mov r13,[rbx].p_r13
+    mov r14,[rbx].p_r14
+    mov r15,[rbx].p_r15
+;
+    mov ds,[rbx].p_ds
+    mov es,[rbx].p_es
+    mov fs,[rbx].p_fs
+    mov gs,[rbx].p_gs
+;
+    mov rax,[rbx].p_dr0
+    mov dr0,rax
+;
+    mov rax,[rbx].p_dr1
+    mov dr1,rax
+;
+    mov rax,[rbx].p_dr2
+    mov dr2,rax
+;
+    mov rax,[rbx].p_dr3
+    mov dr3,rax
+;
+    mov rax,[rbx].p_dr7
+    mov dr7,rax
+;
+    mov rax,[rbx].p_rax
+    mov rbx,[rbx].p_rbx
+    iretq
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
