@@ -8543,7 +8543,8 @@ init_default_regs    PROC near
 ; thread control
 ;
     mov ds:p_fault_vector,-1
-    mov ds:p_fault_code,0
+    mov dword ptr ds:p_fault_code,0
+    mov dword ptr ds:p_fault_code+4,0
     mov ds:p_action_text,0
     ret
 init_default_regs    ENDP
@@ -9308,7 +9309,8 @@ init_fork_regs    PROC near
 ; thread control
 ;
     mov ds:p_fault_vector,-1
-    mov ds:p_fault_code,0
+    mov dword ptr ds:p_fault_code,0
+    mov dword ptr ds:p_fault_code+4,0
     mov ds:p_action_text,0
     mov ds:p_stack_sel,0
     ret
@@ -9781,7 +9783,8 @@ init_first_tss  PROC near
 ; thread control
 ;
     mov ds:p_fault_vector,-1
-    mov ds:p_fault_code,0
+    mov dword ptr ds:p_fault_code,0
+    mov dword ptr ds:p_fault_code+4,0
     mov ds:p_action_text,0
 ;
     mov ds:p_cr3,edx

@@ -380,7 +380,8 @@ double_fault_lock_ok:
 ;
     mov es,ax    
     mov es:p_fault_vector,8
-    mov es:p_fault_code,0
+    mov dword ptr es:p_fault_code,0
+    mov dword ptr es:p_fault_code+4,0
 ;    
     mov ax,double_tss_data_sel
     mov ds,ax
@@ -574,7 +575,8 @@ debug_normal:
     mov al,[ebp].trap_exc_nr
     mov ds:p_fault_vector,al
     mov eax,[ebp].trap_err
-    mov ds:p_fault_code,eax
+    mov dword ptr ds:p_fault_code,eax
+    mov dword ptr ds:p_fault_code+4,0
 ;
     mov eax,[ebp].trap_eax
     mov dword ptr ds:p_rax,eax

@@ -27,4 +27,5 @@
 
 realtime_mon_base    = 0FFFFFF8000000000h
 realtime_stack_base  = 0FFFFFF8000200000h
-realtime_thread_base = 0FFFFFF8000202000h
+realtime_apic_base   = 0FFFFFF8000202000h
+realtime_thread_base = 0FFFFFF8000204000h

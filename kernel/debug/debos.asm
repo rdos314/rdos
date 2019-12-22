@@ -293,7 +293,7 @@ AddFault      PROC near
     test word ptr gs:p_rflags+2,2
     jnz afEnd
 ;    
-    mov eax,gs:p_fault_code
+    mov eax,dword ptr gs:p_fault_code
     cmp ax,3
     je afEnd
 ;    
@@ -4002,7 +4002,7 @@ debug_trace_go:
 ;
     push fs
     mov fs,gs:p_proc_sel
-    mov al,20h
+    mov al,21h
     SendInt
     pop fs
     jmp debug_trace_done

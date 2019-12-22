@@ -29,6 +29,7 @@
 
 include realtime.def
 include system.def
+include ..\pcdev\apic.inc
 
 Code64 segment byte public use64 'code64'
 
@@ -37,7 +38,17 @@ boot:
 sgn  dw 657Ah
 eip  dq OFFSET init
 
-pad  db 6 DUP(?)
+gdt_descr:
+    dw 1Fh
+    dd OFFSET rtm_gdt
+    dd 0FFFFFF80h
+
+idt_descr:
+    dw 3FFh
+    dd OFFSET rtm_idt
+    dd 0FFFFFF80h
+
+pad  db 2 DUP(?)
 
 rtm_gdt:
 gdt0:
@@ -54,7 +65,9 @@ gdt10:
      dw 0CFh
 
 gdt18:
-     dq 0
+     dw 0FFFFh
+     dd 92000000h
+     dw 0CFh
 
 rtm_idt:
 idt0:
@@ -138,7 +151,12 @@ idt0E:
     dd 0
 
 idt0F:
-    dq 0,0
+    dw OFFSET apic_spur_int
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
 
 idt10:
     dq 0,0
@@ -197,7 +215,12 @@ idt20:
     dd 0
 
 idt21:
-    dq 0,0
+    dw OFFSET trace_int
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
 
 idt22:
     dq 0,0
@@ -297,26 +320,88 @@ idt3F:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_int:
+    sti
     add rsp,40
     int 3
+    mov al,20h
+
+trace_int:
+    int 3
+    mov al,21h
 
 div_0:
-trap_1:
-trap_nmi:
-trap_3:
-invalid_opcode:
-protection_fault:
-page_fault:
-
+    push 0
     push rax
     push rbx
     mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,0
+    jmp save_and_wait
+    
+trap_1:
+    push 0
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,1
+    jmp save_and_wait
+
+trap_nmi:
+    push 0
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,2
+    jmp save_and_wait
+
+trap_3:
+    push 0
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,3
+    jmp save_and_wait
+
+invalid_opcode:
+    push 0
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,6
+    jmp save_and_wait
+
+protection_fault:
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,0Dh
+    jmp save_and_wait
+
+page_fault:
+    push rax
+    push rbx
+    mov rbx,realtime_thread_base
+    mov [rbx].p_fault_vector,0Eh
+    jmp save_and_wait
+
+apic_spur_int:
+    iretq
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;   NAME:           Save state and wait for interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+save_and_wait:
     pop rax
     mov [rbx].p_rbx,rax
 ;
     pop rax
     mov [rbx].p_rax,rax
+;
+    pop rax
+    mov [rbx].p_fault_code,rax
 ;
     pop rax
     mov [rbx].p_rip,rax
@@ -352,10 +437,62 @@ page_fault:
     mov [rbx].p_fs,fs
     mov [rbx].p_gs,gs
 
-stl:
-    jmp stl
+waitl:
+    sti
+    hlt
+    jmp waitl
 
-    iretq
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           SetupLocalApic
+;
+;               DESCRIPTION:    Setup local APIC
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupLocalApic    Proc near
+    mov rbx,realtime_apic_base
+;
+    mov eax,10000h
+    mov [rbx].APIC_LINT0,eax
+;
+    mov eax,10000h
+    mov [rbx].APIC_LINT1,eax 
+;   
+    mov eax,10000h
+    mov [rbx].APIC_LERROR,eax
+;
+    mov eax,10000h
+    mov [rbx].APIC_THERMAL,eax
+;
+    mov eax,10000h
+    mov [rbx].APIC_PERF,eax
+;
+    mov eax,10000h
+    mov [rbx].APIC_TIMER,eax
+;
+    mov eax,[rbx].APIC_SPUR
+    and eax,NOT 1000h
+    or eax,100h
+    mov al,0Fh
+    mov [rbx].APIC_SPUR,eax    
+;
+    mov eax,0Bh
+    mov [rbx].APIC_DIV_CONFIG,eax
+;
+    mov eax,-1
+    mov [rbx].APIC_DEST_FORMAT,eax
+;
+    mov eax,10000000h    
+    mov [rbx].APIC_LOG_DEST,eax
+;
+    xor eax,eax
+    mov [rbx].APIC_TPR,eax
+    ret
+SetupLocalApic    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -363,22 +500,6 @@ stl:
 ;   NAME:           init
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-gdt_descr:
-gdt_size:
-    dw 17h
-
-gdt_base:
-    dd OFFSET rtm_gdt
-    dd 0FFFFFF80h
-
-idt_descr:
-idt_size:
-    dw 3FFh
-
-idt_base:
-    dd OFFSET rtm_idt
-    dd 0FFFFFF80h
 
 init:
     mov rdi,realtime_mon_base
@@ -390,6 +511,8 @@ init:
     mov rdx,OFFSET idt_descr
     add rdi,rdx
     lidt [rdi]
+;
+    call SetupLocalApic
 ;
     mov ax,10h
     mov ds,ax

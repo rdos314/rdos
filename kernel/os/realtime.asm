@@ -417,6 +417,18 @@ CreateMonitor      Proc near
     mov ecx,2
     rep stos dword ptr es:[edi]
 ;
+    mov bx,apic_mem_sel
+    GetSelectorBaseSize
+    GetPageEntry
+;
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    xor eax,eax
+    mov ecx,2
+    rep stos dword ptr es:[edi]
+;
     push edx
     mov ds,fs:ps_null_thread
     mov edx,ds:p_linear

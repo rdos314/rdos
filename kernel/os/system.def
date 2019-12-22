@@ -419,7 +419,7 @@ p_realtime          DB ?
 
 p_fault_vector      DB ?
 p_fault_space       DB ?
-p_fault_code        DD ?
+p_fault_code        DQ ?
 
 p_mailslot_sel      DW ?
 

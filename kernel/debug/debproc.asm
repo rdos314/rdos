@@ -472,7 +472,6 @@ real_debug_do:
     jne real_not_trace
 
 real_trace:
-    int 3
     call do_trace
     jmp real_debug_end
 

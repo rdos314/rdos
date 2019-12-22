@@ -810,13 +810,13 @@ ft_gdt  DB 'gdt ',0
 WriteFault      PROC near
     test word ptr gs:p_rflags+2,2
     jnz write_fault_end
-    mov eax,gs:p_fault_code
+    mov eax,dword ptr gs:p_fault_code
     cmp ax,3
     je write_fault_end
     mov ax,cs
     mov es,ax
     mov edi,OFFSET ft_inst
-    mov eax,gs:p_fault_code
+    mov eax,dword ptr gs:p_fault_code
     or ax,ax
     jz write_fault_end
     test ax,1
@@ -825,7 +825,7 @@ WriteFault      PROC near
 fault_not_int:
     WriteAsciiz
 ;
-    mov eax,gs:p_fault_code
+    mov eax,dword ptr gs:p_fault_code
     test ax,2
     jz fault_not_idt
     mov edi,OFFSET ft_idt
@@ -837,7 +837,7 @@ fault_not_idt:
     mov edi,OFFSET ft_ldt
 write_fault_reason:
     WriteAsciiz
-    mov eax,gs:p_fault_code
+    mov eax,dword ptr gs:p_fault_code
     and ax,0FFF8h
     call WriteHexWord
     ret

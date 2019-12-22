@@ -374,7 +374,7 @@ rt_start:
     mov cr3,eax
 ;    
     mov eax,cr0
-    or eax,80000000h
+    or eax,80010008h
     mov cr0,eax
 ;
     xor ax,ax
