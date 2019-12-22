@@ -32,7 +32,9 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
+INCLUDE ..\os\proc.inc
 INCLUDE kdebug.inc
+
 
 debug_row       EQU 0
 debug_col       EQU 4
@@ -3751,6 +3753,281 @@ get_os_pos    Proc near
     mov dh,ds:sw_row
     ret
 get_os_pos    Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DebugReadByte
+;
+;           DESCRIPTION:    Read byte in target process
+;
+;           PARAMETERS:     EDX:ESI	Address
+;                           BX		Selector
+;                           GS		Thread
+; 
+;           RETURNS:        AL		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DebugReadByte    Proc near
+    mov al,gs:p_realtime
+    or al,al
+    jnz drbReal
+;
+    push bx
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    pop bx
+    jc drb32
+
+drb64:    
+    int 3
+    ret
+
+drb32:
+    mov dx,bx
+    test word ptr gs:p_rflags+2,2
+    jz drbPm
+
+drbVm:
+    push bx
+    mov bx,gs
+    ReadThreadSegment
+    pop bx
+    ret
+
+drbPm:
+    push bx
+    mov bx,gs
+    ReadThreadSelector
+    pop bx
+    ret
+
+drbReal:
+    call read_real_mem
+    ret
+DebugReadByte	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DebugReadWord
+;
+;           DESCRIPTION:    Read word in target process
+;
+;           PARAMETERS:     EDX:ESI	Address
+;                           BX		Selector
+;                           GS		Thread
+; 
+;           RETURNS:        AX		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DebugReadWord    Proc near
+    push edx
+    push esi
+;
+    call DebugReadByte
+;
+    push eax
+    inc esi
+    call DebugReadByte
+    mov dl,al
+    pop eax
+    mov ah,dl
+;
+    pop esi
+    pop edx
+    ret
+DebugReadWord	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DebugWriteWord
+;
+;           DESCRIPTION:    Write word in target process
+;
+;           PARAMETERS:     EDX:ESI	Address
+;                           BX		Selector
+;                           GS		Thread
+;                           AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DebugWriteByte    Proc near
+    push ax
+    mov al,gs:p_realtime
+    or al,al
+    pop ax
+    jnz dwbReal
+;
+    push bx
+    mov bx,gs:p_cs
+    IsLongCodeSelector
+    pop bx
+    jc dwb32
+
+dwb64:    
+    int 3
+    ret
+
+dwb32:
+    mov dx,bx
+    test word ptr gs:p_rflags+2,2
+    jz dwbPm
+
+dwbVm:
+    push bx
+    mov bx,gs
+    WriteThreadSegment
+    pop bx
+    ret
+
+dwbPm:
+    push bx
+    mov bx,gs
+    WriteThreadSelector
+    pop bx
+    ret
+
+dwbReal:
+    call write_real_mem
+    ret
+DebugWriteByte	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DebugWriteWord
+;
+;           DESCRIPTION:    Write word in target process
+;
+;           PARAMETERS:     EDX:ESI	Address
+;                           BX		Selector
+;                           GS		Thread
+;                           AX		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DebugWriteWord    Proc near
+    push eax
+    push esi
+;
+    call DebugWriteByte
+;
+    mov al,ah
+    inc esi
+    call DebugWriteByte
+;
+    pop esi
+    pop eax
+    ret
+DebugWriteWord	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_trace
+;
+;           DESCRIPTION:    Trace
+;
+;           PARAMETERS:     GS      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_trace
+
+do_trace    Proc near
+    pushad
+;
+    push fs
+    mov fs,gs:p_core
+    mov bx,fs:ps_null_thread
+    pop fs
+;
+    mov ax,gs
+    cmp ax,bx
+    jne debug_trace_normal
+;
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_trace_done
+
+debug_trace_normal:
+    mov bx,gs:p_cs
+    mov esi,dword ptr gs:p_rip
+    mov edx,dword ptr gs:p_rip+4
+    call DebugReadWord
+;
+    cmp ax,485Ch
+    jne debug_trace_not_sysret
+;
+    push ax
+    add esi,2
+    call DebugReadWord
+    mov dx,ax
+    pop ax
+    cmp dx,070Fh
+    jne debug_trace_not_sysret  
+;
+    or word ptr gs:p_r11,100h      
+    mov ax,word ptr gs:p_rflags
+    and ax,NOT 100h
+    mov word ptr gs:p_rflags,ax
+    jmp debug_trace_go
+
+debug_trace_not_sysret:        
+    cmp al,0CDh
+    jne debug_trace_trace
+;
+    test word ptr gs:p_rflags+2,2
+    jz debug_trace_trace
+;
+    int 3
+    jmp debug_trace_done
+
+debug_trace_trace:
+    mov eax,dword ptr gs:p_dr7
+    and ax,0FFFCh
+    mov dword ptr gs:p_dr7,eax
+    mov ax,word ptr gs:p_rflags
+    or ax,100h
+    mov word ptr gs:p_rflags,ax
+
+debug_trace_go:
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_trace_local
+;
+    push fs
+    mov fs,gs:p_proc_sel
+    mov al,20h
+    SendInt
+    pop fs
+    jmp debug_trace_done
+
+debug_trace_local:
+    push ds
+    push es
+;
+    mov bx,gs
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
+;
+    pop es
+    pop ds
+
+debug_trace_done:
+    popad
+    ret
+do_trace     ENDP
+
+
     
 code    ENDS
 
