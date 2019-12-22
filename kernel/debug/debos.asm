@@ -1484,16 +1484,16 @@ write_phys    Proc near
     mov ebx,flat_sel
     mov ds,ebx
 ;
+    push eax
     mov ebx,edx
     mov eax,1000h
     AllocateBigLinear
 ;
-    push ax
     mov eax,esi
     and ax,0F000h
     or al,7
     SetPageEntry
-    pop ax
+    pop eax
 ;
     and esi,0FFFh
     mov ds:[edx+esi],al
@@ -1738,6 +1738,190 @@ GetCpu  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadByte
+;
+;           DESCRIPTION:    Read byte value
+;
+;           PARAMETERS:     GS                  Debug thread
+;                           DX:ESI              Address
+;                           EDXH                Operation type (0000, F000 = long, 1000 = prot, 2000 = virt, 3000 = phys, 4000 = reg)
+;
+;           RETURNS:        AL                  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_long	Proc near
+    mov al,gs:p_realtime
+    or al,al
+    jz read_long_norm
+;
+    call read_real_mem
+    ret
+
+read_long_norm:
+    int 3
+    ret
+read_long	Endp
+
+read_prot	Proc near
+    push bx
+    mov bx,gs
+    ReadThreadSelector
+    pop bx
+    ret
+read_prot	Endp
+
+read_virt	Proc near
+    push bx
+    mov bx,gs
+    ReadThreadSegment
+    pop bx
+    ret
+read_virt	Endp
+
+read_ph	Proc near
+    push edx
+    and edx,0FFFFFFFh
+    call read_phys
+    pop edx
+    ret
+read_ph	Endp
+
+read_reg	Proc near
+    mov al,gs:[esi]
+    ret
+read_reg	Endp
+
+read_error	Proc near
+    xor al,al
+    ret
+read_error	Endp
+
+read_table:
+ir0	DD OFFSET read_long
+ir1	DD OFFSET read_prot
+ir2	DD OFFSET read_virt
+ir3	DD OFFSET read_ph
+ir4	DD OFFSET read_reg
+ir5	DD OFFSET read_error
+ir6	DD OFFSET read_error
+ir7	DD OFFSET read_error
+ir8	DD OFFSET read_error
+ir9	DD OFFSET read_error
+irA	DD OFFSET read_error
+irB	DD OFFSET read_error
+irC	DD OFFSET read_error
+irD	DD OFFSET read_error
+irE	DD OFFSET read_error
+irF	DD OFFSET read_long
+
+read_byte	Proc near
+    push ebx
+;
+    mov ebx,edx
+    shr ebx,28
+    shl ebx,2
+    call near ptr cs:[ebx].read_table
+;
+    pop ebx
+    ret
+read_byte	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteByte
+;
+;           DESCRIPTION:    write byte value
+;
+;           PARAMETERS:     GS                  Debug thread
+;                           DX:ESI              Address
+;                           EDXH                Operation type (0000, F000 = long, 1000 = prot, 2000 = virt, 3000 = phys, 4000 = reg)
+;                           AL                  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_long	Proc near
+    push eax
+    mov al,gs:p_realtime
+    or al,al
+    pop eax
+    jz write_long_norm
+;
+    call write_real_mem
+    ret
+
+write_long_norm:
+    int 3
+    ret
+write_long	Endp
+
+write_prot	Proc near
+    push bx
+    mov bx,gs
+    WriteThreadSelector
+    pop bx
+    ret
+write_prot	Endp
+
+write_virt	Proc near
+    push bx
+    mov bx,gs
+    WriteThreadSegment
+    pop bx
+    ret
+write_virt	Endp
+
+write_ph	Proc near
+    push edx
+    and edx,0FFFFFFFh
+    call write_phys
+    pop edx
+    ret
+write_ph	Endp
+
+write_reg	Proc near
+    mov gs:[esi],al
+    ret
+write_reg	Endp
+
+write_error	Proc near
+    ret
+write_error	Endp
+
+write_table:
+iw0	DD OFFSET write_long
+iw1	DD OFFSET write_prot
+iw2	DD OFFSET write_virt
+iw3	DD OFFSET write_ph
+iw4	DD OFFSET write_reg
+iw5	DD OFFSET write_error
+iw6	DD OFFSET write_error
+iw7	DD OFFSET write_error
+iw8	DD OFFSET write_error
+iw9	DD OFFSET write_error
+iwA	DD OFFSET write_error
+iwB	DD OFFSET write_error
+iwC	DD OFFSET write_error
+iwD	DD OFFSET write_error
+iwE	DD OFFSET write_error
+iwF	DD OFFSET write_long
+
+write_byte	Proc near
+    push ebx
+;
+    mov ebx,edx
+    shr ebx,28
+    shl ebx,2
+    call near ptr cs:[ebx].write_table
+;
+    pop ebx
+    ret
+write_byte	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           interact_inc
 ;
 ;           DESCRIPTION:    Interact increment
@@ -1752,7 +1936,6 @@ GetCpu  Endp
     
 interact_incr   PROC near
     push eax
-    push bx
     push esi
 ;
     xor eax,eax
@@ -1761,66 +1944,7 @@ interact_incr   PROC near
     mov al,cl
     pushf
     add esi,eax
-;
-    mov bx,gs
-    cmp bx,dx
-    jne interact_inc_norm_mem
-;
-    mov al,gs:[esi]
-    popf
-    jnc inc_reg_low
-
-inc_reg_hi:
-    add al,10h
-    jmp inc_reg_j
-
-inc_reg_low:
-    mov ah,al
-    inc al
-    and al,0Fh
-    and ah,0F0h
-    or al,ah
-
-inc_reg_j:
-    mov gs:[esi],al
-    jmp interact_inc_write_done
-
-interact_inc_norm_mem:
-    mov al,gs:p_realtime
-    or al,al
-    jz interact_inc_local_mem
-;
-    call read_real_mem
-    popf
-    jnc inc_real_low
-
-inc_real_hi:
-    add al,10h
-    jmp inc_real_j
-
-inc_real_low:
-    mov ah,al
-    inc al
-    and al,0Fh
-    and ah,0F0h
-    or al,ah
-
-inc_real_j:
-    call write_real_mem
-    jmp interact_inc_write_done
-
-interact_inc_local_mem:
-    test word ptr ds:[ebp].reg_eflags+2,2
-    jz interact_inc_read_prot
-
-interact_inc_read_virt:
-    ReadThreadSegment
-    jmp interact_inc_read_done
-
-interact_inc_read_prot:
-    ReadThreadSelector
-
-interact_inc_read_done:
+    call read_byte
     popf
     jnc inc_low
 
@@ -1836,19 +1960,9 @@ inc_low:
     or al,ah
 
 inc_j:
-    test word ptr ds:[ebp].reg_eflags+2,2
-    jz interact_inc_write_prot
-
-interact_inc_write_virt:
-    WriteThreadSegment
-    jmp interact_inc_write_done
-
-interact_inc_write_prot:
-    WriteThreadSelector
-
-interact_inc_write_done:
+    call write_byte
+;
     pop esi
-    pop bx
     pop eax
     ret
 interact_incr   ENDP
@@ -1870,7 +1984,6 @@ interact_incr   ENDP
     
 interact_decr   PROC near
     push eax
-    push bx
     push esi
 ;
     xor eax,eax
@@ -1879,66 +1992,7 @@ interact_decr   PROC near
     mov al,cl
     pushf
     add esi,eax
-;
-    mov bx,gs
-    cmp bx,dx
-    jne interact_dec_norm_mem
-;
-    mov al,gs:[esi]
-    popf
-    jnc dec_reg_low
-
-dec_reg_hi:
-    sub al,10h
-    jmp dec_reg_j
-
-dec_reg_low:
-    mov ah,al
-    dec al
-    and al,0Fh
-    and ah,0F0h
-    or al,ah
-    
-dec_reg_j:
-    mov gs:[esi],al
-    jmp interact_dec_write_done
-
-interact_dec_norm_mem:
-    mov al,gs:p_realtime
-    or al,al
-    jz interact_dec_local_mem
-;
-    call read_real_mem
-    popf
-    jnc dec_real_low
-
-dec_real_hi:
-    sub al,10h
-    jmp dec_real_j
-
-dec_real_low:
-    mov ah,al
-    dec al
-    and al,0Fh
-    and ah,0F0h
-    or al,ah
-    
-dec_real_j:
-    call write_real_mem
-    jmp interact_dec_write_done
-
-interact_dec_local_mem:
-    test word ptr ds:[ebp].reg_eflags+2,2
-    jz interact_dec_read_prot
-
-interact_dec_read_virt:
-    ReadThreadSegment
-    jmp interact_dec_read_done
-
-interact_dec_read_prot:
-    ReadThreadSelector
-
-interact_dec_read_done:
+    call read_byte
     popf
     jnc dec_low
 
@@ -1954,19 +2008,9 @@ dec_low:
     or al,ah
     
 dec_j:
-    test word ptr ds:[ebp].reg_eflags+2,2
-    jz interact_dec_write_prot
-
-interact_dec_write_virt:
-    WriteThreadSegment
-    jmp interact_dec_write_done
-
-interact_dec_write_prot:
-    WriteThreadSelector
-
-interact_dec_write_done:
+    call write_byte
+;
     pop esi
-    pop bx
     pop eax
     ret
 interact_decr   ENDP
@@ -1989,7 +2033,6 @@ interact_decr   ENDP
 
 interact_set_value     PROC near
     push eax
-    push bx
     push esi
 ;
     xor eax,eax
@@ -1998,66 +2041,7 @@ interact_set_value     PROC near
     mov al,cl
     pushf
     add esi,eax
-;
-    mov bx,gs
-    cmp bx,dx
-    jne interact_set_norm_mem
-;
-    mov al,gs:[esi]
-    popf
-    jnc set_reg_low
-
-set_reg_hi:
-    and al,0Fh
-    mov ah,ch
-    shl ah,4
-    or al,ah
-    jmp set_reg_j
-
-set_reg_low:
-    and al,0F0h
-    or al,ch
-
-set_reg_j:
-    mov gs:[esi],al
-    jmp interact_set_write_done
-
-interact_set_norm_mem:
-    mov al,gs:p_realtime
-    or al,al
-    jz interact_set_local_mem
-;
-    call read_real_mem
-    popf
-    jnc set_real_low
-
-set_real_hi:
-    and al,0Fh
-    mov ah,ch
-    shl ah,4
-    or al,ah
-    jmp set_real_j
-
-set_real_low:
-    and al,0F0h
-    or al,ch
-
-set_real_j:
-    call write_real_mem
-    jmp interact_set_write_done
-
-interact_set_local_mem:
-    test word ptr ds:[ebp].reg_eflags+2,2
-    jz interact_set_read_prot
-
-interact_set_read_virt:
-    ReadThreadSegment
-    jmp interact_set_read_done
-
-interact_set_read_prot:
-    ReadThreadSelector
-
-interact_set_read_done:
+    call read_byte
     popf
     jnc set_low
 
@@ -2073,19 +2057,9 @@ set_low:
     or al,ch
 
 set_j:
-    test word ptr ds:[ebp].reg_eflags+2,2
-    jz interact_set_write_prot
-
-interact_set_write_virt:
-    WriteThreadSegment
-    jmp interact_set_write_done
-
-interact_set_write_prot:
-    WriteThreadSelector
-
-interact_set_write_done:
+    call write_byte
+;
     pop esi
-    pop bx
     pop eax
     ret
 interact_set_value      ENDP
@@ -2443,7 +2417,7 @@ incdec_ss:
     public change_eax
     
 change_eax      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rax
     push edi
     ret
@@ -2452,7 +2426,7 @@ change_eax      ENDP
     public change_ebx
 
 change_ebx      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rbx
     push edi
     ret
@@ -2461,7 +2435,7 @@ change_ebx      ENDP
     public change_ecx
 
 change_ecx      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rcx
     push edi
     ret
@@ -2470,7 +2444,7 @@ change_ecx      ENDP
     public change_edx
 
 change_edx      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rdx
     push edi
     ret
@@ -2479,7 +2453,7 @@ change_edx      ENDP
     public change_esi
 
 change_esi      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rsi
     push edi
     ret
@@ -2488,7 +2462,7 @@ change_esi      ENDP
     public change_edi
 
 change_edi      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rdi
     push edi
     ret
@@ -2497,7 +2471,7 @@ change_edi      ENDP
     public change_esp
 
 change_esp      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rsp
     push edi
     ret
@@ -2506,7 +2480,7 @@ change_esp      ENDP
     public change_ebp
 
 change_ebp      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rbp
     push edi
     ret
@@ -2515,7 +2489,7 @@ change_ebp      ENDP
     public change_epc
 
 change_epc      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rip
     push edi
     ret
@@ -2524,7 +2498,7 @@ change_epc      ENDP
     public change_raxl
 
 change_raxl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rax
     push edi
     ret
@@ -2533,7 +2507,7 @@ change_raxl      ENDP
     public change_raxh
 
 change_raxh      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rax + 4
     push edi
     ret
@@ -2542,7 +2516,7 @@ change_raxh      ENDP
     public change_rbxl
 
 change_rbxl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rbx
     push edi
     ret
@@ -2551,7 +2525,7 @@ change_rbxl      ENDP
     public change_rbxh
 
 change_rbxh      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rbx + 4
     push edi
     ret
@@ -2560,7 +2534,7 @@ change_rbxh      ENDP
     public change_rcxl
 
 change_rcxl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rcx
     push edi
     ret
@@ -2569,7 +2543,7 @@ change_rcxl      ENDP
     public change_rcxh
 
 change_rcxh      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rcx + 4
     push edi
     ret
@@ -2578,7 +2552,7 @@ change_rcxh      ENDP
     public change_rdxl
 
 change_rdxl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rdx
     push edi
     ret
@@ -2587,7 +2561,7 @@ change_rdxl      ENDP
     public change_rdxh
 
 change_rdxh      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rdx + 4
     push edi
     ret
@@ -2596,7 +2570,7 @@ change_rdxh      ENDP
     public change_rsil
 
 change_rsil      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rsi
     push edi
     ret
@@ -2605,7 +2579,7 @@ change_rsil      ENDP
     public change_rsih
 
 change_rsih      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rsi + 4
     push edi
     ret
@@ -2614,7 +2588,7 @@ change_rsih      ENDP
     public change_rdil
 
 change_rdil      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rdi
     push edi
     ret
@@ -2623,7 +2597,7 @@ change_rdil      ENDP
     public change_rdih
 
 change_rdih      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rdi + 4
     push edi
     ret
@@ -2632,7 +2606,7 @@ change_rdih      ENDP
     public change_r8l
 
 change_r8l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r8
     push edi
     ret
@@ -2641,7 +2615,7 @@ change_r8l      ENDP
     public change_r8h
 
 change_r8h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r8 + 4
     push edi
     ret
@@ -2650,7 +2624,7 @@ change_r8h      ENDP
     public change_r9l
 
 change_r9l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r9
     push edi
     ret
@@ -2659,7 +2633,7 @@ change_r9l      ENDP
     public change_r9h
 
 change_r9h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r9 + 4
     push edi
     ret
@@ -2668,7 +2642,7 @@ change_r9h      ENDP
     public change_r10l
 
 change_r10l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r10
     push edi
     ret
@@ -2677,7 +2651,7 @@ change_r10l      ENDP
     public change_r10h
 
 change_r10h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r10 + 4
     push edi
     ret
@@ -2686,7 +2660,7 @@ change_r10h      ENDP
     public change_r11l
 
 change_r11l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r11
     push edi
     ret
@@ -2695,7 +2669,7 @@ change_r11l      ENDP
     public change_r11h
 
 change_r11h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r11 + 4
     push edi
     ret
@@ -2704,7 +2678,7 @@ change_r11h      ENDP
     public change_r12l
 
 change_r12l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r12
     push edi
     ret
@@ -2713,7 +2687,7 @@ change_r12l      ENDP
     public change_r12h
 
 change_r12h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r12 + 4
     push edi
     ret
@@ -2722,7 +2696,7 @@ change_r12h      ENDP
     public change_r13l
 
 change_r13l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r13
     push edi
     ret
@@ -2731,7 +2705,7 @@ change_r13l      ENDP
     public change_r13h
 
 change_r13h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r13 + 4
     push edi
     ret
@@ -2740,7 +2714,7 @@ change_r13h      ENDP
     public change_r14l
 
 change_r14l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r14
     push edi
     ret
@@ -2749,7 +2723,7 @@ change_r14l      ENDP
     public change_r14h
 
 change_r14h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r14 + 4
     push edi
     ret
@@ -2758,7 +2732,7 @@ change_r14h      ENDP
     public change_r15l
 
 change_r15l      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r15
     push edi
     ret
@@ -2767,7 +2741,7 @@ change_r15l      ENDP
     public change_r15h
 
 change_r15h      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_r15 + 4
     push edi
     ret
@@ -2776,7 +2750,7 @@ change_r15h      ENDP
     public change_ripl
 
 change_ripl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rip
     push edi
     ret
@@ -2785,7 +2759,7 @@ change_ripl      ENDP
     public change_riph
 
 change_riph      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rip + 4
     push edi
     ret
@@ -2794,7 +2768,7 @@ change_riph      ENDP
     public change_rspl
 
 change_rspl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rsp
     push edi
     ret
@@ -2803,7 +2777,7 @@ change_rspl      ENDP
     public change_rsph
 
 change_rsph      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rsp + 4
     push edi
     ret
@@ -2812,7 +2786,7 @@ change_rsph      ENDP
     public change_rbpl
 
 change_rbpl      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rbp
     push edi
     ret
@@ -2821,7 +2795,7 @@ change_rbpl      ENDP
     public change_rbph
 
 change_rbph      PROC near
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_rbp + 4
     push edi
     ret
@@ -2831,7 +2805,7 @@ change_rbph      ENDP
 
 change_cs       PROC near
     and cl,3
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_cs
     push edi
     ret
@@ -2841,7 +2815,7 @@ change_cs       ENDP
 
 change_ds       PROC near
     and cl,3
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_ds
     push edi
     ret
@@ -2851,7 +2825,7 @@ change_ds       ENDP
 
 change_es       PROC near
     and cl,3
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_es
     push edi
     ret
@@ -2861,7 +2835,7 @@ change_es       ENDP
 
 change_fs       PROC near
     and cl,3
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_fs
     push edi
     ret
@@ -2871,7 +2845,7 @@ change_fs       ENDP
 
 change_gs       PROC near
     and cl,3
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_gs
     push edi
     ret
@@ -2881,7 +2855,7 @@ change_gs       ENDP
 
 change_ss       PROC near
     and cl,3
-    mov edx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_ss
     push edi
     ret
@@ -2890,11 +2864,7 @@ change_ss       ENDP
     public change_pm_sel
    
 change_pm_sel   PROC near
-    xor edx,edx
-    xchg edx,ds:[ebp].reg_eflags
-    push edx
-;    
-    mov dx,gs
+    mov edx,40000000h
     and cl,3
     mov esi,OFFSET p_pm_deb_sel
     push cx
@@ -2911,19 +2881,13 @@ change_pm_sel_ret:
     inc ds:sw_col
 
 change_pm_sel_error:
-    pop edx
-    mov ds:[ebp].reg_eflags,edx
     ret
 change_pm_sel   ENDP
 
     public change_pm_offs
 
 change_pm_offs  PROC near
-    xor edx,edx
-    xchg edx,ds:[ebp].reg_eflags
-    push edx
-;
-    mov dx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_pm_deb_offs
     push cx
     push OFFSET change_pm_offs_ret
@@ -2938,19 +2902,13 @@ change_pm_offs_ret:
     inc ds:sw_col
 
 change_pm_offs_error:
-    pop edx
-    mov ds:[ebp].reg_eflags,edx
     ret
 change_pm_offs  ENDP
 
     public change_phys_high
 
 change_phys_high   PROC near
-    xor edx,edx
-    xchg edx,ds:[ebp].reg_eflags
-    push edx
-;    
-    mov dx,gs
+    mov edx,40000000h
     and cl,3
     mov esi,OFFSET p_deb_phys + 4
     push cx
@@ -2968,19 +2926,13 @@ change_phys_high_ret:
     inc ds:sw_col
     
 change_phys_high_error:
-    pop edx
-    mov ds:[ebp].reg_eflags,edx
     ret
 change_phys_high   ENDP
 
     public change_phys_low
 
 change_phys_low  PROC near
-    xor edx,edx
-    xchg edx,ds:[ebp].reg_eflags
-    push edx
-;    
-    mov dx,gs
+    mov edx,40000000h
     mov esi,OFFSET p_deb_phys
     push cx
 ;    
@@ -2997,8 +2949,6 @@ change_phys_low_ret:
     inc ds:sw_col
     
 change_phys_low_error:
-    pop edx
-    mov ds:[ebp].reg_eflags,edx
     ret
 change_phys_low  ENDP
 
@@ -3121,6 +3071,7 @@ interact_set    ENDP
 ;
 ;           PARAMETERS:     GS          Thread
 ;                           DX:ESI      Adress to data
+;                           EDXH        Type of operation (0000/F000 = long, 1000 = pm, 2000 = vm, 3000 = physical, 4000h = reg)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3183,6 +3134,17 @@ mem_cs64:
     ret
 
 mem_cs32:
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz mem_cspm
+;
+    mov edx,20000000h
+    mov dx,gs:p_cs
+    movzx esi,word ptr gs:p_rip
+    call mem_do
+    ret
+
+mem_cspm:
+    mov edx,10000000h
     mov dx,gs:p_cs
     mov esi,dword ptr gs:p_rip
     call mem_do
@@ -3207,6 +3169,17 @@ mem_ss64:
     ret
 
 mem_ss32:
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz mem_sspm
+;
+    mov edx,20000000h
+    mov dx,gs:p_ss
+    movzx esi,word ptr gs:p_rsp
+    call mem_do
+    ret
+
+mem_sspm:
+    mov edx,10000000h
     mov dx,gs:p_ss
     mov esi,dword ptr gs:p_rsp
     call mem_do
@@ -3231,6 +3204,17 @@ mem_es64:
     ret
 
 mem_es32:
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz mem_espm
+;
+    mov edx,20000000h
+    mov dx,gs:p_es
+    xor esi,esi
+    call mem_do
+    ret
+
+mem_espm:
+    mov edx,10000000h
     mov dx,gs:p_es
     xor esi,esi
     call mem_do
@@ -3243,17 +3227,11 @@ mem_pm  PROC near
     mov al,gs:p_realtime
     or al,al
     jnz mem_real
-;
-    xor edx,edx
-    xchg edx,ds:[ebp].reg_eflags
-    push edx
 ;    
+    mov edx,10000000h
     mov dx,gs:p_pm_deb_sel
     mov esi,gs:p_pm_deb_offs
     call mem_do
-;
-    pop edx    
-    mov ds:[ebp].reg_eflags,edx
     ret
 
 mem_real:
@@ -3266,6 +3244,12 @@ mem_pm  ENDP
     public mem_phys
 
 mem_phys  PROC near
+    mov eax,30000000h
+    mov edx,gs:p_deb_phys+4
+    and edx,0FFFFFFFh
+    or edx,eax
+    mov esi,gs:p_deb_phys
+    call mem_do
     ret
 mem_phys  ENDP
 

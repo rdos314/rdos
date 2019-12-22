@@ -60,7 +60,6 @@ code    SEGMENT byte use32 public 'CODE'
     extrn interact_incr:near
     extrn interact_decr:near
     extrn interact_set:near
-    extrn interact_set_value:near
 
     extrn incdec_eax:near
     extrn incdec_ebx:near
