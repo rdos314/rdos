@@ -741,49 +741,6 @@ get_debug_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           DebugRun
-;
-;           DESCRIPTION:    Run currently debugged thread with current DR-settings
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-debug_run_name   DB 'Debug Run',0
-
-debug_run    PROC far
-    push ds
-    push es
-    pushad
-    call local_get_debug_thread_sel
-    or ax,ax
-    jz debug_run_done
-;
-    mov bx,ax
-    mov es,bx
-;
-    mov ax,word ptr es:p_rflags
-    and ax,NOT 100h
-    mov word ptr es:p_rflags,ax
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov si,OFFSET debug_list
-    mov [si],bx
-    mov es,ax
-    Wake
-
-debug_run_done:
-    popad
-    pop es
-    pop ds
-    retf32
-debug_run    ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           DEBUG_NEXT
 ;
 ;           DESCRIPTION:    Select next thread as currently debugged
@@ -1788,12 +1745,6 @@ init_reg32       PROC near
     mov edi,OFFSET get_debug_thread_name
     xor dx,dx
     mov ax,get_debug_thread_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET debug_run
-    mov edi,OFFSET debug_run_name
-    xor dx,dx
-    mov ax,debug_run_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET debug_next

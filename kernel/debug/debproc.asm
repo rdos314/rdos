@@ -69,6 +69,7 @@ code    SEGMENT byte use32 public 'CODE'
     extrn do_trace:near
     extrn do_pace:near
     extrn do_go:near
+    extrn do_run:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -719,6 +720,37 @@ debug_go_done:
     pop gs
     ret
 debug_go	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DebugRun
+;
+;           DESCRIPTION:    Run currently debugged thread with current DR-settings
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_run_name   DB 'Debug Run',0
+
+debug_run    PROC far
+    push gs
+    push eax
+;
+    GetDebugThreadSel
+    or ax,ax
+    jz debug_run_done
+;    
+    mov gs,eax
+    call do_run
+
+debug_run_done:
+    pop eax
+    pop gs
+    ret
+debug_run    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -758,6 +790,12 @@ init_local_debug      PROC near
     mov edi,OFFSET debug_go_name
     xor dx,dx
     mov ax,debug_go_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET debug_run
+    mov edi,OFFSET debug_run_name
+    xor dx,dx
+    mov ax,debug_run_nr
     RegisterBimodalUserGate
     ret
 init_local_debug      ENDP

@@ -4322,6 +4322,48 @@ debug_go_done:
     popad
     ret
 do_go     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_run
+;
+;           DESCRIPTION:    Run
+;
+;           PARAMETERS:     GS      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_run
+
+do_run    Proc near
+    pushad
+;
+    push fs
+    mov fs,gs:p_core
+    mov bx,fs:ps_null_thread
+    pop fs
+;
+    mov ax,gs
+    cmp ax,bx
+    jne debug_run_normal
+;
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_run_done
+
+debug_run_normal:
+    mov ax,word ptr gs:p_rflags
+    and ax,NOT 100h
+    mov word ptr gs:p_rflags,ax
+
+debug_run_go:
+    call DebugWakeup
+
+debug_run_done:
+    popad
+    ret
+do_run     ENDP
 
 code    ENDS
 
