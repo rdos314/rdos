@@ -484,7 +484,6 @@ real_not_trace:
     jne real_not_pace
 
 real_pace:
-    int 3
     call do_pace
     jmp real_debug_end
 

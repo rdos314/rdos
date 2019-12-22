@@ -320,9 +320,7 @@ idt3F:
 reset_int:
     sti
     add rsp,40
-    int 3
-    mov al,20h
-    mov rax,1235h
+    jmp startup
 
 run_int:
     jmp load_and_restart
@@ -557,6 +555,25 @@ SetupLocalApic    Proc near
     mov [rbx].APIC_TPR,eax
     ret
 SetupLocalApic    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           startup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+rout	Proc near
+    mov rax,12343h
+    mov rbx,4555h
+    ret
+rout	Endp
+
+startup:
+    int 3
+    mov al,20h
+    call rout
+    mov rax,1235h
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
