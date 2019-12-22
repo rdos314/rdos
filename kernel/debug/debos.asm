@@ -4027,7 +4027,258 @@ debug_trace_done:
     ret
 do_trace     ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_pace
+;
+;           DESCRIPTION:    Pace
+;
+;           PARAMETERS:     GS      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public do_pace
+
+do_pace    Proc near
+    pushad
+;
+    push fs
+    mov fs,gs:p_core
+    mov bx,fs:ps_null_thread
+    pop fs
+;
+    mov ax,gs
+    cmp ax,bx
+    jne debug_pace_normal
+;
+    mov cl,1
+    mov al,gs:p_realtime
+    or al,al
+    jnz debug_pace_bitness_done
+    jz debug_pace_done
+
+debug_pace_normal:
+    xor cl,cl
+    mov bx,gs:p_cs
+    test byte ptr gs:p_rflags+2,2
+    jnz debug_pace_bitness_done
+;
+    push ds
+    test bx,4
+    jz debug_pace_bitness_gdt
+
+debug_pace_bitness_ldt:
+    mov ds,gs:p_ldt_sel
+    jmp debug_pace_bitness_get
+
+debug_pace_bitness_gdt:
+    mov ax,gdt_sel
+    mov ds,ax
+
+debug_pace_bitness_get:
+    and bx,0FFF8h
+    mov cl,ds:[bx+6]
+    mov ch,cl
+    shr cl,6
+    and cl,1
+    shr ch,5
+    and ch,1
+    or cl,ch
+    pop ds
+
+debug_pace_bitness_done:
+    mov bx,gs:p_cs
+    mov esi,dword ptr gs:p_rip
+    mov edx,dword ptr gs:p_rip+4
+    call DebugReadWord
+;
+    cmp ax,485Ch
+    jne debug_pace_not_sysret
+;
+    push ax
+    push esi
+    add esi,2
+    adc edx,0
+    call DebugReadWord
+    cmp ax,070Fh
+    pop esi
+    pop ax  
+    jne debug_pace_not_sysret  
+;
+    or word ptr gs:p_r11,100h      
+    mov ax,word ptr gs:p_rflags
+    and ax,NOT 100h
+    mov word ptr gs:p_rflags,ax
+    jmp debug_pace_go
+
+debug_pace_not_sysret:            
+    xor ebx,ebx
+    add bx,2
+    cmp ax,50Fh
+    je debug_pace_step
+;    
+    cmp al,0E2h
+    je debug_pace_step
+;
+    cmp al,0CDh
+    je debug_pace_step
+;    
+    inc bx
+    test cl,1
+    jz debug_pace_size_ok
+;
+    add bx,2
+
+debug_pace_size_ok:    
+    cmp al,0E8h
+    je debug_pace_step
+;
+    xor ebx,ebx
+
+debug_pace_far_loop:
+    mov esi,dword ptr gs:p_rip
+    mov edx,dword ptr gs:p_rip+4
+    add esi,ebx
+    call DebugReadWord
+    cmp al,66h
+    je debug_pace_far_ov66
+;
+    cmp al,3Eh
+    je debug_pace_far_ov3e    
+;   
+    cmp al,67h
+    je debug_pace_far_ov67 
+;
+    cmp al,9Ah
+    je debug_pace_far_call
+;
+    jmp debug_pace_trace   
+
+debug_pace_far_ov66:
+    inc bx
+    xor cl,1
+    jmp debug_pace_far_loop
+
+debug_pace_far_ov67:
+    inc bx
+    jmp debug_pace_far_loop
+
+debug_pace_far_ov3e:
+    inc bx
+    jmp debug_pace_far_loop    
+
+debug_pace_far_call:
+    add bx,5
+    test cl,1
+    jz debug_pace_step
+;
+    add bx,2
+    
+debug_pace_step:
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_pace_local
+;
+    mov eax,dword ptr gs:p_rip
+    jmp debug_pace_step_go
+
+debug_pace_local:
+    mov ax,word ptr gs:p_rflags+2
+    test ax,2
+    jz debug_pace_step_prot    
+;
+    xor eax,eax
+    xor edx,edx
+    mov ax,gs:p_cs
+    shl eax,4
+    mov dx,word ptr gs:p_rip
+    add eax,edx
+    jmp debug_pace_step_go
+    
+debug_pace_step_prot:
+    mov si,gs:p_cs
+    test si,4
+    jz debug_pace_step_gdt
+;
+    push ds
+    xor eax,eax
+    mov ds,gs:p_ldt_sel
+    mov si,gs:p_cs
+    and si,0FFF8h
+    mov eax,[si+2]
+    rol eax,8
+    mov al,[si+7]
+    ror eax,8
+    add eax,dword ptr gs:p_rip
+    pop ds
+    jmp debug_pace_step_go
+
+debug_pace_step_gdt:
+    push ds
+    and si,0FFF8h
+    mov ax,gdt_sel
+    mov ds,ax    
+    mov eax,[si+2]
+    rol eax,8
+    mov al,[si+7]
+    ror eax,8
+    add eax,dword ptr gs:p_rip
+    pop ds
+
+debug_pace_step_go:
+    add eax,ebx
+    mov dword ptr gs:p_dr0,eax
+    mov eax,dword ptr gs:p_rip+4
+    mov dword ptr gs:p_dr0+4,eax    
+    mov eax,dword ptr gs:p_dr7
+    and eax,0FFF0FFFCh
+    or ax,1
+    mov dword ptr gs:p_dr7,eax
+    mov ax,word ptr gs:p_rflags
+    and ax,NOT 100h
+    mov word ptr gs:p_rflags,ax
+    jmp debug_pace_go
+    
+debug_pace_trace:
+    mov eax,dword ptr gs:p_dr7
+    and ax,0FFFCh
+    mov dword ptr gs:p_dr7,eax
+    mov ax,word ptr gs:p_rflags
+    or ax,100h
+    mov word ptr gs:p_rflags,ax
+
+debug_pace_go:
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_pace_go_local
+;
+    push fs
+    mov fs,gs:p_core
+    mov al,21h
+    SendInt
+    pop fs
+    jmp debug_pace_done
+
+debug_pace_go_local:
+    push ds
+    push es
+;
+    mov bx,gs
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
+;
+    pop es
+    pop ds
+
+debug_pace_done:
+    popad
+    ret
+do_pace	Endp
     
 code    ENDS
 
