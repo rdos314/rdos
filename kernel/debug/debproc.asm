@@ -77,17 +77,20 @@ code    SEGMENT byte use32 public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 go_sw   PROC near
-    DebugGo
+    call do_go
+;    DebugGo
     ret
 go_sw   ENDP
 
 trace_sw    PROC near
-    DebugTrace
+    call do_trace
+;    DebugTrace
     ret
 trace_sw    ENDP
 
 pace_sw PROC near
-    DebugPace
+    call do_pace
+;    DebugPace
     ret
 pace_sw ENDP
 
