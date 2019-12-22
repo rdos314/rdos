@@ -242,9 +242,6 @@ mon_fixed_lfb       DD ?
 nmi_data            DW ?
 nmi_proc            DD ?, ?
 
-realtime_debug_list DW ?
-realtime_debug_thread DW ?
-
 system_size                     DB ?
 
 system_seg      ENDS

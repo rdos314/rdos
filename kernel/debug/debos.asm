@@ -48,7 +48,6 @@ debug_size      EQU 16
 data    SEGMENT byte public 'DATA'
 
 cpu cpu_struc <>
-real_cpu cpu_struc <>
 
 sw_func_code     DW ?
 sw_col           DB ?
@@ -1725,7 +1724,7 @@ gcLong:
     jmp gcDone
 
 gcReal:
-    mov ebp,OFFSET real_cpu
+    mov ebp,OFFSET cpu
     call GetDebugThreadData
     call GetRealCpu
 

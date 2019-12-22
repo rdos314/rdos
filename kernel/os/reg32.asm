@@ -864,56 +864,6 @@ get_debug_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GET_REALTIME_DEBUG_THREAD_SEL
-;
-;           DESCRIPTION:    Get currently debugged realtime thread selector
-;
-;           PARAMETERS:         AX          DEBUG THREAD OR 0
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_realtime_debug_thread_sel_name   DB 'Get Realtime Debug Thread Sel', 0
-
-get_realtime_debug_thread_sel    PROC far
-    push ds
-    push es
-    push cx
-    push dx
-    push si
-    mov ax,system_data_sel
-    mov ds,ax
-    mov cx,ds:realtime_debug_thread
-    mov si,OFFSET realtime_debug_list
-    mov ax,[si]
-    or ax,ax
-    jz get_real_debug_sel_done
-
-    mov dx,ax
-get_real_debug_sel_try_next:
-    cmp ax,cx
-    je get_real_debug_sel_default
-    mov es,ax
-    mov ax,es:p_next
-    cmp dx,ax
-    je get_real_debug_sel_new
-    jmp get_real_debug_sel_try_next
-get_real_debug_sel_new:
-    mov cx,[si]
-get_real_debug_sel_default:
-    mov ds:realtime_debug_thread,cx
-    mov ax,cx
-get_real_debug_sel_done:
-    pop si
-    pop dx
-    pop cx
-    pop es
-    pop ds
-    retf32
-get_realtime_debug_thread_sel    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           DEBUG_TRACE
 ;
 ;           DESCRIPTION:    Trace one instruction in debugged thread
@@ -2332,12 +2282,6 @@ init_reg32       PROC near
     xor dx,dx
     mov ax,get_debug_thread_nr
     RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_realtime_debug_thread_sel
-    mov edi,OFFSET get_realtime_debug_thread_sel_name
-    xor cl,cl
-    mov ax,get_realtime_debug_thread_sel_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET debug_trace
     mov edi,OFFSET debug_trace_name

@@ -409,9 +409,7 @@ init_boot_system    PROC near
     mov ds,ax
     xor ax,ax
     mov ds:debug_list,ax
-    mov ds:realtime_debug_list,ax
     mov ds:debug_thread,ax
-    mov ds:realtime_debug_thread,ax
     mov ds:flat_base,0
     mov ds:check_point,0
     mov ds:patch_spinlock,0

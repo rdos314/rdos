@@ -1752,11 +1752,6 @@ GetDebugThreadSel MACRO
     OsGate get_debug_thread_sel_nr
                         ENDM
 
-; OUT AX           Thread ID
-GetRealTimeDebugThreadSel MACRO
-    OsGate get_realtime_debug_thread_sel_nr
-                        ENDM
-
 ; IN  GS           Program selector
 ; IN  ES           Event  
 SendDebugEvent MACRO
