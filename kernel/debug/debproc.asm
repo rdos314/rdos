@@ -77,20 +77,17 @@ code    SEGMENT byte use32 public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 go_sw   PROC near
-    call do_go
-;    DebugGo
+    DebugGo
     ret
 go_sw   ENDP
 
 trace_sw    PROC near
-    call do_trace
-;    DebugTrace
+    DebugTrace
     ret
 trace_sw    ENDP
 
 pace_sw PROC near
-    call do_pace
-;    DebugPace
+    DebugPace
     ret
 pace_sw ENDP
 
@@ -633,6 +630,97 @@ marker_loop:
     jmp marker_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DEBUG_TRACE
+;
+;           DESCRIPTION:    Trace one instruction in debugged thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_trace_name    DB 'Debug Trace',0
+
+debug_trace     PROC far
+    push gs
+    push eax
+;
+    GetDebugThreadSel
+    or ax,ax
+    jz debug_trace_done
+;    
+    mov gs,eax
+    call do_trace
+
+debug_trace_done:
+    pop eax
+    pop gs
+    ret
+debug_trace	Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DEBUG_PACE
+;
+;           DESCRIPTION:    Pace one instruction in debugged thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_pace_name    DB 'Debug Pace',0
+
+debug_pace     PROC far
+    push gs
+    push eax
+;
+    GetDebugThreadSel
+    or ax,ax
+    jz debug_pace_done
+;    
+    mov gs,eax
+    call do_pace
+
+debug_pace_done:
+    pop eax
+    pop gs
+    ret
+debug_pace	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DEBUG_GO
+;
+;           DESCRIPTION:    Run currently debugged thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_go_name   DB 'Debug Go',0
+
+debug_go    PROC far
+    push gs
+    push eax
+;
+    GetDebugThreadSel
+    or ax,ax
+    jz debug_go_done
+;    
+    mov gs,eax
+    call do_go
+
+debug_go_done:
+    pop eax
+    pop gs
+    ret
+debug_go	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           init_local_debug
@@ -653,6 +741,24 @@ init_local_debug      PROC near
     mov ax,26
     mov bx,1
     CreateProcess
+;
+    mov esi,OFFSET debug_trace
+    mov edi,OFFSET debug_trace_name
+    xor dx,dx
+    mov ax,debug_trace_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET debug_pace
+    mov edi,OFFSET debug_pace_name
+    xor dx,dx
+    mov ax,debug_pace_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET debug_go
+    mov edi,OFFSET debug_go_name
+    xor dx,dx
+    mov ax,debug_go_nr
+    RegisterBimodalUserGate
     ret
 init_local_debug      ENDP
     

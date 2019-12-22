@@ -2283,24 +2283,6 @@ init_reg32       PROC near
     mov ax,get_debug_thread_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET debug_trace
-    mov edi,OFFSET debug_trace_name
-    xor dx,dx
-    mov ax,debug_trace_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET debug_pace
-    mov edi,OFFSET debug_pace_name
-    xor dx,dx
-    mov ax,debug_pace_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET debug_go
-    mov edi,OFFSET debug_go_name
-    xor dx,dx
-    mov ax,debug_go_nr
-    RegisterBimodalUserGate
-;
     mov esi,OFFSET debug_run
     mov edi,OFFSET debug_run_name
     xor dx,dx
