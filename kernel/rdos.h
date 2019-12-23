@@ -363,8 +363,8 @@ int RDOSAPI RdosGetMaxComPort(void);
 int RDOSAPI RdosIsComAvailable(char ID);
 int RDOSAPI RdosGetStdComPar(char ID, int *Irq, int *Io, int *Baud);
 int RDOSAPI RdosGetUsbComPar(char ID, int *Type);
-int RDOSAPI RdosGetUsbCdcComPar(char ID, int *Vendor, int *Product); 
-int RDOSAPI RdosGetUsbBusPar(char ID); 
+int RDOSAPI RdosGetUsbCdcComPar(char ID, int *Vendor, int *Product);
+int RDOSAPI RdosGetUsbBusPar(char ID);
 int RDOSAPI RdosOpenCom(char ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize);
 void RDOSAPI RdosCloseCom(int Handle);
 void RDOSAPI RdosFlushCom(int Handle);
@@ -487,7 +487,7 @@ void RDOSAPI RdosGetFileTime(int Handle, unsigned long *MsbTime, unsigned long *
 void RDOSAPI RdosSetFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
 int RDOSAPI RdosCreateMapping(int Size);
-int RDOSAPI RdosCreateNamedMapping(const char *Name, int Size); 
+int RDOSAPI RdosCreateNamedMapping(const char *Name, int Size);
 int RDOSAPI RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
 int RDOSAPI RdosOpenNamedMapping(const char *Name);
 void RDOSAPI RdosSyncMapping(int Handle);
@@ -967,14 +967,6 @@ int RDOSAPI RdosCreateRandomBigNum(int bits);
 int RDOSAPI RdosCreateRandomOddBigNum(int bits);
 int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 
-char RDOSAPI RdosReadPhysicalByte(unsigned long long Address);
-short int RDOSAPI RdosReadPhysicalWord(unsigned long long Address);
-long RDOSAPI RdosReadPhysicalDword(unsigned long long Address);
-long long RDOSAPI RdosReadPhysicalQword(unsigned long long Address);
-void RDOSAPI RdosWritePhysicalByte(unsigned long long Address, char Value);
-void RDOSAPI RdosWritePhysicalWord(unsigned long long Address, short int Value);
-void RDOSAPI RdosWritePhysicalDword(unsigned long long Address, long Value);
-void RDOSAPI RdosWritePhysicalQword(unsigned long long Address, long long Value);
 void RDOSAPI RdosEmulateRealtime();
 
 #ifdef __cplusplus
