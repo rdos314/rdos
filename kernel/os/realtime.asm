@@ -373,77 +373,6 @@ ri_ds_ok:
     popad
     iretd
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           MapMonitor
-;
-;           DESCRIPTION:    Map monitor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MapMonitor     PROC near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,eax
-    mov ax,flat_sel
-    mov es,eax
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical64
-    mov al,3
-    mov ds:mon_phys_dir,eax
-    mov ds:mon_phys_dir+4,ebx
-;
-    SetPageEntry
-    mov edi,edx
-;
-    mov ebp,200h
-    mov edx,ds:mon_linear
-    mov ecx,ds:mon_size
-    shr ecx,12
-
-mmCopyMonLoop:    
-    GetPageEntry
-;
-    mov al,3
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-;
-    dec ebp
-    add edx,1000h
-    add edi,8
-    sub ecx,1
-    jnz mmCopyMonLoop
-
-mmPadMonLoop:
-    xor eax,eax
-    stos dword ptr es:[edi]
-    stos dword ptr es:[edi]
-;
-    sub ebp,1
-    jnz mmPadMonLoop
-    
-mmDone:
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    popad
-    pop es
-    pop ds
-    ret
-MapMonitor     Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -464,8 +393,6 @@ CreateMonitor      Proc near
 ;
     mov eax,flat_sel
     mov es,eax
-;
-    call MapMonitor
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -700,6 +627,76 @@ InitMonitor	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           MapMonitor
+;
+;           DESCRIPTION:    Map monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapMonitor     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov al,3
+    mov ds:mon_phys_dir,eax
+    mov ds:mon_phys_dir+4,ebx
+;
+    SetPageEntry
+    mov edi,edx
+;
+    mov ebp,200h
+    mov edx,ds:mon_linear
+    mov ecx,ds:mon_size
+    shr ecx,12
+
+mmCopyMonLoop:    
+    GetPageEntry
+;
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    dec ebp
+    add edx,1000h
+    add edi,8
+    sub ecx,1
+    jnz mmCopyMonLoop
+
+mmPadMonLoop:
+    xor eax,eax
+    stos dword ptr es:[edi]
+    stos dword ptr es:[edi]
+;
+    sub ebp,1
+    jnz mmPadMonLoop
+    
+mmDone:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop es
+    pop ds
+    ret
+MapMonitor     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetupUniPml4
 ;
 ;           DESCRIPTION:    Setup plm4 entries
@@ -815,6 +812,7 @@ load_adapter_mon_loop:
     sub ecx,SIZE rdos_header
     call InitMonitor
     call SetupUniPml4
+    call MapMonitor
 ;
     pop ecx
     pop es
