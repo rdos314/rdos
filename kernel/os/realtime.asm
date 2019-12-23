@@ -680,6 +680,52 @@ delete_realtime_handle_done:
     pop ds
     ret
 delete_realtime_handle       Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           Realtime server thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+realtime_name	DB 'Realtime Server', 0
+
+realtime_thread:
+    int 3
+    mov ax,SEG data
+    mov ds,eax
+    GetThread
+    mov ds:mon_thread,ax
+;
+    WaitForSignal
+    int 3
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           Init_task
+;
+;   DESCRIPTION:    Create detect-threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_task      Proc far
+    push ds
+    push es
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET realtime_name
+    mov esi,OFFSET realtime_thread
+    mov ax,4
+    mov ecx,stack0_size
+    CreateThread
+;
+    pop es
+    pop ds
+    ret
+init_task      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -719,6 +765,9 @@ init_mon_loop:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET init_task
+    HookInitTasking
 ;
     mov al,85h
     mov esi,OFFSET realtime_int
