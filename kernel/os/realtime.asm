@@ -41,6 +41,19 @@ INCLUDE ..\pcdev\apic.inc
 
 .386p
 
+realtime_handle_struc STRUC
+
+rh_base     handle_header <>
+rh_sel      DW ?
+
+realtime_handle_struc ENDS
+
+realtime_struc	STRUC
+
+rs_core_arr	DW 256 DUP(?)
+
+realtime_struc	ENDS
+
 data    SEGMENT byte public 'DATA'
 
 map_sel	        DW ?
@@ -268,38 +281,88 @@ CreateMonitor	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           EmulateRealtime
+;           NAME:           CreateRealtime
 ;
-;           DESCRIPTION:    Emulate realtime load
+;           DESCRIPTION:    Create realtime handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-emulate_realtime_name    DB 'Emulate Realtime',0
+create_realtime_name    DB 'Create Realtime',0
 
-emulate_realtime     PROC far
+create_realtime     PROC far
+    push ds
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov cx,SIZE realtime_handle_struc
+    AllocateHandle
+    mov ds:[ebx].hh_sign,REALTIME_HANDLE
+;
+    mov eax,SIZE realtime_struc
+    AllocateSmallGlobalMem
+    mov ds:[ebx].rh_sel,es
+;
+    mov ecx,256
+    mov edi,OFFSET rs_core_arr
+    xor ax,ax
+    rep stos word ptr es:[edi]
+;       
+    mov bx,[ebx].hh_handle
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+create_realtime     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddRealtimeCore
+;
+;           DESCRIPTION:    Add realtime core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_realtime_core_name    DB 'Add Realtime Core',0
+
+add_realtime_core     PROC near
     push ds
     push es
     push fs
-    pushad
+    push gs
+    push ebx
+;
+    mov ax,REALTIME_HANDLE
+    DerefHandle
+    jc arcDone
+;
+    mov gs,ds:[ebx].rh_sel
 ;
     mov ax,SEG data
     mov ds,eax
 ;
     AllocateRealtimeCore
-    jc erDone
+    jc arcDone
 ;
     GetCoreNumber
-    jc erDone
+    jc arcDone
 ;
     mov es,fs:ps_null_thread
     mov es:p_realtime,1
     mov es:p_tss_sel,0
     call CreateMonitor
 ;
-    movzx bx,al
+    movzx eax,al
+    mov bx,ax
     shl bx,1
-    mov ds:[bx].mon_arr,es
     mov es:rds_flags,0
+    mov ds:[bx].mon_arr,es
+    mov gs:[bx].rs_core_arr,es
 ;
     mov es,fs:ps_null_thread
     mov ebx,fs:ps_cr3
@@ -307,14 +370,29 @@ emulate_realtime     PROC far
     mov es:p_fault_vector,3
     BootRealtimeCore
     DebugRealtime
+    clc
 
-erDone:
-    popad
+arcDone:
+    pop ebx
+    pop gs
     pop fs
     pop es
     pop ds
     ret
-emulate_realtime     Endp
+add_realtime_core     Endp
+
+add_realtime_core16	Proc far
+    push edi
+    movzx edi,di
+    call add_realtime_core
+    pop edi
+    ret
+add_realtime_core16	Endp
+
+add_realtime_core32	Proc far
+    call add_realtime_core
+    ret
+add_realtime_core32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -580,6 +658,32 @@ load_adapter_monitor      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           delete_realtime_handle
+;
+;           DESCRIPTION:    BX              Realtime handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_realtime_handle       Proc far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,REALTIME_HANDLE
+    DerefHandle
+    jc delete_realtime_handle_done
+;
+
+delete_realtime_handle_done:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+delete_realtime_handle       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    Init module
@@ -616,16 +720,26 @@ init_mon_loop:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET emulate_realtime
-    mov edi,OFFSET emulate_realtime_name
-    xor dx,dx
-    mov ax,emulate_realtime_nr
-    RegisterBimodalUserGate
-;
     mov al,85h
     mov esi,OFFSET realtime_int
     SetupIntGate
-
+;    
+    mov ax,REALTIME_HANDLE
+    mov edi,OFFSET delete_realtime_handle
+    RegisterHandle
+;
+    mov esi,OFFSET create_realtime
+    mov edi,OFFSET create_realtime_name
+    xor dx,dx
+    mov ax,create_realtime_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET add_realtime_core16
+    mov esi,OFFSET add_realtime_core32
+    mov edi,OFFSET add_realtime_core_name
+    mov dx,virt_es_in
+    mov ax,add_realtime_core_nr
+    RegisterUserGate
     ret
 init    ENDP
     

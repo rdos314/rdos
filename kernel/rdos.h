@@ -967,7 +967,8 @@ int RDOSAPI RdosCreateRandomBigNum(int bits);
 int RDOSAPI RdosCreateRandomOddBigNum(int bits);
 int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 
-void RDOSAPI RdosEmulateRealtime();
+int RDOSAPI RdosCreateRealtime();
+int RDOSAPI RdosAddRealtimeCore(int handle, const char *exename);
 
 #ifdef __cplusplus
 }

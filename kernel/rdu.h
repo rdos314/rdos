@@ -907,7 +907,9 @@
 #define usergate_set_handle_blocking_mode 0x000002C7
 #define usergate_set_handle_nonblocking_mode 0x000002C8
 
-#define usergate_emulate_realtime 0x000002D1
+#define usergate_create_realtime 0x000002C9
+#define usergate_add_realtime_core 0x000002CA
+
 #define usergate_is_can_module_online 0x000002D2
 
 
@@ -1822,7 +1824,9 @@
 #define CallGate_set_handle_blocking_mode 0x55 0x67 0x9a 199 2 0 0 3 0 0x5d
 #define CallGate_set_handle_nonblocking_mode 0x55 0x67 0x9a 200 2 0 0 3 0 0x5d
 
-#define CallGate_emulate_realtime 0x55 0x67 0x9a 209 2 0 0 3 0 0x5d
+#define CallGate_create_realtime 0x55 0x67 0x9a 201 2 0 0 3 0 0x5d
+#define CallGate_add_realtime_core 0x55 0x67 0x9a 202 2 0 0 3 0 0x5d
+
 #define CallGate_is_can_module_online 0x55 0x67 0x9a 210 2 0 0 3 0 0x5d
 
 #else
@@ -2735,7 +2739,9 @@
 #define CallGate_set_handle_blocking_mode 0x3e 0x67 0x9a 199 2 0 0 3 0
 #define CallGate_set_handle_nonblocking_mode 0x3e 0x67 0x9a 200 2 0 0 3 0
 
-#define CallGate_emulate_realtime 0x3e 0x67 0x9a 209 2 0 0 3 0
+#define CallGate_create_realtime 0x3e 0x67 0x9a 201 2 0 0 3 0
+#define CallGate_add_realtime_core 0x3e 0x67 0x9a 202 2 0 0 3 0
+
 #define CallGate_is_can_module_online 0x3e 0x67 0x9a 210 2 0 0 3 0
 
 #endif

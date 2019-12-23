@@ -4486,3 +4486,17 @@ CreateRandomOddBigNum   MACRO
 FactorPow2BigNum        MACRO
         UserGate factor_pow2_bignum_nr
                 ENDM
+
+;;;;;;;;;;; Realtime ;;;;;;;;;;
+
+; OUT BX            Realtime handle
+CreateRealtime    MACRO
+        UserGate create_realtime_nr
+                ENDM
+
+; IN  BX            Realtime handle
+; IN  ES:(E)DI      Realtime 64-bit executable
+; OUT AX            Core #
+AddRealtimeCore    MACRO
+        UserGate add_realtime_core_nr
+                ENDM

@@ -3988,5 +3988,18 @@
     __parm [__ebx] [__esi] \
     __value [__ebx]
 
-#pragma aux RdosEmulateRealtime = \
-    CallGate_emulate_realtime  \
+#pragma aux RdosCreateRealtime = \
+    CallGate_create_realtime  \
+    ValidateHandle \
+    __value [__ebx]
+
+#pragma aux RdosAddRealtimeCore = \
+    CallGate_add_realtime_core  \
+    "jc Fail" \
+    "movzx ebx,bx" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__ebx] [__edi] \
+    __value [__eax]
