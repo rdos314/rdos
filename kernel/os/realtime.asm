@@ -49,6 +49,8 @@ map_linear	DD ?
 uni_linear      DD ?
 uni_phys        DD ?
 
+uni_phys_pml    DD ?,?
+
 mon_linear      DD ?
 mon_size        DD ?
 mon_phys_dir    DD ?,?
@@ -747,43 +749,24 @@ SetupUniPml4     PROC near
 ;
     xor esi,esi
     mov edi,ds:uni_linear
-    mov ecx,200h
-
-sup4Loop:
-    push ebx
-    push eax
 ;    
     AllocatePhysical64
     mov al,3
     mov es:[edi],eax
     mov es:[edi+4],ebx
+    add edi,8
 ;
-    pop eax
-    pop ebx
+    mov ds:uni_phys_pml,eax
+    mov ds:uni_phys_pml+4,edx
+;
+    mov eax,10000h
+    xor ebx,ebx
     call SetupUniPtr
 ;
-    inc esi
-    add edi,8
-    sub ebx,80h
-    jc sup4Pad
-;
-    loop sup4Loop
-    jmp sup4Done
-
-sup4Pad:
-    sub ecx,1
-    jz sup4Done
-;
+    mov ecx,3FEh
     xor eax,eax
-
-sup4PadLoop:
-    mov es:[edi],eax
-    mov es:[edi+4],eax
+    rep stos dword ptr es:[edi]
 ;
-    add edi,8
-    loop sup4PadLoop
-
-sup4Done:    
     popad
     ret
 SetupUniPml4	Endp
