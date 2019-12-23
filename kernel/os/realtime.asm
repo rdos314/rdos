@@ -360,7 +360,8 @@ add_realtime_core     PROC near
     movzx eax,al
     mov bx,ax
     shl bx,1
-    mov es:rds_flags,0
+    mov es:rds_notify_flags,0
+    mov es:rds_req_flags,0
     mov ds:[bx].mon_arr,es
     mov gs:[bx].rs_core_arr,es
 ;
@@ -693,7 +694,7 @@ delete_realtime_handle       Endp
 
 UpdateCore	Proc near
     xor edx,edx
-    xchg edx,es:rds_flags
+    xchg edx,es:rds_notify_flags
     or edx,edx
     jz ucDone
 ;

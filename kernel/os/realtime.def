@@ -31,11 +31,14 @@ realtime_apic_base   = 0FFFFFF8000202000h
 realtime_thread_base = 0FFFFFF8000204000h
 realtime_data_base   = 0FFFFFF8000206000h
 
-RDS_FLAG_BOOTED	= 1
-RDS_FLAG_DEBUG	= 2
+RDS_NOTIFY_FLAG_BOOTED = 1
+RDS_NOTIFY_FLAG_DEBUG  = 2
 
-realtime_data_struc	STRUC
+RDS_REQ_FLAG_START     = 1
 
-rds_flags	DD ?
+realtime_data_struc     STRUC
 
-realtime_data_struc	ENDS
+rds_notify_flags       DD ?
+rds_req_flags          DD ?
+
+realtime_data_struc     ENDS

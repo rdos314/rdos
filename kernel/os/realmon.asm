@@ -608,9 +608,25 @@ SendInt	Endp
 
 startup:
     mov rbx,realtime_data_base
-    mov [rbx].rds_flags,RDS_FLAG_BOOTED
+    mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_BOOTED
     call SendInt
+;
+    int 3
 
+wait_load:
+    hlt
+;
+    mov edx,[rdx].rds_req_flags
+    or edx,edx
+    jz wait_load
+;
+    test edx,RDS_REQ_FLAG_START
+    jnz loadit
+;
+    int 3
+
+loadit:
+    lock and [rdx].rds_req_flags, NOT RDS_REQ_FLAG_START
     int 3
     mov rax,1235h
     int 3
