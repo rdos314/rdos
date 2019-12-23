@@ -46,9 +46,6 @@ data    SEGMENT byte public 'DATA'
 map_sel	        DW ?
 map_linear	DD ?
 
-uni_linear      DD ?
-uni_phys        DD ?
-
 uni_phys_pml    DD ?,?
 
 mon_linear      DD ?
@@ -380,6 +377,76 @@ ri_ds_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           MapMonitor
+;
+;           DESCRIPTION:    Map monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapMonitor     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov al,3
+    mov ds:mon_phys_dir,eax
+    mov ds:mon_phys_dir+4,ebx
+;
+    SetPageEntry
+    mov edi,edx
+;
+    mov ebp,200h
+    mov edx,ds:mon_linear
+    mov ecx,ds:mon_size
+    shr ecx,12
+
+mmCopyMonLoop:    
+    GetPageEntry
+;
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    dec ebp
+    add edx,1000h
+    add edi,8
+    sub ecx,1
+    jnz mmCopyMonLoop
+
+mmPadMonLoop:
+    xor eax,eax
+    stos dword ptr es:[edi]
+    stos dword ptr es:[edi]
+;
+    sub ebp,1
+    jnz mmPadMonLoop
+    
+mmDone:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop es
+    pop ds
+    ret
+MapMonitor     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CreateMonitor
 ;
 ;           DESCRIPTION:    Create monitor
@@ -398,6 +465,8 @@ CreateMonitor      Proc near
     mov eax,flat_sel
     mov es,eax
 ;
+    call MapMonitor
+;
     mov eax,1000h
     AllocateBigLinear
     mov fs:ps_mon_linear,edx
@@ -411,9 +480,12 @@ CreateMonitor      Proc near
     mov ax,SEG data
     mov ds,eax
     mov edi,edx
-    mov esi,ds:uni_linear
-    mov ecx,2
-    rep movs dword ptr es:[edi],es:[esi]
+;
+    mov eax,ds:uni_phys_pml
+    stos dword ptr es:[edi]
+;
+    mov eax,ds:uni_phys_pml+4
+    stos dword ptr es:[edi]
 ;
     mov ecx,3FEh
     rep stos dword ptr es:[edi]
@@ -527,341 +599,6 @@ CreateMonitor	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AddMonitor
-;
-;           DESCRIPTION:    Add and map monitor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddMonitor     PROC near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,eax
-    mov ax,flat_sel
-    mov es,eax
-;
-    mov edx,ds:uni_linear
-    AllocatePhysical64
-    mov al,3
-    mov es:[edx+0FF8h],eax  ; pml4
-    mov es:[edx+0FFCh],ebx
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax   ; ptr
-    mov es:[edi+4],ebx
-    add edi,8
-;
-    push eax
-    xor eax,eax
-    mov ecx,3FEh
-    rep stos dword ptr es:[edi]
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax   ; dir
-    mov es:[edi+4],ebx
-    add edi,8
-;
-    push eax
-    xor eax,eax
-    mov ecx,3FEh
-    rep stos dword ptr es:[edi]
-    pop eax
-;
-    mov ds:mon_phys_dir,eax
-    mov ds:mon_phys_dir+4,ebx
-;
-    SetPageEntry
-    mov edi,edx
-;
-    mov ebp,200h
-    mov edx,ds:mon_linear
-    mov ecx,ds:mon_size
-    shr ecx,12
-
-amCopyMonLoop:    
-    GetPageEntry
-;
-    mov al,3
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-;
-    dec ebp
-    add edx,1000h
-    add edi,8
-    sub ecx,1
-    jnz amCopyMonLoop
-
-amPadMonLoop:
-    xor eax,eax
-    stos dword ptr es:[edi]
-    stos dword ptr es:[edi]
-;
-    sub ebp,1
-    jnz amPadMonLoop
-    
-amDone:
-    popad
-    pop es
-    pop ds
-    ret
-AddMonitor     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetupUniDir
-;
-;           DESCRIPTION:    Setup ptr entries
-;
-;           PARAMETERS:     ES:EDI	Ptr entry data
-;                           ESI         Ptr entry #
-;                           EBX:EAX     Max address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupUniDir     PROC near
-    pushad
-;
-    push eax
-    push ebx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov eax,es:[edi]
-    mov ebx,es:[edi+4]
-    mov al,3
-    SetPageEntry
-;
-    pop ebx
-    pop eax
-;
-    mov ebp,esi
-    shr ebp,2
-    shl esi,30
-    or si,83h
-;
-    mov edi,edx
-    mov ecx,200h
-
-sudLoop:
-    mov es:[edi],esi
-    mov es:[edi+4],ebp
-;
-    add edi,8
-    add esi,200000h
-    sub eax,200000h
-    sbb ebx,0
-    jc sudPad
-;
-    loop sudLoop
-    jmp sudFree
-
-sudPad:
-    sub ecx,1
-    jz sudFree
-;
-    xor eax,eax
-
-sudPadLoop:
-    mov es:[edi],eax
-    mov es:[edi+4],eax
-;
-    add edi,8
-    loop sudPadLoop
-
-sudFree:
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    popad
-    ret
-SetupUniDir	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetupUniPtr
-;
-;           DESCRIPTION:    Setup ptr entries
-;
-;           PARAMETERS:     ES:EDI	PML4 entry data
-;                           ESI         PML4 entry #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupUniPtr     PROC near
-    pushad
-;
-    mov eax,10000h
-    xor ebx,ebx
-;
-    push eax
-    push ebx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov eax,es:[edi]
-    mov ebx,es:[edi+4]
-    mov al,3
-    SetPageEntry
-;
-    pop ebx
-    pop eax
-;
-    shl esi,9
-    mov edi,edx
-    mov ecx,200h
-
-supLoop:
-    push ebx
-    push eax
-;
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-;
-    pop eax
-    pop ebx
-    call SetupUniDir
-;
-    inc esi
-    add edi,8
-    sub eax,40000000h
-    sbb ebx,0
-    jc supPad
-;
-    loop supLoop
-    jmp supFree
-
-supPad:
-    sub ecx,1
-    jz supFree
-;
-    xor eax,eax
-
-supPadLoop:
-    mov es:[edi],eax
-    mov es:[edi+4],eax
-;
-    add edi,8
-    loop supPadLoop
-
-supFree:
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    popad
-    ret
-SetupUniPtr	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetupUniPml4
-;
-;           DESCRIPTION:    Setup plm4 entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupUniPml4     PROC near
-    pushad
-;
-    mov eax,10000h
-    xor ebx,ebx
-;
-    xor esi,esi
-    mov edi,ds:uni_linear
-;    
-    AllocatePhysical64
-    mov al,3
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-;
-    mov ds:uni_phys_pml,eax
-    mov ds:uni_phys_pml+4,edx
-;
-    call SetupUniPtr
-;
-    add edi,8
-    mov ecx,3FEh
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    popad
-    ret
-SetupUniPml4	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CreateUniMap
-;
-;           DESCRIPTION:    Create uni mapping
-;
-;           RETURNS:        EBX		CR3
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateUniMap     PROC near
-    push ds
-    push es
-    pushad
-;
-    mov edx,SEG data
-    mov ds,edx
-;
-    mov eax,flat_sel
-    mov es,eax
-;
-    mov eax,1000h
-    AllocateBigLinear
-    mov ds:uni_linear,edx
-;
-    AllocatePhysical32
-    mov ds:uni_phys,eax
-;
-    mov al,3
-    SetPageEntry
-;    
-    call SetupUniPml4
-;
-    popad
-    pop es
-    pop ds
-    ret
-CreateUniMap     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           EmulateRealtime
 ;
 ;           DESCRIPTION:    Emulate realtime load
@@ -878,7 +615,6 @@ emulate_realtime     PROC far
 ;
     mov ax,SEG data
     mov ds,eax
-    call CreateUniMap
 ;
     AllocateRealtimeCore
     jc erDone
@@ -964,6 +700,87 @@ InitMonitor	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SetupUniPml4
+;
+;           DESCRIPTION:    Setup plm4 entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupUniPml4     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    xor esi,esi
+;    
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    mov ds:uni_phys_pml,eax
+    mov ds:uni_phys_pml+4,ebx
+;
+    push eax
+    add edi,8
+    mov ecx,3FEh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+;
+    mov edi,edx
+    AllocatePhysical64
+    mov al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+;
+    push eax
+    add edi,8
+    mov ecx,3FEh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop eax
+;
+    SetPageEntry
+;
+    mov edi,edx
+    mov eax,83h
+    mov es:[edi],eax
+;
+    xor eax,eax
+    mov es:[edi+4],eax
+;
+    add edi,8
+    mov ecx,3FEh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop es
+    pop ds
+    ret
+SetupUniPml4	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           load_adapter_monitor
 ;
 ;           DESCRIPTION:    install adapter monitor
@@ -997,6 +814,7 @@ load_adapter_mon_loop:
     add edi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     call InitMonitor
+    call SetupUniPml4
 ;
     pop ecx
     pop es
@@ -1032,7 +850,6 @@ init    PROC far
     mov eax,SEG data
     mov ds,eax
     mov es,eax
-    mov ds:uni_linear,0
     mov ds:mon_linear,0
     mov ds:mon_size,0
     mov ds:map_linear,0
