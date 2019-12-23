@@ -742,7 +742,8 @@ SetupUniPtr	Endp
 SetupUniPml4     PROC near
     pushad
 ;
-    GetHighestPhysical
+    mov eax,10000h
+    xor ebx,ebx
 ;
     xor esi,esi
     mov edi,ds:uni_linear
