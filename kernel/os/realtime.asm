@@ -37,6 +37,7 @@ INCLUDE ..\wait.inc
 INCLUDE system.def
 INCLUDE proc.inc
 INCLUDE realtime.def
+INCLUDE ..\pcdev\apic.inc
 
 .386p
 
@@ -50,6 +51,8 @@ uni_phys        DD ?
 
 mon_linear      DD ?
 mon_size        DD ?
+
+mon_thread      DW ?
 
 mon_arr         DW 256 DUP(?)
 
@@ -314,6 +317,62 @@ write_phys_qword     PROC far
     pop ds
     ret
 write_phys_qword     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           Realtime int (85h)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+realtime_int:
+    pushad
+    push ds
+    push es
+    push fs
+;    
+    EnterInt    
+    mov ax,apic_mem_sel
+    mov ds,eax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov bx,ds:mon_thread
+    Signal
+    LeaveInt
+;    
+    pop ax
+    verr ax
+    jz ri_fs_ok
+;
+    xor ax,ax
+
+ri_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz ri_es_ok
+;
+    xor ax,ax
+
+ri_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz ri_ds_ok
+;
+    xor ax,ax
+
+ri_ds_ok:
+    mov ds,ax
+;    
+    popad
+    iretd
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -999,6 +1058,7 @@ init    PROC far
     mov ds:mon_size,0
     mov ds:map_linear,0
     mov ds:map_sel,0
+    mov ds:mon_thread,0
 ;
     mov edi,OFFSET mon_arr
     mov ecx,256
@@ -1073,6 +1133,11 @@ init_mon_loop:
     xor dx,dx
     mov ax,emulate_realtime_nr
     RegisterBimodalUserGate
+;
+    mov al,85h
+    mov esi,OFFSET realtime_int
+    SetupIntGate
+
     ret
 init    ENDP
     
