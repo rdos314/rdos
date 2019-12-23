@@ -680,6 +680,28 @@ delete_realtime_handle_done:
     pop ds
     ret
 delete_realtime_handle       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateCore
+;
+;           DESCRIPTION:    AL		Core #
+;                           ES		Core data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCore	Proc near
+    xor edx,edx
+    xchg edx,es:rds_flags
+    or edx,edx
+    jz ucDone
+;
+    int 3
+
+ucDone:
+    ret
+UpdateCore	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -691,14 +713,32 @@ delete_realtime_handle       Endp
 realtime_name	DB 'Realtime Server', 0
 
 realtime_thread:
-    int 3
     mov ax,SEG data
     mov ds,eax
     GetThread
     mov ds:mon_thread,ax
-;
+
+rtWait:
     WaitForSignal
-    int 3
+;
+    xor al,al
+    mov ecx,256
+    mov esi,OFFSET mon_arr
+
+rtCheckCoreLoop:
+    mov dx,ds:[esi]
+    or dx,dx
+    jz rtCheckCoreNext
+;
+    mov es,dx
+    call UpdateCore
+
+rtCheckCoreNext:
+    add esi,2
+    inc al
+    loop rtCheckCoreLoop
+;
+    jmp rtWait
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

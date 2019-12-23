@@ -607,8 +607,11 @@ SendInt	Endp
 
 
 startup:
-    int 3
+    mov rbx,realtime_data_base
+    mov [rbx].rds_flags,RDS_FLAG_BOOTED
     call SendInt
+
+    int 3
     mov rax,1235h
     int 3
     mov rax,3
