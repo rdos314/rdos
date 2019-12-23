@@ -29,3 +29,13 @@ realtime_mon_base    = 0FFFFFF8000000000h
 realtime_stack_base  = 0FFFFFF8000200000h
 realtime_apic_base   = 0FFFFFF8000202000h
 realtime_thread_base = 0FFFFFF8000204000h
+realtime_data_base   = 0FFFFFF8000206000h
+
+RDS_FLAG_BOOTED	= 1
+RDS_FLAG_DEBUG	= 2
+
+realtime_data_struc	STRUC
+
+rds_flags	DD ?
+
+realtime_data_struc	ENDS

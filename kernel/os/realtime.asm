@@ -51,6 +51,8 @@ uni_phys        DD ?
 mon_linear      DD ?
 mon_size        DD ?
 
+mon_arr         DW 256 DUP(?)
+
 data    ENDS
 
 code    SEGMENT byte public use32 'CODE'
@@ -323,11 +325,12 @@ write_phys_qword     Endp
 ;           PARAMETERS:     FS          Processor sel
 ;                           ES          Thread sel
 ;
+;           RETURNS:        ES          Monitor data sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateMonitor      Proc near
     push ds
-    push es
     pushad
 ;
     mov eax,flat_sel
@@ -417,9 +420,11 @@ CreateMonitor      Proc near
     mov ecx,2
     rep stos dword ptr es:[edi]
 ;
+    push edx
     mov bx,apic_mem_sel
     GetSelectorBaseSize
     GetPageEntry
+    pop edx
 ;
     mov es:[edi],eax
     mov es:[edi+4],ebx
@@ -439,19 +444,30 @@ CreateMonitor      Proc near
     mov es:[edi+4],ebx
     add edi,8
 ;
-    mov ecx,3FAh
+    xor eax,eax
+    mov ecx,2
+    rep stos dword ptr es:[edi]
+;
+    AllocatePhysical64
+    or al,3
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+    add edi,8
+;
+    push eax
+    mov ecx,3F2h
     xor eax,eax
     rep stos dword ptr es:[edi]
-;    
-    xor eax,eax
-    xor edx,edx
+    pop eax
+;
     SetPageEntry
 ;
-    mov ecx,1000h
-    FreeLinear
+    AllocateGdt
+    mov ecx,SIZE realtime_data_struc
+    CreateDataSelector32
+    mov es,bx
 ;
     popad
-    pop es
     pop ds
     ret
 CreateMonitor	Endp
@@ -487,6 +503,12 @@ emulate_realtime     PROC far
     mov es:p_tss_sel,0
     call CreateMonitor
 ;
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].mon_arr,es
+    mov es:rds_flags,0
+;
+    mov es,fs:ps_null_thread
     mov ebx,fs:ps_cr3
     mov es:p_cr3,ebx
     mov es:p_fault_vector,3
@@ -971,11 +993,17 @@ load_adapter_monitor      Endp
 init    PROC far
     mov eax,SEG data
     mov ds,eax
+    mov es,eax
     mov ds:uni_linear,0
     mov ds:mon_linear,0
     mov ds:mon_size,0
     mov ds:map_linear,0
     mov ds:map_sel,0
+;
+    mov edi,OFFSET mon_arr
+    mov ecx,256
+    xor ax,ax
+    rep stos word ptr es:[edi]
 ;
     mov ax,system_data_sel
     mov ds,ax
