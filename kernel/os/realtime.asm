@@ -51,6 +51,7 @@ uni_phys        DD ?
 
 mon_linear      DD ?
 mon_size        DD ?
+mon_phys_dir    DD ?,?
 
 mon_thread      DW ?
 
@@ -409,25 +410,15 @@ CreateMonitor      Proc near
     mov ds,eax
     mov edi,edx
     mov esi,ds:uni_linear
-    mov ecx,400h
+    mov ecx,2
     rep movs dword ptr es:[edi],es:[esi]
+;
+    mov ecx,3FEh
+    rep stos dword ptr es:[edi]
     mov edi,edx
 ;
     mov eax,1000h
     AllocateBigLinear
-;
-    mov eax,es:[edi+0FF8h]
-    mov ebx,es:[edi+0FFCh]
-    SetPageEntry
-;
-    mov eax,es:[edx]
-    mov ebx,es:[edx+4]
-    SetPageEntry
-;
-    mov eax,es:[edx]
-    mov ebx,es:[edx+4]
-    push eax
-    push ebx
 ;
     AllocatePhysical64
     or al,3
@@ -449,8 +440,8 @@ CreateMonitor      Proc near
     pop eax
     SetPageEntry
 ;
-    pop ebx
-    pop eax
+    mov eax,ds:mon_phys_dir
+    mov ebx,ds:mon_phys_dir+4
     mov es:[edx],eax
     mov es:[edx+4],ebx
 ;
@@ -945,6 +936,9 @@ AddMonitor     PROC near
     mov ecx,3FEh
     rep stos dword ptr es:[edi]
     pop eax
+;
+    mov ds:mon_phys_dir,eax
+    mov ds:mon_phys_dir+4,ebx
 ;
     SetPageEntry
     mov edi,edx
