@@ -811,8 +811,8 @@ load_adapter_mon_loop:
     add edi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     call InitMonitor
-    call SetupUniPml4
     call MapMonitor
+    call SetupUniPml4
 ;
     pop ecx
     pop es
