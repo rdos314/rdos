@@ -30,6 +30,8 @@
 Code64 segment byte public use64 'code64'
 
 init:
+    mov [rbx+10],edx
+
     xor rax,rax
     syscall    
 

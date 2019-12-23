@@ -377,6 +377,8 @@ rt_start:
     or eax,80010008h
     mov cr0,eax
 ;
+    mov edx,es:ap_stack_offset
+;
     xor ax,ax
     mov es,ax
 ;
@@ -398,6 +400,10 @@ rt_init64:
     db 0BBh
     dd 0
     dd 0FFFFFF80h
+;
+    db 89h  ; mov [rbx+10],edx
+    db 53h
+    db 0Ah
 ;
     db 48h   ; mov rax,[rbx+2]
     db 8Bh
@@ -3267,6 +3273,9 @@ boot_realtime_core    Proc far
 ;
     mov eax,cr4
     mov es:[edi].ap_cr4,eax
+;
+    GetApicId
+    mov es:[edi].ap_stack_offset,edx
 ;
     mov edi,0F80h
     mov esi,OFFSET table_start

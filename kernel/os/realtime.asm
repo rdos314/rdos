@@ -98,7 +98,7 @@ realtime_int:
     Signal
     LeaveInt
 ;    
-    pop ax
+    pop eax
     verr ax
     jz ri_fs_ok
 ;
@@ -107,7 +107,7 @@ realtime_int:
 ri_fs_ok:
     mov fs,ax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz ri_es_ok
 ;
@@ -116,7 +116,7 @@ ri_fs_ok:
 ri_es_ok:
     mov es,ax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz ri_ds_ok
 ;

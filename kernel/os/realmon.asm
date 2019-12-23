@@ -35,6 +35,7 @@ Code64 segment byte public use64 'code64'
 
 sgn  dw 657Ah
 eip  dq OFFSET init
+apic dd 0
 
 gdt_descr:
     dw 1Fh
@@ -46,7 +47,7 @@ idt_descr:
     dd OFFSET rtm_idt
     dd 0FFFFFF80h
 
-pad  db 2 DUP(?)
+pad  db 14 DUP(?)
 
 rtm_gdt:
 gdt0:
@@ -559,20 +560,55 @@ SetupLocalApic    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           SendInt
+;
+;               DESCRIPTION:    Send int 85h
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInt    Proc near
+    push rax
+    push rbx
+    push rcx
+    push rdx
+;
+    mov edx,apic
+    shl edx,24
+;
+    mov rbx,realtime_apic_base
+
+siLoop:
+    mov ecx,[rbx].APIC_ICR
+    test cx,1000h
+    jz siDo
+;
+    pause
+    jmp siLoop
+
+siDo:    
+    mov [rbx].APIC_ICR+10h,edx
+;
+    mov eax,4085h
+    mov [rbx].APIC_ICR,eax
+;
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    ret
+SendInt	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           startup
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-rout	Proc near
-    mov rax,12343h
-    mov rbx,4555h
-    ret
-rout	Endp
 
 startup:
     int 3
-    mov al,20h
-    call rout
+    call SendInt
     mov rax,1235h
     int 3
     mov rax,3
