@@ -370,7 +370,6 @@ add_realtime_core     PROC near
     mov es:p_cr3,ebx
     mov es:p_fault_vector,3
     BootRealtimeCore
-    DebugRealtime
     clc
 
 arcDone:
@@ -698,7 +697,22 @@ UpdateCore	Proc near
     or edx,edx
     jz ucDone
 ;
+    test edx,RDS_NOTIFY_FLAG_DEBUG
+    jz ucNotDebug
+;
+    push edx
+    movzx ax,al
+    GetCoreNumber
+    DebugRealtime
+    pop edx
+
+ucNotDebug:
+    test edx,RDS_NOTIFY_FLAG_BOOTED
+    jz ucNotBooted
+;
     int 3
+
+ucNotBooted:
 
 ucDone:
     ret

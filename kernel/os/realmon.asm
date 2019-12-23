@@ -433,6 +433,10 @@ save_and_wait:
     mov [rbx].p_es,es
     mov [rbx].p_fs,fs
     mov [rbx].p_gs,gs
+;
+    mov rbx,realtime_data_base
+    mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_DEBUG
+    call SendInt
 
 waitl:
     sti
@@ -607,6 +611,7 @@ SendInt	Endp
 
 
 startup:
+    int 3
     mov rbx,realtime_data_base
     mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_BOOTED
     call SendInt

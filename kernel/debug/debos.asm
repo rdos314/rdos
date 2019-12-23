@@ -3944,6 +3944,8 @@ DebugWakeup    Proc near
 ;
     push fs
     mov fs,gs:p_core
+    RunRealtime
+;
     mov al,21h
     SendInt
     pop fs

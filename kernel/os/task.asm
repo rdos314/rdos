@@ -2877,6 +2877,7 @@ debug_block_do:
 debug_realtime_name        DB 'Debug Realtime', 0
 
 debug_realtime	Proc far
+    push ds
     push es
     pushad
 ;    
@@ -2891,8 +2892,41 @@ debug_realtime	Proc far
 ;
     popad
     pop es
+    pop ds
     retf32
 debug_realtime	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunRealtime
+;
+;       DESCRIPTION:    Run realtime task (remove from debug list)
+;
+;       PARAMETERS:     FS  Core block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+run_realtime_name        DB 'Run Realtime', 0
+
+run_realtime	Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov esi,OFFSET debug_list       
+    mov es,fs:ps_null_thread
+    call cs:lock_list_proc
+    call RemoveBlock32
+    call cs:unlock_list_proc
+;
+    popad
+    pop es
+    pop ds
+    retf32
+run_realtime	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10371,6 +10405,12 @@ timer_free_list_create:
     mov edi,OFFSET debug_realtime_name
     xor cl,cl
     mov ax,debug_realtime_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET run_realtime
+    mov edi,OFFSET run_realtime_name
+    xor cl,cl
+    mov ax,run_realtime_nr
     RegisterOsGate
 ;
     mov esi,OFFSET wake_thread

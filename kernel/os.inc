@@ -1101,8 +1101,14 @@ FreeRealtimeCore    MACRO
     OsGate free_realtime_core_nr
                     ENDM
 
+;   IN  FS      Processor #
 DebugRealtime    MACRO
     OsGate debug_realtime_nr
+                    ENDM
+
+;   IN  FS      Processor #
+RunRealtime    MACRO
+    OsGate run_realtime_nr
                     ENDM
 
 ;   IN  AL	Apic ID
