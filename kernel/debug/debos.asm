@@ -4164,7 +4164,11 @@ debug_pace_far_loop:
     mov esi,dword ptr gs:p_rip
     mov edx,dword ptr gs:p_rip+4
     add esi,ebx
+    push ebx
+    mov bx,gs:p_cs
     call DebugReadWord
+    pop ebx
+;
     cmp al,66h
     je debug_pace_far_ov66
 ;
@@ -4180,24 +4184,24 @@ debug_pace_far_loop:
     jmp debug_pace_trace   
 
 debug_pace_far_ov66:
-    inc bx
+    inc ebx
     xor cl,1
     jmp debug_pace_far_loop
 
 debug_pace_far_ov67:
-    inc bx
+    inc ebx
     jmp debug_pace_far_loop
 
 debug_pace_far_ov3e:
-    inc bx
+    inc ebx
     jmp debug_pace_far_loop    
 
 debug_pace_far_call:
-    add bx,5
+    add ebx,5
     test cl,1
     jz debug_pace_step
 ;
-    add bx,2
+    add ebx,2
     
 debug_pace_step:
     mov al,gs:p_realtime
@@ -4262,6 +4266,7 @@ debug_pace_step_go:
     mov ax,word ptr gs:p_rflags
     and ax,NOT 100h
     mov word ptr gs:p_rflags,ax
+    or gs:p_flags,THREAD_FLAG_BP
     jmp debug_pace_go
     
 debug_pace_trace:
