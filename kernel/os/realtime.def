@@ -25,6 +25,17 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; page table mappings
+
+; FF00 0000 0000 = 1111 1111 0000 0000 : 0000 0000 0000 0000 : 0000 0000 0000 0000
+; 007F 8000 0000 = 0000 0000 0111 1111 : 1000 0000 0000 0000 : 0000 0000 0000 0000
+; 0000 3FC0 0000 = 0000 0000 0000 0000 : 0011 1111 1100 0000 : 0000 0000 0000 0000
+; 0000 001F E000 = 0000 0000 0000 0000 : 0000 0000 0001 1111 : 1110 0000 0000 0000
+
+realtime_page_table  = 0FFFFFF0000000000h
+realtime_page_dir    = 0FFFFFF7F80000000h
+realtime_page_ptr    = 0FFFFFF7FBFC00000h
+realtime_page_pml    = 0FFFFFF7FBFDFE000h
 realtime_mon_base    = 0FFFFFF8000000000h
 realtime_stack_base  = 0FFFFFF8000200000h
 realtime_apic_base   = 0FFFFFF8000202000h

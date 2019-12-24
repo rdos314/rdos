@@ -169,17 +169,24 @@ CreateMonitor      Proc near
     mov eax,ds:uni_phys_pml+4
     stos dword ptr es:[edi]
 ;
-    mov ecx,3FEh
+    mov ecx,3FAh
     rep stos dword ptr es:[edi]
-    mov edi,edx
+;
+    mov eax,fs:ps_cr3
+    mov al,3
+    stos dword ptr es:[edi]
+;
+    xor eax,eax
+    stos dword ptr es:[edi]
 ;
     mov eax,1000h
     AllocateBigLinear
 ;
     AllocatePhysical64
+    int 3
     or al,3
-    mov es:[edi+0FF8h],eax
-    mov es:[edi+0FFCh],ebx
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
     SetPageEntry
 ;
     AllocatePhysical64
