@@ -222,7 +222,12 @@ idt21:
     dd 0
 
 idt22:
-    dq 0,0
+    dw OFFSET msg_int
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
 
 idt23:
     dq 0,0
@@ -325,6 +330,9 @@ reset_int:
 
 run_int:
     jmp load_and_restart
+
+msg_int:
+    jmp handle_msg
 
 div_0:
     push 0
@@ -512,6 +520,19 @@ load_and_restart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           HandleMsg
+;
+;               DESCRIPTION:    Handle msg int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_msg:
+    int 3
+    iretq
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           SetupLocalApic
 ;
 ;               DESCRIPTION:    Setup local APIC
@@ -605,12 +626,46 @@ SendInt	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           AllocatePhys
+;
+;               DESCRIPTION:    Allocate a physical page
+;
+;               RETURNS:        RDX	Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePhys    Proc near
+    push rbx
+;
+    mov rbx,realtime_data_base
+    mov [rbx].rds_phys_page,0
+    lock or [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_PHYS
+    call SendInt
+
+apWait:
+    hlt
+;
+    xor rdx,rdx
+    xchg rdx,[rbx].rds_phys_page
+    or rdx,rdx
+    jz apWait
+;
+    pop rbx
+    ret
+AllocatePhys	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           startup
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 startup:
+    int 3
+    call AllocatePhys
+;
     mov rbx,realtime_data_base
     mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_BOOTED
     call SendInt

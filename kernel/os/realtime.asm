@@ -363,8 +363,10 @@ add_realtime_core     PROC near
     mov es:p_tss_sel,0
     call CreateMonitor
 ;
+    push eax
     GetThread
     mov es:rds_wait_thread,ax
+    pop eax
 ;
     movzx eax,al
     mov bx,ax
@@ -711,11 +713,13 @@ UpdateCore	Proc near
     test edx,RDS_NOTIFY_FLAG_DEBUG
     jz ucNotDebug
 ;
+    push eax
     push edx
     movzx ax,al
     GetCoreNumber
     DebugRealtime
     pop edx
+    pop eax
 
 ucNotDebug:
     test edx,RDS_NOTIFY_FLAG_BOOTED
@@ -725,6 +729,23 @@ ucNotDebug:
     Signal
 
 ucNotBooted:
+    test edx,RDS_NOTIFY_FLAG_PHYS
+    jz ucNotPhys
+;
+    int 3
+    push eax
+    movzx ax,al
+    GetCoreNumber
+;
+    AllocatePhysical64
+    mov dword ptr es:rds_phys_page,eax
+    mov dword ptr es:rds_phys_page+4,ebx
+;
+    mov al,22h
+    SendInt
+    pop eax
+
+ucNotPhys:
 
 ucDone:
     ret

@@ -44,6 +44,7 @@ realtime_data_base   = 0FFFFFF8000206000h
 
 RDS_NOTIFY_FLAG_BOOTED = 1
 RDS_NOTIFY_FLAG_DEBUG  = 2
+RDS_NOTIFY_FLAG_PHYS   = 4
 
 RDS_REQ_FLAG_START     = 1
 
@@ -53,5 +54,6 @@ rds_notify_flags       DD ?
 rds_req_flags          DD ?
 
 rds_wait_thread        DW ?
+rds_phys_page          DQ ?
 
 realtime_data_struc     ENDS
