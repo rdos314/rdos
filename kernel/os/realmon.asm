@@ -386,6 +386,9 @@ page_fault:
     push rbx
     mov rbx,realtime_thread_base
     mov [rbx].p_fault_vector,0Eh
+    mov rbx,[rsp+10h]
+    test bl,1
+    jz handle_page_fault
     jmp save_and_wait
 
 apic_spur_int:
@@ -515,6 +518,50 @@ load_and_restart:
 ;
     mov rax,[rbx].p_rax
     mov rbx,[rbx].p_rbx
+    iretq
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           Handle page fault
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_page_fault:
+    mov rbx,cr2
+    sti
+    mov rax,rbx
+    shr rax,32
+    test eax,80000000h
+    jz handle_page_fault_ok
+;
+    sub eax,realtime_page_table SHR 32
+    jc save_and_wait
+;
+    cmp eax,80h
+    jnc save_and_wait   
+
+handle_page_fault_ok:
+    mov rax,0FFFFFFFFFFFFh
+    and rbx,rax
+    shr rbx,12
+    shl rbx,3
+    mov rax,realtime_page_table
+    add rbx,rax
+    mov rax,[rbx]
+    test al,1
+    jnz handle_page_retry
+;
+    push rdx
+    call AllocatePhys
+    or dl,67h
+    mov [rbx],rdx
+    pop rdx
+
+handle_page_retry:
+    pop rbx
+    pop rax
+    add rsp,8
     iretq
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -672,7 +719,8 @@ AllocatePhys	Endp
 
 startup:
     int 3
-    call AllocatePhys
+    mov rbx,realtime_heap_base
+    mov rax,[rbx]
 ;
     mov rbx,realtime_data_base
     mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_BOOTED
