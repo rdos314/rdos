@@ -402,6 +402,7 @@ apic_spur_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 save_and_wait:
+    mov rbx,realtime_thread_base
     pop rax
     mov [rbx].p_rbx,rax
 ;
@@ -532,8 +533,6 @@ handle_page_fault:
     sti
     mov rax,rbx
     shr rax,32
-    test eax,80000000h
-    jz handle_page_fault_ok
 ;
     sub eax,realtime_page_table SHR 32
     jc save_and_wait
@@ -552,11 +551,33 @@ handle_page_fault_ok:
     test al,1
     jnz handle_page_retry
 ;
+    push rcx
     push rdx
+    push rdi
+;
     call AllocatePhys
     or dl,67h
     mov [rbx],rdx
+;
+    mov rax,realtime_page_table
+    sub rbx,rax
+    shl rbx,9
+    mov rax,800000000000h
+    test rax,rbx
+    jz handle_page_zero
+;
+    mov rax,0FFFF000000000000h
+    or rbx,rax    
+
+handle_page_zero:
+    mov rdi,rbx
+    mov rcx,200h
+    xor rax,rax
+    rep stosq
+;
+    pop rdi
     pop rdx
+    pop rcx
 
 handle_page_retry:
     pop rbx
@@ -720,6 +741,10 @@ AllocatePhys	Endp
 startup:
     int 3
     mov rbx,realtime_heap_base
+    shr rbx,12
+    shl rbx,3
+    mov rax,realtime_page_table
+    add rbx,rax
     mov rax,[rbx]
 ;
     mov rbx,realtime_data_base
