@@ -183,7 +183,6 @@ CreateMonitor      Proc near
     AllocateBigLinear
 ;
     AllocatePhysical64
-    int 3
     or al,3
     mov es:[edi],eax
     mov es:[edi+4],ebx
@@ -382,7 +381,6 @@ add_realtime_core     PROC near
     BootRealtimeCore
 ;
     WaitForSignal
-    int 3
     clc
 
 arcDone:
@@ -723,7 +721,6 @@ ucNotDebug:
     test edx,RDS_NOTIFY_FLAG_BOOTED
     jz ucNotBooted
 ;
-    int 3
     mov bx,es:rds_wait_thread
     Signal
 
