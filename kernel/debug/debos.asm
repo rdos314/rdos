@@ -4027,13 +4027,30 @@ debug_trace_normal:
 
 debug_trace_not_sysret:        
     cmp al,0CDh
-    jne debug_trace_trace
+    jne debug_trace_not_int
 ;
     test word ptr gs:p_rflags+2,2
     jz debug_trace_trace
 ;
     int 3
     jmp debug_trace_done
+
+debug_trace_not_int:
+    cmp ax,0CF48h
+    jne debug_trace_trace
+;
+    mov al,gs:p_realtime
+    or al,al
+    jz debug_trace_trace
+;
+    mov bx,gs:p_ss
+    mov esi,dword ptr gs:p_rsp
+    mov edx,dword ptr gs:p_rsp+4
+    add esi,10h
+    call DebugReadWord
+    or ax,100h
+    call DebugWriteWord
+    jmp debug_trace_trace
 
 debug_trace_trace:
     mov eax,dword ptr gs:p_dr7

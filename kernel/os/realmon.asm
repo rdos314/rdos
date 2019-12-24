@@ -527,7 +527,15 @@ load_and_restart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 handle_msg:
-    int 3
+    push rax
+    push rbx
+;
+    mov rbx,realtime_apic_base
+    xor eax,eax
+    mov [rbx].APIC_EOI,eax    
+;
+    pop rbx
+    pop rax
     iretq
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
