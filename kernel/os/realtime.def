@@ -52,4 +52,6 @@ realtime_data_struc     STRUC
 rds_notify_flags       DD ?
 rds_req_flags          DD ?
 
+rds_wait_thread        DW ?
+
 realtime_data_struc     ENDS

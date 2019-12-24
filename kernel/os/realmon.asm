@@ -611,10 +611,6 @@ SendInt	Endp
 
 
 startup:
-    int 3
-    mov rbx,realtime_page_pml
-    mov rax,[rbx+0FF8h]
-
     mov rbx,realtime_data_base
     mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_BOOTED
     call SendInt
@@ -632,7 +628,6 @@ wait_load:
     int 3
 
 loadit:
-    lock and [rdx].rds_req_flags, NOT RDS_REQ_FLAG_START
     int 3
     mov rax,1235h
     int 3

@@ -364,6 +364,9 @@ add_realtime_core     PROC near
     mov es:p_tss_sel,0
     call CreateMonitor
 ;
+    GetThread
+    mov es:rds_wait_thread,ax
+;
     movzx eax,al
     mov bx,ax
     shl bx,1
@@ -377,6 +380,9 @@ add_realtime_core     PROC near
     mov es:p_cr3,ebx
     mov es:p_fault_vector,3
     BootRealtimeCore
+;
+    WaitForSignal
+    int 3
     clc
 
 arcDone:
@@ -718,6 +724,8 @@ ucNotDebug:
     jz ucNotBooted
 ;
     int 3
+    mov bx,es:rds_wait_thread
+    Signal
 
 ucNotBooted:
 
