@@ -732,7 +732,6 @@ ucNotBooted:
     test edx,RDS_NOTIFY_FLAG_PHYS
     jz ucNotPhys
 ;
-    int 3
     push eax
     movzx ax,al
     GetCoreNumber
