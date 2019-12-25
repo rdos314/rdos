@@ -682,6 +682,10 @@ handle_start:
 ;
     sti
     int 3
+    mov rbx,realtime_data_base
+    mov rbx,[rbx].rds_linear_page
+    push rbx
+    ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

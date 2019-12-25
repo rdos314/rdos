@@ -31,6 +31,8 @@ Code64 segment byte public use64 'code64'
 
     org 10000h
 
+    jmp init
+
 val	DQ 12345h
 
 init:
