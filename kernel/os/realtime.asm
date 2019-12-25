@@ -328,9 +328,81 @@ create_realtime     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           LoadApp
+;
+;           DESCRIPTION:    Load application
+;
+;           PARAMETERS:     BX		File handle
+;                           ES          Communication area
+;                           FS          Core 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadApp	Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,es
+    mov ds,eax
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov esi,10000h
+
+laLoop:
+    push ebx
+    mov dword ptr ds:rds_linear_page,esi
+    mov dword ptr ds:rds_linear_page+4,0
+    mov al,23h
+    SendInt
+    WaitForSignal
+;
+    mov eax,dword ptr ds:rds_linear_page
+    mov ebx,dword ptr ds:rds_linear_page+4
+    SetPageEntry
+    pop ebx
+;
+    mov ecx,1000h
+    ReadFile
+;
+    add esi,1000h
+;
+    GetFileSize
+    mov ecx,eax
+;
+    GetFilePos
+    cmp eax,ecx
+    jnz laLoop
+;
+    mov esi,10000h
+    mov dword ptr ds:rds_linear_page,esi
+    mov dword ptr ds:rds_linear_page+4,0
+    mov al,24h
+    SendInt
+    clc
+;
+    popad
+    pop es
+    pop ds
+    ret
+LoadApp	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddRealtimeCore
 ;
 ;           DESCRIPTION:    Add realtime core
+;
+;           PARAMETERS:     BX            Realtime handle
+;                           ES:(E)DI      Realtime 64-bit executable
+;
+;           RETURNS:        AX            Core #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -348,25 +420,24 @@ add_realtime_core     PROC near
     jc arcDone
 ;
     mov gs,ds:[ebx].rh_sel
-;
-    mov ax,SEG data
-    mov ds,eax
+    OpenFile
+    jc arcDone
 ;
     AllocateRealtimeCore
-    jc arcDone
+    jc arcClose
 ;
     GetCoreNumber
-    jc arcDone
+    jc arcClose
+;
+    push bx
 ;
     mov es,fs:ps_null_thread
     mov es:p_realtime,1
     mov es:p_tss_sel,0
     call CreateMonitor
 ;
-    push eax
-    GetThread
-    mov es:rds_wait_thread,ax
-    pop eax
+    mov bx,SEG data
+    mov ds,ebx
 ;
     movzx eax,al
     mov bx,ax
@@ -374,6 +445,9 @@ add_realtime_core     PROC near
     mov es:rds_notify_flags,0
     mov ds:[bx].mon_arr,es
     mov gs:[bx].rs_core_arr,es
+;
+    GetThread
+    mov es:rds_wait_thread,ax
 ;
     push es
     mov es,fs:ps_null_thread
@@ -384,16 +458,14 @@ add_realtime_core     PROC near
     WaitForSignal
     pop es
 ;
-    mov dword ptr es:rds_linear_page,10000h
-    mov dword ptr es:rds_linear_page+4,0
-    mov al,23h
-    SendInt
-    WaitForSignal
+    pop bx
 ;
-    int 3
-    mov eax,dword ptr es:rds_linear_page
-    mov ebx,dword ptr es:rds_linear_page+4
-    clc
+    call LoadApp
+    
+arcClose:
+    pushf
+    CloseFile
+    popf
 
 arcDone:
     pop ebx

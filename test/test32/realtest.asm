@@ -29,9 +29,14 @@
 
 Code64 segment byte public use64 'code64'
 
-init:
-    mov [rbx+10],edx
+    org 10000h
 
+val	DQ 12345h
+
+init:
+    mov rbx,val
+    mov rdx,OFFSET val
+    mov rax,[rdx]
     xor rax,rax
     syscall    
 

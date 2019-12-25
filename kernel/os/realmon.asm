@@ -238,7 +238,12 @@ idt23:
     dd 0
 
 idt24:
-    dq 0,0
+    dw OFFSET start_int
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
 
 idt25:
     dq 0,0
@@ -341,6 +346,9 @@ msg_int:
 
 get_page_int:
     jmp handle_get_page
+
+start_int:
+    jmp handle_start
 
 div_0:
     push 0
@@ -657,6 +665,23 @@ handle_page_send_back:
     pop rbx
     pop rax
     iretq
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           HandleStart
+;
+;               DESCRIPTION:    Handle start application
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_start:
+    mov rbx,realtime_apic_base
+    xor eax,eax
+    mov [rbx].APIC_EOI,eax    
+;
+    sti
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
