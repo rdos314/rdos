@@ -34,9 +34,15 @@ include ..\pcdev\apic.inc
 mon_code_sel     = 8
 mon_data_sel     = 10h
 mon_ss0_sel      = 18h
-app_code_sel     = 23h
-app_data_sel     = 2Bh
+app_sys_sel      = 1Bh
+app_data_sel     = 23h
+app_code_sel     = 2Bh
 tr_sel           = 30h
+
+IA32_STAR       = 0C0000081h
+IA32_LSTAR      = 0C0000082h
+IA32_CSTAR      = 0C0000083h
+IA32_FMASK      = 0C0000084h
 
 Code64 segment byte public use64 'code64'
 
@@ -77,13 +83,13 @@ gdt18:
 
 gdt20:
      dw 0FFFFh
-     dd 0FA000000h
-     dw 0AFh
+     dd 0F2000000h
+     dw 0CFh
 
 gdt28:
      dw 0FFFFh
-     dd 0F2000000h
-     dw 0CFh
+     dd 0FA000000h
+     dw 0AFh
 
 gdt30:
      dw 111
@@ -121,7 +127,7 @@ idt2:
 idt3:
     dw OFFSET trap_3
     dw mon_code_sel
-    dw 8E00h
+    dw 0EE00h
     dw 0
     dd 0FFFFFF80h
     dd 0
@@ -754,6 +760,21 @@ handle_start:
     mov ax,tr_sel
     ltr ax
 ;
+    mov eax,OFFSET syscall_start
+    mov edx,0FFFFFF80h
+    mov ecx,IA32_LSTAR
+    wrmsr
+;
+    xor eax,eax
+    xor edx,edx
+    mov ecx,IA32_FMASK
+    wrmsr
+;
+    xor eax,eax
+    mov edx,mon_code_sel + (app_sys_sel SHL 16)
+    mov ecx,IA32_STAR
+    wrmsr
+;
     mov ax,app_data_sel
     push rax
 ;
@@ -909,6 +930,28 @@ apWait:
     pop rbx
     ret
 AllocatePhys	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           syscall handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+syscall_start:
+    push rcx
+    push r11
+;
+    mov rcx,rsp
+    mov rsp,realtime_stack_base + 1000h
+    push rcx
+;
+    cli
+    pop rsp
+    pop r11
+    pop rcx
+    db 48h
+    sysret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

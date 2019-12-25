@@ -41,6 +41,9 @@ init:
     mov rax,[rdx]
     xor rax,rax
     syscall    
+    int 3
+    push rbx
+    pop rax
 
 Code64  Ends
 
