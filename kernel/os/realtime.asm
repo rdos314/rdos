@@ -372,17 +372,27 @@ add_realtime_core     PROC near
     mov bx,ax
     shl bx,1
     mov es:rds_notify_flags,0
-    mov es:rds_req_flags,0
     mov ds:[bx].mon_arr,es
     mov gs:[bx].rs_core_arr,es
 ;
+    push es
     mov es,fs:ps_null_thread
     mov ebx,fs:ps_cr3
     mov es:p_cr3,ebx
     mov es:p_fault_vector,3
     BootRealtimeCore
-;
     WaitForSignal
+    pop es
+;
+    mov dword ptr es:rds_linear_page,10000h
+    mov dword ptr es:rds_linear_page+4,0
+    mov al,23h
+    SendInt
+    WaitForSignal
+;
+    int 3
+    mov eax,dword ptr es:rds_linear_page
+    mov ebx,dword ptr es:rds_linear_page+4
     clc
 
 arcDone:
@@ -745,6 +755,13 @@ ucNotBooted:
     pop eax
 
 ucNotPhys:
+    test edx,RDS_NOTIFY_FLAG_LINEAR
+    jz ucNotSignal
+;
+    mov bx,es:rds_wait_thread
+    Signal
+
+ucNotSignal:
 
 ucDone:
     ret

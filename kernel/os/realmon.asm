@@ -230,7 +230,12 @@ idt22:
     dd 0
 
 idt23:
-    dq 0,0
+    dw OFFSET get_page_int
+    dw 8
+    dw 8E00h
+    dw 0
+    dd 0FFFFFF80h
+    dd 0
 
 idt24:
     dq 0,0
@@ -333,6 +338,9 @@ run_int:
 
 msg_int:
     jmp handle_msg
+
+get_page_int:
+    jmp handle_get_page
 
 div_0:
     push 0
@@ -609,6 +617,50 @@ handle_msg:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           HandleGetPage
+;
+;               DESCRIPTION:    Handle get page for linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_get_page:
+    push rax
+    push rbx
+    push rdx
+;
+    mov rbx,realtime_apic_base
+    xor eax,eax
+    mov [rbx].APIC_EOI,eax    
+;
+    sti
+    mov rbx,realtime_data_base
+    mov rax,[rbx].rds_linear_page
+    shr rax,12
+    shl rax,3
+    mov rbx,realtime_page_table
+    add rbx,rax
+    mov rdx,[rbx]
+    test dl,1
+    jnz handle_page_send_back
+;
+    call AllocatePhys
+    mov dl,67h
+    mov [rbx],rdx
+
+handle_page_send_back:
+    mov rbx,realtime_data_base
+    mov [rbx].rds_linear_page,rdx
+    lock or [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_LINEAR
+    call SendInt
+;
+    pop rdx
+    pop rbx
+    pop rax
+    iretq
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           SetupLocalApic
 ;
 ;               DESCRIPTION:    Setup local APIC
@@ -737,15 +789,12 @@ AllocatePhys	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 startup:
-    int 3
-    mov rbx,realtime_heap_base
-    shr rbx,12
-    shl rbx,3
-    mov rax,realtime_page_table
-    add rbx,rax
-    mov rax,[rbx]
+    mov rbx,realtime_page_pml
+    xor rax,rax
+    mov [rbx],eax
+    mov rax,cr3
+    mov cr3,rax
 ;
     mov rbx,realtime_data_base
     mov [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_BOOTED
@@ -753,15 +802,7 @@ startup:
 
 wait_load:
     hlt
-;
-    mov edx,[rdx].rds_req_flags
-    or edx,edx
-    jz wait_load
-;
-    test edx,RDS_REQ_FLAG_START
-    jnz loadit
-;
-    int 3
+    jmp wait_load
 
 loadit:
     int 3
