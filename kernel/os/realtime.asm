@@ -51,6 +51,7 @@ realtime_handle_struc ENDS
 
 realtime_struc	STRUC
 
+rs_wait_thread	DW ?
 rs_core_arr	DW 256 DUP(?)
 
 realtime_struc	ENDS
@@ -316,6 +317,8 @@ create_realtime     PROC far
     AllocateSmallGlobalMem
     mov ds:[ebx].rh_sel,es
 ;
+    mov ds:rs_wait_thread,0
+;
     mov ecx,256
     mov edi,OFFSET rs_core_arr
     xor ax,ax
@@ -339,6 +342,7 @@ create_realtime     ENDP
 ;           DESCRIPTION:    Load application
 ;
 ;           PARAMETERS:     BX		File handle
+;                           DX          Server thread
 ;                           ES          Communication area
 ;                           FS          Core 
 ;
@@ -349,6 +353,7 @@ LoadApp	Proc near
     push es
     pushad
 ;
+    push dx
     mov eax,es
     mov ds,eax
 ;
@@ -384,6 +389,16 @@ laLoop:
     GetFilePos
     cmp eax,ecx
     jnz laLoop
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop dx
+    mov ds:rds_wait_thread,dx
 ;
     mov esi,10000h
     mov dword ptr ds:rds_linear_page,esi
@@ -451,9 +466,13 @@ add_realtime_core     PROC near
     mov es:rds_notify_flags,0
     mov ds:[bx].mon_arr,es
     mov gs:[bx].rs_core_arr,es
+    mov bx,gs:rs_wait_thread
+    push bx
 ;
+    push eax
     GetThread
     mov es:rds_wait_thread,ax
+    pop eax
 ;
     push es
     mov es,fs:ps_null_thread
@@ -464,8 +483,8 @@ add_realtime_core     PROC near
     WaitForSignal
     pop es
 ;
+    pop dx
     pop bx
-;
     call LoadApp
     
 arcClose:
@@ -914,6 +933,9 @@ wait_for_realtime_signal     PROC far
     jc wfrsDone
 ;
     mov es,ds:[ebx].rh_sel
+    GetThread
+    mov es:rs_wait_thread,ax
+;
     mov bx,OFFSET rs_core_arr
     mov ecx,256
 

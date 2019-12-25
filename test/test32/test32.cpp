@@ -4,9 +4,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "realtime.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : NotifySignal
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifySignal(TRealtimeDevice *Dev, int ID, int Signal)
+{
+    printf("ID %d, signal %d\r\n", ID, Signal);
+}
 
 /*##########################################################################
 #
@@ -21,19 +38,14 @@
 ##########################################################################*/
 void main()
 {
-    int handle;
-    int core;
-    int sig;
+    TRealtimeDevice dev;
 
-    handle = RdosCreateRealtime();
-    core = RdosAddRealtimeCore(handle, "realtest.bin");
+    dev.OnSignal = NotifySignal;
+    dev.AddCore(1, "realtest.bin");
 
     for (;;)
-    {
-        RdosWaitForRealtimeSignal(handle);
-        if (RdosGetRealtimeSignal(handle, &core, &sig))
-            printf("Signal: core %d, signal %d\r\n", core, sig);
-    }
+        RdosWaitMilli(250);
+
 
 //    RdosTestGate("");
 }
