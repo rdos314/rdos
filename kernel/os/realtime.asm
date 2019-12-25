@@ -829,10 +829,16 @@ ucNotBooted:
 
 ucNotPhys:
     test edx,RDS_NOTIFY_FLAG_LINEAR
-    jz ucNotSignal
+    jz ucNotLinear
 ;
     mov bx,es:rds_wait_thread
     Signal
+
+ucNotLinear:
+    test edx,RDS_NOTIFY_FLAG_SIGNAL
+    jz ucNotSignal
+;
+    int 3
 
 ucNotSignal:
 

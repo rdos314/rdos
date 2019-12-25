@@ -40,6 +40,10 @@ val	DQ 12345h
 init:
     mov rcx,500
     RealtimeSignal
+
+wloop:
+    jmp wloop
+
     int 3
 
 Code64  Ends
