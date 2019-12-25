@@ -355,7 +355,7 @@ rtm_tr:
     dd 0
 
 tr_rsp0:
-    dq realtime_stack_base
+    dq realtime_stack_base + 1000h
 
 tr_rsp1:
     dq 0
