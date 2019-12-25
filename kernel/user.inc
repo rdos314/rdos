@@ -4500,3 +4500,15 @@ CreateRealtime    MACRO
 AddRealtimeCore    MACRO
         UserGate add_realtime_core_nr
                 ENDM
+
+; IN  BX            Realtime handle
+WaitForRealtimeSignal    MACRO
+        UserGate wait_for_realtime_signal_nr
+                ENDM
+
+; IN  BX            Realtime handle
+; OUT AX            Core #
+; OUT CX            Signal #
+GetRealtimeSignal    MACRO
+        UserGate get_realtime_signal_nr
+                ENDM

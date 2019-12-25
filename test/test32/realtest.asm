@@ -39,10 +39,20 @@ val	DQ 12345h
 
 init:
     mov rcx,500
+
+mloop:
     RealtimeSignal
+;
+    push rcx
+    mov rcx,1000000h
 
 wloop:
-    jmp wloop
+    loop wloop
+;
+    pop rcx
+    inc ecx
+    and cx,03FFh
+    jmp mloop
 
     int 3
 

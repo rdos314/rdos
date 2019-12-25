@@ -909,6 +909,8 @@ set_handle_nonblocking_mode_nr    = 712
 
 create_realtime_nr                = 713
 add_realtime_core_nr              = 714
+wait_for_realtime_signal_nr       = 715
+get_realtime_signal_nr            = 716
 
 is_can_module_online_nr           = 722
 

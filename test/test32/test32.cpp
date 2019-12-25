@@ -23,9 +23,17 @@ void main()
 {
     int handle;
     int core;
+    int sig;
 
     handle = RdosCreateRealtime();
     core = RdosAddRealtimeCore(handle, "realtest.bin");
+
+    for (;;)
+    {
+        RdosWaitForRealtimeSignal(handle);
+        if (RdosGetRealtimeSignal(handle, &core, &sig))
+            printf("Signal: core %d, signal %d\r\n", core, sig);
+    }
 
 //    RdosTestGate("");
 }

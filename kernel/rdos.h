@@ -969,6 +969,8 @@ int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 
 int RDOSAPI RdosCreateRealtime();
 int RDOSAPI RdosAddRealtimeCore(int handle, const char *exename);
+void RDOSAPI RdosWaitForRealtimeSignal(int handle);
+int RDOSAPI RdosGetRealtimeSignal(int handle, int *core, int *signal);
 
 #ifdef __cplusplus
 }

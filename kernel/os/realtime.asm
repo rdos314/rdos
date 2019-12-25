@@ -280,6 +280,11 @@ CreateMonitor      Proc near
     CreateDataSelector32
     mov es,bx
 ;
+    mov edi,OFFSET rds_signal_bitmap
+    mov ecx,32
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
     popad
     pop ds
     ret
@@ -838,7 +843,8 @@ ucNotLinear:
     test edx,RDS_NOTIFY_FLAG_SIGNAL
     jz ucNotSignal
 ;
-    int 3
+    mov bx,es:rds_wait_thread
+    Signal
 
 ucNotSignal:
 
@@ -882,6 +888,166 @@ rtCheckCoreNext:
     loop rtCheckCoreLoop
 ;
     jmp rtWait
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WaitForRealtimeSignal
+;
+;           DESCRIPTION:    Wait for realtime signal
+;
+;           PARAMETERS:     BX		Realtime handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_realtime_signal_name    DB 'Wait For Realtime Signal',0
+
+wait_for_realtime_signal     PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    mov ax,REALTIME_HANDLE
+    DerefHandle
+    jc wfrsDone
+;
+    mov es,ds:[ebx].rh_sel
+    mov bx,OFFSET rs_core_arr
+    mov ecx,256
+
+wfrsCoreLoop:
+    mov ax,es:[bx]
+    or ax,ax
+    jz wfrsCoreNext
+;
+    push ebx
+    push ecx
+;
+    mov ds,eax
+    GetThread
+    mov ds:rds_wait_thread,ax
+;
+    mov ebx,OFFSET rds_signal_bitmap
+    mov ecx,32
+
+wfrsLoop:
+    mov eax,[ebx]
+    or eax,eax
+    clc
+    jnz wfrsFound
+;
+    add ebx,4
+    loop wfrsLoop
+;
+    stc
+
+wfrsFound:
+    pop ecx
+    pop ebx
+    jnc wfrsDone
+
+wfrsCoreNext:
+    add ebx,2
+    loop wfrsCoreLoop
+;
+    WaitForSignal
+
+wfrsDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+wait_for_realtime_signal     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetRealtimeSignal
+;
+;           DESCRIPTION:    Get realtime signal
+;
+;           PARAMETERS:     BX		Realtime handle
+;
+;           RETURNS:        AX          Core
+;                           CX          Signal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_realtime_signal_name    DB 'Get Realtime Signal',0
+
+get_realtime_signal     PROC far
+    push ds
+    push es
+    push ebx
+    push edx
+;
+    mov ax,REALTIME_HANDLE
+    DerefHandle
+    jc grsDone
+;
+    mov es,ds:[ebx].rh_sel
+    xor ax,ax
+    mov bx,OFFSET rs_core_arr
+    mov ecx,256
+
+grsCoreLoop:
+    mov dx,es:[bx]
+    or dx,dx
+    jz grsCoreNext
+;
+    push eax
+    push ebx
+    push ecx
+;
+    mov ds,edx
+    mov ebx,OFFSET rds_signal_bitmap
+    mov ecx,32
+    xor dx,dx
+
+grsLoop:
+    mov eax,[ebx]
+    or eax,eax
+    jz grsNext
+;
+    bsf ecx,eax
+    lock btr dword ptr [ebx],ecx
+    add dx,cx
+    clc
+    jmp grsFound
+
+grsNext:
+    add dx,32
+    add ebx,4
+    loop grsLoop
+;
+    stc
+
+grsFound:
+    pop ecx
+    pop ebx
+    pop eax
+    jnc grsDone
+
+grsCoreNext:
+    inc ax
+    add ebx,2
+    loop grsCoreLoop
+;
+    stc
+
+grsDone:
+    mov cx,dx
+;
+    pop edx
+    pop ebx
+    pop es
+    pop ds
+    ret
+get_realtime_signal     ENDP
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -972,6 +1138,18 @@ init_mon_loop:
     mov dx,virt_es_in
     mov ax,add_realtime_core_nr
     RegisterUserGate
+;
+    mov esi,OFFSET wait_for_realtime_signal
+    mov edi,OFFSET wait_for_realtime_signal_name
+    xor dx,dx
+    mov ax,wait_for_realtime_signal_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_realtime_signal
+    mov edi,OFFSET get_realtime_signal_name
+    xor dx,dx
+    mov ax,get_realtime_signal_nr
+    RegisterBimodalUserGate
     ret
 init    ENDP
     

@@ -4003,3 +4003,23 @@
     "Done:" \
     __parm [__ebx] [__edi] \
     __value [__eax]
+
+#pragma aux RdosWaitForRealtimeSignal = \
+    CallGate_wait_for_realtime_signal  \
+    __parm [__ebx]
+
+#pragma aux RdosGetRealtimeSignal = \
+    CallGate_get_realtime_signal  \
+    "jc Fail" \
+    "movzx eax,ax" \
+    "mov [esi],eax" \
+    "movzx eax,cx" \
+    "mov [edi],eax" \
+    "mov eax,1" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __modify [__ebx] \
+    __parm [__ebx] [__esi] [__edi] \
+    __value [__eax]

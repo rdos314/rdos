@@ -833,7 +833,6 @@ handle_start:
     mov rbx,[rbx].rds_linear_page
     push rbx
 ;
-    int 3
     mov ax,app_data_sel
     mov ds,ax
     mov es,ax
