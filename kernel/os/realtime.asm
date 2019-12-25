@@ -37,6 +37,7 @@ INCLUDE ..\wait.inc
 INCLUDE system.def
 INCLUDE proc.inc
 INCLUDE realmon.def
+INCLUDE ..\realtime.inc
 INCLUDE ..\pcdev\apic.inc
 
 .386p

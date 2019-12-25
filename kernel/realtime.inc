@@ -20,32 +20,21 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; realtime.def
-; Realtime common area
+; realtime.inc
+; Realtime 64-bit application API
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; page table mappings
+realtime_local_apic        = 0000001F000000000h
+realtime_local_data        = 0000001F000002000h
 
-; FF00 0000 0000 = 1111 1111 0000 0000 : 0000 0000 0000 0000 : 0000 0000 0000 0000
-; 007F 8000 0000 = 0000 0000 0111 1111 : 1000 0000 0000 0000 : 0000 0000 0000 0000
-; 0000 3FC0 0000 = 0000 0000 0000 0000 : 0011 1111 1100 0000 : 0000 0000 0000 0000
-; 0000 001F E000 = 0000 0000 0000 0000 : 0000 0000 0001 1111 : 1110 0000 0000 0000
+realtime_data_struc     STRUC
 
-realtime_heap_base   = 00000100000000000h
-realtime_app_stack   = 00000020000000000h
+rds_notify_flags       DD ?
 
-realtime_page_table  = 0FFFFFF0000000000h
-realtime_page_dir    = 0FFFFFF7F80000000h
-realtime_page_ptr    = 0FFFFFF7FBFC00000h
-realtime_page_pml    = 0FFFFFF7FBFDFE000h
-realtime_mon_base    = 0FFFFFF8000000000h
-realtime_stack_base  = 0FFFFFF8000200000h
-realtime_apic_base   = 0FFFFFF8000202000h
-realtime_thread_base = 0FFFFFF8000204000h
-realtime_data_base   = 0FFFFFF8000206000h
+rds_phys_page          DQ ?
+rds_linear_page        DQ ?
 
-RDS_NOTIFY_FLAG_BOOTED = 1
-RDS_NOTIFY_FLAG_DEBUG  = 2
-RDS_NOTIFY_FLAG_PHYS   = 4
-RDS_NOTIFY_FLAG_LINEAR = 8
+rds_wait_thread        DW ?
+
+realtime_data_struc     ENDS

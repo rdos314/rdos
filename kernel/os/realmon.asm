@@ -28,6 +28,7 @@
 .x64p
 
 include realmon.def
+include ..\realtime.inc
 include system.def
 include ..\pcdev\apic.inc
 

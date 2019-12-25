@@ -34,7 +34,7 @@ INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
 INCLUDE ..\acpi\acpi.inc
-INCLUDE ..\os\realtime.def
+INCLUDE ..\os\realmon.def
 
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
