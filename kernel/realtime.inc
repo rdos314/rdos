@@ -57,7 +57,7 @@ RealtimeSignal	Macro
     lock bts word ptr [rbx].rds_signal_bitmap,cx
     jc rsDone
 ;
-    lock or [ebx].rds_notify_flags,RDS_NOTIFY_FLAG_SIGNAL
+    lock or [rbx].rds_notify_flags,RDS_NOTIFY_FLAG_SIGNAL
     mov edx,[rbx].rds_apic
     shl edx,24
 ;

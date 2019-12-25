@@ -775,6 +775,10 @@ handle_start:
     mov ecx,IA32_STAR
     wrmsr
 ;
+    mov rbx,realtime_data_base
+    mov eax,apic
+    mov [rbx].rds_apic,eax
+;
     mov ax,app_data_sel
     push rax
 ;
@@ -787,6 +791,32 @@ handle_start:
     call AllocatePhys
     mov dl,67h
     mov [rbx],rdx
+;
+    mov rax,realtime_data_base
+    mov rbx,0FFFFFFFFFFFFh
+    and rax,rbx
+    shr rax,12
+    shl rax,3
+    mov rbx,realtime_page_table
+    mov rdx,[rbx+rax]
+    or dl,4
+    mov rax,realtime_local_data
+    shr rax,12
+    shl rax,3
+    mov [rbx+rax],rdx
+;
+    mov rax,realtime_apic_base
+    mov rbx,0FFFFFFFFFFFFh
+    and rax,rbx
+    shr rax,12
+    shl rax,3
+    mov rbx,realtime_page_table
+    mov rdx,[rbx+rax]
+    or dl,4
+    mov rax,realtime_local_apic
+    shr rax,12
+    shl rax,3
+    mov [rbx+rax],rdx
 ;
     mov ebx,1000h
     mov rax,realtime_app_stack
