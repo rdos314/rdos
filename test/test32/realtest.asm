@@ -27,6 +27,8 @@
 
 .x64
 
+include \rdos\kernel\realtime.inc
+
 Code64 segment byte public use64 'code64'
 
     org 10000h
@@ -36,14 +38,9 @@ Code64 segment byte public use64 'code64'
 val	DQ 12345h
 
 init:
-    mov rbx,val
-    mov rdx,OFFSET val
-    mov rax,[rdx]
-    xor rax,rax
-    syscall    
+    mov rcx,500
+    RealtimeSignal
     int 3
-    push rbx
-    pop rax
 
 Code64  Ends
 

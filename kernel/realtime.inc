@@ -28,13 +28,50 @@
 realtime_local_apic        = 0000001F000000000h
 realtime_local_data        = 0000001F000002000h
 
+RDS_NOTIFY_FLAG_SIGNAL = 10h
+
 realtime_data_struc     STRUC
 
 rds_notify_flags       DD ?
+rds_apic               DD ?
 
 rds_phys_page          DQ ?
 rds_linear_page        DQ ?
 
 rds_wait_thread        DW ?
+rds_pad                DW ?
+
+rds_signal_bitmap      DD 32 DUP(?) 
 
 realtime_data_struc     ENDS
+
+;  IN  CX	Signal # (0..1023)
+RealtimeSignal	Macro
+    local rsDone
+
+    push rbx
+    push rcx
+    push rdx
+;
+    mov rbx,realtime_local_data
+    lock bts word ptr [rbx].rds_signal_bitmap,cx
+    jc rsDone
+;
+    lock or [ebx].rds_notify_flags,RDS_NOTIFY_FLAG_SIGNAL
+    mov edx,[rbx].rds_apic
+    shl edx,24
+;
+    mov rbx,realtime_local_apic
+    mov ecx,[rbx+300h]
+    test cx,1000h
+    jnz rsDone
+;
+    mov ecx,4085h
+    mov [rbx+310h],edx
+    mov [rbx+300h],ecx
+
+rsDone:
+    pop rdx
+    pop rcx
+    pop rbx
+                Endm
