@@ -756,7 +756,6 @@ handle_start:
     mov [rbx].APIC_EOI,eax    
 ;
     sti
-    int 3
     mov ax,tr_sel
     ltr ax
 ;
@@ -765,7 +764,7 @@ handle_start:
     mov ecx,IA32_LSTAR
     wrmsr
 ;
-    xor eax,eax
+    mov eax,200h
     xor edx,edx
     mov ecx,IA32_FMASK
     wrmsr
@@ -794,6 +793,7 @@ handle_start:
     push rax
 ;
     pushfq
+    or word ptr [rsp],3000h
 ;
     mov ax,app_code_sel
     push rax
@@ -802,6 +802,7 @@ handle_start:
     mov rbx,[rbx].rds_linear_page
     push rbx
 ;
+    int 3
     mov ax,app_data_sel
     mov ds,ax
     mov es,ax
@@ -944,7 +945,9 @@ syscall_start:
 ;
     mov rcx,rsp
     mov rsp,realtime_stack_base + 1000h
+    sti
     push rcx
+;
 ;
     cli
     pop rsp
@@ -975,13 +978,6 @@ wait_load:
     hlt
     jmp wait_load
 
-loadit:
-    int 3
-    mov rax,1235h
-    int 3
-    mov rax,3
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1003,8 +999,9 @@ init:
     call SetupLocalApic
 ;
     mov ax,mon_data_sel
-    mov ds,ax
-    mov es,ax
+    mov ds,eax
+    mov es,eax
+    mov ss,eax
     int 20h
 
 stop:
