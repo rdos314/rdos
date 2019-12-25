@@ -25,11 +25,18 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.x64
+.x64p
 
 include realtime.def
 include system.def
 include ..\pcdev\apic.inc
+
+mon_code_sel     = 8
+mon_data_sel     = 10h
+mon_ss0_sel      = 18h
+app_code_sel     = 23h
+app_data_sel     = 2Bh
+tr_sel           = 30h
 
 Code64 segment byte public use64 'code64'
 
@@ -38,7 +45,7 @@ eip  dq OFFSET init
 apic dd 0
 
 gdt_descr:
-    dw 1Fh
+    dw 3Fh
     dd OFFSET rtm_gdt
     dd 0FFFFFF80h
 
@@ -68,10 +75,28 @@ gdt18:
      dd 92000000h
      dw 0CFh
 
+gdt20:
+     dw 0FFFFh
+     dd 0FA000000h
+     dw 0AFh
+
+gdt28:
+     dw 0FFFFh
+     dd 0F2000000h
+     dw 0CFh
+
+gdt30:
+     dw 111
+     dw OFFSET rtm_tr
+     dw 8900h
+     dw 0
+     dd 0FFFFFF80h
+     dd 0
+
 rtm_idt:
 idt0:
     dw OFFSET div_0
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -79,7 +104,7 @@ idt0:
 
 idt1:
     dw OFFSET trap_1
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -87,7 +112,7 @@ idt1:
 
 idt2:
     dw OFFSET trap_nmi
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -95,7 +120,7 @@ idt2:
 
 idt3:
     dw OFFSET trap_3
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -109,7 +134,7 @@ idt5:
 
 idt6:
     dw OFFSET invalid_opcode
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -135,7 +160,7 @@ idt0C:
 
 idt0D:
     dw OFFSET protection_fault
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -143,7 +168,7 @@ idt0D:
 
 idt0E:
     dw OFFSET page_fault
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -151,7 +176,7 @@ idt0E:
 
 idt0F:
     dw OFFSET apic_spur_int
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -207,7 +232,7 @@ idt1F:
 
 idt20:
     dw OFFSET reset_int
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -215,7 +240,7 @@ idt20:
 
 idt21:
     dw OFFSET run_int
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -223,7 +248,7 @@ idt21:
 
 idt22:
     dw OFFSET msg_int
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -231,7 +256,7 @@ idt22:
 
 idt23:
     dw OFFSET get_page_int
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -239,7 +264,7 @@ idt23:
 
 idt24:
     dw OFFSET start_int
-    dw 8
+    dw mon_code_sel
     dw 8E00h
     dw 0
     dd 0FFFFFF80h
@@ -325,6 +350,50 @@ idt3E:
 
 idt3F:
     dq 0,0
+
+rtm_tr:
+    dd 0
+
+tr_rsp0:
+    dq realtime_stack_base
+
+tr_rsp1:
+    dq 0
+
+tr_rsp2:
+    dq 0
+
+    dq 0
+
+tr_ist1:
+    dq 0
+
+tr_ist2:
+    dq 0
+
+tr_ist3:
+    dq 0
+
+tr_ist4:
+    dq 0
+
+tr_ist5:
+    dq 0
+
+tr_ist6:
+    dq 0
+
+tr_ist7:
+    dq 0
+
+    dq 0
+    dw 0
+
+tr_io_offset:
+    dw 104
+
+tr_io_bitmap:
+    dq -1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -682,10 +751,40 @@ handle_start:
 ;
     sti
     int 3
+    mov ax,tr_sel
+    ltr ax
+;
+    mov ax,app_data_sel
+    push rax
+;
+    mov rax,realtime_app_stack
+    shr rax,12
+    shl rax,3
+    mov rbx,realtime_page_table
+    add rbx,rax
+;
+    call AllocatePhys
+    mov dl,67h
+    mov [rbx],rdx
+;
+    mov ebx,1000h
+    mov rax,realtime_app_stack
+    add rax,rbx
+    push rax
+;
+    pushfq
+;
+    mov ax,app_code_sel
+    push rax
+;
     mov rbx,realtime_data_base
     mov rbx,[rbx].rds_linear_page
     push rbx
-    ret
+;
+    mov ax,app_data_sel
+    mov ds,ax
+    mov es,ax
+    iretq
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -860,7 +959,7 @@ init:
 ;
     call SetupLocalApic
 ;
-    mov ax,10h
+    mov ax,mon_data_sel
     mov ds,ax
     mov es,ax
     int 20h

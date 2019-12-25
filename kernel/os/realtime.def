@@ -33,6 +33,7 @@
 ; 0000 001F E000 = 0000 0000 0000 0000 : 0000 0000 0001 1111 : 1110 0000 0000 0000
 
 realtime_heap_base   = 00000100000000000h
+realtime_app_stack   = 00000020000000000h
 
 realtime_page_table  = 0FFFFFF0000000000h
 realtime_page_dir    = 0FFFFFF7F80000000h
