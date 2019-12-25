@@ -44,7 +44,7 @@ mloop:
     RealtimeSignal
 ;
     push rcx
-    mov rcx,1000000h
+    mov rcx,10000h
 
 wloop:
     loop wloop

@@ -9,6 +9,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+int count = 0;
+
 /*##########################################################################
 #
 #   Name       : NotifySignal
@@ -22,7 +24,11 @@
 ##########################################################################*/
 static void NotifySignal(TRealtimeDevice *Dev, int ID, int Signal)
 {
-    printf("ID %d, signal %d\r\n", ID, Signal);
+    if (Signal == 1023)
+    {
+        printf("Count %d\r\n", count);
+        count++;
+    }
 }
 
 /*##########################################################################
