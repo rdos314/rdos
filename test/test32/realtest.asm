@@ -35,6 +35,8 @@ Code64 segment byte public use64 'code64'
 
     jmp init
 
+include \rdos\kernel\sin.asm
+
 val	DQ 12345h
 
 init:

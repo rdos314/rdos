@@ -76,6 +76,143 @@ data    ENDS
 code    SEGMENT byte public use32 'CODE'
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:         AL          Byte to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexByte    PROC near
+    push ax
+    mov ah,al
+    and al,0F0h
+    rol al,4
+    cmp al,0Ah
+    jb add_byte_low1
+;    
+    add al,7
+
+add_byte_low1:
+    add al,'0'
+    stosb
+    mov al,ah
+    and al,0Fh
+    cmp al,0Ah
+    jb add_byte_high1
+;    
+    add al,7
+
+add_byte_high1:
+    add al,'0'
+    stosb
+    pop ax
+    ret
+AddHexByte    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateSinTable
+;
+;           DESCRIPTION:    Create sin(x) table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sintab DB 'sin.tab', 0
+
+CreateSinTable     PROC near
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET sintab
+    xor cx,cx
+    CreateFile
+;
+    mov eax,20h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    finit
+    mov eax,7FFFh
+    mov dword ptr es:[edi],eax
+    fild dword ptr es:[edi]
+;
+    mov eax,20000h
+    mov dword ptr es:[edi],eax
+    fild dword ptr es:[edi]
+;
+    xor edx,edx
+
+cstLoop:
+    xor edi,edi
+    mov dword ptr es:[edi],edx
+    fild dword ptr es:[edi]
+    fldpi
+    db 0DEh, 0C9h ; fmulp
+    fdiv st(0),st(1)
+    fsin
+    fmul st(0),st(2)
+    fistp dword ptr es:[edi]
+;
+    mov ecx,7
+    mov esi,dword ptr es:[edi]
+    xor edi,edi
+    test dl,0Fh
+    jz cstWriteDw
+;
+    inc ecx
+    mov al,','
+    stosb
+    jmp cstAddVal
+
+cstWriteDw:
+    add ecx,3
+    mov al,' '
+    stosb
+    mov al,'d'
+    stosb
+    mov al,'w'
+    stosb
+
+cstAddVal:
+    mov al,' '
+    stosb
+    mov al,'0'
+    stosb
+    mov ax,si
+    mov al,ah
+    call AddHexByte
+    mov ax,si
+    call AddHexByte
+    mov al,'h'
+    stosb
+;
+    inc edx
+    test dl,0Fh
+    jnz cstWrite
+;
+    add ecx,2
+    mov al,0Dh
+    stosb
+    mov al,0Ah
+    stosb
+
+cstWrite:
+    xor edi,edi
+    WriteFile
+;
+    cmp edx,40000h
+    jne cstLoop
+;
+    CloseFile
+;
+    ret
+CreateSinTable     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Realtime int (85h)
