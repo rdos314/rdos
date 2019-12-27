@@ -728,7 +728,7 @@ handle_get_page:
     jnz handle_page_send_back
 ;
     call AllocatePhys
-    mov dl,67h
+    or dl,67h
     mov [rbx],rdx
 
 handle_page_send_back:
@@ -789,7 +789,7 @@ handle_start:
     add rbx,rax
 ;
     call AllocatePhys
-    mov dl,67h
+    or dl,67h
     mov [rbx],rdx
 ;
     mov rax,realtime_data_base
