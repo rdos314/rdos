@@ -2908,7 +2908,7 @@ do_exception_block:
 ;
     pop [edx].p_rbp
     pop rbx
-    mov dword ptr [edx].p_fault_code,ebx
+    mov [edx].p_fault_code,rbx
 ;
     pop [edx].p_rip
     pop rbx

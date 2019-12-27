@@ -4966,7 +4966,7 @@ init_first_thread:
 ;
     mov bx,core_data_sel
     mov fs,bx
-    mov fs,cs:cs_sel
+    mov fs,fs:cs_sel
 ;
     mov ax,start_preempt_timer_nr
     IsValidOsGate
