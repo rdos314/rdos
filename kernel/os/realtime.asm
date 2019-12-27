@@ -35,7 +35,7 @@ INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE system.def
-INCLUDE proc.inc
+INCLUDE core.inc
 INCLUDE realmon.def
 INCLUDE ..\realtime.inc
 INCLUDE ..\pcdev\apic.inc
@@ -274,7 +274,7 @@ ri_ds_ok:
 ;
 ;           DESCRIPTION:    Create monitor
 ;
-;           PARAMETERS:     FS          Processor sel
+;           PARAMETERS:     FS          Core sel
 ;                           ES          Thread sel
 ;
 ;           RETURNS:        ES          Monitor data sel
@@ -290,10 +290,10 @@ CreateMonitor      Proc near
 ;
     mov eax,1000h
     AllocateBigLinear
-    mov fs:ps_mon_linear,edx
+    mov fs:cs_mon_linear,edx
 ;
     AllocatePhysical32
-    mov fs:ps_cr3,eax
+    mov fs:cs_cr3,eax
 ;
     mov al,3
     SetPageEntry
@@ -311,7 +311,7 @@ CreateMonitor      Proc near
     mov ecx,3FAh
     rep stos dword ptr es:[edi]
 ;
-    mov eax,fs:ps_cr3
+    mov eax,fs:cs_cr3
     mov al,3
     stos dword ptr es:[edi]
 ;
@@ -386,7 +386,7 @@ CreateMonitor      Proc near
     rep stos dword ptr es:[edi]
 ;
     push edx
-    mov ds,fs:ps_null_thread
+    mov ds,fs:cs_null_thread
     mov edx,ds:p_linear
     GetPageEntry
     pop edx
@@ -589,7 +589,7 @@ add_realtime_core     PROC near
 ;
     push bx
 ;
-    mov es,fs:ps_null_thread
+    mov es,fs:cs_null_thread
     mov es:p_realtime,1
     mov es:p_tss_sel,0
     call CreateMonitor
@@ -612,8 +612,8 @@ add_realtime_core     PROC near
     pop eax
 ;
     push es
-    mov es,fs:ps_null_thread
-    mov ebx,fs:ps_cr3
+    mov es,fs:cs_null_thread
+    mov ebx,fs:cs_cr3
     mov es:p_cr3,ebx
     mov es:p_fault_vector,3
     BootRealtimeCore

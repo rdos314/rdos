@@ -32,7 +32,7 @@ INCLUDE ..\os\port.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE key.inc

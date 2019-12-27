@@ -33,7 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
-INCLUDE proc.inc
+INCLUDE core.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE exec.def

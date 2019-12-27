@@ -31,7 +31,7 @@ include ..\os.def
 include ..\user.def
 include ..\os.inc
 include ..\user.inc
-include proc.inc
+include core.inc
 include protseg.def
 include gate.def
 include system.def
@@ -810,7 +810,7 @@ start_syscall   Proc far
     pushad
 ;    
     GetCore
-    mov edx,fs:ps_syscall_eip
+    mov edx,fs:cs_syscall_eip
     or edx,edx
     jnz start_syscall_setup
 ;   
@@ -819,26 +819,26 @@ start_syscall   Proc far
     mov eax,OFFSET syscall_end - OFFSET syscall_start
     mov ecx,eax
     AllocateSmallLinear
-    mov fs:ps_syscall_eip,edx
+    mov fs:cs_syscall_eip,edx
 ;
     mov esi,OFFSET syscall_start
     mov edi,edx
     rep movs byte ptr es:[edi],es:[esi]
 ;
-    mov eax,fs:ps_linear
+    mov eax,fs:cs_linear
     mov es:[edx+2],eax
     xor eax,eax
     mov es:[edx+6],eax            
 
 start_syscall_setup:    
-    mov eax,fs:ps_syscall_eip
+    mov eax,fs:cs_syscall_eip
     mov edx,long_user_data_sel - 8
     shl edx,16
     mov dx,long_kernel_code_sel
     mov ecx,IA32_STAR
     wrmsr
 ;
-    mov eax,fs:ps_syscall_eip
+    mov eax,fs:cs_syscall_eip
     xor edx,edx
     mov ecx,IA32_LSTAR
     wrmsr
@@ -2908,7 +2908,7 @@ do_exception_block:
 ;
     pop [edx].p_rbp
     pop rbx
-    mov [edx].p_fault_code,ebx
+    mov dword ptr [edx].p_fault_code,ebx
 ;
     pop [edx].p_rip
     pop rbx
@@ -5756,10 +5756,10 @@ spt01 DQ OFFSET setup_wr_es_edi
 
 syscall_start:
     mov r9,123456789ABCh        ; patch to address of processor block
-    mov r10d,[r9].ps_syscall_esp
+    mov r10d,[r9].cs_syscall_esp
     xchg rsp,r10
     push r10
-    mov r10,qword ptr [r9].ps_tls_linear
+    mov r10,qword ptr [r9].cs_tls_linear
     push rcx
     push r11
     popfq

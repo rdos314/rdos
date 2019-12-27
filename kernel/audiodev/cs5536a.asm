@@ -31,7 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\pci.inc
 
 ACC_GPIO_STATUS = 0

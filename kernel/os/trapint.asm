@@ -34,7 +34,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE proc.inc
+INCLUDE core.inc
 
 ;
 seg_es  EQU 0

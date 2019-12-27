@@ -34,7 +34,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE proc.inc
+INCLUDE core.inc
 include ..\debug\kdebug.inc
 
 IFDEF __WASM__
@@ -371,11 +371,11 @@ ctFail:
     jmp ctFail
     
 double_fault_lock_ok:    
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     or ax,ax
     jz double_crash
 ;
-    cmp ax,fs:ps_null_thread
+    cmp ax,fs:cs_null_thread
     je double_crash
 ;
     mov es,ax    
@@ -480,7 +480,7 @@ locked_debug_exception:
     push ax
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
+    mov fs,fs:cs_sel
     pop ax
     jmp debug_normal
 
@@ -560,18 +560,18 @@ debug_dump_fail:
    
 debug_normal:       
     push ax
-    mov ax,fs:ps_curr_thread 
+    mov ax,fs:cs_curr_thread 
     or ax,ax
     pop ax
     jz debug_fault
 ;    
     push ax
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_null_thread
+    mov ax,fs:cs_curr_thread
+    cmp ax,fs:cs_null_thread
     pop ax
     je debug_fault
 ;
-    mov ds,fs:ps_curr_thread 
+    mov ds,fs:cs_curr_thread 
     mov al,[ebp].trap_exc_nr
     mov ds:p_fault_vector,al
     mov eax,[ebp].trap_err

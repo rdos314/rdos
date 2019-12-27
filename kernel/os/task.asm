@@ -35,7 +35,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\apic.inc
-INCLUDE proc.inc
+INCLUDE core.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 include ..\wait.inc
@@ -253,7 +253,7 @@ LockTimerCore    Proc near
     push ax
 
 lticSpinLock:    
-    mov ax,fs:ps_timer_spinlock
+    mov ax,fs:cs_timer_spinlock
     or ax,ax
     je lticGet
 ;
@@ -264,7 +264,7 @@ lticSpinLock:
 lticGet:
     cli
     inc ax
-    xchg ax,fs:ps_timer_spinlock
+    xchg ax,fs:cs_timer_spinlock
     or ax,ax
     jne lticSpinLock
 ;
@@ -284,7 +284,7 @@ LockTimerCore    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockTimerCore    Proc near
-    mov fs:ps_timer_spinlock,0
+    mov fs:cs_timer_spinlock,0
     sti
     ret
 UnlockTimerCore    Endp
@@ -353,9 +353,9 @@ LocalRemoveTimerGlobal    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalRemoveTimerCore Proc near
-    mov bx,fs:ps_timer_head
+    mov bx,fs:cs_timer_head
     mov ax,fs:[bx].timer_next
-    mov fs:ps_timer_head,ax
+    mov fs:cs_timer_head,ax
 ;    
     push es
     push fs
@@ -369,9 +369,9 @@ LocalRemoveTimerCore Proc near
     push eax
     push fs:[bx].timer_offset
 ;
-    mov ax,fs:ps_timer_free
+    mov ax,fs:cs_timer_free
     mov fs:[bx].timer_next,ax
-    mov fs:ps_timer_free,bx
+    mov fs:cs_timer_free,bx
 ;    
     mov ecx,fs:[bx].timer_id
     mov eax,fs:[bx].timer_lsb
@@ -689,13 +689,13 @@ FpuExceptionSingle  Proc near
     push fs
 ;
     call LockCore
-    mov ax,fs:ps_curr_thread    
+    mov ax,fs:cs_curr_thread    
     clts
 ;
-    test fs:ps_flags,PS_FLAG_FPU
+    test fs:cs_flags,CS_FLAG_FPU
     jz fpu_exc_saved
 ;    
-    mov bx,fs:ps_math_thread
+    mov bx,fs:cs_math_thread
     cmp ax,bx
     je fpu_exc_done
 ;
@@ -708,8 +708,8 @@ fpu_exc_saved:
     mov bx,OFFSET p_math_control
     db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
 ;
-    mov fs:ps_math_thread,ax
-    lock or fs:ps_flags,PS_FLAG_FPU
+    mov fs:cs_math_thread,ax
+    lock or fs:cs_flags,CS_FLAG_FPU
 
 fpu_exc_done:
     call UnlockCore
@@ -730,14 +730,14 @@ FpuExceptionMultiple  Proc near
     push fs
     call LockCore
 ;    
-    mov ax,fs:ps_curr_thread    
+    mov ax,fs:cs_curr_thread    
     clts
     mov ds,ax
     mov bx,OFFSET p_math_control
     db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
 ;
-    mov fs:ps_math_thread,ax
-    lock or fs:ps_flags,PS_FLAG_FPU
+    mov fs:cs_math_thread,ax
+    lock or fs:cs_flags,CS_FLAG_FPU
 ;
     call UnlockCore
     pop fs    
@@ -773,7 +773,7 @@ fpu_exception       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FpuSaveSingle  Proc near
-    test fs:ps_flags,PS_FLAG_FPU
+    test fs:cs_flags,CS_FLAG_FPU
     jz fpu_save_single_done
 ;
     push ebx
@@ -799,7 +799,7 @@ FpuSaveSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FpuSaveMultiple  Proc near
-    test fs:ps_flags,PS_FLAG_FPU
+    test fs:cs_flags,CS_FLAG_FPU
     jz fpu_save_mult_done
 ;
     push ebx
@@ -808,7 +808,7 @@ FpuSaveMultiple  Proc near
     clts
     db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
 ;
-    lock and fs:ps_flags,NOT PS_FLAG_FPU
+    lock and fs:cs_flags,NOT cS_FLAG_FPU
 ;
     mov ebx,cr0
     or bl,8
@@ -870,15 +870,15 @@ notify_time_drift  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandlePreempt    Proc near
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jz hpDone
 ;
-    mov si,fs:ps_prio_act
+    mov si,fs:cs_prio_act
     mov ax,fs:[si]
     or ax,ax
     jz hpDone
 ;       
-    cmp ax,fs:ps_last_thread
+    cmp ax,fs:cs_last_thread
     jne hpDone
 ;    
     mov es,ax
@@ -902,7 +902,7 @@ HandlePreempt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandlePrio    Proc near
-    mov si,fs:ps_prio_act
+    mov si,fs:cs_prio_act
     mov ax,fs:[si]
     or ax,ax
     jnz hpqInt
@@ -911,7 +911,7 @@ HandlePrio    Proc near
     jz hpqDone
 ;
     sub si,2
-    mov fs:ps_prio_act,si
+    mov fs:cs_prio_act,si
     jmp HandlePrio
 
 hpqInt:
@@ -924,7 +924,7 @@ hpqInt:
     je hpqDone
 ;
     mov ax,es
-    mov si,fs:ps_prio_act
+    mov si,fs:cs_prio_act
     call RemoveCoreBlock          
 ;    
     call cs:lock_list_proc
@@ -955,7 +955,7 @@ HandlePrio  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPrioThread    Proc near
-    mov si,fs:ps_prio_act
+    mov si,fs:cs_prio_act
     mov ax,fs:[si]
     or ax,ax
     jz gptNull
@@ -971,11 +971,11 @@ gptLoop:
     jz gptDone
 ;
     sub si,2
-    mov fs:ps_prio_act,si
+    mov fs:cs_prio_act,si
     jmp gptLoop
 
 gptNull:
-    mov es,fs:ps_null_thread
+    mov es,fs:cs_null_thread
 
 gptDone:
     ret
@@ -996,13 +996,13 @@ GetPrioThread   Endp
 
 SetupPreempt    Proc near
     mov ax,es
-    cmp ax,fs:ps_null_thread
+    cmp ax,fs:cs_null_thread
     je spSet
 ;    
-    cmp ax,fs:ps_last_thread
+    cmp ax,fs:cs_last_thread
     jne spSet
 ;
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jz spDone    
 
 spSet:
@@ -1010,11 +1010,11 @@ spSet:
     mov ecx,eax
     add eax,1193
     adc edx,0
-    mov fs:ps_preempt_lsb,eax
-    mov fs:ps_preempt_msb,edx
+    mov fs:cs_preempt_lsb,eax
+    mov fs:cs_preempt_msb,edx
 
 spDone:
-    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT
+    lock and fs:cs_flags,NOT CS_FLAG_PREEMPT
     ret
 SetupPreempt    Endp
     
@@ -1035,7 +1035,7 @@ SetupPreempt    Endp
 
 GetNextThread    Proc near
     sti
-    lock and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
+    lock and fs:cs_flags,NOT CS_FLAG_PRIO_CHANGE
 ;
     call HandlePreempt
     call HandlePrio
@@ -1210,17 +1210,17 @@ preempt_reload_loop:
     GetSystemTime
 ;
     call LockTimerCore
-    mov fs:ps_last_lsb,eax
+    mov fs:cs_last_lsb,eax
     add eax,cs:update_tics
     adc edx,0
-    mov bx,fs:ps_timer_head
-    mov ecx,fs:ps_preempt_msb
+    mov bx,fs:cs_timer_head
+    mov ecx,fs:cs_preempt_msb
     cmp ecx,fs:[bx].timer_msb
     jc preempt_reload_check_preempt
 ;
     jnz preempt_reload_check_timer
 ;       
-    mov ecx,fs:ps_preempt_lsb
+    mov ecx,fs:cs_preempt_lsb
     cmp ecx,fs:[bx].timer_lsb
     jc preempt_reload_check_preempt
 
@@ -1233,12 +1233,12 @@ preempt_reload_check_timer:
     jmp preempt_reload_loop
 
 preempt_reload_check_preempt:
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
+    sub eax,fs:cs_preempt_lsb
+    sbb edx,fs:cs_preempt_msb
     jc preempt_reload_timer
 ;       
     call UnlockTimerCore
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
     stc
     jmp preempt_timer_reload_done
 
@@ -1271,12 +1271,12 @@ TimerPreemptReload  Endp
 
 PreemptReload  Proc near
     GetSystemTime
-    mov fs:ps_last_lsb,eax
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
+    mov fs:cs_last_lsb,eax
+    sub eax,fs:cs_preempt_lsb
+    sbb edx,fs:cs_preempt_msb
     jc preempt_reload_ok
 ;       
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
     stc
     jmp preempt_reload_done
 
@@ -1353,10 +1353,10 @@ thread_create:
     iretd    
 
 LoadThread:
-    test fs:ps_flags,PS_FLAG_P_STATE
+    test fs:cs_flags,cS_FLAG_P_STATE
     jz load_thread_loop
 ;    
-    lock and fs:ps_flags,NOT PS_FLAG_P_STATE
+    lock and fs:cs_flags,NOT CS_FLAG_P_STATE
     UpdatePState
 
 load_thread_loop:
@@ -1367,7 +1367,7 @@ load_thread_loop:
 
 load_thread_wakeup_loop:    
     cli
-    mov ax,fs:ps_wakeup_list
+    mov ax,fs:cs_wakeup_list
     or ax,ax
     jz load_thread_wakeup_done
 ;
@@ -1375,10 +1375,10 @@ load_thread_wakeup_loop:
 ;    
     mov di,es:p_prio
     call InsertCoreBlock
-    cmp di,fs:ps_prio_act
+    cmp di,fs:cs_prio_act
     jbe load_thread_wakeup_loop
 ;       
-    mov fs:ps_prio_act,di
+    mov fs:cs_prio_act,di
     jmp load_thread_wakeup_loop
     
 load_thread_wakeup_done:
@@ -1408,28 +1408,28 @@ load_retry:
     mov ax,SEG data
     mov ds,ax
 ;
-    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jz load_timer_not_expired
 ;
     call cs:update_timer_proc
 
 load_timer_not_expired:        
     mov ax,es
-    cmp ax,fs:ps_null_thread
+    cmp ax,fs:cs_null_thread
     je load_thread_loop
 ;    
     mov di,es:p_prio
     call InsertCoreFirst
-    cmp di,fs:ps_prio_act
+    cmp di,fs:cs_prio_act
     jbe load_thread_loop
 ;
-    mov fs:ps_prio_act,di
-    lock or fs:ps_flags,PS_FLAG_PRIO_CHANGE
+    mov fs:cs_prio_act,di
+    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
     jmp load_thread_loop
 
 load_a_task:
     mov es:p_sleep_type,0
-    lock or fs:ps_flags,PS_FLAG_LOADING
+    lock or fs:cs_flags,CS_FLAG_LOADING
     mov ax,gdt_sel
     mov ds,ax
     mov bx,es:p_tss_sel
@@ -1437,25 +1437,25 @@ load_a_task:
     jnz load_protected_mode
 
 load_long_mode:
-    test fs:ps_flags,PS_FLAG_LONG_MODE
+    test fs:cs_flags,CS_FLAG_LONG_MODE
     jnz load_not_flush
 ;    
-    mov bx,fs:ps_long_tr
+    mov bx,fs:cs_long_tr
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
 ;    
     mov eax,es:p_cr3
     SwitchToLongMode
-    lock or fs:ps_flags,PS_FLAG_LONG_MODE
+    lock or fs:cs_flags,CS_FLAG_LONG_MODE
     jmp load_not_flush
 
 load_protected_mode:    
-    test fs:ps_flags,PS_FLAG_LONG_MODE
+    test fs:cs_flags,CS_FLAG_LONG_MODE
     jz load_prot_switch_ok
 ;
     mov eax,es:p_cr3
     SwitchToProtectedMode
-    lock and fs:ps_flags, NOT PS_FLAG_LONG_MODE
+    lock and fs:cs_flags, NOT CS_FLAG_LONG_MODE
 
 load_prot_switch_ok:    
     mov bx,es:p_tss_sel
@@ -1469,12 +1469,12 @@ load_not_flush:
 ;
     mov eax,es:p_cr3
     mov cr3,eax
-    mov fs:ps_tlb.pt32_used,0
+    mov fs:cs_tlb.pt32_used,0
     and ax,0F000h
-    mov fs:ps_cr3,eax
+    mov fs:cs_cr3,eax
 
 load_cr3_ok:
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz load_cr3_flush_ok
 ;
@@ -1510,7 +1510,7 @@ load_suspend_done:
     test ax,THREAD_FLAG_BP
     jz load_bp_done
 ;
-    test fs:ps_flags,PS_FLAG_LONG_MODE
+    test fs:cs_flags,CS_FLAG_LONG_MODE
     jz load_prot_breaks
 ;
     mov edx,ds:p_linear
@@ -1527,14 +1527,14 @@ load_bp_done:
 
 load_actions_done: 
     call LoadUnlockCore
-    mov ax,fs:ps_wakeup_list
+    mov ax,fs:cs_wakeup_list
     or ax,ax
     jnz load_relock
 ;    
-    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jnz load_relock    
 ;
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz load_regs
 
@@ -1544,29 +1544,29 @@ load_relock:
     jmp load_retry
         
 load_regs:
-    test fs:ps_flags,PS_FLAG_LONG_MODE
+    test fs:cs_flags,CS_FLAG_LONG_MODE
     jz load_prot_regs
 ;    
-    mov fs:ps_curr_thread,es
-    mov fs:ps_last_thread,es
-    lock and fs:ps_flags,NOT PS_FLAG_LOADING
+    mov fs:cs_curr_thread,es
+    mov fs:cs_last_thread,es
+    lock and fs:cs_flags,NOT CS_FLAG_LOADING
 ;
     mov eax,es:p_kernel_stack
-    mov fs:ps_syscall_esp,eax
+    mov fs:cs_syscall_esp,eax
 ;    
     mov eax,dword ptr es:p_tls_linear
-    mov fs:ps_tls_linear,eax
+    mov fs:cs_tls_linear,eax
     mov eax,dword ptr es:p_tls_linear+4
-    mov fs:ps_tls_linear+4,eax
+    mov fs:cs_tls_linear+4,eax
 ;    
     mov edx,es:p_linear
-    mov edi,fs:ps_tr_linear
+    mov edi,fs:cs_tr_linear
     LoadLongRegs
 
 load_prot_regs:
-    mov fs:ps_curr_thread,es
-    mov fs:ps_last_thread,es
-    lock and fs:ps_flags,NOT PS_FLAG_LOADING
+    mov fs:cs_curr_thread,es
+    mov fs:cs_last_thread,es
+    lock and fs:cs_flags,NOT cS_FLAG_LOADING
 ;
     test dword ptr ds:p_rflags,20000h
     jnz load_vm
@@ -1748,12 +1748,12 @@ SaveCurrentThread       Proc near
     sti
 ;
     GetSystemTime
-    mov ds,fs:ps_curr_thread
-    sub eax,fs:ps_last_lsb
+    mov ds,fs:cs_curr_thread
+    sub eax,fs:cs_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-    add fs:ps_lsb_tics,eax
-    adc fs:ps_msb_tics,0
+    add fs:cs_lsb_tics,eax
+    adc fs:cs_msb_tics,0
 ;    
     pushfd
     pop eax
@@ -1788,7 +1788,7 @@ SaveCurrentThread       Proc near
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
 ;
-    lss esp,fword ptr fs:ps_stack_offset
+    lss esp,fword ptr fs:cs_stack_offset
     call cs:fpu_save_proc
     mov edx,dword ptr ds:p_rdx    
     push bp
@@ -1822,13 +1822,13 @@ SaveLockedThread    Proc near
     push eax
     push edx
 ;
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     or ax,ax
     jnz sltSave
 ;
     add esp,12
     pop bp
-    lss esp,fword ptr fs:ps_stack_offset        
+    lss esp,fword ptr fs:cs_stack_offset        
     push bp
 ;
     xor bp,bp
@@ -1840,11 +1840,11 @@ SaveLockedThread    Proc near
 sltSave:    
     mov ds,ax
     GetSystemTime
-    sub eax,fs:ps_last_lsb
+    sub eax,fs:cs_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-    add fs:ps_lsb_tics,eax
-    adc fs:ps_msb_tics,0
+    add fs:cs_lsb_tics,eax
+    adc fs:cs_msb_tics,0
 ;
     pushfd
     pop eax
@@ -1872,7 +1872,7 @@ sltSave:
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
 ;
-    lss esp,fword ptr fs:ps_stack_offset        
+    lss esp,fword ptr fs:cs_stack_offset        
     call cs:fpu_save_proc
     mov edx,dword ptr ds:p_rdx
     push bp
@@ -1906,14 +1906,14 @@ SaveIrqThread    Proc near
     push eax
     push edx
 ;
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     mov ds,ax
     GetSystemTime
-    sub eax,fs:ps_last_lsb
+    sub eax,fs:cs_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-    add fs:ps_lsb_tics,eax
-    adc fs:ps_msb_tics,0
+    add fs:cs_lsb_tics,eax
+    adc fs:cs_msb_tics,0
 ;
     pushfd
     pop eax
@@ -1941,7 +1941,7 @@ SaveIrqThread    Proc near
     mov dword ptr ds:p_rip,edx
     mov dword ptr ds:p_rsp,esp
 ;
-    lss esp,fword ptr fs:ps_stack_offset        
+    lss esp,fword ptr fs:cs_stack_offset        
     call cs:fpu_save_proc
     mov edx,dword ptr ds:p_rdx
     push bp
@@ -1972,17 +1972,17 @@ SkipCurrentThread       Proc near
     push eax
     push ds
     GetSystemTime
-    mov ds,fs:ps_curr_thread
-    sub eax,fs:ps_last_lsb
+    mov ds,fs:cs_curr_thread
+    sub eax,fs:cs_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-    add fs:ps_lsb_tics,eax
-    adc fs:ps_msb_tics,0
+    add fs:cs_lsb_tics,eax
+    adc fs:cs_msb_tics,0
     pop ds
     pop eax
 ;    
     pop bp    
-    lss esp,fword ptr fs:ps_stack_offset        
+    lss esp,fword ptr fs:cs_stack_offset        
     push bp
 ;
     xor bp,bp
@@ -2006,7 +2006,7 @@ SkipCurrentThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ContinueCurrentThread:
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     or ax,ax
     jz cctDone
 ;
@@ -2017,17 +2017,17 @@ ContinueCurrentThread:
     je cctPop
 ;
     call InsertCoreBlock
-    cmp di,fs:ps_prio_act
+    cmp di,fs:cs_prio_act
     jbe cctPop
 ;
-    mov fs:ps_prio_act,di
-    lock or fs:ps_flags,PS_FLAG_PRIO_CHANGE
+    mov fs:cs_prio_act,di
+    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
 
 cctPop:
     pop es    
 
 cctDone:
-    mov fs:ps_curr_thread,0
+    mov fs:cs_curr_thread,0
     jmp LoadThread
 
 
@@ -2049,8 +2049,8 @@ run_ap_core:
 ;
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
-    mov es,fs:ps_null_thread
+    mov fs,fs:cs_sel
+    mov es,fs:cs_null_thread
     mov es:p_active,1
 ;
     StartSyscall
@@ -2058,7 +2058,7 @@ run_ap_core:
 run_core_do:  
     call LockCore
     sti
-    lock or fs:ps_flags,PS_FLAG_PREEMPT    
+    lock or fs:cs_flags,CS_FLAG_PREEMPT    
     jmp LoadThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2423,14 +2423,14 @@ core_name_base   DB 'Core'
 null_thread0:
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
-    mov ax,fs:ps_curr_thread
+    mov fs,fs:cs_sel
+    mov ax,fs:cs_curr_thread
     mov es,ax
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
-    mov fs:ps_null_thread,ax
+    mov fs:cs_null_thread,ax
     mov es:p_core,fs
-    lock or fs:ps_flags,PS_FLAG_ACTIVE
+    lock or fs:cs_flags,CS_FLAG_ACTIVE
 ;
     mov ax,start_core_nr
     IsValidOsGate
@@ -2442,8 +2442,8 @@ null_ap_ok:
     push OFFSET null_loop_start
     call SaveCurrentThread
 ;    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0    
@@ -2457,7 +2457,7 @@ null_thread:
     mov es,ax
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
-    mov fs:ps_null_thread,ax
+    mov fs:cs_null_thread,ax
     mov es:p_core,fs
     mov es:p_wanted_core,0
     mov es:p_int_count,0
@@ -2465,8 +2465,8 @@ null_thread:
     push OFFSET null_loop_start
     call SaveCurrentThread
 ;    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0    
@@ -2478,19 +2478,19 @@ null_loop_start:
     GetCore
     
 null_loop:
-    test fs:ps_flags,PS_FLAG_SHUTDOWN
+    test fs:cs_flags,CS_FLAG_SHUTDOWN
     jz null_hlt
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
 ;
     call UnlockCore
-    lock and fs:ps_flags,NOT PS_FLAG_SHUTDOWN
-    mov fs:ps_curr_thread,0
+    lock and fs:cs_flags,NOT CS_FLAG_SHUTDOWN
+    mov fs:cs_curr_thread,0
     ShutdownCore    
 
 null_hlt:  
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     cmp ax,-1
     je null_nest_ok
 ;    
@@ -2514,7 +2514,7 @@ null_nest_ok:
 RemoveWakeupSingle  PROC near
     push si
     cli
-    mov si,OFFSET ps_wakeup_list
+    mov si,OFFSET cs_wakeup_list
     call RemoveCoreBlock
     sti
     pop si    
@@ -2536,7 +2536,7 @@ RemoveWakeupMultiple  PROC near
     push si
 
 rwmTryLock:    
-    mov si,fs:ps_wakeup_spinlock
+    mov si,fs:cs_wakeup_spinlock
     or si,si
     je rwmGet
 ;
@@ -2547,16 +2547,16 @@ rwmTryLock:
 rwmGet:
     cli
     inc si
-    xchg si,fs:ps_wakeup_spinlock
+    xchg si,fs:cs_wakeup_spinlock
     or si,si
     je rwmLocked
 ;
     jmp rwmTryLock
 
 rwmLocked:
-    mov si,OFFSET ps_wakeup_list
+    mov si,OFFSET cs_wakeup_list
     call RemoveCoreBlock
-    mov fs:ps_wakeup_spinlock,0    
+    mov fs:cs_wakeup_spinlock,0    
     sti
     pop si    
     ret
@@ -2577,7 +2577,7 @@ RemoveWakeupMultiple  Endp
 InsertWakeupSingle  PROC near
     push di
     cli
-    mov di,OFFSET ps_wakeup_list
+    mov di,OFFSET cs_wakeup_list
     call InsertCoreBlock
     sti
     pop di
@@ -2611,7 +2611,7 @@ iwmLogOk:
     mov fs,di
 
 iwmTryLockOther:    
-    mov ax,fs:ps_wakeup_spinlock
+    mov ax,fs:cs_wakeup_spinlock
     or ax,ax
     je iwmGetOther
 ;
@@ -2622,28 +2622,28 @@ iwmTryLockOther:
 iwmGetOther:
     cli
     inc ax
-    xchg ax,fs:ps_wakeup_spinlock
+    xchg ax,fs:cs_wakeup_spinlock
     or ax,ax
     je iwmLockedOther
 ;
     jmp iwmTryLockOther
 
 iwmLockedOther:
-    mov di,OFFSET ps_wakeup_list
+    mov di,OFFSET cs_wakeup_list
     call InsertCoreBlock
 ;
     mov di,es:p_prio
-    cmp di,fs:ps_prio_act
-    mov fs:ps_wakeup_spinlock,0
+    cmp di,fs:cs_prio_act
+    mov fs:cs_wakeup_spinlock,0
     sti
     jbe iwmIntOk
 ;    
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jnz iwmIntOk
 ;    
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     cmp ax,-1
     jne iwmIntOk
 ;    
@@ -2656,7 +2656,7 @@ iwmIntOk:
     jmp iwmDone
 
 iwmTryLockSelf:    
-    mov ax,fs:ps_wakeup_spinlock
+    mov ax,fs:cs_wakeup_spinlock
     or ax,ax
     je iwmGetSelf
 ;
@@ -2667,16 +2667,16 @@ iwmTryLockSelf:
 iwmGetSelf:
     cli
     inc ax
-    xchg ax,fs:ps_wakeup_spinlock
+    xchg ax,fs:cs_wakeup_spinlock
     or ax,ax
     je iwmLockedSelf
 ;
     jmp iwmTryLockSelf
 
 iwmLockedSelf:
-    mov di,OFFSET ps_wakeup_list
+    mov di,OFFSET cs_wakeup_list
     call InsertCoreBlock
-    mov fs:ps_wakeup_spinlock,0
+    mov fs:cs_wakeup_spinlock,0
     sti
 
 iwmDone:    
@@ -2830,8 +2830,8 @@ WakeThread      ENDP
 debug_block_name        DB 'Debug Block', 0
 
 debug_block:
-    mov ds,fs:ps_curr_thread
-    lss esp,fword ptr fs:ps_stack_offset        
+    mov ds,fs:cs_curr_thread
+    lss esp,fword ptr fs:cs_stack_offset        
     call cs:fpu_save_proc    
 ;
     xor ax,ax
@@ -2839,7 +2839,7 @@ debug_block:
     mov es,ax
     mov gs,ax    
 ;    
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     mov ds,es:p_prog_sel
     mov ax,ds:pr_debug_id
     or ax,ax
@@ -2848,7 +2848,7 @@ debug_block:
     KernelDebugEvent
 
 debug_block_do:
-    mov fs:ps_curr_thread,0
+    mov fs:cs_curr_thread,0
 ;    
     mov ax,system_data_sel
     mov ds,ax
@@ -2884,7 +2884,7 @@ debug_realtime	Proc far
     mov ax,system_data_sel
     mov ds,ax
     mov edi,OFFSET debug_list       
-    mov es,fs:ps_null_thread
+    mov es,fs:cs_null_thread
     call cs:lock_list_proc
     call InsertBlock32
     call cs:unlock_list_proc
@@ -2917,7 +2917,7 @@ run_realtime	Proc far
     mov ax,system_data_sel
     mov ds,ax
     mov esi,OFFSET debug_list       
-    mov es,fs:ps_null_thread
+    mov es,fs:cs_null_thread
     call cs:lock_list_proc
     call RemoveBlock32
     call cs:unlock_list_proc
@@ -3028,7 +3028,7 @@ adcDo:
     inc ds:ic_cores
     shl si,2
     add si,OFFSET ic_linear
-    mov es:ps_dump_offset,si    
+    mov es:cs_dump_offset,si    
 ;    
     mov ds:[si],edx
 ;    
@@ -3118,11 +3118,11 @@ create_core    Proc far
     mov es:[bx+4],eax
     mov es,bx
 ;
-    mov cx,SIZE processor_seg
+    mov cx,SIZE core_seg
     xor di,di
     xor al,al
     rep stosb
-    mov es:ps_sel,es
+    mov es:cs_sel,es
 ;
     HasLongMode
     jnc cr_flat_stack
@@ -3136,8 +3136,8 @@ create_core    Proc far
 ;
     mov ds,bx
     mov ds:[0],dx
-    mov es:ps_stack_offset,ecx
-    mov es:ps_stack_sel,bx
+    mov es:cs_stack_offset,ecx
+    mov es:cs_stack_sel,bx
     jmp cr_stack_ok    
     
 cr_flat_stack:
@@ -3152,8 +3152,8 @@ cr_flat_stack:
 ;    
     mov ds:[edx],dx
     add edx,1000h
-    mov es:ps_stack_offset,edx
-    mov es:ps_stack_sel,long_kernel_data_sel
+    mov es:cs_stack_offset,edx
+    mov es:cs_stack_sel,long_kernel_data_sel
     
 cr_stack_ok:
     mov ax,SEG data
@@ -3164,12 +3164,12 @@ cr_stack_ok:
     add si,si
     mov ds:[si].core_arr,es
     inc ds:core_count
-    mov es:ps_id,ax    
+    mov es:cs_id,ax    
 ;
     xor ax,ax
     mov ds,ax
-    mov bx,OFFSET ps_ptab
-    mov es:ps_prio_act,bx
+    mov bx,OFFSET cs_ptab
+    mov es:cs_prio_act,bx
 ;
     mov cx,256
 
@@ -3178,34 +3178,34 @@ ptab_init:
     add bx,2
     loop ptab_init
 ;
-    mov es:ps_wakeup_list,0
-    mov es:ps_wakeup_spinlock,0
-    mov es:ps_nesting,-1
-    mov es:ps_curr_thread,0
-    mov es:ps_last_thread,-1
-    mov es:ps_flags,PS_FLAG_INIT_CLOCK
-    mov es:ps_null_thread,0
-    mov es:ps_math_thread,0
-    mov es:ps_apic,-1
-    mov es:ps_last_lsb,0
-    mov es:ps_lsb_tics,0
-    mov es:ps_msb_tics,0
-    mov es:ps_tlb.pt32_locked,0
-    mov es:ps_tlb.pt32_used,0
+    mov es:cs_wakeup_list,0
+    mov es:cs_wakeup_spinlock,0
+    mov es:cs_nesting,-1
+    mov es:cs_curr_thread,0
+    mov es:cs_last_thread,-1
+    mov es:cs_flags,CS_FLAG_INIT_CLOCK
+    mov es:cs_null_thread,0
+    mov es:cs_math_thread,0
+    mov es:cs_apic,-1
+    mov es:cs_last_lsb,0
+    mov es:cs_lsb_tics,0
+    mov es:cs_msb_tics,0
+    mov es:cs_tlb.pt32_locked,0
+    mov es:cs_tlb.pt32_used,0
     mov eax,cr3
     and ax,0F000h
-    mov es:ps_cr3,eax
+    mov es:cs_cr3,eax
 ;
-    mov es:ps_timer_spinlock,0
-    mov bx,OFFSET ps_timer_entries
+    mov es:cs_timer_spinlock,0
+    mov bx,OFFSET cs_timer_entries
     mov es:[bx].timer_next,0
     mov es:[bx].timer_msb,0FFFFFFFFh
     mov es:[bx].timer_lsb,0FFFFFFFFh
-    mov es:ps_timer_head,bx
+    mov es:cs_timer_head,bx
 ;       
     mov cx,0FFh
     add bx,SIZE timer_struc
-    mov es:ps_timer_free,bx
+    mov es:cs_timer_free,bx
 
 core_timer_list_create:
     mov ax,bx
@@ -3214,13 +3214,13 @@ core_timer_list_create:
     mov bx,ax
     loop core_timer_list_create
 ;       
-    mov es:ps_sched_count,0
-    mov es:ps_log_count,0
-    mov es:ps_log_sel,0
-    mov es:ps_log_entry,0
+    mov es:cs_sched_count,0
+    mov es:cs_log_count,0
+    mov es:cs_log_sel,0
+    mov es:cs_log_entry,0
 ;
     mov cx,256
-    mov bx,OFFSET ps_irq_count_arr
+    mov bx,OFFSET cs_irq_count_arr
     xor eax,eax
 
 irq_count_init:
@@ -3228,24 +3228,24 @@ irq_count_init:
     add bx,4
     loop irq_count_init
 ;
-    mov es:ps_curr_irq_nr,0
-    mov es:ps_curr_irq_count,0
-    mov es:ps_curr_irq_retries,0
-    mov es:ps_nested_irq_count,0    
+    mov es:cs_curr_irq_nr,0
+    mov es:cs_curr_irq_count,0
+    mov es:cs_curr_irq_retries,0
+    mov es:cs_nested_irq_count,0    
 ;
     call create_long_tss
-    mov es:ps_long_tr,bx
-    mov es:ps_tr_linear,edx
+    mov es:cs_long_tr,bx
+    mov es:cs_tr_linear,edx
 ;
     mov bx,es
     GetSelectorBaseSize
-    mov es:ps_linear,edx
-    mov es:ps_long_ldt,0
-    mov es:ps_syscall_esp,0
-    mov es:ps_syscall_eip,0
+    mov es:cs_linear,edx
+    mov es:cs_long_ldt,0
+    mov es:cs_syscall_esp,0
+    mov es:cs_syscall_eip,0
     call AddDumpCore
 ;    
-    mov ax,es:ps_id     
+    mov ax,es:cs_id     
 ;
     pop edi
     pop esi
@@ -3273,7 +3273,7 @@ get_scheduler_lock_counter   Proc far
     push fs
     mov ax,core_data_sel
     mov fs,ax
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     pop fs
     retf32
 get_scheduler_lock_counter    Endp
@@ -3295,7 +3295,7 @@ get_core   Proc far
     push ax
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
+    mov fs,fs:cs_sel
     pop ax    
     retf32
 get_core   Endp
@@ -3750,8 +3750,8 @@ TryLockCore   Proc near
     cli
     push word ptr core_data_sel
     pop fs
-    mov fs,fs:ps_sel
-    lock add fs:ps_nesting,1
+    mov fs,fs:cs_sel
+    lock add fs:cs_nesting,1
     ret
 TryLockCore   Endp
 
@@ -3772,11 +3772,11 @@ LockCore      Proc near
     cli
     push word ptr core_data_sel
     pop fs
-    mov fs,fs:ps_sel
-    lock add fs:ps_nesting,1
+    mov fs,fs:cs_sel
+    lock add fs:cs_nesting,1
     jc lcDone
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     je lcDone
 ;
@@ -3803,16 +3803,16 @@ TryUnlockCore    Proc near
     
 tucRetry:    
     cli
-    lock sub fs:ps_nesting,1
+    lock sub fs:cs_nesting,1
     jnc tucDone
 ;
-    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jz tucTimerOk
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc tucHandleTimer
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz tucHandleTimer
 ;    
@@ -3826,14 +3826,14 @@ tucHandleTimer:
     jmp tucRetry
     
 tucTimerOk:      
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz tucTlbDone
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc tucFlush
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz tucFlush
 ;    
@@ -3845,22 +3845,22 @@ tucFlush:
     jmp tucRetry
 
 tucTlbDone:    
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     or ax,ax
     jz tucDone
 ;
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jnz tucSwap
 ;    
-    mov ax,fs:ps_wakeup_list
+    mov ax,fs:cs_wakeup_list
     or ax,ax
     jz tucDone
 
 tucSwap:
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc tucSched
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz tucSched
 ;    
@@ -3894,23 +3894,23 @@ UnlockCore    Proc near
     
 ucRetry:    
     cli
-    lock sub fs:ps_nesting,1
+    lock sub fs:cs_nesting,1
     jc ucNestOk
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     cmp ax,-1
     je ucNestOk
 ;    
     CrashGate
 
 ucNestOk:    
-    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jz ucTimerOk
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc ucHandleTimer
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz ucHandleTimer
 ;    
@@ -3924,14 +3924,14 @@ ucHandleTimer:
     jmp ucRetry
     
 ucTimerOk:      
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz ucTlbDone
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc ucFlush
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz ucFlush
 ;    
@@ -3943,18 +3943,18 @@ ucFlush:
     jmp ucRetry
 
 ucTlbDone:    
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jnz ucSwap
 ;    
-    mov ax,fs:ps_wakeup_list
+    mov ax,fs:cs_wakeup_list
     or ax,ax
     jz ucDone
 
 ucSwap:
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc ucSched
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz ucSched
 ;    
@@ -3985,18 +3985,18 @@ UnlockCore    Endp
 
 LoadUnlockCore    Proc near
     cli
-    lock sub fs:ps_nesting,1
+    lock sub fs:cs_nesting,1
     jc lulcDone
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jne lulcCrash
 ;
-    lock sub fs:ps_nesting,1
+    lock sub fs:cs_nesting,1
     jc lulcDone
 
 lulcCrash:    
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     cmp ax,-1
     je lulcDone
 ;    
@@ -4093,7 +4093,7 @@ unlock_task     Proc far
     cli
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
+    mov fs,fs:cs_sel
     popf
     call UnlockCore
 ;
@@ -4119,9 +4119,9 @@ enter_long_int_name  DB 'Enter Long Int',0
 enter_long_int   Proc far
     mov ax,core_data_sel
     mov ds,ax
-    mov ds,ds:ps_sel
-    add ds:ps_nesting,1
-    mov ax,ds:ps_sel
+    mov ds,ds:cs_sel
+    add ds:cs_nesting,1
+    mov ax,ds:cs_sel
     retf32
 enter_long_int  Endp
 
@@ -4143,16 +4143,16 @@ leave_long_int   Proc far
     
 lliRetry:
     cli
-    lock sub ds:ps_nesting,1
+    lock sub ds:cs_nesting,1
     jnc lliDone
 ;
-    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jz lliTimerOk
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc lliHandleTimer
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz lliHandleTimer
 ;
@@ -4166,18 +4166,18 @@ lliHandleTimer:
     jmp lliRetry
     
 lliTimerOk:    
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     or ax,ax
     jz lliDone
 ;
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz lliTlbDone
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc lliFlush
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz lliFlush
 ;
@@ -4189,18 +4189,18 @@ lliFlush:
     jmp lliRetry
 
 lliTlbDone:    
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jnz lliSwap
 ;    
-    mov ax,fs:ps_wakeup_list
+    mov ax,fs:cs_wakeup_list
     or ax,ax
     jz lliDone
 
 lliSwap:
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc lliSched
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz lliSched
 ;
@@ -4231,11 +4231,11 @@ FlushTlb386    Proc near
     push eax
 
 ft386Again:
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz ft386Done
 ;
-    mov fs:ps_tlb.pt32_used,0    
+    mov fs:cs_tlb.pt32_used,0    
     mov eax,cr3
     mov cr3,eax
     jmp ft386Again
@@ -4260,7 +4260,7 @@ FlushTlb386    Endp
 FlushTlb486    Proc near
 
 ft486Again:
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz ft486Done
 ;    
@@ -4273,15 +4273,15 @@ ft486Again:
     mov cx,fs
     mov es,cx
     mov cx,32
-    mov si,OFFSET ps_tlb.pt32_linear_arr
-    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    mov si,OFFSET cs_tlb.pt32_linear_arr
+    mov di,OFFSET cs_work_tlb.pt32_linear_arr
     rep movs dword ptr es:[di],es:[si]
-    lock xor fs:ps_tlb.pt32_used,eax
+    lock xor fs:cs_tlb.pt32_used,eax
 ;
     mov cx,flat_sel
     mov es,cx
     mov cx,32
-    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    mov di,OFFSET cs_work_tlb.pt32_linear_arr
     mov esi,1
     
 ft486Loop:    
@@ -4302,7 +4302,7 @@ ft486Next:
     jmp ft486Again
 
 ft486All:
-    mov fs:ps_tlb.pt32_used,0
+    mov fs:cs_tlb.pt32_used,0
     mov eax,cr3
     mov cr3,eax
     jmp ft486Again
@@ -4351,23 +4351,23 @@ AddCoreTlb     Proc near
 ;
     mov eax,cr3
     and ax,0F000h
-    cmp eax,fs:ps_cr3
+    cmp eax,fs:cs_cr3
     jne actDone
 
 actTryLock:
-    mov eax,fs:ps_tlb.pt32_used
-    or eax,fs:ps_tlb.pt32_locked
+    mov eax,fs:cs_tlb.pt32_used
+    or eax,fs:cs_tlb.pt32_locked
     not eax
     bsf ecx,eax
     jnz actHasEntry
 ;
-    mov fs:ps_tlb.pt32_used,-1
-    mov fs:ps_tlb.pt32_locked,0
+    mov fs:cs_tlb.pt32_used,-1
+    mov fs:cs_tlb.pt32_locked,0
     jmp actDone
 
 actHasEntry:    
     cli
-    lock bts fs:ps_tlb.pt32_locked,ecx
+    lock bts fs:cs_tlb.pt32_locked,ecx
     jnc actLockOk
 ;
     sti
@@ -4377,18 +4377,18 @@ actHasEntry:
 actLockOk:
     mov di,cx
     shl di,2
-    mov fs:[di].ps_tlb.pt32_linear_arr,edx
+    mov fs:[di].cs_tlb.pt32_linear_arr,edx
 ;
-    lock bts fs:ps_tlb.pt32_used,ecx
+    lock bts fs:cs_tlb.pt32_used,ecx
     jnc actUnlock
 ;
-    lock btc fs:ps_tlb.pt32_locked,ecx
+    lock btc fs:cs_tlb.pt32_locked,ecx
     sti
     pause
     jmp actTryLock
 
 actUnlock:
-    lock btc fs:ps_tlb.pt32_locked,ecx
+    lock btc fs:cs_tlb.pt32_locked,ecx
     sti
 
 actDone:    
@@ -4431,7 +4431,7 @@ ftlbLoop:
 
 ateLoop:
     mov fs,cs:[si]
-    test fs:ps_flags,PS_FLAG_ACTIVE
+    test fs:cs_flags,CS_FLAG_ACTIVE
     jz ateNext
 ;    
     call AddCoreTlb
@@ -4464,14 +4464,14 @@ nfLoop:
     je nfNext
 ;    
     mov fs,bx
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz nfNext
 ;
-    test fs:ps_flags,PS_FLAG_ACTIVE
+    test fs:cs_flags,CS_FLAG_ACTIVE
     jz nfNext
 ;   
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     cmp ax,-1
     jne nfNext
 ;    
@@ -4508,7 +4508,7 @@ UpdateOwnTimer    Proc near
 ;    
     mov ax,SEG data
     mov ds,ax
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
+    lock and fs:cs_flags,NOT CS_FLAG_TIMER_EXPIRED
 
 uotCheck:   
     GetSystemTime
@@ -4554,20 +4554,20 @@ UpdateCombinedTimer    Proc near
 ;    
     mov ax,SEG data
     mov ds,ax
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
+    lock and fs:cs_flags,NOT CS_FLAG_TIMER_EXPIRED
 
 uctLoop:
     GetSystemTime
     call LockTimerCore
     add eax,cs:update_tics
     adc edx,0
-    mov bx,fs:ps_timer_head
-    mov ecx,fs:ps_preempt_msb
+    mov bx,fs:cs_timer_head
+    mov ecx,fs:cs_preempt_msb
     cmp ecx,fs:[bx].timer_msb
     jc uctPreempt
     jnz uctTimer
 ;       
-    mov ecx,fs:ps_preempt_lsb
+    mov ecx,fs:cs_preempt_lsb
     cmp ecx,fs:[bx].timer_lsb
     jc uctPreempt
 
@@ -4580,18 +4580,18 @@ uctTimer:
     jmp uctLoop
 
 uctPreempt:
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
+    sub eax,fs:cs_preempt_lsb
+    sbb edx,fs:cs_preempt_msb
     jc uctReload
 ;
     call UnlockTimerCore
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
 ;
     GetSystemTime
     add eax,1193
     adc edx,0
-    mov fs:ps_preempt_lsb,eax
-    mov fs:ps_preempt_msb,edx
+    mov fs:cs_preempt_lsb,eax
+    mov fs:cs_preempt_msb,edx
     jmp uctLoop
 
 uctReload:
@@ -4662,7 +4662,7 @@ preempt_expired_name   DB 'Preempt Expired', 0
 preempt_expired    Proc far
     call TryLockCore
     sti
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
     call TryUnlockCore
     retf32
 preempt_expired    Endp
@@ -4721,7 +4721,7 @@ start_global_insert_first:
 ;
     call TryLockCore
     call UnlockTimerGlobal    
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     call TryUnlockCore
     jmp start_global_done
     
@@ -4829,16 +4829,16 @@ start_core_timer     PROC far
     sti
     call LockTimerCore
 ;    
-    mov si,fs:ps_timer_free
+    mov si,fs:cs_timer_free
     mov fs:[si].timer_owner,bx
     mov bx,fs:[si].timer_next
-    mov fs:ps_timer_free,bx
+    mov fs:cs_timer_free,bx
     mov fs:[si].timer_lsb,eax
     mov fs:[si].timer_msb,edx
     mov fs:[si].timer_id,ecx
     mov fs:[si].timer_offset,edi
     mov fs:[si].timer_sel,es
-    mov bx,OFFSET ps_timer_head
+    mov bx,OFFSET cs_timer_head
     push si
 
 start_core_try_next:
@@ -4858,7 +4858,7 @@ start_core_insert:
     mov fs:[si].timer_next,bx
 ;    
     call UnlockTimerCore
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     call TryUnlockCore
 ;
     popad
@@ -4900,7 +4900,7 @@ stop_core_loop:
     call LockTimerCore
 ;
     mov cx,bx
-    mov bx,OFFSET ps_timer_head
+    mov bx,OFFSET cs_timer_head
 
 core_timer_stop_next:
     mov si,bx
@@ -4913,9 +4913,9 @@ core_timer_stop_next:
 core_timer_stop_this:
     mov ax,fs:[bx].timer_next
     mov fs:[si].timer_next,ax
-    mov ax,fs:ps_timer_free
+    mov ax,fs:cs_timer_free
     mov fs:[bx].timer_next,ax
-    mov fs:ps_timer_free,bx
+    mov fs:cs_timer_free,bx
 
 core_timer_stop_done:
     call UnlockTimerCore
@@ -4961,12 +4961,12 @@ init_first_thread:
     call LockCore
     sti
     mov di,es:p_prio
-    mov fs:ps_prio_act,di
+    mov fs:cs_prio_act,di
     call InsertCoreBlock
 ;
     mov bx,core_data_sel
     mov fs,bx
-    mov fs,fs:ps_sel
+    mov fs,cs:cs_sel
 ;
     mov ax,start_preempt_timer_nr
     IsValidOsGate
@@ -5073,19 +5073,19 @@ wake_new    ENDP
     
 cleanup_thread:
     call SkipCurrentThread
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_math_thread
+    mov ax,fs:cs_curr_thread
+    cmp ax,fs:cs_math_thread
     jne cleanup_thread_math_ok
 ;    
-    lock and fs:ps_flags,NOT PS_FLAG_FPU
-    mov fs:ps_math_thread,0
+    lock and fs:cs_flags,NOT CS_FLAG_FPU
+    mov fs:cs_math_thread,0
 
 cleanup_thread_math_ok:
     mov bx,cs:system_thread
     Signal    
 ;
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;    
     mov ax,SEG data
     mov ds,ax    
@@ -5110,19 +5110,19 @@ cleanup_thread_math_ok:
     
 cleanup_process:
     call SkipCurrentThread
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_math_thread
+    mov ax,fs:cs_curr_thread
+    cmp ax,fs:cs_math_thread
     jne cleanup_process_math_ok
 ;    
-    lock and fs:ps_flags,NOT PS_FLAG_FPU
-    mov fs:ps_math_thread,0
+    lock and fs:cs_flags,NOT CS_FLAG_FPU
+    mov fs:cs_math_thread,0
 
 cleanup_process_math_ok:    
     mov bx,cs:system_thread
     Signal    
 ;
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0    
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0    
 ;
     mov ax,SEG data
     mov ds,ax
@@ -5189,8 +5189,8 @@ sleep_thread    PROC far
 ;
     mov ds,ax
     movzx edi,di    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     call cs:lock_list_proc
     call InsertBlock32
@@ -5228,7 +5228,7 @@ clear_signal    PROC far
 ;
     mov ax,core_data_sel
     mov ds,ax
-    mov ds,ds:ps_curr_thread
+    mov ds,ds:cs_curr_thread
     mov ds:p_signal,0
 ;
     pop ax
@@ -5315,7 +5315,7 @@ wait_for_signal PROC far
 ;
     cli
     call LockCore
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     call cs:lock_signal_proc
 ;    
     xor al,al
@@ -5330,7 +5330,7 @@ wait_for_signal PROC far
     call SaveLockedThread
     xor ax,ax
     mov es,ax
-    mov fs:ps_curr_thread,ax
+    mov fs:cs_curr_thread,ax
     jmp LoadThread
 
 wait_for_signal_unlock:
@@ -5385,7 +5385,7 @@ wait_for_signal_timeout PROC far
 ;
     cli
     call LockCore
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     call cs:lock_signal_proc
 ;    
     xor al,al
@@ -5407,7 +5407,7 @@ wait_for_signal_timeout PROC far
     call SaveLockedThread
     xor ax,ax
     mov es,ax 
-    mov fs:ps_curr_thread,ax
+    mov fs:cs_curr_thread,ax
     jmp LoadThread
 
 wait_for_signal_timeout_unlock:
@@ -5465,8 +5465,8 @@ ecsBlock:
 ;
     mov ds,ax
     lea edi,[esi].cs_list   
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     call InsertBlock32
     call cs:unlock_kernel_section_proc
@@ -5630,7 +5630,7 @@ cond_enter_section   PROC far
     sti
     call cs:lock_kernel_section_proc
     push ds
-    mov ds,fs:ps_curr_thread
+    mov ds,fs:cs_curr_thread
     mov ds:p_data,-1
     pop ds
 ;
@@ -5666,7 +5666,7 @@ cecsBlock:
     mov cx,cs
     mov es,cx
     mov edi,OFFSET cond_section_timeout
-    mov bx,fs:ps_curr_thread
+    mov bx,fs:cs_curr_thread
     mov cx,bx
     StartTimer
     pop ds
@@ -5682,8 +5682,8 @@ cecsBlock:
 ;
     mov ds,ax
     lea edi,[esi].cs_list   
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     call InsertBlock32
     call cs:unlock_kernel_section_proc
@@ -5710,7 +5710,7 @@ cecsDone:
     push ds
     push bx
 ;    
-    mov bx,fs:ps_curr_thread
+    mov bx,fs:cs_curr_thread
     StopTimer
 ;    
     mov ds,bx
@@ -5915,7 +5915,7 @@ enter_user_section      PROC far
 ;
     mov ax,core_data_sel
     mov fs,ax
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     cmp ax,ds:[ebx].us_owner
     je eusDone
 ;
@@ -5936,8 +5936,8 @@ eusBlock:
 ;
     mov ds,ax
     lea edi,[ebx].us_list     
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     call InsertBlock32
     call cs:unlock_user_section_proc
@@ -5954,7 +5954,7 @@ eusUnlock:
 eusDone:
     mov ax,core_data_sel
     mov fs,ax
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     mov ds:[ebx].us_owner,ax
     inc ds:[ebx].us_count
 
@@ -5993,7 +5993,7 @@ leave_user_section      PROC far
 ;
     mov ax,core_data_sel
     mov fs,ax
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     cmp ax,ds:[ebx].us_owner
     jne lusDone
 ;
@@ -6156,8 +6156,8 @@ acquire_no_sect:
     mov ds,ax
 ;
     lea edi,[ebx].fh_list     
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     call InsertBlock32
     call cs:unlock_futex_proc
@@ -6169,7 +6169,7 @@ acquire_no_sect:
 
 acquire_take:
     push es
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     mov ax,es:p_futex_id
     pop es
     mov es:[esi].fs_owner,ax
@@ -6289,8 +6289,8 @@ acquire_named_no_sect:
     mov ds,ax
 ;
     lea edi,[ebx].fh_list     
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     call InsertBlock32
     call cs:unlock_futex_proc
@@ -6302,7 +6302,7 @@ acquire_named_no_sect:
 
 acquire_named_take:
     push es
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     mov ax,es:p_futex_id
     pop es
     mov es:[esi].fs_owner,ax
@@ -6557,7 +6557,7 @@ get_thread_pre_tasking:
 get_thread_norm:
     mov ax,core_data_sel
     mov ds,ax
-    mov ax,ds:ps_curr_thread
+    mov ax,ds:cs_curr_thread
 
 get_thread_done:
     pop ds
@@ -6582,7 +6582,7 @@ get_thread_pr   PROC far
     push ds
     mov ax,core_data_sel
     mov ds,ax
-    mov ax,ds:ps_curr_thread    
+    mov ax,ds:cs_curr_thread    
     pop ds
     retf32
 get_thread_pr   ENDP
@@ -6604,7 +6604,7 @@ is_long_thread   Proc far
 ;    
     mov ax,core_data_sel
     mov ds,ax
-    mov ds,ds:ps_curr_thread    
+    mov ds,ds:cs_curr_thread    
     mov ax,ds:p_tss_sel
     or ax,ax
     clc
@@ -6635,7 +6635,7 @@ get_core_id    PROC far
     push ds
     mov ax,core_data_sel
     mov ds,ax
-    mov ax,ds:ps_id
+    mov ax,ds:cs_id
     pop ds
     retf32
 get_core_id    ENDP
@@ -6686,12 +6686,12 @@ get_core_load    PROC far
     mov ds,cs:[si].core_arr
 
 gclCoreRetry:    
-    mov edx,ds:ps_msb_tics
-    mov eax,ds:ps_lsb_tics
-    cmp edx,ds:ps_msb_tics
+    mov edx,ds:cs_msb_tics
+    mov eax,ds:cs_lsb_tics
+    cmp edx,ds:cs_msb_tics
     jne gclCoreRetry
 ;
-    mov ds,ds:ps_null_thread
+    mov ds,ds:cs_null_thread
 
 gclNullRetry:
     mov ecx,ds:p_msb_tics
@@ -6742,9 +6742,9 @@ get_core_duty    PROC far
     mov ebx,eax
 
 gcdRetry:    
-    mov edx,ds:ps_msb_tics
-    mov eax,ds:ps_lsb_tics
-    cmp edx,ds:ps_msb_tics
+    mov edx,ds:cs_msb_tics
+    mov eax,ds:cs_lsb_tics
+    cmp edx,ds:cs_msb_tics
     jne gcdRetry
 ;
     pop si
@@ -6919,15 +6919,15 @@ wait_until      PROC far
 ;
     mov cx,SEG data
     mov ds,cx
-    mov cx,fs:ps_curr_thread
+    mov cx,fs:cs_curr_thread
     mov bx,cs
     mov es,bx
     mov edi,OFFSET wake_until
     xor bx,bx
     StartTimer
 ;
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     mov es:p_sleep_type,SLEEP_TYPE_WAIT
     mov es:p_sleep_sel,0
@@ -6958,7 +6958,7 @@ wait_milli_sec  PROC far
     push OFFSET wait_milli_done
     call SaveCurrentThread
 ;
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     mov bx,1193
     mul bx
     push dx
@@ -6978,8 +6978,8 @@ wait_milli_sec  PROC far
     xor bx,bx
     StartTimer
 ;    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     mov es:p_sleep_type,SLEEP_TYPE_WAIT
     mov es:p_sleep_sel,0
@@ -7010,7 +7010,7 @@ wait_micro_sec  PROC far
     push OFFSET wait_micro_done
     call SaveCurrentThread
 ;
-    mov es,fs:ps_curr_thread
+    mov es,fs:cs_curr_thread
     movzx eax,ax
     mov ebx,78184
     mul ebx
@@ -7031,8 +7031,8 @@ wait_micro_sec  PROC far
     xor bx,bx
     StartTimer
 ;    
-    mov es,fs:ps_curr_thread
-    mov fs:ps_curr_thread,0
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
 ;
     mov es:p_sleep_type,SLEEP_TYPE_WAIT
     mov es:p_sleep_sel,0
@@ -7088,10 +7088,10 @@ check_cpu_loop:
     GetCoreNumber
     jc check_not_cpu
 ;
-    cmp bx,fs:ps_null_thread
+    cmp bx,fs:cs_null_thread
     je check_null_ok
 ;    
-    cmp bx,fs:ps_curr_thread
+    cmp bx,fs:cs_curr_thread
     je check_curr_ok
 ;   
     mov ax,fs
@@ -7100,7 +7100,7 @@ check_cpu_loop:
     jne check_cpu_next
 ;
     mov eax,fs:p_sleep_offset
-    cmp ax,OFFSET ps_wakeup_list
+    cmp ax,OFFSET cs_wakeup_list
     je check_wakeup_ok
 ;
     mov ax,fs:p_sleep_type
@@ -7118,7 +7118,7 @@ check_curr_ok:
     jmp check_copy_id
     
 check_null_ok:    
-    cmp bx,fs:ps_curr_thread
+    cmp bx,fs:cs_curr_thread
     mov si,OFFSET Run_state
     je check_copy_id
 ;
@@ -9895,7 +9895,7 @@ init_first_process      Proc near
 ;
     mov ds:p_es,0
     GetCore
-    mov fs:ps_null_thread,es
+    mov fs:cs_null_thread,es
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
@@ -10718,7 +10718,7 @@ timer_free_list_create:
 ;
     mov edx,gdt_linear
     CreateCore
-    or es:ps_flags,PS_FLAG_ACTIVE
+    or es:cs_flags,CS_FLAG_ACTIVE
 ;
     pop ds
     popa

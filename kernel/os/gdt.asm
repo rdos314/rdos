@@ -32,7 +32,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
-INCLUDE proc.inc
+INCLUDE core.inc
 
 gdt_list_struc	STRUC
 
@@ -175,7 +175,7 @@ init_gdt    PROC near
 ;
     mov edx,gdt_core_linear
     mov bx,core_data_sel
-    mov ecx,SIZE processor_seg
+    mov ecx,SIZE core_seg
     CreateDataSelector16
 ;
     xor edx,edx

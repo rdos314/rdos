@@ -32,7 +32,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\os\net.inc
 
 RX_DESCR_COUNT = 256

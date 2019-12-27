@@ -32,7 +32,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE kdebug.inc
 
 
@@ -3991,7 +3991,7 @@ do_trace    Proc near
 ;
     push fs
     mov fs,gs:p_core
-    mov bx,fs:ps_null_thread
+    mov bx,fs:cs_null_thread
     pop fs
 ;
     mov ax,gs
@@ -4086,7 +4086,7 @@ do_pace    Proc near
 ;
     push fs
     mov fs,gs:p_core
-    mov bx,fs:ps_null_thread
+    mov bx,fs:cs_null_thread
     pop fs
 ;
     mov ax,gs
@@ -4320,7 +4320,7 @@ do_go    Proc near
 ;
     push fs
     mov fs,gs:p_core
-    mov bx,fs:ps_null_thread
+    mov bx,fs:cs_null_thread
     pop fs
 ;
     mov ax,gs
@@ -4365,7 +4365,7 @@ do_run    Proc near
 ;
     push fs
     mov fs,gs:p_core
-    mov bx,fs:ps_null_thread
+    mov bx,fs:cs_null_thread
     pop fs
 ;
     mov ax,gs

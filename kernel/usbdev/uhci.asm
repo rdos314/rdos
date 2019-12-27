@@ -32,7 +32,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc

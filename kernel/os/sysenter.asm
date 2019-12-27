@@ -35,7 +35,7 @@ INCLUDE int.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE gate.def
-INCLUDE proc.inc
+INCLUDE core.inc
 
 STUB_LINEAR     = 80000h
 STUB_PAGES      = 4
@@ -255,7 +255,7 @@ start_syscall   Proc far
     push es
     pushad
 ;    
-    mov edx,fs:ps_syscall_eip
+    mov edx,fs:cs_syscall_eip
     or edx,edx
     jnz start_syscall_load_msr
 ;    
@@ -286,7 +286,7 @@ start_syscall   Proc far
     mov es:[edx+edi],eax
 ;
     add edx,OFFSET syscall_entry - OFFSET syscall_start
-    mov fs:ps_syscall_eip,edx
+    mov fs:cs_syscall_eip,edx
 
 start_syscall_load_msr:    
     mov eax,edx

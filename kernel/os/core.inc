@@ -1,0 +1,154 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2010, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; Core.inc
+; Core struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CS_FLAG_PREEMPT        = 1
+CS_FLAG_PRIO_CHANGE    = 2
+CS_FLAG_TIMER_EXPIRED  = 4
+CS_FLAG_NMI            = 8
+CS_FLAG_INIT_CLOCK     = 10h
+CS_FLAG_ACTIVE         = 20h
+CS_FLAG_LOADING        = 80h
+CS_FLAG_FPU            = 100h
+CS_FLAG_P_STATE        = 200h
+CS_FLAG_SHUTDOWN       = 400h
+CS_FLAG_MOVE           = 800h
+CS_FLAG_LONG_MODE      = 1000h
+CS_FLAG_SAVED          = 2000h
+
+timer_struc     STRUC
+
+timer_next              DW ?
+timer_sel               DW ?
+timer_lsb               DD ?
+timer_msb               DD ?
+timer_offset    DD ?
+timer_id                DD ?
+timer_owner             DW ?
+
+timer_struc     ENDS
+
+core_tlb32_struc        STRUC
+
+pt32_locked     DD ?
+pt32_used       DD ?
+pt32_linear_arr DD 32 DUP(?)
+
+core_tlb32_struc        ENDS
+
+MAX_IRQ_NESTING     = 64
+CORE_LOG_ENTRIES    = 200h
+
+core_seg   STRUC
+
+cs_ptab                 DW 256 DUP(?)
+cs_prio_act             DW ?
+
+cs_wakeup_list          DW ?
+
+cs_id                   DW ?
+
+cs_sel                  DW ?
+
+cs_sched_count          DW ?
+cs_log_count            DW ?
+cs_log_sel              DW ?
+cs_log_entry            DW ?
+
+cs_stack_offset         DD ?
+cs_stack_sel            DW ?
+cs_flags                DD ?
+
+cs_nesting              DW ?
+cs_curr_thread          DW ?
+cs_last_thread          DW ?
+cs_null_thread          DW ?
+cs_math_thread          DW ?
+
+cs_gdt_base             DD ?
+cs_gdt_size             DW ?
+
+cs_apic                 DD ?
+cs_acpi                 DB ?
+
+cs_dump_offset          DW ?
+
+cs_preempt_lsb          DD ?
+cs_preempt_msb          DD ?
+
+cs_last_lsb             DD ?
+
+; TSC timer support
+
+cs_system_time          DD ?,?
+cs_tsc_guard            DD ?
+cs_last_tsc             DD ?
+
+cs_clock_tics           DW ?  ; not used
+
+cs_lsb_tics             DD ?
+cs_msb_tics             DD ?
+
+cs_wakeup_spinlock      DW ?
+
+cs_linear               DD ?
+cs_syscall_esp          DD ?
+cs_syscall_eip          DD ?
+cs_tls_linear           DD ?,?
+
+cs_long_tr              DW ?
+cs_long_ldt             DW ?
+cs_tr_linear            DD ?
+
+; these four bytes must be in this order!!
+
+cs_curr_irq_nr          DB ?
+cs_curr_irq_count       DB ?
+cs_curr_irq_retries     DB ?
+cs_curr_irq_spare       DB ?
+
+cs_nested_irq_count     DW ?
+cs_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
+
+cs_irq_count_arr        DD 256 DUP(?)
+
+cs_cr3                  DD ?
+cs_mon_linear           DD ?
+cs_tlb                  core_tlb32_struc <>
+cs_work_tlb             core_tlb32_struc <>
+
+cs_timer_spinlock       DW ?
+cs_timer_head           DW ?
+cs_timer_free           DW ?
+cs_timer_entries        DB 256 * SIZE timer_struc DUP(?)
+
+core_seg   ENDS
+
+; FS        Core selector
+NotifyIrqActivity   Macro
+    inc fs:cs_curr_irq_count
+    Endm
+    

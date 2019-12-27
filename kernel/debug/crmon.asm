@@ -28,7 +28,7 @@
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE kdebug.inc
 INCLUDE emseg.inc
 
@@ -2808,7 +2808,7 @@ WriteEflags     ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-proc_tab    DB 'Processor=',0    
+proc_tab    DB 'Core=',0    
 
 WriteCore   PROC near
     mov esi,OFFSET proc_tab
@@ -2852,7 +2852,7 @@ WriteThread   PROC near
     jz wtNoThread
 ;    
     mov dx,ds:[ebp].debug_core_sel
-    mov ebx,OFFSET ps_curr_thread
+    mov ebx,OFFSET cs_curr_thread
     call ReadWord
     jc wtNoThread
 ;    

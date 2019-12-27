@@ -33,7 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
 MAX_GEN_HOOK_COUNT  = 16

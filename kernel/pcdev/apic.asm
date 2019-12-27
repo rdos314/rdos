@@ -32,7 +32,7 @@ INCLUDE ..\os\port.def
 INCLUDE ..\os\system.def
 INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\acpi\acpi.inc
 INCLUDE ..\os\realmon.def
 
@@ -638,11 +638,11 @@ IsaIrqEntry:
 ;
     EnterInt
 ;       
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ax,ax
     jz IsaIrqPrevOk
 ;    
-    mov ax,fs:ps_nested_irq_count
+    mov ax,fs:cs_nested_irq_count
     mov bx,ax
     inc ax
     cmp ax,MAX_IRQ_NESTING
@@ -651,20 +651,20 @@ IsaIrqEntry:
     int 3
 
 IsaIrqAddStack:
-    mov fs:ps_nested_irq_count,ax
+    mov fs:cs_nested_irq_count,ax
 ;
     shl bx,2
-    mov eax,dword ptr fs:ps_curr_irq_nr
-    mov fs:[bx].ps_nested_irq_stack,eax
+    mov eax,dword ptr fs:cs_curr_irq_nr
+    mov fs:[bx].cs_nested_irq_stack,eax
 
 IsaIrqPrevOk: 
     movzx bx,cs:isa_irq_nr
-    mov word ptr fs:ps_curr_irq_nr,bx
-    mov fs:ps_curr_irq_retries,0
+    mov word ptr fs:cs_curr_irq_nr,bx
+    mov fs:cs_curr_irq_retries,0
 ;
     sti
     shl bx,2
-    inc fs:[bx].ps_irq_count_arr
+    inc fs:[bx].cs_irq_count_arr
 
 IsaIrqRetry:    
     mov ds,cs:isa_irq_handler_data
@@ -676,14 +676,14 @@ IsaIrqRetry:
 IsaIrqExit:
     cli    
 ;
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ah,ah
     jz IsaIrqExitCountOk
 ;
-    mov fs:ps_curr_irq_count,0
-    mov al,fs:ps_curr_irq_retries
+    mov fs:cs_curr_irq_count,0
+    mov al,fs:cs_curr_irq_retries
     inc al
-    mov fs:ps_curr_irq_retries,al
+    mov fs:cs_curr_irq_retries,al
 ;    
     sti
     cmp al,100
@@ -693,16 +693,16 @@ IsaIrqExit:
     jmp IsaIrqRetry
     
 IsaIrqExitCountOk: 
-    mov word ptr fs:ps_curr_irq_nr,0
-    mov bx,fs:ps_nested_irq_count
+    mov word ptr fs:cs_curr_irq_nr,0
+    mov bx,fs:cs_nested_irq_count
     or bx,bx
     jz IsaIrqExitNestingOk
 ;
     dec bx
-    mov fs:ps_nested_irq_count,bx
+    mov fs:cs_nested_irq_count,bx
     shl bx,2
-    mov eax,fs:[bx].ps_nested_irq_stack
-    mov dword ptr fs:ps_curr_irq_nr,eax
+    mov eax,fs:[bx].cs_nested_irq_stack
+    mov dword ptr fs:cs_curr_irq_nr,eax
     
 IsaIrqExitNestingOk:
     mov ax,apic_mem_sel
@@ -1145,11 +1145,11 @@ MsiEntry:
 ;
     EnterInt
 ;       
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ax,ax
     jz MsiPrevOk
 ;    
-    mov ax,fs:ps_nested_irq_count
+    mov ax,fs:cs_nested_irq_count
     mov bx,ax
     inc ax
     cmp ax,MAX_IRQ_NESTING
@@ -1158,33 +1158,33 @@ MsiEntry:
     int 3
 
 MsiAddStack:
-    mov fs:ps_nested_irq_count,ax
+    mov fs:cs_nested_irq_count,ax
     shl bx,2
-    mov eax,dword ptr fs:ps_curr_irq_nr
-    mov fs:[bx].ps_nested_irq_stack,eax
+    mov eax,dword ptr fs:cs_curr_irq_nr
+    mov fs:[bx].cs_nested_irq_stack,eax
 
 MsiPrevOk: 
     movzx bx,cs:msi_irq_nr
-    mov word ptr fs:ps_curr_irq_nr,bx
+    mov word ptr fs:cs_curr_irq_nr,bx
 ;    
     sti
     shl bx,2
-    inc fs:[bx].ps_irq_count_arr
+    inc fs:[bx].cs_irq_count_arr
 ;    
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
     cli
-    mov word ptr fs:ps_curr_irq_nr,0
+    mov word ptr fs:cs_curr_irq_nr,0
 ;    
-    mov bx,fs:ps_nested_irq_count
+    mov bx,fs:cs_nested_irq_count
     or bx,bx
     jz MsiExitNestingOk
 ;
     dec bx
-    mov fs:ps_nested_irq_count,bx
+    mov fs:cs_nested_irq_count,bx
     shl bx,2
-    mov eax,fs:[bx].ps_nested_irq_stack
-    mov dword ptr fs:ps_curr_irq_nr,eax
+    mov eax,fs:[bx].cs_nested_irq_stack
+    mov dword ptr fs:cs_curr_irq_nr,eax
     
 MsiExitNestingOk:
     mov ax,apic_mem_sel
@@ -1560,7 +1560,7 @@ send_nmi Proc far
     push eax
     push edx
 ;    
-    mov edx,fs:ps_apic
+    mov edx,fs:cs_apic
     shl edx,24
     mov ax,apic_mem_sel
     mov ds,ax
@@ -1596,7 +1596,7 @@ send_int  Proc far
     push ecx
     push edx
 ;    
-    mov edx,fs:ps_apic
+    mov edx,fs:cs_apic
     cli
     shl edx,24
     mov cx,apic_mem_sel
@@ -2335,7 +2335,7 @@ long_timer_handler_name    DB 'Long Timer Handler', 0
 
 long_timer_handler      Proc far
     EnterInt    
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -2363,7 +2363,7 @@ long_hpet_handler      Proc far
     mov ds:hpet_int_status,edx
 ;    
     EnterInt    
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,cS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -2404,7 +2404,7 @@ timer_int:
     push fs
 ;
     EnterInt    
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -2465,7 +2465,7 @@ hpet_int:
     mov ds:hpet_int_status,edx
 ;    
     EnterInt    
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -2514,7 +2514,7 @@ hpet_ds_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hpet_ioapic_int Proc far
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ds,ds:hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx  
@@ -2539,7 +2539,7 @@ preempt_int:
     push fs
 ;
     EnterInt    
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -3155,13 +3155,13 @@ SendStartup Endp
 start_core_name DB 'Start Core', 0
 
 start_core   Proc far
-    test fs:ps_flags,PS_FLAG_SHUTDOWN
+    test fs:cs_flags,CS_FLAG_SHUTDOWN
     jz start_core_normal
 ;
-    lock and fs:ps_flags,NOT PS_FLAG_SHUTDOWN
+    lock and fs:cs_flags,NOT CS_FLAG_SHUTDOWN
 
 start_core_normal:    
-    lock or fs:ps_flags,PS_FLAG_ACTIVE
+    lock or fs:cs_flags,CS_FLAG_ACTIVE
     SendNmi
     retf32
 start_core   Endp
@@ -3182,7 +3182,7 @@ shutdown_core:
     call SetupLocalApic
 ;
     GetCore
-    lock and fs:ps_flags,NOT PS_FLAG_ACTIVE
+    lock and fs:cs_flags,NOT CS_FLAG_ACTIVE
 ;
     wbinvd
     xor ax,ax
@@ -3205,7 +3205,7 @@ sdcHlt:
 
 sdcCheck:    
     GetCore
-    test fs:ps_flags,PS_FLAG_ACTIVE
+    test fs:cs_flags,cS_FLAG_ACTIVE
     jz sdcLoop
 ;
     mov ax,start_preempt_timer_nr
@@ -3302,7 +3302,7 @@ boot_realtime_core    Proc far
     out 71h,al
     jmp short $+2
 ;
-    mov edx,fs:ps_apic
+    mov edx,fs:cs_apic
     call SendInit
 ;
     mov eax,es:[edi].ap_cr4
@@ -3430,15 +3430,15 @@ BootCore    Proc near
     db 66h
     sidt fword ptr es:[di].ap_idt
 ;    
-    mov ax,fs:ps_gdt_size
+    mov ax,fs:cs_gdt_size
     dec ax
     mov word ptr es:[di].ap_gdt,ax
-    mov eax,fs:ps_gdt_base
+    mov eax,fs:cs_gdt_base
     mov dword ptr es:[di].ap_gdt+2,eax
 ;
-    mov eax,fs:ps_stack_offset
+    mov eax,fs:cs_stack_offset
     mov es:[di].ap_stack_offset,eax
-    mov ax,fs:ps_stack_sel
+    mov ax,fs:cs_stack_sel
     mov es:[di].ap_stack_sel,ax
 ;
     mov bx,467h
@@ -3457,7 +3457,7 @@ BootCore    Proc near
 ;
     mov ds:mp_processor_sign,0
 ;
-    mov edx,fs:ps_apic
+    mov edx,fs:cs_apic
     call SendInit
 ;
     mov eax,ds:mp_processor_sign
@@ -3536,8 +3536,8 @@ DoCreateCore   Proc near
 ;    
     CreateCoreGdt
     CreateCore
-    mov es:ps_gdt_base,edx
-    mov es:ps_gdt_size,cx
+    mov es:cs_gdt_base,edx
+    mov es:cs_gdt_size,cx
     mov cx,es
     mov fs,cx
 ;
@@ -3674,10 +3674,10 @@ init_core_loop:
 init_boot_proc:
     GetCore
     movzx edx,es:[di].ap_apic_id
-    mov fs:ps_apic,edx
+    mov fs:cs_apic,edx
 ;
     mov al,es:[di].ap_acpi_id
-    mov fs:ps_acpi,al
+    mov fs:cs_acpi,al
     inc bp
     jmp init_core_next
 
@@ -3691,9 +3691,9 @@ init_ap_proc:
 ;    
     call DoCreateCore    
     movzx edx,es:[di].ap_apic_id
-    mov fs:ps_apic,edx
+    mov fs:cs_apic,edx
     mov al,es:[di].ap_acpi_id
-    mov fs:ps_acpi,al
+    mov fs:cs_acpi,al
     call BootCore
 ;
     inc bp

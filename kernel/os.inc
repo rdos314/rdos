@@ -1529,8 +1529,8 @@ EnterInt    MACRO
     cli
     mov ax,core_data_sel
     mov fs,ax
-    mov fs,fs:ps_sel
-    lock add fs:ps_nesting,1
+    mov fs,fs:cs_sel
+    lock add fs:cs_nesting,1
                         ENDM
 
 LeaveInt    MACRO
@@ -1546,16 +1546,16 @@ LeaveInt    MACRO
 
 tucRetry:    
     cli    
-    lock sub fs:ps_nesting,1
+    lock sub fs:cs_nesting,1
     jnc tucDone
 ;
-    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jz tucTimerOk
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc tucHandleTimer
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz tucHandleTimer
 ;    
@@ -1567,18 +1567,18 @@ tucHandleTimer:
     jmp tucRetry
     
 tucTimerOk:      
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:cs_curr_thread
     or ax,ax
     jz tucDone
 ;
-    mov eax,fs:ps_tlb.pt32_used
+    mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz tucTlbDone
 ;
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc tucFlush
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz tucFlush
 ;    
@@ -1590,18 +1590,18 @@ tucFlush:
     jmp tucRetry
 
 tucTlbDone:    
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:cs_flags,CS_FLAG_PREEMPT
     jnz tucSwap
 ;    
-    mov ax,fs:ps_wakeup_list
+    mov ax,fs:cs_wakeup_list
     or ax,ax
     jz tucDone
 
 tucSwap:
-    lock add fs:ps_nesting,1
+    lock add fs:cs_nesting,1
     jc tucSched
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     or ax,ax
     jz tucSched
 ;    

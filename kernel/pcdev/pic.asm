@@ -28,7 +28,7 @@
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\os\port.def
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
@@ -99,11 +99,11 @@ IrqEntry1:
 ;
     EnterInt
 ;       
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ax,ax
     jz IrqPrevOk1
 ;    
-    mov ax,fs:ps_nested_irq_count
+    mov ax,fs:cs_nested_irq_count
     mov bx,ax
     inc ax
     cmp ax,MAX_IRQ_NESTING
@@ -112,20 +112,20 @@ IrqEntry1:
     int 3
 
 IrqAddStack1:
-    mov fs:ps_nested_irq_count,ax
+    mov fs:cs_nested_irq_count,ax
 ;
     shl bx,2
-    mov eax,dword ptr fs:ps_curr_irq_nr
-    mov fs:[bx].ps_nested_irq_stack,eax
+    mov eax,dword ptr fs:cs_curr_irq_nr
+    mov fs:[bx].cs_nested_irq_stack,eax
 
 IrqPrevOk1: 
     movzx bx,cs:irq_nr
-    mov word ptr fs:ps_curr_irq_nr,bx
-    mov fs:ps_curr_irq_retries,0
+    mov word ptr fs:cs_curr_irq_nr,bx
+    mov fs:cs_curr_irq_retries,0
 ;
     sti
     shl bx,2
-    inc fs:[bx].ps_irq_count_arr
+    inc fs:[bx].cs_irq_count_arr
 
 IrqRetry1:    
     mov ds,cs:irq_handler_data
@@ -137,14 +137,14 @@ IrqRetry1:
 IrqExit1:
     cli    
 ;
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ah,ah
     jz IrqExitCountOk1
 ;
-    mov fs:ps_curr_irq_count,0
-    mov al,fs:ps_curr_irq_retries
+    mov fs:cs_curr_irq_count,0
+    mov al,fs:cs_curr_irq_retries
     inc al
-    mov fs:ps_curr_irq_retries,al
+    mov fs:cs_curr_irq_retries,al
 ;    
     sti
     cmp al,100
@@ -154,16 +154,16 @@ IrqExit1:
     jmp IrqRetry1
     
 IrqExitCountOk1: 
-    mov word ptr fs:ps_curr_irq_nr,0
-    mov bx,fs:ps_nested_irq_count
+    mov word ptr fs:cs_curr_irq_nr,0
+    mov bx,fs:cs_nested_irq_count
     or bx,bx
     jz IrqExitNestingOk1
 ;
     dec bx
-    mov fs:ps_nested_irq_count,bx
+    mov fs:cs_nested_irq_count,bx
     shl bx,2
-    mov eax,fs:[bx].ps_nested_irq_stack
-    mov dword ptr fs:ps_curr_irq_nr,eax
+    mov eax,fs:[bx].cs_nested_irq_stack
+    mov dword ptr fs:cs_curr_irq_nr,eax
     
 IrqExitNestingOk1:
     mov al,cs:irq_nr
@@ -235,11 +235,11 @@ IrqEntry2:
 ;
     EnterInt
 ;       
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ax,ax
     jz IrqPrevOk2
 ;    
-    mov ax,fs:ps_nested_irq_count
+    mov ax,fs:cs_nested_irq_count
     mov bx,ax
     inc ax
     cmp ax,MAX_IRQ_NESTING
@@ -248,20 +248,20 @@ IrqEntry2:
     int 3
 
 IrqAddStack2:
-    mov fs:ps_nested_irq_count,ax
+    mov fs:cs_nested_irq_count,ax
 ;
     shl bx,2
-    mov eax,dword ptr fs:ps_curr_irq_nr
-    mov fs:[bx].ps_nested_irq_stack,eax
+    mov eax,dword ptr fs:cs_curr_irq_nr
+    mov fs:[bx].cs_nested_irq_stack,eax
 
 IrqPrevOk2: 
     movzx bx,cs:irq_nr
-    mov word ptr fs:ps_curr_irq_nr,bx
-    mov fs:ps_curr_irq_retries,0
+    mov word ptr fs:cs_curr_irq_nr,bx
+    mov fs:cs_curr_irq_retries,0
 ;
     sti
     shl bx,2
-    inc fs:[bx].ps_irq_count_arr
+    inc fs:[bx].cs_irq_count_arr
 
 IrqRetry2:    
     mov ds,cs:irq_handler_data
@@ -273,14 +273,14 @@ IrqRetry2:
 IrqExit2:
     cli    
 ;
-    mov ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:cs_curr_irq_nr
     or ah,ah
     jz IrqExitCountOk2
 ;
-    mov fs:ps_curr_irq_count,0
-    mov al,fs:ps_curr_irq_retries
+    mov fs:cs_curr_irq_count,0
+    mov al,fs:cs_curr_irq_retries
     inc al
-    mov fs:ps_curr_irq_retries,al
+    mov fs:cs_curr_irq_retries,al
 ;    
     sti
     cmp al,100
@@ -290,16 +290,16 @@ IrqExit2:
     jmp IrqRetry2
     
 IrqExitCountOk2: 
-    mov word ptr fs:ps_curr_irq_nr,0
-    mov bx,fs:ps_nested_irq_count
+    mov word ptr fs:cs_curr_irq_nr,0
+    mov bx,fs:cs_nested_irq_count
     or bx,bx
     jz IrqExitNestingOk2
 ;
     dec bx
-    mov fs:ps_nested_irq_count,bx
+    mov fs:cs_nested_irq_count,bx
     shl bx,2
-    mov eax,fs:[bx].ps_nested_irq_stack
-    mov dword ptr fs:ps_curr_irq_nr,eax
+    mov eax,fs:[bx].cs_nested_irq_stack
+    mov dword ptr fs:cs_curr_irq_nr,eax
     
 IrqExitNestingOk2:
     mov al,62h
@@ -1071,7 +1071,7 @@ timer_int:
     push fs
 ;
     EnterInt
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov al,20h
     out INT0_CONTROL,al
     LeaveInt

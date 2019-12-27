@@ -31,7 +31,7 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
-INCLUDE ..\..\kernel\os\proc.inc
+INCLUDE ..\..\kernel\os\core.inc
 
     .386p
 

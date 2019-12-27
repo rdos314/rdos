@@ -34,7 +34,7 @@ include ..\driver.def
 include ..\pcdev\pci.inc
 include ..\os\com.inc
 include ..\os\protseg.def
-include ..\os\proc.inc
+include ..\os\core.inc
 
 MAX_PORTS       = 16
 MAX_IRQS    = 16

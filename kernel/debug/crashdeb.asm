@@ -32,7 +32,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
-INCLUDE ..\os\proc.inc
+INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE ..\os\protseg.def
@@ -1713,7 +1713,7 @@ AddToCrashLog   Proc near
     push es
     push gs
 ;
-    mov si,fs:ps_dump_offset
+    mov si,fs:cs_dump_offset
     or si,si
     jz aclDone
 ;
@@ -1791,7 +1791,7 @@ AddToCrashLog   Proc near
     mov eax,ds:[ebp].reg_edi
     mov dword ptr gs:[edi].cls_rdi,eax
 ;
-    mov ax,fs:ps_nesting
+    mov ax,fs:cs_nesting
     mov gs:[edi].cls_nesting,ax
 ;
     mov bx,ds:[ebp].reg_es.d_selector
@@ -1838,7 +1838,7 @@ AddToCrashLog   Proc near
     mov edx,ds:[ebp].reg_idt.d_base
     mov gs:[edi].cls_idtr.clss_base,edx
 ;
-    mov bx,fs:ps_curr_thread
+    mov bx,fs:cs_curr_thread
     or bx,bx
     jz aclNoCurr
 ;
@@ -1847,12 +1847,12 @@ AddToCrashLog   Proc near
         
 aclNoCurr:
     mov ax,LOG_CORE_THREAD_WAKEUP
-    mov si,OFFSET ps_wakeup_list
+    mov si,OFFSET cs_wakeup_list
     call AddCrashThreadList
 ;
     mov ax,LOG_CORE_THREAD_READY
     mov cx,256
-    mov si,OFFSET ps_ptab
+    mov si,OFFSET cs_ptab
 
 aclReadyLoop:
     call AddCrashThreadList
@@ -1882,23 +1882,23 @@ aclReadyLoop:
     pop ds
     
 aclStackDone:
-    mov cx,fs:ps_log_count
-    cmp cx,PROC_LOG_ENTRIES    
+    mov cx,fs:cs_log_count
+    cmp cx,CORE_LOG_ENTRIES    
     jb aclLogFew
 
 aclLogMany:
-    mov fs:ps_log_count,PROC_LOG_ENTRIES
+    mov fs:cs_log_count,CORE_LOG_ENTRIES
     jmp aclLogProcess
 
 aclLogFew:
-    mov fs:ps_log_entry,0    
+    mov fs:cs_log_entry,0    
 
 aclLogProcess:
-    mov cx,fs:ps_log_count
+    mov cx,fs:cs_log_count
     or cx,cx
     jz aclLogDone
 ;
-    cmp cx,PROC_LOG_ENTRIES
+    cmp cx,CORE_LOG_ENTRIES
     jbe aclLogSizeOk
 ;
     mov cx,200h
@@ -1911,8 +1911,8 @@ aclLogSizeOk:
 ;
     mov ax,gs
     mov es,ax
-    mov ds,fs:ps_log_sel
-    mov bx,fs:ps_log_entry
+    mov ds,fs:cs_log_sel
+    mov bx,fs:cs_log_entry
     add edi,CORE_IMAGE_LOG_OFFSET
 
 aclLogLoop:    
@@ -1924,7 +1924,7 @@ aclLogLoop:
     pop ecx
 ;
     inc bx
-    cmp bx,PROC_LOG_ENTRIES
+    cmp bx,CORE_LOG_ENTRIES
     jne aclLogNext
 ;
     xor bx,bx
@@ -1971,10 +1971,10 @@ start_core_dump Proc far
     push edx
 ;   
     GetCore
-    test fs:ps_flags,PS_FLAG_NMI
+    test fs:cs_flags,CS_FLAG_NMI
     jnz scdFail
 ;
-    lock or fs:ps_flags,PS_FLAG_NMI    
+    lock or fs:cs_flags,CS_FLAG_NMI    
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1984,7 +1984,7 @@ start_core_dump Proc far
 ;
     mov ax,flat_sel
     mov ds,ax
-    mov bx,fs:ps_id
+    mov bx,fs:cs_id
     cmp bx,ds:[edx].mon_core_count
     jae scdFail
 ;
@@ -2020,13 +2020,13 @@ start_core_dump Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendStopAndWait       Proc near
-    test fs:ps_flags,PS_FLAG_NMI
+    test fs:cs_flags,CS_FLAG_NMI
     jnz swCheck
 ;        
     SendNmi
         
 swCheck:
-    test fs:ps_flags,PS_FLAG_SAVED
+    test fs:cs_flags,CS_FLAG_SAVED
     jnz swDone
 ;
     loop swCheck
@@ -2053,7 +2053,7 @@ sitLoop:
     GetCoreNumber
     jc sitDone
 ;
-    test fs:ps_flags,PS_FLAG_NMI
+    test fs:cs_flags,CS_FLAG_NMI
     jnz sitNext
 ;        
     push ax
@@ -2087,7 +2087,7 @@ sntLoop:
     GetCoreNumber
     jc sntDone
 ;
-    test fs:ps_flags,PS_FLAG_NMI
+    test fs:cs_flags,CS_FLAG_NMI
     jnz sntNext
 ;        
     SendNmi
@@ -2122,7 +2122,7 @@ wsCoreLoop:
     GetCoreNumber
     jc wsValidate
 ;
-    test fs:ps_flags,PS_FLAG_SAVED
+    test fs:cs_flags,CS_FLAG_SAVED
     jnz wsCoreNext
 ;        
     inc dx
@@ -2160,7 +2160,7 @@ notify_core_dump_name    DB 'Notify Core Dump', 0
 notify_core_dump:
     GetCore
     mov ds:[ebp].debug_core_sel,fs
-    mov ax,fs:ps_id
+    mov ax,fs:cs_id
     mov ds:[ebp].debug_core_id,ax
 ;
     mov eax,cr0
@@ -2213,7 +2213,7 @@ notify_core_dump:
     mov ds:[ebp].reg_efer,0
     lock or ds:[ebp].debug_flags,DEBUG_FLAG_VALID
     call AddToCrashLog
-    lock or fs:ps_flags,PS_FLAG_SAVED
+    lock or fs:cs_flags,CS_FLAG_SAVED
 ;    
     mov ax,system_data_sel
     mov es,ax
@@ -2232,7 +2232,7 @@ smEnter:
     mov ax,SEG data
     mov gs,ax
 ;
-    test fs:ps_flags,PS_FLAG_LONG_MODE
+    test fs:cs_flags,CS_FLAG_LONG_MODE
     jz smProtMode
 ;
     mov ds:[ebp].reg_efer,EFER_LME

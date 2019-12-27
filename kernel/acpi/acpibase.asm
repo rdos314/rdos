@@ -31,7 +31,7 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
-INCLUDE ..\..\kernel\os\proc.inc
+INCLUDE ..\..\kernel\os\core.inc
 INCLUDE acpi.inc
 
     .686p
@@ -986,7 +986,7 @@ enter_c3    Proc far
     push eax
 ;    
     GetCore
-    movzx eax,fs:ps_acpi
+    movzx eax,fs:cs_acpi
     call ImplEnterC3
 ;
     pop eax    
@@ -1134,7 +1134,7 @@ ReqPStateUpdate_    Proc near
 
 req_update_loop:    
     GetCoreNumber
-    lock or fs:ps_flags,PS_FLAG_P_STATE
+    lock or fs:cs_flags,CS_FLAG_P_STATE
 ;
     inc eax
     cmp eax,ecx
@@ -1162,7 +1162,7 @@ ReqShutdown_    Proc near
     push fs
 ;    
     GetCoreNumber
-    lock or fs:ps_flags,PS_FLAG_SHUTDOWN
+    lock or fs:cs_flags,CS_FLAG_SHUTDOWN
 ;
     pop fs                
     ret
