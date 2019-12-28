@@ -7008,7 +7008,7 @@ init_phys_bitmap32       Proc near
     mov ds:[edi],eax
 ;
     mov ds:[esi].phys_curr_header32,1
-    mov ds:[esi].phys_curr_header64,0
+    mov ds:[esi].phys_curr_proc_arr,0
     mov ds:[esi].phys_bitmap_count,1
 ;
     mov ebx,esi
@@ -7645,7 +7645,7 @@ init_phys_bitmap64       Proc near
     mov ds:[edi+4],eax
 ;
     mov ds:[esi].phys_curr_header32,1
-    mov ds:[esi].phys_curr_header64,0
+    mov ds:[esi].phys_curr_proc_arr,0
     mov ds:[esi].phys_bitmap_count,1
 ;
     mov ebx,esi

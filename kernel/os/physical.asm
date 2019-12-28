@@ -439,7 +439,7 @@ local_allocate_physical       PROC near
     xor esi,esi
 
 apRetry64:
-    mov bx,ds:phys_curr_header64
+    mov bx,ds:phys_curr_proc_arr
     cmp bx,ds:phys_bitmap_count
     jae apNew64
 ;    
@@ -472,7 +472,7 @@ apNewNext64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header64,ax
+    mov ds:phys_curr_proc_arr,ax
     jmp apRetry64
 
 apNewFirst64:
@@ -501,7 +501,7 @@ apOk64_0:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header64,ax
+    mov ds:phys_curr_proc_arr,ax
 
 apOk64:
     cmp bx,ds:[si].phys_bitmap_pos
@@ -509,7 +509,7 @@ apOk64:
 ;    
     mov ds:[si].phys_bitmap_pos,bx
 ;
-    mov ax,ds:phys_curr_header64
+    mov ax,ds:phys_curr_proc_arr
     cmp ax,32
     jae apRetAds64
 ;
@@ -518,7 +518,7 @@ apOk64:
     pop ecx
     jnc apUpdateHeader64
 ;
-    mov ax,ds:phys_curr_header64
+    mov ax,ds:phys_curr_proc_arr
     or ax,ax
     jnz apRetAds64
 ;
@@ -531,7 +531,7 @@ apUpdateHeader64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header64,ax
+    mov ds:phys_curr_proc_arr,ax
 
 apRetAds64:    
     mov eax,ecx
@@ -615,7 +615,7 @@ apNew32:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header64,ax
+    mov ds:phys_curr_proc_arr,ax
     jmp apRetry32
 
 apNewFirst32:
