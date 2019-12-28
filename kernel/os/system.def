@@ -262,7 +262,7 @@ phys_bitmap_pos      DW ?
 phys_bitmap_header   ENDS
 
 phys_header_start    = 8
-phys_bitmap_start    = 2000h
+phys_bitmap_start    = 9000h
 
 hook_data_struc   STRUC
 

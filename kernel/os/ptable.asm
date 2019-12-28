@@ -7111,7 +7111,7 @@ start_paging_global_done32:
     call local_create_data_sel16
 ;
     mov bx,phys_bit_sel
-    mov ecx,800000h
+    mov ecx,2800000h
     mov edx,phys_bitmap_linear
     call local_create_data_sel16
     ret
@@ -7762,7 +7762,7 @@ start_paging_global_done64:
     call local_create_data_sel16
 ;
     mov bx,phys_bit_sel
-    mov ecx,800000h
+    mov ecx,2800000h
     mov edx,phys_bitmap_linear
     call local_create_data_sel16
     ret

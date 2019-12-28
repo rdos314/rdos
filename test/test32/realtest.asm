@@ -40,6 +40,7 @@ include \rdos\kernel\sin.asm
 val	DQ 12345h
 
 init:
+    int 3
     mov rcx,500
 
 mloop:
