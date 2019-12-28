@@ -248,11 +248,21 @@ system_seg      ENDS
 
 MAX_PROCESSORS  = 32
 
+phys_proc_struc STRUC
+
+phys_low_bitmap     DW ?
+phys_curr_bitmap_4k DW ?
+phys_curr_bitmap_2m DW ?
+phys_high_bitmap    DW ?
+
+phys_proc_struc ENDS
+
 phys_header     STRUC
 
 phys_curr_header32  DW ?
 phys_bitmap_count   DW ?
-phys_curr_proc_arr  DW MAX_PROCESSORS DUP(?)
+phys_header_pad     DD ?
+phys_proc_arr       DW 4 * MAX_PROCESSORS DUP(?)
 
 phys_header     ENDS
 
@@ -263,8 +273,8 @@ phys_bitmap_pos      DW ?
 
 phys_bitmap_header   ENDS
 
-phys_header_start    = 2 * MAX_PROCESSORS + 8
-phys_bitmap_start    = 9000h
+phys_header_start    = SIZE phys_header
+phys_bitmap_start    = phys_header_start + 9000h
 
 hook_data_struc   STRUC
 

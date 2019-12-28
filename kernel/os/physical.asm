@@ -313,19 +313,29 @@ GetPhysBitmap32  Endp
 ;
 ;       DESCRIPTION:    Get 64-bit physical bitmap
 ;
+;       PARAMETERS:     BP      Processor struc
+;
 ;       RETURNS:        SI      Bitmap header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPhysBitmap64  Proc near
-    mov cx,ds:phys_bitmap_count
-    sub cx,32
+    mov bx,ds:[bp].phys_low_bitmap
+    cmp bx,32
+    ja gpbLowOk
+;
+    mov bx,32
+
+gpbLowOk:
+    mov cx,ds:[bp].phys_high_bitmap
+    sub cx,bx
     jc gpbDone64
 ;
     stc
     jz gpbDone64
-;    
-    mov bx,32 * 4 + phys_header_start
+;
+    shl bx,2
+    add bx,phys_header_start
     mov si,bx
     xor di,di
 
@@ -432,15 +442,17 @@ local_allocate_physical       PROC near
     push edx
     push esi
     push edi
+    push ebp
 ;
     mov ax,phys_bit_sel
     mov ds,ax
     xor ebx,ebx
     xor esi,esi
+    mov bp,OFFSET phys_proc_arr
 
 apRetry64:
-    mov bx,ds:phys_curr_proc_arr
-    cmp bx,ds:phys_bitmap_count
+    mov bx,ds:[bp].phys_curr_bitmap_4k
+    cmp bx,ds:[bp].phys_high_bitmap
     jae apNew64
 ;    
     mov si,phys_header_start
@@ -472,7 +484,7 @@ apNewNext64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_proc_arr,ax
+    mov ds:[bp].phys_curr_bitmap_4k,ax
     jmp apRetry64
 
 apNewFirst64:
@@ -501,7 +513,7 @@ apOk64_0:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_proc_arr,ax
+    mov ds:[bp].phys_curr_bitmap_4k,ax
 
 apOk64:
     cmp bx,ds:[si].phys_bitmap_pos
@@ -509,7 +521,7 @@ apOk64:
 ;    
     mov ds:[si].phys_bitmap_pos,bx
 ;
-    mov ax,ds:phys_curr_proc_arr
+    mov ax,ds:[bp].phys_curr_bitmap_4k
     cmp ax,32
     jae apRetAds64
 ;
@@ -518,7 +530,7 @@ apOk64:
     pop ecx
     jnc apUpdateHeader64
 ;
-    mov ax,ds:phys_curr_proc_arr
+    mov ax,ds:[bp].phys_curr_bitmap_4k
     or ax,ax
     jnz apRetAds64
 ;
@@ -531,7 +543,7 @@ apUpdateHeader64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_proc_arr,ax
+    mov ds:[bp].phys_curr_bitmap_4k,ax
 
 apRetAds64:    
     mov eax,ecx
@@ -552,6 +564,7 @@ apDone64:
     pop ebp
 
 apLogDone64:
+    pop ebp
     pop edi
     pop esi
     pop edx
@@ -615,7 +628,7 @@ apNew32:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_proc_arr,ax
+    mov ds:phys_curr_header32,ax
     jmp apRetry32
 
 apNewFirst32:
@@ -1513,6 +1526,7 @@ apRetry:
     rep stos dword ptr es:[edi]
 ;    
     inc ds:phys_bitmap_count
+    inc ds:phys_proc_arr.phys_high_bitmap
 ;    
     pop ecx
     pop es
