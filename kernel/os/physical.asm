@@ -279,17 +279,25 @@ GetPhysBitmap32  Proc near
 gpbCountOk32:
     mov bx,4 + phys_header_start
     mov si,bx
-    xor di,di
+    mov di,4000h
 
 gpbLoop32:
     mov ax,ds:[bx].phys_bitmap_free
+    or ax,ax
+    jz gpbNext32
+;
+    cmp ax,512
+    jb gpbTest32
+;
+    mov si,bx
+    jmp gpbOk32
+
+gpbTest32:
     cmp ax,di
-    jbe gpbNext32
+    jae gpbNext32
 ;
     mov si,bx
     mov di,ax
-    cmp ax,4000h
-    jae gpbOk32
 
 gpbNext32:
     add bx,4
@@ -337,17 +345,25 @@ gpbLowOk:
     shl bx,2
     add bx,phys_header_start
     mov si,bx
-    xor di,di
+    mov di,4000h
 
 gpbLoop64:
     mov ax,ds:[bx].phys_bitmap_free
+    or ax,ax
+    jz gpbNext64
+;
+    cmp ax,512
+    jb gpbTest64
+;
+    mov si,bx
+    jmp gpbOk64
+
+gpbTest64:
     cmp ax,di
-    jbe gpbNext64
+    jae gpbNext64
 ;
     mov si,bx
     mov di,ax
-    cmp ax,4000h
-    jae gpbOk64
 
 gpbNext64:
     add bx,4
@@ -777,6 +793,90 @@ apDoneDma:
     pop ds
     retf32
 allocate_dma_physical   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePhysicalDir
+;
+;           DESCRIPTION:    Allocate physical dir (2M page)
+;
+;           RETURNS:        EBX:EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_physical_dir_name      DB 'Allocate Physical Dir',0
+
+allocate_physical_dir   PROC far
+    push ds
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    xor ebx,ebx
+    xor esi,esi
+    mov bp,OFFSET phys_proc_arr
+
+apdRetry64:
+    mov bx,ds:[bp].phys_curr_bitmap_2m
+    cmp bx,ds:[bp].phys_high_bitmap
+    jae apdNew64
+;    
+    mov si,phys_header_start
+    mov eax,ebx
+    shl eax,2
+    add si,ax
+;    
+    mov edi,phys_bitmap_start
+    shl eax,10
+    add edi,eax
+;
+    mov ax,ds:[si].phys_bitmap_free
+    cmp ax,512
+    jb apdNew64
+;
+    movzx ebx,ds:[si].phys_bitmap_pos
+    mov edx,1000h
+;    call AllocateDirFromBitmap
+    jnc apdOk64
+
+apdNew64:
+;    call GetPhysBitmapDir
+    jc apdDone
+
+apdNewNext64:
+    mov ax,si
+    sub ax,phys_header_start
+    shr ax,2
+    mov ds:[bp].phys_curr_bitmap_2m,ax
+    jmp apdRetry64
+
+apdOk64:
+    cmp bx,ds:[si].phys_bitmap_pos
+    je apdRetAds64
+;    
+    mov ds:[si].phys_bitmap_pos,bx
+
+apdRetAds64:    
+    mov eax,ecx
+    mov ebx,ecx
+    shl eax,12
+    shr ebx,20
+    clc
+
+apdDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+allocate_physical_dir   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
