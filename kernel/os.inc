@@ -991,6 +991,11 @@ FreePhysical    MACRO
     OsGate free_physical_nr
                     ENDM
 
+; OUT EBX:EAX       Physical base address
+AllocatePhysicalDir    MACRO
+    OsGate allocate_physical_dir_nr
+                    ENDM
+
 ; OUT EBX:EAX       Highest physical address
 GetHighestPhysical    MACRO
     OsGate get_highest_physical_nr

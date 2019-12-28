@@ -383,6 +383,55 @@ GetPhysBitmap64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetPhysBitmapDir
+;
+;       DESCRIPTION:    Get dir (2M) physical bitmap
+;
+;       PARAMETERS:     BP      Processor struc
+;
+;       RETURNS:        SI      Bitmap header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPhysBitmapDir  Proc near
+    mov si,ds:[bp].phys_curr_bitmap_2m
+    inc si
+    mov cx,ds:[bp].phys_high_bitmap
+    sub cx,si
+    ja gpbdStart
+;
+    mov si,ds:[bp].phys_low_bitmap
+    mov cx,ds:[bp].phys_high_bitmap
+    sub cx,si
+    jz gpbdFail
+
+gpbdStart:
+    shl si,2
+    add si,phys_header_start
+
+gpbdLoop:
+    mov ax,ds:[si].phys_bitmap_free
+    cmp ax,512
+    jae gpbdOk
+
+gpbdNext:
+    add si,4
+    loop gpbdLoop
+
+gpbdFail:
+    stc
+    jmp gpbdDone
+
+gpbdOk:
+    clc
+
+gpbdDone:
+    ret
+GetPhysBitmapDir  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AllocateFromBitmap
 ;
 ;       DESCRIPTION:    Try to allocate from bitmap
@@ -412,12 +461,12 @@ afbLoop:
     jc afbOk
 
 afbNext:
-    add bx,4
+    add ebx,4
     jmp afbLoop
 
 afbFail:
     mov ds:[si].phys_bitmap_pos,0
-    xor bx,bx
+    xor ebx,ebx
     stc
     jmp afbDone
 
@@ -438,6 +487,98 @@ afbOk:
 afbDone:
     ret
 AllocateFromBitmap  Endp    
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateDirFromBitmap
+;
+;       DESCRIPTION:    Try to allocate 2M from bitmap
+;
+;       PARAMETERS:     EBX     Position
+;                       EDX     Max postion
+;                       SI      Header offset
+;                       EDI     Bitmap offset
+;
+;       RETURNS:        EBX     New position
+;                       ECX     Allocated bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDirFromBitmap  Proc near
+
+adfbLoop:
+    cmp ebx,edx
+    jae adfbFail
+;    
+    push ebx
+    mov cx,16
+    mov eax,-1
+    add ebx,edi
+
+adfbCheckLoop:
+    and eax,ds:[ebx]
+    add ebx,4
+    loop adfbCheckLoop
+;
+    pop ebx
+    cmp eax,-1
+    jnz adfbNext
+;
+    push ebx
+    mov cx,16
+    add ebx,edi
+
+adfbTakeLoop:
+    xor eax,eax
+    xchg eax,ds:[ebx]
+    cmp eax,-1
+    jne adfbRevert
+;
+    add ebx,4
+    loop adfbTakeLoop
+;
+    pop ebx
+    mov ecx,ebx
+    shl ecx,3
+;
+    mov ax,si
+    sub ax,phys_header_start
+    movzx eax,ax
+    shl eax,13
+    add ecx,eax
+    jmp adfbOk
+
+adfbRevert:
+    lock or ds:[ebx],eax
+    cmp cx,16
+    je adfbRevertDone
+;
+    sub ebx,4
+    inc cx
+    mov eax,-1
+    jmp adfbRevert
+
+adfbRevertDone:
+    pop ebx
+
+adfbNext:
+    add ebx,64
+    jmp adfbLoop
+
+adfbFail:
+    mov ds:[si].phys_bitmap_pos,0
+    xor bx,bx
+    stc
+    jmp adfbDone
+
+adfbOk:
+    lock sub ds:[si].phys_bitmap_free,512
+    clc
+
+adfbDone:
+    ret
+AllocateDirFromBitmap  Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -836,16 +977,17 @@ apdRetry64:
     add edi,eax
 ;
     mov ax,ds:[si].phys_bitmap_free
-    cmp ax,512
+    cmp ax,200h
     jb apdNew64
 ;
     movzx ebx,ds:[si].phys_bitmap_pos
+    and bl,0C0h
     mov edx,1000h
-;    call AllocateDirFromBitmap
+    call AllocateDirFromBitmap
     jnc apdOk64
 
 apdNew64:
-;    call GetPhysBitmapDir
+    call GetPhysBitmapDir
     jc apdDone
 
 apdNewNext64:
@@ -856,12 +998,6 @@ apdNewNext64:
     jmp apdRetry64
 
 apdOk64:
-    cmp bx,ds:[si].phys_bitmap_pos
-    je apdRetAds64
-;    
-    mov ds:[si].phys_bitmap_pos,bx
-
-apdRetAds64:    
     mov eax,ecx
     mov ebx,ecx
     shl eax,12
@@ -875,7 +1011,7 @@ apdDone:
     pop edx
     pop ecx
     pop ds
-    ret
+    retf32
 allocate_physical_dir   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2037,6 +2173,12 @@ init_physical_gates     PROC near
     mov edi,OFFSET allocate_dma_physical_name
     xor cl,cl
     mov ax,allocate_dma_physical_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_physical_dir
+    mov edi,OFFSET allocate_physical_dir_name
+    xor cl,cl
+    mov ax,allocate_physical_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_multiple_physical32

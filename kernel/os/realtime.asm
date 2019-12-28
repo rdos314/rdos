@@ -573,6 +573,12 @@ add_realtime_core     PROC near
     push gs
     push ebx
 ;
+
+arcLoop:
+    int 3
+    AllocatePhysicalDir
+    jmp arcLoop
+
     mov ax,REALTIME_HANDLE
     DerefHandle
     jc arcDone
