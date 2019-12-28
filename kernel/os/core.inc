@@ -72,6 +72,7 @@ cs_wakeup_list          DW ?
 cs_id                   DW ?
 
 cs_sel                  DW ?
+cs_processor            DW ?
 
 cs_sched_count          DW ?
 cs_log_count            DW ?

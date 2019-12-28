@@ -3090,8 +3090,8 @@ AddDumpCore    Endp
 ;
 ;       PARAMETERS:     EDX     Core GDT linear
 ;
-;       RETURNS:        AX      Processor #
-;                       ES      Processor sel
+;       RETURNS:        AX      Core #
+;                       ES      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3123,6 +3123,7 @@ create_core    Proc far
     xor al,al
     rep stosb
     mov es:cs_sel,es
+    mov es:cs_processor,0
 ;
     HasLongMode
     jnc cr_flat_stack
