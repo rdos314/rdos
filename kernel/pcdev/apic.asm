@@ -3349,12 +3349,12 @@ brcDone:
     pop ebx
     pop eax
     mov edx,1000h
-;    SetPageEntry
+    SetPageEntry
 ;
     pop ebx
     pop eax
     xor edx,edx
-;    SetPageEntry
+    SetPageEntry
 ;
     popad
     pop fs
