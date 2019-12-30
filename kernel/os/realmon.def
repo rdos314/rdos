@@ -35,6 +35,7 @@
 realtime_heap_base   = 00000100000000000h
 realtime_app_stack   = 00000020000000000h
 
+realtime_global_base = 0FFFF800000000000h
 realtime_page_table  = 0FFFFFF0000000000h
 realtime_page_dir    = 0FFFFFF7F80000000h
 realtime_page_ptr    = 0FFFFFF7FBFC00000h

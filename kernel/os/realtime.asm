@@ -67,6 +67,8 @@ mon_linear      DD ?
 mon_size        DD ?
 mon_phys_dir    DD ?,?
 
+global_pml_arr  DD 2 * 4 DUP(?) ; 2TB address space
+
 mon_thread      DW ?
 
 mon_arr         DW 256 DUP(?)
@@ -309,7 +311,15 @@ CreateMonitor      Proc near
     stos dword ptr es:[edi]
 ;
     xor eax,eax
-    mov ecx,3FAh
+    mov ecx,1FEh
+    rep stos dword ptr es:[edi]
+;
+    mov esi,OFFSET global_pml_arr
+    mov ecx,8
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    xor eax,eax
+    mov ecx,01F4h
     rep stos dword ptr es:[edi]
 ;
     mov eax,fs:cs_cr3
@@ -856,6 +866,38 @@ SetupUniPml4	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreateGlobalPml4
+;
+;           DESCRIPTION:    Create global plm4 entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateGlobalPml4     PROC near
+    push ds
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    mov ecx,4
+    mov edi,OFFSET global_pml_arr
+
+cgpLoop:
+    AllocatePhysical64
+    mov al,67h
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
+    add edi,8
+    loop cgpLoop
+;
+    popad
+    pop ds
+    ret
+CreateGlobalPml4	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           load_adapter_monitor
 ;
 ;           DESCRIPTION:    install adapter monitor
@@ -891,6 +933,7 @@ load_adapter_mon_loop:
     call InitMonitor
     call MapMonitor
     call SetupUniPml4
+    call CreateGlobalPml4
 ;
     pop ecx
     pop es
