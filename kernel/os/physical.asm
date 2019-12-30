@@ -1110,6 +1110,72 @@ free_phys_ret:
     retf32
 free_physical   ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreePhysicalDir
+;
+;           DESCRIPTION:    Free physical 2M page dir
+;
+;           PARAMETERS:     EBX:EAX         Address
+;                           
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+free_physical_dir_name      DB 'Free Physical Dir',0
+
+free_physical_dir   PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,phys_bit_sel
+    mov ds,cx
+    mov es,cx    
+;
+    mov ecx,ebx
+    shl ecx,20
+    mov esi,eax
+    shr esi,12
+    add ecx,esi
+    mov ebx,ecx
+    shr ebx,15
+    and ecx,7FFFh
+;
+    cmp bx,ds:phys_bitmap_count
+    jb fpdDo
+;
+    int 3
+
+fpdDo:
+    mov edi,ebx
+    shl edi,12
+    add edi,phys_bitmap_start
+    shr ecx,3
+    add edi,ecx
+    mov eax,-1
+    mov ecx,16
+    rep stos dword ptr es:[edi]
+;
+    shl ebx,2
+    add ebx,phys_header_start
+    lock add ds:[ebx].phys_bitmap_free,512
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+free_physical_dir   ENDP
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2179,6 +2245,12 @@ init_physical_gates     PROC near
     mov edi,OFFSET allocate_physical_dir_name
     xor cl,cl
     mov ax,allocate_physical_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_physical_dir
+    mov edi,OFFSET free_physical_dir_name
+    xor cl,cl
+    mov ax,free_physical_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_multiple_physical32

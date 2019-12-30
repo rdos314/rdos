@@ -774,13 +774,6 @@ handle_start:
     mov edx,mon_code_sel + (app_sys_sel SHL 16)
     mov ecx,IA32_STAR
     wrmsr
-
-
-    mov rax,cr3
-    int 3
-;
-
-
 ;
     mov rbx,realtime_data_base
     mov eax,apic
