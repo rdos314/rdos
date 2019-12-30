@@ -308,6 +308,7 @@ CreateMonitor      Proc near
     mov eax,ds:uni_phys_pml+4
     stos dword ptr es:[edi]
 ;
+    xor eax,eax
     mov ecx,3FAh
     rep stos dword ptr es:[edi]
 ;
@@ -573,12 +574,6 @@ add_realtime_core     PROC near
     push gs
     push ebx
 ;
-
-arcLoop:
-    int 3
-    AllocatePhysicalDir
-    jmp arcLoop
-
     mov ax,REALTIME_HANDLE
     DerefHandle
     jc arcDone
