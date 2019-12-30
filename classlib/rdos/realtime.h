@@ -61,6 +61,10 @@ public:
 
     TRealtimeCore *AddCore(int ID, const char *ExeName);
 
+    int AllocateGlobalBuffer(long long size);
+    char *MapGlobalBuffer(int handle, long long offset, int size);
+    void UnmapGlobalBuffer(int handle);
+
     void (*OnSignal)(TRealtimeDevice *Dev, int ID, int Signal);
 
 protected:

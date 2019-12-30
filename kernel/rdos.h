@@ -972,6 +972,10 @@ int RDOSAPI RdosAddRealtimeCore(int handle, const char *exename);
 void RDOSAPI RdosWaitForRealtimeSignal(int handle);
 int RDOSAPI RdosGetRealtimeSignal(int handle, int *core, int *signal);
 
+int RDOSAPI RdosAllocateRealtimeBuffer(int handle, long long size);
+char *RDOSAPI RdosMapRealtimeBuffer(int handle, long long offset, int size);
+void RDOSAPI RdosUnmapRealtimeBuffer(int handle);
+
 #ifdef __cplusplus
 }
 #endif

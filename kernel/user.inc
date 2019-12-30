@@ -4512,3 +4512,23 @@ WaitForRealtimeSignal    MACRO
 GetRealtimeSignal    MACRO
         UserGate get_realtime_signal_nr
                 ENDM
+
+; IN  BX            Realtime handle
+; IN  EDX:EAX       Size
+; OUT AX            Realtime buffer handle
+AllocateRealtimeBuffer    MACRO
+        UserGate allocate_realtime_buf_nr
+                ENDM
+
+; IN  BX            Realtime buffer handle
+; IN  EDX:EAX       Offset
+; IN  ECX           Size
+; OUT ES:EDI        Mapped location   
+MapRealtimeBuffer    MACRO
+        UserGate map_realtime_buf_nr
+                ENDM
+
+; IN  BX            Realtime buffer handle
+UnmapRealtimeBuffer    MACRO
+        UserGate unmap_realtime_buf_nr
+                ENDM

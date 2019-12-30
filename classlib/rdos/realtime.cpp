@@ -178,6 +178,54 @@ TRealtimeCore *TRealtimeDevice::AddCore(int ID, const char *ExeName)
 
 /*##########################################################################
 #
+#   Name       : TRealtimeDevice::AllocateGlobalBuffer
+#
+#   Purpose....: Allocate global buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRealtimeDevice::AllocateGlobalBuffer(long long size)
+{
+    return RdosAllocateRealtimeBuffer(FHandle, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TRealtimeDevice::MapGlobalBuffer
+#
+#   Purpose....: Map global buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TRealtimeDevice::MapGlobalBuffer(int handle, long long offset, int size)
+{
+    return RdosMapRealtimeBuffer(handle, offset, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TRealtimeDevice::UnmapGlobalBuffer
+#
+#   Purpose....: Unmap global buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRealtimeDevice::UnmapGlobalBuffer(int handle)
+{
+    RdosUnmapRealtimeBuffer(handle);
+}
+
+/*##########################################################################
+#
 #   Name       : TRealtimeDevice::Execute
 #
 #   Purpose....: Execute

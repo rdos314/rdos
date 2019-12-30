@@ -912,7 +912,12 @@
 #define usergate_wait_for_realtime_signal 0x000002CB
 #define usergate_get_realtime_signal 0x000002CC
 
+#define usergate_allocate_realtime_buf 0x000002CD
+#define usergate_map_realtime_buf 0x000002CE
+#define usergate_unmap_realtime_buf 0x000002CF
+
 #define usergate_is_can_module_online 0x000002D2
+
 
 
 
@@ -1831,7 +1836,12 @@
 #define CallGate_wait_for_realtime_signal 0x55 0x67 0x9a 203 2 0 0 3 0 0x5d
 #define CallGate_get_realtime_signal 0x55 0x67 0x9a 204 2 0 0 3 0 0x5d
 
+#define CallGate_allocate_realtime_buf 0x55 0x67 0x9a 205 2 0 0 3 0 0x5d
+#define CallGate_map_realtime_buf 0x55 0x67 0x9a 206 2 0 0 3 0 0x5d
+#define CallGate_unmap_realtime_buf 0x55 0x67 0x9a 207 2 0 0 3 0 0x5d
+
 #define CallGate_is_can_module_online 0x55 0x67 0x9a 210 2 0 0 3 0 0x5d
+
 
 #else
 
@@ -2748,6 +2758,11 @@
 #define CallGate_wait_for_realtime_signal 0x3e 0x67 0x9a 203 2 0 0 3 0
 #define CallGate_get_realtime_signal 0x3e 0x67 0x9a 204 2 0 0 3 0
 
+#define CallGate_allocate_realtime_buf 0x3e 0x67 0x9a 205 2 0 0 3 0
+#define CallGate_map_realtime_buf 0x3e 0x67 0x9a 206 2 0 0 3 0
+#define CallGate_unmap_realtime_buf 0x3e 0x67 0x9a 207 2 0 0 3 0
+
 #define CallGate_is_can_module_online 0x3e 0x67 0x9a 210 2 0 0 3 0
+
 
 #endif

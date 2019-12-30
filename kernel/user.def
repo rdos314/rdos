@@ -912,6 +912,11 @@ add_realtime_core_nr              = 714
 wait_for_realtime_signal_nr       = 715
 get_realtime_signal_nr            = 716
 
+allocate_realtime_buf_nr          = 717
+map_realtime_buf_nr               = 718
+unmap_realtime_buf_nr             = 719
+
 is_can_module_online_nr           = 722
+
 
 usergate_entries                 = 750

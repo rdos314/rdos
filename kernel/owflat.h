@@ -3996,7 +3996,7 @@
 #pragma aux RdosAddRealtimeCore = \
     CallGate_add_realtime_core  \
     "jc Fail" \
-    "movzx ebx,bx" \
+    "movzx eax,bx" \
     "jmp Done" \
     "Fail:" \
     "xor eax,eax" \
@@ -4023,3 +4023,23 @@
     __modify [__ebx] \
     __parm [__ebx] [__esi] [__edi] \
     __value [__eax]
+
+#pragma aux RdosAllocateRealtimeBuffer = \
+    CallGate_allocate_realtime_buf  \
+    "jc Fail" \
+    "movzx eax,ax" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__ebx] [__edx __eax] \
+    __value [__eax]
+
+#pragma aux RdosMapRealtimeBuffer = \
+    CallGate_map_realtime_buf  \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__edi]
+
+#pragma aux RdosUnmapRealtimeBuffer = \
+    CallGate_unmap_realtime_buf  \
+    __parm [__ebx]
