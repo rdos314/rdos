@@ -1146,7 +1146,6 @@ int main()
     WindTable->AddRow(35, 55);
     WindTable->AddRow(35, 55);
     WindTable->AddRow(35, 55);
-    WindTable->AddRow(35, 55);
 
     WindTable->SetText(0, 0, "State");
     WindTable->SetText(0, 2, "");
@@ -1154,17 +1153,14 @@ int main()
     WindTable->SetText(1, 0, "Error");
     WindTable->SetText(1, 2, "");
 
-    WindTable->SetText(2, 0, "Grid");
+    WindTable->SetText(2, 0, "Power");
     WindTable->SetText(2, 2, "W");
 
-    WindTable->SetText(3, 0, "Dump");
-    WindTable->SetText(3, 2, "W");
+    WindTable->SetText(3, 0, "Rotor");
+    WindTable->SetText(3, 2, "rpm");
 
-    WindTable->SetText(4, 0, "Rotor");
-    WindTable->SetText(4, 2, "rpm");
-
-    WindTable->SetText(5, 0, "Day");
-    WindTable->SetText(5, 2, "kWh");
+    WindTable->SetText(4, 0, "Day");
+    WindTable->SetText(4, 2, "kWh");
     WindTable->Show();
 
     SolarTable = new TTableControl(control, 550, 300, 500, 100);
@@ -1179,10 +1175,10 @@ int main()
     SolarTable->AddRow(35, 55);
     SolarTable->AddRow(35, 55);
 
-    SolarTable->SetText(0, 0, "Effekt");
+    SolarTable->SetText(0, 0, "Power");
     SolarTable->SetText(0, 2, "W");
 
-    SolarTable->SetText(1, 0, "Idag");
+    SolarTable->SetText(1, 0, "Today");
     SolarTable->SetText(1, 2, "kWh");
 
     SolarTable->Show();
@@ -1326,18 +1322,13 @@ int main()
             PowerSum += val;
             PowerCount++;
 
-            val = WindInv->GetCurrentDump();
-            ival = (int)val;
-            sprintf(str, "%d", ival);
-            WindTable->SetText(3, 1, str);
-
             val = WindInv->GetCurrentRpm();
             sprintf(str, "%7.1Lf", val);
-            WindTable->SetText(4, 1, str);
+            WindTable->SetText(3, 1, str);
 
             val = WindInv->GetDayEnergy();
             sprintf(str, "%7.1Lf", val);
-            WindTable->SetText(5, 1, str);
+            WindTable->SetText(4, 1, str);
         }
 
         if (w->IsOnline())
