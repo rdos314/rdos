@@ -363,33 +363,35 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
             if (FCurrPower >= 2000)
             {
                 if (night)
-                    FMaxTank = 450 - ambient;
+                    FMaxTank = 420 - ambient;
                 else
-                    FMaxTank = 480 - ambient;
+                    FMaxTank = 450 - ambient;
             }
             else
             {
                 if (FCurrPower >= 1000)
                 {
                     if (night)
-                        FMaxTank = 400 - ambient;
+                        FMaxTank = 370 - ambient;
                     else
-                        FMaxTank = 440 - ambient;
+                        FMaxTank = 410 - ambient;
                 }
                 else
                 {
                     if (night)
-                        FMaxTank = 350 - ambient;
+                        FMaxTank = 320 - ambient;
                     else
-                        FMaxTank = 400 - ambient;
+                        FMaxTank = 370 - ambient;
                 }
             }
 
-            if (FMaxTank > 410)
-                FMaxTank = 410;
+            if (FMaxTank > 500)
+                FMaxTank = 500;
         }
         else
             FMaxTank = 200;
+
+//        FEch.SetHeatLimit(FMaxTank);
 
         if (FTankTemp > FMaxTank)
         {

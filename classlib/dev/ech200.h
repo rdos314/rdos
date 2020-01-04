@@ -37,6 +37,12 @@ public:
     TEch200(TModbusDevice *moddev, int address);
     virtual ~TEch200();
 
+    void SetHeatLimit(int Limit);
+    void SetColdLimit(int Limit);
+
+    bool IsHeatLimitUpdated();
+    bool IsColdLimitUpdated();
+
     int GetHeatInlet();
     int GetHeatOutlet();
     int GetColdInlet();
@@ -47,12 +53,21 @@ public:
 
 protected:
     int ReadParam(int index);
+    void WriteParam(int index, int val);
     int ReadInput(int index);
     virtual void Execute();
 
     bool FCooling;
     bool FHeating;
     bool FOn;
+
+    int FColdSet;
+    bool FUpdateCold;
+    int FColdLimit;
+
+    int FHeatSet;
+    bool FUpdateHeat;
+    int FHeatLimit;
 
     int FHeatInlet;
     int FHeatOutlet;

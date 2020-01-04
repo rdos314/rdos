@@ -53,6 +53,9 @@ TEch200::TEch200(TModbusDevice *moddev, int address)
     FCooling = false;
     FHeating = false;
 
+    FUpdateHeat = false;
+    FUpdateCold = false;
+
     Start("ECH200", 0x8000);
 }
 
@@ -69,6 +72,84 @@ TEch200::TEch200(TModbusDevice *moddev, int address)
 ##########################################################################*/
 TEch200::~TEch200()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::SetHeatLimit
+#
+#   Purpose....: Set heat limit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TEch200::SetHeatLimit(int Limit)
+{
+    if (Limit < 250)
+        Limit = 250;
+
+    if (Limit > 500)
+        Limit = 500;
+
+    FHeatLimit = Limit;
+    FUpdateHeat = true;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::SetColdLimit
+#
+#   Purpose....: Set cold limit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TEch200::SetColdLimit(int Limit)
+{
+    if (Limit < 100)
+        Limit = 100;
+
+    if (Limit > 250)
+        Limit = 250;
+
+    FColdLimit = Limit;
+    FUpdateCold = true;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::IsHeatLimitUpdated
+#
+#   Purpose....: Is heat limit updated
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TEch200::IsHeatLimitUpdated()
+{
+    return FUpdateHeat;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::IsColdLimitUpdated
+#
+#   Purpose....: Is cold limit updated
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TEch200::IsColdLimitUpdated()
+{
+    return FUpdateCold;
 }
 
 /*##########################################################################
@@ -204,6 +285,27 @@ int TEch200::ReadParam(int index)
 
 /*##########################################################################
 #
+#   Name       : TEch200::WriteParam
+#
+#   Purpose....: Write param
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TEch200::WriteParam(int index, int val)
+{
+    int reg;
+
+    reg = 40001 + 2048 + index;
+    FModbus.StartWritePresetRegisters(reg, 1, val);
+    FModbus.AddPresetRegister(reg, val);
+    FModbus.DoWritePresetRegisters();
+}
+
+/*##########################################################################
+#
 #   Name       : TEch200::ReadInput
 #
 #   Purpose....: Read input
@@ -262,6 +364,26 @@ void TEch200::Execute()
 
     for (;;)
     {
+        if (FUpdateCold)
+        {
+            if (FColdSet != FColdLimit)
+                WriteParam(1, FColdLimit);
+
+            FColdSet = ReadParam(1);
+            if (FColdSet == FColdLimit)
+                FUpdateCold = false;
+        }
+
+        if (FUpdateHeat)
+        {
+            if (FHeatSet != FHeatLimit)
+                WriteParam(2, FHeatLimit);
+
+            FHeatSet = ReadParam(2);
+            if (FHeatSet == FHeatLimit)
+                FUpdateHeat = false;
+        }
+
         if ((counter % 30 == 0))
         {
             high = ReadInput(0x46E);
@@ -285,6 +407,9 @@ void TEch200::Execute()
             mid = ReadInput(0x4BF);
             high = ReadInput(0x4C0);
             FManualAlarms = 65536 * high + 256 * mid + low;
+
+            FColdSet = ReadParam(1);
+            FHeatSet = ReadParam(2);
         }
 
         low = ReadInput(0x47A);

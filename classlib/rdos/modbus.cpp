@@ -540,6 +540,52 @@ int TModbus::PresetRegister(int Reg, int Val)
 
 /*##########################################################################
 #
+#   Name       : TModbus::PresetHoldingRegister
+#
+#   Purpose....: Preset single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::PresetHoldingRegister(int Reg, int Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        msg[4] = 2;
+
+        temp = (short int)Val;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[5], &temp, 2);
+
+        len = Session(16, msg, 7, reply);
+
+        if (len == 4)
+            if (memcmp(msg, &reply[2], 4) == 0)
+                return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TModbus::ReadHoldingRegisterABCD
 #
 #   Purpose....: Read single holding register
