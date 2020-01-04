@@ -33,6 +33,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "ech200.h"
 #include "vp.h"
 #include "lowset.h"
 #include "midset.h"
@@ -70,7 +71,7 @@ TVp::TVp(TControlThread *control)
   : FLog("TVp")
 {
     int i;
-    
+
     FControl = control;
 
     FTankTemp = 200;
@@ -273,11 +274,11 @@ long double TVp::GetHeatP()
 void TVp::SetTempError(int diff)
 {
     FSection.Enter();
-    
+
     TempCount++;
         TempSum += diff;
 
-    FSection.Leave();    
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -350,7 +351,7 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
 
         AmbientSum += fact;
         AmbientCount++;
-    
+
         FValidAmbient = TRUE;
 
         FMaxTank = 200;
@@ -393,8 +394,8 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
             FLowTemp = FTankTemp - 30;
             FHasLowTemp = TRUE;
         }
-           
-        FSection.Leave();    
+
+        FSection.Leave();
     }
 }
 
@@ -411,11 +412,11 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
 void TVp::SetMaxMotor(int motor)
 {
     FSection.Enter();
-    
+
     FMotorCount++;
     FMotorSum += motor;
 
-    FSection.Leave();    
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -459,7 +460,7 @@ void TVp::UpdateCirc(int diostat)
         on = TRUE;
 
     if (FTankTemp > 270)
-    {                
+    {
         if (FCirc == 0)
         {
             if (on)
@@ -483,7 +484,7 @@ void TVp::UpdateCirc(int diostat)
                 if (RdosReadSerialLines(1, &diostat))
                     if ((diostat & 0x10) != 0)
                         on = TRUE;
-            }                    
+            }
         }
     }
 
@@ -521,11 +522,11 @@ void TVp::UpdateVp(int diff)
         else
         {
             on = FPrevOn;
-            
+
             if (diff > 0)
             {
                 FOffCounter = OFF_TIMEOUT;
-                
+
                 if (FIncCount)
                 {
                     FLowTemp = FTankTemp - 30;
@@ -538,9 +539,9 @@ void TVp::UpdateVp(int diff)
             {
                 if (FOffCounter)
                     FOffCounter--;
-                    
+
                 FIncCount = 0;
-            
+
                 if (!FHasLowTemp)
                 {
                     FLowTemp = FTankTemp - 5;
@@ -565,11 +566,11 @@ void TVp::UpdateVp(int diff)
     }
 
     FPrevOn = on;
-    
+
     if (RdosReadSerialLines(1, &diostat))
-    {                
+    {
         if (on)
-        {               
+        {
             if ((diostat & 0x40) == 0)
                 RdosToggleSerialLine(1, 6);   // heat
 
@@ -583,7 +584,7 @@ void TVp::UpdateVp(int diff)
 
             if ((diostat & 0x40) != 0)
                 RdosToggleSerialLine(1, 6);   // heat
-                                               
+
         }
     }
 
@@ -642,7 +643,7 @@ void TVp::CalcLinearRegression(int Size)
         sd += FHistory[j] - FCurrMean;
     }
 
-    xydiff = sum;        
+    xydiff = sum;
     sd = sd / Size;
 
     FCurrFlow = xydiff / xdiff2;
@@ -686,7 +687,7 @@ void TVp::UpdateHistory(long double val)
     int j;
     int index;
     int n;
-    
+
     if (FHistoryCount < MAX_LEVEL_HISTORY)
     {
         FHistoryIndex = 0;
@@ -708,7 +709,7 @@ void TVp::UpdateHistory(long double val)
         FHistory[i] = FRawHistory[j];
     }
 
- 
+
     if (FHistoryCount > 60)
     {
         index = 0;
@@ -720,7 +721,7 @@ void TVp::UpdateHistory(long double val)
             n = HistoryArr[index];
             index++;
             CalcLinearRegression(n);
-            
+
             while (HistoryArr[index] && FCurrTurbulence >= 20.0)
             {
                 n = HistoryArr[index];
@@ -736,7 +737,7 @@ void TVp::UpdateHistory(long double val)
             FCurrTemp = FCurrMean + FCurrSlope * 0.5;
             FTankTemp = (int)(FCurrTemp * 10.0);
             FValidTank = TRUE;
-        
+
             if (FCurrSlope > 0.1)
                 UpdateVp(1);
             else
@@ -755,7 +756,7 @@ void TVp::UpdateHistory(long double val)
             FValidTank = TRUE;
         }
 
-    } 
+    }
 }
 
 /*##########################################################################
@@ -804,7 +805,7 @@ void TVp::CreateDayFile(int year, int month, int day)
         delete FDayFile;
 
     FDayFile = new TFile(filename);
-    
+
     if (!FDayFile->IsOpen())
     {
         delete FDayFile;
@@ -1005,7 +1006,7 @@ void TVp::Execute()
     CommentLabelFactory.SetBackColor(0, 20, 50);
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
-    
+
     ValueLabelFactory.SetSpace(4, 4);
     ValueLabelFactory.SetFont(35);
     ValueLabelFactory.SetBackColor(100, 100, 100);
@@ -1019,6 +1020,11 @@ void TVp::Execute()
     UnitLabelFactory.AlignLeft();
 
     TTableControl *Table;
+    TTableControl *EchTable;
+
+    TSerialDevice serial(1, 9600, 'E', 8, 1);
+    TModbusDevice moddev(&serial);
+    TEch200 Ech(&moddev, 1);
 
     LockGUI();
 
@@ -1061,6 +1067,38 @@ void TVp::Execute()
 
     Table->Show();
 
+    EchTable = new TTableControl(FControl, 550, 400, 500, 275);
+    EchTable->SetBackColor(0, 20, 50);
+    EchTable->SetRowSpacing(10);
+    EchTable->SetColSpacing(16);
+    EchTable->SetSpacingColor(0, 20, 50);
+    EchTable->AddLabelColumn(&CommentLabelFactory, 175);
+    EchTable->AddLabelColumn(&ValueLabelFactory, 175);
+    EchTable->AddLabelColumn(&UnitLabelFactory, 100);
+
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+    EchTable->AddRow(35, 55);
+
+    EchTable->SetText(0, 0, "Heat in");
+    EchTable->SetText(0, 2, "°C");
+
+    EchTable->SetText(1, 0, "Heat out");
+    EchTable->SetText(1, 2, "°C");
+
+    EchTable->SetText(2, 0, "Cold in");
+    EchTable->SetText(2, 2, "°C");
+
+    EchTable->SetText(3, 0, "Auto larm");
+    EchTable->SetText(3, 2, "");
+
+    EchTable->SetText(4, 0, "Manual larm");
+    EchTable->SetText(4, 2, "");
+
+    EchTable->Show();
+
     UnlockGUI();
 
     TempSum = 0;
@@ -1100,6 +1138,29 @@ void TVp::Execute()
 
     while (FInstalled)
     {
+        if (Ech.IsOn())
+        {
+            ival = Ech.GetHeatInlet();
+            sprintf(str, "%d.%01d", ival / 10, ival % 10);
+            EchTable->SetText(0, 1, str);
+
+            ival = Ech.GetHeatOutlet();
+            sprintf(str, "%d.%01d", ival / 10, ival % 10);
+            EchTable->SetText(1, 1, str);
+
+            ival = Ech.GetColdInlet();
+            sprintf(str, "%d.%01d", ival / 10, ival % 10);
+            EchTable->SetText(2, 1, str);
+        }
+
+        ival = Ech.GetAutoAlarms();
+        sprintf(str, "%06hX", ival);
+        EchTable->SetText(3, 1, str);
+
+        ival = Ech.GetManualAlarms();
+        sprintf(str, "%06hX", ival);
+        EchTable->SetText(4, 1, str);
+
         if (RdosReadSerialRaw(1, 5, &ival))
         {
             if (ival > 100 && ival < 600)
@@ -1124,7 +1185,7 @@ void TVp::Execute()
                 sprintf(str, "%5.1Lf", FCurrTurbulence);
                 Table->SetText(6, 1, str);
             }
-            
+
         }
 
         if (RdosReadSerialRaw(1, 6, &ival))
@@ -1167,13 +1228,13 @@ void TVp::Execute()
 
                if (FCirc > 75 && FTankTemp <= FMaxTank)
                    FVpOn = TRUE;
-        
+
             }
 
             FMotorSum = 0;
             FMotorCount = 0;
 
-            FSection.Leave();    
+            FSection.Leave();
         }
 
         if (LastMin != CurrTime->GetMin() && TempCount)
@@ -1194,7 +1255,7 @@ void TVp::Execute()
 
             if (FPrevOn)
                 E += 0.055;
-              
+
             sprintf(str, "%5.1Lf", E);
             Table->SetText(4, 1, str);
 

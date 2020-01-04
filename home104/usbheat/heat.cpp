@@ -52,7 +52,6 @@
 #include "linyaxis.h"
 #include "png.h"
 #include "ddns.h"
-#include "ech200.h"
 
 int GetWebConnectionCount();
 
@@ -925,11 +924,6 @@ int main()
     TTableControl *WeatherTable;
     TTableControl *SolarTable;
     TTableControl *WindTable;
-    TTableControl *EchTable;
-
-    TSerialDevice serial(1, 9600, 'E', 8, 1);
-    TModbusDevice moddev(&serial);
-    TEch200 Ech(&moddev, 1);
 
     RdosCreateThread(WatchdogThread, "Watdog", 0, 0x2000);
 
@@ -1193,38 +1187,6 @@ int main()
 
     SolarTable->Show();
 
-    EchTable = new TTableControl(control, 550, 400, 500, 275);
-    EchTable->SetBackColor(0, 20, 50);
-    EchTable->SetRowSpacing(10);
-    EchTable->SetColSpacing(16);
-    EchTable->SetSpacingColor(0, 20, 50);
-    EchTable->AddLabelColumn(&CommentFactory, 175);
-    EchTable->AddLabelColumn(&ValueFactory, 175);
-    EchTable->AddLabelColumn(&UnitFactory, 100);
-
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-
-    EchTable->SetText(0, 0, "Heat in");
-    EchTable->SetText(0, 2, "°C");
-
-    EchTable->SetText(1, 0, "Heat out");
-    EchTable->SetText(1, 2, "°C");
-
-    EchTable->SetText(2, 0, "Cold in");
-    EchTable->SetText(2, 2, "°C");
-
-    EchTable->SetText(3, 0, "Auto larm");
-    EchTable->SetText(3, 2, "");
-
-    EchTable->SetText(4, 0, "Manual larm");
-    EchTable->SetText(4, 2, "");
-
-    EchTable->Show();
-
     UnlockGUI();
 
     CurrTime = new TDateTime;
@@ -1377,29 +1339,6 @@ int main()
             sprintf(str, "%7.1Lf", val);
             WindTable->SetText(5, 1, str);
         }
-
-        if (Ech.IsOn())
-        {
-            ival = Ech.GetHeatInlet();
-            sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            EchTable->SetText(0, 1, str);
-
-            ival = Ech.GetHeatOutlet();
-            sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            EchTable->SetText(1, 1, str);
-
-            ival = Ech.GetColdInlet();
-            sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            EchTable->SetText(2, 1, str);
-        }
-
-        ival = Ech.GetAutoAlarms();
-        sprintf(str, "%06hX", ival);
-        EchTable->SetText(3, 1, str);
-
-        ival = Ech.GetManualAlarms();
-        sprintf(str, "%06hX", ival);
-        EchTable->SetText(4, 1, str);
 
         if (w->IsOnline())
         {
