@@ -103,7 +103,7 @@ protected:
     int FHasLowTemp;
     int FLowTemp;
 
-    int FOffCounter;
+    int FStartTimeout;
 
     int FValidTank;
     int FValidHeat;

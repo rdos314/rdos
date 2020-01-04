@@ -45,7 +45,7 @@
 #define VOLUME_TANK 500
 #define VOLUME_HEAT 100
 
-#define OFF_TIMEOUT   5 * 60
+#define START_TIMEOUT   5 * 60
 
 void LockGUI();
 void UnlockGUI();
@@ -89,7 +89,7 @@ TVp::TVp(TControlThread *control)
     FHasCirc = FALSE;
     FHistoryCount = 0;
     FMaxTank = 370;
-    FOffCounter = OFF_TIMEOUT;
+    FStartTimeout = 0;
 
     FCurrPower = 0;
     FPowerSum = 0.0;
@@ -391,8 +391,6 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
         else
             FMaxTank = 200;
 
-//        FEch.SetHeatLimit(FMaxTank);
-
         if (FTankTemp > FMaxTank)
         {
             FLowTemp = FTankTemp - 30;
@@ -510,6 +508,7 @@ void TVp::UpdateCirc(int diostat)
 ##########################################################################*/
 void TVp::UpdateVp(int diff)
 {
+    int tries;
     int diostat;
     int on = FVpOn;
 
@@ -519,41 +518,33 @@ void TVp::UpdateVp(int diff)
     {
         on = FEch.IsOn();
 
-        if (diff > 0)
-        {
-            FOffCounter = OFF_TIMEOUT;
-
-            if (FIncCount)
-            {
-                FLowTemp = FTankTemp - 30;
-                FHasLowTemp = TRUE;
-            }
-
-            FIncCount++;
-        }
+        if (on)
+            FStartTimeout = 0;
         else
         {
-            if (FOffCounter)
-                FOffCounter--;
-
-            FIncCount = 0;
-
-            if (!FHasLowTemp)
+            if (FTankTemp <= FLowTemp + 5)
             {
-                FLowTemp = FTankTemp - 5;
-                FHasLowTemp = TRUE;
-            }
-
-            if (FOffCounter == 0)
-            {
-                if (FTankTemp <= FLowTemp + 5)
+                if (FStartTimeout)
                 {
-                    if (!on)
+                    FStartTimeout--;
+
+                    if (FStartTimeout == 0)
                     {
-                        FLog.Log(0, "UpdateVp", "Limit on");
-                        FOffCounter = OFF_TIMEOUT;
+                        FLowTemp = FTankTemp - 30;
+                        FHasLowTemp = TRUE;
                     }
+                }
+                else
+                {
+                    FLog.printf(0, "UpdateVp", "Set Limit %d.%01d", FMaxTank / 10, FMaxTank % 10);
+
+                    FEch.SetHeatLimit(FMaxTank);
+
+                    for (tries = 0; tries < 100 && !FEch.IsHeatLimitUpdated(); tries++)
+                        RdosWaitMilli(100);
+
                     on = TRUE;
+                    FStartTimeout = START_TIMEOUT;
                 }
             }
         }
@@ -574,7 +565,10 @@ void TVp::UpdateVp(int diff)
             if (!FEch.IsOn())
             {
                 if ((diostat & 0x20) != 0)
+                {
+                    FLog.Log(0, "UpdateVp", "Stopped");
                     RdosToggleSerialLine(1, 5);   // cold
+                }
 
                 if ((diostat & 0x40) != 0)
                     RdosToggleSerialLine(1, 6);   // heat
@@ -583,7 +577,6 @@ void TVp::UpdateVp(int diff)
     }
 
     UpdateCirc(diostat);
-
 
     FSection.Leave();
 }
