@@ -99,6 +99,7 @@ protected:
     int FIncCount;
     int FHasCirc;
     long double FCircSpeed;
+    bool FVpCircOn;
 
     int FHasLowTemp;
     int FLowTemp;

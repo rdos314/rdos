@@ -363,30 +363,30 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
             if (FCurrPower >= 2000)
             {
                 if (night)
-                    FMaxTank = 420 - ambient;
-                else
                     FMaxTank = 450 - ambient;
+                else
+                    FMaxTank = 480 - ambient;
             }
             else
             {
                 if (FCurrPower >= 1000)
                 {
                     if (night)
-                        FMaxTank = 370 - ambient;
+                        FMaxTank = 400 - ambient;
                     else
-                        FMaxTank = 410 - ambient;
+                        FMaxTank = 440 - ambient;
                 }
                 else
                 {
                     if (night)
-                        FMaxTank = 320 - ambient;
+                        FMaxTank = 350 - ambient;
                     else
-                        FMaxTank = 370 - ambient;
+                        FMaxTank = 400 - ambient;
                 }
             }
 
-            if (FMaxTank > 500)
-                FMaxTank = 500;
+            if (FMaxTank > 470)
+                FMaxTank = 470;
         }
         else
             FMaxTank = 200;
@@ -528,17 +528,14 @@ void TVp::UpdateVp(int diff)
                 {
                     FStartTimeout--;
 
-                    if (FStartTimeout == 0)
-                    {
-                        FLowTemp = FTankTemp - 30;
-                        FHasLowTemp = TRUE;
-                    }
+                    if (!FStartTimeout)
+                        on = TRUE;
                 }
                 else
                 {
                     FLog.printf(0, "UpdateVp", "Set Limit %d.%01d", FMaxTank / 10, FMaxTank % 10);
 
-                    FEch.SetHeatLimit(FMaxTank);
+                    FEch.SetHeatLimit(FMaxTank + 30);
 
                     for (tries = 0; tries < 100 && !FEch.IsHeatLimitUpdated(); tries++)
                         RdosWaitMilli(100);
@@ -555,7 +552,11 @@ void TVp::UpdateVp(int diff)
         if (on)
         {
             if ((diostat & 0x40) == 0)
+            {
+                FVpCircOn = true;
+                FLog.Log(0, "UpdateVp", "Started");
                 RdosToggleSerialLine(1, 6);   // heat
+            }
 
             if ((diostat & 0x20) == 0)
                 RdosToggleSerialLine(1, 5);   // cold
@@ -566,6 +567,8 @@ void TVp::UpdateVp(int diff)
             {
                 if ((diostat & 0x20) != 0)
                 {
+                    FVpCircOn = false;
+                    FLowTemp = FTankTemp - 30;
                     FLog.Log(0, "UpdateVp", "Stopped");
                     RdosToggleSerialLine(1, 5);   // cold
                 }
@@ -1113,13 +1116,15 @@ void TVp::Execute()
                 FVpOn = FALSE;
             else
                 FVpOn = TRUE;
+
+            FVpCircOn = FVpOn;
         }
         break;
     }
 
     while (FInstalled)
     {
-        if (FEch.IsOn())
+        if (FEch.IsOn() || FVpCircOn)
         {
             ival = FEch.GetHeatInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
