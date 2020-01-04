@@ -94,7 +94,6 @@ protected:
     int FPowerIndex;
 
     int FVpOn;
-    int FPrevOn;
     int FValidCirc;
     int FCirc;
     int FIncCount;

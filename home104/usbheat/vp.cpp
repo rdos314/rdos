@@ -515,59 +515,47 @@ void TVp::UpdateVp(int diff)
 
     if (on)
     {
-        if (FTankTemp > FMaxTank)
+        on = FEch.IsOn();
+
+        if (diff > 0)
         {
-            if (FPrevOn)
-                FLog.Log(0, "UpdateVp", "Temp off");
-            on = FALSE;
+            FOffCounter = OFF_TIMEOUT;
+
+            if (FIncCount)
+            {
+                FLowTemp = FTankTemp - 30;
+                FHasLowTemp = TRUE;
+            }
+
+            FIncCount++;
         }
         else
         {
-            on = FPrevOn;
+            if (FOffCounter)
+                FOffCounter--;
 
-            if (diff > 0)
+            FIncCount = 0;
+
+            if (!FHasLowTemp)
             {
-                FOffCounter = OFF_TIMEOUT;
-
-                if (FIncCount)
-                {
-                    FLowTemp = FTankTemp - 30;
-                    FHasLowTemp = TRUE;
-                }
-
-                FIncCount++;
+                FLowTemp = FTankTemp - 5;
+                FHasLowTemp = TRUE;
             }
-            else
+
+            if (FOffCounter == 0)
             {
-                if (FOffCounter)
-                    FOffCounter--;
-
-                FIncCount = 0;
-
-                if (!FHasLowTemp)
+                if (FTankTemp <= FLowTemp + 5)
                 {
-                    FLowTemp = FTankTemp - 5;
-                    FHasLowTemp = TRUE;
-                }
-
-                if (FOffCounter == 0)
-                {
-                    if (FTankTemp <= FLowTemp + 5)
+                    if (!on)
                     {
-                        if (!on)
-                        {
-                            FLog.Log(0, "UpdateVp", "Limit on");
-                            FOffCounter = OFF_TIMEOUT;
-                        }
-                        on = TRUE;
+                        FLog.Log(0, "UpdateVp", "Limit on");
+                        FOffCounter = OFF_TIMEOUT;
                     }
+                    on = TRUE;
                 }
             }
-
         }
     }
-
-    FPrevOn = on;
 
     if (RdosReadSerialLines(1, &diostat))
     {
@@ -581,12 +569,14 @@ void TVp::UpdateVp(int diff)
         }
         else
         {
-            if ((diostat & 0x20) != 0)
-                RdosToggleSerialLine(1, 5);   // cold
+            if (!FEch.IsOn())
+            {
+                if ((diostat & 0x20) != 0)
+                    RdosToggleSerialLine(1, 5);   // cold
 
-            if ((diostat & 0x40) != 0)
-                RdosToggleSerialLine(1, 6);   // heat
-
+                if ((diostat & 0x40) != 0)
+                    RdosToggleSerialLine(1, 6);   // heat
+            }
         }
     }
 
@@ -925,7 +915,7 @@ void TVp::GetTurbolence(char *str)
 ##########################################################################*/
 void TVp::GetOn(char *str)
 {
-    if (FPrevOn)
+    if (FEch.IsOn())
         strcpy(str, "1");
     else
         strcpy(str, "0");
@@ -1128,8 +1118,6 @@ void TVp::Execute()
                 FVpOn = FALSE;
             else
                 FVpOn = TRUE;
-
-            FPrevOn = FVpOn;
         }
         break;
     }
@@ -1251,7 +1239,7 @@ void TVp::Execute()
                 Table->SetText(2, 1, str);
             }
 
-            if (FPrevOn)
+            if (FEch.IsOn())
                 E += 0.055;
 
             sprintf(str, "%5.1Lf", E);
