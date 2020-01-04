@@ -1010,7 +1010,6 @@ void TVp::Execute()
     UnitLabelFactory.AlignLeft();
 
     TTableControl *Table;
-    TTableControl *EchTable;
 
     LockGUI();
 
@@ -1034,56 +1033,25 @@ void TVp::Execute()
     Table->SetText(0, 0, "Tank temp");
     Table->SetText(0, 2, "°C");
 
-    Table->SetText(1, 0, "Förvärme temp");
-    Table->SetText(1, 2, "°C");
+    Table->SetText(1, 0, "Cirkulation");
+    Table->SetText(1, 2, "V");
 
-    Table->SetText(2, 0, "Start");
+    Table->SetText(2, 0, "Heat in");
     Table->SetText(2, 2, "°C");
 
-    Table->SetText(3, 0, "Cirkulation");
-    Table->SetText(3, 2, "V");
+    Table->SetText(3, 0, "Heat out");
+    Table->SetText(3, 2, "°C");
 
-    Table->SetText(4, 0, "Förbrukning");
-    Table->SetText(4, 2, "kWh");
+    Table->SetText(4, 0, "Cold in");
+    Table->SetText(4, 2, "°C");
 
-    Table->SetText(5, 0, "Effekt");
-    Table->SetText(5, 2, "kW");
+    Table->SetText(5, 0, "Auto larm");
+    Table->SetText(5, 2, "");
 
-    Table->SetText(6, 0, "Turbolence");
+    Table->SetText(6, 0, "Manual larm");
+    Table->SetText(6, 2, "");
 
     Table->Show();
-
-    EchTable = new TTableControl(FControl, 550, 400, 500, 275);
-    EchTable->SetBackColor(0, 20, 50);
-    EchTable->SetRowSpacing(10);
-    EchTable->SetColSpacing(16);
-    EchTable->SetSpacingColor(0, 20, 50);
-    EchTable->AddLabelColumn(&CommentLabelFactory, 175);
-    EchTable->AddLabelColumn(&ValueLabelFactory, 175);
-    EchTable->AddLabelColumn(&UnitLabelFactory, 100);
-
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-    EchTable->AddRow(35, 55);
-
-    EchTable->SetText(0, 0, "Heat in");
-    EchTable->SetText(0, 2, "°C");
-
-    EchTable->SetText(1, 0, "Heat out");
-    EchTable->SetText(1, 2, "°C");
-
-    EchTable->SetText(2, 0, "Cold in");
-    EchTable->SetText(2, 2, "°C");
-
-    EchTable->SetText(3, 0, "Auto larm");
-    EchTable->SetText(3, 2, "");
-
-    EchTable->SetText(4, 0, "Manual larm");
-    EchTable->SetText(4, 2, "");
-
-    EchTable->Show();
 
     UnlockGUI();
 
@@ -1128,24 +1096,24 @@ void TVp::Execute()
         {
             ival = FEch.GetHeatInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            EchTable->SetText(0, 1, str);
+            Table->SetText(2, 1, str);
 
             ival = FEch.GetHeatOutlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            EchTable->SetText(1, 1, str);
+            Table->SetText(3, 1, str);
 
             ival = FEch.GetColdInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            EchTable->SetText(2, 1, str);
+            Table->SetText(4, 1, str);
         }
 
         ival = FEch.GetAutoAlarms();
         sprintf(str, "%06hX", ival);
-        EchTable->SetText(3, 1, str);
+        Table->SetText(5, 1, str);
 
         ival = FEch.GetManualAlarms();
         sprintf(str, "%06hX", ival);
-        EchTable->SetText(4, 1, str);
+        Table->SetText(6, 1, str);
 
         if (RdosReadSerialRaw(1, 5, &ival))
         {
@@ -1164,34 +1132,8 @@ void TVp::Execute()
             {
                 sprintf(str, "%5.2Lf", FCurrTemp);
                 Table->SetText(0, 1, str);
-
-                sprintf(str, "%5.2Lf", PTank);
-                Table->SetText(5, 1, str);
-
-                sprintf(str, "%5.1Lf", FCurrTurbulence);
-                Table->SetText(6, 1, str);
             }
 
-        }
-
-        if (RdosReadSerialRaw(1, 6, &ival))
-        {
-            FHeatSum += ival;
-            FHeatCount++;
-
-            if (FHeatCount >= 5)
-            {
-                FHeatTemp = FHeatSum / FHeatCount;
-
-                val = (long double)FHeatTemp / 10;
-                sprintf(str, "%5.1Lf", val);
-                Table->SetText(1, 1, str);
-
-                FValidHeat = TRUE;
-
-                FHeatSum = 0;
-                FHeatCount = 0;
-            }
         }
 
         CurrTime = new TDateTime;
@@ -1229,21 +1171,8 @@ void TVp::Execute()
             {
                 val = (long double)FCirc / 10;
                 sprintf(str, "%4.1Lf", val);
-                Table->SetText(3, 1, str);
+                Table->SetText(1, 1, str);
             }
-
-            if (FHasLowTemp)
-            {
-                val = (long double)(FLowTemp) / 10;
-                sprintf(str, "%5.1Lf", val);
-                Table->SetText(2, 1, str);
-            }
-
-            if (FEch.IsOn())
-                E += 0.055;
-
-            sprintf(str, "%5.1Lf", E);
-            Table->SetText(4, 1, str);
 
             for (i = 1; i < 20; i++)
             {
