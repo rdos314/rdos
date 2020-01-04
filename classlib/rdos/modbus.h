@@ -52,7 +52,6 @@ public:
     int ReadInputRegister(int Reg, int *val);
 
     int PresetRegister(int Reg, int Val);
-    int PresetHoldingRegister(int Reg, int Val);
 
     int ReadHoldingRegisterABCD(int Reg, float *Val);
     int PresetRegisterABCD(int Reg, float Val);
