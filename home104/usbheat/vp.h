@@ -32,6 +32,7 @@
 #include "fuzzy.h"
 #include "control.h"
 #include "rdoslog.h"
+#include "ech200.h"
 
 #define MAX_LEVEL_HISTORY   601
 #define POWER_COUNT          30
@@ -91,7 +92,7 @@ protected:
     int FCurrPower;
     int FPowerCount;
     int FPowerIndex;
-         
+
     int FVpOn;
     int FPrevOn;
     int FValidCirc;
@@ -145,6 +146,10 @@ protected:
     int FMaxTank;
 
     TControlThread *FControl;
+
+    TSerialDevice FSerial;
+    TModbusDevice FModDev;
+    TEch200 FEch;
 
     TSection FSection;
     TRdosLog FLog;

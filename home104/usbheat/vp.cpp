@@ -33,7 +33,6 @@
 #include <time.h>
 #include <math.h>
 
-#include "ech200.h"
 #include "vp.h"
 #include "lowset.h"
 #include "midset.h"
@@ -68,7 +67,10 @@ const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0
 #
 ##########################################################################*/
 TVp::TVp(TControlThread *control)
-  : FLog("TVp")
+  : FLog("TVp"),
+    FSerial(1, 9600, 'E', 8, 1),
+    FModDev(&FSerial),
+    FEch(&FModDev, 1)
 {
     int i;
 
@@ -1022,10 +1024,6 @@ void TVp::Execute()
     TTableControl *Table;
     TTableControl *EchTable;
 
-    TSerialDevice serial(1, 9600, 'E', 8, 1);
-    TModbusDevice moddev(&serial);
-    TEch200 Ech(&moddev, 1);
-
     LockGUI();
 
     Table = new TTableControl(FControl, 5, 275, 800, 350);
@@ -1138,26 +1136,26 @@ void TVp::Execute()
 
     while (FInstalled)
     {
-        if (Ech.IsOn())
+        if (FEch.IsOn())
         {
-            ival = Ech.GetHeatInlet();
+            ival = FEch.GetHeatInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
             EchTable->SetText(0, 1, str);
 
-            ival = Ech.GetHeatOutlet();
+            ival = FEch.GetHeatOutlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
             EchTable->SetText(1, 1, str);
 
-            ival = Ech.GetColdInlet();
+            ival = FEch.GetColdInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
             EchTable->SetText(2, 1, str);
         }
 
-        ival = Ech.GetAutoAlarms();
+        ival = FEch.GetAutoAlarms();
         sprintf(str, "%06hX", ival);
         EchTable->SetText(3, 1, str);
 
-        ival = Ech.GetManualAlarms();
+        ival = FEch.GetManualAlarms();
         sprintf(str, "%06hX", ival);
         EchTable->SetText(4, 1, str);
 
