@@ -119,20 +119,44 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
     int datalen;
     int replylen;
     int ok = FALSE;
+    int tries;
 
-    msg[0] = FAddress;
-    msg[1] = FunctionCode;
-
-    if (size < 252)
+    for (tries = 0; tries < 10 && !ok; tries++)
     {
-        memcpy(&msg[2], buf, size);
-        ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
+        msg[0] = FAddress;
+        msg[1] = FunctionCode;
+
+        if (size < 252)
+        {
+            memcpy(&msg[2], buf, size);
+            ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
+        }
     }
 
     if (ok)
         return datalen;
     else
-        return 0;
+    {
+        FDevice->Reset();
+        RdosWaitMilli(5000);
+
+        for (tries = 0; tries < 10 && !ok; tries++)
+        {
+            msg[0] = FAddress;
+            msg[1] = FunctionCode;
+
+            if (size < 252)
+            {
+                memcpy(&msg[2], buf, size);
+                ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
+            }
+        }
+
+        if (ok)
+            return datalen;
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -1031,6 +1055,18 @@ int TModbusDevice::IsUsed(int Address)
 TSerialDevice *TModbusDevice::GetSerial()
 {
     return FSerial;
+}
+
+/*##################  TModbusDevice::Reset  ###############
+*   Purpose....: Reset serial device                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TModbusDevice::Reset()
+{
+    FSerial->Reset();
 }
 
 /*##########################################################################

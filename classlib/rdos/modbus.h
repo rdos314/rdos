@@ -91,6 +91,8 @@ public:
     TModbusDevice(TSerialDevice *serial);
     ~TModbusDevice();
 
+    void Reset();
+
     void EnableEcho();
     void DisableEcho();
 
