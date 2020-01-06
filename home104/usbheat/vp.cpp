@@ -528,17 +528,24 @@ void TVp::UpdateVp(int diff)
                 {
                     FStartTimeout--;
 
-                    if (!FStartTimeout)
+                    if (FStartTimeout)
                         on = TRUE;
+                    else
+                        FLog.printf(0, "UpdateVp", "Start timed out");
                 }
                 else
                 {
                     FLog.printf(0, "UpdateVp", "Set Limit %d.%01d", FMaxTank / 10, FMaxTank % 10);
 
-                    FEch.SetHeatLimit(FMaxTank + 30);
+                    FEch.SetHeatLimit(FMaxTank + 20);
 
                     for (tries = 0; tries < 100 && !FEch.IsHeatLimitUpdated(); tries++)
                         RdosWaitMilli(100);
+
+                    if (FEch.IsHeatLimitUpdated())
+                        FLog.printf(0, "UpdateVp", "Limit accepted");
+                    else
+                        FLog.printf(0, "UpdateVp", "Limit not updated");
 
                     on = TRUE;
                     FStartTimeout = START_TIMEOUT;
@@ -553,13 +560,17 @@ void TVp::UpdateVp(int diff)
         {
             if ((diostat & 0x40) == 0)
             {
-                FVpCircOn = true;
-                FLog.Log(0, "UpdateVp", "Started");
                 RdosToggleSerialLine(1, 6);   // heat
+                FLog.Log(0, "UpdateVp", "Heat started");
             }
 
             if ((diostat & 0x20) == 0)
+            {
                 RdosToggleSerialLine(1, 5);   // cold
+                FLog.Log(0, "UpdateVp", "Cold started");
+            }
+
+            FVpCircOn = true;
         }
         else
         {
@@ -567,14 +578,18 @@ void TVp::UpdateVp(int diff)
             {
                 if ((diostat & 0x20) != 0)
                 {
-                    FVpCircOn = false;
-                    FLowTemp = FTankTemp - 30;
-                    FLog.Log(0, "UpdateVp", "Stopped");
                     RdosToggleSerialLine(1, 5);   // cold
+                    FLog.Log(0, "UpdateVp", "Cold stopped");
                 }
 
                 if ((diostat & 0x40) != 0)
+                {
                     RdosToggleSerialLine(1, 6);   // heat
+                    FLog.Log(0, "UpdateVp", "Heat stopped");
+                }
+
+                FVpCircOn = false;
+                FLowTemp = FTankTemp - 30;
             }
         }
     }
