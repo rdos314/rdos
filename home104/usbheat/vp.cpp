@@ -391,9 +391,10 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
         else
             FMaxTank = 200;
 
-        if (FTankTemp > FMaxTank)
+
+        if (!FHasLowTemp)
         {
-            FLowTemp = FTankTemp - 30;
+            FLowTemp = FMaxTank - 30;
             FHasLowTemp = TRUE;
         }
 
@@ -584,12 +585,12 @@ void TVp::UpdateVp(int diff)
 
                 if ((diostat & 0x40) != 0)
                 {
+                    FLowTemp = FTankTemp - 30;
                     RdosToggleSerialLine(1, 6);   // heat
                     FLog.Log(0, "UpdateVp", "Heat stopped");
                 }
 
                 FVpCircOn = false;
-                FLowTemp = FTankTemp - 30;
             }
         }
     }
