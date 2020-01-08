@@ -23,6 +23,7 @@ copy ..\..\kernel\os\lon.rdv files
 copy ..\..\kernel\os\tlist.rdv files
 copy ..\..\kernel\os\wd.rdv files
 copy ..\..\kernel\os\guidev.rdv files
+copy ..\..\kernel\os\realtime.rdv files
 copy ..\..\kernel\bios\pcbios.rdv files
 copy ..\..\kernel\debug\kdebug.rdv files
 copy ..\..\kernel\debug\pcshut.exe files
