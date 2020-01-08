@@ -2526,20 +2526,53 @@ void TRdosImage::Clear()
 void TRdosImage::Add(TRdosObject *obj)
 {
     TRdosObject *p;
+    bool check = false;
+    bool skip = false;
 
-    obj->FLink = 0;
-
-    if (FObjectList)
+    switch (obj->GetType())
+    {
+        case RDOS_OBJECT_KERNEL:
+        case RDOS_OBJECT_SHUTDOWN:
+        case RDOS_OBJECT_DEVICE16:
+        case RDOS_OBJECT_DEVICE32:
+        case RDOS_OBJECT_LONG_MODE:
+        case RDOS_OBJECT_REAL_TIME:
+            check = true;
+            break;
+    }
+        
+    if (check)
     {
         p = FObjectList;
 
-        while (p->FLink)
-            p = p->FLink;
+        while (p && !skip)
+        {
+            if (p->GetType() == obj->GetType())
+                if (p->GetInfo() == obj->GetInfo())
+                    skip = true;
 
-        p->FLink = obj;
+            p = p->FLink;
+        }
     }
+
+    if (skip)
+        delete obj;
     else
-        FObjectList = obj;
+    {
+        obj->FLink = 0;
+
+        if (FObjectList)
+        {
+            p = FObjectList;
+
+            while (p->FLink)
+                p = p->FLink;
+
+            p->FLink = obj;
+        }
+        else
+            FObjectList = obj;
+    }
 }
 
 /*##########################################################################
