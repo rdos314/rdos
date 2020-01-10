@@ -73,6 +73,8 @@ public:
     TRdosSimpleDeviceBaseObject();
     TRdosSimpleDeviceBaseObject(TFile *File, int Size);
 
+    static int IsValid(const char *FileName);
+
 #ifdef __RDOS__
     TRdosSimpleDeviceBaseObject(int adapter, int entry, int size);
 #endif
@@ -92,6 +94,8 @@ class TRdosDosDeviceBaseObject : public TRdosObject
 public:
     TRdosDosDeviceBaseObject();
     TRdosDosDeviceBaseObject(TFile *File, int Size);
+
+    static int IsValid(const char *FileName);
 
 #ifdef __RDOS__
     TRdosDosDeviceBaseObject(int adapter, int entry, int size);
@@ -113,6 +117,8 @@ public:
     TRdosDevice16BaseObject();
     TRdosDevice16BaseObject(TFile *File, int Size);
 
+    static int IsValid(const char *FileName);
+
 #ifdef __RDOS__
     TRdosDevice16BaseObject(int adapter, int entry, int size);
 #endif
@@ -132,6 +138,8 @@ class TRdosDevice32BaseObject : public TRdosObject
 public:
     TRdosDevice32BaseObject();
     TRdosDevice32BaseObject(TFile *File, int Size);
+
+    static int IsValid(const char *FileName);
 
 #ifdef __RDOS__
     TRdosDevice32BaseObject(int adapter, int entry, int size);

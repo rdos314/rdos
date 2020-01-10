@@ -399,6 +399,34 @@ TRdosSimpleDeviceBaseObject::~TRdosSimpleDeviceBaseObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosSimpleDeviceBaseObject::IsValid
+#
+#   Purpose....: Check for valid device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosSimpleDeviceBaseObject::IsValid(const char *FileName)
+{
+    TExeHeader ExeHeader;
+    TFile File(FileName);
+    int ok = FALSE;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TExeHeader));
+
+        if (ExeHeader.Signature == 0x5A4D)
+            ok = TRUE;
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosSimpleDeviceBaseObject::LoadDeviceFile
 #
 #   Purpose....: Load device file
@@ -522,6 +550,36 @@ TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject(int adapter, int entry, int s
 ##########################################################################*/
 TRdosDosDeviceBaseObject::~TRdosDosDeviceBaseObject()
 {
+}
+
+
+/*##########################################################################
+#
+#   Name       : TRdosDosDeviceBaseObject::IsValid
+#
+#   Purpose....: Check for valid device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosDosDeviceBaseObject::IsValid(const char *FileName)
+{
+    TExeHeader ExeHeader;
+    TFile File(FileName);
+    int ok = FALSE;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TExeHeader));
+
+        if (ExeHeader.Signature == 0x5A4D)
+            ok = TRUE;
+    }
+
+    return ok;
 }
 
 /*##########################################################################
@@ -665,6 +723,35 @@ TRdosDevice16BaseObject::~TRdosDevice16BaseObject()
 {
 }
 
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16BaseObject::IsValid
+#
+#   Purpose....: Check for valid device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosDevice16BaseObject::IsValid(const char *FileName)
+{
+    TRdvHeader16 ExeHeader;
+    TFile File(FileName);
+    int ok = FALSE;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TRdvHeader16));
+
+        if (ExeHeader.Signature == 0x3652)
+            ok = TRUE;
+    }
+    return ok;
+}
+
 /*##########################################################################
 #
 #   Name       : TRdosDevice16BaseObject::LoadDeviceFile
@@ -799,6 +886,34 @@ TRdosDevice32BaseObject::TRdosDevice32BaseObject(int adapter, int entry, int siz
 ##########################################################################*/
 TRdosDevice32BaseObject::~TRdosDevice32BaseObject()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice32BaseObject::IsValid
+#
+#   Purpose....: Check for valid device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosDevice32BaseObject::IsValid(const char *FileName)
+{
+    TRdvHeader32 ExeHeader;
+    TFile File(FileName);
+    int ok = FALSE;
+
+    if (File.IsOpen())
+    {
+        ExeHeader.Signature = 0;
+        File.Read(&ExeHeader, sizeof(TRdvHeader32));
+
+        if (ExeHeader.Signature == 0x3252)
+            ok = TRUE;
+    }
+    return ok;
 }
 
 /*##########################################################################
@@ -2876,18 +2991,13 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
     if (!strcmp(cmd, "device"))
     {
         _fullpath(fullname, file, _MAX_PATH);
-        obj = new TRdosDosDeviceObject(fullname, ptr);
-        if (obj->GetType() != RDOS_OBJECT_DOS_DEVICE)
-        {
-            delete obj;
-            obj = new TRdosDevice16Object(fullname, ptr);
-        }
 
-        if (obj->GetType() != RDOS_OBJECT_DEVICE16)
-        {
-            delete obj;
+        if (TRdosDosDeviceBaseObject::IsValid(fullname))
+            obj = new TRdosDosDeviceObject(fullname, ptr);
+        else if (TRdosDevice16BaseObject::IsValid(fullname))
+            obj = new TRdosDevice16Object(fullname, ptr);
+        else if (TRdosDevice32BaseObject::IsValid(fullname))
             obj = new TRdosDevice32Object(fullname, ptr);
-        }
     }
 
     if (!strcmp(cmd, "shutdown"))
