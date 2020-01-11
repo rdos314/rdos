@@ -289,8 +289,7 @@ gpbLoop32:
     cmp ax,512
     jb gpbTest32
 ;
-    mov si,bx
-    jmp gpbOk32
+    mov ax,512
 
 gpbTest32:
     cmp ax,di
@@ -355,8 +354,7 @@ gpbLoop64:
     cmp ax,512
     jb gpbTest64
 ;
-    mov si,bx
-    jmp gpbOk64
+    mov ax,512
 
 gpbTest64:
     cmp ax,di
@@ -1432,8 +1430,11 @@ ampMark64:
     shl eax,13
     mov edx,eax
 ;    
+    movzx eax,bx
+    shl eax,12
+    add eax,phys_bitmap_start
+    sub edi,eax
     mov eax,edi
-    and ax,0FFFh
     shl eax,3
     add edx,eax
 ;    
@@ -1506,8 +1507,11 @@ ampMark32:
     shl eax,13
     mov edx,eax
 ;    
+    movzx eax,bx
+    shl eax,12
+    add eax,phys_bitmap_start
+    sub edi,eax
     mov eax,edi
-    and ax,0FFFh
     shl eax,3
     add edx,eax
 ;    
