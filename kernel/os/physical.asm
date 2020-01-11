@@ -2263,8 +2263,8 @@ init_physical_gates     PROC near
     mov ax,allocate_multiple_physical32_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_multiple_physical32
-    mov edi,OFFSET allocate_multiple_physical32_name
+    mov esi,OFFSET allocate_multiple_physical64
+    mov edi,OFFSET allocate_multiple_physical64_name
     xor cl,cl
     mov ax,allocate_multiple_physical64_nr
     RegisterOsGate
