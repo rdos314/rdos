@@ -584,19 +584,6 @@ add_realtime_core     PROC near
     push gs
     push ebx
 ;
-    int 3
-;
-    mov ecx,2
-    AllocateMultiplePhysical64
-    push eax
-    pop eax
-
-fmpLoop:
-    FreePhysical
-    add eax,1000h
-    loop fmpLoop
-;
-
     mov ax,REALTIME_HANDLE
     DerefHandle
     jc arcDone
