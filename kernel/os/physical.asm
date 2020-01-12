@@ -750,10 +750,15 @@ allocate_physical32_name  DB 'Allocate Physical Memory32',0
 
 allocate_physical32       PROC far
     push ds
+    push fs
     push ecx
     push edx
     push esi
     push edi
+;
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:cs_sel
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -761,7 +766,7 @@ allocate_physical32       PROC far
     xor esi,esi
 
 apRetry32:
-    mov bx,ds:phys_curr_header32
+    mov bx,fs:cp_curr_bitmap32
     cmp bx,ds:phys_bitmap_count
     jae apNew32
 ;    
@@ -790,7 +795,7 @@ apNew32:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header32,ax
+    mov fs:cp_curr_bitmap32,ax
     jmp apRetry32
 
 apNewFirst32:
@@ -819,14 +824,14 @@ apOk32_0:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header32,ax
+    mov fs:cp_curr_bitmap32,ax
 
 apOk32:
     cmp bx,ds:[si].phys_bitmap_pos
     je apRetAds32
 ;    
     mov ds:[si].phys_bitmap_pos,bx
-    mov ax,ds:phys_curr_header32
+    mov ax,fs:cp_curr_bitmap32
     or ax,ax
     jnz apRetAds32
 ;
@@ -838,7 +843,7 @@ apOk32:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:phys_curr_header32,ax
+    mov fs:cp_curr_bitmap32,ax
 
 apRetAds32:    
     mov eax,ecx
@@ -862,6 +867,7 @@ apLogDone32:
     pop esi
     pop edx
     pop ecx
+    pop fs
     pop ds
     retf32
 allocate_physical32       ENDP
@@ -2142,6 +2148,7 @@ init_physical   PROC near
     call local_create_data_sel16
     mov ds,bx
     mov ds:cs_sel,ds
+    mov ds:cp_curr_bitmap32,1
 ;
     mov ax,system_data_sel
     mov ds,ax
