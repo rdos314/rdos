@@ -64,14 +64,11 @@ CORE_LOG_ENTRIES    = 200h
 
 core_seg   STRUC
 
-cs_ptab                 DW 256 DUP(?)
-cs_prio_act             DW ?
+cs_phys_data            core_phys_struc <>    ; this must be first!
 
 cs_wakeup_list          DW ?
 
 cs_id                   DW ?
-
-cs_sel                  DW ?
 cs_processor            DW ?
 
 cs_sched_count          DW ?

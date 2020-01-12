@@ -32,6 +32,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\system.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 

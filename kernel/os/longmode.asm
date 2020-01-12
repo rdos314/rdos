@@ -31,10 +31,10 @@ include ..\os.def
 include ..\user.def
 include ..\os.inc
 include ..\user.inc
+include system.def
 include core.inc
 include protseg.def
 include gate.def
-include system.def
 include elf.def
 include ..\debug\kdebug.inc
 

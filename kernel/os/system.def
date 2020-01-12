@@ -153,6 +153,22 @@ real_mon_header   ENDS
 
 boot64_pages        = 16
 
+core_phys_struc         STRUC
+
+cs_ptab             DW 256 DUP(?)
+cs_prio_act         DW ?
+
+cs_sel              DW ?
+
+cp_curr_bitmap32    DW ?
+cp_curr_bitmap_4k   DW ?
+cp_curr_bitmap_2m   DW ?
+
+cp_low_bitmap       DW ?
+cp_high_bitmap      DW ?
+
+core_phys_struc         ENDS
+
 system_seg      STRUC
 
 dum1                        DD ?
@@ -241,6 +257,8 @@ mon_fixed_lfb       DD ?
 
 nmi_data            DW ?
 nmi_proc            DD ?, ?
+
+phys_init           core_phys_struc <>
 
 system_size                     DB ?
 

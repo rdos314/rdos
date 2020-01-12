@@ -28,12 +28,12 @@
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\os\port.def
+INCLUDE ..\os\system.def
 INCLUDE ..\os\core.inc
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\os\int.def
-INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 
