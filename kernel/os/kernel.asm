@@ -434,7 +434,8 @@ init_boot_system    ENDP
 init_system     Proc near
     push ds
     push es
-    pusha
+    pushad
+;
     mov bx,system_data_sel
     mov ds,bx
     mov cx,OFFSET system_size
@@ -451,7 +452,16 @@ init_system     Proc near
     mov es,ax
     movsd
     movsd   
-    popa
+;
+    mov bx,system_data_sel
+    call local_get_selector_base_size
+    mov eax,OFFSET phys_init
+    add edx,eax
+    mov ecx,SIZE core_phys_struc
+    mov bx,phys_boot_sel
+    call local_create_data_sel16
+;
+    popad
     pop es
     pop ds
     ret
