@@ -49,17 +49,17 @@ rh_sel      DW ?
 
 realtime_handle_struc ENDS
 
-realtime_struc	STRUC
+realtime_struc  STRUC
 
-rs_wait_thread	DW ?
-rs_core_arr	DW 256 DUP(?)
+rs_wait_thread  DW ?
+rs_core_arr     DW 256 DUP(?)
 
-realtime_struc	ENDS
+realtime_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
-map_sel	        DW ?
-map_linear	DD ?
+map_sel         DW ?
+map_linear      DD ?
 
 uni_phys_pml    DD ?,?
 
@@ -437,7 +437,7 @@ CreateMonitor      Proc near
     popad
     pop ds
     ret
-CreateMonitor	Endp
+CreateMonitor   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -489,14 +489,14 @@ create_realtime     ENDP
 ;
 ;           DESCRIPTION:    Load application
 ;
-;           PARAMETERS:     BX		File handle
+;           PARAMETERS:     BX          File handle
 ;                           DX          Server thread
 ;                           ES          Communication area
 ;                           FS          Core 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadApp	Proc near
+LoadApp Proc near
     push ds
     push es
     pushad
@@ -559,7 +559,7 @@ laLoop:
     pop es
     pop ds
     ret
-LoadApp	Endp
+LoadApp Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -583,17 +583,6 @@ add_realtime_core     PROC near
     push fs
     push gs
     push ebx
-;
-    int 3
-    mov bx,system_data_sel
-    GetSelectorBaseSize
-    mov eax,OFFSET phys_init
-    add edx,eax
-    mov ecx,SIZE core_phys_struc
-    mov bx,phys_boot_sel
-    CreateDataSelector16
-    mov es,bx
-    mov es:cs_sel,es
 ;
     mov ax,REALTIME_HANDLE
     DerefHandle
@@ -660,18 +649,18 @@ arcDone:
     ret
 add_realtime_core     Endp
 
-add_realtime_core16	Proc far
+add_realtime_core16     Proc far
     push edi
     movzx edi,di
     call add_realtime_core
     pop edi
     ret
-add_realtime_core16	Endp
+add_realtime_core16     Endp
 
-add_realtime_core32	Proc far
+add_realtime_core32     Proc far
     call add_realtime_core
     ret
-add_realtime_core32	Endp
+add_realtime_core32     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -721,7 +710,7 @@ InitMonitor      Proc near
     popad
     pop ds
     ret
-InitMonitor	Endp
+InitMonitor     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -872,7 +861,7 @@ SetupUniPml4     PROC near
     pop es
     pop ds
     ret
-SetupUniPml4	Endp
+SetupUniPml4    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -904,7 +893,7 @@ cgpLoop:
     popad
     pop ds
     ret
-CreateGlobalPml4	Endp
+CreateGlobalPml4        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -998,12 +987,12 @@ delete_realtime_handle       Endp
 ;
 ;           NAME:           UpdateCore
 ;
-;           DESCRIPTION:    AL		Core #
-;                           ES		Core data sel
+;           DESCRIPTION:    AL          Core #
+;                           ES          Core data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateCore	Proc near
+UpdateCore      Proc near
     xor edx,edx
     xchg edx,es:rds_notify_flags
     or edx,edx
@@ -1061,7 +1050,7 @@ ucNotSignal:
 
 ucDone:
     ret
-UpdateCore	Endp
+UpdateCore      Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1070,7 +1059,7 @@ UpdateCore	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-realtime_name	DB 'Realtime Server', 0
+realtime_name   DB 'Realtime Server', 0
 
 realtime_thread:
     mov ax,SEG data
@@ -1107,7 +1096,7 @@ rtCheckCoreNext:
 ;
 ;           DESCRIPTION:    Wait for realtime signal
 ;
-;           PARAMETERS:     BX		Realtime handle
+;           PARAMETERS:     BX          Realtime handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1184,7 +1173,7 @@ wait_for_realtime_signal     ENDP
 ;
 ;           DESCRIPTION:    Get realtime signal
 ;
-;           PARAMETERS:     BX		Realtime handle
+;           PARAMETERS:     BX          Realtime handle
 ;
 ;           RETURNS:        AX          Core
 ;                           CX          Signal

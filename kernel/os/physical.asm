@@ -1789,7 +1789,7 @@ get_highest_physical   PROC far
 ;
     pop ds
     retf32
-get_highest_physical	ENDP
+get_highest_physical    ENDP
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
