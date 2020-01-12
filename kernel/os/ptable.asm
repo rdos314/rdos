@@ -7009,7 +7009,6 @@ init_phys_bitmap32       Proc near
 ;
     mov ds:[esi].phys_bitmap_count,1
     mov ds:[esi].phys_proc_arr.phys_low_bitmap,0
-    mov ds:[esi].phys_proc_arr.phys_curr_bitmap_4k,0
     mov ds:[esi].phys_proc_arr.phys_curr_bitmap_2m,0
     mov ds:[esi].phys_proc_arr.phys_high_bitmap,1
 ;
@@ -7648,7 +7647,6 @@ init_phys_bitmap64       Proc near
 ;
     mov ds:[esi].phys_bitmap_count,1
     mov ds:[esi].phys_proc_arr.phys_low_bitmap,0
-    mov ds:[esi].phys_proc_arr.phys_curr_bitmap_4k,0
     mov ds:[esi].phys_proc_arr.phys_curr_bitmap_2m,0
     mov ds:[esi].phys_proc_arr.phys_high_bitmap,1
 ;

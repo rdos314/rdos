@@ -3263,6 +3263,7 @@ create_core    Proc far
     mov es:cs_sel,es
     mov es:cs_processor,0
     mov es:cp_curr_bitmap32,1
+    mov es:cp_curr_bitmap_4k,0
 ;
     call InitCore
     mov ax,es:cs_id     

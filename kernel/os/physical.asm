@@ -603,7 +603,6 @@ local_allocate_physical       PROC near
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:cs_sel
-    mov ax,fs:cp_curr_bitmap32
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -612,7 +611,7 @@ local_allocate_physical       PROC near
     mov bp,OFFSET phys_proc_arr
 
 apRetry64:
-    mov bx,ds:[bp].phys_curr_bitmap_4k
+    mov bx,fs:cp_curr_bitmap_4k
     cmp bx,ds:[bp].phys_high_bitmap
     jae apNew64
 ;    
@@ -645,7 +644,7 @@ apNewNext64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:[bp].phys_curr_bitmap_4k,ax
+    mov fs:cp_curr_bitmap_4k,ax
     jmp apRetry64
 
 apNewFirst64:
@@ -674,7 +673,7 @@ apOk64_0:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:[bp].phys_curr_bitmap_4k,ax
+    mov fs:cp_curr_bitmap_4k,ax
 
 apOk64:
     cmp bx,ds:[si].phys_bitmap_pos
@@ -682,7 +681,7 @@ apOk64:
 ;    
     mov ds:[si].phys_bitmap_pos,bx
 ;
-    mov ax,ds:[bp].phys_curr_bitmap_4k
+    mov ax,fs:cp_curr_bitmap_4k
     cmp ax,32
     jae apRetAds64
 ;
@@ -691,7 +690,7 @@ apOk64:
     pop ecx
     jnc apUpdateHeader64
 ;
-    mov ax,ds:[bp].phys_curr_bitmap_4k
+    mov ax,fs:cp_curr_bitmap_4k
     or ax,ax
     jnz apRetAds64
 ;
@@ -704,7 +703,7 @@ apUpdateHeader64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:[bp].phys_curr_bitmap_4k,ax
+    mov fs:cp_curr_bitmap_4k,ax
 
 apRetAds64:    
     mov eax,ecx
@@ -1041,7 +1040,6 @@ allocate_physical_dir   ENDP
 
 local_free_physical   PROC near
     push ds
-    push fs
     push eax
     push ebx
     push ecx
@@ -1059,11 +1057,6 @@ local_free_physical   PROC near
     pop ebp
 
 lfpLogDone:
-    mov cx,core_data_sel
-    mov fs,cx
-    mov fs,fs:cs_sel
-    mov cx,fs:cp_curr_bitmap32
-;
     mov cx,phys_bit_sel
     mov ds,cx
 ;
@@ -1101,7 +1094,6 @@ fpOk:
     pop ecx
     pop ebx
     pop eax
-    pop fs
     pop ds
     ret
 local_free_physical   ENDP
@@ -2149,6 +2141,7 @@ init_physical   PROC near
     mov ds,bx
     mov ds:cs_sel,ds
     mov ds:cp_curr_bitmap32,1
+    mov ds:cp_curr_bitmap_4k,0
 ;
     mov ax,system_data_sel
     mov ds,ax

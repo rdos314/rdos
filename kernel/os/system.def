@@ -269,7 +269,7 @@ MAX_PROCESSORS  = 32
 phys_proc_struc STRUC
 
 phys_low_bitmap     DW ?
-phys_curr_bitmap_4k DW ?
+phys_curr_pad       DW ?
 phys_curr_bitmap_2m DW ?
 phys_high_bitmap    DW ?
 
