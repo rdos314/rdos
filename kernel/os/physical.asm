@@ -593,11 +593,17 @@ AllocateDirFromBitmap  Endp
 
 local_allocate_physical       PROC near
     push ds
+    push fs
     push ecx
     push edx
     push esi
     push edi
     push ebp
+;
+    mov ax,phys_boot_sel
+    mov fs,ax
+    mov fs,fs:cs_sel
+    mov ax,fs:cp_curr_bitmap32
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -724,6 +730,7 @@ apLogDone64:
     pop esi
     pop edx
     pop ecx
+    pop fs
     pop ds
     ret
 local_allocate_physical       ENDP
@@ -1028,6 +1035,7 @@ allocate_physical_dir   ENDP
 
 local_free_physical   PROC near
     push ds
+    push fs
     push eax
     push ebx
     push ecx
@@ -1045,6 +1053,11 @@ local_free_physical   PROC near
     pop ebp
 
 lfpLogDone:
+    mov cx,phys_boot_sel
+    mov fs,cx
+    mov fs,fs:cs_sel
+    mov cx,fs:cp_curr_bitmap32
+;
     mov cx,phys_bit_sel
     mov ds,cx
 ;
@@ -1082,6 +1095,7 @@ fpOk:
     pop ecx
     pop ebx
     pop eax
+    pop fs
     pop ds
     ret
 local_free_physical   ENDP
