@@ -1308,7 +1308,7 @@ GetMultPhys32   Proc near
     mov bp,32
 
 gmpCountOk32:    
-    mov bx,1
+    xor bx,bx
     sub bp,bx
     jbe gmpFail32
 
