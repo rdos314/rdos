@@ -2876,7 +2876,7 @@ debug_block_do:
 
 debug_realtime_name        DB 'Debug Realtime', 0
 
-debug_realtime	Proc far
+debug_realtime  Proc far
     push ds
     push es
     pushad
@@ -2894,7 +2894,7 @@ debug_realtime	Proc far
     pop es
     pop ds
     retf32
-debug_realtime	Endp
+debug_realtime  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2909,7 +2909,7 @@ debug_realtime	Endp
 
 run_realtime_name        DB 'Run Realtime', 0
 
-run_realtime	Proc far
+run_realtime    Proc far
     push ds
     push es
     pushad
@@ -2926,7 +2926,7 @@ run_realtime	Proc far
     pop es
     pop ds
     retf32
-run_realtime	Endp
+run_realtime    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3084,6 +3084,144 @@ AddDumpCore    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitCore
+;
+;       DESCRIPTION:    Init core
+;
+;       PARAMETERS:     ES      Core sel
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitCore    Proc near
+    pushad
+;
+    HasLongMode
+    jnc icFlatStack
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+;    
+    mov ecx,1000h
+    CreateDataSelector32
+;
+    mov ds,bx
+    mov ds:[0],dx
+    mov es:cs_stack_offset,ecx
+    mov es:cs_stack_sel,bx
+    jmp icStackOk    
+    
+icFlatStack:
+    mov eax,3000h
+    AllocateBigLinear
+    xor ebx,ebx
+    mov eax,4
+    SetPageEntry
+    add edx,2000h
+    SetPageEntry
+    sub edx,1000h
+;    
+    mov ds:[edx],dx
+    add edx,1000h
+    mov es:cs_stack_offset,edx
+    mov es:cs_stack_sel,long_kernel_data_sel
+    
+icStackOk:
+    mov ax,SEG data
+    mov ds,ax
+    mov ds,ds:patch_sel
+    mov ax,ds:core_count
+    mov si,ax
+    add si,si
+    mov ds:[si].core_arr,es
+    inc ds:core_count
+    mov es:cs_id,ax    
+;
+    xor ax,ax
+    mov ds,ax
+    mov bx,OFFSET cs_ptab
+    mov es:cs_prio_act,bx
+;
+    mov cx,256
+
+icPtabInit:
+    mov es:[bx],ax
+    add bx,2
+    loop icPtabInit
+;
+    mov es:cs_wakeup_list,0
+    mov es:cs_wakeup_spinlock,0
+    mov es:cs_nesting,-1
+    mov es:cs_curr_thread,0
+    mov es:cs_last_thread,-1
+    mov es:cs_flags,CS_FLAG_INIT_CLOCK
+    mov es:cs_null_thread,0
+    mov es:cs_math_thread,0
+    mov es:cs_apic,-1
+    mov es:cs_last_lsb,0
+    mov es:cs_lsb_tics,0
+    mov es:cs_msb_tics,0
+    mov es:cs_tlb.pt32_locked,0
+    mov es:cs_tlb.pt32_used,0
+    mov eax,cr3
+    and ax,0F000h
+    mov es:cs_cr3,eax
+;
+    mov es:cs_timer_spinlock,0
+    mov bx,OFFSET cs_timer_entries
+    mov es:[bx].timer_next,0
+    mov es:[bx].timer_msb,0FFFFFFFFh
+    mov es:[bx].timer_lsb,0FFFFFFFFh
+    mov es:cs_timer_head,bx
+;       
+    mov cx,0FFh
+    add bx,SIZE timer_struc
+    mov es:cs_timer_free,bx
+
+icTimerListCreate:
+    mov ax,bx
+    add ax,SIZE timer_struc
+    mov es:[bx].timer_next,ax
+    mov bx,ax
+    loop icTimerListCreate
+;       
+    mov es:cs_sched_count,0
+    mov es:cs_log_count,0
+    mov es:cs_log_sel,0
+    mov es:cs_log_entry,0
+;
+    mov cx,256
+    mov bx,OFFSET cs_irq_count_arr
+    xor eax,eax
+
+icIrqCountInit:
+    mov es:[bx],eax
+    add bx,4
+    loop icIrqCountInit
+;
+    mov es:cs_curr_irq_nr,0
+    mov es:cs_curr_irq_count,0
+    mov es:cs_curr_irq_retries,0
+    mov es:cs_nested_irq_count,0    
+;
+    call create_long_tss
+    mov es:cs_long_tr,bx
+    mov es:cs_tr_linear,edx
+;
+    mov bx,es
+    GetSelectorBaseSize
+    mov es:cs_linear,edx
+    mov es:cs_long_ldt,0
+    mov es:cs_syscall_esp,0
+    mov es:cs_syscall_eip,0
+    call AddDumpCore
+;    
+    popad
+    ret
+InitCore    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateCore
 ;
 ;       DESCRIPTION:    Create core
@@ -3124,128 +3262,7 @@ create_core    Proc far
     rep stosb
     mov es:cs_sel,es
     mov es:cs_processor,0
-;
-    HasLongMode
-    jnc cr_flat_stack
-;    
-    mov eax,1000h
-    AllocateBigLinear
-    AllocateGdt
-;    
-    mov ecx,1000h
-    CreateDataSelector32
-;
-    mov ds,bx
-    mov ds:[0],dx
-    mov es:cs_stack_offset,ecx
-    mov es:cs_stack_sel,bx
-    jmp cr_stack_ok    
-    
-cr_flat_stack:
-    mov eax,3000h
-    AllocateBigLinear
-    xor ebx,ebx
-    mov eax,4
-    SetPageEntry
-    add edx,2000h
-    SetPageEntry
-    sub edx,1000h
-;    
-    mov ds:[edx],dx
-    add edx,1000h
-    mov es:cs_stack_offset,edx
-    mov es:cs_stack_sel,long_kernel_data_sel
-    
-cr_stack_ok:
-    mov ax,SEG data
-    mov ds,ax
-    mov ds,ds:patch_sel
-    mov ax,ds:core_count
-    mov si,ax
-    add si,si
-    mov ds:[si].core_arr,es
-    inc ds:core_count
-    mov es:cs_id,ax    
-;
-    xor ax,ax
-    mov ds,ax
-    mov bx,OFFSET cs_ptab
-    mov es:cs_prio_act,bx
-;
-    mov cx,256
-
-ptab_init:
-    mov es:[bx],ax
-    add bx,2
-    loop ptab_init
-;
-    mov es:cs_wakeup_list,0
-    mov es:cs_wakeup_spinlock,0
-    mov es:cs_nesting,-1
-    mov es:cs_curr_thread,0
-    mov es:cs_last_thread,-1
-    mov es:cs_flags,CS_FLAG_INIT_CLOCK
-    mov es:cs_null_thread,0
-    mov es:cs_math_thread,0
-    mov es:cs_apic,-1
-    mov es:cs_last_lsb,0
-    mov es:cs_lsb_tics,0
-    mov es:cs_msb_tics,0
-    mov es:cs_tlb.pt32_locked,0
-    mov es:cs_tlb.pt32_used,0
-    mov eax,cr3
-    and ax,0F000h
-    mov es:cs_cr3,eax
-;
-    mov es:cs_timer_spinlock,0
-    mov bx,OFFSET cs_timer_entries
-    mov es:[bx].timer_next,0
-    mov es:[bx].timer_msb,0FFFFFFFFh
-    mov es:[bx].timer_lsb,0FFFFFFFFh
-    mov es:cs_timer_head,bx
-;       
-    mov cx,0FFh
-    add bx,SIZE timer_struc
-    mov es:cs_timer_free,bx
-
-core_timer_list_create:
-    mov ax,bx
-    add ax,SIZE timer_struc
-    mov es:[bx].timer_next,ax
-    mov bx,ax
-    loop core_timer_list_create
-;       
-    mov es:cs_sched_count,0
-    mov es:cs_log_count,0
-    mov es:cs_log_sel,0
-    mov es:cs_log_entry,0
-;
-    mov cx,256
-    mov bx,OFFSET cs_irq_count_arr
-    xor eax,eax
-
-irq_count_init:
-    mov es:[bx],eax
-    add bx,4
-    loop irq_count_init
-;
-    mov es:cs_curr_irq_nr,0
-    mov es:cs_curr_irq_count,0
-    mov es:cs_curr_irq_retries,0
-    mov es:cs_nested_irq_count,0    
-;
-    call create_long_tss
-    mov es:cs_long_tr,bx
-    mov es:cs_tr_linear,edx
-;
-    mov bx,es
-    GetSelectorBaseSize
-    mov es:cs_linear,edx
-    mov es:cs_long_ldt,0
-    mov es:cs_syscall_esp,0
-    mov es:cs_syscall_eip,0
-    call AddDumpCore
-;    
+    call InitCore
     mov ax,es:cs_id     
 ;
     pop edi
