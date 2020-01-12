@@ -173,11 +173,6 @@ init_gdt    PROC near
     mov ax,get_free_gdt_nr
     RegisterBimodalUserGate
 ;
-    mov edx,gdt_core_linear
-    mov bx,core_data_sel
-    mov ecx,SIZE core_seg
-    CreateDataSelector16
-;
     xor edx,edx
     mov bx,__0000
     mov ecx,1000h

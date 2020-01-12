@@ -10717,6 +10717,11 @@ timer_free_list_create:
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
+    mov edx,gdt_core_linear
+    mov bx,core_data_sel
+    mov ecx,SIZE core_seg
+    CreateDataSelector16
+;
     mov edx,gdt_linear
     CreateCore
     or es:cs_flags,CS_FLAG_ACTIVE
