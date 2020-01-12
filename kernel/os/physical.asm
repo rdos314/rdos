@@ -2216,6 +2216,37 @@ init_phys_done:
     ret
 init_physical   ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InitCorePhysical
+;
+;           DESCRIPTION:    Init core physical limits
+;
+;           PARAMETERS:     BX		Core selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_core_phys_name	DB 'Init Core Physical', 0
+
+init_core_phys	Proc far
+    push ds
+    push fs
+    pushad
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    mov fs,bx
+;
+    mov ax,ds:phys_bitmap_count
+    mov fs:cp_high_bitmap,ax
+    mov fs:cp_low_bitmap,0
+;
+    popad
+    pop fs
+    pop ds
+    retf32
+init_core_phys	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2313,6 +2344,12 @@ init_physical_gates     PROC near
     mov edi,OFFSET get_highest_physical_name
     xor cl,cl
     mov ax,get_highest_physical_nr
+    RegisterOsGate
+;       
+    mov esi,OFFSET init_core_phys
+    mov edi,OFFSET init_core_phys_name
+    xor cl,cl
+    mov ax,init_core_physical_nr
     RegisterOsGate
 ;    
     pop ds

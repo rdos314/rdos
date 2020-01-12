@@ -841,4 +841,6 @@ run_realtime_nr             = 734
 allocate_physical_dir_nr    = 735
 free_physical_dir_nr        = 736
 
+init_core_physical_nr       = 737
+
 osgate_entries              = 750
