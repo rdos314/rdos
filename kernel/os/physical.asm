@@ -1849,7 +1849,14 @@ apRetry:
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;    
-    inc ds:phys_bitmap_count
+    mov ax,phys_bit_sel
+    mov es,ax
+    mov cx,es:phys_bitmap_count
+    inc cx
+    mov es:phys_bitmap_count,cx
+    mov ax,core_data_sel
+    mov es,ax
+    mov es:cp_high_bitmap,cx
 ;    
     pop ecx
     pop es
@@ -2206,13 +2213,6 @@ init_phys_done:
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax    
-;
-    mov ax,phys_bit_sel
-    mov ds,ax
-    mov cx,ds:phys_bitmap_count
-    mov ax,core_data_sel
-    mov ds,ax
-    mov ds:cp_high_bitmap,cx
     ret
 init_physical   ENDP
 

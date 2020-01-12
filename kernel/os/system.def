@@ -280,7 +280,7 @@ phys_bitmap_pos      DW ?
 phys_bitmap_header   ENDS
 
 phys_header_start    = SIZE phys_header
-phys_bitmap_start    = phys_header_start + 9000h
+phys_bitmap_start    = 9000h   ; must be page aligned!
 
 hook_data_struc   STRUC
 

@@ -7040,7 +7040,7 @@ init_phys_alloc_loop32:
     call AllocateRam
     mov ecx,esi
     shr ecx,12
-    bts es:[edi+phys_header_start],ecx
+    bts es:[edi],ecx
     inc es:[ebx].phys_bitmap_free
     jmp init_phys_alloc_loop32
 
@@ -7677,7 +7677,7 @@ init_phys_alloc_loop64:
     call AllocateRam
     mov ecx,esi
     shr ecx,12
-    bts es:[edi+phys_header_start],ecx
+    bts es:[edi],ecx
     inc es:[ebx].phys_bitmap_free
     jmp init_phys_alloc_loop64
 
