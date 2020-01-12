@@ -10734,6 +10734,17 @@ timer_free_list_create:
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,gdt_core_linear
+    mov ecx,SIZE core_seg
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    int 3
+    mov edx,gdt_core_linear
+    mov ax,es:[edx]
+;
     mov edx,gdt_core_linear
     mov bx,core_data_sel
     mov ecx,SIZE core_seg

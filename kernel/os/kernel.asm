@@ -458,7 +458,7 @@ init_system     Proc near
     mov eax,OFFSET phys_init
     add edx,eax
     mov ecx,SIZE core_phys_struc
-    mov bx,phys_boot_sel
+    mov bx,core_data_sel
     call local_create_data_sel16
 ;
     popad

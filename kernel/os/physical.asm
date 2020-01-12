@@ -600,7 +600,7 @@ local_allocate_physical       PROC near
     push edi
     push ebp
 ;
-    mov ax,phys_boot_sel
+    mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:cs_sel
     mov ax,fs:cp_curr_bitmap32
@@ -1053,7 +1053,7 @@ local_free_physical   PROC near
     pop ebp
 
 lfpLogDone:
-    mov cx,phys_boot_sel
+    mov cx,core_data_sel
     mov fs,cx
     mov fs,fs:cs_sel
     mov cx,fs:cp_curr_bitmap32
@@ -2138,7 +2138,7 @@ init_physical   PROC near
     mov eax,OFFSET phys_init
     add edx,eax
     mov ecx,SIZE core_phys_struc
-    mov bx,phys_boot_sel
+    mov bx,core_data_sel
     call local_create_data_sel16
     mov ds,bx
     mov ds:cs_sel,ds
