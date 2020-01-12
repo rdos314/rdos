@@ -57,6 +57,8 @@ kdebug_data_sel         EQU 60h
 
 shutdown_pretask_gate   EQU 68h
 
+phys_boot_sel           EQU 70h
+
 ;
 ; used in kernel and device-drivers only
 ;

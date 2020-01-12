@@ -2119,8 +2119,19 @@ RemoveLongImage  Endp
     public init_physical
 
 init_physical   PROC near
+    mov bx,system_data_sel
+    call local_get_selector_base_size
+    mov eax,OFFSET phys_init
+    add edx,eax
+    mov ecx,SIZE core_phys_struc
+    mov bx,phys_boot_sel
+    call local_create_data_sel16
+    mov ds,bx
+    mov ds:cs_sel,ds
+;
     mov ax,system_data_sel
     mov ds,ax
+;
     mov eax,ds:ram2_size
     or eax,eax
     jz init_phys_multiboot

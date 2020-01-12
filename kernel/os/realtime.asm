@@ -584,6 +584,17 @@ add_realtime_core     PROC near
     push gs
     push ebx
 ;
+    int 3
+    mov bx,system_data_sel
+    GetSelectorBaseSize
+    mov eax,OFFSET phys_init
+    add edx,eax
+    mov ecx,SIZE core_phys_struc
+    mov bx,phys_boot_sel
+    CreateDataSelector16
+    mov es,bx
+    mov es:cs_sel,es
+;
     mov ax,REALTIME_HANDLE
     DerefHandle
     jc arcDone
