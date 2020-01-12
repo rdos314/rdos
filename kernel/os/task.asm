@@ -10741,38 +10741,25 @@ timer_free_list_create:
     xor al,al
     rep stos byte ptr es:[edi]
 ;
-    int 3
     mov edi,gdt_core_linear
     xor esi,esi
     mov ecx,SIZE core_phys_struc
     rep movs byte ptr es:[edi],ds:[esi]
-;
-    AllocateGdt
-    mov eax,[edx+core_data_sel]
-    mov es:[bx],eax    
-;    
-    mov eax,[edx+core_data_sel+4]
-    mov es:[bx+4],eax
-    mov es,bx
-;
-    mov cx,SIZE core_seg
-    xor di,di
-    xor al,al
-    rep stosb
-    mov es:cs_sel,es
-    mov es:cs_processor,0
-    call InitCore
-    mov ax,es:cs_id     
-
-
 ;
     mov edx,gdt_core_linear
     mov bx,core_data_sel
     mov ecx,SIZE core_seg
     CreateDataSelector16
 ;
-    mov edx,gdt_linear
-    CreateCore
+    AllocateGdt
+    mov edx,gdt_core_linear
+    mov ecx,SIZE core_seg
+    CreateDataSelector16
+;
+    mov es,bx
+    mov es:cs_sel,es
+    mov es:cs_processor,0
+    call InitCore
     or es:cs_flags,CS_FLAG_ACTIVE
 ;
     pop ds
