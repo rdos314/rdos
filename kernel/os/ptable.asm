@@ -7008,8 +7008,6 @@ init_phys_bitmap32       Proc near
     mov ds:[edi],eax
 ;
     mov ds:[esi].phys_bitmap_count,1
-    mov ds:[esi].phys_proc_arr.phys_low_bitmap,0
-    mov ds:[esi].phys_proc_arr.phys_high_bitmap,1
 ;
     mov ebx,esi
     add ebx,phys_header_start
@@ -7042,7 +7040,7 @@ init_phys_alloc_loop32:
     call AllocateRam
     mov ecx,esi
     shr ecx,12
-    bts es:[edi],ecx
+    bts es:[edi+phys_header_start],ecx
     inc es:[ebx].phys_bitmap_free
     jmp init_phys_alloc_loop32
 
@@ -7645,8 +7643,6 @@ init_phys_bitmap64       Proc near
     mov ds:[edi+4],eax
 ;
     mov ds:[esi].phys_bitmap_count,1
-    mov ds:[esi].phys_proc_arr.phys_low_bitmap,0
-    mov ds:[esi].phys_proc_arr.phys_high_bitmap,1
 ;
     mov ebx,esi
     add ebx,phys_header_start
@@ -7681,7 +7677,7 @@ init_phys_alloc_loop64:
     call AllocateRam
     mov ecx,esi
     shr ecx,12
-    bts es:[edi],ecx
+    bts es:[edi+phys_header_start],ecx
     inc es:[ebx].phys_bitmap_free
     jmp init_phys_alloc_loop64
 

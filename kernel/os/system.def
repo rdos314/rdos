@@ -264,20 +264,11 @@ system_size                     DB ?
 
 system_seg      ENDS
 
-MAX_PROCESSORS  = 32
-
-phys_proc_struc STRUC
-
-phys_low_bitmap     DW ?
-phys_high_bitmap    DW ?
-
-phys_proc_struc ENDS
 
 phys_header     STRUC
 
 phys_bitmap_count   DW ?
 phys_header_pad     DW ?
-phys_proc_arr       DW 4 * MAX_PROCESSORS DUP(?)
 
 phys_header     ENDS
 

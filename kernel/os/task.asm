@@ -3111,6 +3111,9 @@ InitCore    Proc near
     jmp icStackOk    
     
 icFlatStack:
+    mov ax,flat_sel
+    mov ds,ax
+;
     mov eax,3000h
     AllocateBigLinear
     xor ebx,ebx
@@ -3265,6 +3268,12 @@ create_core    Proc far
     mov es:cp_curr_bitmap32,1
     mov es:cp_curr_bitmap_4k,0
     mov es:cp_curr_bitmap_2m,0
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    mov ax,ds:phys_bitmap_count
+    mov es:cp_high_bitmap,ax
+    mov es:cp_low_bitmap,0
 ;
     call InitCore
     mov ax,es:cs_id     
@@ -10763,6 +10772,14 @@ timer_free_list_create:
     mov es,bx
     mov es:cs_sel,es
     mov es:cs_processor,0
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+;
+    mov ax,ds:phys_bitmap_count
+    mov es:cp_high_bitmap,ax
+    mov es:cp_low_bitmap,0
+;
     call InitCore
     or es:cs_flags,CS_FLAG_ACTIVE
 ;

@@ -320,21 +320,21 @@ GetPhysBitmap32  Endp
 ;
 ;       DESCRIPTION:    Get 64-bit physical bitmap
 ;
-;       PARAMETERS:     BP      Processor struc
+;       PARAMETERS:     FS      Core sel
 ;
 ;       RETURNS:        SI      Bitmap header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPhysBitmap64  Proc near
-    mov bx,ds:[bp].phys_low_bitmap
+    mov bx,fs:cp_low_bitmap
     cmp bx,32
     ja gpbLowOk
 ;
     mov bx,32
 
 gpbLowOk:
-    mov cx,ds:[bp].phys_high_bitmap
+    mov cx,fs:cp_high_bitmap
     sub cx,bx
     jc gpbDone64
 ;
@@ -394,12 +394,12 @@ GetPhysBitmap64  Endp
 GetPhysBitmapDir  Proc near
     mov si,fs:cp_curr_bitmap_2m
     inc si
-    mov cx,ds:[bp].phys_high_bitmap
+    mov cx,fs:cp_high_bitmap
     sub cx,si
     ja gpbdStart
 ;
-    mov si,ds:[bp].phys_low_bitmap
-    mov cx,ds:[bp].phys_high_bitmap
+    mov si,fs:cp_low_bitmap
+    mov cx,fs:cp_high_bitmap
     sub cx,si
     jz gpbdFail
 
@@ -598,7 +598,6 @@ local_allocate_physical       PROC near
     push edx
     push esi
     push edi
-    push ebp
 ;
     mov ax,core_data_sel
     mov fs,ax
@@ -608,11 +607,10 @@ local_allocate_physical       PROC near
     mov ds,ax
     xor ebx,ebx
     xor esi,esi
-    mov bp,OFFSET phys_proc_arr
 
 apRetry64:
     mov bx,fs:cp_curr_bitmap_4k
-    cmp bx,ds:[bp].phys_high_bitmap
+    cmp bx,fs:cp_high_bitmap
     jae apNew64
 ;    
     mov si,phys_header_start
@@ -724,7 +722,6 @@ apDone64:
     pop ebp
 
 apLogDone64:
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -965,7 +962,6 @@ allocate_physical_dir   PROC far
     push edx
     push esi
     push edi
-    push ebp
 ;
     mov ax,core_data_sel
     mov fs,ax
@@ -975,11 +971,10 @@ allocate_physical_dir   PROC far
     mov ds,ax
     xor ebx,ebx
     xor esi,esi
-    mov bp,OFFSET phys_proc_arr
 
 apdRetry64:
     mov bx,fs:cp_curr_bitmap_2m
-    cmp bx,ds:[bp].phys_high_bitmap
+    cmp bx,fs:cp_high_bitmap
     jae apdNew64
 ;    
     mov si,phys_header_start
@@ -1020,7 +1015,6 @@ apdOk64:
     clc
 
 apdDone:
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -1856,7 +1850,6 @@ apRetry:
     rep stos dword ptr es:[edi]
 ;    
     inc ds:phys_bitmap_count
-    inc ds:phys_proc_arr.phys_high_bitmap
 ;    
     pop ecx
     pop es
@@ -2155,6 +2148,8 @@ init_physical   PROC near
     mov ds:cp_curr_bitmap32,1
     mov ds:cp_curr_bitmap_4k,0
     mov ds:cp_curr_bitmap_2m,0
+    mov ds:cp_low_bitmap,0
+    mov ds:cp_high_bitmap,1
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -2211,6 +2206,13 @@ init_phys_done:
     mov eax,cr0
     or eax,80000000h
     mov cr0,eax    
+;
+    mov ax,phys_bit_sel
+    mov ds,ax
+    mov cx,ds:phys_bitmap_count
+    mov ax,core_data_sel
+    mov ds,ax
+    mov ds:cp_high_bitmap,cx
     ret
 init_physical   ENDP
 
