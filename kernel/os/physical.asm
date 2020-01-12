@@ -1081,7 +1081,7 @@ fpDo:
     lock bts ds:[edi],ecx
     jnc fpOk
 ;
-;    int 3
+    int 3
 
 fpOk:
 ;
