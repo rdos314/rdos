@@ -385,14 +385,14 @@ GetPhysBitmap64  Endp
 ;
 ;       DESCRIPTION:    Get dir (2M) physical bitmap
 ;
-;       PARAMETERS:     BP      Processor struc
+;       PARAMETERS:     FS      Core sel
 ;
 ;       RETURNS:        SI      Bitmap header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPhysBitmapDir  Proc near
-    mov si,ds:[bp].phys_curr_bitmap_2m
+    mov si,fs:cp_curr_bitmap_2m
     inc si
     mov cx,ds:[bp].phys_high_bitmap
     sub cx,si
@@ -960,11 +960,16 @@ allocate_physical_dir_name      DB 'Allocate Physical Dir',0
 
 allocate_physical_dir   PROC far
     push ds
+    push fs
     push ecx
     push edx
     push esi
     push edi
     push ebp
+;
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:cs_sel
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -973,7 +978,7 @@ allocate_physical_dir   PROC far
     mov bp,OFFSET phys_proc_arr
 
 apdRetry64:
-    mov bx,ds:[bp].phys_curr_bitmap_2m
+    mov bx,fs:cp_curr_bitmap_2m
     cmp bx,ds:[bp].phys_high_bitmap
     jae apdNew64
 ;    
@@ -1004,7 +1009,7 @@ apdNewNext64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov ds:[bp].phys_curr_bitmap_2m,ax
+    mov fs:cp_curr_bitmap_2m,ax
     jmp apdRetry64
 
 apdOk64:
@@ -1020,6 +1025,7 @@ apdDone:
     pop esi
     pop edx
     pop ecx
+    pop fs
     pop ds
     retf32
 allocate_physical_dir   ENDP
@@ -1139,11 +1145,16 @@ free_physical_dir_name      DB 'Free Physical Dir',0
 free_physical_dir   PROC far
     push ds
     push es
+    push fs
     push eax
     push ebx
     push ecx
     push esi
     push edi
+;
+    mov cx,core_data_sel
+    mov fs,cx
+    mov fs,fs:cs_sel
 ;
     mov cx,phys_bit_sel
     mov ds,cx
@@ -1182,6 +1193,7 @@ fpdDo:
     pop ecx
     pop ebx
     pop eax
+    pop fs
     pop es
     pop ds
     retf32
@@ -2142,6 +2154,7 @@ init_physical   PROC near
     mov ds:cs_sel,ds
     mov ds:cp_curr_bitmap32,1
     mov ds:cp_curr_bitmap_4k,0
+    mov ds:cp_curr_bitmap_2m,0
 ;
     mov ax,system_data_sel
     mov ds,ax
