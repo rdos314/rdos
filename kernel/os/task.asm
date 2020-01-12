@@ -3262,6 +3262,8 @@ create_core    Proc far
     rep stosb
     mov es:cs_sel,es
     mov es:cs_processor,0
+    mov es:cp_curr_bitmap32,1
+;
     call InitCore
     mov ax,es:cs_id     
 ;
