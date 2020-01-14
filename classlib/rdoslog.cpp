@@ -282,12 +282,23 @@ void TRdosLogThread::Stop()
 ##########################################################################*/
 void TRdosLogThread::Write(TString &str)
 {
+    int size;
     TString wrstr;
 
     wrstr.printf("%04d ", FRowNum);
     wrstr += str;
     wrstr += "\r\n";
-    FCurrFile->Write(wrstr.GetData(), wrstr.GetSize());
+
+    size = wrstr.GetSize();
+
+    if (size >= MAX_STR_SIZE || size < 0)
+    {
+        wrstr.printf("Too long entry\r\n");
+        size = wrstr.GetSize();
+    }
+
+    if (size < MAX_STR_SIZE && size > 0)
+        FCurrFile->Write(wrstr.GetData(), size);
 
     FRowNum++;
     if (FRowNum == 10000)
@@ -976,9 +987,20 @@ void TRdosEventLog::InitFiles()
 *##########################################################################*/
 void TRdosEventLog::DumpOne(TString *entry)
 {
+    int size;
     TString str(*entry);
     str += "\r\n";
-    FCurrFile->Write(str.GetData(), str.GetSize());
+
+    size = str.GetSize();
+
+    if (size >= MAX_STR_SIZE || size < 0)
+    {
+        str.printf("Too long dump entry\r\n");
+        size = str.GetSize();
+    }
+
+    if (size < MAX_STR_SIZE)
+        FCurrFile->Write(str.GetData(), size);
 }
 
 /*##################  TRdosEventLog::Execute  #######################
