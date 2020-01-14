@@ -586,7 +586,6 @@ gimLoop:
     mov bx,ds:cd_out_pipe
     mov ecx,10
     WriteUsbDataNoCopy
-    StartUsbTransaction        
 ;
     pop si
     pop cx
@@ -629,11 +628,12 @@ psPoll:
     mov bx,ds:cd_out_pipe
     mov ecx,10
     WriteUsbDataNoCopy
-    StartUsbTransaction        
     jmp psPoll
 
 psStart:
     call GetIdMsg
+;
+    StartUsbTransaction        
 ;
     mov bp, 5 * 5
 
