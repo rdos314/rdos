@@ -952,7 +952,7 @@ ClearPortFeature Endp
 ;
 ;   description:    Clear port change
 ;
-;   Parameters:     GS      Hub
+;   Parameters:     DS      Hub
 ;                   DX      Port #
 ;                   AX      Status change
 ;
@@ -961,6 +961,16 @@ ClearPortFeature Endp
 ClearPortChange  Proc near
     push eax
 ;
+    test ax,8
+    jz cOverCurrentOk
+;
+    push ax
+    mov ax,19
+    call ClearPortFeature
+    pop ax
+    or ds:hub_flags,FLAG_HUB_OVER_CURRENT
+
+cOverCurrentOk:
     shr eax,16
     test ax,1
     jz cpcConnectOk
@@ -987,6 +997,7 @@ cpcEnableOk:
     mov ax,18
     call ClearPortFeature
     pop ax
+    int 3
 
 cpcSuspendOk:
     test ax,8
@@ -996,6 +1007,7 @@ cpcSuspendOk:
     mov ax,19
     call ClearPortFeature
     pop ax
+    int 3
 
 cpcOverCurrentOk:
     test ax,10h
@@ -2212,6 +2224,12 @@ tsStatusLoop:
     call CreatePortThread
 
 tsLoop:
+    test ds:hub_flags,FLAG_HUB_OVER_CURRENT
+    jz tsNotOver
+;
+    int 3
+
+tsNotOver:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz tsExit
 ;    
