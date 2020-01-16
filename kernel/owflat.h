@@ -3507,7 +3507,6 @@
 
 #pragma aux RdosHasUsbOverCurrent = \
     CallGate_has_usb_over_current \
-    "cmc" \
     CarryToBool \
     __value [__eax]
 

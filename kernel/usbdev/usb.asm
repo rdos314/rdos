@@ -5029,7 +5029,7 @@ has_usb_over_current Proc far
     mov bx,ds:usb_over_current
     or bx,bx
     clc
-    jz huscDone
+    jnz huscDone
 ;
     stc
 
