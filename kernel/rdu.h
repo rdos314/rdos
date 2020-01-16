@@ -917,6 +917,7 @@
 #define usergate_unmap_realtime_buf 0x000002CF
 
 #define usergate_is_can_module_online 0x000002D2
+#define usergate_has_usb_over_current 0x000002D3
 
 
 
@@ -1841,6 +1842,7 @@
 #define CallGate_unmap_realtime_buf 0x55 0x67 0x9a 207 2 0 0 3 0 0x5d
 
 #define CallGate_is_can_module_online 0x55 0x67 0x9a 210 2 0 0 3 0 0x5d
+#define CallGate_has_usb_over_current 0x55 0x67 0x9a 211 2 0 0 3 0 0x5d
 
 
 #else
@@ -2763,6 +2765,7 @@
 #define CallGate_unmap_realtime_buf 0x3e 0x67 0x9a 207 2 0 0 3 0
 
 #define CallGate_is_can_module_online 0x3e 0x67 0x9a 210 2 0 0 3 0
+#define CallGate_has_usb_over_current 0x3e 0x67 0x9a 211 2 0 0 3 0
 
 
 #endif

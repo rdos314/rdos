@@ -965,7 +965,7 @@ ClearPortChange  Proc near
     jz cOverCurrentOk
 ;
     push ax
-    mov ax,19
+    mov ax,PORT_POWER
     call ClearPortFeature
     pop ax
     or ds:hub_flags,FLAG_HUB_OVER_CURRENT
@@ -976,7 +976,7 @@ cOverCurrentOk:
     jz cpcConnectOk
 ;
     push ax
-    mov ax,16
+    mov ax,C_PORT_CONNECTION
     call ClearPortFeature
     pop ax
 
@@ -985,7 +985,7 @@ cpcConnectOk:
     jz cpcEnableOk
 ;
     push ax
-    mov ax,17
+    mov ax,C_PORT_ENABLE
     call ClearPortFeature
     pop ax
 
@@ -994,7 +994,7 @@ cpcEnableOk:
     jz cpcSuspendOk
 ;
     push ax
-    mov ax,18
+    mov ax,C_PORT_SUSPEND
     call ClearPortFeature
     pop ax
     int 3
@@ -1004,7 +1004,7 @@ cpcSuspendOk:
     jz cpcOverCurrentOk
 ;
     push ax
-    mov ax,19
+    mov ax,PORT_POWER
     call ClearPortFeature
     pop ax
     int 3
@@ -1014,7 +1014,7 @@ cpcOverCurrentOk:
     jz cpcResetOk
 ;
     push ax
-    mov ax,20
+    mov ax,C_PORT_RESET
     call ClearPortFeature
     pop ax
 ;
@@ -2227,7 +2227,7 @@ tsLoop:
     test ds:hub_flags,FLAG_HUB_OVER_CURRENT
     jz tsNotOver
 ;
-    int 3
+    SetUsbOverCurrent
 
 tsNotOver:
     test ds:hub_flags,FLAG_HUB_DISCONNECT

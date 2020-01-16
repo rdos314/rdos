@@ -842,5 +842,6 @@ allocate_physical_dir_nr    = 735
 free_physical_dir_nr        = 736
 
 init_core_physical_nr       = 737
+set_usb_over_current_nr     = 738
 
 osgate_entries              = 750

@@ -868,6 +868,7 @@ void RDOSAPI RdosStopCanCapture();
 void RDOSAPI RdosStartLonCapture(int FileHandle);
 void RDOSAPI RdosStopLonCapture();
 
+int RDOSAPI RdosHasUsbOverCurrent();
 int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
 int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
 int RDOSAPI RdosGetUsbInterface(int Controller, int Device, int Interface);

@@ -3505,6 +3505,12 @@
     ValidateEax \
     __value [__eax]
 
+#pragma aux RdosHasUsbOverCurrent = \
+    CallGate_has_usb_over_current \
+    "cmc" \
+    CarryToBool \
+    __value [__eax]
+
 #pragma aux RdosGetUsbDevice = \
     CallGate_get_usb_device \
     ValidateEax \

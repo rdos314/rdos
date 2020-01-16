@@ -108,6 +108,7 @@ req_entry_struc ENDS
 data    SEGMENT byte public 'DATA'
 
 usb_enum_section    section_typ <>
+usb_over_current    DW ?
 
 usb_dev_count       DW ?
 usb_dev_arr         DW 256 DUP(?)
@@ -4983,6 +4984,61 @@ hook_usb_detach Proc far
     retf32
 hook_usb_detach   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetUsbOverCurrent
+;
+;           description:    Set USB overcurrent
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_usb_over_current_name DB 'Set USB Over Current', 0
+
+set_usb_over_current Proc far
+    push ds
+    push bx
+;       
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:usb_over_current,1
+;
+    pop bx
+    pop ds
+    retf32
+set_usb_over_current   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HasUsbOverCurrent
+;
+;           description:    Has USB overcurrent
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_usb_over_current_name DB 'Has USB Over Current', 0
+
+has_usb_over_current Proc far
+    push ds
+    push bx
+;       
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:usb_over_current
+    or bx,bx
+    clc
+    jz huscDone
+;
+    stc
+
+huscDone:
+    pop bx
+    pop ds
+    retf32
+has_usb_over_current   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -5001,6 +5057,7 @@ init    Proc far
     mov ds:usb_dev_count,0
     mov ds:usb_attach_hooks,0
     mov ds:usb_detach_hooks,0
+    mov ds:usb_over_current,0
 ;
     mov ax,cs
     mov ds,ax
@@ -5196,6 +5253,12 @@ init    Proc far
     mov ax,write_usb_data_no_copy_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET set_usb_over_current
+    mov edi,OFFSET set_usb_over_current_name
+    xor cl,cl
+    mov ax,set_usb_over_current_nr
+    RegisterOsGate
+;
     mov ebx,OFFSET get_usb_device16
     mov esi,OFFSET get_usb_device32
     mov edi,OFFSET get_usb_device_name
@@ -5325,6 +5388,12 @@ init    Proc far
     mov edi,OFFSET is_usb_pipe_stalled_name
     xor dx,dx
     mov ax,is_usb_pipe_stalled_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET has_usb_over_current
+    mov edi,OFFSET has_usb_over_current_name
+    xor dx,dx
+    mov ax,has_usb_over_current_nr
     RegisterBimodalUserGate
     clc
     ret

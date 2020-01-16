@@ -3693,6 +3693,12 @@ IsUsbPipeStalled      MACRO
         UserGate is_usb_pipe_stalled_nr
                                                 ENDM
 
+
+;   OUT CY          Over current
+HasUsbOverCurrent      MACRO
+        UserGate has_usb_over_current_nr
+                                                ENDM
+
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   OUT BX          Handle
