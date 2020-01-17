@@ -1007,7 +1007,7 @@ cpcSuspendOk:
     mov ax,PORT_POWER
     call ClearPortFeature
     pop ax
-    int 3
+    or ds:hub_flags,FLAG_HUB_OVER_CURRENT
 
 cpcOverCurrentOk:
     test ax,10h
