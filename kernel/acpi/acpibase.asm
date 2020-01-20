@@ -615,6 +615,7 @@ get_table_set_phys:
     mov si,SIZE acpi_header
     mov ecx,ds:acpi_size
     sub ecx,SIZE acpi_header
+    jz get_table_copied
 ;
     xor ah,ah
 
@@ -623,7 +624,8 @@ get_table_copy:
     add ah,al
     stos byte ptr es:[di]
     loop get_table_copy
-;
+
+get_table_copied:
     mov cx,SIZE acpi_header
     xor si,si
 
