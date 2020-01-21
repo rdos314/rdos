@@ -3842,6 +3842,10 @@ SetUsbOverCurrent   MACRO
     OsGate set_usb_over_current_nr
                     ENDM
 
+SetUsbResetFailed   MACRO
+    OsGate set_usb_reset_failed_nr
+                    ENDM
+
 ; IN  DS      Usb device selector
 ; IN  ES      Usb function selector
 ; OUT FS      Control pipe selector

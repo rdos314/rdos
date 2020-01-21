@@ -3082,7 +3082,13 @@ upCheckTimeout:
     cmp ax,100
     jb upNotFatal
 ;
-    int 3
+    SetUsbResetFailed
+    mov ds:[4*edi].usb_timeout_arr,0
+    mov ds:[4*edi].usb_timeout_arr+4,0
+    mov ds:[edi].usb_attach_thread_arr,0
+    mov ds:[edi].usb_detach_thread_arr,0
+    mov ds:[edi].usb_reset_thread_arr,0
+    jmp upLeave
 
 upNotFatal:
     cmp ax,10

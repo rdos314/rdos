@@ -1946,12 +1946,17 @@ AddOut    Proc far
     test fs:xp_flags,XP_FLAG_DATA
     jz aoFirst
 ;
+    mov ax,fs:xp_setup_offset
+    or ax,ax
+    jz aoNotSetup
+;
     mov si,fs:xp_data_last
     mov ax,fs:[si].trb_type
     and ax,NOT 20h
     or ax,10h     
     mov fs:[si].trb_type,ax
-;
+
+aoNotSetup:
     add fs:xp_size,cx
     push cx
     mov bx,es
@@ -2228,6 +2233,10 @@ IssueTransfer    Proc far
 ;    
     cmp si,fs:xp_data_last
     je itNorm
+;
+    mov ax,fs:xp_setup_offset
+    or ax,ax
+    jz itNorm
 ;
     push cx
     xor cx,cx
@@ -3904,7 +3913,13 @@ upCheckTimeout:
     cmp ax,200
     jb upNotFatal
 ;
-    int 3
+    SetUsbResetFailed
+    mov ds:[4*edi].usb_timeout_arr,0
+    mov ds:[4*edi].usb_timeout_arr+4,0
+    mov ds:[edi].usb_attach_thread_arr,0
+    mov ds:[edi].usb_detach_thread_arr,0
+    mov ds:[edi].usb_reset_thread_arr,0
+    jmp UpLeave
 
 upNotFatal:
     test ax,0Fh

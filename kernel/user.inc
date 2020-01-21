@@ -3694,9 +3694,14 @@ IsUsbPipeStalled      MACRO
                                                 ENDM
 
 
-;   OUT CY          Over current
+;   OUT NC          Over current
 HasUsbOverCurrent      MACRO
         UserGate has_usb_over_current_nr
+                                                ENDM
+
+;   OUT NC          Reset failure
+HasUsbResetFailed      MACRO
+        UserGate has_usb_reset_failed_nr
                                                 ENDM
 
 ;   IN  BX          Controller #
