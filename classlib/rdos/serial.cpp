@@ -733,6 +733,8 @@ void TSerialDevice::Execute()
     struct TSerialDebug *DumpArr;
     TPathName path(FLogPath);
 
+    RdosWaitMilli(100);
+
     if (path.MakeDir())
     {        
         InitFiles();
