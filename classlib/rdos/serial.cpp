@@ -277,6 +277,36 @@ int TSerialCommand::WaitForChar(long MaxWait)
 #
 #   Purpose....: Init device
 #
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::Init()
+{
+    OnChar = 0;    
+
+    FPort = 0;
+    FHandle = 0;
+    FBaudrate = 9600;
+    FParity = 'N';
+    FDataBits = 8;
+    FStopBits = 1;
+    FDebugFile = 0;
+    FCurrFile = 0;
+    FCurrId = 0;
+    FNextPos = 0;
+    FEntryCount = 0;
+    FFileCount = 0;
+    FUseCts = FALSE;
+    FBufferSize = 0x4000;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::Init
+#
+#   Purpose....: Init device
+#
 #   In params..: Port       port number (ie COM1 = 1)
 #                Baudrate   baudrate
 #                Parity     parity
@@ -288,21 +318,13 @@ int TSerialCommand::WaitForChar(long MaxWait)
 ##########################################################################*/
 void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
-    OnChar = 0;    
+    Init();
 
     FPort = Port;
     FBaudrate = Baudrate;
     FParity = Parity;
     FDataBits = DataBits;
     FStopBits = StopBits;
-    FDebugFile = 0;
-    FCurrFile = 0;
-    FCurrId = 0;
-    FNextPos = 0;
-    FEntryCount = 0;
-    FFileCount = 0;
-    FUseCts = FALSE;
-    FBufferSize = 0x4000;
        
     OpenPort();
 }
@@ -320,14 +342,7 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 TSerialDevice::TSerialDevice()
  : FSection("Serial")
 {
-    OnChar = 0;    
-    FPort = 0;
-    FBaudrate = 0;
-    FParity = 0;
-    FDataBits = 0;
-    FStopBits = 0;
-    FUseCts = FALSE;
-    FHandle = 0;
+    Init();
 }
 
 /*##########################################################################
@@ -340,17 +355,14 @@ TSerialDevice::TSerialDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(int Port)
+TSerialDevice::TSerialDevice(int Handle)
  : FSection("Serial")
 {
-    OnChar = 0;    
-    FPort = Port;
-    FBaudrate = 9600;
-    FParity = 'N';
-    FDataBits = 8;
-    FStopBits = 1;
-    FUseCts = FALSE;
-    FHandle = 0;
+    FPort = 0;
+    FHandle = Handle;
+    FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
+
+    Init();
 }
 
 /*##########################################################################
@@ -369,7 +381,7 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
   : FSection("Serial"),
     FEventSection("EvSerial")
 {
-        Init(Port, Baudrate, 'N', 8, 1);
+    Init(Port, Baudrate, 'N', 8, 1);
 }
 
 /*##########################################################################
@@ -391,7 +403,7 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits,
   : FSection("Serial"),
     FEventSection("EvSerial")
 {
-        Init(Port, Baudrate, Parity, DataBits, StopBits);
+    Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################
@@ -477,6 +489,23 @@ void TSerialDevice::Add(TWait *Wait)
     if (FHandle)
         RdosAddWaitForCom(Wait->GetHandle(), FHandle, (int)this);
 }
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::GetHandle
+#
+#   Purpose....: Get handle
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDevice::GetHandle()
+{
+    return FHandle;
+}
+
 /*##########################################################################
 #
 #   Name       : TSerialDevice::SetBufferSize

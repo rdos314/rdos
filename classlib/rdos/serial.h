@@ -66,6 +66,8 @@ public:
         
     void Block();
     void Unblock();
+
+    int GetHandle();
         
     void SetBaudrate(long Baudrate);
     void SetParity(char Parity);
@@ -114,6 +116,7 @@ protected:
     virtual void Execute();
 
 private:
+    void Init();
     void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
     void OpenPort();
     void CheckFileCount();
