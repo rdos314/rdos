@@ -1,5 +1,5 @@
-set_property PACKAGE_PIN AD12 [get_ports SYSCLK_P]
 set_property IOSTANDARD LVDS [get_ports SYSCLK_P]
+set_property PACKAGE_PIN AD12 [get_ports SYSCLK_P]
 set_property PACKAGE_PIN AD11 [get_ports SYSCLK_N]
 set_property IOSTANDARD LVDS [get_ports SYSCLK_N]
 set_property PACKAGE_PIN AC6 [get_ports GPIO_SW_W]
@@ -10,3 +10,5 @@ set_property PACKAGE_PIN F16 [get_ports GPIO_LED_7_LS]
 set_property IOSTANDARD LVCMOS25 [get_ports GPIO_LED_7_LS]
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 2.5 [current_design]
+
+create_clock -period 5.000 -name SYSCLK_P -waveform {0.000 2.500} [get_ports SYSCLK_P]
