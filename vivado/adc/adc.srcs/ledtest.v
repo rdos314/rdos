@@ -19,7 +19,8 @@ module tutorial_led_blink
   reg r_TOGGLE = 1'b0;
 
   clk sample_clk_inst(
-                 clk_out, 
+                 clk_out,
+                 GPIO_SW_E, 
                  sample_clk);    
 
   IBUFGDS clk_inst( .I(SYSCLK_P), .IB(SYSCLK_N), .O(clk_out));

@@ -183,7 +183,9 @@ wire clk_in2_sample_700;
 
 
 
-  assign clk_out1 = clk_out1_sample_700;
+  BUFG clkout1_buf
+   (.O   (clk_out1),
+    .I   (clk_out1_sample_700));
 
 
 
