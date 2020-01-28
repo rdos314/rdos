@@ -358,11 +358,11 @@ TSerialDevice::TSerialDevice()
 TSerialDevice::TSerialDevice(int Handle)
  : FSection("Serial")
 {
+    Init();
+
     FPort = 0;
     FHandle = Handle;
     FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
-
-    Init();
 }
 
 /*##########################################################################
