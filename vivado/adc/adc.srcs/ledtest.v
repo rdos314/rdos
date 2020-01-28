@@ -23,6 +23,9 @@ module tutorial_led_blink
                  GPIO_SW_E, 
                  sample_clk);    
 
+  sdram sdram_inst();
+
+
   IBUFGDS clk_inst( .I(SYSCLK_P), .IB(SYSCLK_N), .O(clk_out));
   BUFG clk_sys_inst (.I(clk_out), .O(SYSCLK));
 
