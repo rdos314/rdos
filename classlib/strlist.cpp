@@ -626,7 +626,7 @@ TString &TStringList::operator[](int pos)
 {
     TStringListNode *p = (TStringListNode *)TListBase::Get(pos);
 
-    if (p->IsValid())
+    if (p && p->IsValid())
         return p->Get();
     else
         return EmptyStr;
