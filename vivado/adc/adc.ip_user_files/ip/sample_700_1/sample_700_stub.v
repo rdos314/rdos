@@ -1,10 +1,9 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sun Jan 26 00:06:20 2020
+// Date        : Tue Jan 28 20:54:27 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub -rename_top sample_700 -prefix
-//               sample_700_ sample_700_stub.v
+// Command     : write_verilog -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/sample_700_synth_1/sample_700_stub.v
 // Design      : sample_700
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7k325tffg900-2

@@ -1,10 +1,9 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sun Jan 26 00:06:20 2020
+-- Date        : Tue Jan 28 20:54:27 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top sample_700 -prefix
---               sample_700_ sample_700_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim C:/rdos/vivado/adc/adc.runs/sample_700_synth_1/sample_700_sim_netlist.vhdl
 -- Design      : sample_700
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -19,10 +18,13 @@ entity sample_700_sample_700_clk_wiz is
     clk_out1 : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of sample_700_sample_700_clk_wiz : entity is "sample_700_clk_wiz";
 end sample_700_sample_700_clk_wiz;
 
 architecture STRUCTURE of sample_700_sample_700_clk_wiz is
   signal clk_in1_sample_700 : STD_LOGIC;
+  signal clk_out1_sample_700 : STD_LOGIC;
   signal clkfbout_sample_700 : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKFBOUTB_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKFBSTOPPED_UNCONNECTED : STD_LOGIC;
@@ -49,6 +51,7 @@ architecture STRUCTURE of sample_700_sample_700_clk_wiz is
   attribute IBUF_DELAY_VALUE of clkin1_ibufg : label is "0";
   attribute IFD_DELAY_VALUE : string;
   attribute IFD_DELAY_VALUE of clkin1_ibufg : label is "AUTO";
+  attribute BOX_TYPE of clkout1_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of mmcm_adv_inst : label is "PRIMITIVE";
 begin
 clkin1_ibufg: unisim.vcomponents.IBUF
@@ -58,6 +61,11 @@ clkin1_ibufg: unisim.vcomponents.IBUF
         port map (
       I => clk_in1,
       O => clk_in1_sample_700
+    );
+clkout1_buf: unisim.vcomponents.BUFG
+     port map (
+      I => clk_out1_sample_700,
+      O => clk_out1
     );
 mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
     generic map(
@@ -119,7 +127,7 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKIN2 => '0',
       CLKINSEL => '1',
       CLKINSTOPPED => NLW_mmcm_adv_inst_CLKINSTOPPED_UNCONNECTED,
-      CLKOUT0 => clk_out1,
+      CLKOUT0 => clk_out1_sample_700,
       CLKOUT0B => NLW_mmcm_adv_inst_CLKOUT0B_UNCONNECTED,
       CLKOUT1 => NLW_mmcm_adv_inst_CLKOUT1_UNCONNECTED,
       CLKOUT1B => NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED,

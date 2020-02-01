@@ -1,10 +1,9 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sun Jan 26 00:06:20 2020
+// Date        : Tue Jan 28 20:54:27 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top sample_700 -prefix
-//               sample_700_ sample_700_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim C:/rdos/vivado/adc/adc.runs/sample_700_synth_1/sample_700_sim_netlist.v
 // Design      : sample_700
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -27,6 +26,7 @@ module sample_700
         .clk_out1(clk_out1));
 endmodule
 
+(* ORIG_REF_NAME = "sample_700_clk_wiz" *) 
 module sample_700_sample_700_clk_wiz
    (clk_out1,
     clk_in1);
@@ -36,6 +36,7 @@ module sample_700_sample_700_clk_wiz
   wire clk_in1;
   wire clk_in1_sample_700;
   wire clk_out1;
+  wire clk_out1_sample_700;
   wire clkfbout_sample_700;
   wire NLW_mmcm_adv_inst_CLKFBOUTB_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKFBSTOPPED_UNCONNECTED;
@@ -64,6 +65,10 @@ module sample_700_sample_700_clk_wiz
     clkin1_ibufg
        (.I(clk_in1),
         .O(clk_in1_sample_700));
+  (* BOX_TYPE = "PRIMITIVE" *) 
+  BUFG clkout1_buf
+       (.I(clk_out1_sample_700),
+        .O(clk_out1));
   (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
@@ -123,7 +128,7 @@ module sample_700_sample_700_clk_wiz
         .CLKIN2(1'b0),
         .CLKINSEL(1'b1),
         .CLKINSTOPPED(NLW_mmcm_adv_inst_CLKINSTOPPED_UNCONNECTED),
-        .CLKOUT0(clk_out1),
+        .CLKOUT0(clk_out1_sample_700),
         .CLKOUT0B(NLW_mmcm_adv_inst_CLKOUT0B_UNCONNECTED),
         .CLKOUT1(NLW_mmcm_adv_inst_CLKOUT1_UNCONNECTED),
         .CLKOUT1B(NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED),

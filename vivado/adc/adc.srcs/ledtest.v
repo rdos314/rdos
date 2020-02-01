@@ -1,13 +1,25 @@
 module tutorial_led_blink
-  (
-    SYSCLK_P,
-    SYSCLK_N,
+ (
+    pci_exp_txp,
+    pci_exp_txn,
+    pci_exp_rxp,
+    pci_exp_rxn,
+    sys_rst_n,
+
+    sysclk_p,
+    sysclk_n,
     GPIO_SW_E,
     GPIO_LED_7_LS
   );
 
-  input wire SYSCLK_P;
-  input wire SYSCLK_N;
+  output  [7:0]    pci_exp_txp;
+  output  [7:0]    pci_exp_txn;
+  input   [7:0]    pci_exp_rxp;
+  input   [7:0]    pci_exp_rxn;
+  input            sys_rst_n;
+
+  input wire sysclk_p;
+  input wire sysclk_n;
   input wire GPIO_SW_E;
   output wire GPIO_LED_7_LS;
   wire SYSCLK;
@@ -18,17 +30,24 @@ module tutorial_led_blink
   reg [31:0] r_CNT = 0;
   reg r_TOGGLE = 1'b0;
 
-  clk sample_clk_inst(
-                 clk_out,
-                 GPIO_SW_E, 
-                 sample_clk);    
+sample_700 clk_700_inst
+   (
+    // Clock out ports
+    .clk_out1(sample_clk),     // output clk_out1
+   // Clock in ports
+    .clk_in1(sys_clk));      // input clk_in1
 
   pci_app pci_app_inst(
-                 clk_out,
-                 1'b1);
+    .pci_exp_txp(pci_exp_txp),
+    .pci_exp_txn(pci_exp_txn),
+    .pci_exp_rxp(pci_exp_rxp),
+    .pci_exp_rxn(pci_exp_rxn),
+    .sys_clk(sys_clk),
+    .sys_rst(!sys_rst_n)
+   );
 
-  IBUFGDS clk_inst( .I(SYSCLK_P), .IB(SYSCLK_N), .O(clk_out));
-  BUFG clk_sys_inst (.I(clk_out), .O(SYSCLK));
+ IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
+ BUFG clk_sys_inst (.I(sys_clk), .O(SYSCLK));
 
 begin
 

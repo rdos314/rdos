@@ -1,15 +1,16 @@
 module pci_tx (
   clk,
-  rst_n,
+  sys_rst,
   s_axis_tx_tready,
   s_axis_tx_tdata,
   s_axis_tx_tkeep,
   s_axis_tx_tlast,
-  s_axis_tx_tvalid
+  s_axis_tx_tvalid,
+  s_axis_tx_tuser
 );
 
   input             clk;
-  input             rst_n;
+  input             sys_rst;
 
   // AXIS
   input                           s_axis_tx_tready;
@@ -17,6 +18,7 @@ module pci_tx (
   output  reg [15:0]              s_axis_tx_tkeep;
   output  reg                     s_axis_tx_tlast;
   output  reg                     s_axis_tx_tvalid;
+  output  reg [3:0]               s_axis_tx_tuser;
 
 localparam CPLD_FMT_TYPE      = 7'b10_01010;
 localparam CPL_FMT_TYPE       = 7'b00_01010;
@@ -29,7 +31,12 @@ localparam TX_CPLD_QW1        = 2'b11;
     begin : gen_cpl_128
 
       always @ ( posedge clk ) begin
-        if (!rst_n ) 
+        s_axis_tx_tuser[0] = 1'b0;                // Unused for V6
+        s_axis_tx_tuser[1] = 1'b0;                // Error forward packet
+        s_axis_tx_tuser[2] = 1'b0;                // Stream packet
+        s_axis_tx_tuser[3] = 1'b0;                // tx_src_dsc
+
+        if (sys_rst) 
         begin
           s_axis_tx_tlast   <= 1'b0;
           s_axis_tx_tvalid  <= 1'b0;
