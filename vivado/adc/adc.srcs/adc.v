@@ -73,15 +73,22 @@ module adc (
   input                                       sys_rst_n
 );
 
+  parameter c_CNT = 200000000;
+
 // Register Declaration
 
   wire                                        user_clk;
   wire                                        user_reset;
   wire                                        user_lnk_up;
+  wire                                        sample_clk;  
+  wire                                        clk;  
 
   reg                                         user_reset_q;
   reg                                         user_lnk_up_q;
   reg    [25:0]                               user_clk_heartbeat = 'h0;
+
+  reg [31:0] r_CNT = 0;
+  reg r_TOGGLE = 1'b0;
 
 pci_app pci_app_inst (
     .pci_exp_txp(pci_exp_txp),
@@ -97,27 +104,36 @@ pci_app pci_app_inst (
     .user_lnk_up(user_lnk_up)
 );
 
+sample_700 sample_inst  (
+    .clk_out1(sample_clk),     // output clk_out1
+    .clk_in1(clk)          // input clk_in1
+    );
+
  //-----------------------------I/O BUFFERS------------------------//
 
   IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));
   IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
+  BUFG   sys_clk_buf (.O(clk), .I(sys_clk));
 
   OBUF   led_0_obuf (.O(led_0), .I(sys_rst_n_c));
-  OBUF   led_1_obuf (.O(led_1), .I(!user_reset));
+  OBUF   led_1_obuf (.O(led_1), .I(user_reset));
   OBUF   led_2_obuf (.O(led_2), .I(user_lnk_up));
-  OBUF   led_3_obuf (.O(led_3), .I(user_clk_heartbeat[25]));
+  OBUF   led_3_obuf (.O(led_3), .I(r_TOGGLE));
 
   always @(posedge user_clk) begin
     user_reset_q  <= user_reset;
     user_lnk_up_q <= user_lnk_up;
   end
 
-  // Create a Clock Heartbeat on LED #3
-  always @(posedge user_clk) begin
-      user_clk_heartbeat <= user_clk_heartbeat + 1'b1;
-  end
-
-
-
+  always @ (posedge sample_clk)
+    begin
+      if (r_CNT == c_CNT-1)
+        begin
+          r_TOGGLE <= !r_TOGGLE;
+          r_CNT <= 0;
+        end
+      else
+        r_CNT <= r_CNT + 1;
+    end;
 
 endmodule
