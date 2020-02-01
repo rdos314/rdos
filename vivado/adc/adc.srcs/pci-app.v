@@ -9,7 +9,9 @@ module pci_app (
     
     user_clk,
     user_reset,
-    user_lnk_up
+    user_lnk_up,
+    user_lnk_rate,
+    user_lnk_width
 );
 
   output  [7:0]    pci_exp_txp;
@@ -23,12 +25,17 @@ module pci_app (
   output           user_clk;
   output           user_reset;
   output           user_lnk_up;
+  
+  output           user_lnk_rate;
+  output   [1:0]   user_lnk_width;
 
 // Wire Declarations
 
   wire                                        user_clk;
   wire                                        user_reset;
   wire                                        user_lnk_up;
+  wire                                        user_lnk_rate;
+  wire [1:0]                                  user_lnk_width;
 
   // Tx
   wire                                        s_axis_tx_tready;
@@ -203,8 +210,8 @@ pcie pcie_i
   .pl_directed_link_auton                    ( pl_directed_link_auton ),
   .pl_upstream_prefer_deemph                 ( pl_upstream_prefer_deemph ),
 
-  .pl_sel_lnk_rate                           ( ),
-  .pl_sel_lnk_width                          ( ),
+  .pl_sel_lnk_rate                           ( user_lnk_rate),
+  .pl_sel_lnk_width                          ( user_lnk_width),
   .pl_ltssm_state                            ( ),
   .pl_lane_reversal_mode                     ( ),
 

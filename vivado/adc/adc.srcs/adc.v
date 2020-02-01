@@ -80,6 +80,8 @@ module adc (
   wire                                        user_clk;
   wire                                        user_reset;
   wire                                        user_lnk_up;
+  wire                                        user_lnk_rate;
+  wire [1:0]                                  user_lnk_width;
   wire                                        sample_clk;  
   wire                                        clk;  
 
@@ -101,7 +103,9 @@ pci_app pci_app_inst (
     
     .user_clk(user_clk),
     .user_reset(user_reset),
-    .user_lnk_up(user_lnk_up)
+    .user_lnk_up(user_lnk_up),
+    .user_lnk_rate(user_lnk_rate),
+    .user_lnk_width(user_lnk_width)
 );
 
 sample_700 sample_inst  (
@@ -115,9 +119,9 @@ sample_700 sample_inst  (
   IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
   BUFG   sys_clk_buf (.O(clk), .I(sys_clk));
 
-  OBUF   led_0_obuf (.O(led_0), .I(sys_rst_n_c));
-  OBUF   led_1_obuf (.O(led_1), .I(user_reset));
-  OBUF   led_2_obuf (.O(led_2), .I(user_lnk_up));
+  OBUF   led_0_obuf (.O(led_0), .I(user_lnk_up));
+  OBUF   led_1_obuf (.O(led_1), .I(user_lnk_rate));
+  OBUF   led_2_obuf (.O(led_2), .I(user_lnk_width[1]));
   OBUF   led_3_obuf (.O(led_3), .I(r_TOGGLE));
 
   always @(posedge user_clk) begin
