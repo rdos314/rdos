@@ -67,6 +67,10 @@ module adc (
   output                                      led_1,
   output                                      led_2,
   output                                      led_3,
+  output                                      led_4,
+  output                                      led_5,
+  output                                      led_6,
+  output                                      led_7,
 
   input                                       sys_clk_p,
   input                                       sys_clk_n,
@@ -121,8 +125,12 @@ sample_700 sample_inst  (
 
   OBUF   led_0_obuf (.O(led_0), .I(user_lnk_up));
   OBUF   led_1_obuf (.O(led_1), .I(user_lnk_rate));
-  OBUF   led_2_obuf (.O(led_2), .I(user_lnk_width[1]));
-  OBUF   led_3_obuf (.O(led_3), .I(r_TOGGLE));
+  OBUF   led_2_obuf (.O(led_2), .I(user_lnk_width[0]));
+  OBUF   led_3_obuf (.O(led_3), .I(user_lnk_width[1]));
+  OBUF   led_4_obuf (.O(led_4), .I(user_reset));
+  OBUF   led_5_obuf (.O(led_5), .I(0));
+  OBUF   led_6_obuf (.O(led_6), .I(0));
+  OBUF   led_7_obuf (.O(led_7), .I(r_TOGGLE));
 
   always @(posedge user_clk) begin
     user_reset_q  <= user_reset;
