@@ -1,6 +1,6 @@
 module pci_rx (
   clk,
-  sys_rst_n,
+  reset,
   m_axis_rx_tdata,
   m_axis_rx_tkeep,
   m_axis_rx_tlast,
@@ -10,7 +10,7 @@ module pci_rx (
 );
 
   input                         clk;
-  input                         sys_rst_n;
+  input                         reset;
 
   // AXI-S
   input  [128:0]                m_axis_rx_tdata;
@@ -46,7 +46,7 @@ module pci_rx (
 
 
       always @ ( posedge clk ) begin
-        if (!sys_rst_n )
+        if (reset )
         begin
           m_axis_rx_tready <= 1'b0;
         end // if (!rst_n )
