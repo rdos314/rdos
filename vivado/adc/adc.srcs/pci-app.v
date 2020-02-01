@@ -77,37 +77,11 @@ module pci_app (
   wire [1:0]                                  pl_directed_link_width;
   wire                                        pl_upstream_prefer_deemph;
 
-  wire                                        sys_rst_n_c;
-  wire                                        sys_clk;
-
-
-pcie_pipe_clock pipe_clock_inst (
-
-          //---------- Input -------------------------------------
-          .CLK_TXOUTCLK                   ( pipe_txoutclk_in ),     // Reference clock from lane 0
-          .CLK_RXOUTCLK_IN                ( pipe_rxoutclk_in ),
-          .CLK_RST_N                      ( pipe_mmcm_rst_n ),      // Allow system reset for error_recovery             
-          .CLK_PCLK_SEL                   ( pipe_pclk_sel_in ),
-          .CLK_PCLK_SEL_SLAVE             ( pipe_pclk_sel_slave),
-          .CLK_GEN3                       ( pipe_gen3_in ),
-
-          //---------- Output ------------------------------------
-          .CLK_PCLK                       ( pipe_pclk_out),
-          .CLK_PCLK_SLAVE                 ( pipe_pclk_out_slave),
-          .CLK_RXUSRCLK                   ( pipe_rxusrclk_out),
-          .CLK_RXOUTCLK_OUT               ( pipe_rxoutclk_out),
-          .CLK_DCLK                       ( pipe_dclk_out),
-          .CLK_OOBCLK                     ( pipe_oobclk_out),
-          .CLK_USERCLK1                   ( pipe_userclk1_out),
-          .CLK_USERCLK2                   ( pipe_userclk2_out),
-          .CLK_MMCM_LOCK                  ( pipe_mmcm_lock_out)
-
-      );
 
 pci_rx pci_rx_inst (
 
     .clk(user_clk),                              // I
-    .sys_rst(sys_rst),                      // I
+    .sys_rst(user_reset),                      // I
 
     // AXIS RX
     .m_axis_rx_tdata( m_axis_rx_tdata ),    // I
@@ -121,7 +95,7 @@ pci_rx pci_rx_inst (
 pci_tx pci_tx_inst (
 
     .clk(user_clk),                                  // I
-    .sys_rst(sys_rst),                          // I
+    .sys_rst(user_reset),                            // I
 
     // AXIS Tx
     .s_axis_tx_tready( s_axis_tx_tready ),      // I
@@ -131,7 +105,6 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser )           // I
 );
-
 
   assign cfg_err_cor = 1'b0;                       // Never report Correctable Error
   assign cfg_err_ur = 1'b0;                        // Never report UR
@@ -171,18 +144,18 @@ pcie pcie_inst (
   .pci_exp_rxp(pci_exp_rxp),                                        // input wire [7 : 0] pci_exp_rxp
   .pci_exp_rxn(pci_exp_rxn),                                        // input wire [7 : 0] pci_exp_rxn
 
-  .pipe_pclk_in(pipe_pclk_out),                                     // input wire pipe_pclk_in
-  .pipe_rxusrclk_in(pipe_rxusrclk_out),                             // input wire pipe_rxusrclk_in
-  .pipe_rxoutclk_in(pipe_rxoutclk_out),                             // input wire [7 : 0] pipe_rxoutclk_in
-  .pipe_dclk_in(pipe_dclk_out),                                     // input wire pipe_dclk_in
-  .pipe_userclk1_in(pipe_userclk1_out),                             // input wire pipe_userclk1_in
-  .pipe_userclk2_in(pipe_userclk2_out),                             // input wire pipe_userclk2_in
-  .pipe_oobclk_in(pipe_oobclk_out),                                 // input wire pipe_oobclk_in
-  .pipe_mmcm_lock_in(pipe_mmcm_lock_out),                           // input wire pipe_mmcm_lock_in
-  .pipe_txoutclk_out(pipe_txoutclk_in),                             // output wire pipe_txoutclk_out
-  .pipe_rxoutclk_out(pipe_rxoutclk_in),                             // output wire [7 : 0] pipe_rxoutclk_out
-  .pipe_pclk_sel_out(pipe_pclk_sel_in),                             // output wire [7 : 0] pipe_pclk_sel_out
-  .pipe_gen3_out(pipe_gen3_in),                                     // output wire pipe_gen3_out
+  .int_pclk_out_slave(),                                            // output wire int_pclk_out_slave
+  .int_pipe_rxusrclk_out(),                                         // output wire int_pipe_rxusrclk_out
+  .int_rxoutclk_out(),                                              // output wire [7 : 0] int_rxoutclk_out
+  .int_dclk_out(),                                                  // output wire int_dclk_out
+  .int_mmcm_lock_out(),                                             // output wire int_mmcm_lock_out
+  .int_userclk1_out(),                                              // output wire int_userclk1_out
+  .int_userclk2_out(),                                              // output wire int_userclk2_out
+  .int_oobclk_out(),                                                // output wire int_oobclk_out
+  .int_qplllock_out(),                                              // output wire [1 : 0] int_qplllock_out
+  .int_qplloutclk_out(),                                            // output wire [1 : 0] int_qplloutclk_out
+  .int_qplloutrefclk_out(),                                         // output wire [1 : 0] int_qplloutrefclk_out
+  .int_pclk_sel_slave(8'b0),                                        // input wire [7 : 0] int_pclk_sel_slave
 
   .user_clk_out(user_clk),                                          // output wire user_clk_out
   .user_reset_out(user_reset),                                      // output wire user_reset_out
@@ -262,8 +235,7 @@ pcie pcie_inst (
   .cfg_aer_ecrc_gen_en(),                                           // output wire cfg_aer_ecrc_gen_en
 
   .sys_clk(sys_clk),                                                // input wire sys_clk
-  .sys_rst_n(!sys_rst),                                             // input wire sys_rst_n
-  .pipe_mmcm_rst_n(pipe_mmcm_rst_n)                                 // input wire pipe_mmcm_rst_n
+  .sys_rst_n(!sys_rst)                                             // input wire sys_rst_n
   );
 
 endmodule

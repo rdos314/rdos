@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Tue Jan 28 20:54:27 2020
+// Date        : Sat Feb  1 18:47:24 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim C:/rdos/vivado/adc/adc.runs/sample_700_synth_1/sample_700_sim_netlist.v
 // Design      : sample_700
@@ -72,10 +72,10 @@ module sample_700_sample_700_clk_wiz
   (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
-    .CLKFBOUT_MULT_F(3.500000),
+    .CLKFBOUT_MULT_F(7.000000),
     .CLKFBOUT_PHASE(0.000000),
     .CLKFBOUT_USE_FINE_PS("FALSE"),
-    .CLKIN1_PERIOD(5.000000),
+    .CLKIN1_PERIOD(10.000000),
     .CLKIN2_PERIOD(0.000000),
     .CLKOUT0_DIVIDE_F(1.000000),
     .CLKOUT0_DUTY_CYCLE(0.500000),
