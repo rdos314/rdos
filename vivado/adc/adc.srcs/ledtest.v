@@ -56,21 +56,12 @@
 //------------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
-(* DowngradeIPIdentifiedWarnings = "yes" *)
-module xilinx_pcie_2_1_ep_7x # (
-  parameter PL_FAST_TRAIN       = "FALSE", // Simulation Speedup
-  parameter EXT_PIPE_SIM        = "FALSE",  // This Parameter has effect on selecting Enable External PIPE Interface in GUI.	
-  parameter PCIE_EXT_CLK        = "FALSE",    // Use External Clocking Module
-  parameter PCIE_EXT_GT_COMMON  = "FALSE",
-  parameter REF_CLK_FREQ        = 0,     // 0 - 100 MHz, 1 - 125 MHz, 2 - 250 MHz
-  parameter C_DATA_WIDTH        = 128, // RX/TX interface data width
-  parameter KEEP_WIDTH          = C_DATA_WIDTH / 8 // TSTRB width
-) (
+
+module adc (
   output  [7:0]    pci_exp_txp,
   output  [7:0]    pci_exp_txn,
   input   [7:0]    pci_exp_rxp,
   input   [7:0]    pci_exp_rxn,
-
 
   output                                      led_0,
   output                                      led_1,
@@ -92,12 +83,6 @@ module xilinx_pcie_2_1_ep_7x # (
   reg                                         user_lnk_up_q;
   reg    [25:0]                               user_clk_heartbeat = 'h0;
 
-// Local Parameters
-  localparam TCQ               = 1;
-  localparam USER_CLK_FREQ     = 4;
-  localparam USER_CLK2_DIV2    = "TRUE";
-  localparam USERCLK2_FREQ     = (USER_CLK2_DIV2 == "TRUE") ? (USER_CLK_FREQ == 4) ? 3 : (USER_CLK_FREQ == 3) ? 2 : USER_CLK_FREQ: USER_CLK_FREQ;
-
 pci_app pci_app_inst (
     .pci_exp_txp(pci_exp_txp),
     .pci_exp_txn(pci_exp_txn),
@@ -112,11 +97,9 @@ pci_app pci_app_inst (
     .user_lnk_up(user_lnk_up)
 );
 
-
  //-----------------------------I/O BUFFERS------------------------//
 
   IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));
-
   IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
 
   OBUF   led_0_obuf (.O(led_0), .I(sys_rst_n_c));
@@ -131,7 +114,7 @@ pci_app pci_app_inst (
 
   // Create a Clock Heartbeat on LED #3
   always @(posedge user_clk) begin
-      user_clk_heartbeat <= #TCQ user_clk_heartbeat + 1'b1;
+      user_clk_heartbeat <= user_clk_heartbeat + 1'b1;
   end
 
 

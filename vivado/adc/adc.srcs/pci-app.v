@@ -276,7 +276,7 @@ pcie pcie_i
 pci_rx pci_rx_inst (
 
     .clk(user_clk),                              // I
-    .sys_rst(user_reset),                      // I
+    .sys_rst_n(user_reset),                      // I
 
     // AXIS RX
     .m_axis_rx_tdata( m_axis_rx_tdata ),    // I
@@ -290,7 +290,7 @@ pci_rx pci_rx_inst (
 pci_tx pci_tx_inst (
 
     .clk(user_clk),                                  // I
-    .sys_rst(user_reset),                            // I
+    .sys_rst_n(user_reset),                            // I
 
     // AXIS Tx
     .s_axis_tx_tready( s_axis_tx_tready ),      // I

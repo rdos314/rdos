@@ -1,6 +1,6 @@
 module pci_tx (
   clk,
-  sys_rst,
+  sys_rst_n,
   s_axis_tx_tready,
   s_axis_tx_tdata,
   s_axis_tx_tkeep,
@@ -10,7 +10,7 @@ module pci_tx (
 );
 
   input             clk;
-  input             sys_rst;
+  input             sys_rst_n;
 
   // AXIS
   input                           s_axis_tx_tready;
@@ -36,7 +36,7 @@ localparam TX_CPLD_QW1        = 2'b11;
         s_axis_tx_tuser[2] = 1'b0;                // Stream packet
         s_axis_tx_tuser[3] = 1'b0;                // tx_src_dsc
 
-        if (sys_rst) 
+        if (sys_rst_n) 
         begin
           s_axis_tx_tlast   <= 1'b0;
           s_axis_tx_tvalid  <= 1'b0;
