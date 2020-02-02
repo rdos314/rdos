@@ -19,7 +19,7 @@ module pci_tx (
   output  reg                     s_axis_tx_tlast;
   output  reg                     s_axis_tx_tvalid;
   output  reg [3:0]               s_axis_tx_tuser;
-
+  
 localparam CPLD_FMT_TYPE      = 7'b10_01010;
 localparam CPL_FMT_TYPE       = 7'b00_01010;
 localparam TX_RST_STATE       = 2'b00;

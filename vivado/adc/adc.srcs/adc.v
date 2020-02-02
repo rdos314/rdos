@@ -117,6 +117,11 @@ sample_700 sample_inst  (
     .clk_in1(clk)          // input clk_in1
     );
 
+ila_0 ila_inst (
+	.clk(user_clk), // input wire clk
+	.probe0(user_lnk_up) // input wire [0:0] probe0
+);
+
  //-----------------------------I/O BUFFERS------------------------//
 
   IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));

@@ -13,12 +13,16 @@ module pci_rx (
   input                         reset;
 
   // AXI-S
-  input  [128:0]                m_axis_rx_tdata;
+  input  [127:0]                m_axis_rx_tdata;
   input  [15:0]                 m_axis_rx_tkeep;
   input                         m_axis_rx_tlast;
   input                         m_axis_rx_tvalid;
   output reg                    m_axis_rx_tready;
   input    [21:0]               m_axis_rx_tuser;
+
+  reg [1023:0]       packet_data;
+  reg [127:0]        packet_keep;
+  reg [2:0]          byte_counter;
 
   localparam RX_MEM_RD32_FMT_TYPE = 7'b00_00000;
   localparam RX_MEM_WR32_FMT_TYPE = 7'b10_00000;
@@ -49,10 +53,39 @@ module pci_rx (
         if (reset )
         begin
           m_axis_rx_tready <= 1'b0;
+          byte_counter = 0;
         end // if (!rst_n )
         else
         begin
           m_axis_rx_tready  <= 1'b1;
+          
+          if (m_axis_rx_tvalid)
+          begin
+            case (byte_counter)
+              3'b111: packet_data[1023:896] = m_axis_rx_tdata;
+              3'b110: packet_data[897:768] = m_axis_rx_tdata;
+              3'b101: packet_data[767:640] = m_axis_rx_tdata;
+              3'b100: packet_data[639:512] = m_axis_rx_tdata;
+              3'b011: packet_data[511:384] = m_axis_rx_tdata;
+              3'b010: packet_data[383:256] = m_axis_rx_tdata;
+              3'b001: packet_data[255:128] = m_axis_rx_tdata;
+              3'b000: packet_data[127:0] = m_axis_rx_tdata;
+            endcase
+
+            case (byte_counter)
+              3'b111: packet_keep[127:112] = m_axis_rx_tkeep;
+              3'b110: packet_keep[111:96] = m_axis_rx_tkeep;
+              3'b101: packet_keep[95:80] = m_axis_rx_tkeep;
+              3'b100: packet_keep[79:64] = m_axis_rx_tkeep;
+              3'b011: packet_keep[63:48] = m_axis_rx_tkeep;
+              3'b010: packet_keep[47:32] = m_axis_rx_tkeep;
+              3'b001: packet_keep[31:16] = m_axis_rx_tkeep;
+              3'b000: packet_keep[15:0] = m_axis_rx_tkeep;
+            endcase
+            
+            byte_counter = byte_counter + 1;
+          end
+
         end // if rst_n
       end // always
 
