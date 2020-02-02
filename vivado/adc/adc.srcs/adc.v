@@ -86,6 +86,7 @@ module adc (
   wire                                        user_lnk_up;
   wire                                        user_lnk_rate;
   wire [1:0]                                  user_lnk_width;
+  wire                                        cfg_interrupt_msienable;  
   wire                                        sample_clk;  
   wire                                        clk;  
 
@@ -109,18 +110,14 @@ pci_app pci_app_inst (
     .user_reset(user_reset),
     .user_lnk_up(user_lnk_up),
     .user_lnk_rate(user_lnk_rate),
-    .user_lnk_width(user_lnk_width)
+    .user_lnk_width(user_lnk_width),
+    .cfg_interrupt_msienable(cfg_interrupt_msienable)
 );
 
 sample_700 sample_inst  (
     .clk_out1(sample_clk),     // output clk_out1
     .clk_in1(clk)          // input clk_in1
     );
-
-ila_0 ila_inst (
-	.clk(user_clk), // input wire clk
-	.probe0(user_lnk_up) // input wire [0:0] probe0
-);
 
  //-----------------------------I/O BUFFERS------------------------//
 
@@ -133,7 +130,7 @@ ila_0 ila_inst (
   OBUF   led_2_obuf (.O(led_2), .I(user_lnk_width[0]));
   OBUF   led_3_obuf (.O(led_3), .I(user_lnk_width[1]));
   OBUF   led_4_obuf (.O(led_4), .I(user_reset));
-  OBUF   led_5_obuf (.O(led_5), .I(0));
+  OBUF   led_5_obuf (.O(led_5), .I(cfg_interrupt_msienable));
   OBUF   led_6_obuf (.O(led_6), .I(0));
   OBUF   led_7_obuf (.O(led_7), .I(r_TOGGLE));
 

@@ -11,7 +11,8 @@ module pci_app (
     user_reset,
     user_lnk_up,
     user_lnk_rate,
-    user_lnk_width
+    user_lnk_width,
+    cfg_interrupt_msienable
 );
 
   output  [7:0]    pci_exp_txp;
@@ -28,6 +29,7 @@ module pci_app (
   
   output           user_lnk_rate;
   output   [1:0]   user_lnk_width;
+  output           cfg_interrupt_msienable;
 
 // Wire Declarations
 
@@ -36,7 +38,8 @@ module pci_app (
   wire                                        user_lnk_up;
   wire                                        user_lnk_rate;
   wire [1:0]                                  user_lnk_width;
-
+  wire                                        cfg_interrupt_msienable;
+  
   // Tx
   wire                                        s_axis_tx_tready;
   wire [3:0]                                  s_axis_tx_tuser;
@@ -194,7 +197,7 @@ pcie pcie_i
   .cfg_interrupt_di                          ( cfg_interrupt_di ),
   .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
-  .cfg_interrupt_msienable                   ( ),
+  .cfg_interrupt_msienable                   ( cfg_interrupt_msienable ),
   .cfg_interrupt_msixenable                  ( ),
   .cfg_interrupt_msixfm                      ( ),
   .cfg_interrupt_stat                        ( cfg_interrupt_stat ),

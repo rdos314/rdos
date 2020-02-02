@@ -20,21 +20,52 @@ module pci_rx (
   output reg                    m_axis_rx_tready;
   input    [21:0]               m_axis_rx_tuser;
 
-  reg [1023:0]       packet_data;
-  reg [127:0]        packet_keep;
-  reg [2:0]          byte_counter;
+  reg         req_compl;
+  reg         req_compl_wd;
+  
+  reg [7:0]   tlp_type;
 
-  localparam RX_MEM_RD32_FMT_TYPE = 7'b00_00000;
-  localparam RX_MEM_WR32_FMT_TYPE = 7'b10_00000;
-  localparam RX_MEM_RD64_FMT_TYPE = 7'b01_00000;
-  localparam RX_MEM_WR64_FMT_TYPE = 7'b11_00000;
-  localparam RX_IO_RD32_FMT_TYPE  = 7'b00_00010;
-  localparam RX_IO_WR32_FMT_TYPE  = 7'b10_00010;
+  reg [2:0]   req_tc;                        // Memory Read TC
+  reg         req_td;                        // Memory Read TD
+  reg         req_ep;                        // Memory Read EP
+  reg [1:0]   req_attr;                      // Memory Read Attribute
+  reg [9:0]   req_len;                       // Memory Read Length (1DW)
+  reg [15:0]  req_rid;                       // Memory Read Requestor ID
+  reg [7:0]   req_tag;                       // Memory Read Tag
+  reg [7:0]   req_be;                        // Memory Read Byte Enables
+  reg [11:0]  req_addr;                      // Memory Read Address
+
+  reg [10:0]  wr_addr;                       // Memory Write Address
+  reg [7:0]   wr_be;                         // Memory Write Byte Enable
+  reg [31:0]  wr_data;                       // Memory Write Data
+  reg         wr_en;                         // Memory Write Enable
+
+  localparam PIO_RX_MEM_RD32_FMT_TYPE = 7'b00_00000;
+  localparam PIO_RX_MEM_WR32_FMT_TYPE = 7'b10_00000;
+  localparam PIO_RX_MEM_RD64_FMT_TYPE = 7'b01_00000;
+  localparam PIO_RX_MEM_WR64_FMT_TYPE = 7'b11_00000;
+  localparam PIO_RX_IO_RD32_FMT_TYPE  = 7'b00_00010;
+  localparam PIO_RX_IO_WR32_FMT_TYPE  = 7'b10_00010;
 
   // Local Registers
 
   wire               mem32_bar_hit_n;
   reg [1:0]          region_select;
+
+ila_0 ila_inst (
+	.clk(clk), // input wire clk
+    .trig_in(m_axis_rx_tuser[14]),
+    .probe0(tlp_type),
+	.probe1(req_tc),
+	.probe2(req_td),
+	.probe3(req_ep),
+	.probe4(req_attr),
+	.probe5(req_len),
+	.probe6(req_rid),
+	.probe7(req_tag),
+	.probe8(req_be),
+	.probe9(req_addr)
+);
 
   generate
     begin : pio_rx_sm_128
@@ -52,40 +83,138 @@ module pci_rx (
       always @ ( posedge clk ) begin
         if (reset )
         begin
-          m_axis_rx_tready <= 1'b0;
-          byte_counter = 0;
+          m_axis_rx_tready <= 1'b1;
+          req_tc <= 0;
+          req_td <= 0;
+          req_ep <= 0;
+          req_attr <= 0;
+          req_len <= 0;
+          req_rid <= 0;
+          req_tag <= 0;
+          req_be <= 0;
+          req_addr <= 0;
         end // if (!rst_n )
         else
         begin
-          m_axis_rx_tready  <= 1'b1;
-          
-          if (m_axis_rx_tvalid)
+              // Packet starts in the middle of the 128-bit bus.
+          if ((m_axis_rx_tvalid) && (m_axis_rx_tready))
           begin
-            case (byte_counter)
-              3'b111: packet_data[1023:896] = m_axis_rx_tdata;
-              3'b110: packet_data[897:768] = m_axis_rx_tdata;
-              3'b101: packet_data[767:640] = m_axis_rx_tdata;
-              3'b100: packet_data[639:512] = m_axis_rx_tdata;
-              3'b011: packet_data[511:384] = m_axis_rx_tdata;
-              3'b010: packet_data[383:256] = m_axis_rx_tdata;
-              3'b001: packet_data[255:128] = m_axis_rx_tdata;
-              3'b000: packet_data[127:0] = m_axis_rx_tdata;
-            endcase
+            if (sof_mid)
+            begin
+              tlp_type <= m_axis_rx_tdata[95:88];
+              req_len <= m_axis_rx_tdata[73:64];
+              m_axis_rx_tready <= 1'b0;
 
-            case (byte_counter)
-              3'b111: packet_keep[127:112] = m_axis_rx_tkeep;
-              3'b110: packet_keep[111:96] = m_axis_rx_tkeep;
-              3'b101: packet_keep[95:80] = m_axis_rx_tkeep;
-              3'b100: packet_keep[79:64] = m_axis_rx_tkeep;
-              3'b011: packet_keep[63:48] = m_axis_rx_tkeep;
-              3'b010: packet_keep[47:32] = m_axis_rx_tkeep;
-              3'b001: packet_keep[31:16] = m_axis_rx_tkeep;
-              3'b000: packet_keep[15:0] = m_axis_rx_tkeep;
-            endcase
-            
-            byte_counter = byte_counter + 1;
+              if (m_axis_rx_tdata[73:64] == 10'b1)
+              begin
+                case (tlp_type[6:0])
+                  PIO_RX_MEM_RD32_FMT_TYPE : 
+                  begin
+                    req_tc <= m_axis_rx_tdata[86:84];
+                    req_td <= m_axis_rx_tdata[79];
+                    req_ep <= m_axis_rx_tdata[78];
+                    req_attr <= m_axis_rx_tdata[77:76];
+                    req_len <= m_axis_rx_tdata[73:64];
+                    req_rid <= m_axis_rx_tdata[127:112];
+                    req_tag <= m_axis_rx_tdata[111:104];
+                    req_be <= m_axis_rx_tdata[103:96];
+                  end
+
+                  PIO_RX_MEM_WR32_FMT_TYPE : 
+                  begin
+                    wr_be <= m_axis_rx_tdata[103:96];
+                  end
+
+                  PIO_RX_MEM_RD64_FMT_TYPE : 
+                  begin
+                    req_tc <= m_axis_rx_tdata[86:84];
+                    req_td <= m_axis_rx_tdata[79];
+                    req_ep <= m_axis_rx_tdata[78];
+                    req_attr <= m_axis_rx_tdata[77:76];
+                    req_len <= m_axis_rx_tdata[73:64];
+                    req_rid <= m_axis_rx_tdata[127:112];
+                    req_tag <= m_axis_rx_tdata[111:104];
+                    req_be <= m_axis_rx_tdata[103:96];
+                  end
+
+                  PIO_RX_MEM_WR64_FMT_TYPE : 
+                  begin
+                    wr_be <= m_axis_rx_tdata[103:96];
+                  end
+                endcase
+              end
+            end        
+            else if (sof_right)
+            begin
+              tlp_type <= m_axis_rx_tdata[31:24];
+              req_len <= m_axis_rx_tdata[9:0];
+              m_axis_rx_tready <= 1'b0;
+              if (m_axis_rx_tdata[9:0] == 10'b1)
+              begin
+                case (tlp_type[6:0])
+                  PIO_RX_MEM_RD32_FMT_TYPE : 
+                  begin
+                    req_tc <= m_axis_rx_tdata[22:20];
+                    req_td <= m_axis_rx_tdata[15];
+                    req_ep <= m_axis_rx_tdata[14];
+                    req_attr <= m_axis_rx_tdata[13:12];
+                    req_len <= m_axis_rx_tdata[9:0];
+                    req_rid <= m_axis_rx_tdata[63:48];
+                    req_tag <= m_axis_rx_tdata[47:40];
+                    req_be <= m_axis_rx_tdata[39:32];
+                    req_addr <= {m_axis_rx_tdata[74:66],2'b00};
+                    req_compl <= 1'b1;
+                    req_compl_wd <= 1'b1;
+                  end
+
+                  PIO_RX_MEM_WR32_FMT_TYPE : 
+                  begin
+                    wr_be <= m_axis_rx_tdata[39:32];
+                    wr_data <= m_axis_rx_tdata[127:96];
+                    wr_en <= 1'b1;
+                    wr_addr <= {m_axis_rx_tdata[74:66]};
+                    wr_en <= 1'b1;
+                  end
+
+                  PIO_RX_MEM_RD64_FMT_TYPE : 
+                  begin
+                    req_tc <= m_axis_rx_tdata[22:20];
+                    req_td <= m_axis_rx_tdata[15];
+                    req_ep <= m_axis_rx_tdata[14];
+                    req_attr <= m_axis_rx_tdata[13:12];
+                    req_len <= m_axis_rx_tdata[9:0];
+                    req_rid <= m_axis_rx_tdata[63:48];
+                    req_tag <= m_axis_rx_tdata[47:40];
+                    req_be <= m_axis_rx_tdata[39:32];
+                    req_addr <= {m_axis_rx_tdata[74:66],2'b00};
+                    req_compl <= 1'b1;
+                    req_compl_wd <= 1'b1;
+                  end
+
+                  PIO_RX_MEM_WR64_FMT_TYPE : 
+                  begin
+                    wr_be <= m_axis_rx_tdata[39:32];
+                    wr_addr <= {m_axis_rx_tdata[74:66]};
+                  end
+
+                  PIO_RX_IO_RD32_FMT_TYPE : 
+                  begin
+                    req_tc <= m_axis_rx_tdata[22:20];
+                    req_td <= m_axis_rx_tdata[15];
+                    req_ep <= m_axis_rx_tdata[14];
+                    req_attr <= m_axis_rx_tdata[13:12];
+                    req_len <= m_axis_rx_tdata[9:0];
+                    req_rid <= m_axis_rx_tdata[63:48];
+                    req_tag <= m_axis_rx_tdata[47:40];
+                    req_be <= m_axis_rx_tdata[39:32];
+                    req_addr <= {m_axis_rx_tdata[74:66],2'b00};
+                    req_compl <= 1'b1;
+                    req_compl_wd <= 1'b1;
+                  end
+                endcase
+              end
+            end
           end
-
         end // if rst_n
       end // always
 

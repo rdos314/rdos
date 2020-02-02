@@ -64,6 +64,9 @@ code    SEGMENT byte public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+PciInt:
+    CrashGate
+
 
 PciVendorTab:
 pci00   DW 10EEh, 0AACCh
@@ -88,11 +91,31 @@ InitPciLoop:
 InitPciFound:
     PciPowerOn
 ;
-    mov bp,bx
     mov cl,PCI_command_reg
     ReadPciWord
     or al,PCI_command_busmstr
     WritePciWord
+;
+    mov cl,PCI_nbr_base_address0
+    ReadPciDword
+    test al,1
+;
+    GetPciMsi
+    jc InitPciDone
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+;    
+    mov dl,1
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET PciInt
+    RequestMsiHandler
 
 InitPciDone:
     ret
