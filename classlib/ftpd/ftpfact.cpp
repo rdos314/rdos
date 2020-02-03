@@ -379,6 +379,7 @@ void TFtpSocketServerFactory::Init(bool ReadOnly)
     FList = 0;
     FMyIp = 0;
     FLocalPort = 0;
+    OnCommand = 0;
 }
 
 /*##########################################################################
