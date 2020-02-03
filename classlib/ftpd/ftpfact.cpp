@@ -253,7 +253,7 @@ TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *lin
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-        Init();
+        Init(false);
 }
 
 /*##########################################################################
@@ -270,8 +270,25 @@ TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, i
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *Language)
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-        TFtpLangString::SetLanguage(Language);
-        Init();
+    TFtpLangString::SetLanguage(Language);
+    Init(false);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::TFtpSocketServerFactory
+#
+#   Purpose....: Socket server factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, bool ReadOnly)
+  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+{
+    Init(ReadOnly);
 }
 
 /*##########################################################################
@@ -298,12 +315,22 @@ TFtpSocketServerFactory::~TFtpSocketServerFactory()
     delete cdup;
     delete type;
     delete retr;
-    delete stor;
-    delete mdtm;
-    delete dele;
-    delete mkd;
-    delete rmd;
     delete quit;
+
+    if (stor)
+        delete stor;
+
+    if (mdtm)
+        delete mdtm;
+
+    if (dele)
+        delete dele;
+
+    if (mkd)
+        delete mkd;
+
+    if (rmd)
+        delete rmd;
 }        
 
 /*##########################################################################
@@ -317,29 +344,41 @@ TFtpSocketServerFactory::~TFtpSocketServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFtpSocketServerFactory::Init()
+void TFtpSocketServerFactory::Init(bool ReadOnly)
 {
-        user = new TFtpUserFactory;
-        pass = new TFtpPassFactory;
-        pwd = new TFtpPwdFactory;
-        syst = new TFtpSystFactory;
-        pasv = new TFtpPasvFactory;
-        port = new TFtpPortFactory;
-        list = new TFtpListFactory;
-        cwd = new TFtpCwdFactory;
-        cdup = new TFtpCdupFactory;
-        type = new TFtpTypeFactory;
-        retr = new TFtpRetrFactory;
-    stor = new TFtpStorFactory;
+    user = new TFtpUserFactory;
+    pass = new TFtpPassFactory;
+    pwd = new TFtpPwdFactory;
+    syst = new TFtpSystFactory;
+    pasv = new TFtpPasvFactory;
+    port = new TFtpPortFactory;
+    list = new TFtpListFactory;
+    cwd = new TFtpCwdFactory;
+    cdup = new TFtpCdupFactory;
+    type = new TFtpTypeFactory;
+    retr = new TFtpRetrFactory;
+    quit = new TFtpQuitFactory;
+
+    if (ReadOnly)
+    {
+        stor = 0;
+        mdtm = 0;
+        dele = 0;
+        mkd = 0;
+        rmd = 0;
+    }
+    else
+    {
+        stor = new TFtpStorFactory;
         mdtm = new TFtpMdtmFactory;
         dele = new TFtpDeleFactory;
         mkd = new TFtpMkdFactory;
         rmd = new TFtpRmdFactory;
-        quit = new TFtpQuitFactory;
+    }
 
-        FList = 0;
-        FMyIp = 0;
-        FLocalPort = 0;
+    FList = 0;
+    FMyIp = 0;
+    FLocalPort = 0;
 }
 
 /*##########################################################################
@@ -355,13 +394,13 @@ void TFtpSocketServerFactory::Init()
 ##########################################################################*/
 TSocketServer *TFtpSocketServerFactory::Create(TTcpSocket *Socket)
 {
-        TFtpSocketServer *server;
-        server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
-        server->FLocalPort = FLocalPort;
-        server->OnCommand = OnCommand;
-        server->FMyIp = FMyIp;
+    TFtpSocketServer *server;
+    server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
+    server->FLocalPort = FLocalPort;
+    server->OnCommand = OnCommand;
+    server->FMyIp = FMyIp;
 
-        return server;
+    return server;
 }
 
 /*##########################################################################

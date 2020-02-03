@@ -59,44 +59,45 @@ protected:
 class TFtpSocketServerFactory : public TSocketServerFactory
 {
 public:
+    TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, bool ReadOnly);
     TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *Language);
-	TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TFtpSocketServerFactory();
+    TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TFtpSocketServerFactory();
 
-	void AddUser(const char *User, const char *Passw, const char *RootDir);
-	void SetDataPort(int DataPort);
+    void AddUser(const char *User, const char *Passw, const char *RootDir);
+    void SetDataPort(int DataPort);
 
-	void SetMyIp(long Ip);
+    void SetMyIp(long Ip);
 
-	virtual TSocketServer *Create(TTcpSocket *Socket);
+    virtual TSocketServer *Create(TTcpSocket *Socket);
 
-	void (*OnCommand)(TFtpSocketServer *server, const char *str);
+    void (*OnCommand)(TFtpSocketServer *server, const char *str);
 
 protected:
-	void Init();
+    void Init(bool ReadOnly);
 
-	TFtpCommandFactory *user;
-	TFtpCommandFactory *pass;
-	TFtpCommandFactory *pwd;
-	TFtpCommandFactory *syst;
-	TFtpCommandFactory *pasv;
-	TFtpCommandFactory *port;
-	TFtpCommandFactory *list;
-	TFtpCommandFactory *cwd;
-	TFtpCommandFactory *cdup;
-	TFtpCommandFactory *type;
-	TFtpCommandFactory *retr;
-	TFtpCommandFactory *stor;
-	TFtpCommandFactory *mdtm;
-	TFtpCommandFactory *dele;
-	TFtpCommandFactory *mkd;
-	TFtpCommandFactory *rmd;
-	TFtpCommandFactory *quit;
+    TFtpCommandFactory *user;
+    TFtpCommandFactory *pass;
+    TFtpCommandFactory *pwd;
+    TFtpCommandFactory *syst;
+    TFtpCommandFactory *pasv;
+    TFtpCommandFactory *port;
+    TFtpCommandFactory *list;
+    TFtpCommandFactory *cwd;
+    TFtpCommandFactory *cdup;
+    TFtpCommandFactory *type;
+    TFtpCommandFactory *retr;
+    TFtpCommandFactory *stor;
+    TFtpCommandFactory *mdtm;
+    TFtpCommandFactory *dele;
+    TFtpCommandFactory *mkd;
+    TFtpCommandFactory *rmd;
+    TFtpCommandFactory *quit;
 
-	TFtpUser *FList;
+    TFtpUser *FList;
 
     long FMyIp;
-	int FLocalPort;
+    int FLocalPort;
 };
 
 #endif
