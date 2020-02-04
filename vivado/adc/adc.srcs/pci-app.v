@@ -56,7 +56,13 @@ module pci_app (
   wire                                        m_axis_rx_tready;
   wire  [21:0]                                m_axis_rx_tuser;
 
+  wire [23:0]   sdram_fifo;                   
+  wire          sdram_wr;
+  wire          sdram_full;
 
+  wire          pci_rd_par_active;
+  wire [3:0]    pci_rd_par_index;
+  wire [31:0]   pci_rd_par_data;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -100,6 +106,39 @@ module pci_app (
 
   wire                                        sys_rst_n;
   wire                                        sys_clk;
+
+
+  localparam PIO_RX_MEM_RD32_FMT_TYPE = 7'b00_00000;
+  localparam PIO_RX_MEM_WR32_FMT_TYPE = 7'b10_00000;
+  localparam PIO_RX_MEM_RD64_FMT_TYPE = 7'b01_00000;
+  localparam PIO_RX_MEM_WR64_FMT_TYPE = 7'b11_00000;
+  localparam PIO_RX_IO_RD32_FMT_TYPE  = 7'b00_00010;
+  localparam PIO_RX_IO_WR32_FMT_TYPE  = 7'b10_00010;
+
+sdram_fifo sdram_fifo_inst (
+  .rst(user_reset),       // input wire rst
+  .wr_clk(user_clock),    // input wire wr_clk
+  .rd_clk(user_clock),    // input wire rd_clk
+  .din(sdram_fifo),           // input wire [23 : 0] din
+  .wr_en(sdram_wr),           // input wire wr_en
+  .rd_en(0),                  // input wire rd_en
+  .dout(dout),                // output wire [23 : 0] dout
+  .full(sdram_full),          // output wire full
+  .almost_full(),             // output wire almost_full
+  .empty(sdram_empty),        // output wire empty
+  .wr_rst_busy(),             // output wire wr_rst_busy
+  .rd_rst_busy()              // output wire rd_rst_busy
+);
+
+sdram_rd_par sdram_rd_par_inst (
+  .clka(user_clock),         // input wire clka
+  .wea(pci_rd_par_active),       // input wire [0 : 0] wea
+  .addra(pci_rd_par_index),      // input wire [3 : 0] addra
+  .dina(pci_rd_par_data),        // input wire [31 : 0] dina
+  .clkb(user_clock),         // input wire clkb
+  .addrb(0),  // input wire [3 : 0] addrb
+  .doutb()  // output wire [31 : 0] doutb
+);
 
 pcie pcie_i
  (
@@ -294,7 +333,15 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tlast( m_axis_rx_tlast ),    // I
     .m_axis_rx_tvalid( m_axis_rx_tvalid ),  // I
     .m_axis_rx_tready( m_axis_rx_tready ),  // O
-    .m_axis_rx_tuser ( m_axis_rx_tuser )   // I
+    .m_axis_rx_tuser ( m_axis_rx_tuser ),   // I
+    
+    .sdram_fifo( sdram_fifo),
+    .sdram_wr( sdram_wr ),
+    .sdram_full( sdram_full ),
+
+    .rd_par_active(pci_rd_par_active),
+    .rd_par_index(pci_rd_par_index),
+    .rd_par_data(pci_rd_par_data)
 );
 
 pci_tx pci_tx_inst (
@@ -309,6 +356,15 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tlast( s_axis_tx_tlast ),        // O
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser )           // I
+);
+
+ila_1 ila_1_inst (
+	.clk(user_clk), // input wire clk
+	.probe0(sdram_fifo), // input wire [23:0]  probe0  
+	.probe1(sdram_wr), // input wire [0:0]  probe1 
+	.probe2(sdram_full), // input wire [0:0]  probe2
+	.probe3(pci_rd_par_index), // input wire [3:0]  probe3 
+	.probe4(pci_rd_par_data) // input wire [31:0]  probe4
 );
 
 endmodule
