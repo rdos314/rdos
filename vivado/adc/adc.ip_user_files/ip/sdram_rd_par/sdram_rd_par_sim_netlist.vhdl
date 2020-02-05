@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Wed Feb  5 22:05:20 2020
+-- Date        : Wed Feb  5 22:28:10 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adc/adc.runs/sdram_rd_par_synth_1/sdram_rd_par_sim_netlist.vhdl
@@ -16,29 +16,41 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_prim_wrapper is
   port (
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 );
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 )
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of sdram_rd_par_blk_mem_gen_prim_wrapper : entity is "blk_mem_gen_prim_wrapper";
 end sdram_rd_par_blk_mem_gen_prim_wrapper;
 
 architecture STRUCTURE of sdram_rd_par_blk_mem_gen_prim_wrapper is
-  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_32\ : STD_LOGIC;
-  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_33\ : STD_LOGIC;
-  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_34\ : STD_LOGIC;
-  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_35\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_68\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_69\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_70\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_71\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_72\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_73\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_74\ : STD_LOGIC;
+  signal \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_75\ : STD_LOGIC;
+  signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_SBITERR_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_ECCPARITY_UNCONNECTED\ : STD_LOGIC_VECTOR ( 7 downto 0 );
+  signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\ : STD_LOGIC_VECTOR ( 8 downto 0 );
   attribute box_type : string;
-  attribute box_type of \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram\ : label is "PRIMITIVE";
+  attribute box_type of \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\ : label is "PRIMITIVE";
 begin
-\DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram\: unisim.vcomponents.RAMB18E1
+\DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
       DOA_REG => 0,
       DOB_REG => 0,
+      EN_ECC_READ => false,
+      EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -47,6 +59,14 @@ begin
       INITP_05 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_06 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_07 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_08 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_09 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_0A => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_0B => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_0C => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_0D => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_0E => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INITP_0F => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -111,8 +131,72 @@ begin
       INIT_3D => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_3E => X"0000000000000000000000000000000000000000000000000000000000000000",
       INIT_3F => X"0000000000000000000000000000000000000000000000000000000000000000",
-      INIT_A => X"00000",
-      INIT_B => X"00000",
+      INIT_40 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_41 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_42 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_43 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_44 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_45 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_46 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_47 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_48 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_49 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_4A => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_4B => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_4C => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_4D => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_4E => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_4F => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_50 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_51 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_52 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_53 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_54 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_55 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_56 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_57 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_58 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_59 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_5A => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_5B => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_5C => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_5D => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_5E => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_5F => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_60 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_61 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_62 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_63 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_64 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_65 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_66 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_67 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_68 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_69 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_6A => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_6B => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_6C => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_6D => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_6E => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_6F => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_70 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_71 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_72 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_73 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_74 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_75 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_76 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_77 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_78 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_79 => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_7A => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_7B => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_7C => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_7D => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_7E => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_7F => X"0000000000000000000000000000000000000000000000000000000000000000",
+      INIT_A => X"000000000",
+      INIT_B => X"000000000",
       INIT_FILE => "NONE",
       IS_CLKARDCLK_INVERTED => '0',
       IS_CLKBWRCLK_INVERTED => '0',
@@ -122,50 +206,66 @@ begin
       IS_RSTRAMB_INVERTED => '0',
       IS_RSTREGARSTREG_INVERTED => '0',
       IS_RSTREGB_INVERTED => '0',
+      RAM_EXTENSION_A => "NONE",
+      RAM_EXTENSION_B => "NONE",
       RAM_MODE => "SDP",
       RDADDR_COLLISION_HWCONFIG => "DELAYED_WRITE",
-      READ_WIDTH_A => 36,
+      READ_WIDTH_A => 72,
       READ_WIDTH_B => 0,
       RSTREG_PRIORITY_A => "REGCE",
       RSTREG_PRIORITY_B => "REGCE",
       SIM_COLLISION_CHECK => "ALL",
       SIM_DEVICE => "7SERIES",
-      SRVAL_A => X"00000",
-      SRVAL_B => X"00000",
+      SRVAL_A => X"000000000",
+      SRVAL_B => X"000000000",
       WRITE_MODE_A => "READ_FIRST",
       WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
-      WRITE_WIDTH_B => 36
+      WRITE_WIDTH_B => 72
     )
         port map (
-      ADDRARDADDR(13 downto 9) => B"00000",
-      ADDRARDADDR(8 downto 5) => addrb(3 downto 0),
-      ADDRARDADDR(4 downto 0) => B"00000",
-      ADDRBWRADDR(13 downto 9) => B"00000",
-      ADDRBWRADDR(8 downto 5) => addra(3 downto 0),
-      ADDRBWRADDR(4 downto 0) => B"00000",
+      ADDRARDADDR(15 downto 10) => B"100000",
+      ADDRARDADDR(9 downto 6) => addrb(3 downto 0),
+      ADDRARDADDR(5 downto 0) => B"111111",
+      ADDRBWRADDR(15 downto 10) => B"100000",
+      ADDRBWRADDR(9 downto 6) => addra(3 downto 0),
+      ADDRBWRADDR(5 downto 0) => B"111111",
+      CASCADEINA => '0',
+      CASCADEINB => '0',
+      CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
+      CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
       CLKARDCLK => clka,
       CLKBWRCLK => clka,
-      DIADI(15 downto 0) => dina(15 downto 0),
-      DIBDI(15 downto 0) => dina(31 downto 16),
-      DIPADIP(1 downto 0) => B"00",
-      DIPBDIP(1 downto 0) => B"00",
-      DOADO(15 downto 0) => doutb(15 downto 0),
-      DOBDO(15 downto 0) => doutb(31 downto 16),
-      DOPADOP(1) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_32\,
-      DOPADOP(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_33\,
-      DOPBDOP(1) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_34\,
-      DOPBDOP(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_35\,
+      DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
+      DIADI(31 downto 0) => dina(31 downto 0),
+      DIBDI(31 downto 0) => dina(63 downto 32),
+      DIPADIP(3 downto 0) => B"0000",
+      DIPBDIP(3 downto 0) => B"0000",
+      DOADO(31 downto 0) => doutb(31 downto 0),
+      DOBDO(31 downto 0) => doutb(63 downto 32),
+      DOPADOP(3) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_68\,
+      DOPADOP(2) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_69\,
+      DOPADOP(1) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_70\,
+      DOPADOP(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_71\,
+      DOPBDOP(3) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_72\,
+      DOPBDOP(2) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_73\,
+      DOPBDOP(1) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_74\,
+      DOPBDOP(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_n_75\,
+      ECCPARITY(7 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_ECCPARITY_UNCONNECTED\(7 downto 0),
       ENARDEN => '1',
       ENBWREN => wea(0),
+      INJECTDBITERR => '0',
+      INJECTSBITERR => '0',
+      RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
       REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
       RSTREGARSTREG => '0',
       RSTREGB => '0',
-      WEA(1 downto 0) => B"00",
-      WEBWE(3 downto 0) => B"1111"
+      SBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_SBITERR_UNCONNECTED\,
+      WEA(3 downto 0) => B"0000",
+      WEBWE(7 downto 0) => B"11111111"
     );
 end STRUCTURE;
 library IEEE;
@@ -174,12 +274,12 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_prim_width is
   port (
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 );
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 )
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of sdram_rd_par_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
@@ -192,8 +292,8 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      dina(31 downto 0) => dina(31 downto 0),
-      doutb(31 downto 0) => doutb(31 downto 0),
+      dina(63 downto 0) => dina(63 downto 0),
+      doutb(63 downto 0) => doutb(63 downto 0),
       wea(0) => wea(0)
     );
 end STRUCTURE;
@@ -203,12 +303,12 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_generic_cstr is
   port (
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 );
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 )
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of sdram_rd_par_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
@@ -221,8 +321,8 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      dina(31 downto 0) => dina(31 downto 0),
-      doutb(31 downto 0) => doutb(31 downto 0),
+      dina(63 downto 0) => dina(63 downto 0),
+      doutb(63 downto 0) => doutb(63 downto 0),
       wea(0) => wea(0)
     );
 end STRUCTURE;
@@ -232,12 +332,12 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_top is
   port (
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 );
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 )
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of sdram_rd_par_blk_mem_gen_top : entity is "blk_mem_gen_top";
@@ -250,8 +350,8 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      dina(31 downto 0) => dina(31 downto 0),
-      doutb(31 downto 0) => doutb(31 downto 0),
+      dina(63 downto 0) => dina(63 downto 0),
+      doutb(63 downto 0) => doutb(63 downto 0),
       wea(0) => wea(0)
     );
 end STRUCTURE;
@@ -261,12 +361,12 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_v8_4_4_synth is
   port (
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 );
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 )
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of sdram_rd_par_blk_mem_gen_v8_4_4_synth : entity is "blk_mem_gen_v8_4_4_synth";
@@ -279,8 +379,8 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      dina(31 downto 0) => dina(31 downto 0),
-      doutb(31 downto 0) => doutb(31 downto 0),
+      dina(63 downto 0) => dina(63 downto 0),
+      doutb(63 downto 0) => doutb(63 downto 0),
       wea(0) => wea(0)
     );
 end STRUCTURE;
@@ -296,16 +396,16 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
     regcea : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 );
-    douta : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 );
+    douta : out STD_LOGIC_VECTOR ( 63 downto 0 );
     clkb : in STD_LOGIC;
     rstb : in STD_LOGIC;
     enb : in STD_LOGIC;
     regceb : in STD_LOGIC;
     web : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dinb : in STD_LOGIC_VECTOR ( 31 downto 0 );
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    dinb : in STD_LOGIC_VECTOR ( 63 downto 0 );
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 );
     injectsbiterr : in STD_LOGIC;
     injectdbiterr : in STD_LOGIC;
     eccpipece : in STD_LOGIC;
@@ -326,7 +426,7 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
     s_axi_awburst : in STD_LOGIC_VECTOR ( 1 downto 0 );
     s_axi_awvalid : in STD_LOGIC;
     s_axi_awready : out STD_LOGIC;
-    s_axi_wdata : in STD_LOGIC_VECTOR ( 31 downto 0 );
+    s_axi_wdata : in STD_LOGIC_VECTOR ( 63 downto 0 );
     s_axi_wstrb : in STD_LOGIC_VECTOR ( 0 to 0 );
     s_axi_wlast : in STD_LOGIC;
     s_axi_wvalid : in STD_LOGIC;
@@ -343,7 +443,7 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
     s_axi_arvalid : in STD_LOGIC;
     s_axi_arready : out STD_LOGIC;
     s_axi_rid : out STD_LOGIC_VECTOR ( 3 downto 0 );
-    s_axi_rdata : out STD_LOGIC_VECTOR ( 31 downto 0 );
+    s_axi_rdata : out STD_LOGIC_VECTOR ( 63 downto 0 );
     s_axi_rresp : out STD_LOGIC_VECTOR ( 1 downto 0 );
     s_axi_rlast : out STD_LOGIC;
     s_axi_rvalid : out STD_LOGIC;
@@ -371,9 +471,9 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_COMMON_CLK : integer;
   attribute C_COMMON_CLK of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_COUNT_18K_BRAM : string;
-  attribute C_COUNT_18K_BRAM of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "1";
+  attribute C_COUNT_18K_BRAM of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "0";
   attribute C_COUNT_36K_BRAM : string;
-  attribute C_COUNT_36K_BRAM of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "0";
+  attribute C_COUNT_36K_BRAM of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "1";
   attribute C_CTRL_ECC_ALGO : string;
   attribute C_CTRL_ECC_ALGO of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "NONE";
   attribute C_DEFAULT_DATA : string;
@@ -401,7 +501,7 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_EN_SLEEP_PIN : integer;
   attribute C_EN_SLEEP_PIN of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EST_POWER_SUMMARY : string;
-  attribute C_EST_POWER_SUMMARY of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "Estimated Power for IP     :     3.68295 mW";
+  attribute C_EST_POWER_SUMMARY of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "Estimated Power for IP     :     6.966099 mW";
   attribute C_FAMILY : string;
   attribute C_FAMILY of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "kintex7";
   attribute C_HAS_AXI_ID : integer;
@@ -459,9 +559,9 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_READ_LATENCY_B : integer;
   attribute C_READ_LATENCY_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_READ_WIDTH_A : integer;
-  attribute C_READ_WIDTH_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 32;
+  attribute C_READ_WIDTH_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 64;
   attribute C_READ_WIDTH_B : integer;
-  attribute C_READ_WIDTH_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 32;
+  attribute C_READ_WIDTH_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 64;
   attribute C_RSTRAM_A : integer;
   attribute C_RSTRAM_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_RSTRAM_B : integer;
@@ -499,9 +599,9 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_WRITE_MODE_B : string;
   attribute C_WRITE_MODE_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "READ_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
-  attribute C_WRITE_WIDTH_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 32;
+  attribute C_WRITE_WIDTH_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 64;
   attribute C_WRITE_WIDTH_B : integer;
-  attribute C_WRITE_WIDTH_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 32;
+  attribute C_WRITE_WIDTH_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 64;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "kintex7";
   attribute ORIG_REF_NAME : string;
@@ -514,6 +614,38 @@ architecture STRUCTURE of sdram_rd_par_blk_mem_gen_v8_4_4 is
   signal \<const0>\ : STD_LOGIC;
 begin
   dbiterr <= \<const0>\;
+  douta(63) <= \<const0>\;
+  douta(62) <= \<const0>\;
+  douta(61) <= \<const0>\;
+  douta(60) <= \<const0>\;
+  douta(59) <= \<const0>\;
+  douta(58) <= \<const0>\;
+  douta(57) <= \<const0>\;
+  douta(56) <= \<const0>\;
+  douta(55) <= \<const0>\;
+  douta(54) <= \<const0>\;
+  douta(53) <= \<const0>\;
+  douta(52) <= \<const0>\;
+  douta(51) <= \<const0>\;
+  douta(50) <= \<const0>\;
+  douta(49) <= \<const0>\;
+  douta(48) <= \<const0>\;
+  douta(47) <= \<const0>\;
+  douta(46) <= \<const0>\;
+  douta(45) <= \<const0>\;
+  douta(44) <= \<const0>\;
+  douta(43) <= \<const0>\;
+  douta(42) <= \<const0>\;
+  douta(41) <= \<const0>\;
+  douta(40) <= \<const0>\;
+  douta(39) <= \<const0>\;
+  douta(38) <= \<const0>\;
+  douta(37) <= \<const0>\;
+  douta(36) <= \<const0>\;
+  douta(35) <= \<const0>\;
+  douta(34) <= \<const0>\;
+  douta(33) <= \<const0>\;
+  douta(32) <= \<const0>\;
   douta(31) <= \<const0>\;
   douta(30) <= \<const0>\;
   douta(29) <= \<const0>\;
@@ -566,6 +698,38 @@ begin
   s_axi_rdaddrecc(2) <= \<const0>\;
   s_axi_rdaddrecc(1) <= \<const0>\;
   s_axi_rdaddrecc(0) <= \<const0>\;
+  s_axi_rdata(63) <= \<const0>\;
+  s_axi_rdata(62) <= \<const0>\;
+  s_axi_rdata(61) <= \<const0>\;
+  s_axi_rdata(60) <= \<const0>\;
+  s_axi_rdata(59) <= \<const0>\;
+  s_axi_rdata(58) <= \<const0>\;
+  s_axi_rdata(57) <= \<const0>\;
+  s_axi_rdata(56) <= \<const0>\;
+  s_axi_rdata(55) <= \<const0>\;
+  s_axi_rdata(54) <= \<const0>\;
+  s_axi_rdata(53) <= \<const0>\;
+  s_axi_rdata(52) <= \<const0>\;
+  s_axi_rdata(51) <= \<const0>\;
+  s_axi_rdata(50) <= \<const0>\;
+  s_axi_rdata(49) <= \<const0>\;
+  s_axi_rdata(48) <= \<const0>\;
+  s_axi_rdata(47) <= \<const0>\;
+  s_axi_rdata(46) <= \<const0>\;
+  s_axi_rdata(45) <= \<const0>\;
+  s_axi_rdata(44) <= \<const0>\;
+  s_axi_rdata(43) <= \<const0>\;
+  s_axi_rdata(42) <= \<const0>\;
+  s_axi_rdata(41) <= \<const0>\;
+  s_axi_rdata(40) <= \<const0>\;
+  s_axi_rdata(39) <= \<const0>\;
+  s_axi_rdata(38) <= \<const0>\;
+  s_axi_rdata(37) <= \<const0>\;
+  s_axi_rdata(36) <= \<const0>\;
+  s_axi_rdata(35) <= \<const0>\;
+  s_axi_rdata(34) <= \<const0>\;
+  s_axi_rdata(33) <= \<const0>\;
+  s_axi_rdata(32) <= \<const0>\;
   s_axi_rdata(31) <= \<const0>\;
   s_axi_rdata(30) <= \<const0>\;
   s_axi_rdata(29) <= \<const0>\;
@@ -618,8 +782,8 @@ inst_blk_mem_gen: entity work.sdram_rd_par_blk_mem_gen_v8_4_4_synth
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      dina(31 downto 0) => dina(31 downto 0),
-      doutb(31 downto 0) => doutb(31 downto 0),
+      dina(63 downto 0) => dina(63 downto 0),
+      doutb(63 downto 0) => doutb(63 downto 0),
       wea(0) => wea(0)
     );
 end STRUCTURE;
@@ -632,10 +796,10 @@ entity sdram_rd_par is
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    dina : in STD_LOGIC_VECTOR ( 31 downto 0 );
+    dina : in STD_LOGIC_VECTOR ( 63 downto 0 );
     clkb : in STD_LOGIC;
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
-    doutb : out STD_LOGIC_VECTOR ( 31 downto 0 )
+    doutb : out STD_LOGIC_VECTOR ( 63 downto 0 )
   );
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of sdram_rd_par : entity is true;
@@ -660,12 +824,12 @@ architecture STRUCTURE of sdram_rd_par is
   signal NLW_U0_s_axi_sbiterr_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_s_axi_wready_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_sbiterr_UNCONNECTED : STD_LOGIC;
-  signal NLW_U0_douta_UNCONNECTED : STD_LOGIC_VECTOR ( 31 downto 0 );
+  signal NLW_U0_douta_UNCONNECTED : STD_LOGIC_VECTOR ( 63 downto 0 );
   signal NLW_U0_rdaddrecc_UNCONNECTED : STD_LOGIC_VECTOR ( 3 downto 0 );
   signal NLW_U0_s_axi_bid_UNCONNECTED : STD_LOGIC_VECTOR ( 3 downto 0 );
   signal NLW_U0_s_axi_bresp_UNCONNECTED : STD_LOGIC_VECTOR ( 1 downto 0 );
   signal NLW_U0_s_axi_rdaddrecc_UNCONNECTED : STD_LOGIC_VECTOR ( 3 downto 0 );
-  signal NLW_U0_s_axi_rdata_UNCONNECTED : STD_LOGIC_VECTOR ( 31 downto 0 );
+  signal NLW_U0_s_axi_rdata_UNCONNECTED : STD_LOGIC_VECTOR ( 63 downto 0 );
   signal NLW_U0_s_axi_rid_UNCONNECTED : STD_LOGIC_VECTOR ( 3 downto 0 );
   signal NLW_U0_s_axi_rresp_UNCONNECTED : STD_LOGIC_VECTOR ( 1 downto 0 );
   attribute C_ADDRA_WIDTH : integer;
@@ -685,9 +849,9 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_COMMON_CLK : integer;
   attribute C_COMMON_CLK of U0 : label is 1;
   attribute C_COUNT_18K_BRAM : string;
-  attribute C_COUNT_18K_BRAM of U0 : label is "1";
+  attribute C_COUNT_18K_BRAM of U0 : label is "0";
   attribute C_COUNT_36K_BRAM : string;
-  attribute C_COUNT_36K_BRAM of U0 : label is "0";
+  attribute C_COUNT_36K_BRAM of U0 : label is "1";
   attribute C_CTRL_ECC_ALGO : string;
   attribute C_CTRL_ECC_ALGO of U0 : label is "NONE";
   attribute C_DEFAULT_DATA : string;
@@ -715,7 +879,7 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_EN_SLEEP_PIN : integer;
   attribute C_EN_SLEEP_PIN of U0 : label is 0;
   attribute C_EST_POWER_SUMMARY : string;
-  attribute C_EST_POWER_SUMMARY of U0 : label is "Estimated Power for IP     :     3.68295 mW";
+  attribute C_EST_POWER_SUMMARY of U0 : label is "Estimated Power for IP     :     6.966099 mW";
   attribute C_FAMILY : string;
   attribute C_FAMILY of U0 : label is "kintex7";
   attribute C_HAS_AXI_ID : integer;
@@ -773,9 +937,9 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_READ_LATENCY_B : integer;
   attribute C_READ_LATENCY_B of U0 : label is 1;
   attribute C_READ_WIDTH_A : integer;
-  attribute C_READ_WIDTH_A of U0 : label is 32;
+  attribute C_READ_WIDTH_A of U0 : label is 64;
   attribute C_READ_WIDTH_B : integer;
-  attribute C_READ_WIDTH_B of U0 : label is 32;
+  attribute C_READ_WIDTH_B of U0 : label is 64;
   attribute C_RSTRAM_A : integer;
   attribute C_RSTRAM_A of U0 : label is 0;
   attribute C_RSTRAM_B : integer;
@@ -813,9 +977,9 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_WRITE_MODE_B : string;
   attribute C_WRITE_MODE_B of U0 : label is "READ_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
-  attribute C_WRITE_WIDTH_A of U0 : label is 32;
+  attribute C_WRITE_WIDTH_A of U0 : label is 64;
   attribute C_WRITE_WIDTH_B : integer;
-  attribute C_WRITE_WIDTH_B of U0 : label is 32;
+  attribute C_WRITE_WIDTH_B of U0 : label is 64;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of U0 : label is "kintex7";
   attribute downgradeipidentifiedwarnings of U0 : label is "yes";
@@ -839,10 +1003,10 @@ U0: entity work.sdram_rd_par_blk_mem_gen_v8_4_4
       clkb => clkb,
       dbiterr => NLW_U0_dbiterr_UNCONNECTED,
       deepsleep => '0',
-      dina(31 downto 0) => dina(31 downto 0),
-      dinb(31 downto 0) => B"00000000000000000000000000000000",
-      douta(31 downto 0) => NLW_U0_douta_UNCONNECTED(31 downto 0),
-      doutb(31 downto 0) => doutb(31 downto 0),
+      dina(63 downto 0) => dina(63 downto 0),
+      dinb(63 downto 0) => B"0000000000000000000000000000000000000000000000000000000000000000",
+      douta(63 downto 0) => NLW_U0_douta_UNCONNECTED(63 downto 0),
+      doutb(63 downto 0) => doutb(63 downto 0),
       eccpipece => '0',
       ena => '0',
       enb => '0',
@@ -879,14 +1043,14 @@ U0: entity work.sdram_rd_par_blk_mem_gen_v8_4_4
       s_axi_injectdbiterr => '0',
       s_axi_injectsbiterr => '0',
       s_axi_rdaddrecc(3 downto 0) => NLW_U0_s_axi_rdaddrecc_UNCONNECTED(3 downto 0),
-      s_axi_rdata(31 downto 0) => NLW_U0_s_axi_rdata_UNCONNECTED(31 downto 0),
+      s_axi_rdata(63 downto 0) => NLW_U0_s_axi_rdata_UNCONNECTED(63 downto 0),
       s_axi_rid(3 downto 0) => NLW_U0_s_axi_rid_UNCONNECTED(3 downto 0),
       s_axi_rlast => NLW_U0_s_axi_rlast_UNCONNECTED,
       s_axi_rready => '0',
       s_axi_rresp(1 downto 0) => NLW_U0_s_axi_rresp_UNCONNECTED(1 downto 0),
       s_axi_rvalid => NLW_U0_s_axi_rvalid_UNCONNECTED,
       s_axi_sbiterr => NLW_U0_s_axi_sbiterr_UNCONNECTED,
-      s_axi_wdata(31 downto 0) => B"00000000000000000000000000000000",
+      s_axi_wdata(63 downto 0) => B"0000000000000000000000000000000000000000000000000000000000000000",
       s_axi_wlast => '0',
       s_axi_wready => NLW_U0_s_axi_wready_UNCONNECTED,
       s_axi_wstrb(0) => '0',
