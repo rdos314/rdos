@@ -11,9 +11,14 @@ module pci_rx (
   sdram_fifo,
   sdram_wr,
   sdram_full,
+
   rd_par_active,
   rd_par_index,
-  rd_par_data
+  rd_par_data,
+
+  wr_par_active,
+  wr_par_index,
+  wr_par_data
 );
 
   input                         clk;
@@ -34,6 +39,10 @@ module pci_rx (
   output reg [3:0]              rd_par_index;
   output reg [63:0]             rd_par_data;
 
+  output reg                    wr_par_active;
+  output reg [3:0]              wr_par_index;
+  output reg [1023:0]           wr_par_data;
+
 // local variables
 
   reg [4:0]   data_pos;
@@ -46,20 +55,21 @@ module pci_rx (
   reg [31:0]  req_header  [1:0];
   reg [31:0]  req_address [1:0];
   reg [31:0]  req_data   [31:0];
-  reg [3:0]   req_be     [31:0];
 
   generate
     begin : pci_rx_128
 
       always @ ( posedge clk ) 
       begin
-        rd_par_active = 1'b0;
         sdram_wr = 1'b0;
+        rd_par_active = 1'b0;
+        wr_par_active = 1'b0;
 
         if (reset )
         begin
           m_axis_rx_tready = 1'b0;
           rd_par_index = 4'b1111;
+          wr_par_index = 4'b1111;
         end
         else
         begin
@@ -125,7 +135,6 @@ module pci_rx (
                   req_data[data_pos][15:8] = m_axis_rx_tdata[23:16];
                   req_data[data_pos][23:16] = m_axis_rx_tdata[15:8];
                   req_data[data_pos][31:24] = m_axis_rx_tdata[7:0];
-                  req_be[data_pos] = 4'b1111;       
                   data_pos = data_pos + 1;
                   data_size = data_size - 1;
                 end
@@ -136,7 +145,6 @@ module pci_rx (
                   req_data[data_pos][15:8] = m_axis_rx_tdata[55:48];
                   req_data[data_pos][23:16] = m_axis_rx_tdata[47:40];
                   req_data[data_pos][31:24] = m_axis_rx_tdata[39:32];
-                  req_be[data_pos] = 4'b1111;       
                   data_pos = data_pos + 1;
                   data_size = data_size - 1;
                 end
@@ -147,7 +155,6 @@ module pci_rx (
                   req_data[data_pos][15:8] = m_axis_rx_tdata[87:80];
                   req_data[data_pos][23:16] = m_axis_rx_tdata[79:72];
                   req_data[data_pos][31:24] = m_axis_rx_tdata[71:64];
-                  req_be[data_pos] = 4'b1111;       
                   data_pos = data_pos + 1;
                   data_size = data_size - 1;
                 end
@@ -158,7 +165,6 @@ module pci_rx (
                   req_data[data_pos][15:8] = m_axis_rx_tdata[119:112];
                   req_data[data_pos][23:16] = m_axis_rx_tdata[111:104];
                   req_data[data_pos][31:24] = m_axis_rx_tdata[103:96];
-                  req_be[data_pos] = 4'b1111;       
                   data_pos = data_pos + 1;
                   data_size = data_size - 1;
                 end
@@ -194,7 +200,6 @@ module pci_rx (
                   req_data[data_pos][15:8] = m_axis_rx_tdata[87:80];
                   req_data[data_pos][23:16] = m_axis_rx_tdata[79:72];
                   req_data[data_pos][31:24] = m_axis_rx_tdata[71:64];
-                  req_be[data_pos] = 4'b1111;       
                   data_pos = data_pos + 1;
                   data_size = data_size - 1;
                 end
@@ -205,7 +210,6 @@ module pci_rx (
                   req_data[data_pos][15:8] = m_axis_rx_tdata[119:112];
                   req_data[data_pos][23:16] = m_axis_rx_tdata[111:104];
                   req_data[data_pos][31:24] = m_axis_rx_tdata[103:96];
-                  req_be[data_pos] = 4'b1111;       
                   data_pos = data_pos + 1;
                   data_size = data_size - 1;
                 end
@@ -216,20 +220,54 @@ module pci_rx (
                        
             if (m_axis_rx_tuser[21]) // is final part of TLP
             begin
-              req_be[0] = req_header[1][3:0];
-
-              if (req_len > 1)
-                req_be[req_len - 1] = req_header[1][7:4];
-
               sdram_fifo[0] = req_wr;                        // write req
               sdram_fifo[1] = 1'b0;                          // spare
               sdram_fifo[18:2] = req_address[0][18:2];       // SDRAM dword address
               sdram_fifo[22:19] = 4'b0;                      // spare bits
               sdram_fifo[23] = m_axis_rx_tuser[2];           // BAR0 hit
+              sdram_fifo[31:24] = req_header[1][3:0];        // low and high byte enables
               sdram_wr = 1;             
 
-              if (!req_wr)
-              {
+              if (req_wr)
+              begin
+                wr_par_data[31:0] = req_data[0][31:0];
+                wr_par_data[63:32] = req_data[1][31:0];
+                wr_par_data[95:64] = req_data[2][31:0];
+                wr_par_data[127:96] = req_data[3][31:0];
+                wr_par_data[159:128] = req_data[4][31:0];
+                wr_par_data[191:160] = req_data[5][31:0];
+                wr_par_data[223:192] = req_data[6][31:0];
+                wr_par_data[255:224] = req_data[7][31:0];
+                wr_par_data[287:256] = req_data[8][31:0];
+                wr_par_data[319:288] = req_data[9][31:0];
+                wr_par_data[351:320] = req_data[10][31:0];
+                wr_par_data[383:352] = req_data[11][31:0];
+                wr_par_data[415:384] = req_data[12][31:0];
+                wr_par_data[447:416] = req_data[13][31:0];
+                wr_par_data[479:448] = req_data[14][31:0];
+                wr_par_data[511:480] = req_data[15][31:0];
+                wr_par_data[543:512] = req_data[16][31:0];
+                wr_par_data[575:544] = req_data[17][31:0];
+                wr_par_data[607:576] = req_data[18][31:0];
+                wr_par_data[639:608] = req_data[19][31:0];
+                wr_par_data[671:640] = req_data[20][31:0];
+                wr_par_data[703:672] = req_data[21][31:0];
+                wr_par_data[735:704] = req_data[22][31:0];
+                wr_par_data[767:736] = req_data[23][31:0];
+                wr_par_data[799:768] = req_data[24][31:0];
+                wr_par_data[831:800] = req_data[25][31:0];
+                wr_par_data[863:832] = req_data[26][31:0];
+                wr_par_data[895:864] = req_data[27][31:0];
+                wr_par_data[927:896] = req_data[28][31:0];
+                wr_par_data[959:928] = req_data[29][31:0];
+                wr_par_data[991:960] = req_data[30][31:0];
+                wr_par_data[1023:992] = req_data[31][31:0];
+
+                wr_par_index = wr_par_index + 1;
+                wr_par_active = 1'b1;
+              end
+              else
+              begin
                 rd_par_data[9:0] = req_header[0][9:0];       // len
                 rd_par_data[11:10] = 2'b0;                   // AT
                 rd_par_data[13:12] = req_header[0][13:12];   // Attr

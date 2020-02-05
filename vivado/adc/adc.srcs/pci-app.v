@@ -54,7 +54,7 @@ module pci_app (
   wire             m_axis_rx_tlast;
   wire             m_axis_rx_tvalid;
   wire             m_axis_rx_tready;
-  wire  [21:0]     m_axis_rx_tuser;
+  wire [21:0]      m_axis_rx_tuser;
 
   wire [23:0]      sdram_fifo;                   
   wire             sdram_wr;
@@ -63,6 +63,10 @@ module pci_app (
   wire             pci_rd_par_active;
   wire [3:0]       pci_rd_par_index;
   wire [63:0]      pci_rd_par_data;
+
+  wire             pci_wr_par_active;
+  wire [3:0]       pci_wr_par_index;
+  wire [1023:0]    pci_wr_par_data;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -111,10 +115,10 @@ sdram_fifo sdram_fifo_inst (
   .rst(user_reset),           // input wire rst
   .wr_clk(user_clock),        // input wire wr_clk
   .rd_clk(user_clock),        // input wire rd_clk
-  .din(sdram_fifo),           // input wire [23 : 0] din
+  .din(sdram_fifo),           // input wire [31 : 0] din
   .wr_en(sdram_wr),           // input wire wr_en
   .rd_en(0),                  // input wire rd_en
-  .dout(dout),                // output wire [23 : 0] dout
+  .dout(dout),                // output wire [31 : 0] dout
   .full(sdram_full),          // output wire full
   .almost_full(),             // output wire almost_full
   .empty(sdram_empty),        // output wire empty
@@ -334,6 +338,10 @@ pci_rx pci_rx_inst (
     .rd_par_active(pci_rd_par_active),
     .rd_par_index(pci_rd_par_index),
     .rd_par_data(pci_rd_par_data)
+
+    .wr_par_active(pci_wr_par_active),
+    .wr_par_index(pci_wr_par_index),
+    .wr_par_data(pci_wr_par_data)
 );
 
 pci_tx pci_tx_inst (
