@@ -56,7 +56,7 @@ module pci_app (
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
 
-  wire [23:0]      sdram_fifo;                   
+  wire [31:0]      sdram_fifo;                   
   wire             sdram_wr;
   wire             sdram_full;
 
@@ -112,22 +112,19 @@ module pci_app (
   wire                                        sys_clk;
 
 sdram_fifo sdram_fifo_inst (
-  .rst(user_reset),           // input wire rst
-  .wr_clk(user_clock),        // input wire wr_clk
-  .rd_clk(user_clock),        // input wire rd_clk
-  .din(sdram_fifo),           // input wire [31 : 0] din
-  .wr_en(sdram_wr),           // input wire wr_en
-  .rd_en(0),                  // input wire rd_en
-  .dout(dout),                // output wire [31 : 0] dout
-  .full(sdram_full),          // output wire full
-  .almost_full(),             // output wire almost_full
-  .empty(sdram_empty),        // output wire empty
-  .wr_rst_busy(),             // output wire wr_rst_busy
-  .rd_rst_busy()              // output wire rd_rst_busy
+  .clk(user_reset),                  // input wire clk
+  .srst(user_reset),                 // input wire srst
+  .din(sdram_fifo),                  // input wire [31 : 0] din
+  .wr_en(sdram_wr),                  // input wire wr_en
+  .rd_en(0),                         // input wire rd_en
+  .dout(dout),                       // output wire [31 : 0] dout
+  .full(),                           // output wire full
+  .almost_full(sdram_full),          // output wire almost_full
+  .empty()                          // output wire empty
 );
 
 sdram_rd_par sdram_rd_par_inst (
-  .clka(user_clock),         // input wire clka
+  .clka(user_clock),             // input wire clka
   .wea(pci_rd_par_active),       // input wire [0 : 0] wea
   .addra(pci_rd_par_index),      // input wire [3 : 0] addra
   .dina(pci_rd_par_data),        // input wire [63 : 0] dina
@@ -337,7 +334,7 @@ pci_rx pci_rx_inst (
 
     .rd_par_active(pci_rd_par_active),
     .rd_par_index(pci_rd_par_index),
-    .rd_par_data(pci_rd_par_data)
+    .rd_par_data(pci_rd_par_data),
 
     .wr_par_active(pci_wr_par_active),
     .wr_par_index(pci_wr_par_index),
@@ -360,7 +357,7 @@ pci_tx pci_tx_inst (
 
 ila_1 ila_1_inst (
 	.clk(user_clk),                         // input wire clk
-	.probe0(sdram_fifo),                    // input wire [23:0]  probe0  
+	.probe0(sdram_fifo),                    // input wire [32:0]  probe0  
 	.probe1(sdram_wr),                      // input wire [0:0]  probe1 
 	.probe2(sdram_full),                    // input wire [0:0]  probe2
 	.probe3(pci_rd_par_index),              // input wire [3:0]  probe3 

@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Tue Feb  4 23:23:46 2020
+-- Date        : Wed Feb  5 22:01:02 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adc/adc.runs/sdram_rd_data_synth_1/sdram_rd_data_sim_netlist.vhdl
@@ -17,7 +17,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_data_blk_mem_gen_prim_wrapper is
   port (
     doutb : out STD_LOGIC_VECTOR ( 35 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -34,8 +33,8 @@ architecture STRUCTURE of sdram_rd_data_blk_mem_gen_prim_wrapper is
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram\: unisim.vcomponents.RAMB18E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -129,8 +128,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"00000",
       SRVAL_B => X"00000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 36
     )
@@ -141,7 +140,7 @@ begin
       ADDRBWRADDR(13 downto 9) => B"00000",
       ADDRBWRADDR(8 downto 5) => addra(3 downto 0),
       ADDRBWRADDR(4 downto 0) => B"00000",
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DIADI(15 downto 8) => dina(16 downto 9),
       DIADI(7 downto 0) => dina(7 downto 0),
@@ -161,7 +160,7 @@ begin
       DOPBDOP(0) => doutb(26),
       ENARDEN => '1',
       ENBWREN => wea(0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -178,7 +177,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -201,8 +199,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -372,8 +370,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -388,7 +386,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -429,7 +427,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -447,7 +445,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -470,8 +467,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -641,8 +638,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -657,7 +654,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -698,7 +695,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -716,7 +713,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -739,8 +735,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -910,8 +906,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -926,7 +922,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -967,7 +963,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -985,7 +981,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -1008,8 +1003,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -1179,8 +1174,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -1195,7 +1190,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -1236,7 +1231,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -1254,7 +1249,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -1277,8 +1271,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -1448,8 +1442,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -1464,7 +1458,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -1505,7 +1499,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -1523,7 +1517,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 51 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -1566,8 +1559,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -1737,8 +1730,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -1753,7 +1746,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 30) => B"00",
@@ -1808,7 +1801,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -1826,7 +1819,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -1849,8 +1841,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -2020,8 +2012,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -2036,7 +2028,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -2077,7 +2069,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -2095,7 +2087,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -2118,8 +2109,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -2289,8 +2280,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -2305,7 +2296,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -2346,7 +2337,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -2364,7 +2355,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -2387,8 +2377,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -2558,8 +2548,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -2574,7 +2564,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -2615,7 +2605,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -2633,7 +2623,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -2656,8 +2645,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -2827,8 +2816,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -2843,7 +2832,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -2884,7 +2873,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -2902,7 +2891,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -2925,8 +2913,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -3096,8 +3084,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -3112,7 +3100,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -3153,7 +3141,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -3171,7 +3159,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -3194,8 +3181,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -3365,8 +3352,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -3381,7 +3368,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -3422,7 +3409,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -3440,7 +3427,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -3463,8 +3449,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -3634,8 +3620,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -3650,7 +3636,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -3691,7 +3677,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -3709,7 +3695,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -3732,8 +3717,8 @@ architecture STRUCTURE of \sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram\: unisim.vcomponents.RAMB36E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -3903,8 +3888,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"000000000",
       SRVAL_B => X"000000000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 72
     )
@@ -3919,7 +3904,7 @@ begin
       CASCADEINB => '0',
       CASCADEOUTA => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED\,
       CASCADEOUTB => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED\,
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DBITERR => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED\,
       DIADI(31 downto 24) => dina(34 downto 27),
@@ -3960,7 +3945,7 @@ begin
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
       RDADDRECC(8 downto 0) => \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED\(8 downto 0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -3978,7 +3963,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_data_blk_mem_gen_prim_width is
   port (
     doutb : out STD_LOGIC_VECTOR ( 35 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -3996,7 +3980,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(35 downto 0) => dina(35 downto 0),
       doutb(35 downto 0) => doutb(35 downto 0),
       wea(0) => wea(0)
@@ -4009,7 +3992,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized0\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4027,7 +4009,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4040,7 +4021,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized1\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4058,7 +4038,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4071,7 +4050,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized10\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4089,7 +4067,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4102,7 +4079,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized11\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4120,7 +4096,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4133,7 +4108,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized12\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4151,7 +4125,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4164,7 +4137,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized13\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 51 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4182,7 +4154,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(51 downto 0) => dina(51 downto 0),
       doutb(51 downto 0) => doutb(51 downto 0),
       wea(0) => wea(0)
@@ -4195,7 +4166,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized2\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4213,7 +4183,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4226,7 +4195,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized3\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4244,7 +4212,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4257,7 +4224,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized4\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4275,7 +4241,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4288,7 +4253,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized5\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4306,7 +4270,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4319,7 +4282,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized6\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4337,7 +4299,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4350,7 +4311,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized7\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4368,7 +4328,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4381,7 +4340,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized8\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4399,7 +4357,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4412,7 +4369,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity \sdram_rd_data_blk_mem_gen_prim_width__parameterized9\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 71 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4430,7 +4386,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(71 downto 0),
       doutb(71 downto 0) => doutb(71 downto 0),
       wea(0) => wea(0)
@@ -4443,7 +4398,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_data_blk_mem_gen_generic_cstr is
   port (
     doutb : out STD_LOGIC_VECTOR ( 1023 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4461,7 +4415,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(35 downto 0) => dina(35 downto 0),
       doutb(35 downto 0) => doutb(35 downto 0),
       wea(0) => wea(0)
@@ -4471,7 +4424,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(755 downto 684),
       doutb(71 downto 0) => doutb(755 downto 684),
       wea(0) => wea(0)
@@ -4481,7 +4433,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(827 downto 756),
       doutb(71 downto 0) => doutb(827 downto 756),
       wea(0) => wea(0)
@@ -4491,7 +4442,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(899 downto 828),
       doutb(71 downto 0) => doutb(899 downto 828),
       wea(0) => wea(0)
@@ -4501,7 +4451,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(971 downto 900),
       doutb(71 downto 0) => doutb(971 downto 900),
       wea(0) => wea(0)
@@ -4511,7 +4460,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(51 downto 0) => dina(1023 downto 972),
       doutb(51 downto 0) => doutb(1023 downto 972),
       wea(0) => wea(0)
@@ -4521,7 +4469,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(107 downto 36),
       doutb(71 downto 0) => doutb(107 downto 36),
       wea(0) => wea(0)
@@ -4531,7 +4478,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(179 downto 108),
       doutb(71 downto 0) => doutb(179 downto 108),
       wea(0) => wea(0)
@@ -4541,7 +4487,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(251 downto 180),
       doutb(71 downto 0) => doutb(251 downto 180),
       wea(0) => wea(0)
@@ -4551,7 +4496,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(323 downto 252),
       doutb(71 downto 0) => doutb(323 downto 252),
       wea(0) => wea(0)
@@ -4561,7 +4505,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(395 downto 324),
       doutb(71 downto 0) => doutb(395 downto 324),
       wea(0) => wea(0)
@@ -4571,7 +4514,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(467 downto 396),
       doutb(71 downto 0) => doutb(467 downto 396),
       wea(0) => wea(0)
@@ -4581,7 +4523,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(539 downto 468),
       doutb(71 downto 0) => doutb(539 downto 468),
       wea(0) => wea(0)
@@ -4591,7 +4532,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(611 downto 540),
       doutb(71 downto 0) => doutb(611 downto 540),
       wea(0) => wea(0)
@@ -4601,7 +4541,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(71 downto 0) => dina(683 downto 612),
       doutb(71 downto 0) => doutb(683 downto 612),
       wea(0) => wea(0)
@@ -4614,7 +4553,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_data_blk_mem_gen_top is
   port (
     doutb : out STD_LOGIC_VECTOR ( 1023 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4632,7 +4570,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(1023 downto 0) => dina(1023 downto 0),
       doutb(1023 downto 0) => doutb(1023 downto 0),
       wea(0) => wea(0)
@@ -4645,7 +4582,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_data_blk_mem_gen_v8_4_4_synth is
   port (
     doutb : out STD_LOGIC_VECTOR ( 1023 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -4663,7 +4599,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(1023 downto 0) => dina(1023 downto 0),
       doutb(1023 downto 0) => doutb(1023 downto 0),
       wea(0) => wea(0)
@@ -4754,7 +4689,7 @@ entity sdram_rd_data_blk_mem_gen_v8_4_4 is
   attribute C_BYTE_SIZE : integer;
   attribute C_BYTE_SIZE of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 9;
   attribute C_COMMON_CLK : integer;
-  attribute C_COMMON_CLK of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_COMMON_CLK of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_COUNT_18K_BRAM : string;
   attribute C_COUNT_18K_BRAM of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is "1";
   attribute C_COUNT_36K_BRAM : string;
@@ -4800,7 +4735,7 @@ entity sdram_rd_data_blk_mem_gen_v8_4_4 is
   attribute C_HAS_MEM_OUTPUT_REGS_A : integer;
   attribute C_HAS_MEM_OUTPUT_REGS_A of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_B of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_HAS_MEM_OUTPUT_REGS_B of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_A : integer;
   attribute C_HAS_MUX_OUTPUT_REGS_A of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_B : integer;
@@ -4880,9 +4815,9 @@ entity sdram_rd_data_blk_mem_gen_v8_4_4 is
   attribute C_WRITE_DEPTH_B : integer;
   attribute C_WRITE_DEPTH_B of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 16;
   attribute C_WRITE_MODE_A : string;
-  attribute C_WRITE_MODE_A of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is "NO_CHANGE";
+  attribute C_WRITE_MODE_A of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
   attribute C_WRITE_MODE_B : string;
-  attribute C_WRITE_MODE_B of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
+  attribute C_WRITE_MODE_B of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is "READ_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
   attribute C_WRITE_WIDTH_A of sdram_rd_data_blk_mem_gen_v8_4_4 : entity is 1024;
   attribute C_WRITE_WIDTH_B : integer;
@@ -6987,7 +6922,6 @@ inst_blk_mem_gen: entity work.sdram_rd_data_blk_mem_gen_v8_4_4_synth
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(1023 downto 0) => dina(1023 downto 0),
       doutb(1023 downto 0) => doutb(1023 downto 0),
       wea(0) => wea(0)
@@ -7053,7 +6987,7 @@ architecture STRUCTURE of sdram_rd_data is
   attribute C_BYTE_SIZE : integer;
   attribute C_BYTE_SIZE of U0 : label is 9;
   attribute C_COMMON_CLK : integer;
-  attribute C_COMMON_CLK of U0 : label is 0;
+  attribute C_COMMON_CLK of U0 : label is 1;
   attribute C_COUNT_18K_BRAM : string;
   attribute C_COUNT_18K_BRAM of U0 : label is "1";
   attribute C_COUNT_36K_BRAM : string;
@@ -7099,7 +7033,7 @@ architecture STRUCTURE of sdram_rd_data is
   attribute C_HAS_MEM_OUTPUT_REGS_A : integer;
   attribute C_HAS_MEM_OUTPUT_REGS_A of U0 : label is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_B of U0 : label is 1;
+  attribute C_HAS_MEM_OUTPUT_REGS_B of U0 : label is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_A : integer;
   attribute C_HAS_MUX_OUTPUT_REGS_A of U0 : label is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_B : integer;
@@ -7179,9 +7113,9 @@ architecture STRUCTURE of sdram_rd_data is
   attribute C_WRITE_DEPTH_B : integer;
   attribute C_WRITE_DEPTH_B of U0 : label is 16;
   attribute C_WRITE_MODE_A : string;
-  attribute C_WRITE_MODE_A of U0 : label is "NO_CHANGE";
+  attribute C_WRITE_MODE_A of U0 : label is "WRITE_FIRST";
   attribute C_WRITE_MODE_B : string;
-  attribute C_WRITE_MODE_B of U0 : label is "WRITE_FIRST";
+  attribute C_WRITE_MODE_B of U0 : label is "READ_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
   attribute C_WRITE_WIDTH_A of U0 : label is 1024;
   attribute C_WRITE_WIDTH_B : integer;

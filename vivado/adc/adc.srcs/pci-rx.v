@@ -31,7 +31,7 @@ module pci_rx (
   output reg                    m_axis_rx_tready;
   input      [21:0]             m_axis_rx_tuser;
 
-  output reg [23:0]             sdram_fifo;
+  output reg [31:0]             sdram_fifo;
   output reg                    sdram_wr;
   input  wire                   sdram_full;
 

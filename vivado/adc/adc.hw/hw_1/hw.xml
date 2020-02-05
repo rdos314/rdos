@@ -4,7 +4,7 @@
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.        -->
 
 <hwsession version="1" minor="2">
-  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;],dashboard2=hw_ila_1[xc7k325t_0/hw_ila_1/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_1/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_1/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_1/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_1/Capture Setup=ILA_CAPTURE_1;],dashboard3=hw_ila_2[xc7k325t_0/hw_ila_2/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_2/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_2/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_2/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_2/Settings=ILA_SETTINGS_1;]"/>
+  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;]"/>
   <ObjectList object_type="hw_device" gui_info="">
     <Object name="xc7k325t_0" gui_info="">
       <Properties Property="FULL_PROBES.FILE" value="$_project_name_.runs/impl_1/$_project_name_.ltx"/>
@@ -798,7 +798,7 @@
         <net name="pci_app_inst/pci_rx_inst/byte_counter[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq10&apos;hXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq10&apos;hXXX"/>
@@ -828,7 +828,7 @@
         <net name="pci_app_inst/pci_rx_inst/data_size[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
@@ -852,7 +852,7 @@
         <net name="pci_app_inst/pci_rx_inst/header_pos[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
@@ -2228,7 +2228,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_addr[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq2&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq2&apos;hX"/>
@@ -2250,7 +2250,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_attr[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
@@ -2299,7 +2299,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_ep"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq10&apos;hXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq10&apos;hXXX"/>
@@ -2329,7 +2329,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_len[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -2365,7 +2365,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_rid[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
@@ -2393,7 +2393,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_tag[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq3&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq3&apos;hX"/>
@@ -2437,7 +2437,7 @@
         <net name="pci_app_inst/pci_rx_inst/req_td"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
@@ -2465,7 +2465,7 @@
         <net name="pci_app_inst/pci_rx_inst/tlp_type[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq24&apos;hXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq24&apos;hXX_XXXX"/>
@@ -2483,6 +2483,58 @@
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
+        <net name="pci_app_inst/sdram_fifo[23]"/>
+        <net name="pci_app_inst/sdram_fifo[22]"/>
+        <net name="pci_app_inst/sdram_fifo[21]"/>
+        <net name="pci_app_inst/sdram_fifo[20]"/>
+        <net name="pci_app_inst/sdram_fifo[19]"/>
+        <net name="pci_app_inst/sdram_fifo[18]"/>
+        <net name="pci_app_inst/sdram_fifo[17]"/>
+        <net name="pci_app_inst/sdram_fifo[16]"/>
+        <net name="pci_app_inst/sdram_fifo[15]"/>
+        <net name="pci_app_inst/sdram_fifo[14]"/>
+        <net name="pci_app_inst/sdram_fifo[13]"/>
+        <net name="pci_app_inst/sdram_fifo[12]"/>
+        <net name="pci_app_inst/sdram_fifo[11]"/>
+        <net name="pci_app_inst/sdram_fifo[10]"/>
+        <net name="pci_app_inst/sdram_fifo[9]"/>
+        <net name="pci_app_inst/sdram_fifo[8]"/>
+        <net name="pci_app_inst/sdram_fifo[7]"/>
+        <net name="pci_app_inst/sdram_fifo[6]"/>
+        <net name="pci_app_inst/sdram_fifo[5]"/>
+        <net name="pci_app_inst/sdram_fifo[4]"/>
+        <net name="pci_app_inst/sdram_fifo[3]"/>
+        <net name="pci_app_inst/sdram_fifo[2]"/>
+        <net name="pci_app_inst/sdram_fifo[1]"/>
+        <net name="pci_app_inst/sdram_fifo[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe0[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/sdram_fifo[31]"/>
+        <net name="pci_app_inst/sdram_fifo[30]"/>
+        <net name="pci_app_inst/sdram_fifo[29]"/>
+        <net name="pci_app_inst/sdram_fifo[28]"/>
+        <net name="pci_app_inst/sdram_fifo[27]"/>
+        <net name="pci_app_inst/sdram_fifo[26]"/>
+        <net name="pci_app_inst/sdram_fifo[25]"/>
+        <net name="pci_app_inst/sdram_fifo[24]"/>
         <net name="pci_app_inst/sdram_fifo[23]"/>
         <net name="pci_app_inst/sdram_fifo[22]"/>
         <net name="pci_app_inst/sdram_fifo[21]"/>

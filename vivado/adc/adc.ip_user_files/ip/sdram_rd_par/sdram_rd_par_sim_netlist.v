@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Tue Feb  4 23:20:37 2020
+// Date        : Wed Feb  5 22:05:20 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               C:/rdos/vivado/adc/adc.runs/sdram_rd_par_synth_1/sdram_rd_par_sim_netlist.v
@@ -65,7 +65,7 @@ module sdram_rd_par
   (* C_AXI_SLAVE_TYPE = "0" *) 
   (* C_AXI_TYPE = "1" *) 
   (* C_BYTE_SIZE = "9" *) 
-  (* C_COMMON_CLK = "0" *) 
+  (* C_COMMON_CLK = "1" *) 
   (* C_COUNT_18K_BRAM = "1" *) 
   (* C_COUNT_36K_BRAM = "0" *) 
   (* C_CTRL_ECC_ALGO = "NONE" *) 
@@ -88,7 +88,7 @@ module sdram_rd_par
   (* C_HAS_ENB = "0" *) 
   (* C_HAS_INJECTERR = "0" *) 
   (* C_HAS_MEM_OUTPUT_REGS_A = "0" *) 
-  (* C_HAS_MEM_OUTPUT_REGS_B = "1" *) 
+  (* C_HAS_MEM_OUTPUT_REGS_B = "0" *) 
   (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) 
   (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
   (* C_HAS_REGCEA = "0" *) 
@@ -128,8 +128,8 @@ module sdram_rd_par
   (* C_WEB_WIDTH = "1" *) 
   (* C_WRITE_DEPTH_A = "16" *) 
   (* C_WRITE_DEPTH_B = "16" *) 
-  (* C_WRITE_MODE_A = "NO_CHANGE" *) 
-  (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
+  (* C_WRITE_MODE_A = "WRITE_FIRST" *) 
+  (* C_WRITE_MODE_B = "READ_FIRST" *) 
   (* C_WRITE_WIDTH_A = "32" *) 
   (* C_WRITE_WIDTH_B = "32" *) 
   (* C_XDEVICEFAMILY = "kintex7" *) 
@@ -203,14 +203,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module sdram_rd_par_blk_mem_gen_generic_cstr
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [31:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -220,7 +218,6 @@ module sdram_rd_par_blk_mem_gen_generic_cstr
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [31:0]dina;
   wire [31:0]doutb;
   wire [0:0]wea;
@@ -229,7 +226,6 @@ module sdram_rd_par_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -238,14 +234,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_par_blk_mem_gen_prim_width
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [31:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -255,7 +249,6 @@ module sdram_rd_par_blk_mem_gen_prim_width
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [31:0]dina;
   wire [31:0]doutb;
   wire [0:0]wea;
@@ -264,7 +257,6 @@ module sdram_rd_par_blk_mem_gen_prim_width
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -273,14 +265,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_par_blk_mem_gen_prim_wrapper
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [31:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -294,15 +284,14 @@ module sdram_rd_par_blk_mem_gen_prim_wrapper
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [31:0]dina;
   wire [31:0]doutb;
   wire [0:0]wea;
 
   (* box_type = "PRIMITIVE" *) 
   RAMB18E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INITP_01(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INITP_02(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -396,14 +385,14 @@ module sdram_rd_par_blk_mem_gen_prim_wrapper
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(18'h00000),
     .SRVAL_B(18'h00000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(36)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram 
        (.ADDRARDADDR({1'b0,1'b0,1'b0,1'b0,1'b0,addrb,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .ADDRBWRADDR({1'b0,1'b0,1'b0,1'b0,1'b0,addra,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DIADI(dina[15:0]),
         .DIBDI(dina[31:16]),
@@ -415,7 +404,7 @@ module sdram_rd_par_blk_mem_gen_prim_wrapper
         .DOPBDOP({\DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_34 ,\DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_35 }),
         .ENARDEN(1'b1),
         .ENBWREN(wea),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -428,14 +417,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module sdram_rd_par_blk_mem_gen_top
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [31:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -445,7 +432,6 @@ module sdram_rd_par_blk_mem_gen_top
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [31:0]dina;
   wire [31:0]doutb;
   wire [0:0]wea;
@@ -454,7 +440,6 @@ module sdram_rd_par_blk_mem_gen_top
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -462,7 +447,7 @@ endmodule
 
 (* C_ADDRA_WIDTH = "4" *) (* C_ADDRB_WIDTH = "4" *) (* C_ALGORITHM = "1" *) 
 (* C_AXI_ID_WIDTH = "4" *) (* C_AXI_SLAVE_TYPE = "0" *) (* C_AXI_TYPE = "1" *) 
-(* C_BYTE_SIZE = "9" *) (* C_COMMON_CLK = "0" *) (* C_COUNT_18K_BRAM = "1" *) 
+(* C_BYTE_SIZE = "9" *) (* C_COMMON_CLK = "1" *) (* C_COUNT_18K_BRAM = "1" *) 
 (* C_COUNT_36K_BRAM = "0" *) (* C_CTRL_ECC_ALGO = "NONE" *) (* C_DEFAULT_DATA = "0" *) 
 (* C_DISABLE_WARN_BHV_COLL = "0" *) (* C_DISABLE_WARN_BHV_RANGE = "0" *) (* C_ELABORATION_DIR = "./" *) 
 (* C_ENABLE_32BIT_ADDRESS = "0" *) (* C_EN_DEEPSLEEP_PIN = "0" *) (* C_EN_ECC_PIPE = "0" *) 
@@ -470,7 +455,7 @@ endmodule
 (* C_EN_SHUTDOWN_PIN = "0" *) (* C_EN_SLEEP_PIN = "0" *) (* C_EST_POWER_SUMMARY = "Estimated Power for IP     :     3.68295 mW" *) 
 (* C_FAMILY = "kintex7" *) (* C_HAS_AXI_ID = "0" *) (* C_HAS_ENA = "0" *) 
 (* C_HAS_ENB = "0" *) (* C_HAS_INJECTERR = "0" *) (* C_HAS_MEM_OUTPUT_REGS_A = "0" *) 
-(* C_HAS_MEM_OUTPUT_REGS_B = "1" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
+(* C_HAS_MEM_OUTPUT_REGS_B = "0" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
 (* C_HAS_REGCEA = "0" *) (* C_HAS_REGCEB = "0" *) (* C_HAS_RSTA = "0" *) 
 (* C_HAS_RSTB = "0" *) (* C_HAS_SOFTECC_INPUT_REGS_A = "0" *) (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
 (* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "sdram_rd_par.mem" *) 
@@ -483,7 +468,7 @@ endmodule
 (* C_USE_BYTE_WEA = "0" *) (* C_USE_BYTE_WEB = "0" *) (* C_USE_DEFAULT_DATA = "0" *) 
 (* C_USE_ECC = "0" *) (* C_USE_SOFTECC = "0" *) (* C_USE_URAM = "0" *) 
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "16" *) 
-(* C_WRITE_DEPTH_B = "16" *) (* C_WRITE_MODE_A = "NO_CHANGE" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
+(* C_WRITE_DEPTH_B = "16" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "READ_FIRST" *) 
 (* C_WRITE_WIDTH_A = "32" *) (* C_WRITE_WIDTH_B = "32" *) (* C_XDEVICEFAMILY = "kintex7" *) 
 (* ORIG_REF_NAME = "blk_mem_gen_v8_4_4" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module sdram_rd_par_blk_mem_gen_v8_4_4
@@ -618,7 +603,6 @@ module sdram_rd_par_blk_mem_gen_v8_4_4
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [31:0]dina;
   wire [31:0]doutb;
   wire [0:0]wea;
@@ -725,7 +709,6 @@ module sdram_rd_par_blk_mem_gen_v8_4_4
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -734,14 +717,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_v8_4_4_synth" *) 
 module sdram_rd_par_blk_mem_gen_v8_4_4_synth
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [31:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -751,7 +732,6 @@ module sdram_rd_par_blk_mem_gen_v8_4_4_synth
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [31:0]dina;
   wire [31:0]doutb;
   wire [0:0]wea;
@@ -760,7 +740,6 @@ module sdram_rd_par_blk_mem_gen_v8_4_4_synth
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));

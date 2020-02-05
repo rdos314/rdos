@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Tue Feb  4 23:20:37 2020
+-- Date        : Wed Feb  5 22:05:20 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adc/adc.runs/sdram_rd_par_synth_1/sdram_rd_par_sim_netlist.vhdl
@@ -17,7 +17,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_prim_wrapper is
   port (
     doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -38,8 +37,8 @@ architecture STRUCTURE of sdram_rd_par_blk_mem_gen_prim_wrapper is
 begin
 \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram\: unisim.vcomponents.RAMB18E1
     generic map(
-      DOA_REG => 1,
-      DOB_REG => 1,
+      DOA_REG => 0,
+      DOB_REG => 0,
       INITP_00 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_01 => X"0000000000000000000000000000000000000000000000000000000000000000",
       INITP_02 => X"0000000000000000000000000000000000000000000000000000000000000000",
@@ -133,8 +132,8 @@ begin
       SIM_DEVICE => "7SERIES",
       SRVAL_A => X"00000",
       SRVAL_B => X"00000",
-      WRITE_MODE_A => "WRITE_FIRST",
-      WRITE_MODE_B => "WRITE_FIRST",
+      WRITE_MODE_A => "READ_FIRST",
+      WRITE_MODE_B => "READ_FIRST",
       WRITE_WIDTH_A => 0,
       WRITE_WIDTH_B => 36
     )
@@ -145,7 +144,7 @@ begin
       ADDRBWRADDR(13 downto 9) => B"00000",
       ADDRBWRADDR(8 downto 5) => addra(3 downto 0),
       ADDRBWRADDR(4 downto 0) => B"00000",
-      CLKARDCLK => clkb,
+      CLKARDCLK => clka,
       CLKBWRCLK => clka,
       DIADI(15 downto 0) => dina(15 downto 0),
       DIBDI(15 downto 0) => dina(31 downto 16),
@@ -159,7 +158,7 @@ begin
       DOPBDOP(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram_n_35\,
       ENARDEN => '1',
       ENBWREN => wea(0),
-      REGCEAREGCE => '1',
+      REGCEAREGCE => '0',
       REGCEB => '0',
       RSTRAMARSTRAM => '0',
       RSTRAMB => '0',
@@ -176,7 +175,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_prim_width is
   port (
     doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -194,7 +192,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(31 downto 0) => dina(31 downto 0),
       doutb(31 downto 0) => doutb(31 downto 0),
       wea(0) => wea(0)
@@ -207,7 +204,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_generic_cstr is
   port (
     doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -225,7 +221,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(31 downto 0) => dina(31 downto 0),
       doutb(31 downto 0) => doutb(31 downto 0),
       wea(0) => wea(0)
@@ -238,7 +233,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_top is
   port (
     doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -256,7 +250,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(31 downto 0) => dina(31 downto 0),
       doutb(31 downto 0) => doutb(31 downto 0),
       wea(0) => wea(0)
@@ -269,7 +262,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity sdram_rd_par_blk_mem_gen_v8_4_4_synth is
   port (
     doutb : out STD_LOGIC_VECTOR ( 31 downto 0 );
-    clkb : in STD_LOGIC;
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -287,7 +279,6 @@ begin
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(31 downto 0) => dina(31 downto 0),
       doutb(31 downto 0) => doutb(31 downto 0),
       wea(0) => wea(0)
@@ -378,7 +369,7 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_BYTE_SIZE : integer;
   attribute C_BYTE_SIZE of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 9;
   attribute C_COMMON_CLK : integer;
-  attribute C_COMMON_CLK of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_COMMON_CLK of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_COUNT_18K_BRAM : string;
   attribute C_COUNT_18K_BRAM of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "1";
   attribute C_COUNT_36K_BRAM : string;
@@ -424,7 +415,7 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_HAS_MEM_OUTPUT_REGS_A : integer;
   attribute C_HAS_MEM_OUTPUT_REGS_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_HAS_MEM_OUTPUT_REGS_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_A : integer;
   attribute C_HAS_MUX_OUTPUT_REGS_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_B : integer;
@@ -504,9 +495,9 @@ entity sdram_rd_par_blk_mem_gen_v8_4_4 is
   attribute C_WRITE_DEPTH_B : integer;
   attribute C_WRITE_DEPTH_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 16;
   attribute C_WRITE_MODE_A : string;
-  attribute C_WRITE_MODE_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "NO_CHANGE";
+  attribute C_WRITE_MODE_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
   attribute C_WRITE_MODE_B : string;
-  attribute C_WRITE_MODE_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
+  attribute C_WRITE_MODE_B of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is "READ_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
   attribute C_WRITE_WIDTH_A of sdram_rd_par_blk_mem_gen_v8_4_4 : entity is 32;
   attribute C_WRITE_WIDTH_B : integer;
@@ -627,7 +618,6 @@ inst_blk_mem_gen: entity work.sdram_rd_par_blk_mem_gen_v8_4_4_synth
       addra(3 downto 0) => addra(3 downto 0),
       addrb(3 downto 0) => addrb(3 downto 0),
       clka => clka,
-      clkb => clkb,
       dina(31 downto 0) => dina(31 downto 0),
       doutb(31 downto 0) => doutb(31 downto 0),
       wea(0) => wea(0)
@@ -693,7 +683,7 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_BYTE_SIZE : integer;
   attribute C_BYTE_SIZE of U0 : label is 9;
   attribute C_COMMON_CLK : integer;
-  attribute C_COMMON_CLK of U0 : label is 0;
+  attribute C_COMMON_CLK of U0 : label is 1;
   attribute C_COUNT_18K_BRAM : string;
   attribute C_COUNT_18K_BRAM of U0 : label is "1";
   attribute C_COUNT_36K_BRAM : string;
@@ -739,7 +729,7 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_HAS_MEM_OUTPUT_REGS_A : integer;
   attribute C_HAS_MEM_OUTPUT_REGS_A of U0 : label is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_B of U0 : label is 1;
+  attribute C_HAS_MEM_OUTPUT_REGS_B of U0 : label is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_A : integer;
   attribute C_HAS_MUX_OUTPUT_REGS_A of U0 : label is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_B : integer;
@@ -819,9 +809,9 @@ architecture STRUCTURE of sdram_rd_par is
   attribute C_WRITE_DEPTH_B : integer;
   attribute C_WRITE_DEPTH_B of U0 : label is 16;
   attribute C_WRITE_MODE_A : string;
-  attribute C_WRITE_MODE_A of U0 : label is "NO_CHANGE";
+  attribute C_WRITE_MODE_A of U0 : label is "WRITE_FIRST";
   attribute C_WRITE_MODE_B : string;
-  attribute C_WRITE_MODE_B of U0 : label is "WRITE_FIRST";
+  attribute C_WRITE_MODE_B of U0 : label is "READ_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
   attribute C_WRITE_WIDTH_A of U0 : label is 32;
   attribute C_WRITE_WIDTH_B : integer;

@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Tue Feb  4 23:23:45 2020
+// Date        : Wed Feb  5 22:01:02 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               C:/rdos/vivado/adc/adc.runs/sdram_rd_data_synth_1/sdram_rd_data_sim_netlist.v
@@ -65,7 +65,7 @@ module sdram_rd_data
   (* C_AXI_SLAVE_TYPE = "0" *) 
   (* C_AXI_TYPE = "1" *) 
   (* C_BYTE_SIZE = "9" *) 
-  (* C_COMMON_CLK = "0" *) 
+  (* C_COMMON_CLK = "1" *) 
   (* C_COUNT_18K_BRAM = "1" *) 
   (* C_COUNT_36K_BRAM = "14" *) 
   (* C_CTRL_ECC_ALGO = "NONE" *) 
@@ -88,7 +88,7 @@ module sdram_rd_data
   (* C_HAS_ENB = "0" *) 
   (* C_HAS_INJECTERR = "0" *) 
   (* C_HAS_MEM_OUTPUT_REGS_A = "0" *) 
-  (* C_HAS_MEM_OUTPUT_REGS_B = "1" *) 
+  (* C_HAS_MEM_OUTPUT_REGS_B = "0" *) 
   (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) 
   (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
   (* C_HAS_REGCEA = "0" *) 
@@ -128,8 +128,8 @@ module sdram_rd_data
   (* C_WEB_WIDTH = "1" *) 
   (* C_WRITE_DEPTH_A = "16" *) 
   (* C_WRITE_DEPTH_B = "16" *) 
-  (* C_WRITE_MODE_A = "NO_CHANGE" *) 
-  (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
+  (* C_WRITE_MODE_A = "WRITE_FIRST" *) 
+  (* C_WRITE_MODE_B = "READ_FIRST" *) 
   (* C_WRITE_WIDTH_A = "1024" *) 
   (* C_WRITE_WIDTH_B = "1024" *) 
   (* C_XDEVICEFAMILY = "kintex7" *) 
@@ -203,14 +203,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module sdram_rd_data_blk_mem_gen_generic_cstr
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [1023:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -220,7 +218,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [1023:0]dina;
   wire [1023:0]doutb;
   wire [0:0]wea;
@@ -229,7 +226,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[35:0]),
         .doutb(doutb[35:0]),
         .wea(wea));
@@ -237,7 +233,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[755:684]),
         .doutb(doutb[755:684]),
         .wea(wea));
@@ -245,7 +240,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[827:756]),
         .doutb(doutb[827:756]),
         .wea(wea));
@@ -253,7 +247,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[899:828]),
         .doutb(doutb[899:828]),
         .wea(wea));
@@ -261,7 +254,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[971:900]),
         .doutb(doutb[971:900]),
         .wea(wea));
@@ -269,7 +261,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[1023:972]),
         .doutb(doutb[1023:972]),
         .wea(wea));
@@ -277,7 +268,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[107:36]),
         .doutb(doutb[107:36]),
         .wea(wea));
@@ -285,7 +275,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[179:108]),
         .doutb(doutb[179:108]),
         .wea(wea));
@@ -293,7 +282,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[251:180]),
         .doutb(doutb[251:180]),
         .wea(wea));
@@ -301,7 +289,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[323:252]),
         .doutb(doutb[323:252]),
         .wea(wea));
@@ -309,7 +296,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[395:324]),
         .doutb(doutb[395:324]),
         .wea(wea));
@@ -317,7 +303,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[467:396]),
         .doutb(doutb[467:396]),
         .wea(wea));
@@ -325,7 +310,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[539:468]),
         .doutb(doutb[539:468]),
         .wea(wea));
@@ -333,7 +317,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[611:540]),
         .doutb(doutb[611:540]),
         .wea(wea));
@@ -341,7 +324,6 @@ module sdram_rd_data_blk_mem_gen_generic_cstr
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina[683:612]),
         .doutb(doutb[683:612]),
         .wea(wea));
@@ -350,14 +332,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [35:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -367,7 +347,6 @@ module sdram_rd_data_blk_mem_gen_prim_width
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [35:0]dina;
   wire [35:0]doutb;
   wire [0:0]wea;
@@ -376,7 +355,6 @@ module sdram_rd_data_blk_mem_gen_prim_width
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -385,14 +363,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized0
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -402,7 +378,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized0
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -411,7 +386,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized0
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -420,14 +394,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized1
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -437,7 +409,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized1
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -446,7 +417,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized1
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -455,14 +425,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized10
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -472,7 +440,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized10
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -481,7 +448,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized10
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -490,14 +456,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized11
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -507,7 +471,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized11
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -516,7 +479,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized11
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -525,14 +487,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized12
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -542,7 +502,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized12
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -551,7 +510,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized12
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -560,14 +518,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized13
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [51:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -577,7 +533,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized13
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [51:0]dina;
   wire [51:0]doutb;
   wire [0:0]wea;
@@ -586,7 +541,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized13
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -595,14 +549,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized2
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -612,7 +564,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized2
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -621,7 +572,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized2
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -630,14 +580,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized3
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -647,7 +595,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized3
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -656,7 +603,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized3
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -665,14 +611,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized4
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -682,7 +626,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized4
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -691,7 +634,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized4
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -700,14 +642,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized5
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -717,7 +657,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized5
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -726,7 +665,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized5
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -735,14 +673,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized6
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -752,7 +688,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized6
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -761,7 +696,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized6
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -770,14 +704,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized7
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -787,7 +719,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized7
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -796,7 +727,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized7
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -805,14 +735,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized8
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -822,7 +750,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized8
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -831,7 +758,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized8
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -840,14 +766,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module sdram_rd_data_blk_mem_gen_prim_width__parameterized9
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -857,7 +781,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized9
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -866,7 +789,6 @@ module sdram_rd_data_blk_mem_gen_prim_width__parameterized9
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -875,14 +797,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [35:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -892,15 +812,14 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [35:0]dina;
   wire [35:0]doutb;
   wire [0:0]wea;
 
   (* box_type = "PRIMITIVE" *) 
   RAMB18E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INITP_01(256'h0000000000000000000000000000000000000000000000000000000000000000),
     .INITP_02(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -994,14 +913,14 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(18'h00000),
     .SRVAL_B(18'h00000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(36)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM18.ram 
        (.ADDRARDADDR({1'b0,1'b0,1'b0,1'b0,1'b0,addrb,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .ADDRBWRADDR({1'b0,1'b0,1'b0,1'b0,1'b0,addra,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DIADI({dina[16:9],dina[7:0]}),
         .DIBDI({dina[34:27],dina[25:18]}),
@@ -1013,7 +932,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper
         .DOPBDOP({doutb[35],doutb[26]}),
         .ENARDEN(1'b1),
         .ENBWREN(wea),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -1026,14 +945,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -1043,7 +960,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -1056,8 +972,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -1227,8 +1143,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -1238,7 +1154,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -1255,7 +1171,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized0
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -1269,14 +1185,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -1286,7 +1200,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -1299,8 +1212,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -1470,8 +1383,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -1481,7 +1394,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -1498,7 +1411,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized1
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -1512,14 +1425,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -1529,7 +1440,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -1542,8 +1452,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -1713,8 +1623,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -1724,7 +1634,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -1741,7 +1651,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized10
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -1755,14 +1665,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -1772,7 +1680,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -1785,8 +1692,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -1956,8 +1863,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -1967,7 +1874,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -1984,7 +1891,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized11
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -1998,14 +1905,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -2015,7 +1920,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -2028,8 +1932,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -2199,8 +2103,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -2210,7 +2114,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -2227,7 +2131,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized12
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -2241,14 +2145,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [51:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -2278,7 +2180,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [51:0]dina;
   wire [51:0]doutb;
   wire [0:0]wea;
@@ -2291,8 +2192,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -2462,8 +2363,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -2473,7 +2374,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({1'b0,1'b0,dina[25:20],1'b0,dina[19:13],1'b0,1'b0,dina[12:7],1'b0,dina[6:0]}),
@@ -2490,7 +2391,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized13
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -2504,14 +2405,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -2521,7 +2420,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -2534,8 +2432,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -2705,8 +2603,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -2716,7 +2614,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -2733,7 +2631,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized2
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -2747,14 +2645,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -2764,7 +2660,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -2777,8 +2672,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -2948,8 +2843,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -2959,7 +2854,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -2976,7 +2871,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized3
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -2990,14 +2885,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -3007,7 +2900,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -3020,8 +2912,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -3191,8 +3083,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -3202,7 +3094,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -3219,7 +3111,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized4
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -3233,14 +3125,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -3250,7 +3140,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -3263,8 +3152,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -3434,8 +3323,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -3445,7 +3334,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -3462,7 +3351,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized5
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -3476,14 +3365,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -3493,7 +3380,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -3506,8 +3392,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -3677,8 +3563,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -3688,7 +3574,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -3705,7 +3591,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized6
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -3719,14 +3605,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -3736,7 +3620,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -3749,8 +3632,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -3920,8 +3803,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -3931,7 +3814,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -3948,7 +3831,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized7
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -3962,14 +3845,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -3979,7 +3860,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -3992,8 +3872,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -4163,8 +4043,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -4174,7 +4054,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -4191,7 +4071,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized8
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -4205,14 +4085,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [71:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -4222,7 +4100,6 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [71:0]dina;
   wire [71:0]doutb;
   wire [0:0]wea;
@@ -4235,8 +4112,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9
 
   (* box_type = "PRIMITIVE" *) 
   RAMB36E1 #(
-    .DOA_REG(1),
-    .DOB_REG(1),
+    .DOA_REG(0),
+    .DOB_REG(0),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -4406,8 +4283,8 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9
     .SIM_DEVICE("7SERIES"),
     .SRVAL_A(36'h000000000),
     .SRVAL_B(36'h000000000),
-    .WRITE_MODE_A("WRITE_FIRST"),
-    .WRITE_MODE_B("WRITE_FIRST"),
+    .WRITE_MODE_A("READ_FIRST"),
+    .WRITE_MODE_B("READ_FIRST"),
     .WRITE_WIDTH_A(0),
     .WRITE_WIDTH_B(72)) 
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram 
@@ -4417,7 +4294,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9
         .CASCADEINB(1'b0),
         .CASCADEOUTA(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTA_UNCONNECTED ),
         .CASCADEOUTB(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_CASCADEOUTB_UNCONNECTED ),
-        .CLKARDCLK(clkb),
+        .CLKARDCLK(clka),
         .CLKBWRCLK(clka),
         .DBITERR(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_DBITERR_UNCONNECTED ),
         .DIADI({dina[34:27],dina[25:18],dina[16:9],dina[7:0]}),
@@ -4434,7 +4311,7 @@ module sdram_rd_data_blk_mem_gen_prim_wrapper__parameterized9
         .INJECTDBITERR(1'b0),
         .INJECTSBITERR(1'b0),
         .RDADDRECC(\NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram_RDADDRECC_UNCONNECTED [8:0]),
-        .REGCEAREGCE(1'b1),
+        .REGCEAREGCE(1'b0),
         .REGCEB(1'b0),
         .RSTRAMARSTRAM(1'b0),
         .RSTRAMB(1'b0),
@@ -4448,14 +4325,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module sdram_rd_data_blk_mem_gen_top
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [1023:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -4465,7 +4340,6 @@ module sdram_rd_data_blk_mem_gen_top
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [1023:0]dina;
   wire [1023:0]doutb;
   wire [0:0]wea;
@@ -4474,7 +4348,6 @@ module sdram_rd_data_blk_mem_gen_top
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -4482,7 +4355,7 @@ endmodule
 
 (* C_ADDRA_WIDTH = "4" *) (* C_ADDRB_WIDTH = "4" *) (* C_ALGORITHM = "1" *) 
 (* C_AXI_ID_WIDTH = "4" *) (* C_AXI_SLAVE_TYPE = "0" *) (* C_AXI_TYPE = "1" *) 
-(* C_BYTE_SIZE = "9" *) (* C_COMMON_CLK = "0" *) (* C_COUNT_18K_BRAM = "1" *) 
+(* C_BYTE_SIZE = "9" *) (* C_COMMON_CLK = "1" *) (* C_COUNT_18K_BRAM = "1" *) 
 (* C_COUNT_36K_BRAM = "14" *) (* C_CTRL_ECC_ALGO = "NONE" *) (* C_DEFAULT_DATA = "0" *) 
 (* C_DISABLE_WARN_BHV_COLL = "0" *) (* C_DISABLE_WARN_BHV_RANGE = "0" *) (* C_ELABORATION_DIR = "./" *) 
 (* C_ENABLE_32BIT_ADDRESS = "0" *) (* C_EN_DEEPSLEEP_PIN = "0" *) (* C_EN_ECC_PIPE = "0" *) 
@@ -4490,7 +4363,7 @@ endmodule
 (* C_EN_SHUTDOWN_PIN = "0" *) (* C_EN_SLEEP_PIN = "0" *) (* C_EST_POWER_SUMMARY = "Estimated Power for IP     :     104.613152 mW" *) 
 (* C_FAMILY = "kintex7" *) (* C_HAS_AXI_ID = "0" *) (* C_HAS_ENA = "0" *) 
 (* C_HAS_ENB = "0" *) (* C_HAS_INJECTERR = "0" *) (* C_HAS_MEM_OUTPUT_REGS_A = "0" *) 
-(* C_HAS_MEM_OUTPUT_REGS_B = "1" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
+(* C_HAS_MEM_OUTPUT_REGS_B = "0" *) (* C_HAS_MUX_OUTPUT_REGS_A = "0" *) (* C_HAS_MUX_OUTPUT_REGS_B = "0" *) 
 (* C_HAS_REGCEA = "0" *) (* C_HAS_REGCEB = "0" *) (* C_HAS_RSTA = "0" *) 
 (* C_HAS_RSTB = "0" *) (* C_HAS_SOFTECC_INPUT_REGS_A = "0" *) (* C_HAS_SOFTECC_OUTPUT_REGS_B = "0" *) 
 (* C_INITA_VAL = "0" *) (* C_INITB_VAL = "0" *) (* C_INIT_FILE = "sdram_rd_data.mem" *) 
@@ -4503,7 +4376,7 @@ endmodule
 (* C_USE_BYTE_WEA = "0" *) (* C_USE_BYTE_WEB = "0" *) (* C_USE_DEFAULT_DATA = "0" *) 
 (* C_USE_ECC = "0" *) (* C_USE_SOFTECC = "0" *) (* C_USE_URAM = "0" *) 
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "16" *) 
-(* C_WRITE_DEPTH_B = "16" *) (* C_WRITE_MODE_A = "NO_CHANGE" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
+(* C_WRITE_DEPTH_B = "16" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "READ_FIRST" *) 
 (* C_WRITE_WIDTH_A = "1024" *) (* C_WRITE_WIDTH_B = "1024" *) (* C_XDEVICEFAMILY = "kintex7" *) 
 (* ORIG_REF_NAME = "blk_mem_gen_v8_4_4" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module sdram_rd_data_blk_mem_gen_v8_4_4
@@ -4638,7 +4511,6 @@ module sdram_rd_data_blk_mem_gen_v8_4_4
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [1023:0]dina;
   wire [1023:0]doutb;
   wire [0:0]wea;
@@ -6729,7 +6601,6 @@ module sdram_rd_data_blk_mem_gen_v8_4_4
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
@@ -6738,14 +6609,12 @@ endmodule
 (* ORIG_REF_NAME = "blk_mem_gen_v8_4_4_synth" *) 
 module sdram_rd_data_blk_mem_gen_v8_4_4_synth
    (doutb,
-    clkb,
     clka,
     wea,
     addrb,
     addra,
     dina);
   output [1023:0]doutb;
-  input clkb;
   input clka;
   input [0:0]wea;
   input [3:0]addrb;
@@ -6755,7 +6624,6 @@ module sdram_rd_data_blk_mem_gen_v8_4_4_synth
   wire [3:0]addra;
   wire [3:0]addrb;
   wire clka;
-  wire clkb;
   wire [1023:0]dina;
   wire [1023:0]doutb;
   wire [0:0]wea;
@@ -6764,7 +6632,6 @@ module sdram_rd_data_blk_mem_gen_v8_4_4_synth
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
-        .clkb(clkb),
         .dina(dina),
         .doutb(doutb),
         .wea(wea));
