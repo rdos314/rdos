@@ -33,36 +33,36 @@ module pci_app (
 
 // Wire Declarations
 
-  wire                                        user_clk;
-  wire                                        user_reset;
-  wire                                        user_lnk_up;
-  wire                                        user_lnk_rate;
-  wire [1:0]                                  user_lnk_width;
-  wire                                        cfg_interrupt_msienable;
+  wire             user_clk;
+  wire             user_reset;
+  wire             user_lnk_up;
+  wire             user_lnk_rate;
+  wire [1:0]       user_lnk_width;
+  wire             cfg_interrupt_msienable;
   
   // Tx
-  wire                                        s_axis_tx_tready;
-  wire [3:0]                                  s_axis_tx_tuser;
-  wire [127:0]                                s_axis_tx_tdata;
-  wire [15:0]                                 s_axis_tx_tkeep;
-  wire                                        s_axis_tx_tlast;
-  wire                                        s_axis_tx_tvalid;
+  wire             s_axis_tx_tready;
+  wire [3:0]       s_axis_tx_tuser;
+  wire [127:0]     s_axis_tx_tdata;
+  wire [15:0]      s_axis_tx_tkeep;
+  wire             s_axis_tx_tlast;
+  wire             s_axis_tx_tvalid;
 
   // Rx
-  wire [127:0]                                m_axis_rx_tdata;
-  wire [15:0]                                 m_axis_rx_tkeep;
-  wire                                        m_axis_rx_tlast;
-  wire                                        m_axis_rx_tvalid;
-  wire                                        m_axis_rx_tready;
-  wire  [21:0]                                m_axis_rx_tuser;
+  wire [127:0]     m_axis_rx_tdata;
+  wire [15:0]      m_axis_rx_tkeep;
+  wire             m_axis_rx_tlast;
+  wire             m_axis_rx_tvalid;
+  wire             m_axis_rx_tready;
+  wire  [21:0]     m_axis_rx_tuser;
 
-  wire [23:0]   sdram_fifo;                   
-  wire          sdram_wr;
-  wire          sdram_full;
+  wire [23:0]      sdram_fifo;                   
+  wire             sdram_wr;
+  wire             sdram_full;
 
-  wire          pci_rd_par_active;
-  wire [3:0]    pci_rd_par_index;
-  wire [31:0]   pci_rd_par_data;
+  wire             pci_rd_par_active;
+  wire [3:0]       pci_rd_par_index;
+  wire [63:0]      pci_rd_par_data;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -107,18 +107,10 @@ module pci_app (
   wire                                        sys_rst_n;
   wire                                        sys_clk;
 
-
-  localparam PIO_RX_MEM_RD32_FMT_TYPE = 7'b00_00000;
-  localparam PIO_RX_MEM_WR32_FMT_TYPE = 7'b10_00000;
-  localparam PIO_RX_MEM_RD64_FMT_TYPE = 7'b01_00000;
-  localparam PIO_RX_MEM_WR64_FMT_TYPE = 7'b11_00000;
-  localparam PIO_RX_IO_RD32_FMT_TYPE  = 7'b00_00010;
-  localparam PIO_RX_IO_WR32_FMT_TYPE  = 7'b10_00010;
-
 sdram_fifo sdram_fifo_inst (
-  .rst(user_reset),       // input wire rst
-  .wr_clk(user_clock),    // input wire wr_clk
-  .rd_clk(user_clock),    // input wire rd_clk
+  .rst(user_reset),           // input wire rst
+  .wr_clk(user_clock),        // input wire wr_clk
+  .rd_clk(user_clock),        // input wire rd_clk
   .din(sdram_fifo),           // input wire [23 : 0] din
   .wr_en(sdram_wr),           // input wire wr_en
   .rd_en(0),                  // input wire rd_en
@@ -134,10 +126,10 @@ sdram_rd_par sdram_rd_par_inst (
   .clka(user_clock),         // input wire clka
   .wea(pci_rd_par_active),       // input wire [0 : 0] wea
   .addra(pci_rd_par_index),      // input wire [3 : 0] addra
-  .dina(pci_rd_par_data),        // input wire [31 : 0] dina
-  .clkb(user_clock),         // input wire clkb
-  .addrb(0),  // input wire [3 : 0] addrb
-  .doutb()  // output wire [31 : 0] doutb
+  .dina(pci_rd_par_data),        // input wire [63 : 0] dina
+  .clkb(user_clock),             // input wire clkb
+  .addrb(0),                     // input wire [3 : 0] addrb
+  .doutb()                       // output wire [63 : 0] doutb
 );
 
 pcie pcie_i
@@ -324,8 +316,8 @@ pcie pcie_i
 
 pci_rx pci_rx_inst (
 
-    .clk(user_clk),                              // I
-    .reset(user_reset),                      // I
+    .clk(user_clk),                         // I
+    .reset(user_reset),                     // I
 
     // AXIS RX
     .m_axis_rx_tdata( m_axis_rx_tdata ),    // I
@@ -346,8 +338,8 @@ pci_rx pci_rx_inst (
 
 pci_tx pci_tx_inst (
 
-    .clk(user_clk),                                  // I
-    .reset(user_reset),                            // I
+    .clk(user_clk),                             // I
+    .reset(user_reset),                         // I
 
     // AXIS Tx
     .s_axis_tx_tready( s_axis_tx_tready ),      // I
@@ -355,16 +347,16 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tkeep( s_axis_tx_tkeep ),        // O
     .s_axis_tx_tlast( s_axis_tx_tlast ),        // O
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
-    .s_axis_tx_tuser( s_axis_tx_tuser )           // I
+    .s_axis_tx_tuser( s_axis_tx_tuser )         // I
 );
 
 ila_1 ila_1_inst (
-	.clk(user_clk), // input wire clk
-	.probe0(sdram_fifo), // input wire [23:0]  probe0  
-	.probe1(sdram_wr), // input wire [0:0]  probe1 
-	.probe2(sdram_full), // input wire [0:0]  probe2
-	.probe3(pci_rd_par_index), // input wire [3:0]  probe3 
-	.probe4(pci_rd_par_data) // input wire [31:0]  probe4
+	.clk(user_clk),                         // input wire clk
+	.probe0(sdram_fifo),                    // input wire [23:0]  probe0  
+	.probe1(sdram_wr),                      // input wire [0:0]  probe1 
+	.probe2(sdram_full),                    // input wire [0:0]  probe2
+	.probe3(pci_rd_par_index),              // input wire [3:0]  probe3 
+	.probe4(pci_rd_par_data)                // input wire [63:0]  probe4
 );
 
 endmodule
