@@ -56,6 +56,13 @@ module pci_app (
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
 
+// needed to send completions!
+
+  wire [7:0]       cfg_bus_number;
+  wire [4:0]       cfg_device_number;
+  wire [2:0]       cfg_function_number;
+
+
   wire [131:0]     sdram_fifo_in;                   
   wire [131:0]     sdram_fifo_out;                   
   reg              sdram_fifo_rd;
@@ -428,7 +435,7 @@ ila_1 ila_1_inst (
           local_rd_active = 0;
           local_wr_active = 0;
 
-          if (!sdram_fifo_empty)
+          if (sdram_fifo_empty)
           begin
             sdram_fifo_rd = 1'b0;
           end
@@ -452,17 +459,25 @@ ila_1 ila_1_inst (
               pci_fifo_in[19:16] = 4'b0;                   // TH, AttrH, R
               pci_fifo_in[22:20] = req_header[0][22:20];   // TC
               pci_fifo_in[23] = 1'b0;                      // R
-              pci_fifo_in[24] = req_type[0];               // Copy locked bit
+              pci_fifo_in[24] = req_header[0][24];         // Copy locked bit
  
               if (req_len)
                   pci_fifo_in[31:25] = 6'b10_0101;         // Type + Fmt (data)
               else
                   pci_fifo_in[31:25] = 6'b00_0101;         // Type + Fmt (no data)
 
-              pci_fifo_in[38:32] = req_address[0][6:0];    // Lower address
-              pci_fifo_in[39] = 1'b0;                      // R
-              pci_fifo_in[47:40] = req_header[1][15:8];    // Tag
-              pci_fifo_in[63:48] = req_header[1][31:16];   // Requester ID
+              pci_fifo_in[63:56] = cfg_bus_number[7:0];    // completer ID
+              pci_fifo_in[55:51] = cfg_device_number[4:0];
+              pci_fifo_in[50:48] = cfg_function_number[2:0];
+              pci_fifo_in[47:45] = 3'b0;                   // completion code = 000
+              pci_fifo_in[44] = 1'b0;                      // BCM
+              pci_fifo_in[43:34] = req_len;                // byte count
+              pci_fifo_in[33:32] = 2'b0;                   // dword aligned
+
+              pci_fifo_in[95:80] = req_header[1][31:16];   // Requester ID
+              pci_fifo_in[79:72] = req_header[1][15:8];    // Tag
+              pci_fifo_in[71] = 1'b0;                      // R
+              pci_fifo_in[70:64] = req_address[0][6:0];    // Lower address
 
               local_rd_data[1:0] = 0;
               local_rd_data[18:2] = req_address[18:2];
