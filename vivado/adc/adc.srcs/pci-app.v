@@ -56,12 +56,12 @@ module pci_app (
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
 
-  wire [131:0]     pci_fifo_in;                   
-  wire [131:0]     pci_fifo_out;                   
-  reg              pci_fifo_rd;
-  wire             pci_fifo_wr;
-  wire             pci_fifo_full;
-  wire             pci_fifo_empty;
+  wire [131:0]     sdram_fifo_in;                   
+  wire [131:0]     sdram_fifo_out;                   
+  reg              sdram_fifo_rd;
+  wire             sdram_fifo_wr;
+  wire             sdram_fifo_full;
+  wire             sdram_fifo_empty;
 
   wire             pci_wr_active;
   wire [3:0]       pci_wr_index;
@@ -121,16 +121,16 @@ module pci_app (
   wire                                        sys_rst_n;
   wire                                        sys_clk;
 
-pci_fifo pci_fifo_inst (
+sdram_fifo sdram_fifo_inst (
   .clk(user_clk),                // input wire clk
   .srst(user_reset),             // input wire srst
-  .din(pci_fifo_in),             // input wire [31 : 0] din
-  .wr_en(pci_fifo_wr),           // input wire wr_en
-  .rd_en(pci_fifo_rd),           // input wire rd_en
-  .dout(pci_fifo_out),           // output wire [31 : 0] dout
+  .din(sdram_fifo_in),           // input wire [31 : 0] din
+  .wr_en(sdram_fifo_wr),         // input wire wr_en
+  .rd_en(sdram_fifo_rd),         // input wire rd_en
+  .dout(sdram_fifo_out),         // output wire [31 : 0] dout
   .full(),                       // output wire full
-  .almost_full(pci_fifo_full),   // output wire almost_full
-  .empty(pci_fifo_empty)         // output wire empty
+  .almost_full(sdram_fifo_full), // output wire almost_full
+  .empty(sdram_fifo_empty)       // output wire empty
 );
 
 sdram_wr_data sdram_wr_data_inst (
@@ -348,9 +348,9 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),  // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),   // I
     
-    .fifo_data( pci_fifo_in),
-    .fifo_wr( pci_fifo_wr ),
-    .fifo_full( pci_fifo_full ),
+    .fifo_data( sdram_fifo_in),
+    .fifo_wr( sdram_fifo_wr ),
+    .fifo_full( sdram_fifo_full ),
 
     .wr_active(pci_wr_active),
     .wr_index(pci_wr_index),
@@ -395,19 +395,23 @@ ila_1 ila_1_inst (
       begin
         if (user_reset)
         begin
-            local_rd_index[3:0] = -1;
+            local_rd_index[3:0] = 1'b1111;
         end
         else
         begin
           local_rd_active = 0;
 
-          if (!fifo_empty)
+          if (!sdram_fifo_empty)
           begin
-            fifo_rd = 1'b1;
+            sdram_fifo_rd = 1'b0;
+          end
+          else
+          begin
+            sdram_fifo_rd = 1'b1;
 
-            req_address[63:2] = fifo_out[63:2];
-            req_header[0][31:0] = fifo_out[95:64];
-            req_header[1][31:0] = fifo_out[127:96];
+            req_address[63:2] = sdram_fifo_out[63:2];
+            req_header[0][31:0] = sdram_fifo_out[95:64];
+            req_header[1][31:0] = sdram_fifo_out[127:96];
 
             req_len = req_header[0][9:0];
 
