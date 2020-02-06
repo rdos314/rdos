@@ -48,14 +48,16 @@ module pci_rx (
   reg [4:0]   data_pos;
   reg [4:0]   data_size;
   reg         header_done;
+  reg         pend_strad;
   reg [3:0]   used_index;
   
   reg [7:0]   req_type;
   reg         req_wr;
   reg [9:0]   req_len;
-  reg [31:0]  req_header  [1:0];
-  reg [31:0]  req_address [1:0];
-  reg [31:0]  req_data   [31:0];
+  reg [31:0]  req_header   [1:0];
+  reg [31:0]  req_address  [1:0];
+  reg [31:0]  req_data    [31:0];
+  reg [31:0]  strad_header [1:0];
 
   generate
     begin : pci_rx_128
@@ -71,12 +73,38 @@ module pci_rx (
           m_axis_rx_tready = 1'b0;
           rd_par_index = 4'b1111;
           wr_index = 4'b1111;
+          pend_strad = 1'b0;
         end
         else
         begin
           if (m_axis_rx_tvalid && m_axis_rx_tready)
           begin
-            if (m_axis_rx_tuser[14])  // is first part of TLP
+            if (pend_strad)
+            begin
+              req_header[1] =  strad_header[1];
+              req_header[0] =  strad_header[0];
+
+              req_type = req_header[0][31:24];
+              req_len = req_header[0][9:0];
+              req_wr = req_type[6];
+
+              if (req_wr)
+                data_size = req_len;
+              else
+                data_size = 0;
+              header_done = 1'b0;
+            end
+
+            if (m_axis_rx_tuser[14] && m_axis_rx_tuser[21])  // straddled
+            begin
+              strad_header[1] =  m_axis_rx_tdata[127:96];
+              strad_header[0] =  m_axis_rx_tdata[95:64];
+              pend_strad = 1'b1;
+            end
+            else
+              pend_strad = 1'b0;
+
+            if (m_axis_rx_tuser[14] && !pend_strad)  // is first part of TLP
             begin
               if (m_axis_rx_tuser[13])  // header in high part of data
               begin
@@ -129,7 +157,7 @@ module pci_rx (
             else
             begin
               if (header_done)
-              begin              
+              begin
                 if (data_size)
                 begin
                   req_data[data_pos][7:0] = m_axis_rx_tdata[31:24];
