@@ -1,9 +1,10 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sat Feb  1 20:24:00 2020
+// Date        : Sat Feb  1 20:23:55 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim C:/rdos/vivado/adc/adc.runs/pcie_synth_1/pcie_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top pcie -prefix
+//               pcie_ pcie_sim_netlist.v
 // Design      : pcie
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -11,913 +12,7 @@
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "pcie,pcie_pcie2_top,{}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) (* X_CORE_INFO = "pcie_pcie2_top,Vivado 2019.2" *) 
-(* NotValidForBitStream *)
-module pcie
-   (pci_exp_txp,
-    pci_exp_txn,
-    pci_exp_rxp,
-    pci_exp_rxn,
-    int_pclk_out_slave,
-    int_pipe_rxusrclk_out,
-    int_rxoutclk_out,
-    int_dclk_out,
-    int_mmcm_lock_out,
-    int_userclk1_out,
-    int_userclk2_out,
-    int_oobclk_out,
-    int_qplllock_out,
-    int_qplloutclk_out,
-    int_qplloutrefclk_out,
-    int_pclk_sel_slave,
-    user_clk_out,
-    user_reset_out,
-    user_lnk_up,
-    user_app_rdy,
-    s_axis_tx_tready,
-    s_axis_tx_tdata,
-    s_axis_tx_tkeep,
-    s_axis_tx_tlast,
-    s_axis_tx_tvalid,
-    s_axis_tx_tuser,
-    m_axis_rx_tdata,
-    m_axis_rx_tkeep,
-    m_axis_rx_tlast,
-    m_axis_rx_tvalid,
-    m_axis_rx_tready,
-    m_axis_rx_tuser,
-    cfg_err_ecrc,
-    cfg_err_ur,
-    cfg_err_cpl_timeout,
-    cfg_err_cpl_unexpect,
-    cfg_err_cpl_abort,
-    cfg_err_posted,
-    cfg_err_cor,
-    cfg_err_atomic_egress_blocked,
-    cfg_err_internal_cor,
-    cfg_err_malformed,
-    cfg_err_mc_blocked,
-    cfg_err_poisoned,
-    cfg_err_norecovery,
-    cfg_err_tlp_cpl_header,
-    cfg_err_cpl_rdy,
-    cfg_err_locked,
-    cfg_err_acs,
-    cfg_err_internal_uncor,
-    cfg_interrupt,
-    cfg_interrupt_rdy,
-    cfg_interrupt_assert,
-    cfg_interrupt_di,
-    cfg_interrupt_do,
-    cfg_interrupt_mmenable,
-    cfg_interrupt_msienable,
-    cfg_interrupt_msixenable,
-    cfg_interrupt_msixfm,
-    cfg_interrupt_stat,
-    cfg_pciecap_interrupt_msgnum,
-    pl_directed_link_change,
-    pl_directed_link_width,
-    pl_directed_link_speed,
-    pl_directed_link_auton,
-    pl_upstream_prefer_deemph,
-    pl_sel_lnk_rate,
-    pl_sel_lnk_width,
-    pl_ltssm_state,
-    pl_lane_reversal_mode,
-    pl_phy_lnk_up,
-    pl_tx_pm_state,
-    pl_rx_pm_state,
-    pl_link_upcfg_cap,
-    pl_link_gen2_cap,
-    pl_link_partner_gen2_supported,
-    pl_initial_link_width,
-    pl_directed_change_done,
-    pl_received_hot_rst,
-    pl_transmit_hot_rst,
-    pl_downstream_deemph_source,
-    cfg_err_aer_headerlog,
-    cfg_aer_interrupt_msgnum,
-    cfg_err_aer_headerlog_set,
-    cfg_aer_ecrc_check_en,
-    cfg_aer_ecrc_gen_en,
-    sys_clk,
-    sys_rst_n);
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt txp" *) output [7:0]pci_exp_txp;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt txn" *) output [7:0]pci_exp_txn;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt rxp" *) input [7:0]pci_exp_rxp;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt rxn" *) input [7:0]pci_exp_rxn;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk pclk_slave" *) output int_pclk_out_slave;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk pipe_rxusrclk" *) output int_pipe_rxusrclk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk rxoutclk" *) output [7:0]int_rxoutclk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk dclk" *) output int_dclk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk mmcm_lock" *) output int_mmcm_lock_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk usrclk1" *) output int_userclk1_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk usrclk2" *) output int_userclk2_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk oobclk" *) output int_oobclk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk qplllock" *) output [1:0]int_qplllock_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk qplloutclk" *) output [1:0]int_qplloutclk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk qplloutrefclk" *) output [1:0]int_qplloutrefclk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk pclk_sel_slave" *) input [7:0]int_pclk_sel_slave;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.user_clk_out CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.user_clk_out, ASSOCIATED_BUSIF m_axis_rx:s_axis_tx, FREQ_HZ 125000000, ASSOCIATED_RESET user_reset_out, PHASE 0.000, INSERT_VIP 0" *) output user_clk_out;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.user_reset_out RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST.user_reset_out, POLARITY ACTIVE_HIGH, INSERT_VIP 0" *) output user_reset_out;
-  output user_lnk_up;
-  output user_app_rdy;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TREADY" *) output s_axis_tx_tready;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TDATA" *) input [127:0]s_axis_tx_tdata;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TKEEP" *) input [15:0]s_axis_tx_tkeep;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TLAST" *) input s_axis_tx_tlast;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TVALID" *) input s_axis_tx_tvalid;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TUSER" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME s_axis_tx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 4, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *) input [3:0]s_axis_tx_tuser;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TDATA" *) output [127:0]m_axis_rx_tdata;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TKEEP" *) output [15:0]m_axis_rx_tkeep;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TLAST" *) output m_axis_rx_tlast;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TVALID" *) output m_axis_rx_tvalid;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TREADY" *) input m_axis_rx_tready;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TUSER" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME m_axis_rx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 22, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *) output [21:0]m_axis_rx_tuser;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err ecrc" *) input cfg_err_ecrc;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err ur" *) input cfg_err_ur;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_timeout" *) input cfg_err_cpl_timeout;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_unexpect" *) input cfg_err_cpl_unexpect;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_abort" *) input cfg_err_cpl_abort;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err posted" *) input cfg_err_posted;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cor" *) input cfg_err_cor;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err atomic_egress_blocked" *) input cfg_err_atomic_egress_blocked;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err internal_cor" *) input cfg_err_internal_cor;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err malformed" *) input cfg_err_malformed;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err mc_blocked" *) input cfg_err_mc_blocked;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err poisoned" *) input cfg_err_poisoned;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err norecovery" *) input cfg_err_norecovery;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err tlp_cpl_header" *) input [47:0]cfg_err_tlp_cpl_header;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_rdy" *) output cfg_err_cpl_rdy;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err locked" *) input cfg_err_locked;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err acs" *) input cfg_err_acs;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err internal_uncor" *) input cfg_err_internal_uncor;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt interrupt" *) input cfg_interrupt;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt rdy" *) output cfg_interrupt_rdy;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt assert" *) input cfg_interrupt_assert;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt write_data" *) input [7:0]cfg_interrupt_di;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt read_data" *) output [7:0]cfg_interrupt_do;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt mmenable" *) output [2:0]cfg_interrupt_mmenable;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt msienable" *) output cfg_interrupt_msienable;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt msixenable" *) output cfg_interrupt_msixenable;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt msixfm" *) output cfg_interrupt_msixfm;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt stat" *) input cfg_interrupt_stat;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt pciecap_interrupt_msgnum" *) input [4:0]cfg_pciecap_interrupt_msgnum;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_change" *) input [1:0]pl_directed_link_change;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_width" *) input [1:0]pl_directed_link_width;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_speed" *) input pl_directed_link_speed;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_auton" *) input pl_directed_link_auton;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl upstream_prefer_deemph" *) input pl_upstream_prefer_deemph;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl sel_lnk_rate" *) output pl_sel_lnk_rate;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl sel_lnk_width" *) output [1:0]pl_sel_lnk_width;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl ltssm_state" *) output [5:0]pl_ltssm_state;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl lane_reversal_mode" *) output [1:0]pl_lane_reversal_mode;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl phy_lnk_up" *) output pl_phy_lnk_up;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl tx_pm_state" *) output [2:0]pl_tx_pm_state;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl rx_pm_state" *) output [1:0]pl_rx_pm_state;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl link_upcfg_cap" *) output pl_link_upcfg_cap;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl link_gen2_cap" *) output pl_link_gen2_cap;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl link_partner_gen2_supported" *) output pl_link_partner_gen2_supported;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl initial_link_width" *) output [2:0]pl_initial_link_width;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_change_done" *) output pl_directed_change_done;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl received_hot_rst" *) output pl_received_hot_rst;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl transmit_hot_rst" *) input pl_transmit_hot_rst;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl downstream_deemph_source" *) input pl_downstream_deemph_source;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err err_aer_headerlog" *) input [127:0]cfg_err_aer_headerlog;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_interrupt_msgnum" *) input [4:0]cfg_aer_interrupt_msgnum;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err err_aer_headerlog_set" *) output cfg_err_aer_headerlog_set;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_ecrc_check_en" *) output cfg_aer_ecrc_check_en;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_ecrc_gen_en" *) output cfg_aer_ecrc_gen_en;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.sys_clk CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.sys_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *) input sys_clk;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.sys_rst_n RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST.sys_rst_n, POLARITY ACTIVE_LOW, INSERT_VIP 0" *) input sys_rst_n;
-
-  wire cfg_aer_ecrc_check_en;
-  wire cfg_aer_ecrc_gen_en;
-  wire [4:0]cfg_aer_interrupt_msgnum;
-  wire cfg_err_acs;
-  wire [127:0]cfg_err_aer_headerlog;
-  wire cfg_err_aer_headerlog_set;
-  wire cfg_err_atomic_egress_blocked;
-  wire cfg_err_cor;
-  wire cfg_err_cpl_abort;
-  wire cfg_err_cpl_rdy;
-  wire cfg_err_cpl_timeout;
-  wire cfg_err_cpl_unexpect;
-  wire cfg_err_ecrc;
-  wire cfg_err_internal_cor;
-  wire cfg_err_internal_uncor;
-  wire cfg_err_locked;
-  wire cfg_err_malformed;
-  wire cfg_err_mc_blocked;
-  wire cfg_err_norecovery;
-  wire cfg_err_poisoned;
-  wire cfg_err_posted;
-  wire [47:0]cfg_err_tlp_cpl_header;
-  wire cfg_err_ur;
-  wire cfg_interrupt;
-  wire cfg_interrupt_assert;
-  wire [7:0]cfg_interrupt_di;
-  wire [7:0]cfg_interrupt_do;
-  wire [2:0]cfg_interrupt_mmenable;
-  wire cfg_interrupt_msienable;
-  wire cfg_interrupt_msixenable;
-  wire cfg_interrupt_msixfm;
-  wire cfg_interrupt_rdy;
-  wire cfg_interrupt_stat;
-  wire [4:0]cfg_pciecap_interrupt_msgnum;
-  wire int_dclk_out;
-  wire int_mmcm_lock_out;
-  wire int_oobclk_out;
-  wire int_pclk_out_slave;
-  wire [7:0]int_pclk_sel_slave;
-  wire int_pipe_rxusrclk_out;
-  wire [1:0]int_qplllock_out;
-  wire [1:0]int_qplloutclk_out;
-  wire [1:0]int_qplloutrefclk_out;
-  wire [7:0]int_rxoutclk_out;
-  wire int_userclk1_out;
-  wire int_userclk2_out;
-  wire [127:0]m_axis_rx_tdata;
-  wire [15:0]m_axis_rx_tkeep;
-  wire m_axis_rx_tlast;
-  wire m_axis_rx_tready;
-  wire [21:0]m_axis_rx_tuser;
-  wire m_axis_rx_tvalid;
-  wire [7:0]pci_exp_rxn;
-  wire [7:0]pci_exp_rxp;
-  wire [7:0]pci_exp_txn;
-  wire [7:0]pci_exp_txp;
-  wire pl_directed_change_done;
-  wire pl_directed_link_auton;
-  wire [1:0]pl_directed_link_change;
-  wire pl_directed_link_speed;
-  wire [1:0]pl_directed_link_width;
-  wire pl_downstream_deemph_source;
-  wire [2:0]pl_initial_link_width;
-  wire [1:0]pl_lane_reversal_mode;
-  wire pl_link_gen2_cap;
-  wire pl_link_partner_gen2_supported;
-  wire pl_link_upcfg_cap;
-  wire [5:0]pl_ltssm_state;
-  wire pl_phy_lnk_up;
-  wire pl_received_hot_rst;
-  wire [1:0]pl_rx_pm_state;
-  wire pl_sel_lnk_rate;
-  wire [1:0]pl_sel_lnk_width;
-  wire pl_transmit_hot_rst;
-  wire [2:0]pl_tx_pm_state;
-  wire pl_upstream_prefer_deemph;
-  wire [127:0]s_axis_tx_tdata;
-  wire [15:0]s_axis_tx_tkeep;
-  wire s_axis_tx_tlast;
-  wire s_axis_tx_tready;
-  wire [3:0]s_axis_tx_tuser;
-  wire s_axis_tx_tvalid;
-  wire sys_clk;
-  wire sys_rst_n;
-  wire user_app_rdy;
-  wire user_clk_out;
-  wire user_lnk_up;
-  wire user_reset_out;
-  wire NLW_inst_cfg_aer_rooterr_corr_err_received_UNCONNECTED;
-  wire NLW_inst_cfg_aer_rooterr_corr_err_reporting_en_UNCONNECTED;
-  wire NLW_inst_cfg_aer_rooterr_fatal_err_received_UNCONNECTED;
-  wire NLW_inst_cfg_aer_rooterr_fatal_err_reporting_en_UNCONNECTED;
-  wire NLW_inst_cfg_aer_rooterr_non_fatal_err_received_UNCONNECTED;
-  wire NLW_inst_cfg_aer_rooterr_non_fatal_err_reporting_en_UNCONNECTED;
-  wire NLW_inst_cfg_bridge_serr_en_UNCONNECTED;
-  wire NLW_inst_cfg_mgmt_rd_wr_done_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_assert_int_a_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_assert_int_b_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_assert_int_c_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_assert_int_d_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_deassert_int_a_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_deassert_int_b_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_deassert_int_c_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_deassert_int_d_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_err_cor_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_err_fatal_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_err_non_fatal_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_pm_as_nak_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_pm_pme_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_pme_to_ack_UNCONNECTED;
-  wire NLW_inst_cfg_msg_received_setslotpowerlimit_UNCONNECTED;
-  wire NLW_inst_cfg_pmcsr_pme_en_UNCONNECTED;
-  wire NLW_inst_cfg_pmcsr_pme_status_UNCONNECTED;
-  wire NLW_inst_cfg_received_func_lvl_rst_UNCONNECTED;
-  wire NLW_inst_cfg_root_control_pme_int_en_UNCONNECTED;
-  wire NLW_inst_cfg_root_control_syserr_corr_err_en_UNCONNECTED;
-  wire NLW_inst_cfg_root_control_syserr_fatal_err_en_UNCONNECTED;
-  wire NLW_inst_cfg_root_control_syserr_non_fatal_err_en_UNCONNECTED;
-  wire NLW_inst_cfg_slot_control_electromech_il_ctl_pulse_UNCONNECTED;
-  wire NLW_inst_cfg_to_turnoff_UNCONNECTED;
-  wire NLW_inst_ext_ch_gt_drpclk_UNCONNECTED;
-  wire NLW_inst_pcie_drp_rdy_UNCONNECTED;
-  wire NLW_inst_pipe_gen3_out_UNCONNECTED;
-  wire NLW_inst_pipe_qrst_idle_UNCONNECTED;
-  wire NLW_inst_pipe_rate_idle_UNCONNECTED;
-  wire NLW_inst_pipe_rst_idle_UNCONNECTED;
-  wire NLW_inst_pipe_txoutclk_out_UNCONNECTED;
-  wire NLW_inst_qpll_drp_clk_UNCONNECTED;
-  wire NLW_inst_qpll_drp_gen3_UNCONNECTED;
-  wire NLW_inst_qpll_drp_ovrd_UNCONNECTED;
-  wire NLW_inst_qpll_drp_rst_n_UNCONNECTED;
-  wire NLW_inst_qpll_drp_start_UNCONNECTED;
-  wire NLW_inst_qpll_qplld_UNCONNECTED;
-  wire NLW_inst_startup_cfgclk_UNCONNECTED;
-  wire NLW_inst_startup_cfgmclk_UNCONNECTED;
-  wire NLW_inst_startup_eos_UNCONNECTED;
-  wire NLW_inst_startup_preq_UNCONNECTED;
-  wire NLW_inst_tx_cfg_req_UNCONNECTED;
-  wire NLW_inst_tx_err_drop_UNCONNECTED;
-  wire [7:0]NLW_inst_cfg_bus_number_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_command_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_dcommand_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_dcommand2_UNCONNECTED;
-  wire [4:0]NLW_inst_cfg_device_number_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_dstatus_UNCONNECTED;
-  wire [2:0]NLW_inst_cfg_function_number_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_lcommand_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_lstatus_UNCONNECTED;
-  wire [31:0]NLW_inst_cfg_mgmt_do_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_msg_data_UNCONNECTED;
-  wire [2:0]NLW_inst_cfg_pcie_link_state_UNCONNECTED;
-  wire [1:0]NLW_inst_cfg_pmcsr_powerstate_UNCONNECTED;
-  wire [15:0]NLW_inst_cfg_status_UNCONNECTED;
-  wire [6:0]NLW_inst_cfg_vc_tcvc_map_UNCONNECTED;
-  wire [11:0]NLW_inst_common_commands_out_UNCONNECTED;
-  wire [127:0]NLW_inst_ext_ch_gt_drpdo_UNCONNECTED;
-  wire [7:0]NLW_inst_ext_ch_gt_drprdy_UNCONNECTED;
-  wire [11:0]NLW_inst_fc_cpld_UNCONNECTED;
-  wire [7:0]NLW_inst_fc_cplh_UNCONNECTED;
-  wire [11:0]NLW_inst_fc_npd_UNCONNECTED;
-  wire [7:0]NLW_inst_fc_nph_UNCONNECTED;
-  wire [11:0]NLW_inst_fc_pd_UNCONNECTED;
-  wire [7:0]NLW_inst_fc_ph_UNCONNECTED;
-  wire [7:0]NLW_inst_gt_ch_drp_rdy_UNCONNECTED;
-  wire [31:0]NLW_inst_icap_o_UNCONNECTED;
-  wire [15:0]NLW_inst_pcie_drp_do_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_cpll_lock_UNCONNECTED;
-  wire [31:0]NLW_inst_pipe_debug_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_0_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_1_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_2_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_3_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_4_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_5_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_6_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_7_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_8_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_debug_9_UNCONNECTED;
-  wire [119:0]NLW_inst_pipe_dmonitorout_UNCONNECTED;
-  wire [55:0]NLW_inst_pipe_drp_fsm_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_eyescandataerror_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_pclk_sel_out_UNCONNECTED;
-  wire [1:0]NLW_inst_pipe_qpll_lock_UNCONNECTED;
-  wire [11:0]NLW_inst_pipe_qrst_fsm_UNCONNECTED;
-  wire [39:0]NLW_inst_pipe_rate_fsm_UNCONNECTED;
-  wire [4:0]NLW_inst_pipe_rst_fsm_UNCONNECTED;
-  wire [23:0]NLW_inst_pipe_rxbufstatus_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxcommadet_UNCONNECTED;
-  wire [63:0]NLW_inst_pipe_rxdisperr_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxdlysresetdone_UNCONNECTED;
-  wire [63:0]NLW_inst_pipe_rxnotintable_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxoutclk_out_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxphaligndone_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxpmaresetdone_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxprbserr_UNCONNECTED;
-  wire [23:0]NLW_inst_pipe_rxstatus_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_rxsyncdone_UNCONNECTED;
-  wire [55:0]NLW_inst_pipe_sync_fsm_rx_UNCONNECTED;
-  wire [47:0]NLW_inst_pipe_sync_fsm_tx_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_0_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_1_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_2_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_3_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_4_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_5_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_6_sigs_UNCONNECTED;
-  wire [24:0]NLW_inst_pipe_tx_7_sigs_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_txdlysresetdone_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_txphaligndone_UNCONNECTED;
-  wire [7:0]NLW_inst_pipe_txphinitdone_UNCONNECTED;
-  wire [1:0]NLW_inst_qpll_qpllreset_UNCONNECTED;
-  wire [5:0]NLW_inst_tx_buf_av_UNCONNECTED;
-
-  (* CFG_CTL_IF = "FALSE" *) 
-  (* CFG_FC_IF = "FALSE" *) 
-  (* CFG_MGMT_IF = "FALSE" *) 
-  (* CFG_STATUS_IF = "FALSE" *) 
-  (* CLASS_CODE = "098000" *) 
-  (* C_DATA_WIDTH = "128" *) 
-  (* DowngradeIPIdentifiedWarnings = "yes" *) 
-  (* ENABLE_JTAG_DBG = "FALSE" *) 
-  (* ERR_REPORTING_IF = "TRUE" *) 
-  (* EXT_CH_GT_DRP = "FALSE" *) 
-  (* EXT_PIPE_INTERFACE = "FALSE" *) 
-  (* EXT_STARTUP_PRIMITIVE = "FALSE" *) 
-  (* KEEP_WIDTH = "16" *) 
-  (* LINK_CAP_MAX_LINK_WIDTH = "8" *) 
-  (* PCIE_ASYNC_EN = "FALSE" *) 
-  (* PCIE_EXT_CLK = "FALSE" *) 
-  (* PCIE_EXT_GT_COMMON = "FALSE" *) 
-  (* PIPE_SIM = "FALSE" *) 
-  (* PL_INTERFACE = "TRUE" *) 
-  (* RCV_MSG_IF = "FALSE" *) 
-  (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
-  (* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) 
-  (* bar_0 = "FFF80000" *) 
-  (* bar_1 = "00000000" *) 
-  (* bar_2 = "00000000" *) 
-  (* bar_3 = "00000000" *) 
-  (* bar_4 = "00000000" *) 
-  (* bar_5 = "00000000" *) 
-  (* bram_lat = "2" *) 
-  (* c_aer_base_ptr = "000" *) 
-  (* c_aer_cap_ecrc_check_capable = "FALSE" *) 
-  (* c_aer_cap_ecrc_gen_capable = "FALSE" *) 
-  (* c_aer_cap_multiheader = "FALSE" *) 
-  (* c_aer_cap_nextptr = "000" *) 
-  (* c_aer_cap_on = "FALSE" *) 
-  (* c_aer_cap_optional_err_support = "000000" *) 
-  (* c_aer_cap_permit_rooterr_update = "FALSE" *) 
-  (* c_buf_opt_bma = "FALSE" *) 
-  (* c_component_name = "pcie" *) 
-  (* c_cpl_inf = "TRUE" *) 
-  (* c_cpl_infinite = "TRUE" *) 
-  (* c_cpl_timeout_disable_sup = "FALSE" *) 
-  (* c_cpl_timeout_range = "0010" *) 
-  (* c_cpl_timeout_ranges_sup = "2" *) 
-  (* c_d1_support = "FALSE" *) 
-  (* c_d2_support = "FALSE" *) 
-  (* c_de_emph = "FALSE" *) 
-  (* c_dev_cap2_ari_forwarding_supported = "FALSE" *) 
-  (* c_dev_cap2_atomicop32_completer_supported = "FALSE" *) 
-  (* c_dev_cap2_atomicop64_completer_supported = "FALSE" *) 
-  (* c_dev_cap2_atomicop_routing_supported = "FALSE" *) 
-  (* c_dev_cap2_cas128_completer_supported = "FALSE" *) 
-  (* c_dev_cap2_tph_completer_supported = "00" *) 
-  (* c_dev_control_ext_tag_default = "FALSE" *) 
-  (* c_dev_port_type = "0" *) 
-  (* c_dis_lane_reverse = "TRUE" *) 
-  (* c_disable_rx_poisoned_resp = "FALSE" *) 
-  (* c_disable_scrambling = "FALSE" *) 
-  (* c_disable_tx_aspm_l0s = "FALSE" *) 
-  (* c_dll_lnk_actv_cap = "FALSE" *) 
-  (* c_dsi_bool = "FALSE" *) 
-  (* c_dsn_base_ptr = "000" *) 
-  (* c_dsn_cap_enabled = "FALSE" *) 
-  (* c_dsn_next_ptr = "000" *) 
-  (* c_enable_msg_route = "00000000000" *) 
-  (* c_ep_l0s_accpt_lat = "0" *) 
-  (* c_ep_l1_accpt_lat = "7" *) 
-  (* c_ext_pci_cfg_space_addr = "3FF" *) 
-  (* c_external_clocking = "TRUE" *) 
-  (* c_fc_cpld = "370" *) 
-  (* c_fc_cplh = "72" *) 
-  (* c_fc_npd = "8" *) 
-  (* c_fc_nph = "4" *) 
-  (* c_fc_pd = "32" *) 
-  (* c_fc_ph = "4" *) 
-  (* c_gen1 = "1'b1" *) 
-  (* c_header_type = "00" *) 
-  (* c_hw_auton_spd_disable = "FALSE" *) 
-  (* c_int_width = "64" *) 
-  (* c_last_cfg_dw = "100" *) 
-  (* c_link_cap_aspm_optionality = "FALSE" *) 
-  (* c_ll_ack_timeout = "0000" *) 
-  (* c_ll_ack_timeout_enable = "FALSE" *) 
-  (* c_ll_ack_timeout_function = "0" *) 
-  (* c_ll_replay_timeout = "0000" *) 
-  (* c_ll_replay_timeout_enable = "FALSE" *) 
-  (* c_ll_replay_timeout_func = "1" *) 
-  (* c_lnk_bndwdt_notif = "FALSE" *) 
-  (* c_msi = "0" *) 
-  (* c_msi_64b_addr = "TRUE" *) 
-  (* c_msi_cap_on = "TRUE" *) 
-  (* c_msi_mult_msg_extn = "0" *) 
-  (* c_msi_per_vctr_mask_cap = "FALSE" *) 
-  (* c_msix_cap_on = "FALSE" *) 
-  (* c_msix_next_ptr = "00" *) 
-  (* c_msix_pba_bir = "0" *) 
-  (* c_msix_pba_offset = "0" *) 
-  (* c_msix_table_bir = "0" *) 
-  (* c_msix_table_offset = "0" *) 
-  (* c_msix_table_size = "000" *) 
-  (* c_pci_cfg_space_addr = "3F" *) 
-  (* c_pcie_blk_locn = "0" *) 
-  (* c_pcie_cap_next_ptr = "00" *) 
-  (* c_pcie_cap_slot_implemented = "FALSE" *) 
-  (* c_pcie_dbg_ports = "FALSE" *) 
-  (* c_pcie_fast_config = "0" *) 
-  (* c_perf_level_high = "TRUE" *) 
-  (* c_phantom_functions = "0" *) 
-  (* c_pm_cap_next_ptr = "48" *) 
-  (* c_pme_support = "01" *) 
-  (* c_rbar_base_ptr = "000" *) 
-  (* c_rbar_cap_control_encodedbar0 = "00" *) 
-  (* c_rbar_cap_control_encodedbar1 = "00" *) 
-  (* c_rbar_cap_control_encodedbar2 = "00" *) 
-  (* c_rbar_cap_control_encodedbar3 = "00" *) 
-  (* c_rbar_cap_control_encodedbar4 = "00" *) 
-  (* c_rbar_cap_control_encodedbar5 = "00" *) 
-  (* c_rbar_cap_index0 = "0" *) 
-  (* c_rbar_cap_index1 = "0" *) 
-  (* c_rbar_cap_index2 = "0" *) 
-  (* c_rbar_cap_index3 = "0" *) 
-  (* c_rbar_cap_index4 = "0" *) 
-  (* c_rbar_cap_index5 = "0" *) 
-  (* c_rbar_cap_nextptr = "000" *) 
-  (* c_rbar_cap_on = "FALSE" *) 
-  (* c_rbar_cap_sup0 = "00001" *) 
-  (* c_rbar_cap_sup1 = "00001" *) 
-  (* c_rbar_cap_sup2 = "00001" *) 
-  (* c_rbar_cap_sup3 = "00001" *) 
-  (* c_rbar_cap_sup4 = "00001" *) 
-  (* c_rbar_cap_sup5 = "00001" *) 
-  (* c_rbar_num = "0" *) 
-  (* c_rcb = "0" *) 
-  (* c_recrc_check = "0" *) 
-  (* c_recrc_check_trim = "FALSE" *) 
-  (* c_rev_gt_order = "FALSE" *) 
-  (* c_root_cap_crs = "FALSE" *) 
-  (* c_rx_raddr_lat = "1" *) 
-  (* c_rx_ram_limit = "3FF" *) 
-  (* c_rx_rdata_lat = "3" *) 
-  (* c_rx_write_lat = "1" *) 
-  (* c_silicon_rev = "2" *) 
-  (* c_slot_cap_attn_butn = "FALSE" *) 
-  (* c_slot_cap_attn_ind = "FALSE" *) 
-  (* c_slot_cap_elec_interlock = "FALSE" *) 
-  (* c_slot_cap_hotplug_cap = "FALSE" *) 
-  (* c_slot_cap_hotplug_surprise = "FALSE" *) 
-  (* c_slot_cap_mrl = "FALSE" *) 
-  (* c_slot_cap_no_cmd_comp_sup = "FALSE" *) 
-  (* c_slot_cap_physical_slot_num = "0" *) 
-  (* c_slot_cap_pwr_ctrl = "FALSE" *) 
-  (* c_slot_cap_pwr_ind = "FALSE" *) 
-  (* c_slot_cap_pwr_limit_scale = "0" *) 
-  (* c_slot_cap_pwr_limit_value = "0" *) 
-  (* c_surprise_dn_err_cap = "FALSE" *) 
-  (* c_trgt_lnk_spd = "2" *) 
-  (* c_trn_np_fc = "TRUE" *) 
-  (* c_tx_last_tlp = "31" *) 
-  (* c_tx_raddr_lat = "1" *) 
-  (* c_tx_rdata_lat = "3" *) 
-  (* c_tx_write_lat = "1" *) 
-  (* c_upconfig_capable = "TRUE" *) 
-  (* c_upstream_facing = "TRUE" *) 
-  (* c_ur_atomic = "FALSE" *) 
-  (* c_ur_inv_req = "FALSE" *) 
-  (* c_ur_prs_response = "FALSE" *) 
-  (* c_vc_base_ptr = "000" *) 
-  (* c_vc_cap_enabled = "FALSE" *) 
-  (* c_vc_cap_reject_snoop = "FALSE" *) 
-  (* c_vc_next_ptr = "000" *) 
-  (* c_vsec_base_ptr = "000" *) 
-  (* c_vsec_cap_enabled = "FALSE" *) 
-  (* c_vsec_next_ptr = "000" *) 
-  (* c_xlnx_ref_board = "KC705_REVC" *) 
-  (* cap_ver = "2" *) 
-  (* cardbus_cis_ptr = "00000000" *) 
-  (* cmps = "0" *) 
-  (* con_scl_fctr_d0_state = "0" *) 
-  (* con_scl_fctr_d1_state = "0" *) 
-  (* con_scl_fctr_d2_state = "0" *) 
-  (* con_scl_fctr_d3_state = "0" *) 
-  (* cost_table = "1" *) 
-  (* d1_sup = "0" *) 
-  (* d2_sup = "0" *) 
-  (* dev_id = "AACC" *) 
-  (* dev_port_type = "0000" *) 
-  (* dis_scl_fctr_d0_state = "0" *) 
-  (* dis_scl_fctr_d1_state = "0" *) 
-  (* dis_scl_fctr_d2_state = "0" *) 
-  (* dis_scl_fctr_d3_state = "0" *) 
-  (* dsi = "0" *) 
-  (* ep_l0s_accpt_lat = "000" *) 
-  (* ep_l1_accpt_lat = "111" *) 
-  (* ext_tag_fld_sup = "FALSE" *) 
-  (* int_pin = "0" *) 
-  (* intx = "FALSE" *) 
-  (* max_lnk_spd = "2" *) 
-  (* max_lnk_wdt = "001000" *) 
-  (* mps = "000" *) 
-  (* no_soft_rst = "TRUE" *) 
-  (* pci_exp_int_freq = "3" *) 
-  (* pci_exp_ref_freq = "0" *) 
-  (* phantm_func_sup = "00" *) 
-  (* pme_sup = "01" *) 
-  (* pwr_con_d0_state = "00" *) 
-  (* pwr_con_d1_state = "00" *) 
-  (* pwr_con_d2_state = "00" *) 
-  (* pwr_con_d3_state = "00" *) 
-  (* pwr_dis_d0_state = "00" *) 
-  (* pwr_dis_d1_state = "00" *) 
-  (* pwr_dis_d2_state = "00" *) 
-  (* pwr_dis_d3_state = "00" *) 
-  (* rev_id = "00" *) 
-  (* slot_clk = "TRUE" *) 
-  (* subsys_id = "0007" *) 
-  (* subsys_ven_id = "0" *) 
-  (* ven_id = "10EE" *) 
-  (* xrom_bar = "00000000" *) 
-  pcie_pcie_pcie2_top inst
-       (.cfg_aer_ecrc_check_en(cfg_aer_ecrc_check_en),
-        .cfg_aer_ecrc_gen_en(cfg_aer_ecrc_gen_en),
-        .cfg_aer_interrupt_msgnum(cfg_aer_interrupt_msgnum),
-        .cfg_aer_rooterr_corr_err_received(NLW_inst_cfg_aer_rooterr_corr_err_received_UNCONNECTED),
-        .cfg_aer_rooterr_corr_err_reporting_en(NLW_inst_cfg_aer_rooterr_corr_err_reporting_en_UNCONNECTED),
-        .cfg_aer_rooterr_fatal_err_received(NLW_inst_cfg_aer_rooterr_fatal_err_received_UNCONNECTED),
-        .cfg_aer_rooterr_fatal_err_reporting_en(NLW_inst_cfg_aer_rooterr_fatal_err_reporting_en_UNCONNECTED),
-        .cfg_aer_rooterr_non_fatal_err_received(NLW_inst_cfg_aer_rooterr_non_fatal_err_received_UNCONNECTED),
-        .cfg_aer_rooterr_non_fatal_err_reporting_en(NLW_inst_cfg_aer_rooterr_non_fatal_err_reporting_en_UNCONNECTED),
-        .cfg_bridge_serr_en(NLW_inst_cfg_bridge_serr_en_UNCONNECTED),
-        .cfg_bus_number(NLW_inst_cfg_bus_number_UNCONNECTED[7:0]),
-        .cfg_command(NLW_inst_cfg_command_UNCONNECTED[15:0]),
-        .cfg_dcommand(NLW_inst_cfg_dcommand_UNCONNECTED[15:0]),
-        .cfg_dcommand2(NLW_inst_cfg_dcommand2_UNCONNECTED[15:0]),
-        .cfg_device_number(NLW_inst_cfg_device_number_UNCONNECTED[4:0]),
-        .cfg_ds_bus_number({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .cfg_ds_device_number({1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .cfg_ds_function_number({1'b0,1'b0,1'b0}),
-        .cfg_dsn({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .cfg_dstatus(NLW_inst_cfg_dstatus_UNCONNECTED[15:0]),
-        .cfg_err_acs(cfg_err_acs),
-        .cfg_err_aer_headerlog(cfg_err_aer_headerlog),
-        .cfg_err_aer_headerlog_set(cfg_err_aer_headerlog_set),
-        .cfg_err_atomic_egress_blocked(cfg_err_atomic_egress_blocked),
-        .cfg_err_cor(cfg_err_cor),
-        .cfg_err_cpl_abort(cfg_err_cpl_abort),
-        .cfg_err_cpl_rdy(cfg_err_cpl_rdy),
-        .cfg_err_cpl_timeout(cfg_err_cpl_timeout),
-        .cfg_err_cpl_unexpect(cfg_err_cpl_unexpect),
-        .cfg_err_ecrc(cfg_err_ecrc),
-        .cfg_err_internal_cor(cfg_err_internal_cor),
-        .cfg_err_internal_uncor(cfg_err_internal_uncor),
-        .cfg_err_locked(cfg_err_locked),
-        .cfg_err_malformed(cfg_err_malformed),
-        .cfg_err_mc_blocked(cfg_err_mc_blocked),
-        .cfg_err_norecovery(cfg_err_norecovery),
-        .cfg_err_poisoned(cfg_err_poisoned),
-        .cfg_err_posted(cfg_err_posted),
-        .cfg_err_tlp_cpl_header(cfg_err_tlp_cpl_header),
-        .cfg_err_ur(cfg_err_ur),
-        .cfg_function_number(NLW_inst_cfg_function_number_UNCONNECTED[2:0]),
-        .cfg_interrupt(cfg_interrupt),
-        .cfg_interrupt_assert(cfg_interrupt_assert),
-        .cfg_interrupt_di(cfg_interrupt_di),
-        .cfg_interrupt_do(cfg_interrupt_do),
-        .cfg_interrupt_mmenable(cfg_interrupt_mmenable),
-        .cfg_interrupt_msienable(cfg_interrupt_msienable),
-        .cfg_interrupt_msixenable(cfg_interrupt_msixenable),
-        .cfg_interrupt_msixfm(cfg_interrupt_msixfm),
-        .cfg_interrupt_rdy(cfg_interrupt_rdy),
-        .cfg_interrupt_stat(cfg_interrupt_stat),
-        .cfg_lcommand(NLW_inst_cfg_lcommand_UNCONNECTED[15:0]),
-        .cfg_lstatus(NLW_inst_cfg_lstatus_UNCONNECTED[15:0]),
-        .cfg_mgmt_byte_en({1'b0,1'b0,1'b0,1'b0}),
-        .cfg_mgmt_di({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .cfg_mgmt_do(NLW_inst_cfg_mgmt_do_UNCONNECTED[31:0]),
-        .cfg_mgmt_dwaddr({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .cfg_mgmt_rd_en(1'b0),
-        .cfg_mgmt_rd_wr_done(NLW_inst_cfg_mgmt_rd_wr_done_UNCONNECTED),
-        .cfg_mgmt_wr_en(1'b0),
-        .cfg_mgmt_wr_readonly(1'b0),
-        .cfg_mgmt_wr_rw1c_as_rw(1'b0),
-        .cfg_msg_data(NLW_inst_cfg_msg_data_UNCONNECTED[15:0]),
-        .cfg_msg_received(NLW_inst_cfg_msg_received_UNCONNECTED),
-        .cfg_msg_received_assert_int_a(NLW_inst_cfg_msg_received_assert_int_a_UNCONNECTED),
-        .cfg_msg_received_assert_int_b(NLW_inst_cfg_msg_received_assert_int_b_UNCONNECTED),
-        .cfg_msg_received_assert_int_c(NLW_inst_cfg_msg_received_assert_int_c_UNCONNECTED),
-        .cfg_msg_received_assert_int_d(NLW_inst_cfg_msg_received_assert_int_d_UNCONNECTED),
-        .cfg_msg_received_deassert_int_a(NLW_inst_cfg_msg_received_deassert_int_a_UNCONNECTED),
-        .cfg_msg_received_deassert_int_b(NLW_inst_cfg_msg_received_deassert_int_b_UNCONNECTED),
-        .cfg_msg_received_deassert_int_c(NLW_inst_cfg_msg_received_deassert_int_c_UNCONNECTED),
-        .cfg_msg_received_deassert_int_d(NLW_inst_cfg_msg_received_deassert_int_d_UNCONNECTED),
-        .cfg_msg_received_err_cor(NLW_inst_cfg_msg_received_err_cor_UNCONNECTED),
-        .cfg_msg_received_err_fatal(NLW_inst_cfg_msg_received_err_fatal_UNCONNECTED),
-        .cfg_msg_received_err_non_fatal(NLW_inst_cfg_msg_received_err_non_fatal_UNCONNECTED),
-        .cfg_msg_received_pm_as_nak(NLW_inst_cfg_msg_received_pm_as_nak_UNCONNECTED),
-        .cfg_msg_received_pm_pme(NLW_inst_cfg_msg_received_pm_pme_UNCONNECTED),
-        .cfg_msg_received_pme_to_ack(NLW_inst_cfg_msg_received_pme_to_ack_UNCONNECTED),
-        .cfg_msg_received_setslotpowerlimit(NLW_inst_cfg_msg_received_setslotpowerlimit_UNCONNECTED),
-        .cfg_pcie_link_state(NLW_inst_cfg_pcie_link_state_UNCONNECTED[2:0]),
-        .cfg_pciecap_interrupt_msgnum(cfg_pciecap_interrupt_msgnum),
-        .cfg_pm_force_state({1'b0,1'b0}),
-        .cfg_pm_force_state_en(1'b0),
-        .cfg_pm_halt_aspm_l0s(1'b0),
-        .cfg_pm_halt_aspm_l1(1'b0),
-        .cfg_pm_send_pme_to(1'b0),
-        .cfg_pm_wake(1'b0),
-        .cfg_pmcsr_pme_en(NLW_inst_cfg_pmcsr_pme_en_UNCONNECTED),
-        .cfg_pmcsr_pme_status(NLW_inst_cfg_pmcsr_pme_status_UNCONNECTED),
-        .cfg_pmcsr_powerstate(NLW_inst_cfg_pmcsr_powerstate_UNCONNECTED[1:0]),
-        .cfg_received_func_lvl_rst(NLW_inst_cfg_received_func_lvl_rst_UNCONNECTED),
-        .cfg_root_control_pme_int_en(NLW_inst_cfg_root_control_pme_int_en_UNCONNECTED),
-        .cfg_root_control_syserr_corr_err_en(NLW_inst_cfg_root_control_syserr_corr_err_en_UNCONNECTED),
-        .cfg_root_control_syserr_fatal_err_en(NLW_inst_cfg_root_control_syserr_fatal_err_en_UNCONNECTED),
-        .cfg_root_control_syserr_non_fatal_err_en(NLW_inst_cfg_root_control_syserr_non_fatal_err_en_UNCONNECTED),
-        .cfg_slot_control_electromech_il_ctl_pulse(NLW_inst_cfg_slot_control_electromech_il_ctl_pulse_UNCONNECTED),
-        .cfg_status(NLW_inst_cfg_status_UNCONNECTED[15:0]),
-        .cfg_to_turnoff(NLW_inst_cfg_to_turnoff_UNCONNECTED),
-        .cfg_trn_pending(1'b0),
-        .cfg_turnoff_ok(1'b0),
-        .cfg_vc_tcvc_map(NLW_inst_cfg_vc_tcvc_map_UNCONNECTED[6:0]),
-        .common_commands_in({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .common_commands_out(NLW_inst_common_commands_out_UNCONNECTED[11:0]),
-        .ext_ch_gt_drpaddr({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .ext_ch_gt_drpclk(NLW_inst_ext_ch_gt_drpclk_UNCONNECTED),
-        .ext_ch_gt_drpdi({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .ext_ch_gt_drpdo(NLW_inst_ext_ch_gt_drpdo_UNCONNECTED[127:0]),
-        .ext_ch_gt_drpen({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .ext_ch_gt_drprdy(NLW_inst_ext_ch_gt_drprdy_UNCONNECTED[7:0]),
-        .ext_ch_gt_drpwe({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .fc_cpld(NLW_inst_fc_cpld_UNCONNECTED[11:0]),
-        .fc_cplh(NLW_inst_fc_cplh_UNCONNECTED[7:0]),
-        .fc_npd(NLW_inst_fc_npd_UNCONNECTED[11:0]),
-        .fc_nph(NLW_inst_fc_nph_UNCONNECTED[7:0]),
-        .fc_pd(NLW_inst_fc_pd_UNCONNECTED[11:0]),
-        .fc_ph(NLW_inst_fc_ph_UNCONNECTED[7:0]),
-        .fc_sel({1'b0,1'b0,1'b0}),
-        .gt_ch_drp_rdy(NLW_inst_gt_ch_drp_rdy_UNCONNECTED[7:0]),
-        .icap_clk(1'b0),
-        .icap_csib(1'b0),
-        .icap_i({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .icap_o(NLW_inst_icap_o_UNCONNECTED[31:0]),
-        .icap_rdwrb(1'b0),
-        .int_dclk_out(int_dclk_out),
-        .int_mmcm_lock_out(int_mmcm_lock_out),
-        .int_oobclk_out(int_oobclk_out),
-        .int_pclk_out_slave(int_pclk_out_slave),
-        .int_pclk_sel_slave(int_pclk_sel_slave),
-        .int_pipe_rxusrclk_out(int_pipe_rxusrclk_out),
-        .int_qplllock_out(int_qplllock_out),
-        .int_qplloutclk_out(int_qplloutclk_out),
-        .int_qplloutrefclk_out(int_qplloutrefclk_out),
-        .int_rxoutclk_out(int_rxoutclk_out),
-        .int_userclk1_out(int_userclk1_out),
-        .int_userclk2_out(int_userclk2_out),
-        .m_axis_rx_tdata(m_axis_rx_tdata),
-        .m_axis_rx_tkeep(m_axis_rx_tkeep),
-        .m_axis_rx_tlast(m_axis_rx_tlast),
-        .m_axis_rx_tready(m_axis_rx_tready),
-        .m_axis_rx_tuser(m_axis_rx_tuser),
-        .m_axis_rx_tvalid(m_axis_rx_tvalid),
-        .pci_exp_rxn(pci_exp_rxn),
-        .pci_exp_rxp(pci_exp_rxp),
-        .pci_exp_txn(pci_exp_txn),
-        .pci_exp_txp(pci_exp_txp),
-        .pcie_drp_addr({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pcie_drp_clk(1'b1),
-        .pcie_drp_di({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pcie_drp_do(NLW_inst_pcie_drp_do_UNCONNECTED[15:0]),
-        .pcie_drp_en(1'b0),
-        .pcie_drp_rdy(NLW_inst_pcie_drp_rdy_UNCONNECTED),
-        .pcie_drp_we(1'b0),
-        .pipe_cpll_lock(NLW_inst_pipe_cpll_lock_UNCONNECTED[7:0]),
-        .pipe_dclk_in(1'b0),
-        .pipe_debug(NLW_inst_pipe_debug_UNCONNECTED[31:0]),
-        .pipe_debug_0(NLW_inst_pipe_debug_0_UNCONNECTED[7:0]),
-        .pipe_debug_1(NLW_inst_pipe_debug_1_UNCONNECTED[7:0]),
-        .pipe_debug_2(NLW_inst_pipe_debug_2_UNCONNECTED[7:0]),
-        .pipe_debug_3(NLW_inst_pipe_debug_3_UNCONNECTED[7:0]),
-        .pipe_debug_4(NLW_inst_pipe_debug_4_UNCONNECTED[7:0]),
-        .pipe_debug_5(NLW_inst_pipe_debug_5_UNCONNECTED[7:0]),
-        .pipe_debug_6(NLW_inst_pipe_debug_6_UNCONNECTED[7:0]),
-        .pipe_debug_7(NLW_inst_pipe_debug_7_UNCONNECTED[7:0]),
-        .pipe_debug_8(NLW_inst_pipe_debug_8_UNCONNECTED[7:0]),
-        .pipe_debug_9(NLW_inst_pipe_debug_9_UNCONNECTED[7:0]),
-        .pipe_dmonitorout(NLW_inst_pipe_dmonitorout_UNCONNECTED[119:0]),
-        .pipe_drp_fsm(NLW_inst_pipe_drp_fsm_UNCONNECTED[55:0]),
-        .pipe_eyescandataerror(NLW_inst_pipe_eyescandataerror_UNCONNECTED[7:0]),
-        .pipe_gen3_out(NLW_inst_pipe_gen3_out_UNCONNECTED),
-        .pipe_loopback({1'b0,1'b0,1'b0}),
-        .pipe_mmcm_lock_in(1'b1),
-        .pipe_mmcm_rst_n(1'b1),
-        .pipe_oobclk_in(1'b0),
-        .pipe_pclk_in(1'b0),
-        .pipe_pclk_sel_out(NLW_inst_pipe_pclk_sel_out_UNCONNECTED[7:0]),
-        .pipe_qpll_lock(NLW_inst_pipe_qpll_lock_UNCONNECTED[1:0]),
-        .pipe_qrst_fsm(NLW_inst_pipe_qrst_fsm_UNCONNECTED[11:0]),
-        .pipe_qrst_idle(NLW_inst_pipe_qrst_idle_UNCONNECTED),
-        .pipe_rate_fsm(NLW_inst_pipe_rate_fsm_UNCONNECTED[39:0]),
-        .pipe_rate_idle(NLW_inst_pipe_rate_idle_UNCONNECTED),
-        .pipe_rst_fsm(NLW_inst_pipe_rst_fsm_UNCONNECTED[4:0]),
-        .pipe_rst_idle(NLW_inst_pipe_rst_idle_UNCONNECTED),
-        .pipe_rx_0_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_1_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_2_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_3_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_4_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_5_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_6_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rx_7_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rxbufstatus(NLW_inst_pipe_rxbufstatus_UNCONNECTED[23:0]),
-        .pipe_rxcommadet(NLW_inst_pipe_rxcommadet_UNCONNECTED[7:0]),
-        .pipe_rxdisperr(NLW_inst_pipe_rxdisperr_UNCONNECTED[63:0]),
-        .pipe_rxdlysresetdone(NLW_inst_pipe_rxdlysresetdone_UNCONNECTED[7:0]),
-        .pipe_rxnotintable(NLW_inst_pipe_rxnotintable_UNCONNECTED[63:0]),
-        .pipe_rxoutclk_in({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_rxoutclk_out(NLW_inst_pipe_rxoutclk_out_UNCONNECTED[7:0]),
-        .pipe_rxphaligndone(NLW_inst_pipe_rxphaligndone_UNCONNECTED[7:0]),
-        .pipe_rxpmaresetdone(NLW_inst_pipe_rxpmaresetdone_UNCONNECTED[7:0]),
-        .pipe_rxprbscntreset(1'b0),
-        .pipe_rxprbserr(NLW_inst_pipe_rxprbserr_UNCONNECTED[7:0]),
-        .pipe_rxprbssel({1'b0,1'b0,1'b0}),
-        .pipe_rxstatus(NLW_inst_pipe_rxstatus_UNCONNECTED[23:0]),
-        .pipe_rxsyncdone(NLW_inst_pipe_rxsyncdone_UNCONNECTED[7:0]),
-        .pipe_rxusrclk_in(1'b0),
-        .pipe_sync_fsm_rx(NLW_inst_pipe_sync_fsm_rx_UNCONNECTED[55:0]),
-        .pipe_sync_fsm_tx(NLW_inst_pipe_sync_fsm_tx_UNCONNECTED[47:0]),
-        .pipe_tx_0_sigs(NLW_inst_pipe_tx_0_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_1_sigs(NLW_inst_pipe_tx_1_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_2_sigs(NLW_inst_pipe_tx_2_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_3_sigs(NLW_inst_pipe_tx_3_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_4_sigs(NLW_inst_pipe_tx_4_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_5_sigs(NLW_inst_pipe_tx_5_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_6_sigs(NLW_inst_pipe_tx_6_sigs_UNCONNECTED[24:0]),
-        .pipe_tx_7_sigs(NLW_inst_pipe_tx_7_sigs_UNCONNECTED[24:0]),
-        .pipe_txdlysresetdone(NLW_inst_pipe_txdlysresetdone_UNCONNECTED[7:0]),
-        .pipe_txinhibit({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .pipe_txoutclk_out(NLW_inst_pipe_txoutclk_out_UNCONNECTED),
-        .pipe_txphaligndone(NLW_inst_pipe_txphaligndone_UNCONNECTED[7:0]),
-        .pipe_txphinitdone(NLW_inst_pipe_txphinitdone_UNCONNECTED[7:0]),
-        .pipe_txprbsforceerr(1'b0),
-        .pipe_txprbssel({1'b0,1'b0,1'b0}),
-        .pipe_userclk1_in(1'b1),
-        .pipe_userclk2_in(1'b0),
-        .pl_directed_change_done(pl_directed_change_done),
-        .pl_directed_link_auton(pl_directed_link_auton),
-        .pl_directed_link_change(pl_directed_link_change),
-        .pl_directed_link_speed(pl_directed_link_speed),
-        .pl_directed_link_width(pl_directed_link_width),
-        .pl_downstream_deemph_source(pl_downstream_deemph_source),
-        .pl_initial_link_width(pl_initial_link_width),
-        .pl_lane_reversal_mode(pl_lane_reversal_mode),
-        .pl_link_gen2_cap(pl_link_gen2_cap),
-        .pl_link_partner_gen2_supported(pl_link_partner_gen2_supported),
-        .pl_link_upcfg_cap(pl_link_upcfg_cap),
-        .pl_ltssm_state(pl_ltssm_state),
-        .pl_phy_lnk_up(pl_phy_lnk_up),
-        .pl_received_hot_rst(pl_received_hot_rst),
-        .pl_rx_pm_state(pl_rx_pm_state),
-        .pl_sel_lnk_rate(pl_sel_lnk_rate),
-        .pl_sel_lnk_width(pl_sel_lnk_width),
-        .pl_transmit_hot_rst(pl_transmit_hot_rst),
-        .pl_tx_pm_state(pl_tx_pm_state),
-        .pl_upstream_prefer_deemph(pl_upstream_prefer_deemph),
-        .qpll_drp_clk(NLW_inst_qpll_drp_clk_UNCONNECTED),
-        .qpll_drp_crscode({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .qpll_drp_done({1'b0,1'b0}),
-        .qpll_drp_fsm({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .qpll_drp_gen3(NLW_inst_qpll_drp_gen3_UNCONNECTED),
-        .qpll_drp_ovrd(NLW_inst_qpll_drp_ovrd_UNCONNECTED),
-        .qpll_drp_reset({1'b0,1'b0}),
-        .qpll_drp_rst_n(NLW_inst_qpll_drp_rst_n_UNCONNECTED),
-        .qpll_drp_start(NLW_inst_qpll_drp_start_UNCONNECTED),
-        .qpll_qplld(NLW_inst_qpll_qplld_UNCONNECTED),
-        .qpll_qplllock({1'b0,1'b0}),
-        .qpll_qplloutclk({1'b0,1'b0}),
-        .qpll_qplloutrefclk({1'b0,1'b0}),
-        .qpll_qpllreset(NLW_inst_qpll_qpllreset_UNCONNECTED[1:0]),
-        .rx_np_ok(1'b1),
-        .rx_np_req(1'b1),
-        .s_axis_tx_tdata(s_axis_tx_tdata),
-        .s_axis_tx_tkeep(s_axis_tx_tkeep),
-        .s_axis_tx_tlast(s_axis_tx_tlast),
-        .s_axis_tx_tready(s_axis_tx_tready),
-        .s_axis_tx_tuser(s_axis_tx_tuser),
-        .s_axis_tx_tvalid(s_axis_tx_tvalid),
-        .startup_cfgclk(NLW_inst_startup_cfgclk_UNCONNECTED),
-        .startup_cfgmclk(NLW_inst_startup_cfgmclk_UNCONNECTED),
-        .startup_clk(1'b0),
-        .startup_eos(NLW_inst_startup_eos_UNCONNECTED),
-        .startup_eos_in(1'b0),
-        .startup_gsr(1'b0),
-        .startup_gts(1'b0),
-        .startup_keyclearb(1'b1),
-        .startup_pack(1'b0),
-        .startup_preq(NLW_inst_startup_preq_UNCONNECTED),
-        .startup_usrcclko(1'b1),
-        .startup_usrcclkts(1'b0),
-        .startup_usrdoneo(1'b0),
-        .startup_usrdonets(1'b1),
-        .sys_clk(sys_clk),
-        .sys_rst_n(sys_rst_n),
-        .tx_buf_av(NLW_inst_tx_buf_av_UNCONNECTED[5:0]),
-        .tx_cfg_gnt(1'b1),
-        .tx_cfg_req(NLW_inst_tx_cfg_req_UNCONNECTED),
-        .tx_err_drop(NLW_inst_tx_err_drop_UNCONNECTED),
-        .user_app_rdy(user_app_rdy),
-        .user_clk_out(user_clk_out),
-        .user_lnk_up(user_lnk_up),
-        .user_reset_out(user_reset_out));
-endmodule
-
-(* ORIG_REF_NAME = "BRAM_SDP_MACRO" *) 
-module pcie_BRAM_SDP_MACRO
+module pcie_BRAM_SDP_MACRO_viv_
    (D,
     CLK_USERCLK1,
     \raddr_lat_2.ren_q ,
@@ -1898,7 +993,911 @@ module pcie_BRAM_SDP_MACRO_9
         .WEBWE({1'b1,1'b1,1'b1,1'b1,1'b1,1'b1,1'b1,1'b1}));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_rx" *) 
+(* CHECK_LICENSE_TYPE = "pcie,pcie_pcie2_top,{}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) (* X_CORE_INFO = "pcie_pcie2_top,Vivado 2019.2" *) 
+(* NotValidForBitStream *)
+module pcie
+   (pci_exp_txp,
+    pci_exp_txn,
+    pci_exp_rxp,
+    pci_exp_rxn,
+    int_pclk_out_slave,
+    int_pipe_rxusrclk_out,
+    int_rxoutclk_out,
+    int_dclk_out,
+    int_mmcm_lock_out,
+    int_userclk1_out,
+    int_userclk2_out,
+    int_oobclk_out,
+    int_qplllock_out,
+    int_qplloutclk_out,
+    int_qplloutrefclk_out,
+    int_pclk_sel_slave,
+    user_clk_out,
+    user_reset_out,
+    user_lnk_up,
+    user_app_rdy,
+    s_axis_tx_tready,
+    s_axis_tx_tdata,
+    s_axis_tx_tkeep,
+    s_axis_tx_tlast,
+    s_axis_tx_tvalid,
+    s_axis_tx_tuser,
+    m_axis_rx_tdata,
+    m_axis_rx_tkeep,
+    m_axis_rx_tlast,
+    m_axis_rx_tvalid,
+    m_axis_rx_tready,
+    m_axis_rx_tuser,
+    cfg_err_ecrc,
+    cfg_err_ur,
+    cfg_err_cpl_timeout,
+    cfg_err_cpl_unexpect,
+    cfg_err_cpl_abort,
+    cfg_err_posted,
+    cfg_err_cor,
+    cfg_err_atomic_egress_blocked,
+    cfg_err_internal_cor,
+    cfg_err_malformed,
+    cfg_err_mc_blocked,
+    cfg_err_poisoned,
+    cfg_err_norecovery,
+    cfg_err_tlp_cpl_header,
+    cfg_err_cpl_rdy,
+    cfg_err_locked,
+    cfg_err_acs,
+    cfg_err_internal_uncor,
+    cfg_interrupt,
+    cfg_interrupt_rdy,
+    cfg_interrupt_assert,
+    cfg_interrupt_di,
+    cfg_interrupt_do,
+    cfg_interrupt_mmenable,
+    cfg_interrupt_msienable,
+    cfg_interrupt_msixenable,
+    cfg_interrupt_msixfm,
+    cfg_interrupt_stat,
+    cfg_pciecap_interrupt_msgnum,
+    pl_directed_link_change,
+    pl_directed_link_width,
+    pl_directed_link_speed,
+    pl_directed_link_auton,
+    pl_upstream_prefer_deemph,
+    pl_sel_lnk_rate,
+    pl_sel_lnk_width,
+    pl_ltssm_state,
+    pl_lane_reversal_mode,
+    pl_phy_lnk_up,
+    pl_tx_pm_state,
+    pl_rx_pm_state,
+    pl_link_upcfg_cap,
+    pl_link_gen2_cap,
+    pl_link_partner_gen2_supported,
+    pl_initial_link_width,
+    pl_directed_change_done,
+    pl_received_hot_rst,
+    pl_transmit_hot_rst,
+    pl_downstream_deemph_source,
+    cfg_err_aer_headerlog,
+    cfg_aer_interrupt_msgnum,
+    cfg_err_aer_headerlog_set,
+    cfg_aer_ecrc_check_en,
+    cfg_aer_ecrc_gen_en,
+    sys_clk,
+    sys_rst_n);
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt txp" *) output [7:0]pci_exp_txp;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt txn" *) output [7:0]pci_exp_txn;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt rxp" *) input [7:0]pci_exp_rxp;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_7x_mgt:1.0 pcie_7x_mgt rxn" *) input [7:0]pci_exp_rxn;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk pclk_slave" *) output int_pclk_out_slave;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk pipe_rxusrclk" *) output int_pipe_rxusrclk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk rxoutclk" *) output [7:0]int_rxoutclk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk dclk" *) output int_dclk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk mmcm_lock" *) output int_mmcm_lock_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk usrclk1" *) output int_userclk1_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk usrclk2" *) output int_userclk2_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk oobclk" *) output int_oobclk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk qplllock" *) output [1:0]int_qplllock_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk qplloutclk" *) output [1:0]int_qplloutclk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk qplloutrefclk" *) output [1:0]int_qplloutrefclk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie_sharedlogic_int_clk:1.0 pcie_sharedlogic_int_clk pclk_sel_slave" *) input [7:0]int_pclk_sel_slave;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.user_clk_out CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.user_clk_out, ASSOCIATED_BUSIF m_axis_rx:s_axis_tx, FREQ_HZ 125000000, ASSOCIATED_RESET user_reset_out, PHASE 0.000, INSERT_VIP 0" *) output user_clk_out;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.user_reset_out RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST.user_reset_out, POLARITY ACTIVE_HIGH, INSERT_VIP 0" *) output user_reset_out;
+  output user_lnk_up;
+  output user_app_rdy;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TREADY" *) output s_axis_tx_tready;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TDATA" *) input [127:0]s_axis_tx_tdata;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TKEEP" *) input [15:0]s_axis_tx_tkeep;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TLAST" *) input s_axis_tx_tlast;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TVALID" *) input s_axis_tx_tvalid;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TUSER" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME s_axis_tx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 4, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *) input [3:0]s_axis_tx_tuser;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TDATA" *) output [127:0]m_axis_rx_tdata;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TKEEP" *) output [15:0]m_axis_rx_tkeep;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TLAST" *) output m_axis_rx_tlast;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TVALID" *) output m_axis_rx_tvalid;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TREADY" *) input m_axis_rx_tready;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TUSER" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME m_axis_rx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 22, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *) output [21:0]m_axis_rx_tuser;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err ecrc" *) input cfg_err_ecrc;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err ur" *) input cfg_err_ur;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_timeout" *) input cfg_err_cpl_timeout;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_unexpect" *) input cfg_err_cpl_unexpect;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_abort" *) input cfg_err_cpl_abort;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err posted" *) input cfg_err_posted;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cor" *) input cfg_err_cor;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err atomic_egress_blocked" *) input cfg_err_atomic_egress_blocked;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err internal_cor" *) input cfg_err_internal_cor;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err malformed" *) input cfg_err_malformed;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err mc_blocked" *) input cfg_err_mc_blocked;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err poisoned" *) input cfg_err_poisoned;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err norecovery" *) input cfg_err_norecovery;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err tlp_cpl_header" *) input [47:0]cfg_err_tlp_cpl_header;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err cpl_rdy" *) output cfg_err_cpl_rdy;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err locked" *) input cfg_err_locked;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err acs" *) input cfg_err_acs;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err internal_uncor" *) input cfg_err_internal_uncor;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt interrupt" *) input cfg_interrupt;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt rdy" *) output cfg_interrupt_rdy;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt assert" *) input cfg_interrupt_assert;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt write_data" *) input [7:0]cfg_interrupt_di;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt read_data" *) output [7:0]cfg_interrupt_do;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt mmenable" *) output [2:0]cfg_interrupt_mmenable;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt msienable" *) output cfg_interrupt_msienable;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt msixenable" *) output cfg_interrupt_msixenable;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt msixfm" *) output cfg_interrupt_msixfm;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt stat" *) input cfg_interrupt_stat;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt pciecap_interrupt_msgnum" *) input [4:0]cfg_pciecap_interrupt_msgnum;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_change" *) input [1:0]pl_directed_link_change;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_width" *) input [1:0]pl_directed_link_width;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_speed" *) input pl_directed_link_speed;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_auton" *) input pl_directed_link_auton;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl upstream_prefer_deemph" *) input pl_upstream_prefer_deemph;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl sel_lnk_rate" *) output pl_sel_lnk_rate;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl sel_lnk_width" *) output [1:0]pl_sel_lnk_width;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl ltssm_state" *) output [5:0]pl_ltssm_state;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl lane_reversal_mode" *) output [1:0]pl_lane_reversal_mode;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl phy_lnk_up" *) output pl_phy_lnk_up;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl tx_pm_state" *) output [2:0]pl_tx_pm_state;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl rx_pm_state" *) output [1:0]pl_rx_pm_state;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl link_upcfg_cap" *) output pl_link_upcfg_cap;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl link_gen2_cap" *) output pl_link_gen2_cap;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl link_partner_gen2_supported" *) output pl_link_partner_gen2_supported;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl initial_link_width" *) output [2:0]pl_initial_link_width;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_change_done" *) output pl_directed_change_done;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl received_hot_rst" *) output pl_received_hot_rst;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl transmit_hot_rst" *) input pl_transmit_hot_rst;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl downstream_deemph_source" *) input pl_downstream_deemph_source;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err err_aer_headerlog" *) input [127:0]cfg_err_aer_headerlog;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_interrupt_msgnum" *) input [4:0]cfg_aer_interrupt_msgnum;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err err_aer_headerlog_set" *) output cfg_err_aer_headerlog_set;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_ecrc_check_en" *) output cfg_aer_ecrc_check_en;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_ecrc_gen_en" *) output cfg_aer_ecrc_gen_en;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.sys_clk CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.sys_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *) input sys_clk;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.sys_rst_n RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST.sys_rst_n, POLARITY ACTIVE_LOW, INSERT_VIP 0" *) input sys_rst_n;
+
+  wire cfg_aer_ecrc_check_en;
+  wire cfg_aer_ecrc_gen_en;
+  wire [4:0]cfg_aer_interrupt_msgnum;
+  wire cfg_err_acs;
+  wire [127:0]cfg_err_aer_headerlog;
+  wire cfg_err_aer_headerlog_set;
+  wire cfg_err_atomic_egress_blocked;
+  wire cfg_err_cor;
+  wire cfg_err_cpl_abort;
+  wire cfg_err_cpl_rdy;
+  wire cfg_err_cpl_timeout;
+  wire cfg_err_cpl_unexpect;
+  wire cfg_err_ecrc;
+  wire cfg_err_internal_cor;
+  wire cfg_err_internal_uncor;
+  wire cfg_err_locked;
+  wire cfg_err_malformed;
+  wire cfg_err_mc_blocked;
+  wire cfg_err_norecovery;
+  wire cfg_err_poisoned;
+  wire cfg_err_posted;
+  wire [47:0]cfg_err_tlp_cpl_header;
+  wire cfg_err_ur;
+  wire cfg_interrupt;
+  wire cfg_interrupt_assert;
+  wire [7:0]cfg_interrupt_di;
+  wire [7:0]cfg_interrupt_do;
+  wire [2:0]cfg_interrupt_mmenable;
+  wire cfg_interrupt_msienable;
+  wire cfg_interrupt_msixenable;
+  wire cfg_interrupt_msixfm;
+  wire cfg_interrupt_rdy;
+  wire cfg_interrupt_stat;
+  wire [4:0]cfg_pciecap_interrupt_msgnum;
+  wire int_dclk_out;
+  wire int_mmcm_lock_out;
+  wire int_oobclk_out;
+  wire int_pclk_out_slave;
+  wire [7:0]int_pclk_sel_slave;
+  wire int_pipe_rxusrclk_out;
+  wire [1:0]int_qplllock_out;
+  wire [1:0]int_qplloutclk_out;
+  wire [1:0]int_qplloutrefclk_out;
+  wire [7:0]int_rxoutclk_out;
+  wire int_userclk1_out;
+  wire int_userclk2_out;
+  wire [127:0]m_axis_rx_tdata;
+  wire [15:0]m_axis_rx_tkeep;
+  wire m_axis_rx_tlast;
+  wire m_axis_rx_tready;
+  wire [21:0]m_axis_rx_tuser;
+  wire m_axis_rx_tvalid;
+  wire [7:0]pci_exp_rxn;
+  wire [7:0]pci_exp_rxp;
+  wire [7:0]pci_exp_txn;
+  wire [7:0]pci_exp_txp;
+  wire pl_directed_change_done;
+  wire pl_directed_link_auton;
+  wire [1:0]pl_directed_link_change;
+  wire pl_directed_link_speed;
+  wire [1:0]pl_directed_link_width;
+  wire pl_downstream_deemph_source;
+  wire [2:0]pl_initial_link_width;
+  wire [1:0]pl_lane_reversal_mode;
+  wire pl_link_gen2_cap;
+  wire pl_link_partner_gen2_supported;
+  wire pl_link_upcfg_cap;
+  wire [5:0]pl_ltssm_state;
+  wire pl_phy_lnk_up;
+  wire pl_received_hot_rst;
+  wire [1:0]pl_rx_pm_state;
+  wire pl_sel_lnk_rate;
+  wire [1:0]pl_sel_lnk_width;
+  wire pl_transmit_hot_rst;
+  wire [2:0]pl_tx_pm_state;
+  wire pl_upstream_prefer_deemph;
+  wire [127:0]s_axis_tx_tdata;
+  wire [15:0]s_axis_tx_tkeep;
+  wire s_axis_tx_tlast;
+  wire s_axis_tx_tready;
+  wire [3:0]s_axis_tx_tuser;
+  wire s_axis_tx_tvalid;
+  wire sys_clk;
+  wire sys_rst_n;
+  wire user_app_rdy;
+  wire user_clk_out;
+  wire user_lnk_up;
+  wire user_reset_out;
+  wire NLW_inst_cfg_aer_rooterr_corr_err_received_UNCONNECTED;
+  wire NLW_inst_cfg_aer_rooterr_corr_err_reporting_en_UNCONNECTED;
+  wire NLW_inst_cfg_aer_rooterr_fatal_err_received_UNCONNECTED;
+  wire NLW_inst_cfg_aer_rooterr_fatal_err_reporting_en_UNCONNECTED;
+  wire NLW_inst_cfg_aer_rooterr_non_fatal_err_received_UNCONNECTED;
+  wire NLW_inst_cfg_aer_rooterr_non_fatal_err_reporting_en_UNCONNECTED;
+  wire NLW_inst_cfg_bridge_serr_en_UNCONNECTED;
+  wire NLW_inst_cfg_mgmt_rd_wr_done_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_assert_int_a_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_assert_int_b_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_assert_int_c_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_assert_int_d_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_deassert_int_a_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_deassert_int_b_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_deassert_int_c_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_deassert_int_d_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_err_cor_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_err_fatal_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_err_non_fatal_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_pm_as_nak_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_pm_pme_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_pme_to_ack_UNCONNECTED;
+  wire NLW_inst_cfg_msg_received_setslotpowerlimit_UNCONNECTED;
+  wire NLW_inst_cfg_pmcsr_pme_en_UNCONNECTED;
+  wire NLW_inst_cfg_pmcsr_pme_status_UNCONNECTED;
+  wire NLW_inst_cfg_received_func_lvl_rst_UNCONNECTED;
+  wire NLW_inst_cfg_root_control_pme_int_en_UNCONNECTED;
+  wire NLW_inst_cfg_root_control_syserr_corr_err_en_UNCONNECTED;
+  wire NLW_inst_cfg_root_control_syserr_fatal_err_en_UNCONNECTED;
+  wire NLW_inst_cfg_root_control_syserr_non_fatal_err_en_UNCONNECTED;
+  wire NLW_inst_cfg_slot_control_electromech_il_ctl_pulse_UNCONNECTED;
+  wire NLW_inst_cfg_to_turnoff_UNCONNECTED;
+  wire NLW_inst_ext_ch_gt_drpclk_UNCONNECTED;
+  wire NLW_inst_pcie_drp_rdy_UNCONNECTED;
+  wire NLW_inst_pipe_gen3_out_UNCONNECTED;
+  wire NLW_inst_pipe_qrst_idle_UNCONNECTED;
+  wire NLW_inst_pipe_rate_idle_UNCONNECTED;
+  wire NLW_inst_pipe_rst_idle_UNCONNECTED;
+  wire NLW_inst_pipe_txoutclk_out_UNCONNECTED;
+  wire NLW_inst_qpll_drp_clk_UNCONNECTED;
+  wire NLW_inst_qpll_drp_gen3_UNCONNECTED;
+  wire NLW_inst_qpll_drp_ovrd_UNCONNECTED;
+  wire NLW_inst_qpll_drp_rst_n_UNCONNECTED;
+  wire NLW_inst_qpll_drp_start_UNCONNECTED;
+  wire NLW_inst_qpll_qplld_UNCONNECTED;
+  wire NLW_inst_startup_cfgclk_UNCONNECTED;
+  wire NLW_inst_startup_cfgmclk_UNCONNECTED;
+  wire NLW_inst_startup_eos_UNCONNECTED;
+  wire NLW_inst_startup_preq_UNCONNECTED;
+  wire NLW_inst_tx_cfg_req_UNCONNECTED;
+  wire NLW_inst_tx_err_drop_UNCONNECTED;
+  wire [7:0]NLW_inst_cfg_bus_number_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_command_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_dcommand_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_dcommand2_UNCONNECTED;
+  wire [4:0]NLW_inst_cfg_device_number_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_dstatus_UNCONNECTED;
+  wire [2:0]NLW_inst_cfg_function_number_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_lcommand_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_lstatus_UNCONNECTED;
+  wire [31:0]NLW_inst_cfg_mgmt_do_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_msg_data_UNCONNECTED;
+  wire [2:0]NLW_inst_cfg_pcie_link_state_UNCONNECTED;
+  wire [1:0]NLW_inst_cfg_pmcsr_powerstate_UNCONNECTED;
+  wire [15:0]NLW_inst_cfg_status_UNCONNECTED;
+  wire [6:0]NLW_inst_cfg_vc_tcvc_map_UNCONNECTED;
+  wire [11:0]NLW_inst_common_commands_out_UNCONNECTED;
+  wire [127:0]NLW_inst_ext_ch_gt_drpdo_UNCONNECTED;
+  wire [7:0]NLW_inst_ext_ch_gt_drprdy_UNCONNECTED;
+  wire [11:0]NLW_inst_fc_cpld_UNCONNECTED;
+  wire [7:0]NLW_inst_fc_cplh_UNCONNECTED;
+  wire [11:0]NLW_inst_fc_npd_UNCONNECTED;
+  wire [7:0]NLW_inst_fc_nph_UNCONNECTED;
+  wire [11:0]NLW_inst_fc_pd_UNCONNECTED;
+  wire [7:0]NLW_inst_fc_ph_UNCONNECTED;
+  wire [7:0]NLW_inst_gt_ch_drp_rdy_UNCONNECTED;
+  wire [31:0]NLW_inst_icap_o_UNCONNECTED;
+  wire [15:0]NLW_inst_pcie_drp_do_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_cpll_lock_UNCONNECTED;
+  wire [31:0]NLW_inst_pipe_debug_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_0_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_1_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_2_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_3_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_4_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_5_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_6_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_7_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_8_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_debug_9_UNCONNECTED;
+  wire [119:0]NLW_inst_pipe_dmonitorout_UNCONNECTED;
+  wire [55:0]NLW_inst_pipe_drp_fsm_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_eyescandataerror_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_pclk_sel_out_UNCONNECTED;
+  wire [1:0]NLW_inst_pipe_qpll_lock_UNCONNECTED;
+  wire [11:0]NLW_inst_pipe_qrst_fsm_UNCONNECTED;
+  wire [39:0]NLW_inst_pipe_rate_fsm_UNCONNECTED;
+  wire [4:0]NLW_inst_pipe_rst_fsm_UNCONNECTED;
+  wire [23:0]NLW_inst_pipe_rxbufstatus_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxcommadet_UNCONNECTED;
+  wire [63:0]NLW_inst_pipe_rxdisperr_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxdlysresetdone_UNCONNECTED;
+  wire [63:0]NLW_inst_pipe_rxnotintable_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxoutclk_out_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxphaligndone_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxpmaresetdone_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxprbserr_UNCONNECTED;
+  wire [23:0]NLW_inst_pipe_rxstatus_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_rxsyncdone_UNCONNECTED;
+  wire [55:0]NLW_inst_pipe_sync_fsm_rx_UNCONNECTED;
+  wire [47:0]NLW_inst_pipe_sync_fsm_tx_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_0_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_1_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_2_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_3_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_4_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_5_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_6_sigs_UNCONNECTED;
+  wire [24:0]NLW_inst_pipe_tx_7_sigs_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_txdlysresetdone_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_txphaligndone_UNCONNECTED;
+  wire [7:0]NLW_inst_pipe_txphinitdone_UNCONNECTED;
+  wire [1:0]NLW_inst_qpll_qpllreset_UNCONNECTED;
+  wire [5:0]NLW_inst_tx_buf_av_UNCONNECTED;
+
+  (* CFG_CTL_IF = "FALSE" *) 
+  (* CFG_FC_IF = "FALSE" *) 
+  (* CFG_MGMT_IF = "FALSE" *) 
+  (* CFG_STATUS_IF = "FALSE" *) 
+  (* CLASS_CODE = "098000" *) 
+  (* C_DATA_WIDTH = "128" *) 
+  (* DowngradeIPIdentifiedWarnings = "yes" *) 
+  (* ENABLE_JTAG_DBG = "FALSE" *) 
+  (* ERR_REPORTING_IF = "TRUE" *) 
+  (* EXT_CH_GT_DRP = "FALSE" *) 
+  (* EXT_PIPE_INTERFACE = "FALSE" *) 
+  (* EXT_STARTUP_PRIMITIVE = "FALSE" *) 
+  (* KEEP_WIDTH = "16" *) 
+  (* LINK_CAP_MAX_LINK_WIDTH = "8" *) 
+  (* PCIE_ASYNC_EN = "FALSE" *) 
+  (* PCIE_EXT_CLK = "FALSE" *) 
+  (* PCIE_EXT_GT_COMMON = "FALSE" *) 
+  (* PIPE_SIM = "FALSE" *) 
+  (* PL_INTERFACE = "TRUE" *) 
+  (* RCV_MSG_IF = "FALSE" *) 
+  (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
+  (* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) 
+  (* bar_0 = "FFF80000" *) 
+  (* bar_1 = "00000000" *) 
+  (* bar_2 = "00000000" *) 
+  (* bar_3 = "00000000" *) 
+  (* bar_4 = "00000000" *) 
+  (* bar_5 = "00000000" *) 
+  (* bram_lat = "2" *) 
+  (* c_aer_base_ptr = "000" *) 
+  (* c_aer_cap_ecrc_check_capable = "FALSE" *) 
+  (* c_aer_cap_ecrc_gen_capable = "FALSE" *) 
+  (* c_aer_cap_multiheader = "FALSE" *) 
+  (* c_aer_cap_nextptr = "000" *) 
+  (* c_aer_cap_on = "FALSE" *) 
+  (* c_aer_cap_optional_err_support = "000000" *) 
+  (* c_aer_cap_permit_rooterr_update = "FALSE" *) 
+  (* c_buf_opt_bma = "FALSE" *) 
+  (* c_component_name = "pcie" *) 
+  (* c_cpl_inf = "TRUE" *) 
+  (* c_cpl_infinite = "TRUE" *) 
+  (* c_cpl_timeout_disable_sup = "FALSE" *) 
+  (* c_cpl_timeout_range = "0010" *) 
+  (* c_cpl_timeout_ranges_sup = "2" *) 
+  (* c_d1_support = "FALSE" *) 
+  (* c_d2_support = "FALSE" *) 
+  (* c_de_emph = "FALSE" *) 
+  (* c_dev_cap2_ari_forwarding_supported = "FALSE" *) 
+  (* c_dev_cap2_atomicop32_completer_supported = "FALSE" *) 
+  (* c_dev_cap2_atomicop64_completer_supported = "FALSE" *) 
+  (* c_dev_cap2_atomicop_routing_supported = "FALSE" *) 
+  (* c_dev_cap2_cas128_completer_supported = "FALSE" *) 
+  (* c_dev_cap2_tph_completer_supported = "00" *) 
+  (* c_dev_control_ext_tag_default = "FALSE" *) 
+  (* c_dev_port_type = "0" *) 
+  (* c_dis_lane_reverse = "TRUE" *) 
+  (* c_disable_rx_poisoned_resp = "FALSE" *) 
+  (* c_disable_scrambling = "FALSE" *) 
+  (* c_disable_tx_aspm_l0s = "FALSE" *) 
+  (* c_dll_lnk_actv_cap = "FALSE" *) 
+  (* c_dsi_bool = "FALSE" *) 
+  (* c_dsn_base_ptr = "000" *) 
+  (* c_dsn_cap_enabled = "FALSE" *) 
+  (* c_dsn_next_ptr = "000" *) 
+  (* c_enable_msg_route = "00000000000" *) 
+  (* c_ep_l0s_accpt_lat = "0" *) 
+  (* c_ep_l1_accpt_lat = "7" *) 
+  (* c_ext_pci_cfg_space_addr = "3FF" *) 
+  (* c_external_clocking = "TRUE" *) 
+  (* c_fc_cpld = "370" *) 
+  (* c_fc_cplh = "72" *) 
+  (* c_fc_npd = "8" *) 
+  (* c_fc_nph = "4" *) 
+  (* c_fc_pd = "32" *) 
+  (* c_fc_ph = "4" *) 
+  (* c_gen1 = "1'b1" *) 
+  (* c_header_type = "00" *) 
+  (* c_hw_auton_spd_disable = "FALSE" *) 
+  (* c_int_width = "64" *) 
+  (* c_last_cfg_dw = "100" *) 
+  (* c_link_cap_aspm_optionality = "FALSE" *) 
+  (* c_ll_ack_timeout = "0000" *) 
+  (* c_ll_ack_timeout_enable = "FALSE" *) 
+  (* c_ll_ack_timeout_function = "0" *) 
+  (* c_ll_replay_timeout = "0000" *) 
+  (* c_ll_replay_timeout_enable = "FALSE" *) 
+  (* c_ll_replay_timeout_func = "1" *) 
+  (* c_lnk_bndwdt_notif = "FALSE" *) 
+  (* c_msi = "0" *) 
+  (* c_msi_64b_addr = "TRUE" *) 
+  (* c_msi_cap_on = "TRUE" *) 
+  (* c_msi_mult_msg_extn = "0" *) 
+  (* c_msi_per_vctr_mask_cap = "FALSE" *) 
+  (* c_msix_cap_on = "FALSE" *) 
+  (* c_msix_next_ptr = "00" *) 
+  (* c_msix_pba_bir = "0" *) 
+  (* c_msix_pba_offset = "0" *) 
+  (* c_msix_table_bir = "0" *) 
+  (* c_msix_table_offset = "0" *) 
+  (* c_msix_table_size = "000" *) 
+  (* c_pci_cfg_space_addr = "3F" *) 
+  (* c_pcie_blk_locn = "0" *) 
+  (* c_pcie_cap_next_ptr = "00" *) 
+  (* c_pcie_cap_slot_implemented = "FALSE" *) 
+  (* c_pcie_dbg_ports = "FALSE" *) 
+  (* c_pcie_fast_config = "0" *) 
+  (* c_perf_level_high = "TRUE" *) 
+  (* c_phantom_functions = "0" *) 
+  (* c_pm_cap_next_ptr = "48" *) 
+  (* c_pme_support = "01" *) 
+  (* c_rbar_base_ptr = "000" *) 
+  (* c_rbar_cap_control_encodedbar0 = "00" *) 
+  (* c_rbar_cap_control_encodedbar1 = "00" *) 
+  (* c_rbar_cap_control_encodedbar2 = "00" *) 
+  (* c_rbar_cap_control_encodedbar3 = "00" *) 
+  (* c_rbar_cap_control_encodedbar4 = "00" *) 
+  (* c_rbar_cap_control_encodedbar5 = "00" *) 
+  (* c_rbar_cap_index0 = "0" *) 
+  (* c_rbar_cap_index1 = "0" *) 
+  (* c_rbar_cap_index2 = "0" *) 
+  (* c_rbar_cap_index3 = "0" *) 
+  (* c_rbar_cap_index4 = "0" *) 
+  (* c_rbar_cap_index5 = "0" *) 
+  (* c_rbar_cap_nextptr = "000" *) 
+  (* c_rbar_cap_on = "FALSE" *) 
+  (* c_rbar_cap_sup0 = "00001" *) 
+  (* c_rbar_cap_sup1 = "00001" *) 
+  (* c_rbar_cap_sup2 = "00001" *) 
+  (* c_rbar_cap_sup3 = "00001" *) 
+  (* c_rbar_cap_sup4 = "00001" *) 
+  (* c_rbar_cap_sup5 = "00001" *) 
+  (* c_rbar_num = "0" *) 
+  (* c_rcb = "0" *) 
+  (* c_recrc_check = "0" *) 
+  (* c_recrc_check_trim = "FALSE" *) 
+  (* c_rev_gt_order = "FALSE" *) 
+  (* c_root_cap_crs = "FALSE" *) 
+  (* c_rx_raddr_lat = "1" *) 
+  (* c_rx_ram_limit = "3FF" *) 
+  (* c_rx_rdata_lat = "3" *) 
+  (* c_rx_write_lat = "1" *) 
+  (* c_silicon_rev = "2" *) 
+  (* c_slot_cap_attn_butn = "FALSE" *) 
+  (* c_slot_cap_attn_ind = "FALSE" *) 
+  (* c_slot_cap_elec_interlock = "FALSE" *) 
+  (* c_slot_cap_hotplug_cap = "FALSE" *) 
+  (* c_slot_cap_hotplug_surprise = "FALSE" *) 
+  (* c_slot_cap_mrl = "FALSE" *) 
+  (* c_slot_cap_no_cmd_comp_sup = "FALSE" *) 
+  (* c_slot_cap_physical_slot_num = "0" *) 
+  (* c_slot_cap_pwr_ctrl = "FALSE" *) 
+  (* c_slot_cap_pwr_ind = "FALSE" *) 
+  (* c_slot_cap_pwr_limit_scale = "0" *) 
+  (* c_slot_cap_pwr_limit_value = "0" *) 
+  (* c_surprise_dn_err_cap = "FALSE" *) 
+  (* c_trgt_lnk_spd = "2" *) 
+  (* c_trn_np_fc = "TRUE" *) 
+  (* c_tx_last_tlp = "31" *) 
+  (* c_tx_raddr_lat = "1" *) 
+  (* c_tx_rdata_lat = "3" *) 
+  (* c_tx_write_lat = "1" *) 
+  (* c_upconfig_capable = "TRUE" *) 
+  (* c_upstream_facing = "TRUE" *) 
+  (* c_ur_atomic = "FALSE" *) 
+  (* c_ur_inv_req = "FALSE" *) 
+  (* c_ur_prs_response = "FALSE" *) 
+  (* c_vc_base_ptr = "000" *) 
+  (* c_vc_cap_enabled = "FALSE" *) 
+  (* c_vc_cap_reject_snoop = "FALSE" *) 
+  (* c_vc_next_ptr = "000" *) 
+  (* c_vsec_base_ptr = "000" *) 
+  (* c_vsec_cap_enabled = "FALSE" *) 
+  (* c_vsec_next_ptr = "000" *) 
+  (* c_xlnx_ref_board = "KC705_REVC" *) 
+  (* cap_ver = "2" *) 
+  (* cardbus_cis_ptr = "00000000" *) 
+  (* cmps = "0" *) 
+  (* con_scl_fctr_d0_state = "0" *) 
+  (* con_scl_fctr_d1_state = "0" *) 
+  (* con_scl_fctr_d2_state = "0" *) 
+  (* con_scl_fctr_d3_state = "0" *) 
+  (* cost_table = "1" *) 
+  (* d1_sup = "0" *) 
+  (* d2_sup = "0" *) 
+  (* dev_id = "AACC" *) 
+  (* dev_port_type = "0000" *) 
+  (* dis_scl_fctr_d0_state = "0" *) 
+  (* dis_scl_fctr_d1_state = "0" *) 
+  (* dis_scl_fctr_d2_state = "0" *) 
+  (* dis_scl_fctr_d3_state = "0" *) 
+  (* dsi = "0" *) 
+  (* ep_l0s_accpt_lat = "000" *) 
+  (* ep_l1_accpt_lat = "111" *) 
+  (* ext_tag_fld_sup = "FALSE" *) 
+  (* int_pin = "0" *) 
+  (* intx = "FALSE" *) 
+  (* max_lnk_spd = "2" *) 
+  (* max_lnk_wdt = "001000" *) 
+  (* mps = "000" *) 
+  (* no_soft_rst = "TRUE" *) 
+  (* pci_exp_int_freq = "3" *) 
+  (* pci_exp_ref_freq = "0" *) 
+  (* phantm_func_sup = "00" *) 
+  (* pme_sup = "01" *) 
+  (* pwr_con_d0_state = "00" *) 
+  (* pwr_con_d1_state = "00" *) 
+  (* pwr_con_d2_state = "00" *) 
+  (* pwr_con_d3_state = "00" *) 
+  (* pwr_dis_d0_state = "00" *) 
+  (* pwr_dis_d1_state = "00" *) 
+  (* pwr_dis_d2_state = "00" *) 
+  (* pwr_dis_d3_state = "00" *) 
+  (* rev_id = "00" *) 
+  (* slot_clk = "TRUE" *) 
+  (* subsys_id = "0007" *) 
+  (* subsys_ven_id = "0" *) 
+  (* ven_id = "10EE" *) 
+  (* xrom_bar = "00000000" *) 
+  pcie_pcie_pcie2_top inst
+       (.cfg_aer_ecrc_check_en(cfg_aer_ecrc_check_en),
+        .cfg_aer_ecrc_gen_en(cfg_aer_ecrc_gen_en),
+        .cfg_aer_interrupt_msgnum(cfg_aer_interrupt_msgnum),
+        .cfg_aer_rooterr_corr_err_received(NLW_inst_cfg_aer_rooterr_corr_err_received_UNCONNECTED),
+        .cfg_aer_rooterr_corr_err_reporting_en(NLW_inst_cfg_aer_rooterr_corr_err_reporting_en_UNCONNECTED),
+        .cfg_aer_rooterr_fatal_err_received(NLW_inst_cfg_aer_rooterr_fatal_err_received_UNCONNECTED),
+        .cfg_aer_rooterr_fatal_err_reporting_en(NLW_inst_cfg_aer_rooterr_fatal_err_reporting_en_UNCONNECTED),
+        .cfg_aer_rooterr_non_fatal_err_received(NLW_inst_cfg_aer_rooterr_non_fatal_err_received_UNCONNECTED),
+        .cfg_aer_rooterr_non_fatal_err_reporting_en(NLW_inst_cfg_aer_rooterr_non_fatal_err_reporting_en_UNCONNECTED),
+        .cfg_bridge_serr_en(NLW_inst_cfg_bridge_serr_en_UNCONNECTED),
+        .cfg_bus_number(NLW_inst_cfg_bus_number_UNCONNECTED[7:0]),
+        .cfg_command(NLW_inst_cfg_command_UNCONNECTED[15:0]),
+        .cfg_dcommand(NLW_inst_cfg_dcommand_UNCONNECTED[15:0]),
+        .cfg_dcommand2(NLW_inst_cfg_dcommand2_UNCONNECTED[15:0]),
+        .cfg_device_number(NLW_inst_cfg_device_number_UNCONNECTED[4:0]),
+        .cfg_ds_bus_number({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .cfg_ds_device_number({1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .cfg_ds_function_number({1'b0,1'b0,1'b0}),
+        .cfg_dsn({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .cfg_dstatus(NLW_inst_cfg_dstatus_UNCONNECTED[15:0]),
+        .cfg_err_acs(cfg_err_acs),
+        .cfg_err_aer_headerlog(cfg_err_aer_headerlog),
+        .cfg_err_aer_headerlog_set(cfg_err_aer_headerlog_set),
+        .cfg_err_atomic_egress_blocked(cfg_err_atomic_egress_blocked),
+        .cfg_err_cor(cfg_err_cor),
+        .cfg_err_cpl_abort(cfg_err_cpl_abort),
+        .cfg_err_cpl_rdy(cfg_err_cpl_rdy),
+        .cfg_err_cpl_timeout(cfg_err_cpl_timeout),
+        .cfg_err_cpl_unexpect(cfg_err_cpl_unexpect),
+        .cfg_err_ecrc(cfg_err_ecrc),
+        .cfg_err_internal_cor(cfg_err_internal_cor),
+        .cfg_err_internal_uncor(cfg_err_internal_uncor),
+        .cfg_err_locked(cfg_err_locked),
+        .cfg_err_malformed(cfg_err_malformed),
+        .cfg_err_mc_blocked(cfg_err_mc_blocked),
+        .cfg_err_norecovery(cfg_err_norecovery),
+        .cfg_err_poisoned(cfg_err_poisoned),
+        .cfg_err_posted(cfg_err_posted),
+        .cfg_err_tlp_cpl_header(cfg_err_tlp_cpl_header),
+        .cfg_err_ur(cfg_err_ur),
+        .cfg_function_number(NLW_inst_cfg_function_number_UNCONNECTED[2:0]),
+        .cfg_interrupt(cfg_interrupt),
+        .cfg_interrupt_assert(cfg_interrupt_assert),
+        .cfg_interrupt_di(cfg_interrupt_di),
+        .cfg_interrupt_do(cfg_interrupt_do),
+        .cfg_interrupt_mmenable(cfg_interrupt_mmenable),
+        .cfg_interrupt_msienable(cfg_interrupt_msienable),
+        .cfg_interrupt_msixenable(cfg_interrupt_msixenable),
+        .cfg_interrupt_msixfm(cfg_interrupt_msixfm),
+        .cfg_interrupt_rdy(cfg_interrupt_rdy),
+        .cfg_interrupt_stat(cfg_interrupt_stat),
+        .cfg_lcommand(NLW_inst_cfg_lcommand_UNCONNECTED[15:0]),
+        .cfg_lstatus(NLW_inst_cfg_lstatus_UNCONNECTED[15:0]),
+        .cfg_mgmt_byte_en({1'b0,1'b0,1'b0,1'b0}),
+        .cfg_mgmt_di({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .cfg_mgmt_do(NLW_inst_cfg_mgmt_do_UNCONNECTED[31:0]),
+        .cfg_mgmt_dwaddr({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .cfg_mgmt_rd_en(1'b0),
+        .cfg_mgmt_rd_wr_done(NLW_inst_cfg_mgmt_rd_wr_done_UNCONNECTED),
+        .cfg_mgmt_wr_en(1'b0),
+        .cfg_mgmt_wr_readonly(1'b0),
+        .cfg_mgmt_wr_rw1c_as_rw(1'b0),
+        .cfg_msg_data(NLW_inst_cfg_msg_data_UNCONNECTED[15:0]),
+        .cfg_msg_received(NLW_inst_cfg_msg_received_UNCONNECTED),
+        .cfg_msg_received_assert_int_a(NLW_inst_cfg_msg_received_assert_int_a_UNCONNECTED),
+        .cfg_msg_received_assert_int_b(NLW_inst_cfg_msg_received_assert_int_b_UNCONNECTED),
+        .cfg_msg_received_assert_int_c(NLW_inst_cfg_msg_received_assert_int_c_UNCONNECTED),
+        .cfg_msg_received_assert_int_d(NLW_inst_cfg_msg_received_assert_int_d_UNCONNECTED),
+        .cfg_msg_received_deassert_int_a(NLW_inst_cfg_msg_received_deassert_int_a_UNCONNECTED),
+        .cfg_msg_received_deassert_int_b(NLW_inst_cfg_msg_received_deassert_int_b_UNCONNECTED),
+        .cfg_msg_received_deassert_int_c(NLW_inst_cfg_msg_received_deassert_int_c_UNCONNECTED),
+        .cfg_msg_received_deassert_int_d(NLW_inst_cfg_msg_received_deassert_int_d_UNCONNECTED),
+        .cfg_msg_received_err_cor(NLW_inst_cfg_msg_received_err_cor_UNCONNECTED),
+        .cfg_msg_received_err_fatal(NLW_inst_cfg_msg_received_err_fatal_UNCONNECTED),
+        .cfg_msg_received_err_non_fatal(NLW_inst_cfg_msg_received_err_non_fatal_UNCONNECTED),
+        .cfg_msg_received_pm_as_nak(NLW_inst_cfg_msg_received_pm_as_nak_UNCONNECTED),
+        .cfg_msg_received_pm_pme(NLW_inst_cfg_msg_received_pm_pme_UNCONNECTED),
+        .cfg_msg_received_pme_to_ack(NLW_inst_cfg_msg_received_pme_to_ack_UNCONNECTED),
+        .cfg_msg_received_setslotpowerlimit(NLW_inst_cfg_msg_received_setslotpowerlimit_UNCONNECTED),
+        .cfg_pcie_link_state(NLW_inst_cfg_pcie_link_state_UNCONNECTED[2:0]),
+        .cfg_pciecap_interrupt_msgnum(cfg_pciecap_interrupt_msgnum),
+        .cfg_pm_force_state({1'b0,1'b0}),
+        .cfg_pm_force_state_en(1'b0),
+        .cfg_pm_halt_aspm_l0s(1'b0),
+        .cfg_pm_halt_aspm_l1(1'b0),
+        .cfg_pm_send_pme_to(1'b0),
+        .cfg_pm_wake(1'b0),
+        .cfg_pmcsr_pme_en(NLW_inst_cfg_pmcsr_pme_en_UNCONNECTED),
+        .cfg_pmcsr_pme_status(NLW_inst_cfg_pmcsr_pme_status_UNCONNECTED),
+        .cfg_pmcsr_powerstate(NLW_inst_cfg_pmcsr_powerstate_UNCONNECTED[1:0]),
+        .cfg_received_func_lvl_rst(NLW_inst_cfg_received_func_lvl_rst_UNCONNECTED),
+        .cfg_root_control_pme_int_en(NLW_inst_cfg_root_control_pme_int_en_UNCONNECTED),
+        .cfg_root_control_syserr_corr_err_en(NLW_inst_cfg_root_control_syserr_corr_err_en_UNCONNECTED),
+        .cfg_root_control_syserr_fatal_err_en(NLW_inst_cfg_root_control_syserr_fatal_err_en_UNCONNECTED),
+        .cfg_root_control_syserr_non_fatal_err_en(NLW_inst_cfg_root_control_syserr_non_fatal_err_en_UNCONNECTED),
+        .cfg_slot_control_electromech_il_ctl_pulse(NLW_inst_cfg_slot_control_electromech_il_ctl_pulse_UNCONNECTED),
+        .cfg_status(NLW_inst_cfg_status_UNCONNECTED[15:0]),
+        .cfg_to_turnoff(NLW_inst_cfg_to_turnoff_UNCONNECTED),
+        .cfg_trn_pending(1'b0),
+        .cfg_turnoff_ok(1'b0),
+        .cfg_vc_tcvc_map(NLW_inst_cfg_vc_tcvc_map_UNCONNECTED[6:0]),
+        .common_commands_in({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .common_commands_out(NLW_inst_common_commands_out_UNCONNECTED[11:0]),
+        .ext_ch_gt_drpaddr({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .ext_ch_gt_drpclk(NLW_inst_ext_ch_gt_drpclk_UNCONNECTED),
+        .ext_ch_gt_drpdi({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .ext_ch_gt_drpdo(NLW_inst_ext_ch_gt_drpdo_UNCONNECTED[127:0]),
+        .ext_ch_gt_drpen({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .ext_ch_gt_drprdy(NLW_inst_ext_ch_gt_drprdy_UNCONNECTED[7:0]),
+        .ext_ch_gt_drpwe({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .fc_cpld(NLW_inst_fc_cpld_UNCONNECTED[11:0]),
+        .fc_cplh(NLW_inst_fc_cplh_UNCONNECTED[7:0]),
+        .fc_npd(NLW_inst_fc_npd_UNCONNECTED[11:0]),
+        .fc_nph(NLW_inst_fc_nph_UNCONNECTED[7:0]),
+        .fc_pd(NLW_inst_fc_pd_UNCONNECTED[11:0]),
+        .fc_ph(NLW_inst_fc_ph_UNCONNECTED[7:0]),
+        .fc_sel({1'b0,1'b0,1'b0}),
+        .gt_ch_drp_rdy(NLW_inst_gt_ch_drp_rdy_UNCONNECTED[7:0]),
+        .icap_clk(1'b0),
+        .icap_csib(1'b0),
+        .icap_i({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .icap_o(NLW_inst_icap_o_UNCONNECTED[31:0]),
+        .icap_rdwrb(1'b0),
+        .int_dclk_out(int_dclk_out),
+        .int_mmcm_lock_out(int_mmcm_lock_out),
+        .int_oobclk_out(int_oobclk_out),
+        .int_pclk_out_slave(int_pclk_out_slave),
+        .int_pclk_sel_slave(int_pclk_sel_slave),
+        .int_pipe_rxusrclk_out(int_pipe_rxusrclk_out),
+        .int_qplllock_out(int_qplllock_out),
+        .int_qplloutclk_out(int_qplloutclk_out),
+        .int_qplloutrefclk_out(int_qplloutrefclk_out),
+        .int_rxoutclk_out(int_rxoutclk_out),
+        .int_userclk1_out(int_userclk1_out),
+        .int_userclk2_out(int_userclk2_out),
+        .m_axis_rx_tdata(m_axis_rx_tdata),
+        .m_axis_rx_tkeep(m_axis_rx_tkeep),
+        .m_axis_rx_tlast(m_axis_rx_tlast),
+        .m_axis_rx_tready(m_axis_rx_tready),
+        .m_axis_rx_tuser(m_axis_rx_tuser),
+        .m_axis_rx_tvalid(m_axis_rx_tvalid),
+        .pci_exp_rxn(pci_exp_rxn),
+        .pci_exp_rxp(pci_exp_rxp),
+        .pci_exp_txn(pci_exp_txn),
+        .pci_exp_txp(pci_exp_txp),
+        .pcie_drp_addr({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pcie_drp_clk(1'b1),
+        .pcie_drp_di({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pcie_drp_do(NLW_inst_pcie_drp_do_UNCONNECTED[15:0]),
+        .pcie_drp_en(1'b0),
+        .pcie_drp_rdy(NLW_inst_pcie_drp_rdy_UNCONNECTED),
+        .pcie_drp_we(1'b0),
+        .pipe_cpll_lock(NLW_inst_pipe_cpll_lock_UNCONNECTED[7:0]),
+        .pipe_dclk_in(1'b0),
+        .pipe_debug(NLW_inst_pipe_debug_UNCONNECTED[31:0]),
+        .pipe_debug_0(NLW_inst_pipe_debug_0_UNCONNECTED[7:0]),
+        .pipe_debug_1(NLW_inst_pipe_debug_1_UNCONNECTED[7:0]),
+        .pipe_debug_2(NLW_inst_pipe_debug_2_UNCONNECTED[7:0]),
+        .pipe_debug_3(NLW_inst_pipe_debug_3_UNCONNECTED[7:0]),
+        .pipe_debug_4(NLW_inst_pipe_debug_4_UNCONNECTED[7:0]),
+        .pipe_debug_5(NLW_inst_pipe_debug_5_UNCONNECTED[7:0]),
+        .pipe_debug_6(NLW_inst_pipe_debug_6_UNCONNECTED[7:0]),
+        .pipe_debug_7(NLW_inst_pipe_debug_7_UNCONNECTED[7:0]),
+        .pipe_debug_8(NLW_inst_pipe_debug_8_UNCONNECTED[7:0]),
+        .pipe_debug_9(NLW_inst_pipe_debug_9_UNCONNECTED[7:0]),
+        .pipe_dmonitorout(NLW_inst_pipe_dmonitorout_UNCONNECTED[119:0]),
+        .pipe_drp_fsm(NLW_inst_pipe_drp_fsm_UNCONNECTED[55:0]),
+        .pipe_eyescandataerror(NLW_inst_pipe_eyescandataerror_UNCONNECTED[7:0]),
+        .pipe_gen3_out(NLW_inst_pipe_gen3_out_UNCONNECTED),
+        .pipe_loopback({1'b0,1'b0,1'b0}),
+        .pipe_mmcm_lock_in(1'b1),
+        .pipe_mmcm_rst_n(1'b1),
+        .pipe_oobclk_in(1'b0),
+        .pipe_pclk_in(1'b0),
+        .pipe_pclk_sel_out(NLW_inst_pipe_pclk_sel_out_UNCONNECTED[7:0]),
+        .pipe_qpll_lock(NLW_inst_pipe_qpll_lock_UNCONNECTED[1:0]),
+        .pipe_qrst_fsm(NLW_inst_pipe_qrst_fsm_UNCONNECTED[11:0]),
+        .pipe_qrst_idle(NLW_inst_pipe_qrst_idle_UNCONNECTED),
+        .pipe_rate_fsm(NLW_inst_pipe_rate_fsm_UNCONNECTED[39:0]),
+        .pipe_rate_idle(NLW_inst_pipe_rate_idle_UNCONNECTED),
+        .pipe_rst_fsm(NLW_inst_pipe_rst_fsm_UNCONNECTED[4:0]),
+        .pipe_rst_idle(NLW_inst_pipe_rst_idle_UNCONNECTED),
+        .pipe_rx_0_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_1_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_2_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_3_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_4_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_5_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_6_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rx_7_sigs({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rxbufstatus(NLW_inst_pipe_rxbufstatus_UNCONNECTED[23:0]),
+        .pipe_rxcommadet(NLW_inst_pipe_rxcommadet_UNCONNECTED[7:0]),
+        .pipe_rxdisperr(NLW_inst_pipe_rxdisperr_UNCONNECTED[63:0]),
+        .pipe_rxdlysresetdone(NLW_inst_pipe_rxdlysresetdone_UNCONNECTED[7:0]),
+        .pipe_rxnotintable(NLW_inst_pipe_rxnotintable_UNCONNECTED[63:0]),
+        .pipe_rxoutclk_in({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_rxoutclk_out(NLW_inst_pipe_rxoutclk_out_UNCONNECTED[7:0]),
+        .pipe_rxphaligndone(NLW_inst_pipe_rxphaligndone_UNCONNECTED[7:0]),
+        .pipe_rxpmaresetdone(NLW_inst_pipe_rxpmaresetdone_UNCONNECTED[7:0]),
+        .pipe_rxprbscntreset(1'b0),
+        .pipe_rxprbserr(NLW_inst_pipe_rxprbserr_UNCONNECTED[7:0]),
+        .pipe_rxprbssel({1'b0,1'b0,1'b0}),
+        .pipe_rxstatus(NLW_inst_pipe_rxstatus_UNCONNECTED[23:0]),
+        .pipe_rxsyncdone(NLW_inst_pipe_rxsyncdone_UNCONNECTED[7:0]),
+        .pipe_rxusrclk_in(1'b0),
+        .pipe_sync_fsm_rx(NLW_inst_pipe_sync_fsm_rx_UNCONNECTED[55:0]),
+        .pipe_sync_fsm_tx(NLW_inst_pipe_sync_fsm_tx_UNCONNECTED[47:0]),
+        .pipe_tx_0_sigs(NLW_inst_pipe_tx_0_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_1_sigs(NLW_inst_pipe_tx_1_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_2_sigs(NLW_inst_pipe_tx_2_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_3_sigs(NLW_inst_pipe_tx_3_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_4_sigs(NLW_inst_pipe_tx_4_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_5_sigs(NLW_inst_pipe_tx_5_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_6_sigs(NLW_inst_pipe_tx_6_sigs_UNCONNECTED[24:0]),
+        .pipe_tx_7_sigs(NLW_inst_pipe_tx_7_sigs_UNCONNECTED[24:0]),
+        .pipe_txdlysresetdone(NLW_inst_pipe_txdlysresetdone_UNCONNECTED[7:0]),
+        .pipe_txinhibit({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .pipe_txoutclk_out(NLW_inst_pipe_txoutclk_out_UNCONNECTED),
+        .pipe_txphaligndone(NLW_inst_pipe_txphaligndone_UNCONNECTED[7:0]),
+        .pipe_txphinitdone(NLW_inst_pipe_txphinitdone_UNCONNECTED[7:0]),
+        .pipe_txprbsforceerr(1'b0),
+        .pipe_txprbssel({1'b0,1'b0,1'b0}),
+        .pipe_userclk1_in(1'b1),
+        .pipe_userclk2_in(1'b0),
+        .pl_directed_change_done(pl_directed_change_done),
+        .pl_directed_link_auton(pl_directed_link_auton),
+        .pl_directed_link_change(pl_directed_link_change),
+        .pl_directed_link_speed(pl_directed_link_speed),
+        .pl_directed_link_width(pl_directed_link_width),
+        .pl_downstream_deemph_source(pl_downstream_deemph_source),
+        .pl_initial_link_width(pl_initial_link_width),
+        .pl_lane_reversal_mode(pl_lane_reversal_mode),
+        .pl_link_gen2_cap(pl_link_gen2_cap),
+        .pl_link_partner_gen2_supported(pl_link_partner_gen2_supported),
+        .pl_link_upcfg_cap(pl_link_upcfg_cap),
+        .pl_ltssm_state(pl_ltssm_state),
+        .pl_phy_lnk_up(pl_phy_lnk_up),
+        .pl_received_hot_rst(pl_received_hot_rst),
+        .pl_rx_pm_state(pl_rx_pm_state),
+        .pl_sel_lnk_rate(pl_sel_lnk_rate),
+        .pl_sel_lnk_width(pl_sel_lnk_width),
+        .pl_transmit_hot_rst(pl_transmit_hot_rst),
+        .pl_tx_pm_state(pl_tx_pm_state),
+        .pl_upstream_prefer_deemph(pl_upstream_prefer_deemph),
+        .qpll_drp_clk(NLW_inst_qpll_drp_clk_UNCONNECTED),
+        .qpll_drp_crscode({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .qpll_drp_done({1'b0,1'b0}),
+        .qpll_drp_fsm({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .qpll_drp_gen3(NLW_inst_qpll_drp_gen3_UNCONNECTED),
+        .qpll_drp_ovrd(NLW_inst_qpll_drp_ovrd_UNCONNECTED),
+        .qpll_drp_reset({1'b0,1'b0}),
+        .qpll_drp_rst_n(NLW_inst_qpll_drp_rst_n_UNCONNECTED),
+        .qpll_drp_start(NLW_inst_qpll_drp_start_UNCONNECTED),
+        .qpll_qplld(NLW_inst_qpll_qplld_UNCONNECTED),
+        .qpll_qplllock({1'b0,1'b0}),
+        .qpll_qplloutclk({1'b0,1'b0}),
+        .qpll_qplloutrefclk({1'b0,1'b0}),
+        .qpll_qpllreset(NLW_inst_qpll_qpllreset_UNCONNECTED[1:0]),
+        .rx_np_ok(1'b1),
+        .rx_np_req(1'b1),
+        .s_axis_tx_tdata(s_axis_tx_tdata),
+        .s_axis_tx_tkeep(s_axis_tx_tkeep),
+        .s_axis_tx_tlast(s_axis_tx_tlast),
+        .s_axis_tx_tready(s_axis_tx_tready),
+        .s_axis_tx_tuser(s_axis_tx_tuser),
+        .s_axis_tx_tvalid(s_axis_tx_tvalid),
+        .startup_cfgclk(NLW_inst_startup_cfgclk_UNCONNECTED),
+        .startup_cfgmclk(NLW_inst_startup_cfgmclk_UNCONNECTED),
+        .startup_clk(1'b0),
+        .startup_eos(NLW_inst_startup_eos_UNCONNECTED),
+        .startup_eos_in(1'b0),
+        .startup_gsr(1'b0),
+        .startup_gts(1'b0),
+        .startup_keyclearb(1'b1),
+        .startup_pack(1'b0),
+        .startup_preq(NLW_inst_startup_preq_UNCONNECTED),
+        .startup_usrcclko(1'b1),
+        .startup_usrcclkts(1'b0),
+        .startup_usrdoneo(1'b0),
+        .startup_usrdonets(1'b1),
+        .sys_clk(sys_clk),
+        .sys_rst_n(sys_rst_n),
+        .tx_buf_av(NLW_inst_tx_buf_av_UNCONNECTED[5:0]),
+        .tx_cfg_gnt(1'b1),
+        .tx_cfg_req(NLW_inst_tx_cfg_req_UNCONNECTED),
+        .tx_err_drop(NLW_inst_tx_err_drop_UNCONNECTED),
+        .user_app_rdy(user_app_rdy),
+        .user_clk_out(user_clk_out),
+        .user_lnk_up(user_lnk_up),
+        .user_reset_out(user_reset_out));
+endmodule
+
 module pcie_pcie_axi_basic_rx
    (trn_rsrc_dsc_d,
     m_axis_rx_tvalid_reg,
@@ -2067,7 +2066,6 @@ module pcie_pcie_axi_basic_rx
         .user_reset_out_reg(rx_pipeline_inst_n_164));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_rx_null_gen" *) 
 module pcie_pcie_axi_basic_rx_null_gen
    (cur_state,
     null_mux_sel_reg,
@@ -2593,7 +2591,6 @@ module pcie_pcie_axi_basic_rx_null_gen
         .O(\reg_pkt_len_counter_reg[1]_0 ));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_rx_pipeline" *) 
 module pcie_pcie_axi_basic_rx_pipeline
    (trn_rsrc_dsc_d,
     m_axis_rx_tvalid_reg_0,
@@ -5989,7 +5986,6 @@ module pcie_pcie_axi_basic_rx_pipeline
         .R(SR));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_top" *) 
 module pcie_pcie_axi_basic_top
    (TRNTREM,
     trn_rsrc_dsc_d,
@@ -6207,7 +6203,6 @@ module pcie_pcie_axi_basic_top
         .tx_cfg_gnt(tx_cfg_gnt));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_tx" *) 
 module pcie_pcie_axi_basic_tx
    (TRNTREM,
     reg_tcfg_gnt,
@@ -6364,7 +6359,6 @@ module pcie_pcie_axi_basic_tx
         .trn_tsrc_rdy(trn_tsrc_rdy));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_tx_pipeline" *) 
 module pcie_pcie_axi_basic_tx_pipeline
    (TRNTREM,
     trn_teof,
@@ -7315,7 +7309,6 @@ module pcie_pcie_axi_basic_tx_pipeline
         .R(SR));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_axi_basic_tx_thrtl_ctl" *) 
 module pcie_pcie_axi_basic_tx_thrtl_ctl
    (reg_tcfg_gnt,
     tready_thrtl_reg_0,
@@ -7940,7 +7933,6 @@ module pcie_pcie_axi_basic_tx_thrtl_ctl
         .S(SR));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_core_top" *) 
 module pcie_pcie_core_top
    (pl_ltssm_state,
     INT_RXUSRCLK_OUT,
@@ -9317,7 +9309,6 @@ module pcie_pcie_core_top
         .Q(user_reset_out));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_gt_common" *) 
 module pcie_pcie_gt_common
    (RATE_QPLLLOCK,
     sys_clk_0,
@@ -9461,7 +9452,6 @@ module pcie_pcie_gt_common_42
         .sys_clk_1(sys_clk_1));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_gt_rx_valid_filter_7x" *) 
 module pcie_pcie_gt_rx_valid_filter_7x
    (gt_rxvalid_q_reg_0,
     gt_rx_phy_status_q,
@@ -13322,7 +13312,6 @@ module pcie_pcie_gt_rx_valid_filter_7x_20
         .R(SR));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_gt_top" *) 
 module pcie_pcie_gt_top
    (pipe_rx0_valid_gt,
     phy_rdy_n,
@@ -14164,7 +14153,6 @@ module pcie_pcie_gt_top
         .Q(reg_clock_locked));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_gt_wrapper" *) 
 module pcie_pcie_gt_wrapper
    (cpllpd,
     RATE_CPLLLOCK,
@@ -20108,7 +20096,6 @@ module pcie_pcie_gt_wrapper_58
         .TXUSRCLK2(CLK_RXUSRCLK));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_gtx_cpllpd_ovrd" *) 
 module pcie_pcie_gtx_cpllpd_ovrd
    (cpllpd_6,
     CPLLRESET0,
@@ -21216,75 +21203,75 @@ endmodule
 (* CFG_STATUS_IF = "FALSE" *) (* C_DATA_WIDTH = "128" *) (* DowngradeIPIdentifiedWarnings = "yes" *) 
 (* ENABLE_JTAG_DBG = "FALSE" *) (* ERR_REPORTING_IF = "TRUE" *) (* EXT_CH_GT_DRP = "FALSE" *) 
 (* EXT_PIPE_INTERFACE = "FALSE" *) (* EXT_STARTUP_PRIMITIVE = "FALSE" *) (* KEEP_WIDTH = "16" *) 
-(* LINK_CAP_MAX_LINK_WIDTH = "8" *) (* ORIG_REF_NAME = "pcie_pcie2_top" *) (* PCIE_ASYNC_EN = "FALSE" *) 
-(* PCIE_EXT_CLK = "FALSE" *) (* PCIE_EXT_GT_COMMON = "FALSE" *) (* PIPE_SIM = "FALSE" *) 
-(* PL_INTERFACE = "TRUE" *) (* RCV_MSG_IF = "FALSE" *) (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
-(* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) (* bar_0 = "FFF80000" *) (* bar_1 = "00000000" *) 
-(* bar_2 = "00000000" *) (* bar_3 = "00000000" *) (* bar_4 = "00000000" *) 
-(* bar_5 = "00000000" *) (* bram_lat = "2" *) (* c_aer_base_ptr = "000" *) 
-(* c_aer_cap_ecrc_check_capable = "FALSE" *) (* c_aer_cap_ecrc_gen_capable = "FALSE" *) (* c_aer_cap_multiheader = "FALSE" *) 
-(* c_aer_cap_nextptr = "000" *) (* c_aer_cap_on = "FALSE" *) (* c_aer_cap_optional_err_support = "000000" *) 
-(* c_aer_cap_permit_rooterr_update = "FALSE" *) (* c_buf_opt_bma = "FALSE" *) (* c_component_name = "pcie" *) 
-(* c_cpl_inf = "TRUE" *) (* c_cpl_infinite = "TRUE" *) (* c_cpl_timeout_disable_sup = "FALSE" *) 
-(* c_cpl_timeout_range = "0010" *) (* c_cpl_timeout_ranges_sup = "2" *) (* c_d1_support = "FALSE" *) 
-(* c_d2_support = "FALSE" *) (* c_de_emph = "FALSE" *) (* c_dev_cap2_ari_forwarding_supported = "FALSE" *) 
-(* c_dev_cap2_atomicop32_completer_supported = "FALSE" *) (* c_dev_cap2_atomicop64_completer_supported = "FALSE" *) (* c_dev_cap2_atomicop_routing_supported = "FALSE" *) 
-(* c_dev_cap2_cas128_completer_supported = "FALSE" *) (* c_dev_cap2_tph_completer_supported = "00" *) (* c_dev_control_ext_tag_default = "FALSE" *) 
-(* c_dev_port_type = "0" *) (* c_dis_lane_reverse = "TRUE" *) (* c_disable_rx_poisoned_resp = "FALSE" *) 
-(* c_disable_scrambling = "FALSE" *) (* c_disable_tx_aspm_l0s = "FALSE" *) (* c_dll_lnk_actv_cap = "FALSE" *) 
-(* c_dsi_bool = "FALSE" *) (* c_dsn_base_ptr = "000" *) (* c_dsn_cap_enabled = "FALSE" *) 
-(* c_dsn_next_ptr = "000" *) (* c_enable_msg_route = "00000000000" *) (* c_ep_l0s_accpt_lat = "0" *) 
-(* c_ep_l1_accpt_lat = "7" *) (* c_ext_pci_cfg_space_addr = "3FF" *) (* c_external_clocking = "TRUE" *) 
-(* c_fc_cpld = "370" *) (* c_fc_cplh = "72" *) (* c_fc_npd = "8" *) 
-(* c_fc_nph = "4" *) (* c_fc_pd = "32" *) (* c_fc_ph = "4" *) 
-(* c_gen1 = "1'b1" *) (* c_header_type = "00" *) (* c_hw_auton_spd_disable = "FALSE" *) 
-(* c_int_width = "64" *) (* c_last_cfg_dw = "100" *) (* c_link_cap_aspm_optionality = "FALSE" *) 
-(* c_ll_ack_timeout = "0000" *) (* c_ll_ack_timeout_enable = "FALSE" *) (* c_ll_ack_timeout_function = "0" *) 
-(* c_ll_replay_timeout = "0000" *) (* c_ll_replay_timeout_enable = "FALSE" *) (* c_ll_replay_timeout_func = "1" *) 
-(* c_lnk_bndwdt_notif = "FALSE" *) (* c_msi = "0" *) (* c_msi_64b_addr = "TRUE" *) 
-(* c_msi_cap_on = "TRUE" *) (* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) 
-(* c_msix_cap_on = "FALSE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) 
-(* c_msix_pba_offset = "0" *) (* c_msix_table_bir = "0" *) (* c_msix_table_offset = "0" *) 
-(* c_msix_table_size = "000" *) (* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) 
-(* c_pcie_cap_next_ptr = "00" *) (* c_pcie_cap_slot_implemented = "FALSE" *) (* c_pcie_dbg_ports = "FALSE" *) 
-(* c_pcie_fast_config = "0" *) (* c_perf_level_high = "TRUE" *) (* c_phantom_functions = "0" *) 
-(* c_pm_cap_next_ptr = "48" *) (* c_pme_support = "01" *) (* c_rbar_base_ptr = "000" *) 
-(* c_rbar_cap_control_encodedbar0 = "00" *) (* c_rbar_cap_control_encodedbar1 = "00" *) (* c_rbar_cap_control_encodedbar2 = "00" *) 
-(* c_rbar_cap_control_encodedbar3 = "00" *) (* c_rbar_cap_control_encodedbar4 = "00" *) (* c_rbar_cap_control_encodedbar5 = "00" *) 
-(* c_rbar_cap_index0 = "0" *) (* c_rbar_cap_index1 = "0" *) (* c_rbar_cap_index2 = "0" *) 
-(* c_rbar_cap_index3 = "0" *) (* c_rbar_cap_index4 = "0" *) (* c_rbar_cap_index5 = "0" *) 
-(* c_rbar_cap_nextptr = "000" *) (* c_rbar_cap_on = "FALSE" *) (* c_rbar_cap_sup0 = "00001" *) 
-(* c_rbar_cap_sup1 = "00001" *) (* c_rbar_cap_sup2 = "00001" *) (* c_rbar_cap_sup3 = "00001" *) 
-(* c_rbar_cap_sup4 = "00001" *) (* c_rbar_cap_sup5 = "00001" *) (* c_rbar_num = "0" *) 
-(* c_rcb = "0" *) (* c_recrc_check = "0" *) (* c_recrc_check_trim = "FALSE" *) 
-(* c_rev_gt_order = "FALSE" *) (* c_root_cap_crs = "FALSE" *) (* c_rx_raddr_lat = "1" *) 
-(* c_rx_ram_limit = "3FF" *) (* c_rx_rdata_lat = "3" *) (* c_rx_write_lat = "1" *) 
-(* c_silicon_rev = "2" *) (* c_slot_cap_attn_butn = "FALSE" *) (* c_slot_cap_attn_ind = "FALSE" *) 
-(* c_slot_cap_elec_interlock = "FALSE" *) (* c_slot_cap_hotplug_cap = "FALSE" *) (* c_slot_cap_hotplug_surprise = "FALSE" *) 
-(* c_slot_cap_mrl = "FALSE" *) (* c_slot_cap_no_cmd_comp_sup = "FALSE" *) (* c_slot_cap_physical_slot_num = "0" *) 
-(* c_slot_cap_pwr_ctrl = "FALSE" *) (* c_slot_cap_pwr_ind = "FALSE" *) (* c_slot_cap_pwr_limit_scale = "0" *) 
-(* c_slot_cap_pwr_limit_value = "0" *) (* c_surprise_dn_err_cap = "FALSE" *) (* c_trgt_lnk_spd = "2" *) 
-(* c_trn_np_fc = "TRUE" *) (* c_tx_last_tlp = "31" *) (* c_tx_raddr_lat = "1" *) 
-(* c_tx_rdata_lat = "3" *) (* c_tx_write_lat = "1" *) (* c_upconfig_capable = "TRUE" *) 
-(* c_upstream_facing = "TRUE" *) (* c_ur_atomic = "FALSE" *) (* c_ur_inv_req = "FALSE" *) 
-(* c_ur_prs_response = "FALSE" *) (* c_vc_base_ptr = "000" *) (* c_vc_cap_enabled = "FALSE" *) 
-(* c_vc_cap_reject_snoop = "FALSE" *) (* c_vc_next_ptr = "000" *) (* c_vsec_base_ptr = "000" *) 
-(* c_vsec_cap_enabled = "FALSE" *) (* c_vsec_next_ptr = "000" *) (* c_xlnx_ref_board = "KC705_REVC" *) 
-(* cap_ver = "2" *) (* cardbus_cis_ptr = "00000000" *) (* class_code = "098000" *) 
-(* cmps = "0" *) (* con_scl_fctr_d0_state = "0" *) (* con_scl_fctr_d1_state = "0" *) 
-(* con_scl_fctr_d2_state = "0" *) (* con_scl_fctr_d3_state = "0" *) (* cost_table = "1" *) 
-(* d1_sup = "0" *) (* d2_sup = "0" *) (* dev_id = "AACC" *) 
-(* dev_port_type = "0000" *) (* dis_scl_fctr_d0_state = "0" *) (* dis_scl_fctr_d1_state = "0" *) 
-(* dis_scl_fctr_d2_state = "0" *) (* dis_scl_fctr_d3_state = "0" *) (* dsi = "0" *) 
-(* ep_l0s_accpt_lat = "000" *) (* ep_l1_accpt_lat = "111" *) (* ext_tag_fld_sup = "FALSE" *) 
-(* int_pin = "0" *) (* intx = "FALSE" *) (* max_lnk_spd = "2" *) 
-(* max_lnk_wdt = "001000" *) (* mps = "000" *) (* no_soft_rst = "TRUE" *) 
-(* pci_exp_int_freq = "3" *) (* pci_exp_ref_freq = "0" *) (* phantm_func_sup = "00" *) 
-(* pme_sup = "01" *) (* pwr_con_d0_state = "00" *) (* pwr_con_d1_state = "00" *) 
-(* pwr_con_d2_state = "00" *) (* pwr_con_d3_state = "00" *) (* pwr_dis_d0_state = "00" *) 
-(* pwr_dis_d1_state = "00" *) (* pwr_dis_d2_state = "00" *) (* pwr_dis_d3_state = "00" *) 
-(* rev_id = "00" *) (* slot_clk = "TRUE" *) (* subsys_id = "0007" *) 
-(* subsys_ven_id = "0" *) (* ven_id = "10EE" *) (* xrom_bar = "00000000" *) 
+(* LINK_CAP_MAX_LINK_WIDTH = "8" *) (* PCIE_ASYNC_EN = "FALSE" *) (* PCIE_EXT_CLK = "FALSE" *) 
+(* PCIE_EXT_GT_COMMON = "FALSE" *) (* PIPE_SIM = "FALSE" *) (* PL_INTERFACE = "TRUE" *) 
+(* RCV_MSG_IF = "FALSE" *) (* SHARED_LOGIC_IN_CORE = "TRUE" *) (* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) 
+(* bar_0 = "FFF80000" *) (* bar_1 = "00000000" *) (* bar_2 = "00000000" *) 
+(* bar_3 = "00000000" *) (* bar_4 = "00000000" *) (* bar_5 = "00000000" *) 
+(* bram_lat = "2" *) (* c_aer_base_ptr = "000" *) (* c_aer_cap_ecrc_check_capable = "FALSE" *) 
+(* c_aer_cap_ecrc_gen_capable = "FALSE" *) (* c_aer_cap_multiheader = "FALSE" *) (* c_aer_cap_nextptr = "000" *) 
+(* c_aer_cap_on = "FALSE" *) (* c_aer_cap_optional_err_support = "000000" *) (* c_aer_cap_permit_rooterr_update = "FALSE" *) 
+(* c_buf_opt_bma = "FALSE" *) (* c_component_name = "pcie" *) (* c_cpl_inf = "TRUE" *) 
+(* c_cpl_infinite = "TRUE" *) (* c_cpl_timeout_disable_sup = "FALSE" *) (* c_cpl_timeout_range = "0010" *) 
+(* c_cpl_timeout_ranges_sup = "2" *) (* c_d1_support = "FALSE" *) (* c_d2_support = "FALSE" *) 
+(* c_de_emph = "FALSE" *) (* c_dev_cap2_ari_forwarding_supported = "FALSE" *) (* c_dev_cap2_atomicop32_completer_supported = "FALSE" *) 
+(* c_dev_cap2_atomicop64_completer_supported = "FALSE" *) (* c_dev_cap2_atomicop_routing_supported = "FALSE" *) (* c_dev_cap2_cas128_completer_supported = "FALSE" *) 
+(* c_dev_cap2_tph_completer_supported = "00" *) (* c_dev_control_ext_tag_default = "FALSE" *) (* c_dev_port_type = "0" *) 
+(* c_dis_lane_reverse = "TRUE" *) (* c_disable_rx_poisoned_resp = "FALSE" *) (* c_disable_scrambling = "FALSE" *) 
+(* c_disable_tx_aspm_l0s = "FALSE" *) (* c_dll_lnk_actv_cap = "FALSE" *) (* c_dsi_bool = "FALSE" *) 
+(* c_dsn_base_ptr = "000" *) (* c_dsn_cap_enabled = "FALSE" *) (* c_dsn_next_ptr = "000" *) 
+(* c_enable_msg_route = "00000000000" *) (* c_ep_l0s_accpt_lat = "0" *) (* c_ep_l1_accpt_lat = "7" *) 
+(* c_ext_pci_cfg_space_addr = "3FF" *) (* c_external_clocking = "TRUE" *) (* c_fc_cpld = "370" *) 
+(* c_fc_cplh = "72" *) (* c_fc_npd = "8" *) (* c_fc_nph = "4" *) 
+(* c_fc_pd = "32" *) (* c_fc_ph = "4" *) (* c_gen1 = "1'b1" *) 
+(* c_header_type = "00" *) (* c_hw_auton_spd_disable = "FALSE" *) (* c_int_width = "64" *) 
+(* c_last_cfg_dw = "100" *) (* c_link_cap_aspm_optionality = "FALSE" *) (* c_ll_ack_timeout = "0000" *) 
+(* c_ll_ack_timeout_enable = "FALSE" *) (* c_ll_ack_timeout_function = "0" *) (* c_ll_replay_timeout = "0000" *) 
+(* c_ll_replay_timeout_enable = "FALSE" *) (* c_ll_replay_timeout_func = "1" *) (* c_lnk_bndwdt_notif = "FALSE" *) 
+(* c_msi = "0" *) (* c_msi_64b_addr = "TRUE" *) (* c_msi_cap_on = "TRUE" *) 
+(* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) (* c_msix_cap_on = "FALSE" *) 
+(* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) (* c_msix_pba_offset = "0" *) 
+(* c_msix_table_bir = "0" *) (* c_msix_table_offset = "0" *) (* c_msix_table_size = "000" *) 
+(* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) (* c_pcie_cap_next_ptr = "00" *) 
+(* c_pcie_cap_slot_implemented = "FALSE" *) (* c_pcie_dbg_ports = "FALSE" *) (* c_pcie_fast_config = "0" *) 
+(* c_perf_level_high = "TRUE" *) (* c_phantom_functions = "0" *) (* c_pm_cap_next_ptr = "48" *) 
+(* c_pme_support = "01" *) (* c_rbar_base_ptr = "000" *) (* c_rbar_cap_control_encodedbar0 = "00" *) 
+(* c_rbar_cap_control_encodedbar1 = "00" *) (* c_rbar_cap_control_encodedbar2 = "00" *) (* c_rbar_cap_control_encodedbar3 = "00" *) 
+(* c_rbar_cap_control_encodedbar4 = "00" *) (* c_rbar_cap_control_encodedbar5 = "00" *) (* c_rbar_cap_index0 = "0" *) 
+(* c_rbar_cap_index1 = "0" *) (* c_rbar_cap_index2 = "0" *) (* c_rbar_cap_index3 = "0" *) 
+(* c_rbar_cap_index4 = "0" *) (* c_rbar_cap_index5 = "0" *) (* c_rbar_cap_nextptr = "000" *) 
+(* c_rbar_cap_on = "FALSE" *) (* c_rbar_cap_sup0 = "00001" *) (* c_rbar_cap_sup1 = "00001" *) 
+(* c_rbar_cap_sup2 = "00001" *) (* c_rbar_cap_sup3 = "00001" *) (* c_rbar_cap_sup4 = "00001" *) 
+(* c_rbar_cap_sup5 = "00001" *) (* c_rbar_num = "0" *) (* c_rcb = "0" *) 
+(* c_recrc_check = "0" *) (* c_recrc_check_trim = "FALSE" *) (* c_rev_gt_order = "FALSE" *) 
+(* c_root_cap_crs = "FALSE" *) (* c_rx_raddr_lat = "1" *) (* c_rx_ram_limit = "3FF" *) 
+(* c_rx_rdata_lat = "3" *) (* c_rx_write_lat = "1" *) (* c_silicon_rev = "2" *) 
+(* c_slot_cap_attn_butn = "FALSE" *) (* c_slot_cap_attn_ind = "FALSE" *) (* c_slot_cap_elec_interlock = "FALSE" *) 
+(* c_slot_cap_hotplug_cap = "FALSE" *) (* c_slot_cap_hotplug_surprise = "FALSE" *) (* c_slot_cap_mrl = "FALSE" *) 
+(* c_slot_cap_no_cmd_comp_sup = "FALSE" *) (* c_slot_cap_physical_slot_num = "0" *) (* c_slot_cap_pwr_ctrl = "FALSE" *) 
+(* c_slot_cap_pwr_ind = "FALSE" *) (* c_slot_cap_pwr_limit_scale = "0" *) (* c_slot_cap_pwr_limit_value = "0" *) 
+(* c_surprise_dn_err_cap = "FALSE" *) (* c_trgt_lnk_spd = "2" *) (* c_trn_np_fc = "TRUE" *) 
+(* c_tx_last_tlp = "31" *) (* c_tx_raddr_lat = "1" *) (* c_tx_rdata_lat = "3" *) 
+(* c_tx_write_lat = "1" *) (* c_upconfig_capable = "TRUE" *) (* c_upstream_facing = "TRUE" *) 
+(* c_ur_atomic = "FALSE" *) (* c_ur_inv_req = "FALSE" *) (* c_ur_prs_response = "FALSE" *) 
+(* c_vc_base_ptr = "000" *) (* c_vc_cap_enabled = "FALSE" *) (* c_vc_cap_reject_snoop = "FALSE" *) 
+(* c_vc_next_ptr = "000" *) (* c_vsec_base_ptr = "000" *) (* c_vsec_cap_enabled = "FALSE" *) 
+(* c_vsec_next_ptr = "000" *) (* c_xlnx_ref_board = "KC705_REVC" *) (* cap_ver = "2" *) 
+(* cardbus_cis_ptr = "00000000" *) (* class_code = "098000" *) (* cmps = "0" *) 
+(* con_scl_fctr_d0_state = "0" *) (* con_scl_fctr_d1_state = "0" *) (* con_scl_fctr_d2_state = "0" *) 
+(* con_scl_fctr_d3_state = "0" *) (* cost_table = "1" *) (* d1_sup = "0" *) 
+(* d2_sup = "0" *) (* dev_id = "AACC" *) (* dev_port_type = "0000" *) 
+(* dis_scl_fctr_d0_state = "0" *) (* dis_scl_fctr_d1_state = "0" *) (* dis_scl_fctr_d2_state = "0" *) 
+(* dis_scl_fctr_d3_state = "0" *) (* dsi = "0" *) (* ep_l0s_accpt_lat = "000" *) 
+(* ep_l1_accpt_lat = "111" *) (* ext_tag_fld_sup = "FALSE" *) (* int_pin = "0" *) 
+(* intx = "FALSE" *) (* max_lnk_spd = "2" *) (* max_lnk_wdt = "001000" *) 
+(* mps = "000" *) (* no_soft_rst = "TRUE" *) (* pci_exp_int_freq = "3" *) 
+(* pci_exp_ref_freq = "0" *) (* phantm_func_sup = "00" *) (* pme_sup = "01" *) 
+(* pwr_con_d0_state = "00" *) (* pwr_con_d1_state = "00" *) (* pwr_con_d2_state = "00" *) 
+(* pwr_con_d3_state = "00" *) (* pwr_dis_d0_state = "00" *) (* pwr_dis_d1_state = "00" *) 
+(* pwr_dis_d2_state = "00" *) (* pwr_dis_d3_state = "00" *) (* rev_id = "00" *) 
+(* slot_clk = "TRUE" *) (* subsys_id = "0007" *) (* subsys_ven_id = "0" *) 
+(* ven_id = "10EE" *) (* xrom_bar = "00000000" *) 
 module pcie_pcie_pcie2_top
    (pci_exp_txn,
     pci_exp_txp,
@@ -22946,7 +22933,6 @@ module pcie_pcie_pcie2_top
         .user_reset_out(user_reset_out));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_7x" *) 
 module pcie_pcie_pcie_7x
    (cfg_aer_ecrc_check_en,
     cfg_aer_ecrc_gen_en,
@@ -25154,7 +25140,6 @@ module pcie_pcie_pcie_7x
         .O(user_reset_int_reg));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_bram_7x" *) 
 module pcie_pcie_pcie_bram_7x
    (D,
     CLK_USERCLK1,
@@ -25284,7 +25269,7 @@ module pcie_pcie_pcie_bram_7x_8
   wire [32:0]\wr_lat_2.wdata_q ;
   wire \wr_lat_2.wen_q ;
 
-  pcie_BRAM_SDP_MACRO \use_sdp.ramb36sdp 
+  pcie_BRAM_SDP_MACRO_viv_ \use_sdp.ramb36sdp 
        (.ADDRARDADDR(ADDRARDADDR),
         .ADDRBWRADDR(ADDRBWRADDR),
         .CLK_USERCLK1(CLK_USERCLK1),
@@ -25294,7 +25279,6 @@ module pcie_pcie_pcie_bram_7x_8
         .\wr_lat_2.wen_q (\wr_lat_2.wen_q ));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_bram_top_7x" *) 
 module pcie_pcie_pcie_bram_top_7x
    (Q,
     \rdata_lat_3.rdata_q_reg[67] ,
@@ -25355,7 +25339,6 @@ module pcie_pcie_pcie_bram_top_7x
         .mim_tx_wen(mim_tx_wen));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_brams_7x" *) 
 module pcie_pcie_pcie_brams_7x
    (\rdata_lat_3.rdata_q_reg[67]_0 ,
     CLK_USERCLK1,
@@ -27361,7 +27344,6 @@ module pcie_pcie_pcie_brams_7x_7
         .R(1'b0));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_pipe_lane" *) 
 module pcie_pcie_pcie_pipe_lane
    (pipe_rx1_valid,
     pipe_rx1_chanisaligned,
@@ -30385,7 +30367,6 @@ module pcie_pcie_pcie_pipe_lane_6
         .S(\pipe_stages_1.pipe_rx_polarity_q_reg_0 ));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_pipe_misc" *) 
 module pcie_pcie_pcie_pipe_misc
    (pipe_tx_rcvr_det_gt,
     \pipe_stages_1.pipe_tx_rate_q_reg_0 ,
@@ -30457,7 +30438,6 @@ module pcie_pcie_pcie_pipe_misc
         .R(\pipe_stages_1.pipe_tx_rcvr_det_q_reg_0 ));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_pipe_pipeline" *) 
 module pcie_pcie_pcie_pipe_pipeline
    (pipe_rx1_valid,
     pipe_rx1_chanisaligned,
@@ -31213,7 +31193,6 @@ module pcie_pcie_pcie_pipe_pipeline
         .pipe_tx_rcvr_det_gt(pipe_tx_rcvr_det_gt));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pcie_top" *) 
 module pcie_pcie_pcie_top
    (cfg_aer_ecrc_check_en,
     cfg_aer_ecrc_gen_en,
@@ -32630,7 +32609,6 @@ module pcie_pcie_pcie_top
         .pipe_tx_rcvr_det_gt(pipe_tx_rcvr_det_gt));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_clock" *) 
 module pcie_pcie_pipe_clock
    (mmcm_i_0,
     CLK_MMCM_LOCK,
@@ -33362,7 +33340,6 @@ module pcie_pcie_pipe_clock
         .O(CLK_USERCLK2));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_drp" *) 
 module pcie_pcie_pipe_drp
    (Q,
     DRPADDR,
@@ -46562,7 +46539,6 @@ module pcie_pcie_pipe_drp_59
         .R(RST_DCLK_RESET));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_eq" *) 
 module pcie_pcie_pipe_eq
    (TXPRECURSOR,
     TXMAINCURSOR,
@@ -69906,7 +69882,6 @@ module pcie_pcie_pipe_eq_60
         .R(RST_CPLLRESET));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_rate" *) 
 module pcie_pcie_pipe_rate
    (SYNC_TXSYNC_START,
     rxchbonden_0,
@@ -80738,7 +80713,6 @@ module pcie_pcie_pipe_rate_61
         .O(SYNC_TXSYNC_START));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_reset" *) 
 module pcie_pcie_pipe_reset
    (SS,
     Q,
@@ -82661,7 +82635,6 @@ module pcie_pcie_pipe_reset
         .R(SS));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_sync" *) 
 module pcie_pcie_pipe_sync
    (out,
     txphaligndone_reg3_reg_0,
@@ -87446,7 +87419,6 @@ module pcie_pcie_pipe_sync_62
         .R(RST_CPLLRESET));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_user" *) 
 module pcie_pcie_pipe_user
    (gt_rxvalid_q_reg,
     out,
@@ -95769,7 +95741,6 @@ module pcie_pcie_pipe_user_63
         .R(RST_CPLLRESET));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_pipe_wrapper" *) 
 module pcie_pcie_pipe_wrapper
    (cpllpd,
     cpllpd_0,
@@ -98331,7 +98302,6 @@ module pcie_pcie_pipe_wrapper
         .O(txdlysresetdone_reg1_i_2_n_0));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_qpll_drp" *) 
 module pcie_pcie_qpll_drp
    (DRP_ADDR,
     DRP_DI,
@@ -100931,7 +100901,6 @@ module pcie_pcie_qpll_drp_76
         .R(RST_DCLK_RESET));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_qpll_reset" *) 
 module pcie_pcie_qpll_reset
    (Q,
     pipe_qrst_fsm,
@@ -101855,7 +101824,6 @@ module pcie_pcie_qpll_reset
         .R(SS));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_qpll_wrapper" *) 
 module pcie_pcie_qpll_wrapper
    (DRP_RDY,
     RATE_QPLLLOCK,
@@ -102073,7 +102041,6 @@ module pcie_pcie_qpll_wrapper_77
         .REFCLKOUTMONITOR(\NLW_gtx_common.gtxe2_common_i_REFCLKOUTMONITOR_UNCONNECTED ));
 endmodule
 
-(* ORIG_REF_NAME = "pcie_rxeq_scan" *) 
 module pcie_pcie_rxeq_scan
    (D,
     rxeq_new_txcoeff_req,
@@ -114745,9 +114712,9 @@ module pcie_pcie_rxeq_scan_78
         .R(RST_CPLLRESET));
 endmodule
 
-(* DEST_SYNC_FF = "2" *) (* INIT_SYNC_FF = "0" *) (* ORIG_REF_NAME = "xpm_cdc_single" *) 
-(* SIM_ASSERT_CHK = "0" *) (* SRC_INPUT_REG = "0" *) (* VERSION = "0" *) 
-(* XPM_MODULE = "TRUE" *) (* xpm_cdc = "SINGLE" *) 
+(* DEST_SYNC_FF = "2" *) (* INIT_SYNC_FF = "0" *) (* SIM_ASSERT_CHK = "0" *) 
+(* SRC_INPUT_REG = "0" *) (* VERSION = "0" *) (* XPM_MODULE = "TRUE" *) 
+(* xpm_cdc = "SINGLE" *) 
 module pcie_xpm_cdc_single
    (src_clk,
     src_in,

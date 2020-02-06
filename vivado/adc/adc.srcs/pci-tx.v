@@ -24,21 +24,20 @@ module pci_tx (
   output  reg                     s_axis_tx_tvalid;
   output  reg [3:0]               s_axis_tx_tuser;
 
-  input       [127:0]             fifo_data;
+  input       [735:0]             fifo_data;
   output  reg                     fifo_rd;
   input                           fifo_empty;
 
 
 // local
 
-  reg [6:0]    sel;
+  reg [3:0]    sel;
   reg          header_done;
 
   reg [7:0]    req_type;
   reg [9:0]    req_len;
   reg [31:0]   req_header   [3:0];
-  reg [1023:0] req_data;
-      
+
   generate
     begin : gen_cpl_128
 
@@ -64,56 +63,54 @@ module pci_tx (
             begin
               if (req_len)
               begin
-                s_axis_tx_tdata[31:24] = req_data[(sel) +: 8];
-                s_axis_tx_tdata[23:16] = req_data[(sel+8) +: 8];
-                s_axis_tx_tdata[15:8] = req_data[(sel+16) +: 8];
-                s_axis_tx_tdata[7:0] = req_data[(sel+24) +: 8];
+                s_axis_tx_tdata[31:24] = fifo_data[(32*sel) +: 8];
+                s_axis_tx_tdata[23:16] = fifo_data[(32*sel+8) +: 8];
+                s_axis_tx_tdata[15:8] = fifo_data[(32*sel+16) +: 8];
+                s_axis_tx_tdata[7:0] = fifo_data[(32*sel+24) +: 8];
                 s_axis_tx_tkeep[3:0] = 4'b1111;
-                sel = sel + 32;
+                sel = sel + 1;
                 req_len = req_len - 1;
               end
  
               if (req_len)
               begin
-                s_axis_tx_tdata[63:56] = req_data[(sel) +: 8];
-                s_axis_tx_tdata[55:48] = req_data[(sel+8) +: 8];
-                s_axis_tx_tdata[47:40] = req_data[(sel+16) +: 8];
-                s_axis_tx_tdata[39:32] = req_data[(sel+24) +: 8];
+                s_axis_tx_tdata[63:56] = fifo_data[(32*sel) +: 8];
+                s_axis_tx_tdata[55:48] = fifo_data[(32*sel+8) +: 8];
+                s_axis_tx_tdata[47:40] = fifo_data[(32*sel+16) +: 8];
+                s_axis_tx_tdata[39:32] = fifo_data[(32*sel+24) +: 8];
                 s_axis_tx_tkeep[7:4] = 4'b1111;
-                sel = sel + 32;
+                sel = sel + 1;
                 req_len = req_len - 1;
               end
 
               if (req_len)
               begin
-                s_axis_tx_tdata[95:88] = req_data[(sel) +: 8];
-                s_axis_tx_tdata[87:80] = req_data[(sel+8) +: 8];
-                s_axis_tx_tdata[79:72] = req_data[(sel+16) +: 8];
-                s_axis_tx_tdata[71:64] = req_data[(sel+24) +: 8];
+                s_axis_tx_tdata[95:88] = fifo_data[(32*sel) +: 8];
+                s_axis_tx_tdata[87:80] = fifo_data[(32*sel+8) +: 8];
+                s_axis_tx_tdata[79:72] = fifo_data[(32*sel+16) +: 8];
+                s_axis_tx_tdata[71:64] = fifo_data[(32*sel+24) +: 8];
                 s_axis_tx_tkeep[11:8] = 4'b1111;
-                sel = sel + 32;
+                sel = sel + 1;
                 req_len = req_len - 1;
               end
 
               if (req_len)
               begin
-                s_axis_tx_tdata[127:120] = req_data[(sel) +: 8];
-                s_axis_tx_tdata[119:112] = req_data[(sel+8) +: 8];
-                s_axis_tx_tdata[111:104] = req_data[(sel+16) +: 8];
-                s_axis_tx_tdata[103:96] = req_data[(sel+24) +: 8];
+                s_axis_tx_tdata[127:120] = fifo_data[(32*sel) +: 8];
+                s_axis_tx_tdata[119:112] = fifo_data[(32*sel+8) +: 8];
+                s_axis_tx_tdata[111:104] = fifo_data[(32*sel+16) +: 8];
+                s_axis_tx_tdata[103:96] = fifo_data[(32*sel+24) +: 8];                
                 s_axis_tx_tkeep[15:12] = 4'b1111;
-                sel = sel + 32;
+                sel = sel + 1;
                 req_len = req_len - 1;
               end
             end
             else
             begin
-              req_data = wr_data;
-
-              req_header[0][31:0] = fifo_out[31:0];
-              req_header[1][31:0] = fifo_out[63:32];
-              req_header[2][31:0] = fifo_out[95:64];
-              req_header[3][31:0] = fifo_out[127:96];
+              req_header[0][31:0] = fifo_data[543:512];
+              req_header[1][31:0] = fifo_data[575:544];
+              req_header[2][31:0] = fifo_data[607:576];
+              req_header[3][31:0] = fifo_data[639:608];
 
               req_type = req_header[0][31:24];
               req_len = req_header[0][9:0];
@@ -132,13 +129,13 @@ module pci_tx (
               begin
                 if (req_len)
                 begin
-                  s_axis_tx_tdata[127:120] = req_data[7:0];
-                  s_axis_tx_tdata[119:112] = req_data[15:8];
-                  s_axis_tx_tdata[111:104] = req_data[23:16];
-                  s_axis_tx_tdata[103:96] = req_data[31:24];
+                  s_axis_tx_tdata[127:120] = fifo_data[7:0];
+                  s_axis_tx_tdata[119:112] = fifo_data[15:8];
+                  s_axis_tx_tdata[111:104] = fifo_data[23:16];
+                  s_axis_tx_tdata[103:96] = fifo_data[31:24];
                   s_axis_tx_tkeep[15:12] = 4'b1111;
                   req_len = req_len - 1;
-                  sel = 32;
+                  sel = 1;
                 end
               end
               else

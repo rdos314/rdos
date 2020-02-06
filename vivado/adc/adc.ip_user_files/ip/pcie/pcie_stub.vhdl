@@ -1,9 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Feb  1 20:24:00 2020
+-- Date        : Sat Feb  1 20:23:55 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/pcie_synth_1/pcie_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top pcie -prefix
+--               pcie_ pcie_stub.vhdl
 -- Design      : pcie
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7k325tffg900-2
