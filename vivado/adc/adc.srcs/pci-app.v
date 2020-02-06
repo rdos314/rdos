@@ -56,27 +56,27 @@ module pci_app (
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
 
-  wire [31:0]      fifo_in;                   
-  wire [31:0]      fifo_out;                   
-  reg              sdram_rd;
-  wire             sdram_wr;
-  wire             sdram_full;
-  wire             sdram_empty;
-
-  wire             pci_rd_par_active;
-  wire [3:0]       pci_rd_par_index;
-  wire [63:0]      pci_rd_par_data;
+  wire [131:0]     pci_fifo_in;                   
+  wire [131:0]     pci_fifo_out;                   
+  reg              pci_fifo_rd;
+  wire             pci_fifo_wr;
+  wire             pci_fifo_full;
+  wire             pci_fifo_empty;
 
   wire             pci_wr_active;
   wire [3:0]       pci_wr_index;
   wire [1023:0]    pci_wr_data;
-
-  reg              local_rd_active;
-  reg [3:0]        local_rd_index;
-  reg [1023:0]     local_rd_data;
   
-  wire [63:0]      local_rd_par_data;
+  reg              local_rd_active;
+  reg  [3:0]       local_rd_index;
+  reg  [1023:0]    local_rd_data;
   wire [1023:0]    local_wr_data;
+
+// local
+
+  reg  [63:0]      req_address;
+  reg  [31:0]      req_header   [1:0];
+  reg  [9:0]       req_len;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -121,26 +121,16 @@ module pci_app (
   wire                                        sys_rst_n;
   wire                                        sys_clk;
 
-sdram_fifo sdram_fifo_inst (
-  .clk(user_clk),                   // input wire clk
-  .srst(user_reset),                 // input wire srst
-  .din(fifo_in),                     // input wire [31 : 0] din
-  .wr_en(sdram_wr),                  // input wire wr_en
-  .rd_en(sdram_rd),                  // input wire rd_en
-  .dout(fifo_out),                   // output wire [31 : 0] dout
-  .full(),                           // output wire full
-  .almost_full(sdram_full),          // output wire almost_full
-  .empty(sdram_empty)                // output wire empty
-);
-
-sdram_rd_par sdram_rd_par_inst (
-  .clka(user_clock),             // input wire clka
-  .wea(pci_rd_par_active),       // input wire [0 : 0] wea
-  .addra(pci_rd_par_index),      // input wire [3 : 0] addra
-  .dina(pci_rd_par_data),        // input wire [63 : 0] dina
-  .clkb(user_clock),             // input wire clkb
-  .addrb(0),                     // input wire [3 : 0] addrb
-  .doutb(local_rd_par_data)      // output wire [63 : 0] doutb
+pci_fifo pci_fifo_inst (
+  .clk(user_clk),                // input wire clk
+  .srst(user_reset),             // input wire srst
+  .din(pci_fifo_in),             // input wire [31 : 0] din
+  .wr_en(pci_fifo_wr),           // input wire wr_en
+  .rd_en(pci_fifo_rd),           // input wire rd_en
+  .dout(pci_fifo_out),           // output wire [31 : 0] dout
+  .full(),                       // output wire full
+  .almost_full(pci_fifo_full),   // output wire almost_full
+  .empty(pci_fifo_empty)         // output wire empty
 );
 
 sdram_wr_data sdram_wr_data_inst (
@@ -358,13 +348,9 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),  // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),   // I
     
-    .sdram_fifo( fifo_in),
-    .sdram_wr( sdram_wr ),
-    .sdram_full( sdram_full ),
-
-    .rd_par_active(pci_rd_par_active),
-    .rd_par_index(pci_rd_par_index),
-    .rd_par_data(pci_rd_par_data),
+    .fifo_data( pci_fifo_in),
+    .fifo_wr( pci_fifo_wr ),
+    .fifo_full( pci_fifo_full ),
 
     .wr_active(pci_wr_active),
     .wr_index(pci_wr_index),
@@ -407,26 +393,54 @@ ila_1 ila_1_inst (
 
       always @ ( posedge user_clk ) 
       begin
-        if (!sdram_empty)
+        if (user_reset)
         begin
-          if (fifo_out[0] == 0)
-          begin
-            local_rd_data[1:0] <= 0;
-            local_rd_data[18:2] <= fifo_out[18:2];
-            local_rd_data[1023:19] <= 0;
-            local_rd_index[3:0] <= fifo_out[22:19];
-            local_rd_active <= 1;
-          end
-          else
-          begin
-            local_rd_active <= 0;
-          end
+            local_rd_index[3:0] = -1;
         end
         else
-          local_rd_active <= 0;
+        begin
+          local_rd_active = 0;
 
-        sdram_rd <= 1'b1;
+          if (!fifo_empty)
+          begin
+            fifo_rd = 1'b1;
 
+            req_address[63:2] = fifo_out[63:2];
+            req_header[0][31:0] = fifo_out[95:64];
+            req_header[1][31:0] = fifo_out[127:96];
+
+            req_len = req_header[0][9:0];
+
+            if (fifo_out[0] == 0)
+            begin
+              rd_par_data[9:0] = req_len;                  // len
+              rd_par_data[11:10] = 2'b0;                   // AT
+              rd_par_data[13:12] = req_header[0][13:12];   // Attr
+              rd_par_data[14] = req_header[0][14];         // EP
+              rd_par_data[15] = req_header[0][15];         // TD
+              rd_par_data[19:16] = 4'b0;                   // TH, AttrH, R
+              rd_par_data[22:20] = req_header[0][22:20];   // TC
+              rd_par_data[23] = 1'b0;                      // R
+              rd_par_data[24] = req_type[0];               // Copy locked bit
+ 
+              if (req_len)
+                  rd_par_data[31:25] = 6'b10_0101;         // Type + Fmt (data)
+              else
+                  rd_par_data[31:25] = 6'b00_0101;         // Type + Fmt (no data)
+
+              rd_par_data[38:32] = req_address[0][6:0];    // Lower address
+              rd_par_data[39] = 1'b0;                      // R
+              rd_par_data[47:40] = req_header[1][15:8];    // Tag
+              rd_par_data[63:48] = req_header[1][31:16];   // Requester ID
+
+              local_rd_data[1:0] <= 0;
+              local_rd_data[18:2] <= req_address[18:2];
+              local_rd_data[1023:19] <= 0;
+              local_rd_index = local_rd_index + 1;
+              local_rd_active = 1;
+            end
+          end
+        end
       end
     end
   endgenerate

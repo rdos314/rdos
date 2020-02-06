@@ -8,13 +8,9 @@ module pci_rx (
   m_axis_rx_tready,
   m_axis_rx_tuser,
   
-  sdram_fifo,
-  sdram_wr,
-  sdram_full,
-
-  rd_par_active,
-  rd_par_index,
-  rd_par_data,
+  fifo_data,
+  fifo_wr,
+  fifo_full,
 
   wr_active,
   wr_index,
@@ -31,13 +27,9 @@ module pci_rx (
   output reg                    m_axis_rx_tready;
   input      [21:0]             m_axis_rx_tuser;
 
-  output reg [31:0]             sdram_fifo;
-  output reg                    sdram_wr;
-  input  wire                   sdram_full;
-
-  output reg                    rd_par_active;
-  output reg [3:0]              rd_par_index;
-  output reg [63:0]             rd_par_data;
+  output reg [131:0]            fifo_data;
+  output reg                    fifo_wr;
+  input  wire                   fifo_full;
 
   output reg                    wr_active;
   output reg [3:0]              wr_index;
@@ -249,6 +241,13 @@ module pci_rx (
                        
             if (m_axis_rx_tuser[21]) // is final part of TLP
             begin
+              fifo_data[0] = req_wr;                        // write req
+              fifo_data[1] = m_axis_rx_tuser[2];            // BAR0 hit
+              fifo_data[31:2] = req_address[0][31:2];       // low address
+              fifo_data[63:32] = req_address[1][31:0];      // high address
+              fifo_data[95:64] = req_header[0][31:0];       // header 0 
+              fifo_data[127:96] = req_header[1][31:0];      // header 1
+
               if (req_wr)
               begin
                 wr_data[31:0] = req_data[0][31:0];
@@ -285,46 +284,17 @@ module pci_rx (
                 wr_data[1023:992] = req_data[31][31:0];
 
                 wr_index = wr_index + 1;
-                used_index = wr_index;
+                fifo_data[131:128] = wr_index[3:0];
                 wr_active = 1'b1;
               end
               else
-              begin
-                rd_par_data[9:0] = req_header[0][9:0];       // len
-                rd_par_data[11:10] = 2'b0;                   // AT
-                rd_par_data[13:12] = req_header[0][13:12];   // Attr
-                rd_par_data[14] = req_header[0][14];         // EP
-                rd_par_data[15] = req_header[0][15];         // TD
-                rd_par_data[19:16] = 4'b0;                   // TH, AttrH, R
-                rd_par_data[22:20] = req_header[0][22:20];   // TC
-                rd_par_data[23] = 1'b0;                      // R
-                rd_par_data[24] = req_type[0];               // Copy locked bit
+                fifo_data[131:128] = 4'b0;
 
-                if (req_len)
-                    rd_par_data[31:25] = 6'b10_0101;         // Type + Fmt (data)
-                else
-                    rd_par_data[31:25] = 6'b00_0101;         // Type + Fmt (no data)
-
-                rd_par_data[38:32] = req_address[0][6:0];    // Lower address
-                rd_par_data[39] = 1'b0;                      // R
-                rd_par_data[47:40] = req_header[1][15:8];    // Tag
-                rd_par_data[63:48] = req_header[1][31:16];   // Requester ID
-                rd_par_index = rd_par_index + 1;
-                used_index = rd_par_index;
-                rd_par_active = 1'b1;
-              end
-
-              sdram_fifo[0] = req_wr;                        // write req
-              sdram_fifo[1] = 1'b0;                          // spare
-              sdram_fifo[18:2] = req_address[0][18:2];       // SDRAM dword address
-              sdram_fifo[22:19] = used_index[3:0];             // write index
-              sdram_fifo[23] = m_axis_rx_tuser[2];           // BAR0 hit
-              sdram_fifo[31:24] = req_header[1][7:0];        // low and high byte enables
-              sdram_wr = 1;             
+              fifo_wr = 1;             
             end
           end
 
-          m_axis_rx_tready = !sdram_full;
+          m_axis_rx_tready = !fifo_full;
         end
       end
     end
