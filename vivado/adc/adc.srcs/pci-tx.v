@@ -6,7 +6,11 @@ module pci_tx (
   s_axis_tx_tkeep,
   s_axis_tx_tlast,
   s_axis_tx_tvalid,
-  s_axis_tx_tuser
+  s_axis_tx_tuser,
+
+  fifo_data,
+  fifo_rd,
+  fifo_empty
 );
 
   input             clk;
@@ -19,6 +23,10 @@ module pci_tx (
   output  reg                     s_axis_tx_tlast;
   output  reg                     s_axis_tx_tvalid;
   output  reg [3:0]               s_axis_tx_tuser;
+
+  input       [127:0]             fifo_data;
+  output  reg                     fifo_rd;
+  input                           fifo_empty;
   
 localparam CPLD_FMT_TYPE      = 7'b10_01010;
 localparam CPL_FMT_TYPE       = 7'b00_01010;

@@ -63,14 +63,24 @@ module pci_app (
   wire             sdram_fifo_full;
   wire             sdram_fifo_empty;
 
+  req  [127:0]     pci_fifo_in;                   
+  wire [127:0]     pci_fifo_out;                   
+  wire             pci_fifo_rd;
+  reg              pci_fifo_wr;
+  wire             pci_fifo_full;
+  wire             pci_fifo_empty;
+
   wire             pci_wr_active;
   wire [3:0]       pci_wr_index;
   wire [1023:0]    pci_wr_data;
+  reg  [3:0]       local_wr_index;
+  wire [1023:0]    local_wr_data;
   
   reg              local_rd_active;
   reg  [3:0]       local_rd_index;
   reg  [1023:0]    local_rd_data;
-  wire [1023:0]    local_wr_data;
+  wire [3:0]       pci_rd_index;
+  wire [1023:0]    pci_rd_data;
 
 // local
 
@@ -124,13 +134,25 @@ module pci_app (
 sdram_fifo sdram_fifo_inst (
   .clk(user_clk),                // input wire clk
   .srst(user_reset),             // input wire srst
-  .din(sdram_fifo_in),           // input wire [31 : 0] din
+  .din(sdram_fifo_in),           // input wire [131 : 0] din
   .wr_en(sdram_fifo_wr),         // input wire wr_en
   .rd_en(sdram_fifo_rd),         // input wire rd_en
-  .dout(sdram_fifo_out),         // output wire [31 : 0] dout
+  .dout(sdram_fifo_out),         // output wire [131 : 0] dout
   .full(),                       // output wire full
   .almost_full(sdram_fifo_full), // output wire almost_full
   .empty(sdram_fifo_empty)       // output wire empty
+);
+
+pci_fifo sdram_fifo_inst (
+  .clk(user_clk),                // input wire clk
+  .srst(user_reset),             // input wire srst
+  .din(pci_fifo_in),             // input wire [127 : 0] din
+  .wr_en(pci_fifo_wr),           // input wire wr_en
+  .rd_en(pci_fifo_rd),           // input wire rd_en
+  .dout(pci_fifo_out),           // output wire [127 : 0] dout
+  .full(),                       // output wire full
+  .almost_full(pci_fifo_full),   // output wire almost_full
+  .empty(pci_fifo_empty)         // output wire empty
 );
 
 sdram_wr_data sdram_wr_data_inst (
@@ -139,7 +161,7 @@ sdram_wr_data sdram_wr_data_inst (
   .addra(pci_wr_index),          // input wire [3 : 0] addra
   .dina(pci_wr_data),            // input wire [1023 : 0] dina
   .clkb(user_clock),             // input wire clkb
-  .addrb(0),                     // input wire [3 : 0] addrb
+  .addrb(local_wr_index),        // input wire [3 : 0] addrb
   .doutb(local_wr_data)          // output wire [1023 : 0] doutb
 );
 
@@ -149,8 +171,8 @@ sdram_rd_data sdram_rd_data_inst (
   .addra(local_rd_index),        // input wire [3 : 0] addra
   .dina(local_rd_data),          // input wire [1023 : 0] dina
   .clkb(user_clock),             // input wire clkb
-  .addrb(0),                     // input wire [3 : 0] addrb
-  .doutb()                       // output wire [1023 : 0] doutb
+  .addrb(pci_rd_index),          // input wire [3 : 0] addrb
+  .doutb(pci_rd_data)            // output wire [1023 : 0] doutb
 );
 
 pcie pcie_i
@@ -369,6 +391,10 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tlast( s_axis_tx_tlast ),        // O
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser )         // I
+    
+    .fifo_data( pci_fifo_out),                  // I
+    .fifo_rd( pci_fifo_rd ),                    // O
+    .fifo_empty( pci_fifo_empty )               // I
 );
 
 ila_1 ila_1_inst (
@@ -400,6 +426,7 @@ ila_1 ila_1_inst (
         else
         begin
           local_rd_active = 0;
+          local_wr_active = 0;
 
           if (!sdram_fifo_empty)
           begin
@@ -417,31 +444,36 @@ ila_1 ila_1_inst (
 
             if (fifo_out[0] == 0)
             begin
-              rd_par_data[9:0] = req_len;                  // len
-              rd_par_data[11:10] = 2'b0;                   // AT
-              rd_par_data[13:12] = req_header[0][13:12];   // Attr
-              rd_par_data[14] = req_header[0][14];         // EP
-              rd_par_data[15] = req_header[0][15];         // TD
-              rd_par_data[19:16] = 4'b0;                   // TH, AttrH, R
-              rd_par_data[22:20] = req_header[0][22:20];   // TC
-              rd_par_data[23] = 1'b0;                      // R
-              rd_par_data[24] = req_type[0];               // Copy locked bit
+              pci_fifo_in[9:0] = req_len;                  // len
+              pci_fifo_in[11:10] = 2'b0;                   // AT
+              pci_fifo_in[13:12] = req_header[0][13:12];   // Attr
+              pci_fifo_in[14] = req_header[0][14];         // EP
+              pci_fifo_in[15] = req_header[0][15];         // TD
+              pci_fifo_in[19:16] = 4'b0;                   // TH, AttrH, R
+              pci_fifo_in[22:20] = req_header[0][22:20];   // TC
+              pci_fifo_in[23] = 1'b0;                      // R
+              pci_fifo_in[24] = req_type[0];               // Copy locked bit
  
               if (req_len)
-                  rd_par_data[31:25] = 6'b10_0101;         // Type + Fmt (data)
+                  pci_fifo_in[31:25] = 6'b10_0101;         // Type + Fmt (data)
               else
-                  rd_par_data[31:25] = 6'b00_0101;         // Type + Fmt (no data)
+                  pci_fifo_in[31:25] = 6'b00_0101;         // Type + Fmt (no data)
 
-              rd_par_data[38:32] = req_address[0][6:0];    // Lower address
-              rd_par_data[39] = 1'b0;                      // R
-              rd_par_data[47:40] = req_header[1][15:8];    // Tag
-              rd_par_data[63:48] = req_header[1][31:16];   // Requester ID
+              pci_fifo_in[38:32] = req_address[0][6:0];    // Lower address
+              pci_fifo_in[39] = 1'b0;                      // R
+              pci_fifo_in[47:40] = req_header[1][15:8];    // Tag
+              pci_fifo_in[63:48] = req_header[1][31:16];   // Requester ID
 
-              local_rd_data[1:0] <= 0;
-              local_rd_data[18:2] <= req_address[18:2];
-              local_rd_data[1023:19] <= 0;
+              local_rd_data[1:0] = 0;
+              local_rd_data[18:2] = req_address[18:2];
+              local_rd_data[1023:19] = 0;
               local_rd_index = local_rd_index + 1;
               local_rd_active = 1;
+            end
+            else
+            begin
+              local_wr_index[3:0] = sdram_fifo_out[131:128];
+              local_wr_active = 1;
             end
           end
         end
