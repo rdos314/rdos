@@ -56,27 +56,34 @@ module pci_app (
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
 
-// needed to send completions!
+// PCIe -> SDRAM
 
-  wire [735:0]     sdram_fifo_in;                   
-  wire [735:0]     sdram_fifo_out;                   
-  reg              sdram_fifo_rd;
-  wire             sdram_fifo_wr;
-  wire             sdram_fifo_full;
-  wire             sdram_fifo_empty;
+  wire [1023:0]    sdram_data_in;
+  wire [1023:0]    sdram_data_out;
+  wire [191:0]     sdram_header_in;
+  wire [191:0]     sdram_header_out;
+  reg  [3:0]       sdram_rd_ptr;
+  wire [3:0]       sdram_wr_ptr;
+  wire [3:0]       sdram_curr_wr;
+  reg              sdram_wr;
 
-  reg  [735:0]     pci_fifo_in;                   
-  wire [735:0]     pci_fifo_out;                   
-  wire             pci_fifo_rd;
-  reg              pci_fifo_wr;
-  wire             pci_fifo_full;
-  wire             pci_fifo_empty;
+// SDRAM -> PCIe
+
+  reg  [1023:0]    pci_data_in;
+  wire [1023:0]    pci_data_out;
+  wire [191:0]     pci_header_in;
+  wire [191:0]     pci_header_out;
+  wire [3:0]       pci_rd_ptr;
+  reg  [3:0]       pci_wr_ptr;
+  reg  [3:0]       pci_curr_wr;
+  reg              pci_wr;
 
 // local
 
   reg  [63:0]      req_address;
   reg  [31:0]      req_header   [1:0];
   reg  [9:0]       req_len;
+  reg  [7:0]       req_type;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -121,28 +128,44 @@ module pci_app (
   wire                                        sys_rst_n;
   wire                                        sys_clk;
 
-fifo sdram_fifo_inst (
-  .clk(user_clk),                // input wire clk
-  .srst(user_reset),             // input wire srst
-  .din(sdram_fifo_in),           // input wire [735 : 0] din
-  .wr_en(sdram_fifo_wr),         // input wire wr_en
-  .rd_en(sdram_fifo_rd),         // input wire rd_en
-  .dout(sdram_fifo_out),         // output wire [735 : 0] dout
-  .full(),                       // output wire full
-  .almost_full(sdram_fifo_full), // output wire almost_full
-  .empty(sdram_fifo_empty)       // output wire empty
+bram_data sdram_data_inst (
+  .clka(user_clock),               // input wire clka
+  .wea(sdram_wr),                  // input wire [0 : 0] wea
+  .addra(sdram_wr_ptr),            // input wire [3 : 0] addra
+  .dina(sdram_data_in),            // input wire [1023 : 0] dina
+  .clkb(user_clock),               // input wire clkb
+  .addrb(sdram_rd_ptr),            // input wire [3 : 0] addrb
+  .doutb(sdram_data_out)           // output wire [1023 : 0] doutb
 );
 
-fifo pci_fifo_inst (
-  .clk(user_clk),                // input wire clk
-  .srst(user_reset),             // input wire srst
-  .din(pci_fifo_in),             // input wire [735 : 0] din
-  .wr_en(pci_fifo_wr),           // input wire wr_en
-  .rd_en(pci_fifo_rd),           // input wire rd_en
-  .dout(pci_fifo_out),           // output wire [735 : 0] dout
-  .full(),                       // output wire full
-  .almost_full(pci_fifo_full),   // output wire almost_full
-  .empty(pci_fifo_empty)         // output wire empty
+bram_data pci_data_inst (
+  .clka(user_clock),               // input wire clka
+  .wea(pci_wr),                    // input wire [0 : 0] wea
+  .addra(pci_wr_ptr),              // input wire [3 : 0] addra
+  .dina(pci_data_in),              // input wire [1023 : 0] dina
+  .clkb(user_clock),               // input wire clkb
+  .addrb(pci_rd_ptr),              // input wire [3 : 0] addrb
+  .doutb(pci_data_out)             // output wire [1023 : 0] doutb
+);
+
+bram_header sdram_header_inst (
+  .clka(user_clock),               // input wire clka
+  .wea(sdram_wr),                  // input wire [0 : 0] wea
+  .addra(sdram_wr_ptr),            // input wire [3 : 0] addra
+  .dina(sdram_header_in),          // input wire [191 : 0] dina
+  .clkb(user_clock),               // input wire clkb
+  .addrb(sdram_rd_ptr),            // input wire [3 : 0] addrb
+  .doutb(sdram_header_out)         // output wire [191 : 0] doutb
+);
+
+bram_header pci_header_inst (
+  .clka(user_clock),               // input wire clka
+  .wea(pci_wr),                    // input wire [0 : 0] wea
+  .addra(pci_wr_ptr),              // input wire [3 : 0] addra
+  .dina(pci_header_in),            // input wire [191 : 0] dina
+  .clkb(user_clock),               // input wire clkb
+  .addrb(pci_rd_ptr),              // input wire [3 : 0] addrb
+  .doutb(pci_header_out)           // output wire [191 : 0] doutb
 );
 
 pcie pcie_i
@@ -158,6 +181,7 @@ pcie pcie_i
   // Rx
   .pci_exp_rxn                               ( pci_exp_rxn ),
   .pci_exp_rxp                               ( pci_exp_rxp ),
+
 
   //----------------------------------------------------------------------------------------------------------------//
   // Shared Logic Internal                                                                                          //
@@ -329,20 +353,23 @@ pcie pcie_i
 
 pci_rx pci_rx_inst (
 
-    .clk(user_clk),                         // I
-    .reset(user_reset),                     // I
+    .clk(user_clk),                             // I
+    .reset(user_reset),                         // I
 
     // AXIS RX
-    .m_axis_rx_tdata( m_axis_rx_tdata ),    // I
-    .m_axis_rx_tkeep( m_axis_rx_tkeep ),    // I
-    .m_axis_rx_tlast( m_axis_rx_tlast ),    // I
-    .m_axis_rx_tvalid( m_axis_rx_tvalid ),  // I
-    .m_axis_rx_tready( m_axis_rx_tready ),  // O
-    .m_axis_rx_tuser ( m_axis_rx_tuser ),   // I
-    
-    .fifo_data( sdram_fifo_in),
-    .fifo_wr( sdram_fifo_wr ),
-    .fifo_full( sdram_fifo_full )
+    .m_axis_rx_tdata( m_axis_rx_tdata ),        // I
+    .m_axis_rx_tkeep( m_axis_rx_tkeep ),        // I
+    .m_axis_rx_tlast( m_axis_rx_tlast ),        // I
+    .m_axis_rx_tvalid( m_axis_rx_tvalid ),      // I
+    .m_axis_rx_tready( m_axis_rx_tready ),      // O
+    .m_axis_rx_tuser ( m_axis_rx_tuser ),       // I
+
+    .bram_data( sdram_data_in),                 // O
+    .bram_header( sdram_header_in),             // O
+    .bram_rd_ptr (sdram_rd_ptr),                // I
+    .bram_wr_ptr (sdram_wr_ptr),                // O
+    .bram_curr_wr (sdram_curr_wr),              // O
+    .bram_wr (sdram_wr)                         // O
 );
 
 pci_tx pci_tx_inst (
@@ -356,29 +383,32 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tkeep( s_axis_tx_tkeep ),        // O
     .s_axis_tx_tlast( s_axis_tx_tlast ),        // O
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
-    .s_axis_tx_tuser( s_axis_tx_tuser ),         // I
+    .s_axis_tx_tuser( s_axis_tx_tuser ),        // I
     
-    .fifo_data( pci_fifo_out),                  // I
-    .fifo_rd( pci_fifo_rd ),                    // O
-    .fifo_empty( pci_fifo_empty )               // I
+    .bram_data( pci_data_out),                  // I
+    .bram_header( pci_header_out),              // I
+    .bram_rd_ptr (pci_rd_ptr),                  // O
+    .bram_curr_wr (pci_curr_wr),                // I
 );
 
 ila_1 ila_1_inst (
-	.clk(user_clk),                         // input wire clk
-	.probe0(sdram_fifo_in[575:512]),        // input wire [63:0]  probe0  
-	.probe1(sdram_fifo_out[575:512]),       // input wire [63:0]  probe0  
-	.probe2(sdram_fifo_in[639:576]),        // input wire [63:0]  probe0  
-	.probe3(sdram_fifo_out[639:576]),       // input wire [63:0]  probe0  
-	.probe4(sdram_fifo_rd),                 // input wire [0:0]  probe1 
-	.probe5(sdram_fifo_wr),                 // input wire [0:0]  probe1 
-	.probe6(sdram_fifo_empty),              // input wire [0:0]  probe2
-	.probe7(pci_fifo_in[575:512]),          // input wire [63:0]  probe0  
-	.probe8(pci_fifo_out[575:512]),         // input wire [63:0]  probe0  
-	.probe9(pci_fifo_in[639:576]),          // input wire [63:0]  probe0  
-	.probe10(pci_fifo_out[639:576]),         // input wire [63:0]  probe0  
-	.probe11(pci_fifo_rd),                   // input wire [0:0]  probe1 
-	.probe12(pci_fifo_wr),                   // input wire [0:0]  probe1 
-	.probe13(pci_fifo_empty)                // input wire [0:0]  probe2
+	.clk(user_clk),                        // input wire clk
+	.probe0(sdram_header_in[63:0]),        // input wire [63:0]  probe0  
+	.probe1(sdram_header_out[63:0]),       // input wire [63:0]  probe0  
+	.probe2(sdram_header_in[127:64]),      // input wire [63:0]  probe0  
+	.probe3(sdram_header_out[127:64]),     // input wire [63:0]  probe0  
+	.probe4(sdram_rd_ptr),                 // input wire [3:0]  probe1 
+	.probe5(sdram_wr_ptr),                 // input wire [3:0]  probe1 
+	.probe6(sdram_wr),                     // input wire [0:0]  probe2
+	.probe7(pci_header_in[63:0]),          // input wire [63:0]  probe0  
+	.probe8(pci_header_out[63:0]),         // input wire [63:0]  probe0  
+	.probe9(pci_header_in[127:64]),        // input wire [63:0]  probe0  
+	.probe10(pci_header_out[127:64]),      // input wire [63:0]  probe0  
+	.probe9(pci_data_in[31:0]),            // input wire [31:0]  probe0  
+	.probe10(pci_data_out[31:0]),          // input wire [31:0]  probe0  
+	.probe11(pci_rd_ptr),                  // input wire [3:0]  probe1 
+	.probe12(pci_wr_ptr),                  // input wire [3:0]  probe1 
+	.probe13(pci_wr)                       // input wire [0:0]  probe2
 );
 
   generate
@@ -386,27 +416,34 @@ ila_1 ila_1_inst (
 
       always @ ( posedge user_clk ) 
       begin
-        pci_fifo_wr = 1'b0;
+        if (pci_wr)
+        begin
+          pci_wr_ptr = pci_wr_ptr + 1;
+          pci_wr = 0;
+        end
+
         if (user_reset)
         begin
+          sdram_rd_ptr = 0;
+          sdram_wr_ptr = 0;
+          sdram_wr = 0;          
+          update_ptr = 0;
+          pci_rd_ptr = 0;
+          pci_wr_ptr = 0;
+          pci_wr = 0;
         end
         else
         begin
-          if (sdram_fifo_empty)
+          if (sdram_rd_ptr != sdram_wr_ptr)
           begin
-            sdram_fifo_rd = 1'b0;
-          end
-          else
-          begin
-            sdram_fifo_rd = 1'b1;
-
-            req_header[0][31:0] = sdram_fifo_out[543:512];
-            req_header[1][31:0] = sdram_fifo_out[575:544];
-            req_address[63:0] = sdram_fifo_out[639:576];
+            req_header[0] = sdram_header_out[31:0];
+            req_header[1] = sdram_header_out[63:32];
+            req_address = sdram_header_out[127:64];
 
             req_len = req_header[0][9:0];
+            req_type = req_header[0][31:24];
 
-            if (pci_fifo_out[0] == 0)
+            if (req_type[6] == 0)
             begin
               req_header[0][11:10] = 2'b0;                   // AT
               req_header[0][19:16] = 4'b0;                   // TH, AttrH, R
@@ -418,21 +455,24 @@ ila_1 ila_1_inst (
                   req_header[0][31:25] = 6'b00_0101;         // Type + Fmt (no data)
               
               req_header[1][7] = 0;    
-              pci_fifo_in[543:512] = req_header[0];
-              pci_fifo_in[607:576] = req_header[1];
+              pci_header_in[31:0] = req_header[0];
+              pci_header_in[95:64] = req_header[1];
               
               req_header[1][31:16] = 16'b0;                  // completer ID
               req_header[1][15:13] = 3'b0;                   // completion code = 000
               req_header[1][12] = 1'b0;                      // BCM
               req_header[1][11:2] = req_len;                 // byte count
               req_header[1][1:0] = 2'b0;                     // dword aligned
-              pci_fifo_in[575:544] = req_header[1];
+              pci_header_in[63:32] = req_header[1];
 
-              pci_fifo_in[1:0] = 0;
-              pci_fifo_in[18:2] = req_address[18:2];
-              pci_fifo_in[511:19] = 0;
-              pci_fifo_wr = 1'b1;
+              pci_data_in[1:0] = 0;
+              pci_data_in[18:2] = req_address[18:2];
+              pci_data_in[1023:19] = 0;
+
+              pci_wr = 1;
             end
+
+            sdram_rd_ptr = sdram_rd_ptr + 1;
           end
         end
       end
