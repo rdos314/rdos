@@ -50,6 +50,25 @@ module pci_tx (
   reg [31:0]   req_header   [3:0];
   reg [1023:0] req_data;
 
+
+ila_2 ila_2_inst (
+	.clk(clk),                         // input wire clk
+	.probe0(s_axis_tx_tvalid),         // input wire [0:0]  probe0  
+	.probe1(s_axis_tx_tready),         // input wire [0:0]  probe0  
+	.probe2(s_axis_tx_tlast),          // input wire [0:0]  probe0  
+	.probe3(s_axis_tx_tkeep),          // input wire [15:0]  probe0  
+	.probe4(s_axis_tx_tdata[63:0]),    // input wire [63:0]  probe0  
+	.probe5(s_axis_tx_tdata[127:64]),  // input wire [63:0]  probe0  
+	.probe6(sel),                      // input wire [0:0]  probe0  
+	.probe7(user_last),                // input wire [0:0]  probe0  
+	.probe8(req_type),                 // input wire [7:0]  probe0  
+	.probe9(req_len),                  // input wire [0:0]  probe0  
+	.probe10(req_header[0]),           // input wire [31:0]  probe0  
+	.probe11(req_header[1]),           // input wire [31:0]  probe0  
+	.probe12(req_header[2]),           // input wire [31:0]  probe0  
+	.probe13(req_header[3])            // input wire [31:0]  probe0  
+);
+
   generate
     begin : gen_cpl_128
 
@@ -59,11 +78,11 @@ module pci_tx (
         s_axis_tx_tuser[2] = 1'b0;                // Stream packet
         s_axis_tx_tuser[3] = 1'b0;                // tx_src_dsc
         s_axis_tx_tkeep = 16'b0;
+        s_axis_tx_tlast   = 1'b0;
+        s_axis_tx_tvalid  = 1'b0;
 
         if (reset) 
         begin
-          s_axis_tx_tlast   = 1'b0;
-          s_axis_tx_tvalid  = 1'b0;
           header_done = 0;
           bram_rd_ptr = 0;
         end
