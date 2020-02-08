@@ -58,18 +58,13 @@ module pci_app (
 
 // PCIe -> SDRAM
 
-  wire [1023:0]    sdram_data_in;
-  wire [1023:0]    sdram_data_out;
-  wire [191:0]     sdram_header_in;
-  wire [191:0]     sdram_header_out;
+  wire [1023:0]    sdram_data;
+  wire [191:0]     sdram_header;
   reg  [3:0]       sdram_rd_ptr;
+  wire [1023:0]    sdram_last_data;
+  wire [191:0]     sdram_last_header;
   wire [3:0]       sdram_wr_ptr;
   wire             sdram_wr;
-
-  reg  [1023:0]    sdram_last_data;
-  reg  [191:0]     sdram_last_header;
-  reg  [3:0]       sdram_last_ptr;
-  reg              sdram_last_wr;
 
 // SDRAM -> PCIe
 
@@ -130,16 +125,6 @@ module pci_app (
   wire                                        sys_clk;
 
 
-bram_data sdram_data_inst (
-  .clka(user_clock),               // input wire clka
-  .wea(pci_wr),                    // input wire [0 : 0] wea
-  .addra(sdram_wr_ptr),            // input wire [3 : 0] addra
-  .dina(sdram_data_in),            // input wire [1023 : 0] dina
-  .clkb(user_clock),               // input wire clkb
-  .addrb(sdram_rd_ptr),            // input wire [3 : 0] addrb
-  .doutb(sdram_data_out)           // output wire [1023 : 0] doutb
-);
-
 bram_data pci_data_inst (
   .clka(user_clock),               // input wire clka
   .wea(pci_wr),                    // input wire [0 : 0] wea
@@ -148,16 +133,6 @@ bram_data pci_data_inst (
   .clkb(user_clock),               // input wire clkb
   .addrb(pci_rd_ptr),              // input wire [3 : 0] addrb
   .doutb(pci_data_out)             // output wire [1023 : 0] doutb
-);
-
-bram_header sdram_header_inst (
-  .clka(user_clock),               // input wire clka
-  .wea(sdram_wr),                  // input wire [0 : 0] wea
-  .addra(sdram_wr_ptr),            // input wire [3 : 0] addra
-  .dina(sdram_header_in),          // input wire [191 : 0] dina
-  .clkb(user_clock),               // input wire clkb
-  .addrb(sdram_rd_ptr),            // input wire [3 : 0] addrb
-  .doutb(sdram_header_out)         // output wire [191 : 0] doutb
 );
 
 bram_header pci_header_inst (
@@ -366,9 +341,11 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),      // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),       // I
 
-    .bram_data( sdram_data_in),                 // O
-    .bram_header( sdram_header_in),             // O
+    .bram_data( sdram_data),                    // O
+    .bram_header( sdram_header),                // O
     .bram_rd_ptr (sdram_rd_ptr),                // I
+    .bram_last_data( sdram_last_data),          // O
+    .bram_last_header( sdram_last_header),      // O
     .bram_wr_ptr (sdram_wr_ptr),                // O
     .bram_wr (sdram_wr)                         // O
 );
@@ -397,17 +374,17 @@ pci_tx pci_tx_inst (
 
 ila_1 ila_1_inst (
 	.clk(user_clk),                        // input wire clk
-	.probe0(sdram_header_in[63:0]),        // input wire [63:0]  probe0  
-	.probe1(sdram_header_out[63:0]),       // input wire [63:0]  probe0  
-	.probe2(sdram_header_in[127:64]),      // input wire [63:0]  probe0  
-	.probe3(sdram_header_out[127:64]),     // input wire [63:0]  probe0  
+	.probe0(sdram_header[63:0]),           // input wire [63:0]  probe0  
+	.probe1(sdram_last_header[63:0]),       // input wire [63:0]  probe0  
+	.probe2(sdram_header[127:64]),         // input wire [63:0]  probe0  
+	.probe3(sdram_last_header[127:64]),     // input wire [63:0]  probe0  
 	.probe4(sdram_rd_ptr),                 // input wire [3:0]  probe1 
 	.probe5(sdram_wr_ptr),                 // input wire [3:0]  probe1 
 	.probe6(sdram_wr),                     // input wire [0:0]  probe2
 	.probe7(pci_header_in[63:0]),          // input wire [63:0]  probe0  
-	.probe8(pci_header_out[63:0]),         // input wire [63:0]  probe0  
+	.probe8(pci_last_header[63:0]),         // input wire [63:0]  probe0  
 	.probe9(pci_header_in[127:64]),        // input wire [63:0]  probe0  
-	.probe10(pci_header_out[127:64]),      // input wire [63:0]  probe0  
+	.probe10(pci_last_header[127:64]),      // input wire [63:0]  probe0  
 	.probe11(pci_data_in[31:0]),            // input wire [31:0]  probe0  
 	.probe12(pci_data_out[31:0]),          // input wire [31:0]  probe0  
 	.probe13(pci_rd_ptr),                  // input wire [3:0]  probe1 
@@ -445,11 +422,11 @@ ila_1 ila_1_inst (
         end
         else
         begin
-          if (sdram_last_wr)
+          if (sdram_wr)
           begin
             has_data = 1;
 
-            if (sdram_last_ptr == sdram_rd_ptr)
+            if (sdram_wr_ptr == sdram_rd_ptr)
               use_last = 1;
             else
               use_last = 0;
@@ -458,7 +435,7 @@ ila_1 ila_1_inst (
           begin
             use_last = 0;
 
-            if (sdram_last_ptr == sdram_rd_ptr)
+            if (sdram_wr_ptr == sdram_rd_ptr)
               has_data = 0;
             else
               has_data = 1;                
@@ -475,10 +452,10 @@ ila_1 ila_1_inst (
             end
             else
             begin
-              req_data = sdram_data_out;
-              req_header[0] = sdram_header_out[31:0];
-              req_header[1] = sdram_header_out[63:32];
-              req_address = sdram_header_out[127:64];
+              req_data = sdram_data;
+              req_header[0] = sdram_header[31:0];
+              req_header[1] = sdram_header[63:32];
+              req_address = sdram_header[127:64];
             end
 
             sdram_rd_ptr = sdram_rd_ptr + 1;
@@ -516,14 +493,6 @@ ila_1 ila_1_inst (
             end
           end
         end
-      end
-
-      always @ ( posedge user_clk ) 
-      begin
-        sdram_last_data <= sdram_data_in;
-        sdram_last_header <= sdram_header_in;
-        sdram_last_ptr <= sdram_wr_ptr;
-        sdram_last_wr <= sdram_wr;
       end
 
       always @ ( posedge user_clk ) 

@@ -26,6 +26,10 @@
       <Properties Property="CONTROL.TRIGGER_CONDITION" value="AND"/>
       <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
     </Object>
+    <Object name="pci_app_inst/pci_rx_inst/ila_0_inst" gui_info="">
+      <Properties Property="CONTROL.TRIGGER_CONDITION" value="AND"/>
+      <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
+    </Object>
     <Object name="pci_app_inst/pci_rx_inst/ila_inst" gui_info="">
       <Properties Property="CONTROL.TRIGGER_CONDITION" value="AND"/>
       <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
@@ -953,7 +957,7 @@
         <net name="pci_app_inst/pci_header_in_1[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1037,7 +1041,7 @@
         <net name="pci_app_inst/pci_header_out[64]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1119,6 +1123,174 @@
         <net name="pci_app_inst/pci_header_out_1[2]"/>
         <net name="pci_app_inst/pci_header_out_1[1]"/>
         <net name="pci_app_inst/pci_header_out_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe10[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_last_header[127]"/>
+        <net name="pci_app_inst/pci_last_header[126]"/>
+        <net name="pci_app_inst/pci_last_header[125]"/>
+        <net name="pci_app_inst/pci_last_header[124]"/>
+        <net name="pci_app_inst/pci_last_header[123]"/>
+        <net name="pci_app_inst/pci_last_header[122]"/>
+        <net name="pci_app_inst/pci_last_header[121]"/>
+        <net name="pci_app_inst/pci_last_header[120]"/>
+        <net name="pci_app_inst/pci_last_header[119]"/>
+        <net name="pci_app_inst/pci_last_header[118]"/>
+        <net name="pci_app_inst/pci_last_header[117]"/>
+        <net name="pci_app_inst/pci_last_header[116]"/>
+        <net name="pci_app_inst/pci_last_header[115]"/>
+        <net name="pci_app_inst/pci_last_header[114]"/>
+        <net name="pci_app_inst/pci_last_header[113]"/>
+        <net name="pci_app_inst/pci_last_header[112]"/>
+        <net name="pci_app_inst/pci_last_header[111]"/>
+        <net name="pci_app_inst/pci_last_header[110]"/>
+        <net name="pci_app_inst/pci_last_header[109]"/>
+        <net name="pci_app_inst/pci_last_header[108]"/>
+        <net name="pci_app_inst/pci_last_header[107]"/>
+        <net name="pci_app_inst/pci_last_header[106]"/>
+        <net name="pci_app_inst/pci_last_header[105]"/>
+        <net name="pci_app_inst/pci_last_header[104]"/>
+        <net name="pci_app_inst/pci_last_header[103]"/>
+        <net name="pci_app_inst/pci_last_header[102]"/>
+        <net name="pci_app_inst/pci_last_header[101]"/>
+        <net name="pci_app_inst/pci_last_header[100]"/>
+        <net name="pci_app_inst/pci_last_header[99]"/>
+        <net name="pci_app_inst/pci_last_header[98]"/>
+        <net name="pci_app_inst/pci_last_header[97]"/>
+        <net name="pci_app_inst/pci_last_header[96]"/>
+        <net name="pci_app_inst/pci_last_header[95]"/>
+        <net name="pci_app_inst/pci_last_header[94]"/>
+        <net name="pci_app_inst/pci_last_header[93]"/>
+        <net name="pci_app_inst/pci_last_header[92]"/>
+        <net name="pci_app_inst/pci_last_header[91]"/>
+        <net name="pci_app_inst/pci_last_header[90]"/>
+        <net name="pci_app_inst/pci_last_header[89]"/>
+        <net name="pci_app_inst/pci_last_header[88]"/>
+        <net name="pci_app_inst/pci_last_header[87]"/>
+        <net name="pci_app_inst/pci_last_header[86]"/>
+        <net name="pci_app_inst/pci_last_header[85]"/>
+        <net name="pci_app_inst/pci_last_header[84]"/>
+        <net name="pci_app_inst/pci_last_header[83]"/>
+        <net name="pci_app_inst/pci_last_header[82]"/>
+        <net name="pci_app_inst/pci_last_header[81]"/>
+        <net name="pci_app_inst/pci_last_header[80]"/>
+        <net name="pci_app_inst/pci_last_header[79]"/>
+        <net name="pci_app_inst/pci_last_header[78]"/>
+        <net name="pci_app_inst/pci_last_header[77]"/>
+        <net name="pci_app_inst/pci_last_header[76]"/>
+        <net name="pci_app_inst/pci_last_header[75]"/>
+        <net name="pci_app_inst/pci_last_header[74]"/>
+        <net name="pci_app_inst/pci_last_header[73]"/>
+        <net name="pci_app_inst/pci_last_header[72]"/>
+        <net name="pci_app_inst/pci_last_header[71]"/>
+        <net name="pci_app_inst/pci_last_header[70]"/>
+        <net name="pci_app_inst/pci_last_header[69]"/>
+        <net name="pci_app_inst/pci_last_header[68]"/>
+        <net name="pci_app_inst/pci_last_header[67]"/>
+        <net name="pci_app_inst/pci_last_header[66]"/>
+        <net name="pci_app_inst/pci_last_header[65]"/>
+        <net name="pci_app_inst/pci_last_header[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe8[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_last_header_1[63]"/>
+        <net name="pci_app_inst/pci_last_header_1[62]"/>
+        <net name="pci_app_inst/pci_last_header_1[61]"/>
+        <net name="pci_app_inst/pci_last_header_1[60]"/>
+        <net name="pci_app_inst/pci_last_header_1[59]"/>
+        <net name="pci_app_inst/pci_last_header_1[58]"/>
+        <net name="pci_app_inst/pci_last_header_1[57]"/>
+        <net name="pci_app_inst/pci_last_header_1[56]"/>
+        <net name="pci_app_inst/pci_last_header_1[55]"/>
+        <net name="pci_app_inst/pci_last_header_1[54]"/>
+        <net name="pci_app_inst/pci_last_header_1[53]"/>
+        <net name="pci_app_inst/pci_last_header_1[52]"/>
+        <net name="pci_app_inst/pci_last_header_1[51]"/>
+        <net name="pci_app_inst/pci_last_header_1[50]"/>
+        <net name="pci_app_inst/pci_last_header_1[49]"/>
+        <net name="pci_app_inst/pci_last_header_1[48]"/>
+        <net name="pci_app_inst/pci_last_header_1[47]"/>
+        <net name="pci_app_inst/pci_last_header_1[46]"/>
+        <net name="pci_app_inst/pci_last_header_1[45]"/>
+        <net name="pci_app_inst/pci_last_header_1[44]"/>
+        <net name="pci_app_inst/pci_last_header_1[43]"/>
+        <net name="pci_app_inst/pci_last_header_1[42]"/>
+        <net name="pci_app_inst/pci_last_header_1[41]"/>
+        <net name="pci_app_inst/pci_last_header_1[40]"/>
+        <net name="pci_app_inst/pci_last_header_1[39]"/>
+        <net name="pci_app_inst/pci_last_header_1[38]"/>
+        <net name="pci_app_inst/pci_last_header_1[37]"/>
+        <net name="pci_app_inst/pci_last_header_1[36]"/>
+        <net name="pci_app_inst/pci_last_header_1[35]"/>
+        <net name="pci_app_inst/pci_last_header_1[34]"/>
+        <net name="pci_app_inst/pci_last_header_1[33]"/>
+        <net name="pci_app_inst/pci_last_header_1[32]"/>
+        <net name="pci_app_inst/pci_last_header_1[31]"/>
+        <net name="pci_app_inst/pci_last_header_1[30]"/>
+        <net name="pci_app_inst/pci_last_header_1[29]"/>
+        <net name="pci_app_inst/pci_last_header_1[28]"/>
+        <net name="pci_app_inst/pci_last_header_1[27]"/>
+        <net name="pci_app_inst/pci_last_header_1[26]"/>
+        <net name="pci_app_inst/pci_last_header_1[25]"/>
+        <net name="pci_app_inst/pci_last_header_1[24]"/>
+        <net name="pci_app_inst/pci_last_header_1[23]"/>
+        <net name="pci_app_inst/pci_last_header_1[22]"/>
+        <net name="pci_app_inst/pci_last_header_1[21]"/>
+        <net name="pci_app_inst/pci_last_header_1[20]"/>
+        <net name="pci_app_inst/pci_last_header_1[19]"/>
+        <net name="pci_app_inst/pci_last_header_1[18]"/>
+        <net name="pci_app_inst/pci_last_header_1[17]"/>
+        <net name="pci_app_inst/pci_last_header_1[16]"/>
+        <net name="pci_app_inst/pci_last_header_1[15]"/>
+        <net name="pci_app_inst/pci_last_header_1[14]"/>
+        <net name="pci_app_inst/pci_last_header_1[13]"/>
+        <net name="pci_app_inst/pci_last_header_1[12]"/>
+        <net name="pci_app_inst/pci_last_header_1[11]"/>
+        <net name="pci_app_inst/pci_last_header_1[10]"/>
+        <net name="pci_app_inst/pci_last_header_1[9]"/>
+        <net name="pci_app_inst/pci_last_header_1[8]"/>
+        <net name="pci_app_inst/pci_last_header_1[7]"/>
+        <net name="pci_app_inst/pci_last_header_1[6]"/>
+        <net name="pci_app_inst/pci_last_header_1[5]"/>
+        <net name="pci_app_inst/pci_last_header_1[4]"/>
+        <net name="pci_app_inst/pci_last_header_1[3]"/>
+        <net name="pci_app_inst/pci_last_header_1[2]"/>
+        <net name="pci_app_inst/pci_last_header_1[1]"/>
+        <net name="pci_app_inst/pci_last_header_1[0]"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
@@ -2032,6 +2204,27 @@
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="pci_app_inst/pci_rx_inst/ila_0_inst"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe2[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/header_done"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
@@ -2080,6 +2273,48 @@
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe1[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/m_axis_rx_tready"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe6[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/m_axis_rx_tuser[21]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq22&apos;hXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq22&apos;hXX_XXXX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
@@ -2120,19 +2355,63 @@
         <net name="pci_app_inst/pci_rx_inst/m_axis_rx_tuser[0]"/>
       </nets>
     </probe>
-    <probe type="ila_trigger" busType="net" source="netlist" spec="ILA_TRIGGER_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
         <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe4[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/m_axis_rx_tuser_1[13]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe5[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/m_axis_rx_tuser_2[14]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe0[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
@@ -3335,6 +3614,27 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_2"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe3[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/pend_strad"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe9[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
@@ -3639,6 +3939,263 @@
         <net name="pci_app_inst/pci_rx_inst/req_td"/>
       </nets>
     </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe11[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[31]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[30]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[29]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[28]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[27]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[26]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[25]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[24]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[23]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[22]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[21]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[20]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[19]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[18]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[17]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[16]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[15]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[14]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[13]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[12]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[11]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[10]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[9]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[8]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[7]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[6]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[5]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[4]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[3]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[2]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[1]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[0]__0[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe12[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[31]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[30]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[29]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[28]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[27]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[26]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[25]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[24]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[23]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[22]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[21]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[20]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[19]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[18]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[17]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[16]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[15]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[14]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[13]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[12]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[11]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[10]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[9]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[8]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[7]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[6]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[5]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[4]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[3]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[2]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[1]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_address[1]__0[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe9[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[31]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[30]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[29]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[28]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[27]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[26]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[25]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[24]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[23]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[22]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[21]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[20]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[19]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[18]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[17]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[16]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[15]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[14]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[13]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[12]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[11]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[10]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[9]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[8]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[7]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[6]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[5]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[4]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[3]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[2]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[1]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[0]__0[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="pci_app_inst/pci_rx_inst/ila_0_inst"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe10[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[31]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[30]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[29]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[28]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[27]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[26]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[25]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[24]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[23]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[22]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[21]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[20]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[19]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[18]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[17]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[16]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[15]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[14]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[13]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[12]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[11]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[10]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[9]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[8]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[7]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[6]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[5]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[4]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[3]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[2]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[1]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_header[1]__0[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe7[7:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[7]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[6]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[5]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[4]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[3]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[2]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[1]"/>
+        <net name="pci_app_inst/pci_rx_inst/rq_type[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe8[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/pci_rx_inst/rq_wr"/>
+      </nets>
+    </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
@@ -3675,7 +4232,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="pci_app_inst/ila_1_inst"/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe15[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -4333,6 +4890,174 @@
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
+        <net name="pci_app_inst/sdram_header[127]"/>
+        <net name="pci_app_inst/sdram_header[126]"/>
+        <net name="pci_app_inst/sdram_header[125]"/>
+        <net name="pci_app_inst/sdram_header[124]"/>
+        <net name="pci_app_inst/sdram_header[123]"/>
+        <net name="pci_app_inst/sdram_header[122]"/>
+        <net name="pci_app_inst/sdram_header[121]"/>
+        <net name="pci_app_inst/sdram_header[120]"/>
+        <net name="pci_app_inst/sdram_header[119]"/>
+        <net name="pci_app_inst/sdram_header[118]"/>
+        <net name="pci_app_inst/sdram_header[117]"/>
+        <net name="pci_app_inst/sdram_header[116]"/>
+        <net name="pci_app_inst/sdram_header[115]"/>
+        <net name="pci_app_inst/sdram_header[114]"/>
+        <net name="pci_app_inst/sdram_header[113]"/>
+        <net name="pci_app_inst/sdram_header[112]"/>
+        <net name="pci_app_inst/sdram_header[111]"/>
+        <net name="pci_app_inst/sdram_header[110]"/>
+        <net name="pci_app_inst/sdram_header[109]"/>
+        <net name="pci_app_inst/sdram_header[108]"/>
+        <net name="pci_app_inst/sdram_header[107]"/>
+        <net name="pci_app_inst/sdram_header[106]"/>
+        <net name="pci_app_inst/sdram_header[105]"/>
+        <net name="pci_app_inst/sdram_header[104]"/>
+        <net name="pci_app_inst/sdram_header[103]"/>
+        <net name="pci_app_inst/sdram_header[102]"/>
+        <net name="pci_app_inst/sdram_header[101]"/>
+        <net name="pci_app_inst/sdram_header[100]"/>
+        <net name="pci_app_inst/sdram_header[99]"/>
+        <net name="pci_app_inst/sdram_header[98]"/>
+        <net name="pci_app_inst/sdram_header[97]"/>
+        <net name="pci_app_inst/sdram_header[96]"/>
+        <net name="pci_app_inst/sdram_header[95]"/>
+        <net name="pci_app_inst/sdram_header[94]"/>
+        <net name="pci_app_inst/sdram_header[93]"/>
+        <net name="pci_app_inst/sdram_header[92]"/>
+        <net name="pci_app_inst/sdram_header[91]"/>
+        <net name="pci_app_inst/sdram_header[90]"/>
+        <net name="pci_app_inst/sdram_header[89]"/>
+        <net name="pci_app_inst/sdram_header[88]"/>
+        <net name="pci_app_inst/sdram_header[87]"/>
+        <net name="pci_app_inst/sdram_header[86]"/>
+        <net name="pci_app_inst/sdram_header[85]"/>
+        <net name="pci_app_inst/sdram_header[84]"/>
+        <net name="pci_app_inst/sdram_header[83]"/>
+        <net name="pci_app_inst/sdram_header[82]"/>
+        <net name="pci_app_inst/sdram_header[81]"/>
+        <net name="pci_app_inst/sdram_header[80]"/>
+        <net name="pci_app_inst/sdram_header[79]"/>
+        <net name="pci_app_inst/sdram_header[78]"/>
+        <net name="pci_app_inst/sdram_header[77]"/>
+        <net name="pci_app_inst/sdram_header[76]"/>
+        <net name="pci_app_inst/sdram_header[75]"/>
+        <net name="pci_app_inst/sdram_header[74]"/>
+        <net name="pci_app_inst/sdram_header[73]"/>
+        <net name="pci_app_inst/sdram_header[72]"/>
+        <net name="pci_app_inst/sdram_header[71]"/>
+        <net name="pci_app_inst/sdram_header[70]"/>
+        <net name="pci_app_inst/sdram_header[69]"/>
+        <net name="pci_app_inst/sdram_header[68]"/>
+        <net name="pci_app_inst/sdram_header[67]"/>
+        <net name="pci_app_inst/sdram_header[66]"/>
+        <net name="pci_app_inst/sdram_header[65]"/>
+        <net name="pci_app_inst/sdram_header[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe0[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/sdram_header_1[63]"/>
+        <net name="pci_app_inst/sdram_header_1[62]"/>
+        <net name="pci_app_inst/sdram_header_1[61]"/>
+        <net name="pci_app_inst/sdram_header_1[60]"/>
+        <net name="pci_app_inst/sdram_header_1[59]"/>
+        <net name="pci_app_inst/sdram_header_1[58]"/>
+        <net name="pci_app_inst/sdram_header_1[57]"/>
+        <net name="pci_app_inst/sdram_header_1[56]"/>
+        <net name="pci_app_inst/sdram_header_1[55]"/>
+        <net name="pci_app_inst/sdram_header_1[54]"/>
+        <net name="pci_app_inst/sdram_header_1[53]"/>
+        <net name="pci_app_inst/sdram_header_1[52]"/>
+        <net name="pci_app_inst/sdram_header_1[51]"/>
+        <net name="pci_app_inst/sdram_header_1[50]"/>
+        <net name="pci_app_inst/sdram_header_1[49]"/>
+        <net name="pci_app_inst/sdram_header_1[48]"/>
+        <net name="pci_app_inst/sdram_header_1[47]"/>
+        <net name="pci_app_inst/sdram_header_1[46]"/>
+        <net name="pci_app_inst/sdram_header_1[45]"/>
+        <net name="pci_app_inst/sdram_header_1[44]"/>
+        <net name="pci_app_inst/sdram_header_1[43]"/>
+        <net name="pci_app_inst/sdram_header_1[42]"/>
+        <net name="pci_app_inst/sdram_header_1[41]"/>
+        <net name="pci_app_inst/sdram_header_1[40]"/>
+        <net name="pci_app_inst/sdram_header_1[39]"/>
+        <net name="pci_app_inst/sdram_header_1[38]"/>
+        <net name="pci_app_inst/sdram_header_1[37]"/>
+        <net name="pci_app_inst/sdram_header_1[36]"/>
+        <net name="pci_app_inst/sdram_header_1[35]"/>
+        <net name="pci_app_inst/sdram_header_1[34]"/>
+        <net name="pci_app_inst/sdram_header_1[33]"/>
+        <net name="pci_app_inst/sdram_header_1[32]"/>
+        <net name="pci_app_inst/sdram_header_1[31]"/>
+        <net name="pci_app_inst/sdram_header_1[30]"/>
+        <net name="pci_app_inst/sdram_header_1[29]"/>
+        <net name="pci_app_inst/sdram_header_1[28]"/>
+        <net name="pci_app_inst/sdram_header_1[27]"/>
+        <net name="pci_app_inst/sdram_header_1[26]"/>
+        <net name="pci_app_inst/sdram_header_1[25]"/>
+        <net name="pci_app_inst/sdram_header_1[24]"/>
+        <net name="pci_app_inst/sdram_header_1[23]"/>
+        <net name="pci_app_inst/sdram_header_1[22]"/>
+        <net name="pci_app_inst/sdram_header_1[21]"/>
+        <net name="pci_app_inst/sdram_header_1[20]"/>
+        <net name="pci_app_inst/sdram_header_1[19]"/>
+        <net name="pci_app_inst/sdram_header_1[18]"/>
+        <net name="pci_app_inst/sdram_header_1[17]"/>
+        <net name="pci_app_inst/sdram_header_1[16]"/>
+        <net name="pci_app_inst/sdram_header_1[15]"/>
+        <net name="pci_app_inst/sdram_header_1[14]"/>
+        <net name="pci_app_inst/sdram_header_1[13]"/>
+        <net name="pci_app_inst/sdram_header_1[12]"/>
+        <net name="pci_app_inst/sdram_header_1[11]"/>
+        <net name="pci_app_inst/sdram_header_1[10]"/>
+        <net name="pci_app_inst/sdram_header_1[9]"/>
+        <net name="pci_app_inst/sdram_header_1[8]"/>
+        <net name="pci_app_inst/sdram_header_1[7]"/>
+        <net name="pci_app_inst/sdram_header_1[6]"/>
+        <net name="pci_app_inst/sdram_header_1[5]"/>
+        <net name="pci_app_inst/sdram_header_1[4]"/>
+        <net name="pci_app_inst/sdram_header_1[3]"/>
+        <net name="pci_app_inst/sdram_header_1[2]"/>
+        <net name="pci_app_inst/sdram_header_1[1]"/>
+        <net name="pci_app_inst/sdram_header_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe2[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
         <net name="pci_app_inst/sdram_header_in[127]"/>
         <net name="pci_app_inst/sdram_header_in[126]"/>
         <net name="pci_app_inst/sdram_header_in[125]"/>
@@ -4399,7 +5124,7 @@
         <net name="pci_app_inst/sdram_header_in[64]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -4483,7 +5208,7 @@
         <net name="pci_app_inst/sdram_header_in_1[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -4567,7 +5292,7 @@
         <net name="pci_app_inst/sdram_header_out[64]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -4649,6 +5374,174 @@
         <net name="pci_app_inst/sdram_header_out_1[2]"/>
         <net name="pci_app_inst/sdram_header_out_1[1]"/>
         <net name="pci_app_inst/sdram_header_out_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe3[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/sdram_last_header[127]"/>
+        <net name="pci_app_inst/sdram_last_header[126]"/>
+        <net name="pci_app_inst/sdram_last_header[125]"/>
+        <net name="pci_app_inst/sdram_last_header[124]"/>
+        <net name="pci_app_inst/sdram_last_header[123]"/>
+        <net name="pci_app_inst/sdram_last_header[122]"/>
+        <net name="pci_app_inst/sdram_last_header[121]"/>
+        <net name="pci_app_inst/sdram_last_header[120]"/>
+        <net name="pci_app_inst/sdram_last_header[119]"/>
+        <net name="pci_app_inst/sdram_last_header[118]"/>
+        <net name="pci_app_inst/sdram_last_header[117]"/>
+        <net name="pci_app_inst/sdram_last_header[116]"/>
+        <net name="pci_app_inst/sdram_last_header[115]"/>
+        <net name="pci_app_inst/sdram_last_header[114]"/>
+        <net name="pci_app_inst/sdram_last_header[113]"/>
+        <net name="pci_app_inst/sdram_last_header[112]"/>
+        <net name="pci_app_inst/sdram_last_header[111]"/>
+        <net name="pci_app_inst/sdram_last_header[110]"/>
+        <net name="pci_app_inst/sdram_last_header[109]"/>
+        <net name="pci_app_inst/sdram_last_header[108]"/>
+        <net name="pci_app_inst/sdram_last_header[107]"/>
+        <net name="pci_app_inst/sdram_last_header[106]"/>
+        <net name="pci_app_inst/sdram_last_header[105]"/>
+        <net name="pci_app_inst/sdram_last_header[104]"/>
+        <net name="pci_app_inst/sdram_last_header[103]"/>
+        <net name="pci_app_inst/sdram_last_header[102]"/>
+        <net name="pci_app_inst/sdram_last_header[101]"/>
+        <net name="pci_app_inst/sdram_last_header[100]"/>
+        <net name="pci_app_inst/sdram_last_header[99]"/>
+        <net name="pci_app_inst/sdram_last_header[98]"/>
+        <net name="pci_app_inst/sdram_last_header[97]"/>
+        <net name="pci_app_inst/sdram_last_header[96]"/>
+        <net name="pci_app_inst/sdram_last_header[95]"/>
+        <net name="pci_app_inst/sdram_last_header[94]"/>
+        <net name="pci_app_inst/sdram_last_header[93]"/>
+        <net name="pci_app_inst/sdram_last_header[92]"/>
+        <net name="pci_app_inst/sdram_last_header[91]"/>
+        <net name="pci_app_inst/sdram_last_header[90]"/>
+        <net name="pci_app_inst/sdram_last_header[89]"/>
+        <net name="pci_app_inst/sdram_last_header[88]"/>
+        <net name="pci_app_inst/sdram_last_header[87]"/>
+        <net name="pci_app_inst/sdram_last_header[86]"/>
+        <net name="pci_app_inst/sdram_last_header[85]"/>
+        <net name="pci_app_inst/sdram_last_header[84]"/>
+        <net name="pci_app_inst/sdram_last_header[83]"/>
+        <net name="pci_app_inst/sdram_last_header[82]"/>
+        <net name="pci_app_inst/sdram_last_header[81]"/>
+        <net name="pci_app_inst/sdram_last_header[80]"/>
+        <net name="pci_app_inst/sdram_last_header[79]"/>
+        <net name="pci_app_inst/sdram_last_header[78]"/>
+        <net name="pci_app_inst/sdram_last_header[77]"/>
+        <net name="pci_app_inst/sdram_last_header[76]"/>
+        <net name="pci_app_inst/sdram_last_header[75]"/>
+        <net name="pci_app_inst/sdram_last_header[74]"/>
+        <net name="pci_app_inst/sdram_last_header[73]"/>
+        <net name="pci_app_inst/sdram_last_header[72]"/>
+        <net name="pci_app_inst/sdram_last_header[71]"/>
+        <net name="pci_app_inst/sdram_last_header[70]"/>
+        <net name="pci_app_inst/sdram_last_header[69]"/>
+        <net name="pci_app_inst/sdram_last_header[68]"/>
+        <net name="pci_app_inst/sdram_last_header[67]"/>
+        <net name="pci_app_inst/sdram_last_header[66]"/>
+        <net name="pci_app_inst/sdram_last_header[65]"/>
+        <net name="pci_app_inst/sdram_last_header[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe1[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/sdram_last_header_1[63]"/>
+        <net name="pci_app_inst/sdram_last_header_1[62]"/>
+        <net name="pci_app_inst/sdram_last_header_1[61]"/>
+        <net name="pci_app_inst/sdram_last_header_1[60]"/>
+        <net name="pci_app_inst/sdram_last_header_1[59]"/>
+        <net name="pci_app_inst/sdram_last_header_1[58]"/>
+        <net name="pci_app_inst/sdram_last_header_1[57]"/>
+        <net name="pci_app_inst/sdram_last_header_1[56]"/>
+        <net name="pci_app_inst/sdram_last_header_1[55]"/>
+        <net name="pci_app_inst/sdram_last_header_1[54]"/>
+        <net name="pci_app_inst/sdram_last_header_1[53]"/>
+        <net name="pci_app_inst/sdram_last_header_1[52]"/>
+        <net name="pci_app_inst/sdram_last_header_1[51]"/>
+        <net name="pci_app_inst/sdram_last_header_1[50]"/>
+        <net name="pci_app_inst/sdram_last_header_1[49]"/>
+        <net name="pci_app_inst/sdram_last_header_1[48]"/>
+        <net name="pci_app_inst/sdram_last_header_1[47]"/>
+        <net name="pci_app_inst/sdram_last_header_1[46]"/>
+        <net name="pci_app_inst/sdram_last_header_1[45]"/>
+        <net name="pci_app_inst/sdram_last_header_1[44]"/>
+        <net name="pci_app_inst/sdram_last_header_1[43]"/>
+        <net name="pci_app_inst/sdram_last_header_1[42]"/>
+        <net name="pci_app_inst/sdram_last_header_1[41]"/>
+        <net name="pci_app_inst/sdram_last_header_1[40]"/>
+        <net name="pci_app_inst/sdram_last_header_1[39]"/>
+        <net name="pci_app_inst/sdram_last_header_1[38]"/>
+        <net name="pci_app_inst/sdram_last_header_1[37]"/>
+        <net name="pci_app_inst/sdram_last_header_1[36]"/>
+        <net name="pci_app_inst/sdram_last_header_1[35]"/>
+        <net name="pci_app_inst/sdram_last_header_1[34]"/>
+        <net name="pci_app_inst/sdram_last_header_1[33]"/>
+        <net name="pci_app_inst/sdram_last_header_1[32]"/>
+        <net name="pci_app_inst/sdram_last_header_1[31]"/>
+        <net name="pci_app_inst/sdram_last_header_1[30]"/>
+        <net name="pci_app_inst/sdram_last_header_1[29]"/>
+        <net name="pci_app_inst/sdram_last_header_1[28]"/>
+        <net name="pci_app_inst/sdram_last_header_1[27]"/>
+        <net name="pci_app_inst/sdram_last_header_1[26]"/>
+        <net name="pci_app_inst/sdram_last_header_1[25]"/>
+        <net name="pci_app_inst/sdram_last_header_1[24]"/>
+        <net name="pci_app_inst/sdram_last_header_1[23]"/>
+        <net name="pci_app_inst/sdram_last_header_1[22]"/>
+        <net name="pci_app_inst/sdram_last_header_1[21]"/>
+        <net name="pci_app_inst/sdram_last_header_1[20]"/>
+        <net name="pci_app_inst/sdram_last_header_1[19]"/>
+        <net name="pci_app_inst/sdram_last_header_1[18]"/>
+        <net name="pci_app_inst/sdram_last_header_1[17]"/>
+        <net name="pci_app_inst/sdram_last_header_1[16]"/>
+        <net name="pci_app_inst/sdram_last_header_1[15]"/>
+        <net name="pci_app_inst/sdram_last_header_1[14]"/>
+        <net name="pci_app_inst/sdram_last_header_1[13]"/>
+        <net name="pci_app_inst/sdram_last_header_1[12]"/>
+        <net name="pci_app_inst/sdram_last_header_1[11]"/>
+        <net name="pci_app_inst/sdram_last_header_1[10]"/>
+        <net name="pci_app_inst/sdram_last_header_1[9]"/>
+        <net name="pci_app_inst/sdram_last_header_1[8]"/>
+        <net name="pci_app_inst/sdram_last_header_1[7]"/>
+        <net name="pci_app_inst/sdram_last_header_1[6]"/>
+        <net name="pci_app_inst/sdram_last_header_1[5]"/>
+        <net name="pci_app_inst/sdram_last_header_1[4]"/>
+        <net name="pci_app_inst/sdram_last_header_1[3]"/>
+        <net name="pci_app_inst/sdram_last_header_1[2]"/>
+        <net name="pci_app_inst/sdram_last_header_1[1]"/>
+        <net name="pci_app_inst/sdram_last_header_1[0]"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
