@@ -61,6 +61,7 @@ module pci_rx (
         begin
           m_axis_rx_tready = 0;
           pend_strad = 0;
+          bram_wr = 0;
         end
         else
         begin
