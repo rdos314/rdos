@@ -109,6 +109,7 @@ ila_0 ila_0_inst (
           m_axis_rx_tready = 0;
           pend_strad = 0;
           local_wr = 0;
+          local_wr_ptr = 0;
         end
         else
         begin

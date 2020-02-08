@@ -13,8 +13,8 @@ module pci_tx (
   bram_rd_ptr,
   bram_last_data,
   bram_last_header,
-  bram_last_ptr,
-  bram_last_wr
+  bram_wr_ptr,
+  bram_wr
 );
 
   input             clk;
@@ -34,8 +34,8 @@ module pci_tx (
 
   input  wire [1023:0]            bram_last_data;
   input  wire [191:0]             bram_last_header;
-  input  wire [3:0]               bram_last_ptr;
-  input  wire                     bram_last_wr;
+  input  wire [3:0]               bram_wr_ptr;
+  input  wire                     bram_wr;
 
 
 // local
@@ -65,6 +65,7 @@ module pci_tx (
           s_axis_tx_tlast   = 1'b0;
           s_axis_tx_tvalid  = 1'b0;
           header_done = 0;
+          bram_rd_ptr = 0;
         end
         else
         begin
@@ -72,11 +73,11 @@ module pci_tx (
             has_data = 1;
           else
           begin
-            if (bram_last_wr)
+            if (bram_wr)
             begin
               has_data = 1;
 
-              if (bram_last_ptr == bram_rd_ptr)
+              if (bram_wr_ptr == bram_rd_ptr)
                 use_last = 1;
               else
                 use_last = 0;
@@ -85,7 +86,7 @@ module pci_tx (
             begin
               use_last = 0;
 
-              if (bram_last_ptr == bram_rd_ptr)
+              if (bram_wr_ptr == bram_rd_ptr)
                 has_data = 0;
               else
                 has_data = 1;                

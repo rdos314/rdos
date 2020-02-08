@@ -60,7 +60,7 @@ module pci_app (
 
   wire [1023:0]    sdram_data;
   wire [191:0]     sdram_header;
-  reg  [3:0]       sdram_rd_ptr;
+  wire [3:0]       sdram_rd_ptr;
   wire [1023:0]    sdram_last_data;
   wire [191:0]     sdram_last_header;
   wire [3:0]       sdram_wr_ptr;
@@ -68,18 +68,13 @@ module pci_app (
 
 // SDRAM -> PCIe
 
-  reg  [1023:0]    pci_data_in;
-  wire [1023:0]    pci_data_out;
-  reg  [191:0]     pci_header_in;
-  wire [191:0]     pci_header_out;
+  wire [1023:0]    pci_data;
+  wire [191:0]     pci_header;
   wire [3:0]       pci_rd_ptr;
-  reg  [3:0]       pci_wr_ptr;
-  reg              pci_wr;
-
-  reg  [1023:0]    pci_last_data;
-  reg  [191:0]     pci_last_header;
-  reg  [3:0]       pci_last_ptr;
-  reg              pci_last_wr;
+  wire [1023:0]    pci_last_data;
+  wire [191:0]     pci_last_header;
+  wire [3:0]       pci_wr_ptr;
+  wire             pci_wr;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -123,27 +118,6 @@ module pci_app (
 
   wire                                        sys_rst_n;
   wire                                        sys_clk;
-
-
-bram_data pci_data_inst (
-  .clka(user_clock),               // input wire clka
-  .wea(pci_wr),                    // input wire [0 : 0] wea
-  .addra(pci_wr_ptr),              // input wire [3 : 0] addra
-  .dina(pci_data_in),              // input wire [1023 : 0] dina
-  .clkb(user_clock),               // input wire clkb
-  .addrb(pci_rd_ptr),              // input wire [3 : 0] addrb
-  .doutb(pci_data_out)             // output wire [1023 : 0] doutb
-);
-
-bram_header pci_header_inst (
-  .clka(user_clock),               // input wire clka
-  .wea(pci_wr),                    // input wire [0 : 0] wea
-  .addra(pci_wr_ptr),              // input wire [3 : 0] addra
-  .dina(pci_header_in),            // input wire [191 : 0] dina
-  .clkb(user_clock),               // input wire clkb
-  .addrb(pci_rd_ptr),              // input wire [3 : 0] addrb
-  .doutb(pci_header_out)           // output wire [191 : 0] doutb
-);
 
 pcie pcie_i
  (
@@ -363,147 +337,35 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser ),        // I
     
-    .bram_data( pci_data_out),                  // I
-    .bram_header( pci_header_out),              // I
+    .bram_data( pci_data),                      // I
+    .bram_header( pci_header),                  // I
     .bram_rd_ptr (pci_rd_ptr),                  // O
     .bram_last_data (pci_last_data),            // I
     .bram_last_header (pci_last_header),        // I
-    .bram_last_ptr( pci_last_ptr),              // I
-    .bram_last_wr( pci_last_wr)                 // I
+    .bram_wr_ptr( pci_ptr),                   // I
+    .bram_wr( pci_wr)                      // I
 );
 
-ila_1 ila_1_inst (
-	.clk(user_clk),                        // input wire clk
-	.probe0(sdram_header[63:0]),           // input wire [63:0]  probe0  
-	.probe1(sdram_last_header[63:0]),       // input wire [63:0]  probe0  
-	.probe2(sdram_header[127:64]),         // input wire [63:0]  probe0  
-	.probe3(sdram_last_header[127:64]),     // input wire [63:0]  probe0  
-	.probe4(sdram_rd_ptr),                 // input wire [3:0]  probe1 
-	.probe5(sdram_wr_ptr),                 // input wire [3:0]  probe1 
-	.probe6(sdram_wr),                     // input wire [0:0]  probe2
-	.probe7(pci_header_in[63:0]),          // input wire [63:0]  probe0  
-	.probe8(pci_last_header[63:0]),         // input wire [63:0]  probe0  
-	.probe9(pci_header_in[127:64]),        // input wire [63:0]  probe0  
-	.probe10(pci_last_header[127:64]),      // input wire [63:0]  probe0  
-	.probe11(pci_data_in[31:0]),            // input wire [31:0]  probe0  
-	.probe12(pci_data_out[31:0]),          // input wire [31:0]  probe0  
-	.probe13(pci_rd_ptr),                  // input wire [3:0]  probe1 
-	.probe14(pci_wr_ptr),                  // input wire [3:0]  probe1 
-	.probe15(pci_wr)                       // input wire [0:0]  probe2
+adc_mem adc_mem_inst (
+
+    .clk(user_clk),                             // I
+    .reset(user_reset),                         // I
+
+    .pci_rx_data( sdram_data),                  // I
+    .pci_rx_header( sdram_header),              // I
+    .pci_rx_rd_ptr (sdram_rd_ptr),              // O
+    .pci_rx_last_data( sdram_last_data),        // I
+    .pci_rx_last_header( sdram_last_header),    // I
+    .pci_rx_wr_ptr (sdram_wr_ptr),              // I
+    .pci_rx_wr (sdram_wr),                      // I
+
+    .bram_data( pci_data),                      // O
+    .bram_header( pci_header),                  // O
+    .bram_rd_ptr (pci_rd_ptr),                  // I
+    .bram_last_data (pci_last_data),            // O
+    .bram_last_header (pci_last_header),        // O
+    .bram_wr_ptr( pci_ptr),              // O
+    .bram_wr( pci_wr)                 // O
 );
-
-
-// local
-
-  reg  [63:0]      req_address;
-  reg  [31:0]      req_header   [1:0];
-  reg  [1023:0]    req_data;
-  reg  [9:0]       req_len;
-  reg  [7:0]       req_type;
-  reg              use_last;
-  reg              has_data;
-
-  generate
-    begin : pci_app
-
-      always @ ( posedge user_clk ) 
-      begin
-        if (pci_wr)
-        begin
-          pci_wr_ptr = pci_wr_ptr + 1;
-          pci_wr = 0;
-        end
-
-        if (user_reset)
-        begin
-          sdram_rd_ptr = 0;
-          pci_wr_ptr = 0;
-          pci_wr = 0;
-        end
-        else
-        begin
-          if (sdram_wr)
-          begin
-            has_data = 1;
-
-            if (sdram_wr_ptr == sdram_rd_ptr)
-              use_last = 1;
-            else
-              use_last = 0;
-          end
-          else
-          begin
-            use_last = 0;
-
-            if (sdram_wr_ptr == sdram_rd_ptr)
-              has_data = 0;
-            else
-              has_data = 1;                
-          end
-
-          if (has_data)
-          begin
-            if (use_last)
-            begin
-              req_data = sdram_last_data;
-              req_header[0] = sdram_last_header[31:0];
-              req_header[1] = sdram_last_header[63:32];
-              req_address = sdram_last_header[127:64];
-            end
-            else
-            begin
-              req_data = sdram_data;
-              req_header[0] = sdram_header[31:0];
-              req_header[1] = sdram_header[63:32];
-              req_address = sdram_header[127:64];
-            end
-
-            sdram_rd_ptr = sdram_rd_ptr + 1;
-
-            req_len = req_header[0][9:0];
-            req_type = req_header[0][31:24];
-
-            if (req_type[6] == 0)
-            begin
-              req_header[0][11:10] = 2'b0;                   // AT
-              req_header[0][19:16] = 4'b0;                   // TH, AttrH, R
-              req_header[0][23] = 1'b0;                      // R
- 
-              if (req_len)
-                  req_header[0][31:25] = 6'b10_0101;         // Type + Fmt (data)
-              else
-                  req_header[0][31:25] = 6'b00_0101;         // Type + Fmt (no data)
-              
-              req_header[1][7] = 0;    
-              pci_header_in[31:0] = req_header[0];
-              pci_header_in[95:64] = req_header[1];
-              
-              req_header[1][31:16] = 16'b0;                  // completer ID
-              req_header[1][15:13] = 3'b0;                   // completion code = 000
-              req_header[1][12] = 1'b0;                      // BCM
-              req_header[1][11:2] = req_len;                 // byte count
-              req_header[1][1:0] = 2'b0;                     // dword aligned
-              pci_header_in[63:32] = req_header[1];
-
-              pci_data_in[1:0] = 0;
-              pci_data_in[18:2] = req_address[18:2];
-              pci_data_in[1023:19] = 0;
-
-              pci_wr = 1;
-            end
-          end
-        end
-      end
-
-      always @ ( posedge user_clk ) 
-      begin
-        pci_last_data <= pci_data_in;
-        pci_last_header <= pci_header_in;
-        pci_last_ptr <= pci_wr_ptr;
-        pci_last_wr <= pci_wr;
-      end
-
-    end
-  endgenerate
 
 endmodule
