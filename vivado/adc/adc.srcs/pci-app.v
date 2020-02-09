@@ -374,4 +374,18 @@ adc_mem adc_mem_inst (
     .bram_wr( pci_wr)                           // O
 );
 
+ila_3 ila3_inst (
+    .clk ( user_clk ),                         // I
+    .probe0 ( m_axis_rx_tvalid ),                     // I
+    .probe1 ( m_axis_rx_tlast ),                     // I
+    .probe2 ( m_axis_rx_tready ),                     // I
+    .probe3 ( m_axis_rx_tkeep ),                     // I
+    .probe4 ( m_axis_rx_tdata ),                     // I
+    .probe5 ( s_axis_tx_tvalid ),                     // I
+    .probe6 ( s_axis_tx_tlast ),                     // I
+    .probe7 ( s_axis_tx_tready ),                     // I
+    .probe8 ( s_axis_tx_tkeep ),                     // I
+    .probe9 ( s_axis_tx_tdata )                     // I
+);
+
 endmodule

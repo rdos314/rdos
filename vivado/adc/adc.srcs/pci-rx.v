@@ -109,17 +109,22 @@ ila_0 ila_0_inst (
 	.clk(clk),                        // input wire clk
 	.probe0(m_axis_rx_tvalid),        // input wire [0:0]  probe0  
 	.probe1(m_axis_rx_tready),        // input wire [0:0]  probe0  
-	.probe2(header_done),              // input wire [0:0]  probe0  
-	.probe3(pend_strad),              // input wire [0:0]  probe0  
-	.probe4(m_axis_rx_tuser[13]),              // input wire [0:0]  probe0  
-	.probe5(m_axis_rx_tuser[14]),              // input wire [0:0]  probe0  
-	.probe6(m_axis_rx_tuser[21]),              // input wire [0:0]  probe0  
-	.probe7(req_type),                      // input wire [7:0]  probe0  
+	.probe2(m_axis_rx_tuser[13]),              // input wire [0:0]  probe0  
+	.probe3(m_axis_rx_tuser[14]),              // input wire [0:0]  probe0  
+	.probe4(m_axis_rx_tuser[21]),              // input wire [0:0]  probe0  
+	.probe5(active),                  // input wire [0:0]  probe0  
+	.probe6(load_header_low),              // input wire [0:0]  probe0  
+	.probe7(load_header_high),              // input wire [0:0]  probe0  
 	.probe8(is_first),                      // input wire [0:0]  probe0  
-	.probe9(new_header[31:0]),              // input wire [31:0]  probe0  
-	.probe10(new_header[63:32]),              // input wire [31:0]  probe0  
-	.probe11(new_header[95:64]),              // input wire [31:0]  probe0  
-	.probe12(new_header[127:96])              // input wire [31:0]  probe0  
+	.probe9(start_pos),                      // input wire [1:0]  probe0  
+	.probe10(curr_pos),                      // input wire [3:0]  probe0  
+	.probe11(new_size),                      // input wire [9:0]  probe0  
+	.probe12(max_size),                      // input wire [9:0]  probe0  
+	.probe13(curr_size),                      // input wire [9:0]  probe0  
+	.probe14(req_type),                      // input wire [7:0]  probe0  
+	.probe15(req_len),                      // input wire [9:0]  probe0  
+	.probe16(new_first_be),                   // input wire [3:0]  probe0  
+	.probe17(new_last_be)                   // input wire [3:0]  probe0  
 );
 
 generate
@@ -136,10 +141,7 @@ generate
         else
           active = 0;
       end
-    end
 
-    always @ ( posedge clk ) 
-    begin
       load_header_low = 0;
       load_header_high = 0;
       is_first = 0;
@@ -158,12 +160,9 @@ generate
           load_header_low = 1;
 
           if (m_axis_rx_tuser[13])  // header in high part of data
-          begin
             new_header[63:0] =  m_axis_rx_tdata[127:64];
-            new_header = 1;
-          end
           else
-            new_header[63:0] =  m_axis_rx_tdata[63:32];
+            new_header[63:0] =  m_axis_rx_tdata[63:0];
 
           req_type = new_header[31:24];
           req_len = new_header[9:0];
@@ -238,13 +237,7 @@ generate
 
         if (load_header_high)
           low_adr = new_header[65:64];
-      end
-    end
 
-    always @ ( posedge clk ) 
-    begin
-      if (active)
-      begin
         if (is_first)
         begin
           curr_pos = 0;
@@ -264,13 +257,7 @@ generate
           curr_size = new_size;
         else
           curr_size = max_size;
-      end
-    end
 
-    always @ ( posedge clk ) 
-    begin
-      if (active)
-      begin
         if (req_type[3])
         begin
           if (load_header_low)
