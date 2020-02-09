@@ -60,9 +60,11 @@ module pci_app (
 
   wire [1023:0]    sdram_data;
   wire [191:0]     sdram_header;
+  wire [127:0]     sdram_be;
   wire [3:0]       sdram_rd_ptr;
   wire [1023:0]    sdram_last_data;
   wire [191:0]     sdram_last_header;
+  wire [127:0]     sdram_last_be;
   wire [3:0]       sdram_wr_ptr;
   wire             sdram_wr;
 
@@ -70,9 +72,11 @@ module pci_app (
 
   wire [1023:0]    pci_data;
   wire [191:0]     pci_header;
+  wire [127:0]     pci_be;
   wire [3:0]       pci_rd_ptr;
   wire [1023:0]    pci_last_data;
   wire [191:0]     pci_last_header;
+  wire [127:0]     pci_last_be;
   wire [3:0]       pci_wr_ptr;
   wire             pci_wr;
 
@@ -317,9 +321,11 @@ pci_rx pci_rx_inst (
 
     .bram_data( sdram_data),                    // O
     .bram_header( sdram_header),                // O
+    .bram_be( sdram_be),                        // O
     .bram_rd_ptr (sdram_rd_ptr),                // I
-    .bram_last_data( sdram_last_data),          // O
-    .bram_last_header( sdram_last_header),      // O
+    .curr_data( sdram_last_data),          // O
+    .curr_header( sdram_last_header),      // O
+    .curr_be( sdram_last_be),              // O
     .bram_wr_ptr (sdram_wr_ptr),                // O
     .bram_wr (sdram_wr)                         // O
 );
@@ -342,8 +348,8 @@ pci_tx pci_tx_inst (
     .bram_rd_ptr (pci_rd_ptr),                  // O
     .bram_last_data (pci_last_data),            // I
     .bram_last_header (pci_last_header),        // I
-    .bram_wr_ptr( pci_ptr),                   // I
-    .bram_wr( pci_wr)                      // I
+    .bram_wr_ptr( pci_ptr),                     // I
+    .bram_wr( pci_wr)                           // I
 );
 
 adc_mem adc_mem_inst (
@@ -364,8 +370,8 @@ adc_mem adc_mem_inst (
     .bram_rd_ptr (pci_rd_ptr),                  // I
     .bram_last_data (pci_last_data),            // O
     .bram_last_header (pci_last_header),        // O
-    .bram_wr_ptr( pci_ptr),              // O
-    .bram_wr( pci_wr)                 // O
+    .bram_wr_ptr( pci_ptr),                     // O
+    .bram_wr( pci_wr)                           // O
 );
 
 endmodule
