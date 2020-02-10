@@ -12,11 +12,7 @@ module pci_tx (
   bram_header,
   bram_be,
   bram_rd_ptr,
-  q_data,
-  q_header,
-  q_be,
-  bram_wr_ptr,
-  bram_wr
+  bram_wr_ptr
 );
 
   input             clk;
@@ -34,11 +30,7 @@ module pci_tx (
   input  wire [191:0]             bram_header;
   input  wire [127:0]             bram_be;
   output  reg [3:0]               bram_rd_ptr;
-  input  wire [1023:0]            q_data;
-  input  wire [191:0]             q_header;
-  input  wire [127:0]             q_be;
   input  wire [3:0]               bram_wr_ptr;
-  input  wire                     bram_wr;
 
 // FF
   reg [3:0]    q_pos;
@@ -57,7 +49,6 @@ module pci_tx (
   reg [3:0]    calc_last_be;
 
   reg          has_data;
-  reg          use_last;
 
   reg [7:0]    req_type;
   reg [9:0]    req_len;
@@ -73,14 +64,16 @@ ila_2 ila_2_inst (
 	.probe3(s_axis_tx_tkeep),          // input wire [15:0]  probe0  
 	.probe4(s_axis_tx_tdata[63:0]),    // input wire [63:0]  probe0  
 	.probe5(s_axis_tx_tdata[127:64]),  // input wire [63:0]  probe0  
-	.probe6(sel),                      // input wire [0:0]  probe0  
-	.probe7(user_last),                // input wire [0:0]  probe0  
-	.probe8(req_type),                 // input wire [7:0]  probe0  
-	.probe9(req_len),                  // input wire [0:0]  probe0  
-	.probe10(req_header[0]),           // input wire [31:0]  probe0  
-	.probe11(req_header[1]),           // input wire [31:0]  probe0  
-	.probe12(req_header[2]),           // input wire [31:0]  probe0  
-	.probe13(req_header[3])            // input wire [31:0]  probe0  
+	.probe6(is_first),                 // input wire [0:0]  probe0  
+	.probe7(calc_pos),                 // input wire [3:0]  probe0  
+	.probe8(calc_blk_size),            // input wire [9:0]  probe0  
+	.probe9(calc_remain_size),         // input wire [9:0]  probe0  
+	.probe10(req_type),                 // input wire [7:0]  probe0  
+	.probe11(req_len),                  // input wire [0:0]  probe0  
+	.probe12(req_header[0]),           // input wire [31:0]  probe0  
+	.probe13(req_header[1]),           // input wire [31:0]  probe0  
+	.probe14(req_header[2]),           // input wire [31:0]  probe0  
+	.probe15(req_header[3])            // input wire [31:0]  probe0  
 );
 
 generate
@@ -105,40 +98,18 @@ generate
           begin
             is_first = 1;
 
-            if (bram_wr)
-            begin
-              has_data = 1;
-
-              if (bram_wr_ptr == bram_rd_ptr)
-                use_last = 1;
-              else
-                use_last = 0;
-            end
-            else
-            begin
-              use_last = 0;
-
-              if (bram_wr_ptr == bram_rd_ptr)
-                has_data = 0;
-              else
-                has_data = 1;                
-            end
+             if (bram_wr_ptr == bram_rd_ptr)
+               has_data = 0;
+             else
+               has_data = 1;                
           end
         end
       end 
 
       if (has_data)
       begin
-        if (use_last)
-        begin
-          req_data = q_data;
-          req_header = q_header;
-        end
-        else
-        begin
-          req_data = bram_data;
-          req_header = bram_header;
-        end
+        req_data = bram_data;
+        req_header = bram_header;
 
         if (is_first)
         begin
@@ -225,7 +196,7 @@ generate
               if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 1))
                 s_axis_tx_tkeep[3:0] <= calc_last_be;
               else
-                s_axis_tx_tkeep3:0] <= 4'b1111;
+                s_axis_tx_tkeep[3:0] <= 4'b1111;
             end
             else
               s_axis_tx_tkeep[3:0] <= calc_first_be;

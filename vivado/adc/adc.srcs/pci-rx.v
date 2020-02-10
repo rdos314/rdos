@@ -12,11 +12,7 @@ module pci_rx (
   bram_header,
   bram_be,
   bram_rd_ptr,
-  q_data,
-  q_header,
-  q_be,
   bram_wr_ptr,
-  bram_wr
 );
 
   input                          clk;
@@ -33,20 +29,21 @@ module pci_rx (
   output wire [191:0]            bram_header;
   output wire [127:0]            bram_be;
   input  wire [3:0]              bram_rd_ptr;
-  output reg  [1023:0]           q_data;
-  output reg  [191:0]            q_header;
-  output reg  [127:0]            q_be;
   output reg  [3:0]              bram_wr_ptr;
-  output reg                     bram_wr;
 
 // FF
-  reg [3:0]    q_pos;
-  reg [9:0]    q_remain_size;
-  reg          q_header_done;
-  reg [3:0]    q_first_be;
-  reg [3:0]    q_last_be;
-  reg          q_pend_strad;
-  reg [63:0]   q_strad_header;
+  reg [3:0]      q_pos;
+  reg [9:0]      q_remain_size;
+  reg            q_header_done;
+  reg [3:0]      q_first_be;
+  reg [3:0]      q_last_be;
+  reg            q_pend_strad;
+  reg [63:0]     q_strad_header;
+
+  reg  [1023:0]  q_data;
+  reg  [191:0]   q_header;
+  reg  [127:0]   q_be;
+  reg            bram_wr;
 
 // local variables
 
@@ -441,12 +438,7 @@ generate
         if (bram_wr_ptr + 1 == bram_rd_ptr)
           m_axis_rx_tready <= 0;
         else
-        begin
-          if (bram_wr_ptr + 2 == bram_rd_ptr)
-            m_axis_rx_tready <= 0;
-          else
-            m_axis_rx_tready <= 1;
-        end
+          m_axis_rx_tready <= 1;
       end
     end
 
