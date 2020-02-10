@@ -327,93 +327,6 @@ generate
 
     always @ ( posedge clk ) 
     begin
-      if (has_header_low)
-      begin
-        q_header[63:0] <= loaded_header[63:0];
-        q_first_be <= calc_first_be;
-        q_last_be <= calc_last_be;
-      end
-
-      if (has_header_high)
-        q_header[127:64] <= loaded_header[127:64];
-
-      if (has_strad)
-      begin
-        q_strad_header <=  m_axis_rx_tdata[127:64];
-        q_pend_strad <= 1;
-      end
-      else
-        q_pend_strad <= 0;
-
-      if (active)
-        q_header_done <= calc_header_done;
-    end
-
-    always @ ( posedge clk ) 
-    begin
-      if (calc_blk_size)
-      begin
-        q_data[(32*calc_pos) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+24) +: 8];
-        q_data[(32*calc_pos+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+16) +: 8];
-        q_data[(32*calc_pos+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+8) +: 8];
-        q_data[(32*calc_pos+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos) +: 8];
-
-        if (calc_pos)
-        begin
-          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 1))
-            q_be[4*(calc_pos) +: 4] <= calc_last_be;
-          else
-            q_be[4*(calc_pos) +: 4] <= 4'b1111;
-        end
-        else
-          q_be[3:0] <= calc_first_be;
-      end
-               
-      if (calc_blk_size > 1)
-      begin
-        q_data[(32*(calc_pos+1)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+56) +: 8];
-        q_data[(32*(calc_pos+1)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+48) +: 8];
-        q_data[(32*(calc_pos+1)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+40) +: 8];
-        q_data[(32*(calc_pos+1)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+32) +: 8];
-
-        if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 2))
-          q_be[4*(calc_pos+1) +: 4] <= calc_last_be;
-        else
-          q_be[4*(calc_pos+1) +: 4] <= 4'b1111;
-      end
-
-      if (calc_blk_size > 2)
-      begin
-        q_data[(32*(calc_pos+2)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+88) +: 8];
-        q_data[(32*(calc_pos+2)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+80) +: 8];
-        q_data[(32*(calc_pos+2)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+72) +: 8];
-        q_data[(32*(calc_pos+2)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+64) +: 8];
-
-        if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 3))
-          q_be[4*(calc_pos+2) +: 4] <= calc_last_be;
-        else
-          q_be[4*(calc_pos+2) +: 4] <= 4'b1111;
-      end
-
-      if (calc_blk_size > 3)
-      begin
-        q_data[(32*(calc_pos+3)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+120) +: 8];
-        q_data[(32*(calc_pos+3)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+112) +: 8];
-        q_data[(32*(calc_pos+3)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+104) +: 8];
-        q_data[(32*(calc_pos+3)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+96) +: 8];
-
-        if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 4))
-          q_be[4*(calc_pos+3) +: 4] <= calc_last_be;
-        else
-          q_be[4*(calc_pos+3) +: 4] <= 4'b1111;
-      end
-
-      q_remain_size <= calc_remain_size - calc_blk_size;
-      q_pos <= calc_pos + calc_blk_size;
-    end
-
-    always @ ( posedge clk ) 
-    begin
       if (reset )
       begin
         m_axis_rx_tready <= 0;
@@ -421,16 +334,92 @@ generate
         bram_wr_ptr <= 0;
       end
       else
-      begin
-        if (active)
+      begin      
+        if (has_header_low)
         begin
-          if (m_axis_rx_tuser[21])
+          q_header[63:0] <= loaded_header[63:0];
+          q_first_be <= calc_first_be;
+          q_last_be <= calc_last_be;
+        end
+
+        if (has_header_high)
+          q_header[127:64] <= loaded_header[127:64];
+
+        if (has_strad)
+        begin
+          q_strad_header <=  m_axis_rx_tdata[127:64];
+          q_pend_strad <= 1;
+        end
+        else
+          q_pend_strad <= 0;
+
+        if (active)
+          q_header_done <= calc_header_done;
+
+        if (calc_blk_size)
+        begin
+          q_data[(32*calc_pos) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+24) +: 8];
+          q_data[(32*calc_pos+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+16) +: 8];
+          q_data[(32*calc_pos+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+8) +: 8];
+          q_data[(32*calc_pos+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos) +: 8];
+
+          if (calc_pos)
           begin
-            bram_wr <= 1;             
-            bram_wr_ptr <= bram_wr_ptr + 1;
+            if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 1))
+              q_be[4*(calc_pos) +: 4] <= calc_last_be;
+            else
+              q_be[4*(calc_pos) +: 4] <= 4'b1111;
           end
           else
-            bram_wr <= 0;
+            q_be[3:0] <= calc_first_be;
+        end
+               
+        if (calc_blk_size > 1)
+        begin
+          q_data[(32*(calc_pos+1)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+56) +: 8];
+          q_data[(32*(calc_pos+1)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+48) +: 8];
+          q_data[(32*(calc_pos+1)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+40) +: 8];
+          q_data[(32*(calc_pos+1)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+32) +: 8];
+
+          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 2))
+            q_be[4*(calc_pos+1) +: 4] <= calc_last_be;
+          else
+            q_be[4*(calc_pos+1) +: 4] <= 4'b1111;
+        end
+
+        if (calc_blk_size > 2)
+        begin
+          q_data[(32*(calc_pos+2)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+88) +: 8];
+          q_data[(32*(calc_pos+2)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+80) +: 8];
+          q_data[(32*(calc_pos+2)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+72) +: 8];
+          q_data[(32*(calc_pos+2)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+64) +: 8];
+
+          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 3))
+            q_be[4*(calc_pos+2) +: 4] <= calc_last_be;
+          else
+            q_be[4*(calc_pos+2) +: 4] <= 4'b1111;
+        end
+
+        if (calc_blk_size > 3)
+        begin
+          q_data[(32*(calc_pos+3)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+120) +: 8];
+          q_data[(32*(calc_pos+3)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+112) +: 8];
+          q_data[(32*(calc_pos+3)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+104) +: 8];
+          q_data[(32*(calc_pos+3)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+96) +: 8];
+  
+          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 4))
+            q_be[4*(calc_pos+3) +: 4] <= calc_last_be;
+          else
+            q_be[4*(calc_pos+3) +: 4] <= 4'b1111;
+        end
+
+        q_remain_size <= calc_remain_size - calc_blk_size;
+        q_pos <= calc_pos + calc_blk_size;
+
+        if (m_axis_rx_tuser[21])
+        begin
+          bram_wr <= 1;             
+          bram_wr_ptr <= bram_wr_ptr + 1;
         end
         else
           bram_wr <= 0;

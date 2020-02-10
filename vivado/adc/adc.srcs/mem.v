@@ -101,11 +101,7 @@ ila_1 ila_1_inst (
       always @ ( posedge clk ) 
       begin
         if (reset)
-        begin
-          pci_rx_rd_ptr = 0;
-          bram_wr_ptr = 0;
-          bram_wr = 0;
-        end
+          has_data = 0;
         else
         begin
           if (pci_rx_wr_ptr == pci_rx_rd_ptr)
