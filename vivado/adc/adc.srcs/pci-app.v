@@ -56,29 +56,29 @@ module pci_app (
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
 
-// PCIe -> SDRAM
+// PCIe -> local
 
-  wire [1023:0]    sdram_data;
-  wire [191:0]     sdram_header;
-  wire [127:0]     sdram_be;
-  wire [3:0]       sdram_rd_ptr;
-  wire [1023:0]    sdram_last_data;
-  wire [191:0]     sdram_last_header;
-  wire [127:0]     sdram_last_be;
-  wire [3:0]       sdram_wr_ptr;
-  wire             sdram_wr;
+  wire [1023:0]    pci_rx_data;
+  wire [191:0]     pci_rx_header;
+  wire [127:0]     pci_rx_be;
+  wire [3:0]       pci_rx_rd_ptr;
+  wire [1023:0]    pci_rx_q_data;
+  wire [191:0]     pci_rx_q_header;
+  wire [127:0]     pci_rx_q_be;
+  wire [3:0]       pci_rx_wr_ptr;
+  wire             pci_rx_wr;
 
-// SDRAM -> PCIe
+// local -> PCIe
 
-  wire [1023:0]    pci_data;
-  wire [191:0]     pci_header;
-  wire [127:0]     pci_be;
-  wire [3:0]       pci_rd_ptr;
-  wire [1023:0]    pci_last_data;
-  wire [191:0]     pci_last_header;
-  wire [127:0]     pci_last_be;
-  wire [3:0]       pci_wr_ptr;
-  wire             pci_wr;
+  wire [1023:0]    pci_tx_data;
+  wire [191:0]     pci_tx_header;
+  wire [127:0]     pci_tx_be;
+  wire [3:0]       pci_tx_rd_ptr;
+  wire [1023:0]    pci_tx_q_data;
+  wire [191:0]     pci_tx_q_header;
+  wire [127:0]     pci_tx_q_be;
+  wire [3:0]       pci_tx_wr_ptr;
+  wire             pci_tx_wr;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -319,15 +319,15 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),      // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),       // I
 
-    .bram_data( sdram_data),                    // O
-    .bram_header( sdram_header),                // O
-    .bram_be( sdram_be),                        // O
-    .bram_rd_ptr (sdram_rd_ptr),                // I
-    .curr_data( sdram_last_data),          // O
-    .curr_header( sdram_last_header),      // O
-    .curr_be( sdram_last_be),              // O
-    .bram_wr_ptr (sdram_wr_ptr),                // O
-    .bram_wr (sdram_wr)                         // O
+    .bram_data( pci_rx_data),                    // O
+    .bram_header( pci_rx_header),                // O
+    .bram_be( pci_rx_be),                        // O
+    .bram_rd_ptr (pci_rx_rd_ptr),                // I
+    .q_data( pci_rx_q_data),                     // O
+    .q_header( pci_rx_q_header),                 // O
+    .q_be( pci_rx_q_be),                         // O
+    .bram_wr_ptr (pci_rx_wr_ptr),                // O
+    .bram_wr (pci_rx_wr)                         // O
 );
 
 pci_tx pci_tx_inst (
@@ -343,13 +343,15 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser ),        // I
     
-    .bram_data( pci_data),                      // I
-    .bram_header( pci_header),                  // I
-    .bram_rd_ptr (pci_rd_ptr),                  // O
-    .bram_last_data (pci_last_data),            // I
-    .bram_last_header (pci_last_header),        // I
-    .bram_wr_ptr( pci_ptr),                     // I
-    .bram_wr( pci_wr)                           // I
+    .bram_data( pci_tx_data),                   // I
+    .bram_header( pci_tx_header),               // I
+    .bram_be( pci_tx_be),                       // I
+    .bram_rd_ptr (pci_tx_rd_ptr),               // O
+    .q_data (pci_tx_q_data),                    // I
+    .q_header (pci_tx_q_header),                // I
+    .q_be (pci_tx_q_be),                        // I
+    .bram_wr_ptr( pci_tx_wr_ptr),               // I
+    .bram_wr( pci_tx_wr)                        // I
 );
 
 adc_mem adc_mem_inst (
@@ -357,35 +359,39 @@ adc_mem adc_mem_inst (
     .clk(user_clk),                             // I
     .reset(user_reset),                         // I
 
-    .pci_rx_data( sdram_data),                  // I
-    .pci_rx_header( sdram_header),              // I
-    .pci_rx_rd_ptr (sdram_rd_ptr),              // O
-    .pci_rx_last_data( sdram_last_data),        // I
-    .pci_rx_last_header( sdram_last_header),    // I
-    .pci_rx_wr_ptr (sdram_wr_ptr),              // I
-    .pci_rx_wr (sdram_wr),                      // I
+    .pci_rx_data( pci_rx_data),                 // I
+    .pci_rx_header( pci_rx_header),             // I
+    .pci_rx_be( pci_rx_be),                     // I
+    .pci_rx_rd_ptr (pci_rx_rd_ptr),             // O
+    .pci_rx_q_data( pci_rx_q_data),             // I
+    .pci_rx_q_header( pci_rx_q_header),         // I
+    .pci_rx_q_be( pci_rx_q_be),                 // I
+    .pci_rx_wr_ptr (pci_rx_wr_ptr),             // I
+    .pci_rx_wr (pci_rx_wr),                     // I
 
-    .bram_data( pci_data),                      // O
-    .bram_header( pci_header),                  // O
-    .bram_rd_ptr (pci_rd_ptr),                  // I
-    .bram_last_data (pci_last_data),            // O
-    .bram_last_header (pci_last_header),        // O
-    .bram_wr_ptr( pci_ptr),                     // O
-    .bram_wr( pci_wr)                           // O
+    .bram_data( pci_tx_data),                   // O
+    .bram_header( pci_tx_header),               // O
+    .bram_be( pci_tx_be),                       // O
+    .bram_rd_ptr (pci_tx_rd_ptr),               // I
+    .q_data (pci_tx_q_data),                    // O
+    .q_header (pci_tx_q_header),                // O
+    .q_be (pci_tx_q_be),                        // O
+    .bram_wr_ptr( pci_tx_wr_ptr),               // O
+    .bram_wr( pci_tx_wr)                        // O
 );
 
 ila_3 ila3_inst (
     .clk ( user_clk ),                         // I
-    .probe0 ( m_axis_rx_tvalid ),                     // I
-    .probe1 ( m_axis_rx_tlast ),                     // I
-    .probe2 ( m_axis_rx_tready ),                     // I
-    .probe3 ( m_axis_rx_tkeep ),                     // I
-    .probe4 ( m_axis_rx_tdata ),                     // I
-    .probe5 ( s_axis_tx_tvalid ),                     // I
-    .probe6 ( s_axis_tx_tlast ),                     // I
-    .probe7 ( s_axis_tx_tready ),                     // I
-    .probe8 ( s_axis_tx_tkeep ),                     // I
-    .probe9 ( s_axis_tx_tdata )                     // I
+    .probe0 ( m_axis_rx_tvalid ),              // I
+    .probe1 ( m_axis_rx_tlast ),               // I
+    .probe2 ( m_axis_rx_tready ),              // I
+    .probe3 ( m_axis_rx_tkeep ),               // I
+    .probe4 ( m_axis_rx_tdata ),               // I
+    .probe5 ( s_axis_tx_tvalid ),              // I
+    .probe6 ( s_axis_tx_tlast ),               // I
+    .probe7 ( s_axis_tx_tready ),              // I
+    .probe8 ( s_axis_tx_tkeep ),               // I
+    .probe9 ( s_axis_tx_tdata )                // I
 );
 
 endmodule

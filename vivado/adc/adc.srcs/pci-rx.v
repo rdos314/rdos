@@ -12,9 +12,9 @@ module pci_rx (
   bram_header,
   bram_be,
   bram_rd_ptr,
-  curr_data,
-  curr_header,
-  curr_be,
+  q_data,
+  q_header,
+  q_be,
   bram_wr_ptr,
   bram_wr
 );
@@ -33,53 +33,50 @@ module pci_rx (
   output wire [191:0]            bram_header;
   output wire [127:0]            bram_be;
   input  wire [3:0]              bram_rd_ptr;
-  output reg  [1023:0]           curr_data;
-  output reg  [191:0]            curr_header;
-  output reg  [127:0]            curr_be;
+  output reg  [1023:0]           q_data;
+  output reg  [191:0]            q_header;
+  output reg  [127:0]            q_be;
   output reg  [3:0]              bram_wr_ptr;
   output reg                     bram_wr;
 
 // FF
-  reg [3:0]    sel;
-  reg [3:0]    data_size;
-  reg          header_done;
-  reg          pend_strad;
-  reg [3:0]    curr_first_be;
-  reg [3:0]    curr_last_be;
-  reg [1:0]    curr_low_adr;
-  reg [11:0]   curr_byte_count;
-  reg [63:0]   strad_header;
+  reg [3:0]    q_pos;
+  reg [9:0]    q_remain_size;
+  reg          q_header_done;
+  reg [3:0]    q_first_be;
+  reg [3:0]    q_last_be;
+  reg          q_pend_strad;
+  reg [63:0]   q_strad_header;
 
 // local variables
 
   reg          active;  
-  reg          load_header_low;
-  reg          load_header_high;
-  reg          new_strad;
   reg          is_first;
-  reg [1:0]    start_pos;
-  reg [3:0]    curr_pos;
-  reg [9:0]    new_size;
-  reg [9:0]    max_size;
-  reg [9:0]    curr_size;
   reg [7:0]    req_type;
   reg [9:0]    req_len;
-  reg [3:0]    first_be;
-  reg [3:0]    last_be;
   reg [1:0]    low_adr;
   reg [11:0]   byte_count;
-  reg [3:0]    new_first_be;
-  reg [3:0]    new_last_be;
-  reg [11:0]   temp_byte_count;
-  reg [1:0]    temp_low_adr;
-  reg [127:0]  new_header;
+
+  reg          has_strad;
+  reg          has_header_low;
+  reg          has_header_high;
+
+  reg [3:0]    calc_pos;
+  reg [1:0]    calc_blk_pos;
+  reg [9:0]    calc_blk_size;
+  reg [9:0]    calc_remain_size;
+  reg [3:0]    calc_first_be;
+  reg [3:0]    calc_last_be;
+  reg          calc_header_done;
+
+  reg [127:0]  loaded_header;
 
 
 bram_data pci_rx_data_inst (
   .clka(clk),                 // input wire clka
   .wea(bram_wr),              // input wire [0 : 0] wea
   .addra(bram_wr_ptr),        // input wire [3 : 0] addra
-  .dina(curr_data),           // input wire [1023 : 0] dina
+  .dina(q_data),              // input wire [1023 : 0] dina
   .clkb(clk),                 // input wire clkb
   .addrb(bram_rd_ptr),        // input wire [3 : 0] addrb
   .doutb(bram_data)           // output wire [1023 : 0] doutb
@@ -89,7 +86,7 @@ bram_header pci_rx_header_inst (
   .clka(clk),                 // input wire clka
   .wea(bram_wr),              // input wire [0 : 0] wea
   .addra(bram_wr_ptr),        // input wire [3 : 0] addra
-  .dina(curr_header),         // input wire [191 : 0] dina
+  .dina(q_header),            // input wire [191 : 0] dina
   .clkb(clk),                 // input wire clkb
   .addrb(bram_rd_ptr),        // input wire [3 : 0] addrb
   .doutb(bram_header)         // output wire [191 : 0] doutb
@@ -99,32 +96,36 @@ bram_be pci_rx_be_inst (
   .clka(clk),                 // input wire clka
   .wea(bram_wr),              // input wire [0 : 0] wea
   .addra(bram_wr_ptr),        // input wire [3 : 0] addra
-  .dina(curr_be),             // input wire [127 : 0] dina
+  .dina(q_be),                // input wire [127 : 0] dina
   .clkb(clk),                 // input wire clkb
   .addrb(bram_rd_ptr),        // input wire [3 : 0] addrb
   .doutb(bram_be)             // output wire [127 : 0] doutb
 );
 
 ila_0 ila_0_inst (
-	.clk(clk),                        // input wire clk
-	.probe0(m_axis_rx_tvalid),        // input wire [0:0]  probe0  
-	.probe1(m_axis_rx_tready),        // input wire [0:0]  probe0  
-	.probe2(m_axis_rx_tuser[13]),              // input wire [0:0]  probe0  
-	.probe3(m_axis_rx_tuser[14]),              // input wire [0:0]  probe0  
-	.probe4(m_axis_rx_tuser[21]),              // input wire [0:0]  probe0  
-	.probe5(active),                  // input wire [0:0]  probe0  
-	.probe6(load_header_low),              // input wire [0:0]  probe0  
-	.probe7(load_header_high),              // input wire [0:0]  probe0  
-	.probe8(is_first),                      // input wire [0:0]  probe0  
-	.probe9(start_pos),                      // input wire [1:0]  probe0  
-	.probe10(curr_pos),                      // input wire [3:0]  probe0  
-	.probe11(new_size),                      // input wire [9:0]  probe0  
-	.probe12(max_size),                      // input wire [9:0]  probe0  
-	.probe13(curr_size),                      // input wire [9:0]  probe0  
-	.probe14(req_type),                      // input wire [7:0]  probe0  
-	.probe15(req_len),                      // input wire [9:0]  probe0  
-	.probe16(new_first_be),                   // input wire [3:0]  probe0  
-	.probe17(new_last_be)                   // input wire [3:0]  probe0  
+	.clk(clk),                         // input wire clk
+	.probe0(m_axis_rx_tvalid),         // input wire [0:0]  probe0  
+	.probe1(m_axis_rx_tready),         // input wire [0:0]  probe0  
+	.probe2(m_axis_rx_tuser[13]),      // input wire [0:0]  probe0  
+	.probe3(m_axis_rx_tuser[14]),      // input wire [0:0]  probe0  
+	.probe4(m_axis_rx_tuser[21]),      // input wire [0:0]  probe0  
+	.probe5(active),                   // input wire [0:0]  probe0  
+	.probe6(bram_wr),                  // input wire [0:0]  probe0  
+	.probe7(bram_wr_ptr),              // input wire [3:0]  probe0  
+	.probe8(bram_rd_ptr),              // input wire [3:0]  probe0  
+	.probe9(is_first),                 // input wire [0:0]  probe0  
+	.probe10(req_type),                // input wire [7:0]  probe0  
+	.probe11(req_len),                 // input wire [9:0]  probe0  
+	.probe12(has_strad),               // input wire [0:0]  probe0  
+	.probe13(has_header_low),          // input wire [0:0]  probe0  
+	.probe14(has_header_high),         // input wire [0:0]  probe0  
+	.probe15(calc_pos),                // input wire [3:0]  probe0  
+	.probe16(calc_blk_pos),            // input wire [1:0]  probe0  
+	.probe17(calc_remain_size),        // input wire [9:0]  probe0  
+	.probe18(calc_blk_size),           // input wire [9:0]  probe0  
+	.probe19(calc_first_be),           // input wire [3:0]  probe0  
+	.probe20(calc_last_be),            // input wire [3:0]  probe0  
+	.probe21(calc_header_done)         // input wire [0:0]  probe0  
 );
 
 generate
@@ -142,187 +143,186 @@ generate
           active = 0;
       end
 
-      load_header_low = 0;
-      load_header_high = 0;
+      has_header_low = 0;
+      has_header_high = 0;
       is_first = 0;
-      new_header = 0;
 
       if (active )
       begin
         if (m_axis_rx_tuser[13] && m_axis_rx_tuser[21])
-          new_strad = 1;
+          has_strad = 1;
         else
-          new_strad = 0;
+          has_strad = 0;
 
         if (m_axis_rx_tuser[14])
         begin
           is_first = 1;
-          load_header_low = 1;
+          has_header_low = 1;
 
           if (m_axis_rx_tuser[13])  // header in high part of data
-            new_header[63:0] =  m_axis_rx_tdata[127:64];
+            loaded_header[63:0] =  m_axis_rx_tdata[127:64];
           else
-            new_header[63:0] =  m_axis_rx_tdata[63:0];
+            loaded_header[63:0] =  m_axis_rx_tdata[63:0];
 
-          req_type = new_header[31:24];
-          req_len = new_header[9:0];
+          req_type = loaded_header[31:24];
+          req_len = loaded_header[9:0];
 
           if (m_axis_rx_tuser[13])
-            max_size = 0;
+          begin
+            calc_blk_size = 0;
+            calc_header_done = 0;
+          end
           else
           begin
-            load_header_high = 1;
+            has_header_high = 1;
+            calc_header_done = 1;
 
             if (req_type[5] == 0)  // 3 DW header
             begin
-              new_header[95:64] =  m_axis_rx_tdata[95:64];
-              new_header[127:96] =  32'b0;
-              max_size = 1;
-              start_pos = 2'b11;
+              loaded_header[95:64] =  m_axis_rx_tdata[95:64];
+              loaded_header[127:96] =  32'b0;
+              calc_blk_size = 1;
+              calc_blk_pos = 2'b11;
             end
             else
             begin
-              new_header[127:64] = m_axis_rx_tdata[127:64];
-              max_size = 0;
+              loaded_header[127:64] = m_axis_rx_tdata[127:64];
+              calc_blk_size = 0;
+              calc_blk_pos = 2'b00;
             end
           end
         end
         else
         begin
-          if (pend_strad)
+          calc_header_done = 1;
+
+          if (q_pend_strad)
           begin
-            new_header[63:0] = strad_header;
-            load_header_low = 1;
-            req_type = new_header[31:24];
-            req_len = new_header[9:0];
+            loaded_header[63:0] = q_strad_header;
+            has_header_low = 1;
+            req_type = loaded_header[31:24];
+            req_len = loaded_header[9:0];
           end
           else
           begin
-            req_type = curr_header[31:24];
-            req_len = curr_header[9:0];
+            req_type = q_header[31:24];
+            req_len = q_header[9:0];
           end
 
-          if (header_done)
+          if (q_header_done)
           begin
-            max_size = 4;
-            start_pos = 2'b00;
+            calc_blk_size = 4;
+            calc_blk_pos = 2'b00;
           end
           else
           begin
             is_first = 1;
-            load_header_high = 1;
+            has_header_high = 1;
 
             if (req_type[5] == 0)
             begin
-              new_header[95:64] =  m_axis_rx_tdata[31:0];
-              new_header[127:96] =  32'b0;
-              max_size = 3;
-              start_pos = 2'b01;
+              loaded_header[95:64] =  m_axis_rx_tdata[31:0];
+              loaded_header[127:96] =  32'b0;
+              calc_blk_size = 3;
+              calc_blk_pos = 2'b01;
             end
             else
             begin
-              new_header[127:64] =  m_axis_rx_tdata[63:0];
-              max_size = 2;
-              start_pos = 2'b10;
+              loaded_header[127:64] =  m_axis_rx_tdata[63:0];
+              calc_blk_size = 2;
+              calc_blk_pos = 2'b10;
             end
           end
         end
-
-        if (load_header_low)
-        begin
-          first_be = new_header[39:32];
-          last_be = new_header[47:40];
-          byte_count = new_header[43:32];
-        end
-
-        if (load_header_high)
-          low_adr = new_header[65:64];
 
         if (is_first)
         begin
-          curr_pos = 0;
+          calc_pos = 0;
 
           if (req_type[6])
-            new_size = req_len;
+            calc_remain_size = req_len;
           else
-            new_size = 0;
+            calc_remain_size = 0;
         end
         else
         begin
-          curr_pos = sel;
-          new_size = data_size;
+          calc_pos = q_pos;
+          calc_remain_size = q_remain_size;
         end
 
-        if (max_size > new_size)
-          curr_size = new_size;
-        else
-          curr_size = max_size;
+        if (calc_blk_size > calc_remain_size)
+          calc_blk_size = calc_remain_size;
 
         if (req_type[3])
         begin
-          if (load_header_low)
-            temp_byte_count = byte_count;
-          else
-            temp_byte_count = curr_byte_count;
-
-          if (load_header_high)
-            temp_low_adr = low_adr;
-          else
-            temp_low_adr = curr_low_adr;
-
-          case (temp_low_adr)
-            2'b00: 
-            begin
-              case (temp_byte_count)
-                1: new_first_be = 4'b0001;
-                2: new_first_be = 4'b0011;
-                3: new_first_be = 4'b0111;
-                default: new_first_be = 4'b1111;
-              endcase
-            end
-
-            2'b01:
-            begin
-              case (temp_byte_count)
-                1: new_first_be = 4'b010;
-                2: new_first_be = 4'b0110;
-                default: new_first_be = 4'b1110;
-              endcase
-            end
-
-            2'b10:
-            begin
-              if (temp_byte_count == 1)
-                new_first_be = 4'b0100;
-              else
-                new_first_be = 4'b1100;
-            end
-
-            2'b11:
-            begin
-              new_first_be = 4'b1000;
-            end
-          endcase
-
-          temp_low_adr = temp_low_adr + temp_byte_count[1:0];
-          case (temp_low_adr)
-            2'b00: new_last_be = 4'b1111;
-            2'b01: new_last_be = 4'b0001;
-            2'b10: new_last_be = 4'b0011;
-            2'b11: new_last_be = 4'b0111;
-          endcase
-        end
-        else
-        begin
-          if (load_header_low)
+          if (has_header_high)
           begin
-            new_first_be = first_be;
-            new_last_be = last_be;
+            if (has_header_low)
+              byte_count = loaded_header[43:32];
+            else
+              byte_count = q_header[43:32];
+
+            low_adr = loaded_header[65:64];
+
+            case (low_adr)
+              2'b00: 
+              begin
+                case (byte_count)
+                  1: calc_first_be = 4'b0001;
+                  2: calc_first_be = 4'b0011;
+                  3: calc_first_be = 4'b0111;
+                  default: calc_first_be = 4'b1111;
+                endcase
+              end
+
+              2'b01:
+              begin
+                case (byte_count)
+                  1: calc_first_be = 4'b010;
+                  2: calc_first_be = 4'b0110;
+                  default: calc_first_be = 4'b1110;
+                endcase
+              end
+
+              2'b10:
+              begin
+                if (byte_count == 1)
+                  calc_first_be = 4'b0100;
+                else
+                  calc_first_be = 4'b1100;
+              end
+
+              2'b11:
+              begin
+                calc_first_be = 4'b1000;
+              end
+            endcase
+
+            low_adr = low_adr + byte_count[1:0];
+            case (low_adr)
+              2'b00: calc_last_be = 4'b1111;
+              2'b01: calc_last_be = 4'b0001;
+              2'b10: calc_last_be = 4'b0011;
+              2'b11: calc_last_be = 4'b0111;
+            endcase
           end
           else
           begin
-            new_first_be = curr_first_be;
-            new_last_be = curr_last_be;
+            calc_first_be = q_first_be;
+            calc_last_be = q_last_be;
+          end
+        end
+        else
+        begin
+          if (has_header_low)
+          begin
+            calc_first_be = loaded_header[39:32];
+            calc_last_be = loaded_header[47:40];
+          end
+          else
+          begin
+            calc_first_be = q_first_be;
+            calc_last_be = q_last_be;
           end
         end
       end
@@ -330,95 +330,89 @@ generate
 
     always @ ( posedge clk ) 
     begin
-      if (load_header_low)
+      if (has_header_low)
       begin
-        curr_header[63:0] <= new_header[63:0];
-        curr_first_be <= first_be;
-        curr_last_be <= last_be;
-        curr_byte_count <= byte_count;
+        q_header[63:0] <= loaded_header[63:0];
+        q_first_be <= calc_first_be;
+        q_last_be <= calc_last_be;
       end
 
-      if (load_header_high)
-      begin
-        curr_header[127:64] <= new_header[127:64];
-        curr_low_adr <= low_adr;
-      end
+      if (has_header_high)
+        q_header[127:64] <= loaded_header[127:64];
 
-      if (new_strad)
+      if (has_strad)
       begin
-        strad_header <=  m_axis_rx_tdata[127:64];
-        pend_strad <= 1;
+        q_strad_header <=  m_axis_rx_tdata[127:64];
+        q_pend_strad <= 1;
       end
       else
-        pend_strad <= 0;
+        q_pend_strad <= 0;
 
-      if (new_header || reset || new_strad)
-        header_done <= 0;
-      else
-        header_done <= 1;
+      if (active)
+        q_header_done <= calc_header_done;
     end
 
     always @ ( posedge clk ) 
     begin
-      if (curr_size)
+      if (calc_blk_size)
       begin
-        curr_data[(32*curr_pos) +: 8] <= m_axis_rx_tdata[(32*start_pos+24) +: 8];
-        curr_data[(32*curr_pos+8) +: 8] <= m_axis_rx_tdata[(32*start_pos+16) +: 8];
-        curr_data[(32*curr_pos+16) +: 8] <= m_axis_rx_tdata[(32*start_pos+8) +: 8];
-        curr_data[(32*curr_pos+24) +: 8] <= m_axis_rx_tdata[(32*start_pos) +: 8];
+        q_data[(32*calc_pos) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+24) +: 8];
+        q_data[(32*calc_pos+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+16) +: 8];
+        q_data[(32*calc_pos+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+8) +: 8];
+        q_data[(32*calc_pos+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos) +: 8];
 
-        if (curr_pos)
-          curr_be[4*curr_pos +: 4] <= 4'b1111;
-        else
+        if (calc_pos)
         begin
-          if ((new_size == curr_size) && (curr_size == 1))
-            curr_be[4*(curr_pos) +: 4] <= new_last_be;
+          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 1))
+            q_be[4*(calc_pos) +: 4] <= calc_last_be;
           else
-            curr_be[4*(curr_pos) +: 4] <= 4'b1111;
+            q_be[4*(calc_pos) +: 4] <= 4'b1111;
         end
+        else
+          q_be[3:0] <= calc_first_be;
       end
                
-      if (curr_size > 1)
+      if (calc_blk_size > 1)
       begin
-        curr_data[(32*(curr_pos+1)) +: 8] <= m_axis_rx_tdata[(32*start_pos+56) +: 8];
-        curr_data[(32*(curr_pos+1)+8) +: 8] <= m_axis_rx_tdata[(32*start_pos+48) +: 8];
-        curr_data[(32*(curr_pos+1)+16) +: 8] <= m_axis_rx_tdata[(32*start_pos+40) +: 8];
-        curr_data[(32*(curr_pos+1)+24) +: 8] <= m_axis_rx_tdata[(32*start_pos+32) +: 8];
+        q_data[(32*(calc_pos+1)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+56) +: 8];
+        q_data[(32*(calc_pos+1)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+48) +: 8];
+        q_data[(32*(calc_pos+1)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+40) +: 8];
+        q_data[(32*(calc_pos+1)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+32) +: 8];
 
-        if ((new_size == curr_size) && (curr_size == 2))
-          curr_be[4*(curr_pos+1) +: 4] <= new_last_be;
+        if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 2))
+          q_be[4*(calc_pos+1) +: 4] <= calc_last_be;
         else
-          curr_be[4*(curr_pos+1) +: 4] <= 4'b1111;
+          q_be[4*(calc_pos+1) +: 4] <= 4'b1111;
       end
 
-      if (curr_size > 2)
+      if (calc_blk_size > 2)
       begin
-        curr_data[(32*(curr_pos+2)) +: 8] <= m_axis_rx_tdata[(32*start_pos+88) +: 8];
-        curr_data[(32*(curr_pos+2)+8) +: 8] <= m_axis_rx_tdata[(32*start_pos+80) +: 8];
-        curr_data[(32*(curr_pos+2)+16) +: 8] <= m_axis_rx_tdata[(32*start_pos+72) +: 8];
-        curr_data[(32*(curr_pos+2)+24) +: 8] <= m_axis_rx_tdata[(32*start_pos+64) +: 8];
+        q_data[(32*(calc_pos+2)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+88) +: 8];
+        q_data[(32*(calc_pos+2)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+80) +: 8];
+        q_data[(32*(calc_pos+2)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+72) +: 8];
+        q_data[(32*(calc_pos+2)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+64) +: 8];
 
-        if ((new_size == curr_size) && (curr_size == 3))
-          curr_be[4*(curr_pos+2) +: 4] <= new_last_be;
+        if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 3))
+          q_be[4*(calc_pos+2) +: 4] <= calc_last_be;
         else
-          curr_be[4*(curr_pos+2) +: 4] <= 4'b1111;
+          q_be[4*(calc_pos+2) +: 4] <= 4'b1111;
       end
 
-      if (curr_size > 3)
+      if (calc_blk_size > 3)
       begin
-        curr_data[(32*(curr_pos+3)) +: 8] <= m_axis_rx_tdata[(32*start_pos+120) +: 8];
-        curr_data[(32*(curr_pos+3)+8) +: 8] <= m_axis_rx_tdata[(32*start_pos+112) +: 8];
-        curr_data[(32*(curr_pos+3)+16) +: 8] <= m_axis_rx_tdata[(32*start_pos+104) +: 8];
-        curr_data[(32*(curr_pos+3)+24) +: 8] <= m_axis_rx_tdata[(32*start_pos+96) +: 8];
+        q_data[(32*(calc_pos+3)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+120) +: 8];
+        q_data[(32*(calc_pos+3)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+112) +: 8];
+        q_data[(32*(calc_pos+3)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+104) +: 8];
+        q_data[(32*(calc_pos+3)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+96) +: 8];
 
-        if ((new_size == curr_size) && (curr_size == 4))
-          curr_be[4*(curr_pos+3) +: 4] <= new_last_be;
+        if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 4))
+          q_be[4*(calc_pos+3) +: 4] <= calc_last_be;
         else
-          curr_be[4*(curr_pos+3) +: 4] <= 4'b1111;
+          q_be[4*(calc_pos+3) +: 4] <= 4'b1111;
       end
 
-      data_size <= new_size - curr_size;
-      sel <= curr_pos + curr_size;
+      q_remain_size <= calc_remain_size - calc_blk_size;
+      q_pos <= calc_pos + calc_blk_size;
     end
 
     always @ ( posedge clk ) 
