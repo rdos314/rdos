@@ -118,6 +118,7 @@ generate
             pci_tx_wr <= 0;
 
           q_pci_rx_rd_ptr <= pci_rx_rd_ptr;
+        end
       end
     end
 

@@ -10,7 +10,6 @@ module pci_tx (
 
   pci_tx_data,
   pci_tx_header,
-  pci_tx_be,
   pci_tx_rd_ptr,
   pci_tx_wr_ptr,
   pci_tx_wr
@@ -38,7 +37,7 @@ module pci_tx (
   reg  [9:0]    q_remain_size;
   reg  [3:0]    q_first_be;
   reg  [3:0]    q_last_be;
-  reg  [3:0]    q_bram_rd_ptr;
+  reg  [3:0]    q_pci_tx_rd_ptr;
 
 
 // local
@@ -95,10 +94,10 @@ ila_2 ila_2_inst (
 	.probe9(calc_remain_size),         // input wire [9:0]  probe0  
 	.probe10(req_type),                 // input wire [7:0]  probe0  
 	.probe11(req_len),                  // input wire [0:0]  probe0  
-	.probe12(req_header[0]),           // input wire [31:0]  probe0  
-	.probe13(req_header[1]),           // input wire [31:0]  probe0  
-	.probe14(req_header[2]),           // input wire [31:0]  probe0  
-	.probe15(req_header[3])            // input wire [31:0]  probe0  
+	.probe12(pci_tx_header[31:0]),      // input wire [31:0]  probe0  
+	.probe13(pci_tx_header[63:32]),     // input wire [31:0]  probe0  
+	.probe14(pci_tx_header[95:64]),     // input wire [31:0]  probe0  
+	.probe15(pci_tx_header[127:96])     // input wire [31:0]  probe0  
 );
 
 generate
