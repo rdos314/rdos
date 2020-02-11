@@ -367,7 +367,11 @@ ila_3 ila3_inst (
     .probe6 ( s_axis_tx_tlast ),               // I (1)
     .probe7 ( s_axis_tx_tready ),              // I (1)
     .probe8 ( s_axis_tx_tkeep ),               // I (16)
-    .probe9 ( s_axis_tx_tdata )                // I (128)
+    .probe9 ( s_axis_tx_tdata ),               // I (128)
+    .probe10 ( pci_rx_header[63:0] ),          // I (64)
+    .probe11 ( pci_rx_header[127:64] ),        // I (64)
+    .probe12 ( pci_rx_data[31:0] ),            // I (32)
+    .probe13 ( pci_rx_be[31:0] )               // I (32)
 );
 
 endmodule

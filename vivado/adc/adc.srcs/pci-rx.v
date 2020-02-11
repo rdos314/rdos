@@ -106,23 +106,19 @@ ila_0 ila_0_inst (
 	.probe2(m_axis_rx_tuser[13]),      // input wire [0:0]  probe0  
 	.probe3(m_axis_rx_tuser[14]),      // input wire [0:0]  probe0  
 	.probe4(m_axis_rx_tuser[21]),      // input wire [0:0]  probe0  
-	.probe5(active),                   // input wire [0:0]  probe0  
-	.probe6(bram_wr),                  // input wire [0:0]  probe0  
-	.probe7(bram_wr_ptr),              // input wire [3:0]  probe0  
-	.probe8(bram_rd_ptr),              // input wire [3:0]  probe0  
-	.probe9(is_first),                 // input wire [0:0]  probe0  
-	.probe10(req_type),                // input wire [7:0]  probe0  
-	.probe11(req_len),                 // input wire [9:0]  probe0  
-	.probe12(has_strad),               // input wire [0:0]  probe0  
-	.probe13(has_header_low),          // input wire [0:0]  probe0  
-	.probe14(has_header_high),         // input wire [0:0]  probe0  
-	.probe15(calc_pos),                // input wire [3:0]  probe0  
-	.probe16(calc_blk_pos),            // input wire [1:0]  probe0  
-	.probe17(calc_remain_size),        // input wire [9:0]  probe0  
-	.probe18(calc_blk_size),           // input wire [9:0]  probe0  
-	.probe19(calc_first_be),           // input wire [3:0]  probe0  
-	.probe20(calc_last_be),            // input wire [3:0]  probe0  
-	.probe21(calc_header_done)         // input wire [0:0]  probe0  
+	.probe5(bram_wr),                  // input wire [0:0]  probe0  
+	.probe6(bram_wr_ptr),              // input wire [3:0]  probe0  
+	.probe7(bram_rd_ptr),              // input wire [3:0]  probe0  
+	.probe8(has_header_low),           // input wire [0:0]  probe0  
+	.probe9(has_header_high),          // input wire [0:0]  probe0  
+	.probe10(calc_pos),                // input wire [3:0]  probe0  
+	.probe11(calc_blk_pos),            // input wire [1:0]  probe0  
+	.probe12(calc_remain_size),        // input wire [9:0]  probe0  
+	.probe13(calc_blk_size),           // input wire [9:0]  probe0  
+	.probe14(q_header[63:0]),          // input wire [63:0]  probe0  
+	.probe15(q_header[127:64]),        // input wire [63:0]  probe0  
+	.probe16(q_data[31:0]),            // input wire [31:0]  probe0  
+	.probe17(q_be[31:0])               // input wire [31:0]  probe0  
 );
 
 generate
