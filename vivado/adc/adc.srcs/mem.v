@@ -85,6 +85,8 @@ generate
 
           pci_rx_rd_ptr = pci_rx_rd_ptr + 1;
 
+// FF part
+
           if (req_type[6] == 0)
           begin
             pci_tx_header[63:48] <= 16'b0;                  // completer ID

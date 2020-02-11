@@ -44,6 +44,7 @@ module pci_tx (
 // local
 
   reg            is_first;
+  reg            is_last;
   reg  [3:0]     calc_pos;
   reg  [9:0]     calc_blk_size;
   reg  [9:0]     calc_remain_size;
@@ -123,10 +124,10 @@ generate
           begin
             is_first = 1;
 
-             if (pci_tx_wr_ptr == pci_tx_rd_ptr)
-               has_data = 0;
-             else
-               has_data = 1;                
+            if (pci_tx_wr_ptr == pci_tx_rd_ptr)
+              has_data = 0;
+            else
+              has_data = 1;                
           end
         end
       end 
@@ -161,9 +162,19 @@ generate
           calc_first_be = q_first_be;
           calc_last_be = q_last_be;
         end
+
+        if (calc_remain_size == calc_blk_size)
+        begin
+          is_last = 1;
+          pci_tx_rd_ptr = pci_tx_rd_ptr + 1;
+        end
+        else
+          is_last = 0;
+
       end
       else
         calc_blk_size = 0;
+
 
 // FF part
 
@@ -269,15 +280,12 @@ generate
 
         q_remain_size <= calc_remain_size - calc_blk_size;
         q_pos <= calc_pos + calc_blk_size;
+        q_pci_tx_rd_ptr <= pci_tx_rd_ptr;
 
         s_axis_tx_tvalid  <= 1;
 
-        if (calc_remain_size == calc_blk_size)
-        begin
-          pci_tx_rd_ptr = pci_tx_rd_ptr + 1;
-          q_pci_tx_rd_ptr <= pci_tx_rd_ptr;
+        if (is_last)
           s_axis_tx_tlast <= 1;
-        end
         else
           s_axis_tx_tlast <= 0;
       end
