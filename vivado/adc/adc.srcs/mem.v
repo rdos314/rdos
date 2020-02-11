@@ -44,19 +44,18 @@ module adc_mem (
 
 ila_1 ila_1_inst (
 	.clk(clk),                              // input wire clk
-	.probe0(q_header[127:64]),            // input wire [63:0]  probe0  
-	.probe1(q_header[63:0]),              // input wire [63:0]  probe0  
-	.probe2(q_data[31:0]),                // input wire [31:0]  probe1 
-	.probe3(req_len),                       // input wire [9:0]  probe1 
-	.probe4(bram_header[127:64]),           // input wire [63:0]  probe0
-	.probe5(bram_header[63:0]),             // input wire [63:0]  probe0  
-	.probe6(bram_data[31:0]),               // input wire [31:0]  probe0  
-	.probe7(q_be[31:0]),                  // input wire [31:0]  probe0  
-	.probe8(pci_rx_rd_ptr),                 // input wire [3:0]  probe1 
-	.probe9(pci_rx_wr_ptr),                 // input wire [3:0]  probe1 
-	.probe10(bram_rd_ptr),                  // input wire [3:0]  probe1 
-	.probe11(bram_wr_ptr),                  // input wire [3:0]  probe1 
-	.probe12(bram_wr)                       // input wire [0:0]  probe2
+	.probe0(pci_rx_rd_ptr),                 // input wire [3:0]  probe1 
+	.probe1(pci_rx_wr_ptr),                 // input wire [3:0]  probe1 
+	.probe2(pci_tx_rd_ptr),                 // input wire [3:0]  probe1 
+	.probe3(pci_tx_wr_ptr),                 // input wire [3:0]  probe1 
+	.probe4(pci_tx_wr),                     // input wire [0:0]  probe1 
+	.probe5(req_address),                   // input wire [63:0]  probe1 
+	.probe6(req_len),                       // input wire [9:0]  probe1 
+	.probe7(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
+	.probe8(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
+	.probe9(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
+	.probe10(pci_tx_header[127:64]),        // input wire [63:0]  probe1 
+	.probe11(pci_tx_data[31:0])             // input wire [31:0]  probe2
 );
 
 

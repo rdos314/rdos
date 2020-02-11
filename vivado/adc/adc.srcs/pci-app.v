@@ -371,11 +371,10 @@ ila_3 ila3_inst (
     .probe10 ( pci_rx_header[63:0] ),          // I (64)
     .probe11 ( pci_rx_header[127:64] ),        // I (64)
     .probe12 ( pci_rx_data[31:0] ),            // I (32)
-    .probe13 ( pci_rx_be[31:0] )               // I (32)
+    .probe13 ( pci_rx_be[31:0] ),              // I (32)
     .probe10 ( pci_tx_header[63:0] ),          // I (64)
     .probe11 ( pci_tx_header[127:64] ),        // I (64)
-    .probe12 ( pci_tx_data[31:0] ),            // I (32)
-    .probe13 ( pci_tx_be[31:0] )               // I (32)
+    .probe12 ( pci_tx_data[31:0] )             // I (32)
 );
 
 endmodule
