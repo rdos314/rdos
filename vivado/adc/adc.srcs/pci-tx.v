@@ -108,15 +108,12 @@ generate
 
       if (has_data)
       begin
-        req_data = bram_data;
-        req_header = bram_header;
-
         if (is_first)
         begin
           calc_pos = 0;
 
-          req_type = req_header[31:24];
-          req_len = req_header[9:0];
+          req_type = bram_header[31:24];
+          req_len = bram_header[9:0];
 
           if (req_type[5] == 0)  // 3 DW header
             calc_blk_size = 1;
@@ -142,17 +139,12 @@ generate
       end
       else
         calc_blk_size = 0;
-    end
 
-    always @ ( posedge clk ) 
-    begin
+// FF part
+
       if (reset)
         bram_rd_ptr <= 0;
 
-    end
-
-    always @ ( posedge clk ) 
-    begin
       if (has_data)
       begin
         if (is_first)
@@ -162,15 +154,15 @@ generate
 
           if (req_type[5] == 0)  // 3 DW header
           begin
-            s_axis_tx_tdata[95:0] <= req_header[95:0];
+            s_axis_tx_tdata[95:0] <= bram_header[95:0];
             s_axis_tx_tkeep[11:0] <= 12'hfff;
 
             if (calc_blk_size)
             begin
-              s_axis_tx_tdata[127:120] <= req_data[7:0];
-              s_axis_tx_tdata[119:112] <= req_data[15:8];
-              s_axis_tx_tdata[111:104] <= req_data[23:16];
-              s_axis_tx_tdata[103:96] <= req_data[31:24];
+              s_axis_tx_tdata[127:120] <= bram_data[7:0];
+              s_axis_tx_tdata[119:112] <= bram_data[15:8];
+              s_axis_tx_tdata[111:104] <= bram_data[23:16];
+              s_axis_tx_tdata[103:96] <= bram_data[31:24];
               s_axis_tx_tkeep[15:12] <= calc_first_be;
             end
             else
@@ -178,7 +170,7 @@ generate
           end
           else
           begin
-            s_axis_tx_tdata[127:0] <= req_header[127:0];
+            s_axis_tx_tdata[127:0] <= bram_header[127:0];
             s_axis_tx_tkeep[15:0] <= 16'hffff;
           end
         end
@@ -186,10 +178,10 @@ generate
         begin
           if (calc_blk_size)
           begin
-            s_axis_tx_tdata[31:24] <= req_data[(32*calc_pos) +: 8];
-            s_axis_tx_tdata[23:16] <= req_data[(32*calc_pos+8) +: 8];
-            s_axis_tx_tdata[15:8] <= req_data[(32*calc_pos+16) +: 8];
-            s_axis_tx_tdata[7:0] <= req_data[(32*calc_pos+24) +: 8];
+            s_axis_tx_tdata[31:24] <= bram_data[(32*calc_pos) +: 8];
+            s_axis_tx_tdata[23:16] <= bram_data[(32*calc_pos+8) +: 8];
+            s_axis_tx_tdata[15:8] <= bram_data[(32*calc_pos+16) +: 8];
+            s_axis_tx_tdata[7:0] <= bram_data[(32*calc_pos+24) +: 8];
 
             if (calc_pos)
             begin
@@ -206,10 +198,10 @@ generate
                
           if (calc_blk_size > 1)
           begin
-            s_axis_tx_tdata[63:56] <= req_data[(32*(calc_pos+1)) +: 8];
-            s_axis_tx_tdata[55:48] <= req_data[(32*(calc_pos+1)+8) +: 8];
-            s_axis_tx_tdata[47:40] <= req_data[(32*(calc_pos+1)+16) +: 8];
-            s_axis_tx_tdata[39:32] <= req_data[(32*(calc_pos+1)+24) +: 8];
+            s_axis_tx_tdata[63:56] <= bram_data[(32*(calc_pos+1)) +: 8];
+            s_axis_tx_tdata[55:48] <= bram_data[(32*(calc_pos+1)+8) +: 8];
+            s_axis_tx_tdata[47:40] <= bram_data[(32*(calc_pos+1)+16) +: 8];
+            s_axis_tx_tdata[39:32] <= bram_data[(32*(calc_pos+1)+24) +: 8];
  
             if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 2))
               s_axis_tx_tkeep[7:4] <= calc_last_be;
@@ -221,10 +213,10 @@ generate
 
           if (calc_blk_size > 2)
           begin
-            s_axis_tx_tdata[95:88] <= req_data[(32*(calc_pos+2)) +: 8];
-            s_axis_tx_tdata[87:80] <= req_data[(32*(calc_pos+2)+8) +: 8];
-            s_axis_tx_tdata[79:72] <= req_data[(32*(calc_pos+2)+16) +: 8];
-            s_axis_tx_tdata[71:64] <= req_data[(32*(calc_pos+2)+24) +: 8];
+            s_axis_tx_tdata[95:88] <= bram_data[(32*(calc_pos+2)) +: 8];
+            s_axis_tx_tdata[87:80] <= bram_data[(32*(calc_pos+2)+8) +: 8];
+            s_axis_tx_tdata[79:72] <= bram_data[(32*(calc_pos+2)+16) +: 8];
+            s_axis_tx_tdata[71:64] <= bram_data[(32*(calc_pos+2)+24) +: 8];
 
             if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 3))
               s_axis_tx_tkeep[11:8] <= calc_last_be;
@@ -236,10 +228,10 @@ generate
 
           if (calc_blk_size > 3)
           begin
-            s_axis_tx_tdata[127:120] <= req_data[(32*(calc_pos+3)) +: 8];
-            s_axis_tx_tdata[119:112] <= req_data[(32*(calc_pos+3)+8) +: 8];
-            s_axis_tx_tdata[111:104] <= req_data[(32*(calc_pos+3)+16) +: 8];
-            s_axis_tx_tdata[103:96] <= req_data[(32*(calc_pos+3)+24) +: 8];
+            s_axis_tx_tdata[127:120] <= bram_data[(32*(calc_pos+3)) +: 8];
+            s_axis_tx_tdata[119:112] <= bram_data[(32*(calc_pos+3)+8) +: 8];
+            s_axis_tx_tdata[111:104] <= bram_data[(32*(calc_pos+3)+16) +: 8];
+            s_axis_tx_tdata[103:96] <= bram_data[(32*(calc_pos+3)+24) +: 8];
  
             if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 4))
               s_axis_tx_tkeep[15:12] <= calc_last_be;

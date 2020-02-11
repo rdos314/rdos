@@ -319,10 +319,9 @@ generate
           end
         end
       end
-    end
 
-    always @ ( posedge clk ) 
-    begin
+// FF part
+
       if (reset )
       begin
         m_axis_rx_tready <= 0;

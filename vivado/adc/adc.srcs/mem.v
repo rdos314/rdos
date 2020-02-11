@@ -44,7 +44,6 @@ module adc_mem (
   reg  [63:0]      req_address;
   reg  [9:0]       req_len;
   reg  [7:0]       req_type;
-  reg              has_data;
 
 bram_data pci_tx_data_inst (
   .clka(clk),                     // input wire clka
@@ -95,28 +94,11 @@ ila_1 ila_1_inst (
 );
 
 
-  generate
-    begin : mem
+generate
+  begin : mem
 
-      always @ ( posedge clk ) 
-      begin
-        if (reset)
-          has_data = 0;
-        else
-        begin
-          if (pci_rx_wr_ptr == pci_rx_rd_ptr)
-            has_data = 0;
-          else
-          begin
-            has_data = 1;
-            req_len = pci_rx_header[9:0];
-            req_type = pci_rx_header[31:24];
-            req_address = pci_rx_header[95:64];
-          end
-        end
-      end
-
-      always @ ( posedge clk ) 
+    always @ ( posedge clk ) 
+    begin
       if (reset)
       begin
         pci_rx_rd_ptr <= 0;
@@ -125,8 +107,14 @@ ila_1 ila_1_inst (
       end
       else
       begin
-        if (has_data)
+        if (pci_rx_wr_ptr == pci_rx_rd_ptr)
+          bram_wr <= 0;
+        else
         begin
+          req_len = pci_rx_header[9:0];
+          req_type = pci_rx_header[31:24];
+          req_address = pci_rx_header[95:64];
+
           if (req_type[6] == 0)
           begin
             q_header[63:48] <= 16'b0;                  // completer ID
@@ -156,16 +144,15 @@ ila_1 ila_1_inst (
 
             bram_wr_ptr <= bram_wr_ptr + 1;
             bram_wr <= 1;
-
-            pci_rx_rd_ptr <= pci_rx_rd_ptr + 1;
           end
           else
             bram_wr <= 0;
-        end
-        else
-          bram_wr <= 0;
+
+          pci_rx_rd_ptr <= pci_rx_rd_ptr + 1;
       end
     end
-  endgenerate
+
+  end
+endgenerate
 
 endmodule
