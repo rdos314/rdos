@@ -37,6 +37,7 @@ module pci_tx (
   reg [9:0]    q_remain_size;
   reg [3:0]    q_first_be;
   reg [3:0]    q_last_be;
+  reg [3:0]    q_bram_rd_ptr;
 
 
 // local
@@ -82,6 +83,7 @@ generate
     always @ ( posedge clk ) 
     begin
       has_data = 0;
+      bram_rd_ptr = q_bram_rd_ptr;
 
       if (reset) 
         calc_remain_size = 0;
@@ -143,7 +145,7 @@ generate
 // FF part
 
       if (reset)
-        bram_rd_ptr <= 0;
+        q_bram_rd_ptr <= 0;
 
       if (has_data)
       begin
@@ -249,7 +251,8 @@ generate
 
         if (calc_remain_size == calc_blk_size)
         begin
-          bram_rd_ptr <= bram_rd_ptr + 1;
+          bram_rd_ptr = bram_rd_ptr + 1;
+          q_bram_rd_ptr <= bram_rd_ptr;
           s_axis_tx_tlast <= 1;
         end
         else

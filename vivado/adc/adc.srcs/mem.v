@@ -37,6 +37,7 @@ module adc_mem (
   reg  [191:0]     q_header;
   reg  [127:0]     q_be;
   reg              bram_wr;
+  reg  [3:0]       q_pci_rx_rd_ptr;
 
 
 // local
@@ -99,9 +100,11 @@ generate
 
     always @ ( posedge clk ) 
     begin
+      pci_rx_rd_ptr = q_pci_rx_rd_ptr;
+
       if (reset)
       begin
-        pci_rx_rd_ptr <= 0;
+        q_pci_rx_rd_ptr <= 0;
         bram_wr_ptr <= 0;
         bram_wr <= 0;
       end
@@ -114,6 +117,8 @@ generate
           req_len = pci_rx_header[9:0];
           req_type = pci_rx_header[31:24];
           req_address = pci_rx_header[95:64];
+
+          pci_rx_rd_ptr = pci_rx_rd_ptr + 1;
 
           if (req_type[6] == 0)
           begin
@@ -148,7 +153,7 @@ generate
           else
             bram_wr <= 0;
 
-          pci_rx_rd_ptr <= pci_rx_rd_ptr + 1;
+          q_pci_rx_rd_ptr <= pci_rx_rd_ptr;
       end
     end
 
