@@ -11,8 +11,8 @@ module pci_rx (
   pci_rx_data,
   pci_rx_header,
   pci_rx_be,
-  pci_rx_rd_ptr,
-  pci_rx_wr_ptr
+  pci_rx_rd,
+  pci_rx_empty
 );
 
   input                          clk;
@@ -28,10 +28,14 @@ module pci_rx (
   output wire [1023:0]           pci_rx_data;
   output wire [191:0]            pci_rx_header;
   output wire [127:0]            pci_rx_be;
-  input  wire [3:0]              pci_rx_rd_ptr;
-  output reg  [3:0]              pci_rx_wr_ptr;
+  input  wire                    pci_rx_rd;
+  output wire                    pci_rx_empty;
+
+  wire                           pci_rx_full;
 
 // FF
+  reg            pci_rx_wr;
+  
   reg [3:0]      q_pos;
   reg [9:0]      q_remain_size;
   reg            q_header_done;
@@ -43,7 +47,6 @@ module pci_rx (
   reg  [1023:0]  q_data;
   reg  [191:0]   q_header;
   reg  [127:0]   q_be;
-  reg            pci_rx_wr;
 
 // local variables
 
@@ -69,34 +72,34 @@ module pci_rx (
   reg [127:0]  loaded_header;
 
 
-bram_data pci_rx_data_inst (
-  .clka(clk),                 // input wire clka
-  .wea(pci_rx_wr),            // input wire [0 : 0] wea
-  .addra(pci_rx_wr_ptr),      // input wire [3 : 0] addra
-  .dina(q_data),              // input wire [1023 : 0] dina
-  .clkb(clk),                 // input wire clkb
-  .addrb(pci_rx_rd_ptr),      // input wire [3 : 0] addrb
-  .doutb(pci_rx_data)         // output wire [1023 : 0] doutb
+fifo_data pci_rx_data_inst (
+  .clk(clk),             // input wire clk
+  .din(q_data),          // input wire [1023 : 0] din
+  .wr_en(pci_rx_wr),     // input wire wr_en
+  .rd_en(pci_rx_rd),     // input wire rd_en
+  .dout(pci_rx_data),    // output wire [1023 : 0] dout
+  .full(pci_rx_full),    // output wire full
+  .empty(pci_rx_empty)   // output wire empty
 );
 
-bram_header pci_rx_header_inst (
-  .clka(clk),                 // input wire clka
-  .wea(pci_rx_wr),            // input wire [0 : 0] wea
-  .addra(pci_rx_wr_ptr),      // input wire [3 : 0] addra
-  .dina(q_header),            // input wire [191 : 0] dina
-  .clkb(clk),                 // input wire clkb
-  .addrb(pci_rx_rd_ptr),      // input wire [3 : 0] addrb
-  .doutb(pci_rx_header)       // output wire [191 : 0] doutb
+fifo_header pci_rx_header_inst (
+  .clk(clk),             // input wire clk
+  .din(q_header),        // input wire [191 : 0] din
+  .wr_en(pci_rx_wr),     // input wire wr_en
+  .rd_en(pci_rx_rd),     // input wire rd_en
+  .dout(pci_rx_header),  // output wire [191 : 0] dout
+  .full(),               // output wire full
+  .empty()               // output wire empty
 );
 
-bram_be pci_rx_be_inst (
-  .clka(clk),                 // input wire clka
-  .wea(pci_rx_wr),            // input wire [0 : 0] wea
-  .addra(pci_rx_wr_ptr),      // input wire [3 : 0] addra
-  .dina(q_be),                // input wire [127 : 0] dina
-  .clkb(clk),                 // input wire clkb
-  .addrb(pci_rx_rd_ptr),      // input wire [3 : 0] addrb
-  .doutb(pci_rx_be)           // output wire [127 : 0] doutb
+fifo_be pci_rx_be_inst (
+  .clk(clk),             // input wire clk
+  .din(q_be),            // input wire [127 : 0] din
+  .wr_en(pci_rx_wr),     // input wire wr_en
+  .rd_en(pci_rx_rd),     // input wire rd_en
+  .dout(pci_rx_be),      // output wire [127 : 0] dout
+  .full(),               // output wire full
+  .empty()               // output wire empty
 );
 
 ila_0 ila_0_inst (
@@ -106,9 +109,9 @@ ila_0 ila_0_inst (
 	.probe2(m_axis_rx_tuser[13]),      // input wire [0:0]  probe0  
 	.probe3(m_axis_rx_tuser[14]),      // input wire [0:0]  probe0  
 	.probe4(m_axis_rx_tuser[21]),      // input wire [0:0]  probe0  
-	.probe5(pci_rx_wr),                // input wire [0:0]  probe0  
-	.probe6(pci_rx_wr_ptr),            // input wire [3:0]  probe0  
-	.probe7(pci_rx_rd_ptr),            // input wire [3:0]  probe0  
+	.probe5(pci_rx_rd),                // input wire [0:0]  probe0  
+	.probe6(pci_rx_wr),                // input wire [0:0]  probe0  
+	.probe7(pci_rx_empty),             // input wire [0:0]  probe0  
 	.probe8(has_header_low),           // input wire [0:0]  probe0  
 	.probe9(has_header_high),          // input wire [0:0]  probe0  
 	.probe10(calc_pos),                // input wire [3:0]  probe0  
@@ -326,7 +329,6 @@ generate
       begin
         m_axis_rx_tready <= 0;
         pci_rx_wr <= 0;
-        pci_rx_wr_ptr <= 0;
       end
       else
       begin      
@@ -412,14 +414,11 @@ generate
         q_pos <= calc_pos + calc_blk_size;
 
         if (m_axis_rx_tuser[21])
-        begin
           pci_rx_wr <= 1;             
-          pci_rx_wr_ptr <= pci_rx_wr_ptr + 1;
-        end
         else
           pci_rx_wr <= 0;
 
-        if (pci_rx_wr_ptr + 1 == pci_rx_rd_ptr)
+        if (pci_rx_full)
           m_axis_rx_tready <= 0;
         else
           m_axis_rx_tready <= 1;

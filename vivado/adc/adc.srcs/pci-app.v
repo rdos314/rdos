@@ -61,16 +61,15 @@ module pci_app (
   wire [1023:0]    pci_rx_data;
   wire [191:0]     pci_rx_header;
   wire [127:0]     pci_rx_be;
-  wire [3:0]       pci_rx_rd_ptr;
-  wire [3:0]       pci_rx_wr_ptr;
+  wire             pci_rx_rd;
+  wire             pci_rx_empty;
 
 // local -> PCIe
 
   wire [1023:0]    pci_tx_data;
   wire [191:0]     pci_tx_header;
-  wire [3:0]       pci_tx_rd_ptr;
-  wire [3:0]       pci_tx_wr_ptr;
   wire             pci_tx_wr;
+  wire             pci_tx_full;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -314,8 +313,8 @@ pci_rx pci_rx_inst (
     .pci_rx_data( pci_rx_data),                    // O
     .pci_rx_header( pci_rx_header),                // O
     .pci_rx_be( pci_rx_be),                        // O
-    .pci_rx_rd_ptr (pci_rx_rd_ptr),                // I
-    .pci_rx_wr_ptr (pci_rx_wr_ptr)                // O
+    .pci_rx_rd (pci_rx_rd),                        // I
+    .pci_rx_empty (pci_rx_empty)                   // O
 );
 
 pci_tx pci_tx_inst (
@@ -333,9 +332,8 @@ pci_tx pci_tx_inst (
     
     .pci_tx_data( pci_tx_data),                 // I
     .pci_tx_header( pci_tx_header),             // I
-    .pci_tx_rd_ptr (pci_tx_rd_ptr),             // O
-    .pci_tx_wr_ptr( pci_tx_wr_ptr),             // I
-    .pci_tx_wr( pci_tx_wr)                      // I
+    .pci_tx_wr (pci_tx_wr),                     // I
+    .pci_tx_full (pci_tx_full)                  // O
 );
 
 adc_mem adc_mem_inst (
@@ -346,14 +344,13 @@ adc_mem adc_mem_inst (
     .pci_rx_data( pci_rx_data),                 // I
     .pci_rx_header( pci_rx_header),             // I
     .pci_rx_be( pci_rx_be),                     // I
-    .pci_rx_rd_ptr (pci_rx_rd_ptr),             // O
-    .pci_rx_wr_ptr (pci_rx_wr_ptr),             // I
+    .pci_rx_rd (pci_rx_rd),                     // O
+    .pci_rx_empty (pci_rx_empty),               // I
 
     .pci_tx_data( pci_tx_data),                 // O
     .pci_tx_header( pci_tx_header),             // O
-    .pci_tx_rd_ptr (pci_tx_rd_ptr),             // I
-    .pci_tx_wr_ptr( pci_tx_wr_ptr),             // O
-    .pci_tx_wr( pci_tx_wr)                      // O
+    .pci_tx_wr( pci_tx_wr),                     // O
+    .pci_tx_full( pci_tx_full)                  // I
 );
 
 ila_3 ila3_inst (
