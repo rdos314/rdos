@@ -68,9 +68,9 @@ module pci_app (
 
   wire [1023:0]    pci_tx_data;
   wire [191:0]     pci_tx_header;
-  wire [127:0]     pci_tx_be;
   wire [3:0]       pci_tx_rd_ptr;
   wire [3:0]       pci_tx_wr_ptr;
+  wire             pci_tx_wr;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -311,11 +311,11 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),      // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),       // I
 
-    .bram_data( pci_rx_data),                    // O
-    .bram_header( pci_rx_header),                // O
-    .bram_be( pci_rx_be),                        // O
-    .bram_rd_ptr (pci_rx_rd_ptr),                // I
-    .bram_wr_ptr (pci_rx_wr_ptr)                // O
+    .pci_rx_data( pci_rx_data),                    // O
+    .pci_rx_header( pci_rx_header),                // O
+    .pci_rx_be( pci_rx_be),                        // O
+    .pci_rx_rd_ptr (pci_rx_rd_ptr),                // I
+    .pci_rx_wr_ptr (pci_rx_wr_ptr)                // O
 );
 
 pci_tx pci_tx_inst (
@@ -331,11 +331,11 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser ),        // I
     
-    .bram_data( pci_tx_data),                   // I
-    .bram_header( pci_tx_header),               // I
-    .bram_be( pci_tx_be),                       // I
-    .bram_rd_ptr (pci_tx_rd_ptr),               // O
-    .bram_wr_ptr( pci_tx_wr_ptr)               // I
+    .pci_tx_data( pci_tx_data),                 // I
+    .pci_tx_header( pci_tx_header),             // I
+    .pci_tx_rd_ptr (pci_tx_rd_ptr),             // O
+    .pci_tx_wr_ptr( pci_tx_wr_ptr),             // I
+    .pci_tx_wr( pci_tx_wr)                      // I
 );
 
 adc_mem adc_mem_inst (
@@ -349,11 +349,11 @@ adc_mem adc_mem_inst (
     .pci_rx_rd_ptr (pci_rx_rd_ptr),             // O
     .pci_rx_wr_ptr (pci_rx_wr_ptr),             // I
 
-    .bram_data( pci_tx_data),                   // O
-    .bram_header( pci_tx_header),               // O
-    .bram_be( pci_tx_be),                       // O
-    .bram_rd_ptr (pci_tx_rd_ptr),               // I
-    .bram_wr_ptr( pci_tx_wr_ptr)               // O
+    .pci_tx_data( pci_tx_data),                 // O
+    .pci_tx_header( pci_tx_header),             // O
+    .pci_tx_rd_ptr (pci_tx_rd_ptr),             // I
+    .pci_tx_wr_ptr( pci_tx_wr_ptr),             // O
+    .pci_tx_wr( pci_tx_wr)                      // O
 );
 
 ila_3 ila3_inst (
@@ -372,6 +372,10 @@ ila_3 ila3_inst (
     .probe11 ( pci_rx_header[127:64] ),        // I (64)
     .probe12 ( pci_rx_data[31:0] ),            // I (32)
     .probe13 ( pci_rx_be[31:0] )               // I (32)
+    .probe10 ( pci_tx_header[63:0] ),          // I (64)
+    .probe11 ( pci_tx_header[127:64] ),        // I (64)
+    .probe12 ( pci_tx_data[31:0] ),            // I (32)
+    .probe13 ( pci_tx_be[31:0] )               // I (32)
 );
 
 endmodule

@@ -8,11 +8,12 @@ module pci_tx (
   s_axis_tx_tvalid,
   s_axis_tx_tuser,
 
-  bram_data,
-  bram_header,
-  bram_be,
-  bram_rd_ptr,
-  bram_wr_ptr
+  pci_tx_data,
+  pci_tx_header,
+  pci_tx_be,
+  pci_tx_rd_ptr,
+  pci_tx_wr_ptr,
+  pci_tx_wr
 );
 
   input             clk;
@@ -26,35 +27,57 @@ module pci_tx (
   output  reg                     s_axis_tx_tvalid;
   output  reg [3:0]               s_axis_tx_tuser;
 
-  input  wire [1023:0]            bram_data;
-  input  wire [191:0]             bram_header;
-  input  wire [127:0]             bram_be;
-  output  reg [3:0]               bram_rd_ptr;
-  input  wire [3:0]               bram_wr_ptr;
+  input  wire [1023:0]            pci_tx_data;
+  input  wire [191:0]             pci_tx_header;
+  output reg  [3:0]               pci_tx_rd_ptr;
+  input  wire [3:0]               pci_tx_wr_ptr;
+  input  wire                     pci_tx_wr;
 
 // FF
-  reg [3:0]    q_pos;
-  reg [9:0]    q_remain_size;
-  reg [3:0]    q_first_be;
-  reg [3:0]    q_last_be;
-  reg [3:0]    q_bram_rd_ptr;
+  reg  [3:0]    q_pos;
+  reg  [9:0]    q_remain_size;
+  reg  [3:0]    q_first_be;
+  reg  [3:0]    q_last_be;
+  reg  [3:0]    q_bram_rd_ptr;
 
 
 // local
 
-  reg          is_first;
-  reg [3:0]    calc_pos;
-  reg [9:0]    calc_blk_size;
-  reg [9:0]    calc_remain_size;
-  reg [3:0]    calc_first_be;
-  reg [3:0]    calc_last_be;
+  reg            is_first;
+  reg  [3:0]     calc_pos;
+  reg  [9:0]     calc_blk_size;
+  reg  [9:0]     calc_remain_size;
+  reg  [3:0]     calc_first_be;
+  reg  [3:0]     calc_last_be;
 
-  reg          has_data;
+  reg            has_data;
 
-  reg [7:0]    req_type;
-  reg [9:0]    req_len;
-  reg [191:0]  req_header;
-  reg [1023:0] req_data;
+  reg  [7:0]     req_type;
+  reg  [9:0]     req_len;
+
+  wire [1023:0]  bram_data;
+  wire [191:0]   bram_header;
+
+
+bram_data pci_tx_data_inst (
+  .clka(clk),                     // input wire clka
+  .wea(pci_tx_wr),                // input wire [0 : 0] wea
+  .addra(pci_tx_wr_ptr),          // input wire [3 : 0] addra
+  .dina(pci_tx_data),             // input wire [1023 : 0] dina
+  .clkb(clk),                     // input wire clkb
+  .addrb(pci_tx_rd_ptr),          // input wire [3 : 0] addrb
+  .doutb(bram_data)               // output wire [1023 : 0] doutb
+);
+
+bram_header pci_tx_header_inst (
+  .clka(clk),                     // input wire clka
+  .wea(pci_tx__wr),               // input wire [0 : 0] wea
+  .addra(pci_tx__wr_ptr),         // input wire [3 : 0] addra
+  .dina(pci_tx_header),           // input wire [191 : 0] dina
+  .clkb(clk),                     // input wire clkb
+  .addrb(pci_tx_rd_ptr),          // input wire [3 : 0] addrb
+  .doutb(bram_header)             // output wire [191 : 0] doutb
+);
 
 
 ila_2 ila_2_inst (
@@ -83,7 +106,7 @@ generate
     always @ ( posedge clk ) 
     begin
       has_data = 0;
-      bram_rd_ptr = q_bram_rd_ptr;
+      pci_tx_rd_ptr = q_pci_tx_rd_ptr;
 
       if (reset) 
         calc_remain_size = 0;
@@ -100,7 +123,7 @@ generate
           begin
             is_first = 1;
 
-             if (bram_wr_ptr == bram_rd_ptr)
+             if (pci_tx_wr_ptr == pci_tx_rd_ptr)
                has_data = 0;
              else
                has_data = 1;                
@@ -145,7 +168,7 @@ generate
 // FF part
 
       if (reset)
-        q_bram_rd_ptr <= 0;
+        q_pci_tx_rd_ptr <= 0;
 
       if (has_data)
       begin
@@ -251,8 +274,8 @@ generate
 
         if (calc_remain_size == calc_blk_size)
         begin
-          bram_rd_ptr = bram_rd_ptr + 1;
-          q_bram_rd_ptr <= bram_rd_ptr;
+          pci_tx_rd_ptr = pci_tx_rd_ptr + 1;
+          q_pci_tx_rd_ptr <= pci_tx_rd_ptr;
           s_axis_tx_tlast <= 1;
         end
         else
