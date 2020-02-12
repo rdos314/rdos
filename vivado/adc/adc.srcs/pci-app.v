@@ -73,12 +73,13 @@ module pci_app (
 
 // local memory
 
-  reg  [31:0]      local_mem[32];
+  reg  [31:0]      local_mem[31:0];
 
   wire [4:0]       local_address;
   wire             local_rd;
   reg              local_rp;
   reg  [4:0]       local_rp_address;
+  reg  [31:0]      local_rp_data;
   wire             local_wr;
   wire [3:0]       local_wr_be;
   wire [31:0]      local_wr_data;
@@ -428,7 +429,7 @@ ila_3 ila3_inst (
 generate
   begin : pci_app
 
-    always @ ( posedge clk ) 
+    always @ ( posedge user_clk ) 
     begin
       if (local_rd)
       begin
@@ -468,5 +469,6 @@ generate
 
     end
   end
-end
+endgenerate
+
 endmodule

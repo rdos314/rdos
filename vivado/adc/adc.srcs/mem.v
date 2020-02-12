@@ -18,7 +18,7 @@ module adc_mem (
   sdram_rd,
   sdram_rp,
   sdram_rp_address,
-  sdram_rp_data
+  sdram_rp_data,
 
   sdram_wr,
   sdram_wr_be,
@@ -29,7 +29,7 @@ module adc_mem (
   local_rd,
   local_rp,
   local_rp_address,
-  local_rp_data
+  local_rp_data,
 
   local_wr,
   local_wr_be,
@@ -59,7 +59,7 @@ module adc_mem (
 
   output reg                     sdram_wr;
   output reg  [7:0]              sdram_wr_be;
-  input  wire [63:0]             sdram_wr_data;
+  output reg  [63:0]             sdram_wr_data;
 
   output reg  [4:0]              local_address;
 
@@ -70,7 +70,7 @@ module adc_mem (
 
   output reg                     local_wr;
   output reg  [3:0]              local_wr_be;
-  input  wire [31:0]             local_wr_data;
+  output reg  [31:0]             local_wr_data;
 
 
 // FF
@@ -196,13 +196,13 @@ generate
             if (has_reply)
             begin
               if (is_local)
-                pci_tx_data[32 * reply_pos +: 32] <= local_data;
+                pci_tx_data[32 * reply_pos +: 32] <= local_rp_data;
               else
               begin
                 if ((reply_pos == 0) && req_address[2])
-                  pci_tx_data[31:0] <= sdram_data[63:32];
+                  pci_tx_data[31:0] <= sdram_rp_data[63:32];
                 else
-                  pci_tx_data[32 * reply_pos +: 64] <= sdram_data;
+                  pci_tx_data[32 * reply_pos +: 64] <= sdram_rp_data;
               end
 
               if (is_last_reply)
@@ -246,6 +246,7 @@ generate
 
           8'b010_00000,
           8'b011_00000:
+          begin
             if (is_last_data)
             begin
               q_busy <= 0;
@@ -261,7 +262,7 @@ generate
 
           default:
           begin  // not supported
-            pci_rx_rd <= has_req;
+            pci_rx_rd <= 1;
             pci_tx_wr <= 0;
             q_busy <= 0;
           end

@@ -103,34 +103,6 @@ ila_2 ila_2_inst (
 generate
   begin : gen_cpl_128
 
-
-  always @ (rd_be) begin
-    casex (rd_be[3:0])
-      4'b1xx1 : byte_count = 12'h004;
-      4'b01x1 : byte_count = 12'h003;
-      4'b1x10 : byte_count = 12'h003;
-      4'b0011 : byte_count = 12'h002;
-      4'b0110 : byte_count = 12'h002;
-      4'b1100 : byte_count = 12'h002;
-      4'b0001 : byte_count = 12'h001;
-      4'b0010 : byte_count = 12'h001;
-      4'b0100 : byte_count = 12'h001;
-      4'b1000 : byte_count = 12'h001;
-      4'b0000 : byte_count = 12'h001;
-    endcase
-  end
-
-    always @ (rd_be or req_addr or compl_wd) begin
-    casex ({compl_wd, rd_be[3:0]})
-       5'b1_0000 : lower_addr = {req_addr[6:2], 2'b00};
-       5'b1_xxx1 : lower_addr = {req_addr[6:2], 2'b00};
-       5'b1_xx10 : lower_addr = {req_addr[6:2], 2'b01};
-       5'b1_x100 : lower_addr = {req_addr[6:2], 2'b10};
-       5'b1_1000 : lower_addr = {req_addr[6:2], 2'b11};
-       5'b0_xxxx : lower_addr = 8'h0;
-    endcase // casex ({compl_wd, rd_be[3:0]})
-    end
-
     always @ ( posedge clk ) 
     begin
       has_data = 0;
