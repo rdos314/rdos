@@ -98,18 +98,29 @@ module adc_mem (
   wire [63:0]      req_address = pci_rx_header[95:64];
 
 ila_1 ila_1_inst (
-	.clk(clk),                              // input wire clk
-	.probe0(pci_rx_empty),                  // input wire [0:0]  probe1 
-	.probe1(pci_tx_full),                   // input wire [0:0]  probe1 
-	.probe2(req_address),                   // input wire [63:0]  probe1 
-	.probe3(req_len),                       // input wire [9:0]  probe1 
-	.probe4(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
-	.probe5(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
-	.probe6(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
-	.probe7(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
-	.probe8(pci_tx_data[31:0])              // input wire [31:0]  probe2
+  .clk(clk),                              // input wire clk
+  .probe0(pci_rx_empty),                  // input wire [0:0]  probe1 
+  .probe1(pci_tx_full),                   // input wire [0:0]  probe1 
+  .probe2(req_address),                   // input wire [63:0]  probe1 
+  .probe3(req_len),                       // input wire [9:0]  probe1 
+  .probe4(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
+  .probe5(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
+  .probe6(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
+  .probe7(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
+  .probe8(pci_tx_data[31:0]),             // input wire [31:0]  probe2
+  .probe9(q_busy),                        // input wire [0:0]  probe2
+  .probe10(q_address),                    // input wire [18:0]  probe2
+  .probe11(q_len),                        // input wire [9:0]  probe2
+  .probe12(q_pos),                        // input wire [4:0]  probe2
+  .probe13(calc_address),                 // input wire [18:0]  probe2
+  .probe14(calc_len),                     // input wire [9:0]  probe2
+  .probe15(calc_pos),                     // input wire [4:0]  probe2
+  .probe16(is_local),                     // input wire [0:0]  probe2
+  .probe17(is_last_data),                 // input wire [0:0]  probe2
+  .probe18(is_last_reply),                // input wire [0:0]  probe2
+  .probe19(has_reply),                    // input wire [0:0]  probe2
+  .probe20(reply_pos)                     // input wire [4:0]  probe2
 );
-
 
 generate
   begin : mem
@@ -287,7 +298,7 @@ generate
           8'b000_00001,
           8'b001_00001: 
           begin  // read
-            if (calc_len)
+            if (calc_len && !is_last_reply)
             begin
               if (is_local)
               begin
