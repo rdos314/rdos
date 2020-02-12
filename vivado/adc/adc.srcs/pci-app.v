@@ -71,6 +71,29 @@ module pci_app (
   wire             pci_tx_wr;
   wire             pci_tx_full;
 
+// local memory
+
+  reg  [31:0]      local_mem[32];
+
+  wire [4:0]       local_address;
+  wire             local_rd;
+  reg              local_rp;
+  reg  [4:0]       local_rp_address;
+  wire             local_wr;
+  wire [3:0]       local_wr_be;
+  wire [31:0]      local_wr_data;
+
+// SDRAM memory
+
+  wire [15:0]      sdram_address;
+  wire             sdram_rd;
+  reg              sdram_rp;
+  reg  [3:0]       sdram_rp_address;
+  reg  [63:0]      sdram_rp_data;
+  wire             sdram_wr;
+  wire [7:0]       sdram_wr_be;
+  wire [63:0]      sdram_wr_data;
+
   //-------------------------------------------------------
   // Configuration (CFG) Interface
   //-------------------------------------------------------
@@ -350,7 +373,25 @@ adc_mem adc_mem_inst (
     .pci_tx_data( pci_tx_data),                 // O
     .pci_tx_header( pci_tx_header),             // O
     .pci_tx_wr( pci_tx_wr),                     // O
-    .pci_tx_full( pci_tx_full)                  // I
+    .pci_tx_full( pci_tx_full),                 // I
+
+    .sdram_address( sdram_address),             // O
+    .sdram_rd( sdram_rd),                       // O
+    .sdram_rp( sdram_rp),                       // I
+    .sdram_rp_address( sdram_rp_address),       // I
+    .sdram_rp_data( sdram_rp_data),             // I
+    .sdram_wr( sdram_wr),                       // O
+    .sdram_wr_be( sdram_wr_be),                 // O
+    .sdram_wr_data( sdram_wr_data),             // O
+
+    .local_address( local_address),             // O
+    .local_rd( local_rd),                       // O
+    .local_rp( local_rp),                       // I
+    .local_rp_address( local_rp_address),       // I
+    .local_rp_data( local_rp_data),             // I
+    .local_wr( local_wr),                       // O
+    .local_wr_be( local_wr_be),                 // O
+    .local_wr_data( local_wr_data)              // O
 );
 
 ila_3 ila3_inst (
@@ -365,13 +406,67 @@ ila_3 ila3_inst (
     .probe7 ( s_axis_tx_tready ),              // I (1)
     .probe8 ( s_axis_tx_tkeep ),               // I (16)
     .probe9 ( s_axis_tx_tdata ),               // I (128)
-    .probe10 ( pci_rx_header[63:0] ),          // I (64)
-    .probe11 ( pci_rx_header[127:64] ),        // I (64)
-    .probe12 ( pci_rx_data[31:0] ),            // I (32)
-    .probe13 ( pci_rx_be[31:0] ),              // I (32)
-    .probe14 ( pci_tx_header[63:0] ),          // I (64)
-    .probe15 ( pci_tx_header[127:64] ),        // I (64)
-    .probe16 ( pci_tx_data[31:0] )             // I (32)
+    .probe10 ( local_address ),                // I (5)
+    .probe11 ( local_rd ),                     // I (1)
+    .probe12 ( local_rp ),                     // I (1)
+    .probe13 ( local_rp_address ),             // I (5)
+    .probe14 ( local_rp_data ),                // I (32)
+    .probe15 ( local_wr ),                     // I (1)
+    .probe16 ( local_wr_be ),                  // I (4)
+    .probe17 ( local_wr_data ),                // I (32)
+    .probe18 ( sdram_address ),                // I (16)
+    .probe19 ( sdram_rd ),                     // I (1)
+    .probe20 ( sdram_rp ),                     // I (1)
+    .probe21 ( sdram_rp_address ),             // I (4)
+    .probe22 ( sdram_rp_data ),                // I (64)
+    .probe23 ( sdram_wr ),                     // I (1)
+    .probe24 ( sdram_wr_be ),                  // I (8)
+    .probe25 ( sdram_wr_data )                 // I (64)
 );
 
+
+generate
+  begin : pci_app
+
+    always @ ( posedge clk ) 
+    begin
+      if (local_rd)
+      begin
+        local_rp_address <= local_address[4:0];
+        local_rp_data <= local_mem[local_rp_address];
+        local_rp <= 1;
+      end
+      else
+        local_rp <= 0;
+
+      if (local_wr)
+      begin
+        if (local_wr_be[0])
+          local_mem[local_address][7:0] <= local_wr_data[7:0];
+
+        if (local_wr_be[1])
+          local_mem[local_address][15:8] <= local_wr_data[15:8];
+
+        if (local_wr_be[2])
+          local_mem[local_address][23:16] <= local_wr_data[23:16];
+
+        if (local_wr_be[3])
+          local_mem[local_address][31:24] <= local_wr_data[31:24];
+      end
+
+      if (sdram_rd)
+      begin
+        sdram_rp_address <= sdram_address[3:0];
+        sdram_rp_data[15:0] <= sdram_address[15:0];
+        sdram_rp_data[31:16] <= sdram_address[15:0];
+        sdram_rp_data[47:32] <= sdram_address[15:0];
+        sdram_rp_data[63:48] <= sdram_address[15:0];
+        sdram_rp <= 1;
+      end
+      else
+        sdram_rp <= 0;
+
+    end
+  end
+end
 endmodule

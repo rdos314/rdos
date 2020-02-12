@@ -50,14 +50,15 @@ module pci_rx (
 
 // local variables
 
-  reg          active;  
+  wire         active = m_axis_rx_tvalid && m_axis_rx_tready && !reset;  
+  wire         has_strad = m_axis_rx_tuser[13] && m_axis_rx_tuser[21];
+
   reg          is_first;
   reg [7:0]    req_type;
   reg [9:0]    req_len;
   reg [1:0]    low_adr;
   reg [11:0]   byte_count;
 
-  reg          has_strad;
   reg          has_header_low;
   reg          has_header_high;
 
@@ -127,28 +128,14 @@ ila_0 ila_0_inst (
 generate
   begin : pci_rx_128
 
-    always @ ( posedge clk ) 
+    always @ (*) 
     begin
-      if (reset)
-        active = 0;
-      else
-      begin
-        if (m_axis_rx_tvalid && m_axis_rx_tready)
-          active = 1;
-        else
-          active = 0;
-      end
-
       has_header_low = 0;
       has_header_high = 0;
       is_first = 0;
 
       if (active )
       begin
-        if (m_axis_rx_tuser[13] && m_axis_rx_tuser[21])
-          has_strad = 1;
-        else
-          has_strad = 0;
 
         if (m_axis_rx_tuser[14])
         begin
@@ -248,7 +235,13 @@ generate
 
         if (calc_blk_size > calc_remain_size)
           calc_blk_size = calc_remain_size;
+      end
+    end
 
+    always @ (*) 
+    begin
+      if (active)
+      begin
         if (req_type[3])
         begin
           if (has_header_high)
@@ -322,9 +315,15 @@ generate
           end
         end
       end
+      else
+      begin
+        calc_first_be = 4'b0000;
+        calc_last_be = 4'b0000;
+      end
+    end
 
-// FF part
-
+    always @ ( posedge clk ) 
+    begin
       if (reset )
       begin
         m_axis_rx_tready <= 0;
