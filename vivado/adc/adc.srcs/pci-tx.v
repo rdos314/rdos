@@ -103,7 +103,7 @@ ila_2 ila_2_inst (
 generate
   begin : gen_cpl_128
 
-    always @ ( posedge clk ) 
+    always @ ( * ) 
     begin
       has_data = 0;
 
@@ -169,10 +169,23 @@ generate
       end
       else
         calc_blk_size = 0;
+    end
 
+    always @ ( posedge clk ) 
+    begin
+      if (has_data)
+      begin
+        if (is_last)
+          pci_tx_rd = 1;
+        else
+          pci_tx_rd = 0;
+      end
+      else
+        pci_tx_rd = 0;
+    end
 
-// FF part
-
+    always @ ( posedge clk ) 
+    begin
       if (has_data)
       begin
         if (is_first)
@@ -276,21 +289,12 @@ generate
         s_axis_tx_tvalid  <= 1;
 
         if (is_last)
-        begin
-          pci_tx_rd <= 1;
           s_axis_tx_tlast <= 1;
-        end
         else
-        begin
           s_axis_tx_tlast <= 0;
-          pci_tx_rd <= 0;
-        end
       end
       else
-      begin
         s_axis_tx_tvalid  <= 0;
-        pci_tx_rd <= 0;
-      end
     end
 
   end

@@ -188,14 +188,56 @@ generate
       end
     end
 
-    always @ ( posedge clk ) 
+    always @ (*) 
     begin
       if (reset || pci_rx_empty)
       begin
-        pci_rx_rd <= 0;
-        pci_tx_wr <= 0;
-        q_busy <= 0;
+        pci_rx_rd = 0;
+        pci_tx_wr = 0;
       end
+      else
+      begin 
+        case (req_type)
+          8'b000_00000, 
+          8'b001_00000,
+          8'b000_00001,
+          8'b001_00001: 
+          begin  // read
+            if (is_last_reply)
+            begin
+              pci_rx_rd = 1;
+              pci_tx_wr = 1;
+            end
+            else
+            begin
+              pci_rx_rd = 0;
+              pci_tx_wr = 0;
+            end
+          end
+
+          8'b010_00000,
+          8'b011_00000:
+          begin
+            if (is_last_data)
+              pci_rx_rd = 1;
+            else
+              pci_rx_rd = 0;
+            pci_tx_wr = 0;
+          end
+
+          default:
+          begin  // not supported
+            pci_rx_rd = 1;
+            pci_tx_wr = 0;
+          end
+        end
+      end
+    end
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset || pci_rx_empty)
+        q_busy <= 0;
       else
       begin
         case (req_type)
@@ -236,45 +278,26 @@ generate
                 pci_tx_header[15:12] <= pci_rx_header[15:12];
                 pci_tx_header[11:10] <= 2'b0;                   // AT
                 pci_tx_header[9:0] <= pci_rx_header[9:0];
-                pci_tx_wr <= 1;
-                pci_rx_rd <= 1;
                 q_busy <= 0;
               end
               else
-              begin
-                pci_tx_wr <= 0;
-                pci_rx_rd <= 0;
                 q_busy <= 1;
-              end
             end
             else
-            begin
-              pci_tx_wr <= 0;
-              pci_rx_rd <= 0;
               q_busy <= 1;
-            end
           end
 
           8'b010_00000,
           8'b011_00000:
           begin
             if (is_last_data)
-            begin
               q_busy <= 0;
-              pci_rx_rd <= 1;
-            end
             else
-            begin
               q_busy <= 1;
-              pci_rx_rd <= 0;
-            end
-            pci_tx_wr <= 0;
           end
 
           default:
           begin  // not supported
-            pci_rx_rd <= 1;
-            pci_tx_wr <= 0;
             q_busy <= 0;
           end
         endcase

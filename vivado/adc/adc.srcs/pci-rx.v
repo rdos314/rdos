@@ -34,8 +34,6 @@ module pci_rx (
   wire                           pci_rx_full;
 
 // FF
-  reg            pci_rx_wr;
-  
   reg [3:0]      q_pos;
   reg [9:0]      q_remain_size;
   reg            q_header_done;
@@ -50,6 +48,8 @@ module pci_rx (
 
 // local variables
 
+  reg          pci_rx_wr;
+  
   wire         active = m_axis_rx_tvalid && m_axis_rx_tready && !reset;  
   wire         has_strad = m_axis_rx_tuser[13] && m_axis_rx_tuser[21];
 
@@ -322,14 +322,35 @@ generate
       end
     end
 
-    always @ ( posedge clk ) 
+    always @ (reset or m_axis_rx_tuser[21] ) 
     begin
       if (reset )
-      begin
-        m_axis_rx_tready <= 0;
-        pci_rx_wr <= 0;
-      end
+        pci_rx_wr = 0;
       else
+      begin      
+        if (m_axis_rx_tuser[21])
+          pci_rx_wr = 1;             
+        else
+          pci_rx_wr = 0;
+      end
+    end
+
+    always @ (reset or pci_rx_full ) 
+    begin
+      if (reset )
+        m_axis_rx_tready = 0;
+      else
+      begin      
+        if (pci_rx_full)
+          m_axis_rx_tready = 0;
+        else
+          m_axis_rx_tready = 1;
+      end
+    end
+
+    always @ ( posedge clk ) 
+    begin
+      if (!reset )
       begin      
         if (has_header_low)
         begin
@@ -412,15 +433,6 @@ generate
         q_remain_size <= calc_remain_size - calc_blk_size;
         q_pos <= calc_pos + calc_blk_size;
 
-        if (m_axis_rx_tuser[21])
-          pci_rx_wr <= 1;             
-        else
-          pci_rx_wr <= 0;
-
-        if (pci_rx_full)
-          m_axis_rx_tready <= 0;
-        else
-          m_axis_rx_tready <= 1;
       end
     end
 
