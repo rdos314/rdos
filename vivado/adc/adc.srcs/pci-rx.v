@@ -122,7 +122,11 @@ ila_0 ila_0_inst (
 	.probe14(q_header[63:0]),          // input wire [63:0]  probe0  
 	.probe15(q_header[127:64]),        // input wire [63:0]  probe0  
 	.probe16(q_data[31:0]),            // input wire [31:0]  probe0  
-	.probe17(q_be[31:0])               // input wire [31:0]  probe0  
+	.probe17(q_be[31:0]),              // input wire [31:0]  probe0  
+	.probe18(calc_first_be),           // input wire [3:0]  probe0  
+	.probe19(calc_last_be),            // input wire [3:0]  probe0  
+	.probe20(byte_count),              // input wire [11:0]  probe0  
+	.probe21(q_header[139:128])        // input wire [11:0]  probe0  
 );
 
 generate
@@ -312,6 +316,62 @@ generate
           begin
             calc_first_be = q_first_be;
             calc_last_be = q_last_be;
+            byte_count = q_byte_count;
+          end
+
+          if (calc_pos)
+          begin
+            if (calc_blk_size)
+            begin
+              if (calc_remain_size == calc_blk_size)
+              begin
+                case (calc_last_be)
+                  4'b1111 : byte_count = q_header[139:128] + 4 * calc_blk_size;
+                  4'b1110 : byte_count = q_header[139:128] + 4 * calc_blk_size - 1;
+                  4'b1100 : byte_count = q_header[139:128] + 4 * calc_blk_size - 2;
+                  4'b1000 : byte_count = q_header[139:128] + 4 * calc_blk_size - 3;
+                  4'b0000 : byte_count = q_header[139:128] + 4 * calc_blk_size - 4;
+                  default: byte_count = q_header[139:128] + 4 * calc_blk_size;
+                endcase
+              end
+              else
+                byte_count = q_header[139:128] + 4 * calc_blk_size;
+            end
+            else
+              byte_count = q_header[139:128];
+          end
+          else
+          begin
+            casex (calc_first_be)
+              4'b1xx1 : byte_count = 4;
+              4'b01x1 : byte_count = 3;
+              4'b1x10 : byte_count = 3;
+              4'b0011 : byte_count = 2;
+              4'b0110 : byte_count = 2;
+              4'b1100 : byte_count = 2;
+              4'b0001 : byte_count = 1;
+              4'b0010 : byte_count = 1;
+              4'b0100 : byte_count = 1;
+              4'b1000 : byte_count = 1;
+              4'b0000 : byte_count = 1;
+            endcase
+
+            if (calc_blk_size)
+            begin
+              if (calc_remain_size == calc_blk_size)
+              begin
+                case (calc_last_be)
+                  4'b1111 : byte_count = byte_count + 4 * (calc_blk_size - 1);
+                  4'b1110 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 1;
+                  4'b1100 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 2;
+                  4'b1000 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 3;
+                  4'b0000 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 4;
+                  default: byte_count = byte_count + 4 * (calc_blk_size - 1);
+                endcase
+              end
+              else
+                byte_count = byte_count + 4 * (calc_blk_size - 1);
+            end
           end
         end
       end
@@ -319,6 +379,7 @@ generate
       begin
         calc_first_be = 4'b0000;
         calc_last_be = 4'b0000;
+        byte_count = 0;
       end
     end
 
@@ -348,6 +409,11 @@ generate
       end
     end
 
+    always @ (*) 
+    begin
+    end
+
+
     always @ ( posedge clk ) 
     begin
       if (!reset )
@@ -358,6 +424,8 @@ generate
           q_first_be <= calc_first_be;
           q_last_be <= calc_last_be;
         end
+
+        q_header[139:128] <= byte_count;
 
         if (has_header_high)
           q_header[127:64] <= loaded_header[127:64];
@@ -389,6 +457,7 @@ generate
           end
           else
             q_be[3:0] <= calc_first_be;
+
         end
                
         if (calc_blk_size > 1)
