@@ -48,6 +48,7 @@ module pci_rx (
 
 // local variables
 
+  reg          active;  
   reg          pci_rx_wr;
   
   wire         active = m_axis_rx_tvalid && m_axis_rx_tready && !reset;  
@@ -131,6 +132,20 @@ ila_0 ila_0_inst (
 
 generate
   begin : pci_rx_128
+
+    always @ (*) 
+    begin
+      if (reset)
+        active = 0;
+      else
+      begin
+        if (m_axis_rx_tvalid && m_axis_rx_tready)
+          active = 1;
+        else
+          active = 0;
+      end
+    end
+
 
     always @ (*) 
     begin
@@ -408,11 +423,6 @@ generate
           m_axis_rx_tready = 1;
       end
     end
-
-    always @ (*) 
-    begin
-    end
-
 
     always @ ( posedge clk ) 
     begin
