@@ -97,7 +97,11 @@ ila_2 ila_2_inst (
 	.probe12(pci_tx_header[31:0]),      // input wire [31:0]  probe0  
 	.probe13(pci_tx_header[63:32]),     // input wire [31:0]  probe0  
 	.probe14(pci_tx_header[95:64]),     // input wire [31:0]  probe0  
-	.probe15(pci_tx_header[127:96])     // input wire [31:0]  probe0  
+	.probe15(pci_tx_header[127:96]),    // input wire [31:0]  probe0  
+	.probe16(pci_tx_rd),                // input wire [0:0]  probe0  
+	.probe17(pci_tx_wr),                // input wire [0:0]  probe0  
+	.probe18(pci_tx_empty),             // input wire [0:0]  probe0  
+	.probe19(bram_header[31:0])        // input wire [31:0]  probe0  
 );
 
 generate
@@ -106,6 +110,7 @@ generate
     always @ ( * ) 
     begin
       has_data = 0;
+      calc_blk_size = 0;
 
       if (reset) 
         calc_remain_size = 0;
@@ -143,9 +148,12 @@ generate
             calc_blk_size = 1;
 
           if (req_type[6])
-            calc_remain_size = 0;
-          else
             calc_remain_size = req_len;
+          else
+            calc_remain_size = 0;
+
+          if (calc_blk_size > calc_remain_size)
+            calc_blk_size = calc_remain_size;
 
           calc_first_be = 4'b1111;
           calc_last_be = 4'b1111;
@@ -286,15 +294,26 @@ generate
         q_remain_size <= calc_remain_size - calc_blk_size;
         q_pos <= calc_pos + calc_blk_size;
 
-        s_axis_tx_tvalid  <= 1;
+        if (calc_blk_size)
+        begin
+          s_axis_tx_tvalid  <= 1;
 
-        if (is_last)
-          s_axis_tx_tlast <= 1;
+          if (is_last)
+            s_axis_tx_tlast <= 1;
+          else
+            s_axis_tx_tlast <= 0;
+        end
         else
+        begin
+          s_axis_tx_tvalid  <= 0;
           s_axis_tx_tlast <= 0;
+        end
       end
       else
+      begin
         s_axis_tx_tvalid  <= 0;
+        s_axis_tx_tlast <= 0;
+      end
     end
 
   end

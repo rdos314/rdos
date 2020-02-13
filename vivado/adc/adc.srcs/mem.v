@@ -221,7 +221,7 @@ generate
           begin  // not supported
             pci_rx_rd = 1;
           end
-        end
+        endcase
       end
     end
 

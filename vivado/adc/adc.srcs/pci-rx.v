@@ -39,6 +39,7 @@ module pci_rx (
   reg            q_header_done;
   reg [3:0]      q_first_be;
   reg [3:0]      q_last_be;
+  reg [11:0]     q_byte_count;
   reg            q_pend_strad;
   reg [63:0]     q_strad_header;
 
@@ -46,11 +47,10 @@ module pci_rx (
   reg  [191:0]   q_header;
   reg  [127:0]   q_be;
 
+  reg            pci_rx_wr;
+  
 // local variables
 
-  reg          active;  
-  reg          pci_rx_wr;
-  
   wire         active = m_axis_rx_tvalid && m_axis_rx_tready && !reset;  
   wire         has_strad = m_axis_rx_tuser[13] && m_axis_rx_tuser[21];
 
@@ -132,19 +132,6 @@ ila_0 ila_0_inst (
 
 generate
   begin : pci_rx_128
-
-    always @ (*) 
-    begin
-      if (reset)
-        active = 0;
-      else
-      begin
-        if (m_axis_rx_tvalid && m_axis_rx_tready)
-          active = 1;
-        else
-          active = 0;
-      end
-    end
 
 
     always @ (*) 
@@ -259,6 +246,8 @@ generate
 
     always @ (*) 
     begin
+      byte_count = 0;
+
       if (active)
       begin
         if (req_type[3])
@@ -398,19 +387,6 @@ generate
       end
     end
 
-    always @ (reset or m_axis_rx_tuser[21] ) 
-    begin
-      if (reset )
-        pci_rx_wr = 0;
-      else
-      begin      
-        if (m_axis_rx_tuser[21])
-          pci_rx_wr = 1;             
-        else
-          pci_rx_wr = 0;
-      end
-    end
-
     always @ (reset or pci_rx_full ) 
     begin
       if (reset )
@@ -421,6 +397,20 @@ generate
           m_axis_rx_tready = 0;
         else
           m_axis_rx_tready = 1;
+      end
+    end
+
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset )
+        pci_rx_wr <= 0;
+      else
+      begin      
+        if (m_axis_rx_tuser[21])
+          pci_rx_wr <= 1;             
+        else
+          pci_rx_wr <= 0;
       end
     end
 
