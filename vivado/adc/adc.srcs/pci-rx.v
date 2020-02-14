@@ -143,6 +143,105 @@ ila_0 ila_0_inst (
 	.probe21(q_count)                  // input wire [7:0]  probe0  
 );
 
+function count_to_first_be;
+  input [1:0] base, [11:0] count;
+  reg [3:0] res;
+  begin
+    case (base)
+      2'b00: 
+      begin
+        case (count)
+          1: res = 4'b0001;
+          2: res = 4'b0011;
+          3: res = 4'b0111;
+          default: res = 4'b1111;
+        endcase
+      end
+
+      2'b01:
+      begin
+        case (count)
+          1: res = 4'b010;
+          2: res = 4'b0110;
+          default: res = 4'b1110;
+        endcase
+      end
+
+      2'b10:
+      begin
+        if (count == 1)
+          res = 4'b0100;
+        else
+          res = 4'b1100;
+      end
+
+      2'b11:
+      begin
+        res = 4'b1000;
+      end
+    endcase
+
+    count_to_first_be = res;
+  end
+endfunction
+
+function count_to_last_be;
+  input [1:0] base, [11:0] count;
+  reg [3:0] res;
+  reg [1:0] low;
+  begin
+    low = base + count[1:0];
+    case (low)
+      2'b00: res = 4'b1111;
+      2'b01: res = 4'b0001;
+      2'b10: res = 4'b0011;
+      2'b11: res = 4'b0111;
+    endcase
+
+    count_to_last_be = res;
+  end
+endfunction
+
+function first_be_to_count;
+  input [3:0] be;
+  reg [7:0] res;
+  begin
+    casex (be)
+      4'b1xx1 : count = 4;
+      4'b01x1 : count = 3;
+      4'b1x10 : count = 3;
+      4'b0011 : count = 2;
+      4'b0110 : count = 2;
+      4'b1100 : count = 2;
+      4'b0001 : count = 1;
+      4'b0010 : count = 1;
+      4'b0100 : count = 1;
+      4'b1000 : count = 1;
+      4'b0000 : count = 1;
+    endcase
+
+    first_be_to_count = res;
+  end
+endfunction
+
+function last_be_to_count;
+  input [3:0] be;
+  reg [7:0] res;
+  begin
+    case (be)
+      4'b1111 : res = 4;
+      4'b1110 : res = 3;
+      4'b1100 : res = 2;
+      4'b1000 : res = 1;
+      4'b0000 : res = 0;
+      default: res = 4;
+    endcase
+
+    last_be_to_count = res;
+  end
+endfunction
+
+
 generate
   begin : pci_rx_128
 
@@ -274,47 +373,8 @@ generate
 
             low_adr = loaded_header[65:64];
 
-            case (low_adr)
-              2'b00: 
-              begin
-                case (byte_count)
-                  1: calc_first_be = 4'b0001;
-                  2: calc_first_be = 4'b0011;
-                  3: calc_first_be = 4'b0111;
-                  default: calc_first_be = 4'b1111;
-                endcase
-              end
-
-              2'b01:
-              begin
-                case (byte_count)
-                  1: calc_first_be = 4'b010;
-                  2: calc_first_be = 4'b0110;
-                  default: calc_first_be = 4'b1110;
-                endcase
-              end
-
-              2'b10:
-              begin
-                if (byte_count == 1)
-                  calc_first_be = 4'b0100;
-                else
-                  calc_first_be = 4'b1100;
-              end
-
-              2'b11:
-              begin
-                calc_first_be = 4'b1000;
-              end
-            endcase
-
-            low_adr = low_adr + byte_count[1:0];
-            case (low_adr)
-              2'b00: calc_last_be = 4'b1111;
-              2'b01: calc_last_be = 4'b0001;
-              2'b10: calc_last_be = 4'b0011;
-              2'b11: calc_last_be = 4'b0111;
-            endcase
+            calc_first_be = count_to_first_be(low_adr, byte_count);
+            calc_last_be = count_to_last_be(low_adr, byte_count);
           end
           else
           begin
@@ -341,52 +401,22 @@ generate
             if (calc_blk_size)
             begin
               if (calc_remain_size == calc_blk_size)
-              begin
-                case (calc_last_be)
-                  4'b1111 : byte_count = q_header[139:128] + 4 * calc_blk_size;
-                  4'b1110 : byte_count = q_header[139:128] + 4 * calc_blk_size - 1;
-                  4'b1100 : byte_count = q_header[139:128] + 4 * calc_blk_size - 2;
-                  4'b1000 : byte_count = q_header[139:128] + 4 * calc_blk_size - 3;
-                  4'b0000 : byte_count = q_header[139:128] + 4 * calc_blk_size - 4;
-                  default: byte_count = q_header[139:128] + 4 * calc_blk_size;
-                endcase
-              end
+                byte_count = last_be_to_count(calc_last_be) + q_count + 4 * (calc_blk_size - 4);
               else
-                byte_count = q_header[139:128] + 4 * calc_blk_size;
+                byte_count = q_count + 4 * calc_blk_size;
             end
             else
-              byte_count = q_header[139:128];
+              byte_count = q_count;
           end
           else
           begin
-            casex (calc_first_be)
-              4'b1xx1 : byte_count = 4;
-              4'b01x1 : byte_count = 3;
-              4'b1x10 : byte_count = 3;
-              4'b0011 : byte_count = 2;
-              4'b0110 : byte_count = 2;
-              4'b1100 : byte_count = 2;
-              4'b0001 : byte_count = 1;
-              4'b0010 : byte_count = 1;
-              4'b0100 : byte_count = 1;
-              4'b1000 : byte_count = 1;
-              4'b0000 : byte_count = 1;
-            endcase
+            byte_count = first_be_to_count(calc_last_be);
 
             if (calc_blk_size)
             begin
               if (calc_remain_size == calc_blk_size)
-              begin
-                case (calc_last_be)
-                  4'b1111 : byte_count = byte_count + 4 * (calc_blk_size - 1);
-                  4'b1110 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 1;
-                  4'b1100 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 2;
-                  4'b1000 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 3;
-                  4'b0000 : byte_count = byte_count + 4 * (calc_blk_size - 1) - 4;
-                  default: byte_count = byte_count + 4 * (calc_blk_size - 1);
-                endcase
+                byte_count = last_be_to_count(calc_last_be) + byte_count + 4 * (calc_blk_size - 4);
               end
-              else
                 byte_count = byte_count + 4 * (calc_blk_size - 1);
             end
           end

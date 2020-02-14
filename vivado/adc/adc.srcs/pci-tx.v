@@ -33,15 +33,16 @@ module pci_tx (
   wire                            pci_rx_empty;
 
 // FF
-  reg           pci_tx_rd;
-  reg  [3:0]    q_pos;
-  reg  [9:0]    q_remain_size;
-  reg  [3:0]    q_first_be;
-  reg  [3:0]    q_last_be;
+  reg  [3:0]     q_pos;
+  reg  [9:0]     q_remain_size;
+  reg  [3:0]     q_first_be;
+  reg  [3:0]     q_last_be;
+  reg  [1023:0]  q_data;
 
 
 // local
 
+  reg            pci_tx_rd;
   reg            is_first;
   reg            is_last;
   reg  [3:0]     calc_pos;
@@ -183,7 +184,7 @@ generate
     begin
       if (has_data)
       begin
-        if (is_last)
+        if (is_first)
           pci_tx_rd = 1;
         else
           pci_tx_rd = 0;
@@ -198,6 +199,8 @@ generate
       begin
         if (is_first)
         begin
+          q_data <= bram_data;
+
           q_first_be <= calc_first_be;
           q_last_be <= calc_last_be;
 
@@ -219,7 +222,7 @@ generate
           end
           else
           begin
-            s_axis_tx_tdata[127:0] <= bram_header[127:0];
+            s_axis_tx_tdata[127:0] <= bram_header;
             s_axis_tx_tkeep[15:0] <= 16'hffff;
           end
         end
@@ -227,10 +230,10 @@ generate
         begin
           if (calc_blk_size)
           begin
-            s_axis_tx_tdata[31:24] <= bram_data[(32*calc_pos) +: 8];
-            s_axis_tx_tdata[23:16] <= bram_data[(32*calc_pos+8) +: 8];
-            s_axis_tx_tdata[15:8] <= bram_data[(32*calc_pos+16) +: 8];
-            s_axis_tx_tdata[7:0] <= bram_data[(32*calc_pos+24) +: 8];
+            s_axis_tx_tdata[31:24] <= q_data[(32*calc_pos) +: 8];
+            s_axis_tx_tdata[23:16] <= q_data[(32*calc_pos+8) +: 8];
+            s_axis_tx_tdata[15:8] <= q_data[(32*calc_pos+16) +: 8];
+            s_axis_tx_tdata[7:0] <= q_data[(32*calc_pos+24) +: 8];
 
             if (calc_pos)
             begin
@@ -247,10 +250,10 @@ generate
                
           if (calc_blk_size > 1)
           begin
-            s_axis_tx_tdata[63:56] <= bram_data[(32*(calc_pos+1)) +: 8];
-            s_axis_tx_tdata[55:48] <= bram_data[(32*(calc_pos+1)+8) +: 8];
-            s_axis_tx_tdata[47:40] <= bram_data[(32*(calc_pos+1)+16) +: 8];
-            s_axis_tx_tdata[39:32] <= bram_data[(32*(calc_pos+1)+24) +: 8];
+            s_axis_tx_tdata[63:56] <= q_data[(32*(calc_pos+1)) +: 8];
+            s_axis_tx_tdata[55:48] <= q_data[(32*(calc_pos+1)+8) +: 8];
+            s_axis_tx_tdata[47:40] <= q_data[(32*(calc_pos+1)+16) +: 8];
+            s_axis_tx_tdata[39:32] <= q_data[(32*(calc_pos+1)+24) +: 8];
  
             if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 2))
               s_axis_tx_tkeep[7:4] <= calc_last_be;
@@ -262,10 +265,10 @@ generate
 
           if (calc_blk_size > 2)
           begin
-            s_axis_tx_tdata[95:88] <= bram_data[(32*(calc_pos+2)) +: 8];
-            s_axis_tx_tdata[87:80] <= bram_data[(32*(calc_pos+2)+8) +: 8];
-            s_axis_tx_tdata[79:72] <= bram_data[(32*(calc_pos+2)+16) +: 8];
-            s_axis_tx_tdata[71:64] <= bram_data[(32*(calc_pos+2)+24) +: 8];
+            s_axis_tx_tdata[95:88] <= q_data[(32*(calc_pos+2)) +: 8];
+            s_axis_tx_tdata[87:80] <= q_data[(32*(calc_pos+2)+8) +: 8];
+            s_axis_tx_tdata[79:72] <= q_data[(32*(calc_pos+2)+16) +: 8];
+            s_axis_tx_tdata[71:64] <= q_data[(32*(calc_pos+2)+24) +: 8];
 
             if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 3))
               s_axis_tx_tkeep[11:8] <= calc_last_be;
@@ -277,10 +280,10 @@ generate
 
           if (calc_blk_size > 3)
           begin
-            s_axis_tx_tdata[127:120] <= bram_data[(32*(calc_pos+3)) +: 8];
-            s_axis_tx_tdata[119:112] <= bram_data[(32*(calc_pos+3)+8) +: 8];
-            s_axis_tx_tdata[111:104] <= bram_data[(32*(calc_pos+3)+16) +: 8];
-            s_axis_tx_tdata[103:96] <= bram_data[(32*(calc_pos+3)+24) +: 8];
+            s_axis_tx_tdata[127:120] <= q_data[(32*(calc_pos+3)) +: 8];
+            s_axis_tx_tdata[119:112] <= q_data[(32*(calc_pos+3)+8) +: 8];
+            s_axis_tx_tdata[111:104] <= q_data[(32*(calc_pos+3)+16) +: 8];
+            s_axis_tx_tdata[103:96] <= q_data[(32*(calc_pos+3)+24) +: 8];
  
             if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 4))
               s_axis_tx_tkeep[15:12] <= calc_last_be;
@@ -307,12 +310,14 @@ generate
         begin
           s_axis_tx_tvalid  <= 0;
           s_axis_tx_tlast <= 0;
+          s_axis_tdata <= 0;
         end
       end
       else
       begin
         s_axis_tx_tvalid  <= 0;
         s_axis_tx_tlast <= 0;
+        s_axis_tdata <= 0;
       end
     end
 
