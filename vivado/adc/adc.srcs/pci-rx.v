@@ -60,19 +60,17 @@ module pci_rx (
   reg          is_first;
   reg [7:0]    req_type;
   reg [9:0]    req_len;
-  reg [1:0]    low_adr;
-  reg [11:0]   byte_count;
 
   reg          has_header_low;
   reg          has_header_high;
+  reg          calc_header_done;
 
   reg [3:0]    calc_pos;
   reg [1:0]    calc_blk_pos;
   reg [9:0]    calc_blk_size;
   reg [9:0]    calc_remain_size;
-  reg [3:0]    calc_first_be;
-  reg [3:0]    calc_last_be;
-  reg          calc_header_done;
+  reg  [127:0] calc_be;
+  reg  [7:0]   calc_count;
 
   reg [127:0]  loaded_header;
 
@@ -143,6 +141,47 @@ ila_0 ila_0_inst (
 	.probe21(q_count)                  // input wire [7:0]  probe0  
 );
 
+function first_and_last_to_be;
+  input [3:0] first_be, [3:0] last_be, [9:0] dw_count;
+  reg [127:0] res;
+  begin
+    case (dw_count)
+      0: 
+      begin
+        res = 0;
+      end
+
+      1:
+      begin
+        res[3:0] = first_be;
+        res[127:4] = 0;
+      end
+
+      2:
+      begin
+        res[3:0] = first_be;
+        res[7:4] = last_be;
+        res[127:8] = 0;
+      end
+
+      default:
+        res = 0;
+        res[3:0] = first_be;
+
+        if (dw_count <= 32)
+        begin
+          reg[(4*(dw_count-2)+3):4] = {4*(dw_count-2){1'b1}};
+          reg[4*(dw_count-1) +: 4] = last_be;
+        end
+        else
+          res[127:4] = {124{1'b1}};
+      end
+    endcase
+
+    count_to_be = res;
+  end
+endfunction
+
 function count_to_first_be;
   input [1:0] base, [11:0] count;
   reg [3:0] res;
@@ -202,6 +241,17 @@ function count_to_last_be;
   end
 endfunction
 
+function count_to_be;
+  input [1:0] base, [11:0] count, [9:0] dw_count;
+  reg [3:0] first_be;
+  reg [3:0] last_be;
+  begin
+    first_be = count_to_first_be(base, count);
+    last_be = count_to_last_be(base, count);
+    count_to_be = first_and_last_to_be(first_be, last_be, dw_count);
+  end
+endfunction
+
 function first_be_to_count;
   input [3:0] be;
   reg [7:0] res;
@@ -241,6 +291,25 @@ function last_be_to_count;
   end
 endfunction
 
+function first_and_last_to_count;
+  input [3:0] first_be, [3:0] last_be, [9:0] dw_count;;
+  reg [7:0] res;
+  begin
+    case (dw_count)
+      0: res = 0;
+      1: res = first_be_to_count(first_be);
+      default:
+      begin
+        if (dw_count < 32)
+          res = first_be_to_count(first_be) + last_be_to_count(last_be) + 4 * (dw_count[5:0] - 2);
+        else
+          res = first_be_to_count(first_be) + 4 * (dw_count[5:0] - 1);
+      end
+    endcase
+
+    be_to_count = res;
+  end
+endfunction
 
 generate
   begin : pci_rx_128
@@ -358,7 +427,8 @@ generate
 
     always @ (*) 
     begin
-      byte_count = 0;
+      calc_be = 0;
+      calc_count = 0;
 
       if (active)
       begin
@@ -367,95 +437,23 @@ generate
           if (has_header_high)
           begin
             if (has_header_low)
-              byte_count = loaded_header[43:32];
+              calc_count = loaded_header[43:32];
             else
-              byte_count = q_header[43:32];
+              calc_count = q_header[43:32];
 
-            low_adr = loaded_header[65:64];
-
-            calc_first_be = count_to_first_be(low_adr, byte_count);
-            calc_last_be = count_to_last_be(low_adr, byte_count);
-          end
-          else
-          begin
-            calc_first_be = q_first_be;
-            calc_last_be = q_last_be;
+            calc_be = count_to_be(loaded_header[65:64], calc_count, req_len);
           end
         end
         else
         begin
           if (has_header_low)
           begin
-            calc_first_be = loaded_header[39:32];
-            calc_last_be = loaded_header[47:40];
-          end
-          else
-          begin
-            calc_first_be = q_first_be;
-            calc_last_be = q_last_be;
-            byte_count = q_byte_count;
-          end
-
-          if (calc_pos)
-          begin
-            if (calc_blk_size)
-            begin
-              if (calc_remain_size == calc_blk_size)
-                byte_count = last_be_to_count(calc_last_be) + q_count + 4 * (calc_blk_size - 4);
-              else
-                byte_count = q_count + 4 * calc_blk_size;
-            end
-            else
-              byte_count = q_count;
-          end
-          else
-          begin
-            byte_count = first_be_to_count(calc_last_be);
-
-            if (calc_blk_size)
-            begin
-              if (calc_remain_size == calc_blk_size)
-                byte_count = last_be_to_count(calc_last_be) + byte_count + 4 * (calc_blk_size - 4);
-              end
-                byte_count = byte_count + 4 * (calc_blk_size - 1);
-            end
-          end
+            calc_be = first_and_last_to_be(loaded_header[39:32], loaded_header[47:40], req_len);
+            calc_count = first_and_last_to_count(loaded_header[39:32], loaded_header[47:40], req_len);
         end
       end
-      else
-      begin
-        calc_first_be = 4'b0000;
-        calc_last_be = 4'b0000;
-        byte_count = 0;
-      end
     end
 
-    always @ (reset or pci_rx_full ) 
-    begin
-      if (reset )
-        m_axis_rx_tready = 0;
-      else
-      begin      
-        if (pci_rx_full)
-          m_axis_rx_tready = 0;
-        else
-          m_axis_rx_tready = 1;
-      end
-    end
-
-
-    always @ ( posedge clk ) 
-    begin
-      if (reset )
-        pci_rx_wr <= 0;
-      else
-      begin      
-        if (m_axis_rx_tuser[21])
-          pci_rx_wr <= 1;             
-        else
-          pci_rx_wr <= 0;
-      end
-    end
 
     always @ ( posedge clk ) 
     begin
@@ -464,14 +462,24 @@ generate
         if (has_header_low)
         begin
           q_header[63:0] <= loaded_header[63:0];
-          q_first_be <= calc_first_be;
-          q_last_be <= calc_last_be;
+
+          if (!req_type[3])
+          begin
+            q_be <= calc_be;
+            q_count <= calc_count;
+          end
         end
 
-        q_header[139:128] <= byte_count;
-
         if (has_header_high)
+        begin
           q_header[127:64] <= loaded_header[127:64];
+
+          if (req_type[3])
+          begin
+            q_be <= calc_be;
+            q_count <= calc_count;
+          end
+        end
 
         if (has_strad)
         begin
@@ -490,17 +498,6 @@ generate
           q_data[(32*calc_pos+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+16) +: 8];
           q_data[(32*calc_pos+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+8) +: 8];
           q_data[(32*calc_pos+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos) +: 8];
-
-          if (calc_pos)
-          begin
-            if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 1))
-              q_be[4*(calc_pos) +: 4] <= calc_last_be;
-            else
-              q_be[4*(calc_pos) +: 4] <= 4'b1111;
-          end
-          else
-            q_be[3:0] <= calc_first_be;
-
         end
                
         if (calc_blk_size > 1)
@@ -509,11 +506,6 @@ generate
           q_data[(32*(calc_pos+1)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+48) +: 8];
           q_data[(32*(calc_pos+1)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+40) +: 8];
           q_data[(32*(calc_pos+1)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+32) +: 8];
-
-          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 2))
-            q_be[4*(calc_pos+1) +: 4] <= calc_last_be;
-          else
-            q_be[4*(calc_pos+1) +: 4] <= 4'b1111;
         end
 
         if (calc_blk_size > 2)
@@ -522,11 +514,6 @@ generate
           q_data[(32*(calc_pos+2)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+80) +: 8];
           q_data[(32*(calc_pos+2)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+72) +: 8];
           q_data[(32*(calc_pos+2)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+64) +: 8];
-
-          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 3))
-            q_be[4*(calc_pos+2) +: 4] <= calc_last_be;
-          else
-            q_be[4*(calc_pos+2) +: 4] <= 4'b1111;
         end
 
         if (calc_blk_size > 3)
@@ -535,11 +522,6 @@ generate
           q_data[(32*(calc_pos+3)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+112) +: 8];
           q_data[(32*(calc_pos+3)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+104) +: 8];
           q_data[(32*(calc_pos+3)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+96) +: 8];
-  
-          if ((calc_remain_size == calc_blk_size) && (calc_blk_size == 4))
-            q_be[4*(calc_pos+3) +: 4] <= calc_last_be;
-          else
-            q_be[4*(calc_pos+3) +: 4] <= 4'b1111;
         end
 
         q_remain_size <= calc_remain_size - calc_blk_size;
