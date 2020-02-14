@@ -26,7 +26,7 @@ module pci_tx (
   output  reg [3:0]               s_axis_tx_tuser;
 
   input  wire [1023:0]            pci_tx_data;
-  input  wire [191:0]             pci_tx_header;
+  input  wire [127:0]             pci_tx_header;
   input  wire                     pci_tx_wr;
   output wire                     pci_tx_full;
 
@@ -56,7 +56,7 @@ module pci_tx (
   reg  [9:0]     req_len;
 
   wire [1023:0]  bram_data;
-  wire [191:0]   bram_header;
+  wire [127:0]   bram_header;
 
 
 
@@ -72,10 +72,10 @@ fifo_data pci_tx_data_inst (
 
 fifo_header pci_tx_header_inst (
   .clk(clk),             // input wire clk
-  .din(pci_tx_header),   // input wire [1023 : 0] din
+  .din(pci_tx_header),   // input wire [127 : 0] din
   .wr_en(pci_tx_wr),     // input wire wr_en
   .rd_en(pci_tx_rd),     // input wire rd_en
-  .dout(bram_header),    // output wire [1023 : 0] dout
+  .dout(bram_header),    // output wire [127 : 0] dout
   .full(),               // output wire full
   .empty()               // output wire empty
 );

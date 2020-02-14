@@ -5,6 +5,7 @@ module adc_mem (
   pci_rx_data,
   pci_rx_header,
   pci_rx_be,
+  pci_rx_count,
   pci_rx_rd,
   pci_rx_empty,
 
@@ -40,13 +41,14 @@ module adc_mem (
   input                          reset;
 
   input  wire [1023:0]           pci_rx_data;
-  input  wire [191:0]            pci_rx_header;
+  input  wire [127:0]            pci_rx_header;
   input  wire [127:0]            pci_rx_be;
+  input  wire [7:0]              pci_rx_count;
   output reg                     pci_rx_rd;
   input  wire                    pci_rx_empty;
 
   output reg  [1023:0]           pci_tx_data;
-  output reg  [191:0]            pci_tx_header;
+  output reg  [127:0]            pci_tx_header;
   output reg                     pci_tx_wr;
   input  wire                    pci_tx_full;
 
@@ -105,21 +107,23 @@ ila_1 ila_1_inst (
   .probe3(req_len),                       // input wire [9:0]  probe1 
   .probe4(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
   .probe5(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
-  .probe6(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
-  .probe7(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
-  .probe8(pci_tx_data[31:0]),             // input wire [31:0]  probe2
-  .probe9(q_busy),                        // input wire [0:0]  probe2
-  .probe10(q_address),                    // input wire [18:0]  probe2
-  .probe11(q_len),                        // input wire [9:0]  probe2
-  .probe12(q_pos),                        // input wire [4:0]  probe2
-  .probe13(calc_address),                 // input wire [18:0]  probe2
-  .probe14(calc_len),                     // input wire [9:0]  probe2
-  .probe15(calc_pos),                     // input wire [4:0]  probe2
-  .probe16(is_local),                     // input wire [0:0]  probe2
-  .probe17(is_last_data),                 // input wire [0:0]  probe2
-  .probe18(is_last_reply),                // input wire [0:0]  probe2
-  .probe19(has_reply),                    // input wire [0:0]  probe2
-  .probe20(reply_pos)                     // input wire [4:0]  probe2
+  .probe6(pci_rx_be[31:0]),               // input wire [31:0]  probe1 
+  .probe7(pci_rx_count),                  // input wire [7:0]  probe1 
+  .probe8(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
+  .probe9(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
+  .probe10(pci_tx_data[31:0]),             // input wire [31:0]  probe2
+  .probe11(q_busy),                        // input wire [0:0]  probe2
+  .probe12(q_address),                    // input wire [18:0]  probe2
+  .probe13(q_len),                        // input wire [9:0]  probe2
+  .probe14(q_pos),                        // input wire [4:0]  probe2
+  .probe15(calc_address),                 // input wire [18:0]  probe2
+  .probe16(calc_len),                     // input wire [9:0]  probe2
+  .probe17(calc_pos),                     // input wire [4:0]  probe2
+  .probe18(is_local),                     // input wire [0:0]  probe2
+  .probe19(is_last_data),                 // input wire [0:0]  probe2
+  .probe20(is_last_reply),                // input wire [0:0]  probe2
+  .probe21(has_reply),                    // input wire [0:0]  probe2
+  .probe22(reply_pos)                     // input wire [4:0]  probe2
 );
 
 generate
@@ -257,8 +261,8 @@ generate
                 pci_tx_header[63:48] <= 16'b0;                  // completer ID
                 pci_tx_header[47:45] <= 3'b0;                   // completion code = 000
                 pci_tx_header[44] <= 1'b0;                      // BCM
-                pci_tx_header[43:34] <= req_len;                // byte count
-                pci_tx_header[33:32] <= 2'b0;                   // dword aligned
+                pci_tx_header[39:32] <= pci_rx_count;           // byte count
+                pci_tx_header[43:40] <= 0;                      // high byte count = 0
 
                 if (req_len)
                   pci_tx_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)

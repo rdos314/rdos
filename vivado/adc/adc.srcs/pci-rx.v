@@ -11,6 +11,7 @@ module pci_rx (
   pci_rx_data,
   pci_rx_header,
   pci_rx_be,
+  pci_rx_count,
   pci_rx_rd,
   pci_rx_empty
 );
@@ -26,8 +27,9 @@ module pci_rx (
   input       [21:0]             m_axis_rx_tuser;
 
   output wire [1023:0]           pci_rx_data;
-  output wire [191:0]            pci_rx_header;
+  output wire [127:0]            pci_rx_header;
   output wire [127:0]            pci_rx_be;
+  output wire [7:0]              pci_rx_count;
   input  wire                    pci_rx_rd;
   output wire                    pci_rx_empty;
 
@@ -44,8 +46,9 @@ module pci_rx (
   reg [63:0]     q_strad_header;
 
   reg  [1023:0]  q_data;
-  reg  [191:0]   q_header;
+  reg  [127:0]   q_header;
   reg  [127:0]   q_be;
+  reg  [7:0]     q_count;
 
   reg            pci_rx_wr;
   
@@ -86,10 +89,10 @@ fifo_data pci_rx_data_inst (
 
 fifo_header pci_rx_header_inst (
   .clk(clk),             // input wire clk
-  .din(q_header),        // input wire [191 : 0] din
+  .din(q_header),        // input wire [127 : 0] din
   .wr_en(pci_rx_wr),     // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
-  .dout(pci_rx_header),  // output wire [191 : 0] dout
+  .dout(pci_rx_header),  // output wire [127 : 0] dout
   .full(),               // output wire full
   .empty()               // output wire empty
 );
@@ -100,6 +103,16 @@ fifo_be pci_rx_be_inst (
   .wr_en(pci_rx_wr),     // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
   .dout(pci_rx_be),      // output wire [127 : 0] dout
+  .full(),               // output wire full
+  .empty()               // output wire empty
+);
+
+fifo_count pci_rx_count_inst (
+  .clk(clk),             // input wire clk
+  .din(q_count),         // input wire [7 : 0] din
+  .wr_en(pci_rx_wr),     // input wire wr_en
+  .rd_en(pci_rx_rd),     // input wire rd_en
+  .dout(pci_rx_count),   // output wire [7 : 0] dout
   .full(),               // output wire full
   .empty()               // output wire empty
 );
@@ -127,7 +140,7 @@ ila_0 ila_0_inst (
 	.probe18(calc_first_be),           // input wire [3:0]  probe0  
 	.probe19(calc_last_be),            // input wire [3:0]  probe0  
 	.probe20(byte_count),              // input wire [11:0]  probe0  
-	.probe21(q_header[139:128])        // input wire [11:0]  probe0  
+	.probe21(q_count)                  // input wire [7:0]  probe0  
 );
 
 generate

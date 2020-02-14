@@ -59,8 +59,9 @@ module pci_app (
 // PCIe -> local
 
   wire [1023:0]    pci_rx_data;
-  wire [191:0]     pci_rx_header;
+  wire [127:0]     pci_rx_header;
   wire [127:0]     pci_rx_be;
+  wire [7:0]       pci_rx_count;
   wire             pci_rx_rd;
   wire             pci_rx_empty;
 
@@ -337,6 +338,7 @@ pci_rx pci_rx_inst (
     .pci_rx_data( pci_rx_data),                    // O
     .pci_rx_header( pci_rx_header),                // O
     .pci_rx_be( pci_rx_be),                        // O
+    .pci_rx_count( pci_rx_count),                  // O
     .pci_rx_rd (pci_rx_rd),                        // I
     .pci_rx_empty (pci_rx_empty)                   // O
 );
@@ -368,6 +370,7 @@ adc_mem adc_mem_inst (
     .pci_rx_data( pci_rx_data),                 // I
     .pci_rx_header( pci_rx_header),             // I
     .pci_rx_be( pci_rx_be),                     // I
+    .pci_rx_count( pci_rx_count),               // I
     .pci_rx_rd (pci_rx_rd),                     // O
     .pci_rx_empty (pci_rx_empty),               // I
 
