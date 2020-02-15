@@ -461,10 +461,14 @@ generate
       if (sdram_rd)
       begin
         sdram_rp_address <= sdram_address[3:0];
-        sdram_rp_data[15:0] <= sdram_address[15:0];
-        sdram_rp_data[31:16] <= sdram_address[15:0];
-        sdram_rp_data[47:32] <= sdram_address[15:0];
-        sdram_rp_data[63:48] <= sdram_address[15:0];
+        sdram_rp_data[7:0] <= 8'h10;
+        sdram_rp_data[15:8] <= 8'h32;
+        sdram_rp_data[23:16] <= 8'h54;
+        sdram_rp_data[31:24] <= 8'h76;
+        sdram_rp_data[39:32] <= 8'h98;
+        sdram_rp_data[47:40] <= 8'hba;
+        sdram_rp_data[55:48] <= 8'hdc;
+        sdram_rp_data[63:56] <= 8'hfe;
         sdram_rp <= 1;
       end
       else
