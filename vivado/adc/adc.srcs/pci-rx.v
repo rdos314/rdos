@@ -566,6 +566,8 @@ generate
       has_header_low = 0;
       has_header_high = 0;
       is_first = 0;
+      calc_be = 0;
+      calc_count = 0;
 
       if (active )
       begin
@@ -668,16 +670,7 @@ generate
 
         if (calc_blk_size > calc_remain_size)
           calc_blk_size = calc_remain_size;
-      end
-    end
 
-    always @ (*) 
-    begin
-      calc_be = 0;
-      calc_count = 0;
-
-      if (active)
-      begin
         if (req_type[3])
         begin
           if (has_header_high)
@@ -702,7 +695,6 @@ generate
         end
       end
     end
-
 
     always @ (reset or pci_rx_full ) 
     begin
