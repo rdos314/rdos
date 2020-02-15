@@ -180,7 +180,7 @@ generate
         calc_blk_size = 0;
     end
 
-    always @ ( posedge clk ) 
+    always @ (*) 
     begin
       if (has_data)
       begin
