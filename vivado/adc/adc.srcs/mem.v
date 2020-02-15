@@ -89,6 +89,10 @@ module adc_mem (
   reg  [9:0]       calc_len;
   reg  [4:0]       calc_pos;
 
+  reg  [18:0]      curr_address;
+  reg  [9:0]       curr_len;
+  reg  [4:0]       curr_pos;
+
   reg              is_local;
   reg              is_last_data;
   reg              is_last_reply;
@@ -99,8 +103,122 @@ module adc_mem (
   wire [7:0]       req_type = pci_rx_header[31:24];
   wire [63:0]      req_address = pci_rx_header[95:64];
 
+ila_1 ila_1_inst (
+  .clk(clk),                              // input wire clk
+  .probe0(pci_rx_empty),                  // input wire [0:0]  probe1 
+  .probe1(pci_tx_full),                   // input wire [0:0]  probe1 
+  .probe2(req_address),                   // input wire [63:0]  probe1 
+  .probe3(req_len),                       // input wire [9:0]  probe1 
+  .probe4(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
+  .probe5(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
+  .probe6(pci_rx_be[31:0]),               // input wire [31:0]  probe1 
+  .probe7(pci_rx_count),                  // input wire [7:0]  probe1 
+  .probe8(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
+  .probe9(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
+  .probe10(pci_tx_data[31:0]),             // input wire [31:0]  probe2
+  .probe11(q_busy),                        // input wire [0:0]  probe2
+  .probe12(q_address),                    // input wire [18:0]  probe2
+  .probe13(q_len),                        // input wire [9:0]  probe2
+  .probe14(q_pos),                        // input wire [4:0]  probe2
+  .probe15(calc_address),                 // input wire [18:0]  probe2
+  .probe16(calc_len),                     // input wire [9:0]  probe2
+  .probe17(calc_pos),                     // input wire [4:0]  probe2
+  .probe18(is_local),                     // input wire [0:0]  probe2
+  .probe19(is_last_data),                 // input wire [0:0]  probe2
+  .probe20(is_last_reply),                // input wire [0:0]  probe2
+  .probe21(has_reply),                    // input wire [0:0]  probe2
+  .probe22(reply_pos)                     // input wire [4:0]  probe2
+);
+
 generate
   begin : mem
+
+    always @ ( * ) 
+    begin
+      if (reset || pci_rx_empty)
+      begin
+        pci_rx_rd = 0;
+      end
+      else
+      begin 
+        case (req_type)
+          8'b000_00000, 
+          8'b001_00000,
+          8'b000_00001,
+          8'b001_00001: 
+          begin  // read
+            if (q_busy)
+              curr_address = q_address;
+            else
+              curr_address = req_address[18:0];
+
+            if (curr_address < 128)
+            begin
+              if (local_rp)            
+              begin
+                curr_pos = local_rp_address - req_address[6:2];
+                if (curr_pos + 1 == req_len)
+                  pci_rx_rd = 1;
+                else
+                  pci_rx_rd = 0;
+              end
+              else
+                pci_rx_rd = 0;
+            end
+            else
+            begin
+              if (sdram_rp)
+              begin
+                curr_pos[4:1] = sdram_rp_address - req_address[6:3];
+                curr_pos[0] = 0;
+
+                if (curr_pos + 2 >= req_len)
+                  pci_rx_rd = 1;
+                else
+                  pci_rx_rd = 0;
+              end
+              else
+                pci_rx_rd = 0;
+            end
+          end
+
+          8'b010_00000,
+          8'b011_00000:
+          begin // write
+            if (q_busy)
+            begin
+              curr_address = q_address;
+              curr_len = q_len;
+            end
+            else
+            begin
+              curr_address = req_address[18:0];
+              curr_len = req_len;
+            end
+  
+            if (curr_address < 128)
+            begin
+              if (curr_len <= 1)
+                pci_rx_rd = 1;
+              else
+                pci_rx_rd = 0;
+            end
+            else
+            begin
+              if (curr_len <= 2)
+                pci_rx_rd = 1;
+              else
+                pci_rx_rd = 0;
+             end
+          end
+
+          default:
+          begin  // not supported
+            pci_rx_rd = 1;
+          end
+        endcase
+      end
+    end
 
     always @ ( posedge clk ) 
     begin
@@ -162,40 +280,6 @@ generate
             is_last_data = 1;
 
         end
-      end
-
-      if (reset || pci_rx_empty)
-      begin
-        pci_rx_rd = 0;
-      end
-      else
-      begin 
-        case (req_type)
-          8'b000_00000, 
-          8'b001_00000,
-          8'b000_00001,
-          8'b001_00001: 
-          begin  // read
-            if (is_last_reply)
-              pci_rx_rd = 1;
-            else
-              pci_rx_rd = 0;
-          end
-
-          8'b010_00000,
-          8'b011_00000:
-          begin
-            if (is_last_data)
-              pci_rx_rd = 1;
-            else
-              pci_rx_rd = 0;
-          end
-
-          default:
-          begin  // not supported
-            pci_rx_rd = 1;
-          end
-        endcase
       end
 
       if (reset || pci_rx_empty)

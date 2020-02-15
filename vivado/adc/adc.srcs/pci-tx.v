@@ -105,26 +105,12 @@ ila_2 ila_2_inst (
 	.probe19(bram_header[31:0])        // input wire [31:0]  probe0  
 );
 
-function has_first;
-  input empty;
-  reg res;
-  begin
-    res = 0;
-    if (!reset) 
-      if (s_axis_tx_tready)
-        if (!q_remain_size)
-          if (!empty)
-             res = 1;                
-    has_first = res;
-  end
-endfunction
-
 generate
   begin : gen_cpl_128
 
     always @ (*) 
     begin
-      if (has_first(pci_tx_empty))
+      if (!reset && s_axis_tx_tready && !q_remain_size && !pci_tx_empty)
         pci_tx_rd = 1;
       else
         pci_tx_rd = 0;
