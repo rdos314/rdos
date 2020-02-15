@@ -94,7 +94,7 @@ ila_2 ila_2_inst (
 	.probe8(calc_blk_size),            // input wire [9:0]  probe0  
 	.probe9(calc_remain_size),         // input wire [9:0]  probe0  
 	.probe10(req_type),                 // input wire [7:0]  probe0  
-	.probe11(req_len),                  // input wire [0:0]  probe0  
+	.probe11(req_len),                  // input wire [9:0]  probe0  
 	.probe12(pci_tx_header[31:0]),      // input wire [31:0]  probe0  
 	.probe13(pci_tx_header[63:32]),     // input wire [31:0]  probe0  
 	.probe14(pci_tx_header[95:64]),     // input wire [31:0]  probe0  
@@ -310,14 +310,14 @@ generate
         begin
           s_axis_tx_tvalid  <= 0;
           s_axis_tx_tlast <= 0;
-          s_axis_tdata <= 0;
+          s_axis_tx_tdata <= 0;
         end
       end
       else
       begin
         s_axis_tx_tvalid  <= 0;
         s_axis_tx_tlast <= 0;
-        s_axis_tdata <= 0;
+        s_axis_tx_tdata <= 0;
       end
     end
 

@@ -141,8 +141,11 @@ ila_0 ila_0_inst (
 	.probe21(q_count)                  // input wire [7:0]  probe0  
 );
 
-function first_and_last_to_be;
-  input [3:0] first_be, [3:0] last_be, [9:0] dw_count;
+function [127:0] first_and_last_to_be;
+  input [3:0] first_be;
+  input [3:0] last_be;
+  input [9:0] dw_count;
+  reg [4:0] count;
   reg [127:0] res;
   begin
     case (dw_count)
@@ -164,26 +167,259 @@ function first_and_last_to_be;
         res[127:8] = 0;
       end
 
-      default:
-        res = 0;
+      3:
+      begin
         res[3:0] = first_be;
+        res[7:4] = {4{1'b1}};
+        res[11:8] = last_be;
+        res[127:12] = 0;
+      end
 
-        if (dw_count <= 32)
-        begin
-          reg[(4*(dw_count-2)+3):4] = {4*(dw_count-2){1'b1}};
-          reg[4*(dw_count-1) +: 4] = last_be;
-        end
-        else
-          res[127:4] = {124{1'b1}};
+      4:
+      begin
+        res[3:0] = first_be;
+        res[11:4] = {8{1'b1}};
+        res[15:8] = last_be;
+        res[127:16] = 0;
+      end
+
+      5:
+      begin
+        res[3:0] = first_be;
+        res[15:4] = {12{1'b1}};
+        res[19:16] = last_be;
+        res[127:20] = 0;
+      end
+
+      6:
+      begin
+        res[3:0] = first_be;
+        res[20:4] = {16{1'b1}};
+        res[23:20] = last_be;
+        res[127:24] = 0;
+      end
+
+      7:
+      begin
+        res[3:0] = first_be;
+        res[23:4] = {20{1'b1}};
+        res[27:24] = last_be;
+        res[127:28] = 0;
+      end
+
+      8:
+      begin
+        res[3:0] = first_be;
+        res[27:4] = {24{1'b1}};
+        res[31:28] = last_be;
+        res[127:32] = 0;
+      end
+
+      9:
+      begin
+        res[3:0] = first_be;
+        res[31:4] = {28{1'b1}};
+        res[35:32] = last_be;
+        res[127:36] = 0;
+      end
+
+      10:
+      begin
+        res[3:0] = first_be;
+        res[35:4] = {32{1'b1}};
+        res[39:36] = last_be;
+        res[127:40] = 0;
+      end
+
+      11:
+      begin
+        res[3:0] = first_be;
+        res[39:4] = {36{1'b1}};
+        res[43:40] = last_be;
+        res[127:44] = 0;
+      end
+
+      12:
+      begin
+        res[3:0] = first_be;
+        res[43:4] = {40{1'b1}};
+        res[47:44] = last_be;
+        res[127:48] = 0;
+      end
+
+      13:
+      begin
+        res[3:0] = first_be;
+        res[47:4] = {44{1'b1}};
+        res[51:48] = last_be;
+        res[127:52] = 0;
+      end
+
+      14:
+      begin
+        res[3:0] = first_be;
+        res[51:4] = {48{1'b1}};
+        res[55:52] = last_be;
+        res[127:56] = 0;
+      end
+
+      15:
+      begin
+        res[3:0] = first_be;
+        res[55:4] = {52{1'b1}};
+        res[59:56] = last_be;
+        res[127:60] = 0;
+      end
+
+      16:
+      begin
+        res[3:0] = first_be;
+        res[59:4] = {56{1'b1}};
+        res[63:60] = last_be;
+        res[127:64] = 0;
+      end
+
+      17:
+      begin
+        res[3:0] = first_be;
+        res[63:4] = {60{1'b1}};
+        res[67:64] = last_be;
+        res[127:68] = 0;
+      end
+
+      18:
+      begin
+        res[3:0] = first_be;
+        res[67:4] = {64{1'b1}};
+        res[71:68] = last_be;
+        res[127:72] = 0;
+      end
+
+      19:
+      begin
+        res[3:0] = first_be;
+        res[71:4] = {68{1'b1}};
+        res[75:72] = last_be;
+        res[127:76] = 0;
+      end
+
+      20:
+      begin
+        res[3:0] = first_be;
+        res[75:4] = {72{1'b1}};
+        res[79:76] = last_be;
+        res[127:80] = 0;
+      end
+
+      21:
+      begin
+        res[3:0] = first_be;
+        res[79:4] = {76{1'b1}};
+        res[83:80] = last_be;
+        res[127:84] = 0;
+      end
+      
+      22:
+      begin
+        res[3:0] = first_be;
+        res[83:4] = {80{1'b1}};
+        res[87:84] = last_be;
+        res[127:88] = 0;
+      end
+      
+      23:
+      begin
+        res[3:0] = first_be;
+        res[87:4] = {84{1'b1}};
+        res[91:88] = last_be;
+        res[127:92] = 0;
+      end
+      
+      24:
+      begin
+        res[3:0] = first_be;
+        res[91:4] = {88{1'b1}};
+        res[95:92] = last_be;
+        res[127:96] = 0;
+      end
+      
+      25:
+      begin
+        res[3:0] = first_be;
+        res[95:4] = {92{1'b1}};
+        res[99:96] = last_be;
+        res[127:100] = 0;
+      end
+      
+      26:
+      begin
+        res[3:0] = first_be;
+        res[99:4] = {96{1'b1}};
+        res[103:100] = last_be;
+        res[127:104] = 0;
+      end
+      
+      27:
+      begin
+        res[3:0] = first_be;
+        res[103:4] = {100{1'b1}};
+        res[107:104] = last_be;
+        res[127:108] = 0;
+      end
+      
+      28:
+      begin
+        res[3:0] = first_be;
+        res[107:4] = {104{1'b1}};
+        res[111:108] = last_be;
+        res[127:112] = 0;
+      end
+      
+      29:
+      begin
+        res[3:0] = first_be;
+        res[111:4] = {108{1'b1}};
+        res[115:112] = last_be;
+        res[127:116] = 0;
+      end
+      
+      30:
+      begin
+        res[3:0] = first_be;
+        res[115:4] = {112{1'b1}};
+        res[119:116] = last_be;
+        res[127:120] = 0;
+      end
+      
+      31:
+      begin
+        res[3:0] = first_be;
+        res[119:4] = {116{1'b1}};
+        res[123:120] = last_be;
+        res[127:124] = 0;
+      end
+      
+      32:
+      begin
+        res[3:0] = first_be;
+        res[123:4] = {120{1'b1}};
+        res[127:124] = last_be;
+      end
+
+      default:
+      begin
+        res[3:0] = first_be;
+        res[127:4] = {124{1'b1}};
       end
     endcase
 
-    count_to_be = res;
+    first_and_last_to_be = res;
   end
 endfunction
 
-function count_to_first_be;
-  input [1:0] base, [11:0] count;
+function [3:0] count_to_first_be;
+  input [1:0] base;
+  input [11:0] count;
   reg [3:0] res;
   begin
     case (base)
@@ -224,8 +460,9 @@ function count_to_first_be;
   end
 endfunction
 
-function count_to_last_be;
-  input [1:0] base, [11:0] count;
+function [3:0] count_to_last_be;
+  input [1:0] base;
+  input [11:0] count;
   reg [3:0] res;
   reg [1:0] low;
   begin
@@ -241,8 +478,10 @@ function count_to_last_be;
   end
 endfunction
 
-function count_to_be;
-  input [1:0] base, [11:0] count, [9:0] dw_count;
+function [127:0] count_to_be;
+  input [1:0] base;
+  input [11:0] count;
+  input [9:0] dw_count;
   reg [3:0] first_be;
   reg [3:0] last_be;
   begin
@@ -252,29 +491,29 @@ function count_to_be;
   end
 endfunction
 
-function first_be_to_count;
+function [7:0] first_be_to_count;
   input [3:0] be;
   reg [7:0] res;
   begin
     casex (be)
-      4'b1xx1 : count = 4;
-      4'b01x1 : count = 3;
-      4'b1x10 : count = 3;
-      4'b0011 : count = 2;
-      4'b0110 : count = 2;
-      4'b1100 : count = 2;
-      4'b0001 : count = 1;
-      4'b0010 : count = 1;
-      4'b0100 : count = 1;
-      4'b1000 : count = 1;
-      4'b0000 : count = 1;
+      4'b1xx1 : res = 4;
+      4'b01x1 : res = 3;
+      4'b1x10 : res = 3;
+      4'b0011 : res = 2;
+      4'b0110 : res = 2;
+      4'b1100 : res = 2;
+      4'b0001 : res = 1;
+      4'b0010 : res = 1;
+      4'b0100 : res = 1;
+      4'b1000 : res = 1;
+      4'b0000 : res = 1;
     endcase
 
     first_be_to_count = res;
   end
 endfunction
 
-function last_be_to_count;
+function [7:0] last_be_to_count;
   input [3:0] be;
   reg [7:0] res;
   begin
@@ -291,8 +530,10 @@ function last_be_to_count;
   end
 endfunction
 
-function first_and_last_to_count;
-  input [3:0] first_be, [3:0] last_be, [9:0] dw_count;;
+function [7:0] first_and_last_to_count;
+  input [3:0] first_be;
+  input [3:0] last_be;
+  input [9:0] dw_count;
   reg [7:0] res;
   begin
     case (dw_count)
@@ -307,7 +548,7 @@ function first_and_last_to_count;
       end
     endcase
 
-    be_to_count = res;
+    first_and_last_to_count = res;
   end
 endfunction
 
@@ -450,6 +691,7 @@ generate
           begin
             calc_be = first_and_last_to_be(loaded_header[39:32], loaded_header[47:40], req_len);
             calc_count = first_and_last_to_count(loaded_header[39:32], loaded_header[47:40], req_len);
+          end
         end
       end
     end
