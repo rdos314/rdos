@@ -258,6 +258,17 @@ generate
 
               if (is_last_reply)
               begin
+                pci_tx_header[95:72] <= pci_rx_header[63:40];
+                pci_tx_header[71] <= 0;
+                pci_tx_header[70:66] <= pci_rx_header[70:66];
+                casex (pci_rx_be[3:0])
+                  4'b0000 : pci_tx_header[65:64] <= 0;
+                  4'bxxx1 : pci_tx_header[65:64] <= 0;
+                  4'bxx10 : pci_tx_header[65:64] <= 1;
+                  4'bx100 : pci_tx_header[65:64] <= 2;
+                  4'b1000 : pci_tx_header[65:64] <= 3;
+                endcase
+
                 pci_tx_header[63:48] <= 16'b0;                  // completer ID
                 pci_tx_header[47:45] <= 3'b0;                   // completion code = 000
                 pci_tx_header[44] <= 1'b0;                      // BCM
