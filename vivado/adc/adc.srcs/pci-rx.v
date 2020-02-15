@@ -69,8 +69,11 @@ module pci_rx (
   reg [1:0]    calc_blk_pos;
   reg [9:0]    calc_blk_size;
   reg [9:0]    calc_remain_size;
-  reg  [127:0] calc_be;
-  reg  [7:0]   calc_count;
+  reg [127:0]  calc_be;
+  reg [7:0]    calc_count;
+
+  reg [3:0]    use_first_be;
+  reg [3:0]    use_last_be;
 
   reg [127:0]  loaded_header;
 
@@ -135,11 +138,13 @@ ila_0 ila_0_inst (
 	.probe15(q_header[127:64]),        // input wire [63:0]  probe0  
 	.probe16(q_data[31:0]),            // input wire [31:0]  probe0  
 	.probe17(q_be[31:0]),              // input wire [31:0]  probe0  
-	.probe18(calc_first_be),           // input wire [3:0]  probe0  
-	.probe19(calc_last_be),            // input wire [3:0]  probe0  
-	.probe20(byte_count),              // input wire [11:0]  probe0  
-	.probe21(q_count)                  // input wire [7:0]  probe0  
+	.probe18(q_count),                 // input wire [7:0]  probe0  
+	.probe19(use_first_be),            // input wire [3:0]  probe0  
+	.probe20(use_last_be),             // input wire [3:0]  probe0  
+	.probe21(calc_be),                 // input wire [127:0]  probe0  
+	.probe22(calc_count)               // input wire [7:0]  probe0  
 );
+
 
 function [127:0] first_and_last_to_be;
   input [3:0] first_be;
@@ -689,13 +694,42 @@ generate
         begin
           if (has_header_low)
           begin
-            calc_be = first_and_last_to_be(loaded_header[39:32], loaded_header[47:40], req_len);
-            calc_count = first_and_last_to_count(loaded_header[39:32], loaded_header[47:40], req_len);
+            use_first_be = loaded_header[39:32];
+            use_last_be = loaded_header[47:40];
+            calc_be = first_and_last_to_be(use_first_be, use_last_be, req_len);
+            calc_count = first_and_last_to_count(use_first_be, use_last_be, req_len);
           end
         end
       end
     end
 
+
+    always @ (reset or pci_rx_full ) 
+    begin
+      if (reset )
+        m_axis_rx_tready = 0;
+      else
+      begin      
+        if (pci_rx_full)
+          m_axis_rx_tready = 0;
+        else
+          m_axis_rx_tready = 1;
+      end
+    end
+
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset )
+        pci_rx_wr <= 0;
+      else
+      begin      
+        if (m_axis_rx_tuser[21])
+          pci_rx_wr <= 1;             
+        else
+          pci_rx_wr <= 0;
+      end
+    end
 
     always @ ( posedge clk ) 
     begin
