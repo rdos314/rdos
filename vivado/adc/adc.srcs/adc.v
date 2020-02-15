@@ -89,13 +89,7 @@ module adc (
   wire                                        cfg_interrupt_msienable;  
   wire                                        sample_clk;  
   wire                                        clk;  
-
-  reg                                         user_reset_q;
-  reg                                         user_lnk_up_q;
-  reg    [25:0]                               user_clk_heartbeat = 'h0;
-
-  reg [31:0] r_CNT = 0;
-  reg r_TOGGLE = 1'b0;
+  wire [31:0]                                 bar_control;
 
 pci_app pci_app_inst (
     .pci_exp_txp(pci_exp_txp),
@@ -111,13 +105,15 @@ pci_app pci_app_inst (
     .user_lnk_up(user_lnk_up),
     .user_lnk_rate(user_lnk_rate),
     .user_lnk_width(user_lnk_width),
-    .cfg_interrupt_msienable(cfg_interrupt_msienable)
+    .cfg_interrupt_msienable(cfg_interrupt_msienable),
+
+    .bar_control(bar_control)
 );
 
-sample_700 sample_inst  (
-    .clk_out1(sample_clk),     // output clk_out1
-    .clk_in1(clk)          // input clk_in1
-    );
+// sample_700 sample_inst  (
+//    .clk_out1(sample_clk),     // output clk_out1
+//    .clk_in1(clk)          // input clk_in1
+//    );
 
  //-----------------------------I/O BUFFERS------------------------//
 
@@ -125,29 +121,13 @@ sample_700 sample_inst  (
   IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
   BUFG   sys_clk_buf (.O(clk), .I(sys_clk));
 
-  OBUF   led_0_obuf (.O(led_0), .I(user_lnk_up));
-  OBUF   led_1_obuf (.O(led_1), .I(user_lnk_rate));
-  OBUF   led_2_obuf (.O(led_2), .I(user_lnk_width[0]));
-  OBUF   led_3_obuf (.O(led_3), .I(user_lnk_width[1]));
-  OBUF   led_4_obuf (.O(led_4), .I(user_reset));
-  OBUF   led_5_obuf (.O(led_5), .I(cfg_interrupt_msienable));
-  OBUF   led_6_obuf (.O(led_6), .I(0));
-  OBUF   led_7_obuf (.O(led_7), .I(r_TOGGLE));
-
-  always @(posedge user_clk) begin
-    user_reset_q  <= user_reset;
-    user_lnk_up_q <= user_lnk_up;
-  end
-
-  always @ (posedge sample_clk)
-    begin
-      if (r_CNT == c_CNT-1)
-        begin
-          r_TOGGLE <= !r_TOGGLE;
-          r_CNT <= 0;
-        end
-      else
-        r_CNT <= r_CNT + 1;
-    end;
+  OBUF   led_0_obuf (.O(led_0), .I(bar_control[0]));
+  OBUF   led_1_obuf (.O(led_1), .I(bar_control[1]));
+  OBUF   led_2_obuf (.O(led_2), .I(bar_control[2]));
+  OBUF   led_3_obuf (.O(led_3), .I(bar_control[3]));
+  OBUF   led_4_obuf (.O(led_4), .I(bar_control[4]));
+  OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
+  OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
+  OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
 
 endmodule

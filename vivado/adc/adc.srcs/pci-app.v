@@ -12,24 +12,28 @@ module pci_app (
     user_lnk_up,
     user_lnk_rate,
     user_lnk_width,
-    cfg_interrupt_msienable
+    cfg_interrupt_msienable,
+
+    bar_control
 );
 
-  output  [7:0]    pci_exp_txp;
-  output  [7:0]    pci_exp_txn;
-  input   [7:0]    pci_exp_rxp;
-  input   [7:0]    pci_exp_rxn;
+  output  [7:0]     pci_exp_txp;
+  output  [7:0]     pci_exp_txn;
+  input   [7:0]     pci_exp_rxp;
+  input   [7:0]     pci_exp_rxn;
 
-  input            sys_clk;
-  input            sys_rst_n;
+  input             sys_clk;
+  input             sys_rst_n;
   
-  output           user_clk;
-  output           user_reset;
-  output           user_lnk_up;
+  output            user_clk;
+  output            user_reset;
+  output            user_lnk_up;
   
-  output           user_lnk_rate;
-  output   [1:0]   user_lnk_width;
-  output           cfg_interrupt_msienable;
+  output            user_lnk_rate;
+  output   [1:0]    user_lnk_width;
+  output            cfg_interrupt_msienable;
+
+  output reg [31:0] bar_control;
 
 // Wire Declarations
 
@@ -73,8 +77,6 @@ module pci_app (
   wire             pci_tx_full;
 
 // local memory
-
-  reg  [31:0]      local_mem[31:0];
 
   wire [4:0]       local_address;
   wire             local_rd;
@@ -434,46 +436,59 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      if (local_rd)
-      begin
-        local_rp_address <= local_address[4:0];
-        local_rp_data <= local_mem[local_rp_address];
-        local_rp <= 1;
-      end
+      if (user_reset)
+        bar_control <= 0;
       else
-        local_rp <= 0;
-
-      if (local_wr)
       begin
-        if (local_wr_be[0])
-          local_mem[local_address][7:0] <= local_wr_data[7:0];
+        if (local_rd)
+        begin
+          local_rp_address <= local_address[4:0];
+          case (local_address)
+            0: local_rp_data <= bar_control;
+            default: local_rp_data <= 31'h11223344;
+          endcase     
+          local_rp <= 1;
+        end
+        else
+          local_rp <= 0;
 
-        if (local_wr_be[1])
-          local_mem[local_address][15:8] <= local_wr_data[15:8];
+        if (local_wr)
+        begin
+          local_rp_address <= local_address[4:0];
+          case (local_address)
+            0: 
+            begin
+              if (local_wr_be[0])
+                bar_control[7:0] <= local_wr_data[7:0];
 
-        if (local_wr_be[2])
-          local_mem[local_address][23:16] <= local_wr_data[23:16];
+              if (local_wr_be[1])
+                bar_control[15:8] <= local_wr_data[15:8];
+ 
+              if (local_wr_be[2])
+                bar_control[23:16] <= local_wr_data[23:16];
 
-        if (local_wr_be[3])
-          local_mem[local_address][31:24] <= local_wr_data[31:24];
+              if (local_wr_be[3])
+                bar_control[31:24] <= local_wr_data[31:24];
+            end
+          endcase
+        end
+ 
+        if (sdram_rd)
+        begin
+          sdram_rp_address <= sdram_address[3:0];
+          sdram_rp_data[7:0] <= 8'h10;
+          sdram_rp_data[15:8] <= 8'h32;
+          sdram_rp_data[23:16] <= 8'h54;
+          sdram_rp_data[31:24] <= 8'h76;
+          sdram_rp_data[39:32] <= 8'h98;
+          sdram_rp_data[47:40] <= 8'hba;
+          sdram_rp_data[55:48] <= 8'hdc;
+          sdram_rp_data[63:56] <= 8'hfe;
+          sdram_rp <= 1;
+        end
+        else
+          sdram_rp <= 0;
       end
-
-      if (sdram_rd)
-      begin
-        sdram_rp_address <= sdram_address[3:0];
-        sdram_rp_data[7:0] <= 8'h10;
-        sdram_rp_data[15:8] <= 8'h32;
-        sdram_rp_data[23:16] <= 8'h54;
-        sdram_rp_data[31:24] <= 8'h76;
-        sdram_rp_data[39:32] <= 8'h98;
-        sdram_rp_data[47:40] <= 8'hba;
-        sdram_rp_data[55:48] <= 8'hdc;
-        sdram_rp_data[63:56] <= 8'hfe;
-        sdram_rp <= 1;
-      end
-      else
-        sdram_rp <= 0;
-
     end
   end
 endgenerate
