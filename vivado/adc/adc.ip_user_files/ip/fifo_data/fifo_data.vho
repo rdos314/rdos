@@ -46,21 +46,21 @@
 -- 
 -- DO NOT MODIFY THIS FILE.
 
--- IP VLNV: xilinx.com:ip:blk_mem_gen:8.4
--- IP Revision: 4
+-- IP VLNV: xilinx.com:ip:fifo_generator:13.2
+-- IP Revision: 5
 
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT bram_header
+COMPONENT fifo_data
   PORT (
-    clka : IN STD_LOGIC;
-    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    addra : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(191 DOWNTO 0);
-    clkb : IN STD_LOGIC;
-    addrb : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-    doutb : OUT STD_LOGIC_VECTOR(191 DOWNTO 0)
+    clk : IN STD_LOGIC;
+    din : IN STD_LOGIC_VECTOR(1023 DOWNTO 0);
+    wr_en : IN STD_LOGIC;
+    rd_en : IN STD_LOGIC;
+    dout : OUT STD_LOGIC_VECTOR(1023 DOWNTO 0);
+    full : OUT STD_LOGIC;
+    empty : OUT STD_LOGIC
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -69,19 +69,19 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : bram_header
+your_instance_name : fifo_data
   PORT MAP (
-    clka => clka,
-    wea => wea,
-    addra => addra,
-    dina => dina,
-    clkb => clkb,
-    addrb => addrb,
-    doutb => doutb
+    clk => clk,
+    din => din,
+    wr_en => wr_en,
+    rd_en => rd_en,
+    dout => dout,
+    full => full,
+    empty => empty
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file bram_header.vhd when simulating
--- the core, bram_header. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file fifo_data.vhd when simulating
+-- the core, fifo_data. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 

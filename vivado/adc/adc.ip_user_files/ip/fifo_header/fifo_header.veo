@@ -46,26 +46,26 @@
 // 
 // DO NOT MODIFY THIS FILE.
 
-// IP VLNV: xilinx.com:ip:blk_mem_gen:8.4
-// IP Revision: 4
+// IP VLNV: xilinx.com:ip:fifo_generator:13.2
+// IP Revision: 5
 
 // The following must be inserted into your Verilog file for this
 // core to be instantiated. Change the instance name and port connections
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-bram_data your_instance_name (
-  .clka(clka),    // input wire clka
-  .wea(wea),      // input wire [0 : 0] wea
-  .addra(addra),  // input wire [3 : 0] addra
-  .dina(dina),    // input wire [1023 : 0] dina
-  .clkb(clkb),    // input wire clkb
-  .addrb(addrb),  // input wire [3 : 0] addrb
-  .doutb(doutb)  // output wire [1023 : 0] doutb
+fifo_header your_instance_name (
+  .clk(clk),      // input wire clk
+  .din(din),      // input wire [127 : 0] din
+  .wr_en(wr_en),  // input wire wr_en
+  .rd_en(rd_en),  // input wire rd_en
+  .dout(dout),    // output wire [127 : 0] dout
+  .full(full),    // output wire full
+  .empty(empty)  // output wire empty
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file bram_data.v when simulating
-// the core, bram_data. When compiling the wrapper file, be sure to
+// You must compile the wrapper file fifo_header.v when simulating
+// the core, fifo_header. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 
