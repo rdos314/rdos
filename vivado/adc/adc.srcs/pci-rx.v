@@ -560,6 +560,33 @@ endfunction
 generate
   begin : pci_rx_128
 
+    always @ (reset or pci_rx_full ) 
+    begin
+      if (reset )
+        m_axis_rx_tready = 0;
+      else
+      begin      
+        if (pci_rx_full)
+          m_axis_rx_tready = 0;
+        else
+          m_axis_rx_tready = 1;
+      end
+    end
+
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset )
+        pci_rx_wr <= 0;
+      else
+      begin      
+        if (m_axis_rx_tuser[21])
+          pci_rx_wr <= 1;             
+        else
+          pci_rx_wr <= 0;
+      end
+    end
+
     always @ ( posedge clk ) 
     begin
       has_header_low = 0;
@@ -692,26 +719,6 @@ generate
             calc_count = first_and_last_to_count(use_first_be, use_last_be, req_len);
           end
         end
-      end
-
-      if (reset )
-        m_axis_rx_tready = 0;
-      else
-      begin      
-        if (pci_rx_full)
-          m_axis_rx_tready = 0;
-        else
-          m_axis_rx_tready = 1;
-      end
-
-      if (reset )
-        pci_rx_wr <= 0;
-      else
-      begin      
-        if (m_axis_rx_tuser[21])
-          pci_rx_wr <= 1;             
-        else
-          pci_rx_wr <= 0;
       end
 
       if (!reset )

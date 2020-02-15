@@ -81,8 +81,54 @@ fifo_header pci_tx_header_inst (
   .empty()               // output wire empty
 );
 
+ila_2 ila_2_inst (
+	.clk(clk),                         // input wire clk
+	.probe0(s_axis_tx_tvalid),         // input wire [0:0]  probe0  
+	.probe1(s_axis_tx_tready),         // input wire [0:0]  probe0  
+	.probe2(s_axis_tx_tlast),          // input wire [0:0]  probe0  
+	.probe3(s_axis_tx_tkeep),          // input wire [15:0]  probe0  
+	.probe4(s_axis_tx_tdata[63:0]),    // input wire [63:0]  probe0  
+	.probe5(s_axis_tx_tdata[127:64]),  // input wire [63:0]  probe0  
+	.probe6(is_first),                 // input wire [0:0]  probe0  
+	.probe7(calc_pos),                 // input wire [3:0]  probe0  
+	.probe8(calc_blk_size),            // input wire [9:0]  probe0  
+	.probe9(calc_remain_size),         // input wire [9:0]  probe0  
+	.probe10(req_type),                 // input wire [7:0]  probe0  
+	.probe11(req_len),                  // input wire [9:0]  probe0  
+	.probe12(pci_tx_header[31:0]),      // input wire [31:0]  probe0  
+	.probe13(pci_tx_header[63:32]),     // input wire [31:0]  probe0  
+	.probe14(pci_tx_header[95:64]),     // input wire [31:0]  probe0  
+	.probe15(pci_tx_header[127:96]),    // input wire [31:0]  probe0  
+	.probe16(pci_tx_rd),                // input wire [0:0]  probe0  
+	.probe17(pci_tx_wr),                // input wire [0:0]  probe0  
+	.probe18(pci_tx_empty),             // input wire [0:0]  probe0  
+	.probe19(bram_header[31:0])        // input wire [31:0]  probe0  
+);
+
+function has_first;
+  input empty;
+  reg res;
+  begin
+    res = 0;
+    if (!reset) 
+      if (s_axis_tx_tready)
+        if (!q_remain_size)
+          if (!empty)
+             res = 1;                
+    has_first = res;
+  end
+endfunction
+
 generate
   begin : gen_cpl_128
+
+    always @ (*) 
+    begin
+      if (has_first(pci_tx_empty))
+        pci_tx_rd = 1;
+      else
+        pci_tx_rd = 0;
+    end
 
     always @ ( posedge clk ) 
     begin
@@ -154,16 +200,6 @@ generate
       end
       else
         calc_blk_size = 0;
-
-      if (has_data)
-      begin
-        if (is_first)
-          pci_tx_rd = 1;
-        else
-          pci_tx_rd = 0;
-      end
-      else
-        pci_tx_rd = 0;
 
       if (has_data)
       begin
