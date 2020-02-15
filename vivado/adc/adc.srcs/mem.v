@@ -99,37 +99,10 @@ module adc_mem (
   wire [7:0]       req_type = pci_rx_header[31:24];
   wire [63:0]      req_address = pci_rx_header[95:64];
 
-ila_1 ila_1_inst (
-  .clk(clk),                              // input wire clk
-  .probe0(pci_rx_empty),                  // input wire [0:0]  probe1 
-  .probe1(pci_tx_full),                   // input wire [0:0]  probe1 
-  .probe2(req_address),                   // input wire [63:0]  probe1 
-  .probe3(req_len),                       // input wire [9:0]  probe1 
-  .probe4(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
-  .probe5(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
-  .probe6(pci_rx_be[31:0]),               // input wire [31:0]  probe1 
-  .probe7(pci_rx_count),                  // input wire [7:0]  probe1 
-  .probe8(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
-  .probe9(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
-  .probe10(pci_tx_data[31:0]),             // input wire [31:0]  probe2
-  .probe11(q_busy),                        // input wire [0:0]  probe2
-  .probe12(q_address),                    // input wire [18:0]  probe2
-  .probe13(q_len),                        // input wire [9:0]  probe2
-  .probe14(q_pos),                        // input wire [4:0]  probe2
-  .probe15(calc_address),                 // input wire [18:0]  probe2
-  .probe16(calc_len),                     // input wire [9:0]  probe2
-  .probe17(calc_pos),                     // input wire [4:0]  probe2
-  .probe18(is_local),                     // input wire [0:0]  probe2
-  .probe19(is_last_data),                 // input wire [0:0]  probe2
-  .probe20(is_last_reply),                // input wire [0:0]  probe2
-  .probe21(has_reply),                    // input wire [0:0]  probe2
-  .probe22(reply_pos)                     // input wire [4:0]  probe2
-);
-
 generate
   begin : mem
 
-    always @ (*) 
+    always @ ( posedge clk ) 
     begin
       calc_address = 0;
       calc_len = 0;
@@ -190,10 +163,7 @@ generate
 
         end
       end
-    end
 
-    always @ (*) 
-    begin
       if (reset || pci_rx_empty)
       begin
         pci_rx_rd = 0;
@@ -227,10 +197,7 @@ generate
           end
         endcase
       end
-    end
 
-    always @ ( posedge clk ) 
-    begin
       if (reset || pci_rx_empty)
       begin
         q_busy <= 0;
@@ -320,10 +287,7 @@ generate
           end
         endcase
       end
-    end
 
-    always @ ( posedge clk ) 
-    begin
       if (reset || pci_rx_empty)
       begin
         sdram_rd <= 0;

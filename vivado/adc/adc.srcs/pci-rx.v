@@ -125,18 +125,18 @@ ila_0 ila_0_inst (
 	.probe2(m_axis_rx_tuser[13]),      // input wire [0:0]  probe0  
 	.probe3(m_axis_rx_tuser[14]),      // input wire [0:0]  probe0  
 	.probe4(m_axis_rx_tuser[21]),      // input wire [0:0]  probe0  
-	.probe5(pci_rx_rd),                // input wire [0:0]  probe0  
-	.probe6(pci_rx_wr),                // input wire [0:0]  probe0  
-	.probe7(pci_rx_empty),             // input wire [0:0]  probe0  
-	.probe8(has_header_low),           // input wire [0:0]  probe0  
-	.probe9(has_header_high),          // input wire [0:0]  probe0  
-	.probe10(calc_pos),                // input wire [3:0]  probe0  
-	.probe11(calc_blk_pos),            // input wire [1:0]  probe0  
-	.probe12(calc_remain_size),        // input wire [9:0]  probe0  
-	.probe13(calc_blk_size),           // input wire [9:0]  probe0  
-	.probe14(q_header[63:0]),          // input wire [63:0]  probe0  
-	.probe15(q_header[127:64]),        // input wire [63:0]  probe0  
-	.probe16(q_data[31:0]),            // input wire [31:0]  probe0  
+	.probe5(m_axis_rx_tdata[63:0]),    // input wire [63:0]  probe0  
+	.probe6(m_axis_rx_tdata[127:64]),  // input wire [63:0]  probe0  
+	.probe7(pci_rx_rd),                // input wire [0:0]  probe0  
+	.probe8(pci_rx_wr),                // input wire [0:0]  probe0  
+	.probe9(pci_rx_empty),             // input wire [0:0]  probe0  
+	.probe10(has_header_low),           // input wire [0:0]  probe0  
+	.probe11(has_header_high),          // input wire [0:0]  probe0  
+	.probe12(calc_pos),                // input wire [3:0]  probe0  
+	.probe13(calc_blk_pos),            // input wire [1:0]  probe0  
+	.probe14(calc_remain_size),        // input wire [9:0]  probe0  
+	.probe15(calc_blk_size),           // input wire [9:0]  probe0  
+	.probe16(q_data[63:0]),            // input wire [63:0]  probe0  
 	.probe17(q_be[31:0]),              // input wire [31:0]  probe0  
 	.probe18(q_count),                 // input wire [7:0]  probe0  
 	.probe19(use_first_be),            // input wire [3:0]  probe0  
@@ -560,8 +560,7 @@ endfunction
 generate
   begin : pci_rx_128
 
-
-    always @ (*) 
+    always @ ( posedge clk ) 
     begin
       has_header_low = 0;
       has_header_high = 0;
@@ -694,10 +693,7 @@ generate
           end
         end
       end
-    end
 
-    always @ (reset or pci_rx_full ) 
-    begin
       if (reset )
         m_axis_rx_tready = 0;
       else
@@ -707,11 +703,7 @@ generate
         else
           m_axis_rx_tready = 1;
       end
-    end
 
-
-    always @ ( posedge clk ) 
-    begin
       if (reset )
         pci_rx_wr <= 0;
       else
@@ -721,10 +713,7 @@ generate
         else
           pci_rx_wr <= 0;
       end
-    end
 
-    always @ ( posedge clk ) 
-    begin
       if (!reset )
       begin      
         if (has_header_low)
