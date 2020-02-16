@@ -354,10 +354,6 @@ power_data_sel      EQU 8C8h
 pckey_code_sel      EQU 8D0h
 pckey_data_sel      EQU 8D8h
 
-kc705_code_sel      EQU 8E0h
-kc705_data_sel      EQU 8E8h
-
-anio_code_sel           EQU 8F0h
 flash_disc_sel      EQU 8F8h
 
 ser_key_code_sel    EQU 900h
@@ -492,6 +488,12 @@ usb_bus_data_sel    EQU 0C08h
 
 usb_cdc_code_sel    EQU 0C10h
 usb_cdc_data_sel    EQU 0C18h
+
+anio_code_sel       EQU 0C20h
+anio_data_sel       EQU 0C28h
+anio_control_sel    EQU 0C30h
+anio_adc_sel        EQU 0C38h
+anio_dac_sel        EQU 0C40h
 
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h

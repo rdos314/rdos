@@ -24,8 +24,8 @@ MCommand
 0
 6
 MItem
-9
-kc705.rdv
+8
+anio.rdv
 7
 WString
 5
@@ -47,7 +47,7 @@ rk???Code selector:
 12
 WString
 5
-0x8E0
+0xC20
 0
 13
 MVState
@@ -63,7 +63,7 @@ rk???Data selector:
 16
 WString
 5
-0x8E8
+0xC28
 0
 17
 MCState
@@ -131,8 +131,8 @@ WVList
 0
 32
 MItem
-9
-kc705.asm
+8
+anio.asm
 33
 WString
 6
