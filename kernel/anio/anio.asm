@@ -159,11 +159,11 @@ adc_thread:
 ;
     mov ds,bx
     mov si,103h
-    lods word ptr ds:[si]
-    mov bx,ax
-    lods word ptr ds:[si]
-    mov cx,ax
-    lods word ptr ds:[si]
+    lods dword ptr ds:[si]
+    mov ebx,eax
+    lods dword ptr ds:[si]
+    mov ecx,eax
+    lods dword ptr ds:[si]
     int 3
 
 atDone:
