@@ -48,7 +48,7 @@ module pci_rx (
   reg  [1023:0]  q_data;
   reg  [127:0]   q_header;
   reg  [127:0]   q_be;
-  reg  [7:0]     q_control;
+  reg  [15:0]    q_control;
 
   reg            pci_rx_wr;
   
