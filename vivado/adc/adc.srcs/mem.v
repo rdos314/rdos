@@ -5,7 +5,7 @@ module adc_mem (
   pci_rx_data,
   pci_rx_header,
   pci_rx_be,
-  pci_rx_count,
+  pci_rx_control,
   pci_rx_rd,
   pci_rx_empty,
 
@@ -43,7 +43,7 @@ module adc_mem (
   input  wire [1023:0]           pci_rx_data;
   input  wire [127:0]            pci_rx_header;
   input  wire [127:0]            pci_rx_be;
-  input  wire [7:0]              pci_rx_count;
+  input  wire [15:0]             pci_rx_control;
   output reg                     pci_rx_rd;
   input  wire                    pci_rx_empty;
 
@@ -112,7 +112,7 @@ ila_1 ila_1_inst (
   .probe4(pci_rx_header[63:0]),           // input wire [63:0]  probe1 
   .probe5(pci_rx_header[127:64]),         // input wire [63:0]  probe1 
   .probe6(pci_rx_be[31:0]),               // input wire [31:0]  probe1 
-  .probe7(pci_rx_count),                  // input wire [7:0]  probe1 
+  .probe7(pci_rx_control),                // input wire [15:0]  probe1 
   .probe8(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
   .probe9(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
   .probe10(pci_tx_data[31:0]),             // input wire [31:0]  probe2
@@ -323,7 +323,7 @@ generate
                 pci_tx_header[63:48] <= 16'b0;                  // completer ID
                 pci_tx_header[47:45] <= 3'b0;                   // completion code = 000
                 pci_tx_header[44] <= 1'b0;                      // BCM
-                pci_tx_header[39:32] <= pci_rx_count;           // byte count
+                pci_tx_header[39:32] <= pci_rx_control[7:0];    // byte count
                 pci_tx_header[43:40] <= 0;                      // high byte count = 0
 
                 if (req_len)

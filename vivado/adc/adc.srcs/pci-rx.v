@@ -11,7 +11,7 @@ module pci_rx (
   pci_rx_data,
   pci_rx_header,
   pci_rx_be,
-  pci_rx_count,
+  pci_rx_control,
   pci_rx_rd,
   pci_rx_empty
 );
@@ -29,7 +29,7 @@ module pci_rx (
   output wire [1023:0]           pci_rx_data;
   output wire [127:0]            pci_rx_header;
   output wire [127:0]            pci_rx_be;
-  output wire [7:0]              pci_rx_count;
+  output wire [15:0]             pci_rx_control;
   input  wire                    pci_rx_rd;
   output wire                    pci_rx_empty;
 
@@ -48,7 +48,7 @@ module pci_rx (
   reg  [1023:0]  q_data;
   reg  [127:0]   q_header;
   reg  [127:0]   q_be;
-  reg  [7:0]     q_count;
+  reg  [7:0]     q_control;
 
   reg            pci_rx_wr;
   
@@ -108,12 +108,12 @@ fifo_be pci_rx_be_inst (
   .empty()               // output wire empty
 );
 
-fifo_count pci_rx_count_inst (
+fifo_control pci_rx_control_inst (
   .clk(clk),             // input wire clk
-  .din(q_count),         // input wire [7 : 0] din
+  .din(q_control),       // input wire [15 : 0] din
   .wr_en(pci_rx_wr),     // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
-  .dout(pci_rx_count),   // output wire [7 : 0] dout
+  .dout(pci_rx_control), // output wire [15 : 0] dout
   .full(),               // output wire full
   .empty()               // output wire empty
 );
@@ -138,7 +138,7 @@ ila_0 ila_0_inst (
 	.probe15(calc_blk_size),           // input wire [9:0]  probe0  
 	.probe16(q_data[63:0]),            // input wire [63:0]  probe0  
 	.probe17(q_be[31:0]),              // input wire [31:0]  probe0  
-	.probe18(q_count),                 // input wire [7:0]  probe0  
+	.probe18(q_control),               // input wire [15:0]  probe0  
 	.probe19(use_first_be),            // input wire [3:0]  probe0  
 	.probe20(use_last_be),             // input wire [3:0]  probe0  
 	.probe21(calc_be),                 // input wire [127:0]  probe0  
@@ -730,7 +730,8 @@ generate
           if (!req_type[3])
           begin
             q_be <= calc_be;
-            q_count <= calc_count;
+            q_control[7:0] <= calc_count;
+            q_control[15:8] <= m_axis_rx_tuser[9:2];
           end
         end
 
@@ -741,7 +742,8 @@ generate
           if (req_type[3])
           begin
             q_be <= calc_be;
-            q_count <= calc_count;
+            q_control[7:0] <= calc_count;
+            q_control[15:8] <= m_axis_rx_tuser[9:2];
           end
         end
 
