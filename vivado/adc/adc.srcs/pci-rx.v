@@ -524,9 +524,9 @@ function [7:0] last_be_to_count;
   begin
     case (be)
       4'b1111 : res = 4;
-      4'b1110 : res = 3;
-      4'b1100 : res = 2;
-      4'b1000 : res = 1;
+      4'b0111 : res = 3;
+      4'b0011 : res = 2;
+      4'b0001 : res = 1;
       4'b0000 : res = 0;
       default: res = 4;
     endcase

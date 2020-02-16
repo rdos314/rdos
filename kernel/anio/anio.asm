@@ -96,10 +96,6 @@ InitPciFound:
     or al,PCI_command_busmstr
     WritePciWord
 ;
-    mov cl,PCI_nbr_base_address0
-    ReadPciDword
-    test al,1
-;
     GetPciMsi
     jc InitPciDone
 ;
@@ -116,10 +112,12 @@ InitPciFound:
     mov es,di
     mov edi,OFFSET PciInt
     RequestMsiHandler
+    clc
 
 InitPciDone:
     ret
 InitPciAdapter   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -135,7 +133,41 @@ adc_thread_name	DB 'Xilinx ADC', 0
 adc_thread:
     int 3
     call InitPciAdapter
+    jc atDone
+;
+    mov cl,PCI_nbr_base_address0
+    ReadPciDword
+    test al,1
+    jnz atDone
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    xor ebx,ebx
+    mov si,ax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+;
+    and si,0FFFh
+    or dx,si
+    mov bx,anio_control_sel
+    mov ecx,1000h
+    CreateDataSelector16
+;
+    mov ds,bx
+    mov si,103h
+    lods word ptr ds:[si]
+    mov bx,ax
+    lods word ptr ds:[si]
+    mov cx,ax
+    lods word ptr ds:[si]
     int 3
+
+atDone:
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

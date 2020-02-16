@@ -174,6 +174,9 @@ generate
           calc_pos = q_pos;
           calc_remain_size = q_remain_size;
 
+          if (calc_blk_size > calc_remain_size)
+            calc_blk_size = calc_remain_size;
+
           calc_first_be = q_first_be;
           calc_last_be = q_last_be;
         end

@@ -301,7 +301,7 @@ generate
                 pci_tx_data[32 * reply_pos +: 32] <= local_rp_data;
               else
               begin
-                if ((reply_pos == 0) && req_address[2])
+                if ((reply_pos == 0) && calc_address[2])
                   pci_tx_data[31:0] <= sdram_rp_data[63:32];
                 else
                   pci_tx_data[32 * reply_pos +: 64] <= sdram_rp_data;
