@@ -53,7 +53,7 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module fifo_count (
+module fifo_control (
   clk,
   din,
   wr_en,
@@ -67,13 +67,13 @@ module fifo_count (
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 core_clk CLK" *)
 input wire clk;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA" *)
-input wire [7 : 0] din;
+input wire [15 : 0] din;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_EN" *)
 input wire wr_en;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_EN" *)
 input wire rd_en;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA" *)
-output wire [7 : 0] dout;
+output wire [15 : 0] dout;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE FULL" *)
 output wire full;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *)
@@ -83,11 +83,11 @@ output wire empty;
     .C_COMMON_CLOCK(1),
     .C_SELECT_XPM(0),
     .C_COUNT_TYPE(0),
-    .C_DATA_COUNT_WIDTH(5),
+    .C_DATA_COUNT_WIDTH(10),
     .C_DEFAULT_VALUE("BlankString"),
-    .C_DIN_WIDTH(8),
+    .C_DIN_WIDTH(16),
     .C_DOUT_RST_VAL("0"),
-    .C_DOUT_WIDTH(8),
+    .C_DOUT_WIDTH(16),
     .C_ENABLE_RLOCS(0),
     .C_FAMILY("kintex7"),
     .C_FULL_FLAGS_RST_VAL(0),
@@ -119,13 +119,13 @@ output wire empty;
     .C_PROG_EMPTY_THRESH_ASSERT_VAL(4),
     .C_PROG_EMPTY_THRESH_NEGATE_VAL(5),
     .C_PROG_EMPTY_TYPE(0),
-    .C_PROG_FULL_THRESH_ASSERT_VAL(15),
-    .C_PROG_FULL_THRESH_NEGATE_VAL(14),
+    .C_PROG_FULL_THRESH_ASSERT_VAL(511),
+    .C_PROG_FULL_THRESH_NEGATE_VAL(510),
     .C_PROG_FULL_TYPE(0),
-    .C_RD_DATA_COUNT_WIDTH(5),
-    .C_RD_DEPTH(16),
+    .C_RD_DATA_COUNT_WIDTH(10),
+    .C_RD_DEPTH(512),
     .C_RD_FREQ(1),
-    .C_RD_PNTR_WIDTH(4),
+    .C_RD_PNTR_WIDTH(9),
     .C_UNDERFLOW_LOW(0),
     .C_USE_DOUT_RST(0),
     .C_USE_ECC(0),
@@ -136,10 +136,10 @@ output wire empty;
     .C_USE_FWFT_DATA_COUNT(1),
     .C_VALID_LOW(0),
     .C_WR_ACK_LOW(0),
-    .C_WR_DATA_COUNT_WIDTH(5),
-    .C_WR_DEPTH(16),
+    .C_WR_DATA_COUNT_WIDTH(10),
+    .C_WR_DEPTH(512),
     .C_WR_FREQ(1),
-    .C_WR_PNTR_WIDTH(4),
+    .C_WR_PNTR_WIDTH(9),
     .C_WR_RESPONSE_LATENCY(1),
     .C_MSGON_VAL(1),
     .C_ENABLE_RST_SYNC(1),
@@ -295,12 +295,12 @@ output wire empty;
     .din(din),
     .wr_en(wr_en),
     .rd_en(rd_en),
-    .prog_empty_thresh(4'B0),
-    .prog_empty_thresh_assert(4'B0),
-    .prog_empty_thresh_negate(4'B0),
-    .prog_full_thresh(4'B0),
-    .prog_full_thresh_assert(4'B0),
-    .prog_full_thresh_negate(4'B0),
+    .prog_empty_thresh(9'B0),
+    .prog_empty_thresh_assert(9'B0),
+    .prog_empty_thresh_negate(9'B0),
+    .prog_full_thresh(9'B0),
+    .prog_full_thresh_assert(9'B0),
+    .prog_full_thresh_negate(9'B0),
     .int_clk(1'D0),
     .injectdbiterr(1'D0),
     .injectsbiterr(1'D0),

@@ -52,13 +52,13 @@
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT fifo_count
+COMPONENT fifo_control
   PORT (
     clk : IN STD_LOGIC;
-    din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+    din : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
     wr_en : IN STD_LOGIC;
     rd_en : IN STD_LOGIC;
-    dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+    dout : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
     full : OUT STD_LOGIC;
     empty : OUT STD_LOGIC
   );
@@ -69,7 +69,7 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : fifo_count
+your_instance_name : fifo_control
   PORT MAP (
     clk => clk,
     din => din,
@@ -81,7 +81,7 @@ your_instance_name : fifo_count
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file fifo_count.vhd when simulating
--- the core, fifo_count. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file fifo_control.vhd when simulating
+-- the core, fifo_control. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 
