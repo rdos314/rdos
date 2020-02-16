@@ -98,6 +98,12 @@ module pci_app (
   wire [7:0]       sdram_wr_be;
   wire [63:0]      sdram_wr_data;
 
+  reg              adc_wr;
+  reg  [15:0]      adc_wr_adr;
+  reg  [19:0]      adc_wr_data;
+  reg  [15:0]      adc_rd_adr;
+  wire [19:0]      adc_rd_data;
+
   //-------------------------------------------------------
   // Configuration (CFG) Interface
   //-------------------------------------------------------
@@ -324,6 +330,16 @@ pcie pcie_i
   assign pl_directed_link_auton = 1'b0;            // Zero out link autonomous input
   assign pl_upstream_prefer_deemph = 1'b1;         // Zero out preferred de-emphasis of upstream port
 
+bram_adc bram_adc_inst (
+  .clka(user_clk),     // input wire clka
+  .wea(adc_wr),        // input wire [0 : 0] wea
+  .addra(adc_wr_adr),  // input wire [15 : 0] addra
+  .dina(adc_rd_data),  // input wire [19 : 0] dina
+  .clkb(user_clk),     // input wire clkb
+  .addrb(adc_rd_adr),  // input wire [15 : 0] addrb
+  .doutb(adc_rd_data)  // output wire [19 : 0] doutb
+);
+
 pci_rx pci_rx_inst (
 
     .clk(user_clk),                             // I
@@ -436,6 +452,11 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
+      adc_wr = 0;
+      adc_wr_adr = 0;
+      adc_wr_data = 0;
+      adc_rd_adr = 0;
+
       if (user_reset)
         bar_control <= 0;
       else

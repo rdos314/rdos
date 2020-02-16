@@ -82,9 +82,9 @@ module pcie_core_top # (
   parameter         AER_CAP_ON = "FALSE",
   parameter         AER_CAP_PERMIT_ROOTERR_UPDATE = "FALSE",
 
-  parameter [31:0]  BAR0 = 32'hFFF80000,
-  parameter [31:0]  BAR1 = 32'h00000000,
-  parameter [31:0]  BAR2 = 32'h00000000,
+  parameter [31:0]  BAR0 = 32'hFFFFF000,
+  parameter [31:0]  BAR1 = 32'hFFF80000,
+  parameter [31:0]  BAR2 = 32'hFFF80000,
   parameter [31:0]  BAR3 = 32'h00000000,
   parameter [31:0]  BAR4 = 32'h00000000,
   parameter [31:0]  BAR5 = 32'h00000000,
