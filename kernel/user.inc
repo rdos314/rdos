@@ -3704,6 +3704,12 @@ HasUsbResetFailed      MACRO
         UserGate has_usb_reset_failed_nr
                                                 ENDM
 
+;   OUT NC          Fatal error
+HasUsbCardReaderError      MACRO
+        UserGate has_usb_card_reader_error_nr
+                                                ENDM
+
+
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   OUT BX          Handle

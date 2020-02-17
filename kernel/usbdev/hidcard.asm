@@ -133,6 +133,7 @@ card_state          DB ?
 card_setup          DB ?
 card_active         DB ?
 card_was_off        DB ?
+fatal_error         DB ?
 
 track2              DB 40 DUP(?)
 
@@ -1008,6 +1009,10 @@ hcReset:
 hcResetHid:
     mov ds:card_was_off,0
     mov es,ebx
+    mov ax,es
+    or ax,ax
+    jz hcFatalError
+;
     mov bx,es:hid_device_sel
     ResetHid
 ;
@@ -1024,10 +1029,6 @@ hcResetHid:
 ;
     mov es,ebx
     jmp hcInit
-
-hcFatalError:
-    int 3
-    jmp hcOff
 
 hcNotReset:
     mov al,ds:card_setup
@@ -1050,9 +1051,12 @@ hcOffWait:
 ;
     sub cx,1
     jnz hcOffWait
-;
-    int 3
-    jmp hcOff
+
+hcFatalError:
+    mov ds:fatal_error,1
+    mov ax,100
+    WaitMilliSec
+    jmp hcFatalError
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2539,6 +2543,36 @@ usb_detach  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Has USB card error
+;
+;           DESCRIPTION:    Has usb card error
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_usb_card_reader_error_name	DB 'Has USB Cardreader error', 0
+
+has_usb_card_reader_error	Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,ebx
+    mov al,ds:fatal_error
+    stc
+    or al,al
+    jz hucreDone
+;
+    clc
+
+hucreDone:
+    pop ebx
+    pop ds
+    ret
+has_usb_card_reader_error	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -2568,6 +2602,7 @@ Init    Proc far
     mov ds:mcp_card_thread,0
     mov ds:mcp_pcb,0
     mov ds:mcp_rec_start,0
+    mov ds:fatal_error,0
 ;
     mov eax,cs
     mov ds,eax
@@ -2584,6 +2619,12 @@ Init    Proc far
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    mov esi,OFFSET has_usb_card_reader_error
+    mov edi,OFFSET has_usb_card_reader_error_name
+    xor dx,dx
+    mov ax,has_usb_card_reader_error_nr
+    RegisterBimodalUserGate
     ret
 Init    Endp
         

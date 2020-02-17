@@ -3515,6 +3515,11 @@
     CarryToBool \
     __value [__eax]
 
+#pragma aux RdosHasUsbCardReaderError = \
+    CallGate_has_usb_card_reader_error \
+    CarryToBool \
+    __value [__eax]
+
 #pragma aux RdosGetUsbDevice = \
     CallGate_get_usb_device \
     ValidateEax \
