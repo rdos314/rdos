@@ -32,7 +32,7 @@ module adc_app (
 // local
   reg                    adc_wr;
   reg  [15:0]            adc_wr_adr;
-  reg  [19:0]            adc_rd_data;
+  reg  [19:0]            adc_wr_data;
   reg  [15:0]            adc_rd_adr;
   wire [19:0]            adc_rd_data;
 
@@ -50,7 +50,22 @@ bram_adc bram_adc_inst (
 
 
 ila_3 ila3_inst (
-    .clk ( clk ),                         // I
+   .clk ( clk ),                  // I
+   .probe0(address),             // input wire [16:0]  probe1 
+   .probe1(rd),                  // input wire [0:0]  probe1 
+   .probe2(rp),                  // input wire [0:0]  probe1 
+   .probe3(rp_address),          // input wire [4:0]  probe1 
+   .probe4(rp_data),             // input wire [31:0]  probe1 
+   .probe5(wr),                  // input wire [0:0]  probe1 
+   .probe6(wr_be),               // input wire [3:0]  probe1 
+   .probe7(wr_data),             // input wire [31:0]  probe1 
+   .probe8(ack),                 // input wire [0:0]  probe1 
+   .probe9(adc_wr),              // input wire [0:0]  probe1 
+   .probe10(adc_wr_adr),         // input wire [15:0]  probe1 
+   .probe11(adc_wr_data),        // input wire [19:0]  probe1 
+   .probe12(adc_rd_adr),         // input wire [15:0]  probe1 
+   .probe13(adc_rd_data),        // input wire [19:0]  probe1 
+   .probe14(curr_data)           // input wire [19:0]  probe1 
 );
 
 
@@ -75,17 +90,34 @@ generate
           curr_data[40:21] = adc_rd_data;
           curr_data[63:41] = 0;
 
-          if (wr_be[0])
-            curr_data[7:0] = wr_data[7:0];
+          if (address[0])
+          begin
+            if (wr_be[0])
+              curr_data[39:32] = wr_data[7:0];
 
-          if (wr_be[1])
-            curr_data[15:8] = wr_data[15:8];
+            if (wr_be[1])
+              curr_data[47:40] = wr_data[15:8];
  
-          if (wr_be[2])
-            curr_data[23:16] = wr_data[23:16];
+            if (wr_be[2])
+              curr_data[55:48] = wr_data[23:16];
 
-          if (wr_be[3])
-            curr_data[31:24] = wr_data[31:24];
+            if (wr_be[3])
+              curr_data[63:56] = wr_data[31:24];
+          end
+          else
+          begin
+            if (wr_be[0])
+              curr_data[7:0] = wr_data[7:0];
+
+            if (wr_be[1])
+              curr_data[15:8] = wr_data[15:8];
+ 
+            if (wr_be[2])
+              curr_data[23:16] = wr_data[23:16];
+
+            if (wr_be[3])
+              curr_data[31:24] = wr_data[31:24];
+          end
         end
       end
 
@@ -93,7 +125,7 @@ generate
       begin
         if (adc_rd_adr == address[16:1])
         begin
-          rp_adr <= address[4:0];
+          rp_address <= address[4:0];
           rp <= 1;
 
           if (address[0])
@@ -138,6 +170,7 @@ generate
       end
     end
   end
+end
 endgenerate
 
 endmodule

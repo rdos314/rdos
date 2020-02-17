@@ -127,7 +127,7 @@ pci_app pci_app_inst (
     .user_lnk_width(user_lnk_width),
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
-    .bar_control(bar_control)
+    .bar_control(bar_control),
 
     .bar1_address(bar1_address),
     .bar1_rd(bar1_rd),

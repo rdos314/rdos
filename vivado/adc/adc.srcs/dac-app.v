@@ -10,7 +10,8 @@ module dac_app (
   rp_data,
   wr,
   wr_be,
-  wr_data
+  wr_data,
+  ack
 );
 
   input wire             clk;
@@ -30,14 +31,14 @@ module dac_app (
 // FF
   reg                    dac_wr;
   reg  [15:0]            dac_wr_adr;
-  reg  [19:0]            dac_rd_data;
+  reg  [19:0]            dac_wr_data;
   reg  [15:0]            dac_rd_adr;
 
 // local
-  wire [19:0]            adc_rd_data;
+  wire [19:0]            dac_rd_data;
   reg  [63:0]            curr_data;
 
-bram_dac bram_adc_inst (
+bram_dac bram_dac_inst (
   .clka(clk),          // input wire clka
   .wea(dac_wr),        // input wire [0 : 0] wea
   .addra(dac_wr_adr),  // input wire [15 : 0] addra
@@ -48,7 +49,7 @@ bram_dac bram_adc_inst (
 );
 
 generate
-  begin : dac_app
+begin : dac_app
 
   always @ ( posedge clk ) 
   begin
@@ -68,17 +69,34 @@ generate
           curr_data[40:21] = dac_rd_data;
           curr_data[63:41] = 0;
 
-          if (wr_be[0])
-            curr_data[7:0] = wr_data[7:0];
+          if (address[0])
+          begin
+            if (wr_be[0])
+              curr_data[39:32] = wr_data[7:0];
 
-          if (wr_be[1])
-            curr_data[15:8] = wr_data[15:8];
+            if (wr_be[1])
+              curr_data[47:40] = wr_data[15:8];
  
-          if (wr_be[2])
-            curr_data[23:16] = wr_data[23:16];
+            if (wr_be[2])
+              curr_data[55:48] = wr_data[23:16];
 
-          if (wr_be[3])
-            curr_data[31:24] = wr_data[31:24];
+            if (wr_be[3])
+              curr_data[63:56] = wr_data[31:24];
+          end
+          else
+          begin
+            if (wr_be[0])
+              curr_data[7:0] = wr_data[7:0];
+
+            if (wr_be[1])
+              curr_data[15:8] = wr_data[15:8];
+ 
+            if (wr_be[2])
+              curr_data[23:16] = wr_data[23:16];
+
+            if (wr_be[3])
+              curr_data[31:24] = wr_data[31:24];
+          end
         end
       end
 
@@ -86,7 +104,7 @@ generate
       begin
         if (dac_rd_adr == address[16:1])
         begin
-          rp_adr <= address[4:0];
+          rp_address <= address[4:0];
           rp <= 1;
 
           if (address[0])
@@ -131,6 +149,7 @@ generate
       end
     end
   end
+end
 endgenerate
 
 endmodule

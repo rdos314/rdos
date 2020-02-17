@@ -135,7 +135,7 @@ adc_thread:
     call InitPciAdapter
     jc atDone
 ;
-    mov cl,PCI_nbr_base_address0
+    mov cl,PCI_nbr_base_address1
     ReadPciDword
     test al,1
     jnz atDone
@@ -159,6 +159,8 @@ adc_thread:
 ;
     mov ds,bx
     mov si,103h
+    mov eax,6633AABBCCh
+    mov ds:[si],eax
     lods dword ptr ds:[si]
     mov ebx,eax
     lods dword ptr ds:[si]

@@ -713,8 +713,8 @@ generate
         begin
           if (has_header_low)
           begin
-            use_first_be = loaded_header[39:32];
-            use_last_be = loaded_header[47:40];
+            use_first_be = loaded_header[35:32];
+            use_last_be = loaded_header[39:36];
             calc_be = first_and_last_to_be(use_first_be, use_last_be, req_len);
             calc_count = first_and_last_to_count(use_first_be, use_last_be, req_len);
           end
