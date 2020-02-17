@@ -14,26 +14,68 @@ module pci_app (
     user_lnk_width,
     cfg_interrupt_msienable,
 
-    bar_control
+    bar_control,
+
+    bar1_address,
+    bar1_rd,
+    bar1_rp,
+    bar1_rp_address,
+    bar1_rp_data,
+    bar1_wr,
+    bar1_wr_be,
+    bar1_wr_data,
+    bar1_ack,
+
+    bar2_address,
+    bar2_rd,
+    bar2_rp,
+    bar2_rp_address,
+    bar2_rp_data,
+    bar2_wr,
+    bar2_wr_be,
+    bar2_wr_data,
+    bar2_ack
 );
 
-  output  [7:0]     pci_exp_txp;
-  output  [7:0]     pci_exp_txn;
-  input   [7:0]     pci_exp_rxp;
-  input   [7:0]     pci_exp_rxn;
+  output  [7:0]       pci_exp_txp;
+  output  [7:0]       pci_exp_txn;
+  input   [7:0]       pci_exp_rxp;
+  input   [7:0]       pci_exp_rxn;
 
-  input             sys_clk;
-  input             sys_rst_n;
+  input               sys_clk;
+  input               sys_rst_n;
   
-  output            user_clk;
-  output            user_reset;
-  output            user_lnk_up;
+  output              user_clk;
+  output              user_reset;
+  output              user_lnk_up;
   
-  output            user_lnk_rate;
-  output   [1:0]    user_lnk_width;
-  output            cfg_interrupt_msienable;
+  output              user_lnk_rate;
+  output   [1:0]      user_lnk_width;
+  output              cfg_interrupt_msienable;
 
-  output reg [31:0] bar_control;
+  output reg [31:0]   bar_control;
+
+
+  output wire [16:0]  bar1_address;
+  output wire         bar1_rd;
+  input  wire         bar1_rp;
+  input  wire [4:0]   bar1_rp_address;
+  input  wire [31:0]  bar1_rp_data;
+  output wire         bar1_wr;
+  output wire [3:0]   bar1_wr_be;
+  output wire [31:0]  bar1_wr_data;
+  input  wire         bar1_ack;
+
+  output wire [16:0]  bar2_address;
+  output wire         bar2_rd;
+  input  wire         bar2_rp;
+  input  wire [4:0]   bar2_rp_address;
+  input  wire [31:0]  bar2_rp_data;
+  output wire         bar2_wr;
+  output wire [3:0]   bar2_wr_be;
+  output wire [31:0]  bar2_wr_data;
+  input  wire         bar2_ack;
+
 
 // Wire Declarations
 
@@ -76,33 +118,18 @@ module pci_app (
   wire             pci_tx_wr;
   wire             pci_tx_full;
 
+
 // local memory
 
-  wire [4:0]       local_address;
-  wire             local_rd;
-  reg              local_rp;
-  reg  [4:0]       local_rp_address;
-  reg  [31:0]      local_rp_data;
-  wire             local_wr;
-  wire [3:0]       local_wr_be;
-  wire [31:0]      local_wr_data;
-
-// SDRAM memory
-
-  wire [15:0]      sdram_address;
-  wire             sdram_rd;
-  reg              sdram_rp;
-  reg  [3:0]       sdram_rp_address;
-  reg  [63:0]      sdram_rp_data;
-  wire             sdram_wr;
-  wire [7:0]       sdram_wr_be;
-  wire [63:0]      sdram_wr_data;
-
-  reg              adc_wr;
-  reg  [15:0]      adc_wr_adr;
-  reg  [19:0]      adc_wr_data;
-  reg  [15:0]      adc_rd_adr;
-  wire [19:0]      adc_rd_data;
+  wire [9:0]       bar0_address;
+  wire             bar0_rd;
+  reg              bar0_rp;
+  reg  [4:0]       bar0_rp_address;
+  reg  [31:0]      bar0_rp_data;
+  wire             bar0_wr;
+  wire [3:0]       bar0_wr_be;
+  wire [31:0]      bar0_wr_data;
+  reg              bar0_ack;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -330,16 +357,6 @@ pcie pcie_i
   assign pl_directed_link_auton = 1'b0;            // Zero out link autonomous input
   assign pl_upstream_prefer_deemph = 1'b1;         // Zero out preferred de-emphasis of upstream port
 
-bram_adc bram_adc_inst (
-  .clka(user_clk),     // input wire clka
-  .wea(adc_wr),        // input wire [0 : 0] wea
-  .addra(adc_wr_adr),  // input wire [15 : 0] addra
-  .dina(adc_rd_data),  // input wire [19 : 0] dina
-  .clkb(user_clk),     // input wire clkb
-  .addrb(adc_rd_adr),  // input wire [15 : 0] addrb
-  .doutb(adc_rd_data)  // output wire [19 : 0] doutb
-);
-
 pci_rx pci_rx_inst (
 
     .clk(user_clk),                             // I
@@ -397,53 +414,35 @@ adc_mem adc_mem_inst (
     .pci_tx_wr( pci_tx_wr),                     // O
     .pci_tx_full( pci_tx_full),                 // I
 
-    .sdram_address( sdram_address),             // O
-    .sdram_rd( sdram_rd),                       // O
-    .sdram_rp( sdram_rp),                       // I
-    .sdram_rp_address( sdram_rp_address),       // I
-    .sdram_rp_data( sdram_rp_data),             // I
-    .sdram_wr( sdram_wr),                       // O
-    .sdram_wr_be( sdram_wr_be),                 // O
-    .sdram_wr_data( sdram_wr_data),             // O
+    .bar0_address( bar0_address),               // O
+    .bar0_rd( bar0_rd),                         // O
+    .bar0_rp( bar0_rp),                         // I
+    .bar0_rp_address( bar0_rp_address),         // I
+    .bar0_rp_data( bar0_rp_data),               // I
+    .bar0_wr( bar0_wr),                         // O
+    .bar0_wr_be( bar0_wr_be),                   // O
+    .bar0_wr_data( bar0_wr_data),               // O
+    .bar0_ack( bar0_ack),                       // I
 
-    .local_address( local_address),             // O
-    .local_rd( local_rd),                       // O
-    .local_rp( local_rp),                       // I
-    .local_rp_address( local_rp_address),       // I
-    .local_rp_data( local_rp_data),             // I
-    .local_wr( local_wr),                       // O
-    .local_wr_be( local_wr_be),                 // O
-    .local_wr_data( local_wr_data)              // O
-);
+    .bar1_address( bar1_address),               // O
+    .bar1_rd( bar1_rd),                         // O
+    .bar1_rp( bar1_rp),                         // I
+    .bar1_rp_address( bar1_rp_address),         // I
+    .bar1_rp_data( bar1_rp_data),               // I
+    .bar1_wr( bar1_wr),                         // O
+    .bar1_wr_be( bar1_wr_be),                   // O
+    .bar1_wr_data( bar1_wr_data),               // O
+    .bar1_ack( bar1_ack),                       // I
 
-ila_3 ila3_inst (
-    .clk ( user_clk ),                         // I
-    .probe0 ( m_axis_rx_tvalid ),              // I (1)
-    .probe1 ( m_axis_rx_tlast ),               // I (1)
-    .probe2 ( m_axis_rx_tready ),              // I (1)
-    .probe3 ( m_axis_rx_tkeep ),               // I (16)
-    .probe4 ( m_axis_rx_tdata ),               // I (128)
-    .probe5 ( s_axis_tx_tvalid ),              // I (1)
-    .probe6 ( s_axis_tx_tlast ),               // I (1)
-    .probe7 ( s_axis_tx_tready ),              // I (1)
-    .probe8 ( s_axis_tx_tkeep ),               // I (16)
-    .probe9 ( s_axis_tx_tdata ),               // I (128)
-    .probe10 ( local_address ),                // I (5)
-    .probe11 ( local_rd ),                     // I (1)
-    .probe12 ( local_rp ),                     // I (1)
-    .probe13 ( local_rp_address ),             // I (5)
-    .probe14 ( local_rp_data ),                // I (32)
-    .probe15 ( local_wr ),                     // I (1)
-    .probe16 ( local_wr_be ),                  // I (4)
-    .probe17 ( local_wr_data ),                // I (32)
-    .probe18 ( sdram_address ),                // I (16)
-    .probe19 ( sdram_rd ),                     // I (1)
-    .probe20 ( sdram_rp ),                     // I (1)
-    .probe21 ( sdram_rp_address ),             // I (4)
-    .probe22 ( sdram_rp_data ),                // I (64)
-    .probe23 ( sdram_wr ),                     // I (1)
-    .probe24 ( sdram_wr_be ),                  // I (8)
-    .probe25 ( sdram_wr_data )                 // I (64)
+    .bar2_address( bar2_address),               // O
+    .bar2_rd( bar2_rd),                         // O
+    .bar2_rp( bar2_rp),                         // I
+    .bar2_rp_address( bar2_rp_address),         // I
+    .bar2_rp_data( bar2_rp_data),               // I
+    .bar2_wr( bar2_wr),                         // O
+    .bar2_wr_be( bar2_wr_be),                   // O
+    .bar2_wr_data( bar2_wr_data),               // O
+    .bar2_ack( bar2_ack)                        // I
 );
 
 
@@ -452,63 +451,44 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      adc_wr = 0;
-      adc_wr_adr = 0;
-      adc_wr_data = 0;
-      adc_rd_adr = 0;
-
       if (user_reset)
         bar_control <= 0;
       else
       begin
-        if (local_rd)
+        if (bar0_rd)
         begin
-          local_rp_address <= local_address[4:0];
-          case (local_address)
-            0: local_rp_data <= bar_control;
-            default: local_rp_data <= 31'h11223344;
+          bar0_rp_address <= bar0_address[4:0];
+          case (bar0_address)
+            0: bar0_rp_data <= bar_control;
+            default: bar0_rp_data <= 31'h11223344;
           endcase     
-          local_rp <= 1;
+          bar0_rp <= 1;
         end
         else
-          local_rp <= 0;
+          bar0_rp <= 0;
 
-        if (local_wr)
+        if (bar0_wr)
         begin
-          local_rp_address <= local_address[4:0];
-          case (local_address)
+          case (bar0_address)
             0: 
             begin
-              if (local_wr_be[0])
-                bar_control[7:0] <= local_wr_data[7:0];
+              if (bar0_wr_be[0])
+                bar_control[7:0] <= bar0_wr_data[7:0];
 
-              if (local_wr_be[1])
-                bar_control[15:8] <= local_wr_data[15:8];
+              if (bar0_wr_be[1])
+                bar_control[15:8] <= bar0_wr_data[15:8];
  
-              if (local_wr_be[2])
-                bar_control[23:16] <= local_wr_data[23:16];
+              if (bar0_wr_be[2])
+                bar_control[23:16] <= bar0_wr_data[23:16];
 
-              if (local_wr_be[3])
-                bar_control[31:24] <= local_wr_data[31:24];
+              if (bar0_wr_be[3])
+                bar_control[31:24] <= bar0_wr_data[31:24];
             end
           endcase
-        end
- 
-        if (sdram_rd)
-        begin
-          sdram_rp_address <= sdram_address[3:0];
-          sdram_rp_data[7:0] <= 8'h10;
-          sdram_rp_data[15:8] <= 8'h32;
-          sdram_rp_data[23:16] <= 8'h54;
-          sdram_rp_data[31:24] <= 8'h76;
-          sdram_rp_data[39:32] <= 8'h98;
-          sdram_rp_data[47:40] <= 8'hba;
-          sdram_rp_data[55:48] <= 8'hdc;
-          sdram_rp_data[63:56] <= 8'hfe;
-          sdram_rp <= 1;
+          bar0_ack <= 1;
         end
         else
-          sdram_rp <= 0;
+          bar0_ack <= 0;
       end
     end
   end

@@ -81,15 +81,35 @@ module adc (
 
 // Register Declaration
 
-  wire                                        user_clk;
-  wire                                        user_reset;
-  wire                                        user_lnk_up;
-  wire                                        user_lnk_rate;
-  wire [1:0]                                  user_lnk_width;
-  wire                                        cfg_interrupt_msienable;  
-  wire                                        sample_clk;  
-  wire                                        clk;  
-  wire [31:0]                                 bar_control;
+  wire                   user_clk;
+  wire                   user_reset;
+  wire                   user_lnk_up;
+  wire                   user_lnk_rate;
+  wire [1:0]             user_lnk_width;
+  wire                   cfg_interrupt_msienable;  
+  wire                   sample_clk;  
+  wire                   clk;  
+  wire [31:0]            bar_control;
+
+  wire [16:0]            bar1_address;
+  wire                   bar1_rd;
+  wire                   bar1_rp;
+  wire [4:0]             bar1_rp_address;
+  wire [31:0]            bar1_rp_data;
+  wire                   bar1_wr;
+  wire [3:0]             bar1_wr_be;
+  wire [31:0]            bar1_wr_data;
+  wire                   bar1_ack;
+
+  wire [16:0]            bar2_address;
+  wire                   bar2_rd;
+  wire                   bar2_rp;
+  wire [4:0]             bar2_rp_address;
+  wire [31:0]            bar2_rp_data;
+  wire                   bar2_wr;
+  wire [3:0]             bar2_wr_be;
+  wire [31:0]            bar2_wr_data;
+  wire                   bar2_ack;
 
 pci_app pci_app_inst (
     .pci_exp_txp(pci_exp_txp),
@@ -108,12 +128,64 @@ pci_app pci_app_inst (
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
     .bar_control(bar_control)
+
+    .bar1_address(bar1_address),
+    .bar1_rd(bar1_rd),
+    .bar1_rp(bar1_rp),
+    .bar1_rp_address(bar1_rp_address),
+    .bar1_rp_data(bar1_rp_data),
+    .bar1_wr(bar1_wr),
+    .bar1_wr_be(bar1_wr_be),
+    .bar1_wr_data(bar1_wr_data),
+    .bar1_ack(bar1_ack),
+
+    .bar2_address(bar2_address),
+    .bar2_rd(bar2_rd),
+    .bar2_rp(bar2_rp),
+    .bar2_rp_address(bar2_rp_address),
+    .bar2_rp_data(bar2_rp_data),
+    .bar2_wr(bar2_wr),
+    .bar2_wr_be(bar2_wr_be),
+    .bar2_wr_data(bar2_wr_data),
+    .bar2_ack(bar2_ack)
 );
 
-// sample_700 sample_inst  (
-//    .clk_out1(sample_clk),     // output clk_out1
-//    .clk_in1(clk)          // input clk_in1
-//    );
+adc_app adc_app_inst (
+    .clk(user_clk),
+    .reset(user_reset),
+    .sample_clk(sample_clk),
+
+    .address(bar1_address),
+    .rd(bar1_rd),
+    .rp(bar1_rp),
+    .rp_address(bar1_rp_address),
+    .rp_data(bar1_rp_data),
+    .wr(bar1_wr),
+    .wr_be(bar1_wr_be),
+    .wr_data(bar1_wr_data),
+    .ack(bar1_ack)
+);
+
+dac_app dac_app_inst (
+    .clk(user_clk),
+    .reset(user_reset),
+    .sample_clk(sample_clk),
+
+    .address(bar2_address),
+    .rd(bar2_rd),
+    .rp(bar2_rp),
+    .rp_address(bar2_rp_address),
+    .rp_data(bar2_rp_data),
+    .wr(bar2_wr),
+    .wr_be(bar2_wr_be),
+    .wr_data(bar2_wr_data),
+    .ack(bar2_ack)
+);
+
+ sample_700 sample_inst  (
+    .clk_out1(sample_clk),     // output clk_out1
+    .clk_in1(clk)          // input clk_in1
+    );
 
  //-----------------------------I/O BUFFERS------------------------//
 

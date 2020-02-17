@@ -14,27 +14,35 @@ module adc_mem (
   pci_tx_wr,
   pci_tx_full,
 
-  sdram_address,
+  bar0_address,
+  bar0_rd,
+  bar0_rp,
+  bar0_rp_address,
+  bar0_rp_data,
+  bar0_wr,
+  bar0_wr_be,
+  bar0_wr_data,
+  bar0_ack,
 
-  sdram_rd,
-  sdram_rp,
-  sdram_rp_address,
-  sdram_rp_data,
+  bar1_address,
+  bar1_rd,
+  bar1_rp,
+  bar1_rp_address,
+  bar1_rp_data,
+  bar1_wr,
+  bar1_wr_be,
+  bar1_wr_data,
+  bar1_ack,
 
-  sdram_wr,
-  sdram_wr_be,
-  sdram_wr_data,
-
-  local_address,
-
-  local_rd,
-  local_rp,
-  local_rp_address,
-  local_rp_data,
-
-  local_wr,
-  local_wr_be,
-  local_wr_data
+  bar2_address,
+  bar2_rd,
+  bar2_rp,
+  bar2_rp_address,
+  bar2_rp_data,
+  bar2_wr,
+  bar2_wr_be,
+  bar2_wr_data,
+  bar2_ack
 );
 
   input                          clk;
@@ -52,27 +60,35 @@ module adc_mem (
   output reg                     pci_tx_wr;
   input  wire                    pci_tx_full;
 
-  output reg  [15:0]             sdram_address;
+  output reg  [9:0]              bar0_address;
+  output reg                     bar0_rd;
+  input  wire                    bar0_rp;
+  input  wire [4:0]              bar0_rp_address;
+  input  wire [31:0]             bar0_rp_data;
+  output reg                     bar0_wr;
+  output reg  [3:0]              bar0_wr_be;
+  output reg  [31:0]             bar0_wr_data;
+  input  wire                    bar0_ack;
 
-  output reg                     sdram_rd;
-  input  wire                    sdram_rp;
-  input  wire [3:0]              sdram_rp_address;
-  input  wire [63:0]             sdram_rp_data;
+  output reg  [16:0]             bar1_address;
+  output reg                     bar1_rd;
+  input  wire                    bar1_rp;
+  input  wire [4:0]              bar1_rp_address;
+  input  wire [31:0]             bar1_rp_data;
+  output reg                     bar1_wr;
+  output reg  [3:0]              bar1_wr_be;
+  output reg  [31:0]             bar1_wr_data;
+  input  wire                    bar1_ack;
 
-  output reg                     sdram_wr;
-  output reg  [7:0]              sdram_wr_be;
-  output reg  [63:0]             sdram_wr_data;
-
-  output reg  [4:0]              local_address;
-
-  output reg                     local_rd;
-  input  wire                    local_rp;
-  input  wire [4:0]              local_rp_address;
-  input  wire [31:0]             local_rp_data;
-
-  output reg                     local_wr;
-  output reg  [3:0]              local_wr_be;
-  output reg  [31:0]             local_wr_data;
+  output reg  [16:0]             bar2_address;
+  output reg                     bar2_rd;
+  input  wire                    bar2_rp;
+  input  wire [4:0]              bar2_rp_address;
+  input  wire [31:0]             bar2_rp_data;
+  output reg                     bar2_wr;
+  output reg  [3:0]              bar2_wr_be;
+  output reg  [31:0]             bar2_wr_data;
+  input  wire                    bar2_ack;
 
 
 // FF
@@ -88,20 +104,22 @@ module adc_mem (
   reg  [18:0]      calc_address;
   reg  [9:0]       calc_len;
   reg  [4:0]       calc_pos;
+  reg  [2:0]       calc_bar;
 
   reg  [18:0]      curr_address;
   reg  [9:0]       curr_len;
   reg  [4:0]       curr_pos;
 
-  reg              is_local;
   reg              is_last_data;
   reg              is_last_reply;
   reg              has_reply;
+  reg              has_ack;
   reg  [4:0]       reply_pos;
 
   wire [9:0]       req_len = pci_rx_header[9:0];
   wire [7:0]       req_type = pci_rx_header[31:24];
   wire [63:0]      req_address = pci_rx_header[95:64];
+  wire [7:0]       req_bar = pci_rx_control[15:8];
 
 ila_1 ila_1_inst (
   .clk(clk),                              // input wire clk
@@ -123,12 +141,31 @@ ila_1 ila_1_inst (
   .probe15(calc_address),                 // input wire [18:0]  probe2
   .probe16(calc_len),                     // input wire [9:0]  probe2
   .probe17(calc_pos),                     // input wire [4:0]  probe2
-  .probe18(is_local),                     // input wire [0:0]  probe2
+  .probe18(has_ack),                      // input wire [0:0]  probe2
   .probe19(is_last_data),                 // input wire [0:0]  probe2
   .probe20(is_last_reply),                // input wire [0:0]  probe2
   .probe21(has_reply),                    // input wire [0:0]  probe2
   .probe22(reply_pos)                     // input wire [4:0]  probe2
 );
+
+function [2:0] decode_bar;
+  input [7:0] bar;
+  reg [2:0] res;
+  begin
+    res = 7;
+
+    if (bar[0])
+      res = 0;
+
+    if (bar[1])
+      res = 1;
+
+    if (bar[2])
+      res = 2;
+
+    decode_bar = res;
+  end
+endfunction
 
 generate
   begin : mem
@@ -152,34 +189,54 @@ generate
             else
               curr_address = req_address[18:0];
 
-            if (curr_address < 128)
-            begin
-              if (local_rp)            
+            case (decode_bar(req_bar))
+              0:
               begin
-                curr_pos = local_rp_address - req_address[6:2];
-                if (curr_pos + 1 == req_len)
-                  pci_rx_rd = 1;
+                if (bar0_rp)            
+                begin
+                  curr_pos = bar0_rp_address - req_address[6:2];
+                  if (curr_pos + 1 == req_len)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
                 else
                   pci_rx_rd = 0;
               end
-              else
-                pci_rx_rd = 0;
-            end
-            else
-            begin
-              if (sdram_rp)
-              begin
-                curr_pos[4:1] = sdram_rp_address - req_address[6:3];
-                curr_pos[0] = 0;
 
-                if (curr_pos + 2 >= req_len)
-                  pci_rx_rd = 1;
+              1:
+              begin
+                if (bar1_rp)            
+                begin
+                  curr_pos = bar1_rp_address - req_address[6:2];
+                  if (curr_pos + 1 == req_len)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
                 else
                   pci_rx_rd = 0;
               end
-              else
-                pci_rx_rd = 0;
-            end
+
+              2:
+              begin
+                if (bar2_rp)            
+                begin
+                  curr_pos = bar2_rp_address - req_address[6:2];
+                  if (curr_pos + 1 == req_len)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              default:
+              begin
+                pci_rx_rd = 1;
+              end
+            endcase
           end
 
           8'b010_00000,
@@ -195,21 +252,11 @@ generate
               curr_address = req_address[18:0];
               curr_len = req_len;
             end
-  
-            if (curr_address < 128)
-            begin
-              if (curr_len <= 1)
-                pci_rx_rd = 1;
-              else
-                pci_rx_rd = 0;
-            end
+
+            if (curr_len <= 1)
+              pci_rx_rd = 1;
             else
-            begin
-              if (curr_len <= 2)
-                pci_rx_rd = 1;
-              else
-                pci_rx_rd = 0;
-             end
+              pci_rx_rd = 0;
           end
 
           default:
@@ -226,8 +273,8 @@ generate
       calc_len = 0;
       calc_pos = 0;
 
-      is_local = 0;
       has_reply = 0;
+      has_ack = 0;
       is_last_reply = 0;
       is_last_data = 0;
       reply_pos = 0;
@@ -247,39 +294,56 @@ generate
           calc_pos = 0;
         end
 
-        if (calc_address < 128)
-        begin
-          is_local = 1;
-          has_reply = local_rp;
-
-          if (has_reply)            
+        calc_bar = decode_bar(req_bar);
+        case (calc_bar)
+          0:
           begin
-            reply_pos = local_rp_address - req_address[6:2];
-            if (reply_pos + 1 == req_len)
-              is_last_reply = 1;
+            has_reply = bar0_rp;
+            has_ack = bar0_ack;
+
+            if (has_reply)            
+            begin
+              reply_pos = bar0_rp_address - req_address[6:2];
+              if (reply_pos + 1 == req_len)
+                is_last_reply = 1;
+            end
+
+            if (calc_len <= 1)
+              is_last_data = 1;
           end
-
-          if (calc_len <= 1)
-            is_last_data = 1;
-
-        end
-        else
-        begin
-          has_reply = sdram_rp;
-
-          if (has_reply)
+ 
+          1:
           begin
-            reply_pos[4:1] = sdram_rp_address - req_address[6:3];
-            reply_pos[0] = 0;
+            has_reply = bar1_rp;
+            has_ack = bar1_ack;
 
-            if (reply_pos + 2 >= req_len)
-              is_last_reply = 1;
+            if (has_reply)            
+            begin
+              reply_pos = bar1_rp_address - req_address[6:2];
+              if (reply_pos + 1 == req_len)
+                is_last_reply = 1;
+            end
+
+            if (calc_len <= 1)
+              is_last_data = 1;
           end
+ 
+          2:
+          begin
+            has_reply = bar2_rp;
+            has_ack = bar2_ack;
 
-          if (calc_len <= 2)
-            is_last_data = 1;
+            if (has_reply)            
+            begin
+              reply_pos = bar2_rp_address - req_address[6:2];
+              if (reply_pos + 1 == req_len)
+                is_last_reply = 1;
+            end
 
-        end
+            if (calc_len <= 1)
+              is_last_data = 1;
+          end
+        endcase
       end
 
       if (reset || pci_rx_empty)
@@ -297,15 +361,11 @@ generate
           begin  // read
             if (has_reply)
             begin
-              if (is_local)
-                pci_tx_data[32 * reply_pos +: 32] <= local_rp_data;
-              else
-              begin
-                if ((reply_pos == 0) && calc_address[2])
-                  pci_tx_data[31:0] <= sdram_rp_data[63:32];
-                else
-                  pci_tx_data[32 * reply_pos +: 64] <= sdram_rp_data;
-              end
+              case (calc_bar)
+                0: pci_tx_data[32 * reply_pos +: 32] <= bar0_rp_data;
+                1: pci_tx_data[32 * reply_pos +: 32] <= bar1_rp_data;
+                2: pci_tx_data[32 * reply_pos +: 32] <= bar2_rp_data;
+              endcase
 
               if (is_last_reply)
               begin
@@ -347,20 +407,18 @@ generate
                 pci_tx_wr <= 0;
               end
             end
-            else
-            begin
-              q_busy <= 1;
-              pci_tx_wr <= 0;
-            end
           end
 
           8'b010_00000,
           8'b011_00000:
           begin
-            if (is_last_data)
-              q_busy <= 0;
-            else
-              q_busy <= 1;
+            if (has_ack)
+            begin
+              if (is_last_data)
+                q_busy <= 0;
+              else
+                q_busy <= 1;
+            end
             pci_tx_wr <= 0;
           end
 
@@ -374,10 +432,12 @@ generate
 
       if (reset || pci_rx_empty)
       begin
-        sdram_rd <= 0;
-        sdram_wr <= 0;
-        local_rd <= 0;
-        local_wr <= 0;
+        bar0_rd <= 0;
+        bar1_rd <= 0;
+        bar2_rd <= 0;
+        bar0_wr <= 0;
+        bar1_wr <= 0;
+        bar2_wr <= 0;
       end
       else
       begin
@@ -387,115 +447,121 @@ generate
           8'b000_00001,
           8'b001_00001: 
           begin  // read
-            if (calc_len && !is_last_reply)
+            if (has_reply)
             begin
-              if (is_local)
+              bar0_wr <= 0;
+              bar1_wr <= 0;
+              bar2_wr <= 0;
+
+              if (calc_len && !is_last_reply)
               begin
                 q_address <= calc_address + 4;
                 q_len <= calc_len - 1;
                 q_pos <= calc_pos + 1;
-                local_address <= calc_address[6:2];
+              
+                case (calc_bar)
+                  0:
+                  begin
+                    bar0_address <= calc_address[11:2];
+                    bar0_rd <= 1;
+                    bar1_rd <= 0;
+                    bar2_rd <= 0;
+                  end
 
-                sdram_rd <= 0;
-                sdram_wr <= 0;
-                local_rd <= 1;
-                local_wr <= 0;
-              end
+                  1:
+                  begin
+                    bar1_address <= calc_address[18:2];
+                    bar0_rd <= 0;
+                    bar1_rd <= 1;
+                    bar2_rd <= 0;
+                  end
+
+                  2:
+                  begin
+                    bar2_address <= calc_address[18:2];
+                    bar0_rd <= 0;
+                    bar1_rd <= 0;
+                    bar2_rd <= 1;
+                  end
+
+                  default:
+                  begin
+                    bar0_rd <= 0;
+                    bar1_rd <= 0;
+                    bar2_rd <= 0;
+                  end
+                endcase
+              end             
               else
               begin
-                if (calc_address[2])
-                begin
-                  q_address <= calc_address + 4;
-                  q_len <= calc_len - 1;
-                  q_pos <= calc_pos + 1;
-                  sdram_address <= calc_address[18:3];
-                end
-                else
-                begin
-                  q_address <= calc_address + 8;
-                  if (calc_len > 1)
-                    q_len <= calc_len - 2;
-                  else
-                    q_len <= calc_len - 1;
- 
-                  q_pos <= calc_pos + 2;
-
-                  sdram_address <= calc_address[18:3];
-                end
-
-                sdram_rd <= 1;
-                sdram_wr <= 0;
-                local_rd <= 0;
-                local_wr <= 0;
-              end
+                bar0_rd <= 0;
+                bar1_rd <= 0;
+                bar2_rd <= 0;
+              end            
             end
-            else
-            begin
-              sdram_rd <= 0;
-              sdram_wr <= 0;
-              local_rd <= 0;
-              local_wr <= 0;
-            end             
           end
 
           8'b010_00000,
           8'b011_00000:
           begin  // write
-            if (is_local)
+            if (has_ack)
             begin
               q_address <= calc_address + 4;
               q_len <= calc_len - 1;
               q_pos <= calc_pos + 1;
-              local_address <= calc_address[6:2];
-              local_wr_be <= pci_rx_be[4 * calc_pos +: 4];
-              local_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+              bar0_rd <= 0;
+              bar1_rd <= 0;
+              bar2_rd <= 0;
 
-              sdram_rd <= 0;
-              sdram_wr <= 0;
-              local_rd <= 0;
-              local_wr <= 1;
-            end
-            else
-            begin
-              if (calc_address[2])
-              begin
-                q_address <= calc_address + 4;
-                q_len <= calc_len - 1;
-                q_pos <= calc_pos + 1;
+              case (calc_bar)
+                0:
+                begin
+                  bar0_address <= calc_address[11:2];
+                  bar0_wr_be <= pci_rx_be[4 * calc_pos +: 4];
+                  bar0_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+                  bar0_wr <= 1;
+                  bar1_wr <= 0;
+                  bar2_wr <= 0;
+                end
 
-                sdram_address <= calc_address[18:3];
-                sdram_wr_be[7:4] <= pci_rx_be[3:0];
-                sdram_wr_be[3:0] <= 0;
-                sdram_wr_data[63:32] <= pci_rx_data[31:0];
-              end
-              else
-              begin
-                q_address <= calc_address + 8;
-                if (calc_len > 1)
-                  q_len <= calc_len - 2;
-                else
-                  q_len <= calc_len - 1;
- 
-                q_pos <= calc_pos + 2;
+                1:
+                begin
+                  bar1_address <= calc_address[18:2];
+                  bar1_wr_be <= pci_rx_be[4 * calc_pos +: 4];
+                  bar1_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+                  bar0_wr <= 0;
+                  bar1_wr <= 1;
+                  bar2_wr <= 0;
+                end
 
-                sdram_address <= calc_address[18:3];
-                sdram_wr_be <= pci_rx_be[4 * calc_pos +: 4];
-                sdram_wr_data <= pci_rx_data[32 * calc_pos +: 64];
-              end
+                2:
+                begin
+                  bar2_address <= calc_address[18:2];
+                  bar2_wr_be <= pci_rx_be[4 * calc_pos +: 4];
+                  bar2_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+                  bar0_wr <= 0;
+                  bar1_wr <= 0;
+                  bar2_wr <= 1;
+                end
 
-              sdram_rd <= 0;
-              sdram_wr <= 1;
-              local_rd <= 0;
-              local_wr <= 0;
+                default:
+                begin
+                  bar0_wr <= 0;
+                  bar1_wr <= 0;
+                  bar2_wr <= 0;
+                end
+              endcase
             end
           end
 
           default:
           begin  // not supported
-            sdram_rd <= 0;
-            sdram_wr <= 0;
-            local_rd <= 0;
-            local_wr <= 0;
+            bar0_rd <= 0;
+            bar1_rd <= 0;
+            bar2_rd <= 0;
+            bar0_wr <= 0;
+            bar1_wr <= 0;
+            bar2_wr <= 0;
           end
         endcase
       end
