@@ -42,7 +42,7 @@ bram_dac bram_dac_inst (
   .clka(clk),          // input wire clka
   .wea(dac_wr),        // input wire [0 : 0] wea
   .addra(dac_wr_adr),  // input wire [15 : 0] addra
-  .dina(dac_rd_data),  // input wire [19 : 0] dina
+  .dina(dac_wr_data),  // input wire [19 : 0] dina
   .clkb(clk),          // input wire clkb
   .addrb(dac_rd_adr),  // input wire [15 : 0] addrb
   .doutb(dac_rd_data)  // output wire [19 : 0] doutb
@@ -131,6 +131,7 @@ begin : dac_app
       begin
         if (dac_rd_adr == address[16:1])
         begin
+          dac_wr_data <= curr_data[40:21];
           dac_wr_adr = address[16:1];
           dac_wr <= 1;
           ack <= 1;

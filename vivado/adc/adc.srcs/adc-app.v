@@ -42,7 +42,7 @@ bram_adc bram_adc_inst (
   .clka(clk),          // input wire clka
   .wea(adc_wr),        // input wire [0 : 0] wea
   .addra(adc_wr_adr),  // input wire [15 : 0] addra
-  .dina(adc_rd_data),  // input wire [19 : 0] dina
+  .dina(adc_wr_data),  // input wire [19 : 0] dina
   .clkb(clk),          // input wire clkb
   .addrb(adc_rd_adr),  // input wire [15 : 0] addrb
   .doutb(adc_rd_data)  // output wire [19 : 0] doutb
@@ -65,7 +65,7 @@ ila_3 ila3_inst (
    .probe11(adc_wr_data),        // input wire [19:0]  probe1 
    .probe12(adc_rd_adr),         // input wire [15:0]  probe1 
    .probe13(adc_rd_data),        // input wire [19:0]  probe1 
-   .probe14(curr_data)           // input wire [19:0]  probe1 
+   .probe14(curr_data)           // input wire [63:0]  probe1 
 );
 
 
@@ -152,6 +152,7 @@ generate
       begin
         if (adc_rd_adr == address[16:1])
         begin
+          adc_wr_data <= curr_data[40:21];
           adc_wr_adr = address[16:1];
           adc_wr <= 1;
           ack <= 1;
