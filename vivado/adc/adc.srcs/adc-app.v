@@ -43,12 +43,16 @@ module adc_app (
 
 // sampling
   reg  [4:0]             sample_counter;
-  reg  [1023:0]          sample_data;
   reg                    started;
   reg  [13:0]            curr_ch0;
   reg  [13:0]            curr_ch1;
 
-
+  reg  [1023:0]          sample_data;
+  wire [1023:0]          adc_data;
+  reg                    sample_wr;
+  reg                    sample_rd;
+  wire                   adc_full;
+  wire                   adc_empty;
 
 bram_adc bram_adc_inst (
   .clka(clk),          // input wire clka
@@ -60,6 +64,17 @@ bram_adc bram_adc_inst (
   .doutb(adc_rd_data)  // output wire [19 : 0] doutb
 );
 
+fifo_adc fifo_adc_inst (
+  .rst(reset),          // input wire rst
+  .wr_clk(sample_clk),  // input wire wr_clk
+  .rd_clk(clk),         // input wire rd_clk
+  .din(sample_data),    // input wire [1023 : 0] din
+  .wr_en(sample_wr),    // input wire wr_en
+  .rd_en(sample_rd),    // input wire rd_en
+  .dout(adc_data),      // output wire [1023 : 0] dout
+  .full(adc_full),      // output wire full
+  .empty(adc_empty)     // output wire empty
+);
 
 ila_3 ila3_inst (
    .clk ( clk ),                  // I
@@ -77,19 +92,25 @@ ila_3 ila3_inst (
    .probe11(adc_wr_data),        // input wire [19:0]  probe1 
    .probe12(adc_rd_adr),         // input wire [15:0]  probe1 
    .probe13(adc_rd_data),        // input wire [19:0]  probe1 
-   .probe14(curr_data)           // input wire [63:0]  probe1 
+   .probe14(curr_data),           // input wire [63:0]  probe1 
+   .probe15(adc_empty),           // input wire [0:0]  probe1 
+   .probe16(adc_data[63:0]),      // input wire [63:0]  probe1 
+   .probe17(adc_data[127:64]),    // input wire [63:0]  probe1 
+   .probe18(adc_data[191:128]),   // input wire [63:0]  probe1 
+   .probe19(adc_data[255:192]),   // input wire [63:0]  probe1 
+   .probe20(adc_data[319:256]),   // input wire [63:0]  probe1 
+   .probe21(adc_data[383:320]),   // input wire [63:0]  probe1 
+   .probe22(adc_data[447:384]),   // input wire [63:0]  probe1 
+   .probe23(adc_data[511:448]),   // input wire [63:0]  probe1 
+   .probe24(adc_data[575:512]),   // input wire [63:0]  probe1 
+   .probe25(adc_data[639:576]),   // input wire [63:0]  probe1 
+   .probe26(adc_data[703:640]),   // input wire [63:0]  probe1 
+   .probe27(adc_data[767:704]),   // input wire [63:0]  probe1 
+   .probe28(adc_data[831:768]),   // input wire [63:0]  probe1 
+   .probe29(adc_data[895:832]),   // input wire [63:0]  probe1 
+   .probe30(adc_data[959:896]),   // input wire [63:0]  probe1 
+   .probe31(adc_data[1023:960])   // input wire [63:0]  probe1 
 );
-
-
-ila_4 ila4_inst (
-   .clk ( sample_clk ),          // I
-   .probe0(active),              // input wire [0:0]  probe1 
-   .probe1(sample_counter),      // input wire [4:0]  probe1 
-   .probe2(sample_data[63:0]),   // input wire [63:0]  probe1 
-   .probe3(curr_ch0),            // input wire [13:0]  probe1 
-   .probe4(curr_ch1)             // input wire [13:0]  probe1 
-);
-
 
 generate
 begin : adc_app
@@ -102,12 +123,10 @@ begin : adc_app
       rp <= 0;
       adc_wr <= 0;
       start <= 0;
+      sample_rd <= 0;
     end
     else
     begin
-      if (running)
-        start <= 0;
-    
       if (wr)
       begin
         if (adc_rd_adr == address[16:1])
@@ -147,6 +166,14 @@ begin : adc_app
         end
       end
 
+      if (running)
+        start <= 0;
+
+      if (adc_empty)
+        sample_rd <= 0;
+      else
+        sample_rd <= 1;
+    
       if (rd)
       begin
         if (adc_rd_adr == address[16:1])
@@ -207,34 +234,42 @@ begin : adc_app
       curr_ch0 <= 10000;
       curr_ch1 <= 0;
       running <= 0;
+      sample_wr <= 0;
     end
     else
     begin
-      if (start)
-        running <= 1;
-        
       if (running)
       begin
-        sample_data[(32 * sample_counter) +: 14] = curr_ch0; 
+        sample_data[(32 * sample_counter) +: 14] <= curr_ch0; 
 
         if (curr_ch0[13]) 
-          sample_data[(32 * sample_counter + 14) +: 2] = 2'b11;
+          sample_data[(32 * sample_counter + 14) +: 2] <= 2'b11;
         else  
-          sample_data[(32 * sample_counter + 14) +: 2] = 2'b00;  
+          sample_data[(32 * sample_counter + 14) +: 2] <= 2'b00;  
 
-        sample_data[(32 * sample_counter + 16) +: 14] = curr_ch1;  
+        sample_data[(32 * sample_counter + 16) +: 14] <= curr_ch1;  
 
         if (curr_ch1[13]) 
-          sample_data[(32 * sample_counter + 30) +: 2] = 2'b11;
+          sample_data[(32 * sample_counter + 30) +: 2] <= 2'b11;
         else  
-          sample_data[(32 * sample_counter + 30) +: 2] = 2'b00;  
+          sample_data[(32 * sample_counter + 30) +: 2] <= 2'b00;  
 
         sample_counter <= sample_counter + 1;
 
         if (sample_counter == 5'b11111)
-          running <= 0;
+        begin
+          if (adc_full)
+          begin
+            running <= 0;
+            sample_wr <= 0;
+          end
+          else
+            sample_wr <= 1;
+        end
         else
         begin
+          sample_wr <= 0;
+
           if (curr_ch0)
             curr_ch0 <= curr_ch0 - 1;
           else
@@ -246,6 +281,10 @@ begin : adc_app
             curr_ch1 <= 0;
         end        
       end
+
+      if (start)
+        running <= 1;
+        
     end
   end
 
