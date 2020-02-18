@@ -48,7 +48,9 @@ module adc_app (
   reg  [13:0]            curr_ch1;
 
   reg  [1023:0]          sample_data;
+  reg  [1023:0]          fifo_data;
   wire [1023:0]          adc_data;
+  reg                    new_data;
   reg                    sample_wr;
   reg                    sample_rd;
   wire                   adc_full;
@@ -68,7 +70,7 @@ fifo_adc fifo_adc_inst (
   .rst(reset),          // input wire rst
   .wr_clk(sample_clk),  // input wire wr_clk
   .rd_clk(clk),         // input wire rd_clk
-  .din(sample_data),    // input wire [1023 : 0] din
+  .din(fifo_data),      // input wire [1023 : 0] din
   .wr_en(sample_wr),    // input wire wr_en
   .rd_en(sample_rd),    // input wire rd_en
   .dout(adc_data),      // output wire [1023 : 0] dout
@@ -235,6 +237,7 @@ begin : adc_app
       curr_ch1 <= 0;
       running <= 0;
       sample_wr <= 0;
+      new_data <= 0;
     end
     else
     begin
@@ -261,15 +264,25 @@ begin : adc_app
           if (adc_full)
           begin
             running <= 0;
-            sample_wr <= 0;
+            new_data <= 0;
           end
           else
-            sample_wr <= 1;
+          begin
+            fifo_data <= sample_data;
+            new_data <= 1;
+          end
+          sample_wr <= 0;
         end
         else
         begin
-          sample_wr <= 0;
-
+          if (new_data && sample_counter == 5'b00010)
+          begin
+            sample_wr <= 1;
+            new_data <= 0;
+          end
+          else
+            sample_wr <= 0;
+          
           if (curr_ch0)
             curr_ch0 <= curr_ch0 - 1;
           else
