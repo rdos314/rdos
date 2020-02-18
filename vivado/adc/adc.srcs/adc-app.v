@@ -39,6 +39,7 @@ module adc_app (
   wire [19:0]            adc_rd_data;
 
   reg  [63:0]            curr_data;
+  reg                    start;
 
 // sampling
   reg  [4:0]             sample_counter;
@@ -100,9 +101,13 @@ begin : adc_app
       ack <= 0;
       rp <= 0;
       adc_wr <= 0;
+      start <= 0;
     end
     else
     begin
+      if (running)
+        start <= 0;
+    
       if (wr)
       begin
         if (adc_rd_adr == address[16:1])
@@ -177,7 +182,7 @@ begin : adc_app
           adc_wr_adr = address[16:1];
           adc_wr <= 1;
           ack <= 1;
-          running <= 1;
+          start <= 1;
         end
         else
         begin
@@ -205,6 +210,9 @@ begin : adc_app
     end
     else
     begin
+      if (start)
+        running <= 1;
+        
       if (running)
       begin
         sample_data[(32 * sample_counter) +: 14] = curr_ch0; 

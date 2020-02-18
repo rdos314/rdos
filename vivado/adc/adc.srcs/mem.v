@@ -100,12 +100,16 @@ module adc_mem (
 
 
 // local
+
+  reg  [18:0]      calc_address;
+  reg  [9:0]       calc_len;
+  reg  [4:0]       calc_pos;
+  reg  [2:0]       calc_bar;
+
   reg  [18:0]      curr_address;
   reg  [9:0]       curr_len;
   reg  [4:0]       curr_pos;
-  reg  [2:0]       curr_bar;
 
-  reg  [2:0]       calc_bar;
   reg              is_last_data;
   reg              is_last_reply;
   reg              has_reply;
@@ -134,9 +138,9 @@ ila_1 ila_1_inst (
   .probe12(q_address),                    // input wire [18:0]  probe2
   .probe13(q_len),                        // input wire [9:0]  probe2
   .probe14(q_pos),                        // input wire [4:0]  probe2
-  .probe15(curr_address),                 // input wire [18:0]  probe2
-  .probe16(curr_len),                     // input wire [9:0]  probe2
-  .probe17(curr_pos),                     // input wire [4:0]  probe2
+  .probe15(calc_address),                 // input wire [18:0]  probe2
+  .probe16(calc_len),                     // input wire [9:0]  probe2
+  .probe17(calc_pos),                     // input wire [4:0]  probe2
   .probe18(has_ack),                      // input wire [0:0]  probe2
   .probe19(is_last_data),                 // input wire [0:0]  probe2
   .probe20(is_last_reply),                // input wire [0:0]  probe2
@@ -172,141 +176,82 @@ generate
       if (reset || pci_rx_empty)
       begin
         pci_rx_rd = 0;
-        bar0_rd = 0;
-        bar1_rd = 0;
-        bar2_rd = 0;
-        bar0_wr = 0;
-        bar1_wr = 0;
-        bar2_wr = 0;
       end
       else
       begin 
-        curr_bar = decode_bar(req_bar);
-
-        if (q_busy)
-        begin
-          curr_address = q_address;
-          curr_len = q_len;
-          curr_pos = q_pos;
-        end
-        else
-        begin
-          curr_address = req_address[18:0];
-          curr_len = req_len;
-          curr_pos = 0;
-        end
-
         case (req_type)
           8'b000_00000, 
           8'b001_00000,
           8'b000_00001,
           8'b001_00001: 
           begin  // read
-            bar0_wr = 0;
-            bar1_wr = 0;
-            bar2_wr = 0;
-
-            if (curr_len)
-            begin
-              case (curr_bar)
-                0:
-                begin
-                  bar0_address = curr_address[11:2];
-                  bar0_rd = 1;
-                  bar1_rd = 0;
-                  bar2_rd = 0;
-                end
-
-                1:
-                begin
-                  bar1_address = curr_address[18:2];
-                  bar0_rd = 0;
-                  bar1_rd = 1;
-                  bar2_rd = 0;
-                end
-
-                2:
-                begin
-                  bar2_address = curr_address[18:2];
-                  bar0_rd = 0;
-                  bar1_rd = 0;
-                  bar2_rd = 1;
-                end
-
-                default:
-                begin
-                  bar0_rd = 0;
-                  bar1_rd = 0;
-                  bar2_rd = 0;
-                end
-              endcase
-            end
+            if (q_busy)
+              curr_address = q_address;
             else
-            begin
-              bar0_rd = 0;
-              bar1_rd = 0;
-              bar2_rd = 0;
-            end
+              curr_address = req_address[18:0];
 
-            if (curr_len <= 1)
-              pci_rx_rd = 1;
-            else
-              pci_rx_rd = 0;
+            case (decode_bar(req_bar))
+              0:
+              begin
+                if (bar0_rp)            
+                begin
+                  curr_pos = bar0_rp_address - req_address[6:2];
+                  if (curr_pos + 1 == req_len)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              1:
+              begin
+                if (bar1_rp)            
+                begin
+                  curr_pos = bar1_rp_address - req_address[6:2];
+                  if (curr_pos + 1 == req_len)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              2:
+              begin
+                if (bar2_rp)            
+                begin
+                  curr_pos = bar2_rp_address - req_address[6:2];
+                  if (curr_pos + 1 == req_len)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              default:
+              begin
+                pci_rx_rd = 1;
+              end
+            endcase
           end
 
           8'b010_00000,
           8'b011_00000:
           begin // write
-            bar0_rd = 0;
-            bar1_rd = 0;
-            bar2_rd = 0;
-
-            if (curr_len)
+            if (q_busy)
             begin
-              case (curr_bar)
-                0:
-                begin
-                  bar0_address = curr_address[11:2];
-                  bar0_wr_be = pci_rx_be[4 * curr_pos +: 4];
-                  bar0_wr_data = pci_rx_data[32 * curr_pos +: 32];
-                  bar0_wr = 1;
-                  bar1_wr = 0;
-                  bar2_wr = 0;
-                end
-
-                1:
-                begin
-                  bar1_address = curr_address[18:2];
-                  bar1_wr_be = pci_rx_be[4 * curr_pos +: 4];
-                  bar1_wr_data = pci_rx_data[32 * curr_pos +: 32];
-                  bar0_wr = 0;
-                  bar1_wr = 1;
-                  bar2_wr = 0;
-                end
-
-                2:
-                begin
-                  bar2_address = curr_address[18:2];
-                  bar2_wr_be = pci_rx_be[4 * curr_pos +: 4];
-                  bar2_wr_data = pci_rx_data[32 * curr_pos +: 32];
-                  bar0_wr = 0;
-                  bar1_wr = 0;
-                  bar2_wr = 1;
-                end
-
-                default:
-                begin
-                  bar0_wr = 0;
-                  bar1_wr = 0;
-                  bar2_wr = 0;
-                end
-              endcase
+              curr_address = q_address;
+              curr_len = q_len;
             end
             else
             begin
-              bar0_wr = 0;
-              bar1_wr = 0;
-              bar2_wr = 0;
+              curr_address = req_address[18:0];
+              curr_len = req_len;
             end
 
             if (curr_len <= 1)
@@ -317,12 +262,6 @@ generate
 
           default:
           begin  // not supported
-            bar0_rd = 0;
-            bar1_rd = 0;
-            bar2_rd = 0;
-            bar0_wr = 0;
-            bar1_wr = 0;
-            bar2_wr = 0;
             pci_rx_rd = 1;
           end
         endcase
@@ -331,7 +270,9 @@ generate
 
     always @ ( posedge clk ) 
     begin
+      calc_address = 0;
       calc_len = 0;
+      calc_pos = 0;
 
       has_reply = 0;
       has_ack = 0;
@@ -343,11 +284,19 @@ generate
       begin
         if (q_busy)
         begin
+          calc_address = q_address;
+          calc_len = q_len;
+          calc_pos = q_pos;
+
           if (q_len <= 1)
             is_last_data = 1;
         end
         else
         begin
+          calc_address = req_address[18:0];
+          calc_len = req_len;
+          calc_pos = 0;
+
           if (req_len <= 1)
             is_last_data = 1;
         end
@@ -423,7 +372,7 @@ generate
               begin
                 if (req_len)
                 begin
-                  q_address = req_address[18:0] + 4;
+                  q_address <= req_address[18:0] + 4;
                   q_len <= req_len - 1;
                   q_pos <= 1;
                 end
@@ -479,7 +428,7 @@ generate
             begin
               if (!q_busy)
               begin
-                q_address = req_address[18:0];
+                q_address <= req_address[18:0];
                 q_len <= req_len;
                 q_pos <= 0;
                 q_busy <= 1;
@@ -487,6 +436,7 @@ generate
               pci_tx_wr <= 0;
             end
           end
+
 
           8'b010_00000,
           8'b011_00000:
@@ -506,7 +456,7 @@ generate
               begin
                 if (req_len)
                 begin
-                  q_address = req_address[18:0] + 4;
+                  q_address <= req_address[18:0] + 4;
                   q_len <= req_len - 1;
                   q_pos <= 1;
                 end
@@ -521,15 +471,15 @@ generate
             begin
               if (!q_busy)
               begin
-                q_address = req_address[18:0];
+                q_address <= req_address[18:0];
                 q_len <= req_len;
                 q_pos <= 0;
                 q_busy <= 1;
               end
             end
-
             pci_tx_wr <= 0;
           end
+
 
           default:
           begin  // not supported
@@ -538,7 +488,134 @@ generate
           end
         endcase
       end
+
+      if (reset || pci_rx_empty)
+      begin
+        bar0_rd <= 0;
+        bar1_rd <= 0;
+        bar2_rd <= 0;
+        bar0_wr <= 0;
+        bar1_wr <= 0;
+        bar2_wr <= 0;
+      end
+      else
+      begin
+        case (req_type)
+          8'b000_00000, 
+          8'b001_00000,
+          8'b000_00001,
+          8'b001_00001: 
+          begin  // read
+            bar0_wr <= 0;
+            bar1_wr <= 0;
+            bar2_wr <= 0;
+
+            if (calc_len)
+            begin
+              case (calc_bar)
+                0:
+                begin
+                  bar0_address <= calc_address[11:2];
+                  bar0_rd <= 1;
+                  bar1_rd <= 0;
+                  bar2_rd <= 0;
+                end
+
+                1:
+                begin
+                  bar1_address <= calc_address[18:2];
+                  bar0_rd <= 0;
+                  bar1_rd <= 1;
+                  bar2_rd <= 0;
+                end
+
+                2:
+                begin
+                  bar2_address <= calc_address[18:2];
+                  bar0_rd <= 0;
+                  bar1_rd <= 0;
+                  bar2_rd <= 1;
+                end
+
+                default:
+                begin
+                  bar0_rd <= 0;
+                  bar1_rd <= 0;
+                  bar2_rd <= 0;
+                end
+              endcase
+            end             
+          end
+
+          8'b010_00000,
+          8'b011_00000:
+          begin  // write
+            bar0_rd <= 0;
+            bar1_rd <= 0;
+            bar2_rd <= 0;
+
+            if (calc_len)
+            begin
+              case (calc_bar)
+                0:
+                begin
+                  bar0_address <= calc_address[11:2];
+                  bar0_wr_be <= pci_rx_be[4 * calc_pos +: 4];
+                  bar0_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+                  bar0_wr <= 1;
+                  bar1_wr <= 0;
+                  bar2_wr <= 0;
+                end
+
+                1:
+                begin
+                  bar1_address <= calc_address[18:2];
+                  bar1_wr_be <= pci_rx_be[4 * calc_pos +: 4];
+                  bar1_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+                  bar0_wr <= 0;
+                  bar1_wr <= 1;
+                  bar2_wr <= 0;
+                end
+
+                2:
+                begin
+                  bar2_address <= calc_address[18:2];
+                  bar2_wr_be <= pci_rx_be[4 * calc_pos +: 4];
+                  bar2_wr_data <= pci_rx_data[32 * calc_pos +: 32];
+                  bar0_wr <= 0;
+                  bar1_wr <= 0;
+                  bar2_wr <= 1;
+                end
+
+                default:
+                begin
+                  bar0_wr <= 0;
+                  bar1_wr <= 0;
+                  bar2_wr <= 0;
+                end
+              endcase
+            end
+            else
+            begin
+              bar0_wr <= 0;
+              bar1_wr <= 0;
+              bar2_wr <= 0;
+            end
+          end
+
+          default:
+          begin  // not supported
+            bar0_rd <= 0;
+            bar1_rd <= 0;
+            bar2_rd <= 0;
+            bar0_wr <= 0;
+            bar1_wr <= 0;
+            bar2_wr <= 0;
+          end
+        endcase
+      end
     end
+
   end
 endgenerate
 

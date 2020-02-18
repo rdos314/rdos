@@ -15,6 +15,7 @@ module pci_app (
     cfg_interrupt_msienable,
 
     bar_control,
+    adc_running,
 
     bar1_address,
     bar1_rd,
@@ -54,8 +55,7 @@ module pci_app (
   output              cfg_interrupt_msienable;
 
   output reg [31:0]   bar_control;
-  output wire         pci_tx_full;
-
+  input  wire         adc_running;
 
   output wire [16:0]  bar1_address;
   output wire         bar1_rd;
@@ -111,12 +111,14 @@ module pci_app (
   wire [15:0]      pci_rx_control;
   wire             pci_rx_rd;
   wire             pci_rx_empty;
+  wire             pci_rx_full;
 
 // local -> PCIe
 
   wire [1023:0]    pci_tx_data;
   wire [127:0]     pci_tx_header;
   wire             pci_tx_wr;
+  wire             pci_tx_full;
 
 
 // local memory
@@ -375,7 +377,8 @@ pci_rx pci_rx_inst (
     .pci_rx_be( pci_rx_be),                        // O
     .pci_rx_control( pci_rx_control),              // O
     .pci_rx_rd (pci_rx_rd),                        // I
-    .pci_rx_empty (pci_rx_empty)                   // O
+    .pci_rx_empty (pci_rx_empty),                   // O
+    .pci_rx_full (pci_rx_full)                   // O
 );
 
 pci_tx pci_tx_inst (
@@ -455,6 +458,10 @@ generate
         bar_control <= 0;
       else
       begin
+        bar_control[0] <= pci_rx_full;
+        bar_control[1] <= pci_tx_full;
+        bar_control[7] <= adc_running;
+
         if (bar0_rd)
         begin
           bar0_rp_address <= bar0_address[4:0];
@@ -473,7 +480,7 @@ generate
             0: 
             begin
               if (bar0_wr_be[0])
-                bar_control[7:0] <= bar0_wr_data[7:0];
+                bar_control[6:2] <= bar0_wr_data[6:2];
 
               if (bar0_wr_be[1])
                 bar_control[15:8] <= bar0_wr_data[15:8];
