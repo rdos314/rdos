@@ -13,7 +13,8 @@ module pci_rx (
   pci_rx_be,
   pci_rx_control,
   pci_rx_rd,
-  pci_rx_empty
+  pci_rx_empty,
+  pci_rx_full
 );
 
   input                          clk;
@@ -32,8 +33,7 @@ module pci_rx (
   output wire [15:0]             pci_rx_control;
   input  wire                    pci_rx_rd;
   output wire                    pci_rx_empty;
-
-  wire                           pci_rx_full;
+  output wire                    pci_rx_full;
 
 // FF
   reg [3:0]      q_pos;

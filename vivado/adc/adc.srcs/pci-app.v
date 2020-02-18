@@ -54,6 +54,7 @@ module pci_app (
   output              cfg_interrupt_msienable;
 
   output reg [31:0]   bar_control;
+  output wire         pci_tx_full;
 
 
   output wire [16:0]  bar1_address;
@@ -116,7 +117,6 @@ module pci_app (
   wire [1023:0]    pci_tx_data;
   wire [127:0]     pci_tx_header;
   wire             pci_tx_wr;
-  wire             pci_tx_full;
 
 
 // local memory

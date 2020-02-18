@@ -412,15 +412,21 @@ generate
             begin
               if (q_busy)
               begin
-                q_address <= q_address + 4;
-                q_len <= q_len - 1;
-                q_pos <= q_pos + 1;
+                if (q_len)
+                begin
+                  q_address <= q_address + 4;
+                  q_len <= q_len - 1;
+                  q_pos <= q_pos + 1;
+                end
               end
               else
               begin
-                q_address = req_address[18:0] + 4;
-                q_len <= req_len - 1;
-                q_pos <= 1;
+                if (req_len)
+                begin
+                  q_address = req_address[18:0] + 4;
+                  q_len <= req_len - 1;
+                  q_pos <= 1;
+                end
               end
               
               case (calc_bar)
@@ -489,15 +495,21 @@ generate
             begin
               if (q_busy)
               begin
-                q_address <= q_address + 4;
-                q_len <= q_len - 1;
-                q_pos <= q_pos + 1;
+                if (q_len)
+                begin
+                  q_address <= q_address + 4;
+                  q_len <= q_len - 1;
+                  q_pos <= q_pos + 1;
+                end
               end
               else
               begin
-                q_address = req_address[18:0] + 4;
-                q_len <= req_len - 1;
-                q_pos <= 1;
+                if (req_len)
+                begin
+                  q_address = req_address[18:0] + 4;
+                  q_len <= req_len - 1;
+                  q_pos <= 1;
+                end
               end
 
               if (is_last_data)

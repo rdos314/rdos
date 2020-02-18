@@ -2,6 +2,7 @@ module adc_app (
   clk,
   reset,
   sample_clk,
+  running,
 
   address,
   rd,
@@ -17,6 +18,7 @@ module adc_app (
   input wire             clk;
   input wire             reset;
   input wire             sample_clk;
+  output reg             running;
 
   input wire [16:0]      address;
   input wire             rd;
@@ -29,7 +31,7 @@ module adc_app (
   output reg             ack;
 
 
-// local
+// local BAR
   reg                    adc_wr;
   reg  [15:0]            adc_wr_adr;
   reg  [19:0]            adc_wr_data;
@@ -37,6 +39,15 @@ module adc_app (
   wire [19:0]            adc_rd_data;
 
   reg  [63:0]            curr_data;
+
+// sampling
+  reg  [4:0]             sample_counter;
+  reg  [1023:0]          sample_data;
+  reg                    started;
+  reg  [13:0]            curr_ch0;
+  reg  [13:0]            curr_ch1;
+
+
 
 bram_adc bram_adc_inst (
   .clka(clk),          // input wire clka
@@ -69,8 +80,18 @@ ila_3 ila3_inst (
 );
 
 
+ila_4 ila4_inst (
+   .clk ( sample_clk ),          // I
+   .probe0(active),              // input wire [0:0]  probe1 
+   .probe1(sample_counter),      // input wire [4:0]  probe1 
+   .probe2(sample_data[63:0]),   // input wire [63:0]  probe1 
+   .probe3(curr_ch0),            // input wire [13:0]  probe1 
+   .probe4(curr_ch1)             // input wire [13:0]  probe1 
+);
+
+
 generate
-  begin : adc_app
+begin : adc_app
 
   always @ ( posedge clk ) 
   begin
@@ -156,6 +177,7 @@ generate
           adc_wr_adr = address[16:1];
           adc_wr <= 1;
           ack <= 1;
+          running <= 1;
         end
         else
         begin
@@ -171,7 +193,56 @@ generate
       end
     end
   end
+
+  always @ ( posedge sample_clk ) 
+  begin
+    if (reset)
+    begin
+      sample_counter <= 0;
+      curr_ch0 <= 10000;
+      curr_ch1 <= 0;
+      running <= 0;
+    end
+    else
+    begin
+      if (running)
+      begin
+        sample_data[(32 * sample_counter) +: 14] = curr_ch0; 
+
+        if (curr_ch0[13]) 
+          sample_data[(32 * sample_counter + 14) +: 2] = 2'b11;
+        else  
+          sample_data[(32 * sample_counter + 14) +: 2] = 2'b00;  
+
+        sample_data[(32 * sample_counter + 16) +: 14] = curr_ch1;  
+
+        if (curr_ch1[13]) 
+          sample_data[(32 * sample_counter + 30) +: 2] = 2'b11;
+        else  
+          sample_data[(32 * sample_counter + 30) +: 2] = 2'b00;  
+
+        sample_counter <= sample_counter + 1;
+
+        if (sample_counter == 5'b11111)
+          running <= 0;
+        else
+        begin
+          if (curr_ch0)
+            curr_ch0 <= curr_ch0 - 1;
+          else
+            curr_ch0 <= 10000;
+
+          if (curr_ch1 != 9000)
+            curr_ch1 <= curr_ch1 + 1;
+          else
+            curr_ch1 <= 0;
+        end        
+      end
+    end
+  end
+
 end
+
 endgenerate
 
 endmodule
