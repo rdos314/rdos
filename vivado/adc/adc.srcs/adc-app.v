@@ -41,20 +41,27 @@ module adc_app (
   reg  [63:0]            curr_data;
   reg                    start;
 
-// sampling
-  reg  [4:0]             sample_counter;
+// sample domain
   reg                    started;
+  reg  [3:0]             sample_counter;
   reg  [13:0]            curr_ch0;
   reg  [13:0]            curr_ch1;
+  reg  [223:0]           sample_buffer0;
+  reg  [223:0]           sample_buffer1;
 
-  reg  [1023:0]          sample_data;
-  reg  [1023:0]          fifo_data;
-  wire [1023:0]          adc_data;
-  reg                    new_data;
-  reg                    sample_wr;
-  reg                    sample_rd;
-  wire                   adc_full;
-  wire                   adc_empty;
+// domain sync
+  reg                    notify_data;
+  reg                    ack_data;
+  reg                    sync;
+  reg  [223:0]           sync_buffer0;
+  reg  [223:0]           sync_buffer1;
+
+// PCIe domain
+  reg  [511:0]           synced_buffer;
+  reg  [1023:0]          adc_data;
+  reg                    adc_load;
+  reg                    adc_low;
+
 
 bram_adc bram_adc_inst (
   .clka(clk),          // input wire clka
@@ -64,18 +71,6 @@ bram_adc bram_adc_inst (
   .clkb(clk),          // input wire clkb
   .addrb(adc_rd_adr),  // input wire [15 : 0] addrb
   .doutb(adc_rd_data)  // output wire [19 : 0] doutb
-);
-
-fifo_adc fifo_adc_inst (
-  .rst(reset),          // input wire rst
-  .wr_clk(sample_clk),  // input wire wr_clk
-  .rd_clk(clk),         // input wire rd_clk
-  .din(fifo_data),      // input wire [1023 : 0] din
-  .wr_en(sample_wr),    // input wire wr_en
-  .rd_en(sample_rd),    // input wire rd_en
-  .dout(adc_data),      // output wire [1023 : 0] dout
-  .full(adc_full),      // output wire full
-  .empty(adc_empty)     // output wire empty
 );
 
 ila_3 ila3_inst (
@@ -95,7 +90,7 @@ ila_3 ila3_inst (
    .probe12(adc_rd_adr),         // input wire [15:0]  probe1 
    .probe13(adc_rd_data),        // input wire [19:0]  probe1 
    .probe14(curr_data),           // input wire [63:0]  probe1 
-   .probe15(adc_empty),           // input wire [0:0]  probe1 
+   .probe15(ack_data),            // input wire [0:0]  probe1 
    .probe16(adc_data[63:0]),      // input wire [63:0]  probe1 
    .probe17(adc_data[127:64]),    // input wire [63:0]  probe1 
    .probe18(adc_data[191:128]),   // input wire [63:0]  probe1 
@@ -125,7 +120,10 @@ begin : adc_app
       rp <= 0;
       adc_wr <= 0;
       start <= 0;
-      sample_rd <= 0;
+      sync <= 0;
+      ack_data <= 0;
+      adc_load <= 0;
+      adc_low <= 0;
     end
     else
     begin
@@ -167,14 +165,6 @@ begin : adc_app
           end
         end
       end
-
-      if (running)
-        start <= 0;
-
-      if (adc_empty)
-        sample_rd <= 0;
-      else
-        sample_rd <= 1;
     
       if (rd)
       begin
@@ -225,6 +215,228 @@ begin : adc_app
         ack <= 0;
         adc_wr <= 0;
       end
+
+      if (running)
+        start <= 0;
+
+      if (notify_data)
+      begin
+        ack_data <= 1;
+        sync <= 1;
+      end
+      else
+        sync <= 0;
+
+      if (sync)
+      begin
+        ack_data <= 0;
+        sync <= 0;
+        adc_load <= 0;
+
+        synced_buffer[13:0] <= sync_buffer0[13:0];
+        if (sync_buffer0[13])
+          synced_buffer[15:14] <= 2'b11;
+        else
+          synced_buffer[15:14] <= 2'b00;
+        
+        synced_buffer[29:16] <= sync_buffer1[13:0];
+        if (sync_buffer1[13])
+          synced_buffer[31:30] <= 2'b11;
+        else
+          synced_buffer[31:30] <= 2'b00;
+
+        synced_buffer[45:32] <= sync_buffer0[27:14];
+        if (sync_buffer0[27])
+          synced_buffer[47:46] <= 2'b11;
+        else
+          synced_buffer[47:46] <= 2'b00;
+
+        synced_buffer[61:48] <= sync_buffer1[27:14];
+        if (sync_buffer1[27])
+          synced_buffer[63:62] <= 2'b11;
+        else
+          synced_buffer[63:62] <= 2'b00;
+
+        synced_buffer[77:64] <= sync_buffer0[41:28];
+        if (sync_buffer0[41])
+          synced_buffer[79:78] <= 2'b11;
+        else
+          synced_buffer[79:78] <= 2'b00;
+
+        synced_buffer[93:80] <= sync_buffer1[41:28];
+        if (sync_buffer1[41])
+          synced_buffer[95:94] <= 2'b11;
+        else
+          synced_buffer[95:94] <= 2'b00;
+
+        synced_buffer[109:96] <= sync_buffer0[55:42];
+        if (sync_buffer0[55])
+          synced_buffer[111:110] <= 2'b11;
+        else
+          synced_buffer[111:110] <= 2'b00;
+
+        synced_buffer[125:112] <= sync_buffer1[55:42];
+        if (sync_buffer1[55])
+          synced_buffer[127:126] <= 2'b11;
+        else
+          synced_buffer[127:126] <= 2'b00;
+
+        synced_buffer[141:128] <= sync_buffer0[69:56];
+        if (sync_buffer0[69])
+          synced_buffer[143:142] <= 2'b11;
+        else
+          synced_buffer[143:142] <= 2'b00;
+
+        synced_buffer[157:144] <= sync_buffer1[69:56];
+        if (sync_buffer1[69])
+          synced_buffer[159:158] <= 2'b11;
+        else
+          synced_buffer[159:158] <= 2'b00;
+
+        synced_buffer[173:160] <= sync_buffer0[83:70];
+        if (sync_buffer0[83])
+          synced_buffer[175:174] <= 2'b11;
+        else
+          synced_buffer[175:174] <= 2'b00;
+
+        synced_buffer[189:176] <= sync_buffer1[83:70];
+        if (sync_buffer1[83])
+          synced_buffer[191:190] <= 2'b11;
+        else
+          synced_buffer[191:190] <= 2'b00;
+
+        synced_buffer[205:192] <= sync_buffer0[97:84];
+        if (sync_buffer0[97])
+          synced_buffer[207:206] <= 2'b11;
+        else
+          synced_buffer[207:206] <= 2'b00;
+
+        synced_buffer[221:208] <= sync_buffer1[97:84];
+        if (sync_buffer1[97])
+          synced_buffer[223:222] <= 2'b11;
+        else
+          synced_buffer[223:222] <= 2'b00;
+
+        synced_buffer[237:224] <= sync_buffer0[111:98];
+        if (sync_buffer0[111])
+          synced_buffer[239:238] <= 2'b11;
+        else
+          synced_buffer[239:238] <= 2'b00;
+
+        synced_buffer[253:240] <= sync_buffer1[111:98];
+        if (sync_buffer1[111])
+          synced_buffer[255:254] <= 2'b11;
+        else
+          synced_buffer[255:254] <= 2'b00;
+
+        synced_buffer[269:256] <= sync_buffer0[125:112];
+        if (sync_buffer0[125])
+          synced_buffer[271:270] <= 2'b11;
+        else
+          synced_buffer[271:270] <= 2'b00;
+
+        synced_buffer[285:272] <= sync_buffer1[125:112];
+        if (sync_buffer1[125])
+          synced_buffer[287:286] <= 2'b11;
+        else
+          synced_buffer[287:286] <= 2'b00;
+
+        synced_buffer[301:288] <= sync_buffer0[139:126];
+        if (sync_buffer0[139])
+          synced_buffer[303:302] <= 2'b11;
+        else
+          synced_buffer[303:302] <= 2'b00;
+
+        synced_buffer[317:304] <= sync_buffer1[139:126];
+        if (sync_buffer1[139])
+          synced_buffer[319:318] <= 2'b11;
+        else
+          synced_buffer[319:318] <= 2'b00;
+
+        synced_buffer[333:320] <= sync_buffer0[153:140];
+        if (sync_buffer0[153])
+          synced_buffer[335:334] <= 2'b11;
+        else
+          synced_buffer[335:334] <= 2'b00;
+
+        synced_buffer[349:336] <= sync_buffer1[153:140];
+        if (sync_buffer1[153])
+          synced_buffer[351:350] <= 2'b11;
+        else
+          synced_buffer[351:350] <= 2'b00;
+
+        synced_buffer[365:352] <= sync_buffer0[167:154];
+        if (sync_buffer0[167])
+          synced_buffer[367:366] <= 2'b11;
+        else
+          synced_buffer[367:366] <= 2'b00;
+
+        synced_buffer[381:368] <= sync_buffer1[167:154];
+        if (sync_buffer1[167])
+          synced_buffer[383:382] <= 2'b11;
+        else
+          synced_buffer[383:382] <= 2'b00;
+
+        synced_buffer[397:384] <= sync_buffer0[181:168];
+        if (sync_buffer0[181])
+          synced_buffer[399:398] <= 2'b11;
+        else
+          synced_buffer[399:398] <= 2'b00;
+
+        synced_buffer[413:400] <= sync_buffer1[181:168];
+        if (sync_buffer1[181])
+          synced_buffer[415:414] <= 2'b11;
+        else
+          synced_buffer[415:414] <= 2'b00;
+
+        synced_buffer[429:416] <= sync_buffer0[195:182];
+        if (sync_buffer0[195])
+          synced_buffer[431:430] <= 2'b11;
+        else
+          synced_buffer[431:430] <= 2'b00;
+
+        synced_buffer[445:432] <= sync_buffer1[195:182];
+        if (sync_buffer1[195])
+          synced_buffer[447:446] <= 2'b11;
+        else
+          synced_buffer[447:446] <= 2'b00;
+
+        synced_buffer[461:448] <= sync_buffer0[209:196];
+        if (sync_buffer0[209])
+          synced_buffer[463:462] <= 2'b11;
+        else
+          synced_buffer[463:462] <= 2'b00;
+
+        synced_buffer[477:464] <= sync_buffer1[209:196];
+        if (sync_buffer1[209])
+          synced_buffer[479:478] <= 2'b11;
+        else
+          synced_buffer[479:478] <= 2'b00;
+
+        synced_buffer[493:480] <= sync_buffer0[223:210];
+        if (sync_buffer0[223])
+          synced_buffer[495:494] <= 2'b11;
+        else
+          synced_buffer[495:494] <= 2'b00;
+
+        synced_buffer[509:496] <= sync_buffer1[223:210];
+        if (sync_buffer1[223])
+          synced_buffer[511:510] <= 2'b11;
+        else
+          synced_buffer[511:510] <= 2'b00;
+      end
+
+      if (adc_load)
+      begin
+        adc_load <= 0;
+
+        if (adc_low)
+          adc_data[511:0] <= synced_buffer;
+        else
+          adc_data[1023:512] <= synced_buffer;
+
+        adc_low = adc_low + 1;
+      end
     end
   end
 
@@ -236,64 +448,40 @@ begin : adc_app
       curr_ch0 <= 10000;
       curr_ch1 <= 0;
       running <= 0;
-      sample_wr <= 0;
-      new_data <= 0;
+      notify_data <= 0;
     end
     else
     begin
       if (running)
       begin
-        sample_data[(32 * sample_counter) +: 14] <= curr_ch0; 
+        sample_buffer0[209:0] <= sample_buffer0[223:14];
+        sample_buffer0[223:210] <= curr_ch0;
 
-        if (curr_ch0[13]) 
-          sample_data[(32 * sample_counter + 14) +: 2] <= 2'b11;
-        else  
-          sample_data[(32 * sample_counter + 14) +: 2] <= 2'b00;  
-
-        sample_data[(32 * sample_counter + 16) +: 14] <= curr_ch1;  
-
-        if (curr_ch1[13]) 
-          sample_data[(32 * sample_counter + 30) +: 2] <= 2'b11;
-        else  
-          sample_data[(32 * sample_counter + 30) +: 2] <= 2'b00;  
+        sample_buffer1[209:0] <= sample_buffer1[223:14];
+        sample_buffer1[223:210] <= curr_ch1;
 
         sample_counter <= sample_counter + 1;
 
         if (sample_counter == 5'b11111)
         begin
-          if (adc_full)
-          begin
-            running <= 0;
-            new_data <= 0;
-          end
-          else
-          begin
-            fifo_data <= sample_data;
-            new_data <= 1;
-          end
-          sample_wr <= 0;
+          sync_buffer0 <= sample_buffer0;
+          sync_buffer1 <= sample_buffer1;
+          notify_data <= 1;
         end
-        else
-        begin
-          if (new_data && sample_counter == 5'b00010)
-          begin
-            sample_wr <= 1;
-            new_data <= 0;
-          end
-          else
-            sample_wr <= 0;
           
-          if (curr_ch0)
-            curr_ch0 <= curr_ch0 - 1;
-          else
-            curr_ch0 <= 10000;
+        if (curr_ch0)
+          curr_ch0 <= curr_ch0 - 1;
+        else
+          curr_ch0 <= 10000;
 
-          if (curr_ch1 != 9000)
-            curr_ch1 <= curr_ch1 + 1;
-          else
-            curr_ch1 <= 0;
-        end        
-      end
+        if (curr_ch1 != 9000)
+          curr_ch1 <= curr_ch1 + 1;
+        else
+          curr_ch1 <= 0;
+      end        
+
+      if (ack_data)
+        notify_data <= 0;
 
       if (start)
         running <= 1;
