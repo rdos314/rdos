@@ -39,10 +39,12 @@ module adc_app (
   wire [19:0]            adc_rd_data;
 
   reg  [63:0]            curr_data;
-  reg                    start;
+  reg                    adc_start;
+  reg                    adc_stop;
 
 // sample domain
-  reg                    started;
+  reg                    running;
+  reg                    first;
   reg  [3:0]             sample_counter;
   reg  [13:0]            curr_ch0;
   reg  [13:0]            curr_ch1;
@@ -61,6 +63,7 @@ module adc_app (
   reg  [1023:0]          adc_data;
   reg                    adc_load;
   reg                    adc_low;
+  reg                    has_adc_data;
 
 
 bram_adc bram_adc_inst (
@@ -74,39 +77,44 @@ bram_adc bram_adc_inst (
 );
 
 ila_3 ila3_inst (
-   .clk ( clk ),                  // I
-   .probe0(address),             // input wire [16:0]  probe1 
-   .probe1(rd),                  // input wire [0:0]  probe1 
-   .probe2(rp),                  // input wire [0:0]  probe1 
-   .probe3(rp_address),          // input wire [4:0]  probe1 
-   .probe4(rp_data),             // input wire [31:0]  probe1 
-   .probe5(wr),                  // input wire [0:0]  probe1 
-   .probe6(wr_be),               // input wire [3:0]  probe1 
-   .probe7(wr_data),             // input wire [31:0]  probe1 
-   .probe8(ack),                 // input wire [0:0]  probe1 
-   .probe9(adc_wr),              // input wire [0:0]  probe1 
-   .probe10(adc_wr_adr),         // input wire [15:0]  probe1 
-   .probe11(adc_wr_data),        // input wire [19:0]  probe1 
-   .probe12(adc_rd_adr),         // input wire [15:0]  probe1 
-   .probe13(adc_rd_data),        // input wire [19:0]  probe1 
-   .probe14(curr_data),           // input wire [63:0]  probe1 
-   .probe15(ack_data),            // input wire [0:0]  probe1 
-   .probe16(adc_data[63:0]),      // input wire [63:0]  probe1 
-   .probe17(adc_data[127:64]),    // input wire [63:0]  probe1 
-   .probe18(adc_data[191:128]),   // input wire [63:0]  probe1 
-   .probe19(adc_data[255:192]),   // input wire [63:0]  probe1 
-   .probe20(adc_data[319:256]),   // input wire [63:0]  probe1 
-   .probe21(adc_data[383:320]),   // input wire [63:0]  probe1 
-   .probe22(adc_data[447:384]),   // input wire [63:0]  probe1 
-   .probe23(adc_data[511:448]),   // input wire [63:0]  probe1 
-   .probe24(adc_data[575:512]),   // input wire [63:0]  probe1 
-   .probe25(adc_data[639:576]),   // input wire [63:0]  probe1 
-   .probe26(adc_data[703:640]),   // input wire [63:0]  probe1 
-   .probe27(adc_data[767:704]),   // input wire [63:0]  probe1 
-   .probe28(adc_data[831:768]),   // input wire [63:0]  probe1 
-   .probe29(adc_data[895:832]),   // input wire [63:0]  probe1 
-   .probe30(adc_data[959:896]),   // input wire [63:0]  probe1 
-   .probe31(adc_data[1023:960])   // input wire [63:0]  probe1 
+   .clk ( clk ),                       // I
+   .probe0(address),                   // input wire [16:0]  probe1 
+   .probe1(rd),                        // input wire [0:0]  probe1 
+   .probe2(rp),                        // input wire [0:0]  probe1 
+   .probe3(rp_address),                // input wire [4:0]  probe1 
+   .probe4(rp_data),                   // input wire [31:0]  probe1 
+   .probe5(wr),                        // input wire [0:0]  probe1 
+   .probe6(wr_be),                     // input wire [3:0]  probe1 
+   .probe7(wr_data),                   // input wire [31:0]  probe1 
+   .probe8(ack),                       // input wire [0:0]  probe1 
+   .probe9(adc_wr),                    // input wire [0:0]  probe1 
+   .probe10(adc_wr_adr),               // input wire [15:0]  probe1 
+   .probe11(adc_wr_data),              // input wire [19:0]  probe1 
+   .probe12(adc_rd_adr),               // input wire [15:0]  probe1 
+   .probe13(adc_rd_data),              // input wire [19:0]  probe1 
+   .probe14(curr_data),                // input wire [63:0]  probe1 
+   .probe15(adc_start),                // input wire [0:0]  probe1 
+   .probe16(adc_stop),                 // input wire [0:0]  probe1 
+   .probe17(ack_data),                 // input wire [0:0]  probe1 
+   .probe18(adc_load),                 // input wire [0:0]  probe1 
+   .probe19(adc_low),                  // input wire [0:0]  probe1 
+   .probe20(has_adc_data),             // input wire [0:0]  probe1 
+   .probe21(synced_buffer[31:0]),      // input wire [31:0]  probe1 
+   .probe22(synced_buffer[63:32]),     // input wire [31:0]  probe1 
+   .probe23(synced_buffer[95:64]),     // input wire [31:0]  probe1 
+   .probe24(synced_buffer[127:96]),    // input wire [31:0]  probe1 
+   .probe25(synced_buffer[159:128]),   // input wire [31:0]  probe1 
+   .probe26(synced_buffer[191:160]),   // input wire [31:0]  probe1 
+   .probe27(synced_buffer[223:192]),   // input wire [31:0]  probe1 
+   .probe28(synced_buffer[255:224]),   // input wire [31:0]  probe1 
+   .probe29(synced_buffer[287:256]),   // input wire [31:0]  probe1 
+   .probe30(synced_buffer[319:288]),   // input wire [31:0]  probe1 
+   .probe31(synced_buffer[351:320]),   // input wire [31:0]  probe1 
+   .probe32(synced_buffer[383:352]),   // input wire [31:0]  probe1 
+   .probe33(synced_buffer[415:384]),   // input wire [31:0]  probe1 
+   .probe34(synced_buffer[447:416]),   // input wire [31:0]  probe1 
+   .probe35(synced_buffer[479:448]),   // input wire [31:0]  probe1 
+   .probe36(synced_buffer[511:480])    // input wire [31:0]  probe1 
 );
 
 generate
@@ -119,11 +127,13 @@ begin : adc_app
       ack <= 0;
       rp <= 0;
       adc_wr <= 0;
-      start <= 0;
+      adc_start <= 0;
+      adc_stop <= 0;
       sync <= 0;
       ack_data <= 0;
       adc_load <= 0;
       adc_low <= 0;
+      has_adc_data <= 0;
     end
     else
     begin
@@ -201,7 +211,7 @@ begin : adc_app
           adc_wr_adr = address[16:1];
           adc_wr <= 1;
           ack <= 1;
-          start <= 1;
+          adc_start <= 1;
         end
         else
         begin
@@ -217,7 +227,10 @@ begin : adc_app
       end
 
       if (running)
-        start <= 0;
+        adc_start <= 0;
+
+      if (!running)
+        adc_stop <= 0;
 
       if (notify_data)
       begin
@@ -229,9 +242,8 @@ begin : adc_app
 
       if (sync)
       begin
-        ack_data <= 0;
         sync <= 0;
-        adc_load <= 0;
+        adc_load <= 1;
 
         synced_buffer[13:0] <= sync_buffer0[13:0];
         if (sync_buffer0[13])
@@ -425,17 +437,33 @@ begin : adc_app
         else
           synced_buffer[511:510] <= 2'b00;
       end
+      else
+        adc_load <= 0;
 
       if (adc_load)
       begin
         adc_load <= 0;
+        ack_data <= 0;
 
         if (adc_low)
-          adc_data[511:0] <= synced_buffer;
-        else
           adc_data[1023:512] <= synced_buffer;
+        else
+          adc_data[511:0] <= synced_buffer;
 
-        adc_low = adc_low + 1;
+        adc_low <= adc_low + 1;
+
+        if (adc_low == 1)
+          has_adc_data <= 1;
+        else
+          has_adc_data <= 0;
+      end
+      else
+        has_adc_data <= 0;
+
+      if (has_adc_data)
+      begin
+        has_adc_data <= 0;
+        adc_stop <= 1;
       end
     end
   end
@@ -448,6 +476,7 @@ begin : adc_app
       curr_ch0 <= 10000;
       curr_ch1 <= 0;
       running <= 0;
+      first <= 0;
       notify_data <= 0;
     end
     else
@@ -462,7 +491,7 @@ begin : adc_app
 
         sample_counter <= sample_counter + 1;
 
-        if (sample_counter == 5'b11111)
+        if (!sample_counter && !first)
         begin
           sync_buffer0 <= sample_buffer0;
           sync_buffer1 <= sample_buffer1;
@@ -478,13 +507,22 @@ begin : adc_app
           curr_ch1 <= curr_ch1 + 1;
         else
           curr_ch1 <= 0;
+
+        first <= 0;
       end        
 
       if (ack_data)
         notify_data <= 0;
 
-      if (start)
+      if (adc_start && !running)
+      begin
         running <= 1;
+        first <= 1;
+        sample_counter <= 0;
+      end
+
+      if (adc_stop && running)
+        running <= 0;
         
     end
   end
