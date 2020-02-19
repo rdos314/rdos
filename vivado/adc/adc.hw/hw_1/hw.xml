@@ -4,7 +4,7 @@
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.        -->
 
 <hwsession version="1" minor="2">
-  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;],dashboard2=hw_ila_1[xc7k325t_0/hw_ila_1/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_1/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_1/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_1/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_1/Capture Setup=ILA_CAPTURE_1;],dashboard3=hw_ila_2[xc7k325t_0/hw_ila_2/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_2/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_2/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_2/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_2/Settings=ILA_SETTINGS_1;],dashboard4=hw_ila_3[xc7k325t_0/hw_ila_3/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_3/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_3/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_3/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_3/Waveform=ILA_WAVE_1;],dashboard5=hw_ila_4[xc7k325t_0/hw_ila_4/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_4/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_4/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_4/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_4/Trigger Setup=ILA_TRIGGER_1;]"/>
+  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;]"/>
   <ObjectList object_type="hw_device" gui_info="">
     <Object name="xc7k325t_0" gui_info="">
       <Properties Property="FULL_PROBES.FILE" value="$_project_name_.runs/impl_1/$_project_name_.ltx"/>
@@ -118,6 +118,27 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe17[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/ack_data"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_2"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe0[0]"/>
@@ -131,7 +152,7 @@
         <net name="adc_app_inst/active"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -215,7 +236,7 @@
         <net name="adc_app_inst/adc_data[960]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -299,7 +320,7 @@
         <net name="adc_app_inst/adc_data_10[576]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -383,7 +404,7 @@
         <net name="adc_app_inst/adc_data_11[640]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -467,7 +488,7 @@
         <net name="adc_app_inst/adc_data_12[704]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -551,7 +572,7 @@
         <net name="adc_app_inst/adc_data_13[768]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -635,7 +656,7 @@
         <net name="adc_app_inst/adc_data_14[832]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -719,7 +740,7 @@
         <net name="adc_app_inst/adc_data_15[896]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -803,7 +824,7 @@
         <net name="adc_app_inst/adc_data_1[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -887,7 +908,7 @@
         <net name="adc_app_inst/adc_data_2[64]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -971,7 +992,7 @@
         <net name="adc_app_inst/adc_data_3[128]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1055,7 +1076,7 @@
         <net name="adc_app_inst/adc_data_4[192]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1139,7 +1160,7 @@
         <net name="adc_app_inst/adc_data_5[256]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1223,7 +1244,7 @@
         <net name="adc_app_inst/adc_data_6[320]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1307,7 +1328,7 @@
         <net name="adc_app_inst/adc_data_7[384]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1391,7 +1412,7 @@
         <net name="adc_app_inst/adc_data_8[448]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -1496,6 +1517,48 @@
         <net name="adc_app_inst/adc_empty"/>
       </nets>
     </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe18[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/adc_load"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe19[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/adc_low"/>
+      </nets>
+    </probe>
     <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
@@ -1570,6 +1633,48 @@
         <net name="adc_app_inst/adc_rd_data[2]"/>
         <net name="adc_app_inst/adc_rd_data[1]"/>
         <net name="adc_app_inst/adc_rd_data[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe15[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/adc_start"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe16[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/adc_stop"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
@@ -1907,6 +2012,27 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_1"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe20[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/has_adc_data"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe1[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
@@ -2122,6 +2248,838 @@
         <net name="adc_app_inst/sample_data[2]"/>
         <net name="adc_app_inst/sample_data[1]"/>
         <net name="adc_app_inst/sample_data[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe36[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer[511]"/>
+        <net name="adc_app_inst/synced_buffer[510]"/>
+        <net name="adc_app_inst/synced_buffer[509]"/>
+        <net name="adc_app_inst/synced_buffer[508]"/>
+        <net name="adc_app_inst/synced_buffer[507]"/>
+        <net name="adc_app_inst/synced_buffer[506]"/>
+        <net name="adc_app_inst/synced_buffer[505]"/>
+        <net name="adc_app_inst/synced_buffer[504]"/>
+        <net name="adc_app_inst/synced_buffer[503]"/>
+        <net name="adc_app_inst/synced_buffer[502]"/>
+        <net name="adc_app_inst/synced_buffer[501]"/>
+        <net name="adc_app_inst/synced_buffer[500]"/>
+        <net name="adc_app_inst/synced_buffer[499]"/>
+        <net name="adc_app_inst/synced_buffer[498]"/>
+        <net name="adc_app_inst/synced_buffer[497]"/>
+        <net name="adc_app_inst/synced_buffer[496]"/>
+        <net name="adc_app_inst/synced_buffer[495]"/>
+        <net name="adc_app_inst/synced_buffer[494]"/>
+        <net name="adc_app_inst/synced_buffer[493]"/>
+        <net name="adc_app_inst/synced_buffer[492]"/>
+        <net name="adc_app_inst/synced_buffer[491]"/>
+        <net name="adc_app_inst/synced_buffer[490]"/>
+        <net name="adc_app_inst/synced_buffer[489]"/>
+        <net name="adc_app_inst/synced_buffer[488]"/>
+        <net name="adc_app_inst/synced_buffer[487]"/>
+        <net name="adc_app_inst/synced_buffer[486]"/>
+        <net name="adc_app_inst/synced_buffer[485]"/>
+        <net name="adc_app_inst/synced_buffer[484]"/>
+        <net name="adc_app_inst/synced_buffer[483]"/>
+        <net name="adc_app_inst/synced_buffer[482]"/>
+        <net name="adc_app_inst/synced_buffer[481]"/>
+        <net name="adc_app_inst/synced_buffer[480]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe30[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_10[319]"/>
+        <net name="adc_app_inst/synced_buffer_10[318]"/>
+        <net name="adc_app_inst/synced_buffer_10[317]"/>
+        <net name="adc_app_inst/synced_buffer_10[316]"/>
+        <net name="adc_app_inst/synced_buffer_10[315]"/>
+        <net name="adc_app_inst/synced_buffer_10[314]"/>
+        <net name="adc_app_inst/synced_buffer_10[313]"/>
+        <net name="adc_app_inst/synced_buffer_10[312]"/>
+        <net name="adc_app_inst/synced_buffer_10[311]"/>
+        <net name="adc_app_inst/synced_buffer_10[310]"/>
+        <net name="adc_app_inst/synced_buffer_10[309]"/>
+        <net name="adc_app_inst/synced_buffer_10[308]"/>
+        <net name="adc_app_inst/synced_buffer_10[307]"/>
+        <net name="adc_app_inst/synced_buffer_10[306]"/>
+        <net name="adc_app_inst/synced_buffer_10[305]"/>
+        <net name="adc_app_inst/synced_buffer_10[304]"/>
+        <net name="adc_app_inst/synced_buffer_10[303]"/>
+        <net name="adc_app_inst/synced_buffer_10[302]"/>
+        <net name="adc_app_inst/synced_buffer_10[301]"/>
+        <net name="adc_app_inst/synced_buffer_10[300]"/>
+        <net name="adc_app_inst/synced_buffer_10[299]"/>
+        <net name="adc_app_inst/synced_buffer_10[298]"/>
+        <net name="adc_app_inst/synced_buffer_10[297]"/>
+        <net name="adc_app_inst/synced_buffer_10[296]"/>
+        <net name="adc_app_inst/synced_buffer_10[295]"/>
+        <net name="adc_app_inst/synced_buffer_10[294]"/>
+        <net name="adc_app_inst/synced_buffer_10[293]"/>
+        <net name="adc_app_inst/synced_buffer_10[292]"/>
+        <net name="adc_app_inst/synced_buffer_10[291]"/>
+        <net name="adc_app_inst/synced_buffer_10[290]"/>
+        <net name="adc_app_inst/synced_buffer_10[289]"/>
+        <net name="adc_app_inst/synced_buffer_10[288]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe31[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_11[351]"/>
+        <net name="adc_app_inst/synced_buffer_11[350]"/>
+        <net name="adc_app_inst/synced_buffer_11[349]"/>
+        <net name="adc_app_inst/synced_buffer_11[348]"/>
+        <net name="adc_app_inst/synced_buffer_11[347]"/>
+        <net name="adc_app_inst/synced_buffer_11[346]"/>
+        <net name="adc_app_inst/synced_buffer_11[345]"/>
+        <net name="adc_app_inst/synced_buffer_11[344]"/>
+        <net name="adc_app_inst/synced_buffer_11[343]"/>
+        <net name="adc_app_inst/synced_buffer_11[342]"/>
+        <net name="adc_app_inst/synced_buffer_11[341]"/>
+        <net name="adc_app_inst/synced_buffer_11[340]"/>
+        <net name="adc_app_inst/synced_buffer_11[339]"/>
+        <net name="adc_app_inst/synced_buffer_11[338]"/>
+        <net name="adc_app_inst/synced_buffer_11[337]"/>
+        <net name="adc_app_inst/synced_buffer_11[336]"/>
+        <net name="adc_app_inst/synced_buffer_11[335]"/>
+        <net name="adc_app_inst/synced_buffer_11[334]"/>
+        <net name="adc_app_inst/synced_buffer_11[333]"/>
+        <net name="adc_app_inst/synced_buffer_11[332]"/>
+        <net name="adc_app_inst/synced_buffer_11[331]"/>
+        <net name="adc_app_inst/synced_buffer_11[330]"/>
+        <net name="adc_app_inst/synced_buffer_11[329]"/>
+        <net name="adc_app_inst/synced_buffer_11[328]"/>
+        <net name="adc_app_inst/synced_buffer_11[327]"/>
+        <net name="adc_app_inst/synced_buffer_11[326]"/>
+        <net name="adc_app_inst/synced_buffer_11[325]"/>
+        <net name="adc_app_inst/synced_buffer_11[324]"/>
+        <net name="adc_app_inst/synced_buffer_11[323]"/>
+        <net name="adc_app_inst/synced_buffer_11[322]"/>
+        <net name="adc_app_inst/synced_buffer_11[321]"/>
+        <net name="adc_app_inst/synced_buffer_11[320]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe32[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_12[383]"/>
+        <net name="adc_app_inst/synced_buffer_12[382]"/>
+        <net name="adc_app_inst/synced_buffer_12[381]"/>
+        <net name="adc_app_inst/synced_buffer_12[380]"/>
+        <net name="adc_app_inst/synced_buffer_12[379]"/>
+        <net name="adc_app_inst/synced_buffer_12[378]"/>
+        <net name="adc_app_inst/synced_buffer_12[377]"/>
+        <net name="adc_app_inst/synced_buffer_12[376]"/>
+        <net name="adc_app_inst/synced_buffer_12[375]"/>
+        <net name="adc_app_inst/synced_buffer_12[374]"/>
+        <net name="adc_app_inst/synced_buffer_12[373]"/>
+        <net name="adc_app_inst/synced_buffer_12[372]"/>
+        <net name="adc_app_inst/synced_buffer_12[371]"/>
+        <net name="adc_app_inst/synced_buffer_12[370]"/>
+        <net name="adc_app_inst/synced_buffer_12[369]"/>
+        <net name="adc_app_inst/synced_buffer_12[368]"/>
+        <net name="adc_app_inst/synced_buffer_12[367]"/>
+        <net name="adc_app_inst/synced_buffer_12[366]"/>
+        <net name="adc_app_inst/synced_buffer_12[365]"/>
+        <net name="adc_app_inst/synced_buffer_12[364]"/>
+        <net name="adc_app_inst/synced_buffer_12[363]"/>
+        <net name="adc_app_inst/synced_buffer_12[362]"/>
+        <net name="adc_app_inst/synced_buffer_12[361]"/>
+        <net name="adc_app_inst/synced_buffer_12[360]"/>
+        <net name="adc_app_inst/synced_buffer_12[359]"/>
+        <net name="adc_app_inst/synced_buffer_12[358]"/>
+        <net name="adc_app_inst/synced_buffer_12[357]"/>
+        <net name="adc_app_inst/synced_buffer_12[356]"/>
+        <net name="adc_app_inst/synced_buffer_12[355]"/>
+        <net name="adc_app_inst/synced_buffer_12[354]"/>
+        <net name="adc_app_inst/synced_buffer_12[353]"/>
+        <net name="adc_app_inst/synced_buffer_12[352]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe33[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_13[415]"/>
+        <net name="adc_app_inst/synced_buffer_13[414]"/>
+        <net name="adc_app_inst/synced_buffer_13[413]"/>
+        <net name="adc_app_inst/synced_buffer_13[412]"/>
+        <net name="adc_app_inst/synced_buffer_13[411]"/>
+        <net name="adc_app_inst/synced_buffer_13[410]"/>
+        <net name="adc_app_inst/synced_buffer_13[409]"/>
+        <net name="adc_app_inst/synced_buffer_13[408]"/>
+        <net name="adc_app_inst/synced_buffer_13[407]"/>
+        <net name="adc_app_inst/synced_buffer_13[406]"/>
+        <net name="adc_app_inst/synced_buffer_13[405]"/>
+        <net name="adc_app_inst/synced_buffer_13[404]"/>
+        <net name="adc_app_inst/synced_buffer_13[403]"/>
+        <net name="adc_app_inst/synced_buffer_13[402]"/>
+        <net name="adc_app_inst/synced_buffer_13[401]"/>
+        <net name="adc_app_inst/synced_buffer_13[400]"/>
+        <net name="adc_app_inst/synced_buffer_13[399]"/>
+        <net name="adc_app_inst/synced_buffer_13[398]"/>
+        <net name="adc_app_inst/synced_buffer_13[397]"/>
+        <net name="adc_app_inst/synced_buffer_13[396]"/>
+        <net name="adc_app_inst/synced_buffer_13[395]"/>
+        <net name="adc_app_inst/synced_buffer_13[394]"/>
+        <net name="adc_app_inst/synced_buffer_13[393]"/>
+        <net name="adc_app_inst/synced_buffer_13[392]"/>
+        <net name="adc_app_inst/synced_buffer_13[391]"/>
+        <net name="adc_app_inst/synced_buffer_13[390]"/>
+        <net name="adc_app_inst/synced_buffer_13[389]"/>
+        <net name="adc_app_inst/synced_buffer_13[388]"/>
+        <net name="adc_app_inst/synced_buffer_13[387]"/>
+        <net name="adc_app_inst/synced_buffer_13[386]"/>
+        <net name="adc_app_inst/synced_buffer_13[385]"/>
+        <net name="adc_app_inst/synced_buffer_13[384]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe34[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_14[447]"/>
+        <net name="adc_app_inst/synced_buffer_14[446]"/>
+        <net name="adc_app_inst/synced_buffer_14[445]"/>
+        <net name="adc_app_inst/synced_buffer_14[444]"/>
+        <net name="adc_app_inst/synced_buffer_14[443]"/>
+        <net name="adc_app_inst/synced_buffer_14[442]"/>
+        <net name="adc_app_inst/synced_buffer_14[441]"/>
+        <net name="adc_app_inst/synced_buffer_14[440]"/>
+        <net name="adc_app_inst/synced_buffer_14[439]"/>
+        <net name="adc_app_inst/synced_buffer_14[438]"/>
+        <net name="adc_app_inst/synced_buffer_14[437]"/>
+        <net name="adc_app_inst/synced_buffer_14[436]"/>
+        <net name="adc_app_inst/synced_buffer_14[435]"/>
+        <net name="adc_app_inst/synced_buffer_14[434]"/>
+        <net name="adc_app_inst/synced_buffer_14[433]"/>
+        <net name="adc_app_inst/synced_buffer_14[432]"/>
+        <net name="adc_app_inst/synced_buffer_14[431]"/>
+        <net name="adc_app_inst/synced_buffer_14[430]"/>
+        <net name="adc_app_inst/synced_buffer_14[429]"/>
+        <net name="adc_app_inst/synced_buffer_14[428]"/>
+        <net name="adc_app_inst/synced_buffer_14[427]"/>
+        <net name="adc_app_inst/synced_buffer_14[426]"/>
+        <net name="adc_app_inst/synced_buffer_14[425]"/>
+        <net name="adc_app_inst/synced_buffer_14[424]"/>
+        <net name="adc_app_inst/synced_buffer_14[423]"/>
+        <net name="adc_app_inst/synced_buffer_14[422]"/>
+        <net name="adc_app_inst/synced_buffer_14[421]"/>
+        <net name="adc_app_inst/synced_buffer_14[420]"/>
+        <net name="adc_app_inst/synced_buffer_14[419]"/>
+        <net name="adc_app_inst/synced_buffer_14[418]"/>
+        <net name="adc_app_inst/synced_buffer_14[417]"/>
+        <net name="adc_app_inst/synced_buffer_14[416]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe35[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_15[479]"/>
+        <net name="adc_app_inst/synced_buffer_15[478]"/>
+        <net name="adc_app_inst/synced_buffer_15[477]"/>
+        <net name="adc_app_inst/synced_buffer_15[476]"/>
+        <net name="adc_app_inst/synced_buffer_15[475]"/>
+        <net name="adc_app_inst/synced_buffer_15[474]"/>
+        <net name="adc_app_inst/synced_buffer_15[473]"/>
+        <net name="adc_app_inst/synced_buffer_15[472]"/>
+        <net name="adc_app_inst/synced_buffer_15[471]"/>
+        <net name="adc_app_inst/synced_buffer_15[470]"/>
+        <net name="adc_app_inst/synced_buffer_15[469]"/>
+        <net name="adc_app_inst/synced_buffer_15[468]"/>
+        <net name="adc_app_inst/synced_buffer_15[467]"/>
+        <net name="adc_app_inst/synced_buffer_15[466]"/>
+        <net name="adc_app_inst/synced_buffer_15[465]"/>
+        <net name="adc_app_inst/synced_buffer_15[464]"/>
+        <net name="adc_app_inst/synced_buffer_15[463]"/>
+        <net name="adc_app_inst/synced_buffer_15[462]"/>
+        <net name="adc_app_inst/synced_buffer_15[461]"/>
+        <net name="adc_app_inst/synced_buffer_15[460]"/>
+        <net name="adc_app_inst/synced_buffer_15[459]"/>
+        <net name="adc_app_inst/synced_buffer_15[458]"/>
+        <net name="adc_app_inst/synced_buffer_15[457]"/>
+        <net name="adc_app_inst/synced_buffer_15[456]"/>
+        <net name="adc_app_inst/synced_buffer_15[455]"/>
+        <net name="adc_app_inst/synced_buffer_15[454]"/>
+        <net name="adc_app_inst/synced_buffer_15[453]"/>
+        <net name="adc_app_inst/synced_buffer_15[452]"/>
+        <net name="adc_app_inst/synced_buffer_15[451]"/>
+        <net name="adc_app_inst/synced_buffer_15[450]"/>
+        <net name="adc_app_inst/synced_buffer_15[449]"/>
+        <net name="adc_app_inst/synced_buffer_15[448]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe21[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_1[31]"/>
+        <net name="adc_app_inst/synced_buffer_1[30]"/>
+        <net name="adc_app_inst/synced_buffer_1[29]"/>
+        <net name="adc_app_inst/synced_buffer_1[28]"/>
+        <net name="adc_app_inst/synced_buffer_1[27]"/>
+        <net name="adc_app_inst/synced_buffer_1[26]"/>
+        <net name="adc_app_inst/synced_buffer_1[25]"/>
+        <net name="adc_app_inst/synced_buffer_1[24]"/>
+        <net name="adc_app_inst/synced_buffer_1[23]"/>
+        <net name="adc_app_inst/synced_buffer_1[22]"/>
+        <net name="adc_app_inst/synced_buffer_1[21]"/>
+        <net name="adc_app_inst/synced_buffer_1[20]"/>
+        <net name="adc_app_inst/synced_buffer_1[19]"/>
+        <net name="adc_app_inst/synced_buffer_1[18]"/>
+        <net name="adc_app_inst/synced_buffer_1[17]"/>
+        <net name="adc_app_inst/synced_buffer_1[16]"/>
+        <net name="adc_app_inst/synced_buffer_1[15]"/>
+        <net name="adc_app_inst/synced_buffer_1[14]"/>
+        <net name="adc_app_inst/synced_buffer_1[13]"/>
+        <net name="adc_app_inst/synced_buffer_1[12]"/>
+        <net name="adc_app_inst/synced_buffer_1[11]"/>
+        <net name="adc_app_inst/synced_buffer_1[10]"/>
+        <net name="adc_app_inst/synced_buffer_1[9]"/>
+        <net name="adc_app_inst/synced_buffer_1[8]"/>
+        <net name="adc_app_inst/synced_buffer_1[7]"/>
+        <net name="adc_app_inst/synced_buffer_1[6]"/>
+        <net name="adc_app_inst/synced_buffer_1[5]"/>
+        <net name="adc_app_inst/synced_buffer_1[4]"/>
+        <net name="adc_app_inst/synced_buffer_1[3]"/>
+        <net name="adc_app_inst/synced_buffer_1[2]"/>
+        <net name="adc_app_inst/synced_buffer_1[1]"/>
+        <net name="adc_app_inst/synced_buffer_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe22[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_2[63]"/>
+        <net name="adc_app_inst/synced_buffer_2[62]"/>
+        <net name="adc_app_inst/synced_buffer_2[61]"/>
+        <net name="adc_app_inst/synced_buffer_2[60]"/>
+        <net name="adc_app_inst/synced_buffer_2[59]"/>
+        <net name="adc_app_inst/synced_buffer_2[58]"/>
+        <net name="adc_app_inst/synced_buffer_2[57]"/>
+        <net name="adc_app_inst/synced_buffer_2[56]"/>
+        <net name="adc_app_inst/synced_buffer_2[55]"/>
+        <net name="adc_app_inst/synced_buffer_2[54]"/>
+        <net name="adc_app_inst/synced_buffer_2[53]"/>
+        <net name="adc_app_inst/synced_buffer_2[52]"/>
+        <net name="adc_app_inst/synced_buffer_2[51]"/>
+        <net name="adc_app_inst/synced_buffer_2[50]"/>
+        <net name="adc_app_inst/synced_buffer_2[49]"/>
+        <net name="adc_app_inst/synced_buffer_2[48]"/>
+        <net name="adc_app_inst/synced_buffer_2[47]"/>
+        <net name="adc_app_inst/synced_buffer_2[46]"/>
+        <net name="adc_app_inst/synced_buffer_2[45]"/>
+        <net name="adc_app_inst/synced_buffer_2[44]"/>
+        <net name="adc_app_inst/synced_buffer_2[43]"/>
+        <net name="adc_app_inst/synced_buffer_2[42]"/>
+        <net name="adc_app_inst/synced_buffer_2[41]"/>
+        <net name="adc_app_inst/synced_buffer_2[40]"/>
+        <net name="adc_app_inst/synced_buffer_2[39]"/>
+        <net name="adc_app_inst/synced_buffer_2[38]"/>
+        <net name="adc_app_inst/synced_buffer_2[37]"/>
+        <net name="adc_app_inst/synced_buffer_2[36]"/>
+        <net name="adc_app_inst/synced_buffer_2[35]"/>
+        <net name="adc_app_inst/synced_buffer_2[34]"/>
+        <net name="adc_app_inst/synced_buffer_2[33]"/>
+        <net name="adc_app_inst/synced_buffer_2[32]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe23[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_3[95]"/>
+        <net name="adc_app_inst/synced_buffer_3[94]"/>
+        <net name="adc_app_inst/synced_buffer_3[93]"/>
+        <net name="adc_app_inst/synced_buffer_3[92]"/>
+        <net name="adc_app_inst/synced_buffer_3[91]"/>
+        <net name="adc_app_inst/synced_buffer_3[90]"/>
+        <net name="adc_app_inst/synced_buffer_3[89]"/>
+        <net name="adc_app_inst/synced_buffer_3[88]"/>
+        <net name="adc_app_inst/synced_buffer_3[87]"/>
+        <net name="adc_app_inst/synced_buffer_3[86]"/>
+        <net name="adc_app_inst/synced_buffer_3[85]"/>
+        <net name="adc_app_inst/synced_buffer_3[84]"/>
+        <net name="adc_app_inst/synced_buffer_3[83]"/>
+        <net name="adc_app_inst/synced_buffer_3[82]"/>
+        <net name="adc_app_inst/synced_buffer_3[81]"/>
+        <net name="adc_app_inst/synced_buffer_3[80]"/>
+        <net name="adc_app_inst/synced_buffer_3[79]"/>
+        <net name="adc_app_inst/synced_buffer_3[78]"/>
+        <net name="adc_app_inst/synced_buffer_3[77]"/>
+        <net name="adc_app_inst/synced_buffer_3[76]"/>
+        <net name="adc_app_inst/synced_buffer_3[75]"/>
+        <net name="adc_app_inst/synced_buffer_3[74]"/>
+        <net name="adc_app_inst/synced_buffer_3[73]"/>
+        <net name="adc_app_inst/synced_buffer_3[72]"/>
+        <net name="adc_app_inst/synced_buffer_3[71]"/>
+        <net name="adc_app_inst/synced_buffer_3[70]"/>
+        <net name="adc_app_inst/synced_buffer_3[69]"/>
+        <net name="adc_app_inst/synced_buffer_3[68]"/>
+        <net name="adc_app_inst/synced_buffer_3[67]"/>
+        <net name="adc_app_inst/synced_buffer_3[66]"/>
+        <net name="adc_app_inst/synced_buffer_3[65]"/>
+        <net name="adc_app_inst/synced_buffer_3[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe24[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_4[127]"/>
+        <net name="adc_app_inst/synced_buffer_4[126]"/>
+        <net name="adc_app_inst/synced_buffer_4[125]"/>
+        <net name="adc_app_inst/synced_buffer_4[124]"/>
+        <net name="adc_app_inst/synced_buffer_4[123]"/>
+        <net name="adc_app_inst/synced_buffer_4[122]"/>
+        <net name="adc_app_inst/synced_buffer_4[121]"/>
+        <net name="adc_app_inst/synced_buffer_4[120]"/>
+        <net name="adc_app_inst/synced_buffer_4[119]"/>
+        <net name="adc_app_inst/synced_buffer_4[118]"/>
+        <net name="adc_app_inst/synced_buffer_4[117]"/>
+        <net name="adc_app_inst/synced_buffer_4[116]"/>
+        <net name="adc_app_inst/synced_buffer_4[115]"/>
+        <net name="adc_app_inst/synced_buffer_4[114]"/>
+        <net name="adc_app_inst/synced_buffer_4[113]"/>
+        <net name="adc_app_inst/synced_buffer_4[112]"/>
+        <net name="adc_app_inst/synced_buffer_4[111]"/>
+        <net name="adc_app_inst/synced_buffer_4[110]"/>
+        <net name="adc_app_inst/synced_buffer_4[109]"/>
+        <net name="adc_app_inst/synced_buffer_4[108]"/>
+        <net name="adc_app_inst/synced_buffer_4[107]"/>
+        <net name="adc_app_inst/synced_buffer_4[106]"/>
+        <net name="adc_app_inst/synced_buffer_4[105]"/>
+        <net name="adc_app_inst/synced_buffer_4[104]"/>
+        <net name="adc_app_inst/synced_buffer_4[103]"/>
+        <net name="adc_app_inst/synced_buffer_4[102]"/>
+        <net name="adc_app_inst/synced_buffer_4[101]"/>
+        <net name="adc_app_inst/synced_buffer_4[100]"/>
+        <net name="adc_app_inst/synced_buffer_4[99]"/>
+        <net name="adc_app_inst/synced_buffer_4[98]"/>
+        <net name="adc_app_inst/synced_buffer_4[97]"/>
+        <net name="adc_app_inst/synced_buffer_4[96]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe25[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_5[159]"/>
+        <net name="adc_app_inst/synced_buffer_5[158]"/>
+        <net name="adc_app_inst/synced_buffer_5[157]"/>
+        <net name="adc_app_inst/synced_buffer_5[156]"/>
+        <net name="adc_app_inst/synced_buffer_5[155]"/>
+        <net name="adc_app_inst/synced_buffer_5[154]"/>
+        <net name="adc_app_inst/synced_buffer_5[153]"/>
+        <net name="adc_app_inst/synced_buffer_5[152]"/>
+        <net name="adc_app_inst/synced_buffer_5[151]"/>
+        <net name="adc_app_inst/synced_buffer_5[150]"/>
+        <net name="adc_app_inst/synced_buffer_5[149]"/>
+        <net name="adc_app_inst/synced_buffer_5[148]"/>
+        <net name="adc_app_inst/synced_buffer_5[147]"/>
+        <net name="adc_app_inst/synced_buffer_5[146]"/>
+        <net name="adc_app_inst/synced_buffer_5[145]"/>
+        <net name="adc_app_inst/synced_buffer_5[144]"/>
+        <net name="adc_app_inst/synced_buffer_5[143]"/>
+        <net name="adc_app_inst/synced_buffer_5[142]"/>
+        <net name="adc_app_inst/synced_buffer_5[141]"/>
+        <net name="adc_app_inst/synced_buffer_5[140]"/>
+        <net name="adc_app_inst/synced_buffer_5[139]"/>
+        <net name="adc_app_inst/synced_buffer_5[138]"/>
+        <net name="adc_app_inst/synced_buffer_5[137]"/>
+        <net name="adc_app_inst/synced_buffer_5[136]"/>
+        <net name="adc_app_inst/synced_buffer_5[135]"/>
+        <net name="adc_app_inst/synced_buffer_5[134]"/>
+        <net name="adc_app_inst/synced_buffer_5[133]"/>
+        <net name="adc_app_inst/synced_buffer_5[132]"/>
+        <net name="adc_app_inst/synced_buffer_5[131]"/>
+        <net name="adc_app_inst/synced_buffer_5[130]"/>
+        <net name="adc_app_inst/synced_buffer_5[129]"/>
+        <net name="adc_app_inst/synced_buffer_5[128]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe26[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_6[191]"/>
+        <net name="adc_app_inst/synced_buffer_6[190]"/>
+        <net name="adc_app_inst/synced_buffer_6[189]"/>
+        <net name="adc_app_inst/synced_buffer_6[188]"/>
+        <net name="adc_app_inst/synced_buffer_6[187]"/>
+        <net name="adc_app_inst/synced_buffer_6[186]"/>
+        <net name="adc_app_inst/synced_buffer_6[185]"/>
+        <net name="adc_app_inst/synced_buffer_6[184]"/>
+        <net name="adc_app_inst/synced_buffer_6[183]"/>
+        <net name="adc_app_inst/synced_buffer_6[182]"/>
+        <net name="adc_app_inst/synced_buffer_6[181]"/>
+        <net name="adc_app_inst/synced_buffer_6[180]"/>
+        <net name="adc_app_inst/synced_buffer_6[179]"/>
+        <net name="adc_app_inst/synced_buffer_6[178]"/>
+        <net name="adc_app_inst/synced_buffer_6[177]"/>
+        <net name="adc_app_inst/synced_buffer_6[176]"/>
+        <net name="adc_app_inst/synced_buffer_6[175]"/>
+        <net name="adc_app_inst/synced_buffer_6[174]"/>
+        <net name="adc_app_inst/synced_buffer_6[173]"/>
+        <net name="adc_app_inst/synced_buffer_6[172]"/>
+        <net name="adc_app_inst/synced_buffer_6[171]"/>
+        <net name="adc_app_inst/synced_buffer_6[170]"/>
+        <net name="adc_app_inst/synced_buffer_6[169]"/>
+        <net name="adc_app_inst/synced_buffer_6[168]"/>
+        <net name="adc_app_inst/synced_buffer_6[167]"/>
+        <net name="adc_app_inst/synced_buffer_6[166]"/>
+        <net name="adc_app_inst/synced_buffer_6[165]"/>
+        <net name="adc_app_inst/synced_buffer_6[164]"/>
+        <net name="adc_app_inst/synced_buffer_6[163]"/>
+        <net name="adc_app_inst/synced_buffer_6[162]"/>
+        <net name="adc_app_inst/synced_buffer_6[161]"/>
+        <net name="adc_app_inst/synced_buffer_6[160]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe27[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_7[223]"/>
+        <net name="adc_app_inst/synced_buffer_7[222]"/>
+        <net name="adc_app_inst/synced_buffer_7[221]"/>
+        <net name="adc_app_inst/synced_buffer_7[220]"/>
+        <net name="adc_app_inst/synced_buffer_7[219]"/>
+        <net name="adc_app_inst/synced_buffer_7[218]"/>
+        <net name="adc_app_inst/synced_buffer_7[217]"/>
+        <net name="adc_app_inst/synced_buffer_7[216]"/>
+        <net name="adc_app_inst/synced_buffer_7[215]"/>
+        <net name="adc_app_inst/synced_buffer_7[214]"/>
+        <net name="adc_app_inst/synced_buffer_7[213]"/>
+        <net name="adc_app_inst/synced_buffer_7[212]"/>
+        <net name="adc_app_inst/synced_buffer_7[211]"/>
+        <net name="adc_app_inst/synced_buffer_7[210]"/>
+        <net name="adc_app_inst/synced_buffer_7[209]"/>
+        <net name="adc_app_inst/synced_buffer_7[208]"/>
+        <net name="adc_app_inst/synced_buffer_7[207]"/>
+        <net name="adc_app_inst/synced_buffer_7[206]"/>
+        <net name="adc_app_inst/synced_buffer_7[205]"/>
+        <net name="adc_app_inst/synced_buffer_7[204]"/>
+        <net name="adc_app_inst/synced_buffer_7[203]"/>
+        <net name="adc_app_inst/synced_buffer_7[202]"/>
+        <net name="adc_app_inst/synced_buffer_7[201]"/>
+        <net name="adc_app_inst/synced_buffer_7[200]"/>
+        <net name="adc_app_inst/synced_buffer_7[199]"/>
+        <net name="adc_app_inst/synced_buffer_7[198]"/>
+        <net name="adc_app_inst/synced_buffer_7[197]"/>
+        <net name="adc_app_inst/synced_buffer_7[196]"/>
+        <net name="adc_app_inst/synced_buffer_7[195]"/>
+        <net name="adc_app_inst/synced_buffer_7[194]"/>
+        <net name="adc_app_inst/synced_buffer_7[193]"/>
+        <net name="adc_app_inst/synced_buffer_7[192]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe28[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_8[255]"/>
+        <net name="adc_app_inst/synced_buffer_8[254]"/>
+        <net name="adc_app_inst/synced_buffer_8[253]"/>
+        <net name="adc_app_inst/synced_buffer_8[252]"/>
+        <net name="adc_app_inst/synced_buffer_8[251]"/>
+        <net name="adc_app_inst/synced_buffer_8[250]"/>
+        <net name="adc_app_inst/synced_buffer_8[249]"/>
+        <net name="adc_app_inst/synced_buffer_8[248]"/>
+        <net name="adc_app_inst/synced_buffer_8[247]"/>
+        <net name="adc_app_inst/synced_buffer_8[246]"/>
+        <net name="adc_app_inst/synced_buffer_8[245]"/>
+        <net name="adc_app_inst/synced_buffer_8[244]"/>
+        <net name="adc_app_inst/synced_buffer_8[243]"/>
+        <net name="adc_app_inst/synced_buffer_8[242]"/>
+        <net name="adc_app_inst/synced_buffer_8[241]"/>
+        <net name="adc_app_inst/synced_buffer_8[240]"/>
+        <net name="adc_app_inst/synced_buffer_8[239]"/>
+        <net name="adc_app_inst/synced_buffer_8[238]"/>
+        <net name="adc_app_inst/synced_buffer_8[237]"/>
+        <net name="adc_app_inst/synced_buffer_8[236]"/>
+        <net name="adc_app_inst/synced_buffer_8[235]"/>
+        <net name="adc_app_inst/synced_buffer_8[234]"/>
+        <net name="adc_app_inst/synced_buffer_8[233]"/>
+        <net name="adc_app_inst/synced_buffer_8[232]"/>
+        <net name="adc_app_inst/synced_buffer_8[231]"/>
+        <net name="adc_app_inst/synced_buffer_8[230]"/>
+        <net name="adc_app_inst/synced_buffer_8[229]"/>
+        <net name="adc_app_inst/synced_buffer_8[228]"/>
+        <net name="adc_app_inst/synced_buffer_8[227]"/>
+        <net name="adc_app_inst/synced_buffer_8[226]"/>
+        <net name="adc_app_inst/synced_buffer_8[225]"/>
+        <net name="adc_app_inst/synced_buffer_8[224]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe29[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/synced_buffer_9[287]"/>
+        <net name="adc_app_inst/synced_buffer_9[286]"/>
+        <net name="adc_app_inst/synced_buffer_9[285]"/>
+        <net name="adc_app_inst/synced_buffer_9[284]"/>
+        <net name="adc_app_inst/synced_buffer_9[283]"/>
+        <net name="adc_app_inst/synced_buffer_9[282]"/>
+        <net name="adc_app_inst/synced_buffer_9[281]"/>
+        <net name="adc_app_inst/synced_buffer_9[280]"/>
+        <net name="adc_app_inst/synced_buffer_9[279]"/>
+        <net name="adc_app_inst/synced_buffer_9[278]"/>
+        <net name="adc_app_inst/synced_buffer_9[277]"/>
+        <net name="adc_app_inst/synced_buffer_9[276]"/>
+        <net name="adc_app_inst/synced_buffer_9[275]"/>
+        <net name="adc_app_inst/synced_buffer_9[274]"/>
+        <net name="adc_app_inst/synced_buffer_9[273]"/>
+        <net name="adc_app_inst/synced_buffer_9[272]"/>
+        <net name="adc_app_inst/synced_buffer_9[271]"/>
+        <net name="adc_app_inst/synced_buffer_9[270]"/>
+        <net name="adc_app_inst/synced_buffer_9[269]"/>
+        <net name="adc_app_inst/synced_buffer_9[268]"/>
+        <net name="adc_app_inst/synced_buffer_9[267]"/>
+        <net name="adc_app_inst/synced_buffer_9[266]"/>
+        <net name="adc_app_inst/synced_buffer_9[265]"/>
+        <net name="adc_app_inst/synced_buffer_9[264]"/>
+        <net name="adc_app_inst/synced_buffer_9[263]"/>
+        <net name="adc_app_inst/synced_buffer_9[262]"/>
+        <net name="adc_app_inst/synced_buffer_9[261]"/>
+        <net name="adc_app_inst/synced_buffer_9[260]"/>
+        <net name="adc_app_inst/synced_buffer_9[259]"/>
+        <net name="adc_app_inst/synced_buffer_9[258]"/>
+        <net name="adc_app_inst/synced_buffer_9[257]"/>
+        <net name="adc_app_inst/synced_buffer_9[256]"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
@@ -8071,7 +9029,7 @@
         <net name="pci_app_inst/pci_rx_inst/byte_counter[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq128&apos;hXXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq128&apos;hXXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX"/>
@@ -8079,7 +9037,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe21[127:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -8219,7 +9177,7 @@
         <net name="pci_app_inst/pci_rx_inst/calc_be[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq2&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq2&apos;hX"/>
@@ -8227,7 +9185,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe13[1:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -8241,7 +9199,7 @@
         <net name="pci_app_inst/pci_rx_inst/calc_blk_pos[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq10&apos;hXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq10&apos;hXXX"/>
@@ -8249,7 +9207,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe15[9:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -8271,7 +9229,7 @@
         <net name="pci_app_inst/pci_rx_inst/calc_blk_size[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
@@ -8279,7 +9237,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe22[7:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -8995,7 +9953,7 @@
         <net name="pci_app_inst/pci_rx_inst/m_axis_rx_tuser[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
         <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
@@ -10589,7 +11547,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe7[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -13807,7 +14765,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_5"/>
+        <Option Id="HW_ILA" value="hw_ila_4"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe18[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>

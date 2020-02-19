@@ -37,13 +37,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="136"/>
-    <Option Name="WTModelSimExportSim" Val="136"/>
-    <Option Name="WTQuestaExportSim" Val="136"/>
-    <Option Name="WTIesExportSim" Val="135"/>
-    <Option Name="WTVcsExportSim" Val="135"/>
-    <Option Name="WTRivieraExportSim" Val="135"/>
-    <Option Name="WTActivehdlExportSim" Val="135"/>
+    <Option Name="WTXSimExportSim" Val="137"/>
+    <Option Name="WTModelSimExportSim" Val="137"/>
+    <Option Name="WTQuestaExportSim" Val="137"/>
+    <Option Name="WTIesExportSim" Val="136"/>
+    <Option Name="WTVcsExportSim" Val="136"/>
+    <Option Name="WTRivieraExportSim" Val="136"/>
+    <Option Name="WTActivehdlExportSim" Val="136"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -390,6 +390,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/fifo_adc/fifo_adc.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>

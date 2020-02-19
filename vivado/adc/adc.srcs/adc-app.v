@@ -476,7 +476,7 @@ begin : adc_app
       curr_ch0 <= 10000;
       curr_ch1 <= 0;
       running <= 0;
-      first <= 0;
+      first <= 1;
       notify_data <= 0;
     end
     else
@@ -515,14 +515,14 @@ begin : adc_app
         notify_data <= 0;
 
       if (adc_start && !running)
-      begin
         running <= 1;
-        first <= 1;
-        sample_counter <= 0;
-      end
 
       if (adc_stop && running)
+      begin
         running <= 0;
+        sample_counter <= 0;
+        first <= 1;
+      end
         
     end
   end
