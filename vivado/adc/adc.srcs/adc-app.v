@@ -104,7 +104,8 @@ ila_3 ila3_inst (
    .probe10(adc_wr_adr),               // input wire [15:0]  probe1 
    .probe11(adc_wr_data),              // input wire [19:0]  probe1 
    .probe12(adc_rd_adr),               // input wire [15:0]  probe1 
-   .probe13(adc_rd_data)               // input wire [19:0]  probe1 
+   .probe13(adc_rd_data),              // input wire [19:0]  probe1 
+   .probe14(q_rd_adr)                  // input wire [19:0]  probe1 
 );
 
 ila_4 ila4_inst (
