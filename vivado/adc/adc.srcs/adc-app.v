@@ -157,18 +157,18 @@ begin : adc_app
       if (rd || wr)
       begin
         if (q_rd_adr == address[16:1])
-          adc_rd_address = sample_index;
+          adc_rd_adr = sample_index;
         else
-          adc_rd_address = address[16:1]; 
+          adc_rd_adr = address[16:1]; 
       end
       else
-        adc_rd_address = sample_index;
+        adc_rd_adr = sample_index;
 
       if (wr)
       begin
         if (q_rd_adr == address[16:1])
         begin
-          adc_wr_address = address[16:1];
+          adc_wr_adr = address[16:1];
           adc_wr_data = adc_rd_data;
 
           if (address[0])
@@ -195,7 +195,7 @@ begin : adc_app
       else
         adc_wr = 0;
 
-      q_rd_adr <= adc_rd_address;
+      q_rd_adr <= adc_rd_adr;
     
       if (rd)
       begin
@@ -225,7 +225,6 @@ begin : adc_app
         ack <= 1;
       else
         ack <= 0;
-      end
     end
   end
 

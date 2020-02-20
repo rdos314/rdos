@@ -361,14 +361,14 @@ generate
       end
 
       if (reset || pci_tx_full)
-         pci_tx <= 0;
+         pci_tx_wr <= 0;
       else
       begin
         if (q_adc_send)
         begin
           pci_tx_data <= q_adc_data;
           pci_tx_header <= q_adc_header;
-          pci_tx <= 1;
+          pci_tx_wr <= 1;
           q_adc_send <= 0;
         end
         else
@@ -377,11 +377,11 @@ generate
           begin
             pci_tx_data <= q_local_data;
             pci_tx_header <= q_local_header;
-            pci_tx <= 1;
+            pci_tx_wr <= 1;
             q_local_send <= 0;
           end
           else
-            pci_tx <= 0;
+            pci_tx_wr <= 0;
         end
       end
 

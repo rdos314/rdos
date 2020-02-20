@@ -471,9 +471,11 @@ generate
     always @ ( posedge user_clk ) 
     begin
       if (user_reset)
+      begin
         bar_control <= 0;
         adc_start <= 0;
         adc_stop <= 0;
+      end
       else
       begin
         bar_control[0] <= pci_rx_full;
