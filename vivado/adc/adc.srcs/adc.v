@@ -90,8 +90,10 @@ module adc (
   wire                   sample_clk;  
   wire                   clk;  
   wire [31:0]            bar_control;
+  wire                   adc_start;
+  wire                   adc_stop;
   wire                   adc_running;
-
+  
   wire [16:0]            bar1_address;
   wire                   bar1_rd;
   wire                   bar1_rp;
@@ -129,6 +131,9 @@ pci_app pci_app_inst (
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
     .bar_control(bar_control),
+
+    .adc_start(adc_start),
+    .adc_stop(adc_stop),
     .adc_running(adc_running),
 
     .bar1_address(bar1_address),
@@ -156,7 +161,10 @@ adc_app adc_app_inst (
     .clk(user_clk),
     .reset(user_reset),
     .sample_clk(sample_clk),
-    .running(adc_running),
+
+    .adc_start(adc_start),
+    .adc_stop(adc_stop),
+    .adc_running(adc_running),
 
     .address(bar1_address),
     .rd(bar1_rd),

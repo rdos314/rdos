@@ -1,5 +1,5 @@
 create_clock -period 10.000 -name sys_clk [get_ports sys_clk_p]
-create_generated_clock -name sample_clk [get_pins sample_inst/inst/CLKOUT0]
+create_clock -period 1.428 -name sample_clk -waveform {0.000 0.714} [get_nets sample_inst/inst/clk_out1_sample_700]
 set_clock_group -name async1 -asynchronous -group [get_clocks {sys_clk}] -group [get_clocks {sample_clk }]
 
 set_property IOSTANDARD LVCMOS25 [get_ports sys_rst_n]
@@ -34,14 +34,12 @@ set_property LOC IBUFDS_GTE2_X0Y1 [get_cells refclk_ibuf]
 
 set_false_path -to [get_ports -filter NAME=~led_*]
 set_false_path -from [get_ports sys_rst_n]
-
-
-create_clock -period 1.400 -name sample_700 -waveform {0.000 0.700} [get_nets sample_inst/inst/clk_out1_sample_700]
-set_false_path -from [get_pins -hierarchical *adc_start*] -through [get_nets adc_app_inst/adc_app.running_i_1_n_0]
-set_false_path -from [get_pins -hierarchical *adc_stop*] -through [get_nets adc_app_inst/adc_app.running_i_1_n_0]
-set_false_path -from [get_pins -hierarchical *notify_data*] -through [get_nets -hierarchical *ack_data*]
+set_false_path -from [get_pins -hierarchical *req_start*] -through [get_nets -hierarchical *]
+set_false_path -from [get_pins -hierarchical *req_stop*] -through [get_nets -hierarchical *]
+set_false_path -from [get_pins -hierarchical *adc_running*] -through [get_nets -hierarchical *]
+set_false_path -from [get_pins -hierarchical *notify_sample_data*] -through [get_nets -hierarchical *ack_sample_data*]
+set_false_path -from [get_pins -hierarchical *ack_sample_data*] -through [get_nets -hierarchical *notify_sample_data*]
 set_false_path -from [get_pins -hierarchical *sync_buffer*] -through [get_nets -hierarchical *synced_buffer*]
-set_false_path -from [get_pins -hierarchical *sample_buffer*] -through [get_nets -hierarchical *sync_buffer*]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]

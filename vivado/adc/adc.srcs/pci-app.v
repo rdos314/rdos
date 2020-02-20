@@ -15,6 +15,8 @@ module pci_app (
     cfg_interrupt_msienable,
 
     bar_control,
+    adc_start,
+    adc_stop,
     adc_running,
 
     bar1_address,
@@ -55,6 +57,8 @@ module pci_app (
   output              cfg_interrupt_msienable;
 
   output reg [31:0]   bar_control;
+  output reg          adc_start;
+  output reg          adc_stop;
   input  wire         adc_running;
 
   output wire [16:0]  bar1_address;
@@ -456,6 +460,8 @@ generate
     begin
       if (user_reset)
         bar_control <= 0;
+        adc_start <= 0;
+        adc_stop <= 0;
       else
       begin
         bar_control[0] <= pci_rx_full;
@@ -467,7 +473,7 @@ generate
           bar0_rp_address <= bar0_address[4:0];
           case (bar0_address)
             0: bar0_rp_data <= bar_control;
-            default: bar0_rp_data <= 31'h11223344;
+            default: bar0_rp_data <= 31'hffffffff;
           endcase     
           bar0_rp <= 1;
         end
@@ -480,7 +486,16 @@ generate
             0: 
             begin
               if (bar0_wr_be[0])
+              begin
                 bar_control[6:2] <= bar0_wr_data[6:2];
+                if (bar_control[7] != bar0_wr_data[7])
+                begin
+                  if (bar0_wr_data[7])
+                    adc_start <= 1;
+                  else
+                    adc_stop <= 1;
+                end      
+              end
 
               if (bar0_wr_be[1])
                 bar_control[15:8] <= bar0_wr_data[15:8];
@@ -491,11 +506,21 @@ generate
               if (bar0_wr_be[3])
                 bar_control[31:24] <= bar0_wr_data[31:24];
             end
+
+            default:
+            begin
+              adc_start <= 0;
+              adc_stop <= 0;
+            end
           endcase
           bar0_ack <= 1;
         end
         else
+        begin
+          adc_start <= 0;
+          adc_stop <= 0;
           bar0_ack <= 0;
+        end
       end
     end
   end

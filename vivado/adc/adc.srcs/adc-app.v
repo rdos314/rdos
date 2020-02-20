@@ -2,7 +2,10 @@ module adc_app (
   clk,
   reset,
   sample_clk,
-  running,
+
+  adc_start,
+  adc_stop,
+  adc_running,
 
   address,
   rd,
@@ -18,7 +21,10 @@ module adc_app (
   input wire             clk;
   input wire             reset;
   input wire             sample_clk;
-  output reg             running;
+
+  input wire             adc_start;
+  input wire             adc_stop;
+  output reg             adc_running;
 
   input wire [16:0]      address;
   input wire             rd;
@@ -30,17 +36,15 @@ module adc_app (
   input wire [31:0]      wr_data;
   output reg             ack;
 
-
 // local BAR
   reg                    adc_wr;
   reg  [15:0]            adc_wr_adr;
   reg  [19:0]            adc_wr_data;
   reg  [15:0]            adc_rd_adr;
   wire [19:0]            adc_rd_data;
-
   reg  [63:0]            curr_data;
-  reg                    adc_start;
-  reg                    adc_stop;
+
+// sampling
 
 // sample domain
   reg                    running;
@@ -52,18 +56,21 @@ module adc_app (
   reg  [223:0]           sample_buffer1;
 
 // domain sync
-  reg                    notify_data;
-  reg                    ack_data;
-  reg                    sync;
+  reg                    req_start;
+  reg                    req_stop;
+  reg                    notify_sample_data;
+  reg                    ack_sample_data;
+  reg                    sample_sync;
   reg  [223:0]           sync_buffer0;
   reg  [223:0]           sync_buffer1;
 
 // PCIe domain
+  reg                    pend_start;
   reg  [511:0]           synced_buffer;
-  reg  [1023:0]          adc_data;
-  reg                    adc_load;
-  reg                    adc_low;
-  reg                    has_adc_data;
+  reg  [1023:0]          sample_data;
+  reg                    sample_load;
+  reg                    sample_low;
+  reg                    has_sample_data;
 
 
 bram_adc bram_adc_inst (
@@ -92,29 +99,38 @@ ila_3 ila3_inst (
    .probe11(adc_wr_data),              // input wire [19:0]  probe1 
    .probe12(adc_rd_adr),               // input wire [15:0]  probe1 
    .probe13(adc_rd_data),              // input wire [19:0]  probe1 
-   .probe14(curr_data),                // input wire [63:0]  probe1 
-   .probe15(adc_start),                // input wire [0:0]  probe1 
-   .probe16(adc_stop),                 // input wire [0:0]  probe1 
-   .probe17(ack_data),                 // input wire [0:0]  probe1 
-   .probe18(adc_load),                 // input wire [0:0]  probe1 
-   .probe19(adc_low),                  // input wire [0:0]  probe1 
-   .probe20(has_adc_data),             // input wire [0:0]  probe1 
-   .probe21(synced_buffer[31:0]),      // input wire [31:0]  probe1 
-   .probe22(synced_buffer[63:32]),     // input wire [31:0]  probe1 
-   .probe23(synced_buffer[95:64]),     // input wire [31:0]  probe1 
-   .probe24(synced_buffer[127:96]),    // input wire [31:0]  probe1 
-   .probe25(synced_buffer[159:128]),   // input wire [31:0]  probe1 
-   .probe26(synced_buffer[191:160]),   // input wire [31:0]  probe1 
-   .probe27(synced_buffer[223:192]),   // input wire [31:0]  probe1 
-   .probe28(synced_buffer[255:224]),   // input wire [31:0]  probe1 
-   .probe29(synced_buffer[287:256]),   // input wire [31:0]  probe1 
-   .probe30(synced_buffer[319:288]),   // input wire [31:0]  probe1 
-   .probe31(synced_buffer[351:320]),   // input wire [31:0]  probe1 
-   .probe32(synced_buffer[383:352]),   // input wire [31:0]  probe1 
-   .probe33(synced_buffer[415:384]),   // input wire [31:0]  probe1 
-   .probe34(synced_buffer[447:416]),   // input wire [31:0]  probe1 
-   .probe35(synced_buffer[479:448]),   // input wire [31:0]  probe1 
-   .probe36(synced_buffer[511:480])    // input wire [31:0]  probe1 
+   .probe14(curr_data)                 // input wire [63:0]  probe1 
+);
+
+ila_4 ila4_inst (
+   .clk ( clk ),                       // I
+   .probe0(pend_start),                // input wire [0:0]  probe1 
+   .probe1(req_start),                 // input wire [0:0]  probe1 
+   .probe2(req_stop),                  // input wire [0:0]  probe1 
+   .probe3(adc_start),                 // input wire [0:0]  probe1 
+   .probe4(adc_stop),                  // input wire [0:0]  probe1 
+   .probe5(adc_running),               // input wire [0:0]  probe1 
+   .probe6(ack_sample_data),           // input wire [0:0]  probe1 
+   .probe7(sample_sync),               // input wire [0:0]  probe1 
+   .probe8(sample_load),               // input wire [0:0]  probe1 
+   .probe9(sample_low),                // input wire [0:0]  probe1 
+   .probe10(has_sample_data),          // input wire [0:0]  probe1 
+   .probe11(synced_buffer[31:0]),      // input wire [31:0]  probe1 
+   .probe12(synced_buffer[63:32]),     // input wire [31:0]  probe1 
+   .probe13(synced_buffer[95:64]),     // input wire [31:0]  probe1 
+   .probe14(synced_buffer[127:96]),    // input wire [31:0]  probe1 
+   .probe15(synced_buffer[159:128]),   // input wire [31:0]  probe1 
+   .probe16(synced_buffer[191:160]),   // input wire [31:0]  probe1 
+   .probe17(synced_buffer[223:192]),   // input wire [31:0]  probe1 
+   .probe18(synced_buffer[255:224]),   // input wire [31:0]  probe1 
+   .probe19(synced_buffer[287:256]),   // input wire [31:0]  probe1 
+   .probe20(synced_buffer[319:288]),   // input wire [31:0]  probe1 
+   .probe21(synced_buffer[351:320]),   // input wire [31:0]  probe1 
+   .probe22(synced_buffer[383:352]),   // input wire [31:0]  probe1 
+   .probe23(synced_buffer[415:384]),   // input wire [31:0]  probe1 
+   .probe24(synced_buffer[447:416]),   // input wire [31:0]  probe1 
+   .probe25(synced_buffer[479:448]),   // input wire [31:0]  probe1 
+   .probe26(synced_buffer[511:480])    // input wire [31:0]  probe1 
 );
 
 generate
@@ -127,13 +143,6 @@ begin : adc_app
       ack <= 0;
       rp <= 0;
       adc_wr <= 0;
-      adc_start <= 0;
-      adc_stop <= 0;
-      sync <= 0;
-      ack_data <= 0;
-      adc_load <= 0;
-      adc_low <= 0;
-      has_adc_data <= 0;
     end
     else
     begin
@@ -211,7 +220,6 @@ begin : adc_app
           adc_wr_adr = address[16:1];
           adc_wr <= 1;
           ack <= 1;
-          adc_start <= 1;
         end
         else
         begin
@@ -225,25 +233,51 @@ begin : adc_app
         ack <= 0;
         adc_wr <= 0;
       end
+    end
+  end
 
-      if (running)
-        adc_start <= 0;
-
-      if (!running)
-        adc_stop <= 0;
-
-      if (notify_data)
-      begin
-        ack_data <= 1;
-        sync <= 1;
-      end
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      pend_start <= 0;
+      req_start <= 0;
+      req_stop <= 1;
+      ack_sample_data <= 0;
+      sample_sync <= 0;
+      sample_load <= 0;
+      sample_low <= 0;
+      has_sample_data <= 0;
+    end
+    else
+    begin
+      if (adc_running)
+        req_start <= 0;
       else
-        sync <= 0;
-
-      if (sync)
       begin
-        sync <= 0;
-        adc_load <= 1;
+        req_stop <= 0;
+        ack_sample_data <= 0;
+        sample_sync <= 0;
+        sample_load <= 0;
+     end
+
+     if (adc_start && !adc_running)
+       pend_start <= 1;
+
+     if (adc_stop && adc_running)
+       req_stop <= 1;
+
+      if (notify_sample_data && !ack_sample_data && !sample_sync && !sample_load)
+      begin
+        ack_sample_data <= 1;
+        sample_sync <= 1;
+      end
+
+      if (sample_sync)
+      begin
+        sample_sync <= 0;
+        sample_load <= 1;
+        ack_sample_data <= 0;
 
         synced_buffer[13:0] <= sync_buffer0[13:0];
         if (sync_buffer0[13])
@@ -437,94 +471,75 @@ begin : adc_app
         else
           synced_buffer[511:510] <= 2'b00;
       end
-      else
-        adc_load <= 0;
 
-      if (adc_load)
+      if (sample_load)
       begin
-        adc_load <= 0;
-        ack_data <= 0;
+        sample_load <= 0;
 
-        if (adc_low)
-          adc_data[1023:512] <= synced_buffer;
+        if (sample_low)
+          sample_data[1023:512] <= synced_buffer;
         else
-          adc_data[511:0] <= synced_buffer;
+          sample_data[511:0] <= synced_buffer;
 
-        adc_low <= adc_low + 1;
+        sample_low <= sample_low + 1;
 
-        if (adc_low == 1)
-          has_adc_data <= 1;
-        else
-          has_adc_data <= 0;
+        if (sample_low == 1)
+          has_sample_data <= 1;
       end
-      else
-        has_adc_data <= 0;
 
-      if (has_adc_data)
+      if (has_sample_data)
       begin
-        has_adc_data <= 0;
-        adc_stop <= 1;
+        has_sample_data <= 0;
+        req_stop <= 1;
       end
     end
   end
 
   always @ ( posedge sample_clk ) 
   begin
-    if (reset)
+    if (adc_running)
     begin
-      sample_counter <= 0;
-      curr_ch0 <= 10000;
-      curr_ch1 <= 0;
-      running <= 0;
-      first <= 1;
-      notify_data <= 0;
-    end
-    else
-    begin
-      if (running)
+      sample_buffer0[209:0] <= sample_buffer0[223:14];
+      sample_buffer0[223:210] <= curr_ch0;
+
+      sample_buffer1[209:0] <= sample_buffer1[223:14];
+      sample_buffer1[223:210] <= curr_ch1;
+
+      sample_counter <= sample_counter + 1;
+
+      if (!sample_counter && !first)
       begin
-        sample_buffer0[209:0] <= sample_buffer0[223:14];
-        sample_buffer0[223:210] <= curr_ch0;
-
-        sample_buffer1[209:0] <= sample_buffer1[223:14];
-        sample_buffer1[223:210] <= curr_ch1;
-
-        sample_counter <= sample_counter + 1;
-
-        if (!sample_counter && !first)
-        begin
-          sync_buffer0 <= sample_buffer0;
-          sync_buffer1 <= sample_buffer1;
-          notify_data <= 1;
-        end
-          
-        if (curr_ch0)
-          curr_ch0 <= curr_ch0 - 1;
-        else
-          curr_ch0 <= 10000;
-
-        if (curr_ch1 != 9000)
-          curr_ch1 <= curr_ch1 + 1;
-        else
-          curr_ch1 <= 0;
-
-        first <= 0;
-      end        
-
-      if (ack_data)
-        notify_data <= 0;
-
-      if (adc_start && !running)
-        running <= 1;
-
-      if (adc_stop && running)
-      begin
-        running <= 0;
-        sample_counter <= 0;
-        first <= 1;
+        sync_buffer0 <= sample_buffer0;
+        sync_buffer1 <= sample_buffer1;
+        notify_sample_data <= 1;
       end
-        
+          
+      if (curr_ch0)
+        curr_ch0 <= curr_ch0 - 1;
+      else
+        curr_ch0 <= 10000;
+
+      if (curr_ch1 != 9000)
+        curr_ch1 <= curr_ch1 + 1;
+      else
+        curr_ch1 <= 0;
+
+      first <= 0;
+    end        
+
+    if (ack_sample_data)
+      notify_sample_data <= 0;
+
+    if (req_start && !adc_running)
+    begin
+      adc_running <= 1;
+      sample_counter <= 0;
+      first <= 1;
     end
+
+    if (req_stop && adc_running)
+      adc_running <= 0;
+        
   end
 
 end
