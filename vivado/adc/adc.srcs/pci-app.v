@@ -15,9 +15,12 @@ module pci_app (
     cfg_interrupt_msienable,
 
     bar_control,
+
     adc_start,
     adc_stop,
     adc_running,
+    adc_send,
+    adc_data,
 
     bar1_address,
     bar1_rd,
@@ -40,46 +43,49 @@ module pci_app (
     bar2_ack
 );
 
-  output  [7:0]       pci_exp_txp;
-  output  [7:0]       pci_exp_txn;
-  input   [7:0]       pci_exp_rxp;
-  input   [7:0]       pci_exp_rxn;
+  output  [7:0]        pci_exp_txp;
+  output  [7:0]        pci_exp_txn;
+  input   [7:0]        pci_exp_rxp;
+  input   [7:0]        pci_exp_rxn;
 
-  input               sys_clk;
-  input               sys_rst_n;
+  input                sys_clk;
+  input                sys_rst_n;
   
-  output              user_clk;
-  output              user_reset;
-  output              user_lnk_up;
+  output               user_clk;
+  output               user_reset;
+  output               user_lnk_up;
   
-  output              user_lnk_rate;
-  output   [1:0]      user_lnk_width;
-  output              cfg_interrupt_msienable;
+  output               user_lnk_rate;
+  output   [1:0]       user_lnk_width;
+  output               cfg_interrupt_msienable;
 
-  output reg [31:0]   bar_control;
-  output reg          adc_start;
-  output reg          adc_stop;
-  input  wire         adc_running;
+  output reg [31:0]    bar_control;
 
-  output wire [16:0]  bar1_address;
-  output wire         bar1_rd;
-  input  wire         bar1_rp;
-  input  wire [4:0]   bar1_rp_address;
-  input  wire [31:0]  bar1_rp_data;
-  output wire         bar1_wr;
-  output wire [3:0]   bar1_wr_be;
-  output wire [31:0]  bar1_wr_data;
-  input  wire         bar1_ack;
+  output reg           adc_start;
+  output reg           adc_stop;
+  input  wire          adc_running;
+  input  wire          adc_send;
+  input  wire [1023:0] adc_data;
 
-  output wire [16:0]  bar2_address;
-  output wire         bar2_rd;
-  input  wire         bar2_rp;
-  input  wire [4:0]   bar2_rp_address;
-  input  wire [31:0]  bar2_rp_data;
-  output wire         bar2_wr;
-  output wire [3:0]   bar2_wr_be;
-  output wire [31:0]  bar2_wr_data;
-  input  wire         bar2_ack;
+  output wire [16:0]   bar1_address;
+  output wire          bar1_rd;
+  input  wire          bar1_rp;
+  input  wire [4:0]    bar1_rp_address;
+  input  wire [31:0]   bar1_rp_data;
+  output wire          bar1_wr;
+  output wire [3:0]    bar1_wr_be;
+  output wire [31:0]   bar1_wr_data;
+  input  wire          bar1_ack;
+
+  output wire [16:0]   bar2_address;
+  output wire          bar2_rd;
+  input  wire          bar2_rp;
+  input  wire [4:0]    bar2_rp_address;
+  input  wire [31:0]   bar2_rp_data;
+  output wire          bar2_wr;
+  output wire [3:0]    bar2_wr_be;
+  output wire [31:0]   bar2_wr_data;
+  input  wire          bar2_ack;
 
 
 // Wire Declarations
@@ -420,6 +426,9 @@ adc_mem adc_mem_inst (
     .pci_tx_header( pci_tx_header),             // O
     .pci_tx_wr( pci_tx_wr),                     // O
     .pci_tx_full( pci_tx_full),                 // I
+
+    .adc_send( adc_send),                       // I
+    .adc_data( adc_data),                       // I
 
     .bar0_address( bar0_address),               // O
     .bar0_rd( bar0_rd),                         // O

@@ -6,6 +6,8 @@ module adc_app (
   adc_start,
   adc_stop,
   adc_running,
+  adc_send,
+  adc_data,
 
   address,
   rd,
@@ -25,6 +27,8 @@ module adc_app (
   input wire             adc_start;
   input wire             adc_stop;
   output reg             adc_running;
+  output reg             adc_send;
+  output reg  [1023:0]   adc_data;
 
   input wire [16:0]      address;
   input wire             rd;
@@ -67,10 +71,8 @@ module adc_app (
 // PCIe domain
   reg                    pend_start;
   reg  [511:0]           synced_buffer;
-  reg  [1023:0]          sample_data;
   reg                    sample_load;
   reg                    sample_low;
-  reg                    has_sample_data;
 
 
 bram_adc bram_adc_inst (
@@ -114,7 +116,7 @@ ila_4 ila4_inst (
    .probe7(sample_sync),               // input wire [0:0]  probe1 
    .probe8(sample_load),               // input wire [0:0]  probe1 
    .probe9(sample_low),                // input wire [0:0]  probe1 
-   .probe10(has_sample_data),          // input wire [0:0]  probe1 
+   .probe10(adc_send),                 // input wire [0:0]  probe1 
    .probe11(synced_buffer[31:0]),      // input wire [31:0]  probe1 
    .probe12(synced_buffer[63:32]),     // input wire [31:0]  probe1 
    .probe13(synced_buffer[95:64]),     // input wire [31:0]  probe1 
@@ -247,7 +249,7 @@ begin : adc_app
       sample_sync <= 0;
       sample_load <= 0;
       sample_low <= 0;
-      has_sample_data <= 0;
+      adc_send <= 0;
     end
     else
     begin
@@ -259,6 +261,7 @@ begin : adc_app
         ack_sample_data <= 0;
         sample_sync <= 0;
         sample_load <= 0;
+        adc_send <= 0;
      end
 
      if (adc_start && !adc_running)
@@ -477,21 +480,22 @@ begin : adc_app
         sample_load <= 0;
 
         if (sample_low)
-          sample_data[1023:512] <= synced_buffer;
+          adc_data[1023:512] <= synced_buffer;
         else
-          sample_data[511:0] <= synced_buffer;
+          adc_data[511:0] <= synced_buffer;
 
         sample_low <= sample_low + 1;
 
         if (sample_low == 1)
-          has_sample_data <= 1;
+        begin
+          adc_send <= 1;
+          req_stop <= 1;
+        end
+        else
+          adc_send <= 0;
       end
-
-      if (has_sample_data)
-      begin
-        has_sample_data <= 0;
-        req_stop <= 1;
-      end
+      else
+        adc_send <= 0;
     end
   end
 
