@@ -20,6 +20,7 @@ module pci_app (
     adc_stop,
     adc_running,
     adc_send,
+    adc_address,
     adc_data,
 
     bar1_address,
@@ -65,6 +66,7 @@ module pci_app (
   output reg           adc_stop;
   input  wire          adc_running;
   input  wire          adc_send;
+  input  wire [63:0]   adc_address;
   input  wire [1023:0] adc_data;
 
   output wire [16:0]   bar1_address;
@@ -428,6 +430,7 @@ adc_mem adc_mem_inst (
     .pci_tx_full( pci_tx_full),                 // I
 
     .adc_send( adc_send),                       // I
+    .adc_address( adc_address),                 // I
     .adc_data( adc_data),                       // I
 
     .bar0_address( bar0_address),               // O

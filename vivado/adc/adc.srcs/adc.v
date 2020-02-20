@@ -95,6 +95,7 @@ module adc (
   wire                   adc_stop;
   wire                   adc_running;
   wire                   adc_send;
+  wire [63:0]            adc_address;
   wire [1023:0]          adc_data;
   
   wire [16:0]            bar1_address;
@@ -139,6 +140,7 @@ pci_app pci_app_inst (
     .adc_stop(adc_stop),
     .adc_running(adc_running),
     .adc_send(adc_send),
+    .adc_address(adc_address),
     .adc_data(adc_data),
 
     .bar1_address(bar1_address),
@@ -171,6 +173,7 @@ adc_app adc_app_inst (
     .adc_stop(adc_stop),
     .adc_running(adc_running),
     .adc_send(adc_send),
+    .adc_address(adc_address),
     .adc_data(adc_data),
 
     .address(bar1_address),
