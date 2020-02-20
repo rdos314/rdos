@@ -15,6 +15,7 @@ module adc_mem (
   pci_tx_full,
 
   adc_send,
+  adc_address,
   adc_data,
 
   bar0_address,
@@ -64,6 +65,7 @@ module adc_mem (
   input  wire                    pci_tx_full;
 
   input wire                     adc_send;
+  input wire [63:0]              adc_address;
   input wire [1023:0]            adc_data;
 
   output reg  [9:0]              bar0_address;
@@ -358,7 +360,7 @@ generate
         endcase
       end
 
-      if (reset | pci_tx_full)
+      if (reset || pci_tx_full)
          pci_tx <= 0;
       else
       begin
@@ -387,35 +389,30 @@ generate
       begin
         q_adc_data <= adc_data;
 
-        q_adc_header[95:72] <= pci_rx_header[63:40];
-        q_adc_header[71] <= 0;
-        q_adc_header[70:66] <= pci_rx_header[70:66];
-        casex (pci_rx_be[3:0])
-          4'b0000 : q_adc_header[65:64] <= 0;
-          4'bxxx1 : q_adc_header[65:64] <= 0;
-          4'bxx10 : q_adc_header[65:64] <= 1;
-          4'bx100 : q_adc_header[65:64] <= 2;
-          4'b1000 : q_adc_header[65:64] <= 3;
-        endcase
+        q_adc_header[63:48] <= 0;                      // Requester ID
+        q_adc_header[47:40] <= 0;                      // tag
+        q_adc_header[39:36] <= 4'b1111;                // last be
+        q_adc_header[35:32] <= 4'b1111;                // 1st be
 
-        q_adc_header[63:48] <= 16'b0;                  // completer ID
-        q_adc_header[47:45] <= 3'b0;                   // completion code = 000
-        q_adc_header[44] <= 1'b0;                      // BCM
-        q_adc_header[39:32] <= pci_rx_control[7:0];    // byte count
-        q_adc_header[43:40] <= 0;                      // high byte count = 0
-
-        if (req_len)
-          q_adc_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
+        if (adc_address[63:32] == 0)
+        begin
+          q_adc_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
+          q_adc_header[95:64] <= adc_address[31:0];
+        end
         else
-          q_adc_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
+        begin
+          q_adc_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
+          q_adc_header[95:64] <= adc_address[63:32];
+          q_adc_header[127:96] <= adc_address[31:0];
+        end
 
-        q_adc_header[24] <= pci_rx_header[24];
         q_adc_header[23] <= 1'b0;                      // R
-        q_adc_header[22:20] <= pci_rx_header[22:20];
-        q_adc_header[19:16] <= 4'b0;                   // TH, AttrH, R
-        q_adc_header[15:12] <= pci_rx_header[15:12];
+        q_adc_header[22:20] <= 3'b000;                 // TC
+        q_adc_header[19:16] <= 4'b0000;                // TH, AttrH, R
+        q_adc_header[15:12] <= 4'b0000;                // TD, EP, Attr
         q_adc_header[11:10] <= 2'b0;                   // AT
-        q_adc_header[9:0] <= pci_rx_header[9:0];
+        q_adc_header[9:8] <= 2'b0;                     // len high
+        q_adc_header[7:0] <= 8'h80;                    // 128 byte size
         q_adc_send <= 1;
       end
 
