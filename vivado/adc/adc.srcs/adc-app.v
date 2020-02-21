@@ -13,7 +13,6 @@ module adc_app (
   address,
   rd,
   rp,
-  rp_address,
   rp_data,
   wr,
   wr_be,
@@ -277,7 +276,7 @@ begin : adc_app
       if (adc_stop && adc_running)
         req_stop <= 1;
 
-      if (q_rd_adr == sample_index)
+      if (adc_rd_adr == sample_index)
       begin
         if (pend_start)
         begin

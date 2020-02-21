@@ -186,21 +186,95 @@ generate
       end
       else
       begin 
-        if (q_busy)
-        begin
-          curr_address = q_address;
-          curr_len = q_len;
-        end
-        else
-        begin
-          curr_address = req_address[18:0];
-          curr_len = req_len;
-        end
+        case (req_type)
+          8'b000_00000, 
+          8'b001_00000,
+          8'b000_00001,
+          8'b001_00001: 
+          begin  // read
+            if (q_busy)
+            begin
+              curr_address = q_address;
+              curr_len = q_len;
+            end
+            else
+            begin
+              curr_address = req_address[18:0];
+              curr_len = req_len;
+            end
 
-        if (curr_len <= 1)
-          pci_rx_rd = 1;
-        else
-          pci_rx_rd = 0;
+            case (decode_bar(req_bar))
+              0: 
+              begin
+                if (bar0_rp)            
+                begin
+                  if (curr_len <= 1)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              1:
+              begin
+                if (bar1_rp)            
+                begin
+                  if (curr_len <= 1)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              2:
+              begin
+                if (bar2_rp)            
+                begin
+                  if (curr_len <= 1)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              default:
+              begin
+                pci_rx_rd = 1;
+              end
+            endcase
+          end
+
+          8'b010_00000,
+          8'b011_00000:
+          begin // write
+            if (q_busy)
+            begin
+              curr_address = q_address;
+              curr_len = q_len;
+            end
+            else
+            begin
+              curr_address = req_address[18:0];
+              curr_len = req_len;
+            end
+
+            if (curr_len <= 1)
+              pci_rx_rd = 1;
+            else
+              pci_rx_rd = 0;
+          end
+
+          default:
+          begin  // not supported
+            pci_rx_rd = 1;
+          end
+        endcase
       end
     end
 
