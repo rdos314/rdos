@@ -26,7 +26,6 @@ module pci_app (
     bar1_address,
     bar1_rd,
     bar1_rp,
-    bar1_rp_address,
     bar1_rp_data,
     bar1_wr,
     bar1_wr_be,
@@ -36,7 +35,6 @@ module pci_app (
     bar2_address,
     bar2_rd,
     bar2_rp,
-    bar2_rp_address,
     bar2_rp_data,
     bar2_wr,
     bar2_wr_be,
@@ -72,7 +70,6 @@ module pci_app (
   output wire [16:0]   bar1_address;
   output wire          bar1_rd;
   input  wire          bar1_rp;
-  input  wire [4:0]    bar1_rp_address;
   input  wire [31:0]   bar1_rp_data;
   output wire          bar1_wr;
   output wire [3:0]    bar1_wr_be;
@@ -82,7 +79,6 @@ module pci_app (
   output wire [16:0]   bar2_address;
   output wire          bar2_rd;
   input  wire          bar2_rp;
-  input  wire [4:0]    bar2_rp_address;
   input  wire [31:0]   bar2_rp_data;
   output wire          bar2_wr;
   output wire [3:0]    bar2_wr_be;
@@ -138,7 +134,6 @@ module pci_app (
   wire [9:0]       bar0_address;
   wire             bar0_rd;
   reg              bar0_rp;
-  reg  [4:0]       bar0_rp_address;
   reg  [31:0]      bar0_rp_data;
   wire             bar0_wr;
   wire [3:0]       bar0_wr_be;
@@ -436,7 +431,6 @@ adc_mem adc_mem_inst (
     .bar0_address( bar0_address),               // O
     .bar0_rd( bar0_rd),                         // O
     .bar0_rp( bar0_rp),                         // I
-    .bar0_rp_address( bar0_rp_address),         // I
     .bar0_rp_data( bar0_rp_data),               // I
     .bar0_wr( bar0_wr),                         // O
     .bar0_wr_be( bar0_wr_be),                   // O
@@ -446,7 +440,6 @@ adc_mem adc_mem_inst (
     .bar1_address( bar1_address),               // O
     .bar1_rd( bar1_rd),                         // O
     .bar1_rp( bar1_rp),                         // I
-    .bar1_rp_address( bar1_rp_address),         // I
     .bar1_rp_data( bar1_rp_data),               // I
     .bar1_wr( bar1_wr),                         // O
     .bar1_wr_be( bar1_wr_be),                   // O
@@ -456,7 +449,6 @@ adc_mem adc_mem_inst (
     .bar2_address( bar2_address),               // O
     .bar2_rd( bar2_rd),                         // O
     .bar2_rp( bar2_rp),                         // I
-    .bar2_rp_address( bar2_rp_address),         // I
     .bar2_rp_data( bar2_rp_data),               // I
     .bar2_wr( bar2_wr),                         // O
     .bar2_wr_be( bar2_wr_be),                   // O
@@ -484,7 +476,6 @@ generate
 
         if (bar0_rd)
         begin
-          bar0_rp_address <= bar0_address[4:0];
           case (bar0_address)
             0: bar0_rp_data <= bar_control;
             default: bar0_rp_data <= 31'hffffffff;

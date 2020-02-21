@@ -35,7 +35,6 @@ module adc_app (
   input wire [16:0]      address;
   input wire             rd;
   output reg             rp;
-  output reg [4:0]       rp_address;
   output reg [31:0]      rp_data;
   input wire             wr;
   input wire [3:0]       wr_be;
@@ -94,18 +93,17 @@ ila_3 ila3_inst (
    .probe0(address),                   // input wire [16:0]  probe1 
    .probe1(rd),                        // input wire [0:0]  probe1 
    .probe2(rp),                        // input wire [0:0]  probe1 
-   .probe3(rp_address),                // input wire [4:0]  probe1 
-   .probe4(rp_data),                   // input wire [31:0]  probe1 
-   .probe5(wr),                        // input wire [0:0]  probe1 
-   .probe6(wr_be),                     // input wire [3:0]  probe1 
-   .probe7(wr_data),                   // input wire [31:0]  probe1 
-   .probe8(ack),                       // input wire [0:0]  probe1 
-   .probe9(adc_wr),                    // input wire [0:0]  probe1 
-   .probe10(adc_wr_adr),               // input wire [15:0]  probe1 
-   .probe11(adc_wr_data),              // input wire [19:0]  probe1 
-   .probe12(adc_rd_adr),               // input wire [15:0]  probe1 
-   .probe13(adc_rd_data),              // input wire [19:0]  probe1 
-   .probe14(next_rd_adr)               // input wire [19:0]  probe1 
+   .probe3(rp_data),                   // input wire [31:0]  probe1 
+   .probe4(wr),                        // input wire [0:0]  probe1 
+   .probe5(wr_be),                     // input wire [3:0]  probe1 
+   .probe6(wr_data),                   // input wire [31:0]  probe1 
+   .probe7(ack),                       // input wire [0:0]  probe1 
+   .probe8(adc_wr),                    // input wire [0:0]  probe1 
+   .probe9(adc_wr_adr),                // input wire [15:0]  probe1 
+   .probe10(adc_wr_data),              // input wire [19:0]  probe1 
+   .probe11(adc_rd_adr),               // input wire [15:0]  probe1 
+   .probe12(adc_rd_data),              // input wire [19:0]  probe1 
+   .probe13(next_rd_adr)               // input wire [19:0]  probe1 
 );
 
 ila_4 ila4_inst (
@@ -208,8 +206,6 @@ begin : adc_app
           end
           else
           begin
-            rp_address <= address[4:0];
-
             if (address[0])
             begin
               rp_data[8:0] <= curr_data[19:11];

@@ -101,7 +101,6 @@ module adc (
   wire [16:0]            bar1_address;
   wire                   bar1_rd;
   wire                   bar1_rp;
-  wire [4:0]             bar1_rp_address;
   wire [31:0]            bar1_rp_data;
   wire                   bar1_wr;
   wire [3:0]             bar1_wr_be;
@@ -111,7 +110,6 @@ module adc (
   wire [16:0]            bar2_address;
   wire                   bar2_rd;
   wire                   bar2_rp;
-  wire [4:0]             bar2_rp_address;
   wire [31:0]            bar2_rp_data;
   wire                   bar2_wr;
   wire [3:0]             bar2_wr_be;
@@ -146,7 +144,6 @@ pci_app pci_app_inst (
     .bar1_address(bar1_address),
     .bar1_rd(bar1_rd),
     .bar1_rp(bar1_rp),
-    .bar1_rp_address(bar1_rp_address),
     .bar1_rp_data(bar1_rp_data),
     .bar1_wr(bar1_wr),
     .bar1_wr_be(bar1_wr_be),
@@ -156,7 +153,6 @@ pci_app pci_app_inst (
     .bar2_address(bar2_address),
     .bar2_rd(bar2_rd),
     .bar2_rp(bar2_rp),
-    .bar2_rp_address(bar2_rp_address),
     .bar2_rp_data(bar2_rp_data),
     .bar2_wr(bar2_wr),
     .bar2_wr_be(bar2_wr_be),
@@ -179,7 +175,6 @@ adc_app adc_app_inst (
     .address(bar1_address),
     .rd(bar1_rd),
     .rp(bar1_rp),
-    .rp_address(bar1_rp_address),
     .rp_data(bar1_rp_data),
     .wr(bar1_wr),
     .wr_be(bar1_wr_be),
@@ -195,7 +190,6 @@ dac_app dac_app_inst (
     .address(bar2_address),
     .rd(bar2_rd),
     .rp(bar2_rp),
-    .rp_address(bar2_rp_address),
     .rp_data(bar2_rp_data),
     .wr(bar2_wr),
     .wr_be(bar2_wr_be),

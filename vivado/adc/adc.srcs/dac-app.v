@@ -104,7 +104,6 @@ begin : dac_app
       begin
         if (dac_rd_adr == address[16:1])
         begin
-          rp_address <= address[4:0];
           rp <= 1;
 
           if (address[0])
