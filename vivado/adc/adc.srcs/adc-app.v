@@ -42,15 +42,15 @@ module adc_app (
   input wire [31:0]      wr_data;
   output reg             ack;
 
-// FF
-  reg  [19:0]            q_rd_adr;
-
 // local bar
-  reg                    adc_wr;
   reg  [15:0]            adc_wr_adr;
   reg  [19:0]            adc_wr_data;
+  reg  [19:0]            next_rd_adr;
   reg  [15:0]            adc_rd_adr;
   wire [19:0]            adc_rd_data;
+
+  reg  [15:0]            curr_adr;
+  reg  [19:0]            curr_data;
 
 // sample domain
   reg                    running;
@@ -71,7 +71,7 @@ module adc_app (
   reg  [223:0]           sync_buffer1;
 
 // PCIe domain
-  reg  [19:0]            sample_index;
+  reg  [15:0]            sample_index;
   reg  [63:0]            next_address;
   reg                    pend_start;
   reg  [511:0]           synced_buffer;
@@ -81,11 +81,11 @@ module adc_app (
 
 bram_adc bram_adc_inst (
   .clka(clk),          // input wire clka
-  .wea(adc_wr),        // input wire [0 : 0] wea
+  .wea(ack),           // input wire [0 : 0] wea
   .addra(adc_wr_adr),  // input wire [15 : 0] addra
   .dina(adc_wr_data),  // input wire [19 : 0] dina
   .clkb(clk),          // input wire clkb
-  .addrb(adc_rd_adr),  // input wire [15 : 0] addrb
+  .addrb(next_rd_adr), // input wire [15 : 0] addrb
   .doutb(adc_rd_data)  // output wire [19 : 0] doutb
 );
 
@@ -105,7 +105,7 @@ ila_3 ila3_inst (
    .probe11(adc_wr_data),              // input wire [19:0]  probe1 
    .probe12(adc_rd_adr),               // input wire [15:0]  probe1 
    .probe13(adc_rd_data),              // input wire [19:0]  probe1 
-   .probe14(q_rd_adr)                  // input wire [19:0]  probe1 
+   .probe14(next_rd_adr)               // input wire [19:0]  probe1 
 );
 
 ila_4 ila4_inst (
@@ -122,7 +122,7 @@ ila_4 ila4_inst (
    .probe9(sample_low),                // input wire [0:0]  probe1 
    .probe10(adc_send),                 // input wire [0:0]  probe1 
    .probe11(adc_address),              // input wire [63:0]  probe1 
-   .probe12(sample_index),             // input wire [19:0]  probe1 
+   .probe12(sample_index),             // input wire [15:0]  probe1 
    .probe13(next_address),             // input wire [63:0]  probe1 
    .probe14(synced_buffer[31:0]),      // input wire [31:0]  probe1 
    .probe15(synced_buffer[63:32]),     // input wire [31:0]  probe1 
@@ -151,81 +151,93 @@ begin : adc_app
     begin
       ack <= 0;
       rp <= 0;
-      q_rd_adr <= 0;
+      adc_rd_adr <= 0;
     end
     else
     begin
       if (rd || wr)
       begin
-        if (q_rd_adr == address[16:1])
-          adc_rd_adr = sample_index;
+        if (adc_wr_adr == address[16:1])
+        begin
+          curr_adr = adc_wr_adr;
+          curr_data = adc_wr_data;
+        end
         else
-          adc_rd_adr = address[16:1]; 
+        begin
+          curr_adr = adc_rd_adr;
+          curr_data = adc_rd_data;
+        end
+
+        if (adc_rd_adr == address[16:1])
+          next_rd_adr <= sample_index;
+        else
+          next_rd_adr <= address[16:1]; 
       end
       else
-        adc_rd_adr = sample_index;
+        next_rd_adr <= sample_index;
 
-      if (wr)
+      adc_rd_adr <= next_rd_adr;
+
+      if (rd || wr)
       begin
-        if (q_rd_adr == address[16:1])
+        if (curr_adr == address[16:1])
         begin
-          adc_wr_adr = address[16:1];
-          adc_wr_data = adc_rd_data;
-
-          if (address[0])
+          if (wr)
           begin
-            if (wr_be[0])
-              adc_wr_data[18:11] = wr_data[7:0];
+            if (address[0])
+            begin
+              if (wr_be[0])
+                curr_data[18:11] = wr_data[7:0];
 
-            if (wr_be[1])
-              adc_wr_data[19] = wr_data[8];
+              if (wr_be[1])
+                curr_data[19] = wr_data[8];
+            end
+            else
+            begin
+              if (wr_be[2])
+                curr_data[2:0] = wr_data[23:21];
+
+              if (wr_be[3])
+                curr_data[10:3] = wr_data[31:24];
+            end
+
+            adc_wr_adr <= curr_adr;
+            adc_wr_data <= curr_data;
+            ack <= 1;
+            rp <= 0;
           end
           else
           begin
-            if (wr_be[2])
-              adc_wr_data[2:0] = wr_data[23:21];
+            rp_address <= address[4:0];
 
-            if (wr_be[3])
-              adc_wr_data[10:3] = wr_data[31:24];
+            if (address[0])
+            begin
+              rp_data[8:0] <= curr_data[19:11];
+              rp_data[31:9] <= 0;
+            end
+            else
+            begin
+              rp_data[20:0] <= 0;
+              rp_data[31:21] <= curr_data[10:0];
+            end
+
+            adc_wr_adr <= curr_adr;
+            adc_wr_data <= curr_data;    
+            ack <= 0;
+            rp <= 1;
           end
-          adc_wr = 1;
         end
         else
-          adc_wr = 0;
-      end
-      else
-        adc_wr = 0;
-
-      q_rd_adr <= adc_rd_adr;
-    
-      if (rd)
-      begin
-        if (q_rd_adr == address[16:1])
         begin
-          rp_address <= address[4:0];
-          rp <= 1;
-
-          if (address[0])
-          begin
-            rp_data[8:0] <= adc_rd_data[19:11];
-            rp_data[31:9] <= 0;
-          end
-          else
-          begin
-            rp_data[20:0] <= 0;
-            rp_data[31:21] <= adc_rd_data[10:0];
-          end
-        end
-        else
+          ack <= 0;
           rp <= 0;
+        end
       end
       else
-        rp <= 0;
-
-      if (adc_wr)
-        ack <= 1;
-      else
+      begin
         ack <= 0;
+        rp <= 0;
+      end
     end
   end
 
