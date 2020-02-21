@@ -52,7 +52,7 @@ module adc_app (
   reg  [19:0]            curr_data;
 
 // sample domain
-  reg                    running;
+  reg                    adc_on;
   reg                    first;
   reg  [3:0]             sample_counter;
   reg  [13:0]            curr_ch0;
@@ -250,9 +250,15 @@ begin : adc_app
       sample_low <= 0;
       adc_send <= 0;
       sample_index <= 0;
+      adc_running <= 0;
     end
     else
     begin
+      if (adc_on)
+        adc_running <= 1;
+      else
+        adc_running <= 0;
+
       if (adc_running)
         req_start <= 0;
       else
@@ -521,7 +527,7 @@ begin : adc_app
 
   always @ ( posedge sample_clk ) 
   begin
-    if (adc_running)
+    if (adc_on)
     begin
       sample_buffer0[209:0] <= sample_buffer0[223:14];
       sample_buffer0[223:210] <= curr_ch0;
@@ -543,26 +549,29 @@ begin : adc_app
       else
         curr_ch0 <= 10000;
 
-      if (curr_ch1 != 9000)
-        curr_ch1 <= curr_ch1 + 1;
+      if (curr_ch1)
+        curr_ch1 <= curr_ch1 - 1;
       else
-        curr_ch1 <= 0;
+        curr_ch1 <= 955;
 
       first <= 0;
     end        
-
-    if (ack_sample_data)
-      notify_sample_data <= 0;
-
-    if (req_start && !adc_running)
+    else
     begin
-      adc_running <= 1;
+      curr_ch0 <= 0;
+      curr_ch1 <= 0;
       sample_counter <= 0;
       first <= 1;
     end
 
-    if (req_stop && adc_running)
-      adc_running <= 0;
+    if (ack_sample_data)
+      notify_sample_data <= 0;
+
+    if (req_start && !adc_on)
+      adc_on <= 1;
+
+    if (req_stop && adc_on)
+      adc_on <= 0;
         
   end
 
