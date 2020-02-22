@@ -514,7 +514,11 @@ begin : adc_app
         if (sample_low == 1)
         begin
           adc_send <= 1;
-          req_stop <= 1;
+
+          if (adc_address[20:7] == 14'b11111111111111)
+            req_stop <= 1;
+          else
+            adc_address[20:7] <= adc_address[20:7] + 1;
         end
         else
           adc_send <= 0;
