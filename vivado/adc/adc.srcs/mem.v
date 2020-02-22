@@ -141,19 +141,15 @@ ila_1 ila_1_inst (
   .probe7(pci_rx_control),                // input wire [15:0]  probe1 
   .probe8(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
   .probe9(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
-  .probe10(pci_tx_data[31:0]),             // input wire [31:0]  probe2
-  .probe11(q_busy),                        // input wire [0:0]  probe2
-  .probe12(q_address),                    // input wire [18:0]  probe2
-  .probe13(q_len),                        // input wire [9:0]  probe2
-  .probe14(q_pos),                        // input wire [4:0]  probe2
-  .probe15(calc_address),                 // input wire [18:0]  probe2
-  .probe16(calc_len),                     // input wire [9:0]  probe2
-  .probe17(calc_pos),                     // input wire [4:0]  probe2
-  .probe18(has_ack),                      // input wire [0:0]  probe2
-  .probe19(is_last_data),                 // input wire [0:0]  probe2
-  .probe20(is_last_reply),                // input wire [0:0]  probe2
-  .probe21(has_reply),                    // input wire [0:0]  probe2
-  .probe22(calc_bar)                      // input wire [2:0]  probe2
+  .probe10(pci_tx_data[31:0]),            // input wire [31:0]  probe2
+  .probe11(adc_send),                     // input wire [0:0]  probe2
+  .probe12(adc_address),                  // input wire [63:0]  probe2
+  .probe13(q_local_send),                 // input wire [0:0]  probe2
+  .probe14(q_local_header[63:0]),         // input wire [63:0]  probe2
+  .probe15(q_local_header[127:64]),       // input wire [63:0]  probe2
+  .probe16(q_adc_send),                   // input wire [0:0]  probe2
+  .probe17(q_adc_header[63:0]),           // input wire [63:0]  probe2
+  .probe18(q_adc_header[127:64])          // input wire [63:0]  probe2
 );
 
 function [2:0] decode_bar;

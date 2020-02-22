@@ -51,6 +51,10 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+PciInt:
+    CrashGate
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -63,10 +67,6 @@ code    SEGMENT byte public 'CODE'
 ;           RETURNS:        NC          Adapter found
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PciInt:
-    CrashGate
-
 
 PciVendorTab:
 pci00   DW 10EEh, 0AACCh
@@ -118,27 +118,24 @@ InitPciDone:
     ret
 InitPciAdapter   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;           NAME:           adc_thread
 ;
-;           DESCRIPTION:    Adc thread
+;       NAME:           InitControlBar
+;
+;       DESCRIPTION:    Init control bar
+;
+;       PARAMETERS:     BX:CH       PCI device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-adc_thread_name	DB 'Xilinx ADC', 0
-
-adc_thread:
-    int 3
-    call InitPciAdapter
-    jc atDone
+InitControlBar	proc near
+    pushad
 ;
-    mov cl,PCI_nbr_base_address1
+    mov cl,PCI_nbr_base_address0
     ReadPciDword
     test al,1
-    jnz atDone
+    jnz icbDone
 ;
     push eax
     mov eax,1000h
@@ -156,17 +153,107 @@ adc_thread:
     mov bx,anio_control_sel
     mov ecx,1000h
     CreateDataSelector16
+    clc
+
+icbDone:
+    popad
+    ret
+InitControlBar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    mov ds,bx
-    mov si,103h
-    mov eax,6633AABBCCh
-    mov ds:[si],eax
-    lods dword ptr ds:[si]
-    mov ebx,eax
-    lods dword ptr ds:[si]
-    mov ecx,eax
-    lods dword ptr ds:[si]
+;
+;       NAME:           InitAdcBar
+;
+;       DESCRIPTION:    Init ADC bar
+;
+;       PARAMETERS:     BX:CH       PCI device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitAdcBar	proc near
+    pushad
+;
+    mov cl,PCI_nbr_base_address1
+    ReadPciDword
+    test al,1
+    jnz iabDone
+;
+    push eax
+    mov eax,80000h
+    AllocateBigLinear
+    pop eax
+;
+    mov bx,anio_adc_sel
+    mov ecx,80000h
+    CreateDataSelector16
+;
+    or ax,813h
+    xor ebx,ebx
+    mov ecx,80h
+
+iabLoop:
+    SetPageEntry
+    add eax,1000h
+    add edx,1000h
+    loop iabLoop
+
+iabDone:
+    popad
+    ret
+InitAdcBar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           adc_thread
+;
+;           DESCRIPTION:    Adc thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+adc_thread_name	DB 'ADC', 0
+
+adc_thread:
     int 3
+    call InitPciAdapter
+    jc atDone
+;
+    call InitControlBar
+    call InitAdcBar
+;
+    mov bx,anio_adc_sel
+    mov ds,bx
+    xor di,di
+    AllocatePhysicalDir
+    mov ds:[di],eax
+    mov ds:[di+4],ebx
+;
+    mov eax,200000h
+    AllocateBigLinear
+    AllocateGdt
+    CreateDataSelector32
+;
+    or ax,813h
+    xor ebx,ebx
+    mov ecx,200h
+
+atLoop:
+    SetPageEntry
+    add eax,1000h
+    add edx,1000h
+    loop atLoop
+;
+    mov bx,anio_control_sel
+    mov ds,bx
+    xor bx,bx
+    mov al,80h
+    mov ds:[bx],al
+    mov ds,bx
+;
+    int 3
+
+
 
 atDone:
     TerminateThread
