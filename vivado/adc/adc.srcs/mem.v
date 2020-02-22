@@ -383,7 +383,7 @@ generate
         q_adc_header[15:12] <= 4'b0000;                // TD, EP, Attr
         q_adc_header[11:10] <= 2'b0;                   // AT
         q_adc_header[9:8] <= 2'b0;                     // len high
-        q_adc_header[7:0] <= 8'h80;                    // 128 byte size
+        q_adc_header[7:0] <= 8'h20;                    // 128 byte size
         q_adc_send <= 1;
       end
 

@@ -33,7 +33,7 @@ module pci_tx (
   wire                            pci_rx_empty;
 
 // FF
-  reg  [3:0]     q_pos;
+  reg  [5:0]     q_pos;
   reg  [9:0]     q_remain_size;
   reg  [3:0]     q_first_be;
   reg  [3:0]     q_last_be;
@@ -45,7 +45,7 @@ module pci_tx (
   reg            pci_tx_rd;
   reg            is_first;
   reg            is_last;
-  reg  [3:0]     calc_pos;
+  reg  [5:0]     calc_pos;
   reg  [9:0]     calc_blk_size;
   reg  [9:0]     calc_remain_size;
   reg  [3:0]     calc_first_be;
@@ -90,7 +90,7 @@ ila_2 ila_2_inst (
 	.probe4(s_axis_tx_tdata[63:0]),    // input wire [63:0]  probe0  
 	.probe5(s_axis_tx_tdata[127:64]),  // input wire [63:0]  probe0  
 	.probe6(is_first),                 // input wire [0:0]  probe0  
-	.probe7(calc_pos),                 // input wire [3:0]  probe0  
+	.probe7(calc_pos),                 // input wire [5:0]  probe0  
 	.probe8(calc_blk_size),            // input wire [9:0]  probe0  
 	.probe9(calc_remain_size),         // input wire [9:0]  probe0  
 	.probe10(req_type),                 // input wire [7:0]  probe0  

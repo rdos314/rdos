@@ -543,22 +543,22 @@ begin : adc_app
         notify_sample_data <= 1;
       end
           
-      if (curr_ch0)
-        curr_ch0 <= curr_ch0 - 1;
+      if (curr_ch0 < 10000)
+        curr_ch0 <= curr_ch0 + 1;
       else
-        curr_ch0 <= 10000;
+        curr_ch0 <= 0;
 
-      if (curr_ch1)
-        curr_ch1 <= curr_ch1 - 1;
+      if (curr_ch1 < 955)
+        curr_ch1 <= curr_ch1 + 1;
       else
-        curr_ch1 <= 955;
+        curr_ch1 <= 0;
 
       first <= 0;
     end        
     else
     begin
       curr_ch0 <= 0;
-      curr_ch1 <= 0;
+      curr_ch1 <= 1;
       sample_counter <= 0;
       first <= 1;
     end
