@@ -52,7 +52,6 @@ module adc_app (
 
 // sample domain
   reg                    adc_on;
-  reg                    first;
   reg  [3:0]             sample_counter;
   reg  [13:0]            curr_ch0;
   reg  [13:0]            curr_ch1;
@@ -261,6 +260,9 @@ begin : adc_app
       begin
         pend_start <= 1;
         sample_index <= 0;
+
+        if (adc_stop && adc_running)
+          req_stop <= 1;
       end
       else
       begin
@@ -310,232 +312,235 @@ begin : adc_app
         end
       end
 
-      if (adc_stop && adc_running)
-        req_stop <= 1;
-
       if (notify_sample_data && !ack_sample_data && !sample_sync && !sample_load)
       begin
         ack_sample_data <= 1;
         sample_sync <= 1;
-      end
-
-      if (sample_sync)
-      begin
-        sample_sync <= 0;
-        sample_load <= 1;
-        ack_sample_data <= 0;
-
-        synced_buffer[13:0] <= sync_buffer0[13:0];
-        if (sync_buffer0[13])
-          synced_buffer[15:14] <= 2'b11;
-        else
-          synced_buffer[15:14] <= 2'b00;
-        
-        synced_buffer[29:16] <= sync_buffer1[13:0];
-        if (sync_buffer1[13])
-          synced_buffer[31:30] <= 2'b11;
-        else
-          synced_buffer[31:30] <= 2'b00;
-
-        synced_buffer[45:32] <= sync_buffer0[27:14];
-        if (sync_buffer0[27])
-          synced_buffer[47:46] <= 2'b11;
-        else
-          synced_buffer[47:46] <= 2'b00;
-
-        synced_buffer[61:48] <= sync_buffer1[27:14];
-        if (sync_buffer1[27])
-          synced_buffer[63:62] <= 2'b11;
-        else
-          synced_buffer[63:62] <= 2'b00;
-
-        synced_buffer[77:64] <= sync_buffer0[41:28];
-        if (sync_buffer0[41])
-          synced_buffer[79:78] <= 2'b11;
-        else
-          synced_buffer[79:78] <= 2'b00;
-
-        synced_buffer[93:80] <= sync_buffer1[41:28];
-        if (sync_buffer1[41])
-          synced_buffer[95:94] <= 2'b11;
-        else
-          synced_buffer[95:94] <= 2'b00;
-
-        synced_buffer[109:96] <= sync_buffer0[55:42];
-        if (sync_buffer0[55])
-          synced_buffer[111:110] <= 2'b11;
-        else
-          synced_buffer[111:110] <= 2'b00;
-
-        synced_buffer[125:112] <= sync_buffer1[55:42];
-        if (sync_buffer1[55])
-          synced_buffer[127:126] <= 2'b11;
-        else
-          synced_buffer[127:126] <= 2'b00;
-
-        synced_buffer[141:128] <= sync_buffer0[69:56];
-        if (sync_buffer0[69])
-          synced_buffer[143:142] <= 2'b11;
-        else
-          synced_buffer[143:142] <= 2'b00;
-
-        synced_buffer[157:144] <= sync_buffer1[69:56];
-        if (sync_buffer1[69])
-          synced_buffer[159:158] <= 2'b11;
-        else
-          synced_buffer[159:158] <= 2'b00;
-
-        synced_buffer[173:160] <= sync_buffer0[83:70];
-        if (sync_buffer0[83])
-          synced_buffer[175:174] <= 2'b11;
-        else
-          synced_buffer[175:174] <= 2'b00;
-
-        synced_buffer[189:176] <= sync_buffer1[83:70];
-        if (sync_buffer1[83])
-          synced_buffer[191:190] <= 2'b11;
-        else
-          synced_buffer[191:190] <= 2'b00;
-
-        synced_buffer[205:192] <= sync_buffer0[97:84];
-        if (sync_buffer0[97])
-          synced_buffer[207:206] <= 2'b11;
-        else
-          synced_buffer[207:206] <= 2'b00;
-
-        synced_buffer[221:208] <= sync_buffer1[97:84];
-        if (sync_buffer1[97])
-          synced_buffer[223:222] <= 2'b11;
-        else
-          synced_buffer[223:222] <= 2'b00;
-
-        synced_buffer[237:224] <= sync_buffer0[111:98];
-        if (sync_buffer0[111])
-          synced_buffer[239:238] <= 2'b11;
-        else
-          synced_buffer[239:238] <= 2'b00;
-
-        synced_buffer[253:240] <= sync_buffer1[111:98];
-        if (sync_buffer1[111])
-          synced_buffer[255:254] <= 2'b11;
-        else
-          synced_buffer[255:254] <= 2'b00;
-
-        synced_buffer[269:256] <= sync_buffer0[125:112];
-        if (sync_buffer0[125])
-          synced_buffer[271:270] <= 2'b11;
-        else
-          synced_buffer[271:270] <= 2'b00;
-
-        synced_buffer[285:272] <= sync_buffer1[125:112];
-        if (sync_buffer1[125])
-          synced_buffer[287:286] <= 2'b11;
-        else
-          synced_buffer[287:286] <= 2'b00;
-
-        synced_buffer[301:288] <= sync_buffer0[139:126];
-        if (sync_buffer0[139])
-          synced_buffer[303:302] <= 2'b11;
-        else
-          synced_buffer[303:302] <= 2'b00;
-
-        synced_buffer[317:304] <= sync_buffer1[139:126];
-        if (sync_buffer1[139])
-          synced_buffer[319:318] <= 2'b11;
-        else
-          synced_buffer[319:318] <= 2'b00;
-
-        synced_buffer[333:320] <= sync_buffer0[153:140];
-        if (sync_buffer0[153])
-          synced_buffer[335:334] <= 2'b11;
-        else
-          synced_buffer[335:334] <= 2'b00;
-
-        synced_buffer[349:336] <= sync_buffer1[153:140];
-        if (sync_buffer1[153])
-          synced_buffer[351:350] <= 2'b11;
-        else
-          synced_buffer[351:350] <= 2'b00;
-
-        synced_buffer[365:352] <= sync_buffer0[167:154];
-        if (sync_buffer0[167])
-          synced_buffer[367:366] <= 2'b11;
-        else
-          synced_buffer[367:366] <= 2'b00;
-
-        synced_buffer[381:368] <= sync_buffer1[167:154];
-        if (sync_buffer1[167])
-          synced_buffer[383:382] <= 2'b11;
-        else
-          synced_buffer[383:382] <= 2'b00;
-
-        synced_buffer[397:384] <= sync_buffer0[181:168];
-        if (sync_buffer0[181])
-          synced_buffer[399:398] <= 2'b11;
-        else
-          synced_buffer[399:398] <= 2'b00;
-
-        synced_buffer[413:400] <= sync_buffer1[181:168];
-        if (sync_buffer1[181])
-          synced_buffer[415:414] <= 2'b11;
-        else
-          synced_buffer[415:414] <= 2'b00;
-
-        synced_buffer[429:416] <= sync_buffer0[195:182];
-        if (sync_buffer0[195])
-          synced_buffer[431:430] <= 2'b11;
-        else
-          synced_buffer[431:430] <= 2'b00;
-
-        synced_buffer[445:432] <= sync_buffer1[195:182];
-        if (sync_buffer1[195])
-          synced_buffer[447:446] <= 2'b11;
-        else
-          synced_buffer[447:446] <= 2'b00;
-
-        synced_buffer[461:448] <= sync_buffer0[209:196];
-        if (sync_buffer0[209])
-          synced_buffer[463:462] <= 2'b11;
-        else
-          synced_buffer[463:462] <= 2'b00;
-
-        synced_buffer[477:464] <= sync_buffer1[209:196];
-        if (sync_buffer1[209])
-          synced_buffer[479:478] <= 2'b11;
-        else
-          synced_buffer[479:478] <= 2'b00;
-
-        synced_buffer[493:480] <= sync_buffer0[223:210];
-        if (sync_buffer0[223])
-          synced_buffer[495:494] <= 2'b11;
-        else
-          synced_buffer[495:494] <= 2'b00;
-
-        synced_buffer[509:496] <= sync_buffer1[223:210];
-        if (sync_buffer1[223])
-          synced_buffer[511:510] <= 2'b11;
-        else
-          synced_buffer[511:510] <= 2'b00;
-      end
-
-      if (sample_load)
-      begin
-        sample_load <= 0;
-
-        if (sample_low)
-          adc_data[1023:512] <= synced_buffer;
-        else
-          adc_data[511:0] <= synced_buffer;
-
-        sample_low <= sample_low + 1;
-
-        if (sample_low == 1)
-          adc_send <= 1;
-        else
-          adc_send <= 0;          
+        adc_send <= 0;
       end
       else
-        adc_send <= 0;
+      begin
+        if (sample_sync)
+        begin
+          sample_sync <= 0;
+          sample_load <= 1;
+          ack_sample_data <= 0;
+          adc_send <= 0;
+
+          synced_buffer[13:0] <= sync_buffer0[13:0];
+          if (sync_buffer0[13])
+            synced_buffer[15:14] <= 2'b11;
+          else
+            synced_buffer[15:14] <= 2'b00;
+        
+          synced_buffer[29:16] <= sync_buffer1[13:0];
+          if (sync_buffer1[13])
+            synced_buffer[31:30] <= 2'b11;
+          else
+            synced_buffer[31:30] <= 2'b00;
+
+          synced_buffer[45:32] <= sync_buffer0[27:14];
+          if (sync_buffer0[27])
+            synced_buffer[47:46] <= 2'b11;
+          else
+            synced_buffer[47:46] <= 2'b00;
+
+          synced_buffer[61:48] <= sync_buffer1[27:14];
+          if (sync_buffer1[27])
+            synced_buffer[63:62] <= 2'b11;
+          else
+            synced_buffer[63:62] <= 2'b00;
+
+          synced_buffer[77:64] <= sync_buffer0[41:28];
+          if (sync_buffer0[41])
+            synced_buffer[79:78] <= 2'b11;
+          else
+            synced_buffer[79:78] <= 2'b00;
+
+          synced_buffer[93:80] <= sync_buffer1[41:28];
+          if (sync_buffer1[41])
+            synced_buffer[95:94] <= 2'b11;
+          else
+            synced_buffer[95:94] <= 2'b00;
+
+          synced_buffer[109:96] <= sync_buffer0[55:42];
+          if (sync_buffer0[55])
+            synced_buffer[111:110] <= 2'b11;
+          else
+            synced_buffer[111:110] <= 2'b00;
+
+          synced_buffer[125:112] <= sync_buffer1[55:42];
+          if (sync_buffer1[55])
+            synced_buffer[127:126] <= 2'b11;
+          else
+            synced_buffer[127:126] <= 2'b00;
+
+          synced_buffer[141:128] <= sync_buffer0[69:56];
+          if (sync_buffer0[69])
+            synced_buffer[143:142] <= 2'b11;
+          else
+            synced_buffer[143:142] <= 2'b00;
+
+          synced_buffer[157:144] <= sync_buffer1[69:56];
+          if (sync_buffer1[69])
+            synced_buffer[159:158] <= 2'b11;
+          else
+            synced_buffer[159:158] <= 2'b00;
+
+          synced_buffer[173:160] <= sync_buffer0[83:70];
+          if (sync_buffer0[83])
+            synced_buffer[175:174] <= 2'b11;
+          else
+            synced_buffer[175:174] <= 2'b00;
+
+          synced_buffer[189:176] <= sync_buffer1[83:70];
+          if (sync_buffer1[83])
+            synced_buffer[191:190] <= 2'b11;
+          else
+            synced_buffer[191:190] <= 2'b00;
+
+          synced_buffer[205:192] <= sync_buffer0[97:84];
+          if (sync_buffer0[97])
+            synced_buffer[207:206] <= 2'b11;
+          else
+            synced_buffer[207:206] <= 2'b00;
+
+          synced_buffer[221:208] <= sync_buffer1[97:84];
+          if (sync_buffer1[97])
+            synced_buffer[223:222] <= 2'b11;
+          else
+            synced_buffer[223:222] <= 2'b00;
+
+          synced_buffer[237:224] <= sync_buffer0[111:98];
+          if (sync_buffer0[111])
+            synced_buffer[239:238] <= 2'b11;
+          else
+            synced_buffer[239:238] <= 2'b00;
+
+          synced_buffer[253:240] <= sync_buffer1[111:98];
+          if (sync_buffer1[111])
+            synced_buffer[255:254] <= 2'b11;
+          else
+            synced_buffer[255:254] <= 2'b00;
+
+          synced_buffer[269:256] <= sync_buffer0[125:112];
+          if (sync_buffer0[125])
+            synced_buffer[271:270] <= 2'b11;
+          else
+            synced_buffer[271:270] <= 2'b00;
+
+          synced_buffer[285:272] <= sync_buffer1[125:112];
+          if (sync_buffer1[125])
+            synced_buffer[287:286] <= 2'b11;
+          else
+            synced_buffer[287:286] <= 2'b00;
+
+          synced_buffer[301:288] <= sync_buffer0[139:126];
+          if (sync_buffer0[139])
+            synced_buffer[303:302] <= 2'b11;
+          else
+            synced_buffer[303:302] <= 2'b00;
+
+          synced_buffer[317:304] <= sync_buffer1[139:126];
+          if (sync_buffer1[139])
+            synced_buffer[319:318] <= 2'b11;
+          else
+            synced_buffer[319:318] <= 2'b00;
+
+          synced_buffer[333:320] <= sync_buffer0[153:140];
+          if (sync_buffer0[153])
+            synced_buffer[335:334] <= 2'b11;
+          else
+            synced_buffer[335:334] <= 2'b00;
+
+          synced_buffer[349:336] <= sync_buffer1[153:140];
+          if (sync_buffer1[153])
+            synced_buffer[351:350] <= 2'b11;
+          else
+            synced_buffer[351:350] <= 2'b00;
+
+          synced_buffer[365:352] <= sync_buffer0[167:154];
+          if (sync_buffer0[167])
+            synced_buffer[367:366] <= 2'b11;
+          else
+            synced_buffer[367:366] <= 2'b00;
+
+          synced_buffer[381:368] <= sync_buffer1[167:154];
+          if (sync_buffer1[167])
+            synced_buffer[383:382] <= 2'b11;
+          else
+            synced_buffer[383:382] <= 2'b00;
+
+          synced_buffer[397:384] <= sync_buffer0[181:168];
+          if (sync_buffer0[181])
+            synced_buffer[399:398] <= 2'b11;
+          else
+            synced_buffer[399:398] <= 2'b00;
+
+          synced_buffer[413:400] <= sync_buffer1[181:168];
+          if (sync_buffer1[181])
+            synced_buffer[415:414] <= 2'b11;
+          else
+            synced_buffer[415:414] <= 2'b00;
+
+          synced_buffer[429:416] <= sync_buffer0[195:182];
+          if (sync_buffer0[195])
+            synced_buffer[431:430] <= 2'b11;
+          else
+            synced_buffer[431:430] <= 2'b00;
+
+          synced_buffer[445:432] <= sync_buffer1[195:182];
+          if (sync_buffer1[195])
+            synced_buffer[447:446] <= 2'b11;
+          else
+            synced_buffer[447:446] <= 2'b00;
+
+          synced_buffer[461:448] <= sync_buffer0[209:196];
+          if (sync_buffer0[209])
+            synced_buffer[463:462] <= 2'b11;
+          else
+            synced_buffer[463:462] <= 2'b00;
+
+          synced_buffer[477:464] <= sync_buffer1[209:196];
+          if (sync_buffer1[209])
+            synced_buffer[479:478] <= 2'b11;
+          else
+            synced_buffer[479:478] <= 2'b00;
+
+          synced_buffer[493:480] <= sync_buffer0[223:210];
+          if (sync_buffer0[223])
+            synced_buffer[495:494] <= 2'b11;
+          else
+            synced_buffer[495:494] <= 2'b00;
+ 
+          synced_buffer[509:496] <= sync_buffer1[223:210];
+          if (sync_buffer1[223])
+            synced_buffer[511:510] <= 2'b11;
+          else
+            synced_buffer[511:510] <= 2'b00;
+        end
+        else
+        begin
+          if (sample_load)
+          begin
+            sample_load <= 0;
+
+            if (sample_low)
+              adc_data[1023:512] <= synced_buffer;
+            else
+              adc_data[511:0] <= synced_buffer;
+
+            sample_low <= sample_low + 1;
+
+            if (sample_low == 1)
+              adc_send <= 1;
+            else
+              adc_send <= 0;          
+          end
+          else
+            adc_send <= 0;
+        end
+      end
     end
   end
 
@@ -551,11 +556,16 @@ begin : adc_app
 
       sample_counter <= sample_counter + 1;
 
-      if (!sample_counter && !first)
+      if (sample_counter == 4'b1111)
       begin
         sync_buffer0 <= sample_buffer0;
         sync_buffer1 <= sample_buffer1;
         notify_sample_data <= 1;
+      end
+      else
+      begin
+        if (ack_sample_data)
+          notify_sample_data <= 0;
       end
           
       if (curr_ch0 < 10000)
@@ -563,29 +573,26 @@ begin : adc_app
       else
         curr_ch0 <= 0;
 
-      if (curr_ch1 < 955)
+      if (curr_ch1 < 9955)
         curr_ch1 <= curr_ch1 + 1;
       else
         curr_ch1 <= 0;
-
-      first <= 0;
     end        
     else
     begin
-      curr_ch0 <= 0;
+      curr_ch0 <= 1;
       curr_ch1 <= 1;
       sample_counter <= 0;
-      first <= 1;
-    end
-
-    if (ack_sample_data)
       notify_sample_data <= 0;
+    end
 
     if (req_start && !adc_on)
       adc_on <= 1;
-
-    if (req_stop && adc_on)
-      adc_on <= 0;
+    else
+    begin
+      if (req_stop && adc_on)
+        adc_on <= 0;
+    end
         
   end
 

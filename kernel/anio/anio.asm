@@ -206,6 +206,128 @@ InitAdcBar	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           VerifyData
+;
+;           DESCRIPTION:    Verify data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+VerifyData 	Proc near
+    mov bx,anio_adc_sel
+    mov ds,bx
+    mov bx,flat_sel
+    mov es,bx
+;
+    xor esi,esi
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov ebp,0FFFF0001h
+    
+vdLoop:
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    mov ecx,eax
+    or eax,ebx
+    jz vdDone
+;
+    mov edx,edi
+    mov ecx,200h
+
+vdMapLoop:
+    mov al,67h
+    SetPageEntry
+;
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ecx,400h
+;
+    push ebp
+    pop ax
+    pop bx
+
+vdCheckLoop:
+    cmp ax,es:[edx]
+    je vdCheckBx
+;
+    test ax,2000h
+    jz vdCheckFail
+;
+    or ax,0C000h
+    cmp ax,es:[edx]
+    jne vdCheckFail
+
+vdCheckBx:
+    cmp bx,es:[edx+2]
+    je vdCheckNext
+;
+    test bx,2000h
+    jz vdCheckFail
+;
+    or bx,0C000h
+    cmp bx,es:[edx+2]
+    je vdCheckNext
+    
+vdCheckFail:
+    int 3
+    sub ax,10h
+    sub bx,10h
+    cmp ax,es:[edx]
+    jne vdCheckNotDupl
+;
+    cmp bx,es:[edx+2]
+    je vdCheckNext
+
+vdCheckNotDupl:   
+    int 3
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+
+vdCheckNext:
+    inc ax
+    cmp ax,0E711h
+    jne vdCheckLowOk
+;
+    xor ax,ax
+
+vdCheckLowOk:
+    inc bx
+    cmp bx,0E6E4h
+    jne vdCheckHiOk
+;
+    xor bx,bx
+
+vdCheckHiOk:
+    add edx,4
+    loop vdCheckLoop
+;
+    push bx
+    push ax
+    pop ebp
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    add eax,1000h
+    sub ecx,1
+    jnz vdMapLoop
+;
+    add esi,8
+    jmp vdLoop
+
+vdDone:
+    ret    
+VerifyData	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           adc_thread
 ;
 ;           DESCRIPTION:    Adc thread
@@ -245,9 +367,15 @@ adc_phys_loop:
     xor bx,bx
     mov al,80h
     mov ds:[bx],al
-    mov ds,bx
+;
+    mov ecx,10000h
+
+adc_check_loop:
+    mov al,ds:[bx]
+    loop adc_check_loop
 ;
     int 3
+    call VerifyData
 
 
 
