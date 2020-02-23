@@ -22,7 +22,7 @@
 ;
 ; KC705.ASM
 ; Xilinx ADC driver
-;
+;ac0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE ..\os\system.def
@@ -224,25 +224,20 @@ adc_thread:
 ;
     mov bx,anio_adc_sel
     mov ds,bx
-    xor di,di
-    AllocatePhysicalDir
-    mov ds:[di],eax
-    mov ds:[di+4],ebx
-;
-    mov eax,200000h
-    AllocateBigLinear
-    AllocateGdt
-    CreateDataSelector32
-;
-    or ax,813h
-    xor ebx,ebx
-    mov ecx,200h
+    xor edi,edi
+    mov ecx,10h
 
-atLoop:
-    SetPageEntry
-    add eax,1000h
-    add edx,1000h
-    loop atLoop
+adc_phys_loop:
+    AllocatePhysicalDir
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
+    add edi,8
+    loop adc_phys_loop
+;
+    xor ebx,ebx
+    xor eax,eax
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
 ;
     mov bx,anio_control_sel
     mov ds,bx

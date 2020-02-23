@@ -258,42 +258,58 @@ begin : adc_app
       else
         adc_running <= 0;
 
-      if (adc_running)
-        req_start <= 0;
-      else
+      if (adc_start && !adc_running)
       begin
-        req_stop <= 0;
-        ack_sample_data <= 0;
-        sample_sync <= 0;
-        sample_load <= 0;
-        adc_send <= 0;
+        pend_start <= 1;
         sample_index <= 0;
       end
-
-      if (adc_start && !adc_running)
-        pend_start <= 1;
-
-      if (adc_stop && adc_running)
-        req_stop <= 1;
-
-      if (adc_rd_adr == sample_index)
+      else
       begin
         if (pend_start)
         begin
-          adc_address[20:0] <= 0;
-          adc_address[40:21] <= adc_rd_data;
-          adc_address[63:41] <= 0;
-          pend_start <= 0;
-          req_start <= 1;
-          sample_index <= sample_index + 1;
+          if (adc_rd_adr == sample_index)
+          begin
+            adc_address[20:0] <= 0;
+            adc_address[40:21] <= adc_rd_data;
+            adc_address[63:41] <= 0;
+            pend_start <= 0;
+            req_start <= 1;
+            sample_index <= sample_index + 1;
+          end
         end
         else
         begin
-          next_address[20:0] <= 0;
-          next_address[40:21] <= adc_rd_data;
-          next_address[63:41] <= 0;
+          if (adc_running)
+          begin
+            if (adc_send)
+            begin
+              if (adc_address[20:7] == 14'b11111111111111)
+              begin
+                adc_address <= next_address;
+                sample_index <= sample_index + 1;
+                if (adc_address[40:21] == 0)
+                  req_stop <= 1;
+              end
+              else
+                adc_address[20:7] <= adc_address[20:7] + 1;
+            end
+
+            req_start <= 0;
+
+            if (adc_rd_adr == sample_index)
+            begin
+              next_address[20:0] <= 0;
+              next_address[40:21] <= adc_rd_data;
+              next_address[63:41] <= 0;
+            end
+          end
+          else
+            req_stop <= 0;
         end
       end
+
+      if (adc_stop && adc_running)
+        req_stop <= 1;
 
       if (notify_sample_data && !ack_sample_data && !sample_sync && !sample_load)
       begin
@@ -512,16 +528,9 @@ begin : adc_app
         sample_low <= sample_low + 1;
 
         if (sample_low == 1)
-        begin
           adc_send <= 1;
-
-          if (adc_address[20:7] == 14'b11111111111111)
-            req_stop <= 1;
-          else
-            adc_address[20:7] <= adc_address[20:7] + 1;
-        end
         else
-          adc_send <= 0;
+          adc_send <= 0;          
       end
       else
         adc_send <= 0;
