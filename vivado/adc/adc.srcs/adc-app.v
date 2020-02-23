@@ -284,10 +284,13 @@ begin : adc_app
             begin
               if (adc_address[20:7] == 14'b11111111111111)
               begin
-                adc_address <= next_address;
-                sample_index <= sample_index + 1;
-                if (adc_address[40:21] == 0)
+                if (next_address[40:21] == 0)
                   req_stop <= 1;
+                else
+                begin
+                  adc_address <= next_address;
+                  sample_index <= sample_index + 1;
+                end
               end
               else
                 adc_address[20:7] <= adc_address[20:7] + 1;
