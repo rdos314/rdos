@@ -260,10 +260,51 @@ generate
               curr_len = req_len;
             end
 
-            if (curr_len <= 1)
-              pci_rx_rd = 1;
-            else
-              pci_rx_rd = 0;
+            case (decode_bar(req_bar))
+              0: 
+              begin
+                if (bar0_ack)            
+                begin
+                  if (curr_len <= 1)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              1:
+              begin
+                if (bar1_ack)            
+                begin
+                  if (curr_len <= 1)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              2:
+              begin
+                if (bar2_ack)            
+                begin
+                  if (curr_len <= 1)
+                    pci_rx_rd = 1;
+                  else
+                    pci_rx_rd = 0;
+                end
+                else
+                  pci_rx_rd = 0;
+              end
+
+              default:
+              begin
+                pci_rx_rd = 1;
+              end
+            endcase
           end
 
           default:
@@ -517,7 +558,6 @@ generate
               end
             end
           end
-
 
           default:
           begin  // not supported

@@ -239,6 +239,7 @@ adc_phys_loop:
     mov ds:[edi],eax
     mov ds:[edi+4],ebx
 ;
+    int 3
     mov bx,anio_control_sel
     mov ds,bx
     xor bx,bx

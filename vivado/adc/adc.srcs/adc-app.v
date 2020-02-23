@@ -97,12 +97,11 @@ ila_3 ila3_inst (
    .probe5(wr_be),                     // input wire [3:0]  probe1 
    .probe6(wr_data),                   // input wire [31:0]  probe1 
    .probe7(ack),                       // input wire [0:0]  probe1 
-   .probe8(adc_wr),                    // input wire [0:0]  probe1 
-   .probe9(adc_wr_adr),                // input wire [15:0]  probe1 
-   .probe10(adc_wr_data),              // input wire [19:0]  probe1 
-   .probe11(adc_rd_adr),               // input wire [15:0]  probe1 
-   .probe12(adc_rd_data),              // input wire [19:0]  probe1 
-   .probe13(next_rd_adr)               // input wire [19:0]  probe1 
+   .probe8(adc_wr_adr),                // input wire [15:0]  probe1 
+   .probe9(adc_wr_data),               // input wire [19:0]  probe1 
+   .probe10(adc_rd_adr),               // input wire [15:0]  probe1 
+   .probe11(adc_rd_data),              // input wire [19:0]  probe1 
+   .probe12(next_rd_adr)               // input wire [19:0]  probe1 
 );
 
 ila_4 ila4_inst (
