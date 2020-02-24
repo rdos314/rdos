@@ -58,6 +58,34 @@ PciInt:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           NextPn
+;
+;       DESCRIPTION:    Next PN value
+;
+;       PARAMETERS:     EAX	Value
+;                       EDX     Result
+;                       ECX     Rotations
+;
+;       RETURNS:        EAX     New value
+;                       EDX     New result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextPn	proc near
+    mov ebx,eax
+    shr ebx,5
+    xor ebx,eax
+    shr ebx,17
+    rcr bl,1
+    rcl eax,1
+    rcl edx,1
+    loop NextPn
+    ret
+NextPn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -338,6 +366,32 @@ adc_thread_name	DB 'ADC', 0
 
 adc_thread:
     int 3
+    mov eax,7FAE00h
+    mov ecx,23
+    xor esi,esi
+    xor edx,edx
+    call NextPn
+
+adc_pn_loop:
+    inc esi
+    mov ecx,14
+    xor edx,edx
+    call NextPn
+    cmp dx,3FD7h
+    jne adc_pn_loop
+;
+    mov ecx,14
+    xor edx,edx
+    call NextPn
+    cmp dx,2
+    jne adc_pn_loop
+;
+    int 3
+    mov ecx,14
+    xor edx,edx
+    call NextPn
+
+
     call InitPciAdapter
     jc atDone
 ;
