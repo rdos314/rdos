@@ -171,6 +171,13 @@ module adc (
   wire                   tx_sysref;
   wire                   tx_sync;
 
+  wire        axi_ad9680_jesd_phy_en_char_align;
+  wire [3:0]  util_daq2_xcvr_rx_0_rxcharisk;
+  wire [3:0]  util_daq2_xcvr_rx_1_rxcharisk;
+  wire [3:0]  util_daq2_xcvr_rx_2_rxcharisk;
+  wire [3:0]  util_daq2_xcvr_rx_3_rxcharisk;
+  wire        util_daq2_xcvr_rx_out_clk_0;
+
 // spi
 
   assign spi_csn_adc = spi_csn[2];
@@ -251,19 +258,19 @@ module adc (
   assign gpio_i[31:17] = gpio_o[31:17];
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
-       (.cpll_ref_clk_0(rx_ref_clk_0_1),
-        .cpll_ref_clk_1(rx_ref_clk_0_1),
-        .cpll_ref_clk_2(rx_ref_clk_0_1),
-        .cpll_ref_clk_3(rx_ref_clk_0_1),
-        .qpll_ref_clk_0(tx_ref_clk_0_1),
-        .rx_0_n(rx_data_0_n_1),
-        .rx_0_p(rx_data_0_p_1),
-        .rx_1_n(rx_data_1_n_1),
-        .rx_1_p(rx_data_1_p_1),
-        .rx_2_n(rx_data_2_n_1),
-        .rx_2_p(rx_data_2_p_1),
-        .rx_3_n(rx_data_3_n_1),
-        .rx_3_p(rx_data_3_p_1),
+       (.cpll_ref_clk_0(rx_ref_clk),
+        .cpll_ref_clk_1(rx_ref_clk),
+        .cpll_ref_clk_2(rx_ref_clk),
+        .cpll_ref_clk_3(rx_ref_clk),
+        .qpll_ref_clk_0(tx_ref_clk),
+        .rx_0_n(rx_data_n[0]),
+        .rx_0_p(rx_data_p[0]),
+        .rx_1_n(rx_data_n[1]),
+        .rx_1_p(rx_data_p[1]),
+        .rx_2_n(rx_data_n[2]),
+        .rx_2_p(rx_data_p[2]),
+        .rx_3_n(rx_data_n[3]),
+        .rx_3_p(rx_data_p[3]),
         .rx_calign_0(axi_ad9680_jesd_phy_en_char_align),
         .rx_calign_1(axi_ad9680_jesd_phy_en_char_align),
         .rx_calign_2(axi_ad9680_jesd_phy_en_char_align),
@@ -476,6 +483,46 @@ module adc (
         .up_tx_wr_2(axi_ad9144_xcvr_up_ch_1_wr),
         .up_tx_wr_3(axi_ad9144_xcvr_up_ch_2_wr));
 
+  system_rx_0 rx
+       (.cfg_beats_per_multiframe(rx_axi_rx_cfg_beats_per_multiframe),
+        .cfg_buffer_delay(rx_axi_rx_cfg_buffer_delay),
+        .cfg_buffer_early_release(rx_axi_rx_cfg_buffer_early_release),
+        .cfg_disable_char_replacement(rx_axi_rx_cfg_disable_char_replacement),
+        .cfg_disable_scrambler(rx_axi_rx_cfg_disable_scrambler),
+        .cfg_lanes_disable(rx_axi_rx_cfg_lanes_disable),
+        .cfg_links_disable(rx_axi_rx_cfg_links_disable),
+        .cfg_lmfc_offset(rx_axi_rx_cfg_lmfc_offset),
+        .cfg_octets_per_frame(rx_axi_rx_cfg_octets_per_frame),
+        .cfg_sysref_disable(rx_axi_rx_cfg_sysref_disable),
+        .cfg_sysref_oneshot(rx_axi_rx_cfg_sysref_oneshot),
+        .clk(device_clk_1),
+        .ctrl_err_statistics_mask(rx_axi_rx_cfg_err_statistics_mask),
+        .ctrl_err_statistics_reset(rx_axi_rx_cfg_err_statistics_reset),
+        .event_sysref_alignment_error(rx_rx_event_sysref_alignment_error),
+        .event_sysref_edge(rx_rx_event_sysref_edge),
+        .ilas_config_addr(rx_rx_ilas_config_addr),
+        .ilas_config_data(rx_rx_ilas_config_data),
+        .ilas_config_valid(rx_rx_ilas_config_valid),
+        .phy_block_sync({1'b0,1'b0,1'b0,1'b0}),
+        .phy_charisk({util_daq2_xcvr_rx_3_rxcharisk, util_daq2_xcvr_rx_2_rxcharisk, util_daq2_xcvr_rx_1_rxcharisk, util_daq2_xcvr_rx_0_rxcharisk}),
+        .phy_data({rx_phy3_1_rxdata,rx_phy2_1_rxdata,rx_phy1_1_rxdata,rx_phy0_1_rxdata}),
+        .phy_disperr({rx_phy3_1_rxdisperr,rx_phy2_1_rxdisperr,rx_phy1_1_rxdisperr,rx_phy0_1_rxdisperr}),
+        .phy_en_char_align(axi_ad9680_jesd_phy_en_char_align),
+        .phy_header({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .phy_notintable({rx_phy3_1_rxnotintable,rx_phy2_1_rxnotintable,rx_phy1_1_rxnotintable,rx_phy0_1_rxnotintable}),
+        .reset(rx_axi_core_reset),
+        .rx_data(rx_rx_data),
+        .rx_eof(rx_rx_eof),
+        .rx_sof(rx_rx_sof),
+        .rx_valid(rx_rx_valid),
+        .status_ctrl_state(rx_rx_status_ctrl_state),
+        .status_err_statistics_cnt(rx_rx_status_err_statistics_cnt),
+        .status_lane_cgs_state(rx_rx_status_lane_cgs_state),
+        .status_lane_emb_state(rx_rx_status_lane_emb_state),
+        .status_lane_ifs_ready(rx_rx_status_lane_ifs_ready),
+        .status_lane_latency(rx_rx_status_lane_latency),
+        .sync(rx_sync),
+        .sysref(sysref_1));
 
 pci_app pci_app_inst (
     .pci_exp_txp(pci_exp_txp),
