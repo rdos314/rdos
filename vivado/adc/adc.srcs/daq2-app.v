@@ -1,25 +1,18 @@
 module daq2_app
 (
-  input                   rx_ref_clk_p,
-  input                   rx_ref_clk_n,
-  input                   rx_sysref_p,
-  input                   rx_sysref_n,
-  output                  rx_sync_p,
-  output                  rx_sync_n,
+  input                   rx_ref_clk,
+  input                   rx_sysref,
+  output                  rx_sync,
   input       [ 3:0]      rx_data_p,
   input       [ 3:0]      rx_data_n,
 
-  input                   tx_ref_clk_p,
-  input                   tx_ref_clk_n,
-  input                   tx_sysref_p,
-  input                   tx_sysref_n,
-  input                   tx_sync_p,
-  input                   tx_sync_n,
+  input                   tx_ref_clk,
+  input                   tx_sysref,
+  input                   tx_sync,
   output      [ 3:0]      tx_data_p,
   output      [ 3:0]      tx_data_n,
 
-  input                   trig_p,
-  input                   trig_n,
+  input                   trig,
 
   inout                   adc_fdb,
   inout                   adc_fda,
@@ -46,20 +39,12 @@ module daq2_app
   wire [ 7:0]            spi_csn;
   wire                   spi_mosi;
   wire                   spi_miso;
-  wire                   trig;
-
-  wire                   rx_ref_clk;
-  wire                   rx_sysref;
-  wire                   rx_sync;
-  wire                   tx_ref_clk;
-  wire                   tx_sysref;
-  wire                   tx_sync;
 
   wire        axi_ad9680_jesd_phy_en_char_align;
-  wire [3:0]  util_daq2_xcvr_rx_0_rxcharisk;
-  wire [3:0]  util_daq2_xcvr_rx_1_rxcharisk;
-  wire [3:0]  util_daq2_xcvr_rx_2_rxcharisk;
-  wire [3:0]  util_daq2_xcvr_rx_3_rxcharisk;
+  wire [3:0]  xcvr_rx_0_rxcharisk;
+  wire [3:0]  xcvr_rx_1_rxcharisk;
+  wire [3:0]  xcvr_rx_2_rxcharisk;
+  wire [3:0]  xcvr_rx_3_rxcharisk;
   wire        util_daq2_xcvr_rx_out_clk_0;
 
 // spi
@@ -68,44 +53,6 @@ module daq2_app
   assign spi_csn_dac = spi_csn[1];
   assign spi_csn_clk = spi_csn[0];
 
-  IBUFDS_GTE2 i_ibufds_rx_ref_clk (
-    .CEB (1'd0),
-    .I (rx_ref_clk_p),
-    .IB (rx_ref_clk_n),
-    .O (rx_ref_clk),
-    .ODIV2 ());
-
-  IBUFDS i_ibufds_rx_sysref (
-    .I (rx_sysref_p),
-    .IB (rx_sysref_n),
-    .O (rx_sysref));
-
-  OBUFDS i_obufds_rx_sync (
-    .I (rx_sync),
-    .O (rx_sync_p),
-    .OB (rx_sync_n));
-
-  IBUFDS_GTE2 i_ibufds_tx_ref_clk (
-    .CEB (1'd0),
-    .I (tx_ref_clk_p),
-    .IB (tx_ref_clk_n),
-    .O (tx_ref_clk),
-    .ODIV2 ());
-
-  IBUFDS i_ibufds_tx_sysref (
-    .I (tx_sysref_p),
-    .IB (tx_sysref_n),
-    .O (tx_sysref));
-
-  IBUFDS i_ibufds_tx_sync (
-    .I (tx_sync_p),
-    .IB (tx_sync_n),
-    .O (tx_sync));
-
-  IBUFDS i_ibufds_trig (
-    .I (trig_p),
-    .IB (trig_n),
-    .O (trig));
 
   daq2_spi i_spi (
     .spi_csn (spi_csn[2:0]),
@@ -159,10 +106,10 @@ module daq2_app
         .rx_calign_1(axi_ad9680_jesd_phy_en_char_align),
         .rx_calign_2(axi_ad9680_jesd_phy_en_char_align),
         .rx_calign_3(axi_ad9680_jesd_phy_en_char_align),
-        .rx_charisk_0(util_daq2_xcvr_rx_0_rxcharisk),
-        .rx_charisk_1(util_daq2_xcvr_rx_1_rxcharisk),
-        .rx_charisk_2(util_daq2_xcvr_rx_2_rxcharisk),
-        .rx_charisk_3(util_daq2_xcvr_rx_3_rxcharisk),
+        .rx_charisk_0(xcvr_rx_0_rxcharisk),
+        .rx_charisk_1(xcvr_rx_1_rxcharisk),
+        .rx_charisk_2(xcvr_rx_2_rxcharisk),
+        .rx_charisk_3(xcvr_rx_3_rxcharisk),
         .rx_clk_0(util_daq2_xcvr_rx_out_clk_0),
         .rx_clk_1(util_daq2_xcvr_rx_out_clk_0),
         .rx_clk_2(util_daq2_xcvr_rx_out_clk_0),
@@ -388,7 +335,7 @@ module daq2_app
         .ilas_config_data(rx_rx_ilas_config_data),
         .ilas_config_valid(rx_rx_ilas_config_valid),
         .phy_block_sync({1'b0,1'b0,1'b0,1'b0}),
-        .phy_charisk({util_daq2_xcvr_rx_3_rxcharisk, util_daq2_xcvr_rx_2_rxcharisk, util_daq2_xcvr_rx_1_rxcharisk, util_daq2_xcvr_rx_0_rxcharisk}),
+        .phy_charisk({xcvr_rx_3_rxcharisk, xcvr_rx_2_rxcharisk, xcvr_rx_1_rxcharisk, xcvr_rx_0_rxcharisk}),
         .phy_data({rx_phy3_1_rxdata,rx_phy2_1_rxdata,rx_phy1_1_rxdata,rx_phy0_1_rxdata}),
         .phy_disperr({rx_phy3_1_rxdisperr,rx_phy2_1_rxdisperr,rx_phy1_1_rxdisperr,rx_phy0_1_rxdisperr}),
         .phy_en_char_align(axi_ad9680_jesd_phy_en_char_align),

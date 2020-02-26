@@ -154,27 +154,69 @@ module adc (
   wire [31:0]            bar2_wr_data;
   wire                   bar2_ack;
 
+  wire                   rx_ref_clk;
+  wire                   rx_sysref;
+  wire                   rx_sync;
+
+  wire                   tx_ref_clk;
+  wire                   tx_sysref;
+  wire                   tx_sync;
+
+  wire                   trig;
+
+  IBUFDS_GTE2 i_ibufds_rx_ref_clk (
+    .CEB (1'd0),
+    .I (rx_ref_clk_p),
+    .IB (rx_ref_clk_n),
+    .O (rx_ref_clk),
+    .ODIV2 ());
+
+  IBUFDS i_ibufds_rx_sysref (
+    .I (rx_sysref_p),
+    .IB (rx_sysref_n),
+    .O (rx_sysref));
+
+  OBUFDS i_obufds_rx_sync (
+    .I (rx_sync),
+    .O (rx_sync_p),
+    .OB (rx_sync_n));
+
+  IBUFDS_GTE2 i_ibufds_tx_ref_clk (
+    .CEB (1'd0),
+    .I (tx_ref_clk_p),
+    .IB (tx_ref_clk_n),
+    .O (tx_ref_clk),
+    .ODIV2 ());
+
+  IBUFDS i_ibufds_tx_sysref (
+    .I (tx_sysref_p),
+    .IB (tx_sysref_n),
+    .O (tx_sysref));
+
+  IBUFDS i_ibufds_tx_sync (
+    .I (tx_sync_p),
+    .IB (tx_sync_n),
+    .O (tx_sync));
+
+  IBUFDS i_ibufds_trig (
+    .I (trig_p),
+    .IB (trig_n),
+    .O (trig));
+
 daq2_app daq2_app_inst (
-  .rx_ref_clk_p(rx_ref_clk_p),
-  .rx_ref_clk_n(rx_ref_clk_n),
-  .rx_sysref_p(rx_sysref_p),
-  .rx_sysref_n(rx_sysref_n),
-  .rx_sync_p(rx_sync_p),
-  .rx_sync_n(rx_sync_n),
+  .rx_ref_clk(rx_ref_clk),
+  .rx_sysref(rx_sysref),
+  .rx_sync(rx_sync),
   .rx_data_p(rx_data_p),
   .rx_data_n(rx_data_n),
 
-  .tx_ref_clk_p(tx_ref_clk_p),
-  .tx_ref_clk_n(tx_ref_clk_n),
-  .tx_sysref_p(tx_sysref_p),
-  .tx_sysref_n(tx_sysref_n),
-  .tx_sync_p(tx_sync_p),
-  .tx_sync_n(tx_sync_n),
+  .tx_ref_clk(tx_ref_clk),
+  .tx_sysref(tx_sysref),
+  .tx_sync(tx_sync),
   .tx_data_p(tx_data_p),
   .tx_data_n(tx_data_n),
 
-  .trig_p(trig_p),
-  .trig_n(trig_n),
+  .trig(trig),
 
   .adc_fdb(adc_fdb),
   .adc_fda(adc_fda),
