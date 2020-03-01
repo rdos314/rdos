@@ -567,6 +567,7 @@ void TVp::UpdateVp(int diff)
 
             if ((diostat & 0x20) == 0)
             {
+                RdosWaitMilli(250);
                 RdosToggleSerialLine(1, 5);   // cold
                 FLog.Log(0, "UpdateVp", "Cold started");
             }
@@ -585,6 +586,7 @@ void TVp::UpdateVp(int diff)
 
                 if ((diostat & 0x40) != 0)
                 {
+                    RdosWaitMilli(250);
                     FLowTemp = FTankTemp - 30;
                     RdosToggleSerialLine(1, 6);   // heat
                     FLog.Log(0, "UpdateVp", "Heat stopped");
@@ -689,80 +691,18 @@ void TVp::CalcLinearRegression(int Size)
 ##########################################################################*/
 void TVp::UpdateHistory(long double val)
 {
-    int i;
-    int j;
-    int index;
-    int n;
-
-    if (FHistoryCount < MAX_LEVEL_HISTORY)
+    if (!FValidTank)
     {
-        FHistoryIndex = 0;
-
-        FRawHistory[FHistoryCount] = val;
-        FHistoryCount++;
+        FTankTemp = 200;
+        FValidTank = TRUE;
     }
+
+    if (FEch.IsOn() || FVpCircOn)
+        FTankTemp = FEch.GetHeatInlet();
     else
-    {
-        FRawHistory[FHistoryIndex] = val;
-        FHistoryIndex++;
-        if (FHistoryIndex == MAX_LEVEL_HISTORY)
-            FHistoryIndex = 0;
-    }
+        FTankTemp--;
 
-    for (i = 0; i < FHistoryCount; i++)
-    {
-        j = (i + FHistoryIndex) % MAX_LEVEL_HISTORY;
-        FHistory[i] = FRawHistory[j];
-    }
-
-
-    if (FHistoryCount > 60)
-    {
-        index = 0;
-
-        if (FHistoryCount <= 600)
-            CalcLinearRegression(FHistoryCount);
-        else
-        {
-            n = HistoryArr[index];
-            index++;
-            CalcLinearRegression(n);
-
-            while (HistoryArr[index] && FCurrTurbulence >= 20.0)
-            {
-                n = HistoryArr[index];
-                index++;
-                CalcLinearRegression(n);
-            }
-        }
-
-        if (FCurrTurbulence < 20.0)
-        {
-            FValidPTank = TRUE;
-            PTank = 4.186 * VOLUME_TANK * FCurrFlow;
-            FCurrTemp = FCurrMean + FCurrSlope * 0.5;
-            FTankTemp = (int)(FCurrTemp * 10.0);
-            FValidTank = TRUE;
-
-            if (FCurrSlope > 0.1)
-                UpdateVp(1);
-            else
-            {
-                if (FCurrSlope < -0.1)
-                    UpdateVp(-1);
-                else
-                    UpdateVp(0);
-            }
-        }
-        else
-        {
-            FValidPTank = FALSE;
-            FCurrTemp = FCurrMean;
-            FTankTemp = (int)(FCurrTemp * 10.0);
-            FValidTank = TRUE;
-        }
-
-    }
+    UpdateVp(0);
 }
 
 /*##########################################################################
@@ -1131,31 +1071,12 @@ void TVp::Execute()
         sprintf(str, "%06hX", ival);
         Table->SetText(6, 1, str);
 
-        if (RdosReadSerialRaw(1, 5, &ival))
-        {
-            if (ival > 100 && ival < 600)
-            {
-                val = (long double)ival / 10;
-                UpdateHistory(val);
-
-                sprintf(str, "%5.2Lf", val);
-                Table->SetText(0, 1, str);
-            }
-            else
-                FLog.printf(0, "", "Invalid heat %d", ival);
-
-            if (FHistoryCount > 60)
-            {
-                sprintf(str, "%5.2Lf", FCurrTemp);
-                Table->SetText(0, 1, str);
-            }
-
-        }
-
         CurrTime = new TDateTime;
 
         if (LastMin != CurrTime->GetMin())
         {
+            UpdateHistory(0);
+
             FSection.Enter();
 
             if (FMotorCount)

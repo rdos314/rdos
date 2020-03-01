@@ -176,7 +176,7 @@ void TRad::CreateDayFile(int year, int month, int day)
         delete FDayFile;
 
     FDayFile = new TFile(filename);
-    
+
     if (!FDayFile->IsOpen())
     {
         delete FDayFile;
@@ -608,8 +608,6 @@ void TRad::Execute()
                     FRefCount++;
                     FControl->SetRef(FIndex, val);
                 }
-                else
-                    FLog.printf(0, "", "Ref: %d", val);
             }
             else
                 FControl->SetRef(FIndex);
@@ -626,10 +624,8 @@ void TRad::Execute()
                         FTempCount++;
                         FControl->SetTemp(FIndex, val);
                     }
-                    else
-                        FLog.printf(0, "", "Temp: %d", val);
                 }
-		else
+                else
                     FControl->SetTemp(FIndex);
             }
 
@@ -648,8 +644,8 @@ void TRad::Execute()
                     }
                     else
                         FLog.printf(0, "", "Motor: %d", val);
-		}
-		else
+                }
+                else
                     FControl->SetMotor(FIndex);
             }
 
@@ -669,7 +665,7 @@ void TRad::Execute()
                         FLog.printf(0, "", "Light: %d", val);
                 }
                 else
-		    FControl->SetLight(FIndex);
+                    FControl->SetLight(FIndex);
             }
 
             if (ok)
