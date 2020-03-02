@@ -128,6 +128,8 @@ module adc (
   wire                   sample_clk;  
   wire                   clk;  
   wire [31:0]            bar_control;
+  
+  wire                   spi_locked;
 
   wire                   adc_start;
   wire                   adc_stop;
@@ -163,6 +165,7 @@ module adc (
   wire                   tx_sync;
 
   wire                   trig;
+
 
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
@@ -203,6 +206,7 @@ module adc (
     .IB (trig_n),
     .O (trig));
 
+/*
 daq2_app daq2_app_inst (
   .rx_ref_clk(rx_ref_clk),
   .rx_sysref(rx_sysref),
@@ -235,6 +239,8 @@ daq2_app daq2_app_inst (
   .spi_sdio(spi_sdio),
   .spi_dir(spi_dir)
 );
+
+*/
 
 pci_app pci_app_inst (
     .pci_exp_txp(pci_exp_txp),
@@ -317,16 +323,25 @@ dac_app dac_app_inst (
     .ack(bar2_ack)
 );
 
- sample_700 sample_inst  (
-    .clk_out1(sample_clk),     // output clk_out1
-    .clk_in1(clk)          // input clk_in1
-    );
-
  //-----------------------------I/O BUFFERS------------------------//
 
   IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));
   IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
   BUFG   sys_clk_buf (.O(clk), .I(sys_clk));
+
+  spi_clk_0 spi_clk_inst
+   (
+    // Clock out ports
+    .clk_out1(spi_clk),     // output clk_out1
+    // Status and control signals
+    .locked(spi_locked),       // output locked
+   // Clock in ports
+    .clk_in1(sys_clk));      // input clk_in1
+
+ assign spi_csn_clk = 1;
+ assign spi_csn_dac = 1;
+ assign spi_csn_adc = 1;
+ assign spi_dir = 0;
 
   OBUF   led_0_obuf (.O(led_0), .I(bar_control[0]));
   OBUF   led_1_obuf (.O(led_1), .I(bar_control[1]));
