@@ -28,37 +28,67 @@ set_property PACKAGE_PIN G19 [get_ports led_5]
 set_property PACKAGE_PIN E18 [get_ports led_6]
 set_property PACKAGE_PIN F16 [get_ports led_7]
 
-s
-set_property PACKAGE_PIN  D26 IOSTANDARD LVDS_25 [get_ports rx_sync_p]                     ; ## D08  FMC_HPC_LA01_CC_P
-set_property PACKAGE_PIN  C26 IOSTANDARD LVDS_25 [get_ports rx_sync_n]                     ; ## D09  FMC_HPC_LA01_CC_N
-set_property PACKAGE_PIN  H26 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_p]    ; ## G09  FMC_HPC_LA03_P
-set_property PACKAGE_PIN  H27 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_n]    ; ## G10  FMC_HPC_LA03_N
+set_property IOSTANDARD LVDS_25 [get_ports rx_sync_p]                     ; ## D08  FMC_HPC_LA01_CC_P
+set_property IOSTANDARD LVDS_25 [get_ports rx_sync_n]                     ; ## D09  FMC_HPC_LA01_CC_N
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_p]    ; ## G09  FMC_HPC_LA03_P
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_n]    ; ## G10  FMC_HPC_LA03_N
 
-set_property PACKAGE_PIN  H24 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sync_p]      ; ## H07  FMC_HPC_LA02_P
-set_property PACKAGE_PIN  H25 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sync_n]      ; ## H08  FMC_HPC_LA02_N
-set_property PACKAGE_PIN  G28 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sysref_p]    ; ## H10  FMC_HPC_LA04_P
-set_property PACKAGE_PIN  F28 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sysref_n]    ; ## H11  FMC_HPC_LA04_N
+set_property PACKAGE_PIN  D26 [get_ports rx_sync_p]                     ; ## D08  FMC_HPC_LA01_CC_P
+set_property PACKAGE_PIN  C26 [get_ports rx_sync_n]                     ; ## D09  FMC_HPC_LA01_CC_N
+set_property PACKAGE_PIN  H26 [get_ports rx_sysref_p]    ; ## G09  FMC_HPC_LA03_P
+set_property PACKAGE_PIN  H27 [get_ports rx_sysref_n]    ; ## G10  FMC_HPC_LA03_N
 
-set_property PACKAGE_PIN  G29 IOSTANDARD LVCMOS25 [get_ports spi_csn_clk]                  ; ## D11  FMC_HPC_LA05_P
-set_property PACKAGE_PIN  D29 IOSTANDARD LVCMOS25 [get_ports spi_csn_dac]                  ; ## C14  FMC_HPC_LA10_P
-set_property PACKAGE_PIN  A30 IOSTANDARD LVCMOS25 [get_ports spi_csn_adc]                  ; ## D15  FMC_HPC_LA09_N
-set_property PACKAGE_PIN  F30 IOSTANDARD LVCMOS25 [get_ports spi_clk]                      ; ## D12  FMC_HPC_LA05_N
-set_property PACKAGE_PIN  B30 IOSTANDARD LVCMOS25 [get_ports spi_sdio]                     ; ## D14  FMC_HPC_LA09_P
-set_property PACKAGE_PIN  E30 IOSTANDARD LVCMOS25 [get_ports spi_dir]                      ; ## G13  FMC_HPC_LA08_N
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sync_p]      ; ## H07  FMC_HPC_LA02_P
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sync_n]      ; ## H08  FMC_HPC_LA02_N
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sysref_p]    ; ## H10  FMC_HPC_LA04_P
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports tx_sysref_n]    ; ## H11  FMC_HPC_LA04_N
 
-set_property PACKAGE_PIN  E29 IOSTANDARD LVCMOS25 [get_ports clkd_sync]                    ; ## G12  FMC_HPC_LA08_P
-set_property PACKAGE_PIN  C30 IOSTANDARD LVCMOS25 [get_ports dac_reset]                    ; ## C15  FMC_HPC_LA10_N
-set_property PACKAGE_PIN  B29 IOSTANDARD LVCMOS25 [get_ports dac_txen]                     ; ## G16  FMC_HPC_LA12_N
-set_property PACKAGE_PIN  H30 IOSTANDARD LVCMOS25 [get_ports adc_pd]                       ; ## C10  FMC_HPC_LA06_P
+set_property PACKAGE_PIN  H24 [get_ports tx_sync_p]      ; ## H07  FMC_HPC_LA02_P
+set_property PACKAGE_PIN  H25 [get_ports tx_sync_n]      ; ## H08  FMC_HPC_LA02_N
+set_property PACKAGE_PIN  G28 [get_ports tx_sysref_p]    ; ## H10  FMC_HPC_LA04_P
+set_property PACKAGE_PIN  F28 [get_ports tx_sysref_n]    ; ## H11  FMC_HPC_LA04_N
 
-set_property PACKAGE_PIN  A25 IOSTANDARD LVCMOS25 [get_ports clkd_status[0]]               ; ## D17  FMC_HPC_LA13_P
-set_property PACKAGE_PIN  A26 IOSTANDARD LVCMOS25 [get_ports clkd_status[1]]               ; ## D18  FMC_HPC_LA13_N
-set_property PACKAGE_PIN  C29 IOSTANDARD LVCMOS25 [get_ports dac_irq]                      ; ## G15  FMC_HPC_LA12_P
-set_property PACKAGE_PIN  G27 IOSTANDARD LVCMOS25 [get_ports adc_fda]                      ; ## H16  FMC_HPC_LA11_P
-set_property PACKAGE_PIN  F27 IOSTANDARD LVCMOS25 [get_ports adc_fdb]                      ; ## H17  FMC_HPC_LA11_N
+set_property IOSTANDARD LVCMOS25 [get_ports spi_csn_clk]                  ; ## D11  FMC_HPC_LA05_P
+set_property IOSTANDARD LVCMOS25 [get_ports spi_csn_dac]                  ; ## C14  FMC_HPC_LA10_P
+set_property IOSTANDARD LVCMOS25 [get_ports spi_csn_adc]                  ; ## D15  FMC_HPC_LA09_N
+set_property IOSTANDARD LVCMOS25 [get_ports spi_clk]                      ; ## D12  FMC_HPC_LA05_N
+set_property IOSTANDARD LVCMOS25 [get_ports spi_sdio]                     ; ## D14  FMC_HPC_LA09_P
+set_property IOSTANDARD LVCMOS25 [get_ports spi_dir]                      ; ## G13  FMC_HPC_LA08_N
 
-set_property PACKAGE_PIN  E28 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports trig_p]         ; ## H13  FMC_HPC_LA07_P
-set_property PACKAGE_PIN  D28 IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports trig_n]         ; ## H14  FMC_HPC_LA07_N
+set_property PACKAGE_PIN  G29 [get_ports spi_csn_clk]                  ; ## D11  FMC_HPC_LA05_P
+set_property PACKAGE_PIN  D29 [get_ports spi_csn_dac]                  ; ## C14  FMC_HPC_LA10_P
+set_property PACKAGE_PIN  A30 [get_ports spi_csn_adc]                  ; ## D15  FMC_HPC_LA09_N
+set_property PACKAGE_PIN  F30 [get_ports spi_clk]                      ; ## D12  FMC_HPC_LA05_N
+set_property PACKAGE_PIN  B30 [get_ports spi_sdio]                     ; ## D14  FMC_HPC_LA09_P
+set_property PACKAGE_PIN  E30 [get_ports spi_dir]                      ; ## G13  FMC_HPC_LA08_N
+
+set_property IOSTANDARD LVCMOS25 [get_ports clkd_sync]                    ; ## G12  FMC_HPC_LA08_P
+set_property IOSTANDARD LVCMOS25 [get_ports dac_reset]                    ; ## C15  FMC_HPC_LA10_N
+set_property IOSTANDARD LVCMOS25 [get_ports dac_txen]                     ; ## G16  FMC_HPC_LA12_N
+set_property IOSTANDARD LVCMOS25 [get_ports adc_pd]                       ; ## C10  FMC_HPC_LA06_P
+
+set_property PACKAGE_PIN  E29 [get_ports clkd_sync]                    ; ## G12  FMC_HPC_LA08_P
+set_property PACKAGE_PIN  C30 [get_ports dac_reset]                    ; ## C15  FMC_HPC_LA10_N
+set_property PACKAGE_PIN  B29 [get_ports dac_txen]                     ; ## G16  FMC_HPC_LA12_N
+set_property PACKAGE_PIN  H30 [get_ports adc_pd]                       ; ## C10  FMC_HPC_LA06_P
+
+set_property IOSTANDARD LVCMOS25 [get_ports clkd_status[0]]               ; ## D17  FMC_HPC_LA13_P
+set_property IOSTANDARD LVCMOS25 [get_ports clkd_status[1]]               ; ## D18  FMC_HPC_LA13_N
+set_property IOSTANDARD LVCMOS25 [get_ports dac_irq]                      ; ## G15  FMC_HPC_LA12_P
+set_property IOSTANDARD LVCMOS25 [get_ports adc_fda]                      ; ## H16  FMC_HPC_LA11_P
+set_property IOSTANDARD LVCMOS25 [get_ports adc_fdb]                      ; ## H17  FMC_HPC_LA11_N
+
+set_property PACKAGE_PIN  A25 [get_ports clkd_status[0]]               ; ## D17  FMC_HPC_LA13_P
+set_property PACKAGE_PIN  A26 [get_ports clkd_status[1]]               ; ## D18  FMC_HPC_LA13_N
+set_property PACKAGE_PIN  C29 [get_ports dac_irq]                      ; ## G15  FMC_HPC_LA12_P
+set_property PACKAGE_PIN  G27 [get_ports adc_fda]                      ; ## H16  FMC_HPC_LA11_P
+set_property PACKAGE_PIN  F27 [get_ports adc_fdb]                      ; ## H17  FMC_HPC_LA11_N
+
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports trig_p]         ; ## H13  FMC_HPC_LA07_P
+set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports trig_n]         ; ## H14  FMC_HPC_LA07_N
+
+set_property PACKAGE_PIN  E28 [get_ports trig_p]         ; ## H13  FMC_HPC_LA07_P
+set_property PACKAGE_PIN  D28 [get_ports trig_n]         ; ## H14  FMC_HPC_LA07_N
 
 set_property LOC IBUFDS_GTE2_X0Y1 [get_cells refclk_ibuf]
 

@@ -54,14 +54,6 @@ module daq2_app
   assign spi_csn_clk = spi_csn[0];
 
 
-  daq2_spi i_spi (
-    .spi_csn (spi_csn[2:0]),
-    .spi_clk (spi_clk),
-    .spi_mosi (spi_mosi),
-    .spi_miso (spi_miso),
-    .spi_sdio (spi_sdio),
-    .spi_dir (spi_dir));
-
   assign gpio_i[43] = trig;
 
   ad_iobuf #(.DATA_WIDTH(9)) i_iobuf (

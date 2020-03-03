@@ -258,6 +258,13 @@ pci_app pci_app_inst (
     .user_lnk_width(user_lnk_width),
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
+    .spi_cs_clk (spi_csn_clk),
+    .spi_cs_adc (spi_csn_adc),
+    .spi_cs_dac (spi_csn_dac),
+    .spi_clk (spi_clk),
+    .spi_sdio (spi_sdio),
+    .spi_dir (spi_dir),
+
     .bar_control(bar_control),
 
     .adc_start(adc_start),

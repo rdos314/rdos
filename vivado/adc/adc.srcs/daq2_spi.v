@@ -2,23 +2,24 @@
 
 module daq2_spi (
   input                   spi_rq_rd,
-  input  [1:0]            spi_rq_cs,
+  input      [1:0]        spi_rq_cs,
   input                   spi_rq_word,  
-  input  [11:0]           spi_rq_adr,
+  input      [11:0]       spi_rq_adr,
   input                   spi_rq,
-  input  [15:0]           spi_rq_data,
-  output                  spi_ack;
+  input      [15:0]       spi_rq_data,
+  output reg              spi_ack,
 
-  output [11:0]           spi_rp_adr,
-  output                  spi_rp,
-  output [15:0]           spi_rp_data,
+  output reg [1:0]        spi_rp_cs,
+  output reg [11:0]       spi_rp_adr,
+  output reg              spi_rp,
+  output reg [15:0]       spi_rp_data,
 
-  output                  spi_cs_clk,
-  output                  spi_cs_adc,
-  output                  spi_cs_dac,
+  output reg              spi_cs_clk,
+  output reg              spi_cs_adc,
+  output reg              spi_cs_dac,
   input                   spi_clk,
   inout                   spi_sdio,
-  output                  spi_dir);
+  output reg              spi_dir);
 
   // internal registers
 
@@ -29,6 +30,30 @@ module daq2_spi (
   reg                     spi_z;
   reg                     spi_out_bit;
 
+ila_5 ila5_inst (
+   .clk ( spi_clk ),                     // I
+   .probe0(spi_rq_rd),                   // input wire [0:0]  probe1 
+   .probe1(spi_rq_cs),                   // input wire [1:0]  probe1 
+   .probe2(spi_rq_word),                 // input wire [0:0]  probe1 
+   .probe3(spi_rq_adr),                  // input wire [11:0]  probe1 
+   .probe4(spi_rq),                      // input wire [0:0]  probe1 
+   .probe5(spi_rq_data),                 // input wire [15:0]  probe1 
+   .probe6(spi_ack),                     // input wire [0:0]  probe1 
+   .probe7(spi_rp_cs),                   // input wire [1:0]  probe1 
+   .probe8(spi_rp_adr),                  // input wire [11:0]  probe1 
+   .probe9(spi_rp),                      // input wire [0:0]  probe1 
+   .probe10(spi_rp_data),                // input wire [15:0]  probe1 
+   .probe11(spi_cs_clk),                 // input wire [0:0]  probe1 
+   .probe12(spi_cs_adc),                 // input wire [0:0]  probe1 
+   .probe13(spi_cs_dac),                 // input wire [0:0]  probe1 
+   .probe14(spi_sdio),                   // input wire [0:0]  probe1 
+   .probe15(spi_dir),                    // input wire [0:0]  probe1 
+   .probe16(spi_count),                  // input wire [5:0]  probe1 
+   .probe17(spi_size),                   // input wire [5:0]  probe1 
+   .probe18(spi_rd_wr_n),                // input wire [0:0]  probe1 
+   .probe19(spi_z),                      // input wire [0:0]  probe1 
+   .probe20(spi_out_bit)                 // input wire [0:0]  probe1 
+);
 
   always @(posedge spi_clk) 
   begin
@@ -60,7 +85,7 @@ module daq2_spi (
         spi_cmd[14] <= 0;
         spi_rd_wr_n <= spi_rq_rd;
 
-        if (spi_rd_word)
+        if (spi_rq_word)
           spi_cmd[11:0] <= spi_rq_adr + 1;
         else
           spi_cmd[11:0] <= spi_rq_adr;
@@ -125,7 +150,7 @@ module daq2_spi (
       begin
         spi_rp_adr <= spi_rq_adr;
 
-        if (spi_rd_word)
+        if (spi_rq_word)
         begin
           spi_size <= 32;
           spi_rp_data <= spi_rq_data;
