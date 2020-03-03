@@ -1,95 +1,180 @@
-// ***************************************************************************
-// ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
-//
-// In this HDL repository, there are many different and unique modules, consisting
-// of various HDL (Verilog or VHDL) components. The individual modules are
-// developed independently, and may be accompanied by separate and unique license
-// terms.
-//
-// The user should read each of these license terms, and understand the
-// freedoms and responsibilities that he or she has by using this source/core.
-//
-// This core is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-// A PARTICULAR PURPOSE.
-//
-// Redistribution and use of source or resulting binaries, with or without modification
-// of this file, are permitted under one of the following two license terms:
-//
-//   1. The GNU General Public License version 2 as published by the
-//      Free Software Foundation, which can be found in the top level directory
-//      of this repository (LICENSE_GPL2), and also online at:
-//      <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>
-//
-// OR
-//
-//   2. An ADI specific BSD license, which can be found in the top level directory
-//      of this repository (LICENSE_ADIBSD), and also on-line at:
-//      https://github.com/analogdevicesinc/hdl/blob/master/LICENSE_ADIBSD
-//      This will allow to generate bit files and not release the source code,
-//      as long as it attaches to an ADI device.
-//
-// ***************************************************************************
-// ***************************************************************************
-
 `timescale 1ns/100ps
 
 module daq2_spi (
+  input                   spi_rq_rd,
+  input  [1:0]            spi_rq_cs,
+  input                   spi_rq_word,  
+  input  [11:0]           spi_rq_adr,
+  input                   spi_rq,
+  input  [15:0]           spi_rq_data,
+  output                  spi_ack;
 
-  input       [ 2:0]      spi_csn,
+  output [11:0]           spi_rp_adr,
+  output                  spi_rp,
+  output [15:0]           spi_rp_data,
+
+  output                  spi_cs_clk,
+  output                  spi_cs_adc,
+  output                  spi_cs_dac,
   input                   spi_clk,
-  input                   spi_mosi,
-  output                  spi_miso,
-
   inout                   spi_sdio,
   output                  spi_dir);
 
   // internal registers
 
-  reg     [ 5:0]  spi_count = 'd0;
-  reg             spi_rd_wr_n = 'd0;
-  reg             spi_enable = 'd0;
+  reg [5:0]               spi_count;
+  reg [5:0]               spi_size;
+  reg [14:0]              spi_cmd;   
+  reg                     spi_rd_wr_n;
+  reg                     spi_z;
+  reg                     spi_out_bit;
 
-  // internal signals
 
-  wire            spi_csn_s;
-  wire            spi_enable_s;
+  always @(posedge spi_clk) 
+  begin
+    if (spi_rq)
+    begin
+      if (!spi_count || spi_ack)
+        spi_out_bit = spi_rq_adr[15];
+      else
+      begin
+        if (spi_count < 16)
+          spi_out_bit = spi_cmd[14];
+        else
+          spi_out_bit = spi_rp_data[15];
+      end
+    end
+    else
+      spi_out_bit = 0;
+  end
+  
 
-  // check on rising edge and change on falling edge
+  always @(posedge spi_clk) 
+  begin
+    if (spi_rq)
+    begin
+      if (!spi_count || spi_ack)
+      begin
+        spi_cmd[12] <= 0;
+        spi_cmd[13] <= spi_rq_word;
+        spi_cmd[14] <= 0;
+        spi_rd_wr_n <= spi_rq_rd;
 
-  assign spi_csn_s = & spi_csn;
-  assign spi_dir = ~spi_enable_s;
-  assign spi_enable_s = spi_enable & ~spi_csn_s;
+        if (spi_rd_word)
+          spi_cmd[11:0] <= spi_rq_adr + 1;
+        else
+          spi_cmd[11:0] <= spi_rq_adr;
 
-  always @(posedge spi_clk or posedge spi_csn_s) begin
-    if (spi_csn_s == 1'b1) begin
-      spi_count <= 6'd0;
-      spi_rd_wr_n <= 1'd0;
-    end else begin
-      spi_count <= (spi_count < 6'h3f) ? spi_count + 1'b1 : spi_count;
-      if (spi_count == 6'd0) begin
-        spi_rd_wr_n <= spi_mosi;
+        case (spi_rq_cs)
+          0:
+          begin
+            spi_cs_clk <= 0;
+            spi_cs_adc <= 1;
+            spi_cs_dac <= 1;
+          end
+
+          1:
+          begin
+            spi_cs_clk <= 1;
+            spi_cs_adc <= 0;
+            spi_cs_dac <= 1;
+          end
+
+          2:
+          begin
+            spi_cs_clk <= 1;
+            spi_cs_adc <= 1;
+            spi_cs_dac <= 0;
+          end
+        endcase
+
+        spi_count <= 1;
+        spi_ack <= 0;        
+      end
+      else
+      begin
+        if (spi_count < spi_size)
+        begin
+          spi_count <= spi_count + 1;
+          spi_ack <= 0;        
+        end
+        else
+        begin
+          spi_ack <= 1;        
+          spi_cs_clk <= 1;
+          spi_cs_adc <= 1;
+          spi_cs_dac <= 1;
+        end
+      end
+    end
+    else
+    begin
+      spi_ack <= 0;        
+      spi_cs_clk <= 1;
+      spi_cs_adc <= 1;
+      spi_cs_dac <= 1;
+      spi_count <= 0;
+    end
+  end
+
+  always @(posedge spi_clk) 
+  begin
+    if (spi_rq)
+    begin
+      if (!spi_count || spi_ack)
+      begin
+        spi_rp_adr <= spi_rq_adr;
+
+        if (spi_rd_word)
+        begin
+          spi_size <= 32;
+          spi_rp_data <= spi_rq_data;
+        end
+        else
+        begin
+          spi_size <= 24;
+          spi_rp_data[15:8] <= spi_rq_data[7:0];
+        end
+      end
+      else
+      begin
+        if ((spi_count >= 16) && (spi_count < spi_size))
+        begin
+          spi_rp_data[0] <= spi_sdio;
+          spi_rp_data[15:1] <= spi_rp_data[14:0];
+        end
       end
     end
   end
 
-  always @(negedge spi_clk or posedge spi_csn_s) begin
-    if (spi_csn_s == 1'b1) begin
-      spi_enable <= 1'b0;
-    end else begin
-      if (spi_count == 6'd16) begin
-        spi_enable <= spi_rd_wr_n;
-      end
+  always @(posedge spi_clk) 
+  begin
+    if (spi_ack)
+    begin
+      if (spi_rd_wr_n)
+        spi_rp <= 1;
+      else
+        spi_rp <= 0;
     end
+    else
+      spi_rp <= 0;
   end
 
-  // io butter
+  always @(negedge spi_clk) 
+  begin
+    if (spi_rq)
+    begin
+      if (spi_ack)
+        spi_z <= 0;
+      else
+        if (spi_count >= 16)
+          spi_z <= spi_rd_wr_n;
+    end
+    else
+      spi_z <= 0;
+  end
 
-  assign spi_miso = spi_sdio;
-  assign spi_sdio = (spi_enable_s == 1'b1) ? 1'bz : spi_mosi;
+  assign spi_sdio = spi_z ? 1'bz : spi_out_bit;
+
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************
