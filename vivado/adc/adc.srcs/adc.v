@@ -91,8 +91,8 @@ module adc (
   input                   tx_sysref_n,
   input                   tx_sync_p,
   input                   tx_sync_n,
-  output      [ 3:0]      tx_data_p,
-  output      [ 3:0]      tx_data_n,
+//  output      [ 3:0]      tx_data_p,
+//  output      [ 3:0]      tx_data_n,
 
   input                   trig_p,
   input                   trig_n,
@@ -343,7 +343,7 @@ dac_app dac_app_inst (
     // Status and control signals
     .locked(spi_locked),       // output locked
    // Clock in ports
-    .clk_in1(sys_clk));      // input clk_in1
+    .clk_in1(clk));      // input clk_in1
 
  assign spi_csn_clk = 1;
  assign spi_csn_dac = 1;
