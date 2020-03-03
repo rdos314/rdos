@@ -1014,7 +1014,10 @@ namespace XMLPP
 									x++;
 								}
 								else
+                                                                {
+									i++;
 									x++; // ignore invalid symbol
+                                                                }
 				continue;
 			}
 
