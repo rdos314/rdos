@@ -158,10 +158,13 @@ module pci_app (
   reg [31:0]       bar_spi_adc;
   reg [31:0]       bar_spi_dac;
   
-  reg [15:0]       spi_data;
-  reg [15:0]       spi_adr;
-  reg [1:0]        spi_cs;
-  reg              spi_wr;
+  reg [31:0]       spi_fifo_req_in;
+  wire [31:0]      spi_fifo_req_out;
+  wire             spi_fifo_req_empty;
+
+  wire             spi_rp_empty,
+  wire [29:0]      spi_rp_data,
+  reg              spi_rp_ack;
 
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -480,16 +483,21 @@ adc_mem adc_mem_inst (
 );
 
   daq2_spi i_spi (
-    .spi_rq_rd (spi_rq_rd),
-    .spi_rq_cs (spi_rq_cs),
-    .spi_rq_word (spi_rq_word),
-    .spi_rq_adr (spi_rq_adr),
-    .spi_rq (spi_rq),
-    .spi_rq_data (spi_rq_data),
+    .clk (user_clk),
+    .reset (user_reset),
+
+    .spi_rq_rd (spi_fifo_req_out[31]),
+    .spi_rq_cs (spi_fifo_req_out[30:29]),
+    .spi_rq_word (spi_fifo_req_out[28]),
+    .spi_rq_adr (spi_fifo_req_out[27:16]),
+    .spi_rq_empty (spi_fifo_req_empty),
+    .spi_rq_data (spi_fifo_req[15:0]),
     .spi_ack (spi_ack),
-    .spi_rp_adr (spi_rp_adr),
-    .spi_rp (spi_rp),
+
+    .spi_rp_empty (spi_rp_empty),
     .spi_rp_data (spi_rp_data),
+    .spi_rp_ack (spi_rp_ack),
+
     .spi_cs_clk (spi_cs_clk),
     .spi_cs_adc (spi_cs_adc),
     .spi_cs_dac (spi_cs_dac),
@@ -497,21 +505,128 @@ adc_mem adc_mem_inst (
     .spi_sdio (spi_sdio),
     .spi_dir (spi_dir));
 
-spi_fifo_in spi_fifo_in_inst (
-  .rst(user_reset),        // input wire rst
-  .wr_clk(user_clk),  // input wire wr_clk
-  .rd_clk(spi_clk),  // input wire rd_clk
-  .din({spi_adr[15], spi_cs, spi_adr[12:0], spi_data}),        // input wire [31 : 0] din
-  .wr_en(spi_wr),    // input wire wr_en
-  .rd_en(spi_ack),    // input wire rd_en
-  .dout({spi_rq_rd, spi_rq_cs, spi_rq_word, spi_rq_adr, spi_rq_data}),      // output wire [31 : 0] dout
-  .full(),      // output wire full
-  .empty(!spi_rq)    // output wire empty
+spi_fifo_rq spi_fifo_rq_inst (
+  .rst(user_reset),             // input wire rst
+  .wr_clk(user_clk),            // input wire wr_clk
+  .rd_clk(spi_clk),             // input wire rd_clk
+  .din(spi_fifo_req_in),        // input wire [31 : 0] din
+  .wr_en(spi_wr),               // input wire wr_en
+  .rd_en(spi_ack),              // input wire rd_en
+  .dout(spi_fifo_req_out),      // output wire [31 : 0] dout
+  .full(),                      // output wire full
+  .empty(spi_fifo_req_empty)    // output wire empty
 );
-
 
 generate
   begin : pci_app
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (bar0_wr)
+      begin
+        case (bar0_address)            
+          1:
+          begin
+            if (bar0_wr_be[0])
+              spi_fifo_req_in[7:0] = bar0_wr_data[7:0];
+            else 
+              spi_fifo_req_in[7:0] = bar_spi_clk[7:0];
+ 
+            if (bar0_wr_be[1])
+              spi_fifo_req_in[15:8] = bar0_wr_data[15:8];
+            else 
+              spi_fifo_req_in[15:8] = bar_spi_clk[15:8];
+ 
+            if (bar0_wr_be[2])
+              spi_fifo_req_in[23:16] = bar0_wr_data[23:16];
+            else 
+              spi_fifo_req_in[23:16] = bar_spi_clk[23:16];
+
+            if (bar0_wr_be[3])
+              spi_fifo_req_in[30:29] = 0;
+          end
+
+          2:
+          begin
+            if (bar0_wr_be[0])
+              spi_fifo_req_in[7:0] = bar0_wr_data[7:0];
+            else 
+              spi_fifo_req_in[7:0] = bar_spi_adc[7:0];
+ 
+            if (bar0_wr_be[1])
+              spi_fifo_req_in[15:8] = bar0_wr_data[15:8];
+            else 
+              spi_fifo_req_in[15:8] = bar_spi_adc[15:8];
+ 
+            if (bar0_wr_be[2])
+              spi_fifo_req_in[23:16] = bar0_wr_data[23:16];
+            else 
+              spi_fifo_req_in[23:16] = bar_spi_adc[23:16];
+
+            if (bar0_wr_be[3])
+              spi_fifo_req_in[30:29] = 1;
+          end
+
+          3:
+          begin
+            if (bar0_wr_be[0])
+              spi_fifo_req_in[7:0] = bar0_wr_data[7:0];
+            else 
+              spi_fifo_req_in[7:0] = bar_spi_dac[7:0];
+ 
+            if (bar0_wr_be[1])
+              spi_fifo_req_in[15:8] = bar0_wr_data[15:8];
+            else 
+              spi_fifo_req_in[15:8] = bar_spi_dac[15:8];
+ 
+            if (bar0_wr_be[2])
+              spi_fifo_req_in[23:16] = bar0_wr_data[23:16];
+            else 
+              spi_fifo_req_in[23:16] = bar_spi_dac[23:16];
+
+            if (bar0_wr_be[3])
+              spi_fifo_req_in[30:29] = 2;
+          end
+        endcase
+
+        if (bar0_wr_be[3])
+        begin
+          spi_fifo_req_in[27:24] = bar_wr_data[27:24];
+
+          case (bar0_wr_data[31:28])
+            12:
+            begin
+              spi_fifo_req_in[31] = 1;
+              spi_fifo_req_in[28] = 1;
+              spi_wr = 1;
+            end
+
+            2:
+            begin
+              spi_fifo_req_in[31] = 0;
+              spi_fifo_req_in[28] = 1;
+              spi_wr = 1;
+            end
+
+            1:
+            begin
+              spi_fifo_req_in[31] = 0;
+              spi_fifo_req_in[28] = 0;
+              spi_wr = 1;
+            end
+
+            default:
+            begin
+              spi_wr = 0;
+            end
+          endcase
+        end
+        else
+          spi_wr = 0;
+      end
+      else
+        spi_wr = 0;
+    end
 
     always @ ( posedge user_clk ) 
     begin
@@ -520,7 +635,7 @@ generate
         bar_control <= 0;
         adc_start <= 0;
         adc_stop <= 0;
-        spi_wr <= 0;
+        spi_rp_ack <= 0;
       end
       else
       begin
@@ -567,145 +682,136 @@ generate
 
               if (bar0_wr_be[3])
                 bar_control[31:24] <= bar0_wr_data[31:24];
-
-              spi_wr <= 0;
             end
             
             1:
             begin
               if (bar0_wr_be[0])
-              begin
                 bar_spi_clk[7:0] <= bar0_wr_data[7:0];
-                spi_data[7:0] <= bar0_wr_data[7:0];
-              end
-              else 
-                spi_data[7:0] <= bar_spi_clk[7:0];
  
               if (bar0_wr_be[1])
-              begin
                 bar_spi_clk[15:8] <= bar0_wr_data[15:8];
-                spi_data[15:8] <= bar0_wr_data[15:8];
-              end
-              else 
-                spi_data[15:8] <= bar_spi_clk[15:8];
  
               if (bar0_wr_be[2])
-              begin
                 bar_spi_clk[23:16] <= bar0_wr_data[23:16];
-                spi_adr[7:0] <= bar0_wr_data[23:16];
-              end
-              else 
-                spi_adr[7:0] <= bar_spi_clk[23:16];
 
               if (bar0_wr_be[3])
               begin
-                bar_spi_clk[31] <= bar0_wr_data[31];
-                bar_spi_clk[30:29] <= 0;
-                bar_spi_clk[28:24] <= bar0_wr_data[28:24];
-                spi_adr[15] <= bar0_wr_data[31];
-                spi_adr[12:8] <= bar0_wr_data[28:24];
-                spi_cs <= 0;
-                spi_wr <= 1;
+                bar_spi_clk[27:24] <= bar0_wr_data[27:24];
+
+                case (bar0_wr_data[31:28])
+                  12:      bar_spi_clk[31:28] <= 15;
+                  1, 2:    bar_spi_clk[31:28] <= 0;
+                  default: bar_spi_clk[31:28] <= 0;
+                endcase
               end
-              else
-                spi_wr <= 0;
             end
 
             2:
             begin
               if (bar0_wr_be[0])
-              begin
                 bar_spi_adc[7:0] <= bar0_wr_data[7:0];
-                spi_data[7:0] <= bar0_wr_data[7:0];
-              end
-              else 
-                spi_data[7:0] <= bar_spi_adc[7:0];
  
               if (bar0_wr_be[1])
-              begin
                 bar_spi_adc[15:8] <= bar0_wr_data[15:8];
-                spi_data[15:8] <= bar0_wr_data[15:8];
-              end
-              else 
-                spi_data[15:8] <= bar_spi_adc[15:8];
  
               if (bar0_wr_be[2])
-              begin
                 bar_spi_adc[23:16] <= bar0_wr_data[23:16];
-                spi_adr[7:0] <= bar0_wr_data[23:16];
-              end
-              else 
-                spi_adr[7:0] <= bar_spi_adc[23:16];
 
               if (bar0_wr_be[3])
               begin
-                bar_spi_adc[31] <= bar0_wr_data[31];
-                bar_spi_adc[30:29] <= 0;
-                bar_spi_adc[28:24] <= bar0_wr_data[28:24];
-                spi_adr[15] <= bar0_wr_data[31];
-                spi_adr[12:8] <= bar0_wr_data[28:24];
-                spi_cs <= 1;
-                spi_wr <= 1;
+                bar_spi_adc[27:24] <= bar0_wr_data[27:24];
+
+                case (bar0_wr_data[31:28])
+                  12:      bar_spi_adc[31:28] <= 15;
+                  1, 2:    bar_spi_adc[31:28] <= 0;
+                  default: bar_spi_adc[31:28] <= 0;
+                endcase
               end
-              else
-                spi_wr <= 0;
             end
 
             3:
             begin
               if (bar0_wr_be[0])
-              begin
                 bar_spi_dac[7:0] <= bar0_wr_data[7:0];
-                spi_data[7:0] <= bar0_wr_data[7:0];
-              end
-              else 
-                spi_data[7:0] <= bar_spi_dac[7:0];
  
               if (bar0_wr_be[1])
-              begin
                 bar_spi_dac[15:8] <= bar0_wr_data[15:8];
-                spi_data[15:8] <= bar0_wr_data[15:8];
-              end
-              else 
-                spi_data[15:8] <= bar_spi_dac[15:8];
  
               if (bar0_wr_be[2])
-              begin
                 bar_spi_dac[23:16] <= bar0_wr_data[23:16];
-                spi_adr[7:0] <= bar0_wr_data[23:16];
-              end
-              else 
-                spi_adr[7:0] <= bar_spi_dac[23:16];
 
               if (bar0_wr_be[3])
               begin
-                bar_spi_dac[31] <= bar0_wr_data[31];
-                bar_spi_dac[30:29] <= 0;
-                bar_spi_dac[28:24] <= bar0_wr_data[28:24];
-                spi_adr[15] <= bar0_wr_data[31];
-                spi_adr[12:8] <= bar0_wr_data[28:24];
-                spi_cs <= 2;
-                spi_wr <= 1;
+                bar_spi_dac[27:24] <= bar0_wr_data[27:24];
+
+                case (bar0_wr_data[31:28])
+                  12:      bar_spi_dac[31:28] <= 15;
+                  1, 2:    bar_spi_dac[31:28] <= 0;
+                  default: bar_spi_dac[31:28] <= 0;
+                endcase
               end
-              else
-                spi_wr <= 0;
             end
             
             default:
             begin
               adc_start <= 0;
               adc_stop <= 0;
-              spi_wr <= 0;
             end
           endcase
           bar0_ack <= 1;
+          spi_rp_ack <= 0;
         end
         else
         begin
           adc_start <= 0;
           adc_stop <= 0;
           bar0_ack <= 0;
-          spi_wr <= 0;
+
+          if (spi_rp_empty)
+            spi_rp_ack <= 0;
+          else
+          begin
+            spi_rp_ack <= 1;
+
+            case (spi_rp_data[29:28])
+              0:
+              begin
+                if (bar_spi_clk[31:28] == 15)
+                begin
+                  if (bar_spi_clk[27:16] == spi_rp_data[27:16])
+                  begin
+                    bar_spi_clk[15:0] <= spi_rp_data[15:0];
+                    bar_spi_clk[31:28] <= 0;
+                  end
+                end
+              end
+
+              1:
+              begin
+                if (bar_spi_adc[31:28] == 15)
+                begin
+                  if (bar_spi_adc[27:16] == spi_rp_data[27:16])
+                  begin
+                    bar_spi_adc[15:0] <= spi_rp_data[15:0];
+                    bar_spi_adc[31:28] <= 0;
+                  end
+                end
+              end
+
+              2:
+              begin
+                if (bar_spi_dac[31:28] == 15)
+                begin
+                  if (bar_spi_dac[27:16] == spi_rp_data[27:16])
+                  begin
+                    bar_spi_dac[15:0] <= spi_rp_data[15:0];
+                    bar_spi_dac[31:28] <= 0;
+                  end
+                end
+              end
+            endcase
+          end
         end
       end
     end
