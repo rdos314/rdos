@@ -158,12 +158,13 @@ module pci_app (
   reg [31:0]       bar_spi_adc;
   reg [31:0]       bar_spi_dac;
   
+  reg              spi_wr;
   reg [31:0]       spi_fifo_req_in;
   wire [31:0]      spi_fifo_req_out;
   wire             spi_fifo_req_empty;
 
-  wire             spi_rp_empty,
-  wire [29:0]      spi_rp_data,
+  wire             spi_rp_empty;
+  wire [29:0]      spi_rp_data;
   reg              spi_rp_ack;
 
   //-------------------------------------------------------
@@ -491,8 +492,8 @@ adc_mem adc_mem_inst (
     .spi_rq_word (spi_fifo_req_out[28]),
     .spi_rq_adr (spi_fifo_req_out[27:16]),
     .spi_rq_empty (spi_fifo_req_empty),
-    .spi_rq_data (spi_fifo_req[15:0]),
-    .spi_ack (spi_ack),
+    .spi_rq_data (spi_fifo_req_out[15:0]),
+    .spi_rq_ack (spi_rq_ack),
 
     .spi_rp_empty (spi_rp_empty),
     .spi_rp_data (spi_rp_data),
@@ -511,7 +512,7 @@ spi_fifo_rq spi_fifo_rq_inst (
   .rd_clk(spi_clk),             // input wire rd_clk
   .din(spi_fifo_req_in),        // input wire [31 : 0] din
   .wr_en(spi_wr),               // input wire wr_en
-  .rd_en(spi_ack),              // input wire rd_en
+  .rd_en(spi_rq_ack),           // input wire rd_en
   .dout(spi_fifo_req_out),      // output wire [31 : 0] dout
   .full(),                      // output wire full
   .empty(spi_fifo_req_empty)    // output wire empty
@@ -591,7 +592,7 @@ generate
 
         if (bar0_wr_be[3])
         begin
-          spi_fifo_req_in[27:24] = bar_wr_data[27:24];
+          spi_fifo_req_in[27:24] = bar0_wr_data[27:24];
 
           case (bar0_wr_data[31:28])
             12:

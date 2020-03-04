@@ -14,7 +14,7 @@ module daq2_spi (
 
   output wire             spi_rp_empty,
   output wire [29:0]      spi_rp_data,
-  input                   spi_rp_ack;
+  input                   spi_rp_ack,
 
   output reg              spi_cs_clk,
   output reg              spi_cs_adc,
@@ -69,7 +69,10 @@ ila_5 ila5_inst (
    .probe17(spi_size),                   // input wire [5:0]  probe1 
    .probe18(spi_rd_wr_n),                // input wire [0:0]  probe1 
    .probe19(spi_z),                      // input wire [0:0]  probe1 
-   .probe20(spi_out_bit)                 // input wire [0:0]  probe1 
+   .probe20(spi_out_bit),                // input wire [0:0]  probe1 
+   .probe21(spi_cmd),                    // input wire [14:0]  probe1 
+   .probe22(spi_fifo_data),              // input wire [29:0]  probe1 
+   .probe23(spi_fifo_wr)                 // input wire [0:0]  probe1 
 );
 
   always @(posedge spi_clk) 
@@ -147,6 +150,7 @@ ila_5 ila5_inst (
         begin
           spi_count <= spi_count + 1;
           spi_rq_ack <= 0;        
+          spi_cmd[14:1] <= spi_cmd[13:0];
         end
         else
         begin
