@@ -25,6 +25,7 @@ module daq2_spi (
 
   // internal registers
 
+  reg                     spi_started;
   reg [5:0]               spi_count;
   reg [5:0]               spi_size;
   reg [14:0]              spi_cmd;   
@@ -72,7 +73,8 @@ ila_5 ila5_inst (
    .probe20(spi_out_bit),                // input wire [0:0]  probe1 
    .probe21(spi_cmd),                    // input wire [14:0]  probe1 
    .probe22(spi_fifo_data),              // input wire [29:0]  probe1 
-   .probe23(spi_fifo_wr)                 // input wire [0:0]  probe1 
+   .probe23(spi_fifo_wr),                // input wire [0:0]  probe1 
+   .probe24(spi_started)                 // input wire [0:0]  probe1 
 );
 
   always @(posedge spi_clk) 
@@ -81,7 +83,7 @@ ila_5 ila5_inst (
       spi_out_bit = 0;
     else
     begin
-      if (!spi_count || spi_rq_ack)
+      if (spi_started)
         spi_out_bit = spi_rq_adr[15];
       else
       begin
@@ -93,31 +95,19 @@ ila_5 ila5_inst (
     end
   end
   
-
-  always @(posedge spi_clk) 
+  always @(negedge spi_clk) 
   begin
     if (spi_rq_empty)
     begin
-      spi_rq_ack <= 0;        
       spi_cs_clk <= 1;
       spi_cs_adc <= 1;
       spi_cs_dac <= 1;
-      spi_count <= 0;
+      spi_started <= 0;
     end
     else
     begin
       if (!spi_count || spi_rq_ack)
       begin
-        spi_cmd[12] <= 0;
-        spi_cmd[13] <= spi_rq_word;
-        spi_cmd[14] <= 0;
-        spi_rd_wr_n <= spi_rq_rd;
-
-        if (spi_rq_word)
-          spi_cmd[11:0] <= spi_rq_adr + 1;
-        else
-          spi_cmd[11:0] <= spi_rq_adr;
-
         case (spi_rq_cs)
           0:
           begin
@@ -140,6 +130,42 @@ ila_5 ila5_inst (
             spi_cs_dac <= 0;
           end
         endcase
+        spi_started <= 1;
+      end
+      else
+      begin
+        if (spi_count >= spi_size)
+        begin
+          spi_rq_ack <= 1;        
+          spi_cs_clk <= 1;
+          spi_cs_adc <= 1;
+          spi_cs_dac <= 1;
+        end
+        spi_started <= 0;
+      end
+    end
+  end
+
+  always @(posedge spi_clk) 
+  begin
+    if (spi_rq_empty)
+    begin
+      spi_rq_ack <= 0;        
+      spi_count <= 0;
+    end
+    else
+    begin
+      if (spi_started)
+      begin
+        spi_cmd[12] <= 0;
+        spi_cmd[13] <= spi_rq_word;
+        spi_cmd[14] <= 0;
+        spi_rd_wr_n <= spi_rq_rd;
+
+        if (spi_rq_word)
+          spi_cmd[11:0] <= spi_rq_adr + 1;
+        else
+          spi_cmd[11:0] <= spi_rq_adr;
 
         spi_count <= 1;
         spi_rq_ack <= 0;        
@@ -153,12 +179,7 @@ ila_5 ila5_inst (
           spi_cmd[14:1] <= spi_cmd[13:0];
         end
         else
-        begin
           spi_rq_ack <= 1;        
-          spi_cs_clk <= 1;
-          spi_cs_adc <= 1;
-          spi_cs_dac <= 1;
-        end
       end
     end
   end
