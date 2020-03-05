@@ -88,7 +88,7 @@ ila_5 ila5_inst (
       else
       begin
         if (spi_count < 16)
-          spi_out_bit = spi_cmd[14];
+          spi_out_bit = spi_cmd[15];
         else
           spi_out_bit = spi_rp_data[15];
       end
@@ -102,11 +102,10 @@ ila_5 ila5_inst (
       spi_cs_clk <= 1;
       spi_cs_adc <= 1;
       spi_cs_dac <= 1;
-      spi_started <= 0;
     end
     else
     begin
-      if (!spi_count || spi_rq_ack)
+      if (spi_started)
       begin
         case (spi_rq_cs)
           0:
@@ -130,18 +129,15 @@ ila_5 ila5_inst (
             spi_cs_dac <= 0;
           end
         endcase
-        spi_started <= 1;
       end
       else
       begin
-        if (spi_count >= spi_size)
+        if (spi_rq_ack)
         begin
-          spi_rq_ack <= 1;        
           spi_cs_clk <= 1;
           spi_cs_adc <= 1;
           spi_cs_dac <= 1;
         end
-        spi_started <= 0;
       end
     end
   end
@@ -152,14 +148,17 @@ ila_5 ila5_inst (
     begin
       spi_rq_ack <= 0;        
       spi_count <= 0;
+      spi_started <= 0;
     end
     else
     begin
-      if (spi_started)
+      if (!spi_started && !spi_count) || spi_rq_ack)
       begin
         spi_cmd[12] <= 0;
         spi_cmd[13] <= spi_rq_word;
         spi_cmd[14] <= 0;
+        spi_cmd[15] <= spi_rq_rd;
+
         spi_rd_wr_n <= spi_rq_rd;
 
         if (spi_rq_word)
@@ -167,29 +166,6 @@ ila_5 ila5_inst (
         else
           spi_cmd[11:0] <= spi_rq_adr;
 
-        spi_count <= 1;
-        spi_rq_ack <= 0;        
-      end
-      else
-      begin
-        if (spi_count < spi_size)
-        begin
-          spi_count <= spi_count + 1;
-          spi_rq_ack <= 0;        
-          spi_cmd[14:1] <= spi_cmd[13:0];
-        end
-        else
-          spi_rq_ack <= 1;        
-      end
-    end
-  end
-
-  always @(posedge spi_clk) 
-  begin
-    if (!spi_rq_empty)
-    begin
-      if (!spi_count || spi_rq_ack)
-      begin
         spi_fifo_data[29:28] <= spi_rq_cs;
         spi_fifo_data[27:16] <= spi_rq_adr;
 
@@ -203,13 +179,36 @@ ila_5 ila5_inst (
           spi_size <= 24;
           spi_fifo_data[15:8] <= spi_rq_data[7:0];
         end
+
+        spi_count <= 0;
+        spi_rq_ack <= 0;        
+        spi_started <= 1;
       end
       else
       begin
-        if ((spi_count >= 16) && (spi_count < spi_size))
+        spi_started <= 0;
+
+        if (spi_started)
         begin
-          spi_fifo_data[0] <= spi_sdio;
-          spi_fifo_data[15:1] <= spi_fifo_data[14:0];
+          spi_rq_ack <= 0;       
+          spi_count <= 1;
+        end
+        else
+        begin
+          if (spi_count < spi_size)
+          begin
+            spi_count <= spi_count + 1;
+            spi_rq_ack <= 0;        
+            spi_cmd[15:1] <= spi_cmd[14:0];
+
+            if ((spi_count >= 16))
+            begin
+              spi_fifo_data[0] <= spi_sdio;
+              spi_fifo_data[15:1] <= spi_fifo_data[14:0];
+            end
+          end
+          else
+            spi_rq_ack <= 1;       
         end
       end
     end
@@ -247,7 +246,7 @@ ila_5 ila5_inst (
         if (spi_count >= 16)
         begin
           spi_z <= spi_rd_wr_n;
-          spi_dir <= 0;
+          spi_dir <= !spi_rd_wr_n;
         end
       end
     end
