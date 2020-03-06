@@ -8964,7 +8964,7 @@
         <net name="pci_app_inst/i_spi/&lt;const0>_9"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq15&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq15&apos;hXXXX"/>
@@ -8982,6 +8982,42 @@
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
+        <net name="pci_app_inst/i_spi/spi_cmd[14]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[13]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[12]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[11]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[10]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[9]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[8]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[7]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[6]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[5]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[4]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[3]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[2]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[1]"/>
+        <net name="pci_app_inst/i_spi/spi_cmd[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe21[15:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/i_spi/spi_cmd[15]"/>
         <net name="pci_app_inst/i_spi/spi_cmd[14]"/>
         <net name="pci_app_inst/i_spi/spi_cmd[13]"/>
         <net name="pci_app_inst/i_spi/spi_cmd[12]"/>
@@ -9540,6 +9576,27 @@
         <net name="pci_app_inst/i_spi/spi_size[2]"/>
         <net name="pci_app_inst/i_spi/spi_size[1]"/>
         <net name="pci_app_inst/i_spi/spi_size[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe24[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/i_spi/spi_started"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
