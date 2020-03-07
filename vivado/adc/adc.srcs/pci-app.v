@@ -543,7 +543,7 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      if (bar0_wr)
+      if (bar0_wr && !bar0_ack)
       begin
         case (bar0_address)            
           1:
