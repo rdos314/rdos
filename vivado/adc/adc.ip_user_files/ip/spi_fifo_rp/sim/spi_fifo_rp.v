@@ -66,7 +66,7 @@ module spi_fifo_rp (
 );
 
 input wire rst;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME write_clk, FREQ_HZ 10000000, PHASE 0.000, INSERT_VIP 0" *)
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME write_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 write_clk CLK" *)
 input wire wr_clk;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME read_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0" *)
@@ -144,7 +144,7 @@ output wire empty;
     .C_WR_ACK_LOW(0),
     .C_WR_DATA_COUNT_WIDTH(10),
     .C_WR_DEPTH(1024),
-    .C_WR_FREQ(10),
+    .C_WR_FREQ(100),
     .C_WR_PNTR_WIDTH(10),
     .C_WR_RESPONSE_LATENCY(1),
     .C_MSGON_VAL(1),

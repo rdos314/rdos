@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Wed Mar  4 20:29:01 2020
+-- Date        : Sat Mar  7 16:34:06 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adc/adc.runs/spi_fifo_rp_synth_1/spi_fifo_rp_sim_netlist.vhdl
@@ -1327,7 +1327,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_WR_DEPTH_WRCH : integer;
   attribute C_WR_DEPTH_WRCH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 16;
   attribute C_WR_FREQ : integer;
-  attribute C_WR_FREQ of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 10;
+  attribute C_WR_FREQ of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 100;
   attribute C_WR_PNTR_WIDTH : integer;
   attribute C_WR_PNTR_WIDTH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 10;
   attribute C_WR_PNTR_WIDTH_AXIS : integer;
@@ -2435,7 +2435,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_WR_DEPTH_WRCH : integer;
   attribute C_WR_DEPTH_WRCH of U0 : label is 16;
   attribute C_WR_FREQ : integer;
-  attribute C_WR_FREQ of U0 : label is 10;
+  attribute C_WR_FREQ of U0 : label is 100;
   attribute C_WR_PNTR_WIDTH : integer;
   attribute C_WR_PNTR_WIDTH of U0 : label is 10;
   attribute C_WR_PNTR_WIDTH_AXIS : integer;
@@ -2460,7 +2460,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute x_interface_parameter of rd_clk : signal is "XIL_INTERFACENAME read_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0";
   attribute x_interface_info of rd_en : signal is "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_EN";
   attribute x_interface_info of wr_clk : signal is "xilinx.com:signal:clock:1.0 write_clk CLK";
-  attribute x_interface_parameter of wr_clk : signal is "XIL_INTERFACENAME write_clk, FREQ_HZ 10000000, PHASE 0.000, INSERT_VIP 0";
+  attribute x_interface_parameter of wr_clk : signal is "XIL_INTERFACENAME write_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0";
   attribute x_interface_info of wr_en : signal is "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_EN";
   attribute x_interface_info of din : signal is "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA";
   attribute x_interface_info of dout : signal is "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA";

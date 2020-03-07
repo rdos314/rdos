@@ -155,6 +155,8 @@ module adc (
   wire [3:0]             bar2_wr_be;
   wire [31:0]            bar2_wr_data;
   wire                   bar2_ack;
+  
+  wire                   spi_sys_clk;
 
   wire                   rx_ref_clk;
   wire                   rx_sysref;
@@ -258,6 +260,7 @@ pci_app pci_app_inst (
     .user_lnk_width(user_lnk_width),
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
+    .spi_sys_clk (spi_sys_clk),
     .spi_cs_clk (spi_csn_clk),
     .spi_cs_adc (spi_csn_adc),
     .spi_cs_dac (spi_csn_dac),
@@ -339,16 +342,11 @@ dac_app dac_app_inst (
   spi_clk_0 spi_clk_inst
    (
     // Clock out ports
-    .clk_out1(spi_clk),     // output clk_out1
+    .clk_out1(spi_sys_clk),     // output clk_out1
     // Status and control signals
     .locked(spi_locked),       // output locked
    // Clock in ports
     .clk_in1(clk));      // input clk_in1
-
- assign spi_csn_clk = 1;
- assign spi_csn_dac = 1;
- assign spi_csn_adc = 1;
- assign spi_dir = 0;
 
   OBUF   led_0_obuf (.O(led_0), .I(bar_control[0]));
   OBUF   led_1_obuf (.O(led_1), .I(bar_control[1]));

@@ -13,7 +13,8 @@ module pci_app (
     user_lnk_rate,
     user_lnk_width,
     cfg_interrupt_msienable,
-    
+
+    spi_sys_clk,    
     spi_cs_clk,
     spi_cs_adc,
     spi_cs_dac,
@@ -65,6 +66,7 @@ module pci_app (
   output   [1:0]       user_lnk_width;
   output               cfg_interrupt_msienable;
 
+  input                spi_sys_clk;
   output               spi_cs_clk;
   output               spi_cs_adc;
   output               spi_cs_dac;
@@ -483,9 +485,10 @@ adc_mem adc_mem_inst (
     .bar2_ack( bar2_ack)                        // I
 );
 
-  daq2_spi i_spi (
+  daq2_spi daq2_spi_inst (
     .clk (user_clk),
     .reset (user_reset),
+    .spi_sys_clk (spi_sys_clk),
 
     .spi_rq_rd (spi_fifo_req_out[31]),
     .spi_rq_cs (spi_fifo_req_out[30:29]),
@@ -509,7 +512,7 @@ adc_mem adc_mem_inst (
 spi_fifo_rq spi_fifo_rq_inst (
   .rst(user_reset),             // input wire rst
   .wr_clk(user_clk),            // input wire wr_clk
-  .rd_clk(spi_clk),             // input wire rd_clk
+  .rd_clk(spi_sys_clk),        // input wire rd_clk
   .din(spi_fifo_req_in),        // input wire [31 : 0] din
   .wr_en(spi_wr),               // input wire wr_en
   .rd_en(spi_rq_ack),           // input wire rd_en

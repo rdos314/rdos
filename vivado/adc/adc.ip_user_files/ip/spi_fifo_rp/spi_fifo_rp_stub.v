@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Wed Mar  4 20:29:01 2020
+// Date        : Sat Mar  7 16:34:06 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/spi_fifo_rp_synth_1/spi_fifo_rp_stub.v
 // Design      : spi_fifo_rp

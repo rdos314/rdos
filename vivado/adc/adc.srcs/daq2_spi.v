@@ -3,6 +3,7 @@
 module daq2_spi (
   input                   clk,
   input                   reset,
+  input                   spi_sys_clk,
 
   input                   spi_rq_rd,
   input      [1:0]        spi_rq_cs,
@@ -19,26 +20,30 @@ module daq2_spi (
   output reg              spi_cs_clk,
   output reg              spi_cs_adc,
   output reg              spi_cs_dac,
-  input                   spi_clk,
+  output reg              spi_clk,
   inout                   spi_sdio,
   output reg              spi_dir);
 
   // internal registers
-
+  
+  reg [2:0]               spi_delay;
   reg                     spi_started;
   reg [5:0]               spi_count;
   reg [5:0]               spi_size;
   reg [15:0]              spi_cmd;   
   reg                     spi_rd_wr_n;
   reg                     spi_z;
-  reg                     spi_out_bit;
+  reg                     spi_out;
 
+  reg [15:0]              spi_out_data;
+  reg [15:0]              spi_in_data;
+  
   reg [29:0]              spi_fifo_data;
   reg                     spi_fifo_wr;
 
 spi_fifo_rp spi_fifo_rp_inst (
   .rst(reset),                 // input wire rst
-  .wr_clk(spi_clk),            // input wire wr_clk
+  .wr_clk(spi_sys_clk),        // input wire wr_clk
   .rd_clk(clk),                // input wire rd_clk
   .din(spi_fifo_data),         // input wire [29 : 0] din
   .wr_en(spi_fifo_wr),         // input wire wr_en
@@ -49,7 +54,7 @@ spi_fifo_rp spi_fifo_rp_inst (
 );
 
 ila_5 ila5_inst (
-   .clk ( spi_clk ),                     // I
+   .clk ( spi_sys_clk ),                 // I
    .probe0(spi_rq_rd),                   // input wire [0:0]  probe1 
    .probe1(spi_rq_cs),                   // input wire [1:0]  probe1 
    .probe2(spi_rq_word),                 // input wire [0:0]  probe1 
@@ -61,49 +66,26 @@ ila_5 ila5_inst (
    .probe8(spi_rp_adr),                  // input wire [11:0]  probe1 
    .probe9(spi_rp),                      // input wire [0:0]  probe1 
    .probe10(spi_rp_data),                // input wire [15:0]  probe1 
-   .probe11(spi_cs_clk),                 // input wire [0:0]  probe1 
-   .probe12(spi_cs_adc),                 // input wire [0:0]  probe1 
-   .probe13(spi_cs_dac),                 // input wire [0:0]  probe1 
-   .probe14(spi_sdio),                   // input wire [0:0]  probe1 
-   .probe15(spi_dir),                    // input wire [0:0]  probe1 
-   .probe16(spi_count),                  // input wire [5:0]  probe1 
-   .probe17(spi_size),                   // input wire [5:0]  probe1 
-   .probe18(spi_rd_wr_n),                // input wire [0:0]  probe1 
-   .probe19(spi_z),                      // input wire [0:0]  probe1 
-   .probe20(spi_out_bit),                // input wire [0:0]  probe1 
-   .probe21(spi_cmd),                    // input wire [15:0]  probe1 
-   .probe22(spi_fifo_data),              // input wire [29:0]  probe1 
-   .probe23(spi_fifo_wr),                // input wire [0:0]  probe1 
-   .probe24(spi_started)                 // input wire [0:0]  probe1 
+   .probe11(spi_started),                 // input wire [0:0]  probe1 
+   .probe12(spi_cs_clk),                 // input wire [0:0]  probe1 
+   .probe13(spi_cs_adc),                 // input wire [0:0]  probe1 
+   .probe14(spi_cs_dac),                 // input wire [0:0]  probe1 
+   .probe15(spi_sdio),                   // input wire [0:0]  probe1 
+   .probe16(spi_dir),                    // input wire [0:0]  probe1 
+   .probe17(spi_count),                  // input wire [5:0]  probe1 
+   .probe18(spi_size),                   // input wire [5:0]  probe1 
+   .probe19(spi_rd_wr_n),                // input wire [0:0]  probe1 
+   .probe20(spi_clk),                    // input wire [0:0]  probe1 
+   .probe21(spi_z),                      // input wire [0:0]  probe1 
+   .probe22(spi_out),                    // input wire [0:0]  probe1 
+   .probe23(spi_cmd),                    // input wire [15:0]  probe1 
+   .probe24(spi_in_data),                // input wire [15:0]  probe1 
+   .probe25(spi_out_data),               // input wire [15:0]  probe1 
+   .probe26(spi_fifo_data),              // input wire [29:0]  probe1 
+   .probe27(spi_fifo_wr)                 // input wire [0:0]  probe1 
 );
 
-  always @(posedge spi_clk) 
-  begin
-    if (spi_rq_empty)
-    begin
-      spi_out_bit = 0;
-      spi_started = 0;
-    end
-    else
-    begin
-      if ((!spi_started && !spi_count) || spi_rq_ack)
-      begin
-        spi_started = 1;
-        spi_out_bit = spi_rq_rd;
-      end
-      else
-      begin
-        spi_started = 0;
-
-        if (spi_count < 16)
-          spi_out_bit = spi_cmd[15];
-        else
-          spi_out_bit = spi_rp_data[15];
-      end
-    end
-  end
-
-  always @(posedge spi_clk) 
+  always @(posedge spi_sys_clk) 
   begin
     if (spi_rq_empty)
     begin
@@ -111,129 +93,160 @@ ila_5 ila5_inst (
       spi_cs_adc <= 1;
       spi_cs_dac <= 1;
 
-      spi_rq_ack <= 0;        
-      spi_count <= 0;
-    end
-    else
-    begin
-      if (spi_started)
-      begin
-        case (spi_rq_cs)
-          0:
-          begin
-            spi_cs_clk <= 0;
-            spi_cs_adc <= 1;
-            spi_cs_dac <= 1;
-          end
-
-          1:
-          begin
-            spi_cs_clk <= 1;
-            spi_cs_adc <= 0;
-            spi_cs_dac <= 1;
-          end
-
-          2:
-          begin
-            spi_cs_clk <= 1;
-            spi_cs_adc <= 1;
-            spi_cs_dac <= 0;
-          end
-        endcase
-
-        spi_cmd[12] <= 0;
-        spi_cmd[13] <= spi_rq_word;
-        spi_cmd[14] <= 0;
-        spi_cmd[15] <= spi_rq_rd;
-
-        spi_rd_wr_n <= spi_rq_rd;
-
-        if (spi_rq_word)
-          spi_cmd[11:0] <= spi_rq_adr + 1;
-        else
-          spi_cmd[11:0] <= spi_rq_adr;
-
-        spi_fifo_data[29:28] <= spi_rq_cs;
-        spi_fifo_data[27:16] <= spi_rq_adr;
-
-        if (spi_rq_word)
-        begin
-          spi_size <= 32;
-          spi_fifo_data[15:0] <= spi_rq_data;
-        end
-        else
-        begin
-          spi_size <= 24;
-          spi_fifo_data[15:8] <= spi_rq_data[7:0];
-        end
-
-        spi_count <= 1;
-        spi_rq_ack <= 0;        
-      end
-      else
-      begin
-        if (spi_count < spi_size)
-        begin
-          spi_count <= spi_count + 1;
-          spi_rq_ack <= 0;        
-          spi_cmd[15:1] <= spi_cmd[14:0];
-
-          if ((spi_count >= 16))
-          begin
-            spi_fifo_data[0] <= spi_sdio;
-            spi_fifo_data[15:1] <= spi_fifo_data[14:0];
-          end
-        end
-        else
-        begin
-          spi_rq_ack <= 1;       
-          spi_cs_clk <= 1;
-          spi_cs_adc <= 1;
-          spi_cs_dac <= 1;
-        end
-      end
-    end
-  end
-
-  always @(posedge spi_clk) 
-  begin
-    if (spi_rq_ack)
-    begin
-      if (spi_rd_wr_n)
-        spi_fifo_wr <= 1;
-      else
-        spi_fifo_wr <= 0;
-    end
-    else
+      spi_rq_ack <= 0;
       spi_fifo_wr <= 0;
-  end
 
-  always @(negedge spi_clk) 
-  begin
-    if (spi_rq_empty)
-    begin
-      spi_z <= 0;
+      spi_size <= 16;
+      spi_count <= 0;
+      spi_started <= 0;
+      spi_clk <= 0;
       spi_dir <= 1;
+      spi_z <= 0;
+      spi_out <= 0;
     end
     else
     begin
-      if (spi_rq_ack)
+      if (spi_delay)
       begin
-        spi_z <= 0;
-        spi_dir <= 1;
+        spi_rq_ack <= 0;
+        spi_fifo_wr <= 0;
+        
+        if (spi_delay == 1)
+        begin
+          if (spi_clk == 0)
+          begin
+            if (spi_z == 0)
+            begin
+              if (spi_count < 16)
+              begin
+                spi_out <= spi_cmd[15];
+                spi_cmd[15:1] <= spi_cmd[14:0];
+              end
+              else
+              begin
+                spi_out <= spi_out_data[15];
+                spi_out_data[15:1] <= spi_out_data[14:0];
+              end
+            end
+          end
+        end
+        spi_delay <= spi_delay - 1;        
       end
       else
       begin
-        if (spi_count >= 16)
+        if (spi_started)
         begin
-          spi_z <= spi_rd_wr_n;
-          spi_dir <= !spi_rd_wr_n;
+          if (spi_clk)
+          begin
+            if (spi_rd_wr_n)
+            begin
+              if (spi_count == 16)
+              begin
+                spi_dir <= 0;
+                spi_z <= 1;
+              end
+
+              if (spi_count >= 16)
+              begin
+                spi_in_data[0] <= spi_sdio;
+                spi_in_data[15:1] <= spi_in_data[14:0];
+              end
+            end
+            
+            spi_clk <= 0;
+          end
+          else
+          begin
+            if (spi_count >= spi_size)
+            begin
+              if (spi_rd_wr_n)
+              begin
+                if (spi_size == 24)
+                  spi_fifo_data[7:0] <= spi_in_data[7:0];
+                else
+                  spi_fifo_data[15:0] <= spi_in_data[15:0];
+                spi_fifo_wr <= 1;
+              end
+
+              spi_cs_clk <= 1;
+              spi_cs_adc <= 1;
+              spi_cs_dac <= 1;
+ 
+              spi_clk <= 0;
+              spi_started <= 0;
+              spi_out <= 0;
+              spi_rq_ack <= 1;
+            end
+            else
+            begin
+              spi_count <= spi_count + 1;
+              spi_clk <= 1;
+            end
+          end
         end
+        else
+        begin
+          case (spi_rq_cs)
+            0:
+            begin
+              spi_cs_clk <= 0;
+              spi_cs_adc <= 1;
+              spi_cs_dac <= 1;
+            end
+
+            1:
+            begin
+              spi_cs_clk <= 1;
+              spi_cs_adc <= 0;
+              spi_cs_dac <= 1;
+            end
+
+            2:
+            begin
+              spi_cs_clk <= 1;
+              spi_cs_adc <= 1;
+              spi_cs_dac <= 0;
+            end
+          endcase
+
+          spi_dir <= 1;
+          spi_z <= 0;
+          
+          spi_cmd[12] <= 0;
+          spi_cmd[13] <= spi_rq_word;
+          spi_cmd[14] <= 0;
+          spi_cmd[15] <= spi_rq_rd;
+
+          spi_rd_wr_n <= spi_rq_rd;
+
+          if (spi_rq_word)
+            spi_cmd[11:0] <= spi_rq_adr + 1;
+          else
+            spi_cmd[11:0] <= spi_rq_adr;
+
+          spi_fifo_data[29:28] <= spi_rq_cs;
+          spi_fifo_data[27:16] <= spi_rq_adr;
+
+          if (spi_rq_word)
+          begin
+            spi_size <= 32;
+            spi_out_data[15:0] <= spi_rq_data;
+          end
+          else
+          begin
+            spi_size <= 24;
+            spi_out_data[15:8] <= spi_rq_data[7:0];
+            spi_fifo_data[15:8] <= 0;
+          end
+
+          spi_count <= 0;
+          spi_started <= 1;
+        end
+        spi_delay <= 1;
       end
     end
   end
-
-  assign spi_sdio = spi_z ? 1'bz : spi_out_bit;
-
+  
+  assign spi_sdio = spi_z ? 1'bz : spi_out;
 
 endmodule
