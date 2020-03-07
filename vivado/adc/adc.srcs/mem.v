@@ -142,14 +142,19 @@ ila_1 ila_1_inst (
   .probe8(pci_tx_header[63:0]),           // input wire [63:0]  probe1 
   .probe9(pci_tx_header[127:64]),         // input wire [63:0]  probe1 
   .probe10(pci_tx_data[31:0]),            // input wire [31:0]  probe2
-  .probe11(adc_send),                     // input wire [0:0]  probe2
-  .probe12(adc_address),                  // input wire [63:0]  probe2
-  .probe13(q_local_send),                 // input wire [0:0]  probe2
-  .probe14(q_local_header[63:0]),         // input wire [63:0]  probe2
-  .probe15(q_local_header[127:64]),       // input wire [63:0]  probe2
-  .probe16(q_adc_send),                   // input wire [0:0]  probe2
-  .probe17(q_adc_header[63:0]),           // input wire [63:0]  probe2
-  .probe18(q_adc_header[127:64])          // input wire [63:0]  probe2
+  .probe11(pci_rx_rd),                    // input wire [0:0]  probe1 
+  .probe12(bar0_address),                 // input wire [9:0]  probe2
+  .probe13(bar0_rd),                      // input wire [0:0]  probe2
+  .probe14(bar0_rp),                      // input wire [0:0]  probe2
+  .probe15(bar0_rp_data),                 // input wire [31:0]  probe2
+  .probe16(bar0_wr),                      // input wire [0:0]  probe2
+  .probe17(bar0_wr_be),                   // input wire [3:0]  probe2
+  .probe18(bar0_wr_data),                 // input wire [31:0]  probe2
+  .probe19(bar0_ack),                     // input wire [0:0]  probe2
+  .probe20(is_last_data),                 // input wire [0:0]  probe2
+  .probe21(has_ack),                      // input wire [0:0]  probe2
+  .probe22(q_busy),                       // input wire [0:0]  probe2
+  .probe23(curr_len)                      // input wire [9:0]  probe2
 );
 
 function [2:0] decode_bar;
@@ -315,14 +320,41 @@ generate
       end
     end
 
+    always @ (*) 
+    begin
+      has_reply = 0;
+      has_ack = 0;
+
+      if (!pci_rx_empty)
+      begin
+        case (decode_bar(req_bar))
+          0:
+          begin
+            has_reply = bar0_rp;
+            has_ack = bar0_ack;
+          end
+ 
+          1:
+          begin
+            has_reply = bar1_rp;
+            has_ack = bar1_ack;
+          end
+ 
+          2:
+          begin
+            has_reply = bar2_rp;
+            has_ack = bar2_ack;
+          end
+        endcase
+      end
+    end
+
     always @ ( posedge clk ) 
     begin
       calc_address = 0;
       calc_len = 0;
       calc_pos = 0;
 
-      has_reply = 0;
-      has_ack = 0;
       is_last_reply = 0;
       is_last_data = 0;
 
@@ -348,25 +380,6 @@ generate
         end
 
         calc_bar = decode_bar(req_bar);
-        case (calc_bar)
-          0:
-          begin
-            has_reply = bar0_rp;
-            has_ack = bar0_ack;
-          end
- 
-          1:
-          begin
-            has_reply = bar1_rp;
-            has_ack = bar1_ack;
-          end
- 
-          2:
-          begin
-            has_reply = bar2_rp;
-            has_ack = bar2_ack;
-          end
-        endcase
 
         if (has_reply && is_last_data)            
           is_last_reply = 1;
@@ -587,7 +600,7 @@ generate
             bar1_wr <= 0;
             bar2_wr <= 0;
 
-            if (calc_len)
+            if (calc_len && !has_reply)
             begin
               case (calc_bar)
                 0:
@@ -622,6 +635,12 @@ generate
                 end
               endcase
             end             
+            else
+            begin
+              bar0_rd <= 0;
+              bar1_rd <= 0;
+              bar2_rd <= 0;
+            end
           end
 
           8'b010_00000,
@@ -631,7 +650,7 @@ generate
             bar1_rd <= 0;
             bar2_rd <= 0;
 
-            if (calc_len)
+            if (calc_len && !has_ack)
             begin
               case (calc_bar)
                 0:

@@ -521,6 +521,23 @@ spi_fifo_rq spi_fifo_rq_inst (
   .empty(spi_fifo_req_empty)    // output wire empty
 );
 
+ila_3 ila3_inst (
+   .clk ( user_clk ),                 // I
+   .probe0(spi_wr),                   // input wire [0:0]  probe1 
+   .probe1(spi_fifo_req_in),          // input wire [31:0]  probe1 
+   .probe2(spi_rp_empty),             // input wire [0:0]  probe1 
+   .probe3(spi_rp_data),              // input wire [29:0]  probe1 
+   .probe4(spi_rp_ack),               // input wire [0:0]  probe1 
+   .probe5(bar0_address),             // input wire [9:0]  probe1 
+   .probe6(bar0_rd),                  // input wire [0:0]  probe1 
+   .probe7(bar0_rp),                  // input wire [0:0]  probe1 
+   .probe8(bar0_rp_data),             // input wire [31:0]  probe1 
+   .probe9(bar0_wr),                  // input wire [0:0]  probe1 
+   .probe10(bar0_wr_be),              // input wire [3:0]  probe1 
+   .probe11(bar0_wr_data),            // input wire [31:0]  probe1 
+   .probe12(bar0_ack)                 // input wire [0:0]  probe1 
+);
+
 generate
   begin : pci_app
 
