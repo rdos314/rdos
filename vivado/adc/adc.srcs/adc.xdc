@@ -33,6 +33,9 @@ set_property IOSTANDARD LVDS_25 [get_ports rx_sync_n]                     ; ## D
 set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_p]    ; ## G09  FMC_HPC_LA03_P
 set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_n]    ; ## G10  FMC_HPC_LA03_N
 
+set_property PACKAGE_PIN  E8 [get_ports rx_ref_clk_p]                                      ; ## B20  FMC_HPC_GBTCLK1_M2C_P
+set_property PACKAGE_PIN  E7 [get_ports rx_ref_clk_n]                                      ; ## B21  FMC_HPC_GBTCLK1_M2C_N
+
 set_property PACKAGE_PIN  D26 [get_ports rx_sync_p]                     ; ## D08  FMC_HPC_LA01_CC_P
 set_property PACKAGE_PIN  C26 [get_ports rx_sync_n]                     ; ## D09  FMC_HPC_LA01_CC_N
 set_property PACKAGE_PIN  H26 [get_ports rx_sysref_p]    ; ## G09  FMC_HPC_LA03_P

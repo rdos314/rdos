@@ -213,7 +213,12 @@ ila_5 ila5_inst (
           spi_z <= 0;
           
           spi_cmd[12] <= 0;
-          spi_cmd[13] <= spi_rq_word;
+
+          if (spi_rq_cs == 0)
+            spi_cmd[13] <= spi_rq_word;
+          else
+            spi_cmd[13] <= 0;
+
           spi_cmd[14] <= 0;
           spi_cmd[15] <= spi_rq_rd;
 
