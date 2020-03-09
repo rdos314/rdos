@@ -35,6 +35,25 @@ set_property IOSTANDARD LVDS_25 DIFF_TERM TRUE [get_ports rx_sysref_n]    ; ## G
 
 set_property PACKAGE_PIN  E8 [get_ports rx_ref_clk_p]                                      ; ## B20  FMC_HPC_GBTCLK1_M2C_P
 set_property PACKAGE_PIN  E7 [get_ports rx_ref_clk_n]                                      ; ## B21  FMC_HPC_GBTCLK1_M2C_N
+set_property  PACKAGE_PIN  A8 [get_ports rx_data_p[0]]                                      ; ## A10  FMC_HPC_DP3_M2C_P
+set_property  PACKAGE_PIN  A7 [get_ports rx_data_n[0]]                                      ; ## A11  FMC_HPC_DP3_M2C_N
+set_property  PACKAGE_PIN  E4 [get_ports rx_data_p[1]]                                      ; ## C06  FMC_HPC_DP0_M2C_P
+set_property  PACKAGE_PIN  E3 [get_ports rx_data_n[1]]                                      ; ## C07  FMC_HPC_DP0_M2C_N
+set_property  PACKAGE_PIN  B6 [get_ports rx_data_p[2]]                                      ; ## A06  FMC_HPC_DP2_M2C_P
+set_property  PACKAGE_PIN  B5 [get_ports rx_data_n[2]]                                      ; ## A07  FMC_HPC_DP2_M2C_N
+set_property  PACKAGE_PIN  D6 [get_ports rx_data_p[3]]                                      ; ## A02  FMC_HPC_DP1_M2C_P
+set_property  PACKAGE_PIN  D5 [get_ports rx_data_n[3]]                                      ; ## A03  FMC_HPC_DP1_M2C_N
+
+set_property  PACKAGE_PIN  C8 [get_ports tx_ref_clk_p]                                      ; ## D04  FMC_HPC_GBTCLK0_M2C_P
+set_property  PACKAGE_PIN  C7 [get_ports tx_ref_clk_n]                                      ; ## D05  FMC_HPC_GBTCLK0_M2C_N
+set_property  PACKAGE_PIN  A4 [get_ports tx_data_p[0]]                                      ; ## A30  FMC_HPC_DP3_C2M_P (tx_data_p[0])
+set_property  PACKAGE_PIN  A3 [get_ports tx_data_n[0]]                                      ; ## A31  FMC_HPC_DP3_C2M_N (tx_data_n[0])
+set_property  PACKAGE_PIN  D2 [get_ports tx_data_p[1]]                                      ; ## C02  FMC_HPC_DP0_C2M_P (tx_data_p[3])
+set_property  PACKAGE_PIN  D1 [get_ports tx_data_n[1]]                                      ; ## C03  FMC_HPC_DP0_C2M_N (tx_data_n[3])
+set_property  PACKAGE_PIN  B2 [get_ports tx_data_p[2]]                                      ; ## A26  FMC_HPC_DP2_C2M_P (tx_data_p[1])
+set_property  PACKAGE_PIN  B1 [get_ports tx_data_n[2]]                                      ; ## A27  FMC_HPC_DP2_C2M_N (tx_data_n[1])
+set_property  PACKAGE_PIN  C4 [get_ports tx_data_p[3]]                                      ; ## A22  FMC_HPC_DP1_C2M_P (tx_data_p[2])
+set_property  PACKAGE_PIN  C3 [get_ports tx_data_n[3]]                                      ; ## A23  FMC_HPC_DP1_C2M_N (tx_data_n[2])
 
 set_property PACKAGE_PIN  D26 [get_ports rx_sync_p]                     ; ## D08  FMC_HPC_LA01_CC_P
 set_property PACKAGE_PIN  C26 [get_ports rx_sync_n]                     ; ## D09  FMC_HPC_LA01_CC_N
