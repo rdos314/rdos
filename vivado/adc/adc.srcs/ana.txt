@@ -1,4 +1,51 @@
-  system_rx_0 rx
+system_rx_0
+IN:
+clk
+reset
+phy_data [127:0]      system_util_daq2_xcvr_0:rx_data_3-0
+phy_header [7:0]      0
+phy_charisk [15:0]    system_util_daq2_xcvr_0:rx_charisk_3-0
+phy_notintable [15:0] system_util_daq2_xcvr_0:rx_notintable_3-0
+phy_disperr [15:0]    system_util_daq2_xcvr_0:rx_disperr_3-0
+phy_block_sync [3:0]  0
+sysref
+cfg_lanes_disable [3:0]  0?
+cfg_links_disable     0?
+cfg_beats_per_multiframe [7:0]
+cfg_octets_per_frame [7:0]
+cfg_lmfc_offset [7:0]
+cfg_sysref_disable
+cfg_sysref_oneshot
+cfg_buffer_early_release
+cfg_buffer_delay [7:0]
+cfg_disable_char_replacement
+cfg_disable_scrambler
+ctrl_err_statistics_reset
+ctrl_err_statistic_mask [6:0]
+
+
+OUT:
+lmfc_edge
+lmfc_clk
+event_sysref_alignment_error
+event_sysref_edge
+sync
+phy_en_char_align  rx_phy_char_align?
+rx_data [127:0]
+rx_valid
+rx_eof [3:0]
+rx_sof [3:0]
+ctrl_err_statistic_cnt [127:0]
+ilas_config_valid [3:0]
+ilas_config_addr [7:0]
+ilas_config_data [127:0]
+status_ctrl_state
+status_lane_cgs_state [7:0]
+status_lane_ifs_ready [3:0]
+status_lane_latency [55:0]
+status_lane_emb_state [11:0]
+
+
        (.cfg_beats_per_multiframe(rx_axi_rx_cfg_beats_per_multiframe),
         .cfg_buffer_delay(rx_axi_rx_cfg_buffer_delay),
         .cfg_buffer_early_release(rx_axi_rx_cfg_buffer_early_release),
@@ -39,7 +86,46 @@
         .sync(rx_sync),
         .sysref(sysref_1));
 
-  system_tx_0 tx
+system_tx_0
+IN:
+clk
+reset
+sysref
+sync
+tx_data [127:0]
+tx_ready
+tx_valid
+cfg_lanes_disable [3:0]
+cfg_links_disable
+cfg_beats_per_multiframe [7:0]
+cfg_octets_per_frame [7:0]
+cfg_lmfc_offset [7:0]
+cfg_sysref_oneshot
+cfg_sysref_disable
+cfg_continuous_cgs
+cfg_continuous_ilas
+cfg_skip_ilas
+cfg_mframes_per_ilas [7:0]
+cfg_disable_char_replacement
+cfg_disable_scrambler
+ilas_config_data [127:0]
+ctrl_manual_sync_request
+
+
+OUT:
+phy_data [127:0]   system_util_daq2_xcvr_0:tx_data_3-0
+phy_charisk [15:0] system_util_daq2_xcvr_0:tx_charisk_3-0
+phy_header [7:0]
+lmfc_edge
+lmfc_clk
+ilas_config_rd
+ilas_config_addr [1:0]
+event_sysref_edge
+event_sysref_alignment_error
+status_sync
+status_state [1:0]
+
+
        (.cfg_beats_per_multiframe(tx_axi_tx_cfg_beats_per_multiframe),
         .cfg_continuous_cgs(tx_axi_tx_cfg_continuous_cgs),
         .cfg_continuous_ilas(tx_axi_tx_cfg_continuous_ilas),
