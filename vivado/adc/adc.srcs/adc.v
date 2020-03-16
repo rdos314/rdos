@@ -243,6 +243,7 @@ daq2_app daq2_app_inst (
   .tx_pll_locked(tx_pll_locked),
   
   .adc_start(adc_start),
+  .adc_stop(adc_stop),
   .adc_running(adc_running)
 );
 
@@ -350,13 +351,13 @@ dac_app dac_app_inst (
    // Clock in ports
     .clk_in1(clk));      // input clk_in1
 
-  OBUF   led_0_obuf (.O(led_0), .I(rx_pll_locked[0]));
-  OBUF   led_1_obuf (.O(led_1), .I(rx_pll_locked[1]));
-  OBUF   led_2_obuf (.O(led_2), .I(rx_pll_locked[2]));
-  OBUF   led_3_obuf (.O(led_3), .I(rx_pll_locked[3]));
-  OBUF   led_4_obuf (.O(led_4), .I(tx_pll_locked[0]));
-  OBUF   led_5_obuf (.O(led_5), .I(tx_pll_locked[1]));
-  OBUF   led_6_obuf (.O(led_6), .I(tx_pll_locked[2]));
-  OBUF   led_7_obuf (.O(led_7), .I(tx_pll_locked[3]));
+  OBUF   led_0_obuf (.O(led_0), .I(bar_control[0]));
+  OBUF   led_1_obuf (.O(led_1), .I(bar_control[1]));
+  OBUF   led_2_obuf (.O(led_2), .I(bar_control[2]));
+  OBUF   led_3_obuf (.O(led_3), .I(bar_control[3]));
+  OBUF   led_4_obuf (.O(led_4), .I(bar_control[4]));
+  OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
+  OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
+  OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
 
 endmodule

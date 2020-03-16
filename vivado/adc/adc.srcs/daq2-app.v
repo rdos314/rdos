@@ -31,6 +31,7 @@ module daq2_app
   output     [3:0]        tx_pll_locked,
 
   input                   adc_start,
+  input                   adc_stop,
   output reg              adc_running
 );
 
@@ -41,7 +42,16 @@ module daq2_app
  wire [15:0]              rx_phy_disperr;
  wire [15:0]              rx_phy_notintable;
  wire [127:0]             rx_phy_data;
+ wire                     rx_phy_char_align;
+
+ wire [3:0]               ilas_config_valid;
+ wire [7:0]               ilas_config_addr;
+ wire [127:0]             ilas_config_data;
  
+ wire [1:0]               status_ctrl_state;
+ wire [7:0]               status_lane_cgs_state;
+ wire [3:0]               status_lane_ifs_ready;
+  
  wire [127:0]             rx_data;
  wire                     rx_valid;
  wire [3:0]               rx_eof;
@@ -52,6 +62,7 @@ module daq2_app
    
  reg  [127:0]             tx_data = 0;
 
+ reg                      pend_start;
  reg                      qpll_rst;
  wire                     qpll_locked;
 
@@ -61,24 +72,35 @@ module daq2_app
 ila_6 ila_6_inst (
 	.clk(rx_clk), // input wire clk
 
-	.probe0(adc_start),        // input wire [0:0]  probe11
-	.probe1(adc_running),      // input wire [0:0]  probe11
-	.probe2(qpll_rst),         // input wire [0:0]  probe11
-	.probe3(qpll_locked),      // input wire [0:0]  probe11
-	.probe4(up_rx_rst),        // input wire [0:0]  probe11
-	.probe5(up_rx_rst_done),   // input wire [3:0]  probe11
-	.probe6(rx_pll_locked[0]), // input wire [0:0]  probe0  
-	.probe7(rx_pll_locked[1]), // input wire [0:0]  probe0  
-	.probe8(rx_pll_locked[2]), // input wire [0:0]  probe0  
-	.probe9(rx_pll_locked[3]), // input wire [0:0]  probe0  
-	.probe10(rx_data[31:0]), // input wire [31:0]  probe8 
-	.probe11(rx_data[63:32]), // input wire [31:0]  probe9 
-	.probe12(rx_data[95:64]), // input wire [31:0]  probe10 
-	.probe13(rx_data[127:96]), // input wire [31:0]  probe11
-	.probe14(rx_valid),        // input wire [0:0]  probe11
-	.probe15(rx_eof),          // input wire [3:0]  probe11
-	.probe16(rx_sof)         // input wire [3:0]  probe11
+	.probe0(adc_start),             // input wire [0:0]  probe11
+	.probe1(adc_running),           // input wire [0:0]  probe11
+	.probe2(qpll_rst),              // input wire [0:0]  probe11
+	.probe3(qpll_locked),           // input wire [0:0]  probe11
+	.probe4(up_rx_rst),             // input wire [0:0]  probe11
+	.probe5(up_rx_rst_done),        // input wire [3:0]  probe11
+	.probe6(rx_pll_locked[0]),      // input wire [0:0]  probe0  
+	.probe7(rx_pll_locked[1]),      // input wire [0:0]  probe0  
+	.probe8(rx_pll_locked[2]),      // input wire [0:0]  probe0  
+	.probe9(rx_pll_locked[3]),      // input wire [0:0]  probe0  
+	.probe10(rx_data[31:0]),        // input wire [31:0]  probe8 
+	.probe11(rx_data[63:32]),       // input wire [31:0]  probe9 
+	.probe12(rx_data[95:64]),       // input wire [31:0]  probe10 
+	.probe13(rx_data[127:96]),      // input wire [31:0]  probe11
+	.probe14(rx_phy_charisk[15:0]), // input wire [15:0]  probe8 
+	.probe15(rx_phy_disperr[15:0]), // input wire [15:0]  probe8 
+	.probe16(rx_phy_notintable[15:0]), // input wire [15:0]  probe8 
+	.probe17(ilas_config_valid),       // input wire [3:0]  probe11
+	.probe18(ilas_config_addr),       // input wire [7:0]  probe11
+	.probe19(ilas_config_data[31:0]),  // input wire [31:0]  probe11
+	.probe20(status_ctrl_state),        // input wire [1:0]  probe11
+	.probe21(status_lane_cgs_state),     // input wire [7:0]  probe11
+	.probe22(status_lane_ifs_ready),     // input wire [3:0]  probe11
+	.probe23(rx_sync),               // input wire [0:0]  probe11
+	.probe24(rx_valid),              // input wire [0:0]  probe11
+	.probe25(rx_eof),                // input wire [3:0]  probe11
+	.probe26(rx_sof)                 // input wire [3:0]  probe11
 );
+
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
@@ -94,10 +116,10 @@ ila_6 ila_6_inst (
         .rx_2_p(rx_data_p[2]),
         .rx_3_n(rx_data_n[3]),
         .rx_3_p(rx_data_p[3]),
-        .rx_calign_0(0),
-        .rx_calign_1(0),
-        .rx_calign_2(0),
-        .rx_calign_3(0),
+        .rx_calign_0(rx_phy_char_align),
+        .rx_calign_1(rx_phy_char_align),
+        .rx_calign_2(rx_phy_char_align),
+        .rx_calign_3(rx_phy_char_align),
         .rx_charisk_0(rx_phy_charisk[3:0]),
         .rx_charisk_1(rx_phy_charisk[7:4]),
         .rx_charisk_2(rx_phy_charisk[11:8]),
@@ -324,14 +346,14 @@ system_rx_0 system_rx_0_inst
         .ctrl_err_statistics_reset(0),
         .event_sysref_alignment_error(),
         .event_sysref_edge(),
-        .ilas_config_addr(),
-        .ilas_config_data(),
-        .ilas_config_valid(),
+        .ilas_config_addr(ilas_config_addr),
+        .ilas_config_data(ilas_config_data),
+        .ilas_config_valid(ilas_config_valid),
         .phy_block_sync({1'b0,1'b0,1'b0,1'b0}),
         .phy_charisk(rx_phy_charisk),
         .phy_data(rx_phy_data),
         .phy_disperr(rx_phy_disperr),
-        .phy_en_char_align(),
+        .phy_en_char_align(rx_phy_char_align),
         .phy_header({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .phy_notintable(rx_phy_notintable),
         .reset(reset),
@@ -339,11 +361,11 @@ system_rx_0 system_rx_0_inst
         .rx_eof(rx_eof),
         .rx_sof(rx_sof),
         .rx_valid(rx_valid),
-        .status_ctrl_state(),
+        .status_ctrl_state(status_ctrl_state),
         .status_err_statistics_cnt(),
-        .status_lane_cgs_state(),
+        .status_lane_cgs_state(status_lane_cgs_state),
         .status_lane_emb_state(),
-        .status_lane_ifs_ready(),
+        .status_lane_ifs_ready(status_lane_ifs_ready),
         .status_lane_latency(),
         .sync(rx_sync),
         .sysref(rx_sysref));
@@ -392,25 +414,43 @@ generate
         qpll_rst <= 0;
         adc_running <= 0;
         up_rx_rst <= 0;
+        pend_start <= 0;
       end
       else
       begin
         if (adc_start)
+        begin
           qpll_rst <= 1;
+          pend_start <= 1;
+        end
         else
         begin
-          qpll_rst <= 0;          
-          if (qpll_rst)
-            up_rx_rst <= 1;
+          if (adc_stop)
+          begin
+            pend_start <= 0;
+            adc_running <= 0;
+          end
           else
           begin
-            if (qpll_locked)
+            if (pend_start)
             begin
-              up_rx_rst <= 0;
-              if (up_rx_rst_done)
+              qpll_rst <= 0;          
+              if (qpll_rst)
+                up_rx_rst <= 1;
+              else
               begin
-                if (rx_pll_locked == 4'b1111)
-                  adc_running <= 1;
+                if (qpll_locked)
+                begin
+                  up_rx_rst <= 0;
+                  if (up_rx_rst_done)
+                  begin
+                    if (rx_pll_locked == 4'b1111)
+                    begin
+                      adc_running <= 1;
+                      pend_start <= 0;
+                    end
+                  end
+                end
               end
             end
           end

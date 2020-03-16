@@ -4,7 +4,7 @@
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.        -->
 
 <hwsession version="1" minor="2">
-  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;]"/>
+  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;],dashboard2=hw_ila_1[xc7k325t_0/hw_ila_1/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_1/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_1/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_1/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_1/Capture Setup=ILA_CAPTURE_1;],dashboard3=hw_ila_2[xc7k325t_0/hw_ila_2/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_2/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_2/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_2/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_2/Settings=ILA_SETTINGS_1;],dashboard4=hw_ila_3[xc7k325t_0/hw_ila_3/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_3/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_3/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_3/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_3/Waveform=ILA_WAVE_1;],dashboard5=hw_ila_4[xc7k325t_0/hw_ila_4/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_4/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_4/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_4/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_4/Trigger Setup=ILA_TRIGGER_1;],dashboard6=hw_ila_5[xc7k325t_0/hw_ila_5/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_5/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_5/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_5/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_5/Waveform=ILA_WAVE_1;],dashboard7=hw_ila_6[xc7k325t_0/hw_ila_6/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_6/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_6/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_6/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_6/Settings=ILA_SETTINGS_1;]"/>
   <ObjectList object_type="hw_device" gui_info="">
     <Object name="xc7k325t_0" gui_info="">
       <Properties Property="FULL_PROBES.FILE" value="$_project_name_.runs/impl_1/$_project_name_.ltx"/>
@@ -88,7 +88,8 @@
     <Object name="adc_app_inst/rp" gui_info=""/>
     <Object name="adc_app_inst/sample_counter[4:0]" gui_info="Trigger Setup=0"/>
     <Object name="adc_app_inst/wr" gui_info=""/>
-    <Object name="daq2_app_inst/adc_start" gui_info="Trigger Setup=0"/>
+    <Object name="daq2_app_inst/adc_running" gui_info="Trigger Setup=0"/>
+    <Object name="daq2_app_inst/adc_start" gui_info=""/>
     <Object name="daq2_app_inst/rx_pll_locked_1[0:0]" gui_info=""/>
     <Object name="daq2_app_inst/rx_valid" gui_info=""/>
     <Object name="pci_app_inst/adc_mem_inst/bar0_rd" gui_info=""/>
@@ -3980,7 +3981,7 @@
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
-        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
@@ -3991,7 +3992,7 @@
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
@@ -4001,7 +4002,7 @@
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
-        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
@@ -4012,11 +4013,115 @@
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
         <net name="daq2_app_inst/adc_start"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe18[7:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/ilas_config_addr[7]"/>
+        <net name="daq2_app_inst/ilas_config_addr[6]"/>
+        <net name="daq2_app_inst/ilas_config_addr[5]"/>
+        <net name="daq2_app_inst/ilas_config_addr[4]"/>
+        <net name="daq2_app_inst/ilas_config_addr[3]"/>
+        <net name="daq2_app_inst/ilas_config_addr[2]"/>
+        <net name="daq2_app_inst/ilas_config_addr[1]"/>
+        <net name="daq2_app_inst/ilas_config_addr[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe19[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/ilas_config_data[31]"/>
+        <net name="daq2_app_inst/ilas_config_data[30]"/>
+        <net name="daq2_app_inst/ilas_config_data[29]"/>
+        <net name="daq2_app_inst/ilas_config_data[28]"/>
+        <net name="daq2_app_inst/ilas_config_data[27]"/>
+        <net name="daq2_app_inst/ilas_config_data[26]"/>
+        <net name="daq2_app_inst/ilas_config_data[25]"/>
+        <net name="daq2_app_inst/ilas_config_data[24]"/>
+        <net name="daq2_app_inst/ilas_config_data[23]"/>
+        <net name="daq2_app_inst/ilas_config_data[22]"/>
+        <net name="daq2_app_inst/ilas_config_data[21]"/>
+        <net name="daq2_app_inst/ilas_config_data[20]"/>
+        <net name="daq2_app_inst/ilas_config_data[19]"/>
+        <net name="daq2_app_inst/ilas_config_data[18]"/>
+        <net name="daq2_app_inst/ilas_config_data[17]"/>
+        <net name="daq2_app_inst/ilas_config_data[16]"/>
+        <net name="daq2_app_inst/ilas_config_data[15]"/>
+        <net name="daq2_app_inst/ilas_config_data[14]"/>
+        <net name="daq2_app_inst/ilas_config_data[13]"/>
+        <net name="daq2_app_inst/ilas_config_data[12]"/>
+        <net name="daq2_app_inst/ilas_config_data[11]"/>
+        <net name="daq2_app_inst/ilas_config_data[10]"/>
+        <net name="daq2_app_inst/ilas_config_data[9]"/>
+        <net name="daq2_app_inst/ilas_config_data[8]"/>
+        <net name="daq2_app_inst/ilas_config_data[7]"/>
+        <net name="daq2_app_inst/ilas_config_data[6]"/>
+        <net name="daq2_app_inst/ilas_config_data[5]"/>
+        <net name="daq2_app_inst/ilas_config_data[4]"/>
+        <net name="daq2_app_inst/ilas_config_data[3]"/>
+        <net name="daq2_app_inst/ilas_config_data[2]"/>
+        <net name="daq2_app_inst/ilas_config_data[1]"/>
+        <net name="daq2_app_inst/ilas_config_data[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe17[3:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq4&apos;hX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/ilas_config_valid[3]"/>
+        <net name="daq2_app_inst/ilas_config_valid[2]"/>
+        <net name="daq2_app_inst/ilas_config_valid[1]"/>
+        <net name="daq2_app_inst/ilas_config_valid[0]"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
@@ -4435,7 +4540,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_1"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe15[3:0]"/>
+        <Option Id="MAP" value="probe25[3:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -4447,6 +4552,322 @@
         <net name="daq2_app_inst/rx_eof[2]"/>
         <net name="daq2_app_inst/rx_eof[1]"/>
         <net name="daq2_app_inst/rx_eof[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe14[15:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_charisk[15]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[14]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[13]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[12]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[11]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[10]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[9]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[8]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[7]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[6]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[5]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[4]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[3]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[2]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[1]"/>
+        <net name="daq2_app_inst/rx_phy_charisk[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe13[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_data[127]"/>
+        <net name="daq2_app_inst/rx_phy_data[126]"/>
+        <net name="daq2_app_inst/rx_phy_data[125]"/>
+        <net name="daq2_app_inst/rx_phy_data[124]"/>
+        <net name="daq2_app_inst/rx_phy_data[123]"/>
+        <net name="daq2_app_inst/rx_phy_data[122]"/>
+        <net name="daq2_app_inst/rx_phy_data[121]"/>
+        <net name="daq2_app_inst/rx_phy_data[120]"/>
+        <net name="daq2_app_inst/rx_phy_data[119]"/>
+        <net name="daq2_app_inst/rx_phy_data[118]"/>
+        <net name="daq2_app_inst/rx_phy_data[117]"/>
+        <net name="daq2_app_inst/rx_phy_data[116]"/>
+        <net name="daq2_app_inst/rx_phy_data[115]"/>
+        <net name="daq2_app_inst/rx_phy_data[114]"/>
+        <net name="daq2_app_inst/rx_phy_data[113]"/>
+        <net name="daq2_app_inst/rx_phy_data[112]"/>
+        <net name="daq2_app_inst/rx_phy_data[111]"/>
+        <net name="daq2_app_inst/rx_phy_data[110]"/>
+        <net name="daq2_app_inst/rx_phy_data[109]"/>
+        <net name="daq2_app_inst/rx_phy_data[108]"/>
+        <net name="daq2_app_inst/rx_phy_data[107]"/>
+        <net name="daq2_app_inst/rx_phy_data[106]"/>
+        <net name="daq2_app_inst/rx_phy_data[105]"/>
+        <net name="daq2_app_inst/rx_phy_data[104]"/>
+        <net name="daq2_app_inst/rx_phy_data[103]"/>
+        <net name="daq2_app_inst/rx_phy_data[102]"/>
+        <net name="daq2_app_inst/rx_phy_data[101]"/>
+        <net name="daq2_app_inst/rx_phy_data[100]"/>
+        <net name="daq2_app_inst/rx_phy_data[99]"/>
+        <net name="daq2_app_inst/rx_phy_data[98]"/>
+        <net name="daq2_app_inst/rx_phy_data[97]"/>
+        <net name="daq2_app_inst/rx_phy_data[96]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe10[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_data_1[31]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[30]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[29]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[28]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[27]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[26]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[25]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[24]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[23]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[22]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[21]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[20]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[19]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[18]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[17]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[16]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[15]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[14]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[13]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[12]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[11]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[10]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[9]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[8]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[7]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[6]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[5]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[4]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[3]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[2]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[1]"/>
+        <net name="daq2_app_inst/rx_phy_data_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe11[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_data_2[63]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[62]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[61]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[60]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[59]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[58]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[57]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[56]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[55]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[54]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[53]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[52]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[51]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[50]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[49]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[48]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[47]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[46]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[45]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[44]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[43]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[42]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[41]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[40]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[39]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[38]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[37]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[36]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[35]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[34]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[33]"/>
+        <net name="daq2_app_inst/rx_phy_data_2[32]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe12[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_data_3[95]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[94]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[93]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[92]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[91]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[90]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[89]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[88]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[87]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[86]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[85]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[84]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[83]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[82]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[81]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[80]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[79]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[78]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[77]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[76]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[75]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[74]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[73]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[72]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[71]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[70]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[69]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[68]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[67]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[66]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[65]"/>
+        <net name="daq2_app_inst/rx_phy_data_3[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe15[15:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_disperr[15]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[14]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[13]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[12]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[11]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[10]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[9]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[8]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[7]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[6]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[5]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[4]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[3]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[2]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[1]"/>
+        <net name="daq2_app_inst/rx_phy_disperr[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe16[15:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_phy_notintable[15]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[14]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[13]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[12]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[11]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[10]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[9]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[8]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[7]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[6]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[5]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[4]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[3]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[2]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[1]"/>
+        <net name="daq2_app_inst/rx_phy_notintable[0]"/>
       </nets>
     </probe>
     <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
@@ -4543,7 +4964,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_1"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe16[3:0]"/>
+        <Option Id="MAP" value="probe26[3:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -4567,7 +4988,28 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_1"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe14[0]"/>
+        <Option Id="MAP" value="probe23[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/rx_sync"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe24[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -4576,6 +5018,80 @@
       </probeOptions>
       <nets>
         <net name="daq2_app_inst/rx_valid"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq2&apos;hX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq2&apos;hX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe20[1:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq2&apos;hX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/status_ctrl_state[1]"/>
+        <net name="daq2_app_inst/status_ctrl_state[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe21[7:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/status_lane_cgs_state[7]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[6]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[5]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[4]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[3]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[2]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[1]"/>
+        <net name="daq2_app_inst/status_lane_cgs_state[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe22[3:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq4&apos;hX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="daq2_app_inst/status_lane_ifs_ready[3]"/>
+        <net name="daq2_app_inst/status_lane_ifs_ready[2]"/>
+        <net name="daq2_app_inst/status_lane_ifs_ready[1]"/>
+        <net name="daq2_app_inst/status_lane_ifs_ready[0]"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
@@ -7484,7 +8000,7 @@
         <net name="pci_app_inst/adc_mem_inst/n_0_96"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
@@ -7536,7 +8052,7 @@
         <net name="pci_app_inst/adc_mem_inst/pci_rx_be[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -8035,7 +8551,7 @@
         <net name="pci_app_inst/adc_mem_inst/pci_tx_data[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
@@ -9511,7 +10027,7 @@
         <net name="pci_app_inst/adc_mem_inst/req_header[1][0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq10&apos;hXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq10&apos;hXXX"/>
@@ -10537,7 +11053,7 @@
         <net name="pci_app_inst/daq2_spi_inst/spi_rq_ack"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq12&apos;hXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq12&apos;hXXX"/>
@@ -10569,7 +11085,7 @@
         <net name="pci_app_inst/daq2_spi_inst/spi_rq_adr[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq2&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq2&apos;hX"/>
@@ -10591,7 +11107,7 @@
         <net name="pci_app_inst/daq2_spi_inst/spi_rq_cs[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -14878,7 +15394,7 @@
         <net name="pci_app_inst/pci_rx_inst/calc_be[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq2&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq2&apos;hX"/>
@@ -15069,7 +15585,7 @@
         <net name="pci_app_inst/pci_rx_inst/calc_last_be[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
@@ -17546,7 +18062,7 @@
         <net name="pci_app_inst/pci_rx_inst/q_data[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
@@ -17554,7 +18070,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_5"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe16[63:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -18587,7 +19103,7 @@
         <net name="pci_app_inst/pci_rx_inst/use_first_be[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq4&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq4&apos;hX"/>
@@ -20601,7 +21117,7 @@
         <net name="pci_app_inst/pci_tx_inst/pci_tx_header[72]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
@@ -20609,7 +21125,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_5"/>
+        <Option Id="HW_ILA" value="hw_ila_6"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe12[31:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -20707,7 +21223,7 @@
         <net name="pci_app_inst/pci_tx_inst/pci_tx_header_2[12]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
