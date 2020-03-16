@@ -1,3 +1,241 @@
+L = number of lanes (4)
+M = converters per link (2) 
+F = octets per frame (1)
+N' = JESD400 word size (16)
+N = resolution (14)
+CS = control bits / sample (0)
+K = frames per multiframe (32)
+S = (1)
+HD = high density (1)
+CF = control words / frame clock cycle
+
+(561, 564, 570, 5B0, 5B2, 5B3, 5B5, 5B6)
+
+Clk lane enable:
+        writel_relaxed(0x3, jesd->base + JESD204_RX_REG_SYSREF_STATUS);
+        writel_relaxed(0x0, jesd->base + JESD204_RX_REG_LINK_DISABLE);
+
+
+Config:
+        octets_per_multiframe = config->frames_per_multiframe *
+                config->octets_per_frame;
+
+        val = (octets_per_multiframe - 1);
+        val |= (config->octets_per_frame - 1) << 16;
+
+        writel_relaxed(val, jesd->base + JESD204_RX_REG_LINK_CONF0);
+
+        if (config->subclass_version == 0) {
+                writel_relaxed(JESD204_RX_REG_SYSREF_CONF_SYSREF_DISABLE,
+                               jesd->base + JESD204_RX_REG_SYSREF_CONF);
+                writel_relaxed(JESD204_RX_LINK_CONF2_BUFFER_EARLY_RELEASE,
+                               jesd->base + JESD204_RX_REG_LINK_CONF2);
+        }
+
+axi_jesd204_rx.v: system/ipshared/435C
+
+jesd204_up_common: system/ipshared/343D
+jesd204_up_common #(
+  .core_cfg_beats_per_multiframe(core_cfg_beats_per_multiframe),
+  .core_cfg_octets_per_frame(core_cfg_octets_per_frame),
+  .core_cfg_lanes_disable(core_cfg_lanes_disable),
+  .core_cfg_links_disable(core_cfg_links_disable),
+  .core_cfg_disable_scrambler(core_cfg_disable_scrambler),
+  .core_cfg_disable_char_replacement(core_cfg_disable_char_replacement),
+
+  .up_extra_cfg({
+    /*    18 */ up_cfg_sysref_disable,
+    /*    17 */ up_cfg_sysref_oneshot,
+    /*    16 */ up_cfg_buffer_early_release,
+    /* 08-15 */ up_cfg_buffer_delay,
+    /* 00-07 */ up_cfg_lmfc_offset
+  }),
+  .core_extra_cfg({
+    /*    18 */ core_cfg_sysref_disable,
+    /*    17 */ core_cfg_sysref_oneshot,
+    /*    16 */ core_cfg_buffer_early_release,
+    /* 08-15 */ core_cfg_buffer_delay,
+    /* 00-07 */ core_cfg_lmfc_offset
+
+  case (up_raddr)
+  /* Standard registers */
+  12'h000: up_rdata <= PCORE_VERSION;
+  12'h001: up_rdata <= ID;
+  12'h002: up_rdata <= up_scratch;
+
+#define JESD204_RX_REG_MAGIC                            0x0c
+  12'h003: up_rdata <= PCORE_MAGIC;
+
+  /* Core configuration */
+
+#define JESD204_RX_REG_SYNTH_NUM_LANES                  0x10
+  12'h004: up_rdata <= NUM_LANES;
+
+#define JESD204_RX_REG_SYNTH_DATA_PATH_WIDTH            0x14
+  12'h005: up_rdata <= DATA_PATH_WIDTH;
+
+  12'h006: up_rdata <= {22'b0,LINK_MODE[1:0], NUM_LINKS[7:0]};
+  /* 0x07-0x0f reserved for future use */
+
+#define JESD204_RX_REG_SYNTH_ELASTIC_BUFFER_SIZE        0x40
+  /* 0x10-0x1f reserved for core specific HDL configuration information */
+
+
+  /* IRQ block */
+#define JESD204_RX_REG_IRQ_ENABLE                       0x80
+  12'h020: up_rdata <= up_irq_enable;
+
+#define JESD204_RX_REG_IRQ_PENDING                      0x84
+  12'h021: up_rdata <= up_irq_pending;
+
+#define JESD204_RX_REG_IRQ_SOURCE                       0x88
+  12'h022: up_rdata <= up_irq_source;
+  /* 0x23-0x30 reserved for future use */
+
+  /* JESD common control */
+#define JESD204_RX_REG_LINK_DISABLE                     0xc0
+  12'h030: up_rdata <= up_reset_core;
+
+#define JESD204_RX_REG_LINK_STATE                       0xc4
+  12'h031: up_rdata <= {up_core_reset_ext, up_reset_synchronizer}; /* core ready */
+
+#define JESD204_RX_REG_LINK_CLK_RATIO                   0xc8
+  12'h032: up_rdata <= {11'h00, clk_mon_count}; /* Make it 16.16 */
+  /* 0x32-0x34 reserver for future use */
+
+#define JESD204_RX_REG_LANES_ENABLE                     0x200
+  12'h080: up_rdata <= up_cfg_lanes_disable;
+  /* 0x82-0x83 reserved for future lane disable bits (max 128 lanes) */
+
+#define JESD204_RX_REG_LINK_CONF0                       0x210
+  12'h084: up_rdata <= {
+    /* 24-31 */ 8'h00, /* Reserved for future extensions of octets_per_frame */
+    /* 16-23 */ up_cfg_octets_per_frame,
+    /* 10-15 */ 6'b000000, /* Reserved for future extensions of beats_per_multiframe */
+    /* 00-09 */ up_cfg_beats_per_multiframe,{DATA_PATH_WIDTH{1'b1}}
+  };
+
+#define JESD204_RX_REG_LINK_CONF1                       0x214
+  12'h85: up_rdata <= {
+    /* 02-31 */ 30'h00, /* Reserved for future additions */
+    /*    01 */ up_cfg_disable_char_replacement, /* Disable character replacement */
+    /*    00 */ up_cfg_disable_scrambler /* Disable scrambler */
+  };
+  12'h086: up_rdata <= up_cfg_links_disable;
+  /* 0x87-0x8f reserved for future use */
+
+#define JESD204_RX_REG_LINK_CONF2                       0x240
+#define JESD204_RX_REG_LINK_CONF3                       0x244
+#define JESD204_RX_REG_LINK_STATUS                      0x280
+
+  /* 0x90-0x9f reserved for core specific configuration options */
+
+  default: up_rdata <= 'h00;
+  endcase
+
+      case (up_waddr)
+
+#define JESD204_RX_REG_LANES_ENABLE                     0x200
+      12'h080: begin
+        up_cfg_lanes_disable <= up_wdata[NUM_LANES-1:0];
+      end
+
+#define JESD204_RX_REG_LINK_CONF0                       0x210
+
+
+        octets_per_multiframe = config->frames_per_multiframe *
+                config->octets_per_frame;
+
+        val = (octets_per_multiframe - 1);
+        val |= (config->octets_per_frame - 1) << 16;
+
+
+      12'h084: begin
+        up_cfg_octets_per_frame <= up_wdata[23:16];  (octets_per_multiframe - 1)
+        up_cfg_beats_per_multiframe <= up_wdata[9:DATA_PATH_WIDTH]; (frames_per_multiframe * octets_per_frame - 1)
+
+DATA_PATH_WIDTH = 2
+
+31 = 1F
+[9:2] 1 1111 = 11 = 3 
+      4 3210
+
+      end
+
+#define JESD204_RX_REG_LINK_CONF1                       0x214
+      12'h085: begin
+        up_cfg_disable_char_replacement <= up_wdata[1];
+        up_cfg_disable_scrambler <= up_wdata[0];
+      end
+      12'h086: begin
+        up_cfg_links_disable <= up_wdata[NUM_LINKS-1:0];
+      end
+      endcase
+
+jesd204_up_sysref: system/ipshared/343D
+jesd204_up_sysref #(
+  .DATA_PATH_WIDTH(DATA_PATH_WIDTH)
+) i_up_sysref (
+  .up_clk(s_axi_aclk),
+  .up_reset(up_reset),
+
+  .core_clk(core_clk),
+  .core_event_sysref_edge(core_event_sysref_edge),
+  .core_event_sysref_alignment_error(core_event_sysref_alignment_error),
+
+  .up_raddr(up_raddr),
+  .up_rdata(up_rdata_sysref),
+  .up_wreq(up_wreq),
+  .up_waddr(up_waddr),
+  .up_wdata(up_wdata),
+
+  .up_cfg_is_writeable(up_cfg_is_writeable),
+
+  .up_cfg_lmfc_offset(up_cfg_lmfc_offset),
+  .up_cfg_sysref_oneshot(up_cfg_sysref_oneshot),
+  .up_cfg_sysref_disable(up_cfg_sysref_disable)
+);
+
+  case (up_raddr)
+  /* JESD SYSREF configuraton */
+
+#define JESD204_RX_REG_SYSREF_CONF                      0x100
+  12'h040: up_rdata <= {
+    /* 02-31 */ 30'h00, /* Reserved for future use */
+    /*    01 */ up_cfg_sysref_oneshot,
+    /*    00 */ up_cfg_sysref_disable
+  };
+
+#define JESD204_RX_REG_SYSREF_LMFC_OFFSET               0x104
+  12'h041: up_rdata <= {
+    /* 10-31 */ 22'h00, /* Reserved for future use */
+    /* 02-09 */ up_cfg_lmfc_offset,
+    /* 00-01 */ 2'b00 /* data path alignment for cfg_lmfc_offset */
+  };
+
+#define JESD204_RX_REG_SYSREF_STATUS                    0x108
+  12'h042: up_rdata <= {
+    /* 02-31 */ 30'h00,
+    /* 00-01 */ up_sysref_status
+  };
+  default: up_rdata <= 32'h00000000;
+
+    case (up_waddr)
+    /* JESD SYSREF configuraton */
+
+#define JESD204_RX_REG_SYSREF_CONF                      0x100
+    12'h040: begin
+      up_cfg_sysref_oneshot <= up_wdata[1];
+      up_cfg_sysref_disable <= up_wdata[0];
+    end
+
+#define JESD204_RX_REG_SYSREF_LMFC_OFFSET               0x104
+    12'h041: begin
+      /* Aligned to data path width */
+      up_cfg_lmfc_offset <= up_wdata[9:DATA_PATH_WIDTH];
+    end
+    endcase
+
 system_rx_0
 IN:
 clk
@@ -9,19 +247,19 @@ phy_notintable [15:0] system_util_daq2_xcvr_0:rx_notintable_3-0
 phy_disperr [15:0]    system_util_daq2_xcvr_0:rx_disperr_3-0
 phy_block_sync [3:0]  0
 sysref
-cfg_lanes_disable [3:0]  0?
-cfg_links_disable     0?
-cfg_beats_per_multiframe [7:0]
-cfg_octets_per_frame [7:0]
-cfg_lmfc_offset [7:0]
-cfg_sysref_disable
-cfg_sysref_oneshot
-cfg_buffer_early_release
-cfg_buffer_delay [7:0]
-cfg_disable_char_replacement
-cfg_disable_scrambler
-ctrl_err_statistics_reset
-ctrl_err_statistic_mask [6:0]
+cfg_lanes_disable [3:0]  = (0)
+cfg_links_disable        = (0)
+cfg_beats_per_multiframe [7:0] = (32-1)[9:2] (3)
+cfg_octets_per_frame [7:0] = 1 - 1 (0)
+cfg_lmfc_offset [7:0] (0)
+cfg_sysref_disable (0)
+cfg_sysref_oneshot (0)
+cfg_buffer_early_release (0)
+cfg_buffer_delay [7:0] (0)
+cfg_disable_char_replacement (0)
+cfg_disable_scrambler (0)
+ctrl_err_statistics_reset (0)
+ctrl_err_statistic_mask [6:0] (0)
 
 
 OUT:

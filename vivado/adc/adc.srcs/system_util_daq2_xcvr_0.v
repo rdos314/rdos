@@ -59,6 +59,7 @@ module system_util_daq2_xcvr_0 (
   up_clk,
   qpll_ref_clk_0,
   up_qpll_rst_0,
+  up_qpll_locked_0,
   cpll_ref_clk_0,
   up_cpll_rst_0,
   rx_0_p,
@@ -297,6 +298,7 @@ input wire up_clk;
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 qpll_ref_clk_0 CLK" *)
 input wire qpll_ref_clk_0;
 input wire up_qpll_rst_0;
+output wire up_qpll_locked_0;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME cpll_ref_clk_0, ASSOCIATED_RESET up_rx_rst_0:up_tx_rst_0, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 cpll_ref_clk_0 CLK" *)
 input wire cpll_ref_clk_0;
@@ -818,6 +820,7 @@ output wire up_tx_ready_3;
     .up_clk(up_clk),
     .qpll_ref_clk_0(qpll_ref_clk_0),
     .up_qpll_rst_0(up_qpll_rst_0),
+    .up_qpll_locked_0(up_qpll_locked_0),
     .cpll_ref_clk_0(cpll_ref_clk_0),
     .up_cpll_rst_0(up_cpll_rst_0),
     .rx_0_p(rx_0_p),

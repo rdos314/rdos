@@ -28,28 +28,56 @@ module daq2_app
   inout                   clkd_sync,
 
   output     [3:0]        rx_pll_locked,
-  output     [3:0]        tx_pll_locked
-);
+  output     [3:0]        tx_pll_locked,
 
- wire [31:0]              rx_data_0;
- wire [31:0]              rx_data_1;
- wire [31:0]              rx_data_2;
- wire [31:0]              rx_data_3;
+  input                   adc_start,
+  output reg              adc_running
+);
 
  wire                     rx_clk;
  wire                     tx_clk;
 
-ila_6 your_instance_name (
+ wire [15:0]              rx_phy_charisk;
+ wire [15:0]              rx_phy_disperr;
+ wire [15:0]              rx_phy_notintable;
+ wire [127:0]             rx_phy_data;
+ 
+ wire [127:0]             rx_data;
+ wire                     rx_valid;
+ wire [3:0]               rx_eof;
+ wire [3:0]               rx_sof;
+
+ wire [15:0]              tx_phy_charisk;
+ wire [127:0]             tx_phy_data;
+   
+ reg  [127:0]             tx_data = 0;
+
+ reg                      qpll_rst;
+ wire                     qpll_locked;
+
+ reg                      up_rx_rst; 
+ wire [3:0]               up_rx_rst_done;
+ 
+ila_6 ila_6_inst (
 	.clk(rx_clk), // input wire clk
 
-	.probe0(rx_pll_locked[0]), // input wire [0:0]  probe0  
-	.probe1(rx_pll_locked[1]), // input wire [0:0]  probe0  
-	.probe2(rx_pll_locked[2]), // input wire [0:0]  probe0  
-	.probe3(rx_pll_locked[3]), // input wire [0:0]  probe0  
-	.probe4(rx_data_0), // input wire [31:0]  probe8 
-	.probe5(rx_data_1), // input wire [31:0]  probe9 
-	.probe6(rx_data_2), // input wire [31:0]  probe10 
-	.probe7(rx_data_3) // input wire [31:0]  probe11
+	.probe0(adc_start),        // input wire [0:0]  probe11
+	.probe1(adc_running),      // input wire [0:0]  probe11
+	.probe2(qpll_rst),         // input wire [0:0]  probe11
+	.probe3(qpll_locked),      // input wire [0:0]  probe11
+	.probe4(up_rx_rst),        // input wire [0:0]  probe11
+	.probe5(up_rx_rst_done),   // input wire [3:0]  probe11
+	.probe6(rx_pll_locked[0]), // input wire [0:0]  probe0  
+	.probe7(rx_pll_locked[1]), // input wire [0:0]  probe0  
+	.probe8(rx_pll_locked[2]), // input wire [0:0]  probe0  
+	.probe9(rx_pll_locked[3]), // input wire [0:0]  probe0  
+	.probe10(rx_data[31:0]), // input wire [31:0]  probe8 
+	.probe11(rx_data[63:32]), // input wire [31:0]  probe9 
+	.probe12(rx_data[95:64]), // input wire [31:0]  probe10 
+	.probe13(rx_data[127:96]), // input wire [31:0]  probe11
+	.probe14(rx_valid),        // input wire [0:0]  probe11
+	.probe15(rx_eof),          // input wire [3:0]  probe11
+	.probe16(rx_sof)         // input wire [3:0]  probe11
 );
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
@@ -70,26 +98,26 @@ ila_6 your_instance_name (
         .rx_calign_1(0),
         .rx_calign_2(0),
         .rx_calign_3(0),
-        .rx_charisk_0(),
-        .rx_charisk_1(),
-        .rx_charisk_2(),
-        .rx_charisk_3(),
+        .rx_charisk_0(rx_phy_charisk[3:0]),
+        .rx_charisk_1(rx_phy_charisk[7:4]),
+        .rx_charisk_2(rx_phy_charisk[11:8]),
+        .rx_charisk_3(rx_phy_charisk[15:12]),
         .rx_clk_0(rx_clk),
         .rx_clk_1(rx_clk),
         .rx_clk_2(rx_clk),
         .rx_clk_3(rx_clk),
-        .rx_data_0(rx_data0),
-        .rx_data_1(rx_data1),
-        .rx_data_2(rx_data2),
-        .rx_data_3(rx_data3),
-        .rx_disperr_0(),
-        .rx_disperr_1(),
-        .rx_disperr_2(),
-        .rx_disperr_3(),
-        .rx_notintable_0(),
-        .rx_notintable_1(),
-        .rx_notintable_2(),
-        .rx_notintable_3(),
+        .rx_data_0(rx_phy_data[31:0]),
+        .rx_data_1(rx_phy_data[63:32]),
+        .rx_data_2(rx_phy_data[95:64]),
+        .rx_data_3(rx_phy_data[127:96]),
+        .rx_disperr_0(rx_phy_disperr[3:0]),
+        .rx_disperr_1(rx_phy_disperr[7:4]),
+        .rx_disperr_2(rx_phy_disperr[11:8]),
+        .rx_disperr_3(rx_phy_disperr[15:12]),
+        .rx_notintable_0(rx_phy_notintable[3:0]),
+        .rx_notintable_1(rx_phy_notintable[7:4]),
+        .rx_notintable_2(rx_phy_notintable[11:8]),
+        .rx_notintable_3(rx_phy_notintable[15:12]),
         .rx_out_clk_0(rx_clk),
         .tx_0_n(tx_data_n[0]),
         .tx_0_p(tx_data_p[0]),
@@ -99,18 +127,18 @@ ila_6 your_instance_name (
         .tx_2_p(tx_data_p[2]),
         .tx_3_n(tx_data_n[3]),
         .tx_3_p(tx_data_p[3]),
-        .tx_charisk_0(0),
-        .tx_charisk_1(0),
-        .tx_charisk_2(0),
-        .tx_charisk_3(0),
+        .tx_charisk_0(tx_phy_charisk[3:0]),
+        .tx_charisk_1(tx_phy_charisk[7:4]),
+        .tx_charisk_2(tx_phy_charisk[11:8]),
+        .tx_charisk_3(tx_phy_charisk[15:12]),
         .tx_clk_0(tx_clk),
         .tx_clk_1(tx_clk),
         .tx_clk_2(tx_clk),
         .tx_clk_3(tx_clk),
-        .tx_data_0(0),
-        .tx_data_1(0),
-        .tx_data_2(0),
-        .tx_data_3(0),
+        .tx_data_0(tx_phy_data[31:0]),
+        .tx_data_1(tx_phy_data[63:32]),
+        .tx_data_2(tx_phy_data[95:64]),
+        .tx_data_3(tx_phy_data[127:96]),
         .tx_out_clk_0(tx_clk),
         .up_clk(clk),
         .up_cm_addr_0(0),
@@ -151,7 +179,8 @@ ila_6 your_instance_name (
         .up_es_wr_1(0),
         .up_es_wr_2(0),
         .up_es_wr_3(0),
-        .up_qpll_rst_0(0),
+        .up_qpll_rst_0(qpll_rst),
+        .up_qpll_locked_0(qpll_locked),
         .up_rstn(!reset),
         .up_rx_addr_0(0),
         .up_rx_addr_1(0),
@@ -165,10 +194,10 @@ ila_6 your_instance_name (
         .up_rx_lpm_dfe_n_1(1),
         .up_rx_lpm_dfe_n_2(1),
         .up_rx_lpm_dfe_n_3(1),
-        .up_rx_out_clk_sel_0(0),
-        .up_rx_out_clk_sel_1(0),
-        .up_rx_out_clk_sel_2(0),
-        .up_rx_out_clk_sel_3(0),
+        .up_rx_out_clk_sel_0(3'd4),
+        .up_rx_out_clk_sel_1(3'd4),
+        .up_rx_out_clk_sel_2(3'd4),
+        .up_rx_out_clk_sel_3(3'd4),
         .up_rx_pll_locked_0(rx_pll_locked[0]),
         .up_rx_pll_locked_1(rx_pll_locked[1]),
         .up_rx_pll_locked_2(rx_pll_locked[2]),
@@ -185,18 +214,18 @@ ila_6 your_instance_name (
         .up_rx_ready_1(),
         .up_rx_ready_2(),
         .up_rx_ready_3(),
-        .up_rx_rst_0(0),
-        .up_rx_rst_1(0),
-        .up_rx_rst_2(0),
-        .up_rx_rst_3(0),
-        .up_rx_rst_done_0(),
-        .up_rx_rst_done_1(),
-        .up_rx_rst_done_2(),
-        .up_rx_rst_done_3(),
-        .up_rx_sys_clk_sel_0(0),
-        .up_rx_sys_clk_sel_1(0),
-        .up_rx_sys_clk_sel_2(0),
-        .up_rx_sys_clk_sel_3(0),
+        .up_rx_rst_0(up_rx_rst),
+        .up_rx_rst_1(up_rx_rst),
+        .up_rx_rst_2(up_rx_rst),
+        .up_rx_rst_3(up_rx_rst),
+        .up_rx_rst_done_0(up_rx_rst_done[0]),
+        .up_rx_rst_done_1(up_rx_rst_done[1]),
+        .up_rx_rst_done_2(up_rx_rst_done[2]),
+        .up_rx_rst_done_3(up_rx_rst_done[3]),
+        .up_rx_sys_clk_sel_0(2'd3),
+        .up_rx_sys_clk_sel_1(2'd3),
+        .up_rx_sys_clk_sel_2(2'd3),
+        .up_rx_sys_clk_sel_3(2'd3),
         .up_rx_user_ready_0(1),
         .up_rx_user_ready_1(1),
         .up_rx_user_ready_2(1),
@@ -225,10 +254,10 @@ ila_6 your_instance_name (
         .up_tx_lpm_dfe_n_1(0),
         .up_tx_lpm_dfe_n_2(0),
         .up_tx_lpm_dfe_n_3(0),
-        .up_tx_out_clk_sel_0(0),
-        .up_tx_out_clk_sel_1(0),
-        .up_tx_out_clk_sel_2(0),
-        .up_tx_out_clk_sel_3(0),
+        .up_tx_out_clk_sel_0(3'd4),
+        .up_tx_out_clk_sel_1(3'd4),
+        .up_tx_out_clk_sel_2(3'd4),
+        .up_tx_out_clk_sel_3(3'd4),
         .up_tx_pll_locked_0(tx_pll_locked[0]),
         .up_tx_pll_locked_1(tx_pll_locked[1]),
         .up_tx_pll_locked_2(tx_pll_locked[2]),
@@ -277,5 +306,118 @@ ila_6 your_instance_name (
         .up_tx_wr_1(0),
         .up_tx_wr_2(0),
         .up_tx_wr_3(0));
+
+system_rx_0 system_rx_0_inst
+       (.cfg_beats_per_multiframe(3),
+        .cfg_buffer_delay(0),
+        .cfg_buffer_early_release(0),
+        .cfg_disable_char_replacement(0),
+        .cfg_disable_scrambler(0),
+        .cfg_lanes_disable(0),
+        .cfg_links_disable(0),
+        .cfg_lmfc_offset(0),
+        .cfg_octets_per_frame(0),
+        .cfg_sysref_disable(0),
+        .cfg_sysref_oneshot(0),
+        .clk(rx_clk),
+        .ctrl_err_statistics_mask(0),
+        .ctrl_err_statistics_reset(0),
+        .event_sysref_alignment_error(),
+        .event_sysref_edge(),
+        .ilas_config_addr(),
+        .ilas_config_data(),
+        .ilas_config_valid(),
+        .phy_block_sync({1'b0,1'b0,1'b0,1'b0}),
+        .phy_charisk(rx_phy_charisk),
+        .phy_data(rx_phy_data),
+        .phy_disperr(rx_phy_disperr),
+        .phy_en_char_align(),
+        .phy_header({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .phy_notintable(rx_phy_notintable),
+        .reset(reset),
+        .rx_data(rx_data),
+        .rx_eof(rx_eof),
+        .rx_sof(rx_sof),
+        .rx_valid(rx_valid),
+        .status_ctrl_state(),
+        .status_err_statistics_cnt(),
+        .status_lane_cgs_state(),
+        .status_lane_emb_state(),
+        .status_lane_ifs_ready(),
+        .status_lane_latency(),
+        .sync(rx_sync),
+        .sysref(rx_sysref));
+
+system_tx_0 system_tx_0_inst
+       (.cfg_beats_per_multiframe(3),
+        .cfg_continuous_cgs(0),
+        .cfg_continuous_ilas(0),
+        .cfg_disable_char_replacement(0),
+        .cfg_disable_scrambler(0),
+        .cfg_lanes_disable(0),
+        .cfg_links_disable(0),
+        .cfg_lmfc_offset(0),
+        .cfg_mframes_per_ilas(0),
+        .cfg_octets_per_frame(0),
+        .cfg_skip_ilas(0),
+        .cfg_sysref_disable(0),
+        .cfg_sysref_oneshot(0),
+        .clk(tx_clk),
+        .ctrl_manual_sync_request(0),
+        .event_sysref_alignment_error(),
+        .event_sysref_edge(),
+        .ilas_config_addr(),
+        .ilas_config_data(0),
+        .ilas_config_rd(),
+        .phy_charisk(tx_phy_charisk),
+        .phy_data(tx_phy_data),
+        .reset(reset),
+        .status_state(),
+        .status_sync(),
+        .sync(tx_sync),
+        .sysref(tx_sysref),
+        .tx_data(tx_data),
+        .tx_ready(1),
+        .tx_valid(1));
+
+  assign adc_pd = adc_running ? 1'b0 : 1'b1;
+
+generate
+  begin : daq2_app
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+      begin
+        qpll_rst <= 0;
+        adc_running <= 0;
+        up_rx_rst <= 0;
+      end
+      else
+      begin
+        if (adc_start)
+          qpll_rst <= 1;
+        else
+        begin
+          qpll_rst <= 0;          
+          if (qpll_rst)
+            up_rx_rst <= 1;
+          else
+          begin
+            if (qpll_locked)
+            begin
+              up_rx_rst <= 0;
+              if (up_rx_rst_done)
+              begin
+                if (rx_pll_locked == 4'b1111)
+                  adc_running <= 1;
+              end
+            end
+          end
+        end          
+      end
+    end
+  end
+endgenerate
 
 endmodule

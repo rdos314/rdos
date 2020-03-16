@@ -240,7 +240,10 @@ daq2_app daq2_app_inst (
   .clkd_sync(clkd_sync),
   
   .rx_pll_locked(rx_pll_locked),
-  .tx_pll_locked(tx_pll_locked)
+  .tx_pll_locked(tx_pll_locked),
+  
+  .adc_start(adc_start),
+  .adc_running(adc_running)
 );
 
 pci_app pci_app_inst (

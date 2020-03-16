@@ -496,6 +496,103 @@ SetupClk	proc near
 SetupClk	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupAdc
+;
+;       DESCRIPTION:    Setup ADC chip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupAdc	proc near
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov bx,OFFSET cb_adc
+;
+    mov dx,580h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,581h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,570h
+    mov al,88h
+    call WriteSpiByte
+;
+    mov dx,583h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,584h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,585h
+    mov al,2
+    call WriteSpiByte
+;
+    mov dx,586h
+    mov al,3
+    call WriteSpiByte
+;
+    mov dx,5B2h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,5B3h
+    mov al,11h
+    call WriteSpiByte
+;
+    mov dx,5B5h
+    mov al,22h
+    call WriteSpiByte
+;
+    mov dx,5B6h
+    mov al,33h
+    call WriteSpiByte
+;
+    mov dx,58Bh
+    mov al,83h
+    call WriteSpiByte
+;
+    mov dx,58Dh
+    mov al,31
+    call WriteSpiByte
+;
+    mov dx,58Eh
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,58Fh
+    mov al,13
+    call WriteSpiByte
+;
+    mov dx,590h
+    mov al,2Fh
+    call WriteSpiByte
+;
+    mov dx,120h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,121h
+    mov al,0Fh
+    call WriteSpiByte
+;
+    mov dx,120h
+    mov al,0Ah
+    call WriteSpiByte
+;
+    mov dx,56Eh
+    mov al,0          ; should be 10h for 600 MHz!
+    call WriteSpiByte
+;
+    ret
+SetupAdc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           VerifyData
@@ -638,6 +735,7 @@ adc_thread:
     call SetupClk
 ;
     int 3
+    call SetupAdc
 
 ;
     mov bx,anio_adc_sel

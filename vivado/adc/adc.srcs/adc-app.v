@@ -26,7 +26,7 @@ module adc_app (
 
   input wire             adc_start;
   input wire             adc_stop;
-  output reg             adc_running;
+  input wire             adc_running;
   output reg             adc_send;
   output reg [63:0]      adc_address;
   output reg [1023:0]    adc_data;
@@ -91,10 +91,12 @@ begin : adc_app
 
   always @ ( posedge clk ) 
   begin
-    adc_running <= 0;
-    adc_send <= 0;
-    rp <= 0;
-    ack <= 0;
+    if (reset)
+    begin
+      adc_send <= 0;
+      rp <= 0;
+      ack <= 0;
+    end
   end
 end
 endgenerate
