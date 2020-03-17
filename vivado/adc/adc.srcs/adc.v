@@ -168,8 +168,8 @@ module adc (
 
   wire                   trig;
 
-  wire [3:0]             rx_pll_locked;
-  wire [3:0]             tx_pll_locked;
+  wire                   rx_valid;
+  wire [63:0]            rx_sysref_cnt;
 
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
@@ -238,9 +238,9 @@ daq2_app daq2_app_inst (
   .dac_txen(dac_txen),
   .dac_reset(dac_reset),
   .clkd_sync(clkd_sync),
-  
-  .rx_pll_locked(rx_pll_locked),
-  .tx_pll_locked(tx_pll_locked),
+
+  .rx_valid(rx_valid),
+  .rx_sysref_cnt(rx_sysref_cnt),
   
   .adc_start(adc_start),
   .adc_stop(adc_stop),
@@ -279,6 +279,9 @@ pci_app pci_app_inst (
     .adc_send(adc_send),
     .adc_address(adc_address),
     .adc_data(adc_data),
+
+    .adc_valid(rx_valid),
+    .adc_sysref_cnt(rx_sysref_cnt),
 
     .bar1_address(bar1_address),
     .bar1_rd(bar1_rd),

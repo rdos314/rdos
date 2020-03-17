@@ -31,6 +31,9 @@ module pci_app (
     adc_address,
     adc_data,
 
+    adc_valid,
+    adc_sysref_cnt,
+
     bar1_address,
     bar1_rd,
     bar1_rp,
@@ -82,6 +85,9 @@ module pci_app (
   input  wire          adc_send;
   input  wire [63:0]   adc_address;
   input  wire [1023:0] adc_data;
+
+  input  wire          adc_valid;
+  intput wire [63:0]   adc_sysref_cnt;
 
   output wire [16:0]   bar1_address;
   output wire          bar1_rd;
@@ -662,6 +668,8 @@ generate
       begin
         bar_control[0] <= pci_rx_full;
         bar_control[1] <= pci_tx_full;
+
+        bar_control[6] <= adc_valid;
         bar_control[7] <= adc_running;
 
         if (bar0_rd)
@@ -671,6 +679,8 @@ generate
             1: bar0_rp_data <= bar_spi_clk;
             2: bar0_rp_data <= bar_spi_adc;
             3: bar0_rp_data <= bar_spi_dac;
+            4: bar0_rp_data <= adc_sysref_cnt[31:0];
+            5: bar0_rp_data <= adc_sysref_cnt[63:32];
             default: bar0_rp_data <= 31'hffffffff;
           endcase     
           bar0_rp <= 1;

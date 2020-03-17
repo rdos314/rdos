@@ -1,4 +1,8 @@
 create_clock -period 4.000 -name sys_clk [get_ports sys_clk_p]
+create_clock -period 2.667 -name rx_ref_clk [get_ports rx_ref_clk_p]
+create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
+create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
+create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
 
 set_property IOSTANDARD LVCMOS25 [get_ports sys_rst_n]
 set_property PULLUP true [get_ports sys_rst_n]

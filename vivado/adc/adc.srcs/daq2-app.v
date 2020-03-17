@@ -27,8 +27,8 @@ module daq2_app
   inout                   dac_reset,
   inout                   clkd_sync,
 
-  output     [3:0]        rx_pll_locked,
-  output     [3:0]        tx_pll_locked,
+  output                  rx_valid,
+  output reg  [63:0]      rx_sysref_cnt;
 
   input                   adc_start,
   input                   adc_stop,
@@ -43,6 +43,7 @@ module daq2_app
  wire [15:0]              rx_phy_notintable;
  wire [127:0]             rx_phy_data;
  wire                     rx_phy_char_align;
+ wire [3:0]               rx_pll_locked;
 
  wire [3:0]               ilas_config_valid;
  wire [7:0]               ilas_config_addr;
@@ -53,7 +54,6 @@ module daq2_app
  wire [3:0]               status_lane_ifs_ready;
   
  wire [127:0]             rx_data;
- wire                     rx_valid;
  wire [3:0]               rx_eof;
  wire [3:0]               rx_sof;
 
@@ -68,37 +68,30 @@ module daq2_app
 
  reg                      up_rx_rst; 
  wire [3:0]               up_rx_rst_done;
+
+ reg                      lmfc_clk_s;
+ reg                      lmfc_clk_c;
+
  
 ila_6 ila_6_inst (
 	.clk(rx_clk), // input wire clk
 
-	.probe0(adc_start),             // input wire [0:0]  probe11
-	.probe1(adc_running),           // input wire [0:0]  probe11
-	.probe2(qpll_rst),              // input wire [0:0]  probe11
-	.probe3(qpll_locked),           // input wire [0:0]  probe11
-	.probe4(up_rx_rst),             // input wire [0:0]  probe11
-	.probe5(up_rx_rst_done),        // input wire [3:0]  probe11
-	.probe6(rx_pll_locked[0]),      // input wire [0:0]  probe0  
-	.probe7(rx_pll_locked[1]),      // input wire [0:0]  probe0  
-	.probe8(rx_pll_locked[2]),      // input wire [0:0]  probe0  
-	.probe9(rx_pll_locked[3]),      // input wire [0:0]  probe0  
-	.probe10(rx_data[31:0]),        // input wire [31:0]  probe8 
-	.probe11(rx_data[63:32]),       // input wire [31:0]  probe9 
-	.probe12(rx_data[95:64]),       // input wire [31:0]  probe10 
-	.probe13(rx_data[127:96]),      // input wire [31:0]  probe11
-	.probe14(rx_phy_charisk[15:0]), // input wire [15:0]  probe8 
-	.probe15(rx_phy_disperr[15:0]), // input wire [15:0]  probe8 
-	.probe16(rx_phy_notintable[15:0]), // input wire [15:0]  probe8 
-	.probe17(ilas_config_valid),       // input wire [3:0]  probe11
-	.probe18(ilas_config_addr),       // input wire [7:0]  probe11
-	.probe19(ilas_config_data[31:0]),  // input wire [31:0]  probe11
-	.probe20(status_ctrl_state),        // input wire [1:0]  probe11
-	.probe21(status_lane_cgs_state),     // input wire [7:0]  probe11
-	.probe22(status_lane_ifs_ready),     // input wire [3:0]  probe11
-	.probe23(rx_sync),               // input wire [0:0]  probe11
-	.probe24(rx_valid),              // input wire [0:0]  probe11
-	.probe25(rx_eof),                // input wire [3:0]  probe11
-	.probe26(rx_sof)                 // input wire [3:0]  probe11
+	.probe0(rx_sync),                   // input wire [0:0]  probe11
+	.probe1(rx_valid),                  // input wire [0:0]  probe11
+	.probe2(rx_eof),                    // input wire [3:0]  probe11
+	.probe3(rx_sof)                     // input wire [3:0]  probe11
+	.probe4(rx_data[31:0]),             // input wire [31:0]  probe8 
+	.probe5(rx_data[63:32]),            // input wire [31:0]  probe9 
+	.probe6(rx_data[95:64]),            // input wire [31:0]  probe10 
+	.probe7(rx_data[127:96]),           // input wire [31:0]  probe11
+	.probe8(rx_phy_charisk[15:0]),      // input wire [15:0]  probe8 
+	.probe9(rx_phy_disperr[15:0]),      // input wire [15:0]  probe8 
+	.probe10(rx_phy_notintable[15:0]),  // input wire [15:0]  probe8 
+	.probe11(status_ctrl_state),        // input wire [1:0]  probe11
+	.probe12(status_lane_cgs_state),    // input wire [7:0]  probe11
+	.probe13(status_lane_ifs_ready),    // input wire [3:0]  probe11
+	.probe14(lmfc_clk),                 // input wire [0:0]  probe11
+	.probe15(rx_sysref_cnt)             // input wire [63:0]  probe11
 );
 
 
@@ -368,7 +361,9 @@ system_rx_0 system_rx_0_inst
         .status_lane_ifs_ready(status_lane_ifs_ready),
         .status_lane_latency(),
         .sync(rx_sync),
-        .sysref(rx_sysref));
+        .sysref(rx_sysref),
+        .lmfc_clk(lmfc_clk)
+);
 
 system_tx_0 system_tx_0_inst
        (.cfg_beats_per_multiframe(3),
@@ -457,6 +452,27 @@ generate
         end          
       end
     end
+
+    always @ ( posedge clk ) 
+    begin
+      if (adc_running)
+      begin
+        lmfc_clk_s <= lmfc_clk;
+        if (lmfc_clk_c != lmfc_clk_s)
+        begin
+          lmfc_clk_c <= lmfc_clk_s;
+          if (lmfc_clk_s == 1)
+            rx_sysref_cnt <= rx_sysref_cnt + 1;
+        end
+      end
+      else
+      begin
+        lmfc_clk_c <= 0;
+        lmfc_clk_s <= 0;
+        rx_sysref_cnt <= 0;
+      end
+    end
+
   end
 endgenerate
 
