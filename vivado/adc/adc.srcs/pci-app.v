@@ -451,7 +451,7 @@ adc_mem adc_mem_inst (
     .pci_tx_wr( pci_tx_wr),                     // O
     .pci_tx_full( pci_tx_full),                 // I
 
-    .adc_send( adc_send),                       // I
+    .adc_send( 0),                       // I
     .adc_address( adc_address),                 // I
     .adc_data( adc_data),                       // I
 
@@ -526,14 +526,15 @@ ila_3 ila3_inst (
    .probe1(adc_fifo_full),            // input wire [0:0]  probe1 
    .probe2(adc_fifo_rd),              // input wire [0:0]  probe1 
    .probe3(adc_cnt),                  // input wire [2:0]  probe1 
-   .probe4(adc_data[31:0]),           // input wire [31:0]  probe1 
-   .probe5(adc_data[63:32]),          // input wire [31:0]  probe1 
-   .probe6(adc_data[95:64]),          // input wire [31:0]  probe1 
-   .probe7(adc_data[127:96]),         // input wire [31:0]  probe1 
-   .probe8(adc_data[159:128]),        // input wire [31:0]  probe1 
-   .probe9(adc_data[191:160]),        // input wire [31:0]  probe1 
-   .probe10(adc_send_data[31:0]),      // input wire [31:0]  probe1 
-   .probe11(adc_send_data[63:32])     // input wire [31:0]  probe1 
+   .probe4(adc_send),                 // input wire [0:0]  probe1 
+   .probe5(adc_data[31:0]),           // input wire [31:0]  probe1 
+   .probe6(adc_data[63:32]),          // input wire [31:0]  probe1 
+   .probe7(adc_data[95:64]),          // input wire [31:0]  probe1 
+   .probe8(adc_data[127:96]),         // input wire [31:0]  probe1 
+   .probe9(adc_data[159:128]),        // input wire [31:0]  probe1 
+   .probe10(adc_data[191:160]),        // input wire [31:0]  probe1 
+   .probe11(adc_send_data[31:0]),      // input wire [31:0]  probe1 
+   .probe12(adc_send_data[63:32])     // input wire [31:0]  probe1 
 );
 
 assign adc_fifo_rd = !adc_fifo_empty;
@@ -544,45 +545,55 @@ generate
     always @ ( posedge user_clk ) 
     begin
       if (user_reset)
+      begin
         adc_cnt <= 0;
+        adc_send <= 0;
+      end
       else
       begin
-        if (!adc_fifo_empty)
+        if (adc_fifo_empty)
+          adc_send <= 0;
+        else
         begin
-          adc_data[13:0] <= adc_fifo_data[13:0];
-          adc_data[14] <= adc_fifo_data[13];
-          adc_data[15] <= adc_fifo_data[13];
-          adc_data[29:16] <= adc_fifo_data[27:14];
-          adc_data[30] <= adc_fifo_data[27];
-          adc_data[31] <= adc_fifo_data[27];
+          adc_data[909:896] <= adc_fifo_data[13:0];
+          adc_data[910] <= adc_fifo_data[13];
+          adc_data[911] <= adc_fifo_data[13];
+          adc_data[925:912] <= adc_fifo_data[27:14];
+          adc_data[926] <= adc_fifo_data[27];
+          adc_data[927] <= adc_fifo_data[27];
 
-          adc_data[45:32] <= adc_fifo_data[41:28];
-          adc_data[46] <= adc_fifo_data[41];
-          adc_data[47] <= adc_fifo_data[41];
-          adc_data[61:48] <= adc_fifo_data[55:42];
-          adc_data[62] <= adc_fifo_data[55];
-          adc_data[63] <= adc_fifo_data[55];
+          adc_data[941:928] <= adc_fifo_data[41:28];
+          adc_data[942] <= adc_fifo_data[41];
+          adc_data[943] <= adc_fifo_data[41];
+          adc_data[957:944] <= adc_fifo_data[55:42];
+          adc_data[958] <= adc_fifo_data[55];
+          adc_data[959] <= adc_fifo_data[55];
 
-          adc_data[77:64] <= adc_fifo_data[69:56];
-          adc_data[78] <= adc_fifo_data[69];
-          adc_data[79] <= adc_fifo_data[69];
-          adc_data[93:80] <= adc_fifo_data[83:70];
-          adc_data[94] <= adc_fifo_data[83];
-          adc_data[95] <= adc_fifo_data[83];
+          adc_data[973:960] <= adc_fifo_data[69:56];
+          adc_data[974] <= adc_fifo_data[69];
+          adc_data[975] <= adc_fifo_data[69];
+          adc_data[989:976] <= adc_fifo_data[83:70];
+          adc_data[990] <= adc_fifo_data[83];
+          adc_data[991] <= adc_fifo_data[83];
 
-          adc_data[109:96] <= adc_fifo_data[97:84];
-          adc_data[110] <= adc_fifo_data[97];
-          adc_data[111] <= adc_fifo_data[97];
-          adc_data[125:112] <= adc_fifo_data[111:98];
-          adc_data[126] <= adc_fifo_data[111];
-          adc_data[127] <= adc_fifo_data[111];
+          adc_data[1005:992] <= adc_fifo_data[97:84];
+          adc_data[1006] <= adc_fifo_data[97];
+          adc_data[1007] <= adc_fifo_data[97];
+          adc_data[1021:1008] <= adc_fifo_data[111:98];
+          adc_data[1022] <= adc_fifo_data[111];
+          adc_data[1023] <= adc_fifo_data[111];
 
-          adc_data[1023:128] <= adc_data[895:0];
+          adc_data[895:0] <= adc_data[1023:128];
 
           adc_cnt <= adc_cnt + 1;
 
           if (adc_cnt == 7)
+          begin
             adc_send_data <= adc_data;
+            adc_send <= 1;
+          end
+          else
+            adc_send <= 0;
         end
       end
     end
