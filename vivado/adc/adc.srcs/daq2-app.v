@@ -34,7 +34,12 @@ module daq2_app
 
   input                   adc_start,
   input                   adc_stop,
-  output reg              adc_running
+  output reg              adc_running,
+  
+  input                   adc_fifo_rd,
+  output [111:0]          adc_fifo_data,
+  output                  adc_fifo_full,
+  output                  adc_fifo_empty
 );
 
  wire                     rx_clk;
@@ -428,6 +433,18 @@ system_tx_0 system_tx_0_inst
         .tx_data(tx_data),
         .tx_ready(1),
         .tx_valid(1));
+
+adc_fifo adc_fifo_inst (
+  .rst(reset),           // input wire rst
+  .wr_clk(rx_clk),       // input wire wr_clk
+  .rd_clk(clk),          // input wire rd_clk
+  .din({adcB_3, adcA_3, adcB_2, adcA_2, adcB_1, adcA_1, adcB_0, adcA_0}),        // input wire [111 : 0] din
+  .wr_en(rx_valid),      // input wire wr_en
+  .rd_en(adc_fifo_rd),   // input wire rd_en
+  .dout(adc_fifo_data),  // output wire [111 : 0] dout
+  .full(adc_fifo_full),  // output wire full
+  .empty(adc_fifo_empty) // output wire empty
+);
 
   assign adc_pd = adc_running ? 1'b0 : 1'b1;
   assign up_rx_rst = up_rx_rst_cnt[3];

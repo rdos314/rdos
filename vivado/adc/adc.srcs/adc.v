@@ -134,28 +134,7 @@ module adc (
   wire                   adc_start;
   wire                   adc_stop;
   wire                   adc_running;
-  wire                   adc_send;
-  wire [63:0]            adc_address;
-  wire [1023:0]          adc_data;
-  
-  wire [16:0]            bar1_address;
-  wire                   bar1_rd;
-  wire                   bar1_rp;
-  wire [31:0]            bar1_rp_data;
-  wire                   bar1_wr;
-  wire [3:0]             bar1_wr_be;
-  wire [31:0]            bar1_wr_data;
-  wire                   bar1_ack;
-
-  wire [16:0]            bar2_address;
-  wire                   bar2_rd;
-  wire                   bar2_rp;
-  wire [31:0]            bar2_rp_data;
-  wire                   bar2_wr;
-  wire [3:0]             bar2_wr_be;
-  wire [31:0]            bar2_wr_data;
-  wire                   bar2_ack;
-  
+    
   wire                   spi_sys_clk;
 
   wire                   rx_ref_clk;
@@ -171,6 +150,11 @@ module adc (
 
   wire                   rx_valid;
   wire [63:0]            rx_sysref_cnt;
+  
+  wire                   adc_fifo_rd;
+  wire [111:0]           adc_fifo_data;
+  wire                   adc_fifo_full;
+  wire                   adc_fifo_empty;
 
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
@@ -251,7 +235,12 @@ daq2_app daq2_app_inst (
   
   .adc_start(adc_start),
   .adc_stop(adc_stop),
-  .adc_running(adc_running)
+  .adc_running(adc_running),
+  
+  .adc_fifo_rd(adc_fifo_rd),
+  .adc_fifo_data(adc_fifo_data),
+  .adc_fifo_full(adc_fifo_full),
+  .adc_fifo_empty(adc_fifo_empty) 
 );
 
 pci_app pci_app_inst (
@@ -283,67 +272,13 @@ pci_app pci_app_inst (
     .adc_start(adc_start),
     .adc_stop(adc_stop),
     .adc_running(adc_running),
-    .adc_send(adc_send),
-    .adc_address(adc_address),
-    .adc_data(adc_data),
-
     .adc_valid(rx_valid),
     .adc_sysref_cnt(rx_sysref_cnt),
-
-    .bar1_address(bar1_address),
-    .bar1_rd(bar1_rd),
-    .bar1_rp(bar1_rp),
-    .bar1_rp_data(bar1_rp_data),
-    .bar1_wr(bar1_wr),
-    .bar1_wr_be(bar1_wr_be),
-    .bar1_wr_data(bar1_wr_data),
-    .bar1_ack(bar1_ack),
-
-    .bar2_address(bar2_address),
-    .bar2_rd(bar2_rd),
-    .bar2_rp(bar2_rp),
-    .bar2_rp_data(bar2_rp_data),
-    .bar2_wr(bar2_wr),
-    .bar2_wr_be(bar2_wr_be),
-    .bar2_wr_data(bar2_wr_data),
-    .bar2_ack(bar2_ack)
-);
-
-adc_app adc_app_inst (
-    .clk(user_clk),
-    .reset(user_reset),
-    .sample_clk(sample_clk),
-
-    .adc_start(adc_start),
-    .adc_stop(adc_stop),
-    .adc_running(adc_running),
-    .adc_send(adc_send),
-    .adc_address(adc_address),
-    .adc_data(adc_data),
-
-    .address(bar1_address),
-    .rd(bar1_rd),
-    .rp(bar1_rp),
-    .rp_data(bar1_rp_data),
-    .wr(bar1_wr),
-    .wr_be(bar1_wr_be),
-    .wr_data(bar1_wr_data),
-    .ack(bar1_ack)
-);
-
-dac_app dac_app_inst (
-    .clk(user_clk),
-    .reset(user_reset),
-    .sample_clk(sample_clk),
-
-    .address(bar2_address),
-    .rd(bar2_rd),
-    .rp(bar2_rp),
-    .rp_data(bar2_rp_data),
-    .wr(bar2_wr),
-    .wr_be(bar2_wr_be),
-    .wr_data(bar2_wr_data),
-    .ack(bar2_ack)
+    
+    .adc_fifo_rd(adc_fifo_rd),
+    .adc_fifo_data(adc_fifo_data),
+    .adc_fifo_full(adc_fifo_full),
+    .adc_fifo_empty(adc_fifo_empty)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
