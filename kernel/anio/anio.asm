@@ -573,6 +573,14 @@ SetupAdc	proc near
     mov al,2Fh
     call WriteSpiByte
 ;
+    mov dx,26Fh
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,550h
+    mov al,7
+    call WriteSpiByte
+;
     mov dx,120h
     mov al,0
     call WriteSpiByte
