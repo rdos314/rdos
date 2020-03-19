@@ -1,5 +1,5 @@
 
-// file: sample_700.v
+// file: up_clk.v
 // 
 // (c) Copyright 2008 - 2013 Xilinx, Inc. All rights reserved.
 // 
@@ -56,16 +56,16 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__700.00000______0.000______50.0______103.343____122.577
+// clk_out1__100.00000______0.000______50.0______107.111_____85.928
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
 //----------------------------------------------------------------------------
-// __primary_________100.000____________0.010
+// __primary_________250.000____________0.010
 
 `timescale 1ps/1ps
 
-module sample_700_clk_wiz 
+module up_clk_clk_wiz 
 
  (// Clock in ports
   // Clock out ports
@@ -74,10 +74,10 @@ module sample_700_clk_wiz
  );
   // Input buffering
   //------------------------------------
-wire clk_in1_sample_700;
-wire clk_in2_sample_700;
+wire clk_in1_up_clk;
+wire clk_in2_up_clk;
   IBUF clkin1_ibufg
-   (.O (clk_in1_sample_700),
+   (.O (clk_in1_up_clk),
     .I (clk_in1));
 
 
@@ -90,19 +90,20 @@ wire clk_in2_sample_700;
   //    * Unused inputs are tied off
   //    * Unused outputs are labeled unused
 
-  wire        clk_out1_sample_700;
-  wire        clk_out2_sample_700;
-  wire        clk_out3_sample_700;
-  wire        clk_out4_sample_700;
-  wire        clk_out5_sample_700;
-  wire        clk_out6_sample_700;
-  wire        clk_out7_sample_700;
+  wire        clk_out1_up_clk;
+  wire        clk_out2_up_clk;
+  wire        clk_out3_up_clk;
+  wire        clk_out4_up_clk;
+  wire        clk_out5_up_clk;
+  wire        clk_out6_up_clk;
+  wire        clk_out7_up_clk;
 
   wire [15:0] do_unused;
   wire        drdy_unused;
   wire        psdone_unused;
   wire        locked_int;
-  wire        clkfbout_sample_700;
+  wire        clkfbout_up_clk;
+  wire        clkfbout_buf_up_clk;
   wire        clkfboutb_unused;
     wire clkout0b_unused;
    wire clkout1_unused;
@@ -123,20 +124,20 @@ wire clk_in2_sample_700;
     .COMPENSATION         ("ZHOLD"),
     .STARTUP_WAIT         ("FALSE"),
     .DIVCLK_DIVIDE        (1),
-    .CLKFBOUT_MULT_F      (7.000),
+    .CLKFBOUT_MULT_F      (4.000),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
-    .CLKOUT0_DIVIDE_F     (1.000),
+    .CLKOUT0_DIVIDE_F     (10.000),
     .CLKOUT0_PHASE        (0.000),
-    .CLKOUT0_DUTY_CYCLE   (0.5),
+    .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("FALSE"),
-    .CLKIN1_PERIOD        (10.000))
+    .CLKIN1_PERIOD        (4.000))
   mmcm_adv_inst
     // Output clocks
    (
-    .CLKFBOUT            (clkfbout_sample_700),
+    .CLKFBOUT            (clkfbout_up_clk),
     .CLKFBOUTB           (clkfboutb_unused),
-    .CLKOUT0             (clk_out1_sample_700),
+    .CLKOUT0             (clk_out1_up_clk),
     .CLKOUT0B            (clkout0b_unused),
     .CLKOUT1             (clkout1_unused),
     .CLKOUT1B            (clkout1b_unused),
@@ -148,8 +149,8 @@ wire clk_in2_sample_700;
     .CLKOUT5             (clkout5_unused),
     .CLKOUT6             (clkout6_unused),
      // Input clock control
-    .CLKFBIN             (clkfbout_sample_700),
-    .CLKIN1              (clk_in1_sample_700),
+    .CLKFBIN             (clkfbout_buf_up_clk),
+    .CLKIN1              (clk_in1_up_clk),
     .CLKIN2              (1'b0),
      // Tied to always select the primary input clock
     .CLKINSEL            (1'b1),
@@ -178,6 +179,10 @@ wire clk_in2_sample_700;
  // Output buffering
   //-----------------------------------
 
+  BUFG clkf_buf
+   (.O (clkfbout_buf_up_clk),
+    .I (clkfbout_up_clk));
+
 
 
 
@@ -185,7 +190,7 @@ wire clk_in2_sample_700;
 
   BUFG clkout1_buf
    (.O   (clk_out1),
-    .I   (clk_out1_sample_700));
+    .I   (clk_out1_up_clk));
 
 
 

@@ -1,29 +1,28 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Feb  1 20:09:41 2020
+-- Date        : Wed Mar 18 00:49:23 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/sample_700_synth_1/sample_700_stub.vhdl
--- Design      : sample_700
+-- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/up_clk_synth_1/up_clk_stub.vhdl
+-- Design      : up_clk
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7k325tffg900-2
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity sample_700 is
+entity up_clk is
   Port ( 
     clk_out1 : out STD_LOGIC;
-    clk_out2 : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
 
-end sample_700;
+end up_clk;
 
-architecture stub of sample_700 is
+architecture stub of up_clk is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clk_out1,clk_out2,clk_in1";
+attribute black_box_pad_pin of stub : architecture is "clk_out1,clk_in1";
 begin
 end;

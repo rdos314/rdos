@@ -1,4 +1,5 @@
 
+// file: up_clk.v
 // 
 // (c) Copyright 2008 - 2013 Xilinx, Inc. All rights reserved.
 // 
@@ -55,23 +56,31 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__700.00000______0.000______50.0______103.343____122.577
+// clk_out1__100.00000______0.000______50.0______107.111_____85.928
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
 //----------------------------------------------------------------------------
-// __primary_________100.000____________0.010
+// __primary_________250.000____________0.010
 
-// The following must be inserted into your Verilog file for this
-// core to be instantiated. Change the instance name and port connections
-// (in parentheses) to your own signal names.
+`timescale 1ps/1ps
 
-//----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
+(* CORE_GENERATION_INFO = "up_clk,clk_wiz_v6_0_4_0_0,{component_name=up_clk,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=1,clkin1_period=4.000,clkin2_period=10.0,use_power_down=false,use_reset=false,use_locked=false,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
 
-  sample_700 instance_name
-   (
-    // Clock out ports
-    .clk_out1(clk_out1),     // output clk_out1
-   // Clock in ports
-    .clk_in1(clk_in1));      // input clk_in1
-// INST_TAG_END ------ End INSTANTIATION Template ---------
+module up_clk 
+ (
+  // Clock out ports
+  output        clk_out1,
+ // Clock in ports
+  input         clk_in1
+ );
+
+  up_clk_clk_wiz inst
+  (
+  // Clock out ports  
+  .clk_out1(clk_out1),
+ // Clock in ports
+  .clk_in1(clk_in1)
+  );
+
+endmodule
