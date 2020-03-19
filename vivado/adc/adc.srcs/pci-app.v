@@ -87,7 +87,7 @@ module pci_app (
   input  wire [1023:0] adc_data;
 
   input  wire          adc_valid;
-  intput wire [63:0]   adc_sysref_cnt;
+  input wire [63:0]    adc_sysref_cnt;
 
   output wire [16:0]   bar1_address;
   output wire          bar1_rd;

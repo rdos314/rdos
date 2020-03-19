@@ -163,6 +163,7 @@ module adc (
   wire                   rx_sync;
 
   wire                   tx_ref_clk;
+  wire                   tx_ref_clk2;
   wire                   tx_sysref;
   wire                   tx_sync;
 
@@ -210,9 +211,15 @@ module adc (
     .IB (trig_n),
     .O (trig));
 
+up_clk up_clk_inst
+   (
+    .clk_out1(up_clk),     // output clk_out1
+    .clk_in1(user_clk));      // input clk_in1
+
 
 daq2_app daq2_app_inst (
   .clk(user_clk),
+  .up_clk(up_clk),
   .reset(user_reset),
 
   .rx_ref_clk(rx_ref_clk),

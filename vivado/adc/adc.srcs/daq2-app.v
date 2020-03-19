@@ -15,6 +15,8 @@ module daq2_app
   output      [ 3:0]      tx_data_p,
   output      [ 3:0]      tx_data_n,
 
+  input                   up_clk,
+
   input                   trig,
 
   inout                   adc_fdb,
@@ -28,7 +30,7 @@ module daq2_app
   inout                   clkd_sync,
 
   output                  rx_valid,
-  output reg  [63:0]      rx_sysref_cnt;
+  output reg  [63:0]      rx_sysref_cnt,
 
   input                   adc_start,
   input                   adc_stop,
@@ -62,24 +64,55 @@ module daq2_app
    
  reg  [127:0]             tx_data = 0;
 
+ reg                      adc_start_m;
+ reg                      adc_stop_m;
+
+ reg [4:0]                adc_start_cnt;
+ reg [4:0]                adc_stop_cnt;
+
  reg                      pend_start;
  reg                      qpll_rst;
  wire                     qpll_locked;
 
- reg                      up_rx_rst; 
+ reg                      up_rstn;
+ wire                     up_rx_rst; 
+ wire                     up_rx_user_ready;
  wire [3:0]               up_rx_rst_done;
+
+ reg  [3:0]               up_pll_rst_cnt;
+ reg  [3:0]               up_rx_rst_cnt;
+ reg  [6:0]               up_rx_user_ready_cnt;
 
  reg                      lmfc_clk_s;
  reg                      lmfc_clk_c;
 
  
+ila_4 ila_4_inst (
+	.clk(up_clk), // input wire clk
+
+	.probe0(adc_start_m),               // input wire [0:0]  probe11
+	.probe1(adc_stop_m),                // input wire [0:0]  probe11
+	.probe2(adc_running),               // input wire [0:0]  probe11
+	.probe3(pend_start),                // input wire [0:0]  probe11
+	.probe4(qpll_rst),                  // input wire [0:0]  probe8 
+	.probe5(qpll_locked),               // input wire [0:0]  probe9 
+	.probe6(up_rstn),                   // input wire [0:0]  probe9 
+	.probe7(up_rx_rst),                 // input wire [0:0]  probe9 
+	.probe8(up_rx_user_ready),          // input wire [0:0]  probe9 
+	.probe9(up_rx_rst_done),            // input wire [0:0]  probe9 
+	.probe10(rx_pll_locked),            // input wire [3:0]  probe9 
+	.probe11(up_pll_rst_cnt),           // input wire [3:0]  probe9 
+	.probe12(up_rx_rst_cnt),            // input wire [3:0]  probe9 
+	.probe13(up_rx_user_ready_cnt)      // input wire [6:0]  probe9 
+);
+
 ila_6 ila_6_inst (
 	.clk(rx_clk), // input wire clk
 
 	.probe0(rx_sync),                   // input wire [0:0]  probe11
 	.probe1(rx_valid),                  // input wire [0:0]  probe11
 	.probe2(rx_eof),                    // input wire [3:0]  probe11
-	.probe3(rx_sof)                     // input wire [3:0]  probe11
+	.probe3(rx_sof),                     // input wire [3:0]  probe11
 	.probe4(rx_data[31:0]),             // input wire [31:0]  probe8 
 	.probe5(rx_data[63:32]),            // input wire [31:0]  probe9 
 	.probe6(rx_data[95:64]),            // input wire [31:0]  probe10 
@@ -155,7 +188,7 @@ ila_6 ila_6_inst (
         .tx_data_2(tx_phy_data[95:64]),
         .tx_data_3(tx_phy_data[127:96]),
         .tx_out_clk_0(tx_clk),
-        .up_clk(clk),
+        .up_clk(up_clk),
         .up_cm_addr_0(0),
         .up_cm_enb_0(0),
         .up_cm_rdata_0(),
@@ -196,7 +229,7 @@ ila_6 ila_6_inst (
         .up_es_wr_3(0),
         .up_qpll_rst_0(qpll_rst),
         .up_qpll_locked_0(qpll_locked),
-        .up_rstn(!reset),
+        .up_rstn(up_rstn),
         .up_rx_addr_0(0),
         .up_rx_addr_1(0),
         .up_rx_addr_2(0),
@@ -241,10 +274,10 @@ ila_6 ila_6_inst (
         .up_rx_sys_clk_sel_1(2'd3),
         .up_rx_sys_clk_sel_2(2'd3),
         .up_rx_sys_clk_sel_3(2'd3),
-        .up_rx_user_ready_0(1),
-        .up_rx_user_ready_1(1),
-        .up_rx_user_ready_2(1),
-        .up_rx_user_ready_3(1),
+        .up_rx_user_ready_0(up_rx_user_ready),
+        .up_rx_user_ready_1(up_rx_user_ready),
+        .up_rx_user_ready_2(up_rx_user_ready),
+        .up_rx_user_ready_3(up_rx_user_ready),
         .up_rx_wdata_0(0),
         .up_rx_wdata_1(0),
         .up_rx_wdata_2(0),
@@ -273,10 +306,10 @@ ila_6 ila_6_inst (
         .up_tx_out_clk_sel_1(3'd4),
         .up_tx_out_clk_sel_2(3'd4),
         .up_tx_out_clk_sel_3(3'd4),
-        .up_tx_pll_locked_0(tx_pll_locked[0]),
-        .up_tx_pll_locked_1(tx_pll_locked[1]),
-        .up_tx_pll_locked_2(tx_pll_locked[2]),
-        .up_tx_pll_locked_3(tx_pll_locked[3]),
+        .up_tx_pll_locked_0(),
+        .up_tx_pll_locked_1(),
+        .up_tx_pll_locked_2(),
+        .up_tx_pll_locked_3(),
         .up_tx_postcursor_0(0),
         .up_tx_postcursor_1(0),
         .up_tx_postcursor_2(0),
@@ -398,29 +431,79 @@ system_tx_0 system_tx_0_inst
         .tx_valid(1));
 
   assign adc_pd = adc_running ? 1'b0 : 1'b1;
+  assign up_rx_rst = up_rx_rst_cnt[3];
+  assign up_rx_user_ready = up_rx_user_ready_cnt[6];
 
 generate
   begin : daq2_app
 
-    always @ ( posedge clk ) 
+    always @(posedge clk) 
     begin
       if (reset)
       begin
-        qpll_rst <= 0;
-        adc_running <= 0;
-        up_rx_rst <= 0;
-        pend_start <= 0;
+        adc_start_m <= 0;
+        adc_stop_m <= 0;
       end
       else
       begin
         if (adc_start)
         begin
+          adc_start_m <= 1;
+          adc_start_cnt <= 0;
+        end
+        else
+        begin
+          if (adc_start_m)
+          begin
+            adc_start_cnt <= adc_start_cnt + 1;
+            if (adc_start_cnt[4] == 1)
+              adc_start_m <= 0;
+          end
+
+          if (adc_stop)
+          begin
+            adc_stop_m <= 1;
+            adc_stop_cnt <= 0;
+          end
+          else
+          begin
+            if (adc_stop_m)
+            begin
+              adc_stop_cnt <= adc_stop_cnt + 1;
+              if (adc_stop_cnt[4] == 1)
+                adc_stop_m <= 0;
+            end
+          end
+        end
+      end
+    end
+        
+    always @(posedge up_clk) 
+    begin
+      if (reset)
+      begin
+        adc_running <= 0;
+        pend_start <= 0;
+        up_rstn <= 0;
+        qpll_rst <= 0;
+      end
+      else
+      begin
+        if (adc_start_m)
+        begin
+          up_rstn <= 0;
           qpll_rst <= 1;
+          up_pll_rst_cnt <= 4'h8; 
+          up_rx_rst_cnt <= 4'h8;    
+          up_rx_user_ready_cnt <= 7'h00;  
           pend_start <= 1;
         end
         else
         begin
-          if (adc_stop)
+          up_rstn <= 1;
+          qpll_rst <= 0;
+
+          if (adc_stop_m)
           begin
             pend_start <= 0;
             adc_running <= 0;
@@ -429,31 +512,38 @@ generate
           begin
             if (pend_start)
             begin
-              qpll_rst <= 0;          
-              if (qpll_rst)
-                up_rx_rst <= 1;
-              else
+              if (up_rstn == 1)
               begin
                 if (qpll_locked)
+                  if (up_pll_rst_cnt[3] == 1'b1) 
+                    up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
+
+                if ((up_pll_rst_cnt[3] == 1'b1) || (rx_pll_locked != 4'b1111))
+                  up_rx_rst_cnt <= 4'h8; 
+                else 
+                  if (up_rx_rst_cnt[3] == 1'b1) 
+                    up_rx_rst_cnt <= up_rx_rst_cnt + 1'b1;
+
+                if (up_rx_rst_cnt[3] == 1'b1) 
+                  up_rx_user_ready_cnt <= 7'h00;   
+                else 
                 begin
-                  up_rx_rst <= 0;
-                  if (up_rx_rst_done)
+                  if (up_rx_user_ready_cnt[6] == 1'b0) 
+                    up_rx_user_ready_cnt <= up_rx_user_ready_cnt + 1'b1;
+                  else
                   begin
-                    if (rx_pll_locked == 4'b1111)
-                    begin
-                      adc_running <= 1;
-                      pend_start <= 0;
-                    end
+                    pend_start <= 0;
+                    adc_running <= 1;
                   end
                 end
               end
             end
           end
-        end          
+        end
       end
     end
 
-    always @ ( posedge clk ) 
+    always @ ( posedge rx_clk ) 
     begin
       if (adc_running)
       begin
