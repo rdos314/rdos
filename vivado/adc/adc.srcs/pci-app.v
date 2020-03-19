@@ -160,19 +160,12 @@ module pci_app (
   wire [29:0]      spi_rp_data;
   reg              spi_rp_ack;
 
-  reg              adc_send;
   reg [63:0]       adc_address;
   reg [1023:0]     adc_data;
+  reg [2:0]        adc_cnt;
 
-  reg [15:0]       adcA_0;
-  reg [15:0]       adcA_1;
-  reg [15:0]       adcA_2;
-  reg [15:0]       adcA_3;
-
-  reg [15:0]       adcB_0;
-  reg [15:0]       adcB_1;
-  reg [15:0]       adcB_2;
-  reg [15:0]       adcB_3;
+  reg              adc_send;
+  reg [1023:0]     adc_send_data;
   
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -532,31 +525,15 @@ ila_3 ila3_inst (
    .probe0(adc_fifo_empty),           // input wire [0:0]  probe1 
    .probe1(adc_fifo_full),            // input wire [0:0]  probe1 
    .probe2(adc_fifo_rd),              // input wire [0:0]  probe1 
-   .probe3(adcA_0),                   // input wire [15:0]  probe1 
-   .probe4(adcA_1),                   // input wire [15:0]  probe1 
-   .probe5(adcA_2),                   // input wire [15:0]  probe1 
-   .probe6(adcA_3),                   // input wire [15:0]  probe1 
-   .probe7(adcB_0),                   // input wire [15:0]  probe1 
-   .probe8(adcB_1),                   // input wire [15:0]  probe1 
-   .probe9(adcB_2),                   // input wire [15:0]  probe1 
-   .probe10(adcB_3)                   // input wire [15:0]  probe1 
-);
-
-ila_4 ila4_inst (
-   .clk ( user_clk ),                 // I
-   .probe0(spi_wr),                   // input wire [0:0]  probe1 
-   .probe1(spi_fifo_req_in),          // input wire [31:0]  probe1 
-   .probe2(spi_rp_empty),             // input wire [0:0]  probe1 
-   .probe3(spi_rp_data),              // input wire [29:0]  probe1 
-   .probe4(spi_rp_ack),               // input wire [0:0]  probe1 
-   .probe5(bar0_address),             // input wire [9:0]  probe1 
-   .probe6(bar0_rd),                  // input wire [0:0]  probe1 
-   .probe7(bar0_rp),                  // input wire [0:0]  probe1 
-   .probe8(bar0_rp_data),             // input wire [31:0]  probe1 
-   .probe9(bar0_wr),                  // input wire [0:0]  probe1 
-   .probe10(bar0_wr_be),              // input wire [3:0]  probe1 
-   .probe11(bar0_wr_data),            // input wire [31:0]  probe1 
-   .probe12(bar0_ack)                 // input wire [0:0]  probe1 
+   .probe3(adc_cnt),                  // input wire [2:0]  probe1 
+   .probe4(adc_data[31:0]),           // input wire [31:0]  probe1 
+   .probe5(adc_data[63:32]),          // input wire [31:0]  probe1 
+   .probe6(adc_data[95:64]),          // input wire [31:0]  probe1 
+   .probe7(adc_data[127:96]),         // input wire [31:0]  probe1 
+   .probe8(adc_data[159:128]),        // input wire [31:0]  probe1 
+   .probe9(adc_data[191:160]),        // input wire [31:0]  probe1 
+   .probe10(adc_send_data[31:0]),      // input wire [31:0]  probe1 
+   .probe11(adc_send_data[63:32])     // input wire [31:0]  probe1 
 );
 
 assign adc_fifo_rd = !adc_fifo_empty;
@@ -566,35 +543,47 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      if (!adc_fifo_empty)
+      if (user_reset)
+        adc_cnt <= 0;
+      else
       begin
-        adcA_0[13:0] <= adc_fifo_data[13:0];
-        adcA_0[14] <= adc_fifo_data[13];
-        adcA_0[15] <= adc_fifo_data[13];
-        adcB_0[13:0] <= adc_fifo_data[27:14];
-        adcB_0[14] <= adc_fifo_data[27];
-        adcB_0[15] <= adc_fifo_data[27];
+        if (!adc_fifo_empty)
+        begin
+          adc_data[13:0] <= adc_fifo_data[13:0];
+          adc_data[14] <= adc_fifo_data[13];
+          adc_data[15] <= adc_fifo_data[13];
+          adc_data[29:16] <= adc_fifo_data[27:14];
+          adc_data[30] <= adc_fifo_data[27];
+          adc_data[31] <= adc_fifo_data[27];
 
-        adcA_1[13:0] <= adc_fifo_data[41:28];
-        adcA_1[14] <= adc_fifo_data[41];
-        adcA_1[15] <= adc_fifo_data[41];
-        adcB_1[13:0] <= adc_fifo_data[55:42];
-        adcB_1[14] <= adc_fifo_data[55];
-        adcB_1[15] <= adc_fifo_data[55];
+          adc_data[45:32] <= adc_fifo_data[41:28];
+          adc_data[46] <= adc_fifo_data[41];
+          adc_data[47] <= adc_fifo_data[41];
+          adc_data[61:48] <= adc_fifo_data[55:42];
+          adc_data[62] <= adc_fifo_data[55];
+          adc_data[63] <= adc_fifo_data[55];
 
-        adcA_2[13:0] <= adc_fifo_data[69:56];
-        adcA_2[14] <= adc_fifo_data[69];
-        adcA_2[15] <= adc_fifo_data[69];
-        adcB_2[13:0] <= adc_fifo_data[83:70];
-        adcB_2[14] <= adc_fifo_data[83];
-        adcB_2[15] <= adc_fifo_data[83];
+          adc_data[77:64] <= adc_fifo_data[69:56];
+          adc_data[78] <= adc_fifo_data[69];
+          adc_data[79] <= adc_fifo_data[69];
+          adc_data[93:80] <= adc_fifo_data[83:70];
+          adc_data[94] <= adc_fifo_data[83];
+          adc_data[95] <= adc_fifo_data[83];
 
-        adcA_3[13:0] <= adc_fifo_data[97:84];
-        adcA_3[14] <= adc_fifo_data[97];
-        adcA_3[15] <= adc_fifo_data[97];
-        adcB_3[13:0] <= adc_fifo_data[111:98];
-        adcB_3[14] <= adc_fifo_data[111];
-        adcB_3[15] <= adc_fifo_data[111];
+          adc_data[109:96] <= adc_fifo_data[97:84];
+          adc_data[110] <= adc_fifo_data[97];
+          adc_data[111] <= adc_fifo_data[97];
+          adc_data[125:112] <= adc_fifo_data[111:98];
+          adc_data[126] <= adc_fifo_data[111];
+          adc_data[127] <= adc_fifo_data[111];
+
+          adc_data[1023:128] <= adc_data[895:0];
+
+          adc_cnt <= adc_cnt + 1;
+
+          if (adc_cnt == 7)
+            adc_send_data <= adc_data;
+        end
       end
     end
 

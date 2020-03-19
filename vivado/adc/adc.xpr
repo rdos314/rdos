@@ -37,13 +37,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="185"/>
-    <Option Name="WTModelSimExportSim" Val="185"/>
-    <Option Name="WTQuestaExportSim" Val="185"/>
-    <Option Name="WTIesExportSim" Val="184"/>
-    <Option Name="WTVcsExportSim" Val="184"/>
-    <Option Name="WTRivieraExportSim" Val="184"/>
-    <Option Name="WTActivehdlExportSim" Val="184"/>
+    <Option Name="WTXSimExportSim" Val="186"/>
+    <Option Name="WTModelSimExportSim" Val="186"/>
+    <Option Name="WTQuestaExportSim" Val="186"/>
+    <Option Name="WTIesExportSim" Val="185"/>
+    <Option Name="WTVcsExportSim" Val="185"/>
+    <Option Name="WTRivieraExportSim" Val="185"/>
+    <Option Name="WTActivehdlExportSim" Val="185"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -59,20 +59,6 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/ip/ila_4_1.xcix">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/ip/ila_4_1/ila_4.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/ip/fifo_be.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -341,6 +327,21 @@
       </File>
       <File Path="$PSRCDIR/adc.v">
         <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/ila_4_1.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/ila_4_1/ila_4.xci">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>

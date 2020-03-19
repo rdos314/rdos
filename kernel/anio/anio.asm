@@ -777,7 +777,7 @@ adc_thread:
     call SetAdcTestMode
 ;
     mov cl,2
-    mov al,6
+    mov al,0Fh
     call SetAdcTestMode
 ;
     mov bx,anio_adc_sel
