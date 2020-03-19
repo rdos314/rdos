@@ -77,6 +77,7 @@ module pci_app (
 
 // Wire Declarations
 
+  wire             req_stop;
   wire             adc_send;
   wire [63:0]      adc_address;
   wire [1023:0]    adc_data;
@@ -520,11 +521,13 @@ adc_app adc_app_inst (
     .clk(user_clk),
     .reset(user_reset),
 
-    .adc_fifo_empty(adc_fifo_empty),
-    .adc_fifo_data(adc_fifo_data),
-    .adc_send(adc_send),
-    .adc_address(adc_address),
-    .adc_data(adc_data),
+    .running(adc_running),
+    .req_stop(req_stop),
+    .fifo_avail(!adc_fifo_empty),
+    .fifo_data(adc_fifo_data),
+    .pci_send(adc_send),
+    .pci_address(adc_address),
+    .pci_data(adc_data),
 
     .address(bar1_address),
     .rd(bar1_rd),

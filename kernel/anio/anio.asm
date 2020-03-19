@@ -771,7 +771,6 @@ adc_thread:
     call SetupClk
     call SetupAdc
 ;
-    int 3
     mov cl,1
     mov al,7
     call SetAdcTestMode

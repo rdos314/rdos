@@ -2,11 +2,13 @@ module adc_app (
   clk,
   reset,
 
-  adc_fifo_empty,
-  adc_fifo_data,
-  adc_send,
-  adc_address,
-  adc_data,
+  running,
+  req_stop,
+  fifo_avail,
+  fifo_data,
+  pci_send,
+  pci_address,
+  pci_data,
 
   address,
   rd,
@@ -21,11 +23,13 @@ module adc_app (
   input wire             clk;
   input wire             reset;
 
-  input wire             adc_fifo_empty;
-  input wire [111:0]     adc_fifo_data;
-  output reg             adc_send;
-  output reg [63:0]      adc_address;
-  output reg [1023:0]    adc_data;
+  input wire             running;
+  output reg             req_stop;
+  input wire             fifo_avail;
+  input wire [111:0]     fifo_data;
+  output reg             pci_send;
+  output reg [63:0]      pci_address;
+  output reg [1023:0]    pci_data;
 
   input wire [16:0]      address;
   input wire             rd;
@@ -66,17 +70,18 @@ bram_adc bram_adc_inst (
 
 ila_3 ila3_inst (
    .clk ( clk ),                      // I
-   .probe0(adc_fifo_empty),           // input wire [0:0]  probe1 
+   .probe0(adc_fifo_avail),           // input wire [0:0]  probe1 
    .probe1(adc_cnt),                  // input wire [2:0]  probe1 
-   .probe2(adc_send),                 // input wire [0:0]  probe1 
+   .probe2(pci_send),                 // input wire [0:0]  probe1 
    .probe3(adc_curr[927:896]),        // input wire [31:0]  probe1 
    .probe4(adc_curr[961:928]),        // input wire [31:0]  probe1 
    .probe5(adc_curr[991:960]),        // input wire [31:0]  probe1 
    .probe6(adc_curr[1023:992]),       // input wire [31:0]  probe1 
-   .probe7(adc_data[31:0]),           // input wire [31:0]  probe1 
-   .probe8(adc_data[63:32]),          // input wire [31:0]  probe1 
-   .probe9(adc_data[95:64]),          // input wire [31:0]  probe1 
-   .probe10(adc_data[127:96])         // input wire [31:0]  probe1 
+   .probe7(pci_address[63:0]),         // input wire [63:0]  probe1 
+   .probe8(pci_data[31:0]),           // input wire [31:0]  probe1 
+   .probe9(pci_data[63:32]),          // input wire [31:0]  probe1 
+   .probe10(pci_data[95:64]),         // input wire [31:0]  probe1 
+   .probe11(pci_data[127:96])         // input wire [31:0]  probe1 
 );
 
 ila_4 ila4_inst (
@@ -198,41 +203,39 @@ begin : adc_app
     if (reset)
     begin
       adc_cnt <= 0;
-      adc_send <= 0;
+      pci_send <= 0;
     end
     else
     begin
-      if (adc_fifo_empty)
-        adc_send <= 0;
-      else
+      if (fifo_avail)
       begin
-        adc_curr[909:896] <= adc_fifo_data[13:0];
-        adc_curr[910] <= adc_fifo_data[13];
-        adc_curr[911] <= adc_fifo_data[13];
-        adc_curr[925:912] <= adc_fifo_data[27:14];
-        adc_curr[926] <= adc_fifo_data[27];
-        adc_curr[927] <= adc_fifo_data[27];
+        adc_curr[909:896] <= fifo_data[13:0];
+        adc_curr[910] <= fifo_data[13];
+        adc_curr[911] <= fifo_data[13];
+        adc_curr[925:912] <= fifo_data[27:14];
+        adc_curr[926] <= fifo_data[27];
+        adc_curr[927] <= fifo_data[27];
 
-        adc_curr[941:928] <= adc_fifo_data[41:28];
-        adc_curr[942] <= adc_fifo_data[41];
-        adc_curr[943] <= adc_fifo_data[41];
-        adc_curr[957:944] <= adc_fifo_data[55:42];
-        adc_curr[958] <= adc_fifo_data[55];
-        adc_curr[959] <= adc_fifo_data[55];
+        adc_curr[941:928] <= fifo_data[41:28];
+        adc_curr[942] <= fifo_data[41];
+        adc_curr[943] <= fifo_data[41];
+        adc_curr[957:944] <= fifo_data[55:42];
+        adc_curr[958] <= fifo_data[55];
+        adc_curr[959] <= fifo_data[55];
 
-        adc_curr[973:960] <= adc_fifo_data[69:56];
-        adc_curr[974] <= adc_fifo_data[69];
-        adc_curr[975] <= adc_fifo_data[69];
-        adc_curr[989:976] <= adc_fifo_data[83:70];
-        adc_curr[990] <= adc_fifo_data[83];
-        adc_curr[991] <= adc_fifo_data[83];
+        adc_curr[973:960] <= fifo_data[69:56];
+        adc_curr[974] <= fifo_data[69];
+        adc_curr[975] <= fifo_data[69];
+        adc_curr[989:976] <= fifo_data[83:70];
+        adc_curr[990] <= fifo_data[83];
+        adc_curr[991] <= fifo_data[83];
 
-        adc_curr[1005:992] <= adc_fifo_data[97:84];
-        adc_curr[1006] <= adc_fifo_data[97];
-        adc_curr[1007] <= adc_fifo_data[97];
-        adc_curr[1021:1008] <= adc_fifo_data[111:98];
-        adc_curr[1022] <= adc_fifo_data[111];
-        adc_curr[1023] <= adc_fifo_data[111];
+        adc_curr[1005:992] <= fifo_data[97:84];
+        adc_curr[1006] <= fifo_data[97];
+        adc_curr[1007] <= fifo_data[97];
+        adc_curr[1021:1008] <= fifo_data[111:98];
+        adc_curr[1022] <= fifo_data[111];
+        adc_curr[1023] <= fifo_data[111];
 
         adc_curr[895:0] <= adc_curr[1023:128];
 
@@ -240,11 +243,66 @@ begin : adc_app
 
         if (adc_cnt == 7)
         begin
-          adc_data <= adc_curr;
-          adc_send <= 1;
+          pci_data <= adc_curr;
+          pci_send <= 1;
         end
         else
-          adc_send <= 0;
+          pci_send <= 0;
+      end
+      else
+        pci_send <= 0;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      sample_index <= 0;
+      pci_address[63:0] <= 0;
+      next_address[63:0] <= 0;
+      req_stop <= 0;
+    end
+    else
+    begin
+      if (running)
+      begin
+        if (pci_send)
+        begin
+          if (pci_address[20:7] == 14'b11111111111111)
+          begin
+            if (next_address[40:21] == 0)
+              req_stop <= 1;
+            else
+            begin
+              pci_address <= next_address;
+              sample_index <= sample_index + 1;
+              next_address <= 0;
+            end
+          end
+          else
+            pci_address[20:7] <= pci_address[20:7] + 1;
+        end        
+        else
+        begin
+          if (adc_rd_adr == sample_index)
+          begin
+            next_address[20:0] <= 0;
+            next_address[40:21] <= adc_rd_data;
+            next_address[63:41] <= 0;
+          end
+        end
+      end
+      else
+      begin
+        req_stop <= 0;
+
+        if (adc_rd_adr == sample_index)
+        begin
+          pci_address[20:0] <= 0;
+          pci_address[40:21] <= adc_rd_data;
+          pci_address[63:41] <= 0;
+        end
       end
     end
   end
