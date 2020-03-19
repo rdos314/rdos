@@ -86,25 +86,16 @@ module daq2_app
  reg                      lmfc_clk_s;
  reg                      lmfc_clk_c;
 
- 
-ila_4 ila_4_inst (
-	.clk(up_clk), // input wire clk
+ reg [13:0]               adcA_0;
+ reg [13:0]               adcA_1;
+ reg [13:0]               adcA_2;
+ reg [13:0]               adcA_3;
 
-	.probe0(adc_start_m),               // input wire [0:0]  probe11
-	.probe1(adc_stop_m),                // input wire [0:0]  probe11
-	.probe2(adc_running),               // input wire [0:0]  probe11
-	.probe3(pend_start),                // input wire [0:0]  probe11
-	.probe4(qpll_rst),                  // input wire [0:0]  probe8 
-	.probe5(qpll_locked),               // input wire [0:0]  probe9 
-	.probe6(up_rstn),                   // input wire [0:0]  probe9 
-	.probe7(up_rx_rst),                 // input wire [0:0]  probe9 
-	.probe8(up_rx_user_ready),          // input wire [0:0]  probe9 
-	.probe9(up_rx_rst_done),            // input wire [0:0]  probe9 
-	.probe10(rx_pll_locked),            // input wire [3:0]  probe9 
-	.probe11(up_pll_rst_cnt),           // input wire [3:0]  probe9 
-	.probe12(up_rx_rst_cnt),            // input wire [3:0]  probe9 
-	.probe13(up_rx_user_ready_cnt)      // input wire [6:0]  probe9 
-);
+ reg [13:0]               adcB_0;
+ reg [13:0]               adcB_1;
+ reg [13:0]               adcB_2;
+ reg [13:0]               adcB_3;
+
 
 ila_6 ila_6_inst (
 	.clk(rx_clk), // input wire clk
@@ -117,14 +108,22 @@ ila_6 ila_6_inst (
 	.probe5(rx_data[63:32]),            // input wire [31:0]  probe9 
 	.probe6(rx_data[95:64]),            // input wire [31:0]  probe10 
 	.probe7(rx_data[127:96]),           // input wire [31:0]  probe11
-	.probe8(rx_phy_charisk[15:0]),      // input wire [15:0]  probe8 
-	.probe9(rx_phy_disperr[15:0]),      // input wire [15:0]  probe8 
-	.probe10(rx_phy_notintable[15:0]),  // input wire [15:0]  probe8 
-	.probe11(status_ctrl_state),        // input wire [1:0]  probe11
-	.probe12(status_lane_cgs_state),    // input wire [7:0]  probe11
-	.probe13(status_lane_ifs_ready),    // input wire [3:0]  probe11
-	.probe14(lmfc_clk),                 // input wire [0:0]  probe11
-	.probe15(rx_sysref_cnt)             // input wire [63:0]  probe11
+	.probe8(adcA_0),                    // input wire [13:0]  probe11
+	.probe9(adcA_1),                    // input wire [13:0]  probe11
+	.probe10(adcA_2),                   // input wire [13:0]  probe11
+	.probe11(adcA_3),                   // input wire [13:0]  probe11
+	.probe12(adcB_0),                    // input wire [13:0]  probe11
+	.probe13(adcB_1),                    // input wire [13:0]  probe11
+	.probe14(adcB_2),                   // input wire [13:0]  probe11
+	.probe15(adcB_3),                   // input wire [13:0]  probe11
+	.probe16(rx_phy_charisk[15:0]),      // input wire [15:0]  probe8 
+	.probe17(rx_phy_disperr[15:0]),      // input wire [15:0]  probe8 
+	.probe18(rx_phy_notintable[15:0]),  // input wire [15:0]  probe8 
+	.probe19(status_ctrl_state),        // input wire [1:0]  probe11
+	.probe20(status_lane_cgs_state),    // input wire [7:0]  probe11
+	.probe21(status_lane_ifs_ready),    // input wire [3:0]  probe11
+	.probe22(lmfc_clk),                 // input wire [0:0]  probe11
+	.probe23(rx_sysref_cnt)             // input wire [63:0]  probe11
 );
 
 
@@ -560,6 +559,21 @@ generate
         lmfc_clk_c <= 0;
         lmfc_clk_s <= 0;
         rx_sysref_cnt <= 0;
+      end
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (rx_valid)
+      begin
+        adcA_0 <= {rx_data[7:0], rx_data[39:34]};
+        adcA_1 <= {rx_data[15:8], rx_data[47:42]};
+        adcA_2 <= {rx_data[23:16], rx_data[55:50]};
+        adcA_3 <= {rx_data[31:24], rx_data[63:58]};
+        adcB_0 <= {rx_data[71:64], rx_data[103:98]};
+        adcB_1 <= {rx_data[79:72], rx_data[111:106]};
+        adcB_2 <= {rx_data[87:80], rx_data[119:114]};
+        adcB_3 <= {rx_data[95:88], rx_data[127:122]};
       end
     end
 

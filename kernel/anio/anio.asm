@@ -578,7 +578,7 @@ SetupAdc	proc near
     call WriteSpiByte
 ;
     mov dx,550h
-    mov al,7
+    mov al,0
     call WriteSpiByte
 ;
     mov dx,120h
@@ -599,6 +599,34 @@ SetupAdc	proc near
 ;
     ret
 SetupAdc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetAdcTestMode
+;
+;           DESCRIPTION:    Set test mode
+;
+;           PARAMETERS:     AL		Mode
+;                           CL          Channels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetAdcTestMode	Proc near
+    push ax
+    mov dx,8
+    mov al,cl
+    call WriteSpiByte
+    pop ax
+;
+    mov dx,550h
+    call WriteSpiByte
+;
+    mov dx,8
+    mov al,3
+    call WriteSpiByte
+    ret
+SetAdcTestMode	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -741,10 +769,16 @@ adc_thread:
     call InitControlBar
     call InitAdcBar
     call SetupClk
+    call SetupAdc
 ;
     int 3
-    call SetupAdc
-
+    mov cl,1
+    mov al,7
+    call SetAdcTestMode
+;
+    mov cl,2
+    mov al,6
+    call SetAdcTestMode
 ;
     mov bx,anio_adc_sel
     mov ds,bx
