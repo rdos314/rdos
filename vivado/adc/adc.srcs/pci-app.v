@@ -77,6 +77,10 @@ module pci_app (
 
 // Wire Declarations
 
+  wire             adc_send;
+  wire [63:0]      adc_address;
+  wire [1023:0]    adc_data;
+
   wire [16:0]      bar1_address;
   wire             bar1_rd;
   wire             bar1_rp;
@@ -159,13 +163,6 @@ module pci_app (
   wire             spi_rp_empty;
   wire [29:0]      spi_rp_data;
   reg              spi_rp_ack;
-
-  reg [63:0]       adc_address;
-  reg [1023:0]     adc_data;
-  reg [2:0]        adc_cnt;
-
-  reg              adc_send;
-  reg [1023:0]     adc_send_data;
   
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -519,84 +516,30 @@ spi_fifo_rq spi_fifo_rq_inst (
   .empty(spi_fifo_req_empty)    // output wire empty
 );
 
+adc_app adc_app_inst (
+    .clk(user_clk),
+    .reset(user_reset),
 
-ila_3 ila3_inst (
-   .clk ( user_clk ),                 // I
-   .probe0(adc_fifo_empty),           // input wire [0:0]  probe1 
-   .probe1(adc_fifo_full),            // input wire [0:0]  probe1 
-   .probe2(adc_fifo_rd),              // input wire [0:0]  probe1 
-   .probe3(adc_cnt),                  // input wire [2:0]  probe1 
-   .probe4(adc_send),                 // input wire [0:0]  probe1 
-   .probe5(adc_data[31:0]),           // input wire [31:0]  probe1 
-   .probe6(adc_data[63:32]),          // input wire [31:0]  probe1 
-   .probe7(adc_data[95:64]),          // input wire [31:0]  probe1 
-   .probe8(adc_data[127:96]),         // input wire [31:0]  probe1 
-   .probe9(adc_data[159:128]),        // input wire [31:0]  probe1 
-   .probe10(adc_data[191:160]),        // input wire [31:0]  probe1 
-   .probe11(adc_send_data[31:0]),      // input wire [31:0]  probe1 
-   .probe12(adc_send_data[63:32])     // input wire [31:0]  probe1 
+    .adc_fifo_empty(adc_fifo_empty),
+    .adc_fifo_data(adc_fifo_data),
+    .adc_send(adc_send),
+    .adc_address(adc_address),
+    .adc_data(adc_data),
+
+    .address(bar1_address),
+    .rd(bar1_rd),
+    .rp(bar1_rp),
+    .rp_data(bar1_rp_data),
+    .wr(bar1_wr),
+    .wr_be(bar1_wr_be),
+    .wr_data(bar1_wr_data),
+    .ack(bar1_ack)
 );
 
 assign adc_fifo_rd = !adc_fifo_empty;
 
 generate
   begin : pci_app
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        adc_cnt <= 0;
-        adc_send <= 0;
-      end
-      else
-      begin
-        if (adc_fifo_empty)
-          adc_send <= 0;
-        else
-        begin
-          adc_data[909:896] <= adc_fifo_data[13:0];
-          adc_data[910] <= adc_fifo_data[13];
-          adc_data[911] <= adc_fifo_data[13];
-          adc_data[925:912] <= adc_fifo_data[27:14];
-          adc_data[926] <= adc_fifo_data[27];
-          adc_data[927] <= adc_fifo_data[27];
-
-          adc_data[941:928] <= adc_fifo_data[41:28];
-          adc_data[942] <= adc_fifo_data[41];
-          adc_data[943] <= adc_fifo_data[41];
-          adc_data[957:944] <= adc_fifo_data[55:42];
-          adc_data[958] <= adc_fifo_data[55];
-          adc_data[959] <= adc_fifo_data[55];
-
-          adc_data[973:960] <= adc_fifo_data[69:56];
-          adc_data[974] <= adc_fifo_data[69];
-          adc_data[975] <= adc_fifo_data[69];
-          adc_data[989:976] <= adc_fifo_data[83:70];
-          adc_data[990] <= adc_fifo_data[83];
-          adc_data[991] <= adc_fifo_data[83];
-
-          adc_data[1005:992] <= adc_fifo_data[97:84];
-          adc_data[1006] <= adc_fifo_data[97];
-          adc_data[1007] <= adc_fifo_data[97];
-          adc_data[1021:1008] <= adc_fifo_data[111:98];
-          adc_data[1022] <= adc_fifo_data[111];
-          adc_data[1023] <= adc_fifo_data[111];
-
-          adc_data[895:0] <= adc_data[1023:128];
-
-          adc_cnt <= adc_cnt + 1;
-
-          if (adc_cnt == 7)
-          begin
-            adc_send_data <= adc_data;
-            adc_send <= 1;
-          end
-          else
-            adc_send <= 0;
-        end
-      end
-    end
 
     always @ ( posedge user_clk ) 
     begin
@@ -714,7 +657,6 @@ generate
         adc_start <= 0;
         adc_stop <= 0;
         spi_rp_ack <= 0;
-        adc_send <= 0;
       end
       else
       begin
