@@ -68,7 +68,7 @@ module pci_app (
   input  wire          adc_valid;
   input wire [63:0]    adc_sysref_cnt;
 
-  output  reg          adc_fifo_rd;
+  output wire          adc_fifo_rd;
   input wire [111:0]   adc_fifo_data;
   input wire           adc_fifo_full;
   input wire           adc_fifo_empty;
@@ -559,14 +559,14 @@ ila_4 ila4_inst (
    .probe12(bar0_ack)                 // input wire [0:0]  probe1 
 );
 
+assign adc_fifo_rd = !adc_fifo_empty;
+
 generate
   begin : pci_app
 
     always @ ( posedge user_clk ) 
     begin
-      if (adc_fifo_empty)
-        adc_fifo_rd <= 0;
-      else
+      if (!adc_fifo_empty)
       begin
         adcA_0[13:0] <= adc_fifo_data[13:0];
         adcA_0[14] <= adc_fifo_data[13];
@@ -595,8 +595,6 @@ generate
         adcB_3[13:0] <= adc_fifo_data[111:98];
         adcB_3[14] <= adc_fifo_data[111];
         adcB_3[15] <= adc_fifo_data[111];
-
-        adc_fifo_rd <= 1;        
       end
     end
 

@@ -101,35 +101,7 @@ module daq2_app
  reg [13:0]               adcB_2;
  reg [13:0]               adcB_3;
 
-
-ila_6 ila_6_inst (
-	.clk(rx_clk), // input wire clk
-
-	.probe0(rx_sync),                   // input wire [0:0]  probe11
-	.probe1(rx_valid),                  // input wire [0:0]  probe11
-	.probe2(rx_eof),                    // input wire [3:0]  probe11
-	.probe3(rx_sof),                     // input wire [3:0]  probe11
-	.probe4(rx_data[31:0]),             // input wire [31:0]  probe8 
-	.probe5(rx_data[63:32]),            // input wire [31:0]  probe9 
-	.probe6(rx_data[95:64]),            // input wire [31:0]  probe10 
-	.probe7(rx_data[127:96]),           // input wire [31:0]  probe11
-	.probe8(adcA_0),                    // input wire [13:0]  probe11
-	.probe9(adcA_1),                    // input wire [13:0]  probe11
-	.probe10(adcA_2),                   // input wire [13:0]  probe11
-	.probe11(adcA_3),                   // input wire [13:0]  probe11
-	.probe12(adcB_0),                    // input wire [13:0]  probe11
-	.probe13(adcB_1),                    // input wire [13:0]  probe11
-	.probe14(adcB_2),                   // input wire [13:0]  probe11
-	.probe15(adcB_3),                   // input wire [13:0]  probe11
-	.probe16(rx_phy_charisk[15:0]),      // input wire [15:0]  probe8 
-	.probe17(rx_phy_disperr[15:0]),      // input wire [15:0]  probe8 
-	.probe18(rx_phy_notintable[15:0]),  // input wire [15:0]  probe8 
-	.probe19(status_ctrl_state),        // input wire [1:0]  probe11
-	.probe20(status_lane_cgs_state),    // input wire [7:0]  probe11
-	.probe21(status_lane_ifs_ready),    // input wire [3:0]  probe11
-	.probe22(lmfc_clk),                 // input wire [0:0]  probe11
-	.probe23(rx_sysref_cnt)             // input wire [63:0]  probe11
-);
+ reg                      adc_wr;
 
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
@@ -439,7 +411,7 @@ adc_fifo adc_fifo_inst (
   .wr_clk(rx_clk),       // input wire wr_clk
   .rd_clk(clk),          // input wire rd_clk
   .din({adcB_3, adcA_3, adcB_2, adcA_2, adcB_1, adcA_1, adcB_0, adcA_0}),        // input wire [111 : 0] din
-  .wr_en(rx_valid),      // input wire wr_en
+  .wr_en(adc_wr),        // input wire wr_en
   .rd_en(adc_fifo_rd),   // input wire rd_en
   .dout(adc_fifo_data),  // output wire [111 : 0] dout
   .full(adc_fifo_full),  // output wire full
@@ -591,7 +563,10 @@ generate
         adcB_1 <= {rx_data[79:72], rx_data[111:106]};
         adcB_2 <= {rx_data[87:80], rx_data[119:114]};
         adcB_3 <= {rx_data[95:88], rx_data[127:122]};
+        adc_wr <= 1;
       end
+      else
+        adc_wr <= 0;
     end
 
   end
