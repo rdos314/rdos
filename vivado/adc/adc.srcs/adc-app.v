@@ -70,18 +70,19 @@ bram_adc bram_adc_inst (
 
 ila_3 ila3_inst (
    .clk ( clk ),                      // I
-   .probe0(adc_fifo_avail),           // input wire [0:0]  probe1 
+   .probe0(fifo_avail),               // input wire [0:0]  probe1 
    .probe1(adc_cnt),                  // input wire [2:0]  probe1 
    .probe2(pci_send),                 // input wire [0:0]  probe1 
-   .probe3(adc_curr[927:896]),        // input wire [31:0]  probe1 
-   .probe4(adc_curr[961:928]),        // input wire [31:0]  probe1 
-   .probe5(adc_curr[991:960]),        // input wire [31:0]  probe1 
-   .probe6(adc_curr[1023:992]),       // input wire [31:0]  probe1 
-   .probe7(pci_address[63:0]),         // input wire [63:0]  probe1 
-   .probe8(pci_data[31:0]),           // input wire [31:0]  probe1 
-   .probe9(pci_data[63:32]),          // input wire [31:0]  probe1 
-   .probe10(pci_data[95:64]),         // input wire [31:0]  probe1 
-   .probe11(pci_data[127:96])         // input wire [31:0]  probe1 
+   .probe3(req_stop),                 // input wire [0:0]  probe1 
+   .probe4(adc_curr[927:896]),        // input wire [31:0]  probe1 
+   .probe5(adc_curr[961:928]),        // input wire [31:0]  probe1 
+   .probe6(adc_curr[991:960]),        // input wire [31:0]  probe1 
+   .probe7(adc_curr[1023:992]),       // input wire [31:0]  probe1 
+   .probe8(pci_address[63:0]),        // input wire [63:0]  probe1 
+   .probe9(pci_data[31:0]),           // input wire [31:0]  probe1 
+   .probe10(pci_data[63:32]),         // input wire [31:0]  probe1 
+   .probe11(pci_data[95:64]),         // input wire [31:0]  probe1 
+   .probe12(pci_data[127:96])         // input wire [31:0]  probe1 
 );
 
 ila_4 ila4_inst (

@@ -696,7 +696,10 @@ generate
                 if (bar_control[7] != bar0_wr_data[7])
                 begin
                   if (bar0_wr_data[7])
-                    adc_start <= 1;
+                  begin
+                    if (adc_address != 0)
+                      adc_start <= 1;
+                  end 
                   else
                     adc_stop <= 1;
                 end      
@@ -793,7 +796,12 @@ generate
         else
         begin
           adc_start <= 0;
-          adc_stop <= 0;
+
+          if (req_stop)
+            adc_stop <= 1;
+          else
+            adc_stop <= 0;
+
           bar0_ack <= 0;
 
           if (spi_rp_empty)
