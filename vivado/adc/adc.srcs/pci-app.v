@@ -33,7 +33,11 @@ module pci_app (
     adc_fifo_rd,
     adc_fifo_data,
     adc_fifo_full,
-    adc_fifo_empty
+    adc_fifo_empty,
+
+    adc_spi_fifo_out,
+    adc_spi_fifo_empty,
+    adc_spi_fifo_ack
 );
 
   output  [7:0]        pci_exp_txp;
@@ -73,6 +77,9 @@ module pci_app (
   input wire           adc_fifo_full;
   input wire           adc_fifo_empty;
 
+  input wire [19:0]    adc_spi_fifo_out;
+  input wire           adc_spi_fifo_empty;
+  output wire          adc_spi_fifo_ack;
 
 
 // Wire Declarations
@@ -493,6 +500,11 @@ adc_mem adc_mem_inst (
     .spi_rq_empty (spi_fifo_req_empty),
     .spi_rq_data (spi_fifo_req_out[15:0]),
     .spi_rq_ack (spi_rq_ack),
+
+    .adc_rq_adr (adc_spi_fifo_out[19:8]),
+    .adc_rq_empty (adc_spi_fifo_empty),
+    .adc_rq_data (adc_spi_fifo_out[7:0]),
+    .adc_rq_ack (adc_spi_fifo_ack),
 
     .spi_rp_empty (spi_rp_empty),
     .spi_rp_data (spi_rp_data),

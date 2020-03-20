@@ -13,6 +13,11 @@ module daq2_spi (
   input      [15:0]       spi_rq_data,
   output reg              spi_rq_ack,
 
+  input      [11:0]       adc_rq_adr,
+  input                   adc_rq_empty,
+  input      [7:0]        adc_rq_data,
+  output reg              adc_rq_ack,
+
   output wire             spi_rp_empty,
   output wire [29:0]      spi_rp_data,
   input                   spi_rp_ack,
@@ -40,6 +45,7 @@ module daq2_spi (
   
   reg [29:0]              spi_fifo_data;
   reg                     spi_fifo_wr;
+  reg                     use_adc;
 
 spi_fifo_rp spi_fifo_rp_inst (
   .rst(reset),                 // input wire rst
@@ -87,13 +93,14 @@ ila_5 ila5_inst (
 
   always @(posedge spi_sys_clk) 
   begin
-    if (spi_rq_empty)
+    if (spi_rq_empty && adc_rq_empty)
     begin
       spi_cs_clk <= 1;
       spi_cs_adc <= 1;
       spi_cs_dac <= 1;
 
       spi_rq_ack <= 0;
+      adc_rq_ack <= 0;
       spi_fifo_wr <= 0;
 
       spi_size <= 16;
@@ -108,8 +115,9 @@ ila_5 ila5_inst (
     begin
       if (spi_delay)
       begin
-        spi_rq_ack <= 0;
         spi_fifo_wr <= 0;
+        adc_rq_ack <= 0;
+        spi_rq_ack <= 0;
         
         if (spi_delay == 1)
         begin
@@ -175,7 +183,11 @@ ila_5 ila5_inst (
               spi_clk <= 0;
               spi_started <= 0;
               spi_out <= 0;
-              spi_rq_ack <= 1;
+
+              if (use_adc)
+                adc_rq_ack <= 1;
+              else
+                spi_rq_ack <= 1;
             end
             else
             begin
@@ -186,64 +198,85 @@ ila_5 ila5_inst (
         end
         else
         begin
-          case (spi_rq_cs)
-            0:
-            begin
-              spi_cs_clk <= 0;
-              spi_cs_adc <= 1;
-              spi_cs_dac <= 1;
-            end
-
-            1:
-            begin
-              spi_cs_clk <= 1;
-              spi_cs_adc <= 0;
-              spi_cs_dac <= 1;
-            end
-
-            2:
-            begin
-              spi_cs_clk <= 1;
-              spi_cs_adc <= 1;
-              spi_cs_dac <= 0;
-            end
-          endcase
-
-          spi_dir <= 1;
-          spi_z <= 0;
+          if (spi_rq_empty)
+          begin
+            spi_cs_clk <= 1;
+            spi_cs_adc <= 0;
+            spi_cs_dac <= 1;
+            
+            spi_dir <= 1;
+            spi_z <= 0;
+            spi_rd_wr_n <= 0;
           
-          spi_cmd[12] <= 0;
+            spi_cmd[15:12] <= 0;
+            spi_cmd[11:0] <= adc_rq_adr;
 
-          if (spi_rq_cs == 0)
-            spi_cmd[13] <= spi_rq_word;
-          else
-            spi_cmd[13] <= 0;
-
-          spi_cmd[14] <= 0;
-          spi_cmd[15] <= spi_rq_rd;
-
-          spi_rd_wr_n <= spi_rq_rd;
-
-          if (spi_rq_word)
-            spi_cmd[11:0] <= spi_rq_adr + 1;
-          else
-            spi_cmd[11:0] <= spi_rq_adr;
-
-          spi_fifo_data[29:28] <= spi_rq_cs;
-          spi_fifo_data[27:16] <= spi_rq_adr;
-
-          if (spi_rq_word)
-          begin
-            spi_size <= 32;
-            spi_out_data[15:0] <= spi_rq_data;
-          end
-          else
-          begin
             spi_size <= 24;
-            spi_out_data[15:8] <= spi_rq_data[7:0];
-            spi_fifo_data[15:8] <= 0;
-          end
+            spi_out_data[15:8] <= adc_rq_data;
 
+            use_adc <= 1;
+          end
+          else
+          begin
+            case (spi_rq_cs)
+              0:
+              begin
+                spi_cs_clk <= 0;
+                spi_cs_adc <= 1;
+                spi_cs_dac <= 1;
+              end
+
+              1:
+              begin
+                spi_cs_clk <= 1;
+                spi_cs_adc <= 0;
+                spi_cs_dac <= 1;
+              end
+
+              2:
+              begin
+                spi_cs_clk <= 1;
+                spi_cs_adc <= 1;
+              spi_cs_dac <= 0;
+              end
+            endcase
+            
+            spi_dir <= 1;
+            spi_z <= 0;
+          
+            spi_cmd[12] <= 0;
+
+            if (spi_rq_cs == 0)
+              spi_cmd[13] <= spi_rq_word;
+            else
+              spi_cmd[13] <= 0;
+
+            spi_cmd[14] <= 0;
+            spi_cmd[15] <= spi_rq_rd;
+
+            spi_rd_wr_n <= spi_rq_rd;
+  
+            if (spi_rq_word)
+              spi_cmd[11:0] <= spi_rq_adr + 1;
+            else
+              spi_cmd[11:0] <= spi_rq_adr;
+
+            spi_fifo_data[29:28] <= spi_rq_cs;
+            spi_fifo_data[27:16] <= spi_rq_adr;
+
+            if (spi_rq_word)
+            begin
+              spi_size <= 32;
+              spi_out_data[15:0] <= spi_rq_data;
+            end
+            else
+            begin
+              spi_size <= 24;
+              spi_out_data[15:8] <= spi_rq_data[7:0];
+              spi_fifo_data[15:8] <= 0;
+            end
+            use_adc <= 0;
+          end
           spi_count <= 0;
           spi_started <= 1;
         end

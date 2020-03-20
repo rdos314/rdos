@@ -16,6 +16,7 @@ module daq2_app
   output      [ 3:0]      tx_data_n,
 
   input                   up_clk,
+  input                   spi_sys_clk,
 
   input                   trig,
 
@@ -39,7 +40,11 @@ module daq2_app
   input                   adc_fifo_rd,
   output [111:0]          adc_fifo_data,
   output                  adc_fifo_full,
-  output                  adc_fifo_empty
+  output                  adc_fifo_empty,
+
+  output [19:0]           adc_spi_fifo_out,
+  output                  adc_spi_fifo_empty,
+  input                   adc_spi_fifo_ack
 );
 
  wire                     rx_clk;
@@ -418,6 +423,18 @@ adc_fifo adc_fifo_inst (
   .empty(adc_fifo_empty) // output wire empty
 );
 
+adc_spi_fifo adc_spi_fifo_inst (
+  .rst(reset),                  // input wire rst
+  .wr_clk(rx_clk),              // input wire wr_clk
+  .rd_clk(spi_sys_clk),         // input wire rd_clk
+  .din(0),                      // input wire [19 : 0] din
+  .wr_en(0),                    // input wire wr_en
+  .rd_en(adc_spi_fifo_ack),     // input wire rd_en
+  .dout(adc_spi_fifo_out),      // output wire [19 : 0] dout
+  .full(),                      // output wire full
+  .empty(adc_spi_fifo_empty)    // output wire empty
+);
+
   assign adc_pd = adc_running ? 1'b0 : 1'b1;
   assign up_rx_rst = up_rx_rst_cnt[3];
   assign up_rx_user_ready = up_rx_user_ready_cnt[6];
@@ -488,16 +505,18 @@ generate
         end
         else
         begin
-          up_rstn <= 1;
           qpll_rst <= 0;
 
           if (adc_stop_m)
           begin
             pend_start <= 0;
             adc_running <= 0;
+            up_rstn <= 0;
           end
           else
           begin
+            up_rstn <= 1;
+
             if (pend_start)
             begin
               if (up_rstn == 1)
