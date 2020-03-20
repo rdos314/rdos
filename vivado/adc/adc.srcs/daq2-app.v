@@ -107,6 +107,9 @@ module daq2_app
 
  reg                      adc_wr;
 
+ reg [11:0]               spi_cmd;
+ reg [7:0]                spi_data;
+ reg                      spi_wr;
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
@@ -425,12 +428,29 @@ adc_fifo adc_fifo_inst (
 adc_spi_fifo adc_spi_fifo_inst (
   .clk(up_clk),                 // input wire clk
   .rst(reset),                  // input wire rst
-  .din(0),                      // input wire [19 : 0] din
-  .wr_en(0),                    // input wire wr_en
+  .din({spi_cmd, spi_data}),    // input wire [19 : 0] din
+  .wr_en(spi_wr),               // input wire wr_en
   .rd_en(adc_spi_fifo_ack),     // input wire rd_en
   .dout(adc_spi_fifo_out),      // output wire [19 : 0] dout
   .full(),                      // output wire full
   .empty(adc_spi_fifo_empty)    // output wire empty
+);
+
+ila_6 ila_6_inst (
+	.clk(up_clk), // input wire clk
+
+	.probe0(adc_running),               // input wire [0:0]  probe11
+	.probe1(pend_start),                // input wire [0:0]  probe11
+	.probe2(up_rstn),                   // input wire [0:0]  probe11
+	.probe3(qpll_rst),                   // input wire [0:0]  probe11
+	.probe4(spi_wr),                    // input wire [0:0]  probe8 
+	.probe5(up_pll_rst_cnt),            // input wire [3:0]  probe9 
+	.probe6(up_rx_rst_cnt),             // input wire [3:0]  probe10 
+	.probe7(up_rx_user_ready_cnt),      // input wire [6:0]  probe11
+	.probe8(adc_spi_fifo_empty),        // input wire [0:0]  probe8 
+	.probe9(qpll_locked),               // input wire [0:0]  probe8 
+	.probe10(rx_pll_locked),            // input wire [3:0]  probe8 
+	.probe11(up_rx_rst_done)            // input wire [3:0]  probe11
 );
 
   assign adc_pd = adc_running ? 1'b0 : 1'b1;
@@ -489,6 +509,7 @@ generate
         pend_start <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
+        spi_wr <= 0;
       end
       else
       begin
@@ -517,34 +538,46 @@ generate
 
             if (pend_start)
             begin
-              adc_running <= 1;
-
-              if (up_rstn == 1)
+              if (!adc_running)
               begin
-                if (qpll_locked)
-                  if (up_pll_rst_cnt[3] == 1'b1) 
-                    up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
+                spi_cmd <= 12'h550;
+                spi_data <= 8'h07;
+                adc_running <= 1;
+                spi_wr <= 1;
+              end
+              else
+              begin
+                spi_wr <= 0;
 
-                if ((up_pll_rst_cnt[3] == 1'b1) || (rx_pll_locked != 4'b1111))
-                  up_rx_rst_cnt <= 4'h8; 
-                else 
-                  if (up_rx_rst_cnt[3] == 1'b1) 
-                    up_rx_rst_cnt <= up_rx_rst_cnt + 1'b1;
-
-                if (up_rx_rst_cnt[3] == 1'b1) 
-                  up_rx_user_ready_cnt <= 7'h00;   
-                else 
+                if (adc_spi_fifo_empty)
                 begin
-                  if (up_rx_user_ready_cnt[6] == 1'b0) 
-                    up_rx_user_ready_cnt <= up_rx_user_ready_cnt + 1'b1;
-                  else
+                  if (qpll_locked)
+                    if (up_pll_rst_cnt[3] == 1'b1) 
+                      up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
+
+                  if ((up_pll_rst_cnt[3] == 1'b1) || (rx_pll_locked != 4'b1111))
+                    up_rx_rst_cnt <= 4'h8; 
+                  else 
+                    if (up_rx_rst_cnt[3] == 1'b1) 
+                      up_rx_rst_cnt <= up_rx_rst_cnt + 1'b1;
+
+                  if (up_rx_rst_cnt[3] == 1'b1) 
+                    up_rx_user_ready_cnt <= 7'h00;   
+                  else 
                   begin
-                    if (up_rx_rst_done == 4'b1111)
-                      pend_start <= 0;
+                    if (up_rx_user_ready_cnt[6] == 1'b0) 
+                      up_rx_user_ready_cnt <= up_rx_user_ready_cnt + 1'b1;
+                    else
+                    begin
+                      if (up_rx_rst_done == 4'b1111)
+                        pend_start <= 0;
+                    end
                   end
                 end
               end
             end
+            else
+              spi_wr <= 0;
           end
         end
       end

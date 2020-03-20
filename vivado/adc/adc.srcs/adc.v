@@ -244,7 +244,7 @@ daq2_app daq2_app_inst (
   .adc_fifo_full(adc_fifo_full),
   .adc_fifo_empty(adc_fifo_empty),
     
-  .adc_spi_fifo_out(adc_spi_fifo_data),
+  .adc_spi_fifo_out(adc_spi_fifo_out),
   .adc_spi_fifo_empty(adc_spi_fifo_empty),
   .adc_spi_fifo_ack(adc_spi_fifo_ack)
 );
@@ -286,7 +286,7 @@ pci_app pci_app_inst (
     .adc_fifo_full(adc_fifo_full),
     .adc_fifo_empty(adc_fifo_empty),
     
-    .adc_spi_fifo_out(adc_spi_fifo_data),
+    .adc_spi_fifo_out(adc_spi_fifo_out),
     .adc_spi_fifo_empty(adc_spi_fifo_empty),
     .adc_spi_fifo_ack(adc_spi_fifo_ack)
 );
