@@ -519,6 +519,8 @@ generate
 
             if (pend_start)
             begin
+              adc_running <= 1;
+
               if (up_rstn == 1)
               begin
                 if (qpll_locked)
@@ -539,8 +541,8 @@ generate
                     up_rx_user_ready_cnt <= up_rx_user_ready_cnt + 1'b1;
                   else
                   begin
-                    pend_start <= 0;
-                    adc_running <= 1;
+                    if (up_rx_rst_done == 4'b1111)
+                      pend_start <= 0;
                   end
                 end
               end
