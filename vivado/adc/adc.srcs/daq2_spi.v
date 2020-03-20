@@ -3,7 +3,7 @@
 module daq2_spi (
   input                   clk,
   input                   reset,
-  input                   spi_sys_clk,
+  input                   up_clk,
 
   input                   spi_rq_rd,
   input      [1:0]        spi_rq_cs,
@@ -49,7 +49,7 @@ module daq2_spi (
 
 spi_fifo_rp spi_fifo_rp_inst (
   .rst(reset),                 // input wire rst
-  .wr_clk(spi_sys_clk),        // input wire wr_clk
+  .wr_clk(up_clk),             // input wire wr_clk
   .rd_clk(clk),                // input wire rd_clk
   .din(spi_fifo_data),         // input wire [29 : 0] din
   .wr_en(spi_fifo_wr),         // input wire wr_en
@@ -60,7 +60,7 @@ spi_fifo_rp spi_fifo_rp_inst (
 );
 
 ila_5 ila5_inst (
-   .clk ( spi_sys_clk ),                 // I
+   .clk ( up_clk ),                      // I
    .probe0(spi_rq_rd),                   // input wire [0:0]  probe1 
    .probe1(spi_rq_cs),                   // input wire [1:0]  probe1 
    .probe2(spi_rq_word),                 // input wire [0:0]  probe1 
@@ -91,7 +91,7 @@ ila_5 ila5_inst (
    .probe27(spi_fifo_wr)                 // input wire [0:0]  probe1 
 );
 
-  always @(posedge spi_sys_clk) 
+  always @(posedge up_clk) 
   begin
     if (spi_rq_empty && adc_rq_empty)
     begin

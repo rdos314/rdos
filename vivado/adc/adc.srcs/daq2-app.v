@@ -16,7 +16,6 @@ module daq2_app
   output      [ 3:0]      tx_data_n,
 
   input                   up_clk,
-  input                   spi_sys_clk,
 
   input                   trig,
 
@@ -424,9 +423,8 @@ adc_fifo adc_fifo_inst (
 );
 
 adc_spi_fifo adc_spi_fifo_inst (
+  .clk(up_clk),                 // input wire clk
   .rst(reset),                  // input wire rst
-  .wr_clk(rx_clk),              // input wire wr_clk
-  .rd_clk(spi_sys_clk),         // input wire rd_clk
   .din(0),                      // input wire [19 : 0] din
   .wr_en(0),                    // input wire wr_en
   .rd_en(adc_spi_fifo_ack),     // input wire rd_en
