@@ -38,11 +38,9 @@ module daq2_app
   input [7:0]             adc_test_mode,
   output reg [31:0]       adc_sync_fail_cnt,
   output reg [31:0]       adc_sync_ok_cnt,
-  
-  input                   adc_fifo_rd,
-  output [111:0]          adc_fifo_data,
-  output                  adc_fifo_full,
-  output                  adc_fifo_empty,
+
+  output reg              adc_wr,
+  output reg [1023:0]     adc_data,
 
   output reg              adc_spi_read,
   output reg              adc_spi_write,
@@ -115,8 +113,8 @@ module daq2_app
 
  reg [2:0]                adc_cnt;
  reg [1023:0]             adc_curr;
- reg [1023:0]             adc_data;
- reg                      adc_wr;
+ reg [1023:0]             adc_temp;
+ reg                      curr_pos;
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
@@ -420,18 +418,6 @@ system_tx_0 system_tx_0_inst
         .tx_ready(1),
         .tx_valid(1));
 
-adc_fifo adc_fifo_inst (
-  .rst(reset),           // input wire rst
-  .wr_clk(rx_clk),       // input wire wr_clk
-  .rd_clk(clk),          // input wire rd_clk
-  .din({adcB_3, adcA_3, adcB_2, adcA_2, adcB_1, adcA_1, adcB_0, adcA_0}),        // input wire [111 : 0] din
-  .wr_en(0),        // input wire wr_en
-  .rd_en(adc_fifo_rd),   // input wire rd_en
-  .dout(adc_fifo_data),  // output wire [111 : 0] dout
-  .full(adc_fifo_full),  // output wire full
-  .empty(adc_fifo_empty) // output wire empty
-);
-
 ila_6 ila_6_inst (
 	.clk(up_clk), // input wire clk
 
@@ -453,19 +439,6 @@ ila_6 ila_6_inst (
 	.probe15(rx_pll_locked),             // input wire [3:0]  probe8 
 	.probe16(up_rx_rst_done),            // input wire [3:0]  probe11
 	.probe17(spi_test_done)              // input wire [0:0]  probe11
-);
-
-ila_3 ila3_inst (
-   .clk ( rx_clk ),                   // I
-   .probe0(adc_cnt),                  // input wire [2:0]  probe1 
-   .probe1(adc_curr[31:0]),           // input wire [31:0]  probe1 
-   .probe2(adc_curr[63:32]),          // input wire [31:0]  probe1 
-   .probe3(adc_curr[95:64]),          // input wire [31:0]  probe1 
-   .probe4(adc_curr[127:96]),         // input wire [31:0]  probe1 
-   .probe5(adc_data[31:0]),           // input wire [31:0]  probe1 
-   .probe6(adc_data[63:32]),          // input wire [31:0]  probe1 
-   .probe7(adc_data[95:64]),          // input wire [31:0]  probe1 
-   .probe8(adc_data[127:96])          // input wire [31:0]  probe1 
 );
 
 function check_valid;
@@ -725,7 +698,37 @@ generate
     always @ ( posedge rx_clk ) 
     begin
       if (rx_valid && (adc_cnt == 7))
-        adc_data <= adc_curr;
+        adc_temp <= adc_curr;
+    end
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+      begin
+        curr_pos <= 0;
+        adc_wr <= 0;
+      end
+      else
+      begin
+        if (rx_valid)
+        begin
+          if (curr_pos != adc_cnt[2])
+          begin
+            curr_pos <= adc_cnt[2];
+            if (curr_pos)
+            begin
+              adc_data <= adc_temp;
+              adc_wr <= 1;
+            end
+            else
+              adc_wr <= 0;
+          end
+          else
+            adc_wr <= 0;
+        end
+        else
+          adc_wr <= 0;
+      end
     end
 
   end

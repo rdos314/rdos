@@ -34,10 +34,8 @@ module pci_app (
     adc_sync_fail_cnt,
     adc_sync_ok_cnt,
 
-    adc_fifo_rd,
-    adc_fifo_data,
-    adc_fifo_full,
-    adc_fifo_empty,
+    adc_wr,
+    adc_data,
 
     adc_spi_read,
     adc_spi_write,
@@ -83,10 +81,8 @@ module pci_app (
   input wire [31:0]    adc_sync_fail_cnt;
   input wire [31:0]    adc_sync_ok_cnt;
 
-  output wire          adc_fifo_rd;
-  input wire [111:0]   adc_fifo_data;
-  input wire           adc_fifo_full;
-  input wire           adc_fifo_empty;
+  input wire           adc_wr;
+  input wire [1023:0]  adc_data;
 
   input                adc_spi_read;
   input                adc_spi_write;
@@ -100,12 +96,7 @@ module pci_app (
 // Wire Declarations
 
   wire             req_stop;
-  wire             adc_send;
   wire [63:0]      adc_address;
-  wire [1023:0]    adc_data;
-
-  wire [31:0]      sync_fail_cnt;
-  wire [31:0]      sync_ok_cnt;
 
   wire [16:0]      bar1_address;
   wire             bar1_rd;
@@ -474,7 +465,7 @@ adc_mem adc_mem_inst (
     .pci_tx_wr( pci_tx_wr),                     // O
     .pci_tx_full( pci_tx_full),                 // I
 
-    .adc_send( 0),                       // I
+    .adc_send( 0),                              // I
     .adc_address( adc_address),                 // I
     .adc_data( adc_data),                       // I
 
@@ -557,14 +548,8 @@ adc_app adc_app_inst (
     .running(adc_running),
     .probing(1),
     .req_stop(req_stop),
-    .fifo_avail(!adc_fifo_empty),
-    .fifo_data(adc_fifo_data),
-    .pci_send(adc_send),
-    .pci_address(adc_address),
-    .pci_data(adc_data),
-
-    .sync_ok_cnt(sync_ok_cnt),
-    .sync_fail_cnt(sync_fail_cnt),
+    .adc_wr(adc_wr),
+    .adc_address(adc_address),
 
     .address(bar1_address),
     .rd(bar1_rd),
@@ -576,7 +561,15 @@ adc_app adc_app_inst (
     .ack(bar1_ack)
 );
 
-assign adc_fifo_rd = !adc_fifo_empty;
+ila_3 ila3_inst (
+   .clk ( user_clk ),                      // I
+   .probe0(adc_wr),                   // input wire [0:0]  probe1 
+   .probe1(adc_address),              // input wire [63:0]  probe1 
+   .probe2(adc_data[31:0]),           // input wire [31:0]  probe1 
+   .probe3(adc_data[63:32]),          // input wire [31:0]  probe1 
+   .probe4(adc_data[95:64]),          // input wire [31:0]  probe1 
+   .probe5(adc_data[127:96])          // input wire [31:0]  probe1 
+);
 
 generate
   begin : pci_app
@@ -716,10 +709,9 @@ generate
             3: bar0_rp_data <= bar_spi_dac;
             4: bar0_rp_data <= adc_sysref_cnt[31:0];
             5: bar0_rp_data <= adc_sysref_cnt[63:32];
-            6: bar0_rp_data <= sync_fail_cnt;
-            7: bar0_rp_data <= sync_ok_cnt;
-            8: bar0_rp_data <= adc_sync_fail_cnt;
-            9: bar0_rp_data <= adc_sync_ok_cnt;            default: bar0_rp_data <= 31'hffffffff;
+            6: bar0_rp_data <= adc_sync_fail_cnt;
+            7: bar0_rp_data <= adc_sync_ok_cnt;
+            default: bar0_rp_data <= 31'hffffffff;
           endcase     
           bar0_rp <= 1;
         end

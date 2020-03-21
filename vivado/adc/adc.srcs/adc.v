@@ -152,10 +152,8 @@ module adc (
   wire                   rx_valid;
   wire [63:0]            rx_sysref_cnt;
   
-  wire                   adc_fifo_rd;
-  wire [111:0]           adc_fifo_data;
-  wire                   adc_fifo_full;
-  wire                   adc_fifo_empty;
+  wire                   adc_wr;
+  wire [1023:0]          adc_data;
 
   wire                   adc_spi_read;
   wire                   adc_spi_write;
@@ -250,10 +248,8 @@ daq2_app daq2_app_inst (
   .adc_sync_fail_cnt(adc_sync_fail_cnt),
   .adc_sync_ok_cnt(adc_sync_ok_cnt),
   
-  .adc_fifo_rd(adc_fifo_rd),
-  .adc_fifo_data(adc_fifo_data),
-  .adc_fifo_full(adc_fifo_full),
-  .adc_fifo_empty(adc_fifo_empty),
+  .adc_wr(adc_wr),
+  .adc_data(adc_data),
     
   .adc_spi_read(adc_spi_read),
   .adc_spi_write(adc_spi_write),
@@ -300,10 +296,8 @@ pci_app pci_app_inst (
     .adc_valid(rx_valid),
     .adc_sysref_cnt(rx_sysref_cnt),
     
-    .adc_fifo_rd(adc_fifo_rd),
-    .adc_fifo_data(adc_fifo_data),
-    .adc_fifo_full(adc_fifo_full),
-    .adc_fifo_empty(adc_fifo_empty),
+    .adc_wr(adc_wr),
+    .adc_data(adc_data),
     
     .adc_spi_read(adc_spi_read),
     .adc_spi_write(adc_spi_write),
