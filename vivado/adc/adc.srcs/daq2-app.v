@@ -113,10 +113,10 @@ module daq2_app
  wire [13:0]              adcB_2;
  wire [13:0]              adcB_3;
 
- reg                      adc_wr;
-
- reg [895:0]              adc_data;
  reg [2:0]                adc_cnt;
+ reg [1023:0]             adc_curr;
+ reg [1023:0]             adc_data;
+ reg                      adc_wr;
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
@@ -458,14 +458,14 @@ ila_6 ila_6_inst (
 ila_3 ila3_inst (
    .clk ( rx_clk ),                   // I
    .probe0(adc_cnt),                  // input wire [2:0]  probe1 
-   .probe1(adc_data[13:0]),           // input wire [13:0]  probe1 
-   .probe2(adc_data[27:14]),          // input wire [13:0]  probe1 
-   .probe3(adc_data[41:28]),          // input wire [13:0]  probe1 
-   .probe4(adc_data[55:42]),          // input wire [13:0]  probe1 
-   .probe5(adc_data[69:56]),          // input wire [13:0]  probe1 
-   .probe6(adc_data[83:70]),          // input wire [13:0]  probe1 
-   .probe7(adc_data[97:84]),          // input wire [13:0]  probe1 
-   .probe8(adc_data[111:98])          // input wire [13:0]  probe1 
+   .probe1(adc_curr[31:0]),           // input wire [31:0]  probe1 
+   .probe2(adc_curr[63:32]),          // input wire [31:0]  probe1 
+   .probe3(adc_curr[95:64]),          // input wire [31:0]  probe1 
+   .probe4(adc_curr[127:96]),         // input wire [31:0]  probe1 
+   .probe5(adc_data[31:0]),           // input wire [31:0]  probe1 
+   .probe6(adc_data[63:32]),          // input wire [31:0]  probe1 
+   .probe7(adc_data[95:64]),          // input wire [31:0]  probe1 
+   .probe8(adc_data[127:96])          // input wire [31:0]  probe1 
 );
 
 function check_valid;
@@ -669,15 +669,35 @@ generate
     begin
       if (rx_valid)
       begin
-        adc_data[895:882] <= adcB_3;
-        adc_data[881:868] <= adcA_3;
-        adc_data[867:854] <= adcB_2;
-        adc_data[853:840] <= adcA_2;
-        adc_data[839:826] <= adcB_1;
-        adc_data[825:812] <= adcA_1;
-        adc_data[811:798] <= adcB_0;
-        adc_data[797:784] <= adcA_0;
-        adc_data[783:0] <= adc_data[895:112];
+        adc_curr[909:896] <= adcA_0;
+        adc_curr[910] <= adcA_0[13];
+        adc_curr[911] <= adcA_0[13];
+        adc_curr[925:912] <= adcB_0;
+        adc_curr[926] <= adcB_0[13];
+        adc_curr[927] <= adcB_0[13];
+
+        adc_curr[941:928] <= adcA_1;
+        adc_curr[942] <= adcA_1[13];
+        adc_curr[943] <= adcA_1[13];
+        adc_curr[957:944] <= adcB_1;
+        adc_curr[958] <= adcB_1[13];
+        adc_curr[959] <= adcB_1[13];
+
+        adc_curr[973:960] <= adcA_2;
+        adc_curr[974] <= adcA_2[13];
+        adc_curr[975] <= adcA_2[13];
+        adc_curr[989:976] <= adcB_2;
+        adc_curr[990] <= adcB_2[13];
+        adc_curr[991] <= adcB_2[13];
+
+        adc_curr[1005:992] <= adcA_3;
+        adc_curr[1006] <= adcA_3[13];
+        adc_curr[1007] <= adcA_3[13];
+        adc_curr[1021:1008] <= adcB_3;
+        adc_curr[1022] <= adcB_3[13];
+        adc_curr[1023] <= adcB_3[13];
+
+        adc_curr[895:0] <= adc_curr[1023:128];
         adc_cnt <= adc_cnt + 1;
       end
       else
@@ -700,6 +720,12 @@ generate
         adc_sync_fail_cnt <= 0;
         adc_sync_ok_cnt <= 0;
       end
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (rx_valid && (adc_cnt == 7))
+        adc_data <= adc_curr;
     end
 
   end
