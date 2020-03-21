@@ -135,8 +135,8 @@ module adc (
   wire                   adc_start;
   wire                   adc_stop;
   wire                   adc_running;
-  wire [63:0]            adc_sync_fail_cnt;
-  wire [63:0]            adc_sync_ok_cnt;
+  wire [31:0]            adc_sync_fail_cnt;
+  wire [31:0]            adc_sync_ok_cnt;
     
   wire                   rx_ref_clk;
   wire                   rx_sysref;

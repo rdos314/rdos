@@ -80,8 +80,8 @@ module pci_app (
   input  wire          adc_running;
   input  wire          adc_valid;
   input wire [63:0]    adc_sysref_cnt;
-  input wire [63:0]    adc_sync_fail_cnt;
-  input wire [63:0]    adc_sync_ok_cnt;
+  input wire [31:0]    adc_sync_fail_cnt;
+  input wire [31:0]    adc_sync_ok_cnt;
 
   output wire          adc_fifo_rd;
   input wire [111:0]   adc_fifo_data;
@@ -103,6 +103,9 @@ module pci_app (
   wire             adc_send;
   wire [63:0]      adc_address;
   wire [1023:0]    adc_data;
+
+  wire [31:0]      sync_fail_cnt;
+  wire [31:0]      sync_ok_cnt;
 
   wire [16:0]      bar1_address;
   wire             bar1_rd;
@@ -552,12 +555,16 @@ adc_app adc_app_inst (
     .reset(user_reset),
 
     .running(adc_running),
+    .probing(1),
     .req_stop(req_stop),
     .fifo_avail(!adc_fifo_empty),
     .fifo_data(adc_fifo_data),
     .pci_send(adc_send),
     .pci_address(adc_address),
     .pci_data(adc_data),
+
+    .sync_ok_cnt(sync_ok_cnt),
+    .sync_fail_cnt(sync_fail_cnt),
 
     .address(bar1_address),
     .rd(bar1_rd),
@@ -709,11 +716,10 @@ generate
             3: bar0_rp_data <= bar_spi_dac;
             4: bar0_rp_data <= adc_sysref_cnt[31:0];
             5: bar0_rp_data <= adc_sysref_cnt[63:32];
-            6: bar0_rp_data <= adc_sync_fail_cnt[31:0];
-            7: bar0_rp_data <= adc_sync_fail_cnt[63:32];
-            8: bar0_rp_data <= adc_sync_ok_cnt[31:0];
-            9: bar0_rp_data <= adc_sync_ok_cnt[63:32];
-            default: bar0_rp_data <= 31'hffffffff;
+            6: bar0_rp_data <= sync_fail_cnt;
+            7: bar0_rp_data <= sync_ok_cnt;
+            8: bar0_rp_data <= adc_sync_fail_cnt;
+            9: bar0_rp_data <= adc_sync_ok_cnt;            default: bar0_rp_data <= 31'hffffffff;
           endcase     
           bar0_rp <= 1;
         end

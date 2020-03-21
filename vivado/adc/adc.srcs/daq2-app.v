@@ -35,9 +35,9 @@ module daq2_app
   input                   adc_start,
   input                   adc_stop,
   output reg              adc_running,
-  input                   adc_test_mode,
-  output reg [63:0]       adc_sync_fail_cnt,
-  output reg [63:0]       adc_sync_ok_cnt,
+  input [7:0]             adc_test_mode,
+  output reg [31:0]       adc_sync_fail_cnt,
+  output reg [31:0]       adc_sync_ok_cnt,
   
   input                   adc_fifo_rd,
   output [111:0]          adc_fifo_data,
@@ -103,17 +103,20 @@ module daq2_app
  reg                      lmfc_clk_s;
  reg                      lmfc_clk_c;
 
- reg [13:0]               adcA_0;
- reg [13:0]               adcA_1;
- reg [13:0]               adcA_2;
- reg [13:0]               adcA_3;
+ wire [13:0]              adcA_0;
+ wire [13:0]              adcA_1;
+ wire [13:0]              adcA_2;
+ wire [13:0]              adcA_3;
 
- reg [13:0]               adcB_0;
- reg [13:0]               adcB_1;
- reg [13:0]               adcB_2;
- reg [13:0]               adcB_3;
+ wire [13:0]              adcB_0;
+ wire [13:0]              adcB_1;
+ wire [13:0]              adcB_2;
+ wire [13:0]              adcB_3;
 
  reg                      adc_wr;
+
+ reg [895:0]              adc_data;
+ reg [2:0]                adc_cnt;
 
   system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
@@ -422,7 +425,7 @@ adc_fifo adc_fifo_inst (
   .wr_clk(rx_clk),       // input wire wr_clk
   .rd_clk(clk),          // input wire rd_clk
   .din({adcB_3, adcA_3, adcB_2, adcA_2, adcB_1, adcA_1, adcB_0, adcA_0}),        // input wire [111 : 0] din
-  .wr_en(adc_wr),        // input wire wr_en
+  .wr_en(0),        // input wire wr_en
   .rd_en(adc_fifo_rd),   // input wire rd_en
   .dout(adc_fifo_data),  // output wire [111 : 0] dout
   .full(adc_fifo_full),  // output wire full
@@ -450,6 +453,19 @@ ila_6 ila_6_inst (
 	.probe15(rx_pll_locked),             // input wire [3:0]  probe8 
 	.probe16(up_rx_rst_done),            // input wire [3:0]  probe11
 	.probe17(spi_test_done)              // input wire [0:0]  probe11
+);
+
+ila_3 ila3_inst (
+   .clk ( rx_clk ),                   // I
+   .probe0(adc_cnt),                  // input wire [2:0]  probe1 
+   .probe1(adc_data[13:0]),           // input wire [13:0]  probe1 
+   .probe2(adc_data[27:14]),          // input wire [13:0]  probe1 
+   .probe3(adc_data[41:28]),          // input wire [13:0]  probe1 
+   .probe4(adc_data[55:42]),          // input wire [13:0]  probe1 
+   .probe5(adc_data[69:56]),          // input wire [13:0]  probe1 
+   .probe6(adc_data[83:70]),          // input wire [13:0]  probe1 
+   .probe7(adc_data[97:84]),          // input wire [13:0]  probe1 
+   .probe8(adc_data[111:98])          // input wire [13:0]  probe1 
 );
 
 function check_valid;
@@ -640,20 +656,40 @@ generate
       end
     end
 
+    assign adcA_0 = {rx_data[7:0], rx_data[39:34]};
+    assign adcA_1 = {rx_data[15:8], rx_data[47:42]};
+    assign adcA_2 = {rx_data[23:16], rx_data[55:50]};
+    assign adcA_3 = {rx_data[31:24], rx_data[63:58]};
+    assign adcB_0 = {rx_data[71:64], rx_data[103:98]};
+    assign adcB_1 = {rx_data[79:72], rx_data[111:106]};
+    assign adcB_2 = {rx_data[87:80], rx_data[119:114]};
+    assign adcB_3 = {rx_data[95:88], rx_data[127:122]};
+
     always @ ( posedge rx_clk ) 
     begin
       if (rx_valid)
       begin
-        adcA_0 <= {rx_data[7:0], rx_data[39:34]};
-        adcA_1 <= {rx_data[15:8], rx_data[47:42]};
-        adcA_2 <= {rx_data[23:16], rx_data[55:50]};
-        adcA_3 <= {rx_data[31:24], rx_data[63:58]};
-        adcB_0 <= {rx_data[71:64], rx_data[103:98]};
-        adcB_1 <= {rx_data[79:72], rx_data[111:106]};
-        adcB_2 <= {rx_data[87:80], rx_data[119:114]};
-        adcB_3 <= {rx_data[95:88], rx_data[127:122]};
-        adc_wr <= 0;
+        adc_data[895:882] <= adcB_3;
+        adc_data[881:868] <= adcA_3;
+        adc_data[867:854] <= adcB_2;
+        adc_data[853:840] <= adcA_2;
+        adc_data[839:826] <= adcB_1;
+        adc_data[825:812] <= adcA_1;
+        adc_data[811:798] <= adcB_0;
+        adc_data[797:784] <= adcA_0;
+        adc_data[783:0] <= adc_data[895:112];
+        adc_cnt <= adc_cnt + 1;
+      end
+      else
+      begin
+        adc_cnt <= 0;
+      end
+    end
 
+    always @ ( posedge rx_clk ) 
+    begin
+      if (rx_valid)
+      begin
         if (check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3))
           adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
         else
@@ -663,7 +699,6 @@ generate
       begin
         adc_sync_fail_cnt <= 0;
         adc_sync_ok_cnt <= 0;
-        adc_wr <= 0;
       end
     end
 

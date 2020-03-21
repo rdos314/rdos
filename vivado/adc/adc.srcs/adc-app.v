@@ -3,12 +3,16 @@ module adc_app (
   reset,
 
   running,
+  probing,
   req_stop,
   fifo_avail,
   fifo_data,
   pci_send,
   pci_address,
   pci_data,
+
+  sync_fail_cnt,
+  sync_ok_cnt,
 
   address,
   rd,
@@ -24,12 +28,16 @@ module adc_app (
   input wire             reset;
 
   input wire             running;
+  input wire             probing;
   output reg             req_stop;
   input wire             fifo_avail;
   input wire [111:0]     fifo_data;
   output reg             pci_send;
   output reg [63:0]      pci_address;
   output reg [1023:0]    pci_data;
+
+  output reg [31:0]      sync_fail_cnt;
+  output reg [31:0]      sync_ok_cnt;
 
   input wire [16:0]      address;
   input wire             rd;
@@ -68,23 +76,6 @@ bram_adc bram_adc_inst (
   .doutb(adc_rd_data)  // output wire [19 : 0] doutb
 );
 
-ila_3 ila3_inst (
-   .clk ( clk ),                      // I
-   .probe0(fifo_avail),               // input wire [0:0]  probe1 
-   .probe1(adc_cnt),                  // input wire [2:0]  probe1 
-   .probe2(pci_send),                 // input wire [0:0]  probe1 
-   .probe3(req_stop),                 // input wire [0:0]  probe1 
-   .probe4(adc_curr[927:896]),        // input wire [31:0]  probe1 
-   .probe5(adc_curr[961:928]),        // input wire [31:0]  probe1 
-   .probe6(adc_curr[991:960]),        // input wire [31:0]  probe1 
-   .probe7(adc_curr[1023:992]),       // input wire [31:0]  probe1 
-   .probe8(pci_address[63:0]),        // input wire [63:0]  probe1 
-   .probe9(pci_data[31:0]),           // input wire [31:0]  probe1 
-   .probe10(pci_data[63:32]),         // input wire [31:0]  probe1 
-   .probe11(pci_data[95:64]),         // input wire [31:0]  probe1 
-   .probe12(pci_data[127:96])         // input wire [31:0]  probe1 
-);
-
 ila_4 ila4_inst (
    .clk ( clk ),                       // I
    .probe0(address),                   // input wire [16:0]  probe1 
@@ -101,6 +92,28 @@ ila_4 ila4_inst (
    .probe11(adc_rd_data),              // input wire [19:0]  probe1 
    .probe12(next_rd_adr)               // input wire [19:0]  probe1 
 );
+
+function check_valid;
+  input [127:0] data;
+  reg res = 0;
+  begin
+    if (data[15:0] == 16'h0000)
+      if (data[31:16] == 16'h0000)
+        if (data[63:32] == 32'hFFFFFFFF)
+          if (data[95:64] == 32'h00000000)
+            if (data[127:96] == 32'hFFFFFFFF)
+              res = 1;
+
+    if (data[15:0] == 16'hFFFF)
+      if (data[31:16] == 16'hFFFF)
+        if (data[63:32] == 32'h00000000)
+          if (data[95:64] == 32'hFFFFFFFF)
+            if (data[127:96] == 32'h00000000)
+              res = 1;
+
+    check_valid = res;
+  end
+endfunction
 
 generate
 begin : adc_app
@@ -205,6 +218,8 @@ begin : adc_app
     begin
       adc_cnt <= 0;
       pci_send <= 0;
+      sync_fail_cnt <= 0;
+      sync_ok_cnt <= 0;
     end
     else
     begin
@@ -240,18 +255,38 @@ begin : adc_app
 
         adc_curr[895:0] <= adc_curr[1023:128];
 
-        adc_cnt <= adc_cnt + 1;
-
-        if (adc_cnt == 7)
+        if (probing)
         begin
-          pci_data <= adc_curr;
-          pci_send <= 1;
+          pci_send <= 0;
+
+          if (check_valid(adc_curr[1023:896]))
+            sync_ok_cnt <= sync_ok_cnt + 1;
+          else
+            sync_fail_cnt <= sync_fail_cnt + 1;
         end
         else
-          pci_send <= 0;
+        begin
+          adc_cnt <= adc_cnt + 1;
+
+          if (adc_cnt == 7)
+          begin
+            pci_data <= adc_curr;
+            pci_send <= 1;
+          end
+          else
+            pci_send <= 0;
+        end
       end
       else
+      begin
         pci_send <= 0;
+
+        if (!running)
+        begin
+          sync_ok_cnt <= 0;
+          sync_fail_cnt <= 0;
+        end
+      end
     end
   end
 
