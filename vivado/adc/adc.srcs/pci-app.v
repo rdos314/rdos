@@ -23,12 +23,16 @@ module pci_app (
     spi_dir,
 
     bar_control,
+    bar_adc_test_mode,
 
     adc_start,
     adc_stop,
     adc_running,
     adc_valid,
     adc_sysref_cnt,
+
+    adc_sync_fail_cnt,
+    adc_sync_ok_cnt,
 
     adc_fifo_rd,
     adc_fifo_data,
@@ -68,13 +72,16 @@ module pci_app (
   inout                spi_sdio;
   output               spi_dir;
 
-  output reg [31:0]    bar_control;
+  output reg [7:0]     bar_control;
+  output reg [7:0]     bar_adc_test_mode;
 
   output reg           adc_start;
   output reg           adc_stop;
   input  wire          adc_running;
   input  wire          adc_valid;
   input wire [63:0]    adc_sysref_cnt;
+  input wire [63:0]    adc_sync_fail_cnt;
+  input wire [63:0]    adc_sync_ok_cnt;
 
   output wire          adc_fifo_rd;
   input wire [111:0]   adc_fifo_data;
@@ -680,6 +687,7 @@ generate
       if (user_reset)
       begin
         bar_control <= 0;
+        bar_adc_test_mode <= 7;
         adc_start <= 0;
         adc_stop <= 0;
         spi_rp_ack <= 0;
@@ -695,12 +703,16 @@ generate
         if (bar0_rd)
         begin
           case (bar0_address)
-            0: bar0_rp_data <= bar_control;
+            0: bar0_rp_data <= {16'h0, bar_adc_test_mode, bar_control};
             1: bar0_rp_data <= bar_spi_clk;
             2: bar0_rp_data <= bar_spi_adc;
             3: bar0_rp_data <= bar_spi_dac;
             4: bar0_rp_data <= adc_sysref_cnt[31:0];
             5: bar0_rp_data <= adc_sysref_cnt[63:32];
+            6: bar0_rp_data <= adc_sync_fail_cnt[31:0];
+            7: bar0_rp_data <= adc_sync_fail_cnt[63:32];
+            8: bar0_rp_data <= adc_sync_ok_cnt[31:0];
+            9: bar0_rp_data <= adc_sync_ok_cnt[63:32];
             default: bar0_rp_data <= 31'hffffffff;
           endcase     
           bar0_rp <= 1;
@@ -729,13 +741,7 @@ generate
               end
 
               if (bar0_wr_be[1])
-                bar_control[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                bar_control[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-                bar_control[31:24] <= bar0_wr_data[31:24];
+                bar_adc_test_mode[7:0] <= bar0_wr_data[15:8]; 
             end
             
             1:

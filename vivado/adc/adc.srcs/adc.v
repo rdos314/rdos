@@ -127,13 +127,16 @@ module adc (
   wire                   cfg_interrupt_msienable;  
   wire                   sample_clk;  
   wire                   clk;  
-  wire [31:0]            bar_control;
+  wire [7:0]             bar_control;
+  wire [7:0]             bar_adc_test_mode;
   
   wire                   spi_locked;
 
   wire                   adc_start;
   wire                   adc_stop;
   wire                   adc_running;
+  wire [63:0]            adc_sync_fail_cnt;
+  wire [63:0]            adc_sync_ok_cnt;
     
   wire                   rx_ref_clk;
   wire                   rx_sysref;
@@ -242,6 +245,10 @@ daq2_app daq2_app_inst (
   .adc_start(adc_start),
   .adc_stop(adc_stop),
   .adc_running(adc_running),
+  .adc_test_mode(bar_adc_test_mode),
+
+  .adc_sync_fail_cnt(adc_sync_fail_cnt),
+  .adc_sync_ok_cnt(adc_sync_ok_cnt),
   
   .adc_fifo_rd(adc_fifo_rd),
   .adc_fifo_data(adc_fifo_data),
@@ -282,6 +289,10 @@ pci_app pci_app_inst (
     .spi_dir (spi_dir),
 
     .bar_control(bar_control),
+    .bar_adc_test_mode(bar_adc_test_mode),
+
+    .adc_sync_fail_cnt(adc_sync_fail_cnt),
+    .adc_sync_ok_cnt(adc_sync_ok_cnt),
 
     .adc_start(adc_start),
     .adc_stop(adc_stop),

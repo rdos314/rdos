@@ -35,6 +35,9 @@ module daq2_app
   input                   adc_start,
   input                   adc_stop,
   output reg              adc_running,
+  input                   adc_test_mode,
+  output reg [63:0]       adc_sync_fail_cnt,
+  output reg [63:0]       adc_sync_ok_cnt,
   
   input                   adc_fifo_rd,
   output [111:0]          adc_fifo_data,
@@ -449,6 +452,41 @@ ila_6 ila_6_inst (
 	.probe17(spi_test_done)              // input wire [0:0]  probe11
 );
 
+function check_valid;
+  input [13:0] adcA_0;
+  input [13:0] adcB_0;
+  input [13:0] adcA_1;
+  input [13:0] adcB_1;
+  input [13:0] adcA_2;
+  input [13:0] adcB_2;
+  input [13:0] adcA_3;
+  input [13:0] adcB_3;
+  reg res = 0;
+  begin
+    if (adcA_0 == 14'h0000)
+      if (adcB_0 == 14'h0000)
+        if (adcA_1 == 14'h3FFF)
+          if (adcB_1 == 14'h3FFF)
+            if (adcA_2 == 14'h0000)
+              if (adcB_2 == 14'h0000)
+                if (adcA_3 == 14'h3FFF)
+                  if (adcB_3 == 14'h3FFF)
+                    res = 1;
+
+    if (adcA_0 == 14'h3FFF)
+      if (adcB_0 == 14'h3FFF)
+        if (adcA_1 == 14'h0000)
+          if (adcB_1 == 14'h0000)
+            if (adcA_2 == 14'h3FFF)
+              if (adcB_2 == 14'h3FFF)
+                if (adcA_3 == 14'h0000)
+                  if (adcB_3 == 14'h0000)
+                    res = 1;
+    check_valid = res;
+  end
+endfunction
+
+
   assign adc_pd = adc_running ? 1'b0 : 1'b1;
   assign up_rx_rst = up_rx_rst_cnt[3];
   assign up_rx_user_ready = up_rx_user_ready_cnt[6];
@@ -614,10 +652,19 @@ generate
         adcB_1 <= {rx_data[79:72], rx_data[111:106]};
         adcB_2 <= {rx_data[87:80], rx_data[119:114]};
         adcB_3 <= {rx_data[95:88], rx_data[127:122]};
-        adc_wr <= 1;
+        adc_wr <= 0;
+
+        if (check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3))
+          adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
+        else
+          adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
       end
       else
+      begin
+        adc_sync_fail_cnt <= 0;
+        adc_sync_ok_cnt <= 0;
         adc_wr <= 0;
+      end
     end
 
   end
