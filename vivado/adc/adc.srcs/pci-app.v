@@ -35,9 +35,13 @@ module pci_app (
     adc_fifo_full,
     adc_fifo_empty,
 
-    adc_spi_fifo_out,
-    adc_spi_fifo_empty,
-    adc_spi_fifo_ack
+    adc_spi_read,
+    adc_spi_write,
+    adc_spi_adr,
+    adc_spi_in_data,
+    adc_spi_out_data,
+    adc_spi_running,
+    adc_spi_done
 );
 
   output  [7:0]        pci_exp_txp;
@@ -77,9 +81,13 @@ module pci_app (
   input wire           adc_fifo_full;
   input wire           adc_fifo_empty;
 
-  input wire [19:0]    adc_spi_fifo_out;
-  input wire           adc_spi_fifo_empty;
-  output wire          adc_spi_fifo_ack;
+  input                adc_spi_read;
+  input                adc_spi_write;
+  input      [11:0]    adc_spi_adr;
+  output     [7:0]     adc_spi_in_data;
+  input      [7:0]     adc_spi_out_data;
+  output               adc_spi_running;
+  output               adc_spi_done;
 
 
 // Wire Declarations
@@ -501,10 +509,13 @@ adc_mem adc_mem_inst (
     .spi_rq_data (spi_fifo_req_out[15:0]),
     .spi_rq_ack (spi_rq_ack),
 
-    .adc_rq_adr (adc_spi_fifo_out[19:8]),
-    .adc_rq_empty (adc_spi_fifo_empty),
-    .adc_rq_data (adc_spi_fifo_out[7:0]),
-    .adc_rq_ack (adc_spi_fifo_ack),
+    .adc_read(adc_spi_read),
+    .adc_write(adc_spi_write),
+    .adc_adr(adc_spi_adr),
+    .adc_in_data(adc_spi_in_data),
+    .adc_out_data(adc_spi_out_data),
+    .adc_running(adc_spi_running),
+    .adc_done(adc_spi_done),
 
     .spi_rp_empty (spi_rp_empty),
     .spi_rp_data (spi_rp_data),

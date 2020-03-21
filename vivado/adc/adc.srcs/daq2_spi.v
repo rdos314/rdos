@@ -13,10 +13,13 @@ module daq2_spi (
   input      [15:0]       spi_rq_data,
   output reg              spi_rq_ack,
 
-  input      [11:0]       adc_rq_adr,
-  input                   adc_rq_empty,
-  input      [7:0]        adc_rq_data,
-  output reg              adc_rq_ack,
+  input                   adc_read,
+  input                   adc_write,
+  input      [11:0]       adc_adr,
+  output reg [7:0]        adc_in_data,
+  input      [7:0]        adc_out_data,
+  output reg              adc_running,
+  output reg              adc_done,
 
   output wire             spi_rp_empty,
   output wire [29:0]      spi_rp_data,
@@ -45,7 +48,6 @@ module daq2_spi (
   
   reg [29:0]              spi_fifo_data;
   reg                     spi_fifo_wr;
-  reg                     use_adc;
 
 spi_fifo_rp spi_fifo_rp_inst (
   .rst(reset),                 // input wire rst
@@ -88,19 +90,26 @@ ila_5 ila5_inst (
    .probe24(spi_in_data),                // input wire [15:0]  probe1 
    .probe25(spi_out_data),               // input wire [15:0]  probe1 
    .probe26(spi_fifo_data),              // input wire [29:0]  probe1 
-   .probe27(spi_fifo_wr)                 // input wire [0:0]  probe1 
+   .probe27(spi_fifo_wr),                // input wire [0:0]  probe1 
+   .probe28(adc_spi_write),              // input wire [0:0]  probe1 
+   .probe29(adc_spi_read),               // input wire [0:0]  probe1 
+   .probe30(adc_spi_adr),                // input wire [11:0]  probe1 
+   .probe31(adc_spi_out_data),           // input wire [7:0]  probe1 
+   .probe32(adc_spi_in_data),            // input wire [7:0]  probe1 
+   .probe33(adc_spi_running),            // input wire [0:0]  probe1 
+   .probe34(adc_spi_done),               // input wire [0:0]  probe1 
+   .probe35(spi_delay)                   // input wire [0:0]  probe1 
 );
 
   always @(posedge up_clk) 
   begin
-    if (spi_rq_empty && adc_rq_empty)
+    if (spi_rq_empty && !adc_read && !adc_write)
     begin
       spi_cs_clk <= 1;
       spi_cs_adc <= 1;
       spi_cs_dac <= 1;
 
       spi_rq_ack <= 0;
-      adc_rq_ack <= 0;
       spi_fifo_wr <= 0;
 
       spi_size <= 16;
@@ -110,13 +119,15 @@ ila_5 ila5_inst (
       spi_dir <= 1;
       spi_z <= 0;
       spi_out <= 0;
+
+      adc_running <= 0;
+      adc_done <= 0;
     end
     else
     begin
       if (spi_delay)
       begin
         spi_fifo_wr <= 0;
-        adc_rq_ack <= 0;
         spi_rq_ack <= 0;
         
         if (spi_delay == 1)
@@ -156,8 +167,16 @@ ila_5 ila5_inst (
 
               if (spi_count >= 16)
               begin
-                spi_in_data[0] <= spi_sdio;
-                spi_in_data[15:1] <= spi_in_data[14:0];
+                if (adc_running)
+                begin
+                  adc_in_data[0] <= spi_sdio;
+                  adc_in_data[7:1] <= adc_in_data[6:0];
+                end
+                else
+                begin
+                  spi_in_data[0] <= spi_sdio;
+                  spi_in_data[15:1] <= spi_in_data[14:0];
+                end
               end
             end
             
@@ -167,7 +186,7 @@ ila_5 ila5_inst (
           begin
             if (spi_count >= spi_size)
             begin
-              if (spi_rd_wr_n)
+              if (spi_rd_wr_n && !adc_running)
               begin
                 if (spi_size == 24)
                   spi_fifo_data[7:0] <= spi_in_data[7:0];
@@ -184,8 +203,8 @@ ila_5 ila5_inst (
               spi_started <= 0;
               spi_out <= 0;
 
-              if (use_adc)
-                adc_rq_ack <= 1;
+              if (adc_running)
+                adc_done <= 1;
               else
                 spi_rq_ack <= 1;
             end
@@ -200,21 +219,28 @@ ila_5 ila5_inst (
         begin
           if (spi_rq_empty)
           begin
-            spi_cs_clk <= 1;
-            spi_cs_adc <= 0;
-            spi_cs_dac <= 1;
+            if (!adc_running)
+            begin
+              spi_cs_clk <= 1;
+              spi_cs_adc <= 0;
+              spi_cs_dac <= 1;
             
-            spi_dir <= 1;
-            spi_z <= 0;
-            spi_rd_wr_n <= 0;
-          
-            spi_cmd[15:12] <= 0;
-            spi_cmd[11:0] <= adc_rq_adr;
+              spi_dir <= 1;
+              spi_z <= 0;
+              spi_rd_wr_n <= adc_read;
 
-            spi_size <= 24;
-            spi_out_data[15:8] <= adc_rq_data;
+              spi_cmd[15] <= adc_read;
+              spi_cmd[14:12] <= 0;
+              spi_cmd[11:0] <= adc_adr;
 
-            use_adc <= 1;
+              spi_size <= 24;
+              spi_out_data[15:8] <= adc_out_data;
+
+              adc_running <= 1;
+              adc_done <= 0;
+              spi_started <= 1;
+              spi_count <= 0;
+            end
           end
           else
           begin
@@ -275,10 +301,11 @@ ila_5 ila5_inst (
               spi_out_data[15:8] <= spi_rq_data[7:0];
               spi_fifo_data[15:8] <= 0;
             end
-            use_adc <= 0;
+            adc_done <= 0;
+            adc_running <= 0;
+            spi_started <= 1;
+            spi_count <= 0;
           end
-          spi_count <= 0;
-          spi_started <= 1;
         end
         spi_delay <= 1;
       end

@@ -154,9 +154,13 @@ module adc (
   wire                   adc_fifo_full;
   wire                   adc_fifo_empty;
 
-  wire [19:0]            adc_spi_fifo_out;
-  wire                   adc_spi_fifo_empty;
-  wire                   adc_spi_fifo_ack;
+  wire                   adc_spi_read;
+  wire                   adc_spi_write;
+  wire [11:0]            adc_spi_adr;
+  wire [7:0]             adc_spi_in_data;
+  wire [7:0]             adc_spi_out_data;
+  wire                   adc_spi_running;
+  wire                   adc_spi_done;
 
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
@@ -244,9 +248,13 @@ daq2_app daq2_app_inst (
   .adc_fifo_full(adc_fifo_full),
   .adc_fifo_empty(adc_fifo_empty),
     
-  .adc_spi_fifo_out(adc_spi_fifo_out),
-  .adc_spi_fifo_empty(adc_spi_fifo_empty),
-  .adc_spi_fifo_ack(adc_spi_fifo_ack)
+  .adc_spi_read(adc_spi_read),
+  .adc_spi_write(adc_spi_write),
+  .adc_spi_adr(adc_spi_adr),
+  .adc_spi_in_data(adc_spi_in_data),
+  .adc_spi_out_data(adc_spi_out_data),
+  .adc_spi_running(adc_spi_running),
+  .adc_spi_done(adc_spi_done)
 );
 
 pci_app pci_app_inst (
@@ -286,9 +294,13 @@ pci_app pci_app_inst (
     .adc_fifo_full(adc_fifo_full),
     .adc_fifo_empty(adc_fifo_empty),
     
-    .adc_spi_fifo_out(adc_spi_fifo_out),
-    .adc_spi_fifo_empty(adc_spi_fifo_empty),
-    .adc_spi_fifo_ack(adc_spi_fifo_ack)
+    .adc_spi_read(adc_spi_read),
+    .adc_spi_write(adc_spi_write),
+    .adc_spi_adr(adc_spi_adr),
+    .adc_spi_in_data(adc_spi_in_data),
+    .adc_spi_out_data(adc_spi_out_data),
+    .adc_spi_running(adc_spi_running),
+    .adc_spi_done(adc_spi_done)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
