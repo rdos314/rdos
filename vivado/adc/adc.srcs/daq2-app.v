@@ -79,16 +79,6 @@ module daq2_app
    
  reg  [127:0]             tx_data = 0;
 
- reg                      adc_start_m;
- reg                      adc_stop_m;
- reg                      adc_test_m;
-
- reg [4:0]                adc_start_cnt;
- reg [4:0]                adc_stop_cnt;
- reg [4:0]                adc_test_cnt;
-
- reg [7:0]                adc_curr_test;
-
  reg                      spi_test_done;
  reg                      pend_start;
  reg                      qpll_rst;
@@ -485,68 +475,6 @@ endfunction
 
 generate
   begin : daq2_app
-
-    always @(posedge clk) 
-    begin
-      if (reset)
-      begin
-        adc_start_m <= 0;
-        adc_stop_m <= 0;
-        adc_test_m <= 0;
-        adc_curr_test <= 7;
-      end
-      else
-      begin
-        if (adc_running)
-        begin
-          if (adc_curr_test != adc_test_mode)
-          begin
-            adc_test_m <= 1;
-            adc_test_cnt <= 0;
-            adc_curr_test <= adc_test_mode;
-          end
-          else
-          begin
-            if (adc_test_m)
-            begin
-              adc_test_cnt <= adc_test_cnt + 1;
-              if (adc_test_cnt[4] == 1)
-                adc_test_m <= 0;
-            end
-          end
-        end
-
-        if (adc_start)
-        begin
-          adc_start_m <= 1;
-          adc_start_cnt <= 0;
-        end
-        else
-        begin
-          if (adc_start_m)
-          begin
-            adc_start_cnt <= adc_start_cnt + 1;
-            if (adc_start_cnt[4] == 1)
-              adc_start_m <= 0;
-          end
-
-          if (adc_stop)
-          begin
-            adc_stop_m <= 1;
-            adc_stop_cnt <= 0;
-          end
-          else
-          begin
-            if (adc_stop_m)
-            begin
-              adc_stop_cnt <= adc_stop_cnt + 1;
-              if (adc_stop_cnt[4] == 1)
-                adc_stop_m <= 0;
-            end
-          end
-        end
-      end
-    end
         
     always @(posedge up_clk) 
     begin
@@ -562,7 +490,7 @@ generate
       end
       else
       begin
-        if (adc_start_m)
+        if (adc_start)
         begin
           up_rstn <= 0;
           qpll_rst <= 1;
@@ -575,7 +503,7 @@ generate
         begin
           qpll_rst <= 0;
 
-          if (adc_stop_m)
+          if (adc_stop)
           begin
             pend_start <= 0;
             adc_running <= 0;
@@ -631,12 +559,12 @@ generate
             end
             else
             begin
-              if (adc_test_m)
-              begin
-                up_adc_spi_adr <= 12'h550;
-                up_adc_spi_out_data <= adc_curr_test;
-                up_adc_spi_write <= 1;
-              end
+//              if (adc_test_mode)
+//              begin
+//                up_adc_spi_adr <= 12'h550;
+//                up_adc_spi_out_data <= adc_curr_test;
+//                up_adc_spi_write <= 1;
+//              end
 
               if (up_adc_spi_done)
               begin

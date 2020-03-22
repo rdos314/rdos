@@ -185,6 +185,25 @@ module adc (
   wire [29:0]            pci_spi_rp_out;
   wire                   pci_spi_rp_empty;
 
+  wire                   pci_adc_start;
+  reg                    pci_up_start;
+  reg [2:0]              pci_start_cnt;
+
+  wire                   pci_adc_stop;
+  reg                    pci_up_stop;
+  reg [2:0]              pci_stop_cnt;
+
+  reg                    up_pci_start;
+  reg                    up_curr_start;
+  reg                    up_adc_start;
+
+  reg                    up_pci_stop;
+  reg                    up_curr_stop;
+  reg                    up_adc_stop;
+
+  wire [7:0]             pci_test_mode;
+  reg [7:0]              up_test_mode;
+
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
     .I (rx_ref_clk_p),
@@ -263,11 +282,11 @@ daq2_app daq2_app_inst (
 
   .rx_sysref_cnt(rx_sysref_cnt),
   
-  .adc_start(adc_start),
-  .adc_stop(adc_stop),
+  .adc_start(up_adc_start),
+  .adc_stop(up_adc_stop),
   .adc_running(adc_running),
   .adc_probing(adc_probing),
-  .adc_test_mode(bar_adc_test_mode),
+  .adc_test_mode(up_test_mode),
 
   .adc_sync_fail_cnt(adc_sync_fail_cnt),
   .adc_sync_ok_cnt(adc_sync_ok_cnt),
@@ -308,13 +327,13 @@ pci_app pci_app_inst (
     .spi_rp_ack(pci_spi_rp_ack),
 
     .bar_control(bar_control),
-    .bar_adc_test_mode(bar_adc_test_mode),
+    .bar_adc_test_mode(pci_test_mode),
 
     .adc_sync_fail_cnt(adc_sync_fail_cnt),
     .adc_sync_ok_cnt(adc_sync_ok_cnt),
 
-    .adc_start(adc_start),
-    .adc_stop(adc_stop),
+    .adc_start(pci_adc_start),
+    .adc_stop(pci_adc_stop),
     .adc_running(adc_running),
     .adc_probing(adc_probing),
     .adc_valid(0),
@@ -394,6 +413,19 @@ daq2_spi daq2_spi_inst (
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
 
+
+ila_3 ila3_inst (
+   .clk ( up_clk ),                 // I
+   .probe0(up_pci_start),           // input wire [0:0]  probe1 
+   .probe1(up_curr_start),          // input wire [0:0]  probe1 
+   .probe2(up_adc_start),           // input wire [0:0]  probe1 
+   .probe3(up_pci_stop),            // input wire [0:0]  probe1 
+   .probe4(up_curr_stop),           // input wire [0:0]  probe1 
+   .probe5(up_adc_stop),            // input wire [0:0]  probe1 
+   .probe6(up_test_mode)            // input wire [7:0]  probe1 
+);
+
+
 generate
   begin : adc
 
@@ -425,6 +457,97 @@ generate
           pci_adc_wr <= 0;
       end
     end
+
+    always @(posedge user_clk) 
+    begin
+      if (user_reset)
+      begin
+        pci_up_start <= 0;
+        pci_start_cnt <= 0;
+        pci_up_stop <= 0;
+        pci_stop_cnt <= 0;
+      end
+      else
+      begin
+        if (pci_adc_start)
+        begin
+          pci_up_start <= 1;
+          pci_start_cnt <= 0;
+        end
+        else
+        begin
+          if (pci_up_start)
+          begin
+            if (pci_start_cnt[2] == 1)
+              pci_up_start <= 0;
+            else
+              pci_start_cnt <= pci_start_cnt + 1;
+          end
+        end
+
+        if (pci_adc_stop)
+        begin
+          pci_up_stop <= 1;
+          pci_stop_cnt <= 0;
+        end
+        else
+        begin
+          if (pci_up_stop)
+          begin
+            if (pci_stop_cnt[2] == 1)
+              pci_up_stop <= 0;
+            else
+              pci_stop_cnt <= pci_stop_cnt + 1;
+          end
+        end
+      end
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_pci_start <= pci_up_start;
+      up_pci_stop <= pci_up_stop;
+      up_test_mode <= pci_test_mode;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      if (user_reset)
+      begin
+        up_curr_start <= 0;
+        up_adc_start <= 0;
+        up_curr_stop <= 0;
+        up_adc_stop <= 0;
+        up_test_mode <= 7;
+      end
+      else
+      begin
+        if (up_pci_start != up_curr_start)
+        begin
+          up_curr_start <= up_pci_start;
+
+          if (up_pci_start)
+            up_adc_start <= 1;
+          else
+            up_adc_start <= 0;
+        end
+        else
+          up_adc_start <= 0;
+  
+        if (up_pci_stop != up_curr_stop)
+        begin
+          up_curr_stop <= up_pci_stop;
+
+          if (up_pci_stop)
+            up_adc_stop <= 1;
+          else
+            up_adc_stop <= 0;
+        end
+        else
+          up_adc_stop <= 0;
+      end
+    end
+
 
   end
 
