@@ -3,6 +3,9 @@ module daq2_app
   input                   clk,
   input                   reset,
 
+  output                  rx_clk,
+  output                  tx_clk,
+
   input                   rx_ref_clk,
   input                   rx_sysref,
   output                  rx_sync,
@@ -29,7 +32,6 @@ module daq2_app
   inout                   dac_reset,
   inout                   clkd_sync,
 
-  output                  rx_valid,
   output reg  [63:0]      rx_sysref_cnt,
 
   input                   adc_start,
@@ -52,9 +54,6 @@ module daq2_app
   input wire              up_adc_spi_done
 );
 
- wire                     rx_clk;
- wire                     tx_clk;
-
  wire [15:0]              rx_phy_charisk;
  wire [15:0]              rx_phy_disperr;
  wire [15:0]              rx_phy_notintable;
@@ -70,9 +69,10 @@ module daq2_app
  wire [7:0]               status_lane_cgs_state;
  wire [3:0]               status_lane_ifs_ready;
   
- wire [127:0]             rx_data;
+ wire [127:0]             jesd_rx_data;
  wire [3:0]               rx_eof;
  wire [3:0]               rx_sof;
+ wire                     rx_valid;
 
  wire [15:0]              tx_phy_charisk;
  wire [127:0]             tx_phy_data;
@@ -118,10 +118,8 @@ module daq2_app
 
  reg [2:0]                adc_cnt;
  reg [1023:0]             adc_curr;
- reg [1023:0]             adc_temp;
- reg                      curr_pos;
 
-  system_util_daq2_xcvr_0 util_daq2_xcvr
+system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
         .cpll_ref_clk_1(rx_ref_clk),
         .cpll_ref_clk_2(rx_ref_clk),
@@ -376,7 +374,7 @@ system_rx_0 system_rx_0_inst
         .phy_header({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .phy_notintable(rx_phy_notintable),
         .reset(reset),
-        .rx_data(rx_data),
+        .rx_data(jesd_rx_data),
         .rx_eof(rx_eof),
         .rx_sof(rx_sof),
         .rx_valid(rx_valid),
@@ -671,14 +669,14 @@ generate
       end
     end
 
-    assign adcA_0 = {rx_data[7:0], rx_data[39:34]};
-    assign adcA_1 = {rx_data[15:8], rx_data[47:42]};
-    assign adcA_2 = {rx_data[23:16], rx_data[55:50]};
-    assign adcA_3 = {rx_data[31:24], rx_data[63:58]};
-    assign adcB_0 = {rx_data[71:64], rx_data[103:98]};
-    assign adcB_1 = {rx_data[79:72], rx_data[111:106]};
-    assign adcB_2 = {rx_data[87:80], rx_data[119:114]};
-    assign adcB_3 = {rx_data[95:88], rx_data[127:122]};
+    assign adcA_0 = {jesd_rx_data[7:0], jesd_rx_data[39:34]};
+    assign adcA_1 = {jesd_rx_data[15:8], jesd_rx_data[47:42]};
+    assign adcA_2 = {jesd_rx_data[23:16], jesd_rx_data[55:50]};
+    assign adcA_3 = {jesd_rx_data[31:24], jesd_rx_data[63:58]};
+    assign adcB_0 = {jesd_rx_data[71:64], jesd_rx_data[103:98]};
+    assign adcB_1 = {jesd_rx_data[79:72], jesd_rx_data[111:106]};
+    assign adcB_2 = {jesd_rx_data[87:80], jesd_rx_data[119:114]};
+    assign adcB_3 = {jesd_rx_data[95:88], jesd_rx_data[127:122]};
 
     always @ ( posedge rx_clk ) 
     begin
@@ -739,38 +737,19 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_valid && (adc_cnt == 7))
-        adc_temp <= adc_curr;
-    end
-
-    always @ ( posedge clk ) 
-    begin
-      if (reset)
+      if (rx_valid)
       begin
-        curr_pos <= 0;
-        adc_wr <= 0;
+        case (adc_cnt)
+          3: adc_wr <= 0;
+          7:
+          begin
+            adc_data <= adc_curr;
+            adc_wr <= 1;
+          end
+        endcase
       end
       else
-      begin
-        if (rx_valid)
-        begin
-          if (curr_pos != adc_cnt[2])
-          begin
-            curr_pos <= adc_cnt[2];
-            if (curr_pos)
-            begin
-              adc_data <= adc_temp;
-              adc_wr <= 1;
-            end
-            else
-              adc_wr <= 0;
-          end
-          else
-            adc_wr <= 0;
-        end
-        else
-          adc_wr <= 0;
-      end
+        adc_wr <= 0;
     end
 
   end

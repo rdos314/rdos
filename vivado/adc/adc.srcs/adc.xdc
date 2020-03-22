@@ -1,9 +1,3 @@
-create_clock -period 4.000 -name sys_clk [get_ports sys_clk_p]
-create_clock -period 2.667 -name rx_ref_clk [get_ports rx_ref_clk_p]
-create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
-create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
-create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
-
 set_property IOSTANDARD LVCMOS25 [get_ports sys_rst_n]
 set_property PULLUP true [get_ports sys_rst_n]
 set_property PACKAGE_PIN G25 [get_ports sys_rst_n]
@@ -124,18 +118,18 @@ set_property PACKAGE_PIN  D28 [get_ports trig_n]         ; ## H14  FMC_HPC_LA07_
 set_property LOC IBUFDS_GTE2_X0Y1 [get_cells refclk_ibuf]
 
 # ADC/DAC clocks
-
-create_clock -name tx_ref_clk   -period  2.00 [get_ports tx_ref_clk_p]
-create_clock -name rx_ref_clk   -period  2.00 [get_ports rx_ref_clk_p]
-
-set_false_path -to [get_ports -filter NAME=~led_*]
+create_clock -period 4.000 -name sys_clk [get_ports sys_clk_p]
+create_clock -period 2.667 -name rx_ref_clk [get_ports rx_ref_clk_p]
+create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
+create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
+create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
+ 
 set_false_path -from [get_ports sys_rst_n]
-set_false_path -from [get_pins -hierarchical *req_start*]
-set_false_path -from [get_pins -hierarchical *req_stop*]
-set_false_path -from [get_pins -hierarchical *adc_on*]
-set_false_path -from [get_pins -hierarchical *notify_sample_data*]
-set_false_path -from [get_pins -hierarchical *ack_sample_data*]
-set_false_path -from [get_pins -hierarchical *sync_buffer*] 
+set_false_path -from [get_clocks sys_clk] -to [get_clocks rx_ref_clk]
+set_false_path -from [get_clocks rx_ref_clk] -to [get_clocks sys_clk]
+set_false_path -from [get_clocks sys_clk] -to [get_clocks rx_sysref]
+set_false_path -from [get_clocks rx_sysref] -to [get_clocks sys_clk]
+set_false_path -from [get_pins up_clk_inst/clk_out1] -to [get_clocks sys_clk]
 
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]

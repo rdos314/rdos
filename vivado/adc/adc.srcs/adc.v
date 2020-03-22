@@ -138,6 +138,9 @@ module adc (
   wire                   adc_probing;
   wire [31:0]            adc_sync_fail_cnt;
   wire [31:0]            adc_sync_ok_cnt;
+
+  wire                   rx_clk;
+  wire                   tx_clk;
     
   wire                   rx_ref_clk;
   wire                   rx_sysref;
@@ -150,11 +153,15 @@ module adc (
 
   wire                   trig;
 
-  wire                   rx_valid;
   wire [63:0]            rx_sysref_cnt;
   
-  wire                   adc_wr;
-  wire [1023:0]          adc_data;
+  wire                   rx_adc_wr;
+  wire [1023:0]          rx_adc_data;
+
+  reg                    pci_rx_wr;
+  reg                    pci_curr_wr;
+  reg                    pci_adc_wr;
+  reg [1023:0]           pci_adc_data;
 
   wire                   up_adc_spi_read;
   wire                   up_adc_spi_write;
@@ -224,8 +231,11 @@ up_clk up_clk_inst
 
 daq2_app daq2_app_inst (
   .clk(user_clk),
-  .up_clk(up_clk),
   .reset(user_reset),
+
+  .up_clk(up_clk),
+  .rx_clk(rx_clk),
+  .tx_clk(tx_clk),
 
   .rx_ref_clk(rx_ref_clk),
   .rx_sysref(rx_sysref),
@@ -251,7 +261,6 @@ daq2_app daq2_app_inst (
   .dac_reset(dac_reset),
   .clkd_sync(clkd_sync),
 
-  .rx_valid(rx_valid),
   .rx_sysref_cnt(rx_sysref_cnt),
   
   .adc_start(adc_start),
@@ -263,8 +272,8 @@ daq2_app daq2_app_inst (
   .adc_sync_fail_cnt(adc_sync_fail_cnt),
   .adc_sync_ok_cnt(adc_sync_ok_cnt),
   
-  .adc_wr(adc_wr),
-  .adc_data(adc_data),
+  .adc_wr(rx_adc_wr),
+  .adc_data(rx_adc_data),
     
   .up_adc_spi_read(up_adc_spi_read),
   .up_adc_spi_write(up_adc_spi_write),
@@ -308,11 +317,11 @@ pci_app pci_app_inst (
     .adc_stop(adc_stop),
     .adc_running(adc_running),
     .adc_probing(adc_probing),
-    .adc_valid(rx_valid),
+    .adc_valid(0),
     .adc_sysref_cnt(rx_sysref_cnt),
     
-    .adc_wr(adc_wr),
-    .adc_data(adc_data)
+    .adc_wr(pci_adc_wr),
+    .adc_data(pci_adc_data)
 );
 
 spi_fifo_rq spi_fifo_rq_inst (
@@ -384,5 +393,41 @@ daq2_spi daq2_spi_inst (
   OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
+
+generate
+  begin : adc
+
+    always @ ( posedge user_clk ) 
+    begin
+      pci_adc_data <= rx_adc_data;
+      pci_rx_wr <= rx_adc_wr;
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (user_reset)
+      begin
+        pci_curr_wr <= 0;
+        pci_adc_wr <= 0;
+      end
+      else
+      begin
+        if (pci_rx_wr != pci_curr_wr)
+        begin
+          pci_curr_wr <= pci_rx_wr;
+
+          if (pci_rx_wr)
+            pci_adc_wr <= 1;
+          else
+            pci_adc_wr <= 0;
+        end
+        else
+          pci_adc_wr <= 0;
+      end
+    end
+
+  end
+
+endgenerate
 
 endmodule
