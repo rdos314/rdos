@@ -57,7 +57,7 @@ ila_5 ila5_inst (
    .probe8(spi_rp_adr),                  // input wire [11:0]  probe1 
    .probe9(spi_rp),                      // input wire [0:0]  probe1 
    .probe10(spi_rp_data),                // input wire [15:0]  probe1 
-   .probe11(spi_started),                 // input wire [0:0]  probe1 
+   .probe11(spi_started),                // input wire [0:0]  probe1 
    .probe12(spi_cs_clk),                 // input wire [0:0]  probe1 
    .probe13(spi_cs_adc),                 // input wire [0:0]  probe1 
    .probe14(spi_cs_dac),                 // input wire [0:0]  probe1 
@@ -74,13 +74,13 @@ ila_5 ila5_inst (
    .probe25(spi_out_data),               // input wire [15:0]  probe1 
    .probe26(spi_rp_data),                // input wire [29:0]  probe1 
    .probe27(spi_rp_wr),                  // input wire [0:0]  probe1 
-   .probe28(adc_spi_write),              // input wire [0:0]  probe1 
-   .probe29(adc_spi_read),               // input wire [0:0]  probe1 
-   .probe30(adc_spi_adr),                // input wire [11:0]  probe1 
-   .probe31(adc_spi_out_data),           // input wire [7:0]  probe1 
-   .probe32(adc_spi_in_data),            // input wire [7:0]  probe1 
-   .probe33(adc_spi_running),            // input wire [0:0]  probe1 
-   .probe34(adc_spi_done),               // input wire [0:0]  probe1 
+   .probe28(adc_write),                  // input wire [0:0]  probe1 
+   .probe29(adc_read),                   // input wire [0:0]  probe1 
+   .probe30(adc_adr),                    // input wire [11:0]  probe1 
+   .probe31(adc_out_data),               // input wire [7:0]  probe1 
+   .probe32(adc_in_data),                // input wire [7:0]  probe1 
+   .probe33(adc_running),                // input wire [0:0]  probe1 
+   .probe34(adc_done),                   // input wire [0:0]  probe1 
    .probe35(spi_delay)                   // input wire [0:0]  probe1 
 );
 

@@ -156,13 +156,13 @@ module adc (
   wire                   adc_wr;
   wire [1023:0]          adc_data;
 
-  wire                   adc_spi_read;
-  wire                   adc_spi_write;
-  wire [11:0]            adc_spi_adr;
-  wire [7:0]             adc_spi_in_data;
-  wire [7:0]             adc_spi_out_data;
-  wire                   adc_spi_running;
-  wire                   adc_spi_done;
+  wire                   up_adc_spi_read;
+  wire                   up_adc_spi_write;
+  wire [11:0]            up_adc_spi_adr;
+  wire [7:0]             up_adc_spi_in_data;
+  wire [7:0]             up_adc_spi_out_data;
+  wire                   up_adc_spi_running;
+  wire                   up_adc_spi_done;
 
   wire [31:0]            pci_spi_rq_in;
   wire                   pci_spi_wr;
@@ -266,13 +266,13 @@ daq2_app daq2_app_inst (
   .adc_wr(adc_wr),
   .adc_data(adc_data),
     
-  .adc_spi_read(adc_spi_read),
-  .adc_spi_write(adc_spi_write),
-  .adc_spi_adr(adc_spi_adr),
-  .adc_spi_in_data(adc_spi_in_data),
-  .adc_spi_out_data(adc_spi_out_data),
-  .adc_spi_running(adc_spi_running),
-  .adc_spi_done(adc_spi_done)
+  .up_adc_spi_read(up_adc_spi_read),
+  .up_adc_spi_write(up_adc_spi_write),
+  .up_adc_spi_adr(up_adc_spi_adr),
+  .up_adc_spi_in_data(up_adc_spi_in_data),
+  .up_adc_spi_out_data(up_adc_spi_out_data),
+  .up_adc_spi_running(up_adc_spi_running),
+  .up_adc_spi_done(up_adc_spi_done)
 );
 
 pci_app pci_app_inst (
@@ -340,6 +340,13 @@ spi_fifo_rp spi_fifo_rp_inst (
 );
 
 daq2_spi daq2_spi_inst (
+    .spi_cs_clk (spi_csn_clk),
+    .spi_cs_adc (spi_csn_adc),
+    .spi_cs_dac (spi_csn_dac),
+    .spi_clk (spi_clk),
+    .spi_sdio (spi_sdio),
+    .spi_dir (spi_dir),
+
     .reset (user_reset),
     .up_clk (up_clk),
 
@@ -351,23 +358,16 @@ daq2_spi daq2_spi_inst (
     .spi_rq_data (up_spi_rq_out[15:0]),
     .spi_rq_ack (up_spi_rq_ack),
 
-    .adc_read(adc_spi_read),
-    .adc_write(adc_spi_write),
-    .adc_adr(adc_spi_adr),
-    .adc_in_data(adc_spi_in_data),
-    .adc_out_data(adc_spi_out_data),
-    .adc_running(adc_spi_running),
-    .adc_done(adc_spi_done),
+    .adc_read(up_adc_spi_read),
+    .adc_write(up_adc_spi_write),
+    .adc_adr(up_adc_spi_adr),
+    .adc_in_data(up_adc_spi_in_data),
+    .adc_out_data(up_adc_spi_out_data),
+    .adc_running(up_adc_spi_running),
+    .adc_done(up_adc_spi_done),
 
     .spi_rp_data (up_spi_rp_in),
-    .spi_rp_wr (up_spi_rp),
-
-    .spi_cs_clk (spi_cs_clk),
-    .spi_cs_adc (spi_cs_adc),
-    .spi_cs_dac (spi_cs_dac),
-    .spi_clk (spi_clk),
-    .spi_sdio (spi_sdio),
-    .spi_dir (spi_dir)
+    .spi_rp_wr (up_spi_rp)
 );
 
  //-----------------------------I/O BUFFERS------------------------//

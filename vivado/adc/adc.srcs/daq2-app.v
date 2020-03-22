@@ -43,13 +43,13 @@ module daq2_app
   output reg              adc_wr,
   output reg [1023:0]     adc_data,
 
-  output reg              adc_spi_read,
-  output reg              adc_spi_write,
-  output reg [11:0]       adc_spi_adr,
-  input wire [7:0]        adc_spi_in_data,
-  output reg [7:0]        adc_spi_out_data,
-  input wire              adc_spi_running,
-  input wire              adc_spi_done
+  output reg              up_adc_spi_read,
+  output reg              up_adc_spi_write,
+  output reg [11:0]       up_adc_spi_adr,
+  input wire [7:0]        up_adc_spi_in_data,
+  output reg [7:0]        up_adc_spi_out_data,
+  input wire              up_adc_spi_running,
+  input wire              up_adc_spi_done
 );
 
  wire                     rx_clk;
@@ -430,12 +430,12 @@ ila_6 ila_6_inst (
 	.probe1(pend_start),                // input wire [0:0]  probe11
 	.probe2(up_rstn),                   // input wire [0:0]  probe11
 	.probe3(qpll_rst),                  // input wire [0:0]  probe11
-	.probe4(adc_spi_read),              // input wire [0:0]  probe8 
-	.probe5(adc_spi_write),             // input wire [0:0]  probe8 
-	.probe6(adc_spi_adr),               // input wire [11:0]  probe8 
-	.probe7(adc_spi_out_data),          // input wire [7:0]  probe8 
-	.probe8(adc_spi_running),           // input wire [0:0]  probe8 
-	.probe9(adc_spi_done),              // input wire [0:0]  probe8 
+	.probe4(up_adc_spi_read),              // input wire [0:0]  probe8 
+	.probe5(up_adc_spi_write),             // input wire [0:0]  probe8 
+	.probe6(up_adc_spi_adr),               // input wire [11:0]  probe8 
+	.probe7(up_adc_spi_out_data),          // input wire [7:0]  probe8 
+	.probe8(up_adc_spi_running),           // input wire [0:0]  probe8 
+	.probe9(up_adc_spi_done),              // input wire [0:0]  probe8 
 	.probe10(up_pll_rst_cnt),            // input wire [3:0]  probe9 
 	.probe11(up_rx_rst_cnt),             // input wire [3:0]  probe10 
 	.probe12(up_rx_user_ready_cnt),      // input wire [6:0]  probe11
@@ -558,8 +558,8 @@ generate
         pend_start <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
-        adc_spi_read <= 0;
-        adc_spi_write <= 0;
+        up_adc_spi_read <= 0;
+        up_adc_spi_write <= 0;
         spi_test_done <= 0;
       end
       else
@@ -591,12 +591,12 @@ generate
             begin
               if (adc_running)
               begin
-                if (adc_spi_done)
+                if (up_adc_spi_done)
                   spi_test_done <= 1;
 
                 if (spi_test_done)
                 begin
-                  adc_spi_write <= 0;
+                  up_adc_spi_write <= 0;
 
                   if (qpll_locked)
                     if (up_pll_rst_cnt[3] == 1'b1) 
@@ -624,9 +624,9 @@ generate
               end
               else
               begin
-                adc_spi_adr <= 12'h550;
-                adc_spi_out_data <= 8'h07;
-                adc_spi_write <= 1;
+                up_adc_spi_adr <= 12'h550;
+                up_adc_spi_out_data <= 8'h07;
+                up_adc_spi_write <= 1;
                 adc_running <= 1;
                 adc_probing <= 1;
               end
@@ -635,14 +635,14 @@ generate
             begin
               if (adc_test_m)
               begin
-                adc_spi_adr <= 12'h550;
-                adc_spi_out_data <= adc_curr_test;
-                adc_spi_write <= 1;
+                up_adc_spi_adr <= 12'h550;
+                up_adc_spi_out_data <= adc_curr_test;
+                up_adc_spi_write <= 1;
               end
 
-              if (adc_spi_done)
+              if (up_adc_spi_done)
               begin
-                adc_spi_write <= 0;
+                up_adc_spi_write <= 0;
                 adc_probing <= 0;
               end;
             end
