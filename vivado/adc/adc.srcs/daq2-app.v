@@ -105,6 +105,15 @@ module daq2_app
  wire [13:0]              adcB_2;
  wire [13:0]              adcB_3;
 
+ wire                     rx_test_ok;
+ reg                      rx_wait_for_run;
+ reg                      rx_probing;
+ reg                      rx_running;
+ reg                      rx_run;
+
+ reg                      up_run;
+ reg                      up_wait_for_run;
+
  reg [7:0]                curr_test_mode;
  reg [2:0]                adc_cnt;
  reg [1023:0]             adc_curr;
@@ -484,6 +493,11 @@ endfunction
 
 generate
   begin : daq2_app
+
+    always @(posedge up_clk) 
+    begin
+      up_run <= rx_run;
+    end
         
     always @(posedge up_clk) 
     begin
@@ -498,6 +512,7 @@ generate
         qpll_rst <= 0;
         up_adc_spi_read <= 0;
         up_adc_spi_write <= 0;
+        up_wait_for_run <= 0;
       end
       else
       begin
@@ -520,6 +535,7 @@ generate
             adc_started <= 0;
             adc_probing <= 0;
             adc_running <= 0;
+            up_wait_for_run <= 0;
             up_rstn <= 0;
           end
           else
@@ -581,13 +597,17 @@ generate
                   up_adc_spi_adr <= 12'h550;
                   up_adc_spi_out_data <= adc_test_mode;
                   up_adc_spi_write <= 1;
+                  up_wait_for_run <= 1;
                 end
 
                 if (up_adc_spi_done)
-                begin
                   up_adc_spi_write <= 0;
-                  adc_running <= 1;
-                end
+              end
+
+              if (up_run)
+              begin
+                up_wait_for_run <= 0;
+                adc_running <= 1;
               end
             end
           end
@@ -624,6 +644,15 @@ generate
     assign adcB_2 = {jesd_rx_data[87:80], jesd_rx_data[119:114]};
     assign adcB_3 = {jesd_rx_data[95:88], jesd_rx_data[127:122]};
 
+    assign rx_test_ok = check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3);
+
+    always @ ( posedge rx_clk ) 
+    begin
+      rx_probing <= adc_probing;
+      rx_running <= adc_running;
+      rx_wait_for_run <= up_wait_for_run;
+    end
+
     always @ ( posedge rx_clk ) 
     begin
       if (rx_valid)
@@ -657,33 +686,44 @@ generate
         adc_curr[1023] <= adcB_3[13];
 
         adc_curr[895:0] <= adc_curr[1023:128];
-        adc_cnt <= adc_cnt + 1;
+
+        if (rx_running || (rx_wait_for_run && !rx_test_ok))
+          adc_cnt <= adc_cnt + 1;
+        else
+          adc_cnt <= 0;
       end
       else
-      begin
         adc_cnt <= 0;
-      end
     end
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_valid)
+      if (rx_valid && rx_probing)
       begin
-        if (check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3))
-          adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
-        else
-          adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
+        if (!rx_running)
+        begin        
+          if (rx_test_ok)
+            adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
+          else
+          begin
+            if (rx_wait_for_run)
+              rx_run <= 1;
+            else
+              adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
+          end
+        end
       end
       else
       begin
         adc_sync_fail_cnt <= 0;
         adc_sync_ok_cnt <= 0;
+        rx_run <= 0;
       end
     end
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_valid && adc_running)
+      if (rx_valid && rx_running)
       begin
         case (adc_cnt)
           3: adc_wr <= 0;
