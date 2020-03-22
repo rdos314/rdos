@@ -14,14 +14,6 @@ module pci_app (
     user_lnk_width,
     cfg_interrupt_msienable,
 
-    up_clk,    
-    spi_cs_clk,
-    spi_cs_adc,
-    spi_cs_dac,
-    spi_clk,
-    spi_sdio,
-    spi_dir,
-
     bar_control,
     bar_adc_test_mode,
 
@@ -38,13 +30,14 @@ module pci_app (
     adc_wr,
     adc_data,
 
-    adc_spi_read,
-    adc_spi_write,
-    adc_spi_adr,
-    adc_spi_in_data,
-    adc_spi_out_data,
-    adc_spi_running,
-    adc_spi_done
+    spi_wr,
+    spi_fifo_req_in,
+    spi_fifo_req_out,
+    spi_fifo_req_empty,
+
+    spi_rp_empty,
+    spi_rp_data,
+    spi_rp_ack
 );
 
   output  [7:0]        pci_exp_txp;
@@ -63,14 +56,6 @@ module pci_app (
   output   [1:0]       user_lnk_width;
   output               cfg_interrupt_msienable;
 
-  input                up_clk;
-  output               spi_cs_clk;
-  output               spi_cs_adc;
-  output               spi_cs_dac;
-  output               spi_clk;
-  inout                spi_sdio;
-  output               spi_dir;
-
   output reg [7:0]     bar_control;
   output reg [7:0]     bar_adc_test_mode;
 
@@ -86,14 +71,14 @@ module pci_app (
   input wire           adc_wr;
   input wire [1023:0]  adc_data;
 
-  input                adc_spi_read;
-  input                adc_spi_write;
-  input      [11:0]    adc_spi_adr;
-  output     [7:0]     adc_spi_in_data;
-  input      [7:0]     adc_spi_out_data;
-  output               adc_spi_running;
-  output               adc_spi_done;
+  output reg           spi_wr;
+  output reg [31:0]    spi_fifo_req_in;
+  input wire [31:0]    spi_fifo_req_out;
+  input wire           spi_fifo_req_empty;
 
+  input wire           spi_rp_empty;
+  input wire [29:0]    spi_rp_data;
+  output reg           spi_rp_ack;
 
 // Wire Declarations
 
@@ -174,14 +159,6 @@ module pci_app (
   reg [31:0]       bar_spi_adc;
   reg [31:0]       bar_spi_dac;
   
-  reg              spi_wr;
-  reg [31:0]       spi_fifo_req_in;
-  wire [31:0]      spi_fifo_req_out;
-  wire             spi_fifo_req_empty;
-
-  wire             spi_rp_empty;
-  wire [29:0]      spi_rp_data;
-  reg              spi_rp_ack;
   
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -499,49 +476,6 @@ adc_mem adc_mem_inst (
     .bar2_ack( bar2_ack)                        // I
 );
 
-  daq2_spi daq2_spi_inst (
-    .clk (user_clk),
-    .reset (user_reset),
-    .up_clk (up_clk),
-
-    .spi_rq_rd (spi_fifo_req_out[31]),
-    .spi_rq_cs (spi_fifo_req_out[30:29]),
-    .spi_rq_word (spi_fifo_req_out[28]),
-    .spi_rq_adr (spi_fifo_req_out[27:16]),
-    .spi_rq_empty (spi_fifo_req_empty),
-    .spi_rq_data (spi_fifo_req_out[15:0]),
-    .spi_rq_ack (spi_rq_ack),
-
-    .adc_read(adc_spi_read),
-    .adc_write(adc_spi_write),
-    .adc_adr(adc_spi_adr),
-    .adc_in_data(adc_spi_in_data),
-    .adc_out_data(adc_spi_out_data),
-    .adc_running(adc_spi_running),
-    .adc_done(adc_spi_done),
-
-    .spi_rp_empty (spi_rp_empty),
-    .spi_rp_data (spi_rp_data),
-    .spi_rp_ack (spi_rp_ack),
-
-    .spi_cs_clk (spi_cs_clk),
-    .spi_cs_adc (spi_cs_adc),
-    .spi_cs_dac (spi_cs_dac),
-    .spi_clk (spi_clk),
-    .spi_sdio (spi_sdio),
-    .spi_dir (spi_dir));
-
-spi_fifo_rq spi_fifo_rq_inst (
-  .rst(user_reset),             // input wire rst
-  .wr_clk(user_clk),            // input wire wr_clk
-  .rd_clk(up_clk),              // input wire rd_clk
-  .din(spi_fifo_req_in),        // input wire [31 : 0] din
-  .wr_en(spi_wr),               // input wire wr_en
-  .rd_en(spi_rq_ack),           // input wire rd_en
-  .dout(spi_fifo_req_out),      // output wire [31 : 0] dout
-  .full(),                      // output wire full
-  .empty(spi_fifo_req_empty)    // output wire empty
-);
 
 adc_app adc_app_inst (
     .clk(user_clk),

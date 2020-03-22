@@ -164,6 +164,15 @@ module adc (
   wire                   adc_spi_running;
   wire                   adc_spi_done;
 
+  wire                   spi_wr;
+  wire [31:0]            spi_fifo_req_in;
+  wire [31:0]            spi_fifo_req_out;
+  wire                   spi_fifo_req_empty;
+
+  wire                   spi_rp_empty;
+  wire [29:0]            spi_rp_data;
+  wire                   spi_rp_ack;
+
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
     .I (rx_ref_clk_p),
@@ -278,13 +287,14 @@ pci_app pci_app_inst (
     .user_lnk_width(user_lnk_width),
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
-    .up_clk (up_clk),
-    .spi_cs_clk (spi_csn_clk),
-    .spi_cs_adc (spi_csn_adc),
-    .spi_cs_dac (spi_csn_dac),
-    .spi_clk (spi_clk),
-    .spi_sdio (spi_sdio),
-    .spi_dir (spi_dir),
+    .spi_wr(spi_wr),
+    .spi_fifo_req_in(spi_fifo_req_in),
+    .spi_fifo_req_out(spi_fifo_req_out),
+    .spi_fifo_req_empty(spi_fifo_req_empty),
+
+    .spi_rp_empty(spi_rp_empty),
+    .spi_rp_data(spi_rp_data),
+    .spi_rp_ack(spi_rp_ack),
 
     .bar_control(bar_control),
     .bar_adc_test_mode(bar_adc_test_mode),
@@ -300,16 +310,54 @@ pci_app pci_app_inst (
     .adc_sysref_cnt(rx_sysref_cnt),
     
     .adc_wr(adc_wr),
-    .adc_data(adc_data),
-    
-    .adc_spi_read(adc_spi_read),
-    .adc_spi_write(adc_spi_write),
-    .adc_spi_adr(adc_spi_adr),
-    .adc_spi_in_data(adc_spi_in_data),
-    .adc_spi_out_data(adc_spi_out_data),
-    .adc_spi_running(adc_spi_running),
-    .adc_spi_done(adc_spi_done)
+    .adc_data(adc_data)
 );
+
+spi_fifo_rq spi_fifo_rq_inst (
+  .rst(user_reset),             // input wire rst
+  .wr_clk(user_clk),            // input wire wr_clk
+  .rd_clk(up_clk),              // input wire rd_clk
+  .din(spi_fifo_req_in),        // input wire [31 : 0] din
+  .wr_en(spi_wr),               // input wire wr_en
+  .rd_en(spi_rq_ack),           // input wire rd_en
+  .dout(spi_fifo_req_out),      // output wire [31 : 0] dout
+  .full(),                      // output wire full
+  .empty(spi_fifo_req_empty)    // output wire empty
+);
+
+daq2_spi daq2_spi_inst (
+    .clk (user_clk),
+    .reset (user_reset),
+    .up_clk (up_clk),
+
+    .spi_rq_rd (spi_fifo_req_out[31]),
+    .spi_rq_cs (spi_fifo_req_out[30:29]),
+    .spi_rq_word (spi_fifo_req_out[28]),
+    .spi_rq_adr (spi_fifo_req_out[27:16]),
+    .spi_rq_empty (spi_fifo_req_empty),
+    .spi_rq_data (spi_fifo_req_out[15:0]),
+    .spi_rq_ack (spi_rq_ack),
+
+    .adc_read(adc_spi_read),
+    .adc_write(adc_spi_write),
+    .adc_adr(adc_spi_adr),
+    .adc_in_data(adc_spi_in_data),
+    .adc_out_data(adc_spi_out_data),
+    .adc_running(adc_spi_running),
+    .adc_done(adc_spi_done),
+
+    .spi_rp_empty (spi_rp_empty),
+    .spi_rp_data (spi_rp_data),
+    .spi_rp_ack (spi_rp_ack),
+
+    .spi_cs_clk (spi_cs_clk),
+    .spi_cs_adc (spi_cs_adc),
+    .spi_cs_dac (spi_cs_dac),
+    .spi_clk (spi_clk),
+    .spi_sdio (spi_sdio),
+    .spi_dir (spi_dir)
+);
+
 
  //-----------------------------I/O BUFFERS------------------------//
 
