@@ -1,7 +1,6 @@
 `timescale 1ns/100ps
 
 module daq2_spi (
-  input                   clk,
   input                   reset,
   input                   up_clk,
 
@@ -13,6 +12,9 @@ module daq2_spi (
   input      [15:0]       spi_rq_data,
   output reg              spi_rq_ack,
 
+  output reg [29:0]       spi_rp_data,
+  output reg              spi_rp_wr,
+
   input                   adc_read,
   input                   adc_write,
   input      [11:0]       adc_adr,
@@ -20,10 +22,6 @@ module daq2_spi (
   input      [7:0]        adc_out_data,
   output reg              adc_running,
   output reg              adc_done,
-
-  output wire             spi_rp_empty,
-  output wire [29:0]      spi_rp_data,
-  input                   spi_rp_ack,
 
   output reg              spi_cs_clk,
   output reg              spi_cs_adc,
@@ -45,21 +43,6 @@ module daq2_spi (
 
   reg [15:0]              spi_out_data;
   reg [15:0]              spi_in_data;
-  
-  reg [29:0]              spi_fifo_data;
-  reg                     spi_fifo_wr;
-
-spi_fifo_rp spi_fifo_rp_inst (
-  .rst(reset),                 // input wire rst
-  .wr_clk(up_clk),             // input wire wr_clk
-  .rd_clk(clk),                // input wire rd_clk
-  .din(spi_fifo_data),         // input wire [29 : 0] din
-  .wr_en(spi_fifo_wr),         // input wire wr_en
-  .rd_en(spi_rp_ack),          // input wire rd_en
-  .dout(spi_rp_data),          // output wire [29 : 0] dout
-  .full(),                     // output wire full
-  .empty(spi_rep_empty)        // output wire empty
-);
 
 ila_5 ila5_inst (
    .clk ( up_clk ),                      // I
@@ -89,8 +72,8 @@ ila_5 ila5_inst (
    .probe23(spi_cmd),                    // input wire [15:0]  probe1 
    .probe24(spi_in_data),                // input wire [15:0]  probe1 
    .probe25(spi_out_data),               // input wire [15:0]  probe1 
-   .probe26(spi_fifo_data),              // input wire [29:0]  probe1 
-   .probe27(spi_fifo_wr),                // input wire [0:0]  probe1 
+   .probe26(spi_rp_data),                // input wire [29:0]  probe1 
+   .probe27(spi_rp_wr),                  // input wire [0:0]  probe1 
    .probe28(adc_spi_write),              // input wire [0:0]  probe1 
    .probe29(adc_spi_read),               // input wire [0:0]  probe1 
    .probe30(adc_spi_adr),                // input wire [11:0]  probe1 
@@ -110,7 +93,7 @@ ila_5 ila5_inst (
       spi_cs_dac <= 1;
 
       spi_rq_ack <= 0;
-      spi_fifo_wr <= 0;
+      spi_rp_wr <= 0;
 
       spi_size <= 16;
       spi_count <= 0;
@@ -127,7 +110,7 @@ ila_5 ila5_inst (
     begin
       if (spi_delay)
       begin
-        spi_fifo_wr <= 0;
+        spi_rp_wr <= 0;
         spi_rq_ack <= 0;
         
         if (spi_delay == 1)
@@ -189,10 +172,10 @@ ila_5 ila5_inst (
               if (spi_rd_wr_n && !adc_running)
               begin
                 if (spi_size == 24)
-                  spi_fifo_data[7:0] <= spi_in_data[7:0];
+                  spi_rp_data[7:0] <= spi_in_data[7:0];
                 else
-                  spi_fifo_data[15:0] <= spi_in_data[15:0];
-                spi_fifo_wr <= 1;
+                  spi_rp_data[15:0] <= spi_in_data[15:0];
+                spi_rp_wr <= 1;
               end
 
               spi_cs_clk <= 1;
@@ -287,8 +270,8 @@ ila_5 ila5_inst (
             else
               spi_cmd[11:0] <= spi_rq_adr;
 
-            spi_fifo_data[29:28] <= spi_rq_cs;
-            spi_fifo_data[27:16] <= spi_rq_adr;
+            spi_rp_data[29:28] <= spi_rq_cs;
+            spi_rp_data[27:16] <= spi_rq_adr;
 
             if (spi_rq_word)
             begin
@@ -299,7 +282,7 @@ ila_5 ila5_inst (
             begin
               spi_size <= 24;
               spi_out_data[15:8] <= spi_rq_data[7:0];
-              spi_fifo_data[15:8] <= 0;
+              spi_rp_data[15:8] <= 0;
             end
             adc_done <= 0;
             adc_running <= 0;

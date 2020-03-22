@@ -31,9 +31,7 @@ module pci_app (
     adc_data,
 
     spi_wr,
-    spi_fifo_req_in,
-    spi_fifo_req_out,
-    spi_fifo_req_empty,
+    spi_rq_in,
 
     spi_rp_empty,
     spi_rp_data,
@@ -72,9 +70,7 @@ module pci_app (
   input wire [1023:0]  adc_data;
 
   output reg           spi_wr;
-  output reg [31:0]    spi_fifo_req_in;
-  input wire [31:0]    spi_fifo_req_out;
-  input wire           spi_fifo_req_empty;
+  output reg [31:0]    spi_rq_in;
 
   input wire           spi_rp_empty;
   input wire [29:0]    spi_rp_data;
@@ -519,90 +515,90 @@ generate
           1:
           begin
             if (bar0_wr_be[0])
-              spi_fifo_req_in[7:0] = bar0_wr_data[7:0];
+              spi_rq_in[7:0] = bar0_wr_data[7:0];
             else 
-              spi_fifo_req_in[7:0] = bar_spi_clk[7:0];
+              spi_rq_in[7:0] = bar_spi_clk[7:0];
  
             if (bar0_wr_be[1])
-              spi_fifo_req_in[15:8] = bar0_wr_data[15:8];
+              spi_rq_in[15:8] = bar0_wr_data[15:8];
             else 
-              spi_fifo_req_in[15:8] = bar_spi_clk[15:8];
+              spi_rq_in[15:8] = bar_spi_clk[15:8];
  
             if (bar0_wr_be[2])
-              spi_fifo_req_in[23:16] = bar0_wr_data[23:16];
+              spi_rq_in[23:16] = bar0_wr_data[23:16];
             else 
-              spi_fifo_req_in[23:16] = bar_spi_clk[23:16];
+              spi_rq_in[23:16] = bar_spi_clk[23:16];
 
             if (bar0_wr_be[3])
-              spi_fifo_req_in[30:29] = 0;
+              spi_rq_in[30:29] = 0;
           end
 
           2:
           begin
             if (bar0_wr_be[0])
-              spi_fifo_req_in[7:0] = bar0_wr_data[7:0];
+              spi_rq_in[7:0] = bar0_wr_data[7:0];
             else 
-              spi_fifo_req_in[7:0] = bar_spi_adc[7:0];
+              spi_rq_in[7:0] = bar_spi_adc[7:0];
  
             if (bar0_wr_be[1])
-              spi_fifo_req_in[15:8] = bar0_wr_data[15:8];
+              spi_rq_in[15:8] = bar0_wr_data[15:8];
             else 
-              spi_fifo_req_in[15:8] = bar_spi_adc[15:8];
+              spi_rq_in[15:8] = bar_spi_adc[15:8];
  
             if (bar0_wr_be[2])
-              spi_fifo_req_in[23:16] = bar0_wr_data[23:16];
+              spi_rq_in[23:16] = bar0_wr_data[23:16];
             else 
-              spi_fifo_req_in[23:16] = bar_spi_adc[23:16];
+              spi_rq_in[23:16] = bar_spi_adc[23:16];
 
             if (bar0_wr_be[3])
-              spi_fifo_req_in[30:29] = 1;
+              spi_rq_in[30:29] = 1;
           end
 
           3:
           begin
             if (bar0_wr_be[0])
-              spi_fifo_req_in[7:0] = bar0_wr_data[7:0];
+              spi_rq_in[7:0] = bar0_wr_data[7:0];
             else 
-              spi_fifo_req_in[7:0] = bar_spi_dac[7:0];
+              spi_rq_in[7:0] = bar_spi_dac[7:0];
  
             if (bar0_wr_be[1])
-              spi_fifo_req_in[15:8] = bar0_wr_data[15:8];
+              spi_rq_in[15:8] = bar0_wr_data[15:8];
             else 
-              spi_fifo_req_in[15:8] = bar_spi_dac[15:8];
+              spi_rq_in[15:8] = bar_spi_dac[15:8];
  
             if (bar0_wr_be[2])
-              spi_fifo_req_in[23:16] = bar0_wr_data[23:16];
+              spi_rq_in[23:16] = bar0_wr_data[23:16];
             else 
-              spi_fifo_req_in[23:16] = bar_spi_dac[23:16];
+              spi_rq_in[23:16] = bar_spi_dac[23:16];
 
             if (bar0_wr_be[3])
-              spi_fifo_req_in[30:29] = 2;
+              spi_rq_in[30:29] = 2;
           end
         endcase
 
         if (bar0_wr_be[3])
         begin
-          spi_fifo_req_in[27:24] = bar0_wr_data[27:24];
+          spi_rq_in[27:24] = bar0_wr_data[27:24];
 
           case (bar0_wr_data[31:28])
             12:
             begin
-              spi_fifo_req_in[31] = 1;
-              spi_fifo_req_in[28] = 1;
+              spi_rq_in[31] = 1;
+              spi_rq_in[28] = 1;
               spi_wr = 1;
             end
 
             2:
             begin
-              spi_fifo_req_in[31] = 0;
-              spi_fifo_req_in[28] = 1;
+              spi_rq_in[31] = 0;
+              spi_rq_in[28] = 1;
               spi_wr = 1;
             end
 
             1:
             begin
-              spi_fifo_req_in[31] = 0;
-              spi_fifo_req_in[28] = 0;
+              spi_rq_in[31] = 0;
+              spi_rq_in[28] = 0;
               spi_wr = 1;
             end
 
