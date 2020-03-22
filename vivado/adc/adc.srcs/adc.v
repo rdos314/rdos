@@ -128,12 +128,14 @@ module adc (
   wire                   sample_clk;  
   wire                   clk;  
   wire [7:0]             bar_control;
-  wire [7:0]             bar_adc_test_mode;
   
   wire                   spi_locked;
 
-  wire [31:0]            adc_sync_fail_cnt;
-  wire [31:0]            adc_sync_ok_cnt;
+  wire [31:0]            rx_sync_fail_cnt;
+  wire [31:0]            rx_sync_ok_cnt;
+
+  reg [31:0]             pci_sync_fail_cnt;
+  reg [31:0]             pci_sync_ok_cnt;
 
   wire                   rx_clk;
   wire                   tx_clk;
@@ -294,8 +296,8 @@ daq2_app daq2_app_inst (
   .adc_running(up_adc_running),
   .adc_test_mode(up_test_mode),
 
-  .adc_sync_fail_cnt(adc_sync_fail_cnt),
-  .adc_sync_ok_cnt(adc_sync_ok_cnt),
+  .adc_sync_fail_cnt(rx_sync_fail_cnt),
+  .adc_sync_ok_cnt(rx_sync_ok_cnt),
   
   .adc_wr(rx_adc_wr),
   .adc_data(rx_adc_data),
@@ -335,8 +337,8 @@ pci_app pci_app_inst (
     .bar_control(bar_control),
     .bar_adc_test_mode(pci_test_mode),
 
-    .adc_sync_fail_cnt(adc_sync_fail_cnt),
-    .adc_sync_ok_cnt(adc_sync_ok_cnt),
+    .adc_sync_fail_cnt(pci_sync_fail_cnt),
+    .adc_sync_ok_cnt(pci_sync_ok_cnt),
 
     .adc_start(pci_adc_start),
     .adc_stop(pci_adc_stop),
@@ -422,17 +424,18 @@ daq2_spi daq2_spi_inst (
 
 
 ila_3 ila3_inst (
-   .clk ( up_clk ),                 // I
-   .probe0(up_pci_start),           // input wire [0:0]  probe1 
-   .probe1(up_curr_start),          // input wire [0:0]  probe1 
-   .probe2(up_adc_start),           // input wire [0:0]  probe1 
-   .probe3(up_pci_stop),            // input wire [0:0]  probe1 
-   .probe4(up_curr_stop),           // input wire [0:0]  probe1 
-   .probe5(up_adc_stop),            // input wire [0:0]  probe1 
-   .probe6(up_adc_started),         // input wire [0:0]  probe1 
-   .probe7(up_adc_probing),         // input wire [0:0]  probe1 
-   .probe8(up_adc_running),         // input wire [0:0]  probe1 
-   .probe9(up_test_mode)            // input wire [7:0]  probe1 
+   .clk ( user_clk ),                 // I
+   .probe0(pci_adc_start),           // input wire [0:0]  probe1 
+   .probe1(pci_adc_stop),            // input wire [0:0]  probe1 
+   .probe2(pci_adc_started),         // input wire [0:0]  probe1 
+   .probe3(pci_adc_probing),         // input wire [0:0]  probe1 
+   .probe4(pci_adc_running),         // input wire [0:0]  probe1 
+   .probe5(up_test_mode),            // input wire [7:0]  probe1 
+   .probe6(pci_adc_wr),              // input wire [0:0]  probe1 
+   .probe7(pci_adc_data[31:0]),      // input wire [31:0]  probe1 
+   .probe8(pci_adc_data[63:32]),     // input wire [31:0]  probe1 
+   .probe9(pci_adc_data[95:64]),     // input wire [31:0]  probe1 
+   .probe10(pci_adc_data[127:96])    // input wire [31:0]  probe1 
 );
 
 
@@ -517,7 +520,11 @@ generate
     begin
       up_pci_start <= pci_up_start;
       up_pci_stop <= pci_up_stop;
-      up_test_mode <= pci_test_mode;
+
+      if (user_reset)
+        up_test_mode <= 7;
+      else
+        up_test_mode <= pci_test_mode;
     end
 
     always @ ( posedge up_clk ) 
@@ -528,7 +535,6 @@ generate
         up_adc_start <= 0;
         up_curr_stop <= 0;
         up_adc_stop <= 0;
-        up_test_mode <= 7;
       end
       else
       begin
@@ -565,6 +571,11 @@ generate
       pci_adc_running <= up_adc_running;
     end
 
+    always @ ( posedge user_clk ) 
+    begin
+      pci_sync_ok_cnt <= rx_sync_ok_cnt;
+      pci_sync_fail_cnt <= rx_sync_fail_cnt;
+    end
 
   end
 
