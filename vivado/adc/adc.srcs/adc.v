@@ -132,10 +132,6 @@ module adc (
   
   wire                   spi_locked;
 
-  wire                   adc_start;
-  wire                   adc_stop;
-  wire                   adc_running;
-  wire                   adc_probing;
   wire [31:0]            adc_sync_fail_cnt;
   wire [31:0]            adc_sync_ok_cnt;
 
@@ -200,6 +196,15 @@ module adc (
   reg                    up_pci_stop;
   reg                    up_curr_stop;
   reg                    up_adc_stop;
+
+  wire                   up_adc_started;
+  reg                    pci_adc_started;
+
+  wire                   up_adc_probing;
+  reg                    pci_adc_probing;
+
+  wire                   up_adc_running;
+  reg                    pci_adc_running;
 
   wire [7:0]             pci_test_mode;
   reg [7:0]              up_test_mode;
@@ -284,8 +289,9 @@ daq2_app daq2_app_inst (
   
   .adc_start(up_adc_start),
   .adc_stop(up_adc_stop),
-  .adc_running(adc_running),
-  .adc_probing(adc_probing),
+  .adc_started(up_adc_started),
+  .adc_probing(up_adc_probing),
+  .adc_running(up_adc_running),
   .adc_test_mode(up_test_mode),
 
   .adc_sync_fail_cnt(adc_sync_fail_cnt),
@@ -334,9 +340,10 @@ pci_app pci_app_inst (
 
     .adc_start(pci_adc_start),
     .adc_stop(pci_adc_stop),
-    .adc_running(adc_running),
-    .adc_probing(adc_probing),
-    .adc_valid(0),
+    .adc_started(pci_adc_started),
+    .adc_probing(pci_adc_probing),
+    .adc_running(pci_adc_running),
+
     .adc_sysref_cnt(rx_sysref_cnt),
     
     .adc_wr(pci_adc_wr),
@@ -422,7 +429,10 @@ ila_3 ila3_inst (
    .probe3(up_pci_stop),            // input wire [0:0]  probe1 
    .probe4(up_curr_stop),           // input wire [0:0]  probe1 
    .probe5(up_adc_stop),            // input wire [0:0]  probe1 
-   .probe6(up_test_mode)            // input wire [7:0]  probe1 
+   .probe6(up_adc_started),         // input wire [0:0]  probe1 
+   .probe7(up_adc_probing),         // input wire [0:0]  probe1 
+   .probe8(up_adc_running),         // input wire [0:0]  probe1 
+   .probe9(up_test_mode)            // input wire [7:0]  probe1 
 );
 
 
@@ -546,6 +556,13 @@ generate
         else
           up_adc_stop <= 0;
       end
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      pci_adc_started <= up_adc_started;
+      pci_adc_probing <= up_adc_probing;
+      pci_adc_running <= up_adc_running;
     end
 
 

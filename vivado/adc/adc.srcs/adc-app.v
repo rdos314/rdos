@@ -2,8 +2,9 @@ module adc_app (
   clk,
   reset,
 
-  running,
+  started,
   probing,
+  running,
   req_stop,
 
   adc_wr,
@@ -22,8 +23,9 @@ module adc_app (
   input wire             clk;
   input wire             reset;
 
-  input wire             running;
+  input wire             started;
   input wire             probing;
+  input wire             running;
   output reg             req_stop;
 
   input wire             adc_wr;
@@ -188,7 +190,7 @@ begin : adc_app
     end
     else
     begin
-      if (running && !probing)
+      if (running)
       begin
         if (adc_wr)
         begin

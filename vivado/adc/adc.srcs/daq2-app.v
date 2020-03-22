@@ -36,8 +36,9 @@ module daq2_app
 
   input                   adc_start,
   input                   adc_stop,
-  output reg              adc_running,
+  output reg              adc_started,
   output reg              adc_probing,
+  output reg              adc_running,
   input [7:0]             adc_test_mode,
   output reg [31:0]       adc_sync_fail_cnt,
   output reg [31:0]       adc_sync_ok_cnt,
@@ -106,6 +107,7 @@ module daq2_app
  wire [13:0]              adcB_2;
  wire [13:0]              adcB_3;
 
+ reg [7:0]                curr_test_mode;
  reg [2:0]                adc_cnt;
  reg [1023:0]             adc_curr;
 
@@ -414,7 +416,7 @@ system_tx_0 system_tx_0_inst
 ila_6 ila_6_inst (
 	.clk(up_clk), // input wire clk
 
-	.probe0(adc_running),               // input wire [0:0]  probe11
+	.probe0(adc_started),               // input wire [0:0]  probe11
 	.probe1(pend_start),                // input wire [0:0]  probe11
 	.probe2(up_rstn),                   // input wire [0:0]  probe11
 	.probe3(qpll_rst),                  // input wire [0:0]  probe11
@@ -469,7 +471,7 @@ function check_valid;
 endfunction
 
 
-  assign adc_pd = adc_running ? 1'b0 : 1'b1;
+  assign adc_pd = adc_started ? 1'b0 : 1'b1;
   assign up_rx_rst = up_rx_rst_cnt[3];
   assign up_rx_user_ready = up_rx_user_ready_cnt[6];
 
@@ -480,13 +482,15 @@ generate
     begin
       if (reset)
       begin
+        adc_started <= 0;
+        adc_probing <= 0;
         adc_running <= 0;
+
         pend_start <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
         up_adc_spi_read <= 0;
         up_adc_spi_write <= 0;
-        spi_test_done <= 0;
       end
       else
       begin
@@ -506,6 +510,8 @@ generate
           if (adc_stop)
           begin
             pend_start <= 0;
+            adc_started <= 0;
+            adc_probing <= 0;
             adc_running <= 0;
             up_rstn <= 0;
           end
@@ -515,7 +521,7 @@ generate
 
             if (pend_start)
             begin
-              if (adc_running)
+              if (adc_started)
               begin
                 if (up_adc_spi_done)
                   spi_test_done <= 1;
@@ -553,24 +559,29 @@ generate
                 up_adc_spi_adr <= 12'h550;
                 up_adc_spi_out_data <= 8'h07;
                 up_adc_spi_write <= 1;
-                adc_running <= 1;
+                adc_started <= 1;
                 adc_probing <= 1;
+                curr_test_mode <= 7;
               end
             end
             else
             begin
-//              if (adc_test_mode)
-//              begin
-//                up_adc_spi_adr <= 12'h550;
-//                up_adc_spi_out_data <= adc_curr_test;
-//                up_adc_spi_write <= 1;
-//              end
-
-              if (up_adc_spi_done)
+              if (adc_probing)
               begin
-                up_adc_spi_write <= 0;
-                adc_probing <= 0;
-              end;
+                if (adc_test_mode != curr_test_mode)
+                begin
+                  curr_test_mode <= adc_test_mode;
+                  up_adc_spi_adr <= 12'h550;
+                  up_adc_spi_out_data <= adc_test_mode;
+                  up_adc_spi_write <= 1;
+                end
+
+                if (up_adc_spi_done)
+                begin
+                  up_adc_spi_write <= 0;
+                  adc_running <= 1;
+                end
+              end
             end
           end
         end
@@ -579,7 +590,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (adc_running)
+      if (adc_started)
       begin
         lmfc_clk_s <= lmfc_clk;
         if (lmfc_clk_c != lmfc_clk_s)
@@ -665,7 +676,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_valid)
+      if (rx_valid && adc_running)
       begin
         case (adc_cnt)
           3: adc_wr <= 0;

@@ -19,9 +19,9 @@ module pci_app (
 
     adc_start,
     adc_stop,
-    adc_running,
+    adc_started,
     adc_probing,
-    adc_valid,
+    adc_running,
     adc_sysref_cnt,
 
     adc_sync_fail_cnt,
@@ -59,9 +59,9 @@ module pci_app (
 
   output reg           adc_start;
   output reg           adc_stop;
-  input  wire          adc_running;
+  input  wire          adc_started;
   input  wire          adc_probing;
-  input  wire          adc_valid;
+  input  wire          adc_running;
   input wire [63:0]    adc_sysref_cnt;
   input wire [31:0]    adc_sync_fail_cnt;
   input wire [31:0]    adc_sync_ok_cnt;
@@ -477,8 +477,9 @@ adc_app adc_app_inst (
     .clk(user_clk),
     .reset(user_reset),
 
+    .started(adc_started),
+    .probing(adc_probing),
     .running(adc_running),
-    .probing(1),
     .req_stop(req_stop),
     .adc_wr(adc_wr),
     .adc_address(adc_address),
@@ -619,8 +620,28 @@ generate
         bar_control[0] <= pci_rx_full;
         bar_control[1] <= pci_tx_full;
 
-        bar_control[6] <= adc_valid;
-        bar_control[7] <= adc_running;
+        if (adc_started)
+        begin
+          if (adc_probing)
+          begin
+            bar_control[7] <= 1;
+
+            if (adc_running)
+              bar_control[6] <= 1;
+            else
+              bar_control[6] <= 0;
+          end
+          else
+          begin
+            bar_control[6] <= 1;
+            bar_control[7] <= 0;
+          end
+        end
+        else
+        begin
+          bar_control[6] <= 0;
+          bar_control[7] <= 0;
+        end
 
         if (bar0_rd)
         begin
