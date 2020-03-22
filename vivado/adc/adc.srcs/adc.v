@@ -135,6 +135,7 @@ module adc (
   wire                   adc_start;
   wire                   adc_stop;
   wire                   adc_running;
+  wire                   adc_probing;
   wire [31:0]            adc_sync_fail_cnt;
   wire [31:0]            adc_sync_ok_cnt;
     
@@ -243,6 +244,7 @@ daq2_app daq2_app_inst (
   .adc_start(adc_start),
   .adc_stop(adc_stop),
   .adc_running(adc_running),
+  .adc_probing(adc_probing),
   .adc_test_mode(bar_adc_test_mode),
 
   .adc_sync_fail_cnt(adc_sync_fail_cnt),
@@ -293,6 +295,7 @@ pci_app pci_app_inst (
     .adc_start(adc_start),
     .adc_stop(adc_stop),
     .adc_running(adc_running),
+    .adc_probing(adc_probing),
     .adc_valid(rx_valid),
     .adc_sysref_cnt(rx_sysref_cnt),
     

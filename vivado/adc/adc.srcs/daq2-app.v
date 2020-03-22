@@ -35,6 +35,7 @@ module daq2_app
   input                   adc_start,
   input                   adc_stop,
   output reg              adc_running,
+  output reg              adc_probing,
   input [7:0]             adc_test_mode,
   output reg [31:0]       adc_sync_fail_cnt,
   output reg [31:0]       adc_sync_ok_cnt,
@@ -80,9 +81,13 @@ module daq2_app
 
  reg                      adc_start_m;
  reg                      adc_stop_m;
+ reg                      adc_test_m;
 
  reg [4:0]                adc_start_cnt;
  reg [4:0]                adc_stop_cnt;
+ reg [4:0]                adc_test_cnt;
+
+ reg [7:0]                adc_curr_test;
 
  reg                      spi_test_done;
  reg                      pend_start;
@@ -489,9 +494,30 @@ generate
       begin
         adc_start_m <= 0;
         adc_stop_m <= 0;
+        adc_test_m <= 0;
+        adc_curr_test <= 7;
       end
       else
       begin
+        if (adc_running)
+        begin
+          if (adc_curr_test != adc_test_mode)
+          begin
+            adc_test_m <= 1;
+            adc_test_cnt <= 0;
+            adc_curr_test <= adc_test_mode;
+          end
+          else
+          begin
+            if (adc_test_m)
+            begin
+              adc_test_cnt <= adc_test_cnt + 1;
+              if (adc_test_cnt[4] == 1)
+                adc_test_m <= 0;
+            end
+          end
+        end
+
         if (adc_start)
         begin
           adc_start_m <= 1;
@@ -602,7 +628,23 @@ generate
                 adc_spi_out_data <= 8'h07;
                 adc_spi_write <= 1;
                 adc_running <= 1;
+                adc_probing <= 1;
               end
+            end
+            else
+            begin
+              if (adc_test_m)
+              begin
+                adc_spi_adr <= 12'h550;
+                adc_spi_out_data <= adc_curr_test;
+                adc_spi_write <= 1;
+              end
+
+              if (adc_spi_done)
+              begin
+                adc_spi_write <= 0;
+                adc_probing <= 0;
+              end;
             end
           end
         end

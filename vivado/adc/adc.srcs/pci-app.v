@@ -28,6 +28,7 @@ module pci_app (
     adc_start,
     adc_stop,
     adc_running,
+    adc_probing,
     adc_valid,
     adc_sysref_cnt,
 
@@ -76,6 +77,7 @@ module pci_app (
   output reg           adc_start;
   output reg           adc_stop;
   input  wire          adc_running;
+  input  wire          adc_probing;
   input  wire          adc_valid;
   input wire [63:0]    adc_sysref_cnt;
   input wire [31:0]    adc_sync_fail_cnt;
@@ -564,11 +566,12 @@ adc_app adc_app_inst (
 ila_3 ila3_inst (
    .clk ( user_clk ),                      // I
    .probe0(adc_wr),                   // input wire [0:0]  probe1 
-   .probe1(adc_address),              // input wire [63:0]  probe1 
-   .probe2(adc_data[31:0]),           // input wire [31:0]  probe1 
-   .probe3(adc_data[63:32]),          // input wire [31:0]  probe1 
-   .probe4(adc_data[95:64]),          // input wire [31:0]  probe1 
-   .probe5(adc_data[127:96])          // input wire [31:0]  probe1 
+   .probe1(adc_probing),              // input wire [0:0]  probe1 
+   .probe2(adc_address),              // input wire [63:0]  probe1 
+   .probe3(adc_data[31:0]),           // input wire [31:0]  probe1 
+   .probe4(adc_data[63:32]),          // input wire [31:0]  probe1 
+   .probe5(adc_data[95:64]),          // input wire [31:0]  probe1 
+   .probe6(adc_data[127:96])          // input wire [31:0]  probe1 
 );
 
 generate
