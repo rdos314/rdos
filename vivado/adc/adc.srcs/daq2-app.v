@@ -110,6 +110,8 @@ module daq2_app
  reg                      rx_probing;
  reg                      rx_running;
  reg                      rx_run;
+ reg [7:0]                rx_test_mode;
+ reg [4:0]                rx_skip_cnt;
 
  reg                      up_run;
  reg                      up_wait_for_run;
@@ -651,6 +653,7 @@ generate
       rx_probing <= adc_probing;
       rx_running <= adc_running;
       rx_wait_for_run <= up_wait_for_run;
+      rx_test_mode <= adc_test_mode;
     end
 
     always @ ( posedge rx_clk ) 
@@ -687,10 +690,35 @@ generate
 
         adc_curr[895:0] <= adc_curr[1023:128];
 
-        if (rx_running || (rx_wait_for_run && !rx_test_ok))
+        if (rx_running)
           adc_cnt <= adc_cnt + 1;
         else
-          adc_cnt <= 0;
+        begin
+          if (rx_wait_for_run)
+          begin
+            if (rx_test_mode)
+            begin
+              if (rx_test_ok)
+                adc_cnt <= 0;
+              else
+                adc_cnt <= adc_cnt + 1;
+            end
+            else
+            begin
+              if (rx_skip_cnt[4])
+                adc_cnt <= adc_cnt + 1;
+              else
+                adc_cnt <= 0;
+
+              if (rx_test_ok)
+                rx_skip_cnt <= 0;
+              else
+                rx_skip_cnt <= rx_skip_cnt + 1;
+            end
+          end
+          else
+            adc_cnt <= 0;
+        end
       end
       else
         adc_cnt <= 0;
@@ -707,7 +735,15 @@ generate
           else
           begin
             if (rx_wait_for_run)
-              rx_run <= 1;
+            begin
+              if (rx_test_mode)
+                rx_run <= 1;
+              else
+              begin
+                if (rx_skip_cnt[4])
+                  rx_run <= 1;
+              end
+            end
             else
               adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
           end
