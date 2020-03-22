@@ -152,6 +152,7 @@ module adc (
   wire                   trig;
 
   wire [63:0]            rx_sysref_cnt;
+  reg [63:0]             pci_sysref_cnt;
   
   wire                   rx_adc_wr;
   wire [1023:0]          rx_adc_data;
@@ -256,9 +257,7 @@ up_clk up_clk_inst
     .clk_in1(user_clk));   // input clk_in1
 
 daq2_app daq2_app_inst (
-  .clk(user_clk),
   .reset(user_reset),
-
   .up_clk(up_clk),
   .rx_clk(rx_clk),
   .tx_clk(tx_clk),
@@ -346,7 +345,7 @@ pci_app pci_app_inst (
     .adc_probing(pci_adc_probing),
     .adc_running(pci_adc_running),
 
-    .adc_sysref_cnt(rx_sysref_cnt),
+    .adc_sysref_cnt(pci_sysref_cnt),
     
     .adc_wr(pci_adc_wr),
     .adc_data(pci_adc_data)
@@ -575,6 +574,7 @@ generate
     begin
       pci_sync_ok_cnt <= rx_sync_ok_cnt;
       pci_sync_fail_cnt <= rx_sync_fail_cnt;
+      pci_sysref_cnt <= rx_sysref_cnt;
     end
 
   end

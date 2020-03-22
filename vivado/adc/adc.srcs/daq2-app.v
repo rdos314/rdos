@@ -1,8 +1,8 @@
 module daq2_app
 (
-  input                   clk,
   input                   reset,
 
+  input                   up_clk,
   output                  rx_clk,
   output                  tx_clk,
 
@@ -17,8 +17,6 @@ module daq2_app
   input                   tx_sync,
   output      [ 3:0]      tx_data_p,
   output      [ 3:0]      tx_data_n,
-
-  input                   up_clk,
 
   input                   trig,
 
@@ -410,8 +408,8 @@ system_tx_0 system_tx_0_inst
         .sync(tx_sync),
         .sysref(tx_sysref),
         .tx_data(tx_data),
-        .tx_ready(1),
-        .tx_valid(1));
+        .tx_ready(1'b1),
+        .tx_valid(1'b1));
 
 ila_6 ila_6_inst (
 	.clk(up_clk), // input wire clk
@@ -445,8 +443,10 @@ function check_valid;
   input [13:0] adcB_2;
   input [13:0] adcA_3;
   input [13:0] adcB_3;
-  reg res = 0;
+  reg res;
   begin
+    res = 0;
+    
     if (adcA_0 == 14'h0000)
       if (adcB_0 == 14'h0000)
         if (adcA_1 == 14'h3FFF)
@@ -470,6 +470,13 @@ function check_valid;
   end
 endfunction
 
+  assign adc_fda = 1'bz;
+  assign adc_fdb = 1'bz;
+  assign dac_irq = 1'bz;
+  assign clkd_status = 2'bz;
+  assign clkd_sync = 2'bz;
+  assign dac_txen = 1'bz;
+  assign dac_reset = 1'bz;
 
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
   assign up_rx_rst = up_rx_rst_cnt[3];
