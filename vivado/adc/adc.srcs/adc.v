@@ -429,7 +429,7 @@ ila_3 ila3_inst (
    .probe2(pci_adc_started),         // input wire [0:0]  probe1 
    .probe3(pci_adc_probing),         // input wire [0:0]  probe1 
    .probe4(pci_adc_running),         // input wire [0:0]  probe1 
-   .probe5(up_test_mode),            // input wire [7:0]  probe1 
+   .probe5(pci_test_mode),           // input wire [7:0]  probe1 
    .probe6(pci_adc_wr),              // input wire [0:0]  probe1 
    .probe7(pci_adc_data[31:0]),      // input wire [31:0]  probe1 
    .probe8(pci_adc_data[63:32]),     // input wire [31:0]  probe1 

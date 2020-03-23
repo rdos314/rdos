@@ -582,7 +582,7 @@ generate
               else
               begin
                 up_adc_spi_adr <= 12'h550;
-                up_adc_spi_out_data <= 8'h07;
+                up_adc_spi_out_data <= 8'h37;
                 up_adc_spi_write <= 1;
                 adc_started <= 1;
                 adc_probing <= 1;
