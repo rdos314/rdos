@@ -155,6 +155,31 @@ module pci_app (
   reg [31:0]       bar_spi_adc;
   reg [31:0]       bar_spi_dac;
   
+// int analysis
+
+  reg              int_req;
+  wire             int_ack;
+  reg              int_num;
+
+  reg [31:0]       int_delay;
+  reg [31:0]       int_counter;
+  reg [31:0]       int_irq;
+  reg [31:0]       int_signal;
+  reg [31:0]       int_app;
+
+
+ila_3 ila3_inst (
+   .clk ( user_clk ),                 // I
+   .probe0(int_req),                 // input wire [0:0]  probe1 
+   .probe1(int_ack),                 // input wire [0:0]  probe1 
+   .probe2(int_num),                 // input wire [7:0]  probe1 
+   .probe3(int_delay),               // input wire [31:0]  probe1 
+   .probe4(int_counter),             // input wire [31:0]  probe1 
+   .probe5(int_irq),                 // input wire [31:0]  probe1 
+   .probe6(int_signal),              // input wire [31:0]  probe1 
+   .probe7(int_app)                  // input wire [31:0]  probe1 
+);
+
   
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -179,9 +204,7 @@ module pci_app (
   wire [127:0]                                cfg_err_aer_headerlog;
   wire   [4:0]                                cfg_aer_interrupt_msgnum;
 
-  wire                                        cfg_interrupt;
   wire                                        cfg_interrupt_assert;
-  wire   [7:0]                                cfg_interrupt_di;
   wire                                        cfg_interrupt_stat;
   wire   [4:0]                                cfg_pciecap_interrupt_msgnum;
 
@@ -290,10 +313,10 @@ pcie pcie_i
   //------------------------------------------------//
   // EP Only                                        //
   //------------------------------------------------//
-  .cfg_interrupt                             ( cfg_interrupt ),
-  .cfg_interrupt_rdy                         ( ),
+  .cfg_interrupt                             ( int_req ),
+  .cfg_interrupt_rdy                         ( int_ack ),
   .cfg_interrupt_assert                      ( cfg_interrupt_assert ),
-  .cfg_interrupt_di                          ( cfg_interrupt_di ),
+  .cfg_interrupt_di                          ( int_num ),
   .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
   .cfg_interrupt_msienable                   ( cfg_interrupt_msienable ),
@@ -345,6 +368,7 @@ pcie pcie_i
   //----------------------------------------------------------------------------------------------------------------//
   // System  (SYS) Interface                                                                                        //
   //----------------------------------------------------------------------------------------------------------------//
+
   .sys_clk                                    ( sys_clk ),
   .sys_rst_n                                  ( sys_rst_n )
 
@@ -373,8 +397,6 @@ pcie pcie_i
   assign cfg_interrupt_stat = 1'b0;                // Never set the Interrupt Status bit
   assign cfg_pciecap_interrupt_msgnum = 5'b00000;  // Zero out Interrupt Message Number
   assign cfg_interrupt_assert = 1'b0;              // Always drive interrupt de-assert
-  assign cfg_interrupt = 1'b0;                     // Never drive interrupt by qualifying cfg_interrupt_assert
-  assign cfg_interrupt_di = 8'b0;                  // Do not set interrupt fields
 
   assign pl_directed_link_change = 2'b00;          // Never initiate link change
   assign pl_directed_link_width = 2'b00;          // Zero out directed link width
@@ -614,6 +636,11 @@ generate
         adc_start <= 0;
         adc_stop <= 0;
         spi_rp_ack <= 0;
+
+        int_irq <= 0;
+        int_signal <= 0;
+        int_app <= 0;
+        int_delay <= 0;
       end
       else
       begin
@@ -654,7 +681,11 @@ generate
             5: bar0_rp_data <= adc_sysref_cnt[63:32];
             6: bar0_rp_data <= adc_sync_fail_cnt;
             7: bar0_rp_data <= adc_sync_ok_cnt;
-            default: bar0_rp_data <= 31'hffffffff;
+            16: bar0_rp_data <= int_delay;
+            17: bar0_rp_data <= int_irq;
+            18: bar0_rp_data <= int_signal;
+            19: bar0_rp_data <= int_app;
+            default: bar0_rp_data <= 32'hffffffff;
           endcase     
           bar0_rp <= 1;
         end
@@ -753,6 +784,39 @@ generate
                 endcase
               end
             end
+
+            16:
+            begin
+              if (bar0_wr_be[0])
+                int_delay[7:0] <= bar0_wr_data[7:0];
+ 
+              if (bar0_wr_be[1])
+                int_delay[15:8] <= bar0_wr_data[15:8];
+ 
+              if (bar0_wr_be[2])
+                int_delay[23:16] <= bar0_wr_data[23:16];
+
+              if (bar0_wr_be[3])
+                int_delay[31:24] <= bar0_wr_data[31:24];
+            end
+
+            17:
+            begin
+              if (bar0_wr_be[0])
+                int_irq <= int_irq + 1;
+            end
+
+            18:
+            begin
+              if (bar0_wr_be[0])
+                int_signal <= int_signal + 1; 
+            end
+
+            19:
+            begin
+              if (bar0_wr_be[0])
+                int_app <= int_app + 1; 
+            end
             
             default:
             begin
@@ -821,6 +885,41 @@ generate
         end
       end
     end
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (user_reset)
+      begin
+        int_counter <= 0;
+        int_req <= 0;
+        int_num <= 0;
+      end
+      else
+      begin
+        if (int_delay)
+        begin
+          if (int_req)
+          begin
+            if (int_ack)
+              int_req <= 0;
+          end
+          else
+          begin
+            if (int_counter == int_delay)
+            begin
+              int_req <= 1;
+              int_counter <= 0;
+            end
+            else
+            begin
+              int_req <= 0;
+              int_counter <= int_counter + 1;
+            end
+          end
+        end
+      end
+    end
+
   end
 endgenerate
 

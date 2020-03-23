@@ -30,6 +30,11 @@
     __parm [__edi] \
     __value [__eax]
 
+
+#pragma aux RdosWaitAnio = \
+    CallGate_wait_anio  \
+    __parm [__eax]
+
 #pragma aux RdosLoad32 = \
     CallGate_load_device32  \
 

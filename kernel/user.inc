@@ -4549,3 +4549,9 @@ MapRealtimeBuffer    MACRO
 UnmapRealtimeBuffer    MACRO
         UserGate unmap_realtime_buf_nr
                 ENDM
+
+
+; IN  AL            IRQ #
+WaitAnio    MACRO
+        UserGate wait_anio_nr
+                ENDM

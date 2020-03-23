@@ -225,6 +225,8 @@ long RDOSAPI RdosGetRandom(long range);
 int RDOSAPI RdosGetMac(char *mac);
 void RDOSAPI RdosCreateUuid(char *uuid);
 
+void RDOSAPI RdosWaitAnio(int Irq);
+
 long RDOSAPI RdosGetAcpiStatus();
 int RDOSAPI RdosGetAcpiObject(int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiMethod(int Object, int Index, char *AcpiName);

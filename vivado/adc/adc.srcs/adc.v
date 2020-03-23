@@ -421,23 +421,6 @@ daq2_spi daq2_spi_inst (
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
 
-
-ila_3 ila3_inst (
-   .clk ( user_clk ),                 // I
-   .probe0(pci_adc_start),           // input wire [0:0]  probe1 
-   .probe1(pci_adc_stop),            // input wire [0:0]  probe1 
-   .probe2(pci_adc_started),         // input wire [0:0]  probe1 
-   .probe3(pci_adc_probing),         // input wire [0:0]  probe1 
-   .probe4(pci_adc_running),         // input wire [0:0]  probe1 
-   .probe5(pci_test_mode),           // input wire [7:0]  probe1 
-   .probe6(pci_adc_wr),              // input wire [0:0]  probe1 
-   .probe7(pci_adc_data[31:0]),      // input wire [31:0]  probe1 
-   .probe8(pci_adc_data[63:32]),     // input wire [31:0]  probe1 
-   .probe9(pci_adc_data[95:64]),     // input wire [31:0]  probe1 
-   .probe10(pci_adc_data[127:96])    // input wire [31:0]  probe1 
-);
-
-
 generate
   begin : adc
 

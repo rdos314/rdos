@@ -47,6 +47,9 @@ data    SEGMENT byte public 'DATA'
 
 board_linear	DD ?
 
+server_thread      DW ?
+client_thread      DW ?
+
 data	ENDS
 
 IFDEF __WASM__
@@ -59,9 +62,6 @@ ENDIF
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
-
-PciInt:
-    CrashGate
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -750,6 +750,71 @@ vdDone:
     ret    
 VerifyData	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           PciInt
+;
+;           DESCRIPTION:    Int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PciInt Proc far
+    mov bx,anio_control_sel
+    mov ds,bx
+;
+    mov bx,44h
+    mov al,1
+    mov ds:[bx],al
+;
+    mov bx,SEG data
+    mov ds,ebx
+    mov bx,ds:server_thread
+    Signal
+    ret
+PciInt	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WaitAnio
+;
+;           DESCRIPTION:    Wait for IO
+;
+;           PARAMETERS:     AL		Irq #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_anio_name    DB 'Wait Anio', 0
+
+wait_anio Proc far
+    push ds
+    push eax
+    push ebx
+;
+    movzx ebx,al
+    add ebx,ebx
+    ClearSignal
+;
+    mov eax,SEG data
+    mov ds,eax
+    GetThread
+    mov ds:client_thread,ax
+;
+    WaitForSignal
+    mov ds:client_thread,0
+;
+    mov bx,4Ch
+    mov al,1
+    mov ds:[bx],al
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+wait_anio	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -767,6 +832,36 @@ adc_thread:
     jc atDone
 ;
     call InitControlBar
+;
+; CODAB test
+;
+    mov bx,SEG data
+    mov ds,bx
+    GetThread
+    mov ds:server_thread,ax
+    mov ds:client_thread,0
+;
+    mov bx,anio_control_sel
+    mov ds,bx
+    mov bx,40h
+    mov eax,250 * 1000
+    mov ds:[bx],eax
+
+adc_wait:
+    WaitForSignal
+;
+    mov bx,48h
+    mov al,1
+    mov ds:[bx],al
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:client_thread
+    Signal
+    jmp adc_wait
+
+
+
     call InitAdcBar
     call SetupClk
     call SetupAdc
@@ -865,6 +960,16 @@ Init    Proc far
     mov es,eax
     mov edi,OFFSET init_thread
     HookInitPci
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+;
+    mov esi,OFFSET wait_anio
+    mov edi,OFFSET wait_anio_name
+    xor dx,dx
+    mov ax,wait_anio_nr
+    RegisterBimodalUserGate
     clc
     ret
 Init    Endp
