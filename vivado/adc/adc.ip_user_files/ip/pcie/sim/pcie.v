@@ -402,7 +402,7 @@ input wire sys_rst_n;
     .c_msi_cap_on("TRUE"),
     .c_pm_cap_next_ptr("48"),
     .c_msi_64b_addr("TRUE"),
-    .c_msi("0"),
+    .c_msi("2"),
     .c_msi_mult_msg_extn("0"),
     .c_msi_per_vctr_mask_cap("FALSE"),
     .c_msix_cap_on("FALSE"),

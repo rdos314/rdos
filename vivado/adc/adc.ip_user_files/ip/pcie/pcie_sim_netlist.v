@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sun Feb 16 17:05:19 2020
+// Date        : Tue Mar 24 10:13:51 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim C:/rdos/vivado/adc/adc.runs/pcie_synth_1/pcie_sim_netlist.v
 // Design      : pcie
@@ -493,7 +493,7 @@ module pcie
   (* c_ll_replay_timeout_enable = "FALSE" *) 
   (* c_ll_replay_timeout_func = "1" *) 
   (* c_lnk_bndwdt_notif = "FALSE" *) 
-  (* c_msi = "0" *) 
+  (* c_msi = "2" *) 
   (* c_msi_64b_addr = "TRUE" *) 
   (* c_msi_cap_on = "TRUE" *) 
   (* c_msi_mult_msg_extn = "0" *) 
@@ -21241,7 +21241,7 @@ endmodule
 (* c_int_width = "64" *) (* c_last_cfg_dw = "100" *) (* c_link_cap_aspm_optionality = "FALSE" *) 
 (* c_ll_ack_timeout = "0000" *) (* c_ll_ack_timeout_enable = "FALSE" *) (* c_ll_ack_timeout_function = "0" *) 
 (* c_ll_replay_timeout = "0000" *) (* c_ll_replay_timeout_enable = "FALSE" *) (* c_ll_replay_timeout_func = "1" *) 
-(* c_lnk_bndwdt_notif = "FALSE" *) (* c_msi = "0" *) (* c_msi_64b_addr = "TRUE" *) 
+(* c_lnk_bndwdt_notif = "FALSE" *) (* c_msi = "2" *) (* c_msi_64b_addr = "TRUE" *) 
 (* c_msi_cap_on = "TRUE" *) (* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) 
 (* c_msix_cap_on = "FALSE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) 
 (* c_msix_pba_offset = "0" *) (* c_msix_table_bir = "0" *) (* c_msix_table_offset = "0" *) 
@@ -24360,7 +24360,7 @@ module pcie_pcie_pcie_7x
     .MSI_BASE_PTR(8'h48),
     .MSI_CAP_64_BIT_ADDR_CAPABLE("TRUE"),
     .MSI_CAP_ID(8'h05),
-    .MSI_CAP_MULTIMSGCAP(0),
+    .MSI_CAP_MULTIMSGCAP(2),
     .MSI_CAP_MULTIMSG_EXTENSION(0),
     .MSI_CAP_NEXTPTR(8'h60),
     .MSI_CAP_ON("TRUE"),

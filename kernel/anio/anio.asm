@@ -33,6 +33,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\os\core.inc
 
 control_bar	STRUC
 
@@ -47,8 +48,15 @@ data    SEGMENT byte public 'DATA'
 
 board_linear	DD ?
 
-server_thread      DW ?
-client_thread      DW ?
+server0        DW ?
+server1        DW ?
+server2        DW ?
+server3        DW ?
+
+cnt0           DW ?
+cnt1           DW ?
+cnt2           DW ?
+cnt3           DW ?
 
 data	ENDS
 
@@ -210,17 +218,35 @@ InitPciFound:
     jc InitPciDone
 ;
     push cx
-    mov cx,1
+    mov cx,4
     mov al,14h
     AllocateInts
     pop cx
 ;    
-    mov dl,1
+    mov dl,4
     SetupPciMsi
 ;    
     mov di,cs
     mov es,di
-    mov edi,OFFSET PciInt
+    mov edi,OFFSET int_0
+    RequestMsiHandler
+;    
+    inc al
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET int_1
+    RequestMsiHandler
+;    
+    inc al
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET int_2
+    RequestMsiHandler
+;    
+    inc al
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET int_3
     RequestMsiHandler
     clc
 
@@ -750,70 +776,204 @@ vdDone:
     ret    
 VerifyData	Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           PciInt
+;           NAME:           int_x
 ;
 ;           DESCRIPTION:    Int
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PciInt Proc far
-    mov bx,anio_control_sel
-    mov ds,bx
-;
-    mov bx,44h
-    mov al,1
-    mov ds:[bx],al
-;
+int_0 Proc far
     mov bx,SEG data
     mov ds,ebx
-    mov bx,ds:server_thread
+    mov cx,ds:cnt0
+    and ecx,3
+    jz int_done0
+
+int_loop0:
+    NotifyIrqActivity
+    mov bx,ds:server0
     Signal
+    loop int_loop0
+
+int_done0:
+    inc ds:cnt0
     ret
-PciInt	Endp
+int_0	Endp
+
+int_1 Proc far
+    mov bx,SEG data
+    mov ds,ebx
+    mov cx,ds:cnt1
+    and ecx,3
+    jz int_done1
+
+int_loop1:
+    NotifyIrqActivity
+    mov bx,ds:server1
+    Signal
+    loop int_loop1
+
+int_done1:
+    inc ds:cnt1
+    ret
+int_1	Endp
+
+int_2 Proc far
+    mov bx,SEG data
+    mov ds,ebx
+    mov cx,ds:cnt2
+    and ecx,3
+    jz int_done2
+
+int_loop2:
+    NotifyIrqActivity
+    mov bx,ds:server2
+    Signal
+    loop int_loop2
+
+int_done2:
+    inc ds:cnt2
+    ret
+int_2	Endp
+
+int_3 Proc far
+    mov bx,SEG data
+    mov ds,ebx
+    mov cx,ds:cnt3
+    and ecx,3
+    jz int_done3
+
+int_loop3:
+    NotifyIrqActivity
+    mov bx,ds:server3
+    Signal
+    loop int_loop3
+
+int_done3:
+    inc ds:cnt3
+    ret
+int_3	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WaitAnio
+;           NAME:           serv_threadx
 ;
-;           DESCRIPTION:    Wait for IO
-;
-;           PARAMETERS:     AL		Irq #
+;           DESCRIPTION:    Server threads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wait_anio_name    DB 'Wait Anio', 0
+serv_thread0_name	DB 'Serv 0', 0
+serv_thread1_name	DB 'Serv 1', 0
+serv_thread2_name	DB 'Serv 2', 0
+serv_thread3_name	DB 'Serv 3', 0
 
-wait_anio Proc far
-    push ds
-    push eax
-    push ebx
+serv_thread0:
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,anio_control_sel
+    mov es,bx
 ;
-    movzx ebx,al
-    add ebx,ebx
-    ClearSignal
-;
-    mov eax,SEG data
-    mov ds,eax
     GetThread
-    mov ds:client_thread,ax
+    mov ds:server0,ax
 ;
-    WaitForSignal
-    mov ds:client_thread,0
+    mov bx,40h
+    mov eax,1A563A12h
+    mov es:[bx],eax
+    jmp serv_thread
+
+serv_thread1:
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,anio_control_sel
+    mov es,bx
+;
+    GetThread
+    mov ds:server1,ax
+;
+    mov bx,44h
+    mov eax,0A732BC31h
+    mov es:[bx],eax
+    jmp serv_thread
+
+serv_thread2:
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,anio_control_sel
+    mov es,bx
+;
+    GetThread
+    mov ds:server2,ax
+;
+    mov bx,48h
+    mov eax,86BD57A0h
+    mov es:[bx],eax
+    jmp serv_thread
+
+serv_thread3:
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,anio_control_sel
+    mov es,bx
+;
+    GetThread
+    mov ds:server3,ax
 ;
     mov bx,4Ch
-    mov al,1
-    mov ds:[bx],al
+    mov eax,11A27673h
+    mov es:[bx],eax
+
+serv_thread:
+    AddThreadInt
+
+serv_loop:
+    WaitForSignal
+    jmp serv_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
-    pop ebx
-    pop eax
-    pop ds
-    ret
-wait_anio	Endp
+;           NAME:           cli_thread
+;
+;           DESCRIPTION:    Client threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cli_thread0_name	DB 'Cli 0', 0
+cli_thread1_name	DB 'Cli 1', 0
+cli_thread2_name	DB 'Cli 2', 0
+cli_thread3_name	DB 'Cli 3', 0
+cli_thread4_name	DB 'Cli 4', 0
+cli_thread5_name	DB 'Cli 5', 0
+
+cli_serv_tab:
+cs0  DW OFFSET server0
+cs1  DW OFFSET server1
+cs2  DW OFFSET server2
+cs3  DW OFFSET server3
+
+cli_thread:
+    mov ebx,SEG data
+    mov ds,ebx
+
+cli_loop:
+    GetSystemTime
+    mov ebx,eax
+    and ebx,3FFh
+    add eax,ebx
+    adc edx,0
+;
+    mov ebx,eax
+    and ebx,6
+    mov bx,cs:[ebx].cli_serv_tab
+    mov bx,ds:[bx]
+    WaitUntil
+    Signal
+    jmp cli_loop
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -835,31 +995,72 @@ adc_thread:
 ;
 ; CODAB test
 ;
-    mov bx,SEG data
-    mov ds,bx
-    GetThread
-    mov ds:server_thread,ax
-    mov ds:client_thread,0
 ;
-    mov bx,anio_control_sel
-    mov ds,bx
-    mov bx,40h
-    mov eax,250 * 1000
-    mov ds:[bx],eax
-
-adc_wait:
-    WaitForSignal
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
-    mov bx,48h
-    mov al,1
-    mov ds:[bx],al
+    mov esi,OFFSET serv_thread0
+    mov edi,OFFSET serv_thread0_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
 ;
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:client_thread
-    Signal
-    jmp adc_wait
-
+    mov esi,OFFSET serv_thread1
+    mov edi,OFFSET serv_thread1_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    mov esi,OFFSET serv_thread2
+    mov edi,OFFSET serv_thread2_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    mov esi,OFFSET serv_thread3
+    mov edi,OFFSET serv_thread3_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    mov esi,OFFSET cli_thread
+    mov edi,OFFSET cli_thread0_name
+    mov ecx,stack0_size
+    mov ax,3
+    CreateThread
+;
+    mov esi,OFFSET cli_thread
+    mov edi,OFFSET cli_thread1_name
+    mov ecx,stack0_size
+    mov ax,3
+    CreateThread
+;
+    mov esi,OFFSET cli_thread
+    mov edi,OFFSET cli_thread2_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    mov esi,OFFSET cli_thread
+    mov edi,OFFSET cli_thread3_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    mov esi,OFFSET cli_thread
+    mov edi,OFFSET cli_thread4_name
+    mov ecx,stack0_size
+    mov ax,5
+    CreateThread
+;
+    mov esi,OFFSET cli_thread
+    mov edi,OFFSET cli_thread5_name
+    mov ecx,stack0_size
+    mov ax,5
+    CreateThread
+;
+    int 3
 
 
     call InitAdcBar
@@ -960,16 +1161,6 @@ Init    Proc far
     mov es,eax
     mov edi,OFFSET init_thread
     HookInitPci
-;
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-;
-    mov esi,OFFSET wait_anio
-    mov edi,OFFSET wait_anio_name
-    xor dx,dx
-    mov ax,wait_anio_nr
-    RegisterBimodalUserGate
     clc
     ret
 Init    Endp
