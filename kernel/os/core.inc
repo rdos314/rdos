@@ -61,12 +61,13 @@ core_tlb32_struc        ENDS
 
 MAX_IRQ_NESTING     = 64
 CORE_LOG_ENTRIES    = 200h
+CORE_WAKEUP_ENTRIES = 16
 
 core_seg   STRUC
 
 cs_phys_data            core_phys_struc <>    ; this must be first!
 
-cs_wakeup_list          DW ?
+cs_wakeup_count         DW ?
 
 cs_id                   DW ?
 cs_processor            DW ?
@@ -105,12 +106,12 @@ cs_system_time          DD ?,?
 cs_tsc_guard            DD ?
 cs_last_tsc             DD ?
 
-cs_clock_tics           DW ?  ; not used
+cs_pad1                 DW ? 
 
 cs_lsb_tics             DD ?
 cs_msb_tics             DD ?
 
-cs_wakeup_spinlock      DW ?
+cs_pad2                 DW ?
 
 cs_linear               DD ?
 cs_syscall_esp          DD ?
@@ -137,6 +138,8 @@ cs_cr3                  DD ?
 cs_mon_linear           DD ?
 cs_tlb                  core_tlb32_struc <>
 cs_work_tlb             core_tlb32_struc <>
+
+cs_wakeup_arr           DW CORE_WAKEUP_ENTRIES DUP(?)
 
 cs_timer_spinlock       DW ?
 cs_timer_head           DW ?

@@ -160,9 +160,6 @@ system_thread               DW 0
 lock_list_proc              DW OFFSET LockListSingle
 unlock_list_proc            DW OFFSET UnlockListSingle
 
-insert_wakeup_proc          DW OFFSET InsertWakeupSingle
-remove_wakeup_proc          DW OFFSET RemoveWakeupSingle
-
 lock_signal_proc            DW OFFSET LockSignalSingle
 unlock_signal_proc          DW OFFSET UnlockSignalSingle
 
@@ -1367,11 +1364,11 @@ load_thread_loop:
 
 load_thread_wakeup_loop:    
     cli
-    mov ax,fs:cs_wakeup_list
+    mov ax,fs:cs_wakeup_count
     or ax,ax
     jz load_thread_wakeup_done
 ;
-    call cs:remove_wakeup_proc
+    call RemoveWakeup
 ;    
     mov di,es:p_prio
     call InsertCoreBlock
@@ -1397,7 +1394,7 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
-    call cs:insert_wakeup_proc
+    call InsertWakeup
     jmp load_thread_loop
 
 load_reload_loop:
@@ -1527,7 +1524,7 @@ load_bp_done:
 
 load_actions_done: 
     call LoadUnlockCore
-    mov ax,fs:cs_wakeup_list
+    mov ax,fs:cs_wakeup_count
     or ax,ax
     jnz load_relock
 ;    
@@ -2353,8 +2350,6 @@ start_processor_null_threads    Proc near
 ;
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
-    mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
-    mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
     mov ds:lock_signal_proc,OFFSET LockSignalMultiple
     mov ds:unlock_signal_proc,OFFSET UnlockSignalMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
@@ -2503,187 +2498,163 @@ null_nest_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           RemoveWakeupSingle
+;           NAME:           RemoveWakeup
 ;
-;           DESCRIPTION:    Remove wakeup thread, single core
-;
-;           RETURNS:        ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveWakeupSingle  PROC near
-    push si
-    cli
-    mov si,OFFSET cs_wakeup_list
-    call RemoveCoreBlock
-    sti
-    pop si    
-    ret
-RemoveWakeupSingle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RemoveWakeupMultiple
-;
-;           DESCRIPTION:    Remove wakeup thread, multiple core
+;           DESCRIPTION:    Remove wakeup
 ;
 ;           RETURNS:        ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveWakeupMultiple  PROC near
-    push si
-
-rwmTryLock:    
-    mov si,fs:cs_wakeup_spinlock
-    or si,si
-    je rwmGet
+RemoveWakeup  PROC near
+    push ax
+    push bx
+    push cx
+    push bp
 ;
-    sti
-    pause
-    jmp rwmTryLock
+    mov bp,256
+    mov bx,OFFSET cs_wakeup_arr
+    mov cx,CORE_WAKEUP_ENTRIES
 
-rwmGet:
-    cli
-    inc si
-    xchg si,fs:cs_wakeup_spinlock
-    or si,si
-    je rwmLocked
+rwLoop:
+    xor ax,ax
+    xchg ax,fs:[bx]
+    or ax,ax
+    jnz rwOk
 ;
-    jmp rwmTryLock
+    add bx,2
+    loop rwLoop
+;
+    mov bx,OFFSET cs_wakeup_arr
+    mov cx,CORE_WAKEUP_ENTRIES
+    sub bp,1
+    jnz rwLoop
+;
+    CrashGate
 
-rwmLocked:
-    mov si,OFFSET cs_wakeup_list
-    call RemoveCoreBlock
-    mov fs:cs_wakeup_spinlock,0    
-    sti
-    pop si    
+rwOk:
+    mov es,ax
+    lock sub fs:cs_wakeup_count,1
+;
+    pop bp
+    pop cx
+    pop bx    
+    pop ax
     ret
-RemoveWakeupMultiple  Endp
+RemoveWakeup  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InsertWakeupSingle
+;           NAME:           AddWakeup
 ;
-;           DESCRIPTION:    Insert thread into run list, single core
+;           DESCRIPTION:    Add to wakeup
 ;
 ;           PARAMETERS:     ES      Thread
 ;                           FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertWakeupSingle  PROC near
-    push di
-    cli
-    mov di,OFFSET cs_wakeup_list
-    call InsertCoreBlock
-    sti
-    pop di
+AddWakeup  PROC near
+    push ax
+    push bx
+    push cx
+    push dx
+    push bp
+;
+    mov bp,256
+    mov bx,OFFSET cs_wakeup_arr
+    lock add fs:cs_wakeup_count,1
+;
+    mov es:p_sleep_sel,fs
+    mov word ptr es:p_sleep_offset,bx
+;
+    mov cx,CORE_WAKEUP_ENTRIES
+    mov dx,es
+
+awLoop:
+    mov ax,fs:[bx]
+    or ax,ax
+    jnz awNext
+;
+    xchg dx,fs:[bx]
+    or dx,dx
+    jz awDone
+
+awNext:
+    add bx,2
+    loop awLoop    
+;
+    mov cx,CORE_WAKEUP_ENTRIES
+    mov bx,OFFSET cs_wakeup_arr
+    sub bp,1
+    jnz awLoop
+;
+    CrashGate
+   
+awDone:
+    pop bp
+    pop dx
+    pop cx
+    pop bx
+    pop ax
     ret
-InsertWakeupSingle  Endp
+AddWakeup  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InsertWakeupMultiple
+;           NAME:           InsertWakeup
 ;
-;           DESCRIPTION:    Insert thread into run list, multiple core
+;           DESCRIPTION:    Add to wakeup
 ;
 ;           PARAMETERS:     ES      Thread
 ;                           FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertWakeupMultiple  PROC near
+InsertWakeup  PROC near
     push ax
     push di
-
-iwmLogOk:
-    mov ax,fs
 ;
+    mov ax,fs
     mov di,es:p_core
     cmp ax,di
-    je iwmTryLockSelf
-;    
+    jne iwOther
+
+iwSelf:    
+    call AddWakeup
+    jmp iwDone
+    
+iwOther:    
     push fs
     mov fs,di
-
-iwmTryLockOther:    
-    mov ax,fs:cs_wakeup_spinlock
-    or ax,ax
-    je iwmGetOther
 ;
-    sti
-    pause
-    jmp iwmTryLockOther
-
-iwmGetOther:
-    cli
-    inc ax
-    xchg ax,fs:cs_wakeup_spinlock
-    or ax,ax
-    je iwmLockedOther
-;
-    jmp iwmTryLockOther
-
-iwmLockedOther:
-    mov di,OFFSET cs_wakeup_list
-    call InsertCoreBlock
-;
+    call AddWakeup
     mov di,es:p_prio
     cmp di,fs:cs_prio_act
-    mov fs:cs_wakeup_spinlock,0
-    sti
-    jbe iwmIntOk
+    jbe iwIntOk
 ;    
     test fs:cs_flags,CS_FLAG_PREEMPT
-    jnz iwmIntOk
+    jnz iwIntOk
 ;    
     lock or fs:cs_flags,CS_FLAG_PREEMPT
 ;
     mov ax,fs:cs_nesting
     cmp ax,-1
-    jne iwmIntOk
+    jne iwIntOk
 ;    
     mov al,81h
     SendInt    
 
-iwmIntOk:
-    sti
+iwIntOk:
     pop fs
-    jmp iwmDone
 
-iwmTryLockSelf:    
-    mov ax,fs:cs_wakeup_spinlock
-    or ax,ax
-    je iwmGetSelf
-;
-    sti
-    pause
-    jmp iwmTryLockSelf
-
-iwmGetSelf:
-    cli
-    inc ax
-    xchg ax,fs:cs_wakeup_spinlock
-    or ax,ax
-    je iwmLockedSelf
-;
-    jmp iwmTryLockSelf
-
-iwmLockedSelf:
-    mov di,OFFSET cs_wakeup_list
-    call InsertCoreBlock
-    mov fs:cs_wakeup_spinlock,0
-    sti
-
-iwmDone:    
+iwDone:    
     pop di
     pop ax
     ret
-InsertWakeupMultiple  Endp
+InsertWakeup  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2803,7 +2774,7 @@ WakeThread      PROC near
     call RemoveBlock32
     mov es:p_data,eax
     call cs:unlock_list_proc
-    call cs:insert_wakeup_proc
+    call InsertWakeup
     
 wtUnlock:    
     call TryUnlockCore
@@ -3151,8 +3122,16 @@ icPtabInit:
     add bx,2
     loop icPtabInit
 ;
-    mov es:cs_wakeup_list,0
-    mov es:cs_wakeup_spinlock,0
+    mov cx,CORE_WAKEUP_ENTRIES
+    mov bx,OFFSET cs_wakeup_arr
+    xor ax,ax
+
+icWakeupInit:
+    mov es:[bx],ax
+    add bx,2
+    loop icWakeupInit
+;
+    mov es:cs_wakeup_count,0
     mov es:cs_nesting,-1
     mov es:cs_curr_thread,0
     mov es:cs_last_thread,-1
@@ -3880,7 +3859,7 @@ tucTlbDone:
     test fs:cs_flags,CS_FLAG_PREEMPT
     jnz tucSwap
 ;    
-    mov ax,fs:cs_wakeup_list
+    mov ax,fs:cs_wakeup_count
     or ax,ax
     jz tucDone
 
@@ -3974,7 +3953,7 @@ ucTlbDone:
     test fs:cs_flags,CS_FLAG_PREEMPT
     jnz ucSwap
 ;    
-    mov ax,fs:cs_wakeup_list
+    mov ax,fs:cs_wakeup_count
     or ax,ax
     jz ucDone
 
@@ -4220,7 +4199,7 @@ lliTlbDone:
     test fs:cs_flags,CS_FLAG_PREEMPT
     jnz lliSwap
 ;    
-    mov ax,fs:cs_wakeup_list
+    mov ax,fs:cs_wakeup_count
     or ax,ax
     jz lliDone
 
@@ -5079,7 +5058,7 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    call cs:insert_wakeup_proc
+    call InsertWakeup
     jmp ContinueCurrentThread
 
 wake_new_other_core:
@@ -5307,7 +5286,7 @@ signal_thread   PROC far
     mov es:p_sleep_type,0
     mov es:p_signal,0
     call cs:unlock_signal_proc
-    call cs:insert_wakeup_proc    
+    call InsertWakeup    
     jmp signal_unlock_core
 
 signal_unlock_signal:
@@ -5555,9 +5534,8 @@ lcsUnblock:
     call RemoveBlock32
     mov es:p_data,0
     sub esi,OFFSET cs_list
-    call cs:unlock_kernel_section_proc    
-;    
-    call cs:insert_wakeup_proc
+    call cs:unlock_kernel_section_proc        
+    call InsertWakeup
 
 lcsUnblocked:
     pop di
@@ -6065,8 +6043,7 @@ lusUnblock:
     call RemoveBlock32
     mov es:p_data,0
     call cs:unlock_user_section_proc
-;
-    call cs:insert_wakeup_proc
+    call InsertWakeup
 
 lusUnblocked:
     pop di
@@ -6424,7 +6401,7 @@ release_futex   Proc near
 ;
     push es    
     mov es,cx
-    call cs:insert_wakeup_proc
+    call InsertWakeup
     pop es
 ;    
     pop di
@@ -6921,7 +6898,7 @@ wake_until      PROC far
     call TryLockCore
     sti
     mov es,cx
-    call cs:insert_wakeup_proc
+    call InsertWakeup
     call TryUnlockCore
     retf32
 wake_until      ENDP
@@ -7128,7 +7105,7 @@ check_cpu_loop:
     jne check_cpu_next
 ;
     mov eax,fs:p_sleep_offset
-    cmp ax,OFFSET cs_wakeup_list
+    cmp ax,OFFSET cs_wakeup_arr
     je check_wakeup_ok
 ;
     mov ax,fs:p_sleep_type

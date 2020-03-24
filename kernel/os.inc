@@ -1608,7 +1608,7 @@ tucTlbDone:
     test fs:cs_flags,CS_FLAG_PREEMPT
     jnz tucSwap
 ;    
-    mov ax,fs:cs_wakeup_list
+    mov ax,fs:cs_wakeup_count
     or ax,ax
     jz tucDone
 

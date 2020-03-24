@@ -1846,9 +1846,9 @@ AddToCrashLog   Proc near
     call AddCrashThread
         
 aclNoCurr:
-    mov ax,LOG_CORE_THREAD_WAKEUP
-    mov si,OFFSET cs_wakeup_list
-    call AddCrashThreadList
+;    mov ax,LOG_CORE_THREAD_WAKEUP
+;    mov si,OFFSET cs_wakeup_list
+;    call AddCrashThreadList
 ;
     mov ax,LOG_CORE_THREAD_READY
     mov cx,256
