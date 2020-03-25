@@ -92,6 +92,7 @@ cs_gdt_size             DW ?
 
 cs_apic                 DD ?
 cs_acpi                 DB ?
+cs_pad1                 DB ?
 
 cs_dump_offset          DW ?
 
@@ -106,12 +107,8 @@ cs_system_time          DD ?,?
 cs_tsc_guard            DD ?
 cs_last_tsc             DD ?
 
-cs_pad1                 DW ? 
-
 cs_lsb_tics             DD ?
 cs_msb_tics             DD ?
-
-cs_pad2                 DW ?
 
 cs_linear               DD ?
 cs_syscall_esp          DD ?
@@ -133,13 +130,12 @@ cs_nested_irq_count     DW ?
 cs_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
 
 cs_irq_count_arr        DD 256 DUP(?)
+cs_wakeup_arr           DW CORE_WAKEUP_ENTRIES DUP(?)
 
 cs_cr3                  DD ?
 cs_mon_linear           DD ?
 cs_tlb                  core_tlb32_struc <>
 cs_work_tlb             core_tlb32_struc <>
-
-cs_wakeup_arr           DW CORE_WAKEUP_ENTRIES DUP(?)
 
 cs_timer_spinlock       DW ?
 cs_timer_head           DW ?

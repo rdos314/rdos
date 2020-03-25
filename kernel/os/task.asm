@@ -2510,9 +2510,7 @@ RemoveWakeup  PROC near
     push ax
     push bx
     push cx
-    push bp
 ;
-    mov bp,256
     mov bx,OFFSET cs_wakeup_arr
     mov cx,CORE_WAKEUP_ENTRIES
 
@@ -2525,18 +2523,12 @@ rwLoop:
     add bx,2
     loop rwLoop
 ;
-    mov bx,OFFSET cs_wakeup_arr
-    mov cx,CORE_WAKEUP_ENTRIES
-    sub bp,1
-    jnz rwLoop
-;
     CrashGate
 
 rwOk:
     mov es,ax
     lock sub fs:cs_wakeup_count,1
 ;
-    pop bp
     pop cx
     pop bx    
     pop ax
@@ -2564,7 +2556,6 @@ AddWakeup  PROC near
 ;
     mov bp,256
     mov bx,OFFSET cs_wakeup_arr
-    lock add fs:cs_wakeup_count,1
 ;
     mov es:p_sleep_sel,fs
     mov word ptr es:p_sleep_offset,bx
@@ -2593,6 +2584,8 @@ awNext:
     CrashGate
    
 awDone:
+    lock add fs:cs_wakeup_count,1
+;
     pop bp
     pop dx
     pop cx
