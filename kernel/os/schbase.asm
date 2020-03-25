@@ -854,6 +854,36 @@ GetThreadTics_ PROC near
 GetThreadTics_ ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearThreadIrqs
+;
+;           DESCRIPTION:    Clear thread IRQs
+;
+;           PARAMETER:      AX          Thread handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ClearThreadIrqs_
+    
+ClearThreadIrqs_ PROC near
+    push es
+    push ecx
+    push edi
+;
+    mov es,ax
+    mov edi,OFFSET p_irq_bitmap
+    mov ecx,8
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop edi
+    pop ecx
+    pop es
+    ret
+ClearThreadIrqs_ ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler

@@ -106,6 +106,9 @@ extern void SetThreadCore(int Core, int ThreadHandle);
 extern long long GetThreadTics(int ThreadHandle);
 #pragma aux GetThreadTics parm routine [eax] value [edx eax]
 
+extern void ClearThreadIrqs(int ThreadHandle);
+#pragma aux ClearThreadIrqs parm routine [eax]
+
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -200,6 +203,8 @@ void ThreadCreated(int handle, int ID, int Prio)
         ThreadArr[Index].Prio = Prio;
         ThreadArr[Index].IdleCount = 0;
         ThreadArr[Index].BaseTics = 0;
+
+        ClearThreadIrqs(handle);
     }
 
     RdosLeaveKernelSection(&ThreadSection);
@@ -901,6 +906,21 @@ void __far InitTasking()
     RdosCreateKernelThread(5, 0x1000, &SchedulerThread, "Scheduler", 0);
 }
 
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    int i;
+
+    for (i = 0; i < ActiveThreads; i++)
+    {
+        if (ThreadArr[i].Valid)
+        {
+            ClearThreadIrqs(ThreadArr[i].Handle);
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : main
@@ -927,4 +947,6 @@ int main()
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
+
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 }
