@@ -976,6 +976,55 @@ ltiLoop:
 LockThreadIrq_ ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetThreadIrq
+;
+;           DESCRIPTION:    Get thread IRQ
+;
+;           RETURNS:        EAX         IRQ # or -1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetThreadIrq_
+    
+GetThreadIrq_ PROC near
+    push ecx
+    push edx
+    push esi
+;
+    mov ecx,8
+    xor edx,edx
+    mov esi,OFFSET locked_irq_bitmap
+
+gtiLoop:
+    mov eax,ds:[esi]
+    or eax,eax
+    jz gtiNext
+;
+    bsf ecx,eax
+    btc eax,ecx
+    mov ds:[esi],eax
+;
+    mov eax,ecx
+    add eax,edx
+    jmp gtiDone
+
+gtiNext:
+    add edx,32
+    add esi,4
+    loop gtiLoop
+;
+    mov eax,-1
+
+gtiDone:
+    pop esi
+    pop edx
+    pop ecx
+    ret
+GetThreadIrq_	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler
