@@ -2454,7 +2454,7 @@ null_thread:
     mov es:p_sleep_offset,0
     mov fs:cs_null_thread,ax
     mov es:p_core,fs
-    mov es:p_wanted_core,0
+    mov es:p_wanted_core,0    
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -5219,6 +5219,7 @@ signal_thread_name      DB 'Signal',0
 
 signal_thread   PROC far
     push ax
+    push si
     push es
     push fs
 ;
@@ -5236,6 +5237,22 @@ signal_thread   PROC far
     test es:p_flags,THREAD_FLAG_TERMINATED
     jnz signal_unlock_core    
 ;
+    mov si,fs:cs_irq_count
+    or si,si
+    jz signal_other_thread
+;
+    dec si
+    mov al,fs:[si].cs_irq_stack
+    cmp al,-1
+    je signal_do_lock
+;
+    movzx ax,al
+    bts word ptr es:p_irq_bitmap,ax
+    jmp signal_do_lock
+
+signal_other_thread:
+
+signal_do_lock:
     call cs:lock_signal_proc
     mov es:p_signal,1
 ;    
@@ -5258,6 +5275,7 @@ signal_unlock_core:
 signal_done:       
     pop fs
     pop es
+    pop si
     pop ax
     retf32
 signal_thread   ENDP
