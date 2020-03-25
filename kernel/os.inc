@@ -1535,11 +1535,23 @@ GetSchedulerLockCounter    MACRO
     OsGate get_scheduler_lock_counter_nr
                         ENDM
 
+;   IN AL	Irq # (-1 for timer/non-specific)
 EnterInt    MACRO
+    local eiOk
+
     cli
-    mov ax,core_data_sel
-    mov fs,ax
+    mov bx,core_data_sel
+    mov fs,bx
     mov fs,fs:cs_sel
+    mov bx,fs:cs_irq_count
+    cmp bx,MAX_IRQ_NESTING
+    jb eiOk
+;
+    CrashGate
+
+eiOk:
+    mov fs:[bx].cs_irq_stack,al
+    inc fs:cs_irq_count
     lock add fs:cs_nesting,1
                         ENDM
 
@@ -1553,6 +1565,8 @@ LeaveInt    MACRO
     local tucSwap
     local tucTlbDone
     local tucLeave
+
+    dec fs:cs_irq_count
 
 tucRetry:    
     cli    

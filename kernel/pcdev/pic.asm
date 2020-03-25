@@ -97,6 +97,7 @@ IrqEntry1:
     mov es,ax
     mov fs,ax
 ;
+    mov al,cs:irq_nr
     EnterInt
 ;       
     mov ax,word ptr fs:cs_curr_irq_nr
@@ -124,8 +125,6 @@ IrqPrevOk1:
     mov fs:cs_curr_irq_retries,0
 ;
     sti
-    shl bx,2
-    inc fs:[bx].cs_irq_count_arr
 
 IrqRetry1:    
     mov ds,cs:irq_handler_data
@@ -233,6 +232,7 @@ IrqEntry2:
     mov es,ax
     mov fs,ax
 ;
+    mov al,cs:irq_nr
     EnterInt
 ;       
     mov ax,word ptr fs:cs_curr_irq_nr
@@ -260,8 +260,6 @@ IrqPrevOk2:
     mov fs:cs_curr_irq_retries,0
 ;
     sti
-    shl bx,2
-    inc fs:[bx].cs_irq_count_arr
 
 IrqRetry2:    
     mov ds,cs:irq_handler_data
@@ -1070,6 +1068,7 @@ timer_int:
     push es
     push fs
 ;
+    mov al,-1
     EnterInt
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov al,20h

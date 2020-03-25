@@ -227,6 +227,7 @@ realtime_int:
     push es
     push fs
 ;    
+    mov al,-1
     EnterInt    
     mov ax,apic_mem_sel
     mov ds,eax

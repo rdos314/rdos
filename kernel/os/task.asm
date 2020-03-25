@@ -3163,19 +3163,11 @@ icTimerListCreate:
     mov es:cs_log_sel,0
     mov es:cs_log_entry,0
 ;
-    mov cx,256
-    mov bx,OFFSET cs_irq_count_arr
-    xor eax,eax
-
-icIrqCountInit:
-    mov es:[bx],eax
-    add bx,4
-    loop icIrqCountInit
-;
     mov es:cs_curr_irq_nr,0
     mov es:cs_curr_irq_count,0
     mov es:cs_curr_irq_retries,0
     mov es:cs_nested_irq_count,0    
+    mov es:cs_irq_count,0
 ;
     call create_long_tss
     mov es:cs_long_tr,bx

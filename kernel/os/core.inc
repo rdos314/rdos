@@ -129,8 +129,10 @@ cs_curr_irq_spare       DB ?
 cs_nested_irq_count     DW ?
 cs_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
 
-cs_irq_count_arr        DD 256 DUP(?)
 cs_wakeup_arr           DW CORE_WAKEUP_ENTRIES DUP(?)
+
+cs_irq_count            DW ?
+cs_irq_stack            DB MAX_IRQ_NESTING DUP(?)
 
 cs_cr3                  DD ?
 cs_mon_linear           DD ?

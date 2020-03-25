@@ -636,6 +636,7 @@ IsaIrqEntry:
     push es
     push fs
 ;
+    mov al,cs:isa_irq_nr
     EnterInt
 ;       
     mov ax,word ptr fs:cs_curr_irq_nr
@@ -663,8 +664,6 @@ IsaIrqPrevOk:
     mov fs:cs_curr_irq_retries,0
 ;
     sti
-    shl bx,2
-    inc fs:[bx].cs_irq_count_arr
 
 IsaIrqRetry:    
     mov ds,cs:isa_irq_handler_data
@@ -1143,6 +1142,7 @@ MsiEntry:
     push es
     push fs
 ;
+    mov al,cs:msi_irq_nr
     EnterInt
 ;       
     mov ax,word ptr fs:cs_curr_irq_nr
@@ -1167,10 +1167,7 @@ MsiPrevOk:
     movzx bx,cs:msi_irq_nr
     mov word ptr fs:cs_curr_irq_nr,bx
 ;    
-    sti
-    shl bx,2
-    inc fs:[bx].cs_irq_count_arr
-;    
+    sti    
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
     cli
@@ -2334,6 +2331,7 @@ has_local_timer    Endp
 long_timer_handler_name    DB 'Long Timer Handler', 0
 
 long_timer_handler      Proc far
+    mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
@@ -2362,6 +2360,7 @@ long_hpet_handler      Proc far
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;    
+    mov al,-1
     EnterInt    
     lock or fs:cs_flags,cS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
@@ -2403,6 +2402,7 @@ timer_int:
     push es
     push fs
 ;
+    mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
@@ -2464,6 +2464,7 @@ hpet_int:
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;    
+    mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
@@ -2538,6 +2539,7 @@ preempt_int:
     push es
     push fs
 ;
+    mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_PREEMPT
     mov ax,apic_mem_sel
@@ -2591,6 +2593,7 @@ force_schedule_int:
     push es
     push fs
 ;
+    mov al,-1
     EnterInt
     mov ax,apic_mem_sel
     mov ds,ax
