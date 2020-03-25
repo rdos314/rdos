@@ -43,6 +43,8 @@ INCLUDE chandle.inc
 
 data    SEGMENT byte public 'DATA'
 
+locked_irq_bitmap   DB 32 DUP(?)
+
 state_hooks         DW ?
 state_arr           DD 2*32 DUP(?)
 
@@ -928,6 +930,50 @@ HasThreadIrq_ PROC near
     pop ds
     ret
 HasThreadIrq_ ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LockThreadIrq
+;
+;           DESCRIPTION:    Lock thread IRQ
+;
+;           PARAMETER:      AX          Thread handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LockThreadIrq_
+    
+LockThreadIrq_ PROC near
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov ds,eax
+    mov esi,OFFSET p_irq_bitmap
+;
+    mov eax,SEG data
+    mov es,eax
+    mov edi,OFFSET locked_irq_bitmap
+;
+    mov ecx,8
+
+ltiLoop:
+    xor eax,eax
+    xchg eax,ds:[esi]
+    add esi,4
+    stos dword ptr es:[edi]
+    loop ltiLoop
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+    ret
+LockThreadIrq_ ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

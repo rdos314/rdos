@@ -112,6 +112,9 @@ extern void ClearThreadIrqs(int ThreadHandle);
 extern long HasThreadIrq(int ThreadHandle);
 #pragma aux HasThreadIrq parm routine [eax] value [eax]
 
+extern void LockThreadIrq(int ThreadHandle);
+#pragma aux LockThreadIrq parm routine [eax]
+
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -914,13 +917,15 @@ void __far InitTasking()
 void __far ImplTestGate(const char *msg)
 {
     int i;
-    int ok;
 
     for (i = 0; i < ActiveThreads; i++)
     {
         if (ThreadArr[i].Valid)
         {
-            ok = HasThreadIrq(ThreadArr[i].Handle);
+            if (HasThreadIrq(ThreadArr[i].Handle))
+            {
+                LockThreadIrq(ThreadArr[i].Handle);
+            }
         }
     }
 }
