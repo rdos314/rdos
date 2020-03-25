@@ -32,6 +32,7 @@
 #define MAX_PROCESSES           64
 #define MAX_THREADS             512
 #define MAX_PROCESSOR_COUNT     32
+#define MAX_IRQ_SERVERS         4
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -51,6 +52,7 @@ struct TThread
     int Core;
     int Prio;
     int IdleCount;
+    int Irq;
     long long BaseTics;
 };
 
@@ -60,6 +62,13 @@ struct TCore
     long long CoreBaseTics;
     int Active;
     int Realtime;
+};
+
+
+struct TIrq
+{
+    int ServerCount;
+    int ServerArr[MAX_IRQ_SERVERS];
 };
 
 struct TThreadState
@@ -93,6 +102,7 @@ int ActiveProcesses = 0;
 struct TProcess ProcessArr[MAX_PROCESSES];
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
+struct TIrq IrqArr[256];
 
 int StatCount = 0;
 struct TThreadState ThreadStatArr[MAX_THREADS];
@@ -212,6 +222,7 @@ void ThreadCreated(int handle, int ID, int Prio)
         ThreadArr[Index].Prio = Prio;
         ThreadArr[Index].IdleCount = 0;
         ThreadArr[Index].BaseTics = 0;
+        ThreadArr[Index].Irq = 0;
 
         ClearThreadIrqs(handle);
     }
@@ -640,6 +651,11 @@ void __far SchedulerThread(void *param)
     long long Tics;
     int Diff;
     int i;
+    int j;
+    int irq;
+    int found;
+    int handle;
+    int id;
     int Core;
     int Load;
     long long NullTics;
@@ -737,6 +753,35 @@ void __far SchedulerThread(void *param)
         {
             if (ThreadArr[i].Valid)
             {
+                handle = ThreadArr[i].Handle;
+                if (HasThreadIrq(handle))
+                {
+                    id = ThreadArr[i].ID;
+                    LockThreadIrq(handle);
+                    irq = GetThreadIrq();
+                    while (irq != -1)
+                    {
+                        if (IrqArr[irq].ServerCount != -1)
+                        {
+                            if (IrqArr[irq].ServerCount < MAX_IRQ_SERVERS)
+                            {
+                                found = 0;
+                                for (j = 0; j < IrqArr[irq].ServerCount && !found; j++)
+                                    found = IrqArr[irq].ServerArr[j] == id;
+
+                                if (!found)
+                                {
+                                    IrqArr[irq].ServerArr[IrqArr[irq].ServerCount] = id;
+                                    IrqArr[irq].ServerCount++;
+                                }
+                            }
+                            else
+                                IrqArr[irq].ServerCount = -1;
+                        }
+                        irq = GetThreadIrq();
+                    }
+                }
+
                 Tics = GetThreadTics(ThreadArr[i].Handle);
                 Diff = (int)(Tics - ThreadArr[i].BaseTics);
                 ThreadArr[i].BaseTics = Tics;
@@ -893,6 +938,9 @@ void InitThreadList()
     for (i = 0; i < MAX_PROCESSES; i++)
         ProcessArr[i].Valid = FALSE;
 
+    for (i = 0; i < 256; i++)
+        IrqArr[i].ServerCount = 0;
+
     RdosInitKernelSection(&ThreadSection);
     RdosInitKernelSection(&CoreSection);
     RdosInitKernelSection(&ProcessSection);
@@ -920,21 +968,13 @@ void __far InitTasking()
 void __far ImplTestGate(const char *msg)
 {
     int i;
-    int irq;
+    int handle;
 
     for (i = 0; i < ActiveThreads; i++)
     {
         if (ThreadArr[i].Valid)
         {
-            if (HasThreadIrq(ThreadArr[i].Handle))
-            {
-                LockThreadIrq(ThreadArr[i].Handle);
-                irq = GetThreadIrq();
-                while (irq != -1)
-                {
-                    irq = GetThreadIrq();
-                }
-            }
+            handle = ThreadArr[i].Handle;
         }
     }
 }
