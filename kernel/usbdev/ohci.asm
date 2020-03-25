@@ -3422,7 +3422,6 @@ UpdatePipeList  Endp
 
 ohci_function_handler:
     mov ds,bx
-    AddThreadInt
     GetThread
     mov ds:ohc_thread,ax
 
@@ -3903,7 +3902,6 @@ InitPciAdapter  Endp
 ohci_name       DB 'OHCI',0
 
 ohci_thread:
-    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     mov ds:UseTimer,0

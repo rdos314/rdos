@@ -422,7 +422,6 @@ p_console           DW ?
 p_parent_console    DW ?
 p_loader            DW ?
 p_wanted_core       DW ?
-p_int_count         DW ?
 
 p_int_locked_stack      DW ? 
 p_int_prot16_stack      DW ?

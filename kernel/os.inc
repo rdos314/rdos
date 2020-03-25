@@ -1157,11 +1157,6 @@ SetThreadCore    MACRO
     OsGate set_thread_core_nr
                     ENDM
 
-;  IN  AL   Int #
-AddThreadInt    MACRO
-    OsGate add_thread_int_nr
-                    ENDM
-
 ;  OUT AX   TID
 CreatePid    MACRO
     OsGate create_pid_nr

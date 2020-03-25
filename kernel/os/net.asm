@@ -1243,7 +1243,6 @@ CheckLink   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetThread:
-    AddThreadInt
     mov fs,bx
     GetThread
     mov fs:d_thread,ax

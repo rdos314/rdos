@@ -854,29 +854,6 @@ GetThreadTics_ PROC near
 GetThreadTics_ ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetThreadIntCount
-;
-;           DESCRIPTION:    Get thread int count 
-;
-;           PARAMETER:      AX          Thread handle
-;
-;           RETURNS:        EAX         Int count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetThreadIntCount_
-    
-GetThreadIntCount_ PROC near
-    push es
-    mov es,ax
-    movzx eax,es:p_int_count
-    pop es
-    ret
-GetThreadIntCount_ ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler

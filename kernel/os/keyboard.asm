@@ -129,7 +129,6 @@ remove_non_key Endp
 keyboard_name   DB 'Keyboard',0
 
 keyboard_pr:
-    AddThreadInt
     sti
     mov ax,SEG data
     mov ds,ax

@@ -51,7 +51,6 @@ struct TThread
     int Core;
     int Prio;
     int IdleCount;
-    int IntCount;
     long long BaseTics;
 };
 
@@ -67,7 +66,6 @@ struct TThreadState
 {
     int ID;
     int Core;
-    int IntCount;
     int Load;
 };
 
@@ -107,9 +105,6 @@ extern void SetThreadCore(int Core, int ThreadHandle);
 
 extern long long GetThreadTics(int ThreadHandle);
 #pragma aux GetThreadTics parm routine [eax] value [edx eax]
-
-extern int GetThreadIntCount(int ThreadHandle);
-#pragma aux GetThreadIntCount parm routine [eax] value [eax]
 
 /*##########################################################################
 #
@@ -731,7 +726,6 @@ void __far SchedulerThread(void *param)
                 Tics = GetThreadTics(ThreadArr[i].Handle);
                 Diff = (int)(Tics - ThreadArr[i].BaseTics);
                 ThreadArr[i].BaseTics = Tics;
-                ThreadArr[i].IntCount = GetThreadIntCount(ThreadArr[i].Handle);
 
                 Core = ThreadArr[i].Core;
 
@@ -754,7 +748,6 @@ void __far SchedulerThread(void *param)
                 {
                     ThreadStatArr[StatCount].ID = ThreadArr[i].ID;
                     ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
-                    ThreadStatArr[StatCount].IntCount = ThreadArr[i].IntCount;
                     ThreadStatArr[StatCount].Load = Load;
                     StatCount++;
 
@@ -817,7 +810,7 @@ void __far SchedulerThread(void *param)
 
                 for (i = 0; i < StatCount; i++)
                 {
-                    if (ThreadStatArr[i].Core == HighestCore && ThreadStatArr[i].IntCount == 0)
+                    if (ThreadStatArr[i].Core == HighestCore)
                     {
                         Load = ThreadStatArr[i].Load;
 

@@ -3228,7 +3228,6 @@ perform_one     Endp
 action_wait DB 'Idle', 0
 
 req_discbuf_thread:
-    AddThreadInt
     mov ax,flat_sel
     mov es,ax
     mov ax,fs
@@ -3364,7 +3363,6 @@ RetryCmdList   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_discbuf_thread:
-    AddThreadInt
     mov ax,flat_sel
     mov es,ax
     mov ax,fs

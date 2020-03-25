@@ -2326,7 +2326,6 @@ perform_one     Endp
 action_idle DB 'Idle', 0
 
 discbuf_thread:
-    AddThreadInt
     mov ax,fs
     mov ds,ax
     mov fs,ds:sd_reg_sel    

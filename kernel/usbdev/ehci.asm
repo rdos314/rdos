@@ -3679,7 +3679,6 @@ UpdatePipeList  Endp
 
 ehci_function_handler:
     mov ds,bx
-    AddThreadInt
     GetThread
     mov ds:ehc_thread,ax
 
@@ -4242,7 +4241,6 @@ InitPciAdapter  Endp
 ehci_name       DB 'EHCI',0
 
 ehci_thread:
-    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     GetThread

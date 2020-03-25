@@ -927,7 +927,6 @@ serv_thread3:
     mov es:[bx],eax
 
 serv_thread:
-    AddThreadInt
 
 serv_loop:
     WaitForSignal

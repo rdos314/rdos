@@ -303,7 +303,7 @@ ENDIF
 ;
 ;           DESCRIPTION:    Create dump file
 ;
-;           Parameters:     CS:ESI	Text
+;           Parameters:     CS:ESI      Text
 ;                           ES:EDI      Data
 ;                           ECX         Size
 ;
@@ -312,7 +312,7 @@ ENDIF
 my_dump_file DB 'c:/xhci.txt', 0
 start_text   DB 'Start', 0dh, 0ah
 
-AddDump	Proc near
+AddDump Proc near
     push ds
     push es
     pushad
@@ -437,7 +437,7 @@ adCrLf:
     pop es
     pop ds 
     ret
-AddDump	Endp
+AddDump Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1534,7 +1534,7 @@ iet29   DD OFFSET output15_text
 iet30   DD OFFSET input15_text
 ietLast DD 0
 
-DumpInputContext	Proc near
+DumpInputContext        Proc near
     pushad
 ;
     push es
@@ -1584,7 +1584,7 @@ dicEpNext:
 ;
     popad
     ret
-DumpInputContext	Endp
+DumpInputContext        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2900,7 +2900,7 @@ IssueOne   Endp
 AllocateAddress   Proc far
     call EnableSlot
     retf32   
-AllocateAddress	  Endp
+AllocateAddress   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2917,7 +2917,7 @@ AllocateAddress	  Endp
 FreeAddress   Proc far
     call DisableSlot
     retf32   
-FreeAddress	  Endp
+FreeAddress       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2973,7 +2973,7 @@ CreateDev   Proc far
     popad
     pop fs
     retf32   
-CreateDev	Endp
+CreateDev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3652,7 +3652,6 @@ evt3F DW OFFSET error_event
 event_thread_name   DB 'XHCI Event', 0
 
 event_thread:
-    AddThreadInt
     mov es,bx
     GetThread
     mov es:xhc_event_thread,ax

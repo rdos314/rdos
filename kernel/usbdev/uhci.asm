@@ -2687,7 +2687,7 @@ IssueOne   Endp
 ;
 ;       DESCRIPTION:    Allocate address
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;
 ;       RETURNS:        AL      Address
 ;
@@ -2705,7 +2705,7 @@ AllocateAddress   Endp
 ;
 ;       DESCRIPTION:    Free address
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;                       AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2722,7 +2722,7 @@ FreeAddress   Endp
 ;
 ;       DESCRIPTION:    Create device sel
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;                       AL      Address
 ;                       AH      Speed
 ;                       BX      Hub sel
@@ -3661,7 +3661,6 @@ InitPciAdapter  Endp
 uhci_name       DB 'UHCI',0
 
 uhci_thread:
-    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     GetThread
