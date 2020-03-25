@@ -884,6 +884,52 @@ ClearThreadIrqs_ PROC near
 ClearThreadIrqs_ ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasThreadIrq
+;
+;           DESCRIPTION:    Has thread any IRQ?
+;
+;           PARAMETER:      AX          Thread handle
+;
+;           RETURNS:        EAX         0 = no IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HasThreadIrq_
+    
+HasThreadIrq_ PROC near
+    push ds
+    push edx
+    push esi
+;
+    mov ds,ax
+    mov esi,OFFSET p_irq_bitmap
+    xor edx,edx
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or edx,eax
+    lods dword ptr ds:[esi]
+    or eax,edx
+;
+    pop esi
+    pop edx
+    pop ds
+    ret
+HasThreadIrq_ ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler
