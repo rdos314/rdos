@@ -1047,6 +1047,37 @@ SetThreadIrq_ PROC near
 SetThreadIrq_	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetCoreInts
+;
+;           DESCRIPTION:    Get int count (per core)
+;
+;           PARAMETER:      AX          Core #
+;                           DL          IRQ #
+;
+;           RETURNS:        EAX		Int count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetCoreInts_
+    
+GetCoreInts_ PROC near
+    push fs
+    push ebx
+;
+    GetCore
+    movzx ebx,dl
+    shl ebx,2
+    xor eax,eax
+    xchg eax,fs:[ebx].cs_irq_arr_counter
+;
+    pop ebx
+    pop fs
+    ret
+GetCoreInts_	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler

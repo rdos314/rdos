@@ -68,6 +68,7 @@ struct TCore
 struct TIrq
 {
     int Core;
+    int IntCount;
     int ServerCount;
     int ServerArr[MAX_IRQ_SERVERS];
 };
@@ -132,6 +133,9 @@ extern long GetThreadIrq();
 
 extern void SetThreadIrq(int ThreadHandle, int Irq);
 #pragma aux SetThreadIrq parm routine [eax] [edx]
+
+extern long GetCoreInts(int Core, int Irq);
+#pragma aux GetCoreInts parm routine [eax] [edx]
 
 /*##########################################################################
 #
@@ -1045,6 +1049,11 @@ void __far InitTasking()
 
 void __far ImplTestGate(const char *msg)
 {
+    int i;
+
+    for (i = 0; i < 256; i++)
+        IrqArr[i].IntCount = GetCoreInts(IrqArr[i].Core, i);
+
 }
 
 /*##########################################################################
@@ -1074,5 +1083,5 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 }
