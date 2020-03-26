@@ -7053,6 +7053,7 @@ Futex_state     DB 'User Section',0
 Section_state   DB 'Kernel Section',0
 Suspend_state   DB 'Suspend',0
 
+Irq_state       DB 'Irq ', 0
 Wakeup_state    DB 'Wakeup ',0 
 Run_state       DB 'Run ', 0
 Ready_cpu_state DB 'Ready ',0
@@ -7145,9 +7146,9 @@ check_copy_id:
     jmp check_copy_id
 
 check_copy_id_done:
-    mov al,'0'
-    add al,dl
-    stos byte ptr es:[edi]
+    mov al,dl
+    call ToHex
+    stos word ptr es:[edi]
 
 check_copy_end:
     xor al,al
@@ -7172,6 +7173,35 @@ check_not_wait:
     cmp ax,SLEEP_TYPE_SIGNAL
     jne check_not_signal
 ;
+    mov al,fs:p_irq
+    or al,al
+    jz check_signal
+;
+    mov si,OFFSET Irq_state
+
+check_copy_irq:
+    mov al,cs:[si]
+    or al,al
+    jz check_copy_irq_done
+;
+    inc si
+    stos byte ptr es:[edi]
+    jmp check_copy_irq
+
+check_copy_irq_done:
+    mov al,fs:p_irq
+    call ToHex
+    stos word ptr es:[edi]
+;
+    xor al,al    
+    stos byte ptr es:[edi]
+;
+    xor cx,cx
+    xor edx,edx
+    clc
+    jmp check_done
+
+check_signal:
     mov si,OFFSET Signal_state
     jmp check_copy_zero
     
