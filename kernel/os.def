@@ -843,4 +843,6 @@ init_core_physical_nr       = 737
 set_usb_over_current_nr     = 738
 set_usb_reset_failed_nr     = 739
 
+is_pci_msi_nr               = 740
+
 osgate_entries              = 750

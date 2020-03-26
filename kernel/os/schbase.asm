@@ -1078,6 +1078,33 @@ GetCoreInts_ PROC near
 GetCoreInts_	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsPciMsi
+;
+;           DESCRIPTION:    Is PCI MSI
+;
+;           PARAMETER:      AL          IRQ #
+;
+;           RETURNS:        EAX		1 = ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsPciMsi_
+    
+IsPciMsi_ PROC near
+    IsPciMsi
+    jc ipmFail
+;
+    mov eax,1
+    ret
+
+ipmFail:
+    xor eax,eax
+    ret
+IsPciMsi_	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler

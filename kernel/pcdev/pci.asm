@@ -68,7 +68,7 @@ epci_acpi_name  DB 128 DUP(?)
 
 ext_pci_struc  ENDS
 
-msi_struc	STRUC
+msi_struc       STRUC
 
 msi_bus         DB ?
 msi_device      DB ?
@@ -78,7 +78,7 @@ msi_int_base    DB ?
 msi_int_count   DB ?
 msi_core        DW ?
 
-msi_struc	ENDS
+msi_struc       ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -1089,6 +1089,42 @@ spmDone:
     pop ds
     retf32
 setup_pci_msi     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsPciMsi
+;
+;           DESCRIPTION:    Is PCI MSI irq
+;
+;           PARAMETERS:     AL          Irq #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_pci_msi_name DB 'Is PCI MSI',0
+
+is_pci_msi     Proc far    
+    push ds
+    push ax
+    push si
+;    
+    mov si,SEG data
+    mov ds,si
+    movzx si,al
+    shl si,3
+    mov al,ds:[si].pci_msi_arr.msi_reg
+    or al,al
+    stc
+    jz ipmDone
+;
+    clc
+
+ipmDone:
+    pop si
+    pop ax
+    pop ds
+    retf32
+is_pci_msi      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2129,6 +2165,12 @@ init    Proc far
     mov edi,OFFSET setup_pci_msi_name
     xor cl,cl
     mov ax,setup_pci_msi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET is_pci_msi
+    mov edi,OFFSET is_pci_msi_name
+    xor cl,cl
+    mov ax,is_pci_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_msix

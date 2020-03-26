@@ -137,6 +137,9 @@ extern void SetThreadIrq(int ThreadHandle, int Irq);
 extern long GetCoreInts(int Core, int Irq);
 #pragma aux GetCoreInts parm routine [eax] [edx]
 
+extern int IsPciMsi(int Irq);
+#pragma aux IsPciMsi parm routine [eax] value [eax]
+
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -1050,9 +1053,13 @@ void __far InitTasking()
 void __far ImplTestGate(const char *msg)
 {
     int i;
+    int ok;
 
     for (i = 0; i < 256; i++)
+    {
         IrqArr[i].IntCount = GetCoreInts(IrqArr[i].Core, i);
+        ok = IsPciMsi(i);
+    }
 
 }
 

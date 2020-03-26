@@ -3759,6 +3759,11 @@ SetupPciMsiXEntry    MACRO
     OsGate setup_pci_msix_entry_nr
                     ENDM
 
+; IN  AL    Int #
+IsPciMsi    MACRO
+    OsGate is_pci_msi_nr
+                    ENDM
+
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX     Table name
