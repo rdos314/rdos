@@ -34,6 +34,8 @@
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_IRQ_SERVERS         4
 
+#define MOD_FLAG_MSI     1
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -68,6 +70,7 @@ struct TCore
 struct TIrq
 {
     int Core;
+    int ModFlags;
     int IntCount;
     int ServerCount;
     int ServerArr[MAX_IRQ_SERVERS];
@@ -749,6 +752,14 @@ void __far SchedulerThread(void *param)
 
         if (IrqChanged)
         {
+            for (i = 0; i < 256; i++)
+            {
+                if (IsPciMsi(i))
+                    IrqArr[i].ModFlags = MOD_FLAG_MSI;
+                else
+                    IrqArr[i].ModFlags = 0;
+            }
+
             for (i = 0; i < ActiveThreads; i++)
             {
                 if (ThreadArr[i].Valid)
@@ -1059,6 +1070,10 @@ void __far ImplTestGate(const char *msg)
     {
         IrqArr[i].IntCount = GetCoreInts(IrqArr[i].Core, i);
         ok = IsPciMsi(i);
+        if (ok)
+            IrqArr[i].ModFlags = MOD_FLAG_MSI;
+        else
+            IrqArr[i].ModFlags = 0;
     }
 
 }
