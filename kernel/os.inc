@@ -1552,6 +1552,9 @@ EnterInt    MACRO
 eiOk:
     mov fs:[bx].cs_irq_stack,al
     inc fs:cs_irq_count
+    movzx bx,al
+    shl bx,2
+    inc fs:[bx].cs_irq_arr_counter
     lock add fs:cs_nesting,1
                         ENDM
 

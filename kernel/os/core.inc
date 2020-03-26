@@ -139,6 +139,8 @@ cs_mon_linear           DD ?
 cs_tlb                  core_tlb32_struc <>
 cs_work_tlb             core_tlb32_struc <>
 
+cs_irq_arr_counter      DD 256 DUP(?)
+
 cs_timer_spinlock       DW ?
 cs_timer_head           DW ?
 cs_timer_free           DW ?
