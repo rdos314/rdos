@@ -68,17 +68,31 @@ epci_acpi_name  DB 128 DUP(?)
 
 ext_pci_struc  ENDS
 
+msi_struc	STRUC
+
+msi_bus         DB ?
+msi_device      DB ?
+msi_function    DB ?
+msi_reg         DB ?
+msi_int_base    DB ?
+msi_int_count   DB ?
+msi_core        DW ?
+
+msi_struc	ENDS
+
 data    SEGMENT byte public 'DATA'
 
-pci_spinlock        spinlock_typ <>
+pci_spinlock            spinlock_typ <>
+
+pci_msi_arr             DD 256 DUP(?,?)
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 32 DUP(?,?)
 
-pci_device_arr      DD MAX_PCI_DEVICES DUP(?,?)
+pci_device_arr          DD MAX_PCI_DEVICES DUP(?,?)
 
-ext_pci_dev_count   DW ?    
-ext_pci_dev_arr     DW MAX_PCI_DEVICES DUP(?)
+ext_pci_dev_count       DW ?    
+ext_pci_dev_arr         DW MAX_PCI_DEVICES DUP(?)
 
 data    ENDS
 
@@ -964,10 +978,31 @@ get_pci_msi     Endp
 setup_pci_msi_name DB 'Setup PCI MSI',0
 
 setup_pci_msi     Proc far    
+    push ds
     push ax
     push cx
     push edx
+    push si
 ;    
+    mov si,SEG data
+    mov ds,si
+    movzx si,al
+    shl si,3
+    mov dh,dl
+
+spmEntryLoop:
+    add si,OFFSET pci_msi_arr
+    mov ds:[si].msi_bus,bh
+    mov ds:[si].msi_device,bl
+    mov ds:[si].msi_function,ch
+    mov ds:[si].msi_reg,cl
+    mov ds:[si].msi_int_base,al
+    mov ds:[si].msi_int_count,dl
+    mov ds:[si].msi_core,0
+    add si,8
+    sub dh,1
+    jnz spmEntryLoop
+;
     mov dh,al
     xor ah,ah
 
@@ -1047,9 +1082,11 @@ spmVector:
     WritePciWord
 
 spmDone:
+    pop si
     pop edx
     pop cx
     pop ax
+    pop ds
     retf32
 setup_pci_msi     Endp
 
@@ -1986,6 +2023,12 @@ init    Proc far
     mov eax,-1
     mov di,OFFSET pci_device_arr
     rep stosd
+;
+    mov di,OFFSET pci_msi_arr
+    xor eax,eax
+    mov cx,2 * 256
+    rep stosd
+;
     mov ds:pci_init_hooks,0
     mov ds:ext_pci_dev_count,0
     InitSpinlock ds:pci_spinlock
