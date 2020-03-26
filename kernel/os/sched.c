@@ -67,6 +67,7 @@ struct TCore
 
 struct TIrq
 {
+    int Core;
     int ServerCount;
     int ServerArr[MAX_IRQ_SERVERS];
 };
@@ -75,6 +76,7 @@ struct TThreadState
 {
     int ID;
     int Core;
+    int Irq;
     int Load;
 };
 
@@ -765,12 +767,12 @@ void __far SchedulerThread(void *param)
                             ThreadArr[i].Irq = 0;
                             SetThreadIrq(ThreadArr[i].Handle, 0);
                             break;
- 
+
                         case 1:
                             SetThreadIrq(ThreadArr[i].Handle, irq);
                             ThreadArr[i].Irq = irq;
                             break;
-                
+
                         default:
                             ThreadArr[i].Irq = -1;
                             SetThreadIrq(ThreadArr[i].Handle, 0);
@@ -844,6 +846,16 @@ void __far SchedulerThread(void *param)
         {
             if (ThreadArr[i].Valid)
             {
+                irq = ThreadArr[i].Irq;
+                if (irq > 0)
+                {
+                    if (ThreadArr[i].Core != IrqArr[irq].Core)
+                    {
+                        ThreadArr[i].Core = IrqArr[irq].Core;
+                        SetThreadCore(IrqArr[irq].Core, ThreadArr[i].Handle);
+                    }
+                }
+
                 Tics = GetThreadTics(ThreadArr[i].Handle);
                 Diff = (int)(Tics - ThreadArr[i].BaseTics);
                 ThreadArr[i].BaseTics = Tics;
@@ -869,6 +881,7 @@ void __far SchedulerThread(void *param)
                 {
                     ThreadStatArr[StatCount].ID = ThreadArr[i].ID;
                     ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
+                    ThreadStatArr[StatCount].Irq = ThreadArr[i].Irq;
                     ThreadStatArr[StatCount].Load = Load;
                     StatCount++;
 
@@ -931,7 +944,7 @@ void __far SchedulerThread(void *param)
 
                 for (i = 0; i < StatCount; i++)
                 {
-                    if (ThreadStatArr[i].Core == HighestCore)
+                    if (ThreadStatArr[i].Core == HighestCore && ThreadStatArr[i].Irq <= 0)
                     {
                         Load = ThreadStatArr[i].Load;
 
@@ -1001,7 +1014,10 @@ void InitThreadList()
         ProcessArr[i].Valid = FALSE;
 
     for (i = 0; i < 256; i++)
+    {
         IrqArr[i].ServerCount = 0;
+        IrqArr[i].Core = 0;
+    }
 
     RdosInitKernelSection(&ThreadSection);
     RdosInitKernelSection(&CoreSection);
