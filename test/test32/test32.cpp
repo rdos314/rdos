@@ -46,8 +46,7 @@ void main()
 {
     TRealtimeDevice dev;
 
-    for (;;)
-        RdosTestGate("");
+    RdosTestGate("");
 
     dev.OnSignal = NotifySignal;
     dev.AddCore(1, "realtest.bin");

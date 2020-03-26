@@ -1025,6 +1025,28 @@ gtiDone:
 GetThreadIrq_	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetThreadIrq
+;
+;           DESCRIPTION:    Set thread IRQ
+;
+;           PARAMETER:      AX          Thread handle
+;                           DL          IRQ #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetThreadIrq_
+    
+SetThreadIrq_ PROC near
+    push ds
+    mov ds,eax
+    mov ds:p_irq,dl
+    pop ds
+    ret
+SetThreadIrq_	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler

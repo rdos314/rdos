@@ -128,6 +128,9 @@ extern void LockThreadIrq(int ThreadHandle);
 extern long GetThreadIrq();
 #pragma aux GetThreadIrq value [eax]
 
+extern void SetThreadIrq(int ThreadHandle, int Irq);
+#pragma aux SetThreadIrq parm routine [eax] [edx]
+
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -652,9 +655,12 @@ void __far SchedulerThread(void *param)
     int Diff;
     int i;
     int j;
+    int k;
     int irq;
     int found;
     int handle;
+    int count;
+    int IrqChanged;
     int id;
     int Core;
     int Load;
@@ -691,6 +697,90 @@ void __far SchedulerThread(void *param)
     for (;;)
     {
         RdosWaitMilli(250);
+
+        RdosEnterKernelSection(&ThreadSection);
+
+        IrqChanged = 0;
+
+        for (i = 0; i < ActiveThreads; i++)
+        {
+            if (ThreadArr[i].Valid)
+            {
+                handle = ThreadArr[i].Handle;
+                if (HasThreadIrq(handle))
+                {
+                    id = ThreadArr[i].ID;
+                    LockThreadIrq(handle);
+                    irq = GetThreadIrq();
+                    while (irq != -1)
+                    {
+                        if (IrqArr[irq].ServerCount != -1)
+                        {
+                            if (IrqArr[irq].ServerCount < MAX_IRQ_SERVERS)
+                            {
+                                found = 0;
+                                for (j = 0; j < IrqArr[irq].ServerCount && !found; j++)
+                                    found = IrqArr[irq].ServerArr[j] == id;
+
+                                if (!found)
+                                {
+                                    IrqChanged = 1;
+                                    IrqArr[irq].ServerArr[IrqArr[irq].ServerCount] = id;
+                                    IrqArr[irq].ServerCount++;
+                                }
+                            }
+                            else
+                                IrqArr[irq].ServerCount = -1;
+                        }
+                        irq = GetThreadIrq();
+                    }
+                }
+            }
+        }
+
+        if (IrqChanged)
+        {
+            for (i = 0; i < ActiveThreads; i++)
+            {
+                if (ThreadArr[i].Valid)
+                {
+                    id = ThreadArr[i].ID;
+                    count = 0;
+
+                    for (j = 0; j < 256; j++)
+                    {
+                        for (k = 0; k < IrqArr[j].ServerCount; j++)
+                        {
+                            if (IrqArr[j].ServerArr[k] == id)
+                            {
+                                count++;
+                                irq = j;
+                            }
+                        }
+                    }
+
+                    switch (count)
+                    {
+                        case 0:
+                            ThreadArr[i].Irq = 0;
+                            SetThreadIrq(ThreadArr[i].Handle, 0);
+                            break;
+ 
+                        case 1:
+                            SetThreadIrq(ThreadArr[i].Handle, irq);
+                            ThreadArr[i].Irq = irq;
+                            break;
+                
+                        default:
+                            ThreadArr[i].Irq = -1;
+                            SetThreadIrq(ThreadArr[i].Handle, 0);
+                            break;
+                    }
+                }
+            }
+        }
+
+        RdosLeaveKernelSection(&ThreadSection);
 
         StatCount = 0;
         MaxLoad = 0;
@@ -749,39 +839,11 @@ void __far SchedulerThread(void *param)
         if (CurrLoad > 1000)
             CurrLoad = 1000;
 
+
         for (i = 0; i < ActiveThreads; i++)
         {
             if (ThreadArr[i].Valid)
             {
-                handle = ThreadArr[i].Handle;
-                if (HasThreadIrq(handle))
-                {
-                    id = ThreadArr[i].ID;
-                    LockThreadIrq(handle);
-                    irq = GetThreadIrq();
-                    while (irq != -1)
-                    {
-                        if (IrqArr[irq].ServerCount != -1)
-                        {
-                            if (IrqArr[irq].ServerCount < MAX_IRQ_SERVERS)
-                            {
-                                found = 0;
-                                for (j = 0; j < IrqArr[irq].ServerCount && !found; j++)
-                                    found = IrqArr[irq].ServerArr[j] == id;
-
-                                if (!found)
-                                {
-                                    IrqArr[irq].ServerArr[IrqArr[irq].ServerCount] = id;
-                                    IrqArr[irq].ServerCount++;
-                                }
-                            }
-                            else
-                                IrqArr[irq].ServerCount = -1;
-                        }
-                        irq = GetThreadIrq();
-                    }
-                }
-
                 Tics = GetThreadTics(ThreadArr[i].Handle);
                 Diff = (int)(Tics - ThreadArr[i].BaseTics);
                 ThreadArr[i].BaseTics = Tics;
@@ -967,16 +1029,6 @@ void __far InitTasking()
 
 void __far ImplTestGate(const char *msg)
 {
-    int i;
-    int handle;
-
-    for (i = 0; i < ActiveThreads; i++)
-    {
-        if (ThreadArr[i].Valid)
-        {
-            handle = ThreadArr[i].Handle;
-        }
-    }
 }
 
 /*##########################################################################
@@ -1006,5 +1058,5 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
 
-    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
+//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 }

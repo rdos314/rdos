@@ -8139,6 +8139,7 @@ init_thread_block       PROC near
     mov es:p_core,fs
     pop fs
 ;
+    mov es:p_irq,0
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
 ;
@@ -9720,6 +9721,7 @@ create_first_thread       PROC near
     mov es:p_ldt_sel,ax
     mov es:p_lib_sel,ax
 ;
+    mov es:p_irq,0
     mov es:p_debug_event,0
     mov es:p_flags,0
     mov es:p_signal_spinlock,0
