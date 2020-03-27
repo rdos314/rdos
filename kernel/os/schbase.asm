@@ -1080,29 +1080,36 @@ GetCoreInts_	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           IsPciMsi
+;           NAME:           GetPciMsiBase
 ;
-;           DESCRIPTION:    Is PCI MSI
+;           DESCRIPTION:    Get PCI MSI info
 ;
 ;           PARAMETER:      AL          IRQ #
 ;
-;           RETURNS:        EAX		1 = ok
+;           RETURNS:        EAX		Base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public IsPciMsi_
+    public GetPciMsiBase_
     
-IsPciMsi_ PROC near
-    IsPciMsi
-    jc ipmFail
+GetPciMsiBase_ PROC near
+    push ecx
+    push edx
 ;
-    mov eax,1
-    ret
+    GetPciMsiInfo
+    jc gpmbFail
+;
+    movzx eax,al
+    jmp gpmbDone
 
-ipmFail:
+gpmbFail:
     xor eax,eax
+
+gpmbDone:
+    pop edx
+    pop ecx
     ret
-IsPciMsi_	Endp
+GetPciMsiBase_	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

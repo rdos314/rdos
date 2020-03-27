@@ -3760,8 +3760,11 @@ SetupPciMsiXEntry    MACRO
                     ENDM
 
 ; IN  AL    Int #
-IsPciMsi    MACRO
-    OsGate is_pci_msi_nr
+; OUT AL    Base int #
+; OUT CL    Int count
+; OUT DX    Core
+GetPciMsiInfo    MACRO
+    OsGate get_pci_msi_info_nr
                     ENDM
 
 ;;;;;;;;;; ACPI ;;;;;;;;;

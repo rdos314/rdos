@@ -1093,38 +1093,44 @@ setup_pci_msi     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IsPciMsi
+;           NAME:           GetPciMsiInfo
 ;
-;           DESCRIPTION:    Is PCI MSI irq
+;           DESCRIPTION:    Get PCI MSI info
 ;
 ;           PARAMETERS:     AL          Irq #
 ;
+;           RETURNS:        CL          Int count
+;                           AL          Base int
+;                           DX          Core
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_pci_msi_name DB 'Is PCI MSI',0
+get_pci_msi_info_name DB 'Get PCI MSI Info',0
 
-is_pci_msi     Proc far    
+get_pci_msi_info     Proc far    
     push ds
-    push ax
     push si
 ;    
     mov si,SEG data
     mov ds,si
     movzx si,al
     shl si,3
-    mov al,ds:[si].pci_msi_arr.msi_reg
+    add si,OFFSET pci_msi_arr
+    mov al,ds:[si].msi_reg
     or al,al
     stc
-    jz ipmDone
+    jz gpmiDone
 ;
+    mov al,ds:[si].msi_int_base
+    mov cl,ds:[si].msi_int_count
+    mov dx,ds:[si].msi_core
     clc
 
-ipmDone:
+gpmiDone:
     pop si
-    pop ax
     pop ds
     retf32
-is_pci_msi      Endp
+get_pci_msi_info      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2167,10 +2173,10 @@ init    Proc far
     mov ax,setup_pci_msi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET is_pci_msi
-    mov edi,OFFSET is_pci_msi_name
+    mov esi,OFFSET get_pci_msi_info
+    mov edi,OFFSET get_pci_msi_info_name
     xor cl,cl
-    mov ax,is_pci_msi_nr
+    mov ax,get_pci_msi_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_msix

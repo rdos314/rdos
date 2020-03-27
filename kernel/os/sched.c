@@ -34,7 +34,8 @@
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_IRQ_SERVERS         4
 
-#define MOD_FLAG_MSI     1
+#define MOD_FLAG_MSI_BASE       1
+#define MOD_FLAG_MSI_SHARED     2
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -674,6 +675,7 @@ void __far SchedulerThread(void *param)
     int count;
     int IrqChanged;
     int id;
+    int base;
     int Core;
     int Load;
     long long NullTics;
@@ -754,8 +756,15 @@ void __far SchedulerThread(void *param)
         {
             for (i = 0; i < 256; i++)
             {
-                if (IsPciMsi(i))
-                    IrqArr[i].ModFlags = MOD_FLAG_MSI;
+                base = GetPciMsiBase(i);
+
+                if (base)
+                {
+                    if (base == i)
+                        IrqArr[i].ModFlags = MOD_FLAG_MSI_BASE;
+                    else
+                        IrqArr[i].ModFlags = MOD_FLAG_MSI_SHARED;
+                }
                 else
                     IrqArr[i].ModFlags = 0;
             }
@@ -1065,16 +1074,7 @@ void __far ImplTestGate(const char *msg)
 {
     int i;
     int ok;
-
-    for (i = 0; i < 256; i++)
-    {
-        IrqArr[i].IntCount = GetCoreInts(IrqArr[i].Core, i);
-        ok = IsPciMsi(i);
-        if (ok)
-            IrqArr[i].ModFlags = MOD_FLAG_MSI;
-        else
-            IrqArr[i].ModFlags = 0;
-    }
+    int base;
 
 }
 
