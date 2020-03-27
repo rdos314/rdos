@@ -81,7 +81,6 @@ struct TThreadState
 {
     int ID;
     int Core;
-    int Irq;
     int Load;
 };
 
@@ -904,11 +903,10 @@ void __far SchedulerThread(void *param)
                     }
                 }
 
-                if (Load)
+                if (Load && (ThreadArr[i].Irq <= 0))
                 {
                     ThreadStatArr[StatCount].ID = ThreadArr[i].ID;
                     ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
-                    ThreadStatArr[StatCount].Irq = ThreadArr[i].Irq;
                     ThreadStatArr[StatCount].Load = Load;
                     StatCount++;
 
@@ -971,7 +969,7 @@ void __far SchedulerThread(void *param)
 
                 for (i = 0; i < StatCount; i++)
                 {
-                    if (ThreadStatArr[i].Core == HighestCore && ThreadStatArr[i].Irq <= 0)
+                    if (ThreadStatArr[i].Core == HighestCore)
                     {
                         Load = ThreadStatArr[i].Load;
 
