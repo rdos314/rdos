@@ -67,7 +67,6 @@ struct TCore
     int Realtime;
 };
 
-
 struct TIrq
 {
     int Core;
@@ -92,6 +91,13 @@ struct TCoreState
     int Load;
 };
 
+struct TIrqState
+{
+    int Irq;
+    int Core;
+    int Load;
+};
+
 struct TKernelSection ProcessSection;
 struct TKernelSection ThreadSection;
 struct TKernelSection CoreSection;
@@ -113,6 +119,9 @@ struct TIrq IrqArr[256];
 int StatCount = 0;
 struct TThreadState ThreadStatArr[MAX_THREADS];
 struct TCoreState CoreStatArr[MAX_PROCESSOR_COUNT];
+
+int IrqStatCount = 0;
+struct TIrqState IrqStatArr[256];
 
 extern void InitScheduler();
 
@@ -1071,9 +1080,48 @@ void __far InitTasking()
 void __far ImplTestGate(const char *msg)
 {
     int i;
-    int ok;
+    int use;
     int base;
+    int ints;
 
+    IrqStatCount = 0;
+
+    for (i = 0; i < 256; i++)
+    {
+        base = i;
+
+        switch (IrqArr[i].ModFlags)
+        {
+            case MOD_FLAG_MSI_BASE:
+                ints = GetCoreInts(IrqArr[i].Core, i);
+                break;
+
+            case MOD_FLAG_MSI_SHARED:
+                base--;
+                while (IrqArr[base].ModFlags == MOD_FLAG_MSI_SHARED)
+                    base--;
+
+                ints = GetCoreInts(IrqArr[i].Core, i);
+                break;
+
+            default:
+                ints = 0;
+                break;
+        }
+
+        if (ints)
+        {
+            if (IrqStatCount && IrqStatArr[IrqStatCount - 1].Irq == base)
+                IrqStatArr[IrqStatCount - 1].Load += ints;
+            else
+            {
+                IrqStatArr[IrqStatCount].Irq = base;
+                IrqStatArr[IrqStatCount].Core = IrqArr[i].Core;
+                IrqStatArr[IrqStatCount].Load = ints;
+                IrqStatCount++;
+            }
+        }
+    }
 }
 
 /*##########################################################################
