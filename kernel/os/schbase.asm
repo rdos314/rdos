@@ -1066,7 +1066,7 @@ GetCoreInts_ PROC near
     push fs
     push ebx
 ;
-    GetCore
+    GetCoreNumber
     movzx ebx,dl
     shl ebx,2
     xor eax,eax

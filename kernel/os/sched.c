@@ -153,7 +153,7 @@ extern void SetThreadIrq(int ThreadHandle, int Irq);
 #pragma aux SetThreadIrq parm routine [eax] [edx]
 
 extern long GetCoreInts(int Core, int Irq);
-#pragma aux GetCoreInts parm routine [eax] [edx]
+#pragma aux GetCoreInts parm routine [eax] [edx] value [eax]
 
 extern int GetPciMsiBase(int Irq);
 #pragma aux GetPciMsiBase parm routine [eax] value [eax]
@@ -839,7 +839,6 @@ void __far SchedulerThread(void *param)
             CoreArr[Core].CoreBaseTics = CoreTics;
             CoreStatArr[Core].NullTics = (int)(NullTics - CoreArr[Core].NullBaseTics);
             CoreArr[Core].NullBaseTics = NullTics;
-            CoreArr[Core].IrqCount = 0;
         }
 
         NullSum = 0;
@@ -1149,6 +1148,9 @@ void __far ImplTestGate(const char *msg)
 
         if (IrqStatCount && MaxIrqs <= 1)
         {
+            for (Core = 0; Core < ProcessorCount; Core++)
+                CoreArr[Core].IrqCount = 0;
+
             for (i = 0; i < IrqStatCount; i++)
             {
                 Core = IrqStatArr[i].Core;
