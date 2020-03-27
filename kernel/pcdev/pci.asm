@@ -34,6 +34,7 @@ INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE pci.inc
+INCLUDE ..\os\core.inc
 
 IFDEF __WASM__
     .686p
@@ -1089,6 +1090,57 @@ spmDone:
     pop ds
     retf32
 setup_pci_msi     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MovePciMsi
+;
+;           DESCRIPTION:    Move MSI to new core
+;
+;           PARAMETERS:     AL          Int base
+;                           FS		Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_pci_msi_name DB 'Move PCI MSI',0
+
+move_pci_msi     Proc far    
+    push ds
+    pushad
+;    
+    mov si,SEG data
+    mov ds,si
+    movzx si,al
+    shl si,3
+    add si,OFFSET pci_msi_arr
+;
+    mov bh,ds:[si].msi_bus
+    mov bl,ds:[si].msi_device
+    mov ch,ds:[si].msi_function
+    mov cl,ds:[si].msi_reg
+    or cl,cl
+    jz mpmDone
+;
+    mov ax,fs:cs_id
+    mov ds:[si].msi_core,ax
+    mov edx,fs:cs_apic
+    shl edx,12
+;
+    ReadPciWord
+    WritePciWord
+;
+    add cl,2
+    ReadPciDword
+    and eax,0FFF00000h
+    or eax,edx
+    WritePciDword
+
+mpmDone:
+    popad
+    pop ds
+    retf32
+move_pci_msi     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2177,6 +2229,12 @@ init    Proc far
     mov edi,OFFSET get_pci_msi_info_name
     xor cl,cl
     mov ax,get_pci_msi_info_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET move_pci_msi
+    mov edi,OFFSET move_pci_msi_name
+    xor cl,cl
+    mov ax,move_pci_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_msix

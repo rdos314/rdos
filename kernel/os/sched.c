@@ -158,6 +158,9 @@ extern long GetCoreInts(int Core, int Irq);
 extern int GetPciMsiBase(int Irq);
 #pragma aux GetPciMsiBase parm routine [eax] value [eax]
 
+extern void MovePciMsi(int Core, int Irq);
+#pragma aux MovePciMsi parm routine [eax] [edx]
+
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -935,6 +938,110 @@ void __far SchedulerThread(void *param)
 
         RdosLeaveKernelSection(&ThreadSection);
 
+        IrqStatCount = 0;
+
+        if (ActiveProcessors > 1)
+        {
+            for (i = 0; i < 256; i++)
+            {
+                base = i;
+
+                switch (IrqArr[i].ModFlags)
+                {
+                    case MOD_FLAG_MSI_BASE:
+                    ints = GetCoreInts(IrqArr[i].Core, i);
+                    break;
+
+                    case MOD_FLAG_MSI_SHARED:
+                        base--;
+                        while (IrqArr[base].ModFlags == MOD_FLAG_MSI_SHARED)
+                            base--;
+
+                        ints = GetCoreInts(IrqArr[i].Core, i);
+                        break;
+
+                    default:
+                        ints = 0;
+                        break;
+                }
+
+                if (ints)
+                {
+                    if (IrqStatCount && IrqStatArr[IrqStatCount - 1].Irq == base)
+                        IrqStatArr[IrqStatCount - 1].Load += ints;
+                    else
+                    {
+                        if (IrqArr[i].ServerCount == 1)
+                        {
+                            IrqStatArr[IrqStatCount].Irq = base;
+                            IrqStatArr[IrqStatCount].Core = IrqArr[i].Core;
+                            IrqStatArr[IrqStatCount].Load = ints;
+                            IrqStatCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (IrqStatCount)
+        {
+            for (Core = 0; Core < ProcessorCount; Core++)
+                CoreArr[Core].IrqCount = 0;
+
+            for (i = 0; i < IrqStatCount; i++)
+            {
+                Core = IrqStatArr[i].Core;
+                CoreArr[Core].IrqCount++;
+            }
+
+            MinIrqs = 1000;
+            MaxIrqs = 0;
+
+            for (Core = 0; Core < ProcessorCount; Core++)
+            {
+                if (CoreArr[Core].Active)
+                {
+                    if (MinIrqs > CoreArr[Core].IrqCount)
+                    {
+                        MinIrqs = CoreArr[Core].IrqCount;
+                        MinCore = Core;
+                    }
+
+                    if (MaxIrqs < CoreArr[Core].IrqCount)
+                    {
+                        MaxIrqs = CoreArr[Core].IrqCount;
+                        MaxCore = Core;
+                    }
+                }
+            }
+
+            if (MaxIrqs > 1 && MinIrqs == 0)
+            {
+                Load = 0;
+
+                for (i = 0; i < IrqStatCount; i++)
+                {
+                    if (IrqStatArr[i].Core == MaxCore)
+                    {
+                        if (Load < IrqStatArr[i].Load)
+                        {
+                            Load = IrqStatArr[i].Load;
+                            MoveIrq = IrqStatArr[i].Irq;
+                        }
+                    }
+                }
+                MovePciMsi(MinCore, MoveIrq);
+
+                IrqArr[MoveIrq].Core = MinCore;
+                MoveIrq++;
+                while (IrqArr[MoveIrq].ModFlags == MOD_FLAG_MSI_SHARED)
+                {
+                    IrqArr[MoveIrq].Core = MinCore;
+                    MoveIrq++;
+                }
+            }
+        }
+
         RdosEnterKernelSection(&CoreSection);
 
         if (MaxLoad > 600)
@@ -1100,101 +1207,6 @@ void __far ImplTestGate(const char *msg)
     int count;
     int IrqChanged;
     int id;
-
-        IrqStatCount = 0;
-
-        if (ActiveProcessors > 1)
-        {
-            for (i = 0; i < 256; i++)
-            {
-                base = i;
-
-                switch (IrqArr[i].ModFlags)
-                {
-                    case MOD_FLAG_MSI_BASE:
-                    ints = GetCoreInts(IrqArr[i].Core, i);
-                    break;
-
-                    case MOD_FLAG_MSI_SHARED:
-                        base--;
-                        while (IrqArr[base].ModFlags == MOD_FLAG_MSI_SHARED)
-                            base--;
-
-                        ints = GetCoreInts(IrqArr[i].Core, i);
-                        break;
-
-                    default:
-                        ints = 0;
-                        break;
-                }
-
-                if (ints)
-                {
-                    if (IrqStatCount && IrqStatArr[IrqStatCount - 1].Irq == base)
-                        IrqStatArr[IrqStatCount - 1].Load += ints;
-                    else
-                    {
-                        if (IrqArr[i].ServerCount == 1)
-                        {
-                            IrqStatArr[IrqStatCount].Irq = base;
-                            IrqStatArr[IrqStatCount].Core = IrqArr[i].Core;
-                            IrqStatArr[IrqStatCount].Load = ints;
-                            IrqStatCount++;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (IrqStatCount && MaxIrqs <= 1)
-        {
-            for (Core = 0; Core < ProcessorCount; Core++)
-                CoreArr[Core].IrqCount = 0;
-
-            for (i = 0; i < IrqStatCount; i++)
-            {
-                Core = IrqStatArr[i].Core;
-                CoreArr[Core].IrqCount++;
-            }
-
-            MinIrqs = 1000;
-            MaxIrqs = 0;
-
-            for (Core = 0; Core < ProcessorCount; Core++)
-            {
-                if (CoreArr[Core].Active)
-                {
-                    if (MinIrqs > CoreArr[Core].IrqCount)
-                    {
-                        MinIrqs = CoreArr[Core].IrqCount;
-                        MinCore = Core;
-                    }
-
-                    if (MaxIrqs < CoreArr[Core].IrqCount)
-                    {
-                        MaxIrqs = CoreArr[Core].IrqCount;
-                        MaxCore = Core;
-                    }
-                }
-            }
-
-            if (MaxIrqs > 1 && MinIrqs == 0)
-            {
-                Load = 0;
-
-                for (i = 0; i < IrqStatCount; i++)
-                {
-                    if (IrqStatArr[i].Core == MaxCore)
-                    {
-                        if (Load < IrqStatArr[i].Load)
-                        {
-                            Load = IrqStatArr[i].Load;
-                            MoveIrq = IrqStatArr[i].Irq;
-                        }
-                    }
-                }
-            }
-        }
 }
 
 /*##########################################################################

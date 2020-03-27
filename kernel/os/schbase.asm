@@ -1112,6 +1112,33 @@ gpmbDone:
 GetPciMsiBase_	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           MovePciMsi
+;
+;           DESCRIPTION:    Move PCI MSI
+;
+;           PARAMETER:      AX          Core #
+;                           DL          IRQ #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public MovePciMsi_
+    
+MovePciMsi_ PROC near
+    push fs
+    push eax
+;
+    GetCoreNumber
+    mov al,dl
+    MovePciMsi
+;
+    pop eax
+    pop fs
+    ret
+MovePciMsi_	Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           InitScheduler
