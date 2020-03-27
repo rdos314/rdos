@@ -123,6 +123,9 @@ struct TCoreState CoreStatArr[MAX_PROCESSOR_COUNT];
 
 int MinIrqs = 0;
 int MaxIrqs = 0;
+int MinCore = 0;
+int MaxCore = 0;
+int MoveIrq = 0;
 int IrqStatCount = 0;
 struct TIrqState IrqStatArr[256];
 
@@ -994,10 +997,33 @@ void __far SchedulerThread(void *param)
                 if (CoreArr[Core].Active)
                 {
                     if (MinIrqs > CoreArr[Core].IrqCount)
+                    {
                         MinIrqs = CoreArr[Core].IrqCount;
+                        MinCore = Core;
+                    }
 
                     if (MaxIrqs < CoreArr[Core].IrqCount)
+                    {
                         MaxIrqs = CoreArr[Core].IrqCount;
+                        MaxCore = Core;
+                    }
+                }
+            }
+
+            if (MaxIrqs > 1 && MinIrqs == 0)
+            {
+                Load = 0;                
+
+                for (i = 0; i < IrqStatCount; i++)
+                {
+                    if (IrqStatArr[i].Core == MaxCore)
+                    {
+                        if (Load < IrqStatArr[i].Load)
+                        {
+                            Load = IrqStatArr[i].Load;
+                            MoveIrq = IrqStatArr[i].Irq;
+                        }
+                    }
                 }
             }
         }
