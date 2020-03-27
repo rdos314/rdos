@@ -988,10 +988,10 @@ setup_pci_msi     Proc far
     mov ds,si
     movzx si,al
     shl si,3
+    add si,OFFSET pci_msi_arr
     mov dh,dl
 
 spmEntryLoop:
-    add si,OFFSET pci_msi_arr
     mov ds:[si].msi_bus,bh
     mov ds:[si].msi_device,bl
     mov ds:[si].msi_function,ch
