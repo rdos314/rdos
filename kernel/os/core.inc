@@ -65,7 +65,7 @@ CORE_WAKEUP_ENTRIES = 16
 
 core_seg   STRUC
 
-cs_phys_data            core_phys_struc <>    ; this must be first!
+cs_base_data            core_base_struc <>    ; this must be first!
 
 cs_wakeup_count         DW ?
 

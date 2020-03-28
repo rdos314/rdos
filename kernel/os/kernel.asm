@@ -455,9 +455,9 @@ init_system     Proc near
 ;
     mov bx,system_data_sel
     call local_get_selector_base_size
-    mov eax,OFFSET phys_init
+    mov eax,OFFSET core_init
     add edx,eax
-    mov ecx,SIZE core_phys_struc
+    mov ecx,SIZE core_base_struc
     mov bx,core_data_sel
     call local_create_data_sel16
 ;

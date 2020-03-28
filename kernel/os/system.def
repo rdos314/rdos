@@ -153,21 +153,14 @@ real_mon_header   ENDS
 
 boot64_pages        = 16
 
-core_phys_struc         STRUC
+core_base_struc         STRUC
 
 cs_ptab             DW 256 DUP(?)
 cs_prio_act         DW ?
 
 cs_sel              DW ?
 
-cp_curr_bitmap32    DW ?
-cp_curr_bitmap_4k   DW ?
-cp_curr_bitmap_2m   DW ?
-
-cp_low_bitmap       DW ?
-cp_high_bitmap      DW ?
-
-core_phys_struc         ENDS
+core_base_struc         ENDS
 
 system_seg      STRUC
 
@@ -258,7 +251,7 @@ mon_fixed_lfb       DD ?
 nmi_data            DW ?
 nmi_proc            DD ?, ?
 
-phys_init           core_phys_struc <>
+core_init           core_base_struc <>
 
 system_size                     DB ?
 
@@ -267,8 +260,9 @@ system_seg      ENDS
 
 phys_header     STRUC
 
+phys_curr_header32  DW ?
+phys_curr_header64  DW ?
 phys_bitmap_count   DW ?
-phys_header_pad     DW ?
 
 phys_header     ENDS
 
@@ -279,8 +273,8 @@ phys_bitmap_pos      DW ?
 
 phys_bitmap_header   ENDS
 
-phys_header_start    = SIZE phys_header
-phys_bitmap_start    = 9000h   ; must be page aligned!
+phys_header_start    = 8
+phys_bitmap_start    = 2000h
 
 hook_data_struc   STRUC
 

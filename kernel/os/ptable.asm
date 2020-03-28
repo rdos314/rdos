@@ -7007,6 +7007,8 @@ init_phys_bitmap32       Proc near
     or al,3
     mov ds:[edi],eax
 ;
+    mov ds:[esi].phys_curr_header32,1
+    mov ds:[esi].phys_curr_header64,0
     mov ds:[esi].phys_bitmap_count,1
 ;
     mov ebx,esi
@@ -7109,7 +7111,7 @@ start_paging_global_done32:
     call local_create_data_sel16
 ;
     mov bx,phys_bit_sel
-    mov ecx,2800000h
+    mov ecx,800000h
     mov edx,phys_bitmap_linear
     call local_create_data_sel16
     ret
@@ -7642,6 +7644,8 @@ init_phys_bitmap64       Proc near
     xor eax,eax
     mov ds:[edi+4],eax
 ;
+    mov ds:[esi].phys_curr_header32,1
+    mov ds:[esi].phys_curr_header64,0
     mov ds:[esi].phys_bitmap_count,1
 ;
     mov ebx,esi
@@ -7758,7 +7762,7 @@ start_paging_global_done64:
     call local_create_data_sel16
 ;
     mov bx,phys_bit_sel
-    mov ecx,2800000h
+    mov ecx,800000h
     mov edx,phys_bitmap_linear
     call local_create_data_sel16
     ret

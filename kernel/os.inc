@@ -943,11 +943,6 @@ AllocateFixedVMLinear   MACRO
 
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
-; IN  BX	Core sel
-InitCorePhysical     MACRO
-    OsGate init_core_physical_nr
-                    ENDM
-
 ;       EAX         FYSISK ADDRESS
 ;AllocateOldPhysical    MACRO
 ;    OsGate allocate_old_physical_nr

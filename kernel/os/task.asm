@@ -3228,12 +3228,6 @@ create_core    Proc far
     rep stosb
     mov es:cs_sel,es
     mov es:cs_processor,0
-    mov es:cp_curr_bitmap32,1
-    mov es:cp_curr_bitmap_4k,0
-    mov es:cp_curr_bitmap_2m,0
-;
-    mov bx,es
-    InitCorePhysical
 ;
     call InitCore
     mov ax,es:cs_id     
@@ -10731,7 +10725,7 @@ timer_free_list_create:
 ;
     mov edi,gdt_core_linear
     xor esi,esi
-    mov ecx,SIZE core_phys_struc
+    mov ecx,SIZE core_base_struc
     rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov edx,gdt_core_linear
@@ -10747,7 +10741,6 @@ timer_free_list_create:
     mov es,bx
     mov es:cs_sel,es
     mov es:cs_processor,0
-    InitCorePhysical
 ;
     call InitCore
     or es:cs_flags,CS_FLAG_ACTIVE

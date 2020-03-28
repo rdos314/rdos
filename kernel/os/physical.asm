@@ -279,24 +279,17 @@ GetPhysBitmap32  Proc near
 gpbCountOk32:
     mov bx,4 + phys_header_start
     mov si,bx
-    mov di,4000h
+    xor di,di
 
 gpbLoop32:
     mov ax,ds:[bx].phys_bitmap_free
-    or ax,ax
-    jz gpbNext32
-;
-    cmp ax,512
-    jb gpbTest32
-;
-    mov ax,512
-
-gpbTest32:
     cmp ax,di
-    jae gpbNext32
+    jbe gpbNext32
 ;
     mov si,bx
     mov di,ax
+    cmp ax,4000h
+    jae gpbOk32
 
 gpbNext32:
     add bx,4
@@ -320,48 +313,31 @@ GetPhysBitmap32  Endp
 ;
 ;       DESCRIPTION:    Get 64-bit physical bitmap
 ;
-;       PARAMETERS:     FS      Core sel
-;
 ;       RETURNS:        SI      Bitmap header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPhysBitmap64  Proc near
-    mov bx,fs:cp_low_bitmap
-    cmp bx,32
-    ja gpbLowOk
-;
-    mov bx,32
-
-gpbLowOk:
-    mov cx,fs:cp_high_bitmap
-    sub cx,bx
+    mov cx,ds:phys_bitmap_count
+    sub cx,32
     jc gpbDone64
 ;
     stc
     jz gpbDone64
-;
-    shl bx,2
-    add bx,phys_header_start
+;    
+    mov bx,32 * 4 + phys_header_start
     mov si,bx
-    mov di,4000h
+    xor di,di
 
 gpbLoop64:
     mov ax,ds:[bx].phys_bitmap_free
-    or ax,ax
-    jz gpbNext64
-;
-    cmp ax,512
-    jb gpbTest64
-;
-    mov ax,512
-
-gpbTest64:
     cmp ax,di
-    jae gpbNext64
+    jbe gpbNext64
 ;
     mov si,bx
     mov di,ax
+    cmp ax,4000h
+    jae gpbOk64
 
 gpbNext64:
     add bx,4
@@ -392,20 +368,13 @@ GetPhysBitmap64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPhysBitmapDir  Proc near
-    mov si,fs:cp_curr_bitmap_2m
-    inc si
-    mov cx,fs:cp_high_bitmap
-    sub cx,si
-    ja gpbdStart
-;
-    mov si,fs:cp_low_bitmap
-    mov cx,fs:cp_high_bitmap
-    sub cx,si
-    jz gpbdFail
+    mov cx,ds:phys_bitmap_count
+    sub cx,32
+    jc gpbdDone
 
 gpbdStart:
-    shl si,2
-    add si,phys_header_start
+    mov bx,32 * 4 + phys_header_start
+    mov si,bx
 
 gpbdLoop:
     mov ax,ds:[si].phys_bitmap_free
@@ -459,12 +428,12 @@ afbLoop:
     jc afbOk
 
 afbNext:
-    add ebx,4
+    add bx,4
     jmp afbLoop
 
 afbFail:
     mov ds:[si].phys_bitmap_pos,0
-    xor ebx,ebx
+    xor bx,bx
     stc
     jmp afbDone
 
@@ -593,15 +562,10 @@ AllocateDirFromBitmap  Endp
 
 local_allocate_physical       PROC near
     push ds
-    push fs
     push ecx
     push edx
     push esi
     push edi
-;
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:cs_sel
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -609,8 +573,8 @@ local_allocate_physical       PROC near
     xor esi,esi
 
 apRetry64:
-    mov bx,fs:cp_curr_bitmap_4k
-    cmp bx,fs:cp_high_bitmap
+    mov bx,ds:phys_curr_header64
+    cmp bx,ds:phys_bitmap_count
     jae apNew64
 ;    
     mov si,phys_header_start
@@ -642,7 +606,7 @@ apNewNext64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap_4k,ax
+    mov ds:phys_curr_header64,ax
     jmp apRetry64
 
 apNewFirst64:
@@ -671,7 +635,7 @@ apOk64_0:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap_4k,ax
+    mov ds:phys_curr_header64,ax
 
 apOk64:
     cmp bx,ds:[si].phys_bitmap_pos
@@ -679,7 +643,7 @@ apOk64:
 ;    
     mov ds:[si].phys_bitmap_pos,bx
 ;
-    mov ax,fs:cp_curr_bitmap_4k
+    mov ax,ds:phys_curr_header64
     cmp ax,32
     jae apRetAds64
 ;
@@ -688,7 +652,7 @@ apOk64:
     pop ecx
     jnc apUpdateHeader64
 ;
-    mov ax,fs:cp_curr_bitmap_4k
+    mov ax,ds:phys_curr_header64
     or ax,ax
     jnz apRetAds64
 ;
@@ -701,7 +665,7 @@ apUpdateHeader64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap_4k,ax
+    mov ds:phys_curr_header64,ax
 
 apRetAds64:    
     mov eax,ecx
@@ -726,7 +690,6 @@ apLogDone64:
     pop esi
     pop edx
     pop ecx
-    pop fs
     pop ds
     ret
 local_allocate_physical       ENDP
@@ -746,15 +709,10 @@ allocate_physical32_name  DB 'Allocate Physical Memory32',0
 
 allocate_physical32       PROC far
     push ds
-    push fs
     push ecx
     push edx
     push esi
     push edi
-;
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:cs_sel
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -762,7 +720,7 @@ allocate_physical32       PROC far
     xor esi,esi
 
 apRetry32:
-    mov bx,fs:cp_curr_bitmap32
+    mov bx,ds:phys_curr_header32
     cmp bx,ds:phys_bitmap_count
     jae apNew32
 ;    
@@ -791,7 +749,7 @@ apNew32:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap32,ax
+    mov ds:phys_curr_header64,ax
     jmp apRetry32
 
 apNewFirst32:
@@ -820,14 +778,14 @@ apOk32_0:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap32,ax
+    mov ds:phys_curr_header32,ax
 
 apOk32:
     cmp bx,ds:[si].phys_bitmap_pos
     je apRetAds32
 ;    
     mov ds:[si].phys_bitmap_pos,bx
-    mov ax,fs:cp_curr_bitmap32
+    mov ax,ds:phys_curr_header32
     or ax,ax
     jnz apRetAds32
 ;
@@ -839,7 +797,7 @@ apOk32:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap32,ax
+    mov ds:phys_curr_header32,ax
 
 apRetAds32:    
     mov eax,ecx
@@ -863,7 +821,6 @@ apLogDone32:
     pop esi
     pop edx
     pop ecx
-    pop fs
     pop ds
     retf32
 allocate_physical32       ENDP
@@ -957,15 +914,10 @@ allocate_physical_dir_name      DB 'Allocate Physical Dir',0
 
 allocate_physical_dir   PROC far
     push ds
-    push fs
     push ecx
     push edx
     push esi
     push edi
-;
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:cs_sel
 ;
     mov ax,phys_bit_sel
     mov ds,ax
@@ -973,8 +925,8 @@ allocate_physical_dir   PROC far
     xor esi,esi
 
 apdRetry64:
-    mov bx,fs:cp_curr_bitmap_2m
-    cmp bx,fs:cp_high_bitmap
+    mov bx,ds:phys_curr_header64
+    cmp bx,ds:phys_bitmap_count
     jae apdNew64
 ;    
     mov si,phys_header_start
@@ -1004,7 +956,7 @@ apdNewNext64:
     mov ax,si
     sub ax,phys_header_start
     shr ax,2
-    mov fs:cp_curr_bitmap_2m,ax
+    mov ds:phys_curr_header64,ax
     jmp apdRetry64
 
 apdOk64:
@@ -1019,7 +971,6 @@ apdDone:
     pop esi
     pop edx
     pop ecx
-    pop fs
     pop ds
     retf32
 allocate_physical_dir   ENDP
@@ -1145,10 +1096,6 @@ free_physical_dir   PROC far
     push ecx
     push esi
     push edi
-;
-    mov cx,core_data_sel
-    mov fs,cx
-    mov fs,fs:cs_sel
 ;
     mov cx,phys_bit_sel
     mov ds,cx
@@ -1326,7 +1273,7 @@ GetMultPhys32   Proc near
     mov bp,32
 
 gmpCountOk32:    
-    xor bx,bx
+    mov bx,1
     sub bp,bx
     jbe gmpFail32
 
@@ -1448,11 +1395,8 @@ ampMark64:
     shl eax,13
     mov edx,eax
 ;    
-    movzx eax,bx
-    shl eax,12
-    add eax,phys_bitmap_start
-    sub edi,eax
     mov eax,edi
+    and ax,0FFFh
     shl eax,3
     add edx,eax
 ;    
@@ -1525,11 +1469,8 @@ ampMark32:
     shl eax,13
     mov edx,eax
 ;    
-    movzx eax,bx
-    shl eax,12
-    add eax,phys_bitmap_start
-    sub edi,eax
     mov eax,edi
+    and ax,0FFFh
     shl eax,3
     add edx,eax
 ;    
@@ -1849,14 +1790,7 @@ apRetry:
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;    
-    mov ax,phys_bit_sel
-    mov es,ax
-    mov cx,es:phys_bitmap_count
-    inc cx
-    mov es:phys_bitmap_count,cx
-    mov ax,core_data_sel
-    mov es,ax
-    mov es:cp_high_bitmap,cx
+    inc ds:phys_bitmap_count
 ;    
     pop ecx
     pop es
@@ -2145,22 +2079,15 @@ RemoveLongImage  Endp
 init_physical   PROC near
     mov bx,system_data_sel
     call local_get_selector_base_size
-    mov eax,OFFSET phys_init
+    mov eax,OFFSET core_init
     add edx,eax
-    mov ecx,SIZE core_phys_struc
+    mov ecx,SIZE core_base_struc
     mov bx,core_data_sel
     call local_create_data_sel16
     mov ds,bx
     mov ds:cs_sel,ds
-    mov ds:cp_curr_bitmap32,1
-    mov ds:cp_curr_bitmap_4k,0
-    mov ds:cp_curr_bitmap_2m,0
-    mov ds:cp_low_bitmap,0
-    mov ds:cp_high_bitmap,1
-;
     mov ax,system_data_sel
     mov ds,ax
-;
     mov eax,ds:ram2_size
     or eax,eax
     jz init_phys_multiboot
@@ -2216,37 +2143,6 @@ init_phys_done:
     ret
 init_physical   ENDP
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           InitCorePhysical
-;
-;           DESCRIPTION:    Init core physical limits
-;
-;           PARAMETERS:     BX		Core selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_core_phys_name	DB 'Init Core Physical', 0
-
-init_core_phys	Proc far
-    push ds
-    push fs
-    pushad
-;
-    mov ax,phys_bit_sel
-    mov ds,ax
-    mov fs,bx
-;
-    mov ax,ds:phys_bitmap_count
-    mov fs:cp_high_bitmap,ax
-    mov fs:cp_low_bitmap,0
-;
-    popad
-    pop fs
-    pop ds
-    retf32
-init_core_phys	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2344,12 +2240,6 @@ init_physical_gates     PROC near
     mov edi,OFFSET get_highest_physical_name
     xor cl,cl
     mov ax,get_highest_physical_nr
-    RegisterOsGate
-;       
-    mov esi,OFFSET init_core_phys
-    mov edi,OFFSET init_core_phys_name
-    xor cl,cl
-    mov ax,init_core_physical_nr
     RegisterOsGate
 ;    
     pop ds
