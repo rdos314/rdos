@@ -414,7 +414,7 @@ void MoveThread(int Core, int ThreadId)
         ok = TRUE;
 
     if (ok)
-        ok = CoreArr[Core].Active;
+        ok = CoreArr[Core].Active && !CoreArr[Core].Realtime;
 
     if (ok)
     {
@@ -999,7 +999,7 @@ void __far SchedulerThread(void *param)
 
             for (Core = 0; Core < ProcessorCount; Core++)
             {
-                if (CoreArr[Core].Active)
+                if (CoreArr[Core].Active && !CoreArr[Core].Realtime)
                 {
                     if (MinIrqs > CoreArr[Core].IrqCount)
                     {
@@ -1066,7 +1066,7 @@ void __far SchedulerThread(void *param)
 
             for (Core = 0; Core < ProcessorCount; Core++)
             {
-                if (CoreArr[Core].Active)
+                if (CoreArr[Core].Active && !CoreArr[Core].Realtime)
                 {
                     Load = CoreStatArr[Core].Load;
 
@@ -1126,7 +1126,7 @@ void __far SchedulerThread(void *param)
 
                 for (i = 0; i < ActiveThreads; i++)
                 {
-                    if (ThreadArr[i].Valid && ThreadArr[i].Core != 0 && ThreadArr[i].Prio && ThreadArr[i].IdleCount > 16)
+                    if (ThreadArr[i].Valid && ThreadArr[i].Core != 0 && ThreadArr[i].Prio && ThreadArr[i].IdleCount > 16 && ThreadArr[i].Irq == 0)
                     {
                         ThreadArr[i].Core = 0;
                         ThreadArr[i].IdleCount = 0;
