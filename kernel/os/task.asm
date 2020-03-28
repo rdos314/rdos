@@ -7183,6 +7183,16 @@ check_copy_irq:
     jmp check_copy_irq
 
 check_copy_irq_done:
+    push fs
+    mov fs,fs:p_core
+    mov ax,fs:cs_id
+    pop fs
+    call ToHex
+    stos word ptr es:[edi]
+;
+    mov al,'.'
+    stos byte ptr es:[edi]
+;    
     mov al,fs:p_irq
     call ToHex
     stos word ptr es:[edi]
