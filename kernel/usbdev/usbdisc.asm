@@ -2224,6 +2224,9 @@ uaBulkIn:
     
 uaDescrNext:    
     movzx cx,es:[di].ucd_len
+    or cx,cx
+    jz uaDescrDone
+;
     add di,cx
     cmp di,es:ucd_size
     jb uaDescrLoop    
