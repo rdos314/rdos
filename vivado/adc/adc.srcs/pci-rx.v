@@ -36,52 +36,31 @@ module pci_rx (
   output wire                    pci_rx_full;
 
 // FF
-  reg [3:0]      q_pos;
-  reg [9:0]      q_remain_size;
-  reg            q_header_done;
-  reg [3:0]      q_first_be;
-  reg [3:0]      q_last_be;
-  reg [11:0]     q_byte_count;
-  reg            q_pend_strad;
-  reg [63:0]     q_strad_header;
 
-  reg  [1023:0]  q_data;
-  reg  [127:0]   q_header;
-  reg  [127:0]   q_be;
-  reg  [15:0]    q_control;
+  reg  [1023:0]  q_pkt_data;
+  reg  [2:0]     q_shift_pos;
+  reg            q_pkt_done;
+  reg  [3:0]     q_count;
+  reg  [127:0]   q_pkt_header;
+  reg  [7:0]     q_pkt_type;
+  reg  [9:0]     q_pkt_len;
 
-  reg            pci_rx_wr;
-  
-// local variables
+  reg            q_rx_wr;
+  reg  [127:0]   q_rx_be;
+  reg  [15:0]    q_rx_control;
+  reg  [1023:0]  q_rx_data;
 
-  wire         active = m_axis_rx_tvalid && m_axis_rx_tready && !reset;  
-  wire         has_strad = m_axis_rx_tuser[13] && m_axis_rx_tuser[21];
-
-  reg          is_first;
-  reg [7:0]    req_type;
-  reg [9:0]    req_len;
-
-  reg          has_header_low;
-  reg          has_header_high;
-  reg          calc_header_done;
-
-  reg [3:0]    calc_pos;
-  reg [1:0]    calc_blk_pos;
-  reg [9:0]    calc_blk_size;
-  reg [9:0]    calc_remain_size;
-  reg [127:0]  calc_be;
-  reg [7:0]    calc_count;
-
-  reg [3:0]    use_first_be;
-  reg [3:0]    use_last_be;
-
-  reg [127:0]  loaded_header;
-
+  wire [127:0]   pkt_data;
+  wire [63:0]    pkt_header;
+  wire [7:0]     pkt_type;
+  wire [3:0]     q_pkt_first_be;
+  wire [3:0]     q_pkt_last_be;
+  wire [11:0]    q_pkt_count;
 
 fifo_data pci_rx_data_inst (
   .clk(clk),             // input wire clk
-  .din(q_data),          // input wire [1023 : 0] din
-  .wr_en(pci_rx_wr),     // input wire wr_en
+  .din(q_rx_data),       // input wire [1023 : 0] din
+  .wr_en(q_rx_wr),       // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
   .dout(pci_rx_data),    // output wire [1023 : 0] dout
   .full(pci_rx_full),    // output wire full
@@ -90,8 +69,8 @@ fifo_data pci_rx_data_inst (
 
 fifo_header pci_rx_header_inst (
   .clk(clk),             // input wire clk
-  .din(q_header),        // input wire [127 : 0] din
-  .wr_en(pci_rx_wr),     // input wire wr_en
+  .din(q_pkt_header),    // input wire [127 : 0] din
+  .wr_en(q_rx_wr),       // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
   .dout(pci_rx_header),  // output wire [127 : 0] dout
   .full(),               // output wire full
@@ -100,8 +79,8 @@ fifo_header pci_rx_header_inst (
 
 fifo_be pci_rx_be_inst (
   .clk(clk),             // input wire clk
-  .din(q_be),            // input wire [127 : 0] din
-  .wr_en(pci_rx_wr),     // input wire wr_en
+  .din(q_rx_be),         // input wire [127 : 0] din
+  .wr_en(q_rx_wr),       // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
   .dout(pci_rx_be),      // output wire [127 : 0] dout
   .full(),               // output wire full
@@ -110,8 +89,8 @@ fifo_be pci_rx_be_inst (
 
 fifo_control pci_rx_control_inst (
   .clk(clk),             // input wire clk
-  .din(q_control),       // input wire [15 : 0] din
-  .wr_en(pci_rx_wr),     // input wire wr_en
+  .din(q_rx_control),    // input wire [15 : 0] din
+  .wr_en(q_rx_wr),       // input wire wr_en
   .rd_en(pci_rx_rd),     // input wire rd_en
   .dout(pci_rx_control), // output wire [15 : 0] dout
   .full(),               // output wire full
@@ -127,25 +106,28 @@ ila_0 ila_0_inst (
 	.probe4(m_axis_rx_tuser[21]),      // input wire [0:0]  probe0  
 	.probe5(m_axis_rx_tdata[63:0]),    // input wire [63:0]  probe0  
 	.probe6(m_axis_rx_tdata[127:64]),  // input wire [63:0]  probe0  
-	.probe7(pci_rx_rd),                // input wire [0:0]  probe0  
-	.probe8(pci_rx_wr),                // input wire [0:0]  probe0  
-	.probe9(pci_rx_empty),             // input wire [0:0]  probe0  
-	.probe10(has_header_low),           // input wire [0:0]  probe0  
-	.probe11(has_header_high),          // input wire [0:0]  probe0  
-	.probe12(calc_pos),                // input wire [3:0]  probe0  
-	.probe13(calc_blk_pos),            // input wire [1:0]  probe0  
-	.probe14(calc_remain_size),        // input wire [9:0]  probe0  
-	.probe15(calc_blk_size),           // input wire [9:0]  probe0  
-	.probe16(q_data[63:0]),            // input wire [63:0]  probe0  
-	.probe17(q_be[31:0]),              // input wire [31:0]  probe0  
-	.probe18(q_control),               // input wire [15:0]  probe0  
-	.probe19(use_first_be),            // input wire [3:0]  probe0  
-	.probe20(use_last_be),             // input wire [3:0]  probe0  
-	.probe21(calc_be),                 // input wire [127:0]  probe0  
-	.probe22(calc_count)               // input wire [7:0]  probe0  
+	.probe7(q_shift_pos),              // input wire [2:0]  probe0  
+	.probe8(q_pkt_done),               // input wire [0:0]  probe0  
+	.probe9(q_rx_wr),                  // input wire [0:0]  probe0  
+	.probe10(q_pkt_header),            // input wire [127:0]  probe0  
+	.probe11(q_pkt_type),              // input wire [7:0]  probe0  
+	.probe12(q_pkt_len),               // input wire [9:0]  probe0  
+	.probe13(q_rx_be[63:0]),           // input wire [63:0]  probe0  
+	.probe14(q_rx_control),            // input wire [15:0]  probe0  
+	.probe15(q_rx_data[63:0]),         // input wire [63:0]  probe0  
+	.probe16(q_rx_data[127:64]),       // input wire [63:0]  probe0  
+	.probe17(q_pkt_data[895:768]),     // input wire [127:0]  probe0  
+	.probe18(q_pkt_data[1023:896]),    // input wire [127:0]  probe0  
+	.probe19(pci_rx_data[63:0]),       // input wire [63:0]  probe0  
+	.probe20(pci_rx_data[127:64]),     // input wire [63:0]  probe0  
+	.probe21(pci_rx_header[63:0]),     // input wire [63:0]  probe0  
+	.probe22(pci_rx_header[127:64]),   // input wire [63:0]  probe0  
+	.probe23(pci_rx_be[63:0]),         // input wire [63:0]  probe0  
+	.probe24(pci_rx_control[15:0]),    // input wire [15:0]  probe0  
+	.probe25(pci_rx_rd),               // input wire [0:0]  probe0  
+	.probe26(pci_rx_empty)             // input wire [0:0]  probe0  
 );
-
-
+	
 function [127:0] first_and_last_to_be;
   input [3:0] first_be;
   input [3:0] last_be;
@@ -573,227 +555,176 @@ generate
       end
     end
 
+    assign pkt_header = m_axis_rx_tuser[13] ? m_axis_rx_tdata[127:64] : m_axis_rx_tdata[63:0];
+    assign pkt_type = pkt_header[31:24];
+    assign q_pkt_first_be = q_pkt_header[35:32];
+    assign q_pkt_last_be = q_pkt_header[39:36];
+    assign q_pkt_count = q_pkt_header[43:32];
+
+    assign pkt_data[31:24] = m_axis_rx_tdata[7:0];
+    assign pkt_data[23:16] = m_axis_rx_tdata[15:8];
+    assign pkt_data[15:8] = m_axis_rx_tdata[23:16];
+    assign pkt_data[7:0] = m_axis_rx_tdata[31:24];
+
+    assign pkt_data[63:56] = m_axis_rx_tdata[39:32];
+    assign pkt_data[55:48] = m_axis_rx_tdata[47:40];
+    assign pkt_data[47:40] = m_axis_rx_tdata[55:48];
+    assign pkt_data[39:32] = m_axis_rx_tdata[63:56];
+
+    assign pkt_data[95:88] = m_axis_rx_tdata[71:64];
+    assign pkt_data[87:80] = m_axis_rx_tdata[79:72];
+    assign pkt_data[79:72] = m_axis_rx_tdata[87:80];
+    assign pkt_data[71:64] = m_axis_rx_tdata[95:88];
+
+    assign pkt_data[127:120] = m_axis_rx_tdata[103:96];
+    assign pkt_data[119:112] = m_axis_rx_tdata[111:104];
+    assign pkt_data[111:104] = m_axis_rx_tdata[119:112];
+    assign pkt_data[103:96] = m_axis_rx_tdata[127:120];
 
     always @ ( posedge clk ) 
     begin
-      if (reset )
-        pci_rx_wr <= 0;
-      else
-      begin      
-        if (m_axis_rx_tuser[21])
-          pci_rx_wr <= 1;             
+      if (m_axis_rx_tvalid && m_axis_rx_tready && !reset)
+      begin
+        if (m_axis_rx_tuser[14])
+        begin
+          q_pkt_header[63:0] <= pkt_header;
+          q_pkt_type <= pkt_type;
+          q_pkt_len <= pkt_header[9:0];
+          q_rx_control[15:8] <= m_axis_rx_tuser[9:2];
+
+          if (m_axis_rx_tuser[13])
+          begin
+            q_shift_pos <= 0;
+
+            case (q_shift_pos)
+              2:
+              begin
+                q_pkt_data[831:0] <= q_pkt_data[959:128];
+                q_pkt_data[959:832] <= pkt_data;
+                q_count <= q_count + 1;
+              end
+
+              3:
+              begin
+                q_pkt_data[863:0] <= q_pkt_data[991:128];
+                q_pkt_data[991:864] <= pkt_data;
+                q_count <= q_count + 1;
+              end
+            endcase
+          end
+          else
+          begin
+            if (pkt_type[5] == 0)
+            begin
+              q_pkt_header[95:64] <= m_axis_rx_tdata[95:64];
+              q_pkt_header[127:96] <= 32'b0;
+              q_pkt_data[927:896] <= pkt_data[127:96];
+              q_shift_pos <= 1;
+              q_count <= 1;
+            end
+            else
+            begin
+              q_pkt_header[127:64] <= m_axis_rx_tdata[127:64];
+              q_shift_pos <= 4;
+              q_count <= 0;
+            end
+          end
+        end
         else
-          pci_rx_wr <= 0;
+        begin
+          case (q_shift_pos)
+            0:
+            begin
+              if (q_pkt_type[5] == 0)
+              begin
+                q_pkt_header[95:64] <= m_axis_rx_tdata[31:0];
+                q_pkt_header[127:96] <= 32'b0;
+                q_pkt_data[991:896] <= pkt_data[127:32];
+                q_shift_pos <= 3;
+                q_count <= 1;
+              end
+              else
+              begin
+                q_pkt_header[127:64] <= m_axis_rx_tdata[63:0];
+                q_pkt_data[959:896] <= pkt_data[127:64];
+                q_shift_pos <= 2;
+                q_count <= 1;
+              end
+            end
+ 
+            1:
+            begin
+              q_pkt_data[799:0] <= q_pkt_data[927:128];
+              q_pkt_data[927:800] <= pkt_data;
+              q_count <= q_count + 1;
+            end
+
+            2:
+            begin
+              q_pkt_data[831:0] <= q_pkt_data[959:128];
+              q_pkt_data[959:832] <= pkt_data;
+              q_count <= q_count + 1;
+            end
+
+            3:
+            begin
+              q_pkt_data[863:0] <= q_pkt_data[991:128];
+              q_pkt_data[991:864] <= pkt_data;
+              q_count <= q_count + 1;
+            end
+
+            4:
+            begin
+              q_pkt_data[895:0] <= q_pkt_data[1023:128];
+              q_pkt_data[1023:896] <= pkt_data;
+              q_count <= q_count + 1;
+            end
+          endcase
+        end
+
+        if (m_axis_rx_tuser[21])
+          q_pkt_done <= 1;
+        else
+          q_pkt_done <= 0;
+      end
+      else
+      begin
+        q_count <= 0;
+        q_shift_pos <= 0;
+        q_pkt_done <= 0;
       end
     end
 
     always @ ( posedge clk ) 
     begin
-      has_header_low = 0;
-      has_header_high = 0;
-      is_first = 0;
-      calc_be = 0;
-      calc_count = 0;
-
-      if (active )
+      if (q_pkt_done)
       begin
-
-        if (m_axis_rx_tuser[14])
+        if (q_pkt_type[3])
         begin
-          is_first = 1;
-          has_header_low = 1;
-
-          if (m_axis_rx_tuser[13])  // header in high part of data
-            loaded_header[63:0] =  m_axis_rx_tdata[127:64];
-          else
-            loaded_header[63:0] =  m_axis_rx_tdata[63:0];
-
-          req_type = loaded_header[31:24];
-          req_len = loaded_header[9:0];
-
-          if (m_axis_rx_tuser[13])
-          begin
-            calc_blk_size = 0;
-            calc_header_done = 0;
-          end
-          else
-          begin
-            has_header_high = 1;
-            calc_header_done = 1;
-
-            if (req_type[5] == 0)  // 3 DW header
-            begin
-              loaded_header[95:64] =  m_axis_rx_tdata[95:64];
-              loaded_header[127:96] =  32'b0;
-              calc_blk_size = 1;
-              calc_blk_pos = 2'b11;
-            end
-            else
-            begin
-              loaded_header[127:64] = m_axis_rx_tdata[127:64];
-              calc_blk_size = 0;
-              calc_blk_pos = 2'b00;
-            end
-          end
+          q_rx_be <= count_to_be(q_pkt_header[65:64], q_pkt_count, q_pkt_len);
+          q_rx_control[7:0] <= q_pkt_count[7:0];
         end
         else
         begin
-          calc_header_done = 1;
-
-          if (q_pend_strad)
-          begin
-            loaded_header[63:0] = q_strad_header;
-            has_header_low = 1;
-            req_type = loaded_header[31:24];
-            req_len = loaded_header[9:0];
-          end
-          else
-          begin
-            req_type = q_header[31:24];
-            req_len = q_header[9:0];
-          end
-
-          if (q_header_done)
-          begin
-            calc_blk_size = 4;
-            calc_blk_pos = 2'b00;
-          end
-          else
-          begin
-            is_first = 1;
-            has_header_high = 1;
-
-            if (req_type[5] == 0)
-            begin
-              loaded_header[95:64] =  m_axis_rx_tdata[31:0];
-              loaded_header[127:96] =  32'b0;
-              calc_blk_size = 3;
-              calc_blk_pos = 2'b01;
-            end
-            else
-            begin
-              loaded_header[127:64] =  m_axis_rx_tdata[63:0];
-              calc_blk_size = 2;
-              calc_blk_pos = 2'b10;
-            end
-          end
+          q_rx_be <= first_and_last_to_be(q_pkt_first_be, q_pkt_last_be, q_pkt_len);
+          q_rx_control[7:0] = first_and_last_to_count(q_pkt_first_be, q_pkt_last_be, q_pkt_len);
         end
 
-        if (is_first)
-        begin
-          calc_pos = 0;
+        case (q_count)
+          1: q_rx_data[127:0] <= q_pkt_data[1023:896];
+          2: q_rx_data[255:0] <= q_pkt_data[1023:768];
+          3: q_rx_data[383:0] <= q_pkt_data[1023:640];
+          4: q_rx_data[511:0] <= q_pkt_data[1023:512];
+          5: q_rx_data[639:0] <= q_pkt_data[1023:384];
+          6: q_rx_data[767:0] <= q_pkt_data[1023:256];
+          7: q_rx_data[895:0] <= q_pkt_data[1023:128];
+          default: q_rx_data <= q_pkt_data;
+        endcase
 
-          if (req_type[6])
-            calc_remain_size = req_len;
-          else
-            calc_remain_size = 0;
-        end
-        else
-        begin
-          calc_pos = q_pos;
-          calc_remain_size = q_remain_size;
-        end
-
-        if (calc_blk_size > calc_remain_size)
-          calc_blk_size = calc_remain_size;
-
-        if (req_type[3])
-        begin
-          if (has_header_high)
-          begin
-            if (has_header_low)
-              calc_count = loaded_header[43:32];
-            else
-              calc_count = q_header[43:32];
-
-            calc_be = count_to_be(loaded_header[65:64], calc_count, req_len);
-          end
-        end
-        else
-        begin
-          if (has_header_low)
-          begin
-            use_first_be = loaded_header[35:32];
-            use_last_be = loaded_header[39:36];
-            calc_be = first_and_last_to_be(use_first_be, use_last_be, req_len);
-            calc_count = first_and_last_to_count(use_first_be, use_last_be, req_len);
-          end
-        end
+        q_rx_wr <= 1;
       end
-
-      if (!reset )
-      begin      
-        if (has_header_low)
-        begin
-          q_header[63:0] <= loaded_header[63:0];
-
-          if (!req_type[3])
-          begin
-            q_be <= calc_be;
-            q_control[7:0] <= calc_count;
-            q_control[15:8] <= m_axis_rx_tuser[9:2];
-          end
-        end
-
-        if (has_header_high)
-        begin
-          q_header[127:64] <= loaded_header[127:64];
-
-          if (req_type[3])
-          begin
-            q_be <= calc_be;
-            q_control[7:0] <= calc_count;
-            q_control[15:8] <= m_axis_rx_tuser[9:2];
-          end
-        end
-
-        if (has_strad)
-        begin
-          q_strad_header <=  m_axis_rx_tdata[127:64];
-          q_pend_strad <= 1;
-        end
-        else
-          q_pend_strad <= 0;
-
-        if (active)
-          q_header_done <= calc_header_done;
-
-        if (calc_blk_size)
-        begin
-          q_data[(32*calc_pos) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+24) +: 8];
-          q_data[(32*calc_pos+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+16) +: 8];
-          q_data[(32*calc_pos+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+8) +: 8];
-          q_data[(32*calc_pos+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos) +: 8];
-        end
-               
-        if (calc_blk_size > 1)
-        begin
-          q_data[(32*(calc_pos+1)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+56) +: 8];
-          q_data[(32*(calc_pos+1)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+48) +: 8];
-          q_data[(32*(calc_pos+1)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+40) +: 8];
-          q_data[(32*(calc_pos+1)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+32) +: 8];
-        end
-
-        if (calc_blk_size > 2)
-        begin
-          q_data[(32*(calc_pos+2)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+88) +: 8];
-          q_data[(32*(calc_pos+2)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+80) +: 8];
-          q_data[(32*(calc_pos+2)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+72) +: 8];
-          q_data[(32*(calc_pos+2)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+64) +: 8];
-        end
-
-        if (calc_blk_size > 3)
-        begin
-          q_data[(32*(calc_pos+3)) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+120) +: 8];
-          q_data[(32*(calc_pos+3)+8) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+112) +: 8];
-          q_data[(32*(calc_pos+3)+16) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+104) +: 8];
-          q_data[(32*(calc_pos+3)+24) +: 8] <= m_axis_rx_tdata[(32*calc_blk_pos+96) +: 8];
-        end
-
-        q_remain_size <= calc_remain_size - calc_blk_size;
-        q_pos <= calc_pos + calc_blk_size;
-
-      end
+      else
+        q_rx_wr <= 0;
     end
 
   end    

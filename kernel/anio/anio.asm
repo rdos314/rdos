@@ -992,6 +992,13 @@ adc_thread:
 ;
     call InitControlBar
 ;
+    mov bx,anio_control_sel
+    mov es,bx
+    mov bx,40h
+    mov eax,12345678h
+    mov es:[bx],eax
+    mov es:[bx+1],eax
+;
 ; CODAB test
 ;
 ;
