@@ -496,7 +496,7 @@ adc_mem adc_mem_inst (
     .pci_tx_wr( pci_tx_wr),                     // O
     .pci_tx_full( pci_tx_full),                 // I
 
-    .adc_send( 0),                              // I
+    .adc_send( adc_wr ),                        // I
     .adc_address( adc_address),                 // I
     .adc_data( adc_data),                       // I
 
