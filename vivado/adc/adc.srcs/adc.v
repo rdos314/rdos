@@ -192,6 +192,9 @@ module adc (
   reg                    pci_up_stop;
   reg [2:0]              pci_stop_cnt;
 
+  reg                    up_reset;
+  reg [7:0]              pci_reset_cnt;
+
   reg                    up_pci_start;
   reg                    up_curr_start;
   reg                    up_adc_start;
@@ -257,7 +260,7 @@ up_clk up_clk_inst
     .clk_in1(user_clk));   // input clk_in1
 
 daq2_app daq2_app_inst (
-  .reset(user_reset),
+  .reset(up_reset),
   .up_clk(up_clk),
   .rx_clk(rx_clk),
   .tx_clk(tx_clk),
@@ -383,7 +386,7 @@ daq2_spi daq2_spi_inst (
     .spi_sdio (spi_sdio),
     .spi_dir (spi_dir),
 
-    .reset (user_reset),
+    .reset (up_reset),
     .up_clk (up_clk),
 
     .spi_rq_rd (up_spi_rq_out[31]),
@@ -458,12 +461,19 @@ generate
       if (user_reset)
       begin
         pci_up_start <= 0;
+        up_reset <= 1;
+        pci_reset_cnt <= 0;
         pci_start_cnt <= 0;
         pci_up_stop <= 0;
         pci_stop_cnt <= 0;
       end
       else
       begin
+        if (pci_reset_cnt[7] == 1)
+          up_reset <= 0;
+        else
+          pci_reset_cnt <= pci_reset_cnt + 1;
+
         if (pci_adc_start)
         begin
           pci_up_start <= 1;
@@ -511,7 +521,7 @@ generate
 
     always @ ( posedge up_clk ) 
     begin
-      if (user_reset)
+      if (up_reset)
       begin
         up_curr_start <= 0;
         up_adc_start <= 0;
