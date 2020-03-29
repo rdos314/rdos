@@ -155,65 +155,6 @@ module pci_app (
   reg [31:0]       bar_spi_adc;
   reg [31:0]       bar_spi_dac;
   
-// int analysis
-
-  reg              int_req;
-  wire             int_ack;
-  reg [1:0]        int_num;
-
-  reg [31:0]       int_load_0;
-  reg [31:0]       int_load_1;
-  reg [31:0]       int_load_2;
-  reg [31:0]       int_load_3;
-
-  reg [31:0]       int_pn_0;
-  reg [31:0]       int_pn_1;
-  reg [31:0]       int_pn_2;
-  reg [31:0]       int_pn_3;
-
-  reg [15:0]       int_cnt_0;
-  reg [15:0]       int_cnt_1;
-  reg [15:0]       int_cnt_2;
-  reg [15:0]       int_cnt_3;
-
-  reg              int_started_0;
-  reg              int_started_1;
-  reg              int_started_2;
-  reg              int_started_3;
-
-  reg              int_req_0;
-  reg              int_req_1;
-  reg              int_req_2;
-  reg              int_req_3;
-
-  reg              int_ack_0;
-  reg              int_ack_1;
-  reg              int_ack_2;
-  reg              int_ack_3;
-
-ila_3 ila3_inst (
-   .clk ( user_clk ),                // I
-   .probe0(int_req),                 // input wire [0:0]  probe1 
-   .probe1(int_ack),                 // input wire [0:0]  probe1 
-   .probe2(int_num),                 // input wire [1:0]  probe1 
-   .probe3(int_req_0),               // input wire [0:0]  probe1 
-   .probe4(int_ack_0),               // input wire [0:0]  probe1 
-   .probe5(int_req_1),               // input wire [0:0]  probe1 
-   .probe6(int_ack_1),               // input wire [0:0]  probe1 
-   .probe7(int_req_2),               // input wire [0:0]  probe1 
-   .probe8(int_ack_2),               // input wire [0:0]  probe1 
-   .probe9(int_req_3),               // input wire [0:0]  probe1 
-   .probe10(int_ack_3),              // input wire [0:0]  probe1 
-   .probe11(int_pn_0),               // input wire [31:0]  probe1 
-   .probe12(int_cnt_0),              // input wire [15:0]  probe1 
-   .probe13(int_pn_1),               // input wire [31:0]  probe1 
-   .probe14(int_cnt_1),              // input wire [15:0]  probe1 
-   .probe15(int_pn_2),               // input wire [31:0]  probe1 
-   .probe16(int_cnt_2),              // input wire [15:0]  probe1 
-   .probe17(int_pn_3),               // input wire [31:0]  probe1 
-   .probe18(int_cnt_3)               // input wire [15:0]  probe1 
-);
-
   
   //-------------------------------------------------------
   // Configuration (CFG) Interface
@@ -347,10 +288,10 @@ pcie pcie_i
   //------------------------------------------------//
   // EP Only                                        //
   //------------------------------------------------//
-  .cfg_interrupt                             ( int_req ),
+  .cfg_interrupt                             ( 0 ),
   .cfg_interrupt_rdy                         ( int_ack ),
   .cfg_interrupt_assert                      ( cfg_interrupt_assert ),
-  .cfg_interrupt_di                          ( int_num ),
+  .cfg_interrupt_di                          ( 0 ),
   .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
   .cfg_interrupt_msienable                   ( cfg_interrupt_msienable ),
@@ -670,11 +611,6 @@ generate
         adc_start <= 0;
         adc_stop <= 0;
         spi_rp_ack <= 0;
-
-        int_load_0 <= 0;
-        int_load_1 <= 0;
-        int_load_2 <= 0;
-        int_load_3 <= 0;
       end
       else
       begin
@@ -715,10 +651,6 @@ generate
             5: bar0_rp_data <= adc_sysref_cnt[63:32];
             6: bar0_rp_data <= adc_sync_fail_cnt;
             7: bar0_rp_data <= adc_sync_ok_cnt;
-            16: bar0_rp_data <= int_pn_0;
-            17: bar0_rp_data <= int_pn_1;
-            18: bar0_rp_data <= int_pn_2;
-            19: bar0_rp_data <= int_pn_3;
             default: bar0_rp_data <= 32'hffffffff;
           endcase     
           bar0_rp <= 1;
@@ -818,66 +750,6 @@ generate
                 endcase
               end
             end
-
-            16:
-            begin
-              if (bar0_wr_be[0])
-                int_load_0[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                int_load_0[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                int_load_0[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-                int_load_0[31:24] <= bar0_wr_data[31:24];
-            end
-
-            17:
-            begin
-              if (bar0_wr_be[0])
-                int_load_1[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                int_load_1[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                int_load_1[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-                int_load_1[31:24] <= bar0_wr_data[31:24];
-            end
-            
-            18:
-            begin
-              if (bar0_wr_be[0])
-                int_load_2[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                int_load_2[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                int_load_2[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-                int_load_2[31:24] <= bar0_wr_data[31:24];
-            end
-            
-            19:
-            begin
-              if (bar0_wr_be[0])
-                int_load_3[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                int_load_3[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                int_load_3[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-                int_load_3[31:24] <= bar0_wr_data[31:24];
-            end
             
             default:
             begin
@@ -942,248 +814,6 @@ generate
                 end
               end
             endcase
-          end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        int_pn_0 <= 0;
-        int_cnt_0 <= 0;
-        int_req_0 <= 0;
-        int_started_0 <= 0;
-      end
-      else
-      begin
-        if (int_started_0)
-        begin
-          if (int_req_0)
-          begin
-            if (int_ack_0)
-            begin
-              int_req_0 <= 0;
-              int_cnt_0 <= 0;
-            end
-          end
-          else
-          begin
-            if (int_pn_0[15:0] == int_cnt_0)
-            begin
-              int_pn_0[31:1] <= int_pn_0[30:0];
-              int_pn_0[0] <= int_pn_0[22] ^ int_pn_0[17];
-              int_req_0 <= 1;
-            end
-            else
-              int_cnt_0 <= int_cnt_0 + 1;
-          end
-        end
-        else
-        begin
-          if (int_load_0)
-          begin
-            int_started_0 <= 1;
-            int_pn_0 <= int_load_0;
-          end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        int_pn_1 <= 0;
-        int_cnt_1 <= 0;
-        int_req_1 <= 0;
-        int_started_1 <= 0;
-      end
-      else
-      begin
-        if (int_started_1)
-        begin
-          if (int_req_1)
-          begin
-            if (int_ack_1)
-            begin
-              int_req_1 <= 0;
-              int_cnt_1 <= 0;
-            end
-          end
-          else
-          begin
-            if (int_pn_1[15:0] == int_cnt_1)
-            begin
-              int_pn_1[31:1] <= int_pn_1[30:0];
-              int_pn_1[0] <= int_pn_1[22] ^ int_pn_1[17];
-              int_req_1 <= 1;
-            end
-            else
-              int_cnt_1 <= int_cnt_1 + 1;
-          end
-        end
-        else
-        begin
-          if (int_load_1)
-          begin
-            int_started_1 <= 1;
-            int_pn_1 <= int_load_1;
-          end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        int_pn_2 <= 0;
-        int_cnt_2 <= 0;
-        int_req_2 <= 0;
-        int_started_2 <= 0;
-      end
-      else
-      begin
-        if (int_started_2)
-        begin
-          if (int_req_2)
-          begin
-            if (int_ack_2)
-            begin
-              int_req_2 <= 0;
-              int_cnt_2 <= 0;
-            end
-          end
-          else
-          begin
-            if (int_pn_2[15:0] == int_cnt_2)
-            begin
-              int_pn_2[31:1] <= int_pn_2[30:0];
-              int_pn_2[0] <= int_pn_2[22] ^ int_pn_2[17];
-              int_req_2 <= 1;
-            end
-            else
-              int_cnt_2 <= int_cnt_2 + 1;
-          end
-        end
-        else
-        begin
-          if (int_load_2)
-          begin
-            int_started_2 <= 1;
-            int_pn_2 <= int_load_2;
-          end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        int_pn_3 <= 0;
-        int_cnt_3 <= 0;
-        int_req_3 <= 0;
-        int_started_3 <= 0;
-      end
-      else
-      begin
-        if (int_started_3)
-        begin
-          if (int_req_3)
-          begin
-            if (int_ack_3)
-            begin
-              int_req_3 <= 0;
-              int_cnt_3 <= 0;
-            end
-          end
-          else
-          begin
-            if (int_pn_3[15:0] == int_cnt_3)
-            begin
-              int_pn_3[31:1] <= int_pn_3[30:0];
-              int_pn_3[0] <= int_pn_3[22] ^ int_pn_3[17];
-              int_req_3 <= 1;
-            end
-            else
-              int_cnt_3 <= int_cnt_3 + 1;
-          end
-        end
-        else
-        begin
-          if (int_load_3)
-          begin
-            int_started_3 <= 1;
-            int_pn_3 <= int_load_3;
-          end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        int_ack_0 <= 0;
-        int_ack_1 <= 0;
-        int_ack_2 <= 0;
-        int_ack_3 <= 0;
-        int_req <= 0;
-        int_num <= 0;
-      end
-      else
-      begin
-        if (int_req)
-        begin
-          if (int_ack)
-          begin
-            int_req <= 0;
-            case (int_num)
-              0: int_ack_0 <= 1;
-              1: int_ack_1 <= 1;
-              2: int_ack_2 <= 1;
-              3: int_ack_3 <= 1;
-            endcase
-          end
-        end
-        else
-        begin
-          int_ack_0 <= 0;
-          int_ack_1 <= 0;
-          int_ack_2 <= 0;
-          int_ack_3 <= 0;
-
-          if (int_req_0)
-          begin
-            int_num <= 0;
-            int_req <= 1;
-          end
-          else
-          begin
-            if (int_req_1)
-            begin
-              int_num <= 1;
-              int_req <= 1;
-            end
-            else
-            begin
-              if (int_req_2)
-              begin
-                int_num <= 2;
-                int_req <= 1;
-              end
-              else
-              begin
-                if (int_req_3)
-                begin
-                  int_num <= 3;
-                  int_req <= 1;
-                end
-              end
-            end
           end
         end
       end
