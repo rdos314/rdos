@@ -1395,6 +1395,10 @@ ampMark64:
     shl eax,13
     mov edx,eax
 ;    
+    movzx eax,bx
+    shl eax,12
+    add eax,phys_bitmap_start
+    sub edi,eax
     mov eax,edi
     and ax,0FFFh
     shl eax,3
@@ -1469,6 +1473,10 @@ ampMark32:
     shl eax,13
     mov edx,eax
 ;    
+    movzx eax,bx
+    shl eax,12
+    add eax,phys_bitmap_start
+    sub edi,eax
     mov eax,edi
     and ax,0FFFh
     shl eax,3
