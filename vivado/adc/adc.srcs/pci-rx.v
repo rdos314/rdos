@@ -11,10 +11,9 @@ module pci_rx (
   pci_rx_data,
   pci_rx_header,
   pci_rx_be,
-  pci_rx_control,
-  pci_rx_rd,
-  pci_rx_empty,
-  pci_rx_full
+  pci_rx_count,
+  pci_rx_bar,
+  pci_rx_valid
 );
 
   input                          clk;
@@ -27,75 +26,31 @@ module pci_rx (
   output reg                     m_axis_rx_tready;
   input       [21:0]             m_axis_rx_tuser;
 
-  output wire [1023:0]           pci_rx_data;
-  output wire [127:0]            pci_rx_header;
-  output wire [127:0]            pci_rx_be;
-  output wire [15:0]             pci_rx_control;
-  input  wire                    pci_rx_rd;
-  output wire                    pci_rx_empty;
-  output wire                    pci_rx_full;
+  output reg  [1023:0]           pci_rx_data;
+  output reg  [127:0]            pci_rx_header;
+  output reg  [127:0]            pci_rx_be;
+  output reg  [7:0]              pci_rx_count;
+  output reg  [7:0]              pci_rx_bar;
+  output reg                     pci_rx_valid;
+
 
 // FF
 
   reg  [1023:0]  q_pkt_data;
+  reg  [127:0]   q_pkt_header;
   reg  [2:0]     q_shift_pos;
   reg            q_pkt_done;
   reg  [3:0]     q_count;
-  reg  [127:0]   q_pkt_header;
   reg  [7:0]     q_pkt_type;
   reg  [9:0]     q_pkt_len;
-
-  reg            q_rx_wr;
-  reg  [127:0]   q_rx_be;
-  reg  [15:0]    q_rx_control;
-  reg  [1023:0]  q_rx_data;
+  reg  [7:0]     q_pkt_bar;
+  reg  [11:0]    q_pkt_count;
 
   wire [127:0]   pkt_data;
   wire [63:0]    pkt_header;
   wire [7:0]     pkt_type;
   wire [3:0]     q_pkt_first_be;
   wire [3:0]     q_pkt_last_be;
-  wire [11:0]    q_pkt_count;
-
-fifo_data pci_rx_data_inst (
-  .clk(clk),             // input wire clk
-  .din(q_rx_data),       // input wire [1023 : 0] din
-  .wr_en(q_rx_wr),       // input wire wr_en
-  .rd_en(pci_rx_rd),     // input wire rd_en
-  .dout(pci_rx_data),    // output wire [1023 : 0] dout
-  .full(pci_rx_full),    // output wire full
-  .empty(pci_rx_empty)   // output wire empty
-);
-
-fifo_header pci_rx_header_inst (
-  .clk(clk),             // input wire clk
-  .din(q_pkt_header),    // input wire [127 : 0] din
-  .wr_en(q_rx_wr),       // input wire wr_en
-  .rd_en(pci_rx_rd),     // input wire rd_en
-  .dout(pci_rx_header),  // output wire [127 : 0] dout
-  .full(),               // output wire full
-  .empty()               // output wire empty
-);
-
-fifo_be pci_rx_be_inst (
-  .clk(clk),             // input wire clk
-  .din(q_rx_be),         // input wire [127 : 0] din
-  .wr_en(q_rx_wr),       // input wire wr_en
-  .rd_en(pci_rx_rd),     // input wire rd_en
-  .dout(pci_rx_be),      // output wire [127 : 0] dout
-  .full(),               // output wire full
-  .empty()               // output wire empty
-);
-
-fifo_control pci_rx_control_inst (
-  .clk(clk),             // input wire clk
-  .din(q_rx_control),    // input wire [15 : 0] din
-  .wr_en(q_rx_wr),       // input wire wr_en
-  .rd_en(pci_rx_rd),     // input wire rd_en
-  .dout(pci_rx_control), // output wire [15 : 0] dout
-  .full(),               // output wire full
-  .empty()               // output wire empty
-);
 
 ila_0 ila_0_inst (
 	.clk(clk),                         // input wire clk
@@ -108,25 +63,20 @@ ila_0 ila_0_inst (
 	.probe6(m_axis_rx_tdata[127:64]),  // input wire [63:0]  probe0  
 	.probe7(q_shift_pos),              // input wire [2:0]  probe0  
 	.probe8(q_pkt_done),               // input wire [0:0]  probe0  
-	.probe9(q_rx_wr),                  // input wire [0:0]  probe0  
 	.probe10(q_pkt_header),            // input wire [127:0]  probe0  
 	.probe11(q_pkt_type),              // input wire [7:0]  probe0  
 	.probe12(q_pkt_len),               // input wire [9:0]  probe0  
-	.probe13(q_rx_be[63:0]),           // input wire [63:0]  probe0  
-	.probe14(q_rx_control),            // input wire [15:0]  probe0  
-	.probe15(q_rx_data[63:0]),         // input wire [63:0]  probe0  
-	.probe16(q_rx_data[127:64]),       // input wire [63:0]  probe0  
-	.probe17(q_pkt_data[895:768]),     // input wire [127:0]  probe0  
-	.probe18(q_pkt_data[1023:896]),    // input wire [127:0]  probe0  
-	.probe19(pci_rx_data[63:0]),       // input wire [63:0]  probe0  
-	.probe20(pci_rx_data[127:64]),     // input wire [63:0]  probe0  
-	.probe21(pci_rx_header[63:0]),     // input wire [63:0]  probe0  
-	.probe22(pci_rx_header[127:64]),   // input wire [63:0]  probe0  
-	.probe23(pci_rx_be[63:0]),         // input wire [63:0]  probe0  
-	.probe24(pci_rx_control[15:0]),    // input wire [15:0]  probe0  
-	.probe25(pci_rx_rd),               // input wire [0:0]  probe0  
-	.probe26(pci_rx_empty)             // input wire [0:0]  probe0  
-);
+	.probe13(q_pkt_data[895:768]),     // input wire [127:0]  probe0  
+	.probe14(q_pkt_data[1023:896]),    // input wire [127:0]  probe0  
+	.probe15(pci_rx_data[63:0]),       // input wire [63:0]  probe0  
+	.probe16(pci_rx_data[127:64]),     // input wire [63:0]  probe0  
+	.probe17(pci_rx_header[63:0]),     // input wire [63:0]  probe0  
+	.probe18(pci_rx_header[127:64]),   // input wire [63:0]  probe0  
+	.probe19(pci_rx_be[63:0]),         // input wire [63:0]  probe0  
+	.probe20(pci_rx_count),            // input wire [7:0]  probe0  
+	.probe21(pci_rx_bar),              // input wire [7:0]  probe0  
+	.probe22(pci_rx_valid)             // input wire [0:0]  probe0  
+); 
 	
 function [127:0] first_and_last_to_be;
   input [3:0] first_be;
@@ -542,24 +492,10 @@ endfunction
 generate
   begin : pci_rx_128
 
-    always @ (reset or pci_rx_full ) 
-    begin
-      if (reset )
-        m_axis_rx_tready = 0;
-      else
-      begin      
-        if (pci_rx_full)
-          m_axis_rx_tready = 0;
-        else
-          m_axis_rx_tready = 1;
-      end
-    end
+    assign m_axis_rx_tready = reset ? 0 : 1;
 
     assign pkt_header = m_axis_rx_tuser[13] ? m_axis_rx_tdata[127:64] : m_axis_rx_tdata[63:0];
     assign pkt_type = pkt_header[31:24];
-    assign q_pkt_first_be = q_pkt_header[35:32];
-    assign q_pkt_last_be = q_pkt_header[39:36];
-    assign q_pkt_count = q_pkt_header[43:32];
 
     assign pkt_data[31:24] = m_axis_rx_tdata[7:0];
     assign pkt_data[23:16] = m_axis_rx_tdata[15:8];
@@ -581,6 +517,10 @@ generate
     assign pkt_data[111:104] = m_axis_rx_tdata[119:112];
     assign pkt_data[103:96] = m_axis_rx_tdata[127:120];
 
+    assign q_pkt_first_be = q_pkt_header[35:32];
+    assign q_pkt_last_be = q_pkt_header[39:36];
+    assign q_pkt_count = q_pkt_header[43:32];
+
     always @ ( posedge clk ) 
     begin
       if (m_axis_rx_tvalid && m_axis_rx_tready && !reset)
@@ -590,7 +530,7 @@ generate
           q_pkt_header[63:0] <= pkt_header;
           q_pkt_type <= pkt_type;
           q_pkt_len <= pkt_header[9:0];
-          q_rx_control[15:8] <= m_axis_rx_tuser[9:2];
+          q_pkt_bar <= m_axis_rx_tuser[9:2];
 
           if (m_axis_rx_tuser[13])
           begin
@@ -701,31 +641,35 @@ generate
       begin
         if (q_pkt_type[3])
         begin
-          q_rx_be <= count_to_be(q_pkt_header[65:64], q_pkt_count, q_pkt_len);
-          q_rx_control[7:0] <= q_pkt_count[7:0];
+          pci_rx_be <= count_to_be(q_pkt_header[65:64], q_pkt_count, q_pkt_len);
+          pci_rx_count <= q_pkt_count[7:0];
         end
         else
         begin
-          q_rx_be <= first_and_last_to_be(q_pkt_first_be, q_pkt_last_be, q_pkt_len);
-          q_rx_control[7:0] = first_and_last_to_count(q_pkt_first_be, q_pkt_last_be, q_pkt_len);
+          pci_rx_be <= first_and_last_to_be(q_pkt_first_be, q_pkt_last_be, q_pkt_len);
+          pci_rx_count = first_and_last_to_count(q_pkt_first_be, q_pkt_last_be, q_pkt_len);
         end
 
+        pci_rx_bar <= q_pkt_bar;
+        pci_rx_header <= q_pkt_header;
+
         case (q_count)
-          1: q_rx_data[127:0] <= q_pkt_data[1023:896];
-          2: q_rx_data[255:0] <= q_pkt_data[1023:768];
-          3: q_rx_data[383:0] <= q_pkt_data[1023:640];
-          4: q_rx_data[511:0] <= q_pkt_data[1023:512];
-          5: q_rx_data[639:0] <= q_pkt_data[1023:384];
-          6: q_rx_data[767:0] <= q_pkt_data[1023:256];
-          7: q_rx_data[895:0] <= q_pkt_data[1023:128];
-          default: q_rx_data <= q_pkt_data;
+          1: pci_rx_data[127:0] <= q_pkt_data[1023:896];
+          2: pci_rx_data[255:0] <= q_pkt_data[1023:768];
+          3: pci_rx_data[383:0] <= q_pkt_data[1023:640];
+          4: pci_rx_data[511:0] <= q_pkt_data[1023:512];
+          5: pci_rx_data[639:0] <= q_pkt_data[1023:384];
+          6: pci_rx_data[767:0] <= q_pkt_data[1023:256];
+          7: pci_rx_data[895:0] <= q_pkt_data[1023:128];
+          default: pci_rx_data <= q_pkt_data;
         endcase
 
-        q_rx_wr <= 1;
+        pci_rx_valid <= 1;
       end
       else
-        q_rx_wr <= 0;
+        pci_rx_valid <= 0;
     end
+
 
   end    
 endgenerate

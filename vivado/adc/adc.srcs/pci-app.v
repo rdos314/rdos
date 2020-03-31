@@ -127,10 +127,13 @@ module pci_app (
   wire [1023:0]    pci_rx_data;
   wire [127:0]     pci_rx_header;
   wire [127:0]     pci_rx_be;
-  wire [15:0]      pci_rx_control;
-  wire             pci_rx_rd;
-  wire             pci_rx_empty;
-  wire             pci_rx_full;
+  wire [7:0]       pci_rx_count;
+  wire [7:0]       pci_rx_bar;
+  wire             pci_rx_valid;
+
+  wire [9:0]       pci_rx_len;
+  wire [7:0]       pci_rx_type;
+  wire [63:0]      pci_rx_address;
 
 // local -> PCIe
 
@@ -139,18 +142,51 @@ module pci_app (
   wire             pci_tx_wr;
   wire             pci_tx_full;
 
+// BAR interface
+
+  reg  [9:0]       bar0_rd_address;
+  reg              bar0_rd;
+
+  reg  [95:0]      bar0_rp_header;
+  reg  [31:0]      bar0_rp_data;
+  reg              bar0_rp;
+
+  reg  [9:0]       bar0_wr_address;
+  reg  [31:0]      bar0_wr_data;
+  reg  [3:0]       bar0_wr_be;
+  reg              bar0_wr;
+
+  reg  [16:0]      bar1_rd_address;
+  reg              bar1_rd;
+
+  reg  [95:0]      bar1_rp_header;
+  wire [31:0]      bar1_rp_data;
+  wire             bar1_rp;
+
+  reg  [16:0]      bar1_wr_address;
+  reg  [31:0]      bar1_wr_data;
+  reg  [3:0]       bar1_wr_be;
+  reg              bar1_wr;
+
+  reg  [16:0]      bar2_rd_address;
+  reg              bar2_rd;
+
+  reg  [95:0]      bar2_rp_header;
+  wire [31:0]      bar2_rp_data;
+  wire             bar2_rp;
+
+  reg  [16:0]      bar2_wr_address;
+  reg  [31:0]      bar2_wr_data;
+  reg  [3:0]       bar2_wr_be;
+  reg              bar2_wr;
+
 
 // local memory
 
-  wire [9:0]       bar0_address;
-  wire             bar0_rd;
-  reg              bar0_rp;
-  reg  [31:0]      bar0_rp_data;
-  wire             bar0_wr;
-  wire [3:0]       bar0_wr_be;
-  wire [31:0]      bar0_wr_data;
-  reg              bar0_ack;
-  
+  reg              spi_clk_valid;
+  reg              spi_adc_valid;
+  reg              spi_dac_valid;
+
   reg [31:0]       bar_spi_clk;
   reg [31:0]       bar_spi_adc;
   reg [31:0]       bar_spi_dac;
@@ -392,13 +428,12 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),      // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),       // I
 
-    .pci_rx_data( pci_rx_data),                    // O
-    .pci_rx_header( pci_rx_header),                // O
-    .pci_rx_be( pci_rx_be),                        // O
-    .pci_rx_control( pci_rx_control),              // O
-    .pci_rx_rd (pci_rx_rd),                        // I
-    .pci_rx_empty (pci_rx_empty),                   // O
-    .pci_rx_full (pci_rx_full)                   // O
+    .pci_rx_data( pci_rx_data),                // O
+    .pci_rx_header( pci_rx_header),            // O
+    .pci_rx_be( pci_rx_be),                    // O
+    .pci_rx_count( pci_rx_count),              // O
+    .pci_rx_bar (pci_rx_bar),                  // O
+    .pci_rx_valid (pci_rx_valid)               // O
 );
 
 pci_tx pci_tx_inst (
@@ -420,56 +455,6 @@ pci_tx pci_tx_inst (
     .pci_tx_full (pci_tx_full)                  // O
 );
 
-adc_mem adc_mem_inst (
-
-    .clk(user_clk),                             // I
-    .reset(user_reset),                         // I
-
-    .pci_rx_data( pci_rx_data),                 // I
-    .pci_rx_header( pci_rx_header),             // I
-    .pci_rx_be( pci_rx_be),                     // I
-    .pci_rx_control( pci_rx_control),           // I
-    .pci_rx_rd (pci_rx_rd),                     // O
-    .pci_rx_empty (pci_rx_empty),               // I
-
-    .pci_tx_data( pci_tx_data),                 // O
-    .pci_tx_header( pci_tx_header),             // O
-    .pci_tx_wr( pci_tx_wr),                     // O
-    .pci_tx_full( pci_tx_full),                 // I
-
-    .adc_send( adc_wr ),                        // I
-    .adc_address( adc_address),                 // I
-    .adc_data( adc_data),                       // I
-
-    .bar0_address( bar0_address),               // O
-    .bar0_rd( bar0_rd),                         // O
-    .bar0_rp( bar0_rp),                         // I
-    .bar0_rp_data( bar0_rp_data),               // I
-    .bar0_wr( bar0_wr),                         // O
-    .bar0_wr_be( bar0_wr_be),                   // O
-    .bar0_wr_data( bar0_wr_data),               // O
-    .bar0_ack( bar0_ack),                       // I
-
-    .bar1_address( bar1_address),               // O
-    .bar1_rd( bar1_rd),                         // O
-    .bar1_rp( bar1_rp),                         // I
-    .bar1_rp_data( bar1_rp_data),               // I
-    .bar1_wr( bar1_wr),                         // O
-    .bar1_wr_be( bar1_wr_be),                   // O
-    .bar1_wr_data( bar1_wr_data),               // O
-    .bar1_ack( bar1_ack),                       // I
-
-    .bar2_address( bar2_address),               // O
-    .bar2_rd( bar2_rd),                         // O
-    .bar2_rp( bar2_rp),                         // I
-    .bar2_rp_data( bar2_rp_data),               // I
-    .bar2_wr( bar2_wr),                         // O
-    .bar2_wr_be( bar2_wr_be),                   // O
-    .bar2_wr_data( bar2_wr_data),               // O
-    .bar2_ack( bar2_ack)                        // I
-);
-
-
 adc_app adc_app_inst (
     .clk(user_clk),
     .reset(user_reset),
@@ -481,125 +466,243 @@ adc_app adc_app_inst (
     .adc_wr(adc_wr),
     .adc_address(adc_address),
 
-    .address(bar1_address),
+    .rd_address(bar1_rd_address),
     .rd(bar1_rd),
-    .rp(bar1_rp),
+
     .rp_data(bar1_rp_data),
-    .wr(bar1_wr),
-    .wr_be(bar1_wr_be),
+    .rp(bar1_rp),
+
+    .wr_address(bar1_wr_address),
     .wr_data(bar1_wr_data),
-    .ack(bar1_ack)
+    .wr(bar1_wr)
 );
 
 generate
   begin : pci_app
 
+    assign pci_rx_len = pci_rx_header[9:0];
+    assign pci_rx_type = pci_rx_header[31:24];
+    assign pci_rx_address = pci_rx_header[95:64];
+
+    assign bar2_rp = 0;
+
     always @ ( posedge user_clk ) 
     begin
-      if (bar0_wr && !bar0_ack)
+      if (pci_rx_valid)
       begin
-        case (bar0_address)            
-          1:
-          begin
-            if (bar0_wr_be[0])
-              spi_rq_in[7:0] = bar0_wr_data[7:0];
-            else 
-              spi_rq_in[7:0] = bar_spi_clk[7:0];
- 
-            if (bar0_wr_be[1])
-              spi_rq_in[15:8] = bar0_wr_data[15:8];
-            else 
-              spi_rq_in[15:8] = bar_spi_clk[15:8];
- 
-            if (bar0_wr_be[2])
-              spi_rq_in[23:16] = bar0_wr_data[23:16];
-            else 
-              spi_rq_in[23:16] = bar_spi_clk[23:16];
-
-            if (bar0_wr_be[3])
-              spi_rq_in[30:29] = 0;
-          end
-
-          2:
-          begin
-            if (bar0_wr_be[0])
-              spi_rq_in[7:0] = bar0_wr_data[7:0];
-            else 
-              spi_rq_in[7:0] = bar_spi_adc[7:0];
- 
-            if (bar0_wr_be[1])
-              spi_rq_in[15:8] = bar0_wr_data[15:8];
-            else 
-              spi_rq_in[15:8] = bar_spi_adc[15:8];
- 
-            if (bar0_wr_be[2])
-              spi_rq_in[23:16] = bar0_wr_data[23:16];
-            else 
-              spi_rq_in[23:16] = bar_spi_adc[23:16];
-
-            if (bar0_wr_be[3])
-              spi_rq_in[30:29] = 1;
-          end
-
-          3:
-          begin
-            if (bar0_wr_be[0])
-              spi_rq_in[7:0] = bar0_wr_data[7:0];
-            else 
-              spi_rq_in[7:0] = bar_spi_dac[7:0];
- 
-            if (bar0_wr_be[1])
-              spi_rq_in[15:8] = bar0_wr_data[15:8];
-            else 
-              spi_rq_in[15:8] = bar_spi_dac[15:8];
- 
-            if (bar0_wr_be[2])
-              spi_rq_in[23:16] = bar0_wr_data[23:16];
-            else 
-              spi_rq_in[23:16] = bar_spi_dac[23:16];
-
-            if (bar0_wr_be[3])
-              spi_rq_in[30:29] = 2;
-          end
-        endcase
-
-        if (bar0_wr_be[3])
+        if (pci_rx_bar[0])
         begin
-          spi_rq_in[27:24] = bar0_wr_data[27:24];
-
-          case (bar0_wr_data[31:28])
-            12:
+          case (pci_rx_type)
+            8'b000_00000, 
+            8'b001_00000,
+            8'b000_00001,
+            8'b001_00001: 
             begin
-              spi_rq_in[31] = 1;
-              spi_rq_in[28] = 1;
-              spi_wr = 1;
+              bar0_rd_address <= pci_rx_address[9:0];
+
+              bar0_rp_header[95:72] <= pci_rx_header[63:40];
+              bar0_rp_header[71] <= 0;
+              bar0_rp_header[70:66] <= pci_rx_header[70:66];
+
+              casex (pci_rx_be[3:0])
+                4'b0000 : bar0_rp_header[65:64] <= 0;
+                4'bxxx1 : bar0_rp_header[65:64] <= 0;
+                4'bxx10 : bar0_rp_header[65:64] <= 1;
+                4'bx100 : bar0_rp_header[65:64] <= 2;
+                4'b1000 : bar0_rp_header[65:64] <= 3;
+              endcase
+
+              bar0_rp_header[63:48] <= 16'b0;                  // completer ID
+              bar0_rp_header[47:45] <= 3'b0;                   // completion code = 000
+              bar0_rp_header[44] <= 1'b0;                      // BCM
+              bar0_rp_header[39:32] <= pci_rx_count;           // byte count
+              bar0_rp_header[43:40] <= 0;                      // high byte count = 0
+
+              if (pci_rx_count)
+                bar0_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
+              else
+                bar0_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
+
+              bar0_rp_header[24] <= pci_rx_header[24];
+              bar0_rp_header[23] <= 1'b0;                      // R
+              bar0_rp_header[22:20] <= pci_rx_header[22:20];
+              bar0_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
+              bar0_rp_header[15:12] <= pci_rx_header[15:12];
+              bar0_rp_header[11:10] <= 2'b0;                   // AT
+              bar0_rp_header[9:0] <= pci_rx_header[9:0];
+
+              bar0_rd <= 1;
+              bar0_wr <= 0;
             end
 
-            2:
-            begin
-              spi_rq_in[31] = 0;
-              spi_rq_in[28] = 1;
-              spi_wr = 1;
-            end
-
-            1:
-            begin
-              spi_rq_in[31] = 0;
-              spi_rq_in[28] = 0;
-              spi_wr = 1;
+            8'b010_00000,
+            8'b011_00000:
+            begin       
+              bar0_wr_address <= pci_rx_address[9:0];
+              bar0_wr_data <= pci_rx_data[31:0];
+              bar0_wr_be <= pci_rx_be[3:0];
+              bar0_wr <= 1;
+              bar0_rd <= 0;
             end
 
             default:
             begin
-              spi_wr = 0;
+              bar0_rd <= 0;
+              bar0_wr <= 0;
             end
           endcase
         end
         else
-          spi_wr = 0;
+        begin
+          bar0_rd <= 0;
+          bar0_wr <= 0;
+
+          if (pci_rx_bar[1])
+          begin
+            case (pci_rx_type)
+              8'b000_00000, 
+              8'b001_00000,
+              8'b000_00001,
+              8'b001_00001: 
+              begin
+                bar1_rd_address <= pci_rx_address[16:0];
+
+                bar1_rp_header[95:72] <= pci_rx_header[63:40];
+                bar1_rp_header[71] <= 0;
+                bar1_rp_header[70:66] <= pci_rx_header[70:66];
+
+                casex (pci_rx_be[3:0])
+                  4'b0000 : bar1_rp_header[65:64] <= 0;
+                  4'bxxx1 : bar1_rp_header[65:64] <= 0;
+                  4'bxx10 : bar1_rp_header[65:64] <= 1;
+                  4'bx100 : bar1_rp_header[65:64] <= 2;
+                  4'b1000 : bar1_rp_header[65:64] <= 3;
+                endcase
+
+                bar1_rp_header[63:48] <= 16'b0;                  // completer ID
+                bar1_rp_header[47:45] <= 3'b0;                   // completion code = 000
+                bar1_rp_header[44] <= 1'b0;                      // BCM
+                bar1_rp_header[39:32] <= pci_rx_count;           // byte count
+                bar1_rp_header[43:40] <= 0;                      // high byte count = 0
+
+                if (pci_rx_count)
+                  bar1_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
+                 else
+                  bar1_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
+
+                bar1_rp_header[24] <= pci_rx_header[24];
+                bar1_rp_header[23] <= 1'b0;                      // R
+                bar1_rp_header[22:20] <= pci_rx_header[22:20];
+                bar1_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
+                bar1_rp_header[15:12] <= pci_rx_header[15:12];
+                bar1_rp_header[11:10] <= 2'b0;                   // AT
+                bar1_rp_header[9:0] <= pci_rx_header[9:0];
+
+                bar1_rd <= 1;
+                bar1_wr <= 0;
+              end
+
+              8'b010_00000,
+              8'b011_00000:
+              begin       
+                bar1_wr_address <= pci_rx_address[16:0];
+                bar1_wr_data <= pci_rx_data[31:0];
+                bar1_wr_be <= pci_rx_be[3:0];
+                bar1_wr <= 1;
+                bar1_rd <= 0;
+              end
+
+              default:
+              begin
+                bar1_rd <= 0;
+                bar1_wr <= 0;
+              end
+            endcase
+          end
+          else
+          begin
+            bar1_rd <= 0;
+            bar1_wr <= 0;
+
+            if (pci_rx_bar[2])
+            begin
+              case (pci_rx_type)
+                8'b000_00000, 
+                8'b001_00000,
+                8'b000_00001,
+                8'b001_00001: 
+                begin
+                  bar2_rd_address <= pci_rx_address[16:0];
+
+                  bar2_rp_header[95:72] <= pci_rx_header[63:40];
+                  bar2_rp_header[71] <= 0;
+                  bar2_rp_header[70:66] <= pci_rx_header[70:66];
+
+                  casex (pci_rx_be[3:0])
+                    4'b0000 : bar2_rp_header[65:64] <= 0;
+                    4'bxxx1 : bar2_rp_header[65:64] <= 0;
+                    4'bxx10 : bar2_rp_header[65:64] <= 1;
+                    4'bx100 : bar2_rp_header[65:64] <= 2;
+                    4'b1000 : bar2_rp_header[65:64] <= 3;
+                  endcase
+
+                  bar2_rp_header[63:48] <= 16'b0;                  // completer ID
+                  bar2_rp_header[47:45] <= 3'b0;                   // completion code = 000
+                  bar2_rp_header[44] <= 1'b0;                      // BCM
+                  bar2_rp_header[39:32] <= pci_rx_count;           // byte count
+                  bar2_rp_header[43:40] <= 0;                      // high byte count = 0
+
+                  if (pci_rx_count)
+                    bar2_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
+                   else
+                    bar2_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
+
+                  bar2_rp_header[24] <= pci_rx_header[24];
+                  bar2_rp_header[23] <= 1'b0;                      // R
+                  bar2_rp_header[22:20] <= pci_rx_header[22:20];
+                  bar2_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
+                  bar2_rp_header[15:12] <= pci_rx_header[15:12];
+                  bar2_rp_header[11:10] <= 2'b0;                   // AT
+                  bar2_rp_header[9:0] <= pci_rx_header[9:0];
+
+                  bar2_rd <= 1;
+                  bar2_wr <= 0;
+                end
+
+                8'b010_00000,
+                8'b011_00000:
+                begin       
+                  bar2_wr_address <= pci_rx_address[16:0];
+                  bar2_wr_data <= pci_rx_data[31:0];
+                  bar2_wr_be <= pci_rx_be[3:0];
+                  bar2_wr <= 1;
+                  bar2_rd <= 0;
+                end
+
+                default:
+                begin
+                  bar2_rd <= 0;
+                  bar2_wr <= 0;
+                end
+              endcase
+            end
+            else
+            begin
+              bar2_rd <= 0;
+              bar2_wr <= 0;
+            end
+          end
+        end
       end
       else
-        spi_wr = 0;
+      begin
+        bar0_rd <= 0;
+        bar0_wr <= 0;
+        bar1_rd <= 0;
+        bar1_wr <= 0;
+        bar2_rd <= 0;
+        bar2_wr <= 0;
+      end
     end
 
     always @ ( posedge user_clk ) 
@@ -610,7 +713,10 @@ generate
         bar_adc_test_mode <= 7;
         adc_start <= 0;
         adc_stop <= 0;
-        spi_rp_ack <= 0;
+
+        spi_clk_valid <= 0;
+        spi_adc_valid <= 0;
+        spi_dac_valid <= 0;
       end
       else
       begin
@@ -642,7 +748,7 @@ generate
 
         if (bar0_rd)
         begin
-          case (bar0_address)
+          case (bar0_rd_address)
             0: bar0_rp_data <= {16'h0, bar_adc_test_mode, bar_control};
             1: bar0_rp_data <= bar_spi_clk;
             2: bar0_rp_data <= bar_spi_adc;
@@ -660,7 +766,7 @@ generate
 
         if (bar0_wr)
         begin
-          case (bar0_address)
+          case (bar0_wr_address)
             0: 
             begin
               if (bar0_wr_be[0])
@@ -698,11 +804,30 @@ generate
                 bar_spi_clk[27:24] <= bar0_wr_data[27:24];
 
                 case (bar0_wr_data[31:28])
-                  12:      bar_spi_clk[31:28] <= 15;
-                  1, 2:    bar_spi_clk[31:28] <= 0;
-                  default: bar_spi_clk[31:28] <= 0;
+                  12:      
+                  begin
+                    bar_spi_clk[31:28] <= 15;
+                    spi_clk_valid <= 1;
+                  end
+
+                  1, 2:    
+                  begin
+                    bar_spi_clk[31:28] <= 0;
+                    spi_clk_valid <= 1;
+                  end
+
+                  default: 
+                  begin
+                    bar_spi_clk[31:28] <= 0;
+                    spi_clk_valid <= 0;
+                  end                    
                 endcase
               end
+              else
+                spi_clk_valid <= 0;
+
+              spi_adc_valid <= 0;
+              spi_dac_valid <= 0;
             end
 
             2:
@@ -721,11 +846,30 @@ generate
                 bar_spi_adc[27:24] <= bar0_wr_data[27:24];
 
                 case (bar0_wr_data[31:28])
-                  12:      bar_spi_adc[31:28] <= 15;
-                  1, 2:    bar_spi_adc[31:28] <= 0;
-                  default: bar_spi_adc[31:28] <= 0;
+                  12:      
+                  begin
+                    bar_spi_adc[31:28] <= 15;
+                    spi_adc_valid <= 1;
+                  end
+
+                  1, 2:    
+                  begin
+                    bar_spi_adc[31:28] <= 0;
+                    spi_adc_valid <= 1;
+                  end
+
+                  default: 
+                  begin
+                    bar_spi_adc[31:28] <= 0;
+                    spi_adc_valid <= 0;
+                  end
                 endcase
               end
+              else
+                spi_adc_valid <= 0;
+
+              spi_clk_valid <= 0;
+              spi_dac_valid <= 0;
             end
 
             3:
@@ -744,21 +888,42 @@ generate
                 bar_spi_dac[27:24] <= bar0_wr_data[27:24];
 
                 case (bar0_wr_data[31:28])
-                  12:      bar_spi_dac[31:28] <= 15;
-                  1, 2:    bar_spi_dac[31:28] <= 0;
-                  default: bar_spi_dac[31:28] <= 0;
+                  12:      
+                  begin
+                    bar_spi_dac[31:28] <= 15;
+                    spi_dac_valid <= 1;
+                  end
+
+                  1, 2:    
+                  begin
+                    bar_spi_dac[31:28] <= 0;
+                    spi_dac_valid <= 1;
+                  end
+
+                  default: 
+                  begin
+                    bar_spi_dac[31:28] <= 0;
+                    spi_dac_valid <= 0;
+                  end
                 endcase
               end
+              else
+                spi_dac_valid <= 0;
+
+              spi_clk_valid <= 0;
+              spi_adc_valid <= 0;
             end
             
             default:
             begin
               adc_start <= 0;
               adc_stop <= 0;
+
+              spi_clk_valid <= 0;
+              spi_adc_valid <= 0;
+              spi_dac_valid <= 0;
             end
           endcase
-          bar0_ack <= 1;
-          spi_rp_ack <= 0;
         end
         else
         begin
@@ -769,7 +934,9 @@ generate
           else
             adc_stop <= 0;
 
-          bar0_ack <= 0;
+          spi_clk_valid <= 0;
+          spi_adc_valid <= 0;
+          spi_dac_valid <= 0;
 
           if (spi_rp_empty)
             spi_rp_ack <= 0;
@@ -818,6 +985,118 @@ generate
         end
       end
     end
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (spi_clk_valid)
+      begin
+        spi_rq_in[23:0] <= bar0_spi_clk[23:0];
+        spi_rq_in[30:29] <= 0;
+
+        case (bar0_spi_clk[31:28])
+          12:
+          begin
+            spi_rq_in[31] <= 1;
+            spi_rq_in[28] <= 1;
+            spi_wr <= 1;
+          end
+
+          2:
+          begin
+            spi_rq_in[31] <= 0;
+            spi_rq_in[28] <= 1;
+            spi_wr <= 1;
+          end
+
+          1:
+          begin
+            spi_rq_in[31] <= 0;
+            spi_rq_in[28] <= 0;
+            spi_wr <= 1;
+          end
+
+          default:
+          begin
+            spi_wr <= 0;
+          end
+        endcase
+      end
+      else
+      begin
+        if (spi_adc_valid)
+        begin
+          spi_rq_in[23:0] <= bar_spi_adc[23:0];
+          spi_rq_in[30:29] <= 1;
+
+          case (bar0_spi_adc[31:28])
+            12:
+            begin
+              spi_rq_in[31] <= 1;
+              spi_rq_in[28] <= 1;
+              spi_wr <= 1;
+            end
+
+            2:
+            begin
+              spi_rq_in[31] <= 0;
+              spi_rq_in[28] <= 1;
+              spi_wr <= 1;
+            end
+
+            1:
+            begin
+              spi_rq_in[31] <= 0;
+              spi_rq_in[28] <= 0;
+              spi_wr <= 1;
+            end
+
+            default:
+            begin
+              spi_wr <= 0;
+            end
+          endcase
+        end
+        else
+        begin
+          if (spi_dac_valid)
+          begin
+            spi_rq_in[23:0] <= bar_spi_dac[23:0];
+            spi_rq_in[30:29] <= 2;
+
+            case (bar0_spi_dac[31:28])
+              12:
+              begin
+                spi_rq_in[31] <= 1;
+                spi_rq_in[28] <= 1;
+                spi_wr <= 1;
+              end
+
+              2:
+              begin
+                spi_rq_in[31] <= 0;
+                spi_rq_in[28] <= 1;
+                spi_wr <= 1;
+              end
+
+              1:
+              begin
+                spi_rq_in[31] <= 0;
+                spi_rq_in[28] <= 0;
+                spi_wr <= 1;
+              end
+
+              default:
+              begin
+                spi_wr <= 0;
+              end
+            endcase
+          end
+          else
+            spi_wr <= 0;
+        end
+      end
+    end
+
 
   end
 endgenerate
