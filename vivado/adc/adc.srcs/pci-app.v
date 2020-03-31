@@ -14,28 +14,41 @@ module pci_app (
     user_lnk_width,
     cfg_interrupt_msienable,
 
-    bar_control,
-    bar_adc_test_mode,
+    bar0_rd_address,
+    bar0_rd,
 
-    adc_start,
-    adc_stop,
-    adc_started,
-    adc_probing,
-    adc_running,
-    adc_sysref_cnt,
+    bar0_rp_data,
+    bar0_rp,
 
-    adc_sync_fail_cnt,
-    adc_sync_ok_cnt,
+    bar0_wr_address,
+    bar0_wr_data,
+    bar0_wr_be,
+    bar0_wr,
+
+    bar1_rd_address,
+    bar1_rd,
+
+    bar1_rp_data,
+    bar1_rp,
+
+    bar1_wr_address,
+    bar1_wr_data,
+    bar1_wr_be,
+    bar1_wr,
+
+    bar2_rd_address,
+    bar2_rd,
+
+    bar2_rp_data,
+    bar2_rp,
+
+    bar2_wr_address,
+    bar2_wr_data,
+    bar2_wr_be,
+    bar2_wr,
 
     adc_wr,
-    adc_data,
-
-    spi_wr,
-    spi_rq_in,
-
-    spi_rp_empty,
-    spi_rp_data,
-    spi_rp_ack
+    adc_data
 );
 
   output  [7:0]        pci_exp_txp;
@@ -54,50 +67,46 @@ module pci_app (
   output   [1:0]       user_lnk_width;
   output               cfg_interrupt_msienable;
 
-  output reg [7:0]     bar_control;
-  output reg [7:0]     bar_adc_test_mode;
+  output reg [9:0]     bar0_rd_address;
+  output reg           bar0_rd;
 
-  output reg           adc_start;
-  output reg           adc_stop;
-  input  wire          adc_started;
-  input  wire          adc_probing;
-  input  wire          adc_running;
-  input wire [63:0]    adc_sysref_cnt;
-  input wire [31:0]    adc_sync_fail_cnt;
-  input wire [31:0]    adc_sync_ok_cnt;
+  input wire [31:0]    bar0_rp_data;
+  input wire           bar0_rp;
+
+  output reg [9:0]     bar0_wr_address;
+  output reg [31:0]    bar0_wr_data;
+  output reg [3:0]     bar0_wr_be;
+  output reg           bar0_wr;
+
+  output reg [16:0]    bar1_rd_address;
+  output reg           bar1_rd;
+
+  input wire [31:0]    bar1_rp_data;
+  input wire           bar1_rp;
+
+  output reg [16:0]    bar1_wr_address;
+  output reg [31:0]    bar1_wr_data;
+  output reg [3:0]     bar1_wr_be;
+  output reg           bar1_wr;
+
+  output reg [16:0]    bar2_rd_address;
+  output reg           bar2_rd;
+
+  input wire [31:0]    bar2_rp_data;
+  input wire           bar2_rp;
+
+  output reg [16:0]    bar2_wr_address;
+  output reg [31:0]    bar2_wr_data;
+  output reg [3:0]     bar2_wr_be;
+  output reg           bar2_wr;
 
   input wire           adc_wr;
   input wire [1023:0]  adc_data;
-
-  output reg           spi_wr;
-  output reg [31:0]    spi_rq_in;
-
-  input wire           spi_rp_empty;
-  input wire [29:0]    spi_rp_data;
-  output reg           spi_rp_ack;
 
 // Wire Declarations
 
   wire             req_stop;
   wire [63:0]      adc_address;
-
-  wire [16:0]      bar1_address;
-  wire             bar1_rd;
-  wire             bar1_rp;
-  wire [31:0]      bar1_rp_data;
-  wire             bar1_wr;
-  wire [3:0]       bar1_wr_be;
-  wire [31:0]      bar1_wr_data;
-  wire             bar1_ack;
-
-  wire [16:0]      bar2_address;
-  wire             bar2_rd;
-  wire             bar2_rp;
-  wire [31:0]      bar2_rp_data;
-  wire             bar2_wr;
-  wire [3:0]       bar2_wr_be;
-  wire [31:0]      bar2_wr_data;
-  wire             bar2_ack;
 
   wire             user_clk;
   wire             user_reset;
@@ -142,46 +151,11 @@ module pci_app (
   wire             pci_tx_wr;
   wire             pci_tx_full;
 
-// BAR interface
-
-  reg  [9:0]       bar0_rd_address;
-  reg              bar0_rd;
+// local memory
 
   reg  [95:0]      bar0_rp_header;
-  reg  [31:0]      bar0_rp_data;
-  reg              bar0_rp;
-
-  reg  [9:0]       bar0_wr_address;
-  reg  [31:0]      bar0_wr_data;
-  reg  [3:0]       bar0_wr_be;
-  reg              bar0_wr;
-
-  reg  [16:0]      bar1_rd_address;
-  reg              bar1_rd;
-
   reg  [95:0]      bar1_rp_header;
-  wire [31:0]      bar1_rp_data;
-  wire             bar1_rp;
-
-  reg  [16:0]      bar1_wr_address;
-  reg  [31:0]      bar1_wr_data;
-  reg  [3:0]       bar1_wr_be;
-  reg              bar1_wr;
-
-  reg  [16:0]      bar2_rd_address;
-  reg              bar2_rd;
-
   reg  [95:0]      bar2_rp_header;
-  wire [31:0]      bar2_rp_data;
-  wire             bar2_rp;
-
-  reg  [16:0]      bar2_wr_address;
-  reg  [31:0]      bar2_wr_data;
-  reg  [3:0]       bar2_wr_be;
-  reg              bar2_wr;
-
-
-// local memory
 
   reg              spi_clk_valid;
   reg              spi_adc_valid;
@@ -455,28 +429,6 @@ pci_tx pci_tx_inst (
     .pci_tx_full (pci_tx_full)                  // O
 );
 
-adc_app adc_app_inst (
-    .clk(user_clk),
-    .reset(user_reset),
-
-    .started(adc_started),
-    .probing(adc_probing),
-    .running(adc_running),
-    .req_stop(req_stop),
-    .adc_wr(adc_wr),
-    .adc_address(adc_address),
-
-    .rd_address(bar1_rd_address),
-    .rd(bar1_rd),
-
-    .rp_data(bar1_rp_data),
-    .rp(bar1_rp),
-
-    .wr_address(bar1_wr_address),
-    .wr_data(bar1_wr_data),
-    .wr(bar1_wr)
-);
-
 generate
   begin : pci_app
 
@@ -702,398 +654,6 @@ generate
         bar1_wr <= 0;
         bar2_rd <= 0;
         bar2_wr <= 0;
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        bar_control <= 0;
-        bar_adc_test_mode <= 7;
-        adc_start <= 0;
-        adc_stop <= 0;
-
-        spi_clk_valid <= 0;
-        spi_adc_valid <= 0;
-        spi_dac_valid <= 0;
-      end
-      else
-      begin
-        bar_control[0] <= pci_rx_full;
-        bar_control[1] <= pci_tx_full;
-
-        if (adc_started)
-        begin
-          if (adc_probing)
-          begin
-            bar_control[7] <= 1;
-
-            if (adc_running)
-              bar_control[6] <= 1;
-            else
-              bar_control[6] <= 0;
-          end
-          else
-          begin
-            bar_control[6] <= 1;
-            bar_control[7] <= 0;
-          end
-        end
-        else
-        begin
-          bar_control[6] <= 0;
-          bar_control[7] <= 0;
-        end
-
-        if (bar0_rd)
-        begin
-          case (bar0_rd_address)
-            0: bar0_rp_data <= {16'h0, bar_adc_test_mode, bar_control};
-            1: bar0_rp_data <= bar_spi_clk;
-            2: bar0_rp_data <= bar_spi_adc;
-            3: bar0_rp_data <= bar_spi_dac;
-            4: bar0_rp_data <= adc_sysref_cnt[31:0];
-            5: bar0_rp_data <= adc_sysref_cnt[63:32];
-            6: bar0_rp_data <= adc_sync_fail_cnt;
-            7: bar0_rp_data <= adc_sync_ok_cnt;
-            default: bar0_rp_data <= 32'hffffffff;
-          endcase     
-          bar0_rp <= 1;
-        end
-        else
-          bar0_rp <= 0;
-
-        if (bar0_wr)
-        begin
-          case (bar0_wr_address)
-            0: 
-            begin
-              if (bar0_wr_be[0])
-              begin
-                bar_control[6:2] <= bar0_wr_data[6:2];
-                if (bar_control[7] != bar0_wr_data[7])
-                begin
-                  if (bar0_wr_data[7])
-                  begin
-                    if (adc_address != 0)
-                      adc_start <= 1;
-                  end 
-                  else
-                    adc_stop <= 1;
-                end      
-              end
-
-              if (bar0_wr_be[1])
-                bar_adc_test_mode[7:0] <= bar0_wr_data[15:8]; 
-            end
-            
-            1:
-            begin
-              if (bar0_wr_be[0])
-                bar_spi_clk[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                bar_spi_clk[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                bar_spi_clk[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-              begin
-                bar_spi_clk[27:24] <= bar0_wr_data[27:24];
-
-                case (bar0_wr_data[31:28])
-                  12:      
-                  begin
-                    bar_spi_clk[31:28] <= 15;
-                    spi_clk_valid <= 1;
-                  end
-
-                  1, 2:    
-                  begin
-                    bar_spi_clk[31:28] <= 0;
-                    spi_clk_valid <= 1;
-                  end
-
-                  default: 
-                  begin
-                    bar_spi_clk[31:28] <= 0;
-                    spi_clk_valid <= 0;
-                  end                    
-                endcase
-              end
-              else
-                spi_clk_valid <= 0;
-
-              spi_adc_valid <= 0;
-              spi_dac_valid <= 0;
-            end
-
-            2:
-            begin
-              if (bar0_wr_be[0])
-                bar_spi_adc[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                bar_spi_adc[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                bar_spi_adc[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-              begin
-                bar_spi_adc[27:24] <= bar0_wr_data[27:24];
-
-                case (bar0_wr_data[31:28])
-                  12:      
-                  begin
-                    bar_spi_adc[31:28] <= 15;
-                    spi_adc_valid <= 1;
-                  end
-
-                  1, 2:    
-                  begin
-                    bar_spi_adc[31:28] <= 0;
-                    spi_adc_valid <= 1;
-                  end
-
-                  default: 
-                  begin
-                    bar_spi_adc[31:28] <= 0;
-                    spi_adc_valid <= 0;
-                  end
-                endcase
-              end
-              else
-                spi_adc_valid <= 0;
-
-              spi_clk_valid <= 0;
-              spi_dac_valid <= 0;
-            end
-
-            3:
-            begin
-              if (bar0_wr_be[0])
-                bar_spi_dac[7:0] <= bar0_wr_data[7:0];
- 
-              if (bar0_wr_be[1])
-                bar_spi_dac[15:8] <= bar0_wr_data[15:8];
- 
-              if (bar0_wr_be[2])
-                bar_spi_dac[23:16] <= bar0_wr_data[23:16];
-
-              if (bar0_wr_be[3])
-              begin
-                bar_spi_dac[27:24] <= bar0_wr_data[27:24];
-
-                case (bar0_wr_data[31:28])
-                  12:      
-                  begin
-                    bar_spi_dac[31:28] <= 15;
-                    spi_dac_valid <= 1;
-                  end
-
-                  1, 2:    
-                  begin
-                    bar_spi_dac[31:28] <= 0;
-                    spi_dac_valid <= 1;
-                  end
-
-                  default: 
-                  begin
-                    bar_spi_dac[31:28] <= 0;
-                    spi_dac_valid <= 0;
-                  end
-                endcase
-              end
-              else
-                spi_dac_valid <= 0;
-
-              spi_clk_valid <= 0;
-              spi_adc_valid <= 0;
-            end
-            
-            default:
-            begin
-              adc_start <= 0;
-              adc_stop <= 0;
-
-              spi_clk_valid <= 0;
-              spi_adc_valid <= 0;
-              spi_dac_valid <= 0;
-            end
-          endcase
-        end
-        else
-        begin
-          adc_start <= 0;
-
-          if (req_stop)
-            adc_stop <= 1;
-          else
-            adc_stop <= 0;
-
-          spi_clk_valid <= 0;
-          spi_adc_valid <= 0;
-          spi_dac_valid <= 0;
-
-          if (spi_rp_empty)
-            spi_rp_ack <= 0;
-          else
-          begin
-            spi_rp_ack <= 1;
-
-            case (spi_rp_data[29:28])
-              0:
-              begin
-                if (bar_spi_clk[31:28] == 15)
-                begin
-                  if (bar_spi_clk[27:16] == spi_rp_data[27:16])
-                  begin
-                    bar_spi_clk[15:0] <= spi_rp_data[15:0];
-                    bar_spi_clk[31:28] <= 0;
-                  end
-                end
-              end
-
-              1:
-              begin
-                if (bar_spi_adc[31:28] == 15)
-                begin
-                  if (bar_spi_adc[27:16] == spi_rp_data[27:16])
-                  begin
-                    bar_spi_adc[15:0] <= spi_rp_data[15:0];
-                    bar_spi_adc[31:28] <= 0;
-                  end
-                end
-              end
-
-              2:
-              begin
-                if (bar_spi_dac[31:28] == 15)
-                begin
-                  if (bar_spi_dac[27:16] == spi_rp_data[27:16])
-                  begin
-                    bar_spi_dac[15:0] <= spi_rp_data[15:0];
-                    bar_spi_dac[31:28] <= 0;
-                  end
-                end
-              end
-            endcase
-          end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (spi_clk_valid)
-      begin
-        spi_rq_in[23:0] <= bar0_spi_clk[23:0];
-        spi_rq_in[30:29] <= 0;
-
-        case (bar0_spi_clk[31:28])
-          12:
-          begin
-            spi_rq_in[31] <= 1;
-            spi_rq_in[28] <= 1;
-            spi_wr <= 1;
-          end
-
-          2:
-          begin
-            spi_rq_in[31] <= 0;
-            spi_rq_in[28] <= 1;
-            spi_wr <= 1;
-          end
-
-          1:
-          begin
-            spi_rq_in[31] <= 0;
-            spi_rq_in[28] <= 0;
-            spi_wr <= 1;
-          end
-
-          default:
-          begin
-            spi_wr <= 0;
-          end
-        endcase
-      end
-      else
-      begin
-        if (spi_adc_valid)
-        begin
-          spi_rq_in[23:0] <= bar_spi_adc[23:0];
-          spi_rq_in[30:29] <= 1;
-
-          case (bar0_spi_adc[31:28])
-            12:
-            begin
-              spi_rq_in[31] <= 1;
-              spi_rq_in[28] <= 1;
-              spi_wr <= 1;
-            end
-
-            2:
-            begin
-              spi_rq_in[31] <= 0;
-              spi_rq_in[28] <= 1;
-              spi_wr <= 1;
-            end
-
-            1:
-            begin
-              spi_rq_in[31] <= 0;
-              spi_rq_in[28] <= 0;
-              spi_wr <= 1;
-            end
-
-            default:
-            begin
-              spi_wr <= 0;
-            end
-          endcase
-        end
-        else
-        begin
-          if (spi_dac_valid)
-          begin
-            spi_rq_in[23:0] <= bar_spi_dac[23:0];
-            spi_rq_in[30:29] <= 2;
-
-            case (bar0_spi_dac[31:28])
-              12:
-              begin
-                spi_rq_in[31] <= 1;
-                spi_rq_in[28] <= 1;
-                spi_wr <= 1;
-              end
-
-              2:
-              begin
-                spi_rq_in[31] <= 0;
-                spi_rq_in[28] <= 1;
-                spi_wr <= 1;
-              end
-
-              1:
-              begin
-                spi_rq_in[31] <= 0;
-                spi_rq_in[28] <= 0;
-                spi_wr <= 1;
-              end
-
-              default:
-              begin
-                spi_wr <= 0;
-              end
-            endcase
-          end
-          else
-            spi_wr <= 0;
-        end
       end
     end
 

@@ -23,7 +23,7 @@ module pci_rx (
   input       [15:0]             m_axis_rx_tkeep;
   input                          m_axis_rx_tlast;
   input                          m_axis_rx_tvalid;
-  output reg                     m_axis_rx_tready;
+  output wire                    m_axis_rx_tready;
   input       [21:0]             m_axis_rx_tuser;
 
   output reg  [1023:0]           pci_rx_data;
@@ -44,7 +44,7 @@ module pci_rx (
   reg  [7:0]     q_pkt_type;
   reg  [9:0]     q_pkt_len;
   reg  [7:0]     q_pkt_bar;
-  reg  [11:0]    q_pkt_count;
+  wire [11:0]    q_pkt_count;
 
   wire [127:0]   pkt_data;
   wire [63:0]    pkt_header;
@@ -63,19 +63,19 @@ ila_0 ila_0_inst (
 	.probe6(m_axis_rx_tdata[127:64]),  // input wire [63:0]  probe0  
 	.probe7(q_shift_pos),              // input wire [2:0]  probe0  
 	.probe8(q_pkt_done),               // input wire [0:0]  probe0  
-	.probe10(q_pkt_header),            // input wire [127:0]  probe0  
-	.probe11(q_pkt_type),              // input wire [7:0]  probe0  
-	.probe12(q_pkt_len),               // input wire [9:0]  probe0  
-	.probe13(q_pkt_data[895:768]),     // input wire [127:0]  probe0  
-	.probe14(q_pkt_data[1023:896]),    // input wire [127:0]  probe0  
-	.probe15(pci_rx_data[63:0]),       // input wire [63:0]  probe0  
-	.probe16(pci_rx_data[127:64]),     // input wire [63:0]  probe0  
-	.probe17(pci_rx_header[63:0]),     // input wire [63:0]  probe0  
-	.probe18(pci_rx_header[127:64]),   // input wire [63:0]  probe0  
-	.probe19(pci_rx_be[63:0]),         // input wire [63:0]  probe0  
-	.probe20(pci_rx_count),            // input wire [7:0]  probe0  
-	.probe21(pci_rx_bar),              // input wire [7:0]  probe0  
-	.probe22(pci_rx_valid)             // input wire [0:0]  probe0  
+	.probe9(q_pkt_header),            // input wire [127:0]  probe0  
+	.probe10(q_pkt_type),              // input wire [7:0]  probe0  
+	.probe11(q_pkt_len),               // input wire [9:0]  probe0  
+	.probe12(q_pkt_data[895:768]),     // input wire [127:0]  probe0  
+	.probe13(q_pkt_data[1023:896]),    // input wire [127:0]  probe0  
+	.probe14(pci_rx_data[63:0]),       // input wire [63:0]  probe0  
+	.probe15(pci_rx_data[127:64]),     // input wire [63:0]  probe0  
+	.probe16(pci_rx_header[63:0]),     // input wire [63:0]  probe0  
+	.probe17(pci_rx_header[127:64]),   // input wire [63:0]  probe0  
+	.probe18(pci_rx_be[63:0]),         // input wire [63:0]  probe0  
+	.probe19(pci_rx_count),            // input wire [7:0]  probe0  
+	.probe20(pci_rx_bar),              // input wire [7:0]  probe0  
+	.probe21(pci_rx_valid)             // input wire [0:0]  probe0  
 ); 
 	
 function [127:0] first_and_last_to_be;

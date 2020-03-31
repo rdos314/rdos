@@ -129,6 +129,31 @@ module adc_mem (
   wire [63:0]      req_address = pci_rx_header[95:64];
   wire [7:0]       req_bar = pci_rx_control[15:8];
 
+
+spi_fifo_rq spi_fifo_rq_inst (
+  .rst(user_reset),             // input wire rst
+  .wr_clk(user_clk),            // input wire wr_clk
+  .rd_clk(up_clk),              // input wire rd_clk
+  .din(pci_spi_rq_in),          // input wire [31 : 0] din
+  .wr_en(pci_spi_wr),           // input wire wr_en
+  .rd_en(up_spi_rq_ack),        // input wire rd_en
+  .dout(up_spi_rq_out),         // output wire [31 : 0] dout
+  .full(),                      // output wire full
+  .empty(up_spi_rq_empty)       // output wire empty
+);
+
+spi_fifo_rp spi_fifo_rp_inst (
+  .rst(user_reset),             // input wire rst
+  .wr_clk(up_clk),              // input wire wr_clk
+  .rd_clk(user_clk),            // input wire rd_clk
+  .din(up_spi_rp_in),           // input wire [29 : 0] din
+  .wr_en(up_spi_rp),            // input wire wr_en
+  .rd_en(pci_spi_rp_ack),       // input wire rd_en
+  .dout(pci_spi_rp_out),        // output wire [29 : 0] dout
+  .full(),                      // output wire full
+  .empty(pci_spi_rp_empty)      // output wire empty
+);
+
 ila_1 ila_1_inst (
   .clk(clk),                              // input wire clk
   .probe0(pci_rx_empty),                  // input wire [0:0]  probe1 
@@ -704,6 +729,399 @@ generate
             bar2_wr <= 0;
           end
         endcase
+      end
+    end
+
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (user_reset)
+      begin
+        bar_control <= 0;
+        bar_adc_test_mode <= 7;
+        adc_start <= 0;
+        adc_stop <= 0;
+
+        spi_clk_valid <= 0;
+        spi_adc_valid <= 0;
+        spi_dac_valid <= 0;
+      end
+      else
+      begin
+        bar_control[0] <= pci_rx_full;
+        bar_control[1] <= pci_tx_full;
+
+        if (adc_started)
+        begin
+          if (adc_probing)
+          begin
+            bar_control[7] <= 1;
+
+            if (adc_running)
+              bar_control[6] <= 1;
+            else
+              bar_control[6] <= 0;
+          end
+          else
+          begin
+            bar_control[6] <= 1;
+            bar_control[7] <= 0;
+          end
+        end
+        else
+        begin
+          bar_control[6] <= 0;
+          bar_control[7] <= 0;
+        end
+
+        if (bar0_rd)
+        begin
+          case (bar0_rd_address)
+            0: bar0_rp_data <= {16'h0, bar_adc_test_mode, bar_control};
+            1: bar0_rp_data <= bar_spi_clk;
+            2: bar0_rp_data <= bar_spi_adc;
+            3: bar0_rp_data <= bar_spi_dac;
+            4: bar0_rp_data <= adc_sysref_cnt[31:0];
+            5: bar0_rp_data <= adc_sysref_cnt[63:32];
+            6: bar0_rp_data <= adc_sync_fail_cnt;
+            7: bar0_rp_data <= adc_sync_ok_cnt;
+            default: bar0_rp_data <= 32'hffffffff;
+          endcase     
+          bar0_rp <= 1;
+        end
+        else
+          bar0_rp <= 0;
+
+        if (bar0_wr)
+        begin
+          case (bar0_wr_address)
+            0: 
+            begin
+              if (bar0_wr_be[0])
+              begin
+                bar_control[6:2] <= bar0_wr_data[6:2];
+                if (bar_control[7] != bar0_wr_data[7])
+                begin
+                  if (bar0_wr_data[7])
+                  begin
+                    if (adc_address != 0)
+                      adc_start <= 1;
+                  end 
+                  else
+                    adc_stop <= 1;
+                end      
+              end
+
+              if (bar0_wr_be[1])
+                bar_adc_test_mode[7:0] <= bar0_wr_data[15:8]; 
+            end
+            
+            1:
+            begin
+              if (bar0_wr_be[0])
+                bar_spi_clk[7:0] <= bar0_wr_data[7:0];
+ 
+              if (bar0_wr_be[1])
+                bar_spi_clk[15:8] <= bar0_wr_data[15:8];
+ 
+              if (bar0_wr_be[2])
+                bar_spi_clk[23:16] <= bar0_wr_data[23:16];
+
+              if (bar0_wr_be[3])
+              begin
+                bar_spi_clk[27:24] <= bar0_wr_data[27:24];
+
+                case (bar0_wr_data[31:28])
+                  12:      
+                  begin
+                    bar_spi_clk[31:28] <= 15;
+                    spi_clk_valid <= 1;
+                  end
+
+                  1, 2:    
+                  begin
+                    bar_spi_clk[31:28] <= 0;
+                    spi_clk_valid <= 1;
+                  end
+
+                  default: 
+                  begin
+                    bar_spi_clk[31:28] <= 0;
+                    spi_clk_valid <= 0;
+                  end                    
+                endcase
+              end
+              else
+                spi_clk_valid <= 0;
+
+              spi_adc_valid <= 0;
+              spi_dac_valid <= 0;
+            end
+
+            2:
+            begin
+              if (bar0_wr_be[0])
+                bar_spi_adc[7:0] <= bar0_wr_data[7:0];
+ 
+              if (bar0_wr_be[1])
+                bar_spi_adc[15:8] <= bar0_wr_data[15:8];
+ 
+              if (bar0_wr_be[2])
+                bar_spi_adc[23:16] <= bar0_wr_data[23:16];
+
+              if (bar0_wr_be[3])
+              begin
+                bar_spi_adc[27:24] <= bar0_wr_data[27:24];
+
+                case (bar0_wr_data[31:28])
+                  12:      
+                  begin
+                    bar_spi_adc[31:28] <= 15;
+                    spi_adc_valid <= 1;
+                  end
+
+                  1, 2:    
+                  begin
+                    bar_spi_adc[31:28] <= 0;
+                    spi_adc_valid <= 1;
+                  end
+
+                  default: 
+                  begin
+                    bar_spi_adc[31:28] <= 0;
+                    spi_adc_valid <= 0;
+                  end
+                endcase
+              end
+              else
+                spi_adc_valid <= 0;
+
+              spi_clk_valid <= 0;
+              spi_dac_valid <= 0;
+            end
+
+            3:
+            begin
+              if (bar0_wr_be[0])
+                bar_spi_dac[7:0] <= bar0_wr_data[7:0];
+ 
+              if (bar0_wr_be[1])
+                bar_spi_dac[15:8] <= bar0_wr_data[15:8];
+ 
+              if (bar0_wr_be[2])
+                bar_spi_dac[23:16] <= bar0_wr_data[23:16];
+
+              if (bar0_wr_be[3])
+              begin
+                bar_spi_dac[27:24] <= bar0_wr_data[27:24];
+
+                case (bar0_wr_data[31:28])
+                  12:      
+                  begin
+                    bar_spi_dac[31:28] <= 15;
+                    spi_dac_valid <= 1;
+                  end
+
+                  1, 2:    
+                  begin
+                    bar_spi_dac[31:28] <= 0;
+                    spi_dac_valid <= 1;
+                  end
+
+                  default: 
+                  begin
+                    bar_spi_dac[31:28] <= 0;
+                    spi_dac_valid <= 0;
+                  end
+                endcase
+              end
+              else
+                spi_dac_valid <= 0;
+
+              spi_clk_valid <= 0;
+              spi_adc_valid <= 0;
+            end
+            
+            default:
+            begin
+              adc_start <= 0;
+              adc_stop <= 0;
+
+              spi_clk_valid <= 0;
+              spi_adc_valid <= 0;
+              spi_dac_valid <= 0;
+            end
+          endcase
+        end
+        else
+        begin
+          adc_start <= 0;
+
+          if (req_stop)
+            adc_stop <= 1;
+          else
+            adc_stop <= 0;
+
+          spi_clk_valid <= 0;
+          spi_adc_valid <= 0;
+          spi_dac_valid <= 0;
+
+          if (spi_rp_empty)
+            spi_rp_ack <= 0;
+          else
+          begin
+            spi_rp_ack <= 1;
+
+            case (spi_rp_data[29:28])
+              0:
+              begin
+                if (bar_spi_clk[31:28] == 15)
+                begin
+                  if (bar_spi_clk[27:16] == spi_rp_data[27:16])
+                  begin
+                    bar_spi_clk[15:0] <= spi_rp_data[15:0];
+                    bar_spi_clk[31:28] <= 0;
+                  end
+                end
+              end
+
+              1:
+              begin
+                if (bar_spi_adc[31:28] == 15)
+                begin
+                  if (bar_spi_adc[27:16] == spi_rp_data[27:16])
+                  begin
+                    bar_spi_adc[15:0] <= spi_rp_data[15:0];
+                    bar_spi_adc[31:28] <= 0;
+                  end
+                end
+              end
+
+              2:
+              begin
+                if (bar_spi_dac[31:28] == 15)
+                begin
+                  if (bar_spi_dac[27:16] == spi_rp_data[27:16])
+                  begin
+                    bar_spi_dac[15:0] <= spi_rp_data[15:0];
+                    bar_spi_dac[31:28] <= 0;
+                  end
+                end
+              end
+            endcase
+          end
+        end
+      end
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (spi_clk_valid)
+      begin
+        spi_rq_in[23:0] <= bar0_spi_clk[23:0];
+        spi_rq_in[30:29] <= 0;
+
+        case (bar0_spi_clk[31:28])
+          12:
+          begin
+            spi_rq_in[31] <= 1;
+            spi_rq_in[28] <= 1;
+            spi_wr <= 1;
+          end
+
+          2:
+          begin
+            spi_rq_in[31] <= 0;
+            spi_rq_in[28] <= 1;
+            spi_wr <= 1;
+          end
+
+          1:
+          begin
+            spi_rq_in[31] <= 0;
+            spi_rq_in[28] <= 0;
+            spi_wr <= 1;
+          end
+
+          default:
+          begin
+            spi_wr <= 0;
+          end
+        endcase
+      end
+      else
+      begin
+        if (spi_adc_valid)
+        begin
+          spi_rq_in[23:0] <= bar_spi_adc[23:0];
+          spi_rq_in[30:29] <= 1;
+
+          case (bar0_spi_adc[31:28])
+            12:
+            begin
+              spi_rq_in[31] <= 1;
+              spi_rq_in[28] <= 1;
+              spi_wr <= 1;
+            end
+
+            2:
+            begin
+              spi_rq_in[31] <= 0;
+              spi_rq_in[28] <= 1;
+              spi_wr <= 1;
+            end
+
+            1:
+            begin
+              spi_rq_in[31] <= 0;
+              spi_rq_in[28] <= 0;
+              spi_wr <= 1;
+            end
+
+            default:
+            begin
+              spi_wr <= 0;
+            end
+          endcase
+        end
+        else
+        begin
+          if (spi_dac_valid)
+          begin
+            spi_rq_in[23:0] <= bar_spi_dac[23:0];
+            spi_rq_in[30:29] <= 2;
+
+            case (bar0_spi_dac[31:28])
+              12:
+              begin
+                spi_rq_in[31] <= 1;
+                spi_rq_in[28] <= 1;
+                spi_wr <= 1;
+              end
+
+              2:
+              begin
+                spi_rq_in[31] <= 0;
+                spi_rq_in[28] <= 1;
+                spi_wr <= 1;
+              end
+
+              1:
+              begin
+                spi_rq_in[31] <= 0;
+                spi_rq_in[28] <= 0;
+                spi_wr <= 1;
+              end
+
+              default:
+              begin
+                spi_wr <= 0;
+              end
+            endcase
+          end
+          else
+            spi_wr <= 0;
+        end
       end
     end
 
