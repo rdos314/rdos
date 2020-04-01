@@ -585,6 +585,25 @@ ila_4 ila_4_inst (
 generate
   begin : adc
 
+    always @ ( posedge user_clk ) 
+    begin
+      if (pci_bar0_rd)
+      begin
+        up_bar0_rd_address <= pci_bar0_rd_address;
+        pci_up_bar0_rd <= 1;
+        pci_bar0_rd_cnt <= 0;
+      end
+      else
+      begin
+        if (pci_up_bar0_rd)
+        begin
+          if (pci_bar0_rd_cnt[2])
+            pci_up_bar0_rd <= 0;
+          else
+            pci_bar0_rd_cnt <= pci_bar0_rd_cnt + 1;
+        end
+      end
+    end
 
     always @ ( posedge up_clk ) 
     begin
@@ -596,7 +615,6 @@ generate
       else
         up_bar0_rd <= 0;
     end
-
 
     always @ ( posedge user_clk ) 
     begin
