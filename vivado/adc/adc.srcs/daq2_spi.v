@@ -53,7 +53,7 @@ module daq2_spi (
   wire [11:0]             spi_rq_adr;
   wire [15:0]             spi_rq_data_out;
 
-  reg [29:0]              spi_rp_in;
+  reg [29:0]              spi_rp_data_in;
   reg                     spi_rp_wr;
   wire                    spi_rp_empty;
 
@@ -138,7 +138,6 @@ spi_fifo_rp spi_fifo_rp_inst (
       spi_cs_adc <= 1;
       spi_cs_dac <= 1;
 
-      spi_rq_ack <= 0;
       spi_rp_wr <= 0;
 
       spi_size <= 16;
@@ -157,7 +156,6 @@ spi_fifo_rp spi_fifo_rp_inst (
       if (spi_delay)
       begin
         spi_rp_wr <= 0;
-        spi_rq_ack <= 0;
         
         if (spi_delay == 1)
         begin
@@ -234,8 +232,6 @@ spi_fifo_rp spi_fifo_rp_inst (
 
               if (adc_running)
                 adc_done <= 1;
-              else
-                spi_rq_ack <= 1;
             end
             else
             begin

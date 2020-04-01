@@ -6,7 +6,7 @@ module control_bar (
   input                   rd,
 
   output reg [31:0]       rp_data,
-  output                  rp,
+  output reg              rp,
 
   input [9:0]             wr_address,
   input [31:0]            wr_data,
@@ -49,9 +49,9 @@ module control_bar (
 generate
   begin : ctrl_bar_gen
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge up_clk ) 
     begin
-      if (user_reset)
+      if (up_reset)
       begin
         state <= 0;
         adc_test_mode <= 7;
@@ -143,7 +143,7 @@ generate
                 if (wr_be[2])
                   bar_spi_clk[23:16] <= wr_data[23:16];
 
-                if (bar0_wr_be[3])
+                if (wr_be[3])
                 begin
                   bar_spi_clk[27:24] <= wr_data[27:24];
 
@@ -337,14 +337,14 @@ generate
     end
 
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge up_clk ) 
     begin
       if (spi_clk_valid)
       begin
-        spi_rq_data[23:0] <= bar0_spi_clk[23:0];
+        spi_rq_data[23:0] <= bar_spi_clk[23:0];
         spi_rq_data[30:29] <= 0;
 
-        case (bar0_spi_clk[31:28])
+        case (bar_spi_clk[31:28])
           12:
           begin
             spi_rq_data[31] <= 1;
@@ -379,7 +379,7 @@ generate
           spi_rq_data[23:0] <= bar_spi_adc[23:0];
           spi_rq_data[30:29] <= 1;
 
-          case (bar0_spi_adc[31:28])
+          case (bar_spi_adc[31:28])
             12:
             begin
               spi_rq_data[31] <= 1;
@@ -414,7 +414,7 @@ generate
             spi_rq_data[23:0] <= bar_spi_dac[23:0];
             spi_rq_data[30:29] <= 2;
 
-            case (bar0_spi_dac[31:28])
+            case (bar_spi_dac[31:28])
               12:
               begin
                 spi_rq_data[31] <= 1;

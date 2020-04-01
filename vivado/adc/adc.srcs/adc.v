@@ -447,7 +447,7 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
     
-    .adc_wr(pci_adc_wr),
+    .adc_send(pci_adc_wr),
     .adc_address(pci_adc_address),
     .adc_data(pci_adc_data)
 );
@@ -476,7 +476,7 @@ daq2_spi daq2_spi_inst (
     .adc_in_data(adc_spi_in_data),
     .adc_out_data(adc_spi_out_data),
     .adc_running(adc_spi_running),
-    .adc_done(adc_spi_done),
+    .adc_done(adc_spi_done)
 );
 
 control_bar control_bar_inst (

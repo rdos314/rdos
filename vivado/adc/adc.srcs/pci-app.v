@@ -47,7 +47,7 @@ module pci_app (
     bar2_wr_be,
     bar2_wr,
 
-    adc_wr,
+    adc_send,
     adc_address,
     adc_data
 );
@@ -101,7 +101,7 @@ module pci_app (
   output reg [3:0]     bar2_wr_be;
   output reg           bar2_wr;
 
-  input wire           adc_wr;
+  input wire           adc_send;
   input wire [63:0]    adc_address;
   input wire [1023:0]  adc_data;
 
@@ -148,9 +148,9 @@ module pci_app (
 
 // local -> PCIe
 
-  wire [1023:0]    pci_tx_data;
-  wire [127:0]     pci_tx_header;
-  wire             pci_tx_wr;
+  reg [1023:0]     pci_tx_data;
+  reg [127:0]      pci_tx_header;
+  reg              pci_tx_wr;
   wire             pci_tx_full;
 
 // local memory
@@ -180,7 +180,7 @@ module pci_app (
   reg              q_bar1_send;
   reg              bar1_ack;
 
-  reg  [95:0]      bar2_rp_header;
+  reg  [95:0]      q_bar2_rp_header;
   reg  [31:0]      q_bar2_data;
   reg              q_bar2_send;
   reg              bar2_ack;
@@ -682,7 +682,7 @@ generate
     always @ ( posedge user_clk ) 
     begin
       if (user_reset)
-        adc_send <= 0;
+        q_adc_send <= 0;
       else
       begin
         if (adc_send)
@@ -763,7 +763,7 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      if (reset)
+      if (user_reset)
       begin
         adc_send_ack <= 0;
         bar0_ack <= 0;

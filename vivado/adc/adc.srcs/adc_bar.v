@@ -8,7 +8,7 @@ module adc_bar (
   output reg [31:0]       rp_data,
   output reg              rp,
 
-  input wire [9:0]        wr_address,
+  input wire [16:0]       wr_address,
   input wire [31:0]       wr_data,
   input wire [3:0]        wr_be,
   input wire              wr,
@@ -70,9 +70,9 @@ begin : adc_app
       rp <= 0;
   end
 
-  always @ ( posedge clk ) 
+  always @ ( posedge up_clk ) 
   begin
-    if (reset)
+    if (up_reset)
     begin
       bar_rd <= 0;
       q_rd_adr <= 0;
@@ -104,9 +104,9 @@ begin : adc_app
     end
   end
 
-  always @ ( posedge clk ) 
+  always @ ( posedge up_clk ) 
   begin
-    if (reset)
+    if (up_reset)
     begin
       adc_valid <= 0;
       adc_address[63:0] <= 0;
