@@ -468,7 +468,7 @@ daq2_spi daq2_spi_inst (
 
     .spi_rp (spi_rp),
     .spi_rp_data (spi_rp_data),
-    .spi_rp_ack (spi_rp_ack)
+    .spi_rp_ack (spi_rp_ack),
 
     .adc_read(adc_spi_read),
     .adc_write(adc_spi_write),
@@ -498,7 +498,7 @@ control_bar control_bar_inst (
 
     .spi_rp (spi_rp),
     .spi_rp_data (spi_rp_data),
-    .spi_rp_ack (spi_rp_ack)
+    .spi_rp_ack (spi_rp_ack),
 
     .adc_address(up_adc_address),
     .adc_sysref_cnt(up_adc_sysref_cnt),
@@ -761,7 +761,7 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      pci_adc_address <= up_adc_adr;
+      pci_adc_address <= up_adc_address;
       pci_adc_data <= rx_adc_data;
       pci_rx_wr <= rx_adc_wr;
     end
@@ -794,7 +794,6 @@ generate
     begin
       if (user_reset)
       begin
-        pci_up_start <= 0;
         up_reset <= 1;
         pci_reset_cnt <= 0;
       end
