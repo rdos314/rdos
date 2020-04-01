@@ -54,9 +54,8 @@
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
 module spi_fifo_rp (
+  clk,
   rst,
-  wr_clk,
-  rd_clk,
   din,
   wr_en,
   rd_en,
@@ -65,13 +64,10 @@ module spi_fifo_rp (
   empty
 );
 
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME core_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 core_clk CLK" *)
+input wire clk;
 input wire rst;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME write_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *)
-(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 write_clk CLK" *)
-input wire wr_clk;
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME read_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0" *)
-(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 read_clk CLK" *)
-input wire rd_clk;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA" *)
 input wire [29 : 0] din;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_EN" *)
@@ -86,7 +82,7 @@ output wire full;
 output wire empty;
 
   fifo_generator_v13_2_5 #(
-    .C_COMMON_CLOCK(0),
+    .C_COMMON_CLOCK(1),
     .C_SELECT_XPM(0),
     .C_COUNT_TYPE(0),
     .C_DATA_COUNT_WIDTH(10),
@@ -122,15 +118,15 @@ output wire empty;
     .C_PRELOAD_LATENCY(0),
     .C_PRELOAD_REGS(1),
     .C_PRIM_FIFO_TYPE("1kx36"),
-    .C_PROG_EMPTY_THRESH_ASSERT_VAL(6),
-    .C_PROG_EMPTY_THRESH_NEGATE_VAL(7),
+    .C_PROG_EMPTY_THRESH_ASSERT_VAL(4),
+    .C_PROG_EMPTY_THRESH_NEGATE_VAL(5),
     .C_PROG_EMPTY_TYPE(0),
-    .C_PROG_FULL_THRESH_ASSERT_VAL(1017),
-    .C_PROG_FULL_THRESH_NEGATE_VAL(1016),
+    .C_PROG_FULL_THRESH_ASSERT_VAL(1023),
+    .C_PROG_FULL_THRESH_NEGATE_VAL(1022),
     .C_PROG_FULL_TYPE(0),
     .C_RD_DATA_COUNT_WIDTH(10),
     .C_RD_DEPTH(1024),
-    .C_RD_FREQ(250),
+    .C_RD_FREQ(1),
     .C_RD_PNTR_WIDTH(10),
     .C_UNDERFLOW_LOW(0),
     .C_USE_DOUT_RST(0),
@@ -144,7 +140,7 @@ output wire empty;
     .C_WR_ACK_LOW(0),
     .C_WR_DATA_COUNT_WIDTH(10),
     .C_WR_DEPTH(1024),
-    .C_WR_FREQ(100),
+    .C_WR_FREQ(1),
     .C_WR_PNTR_WIDTH(10),
     .C_WR_RESPONSE_LATENCY(1),
     .C_MSGON_VAL(1),
@@ -291,12 +287,12 @@ output wire empty;
   ) inst (
     .backup(1'D0),
     .backup_marker(1'D0),
-    .clk(1'D0),
+    .clk(clk),
     .rst(rst),
     .srst(1'D0),
-    .wr_clk(wr_clk),
+    .wr_clk(1'D0),
     .wr_rst(1'D0),
-    .rd_clk(rd_clk),
+    .rd_clk(1'D0),
     .rd_rst(1'D0),
     .din(din),
     .wr_en(wr_en),

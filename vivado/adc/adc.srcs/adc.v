@@ -548,7 +548,9 @@ ila_3 ila_3_inst (
 	.probe6(pci_bar0_wr_be),           // input wire [3:0]  probe0  
 	.probe7(pci_bar0_wr),              // input wire [0:0]  probe0  
 	.probe8(pci_up_bar0_wr),           // input wire [0:0]  probe0  
-	.probe9(pci_up_bar0_wr_cnt)        // input wire [2:0]  probe0  
+	.probe9(pci_up_bar0_wr_cnt),       // input wire [2:0]  probe0  
+	.probe10(pci_bar0_rp_address),      // input wire [31:0]  probe0  
+	.probe11(pci_bar0_rp)               // input wire [0:0]  probe0  
 ); 
 
 
@@ -561,7 +563,9 @@ ila_4 ila_4_inst (
 	.probe4(up_bar0_wr_data),          // input wire [31:0]  probe0  
 	.probe5(up_bar0_wr_be),            // input wire [3:0]  probe0  
 	.probe6(up_bar0_wr),               // input wire [0:0]  probe0  
-	.probe7(curr_bar0_wr)              // input wire [0:0]  probe0  
+	.probe7(curr_bar0_wr),             // input wire [0:0]  probe0  
+	.probe8(up_bar0_rp),               // input wire [0:0]  probe0  
+	.probe9(up_bar0_rp_data)           // input wire [31:0]  probe0  
 ); 
 
  //-----------------------------I/O BUFFERS------------------------//

@@ -99,27 +99,25 @@ ila_5 ila5_inst (
 );
 
 spi_fifo_rq spi_fifo_rq_inst (
-  .rst(up_reset),               // input wire rst
-  .wr_clk(up_clk),              // input wire wr_clk
-  .rd_clk(up_clk),              // input wire rd_clk
-  .din(spi_rq_data),            // input wire [31 : 0] din
-  .wr_en(spi_rq),               // input wire wr_en
-  .rd_en(spi_rq_ack),           // input wire rd_en
-  .dout(spi_rq_out),            // output wire [31 : 0] dout
-  .full(),                      // output wire full
-  .empty(spi_rq_empty)          // output wire empty
+  .clk(up_clk),                // input wire clk
+  .rst(up_reset),              // input wire rst
+  .din(spi_rq_data),           // input wire [31 : 0] din
+  .wr_en(spi_rq),              // input wire wr_en
+  .rd_en(spi_rq_ack),          // input wire rd_en
+  .dout(spi_rq_out),           // output wire [31 : 0] dout
+  .full(),                     // output wire full
+  .empty(spi_rq_empty)         // output wire empty
 );
 
 spi_fifo_rp spi_fifo_rp_inst (
-  .rst(up_reset),               // input wire rst
-  .wr_clk(up_clk),              // input wire wr_clk
-  .rd_clk(up_clk),              // input wire rd_clk
-  .din(spi_rp_data_in),         // input wire [29 : 0] din
-  .wr_en(spi_rp_wr),            // input wire wr_en
-  .rd_en(spi_rp_ack),           // input wire rd_en
-  .dout(spi_rp_data),           // output wire [29 : 0] dout
-  .full(),                      // output wire full
-  .empty(spi_rp_empty)          // output wire empty
+  .clk(up_clk),                // input wire clk
+  .rst(up_reset),              // input wire rst
+  .din(spi_rp_data_in),        // input wire [29 : 0] din
+  .wr_en(spi_rp_wr),           // input wire wr_en
+  .rd_en(spi_rp_ack),          // input wire rd_en
+  .dout(spi_rp_data),          // output wire [29 : 0] dout
+  .full(),                     // output wire full
+  .empty(spi_rp_empty)         // output wire empty
 );
 
   assign spi_rq_rd = spi_rq_out[31];
