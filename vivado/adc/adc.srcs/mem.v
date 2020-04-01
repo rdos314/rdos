@@ -130,30 +130,6 @@ module adc_mem (
   wire [7:0]       req_bar = pci_rx_control[15:8];
 
 
-spi_fifo_rq spi_fifo_rq_inst (
-  .rst(user_reset),             // input wire rst
-  .wr_clk(user_clk),            // input wire wr_clk
-  .rd_clk(up_clk),              // input wire rd_clk
-  .din(pci_spi_rq_in),          // input wire [31 : 0] din
-  .wr_en(pci_spi_wr),           // input wire wr_en
-  .rd_en(up_spi_rq_ack),        // input wire rd_en
-  .dout(up_spi_rq_out),         // output wire [31 : 0] dout
-  .full(),                      // output wire full
-  .empty(up_spi_rq_empty)       // output wire empty
-);
-
-spi_fifo_rp spi_fifo_rp_inst (
-  .rst(user_reset),             // input wire rst
-  .wr_clk(up_clk),              // input wire wr_clk
-  .rd_clk(user_clk),            // input wire rd_clk
-  .din(up_spi_rp_in),           // input wire [29 : 0] din
-  .wr_en(up_spi_rp),            // input wire wr_en
-  .rd_en(pci_spi_rp_ack),       // input wire rd_en
-  .dout(pci_spi_rp_out),        // output wire [29 : 0] dout
-  .full(),                      // output wire full
-  .empty(pci_spi_rp_empty)      // output wire empty
-);
-
 ila_1 ila_1_inst (
   .clk(clk),                              // input wire clk
   .probe0(pci_rx_empty),                  // input wire [0:0]  probe1 

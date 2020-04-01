@@ -1,46 +1,22 @@
-module adc_app (
-  clk,
-  reset,
+module adc_bar (
+  input wire              up_reset,
+  input wire              up_clk,
 
-  started,
-  probing,
-  running,
-  req_stop,
+  input wire [16:0]       rd_address,
+  input wire              rd,
 
-  adc_wr,
-  adc_address,
+  output reg [31:0]       rp_data,
+  output reg              rp,
 
-  rd_address,
-  rd,
+  input wire [9:0]        wr_address,
+  input wire [31:0]       wr_data,
+  input wire [3:0]        wr_be,
+  input wire              wr,
 
-  rp_data,
-  rp,
-
-  wr_address,
-  wr_data,
-  wr
+  input wire [16:0]       adc_index,
+  output reg [63:0]       adc_address,
+  output reg              adc_valid
 );
-
-  input wire             clk;
-  input wire             reset;
-
-  input wire             started;
-  input wire             probing;
-  input wire             running;
-  output reg             req_stop;
-
-  input wire             adc_wr;
-  output reg [63:0]      adc_address;
-
-  input wire [16:0]      rd_address;
-  input wire             rd;
-
-  output reg [31:0]      rp_data;
-  output reg             rp;
-
-  input wire [16:0]      wr_address;
-  input wire [31:0]      wr_data;
-  input wire             wr;
 
 // local bar
 
@@ -54,18 +30,17 @@ module adc_app (
   wire [15:0]            bar_rd_adr;
   wire [19:0]            bar_rd_data;
 
-// PCIe domain
   reg  [15:0]            q_rd_adr;
-  reg  [15:0]            sample_index;
-  reg  [63:0]            next_address;
+
+  reg  [16:0]            adc_curr_index;
 
 
 bram_adc bram_adc_inst (
-  .clka(clk),          // input wire clka
+  .clka(up_clk),       // input wire clka
   .wea(wr),            // input wire [0 : 0] wea
   .addra(bar_wr_adr),  // input wire [15 : 0] addra
   .dina(bar_wr_data),  // input wire [19 : 0] dina
-  .clkb(clk),          // input wire clkb
+  .clkb(up_clk),       // input wire clkb
   .addrb(bar_rd_adr),  // input wire [15 : 0] addrb
   .doutb(bar_rd_data)  // output wire [19 : 0] doutb
 );
@@ -73,9 +48,9 @@ bram_adc bram_adc_inst (
 generate
 begin : adc_app
 
-  assign bar_rd_adr = rd ? rd_address[16:1] : sample_index;
+  assign bar_rd_adr = rd ? rd_address[16:1] : adc_index;
 
-  always @ ( posedge clk ) 
+  always @ ( posedge up_clk ) 
   begin
     if (bar_rd)
     begin
@@ -133,52 +108,26 @@ begin : adc_app
   begin
     if (reset)
     begin
-      sample_index <= 0;
+      adc_valid <= 0;
       adc_address[63:0] <= 0;
-      next_address[63:0] <= 0;
-      req_stop <= 0;
+      adc_curr_index <= 0;
     end
     else
     begin
-      if (running)
+      if (adc_curr_index == adc_index)
       begin
-        if (adc_wr)
-        begin
-          if (adc_address[20:7] == 14'b11111111111111)
-          begin
-            if (next_address[40:21] == 0)
-              req_stop <= 1;
-            else
-            begin
-              adc_address <= next_address;
-              sample_index <= sample_index + 1;
-              next_address <= 0;
-            end
-          end
-          else
-            adc_address[20:7] <= adc_address[20:7] + 1;
-        end        
-        else
-        begin
-          if (q_rd_adr == sample_index)
-          begin
-            next_address[20:0] <= 0;
-            next_address[40:21] <= bar_rd_data;
-            next_address[63:41] <= 0;
-          end
-        end
-      end
-      else
-      begin
-        req_stop <= 0;
-        sample_index <= 0;
-
-        if (q_rd_adr == 0)
+        if (q_rd_adr == adc_index)
         begin
           adc_address[20:0] <= 0;
           adc_address[40:21] <= bar_rd_data;
           adc_address[63:41] <= 0;
+          adc_valid <= 1;
         end
+      end
+      else
+      begin
+        adc_curr_index <= adc_index;
+        adc_valid <= 0;
       end
     end
   end
