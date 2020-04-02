@@ -1,4 +1,4 @@
-module adc_bar (
+module phys_bar (
   input wire              up_reset,
   input wire              up_clk,
 
@@ -13,9 +13,9 @@ module adc_bar (
   input wire [3:0]        wr_be,
   input wire              wr,
 
-  input wire [16:0]       adc_index,
-  output reg [63:0]       adc_address,
-  output reg              adc_valid
+  input wire [16:0]       index,
+  output reg [63:0]       phys,
+  output reg              valid
 );
 
 // local bar
@@ -36,10 +36,10 @@ module adc_bar (
   reg  [15:0]            q_wr_adr;
   reg  [19:0]            q_wr_data;
 
-  reg  [16:0]            adc_curr_index;
+  reg  [16:0]            curr_index;
 
 
-bram_adc bram_adc_inst (
+bram_phys bram_phys_inst (
   .clka(up_clk),      // input wire clka
   .wea(q_wr),         // input wire [0 : 0] wea
   .addra(q_wr_adr),   // input wire [15 : 0] addra
@@ -49,39 +49,10 @@ bram_adc bram_adc_inst (
   .doutb(q_rd_data)   // output wire [19 : 0] doutb
 );
 
-
-ila_4 ila_4_inst (
-	.clk(up_clk),                         // input wire clk
-	.probe0(rd_address),       // input wire [16:0]  probe0  
-	.probe1(rd),               // input wire [0:0]  probe0  
-	.probe2(rp),               // input wire [0:0]  probe0  
-	.probe3(rp_data),           // input wire [31:0]  probe0  
-	.probe4(wr_address),       // input wire [16:0]  probe0  
-	.probe5(wr_data),          // input wire [31:0]  probe0  
-	.probe6(wr_be),            // input wire [3:0]  probe0  
-	.probe7(wr),               // input wire [0:0]  probe0  
-	.probe8(adc_index),        // input wire [16:0]  probe0  
-	.probe9(adc_address),      // input wire [63:0]  probe0  
-	.probe10(adc_valid),       // input wire [0:0]  probe0  
-	.probe11(rd_only_adr),     // input wire [15:0]  probe0  
-	.probe12(rd_adr),          // input wire [15:0]  probe0  
-	.probe13(q_rd),            // input wire [0:0]  probe0  
-	.probe14(q_rd_msb),        // input wire [0:0]  probe0  
-	.probe15(q_rd_adr),        // input wire [15:0]  probe0  
-	.probe16(q_rd_data),       // input wire [19:0]  probe0  
-	.probe17(q_pend_wr),       // input wire [0:0]  probe0  
-	.probe18(q_pend_data),     // input wire [31:0]  probe0  
-	.probe19(q_wr_msb),        // input wire [0:0]  probe0  
-	.probe20(q_wr),            // input wire [0:0]  probe0  
-	.probe21(q_wr_data),       // input wire [19:0]  probe0  
-	.probe22(adc_curr_index)   // input wire [16:0]  probe0  
-); 
-
-
 generate
-begin : adc_app
+begin : phys_bar_gen
 
-  assign rd_only_adr = rd ? rd_address[16:1] : adc_index;
+  assign rd_only_adr = rd ? rd_address[16:1] : index;
   assign rd_adr = wr ? wr_address[16:1] : rd_only_adr;
 
   always @ ( posedge up_clk ) 
@@ -183,26 +154,31 @@ begin : adc_app
   begin
     if (up_reset)
     begin
-      adc_valid <= 0;
-      adc_address[63:0] <= 0;
-      adc_curr_index <= 0;
+      valid <= 0;
+      phys[63:0] <= 0;
+      curr_index <= 0;
     end
     else
     begin
-      if (adc_curr_index == adc_index)
-      begin
-        if (q_rd_adr == adc_index)
-        begin
-          adc_address[20:0] <= 0;
-          adc_address[40:21] <= q_rd_data;
-          adc_address[63:41] <= 0;
-          adc_valid <= 1;
-        end
-      end
+      if (wr)
+        valid <= 0;
       else
       begin
-        adc_curr_index <= adc_index;
-        adc_valid <= 0;
+        if (curr_index == index)
+        begin
+          if (q_rd_adr == index)
+          begin
+            phys[20:0] <= 0;
+            phys[40:21] <= q_rd_data;
+            phys[63:41] <= 0;
+            valid <= 1;
+          end
+        end
+        else
+        begin
+          curr_index <= index;
+          valid <= 0;
+        end
       end
     end
   end

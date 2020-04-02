@@ -166,6 +166,13 @@ module adc (
   reg                  up_reset;
   reg [7:0]            pci_reset_cnt;
 
+  reg                  adc_index;
+  wire [63:0]          adc_phys;
+  wire                 adc_valid;
+
+  reg                  dac_index;
+  wire [63:0]          dac_phys;
+  wire                 dac_valid;
 
 // ADC
 
@@ -517,7 +524,7 @@ control_bar control_bar_inst (
 );
 
 
-adc_bar adc_bar_inst (
+phys_bar adc_bar_inst (
     .up_clk(up_clk),
     .up_reset(up_reset),
 
@@ -531,9 +538,28 @@ adc_bar adc_bar_inst (
     .wr_be(up_bar1_wr_be),
     .wr(up_bar1_wr),
 
-    .adc_index(adc_index),
-    .adc_address(adc_address),
-    .adc_valid(adc_valid)
+    .index(adc_index),
+    .phys(adc_phys),
+    .valid(adc_valid)
+);
+
+phys_bar dac_bar_inst (
+    .up_clk(up_clk),
+    .up_reset(up_reset),
+
+    .rd_address(up_bar2_rd_address),
+    .rd(up_bar2_rd),
+    .rp_data(up_bar2_rp_data),
+    .rp(up_bar2_rp),
+
+    .wr_address(up_bar2_wr_address),
+    .wr_data(up_bar2_wr_data),
+    .wr_be(up_bar2_wr_be),
+    .wr(up_bar2_wr),
+
+    .index(dac_index),
+    .phys(dac_phys),
+    .valid(dac_valid)
 );
 
 
@@ -874,8 +900,34 @@ generate
 
     always @(posedge user_clk) 
     begin
-      pci_bar2_rp <= 0;
-      pci_bar2_rp_data <= 0;
+      if (user_reset)
+      begin
+        pci_bar2_rp <= 0;
+        pci_bar2_rp_data <= 0;
+        q_bar2_rp <= 0;
+        curr_bar2_rp <= 0;
+      end
+      else
+      begin
+        if (q_bar2_rp)
+        begin
+          pci_bar2_rp_data <= up_bar2_rp_data;
+          pci_bar2_rp <= 1;
+          q_bar2_rp <= 0;
+        end
+        else
+        begin
+          pci_bar2_rp <= 0;
+
+          if (up_bar2_rp != curr_bar2_rp)
+          begin
+            curr_bar2_rp <= up_bar2_rp;
+
+            if (up_bar2_rp)
+              q_bar2_rp <= 1;
+          end
+        end
+      end
     end
 
   end
