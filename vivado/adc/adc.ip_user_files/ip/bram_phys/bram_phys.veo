@@ -54,7 +54,7 @@
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-bram_dac your_instance_name (
+bram_phys your_instance_name (
   .clka(clka),    // input wire clka
   .wea(wea),      // input wire [0 : 0] wea
   .addra(addra),  // input wire [15 : 0] addra
@@ -65,7 +65,7 @@ bram_dac your_instance_name (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file bram_dac.v when simulating
-// the core, bram_dac. When compiling the wrapper file, be sure to
+// You must compile the wrapper file bram_phys.v when simulating
+// the core, bram_phys. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 

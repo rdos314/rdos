@@ -3,8 +3,8 @@
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
 // Date        : Sun Feb 16 16:59:04 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top bram_dac -prefix
-//               bram_dac_ bram_adc_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top bram_phys -prefix
+//               bram_phys_ bram_adc_sim_netlist.v
 // Design      : bram_adc
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,7 +14,7 @@
 
 (* CHECK_LICENSE_TYPE = "bram_adc,blk_mem_gen_v8_4_4,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_4,Vivado 2019.2" *) 
 (* NotValidForBitStream *)
-module bram_dac
+module bram_phys
    (clka,
     wea,
     addra,
@@ -134,7 +134,7 @@ module bram_dac
   (* C_WRITE_WIDTH_B = "20" *) 
   (* C_XDEVICEFAMILY = "kintex7" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
-  bram_dac_blk_mem_gen_v8_4_4 U0
+  bram_phys_blk_mem_gen_v8_4_4 U0
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -200,7 +200,7 @@ module bram_dac
         .web(1'b0));
 endmodule
 
-module bram_dac_bindec
+module bram_phys_bindec
    (ena_array,
     addra,
     wea);
@@ -332,7 +332,7 @@ module bram_dac_bindec
 endmodule
 
 (* ORIG_REF_NAME = "bindec" *) 
-module bram_dac_bindec_0
+module bram_phys_bindec_0
    (enb_array,
     addrb);
   output [10:0]enb_array;
@@ -431,7 +431,7 @@ module bram_dac_bindec_0
         .O(enb_array[10]));
 endmodule
 
-module bram_dac_blk_mem_gen_generic_cstr
+module bram_phys_blk_mem_gen_generic_cstr
    (doutb,
     addra,
     wea,
@@ -740,14 +740,14 @@ module bram_dac_blk_mem_gen_generic_cstr
   wire \ramloop[9].ram.r_n_8 ;
   wire [0:0]wea;
 
-  bram_dac_bindec \bindec_a.bindec_inst_a 
+  bram_phys_bindec \bindec_a.bindec_inst_a 
        (.addra(addra[15:12]),
         .ena_array({ena_array[15:8],ena_array[6],ena_array[4],ena_array[2:0]}),
         .wea(wea));
-  bram_dac_bindec_0 \bindec_b.bindec_inst_b 
+  bram_phys_bindec_0 \bindec_b.bindec_inst_b 
        (.addrb(addrb[15:12]),
         .enb_array({enb_array[14:10],enb_array[8:5],enb_array[2:1]}));
-  bram_dac_blk_mem_gen_mux__parameterized0 \has_mux_b.B 
+  bram_phys_blk_mem_gen_mux__parameterized0 \has_mux_b.B 
        (.DOBDO({\ramloop[3].ram.r_n_0 ,\ramloop[3].ram.r_n_1 ,\ramloop[3].ram.r_n_2 ,\ramloop[3].ram.r_n_3 ,\ramloop[3].ram.r_n_4 ,\ramloop[3].ram.r_n_5 ,\ramloop[3].ram.r_n_6 ,\ramloop[3].ram.r_n_7 }),
         .DOPBDOP(\ramloop[3].ram.r_n_8 ),
         .addrb(addrb[15:12]),
@@ -814,7 +814,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .\doutb[8]_INST_0_i_2_6 (\ramloop[13].ram.r_n_8 ),
         .\doutb[8]_INST_0_i_2_7 (\ramloop[12].ram.r_n_8 ),
         .ram_doutb(ram_doutb));
-  bram_dac_blk_mem_gen_prim_width \ramloop[0].ram.r 
+  bram_phys_blk_mem_gen_prim_width \ramloop[0].ram.r 
        (.addra(addra[11:0]),
         .addrb(addrb),
         .addrb_14_sp_1(\ramloop[0].ram.r_n_9 ),
@@ -823,7 +823,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[0]),
         .ram_doutb(ram_doutb));
-  bram_dac_blk_mem_gen_prim_width__parameterized9 \ramloop[10].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized9 \ramloop[10].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[10].ram.r_n_0 ,\ramloop[10].ram.r_n_1 ,\ramloop[10].ram.r_n_2 ,\ramloop[10].ram.r_n_3 ,\ramloop[10].ram.r_n_4 ,\ramloop[10].ram.r_n_5 ,\ramloop[10].ram.r_n_6 ,\ramloop[10].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[10].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -833,7 +833,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[10]),
         .enb_array(enb_array[10]));
-  bram_dac_blk_mem_gen_prim_width__parameterized10 \ramloop[11].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized10 \ramloop[11].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[11].ram.r_n_0 ,\ramloop[11].ram.r_n_1 ,\ramloop[11].ram.r_n_2 ,\ramloop[11].ram.r_n_3 ,\ramloop[11].ram.r_n_4 ,\ramloop[11].ram.r_n_5 ,\ramloop[11].ram.r_n_6 ,\ramloop[11].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[11].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -843,7 +843,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[11]),
         .enb_array(enb_array[11]));
-  bram_dac_blk_mem_gen_prim_width__parameterized11 \ramloop[12].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized11 \ramloop[12].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[12].ram.r_n_0 ,\ramloop[12].ram.r_n_1 ,\ramloop[12].ram.r_n_2 ,\ramloop[12].ram.r_n_3 ,\ramloop[12].ram.r_n_4 ,\ramloop[12].ram.r_n_5 ,\ramloop[12].ram.r_n_6 ,\ramloop[12].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[12].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -853,7 +853,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[12]),
         .enb_array(enb_array[12]));
-  bram_dac_blk_mem_gen_prim_width__parameterized12 \ramloop[13].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized12 \ramloop[13].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[13].ram.r_n_0 ,\ramloop[13].ram.r_n_1 ,\ramloop[13].ram.r_n_2 ,\ramloop[13].ram.r_n_3 ,\ramloop[13].ram.r_n_4 ,\ramloop[13].ram.r_n_5 ,\ramloop[13].ram.r_n_6 ,\ramloop[13].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[13].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -863,7 +863,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[13]),
         .enb_array(enb_array[13]));
-  bram_dac_blk_mem_gen_prim_width__parameterized13 \ramloop[14].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized13 \ramloop[14].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[14].ram.r_n_0 ,\ramloop[14].ram.r_n_1 ,\ramloop[14].ram.r_n_2 ,\ramloop[14].ram.r_n_3 ,\ramloop[14].ram.r_n_4 ,\ramloop[14].ram.r_n_5 ,\ramloop[14].ram.r_n_6 ,\ramloop[14].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[14].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -873,7 +873,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[14]),
         .enb_array(enb_array[14]));
-  bram_dac_blk_mem_gen_prim_width__parameterized14 \ramloop[15].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized14 \ramloop[15].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[15].ram.r_n_0 ,\ramloop[15].ram.r_n_1 ,\ramloop[15].ram.r_n_2 ,\ramloop[15].ram.r_n_3 ,\ramloop[15].ram.r_n_4 ,\ramloop[15].ram.r_n_5 ,\ramloop[15].ram.r_n_6 ,\ramloop[15].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[15].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -883,7 +883,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[15]),
         .enb_array(enb_array[15]));
-  bram_dac_blk_mem_gen_prim_width__parameterized15 \ramloop[16].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized15 \ramloop[16].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[16].ram.r_n_0 ,\ramloop[16].ram.r_n_1 ,\ramloop[16].ram.r_n_2 ,\ramloop[16].ram.r_n_3 ,\ramloop[16].ram.r_n_4 ,\ramloop[16].ram.r_n_5 ,\ramloop[16].ram.r_n_6 ,\ramloop[16].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[16].ram.r_n_8 ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\ramloop[0].ram.r_n_9 ),
@@ -893,7 +893,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .clkb(clkb),
         .dina(dina[17:9]),
         .ena_array(ena_array[0]));
-  bram_dac_blk_mem_gen_prim_width__parameterized16 \ramloop[17].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized16 \ramloop[17].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[17].ram.r_n_0 ,\ramloop[17].ram.r_n_1 ,\ramloop[17].ram.r_n_2 ,\ramloop[17].ram.r_n_3 ,\ramloop[17].ram.r_n_4 ,\ramloop[17].ram.r_n_5 ,\ramloop[17].ram.r_n_6 ,\ramloop[17].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[17].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -903,7 +903,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[1]),
         .enb_array(enb_array[1]));
-  bram_dac_blk_mem_gen_prim_width__parameterized17 \ramloop[18].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized17 \ramloop[18].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[18].ram.r_n_0 ,\ramloop[18].ram.r_n_1 ,\ramloop[18].ram.r_n_2 ,\ramloop[18].ram.r_n_3 ,\ramloop[18].ram.r_n_4 ,\ramloop[18].ram.r_n_5 ,\ramloop[18].ram.r_n_6 ,\ramloop[18].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[18].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -913,7 +913,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[2]),
         .enb_array(enb_array[2]));
-  bram_dac_blk_mem_gen_prim_width__parameterized18 \ramloop[19].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized18 \ramloop[19].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[19].ram.r_n_0 ,\ramloop[19].ram.r_n_1 ,\ramloop[19].ram.r_n_2 ,\ramloop[19].ram.r_n_3 ,\ramloop[19].ram.r_n_4 ,\ramloop[19].ram.r_n_5 ,\ramloop[19].ram.r_n_6 ,\ramloop[19].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[19].ram.r_n_8 ),
         .addra(addra),
@@ -924,7 +924,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .ena_array(ena_array[3]),
         .enb_array(enb_array[3]),
         .wea(wea));
-  bram_dac_blk_mem_gen_prim_width__parameterized0 \ramloop[1].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized0 \ramloop[1].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[1].ram.r_n_0 ,\ramloop[1].ram.r_n_1 ,\ramloop[1].ram.r_n_2 ,\ramloop[1].ram.r_n_3 ,\ramloop[1].ram.r_n_4 ,\ramloop[1].ram.r_n_5 ,\ramloop[1].ram.r_n_6 ,\ramloop[1].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[1].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -934,7 +934,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[1]),
         .enb_array(enb_array[1]));
-  bram_dac_blk_mem_gen_prim_width__parameterized19 \ramloop[20].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized19 \ramloop[20].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[20].ram.r_n_0 ,\ramloop[20].ram.r_n_1 ,\ramloop[20].ram.r_n_2 ,\ramloop[20].ram.r_n_3 ,\ramloop[20].ram.r_n_4 ,\ramloop[20].ram.r_n_5 ,\ramloop[20].ram.r_n_6 ,\ramloop[20].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[20].ram.r_n_8 ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\ramloop[4].ram.r_n_9 ),
@@ -944,7 +944,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .clkb(clkb),
         .dina(dina[17:9]),
         .ena_array(ena_array[4]));
-  bram_dac_blk_mem_gen_prim_width__parameterized20 \ramloop[21].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized20 \ramloop[21].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[21].ram.r_n_0 ,\ramloop[21].ram.r_n_1 ,\ramloop[21].ram.r_n_2 ,\ramloop[21].ram.r_n_3 ,\ramloop[21].ram.r_n_4 ,\ramloop[21].ram.r_n_5 ,\ramloop[21].ram.r_n_6 ,\ramloop[21].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[21].ram.r_n_8 ),
         .addra(addra),
@@ -955,7 +955,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .ena_array(ena_array[5]),
         .enb_array(enb_array[5]),
         .wea(wea));
-  bram_dac_blk_mem_gen_prim_width__parameterized21 \ramloop[22].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized21 \ramloop[22].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[22].ram.r_n_0 ,\ramloop[22].ram.r_n_1 ,\ramloop[22].ram.r_n_2 ,\ramloop[22].ram.r_n_3 ,\ramloop[22].ram.r_n_4 ,\ramloop[22].ram.r_n_5 ,\ramloop[22].ram.r_n_6 ,\ramloop[22].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[22].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -965,7 +965,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[6]),
         .enb_array(enb_array[6]));
-  bram_dac_blk_mem_gen_prim_width__parameterized22 \ramloop[23].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized22 \ramloop[23].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[23].ram.r_n_0 ,\ramloop[23].ram.r_n_1 ,\ramloop[23].ram.r_n_2 ,\ramloop[23].ram.r_n_3 ,\ramloop[23].ram.r_n_4 ,\ramloop[23].ram.r_n_5 ,\ramloop[23].ram.r_n_6 ,\ramloop[23].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[23].ram.r_n_8 ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\ramloop[7].ram.r_n_9 ),
@@ -975,7 +975,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .clkb(clkb),
         .dina(dina[17:9]),
         .enb_array(enb_array[7]));
-  bram_dac_blk_mem_gen_prim_width__parameterized23 \ramloop[24].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized23 \ramloop[24].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[24].ram.r_n_0 ,\ramloop[24].ram.r_n_1 ,\ramloop[24].ram.r_n_2 ,\ramloop[24].ram.r_n_3 ,\ramloop[24].ram.r_n_4 ,\ramloop[24].ram.r_n_5 ,\ramloop[24].ram.r_n_6 ,\ramloop[24].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[24].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -985,7 +985,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[8]),
         .enb_array(enb_array[8]));
-  bram_dac_blk_mem_gen_prim_width__parameterized24 \ramloop[25].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized24 \ramloop[25].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[25].ram.r_n_0 ,\ramloop[25].ram.r_n_1 ,\ramloop[25].ram.r_n_2 ,\ramloop[25].ram.r_n_3 ,\ramloop[25].ram.r_n_4 ,\ramloop[25].ram.r_n_5 ,\ramloop[25].ram.r_n_6 ,\ramloop[25].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[25].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -995,7 +995,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[9]),
         .enb_array(enb_array[9]));
-  bram_dac_blk_mem_gen_prim_width__parameterized25 \ramloop[26].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized25 \ramloop[26].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[26].ram.r_n_0 ,\ramloop[26].ram.r_n_1 ,\ramloop[26].ram.r_n_2 ,\ramloop[26].ram.r_n_3 ,\ramloop[26].ram.r_n_4 ,\ramloop[26].ram.r_n_5 ,\ramloop[26].ram.r_n_6 ,\ramloop[26].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[26].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1005,7 +1005,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[10]),
         .enb_array(enb_array[10]));
-  bram_dac_blk_mem_gen_prim_width__parameterized26 \ramloop[27].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized26 \ramloop[27].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[27].ram.r_n_0 ,\ramloop[27].ram.r_n_1 ,\ramloop[27].ram.r_n_2 ,\ramloop[27].ram.r_n_3 ,\ramloop[27].ram.r_n_4 ,\ramloop[27].ram.r_n_5 ,\ramloop[27].ram.r_n_6 ,\ramloop[27].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[27].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1015,7 +1015,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[11]),
         .enb_array(enb_array[11]));
-  bram_dac_blk_mem_gen_prim_width__parameterized27 \ramloop[28].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized27 \ramloop[28].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[28].ram.r_n_0 ,\ramloop[28].ram.r_n_1 ,\ramloop[28].ram.r_n_2 ,\ramloop[28].ram.r_n_3 ,\ramloop[28].ram.r_n_4 ,\ramloop[28].ram.r_n_5 ,\ramloop[28].ram.r_n_6 ,\ramloop[28].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[28].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1025,7 +1025,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[12]),
         .enb_array(enb_array[12]));
-  bram_dac_blk_mem_gen_prim_width__parameterized28 \ramloop[29].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized28 \ramloop[29].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[29].ram.r_n_0 ,\ramloop[29].ram.r_n_1 ,\ramloop[29].ram.r_n_2 ,\ramloop[29].ram.r_n_3 ,\ramloop[29].ram.r_n_4 ,\ramloop[29].ram.r_n_5 ,\ramloop[29].ram.r_n_6 ,\ramloop[29].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[29].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1035,7 +1035,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[13]),
         .enb_array(enb_array[13]));
-  bram_dac_blk_mem_gen_prim_width__parameterized1 \ramloop[2].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized1 \ramloop[2].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[2].ram.r_n_0 ,\ramloop[2].ram.r_n_1 ,\ramloop[2].ram.r_n_2 ,\ramloop[2].ram.r_n_3 ,\ramloop[2].ram.r_n_4 ,\ramloop[2].ram.r_n_5 ,\ramloop[2].ram.r_n_6 ,\ramloop[2].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[2].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1045,7 +1045,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[2]),
         .enb_array(enb_array[2]));
-  bram_dac_blk_mem_gen_prim_width__parameterized29 \ramloop[30].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized29 \ramloop[30].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[30].ram.r_n_0 ,\ramloop[30].ram.r_n_1 ,\ramloop[30].ram.r_n_2 ,\ramloop[30].ram.r_n_3 ,\ramloop[30].ram.r_n_4 ,\ramloop[30].ram.r_n_5 ,\ramloop[30].ram.r_n_6 ,\ramloop[30].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[30].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1055,7 +1055,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[14]),
         .enb_array(enb_array[14]));
-  bram_dac_blk_mem_gen_prim_width__parameterized30 \ramloop[31].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized30 \ramloop[31].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[31].ram.r_n_0 ,\ramloop[31].ram.r_n_1 ,\ramloop[31].ram.r_n_2 ,\ramloop[31].ram.r_n_3 ,\ramloop[31].ram.r_n_4 ,\ramloop[31].ram.r_n_5 ,\ramloop[31].ram.r_n_6 ,\ramloop[31].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[31].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1065,7 +1065,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[17:9]),
         .ena_array(ena_array[15]),
         .enb_array(enb_array[15]));
-  bram_dac_blk_mem_gen_prim_width__parameterized31 \ramloop[32].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized31 \ramloop[32].ram.r 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -1073,7 +1073,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[18]),
         .doutb(doutb[18]),
         .wea(wea));
-  bram_dac_blk_mem_gen_prim_width__parameterized32 \ramloop[33].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized32 \ramloop[33].ram.r 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -1081,7 +1081,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[19]),
         .doutb(doutb[19]),
         .wea(wea));
-  bram_dac_blk_mem_gen_prim_width__parameterized2 \ramloop[3].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized2 \ramloop[3].ram.r 
        (.DOBDO({\ramloop[3].ram.r_n_0 ,\ramloop[3].ram.r_n_1 ,\ramloop[3].ram.r_n_2 ,\ramloop[3].ram.r_n_3 ,\ramloop[3].ram.r_n_4 ,\ramloop[3].ram.r_n_5 ,\ramloop[3].ram.r_n_6 ,\ramloop[3].ram.r_n_7 }),
         .DOPBDOP(\ramloop[3].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1091,7 +1091,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[3]),
         .enb_array(enb_array[3]));
-  bram_dac_blk_mem_gen_prim_width__parameterized3 \ramloop[4].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized3 \ramloop[4].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[4].ram.r_n_0 ,\ramloop[4].ram.r_n_1 ,\ramloop[4].ram.r_n_2 ,\ramloop[4].ram.r_n_3 ,\ramloop[4].ram.r_n_4 ,\ramloop[4].ram.r_n_5 ,\ramloop[4].ram.r_n_6 ,\ramloop[4].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[4].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1101,7 +1101,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .clkb(clkb),
         .dina(dina[8:0]),
         .ena_array(ena_array[4]));
-  bram_dac_blk_mem_gen_prim_width__parameterized4 \ramloop[5].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized4 \ramloop[5].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[5].ram.r_n_0 ,\ramloop[5].ram.r_n_1 ,\ramloop[5].ram.r_n_2 ,\ramloop[5].ram.r_n_3 ,\ramloop[5].ram.r_n_4 ,\ramloop[5].ram.r_n_5 ,\ramloop[5].ram.r_n_6 ,\ramloop[5].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[5].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1111,7 +1111,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[5]),
         .enb_array(enb_array[5]));
-  bram_dac_blk_mem_gen_prim_width__parameterized5 \ramloop[6].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized5 \ramloop[6].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[6].ram.r_n_0 ,\ramloop[6].ram.r_n_1 ,\ramloop[6].ram.r_n_2 ,\ramloop[6].ram.r_n_3 ,\ramloop[6].ram.r_n_4 ,\ramloop[6].ram.r_n_5 ,\ramloop[6].ram.r_n_6 ,\ramloop[6].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[6].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1121,7 +1121,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[6]),
         .enb_array(enb_array[6]));
-  bram_dac_blk_mem_gen_prim_width__parameterized6 \ramloop[7].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized6 \ramloop[7].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[7].ram.r_n_0 ,\ramloop[7].ram.r_n_1 ,\ramloop[7].ram.r_n_2 ,\ramloop[7].ram.r_n_3 ,\ramloop[7].ram.r_n_4 ,\ramloop[7].ram.r_n_5 ,\ramloop[7].ram.r_n_6 ,\ramloop[7].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[7].ram.r_n_8 ),
         .addra(addra),
@@ -1132,7 +1132,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .enb_array(enb_array[7]),
         .wea(wea));
-  bram_dac_blk_mem_gen_prim_width__parameterized7 \ramloop[8].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized7 \ramloop[8].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[8].ram.r_n_0 ,\ramloop[8].ram.r_n_1 ,\ramloop[8].ram.r_n_2 ,\ramloop[8].ram.r_n_3 ,\ramloop[8].ram.r_n_4 ,\ramloop[8].ram.r_n_5 ,\ramloop[8].ram.r_n_6 ,\ramloop[8].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[8].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1142,7 +1142,7 @@ module bram_dac_blk_mem_gen_generic_cstr
         .dina(dina[8:0]),
         .ena_array(ena_array[8]),
         .enb_array(enb_array[8]));
-  bram_dac_blk_mem_gen_prim_width__parameterized8 \ramloop[9].ram.r 
+  bram_phys_blk_mem_gen_prim_width__parameterized8 \ramloop[9].ram.r 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ({\ramloop[9].ram.r_n_0 ,\ramloop[9].ram.r_n_1 ,\ramloop[9].ram.r_n_2 ,\ramloop[9].ram.r_n_3 ,\ramloop[9].ram.r_n_4 ,\ramloop[9].ram.r_n_5 ,\ramloop[9].ram.r_n_6 ,\ramloop[9].ram.r_n_7 }),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\ramloop[9].ram.r_n_8 ),
         .addra(addra[11:0]),
@@ -1155,7 +1155,7 @@ module bram_dac_blk_mem_gen_generic_cstr
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_mux" *) 
-module bram_dac_blk_mem_gen_mux__parameterized0
+module bram_phys_blk_mem_gen_mux__parameterized0
    (doutb,
     addrb,
     clkb,
@@ -2489,7 +2489,7 @@ module bram_dac_blk_mem_gen_mux__parameterized0
         .R(1'b0));
 endmodule
 
-module bram_dac_blk_mem_gen_prim_width
+module bram_phys_blk_mem_gen_prim_width
    (ram_doutb,
     addrb_14_sp_1,
     clka,
@@ -2517,7 +2517,7 @@ module bram_dac_blk_mem_gen_prim_width
   wire [8:0]ram_doutb;
 
   assign addrb_14_sp_1 = addrb_14_sn_1;
-  bram_dac_blk_mem_gen_prim_wrapper \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper \prim_noinit.ram 
        (.addra(addra),
         .addrb(addrb),
         .addrb_14_sp_1(addrb_14_sn_1),
@@ -2529,7 +2529,7 @@ module bram_dac_blk_mem_gen_prim_width
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized0
+module bram_phys_blk_mem_gen_prim_width__parameterized0
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2559,7 +2559,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized0
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized0 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized0 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2572,7 +2572,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized0
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized1
+module bram_phys_blk_mem_gen_prim_width__parameterized1
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2602,7 +2602,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized1
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized1 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized1 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2615,7 +2615,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized1
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized10
+module bram_phys_blk_mem_gen_prim_width__parameterized10
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2645,7 +2645,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized10
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized10 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized10 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2658,7 +2658,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized10
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized11
+module bram_phys_blk_mem_gen_prim_width__parameterized11
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2688,7 +2688,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized11
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized11 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized11 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2701,7 +2701,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized11
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized12
+module bram_phys_blk_mem_gen_prim_width__parameterized12
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2731,7 +2731,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized12
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized12 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized12 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2744,7 +2744,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized12
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized13
+module bram_phys_blk_mem_gen_prim_width__parameterized13
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2774,7 +2774,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized13
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized13 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized13 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2787,7 +2787,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized13
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized14
+module bram_phys_blk_mem_gen_prim_width__parameterized14
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2817,7 +2817,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized14
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized14 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized14 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2830,7 +2830,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized14
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized15
+module bram_phys_blk_mem_gen_prim_width__parameterized15
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2860,7 +2860,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized15
   wire [8:0]dina;
   wire [0:0]ena_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized15 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized15 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_2 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ),
@@ -2873,7 +2873,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized15
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized16
+module bram_phys_blk_mem_gen_prim_width__parameterized16
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2903,7 +2903,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized16
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized16 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized16 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2916,7 +2916,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized16
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized17
+module bram_phys_blk_mem_gen_prim_width__parameterized17
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -2946,7 +2946,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized17
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized17 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized17 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -2959,7 +2959,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized17
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized18
+module bram_phys_blk_mem_gen_prim_width__parameterized18
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     ena_array,
@@ -2992,7 +2992,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized18
   wire [0:0]enb_array;
   wire [0:0]wea;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized18 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized18 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3006,7 +3006,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized18
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized19
+module bram_phys_blk_mem_gen_prim_width__parameterized19
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3036,7 +3036,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized19
   wire [8:0]dina;
   wire [0:0]ena_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized19 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized19 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_2 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ),
@@ -3049,7 +3049,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized19
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized2
+module bram_phys_blk_mem_gen_prim_width__parameterized2
    (DOBDO,
     DOPBDOP,
     clka,
@@ -3079,7 +3079,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized2
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized2 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized2 \prim_noinit.ram 
        (.DOBDO(DOBDO),
         .DOPBDOP(DOPBDOP),
         .addra(addra),
@@ -3092,7 +3092,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized2
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized20
+module bram_phys_blk_mem_gen_prim_width__parameterized20
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     ena_array,
@@ -3125,7 +3125,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized20
   wire [0:0]enb_array;
   wire [0:0]wea;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized20 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized20 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3139,7 +3139,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized20
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized21
+module bram_phys_blk_mem_gen_prim_width__parameterized21
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3169,7 +3169,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized21
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized21 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized21 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3182,7 +3182,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized21
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized22
+module bram_phys_blk_mem_gen_prim_width__parameterized22
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3212,7 +3212,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized22
   wire [8:0]dina;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized22 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized22 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_2 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ),
@@ -3225,7 +3225,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized22
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized23
+module bram_phys_blk_mem_gen_prim_width__parameterized23
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3255,7 +3255,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized23
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized23 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized23 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3268,7 +3268,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized23
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized24
+module bram_phys_blk_mem_gen_prim_width__parameterized24
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     enb_array,
@@ -3298,7 +3298,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized24
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized24 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized24 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3311,7 +3311,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized24
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized25
+module bram_phys_blk_mem_gen_prim_width__parameterized25
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3341,7 +3341,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized25
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized25 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized25 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3354,7 +3354,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized25
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized26
+module bram_phys_blk_mem_gen_prim_width__parameterized26
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3384,7 +3384,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized26
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized26 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized26 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3397,7 +3397,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized26
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized27
+module bram_phys_blk_mem_gen_prim_width__parameterized27
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3427,7 +3427,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized27
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized27 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized27 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3440,7 +3440,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized27
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized28
+module bram_phys_blk_mem_gen_prim_width__parameterized28
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3470,7 +3470,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized28
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized28 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized28 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3483,7 +3483,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized28
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized29
+module bram_phys_blk_mem_gen_prim_width__parameterized29
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3513,7 +3513,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized29
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized29 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized29 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3526,7 +3526,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized29
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized3
+module bram_phys_blk_mem_gen_prim_width__parameterized3
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     addrb_15_sp_1,
@@ -3557,7 +3557,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized3
   wire [0:0]ena_array;
 
   assign addrb_15_sp_1 = addrb_15_sn_1;
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized3 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized3 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3570,7 +3570,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized3
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized30
+module bram_phys_blk_mem_gen_prim_width__parameterized30
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     enb_array,
@@ -3600,7 +3600,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized30
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized30 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized30 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3613,7 +3613,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized30
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized31
+module bram_phys_blk_mem_gen_prim_width__parameterized31
    (doutb,
     clka,
     clkb,
@@ -3637,7 +3637,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized31
   wire [0:0]doutb;
   wire [0:0]wea;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized31 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized31 \prim_noinit.ram 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -3648,7 +3648,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized31
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized32
+module bram_phys_blk_mem_gen_prim_width__parameterized32
    (doutb,
     clka,
     clkb,
@@ -3672,7 +3672,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized32
   wire [0:0]doutb;
   wire [0:0]wea;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized32 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized32 \prim_noinit.ram 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -3683,7 +3683,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized32
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized4
+module bram_phys_blk_mem_gen_prim_width__parameterized4
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3713,7 +3713,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized4
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized4 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized4 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3726,7 +3726,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized4
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized5
+module bram_phys_blk_mem_gen_prim_width__parameterized5
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3756,7 +3756,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized5
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized5 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized5 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3769,7 +3769,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized5
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized6
+module bram_phys_blk_mem_gen_prim_width__parameterized6
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     addra_15_sp_1,
@@ -3803,7 +3803,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized6
   wire [0:0]wea;
 
   assign addra_15_sp_1 = addra_15_sn_1;
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized6 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized6 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3817,7 +3817,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized6
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized7
+module bram_phys_blk_mem_gen_prim_width__parameterized7
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3847,7 +3847,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized7
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized7 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized7 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3860,7 +3860,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized7
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized8
+module bram_phys_blk_mem_gen_prim_width__parameterized8
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3890,7 +3890,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized8
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized8 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized8 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3903,7 +3903,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized8
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_dac_blk_mem_gen_prim_width__parameterized9
+module bram_phys_blk_mem_gen_prim_width__parameterized9
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     clka,
@@ -3933,7 +3933,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized9
   wire [0:0]ena_array;
   wire [0:0]enb_array;
 
-  bram_dac_blk_mem_gen_prim_wrapper__parameterized9 \prim_noinit.ram 
+  bram_phys_blk_mem_gen_prim_wrapper__parameterized9 \prim_noinit.ram 
        (.\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram ),
         .\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ),
         .addra(addra),
@@ -3945,7 +3945,7 @@ module bram_dac_blk_mem_gen_prim_width__parameterized9
         .enb_array(enb_array));
 endmodule
 
-module bram_dac_blk_mem_gen_prim_wrapper
+module bram_phys_blk_mem_gen_prim_wrapper
    (ram_doutb,
     addrb_14_sp_1,
     clka,
@@ -4204,7 +4204,7 @@ module bram_dac_blk_mem_gen_prim_wrapper
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized0
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized0
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -4457,7 +4457,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized0
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized1
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized1
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -4710,7 +4710,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized1
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized10
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized10
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -4963,7 +4963,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized10
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized11
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized11
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -5216,7 +5216,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized11
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized12
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized12
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -5469,7 +5469,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized12
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized13
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized13
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -5722,7 +5722,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized13
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized14
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized14
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -5975,7 +5975,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized14
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized15
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized15
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -6228,7 +6228,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized15
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized16
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized16
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -6481,7 +6481,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized16
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized17
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized17
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -6734,7 +6734,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized17
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized18
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized18
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     ena_array,
@@ -7007,7 +7007,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized18
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized19
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized19
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -7260,7 +7260,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized19
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized2
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized2
    (DOBDO,
     DOPBDOP,
     clka,
@@ -7513,7 +7513,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized2
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized20
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized20
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     ena_array,
@@ -7778,7 +7778,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized20
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized21
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized21
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -8031,7 +8031,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized21
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized22
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized22
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -8284,7 +8284,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized22
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized23
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized23
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -8537,7 +8537,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized23
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized24
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized24
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     enb_array,
@@ -8798,7 +8798,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized24
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized25
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized25
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9051,7 +9051,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized25
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized26
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized26
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9304,7 +9304,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized26
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized27
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized27
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9557,7 +9557,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized27
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized28
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized28
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -9810,7 +9810,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized28
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized29
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized29
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -10063,7 +10063,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized29
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized3
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized3
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     addrb_15_sp_1,
@@ -10325,7 +10325,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized3
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized30
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized30
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     enb_array,
@@ -10586,7 +10586,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized30
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized31
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized31
    (doutb,
     clka,
     clkb,
@@ -11053,7 +11053,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized31
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized32
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized32
    (doutb,
     clka,
     clkb,
@@ -11520,7 +11520,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized32
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized4
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized4
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -11773,7 +11773,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized4
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized5
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized5
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -12026,7 +12026,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized5
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized6
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized6
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     addra_15_sp_1,
@@ -12292,7 +12292,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized6
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized7
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized7
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -12545,7 +12545,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized7
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized8
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized8
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -12798,7 +12798,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized8
 endmodule
 
 (* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
-module bram_dac_blk_mem_gen_prim_wrapper__parameterized9
+module bram_phys_blk_mem_gen_prim_wrapper__parameterized9
    (\DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0 ,
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1 ,
     clka,
@@ -13050,7 +13050,7 @@ module bram_dac_blk_mem_gen_prim_wrapper__parameterized9
         .WEBWE({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}));
 endmodule
 
-module bram_dac_blk_mem_gen_top
+module bram_phys_blk_mem_gen_top
    (doutb,
     addra,
     wea,
@@ -13074,7 +13074,7 @@ module bram_dac_blk_mem_gen_top
   wire [19:0]doutb;
   wire [0:0]wea;
 
-  bram_dac_blk_mem_gen_generic_cstr \valid.cstr 
+  bram_phys_blk_mem_gen_generic_cstr \valid.cstr 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -13110,7 +13110,7 @@ endmodule
 (* C_WRITE_DEPTH_B = "65536" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
 (* C_WRITE_WIDTH_A = "20" *) (* C_WRITE_WIDTH_B = "20" *) (* C_XDEVICEFAMILY = "kintex7" *) 
 (* downgradeipidentifiedwarnings = "yes" *) 
-module bram_dac_blk_mem_gen_v8_4_4
+module bram_phys_blk_mem_gen_v8_4_4
    (clka,
     rsta,
     ena,
@@ -13345,7 +13345,7 @@ module bram_dac_blk_mem_gen_v8_4_4
   assign sbiterr = \<const0> ;
   GND GND
        (.G(\<const0> ));
-  bram_dac_blk_mem_gen_v8_4_4_synth inst_blk_mem_gen
+  bram_phys_blk_mem_gen_v8_4_4_synth inst_blk_mem_gen
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -13355,7 +13355,7 @@ module bram_dac_blk_mem_gen_v8_4_4
         .wea(wea));
 endmodule
 
-module bram_dac_blk_mem_gen_v8_4_4_synth
+module bram_phys_blk_mem_gen_v8_4_4_synth
    (doutb,
     addra,
     wea,
@@ -13379,7 +13379,7 @@ module bram_dac_blk_mem_gen_v8_4_4_synth
   wire [19:0]doutb;
   wire [0:0]wea;
 
-  bram_dac_blk_mem_gen_top \gnbram.gnativebmg.native_blk_mem_gen 
+  bram_phys_blk_mem_gen_top \gnbram.gnativebmg.native_blk_mem_gen 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),

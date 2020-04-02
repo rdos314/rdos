@@ -53,7 +53,7 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module bram_dac (
+module bram_phys (
   clka,
   wea,
   addra,
@@ -98,7 +98,7 @@ output wire [19 : 0] doutb;
     .C_PRIM_TYPE(1),
     .C_LOAD_INIT_FILE(0),
     .C_INIT_FILE_NAME("no_coe_file_loaded"),
-    .C_INIT_FILE("bram_dac.mem"),
+    .C_INIT_FILE("bram_phys.mem"),
     .C_USE_DEFAULT_DATA(0),
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),

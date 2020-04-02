@@ -3,8 +3,8 @@
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
 -- Date        : Sun Feb 16 16:59:04 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub -rename_top bram_dac -prefix
---               bram_dac_ bram_adc_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top bram_phys -prefix
+--               bram_phys_ bram_adc_stub.vhdl
 -- Design      : bram_adc
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7k325tffg900-2
@@ -12,7 +12,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity bram_dac is
+entity bram_phys is
   Port ( 
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
@@ -23,9 +23,9 @@ entity bram_dac is
     doutb : out STD_LOGIC_VECTOR ( 19 downto 0 )
   );
 
-end bram_dac;
+end bram_phys;
 
-architecture stub of bram_dac is
+architecture stub of bram_phys is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;

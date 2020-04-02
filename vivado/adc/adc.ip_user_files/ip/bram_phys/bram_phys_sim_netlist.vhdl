@@ -3,8 +3,8 @@
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
 -- Date        : Sun Feb 16 16:59:04 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top bram_dac -prefix
---               bram_dac_ bram_adc_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top bram_phys -prefix
+--               bram_phys_ bram_adc_sim_netlist.vhdl
 -- Design      : bram_adc
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,15 +14,15 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_bindec is
+entity bram_phys_bindec is
   port (
     ena_array : out STD_LOGIC_VECTOR ( 12 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 3 downto 0 );
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-end bram_dac_bindec;
+end bram_phys_bindec;
 
-architecture STRUCTURE of bram_dac_bindec is
+architecture STRUCTURE of bram_phys_bindec is
 begin
 ENOUT: unisim.vcomponents.LUT5
     generic map(
@@ -185,16 +185,16 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_bindec_0 is
+entity bram_phys_bindec_0 is
   port (
     enb_array : out STD_LOGIC_VECTOR ( 10 downto 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of bram_dac_bindec_0 : entity is "bindec";
-end bram_dac_bindec_0;
+  attribute ORIG_REF_NAME of bram_phys_bindec_0 : entity is "bindec";
+end bram_phys_bindec_0;
 
-architecture STRUCTURE of bram_dac_bindec_0 is
+architecture STRUCTURE of bram_phys_bindec_0 is
 begin
 ENOUT: unisim.vcomponents.LUT4
     generic map(
@@ -322,7 +322,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_mux__parameterized0\ is
+entity \bram_phys_blk_mem_gen_mux__parameterized0\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 17 downto 0 );
     addrb : in STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -392,10 +392,10 @@ entity \bram_dac_blk_mem_gen_mux__parameterized0\ is
     \doutb[17]_INST_0_i_2_7\ : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_mux__parameterized0\ : entity is "blk_mem_gen_mux";
-end \bram_dac_blk_mem_gen_mux__parameterized0\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_mux__parameterized0\ : entity is "blk_mem_gen_mux";
+end \bram_phys_blk_mem_gen_mux__parameterized0\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_mux__parameterized0\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_mux__parameterized0\ is
   signal \doutb[0]_INST_0_i_1_n_0\ : STD_LOGIC;
   signal \doutb[0]_INST_0_i_2_n_0\ : STD_LOGIC;
   signal \doutb[0]_INST_0_i_3_n_0\ : STD_LOGIC;
@@ -1869,7 +1869,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_blk_mem_gen_prim_wrapper is
+entity bram_phys_blk_mem_gen_prim_wrapper is
   port (
     ram_doutb : out STD_LOGIC_VECTOR ( 8 downto 0 );
     addrb_14_sp_1 : out STD_LOGIC;
@@ -1880,9 +1880,9 @@ entity bram_dac_blk_mem_gen_prim_wrapper is
     addrb : in STD_LOGIC_VECTOR ( 15 downto 0 );
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-end bram_dac_blk_mem_gen_prim_wrapper;
+end bram_phys_blk_mem_gen_prim_wrapper;
 
-architecture STRUCTURE of bram_dac_blk_mem_gen_prim_wrapper is
+architecture STRUCTURE of bram_phys_blk_mem_gen_prim_wrapper is
   signal addrb_14_sn_1 : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -2134,7 +2134,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized0\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized0\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -2147,10 +2147,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized0\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized0\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized0\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized0\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized0\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized0\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized0\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -2389,7 +2389,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized1\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized1\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -2402,10 +2402,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized1\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized1\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized1\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized1\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized1\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized1\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized1\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -2644,7 +2644,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized10\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized10\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -2657,10 +2657,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized10\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized10\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized10\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized10\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized10\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized10\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized10\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -2899,7 +2899,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized11\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized11\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -2912,10 +2912,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized11\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized11\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized11\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized11\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized11\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized11\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized11\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -3154,7 +3154,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized12\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized12\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -3167,10 +3167,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized12\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized12\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized12\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized12\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized12\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized12\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized12\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -3409,7 +3409,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized13\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized13\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -3422,10 +3422,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized13\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized13\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized13\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized13\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized13\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized13\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized13\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -3664,7 +3664,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized14\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized14\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -3677,10 +3677,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized14\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized14\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized14\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized14\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized14\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized14\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized14\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -3919,7 +3919,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized15\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized15\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -3932,10 +3932,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized15\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized15\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized15\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized15\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized15\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized15\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized15\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -4174,7 +4174,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized16\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized16\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -4187,10 +4187,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized16\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized16\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized16\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized16\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized16\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized16\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized16\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -4429,7 +4429,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized17\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized17\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -4442,10 +4442,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized17\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized17\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized17\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized17\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized17\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized17\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized17\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -4684,7 +4684,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized18\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized18\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -4698,10 +4698,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized18\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized18\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized18\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized18\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized18\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized18\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized18\ is
   signal \^ena_array\ : STD_LOGIC_VECTOR ( 0 to 0 );
   signal \^enb_array\ : STD_LOGIC_VECTOR ( 0 to 0 );
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
@@ -4967,7 +4967,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized19\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized19\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -4980,10 +4980,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized19\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized19\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized19\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized19\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized19\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized19\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized19\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -5222,7 +5222,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized2\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized2\ is
   port (
     DOBDO : out STD_LOGIC_VECTOR ( 7 downto 0 );
     DOPBDOP : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -5235,10 +5235,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized2\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized2\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized2\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized2\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized2\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized2\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized2\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -5477,7 +5477,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized20\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized20\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -5491,10 +5491,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized20\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized20\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized20\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized20\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized20\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized20\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized20\ is
   signal \^ena_array\ : STD_LOGIC_VECTOR ( 0 to 0 );
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -5747,7 +5747,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized21\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized21\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -5760,10 +5760,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized21\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized21\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized21\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized21\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized21\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized21\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized21\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -6002,7 +6002,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized22\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized22\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -6015,10 +6015,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized22\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized22\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized22\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized22\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized22\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized22\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized22\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -6257,7 +6257,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized23\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized23\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -6270,10 +6270,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized23\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized23\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized23\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized23\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized23\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized23\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized23\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -6512,7 +6512,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized24\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized24\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -6525,10 +6525,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized24\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized24\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized24\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized24\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized24\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized24\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized24\ is
   signal \^enb_array\ : STD_LOGIC_VECTOR ( 0 to 0 );
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -6780,7 +6780,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized25\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized25\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -6793,10 +6793,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized25\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized25\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized25\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized25\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized25\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized25\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized25\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7035,7 +7035,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized26\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized26\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -7048,10 +7048,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized26\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized26\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized26\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized26\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized26\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized26\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized26\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7290,7 +7290,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized27\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized27\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -7303,10 +7303,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized27\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized27\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized27\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized27\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized27\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized27\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized27\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7545,7 +7545,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized28\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized28\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -7558,10 +7558,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized28\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized28\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized28\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized28\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized28\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized28\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized28\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -7800,7 +7800,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized29\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized29\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -7813,10 +7813,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized29\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized29\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized29\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized29\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized29\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized29\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized29\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -8055,7 +8055,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized3\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized3\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -8068,10 +8068,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized3\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized3\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized3\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized3\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized3\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized3\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized3\ is
   signal addrb_15_sn_1 : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -8323,7 +8323,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized30\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized30\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -8336,10 +8336,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized30\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized30\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized30\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized30\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized30\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized30\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized30\ is
   signal \^enb_array\ : STD_LOGIC_VECTOR ( 0 to 0 );
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -8591,7 +8591,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized31\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized31\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 0 to 0 );
     clka : in STD_LOGIC;
@@ -8602,10 +8602,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized31\ is
     dina : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized31\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized31\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized31\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized31\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized31\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized31\ is
   signal cascadelata_tmp : STD_LOGIC;
   signal cascadelatb_tmp : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.CASCADED_PRIM36.ram_B_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9062,7 +9062,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized32\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized32\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 0 to 0 );
     clka : in STD_LOGIC;
@@ -9073,10 +9073,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized32\ is
     dina : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized32\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized32\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized32\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized32\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized32\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized32\ is
   signal cascadelata_tmp : STD_LOGIC;
   signal cascadelatb_tmp : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.CASCADED_PRIM36.ram_B_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9533,7 +9533,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized4\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized4\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -9546,10 +9546,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized4\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized4\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized4\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized4\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized4\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized4\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized4\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -9788,7 +9788,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized5\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized5\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -9801,10 +9801,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized5\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized5\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized5\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized5\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized5\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized5\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized5\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10043,7 +10043,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized6\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized6\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -10057,10 +10057,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized6\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized6\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized6\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized6\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized6\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized6\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized6\ is
   signal addra_15_sn_1 : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -10313,7 +10313,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized7\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized7\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -10326,10 +10326,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized7\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized7\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized7\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized7\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized7\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized7\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized7\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10568,7 +10568,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized8\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized8\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -10581,10 +10581,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized8\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized8\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized8\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized8\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized8\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized8\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized8\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -10823,7 +10823,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized9\ is
+entity \bram_phys_blk_mem_gen_prim_wrapper__parameterized9\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -10836,10 +10836,10 @@ entity \bram_dac_blk_mem_gen_prim_wrapper__parameterized9\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_wrapper__parameterized9\ : entity is "blk_mem_gen_prim_wrapper";
-end \bram_dac_blk_mem_gen_prim_wrapper__parameterized9\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_wrapper__parameterized9\ : entity is "blk_mem_gen_prim_wrapper";
+end \bram_phys_blk_mem_gen_prim_wrapper__parameterized9\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_wrapper__parameterized9\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_wrapper__parameterized9\ is
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -11078,7 +11078,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_blk_mem_gen_prim_width is
+entity bram_phys_blk_mem_gen_prim_width is
   port (
     ram_doutb : out STD_LOGIC_VECTOR ( 8 downto 0 );
     addrb_14_sp_1 : out STD_LOGIC;
@@ -11089,13 +11089,13 @@ entity bram_dac_blk_mem_gen_prim_width is
     addrb : in STD_LOGIC_VECTOR ( 15 downto 0 );
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
-end bram_dac_blk_mem_gen_prim_width;
+end bram_phys_blk_mem_gen_prim_width;
 
-architecture STRUCTURE of bram_dac_blk_mem_gen_prim_width is
+architecture STRUCTURE of bram_phys_blk_mem_gen_prim_width is
   signal addrb_14_sn_1 : STD_LOGIC;
 begin
   addrb_14_sp_1 <= addrb_14_sn_1;
-\prim_noinit.ram\: entity work.bram_dac_blk_mem_gen_prim_wrapper
+\prim_noinit.ram\: entity work.bram_phys_blk_mem_gen_prim_wrapper
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -11111,7 +11111,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized0\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized0\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11124,12 +11124,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized0\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized0\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized0\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized0\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized0\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized0\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized0\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized0\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized0\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11146,7 +11146,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized1\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized1\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11159,12 +11159,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized1\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized1\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized1\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized1\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized1\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized1\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized1\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized1\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized1\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11181,7 +11181,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized10\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized10\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11194,12 +11194,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized10\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized10\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized10\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized10\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized10\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized10\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized10\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized10\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized10\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11216,7 +11216,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized11\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized11\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11229,12 +11229,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized11\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized11\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized11\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized11\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized11\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized11\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized11\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized11\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized11\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11251,7 +11251,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized12\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized12\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11264,12 +11264,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized12\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized12\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized12\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized12\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized12\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized12\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized12\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized12\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized12\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11286,7 +11286,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized13\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized13\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11299,12 +11299,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized13\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized13\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized13\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized13\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized13\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized13\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized13\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized13\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized13\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11321,7 +11321,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized14\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized14\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11334,12 +11334,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized14\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized14\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized14\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized14\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized14\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized14\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized14\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized14\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized14\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11356,7 +11356,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized15\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized15\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11369,12 +11369,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized15\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized15\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized15\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized15\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized15\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized15\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized15\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized15\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized15\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11391,7 +11391,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized16\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized16\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11404,12 +11404,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized16\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized16\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized16\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized16\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized16\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized16\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized16\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized16\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized16\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11426,7 +11426,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized17\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized17\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11439,12 +11439,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized17\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized17\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized17\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized17\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized17\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized17\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized17\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized17\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized17\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11461,7 +11461,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized18\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized18\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11475,12 +11475,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized18\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized18\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized18\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized18\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized18\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized18\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized18\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized18\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized18\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11498,7 +11498,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized19\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized19\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11511,12 +11511,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized19\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized19\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized19\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized19\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized19\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized19\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized19\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized19\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized19\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11533,7 +11533,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized2\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized2\ is
   port (
     DOBDO : out STD_LOGIC_VECTOR ( 7 downto 0 );
     DOPBDOP : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11546,12 +11546,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized2\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized2\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized2\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized2\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized2\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized2\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized2\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized2\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized2\
      port map (
       DOBDO(7 downto 0) => DOBDO(7 downto 0),
       DOPBDOP(0) => DOPBDOP(0),
@@ -11568,7 +11568,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized20\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized20\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11582,12 +11582,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized20\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized20\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized20\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized20\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized20\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized20\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized20\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized20\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized20\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11605,7 +11605,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized21\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized21\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11618,12 +11618,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized21\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized21\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized21\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized21\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized21\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized21\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized21\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized21\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized21\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11640,7 +11640,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized22\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized22\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11653,12 +11653,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized22\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized22\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized22\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized22\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized22\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized22\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized22\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized22\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized22\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11675,7 +11675,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized23\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized23\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11688,12 +11688,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized23\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized23\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized23\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized23\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized23\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized23\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized23\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized23\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized23\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11710,7 +11710,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized24\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized24\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11723,12 +11723,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized24\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized24\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized24\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized24\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized24\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized24\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized24\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized24\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized24\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11745,7 +11745,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized25\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized25\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11758,12 +11758,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized25\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized25\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized25\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized25\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized25\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized25\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized25\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized25\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized25\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11780,7 +11780,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized26\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized26\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11793,12 +11793,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized26\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized26\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized26\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized26\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized26\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized26\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized26\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized26\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized26\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11815,7 +11815,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized27\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized27\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11828,12 +11828,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized27\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized27\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized27\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized27\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized27\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized27\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized27\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized27\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized27\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11850,7 +11850,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized28\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized28\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11863,12 +11863,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized28\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized28\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized28\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized28\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized28\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized28\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized28\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized28\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized28\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11885,7 +11885,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized29\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized29\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11898,12 +11898,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized29\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized29\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized29\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized29\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized29\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized29\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized29\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized29\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized29\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11920,7 +11920,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized3\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized3\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11933,14 +11933,14 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized3\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized3\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized3\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized3\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized3\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized3\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized3\ is
   signal addrb_15_sn_1 : STD_LOGIC;
 begin
   addrb_15_sp_1 <= addrb_15_sn_1;
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized3\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized3\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11957,7 +11957,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized30\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized30\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -11970,12 +11970,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized30\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized30\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized30\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized30\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized30\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized30\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized30\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized30\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized30\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -11992,7 +11992,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized31\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized31\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 0 to 0 );
     clka : in STD_LOGIC;
@@ -12003,12 +12003,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized31\ is
     dina : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized31\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized31\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized31\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized31\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized31\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized31\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized31\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized31\
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -12023,7 +12023,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized32\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized32\ is
   port (
     doutb : out STD_LOGIC_VECTOR ( 0 to 0 );
     clka : in STD_LOGIC;
@@ -12034,12 +12034,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized32\ is
     dina : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized32\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized32\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized32\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized32\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized32\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized32\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized32\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized32\
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -12054,7 +12054,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized4\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized4\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -12067,12 +12067,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized4\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized4\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized4\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized4\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized4\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized4\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized4\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized4\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized4\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -12089,7 +12089,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized5\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized5\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -12102,12 +12102,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized5\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized5\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized5\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized5\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized5\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized5\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized5\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized5\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized5\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -12124,7 +12124,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized6\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized6\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -12138,14 +12138,14 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized6\ is
     wea : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized6\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized6\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized6\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized6\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized6\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized6\ is
   signal addra_15_sn_1 : STD_LOGIC;
 begin
   addra_15_sp_1 <= addra_15_sn_1;
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized6\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized6\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -12163,7 +12163,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized7\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized7\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -12176,12 +12176,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized7\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized7\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized7\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized7\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized7\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized7\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized7\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized7\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized7\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -12198,7 +12198,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized8\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized8\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -12211,12 +12211,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized8\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized8\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized8\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized8\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized8\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized8\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized8\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized8\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized8\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -12233,7 +12233,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \bram_dac_blk_mem_gen_prim_width__parameterized9\ is
+entity \bram_phys_blk_mem_gen_prim_width__parameterized9\ is
   port (
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\ : out STD_LOGIC_VECTOR ( 7 downto 0 );
     \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -12246,12 +12246,12 @@ entity \bram_dac_blk_mem_gen_prim_width__parameterized9\ is
     dina : in STD_LOGIC_VECTOR ( 8 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \bram_dac_blk_mem_gen_prim_width__parameterized9\ : entity is "blk_mem_gen_prim_width";
-end \bram_dac_blk_mem_gen_prim_width__parameterized9\;
+  attribute ORIG_REF_NAME of \bram_phys_blk_mem_gen_prim_width__parameterized9\ : entity is "blk_mem_gen_prim_width";
+end \bram_phys_blk_mem_gen_prim_width__parameterized9\;
 
-architecture STRUCTURE of \bram_dac_blk_mem_gen_prim_width__parameterized9\ is
+architecture STRUCTURE of \bram_phys_blk_mem_gen_prim_width__parameterized9\ is
 begin
-\prim_noinit.ram\: entity work.\bram_dac_blk_mem_gen_prim_wrapper__parameterized9\
+\prim_noinit.ram\: entity work.\bram_phys_blk_mem_gen_prim_wrapper__parameterized9\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(7 downto 0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7 downto 0),
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_1\(0) => \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram_0\(0),
@@ -12268,7 +12268,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_blk_mem_gen_generic_cstr is
+entity bram_phys_blk_mem_gen_generic_cstr is
   port (
     doutb : out STD_LOGIC_VECTOR ( 19 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -12278,9 +12278,9 @@ entity bram_dac_blk_mem_gen_generic_cstr is
     clkb : in STD_LOGIC;
     dina : in STD_LOGIC_VECTOR ( 19 downto 0 )
   );
-end bram_dac_blk_mem_gen_generic_cstr;
+end bram_phys_blk_mem_gen_generic_cstr;
 
-architecture STRUCTURE of bram_dac_blk_mem_gen_generic_cstr is
+architecture STRUCTURE of bram_phys_blk_mem_gen_generic_cstr is
   signal ena_array : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal enb_array : STD_LOGIC_VECTOR ( 15 downto 1 );
   signal ram_doutb : STD_LOGIC_VECTOR ( 8 downto 0 );
@@ -12567,7 +12567,7 @@ architecture STRUCTURE of bram_dac_blk_mem_gen_generic_cstr is
   signal \ramloop[9].ram.r_n_7\ : STD_LOGIC;
   signal \ramloop[9].ram.r_n_8\ : STD_LOGIC;
 begin
-\bindec_a.bindec_inst_a\: entity work.bram_dac_bindec
+\bindec_a.bindec_inst_a\: entity work.bram_phys_bindec
      port map (
       addra(3 downto 0) => addra(15 downto 12),
       ena_array(12 downto 5) => ena_array(15 downto 8),
@@ -12576,14 +12576,14 @@ begin
       ena_array(2 downto 0) => ena_array(2 downto 0),
       wea(0) => wea(0)
     );
-\bindec_b.bindec_inst_b\: entity work.bram_dac_bindec_0
+\bindec_b.bindec_inst_b\: entity work.bram_phys_bindec_0
      port map (
       addrb(3 downto 0) => addrb(15 downto 12),
       enb_array(10 downto 6) => enb_array(14 downto 10),
       enb_array(5 downto 2) => enb_array(8 downto 5),
       enb_array(1 downto 0) => enb_array(2 downto 1)
     );
-\has_mux_b.B\: entity work.\bram_dac_blk_mem_gen_mux__parameterized0\
+\has_mux_b.B\: entity work.\bram_phys_blk_mem_gen_mux__parameterized0\
      port map (
       DOBDO(7) => \ramloop[3].ram.r_n_0\,
       DOBDO(6) => \ramloop[3].ram.r_n_1\,
@@ -12869,7 +12869,7 @@ begin
       \doutb[8]_INST_0_i_2_7\(0) => \ramloop[12].ram.r_n_8\,
       ram_doutb(8 downto 0) => ram_doutb(8 downto 0)
     );
-\ramloop[0].ram.r\: entity work.bram_dac_blk_mem_gen_prim_width
+\ramloop[0].ram.r\: entity work.bram_phys_blk_mem_gen_prim_width
      port map (
       addra(11 downto 0) => addra(11 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -12880,7 +12880,7 @@ begin
       ena_array(0) => ena_array(0),
       ram_doutb(8 downto 0) => ram_doutb(8 downto 0)
     );
-\ramloop[10].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized9\
+\ramloop[10].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized9\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[10].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[10].ram.r_n_1\,
@@ -12899,7 +12899,7 @@ begin
       ena_array(0) => ena_array(10),
       enb_array(0) => enb_array(10)
     );
-\ramloop[11].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized10\
+\ramloop[11].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized10\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[11].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[11].ram.r_n_1\,
@@ -12918,7 +12918,7 @@ begin
       ena_array(0) => ena_array(11),
       enb_array(0) => enb_array(11)
     );
-\ramloop[12].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized11\
+\ramloop[12].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized11\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[12].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[12].ram.r_n_1\,
@@ -12937,7 +12937,7 @@ begin
       ena_array(0) => ena_array(12),
       enb_array(0) => enb_array(12)
     );
-\ramloop[13].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized12\
+\ramloop[13].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized12\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[13].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[13].ram.r_n_1\,
@@ -12956,7 +12956,7 @@ begin
       ena_array(0) => ena_array(13),
       enb_array(0) => enb_array(13)
     );
-\ramloop[14].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized13\
+\ramloop[14].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized13\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[14].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[14].ram.r_n_1\,
@@ -12975,7 +12975,7 @@ begin
       ena_array(0) => ena_array(14),
       enb_array(0) => enb_array(14)
     );
-\ramloop[15].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized14\
+\ramloop[15].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized14\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[15].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[15].ram.r_n_1\,
@@ -12994,7 +12994,7 @@ begin
       ena_array(0) => ena_array(15),
       enb_array(0) => enb_array(15)
     );
-\ramloop[16].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized15\
+\ramloop[16].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized15\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[16].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[16].ram.r_n_1\,
@@ -13013,7 +13013,7 @@ begin
       dina(8 downto 0) => dina(17 downto 9),
       ena_array(0) => ena_array(0)
     );
-\ramloop[17].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized16\
+\ramloop[17].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized16\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[17].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[17].ram.r_n_1\,
@@ -13032,7 +13032,7 @@ begin
       ena_array(0) => ena_array(1),
       enb_array(0) => enb_array(1)
     );
-\ramloop[18].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized17\
+\ramloop[18].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized17\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[18].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[18].ram.r_n_1\,
@@ -13051,7 +13051,7 @@ begin
       ena_array(0) => ena_array(2),
       enb_array(0) => enb_array(2)
     );
-\ramloop[19].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized18\
+\ramloop[19].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized18\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[19].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[19].ram.r_n_1\,
@@ -13071,7 +13071,7 @@ begin
       enb_array(0) => enb_array(3),
       wea(0) => wea(0)
     );
-\ramloop[1].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized0\
+\ramloop[1].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized0\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[1].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[1].ram.r_n_1\,
@@ -13090,7 +13090,7 @@ begin
       ena_array(0) => ena_array(1),
       enb_array(0) => enb_array(1)
     );
-\ramloop[20].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized19\
+\ramloop[20].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized19\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[20].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[20].ram.r_n_1\,
@@ -13109,7 +13109,7 @@ begin
       dina(8 downto 0) => dina(17 downto 9),
       ena_array(0) => ena_array(4)
     );
-\ramloop[21].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized20\
+\ramloop[21].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized20\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[21].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[21].ram.r_n_1\,
@@ -13129,7 +13129,7 @@ begin
       enb_array(0) => enb_array(5),
       wea(0) => wea(0)
     );
-\ramloop[22].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized21\
+\ramloop[22].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized21\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[22].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[22].ram.r_n_1\,
@@ -13148,7 +13148,7 @@ begin
       ena_array(0) => ena_array(6),
       enb_array(0) => enb_array(6)
     );
-\ramloop[23].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized22\
+\ramloop[23].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized22\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[23].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[23].ram.r_n_1\,
@@ -13167,7 +13167,7 @@ begin
       dina(8 downto 0) => dina(17 downto 9),
       enb_array(0) => enb_array(7)
     );
-\ramloop[24].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized23\
+\ramloop[24].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized23\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[24].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[24].ram.r_n_1\,
@@ -13186,7 +13186,7 @@ begin
       ena_array(0) => ena_array(8),
       enb_array(0) => enb_array(8)
     );
-\ramloop[25].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized24\
+\ramloop[25].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized24\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[25].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[25].ram.r_n_1\,
@@ -13205,7 +13205,7 @@ begin
       ena_array(0) => ena_array(9),
       enb_array(0) => enb_array(9)
     );
-\ramloop[26].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized25\
+\ramloop[26].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized25\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[26].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[26].ram.r_n_1\,
@@ -13224,7 +13224,7 @@ begin
       ena_array(0) => ena_array(10),
       enb_array(0) => enb_array(10)
     );
-\ramloop[27].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized26\
+\ramloop[27].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized26\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[27].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[27].ram.r_n_1\,
@@ -13243,7 +13243,7 @@ begin
       ena_array(0) => ena_array(11),
       enb_array(0) => enb_array(11)
     );
-\ramloop[28].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized27\
+\ramloop[28].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized27\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[28].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[28].ram.r_n_1\,
@@ -13262,7 +13262,7 @@ begin
       ena_array(0) => ena_array(12),
       enb_array(0) => enb_array(12)
     );
-\ramloop[29].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized28\
+\ramloop[29].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized28\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[29].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[29].ram.r_n_1\,
@@ -13281,7 +13281,7 @@ begin
       ena_array(0) => ena_array(13),
       enb_array(0) => enb_array(13)
     );
-\ramloop[2].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized1\
+\ramloop[2].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized1\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[2].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[2].ram.r_n_1\,
@@ -13300,7 +13300,7 @@ begin
       ena_array(0) => ena_array(2),
       enb_array(0) => enb_array(2)
     );
-\ramloop[30].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized29\
+\ramloop[30].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized29\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[30].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[30].ram.r_n_1\,
@@ -13319,7 +13319,7 @@ begin
       ena_array(0) => ena_array(14),
       enb_array(0) => enb_array(14)
     );
-\ramloop[31].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized30\
+\ramloop[31].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized30\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[31].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[31].ram.r_n_1\,
@@ -13338,7 +13338,7 @@ begin
       ena_array(0) => ena_array(15),
       enb_array(0) => enb_array(15)
     );
-\ramloop[32].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized31\
+\ramloop[32].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized31\
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -13348,7 +13348,7 @@ begin
       doutb(0) => doutb(18),
       wea(0) => wea(0)
     );
-\ramloop[33].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized32\
+\ramloop[33].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized32\
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -13358,7 +13358,7 @@ begin
       doutb(0) => doutb(19),
       wea(0) => wea(0)
     );
-\ramloop[3].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized2\
+\ramloop[3].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized2\
      port map (
       DOBDO(7) => \ramloop[3].ram.r_n_0\,
       DOBDO(6) => \ramloop[3].ram.r_n_1\,
@@ -13377,7 +13377,7 @@ begin
       ena_array(0) => ena_array(3),
       enb_array(0) => enb_array(3)
     );
-\ramloop[4].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized3\
+\ramloop[4].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized3\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[4].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[4].ram.r_n_1\,
@@ -13396,7 +13396,7 @@ begin
       dina(8 downto 0) => dina(8 downto 0),
       ena_array(0) => ena_array(4)
     );
-\ramloop[5].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized4\
+\ramloop[5].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized4\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[5].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[5].ram.r_n_1\,
@@ -13415,7 +13415,7 @@ begin
       ena_array(0) => ena_array(5),
       enb_array(0) => enb_array(5)
     );
-\ramloop[6].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized5\
+\ramloop[6].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized5\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[6].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[6].ram.r_n_1\,
@@ -13434,7 +13434,7 @@ begin
       ena_array(0) => ena_array(6),
       enb_array(0) => enb_array(6)
     );
-\ramloop[7].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized6\
+\ramloop[7].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized6\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[7].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[7].ram.r_n_1\,
@@ -13454,7 +13454,7 @@ begin
       enb_array(0) => enb_array(7),
       wea(0) => wea(0)
     );
-\ramloop[8].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized7\
+\ramloop[8].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized7\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[8].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[8].ram.r_n_1\,
@@ -13473,7 +13473,7 @@ begin
       ena_array(0) => ena_array(8),
       enb_array(0) => enb_array(8)
     );
-\ramloop[9].ram.r\: entity work.\bram_dac_blk_mem_gen_prim_width__parameterized8\
+\ramloop[9].ram.r\: entity work.\bram_phys_blk_mem_gen_prim_width__parameterized8\
      port map (
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(7) => \ramloop[9].ram.r_n_0\,
       \DEVICE_7SERIES.NO_BMM_INFO.SDP.SIMPLE_PRIM36.ram\(6) => \ramloop[9].ram.r_n_1\,
@@ -13497,7 +13497,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_blk_mem_gen_top is
+entity bram_phys_blk_mem_gen_top is
   port (
     doutb : out STD_LOGIC_VECTOR ( 19 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -13507,11 +13507,11 @@ entity bram_dac_blk_mem_gen_top is
     clkb : in STD_LOGIC;
     dina : in STD_LOGIC_VECTOR ( 19 downto 0 )
   );
-end bram_dac_blk_mem_gen_top;
+end bram_phys_blk_mem_gen_top;
 
-architecture STRUCTURE of bram_dac_blk_mem_gen_top is
+architecture STRUCTURE of bram_phys_blk_mem_gen_top is
 begin
-\valid.cstr\: entity work.bram_dac_blk_mem_gen_generic_cstr
+\valid.cstr\: entity work.bram_phys_blk_mem_gen_generic_cstr
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -13526,7 +13526,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_blk_mem_gen_v8_4_4_synth is
+entity bram_phys_blk_mem_gen_v8_4_4_synth is
   port (
     doutb : out STD_LOGIC_VECTOR ( 19 downto 0 );
     addra : in STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -13536,11 +13536,11 @@ entity bram_dac_blk_mem_gen_v8_4_4_synth is
     clkb : in STD_LOGIC;
     dina : in STD_LOGIC_VECTOR ( 19 downto 0 )
   );
-end bram_dac_blk_mem_gen_v8_4_4_synth;
+end bram_phys_blk_mem_gen_v8_4_4_synth;
 
-architecture STRUCTURE of bram_dac_blk_mem_gen_v8_4_4_synth is
+architecture STRUCTURE of bram_phys_blk_mem_gen_v8_4_4_synth is
 begin
-\gnbram.gnativebmg.native_blk_mem_gen\: entity work.bram_dac_blk_mem_gen_top
+\gnbram.gnativebmg.native_blk_mem_gen\: entity work.bram_phys_blk_mem_gen_top
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -13555,7 +13555,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac_blk_mem_gen_v8_4_4 is
+entity bram_phys_blk_mem_gen_v8_4_4 is
   port (
     clka : in STD_LOGIC;
     rsta : in STD_LOGIC;
@@ -13622,160 +13622,160 @@ entity bram_dac_blk_mem_gen_v8_4_4 is
     s_axi_rdaddrecc : out STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute C_ADDRA_WIDTH : integer;
-  attribute C_ADDRA_WIDTH of bram_dac_blk_mem_gen_v8_4_4 : entity is 16;
+  attribute C_ADDRA_WIDTH of bram_phys_blk_mem_gen_v8_4_4 : entity is 16;
   attribute C_ADDRB_WIDTH : integer;
-  attribute C_ADDRB_WIDTH of bram_dac_blk_mem_gen_v8_4_4 : entity is 16;
+  attribute C_ADDRB_WIDTH of bram_phys_blk_mem_gen_v8_4_4 : entity is 16;
   attribute C_ALGORITHM : integer;
-  attribute C_ALGORITHM of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_ALGORITHM of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_AXI_ID_WIDTH : integer;
-  attribute C_AXI_ID_WIDTH of bram_dac_blk_mem_gen_v8_4_4 : entity is 4;
+  attribute C_AXI_ID_WIDTH of bram_phys_blk_mem_gen_v8_4_4 : entity is 4;
   attribute C_AXI_SLAVE_TYPE : integer;
-  attribute C_AXI_SLAVE_TYPE of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_AXI_SLAVE_TYPE of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_AXI_TYPE : integer;
-  attribute C_AXI_TYPE of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_AXI_TYPE of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_BYTE_SIZE : integer;
-  attribute C_BYTE_SIZE of bram_dac_blk_mem_gen_v8_4_4 : entity is 9;
+  attribute C_BYTE_SIZE of bram_phys_blk_mem_gen_v8_4_4 : entity is 9;
   attribute C_COMMON_CLK : integer;
-  attribute C_COMMON_CLK of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_COMMON_CLK of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_COUNT_18K_BRAM : string;
-  attribute C_COUNT_18K_BRAM of bram_dac_blk_mem_gen_v8_4_4 : entity is "0";
+  attribute C_COUNT_18K_BRAM of bram_phys_blk_mem_gen_v8_4_4 : entity is "0";
   attribute C_COUNT_36K_BRAM : string;
-  attribute C_COUNT_36K_BRAM of bram_dac_blk_mem_gen_v8_4_4 : entity is "36";
+  attribute C_COUNT_36K_BRAM of bram_phys_blk_mem_gen_v8_4_4 : entity is "36";
   attribute C_CTRL_ECC_ALGO : string;
-  attribute C_CTRL_ECC_ALGO of bram_dac_blk_mem_gen_v8_4_4 : entity is "NONE";
+  attribute C_CTRL_ECC_ALGO of bram_phys_blk_mem_gen_v8_4_4 : entity is "NONE";
   attribute C_DEFAULT_DATA : string;
-  attribute C_DEFAULT_DATA of bram_dac_blk_mem_gen_v8_4_4 : entity is "0";
+  attribute C_DEFAULT_DATA of bram_phys_blk_mem_gen_v8_4_4 : entity is "0";
   attribute C_DISABLE_WARN_BHV_COLL : integer;
-  attribute C_DISABLE_WARN_BHV_COLL of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_DISABLE_WARN_BHV_COLL of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_DISABLE_WARN_BHV_RANGE : integer;
-  attribute C_DISABLE_WARN_BHV_RANGE of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_DISABLE_WARN_BHV_RANGE of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_ELABORATION_DIR : string;
-  attribute C_ELABORATION_DIR of bram_dac_blk_mem_gen_v8_4_4 : entity is "./";
+  attribute C_ELABORATION_DIR of bram_phys_blk_mem_gen_v8_4_4 : entity is "./";
   attribute C_ENABLE_32BIT_ADDRESS : integer;
-  attribute C_ENABLE_32BIT_ADDRESS of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_ENABLE_32BIT_ADDRESS of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_DEEPSLEEP_PIN : integer;
-  attribute C_EN_DEEPSLEEP_PIN of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_DEEPSLEEP_PIN of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_ECC_PIPE : integer;
-  attribute C_EN_ECC_PIPE of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_ECC_PIPE of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_RDADDRA_CHG : integer;
-  attribute C_EN_RDADDRA_CHG of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_RDADDRA_CHG of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_RDADDRB_CHG : integer;
-  attribute C_EN_RDADDRB_CHG of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_RDADDRB_CHG of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_SAFETY_CKT : integer;
-  attribute C_EN_SAFETY_CKT of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_SAFETY_CKT of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_SHUTDOWN_PIN : integer;
-  attribute C_EN_SHUTDOWN_PIN of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_SHUTDOWN_PIN of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EN_SLEEP_PIN : integer;
-  attribute C_EN_SLEEP_PIN of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_EN_SLEEP_PIN of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_EST_POWER_SUMMARY : string;
-  attribute C_EST_POWER_SUMMARY of bram_dac_blk_mem_gen_v8_4_4 : entity is "Estimated Power for IP     :     18.774798 mW";
+  attribute C_EST_POWER_SUMMARY of bram_phys_blk_mem_gen_v8_4_4 : entity is "Estimated Power for IP     :     18.774798 mW";
   attribute C_FAMILY : string;
-  attribute C_FAMILY of bram_dac_blk_mem_gen_v8_4_4 : entity is "kintex7";
+  attribute C_FAMILY of bram_phys_blk_mem_gen_v8_4_4 : entity is "kintex7";
   attribute C_HAS_AXI_ID : integer;
-  attribute C_HAS_AXI_ID of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_AXI_ID of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_ENA : integer;
-  attribute C_HAS_ENA of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_ENA of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_ENB : integer;
-  attribute C_HAS_ENB of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_ENB of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_INJECTERR : integer;
-  attribute C_HAS_INJECTERR of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_INJECTERR of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_A : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_MEM_OUTPUT_REGS_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MEM_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MEM_OUTPUT_REGS_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_MEM_OUTPUT_REGS_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_A : integer;
-  attribute C_HAS_MUX_OUTPUT_REGS_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_MUX_OUTPUT_REGS_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_MUX_OUTPUT_REGS_B : integer;
-  attribute C_HAS_MUX_OUTPUT_REGS_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_MUX_OUTPUT_REGS_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_REGCEA : integer;
-  attribute C_HAS_REGCEA of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_REGCEA of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_REGCEB : integer;
-  attribute C_HAS_REGCEB of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_REGCEB of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_RSTA : integer;
-  attribute C_HAS_RSTA of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_RSTA of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_RSTB : integer;
-  attribute C_HAS_RSTB of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_RSTB of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_SOFTECC_INPUT_REGS_A : integer;
-  attribute C_HAS_SOFTECC_INPUT_REGS_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_SOFTECC_INPUT_REGS_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_HAS_SOFTECC_OUTPUT_REGS_B : integer;
-  attribute C_HAS_SOFTECC_OUTPUT_REGS_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_HAS_SOFTECC_OUTPUT_REGS_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_INITA_VAL : string;
-  attribute C_INITA_VAL of bram_dac_blk_mem_gen_v8_4_4 : entity is "0";
+  attribute C_INITA_VAL of bram_phys_blk_mem_gen_v8_4_4 : entity is "0";
   attribute C_INITB_VAL : string;
-  attribute C_INITB_VAL of bram_dac_blk_mem_gen_v8_4_4 : entity is "0";
+  attribute C_INITB_VAL of bram_phys_blk_mem_gen_v8_4_4 : entity is "0";
   attribute C_INIT_FILE : string;
-  attribute C_INIT_FILE of bram_dac_blk_mem_gen_v8_4_4 : entity is "bram_adc.mem";
+  attribute C_INIT_FILE of bram_phys_blk_mem_gen_v8_4_4 : entity is "bram_adc.mem";
   attribute C_INIT_FILE_NAME : string;
-  attribute C_INIT_FILE_NAME of bram_dac_blk_mem_gen_v8_4_4 : entity is "no_coe_file_loaded";
+  attribute C_INIT_FILE_NAME of bram_phys_blk_mem_gen_v8_4_4 : entity is "no_coe_file_loaded";
   attribute C_INTERFACE_TYPE : integer;
-  attribute C_INTERFACE_TYPE of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_INTERFACE_TYPE of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_LOAD_INIT_FILE : integer;
-  attribute C_LOAD_INIT_FILE of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_LOAD_INIT_FILE of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_MEM_TYPE : integer;
-  attribute C_MEM_TYPE of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_MEM_TYPE of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_MUX_PIPELINE_STAGES : integer;
-  attribute C_MUX_PIPELINE_STAGES of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_MUX_PIPELINE_STAGES of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_PRIM_TYPE : integer;
-  attribute C_PRIM_TYPE of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_PRIM_TYPE of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_READ_DEPTH_A : integer;
-  attribute C_READ_DEPTH_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 65536;
+  attribute C_READ_DEPTH_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 65536;
   attribute C_READ_DEPTH_B : integer;
-  attribute C_READ_DEPTH_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 65536;
+  attribute C_READ_DEPTH_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 65536;
   attribute C_READ_LATENCY_A : integer;
-  attribute C_READ_LATENCY_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_READ_LATENCY_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_READ_LATENCY_B : integer;
-  attribute C_READ_LATENCY_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_READ_LATENCY_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_READ_WIDTH_A : integer;
-  attribute C_READ_WIDTH_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 20;
+  attribute C_READ_WIDTH_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 20;
   attribute C_READ_WIDTH_B : integer;
-  attribute C_READ_WIDTH_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 20;
+  attribute C_READ_WIDTH_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 20;
   attribute C_RSTRAM_A : integer;
-  attribute C_RSTRAM_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_RSTRAM_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_RSTRAM_B : integer;
-  attribute C_RSTRAM_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_RSTRAM_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_RST_PRIORITY_A : string;
-  attribute C_RST_PRIORITY_A of bram_dac_blk_mem_gen_v8_4_4 : entity is "CE";
+  attribute C_RST_PRIORITY_A of bram_phys_blk_mem_gen_v8_4_4 : entity is "CE";
   attribute C_RST_PRIORITY_B : string;
-  attribute C_RST_PRIORITY_B of bram_dac_blk_mem_gen_v8_4_4 : entity is "CE";
+  attribute C_RST_PRIORITY_B of bram_phys_blk_mem_gen_v8_4_4 : entity is "CE";
   attribute C_SIM_COLLISION_CHECK : string;
-  attribute C_SIM_COLLISION_CHECK of bram_dac_blk_mem_gen_v8_4_4 : entity is "ALL";
+  attribute C_SIM_COLLISION_CHECK of bram_phys_blk_mem_gen_v8_4_4 : entity is "ALL";
   attribute C_USE_BRAM_BLOCK : integer;
-  attribute C_USE_BRAM_BLOCK of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_BRAM_BLOCK of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_USE_BYTE_WEA : integer;
-  attribute C_USE_BYTE_WEA of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_BYTE_WEA of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_USE_BYTE_WEB : integer;
-  attribute C_USE_BYTE_WEB of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_BYTE_WEB of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_USE_DEFAULT_DATA : integer;
-  attribute C_USE_DEFAULT_DATA of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_DEFAULT_DATA of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_USE_ECC : integer;
-  attribute C_USE_ECC of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_ECC of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_USE_SOFTECC : integer;
-  attribute C_USE_SOFTECC of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_SOFTECC of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_USE_URAM : integer;
-  attribute C_USE_URAM of bram_dac_blk_mem_gen_v8_4_4 : entity is 0;
+  attribute C_USE_URAM of bram_phys_blk_mem_gen_v8_4_4 : entity is 0;
   attribute C_WEA_WIDTH : integer;
-  attribute C_WEA_WIDTH of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_WEA_WIDTH of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_WEB_WIDTH : integer;
-  attribute C_WEB_WIDTH of bram_dac_blk_mem_gen_v8_4_4 : entity is 1;
+  attribute C_WEB_WIDTH of bram_phys_blk_mem_gen_v8_4_4 : entity is 1;
   attribute C_WRITE_DEPTH_A : integer;
-  attribute C_WRITE_DEPTH_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 65536;
+  attribute C_WRITE_DEPTH_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 65536;
   attribute C_WRITE_DEPTH_B : integer;
-  attribute C_WRITE_DEPTH_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 65536;
+  attribute C_WRITE_DEPTH_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 65536;
   attribute C_WRITE_MODE_A : string;
-  attribute C_WRITE_MODE_A of bram_dac_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
+  attribute C_WRITE_MODE_A of bram_phys_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
   attribute C_WRITE_MODE_B : string;
-  attribute C_WRITE_MODE_B of bram_dac_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
+  attribute C_WRITE_MODE_B of bram_phys_blk_mem_gen_v8_4_4 : entity is "WRITE_FIRST";
   attribute C_WRITE_WIDTH_A : integer;
-  attribute C_WRITE_WIDTH_A of bram_dac_blk_mem_gen_v8_4_4 : entity is 20;
+  attribute C_WRITE_WIDTH_A of bram_phys_blk_mem_gen_v8_4_4 : entity is 20;
   attribute C_WRITE_WIDTH_B : integer;
-  attribute C_WRITE_WIDTH_B of bram_dac_blk_mem_gen_v8_4_4 : entity is 20;
+  attribute C_WRITE_WIDTH_B of bram_phys_blk_mem_gen_v8_4_4 : entity is 20;
   attribute C_XDEVICEFAMILY : string;
-  attribute C_XDEVICEFAMILY of bram_dac_blk_mem_gen_v8_4_4 : entity is "kintex7";
+  attribute C_XDEVICEFAMILY of bram_phys_blk_mem_gen_v8_4_4 : entity is "kintex7";
   attribute downgradeipidentifiedwarnings : string;
-  attribute downgradeipidentifiedwarnings of bram_dac_blk_mem_gen_v8_4_4 : entity is "yes";
-end bram_dac_blk_mem_gen_v8_4_4;
+  attribute downgradeipidentifiedwarnings of bram_phys_blk_mem_gen_v8_4_4 : entity is "yes";
+end bram_phys_blk_mem_gen_v8_4_4;
 
-architecture STRUCTURE of bram_dac_blk_mem_gen_v8_4_4 is
+architecture STRUCTURE of bram_phys_blk_mem_gen_v8_4_4 is
   signal \<const0>\ : STD_LOGIC;
 begin
   dbiterr <= \<const0>\;
@@ -13878,7 +13878,7 @@ GND: unisim.vcomponents.GND
      port map (
       G => \<const0>\
     );
-inst_blk_mem_gen: entity work.bram_dac_blk_mem_gen_v8_4_4_synth
+inst_blk_mem_gen: entity work.bram_phys_blk_mem_gen_v8_4_4_synth
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),
@@ -13893,7 +13893,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity bram_dac is
+entity bram_phys is
   port (
     clka : in STD_LOGIC;
     wea : in STD_LOGIC_VECTOR ( 0 to 0 );
@@ -13904,16 +13904,16 @@ entity bram_dac is
     doutb : out STD_LOGIC_VECTOR ( 19 downto 0 )
   );
   attribute NotValidForBitStream : boolean;
-  attribute NotValidForBitStream of bram_dac : entity is true;
+  attribute NotValidForBitStream of bram_phys : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of bram_dac : entity is "bram_adc,blk_mem_gen_v8_4_4,{}";
+  attribute CHECK_LICENSE_TYPE of bram_phys : entity is "bram_adc,blk_mem_gen_v8_4_4,{}";
   attribute downgradeipidentifiedwarnings : string;
-  attribute downgradeipidentifiedwarnings of bram_dac : entity is "yes";
+  attribute downgradeipidentifiedwarnings of bram_phys : entity is "yes";
   attribute x_core_info : string;
-  attribute x_core_info of bram_dac : entity is "blk_mem_gen_v8_4_4,Vivado 2019.2";
-end bram_dac;
+  attribute x_core_info of bram_phys : entity is "blk_mem_gen_v8_4_4,Vivado 2019.2";
+end bram_phys;
 
-architecture STRUCTURE of bram_dac is
+architecture STRUCTURE of bram_phys is
   signal NLW_U0_dbiterr_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_rsta_busy_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_rstb_busy_UNCONNECTED : STD_LOGIC;
@@ -14097,7 +14097,7 @@ architecture STRUCTURE of bram_dac is
   attribute x_interface_info of doutb : signal is "xilinx.com:interface:bram:1.0 BRAM_PORTB DOUT";
   attribute x_interface_info of wea : signal is "xilinx.com:interface:bram:1.0 BRAM_PORTA WE";
 begin
-U0: entity work.bram_dac_blk_mem_gen_v8_4_4
+U0: entity work.bram_phys_blk_mem_gen_v8_4_4
      port map (
       addra(15 downto 0) => addra(15 downto 0),
       addrb(15 downto 0) => addrb(15 downto 0),

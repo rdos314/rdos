@@ -52,7 +52,7 @@
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT bram_adc
+COMPONENT bram_phys
   PORT (
     clka : IN STD_LOGIC;
     wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
@@ -69,7 +69,7 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : bram_adc
+your_instance_name : bram_phys
   PORT MAP (
     clka => clka,
     wea => wea,
@@ -81,7 +81,7 @@ your_instance_name : bram_adc
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file bram_adc.vhd when simulating
--- the core, bram_adc. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file bram_phys.vhd when simulating
+-- the core, bram_phys. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 
