@@ -20,49 +20,53 @@ module adc_bar (
 
 // local bar
 
-  reg                    bar_wr;
-  reg                    bar_wr_valid;
-  reg  [15:0]            bar_wr_adr;
-  reg  [19:0]            bar_wr_data;
+  wire [19:0]            rd_only_adr;
+  wire [19:0]            rd_adr;
 
-  reg                    bar_rd;
-  reg                    bar_msb;
-  wire [15:0]            bar_rd_adr;
-  wire [19:0]            bar_rd_data;
-
+  reg                    q_rd;
+  reg                    q_rd_msb;
   reg  [15:0]            q_rd_adr;
+  wire [19:0]            q_rd_data;
+
+  reg                    q_pend_wr;
+  reg  [31:0]            q_pend_data;
+  reg                    q_wr_msb;
+  reg                    q_wr;
+  reg  [15:0]            q_wr_adr;
+  reg  [19:0]            q_wr_data;
 
   reg  [16:0]            adc_curr_index;
 
 
 bram_adc bram_adc_inst (
-  .clka(up_clk),       // input wire clka
-  .wea(wr),            // input wire [0 : 0] wea
-  .addra(bar_wr_adr),  // input wire [15 : 0] addra
-  .dina(bar_wr_data),  // input wire [19 : 0] dina
-  .clkb(up_clk),       // input wire clkb
-  .addrb(bar_rd_adr),  // input wire [15 : 0] addrb
-  .doutb(bar_rd_data)  // output wire [19 : 0] doutb
+  .clka(up_clk),      // input wire clka
+  .wea(q_wr),         // input wire [0 : 0] wea
+  .addra(q_wr_adr),   // input wire [15 : 0] addra
+  .dina(q_wr_data),   // input wire [19 : 0] dina
+  .clkb(up_clk),      // input wire clkb
+  .addrb(rd_adr),     // input wire [15 : 0] addrb
+  .doutb(q_rd_data)   // output wire [19 : 0] doutb
 );
 
 generate
 begin : adc_app
 
-  assign bar_rd_adr = rd ? rd_address[16:1] : adc_index;
+  assign rd_only_adr = rd ? rd_address[16:1] : adc_index;
+  assign rd_adr = wr ? wr_address[16:1] : rd_only_adr;
 
   always @ ( posedge up_clk ) 
   begin
-    if (bar_rd)
+    if (q_rd)
     begin
-      if (bar_msb)
+      if (q_rd_msb)
       begin
-        rp_data[8:0] <= bar_rd_data[19:11];
+        rp_data[8:0] <= q_rd_data[19:11];
         rp_data[31:9] <= 0;
       end
       else
       begin
         rp_data[20:0] <= 0;
-        rp_data[31:21] <= bar_rd_data[10:0];
+        rp_data[31:21] <= q_rd_data[10:0];
       end
       rp <= 1;
     end
@@ -74,32 +78,54 @@ begin : adc_app
   begin
     if (up_reset)
     begin
-      bar_rd <= 0;
+      q_rd <= 0;
+      q_wr <= 0;
       q_rd_adr <= 0;
+      q_pend_wr <= 0;
     end
     else
     begin
-      q_rd_adr <= bar_rd_adr;
+      q_rd_adr <= rd_adr;
 
       if (wr)
       begin
-        bar_wr_adr <= wr_address[16:1];
-        if (wr_address[0])
-          bar_wr_data[19:11] <= wr_data[8:0];
-        else
-          bar_wr_data[10:0] = wr_data[31:21];
-
-        bar_rd <= 0;
+        q_wr_adr <= wr_address[16:1];
+        q_wr_msb <= wr_address[0];
+        q_pend_data <= wr_data;
+        q_rd <= 0;
+        q_wr <= 0;
+        q_pend_wr <= 1;
       end
       else
       begin
         if (rd)
         begin
-          bar_msb <= rd_address[0];
-          bar_rd <= 1;
+          q_rd_msb <= rd_address[0];
+          q_rd <= 1;
         end
         else
-          bar_rd <= 0;
+          q_rd <= 0;
+
+        if (q_pend_wr)
+        begin
+          if (q_wr_msb)
+          begin
+            q_wr_data[19:11] <= q_pend_data[8:0];
+            q_wr_data[10:0] = q_rd_data[10:0];
+          end
+          else
+          begin
+            q_wr_data[10:0] = q_pend_data[31:21];
+            q_wr_data[19:11] <= q_rd_data[19:11];
+          end
+
+          q_wr <= 1;
+          q_pend_wr <= 0;
+        end
+        else
+          q_wr <= 0;
+
+        end
       end
     end
   end
@@ -119,7 +145,7 @@ begin : adc_app
         if (q_rd_adr == adc_index)
         begin
           adc_address[20:0] <= 0;
-          adc_address[40:21] <= bar_rd_data;
+          adc_address[40:21] <= q_rd_data;
           adc_address[63:41] <= 0;
           adc_valid <= 1;
         end

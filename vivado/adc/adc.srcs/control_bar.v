@@ -58,6 +58,10 @@ generate
         adc_start <= 0;
         adc_stop <= 0;
 
+        bar_spi_clk <= 0;
+        bar_spi_adc <= 0;
+        bar_spi_dac <= 0;
+
         spi_clk_valid <= 0;
         spi_adc_valid <= 0;
         spi_dac_valid <= 0;
@@ -115,7 +119,7 @@ generate
               begin
                 if (wr_be[0])
                 begin
-                  state[6:2] <= wr_data[6:2];
+                  state[5:0] <= wr_data[5:0];
                   if (state[7] != wr_data[7])
                   begin
                     if (wr_data[7])
