@@ -537,37 +537,6 @@ adc_bar adc_bar_inst (
 );
 
 
-ila_3 ila_3_inst (
-	.clk(user_clk),                         // input wire clk
-	.probe0(pci_bar0_rd_address),      // input wire [9:0]  probe0  
-	.probe1(pci_bar0_rd),              // input wire [0:0]  probe0  
-	.probe2(pci_up_bar0_rd),           // input wire [0:0]  probe0  
-	.probe3(pci_up_bar0_rd_cnt),       // input wire [2:0]  probe0  
-	.probe4(pci_bar0_wr_address),      // input wire [9:0]  probe0  
-	.probe5(pci_bar0_wr_data),         // input wire [31:0]  probe0  
-	.probe6(pci_bar0_wr_be),           // input wire [3:0]  probe0  
-	.probe7(pci_bar0_wr),              // input wire [0:0]  probe0  
-	.probe8(pci_up_bar0_wr),           // input wire [0:0]  probe0  
-	.probe9(pci_up_bar0_wr_cnt),       // input wire [2:0]  probe0  
-	.probe10(pci_bar0_rp_address),      // input wire [31:0]  probe0  
-	.probe11(pci_bar0_rp)               // input wire [0:0]  probe0  
-); 
-
-
-ila_4 ila_4_inst (
-	.clk(up_clk),                         // input wire clk
-	.probe0(up_bar0_rd_address),       // input wire [9:0]  probe0  
-	.probe1(up_bar0_rd),               // input wire [0:0]  probe0  
-	.probe2(curr_bar0_rd),             // input wire [0:0]  probe0  
-	.probe3(up_bar0_wr_address),       // input wire [9:0]  probe0  
-	.probe4(up_bar0_wr_data),          // input wire [31:0]  probe0  
-	.probe5(up_bar0_wr_be),            // input wire [3:0]  probe0  
-	.probe6(up_bar0_wr),               // input wire [0:0]  probe0  
-	.probe7(curr_bar0_wr),             // input wire [0:0]  probe0  
-	.probe8(up_bar0_rp),               // input wire [0:0]  probe0  
-	.probe9(up_bar0_rp_data)           // input wire [31:0]  probe0  
-); 
-
  //-----------------------------I/O BUFFERS------------------------//
 
   IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));

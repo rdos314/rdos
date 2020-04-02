@@ -471,7 +471,7 @@ generate
             8'b000_00001,
             8'b001_00001: 
             begin
-              bar0_rd_address <= pci_rx_address[9:0];
+              bar0_rd_address <= pci_rx_address[11:2];
 
               q_bar0_rp_header[95:72] <= pci_rx_header[63:40];
               q_bar0_rp_header[71] <= 0;
@@ -511,7 +511,7 @@ generate
             8'b010_00000,
             8'b011_00000:
             begin       
-              bar0_wr_address <= pci_rx_address[9:0];
+              bar0_wr_address <= pci_rx_address[11:2];
               bar0_wr_data <= pci_rx_data[31:0];
               bar0_wr_be <= pci_rx_be[3:0];
               bar0_wr <= 1;
@@ -538,7 +538,7 @@ generate
               8'b000_00001,
               8'b001_00001: 
               begin
-                bar1_rd_address <= pci_rx_address[16:0];
+                bar1_rd_address <= pci_rx_address[18:2];
 
                 q_bar1_rp_header[95:72] <= pci_rx_header[63:40];
                 q_bar1_rp_header[71] <= 0;
@@ -578,7 +578,7 @@ generate
               8'b010_00000,
               8'b011_00000:
               begin       
-                bar1_wr_address <= pci_rx_address[16:0];
+                bar1_wr_address <= pci_rx_address[18:2];
                 bar1_wr_data <= pci_rx_data[31:0];
                 bar1_wr_be <= pci_rx_be[3:0];
                 bar1_wr <= 1;
@@ -605,7 +605,7 @@ generate
                 8'b000_00001,
                 8'b001_00001: 
                 begin
-                  bar2_rd_address <= pci_rx_address[16:0];
+                  bar2_rd_address <= pci_rx_address[18:2];
 
                   q_bar2_rp_header[95:72] <= pci_rx_header[63:40];
                   q_bar2_rp_header[71] <= 0;
@@ -645,7 +645,7 @@ generate
                 8'b010_00000,
                 8'b011_00000:
                 begin       
-                  bar2_wr_address <= pci_rx_address[16:0];
+                  bar2_wr_address <= pci_rx_address[18:2];
                   bar2_wr_data <= pci_rx_data[31:0];
                   bar2_wr_be <= pci_rx_be[3:0];
                   bar2_wr <= 1;
