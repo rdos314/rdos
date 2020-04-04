@@ -48,7 +48,7 @@
 //
 //-----------------------------------------------------------------------------
 // Project    : Series-7 Integrated Block for PCI Express
-// File       : pcie_core_top.v
+// File       : pcie_7x_0_core_top.v
 // Version    : 3.3
 //
 // Description: 7-series solution wrapper : Endpoint for PCI Express
@@ -59,14 +59,14 @@
 
 `timescale 1ps/1ps
 
-(* CORE_GENERATION_INFO = "pcie,pcie_7x_v3_3_11,{LINK_CAP_MAX_LINK_SPEED=2,LINK_CAP_MAX_LINK_WIDTH=8,PCIE_CAP_DEVICE_PORT_TYPE=0000,DEV_CAP_MAX_PAYLOAD_SUPPORTED=0,USER_CLK_FREQ=4,REF_CLK_FREQ=0,MSI_CAP_ON=TRUE,MSI_CAP_MULTIMSGCAP=0,MSI_CAP_MULTIMSG_EXTENSION=0,MSIX_CAP_ON=FALSE,TL_TX_RAM_RADDR_LATENCY=1,TL_TX_RAM_RDATA_LATENCY=3,TL_RX_RAM_RADDR_LATENCY=1,TL_RX_RAM_RDATA_LATENCY=3,TL_RX_RAM_WRITE_LATENCY=1,\
+(* CORE_GENERATION_INFO = "pcie_7x_0,pcie_7x_v3_3_11,{LINK_CAP_MAX_LINK_SPEED=2,LINK_CAP_MAX_LINK_WIDTH=8,PCIE_CAP_DEVICE_PORT_TYPE=0000,DEV_CAP_MAX_PAYLOAD_SUPPORTED=0,USER_CLK_FREQ=4,REF_CLK_FREQ=0,MSI_CAP_ON=TRUE,MSI_CAP_MULTIMSGCAP=0,MSI_CAP_MULTIMSG_EXTENSION=0,MSIX_CAP_ON=FALSE,TL_TX_RAM_RADDR_LATENCY=1,TL_TX_RAM_RDATA_LATENCY=3,TL_RX_RAM_RADDR_LATENCY=1,TL_RX_RAM_RDATA_LATENCY=3,TL_RX_RAM_WRITE_LATENCY=1,\
 VC0_TX_LASTPACKET=31,VC0_RX_RAM_LIMIT=3FF,VC0_TOTAL_CREDITS_PH=4,VC0_TOTAL_CREDITS_PD=32,VC0_TOTAL_CREDITS_NPH=4,VC0_TOTAL_CREDITS_NPD=8,VC0_TOTAL_CREDITS_CH=72,VC0_TOTAL_CREDITS_CD=370,VC0_CPL_INFINITE=TRUE,DEV_CAP_PHANTOM_FUNCTIONS_SUPPORT=0,DEV_CAP_EXT_TAG_SUPPORTED=FALSE,LINK_STATUS_SLOT_CLOCK_CONFIG=TRUE,DISABLE_LANE_REVERSAL=TRUE,DISABLE_SCRAMBLING=FALSE,DSN_CAP_ON=FALSE,REVISION_ID=00,VC_CAP_ON=FALSE}" *)
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module pcie_core_top # (
+module pcie_7x_0_core_top # (
   parameter         CFG_VEND_ID        = 16'h10EE,
   parameter         CFG_DEV_ID         = 16'hAACC,
   parameter         CFG_REV_ID         =  8'h00,
-  parameter         CFG_SUBSYS_VEND_ID = 16'h0,
+  parameter         CFG_SUBSYS_VEND_ID = 16'h10EE,
   parameter         CFG_SUBSYS_ID      = 16'h0007,
 
   parameter         EXT_PIPE_SIM = "FALSE",
@@ -165,7 +165,7 @@ module pcie_core_top # (
   parameter         PM_CAP_D1SUPPORT = "FALSE",
   parameter         PM_CAP_D2SUPPORT = "FALSE",
   parameter [7:0]   PM_CAP_NEXTPTR = 8'h48,
-  parameter [4:0]   PM_CAP_PMESUPPORT = 5'h01,
+  parameter [4:0]   PM_CAP_PMESUPPORT = 5'h09,
   parameter         PM_CSR_NOSOFTRST = "TRUE",
 
   parameter [1:0]   PM_DATA_SCALE0 = 2'h0,
@@ -1121,7 +1121,7 @@ module pcie_core_top # (
   //   2) PCIE 2_1 Hard Block                                                                                         //
   //   3) PCIE PIPE Interface Pipeline                                                                                //
   //------------------------------------------------------------------------------------------------------------------//
-pcie_pcie_top # (
+pcie_7x_0_pcie_top # (
     .PIPE_PIPELINE_STAGES                     ( PIPE_PIPELINE_STAGES ),
     .AER_BASE_PTR                             ( AER_BASE_PTR ),
     .AER_CAP_ECRC_CHECK_CAPABLE               ( AER_CAP_ECRC_CHECK_CAPABLE ),
@@ -1811,7 +1811,7 @@ pcie_pcie_top # (
   //     2) Kintex-7 GTX                                                                                              //
   //     3) Artix-7  GTP                                                                                              //
   //------------------------------------------------------------------------------------------------------------------//
-pcie_gt_top #(
+pcie_7x_0_gt_top #(
     .LINK_CAP_MAX_LINK_WIDTH       ( LINK_CAP_MAX_LINK_WIDTH ),
     .REF_CLK_FREQ                  ( REF_CLK_FREQ ),
     .USER_CLK_FREQ                 ( USER_CLK_FREQ ),

@@ -1,11 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sun Feb 16 17:05:15 2020
+-- Date        : Sat Apr  4 22:25:58 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top pcie -prefix
---               pcie_ pcie_sim_netlist.vhdl
--- Design      : pcie
+-- Command     : write_vhdl -force -mode funcsim C:/rdos/vivado/adc/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
+-- Design      : pcie_7x_0
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
 -- Device      : xc7k325tffg900-2
@@ -14,7 +13,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity \pcie_BRAM_SDP_MACRO_viv_\ is
+entity pcie_7x_0_BRAM_SDP_MACRO is
   port (
     D : out STD_LOGIC_VECTOR ( 32 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -24,9 +23,11 @@ entity \pcie_BRAM_SDP_MACRO_viv_\ is
     ADDRBWRADDR : in STD_LOGIC_VECTOR ( 9 downto 0 );
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 32 downto 0 )
   );
-end \pcie_BRAM_SDP_MACRO_viv_\;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_BRAM_SDP_MACRO : entity is "BRAM_SDP_MACRO";
+end pcie_7x_0_BRAM_SDP_MACRO;
 
-architecture STRUCTURE of \pcie_BRAM_SDP_MACRO_viv_\ is
+architecture STRUCTURE of pcie_7x_0_BRAM_SDP_MACRO is
   signal rdata_int : STD_LOGIC_VECTOR ( 71 downto 69 );
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -274,7 +275,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_BRAM_SDP_MACRO_12 is
+entity pcie_7x_0_BRAM_SDP_MACRO_12 is
   port (
     D : out STD_LOGIC_VECTOR ( 31 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -285,10 +286,10 @@ entity pcie_BRAM_SDP_MACRO_12 is
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_BRAM_SDP_MACRO_12 : entity is "BRAM_SDP_MACRO";
-end pcie_BRAM_SDP_MACRO_12;
+  attribute ORIG_REF_NAME of pcie_7x_0_BRAM_SDP_MACRO_12 : entity is "BRAM_SDP_MACRO";
+end pcie_7x_0_BRAM_SDP_MACRO_12;
 
-architecture STRUCTURE of pcie_BRAM_SDP_MACRO_12 is
+architecture STRUCTURE of pcie_7x_0_BRAM_SDP_MACRO_12 is
   signal rdata_int : STD_LOGIC_VECTOR ( 71 downto 68 );
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
@@ -536,7 +537,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_BRAM_SDP_MACRO_13 is
+entity pcie_7x_0_BRAM_SDP_MACRO_13 is
   port (
     D : out STD_LOGIC_VECTOR ( 35 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -547,10 +548,10 @@ entity pcie_BRAM_SDP_MACRO_13 is
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 35 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_BRAM_SDP_MACRO_13 : entity is "BRAM_SDP_MACRO";
-end pcie_BRAM_SDP_MACRO_13;
+  attribute ORIG_REF_NAME of pcie_7x_0_BRAM_SDP_MACRO_13 : entity is "BRAM_SDP_MACRO";
+end pcie_7x_0_BRAM_SDP_MACRO_13;
 
-architecture STRUCTURE of pcie_BRAM_SDP_MACRO_13 is
+architecture STRUCTURE of pcie_7x_0_BRAM_SDP_MACRO_13 is
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -795,7 +796,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_BRAM_SDP_MACRO_9 is
+entity pcie_7x_0_BRAM_SDP_MACRO_9 is
   port (
     D : out STD_LOGIC_VECTOR ( 35 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -806,10 +807,10 @@ entity pcie_BRAM_SDP_MACRO_9 is
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 35 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_BRAM_SDP_MACRO_9 : entity is "BRAM_SDP_MACRO";
-end pcie_BRAM_SDP_MACRO_9;
+  attribute ORIG_REF_NAME of pcie_7x_0_BRAM_SDP_MACRO_9 : entity is "BRAM_SDP_MACRO";
+end pcie_7x_0_BRAM_SDP_MACRO_9;
 
-architecture STRUCTURE of pcie_BRAM_SDP_MACRO_9 is
+architecture STRUCTURE of pcie_7x_0_BRAM_SDP_MACRO_9 is
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTA_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_CASCADEOUTB_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_genblk3_0.bram36_dp_bl.bram36_tdp_bl_DBITERR_UNCONNECTED\ : STD_LOGIC;
@@ -1054,7 +1055,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_rx_null_gen is
+entity pcie_7x_0_pcie_7x_0_axi_basic_rx_null_gen is
   port (
     cur_state : out STD_LOGIC;
     null_mux_sel_reg : out STD_LOGIC;
@@ -1078,9 +1079,11 @@ entity pcie_pcie_axi_basic_rx_null_gen is
     null_mux_sel_reg_0 : in STD_LOGIC;
     \reg_pkt_len_counter_reg[7]_2\ : in STD_LOGIC
   );
-end pcie_pcie_axi_basic_rx_null_gen;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_rx_null_gen : entity is "pcie_7x_0_axi_basic_rx_null_gen";
+end pcie_7x_0_pcie_7x_0_axi_basic_rx_null_gen;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_rx_null_gen is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_rx_null_gen is
   signal cur_state_i_4_n_0 : STD_LOGIC;
   signal cur_state_i_5_n_0 : STD_LOGIC;
   signal \^m_axis_rx_tuser[21]_i_10_0\ : STD_LOGIC;
@@ -1731,7 +1734,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_rx_pipeline is
+entity pcie_7x_0_pcie_7x_0_axi_basic_rx_pipeline is
   port (
     trn_rsrc_dsc_d : out STD_LOGIC;
     m_axis_rx_tvalid_reg_0 : out STD_LOGIC;
@@ -1774,9 +1777,11 @@ entity pcie_pcie_axi_basic_rx_pipeline is
     \trn_rd_prev_reg[127]_0\ : in STD_LOGIC_VECTOR ( 127 downto 0 );
     \trn_rbar_hit_prev_reg[6]_0\ : in STD_LOGIC_VECTOR ( 6 downto 0 )
   );
-end pcie_pcie_axi_basic_rx_pipeline;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_rx_pipeline : entity is "pcie_7x_0_axi_basic_rx_pipeline";
+end pcie_7x_0_pcie_7x_0_axi_basic_rx_pipeline;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_rx_pipeline is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_rx_pipeline is
   signal \^di\ : STD_LOGIC_VECTOR ( 3 downto 0 );
   signal \^e\ : STD_LOGIC_VECTOR ( 0 to 0 );
   signal \^q\ : STD_LOGIC_VECTOR ( 127 downto 0 );
@@ -6188,7 +6193,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_tx_pipeline is
+entity pcie_7x_0_pcie_7x_0_axi_basic_tx_pipeline is
   port (
     TRNTREM : out STD_LOGIC_VECTOR ( 1 downto 0 );
     trn_teof : out STD_LOGIC;
@@ -6211,9 +6216,11 @@ entity pcie_pcie_axi_basic_tx_pipeline is
     s_axis_tx_tuser : in STD_LOGIC_VECTOR ( 3 downto 0 );
     s_axis_tx_tkeep : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_axi_basic_tx_pipeline;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_tx_pipeline : entity is "pcie_7x_0_axi_basic_tx_pipeline";
+end pcie_7x_0_pcie_7x_0_axi_basic_tx_pipeline;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_tx_pipeline is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_tx_pipeline is
   signal \^trntrem\ : STD_LOGIC_VECTOR ( 1 downto 0 );
   signal \^axi_in_packet\ : STD_LOGIC;
   signal \^reg_disable_trn\ : STD_LOGIC;
@@ -7409,7 +7416,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_tx_thrtl_ctl is
+entity pcie_7x_0_pcie_7x_0_axi_basic_tx_thrtl_ctl is
   port (
     reg_tcfg_gnt : out STD_LOGIC;
     tready_thrtl_reg_0 : out STD_LOGIC;
@@ -7441,9 +7448,11 @@ entity pcie_pcie_axi_basic_tx_thrtl_ctl is
     s_axis_tx_tuser : in STD_LOGIC_VECTOR ( 0 to 0 );
     \cfg_pcie_link_state_d_reg[2]_0\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_axi_basic_tx_thrtl_ctl;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_tx_thrtl_ctl : entity is "pcie_7x_0_axi_basic_tx_thrtl_ctl";
+end pcie_7x_0_pcie_7x_0_axi_basic_tx_thrtl_ctl;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_tx_thrtl_ctl is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_tx_thrtl_ctl is
   signal \^l23_thrtl_ep.x7_l23_thrtl_ep.reg_to_turnoff_reg_0\ : STD_LOGIC;
   signal cfg_pcie_link_state_d : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal cfg_turnoff_ok_pending : STD_LOGIC;
@@ -8156,7 +8165,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q : out STD_LOGIC;
@@ -8175,9 +8184,11 @@ entity pcie_pcie_gt_rx_valid_filter_7x is
     PIPE_RXDATAK : in STD_LOGIC_VECTOR ( 1 downto 0 );
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
-end pcie_pcie_gt_rx_valid_filter_7x;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__6_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__6_n_0\ : STD_LOGIC;
@@ -8773,7 +8784,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_14 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_14 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -8792,10 +8803,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_14 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_14 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_14;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_14 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_14;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_14 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_14 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__5_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__5_n_0\ : STD_LOGIC;
@@ -9376,7 +9387,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_15 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_15 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -9395,10 +9406,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_15 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_15 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_15;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_15 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_15;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_15 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_15 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__4_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__4_n_0\ : STD_LOGIC;
@@ -9979,7 +9990,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_16 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_16 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -9998,10 +10009,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_16 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_16 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_16;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_16 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_16;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_16 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_16 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__3_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__3_n_0\ : STD_LOGIC;
@@ -10582,7 +10593,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_17 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_17 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -10601,10 +10612,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_17 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_17 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_17;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_17 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_17;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_17 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_17 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__2_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__2_n_0\ : STD_LOGIC;
@@ -11185,7 +11196,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_18 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_18 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -11204,10 +11215,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_18 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_18 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_18;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_18 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_18;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_18 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_18 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__1_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__1_n_0\ : STD_LOGIC;
@@ -11788,7 +11799,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_19 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_19 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -11807,10 +11818,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_19 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_19 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_19;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_19 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_19;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_19 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_19 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1__0_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1__0_n_0\ : STD_LOGIC;
@@ -12391,7 +12402,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_rx_valid_filter_7x_20 is
+entity pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_20 is
   port (
     gt_rxvalid_q_reg_0 : out STD_LOGIC;
     gt_rx_phy_status_q_reg_0 : out STD_LOGIC;
@@ -12410,10 +12421,10 @@ entity pcie_pcie_gt_rx_valid_filter_7x_20 is
     PIPE_RXDATA : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_rx_valid_filter_7x_20 : entity is "pcie_gt_rx_valid_filter_7x";
-end pcie_pcie_gt_rx_valid_filter_7x_20;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_20 : entity is "pcie_7x_0_gt_rx_valid_filter_7x";
+end pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_20;
 
-architecture STRUCTURE of pcie_pcie_gt_rx_valid_filter_7x_20 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_20 is
   signal \^q\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal \gt_rx_status_q[0]_i_1_n_0\ : STD_LOGIC;
   signal \gt_rx_status_q[1]_i_1_n_0\ : STD_LOGIC;
@@ -12994,7 +13005,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd is
   port (
     cpllpd_6 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -13002,9 +13013,11 @@ entity pcie_pcie_gtx_cpllpd_ovrd is
     rate_cpllreset_7 : in STD_LOGIC;
     RST_CPLLRESET : in STD_LOGIC
   );
-end pcie_pcie_gtx_cpllpd_ovrd;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -13161,7 +13174,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_65 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_65 is
   port (
     cpllpd_5 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -13170,10 +13183,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_65 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_65 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_65;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_65 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_65;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_65 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_65 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -13330,7 +13343,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_67 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_67 is
   port (
     cpllpd_4 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -13339,10 +13352,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_67 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_67 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_67;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_67 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_67;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_67 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_67 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -13499,7 +13512,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_69 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_69 is
   port (
     cpllpd_3 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -13508,10 +13521,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_69 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_69 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_69;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_69 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_69;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_69 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_69 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -13668,7 +13681,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_71 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_71 is
   port (
     cpllpd_2 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -13677,10 +13690,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_71 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_71 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_71;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_71 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_71;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_71 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_71 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -13837,7 +13850,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_73 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_73 is
   port (
     cpllpd_1 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -13846,10 +13859,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_73 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_73 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_73;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_73 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_73;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_73 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_73 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -14006,7 +14019,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_75 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_75 is
   port (
     cpllpd_0 : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -14015,10 +14028,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_75 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_75 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_75;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_75 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_75;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_75 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_75 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -14175,7 +14188,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gtx_cpllpd_ovrd_79 is
+entity pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_79 is
   port (
     cpllpd : out STD_LOGIC;
     CPLLRESET0 : out STD_LOGIC;
@@ -14184,10 +14197,10 @@ entity pcie_pcie_gtx_cpllpd_ovrd_79 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gtx_cpllpd_ovrd_79 : entity is "pcie_gtx_cpllpd_ovrd";
-end pcie_pcie_gtx_cpllpd_ovrd_79;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_79 : entity is "pcie_7x_0_gtx_cpllpd_ovrd";
+end pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_79;
 
-architecture STRUCTURE of pcie_pcie_gtx_cpllpd_ovrd_79 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_79 is
   signal \cpllpd_wait_reg[31]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[63]_srl32_n_1\ : STD_LOGIC;
   signal \cpllpd_wait_reg[94]_srl31_n_0\ : STD_LOGIC;
@@ -14344,7 +14357,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane is
   port (
     pipe_rx1_valid : out STD_LOGIC;
     pipe_rx1_chanisaligned : out STD_LOGIC;
@@ -14375,9 +14388,11 @@ entity pcie_pcie_pcie_pipe_lane is
     \pipe_stages_1.pipe_tx_data_q_reg[15]_0\ : in STD_LOGIC_VECTOR ( 15 downto 0 );
     \pipe_stages_1.pipe_tx_powerdown_q_reg[1]_0\ : in STD_LOGIC_VECTOR ( 1 downto 0 )
   );
-end pcie_pcie_pcie_pipe_lane;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -14768,7 +14783,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_0 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_0 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -14800,10 +14815,10 @@ entity pcie_pcie_pcie_pipe_lane_0 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_0 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_0;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_0 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_0;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_0 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_0 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -15194,7 +15209,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_1 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_1 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -15226,10 +15241,10 @@ entity pcie_pcie_pcie_pipe_lane_1 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_1 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_1;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_1 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_1;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_1 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_1 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -15620,7 +15635,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_2 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_2 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -15652,10 +15667,10 @@ entity pcie_pcie_pcie_pipe_lane_2 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_2 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_2;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_2 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_2;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_2 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_2 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -16046,7 +16061,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_3 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_3 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -16078,10 +16093,10 @@ entity pcie_pcie_pcie_pipe_lane_3 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_3 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_3;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_3 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_3;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_3 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_3 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -16472,7 +16487,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_4 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_4 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -16504,10 +16519,10 @@ entity pcie_pcie_pcie_pipe_lane_4 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_4 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_4;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_4 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_4;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_4 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_4 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -16898,7 +16913,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_5 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_5 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -16930,10 +16945,10 @@ entity pcie_pcie_pcie_pipe_lane_5 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_5 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_5;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_5 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_5;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_5 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_5 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -17324,7 +17339,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_lane_6 is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_lane_6 is
   port (
     PIPE_RXPOLARITY : out STD_LOGIC_VECTOR ( 0 to 0 );
     PIPE_TXCOMPLIANCE : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -17356,10 +17371,10 @@ entity pcie_pcie_pcie_pipe_lane_6 is
     \pipe_stages_1.pipe_rx_status_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_pipe_lane_6 : entity is "pcie_pcie_pipe_lane";
-end pcie_pcie_pcie_pipe_lane_6;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_6 : entity is "pcie_7x_0_pcie_pipe_lane";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_lane_6;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_lane_6 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_lane_6 is
 begin
 \pipe_stages_1.pipe_rx_chanisaligned_q_reg\: unisim.vcomponents.FDRE
      port map (
@@ -17750,7 +17765,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_misc is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_misc is
   port (
     pipe_tx_rcvr_det_gt : out STD_LOGIC;
     \pipe_stages_1.pipe_tx_rate_q_reg_0\ : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -17763,9 +17778,11 @@ entity pcie_pcie_pcie_pipe_misc is
     pipe_tx_deemph : in STD_LOGIC;
     \pipe_stages_1.pipe_tx_margin_q_reg[2]_1\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_pcie_pipe_misc;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_misc : entity is "pcie_7x_0_pcie_pipe_misc";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_misc;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_misc is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_misc is
 begin
 \pipe_stages_1.pipe_tx_deemph_q_reg\: unisim.vcomponents.FDSE
      port map (
@@ -17820,7 +17837,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_clock is
+entity pcie_7x_0_pcie_7x_0_pipe_clock is
   port (
     mmcm_i_0 : out STD_LOGIC;
     CLK_MMCM_LOCK : out STD_LOGIC;
@@ -17835,9 +17852,11 @@ entity pcie_pcie_pipe_clock is
     USER_RATE_GEN3 : in STD_LOGIC;
     pipe_mmcm_rst_n : in STD_LOGIC
   );
-end pcie_pcie_pipe_clock;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_clock : entity is "pcie_7x_0_pipe_clock";
+end pcie_7x_0_pcie_7x_0_pipe_clock;
 
-architecture STRUCTURE of pcie_pcie_pipe_clock is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_clock is
   signal \^clk_mmcm_lock\ : STD_LOGIC;
   signal \^clk_rxusrclk\ : STD_LOGIC;
   signal RST0 : STD_LOGIC;
@@ -18723,7 +18742,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp is
+entity pcie_7x_0_pcie_7x_0_pipe_drp is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRPADDR : out STD_LOGIC_VECTOR ( 8 downto 0 );
@@ -18745,9 +18764,11 @@ entity pcie_pcie_pipe_drp is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 );
     ext_ch_gt_drpdi : in STD_LOGIC_VECTOR ( 15 downto 0 )
   );
-end pcie_pcie_pipe_drp;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1_n_0\ : STD_LOGIC;
@@ -20845,7 +20866,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_22 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_22 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -20868,10 +20889,10 @@ entity pcie_pcie_pipe_drp_22 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_22 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_22;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_22 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_22;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_22 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_22 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__0_n_0\ : STD_LOGIC;
@@ -22969,7 +22990,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_28 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_28 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -22992,10 +23013,10 @@ entity pcie_pcie_pipe_drp_28 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_28 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_28;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_28 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_28;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_28 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_28 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__1_n_0\ : STD_LOGIC;
@@ -25093,7 +25114,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_34 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_34 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -25116,10 +25137,10 @@ entity pcie_pcie_pipe_drp_34 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_34 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_34;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_34 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_34;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_34 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_34 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__2_n_0\ : STD_LOGIC;
@@ -27217,7 +27238,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_40 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_40 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -27240,10 +27261,10 @@ entity pcie_pcie_pipe_drp_40 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_40 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_40;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_40 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_40;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_40 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_40 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__3_n_0\ : STD_LOGIC;
@@ -29341,7 +29362,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_47 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_47 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -29364,10 +29385,10 @@ entity pcie_pcie_pipe_drp_47 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_47 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_47;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_47 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_47;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_47 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_47 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__4_n_0\ : STD_LOGIC;
@@ -31465,7 +31486,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_53 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_53 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -31488,10 +31509,10 @@ entity pcie_pcie_pipe_drp_53 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_53 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_53;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_53 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_53;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_53 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_53 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__5_n_0\ : STD_LOGIC;
@@ -33589,7 +33610,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_drp_59 is
+entity pcie_7x_0_pcie_7x_0_pipe_drp_59 is
   port (
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DRP_DONE : out STD_LOGIC;
@@ -33612,10 +33633,10 @@ entity pcie_pcie_pipe_drp_59 is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_drp_59 : entity is "pcie_pipe_drp";
-end pcie_pcie_pipe_drp_59;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_drp_59 : entity is "pcie_7x_0_pipe_drp";
+end pcie_7x_0_pcie_7x_0_pipe_drp_59;
 
-architecture STRUCTURE of pcie_pcie_pipe_drp_59 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_drp_59 is
   signal \^q\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal addr_reg : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \addr_reg[4]_i_1__6_n_0\ : STD_LOGIC;
@@ -35713,7 +35734,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate is
+entity pcie_7x_0_pcie_7x_0_pipe_rate is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_0 : out STD_LOGIC;
@@ -35749,9 +35770,11 @@ entity pcie_pcie_pipe_rate is
     \out\ : in STD_LOGIC;
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
-end pcie_pcie_pipe_rate;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate is
   signal \FSM_onehot_fsm[0]_i_1__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__0_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1_n_0\ : STD_LOGIC;
@@ -37445,7 +37468,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_24 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_24 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_1 : out STD_LOGIC;
@@ -37482,10 +37505,10 @@ entity pcie_pcie_pipe_rate_24 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_24 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_24;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_24 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_24;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_24 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_24 is
   signal \FSM_onehot_fsm[0]_i_1__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__0_n_0\ : STD_LOGIC;
@@ -39179,7 +39202,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_30 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_30 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_2 : out STD_LOGIC;
@@ -39221,10 +39244,10 @@ entity pcie_pcie_pipe_rate_30 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_30 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_30;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_30 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_30;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_30 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_30 is
   signal \FSM_onehot_fsm[0]_i_1__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__1_n_0\ : STD_LOGIC;
@@ -40932,7 +40955,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_36 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_36 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_3 : out STD_LOGIC;
@@ -40969,10 +40992,10 @@ entity pcie_pcie_pipe_rate_36 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_36 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_36;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_36 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_36;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_36 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_36 is
   signal \FSM_onehot_fsm[0]_i_1__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__2_n_0\ : STD_LOGIC;
@@ -42666,7 +42689,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_43 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_43 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_4 : out STD_LOGIC;
@@ -42703,10 +42726,10 @@ entity pcie_pcie_pipe_rate_43 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_43 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_43;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_43 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_43;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_43 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_43 is
   signal \FSM_onehot_fsm[0]_i_1__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__3_n_0\ : STD_LOGIC;
@@ -44400,7 +44423,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_49 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_49 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_5 : out STD_LOGIC;
@@ -44441,10 +44464,10 @@ entity pcie_pcie_pipe_rate_49 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_49 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_49;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_49 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_49;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_49 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_49 is
   signal \FSM_onehot_fsm[0]_i_1__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__4_n_0\ : STD_LOGIC;
@@ -46151,7 +46174,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_55 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_55 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_6 : out STD_LOGIC;
@@ -46188,10 +46211,10 @@ entity pcie_pcie_pipe_rate_55 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_55 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_55;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_55 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_55;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_55 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_55 is
   signal \FSM_onehot_fsm[0]_i_1__7_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__5_n_0\ : STD_LOGIC;
@@ -47885,7 +47908,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_rate_61 is
+entity pcie_7x_0_pcie_7x_0_pipe_rate_61 is
   port (
     SYNC_TXSYNC_START : out STD_LOGIC;
     rxchbonden_7 : out STD_LOGIC;
@@ -47922,10 +47945,10 @@ entity pcie_pcie_pipe_rate_61 is
     \FSM_onehot_fsm_reg[20]_0\ : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_rate_61 : entity is "pcie_pipe_rate";
-end pcie_pcie_pipe_rate_61;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_rate_61 : entity is "pcie_7x_0_pipe_rate";
+end pcie_7x_0_pcie_7x_0_pipe_rate_61;
 
-architecture STRUCTURE of pcie_pcie_pipe_rate_61 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_rate_61 is
   signal \FSM_onehot_fsm[0]_i_1__8_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2__7_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[12]_i_1__6_n_0\ : STD_LOGIC;
@@ -49619,7 +49642,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_reset is
+entity pcie_7x_0_pcie_7x_0_pipe_reset is
   port (
     SS : out STD_LOGIC_VECTOR ( 0 to 0 );
     Q : out STD_LOGIC_VECTOR ( 2 downto 0 );
@@ -49642,9 +49665,11 @@ entity pcie_pcie_pipe_reset is
     \rxcdrlock_reg1_reg[7]_0\ : in STD_LOGIC_VECTOR ( 7 downto 0 );
     \out\ : in STD_LOGIC
   );
-end pcie_pcie_pipe_reset;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_reset : entity is "pcie_7x_0_pipe_reset";
+end pcie_7x_0_pcie_7x_0_pipe_reset;
 
-architecture STRUCTURE of pcie_pcie_pipe_reset is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_reset is
   signal \^drp_gtxreset\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[10]_i_1_n_0\ : STD_LOGIC;
@@ -52044,7 +52069,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync is
+entity pcie_7x_0_pcie_7x_0_pipe_sync is
   port (
     \out\ : out STD_LOGIC;
     txphaligndone_reg3_reg_0 : out STD_LOGIC;
@@ -52071,9 +52096,11 @@ entity pcie_pcie_pipe_sync is
     \FSM_onehot_txsync_fsm.fsm_tx_reg[6]_0\ : in STD_LOGIC;
     \FSM_onehot_txsync_fsm.fsm_tx_reg[6]_1\ : in STD_LOGIC
   );
-end pcie_pcie_pipe_sync;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1_n_0\ : STD_LOGIC;
@@ -52847,7 +52874,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_25 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_25 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -52871,10 +52898,10 @@ entity pcie_pcie_pipe_sync_25 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_25 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_25;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_25 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_25;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_25 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_25 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__0_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__0_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__0_n_0\ : STD_LOGIC;
@@ -53617,7 +53644,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_31 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_31 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -53641,10 +53668,10 @@ entity pcie_pcie_pipe_sync_31 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_31 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_31;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_31 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_31;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_31 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_31 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__1_n_0\ : STD_LOGIC;
@@ -54387,7 +54414,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_37 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_37 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -54411,10 +54438,10 @@ entity pcie_pcie_pipe_sync_37 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_37 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_37;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_37 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_37;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_37 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_37 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__2_n_0\ : STD_LOGIC;
@@ -55157,7 +55184,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_44 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_44 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -55181,10 +55208,10 @@ entity pcie_pcie_pipe_sync_44 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_44 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_44;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_44 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_44;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_44 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_44 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__3_n_0\ : STD_LOGIC;
@@ -55927,7 +55954,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_50 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_50 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -55951,10 +55978,10 @@ entity pcie_pcie_pipe_sync_50 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_50 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_50;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_50 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_50;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_50 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_50 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__4_n_0\ : STD_LOGIC;
@@ -56697,7 +56724,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_56 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_56 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -56721,10 +56748,10 @@ entity pcie_pcie_pipe_sync_56 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_56 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_56;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_56 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_56;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_56 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_56 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__5_n_0\ : STD_LOGIC;
@@ -57467,7 +57494,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_sync_62 is
+entity pcie_7x_0_pcie_7x_0_pipe_sync_62 is
   port (
     Q : out STD_LOGIC_VECTOR ( 5 downto 0 );
     pipe_sync_fsm_rx : out STD_LOGIC_VECTOR ( 0 to 0 );
@@ -57491,10 +57518,10 @@ entity pcie_pcie_pipe_sync_62 is
     user_active_lane : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_sync_62 : entity is "pcie_pipe_sync";
-end pcie_pcie_pipe_sync_62;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_sync_62 : entity is "pcie_7x_0_pipe_sync";
+end pcie_7x_0_pcie_7x_0_pipe_sync_62;
 
-architecture STRUCTURE of pcie_pcie_pipe_sync_62 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_sync_62 is
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_1__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[1]_i_2__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_txsync_fsm.fsm_tx[2]_i_1__6_n_0\ : STD_LOGIC;
@@ -58237,7 +58264,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user is
+entity pcie_7x_0_pcie_7x_0_pipe_user is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -58273,9 +58300,11 @@ entity pcie_pcie_pipe_user is
     USER_RXEQ_ADAPT_DONE : in STD_LOGIC;
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-end pcie_pcie_pipe_user;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user;
 
-architecture STRUCTURE of pcie_pcie_pipe_user is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user is
   signal \converge_cnt[0]_i_1__0_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5_n_0\ : STD_LOGIC;
@@ -59582,7 +59611,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_26 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_26 is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -59614,10 +59643,10 @@ entity pcie_pcie_pipe_user_26 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_26 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_26;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_26 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_26;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_26 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_26 is
   signal \converge_cnt[0]_i_1__2_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__0_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__0_n_0\ : STD_LOGIC;
@@ -60913,7 +60942,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_32 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_32 is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -60957,10 +60986,10 @@ entity pcie_pcie_pipe_user_32 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_32 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_32;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_32 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_32;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_32 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_32 is
   signal \converge_cnt[0]_i_1__4_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__1_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__1_n_0\ : STD_LOGIC;
@@ -62299,7 +62328,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_38 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_38 is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -62331,10 +62360,10 @@ entity pcie_pcie_pipe_user_38 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_38 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_38;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_38 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_38;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_38 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_38 is
   signal \converge_cnt[0]_i_1__6_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__2_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__2_n_0\ : STD_LOGIC;
@@ -63630,7 +63659,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_45 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_45 is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -63672,10 +63701,10 @@ entity pcie_pcie_pipe_user_45 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_45 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_45;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_45 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_45;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_45 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_45 is
   signal \converge_cnt[0]_i_1__8_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__3_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__3_n_0\ : STD_LOGIC;
@@ -64986,7 +65015,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_51 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_51 is
   port (
     reg_clock_locked_reg : out STD_LOGIC;
     gt_rxvalid_q_reg : out STD_LOGIC;
@@ -65026,10 +65055,10 @@ entity pcie_pcie_pipe_user_51 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_51 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_51;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_51 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_51;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_51 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_51 is
   signal \converge_cnt[0]_i_1__10_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__4_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__4_n_0\ : STD_LOGIC;
@@ -66349,7 +66378,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_57 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_57 is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -66390,10 +66419,10 @@ entity pcie_pcie_pipe_user_57 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_57 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_57;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_57 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_57;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_57 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_57 is
   signal \converge_cnt[0]_i_1__12_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__5_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__5_n_0\ : STD_LOGIC;
@@ -67704,7 +67733,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_user_63 is
+entity pcie_7x_0_pcie_7x_0_pipe_user_63 is
   port (
     gt_rxvalid_q_reg : out STD_LOGIC;
     \out\ : out STD_LOGIC;
@@ -67736,10 +67765,10 @@ entity pcie_pcie_pipe_user_63 is
     RST_PHYSTATUS : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_user_63 : entity is "pcie_pipe_user";
-end pcie_pcie_pipe_user_63;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_user_63 : entity is "pcie_7x_0_pipe_user";
+end pcie_7x_0_pcie_7x_0_pipe_user_63;
 
-architecture STRUCTURE of pcie_pcie_pipe_user_63 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_user_63 is
   signal \converge_cnt[0]_i_1__14_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_4__6_n_0\ : STD_LOGIC;
   signal \converge_cnt[0]_i_5__6_n_0\ : STD_LOGIC;
@@ -69035,7 +69064,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_qpll_drp is
+entity pcie_7x_0_pcie_7x_0_qpll_drp is
   port (
     DRP_ADDR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     DRP_DI : out STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -69050,9 +69079,11 @@ entity pcie_pcie_qpll_drp is
     DRP_DO : in STD_LOGIC_VECTOR ( 15 downto 0 );
     DRP_GEN3 : in STD_LOGIC
   );
-end pcie_pcie_qpll_drp;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_qpll_drp : entity is "pcie_7x_0_qpll_drp";
+end pcie_7x_0_pcie_7x_0_qpll_drp;
 
-architecture STRUCTURE of pcie_pcie_qpll_drp is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_qpll_drp is
   signal addr : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \crscode[5]_i_1__0_n_0\ : STD_LOGIC;
   signal \crscode_reg_n_0_[0]\ : STD_LOGIC;
@@ -70728,7 +70759,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_qpll_drp_76 is
+entity pcie_7x_0_pcie_7x_0_qpll_drp_76 is
   port (
     DRP_ADDR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     DRP_DI : out STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -70744,10 +70775,10 @@ entity pcie_pcie_qpll_drp_76 is
     DRP_GEN3 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_qpll_drp_76 : entity is "pcie_qpll_drp";
-end pcie_pcie_qpll_drp_76;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_qpll_drp_76 : entity is "pcie_7x_0_qpll_drp";
+end pcie_7x_0_pcie_7x_0_qpll_drp_76;
 
-architecture STRUCTURE of pcie_pcie_qpll_drp_76 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_qpll_drp_76 is
   signal addr : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal \crscode[5]_i_1_n_0\ : STD_LOGIC;
   signal \crscode_reg_n_0_[0]\ : STD_LOGIC;
@@ -72423,7 +72454,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_qpll_reset is
+entity pcie_7x_0_pcie_7x_0_qpll_reset is
   port (
     Q : out STD_LOGIC_VECTOR ( 1 downto 0 );
     pipe_qrst_fsm : out STD_LOGIC_VECTOR ( 3 downto 0 );
@@ -72440,9 +72471,11 @@ entity pcie_pcie_qpll_reset is
     \cplllock_reg1_reg[7]_0\ : in STD_LOGIC_VECTOR ( 7 downto 0 );
     CLK_MMCM_LOCK : in STD_LOGIC
   );
-end pcie_pcie_qpll_reset;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_qpll_reset : entity is "pcie_7x_0_qpll_reset";
+end pcie_7x_0_pcie_7x_0_qpll_reset;
 
-architecture STRUCTURE of pcie_pcie_qpll_reset is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_qpll_reset is
   signal \FSM_onehot_fsm[0]_i_1__0_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[0]_i_2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[1]_i_1__0_n_0\ : STD_LOGIC;
@@ -73585,105 +73618,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_qpll_wrapper is
-  port (
-    DRP_RDY : out STD_LOGIC;
-    RATE_QPLLLOCK : out STD_LOGIC;
-    sys_clk_0 : out STD_LOGIC;
-    sys_clk_1 : out STD_LOGIC;
-    DRP_DO : out STD_LOGIC_VECTOR ( 15 downto 0 );
-    CLK_DCLK : in STD_LOGIC;
-    qpll_drp_en : in STD_LOGIC;
-    qpll_drp_we : in STD_LOGIC;
-    sys_clk : in STD_LOGIC;
-    qpllpd : in STD_LOGIC;
-    qrst_qpllreset : in STD_LOGIC;
-    DRP_DI : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    DRP_ADDR : in STD_LOGIC_VECTOR ( 4 downto 0 )
-  );
-end pcie_pcie_qpll_wrapper;
-
-architecture STRUCTURE of pcie_pcie_qpll_wrapper is
-  signal \NLW_gtx_common.gtxe2_common_i_QPLLFBCLKLOST_UNCONNECTED\ : STD_LOGIC;
-  signal \NLW_gtx_common.gtxe2_common_i_QPLLREFCLKLOST_UNCONNECTED\ : STD_LOGIC;
-  signal \NLW_gtx_common.gtxe2_common_i_REFCLKOUTMONITOR_UNCONNECTED\ : STD_LOGIC;
-  signal \NLW_gtx_common.gtxe2_common_i_QPLLDMONITOR_UNCONNECTED\ : STD_LOGIC_VECTOR ( 7 downto 0 );
-  attribute BOX_TYPE : string;
-  attribute BOX_TYPE of \gtx_common.gtxe2_common_i\ : label is "PRIMITIVE";
-begin
-\gtx_common.gtxe2_common_i\: unisim.vcomponents.GTXE2_COMMON
-    generic map(
-      BIAS_CFG => X"0000040000001000",
-      COMMON_CFG => X"00000000",
-      IS_DRPCLK_INVERTED => '0',
-      IS_GTGREFCLK_INVERTED => '0',
-      IS_QPLLLOCKDETCLK_INVERTED => '0',
-      QPLL_CFG => X"06801C1",
-      QPLL_CLKOUT_CFG => B"0000",
-      QPLL_COARSE_FREQ_OVRD => B"010000",
-      QPLL_COARSE_FREQ_OVRD_EN => '0',
-      QPLL_CP => B"0000011111",
-      QPLL_CP_MONITOR_EN => '0',
-      QPLL_DMONITOR_SEL => '0',
-      QPLL_FBDIV => B"0100100000",
-      QPLL_FBDIV_MONITOR_EN => '0',
-      QPLL_FBDIV_RATIO => '1',
-      QPLL_INIT_CFG => X"000006",
-      QPLL_LOCK_CFG => X"21E8",
-      QPLL_LPF => B"1101",
-      QPLL_REFCLK_DIV => 1,
-      SIM_QPLLREFCLK_SEL => B"001",
-      SIM_RESET_SPEEDUP => "FALSE",
-      SIM_VERSION => "3.0"
-    )
-        port map (
-      BGBYPASSB => '1',
-      BGMONITORENB => '1',
-      BGPDB => '1',
-      BGRCALOVRD(4 downto 0) => B"11111",
-      DRPADDR(7) => DRP_ADDR(4),
-      DRPADDR(6) => '0',
-      DRPADDR(5) => DRP_ADDR(3),
-      DRPADDR(4) => DRP_ADDR(3),
-      DRPADDR(3) => DRP_ADDR(4),
-      DRPADDR(2 downto 0) => DRP_ADDR(2 downto 0),
-      DRPCLK => CLK_DCLK,
-      DRPDI(15 downto 0) => DRP_DI(15 downto 0),
-      DRPDO(15 downto 0) => DRP_DO(15 downto 0),
-      DRPEN => qpll_drp_en,
-      DRPRDY => DRP_RDY,
-      DRPWE => qpll_drp_we,
-      GTGREFCLK => '0',
-      GTNORTHREFCLK0 => '0',
-      GTNORTHREFCLK1 => '0',
-      GTREFCLK0 => sys_clk,
-      GTREFCLK1 => '0',
-      GTSOUTHREFCLK0 => '0',
-      GTSOUTHREFCLK1 => '0',
-      PMARSVD(7 downto 0) => B"00000000",
-      QPLLDMONITOR(7 downto 0) => \NLW_gtx_common.gtxe2_common_i_QPLLDMONITOR_UNCONNECTED\(7 downto 0),
-      QPLLFBCLKLOST => \NLW_gtx_common.gtxe2_common_i_QPLLFBCLKLOST_UNCONNECTED\,
-      QPLLLOCK => RATE_QPLLLOCK,
-      QPLLLOCKDETCLK => '0',
-      QPLLLOCKEN => '1',
-      QPLLOUTCLK => sys_clk_0,
-      QPLLOUTREFCLK => sys_clk_1,
-      QPLLOUTRESET => '0',
-      QPLLPD => qpllpd,
-      QPLLREFCLKLOST => \NLW_gtx_common.gtxe2_common_i_QPLLREFCLKLOST_UNCONNECTED\,
-      QPLLREFCLKSEL(2 downto 0) => B"001",
-      QPLLRESET => qrst_qpllreset,
-      QPLLRSVD1(15 downto 0) => B"0000000000000000",
-      QPLLRSVD2(4 downto 0) => B"11111",
-      RCALENB => '1',
-      REFCLKOUTMONITOR => \NLW_gtx_common.gtxe2_common_i_REFCLKOUTMONITOR_UNCONNECTED\
-    );
-end STRUCTURE;
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-library UNISIM;
-use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_qpll_wrapper_77 is
+entity pcie_7x_0_pcie_7x_0_qpll_wrapper is
   port (
     DRP_RDY : out STD_LOGIC;
     RATE_QPLLLOCK : out STD_LOGIC;
@@ -73700,10 +73635,10 @@ entity pcie_pcie_qpll_wrapper_77 is
     DRP_ADDR : in STD_LOGIC_VECTOR ( 4 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_qpll_wrapper_77 : entity is "pcie_qpll_wrapper";
-end pcie_pcie_qpll_wrapper_77;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_qpll_wrapper : entity is "pcie_7x_0_qpll_wrapper";
+end pcie_7x_0_pcie_7x_0_qpll_wrapper;
 
-architecture STRUCTURE of pcie_pcie_qpll_wrapper_77 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_qpll_wrapper is
   signal \NLW_gtx_common.gtxe2_common_i_QPLLFBCLKLOST_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_gtx_common.gtxe2_common_i_QPLLREFCLKLOST_UNCONNECTED\ : STD_LOGIC;
   signal \NLW_gtx_common.gtxe2_common_i_REFCLKOUTMONITOR_UNCONNECTED\ : STD_LOGIC;
@@ -73783,7 +73718,107 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan is
+entity pcie_7x_0_pcie_7x_0_qpll_wrapper_77 is
+  port (
+    DRP_RDY : out STD_LOGIC;
+    RATE_QPLLLOCK : out STD_LOGIC;
+    sys_clk_0 : out STD_LOGIC;
+    sys_clk_1 : out STD_LOGIC;
+    DRP_DO : out STD_LOGIC_VECTOR ( 15 downto 0 );
+    CLK_DCLK : in STD_LOGIC;
+    qpll_drp_en : in STD_LOGIC;
+    qpll_drp_we : in STD_LOGIC;
+    sys_clk : in STD_LOGIC;
+    qpllpd : in STD_LOGIC;
+    qrst_qpllreset : in STD_LOGIC;
+    DRP_DI : in STD_LOGIC_VECTOR ( 15 downto 0 );
+    DRP_ADDR : in STD_LOGIC_VECTOR ( 4 downto 0 )
+  );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_qpll_wrapper_77 : entity is "pcie_7x_0_qpll_wrapper";
+end pcie_7x_0_pcie_7x_0_qpll_wrapper_77;
+
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_qpll_wrapper_77 is
+  signal \NLW_gtx_common.gtxe2_common_i_QPLLFBCLKLOST_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_gtx_common.gtxe2_common_i_QPLLREFCLKLOST_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_gtx_common.gtxe2_common_i_REFCLKOUTMONITOR_UNCONNECTED\ : STD_LOGIC;
+  signal \NLW_gtx_common.gtxe2_common_i_QPLLDMONITOR_UNCONNECTED\ : STD_LOGIC_VECTOR ( 7 downto 0 );
+  attribute BOX_TYPE : string;
+  attribute BOX_TYPE of \gtx_common.gtxe2_common_i\ : label is "PRIMITIVE";
+begin
+\gtx_common.gtxe2_common_i\: unisim.vcomponents.GTXE2_COMMON
+    generic map(
+      BIAS_CFG => X"0000040000001000",
+      COMMON_CFG => X"00000000",
+      IS_DRPCLK_INVERTED => '0',
+      IS_GTGREFCLK_INVERTED => '0',
+      IS_QPLLLOCKDETCLK_INVERTED => '0',
+      QPLL_CFG => X"06801C1",
+      QPLL_CLKOUT_CFG => B"0000",
+      QPLL_COARSE_FREQ_OVRD => B"010000",
+      QPLL_COARSE_FREQ_OVRD_EN => '0',
+      QPLL_CP => B"0000011111",
+      QPLL_CP_MONITOR_EN => '0',
+      QPLL_DMONITOR_SEL => '0',
+      QPLL_FBDIV => B"0100100000",
+      QPLL_FBDIV_MONITOR_EN => '0',
+      QPLL_FBDIV_RATIO => '1',
+      QPLL_INIT_CFG => X"000006",
+      QPLL_LOCK_CFG => X"21E8",
+      QPLL_LPF => B"1101",
+      QPLL_REFCLK_DIV => 1,
+      SIM_QPLLREFCLK_SEL => B"001",
+      SIM_RESET_SPEEDUP => "FALSE",
+      SIM_VERSION => "3.0"
+    )
+        port map (
+      BGBYPASSB => '1',
+      BGMONITORENB => '1',
+      BGPDB => '1',
+      BGRCALOVRD(4 downto 0) => B"11111",
+      DRPADDR(7) => DRP_ADDR(4),
+      DRPADDR(6) => '0',
+      DRPADDR(5) => DRP_ADDR(3),
+      DRPADDR(4) => DRP_ADDR(3),
+      DRPADDR(3) => DRP_ADDR(4),
+      DRPADDR(2 downto 0) => DRP_ADDR(2 downto 0),
+      DRPCLK => CLK_DCLK,
+      DRPDI(15 downto 0) => DRP_DI(15 downto 0),
+      DRPDO(15 downto 0) => DRP_DO(15 downto 0),
+      DRPEN => qpll_drp_en,
+      DRPRDY => DRP_RDY,
+      DRPWE => qpll_drp_we,
+      GTGREFCLK => '0',
+      GTNORTHREFCLK0 => '0',
+      GTNORTHREFCLK1 => '0',
+      GTREFCLK0 => sys_clk,
+      GTREFCLK1 => '0',
+      GTSOUTHREFCLK0 => '0',
+      GTSOUTHREFCLK1 => '0',
+      PMARSVD(7 downto 0) => B"00000000",
+      QPLLDMONITOR(7 downto 0) => \NLW_gtx_common.gtxe2_common_i_QPLLDMONITOR_UNCONNECTED\(7 downto 0),
+      QPLLFBCLKLOST => \NLW_gtx_common.gtxe2_common_i_QPLLFBCLKLOST_UNCONNECTED\,
+      QPLLLOCK => RATE_QPLLLOCK,
+      QPLLLOCKDETCLK => '0',
+      QPLLLOCKEN => '1',
+      QPLLOUTCLK => sys_clk_0,
+      QPLLOUTREFCLK => sys_clk_1,
+      QPLLOUTRESET => '0',
+      QPLLPD => qpllpd,
+      QPLLREFCLKLOST => \NLW_gtx_common.gtxe2_common_i_QPLLREFCLKLOST_UNCONNECTED\,
+      QPLLREFCLKSEL(2 downto 0) => B"001",
+      QPLLRESET => qrst_qpllreset,
+      QPLLRSVD1(15 downto 0) => B"0000000000000000",
+      QPLLRSVD2(4 downto 0) => B"11111",
+      RCALENB => '1',
+      REFCLKOUTMONITOR => \NLW_gtx_common.gtxe2_common_i_REFCLKOUTMONITOR_UNCONNECTED\
+    );
+end STRUCTURE;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+library UNISIM;
+use UNISIM.VCOMPONENTS.ALL;
+entity pcie_7x_0_pcie_7x_0_rxeq_scan is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -73807,9 +73842,11 @@ entity pcie_pcie_rxeq_scan is
     \fs_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 );
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
-end pcie_pcie_rxeq_scan;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan is
   signal \FSM_onehot_fsm[1]_i_1__16_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__8_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__8_n_0\ : STD_LOGIC;
@@ -75793,7 +75830,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_64 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_64 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -75818,10 +75855,10 @@ entity pcie_pcie_rxeq_scan_64 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_64 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_64;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_64 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_64;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_64 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_64 is
   signal \FSM_onehot_fsm[1]_i_1__14_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__7_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__7_n_0\ : STD_LOGIC;
@@ -77805,7 +77842,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_66 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_66 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -77830,10 +77867,10 @@ entity pcie_pcie_rxeq_scan_66 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_66 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_66;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_66 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_66;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_66 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_66 is
   signal \FSM_onehot_fsm[1]_i_1__12_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__6_n_0\ : STD_LOGIC;
@@ -79817,7 +79854,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_68 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_68 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -79842,10 +79879,10 @@ entity pcie_pcie_rxeq_scan_68 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_68 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_68;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_68 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_68;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_68 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_68 is
   signal \FSM_onehot_fsm[1]_i_1__10_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__5_n_0\ : STD_LOGIC;
@@ -81829,7 +81866,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_70 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_70 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -81854,10 +81891,10 @@ entity pcie_pcie_rxeq_scan_70 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_70 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_70;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_70 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_70;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_70 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_70 is
   signal \FSM_onehot_fsm[1]_i_1__8_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__4_n_0\ : STD_LOGIC;
@@ -83841,7 +83878,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_72 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_72 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -83866,10 +83903,10 @@ entity pcie_pcie_rxeq_scan_72 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_72 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_72;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_72 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_72;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_72 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_72 is
   signal \FSM_onehot_fsm[1]_i_1__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__3_n_0\ : STD_LOGIC;
@@ -85853,7 +85890,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_74 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_74 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -85878,10 +85915,10 @@ entity pcie_pcie_rxeq_scan_74 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_74 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_74;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_74 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_74;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_74 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_74 is
   signal \FSM_onehot_fsm[1]_i_1__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__2_n_0\ : STD_LOGIC;
@@ -87865,7 +87902,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_rxeq_scan_78 is
+entity pcie_7x_0_pcie_7x_0_rxeq_scan_78 is
   port (
     D : out STD_LOGIC_VECTOR ( 2 downto 0 );
     rxeq_new_txcoeff_req : out STD_LOGIC;
@@ -87890,10 +87927,10 @@ entity pcie_pcie_rxeq_scan_78 is
     \lf_reg1_reg[5]_0\ : in STD_LOGIC_VECTOR ( 5 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_rxeq_scan_78 : entity is "pcie_rxeq_scan";
-end pcie_pcie_rxeq_scan_78;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_rxeq_scan_78 : entity is "pcie_7x_0_rxeq_scan";
+end pcie_7x_0_pcie_7x_0_rxeq_scan_78;
 
-architecture STRUCTURE of pcie_pcie_rxeq_scan_78 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_rxeq_scan_78 is
   signal \FSM_onehot_fsm[1]_i_1__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[2]_i_1__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm[3]_i_1__1_n_0\ : STD_LOGIC;
@@ -89877,7 +89914,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_xpm_cdc_single is
+entity pcie_7x_0_xpm_cdc_single is
   port (
     src_clk : in STD_LOGIC;
     src_in : in STD_LOGIC;
@@ -89885,85 +89922,24 @@ entity pcie_xpm_cdc_single is
     dest_out : out STD_LOGIC
   );
   attribute DEST_SYNC_FF : integer;
-  attribute DEST_SYNC_FF of pcie_xpm_cdc_single : entity is 2;
+  attribute DEST_SYNC_FF of pcie_7x_0_xpm_cdc_single : entity is 2;
   attribute INIT_SYNC_FF : integer;
-  attribute INIT_SYNC_FF of pcie_xpm_cdc_single : entity is 0;
-  attribute SIM_ASSERT_CHK : integer;
-  attribute SIM_ASSERT_CHK of pcie_xpm_cdc_single : entity is 0;
-  attribute SRC_INPUT_REG : integer;
-  attribute SRC_INPUT_REG of pcie_xpm_cdc_single : entity is 0;
-  attribute VERSION : integer;
-  attribute VERSION of pcie_xpm_cdc_single : entity is 0;
-  attribute XPM_MODULE : string;
-  attribute XPM_MODULE of pcie_xpm_cdc_single : entity is "TRUE";
-  attribute xpm_cdc : string;
-  attribute xpm_cdc of pcie_xpm_cdc_single : entity is "SINGLE";
-end pcie_xpm_cdc_single;
-
-architecture STRUCTURE of pcie_xpm_cdc_single is
-  signal syncstages_ff : STD_LOGIC_VECTOR ( 1 downto 0 );
-  attribute RTL_KEEP : string;
-  attribute RTL_KEEP of syncstages_ff : signal is "true";
-  attribute async_reg : string;
-  attribute async_reg of syncstages_ff : signal is "true";
-  attribute xpm_cdc of syncstages_ff : signal is "SINGLE";
-  attribute ASYNC_REG_boolean : boolean;
-  attribute ASYNC_REG_boolean of \syncstages_ff_reg[0]\ : label is std.standard.true;
-  attribute KEEP : string;
-  attribute KEEP of \syncstages_ff_reg[0]\ : label is "true";
-  attribute XPM_CDC of \syncstages_ff_reg[0]\ : label is "SINGLE";
-  attribute ASYNC_REG_boolean of \syncstages_ff_reg[1]\ : label is std.standard.true;
-  attribute KEEP of \syncstages_ff_reg[1]\ : label is "true";
-  attribute XPM_CDC of \syncstages_ff_reg[1]\ : label is "SINGLE";
-begin
-  dest_out <= syncstages_ff(1);
-\syncstages_ff_reg[0]\: unisim.vcomponents.FDRE
-     port map (
-      C => dest_clk,
-      CE => '1',
-      D => src_in,
-      Q => syncstages_ff(0),
-      R => '0'
-    );
-\syncstages_ff_reg[1]\: unisim.vcomponents.FDRE
-     port map (
-      C => dest_clk,
-      CE => '1',
-      D => syncstages_ff(0),
-      Q => syncstages_ff(1),
-      R => '0'
-    );
-end STRUCTURE;
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-library UNISIM;
-use UNISIM.VCOMPONENTS.ALL;
-entity \pcie_xpm_cdc_single__2\ is
-  port (
-    src_clk : in STD_LOGIC;
-    src_in : in STD_LOGIC;
-    dest_clk : in STD_LOGIC;
-    dest_out : out STD_LOGIC
-  );
-  attribute DEST_SYNC_FF : integer;
-  attribute DEST_SYNC_FF of \pcie_xpm_cdc_single__2\ : entity is 2;
-  attribute INIT_SYNC_FF : integer;
-  attribute INIT_SYNC_FF of \pcie_xpm_cdc_single__2\ : entity is 0;
+  attribute INIT_SYNC_FF of pcie_7x_0_xpm_cdc_single : entity is 0;
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of \pcie_xpm_cdc_single__2\ : entity is "xpm_cdc_single";
+  attribute ORIG_REF_NAME of pcie_7x_0_xpm_cdc_single : entity is "xpm_cdc_single";
   attribute SIM_ASSERT_CHK : integer;
-  attribute SIM_ASSERT_CHK of \pcie_xpm_cdc_single__2\ : entity is 0;
+  attribute SIM_ASSERT_CHK of pcie_7x_0_xpm_cdc_single : entity is 0;
   attribute SRC_INPUT_REG : integer;
-  attribute SRC_INPUT_REG of \pcie_xpm_cdc_single__2\ : entity is 0;
+  attribute SRC_INPUT_REG of pcie_7x_0_xpm_cdc_single : entity is 0;
   attribute VERSION : integer;
-  attribute VERSION of \pcie_xpm_cdc_single__2\ : entity is 0;
+  attribute VERSION of pcie_7x_0_xpm_cdc_single : entity is 0;
   attribute XPM_MODULE : string;
-  attribute XPM_MODULE of \pcie_xpm_cdc_single__2\ : entity is "TRUE";
+  attribute XPM_MODULE of pcie_7x_0_xpm_cdc_single : entity is "TRUE";
   attribute xpm_cdc : string;
-  attribute xpm_cdc of \pcie_xpm_cdc_single__2\ : entity is "SINGLE";
-end \pcie_xpm_cdc_single__2\;
+  attribute xpm_cdc of pcie_7x_0_xpm_cdc_single : entity is "SINGLE";
+end pcie_7x_0_xpm_cdc_single;
 
-architecture STRUCTURE of \pcie_xpm_cdc_single__2\ is
+architecture STRUCTURE of pcie_7x_0_xpm_cdc_single is
   signal syncstages_ff : STD_LOGIC_VECTOR ( 1 downto 0 );
   attribute RTL_KEEP : string;
   attribute RTL_KEEP of syncstages_ff : signal is "true";
@@ -90001,7 +89977,70 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_rx is
+entity \pcie_7x_0_xpm_cdc_single__2\ is
+  port (
+    src_clk : in STD_LOGIC;
+    src_in : in STD_LOGIC;
+    dest_clk : in STD_LOGIC;
+    dest_out : out STD_LOGIC
+  );
+  attribute DEST_SYNC_FF : integer;
+  attribute DEST_SYNC_FF of \pcie_7x_0_xpm_cdc_single__2\ : entity is 2;
+  attribute INIT_SYNC_FF : integer;
+  attribute INIT_SYNC_FF of \pcie_7x_0_xpm_cdc_single__2\ : entity is 0;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of \pcie_7x_0_xpm_cdc_single__2\ : entity is "xpm_cdc_single";
+  attribute SIM_ASSERT_CHK : integer;
+  attribute SIM_ASSERT_CHK of \pcie_7x_0_xpm_cdc_single__2\ : entity is 0;
+  attribute SRC_INPUT_REG : integer;
+  attribute SRC_INPUT_REG of \pcie_7x_0_xpm_cdc_single__2\ : entity is 0;
+  attribute VERSION : integer;
+  attribute VERSION of \pcie_7x_0_xpm_cdc_single__2\ : entity is 0;
+  attribute XPM_MODULE : string;
+  attribute XPM_MODULE of \pcie_7x_0_xpm_cdc_single__2\ : entity is "TRUE";
+  attribute xpm_cdc : string;
+  attribute xpm_cdc of \pcie_7x_0_xpm_cdc_single__2\ : entity is "SINGLE";
+end \pcie_7x_0_xpm_cdc_single__2\;
+
+architecture STRUCTURE of \pcie_7x_0_xpm_cdc_single__2\ is
+  signal syncstages_ff : STD_LOGIC_VECTOR ( 1 downto 0 );
+  attribute RTL_KEEP : string;
+  attribute RTL_KEEP of syncstages_ff : signal is "true";
+  attribute async_reg : string;
+  attribute async_reg of syncstages_ff : signal is "true";
+  attribute xpm_cdc of syncstages_ff : signal is "SINGLE";
+  attribute ASYNC_REG_boolean : boolean;
+  attribute ASYNC_REG_boolean of \syncstages_ff_reg[0]\ : label is std.standard.true;
+  attribute KEEP : string;
+  attribute KEEP of \syncstages_ff_reg[0]\ : label is "true";
+  attribute XPM_CDC of \syncstages_ff_reg[0]\ : label is "SINGLE";
+  attribute ASYNC_REG_boolean of \syncstages_ff_reg[1]\ : label is std.standard.true;
+  attribute KEEP of \syncstages_ff_reg[1]\ : label is "true";
+  attribute XPM_CDC of \syncstages_ff_reg[1]\ : label is "SINGLE";
+begin
+  dest_out <= syncstages_ff(1);
+\syncstages_ff_reg[0]\: unisim.vcomponents.FDRE
+     port map (
+      C => dest_clk,
+      CE => '1',
+      D => src_in,
+      Q => syncstages_ff(0),
+      R => '0'
+    );
+\syncstages_ff_reg[1]\: unisim.vcomponents.FDRE
+     port map (
+      C => dest_clk,
+      CE => '1',
+      D => syncstages_ff(0),
+      Q => syncstages_ff(1),
+      R => '0'
+    );
+end STRUCTURE;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+library UNISIM;
+use UNISIM.VCOMPONENTS.ALL;
+entity pcie_7x_0_pcie_7x_0_axi_basic_rx is
   port (
     trn_rsrc_dsc_d : out STD_LOGIC;
     m_axis_rx_tvalid_reg : out STD_LOGIC;
@@ -90026,9 +90065,11 @@ entity pcie_pcie_axi_basic_rx is
     \trn_rd_prev_reg[127]\ : in STD_LOGIC_VECTOR ( 127 downto 0 );
     \trn_rbar_hit_prev_reg[6]\ : in STD_LOGIC_VECTOR ( 6 downto 0 )
   );
-end pcie_pcie_axi_basic_rx;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_rx : entity is "pcie_7x_0_axi_basic_rx";
+end pcie_7x_0_pcie_7x_0_axi_basic_rx;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_rx is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_rx is
   signal cur_state : STD_LOGIC;
   signal next_state : STD_LOGIC;
   signal null_mux_sel : STD_LOGIC;
@@ -90064,7 +90105,7 @@ architecture STRUCTURE of pcie_pcie_axi_basic_rx is
   signal rx_pipeline_inst_n_8 : STD_LOGIC;
   signal rx_pipeline_inst_n_9 : STD_LOGIC;
 begin
-rx_null_gen_inst: entity work.pcie_pcie_axi_basic_rx_null_gen
+rx_null_gen_inst: entity work.pcie_7x_0_pcie_7x_0_axi_basic_rx_null_gen
      port map (
       DI(3) => rx_pipeline_inst_n_6,
       DI(2) => rx_pipeline_inst_n_7,
@@ -90104,7 +90145,7 @@ rx_null_gen_inst: entity work.pcie_pcie_axi_basic_rx_null_gen
       user_reset_out_reg_0 => rx_null_gen_inst_n_5,
       user_reset_out_reg_1 => rx_null_gen_inst_n_6
     );
-rx_pipeline_inst: entity work.pcie_pcie_axi_basic_rx_pipeline
+rx_pipeline_inst: entity work.pcie_7x_0_pcie_7x_0_axi_basic_rx_pipeline
      port map (
       D(1 downto 0) => D(1 downto 0),
       DI(3) => rx_pipeline_inst_n_6,
@@ -90168,7 +90209,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_tx is
+entity pcie_7x_0_pcie_7x_0_axi_basic_tx is
   port (
     TRNTREM : out STD_LOGIC_VECTOR ( 1 downto 0 );
     reg_tcfg_gnt : out STD_LOGIC;
@@ -90203,9 +90244,11 @@ entity pcie_pcie_axi_basic_tx is
     \cfg_pcie_link_state_d_reg[2]\ : in STD_LOGIC_VECTOR ( 2 downto 0 );
     s_axis_tx_tkeep : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_axi_basic_tx;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_tx : entity is "pcie_7x_0_axi_basic_tx";
+end pcie_7x_0_pcie_7x_0_axi_basic_tx;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_tx is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_tx is
   signal axi_in_packet : STD_LOGIC;
   signal reg_disable_trn : STD_LOGIC;
   signal reg_tsrc_rdy0 : STD_LOGIC;
@@ -90213,7 +90256,7 @@ architecture STRUCTURE of pcie_pcie_axi_basic_tx is
   signal \^tready_thrtl_reg\ : STD_LOGIC;
 begin
   tready_thrtl_reg <= \^tready_thrtl_reg\;
-\thrtl_ctl_enabled.tx_thrl_ctl_inst\: entity work.pcie_pcie_axi_basic_tx_thrtl_ctl
+\thrtl_ctl_enabled.tx_thrl_ctl_inst\: entity work.pcie_7x_0_pcie_7x_0_axi_basic_tx_thrtl_ctl
      port map (
       \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg_0\ => \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg\,
       \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg_1\ => \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg_0\,
@@ -90247,7 +90290,7 @@ begin
       trn_tcfg_req_d_reg_0 => trn_tcfg_req_d_reg,
       tx_cfg_gnt => tx_cfg_gnt
     );
-tx_pipeline_inst: entity work.pcie_pcie_axi_basic_tx_pipeline
+tx_pipeline_inst: entity work.pcie_7x_0_pcie_7x_0_axi_basic_tx_pipeline
      port map (
       SR(0) => SR(0),
       TRNTDSTRDY(0) => TRNTDSTRDY(0),
@@ -90275,73 +90318,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_common is
-  port (
-    RATE_QPLLLOCK : out STD_LOGIC;
-    sys_clk_0 : out STD_LOGIC;
-    sys_clk_1 : out STD_LOGIC;
-    DRP_DONE : out STD_LOGIC;
-    CLK_DCLK : in STD_LOGIC;
-    sys_clk : in STD_LOGIC;
-    qpllpd : in STD_LOGIC;
-    qrst_qpllreset : in STD_LOGIC;
-    RST_DCLK_RESET : in STD_LOGIC;
-    QRST_DRP_START : in STD_LOGIC;
-    DRP_GEN3 : in STD_LOGIC
-  );
-end pcie_pcie_gt_common;
-
-architecture STRUCTURE of pcie_pcie_gt_common is
-  signal \^rate_qplllock\ : STD_LOGIC;
-  signal qpll_drp_addr : STD_LOGIC_VECTOR ( 7 downto 0 );
-  signal qpll_drp_di : STD_LOGIC_VECTOR ( 15 downto 0 );
-  signal qpll_drp_do : STD_LOGIC_VECTOR ( 15 downto 0 );
-  signal qpll_drp_en : STD_LOGIC;
-  signal qpll_drp_rdy : STD_LOGIC;
-  signal qpll_drp_we : STD_LOGIC;
-begin
-  RATE_QPLLLOCK <= \^rate_qplllock\;
-qpll_drp_i: entity work.pcie_pcie_qpll_drp_76
-     port map (
-      CLK_DCLK => CLK_DCLK,
-      DRP_ADDR(4) => qpll_drp_addr(7),
-      DRP_ADDR(3) => qpll_drp_addr(5),
-      DRP_ADDR(2 downto 0) => qpll_drp_addr(2 downto 0),
-      DRP_DI(15 downto 0) => qpll_drp_di(15 downto 0),
-      DRP_DO(15 downto 0) => qpll_drp_do(15 downto 0),
-      DRP_DONE => DRP_DONE,
-      DRP_GEN3 => DRP_GEN3,
-      DRP_RDY => qpll_drp_rdy,
-      QRST_DRP_START => QRST_DRP_START,
-      RATE_QPLLLOCK => \^rate_qplllock\,
-      RST_DCLK_RESET => RST_DCLK_RESET,
-      qpll_drp_en => qpll_drp_en,
-      qpll_drp_we => qpll_drp_we
-    );
-qpll_wrapper_i: entity work.pcie_pcie_qpll_wrapper_77
-     port map (
-      CLK_DCLK => CLK_DCLK,
-      DRP_ADDR(4) => qpll_drp_addr(7),
-      DRP_ADDR(3) => qpll_drp_addr(5),
-      DRP_ADDR(2 downto 0) => qpll_drp_addr(2 downto 0),
-      DRP_DI(15 downto 0) => qpll_drp_di(15 downto 0),
-      DRP_DO(15 downto 0) => qpll_drp_do(15 downto 0),
-      DRP_RDY => qpll_drp_rdy,
-      RATE_QPLLLOCK => \^rate_qplllock\,
-      qpll_drp_en => qpll_drp_en,
-      qpll_drp_we => qpll_drp_we,
-      qpllpd => qpllpd,
-      qrst_qpllreset => qrst_qpllreset,
-      sys_clk => sys_clk,
-      sys_clk_0 => sys_clk_0,
-      sys_clk_1 => sys_clk_1
-    );
-end STRUCTURE;
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-library UNISIM;
-use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_common_42 is
+entity pcie_7x_0_pcie_7x_0_gt_common is
   port (
     RATE_QPLLLOCK : out STD_LOGIC;
     sys_clk_0 : out STD_LOGIC;
@@ -90356,10 +90333,10 @@ entity pcie_pcie_gt_common_42 is
     DRP_GEN3 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_common_42 : entity is "pcie_gt_common";
-end pcie_pcie_gt_common_42;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_common : entity is "pcie_7x_0_gt_common";
+end pcie_7x_0_pcie_7x_0_gt_common;
 
-architecture STRUCTURE of pcie_pcie_gt_common_42 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_common is
   signal \^rate_qplllock\ : STD_LOGIC;
   signal qpll_drp_addr : STD_LOGIC_VECTOR ( 7 downto 0 );
   signal qpll_drp_di : STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -90369,7 +90346,7 @@ architecture STRUCTURE of pcie_pcie_gt_common_42 is
   signal qpll_drp_we : STD_LOGIC;
 begin
   RATE_QPLLLOCK <= \^rate_qplllock\;
-qpll_drp_i: entity work.pcie_pcie_qpll_drp
+qpll_drp_i: entity work.pcie_7x_0_pcie_7x_0_qpll_drp_76
      port map (
       CLK_DCLK => CLK_DCLK,
       DRP_ADDR(4) => qpll_drp_addr(7),
@@ -90386,7 +90363,7 @@ qpll_drp_i: entity work.pcie_pcie_qpll_drp
       qpll_drp_en => qpll_drp_en,
       qpll_drp_we => qpll_drp_we
     );
-qpll_wrapper_i: entity work.pcie_pcie_qpll_wrapper
+qpll_wrapper_i: entity work.pcie_7x_0_pcie_7x_0_qpll_wrapper_77
      port map (
       CLK_DCLK => CLK_DCLK,
       DRP_ADDR(4) => qpll_drp_addr(7),
@@ -90409,7 +90386,75 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper is
+entity pcie_7x_0_pcie_7x_0_gt_common_42 is
+  port (
+    RATE_QPLLLOCK : out STD_LOGIC;
+    sys_clk_0 : out STD_LOGIC;
+    sys_clk_1 : out STD_LOGIC;
+    DRP_DONE : out STD_LOGIC;
+    CLK_DCLK : in STD_LOGIC;
+    sys_clk : in STD_LOGIC;
+    qpllpd : in STD_LOGIC;
+    qrst_qpllreset : in STD_LOGIC;
+    RST_DCLK_RESET : in STD_LOGIC;
+    QRST_DRP_START : in STD_LOGIC;
+    DRP_GEN3 : in STD_LOGIC
+  );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_common_42 : entity is "pcie_7x_0_gt_common";
+end pcie_7x_0_pcie_7x_0_gt_common_42;
+
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_common_42 is
+  signal \^rate_qplllock\ : STD_LOGIC;
+  signal qpll_drp_addr : STD_LOGIC_VECTOR ( 7 downto 0 );
+  signal qpll_drp_di : STD_LOGIC_VECTOR ( 15 downto 0 );
+  signal qpll_drp_do : STD_LOGIC_VECTOR ( 15 downto 0 );
+  signal qpll_drp_en : STD_LOGIC;
+  signal qpll_drp_rdy : STD_LOGIC;
+  signal qpll_drp_we : STD_LOGIC;
+begin
+  RATE_QPLLLOCK <= \^rate_qplllock\;
+qpll_drp_i: entity work.pcie_7x_0_pcie_7x_0_qpll_drp
+     port map (
+      CLK_DCLK => CLK_DCLK,
+      DRP_ADDR(4) => qpll_drp_addr(7),
+      DRP_ADDR(3) => qpll_drp_addr(5),
+      DRP_ADDR(2 downto 0) => qpll_drp_addr(2 downto 0),
+      DRP_DI(15 downto 0) => qpll_drp_di(15 downto 0),
+      DRP_DO(15 downto 0) => qpll_drp_do(15 downto 0),
+      DRP_DONE => DRP_DONE,
+      DRP_GEN3 => DRP_GEN3,
+      DRP_RDY => qpll_drp_rdy,
+      QRST_DRP_START => QRST_DRP_START,
+      RATE_QPLLLOCK => \^rate_qplllock\,
+      RST_DCLK_RESET => RST_DCLK_RESET,
+      qpll_drp_en => qpll_drp_en,
+      qpll_drp_we => qpll_drp_we
+    );
+qpll_wrapper_i: entity work.pcie_7x_0_pcie_7x_0_qpll_wrapper
+     port map (
+      CLK_DCLK => CLK_DCLK,
+      DRP_ADDR(4) => qpll_drp_addr(7),
+      DRP_ADDR(3) => qpll_drp_addr(5),
+      DRP_ADDR(2 downto 0) => qpll_drp_addr(2 downto 0),
+      DRP_DI(15 downto 0) => qpll_drp_di(15 downto 0),
+      DRP_DO(15 downto 0) => qpll_drp_do(15 downto 0),
+      DRP_RDY => qpll_drp_rdy,
+      RATE_QPLLLOCK => \^rate_qplllock\,
+      qpll_drp_en => qpll_drp_en,
+      qpll_drp_we => qpll_drp_we,
+      qpllpd => qpllpd,
+      qrst_qpllreset => qrst_qpllreset,
+      sys_clk => sys_clk,
+      sys_clk_0 => sys_clk_0,
+      sys_clk_1 => sys_clk_1
+    );
+end STRUCTURE;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+library UNISIM;
+use UNISIM.VCOMPONENTS.ALL;
+entity pcie_7x_0_pcie_7x_0_gt_wrapper is
   port (
     cpllpd : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -90490,9 +90535,11 @@ entity pcie_pcie_gt_wrapper is
     rate_cpllreset_0 : in STD_LOGIC;
     RST_CPLLRESET : in STD_LOGIC
   );
-end pcie_pcie_gt_wrapper;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -90553,7 +90600,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_79
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_79
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -91040,7 +91087,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_21 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_21 is
   port (
     cpllpd_0 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -91120,10 +91167,10 @@ entity pcie_pcie_gt_wrapper_21 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_21 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_21;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_21 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_21;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_21 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_21 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -91190,7 +91237,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_21 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_75
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_75
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -91681,7 +91728,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_27 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_27 is
   port (
     cpllpd_1 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -91761,10 +91808,10 @@ entity pcie_pcie_gt_wrapper_27 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_27 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_27;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_27 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_27;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_27 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_27 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -91831,7 +91878,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_27 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_73
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_73
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -92322,7 +92369,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_33 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_33 is
   port (
     cpllpd_2 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -92402,10 +92449,10 @@ entity pcie_pcie_gt_wrapper_33 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_33 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_33;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_33 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_33;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_33 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_33 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -92472,7 +92519,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_33 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_71
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_71
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -92963,7 +93010,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_39 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_39 is
   port (
     cpllpd_3 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -93043,10 +93090,10 @@ entity pcie_pcie_gt_wrapper_39 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_39 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_39;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_39 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_39;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_39 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_39 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -93113,7 +93160,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_39 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_69
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_69
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -93604,7 +93651,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_46 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_46 is
   port (
     cpllpd_4 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -93684,10 +93731,10 @@ entity pcie_pcie_gt_wrapper_46 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_46 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_46;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_46 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_46;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_46 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_46 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -93754,7 +93801,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_46 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_67
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_67
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -94245,7 +94292,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_52 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_52 is
   port (
     cpllpd_5 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -94325,10 +94372,10 @@ entity pcie_pcie_gt_wrapper_52 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_52 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_52;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_52 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_52;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_52 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_52 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -94395,7 +94442,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_52 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd_65
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd_65
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -94886,7 +94933,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_wrapper_58 is
+entity pcie_7x_0_pcie_7x_0_gt_wrapper_58 is
   port (
     cpllpd_6 : out STD_LOGIC;
     RATE_CPLLLOCK : out STD_LOGIC;
@@ -94966,10 +95013,10 @@ entity pcie_pcie_gt_wrapper_58 is
     RST_CPLLRESET : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_gt_wrapper_58 : entity is "pcie_gt_wrapper";
-end pcie_pcie_gt_wrapper_58;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_wrapper_58 : entity is "pcie_7x_0_gt_wrapper";
+end pcie_7x_0_pcie_7x_0_gt_wrapper_58;
 
-architecture STRUCTURE of pcie_pcie_gt_wrapper_58 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_wrapper_58 is
   signal CPLLRESET0 : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_10\ : STD_LOGIC;
   signal \gtx_channel.gtxe2_channel_i_n_138\ : STD_LOGIC;
@@ -95036,7 +95083,7 @@ architecture STRUCTURE of pcie_pcie_gt_wrapper_58 is
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of \gtx_channel.gtxe2_channel_i\ : label is "PRIMITIVE";
 begin
-cpllPDInst: entity work.pcie_pcie_gtx_cpllpd_ovrd
+cpllPDInst: entity work.pcie_7x_0_pcie_7x_0_gtx_cpllpd_ovrd
      port map (
       CPLLRESET0 => CPLLRESET0,
       RST_CPLLRESET => RST_CPLLRESET,
@@ -95527,36 +95574,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_bram_7x is
-  port (
-    D : out STD_LOGIC_VECTOR ( 35 downto 0 );
-    CLK_USERCLK1 : in STD_LOGIC;
-    \raddr_lat_2.ren_q\ : in STD_LOGIC;
-    \wr_lat_2.wen_q\ : in STD_LOGIC;
-    ADDRARDADDR : in STD_LOGIC_VECTOR ( 9 downto 0 );
-    ADDRBWRADDR : in STD_LOGIC_VECTOR ( 9 downto 0 );
-    \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 35 downto 0 )
-  );
-end pcie_pcie_pcie_bram_7x;
-
-architecture STRUCTURE of pcie_pcie_pcie_bram_7x is
-begin
-\use_sdp.ramb36sdp\: entity work.pcie_BRAM_SDP_MACRO_9
-     port map (
-      ADDRARDADDR(9 downto 0) => ADDRARDADDR(9 downto 0),
-      ADDRBWRADDR(9 downto 0) => ADDRBWRADDR(9 downto 0),
-      CLK_USERCLK1 => CLK_USERCLK1,
-      D(35 downto 0) => D(35 downto 0),
-      \raddr_lat_2.ren_q\ => \raddr_lat_2.ren_q\,
-      \wr_lat_2.wdata_q\(35 downto 0) => \wr_lat_2.wdata_q\(35 downto 0),
-      \wr_lat_2.wen_q\ => \wr_lat_2.wen_q\
-    );
-end STRUCTURE;
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-library UNISIM;
-use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_bram_7x_10 is
+entity pcie_7x_0_pcie_7x_0_pcie_bram_7x is
   port (
     D : out STD_LOGIC_VECTOR ( 35 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -95567,12 +95585,12 @@ entity pcie_pcie_pcie_bram_7x_10 is
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 35 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_bram_7x_10 : entity is "pcie_pcie_bram_7x";
-end pcie_pcie_pcie_bram_7x_10;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_bram_7x : entity is "pcie_7x_0_pcie_bram_7x";
+end pcie_7x_0_pcie_7x_0_pcie_bram_7x;
 
-architecture STRUCTURE of pcie_pcie_pcie_bram_7x_10 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_bram_7x is
 begin
-\use_sdp.ramb36sdp\: entity work.pcie_BRAM_SDP_MACRO_13
+\use_sdp.ramb36sdp\: entity work.pcie_7x_0_BRAM_SDP_MACRO_9
      port map (
       ADDRARDADDR(9 downto 0) => ADDRARDADDR(9 downto 0),
       ADDRBWRADDR(9 downto 0) => ADDRBWRADDR(9 downto 0),
@@ -95587,7 +95605,38 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_bram_7x_11 is
+entity pcie_7x_0_pcie_7x_0_pcie_bram_7x_10 is
+  port (
+    D : out STD_LOGIC_VECTOR ( 35 downto 0 );
+    CLK_USERCLK1 : in STD_LOGIC;
+    \raddr_lat_2.ren_q\ : in STD_LOGIC;
+    \wr_lat_2.wen_q\ : in STD_LOGIC;
+    ADDRARDADDR : in STD_LOGIC_VECTOR ( 9 downto 0 );
+    ADDRBWRADDR : in STD_LOGIC_VECTOR ( 9 downto 0 );
+    \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 35 downto 0 )
+  );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_bram_7x_10 : entity is "pcie_7x_0_pcie_bram_7x";
+end pcie_7x_0_pcie_7x_0_pcie_bram_7x_10;
+
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_bram_7x_10 is
+begin
+\use_sdp.ramb36sdp\: entity work.pcie_7x_0_BRAM_SDP_MACRO_13
+     port map (
+      ADDRARDADDR(9 downto 0) => ADDRARDADDR(9 downto 0),
+      ADDRBWRADDR(9 downto 0) => ADDRBWRADDR(9 downto 0),
+      CLK_USERCLK1 => CLK_USERCLK1,
+      D(35 downto 0) => D(35 downto 0),
+      \raddr_lat_2.ren_q\ => \raddr_lat_2.ren_q\,
+      \wr_lat_2.wdata_q\(35 downto 0) => \wr_lat_2.wdata_q\(35 downto 0),
+      \wr_lat_2.wen_q\ => \wr_lat_2.wen_q\
+    );
+end STRUCTURE;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+library UNISIM;
+use UNISIM.VCOMPONENTS.ALL;
+entity pcie_7x_0_pcie_7x_0_pcie_bram_7x_11 is
   port (
     D : out STD_LOGIC_VECTOR ( 31 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -95598,12 +95647,12 @@ entity pcie_pcie_pcie_bram_7x_11 is
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_bram_7x_11 : entity is "pcie_pcie_bram_7x";
-end pcie_pcie_pcie_bram_7x_11;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_bram_7x_11 : entity is "pcie_7x_0_pcie_bram_7x";
+end pcie_7x_0_pcie_7x_0_pcie_bram_7x_11;
 
-architecture STRUCTURE of pcie_pcie_pcie_bram_7x_11 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_bram_7x_11 is
 begin
-\use_sdp.ramb36sdp\: entity work.pcie_BRAM_SDP_MACRO_12
+\use_sdp.ramb36sdp\: entity work.pcie_7x_0_BRAM_SDP_MACRO_12
      port map (
       ADDRARDADDR(9 downto 0) => ADDRARDADDR(9 downto 0),
       ADDRBWRADDR(9 downto 0) => ADDRBWRADDR(9 downto 0),
@@ -95618,7 +95667,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_bram_7x_8 is
+entity pcie_7x_0_pcie_7x_0_pcie_bram_7x_8 is
   port (
     D : out STD_LOGIC_VECTOR ( 32 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -95629,12 +95678,12 @@ entity pcie_pcie_pcie_bram_7x_8 is
     \wr_lat_2.wdata_q\ : in STD_LOGIC_VECTOR ( 32 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_bram_7x_8 : entity is "pcie_pcie_bram_7x";
-end pcie_pcie_pcie_bram_7x_8;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_bram_7x_8 : entity is "pcie_7x_0_pcie_bram_7x";
+end pcie_7x_0_pcie_7x_0_pcie_bram_7x_8;
 
-architecture STRUCTURE of pcie_pcie_pcie_bram_7x_8 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_bram_7x_8 is
 begin
-\use_sdp.ramb36sdp\: entity work.\pcie_BRAM_SDP_MACRO_viv_\
+\use_sdp.ramb36sdp\: entity work.pcie_7x_0_BRAM_SDP_MACRO
      port map (
       ADDRARDADDR(9 downto 0) => ADDRARDADDR(9 downto 0),
       ADDRBWRADDR(9 downto 0) => ADDRBWRADDR(9 downto 0),
@@ -95649,7 +95698,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_pipe_pipeline is
+entity pcie_7x_0_pcie_7x_0_pcie_pipe_pipeline is
   port (
     pipe_rx1_valid : out STD_LOGIC;
     pipe_rx1_chanisaligned : out STD_LOGIC;
@@ -95821,11 +95870,13 @@ entity pcie_pcie_pcie_pipe_pipeline is
     \pipe_stages_1.pipe_rx_data_q_reg[15]_14\ : in STD_LOGIC_VECTOR ( 15 downto 0 );
     \pipe_stages_1.pipe_rx_status_q_reg[2]_14\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_pcie_pipe_pipeline;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_pipe_pipeline : entity is "pcie_7x_0_pcie_pipe_pipeline";
+end pcie_7x_0_pcie_7x_0_pcie_pipe_pipeline;
 
-architecture STRUCTURE of pcie_pcie_pcie_pipe_pipeline is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_pipe_pipeline is
 begin
-\pipe_2_lane.pipe_lane_1_i\: entity work.pcie_pcie_pcie_pipe_lane
+\pipe_2_lane.pipe_lane_1_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(3 downto 2),
@@ -95856,7 +95907,7 @@ begin
       pipe_tx1_compliance => pipe_tx1_compliance,
       pipe_tx1_elec_idle => pipe_tx1_elec_idle
     );
-\pipe_4_lane.pipe_lane_2_i\: entity work.pcie_pcie_pcie_pipe_lane_0
+\pipe_4_lane.pipe_lane_2_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_0
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(5 downto 4),
@@ -95887,7 +95938,7 @@ begin
       pipe_tx2_compliance => pipe_tx2_compliance,
       pipe_tx2_elec_idle => pipe_tx2_elec_idle
     );
-\pipe_4_lane.pipe_lane_3_i\: entity work.pcie_pcie_pcie_pipe_lane_1
+\pipe_4_lane.pipe_lane_3_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_1
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(7 downto 6),
@@ -95918,7 +95969,7 @@ begin
       pipe_tx3_compliance => pipe_tx3_compliance,
       pipe_tx3_elec_idle => pipe_tx3_elec_idle
     );
-\pipe_8_lane.pipe_lane_4_i\: entity work.pcie_pcie_pcie_pipe_lane_2
+\pipe_8_lane.pipe_lane_4_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_2
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(9 downto 8),
@@ -95949,7 +96000,7 @@ begin
       pipe_tx4_compliance => pipe_tx4_compliance,
       pipe_tx4_elec_idle => pipe_tx4_elec_idle
     );
-\pipe_8_lane.pipe_lane_5_i\: entity work.pcie_pcie_pcie_pipe_lane_3
+\pipe_8_lane.pipe_lane_5_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_3
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(11 downto 10),
@@ -95980,7 +96031,7 @@ begin
       pipe_tx5_compliance => pipe_tx5_compliance,
       pipe_tx5_elec_idle => pipe_tx5_elec_idle
     );
-\pipe_8_lane.pipe_lane_6_i\: entity work.pcie_pcie_pcie_pipe_lane_4
+\pipe_8_lane.pipe_lane_6_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_4
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(13 downto 12),
@@ -96011,7 +96062,7 @@ begin
       pipe_tx6_compliance => pipe_tx6_compliance,
       pipe_tx6_elec_idle => pipe_tx6_elec_idle
     );
-\pipe_8_lane.pipe_lane_7_i\: entity work.pcie_pcie_pcie_pipe_lane_5
+\pipe_8_lane.pipe_lane_7_i\: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_5
      port map (
       CLK => CLK,
       PIPE_POWERDOWN(1 downto 0) => PIPE_POWERDOWN(15 downto 14),
@@ -96042,7 +96093,7 @@ begin
       pipe_tx7_compliance => pipe_tx7_compliance,
       pipe_tx7_elec_idle => pipe_tx7_elec_idle
     );
-pipe_lane_0_i: entity work.pcie_pcie_pcie_pipe_lane_6
+pipe_lane_0_i: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_lane_6
      port map (
       CLK => CLK,
       D(1 downto 0) => D(1 downto 0),
@@ -96073,7 +96124,7 @@ pipe_lane_0_i: entity work.pcie_pcie_pcie_pipe_lane_6
       pipe_tx0_compliance => pipe_tx0_compliance,
       pipe_tx0_elec_idle => pipe_tx0_elec_idle
     );
-pipe_misc_i: entity work.pcie_pcie_pcie_pipe_misc
+pipe_misc_i: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_misc
      port map (
       CLK => CLK,
       \pipe_stages_1.pipe_tx_margin_q_reg[2]_0\(2 downto 0) => \pipe_stages_1.pipe_tx_margin_q_reg[2]\(2 downto 0),
@@ -96091,7 +96142,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq is
+entity pcie_7x_0_pcie_7x_0_pipe_eq is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -96101,9 +96152,11 @@ entity pcie_pcie_pipe_eq is
     CLK_RXUSRCLK : in STD_LOGIC;
     USER_RATE_GEN3 : in STD_LOGIC
   );
-end pcie_pcie_pipe_eq;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq is
   signal \FSM_onehot_fsm_rx[1]_i_1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1_n_0\ : STD_LOGIC;
@@ -97699,7 +97752,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_78
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_78
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -99953,7 +100006,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_23 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_23 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -99964,10 +100017,10 @@ entity pcie_pcie_pipe_eq_23 is
     rate_gen3_1 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_23 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_23;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_23 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_23;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_23 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_23 is
   signal \FSM_onehot_fsm_rx[1]_i_1__0_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__0_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__0_n_0\ : STD_LOGIC;
@@ -101563,7 +101616,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_74
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_74
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -103817,7 +103870,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_29 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_29 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -103828,10 +103881,10 @@ entity pcie_pcie_pipe_eq_29 is
     rate_gen3_2 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_29 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_29;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_29 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_29;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_29 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_29 is
   signal \FSM_onehot_fsm_rx[1]_i_1__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__1_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__1_n_0\ : STD_LOGIC;
@@ -105427,7 +105480,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_72
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_72
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -107681,7 +107734,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_35 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_35 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -107692,10 +107745,10 @@ entity pcie_pcie_pipe_eq_35 is
     rate_gen3_3 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_35 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_35;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_35 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_35;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_35 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_35 is
   signal \FSM_onehot_fsm_rx[1]_i_1__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__2_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__2_n_0\ : STD_LOGIC;
@@ -109291,7 +109344,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_70
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_70
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -111545,7 +111598,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_41 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_41 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -111556,10 +111609,10 @@ entity pcie_pcie_pipe_eq_41 is
     rate_gen3_4 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_41 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_41;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_41 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_41;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_41 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_41 is
   signal \FSM_onehot_fsm_rx[1]_i_1__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__3_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__3_n_0\ : STD_LOGIC;
@@ -113155,7 +113208,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_68
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_68
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -115409,7 +115462,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_48 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_48 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -115420,10 +115473,10 @@ entity pcie_pcie_pipe_eq_48 is
     rate_gen3_5 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_48 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_48;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_48 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_48;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_48 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_48 is
   signal \FSM_onehot_fsm_rx[1]_i_1__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__4_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__4_n_0\ : STD_LOGIC;
@@ -117019,7 +117072,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_66
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_66
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -119273,7 +119326,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_54 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_54 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -119284,10 +119337,10 @@ entity pcie_pcie_pipe_eq_54 is
     rate_gen3_6 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_54 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_54;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_54 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_54;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_54 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_54 is
   signal \FSM_onehot_fsm_rx[1]_i_1__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__5_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__5_n_0\ : STD_LOGIC;
@@ -120883,7 +120936,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan_64
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan_64
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -123137,7 +123190,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_eq_60 is
+entity pcie_7x_0_pcie_7x_0_pipe_eq_60 is
   port (
     TXPRECURSOR : out STD_LOGIC_VECTOR ( 4 downto 0 );
     TXMAINCURSOR : out STD_LOGIC_VECTOR ( 6 downto 0 );
@@ -123148,10 +123201,10 @@ entity pcie_pcie_pipe_eq_60 is
     rate_gen3_7 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pipe_eq_60 : entity is "pcie_pipe_eq";
-end pcie_pcie_pipe_eq_60;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_eq_60 : entity is "pcie_7x_0_pipe_eq";
+end pcie_7x_0_pcie_7x_0_pipe_eq_60;
 
-architecture STRUCTURE of pcie_pcie_pipe_eq_60 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_eq_60 is
   signal \FSM_onehot_fsm_rx[1]_i_1__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[1]_i_2__6_n_0\ : STD_LOGIC;
   signal \FSM_onehot_fsm_rx[3]_i_1__6_n_0\ : STD_LOGIC;
@@ -124747,7 +124800,7 @@ rxeq_preset_valid_reg: unisim.vcomponents.FDRE
       Q => rxeq_preset_valid,
       R => RST_CPLLRESET
     );
-rxeq_scan_i: entity work.pcie_pcie_rxeq_scan
+rxeq_scan_i: entity work.pcie_7x_0_pcie_7x_0_rxeq_scan
      port map (
       CLK_RXUSRCLK => CLK_RXUSRCLK,
       D(2) => rxeq_scan_i_n_0,
@@ -127001,7 +127054,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_axi_basic_top is
+entity pcie_7x_0_pcie_7x_0_axi_basic_top is
   port (
     TRNTREM : out STD_LOGIC_VECTOR ( 1 downto 0 );
     trn_rsrc_dsc_d : out STD_LOGIC;
@@ -127056,11 +127109,13 @@ entity pcie_pcie_axi_basic_top is
     \trn_rbar_hit_prev_reg[6]\ : in STD_LOGIC_VECTOR ( 6 downto 0 );
     s_axis_tx_tkeep : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_axi_basic_top;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_axi_basic_top : entity is "pcie_7x_0_axi_basic_top";
+end pcie_7x_0_pcie_7x_0_axi_basic_top;
 
-architecture STRUCTURE of pcie_pcie_axi_basic_top is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_axi_basic_top is
 begin
-rx_inst: entity work.pcie_pcie_axi_basic_rx
+rx_inst: entity work.pcie_7x_0_pcie_7x_0_axi_basic_rx
      port map (
       D(1 downto 0) => D(1 downto 0),
       E(0) => trn_rdst_rdy,
@@ -127085,7 +127140,7 @@ rx_inst: entity work.pcie_pcie_axi_basic_rx
       trn_rsrc_dsc_d => trn_rsrc_dsc_d,
       trn_rsrc_dsc_prev0 => trn_rsrc_dsc_prev0
     );
-tx_inst: entity work.pcie_pcie_axi_basic_tx
+tx_inst: entity work.pcie_7x_0_pcie_7x_0_axi_basic_tx
      port map (
       \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg\ => \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff\,
       \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg_0\ => \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff_reg\,
@@ -127125,7 +127180,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_brams_7x is
+entity pcie_7x_0_pcie_7x_0_pcie_brams_7x is
   port (
     \rdata_lat_3.rdata_q_reg[67]_0\ : out STD_LOGIC_VECTOR ( 67 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -127135,9 +127190,11 @@ entity pcie_pcie_pcie_brams_7x is
     MIMRXWDATA : in STD_LOGIC_VECTOR ( 67 downto 0 );
     MIMRXRADDR : in STD_LOGIC_VECTOR ( 9 downto 0 )
   );
-end pcie_pcie_pcie_brams_7x;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_brams_7x : entity is "pcie_7x_0_pcie_brams_7x";
+end pcie_7x_0_pcie_7x_0_pcie_brams_7x;
 
-architecture STRUCTURE of pcie_pcie_pcie_brams_7x is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_brams_7x is
   signal \raddr_lat_2.raddr_q\ : STD_LOGIC_VECTOR ( 9 downto 0 );
   signal \raddr_lat_2.ren_q\ : STD_LOGIC;
   signal rdata_int : STD_LOGIC_VECTOR ( 67 downto 0 );
@@ -127145,7 +127202,7 @@ architecture STRUCTURE of pcie_pcie_pcie_brams_7x is
   signal \wr_lat_2.wdata_q\ : STD_LOGIC_VECTOR ( 67 downto 0 );
   signal \wr_lat_2.wen_q\ : STD_LOGIC;
 begin
-\brams[0].ram\: entity work.pcie_pcie_pcie_bram_7x_10
+\brams[0].ram\: entity work.pcie_7x_0_pcie_7x_0_pcie_bram_7x_10
      port map (
       ADDRARDADDR(9 downto 0) => \raddr_lat_2.raddr_q\(9 downto 0),
       ADDRBWRADDR(9 downto 0) => \wr_lat_2.waddr_q\(9 downto 0),
@@ -127155,7 +127212,7 @@ begin
       \wr_lat_2.wdata_q\(35 downto 0) => \wr_lat_2.wdata_q\(35 downto 0),
       \wr_lat_2.wen_q\ => \wr_lat_2.wen_q\
     );
-\brams[1].ram\: entity work.pcie_pcie_pcie_bram_7x_11
+\brams[1].ram\: entity work.pcie_7x_0_pcie_7x_0_pcie_bram_7x_11
      port map (
       ADDRARDADDR(9 downto 0) => \raddr_lat_2.raddr_q\(9 downto 0),
       ADDRBWRADDR(9 downto 0) => \wr_lat_2.waddr_q\(9 downto 0),
@@ -128434,7 +128491,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_brams_7x_7 is
+entity pcie_7x_0_pcie_7x_0_pcie_brams_7x_7 is
   port (
     Q : out STD_LOGIC_VECTOR ( 68 downto 0 );
     CLK_USERCLK1 : in STD_LOGIC;
@@ -128445,10 +128502,10 @@ entity pcie_pcie_pcie_brams_7x_7 is
     MIMTXRADDR : in STD_LOGIC_VECTOR ( 9 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of pcie_pcie_pcie_brams_7x_7 : entity is "pcie_pcie_brams_7x";
-end pcie_pcie_pcie_brams_7x_7;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_brams_7x_7 : entity is "pcie_7x_0_pcie_brams_7x";
+end pcie_7x_0_pcie_7x_0_pcie_brams_7x_7;
 
-architecture STRUCTURE of pcie_pcie_pcie_brams_7x_7 is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_brams_7x_7 is
   signal \raddr_lat_2.raddr_q\ : STD_LOGIC_VECTOR ( 9 downto 0 );
   signal \raddr_lat_2.ren_q\ : STD_LOGIC;
   signal rdata_int : STD_LOGIC_VECTOR ( 68 downto 0 );
@@ -128456,7 +128513,7 @@ architecture STRUCTURE of pcie_pcie_pcie_brams_7x_7 is
   signal \wr_lat_2.wdata_q\ : STD_LOGIC_VECTOR ( 68 downto 0 );
   signal \wr_lat_2.wen_q\ : STD_LOGIC;
 begin
-\brams[0].ram\: entity work.pcie_pcie_pcie_bram_7x
+\brams[0].ram\: entity work.pcie_7x_0_pcie_7x_0_pcie_bram_7x
      port map (
       ADDRARDADDR(9 downto 0) => \raddr_lat_2.raddr_q\(9 downto 0),
       ADDRBWRADDR(9 downto 0) => \wr_lat_2.waddr_q\(9 downto 0),
@@ -128466,7 +128523,7 @@ begin
       \wr_lat_2.wdata_q\(35 downto 0) => \wr_lat_2.wdata_q\(35 downto 0),
       \wr_lat_2.wen_q\ => \wr_lat_2.wen_q\
     );
-\brams[1].ram\: entity work.pcie_pcie_pcie_bram_7x_8
+\brams[1].ram\: entity work.pcie_7x_0_pcie_7x_0_pcie_bram_7x_8
      port map (
       ADDRARDADDR(9 downto 0) => \raddr_lat_2.raddr_q\(9 downto 0),
       ADDRBWRADDR(9 downto 0) => \wr_lat_2.waddr_q\(9 downto 0),
@@ -129761,7 +129818,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pipe_wrapper is
+entity pcie_7x_0_pcie_7x_0_pipe_wrapper is
   port (
     cpllpd : out STD_LOGIC;
     cpllpd_0 : out STD_LOGIC;
@@ -129921,9 +129978,11 @@ entity pcie_pcie_pipe_wrapper is
     ext_ch_gt_drpwe : in STD_LOGIC_VECTOR ( 7 downto 0 );
     ext_ch_gt_drpdi : in STD_LOGIC_VECTOR ( 127 downto 0 )
   );
-end pcie_pcie_pipe_wrapper;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pipe_wrapper : entity is "pcie_7x_0_pipe_wrapper";
+end pcie_7x_0_pcie_7x_0_pipe_wrapper;
 
-architecture STRUCTURE of pcie_pcie_pipe_wrapper is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pipe_wrapper is
   signal \^clk_dclk\ : STD_LOGIC;
   signal \^clk_mmcm_lock\ : STD_LOGIC;
   signal \^clk_pclk_sel\ : STD_LOGIC_VECTOR ( 7 downto 0 );
@@ -130406,7 +130465,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       I4 => user_rx_converge(7),
       O => \gtx_channel.gtxe2_channel_i_i_71_n_0\
     );
-\pipe_clock_int.pipe_clock_i\: entity work.pcie_pcie_pipe_clock
+\pipe_clock_int.pipe_clock_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_clock
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
@@ -130421,7 +130480,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_mmcm_rst_n => pipe_mmcm_rst_n,
       pipe_txoutclk_out => \^pipe_txoutclk_out\
     );
-\pipe_lane[0].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper
+\pipe_lane[0].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper
      port map (
       CLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -130503,7 +130562,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       sync_txdlyen_0 => sync_txdlyen_0,
       sys_clk => sys_clk
     );
-\pipe_lane[0].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp
+\pipe_lane[0].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8) => \pipe_lane[0].pipe_drp.pipe_drp_i_n_3\,
@@ -130526,7 +130585,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(0),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[0].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq
+\pipe_lane[0].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -130536,7 +130595,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RATE_GEN3 => \^gen3_reg\,
       USER_RXEQ_ADAPT_DONE => \pipe_lane[0].pipe_eq.pipe_eq_i_n_17\
     );
-\pipe_lane[0].pipe_quad.gt_common_enabled.gt_common_int.gt_common_i\: entity work.pcie_pcie_gt_common
+\pipe_lane[0].pipe_quad.gt_common_enabled.gt_common_int.gt_common_i\: entity work.pcie_7x_0_pcie_7x_0_gt_common
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRP_DONE => qdrp_done(0),
@@ -130550,7 +130609,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       sys_clk_0 => \^sys_clk_0\,
       sys_clk_1 => \^sys_clk_1\
     );
-\pipe_lane[0].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate
+\pipe_lane[0].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       \FSM_onehot_fsm_reg[20]_0\ => p_0_in1_in,
@@ -130587,7 +130646,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_0 => rxchbonden_0,
       user_active_lane(0) => user_active_lane(0)
     );
-\pipe_lane[0].pipe_sync_i\: entity work.pcie_pcie_pipe_sync
+\pipe_lane[0].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       \FSM_onehot_txsync_fsm.fsm_tx_reg[5]_0\ => \pipe_lane[0].pipe_user_i_n_2\,
@@ -130618,7 +130677,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       txphaligndone_reg3_reg_0 => \pipe_lane[0].pipe_sync_i_n_1\,
       user_active_lane(0) => user_active_lane(0)
     );
-\pipe_lane[0].pipe_user_i\: entity work.pcie_pcie_pipe_user
+\pipe_lane[0].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(0),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -130655,7 +130714,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       txelecidle_reg2_reg_1 => p_1_in2_in,
       user_active_lane(0) => user_active_lane(0)
     );
-\pipe_lane[1].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_21
+\pipe_lane[1].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_21
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -130734,7 +130793,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_1 => rxchbonden_1,
       sys_clk => sys_clk
     );
-\pipe_lane[1].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_22
+\pipe_lane[1].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_22
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_9(8 downto 0),
@@ -130756,7 +130815,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(1),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[1].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_23
+\pipe_lane[1].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_23
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -130766,7 +130825,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[1].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_1 => rate_gen3_1
     );
-\pipe_lane[1].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_24
+\pipe_lane[1].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_24
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       \FSM_onehot_fsm_reg[20]_0\ => p_0_in1_in_0,
@@ -130803,7 +130862,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_1 => rxchbonden_1,
       user_active_lane(0) => user_active_lane(1)
     );
-\pipe_lane[1].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_25
+\pipe_lane[1].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_25
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -130830,7 +130889,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(1),
       user_active_lane(0) => user_active_lane(1)
     );
-\pipe_lane[1].pipe_user_i\: entity work.pcie_pcie_pipe_user_26
+\pipe_lane[1].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_26
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(1),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -130862,7 +130921,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       user_active_lane(0) => user_active_lane(1),
       user_rx_converge(0) => user_rx_converge(1)
     );
-\pipe_lane[2].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_27
+\pipe_lane[2].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_27
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -130941,7 +131000,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_2 => rxchbonden_2,
       sys_clk => sys_clk
     );
-\pipe_lane[2].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_28
+\pipe_lane[2].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_28
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_18(8 downto 0),
@@ -130963,7 +131022,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(2),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[2].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_29
+\pipe_lane[2].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_29
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -130973,7 +131032,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[2].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_2 => rate_gen3_2
     );
-\pipe_lane[2].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_30
+\pipe_lane[2].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_30
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131015,7 +131074,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_2 => rxchbonden_2,
       user_active_lane(0) => user_active_lane(2)
     );
-\pipe_lane[2].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_31
+\pipe_lane[2].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_31
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131042,7 +131101,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(2),
       user_active_lane(0) => user_active_lane(2)
     );
-\pipe_lane[2].pipe_user_i\: entity work.pcie_pcie_pipe_user_32
+\pipe_lane[2].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_32
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(2),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131086,7 +131145,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       txphinitdone_reg1_reg_1 => p_1_in2_in_5,
       user_active_lane(1 downto 0) => user_active_lane(1 downto 0)
     );
-\pipe_lane[3].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_33
+\pipe_lane[3].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_33
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131165,7 +131224,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_3 => rxchbonden_3,
       sys_clk => sys_clk
     );
-\pipe_lane[3].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_34
+\pipe_lane[3].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_34
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_27(8 downto 0),
@@ -131187,7 +131246,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(3),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[3].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_35
+\pipe_lane[3].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_35
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -131197,7 +131256,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[3].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_3 => rate_gen3_3
     );
-\pipe_lane[3].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_36
+\pipe_lane[3].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_36
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131234,7 +131293,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_3 => rxchbonden_3,
       user_active_lane(0) => user_active_lane(3)
     );
-\pipe_lane[3].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_37
+\pipe_lane[3].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_37
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131261,7 +131320,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(3),
       user_active_lane(0) => user_active_lane(3)
     );
-\pipe_lane[3].pipe_user_i\: entity work.pcie_pcie_pipe_user_38
+\pipe_lane[3].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_38
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(3),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131293,7 +131352,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       user_active_lane(0) => user_active_lane(3),
       user_rx_converge(0) => user_rx_converge(3)
     );
-\pipe_lane[4].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_39
+\pipe_lane[4].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_39
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131372,7 +131431,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_4 => rxchbonden_4,
       sys_clk => sys_clk
     );
-\pipe_lane[4].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_40
+\pipe_lane[4].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_40
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_36(8 downto 0),
@@ -131394,7 +131453,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(4),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[4].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_41
+\pipe_lane[4].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_41
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -131404,7 +131463,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[4].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_4 => rate_gen3_4
     );
-\pipe_lane[4].pipe_quad.gt_common_enabled.gt_common_int.gt_common_i\: entity work.pcie_pcie_gt_common_42
+\pipe_lane[4].pipe_quad.gt_common_enabled.gt_common_int.gt_common_i\: entity work.pcie_7x_0_pcie_7x_0_gt_common_42
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRP_DONE => qdrp_done(1),
@@ -131418,7 +131477,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       sys_clk_0 => \^sys_clk_2\,
       sys_clk_1 => \^sys_clk_3\
     );
-\pipe_lane[4].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_43
+\pipe_lane[4].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_43
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131455,7 +131514,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_4 => rxchbonden_4,
       user_active_lane(0) => user_active_lane(4)
     );
-\pipe_lane[4].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_44
+\pipe_lane[4].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_44
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131482,7 +131541,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(4),
       user_active_lane(0) => user_active_lane(4)
     );
-\pipe_lane[4].pipe_user_i\: entity work.pcie_pcie_pipe_user_45
+\pipe_lane[4].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_45
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(4),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131524,7 +131583,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       txphinitdone_reg1_reg => \pipe_lane[6].pipe_user_i_n_2\,
       user_active_lane(0) => user_active_lane(5)
     );
-\pipe_lane[5].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_46
+\pipe_lane[5].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_46
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131603,7 +131662,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_5 => rxchbonden_5,
       sys_clk => sys_clk
     );
-\pipe_lane[5].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_47
+\pipe_lane[5].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_47
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_45(8 downto 0),
@@ -131625,7 +131684,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(5),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[5].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_48
+\pipe_lane[5].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_48
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -131635,7 +131694,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[5].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_5 => rate_gen3_5
     );
-\pipe_lane[5].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_49
+\pipe_lane[5].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_49
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131676,7 +131735,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_5 => rxchbonden_5,
       user_active_lane(0) => user_active_lane(5)
     );
-\pipe_lane[5].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_50
+\pipe_lane[5].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_50
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131703,7 +131762,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(5),
       user_active_lane(0) => user_active_lane(5)
     );
-\pipe_lane[5].pipe_user_i\: entity work.pcie_pcie_pipe_user_51
+\pipe_lane[5].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_51
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(5),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131743,7 +131802,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       user_active_lane(0) => user_active_lane(5),
       user_rx_converge(0) => user_rx_converge(5)
     );
-\pipe_lane[6].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_52
+\pipe_lane[6].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_52
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131822,7 +131881,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_6 => rxchbonden_6,
       sys_clk => sys_clk
     );
-\pipe_lane[6].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_53
+\pipe_lane[6].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_53
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_54(8 downto 0),
@@ -131844,7 +131903,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(6),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[6].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_54
+\pipe_lane[6].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_54
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -131854,7 +131913,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[6].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_6 => rate_gen3_6
     );
-\pipe_lane[6].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_55
+\pipe_lane[6].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_55
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131891,7 +131950,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_6 => rxchbonden_6,
       user_active_lane(0) => user_active_lane(6)
     );
-\pipe_lane[6].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_56
+\pipe_lane[6].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_56
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131918,7 +131977,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(6),
       user_active_lane(0) => user_active_lane(6)
     );
-\pipe_lane[6].pipe_user_i\: entity work.pcie_pcie_pipe_user_57
+\pipe_lane[6].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_57
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(6),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -131959,7 +132018,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       txphaligndone_reg1_i_3_0 => p_1_in2_in_13,
       user_active_lane(0) => user_active_lane(6)
     );
-\pipe_lane[7].gt_wrapper_i\: entity work.pcie_pcie_gt_wrapper_58
+\pipe_lane[7].gt_wrapper_i\: entity work.pcie_7x_0_pcie_7x_0_gt_wrapper_58
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -132038,7 +132097,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_7 => rxchbonden_7,
       sys_clk => sys_clk
     );
-\pipe_lane[7].pipe_drp.pipe_drp_i\: entity work.pcie_pcie_pipe_drp_59
+\pipe_lane[7].pipe_drp.pipe_drp_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_drp_59
      port map (
       CLK_DCLK => \^clk_dclk\,
       DRPADDR(8 downto 0) => drp_mux_addr_63(8 downto 0),
@@ -132060,7 +132119,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       gt_ch_drp_rdy(0) => gt_ch_drp_rdy(7),
       \rate_reg1_reg[0]_0\(0) => \rate_reg1_reg[0]\(0)
     );
-\pipe_lane[7].pipe_eq.pipe_eq_i\: entity work.pcie_pcie_pipe_eq_60
+\pipe_lane[7].pipe_eq.pipe_eq_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_eq_60
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       RST_CPLLRESET => rst_cpllreset,
@@ -132070,7 +132129,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       USER_RXEQ_ADAPT_DONE => \pipe_lane[7].pipe_eq.pipe_eq_i_n_17\,
       rate_gen3_7 => rate_gen3_7
     );
-\pipe_lane[7].pipe_rate.pipe_rate_i\: entity work.pcie_pcie_pipe_rate_61
+\pipe_lane[7].pipe_rate.pipe_rate_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_rate_61
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -132107,7 +132166,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       rxchbonden_7 => rxchbonden_7,
       user_active_lane(0) => user_active_lane(7)
     );
-\pipe_lane[7].pipe_sync_i\: entity work.pcie_pcie_pipe_sync_62
+\pipe_lane[7].pipe_sync_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_sync_62
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -132134,7 +132193,7 @@ cpllpd_refclk_inst: unisim.vcomponents.BUFG
       pipe_sync_fsm_rx(0) => pipe_sync_fsm_rx(7),
       user_active_lane(0) => user_active_lane(7)
     );
-\pipe_lane[7].pipe_user_i\: entity work.pcie_pcie_pipe_user_63
+\pipe_lane[7].pipe_user_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_user_63
      port map (
       CLK_PCLK_SEL(0) => \^clk_pclk_sel\(7),
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -132189,7 +132248,7 @@ pipe_rate_idle_INST_0_i_1: unisim.vcomponents.LUT4
       I3 => rate_idle(6),
       O => pipe_rate_idle_INST_0_i_1_n_0
     );
-\pipe_reset.pipe_reset_i\: entity work.pcie_pcie_pipe_reset
+\pipe_reset.pipe_reset_i\: entity work.pcie_7x_0_pcie_7x_0_pipe_reset
      port map (
       CLK_DCLK => \^clk_dclk\,
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
@@ -132242,7 +132301,7 @@ pipe_rate_idle_INST_0_i_1: unisim.vcomponents.LUT4
       \txsync_done_reg1_reg[7]_0\(1) => p_349_out,
       \txsync_done_reg1_reg[7]_0\(0) => p_404_out
     );
-\qpll_reset.qpll_reset_i\: entity work.pcie_pcie_qpll_reset
+\qpll_reset.qpll_reset_i\: entity work.pcie_7x_0_pcie_7x_0_qpll_reset
      port map (
       CLK_MMCM_LOCK => \^clk_mmcm_lock\,
       CLK_RXUSRCLK => \^clk_rxusrclk\,
@@ -132349,7 +132408,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_gt_top is
+entity pcie_7x_0_pcie_7x_0_gt_top is
   port (
     pipe_rx0_valid_gt : out STD_LOGIC;
     phy_rdy_n : out STD_LOGIC;
@@ -132486,9 +132545,11 @@ entity pcie_pcie_gt_top is
     ext_ch_gt_drpdi : in STD_LOGIC_VECTOR ( 127 downto 0 );
     sys_rst_n : in STD_LOGIC
   );
-end pcie_pcie_gt_top;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_gt_top : entity is "pcie_7x_0_gt_top";
+end pcie_7x_0_pcie_7x_0_gt_top;
 
-architecture STRUCTURE of pcie_pcie_gt_top is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_gt_top is
   signal \^clk_rxusrclk\ : STD_LOGIC;
   signal gt_rx_data_k_wire_filter : STD_LOGIC_VECTOR ( 29 downto 0 );
   signal gt_rx_data_wire_filter : STD_LOGIC_VECTOR ( 239 downto 0 );
@@ -132555,7 +132616,7 @@ begin
   pipe_rx7_valid_gt <= \^pipe_rx7_valid_gt\;
   pipe_rxstatus(23 downto 0) <= \^pipe_rxstatus\(23 downto 0);
   sys_rst_n_0 <= \^sys_rst_n_0\;
-\gt_rx_valid_filter[0].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x
+\gt_rx_valid_filter[0].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(15 downto 0),
@@ -132574,7 +132635,7 @@ begin
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(2 downto 0),
       \pl_ltssm_state_q_reg[5]\ => \gt_rx_valid_filter[0].GT_RX_VALID_FILTER_7x_inst_n_3\
     );
-\gt_rx_valid_filter[1].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_14
+\gt_rx_valid_filter[1].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_14
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(47 downto 32),
@@ -132592,7 +132653,7 @@ begin
       gt_rxvalid_q_reg_2 => pipe_wrapper_i_n_701,
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(5 downto 3)
     );
-\gt_rx_valid_filter[2].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_15
+\gt_rx_valid_filter[2].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_15
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(79 downto 64),
@@ -132610,7 +132671,7 @@ begin
       gt_rxvalid_q_reg_2 => pipe_wrapper_i_n_702,
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(8 downto 6)
     );
-\gt_rx_valid_filter[3].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_16
+\gt_rx_valid_filter[3].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_16
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(111 downto 96),
@@ -132628,7 +132689,7 @@ begin
       gt_rxvalid_q_reg_2 => pipe_wrapper_i_n_703,
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(11 downto 9)
     );
-\gt_rx_valid_filter[4].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_17
+\gt_rx_valid_filter[4].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_17
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(143 downto 128),
@@ -132646,7 +132707,7 @@ begin
       gt_rxvalid_q_reg_2 => pipe_wrapper_i_n_704,
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(14 downto 12)
     );
-\gt_rx_valid_filter[5].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_18
+\gt_rx_valid_filter[5].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_18
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(175 downto 160),
@@ -132664,7 +132725,7 @@ begin
       gt_rxvalid_q_reg_2 => pipe_wrapper_i_n_705,
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(17 downto 15)
     );
-\gt_rx_valid_filter[6].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_19
+\gt_rx_valid_filter[6].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_19
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(207 downto 192),
@@ -132682,7 +132743,7 @@ begin
       gt_rxvalid_q_reg_2 => pipe_wrapper_i_n_706,
       pipe_rxstatus(2 downto 0) => \^pipe_rxstatus\(20 downto 18)
     );
-\gt_rx_valid_filter[7].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_pcie_gt_rx_valid_filter_7x_20
+\gt_rx_valid_filter[7].GT_RX_VALID_FILTER_7x_inst\: entity work.pcie_7x_0_pcie_7x_0_gt_rx_valid_filter_7x_20
      port map (
       CLK_RXUSRCLK => \^clk_rxusrclk\,
       PIPE_RXDATA(15 downto 0) => gt_rx_data_wire_filter(239 downto 224),
@@ -132788,7 +132849,7 @@ phy_rdy_n_int_reg: unisim.vcomponents.FDRE
       Q => \^phy_rdy_n\,
       R => '0'
     );
-pipe_wrapper_i: entity work.pcie_pcie_pipe_wrapper
+pipe_wrapper_i: entity work.pcie_7x_0_pcie_7x_0_pipe_wrapper
      port map (
       CLK_DCLK => CLK_DCLK,
       CLK_MMCM_LOCK => CLK_MMCM_LOCK,
@@ -133039,7 +133100,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_bram_top_7x is
+entity pcie_7x_0_pcie_7x_0_pcie_bram_top_7x is
   port (
     Q : out STD_LOGIC_VECTOR ( 68 downto 0 );
     \rdata_lat_3.rdata_q_reg[67]\ : out STD_LOGIC_VECTOR ( 67 downto 0 );
@@ -133055,11 +133116,13 @@ entity pcie_pcie_pcie_bram_top_7x is
     MIMRXWDATA : in STD_LOGIC_VECTOR ( 67 downto 0 );
     MIMRXRADDR : in STD_LOGIC_VECTOR ( 9 downto 0 )
   );
-end pcie_pcie_pcie_bram_top_7x;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_bram_top_7x : entity is "pcie_7x_0_pcie_bram_top_7x";
+end pcie_7x_0_pcie_7x_0_pcie_bram_top_7x;
 
-architecture STRUCTURE of pcie_pcie_pcie_bram_top_7x is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_bram_top_7x is
 begin
-pcie_brams_rx: entity work.pcie_pcie_pcie_brams_7x
+pcie_brams_rx: entity work.pcie_7x_0_pcie_7x_0_pcie_brams_7x
      port map (
       CLK_USERCLK1 => CLK_USERCLK1,
       MIMRXRADDR(9 downto 0) => MIMRXRADDR(9 downto 0),
@@ -133069,7 +133132,7 @@ pcie_brams_rx: entity work.pcie_pcie_pcie_brams_7x
       mim_rx_wen => mim_rx_wen,
       \rdata_lat_3.rdata_q_reg[67]_0\(67 downto 0) => \rdata_lat_3.rdata_q_reg[67]\(67 downto 0)
     );
-pcie_brams_tx: entity work.pcie_pcie_pcie_brams_7x_7
+pcie_brams_tx: entity work.pcie_7x_0_pcie_7x_0_pcie_brams_7x_7
      port map (
       CLK_USERCLK1 => CLK_USERCLK1,
       MIMTXRADDR(9 downto 0) => MIMTXRADDR(9 downto 0),
@@ -133084,7 +133147,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_7x is
+entity pcie_7x_0_pcie_7x_0_pcie_7x is
   port (
     cfg_aer_ecrc_check_en : out STD_LOGIC;
     cfg_aer_ecrc_gen_en : out STD_LOGIC;
@@ -133371,9 +133434,11 @@ entity pcie_pcie_pcie_7x is
     reg_dsc_detect : in STD_LOGIC;
     reg_tcfg_gnt : in STD_LOGIC
   );
-end pcie_pcie_pcie_7x;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_7x : entity is "pcie_7x_0_pcie_7x";
+end pcie_7x_0_pcie_7x_0_pcie_7x;
 
-architecture STRUCTURE of pcie_pcie_pcie_7x is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_7x is
   signal \^trntbufav\ : STD_LOGIC_VECTOR ( 5 downto 0 );
   signal cfg_err_aer_headerlog_set_n : STD_LOGIC;
   signal cfg_err_cpl_rdy_n : STD_LOGIC;
@@ -134010,7 +134075,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       PM_CAP_ID => X"01",
       PM_CAP_NEXTPTR => X"48",
       PM_CAP_ON => "TRUE",
-      PM_CAP_PMESUPPORT => X"01",
+      PM_CAP_PMESUPPORT => X"09",
       PM_CAP_PME_CLOCK => "FALSE",
       PM_CAP_RSVD_04 => 0,
       PM_CAP_VERSION => 3,
@@ -134287,7 +134352,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       CFGROOTCONTROLSYSERRNONFATALERREN => cfg_root_control_syserr_non_fatal_err_en,
       CFGSLOTCONTROLELECTROMECHILCTLPULSE => cfg_slot_control_electromech_il_ctl_pulse,
       CFGSUBSYSID(15 downto 0) => B"0000000000000111",
-      CFGSUBSYSVENDID(15 downto 0) => B"0000000000000000",
+      CFGSUBSYSVENDID(15 downto 0) => B"0001000011101110",
       CFGTRANSACTION => pcie_block_i_n_84,
       CFGTRANSACTIONADDR(6) => pcie_block_i_n_1097,
       CFGTRANSACTIONADDR(5) => pcie_block_i_n_1098,
@@ -135061,7 +135126,7 @@ pcie_block_i_i_9: unisim.vcomponents.LUT1
       I0 => cfg_err_locked,
       O => pcie_block_i_i_9_n_0
     );
-pcie_bram_top: entity work.pcie_pcie_pcie_bram_top_7x
+pcie_bram_top: entity work.pcie_7x_0_pcie_7x_0_pcie_bram_top_7x
      port map (
       CLK_USERCLK1 => CLK_USERCLK1,
       MIMRXRADDR(9 downto 0) => mim_rx_raddr(9 downto 0),
@@ -135179,7 +135244,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie_top is
+entity pcie_7x_0_pcie_7x_0_pcie_top is
   port (
     cfg_aer_ecrc_check_en : out STD_LOGIC;
     cfg_aer_ecrc_gen_en : out STD_LOGIC;
@@ -135400,9 +135465,11 @@ entity pcie_pcie_pcie_top is
     \pipe_stages_1.pipe_rx_data_q_reg[15]_6\ : in STD_LOGIC_VECTOR ( 15 downto 0 );
     \pipe_stages_1.pipe_rx_status_q_reg[2]_6\ : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
-end pcie_pcie_pcie_top;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie_top : entity is "pcie_7x_0_pcie_top";
+end pcie_7x_0_pcie_7x_0_pcie_top;
 
-architecture STRUCTURE of pcie_pcie_pcie_top is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie_top is
   signal \^d\ : STD_LOGIC_VECTOR ( 2 downto 0 );
   signal \^cfg_msg_data\ : STD_LOGIC_VECTOR ( 15 downto 0 );
   signal cfg_turnoff_ok_w : STD_LOGIC;
@@ -135560,7 +135627,7 @@ begin
   cfg_msg_data(15 downto 0) <= \^cfg_msg_data\(15 downto 0);
   \pipe_stages_1.pipe_rx_chanisaligned_q_reg\ <= \^pipe_stages_1.pipe_rx_chanisaligned_q_reg\;
   \pipe_stages_1.pipe_rx_chanisaligned_q_reg_1\(5 downto 0) <= \^pipe_stages_1.pipe_rx_chanisaligned_q_reg_1\(5 downto 0);
-axi_basic_top: entity work.pcie_pcie_axi_basic_top
+axi_basic_top: entity work.pcie_7x_0_pcie_7x_0_axi_basic_top
      port map (
       D(1 downto 0) => trn_rrem(1 downto 0),
       \L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff\ => \tx_inst/thrtl_ctl_enabled.tx_thrl_ctl_inst/L23_thrtl_ep.x7_L23_thrtl_ep.reg_to_turnoff\,
@@ -135761,7 +135828,7 @@ axi_basic_top: entity work.pcie_pcie_axi_basic_top
       Q => cfg_function_number(2),
       R => \tx_inst/tx_pipeline_inst/reg_disable_trn2\
     );
-pcie_7x_i: entity work.pcie_pcie_pcie_7x
+pcie_7x_i: entity work.pcie_7x_0_pcie_7x_0_pcie_7x
      port map (
       CFGMGMTBYTEENN(3 downto 0) => CFGMGMTBYTEENN(3 downto 0),
       CLK => CLK,
@@ -136058,7 +136125,7 @@ pcie_7x_i: entity work.pcie_pcie_pcie_7x
       tx_err_drop => tx_err_drop,
       user_reset_int_reg => user_reset_int_reg
     );
-pcie_pipe_pipeline_i: entity work.pcie_pcie_pcie_pipe_pipeline
+pcie_pipe_pipeline_i: entity work.pcie_7x_0_pcie_7x_0_pcie_pipe_pipeline
      port map (
       CLK => CLK,
       D(1 downto 0) => pipe_tx0_char_is_k(1 downto 0),
@@ -136235,7 +136302,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_core_top is
+entity pcie_7x_0_pcie_7x_0_core_top is
   port (
     pl_ltssm_state : out STD_LOGIC_VECTOR ( 5 downto 0 );
     INT_RXUSRCLK_OUT : out STD_LOGIC;
@@ -136446,9 +136513,11 @@ entity pcie_pcie_core_top is
     cfg_pm_force_state_en : in STD_LOGIC;
     cfg_pm_wake : in STD_LOGIC
   );
-end pcie_pcie_core_top;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_core_top : entity is "pcie_7x_0_core_top";
+end pcie_7x_0_pcie_7x_0_core_top;
 
-architecture STRUCTURE of pcie_pcie_core_top is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_core_top is
   signal \^int_rxusrclk_out\ : STD_LOGIC;
   signal \_inferred__0/store_ltssm_inferred_i_2_n_0\ : STD_LOGIC;
   signal \_inferred__0/store_ltssm_inferred_i_3_n_0\ : STD_LOGIC;
@@ -136699,7 +136768,7 @@ begin
       I5 => ltssm_reg2(4),
       O => \_inferred__0/store_ltssm_inferred_i_3_n_0\
     );
-gt_top_i: entity work.pcie_pcie_gt_top
+gt_top_i: entity work.pcie_7x_0_pcie_7x_0_gt_top
      port map (
       CLK_DCLK => int_dclk_out,
       CLK_MMCM_LOCK => int_mmcm_lock_out,
@@ -137084,7 +137153,7 @@ pcie_block_i_i_35: unisim.vcomponents.LUT1
       I0 => cfg_mgmt_byte_en(0),
       O => pcie_block_i_i_35_n_0
     );
-pcie_top_i: entity work.pcie_pcie_pcie_top
+pcie_top_i: entity work.pcie_7x_0_pcie_7x_0_pcie_top
      port map (
       CFGMGMTBYTEENN(3) => pcie_block_i_i_32_n_0,
       CFGMGMTBYTEENN(2) => pcie_block_i_i_33_n_0,
@@ -137373,7 +137442,7 @@ pcie_top_i: entity work.pcie_pcie_pcie_top
       tx_err_drop => tx_err_drop,
       user_reset_int_reg => pcie_top_i_n_303
     );
-phy_lnk_up_cdc: entity work.\pcie_xpm_cdc_single__2\
+phy_lnk_up_cdc: entity work.\pcie_7x_0_xpm_cdc_single__2\
      port map (
       dest_clk => \^int_userclk2_out\,
       dest_out => pl_phy_lnk_up_sync,
@@ -137388,7 +137457,7 @@ pl_phy_lnk_up_q_reg: unisim.vcomponents.FDRE
       Q => \^pl_phy_lnk_up\,
       R => gt_top_i_n_828
     );
-pl_received_hot_rst_cdc: entity work.pcie_xpm_cdc_single
+pl_received_hot_rst_cdc: entity work.pcie_7x_0_xpm_cdc_single
      port map (
       dest_clk => \^int_userclk2_out\,
       dest_out => pl_received_hot_rst_sync,
@@ -137449,7 +137518,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie_pcie_pcie2_top is
+entity pcie_7x_0_pcie_7x_0_pcie2_top is
   port (
     pci_exp_txn : out STD_LOGIC_VECTOR ( 7 downto 0 );
     pci_exp_txp : out STD_LOGIC_VECTOR ( 7 downto 0 );
@@ -137743,444 +137812,446 @@ entity pcie_pcie_pcie2_top is
     sys_rst_n : in STD_LOGIC
   );
   attribute CFG_CTL_IF : string;
-  attribute CFG_CTL_IF of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute CFG_CTL_IF of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute CFG_FC_IF : string;
-  attribute CFG_FC_IF of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute CFG_FC_IF of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute CFG_MGMT_IF : string;
-  attribute CFG_MGMT_IF of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute CFG_MGMT_IF of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute CFG_STATUS_IF : string;
-  attribute CFG_STATUS_IF of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute CFG_STATUS_IF of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute C_DATA_WIDTH : integer;
-  attribute C_DATA_WIDTH of pcie_pcie_pcie2_top : entity is 128;
+  attribute C_DATA_WIDTH of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 128;
   attribute DowngradeIPIdentifiedWarnings : string;
-  attribute DowngradeIPIdentifiedWarnings of pcie_pcie_pcie2_top : entity is "yes";
+  attribute DowngradeIPIdentifiedWarnings of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "yes";
   attribute ENABLE_JTAG_DBG : string;
-  attribute ENABLE_JTAG_DBG of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute ENABLE_JTAG_DBG of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute ERR_REPORTING_IF : string;
-  attribute ERR_REPORTING_IF of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute ERR_REPORTING_IF of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute EXT_CH_GT_DRP : string;
-  attribute EXT_CH_GT_DRP of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute EXT_CH_GT_DRP of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute EXT_PIPE_INTERFACE : string;
-  attribute EXT_PIPE_INTERFACE of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute EXT_PIPE_INTERFACE of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute EXT_STARTUP_PRIMITIVE : string;
-  attribute EXT_STARTUP_PRIMITIVE of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute EXT_STARTUP_PRIMITIVE of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute KEEP_WIDTH : integer;
-  attribute KEEP_WIDTH of pcie_pcie_pcie2_top : entity is 16;
+  attribute KEEP_WIDTH of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 16;
   attribute LINK_CAP_MAX_LINK_WIDTH : integer;
-  attribute LINK_CAP_MAX_LINK_WIDTH of pcie_pcie_pcie2_top : entity is 8;
+  attribute LINK_CAP_MAX_LINK_WIDTH of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 8;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "pcie_7x_0_pcie2_top";
   attribute PCIE_ASYNC_EN : string;
-  attribute PCIE_ASYNC_EN of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute PCIE_ASYNC_EN of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute PCIE_EXT_CLK : string;
-  attribute PCIE_EXT_CLK of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute PCIE_EXT_CLK of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute PCIE_EXT_GT_COMMON : string;
-  attribute PCIE_EXT_GT_COMMON of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute PCIE_EXT_GT_COMMON of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute PIPE_SIM : string;
-  attribute PIPE_SIM of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute PIPE_SIM of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute PL_INTERFACE : string;
-  attribute PL_INTERFACE of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute PL_INTERFACE of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute RCV_MSG_IF : string;
-  attribute RCV_MSG_IF of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute RCV_MSG_IF of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute SHARED_LOGIC_IN_CORE : string;
-  attribute SHARED_LOGIC_IN_CORE of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute SHARED_LOGIC_IN_CORE of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute TRANSCEIVER_CTRL_STATUS_PORTS : string;
-  attribute TRANSCEIVER_CTRL_STATUS_PORTS of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute TRANSCEIVER_CTRL_STATUS_PORTS of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute bar_0 : string;
-  attribute bar_0 of pcie_pcie_pcie2_top : entity is "FFFFF000";
+  attribute bar_0 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFFFF000";
   attribute bar_1 : string;
-  attribute bar_1 of pcie_pcie_pcie2_top : entity is "FFF80000";
+  attribute bar_1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFF80000";
   attribute bar_2 : string;
-  attribute bar_2 of pcie_pcie_pcie2_top : entity is "FFF80000";
+  attribute bar_2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFF80000";
   attribute bar_3 : string;
-  attribute bar_3 of pcie_pcie_pcie2_top : entity is "00000000";
+  attribute bar_3 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bar_4 : string;
-  attribute bar_4 of pcie_pcie_pcie2_top : entity is "00000000";
+  attribute bar_4 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bar_5 : string;
-  attribute bar_5 of pcie_pcie_pcie2_top : entity is "00000000";
+  attribute bar_5 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bram_lat : string;
-  attribute bram_lat of pcie_pcie_pcie2_top : entity is "2";
+  attribute bram_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute c_aer_base_ptr : string;
-  attribute c_aer_base_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_aer_base_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_aer_cap_ecrc_check_capable : string;
-  attribute c_aer_cap_ecrc_check_capable of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_aer_cap_ecrc_check_capable of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_aer_cap_ecrc_gen_capable : string;
-  attribute c_aer_cap_ecrc_gen_capable of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_aer_cap_ecrc_gen_capable of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_aer_cap_multiheader : string;
-  attribute c_aer_cap_multiheader of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_aer_cap_multiheader of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_aer_cap_nextptr : string;
-  attribute c_aer_cap_nextptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_aer_cap_nextptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_aer_cap_on : string;
-  attribute c_aer_cap_on of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_aer_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_aer_cap_optional_err_support : string;
-  attribute c_aer_cap_optional_err_support of pcie_pcie_pcie2_top : entity is "000000";
+  attribute c_aer_cap_optional_err_support of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000000";
   attribute c_aer_cap_permit_rooterr_update : string;
-  attribute c_aer_cap_permit_rooterr_update of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_aer_cap_permit_rooterr_update of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_buf_opt_bma : string;
-  attribute c_buf_opt_bma of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_buf_opt_bma of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_component_name : string;
-  attribute c_component_name of pcie_pcie_pcie2_top : entity is "pcie";
+  attribute c_component_name of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "pcie_7x_0";
   attribute c_cpl_inf : string;
-  attribute c_cpl_inf of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_cpl_inf of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_cpl_infinite : string;
-  attribute c_cpl_infinite of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_cpl_infinite of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_cpl_timeout_disable_sup : string;
-  attribute c_cpl_timeout_disable_sup of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_cpl_timeout_disable_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_cpl_timeout_range : string;
-  attribute c_cpl_timeout_range of pcie_pcie_pcie2_top : entity is "0010";
+  attribute c_cpl_timeout_range of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0010";
   attribute c_cpl_timeout_ranges_sup : string;
-  attribute c_cpl_timeout_ranges_sup of pcie_pcie_pcie2_top : entity is "2";
+  attribute c_cpl_timeout_ranges_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute c_d1_support : string;
-  attribute c_d1_support of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_d1_support of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_d2_support : string;
-  attribute c_d2_support of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_d2_support of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_de_emph : string;
-  attribute c_de_emph of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_de_emph of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_cap2_ari_forwarding_supported : string;
-  attribute c_dev_cap2_ari_forwarding_supported of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dev_cap2_ari_forwarding_supported of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_cap2_atomicop32_completer_supported : string;
-  attribute c_dev_cap2_atomicop32_completer_supported of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dev_cap2_atomicop32_completer_supported of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_cap2_atomicop64_completer_supported : string;
-  attribute c_dev_cap2_atomicop64_completer_supported of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dev_cap2_atomicop64_completer_supported of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_cap2_atomicop_routing_supported : string;
-  attribute c_dev_cap2_atomicop_routing_supported of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dev_cap2_atomicop_routing_supported of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_cap2_cas128_completer_supported : string;
-  attribute c_dev_cap2_cas128_completer_supported of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dev_cap2_cas128_completer_supported of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_cap2_tph_completer_supported : string;
-  attribute c_dev_cap2_tph_completer_supported of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_dev_cap2_tph_completer_supported of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_dev_control_ext_tag_default : string;
-  attribute c_dev_control_ext_tag_default of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dev_control_ext_tag_default of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dev_port_type : string;
-  attribute c_dev_port_type of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_dev_port_type of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_dis_lane_reverse : string;
-  attribute c_dis_lane_reverse of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_dis_lane_reverse of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_disable_rx_poisoned_resp : string;
-  attribute c_disable_rx_poisoned_resp of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_disable_rx_poisoned_resp of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_disable_scrambling : string;
-  attribute c_disable_scrambling of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_disable_scrambling of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_disable_tx_aspm_l0s : string;
-  attribute c_disable_tx_aspm_l0s of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_disable_tx_aspm_l0s of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dll_lnk_actv_cap : string;
-  attribute c_dll_lnk_actv_cap of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dll_lnk_actv_cap of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dsi_bool : string;
-  attribute c_dsi_bool of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dsi_bool of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dsn_base_ptr : string;
-  attribute c_dsn_base_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_dsn_base_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_dsn_cap_enabled : string;
-  attribute c_dsn_cap_enabled of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_dsn_cap_enabled of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_dsn_next_ptr : string;
-  attribute c_dsn_next_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_dsn_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_enable_msg_route : string;
-  attribute c_enable_msg_route of pcie_pcie_pcie2_top : entity is "00000000000";
+  attribute c_enable_msg_route of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000000";
   attribute c_ep_l0s_accpt_lat : string;
-  attribute c_ep_l0s_accpt_lat of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_ep_l0s_accpt_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_ep_l1_accpt_lat : string;
-  attribute c_ep_l1_accpt_lat of pcie_pcie_pcie2_top : entity is "7";
+  attribute c_ep_l1_accpt_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "7";
   attribute c_ext_pci_cfg_space_addr : string;
-  attribute c_ext_pci_cfg_space_addr of pcie_pcie_pcie2_top : entity is "3FF";
+  attribute c_ext_pci_cfg_space_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3FF";
   attribute c_external_clocking : string;
-  attribute c_external_clocking of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_external_clocking of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_fc_cpld : string;
-  attribute c_fc_cpld of pcie_pcie_pcie2_top : entity is "370";
+  attribute c_fc_cpld of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "370";
   attribute c_fc_cplh : string;
-  attribute c_fc_cplh of pcie_pcie_pcie2_top : entity is "72";
+  attribute c_fc_cplh of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "72";
   attribute c_fc_npd : string;
-  attribute c_fc_npd of pcie_pcie_pcie2_top : entity is "8";
+  attribute c_fc_npd of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "8";
   attribute c_fc_nph : string;
-  attribute c_fc_nph of pcie_pcie_pcie2_top : entity is "4";
+  attribute c_fc_nph of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "4";
   attribute c_fc_pd : string;
-  attribute c_fc_pd of pcie_pcie_pcie2_top : entity is "32";
+  attribute c_fc_pd of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "32";
   attribute c_fc_ph : string;
-  attribute c_fc_ph of pcie_pcie_pcie2_top : entity is "4";
+  attribute c_fc_ph of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "4";
   attribute c_gen1 : string;
-  attribute c_gen1 of pcie_pcie_pcie2_top : entity is "1'b1";
+  attribute c_gen1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1'b1";
   attribute c_header_type : string;
-  attribute c_header_type of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_header_type of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_hw_auton_spd_disable : string;
-  attribute c_hw_auton_spd_disable of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_hw_auton_spd_disable of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_int_width : integer;
-  attribute c_int_width of pcie_pcie_pcie2_top : entity is 64;
+  attribute c_int_width of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 64;
   attribute c_last_cfg_dw : string;
-  attribute c_last_cfg_dw of pcie_pcie_pcie2_top : entity is "100";
+  attribute c_last_cfg_dw of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "100";
   attribute c_link_cap_aspm_optionality : string;
-  attribute c_link_cap_aspm_optionality of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_link_cap_aspm_optionality of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_ll_ack_timeout : string;
-  attribute c_ll_ack_timeout of pcie_pcie_pcie2_top : entity is "0000";
+  attribute c_ll_ack_timeout of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0000";
   attribute c_ll_ack_timeout_enable : string;
-  attribute c_ll_ack_timeout_enable of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_ll_ack_timeout_enable of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_ll_ack_timeout_function : string;
-  attribute c_ll_ack_timeout_function of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_ll_ack_timeout_function of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_ll_replay_timeout : string;
-  attribute c_ll_replay_timeout of pcie_pcie_pcie2_top : entity is "0000";
+  attribute c_ll_replay_timeout of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0000";
   attribute c_ll_replay_timeout_enable : string;
-  attribute c_ll_replay_timeout_enable of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_ll_replay_timeout_enable of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_ll_replay_timeout_func : string;
-  attribute c_ll_replay_timeout_func of pcie_pcie_pcie2_top : entity is "1";
+  attribute c_ll_replay_timeout_func of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1";
   attribute c_lnk_bndwdt_notif : string;
-  attribute c_lnk_bndwdt_notif of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_lnk_bndwdt_notif of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_msi : string;
-  attribute c_msi of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_msi of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msi_64b_addr : string;
-  attribute c_msi_64b_addr of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_msi_64b_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_msi_cap_on : string;
-  attribute c_msi_cap_on of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_msi_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_msi_mult_msg_extn : string;
-  attribute c_msi_mult_msg_extn of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_msi_mult_msg_extn of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msi_per_vctr_mask_cap : string;
-  attribute c_msi_per_vctr_mask_cap of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_msi_per_vctr_mask_cap of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_msix_cap_on : string;
-  attribute c_msix_cap_on of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_msix_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_msix_next_ptr : string;
-  attribute c_msix_next_ptr of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_msix_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_msix_pba_bir : string;
-  attribute c_msix_pba_bir of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_msix_pba_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_pba_offset : string;
-  attribute c_msix_pba_offset of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_msix_pba_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_table_bir : string;
-  attribute c_msix_table_bir of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_msix_table_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_table_offset : string;
-  attribute c_msix_table_offset of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_pci_cfg_space_addr : string;
-  attribute c_pci_cfg_space_addr of pcie_pcie_pcie2_top : entity is "3F";
+  attribute c_pci_cfg_space_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3F";
   attribute c_pcie_blk_locn : string;
-  attribute c_pcie_blk_locn of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_pcie_blk_locn of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_pcie_cap_next_ptr : string;
-  attribute c_pcie_cap_next_ptr of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_pcie_cap_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_pcie_cap_slot_implemented : string;
-  attribute c_pcie_cap_slot_implemented of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_pcie_cap_slot_implemented of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_pcie_dbg_ports : string;
-  attribute c_pcie_dbg_ports of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_pcie_dbg_ports of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_pcie_fast_config : integer;
-  attribute c_pcie_fast_config of pcie_pcie_pcie2_top : entity is 0;
+  attribute c_pcie_fast_config of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 0;
   attribute c_perf_level_high : string;
-  attribute c_perf_level_high of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_perf_level_high of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_phantom_functions : string;
-  attribute c_phantom_functions of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_phantom_functions of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_pm_cap_next_ptr : string;
-  attribute c_pm_cap_next_ptr of pcie_pcie_pcie2_top : entity is "48";
+  attribute c_pm_cap_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "48";
   attribute c_pme_support : string;
-  attribute c_pme_support of pcie_pcie_pcie2_top : entity is "01";
+  attribute c_pme_support of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "09";
   attribute c_rbar_base_ptr : string;
-  attribute c_rbar_base_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_rbar_base_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_rbar_cap_control_encodedbar0 : string;
-  attribute c_rbar_cap_control_encodedbar0 of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_rbar_cap_control_encodedbar0 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_rbar_cap_control_encodedbar1 : string;
-  attribute c_rbar_cap_control_encodedbar1 of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_rbar_cap_control_encodedbar1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_rbar_cap_control_encodedbar2 : string;
-  attribute c_rbar_cap_control_encodedbar2 of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_rbar_cap_control_encodedbar2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_rbar_cap_control_encodedbar3 : string;
-  attribute c_rbar_cap_control_encodedbar3 of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_rbar_cap_control_encodedbar3 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_rbar_cap_control_encodedbar4 : string;
-  attribute c_rbar_cap_control_encodedbar4 of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_rbar_cap_control_encodedbar4 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_rbar_cap_control_encodedbar5 : string;
-  attribute c_rbar_cap_control_encodedbar5 of pcie_pcie_pcie2_top : entity is "00";
+  attribute c_rbar_cap_control_encodedbar5 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_rbar_cap_index0 : string;
-  attribute c_rbar_cap_index0 of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_cap_index0 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rbar_cap_index1 : string;
-  attribute c_rbar_cap_index1 of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_cap_index1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rbar_cap_index2 : string;
-  attribute c_rbar_cap_index2 of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_cap_index2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rbar_cap_index3 : string;
-  attribute c_rbar_cap_index3 of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_cap_index3 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rbar_cap_index4 : string;
-  attribute c_rbar_cap_index4 of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_cap_index4 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rbar_cap_index5 : string;
-  attribute c_rbar_cap_index5 of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_cap_index5 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rbar_cap_nextptr : string;
-  attribute c_rbar_cap_nextptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_rbar_cap_nextptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_rbar_cap_on : string;
-  attribute c_rbar_cap_on of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_rbar_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_rbar_cap_sup0 : string;
-  attribute c_rbar_cap_sup0 of pcie_pcie_pcie2_top : entity is "00001";
+  attribute c_rbar_cap_sup0 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00001";
   attribute c_rbar_cap_sup1 : string;
-  attribute c_rbar_cap_sup1 of pcie_pcie_pcie2_top : entity is "00001";
+  attribute c_rbar_cap_sup1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00001";
   attribute c_rbar_cap_sup2 : string;
-  attribute c_rbar_cap_sup2 of pcie_pcie_pcie2_top : entity is "00001";
+  attribute c_rbar_cap_sup2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00001";
   attribute c_rbar_cap_sup3 : string;
-  attribute c_rbar_cap_sup3 of pcie_pcie_pcie2_top : entity is "00001";
+  attribute c_rbar_cap_sup3 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00001";
   attribute c_rbar_cap_sup4 : string;
-  attribute c_rbar_cap_sup4 of pcie_pcie_pcie2_top : entity is "00001";
+  attribute c_rbar_cap_sup4 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00001";
   attribute c_rbar_cap_sup5 : string;
-  attribute c_rbar_cap_sup5 of pcie_pcie_pcie2_top : entity is "00001";
+  attribute c_rbar_cap_sup5 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00001";
   attribute c_rbar_num : string;
-  attribute c_rbar_num of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rbar_num of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_rcb : string;
-  attribute c_rcb of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_rcb of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_recrc_check : string;
-  attribute c_recrc_check of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_recrc_check of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_recrc_check_trim : string;
-  attribute c_recrc_check_trim of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_recrc_check_trim of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_rev_gt_order : string;
-  attribute c_rev_gt_order of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_rev_gt_order of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_root_cap_crs : string;
-  attribute c_root_cap_crs of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_root_cap_crs of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_rx_raddr_lat : string;
-  attribute c_rx_raddr_lat of pcie_pcie_pcie2_top : entity is "1";
+  attribute c_rx_raddr_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1";
   attribute c_rx_ram_limit : string;
-  attribute c_rx_ram_limit of pcie_pcie_pcie2_top : entity is "3FF";
+  attribute c_rx_ram_limit of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3FF";
   attribute c_rx_rdata_lat : string;
-  attribute c_rx_rdata_lat of pcie_pcie_pcie2_top : entity is "3";
+  attribute c_rx_rdata_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3";
   attribute c_rx_write_lat : string;
-  attribute c_rx_write_lat of pcie_pcie_pcie2_top : entity is "1";
+  attribute c_rx_write_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1";
   attribute c_silicon_rev : string;
-  attribute c_silicon_rev of pcie_pcie_pcie2_top : entity is "2";
+  attribute c_silicon_rev of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute c_slot_cap_attn_butn : string;
-  attribute c_slot_cap_attn_butn of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_attn_butn of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_attn_ind : string;
-  attribute c_slot_cap_attn_ind of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_attn_ind of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_elec_interlock : string;
-  attribute c_slot_cap_elec_interlock of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_elec_interlock of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_hotplug_cap : string;
-  attribute c_slot_cap_hotplug_cap of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_hotplug_cap of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_hotplug_surprise : string;
-  attribute c_slot_cap_hotplug_surprise of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_hotplug_surprise of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_mrl : string;
-  attribute c_slot_cap_mrl of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_mrl of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_no_cmd_comp_sup : string;
-  attribute c_slot_cap_no_cmd_comp_sup of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_no_cmd_comp_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_physical_slot_num : string;
-  attribute c_slot_cap_physical_slot_num of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_slot_cap_physical_slot_num of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_slot_cap_pwr_ctrl : string;
-  attribute c_slot_cap_pwr_ctrl of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_pwr_ctrl of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_pwr_ind : string;
-  attribute c_slot_cap_pwr_ind of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_slot_cap_pwr_ind of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_slot_cap_pwr_limit_scale : string;
-  attribute c_slot_cap_pwr_limit_scale of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_slot_cap_pwr_limit_scale of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_slot_cap_pwr_limit_value : string;
-  attribute c_slot_cap_pwr_limit_value of pcie_pcie_pcie2_top : entity is "0";
+  attribute c_slot_cap_pwr_limit_value of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_surprise_dn_err_cap : string;
-  attribute c_surprise_dn_err_cap of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_surprise_dn_err_cap of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_trgt_lnk_spd : string;
-  attribute c_trgt_lnk_spd of pcie_pcie_pcie2_top : entity is "2";
+  attribute c_trgt_lnk_spd of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute c_trn_np_fc : string;
-  attribute c_trn_np_fc of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_trn_np_fc of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_tx_last_tlp : string;
-  attribute c_tx_last_tlp of pcie_pcie_pcie2_top : entity is "31";
+  attribute c_tx_last_tlp of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "31";
   attribute c_tx_raddr_lat : string;
-  attribute c_tx_raddr_lat of pcie_pcie_pcie2_top : entity is "1";
+  attribute c_tx_raddr_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1";
   attribute c_tx_rdata_lat : string;
-  attribute c_tx_rdata_lat of pcie_pcie_pcie2_top : entity is "3";
+  attribute c_tx_rdata_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3";
   attribute c_tx_write_lat : string;
-  attribute c_tx_write_lat of pcie_pcie_pcie2_top : entity is "1";
+  attribute c_tx_write_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1";
   attribute c_upconfig_capable : string;
-  attribute c_upconfig_capable of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_upconfig_capable of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_upstream_facing : string;
-  attribute c_upstream_facing of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute c_upstream_facing of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_ur_atomic : string;
-  attribute c_ur_atomic of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_ur_atomic of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_ur_inv_req : string;
-  attribute c_ur_inv_req of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_ur_inv_req of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_ur_prs_response : string;
-  attribute c_ur_prs_response of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_ur_prs_response of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_vc_base_ptr : string;
-  attribute c_vc_base_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_vc_base_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_vc_cap_enabled : string;
-  attribute c_vc_cap_enabled of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_vc_cap_enabled of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_vc_cap_reject_snoop : string;
-  attribute c_vc_cap_reject_snoop of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_vc_cap_reject_snoop of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_vc_next_ptr : string;
-  attribute c_vc_next_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_vc_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_vsec_base_ptr : string;
-  attribute c_vsec_base_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_vsec_base_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_vsec_cap_enabled : string;
-  attribute c_vsec_cap_enabled of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute c_vsec_cap_enabled of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_vsec_next_ptr : string;
-  attribute c_vsec_next_ptr of pcie_pcie_pcie2_top : entity is "000";
+  attribute c_vsec_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute c_xlnx_ref_board : string;
-  attribute c_xlnx_ref_board of pcie_pcie_pcie2_top : entity is "KC705_REVC";
+  attribute c_xlnx_ref_board of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "KC705_REVC";
   attribute cap_ver : string;
-  attribute cap_ver of pcie_pcie_pcie2_top : entity is "2";
+  attribute cap_ver of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute cardbus_cis_ptr : string;
-  attribute cardbus_cis_ptr of pcie_pcie_pcie2_top : entity is "00000000";
+  attribute cardbus_cis_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute class_code : string;
-  attribute class_code of pcie_pcie_pcie2_top : entity is "098000";
+  attribute class_code of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "098000";
   attribute cmps : string;
-  attribute cmps of pcie_pcie_pcie2_top : entity is "0";
+  attribute cmps of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute con_scl_fctr_d0_state : string;
-  attribute con_scl_fctr_d0_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute con_scl_fctr_d0_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute con_scl_fctr_d1_state : string;
-  attribute con_scl_fctr_d1_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute con_scl_fctr_d1_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute con_scl_fctr_d2_state : string;
-  attribute con_scl_fctr_d2_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute con_scl_fctr_d2_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute con_scl_fctr_d3_state : string;
-  attribute con_scl_fctr_d3_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute con_scl_fctr_d3_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute cost_table : integer;
-  attribute cost_table of pcie_pcie_pcie2_top : entity is 1;
+  attribute cost_table of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 1;
   attribute d1_sup : string;
-  attribute d1_sup of pcie_pcie_pcie2_top : entity is "0";
+  attribute d1_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute d2_sup : string;
-  attribute d2_sup of pcie_pcie_pcie2_top : entity is "0";
+  attribute d2_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute dev_id : string;
-  attribute dev_id of pcie_pcie_pcie2_top : entity is "AACC";
+  attribute dev_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "AACC";
   attribute dev_port_type : string;
-  attribute dev_port_type of pcie_pcie_pcie2_top : entity is "0000";
+  attribute dev_port_type of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0000";
   attribute dis_scl_fctr_d0_state : string;
-  attribute dis_scl_fctr_d0_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute dis_scl_fctr_d0_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute dis_scl_fctr_d1_state : string;
-  attribute dis_scl_fctr_d1_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute dis_scl_fctr_d1_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute dis_scl_fctr_d2_state : string;
-  attribute dis_scl_fctr_d2_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute dis_scl_fctr_d2_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute dis_scl_fctr_d3_state : string;
-  attribute dis_scl_fctr_d3_state of pcie_pcie_pcie2_top : entity is "0";
+  attribute dis_scl_fctr_d3_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute dsi : string;
-  attribute dsi of pcie_pcie_pcie2_top : entity is "0";
+  attribute dsi of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute ep_l0s_accpt_lat : string;
-  attribute ep_l0s_accpt_lat of pcie_pcie_pcie2_top : entity is "000";
+  attribute ep_l0s_accpt_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute ep_l1_accpt_lat : string;
-  attribute ep_l1_accpt_lat of pcie_pcie_pcie2_top : entity is "111";
+  attribute ep_l1_accpt_lat of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "111";
   attribute ext_tag_fld_sup : string;
-  attribute ext_tag_fld_sup of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute ext_tag_fld_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute int_pin : string;
-  attribute int_pin of pcie_pcie_pcie2_top : entity is "0";
+  attribute int_pin of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute intx : string;
-  attribute intx of pcie_pcie_pcie2_top : entity is "FALSE";
+  attribute intx of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute max_lnk_spd : string;
-  attribute max_lnk_spd of pcie_pcie_pcie2_top : entity is "2";
+  attribute max_lnk_spd of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute max_lnk_wdt : string;
-  attribute max_lnk_wdt of pcie_pcie_pcie2_top : entity is "001000";
+  attribute max_lnk_wdt of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "001000";
   attribute mps : string;
-  attribute mps of pcie_pcie_pcie2_top : entity is "000";
+  attribute mps of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
   attribute no_soft_rst : string;
-  attribute no_soft_rst of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute no_soft_rst of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute pci_exp_int_freq : integer;
-  attribute pci_exp_int_freq of pcie_pcie_pcie2_top : entity is 3;
+  attribute pci_exp_int_freq of pcie_7x_0_pcie_7x_0_pcie2_top : entity is 3;
   attribute pci_exp_ref_freq : string;
-  attribute pci_exp_ref_freq of pcie_pcie_pcie2_top : entity is "0";
+  attribute pci_exp_ref_freq of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute phantm_func_sup : string;
-  attribute phantm_func_sup of pcie_pcie_pcie2_top : entity is "00";
+  attribute phantm_func_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pme_sup : string;
-  attribute pme_sup of pcie_pcie_pcie2_top : entity is "01";
+  attribute pme_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "09";
   attribute pwr_con_d0_state : string;
-  attribute pwr_con_d0_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_con_d0_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_con_d1_state : string;
-  attribute pwr_con_d1_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_con_d1_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_con_d2_state : string;
-  attribute pwr_con_d2_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_con_d2_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_con_d3_state : string;
-  attribute pwr_con_d3_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_con_d3_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_dis_d0_state : string;
-  attribute pwr_dis_d0_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_dis_d0_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_dis_d1_state : string;
-  attribute pwr_dis_d1_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_dis_d1_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_dis_d2_state : string;
-  attribute pwr_dis_d2_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_dis_d2_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute pwr_dis_d3_state : string;
-  attribute pwr_dis_d3_state of pcie_pcie_pcie2_top : entity is "00";
+  attribute pwr_dis_d3_state of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute rev_id : string;
-  attribute rev_id of pcie_pcie_pcie2_top : entity is "00";
+  attribute rev_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute slot_clk : string;
-  attribute slot_clk of pcie_pcie_pcie2_top : entity is "TRUE";
+  attribute slot_clk of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute subsys_id : string;
-  attribute subsys_id of pcie_pcie_pcie2_top : entity is "0007";
+  attribute subsys_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0007";
   attribute subsys_ven_id : string;
-  attribute subsys_ven_id of pcie_pcie_pcie2_top : entity is "0";
+  attribute subsys_ven_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "10EE";
   attribute ven_id : string;
-  attribute ven_id of pcie_pcie_pcie2_top : entity is "10EE";
+  attribute ven_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "10EE";
   attribute xrom_bar : string;
-  attribute xrom_bar of pcie_pcie_pcie2_top : entity is "00000000";
-end pcie_pcie_pcie2_top;
+  attribute xrom_bar of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
+end pcie_7x_0_pcie_7x_0_pcie2_top;
 
-architecture STRUCTURE of pcie_pcie_pcie2_top is
+architecture STRUCTURE of pcie_7x_0_pcie_7x_0_pcie2_top is
   signal \<const0>\ : STD_LOGIC;
   signal \<const1>\ : STD_LOGIC;
   signal \^cfg_command\ : STD_LOGIC_VECTOR ( 10 downto 0 );
@@ -138867,7 +138938,7 @@ VCC: unisim.vcomponents.VCC
      port map (
       P => \<const1>\
     );
-inst: entity work.pcie_pcie_core_top
+inst: entity work.pcie_7x_0_pcie_7x_0_core_top
      port map (
       INT_RXUSRCLK_OUT => \^int_oobclk_out\,
       PIPE_DRP_FSM(23 downto 0) => \^pipe_drp_fsm\(23 downto 0),
@@ -139108,7 +139179,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity pcie is
+entity pcie_7x_0 is
   port (
     pci_exp_txp : out STD_LOGIC_VECTOR ( 7 downto 0 );
     pci_exp_txn : out STD_LOGIC_VECTOR ( 7 downto 0 );
@@ -139200,16 +139271,16 @@ entity pcie is
     sys_rst_n : in STD_LOGIC
   );
   attribute NotValidForBitStream : boolean;
-  attribute NotValidForBitStream of pcie : entity is true;
+  attribute NotValidForBitStream of pcie_7x_0 : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of pcie : entity is "pcie,pcie_pcie2_top,{}";
+  attribute CHECK_LICENSE_TYPE of pcie_7x_0 : entity is "pcie_7x_0,pcie_7x_0_pcie2_top,{}";
   attribute DowngradeIPIdentifiedWarnings : string;
-  attribute DowngradeIPIdentifiedWarnings of pcie : entity is "yes";
+  attribute DowngradeIPIdentifiedWarnings of pcie_7x_0 : entity is "yes";
   attribute X_CORE_INFO : string;
-  attribute X_CORE_INFO of pcie : entity is "pcie_pcie2_top,Vivado 2019.2";
-end pcie;
+  attribute X_CORE_INFO of pcie_7x_0 : entity is "pcie_7x_0_pcie2_top,Vivado 2019.2";
+end pcie_7x_0;
 
-architecture STRUCTURE of pcie is
+architecture STRUCTURE of pcie_7x_0 is
   signal NLW_inst_cfg_aer_rooterr_corr_err_received_UNCONNECTED : STD_LOGIC;
   signal NLW_inst_cfg_aer_rooterr_corr_err_reporting_en_UNCONNECTED : STD_LOGIC;
   signal NLW_inst_cfg_aer_rooterr_fatal_err_received_UNCONNECTED : STD_LOGIC;
@@ -139411,7 +139482,7 @@ architecture STRUCTURE of pcie is
   attribute c_buf_opt_bma : string;
   attribute c_buf_opt_bma of inst : label is "FALSE";
   attribute c_component_name : string;
-  attribute c_component_name of inst : label is "pcie";
+  attribute c_component_name of inst : label is "pcie_7x_0";
   attribute c_cpl_inf : string;
   attribute c_cpl_inf of inst : label is "TRUE";
   attribute c_cpl_infinite : string;
@@ -139553,7 +139624,7 @@ architecture STRUCTURE of pcie is
   attribute c_pm_cap_next_ptr : string;
   attribute c_pm_cap_next_ptr of inst : label is "48";
   attribute c_pme_support : string;
-  attribute c_pme_support of inst : label is "01";
+  attribute c_pme_support of inst : label is "09";
   attribute c_rbar_base_ptr : string;
   attribute c_rbar_base_ptr of inst : label is "000";
   attribute c_rbar_cap_control_encodedbar0 : string;
@@ -139741,7 +139812,7 @@ architecture STRUCTURE of pcie is
   attribute phantm_func_sup : string;
   attribute phantm_func_sup of inst : label is "00";
   attribute pme_sup : string;
-  attribute pme_sup of inst : label is "01";
+  attribute pme_sup of inst : label is "09";
   attribute pwr_con_d0_state : string;
   attribute pwr_con_d0_state of inst : label is "00";
   attribute pwr_con_d1_state : string;
@@ -139765,7 +139836,7 @@ architecture STRUCTURE of pcie is
   attribute subsys_id : string;
   attribute subsys_id of inst : label is "0007";
   attribute subsys_ven_id : string;
-  attribute subsys_ven_id of inst : label is "0";
+  attribute subsys_ven_id of inst : label is "10EE";
   attribute ven_id : string;
   attribute ven_id of inst : label is "10EE";
   attribute xrom_bar : string;
@@ -139865,7 +139936,7 @@ architecture STRUCTURE of pcie is
   attribute X_INTERFACE_INFO of s_axis_tx_tuser : signal is "xilinx.com:interface:axis:1.0 s_axis_tx TUSER";
   attribute X_INTERFACE_PARAMETER of s_axis_tx_tuser : signal is "XIL_INTERFACENAME s_axis_tx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 4, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0";
 begin
-inst: entity work.pcie_pcie_pcie2_top
+inst: entity work.pcie_7x_0_pcie_7x_0_pcie2_top
      port map (
       cfg_aer_ecrc_check_en => cfg_aer_ecrc_check_en,
       cfg_aer_ecrc_gen_en => cfg_aer_ecrc_gen_en,

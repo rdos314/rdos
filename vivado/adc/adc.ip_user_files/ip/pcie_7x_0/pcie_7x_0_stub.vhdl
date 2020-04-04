@@ -1,18 +1,17 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sun Feb 16 17:05:14 2020
+-- Date        : Sat Apr  4 22:25:57 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub -rename_top pcie -prefix
---               pcie_ pcie_stub.vhdl
--- Design      : pcie
+-- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_stub.vhdl
+-- Design      : pcie_7x_0
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7k325tffg900-2
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity pcie is
+entity pcie_7x_0 is
   Port ( 
     pci_exp_txp : out STD_LOGIC_VECTOR ( 7 downto 0 );
     pci_exp_txn : out STD_LOGIC_VECTOR ( 7 downto 0 );
@@ -104,14 +103,14 @@ entity pcie is
     sys_rst_n : in STD_LOGIC
   );
 
-end pcie;
+end pcie_7x_0;
 
-architecture stub of pcie is
+architecture stub of pcie_7x_0 is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
 attribute black_box_pad_pin of stub : architecture is "pci_exp_txp[7:0],pci_exp_txn[7:0],pci_exp_rxp[7:0],pci_exp_rxn[7:0],int_pclk_out_slave,int_pipe_rxusrclk_out,int_rxoutclk_out[7:0],int_dclk_out,int_mmcm_lock_out,int_userclk1_out,int_userclk2_out,int_oobclk_out,int_qplllock_out[1:0],int_qplloutclk_out[1:0],int_qplloutrefclk_out[1:0],int_pclk_sel_slave[7:0],user_clk_out,user_reset_out,user_lnk_up,user_app_rdy,s_axis_tx_tready,s_axis_tx_tdata[127:0],s_axis_tx_tkeep[15:0],s_axis_tx_tlast,s_axis_tx_tvalid,s_axis_tx_tuser[3:0],m_axis_rx_tdata[127:0],m_axis_rx_tkeep[15:0],m_axis_rx_tlast,m_axis_rx_tvalid,m_axis_rx_tready,m_axis_rx_tuser[21:0],cfg_err_ecrc,cfg_err_ur,cfg_err_cpl_timeout,cfg_err_cpl_unexpect,cfg_err_cpl_abort,cfg_err_posted,cfg_err_cor,cfg_err_atomic_egress_blocked,cfg_err_internal_cor,cfg_err_malformed,cfg_err_mc_blocked,cfg_err_poisoned,cfg_err_norecovery,cfg_err_tlp_cpl_header[47:0],cfg_err_cpl_rdy,cfg_err_locked,cfg_err_acs,cfg_err_internal_uncor,cfg_interrupt,cfg_interrupt_rdy,cfg_interrupt_assert,cfg_interrupt_di[7:0],cfg_interrupt_do[7:0],cfg_interrupt_mmenable[2:0],cfg_interrupt_msienable,cfg_interrupt_msixenable,cfg_interrupt_msixfm,cfg_interrupt_stat,cfg_pciecap_interrupt_msgnum[4:0],pl_directed_link_change[1:0],pl_directed_link_width[1:0],pl_directed_link_speed,pl_directed_link_auton,pl_upstream_prefer_deemph,pl_sel_lnk_rate,pl_sel_lnk_width[1:0],pl_ltssm_state[5:0],pl_lane_reversal_mode[1:0],pl_phy_lnk_up,pl_tx_pm_state[2:0],pl_rx_pm_state[1:0],pl_link_upcfg_cap,pl_link_gen2_cap,pl_link_partner_gen2_supported,pl_initial_link_width[2:0],pl_directed_change_done,pl_received_hot_rst,pl_transmit_hot_rst,pl_downstream_deemph_source,cfg_err_aer_headerlog[127:0],cfg_aer_interrupt_msgnum[4:0],cfg_err_aer_headerlog_set,cfg_aer_ecrc_check_en,cfg_aer_ecrc_gen_en,sys_clk,sys_rst_n";
 attribute X_CORE_INFO : string;
-attribute X_CORE_INFO of stub : architecture is "pcie_pcie2_top,Vivado 2019.2";
+attribute X_CORE_INFO of stub : architecture is "pcie_7x_0_pcie2_top,Vivado 2019.2";
 begin
 end;

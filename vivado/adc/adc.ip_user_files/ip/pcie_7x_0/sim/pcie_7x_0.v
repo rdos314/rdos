@@ -53,7 +53,7 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module pcie (
+module pcie_7x_0 (
   pci_exp_txp,
   pci_exp_txn,
   pci_exp_rxp,
@@ -325,8 +325,8 @@ input wire sys_clk;
 (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.sys_rst_n RST" *)
 input wire sys_rst_n;
 
-  pcie_pcie2_top #(
-    .c_component_name("pcie"),
+  pcie_7x_0_pcie2_top #(
+    .c_component_name("pcie_7x_0"),
     .dev_port_type("0000"),
     .c_dev_port_type("0"),
     .c_header_type("00"),
@@ -347,7 +347,7 @@ input wire sys_rst_n;
     .ven_id("10EE"),
     .dev_id("AACC"),
     .rev_id("00"),
-    .subsys_ven_id("0"),
+    .subsys_ven_id("10EE"),
     .subsys_id("0007"),
     .class_code("098000"),
     .cardbus_cis_ptr("00000000"),
@@ -419,8 +419,8 @@ input wire sys_rst_n;
     .c_d1_support("FALSE"),
     .d2_sup("0"),
     .c_d2_support("FALSE"),
-    .pme_sup("01"),
-    .c_pme_support("01"),
+    .pme_sup("09"),
+    .c_pme_support("09"),
     .no_soft_rst("TRUE"),
     .pwr_con_d0_state("00"),
     .con_scl_fctr_d0_state("0"),
