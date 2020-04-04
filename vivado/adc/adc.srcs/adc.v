@@ -312,6 +312,9 @@ module adc (
   reg                  curr_bar2_rp;
   reg                  q_bar2_rp;
 
+  IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));
+  IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
+  BUFG   up_clk_inst (.I(sys_clk), .O(up_clk));
 
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
@@ -351,11 +354,6 @@ module adc (
     .I (trig_p),
     .IB (trig_n),
     .O (trig));
-
-up_clk up_clk_inst
-   (
-    .clk_out1(up_clk),     // output clk_out1
-    .clk_in1(user_clk));   // input clk_in1
 
 daq2_app daq2_app_inst (
     .reset(up_reset),
@@ -565,8 +563,6 @@ phys_bar dac_bar_inst (
 
  //-----------------------------I/O BUFFERS------------------------//
 
-  IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));
-  IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
 
   OBUF   led_0_obuf (.O(led_0), .I(bar_control[0]));
   OBUF   led_1_obuf (.O(led_1), .I(bar_control[1]));
