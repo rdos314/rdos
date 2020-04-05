@@ -228,8 +228,8 @@ module pci_app (
   wire                                        sys_rst_n;
   wire                                        sys_clk;
 
-pcie_pcie2_top pcie_i
-// pcie_7x_0 pcie_i
+// pcie_pcie2_top pcie_i
+pcie_7x_0 pcie_i
  (
 
   //----------------------------------------------------------------------------------------------------------------//

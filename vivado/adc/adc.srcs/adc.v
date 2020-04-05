@@ -76,6 +76,12 @@ module adc (
   input                   sys_clk_n,
   input                   sys_rst_n,
 
+  input                   sysclk_p,
+  input                   sysclk_n,
+
+  input                   user_clk_p,
+  input                   user_clk_n,
+
   input                   rx_ref_clk_p,
   input                   rx_ref_clk_n,
   input                   rx_sysref_p,
@@ -120,7 +126,9 @@ module adc (
 // Register Declaration
 
   wire                 user_clk;
-  wire                 user_reset;
+  wire                 sys_clk;
+  wire                 pcie_clk;
+  wire                 pcie_reset;
   wire                 user_lnk_up;
   wire                 user_lnk_rate;
   wire [1:0]           user_lnk_width;
@@ -312,9 +320,32 @@ module adc (
   reg                  curr_bar2_rp;
   reg                  q_bar2_rp;
 
+// LED
+
+  reg [31:0]           sys_cnt;
+  reg [31:0]           user_cnt;
+  reg [31:0]           pcie_cnt;
+
+  reg                  sys_led;
+  reg                  user_led;
+  reg                  pcie_led;
+
   IBUF   sys_reset_n_ibuf (.O(sys_rst_n_c), .I(sys_rst_n));
-  IBUFDS_GTE2 refclk_ibuf (.O(sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
-  BUFG   up_clk_inst (.I(sys_clk), .O(up_clk));
+  IBUFDS_GTE2 refclk_ibuf (.O(pcie_sys_clk), .ODIV2(), .I(sys_clk_p), .CEB(1'b0), .IB(sys_clk_n));
+
+  IBUFDS IBUFDS_inst_user_clock(
+	.O(user_clk), // Buffer output
+	.I(user_clk_p), // Diff_p buffer input (connect directly to top-level port)
+	.IB(user_clk_n) // Diff_n buffer input (connect directly to top-level port)
+);
+
+  IBUFDS IBUFDS_inst_sys_clock(
+	.O(sys_clk), // Buffer output
+	.I(sysclk_p), // Diff_p buffer input (connect directly to top-level port)
+	.IB(sysclk_n) // Diff_n buffer input (connect directly to top-level port)
+);
+
+  BUFG   up_clk_inst (.I(user_clk), .O(up_clk));
 
   IBUFDS_GTE2 i_ibufds_rx_ref_clk (
     .CEB (1'd0),
@@ -415,11 +446,11 @@ pci_app pci_app_inst (
     .pci_exp_rxp(pci_exp_rxp),
     .pci_exp_rxn(pci_exp_rxn),
 
-    .sys_clk(sys_clk),
+    .sys_clk(pcie_sys_clk),
     .sys_rst_n(sys_rst_n_c),
     
-    .user_clk(user_clk),
-    .user_reset(user_reset),
+    .user_clk(pcie_clk),
+    .user_reset(pcie_reset),
     .user_lnk_up(user_lnk_up),
     .user_lnk_rate(user_lnk_rate),
     .user_lnk_width(user_lnk_width),
@@ -564,9 +595,9 @@ phys_bar dac_bar_inst (
  //-----------------------------I/O BUFFERS------------------------//
 
 
-  OBUF   led_0_obuf (.O(led_0), .I(bar_control[0]));
-  OBUF   led_1_obuf (.O(led_1), .I(bar_control[1]));
-  OBUF   led_2_obuf (.O(led_2), .I(bar_control[2]));
+  OBUF   led_0_obuf (.O(led_0), .I(pcie_led));
+  OBUF   led_1_obuf (.O(led_1), .I(user_led));
+  OBUF   led_2_obuf (.O(led_2), .I(sys_led));
   OBUF   led_3_obuf (.O(led_3), .I(bar_control[3]));
   OBUF   led_4_obuf (.O(led_4), .I(bar_control[4]));
   OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
@@ -576,7 +607,40 @@ phys_bar dac_bar_inst (
 generate
   begin : adc
 
+    always @ ( posedge pcie_sys_clk ) 
+    begin
+      if (pcie_cnt == 50000000)
+      begin
+        pcie_led <= !pcie_led;
+        pcie_cnt <= 0;
+      end
+      else
+        pcie_cnt <= pcie_cnt + 1;
+    end
+
     always @ ( posedge user_clk ) 
+    begin
+      if (user_cnt == 78125000)
+      begin
+        user_led <= !user_led;
+        user_cnt <= 0;
+      end
+      else
+        user_cnt <= user_cnt + 1;
+    end
+
+    always @ ( posedge sys_clk ) 
+    begin
+      if (sys_cnt == 100000000)
+      begin
+        sys_led <= !sys_led;
+        sys_cnt <= 0;
+      end
+      else
+        sys_cnt <= sys_cnt + 1;
+    end
+
+    always @ ( posedge pcie_clk ) 
     begin
       if (pci_bar0_rd)
       begin
@@ -607,7 +671,7 @@ generate
         up_bar0_rd <= 0;
     end
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
       if (pci_bar1_rd)
       begin
@@ -639,7 +703,7 @@ generate
     end
 
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
       if (pci_bar2_rd)
       begin
@@ -671,7 +735,7 @@ generate
     end
 
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
       if (pci_bar0_wr)
       begin
@@ -705,7 +769,7 @@ generate
     end
 
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
       if (pci_bar1_wr)
       begin
@@ -739,7 +803,7 @@ generate
     end
 
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
       if (pci_bar2_wr)
       begin
@@ -772,16 +836,16 @@ generate
         up_bar2_wr <= 0;
     end
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
       pci_adc_address <= up_adc_address;
       pci_adc_data <= rx_adc_data;
       pci_rx_wr <= rx_adc_wr;
     end
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_clk ) 
     begin
-      if (user_reset)
+      if (pcie_reset)
       begin
         pci_curr_wr <= 0;
         pci_adc_wr <= 0;
@@ -803,9 +867,9 @@ generate
     end
 
 
-    always @(posedge user_clk) 
+    always @(posedge pcie_clk) 
     begin
-      if (user_reset)
+      if (pcie_reset)
       begin
         up_reset <= 1;
         pci_reset_cnt <= 0;
@@ -828,9 +892,9 @@ generate
     end
 
 
-    always @(posedge user_clk) 
+    always @(posedge pcie_clk) 
     begin
-      if (user_reset)
+      if (pcie_reset)
       begin
         pci_bar0_rp <= 0;
         pci_bar0_rp_data <= 0;
@@ -861,9 +925,9 @@ generate
     end
 
 
-    always @(posedge user_clk) 
+    always @(posedge pcie_clk) 
     begin
-      if (user_reset)
+      if (pcie_reset)
       begin
         pci_bar1_rp <= 0;
         pci_bar1_rp_data <= 0;
@@ -894,9 +958,9 @@ generate
     end
 
 
-    always @(posedge user_clk) 
+    always @(posedge pcie_clk) 
     begin
-      if (user_reset)
+      if (pcie_reset)
       begin
         pci_bar2_rp <= 0;
         pci_bar2_rp_data <= 0;
