@@ -97,8 +97,8 @@ module adc (
   input                   tx_sysref_n,
   input                   tx_sync_p,
   input                   tx_sync_n,
-//  output      [ 3:0]      tx_data_p,
-//  output      [ 3:0]      tx_data_n,
+  output      [ 3:0]      tx_data_p,
+  output      [ 3:0]      tx_data_n,
 
   input                   trig_p,
   input                   trig_n,

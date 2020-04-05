@@ -108,7 +108,6 @@ module pci_app (
 // Wire Declarations
 
   wire             req_stop;
-  wire [63:0]      adc_address;
 
   wire             user_clk;
   wire             user_reset;
@@ -457,8 +456,6 @@ generate
     assign pci_rx_len = pci_rx_header[9:0];
     assign pci_rx_type = pci_rx_header[31:24];
     assign pci_rx_address = pci_rx_header[95:64];
-
-    assign bar2_rp = 0;
 
     always @ ( posedge user_clk ) 
     begin

@@ -419,7 +419,7 @@ system_tx_0 system_tx_0_inst
         .sync(tx_sync),
         .sysref(tx_sysref),
         .tx_data(tx_data),
-        .tx_ready(1'b1),
+        .tx_ready(),
         .tx_valid(1'b1));
 
 ila_6 ila_6_inst (

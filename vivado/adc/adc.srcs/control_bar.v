@@ -377,10 +377,10 @@ generate
     begin
       if (spi_clk_valid)
       begin
-        spi_rq_data[23:0] <= bar_spi_clk[23:0];
+        spi_rq_data[27:0] <= bar_spi_clk[27:0];
         spi_rq_data[30:29] <= 0;
 
-        case (bar_spi_clk[31:28])
+        case (wr_data[31:28])
           12:
           begin
             spi_rq_data[31] <= 1;
@@ -412,10 +412,10 @@ generate
       begin
         if (spi_adc_valid)
         begin
-          spi_rq_data[23:0] <= bar_spi_adc[23:0];
+          spi_rq_data[27:0] <= bar_spi_adc[27:0];
           spi_rq_data[30:29] <= 1;
 
-          case (bar_spi_adc[31:28])
+          case (wr_data[31:28])
             12:
             begin
               spi_rq_data[31] <= 1;
@@ -447,10 +447,10 @@ generate
         begin
           if (spi_dac_valid)
           begin
-            spi_rq_data[23:0] <= bar_spi_dac[23:0];
+            spi_rq_data[27:0] <= bar_spi_dac[27:0];
             spi_rq_data[30:29] <= 2;
 
-            case (bar_spi_dac[31:28])
+            case (wr_data[31:28])
               12:
               begin
                 spi_rq_data[31] <= 1;
