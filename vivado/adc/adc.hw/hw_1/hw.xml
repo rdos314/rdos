@@ -134,8 +134,9 @@
     <Object name="adc_app_inst/wr" gui_info=""/>
     <Object name="adc_bar_inst/q_wr" gui_info="Trigger Setup=0"/>
     <Object name="control_bar_inst/rd" gui_info=""/>
-    <Object name="control_bar_inst/spi_rp" gui_info="Trigger Setup=0"/>
-    <Object name="control_bar_inst/wr" gui_info=""/>
+    <Object name="control_bar_inst/spi_clk_valid" gui_info=""/>
+    <Object name="control_bar_inst/spi_rp" gui_info=""/>
+    <Object name="control_bar_inst/wr" gui_info="Trigger Setup=0"/>
     <Object name="daq2_app_inst/adc_cnt[2:0]" gui_info="Trigger Setup=0"/>
     <Object name="daq2_app_inst/adc_running" gui_info="Trigger Setup=0"/>
     <Object name="daq2_app_inst/adc_start" gui_info=""/>
@@ -143,7 +144,8 @@
     <Object name="daq2_app_inst/adc_started" gui_info=""/>
     <Object name="daq2_app_inst/rx_pll_locked_1[0:0]" gui_info=""/>
     <Object name="daq2_app_inst/rx_valid" gui_info="Trigger Setup=0"/>
-    <Object name="daq2_spi_inst/spi_clk" gui_info="Trigger Setup=0"/>
+    <Object name="daq2_app_inst/up_adc_spi_read" gui_info=""/>
+    <Object name="daq2_spi_inst/spi_clk" gui_info=""/>
     <Object name="pci_adc_start" gui_info="Trigger Setup=0"/>
     <Object name="pci_adc_wr" gui_info="Trigger Setup=1"/>
     <Object name="pci_app_inst/adc_app_inst/adc_fifo_avail" gui_info="Trigger Setup=0"/>
@@ -7023,7 +7025,7 @@
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
-        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
@@ -7034,7 +7036,7 @@
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
@@ -7188,7 +7190,7 @@
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
-        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
@@ -7199,7 +7201,7 @@
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
@@ -12371,7 +12373,7 @@
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
-        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
@@ -12382,7 +12384,7 @@
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>

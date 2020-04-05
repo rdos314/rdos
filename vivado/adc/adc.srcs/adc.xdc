@@ -168,8 +168,6 @@ set_property IOSTANDARD LVDS_25 [get_ports trig_n]         ; ## H14  FMC_HPC_LA0
 set_property PACKAGE_PIN  E28 [get_ports trig_p]         ; ## H13  FMC_HPC_LA07_P
 set_property PACKAGE_PIN  D28 [get_ports trig_n]         ; ## H14  FMC_HPC_LA07_N
 
-set_property LOC IBUFDS_GTE2_X0Y1 [get_cells refclk_ibuf]
-
 # ADC/DAC clocks
 create_clock -period 2.667 -name rx_ref_clk [get_ports rx_ref_clk_p]
 create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
@@ -181,6 +179,8 @@ set_false_path -from [get_clocks pci_ref_clk] -to [get_clocks rx_ref_clk]
 set_false_path -from [get_clocks rx_ref_clk] -to [get_clocks pci_ref_clk]
 set_false_path -from [get_clocks pci_ref_clk] -to [get_clocks rx_sysref]
 set_false_path -from [get_clocks rx_sysref] -to [get_clocks pci_ref_clk]
+set_false_path -from [get_clocks pci_ref_clk] -to [get_clocks sys_clk]
+set_false_path -from [get_clocks sys_clk] -to [get_clocks pci_ref_clk]
 
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
