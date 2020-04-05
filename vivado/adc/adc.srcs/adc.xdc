@@ -1,18 +1,14 @@
-set_property IOSTANDARD LVCMOS25 [get_ports sys_rst_n]
-set_property PULLUP true [get_ports sys_rst_n]
-set_property PACKAGE_PIN G25 [get_ports sys_rst_n]
-
 set_property PACKAGE_PIN K29 [get_ports user_clk_n]
 set_property IOSTANDARD LVDS_25 [get_ports user_clk_n]
 set_property PACKAGE_PIN K28 [get_ports user_clk_p]
 set_property IOSTANDARD LVDS_25 [get_ports user_clk_p]
 create_clock -period 6.400 -name user_clk [get_ports user_clk_p]
 
-set_property PACKAGE_PIN AD11 [get_ports sysclk_n]
-set_property IOSTANDARD LVDS [get_ports sysclk_n]
-set_property PACKAGE_PIN AD12 [get_ports sysclk_p]
-set_property IOSTANDARD LVDS [get_ports usysclk_p]
-create_clock -period 5.000 -name sysclk [get_ports sysclk_p]
+set_property PACKAGE_PIN AD11 [get_ports sys_clk_n]
+set_property IOSTANDARD LVDS [get_ports sys_clk_n]
+set_property PACKAGE_PIN AD12 [get_ports sys_clk_p]
+set_property IOSTANDARD LVDS [get_ports sys_clk_p]
+create_clock -period 5.000 -name sys_clk [get_ports sys_clk_p]
 
 set_property IOSTANDARD LVCMOS15 [get_ports sw_w]
 set_property IOSTANDARD LVCMOS15 [get_ports sw_e]
@@ -38,18 +34,17 @@ set_property PACKAGE_PIN G19 [get_ports led_5]
 set_property PACKAGE_PIN E18 [get_ports led_6]
 set_property PACKAGE_PIN F16 [get_ports led_7]
 
-# PCI Express 
-create_clock -period 10.000 -name sys_clk [get_ports sys_clk_p]
-
-set_property PACKAGE_PIN G25 [get_ports perst_n]
-set_property IOSTANDARD LVCMOS25 [get_ports perst_n]
-
-set_property PACKAGE_PIN U8 [get_ports ref_clk_clk_p]
-set_property PACKAGE_PIN U7 [get_ports ref_clk_clk_n]
-create_clock -period 10.000 -name ref_clk_clk_p -waveform {0.000 5.000} [get_ports ref_clk_clk_p]
-
 set_property PACKAGE_PIN AB7 [get_ports reset]
 set_property IOSTANDARD LVCMOS15 [get_ports reset]
+
+# PCI Express 
+set_property IOSTANDARD LVCMOS25 [get_ports pci_rst_n]
+set_property PULLUP true [get_ports pci_rst_n]
+set_property PACKAGE_PIN G25 [get_ports pci_rst_n]
+
+set_property PACKAGE_PIN U8 [get_ports pci_ref_clk_p]
+set_property PACKAGE_PIN U7 [get_ports pci_ref_clk_n]
+create_clock -period 10.000 -name pci_ref_clk -waveform {0.000 5.000} [get_ports pci_ref_clk_p]
 
 set_property PACKAGE_PIN M5 [get_ports {pci_exp_rxn[0]}]
 set_property PACKAGE_PIN M6 [get_ports {pci_exp_rxp[0]}]
@@ -181,11 +176,11 @@ create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
 create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
 create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
  
-set_false_path -from [get_ports sys_rst_n]
-set_false_path -from [get_clocks sys_clk] -to [get_clocks rx_ref_clk]
-set_false_path -from [get_clocks rx_ref_clk] -to [get_clocks sys_clk]
-set_false_path -from [get_clocks sys_clk] -to [get_clocks rx_sysref]
-set_false_path -from [get_clocks rx_sysref] -to [get_clocks sys_clk]
+set_false_path -from [get_ports pci_rst_n]
+set_false_path -from [get_clocks pci_ref_clk] -to [get_clocks rx_ref_clk]
+set_false_path -from [get_clocks rx_ref_clk] -to [get_clocks pci_ref_clk]
+set_false_path -from [get_clocks pci_ref_clk] -to [get_clocks rx_sysref]
+set_false_path -from [get_clocks rx_sysref] -to [get_clocks pci_ref_clk]
 
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
