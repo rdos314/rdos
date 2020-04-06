@@ -8,61 +8,57 @@ module pci_tx (
   s_axis_tx_tvalid,
   s_axis_tx_tuser,
 
-  pci_tx_data,
-  pci_tx_header,
-  pci_tx_wr,
-  pci_tx_full
+  bar_data,
+  bar_header,
+  bar_wr,
+  bar_busy,
+
+  adc_data,
+  adc_address,
+  adc_wr,
+  adc_busy
 );
 
-  input             clk;
-  input             reset;
+  input                     clk;
+  input                     reset;
 
-  // AXIS
-  input                           s_axis_tx_tready;
-  output  reg [127:0]             s_axis_tx_tdata;
-  output  reg [15:0]              s_axis_tx_tkeep;
-  output  reg                     s_axis_tx_tlast;
-  output  reg                     s_axis_tx_tvalid;
-  output  reg [3:0]               s_axis_tx_tuser;
+  input                     s_axis_tx_tready;
+  output reg  [127:0]       s_axis_tx_tdata;
+  output reg  [15:0]        s_axis_tx_tkeep;
+  output reg                s_axis_tx_tlast;
+  output reg                s_axis_tx_tvalid;
+  output reg  [3:0]         s_axis_tx_tuser;
 
-  input  wire [1023:0]            pci_tx_data;
-  input  wire [127:0]             pci_tx_header;
-  input  wire                     pci_tx_wr;
-  output wire                     pci_tx_full;
+  input  wire [127:0]       bar_data;
+  input  wire [127:0]       bar_header;
+  input  wire               bar_wr;
+  output reg                bar_busy;
 
-// FF
-  reg  [9:0]     q_pkt_count;
-  reg  [1023:0]  q_pkt_data;
-
-  wire [7:0]     pkt_type;
-  wire [9:0]     pkt_len;
-  wire [127:0]   pkt_data;
-
-  wire [1023:0]  bram_data;
-  wire [127:0]   bram_header;
-
-  reg            pci_tx_rd;
+  input  wire [1023:0]      adc_data;
+  input  wire [127:0]       adc_header;
+  input  wire               adc_wr;
+  output reg                adc_busy;
 
 
-fifo_data pci_tx_data_inst (
-  .clk(clk),               // input wire clk
-  .din(pci_tx_data),       // input wire [1023 : 0] din
-  .wr_en(pci_tx_wr),       // input wire wr_en
-  .rd_en(pci_tx_rd),       // input wire rd_en
-  .dout(bram_data),        // output wire [1023 : 0] dout
-  .full(pci_tx_full),      // output wire full
-  .empty(pci_tx_empty)     // output wire empty
-);
+// local
 
-fifo_header pci_tx_header_inst (
-  .clk(clk),               // input wire clk
-  .din(pci_tx_header),     // input wire [127 : 0] din
-  .wr_en(pci_tx_wr),       // input wire wr_en
-  .rd_en(pci_tx_rd),       // input wire rd_en
-  .dout(bram_header),      // output wire [127 : 0] dout
-  .full(),                 // output wire full
-  .empty()                 // output wire empty
-);
+  reg                       bar_is_active;
+  reg                       start;
+  reg [9:0]                 count;
+
+  reg [127:0]               q_bar_header;
+  reg [127:0]               q_bar_data;
+  reg [127:0]               pend_bar_data;
+  reg [127:0]               q_adc_header;
+  reg [1023:0]              q_adc_data;
+  reg [1023:0]              pend_adc_data;
+
+  wire [7:0]                pkt_type;
+  wire [9:0]                pkt_len;
+  wire [127:0]              pkt_header;
+  wire [127:0]              raw_pkt_data;
+  wire [127:0]              pkt_data;
+
 
 ila_2 ila_2_inst (
 	.clk(clk),                         // input wire clk
@@ -89,79 +85,76 @@ ila_2 ila_2_inst (
 generate
   begin : gen_pci_tx
 
-    assign pkt_type = bram_header[31:24];
-    assign pkt_len = bram_header[9:0];
+    assign raw_pkt_data = bar_is_active ? q_bar_data : q_adc_data[127:0];
+    assign pkt_header = bar_is_active ? q_bar_header : q_adc_header;
 
-    assign pkt_data[31:24] = q_pkt_data[7:0];
-    assign pkt_data[23:16] = q_pkt_data[15:8];
-    assign pkt_data[15:8] = q_pkt_data[23:16];
-    assign pkt_data[7:0] = q_pkt_data[31:24];
+    assign pkt_type = pkt_header[31:24];
+    assign pkt_len = pkt_header[9:0];
 
-    assign pkt_data[63:56] = q_pkt_data[39:32];
-    assign pkt_data[55:48] = q_pkt_data[47:40];
-    assign pkt_data[47:40] = q_pkt_data[55:48];
-    assign pkt_data[39:32] = q_pkt_data[63:56];
+    assign pkt_data[31:24] = raw_pkt_data[7:0];
+    assign pkt_data[23:16] = raw_pkt_data[15:8];
+    assign pkt_data[15:8] = raw_pkt_data[23:16];
+    assign pkt_data[7:0] = raw_pkt_data[31:24];
 
-    assign pkt_data[95:88] = q_pkt_data[71:64];
-    assign pkt_data[87:80] = q_pkt_data[79:72];
-    assign pkt_data[79:72] = q_pkt_data[87:80];
-    assign pkt_data[71:64] = q_pkt_data[95:88];
+    assign pkt_data[63:56] = raw_pkt_data[39:32];
+    assign pkt_data[55:48] = raw_pkt_data[47:40];
+    assign pkt_data[47:40] = raw_pkt_data[55:48];
+    assign pkt_data[39:32] = raw_pkt_data[63:56];
 
-    assign pkt_data[127:120] = q_pkt_data[103:96];
-    assign pkt_data[119:112] = q_pkt_data[111:104];
-    assign pkt_data[111:104] = q_pkt_data[119:112];
-    assign pkt_data[103:96] = q_pkt_data[127:120];
+    assign pkt_data[95:88] = raw_pkt_data[71:64];
+    assign pkt_data[87:80] = raw_pkt_data[79:72];
+    assign pkt_data[79:72] = raw_pkt_data[87:80];
+    assign pkt_data[71:64] = raw_pkt_data[95:88];
 
-    always @ ( * ) 
+    assign pkt_data[127:120] = raw_pkt_data[103:96];
+    assign pkt_data[119:112] = raw_pkt_data[111:104];
+    assign pkt_data[111:104] = raw_pkt_data[119:112];
+    assign pkt_data[103:96] = raw_pkt_data[127:120];
+
+
+    always @ ( posedge clk ) 
     begin
       if (reset)
-        pci_tx_rd = 0;
+      begin
+        bar_busy <= 0;
+        adc_busy <= 0;        
+      end
       else
       begin
-        if (s_axis_tx_tready)
+        if (bar_wr)
         begin
-          if (s_axis_tx_tvalid && !s_axis_tx_tlast)
-          begin
-            if (q_pkt_count > 4)
-              pci_tx_rd = 0;
-            else
-              pci_tx_rd = 1;
-          end
+          q_bar_header <= bar_header;
+          pend_bar_data <= bar_data;
+        end
+            
+        if (adc_wr)
+        begin
+          q_adc_header <= adc_header;
+          pend_adc_data <= adc_data;
+        end
+
+        if (start)
+        begin
+          if (adc_wr)
+            adc_busy <= 1;
           else
-          begin
-            if (pci_tx_empty)
-              pci_tx_rd = 0;
-            else
-            begin
-              if (pkt_type[5] == 0)  // 3 DW header
-              begin
-                if (pkt_type[6] && pkt_len)
-                begin
-                  if (pkt_len > 1)
-                    pci_tx_rd = 0;
-                  else
-                    pci_tx_rd = 1;
-                end
-                else
-                  pci_tx_rd = 1;
-              end
-              else
-              begin
-                if (pkt_type[6])
-                begin
-                  if (pkt_len)
-                    pci_tx_rd = 0;
-                  else
-                    pci_tx_rd = 1;
-                end
-                else
-                  pci_tx_rd = 1;
-              end
-            end
-          end
+            if (!bar_is_active)    
+              adc_busy <= 0;              
+
+          if (bar_wr)
+            bar_busy <= 1;
+          else
+            if (bar_is_active)    
+              bar_busy <= 0;              
         end
         else
-          pci_tx_rd = 0;
+        begin
+          if (adc_wr)
+            adc_busy <= 1;
+
+          if (bar_wr)
+            bar_busy <= 1;
+        end
       end
     end
 
@@ -172,6 +165,8 @@ generate
         s_axis_tx_tuser <= 0;
         s_axis_tx_tvalid <= 0;
         s_axis_tx_tlast <= 0;
+        count <= 0;
+        start <= 0;
       end
       else
       begin
@@ -180,61 +175,45 @@ generate
           if (s_axis_tx_tvalid && !s_axis_tx_tlast)
           begin
             s_axis_tx_tdata <= pkt_data;
-            q_pkt_data[895:0] <= q_pkt_data[1023:128];
 
-            case (q_pkt_count)
-              0:
-              begin
-                s_axis_tx_tkeep[15:0] <= 16'h0000;
-                q_pkt_count <= 0;
-                s_axis_tx_tlast <= 1;
-              end
+            if (count > 4)
+            begin
+              s_axis_tx_tlast <= 0;
+              count <= count - 4;
+              q_adc_data[895:0] <= q_adc_data[1023:128];
+            end
+            else
+            begin
+              s_axis_tx_tlast <= 1;
 
-              1:
+              if (adc_busy || bar_busy))
               begin
-                s_axis_tx_tkeep[15:0] <= 16'h000f;
-                q_pkt_count <= 0;
-                s_axis_tx_tlast <= 1;
-              end
+                start <= 1;
 
-              2:
-              begin
-                s_axis_tx_tkeep[15:0] <= 16'h00ff;
-                q_pkt_count <= 0;
-                s_axis_tx_tlast <= 1;
+                if (adc_busy)
+                begin
+                  bar_is_active <= 0;
+                  q_adc_data <= pend_adc_data;
+                end
+                else
+                begin
+                  bar_is_active <= 1;
+                  q_bar_data <= pend_bar_data;
+                end
               end
-                
-              3:
-              begin
-                s_axis_tx_tkeep[15:0] <= 16'h0fff;
-                q_pkt_count <= 0;
-                s_axis_tx_tlast <= 1;
-              end
+            end
 
-              4:
-              begin
-                s_axis_tx_tkeep[15:0] <= 16'hffff;
-                q_pkt_count <= 0;
-                s_axis_tx_tlast <= 1;
-              end
-
-              default:
-              begin
-                s_axis_tx_tkeep[15:0] <= 16'hffff;
-                q_pkt_count <= q_pkt_count - 4;
-                s_axis_tx_tlast <= 0;
-              end
+            case (count)
+              0: s_axis_tx_tkeep[15:0] <= 16'h0000;
+              1: s_axis_tx_tkeep[15:0] <= 16'h000f;
+              2: s_axis_tx_tkeep[15:0] <= 16'h00ff;
+              3: s_axis_tx_tkeep[15:0] <= 16'h0fff;
+              default: s_axis_tx_tkeep[15:0] <= 16'hffff;
             endcase
           end
           else
           begin
-            if (pci_tx_empty)
-            begin
-              s_axis_tx_tuser <= 0;
-              s_axis_tx_tvalid <= 0;
-              s_axis_tx_tlast <= 0;
-            end
-            else
+            if (start)
             begin
               s_axis_tx_tvalid <= 1;
 
@@ -242,52 +221,155 @@ generate
               begin
                 if (pkt_type[6] && pkt_len)
                 begin
-                  s_axis_tx_tdata[127:120] <= bram_data[7:0];
-                  s_axis_tx_tdata[119:112] <= bram_data[15:8];
-                  s_axis_tx_tdata[111:104] <= bram_data[23:16];
-                  s_axis_tx_tdata[103:96] <= bram_data[31:24];
+                  s_axis_tx_tdata[127:96] <= pkt_data[31:0];
                   s_axis_tx_tkeep[15:12] <= 4'b1111;
-                  s_axis_tx_tdata[95:0] <= bram_header[95:0];
+                  s_axis_tx_tdata[95:0] <= pkt_header[95:0];
                   s_axis_tx_tkeep[11:0] <= 12'hfff;
-                  q_pkt_data[991:0] <= bram_data[1023:32];
-                  q_pkt_count <= pkt_len - 1;
+
                   if (pkt_len > 1)
+                  begin
+                    start <= 0;
                     s_axis_tx_tlast <= 0;
+                    count <= pkt_len - 1;
+
+                    if (bar_is_active)
+                      q_bar_data[95:0] <= q_bar_data[127:32];
+                    else
+                      q_adc_data[991:0] <= q_adc_data[1023:32];
+                  end
                   else
+                  begin
                     s_axis_tx_tlast <= 1;
+
+                    if (adc_busy || bar_busy))
+                    begin
+                      start <= 1;
+
+                      if (adc_busy)
+                      begin
+                        bar_is_active <= 0;
+                        q_adc_data <= pend_adc_data;
+                      end
+                      else
+                      begin
+                        bar_is_active <= 1;
+                        q_bar_data <= pend_bar_data;
+                      end
+                    end
+                    else
+                      start <= 0;
+                  end
                 end
                 else
                 begin
                   s_axis_tx_tdata[127:96] <= 0;
                   s_axis_tx_tkeep[15:12] <= 4'b0000;
-                  s_axis_tx_tdata[95:0] <= bram_header[95:0];
+                  s_axis_tx_tdata[95:0] <= pkt_header[95:0];
                   s_axis_tx_tkeep[11:0] <= 12'hfff;
-                  q_pkt_count <= 0;
                   s_axis_tx_tlast <= 1;
+
+                  if (adc_busy || bar_busy))
+                  begin
+                    start <= 1;
+
+                    if (adc_busy)
+                    begin
+                      bar_is_active <= 0;
+                      q_adc_data <= pend_adc_data;
+                    end
+                    else
+                    begin
+                      bar_is_active <= 1;
+                      q_bar_data <= pend_bar_data;
+                    end
+                  end
+                  else
+                    start <= 0;
                 end
               end
               else
               begin
-                s_axis_tx_tdata[127:0] <= bram_header;
+                s_axis_tx_tdata[127:0] <= pkt_header;
                 s_axis_tx_tkeep[15:0] <= 16'hffff;
-                q_pkt_data <= bram_data;
-  
+    
                 if (pkt_type[6])
                 begin
-                  q_pkt_count = pkt_len;
+                  count <= pkt_len;
                   if (pkt_len)
+                  begin
                     s_axis_tx_tlast <= 0;
+                    start <= 0;
+                  end
                   else
+                  begin
                     s_axis_tx_tlast <= 1;
+
+                    if (adc_busy || bar_busy))
+                    begin
+                     start <= 1;
+
+                      if (adc_busy)
+                      begin
+                        bar_is_active <= 0;
+                        q_adc_data <= pend_adc_data;
+                      end
+                      else
+                      begin
+                        bar_is_active <= 1;
+                        q_bar_data <= pend_bar_data;
+                      end
+                    end
+                    else
+                      start <= 0;
+                  end
                 end
                 else
                 begin
-                  q_pkt_count <= 0;
                   s_axis_tx_tlast <= 1;
+
+                  if (adc_busy || bar_busy))
+                  begin
+                   start <= 1;
+
+                    if (adc_busy)
+                    begin
+                      bar_is_active <= 0;
+                      q_adc_data <= pend_adc_data;
+                    end
+                    else
+                    begin
+                      bar_is_active <= 1;
+                      q_bar_data <= pend_bar_data;
+                    end
+                  end
+                  else
+                    start <= 0;
                 end
               end
             end
-          end
+            else
+            begin
+              s_axis_tx_tvalid <= 0;
+              
+              if (adc_busy || bar_busy))
+              begin
+                start <= 1;
+
+                if (adc_busy)
+                begin
+                  bar_is_active <= 0;
+                  q_adc_data <= pend_adc_data;
+                end
+                else
+                begin
+                  bar_is_active <= 1;
+                  q_bar_data <= pend_bar_data;
+                end
+              end
+              else
+                start <= 0;
+            end
+          end                
         end
       end
     end
