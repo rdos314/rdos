@@ -741,14 +741,10 @@ generate
         up_bar2_rd <= 0;
     end
 
-
     always @ ( posedge pcie_user_clk ) 
     begin
       if (pci_bar0_wr)
       begin
-        up_bar0_wr_address <= pci_bar0_wr_address;
-        up_bar0_wr_data <= pci_bar0_wr_data;
-        up_bar0_wr_be <= pci_bar0_wr_be;
         pci_up_bar0_wr <= 1;
         pci_bar0_wr_cnt <= 0;
       end
@@ -762,6 +758,13 @@ generate
             pci_bar0_wr_cnt <= pci_bar0_wr_cnt + 1;
         end
       end
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_bar0_wr_address <= pci_bar0_wr_address;
+      up_bar0_wr_data <= pci_bar0_wr_data;
+      up_bar0_wr_be <= pci_bar0_wr_be;
     end
 
     always @ ( posedge up_clk ) 
@@ -780,9 +783,6 @@ generate
     begin
       if (pci_bar1_wr)
       begin
-        up_bar1_wr_address <= pci_bar1_wr_address;
-        up_bar1_wr_data <= pci_bar1_wr_data;
-        up_bar1_wr_be <= pci_bar1_wr_be;
         pci_up_bar1_wr <= 1;
         pci_bar1_wr_cnt <= 0;
       end
@@ -796,6 +796,13 @@ generate
             pci_bar1_wr_cnt <= pci_bar1_wr_cnt + 1;
         end
       end
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_bar1_wr_address <= pci_bar1_wr_address;
+      up_bar1_wr_data <= pci_bar1_wr_data;
+      up_bar1_wr_be <= pci_bar1_wr_be;
     end
 
     always @ ( posedge up_clk ) 
@@ -814,9 +821,6 @@ generate
     begin
       if (pci_bar2_wr)
       begin
-        up_bar2_wr_address <= pci_bar2_wr_address;
-        up_bar2_wr_data <= pci_bar2_wr_data;
-        up_bar2_wr_be <= pci_bar2_wr_be;
         pci_up_bar2_wr <= 1;
         pci_bar2_wr_cnt <= 0;
       end
@@ -830,6 +834,13 @@ generate
             pci_bar2_wr_cnt <= pci_bar2_wr_cnt + 1;
         end
       end
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_bar2_wr_address <= pci_bar2_wr_address;
+      up_bar2_wr_data <= pci_bar2_wr_data;
+      up_bar2_wr_be <= pci_bar2_wr_be;
     end
 
     always @ ( posedge up_clk ) 

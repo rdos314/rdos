@@ -147,10 +147,15 @@ module pci_app (
 
 // local -> PCIe
 
-  reg [1023:0]     pci_tx_data;
-  reg [127:0]      pci_tx_header;
-  reg              pci_tx_wr;
-  wire             pci_tx_full;
+  reg [127:0]      tx_bar_data;
+  reg [127:0]      tx_bar_header;
+  reg              tx_bar_wr;
+  wire             tx_bar_busy;
+
+  reg [1023:0]     tx_adc_data;
+  reg [127:0]      tx_adc_header;
+  reg              tx_adc_wr;
+  wire             tx_adc_busy;
 
 // local memory
 
@@ -444,10 +449,15 @@ pci_tx pci_tx_inst (
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser ),        // I
     
-    .pci_tx_data( pci_tx_data),                 // I
-    .pci_tx_header( pci_tx_header),             // I
-    .pci_tx_wr (pci_tx_wr),                     // I
-    .pci_tx_full (pci_tx_full)                  // O
+    .bar_data( tx_bar_data),                 // I
+    .bar_header( tx_bar_header),             // I
+    .bar_wr (tx_bar_wr),                     // I
+    .bar_busy (tx_bar_busy),                 // O
+    
+    .adc_data( tx_adc_data),                 // I
+    .adc_header( tx_adc_header),             // I
+    .adc_wr (tx_adc_wr),                     // I
+    .adc_busy (tx_adc_busy)                  // O
 );
 
 generate
@@ -763,82 +773,90 @@ generate
     begin
       if (user_reset)
       begin
-        adc_send_ack <= 0;
         bar0_ack <= 0;
         bar1_ack <= 0;
         bar2_ack <= 0;
       end
       else
       begin
-        if (pci_tx_full)
+        if (tx_bar_busy)
         begin
-          pci_tx_wr <= 0;
-          adc_send_ack <= 0;
+          tx_bar_wr <= 0;
           bar0_ack <= 0;
           bar1_ack <= 0;
           bar2_ack <= 0;
         end
         else
         begin
-          if (q_adc_send && !adc_send_ack)
+          if (q_bar0_send && !bar0_ack)
           begin
-            pci_tx_data <= q_adc_data;
-            pci_tx_header <= q_adc_header;
-            pci_tx_wr <= 1;
-            adc_send_ack <= 1;
-            bar0_ack <= 0;
+            tx_bar_data <= q_bar0_data;
+            tx_bar_header <= q_bar0_rp_header;
+            tx_bar_wr <= 1;
+            bar0_ack <= 1;
             bar1_ack <= 0;
             bar2_ack <= 0;
           end
           else
           begin
-            adc_send_ack <= 0;
- 
-            if (q_bar0_send && !bar0_ack)
+            bar0_ack <= 0;
+
+            if (q_bar1_send && !bar1_ack)
             begin
-              pci_tx_data <= q_bar0_data;
-              pci_tx_header <= q_bar0_rp_header;
-              pci_tx_wr <= 1;
-              bar0_ack <= 1;
-              bar1_ack <= 0;
+              tx_bar_data <= q_bar1_data;
+              tx_bar_header <= q_bar1_rp_header;
+              tx_bar_wr <= 1;
+              bar1_ack <= 1;
               bar2_ack <= 0;
             end
             else
             begin
-              bar0_ack <= 0;
+              bar1_ack <= 0;
 
-              if (q_bar1_send && !bar1_ack)
+              if (q_bar2_send && !bar2_ack)
               begin
-                pci_tx_data <= q_bar1_data;
-                pci_tx_header <= q_bar1_rp_header;
-                pci_tx_wr <= 1;
-                bar1_ack <= 1;
-                bar2_ack <= 0;
+                tx_bar_data <= q_bar2_data;
+                tx_bar_header <= q_bar2_rp_header;
+                tx_bar_wr <= 1;
+                bar2_ack <= 1;
               end
               else
               begin
-                bar1_ack <= 0;
-
-                if (q_bar2_send && !bar2_ack)
-                begin
-                  pci_tx_data <= q_bar2_data;
-                  pci_tx_header <= q_bar2_rp_header;
-                  pci_tx_wr <= 1;
-                  bar2_ack <= 1;
-                end
-                else
-                begin
-                  pci_tx_wr <= 0;
-                  bar2_ack <= 0;
-                end
+                tx_bar_wr <= 0;
+                bar2_ack <= 0;
               end
             end
           end
         end
       end
     end
-   
 
+    always @ ( posedge user_clk ) 
+    begin
+      if (user_reset)
+        adc_send_ack <= 0;
+      else
+      begin
+        if (tx_adc_busy)
+        begin
+          tx_adc_wr <= 0;
+          adc_send_ack <= 0;
+        end
+        else
+        begin
+          if (q_adc_send && !adc_send_ack)
+          begin
+            tx_adc_data <= q_adc_data;
+            tx_adc_header <= q_adc_header;
+            tx_adc_wr <= 1;
+            adc_send_ack <= 1;
+          end
+          else
+            adc_send_ack <= 0;
+        end
+      end
+    end
+   
   end
 endgenerate
 
