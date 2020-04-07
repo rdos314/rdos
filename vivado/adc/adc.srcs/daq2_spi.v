@@ -293,7 +293,7 @@ spi_fifo_rp spi_fifo_rp_inst (
             spi_count <= 0;
           end
         end
-        spi_delay <= 1;
+        spi_delay <= 4;
       end
     end
   end

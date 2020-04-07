@@ -434,8 +434,8 @@ daq2_spi daq2_spi_inst (
     .spi_sdio (spi_sdio),
     .spi_dir (spi_dir),
 
-    .reset (up_reset),
-    .up_clk (up_clk),
+    .reset (pcie_user_reset),
+    .up_clk (pcie_user_clk),
 
     .spi_rq (spi_rq),
     .spi_rq_data (spi_rq_data),
@@ -444,13 +444,8 @@ daq2_spi daq2_spi_inst (
     .spi_rp_data (spi_rp_data),
     .spi_rp_ack (spi_rp_ack),
 
-    .adc_read(adc_spi_read),
-    .adc_write(adc_spi_write),
-    .adc_adr(adc_spi_adr),
-    .adc_in_data(adc_spi_in_data),
-    .adc_out_data(adc_spi_out_data),
-    .adc_running(adc_spi_running),
-    .adc_done(adc_spi_done)
+    .adc_read(0),
+    .adc_write(0)
 );
 
 control_bar control_bar_inst (
@@ -465,7 +460,15 @@ control_bar control_bar_inst (
     .wr_address(pci_bar0_wr_address),
     .wr_data(pci_bar0_wr_data),
     .wr_be(pci_bar0_wr_be),
-    .wr(pci_bar0_wr)
+    .wr(pci_bar0_wr),
+
+    .spi_rq (spi_rq),
+    .spi_rq_data (spi_rq_data),
+
+    .spi_rp (spi_rp),
+    .spi_rp_data (spi_rp_data),
+    .spi_rp_ack (spi_rp_ack)
+
 );
 
 
