@@ -199,9 +199,9 @@ module adc (
   wire [31:0]          rx_sync_ok_cnt;
   wire [63:0]          rx_sysref_cnt;
 
-  reg [31:0]           adc_sync_fail_cnt;
-  reg [31:0]           adc_sync_ok_cnt;
-  reg [63:0]           adc_sysref_cnt;
+  reg [31:0]           pci_adc_sync_fail_cnt;
+  reg [31:0]           pci_adc_sync_ok_cnt;
+  reg [63:0]           pci_adc_sysref_cnt;
   
   wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
@@ -259,10 +259,12 @@ module adc (
   reg [31:0]           sys_cnt;
   reg [31:0]           user_cnt;
   reg [31:0]           pcie_cnt;
+  reg [31:0]           rx_cnt;
 
   reg                  sys_led;
   reg                  user_led;
   reg                  pcie_led;
+  reg                  rx_led;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -469,9 +471,9 @@ control_bar control_bar_inst (
     .spi_rp_ack (spi_rp_ack),
 
     .adc_address(adc_address),
-    .adc_sysref_cnt(adc_sysref_cnt),
-    .adc_sync_fail_cnt(adc_sync_fail_cnt),
-    .adc_sync_ok_cnt(adc_sync_ok_cnt),
+    .adc_sysref_cnt(pci_adc_sysref_cnt),
+    .adc_sync_fail_cnt(pci_adc_sync_fail_cnt),
+    .adc_sync_ok_cnt(pci_adc_sync_ok_cnt),
 
     .adc_started(0),
     .adc_probing(0),
@@ -530,7 +532,7 @@ phys_bar dac_bar_inst (
   OBUF   led_0_obuf (.O(led_0), .I(pcie_led));
   OBUF   led_1_obuf (.O(led_1), .I(user_led));
   OBUF   led_2_obuf (.O(led_2), .I(sys_led));
-  OBUF   led_3_obuf (.O(led_3), .I(bar_control[3]));
+  OBUF   led_3_obuf (.O(led_3), .I(rx_led));
   OBUF   led_4_obuf (.O(led_4), .I(bar_control[4]));
   OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
@@ -570,6 +572,24 @@ generate
       end
       else
         sys_cnt <= sys_cnt + 1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (rx_cnt == 187500000)
+      begin
+        rx_led <= !rx_led;
+        rx_cnt <= 0;
+      end
+      else
+        rx_cnt <= rx_cnt + 1;
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      pci_adc_sync_fail_cnt <= rx_sync_fail_cnt;
+      pci_adc_sync_ok_cnt <= rx_sync_ok_cnt;
+      pci_adc_sysref_cnt <= rx_sysref_cnt;
     end
 
   end
