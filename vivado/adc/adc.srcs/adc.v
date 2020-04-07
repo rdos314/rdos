@@ -222,8 +222,8 @@ module adc (
   wire [9:0]           pci_bar0_rd_address;
   wire                 pci_bar0_rd;
 
-  reg  [31:0]          pci_bar0_rp_data;
-  reg                  pci_bar0_rp;
+  wire [31:0]          pci_bar0_rp_data;
+  wire                 pci_bar0_rp;
 
   wire [9:0]           pci_bar0_wr_address;
   wire [31:0]          pci_bar0_wr_data;
@@ -234,8 +234,8 @@ module adc (
   wire [16:0]          pci_bar1_rd_address;
   wire                 pci_bar1_rd;
 
-  reg  [31:0]          pci_bar1_rp_data;
-  reg                  pci_bar1_rp;
+  wire [31:0]          pci_bar1_rp_data;
+  wire                 pci_bar1_rp;
 
   wire [16:0]          pci_bar1_wr_address;
   wire [31:0]          pci_bar1_wr_data;
@@ -246,83 +246,14 @@ module adc (
   wire [16:0]          pci_bar2_rd_address;
   wire                 pci_bar2_rd;
 
-  reg  [31:0]          pci_bar2_rp_data;
-  reg                  pci_bar2_rp;
+  wire [31:0]          pci_bar2_rp_data;
+  wire                 pci_bar2_rp;
 
   wire [16:0]          pci_bar2_wr_address;
   wire [31:0]          pci_bar2_wr_data;
   wire [3:0]           pci_bar2_wr_be;
   wire                 pci_bar2_wr;
 
-
-// up bar
-
-  reg [9:0]            up_bar0_rd_address;
-  reg                  up_bar0_rd;
-
-  wire [31:0]          up_bar0_rp_data;
-  wire                 up_bar0_rp;
-
-  reg  [9:0]           up_bar0_wr_address;
-  reg  [31:0]          up_bar0_wr_data;
-  reg  [3:0]           up_bar0_wr_be;
-  reg                  up_bar0_wr;
-
-
-  reg [16:0]           up_bar1_rd_address;
-  reg                  up_bar1_rd;
-
-  wire [31:0]          up_bar1_rp_data;
-  wire                 up_bar1_rp;
-
-  reg  [16:0]          up_bar1_wr_address;
-  reg  [31:0]          up_bar1_wr_data;
-  reg  [3:0]           up_bar1_wr_be;
-  reg                  up_bar1_wr;
-
-
-  reg [16:0]           up_bar2_rd_address;
-  reg                  up_bar2_rd;
-
-  wire [31:0]          up_bar2_rp_data;
-  wire                 up_bar2_rp;
-
-  reg  [16:0]          up_bar2_wr_address;
-  reg  [31:0]          up_bar2_wr_data;
-  reg  [3:0]           up_bar2_wr_be;
-  reg                  up_bar2_wr;
-
-// sync bar
-
-  reg                  curr_bar0_rd;
-  reg                  pci_up_bar0_rd;
-  reg [2:0]            pci_bar0_rd_cnt;
-  reg                  curr_bar0_rp;
-  reg                  q_bar0_rp;
-
-  reg                  curr_bar0_wr;
-  reg                  pci_up_bar0_wr;
-  reg [2:0]            pci_bar0_wr_cnt;
-
-  reg                  curr_bar1_rd;
-  reg                  pci_up_bar1_rd;
-  reg [2:0]            pci_bar1_rd_cnt;
-  reg                  curr_bar1_rp;
-  reg                  q_bar1_rp;
-
-  reg                  curr_bar1_wr;
-  reg                  pci_up_bar1_wr;
-  reg [2:0]            pci_bar1_wr_cnt;
-
-  reg                  curr_bar2_rd;
-  reg                  pci_up_bar2_rd;
-  reg [2:0]            pci_bar2_rd_cnt;
-
-  reg                  curr_bar2_wr;
-  reg                  pci_up_bar2_wr;
-  reg [2:0]            pci_bar2_wr_cnt;
-  reg                  curr_bar2_rp;
-  reg                  q_bar2_rp;
 
 // LED
 
@@ -490,7 +421,7 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
     
-    .adc_send(pci_adc_wr),
+    .adc_send(0),
     .adc_address(pci_adc_address),
     .adc_data(pci_adc_data)
 );
@@ -523,77 +454,55 @@ daq2_spi daq2_spi_inst (
 );
 
 control_bar control_bar_inst (
-    .up_reset(up_reset),
-    .up_clk(up_clk),
+    .up_reset(pcie_user_reset),
+    .up_clk(pcie_user_clk),
 
-    .rd_address(up_bar0_rd_address),
-    .rd(up_bar0_rd),
-    .rp_data(up_bar0_rp_data),
-    .rp(up_bar0_rp),
+    .rd_address(pci_bar0_rd_address),
+    .rd(pci_bar0_rd),
+    .rp_data(pci_bar0_rp_data),
+    .rp(pci_bar0_rp),
 
-    .wr_address(up_bar0_wr_address),
-    .wr_data(up_bar0_wr_data),
-    .wr_be(up_bar0_wr_be),
-    .wr(up_bar0_wr),
-
-    .spi_rq (spi_rq),
-    .spi_rq_data (spi_rq_data),
-
-    .spi_rp (spi_rp),
-    .spi_rp_data (spi_rp_data),
-    .spi_rp_ack (spi_rp_ack),
-
-    .adc_address(up_adc_address),
-    .adc_sysref_cnt(up_adc_sysref_cnt),
-    .adc_sync_fail_cnt(up_adc_sync_fail_cnt),
-    .adc_sync_ok_cnt(up_adc_sync_ok_cnt),
-
-    .adc_started(adc_started),
-    .adc_probing(adc_probing),
-    .adc_running(adc_running),
-
-    .adc_start(adc_start),
-    .adc_stop(adc_stop),
-    .adc_test_mode(adc_test_mode),
-
-    .state(bar_control)
+    .wr_address(pci_bar0_wr_address),
+    .wr_data(pci_bar0_wr_data),
+    .wr_be(pci_bar0_wr_be),
+    .wr(pci_bar0_wr)
 );
 
 
 phys_bar adc_bar_inst (
-    .up_clk(up_clk),
-    .up_reset(up_reset),
+    .up_clk(pcie_user_clk),
+    .up_reset(pcie_user_reset),
 
-    .rd_address(up_bar1_rd_address),
-    .rd(up_bar1_rd),
-    .rp_data(up_bar1_rp_data),
-    .rp(up_bar1_rp),
+    .rd_address(pci_bar1_rd_address),
+    .rd(pci_bar1_rd),
+    .rp_data(pci_bar1_rp_data),
+    .rp(pci_bar1_rp),
 
-    .wr_address(up_bar1_wr_address),
-    .wr_data(up_bar1_wr_data),
-    .wr_be(up_bar1_wr_be),
-    .wr(up_bar1_wr),
+    .wr_address(pci_bar1_wr_address),
+    .wr_data(pci_bar1_wr_data),
+    .wr_be(pci_bar1_wr_be),
+    .wr(pci_bar1_wr),
 
-    .index(adc_index),
+    .index(1),
     .phys(adc_phys),
     .valid(adc_valid)
 );
 
 phys_bar dac_bar_inst (
-    .up_clk(up_clk),
-    .up_reset(up_reset),
+    .up_clk(pcie_user_clk),
+    .up_reset(pcie_user_reset),
 
-    .rd_address(up_bar2_rd_address),
-    .rd(up_bar2_rd),
-    .rp_data(up_bar2_rp_data),
-    .rp(up_bar2_rp),
+    .rd_address(pci_bar2_rd_address),
+    .rd(pci_bar2_rd),
+    .rp_data(pci_bar2_rp_data),
+    .rp(pci_bar2_rp),
 
-    .wr_address(up_bar2_wr_address),
-    .wr_data(up_bar2_wr_data),
-    .wr_be(up_bar2_wr_be),
-    .wr(up_bar2_wr),
+    .wr_address(pci_bar2_wr_address),
+    .wr_data(pci_bar2_wr_data),
+    .wr_be(pci_bar2_wr_be),
+    .wr(pci_bar2_wr),
 
-    .index(dac_index),
+    .index(2),
     .phys(dac_phys),
     .valid(dac_valid)
 );
