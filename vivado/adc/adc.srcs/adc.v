@@ -199,18 +199,17 @@ module adc (
   wire [31:0]          rx_sync_ok_cnt;
   wire [63:0]          rx_sysref_cnt;
 
-  reg [31:0]           up_adc_sync_fail_cnt;
-  reg [31:0]           up_adc_sync_ok_cnt;
-  reg [63:0]           up_adc_sysref_cnt;
+  reg [31:0]           adc_sync_fail_cnt;
+  reg [31:0]           adc_sync_ok_cnt;
+  reg [63:0]           adc_sysref_cnt;
   
   wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
-  reg [63:0]           up_adc_address;
+  reg [63:0]           adc_address;
 
   reg                  pci_rx_wr;
   reg                  pci_curr_wr;
   reg                  pci_adc_wr;
-  reg [63:0]           pci_adc_address;
   reg [1023:0]         pci_adc_data;
 
 
@@ -356,12 +355,12 @@ daq2_app daq2_app_inst (
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
-    .adc_start(adc_start),
-    .adc_stop(adc_stop),
+    .adc_start(0),
+    .adc_stop(0),
     .adc_started(adc_started),
     .adc_probing(adc_probing),
     .adc_running(adc_running),
-    .adc_test_mode(adc_test_mode),
+    .adc_test_mode(7),
 
     .adc_sync_fail_cnt(rx_sync_fail_cnt),
     .adc_sync_ok_cnt(rx_sync_ok_cnt),
@@ -422,7 +421,7 @@ pci_app pci_app_inst (
     .bar2_wr(pci_bar2_wr),
     
     .adc_send(0),
-    .adc_address(pci_adc_address),
+    .adc_address(adc_address),
     .adc_data(pci_adc_data)
 );
 
@@ -467,8 +466,22 @@ control_bar control_bar_inst (
 
     .spi_rp (spi_rp),
     .spi_rp_data (spi_rp_data),
-    .spi_rp_ack (spi_rp_ack)
+    .spi_rp_ack (spi_rp_ack),
 
+    .adc_address(adc_address),
+    .adc_sysref_cnt(adc_sysref_cnt),
+    .adc_sync_fail_cnt(adc_sync_fail_cnt),
+    .adc_sync_ok_cnt(adc_sync_ok_cnt),
+
+    .adc_started(0),
+    .adc_probing(0),
+    .adc_running(0),
+
+    .adc_start(adc_start),
+    .adc_stop(adc_stop),
+    .adc_test_mode(adc_test_mode),
+
+    .state(bar_control)
 );
 
 
