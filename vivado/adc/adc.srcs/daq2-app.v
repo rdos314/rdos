@@ -422,29 +422,6 @@ system_tx_0 system_tx_0_inst
         .tx_ready(),
         .tx_valid(1'b1));
 
-ila_6 ila_6_inst (
-	.clk(up_clk), // input wire clk
-
-	.probe0(adc_started),               // input wire [0:0]  probe11
-	.probe1(pend_start),                // input wire [0:0]  probe11
-	.probe2(up_rstn),                   // input wire [0:0]  probe11
-	.probe3(qpll_rst),                  // input wire [0:0]  probe11
-	.probe4(up_adc_spi_read),              // input wire [0:0]  probe8 
-	.probe5(up_adc_spi_write),             // input wire [0:0]  probe8 
-	.probe6(up_adc_spi_adr),               // input wire [11:0]  probe8 
-	.probe7(up_adc_spi_out_data),          // input wire [7:0]  probe8 
-	.probe8(up_adc_spi_running),           // input wire [0:0]  probe8 
-	.probe9(up_adc_spi_done),              // input wire [0:0]  probe8 
-	.probe10(up_pll_rst_cnt),            // input wire [3:0]  probe9 
-	.probe11(up_rx_rst_cnt),             // input wire [3:0]  probe10 
-	.probe12(up_rx_user_ready_cnt),      // input wire [6:0]  probe11
-	.probe13(adc_spi_fifo_empty),        // input wire [0:0]  probe8 
-	.probe14(qpll_locked),               // input wire [0:0]  probe8 
-	.probe15(rx_pll_locked),             // input wire [3:0]  probe8 
-	.probe16(up_rx_rst_done),            // input wire [3:0]  probe11
-	.probe17(spi_test_done)              // input wire [0:0]  probe11
-);
-
 function check_valid;
   input [13:0] adcA_0;
   input [13:0] adcB_0;

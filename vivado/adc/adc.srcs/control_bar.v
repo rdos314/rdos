@@ -46,38 +46,6 @@ module control_bar (
   reg [31:0]              bar_spi_adc;
   reg [31:0]              bar_spi_dac;
 
-
-ila_3 ila_3_inst (
-	.clk(up_clk),                         // input wire clk
-	.probe0(rd_address),      // input wire [9:0]  probe0  
-	.probe1(rd),              // input wire [0:0]  probe0  
-	.probe2(wr_address),      // input wire [9:0]  probe0  
-	.probe3(wr_data),         // input wire [31:0]  probe0  
-	.probe4(wr_be),           // input wire [3:0]  probe0  
-	.probe5(wr),              // input wire [0:0]  probe0  
-	.probe6(rp_address),      // input wire [31:0]  probe0  
-	.probe7(rp),              // input wire [0:0]  probe0  
-	.probe8(spi_rq),          // input wire [0:0]  probe0  
-	.probe9(spi_rq_data),     // input wire [31:0]  probe0  
-	.probe10(spi_rp),          // input wire [0:0]  probe0  
-	.probe11(spi_rp_data),     // input wire [29:0]  probe0  
-	.probe12(spi_rp_ack),      // input wire [0:0]  probe0  
-	.probe13(adc_started),      // input wire [0:0]  probe0  
-	.probe14(adc_probing),      // input wire [0:0]  probe0  
-	.probe15(adc_running),      // input wire [0:0]  probe0  
-	.probe16(adc_start),        // input wire [0:0]  probe0  
-	.probe17(adc_stop),         // input wire [0:0]  probe0  
-	.probe18(adc_test_mode),    // input wire [7:0]  probe0  
-	.probe19(adc_test_mode),    // input wire [7:0]  probe0  
-	.probe20(spi_clk_valid),    // input wire [0:0]  probe0  
-	.probe21(spi_adc_valid),    // input wire [0:0]  probe0  
-	.probe22(spi_dac_valid),    // input wire [0:0]  probe0  
-	.probe23(bar_spi_clk),      // input wire [31:0]  probe0  
-	.probe24(bar_spi_adc),      // input wire [31:0]  probe0  
-	.probe25(bar_spi_dac)       // input wire [31:0]  probe0  
-); 
-
-
 generate
   begin : ctrl_bar_gen
 
