@@ -134,16 +134,19 @@ module pci_app (
 
 // PCIe -> local
 
-  wire [1023:0]    pci_rx_data;
-  wire [127:0]     pci_rx_header;
-  wire [127:0]     pci_rx_be;
-  wire [7:0]       pci_rx_count;
-  wire [7:0]       pci_rx_bar;
-  wire             pci_rx_valid;
+  wire [127:0]     rx_bar_data;
+  wire [127:0]     rx_bar_header;
+  wire [15:0]      rx_bar_be;
+  wire [7:0]       rx_bar_count;
+  wire [7:0]       rx_bar_sel;
+  wire             rx_bar_valid;
 
-  wire [9:0]       pci_rx_len;
-  wire [7:0]       pci_rx_type;
-  wire [63:0]      pci_rx_address;
+  wire [9:0]       rx_bar_len;
+  wire [7:0]       rx_bar_type;
+  wire [63:0]      rx_bar_address;
+
+  wire [1023:0]    rx_dac_data;
+  wire             rx_dac_valid;
 
 // local -> PCIe
 
@@ -428,13 +431,17 @@ pci_rx pci_rx_inst (
     .m_axis_rx_tready( m_axis_rx_tready ),      // O
     .m_axis_rx_tuser ( m_axis_rx_tuser ),       // I
 
-    .pci_rx_data( pci_rx_data),                // O
-    .pci_rx_header( pci_rx_header),            // O
-    .pci_rx_be( pci_rx_be),                    // O
-    .pci_rx_count( pci_rx_count),              // O
-    .pci_rx_bar (pci_rx_bar),                  // O
-    .pci_rx_valid (pci_rx_valid)               // O
+    .bar_data( rx_bar_data),                // O
+    .bar_header( rx_bar_header),            // O
+    .bar_be( rx_bar_be),                    // O
+    .bar_count( rx_bar_count),              // O
+    .bar_sel (rx_bar_sel),                  // O
+    .bar_valid (rx_bar_valid),              // O
+
+    .dac_data( rx_dac_data),                // O
+    .dac_valid (rx_dac_valid)               // O
 );
+
 
 pci_tx pci_tx_inst (
 
@@ -463,29 +470,29 @@ pci_tx pci_tx_inst (
 generate
   begin : pci_app
 
-    assign pci_rx_len = pci_rx_header[9:0];
-    assign pci_rx_type = pci_rx_header[31:24];
-    assign pci_rx_address = pci_rx_header[95:64];
+    assign rx_bar_len = rx_bar_header[9:0];
+    assign rx_bar_type = rx_bar_header[31:24];
+    assign rx_bar_address = rx_bar_header[95:64];
 
     always @ ( posedge user_clk ) 
     begin
-      if (pci_rx_valid)
+      if (rx_bar_valid)
       begin
-        if (pci_rx_bar[0])
+        if (rx_bar_sel[0])
         begin
-          case (pci_rx_type)
+          case (rx_bar_type)
             8'b000_00000, 
             8'b001_00000,
             8'b000_00001,
             8'b001_00001: 
             begin
-              bar0_rd_address <= pci_rx_address[11:2];
+              bar0_rd_address <= rx_bar_address[11:2];
 
-              q_bar0_rp_header[95:72] <= pci_rx_header[63:40];
+              q_bar0_rp_header[95:72] <= rx_bar_header[63:40];
               q_bar0_rp_header[71] <= 0;
-              q_bar0_rp_header[70:66] <= pci_rx_header[70:66];
+              q_bar0_rp_header[70:66] <= rx_bar_header[70:66];
 
-              casex (pci_rx_be[3:0])
+              casex (rx_bar_be[3:0])
                 4'b0000 : q_bar0_rp_header[65:64] <= 0;
                 4'bxxx1 : q_bar0_rp_header[65:64] <= 0;
                 4'bxx10 : q_bar0_rp_header[65:64] <= 1;
@@ -496,21 +503,21 @@ generate
               q_bar0_rp_header[63:48] <= 16'b0;                  // completer ID
               q_bar0_rp_header[47:45] <= 3'b0;                   // completion code = 000
               q_bar0_rp_header[44] <= 1'b0;                      // BCM
-              q_bar0_rp_header[39:32] <= pci_rx_count;           // byte count
+              q_bar0_rp_header[39:32] <= rx_bar_count;           // byte count
               q_bar0_rp_header[43:40] <= 0;                      // high byte count = 0
 
-              if (pci_rx_count)
+              if (rx_bar_count)
                 q_bar0_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
               else
                 q_bar0_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
 
-              q_bar0_rp_header[24] <= pci_rx_header[24];
+              q_bar0_rp_header[24] <= rx_bar_header[24];
               q_bar0_rp_header[23] <= 1'b0;                      // R
-              q_bar0_rp_header[22:20] <= pci_rx_header[22:20];
+              q_bar0_rp_header[22:20] <= rx_bar_header[22:20];
               q_bar0_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
-              q_bar0_rp_header[15:12] <= pci_rx_header[15:12];
+              q_bar0_rp_header[15:12] <= rx_bar_header[15:12];
               q_bar0_rp_header[11:10] <= 2'b0;                   // AT
-              q_bar0_rp_header[9:0] <= pci_rx_header[9:0];
+              q_bar0_rp_header[9:0] <= rx_bar_header[9:0];
 
               bar0_rd <= 1;
               bar0_wr <= 0;
@@ -519,9 +526,9 @@ generate
             8'b010_00000,
             8'b011_00000:
             begin       
-              bar0_wr_address <= pci_rx_address[11:2];
-              bar0_wr_data <= pci_rx_data[31:0];
-              bar0_wr_be <= pci_rx_be[3:0];
+              bar0_wr_address <= rx_bar_address[11:2];
+              bar0_wr_data <= rx_bar_data[31:0];
+              bar0_wr_be <= rx_bar_be[3:0];
               bar0_wr <= 1;
               bar0_rd <= 0;
             end
@@ -538,19 +545,19 @@ generate
           bar0_rd <= 0;
           bar0_wr <= 0;
 
-          if (pci_rx_bar[1])
+          if (rx_bar_bar[1])
           begin
-            case (pci_rx_type)
+            case (rx_bar_type)
               8'b000_00000, 
               8'b001_00000,
               8'b000_00001,
               8'b001_00001: 
               begin
-                bar1_rd_address <= pci_rx_address[18:2];
+                bar1_rd_address <= rx_bar_address[18:2];
 
-                q_bar1_rp_header[95:72] <= pci_rx_header[63:40];
+                q_bar1_rp_header[95:72] <= rx_bar_header[63:40];
                 q_bar1_rp_header[71] <= 0;
-                q_bar1_rp_header[70:66] <= pci_rx_header[70:66];
+                q_bar1_rp_header[70:66] <= rx_bar_header[70:66];
 
                 casex (pci_rx_be[3:0])
                   4'b0000 : q_bar1_rp_header[65:64] <= 0;
@@ -563,21 +570,21 @@ generate
                 q_bar1_rp_header[63:48] <= 16'b0;                  // completer ID
                 q_bar1_rp_header[47:45] <= 3'b0;                   // completion code = 000
                 q_bar1_rp_header[44] <= 1'b0;                      // BCM
-                q_bar1_rp_header[39:32] <= pci_rx_count;           // byte count
+                q_bar1_rp_header[39:32] <= rx_bar_count;           // byte count
                 q_bar1_rp_header[43:40] <= 0;                      // high byte count = 0
 
-                if (pci_rx_count)
+                if (rx_bar_count)
                   q_bar1_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
                  else
                   q_bar1_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
 
-                q_bar1_rp_header[24] <= pci_rx_header[24];
+                q_bar1_rp_header[24] <= rx_bar_header[24];
                 q_bar1_rp_header[23] <= 1'b0;                      // R
-                q_bar1_rp_header[22:20] <= pci_rx_header[22:20];
+                q_bar1_rp_header[22:20] <= rx_bar_header[22:20];
                 q_bar1_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
-                q_bar1_rp_header[15:12] <= pci_rx_header[15:12];
+                q_bar1_rp_header[15:12] <= rx_bar_header[15:12];
                 q_bar1_rp_header[11:10] <= 2'b0;                   // AT
-                q_bar1_rp_header[9:0] <= pci_rx_header[9:0];
+                q_bar1_rp_header[9:0] <= rx_bar_header[9:0];
 
                 bar1_rd <= 1;
                 bar1_wr <= 0;
@@ -586,9 +593,9 @@ generate
               8'b010_00000,
               8'b011_00000:
               begin       
-                bar1_wr_address <= pci_rx_address[18:2];
-                bar1_wr_data <= pci_rx_data[31:0];
-                bar1_wr_be <= pci_rx_be[3:0];
+                bar1_wr_address <= rx_bar_address[18:2];
+                bar1_wr_data <= rx_bar_data[31:0];
+                bar1_wr_be <= rx_bar_be[3:0];
                 bar1_wr <= 1;
                 bar1_rd <= 0;
               end
@@ -605,21 +612,21 @@ generate
             bar1_rd <= 0;
             bar1_wr <= 0;
 
-            if (pci_rx_bar[2])
+            if (rx_bar_sel[2])
             begin
-              case (pci_rx_type)
+              case (rx_bar_type)
                 8'b000_00000, 
                 8'b001_00000,
                 8'b000_00001,
                 8'b001_00001: 
                 begin
-                  bar2_rd_address <= pci_rx_address[18:2];
+                  bar2_rd_address <= rx_bar_address[18:2];
 
-                  q_bar2_rp_header[95:72] <= pci_rx_header[63:40];
+                  q_bar2_rp_header[95:72] <= rx_bar_header[63:40];
                   q_bar2_rp_header[71] <= 0;
-                  q_bar2_rp_header[70:66] <= pci_rx_header[70:66];
+                  q_bar2_rp_header[70:66] <= rx_bar_header[70:66];
 
-                  casex (pci_rx_be[3:0])
+                  casex (rx_bar_be[3:0])
                     4'b0000 : q_bar2_rp_header[65:64] <= 0;
                     4'bxxx1 : q_bar2_rp_header[65:64] <= 0;
                     4'bxx10 : q_bar2_rp_header[65:64] <= 1;
@@ -630,21 +637,21 @@ generate
                   q_bar2_rp_header[63:48] <= 16'b0;                  // completer ID
                   q_bar2_rp_header[47:45] <= 3'b0;                   // completion code = 000
                   q_bar2_rp_header[44] <= 1'b0;                      // BCM
-                  q_bar2_rp_header[39:32] <= pci_rx_count;           // byte count
+                  q_bar2_rp_header[39:32] <= rx_bar_count;           // byte count
                   q_bar2_rp_header[43:40] <= 0;                      // high byte count = 0
 
-                  if (pci_rx_count)
+                  if (rx_bar_count)
                     q_bar2_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
                    else
                     q_bar2_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
 
-                  q_bar2_rp_header[24] <= pci_rx_header[24];
+                  q_bar2_rp_header[24] <= rx_bar_header[24];
                   q_bar2_rp_header[23] <= 1'b0;                      // R
-                  q_bar2_rp_header[22:20] <= pci_rx_header[22:20];
+                  q_bar2_rp_header[22:20] <= rx_bar_header[22:20];
                   q_bar2_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
-                  q_bar2_rp_header[15:12] <= pci_rx_header[15:12];
+                  q_bar2_rp_header[15:12] <= rx_bar_header[15:12];
                   q_bar2_rp_header[11:10] <= 2'b0;                   // AT
-                  q_bar2_rp_header[9:0] <= pci_rx_header[9:0];
+                  q_bar2_rp_header[9:0] <= rx_bar_header[9:0];
 
                   bar2_rd <= 1;
                   bar2_wr <= 0;
@@ -653,9 +660,9 @@ generate
                 8'b010_00000,
                 8'b011_00000:
                 begin       
-                  bar2_wr_address <= pci_rx_address[18:2];
-                  bar2_wr_data <= pci_rx_data[31:0];
-                  bar2_wr_be <= pci_rx_be[3:0];
+                  bar2_wr_address <= rx_bar_address[18:2];
+                  bar2_wr_data <= rx_bar_data[31:0];
+                  bar2_wr_be <= rx_bar_be[3:0];
                   bar2_wr <= 1;
                   bar2_rd <= 0;
                 end
