@@ -545,7 +545,7 @@ generate
           bar0_rd <= 0;
           bar0_wr <= 0;
 
-          if (rx_bar_bar[1])
+          if (rx_bar_sel[1])
           begin
             case (rx_bar_type)
               8'b000_00000, 
@@ -559,7 +559,7 @@ generate
                 q_bar1_rp_header[71] <= 0;
                 q_bar1_rp_header[70:66] <= rx_bar_header[70:66];
 
-                casex (pci_rx_be[3:0])
+                casex (rx_bar_be[3:0])
                   4'b0000 : q_bar1_rp_header[65:64] <= 0;
                   4'bxxx1 : q_bar1_rp_header[65:64] <= 0;
                   4'bxx10 : q_bar1_rp_header[65:64] <= 1;

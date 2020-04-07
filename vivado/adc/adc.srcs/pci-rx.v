@@ -361,43 +361,40 @@ generate
             end
           end
         end
-      end
-      else
-      begin
-        if (q_bar)
+        else
         begin
-          case (q_bar_shift)
-            0:
-            begin
-              if (q_type[5] == 0)
+          if (q_bar)
+          begin
+            case (q_bar_shift)
+              0:
               begin
-                q_bar_header[95:64] <= m_axis_rx_tdata[31:0];
-                q_bar_header[127:96] <= 32'b0;
-                q_bar_data[95:0] <= pkt_data[127:32];
-                q_bar_shift <= 3;
+                if (q_type[5] == 0)
+                begin
+                  q_bar_header[95:64] <= m_axis_rx_tdata[31:0];
+                  q_bar_header[127:96] <= 32'b0;
+                  q_bar_data[95:0] <= pkt_data[127:32];
+                  q_bar_shift <= 3;
+                end
+                else
+                begin
+                  q_bar_header[127:64] <= m_axis_rx_tdata[63:0];
+                  q_bar_data[63:0] <= pkt_data[127:64];
+                  q_bar_shift <= 2;
+                end
               end
-              else
-              begin
-                q_bar_header[127:64] <= m_axis_rx_tdata[63:0];
-                q_bar_data[63:0] <= pkt_data[127:64];
-                q_bar_shift <= 2;
-              end
-            end
  
-            1: q_bar_data[127:32] <= pkt_data[95:0];
-            2: q_bar_data[127:64] <= pkt_data[63:0];
-            3: q_bar_data[127:96] <= pkt_data[31:0];
-            4: q_bar_data <= pkt_data;
-          endcase
-
-          if (m_axis_rx_tuser[21])
-            q_bar_done <= 1;
-          else
-            q_bar_done <= 0;
+              1: q_bar_data[127:32] <= pkt_data[95:0];
+              2: q_bar_data[127:64] <= pkt_data[63:0];
+              3: q_bar_data[127:96] <= pkt_data[31:0];
+              4: q_bar_data <= pkt_data;
+            endcase
+          end
         end
+
+        if (m_axis_rx_tuser[21])
+          q_bar_done <= 1;
         else
           q_bar_done <= 0;
- 
       end
       else
       begin
@@ -526,12 +523,10 @@ generate
               end
             endcase
           end
-
-          if (m_axis_rx_tuser[21])
-            q_dac_done <= 1;
-          else
-            q_dac_done <= 0;
         end
+
+        if (m_axis_rx_tuser[21])
+          q_dac_done <= 1;
         else
           q_dac_done <= 0;
       end
@@ -552,7 +547,6 @@ generate
       else
         dac_valid <= 0;
     end
-
 
   end    
 endgenerate
