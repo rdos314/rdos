@@ -188,8 +188,9 @@ module adc (
 
 // ADC
 
-  wire                 adc_start;
-  wire                 adc_stop;
+  wire                 pci_adc_start;
+  wire                 pci_adc_stop;
+
   wire                 adc_started;
   wire                 adc_probing;
   wire                 adc_running;
@@ -423,7 +424,7 @@ pci_app pci_app_inst (
     .bar2_wr(pci_bar2_wr),
     
     .adc_send(0),
-    .adc_address(adc_address),
+    .adc_address(1000000),
     .adc_data(pci_adc_data)
 );
 
@@ -470,7 +471,7 @@ control_bar control_bar_inst (
     .spi_rp_data (spi_rp_data),
     .spi_rp_ack (spi_rp_ack),
 
-    .adc_address(adc_address),
+    .adc_address(1),
     .adc_sysref_cnt(pci_adc_sysref_cnt),
     .adc_sync_fail_cnt(pci_adc_sync_fail_cnt),
     .adc_sync_ok_cnt(pci_adc_sync_ok_cnt),
@@ -479,8 +480,8 @@ control_bar control_bar_inst (
     .adc_probing(0),
     .adc_running(0),
 
-    .adc_start(adc_start),
-    .adc_stop(adc_stop),
+    .adc_start(pci_adc_start),
+    .adc_stop(pci_adc_stop),
     .adc_test_mode(adc_test_mode),
 
     .state(bar_control)
@@ -576,7 +577,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_cnt == 187500000)
+      if (rx_cnt == 93750000)
       begin
         rx_led <= !rx_led;
         rx_cnt <= 0;
@@ -592,7 +593,9 @@ generate
       pci_adc_sysref_cnt <= rx_sysref_cnt;
     end
 
+
   end
+
 
 endgenerate
 endmodule
