@@ -55,6 +55,16 @@ module adc_app (
   assign spi_write = 0;
 
 
+ila_1 ila_1_inst (
+	.clk(clk),             // input wire clk
+	.probe0(start),        // input wire [0:0]  probe0  
+	.probe1(stop),         // input wire [0:0]  probe0  
+	.probe2(started),      // input wire [0:0]  probe0  
+	.probe3(probing),      // input wire [0:0]  probe0  
+	.probe4(running)       // input wire [0:0]  probe0  
+);
+
+
 generate
 begin : adc_app
 
@@ -64,28 +74,24 @@ begin : adc_app
       begin
         started <= 0;
         running <= 0;
-        pend_start <= 0;
       end
       else
       begin
         if (start)
-          pend_start <= 1;
+          started <= 1;
         else
         begin
           if (stop)
           begin
-            pend_start <= 0;
+            started <= 0;
+            probing <= 0;
             running <= 0;
           end
           else
           begin
-            if (pend_start)
+            if (started)
             begin
               probing <= 1;
-              pend_start <= 0;
-            end
-            else
-            begin
               if (probing)
                 running <= 1;
             end
