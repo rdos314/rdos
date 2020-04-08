@@ -166,6 +166,9 @@ module adc (
   wire                 adc_stop;
   wire [7:0]           adc_test_mode;
 
+  wire                 pci_req_start;
+  wire                 pci_ack_start;
+
   wire                 adc_started;
   wire                 adc_probing;
   wire                 adc_running;
@@ -493,6 +496,9 @@ adc_app adc_app_inst (
     .start(adc_start),
     .stop(adc_stop),
 
+    .req_start(pci_req_start),
+    .ack_start(pci_ack_start),
+
     .started(adc_started),
     .probing(adc_probing),
     .running(adc_running)
@@ -510,6 +516,7 @@ adc_app adc_app_inst (
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
 
+  assign pci_ack_start = pci_req_start;
 
 generate
   begin : adc
