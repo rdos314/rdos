@@ -43,8 +43,13 @@ module adc_app (
 
   input wire              start,
   input wire              stop,
-  input wire [7:0]        test_mode
+
+  output reg              started,
+  output reg              probing,
+  output reg              running
 );
+
+  reg                     pend_start;
 
   assign spi_read = 0;
   assign spi_write = 0;
@@ -52,6 +57,42 @@ module adc_app (
 
 generate
 begin : adc_app
+
+    always @(posedge clk) 
+    begin
+      if (reset)
+      begin
+        started <= 0;
+        running <= 0;
+        pend_start <= 0;
+      end
+      else
+      begin
+        if (start)
+          pend_start <= 1;
+        else
+        begin
+          if (stop)
+          begin
+            pend_start <= 0;
+            running <= 0;
+          end
+          else
+          begin
+            if (pend_start)
+            begin
+              probing <= 1;
+              pend_start <= 0;
+            end
+            else
+            begin
+              if (probing)
+                running <= 1;
+            end
+          end
+        end
+      end
+    end
 
 end
 endgenerate

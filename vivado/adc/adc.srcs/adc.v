@@ -166,9 +166,9 @@ module adc (
   wire                 adc_stop;
   wire [7:0]           adc_test_mode;
 
-  wire                 pci_adc_started;
-  wire                 pci_adc_probing;
-  wire                 pci_adc_running;
+  wire                 adc_started;
+  wire                 adc_probing;
+  wire                 adc_running;
 
   wire [31:0]          rx_sync_fail_cnt;
   wire [31:0]          rx_sync_ok_cnt;
@@ -428,14 +428,13 @@ control_bar control_bar_inst (
     .spi_rp_data (spi_rp_data),
     .spi_rp_ack (spi_rp_ack),
 
-    .adc_address(1),
     .adc_sysref_cnt(pci_adc_sysref_cnt),
     .adc_sync_fail_cnt(pci_adc_sync_fail_cnt),
     .adc_sync_ok_cnt(pci_adc_sync_ok_cnt),
 
-    .adc_started(0),
-    .adc_probing(0),
-    .adc_running(0),
+    .adc_started(adc_started),
+    .adc_probing(adc_probing),
+    .adc_running(adc_running),
 
     .adc_start(adc_start),
     .adc_stop(adc_stop),
@@ -493,7 +492,10 @@ adc_app adc_app_inst (
 
     .start(adc_start),
     .stop(adc_stop),
-    .test_mode(adc_test_mode)
+
+    .started(adc_started),
+    .probing(adc_probing),
+    .running(adc_running)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -507,10 +509,6 @@ adc_app adc_app_inst (
   OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
-
-  assign pci_adc_started = 0;
-  assign pci_adc_probing = 0;
-  assign pci_adc_running = 0;
 
 
 generate
