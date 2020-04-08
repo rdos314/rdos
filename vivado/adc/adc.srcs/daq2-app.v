@@ -69,7 +69,7 @@ module daq2_app
   output reg [31:0]       adc_sync_ok_cnt,
 
   output reg              adc_wr,
-  output reg [1023:0]     adc_data,
+  output reg [1023:0]     adc_data
 );
 
  wire [15:0]              rx_phy_charisk;

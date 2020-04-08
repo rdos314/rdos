@@ -160,7 +160,7 @@ module adc (
 
   wire [16:0]          adc_phys_index;
   wire [63:0]          adc_phys;
-  wire                 adc_phys_valid
+  wire                 adc_phys_valid;
 
   wire                 adc_start;
   wire                 adc_stop;
@@ -403,15 +403,8 @@ daq2_spi daq2_spi_inst (
 
     .spi_rp (spi_rp),
     .spi_rp_data (spi_rp_data),
-    .spi_rp_ack (spi_rp_ack),
+    .spi_rp_ack (spi_rp_ack)
 
-    .adc_read(adc_spi_read),
-    .adc_write(adc_spi_write),
-    .adc_adr(adc_spi_adr),
-    .adc_in_data(adc_spi_in_data),
-    .adc_out_data(adc_spi_out_data),
-    .adc_running(adc_spi_running),
-    .adc_done(adc_spi_done)
 );
 
 control_bar control_bar_inst (
@@ -440,9 +433,9 @@ control_bar control_bar_inst (
     .adc_sync_fail_cnt(pci_adc_sync_fail_cnt),
     .adc_sync_ok_cnt(pci_adc_sync_ok_cnt),
 
-    .adc_started(pci_adc_started),
-    .adc_probing(pci_adc_probing),
-    .adc_running(pci_adc_running),
+    .adc_started(0),
+    .adc_probing(0),
+    .adc_running(0),
 
     .adc_start(adc_start),
     .adc_stop(adc_stop),
@@ -466,7 +459,7 @@ phys_bar adc_bar_inst (
     .wr_be(pci_bar1_wr_be),
     .wr(pci_bar1_wr),
 
-    .index(adc_phys_index),
+    .index(1),
     .phys(adc_phys),
     .valid(adc_phys_valid)
 );
@@ -494,17 +487,9 @@ adc_app adc_app_inst (
     .reset (pcie_user_reset),
     .clk (pcie_user_clk),
 
-    .spi_read(adc_spi_read),
-    .spi_write(adc_spi_write),
-    .spi_adr(adc_spi_adr),
-    .spi_in_data(adc_spi_in_data),
-    .spi_out_data(adc_spi_out_data),
-    .spi_running(adc_spi_running),
-    .spi_done(adc_spi_done),
-
-    .index(adc_phys_index),
+    .phys_index(adc_phys_index),
     .phys(adc_phys),
-    .valid(adc_phys_valid),
+    .phys_valid(adc_phys_valid),
 
     .start(adc_start),
     .stop(adc_stop),
@@ -578,10 +563,6 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      pci_adc_started <= rx_adc_started;
-      pci_adc_probing <= rx_adc_probing;
-      pci_adc_running <= rx_adc_running;
-
       pci_adc_sync_fail_cnt <= rx_sync_fail_cnt;
       pci_adc_sync_ok_cnt <= rx_sync_ok_cnt;
       pci_adc_sysref_cnt <= rx_sysref_cnt;
