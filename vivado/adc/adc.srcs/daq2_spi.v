@@ -1,8 +1,35 @@
+////////////////////////////////////////////////////////////////////////////////
+// RDOS operating system
+// Copyright (C) 1988-2020, Leif Ekblad
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version. The only exception to this rule
+// is for commercial usage in embedded systems. For information on
+// usage in commercial embedded systems, contact embedded@rdos.net
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// The author of this program may be contacted at leif@rdos.net
+//
+// daq2_spi.v
+// SPI interface for DAQ2
+//
+////////////////////////////////////////////////////////////////////////////////
+
 `timescale 1ns/100ps
 
 module daq2_spi (
   input                   reset,
-  input                   up_clk,
+  input                   clk,
 
   input                   spi_rq,
   input [31:0]            spi_rq_data,
@@ -59,7 +86,7 @@ module daq2_spi (
 
 
 spi_fifo_rq spi_fifo_rq_inst (
-  .clk(up_clk),                // input wire clk
+  .clk(clk),                   // input wire clk
   .rst(up_reset),              // input wire rst
   .din(spi_rq_data),           // input wire [31 : 0] din
   .wr_en(spi_rq),              // input wire wr_en
@@ -70,7 +97,7 @@ spi_fifo_rq spi_fifo_rq_inst (
 );
 
 spi_fifo_rp spi_fifo_rp_inst (
-  .clk(up_clk),                // input wire clk
+  .clk(clk),                   // input wire clk
   .rst(up_reset),              // input wire rst
   .din(spi_rp_data_in),        // input wire [29 : 0] din
   .wr_en(spi_rp_wr),           // input wire wr_en
@@ -88,7 +115,7 @@ spi_fifo_rp spi_fifo_rp_inst (
 
   assign spi_rp = !spi_rp_empty;
 
-  always @(posedge up_clk) 
+  always @(posedge clk) 
   begin
     if (spi_rq_empty && !adc_read && !adc_write)
     begin

@@ -1,3 +1,30 @@
+////////////////////////////////////////////////////////////////////////////////
+// RDOS operating system
+// Copyright (C) 1988-2020, Leif Ekblad
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version. The only exception to this rule
+// is for commercial usage in embedded systems. For information on
+// usage in commercial embedded systems, contact embedded@rdos.net
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// The author of this program may be contacted at leif@rdos.net
+//
+// daq2.v
+// DAQ2 main module
+//
+////////////////////////////////////////////////////////////////////////////////
+
 module daq2_app
 (
   input                   reset,
@@ -43,14 +70,6 @@ module daq2_app
 
   output reg              adc_wr,
   output reg [1023:0]     adc_data,
-
-  output reg              up_adc_spi_read,
-  output reg              up_adc_spi_write,
-  output reg [11:0]       up_adc_spi_adr,
-  input wire [7:0]        up_adc_spi_in_data,
-  output reg [7:0]        up_adc_spi_out_data,
-  input wire              up_adc_spi_running,
-  input wire              up_adc_spi_done
 );
 
  wire [15:0]              rx_phy_charisk;
@@ -489,8 +508,6 @@ generate
         pend_start <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
-        up_adc_spi_read <= 0;
-        up_adc_spi_write <= 0;
         up_wait_for_run <= 0;
       end
       else
@@ -525,13 +542,11 @@ generate
             begin
               if (adc_started)
               begin
-                if (up_adc_spi_done)
-                  spi_test_done <= 1;
+//                if (up_adc_spi_done)
+//                  spi_test_done <= 1;
 
                 if (spi_test_done)
                 begin
-                  up_adc_spi_write <= 0;
-
                   if (qpll_locked)
                     if (up_pll_rst_cnt[3] == 1'b1) 
                       up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
@@ -558,9 +573,9 @@ generate
               end
               else
               begin
-                up_adc_spi_adr <= 12'h550;
-                up_adc_spi_out_data <= 8'h37;
-                up_adc_spi_write <= 1;
+//                up_adc_spi_adr <= 12'h550;
+//                up_adc_spi_out_data <= 8'h37;
+//                up_adc_spi_write <= 1;
                 adc_started <= 1;
                 adc_probing <= 1;
                 curr_test_mode <= 7;
@@ -573,14 +588,11 @@ generate
                 if (adc_test_mode != curr_test_mode)
                 begin
                   curr_test_mode <= adc_test_mode;
-                  up_adc_spi_adr <= 12'h550;
-                  up_adc_spi_out_data <= adc_test_mode;
-                  up_adc_spi_write <= 1;
+//                  up_adc_spi_adr <= 12'h550;
+//                  up_adc_spi_out_data <= adc_test_mode;
+//                  up_adc_spi_write <= 1;
                   up_wait_for_run <= 1;
                 end
-
-                if (up_adc_spi_done)
-                  up_adc_spi_write <= 0;
               end
 
               if (up_run)

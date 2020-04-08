@@ -1,6 +1,33 @@
+////////////////////////////////////////////////////////////////////////////////
+// RDOS operating system
+// Copyright (C) 1988-2020, Leif Ekblad
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version. The only exception to this rule
+// is for commercial usage in embedded systems. For information on
+// usage in commercial embedded systems, contact embedded@rdos.net
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// The author of this program may be contacted at leif@rdos.net
+//
+// phys_bar.v
+// Physical address list bar (1 & 2)
+//
+////////////////////////////////////////////////////////////////////////////////
+
 module phys_bar (
-  input wire              up_reset,
-  input wire              up_clk,
+  input wire              reset,
+  input wire              clk,
 
   input wire [16:0]       rd_address,
   input wire              rd,
@@ -40,11 +67,11 @@ module phys_bar (
 
 
 bram_phys bram_phys_inst (
-  .clka(up_clk),      // input wire clka
+  .clka(clk),         // input wire clka
   .wea(q_wr),         // input wire [0 : 0] wea
   .addra(q_wr_adr),   // input wire [15 : 0] addra
   .dina(q_wr_data),   // input wire [19 : 0] dina
-  .clkb(up_clk),      // input wire clkb
+  .clkb(clk),         // input wire clkb
   .addrb(rd_adr),     // input wire [15 : 0] addrb
   .doutb(q_rd_data)   // output wire [19 : 0] doutb
 );
@@ -55,7 +82,7 @@ begin : phys_bar_gen
   assign rd_only_adr = rd ? rd_address[16:1] : index;
   assign rd_adr = wr ? wr_address[16:1] : rd_only_adr;
 
-  always @ ( posedge up_clk ) 
+  always @ ( posedge clk ) 
   begin
     if (q_rd)
     begin
@@ -75,9 +102,9 @@ begin : phys_bar_gen
       rp <= 0;
   end
 
-  always @ ( posedge up_clk ) 
+  always @ ( posedge clk ) 
   begin
-    if (up_reset)
+    if (reset)
     begin
       q_rd <= 0;
       q_wr <= 0;
@@ -150,9 +177,9 @@ begin : phys_bar_gen
     end
   end
 
-  always @ ( posedge up_clk ) 
+  always @ ( posedge clk ) 
   begin
-    if (up_reset)
+    if (reset)
     begin
       valid <= 0;
       phys[63:0] <= 0;

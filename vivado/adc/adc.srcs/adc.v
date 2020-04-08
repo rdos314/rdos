@@ -1,59 +1,29 @@
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// RDOS operating system
+// Copyright (C) 1988-2020, Leif Ekblad
 //
-// (c) Copyright 2010-2011 Xilinx, Inc. All rights reserved.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version. The only exception to this rule
+// is for commercial usage in embedded systems. For information on
+// usage in commercial embedded systems, contact embedded@rdos.net
 //
-// This file contains confidential and proprietary information
-// of Xilinx, Inc. and is protected under U.S. and
-// international copyright and other intellectual property
-// laws.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// DISCLAIMER
-// This disclaimer is not a license and does not grant any
-// rights to the materials distributed herewith. Except as
-// otherwise provided in a valid license issued to you by
-// Xilinx, and to the maximum extent permitted by applicable
-// law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
-// WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
-// AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
-// BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
-// INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
-// (2) Xilinx shall not be liable (whether in contract or tort,
-// including negligence, or under any other theory of
-// liability) for any loss or damage of any kind or nature
-// related to, arising under or in connection with these
-// materials, including for any direct, or any indirect,
-// special, incidental, or consequential loss or damage
-// (including loss of data, profits, goodwill, or any type of
-// loss or damage suffered as a result of any action brought
-// by a third party) even if such damage or loss was
-// reasonably foreseeable or Xilinx had been advised of the
-// possibility of the same.
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-// CRITICAL APPLICATIONS
-// Xilinx products are not designed or intended to be fail-
-// safe, or for use in any application requiring fail-safe
-// performance, such as life-support or safety devices or
-// systems, Class III medical devices, nuclear facilities,
-// applications related to the deployment of airbags, or any
-// other applications that could lead to death, personal
-// injury, or severe property or environmental damage
-// (individually and collectively, "Critical
-// Applications"). Customer assumes the sole risk and
-// liability of any use of Xilinx products in Critical
-// Applications, subject only to applicable laws and
-// regulations governing limitations on product liability.
+// The author of this program may be contacted at leif@rdos.net
 //
-// THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
-// PART OF THIS FILE AT ALL TIMES.
+// adc.v
+// Top-level DAQ2 module
 //
-//-----------------------------------------------------------------------------
-// Project    : Series-7 Integrated Block for PCI Express
-// File       : xilinx_pcie_2_1_ep_7x.v
-// Version    : 3.3
-//--
-//-- Description:  PCI Express Endpoint example FPGA design
-//--
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1ns / 1ps
 
@@ -191,9 +161,10 @@ module adc (
   wire                 pci_adc_start;
   wire                 pci_adc_stop;
 
-  wire                 adc_started;
-  wire                 adc_probing;
-  wire                 adc_running;
+  wire                 pci_adc_started;
+  wire                 pci_adc_probing;
+  wire                 pci_adc_running;
+
   wire                 adc_test_mode;
 
   wire [31:0]          rx_sync_fail_cnt;
@@ -358,26 +329,11 @@ daq2_app daq2_app_inst (
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
-    .adc_start(0),
-    .adc_stop(0),
-    .adc_started(adc_started),
-    .adc_probing(adc_probing),
-    .adc_running(adc_running),
-    .adc_test_mode(7),
-
     .adc_sync_fail_cnt(rx_sync_fail_cnt),
     .adc_sync_ok_cnt(rx_sync_ok_cnt),
   
     .adc_wr(rx_adc_wr),
-    .adc_data(rx_adc_data),
-    
-    .up_adc_spi_read(adc_spi_read),
-    .up_adc_spi_write(adc_spi_write),
-    .up_adc_spi_adr(adc_spi_adr),
-    .up_adc_spi_in_data(adc_spi_in_data),
-    .up_adc_spi_out_data(adc_spi_out_data),
-    .up_adc_spi_running(adc_spi_running),
-    .up_adc_spi_done(adc_spi_done)
+    .adc_data(rx_adc_data)
 );
 
 pci_app pci_app_inst (
@@ -437,7 +393,7 @@ daq2_spi daq2_spi_inst (
     .spi_dir (spi_dir),
 
     .reset (pcie_user_reset),
-    .up_clk (pcie_user_clk),
+    .clk (pcie_user_clk),
 
     .spi_rq (spi_rq),
     .spi_rq_data (spi_rq_data),
@@ -446,13 +402,18 @@ daq2_spi daq2_spi_inst (
     .spi_rp_data (spi_rp_data),
     .spi_rp_ack (spi_rp_ack),
 
-    .adc_read(0),
-    .adc_write(0)
+    .adc_read(adc_spi_read),
+    .adc_write(adc_spi_write),
+    .adc_adr(adc_spi_adr),
+    .adc_in_data(adc_spi_in_data),
+    .adc_out_data(adc_spi_out_data),
+    .adc_running(adc_spi_running),
+    .adc_done(adc_spi_done)
 );
 
 control_bar control_bar_inst (
-    .up_reset(pcie_user_reset),
-    .up_clk(pcie_user_clk),
+    .reset(pcie_user_reset),
+    .clk(pcie_user_clk),
 
     .rd_address(pci_bar0_rd_address),
     .rd(pci_bar0_rd),
@@ -476,9 +437,9 @@ control_bar control_bar_inst (
     .adc_sync_fail_cnt(pci_adc_sync_fail_cnt),
     .adc_sync_ok_cnt(pci_adc_sync_ok_cnt),
 
-    .adc_started(0),
-    .adc_probing(0),
-    .adc_running(0),
+    .adc_started(pci_adc_started),
+    .adc_probing(pci_adc_probing),
+    .adc_running(pci_adc_running),
 
     .adc_start(pci_adc_start),
     .adc_stop(pci_adc_stop),
@@ -489,8 +450,8 @@ control_bar control_bar_inst (
 
 
 phys_bar adc_bar_inst (
-    .up_clk(pcie_user_clk),
-    .up_reset(pcie_user_reset),
+    .clk(pcie_user_clk),
+    .reset(pcie_user_reset),
 
     .rd_address(pci_bar1_rd_address),
     .rd(pci_bar1_rd),
@@ -508,8 +469,8 @@ phys_bar adc_bar_inst (
 );
 
 phys_bar dac_bar_inst (
-    .up_clk(pcie_user_clk),
-    .up_reset(pcie_user_reset),
+    .clk(pcie_user_clk),
+    .reset(pcie_user_reset),
 
     .rd_address(pci_bar2_rd_address),
     .rd(pci_bar2_rd),
@@ -526,6 +487,18 @@ phys_bar dac_bar_inst (
     .valid(dac_valid)
 );
 
+adc_app adc_app_inst (
+    .reset (pcie_user_reset),
+    .clk (pcie_user_clk),
+
+    .adc_read(adc_spi_read),
+    .adc_write(adc_spi_write),
+    .adc_adr(adc_spi_adr),
+    .adc_in_data(adc_spi_in_data),
+    .adc_out_data(adc_spi_out_data),
+    .adc_running(adc_spi_running),
+    .adc_done(adc_spi_done)
+);
 
  //-----------------------------I/O BUFFERS------------------------//
 
@@ -538,6 +511,12 @@ phys_bar dac_bar_inst (
   OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
+
+  assign pci_adc_started = 0;
+  assign pci_adc_probing = 0;
+  assign pci_adc_running = 0;
+  assign adc_test_mode = 0;
+
 
 generate
   begin : adc
@@ -586,8 +565,20 @@ generate
         rx_cnt <= rx_cnt + 1;
     end
 
+
+    always @ ( posedge rx_clk ) 
+    begin
+      rx_adc_start <= pci_adc_start;
+      rx_adc_stop <= pci_adc_stop;
+    end
+
+
     always @ ( posedge user_clk ) 
     begin
+      pci_adc_started <= rx_adc_started;
+      pci_adc_probing <= rx_adc_probing;
+      pci_adc_running <= rx_adc_running;
+
       pci_adc_sync_fail_cnt <= rx_sync_fail_cnt;
       pci_adc_sync_ok_cnt <= rx_sync_ok_cnt;
       pci_adc_sysref_cnt <= rx_sysref_cnt;
