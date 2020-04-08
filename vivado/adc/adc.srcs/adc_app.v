@@ -29,17 +29,25 @@ module adc_app (
   input                   reset,
   input                   clk,
 
-  output wire             adc_read,
-  output wire             adc_write,
-  output reg [11:0]       adc_adr,
-  input wire [7:0]        adc_in_data,
-  output reg [7:0]        adc_out_data,
-  input wire              adc_running,
-  input wire              adc_done
+  output wire             spi_read,
+  output wire             spi_write,
+  output reg [11:0]       spi_adr,
+  input wire [7:0]        spi_in_data,
+  output reg [7:0]        spi_out_data,
+  input wire              spi_running,
+  input wire              spi_done,
+
+  output reg [16:0]       phys_index,
+  input wire [63:0]       phys,
+  input wire              phys_valid,
+
+  input wire              start,
+  input wire              stop,
+  input wire [7:0]        test_mode
 );
 
-  assign adc_spi_read = 0;
-  assign adc_spi_write = 0;
+  assign spi_read = 0;
+  assign spi_write = 0;
 
 
 generate

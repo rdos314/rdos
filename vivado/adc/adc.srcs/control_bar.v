@@ -73,21 +73,6 @@ module control_bar (
   reg [31:0]              bar_spi_adc;
   reg [31:0]              bar_spi_dac;
 
-  reg [2:0]               adc_start_cnt;
-  reg [2:0]               adc_stop_cnt;
-  reg                     pulse_adc_start;
-  reg                     pulse_adc_stop;  
-
-
-ila_1 ila_1_inst (
-	.clk(clk),                         // input wire clk
-	.probe0(pulse_adc_start),          // input wire [0:0]  probe0  
-	.probe1(pulse_adc_stop),           // input wire [0:0]  probe0  
-	.probe2(adc_start_cnt),            // input wire [2:0]  probe0  
-	.probe3(adc_stop_cnt),             // input wire [2:0]  probe0  
-	.probe4(adc_start),                // input wire [0:0]  probe0  
-	.probe5(adc_stop)                  // input wire [0:0]  probe0  
-); 
 
 generate
   begin : ctrl_bar_gen
@@ -98,8 +83,8 @@ generate
       begin
         state <= 0;
         adc_test_mode <= 7;
-        pulse_adc_start <= 0;
-        pulse_adc_stop <= 0;
+        adc_start <= 0;
+        adc_stop <= 0;
 
         bar_spi_clk <= 0;
         bar_spi_adc <= 0;
@@ -168,10 +153,10 @@ generate
                     if (wr_data[7])
                     begin
                       if (adc_address != 0)
-                        pulse_adc_start <= 1;
+                        adc_start <= 1;
                     end 
                     else
-                      pulse_adc_stop <= 1;
+                      adc_stop <= 1;
                   end      
                 end
 
@@ -217,8 +202,8 @@ generate
                 else
                   spi_clk_valid <= 0;
 
-                pulse_adc_start <= 0;
-                pulse_adc_stop <= 0;
+                adc_start <= 0;
+                adc_stop <= 0;
 
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
@@ -262,8 +247,8 @@ generate
                 else
                   spi_adc_valid <= 0;
 
-                pulse_adc_start <= 0;
-                pulse_adc_stop <= 0;
+                adc_start <= 0;
+                adc_stop <= 0;
 
                 spi_clk_valid <= 0;
                 spi_dac_valid <= 0;
@@ -307,8 +292,8 @@ generate
                 else
                   spi_dac_valid <= 0;
 
-                pulse_adc_start <= 0;
-                pulse_adc_stop <= 0;
+                adc_start <= 0;
+                adc_stop <= 0;
 
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
@@ -316,8 +301,8 @@ generate
             
               default:
               begin
-                pulse_adc_start <= 0;
-                pulse_adc_stop <= 0;
+                adc_start <= 0;
+                adc_stop <= 0;
 
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
@@ -327,8 +312,8 @@ generate
           end
           else
           begin
-            pulse_adc_start <= 0;
-            pulse_adc_stop <= 0;
+            adc_start <= 0;
+            adc_stop <= 0;
 
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
@@ -491,54 +476,6 @@ generate
           end
           else
             spi_rq <= 0;
-        end
-      end
-    end
-
-    always @ ( posedge clk ) 
-    begin
-      if (reset)
-        adc_start <= 0;
-      else
-      begin
-        if (pulse_adc_start)
-        begin
-          adc_start_cnt <= 3'b111;
-          adc_start <= 1;
-        end
-        else
-        begin
-          if (adc_start)
-          begin
-            if (adc_start_cnt)
-              adc_start_cnt <= adc_start_cnt - 1;
-            else
-              adc_start <= 0;
-          end
-        end
-      end
-    end
-
-    always @ ( posedge clk ) 
-    begin
-      if (reset)
-        adc_stop <= 0;
-      else
-      begin
-        if (pulse_adc_stop)
-        begin
-          adc_stop_cnt <= 3'b111;
-          adc_stop <= 1;
-        end
-        else
-        begin
-          if (adc_stop)
-          begin
-            if (adc_stop_cnt)
-              adc_stop_cnt <= adc_stop_cnt - 1;
-            else
-              adc_stop <= 0;
-          end
         end
       end
     end

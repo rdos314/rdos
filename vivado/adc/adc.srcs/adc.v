@@ -158,14 +158,17 @@ module adc (
 
 // ADC
 
-  wire                 pci_adc_start;
-  wire                 pci_adc_stop;
+  wire [16:0]          adc_phys_index;
+  wire [63:0]          adc_phys;
+  wire                 adc_phys_valid
+
+  wire                 adc_start;
+  wire                 adc_stop;
+  wire [7:0]           adc_test_mode;
 
   wire                 pci_adc_started;
   wire                 pci_adc_probing;
   wire                 pci_adc_running;
-
-  wire                 adc_test_mode;
 
   wire [31:0]          rx_sync_fail_cnt;
   wire [31:0]          rx_sync_ok_cnt;
@@ -441,8 +444,8 @@ control_bar control_bar_inst (
     .adc_probing(pci_adc_probing),
     .adc_running(pci_adc_running),
 
-    .adc_start(pci_adc_start),
-    .adc_stop(pci_adc_stop),
+    .adc_start(adc_start),
+    .adc_stop(adc_stop),
     .adc_test_mode(adc_test_mode),
 
     .state(bar_control)
@@ -463,9 +466,9 @@ phys_bar adc_bar_inst (
     .wr_be(pci_bar1_wr_be),
     .wr(pci_bar1_wr),
 
-    .index(1),
+    .index(adc_phys_index),
     .phys(adc_phys),
-    .valid(adc_valid)
+    .valid(adc_phys_valid)
 );
 
 phys_bar dac_bar_inst (
@@ -491,13 +494,21 @@ adc_app adc_app_inst (
     .reset (pcie_user_reset),
     .clk (pcie_user_clk),
 
-    .adc_read(adc_spi_read),
-    .adc_write(adc_spi_write),
-    .adc_adr(adc_spi_adr),
-    .adc_in_data(adc_spi_in_data),
-    .adc_out_data(adc_spi_out_data),
-    .adc_running(adc_spi_running),
-    .adc_done(adc_spi_done)
+    .spi_read(adc_spi_read),
+    .spi_write(adc_spi_write),
+    .spi_adr(adc_spi_adr),
+    .spi_in_data(adc_spi_in_data),
+    .spi_out_data(adc_spi_out_data),
+    .spi_running(adc_spi_running),
+    .spi_done(adc_spi_done),
+
+    .index(adc_phys_index),
+    .phys(adc_phys),
+    .valid(adc_phys_valid),
+
+    .start(adc_start),
+    .stop(adc_stop),
+    .test_mode(adc_test_mode)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -515,7 +526,6 @@ adc_app adc_app_inst (
   assign pci_adc_started = 0;
   assign pci_adc_probing = 0;
   assign pci_adc_running = 0;
-  assign adc_test_mode = 0;
 
 
 generate
@@ -563,13 +573,6 @@ generate
       end
       else
         rx_cnt <= rx_cnt + 1;
-    end
-
-
-    always @ ( posedge rx_clk ) 
-    begin
-      rx_adc_start <= pci_adc_start;
-      rx_adc_stop <= pci_adc_stop;
     end
 
 
