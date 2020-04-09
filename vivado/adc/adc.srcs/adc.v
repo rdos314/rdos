@@ -244,13 +244,13 @@ module adc (
 // clock domain crossings
 
 
- (* ASYNC_REG=TRUE *)  reg [31:0]           adc_sync_fail_cnt_1;
- (* ASYNC_REG=TRUE *)  reg [31:0]           adc_sync_ok_cnt_1;
- (* ASYNC_REG=TRUE *)  reg [63:0]           adc_sysref_cnt_1;
+ (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_fail_cnt_1;
+ (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_ok_cnt_1;
+ (* ASYNC_REG="TRUE" *)  reg [63:0]           adc_sysref_cnt_1;
 
- (* ASYNC_REG=TRUE *)  reg [31:0]           pci_adc_sync_fail_cnt;
- (* ASYNC_REG=TRUE *)  reg [31:0]           pci_adc_sync_ok_cnt;
- (* ASYNC_REG=TRUE *)  reg [63:0]           pci_adc_sysref_cnt;
+ (* ASYNC_REG="TRUE" *)  reg [31:0]           pci_adc_sync_fail_cnt;
+ (* ASYNC_REG="TRUE" *)  reg [31:0]           pci_adc_sync_ok_cnt;
+ (* ASYNC_REG="TRUE" *)  reg [63:0]           pci_adc_sysref_cnt;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
