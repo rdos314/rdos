@@ -166,8 +166,8 @@ module adc (
   wire                 adc_stop;
   wire [7:0]           adc_test_mode;
 
-  wire                 pci_req_start;
-  wire                 pci_ack_start;
+  wire                 pci_adc_req_start;
+  wire                 rx_adc_ack_start;
 
   wire                 adc_started;
   wire                 adc_probing;
@@ -243,14 +243,21 @@ module adc (
 
 // clock domain crossings
 
-
  (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_fail_cnt_1;
- (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_ok_cnt_1;
- (* ASYNC_REG="TRUE" *)  reg [63:0]           adc_sysref_cnt_1;
-
  (* ASYNC_REG="TRUE" *)  reg [31:0]           pci_adc_sync_fail_cnt;
+
+ (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_ok_cnt_1;
  (* ASYNC_REG="TRUE" *)  reg [31:0]           pci_adc_sync_ok_cnt;
+
+ (* ASYNC_REG="TRUE" *)  reg [63:0]           adc_sysref_cnt_1;
  (* ASYNC_REG="TRUE" *)  reg [63:0]           pci_adc_sysref_cnt;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_req_start_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_adc_req_start;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_ack_start_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_ack_start;
+
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -340,6 +347,9 @@ daq2_app daq2_app_inst (
     .dac_txen(dac_txen),
     .dac_reset(dac_reset),
     .clkd_sync(clkd_sync),
+
+    .adc_req_start(rx_adc_req_start),
+    .adc_ack_start(rx_adc_ack_start),
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
@@ -504,8 +514,8 @@ adc_app adc_app_inst (
     .start(adc_start),
     .stop(adc_stop),
 
-    .req_start(pci_req_start),
-    .ack_start(pci_ack_start),
+    .req_start(pci_adc_req_start),
+    .ack_start(pci_adc_ack_start),
 
     .started(adc_started),
     .probing(adc_probing),
@@ -523,8 +533,6 @@ adc_app adc_app_inst (
   OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
   OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
   OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
-
-  assign pci_ack_start = pci_req_start;
 
 generate
   begin : adc
@@ -592,6 +600,17 @@ generate
       pci_adc_sysref_cnt <= adc_sysref_cnt_1;
     end
 
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_req_start_1 <= pci_adc_req_start;
+      rx_adc_req_start <= adc_req_start_1;
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      adc_ack_start_1 <= rx_adc_ack_start;
+      pci_adc_ack_start <= adc_ack_start_1;
+    end
 
   end
 

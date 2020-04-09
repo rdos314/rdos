@@ -59,6 +59,9 @@ module daq2_app
 
   output reg  [63:0]      rx_sysref_cnt,
 
+  input wire              adc_req_start,
+  output wire             adc_ack_start,
+
   input                   adc_start,
   input                   adc_stop,
   output reg              adc_started,
@@ -488,6 +491,8 @@ endfunction
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
   assign up_rx_rst = up_rx_rst_cnt[3];
   assign up_rx_user_ready = up_rx_user_ready_cnt[6];
+
+  assign adc_ack_start = adc_req_start;
 
 generate
   begin : daq2_app
