@@ -65,13 +65,15 @@ ila_1 ila_1_inst (
 	.clk(clk),                // input wire clk
 	.probe0(start),           // input wire [0:0]  probe0  
 	.probe1(stop),            // input wire [0:0]  probe0  
-	.probe2(int_req_start),   // input wire [0:0]  probe0  
-	.probe3(start_cnt),       // input wire [2:0]  probe0  
-	.probe4(int_ack_start),   // input wire [0:0]  probe0  
-	.probe5(curr_ack_start),  // input wire [0:0]  probe0  
-	.probe6(started),         // input wire [0:0]  probe0  
-	.probe7(probing),         // input wire [0:0]  probe0  
-	.probe8(running)          // input wire [0:0]  probe0  
+	.probe2(req_start),       // input wire [0:0]  probe0  
+	.probe3(ack_start),       // input wire [0:0]  probe0  
+	.probe4(int_req_start),   // input wire [0:0]  probe0  
+	.probe5(start_cnt),       // input wire [2:0]  probe0  
+	.probe6(int_ack_start),   // input wire [0:0]  probe0  
+	.probe7(curr_ack_start),  // input wire [0:0]  probe0  
+	.probe8(started),         // input wire [0:0]  probe0  
+	.probe9(probing),         // input wire [0:0]  probe0  
+	.probe10(running)          // input wire [0:0]  probe0  
 );
 
 
