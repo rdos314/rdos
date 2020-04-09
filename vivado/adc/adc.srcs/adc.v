@@ -176,10 +176,6 @@ module adc (
   wire [31:0]          rx_sync_fail_cnt;
   wire [31:0]          rx_sync_ok_cnt;
   wire [63:0]          rx_sysref_cnt;
-
-  reg [31:0]           pci_adc_sync_fail_cnt;
-  reg [31:0]           pci_adc_sync_ok_cnt;
-  reg [63:0]           pci_adc_sysref_cnt;
   
   wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
@@ -243,6 +239,18 @@ module adc (
   reg                  user_led;
   reg                  pcie_led;
   reg                  rx_led;
+
+
+// clock domain crossings
+
+
+ (* ASYNC_REG=TRUE *)  reg [31:0]           adc_sync_fail_cnt_1;
+ (* ASYNC_REG=TRUE *)  reg [31:0]           adc_sync_ok_cnt_1;
+ (* ASYNC_REG=TRUE *)  reg [63:0]           adc_sysref_cnt_1;
+
+ (* ASYNC_REG=TRUE *)  reg [31:0]           pci_adc_sync_fail_cnt;
+ (* ASYNC_REG=TRUE *)  reg [31:0]           pci_adc_sync_ok_cnt;
+ (* ASYNC_REG=TRUE *)  reg [63:0]           pci_adc_sysref_cnt;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -568,9 +576,20 @@ generate
 
     always @ ( posedge user_clk ) 
     begin
-      pci_adc_sync_fail_cnt <= rx_sync_fail_cnt;
-      pci_adc_sync_ok_cnt <= rx_sync_ok_cnt;
-      pci_adc_sysref_cnt <= rx_sysref_cnt;
+      adc_sync_fail_cnt_1 <= rx_sync_fail_cnt;
+      pci_adc_sync_fail_cnt <=  adc_sync_fail_cnt_1;
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      adc_sync_ok_cnt_1 <= rx_sync_ok_cnt;
+      pci_adc_sync_ok_cnt <= adc_sync_ok_cnt_1;
+    end
+
+    always @ ( posedge user_clk ) 
+    begin
+      adc_sysref_cnt_1 <= rx_sysref_cnt;
+      pci_adc_sysref_cnt <= adc_sysref_cnt_1;
     end
 
 
