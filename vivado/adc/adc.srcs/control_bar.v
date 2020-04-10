@@ -51,15 +51,9 @@ module control_bar (
   input [31:0]            adc_sync_fail_cnt,
   input [31:0]            adc_sync_ok_cnt,
 
-  input                   adc_started,
-  input                   adc_probing,
-  input                   adc_running,
-
-  output reg              adc_start,
-  output reg              adc_stop,
-  output reg [7:0]        adc_test_mode,
-
-  output reg [7:0]        state
+  output reg              tx_control_msg,
+  output reg [7:0]        tx_control_index,
+  output reg [7:0]        tx_control_data
 );
 
 // internal
@@ -72,8 +66,27 @@ module control_bar (
   reg [31:0]              bar_spi_adc;
   reg [31:0]              bar_spi_dac;
 
-  reg                     int_adc_start;
-  reg                     int_adc_stop;  
+  reg                     req_send_adc_state;
+  reg                     ack_send_adc_state;
+  reg [7:0]               adc_state;
+
+  reg                     req_send_adc_test_mode;
+  reg                     ack_send_adc_test_mode;
+  reg [7:0]               adc_test_mode;
+
+
+ila_1 ila_1_inst (
+	.clk(clk),                       // input wire clk
+	.probe0(req_send_adc_state),     // input wire [0:0]  probe0  
+	.probe1(ack_send_adc_state),     // input wire [0:0]  probe0  
+	.probe2(adc_state),              // input wire [7:0]  probe0  
+	.probe3(req_send_adc_test_mode), // input wire [0:0]  probe0  
+	.probe4(ack_send_adc_test_mode), // input wire [0:0]  probe0  
+	.probe5(adc_test_mode),          // input wire [7:0]  probe0  
+	.probe6(tx_control_msg),         // input wire [0:0]  probe0  
+	.probe7(tx_control_index),       // input wire [7:0]  probe0  
+	.probe8(tx_control_data)         // input wire [7:0]  probe0  
+);
 
 generate
   begin : ctrl_bar_gen
@@ -82,10 +95,10 @@ generate
     begin
       if (reset)
       begin
-        state <= 0;
+        adc_state <= 0;
         adc_test_mode <= 7;
-        int_adc_start <= 0;
-        int_adc_stop <= 0;
+        req_send_adc_state <= 0;
+        req_send_adc_test_mode <= 0;
 
         bar_spi_clk <= 0;
         bar_spi_adc <= 0;
@@ -99,33 +112,13 @@ generate
       end
       else
       begin
-        if (adc_started)
-        begin
-          if (adc_probing)
-          begin
-            state[7] <= 1;
-
-            if (adc_running)
-              state[6] <= 1;
-            else
-              state[6] <= 0;
-          end
-          else
-          begin
-            state[6] <= 1;
-            state[7] <= 0;
-          end
-        end
-        else
-        begin
-          state[6] <= 0;
-          state[7] <= 0;
-        end
+        adc_state[6] <= 0;
+        adc_state[7] <= 0;
 
         if (rd)
         begin
           case (rd_address)
-            0: rp_data <= {16'h0, adc_test_mode, state};
+            0: rp_data <= {16'h0, adc_test_mode, adc_state};
             1: rp_data <= bar_spi_clk;
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
@@ -148,18 +141,17 @@ generate
               begin
                 if (wr_be[0])
                 begin
-                  state[5:0] <= wr_data[5:0];
-                  if (state[7] != wr_data[7])
-                  begin
-                    if (wr_data[7])
-                      int_adc_start <= 1;
-                    else
-                      int_adc_stop <= 1;
-                  end      
+                  adc_state[5:0] <= wr_data[5:0];
+                  if (adc_state[7] != wr_data[7])
+                    req_send_adc_state <= 1;
                 end
 
                 if (wr_be[1])
+                begin
                   adc_test_mode[7:0] <= wr_data[15:8]; 
+                  if (adc_test_mode[7:0] != wr_data[15:8])
+                    req_send_adc_test_mode <= 1;
+                end
               end
             
               1:
@@ -199,9 +191,6 @@ generate
                 end
                 else
                   spi_clk_valid <= 0;
-
-                int_adc_start <= 0;
-                int_adc_stop <= 0;
 
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
@@ -245,9 +234,6 @@ generate
                 else
                   spi_adc_valid <= 0;
 
-                int_adc_start <= 0;
-                int_adc_stop <= 0;
-
                 spi_clk_valid <= 0;
                 spi_dac_valid <= 0;
               end
@@ -290,18 +276,12 @@ generate
                 else
                   spi_dac_valid <= 0;
 
-                int_adc_start <= 0;
-                int_adc_stop <= 0;
-
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
               end
             
               default:
               begin
-                int_adc_start <= 0;
-                int_adc_stop <= 0;
-
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
@@ -310,8 +290,11 @@ generate
           end
           else
           begin
-            int_adc_start <= 0;
-            int_adc_stop <= 0;
+            if (ack_send_adc_state)
+              req_send_adc_state <= 0;
+          
+            if (ack_send_adc_test_mode)
+              req_send_adc_test_mode <= 0;
 
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
@@ -480,8 +463,50 @@ generate
 
     always @ ( posedge clk ) 
     begin
-      adc_start <= int_adc_start;
-      adc_stop <= int_adc_stop;
+      if (reset)
+      begin
+        tx_control_msg <= 0;
+        ack_send_adc_state <= 0;
+        ack_send_adc_test_mode <= 0;
+      end
+      else
+      begin
+        if (req_send_adc_state)
+        begin
+          if (ack_send_adc_state)
+          begin
+            ack_send_adc_state <= 0;
+            tx_control_msg <= 0;
+          end
+          else
+          begin
+            tx_control_index <= 0;
+            tx_control_data <= adc_state;
+            tx_control_msg <= 1;
+            ack_send_adc_state <= 1;
+          end
+        end
+        else
+        begin
+          if (req_send_adc_test_mode)
+          begin
+            if (ack_send_adc_test_mode)
+            begin
+              ack_send_adc_test_mode <= 0;
+              tx_control_msg <= 0;
+            end
+            else
+            begin
+              tx_control_index <= 1;
+              tx_control_data <= adc_test_mode;
+              tx_control_msg <= 1;
+              ack_send_adc_test_mode <= 1;
+            end
+          end            
+          else
+            tx_control_msg <= 0;
+        end
+      end
     end
 
   end

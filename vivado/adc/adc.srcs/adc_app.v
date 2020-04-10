@@ -37,126 +37,18 @@ module adc_app (
   input wire              spi_running,
   input wire              spi_done,
 
-  output reg [16:0]       phys_index,
-  input wire [63:0]       phys,
-  input wire              phys_valid,
-
-  input wire              start,
-  input wire              stop,
-
-  output reg              req_start,
-  input wire              ack_start,
-
-  output reg              started,
-  output reg              probing,
-  output reg              running
+  input wire              rx_control_msg,
+  input wire [7:0]        rx_control_index,
+  input wire [7:0]        rx_control_data
 );
-
-  reg                     int_req_start;
-  reg                     int_ack_start;
-  reg [2:0]               start_cnt;
-  reg                     curr_ack_start;
 
   assign spi_read = 0;
   assign spi_write = 0;
 
 
-ila_1 ila_1_inst (
-	.clk(clk),                // input wire clk
-	.probe0(start),           // input wire [0:0]  probe0  
-	.probe1(stop),            // input wire [0:0]  probe0  
-	.probe2(req_start),       // input wire [0:0]  probe0  
-	.probe3(ack_start),       // input wire [0:0]  probe0  
-	.probe4(int_req_start),   // input wire [0:0]  probe0  
-	.probe5(start_cnt),       // input wire [2:0]  probe0  
-	.probe6(int_ack_start),   // input wire [0:0]  probe0  
-	.probe7(curr_ack_start),  // input wire [0:0]  probe0  
-	.probe8(started),         // input wire [0:0]  probe0  
-	.probe9(probing),         // input wire [0:0]  probe0  
-	.probe10(running)          // input wire [0:0]  probe0  
-);
-
-
 generate
 begin : adc_app
 
-    always @(posedge clk) 
-    begin
-      if (reset)
-      begin
-        started <= 0;
-        running <= 0;
-        int_req_start <= 0;
-      end
-      else
-      begin
-        if (start)
-          int_req_start <= 1;
-        else
-        begin
-          int_req_start <= 0;
-          if (int_ack_start)
-            started <= 1;
-          else
-          begin
-            if (stop)
-            begin
-              started <= 0;
-              probing <= 0;
-              running <= 0;
-            end
-            else
-            begin
-              if (started)
-              begin
-                probing <= 1;
-                if (probing)
-                  running <= 1;
-              end
-            end
-          end
-        end
-      end
-    end
-
-    always @(posedge clk) 
-    begin
-      if (int_req_start)
-      begin
-        req_start <= 1;
-        start_cnt <= 3'b111;
-      end
-      else
-      begin
-        if (req_start)
-        begin
-          if (start_cnt)
-            start_cnt <= start_cnt - 1;
-          else
-            req_start <= 0;
-        end
-      end
-    end
-
-    always @(posedge clk) 
-    begin
-      if (reset)
-      begin
-        curr_ack_start <= 0;
-        int_ack_start <= 0;
-      end
-      else
-      begin
-        if (curr_ack_start == ack_start)
-          int_ack_start <= 0;
-        else
-        begin
-          curr_ack_start <= ack_start;
-          if (ack_start)
-            int_ack_start <= 1;
-        end
-      end
-    end
 
 end
 endgenerate

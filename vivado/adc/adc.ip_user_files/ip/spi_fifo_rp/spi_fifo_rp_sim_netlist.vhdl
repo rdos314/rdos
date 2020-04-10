@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Wed Apr  1 22:57:28 2020
+-- Date        : Fri Apr 10 11:05:55 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adc/adc.runs/spi_fifo_rp_synth_1/spi_fifo_rp_sim_netlist.vhdl
@@ -16,24 +16,28 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_builtin_prim_v6 is
   port (
+    empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 29 downto 0 );
-    empty : out STD_LOGIC;
-    clk : in STD_LOGIC;
-    rd_rst_i : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
+    RST : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
     wr_en : in STD_LOGIC;
-    din : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    rd_en : in STD_LOGIC
+    din : in STD_LOGIC_VECTOR ( 29 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_builtin_prim_v6 : entity is "builtin_prim_v6";
 end spi_fifo_rp_builtin_prim_v6;
 
 architecture STRUCTURE of spi_fifo_rp_builtin_prim_v6 is
+  signal DO : STD_LOGIC_VECTOR ( 63 downto 32 );
+  signal DOP : STD_LOGIC_VECTOR ( 7 downto 4 );
+  signal RDCOUNT : STD_LOGIC_VECTOR ( 12 downto 10 );
+  signal WRCOUNT : STD_LOGIC_VECTOR ( 12 downto 10 );
   signal dbiterr_i : STD_LOGIC;
-  signal \^empty\ : STD_LOGIC;
-  signal empty_fifo : STD_LOGIC;
-  signal empty_q : STD_LOGIC;
+  signal \gf36e1_inst.sngfifo36e1_n_0\ : STD_LOGIC;
+  signal \gf36e1_inst.sngfifo36e1_n_1\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_102\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_103\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_104\ : STD_LOGIC;
@@ -61,35 +65,23 @@ architecture STRUCTURE of spi_fifo_rp_builtin_prim_v6 is
   signal \gf36e1_inst.sngfifo36e1_n_5\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_66\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_67\ : STD_LOGIC;
-  signal \gsfl.empty_user_i_1_n_0\ : STD_LOGIC;
   signal overflow_i : STD_LOGIC;
-  signal prog_empty_fifo : STD_LOGIC;
-  signal prog_full_fifo : STD_LOGIC;
-  signal \rden_fifo__0\ : STD_LOGIC;
   signal sbiterr_i : STD_LOGIC;
-  signal \NLW_gf36e1_inst.sngfifo36e1_DO_UNCONNECTED\ : STD_LOGIC_VECTOR ( 63 downto 32 );
-  signal \NLW_gf36e1_inst.sngfifo36e1_DOP_UNCONNECTED\ : STD_LOGIC_VECTOR ( 7 downto 4 );
   signal \NLW_gf36e1_inst.sngfifo36e1_ECCPARITY_UNCONNECTED\ : STD_LOGIC_VECTOR ( 7 downto 0 );
-  signal \NLW_gf36e1_inst.sngfifo36e1_RDCOUNT_UNCONNECTED\ : STD_LOGIC_VECTOR ( 12 downto 10 );
-  signal \NLW_gf36e1_inst.sngfifo36e1_WRCOUNT_UNCONNECTED\ : STD_LOGIC_VECTOR ( 12 downto 10 );
   attribute box_type : string;
   attribute box_type of \gf36e1_inst.sngfifo36e1\ : label is "PRIMITIVE";
-  attribute SOFT_HLUTNM : string;
-  attribute SOFT_HLUTNM of \gsfl.empty_user_i_1\ : label is "soft_lutpair0";
-  attribute SOFT_HLUTNM of rden_fifo : label is "soft_lutpair0";
 begin
-  empty <= \^empty\;
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
-      ALMOST_EMPTY_OFFSET => X"0003",
-      ALMOST_FULL_OFFSET => X"0002",
+      ALMOST_EMPTY_OFFSET => X"0006",
+      ALMOST_FULL_OFFSET => X"000A",
       DATA_WIDTH => 36,
-      DO_REG => 0,
+      DO_REG => 1,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
-      EN_SYN => true,
+      EN_SYN => false,
       FIFO_MODE => "FIFO36",
-      FIRST_WORD_FALL_THROUGH => false,
+      FIRST_WORD_FALL_THROUGH => true,
       INIT => X"000000000000000000",
       IS_RDCLK_INVERTED => '0',
       IS_RDEN_INVERTED => '0',
@@ -101,28 +93,28 @@ begin
       SRVAL => X"000000000000000000"
     )
         port map (
-      ALMOSTEMPTY => prog_empty_fifo,
-      ALMOSTFULL => prog_full_fifo,
+      ALMOSTEMPTY => \gf36e1_inst.sngfifo36e1_n_0\,
+      ALMOSTFULL => \gf36e1_inst.sngfifo36e1_n_1\,
       DBITERR => dbiterr_i,
       DI(63 downto 30) => B"0000000000000000000000000000000000",
       DI(29 downto 0) => din(29 downto 0),
       DIP(7 downto 0) => B"00000000",
-      DO(63 downto 32) => \NLW_gf36e1_inst.sngfifo36e1_DO_UNCONNECTED\(63 downto 32),
+      DO(63 downto 32) => DO(63 downto 32),
       DO(31) => \gf36e1_inst.sngfifo36e1_n_66\,
       DO(30) => \gf36e1_inst.sngfifo36e1_n_67\,
       DO(29 downto 0) => dout(29 downto 0),
-      DOP(7 downto 4) => \NLW_gf36e1_inst.sngfifo36e1_DOP_UNCONNECTED\(7 downto 4),
+      DOP(7 downto 4) => DOP(7 downto 4),
       DOP(3) => \gf36e1_inst.sngfifo36e1_n_102\,
       DOP(2) => \gf36e1_inst.sngfifo36e1_n_103\,
       DOP(1) => \gf36e1_inst.sngfifo36e1_n_104\,
       DOP(0) => \gf36e1_inst.sngfifo36e1_n_105\,
       ECCPARITY(7 downto 0) => \NLW_gf36e1_inst.sngfifo36e1_ECCPARITY_UNCONNECTED\(7 downto 0),
-      EMPTY => empty_fifo,
+      EMPTY => empty,
       FULL => full,
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
-      RDCLK => clk,
-      RDCOUNT(12 downto 10) => \NLW_gf36e1_inst.sngfifo36e1_RDCOUNT_UNCONNECTED\(12 downto 10),
+      RDCLK => rd_clk,
+      RDCOUNT(12 downto 10) => RDCOUNT(12 downto 10),
       RDCOUNT(9) => \gf36e1_inst.sngfifo36e1_n_11\,
       RDCOUNT(8) => \gf36e1_inst.sngfifo36e1_n_12\,
       RDCOUNT(7) => \gf36e1_inst.sngfifo36e1_n_13\,
@@ -133,14 +125,14 @@ begin
       RDCOUNT(2) => \gf36e1_inst.sngfifo36e1_n_18\,
       RDCOUNT(1) => \gf36e1_inst.sngfifo36e1_n_19\,
       RDCOUNT(0) => \gf36e1_inst.sngfifo36e1_n_20\,
-      RDEN => \rden_fifo__0\,
+      RDEN => rd_en,
       RDERR => \gf36e1_inst.sngfifo36e1_n_5\,
       REGCE => '0',
-      RST => rd_rst_i,
+      RST => RST,
       RSTREG => '0',
       SBITERR => sbiterr_i,
-      WRCLK => clk,
-      WRCOUNT(12 downto 10) => \NLW_gf36e1_inst.sngfifo36e1_WRCOUNT_UNCONNECTED\(12 downto 10),
+      WRCLK => wr_clk,
+      WRCOUNT(12 downto 10) => WRCOUNT(12 downto 10),
       WRCOUNT(9) => \gf36e1_inst.sngfifo36e1_n_24\,
       WRCOUNT(8) => \gf36e1_inst.sngfifo36e1_n_25\,
       WRCOUNT(7) => \gf36e1_inst.sngfifo36e1_n_26\,
@@ -154,50 +146,6 @@ begin
       WREN => wr_en,
       WRERR => overflow_i
     );
-\gsfl.empty_q_reg\: unisim.vcomponents.FDPE
-    generic map(
-      INIT => '1'
-    )
-        port map (
-      C => clk,
-      CE => '1',
-      D => empty_fifo,
-      PRE => rd_rst_i,
-      Q => empty_q
-    );
-\gsfl.empty_user_i_1\: unisim.vcomponents.LUT4
-    generic map(
-      INIT => X"ABA0"
-    )
-        port map (
-      I0 => empty_fifo,
-      I1 => empty_q,
-      I2 => rd_en,
-      I3 => \^empty\,
-      O => \gsfl.empty_user_i_1_n_0\
-    );
-\gsfl.empty_user_reg\: unisim.vcomponents.FDPE
-    generic map(
-      INIT => '1'
-    )
-        port map (
-      C => clk,
-      CE => '1',
-      D => \gsfl.empty_user_i_1_n_0\,
-      PRE => rd_rst_i,
-      Q => \^empty\
-    );
-rden_fifo: unisim.vcomponents.LUT4
-    generic map(
-      INIT => X"AAEA"
-    )
-        port map (
-      I0 => rd_en,
-      I1 => \^empty\,
-      I2 => empty_q,
-      I3 => empty_fifo,
-      O => \rden_fifo__0\
-    );
 end STRUCTURE;
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -205,9 +153,10 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_reset_builtin is
   port (
-    rd_rst_i : out STD_LOGIC;
-    clk : in STD_LOGIC;
-    rst : in STD_LOGIC
+    RST : out STD_LOGIC;
+    wr_clk : in STD_LOGIC;
+    \^rst\ : in STD_LOGIC;
+    rd_clk : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_reset_builtin : entity is "reset_builtin";
@@ -228,9 +177,9 @@ architecture STRUCTURE of spi_fifo_rp_reset_builtin is
   signal rd_rst_reg2 : STD_LOGIC;
   attribute async_reg of rd_rst_reg2 : signal is "true";
   attribute msgon of rd_rst_reg2 : signal is "true";
-  signal \rsync.rcc.wr_rst_fb_reg[1]_srl4_n_0\ : STD_LOGIC;
-  signal \rsync.rcc.wr_rst_fb_reg_n_0_[0]\ : STD_LOGIC;
-  signal \rsync.rcc.wr_rst_reg_i_1_n_0\ : STD_LOGIC;
+  signal \rsync.ric.wr_rst_fb_reg[1]_srl4_n_0\ : STD_LOGIC;
+  signal \rsync.ric.wr_rst_fb_reg_n_0_[0]\ : STD_LOGIC;
+  signal \rsync.ric.wr_rst_reg_i_1_n_0\ : STD_LOGIC;
   signal wr_rst_reg : STD_LOGIC;
   signal wr_rst_reg1 : STD_LOGIC;
   attribute async_reg of wr_rst_reg1 : signal is "true";
@@ -239,35 +188,59 @@ architecture STRUCTURE of spi_fifo_rp_reset_builtin is
   attribute async_reg of wr_rst_reg2 : signal is "true";
   attribute msgon of wr_rst_reg2 : signal is "true";
   attribute ASYNC_REG_boolean : boolean;
-  attribute ASYNC_REG_boolean of \rsync.rcc.power_on_wr_rst_reg[0]\ : label is std.standard.true;
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_rd_rst_reg[0]\ : label is std.standard.true;
   attribute KEEP : string;
-  attribute KEEP of \rsync.rcc.power_on_wr_rst_reg[0]\ : label is "yes";
-  attribute msgon of \rsync.rcc.power_on_wr_rst_reg[0]\ : label is "true";
-  attribute ASYNC_REG_boolean of \rsync.rcc.power_on_wr_rst_reg[1]\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.power_on_wr_rst_reg[1]\ : label is "yes";
-  attribute msgon of \rsync.rcc.power_on_wr_rst_reg[1]\ : label is "true";
-  attribute ASYNC_REG_boolean of \rsync.rcc.power_on_wr_rst_reg[2]\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.power_on_wr_rst_reg[2]\ : label is "yes";
-  attribute msgon of \rsync.rcc.power_on_wr_rst_reg[2]\ : label is "true";
-  attribute ASYNC_REG_boolean of \rsync.rcc.power_on_wr_rst_reg[3]\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.power_on_wr_rst_reg[3]\ : label is "yes";
-  attribute msgon of \rsync.rcc.power_on_wr_rst_reg[3]\ : label is "true";
-  attribute ASYNC_REG_boolean of \rsync.rcc.power_on_wr_rst_reg[4]\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.power_on_wr_rst_reg[4]\ : label is "yes";
-  attribute msgon of \rsync.rcc.power_on_wr_rst_reg[4]\ : label is "true";
-  attribute ASYNC_REG_boolean of \rsync.rcc.power_on_wr_rst_reg[5]\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.power_on_wr_rst_reg[5]\ : label is "yes";
-  attribute msgon of \rsync.rcc.power_on_wr_rst_reg[5]\ : label is "true";
+  attribute KEEP of \rsync.ric.power_on_rd_rst_reg[0]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_rd_rst_reg[0]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_rd_rst_reg[1]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_rd_rst_reg[1]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_rd_rst_reg[1]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_rd_rst_reg[2]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_rd_rst_reg[2]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_rd_rst_reg[2]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_rd_rst_reg[3]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_rd_rst_reg[3]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_rd_rst_reg[3]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_rd_rst_reg[4]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_rd_rst_reg[4]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_rd_rst_reg[4]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_rd_rst_reg[5]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_rd_rst_reg[5]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_rd_rst_reg[5]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_wr_rst_reg[0]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_wr_rst_reg[0]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_wr_rst_reg[0]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_wr_rst_reg[1]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_wr_rst_reg[1]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_wr_rst_reg[1]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_wr_rst_reg[2]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_wr_rst_reg[2]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_wr_rst_reg[2]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_wr_rst_reg[3]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_wr_rst_reg[3]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_wr_rst_reg[3]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_wr_rst_reg[4]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_wr_rst_reg[4]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_wr_rst_reg[4]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.power_on_wr_rst_reg[5]\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.power_on_wr_rst_reg[5]\ : label is "yes";
+  attribute msgon of \rsync.ric.power_on_wr_rst_reg[5]\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.rd_rst_reg1_reg\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.rd_rst_reg1_reg\ : label is "yes";
+  attribute msgon of \rsync.ric.rd_rst_reg1_reg\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.rd_rst_reg2_reg\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.rd_rst_reg2_reg\ : label is "yes";
+  attribute msgon of \rsync.ric.rd_rst_reg2_reg\ : label is "true";
   attribute srl_bus_name : string;
-  attribute srl_bus_name of \rsync.rcc.wr_rst_fb_reg[1]_srl4\ : label is "U0/\inst_fifo_gen/gconvfifo.rf/gbi.bi/g7ser_birst.rstbt/rsync.rcc.wr_rst_fb_reg ";
+  attribute srl_bus_name of \rsync.ric.wr_rst_fb_reg[1]_srl4\ : label is "U0/\inst_fifo_gen/gconvfifo.rf/gbi.bi/g7ser_birst.rstbt/rsync.ric.wr_rst_fb_reg ";
   attribute srl_name : string;
-  attribute srl_name of \rsync.rcc.wr_rst_fb_reg[1]_srl4\ : label is "U0/\inst_fifo_gen/gconvfifo.rf/gbi.bi/g7ser_birst.rstbt/rsync.rcc.wr_rst_fb_reg[1]_srl4 ";
-  attribute ASYNC_REG_boolean of \rsync.rcc.wr_rst_reg1_reg\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.wr_rst_reg1_reg\ : label is "yes";
-  attribute msgon of \rsync.rcc.wr_rst_reg1_reg\ : label is "true";
-  attribute ASYNC_REG_boolean of \rsync.rcc.wr_rst_reg2_reg\ : label is std.standard.true;
-  attribute KEEP of \rsync.rcc.wr_rst_reg2_reg\ : label is "yes";
-  attribute msgon of \rsync.rcc.wr_rst_reg2_reg\ : label is "true";
+  attribute srl_name of \rsync.ric.wr_rst_fb_reg[1]_srl4\ : label is "U0/\inst_fifo_gen/gconvfifo.rf/gbi.bi/g7ser_birst.rstbt/rsync.ric.wr_rst_fb_reg[1]_srl4 ";
+  attribute ASYNC_REG_boolean of \rsync.ric.wr_rst_reg1_reg\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.wr_rst_reg1_reg\ : label is "yes";
+  attribute msgon of \rsync.ric.wr_rst_reg1_reg\ : label is "true";
+  attribute ASYNC_REG_boolean of \rsync.ric.wr_rst_reg2_reg\ : label is std.standard.true;
+  attribute KEEP of \rsync.ric.wr_rst_reg2_reg\ : label is "yes";
+  attribute msgon of \rsync.ric.wr_rst_reg2_reg\ : label is "true";
 begin
 \gf36e1_inst.sngfifo36e1_i_1\: unisim.vcomponents.LUT2
     generic map(
@@ -276,150 +249,174 @@ begin
         port map (
       I0 => wr_rst_reg,
       I1 => power_on_wr_rst(0),
-      O => rd_rst_i
+      O => RST
     );
-i_0: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '0',
-      O => rd_rst_reg1
-    );
-i_1: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '0',
-      O => rd_rst_reg2
-    );
-i_2: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '1',
-      O => power_on_rd_rst(5)
-    );
-i_3: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '1',
-      O => power_on_rd_rst(4)
-    );
-i_4: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '1',
-      O => power_on_rd_rst(3)
-    );
-i_5: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '1',
-      O => power_on_rd_rst(2)
-    );
-i_6: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '1',
-      O => power_on_rd_rst(1)
-    );
-i_7: unisim.vcomponents.LUT1
-    generic map(
-      INIT => X"2"
-    )
-        port map (
-      I0 => '1',
-      O => power_on_rd_rst(0)
-    );
-\rsync.rcc.power_on_wr_rst_reg[0]\: unisim.vcomponents.FDRE
+\rsync.ric.power_on_rd_rst_reg[0]\: unisim.vcomponents.FDRE
     generic map(
       INIT => '1'
     )
         port map (
-      C => clk,
+      C => rd_clk,
+      CE => '1',
+      D => power_on_rd_rst(1),
+      Q => power_on_rd_rst(0),
+      R => '0'
+    );
+\rsync.ric.power_on_rd_rst_reg[1]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '1'
+    )
+        port map (
+      C => rd_clk,
+      CE => '1',
+      D => power_on_rd_rst(2),
+      Q => power_on_rd_rst(1),
+      R => '0'
+    );
+\rsync.ric.power_on_rd_rst_reg[2]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '1'
+    )
+        port map (
+      C => rd_clk,
+      CE => '1',
+      D => power_on_rd_rst(3),
+      Q => power_on_rd_rst(2),
+      R => '0'
+    );
+\rsync.ric.power_on_rd_rst_reg[3]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '1'
+    )
+        port map (
+      C => rd_clk,
+      CE => '1',
+      D => power_on_rd_rst(4),
+      Q => power_on_rd_rst(3),
+      R => '0'
+    );
+\rsync.ric.power_on_rd_rst_reg[4]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '1'
+    )
+        port map (
+      C => rd_clk,
+      CE => '1',
+      D => power_on_rd_rst(5),
+      Q => power_on_rd_rst(4),
+      R => '0'
+    );
+\rsync.ric.power_on_rd_rst_reg[5]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '1'
+    )
+        port map (
+      C => rd_clk,
+      CE => '1',
+      D => '0',
+      Q => power_on_rd_rst(5),
+      R => '0'
+    );
+\rsync.ric.power_on_wr_rst_reg[0]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '1'
+    )
+        port map (
+      C => wr_clk,
       CE => '1',
       D => power_on_wr_rst(1),
       Q => power_on_wr_rst(0),
       R => '0'
     );
-\rsync.rcc.power_on_wr_rst_reg[1]\: unisim.vcomponents.FDRE
+\rsync.ric.power_on_wr_rst_reg[1]\: unisim.vcomponents.FDRE
     generic map(
       INIT => '1'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => power_on_wr_rst(2),
       Q => power_on_wr_rst(1),
       R => '0'
     );
-\rsync.rcc.power_on_wr_rst_reg[2]\: unisim.vcomponents.FDRE
+\rsync.ric.power_on_wr_rst_reg[2]\: unisim.vcomponents.FDRE
     generic map(
       INIT => '1'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => power_on_wr_rst(3),
       Q => power_on_wr_rst(2),
       R => '0'
     );
-\rsync.rcc.power_on_wr_rst_reg[3]\: unisim.vcomponents.FDRE
+\rsync.ric.power_on_wr_rst_reg[3]\: unisim.vcomponents.FDRE
     generic map(
       INIT => '1'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => power_on_wr_rst(4),
       Q => power_on_wr_rst(3),
       R => '0'
     );
-\rsync.rcc.power_on_wr_rst_reg[4]\: unisim.vcomponents.FDRE
+\rsync.ric.power_on_wr_rst_reg[4]\: unisim.vcomponents.FDRE
     generic map(
       INIT => '1'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => power_on_wr_rst(5),
       Q => power_on_wr_rst(4),
       R => '0'
     );
-\rsync.rcc.power_on_wr_rst_reg[5]\: unisim.vcomponents.FDRE
+\rsync.ric.power_on_wr_rst_reg[5]\: unisim.vcomponents.FDRE
     generic map(
       INIT => '1'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => '0',
       Q => power_on_wr_rst(5),
       R => '0'
     );
-\rsync.rcc.wr_rst_fb_reg[0]\: unisim.vcomponents.FDRE
+\rsync.ric.rd_rst_reg1_reg\: unisim.vcomponents.FDPE
     generic map(
       INIT => '0'
     )
         port map (
-      C => clk,
+      C => rd_clk,
       CE => '1',
-      D => \rsync.rcc.wr_rst_fb_reg[1]_srl4_n_0\,
-      Q => \rsync.rcc.wr_rst_fb_reg_n_0_[0]\,
+      D => '0',
+      PRE => \^rst\,
+      Q => rd_rst_reg1
+    );
+\rsync.ric.rd_rst_reg2_reg\: unisim.vcomponents.FDPE
+    generic map(
+      INIT => '0'
+    )
+        port map (
+      C => rd_clk,
+      CE => '1',
+      D => rd_rst_reg1,
+      PRE => \^rst\,
+      Q => rd_rst_reg2
+    );
+\rsync.ric.wr_rst_fb_reg[0]\: unisim.vcomponents.FDRE
+    generic map(
+      INIT => '0'
+    )
+        port map (
+      C => wr_clk,
+      CE => '1',
+      D => \rsync.ric.wr_rst_fb_reg[1]_srl4_n_0\,
+      Q => \rsync.ric.wr_rst_fb_reg_n_0_[0]\,
       R => '0'
     );
-\rsync.rcc.wr_rst_fb_reg[1]_srl4\: unisim.vcomponents.SRL16E
+\rsync.ric.wr_rst_fb_reg[1]_srl4\: unisim.vcomponents.SRL16E
     generic map(
       INIT => X"0000"
     )
@@ -429,49 +426,49 @@ i_7: unisim.vcomponents.LUT1
       A2 => '0',
       A3 => '0',
       CE => '1',
-      CLK => clk,
+      CLK => wr_clk,
       D => wr_rst_reg,
-      Q => \rsync.rcc.wr_rst_fb_reg[1]_srl4_n_0\
+      Q => \rsync.ric.wr_rst_fb_reg[1]_srl4_n_0\
     );
-\rsync.rcc.wr_rst_reg1_reg\: unisim.vcomponents.FDPE
+\rsync.ric.wr_rst_reg1_reg\: unisim.vcomponents.FDPE
     generic map(
       INIT => '0'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => '0',
-      PRE => rst,
+      PRE => \^rst\,
       Q => wr_rst_reg1
     );
-\rsync.rcc.wr_rst_reg2_reg\: unisim.vcomponents.FDPE
+\rsync.ric.wr_rst_reg2_reg\: unisim.vcomponents.FDPE
     generic map(
       INIT => '0'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
       D => wr_rst_reg1,
-      PRE => rst,
+      PRE => \^rst\,
       Q => wr_rst_reg2
     );
-\rsync.rcc.wr_rst_reg_i_1\: unisim.vcomponents.LUT2
+\rsync.ric.wr_rst_reg_i_1\: unisim.vcomponents.LUT2
     generic map(
       INIT => X"2"
     )
         port map (
       I0 => wr_rst_reg,
-      I1 => \rsync.rcc.wr_rst_fb_reg_n_0_[0]\,
-      O => \rsync.rcc.wr_rst_reg_i_1_n_0\
+      I1 => \rsync.ric.wr_rst_fb_reg_n_0_[0]\,
+      O => \rsync.ric.wr_rst_reg_i_1_n_0\
     );
-\rsync.rcc.wr_rst_reg_reg\: unisim.vcomponents.FDPE
+\rsync.ric.wr_rst_reg_reg\: unisim.vcomponents.FDPE
     generic map(
       INIT => '0'
     )
         port map (
-      C => clk,
+      C => wr_clk,
       CE => '1',
-      D => \rsync.rcc.wr_rst_reg_i_1_n_0\,
+      D => \rsync.ric.wr_rst_reg_i_1_n_0\,
       PRE => wr_rst_reg2,
       Q => wr_rst_reg
     );
@@ -482,14 +479,15 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_builtin_extdepth_v6 is
   port (
+    empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 29 downto 0 );
-    empty : out STD_LOGIC;
-    clk : in STD_LOGIC;
-    rd_rst_i : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
+    RST : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
     wr_en : in STD_LOGIC;
-    din : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    rd_en : in STD_LOGIC
+    din : in STD_LOGIC_VECTOR ( 29 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_builtin_extdepth_v6 : entity is "builtin_extdepth_v6";
@@ -511,18 +509,7 @@ architecture STRUCTURE of spi_fifo_rp_builtin_extdepth_v6 is
   attribute async_reg of sbr_d1 : signal is "true";
   attribute msgon of sbr_d1 : signal is "true";
 begin
-\gonep.inst_prim\: entity work.spi_fifo_rp_builtin_prim_v6
-     port map (
-      clk => clk,
-      din(29 downto 0) => din(29 downto 0),
-      dout(29 downto 0) => dout(29 downto 0),
-      empty => empty,
-      full => full,
-      rd_en => rd_en,
-      rd_rst_i => rd_rst_i,
-      wr_en => wr_en
-    );
-i_0: unisim.vcomponents.LUT1
+\gextw[1].gnll_fifo.inst_extdi_0\: unisim.vcomponents.LUT1
     generic map(
       INIT => X"2"
     )
@@ -530,7 +517,7 @@ i_0: unisim.vcomponents.LUT1
       I0 => '0',
       O => sbr_d1
     );
-i_1: unisim.vcomponents.LUT1
+\gextw[1].gnll_fifo.inst_extdi_1\: unisim.vcomponents.LUT1
     generic map(
       INIT => X"2"
     )
@@ -538,7 +525,7 @@ i_1: unisim.vcomponents.LUT1
       I0 => '0',
       O => dbr_d1
     );
-i_2: unisim.vcomponents.LUT1
+\gextw[1].gnll_fifo.inst_extdi_2\: unisim.vcomponents.LUT1
     generic map(
       INIT => X"2"
     )
@@ -546,13 +533,25 @@ i_2: unisim.vcomponents.LUT1
       I0 => '0',
       O => sbr_as_reg
     );
-i_3: unisim.vcomponents.LUT1
+\gextw[1].gnll_fifo.inst_extdi_3\: unisim.vcomponents.LUT1
     generic map(
       INIT => X"2"
     )
         port map (
       I0 => '0',
       O => dbr_as_reg
+    );
+\gonep.inst_prim\: entity work.spi_fifo_rp_builtin_prim_v6
+     port map (
+      RST => RST,
+      din(29 downto 0) => din(29 downto 0),
+      dout(29 downto 0) => dout(29 downto 0),
+      empty => empty,
+      full => full,
+      rd_clk => rd_clk,
+      rd_en => rd_en,
+      wr_clk => wr_clk,
+      wr_en => wr_en
     );
 end STRUCTURE;
 library IEEE;
@@ -561,14 +560,15 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_builtin_top_v6 is
   port (
+    empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 29 downto 0 );
-    empty : out STD_LOGIC;
-    clk : in STD_LOGIC;
-    rd_rst_i : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
+    RST : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
     wr_en : in STD_LOGIC;
-    din : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    rd_en : in STD_LOGIC
+    din : in STD_LOGIC_VECTOR ( 29 downto 0 )
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_builtin_top_v6 : entity is "builtin_top_v6";
@@ -578,13 +578,14 @@ architecture STRUCTURE of spi_fifo_rp_builtin_top_v6 is
 begin
 \gextw[1].gnll_fifo.inst_extd\: entity work.spi_fifo_rp_builtin_extdepth_v6
      port map (
-      clk => clk,
+      RST => RST,
       din(29 downto 0) => din(29 downto 0),
       dout(29 downto 0) => dout(29 downto 0),
       empty => empty,
       full => full,
+      rd_clk => rd_clk,
       rd_en => rd_en,
-      rd_rst_i => rd_rst_i,
+      wr_clk => wr_clk,
       wr_en => wr_en
     );
 end STRUCTURE;
@@ -594,37 +595,40 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_fifo_generator_v13_2_5_builtin is
   port (
+    empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 29 downto 0 );
-    empty : out STD_LOGIC;
-    clk : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    rst : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    rst : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_fifo_generator_v13_2_5_builtin : entity is "fifo_generator_v13_2_5_builtin";
 end spi_fifo_rp_fifo_generator_v13_2_5_builtin;
 
 architecture STRUCTURE of spi_fifo_rp_fifo_generator_v13_2_5_builtin is
-  signal rd_rst_i : STD_LOGIC;
+  signal wr_rst_i : STD_LOGIC;
 begin
 \g7ser_birst.rstbt\: entity work.spi_fifo_rp_reset_builtin
      port map (
-      clk => clk,
-      rd_rst_i => rd_rst_i,
-      rst => rst
+      RST => wr_rst_i,
+      rd_clk => rd_clk,
+      \^rst\ => rst,
+      wr_clk => wr_clk
     );
 \v7_bi_fifo.fblk\: entity work.spi_fifo_rp_builtin_top_v6
      port map (
-      clk => clk,
+      RST => wr_rst_i,
       din(29 downto 0) => din(29 downto 0),
       dout(29 downto 0) => dout(29 downto 0),
       empty => empty,
       full => full,
+      rd_clk => rd_clk,
       rd_en => rd_en,
-      rd_rst_i => rd_rst_i,
+      wr_clk => wr_clk,
       wr_en => wr_en
     );
 end STRUCTURE;
@@ -634,14 +638,15 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_fifo_generator_top is
   port (
+    empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 29 downto 0 );
-    empty : out STD_LOGIC;
-    clk : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    rst : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    rst : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_fifo_generator_top : entity is "fifo_generator_top";
@@ -651,13 +656,14 @@ architecture STRUCTURE of spi_fifo_rp_fifo_generator_top is
 begin
 \gbi.bi\: entity work.spi_fifo_rp_fifo_generator_v13_2_5_builtin
      port map (
-      clk => clk,
       din(29 downto 0) => din(29 downto 0),
       dout(29 downto 0) => dout(29 downto 0),
       empty => empty,
       full => full,
+      rd_clk => rd_clk,
       rd_en => rd_en,
       rst => rst,
+      wr_clk => wr_clk,
       wr_en => wr_en
     );
 end STRUCTURE;
@@ -667,14 +673,15 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp_fifo_generator_v13_2_5_synth is
   port (
+    empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 29 downto 0 );
-    empty : out STD_LOGIC;
-    clk : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    rst : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    rst : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of spi_fifo_rp_fifo_generator_v13_2_5_synth : entity is "fifo_generator_v13_2_5_synth";
@@ -684,13 +691,14 @@ architecture STRUCTURE of spi_fifo_rp_fifo_generator_v13_2_5_synth is
 begin
 \gconvfifo.rf\: entity work.spi_fifo_rp_fifo_generator_top
      port map (
-      clk => clk,
       din(29 downto 0) => din(29 downto 0),
       dout(29 downto 0) => dout(29 downto 0),
       empty => empty,
       full => full,
+      rd_clk => rd_clk,
       rd_en => rd_en,
       rst => rst,
+      wr_clk => wr_clk,
       wr_en => wr_en
     );
 end STRUCTURE;
@@ -983,7 +991,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_AXI_WUSER_WIDTH : integer;
   attribute C_AXI_WUSER_WIDTH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1;
   attribute C_COMMON_CLOCK : integer;
-  attribute C_COMMON_CLOCK of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1;
+  attribute C_COMMON_CLOCK of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 0;
   attribute C_COUNT_TYPE : integer;
   attribute C_COUNT_TYPE of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 0;
   attribute C_DATA_COUNT_WIDTH : integer;
@@ -1173,7 +1181,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_PRIM_FIFO_TYPE_WRCH : string;
   attribute C_PRIM_FIFO_TYPE_WRCH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is "512x36";
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 4;
+  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 6;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1022;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH : integer;
@@ -1187,7 +1195,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1022;
   attribute C_PROG_EMPTY_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 5;
+  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 7;
   attribute C_PROG_EMPTY_TYPE : integer;
   attribute C_PROG_EMPTY_TYPE of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_EMPTY_TYPE_AXIS : integer;
@@ -1203,7 +1211,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_PROG_EMPTY_TYPE_WRCH : integer;
   attribute C_PROG_EMPTY_TYPE_WRCH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_FULL_THRESH_ASSERT_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1023;
+  attribute C_PROG_FULL_THRESH_ASSERT_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1015;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1023;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_RACH : integer;
@@ -1217,7 +1225,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1023;
   attribute C_PROG_FULL_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_FULL_THRESH_NEGATE_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1022;
+  attribute C_PROG_FULL_THRESH_NEGATE_VAL of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1014;
   attribute C_PROG_FULL_TYPE : integer;
   attribute C_PROG_FULL_TYPE of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_FULL_TYPE_AXIS : integer;
@@ -1241,7 +1249,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_RD_DEPTH : integer;
   attribute C_RD_DEPTH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1024;
   attribute C_RD_FREQ : integer;
-  attribute C_RD_FREQ of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1;
+  attribute C_RD_FREQ of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 250;
   attribute C_RD_PNTR_WIDTH : integer;
   attribute C_RD_PNTR_WIDTH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 10;
   attribute C_REG_SLICE_MODE_AXIS : integer;
@@ -1319,7 +1327,7 @@ entity spi_fifo_rp_fifo_generator_v13_2_5 is
   attribute C_WR_DEPTH_WRCH : integer;
   attribute C_WR_DEPTH_WRCH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 16;
   attribute C_WR_FREQ : integer;
-  attribute C_WR_FREQ of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 1;
+  attribute C_WR_FREQ of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 200;
   attribute C_WR_PNTR_WIDTH : integer;
   attribute C_WR_PNTR_WIDTH of spi_fifo_rp_fifo_generator_v13_2_5 : entity is 10;
   attribute C_WR_PNTR_WIDTH_AXIS : integer;
@@ -1879,13 +1887,14 @@ VCC: unisim.vcomponents.VCC
     );
 inst_fifo_gen: entity work.spi_fifo_rp_fifo_generator_v13_2_5_synth
      port map (
-      clk => clk,
       din(29 downto 0) => din(29 downto 0),
       dout(29 downto 0) => dout(29 downto 0),
       empty => empty,
       full => full,
+      rd_clk => rd_clk,
       rd_en => rd_en,
       rst => rst,
+      wr_clk => wr_clk,
       wr_en => wr_en
     );
 end STRUCTURE;
@@ -1895,8 +1904,9 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity spi_fifo_rp is
   port (
-    clk : in STD_LOGIC;
     rst : in STD_LOGIC;
+    wr_clk : in STD_LOGIC;
+    rd_clk : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 29 downto 0 );
     wr_en : in STD_LOGIC;
     rd_en : in STD_LOGIC;
@@ -2089,7 +2099,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_AXI_WUSER_WIDTH : integer;
   attribute C_AXI_WUSER_WIDTH of U0 : label is 1;
   attribute C_COMMON_CLOCK : integer;
-  attribute C_COMMON_CLOCK of U0 : label is 1;
+  attribute C_COMMON_CLOCK of U0 : label is 0;
   attribute C_COUNT_TYPE : integer;
   attribute C_COUNT_TYPE of U0 : label is 0;
   attribute C_DATA_COUNT_WIDTH : integer;
@@ -2279,7 +2289,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_PRIM_FIFO_TYPE_WRCH : string;
   attribute C_PRIM_FIFO_TYPE_WRCH of U0 : label is "512x36";
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of U0 : label is 4;
+  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of U0 : label is 6;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS of U0 : label is 1022;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH : integer;
@@ -2293,7 +2303,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH of U0 : label is 1022;
   attribute C_PROG_EMPTY_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of U0 : label is 5;
+  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of U0 : label is 7;
   attribute C_PROG_EMPTY_TYPE : integer;
   attribute C_PROG_EMPTY_TYPE of U0 : label is 0;
   attribute C_PROG_EMPTY_TYPE_AXIS : integer;
@@ -2309,7 +2319,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_PROG_EMPTY_TYPE_WRCH : integer;
   attribute C_PROG_EMPTY_TYPE_WRCH of U0 : label is 0;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_FULL_THRESH_ASSERT_VAL of U0 : label is 1023;
+  attribute C_PROG_FULL_THRESH_ASSERT_VAL of U0 : label is 1015;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS of U0 : label is 1023;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_RACH : integer;
@@ -2323,7 +2333,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH of U0 : label is 1023;
   attribute C_PROG_FULL_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_FULL_THRESH_NEGATE_VAL of U0 : label is 1022;
+  attribute C_PROG_FULL_THRESH_NEGATE_VAL of U0 : label is 1014;
   attribute C_PROG_FULL_TYPE : integer;
   attribute C_PROG_FULL_TYPE of U0 : label is 0;
   attribute C_PROG_FULL_TYPE_AXIS : integer;
@@ -2347,7 +2357,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_RD_DEPTH : integer;
   attribute C_RD_DEPTH of U0 : label is 1024;
   attribute C_RD_FREQ : integer;
-  attribute C_RD_FREQ of U0 : label is 1;
+  attribute C_RD_FREQ of U0 : label is 250;
   attribute C_RD_PNTR_WIDTH : integer;
   attribute C_RD_PNTR_WIDTH of U0 : label is 10;
   attribute C_REG_SLICE_MODE_AXIS : integer;
@@ -2425,7 +2435,7 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_WR_DEPTH_WRCH : integer;
   attribute C_WR_DEPTH_WRCH of U0 : label is 16;
   attribute C_WR_FREQ : integer;
-  attribute C_WR_FREQ of U0 : label is 1;
+  attribute C_WR_FREQ of U0 : label is 200;
   attribute C_WR_PNTR_WIDTH : integer;
   attribute C_WR_PNTR_WIDTH of U0 : label is 10;
   attribute C_WR_PNTR_WIDTH_AXIS : integer;
@@ -2443,12 +2453,14 @@ architecture STRUCTURE of spi_fifo_rp is
   attribute C_WR_RESPONSE_LATENCY : integer;
   attribute C_WR_RESPONSE_LATENCY of U0 : label is 1;
   attribute x_interface_info : string;
-  attribute x_interface_info of clk : signal is "xilinx.com:signal:clock:1.0 core_clk CLK";
-  attribute x_interface_parameter : string;
-  attribute x_interface_parameter of clk : signal is "XIL_INTERFACENAME core_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0";
   attribute x_interface_info of empty : signal is "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY";
   attribute x_interface_info of full : signal is "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE FULL";
+  attribute x_interface_info of rd_clk : signal is "xilinx.com:signal:clock:1.0 read_clk CLK";
+  attribute x_interface_parameter : string;
+  attribute x_interface_parameter of rd_clk : signal is "XIL_INTERFACENAME read_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0";
   attribute x_interface_info of rd_en : signal is "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_EN";
+  attribute x_interface_info of wr_clk : signal is "xilinx.com:signal:clock:1.0 write_clk CLK";
+  attribute x_interface_parameter of wr_clk : signal is "XIL_INTERFACENAME write_clk, FREQ_HZ 200000000, PHASE 0.000, INSERT_VIP 0";
   attribute x_interface_info of wr_en : signal is "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_EN";
   attribute x_interface_info of din : signal is "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA";
   attribute x_interface_info of dout : signal is "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA";
@@ -2537,7 +2549,7 @@ U0: entity work.spi_fifo_rp_fifo_generator_v13_2_5
       axis_wr_data_count(10 downto 0) => NLW_U0_axis_wr_data_count_UNCONNECTED(10 downto 0),
       backup => '0',
       backup_marker => '0',
-      clk => clk,
+      clk => '0',
       data_count(9 downto 0) => NLW_U0_data_count_UNCONNECTED(9 downto 0),
       dbiterr => NLW_U0_dbiterr_UNCONNECTED,
       din(29 downto 0) => din(29 downto 0),
@@ -2612,7 +2624,7 @@ U0: entity work.spi_fifo_rp_fifo_generator_v13_2_5
       prog_full_thresh(9 downto 0) => B"0000000000",
       prog_full_thresh_assert(9 downto 0) => B"0000000000",
       prog_full_thresh_negate(9 downto 0) => B"0000000000",
-      rd_clk => '0',
+      rd_clk => rd_clk,
       rd_data_count(9 downto 0) => NLW_U0_rd_data_count_UNCONNECTED(9 downto 0),
       rd_en => rd_en,
       rd_rst => '0',
@@ -2681,7 +2693,7 @@ U0: entity work.spi_fifo_rp_fifo_generator_v13_2_5
       underflow => NLW_U0_underflow_UNCONNECTED,
       valid => NLW_U0_valid_UNCONNECTED,
       wr_ack => NLW_U0_wr_ack_UNCONNECTED,
-      wr_clk => '0',
+      wr_clk => wr_clk,
       wr_data_count(9 downto 0) => NLW_U0_wr_data_count_UNCONNECTED(9 downto 0),
       wr_en => wr_en,
       wr_rst => '0',
