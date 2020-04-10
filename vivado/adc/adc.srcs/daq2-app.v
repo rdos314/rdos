@@ -63,7 +63,9 @@ module daq2_app
   input                   adc_qpll_rst,
   output wire             adc_qpll_locked,
 
+  input                   adc_started,
   input                   adc_rst,
+  output wire [3:0]       adc_pll_locked,
   output wire [3:0]       adc_rst_done,
   output reg [31:0]       adc_sync_fail_cnt,
   output reg [31:0]       adc_sync_ok_cnt,
@@ -77,7 +79,6 @@ module daq2_app
  wire [15:0]              rx_phy_notintable;
  wire [127:0]             rx_phy_data;
  wire                     rx_phy_char_align;
- wire [3:0]               rx_pll_locked;
 
  wire [3:0]               ilas_config_valid;
  wire [7:0]               ilas_config_addr;
@@ -100,7 +101,6 @@ module daq2_app
  reg                      lmfc_clk_s;
  reg                      lmfc_clk_c;
  
- wire                     adc_started;
  wire                     rx_running;
  wire                     rx_wait_for_run;
 
@@ -235,10 +235,10 @@ system_util_daq2_xcvr_0 util_daq2_xcvr
         .up_rx_out_clk_sel_1(3'd4),
         .up_rx_out_clk_sel_2(3'd4),
         .up_rx_out_clk_sel_3(3'd4),
-        .up_rx_pll_locked_0(rx_pll_locked[0]),
-        .up_rx_pll_locked_1(rx_pll_locked[1]),
-        .up_rx_pll_locked_2(rx_pll_locked[2]),
-        .up_rx_pll_locked_3(rx_pll_locked[3]),
+        .up_rx_pll_locked_0(adc_pll_locked[0]),
+        .up_rx_pll_locked_1(adc_pll_locked[1]),
+        .up_rx_pll_locked_2(adc_pll_locked[2]),
+        .up_rx_pll_locked_3(adc_pll_locked[3]),
         .up_rx_rate_0(0),
         .up_rx_rate_1(0),
         .up_rx_rate_2(0),
@@ -463,15 +463,11 @@ endfunction
   assign dac_txen = 1'bz;
   assign dac_reset = 1'bz;
   
-  assign adc_started = 0;
-
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
   assign up_rx_user_ready = 0;
   
   assign rx_running = 0;
   assign rx_wait_for_run = 0;
-
-
 
 generate
   begin : daq2_app

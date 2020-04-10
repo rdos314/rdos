@@ -161,12 +161,14 @@ module adc (
 // ADC
 
   wire [2:0]           adc_state;
+  wire                 adc_started;
 
   wire                 adc_up_rstn;
   wire                 adc_qpll_rst;
   wire                 adc_rst;
 
   wire                 adc_qpll_locked_1;
+  wire [3:0]           adc_pll_locked_1;
   wire [3:0]           adc_rst_done_1;
 
   wire [16:0]          adc_phys_index;
@@ -277,6 +279,9 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  adc_qpll_locked_2;
  (* ASYNC_REG="TRUE" *)  reg                  adc_qpll_locked;
 
+ (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_pll_locked_2;
+ (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_pll_locked;
+
  (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_rst_done_2;
  (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_rst_done;
 
@@ -373,8 +378,10 @@ daq2_app daq2_app_inst (
     .adc_up_rstn(adc_up_rstn),
     .adc_qpll_rst(adc_qpll_rst),
     .adc_qpll_locked(adc_qpll_locked_1),
-    
+
+    .adc_started(adc_started),    
     .adc_rst(adc_rst),
+    .adc_pll_locked(adc_pll_locked_1),
     .adc_rst_done(adc_rst_done_1),
 
     .rx_sysref_cnt(rx_sysref_cnt),
@@ -559,7 +566,9 @@ adc_app adc_app_inst (
     .qpll_rst(adc_qpll_rst),
     .qpll_locked(adc_qpll_locked),
 
+    .adc_started(adc_started),
     .adc_rst(adc_rst),
+    .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
 
     .state(adc_state)
@@ -655,6 +664,12 @@ generate
     begin
       adc_qpll_locked_2 <= adc_qpll_locked_1;
       adc_qpll_locked <= adc_qpll_locked_2;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_pll_locked_2 <= adc_pll_locked_1;
+      adc_pll_locked <= adc_pll_locked_2;
     end
 
     always @ ( posedge up_clk ) 

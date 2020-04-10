@@ -29,8 +29,8 @@ module adc_app (
   input                   reset,
   input                   clk,
 
-  output wire             spi_read,
-  output wire             spi_write,
+  output reg              spi_read,
+  output reg              spi_write,
   output reg [11:0]       spi_adr,
   input wire [7:0]        spi_in_data,
   output reg [7:0]        spi_out_data,
@@ -49,7 +49,9 @@ module adc_app (
   output reg              qpll_rst,
   input wire              qpll_locked,
 
+  output reg              adc_started,
   output reg              adc_rst,
+  input wire [3:0]        adc_pll_locked,
   input wire [3:0]        adc_rst_done,
 
   output reg [2:0]        state
@@ -63,13 +65,10 @@ module adc_app (
   reg                     req_stop;
   reg                     pend_start;
 
+  reg                     spi_test_done;
   reg [3:0]               pll_rst_cnt; 
   reg [3:0]               adc_rst_cnt;
-  reg [6:0]               user_ready_cnt;  
-
-  assign spi_read = 0;
-  assign spi_write = 0;
-
+  reg [6:0]               adc_user_ready_cnt;  
 
 ila_1 ila_1_inst (
 	.clk(clk),                       // input wire clk
@@ -85,11 +84,20 @@ ila_1 ila_1_inst (
 	.probe9(pend_start),             // input wire [0:0]  probe0  
 	.probe10(qpll_rst),              // input wire [0:0]  probe0  
 	.probe11(qpll_locked),           // input wire [0:0]  probe0  
-	.probe12(tx_control_msg),        // input wire [0:0]  probe0  
-	.probe13(tx_control_index),      // input wire [7:0]  probe0  
-	.probe14(tx_control_data)        // input wire [7:0]  probe0  
+	.probe12(adc_spi_write),         // input wire [0:0]  probe0  
+	.probe13(adc_spi_done),          // input wire [0:0]  probe0  
+	.probe14(spi_test_done),         // input wire [0:0]  probe0  
+	.probe15(adc_started),           // input wire [0:0]  probe0  
+	.probe16(adc_rst),               // input wire [0:0]  probe0  
+	.probe17(adc_pll_locked),        // input wire [3:0]  probe0  
+	.probe18(adc_rst_done),          // input wire [3:0]  probe0  
+	.probe19(pll_rst_cnt),           // input wire [3:0]  probe0  
+	.probe20(adc_rst_cnt),           // input wire [3:0]  probe0  
+	.probe21(adc_user_ready_cnt),    // input wire [6:0]  probe0  
+	.probe22(tx_control_msg),        // input wire [0:0]  probe0  
+	.probe23(tx_control_index),      // input wire [7:0]  probe0  
+	.probe24(tx_control_data)        // input wire [7:0]  probe0  
 );
-
 
 generate
 begin : adc_app
@@ -157,10 +165,12 @@ begin : adc_app
     begin
       if (reset)
       begin
+        adc_started <= 0;
         state <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
         pend_start <= 0;
+        spi_test_done <= 0;
       end
       else
       begin
@@ -170,7 +180,7 @@ begin : adc_app
           qpll_rst <= 1;
           pll_rst_cnt <= 4'h8; 
           adc_rst_cnt <= 4'h8;    
-          user_ready_cnt <= 7'h00;  
+          adc_user_ready_cnt <= 7'h00;  
           pend_start <= 1;
         end
         else
@@ -179,6 +189,7 @@ begin : adc_app
 
           if (req_stop)
           begin
+            adc_started <= 0;
             state <= 0;
             up_rstn <= 0;
           end
@@ -186,8 +197,47 @@ begin : adc_app
           begin
             if (pend_start)
             begin
-              state[0] <= 1;
-              pend_start <= 0;
+              spi_write <= 0;
+
+              if (adc_started)
+              begin
+                if (adc_spi_done)
+                  spi_test_done <= 1;
+
+                if (spi_test_done)
+                begin
+                  if (qpll_locked)
+                    if (pll_rst_cnt[3] == 1'b1) 
+                      pll_rst_cnt <= pll_rst_cnt + 1'b1;
+
+                  if ((pll_rst_cnt[3] == 1'b1) || (adc_pll_locked != 4'b1111))
+                    adc_rst_cnt <= 4'h8; 
+                  else 
+                    if (adc_rst_cnt[3] == 1'b1) 
+                      adc_rst_cnt <= adc_rst_cnt + 1'b1;
+
+                  if (adc_rst_cnt[3] == 1'b1) 
+                    adc_user_ready_cnt <= 7'h00;   
+                  else 
+                  begin
+                    if (adc_user_ready_cnt[6] == 1'b0) 
+                      adc_user_ready_cnt <= adc_user_ready_cnt + 1'b1;
+                    else
+                    begin
+                      if (adc_rst_done == 4'b1111)
+                        pend_start <= 0;
+                    end
+                  end
+                end
+              end
+              else
+              begin
+                spi_adr <= 12'h550;
+                spi_out_data <= 8'h37;
+                spi_write <= 1;
+                adc_started <= 1;
+                state[0] <= 1;
+              end
             end
           end
         end
