@@ -46,6 +46,13 @@ module adc_app (
   assign spi_write = 0;
 
 
+ila_1 ila_1_inst (
+	.clk(clk),                       // input wire clk
+	.probe0(rx_control_msg),         // input wire [0:0]  probe0  
+	.probe1(rx_control_index),       // input wire [7:0]  probe0  
+	.probe2(rx_control_data)         // input wire [7:0]  probe0  
+);
+
 generate
 begin : adc_app
 

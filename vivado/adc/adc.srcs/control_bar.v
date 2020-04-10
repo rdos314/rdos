@@ -66,6 +66,8 @@ module control_bar (
   reg [31:0]              bar_spi_adc;
   reg [31:0]              bar_spi_dac;
 
+  reg [7:0]               adc_control;
+
   reg                     req_send_adc_state;
   reg                     ack_send_adc_state;
   reg [7:0]               adc_state;
@@ -75,19 +77,6 @@ module control_bar (
   reg [7:0]               adc_test_mode;
 
 
-ila_1 ila_1_inst (
-	.clk(clk),                       // input wire clk
-	.probe0(req_send_adc_state),     // input wire [0:0]  probe0  
-	.probe1(ack_send_adc_state),     // input wire [0:0]  probe0  
-	.probe2(adc_state),              // input wire [7:0]  probe0  
-	.probe3(req_send_adc_test_mode), // input wire [0:0]  probe0  
-	.probe4(ack_send_adc_test_mode), // input wire [0:0]  probe0  
-	.probe5(adc_test_mode),          // input wire [7:0]  probe0  
-	.probe6(tx_control_msg),         // input wire [0:0]  probe0  
-	.probe7(tx_control_index),       // input wire [7:0]  probe0  
-	.probe8(tx_control_data)         // input wire [7:0]  probe0  
-);
-
 generate
   begin : ctrl_bar_gen
 
@@ -95,7 +84,7 @@ generate
     begin
       if (reset)
       begin
-        adc_state <= 0;
+        adc_control <= 0;
         adc_test_mode <= 7;
         req_send_adc_state <= 0;
         req_send_adc_test_mode <= 0;
@@ -112,13 +101,13 @@ generate
       end
       else
       begin
-        adc_state[6] <= 0;
-        adc_state[7] <= 0;
+        adc_control[6] <= 0;
+        adc_control[7] <= 0;
 
         if (rd)
         begin
           case (rd_address)
-            0: rp_data <= {16'h0, adc_test_mode, adc_state};
+            0: rp_data <= {16'h0, adc_test_mode, adc_control};
             1: rp_data <= bar_spi_clk;
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
@@ -141,9 +130,12 @@ generate
               begin
                 if (wr_be[0])
                 begin
-                  adc_state[5:0] <= wr_data[5:0];
-                  if (adc_state[7] != wr_data[7])
+                  adc_control[5:0] <= wr_data[5:0];
+                  if (adc_control[7] != wr_data[7])
+                  begin
+                    adc_state <= wr_data;
                     req_send_adc_state <= 1;
+                  end
                 end
 
                 if (wr_be[1])

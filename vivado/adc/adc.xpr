@@ -37,13 +37,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="252"/>
-    <Option Name="WTModelSimExportSim" Val="251"/>
-    <Option Name="WTQuestaExportSim" Val="251"/>
-    <Option Name="WTIesExportSim" Val="250"/>
-    <Option Name="WTVcsExportSim" Val="250"/>
-    <Option Name="WTRivieraExportSim" Val="250"/>
-    <Option Name="WTActivehdlExportSim" Val="250"/>
+    <Option Name="WTXSimExportSim" Val="253"/>
+    <Option Name="WTModelSimExportSim" Val="252"/>
+    <Option Name="WTQuestaExportSim" Val="252"/>
+    <Option Name="WTIesExportSim" Val="251"/>
+    <Option Name="WTVcsExportSim" Val="251"/>
+    <Option Name="WTRivieraExportSim" Val="251"/>
+    <Option Name="WTActivehdlExportSim" Val="251"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -1018,9 +1018,7 @@
     </Run>
     <Run Id="clk_up_synth_1" Type="Ft3:Synth" SrcSet="clk_up" Part="xc7k325tffg900-2" ConstrsSet="clk_up" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/clk_up_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2019">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2019"/>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -1184,9 +1182,7 @@
     </Run>
     <Run Id="clk_up_impl_1" Type="Ft2:EntireDesign" Part="xc7k325tffg900-2" ConstrsSet="clk_up" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="clk_up_synth_1" IncludeInArchive="false" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019">
-          <Desc>Default settings for Implementation.</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
