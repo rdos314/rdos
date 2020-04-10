@@ -45,6 +45,13 @@ module adc_app (
   output reg [7:0]        tx_control_index,
   output reg [7:0]        tx_control_data,
 
+  output reg              up_rstn,
+  output reg              qpll_rst,
+  input wire              qpll_locked,
+
+  output reg              adc_rst,
+  input wire [3:0]        adc_rst_done,
+
   output reg [2:0]        state
 );
 
@@ -54,6 +61,11 @@ module adc_app (
 
   reg                     req_start;
   reg                     req_stop;
+  reg                     pend_start;
+
+  reg [3:0]               pll_rst_cnt; 
+  reg [3:0]               adc_rst_cnt;
+  reg [6:0]               user_ready_cnt;  
 
   assign spi_read = 0;
   assign spi_write = 0;
@@ -70,9 +82,12 @@ ila_1 ila_1_inst (
 	.probe6(test_mode),              // input wire [7:0]  probe0  
 	.probe7(req_start),              // input wire [0:0]  probe0  
 	.probe8(req_stop),               // input wire [0:0]  probe0  
-	.probe9(tx_control_msg),         // input wire [0:0]  probe0  
-	.probe10(tx_control_index),      // input wire [7:0]  probe0  
-	.probe11(tx_control_data)        // input wire [7:0]  probe0  
+	.probe9(pend_start),             // input wire [0:0]  probe0  
+	.probe10(qpll_rst),              // input wire [0:0]  probe0  
+	.probe11(qpll_locked),           // input wire [0:0]  probe0  
+	.probe12(tx_control_msg),        // input wire [0:0]  probe0  
+	.probe13(tx_control_index),      // input wire [7:0]  probe0  
+	.probe14(tx_control_data)        // input wire [7:0]  probe0  
 );
 
 
@@ -141,15 +156,40 @@ begin : adc_app
     always @ ( posedge clk ) 
     begin
       if (reset)
+      begin
         state <= 0;
+        up_rstn <= 0;
+        qpll_rst <= 0;
+        pend_start <= 0;
+      end
       else
       begin
         if (req_start)
-          state[0] <= 1;
+        begin
+          up_rstn <= 0;
+          qpll_rst <= 1;
+          pll_rst_cnt <= 4'h8; 
+          adc_rst_cnt <= 4'h8;    
+          user_ready_cnt <= 7'h00;  
+          pend_start <= 1;
+        end
         else
         begin
+          qpll_rst <= 0;
+
           if (req_stop)
-            state[0] <= 0;
+          begin
+            state <= 0;
+            up_rstn <= 0;
+          end
+          else
+          begin
+            if (pend_start)
+            begin
+              state[0] <= 1;
+              pend_start <= 0;
+            end
+          end
         end
       end
     end

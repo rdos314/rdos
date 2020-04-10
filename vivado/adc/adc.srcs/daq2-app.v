@@ -59,15 +59,12 @@ module daq2_app
 
   output reg  [63:0]      rx_sysref_cnt,
 
-  input wire              adc_req_start,
-  output wire             adc_ack_start,
+  input                   adc_up_rstn,
+  input                   adc_qpll_rst,
+  output wire             adc_qpll_locked,
 
-  input                   adc_start,
-  input                   adc_stop,
-  output reg              adc_started,
-  output reg              adc_probing,
-  output reg              adc_running,
-  input [7:0]             adc_test_mode,
+  input                   adc_rst,
+  output wire [3:0]       adc_rst_done,
   output reg [31:0]       adc_sync_fail_cnt,
   output reg [31:0]       adc_sync_ok_cnt,
 
@@ -100,22 +97,12 @@ module daq2_app
    
  reg  [127:0]             tx_data = 0;
 
- reg                      spi_test_done;
- reg                      pend_start;
- reg                      qpll_rst;
- wire                     qpll_locked;
-
- reg                      up_rstn;
- wire                     up_rx_rst; 
- wire                     up_rx_user_ready;
- wire [3:0]               up_rx_rst_done;
-
- reg  [3:0]               up_pll_rst_cnt;
- reg  [3:0]               up_rx_rst_cnt;
- reg  [6:0]               up_rx_user_ready_cnt;
-
  reg                      lmfc_clk_s;
  reg                      lmfc_clk_c;
+ 
+ wire                     adc_started;
+ wire                     rx_running;
+ wire                     rx_wait_for_run;
 
  wire [13:0]              adcA_0;
  wire [13:0]              adcA_1;
@@ -127,18 +114,6 @@ module daq2_app
  wire [13:0]              adcB_2;
  wire [13:0]              adcB_3;
 
- wire                     rx_test_ok;
- reg                      rx_wait_for_run;
- reg                      rx_probing;
- reg                      rx_running;
- reg                      rx_run;
- reg [7:0]                rx_test_mode;
- reg [4:0]                rx_skip_cnt;
-
- reg                      up_run;
- reg                      up_wait_for_run;
-
- reg [7:0]                curr_test_mode;
  reg [2:0]                adc_cnt;
  reg [1023:0]             adc_curr;
 
@@ -241,9 +216,9 @@ system_util_daq2_xcvr_0 util_daq2_xcvr
         .up_es_wr_1(0),
         .up_es_wr_2(0),
         .up_es_wr_3(0),
-        .up_qpll_rst_0(qpll_rst),
-        .up_qpll_locked_0(qpll_locked),
-        .up_rstn(up_rstn),
+        .up_qpll_rst_0(adc_qpll_rst),
+        .up_qpll_locked_0(adc_qpll_locked),
+        .up_rstn(adc_up_rstn),
         .up_rx_addr_0(0),
         .up_rx_addr_1(0),
         .up_rx_addr_2(0),
@@ -276,14 +251,14 @@ system_util_daq2_xcvr_0 util_daq2_xcvr
         .up_rx_ready_1(),
         .up_rx_ready_2(),
         .up_rx_ready_3(),
-        .up_rx_rst_0(up_rx_rst),
-        .up_rx_rst_1(up_rx_rst),
-        .up_rx_rst_2(up_rx_rst),
-        .up_rx_rst_3(up_rx_rst),
-        .up_rx_rst_done_0(up_rx_rst_done[0]),
-        .up_rx_rst_done_1(up_rx_rst_done[1]),
-        .up_rx_rst_done_2(up_rx_rst_done[2]),
-        .up_rx_rst_done_3(up_rx_rst_done[3]),
+        .up_rx_rst_0(adc_rst),
+        .up_rx_rst_1(adc_rst),
+        .up_rx_rst_2(adc_rst),
+        .up_rx_rst_3(adc_rst),
+        .up_rx_rst_done_0(adc_rst_done[0]),
+        .up_rx_rst_done_1(adc_rst_done[1]),
+        .up_rx_rst_done_2(adc_rst_done[2]),
+        .up_rx_rst_done_3(adc_rst_done[3]),
         .up_rx_sys_clk_sel_0(2'd3),
         .up_rx_sys_clk_sel_1(2'd3),
         .up_rx_sys_clk_sel_2(2'd3),
@@ -487,129 +462,19 @@ endfunction
   assign clkd_sync = 2'bz;
   assign dac_txen = 1'bz;
   assign dac_reset = 1'bz;
+  
+  assign adc_started = 0;
 
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
-  assign up_rx_rst = up_rx_rst_cnt[3];
-  assign up_rx_user_ready = up_rx_user_ready_cnt[6];
+  assign up_rx_user_ready = 0;
+  
+  assign rx_running = 0;
+  assign rx_wait_for_run = 0;
 
-  assign adc_ack_start = adc_req_start;
+
 
 generate
   begin : daq2_app
-
-    always @(posedge up_clk) 
-    begin
-      up_run <= rx_run;
-    end
-        
-    always @(posedge up_clk) 
-    begin
-      if (reset)
-      begin
-        adc_started <= 0;
-        adc_probing <= 0;
-        adc_running <= 0;
-
-        pend_start <= 0;
-        up_rstn <= 0;
-        qpll_rst <= 0;
-        up_wait_for_run <= 0;
-      end
-      else
-      begin
-        if (adc_start)
-        begin
-          up_rstn <= 0;
-          qpll_rst <= 1;
-          up_pll_rst_cnt <= 4'h8; 
-          up_rx_rst_cnt <= 4'h8;    
-          up_rx_user_ready_cnt <= 7'h00;  
-          pend_start <= 1;
-        end
-        else
-        begin
-          qpll_rst <= 0;
-
-          if (adc_stop)
-          begin
-            pend_start <= 0;
-            adc_started <= 0;
-            adc_probing <= 0;
-            adc_running <= 0;
-            up_wait_for_run <= 0;
-            up_rstn <= 0;
-          end
-          else
-          begin
-            up_rstn <= 1;
-
-            if (pend_start)
-            begin
-              if (adc_started)
-              begin
-//                if (up_adc_spi_done)
-//                  spi_test_done <= 1;
-
-                if (spi_test_done)
-                begin
-                  if (qpll_locked)
-                    if (up_pll_rst_cnt[3] == 1'b1) 
-                      up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
-
-                  if ((up_pll_rst_cnt[3] == 1'b1) || (rx_pll_locked != 4'b1111))
-                    up_rx_rst_cnt <= 4'h8; 
-                  else 
-                    if (up_rx_rst_cnt[3] == 1'b1) 
-                      up_rx_rst_cnt <= up_rx_rst_cnt + 1'b1;
-
-                  if (up_rx_rst_cnt[3] == 1'b1) 
-                    up_rx_user_ready_cnt <= 7'h00;   
-                  else 
-                  begin
-                    if (up_rx_user_ready_cnt[6] == 1'b0) 
-                      up_rx_user_ready_cnt <= up_rx_user_ready_cnt + 1'b1;
-                    else
-                    begin
-                      if (up_rx_rst_done == 4'b1111)
-                        pend_start <= 0;
-                    end
-                  end
-                end
-              end
-              else
-              begin
-//                up_adc_spi_adr <= 12'h550;
-//                up_adc_spi_out_data <= 8'h37;
-//                up_adc_spi_write <= 1;
-                adc_started <= 1;
-                adc_probing <= 1;
-                curr_test_mode <= 7;
-              end
-            end
-            else
-            begin
-              if (adc_probing)
-              begin
-                if (adc_test_mode != curr_test_mode)
-                begin
-                  curr_test_mode <= adc_test_mode;
-//                  up_adc_spi_adr <= 12'h550;
-//                  up_adc_spi_out_data <= adc_test_mode;
-//                  up_adc_spi_write <= 1;
-                  up_wait_for_run <= 1;
-                end
-              end
-
-              if (up_run)
-              begin
-                up_wait_for_run <= 0;
-                adc_running <= 1;
-              end
-            end
-          end
-        end
-      end
-    end
 
     always @ ( posedge rx_clk ) 
     begin
@@ -641,14 +506,6 @@ generate
     assign adcB_3 = {jesd_rx_data[95:88], jesd_rx_data[127:122]};
 
     assign rx_test_ok = check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3);
-
-    always @ ( posedge rx_clk ) 
-    begin
-      rx_probing <= adc_probing;
-      rx_running <= adc_running;
-      rx_wait_for_run <= up_wait_for_run;
-      rx_test_mode <= adc_test_mode;
-    end
 
     always @ ( posedge rx_clk ) 
     begin
@@ -687,68 +544,10 @@ generate
         if (rx_running)
           adc_cnt <= adc_cnt + 1;
         else
-        begin
-          if (rx_wait_for_run)
-          begin
-            if (rx_test_mode)
-            begin
-              if (rx_test_ok)
-                adc_cnt <= 0;
-              else
-                adc_cnt <= adc_cnt + 1;
-            end
-            else
-            begin
-              if (rx_skip_cnt[4])
-                adc_cnt <= adc_cnt + 1;
-              else
-                adc_cnt <= 0;
-
-              if (rx_test_ok)
-                rx_skip_cnt <= 0;
-              else
-                rx_skip_cnt <= rx_skip_cnt + 1;
-            end
-          end
-          else
-            adc_cnt <= 0;
-        end
+          adc_cnt <= 0;
       end
       else
         adc_cnt <= 0;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      if (rx_valid && rx_probing)
-      begin
-        if (!rx_running)
-        begin        
-          if (rx_test_ok)
-            adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
-          else
-          begin
-            if (rx_wait_for_run)
-            begin
-              if (rx_test_mode)
-                rx_run <= 1;
-              else
-              begin
-                if (rx_skip_cnt[4])
-                  rx_run <= 1;
-              end
-            end
-            else
-              adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
-          end
-        end
-      end
-      else
-      begin
-        adc_sync_fail_cnt <= 0;
-        adc_sync_ok_cnt <= 0;
-        rx_run <= 0;
-      end
     end
 
     always @ ( posedge rx_clk ) 

@@ -162,6 +162,13 @@ module adc (
 
   wire [2:0]           adc_state;
 
+  wire                 adc_up_rstn;
+  wire                 adc_qpll_rst;
+  wire                 adc_rst;
+
+  wire                 adc_qpll_locked_1;
+  wire [3:0]           adc_rst_done_1;
+
   wire [16:0]          adc_phys_index;
   wire [63:0]          adc_phys;
   wire                 adc_phys_valid;
@@ -267,6 +274,12 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_2;
 
+ (* ASYNC_REG="TRUE" *)  reg                  adc_qpll_locked_2;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_qpll_locked;
+
+ (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_rst_done_2;
+ (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_rst_done;
+
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
 
@@ -357,8 +370,12 @@ daq2_app daq2_app_inst (
     .dac_reset(dac_reset),
     .clkd_sync(clkd_sync),
 
-    .adc_req_start(0),
-    .adc_ack_start(),
+    .adc_up_rstn(adc_up_rstn),
+    .adc_qpll_rst(adc_qpll_rst),
+    .adc_qpll_locked(adc_qpll_locked_1),
+    
+    .adc_rst(adc_rst),
+    .adc_rst_done(adc_rst_done_1),
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
@@ -538,6 +555,13 @@ adc_app adc_app_inst (
     .tx_control_index(tx_up_control_index),
     .tx_control_data(tx_up_control_data),
 
+    .up_rstn(adc_up_rstn),
+    .qpll_rst(adc_qpll_rst),
+    .qpll_locked(adc_qpll_locked),
+
+    .adc_rst(adc_rst),
+    .adc_rst_done(adc_rst_done),
+
     .state(adc_state)
 );
 
@@ -625,6 +649,18 @@ generate
     begin
       up_reset_1 <= pcie_user_reset;
       up_reset <= up_reset_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_qpll_locked_2 <= adc_qpll_locked_1;
+      adc_qpll_locked <= adc_qpll_locked_2;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_rst_done_2 <= adc_rst_done_1;
+      adc_rst_done <= adc_rst_done_2;
     end
 
     always @ ( posedge up_clk ) 
