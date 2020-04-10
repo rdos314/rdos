@@ -82,27 +82,6 @@ module control_bar (
   reg [1:0]               tx_control_delay;
 
 
-ila_1 ila_1_inst (
-	.clk(clk),                       // input wire clk
-	.probe0(rx_control_msg),         // input wire [0:0]  probe0  
-	.probe1(rx_control_index),       // input wire [7:0]  probe0  
-	.probe2(rx_control_data),        // input wire [7:0]  probe0  
-	.probe3(adc_control),            // input wire [7:0]  probe0  
-	.probe4(adc_test_mode),          // input wire [7:0]  probe0  
-	.probe5(pend_control),           // input wire [0:0]  probe0  
-	.probe6(pend_index),             // input wire [7:0]  probe0  
-	.probe7(pend_data),              // input wire [7:0]  probe0  
-	.probe8(req_send_adc_state),     // input wire [0:0]  probe0  
-	.probe9(req_send_adc_test_mode), // input wire [0:0]  probe0  
-	.probe10(ack_send_adc_state),    // input wire [0:0]  probe0  
-	.probe11(ack_send_adc_test_mode),// input wire [0:0]  probe0  
-	.probe12(tx_control_msg),        // input wire [0:0]  probe0  
-	.probe13(tx_control_index),      // input wire [7:0]  probe0  
-	.probe14(tx_control_data),       // input wire [7:0]  probe0  
-	.probe15(tx_control_delay)       // input wire [1:0]  probe0  
-);
-
-
 generate
   begin : ctrl_bar_gen
 

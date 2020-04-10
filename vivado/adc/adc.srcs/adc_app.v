@@ -43,16 +43,37 @@ module adc_app (
 
   output reg              tx_control_msg,
   output reg [7:0]        tx_control_index,
-  output reg [7:0]        tx_control_data
+  output reg [7:0]        tx_control_data,
+
+  output reg [2:0]        state
 );
 
-  reg [1:0]               state;
+  reg [1:0]               req_state;
+  reg [2:0]               curr_state;
   reg [7:0]               test_mode;
+
   reg                     req_start;
   reg                     req_stop;
 
   assign spi_read = 0;
   assign spi_write = 0;
+
+
+ila_1 ila_1_inst (
+	.clk(clk),                       // input wire clk
+	.probe0(rx_control_msg),         // input wire [0:0]  probe0  
+	.probe1(rx_control_index),       // input wire [7:0]  probe0  
+	.probe2(rx_control_data),        // input wire [7:0]  probe0  
+	.probe3(req_state),              // input wire [1:0]  probe0  
+	.probe4(state),                  // input wire [2:0]  probe0  
+	.probe5(curr_state),             // input wire [2:0]  probe0  
+	.probe6(test_mode),              // input wire [7:0]  probe0  
+	.probe7(req_start),              // input wire [0:0]  probe0  
+	.probe8(req_stop),               // input wire [0:0]  probe0  
+	.probe9(tx_control_msg),         // input wire [0:0]  probe0  
+	.probe10(tx_control_index),      // input wire [7:0]  probe0  
+	.probe11(tx_control_data)        // input wire [7:0]  probe0  
+);
 
 
 generate
@@ -64,7 +85,7 @@ begin : adc_app
       begin
         req_start <= 0;
         req_stop <= 0;
-        state <= 0;
+        req_state <= 0;
         test_mode <= 7;
       end
       else
@@ -74,8 +95,8 @@ begin : adc_app
           case (rx_control_index)
             0:
             begin
-              state <= rx_control_data[1:0];
-              if (state[1] != rx_control_data[1])
+              req_state <= rx_control_data[1:0];
+              if (req_state[1] != rx_control_data[1])
               begin
                 if (rx_control_data[1])
                 begin
@@ -120,26 +141,37 @@ begin : adc_app
     always @ ( posedge clk ) 
     begin
       if (reset)
-        tx_control_msg <= 0;
+        state <= 0;
       else
       begin
         if (req_start)
-        begin
-          tx_control_index <= 0;
-          tx_control_data <= 1;
-          tx_control_msg <= 1;
-        end
+          state[0] <= 1;
         else
         begin
           if (req_stop)
-          begin
-            tx_control_index <= 0;
-            tx_control_data <= 0;
-            tx_control_msg <= 1;
-          end
-          else
-            tx_control_msg <= 0;
+            state[0] <= 0;
         end
+      end
+    end
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+      begin
+        tx_control_msg <= 0;
+        curr_state <= 0;
+      end
+      else
+      begin
+        curr_state <= state;
+        if (curr_state != state)
+        begin
+          tx_control_index <= 0;
+          tx_control_data <= state;
+          tx_control_msg <= 1;
+        end
+        else
+          tx_control_msg <= 0;
       end
     end
 

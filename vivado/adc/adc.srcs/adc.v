@@ -160,6 +160,8 @@ module adc (
 
 // ADC
 
+  wire [2:0]           adc_state;
+
   wire [16:0]          adc_phys_index;
   wire [63:0]          adc_phys;
   wire                 adc_phys_valid;
@@ -534,7 +536,9 @@ adc_app adc_app_inst (
 
     .tx_control_msg(tx_up_control_msg),
     .tx_control_index(tx_up_control_index),
-    .tx_control_data(tx_up_control_data)
+    .tx_control_data(tx_up_control_data),
+
+    .state(adc_state)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -545,9 +549,9 @@ adc_app adc_app_inst (
   OBUF   led_2_obuf (.O(led_2), .I(sys_led));
   OBUF   led_3_obuf (.O(led_3), .I(rx_led));
   OBUF   led_4_obuf (.O(led_4), .I(bar_control[4]));
-  OBUF   led_5_obuf (.O(led_5), .I(bar_control[5]));
-  OBUF   led_6_obuf (.O(led_6), .I(bar_control[6]));
-  OBUF   led_7_obuf (.O(led_7), .I(bar_control[7]));
+  OBUF   led_5_obuf (.O(led_5), .I(adc_state[0]));
+  OBUF   led_6_obuf (.O(led_6), .I(adc_state[1]));
+  OBUF   led_7_obuf (.O(led_7), .I(adc_state[2]));
 
   assign bar_control = 0;
 
