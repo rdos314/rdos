@@ -30,6 +30,7 @@
 module daq2_spi (
   input                   reset,
   input                   clk,
+  input                   pci_clk,
 
   input                   spi_rq,
   input [31:0]            spi_rq_data,
@@ -86,8 +87,9 @@ module daq2_spi (
 
 
 spi_fifo_rq spi_fifo_rq_inst (
-  .clk(clk),                   // input wire clk
-  .rst(up_reset),              // input wire rst
+  .rst(reset),                 // input wire rst
+  .wr_clk(pci_clk),            // input wire wr_clk
+  .rd_clk(clk),                // input wire rd_clk
   .din(spi_rq_data),           // input wire [31 : 0] din
   .wr_en(spi_rq),              // input wire wr_en
   .rd_en(spi_rq_ack),          // input wire rd_en
@@ -96,9 +98,11 @@ spi_fifo_rq spi_fifo_rq_inst (
   .empty(spi_rq_empty)         // output wire empty
 );
 
+
 spi_fifo_rp spi_fifo_rp_inst (
-  .clk(clk),                   // input wire clk
-  .rst(up_reset),              // input wire rst
+  .rst(reset),                 // input wire rst
+  .wr_clk(clk),                // input wire wr_clk
+  .rd_clk(pci_clk),            // input wire rd_clk
   .din(spi_rp_data_in),        // input wire [29 : 0] din
   .wr_en(spi_rp_wr),           // input wire wr_en
   .rd_en(spi_rp_ack),          // input wire rd_en
@@ -320,7 +324,7 @@ spi_fifo_rp spi_fifo_rp_inst (
             spi_count <= 0;
           end
         end
-        spi_delay <= 4;
+        spi_delay <= 1;
       end
     end
   end

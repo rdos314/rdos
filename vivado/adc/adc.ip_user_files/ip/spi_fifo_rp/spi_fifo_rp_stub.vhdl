@@ -1,9 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Fri Apr 10 11:05:55 2020
+-- Date        : Sat Mar  7 16:34:06 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/spi_fifo_rp_synth_1/spi_fifo_rp_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top spi_fifo_rp -prefix
+--               spi_fifo_rp_ spi_fifo_rp_stub.vhdl
 -- Design      : spi_fifo_rp
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7k325tffg900-2

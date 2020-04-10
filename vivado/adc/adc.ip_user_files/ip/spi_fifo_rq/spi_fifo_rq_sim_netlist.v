@@ -1,10 +1,10 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Fri Apr 10 11:03:58 2020
+// Date        : Sat Mar  7 16:31:08 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim
-//               C:/rdos/vivado/adc/adc.runs/spi_fifo_rq_synth_1/spi_fifo_rq_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top spi_fifo_rq -prefix
+//               spi_fifo_rq_ spi_fifo_rq_sim_netlist.v
 // Design      : spi_fifo_rq
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -26,7 +26,7 @@ module spi_fifo_rq
     empty);
   input rst;
   (* x_interface_info = "xilinx.com:signal:clock:1.0 write_clk CLK" *) (* x_interface_parameter = "XIL_INTERFACENAME write_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0" *) input wr_clk;
-  (* x_interface_info = "xilinx.com:signal:clock:1.0 read_clk CLK" *) (* x_interface_parameter = "XIL_INTERFACENAME read_clk, FREQ_HZ 200000000, PHASE 0.000, INSERT_VIP 0" *) input rd_clk;
+  (* x_interface_info = "xilinx.com:signal:clock:1.0 read_clk CLK" *) (* x_interface_parameter = "XIL_INTERFACENAME read_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *) input rd_clk;
   (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA" *) input [31:0]din;
   (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_EN" *) input wr_en;
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_EN" *) input rd_en;
@@ -302,14 +302,14 @@ module spi_fifo_rq
   (* C_PROG_EMPTY_TYPE_WACH = "0" *) 
   (* C_PROG_EMPTY_TYPE_WDCH = "0" *) 
   (* C_PROG_EMPTY_TYPE_WRCH = "0" *) 
-  (* C_PROG_FULL_THRESH_ASSERT_VAL = "1014" *) 
+  (* C_PROG_FULL_THRESH_ASSERT_VAL = "1009" *) 
   (* C_PROG_FULL_THRESH_ASSERT_VAL_AXIS = "1023" *) 
   (* C_PROG_FULL_THRESH_ASSERT_VAL_RACH = "1023" *) 
   (* C_PROG_FULL_THRESH_ASSERT_VAL_RDCH = "1023" *) 
   (* C_PROG_FULL_THRESH_ASSERT_VAL_WACH = "1023" *) 
   (* C_PROG_FULL_THRESH_ASSERT_VAL_WDCH = "1023" *) 
   (* C_PROG_FULL_THRESH_ASSERT_VAL_WRCH = "1023" *) 
-  (* C_PROG_FULL_THRESH_NEGATE_VAL = "1013" *) 
+  (* C_PROG_FULL_THRESH_NEGATE_VAL = "1008" *) 
   (* C_PROG_FULL_TYPE = "0" *) 
   (* C_PROG_FULL_TYPE_AXIS = "0" *) 
   (* C_PROG_FULL_TYPE_RACH = "0" *) 
@@ -321,7 +321,7 @@ module spi_fifo_rq
   (* C_RDCH_TYPE = "0" *) 
   (* C_RD_DATA_COUNT_WIDTH = "10" *) 
   (* C_RD_DEPTH = "1024" *) 
-  (* C_RD_FREQ = "200" *) 
+  (* C_RD_FREQ = "100" *) 
   (* C_RD_PNTR_WIDTH = "10" *) 
   (* C_REG_SLICE_MODE_AXIS = "0" *) 
   (* C_REG_SLICE_MODE_RACH = "0" *) 
@@ -603,7 +603,6 @@ module spi_fifo_rq
         .wr_rst_busy(NLW_U0_wr_rst_busy_UNCONNECTED));
 endmodule
 
-(* ORIG_REF_NAME = "builtin_extdepth_v6" *) 
 module spi_fifo_rq_builtin_extdepth_v6
    (empty,
     full,
@@ -670,7 +669,6 @@ module spi_fifo_rq_builtin_extdepth_v6
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "builtin_prim_v6" *) 
 module spi_fifo_rq_builtin_prim_v6
    (empty,
     full,
@@ -739,7 +737,7 @@ module spi_fifo_rq_builtin_prim_v6
   (* box_type = "PRIMITIVE" *) 
   FIFO36E1 #(
     .ALMOST_EMPTY_OFFSET(13'h0006),
-    .ALMOST_FULL_OFFSET(13'h000B),
+    .ALMOST_FULL_OFFSET(13'h0010),
     .DATA_WIDTH(36),
     .DO_REG(1),
     .EN_ECC_READ("FALSE"),
@@ -783,7 +781,6 @@ module spi_fifo_rq_builtin_prim_v6
         .WRERR(overflow_i));
 endmodule
 
-(* ORIG_REF_NAME = "builtin_top_v6" *) 
 module spi_fifo_rq_builtin_top_v6
    (empty,
     full,
@@ -826,7 +823,6 @@ module spi_fifo_rq_builtin_top_v6
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_top" *) 
 module spi_fifo_rq_fifo_generator_top
    (empty,
     full,
@@ -914,13 +910,13 @@ endmodule
 (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "7" *) (* C_PROG_EMPTY_TYPE = "0" *) 
 (* C_PROG_EMPTY_TYPE_AXIS = "0" *) (* C_PROG_EMPTY_TYPE_RACH = "0" *) (* C_PROG_EMPTY_TYPE_RDCH = "0" *) 
 (* C_PROG_EMPTY_TYPE_WACH = "0" *) (* C_PROG_EMPTY_TYPE_WDCH = "0" *) (* C_PROG_EMPTY_TYPE_WRCH = "0" *) 
-(* C_PROG_FULL_THRESH_ASSERT_VAL = "1014" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_AXIS = "1023" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_RACH = "1023" *) 
+(* C_PROG_FULL_THRESH_ASSERT_VAL = "1009" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_AXIS = "1023" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_RACH = "1023" *) 
 (* C_PROG_FULL_THRESH_ASSERT_VAL_RDCH = "1023" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_WACH = "1023" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_WDCH = "1023" *) 
-(* C_PROG_FULL_THRESH_ASSERT_VAL_WRCH = "1023" *) (* C_PROG_FULL_THRESH_NEGATE_VAL = "1013" *) (* C_PROG_FULL_TYPE = "0" *) 
+(* C_PROG_FULL_THRESH_ASSERT_VAL_WRCH = "1023" *) (* C_PROG_FULL_THRESH_NEGATE_VAL = "1008" *) (* C_PROG_FULL_TYPE = "0" *) 
 (* C_PROG_FULL_TYPE_AXIS = "0" *) (* C_PROG_FULL_TYPE_RACH = "0" *) (* C_PROG_FULL_TYPE_RDCH = "0" *) 
 (* C_PROG_FULL_TYPE_WACH = "0" *) (* C_PROG_FULL_TYPE_WDCH = "0" *) (* C_PROG_FULL_TYPE_WRCH = "0" *) 
 (* C_RACH_TYPE = "0" *) (* C_RDCH_TYPE = "0" *) (* C_RD_DATA_COUNT_WIDTH = "10" *) 
-(* C_RD_DEPTH = "1024" *) (* C_RD_FREQ = "200" *) (* C_RD_PNTR_WIDTH = "10" *) 
+(* C_RD_DEPTH = "1024" *) (* C_RD_FREQ = "100" *) (* C_RD_PNTR_WIDTH = "10" *) 
 (* C_REG_SLICE_MODE_AXIS = "0" *) (* C_REG_SLICE_MODE_RACH = "0" *) (* C_REG_SLICE_MODE_RDCH = "0" *) 
 (* C_REG_SLICE_MODE_WACH = "0" *) (* C_REG_SLICE_MODE_WDCH = "0" *) (* C_REG_SLICE_MODE_WRCH = "0" *) 
 (* C_SELECT_XPM = "0" *) (* C_SYNCHRONIZER_STAGE = "2" *) (* C_UNDERFLOW_LOW = "0" *) 
@@ -936,7 +932,7 @@ endmodule
 (* C_WR_DEPTH_WRCH = "16" *) (* C_WR_FREQ = "250" *) (* C_WR_PNTR_WIDTH = "10" *) 
 (* C_WR_PNTR_WIDTH_AXIS = "10" *) (* C_WR_PNTR_WIDTH_RACH = "4" *) (* C_WR_PNTR_WIDTH_RDCH = "10" *) 
 (* C_WR_PNTR_WIDTH_WACH = "4" *) (* C_WR_PNTR_WIDTH_WDCH = "10" *) (* C_WR_PNTR_WIDTH_WRCH = "4" *) 
-(* C_WR_RESPONSE_LATENCY = "1" *) (* ORIG_REF_NAME = "fifo_generator_v13_2_5" *) 
+(* C_WR_RESPONSE_LATENCY = "1" *) 
 module spi_fifo_rq_fifo_generator_v13_2_5
    (backup,
     backup_marker,
@@ -1954,7 +1950,6 @@ module spi_fifo_rq_fifo_generator_v13_2_5
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_v13_2_5_builtin" *) 
 module spi_fifo_rq_fifo_generator_v13_2_5_builtin
    (empty,
     full,
@@ -2003,7 +1998,6 @@ module spi_fifo_rq_fifo_generator_v13_2_5_builtin
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_v13_2_5_synth" *) 
 module spi_fifo_rq_fifo_generator_v13_2_5_synth
    (empty,
     full,
@@ -2046,7 +2040,6 @@ module spi_fifo_rq_fifo_generator_v13_2_5_synth
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "reset_builtin" *) 
 module spi_fifo_rq_reset_builtin
    (RST,
     rd_clk,

@@ -1,10 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Fri Apr 10 11:03:58 2020
+-- Date        : Sat Mar  7 16:31:08 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim
---               C:/rdos/vivado/adc/adc.runs/spi_fifo_rq_synth_1/spi_fifo_rq_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top spi_fifo_rq -prefix
+--               spi_fifo_rq_ spi_fifo_rq_sim_netlist.vhdl
 -- Design      : spi_fifo_rq
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -26,8 +26,6 @@ entity spi_fifo_rq_builtin_prim_v6 is
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_builtin_prim_v6 : entity is "builtin_prim_v6";
 end spi_fifo_rq_builtin_prim_v6;
 
 architecture STRUCTURE of spi_fifo_rq_builtin_prim_v6 is
@@ -72,7 +70,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"0006",
-      ALMOST_FULL_OFFSET => X"000B",
+      ALMOST_FULL_OFFSET => X"0010",
       DATA_WIDTH => 36,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -154,8 +152,6 @@ entity spi_fifo_rq_reset_builtin is
     wr_clk : in STD_LOGIC;
     \^rst\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_reset_builtin : entity is "reset_builtin";
 end spi_fifo_rq_reset_builtin;
 
 architecture STRUCTURE of spi_fifo_rq_reset_builtin is
@@ -485,8 +481,6 @@ entity spi_fifo_rq_builtin_extdepth_v6 is
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_builtin_extdepth_v6 : entity is "builtin_extdepth_v6";
 end spi_fifo_rq_builtin_extdepth_v6;
 
 architecture STRUCTURE of spi_fifo_rq_builtin_extdepth_v6 is
@@ -566,8 +560,6 @@ entity spi_fifo_rq_builtin_top_v6 is
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_builtin_top_v6 : entity is "builtin_top_v6";
 end spi_fifo_rq_builtin_top_v6;
 
 architecture STRUCTURE of spi_fifo_rq_builtin_top_v6 is
@@ -601,8 +593,6 @@ entity spi_fifo_rq_fifo_generator_v13_2_5_builtin is
     din : in STD_LOGIC_VECTOR ( 31 downto 0 );
     rst : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_v13_2_5_builtin : entity is "fifo_generator_v13_2_5_builtin";
 end spi_fifo_rq_fifo_generator_v13_2_5_builtin;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_v13_2_5_builtin is
@@ -644,8 +634,6 @@ entity spi_fifo_rq_fifo_generator_top is
     din : in STD_LOGIC_VECTOR ( 31 downto 0 );
     rst : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_top : entity is "fifo_generator_top";
 end spi_fifo_rq_fifo_generator_top;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_top is
@@ -679,8 +667,6 @@ entity spi_fifo_rq_fifo_generator_v13_2_5_synth is
     din : in STD_LOGIC_VECTOR ( 31 downto 0 );
     rst : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_v13_2_5_synth : entity is "fifo_generator_v13_2_5_synth";
 end spi_fifo_rq_fifo_generator_v13_2_5_synth;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_v13_2_5_synth is
@@ -1207,7 +1193,7 @@ entity spi_fifo_rq_fifo_generator_v13_2_5 is
   attribute C_PROG_EMPTY_TYPE_WRCH : integer;
   attribute C_PROG_EMPTY_TYPE_WRCH of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_FULL_THRESH_ASSERT_VAL of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1014;
+  attribute C_PROG_FULL_THRESH_ASSERT_VAL of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1009;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1023;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_RACH : integer;
@@ -1221,7 +1207,7 @@ entity spi_fifo_rq_fifo_generator_v13_2_5 is
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1023;
   attribute C_PROG_FULL_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_FULL_THRESH_NEGATE_VAL of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1013;
+  attribute C_PROG_FULL_THRESH_NEGATE_VAL of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1008;
   attribute C_PROG_FULL_TYPE : integer;
   attribute C_PROG_FULL_TYPE of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_FULL_TYPE_AXIS : integer;
@@ -1245,7 +1231,7 @@ entity spi_fifo_rq_fifo_generator_v13_2_5 is
   attribute C_RD_DEPTH : integer;
   attribute C_RD_DEPTH of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1024;
   attribute C_RD_FREQ : integer;
-  attribute C_RD_FREQ of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 200;
+  attribute C_RD_FREQ of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 100;
   attribute C_RD_PNTR_WIDTH : integer;
   attribute C_RD_PNTR_WIDTH of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 10;
   attribute C_REG_SLICE_MODE_AXIS : integer;
@@ -1340,8 +1326,6 @@ entity spi_fifo_rq_fifo_generator_v13_2_5 is
   attribute C_WR_PNTR_WIDTH_WRCH of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 4;
   attribute C_WR_RESPONSE_LATENCY : integer;
   attribute C_WR_RESPONSE_LATENCY of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1;
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_v13_2_5 : entity is "fifo_generator_v13_2_5";
 end spi_fifo_rq_fifo_generator_v13_2_5;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_v13_2_5 is
@@ -2315,7 +2299,7 @@ architecture STRUCTURE of spi_fifo_rq is
   attribute C_PROG_EMPTY_TYPE_WRCH : integer;
   attribute C_PROG_EMPTY_TYPE_WRCH of U0 : label is 0;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_FULL_THRESH_ASSERT_VAL of U0 : label is 1014;
+  attribute C_PROG_FULL_THRESH_ASSERT_VAL of U0 : label is 1009;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_AXIS of U0 : label is 1023;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_RACH : integer;
@@ -2329,7 +2313,7 @@ architecture STRUCTURE of spi_fifo_rq is
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_FULL_THRESH_ASSERT_VAL_WRCH of U0 : label is 1023;
   attribute C_PROG_FULL_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_FULL_THRESH_NEGATE_VAL of U0 : label is 1013;
+  attribute C_PROG_FULL_THRESH_NEGATE_VAL of U0 : label is 1008;
   attribute C_PROG_FULL_TYPE : integer;
   attribute C_PROG_FULL_TYPE of U0 : label is 0;
   attribute C_PROG_FULL_TYPE_AXIS : integer;
@@ -2353,7 +2337,7 @@ architecture STRUCTURE of spi_fifo_rq is
   attribute C_RD_DEPTH : integer;
   attribute C_RD_DEPTH of U0 : label is 1024;
   attribute C_RD_FREQ : integer;
-  attribute C_RD_FREQ of U0 : label is 200;
+  attribute C_RD_FREQ of U0 : label is 100;
   attribute C_RD_PNTR_WIDTH : integer;
   attribute C_RD_PNTR_WIDTH of U0 : label is 10;
   attribute C_REG_SLICE_MODE_AXIS : integer;
@@ -2453,7 +2437,7 @@ architecture STRUCTURE of spi_fifo_rq is
   attribute x_interface_info of full : signal is "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE FULL";
   attribute x_interface_info of rd_clk : signal is "xilinx.com:signal:clock:1.0 read_clk CLK";
   attribute x_interface_parameter : string;
-  attribute x_interface_parameter of rd_clk : signal is "XIL_INTERFACENAME read_clk, FREQ_HZ 200000000, PHASE 0.000, INSERT_VIP 0";
+  attribute x_interface_parameter of rd_clk : signal is "XIL_INTERFACENAME read_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0";
   attribute x_interface_info of rd_en : signal is "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_EN";
   attribute x_interface_info of wr_clk : signal is "xilinx.com:signal:clock:1.0 write_clk CLK";
   attribute x_interface_parameter of wr_clk : signal is "XIL_INTERFACENAME write_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0";

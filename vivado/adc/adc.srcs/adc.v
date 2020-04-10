@@ -229,10 +229,10 @@ module adc (
   wire                 tx_pci_control_msg;
   wire [7:0]           tx_pci_control_index;
   wire [7:0]           tx_pci_control_data;
-  reg                  rx_sys_control_msg_3;
-  reg                  rx_sys_control_msg;
-  reg  [7:0]           rx_sys_control_index;
-  reg  [7:0]           rx_sys_control_data;
+  reg                  rx_up_control_msg_3;
+  reg                  rx_up_control_msg;
+  reg  [7:0]           rx_up_control_index;
+  reg  [7:0]           rx_up_control_data;
 
 // LED
 
@@ -264,12 +264,11 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  adc_ack_start_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_ack_start;
 
- (* ASYNC_REG="TRUE" *)  reg                  sys_reset_1;
- (* ASYNC_REG="TRUE" *)  reg                  sys_reset;
+ (* ASYNC_REG="TRUE" *)  reg                  up_reset_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_reset;
 
- (* ASYNC_REG="TRUE" *)  reg                  rx_sys_control_msg_1;
- (* ASYNC_REG="TRUE" *)  reg                  rx_sys_control_msg_2;
-
+ (* ASYNC_REG="TRUE" *)  reg                  rx_up_control_msg_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_up_control_msg_2;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -325,9 +324,15 @@ module adc (
     .IB (trig_n),
     .O (trig));
 
+clk_up clk_up_inst
+   (
+   .clk_out1(up_clk),
+   .clk_in1(sys_clk)
+); 
+
 daq2_app daq2_app_inst (
     .reset(up_reset),
-    .up_clk(sys_clk),
+    .up_clk(up_clk),
     .rx_clk(rx_clk),
     .tx_clk(tx_clk),
 
@@ -423,8 +428,9 @@ daq2_spi daq2_spi_inst (
     .spi_sdio (spi_sdio),
     .spi_dir (spi_dir),
 
-    .reset (sys_reset),
-    .clk (sys_clk),
+    .reset (up_reset),
+    .clk (up_clk),
+    .pci_clk (pcie_user_clk),
 
     .spi_rq (spi_rq),
     .spi_rq_data (spi_rq_data),
@@ -512,8 +518,8 @@ phys_bar dac_bar_inst (
 );
 
 adc_app adc_app_inst (
-    .reset (sys_reset),
-    .clk (sys_clk),
+    .reset (up_reset),
+    .clk (up_clk),
 
     .spi_read(adc_spi_read),
     .spi_write(adc_spi_write),
@@ -523,9 +529,9 @@ adc_app adc_app_inst (
     .spi_running(adc_spi_running),
     .spi_done(adc_spi_done),
 
-    .rx_control_msg(rx_sys_control_msg),
-    .rx_control_index(rx_sys_control_index),
-    .rx_control_data(rx_sys_control_data)
+    .rx_control_msg(rx_up_control_msg),
+    .rx_control_index(rx_up_control_index),
+    .rx_control_data(rx_up_control_data)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -620,28 +626,27 @@ generate
       pci_adc_ack_start <= adc_ack_start_1;
     end
     
-    always @ ( posedge sys_clk ) 
+    always @ ( posedge up_clk ) 
     begin
-      sys_reset_1 <= pcie_user_reset;
-      sys_reset <= sys_reset_1;
+      up_reset_1 <= pcie_user_reset;
+      up_reset <= up_reset_1;
     end
 
-    always @ ( posedge sys_clk ) 
+    always @ ( posedge up_clk ) 
     begin
-      rx_sys_control_msg_1 <= tx_pci_control_msg;
-      rx_sys_control_msg_2 <= rx_sys_control_msg_1;
-      rx_sys_control_msg_3 <= rx_sys_control_msg_2;
+      rx_up_control_msg_1 <= tx_pci_control_msg;
+      rx_up_control_msg_2 <= rx_up_control_msg_1;
+      rx_up_control_msg_3 <= rx_up_control_msg_2;
       
-      if (!rx_sys_control_msg_3 && rx_sys_control_msg_2)
+      if (!rx_up_control_msg_3 && rx_up_control_msg_2)
       begin
-        rx_sys_control_msg <= 1;
-        rx_sys_control_index <= tx_pci_control_index;
-        rx_sys_control_data <= tx_pci_control_data;
+        rx_up_control_msg <= 1;
+        rx_up_control_index <= tx_pci_control_index;
+        rx_up_control_data <= tx_pci_control_data;
       end
       else
-        rx_sys_control_msg <= 0;
+        rx_up_control_msg <= 0;
     end
-
 
   end
 
