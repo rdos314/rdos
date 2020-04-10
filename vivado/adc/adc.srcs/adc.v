@@ -164,17 +164,6 @@ module adc (
   wire [63:0]          adc_phys;
   wire                 adc_phys_valid;
 
-  wire                 adc_start;
-  wire                 adc_stop;
-  wire [7:0]           adc_test_mode;
-
-  wire                 pci_adc_req_start;
-  wire                 rx_adc_ack_start;
-
-  wire                 adc_started;
-  wire                 adc_probing;
-  wire                 adc_running;
-
   wire [31:0]          rx_sync_fail_cnt;
   wire [31:0]          rx_sync_ok_cnt;
   wire [63:0]          rx_sysref_cnt;
@@ -234,6 +223,15 @@ module adc (
   reg  [7:0]           rx_up_control_index;
   reg  [7:0]           rx_up_control_data;
 
+
+  wire                 tx_up_control_msg;
+  wire [7:0]           tx_up_control_index;
+  wire [7:0]           tx_up_control_data;
+  reg                  rx_pci_control_msg_3;
+  reg                  rx_pci_control_msg;
+  reg  [7:0]           rx_pci_control_index;
+  reg  [7:0]           rx_pci_control_data;
+
 // LED
 
   reg [31:0]           sys_cnt;
@@ -258,17 +256,14 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg [63:0]           adc_sysref_cnt_1;
  (* ASYNC_REG="TRUE" *)  reg [63:0]           pci_adc_sysref_cnt;
 
- (* ASYNC_REG="TRUE" *)  reg                  adc_req_start_1;
- (* ASYNC_REG="TRUE" *)  reg                  rx_adc_req_start;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_ack_start_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_ack_start;
-
  (* ASYNC_REG="TRUE" *)  reg                  up_reset_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_reset;
 
  (* ASYNC_REG="TRUE" *)  reg                  rx_up_control_msg_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_up_control_msg_2;
+
+ (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_2;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -360,8 +355,8 @@ daq2_app daq2_app_inst (
     .dac_reset(dac_reset),
     .clkd_sync(clkd_sync),
 
-    .adc_req_start(rx_adc_req_start),
-    .adc_ack_start(rx_adc_ack_start),
+    .adc_req_start(0),
+    .adc_ack_start(),
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
@@ -475,7 +470,11 @@ control_bar control_bar_inst (
     
     .tx_control_msg(tx_pci_control_msg),
     .tx_control_index(tx_pci_control_index),
-    .tx_control_data(tx_pci_control_data)
+    .tx_control_data(tx_pci_control_data),
+    
+    .rx_control_msg(rx_pci_control_msg),
+    .rx_control_index(rx_pci_control_index),
+    .rx_control_data(rx_pci_control_data)
 );
 
 
@@ -531,7 +530,11 @@ adc_app adc_app_inst (
 
     .rx_control_msg(rx_up_control_msg),
     .rx_control_index(rx_up_control_index),
-    .rx_control_data(rx_up_control_data)
+    .rx_control_data(rx_up_control_data),
+
+    .tx_control_msg(tx_up_control_msg),
+    .tx_control_index(tx_up_control_index),
+    .tx_control_data(tx_up_control_data)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -596,34 +599,22 @@ generate
     end
 
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_user_clk ) 
     begin
       adc_sync_fail_cnt_1 <= rx_sync_fail_cnt;
       pci_adc_sync_fail_cnt <=  adc_sync_fail_cnt_1;
     end
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_user_clk ) 
     begin
       adc_sync_ok_cnt_1 <= rx_sync_ok_cnt;
       pci_adc_sync_ok_cnt <= adc_sync_ok_cnt_1;
     end
 
-    always @ ( posedge user_clk ) 
+    always @ ( posedge pcie_user_clk ) 
     begin
       adc_sysref_cnt_1 <= rx_sysref_cnt;
       pci_adc_sysref_cnt <= adc_sysref_cnt_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_req_start_1 <= pci_adc_req_start;
-      rx_adc_req_start <= adc_req_start_1;
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      adc_ack_start_1 <= rx_adc_ack_start;
-      pci_adc_ack_start <= adc_ack_start_1;
     end
     
     always @ ( posedge up_clk ) 
@@ -646,6 +637,22 @@ generate
       end
       else
         rx_up_control_msg <= 0;
+    end
+
+    always @ ( posedge pcie_user_clk ) 
+    begin
+      rx_pci_control_msg_1 <= tx_up_control_msg;
+      rx_pci_control_msg_2 <= rx_pci_control_msg_1;
+      rx_pci_control_msg_3 <= rx_pci_control_msg_2;
+      
+      if (!rx_pci_control_msg_3 && rx_pci_control_msg_2)
+      begin
+        rx_pci_control_msg <= 1;
+        rx_pci_control_index <= tx_up_control_index;
+        rx_pci_control_data <= tx_up_control_data;
+      end
+      else
+        rx_pci_control_msg <= 0;
     end
 
   end
