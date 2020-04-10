@@ -46,11 +46,10 @@ module adc_app (
   output reg [7:0]        tx_control_data
 );
 
-  reg [7:0]               state;
+  reg [1:0]               state;
   reg [7:0]               test_mode;
-
-  reg                     send_state;
-  reg                     send_test_mode;
+  reg                     req_start;
+  reg                     req_stop;
 
   assign spi_read = 0;
   assign spi_write = 0;
@@ -63,10 +62,10 @@ begin : adc_app
     begin
       if (reset)
       begin
+        req_start <= 0;
+        req_stop <= 0;
         state <= 0;
         test_mode <= 7;
-        send_state <= 0;
-        send_test_mode <= 0;
       end
       else
       begin
@@ -75,54 +74,74 @@ begin : adc_app
           case (rx_control_index)
             0:
             begin
-              state <= rx_control_data;
-              send_state <= 1;
-              send_test_mode <= 0;
+              state <= rx_control_data[1:0];
+              if (state[1] != rx_control_data[1])
+              begin
+                if (rx_control_data[1])
+                begin
+                  req_start <= 1;
+                  req_stop <= 0;
+                end
+                else
+                begin
+                  req_start <= 0;
+                  req_stop <= 1;
+                end
+              end
+              else
+              begin
+                req_start <= 0;
+                req_stop <= 0;
+              end
             end
 
             1:
             begin
+              req_start <= 0;
+              req_stop <= 0;
               test_mode <= rx_control_data;
-              send_state <= 0;
-              send_test_mode <= 1;
             end
 
             default:
             begin
-              send_state <= 0;
-              send_test_mode <= 0;
+              req_start <= 0;
+              req_stop <= 0;
             end
           endcase
         end
         else
         begin
-          send_state <= 0;
-          send_test_mode <= 0;
+          req_start <= 0;
+          req_stop <= 0;
         end
       end
      end
 
     always @ ( posedge clk ) 
     begin
-      if (send_state)
-      begin
-        tx_control_index <= 0;
-        tx_control_data <= state;
-        tx_control_msg <= 1;
-      end
+      if (reset)
+        tx_control_msg <= 0;
       else
       begin
-        if (send_test_mode)
+        if (req_start)
         begin
-          tx_control_index <= 1;
-          tx_control_data <= test_mode;
+          tx_control_index <= 0;
+          tx_control_data <= 1;
           tx_control_msg <= 1;
         end
         else
-          tx_control_msg <= 0;
+        begin
+          if (req_stop)
+          begin
+            tx_control_index <= 0;
+            tx_control_data <= 0;
+            tx_control_msg <= 1;
+          end
+          else
+            tx_control_msg <= 0;
+        end
       end
     end
-
 
 end
 endgenerate

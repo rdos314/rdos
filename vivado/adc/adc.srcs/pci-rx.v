@@ -97,33 +97,6 @@ module pci_rx (
   reg  [127:0]   q_dac_header;
   reg            q_dac_done;
 
-
-
-ila_0 ila_0_inst (
-	.clk(clk),                         // input wire clk
-	.probe0(m_axis_rx_tvalid),         // input wire [0:0]  probe0  
-	.probe1(m_axis_rx_tready),         // input wire [0:0]  probe0  
-	.probe2(m_axis_rx_tuser[13]),      // input wire [0:0]  probe0  
-	.probe3(m_axis_rx_tuser[14]),      // input wire [0:0]  probe0  
-	.probe4(m_axis_rx_tuser[21]),      // input wire [0:0]  probe0  
-	.probe5(m_axis_rx_tdata[63:0]),    // input wire [63:0]  probe0  
-	.probe6(m_axis_rx_tdata[127:64]),  // input wire [63:0]  probe0  
-	.probe7(q_bar_shift),              // input wire [2:0]  probe0  
-	.probe8(q_bar_done),               // input wire [0:0]  probe0  
-	.probe9(pkt_header[63:0]),         // input wire [63:0]  probe0  
-	.probe10(q_type),                  // input wire [7:0]  probe0  
-	.probe11(q_len),                   // input wire [9:0]  probe0  
-	.probe12(q_bar),                   // input wire [7:0]  probe0  
-	.probe13(q_bar_data[63:0]),        // input wire [63:0]  probe0  
-	.probe14(q_bar_data[127:64]),      // input wire [63:0]  probe0  
-	.probe15(bar_data[63:0]),          // input wire [63:0]  probe0  
-	.probe16(bar_data[127:64]),        // input wire [63:0]  probe0  
-	.probe17(bar_header[63:0]),        // input wire [63:0]  probe0  
-	.probe18(bar_be),                  // input wire [15:0]  probe0  
-	.probe19(bar_count),               // input wire [7:0]  probe0  
-	.probe20(bar_sel),                 // input wire [7:0]  probe0  
-	.probe21(bar_valid)                // input wire [0:0]  probe0  
-); 
 	
 function [15:0] first_and_last_to_be;
   input [3:0] first_be;

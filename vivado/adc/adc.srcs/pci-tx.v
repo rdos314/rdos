@@ -98,27 +98,6 @@ module pci_tx (
   reg                       adc_tx_tlast;
   reg                       adc_tx_tvalid;
 
-
-ila_2 ila_2_inst (
-	.clk(clk),                         // input wire clk
-	.probe0(s_axis_tx_tvalid),         // input wire [0:0]  probe0  
-	.probe1(s_axis_tx_tready),         // input wire [0:0]  probe0  
-	.probe2(s_axis_tx_tlast),          // input wire [0:0]  probe0  
-	.probe3(s_axis_tx_tkeep),          // input wire [15:0]  probe0  
-	.probe4(s_axis_tx_tdata[63:0]),    // input wire [63:0]  probe0  
-	.probe5(s_axis_tx_tdata[127:64]),  // input wire [63:0]  probe0  
-	.probe6(bar_wr),                   // input wire [0:0]  probe0  
-	.probe7(bar_busy),                 // input wire [0:0]  probe0  
-	.probe8(adc_wr),                   // input wire [0:0]  probe0  
-	.probe9(adc_busy),                 // input wire [0:0]  probe0  
-	.probe10(bar_tx_tvalid),           // input wire [0:0]  probe0  
-	.probe11(adc_tx_tvalid),           // input wire [0:0]  probe0  
-	.probe12(bar_start),               // input wire [0:0]  probe0  
-	.probe13(adc_start),               // input wire [0:0]  probe0  
-	.probe14(bar_count),               // input wire [9:0]  probe0  
-	.probe15(adc_count)                // input wire [9:0]  probe0  
-);
-
 generate
   begin : gen_pci_tx
 

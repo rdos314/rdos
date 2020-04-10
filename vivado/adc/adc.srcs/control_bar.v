@@ -70,23 +70,16 @@ module control_bar (
   reg [31:0]              bar_spi_adc;
   reg [31:0]              bar_spi_dac;
 
-  reg [7:0]               adc_control;
-
   reg                     req_send_adc_state;
   reg                     ack_send_adc_state;
   reg [7:0]               adc_state;
+  reg [1:0]               adc_req_state;
 
   reg                     req_send_adc_test_mode;
   reg                     ack_send_adc_test_mode;
   reg [7:0]               adc_test_mode;
 
   reg [1:0]               tx_control_delay;
-
-  reg                     pend_control;
-  reg                     ack_control;
-  reg [7:0]               pend_index;
-  reg [7:0]               pend_data;
-
 
 
 ila_1 ila_1_inst (
@@ -117,11 +110,11 @@ generate
     begin
       if (reset)
       begin
-        adc_control <= 0;
+        adc_state[5:0] <= 0;
+        adc_req_state <= 0;
         adc_test_mode <= 7;
         req_send_adc_state <= 0;
         req_send_adc_test_mode <= 0;
-        ack_control <= 0;
 
         bar_spi_clk <= 0;
         bar_spi_adc <= 0;
@@ -138,7 +131,7 @@ generate
         if (rd)
         begin
           case (rd_address)
-            0: rp_data <= {16'h0, adc_test_mode, adc_control};
+            0: rp_data <= {16'h0, adc_test_mode, adc_state};
             1: rp_data <= bar_spi_clk;
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
@@ -161,7 +154,8 @@ generate
               begin
                 if (wr_be[0])
                 begin
-                  adc_state <= wr_data;
+                  adc_state[5:0] <= wr_data[5:0];
+                  adc_req_state[1:0] <= wr_data[7:6];
                   req_send_adc_state <= 1;
                 end
 
@@ -314,17 +308,6 @@ generate
           
             if (ack_send_adc_test_mode)
               req_send_adc_test_mode <= 0;
-
-            if (pend_control)
-            begin
-              ack_control <= 1;
-              case (pend_index)
-                0: adc_control <= pend_data;
-                1: adc_test_mode <= pend_data;
-              endcase
-            end
-            else
-              ack_control <= 0;
 
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
@@ -497,6 +480,7 @@ generate
       begin
         tx_control_msg <= 0;
         tx_control_delay <= 0;
+        tx_control_data <= 0;
         ack_send_adc_state <= 0;
         ack_send_adc_test_mode <= 0;
       end
@@ -516,7 +500,7 @@ generate
             else
             begin
               tx_control_index <= 0;
-              tx_control_data <= adc_state;
+              tx_control_data <= adc_req_state;
               tx_control_msg <= 1;
               tx_control_delay <= 3;
               ack_send_adc_state <= 1;
@@ -555,19 +539,35 @@ generate
     always @ ( posedge clk ) 
     begin
       if (reset)
-        pend_control <= 0;
+        adc_state[7:6] <= 0;
       else
       begin
         if (rx_control_msg)
         begin
-          pend_control <= 1;
-          pend_index <= rx_control_index;
-          pend_data <= rx_control_data;
-        end
-        else
-        begin
-          if (ack_control)
-            pend_control <= 0;
+          case (rx_control_index)
+            0: 
+            if (rx_control_data[0])
+            begin
+              if (rx_control_data[1])
+              begin
+                adc_state[7] <= 1;
+                if (rx_control_data[2])
+                  adc_state[6] <= 1;
+                else
+                  adc_state[6] <= 0;
+              end
+              else
+              begin
+                adc_state[6] <= 1;
+                adc_state[7] <= 0;
+              end
+            end
+            else
+            begin
+              adc_state[6] <= 0;
+              adc_state[7] <= 0;
+            end
+          endcase
         end
       end
     end  
