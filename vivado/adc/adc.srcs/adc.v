@@ -261,12 +261,6 @@ module adc (
 
 // clock domain crossings
 
- (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_fail_cnt_1;
- (* ASYNC_REG="TRUE" *)  reg [31:0]           pci_adc_sync_fail_cnt;
-
- (* ASYNC_REG="TRUE" *)  reg [31:0]           adc_sync_ok_cnt_1;
- (* ASYNC_REG="TRUE" *)  reg [31:0]           pci_adc_sync_ok_cnt;
-
  (* ASYNC_REG="TRUE" *)  reg [63:0]           adc_sysref_cnt_1;
  (* ASYNC_REG="TRUE" *)  reg [63:0]           pci_adc_sysref_cnt;
 
@@ -389,9 +383,6 @@ daq2_app daq2_app_inst (
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
-    .adc_sync_fail_cnt(rx_sync_fail_cnt),
-    .adc_sync_ok_cnt(rx_sync_ok_cnt),
-  
     .adc_wr(rx_adc_wr),
     .adc_data(rx_adc_data)
 );
@@ -494,8 +485,6 @@ control_bar control_bar_inst (
     .spi_rp_ack (spi_rp_ack),
 
     .adc_sysref_cnt(pci_adc_sysref_cnt),
-    .adc_sync_fail_cnt(pci_adc_sync_fail_cnt),
-    .adc_sync_ok_cnt(pci_adc_sync_ok_cnt),
     
     .tx_control_msg(tx_pci_control_msg),
     .tx_control_index(tx_pci_control_index),
@@ -639,19 +628,6 @@ generate
       end
       else
         rx_cnt <= rx_cnt + 1;
-    end
-
-
-    always @ ( posedge pcie_user_clk ) 
-    begin
-      adc_sync_fail_cnt_1 <= rx_sync_fail_cnt;
-      pci_adc_sync_fail_cnt <=  adc_sync_fail_cnt_1;
-    end
-
-    always @ ( posedge pcie_user_clk ) 
-    begin
-      adc_sync_ok_cnt_1 <= rx_sync_ok_cnt;
-      pci_adc_sync_ok_cnt <= adc_sync_ok_cnt_1;
     end
 
     always @ ( posedge pcie_user_clk ) 

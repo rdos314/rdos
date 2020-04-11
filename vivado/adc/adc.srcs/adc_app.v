@@ -190,8 +190,6 @@ begin : adc_app
 
                 if (spi_test_done)
                 begin
-                  adc_probing <= 1;
-
                   if (qpll_locked)
                     if (pll_rst_cnt[3] == 1'b1) 
                       pll_rst_cnt <= pll_rst_cnt + 1'b1;
@@ -211,7 +209,10 @@ begin : adc_app
                     else
                     begin
                       if (adc_rst_done == 4'b1111)
+                      begin
                         pend_start <= 0;
+                        adc_probing <= 1;
+                      end
                     end
                   end
                 end

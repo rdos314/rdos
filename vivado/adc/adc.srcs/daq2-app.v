@@ -67,11 +67,11 @@ module daq2_app
   input                   adc_user_ready,
   output wire [3:0]       adc_pll_locked,
   output wire [3:0]       adc_rst_done,
-  output reg [31:0]       adc_sync_fail_cnt,
-  output reg [31:0]       adc_sync_ok_cnt,
 
   input                   adc_started,
   input                   adc_probing,
+  output reg              adc_sync_ok,
+  output reg              adc_sync_fail,
 
   output reg              adc_wr,
   output reg [1023:0]     adc_data
@@ -105,6 +105,9 @@ module daq2_app
  reg                      lmfc_clk_c;
 
  reg                      rx_run;
+
+ reg [1:0]                adc_sync_fail_cnt;
+ reg [15:0]               adc_sync_ok_cnt;
  
  wire                     rx_running;
  wire                     rx_wait_for_run;
@@ -486,21 +489,20 @@ endfunction
 
 ila_0 ila_0_inst (
     .clk(rx_clk),                    // input wire clk
-    .probe0(adc_started),            // input wire [0:0]  probe0  
-    .probe1(adc_probing),            // input wire [0:0]  probe0  
-    .probe2(adc_user_ready),         // input wire [0:0]  probe0  
-    .probe3(adc_rst_done),           // input wire [3:0]  probe0  
-    .probe4(rx_valid),               // input wire [0:0]  probe0  
-    .probe5(rx_run),                 // input wire [0:0]  probe0  
-    .probe6(rx_test_ok),             // input wire [0:0]  probe0  
-    .probe7(adcA_0),                 // input wire [13:0]  probe0
-    .probe8(adcB_0),                 // input wire [13:0]  probe0
-    .probe9(adcA_1),                 // input wire [13:0]  probe0
-    .probe10(adcB_1),                // input wire [13:0]  probe0
-    .probe11(adcA_2),                // input wire [13:0]  probe0
-    .probe12(adcB_2),                // input wire [13:0]  probe0
-    .probe13(adcA_3),                // input wire [13:0]  probe0
-    .probe14(adcB_3)                 // input wire [13:0]  probe0
+    .probe0(rx_valid),               // input wire [0:0]  probe0  
+    .probe1(rx_test_ok),             // input wire [0:0]  probe0  
+    .probe2(adc_sync_ok),            // input wire [0:0]  probe0  
+    .probe3(adc_sync_fail),          // input wire [0:0]  probe0  
+    .probe4(adc_sync_ok_cnt),        // input wire [15:0]  probe0  
+    .probe5(adc_sync_fail_cnt),      // input wire [1:0]  probe0  
+    .probe6(adcA_0),                 // input wire [13:0]  probe0
+    .probe7(adcB_0),                 // input wire [13:0]  probe0
+    .probe8(adcA_1),                 // input wire [13:0]  probe0
+    .probe9(adcB_1),                 // input wire [13:0]  probe0
+    .probe10(adcA_2),                // input wire [13:0]  probe0
+    .probe11(adcB_2),                // input wire [13:0]  probe0
+    .probe12(adcA_3),                // input wire [13:0]  probe0
+    .probe13(adcB_3)                 // input wire [13:0]  probe0
 );
 
 generate
@@ -569,21 +571,38 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_valid && adc_probing)
+      if (adc_probing)
       begin
-        if (!rx_running)
+        if (rx_valid && !rx_running)
         begin        
           if (rx_test_ok)
+          begin
             adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
+            if (adc_sync_ok_cnt[15])
+            begin
+              if (!adc_sync_ok && !adc_sync_fail)
+              begin
+                if (adc_sync_fail_cnt > 1)
+                  adc_sync_fail <= 1;
+                else
+                  adc_sync_ok <= 1;
+              end
+            end
+          end
           else
+          begin
             adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
+            if (adc_sync_fail_cnt[1])
+              adc_sync_fail <= 1;
+          end       
         end
       end
       else
       begin
         adc_sync_fail_cnt <= 0;
         adc_sync_ok_cnt <= 0;
-        rx_run <= 0;
+        adc_sync_ok <= 0;
+        adc_sync_fail <= 0;
       end
     end
 
