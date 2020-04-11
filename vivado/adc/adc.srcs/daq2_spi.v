@@ -86,6 +86,48 @@ module daq2_spi (
   wire                    spi_rp_empty;
 
 
+ila_5 ila5_inst (
+   .clk ( clk ),                      // I
+   .probe0(spi_rq),                      // input wire [0:0]  probe1 
+   .probe1(spi_rq_data),                 // input wire [31:0]  probe1 
+   .probe2(spi_rq_rd),                   // input wire [0:0]  probe1 
+   .probe3(spi_rq_cs),                   // input wire [1:0]  probe1 
+   .probe4(spi_rq_word),                 // input wire [0:0]  probe1 
+   .probe5(spi_rq_adr),                  // input wire [11:0]  probe1 
+   .probe6(spi_rq_empty),                // input wire [0:0]  probe1 
+   .probe7(spi_rq_data_out),             // input wire [15:0]  probe1 
+   .probe8(spi_rq_ack),                  // input wire [0:0]  probe1 
+   .probe9(spi_rp_cs),                   // input wire [1:0]  probe1 
+   .probe10(spi_rp_adr),                  // input wire [11:0]  probe1 
+   .probe11(spi_rp),                      // input wire [0:0]  probe1 
+   .probe12(spi_rp_data),                // input wire [15:0]  probe1 
+   .probe13(spi_started),                // input wire [0:0]  probe1 
+   .probe14(spi_cs_clk),                 // input wire [0:0]  probe1 
+   .probe15(spi_cs_adc),                 // input wire [0:0]  probe1 
+   .probe16(spi_cs_dac),                 // input wire [0:0]  probe1 
+   .probe17(spi_sdio),                   // input wire [0:0]  probe1 
+   .probe18(spi_dir),                    // input wire [0:0]  probe1 
+   .probe19(spi_count),                  // input wire [5:0]  probe1 
+   .probe20(spi_size),                   // input wire [5:0]  probe1 
+   .probe21(spi_rd_wr_n),                // input wire [0:0]  probe1 
+   .probe22(spi_clk),                    // input wire [0:0]  probe1 
+   .probe23(spi_z),                      // input wire [0:0]  probe1 
+   .probe24(spi_out),                    // input wire [0:0]  probe1 
+   .probe25(spi_cmd),                    // input wire [15:0]  probe1 
+   .probe26(spi_in_data),                // input wire [15:0]  probe1 
+   .probe27(spi_out_data),               // input wire [15:0]  probe1 
+   .probe28(spi_rp_data),                // input wire [29:0]  probe1 
+   .probe29(spi_rp_wr),                  // input wire [0:0]  probe1 
+   .probe30(adc_write),                  // input wire [0:0]  probe1 
+   .probe31(adc_read),                   // input wire [0:0]  probe1 
+   .probe32(adc_adr),                    // input wire [11:0]  probe1 
+   .probe33(adc_out_data),               // input wire [7:0]  probe1 
+   .probe34(adc_in_data),                // input wire [7:0]  probe1 
+   .probe35(adc_running),                // input wire [0:0]  probe1 
+   .probe36(adc_done),                   // input wire [0:0]  probe1 
+   .probe37(spi_delay)                   // input wire [0:0]  probe1 
+);
+
 spi_fifo_rq spi_fifo_rq_inst (
   .rst(reset),                 // input wire rst
   .wr_clk(pci_clk),            // input wire wr_clk

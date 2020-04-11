@@ -84,8 +84,8 @@ ila_1 ila_1_inst (
 	.probe9(pend_start),             // input wire [0:0]  probe0  
 	.probe10(qpll_rst),              // input wire [0:0]  probe0  
 	.probe11(qpll_locked),           // input wire [0:0]  probe0  
-	.probe12(adc_spi_write),         // input wire [0:0]  probe0  
-	.probe13(adc_spi_done),          // input wire [0:0]  probe0  
+	.probe12(spi_write),             // input wire [0:0]  probe0  
+	.probe13(spi_done),              // input wire [0:0]  probe0  
 	.probe14(spi_test_done),         // input wire [0:0]  probe0  
 	.probe15(adc_started),           // input wire [0:0]  probe0  
 	.probe16(adc_rst),               // input wire [0:0]  probe0  
@@ -165,6 +165,7 @@ begin : adc_app
     begin
       if (reset)
       begin
+        spi_write <= 0;
         adc_started <= 0;
         state <= 0;
         up_rstn <= 0;
@@ -197,12 +198,13 @@ begin : adc_app
           begin
             if (pend_start)
             begin
-              spi_write <= 0;
-
               if (adc_started)
               begin
-                if (adc_spi_done)
+                if (spi_done)
+                begin
                   spi_test_done <= 1;
+                  spi_write <= 0;
+                end
 
                 if (spi_test_done)
                 begin
@@ -238,6 +240,11 @@ begin : adc_app
                 adc_started <= 1;
                 state[0] <= 1;
               end
+            end
+            else
+            begin
+              if (spi_done)
+                spi_write <= 0;
             end
           end
         end
