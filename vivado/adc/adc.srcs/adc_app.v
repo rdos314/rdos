@@ -50,7 +50,8 @@ module adc_app (
   input wire              qpll_locked,
 
   output reg              adc_started,
-  output reg              adc_rst,
+  output wire             adc_rst,
+  output wire             adc_user_ready,
   input wire [3:0]        adc_pll_locked,
   input wire [3:0]        adc_rst_done,
 
@@ -72,32 +73,29 @@ module adc_app (
 
 ila_1 ila_1_inst (
 	.clk(clk),                       // input wire clk
-	.probe0(rx_control_msg),         // input wire [0:0]  probe0  
-	.probe1(rx_control_index),       // input wire [7:0]  probe0  
-	.probe2(rx_control_data),        // input wire [7:0]  probe0  
-	.probe3(req_state),              // input wire [1:0]  probe0  
-	.probe4(state),                  // input wire [2:0]  probe0  
-	.probe5(curr_state),             // input wire [2:0]  probe0  
-	.probe6(test_mode),              // input wire [7:0]  probe0  
-	.probe7(req_start),              // input wire [0:0]  probe0  
-	.probe8(req_stop),               // input wire [0:0]  probe0  
-	.probe9(pend_start),             // input wire [0:0]  probe0  
-	.probe10(qpll_rst),              // input wire [0:0]  probe0  
-	.probe11(qpll_locked),           // input wire [0:0]  probe0  
-	.probe12(spi_write),             // input wire [0:0]  probe0  
-	.probe13(spi_done),              // input wire [0:0]  probe0  
-	.probe14(spi_test_done),         // input wire [0:0]  probe0  
-	.probe15(adc_started),           // input wire [0:0]  probe0  
-	.probe16(adc_rst),               // input wire [0:0]  probe0  
-	.probe17(adc_pll_locked),        // input wire [3:0]  probe0  
-	.probe18(adc_rst_done),          // input wire [3:0]  probe0  
-	.probe19(pll_rst_cnt),           // input wire [3:0]  probe0  
-	.probe20(adc_rst_cnt),           // input wire [3:0]  probe0  
-	.probe21(adc_user_ready_cnt),    // input wire [6:0]  probe0  
-	.probe22(tx_control_msg),        // input wire [0:0]  probe0  
-	.probe23(tx_control_index),      // input wire [7:0]  probe0  
-	.probe24(tx_control_data)        // input wire [7:0]  probe0  
+	.probe0(req_state),              // input wire [1:0]  probe0  
+	.probe1(state),                  // input wire [2:0]  probe0  
+	.probe2(curr_state),             // input wire [2:0]  probe0  
+	.probe3(test_mode),              // input wire [7:0]  probe0  
+	.probe4(req_start),              // input wire [0:0]  probe0  
+	.probe5(req_stop),               // input wire [0:0]  probe0  
+	.probe6(pend_start),             // input wire [0:0]  probe0  
+	.probe7(qpll_rst),               // input wire [0:0]  probe0  
+	.probe8(qpll_locked),            // input wire [0:0]  probe0  
+	.probe9(spi_write),              // input wire [0:0]  probe0  
+	.probe10(spi_test_done),         // input wire [0:0]  probe0  
+	.probe11(adc_started),           // input wire [0:0]  probe0  
+	.probe12(adc_rst),               // input wire [0:0]  probe0  
+	.probe13(adc_user_ready),        // input wire [0:0]  probe0  
+	.probe14(adc_pll_locked),        // input wire [3:0]  probe0  
+	.probe15(adc_rst_done),          // input wire [3:0]  probe0  
+	.probe16(pll_rst_cnt),           // input wire [3:0]  probe0  
+	.probe17(adc_rst_cnt),           // input wire [3:0]  probe0  
+	.probe18(adc_user_ready_cnt)     // input wire [6:0]  probe0  
 );
+
+  assign adc_rst = adc_rst_cnt[3];
+  assign adc_user_ready = adc_user_ready_cnt[6];
 
 generate
 begin : adc_app
@@ -196,6 +194,8 @@ begin : adc_app
           end
           else
           begin
+            up_rstn <= 1;
+
             if (pend_start)
             begin
               if (adc_started)

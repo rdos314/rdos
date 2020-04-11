@@ -166,6 +166,7 @@ module adc (
   wire                 adc_up_rstn;
   wire                 adc_qpll_rst;
   wire                 adc_rst;
+  wire                 adc_user_ready;
 
   wire                 adc_qpll_locked_1;
   wire [3:0]           adc_pll_locked_1;
@@ -381,6 +382,7 @@ daq2_app daq2_app_inst (
 
     .adc_started(adc_started),    
     .adc_rst(adc_rst),
+    .adc_user_ready(adc_user_ready),
     .adc_pll_locked(adc_pll_locked_1),
     .adc_rst_done(adc_rst_done_1),
 
@@ -568,6 +570,7 @@ adc_app adc_app_inst (
 
     .adc_started(adc_started),
     .adc_rst(adc_rst),
+    .adc_user_ready(adc_user_ready),
     .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
 

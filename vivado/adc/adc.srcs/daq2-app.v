@@ -65,6 +65,7 @@ module daq2_app
 
   input                   adc_started,
   input                   adc_rst,
+  input                   adc_user_ready,
   output wire [3:0]       adc_pll_locked,
   output wire [3:0]       adc_rst_done,
   output reg [31:0]       adc_sync_fail_cnt,
@@ -263,10 +264,10 @@ system_util_daq2_xcvr_0 util_daq2_xcvr
         .up_rx_sys_clk_sel_1(2'd3),
         .up_rx_sys_clk_sel_2(2'd3),
         .up_rx_sys_clk_sel_3(2'd3),
-        .up_rx_user_ready_0(up_rx_user_ready),
-        .up_rx_user_ready_1(up_rx_user_ready),
-        .up_rx_user_ready_2(up_rx_user_ready),
-        .up_rx_user_ready_3(up_rx_user_ready),
+        .up_rx_user_ready_0(adc_user_ready),
+        .up_rx_user_ready_1(adc_user_ready),
+        .up_rx_user_ready_2(adc_user_ready),
+        .up_rx_user_ready_3(adc_user_ready),
         .up_rx_wdata_0(0),
         .up_rx_wdata_1(0),
         .up_rx_wdata_2(0),
@@ -464,10 +465,22 @@ endfunction
   assign dac_reset = 1'bz;
   
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
-  assign up_rx_user_ready = 0;
   
   assign rx_running = 0;
   assign rx_wait_for_run = 0;
+
+ila_0 ila_0_inst (
+	.clk(up_clk),                    // input wire clk
+	.probe0(adc_up_rstn),            // input wire [0:0]  probe0  
+	.probe1(adc_qpll_rst),           // input wire [0:0]  probe0  
+	.probe2(adc_qpll_locked),        // input wire [0:0]  probe0  
+	.probe3(adc_started),            // input wire [0:0]  probe0  
+	.probe4(adc_rst),                // input wire [0:0]  probe0  
+	.probe5(adc_user_ready),         // input wire [0:0]  probe0  
+	.probe6(adc_pll_locked),         // input wire [3:0]  probe0  
+	.probe7(adc_rst_done),           // input wire [3:0]  probe0  
+	.probe8(adc_user_ready)          // input wire [0:0]  probe0  
+);
 
 generate
   begin : daq2_app
