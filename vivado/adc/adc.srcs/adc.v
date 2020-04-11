@@ -168,9 +168,9 @@ module adc (
   wire                 adc_rst;
   wire                 adc_user_ready;
 
-  wire                 adc_qpll_locked_1;
-  wire [3:0]           adc_pll_locked_1;
-  wire [3:0]           adc_rst_done_1;
+  wire                 adc_qpll_locked;
+  wire [3:0]           adc_pll_locked;
+  wire [3:0]           adc_rst_done;
 
   wire [16:0]          adc_phys_index;
   wire [63:0]          adc_phys;
@@ -277,15 +277,6 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_2;
 
- (* ASYNC_REG="TRUE" *)  reg                  adc_qpll_locked_2;
- (* ASYNC_REG="TRUE" *)  reg                  adc_qpll_locked;
-
- (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_pll_locked_2;
- (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_pll_locked;
-
- (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_rst_done_2;
- (* ASYNC_REG="TRUE" *)  reg [3:0]            adc_rst_done;
-
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
 
@@ -378,13 +369,13 @@ daq2_app daq2_app_inst (
 
     .adc_up_rstn(adc_up_rstn),
     .adc_qpll_rst(adc_qpll_rst),
-    .adc_qpll_locked(adc_qpll_locked_1),
+    .adc_qpll_locked(adc_qpll_locked),
 
     .adc_started(adc_started),    
     .adc_rst(adc_rst),
     .adc_user_ready(adc_user_ready),
-    .adc_pll_locked(adc_pll_locked_1),
-    .adc_rst_done(adc_rst_done_1),
+    .adc_pll_locked(adc_pll_locked),
+    .adc_rst_done(adc_rst_done),
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
@@ -661,24 +652,6 @@ generate
     begin
       up_reset_1 <= pcie_user_reset;
       up_reset <= up_reset_1;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      adc_qpll_locked_2 <= adc_qpll_locked_1;
-      adc_qpll_locked <= adc_qpll_locked_2;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      adc_pll_locked_2 <= adc_pll_locked_1;
-      adc_pll_locked <= adc_pll_locked_2;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      adc_rst_done_2 <= adc_rst_done_1;
-      adc_rst_done <= adc_rst_done_2;
     end
 
     always @ ( posedge up_clk ) 
