@@ -488,17 +488,19 @@ ila_0 ila_0_inst (
     .clk(rx_clk),                    // input wire clk
     .probe0(adc_started),            // input wire [0:0]  probe0  
     .probe1(adc_probing),            // input wire [0:0]  probe0  
-    .probe2(rx_valid),               // input wire [0:0]  probe0  
-    .probe3(rx_run),                 // input wire [0:0]  probe0  
-    .probe4(rx_test_ok),             // input wire [0:0]  probe0  
-    .probe5(adcA_0),                 // input wire [13:0]  probe0
-    .probe6(adcB_0),                 // input wire [13:0]  probe0
-    .probe7(adcA_1),                 // input wire [13:0]  probe0
-    .probe8(adcB_1),                 // input wire [13:0]  probe0
-    .probe9(adcA_2),                 // input wire [13:0]  probe0
-    .probe10(adcB_2),                // input wire [13:0]  probe0
-    .probe11(adcA_3),                // input wire [13:0]  probe0
-    .probe12(adcB_3)                 // input wire [13:0]  probe0
+    .probe2(adc_user_ready),         // input wire [0:0]  probe0  
+    .probe3(adc_rst_done),           // input wire [3:0]  probe0  
+    .probe4(rx_valid),               // input wire [0:0]  probe0  
+    .probe5(rx_run),                 // input wire [0:0]  probe0  
+    .probe6(rx_test_ok),             // input wire [0:0]  probe0  
+    .probe7(adcA_0),                 // input wire [13:0]  probe0
+    .probe8(adcB_0),                 // input wire [13:0]  probe0
+    .probe9(adcA_1),                 // input wire [13:0]  probe0
+    .probe10(adcB_1),                // input wire [13:0]  probe0
+    .probe11(adcA_2),                // input wire [13:0]  probe0
+    .probe12(adcB_2),                // input wire [13:0]  probe0
+    .probe13(adcA_3),                // input wire [13:0]  probe0
+    .probe14(adcB_3)                 // input wire [13:0]  probe0
 );
 
 generate
