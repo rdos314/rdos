@@ -49,13 +49,15 @@ module adc_app (
   output reg              qpll_rst,
   input wire              qpll_locked,
 
-  output reg              adc_started,
   output wire             adc_rst,
   output wire             adc_user_ready,
   input wire [3:0]        adc_pll_locked,
   input wire [3:0]        adc_rst_done,
 
-  output reg [2:0]        state
+  output reg              adc_started,
+  output reg              adc_probing,
+
+  output wire [2:0]       state
 );
 
   reg [1:0]               req_state;
@@ -71,31 +73,12 @@ module adc_app (
   reg [3:0]               adc_rst_cnt;
   reg [6:0]               adc_user_ready_cnt;  
 
-ila_1 ila_1_inst (
-	.clk(clk),                       // input wire clk
-	.probe0(req_state),              // input wire [1:0]  probe0  
-	.probe1(state),                  // input wire [2:0]  probe0  
-	.probe2(curr_state),             // input wire [2:0]  probe0  
-	.probe3(test_mode),              // input wire [7:0]  probe0  
-	.probe4(req_start),              // input wire [0:0]  probe0  
-	.probe5(req_stop),               // input wire [0:0]  probe0  
-	.probe6(pend_start),             // input wire [0:0]  probe0  
-	.probe7(qpll_rst),               // input wire [0:0]  probe0  
-	.probe8(qpll_locked),            // input wire [0:0]  probe0  
-	.probe9(spi_write),              // input wire [0:0]  probe0  
-	.probe10(spi_test_done),         // input wire [0:0]  probe0  
-	.probe11(adc_started),           // input wire [0:0]  probe0  
-	.probe12(adc_rst),               // input wire [0:0]  probe0  
-	.probe13(adc_user_ready),        // input wire [0:0]  probe0  
-	.probe14(adc_pll_locked),        // input wire [3:0]  probe0  
-	.probe15(adc_rst_done),          // input wire [3:0]  probe0  
-	.probe16(pll_rst_cnt),           // input wire [3:0]  probe0  
-	.probe17(adc_rst_cnt),           // input wire [3:0]  probe0  
-	.probe18(adc_user_ready_cnt)     // input wire [6:0]  probe0  
-);
-
   assign adc_rst = adc_rst_cnt[3];
   assign adc_user_ready = adc_user_ready_cnt[6];
+
+  assign state[0] = adc_started;
+  assign state[1] = adc_probing;
+  assign state[2] = 0;
 
 generate
 begin : adc_app
@@ -165,7 +148,7 @@ begin : adc_app
       begin
         spi_write <= 0;
         adc_started <= 0;
-        state <= 0;
+        adc_probing <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
         pend_start <= 0;
@@ -189,7 +172,6 @@ begin : adc_app
           if (req_stop)
           begin
             adc_started <= 0;
-            state <= 0;
             up_rstn <= 0;
           end
           else
@@ -208,6 +190,8 @@ begin : adc_app
 
                 if (spi_test_done)
                 begin
+                  adc_probing <= 1;
+
                   if (qpll_locked)
                     if (pll_rst_cnt[3] == 1'b1) 
                       pll_rst_cnt <= pll_rst_cnt + 1'b1;
@@ -238,7 +222,6 @@ begin : adc_app
                 spi_out_data <= 8'h37;
                 spi_write <= 1;
                 adc_started <= 1;
-                state[0] <= 1;
               end
             end
             else

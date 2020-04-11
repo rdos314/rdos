@@ -63,13 +63,15 @@ module daq2_app
   input                   adc_qpll_rst,
   output wire             adc_qpll_locked,
 
-  input                   adc_started,
   input                   adc_rst,
   input                   adc_user_ready,
   output wire [3:0]       adc_pll_locked,
   output wire [3:0]       adc_rst_done,
   output reg [31:0]       adc_sync_fail_cnt,
   output reg [31:0]       adc_sync_ok_cnt,
+
+  input                   adc_started,
+  input                   adc_probing,
 
   output reg              adc_wr,
   output reg [1023:0]     adc_data
@@ -101,6 +103,8 @@ module daq2_app
 
  reg                      lmfc_clk_s;
  reg                      lmfc_clk_c;
+
+ reg                      rx_run;
  
  wire                     rx_running;
  wire                     rx_wait_for_run;
@@ -469,17 +473,32 @@ endfunction
   assign rx_running = 0;
   assign rx_wait_for_run = 0;
 
+  assign adcA_0 = {jesd_rx_data[7:0], jesd_rx_data[39:34]};
+  assign adcA_1 = {jesd_rx_data[15:8], jesd_rx_data[47:42]};
+  assign adcA_2 = {jesd_rx_data[23:16], jesd_rx_data[55:50]};
+  assign adcA_3 = {jesd_rx_data[31:24], jesd_rx_data[63:58]};
+  assign adcB_0 = {jesd_rx_data[71:64], jesd_rx_data[103:98]};
+  assign adcB_1 = {jesd_rx_data[79:72], jesd_rx_data[111:106]};
+  assign adcB_2 = {jesd_rx_data[87:80], jesd_rx_data[119:114]};
+  assign adcB_3 = {jesd_rx_data[95:88], jesd_rx_data[127:122]};
+
+  assign rx_test_ok = check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3);
+
 ila_0 ila_0_inst (
-	.clk(up_clk),                    // input wire clk
-	.probe0(adc_up_rstn),            // input wire [0:0]  probe0  
-	.probe1(adc_qpll_rst),           // input wire [0:0]  probe0  
-	.probe2(adc_qpll_locked),        // input wire [0:0]  probe0  
-	.probe3(adc_started),            // input wire [0:0]  probe0  
-	.probe4(adc_rst),                // input wire [0:0]  probe0  
-	.probe5(adc_user_ready),         // input wire [0:0]  probe0  
-	.probe6(adc_pll_locked),         // input wire [3:0]  probe0  
-	.probe7(adc_rst_done),           // input wire [3:0]  probe0  
-	.probe8(adc_user_ready)          // input wire [0:0]  probe0  
+    .clk(rx_clk),                    // input wire clk
+    .probe0(adc_started),            // input wire [0:0]  probe0  
+    .probe1(adc_probing),            // input wire [0:0]  probe0  
+    .probe2(rx_valid),               // input wire [0:0]  probe0  
+    .probe3(rx_run),                 // input wire [0:0]  probe0  
+    .probe4(rx_test_ok),             // input wire [0:0]  probe0  
+    .probe5(adcA_0),                 // input wire [13:0]  probe0
+    .probe6(adcB_0),                 // input wire [13:0]  probe0
+    .probe7(adcA_1),                 // input wire [13:0]  probe0
+    .probe8(adcB_1),                 // input wire [13:0]  probe0
+    .probe9(adcA_2),                 // input wire [13:0]  probe0
+    .probe10(adcB_2),                // input wire [13:0]  probe0
+    .probe11(adcA_3),                // input wire [13:0]  probe0
+    .probe12(adcB_3)                 // input wire [13:0]  probe0
 );
 
 generate
@@ -504,17 +523,6 @@ generate
         rx_sysref_cnt <= 0;
       end
     end
-
-    assign adcA_0 = {jesd_rx_data[7:0], jesd_rx_data[39:34]};
-    assign adcA_1 = {jesd_rx_data[15:8], jesd_rx_data[47:42]};
-    assign adcA_2 = {jesd_rx_data[23:16], jesd_rx_data[55:50]};
-    assign adcA_3 = {jesd_rx_data[31:24], jesd_rx_data[63:58]};
-    assign adcB_0 = {jesd_rx_data[71:64], jesd_rx_data[103:98]};
-    assign adcB_1 = {jesd_rx_data[79:72], jesd_rx_data[111:106]};
-    assign adcB_2 = {jesd_rx_data[87:80], jesd_rx_data[119:114]};
-    assign adcB_3 = {jesd_rx_data[95:88], jesd_rx_data[127:122]};
-
-    assign rx_test_ok = check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3);
 
     always @ ( posedge rx_clk ) 
     begin
@@ -552,8 +560,6 @@ generate
 
         if (rx_running)
           adc_cnt <= adc_cnt + 1;
-        else
-          adc_cnt <= 0;
       end
       else
         adc_cnt <= 0;
@@ -561,19 +567,22 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_valid && rx_running)
+      if (rx_valid && adc_probing)
       begin
-        case (adc_cnt)
-          3: adc_wr <= 0;
-          7:
-          begin
-            adc_data <= adc_curr;
-            adc_wr <= 1;
-          end
-        endcase
+        if (!rx_running)
+        begin        
+          if (rx_test_ok)
+            adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
+          else
+            adc_sync_fail_cnt <= adc_sync_fail_cnt + 1;
+        end
       end
       else
-        adc_wr <= 0;
+      begin
+        adc_sync_fail_cnt <= 0;
+        adc_sync_ok_cnt <= 0;
+        rx_run <= 0;
+      end
     end
 
   end

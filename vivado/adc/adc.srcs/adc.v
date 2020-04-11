@@ -160,8 +160,10 @@ module adc (
 
 // ADC
 
+  wire                 up_adc_started;
+  wire                 up_adc_probing;
+
   wire [2:0]           adc_state;
-  wire                 adc_started;
 
   wire                 adc_up_rstn;
   wire                 adc_qpll_rst;
@@ -277,6 +279,12 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_2;
 
+ (* ASYNC_REG="TRUE" *)  reg                  adc_started_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_adc_started;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_probing_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_adc_probing;
+
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
 
@@ -371,11 +379,13 @@ daq2_app daq2_app_inst (
     .adc_qpll_rst(adc_qpll_rst),
     .adc_qpll_locked(adc_qpll_locked),
 
-    .adc_started(adc_started),    
     .adc_rst(adc_rst),
     .adc_user_ready(adc_user_ready),
     .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
+
+    .adc_started(rx_adc_started),    
+    .adc_probing(rx_adc_probing),    
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
@@ -559,11 +569,13 @@ adc_app adc_app_inst (
     .qpll_rst(adc_qpll_rst),
     .qpll_locked(adc_qpll_locked),
 
-    .adc_started(adc_started),
     .adc_rst(adc_rst),
     .adc_user_ready(adc_user_ready),
     .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
+
+    .adc_started(up_adc_started),
+    .adc_probing(up_adc_probing),
 
     .state(adc_state)
 );
@@ -652,6 +664,18 @@ generate
     begin
       up_reset_1 <= pcie_user_reset;
       up_reset <= up_reset_1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_started_1 <= up_adc_started;
+      rx_adc_started <= adc_started_1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_probing_1 <= up_adc_probing;
+      rx_adc_probing <= adc_probing_1;
     end
 
     always @ ( posedge up_clk ) 
