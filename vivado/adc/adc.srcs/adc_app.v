@@ -335,35 +335,36 @@ begin : adc_app
       begin
         if (adc_started)
         begin
+          if (adc_probing && !adc_phys_out && next_valid)
+            adc_phys_out <= adc_phys_in;
+
           adc_clear <= 0;
           if (adc_wr)
           begin
-            if (adc_phys_out[20:7] == 14'b11111111111111)
+            if (adc_phys_out)
             begin
-              adc_next <= 1;
-              if (next_valid)
-                adc_phys_out <= adc_phys_in;
+              if (adc_phys_out[20:7] == 14'b11111111111111)
+              begin
+                adc_next <= 1;
+                if (next_valid)
+                  adc_phys_out <= adc_phys_in;
+                else
+                  adc_phys_out <= 0;
+              end
               else
-                adc_phys_out <= 0;
+              begin
+                adc_next <= 0;
+                adc_phys_out[20:7] <= adc_phys_out[20:7] + 1;
+              end
             end
             else
-            begin
               adc_next <= 0;
-              adc_phys_out[20:7] <= adc_phys_out[20:7] + 1;
-            end
           end
-          else
-            adc_next <= 0;
         end
         else
         begin
           if (req_start)
             adc_clear <= 1;
-          else
-          begin
-            if (next_valid)
-              adc_phys_out <= adc_phys_in;
-          end
         end
       end
     end
