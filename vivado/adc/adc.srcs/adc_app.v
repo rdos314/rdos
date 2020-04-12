@@ -84,17 +84,6 @@ module adc_app (
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
 
-
-ila_0 ila_0_inst (
-    .clk(clk),                       // input wire clk
-    .probe0(adc_started),            // input wire [0:0]  probe0  
-    .probe1(adc_probing),            // input wire [0:0]  probe0  
-    .probe2(adc_sync_ok),            // input wire [0:0]  probe0  
-    .probe3(adc_sync_fail),          // input wire [0:0]  probe0  
-    .probe4(adc_running)             // input wire [0:0]  probe0  
-);
-
-
 generate
 begin : adc_app
 
@@ -252,7 +241,6 @@ begin : adc_app
                 spi_out_data <= test_mode;
                 spi_write <= 1;
                 adc_running <= 1;
-                adc_probing <= 0;
               end
               else
               begin

@@ -186,7 +186,6 @@ module adc (
   
   wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
-  reg [63:0]           adc_address;
 
   reg                  pci_rx_wr;
   reg                  pci_curr_wr;

@@ -110,6 +110,7 @@ module daq2_app
 
  reg [1:0]                adc_sync_fail_cnt;
  reg [15:0]               adc_sync_ok_cnt;
+ reg                      adc_start_found;
  
  wire [13:0]              adcA_0;
  wire [13:0]              adcA_1;
@@ -486,6 +487,23 @@ endfunction
   assign adc_sync_ok = adc_sync_ok_cnt[15];
   assign adc_sync_fail = adc_sync_fail_cnt[1];
 
+
+ila_0 ila_0_inst (
+    .clk(rx_clk),                       // input wire clk
+    .probe0(adc_started),            // input wire [0:0]  probe0  
+    .probe1(adc_probing),            // input wire [0:0]  probe0  
+    .probe2(adc_running),            // input wire [0:0]  probe0  
+    .probe3(adc_sync_ok),            // input wire [0:0]  probe0  
+    .probe4(adc_sync_fail),          // input wire [0:0]  probe0  
+    .probe5(rx_valid),               // input wire [0:0]  probe0  
+    .probe6(adc_start_found),        // input wire [0:0]  probe0  
+    .probe7(adc_cnt),                // input wire [0:0]  probe0  
+    .probe8(adc_wr),                 // input wire [0:0]  probe0  
+    .probe9(adc_curr[1023:1008]),    // input wire [15:0]  probe0  
+    .probe10(adc_curr[1007:992])      // input wire [15:0]  probe0  
+);
+
+
 generate
   begin : daq2_app
 
@@ -544,19 +562,36 @@ generate
         adc_curr[895:0] <= adc_curr[1023:128];
 
         if (adc_running)
-          adc_cnt <= adc_cnt + 1;
+        begin
+          if (adc_probing && !adc_start_found)
+          begin
+            if (!rx_test_ok)
+            begin
+              adc_cnt <= adc_cnt + 1;
+              adc_start_found <= 1;
+            end
+          end
+          else
+            adc_cnt <= adc_cnt + 1;
+        end
         else
+        begin
           adc_cnt <= 0;
+          adc_start_found <= 0;
+        end
       end
       else
+      begin
         adc_cnt <= 0;
+        adc_start_found <= 0;
+      end
     end
 
     always @ ( posedge rx_clk ) 
     begin
       if (adc_probing)
       begin
-        if (rx_valid && !adc_sync_ok && !adc_sync_fail)
+        if (rx_valid && !adc_sync_ok && !adc_sync_fail && !adc_running)
         begin        
           if (rx_test_ok)
             adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
@@ -569,6 +604,23 @@ generate
         adc_sync_fail_cnt <= 0;
         adc_sync_ok_cnt <= 0;
       end
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (rx_valid && adc_running)
+      begin
+        case (adc_cnt)
+          3: adc_wr <= 0;
+          7:
+          begin
+            adc_data <= adc_curr;
+            adc_wr <= 1;
+          end
+        endcase
+      end
+      else
+        adc_wr <= 0;
     end
 
   end
