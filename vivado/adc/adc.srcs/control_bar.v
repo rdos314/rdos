@@ -89,7 +89,7 @@ generate
       begin
         adc_state[5:0] <= 0;
         adc_req_state <= 0;
-        adc_test_mode <= 7;
+        adc_test_mode <= 0;
         req_send_adc_state <= 0;
         req_send_adc_test_mode <= 0;
 

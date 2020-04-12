@@ -59,6 +59,7 @@ module adc_app (
 
   output reg              adc_started,
   output reg              adc_probing,
+  output reg              adc_running,
 
   output wire [2:0]       state
 );
@@ -81,7 +82,7 @@ module adc_app (
 
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
-  assign state[2] = 0;
+  assign state[2] = adc_running;
 
 
 ila_0 ila_0_inst (
@@ -89,7 +90,8 @@ ila_0 ila_0_inst (
     .probe0(adc_started),            // input wire [0:0]  probe0  
     .probe1(adc_probing),            // input wire [0:0]  probe0  
     .probe2(adc_sync_ok),            // input wire [0:0]  probe0  
-    .probe3(adc_sync_fail)           // input wire [0:0]  probe0  
+    .probe3(adc_sync_fail),          // input wire [0:0]  probe0  
+    .probe4(adc_running)             // input wire [0:0]  probe0  
 );
 
 
@@ -103,7 +105,7 @@ begin : adc_app
         req_start <= 0;
         req_stop <= 0;
         req_state <= 0;
-        test_mode <= 7;
+        test_mode <= 0;
       end
       else
       begin
@@ -162,6 +164,7 @@ begin : adc_app
         spi_write <= 0;
         adc_started <= 0;
         adc_probing <= 0;
+        adc_running <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
         pend_start <= 0;
@@ -242,6 +245,23 @@ begin : adc_app
             begin
               if (spi_done)
                 spi_write <= 0;
+
+              if (adc_sync_ok)
+              begin
+                spi_adr <= 12'h550;
+                spi_out_data <= test_mode;
+                spi_write <= 1;
+                adc_running <= 1;
+                adc_probing <= 0;
+              end
+              else
+              begin
+                if (adc_sync_fail)
+                begin
+                  adc_started <= 0;
+                  adc_probing <= 0;
+                end
+              end
             end
           end
         end

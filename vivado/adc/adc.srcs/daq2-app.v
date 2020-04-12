@@ -70,6 +70,8 @@ module daq2_app
 
   input                   adc_started,
   input                   adc_probing,
+  input                   adc_running,
+
   output wire             adc_sync_ok,
   output wire             adc_sync_fail,
 
@@ -109,9 +111,6 @@ module daq2_app
  reg [1:0]                adc_sync_fail_cnt;
  reg [15:0]               adc_sync_ok_cnt;
  
- wire                     rx_running;
- wire                     rx_wait_for_run;
-
  wire [13:0]              adcA_0;
  wire [13:0]              adcA_1;
  wire [13:0]              adcA_2;
@@ -473,9 +472,6 @@ endfunction
   
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
   
-  assign rx_running = 0;
-  assign rx_wait_for_run = 0;
-
   assign adcA_0 = {jesd_rx_data[7:0], jesd_rx_data[39:34]};
   assign adcA_1 = {jesd_rx_data[15:8], jesd_rx_data[47:42]};
   assign adcA_2 = {jesd_rx_data[23:16], jesd_rx_data[55:50]};
@@ -547,8 +543,10 @@ generate
 
         adc_curr[895:0] <= adc_curr[1023:128];
 
-        if (rx_running)
+        if (adc_running)
           adc_cnt <= adc_cnt + 1;
+        else
+          adc_cnt <= 0;
       end
       else
         adc_cnt <= 0;
@@ -558,7 +556,7 @@ generate
     begin
       if (adc_probing)
       begin
-        if (rx_valid && !rx_running && !adc_sync_ok && !adc_sync_fail)
+        if (rx_valid && !adc_sync_ok && !adc_sync_fail)
         begin        
           if (rx_test_ok)
             adc_sync_ok_cnt <= adc_sync_ok_cnt + 1;
