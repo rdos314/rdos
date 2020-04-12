@@ -54,6 +54,9 @@ module adc_app (
   input wire [3:0]        adc_pll_locked,
   input wire [3:0]        adc_rst_done,
 
+  input wire              adc_sync_ok,
+  input wire              adc_sync_fail,
+
   output reg              adc_started,
   output reg              adc_probing,
 
@@ -79,6 +82,16 @@ module adc_app (
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
   assign state[2] = 0;
+
+
+ila_0 ila_0_inst (
+    .clk(clk),                       // input wire clk
+    .probe0(adc_started),            // input wire [0:0]  probe0  
+    .probe1(adc_probing),            // input wire [0:0]  probe0  
+    .probe2(adc_sync_ok),            // input wire [0:0]  probe0  
+    .probe3(adc_sync_fail)           // input wire [0:0]  probe0  
+);
+
 
 generate
 begin : adc_app

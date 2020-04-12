@@ -163,6 +163,9 @@ module adc (
   wire                 up_adc_started;
   wire                 up_adc_probing;
 
+  wire                 rx_adc_sync_ok;
+  wire                 rx_adc_sync_fail;
+
   wire [2:0]           adc_state;
 
   wire                 adc_up_rstn;
@@ -178,8 +181,6 @@ module adc (
   wire [63:0]          adc_phys;
   wire                 adc_phys_valid;
 
-  wire [31:0]          rx_sync_fail_cnt;
-  wire [31:0]          rx_sync_ok_cnt;
   wire [63:0]          rx_sysref_cnt;
   
   wire                 rx_adc_wr;
@@ -278,6 +279,12 @@ module adc (
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_probing_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_adc_probing;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_sync_ok_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -380,6 +387,9 @@ daq2_app daq2_app_inst (
 
     .adc_started(rx_adc_started),    
     .adc_probing(rx_adc_probing),    
+
+    .adc_sync_ok(rx_adc_sync_ok),    
+    .adc_sync_fail(rx_adc_sync_fail),    
 
     .rx_sysref_cnt(rx_sysref_cnt),
   
@@ -566,6 +576,9 @@ adc_app adc_app_inst (
     .adc_started(up_adc_started),
     .adc_probing(up_adc_probing),
 
+    .adc_sync_ok(up_adc_sync_ok),
+    .adc_sync_fail(up_adc_sync_fail),
+
     .state(adc_state)
 );
 
@@ -576,7 +589,7 @@ adc_app adc_app_inst (
   OBUF   led_1_obuf (.O(led_1), .I(user_led));
   OBUF   led_2_obuf (.O(led_2), .I(sys_led));
   OBUF   led_3_obuf (.O(led_3), .I(rx_led));
-  OBUF   led_4_obuf (.O(led_4), .I(bar_control[4]));
+  OBUF   led_4_obuf (.O(led_4), .I(rx_adc_sync_ok));
   OBUF   led_5_obuf (.O(led_5), .I(adc_state[0]));
   OBUF   led_6_obuf (.O(led_6), .I(adc_state[1]));
   OBUF   led_7_obuf (.O(led_7), .I(adc_state[2]));
@@ -652,6 +665,18 @@ generate
     begin
       adc_probing_1 <= up_adc_probing;
       rx_adc_probing <= adc_probing_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_sync_ok_1 <= rx_adc_sync_ok;
+      up_adc_sync_ok <= adc_sync_ok_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_sync_fail_1 <= rx_adc_sync_fail;
+      up_adc_sync_fail <= adc_sync_fail_1;
     end
 
     always @ ( posedge up_clk ) 
