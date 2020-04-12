@@ -56,11 +56,17 @@ module adc_app (
 
   input wire              adc_sync_ok,
   input wire              adc_sync_fail,
-  input wire              adc_wr,
 
   output reg              adc_started,
   output reg              adc_probing,
   output reg              adc_running,
+
+  output reg              adc_clear,
+  output reg              adc_next,
+  input wire              adc_phys_valid,
+  input wire [63:0]       adc_phys_in,
+  input wire              adc_wr,
+  output reg [63:0]       adc_phys_out,
 
   output wire [2:0]       state
 );
@@ -72,6 +78,7 @@ module adc_app (
   reg                     req_start;
   reg                     req_stop;
   reg                     pend_start;
+  reg                     next_valid;
 
   reg                     spi_test_done;
   reg [3:0]               pll_rst_cnt; 
@@ -93,9 +100,14 @@ ila_0 ila_0_inst (
     .probe2(adc_running),            // input wire [0:0]  probe0  
     .probe3(adc_sync_ok),            // input wire [0:0]  probe0  
     .probe4(adc_sync_fail),          // input wire [0:0]  probe0  
-    .probe5(adc_wr)                  // input wire [0:0]  probe0  
+    .probe5(next_valid),             // input wire [0:0]  probe0  
+    .probe6(adc_clear),              // input wire [0:0]  probe0  
+    .probe7(adc_next),               // input wire [0:0]  probe0  
+    .probe8(adc_phys_valid),         // input wire [0:0]  probe0  
+    .probe9(adc_phys_in),            // input wire [63:0]  probe0  
+    .probe10(adc_wr),                // input wire [0:0]  probe0  
+    .probe11(adc_phys_out)           // input wire [63:0]  probe0  
 );
-
 
 generate
 begin : adc_app
@@ -294,6 +306,68 @@ begin : adc_app
           tx_control_msg <= 0;
       end
     end
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+        next_valid <= 0;
+      else
+      begin
+        if (adc_phys_valid)
+          next_valid <= 1;
+        else
+        begin
+          if (adc_clear || adc_next)
+            next_valid <= 0;
+        end
+      end
+    end
+
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+      begin
+        adc_clear <= 1;
+        adc_next <= 0;
+        adc_phys_out <= 0;
+      end
+      else
+      begin
+        if (adc_started)
+        begin
+          adc_clear <= 0;
+          if (adc_wr)
+          begin
+            if (adc_phys_out[20:7] == 14'b11111111111111)
+            begin
+              adc_next <= 1;
+              if (next_valid)
+                adc_phys_out <= adc_phys_in;
+              else
+                adc_phys_out <= 0;
+            end
+            else
+            begin
+              adc_next <= 0;
+              adc_phys_out[20:7] <= adc_phys_out[20:7] + 1;
+            end
+          end
+          else
+            adc_next <= 0;
+        end
+        else
+        begin
+          if (req_start)
+            adc_clear <= 1;
+          else
+          begin
+            if (next_valid)
+              adc_phys_out <= adc_phys_in;
+          end
+        end
+      end
+    end
+
 
 end
 endgenerate

@@ -194,6 +194,17 @@ module adc (
   reg                  up_adc_wr;
   reg [1023:0]         up_adc_data;
 
+  wire                 up_adc_clear;
+  wire                 up_adc_next;
+
+  reg                  up_adc_phys_valid_3;
+  reg                  up_adc_phys_valid;
+  reg [63:0]           up_adc_phys_in;
+
+  wire [16:0]          pci_adc_index;
+  wire [63:0]          pci_adc_phys;
+  wire                 pci_adc_phys_valid;
+  
 // PCI bar
   wire [9:0]           pci_bar0_rd_address;
   wire                 pci_bar0_rd;
@@ -293,6 +304,15 @@ module adc (
 
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_wr_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_wr_2;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_clear_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_clear;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_next_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_next;
+
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_phys_valid_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_phys_valid_2;
 
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
@@ -530,9 +550,11 @@ phys_bar adc_bar_inst (
     .wr_be(pci_bar1_wr_be),
     .wr(pci_bar1_wr),
 
-    .index(1),
-    .phys(adc_phys),
-    .valid(adc_phys_valid)
+    .clear(pci_adc_clear),
+    .next(pci_adc_next),
+    .index(pci_adc_index),
+    .phys(pci_adc_phys),
+    .valid(pci_adc_phys_valid)
 );
 
 phys_bar dac_bar_inst (
@@ -549,9 +571,11 @@ phys_bar dac_bar_inst (
     .wr_be(pci_bar2_wr_be),
     .wr(pci_bar2_wr),
 
-    .index(2),
-    .phys(dac_phys),
-    .valid(dac_valid)
+    .clear(1),
+    .next(0),
+    .index(),
+    .phys(),
+    .valid()
 );
 
 adc_app adc_app_inst (
@@ -589,6 +613,12 @@ adc_app adc_app_inst (
 
     .adc_sync_ok(up_adc_sync_ok),
     .adc_sync_fail(up_adc_sync_fail),
+
+    .adc_clear(up_adc_clear),
+    .adc_next(up_adc_next),
+    .adc_phys_valid(up_adc_phys_valid),
+    .adc_phys_in(up_adc_phys_in),
+    .adc_phys_out(),
 
     .adc_wr(up_adc_wr),
 
@@ -740,6 +770,33 @@ generate
         up_adc_wr <= 1;
       else
         up_adc_wr <= 0;
+    end
+
+    always @ ( posedge pcie_user_clk ) 
+    begin
+      adc_clear_1 <= up_adc_clear;
+      pci_adc_clear <= adc_clear_1;
+    end
+
+    always @ ( posedge pcie_user_clk ) 
+    begin
+      adc_next_1 <= up_adc_next;
+      pci_adc_next <= adc_next_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_phys_valid_1 <= pci_adc_phys_valid;
+      up_adc_phys_valid_2 <= up_adc_phys_valid_1;
+      up_adc_phys_valid_3 <= up_adc_phys_valid_2;
+      
+      if (!up_adc_phys_valid_3 && up_adc_phys_valid_2)
+      begin
+        up_adc_phys_valid <= 1;
+        up_adc_phys_in <= pci_adc_phys;
+      end
+      else
+        up_adc_phys_valid <= 0;
     end
 
   end

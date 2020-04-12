@@ -40,7 +40,9 @@ module phys_bar (
   input wire [3:0]        wr_be,
   input wire              wr,
 
-  input wire [16:0]       index,
+  input wire              clear,
+  input wire              next,
+  output reg [16:0]       index,
   output reg [63:0]       phys,
   output reg              valid
 );
@@ -62,9 +64,6 @@ module phys_bar (
   reg                    q_wr;
   reg  [15:0]            q_wr_adr;
   reg  [19:0]            q_wr_data;
-
-  reg  [16:0]            curr_index;
-
 
 bram_phys bram_phys_inst (
   .clka(clk),         // input wire clka
@@ -179,19 +178,24 @@ begin : phys_bar_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset)
+    if (reset || clear)
     begin
       valid <= 0;
       phys[63:0] <= 0;
-      curr_index <= 0;
+      index <= 0;
     end
     else
     begin
-      if (wr)
+      if (next)
+      begin
+        index <= index + 1;
         valid <= 0;
+      end
       else
       begin
-        if (curr_index == index)
+        if (wr)
+          valid <= 0;
+        else
         begin
           if (q_rd_adr == index)
           begin
@@ -200,11 +204,6 @@ begin : phys_bar_gen
             phys[63:41] <= 0;
             valid <= 1;
           end
-        end
-        else
-        begin
-          curr_index <= index;
-          valid <= 0;
         end
       end
     end
