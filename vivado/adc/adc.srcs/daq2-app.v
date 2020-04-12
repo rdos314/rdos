@@ -487,23 +487,6 @@ endfunction
   assign adc_sync_ok = adc_sync_ok_cnt[15];
   assign adc_sync_fail = adc_sync_fail_cnt[1];
 
-
-ila_0 ila_0_inst (
-    .clk(rx_clk),                       // input wire clk
-    .probe0(adc_started),            // input wire [0:0]  probe0  
-    .probe1(adc_probing),            // input wire [0:0]  probe0  
-    .probe2(adc_running),            // input wire [0:0]  probe0  
-    .probe3(adc_sync_ok),            // input wire [0:0]  probe0  
-    .probe4(adc_sync_fail),          // input wire [0:0]  probe0  
-    .probe5(rx_valid),               // input wire [0:0]  probe0  
-    .probe6(adc_start_found),        // input wire [0:0]  probe0  
-    .probe7(adc_cnt),                // input wire [0:0]  probe0  
-    .probe8(adc_wr),                 // input wire [0:0]  probe0  
-    .probe9(adc_curr[1023:1008]),    // input wire [15:0]  probe0  
-    .probe10(adc_curr[1007:992])      // input wire [15:0]  probe0  
-);
-
-
 generate
   begin : daq2_app
 

@@ -167,6 +167,10 @@ module adc (
   wire                 rx_adc_sync_ok;
   wire                 rx_adc_sync_fail;
 
+  wire                 rx_adc_wr;
+  reg                  up_adc_wr_3;
+  reg                  up_adc_wr;
+
   wire [2:0]           adc_state;
 
   wire                 adc_up_rstn;
@@ -187,10 +191,8 @@ module adc (
   wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
 
-  reg                  pci_rx_wr;
-  reg                  pci_curr_wr;
-  reg                  pci_adc_wr;
-  reg [1023:0]         pci_adc_data;
+  reg                  up_adc_wr;
+  reg [1023:0]         up_adc_data;
 
 // PCI bar
   wire [9:0]           pci_bar0_rd_address;
@@ -288,6 +290,10 @@ module adc (
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail;
+
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_wr_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_wr_2;
+
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -584,6 +590,8 @@ adc_app adc_app_inst (
     .adc_sync_ok(up_adc_sync_ok),
     .adc_sync_fail(up_adc_sync_fail),
 
+    .adc_wr(up_adc_wr),
+
     .state(adc_state)
 );
 
@@ -720,6 +728,18 @@ generate
       end
       else
         rx_pci_control_msg <= 0;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_wr_1 <= rx_adc_wr;
+      up_adc_wr_2 <= up_adc_wr_1;
+      up_adc_wr_3 <= up_adc_wr_2;
+      
+      if (!up_adc_wr_3 && up_adc_wr_2)
+        up_adc_wr <= 1;
+      else
+        up_adc_wr <= 0;
     end
 
   end
