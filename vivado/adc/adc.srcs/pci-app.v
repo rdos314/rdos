@@ -75,7 +75,7 @@ module pci_app (
     bar2_wr,
 
     adc_send,
-    adc_address,
+    adc_header,
     adc_data
 );
 
@@ -129,7 +129,7 @@ module pci_app (
   output reg           bar2_wr;
 
   input wire           adc_send;
-  input wire [63:0]    adc_address;
+  input wire [127:0]   adc_header;
   input wire [1023:0]  adc_data;
 
 // Wire Declarations
@@ -198,11 +198,6 @@ module pci_app (
   reg [31:0]       bar_spi_dac;
 
 // PCIe send
-
-  reg  [127:0]     q_adc_header;
-  reg  [1023:0]    q_adc_data;
-  reg              q_adc_send;
-  reg              adc_send_ack;
 
   reg  [95:0]      q_bar0_rp_header;
   reg  [31:0]      q_bar0_data;
@@ -488,10 +483,10 @@ pci_tx pci_tx_inst (
     .bar_wr (tx_bar_wr),                     // I
     .bar_busy (tx_bar_busy),                 // O
     
-    .adc_data( tx_adc_data),                 // I
-    .adc_header( tx_adc_header),             // I
-    .adc_wr (tx_adc_wr),                     // I
-    .adc_busy (tx_adc_busy)                  // O
+    .adc_data( adc_data),                    // I
+    .adc_header( adc_header),                // I
+    .adc_wr (adc_send),                      // I
+    .adc_busy ()                             // O
 );
 
 generate
@@ -724,48 +719,6 @@ generate
     always @ ( posedge user_clk ) 
     begin
       if (user_reset)
-        q_adc_send <= 0;
-      else
-      begin
-        if (adc_send)
-        begin
-          q_adc_data <= adc_data;
-
-          q_adc_header[63:48] <= 0;                      // Requester ID
-          q_adc_header[47:40] <= 0;                      // tag
-          q_adc_header[39:36] <= 4'b1111;                // last be
-          q_adc_header[35:32] <= 4'b1111;                // 1st be
-
-          if (adc_address[63:32] == 0)
-          begin
-            q_adc_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
-            q_adc_header[95:64] <= adc_address[31:0];
-          end
-          else
-          begin
-            q_adc_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
-            q_adc_header[95:64] <= adc_address[63:32];
-            q_adc_header[127:96] <= adc_address[31:0];
-          end
-
-          q_adc_header[23] <= 1'b0;                      // R
-          q_adc_header[22:20] <= 3'b000;                 // TC
-          q_adc_header[19:16] <= 4'b0000;                // TH, AttrH, R
-          q_adc_header[15:12] <= 4'b0000;                // TD, EP, Attr
-          q_adc_header[11:10] <= 2'b0;                   // AT
-          q_adc_header[9:8] <= 2'b0;                     // len high
-          q_adc_header[7:0] <= 8'h20;                    // 128 byte size
-          q_adc_send <= 1;
-        end
-        else
-          if (adc_send_ack)
-            q_adc_send <= 0;
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
       begin
         q_bar0_send <= 0;
         q_bar1_send <= 0;
@@ -861,32 +814,6 @@ generate
               end
             end
           end
-        end
-      end
-    end
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-        adc_send_ack <= 0;
-      else
-      begin
-        if (tx_adc_busy)
-        begin
-          tx_adc_wr <= 0;
-          adc_send_ack <= 0;
-        end
-        else
-        begin
-          if (q_adc_send && !adc_send_ack)
-          begin
-            tx_adc_data <= q_adc_data;
-            tx_adc_header <= q_adc_header;
-            tx_adc_wr <= 1;
-            adc_send_ack <= 1;
-          end
-          else
-            adc_send_ack <= 0;
         end
       end
     end

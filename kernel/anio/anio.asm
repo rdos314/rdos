@@ -604,34 +604,6 @@ SetupAdc	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           SetAdcTestMode
-;
-;           DESCRIPTION:    Set test mode
-;
-;           PARAMETERS:     AL		Mode
-;                           CL          Channels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetAdcTestMode	Proc near
-    push ax
-    mov dx,8
-    mov al,cl
-    call WriteSpiByte
-    pop ax
-;
-    mov dx,550h
-    call WriteSpiByte
-;
-    mov dx,8
-    mov al,3
-    call WriteSpiByte
-    ret
-SetAdcTestMode	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           VerifyData
 ;
 ;           DESCRIPTION:    Verify data
@@ -648,7 +620,7 @@ VerifyData 	Proc near
     mov eax,1000h
     AllocateBigLinear
     mov edi,edx
-    mov ebp,0FFFF0001h
+    mov ebp,07D007Dh
     
 vdLoop:
     mov eax,ds:[esi]
@@ -679,51 +651,27 @@ vdCheckLoop:
     cmp ax,es:[edx]
     je vdCheckBx
 ;
-    test ax,2000h
-    jz vdCheckFail
-;
-    or ax,0C000h
-    cmp ax,es:[edx]
-    jne vdCheckFail
+    jmp vdCheckFail
 
 vdCheckBx:
-    cmp bx,es:[edx+2]
-    je vdCheckNext
-;
-    test bx,2000h
-    jz vdCheckFail
-;
-    or bx,0C000h
     cmp bx,es:[edx+2]
     je vdCheckNext
     
 vdCheckFail:
     int 3
-    sub ax,10h
-    sub bx,10h
-    cmp ax,es:[edx]
-    jne vdCheckNotDupl
-;
-    cmp bx,es:[edx+2]
-    je vdCheckNext
-
-vdCheckNotDupl:   
-    int 3
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    mov ax,es:[edx]
+    mov bx,es:[edx+2]
 
 vdCheckNext:
     inc ax
-    cmp ax,0E711h
+    cmp ax,80h
     jne vdCheckLowOk
 ;
     xor ax,ax
 
 vdCheckLowOk:
     inc bx
-    cmp bx,0E6E4h
+    cmp bx,80h
     jne vdCheckHiOk
 ;
     xor bx,bx
@@ -772,14 +720,6 @@ adc_thread:
     call SetupClk
     call SetupAdc
 ;
-    mov cl,1
-    mov al,7
-    call SetAdcTestMode
-;
-    mov cl,2
-    mov al,0Fh
-    call SetAdcTestMode
-;
     mov bx,anio_adc_sel
     mov ds,bx
     xor edi,edi
@@ -803,12 +743,6 @@ adc_phys_loop:
     xor bx,bx
     mov al,80h
     mov ds:[bx],al
-;
-    mov ecx,10000h
-
-adc_check_loop:
-    mov al,ds:[bx]
-    loop adc_check_loop
 ;
     int 3
     call VerifyData

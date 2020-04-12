@@ -16877,6 +16877,90 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="ila_0_inst"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe3[63:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_adc_header[127]"/>
+        <net name="pci_adc_header[126]"/>
+        <net name="pci_adc_header[125]"/>
+        <net name="pci_adc_header[124]"/>
+        <net name="pci_adc_header[123]"/>
+        <net name="pci_adc_header[122]"/>
+        <net name="pci_adc_header[121]"/>
+        <net name="pci_adc_header[120]"/>
+        <net name="pci_adc_header[119]"/>
+        <net name="pci_adc_header[118]"/>
+        <net name="pci_adc_header[117]"/>
+        <net name="pci_adc_header[116]"/>
+        <net name="pci_adc_header[115]"/>
+        <net name="pci_adc_header[114]"/>
+        <net name="pci_adc_header[113]"/>
+        <net name="pci_adc_header[112]"/>
+        <net name="pci_adc_header[111]"/>
+        <net name="pci_adc_header[110]"/>
+        <net name="pci_adc_header[109]"/>
+        <net name="pci_adc_header[108]"/>
+        <net name="pci_adc_header[107]"/>
+        <net name="pci_adc_header[106]"/>
+        <net name="pci_adc_header[105]"/>
+        <net name="pci_adc_header[104]"/>
+        <net name="pci_adc_header[103]"/>
+        <net name="pci_adc_header[102]"/>
+        <net name="pci_adc_header[101]"/>
+        <net name="pci_adc_header[100]"/>
+        <net name="pci_adc_header[99]"/>
+        <net name="pci_adc_header[98]"/>
+        <net name="pci_adc_header[97]"/>
+        <net name="pci_adc_header[96]"/>
+        <net name="pci_adc_header[95]"/>
+        <net name="pci_adc_header[94]"/>
+        <net name="pci_adc_header[93]"/>
+        <net name="pci_adc_header[92]"/>
+        <net name="pci_adc_header[91]"/>
+        <net name="pci_adc_header[90]"/>
+        <net name="pci_adc_header[89]"/>
+        <net name="pci_adc_header[88]"/>
+        <net name="pci_adc_header[87]"/>
+        <net name="pci_adc_header[86]"/>
+        <net name="pci_adc_header[85]"/>
+        <net name="pci_adc_header[84]"/>
+        <net name="pci_adc_header[83]"/>
+        <net name="pci_adc_header[82]"/>
+        <net name="pci_adc_header[81]"/>
+        <net name="pci_adc_header[80]"/>
+        <net name="pci_adc_header[79]"/>
+        <net name="pci_adc_header[78]"/>
+        <net name="pci_adc_header[77]"/>
+        <net name="pci_adc_header[76]"/>
+        <net name="pci_adc_header[75]"/>
+        <net name="pci_adc_header[74]"/>
+        <net name="pci_adc_header[73]"/>
+        <net name="pci_adc_header[72]"/>
+        <net name="pci_adc_header[71]"/>
+        <net name="pci_adc_header[70]"/>
+        <net name="pci_adc_header[69]"/>
+        <net name="pci_adc_header[68]"/>
+        <net name="pci_adc_header[67]"/>
+        <net name="pci_adc_header[66]"/>
+        <net name="pci_adc_header[65]"/>
+        <net name="pci_adc_header[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq64&apos;hXXXX_XXXX_XXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_2"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe3[63:0]"/>

@@ -176,7 +176,7 @@ module adc (
   wire                 up_adc_send;
   reg                  pci_adc_send_3;
   reg                  pci_adc_send;
-  reg [63:0]           pci_adc_phys;
+  reg [127:0]          pci_adc_header;
   reg [1023:0]         pci_adc_data;
 
   wire [2:0]           adc_state;
@@ -487,7 +487,7 @@ pci_app pci_app_inst (
     .bar2_wr(pci_bar2_wr),
     
     .adc_send(pci_adc_send),
-    .adc_address(pci_adc_phys),
+    .adc_header(pci_adc_header),
     .adc_data(pci_adc_data)
 );
 
@@ -659,7 +659,7 @@ ila_0 ila_0_inst (
     .probe0(pci_adc_wr_3),           // input wire [0:0]  probe0  
     .probe1(pci_adc_data[15:0]),     // input wire [15:0]  probe0  
     .probe2(pci_adc_data[31:16]),    // input wire [15:0]  probe0  
-    .probe3(pci_adc_phys),           // input wire [63:0]  probe0  
+    .probe3(pci_adc_header[127:64]), // input wire [63:0]  probe0  
     .probe4(pci_adc_send),           // input wire [0:0]  probe0  
     .probe5(bar_adc_index)           // input wire [16:0]  probe0  
 );
@@ -850,9 +850,32 @@ generate
       
       if (!pci_adc_send_3 && pci_adc_send_2)
       begin
-        pci_adc_send <= 1;
-        pci_adc_phys <= up_adc_phys_out;
+        pci_adc_header[63:48] <= 0;                      // Requester ID
+        pci_adc_header[47:40] <= 0;                      // tag
+        pci_adc_header[39:36] <= 4'b1111;                // last be
+        pci_adc_header[35:32] <= 4'b1111;                // 1st be
+
+        if (up_adc_phys_out[63:32] == 0)
+        begin
+          pci_adc_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
+          pci_adc_header[95:64] <= up_adc_phys_out[31:0];
+        end
+        else
+        begin
+          pci_adc_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
+          pci_adc_header[95:64] <= up_adc_phys_out[63:32];
+          pci_adc_header[127:96] <= up_adc_phys_out[31:0];
+        end
+
+        pci_adc_header[23] <= 1'b0;                      // R
+        pci_adc_header[22:20] <= 3'b000;                 // TC
+        pci_adc_header[19:16] <= 4'b0000;                // TH, AttrH, R
+        pci_adc_header[15:12] <= 4'b0000;                // TD, EP, Attr
+        pci_adc_header[11:10] <= 2'b0;                   // AT
+        pci_adc_header[9:8] <= 2'b0;                     // len high
+        pci_adc_header[7:0] <= 8'h20;                    // 128 byte size
         pci_adc_data <= wr_adc_data;
+        pci_adc_send <= 1;
       end
       else
         pci_adc_send <= 0;
