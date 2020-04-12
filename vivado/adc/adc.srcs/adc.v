@@ -171,12 +171,13 @@ module adc (
   reg                  up_adc_wr_3;
   reg                  up_adc_wr;
   reg                  pci_adc_wr_3;
-  reg [1023:0]         pci_adc_data;
+  reg [1023:0]         wr_adc_data;
 
   wire                 up_adc_send;
   reg                  pci_adc_send_3;
   reg                  pci_adc_send;
   reg [63:0]           pci_adc_phys;
+  reg [1023:0]         pci_adc_data;
 
   wire [2:0]           adc_state;
 
@@ -485,8 +486,8 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
     
-    .adc_send(0),
-    .adc_address(1000000),
+    .adc_send(pci_adc_send),
+    .adc_address(pci_adc_phys),
     .adc_data(pci_adc_data)
 );
 
@@ -838,7 +839,7 @@ generate
       pci_adc_wr_3 <= pci_adc_wr_2;
       
       if (!pci_adc_wr_3 && pci_adc_wr_2)
-        pci_adc_data <= rx_adc_data;
+        wr_adc_data <= rx_adc_data;
     end
 
     always @ ( posedge pcie_user_clk ) 
@@ -851,6 +852,7 @@ generate
       begin
         pci_adc_send <= 1;
         pci_adc_phys <= up_adc_phys_out;
+        pci_adc_data <= wr_adc_data;
       end
       else
         pci_adc_send <= 0;

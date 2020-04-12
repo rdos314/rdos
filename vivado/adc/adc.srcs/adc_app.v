@@ -88,6 +88,15 @@ module adc_app (
   reg [3:0]               adc_rst_cnt;
   reg [6:0]               adc_user_ready_cnt;  
 
+ila_1 ila_1_inst (
+    .clk(clk),                       // input wire clk
+    .probe0(req_start),              // input wire [0:0]  probe0  
+    .probe1(req_stop),               // input wire [0:0]  probe0  
+    .probe2(adc_started),            // input wire [0:0]  probe0  
+    .probe3(adc_probing),            // input wire [0:0]  probe0  
+    .probe4(adc_running)             // input wire [0:0]  probe0  
+);
+
   assign adc_rst = adc_rst_cnt[3];
   assign adc_user_ready = adc_user_ready_cnt[6];
   assign adc_send = adc_phys_out ? adc_wr : 0'b0;
