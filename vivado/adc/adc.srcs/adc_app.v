@@ -67,6 +67,7 @@ module adc_app (
   input wire [63:0]       adc_phys_in,
   input wire              adc_wr,
   output reg [63:0]       adc_phys_out,
+  output wire             adc_send,
 
   output wire [2:0]       state
 );
@@ -79,6 +80,8 @@ module adc_app (
   reg                     req_stop;
   reg                     pend_start;
   reg                     next_valid;
+  reg                     update_1;
+  reg                     update_2;
 
   reg                     spi_test_done;
   reg [3:0]               pll_rst_cnt; 
@@ -87,27 +90,11 @@ module adc_app (
 
   assign adc_rst = adc_rst_cnt[3];
   assign adc_user_ready = adc_user_ready_cnt[6];
+  assign adc_send = adc_phys_out ? adc_wr : 0'b0;
 
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
-
-
-ila_0 ila_0_inst (
-    .clk(clk),                       // input wire clk
-    .probe0(adc_started),            // input wire [0:0]  probe0  
-    .probe1(adc_probing),            // input wire [0:0]  probe0  
-    .probe2(adc_running),            // input wire [0:0]  probe0  
-    .probe3(adc_sync_ok),            // input wire [0:0]  probe0  
-    .probe4(adc_sync_fail),          // input wire [0:0]  probe0  
-    .probe5(next_valid),             // input wire [0:0]  probe0  
-    .probe6(adc_clear),              // input wire [0:0]  probe0  
-    .probe7(adc_next),               // input wire [0:0]  probe0  
-    .probe8(adc_phys_valid),         // input wire [0:0]  probe0  
-    .probe9(adc_phys_in),            // input wire [63:0]  probe0  
-    .probe10(adc_wr),                // input wire [0:0]  probe0  
-    .probe11(adc_phys_out)           // input wire [63:0]  probe0  
-);
 
 generate
 begin : adc_app
@@ -258,7 +245,14 @@ begin : adc_app
             else
             begin
               if (adc_wr)
+              begin
                 adc_probing <= 0;
+                if (!adc_phys_out)
+                begin
+                  adc_started <= 0;
+                  adc_running <= 0;
+                end
+              end
               else
               begin
                 if (adc_sync_ok)
@@ -330,6 +324,8 @@ begin : adc_app
         adc_clear <= 1;
         adc_next <= 0;
         adc_phys_out <= 0;
+        update_1 <= 0;
+        update_2 <= 0;
       end
       else
       begin
@@ -339,7 +335,10 @@ begin : adc_app
             adc_phys_out <= adc_phys_in;
 
           adc_clear <= 0;
-          if (adc_wr)
+          update_1 <= adc_wr;
+          update_2 <= update_1;
+
+          if (update_2)
           begin
             if (adc_phys_out)
             begin
@@ -363,6 +362,9 @@ begin : adc_app
         end
         else
         begin
+          update_1 <= 0;
+          update_2 <= 0;
+
           if (req_start)
             adc_clear <= 1;
         end
