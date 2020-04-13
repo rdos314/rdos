@@ -43,7 +43,7 @@ module pci_tx (
   adc_data,
   adc_header,
   adc_wr,
-  adc_busy
+  adc_loaded
 );
 
   input                     clk;
@@ -64,7 +64,7 @@ module pci_tx (
   input  wire [1023:0]      adc_data;
   input  wire [127:0]       adc_header;
   input  wire               adc_wr;
-  output reg                adc_busy;
+  output reg                adc_loaded;
 
 
 // local
@@ -161,7 +161,7 @@ generate
         pend_bar_data <= bar_data;
       end
             
-      if (adc_wr)
+      if (adc_wr && !adc_loaded)
       begin
         q_adc_header <= adc_header;
         pend_adc_data <= adc_data;
@@ -188,8 +188,8 @@ generate
             bar_tx_tdata <= bar_pkt_data;
             bar_tx_tlast <= 1;
             bar_busy <= bar_wr;
-            bar_start <= (bar_busy && !adc_busy);
-            if (bar_busy && !adc_busy )
+            bar_start <= (bar_busy && !adc_loaded);
+            if (bar_busy && !adc_loaded )
               q_bar_data <= pend_bar_data;
  
             case (bar_count)
@@ -227,8 +227,8 @@ generate
                   begin
                     bar_tx_tlast <= 1;
                     bar_busy <= bar_wr;
-                    bar_start <= (bar_busy && !adc_busy);
-                    if (bar_busy && !adc_busy )
+                    bar_start <= (bar_busy && !adc_loaded);
+                    if (bar_busy && !adc_loaded )
                       q_bar_data <= pend_bar_data;
                   end
                 end
@@ -240,8 +240,8 @@ generate
                   bar_tx_tkeep[11:0] <= 12'hfff;
                   bar_tx_tlast <= 1;
                   bar_busy <= bar_wr;
-                  bar_start <= (bar_busy && !adc_busy);
-                  if (bar_busy && !adc_busy )
+                  bar_start <= (bar_busy && !adc_loaded);
+                  if (bar_busy && !adc_loaded )
                     q_bar_data <= pend_bar_data;
                 end
               end
@@ -263,8 +263,8 @@ generate
                   begin
                     bar_tx_tlast <= 1;
                     bar_busy <= bar_wr;
-                    bar_start <= (bar_busy && !adc_busy);
-                    if (bar_busy && !adc_busy )
+                    bar_start <= (bar_busy && !adc_loaded);
+                    if (bar_busy && !adc_loaded )
                       q_bar_data <= pend_bar_data;
                   end
                 end
@@ -272,8 +272,8 @@ generate
                 begin
                   bar_tx_tlast <= 1;
                   bar_busy <= bar_wr;
-                  bar_start <= (bar_busy && !adc_busy);
-                  if (bar_busy && !adc_busy )
+                  bar_start <= (bar_busy && !adc_loaded);
+                  if (bar_busy && !adc_loaded )
                     q_bar_data <= pend_bar_data;
                 end
               end
@@ -282,8 +282,8 @@ generate
             begin
               bar_tx_tvalid <= 0;
               bar_busy <= bar_wr;
-              bar_start <= (bar_busy && !adc_busy);
-              if (bar_busy && !adc_busy )
+              bar_start <= (bar_busy && !adc_loaded);
+              if (bar_busy && !adc_loaded )
                 q_bar_data <= pend_bar_data;
             end
           end                
@@ -300,7 +300,7 @@ generate
         adc_tx_tkeep <= 0;
         adc_count <= 0;
         adc_start <= 0;
-        adc_busy <= 0;
+        adc_loaded <= 0;
       end
       else
       begin
@@ -312,6 +312,7 @@ generate
 
             if (adc_count > 4)
             begin
+              adc_loaded <= 0;
               adc_tx_tlast <= 0;
               adc_count <= adc_count - 4;
               q_adc_data[895:0] <= q_adc_data[1023:128];
@@ -319,9 +320,9 @@ generate
             else
             begin
               adc_tx_tlast <= 1;
-              adc_busy <= adc_wr;
-              adc_start <= adc_busy;
-              if (adc_busy)
+              adc_loaded <= adc_wr;
+              adc_start <= adc_loaded;
+              if (adc_loaded)
                 q_adc_data <= pend_adc_data;
             end
 
@@ -337,6 +338,7 @@ generate
           begin
             if (adc_start)
             begin
+              adc_loaded <= 0;
               adc_tx_tvalid <= 1;
               adc_tx_tkeep[15:0] <= 16'hffff;
               adc_start <= 0;
@@ -358,13 +360,15 @@ generate
             else
             begin
               adc_tx_tvalid <= 0;
-              adc_busy <= adc_wr;
-              adc_start <= adc_busy;
-              if (adc_busy)
+              adc_loaded <= adc_wr;
+              adc_start <= adc_loaded;
+              if (adc_loaded)
                 q_adc_data <= pend_adc_data;
             end
           end                
         end
+        else
+          adc_loaded <= 0;
       end
     end
 

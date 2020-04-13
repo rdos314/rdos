@@ -147,7 +147,6 @@ module adc (
 
 // Reset
 
-  reg                  up_reset;
   reg [7:0]            pci_reset_cnt;
 
   reg                  adc_index;
@@ -186,7 +185,6 @@ module adc (
 
   wire [63:0]          rx_sysref_cnt;
   
-  wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
 
   wire                 up_adc_clear;
@@ -202,7 +200,7 @@ module adc (
   wire [19:0]          bar_adc_phys_page;
   wire                 bar_adc_phys_valid;
 
-  wire                 pci_adc_busy;
+  wire                 pci_adc_loaded;
   reg                  pci_adc_wr_3;
   reg                  pci_adc_send;
   reg [127:0]          pci_adc_header;
@@ -483,7 +481,7 @@ pci_app pci_app_inst (
     .bar2_wr(pci_bar2_wr),
     
     .adc_send(pci_adc_send),
-    .adc_busy(pci_adc_busy),
+    .adc_loaded(pci_adc_loaded),
     .adc_header(pci_adc_header),
     .adc_data(pci_adc_data)
 );
@@ -657,7 +655,7 @@ adc_app adc_app_inst (
 
 ila_0 ila_0_inst (
     .clk(pcie_user_clk),              // input wire clk
-    .probe0(pci_adc_busy),            // input wire [0:0]  probe0  
+    .probe0(pci_adc_loaded),          // input wire [0:0]  probe0  
     .probe1(pci_adc_send),            // input wire [0:0]  probe0  
     .probe2(up_adc_loaded),           // input wire [0:0]  probe0  
     .probe3(pci_adc_wr_2),            // input wire [0:0]  probe0  
@@ -859,11 +857,8 @@ generate
           pci_adc_header <= up_adc_out_header;
           pci_adc_data <= up_adc_out_data;
 
-          if (pci_adc_busy)
-          begin
-            pci_adc_send <= 0;
+          if (pci_adc_send && !pci_adc_loaded)
             up_adc_loaded <= 1;
-          end
           else
           begin
             pci_adc_send <= 1;
@@ -872,13 +867,24 @@ generate
         end
         else
         begin
-          if (!pci_adc_busy && up_adc_loaded)
+          if (pci_adc_loaded)
           begin
-            up_adc_loaded <= 0;
-            pci_adc_send <= 1;
+            if (up_adc_loaded)
+            begin
+              pci_adc_send <= 1;
+              up_adc_loaded <= 0;
+            end
+            else
+              pci_adc_send <= 0;
           end
           else
-            pci_adc_send <= 0;
+          begin
+            if (up_adc_loaded && !pci_adc_send)
+            begin
+              pci_adc_send <= 1;
+              up_adc_loaded <= 0;
+            end
+          end
         end
       end
     end

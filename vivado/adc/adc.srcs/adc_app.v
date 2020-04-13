@@ -115,17 +115,29 @@ adc_fifo adc_fifo_inst (
 
 ila_1 ila_1_inst (
     .clk(clk),                        // input wire clk
-    .probe0(adc_in),                  // input wire [0:0]  probe0  
-    .probe1(fifo_empty),              // input wire [0:0]  probe0  
-    .probe2(fifo_full),               // input wire [0:0]  probe0  
-    .probe3(fifo_rd),                 // input wire [0:0]  probe0  
-    .probe4(delay),                   // input wire [1:0]  probe0  
-    .probe5(adc_out),                 // input wire [0:0]  probe0  
-    .probe6(adc_out_header[127:64]),  // input wire [63:0]  probe0  
-    .probe7(adc_out_data[15:0]),      // input wire [15:0]  probe0  
-    .probe8(adc_out_data[31:16]),     // input wire [15:0]  probe0  
-    .probe9(adc_phys_valid),          // input wire [0:0]  probe0  
-    .probe10(adc_phys_page)           // input wire [19:0]  probe0  
+    .probe0(req_start),               // input wire [0:0]  probe0  
+    .probe1(req_stop),                // input wire [0:0]  probe0  
+    .probe2(adc_started),             // input wire [0:0]  probe0  
+    .probe3(adc_probing),             // input wire [0:0]  probe0  
+    .probe4(adc_running),             // input wire [0:0]  probe0  
+    .probe5(adc_pll_locked),          // input wire [3:0]  probe0  
+    .probe6(adc_rst_done),            // input wire [3:0]  probe0  
+    .probe7(adc_sync_ok),             // input wire [0:0]  probe0  
+    .probe8(adc_sync_fail),           // input wire [0:0]  probe0  
+    .probe9(busy),                    // input wire [0:0]  probe0  
+    .probe10(next_valid),              // input wire [0:0]  probe0  
+    .probe11(next_page),               // input wire [19:0]  probe0  
+    .probe12(adc_in),                  // input wire [0:0]  probe0  
+    .probe13(fifo_empty),              // input wire [0:0]  probe0  
+    .probe14(fifo_full),               // input wire [0:0]  probe0  
+    .probe15(fifo_rd),                 // input wire [0:0]  probe0  
+    .probe16(delay),                   // input wire [1:0]  probe0  
+    .probe17(adc_out),                 // input wire [0:0]  probe0  
+    .probe18(adc_out_header[127:64]),  // input wire [63:0]  probe0  
+    .probe19(adc_out_data[15:0]),      // input wire [15:0]  probe0  
+    .probe20(adc_out_data[31:16]),     // input wire [15:0]  probe0  
+    .probe21(adc_phys_valid),          // input wire [0:0]  probe0  
+    .probe22(adc_phys_page)           // input wire [19:0]  probe0  
 );
 
   assign fifo_reset = !adc_started;
