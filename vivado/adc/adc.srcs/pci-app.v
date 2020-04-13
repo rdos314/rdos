@@ -75,6 +75,7 @@ module pci_app (
     bar2_wr,
 
     adc_send,
+    adc_busy,
     adc_header,
     adc_data
 );
@@ -129,6 +130,7 @@ module pci_app (
   output reg           bar2_wr;
 
   input wire           adc_send;
+  output wire          adc_busy;
   input wire [127:0]   adc_header;
   input wire [1023:0]  adc_data;
 

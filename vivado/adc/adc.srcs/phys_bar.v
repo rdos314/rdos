@@ -43,7 +43,7 @@ module phys_bar (
   input wire              clear,
   input wire              next,
   output reg [16:0]       index,
-  output reg [63:0]       phys,
+  output reg [19:0]       page,
   output reg              valid
 );
 
@@ -181,7 +181,7 @@ begin : phys_bar_gen
     if (reset || clear)
     begin
       valid <= 0;
-      phys[63:0] <= 0;
+      page <= 0;
       index <= 0;
     end
     else
@@ -199,9 +199,7 @@ begin : phys_bar_gen
         begin
           if (q_rd_adr == index)
           begin
-            phys[20:0] <= 0;
-            phys[40:21] <= q_rd_data;
-            phys[63:41] <= 0;
+            page <= q_rd_data;
             valid <= 1;
           end
         end

@@ -64,10 +64,15 @@ module adc_app (
   output reg              adc_clear,
   output reg              adc_next,
   input wire              adc_phys_valid,
-  input wire [63:0]       adc_phys_in,
-  input wire              adc_wr,
-  output reg [63:0]       adc_phys_out,
-  output wire             adc_send,
+  input wire [19:0]       adc_phys_page,
+
+  input wire              adc_in,
+  input wire [1023:0]     adc_in_data,
+
+  output reg              adc_out,
+  input wire              adc_out_busy,
+  output reg [127:0]      adc_out_header,
+  output wire [1023:0]    adc_out_data,
 
   output wire [2:0]       state
 );
@@ -79,27 +84,54 @@ module adc_app (
   reg                     req_start;
   reg                     req_stop;
   reg                     pend_start;
+
+  reg                     busy;
+  reg [1:0]               delay;
   reg                     next_valid;
-  reg                     update_1;
-  reg                     update_2;
+  reg [19:0]              next_page;
+  reg [13:0]              pkt_index;
 
   reg                     spi_test_done;
   reg [3:0]               pll_rst_cnt; 
   reg [3:0]               adc_rst_cnt;
   reg [6:0]               adc_user_ready_cnt;  
 
-ila_1 ila_1_inst (
-    .clk(clk),                       // input wire clk
-    .probe0(req_start),              // input wire [0:0]  probe0  
-    .probe1(req_stop),               // input wire [0:0]  probe0  
-    .probe2(adc_started),            // input wire [0:0]  probe0  
-    .probe3(adc_probing),            // input wire [0:0]  probe0  
-    .probe4(adc_running)             // input wire [0:0]  probe0  
+  wire                    fifo_reset;
+  wire                    fifo_full;
+  wire                    fifo_empty;
+  reg                     fifo_rd;
+  reg [1023:0]            fifo_data;
+
+adc_fifo adc_fifo_inst (
+  .clk(clk),             // input wire clk
+  .srst(fifo_reset),     // input wire srst
+  .din(adc_in_data),     // input wire [1023 : 0] din
+  .wr_en(adc_in),        // input wire wr_en
+  .rd_en(fifo_rd),       // input wire rd_en
+  .dout(adc_out_data),   // output wire [1023 : 0] dout
+  .full(fifo_full),      // output wire full
+  .empty(fifo_empty)     // output wire empty
 );
+
+ila_1 ila_1_inst (
+    .clk(clk),                        // input wire clk
+    .probe0(adc_in),                  // input wire [0:0]  probe0  
+    .probe1(fifo_empty),              // input wire [0:0]  probe0  
+    .probe2(fifo_full),               // input wire [0:0]  probe0  
+    .probe3(fifo_rd),                 // input wire [0:0]  probe0  
+    .probe4(delay),                   // input wire [1:0]  probe0  
+    .probe5(adc_out),                 // input wire [0:0]  probe0  
+    .probe6(adc_out_header[127:64]),  // input wire [63:0]  probe0  
+    .probe7(adc_out_data[15:0]),      // input wire [15:0]  probe0  
+    .probe8(adc_out_data[31:16]),     // input wire [15:0]  probe0  
+    .probe9(adc_phys_valid),          // input wire [0:0]  probe0  
+    .probe10(adc_phys_page)           // input wire [19:0]  probe0  
+);
+
+  assign fifo_reset = !adc_started;
 
   assign adc_rst = adc_rst_cnt[3];
   assign adc_user_ready = adc_user_ready_cnt[6];
-  assign adc_send = adc_phys_out ? adc_wr : 0'b0;
 
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
@@ -253,10 +285,10 @@ begin : adc_app
             end
             else
             begin
-              if (adc_wr)
+              if (adc_in)
               begin
                 adc_probing <= 0;
-                if (!adc_phys_out)
+                if (fifo_full)
                 begin
                   adc_started <= 0;
                   adc_running <= 0;
@@ -317,7 +349,10 @@ begin : adc_app
       else
       begin
         if (adc_phys_valid)
+        begin
           next_valid <= 1;
+          next_page <= adc_phys_page;
+        end
         else
         begin
           if (adc_clear || adc_next)
@@ -332,38 +367,23 @@ begin : adc_app
       begin
         adc_clear <= 1;
         adc_next <= 0;
-        adc_phys_out <= 0;
-        update_1 <= 0;
-        update_2 <= 0;
+        pkt_index <= 0;
       end
       else
       begin
         if (adc_started)
         begin
-          if (adc_probing && !adc_phys_out && next_valid)
-            adc_phys_out <= adc_phys_in;
-
           adc_clear <= 0;
-          update_1 <= adc_wr;
-          update_2 <= update_1;
 
-          if (update_2)
+          if (fifo_rd)
           begin
-            if (adc_phys_out)
+            pkt_index <= pkt_index + 1;
+            if (next_page)
             begin
-              if (adc_phys_out[20:7] == 14'b11111111111111)
-              begin
+              if (pkt_index == 14'b11111111111111)
                 adc_next <= 1;
-                if (next_valid)
-                  adc_phys_out <= adc_phys_in;
-                else
-                  adc_phys_out <= 0;
-              end
               else
-              begin
                 adc_next <= 0;
-                adc_phys_out[20:7] <= adc_phys_out[20:7] + 1;
-              end
             end
             else
               adc_next <= 0;
@@ -371,15 +391,77 @@ begin : adc_app
         end
         else
         begin
-          update_1 <= 0;
-          update_2 <= 0;
-
           if (req_start)
             adc_clear <= 1;
         end
       end
     end
 
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+      begin
+        delay <= 0;
+        adc_out <= 0;
+        busy <= 0;
+        fifo_rd <= 0;
+      end
+      else
+      begin
+        if (busy)
+        begin
+          if (delay)
+            delay <= delay - 1;
+          else
+          begin
+            fifo_rd <= adc_out;
+            busy <= adc_out_busy;
+            adc_out <= 0;
+          end
+        end
+        else
+        begin
+          fifo_rd <= 0;
+
+          if (fifo_empty || next_page == 0)
+            adc_out <= 0;
+          else
+          begin
+            adc_out_header[63:48] <= 0;                      // Requester ID
+            adc_out_header[47:40] <= 0;                      // tag
+            adc_out_header[39:36] <= 4'b1111;                // last be
+            adc_out_header[35:32] <= 4'b1111;                // 1st be
+
+            if (next_page[19:11] == 0)
+            begin
+              adc_out_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
+              adc_out_header[70:64] <= 0;
+              adc_out_header[84:71] <= pkt_index;
+              adc_out_header[95:85] <= next_page[10:0];
+            end
+            else
+            begin
+              adc_out_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
+              adc_out_header[72:64] <= next_page[19:11];
+              adc_out_header[102:96] <= 0;
+              adc_out_header[116:103] <= pkt_index;
+              adc_out_header[127:117] <= next_page[10:0];
+            end
+
+            adc_out_header[23] <= 1'b0;                      // R
+            adc_out_header[22:20] <= 3'b000;                 // TC
+            adc_out_header[19:16] <= 4'b0000;                // TH, AttrH, R
+            adc_out_header[15:12] <= 4'b0000;                // TD, EP, Attr
+            adc_out_header[11:10] <= 2'b0;                   // AT
+            adc_out_header[9:8] <= 2'b0;                     // len high
+            adc_out_header[7:0] <= 8'h20;                    // 128 byte size
+            adc_out <= 1;
+            delay <= 2;
+            busy <= 1;
+          end
+        end
+      end
+    end
 
 end
 endgenerate
