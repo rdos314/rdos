@@ -43,7 +43,7 @@ module pci_tx (
   adc_data,
   adc_header,
   adc_wr,
-  adc_loaded
+  adc_ack
 );
 
   input                     clk;
@@ -64,7 +64,7 @@ module pci_tx (
   input  wire [1023:0]      adc_data;
   input  wire [127:0]       adc_header;
   input  wire               adc_wr;
-  output reg                adc_loaded;
+  output reg                adc_ack;
 
 
 // local
@@ -91,6 +91,7 @@ module pci_tx (
   reg                       bar_tx_tlast;
   reg                       bar_tx_tvalid;
 
+  reg                       adc_loaded;
   reg                       adc_start;
   reg [9:0]                 adc_count;
   reg [127:0]               adc_tx_tdata;
@@ -159,12 +160,6 @@ generate
       begin
         q_bar_header <= bar_header;
         pend_bar_data <= bar_data;
-      end
-            
-      if (adc_wr && !adc_loaded)
-      begin
-        q_adc_header <= adc_header;
-        pend_adc_data <= adc_data;
       end
     end
 
@@ -301,6 +296,7 @@ generate
         adc_count <= 0;
         adc_start <= 0;
         adc_loaded <= 0;
+        adc_ack <= 0;
       end
       else
       begin
@@ -309,21 +305,40 @@ generate
           if (adc_tx_tvalid && !adc_tx_tlast)
           begin
             adc_tx_tdata <= adc_pkt_data;
+            adc_ack <= 0;
 
             if (adc_count > 4)
             begin
-              adc_loaded <= 0;
               adc_tx_tlast <= 0;
               adc_count <= adc_count - 4;
               q_adc_data[895:0] <= q_adc_data[1023:128];
+
+              if (adc_wr)
+              begin
+                q_adc_header <= adc_header;
+                pend_adc_data <= adc_data;
+                adc_loaded <= 1;
+              end
             end
             else
             begin
               adc_tx_tlast <= 1;
-              adc_loaded <= adc_wr;
-              adc_start <= adc_loaded;
-              if (adc_loaded)
-                q_adc_data <= pend_adc_data;
+              adc_loaded <= 0;
+
+              if (adc_wr)
+              begin
+                q_adc_header <= adc_header;
+                q_adc_data <= adc_data;
+                adc_start <= 1;
+              end
+              else
+              begin
+                if (adc_loaded)
+                begin
+                  q_adc_data <= pend_adc_data;
+                  adc_start <= 1;
+                end
+              end
             end
 
             case (adc_count)
@@ -338,10 +353,18 @@ generate
           begin
             if (adc_start)
             begin
-              adc_loaded <= 0;
+              adc_ack <= 1;
+              adc_start <= 0;
+
+              if (adc_wr)
+              begin
+                q_adc_header <= adc_header;
+                pend_adc_data <= adc_data;
+                adc_loaded <= 1;
+              end
+
               adc_tx_tvalid <= 1;
               adc_tx_tkeep[15:0] <= 16'hffff;
-              adc_start <= 0;
               adc_tx_tlast <= 0;
 
               if (adc_pkt_type[5] == 0)  // 3 DW header
@@ -360,15 +383,37 @@ generate
             else
             begin
               adc_tx_tvalid <= 0;
-              adc_loaded <= adc_wr;
-              adc_start <= adc_loaded;
-              if (adc_loaded)
-                q_adc_data <= pend_adc_data;
+              adc_ack <= 0;
+              adc_loaded <= 0;
+
+              if (adc_wr)
+              begin
+                q_adc_header <= adc_header;
+                q_adc_data <= adc_data;
+                adc_start <= 1;
+              end
+              else
+              begin
+                if (adc_loaded)
+                begin
+                  q_adc_data <= pend_adc_data;
+                  adc_start <= 1;
+                end
+              end
             end
           end                
         end
         else
-          adc_loaded <= 0;
+        begin
+          adc_ack <= 0;
+
+          if (adc_wr)
+          begin
+            q_adc_header <= adc_header;
+            pend_adc_data <= adc_data;
+            adc_loaded <= 1;
+          end
+        end
       end
     end
 

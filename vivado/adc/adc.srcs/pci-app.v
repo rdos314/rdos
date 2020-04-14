@@ -74,10 +74,10 @@ module pci_app (
     bar2_wr_be,
     bar2_wr,
 
-    adc_send,
-    adc_loaded,
     adc_header,
     adc_data
+    adc_wr,
+    adc_ack
 );
 
   output  [7:0]        pci_exp_txp;
@@ -129,10 +129,10 @@ module pci_app (
   output reg [3:0]     bar2_wr_be;
   output reg           bar2_wr;
 
-  input wire           adc_send;
-  output wire          adc_loaded;
   input wire [127:0]   adc_header;
   input wire [1023:0]  adc_data;
+  input wire           adc_wr;
+  output wire          adc_ack;
 
 // Wire Declarations
 
@@ -487,8 +487,8 @@ pci_tx pci_tx_inst (
     
     .adc_data( adc_data),                    // I
     .adc_header( adc_header),                // I
-    .adc_wr (adc_send),                      // I
-    .adc_loaded (adc_loaded)                 // O
+    .adc_wr (adc_wr),                        // I
+    .adc_ack (adc_ack)                       // O
 );
 
 generate

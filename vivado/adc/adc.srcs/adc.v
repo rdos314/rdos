@@ -167,10 +167,17 @@ module adc (
   wire                 rx_adc_sync_fail;
 
   wire                 rx_adc_wr;
-  reg                  up_adc_loaded;
   reg                  up_adc_in_3;
   reg                  up_adc_in;
   reg [1023:0]         up_adc_in_data;
+
+  reg                  pci_adc_load_3;
+  reg                  up_adc_loaded;
+  reg                  pci_adc_busy;
+  reg                  pci_adc_wr;
+  wire                 pci_adc_ack;
+  reg [127:0]          pci_adc_header;
+  reg [1023:0]         pci_adc_data;
 
   wire [2:0]           adc_state;
 
@@ -199,12 +206,6 @@ module adc (
   wire [16:0]          bar_adc_index;
   wire [19:0]          bar_adc_phys_page;
   wire                 bar_adc_phys_valid;
-
-  wire                 pci_adc_loaded;
-  reg                  pci_adc_wr_3;
-  reg                  pci_adc_send;
-  reg [127:0]          pci_adc_header;
-  reg [1023:0]         pci_adc_data;
 
   wire [127:0]         up_adc_out_header;
   wire [1023:0]        up_adc_out_data;
@@ -319,11 +320,11 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_phys_valid_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_phys_valid_2;
 
- (* ASYNC_REG="TRUE" *)  reg                  adc_out_busy_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_out_busy;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_ack_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_ack;
 
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_wr_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_wr_2;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_load_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_load_2;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -480,10 +481,10 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
     
-    .adc_send(pci_adc_send),
-    .adc_loaded(pci_adc_loaded),
     .adc_header(pci_adc_header),
-    .adc_data(pci_adc_data)
+    .adc_data(pci_adc_data),
+    .adc_wr(pci_adc_wr),
+    .adc_ack(pci_adc_ack)
 );
 
 daq2_spi daq2_spi_inst (
@@ -655,11 +656,12 @@ adc_app adc_app_inst (
 
 ila_0 ila_0_inst (
     .clk(pcie_user_clk),              // input wire clk
-    .probe0(pci_adc_loaded),          // input wire [0:0]  probe0  
-    .probe1(pci_adc_send),            // input wire [0:0]  probe0  
+    .probe0(pci_adc_load_2),          // input wire [0:0]  probe0  
+    .probe1(pci_adc_load_3),          // input wire [0:0]  probe0  
     .probe2(up_adc_loaded),           // input wire [0:0]  probe0  
-    .probe3(pci_adc_wr_2),            // input wire [0:0]  probe0  
-    .probe4(pci_adc_wr_3)             // input wire [0:0]  probe0  
+    .probe3(pci_adc_wr),              // input wire [0:0]  probe0  
+    .probe4(pci_adc_ack),             // input wire [0:0]  probe0  
+    .probe5(pci_adc_busy)             // input wire [0:0]  probe0  
 );
 
   assign bar_control = 0;
@@ -844,47 +846,62 @@ generate
       if (pcie_user_reset)
       begin
         up_adc_loaded <= 0;
-        pci_adc_send <= 0;
+        pci_adc_wr <= 0;
+        pci_adc_busy <= 0;
+        pci_adc_load_1 <= 0;
+        pci_adc_load_2 <= 0;
+        pci_adc_load_3 <= 0;
       end
       else
       begin
-        pci_adc_wr_1 <= up_adc_out;
-        pci_adc_wr_2 <= pci_adc_wr_1;
-        pci_adc_wr_3 <= pci_adc_wr_2;
+        pci_adc_load_1 <= up_adc_out;
+        pci_adc_load_2 <= pci_adc_load_1;
+        pci_adc_load_3 <= pci_adc_load_2;
 
-        if (!pci_adc_wr_3 && pci_adc_wr_2)
+        if (!pci_adc_load_3 && pci_adc_load_2)
         begin
           pci_adc_header <= up_adc_out_header;
           pci_adc_data <= up_adc_out_data;
 
-          if (pci_adc_send && !pci_adc_loaded)
-            up_adc_loaded <= 1;
+          if (pci_adc_ack)
+          begin
+            pci_adc_wr <= 1;
+            pci_adc_busy <= 1;
+            up_adc_loaded <= 0;
+          end
           else
           begin
-            pci_adc_send <= 1;
-            up_adc_loaded <= 0;
+            if (pci_adc_busy)
+            begin
+              pci_adc_wr <= 0;
+              up_adc_loaded <= 1;
+            end
+            else
+            begin
+              pci_adc_wr <= 1;
+              pci_adc_busy <= 1;
+              up_adc_loaded <= 0;
+            end
           end
         end
         else
         begin
-          if (pci_adc_loaded)
+          if (pci_adc_ack)
           begin
             if (up_adc_loaded)
             begin
-              pci_adc_send <= 1;
+              pci_adc_wr <= 1;
+              pci_adc_busy <= 1;
               up_adc_loaded <= 0;
             end
             else
-              pci_adc_send <= 0;
-          end
-          else
-          begin
-            if (up_adc_loaded && !pci_adc_send)
             begin
-              pci_adc_send <= 1;
-              up_adc_loaded <= 0;
+              pci_adc_wr <= 0;
+              pci_adc_busy <= 0;
             end
           end
+          else
+            pci_adc_wr <= 0;
         end
       end
     end
