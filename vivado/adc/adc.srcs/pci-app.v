@@ -75,7 +75,7 @@ module pci_app (
     bar2_wr,
 
     adc_header,
-    adc_data
+    adc_data,
     adc_wr,
     adc_ack
 );

@@ -323,6 +323,9 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  adc_ack_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_ack;
 
+ (* ASYNC_REG="TRUE" *)  reg                  adc_out_busy_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_out_busy;
+
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_load_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_load_2;
 
