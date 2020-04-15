@@ -26,8 +26,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module adc_app (
-  input                   reset,
-  input                   clk,
+  input                   rx_clk,
+  input                   pci_reset,
+  input                   pci_clk,
+  input                   up_reset,
+  input                   up_clk,
 
   output reg              spi_read,
   output reg              spi_write,
@@ -36,6 +39,17 @@ module adc_app (
   output reg [7:0]        spi_out_data,
   input wire              spi_running,
   input wire              spi_done,
+
+  input wire [16:0]       bar_rd_address,
+  input wire              bar_rd,
+
+  output wire [31:0]      bar_rp_data,
+  output wire             bar_rp,
+
+  input wire [16:0]       bar_wr_address,
+  input wire [31:0]       bar_wr_data,
+  input wire [3:0]        bar_wr_be,
+  input wire              bar_wr,
 
   input wire              rx_control_msg,
   input wire [7:0]        rx_control_index,
@@ -61,105 +75,149 @@ module adc_app (
   output reg              adc_probing,
   output reg              adc_running,
 
-  output reg              adc_clear,
-  output reg              adc_next,
-  input wire              adc_phys_valid,
-  input wire [19:0]       adc_phys_page,
-
   input wire              adc_in,
-  input wire [1023:0]     adc_in_data,
+  input wire [127:0]      adc_in_data,
 
   output reg              adc_out,
-  input wire              adc_out_busy,
+  input wire              adc_out_ack,
   output reg [127:0]      adc_out_header,
-  output wire [1023:0]    adc_out_data,
+  output reg [1023:0]     adc_out_data,
 
   output wire [2:0]       state
 );
 
-  reg [1:0]               req_state;
-  reg [2:0]               curr_state;
-  reg [7:0]               test_mode;
+// up domain
 
-  reg                     req_start;
-  reg                     req_stop;
-  reg                     pend_start;
+  reg [1:0]               up_req_state;
+  reg [2:0]               up_curr_state;
+  reg [7:0]               up_test_mode;
 
-  reg                     busy;
-  reg [1:0]               delay;
-  reg                     next_valid;
-  reg [19:0]              next_page;
-  reg [13:0]              pkt_index;
+  reg                     up_req_start;
+  reg                     up_req_stop;
+  reg                     up_pend_start;
 
-  reg                     spi_test_done;
-  reg [3:0]               pll_rst_cnt; 
-  reg [3:0]               adc_rst_cnt;
-  reg [6:0]               adc_user_ready_cnt;  
+  reg                     up_spi_test_done;
+  reg [3:0]               up_pll_rst_cnt; 
+  reg [3:0]               up_adc_rst_cnt;
+  reg [6:0]               up_adc_user_ready_cnt;  
+
+// pci domain
+
+  reg [19:0]              pci_page;
+  reg [13:0]              pci_index;
+  reg [2:0]               pci_adc_cnt;
+  reg                     pci_busy;
+  reg                     pci_pend;
+  reg                     pci_has_data;
+  reg [1023:0]            pci_data;
+
+  reg                     phys_clear;
+  reg                     phys_next;
+  wire [16:0]             phys_index;
+  wire [19:0]             phys_page;
+  wire                    phys_valid;
+
+// FIFO
+
+  wire                    fifo_want_data;
+  wire                    fifo_rd;
 
   wire                    fifo_reset;
   wire                    fifo_full;
   wire                    fifo_empty;
-  reg                     fifo_rd;
-  reg [1023:0]            fifo_data;
+  reg [127:0]             fifo_data;
+
+
+// clock domain crossings
+
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_started_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_started;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_probing_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_probing;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
+
 
 adc_fifo adc_fifo_inst (
-  .clk(clk),             // input wire clk
+  .rd_clk(pci_clk),      // input wire read clk
+  .wr_clk(rx_clk),       // input wire write clk
   .srst(fifo_reset),     // input wire srst
-  .din(adc_in_data),     // input wire [1023 : 0] din
+  .din(adc_in_data),     // input wire [127 : 0] din
   .wr_en(adc_in),        // input wire wr_en
   .rd_en(fifo_rd),       // input wire rd_en
-  .dout(adc_out_data),   // output wire [1023 : 0] dout
+  .dout(fifo_data),      // output wire [127 : 0] dout
   .full(fifo_full),      // output wire full
   .empty(fifo_empty)     // output wire empty
 );
 
+phys_bar adc_bar_inst (
+    .clk(pci_clk),
+    .reset(pci_reset),
+
+    .rd_address(bar_rd_address),
+    .rd(bar_rd),
+    .rp_data(bar_rp_data),
+    .rp(bar_rp),
+
+    .wr_address(bar_wr_address),
+    .wr_data(bar_wr_data),
+    .wr_be(bar_wr_be),
+    .wr(bar_wr),
+
+    .clear(phys_clear),
+    .next(phys_next),
+    .index(phys_index),
+    .page(phys_page),
+    .valid(phys_valid)
+);
+
+
 ila_1 ila_1_inst (
-    .clk(clk),                        // input wire clk
-    .probe0(req_start),               // input wire [0:0]  probe0  
-    .probe1(req_stop),                // input wire [0:0]  probe0  
-    .probe2(adc_started),             // input wire [0:0]  probe0  
-    .probe3(adc_probing),             // input wire [0:0]  probe0  
-    .probe4(adc_running),             // input wire [0:0]  probe0  
-    .probe5(adc_pll_locked),          // input wire [3:0]  probe0  
-    .probe6(adc_rst_done),            // input wire [3:0]  probe0  
-    .probe7(adc_sync_ok),             // input wire [0:0]  probe0  
-    .probe8(adc_sync_fail),           // input wire [0:0]  probe0  
-    .probe9(busy),                    // input wire [0:0]  probe0  
-    .probe10(next_valid),              // input wire [0:0]  probe0  
-    .probe11(next_page),               // input wire [19:0]  probe0  
-    .probe12(adc_in),                  // input wire [0:0]  probe0  
-    .probe13(fifo_empty),              // input wire [0:0]  probe0  
-    .probe14(fifo_full),               // input wire [0:0]  probe0  
-    .probe15(fifo_rd),                 // input wire [0:0]  probe0  
-    .probe16(delay),                   // input wire [1:0]  probe0  
-    .probe17(adc_out),                 // input wire [0:0]  probe0  
-    .probe18(adc_out_header[127:64]),  // input wire [63:0]  probe0  
-    .probe19(adc_out_data[15:0]),      // input wire [15:0]  probe0  
-    .probe20(adc_out_data[31:16]),     // input wire [15:0]  probe0  
-    .probe21(adc_phys_valid),          // input wire [0:0]  probe0  
-    .probe22(adc_phys_page)           // input wire [19:0]  probe0  
+    .clk(pci_clk),                     // input wire clk
+    .probe0(pci_adc_started),          // input wire [0:0]  probe0  
+    .probe1(pci_adc_probing),          // input wire [0:0]  probe0  
+    .probe2(pci_adc_running),          // input wire [0:0]  probe0  
+    .probe3(pci_page),                 // input wire [19:0]  probe0  
+    .probe4(pci_index),                // input wire [13:0]  probe0  
+    .probe5(pci_adc_cnt),              // input wire [2:0]  probe0  
+    .probe6(pci_busy),                 // input wire [0:0]  probe0  
+    .probe7(pci_pend),                 // input wire [0:0]  probe0  
+    .probe8(pci_has_data),             // input wire [0:0]  probe0  
+    .probe9(fifo_empty),               // input wire [0:0]  probe0  
+    .probe10(fifo_full),               // input wire [0:0]  probe0  
+    .probe11(fifo_rd),                 // input wire [0:0]  probe0  
+    .probe12(adc_out),                 // input wire [0:0]  probe0  
+    .probe13(adc_out_header[127:64]),  // input wire [63:0]  probe0  
+    .probe14(adc_out_data[15:0]),      // input wire [15:0]  probe0  
+    .probe15(adc_out_data[31:16])      // input wire [15:0]  probe0  
 );
 
   assign fifo_reset = !adc_started;
 
-  assign adc_rst = adc_rst_cnt[3];
-  assign adc_user_ready = adc_user_ready_cnt[6];
+  assign adc_rst = up_adc_rst_cnt[3];
+  assign adc_user_ready = up_adc_user_ready_cnt[6];
 
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
 
+  assign fifo_want_data = pci_page ? !fifo_empty : 1'b0;
+  assign fifo_rd = pci_pend ? 1'b0 : fifo_want_data;
+
 generate
 begin : adc_app
 
-    always @ ( posedge clk ) 
+    always @ ( posedge up_clk ) 
     begin
-      if (reset)
+      if (up_reset)
       begin
-        req_start <= 0;
-        req_stop <= 0;
-        req_state <= 0;
-        test_mode <= 0;
+        up_req_start <= 0;
+        up_req_stop <= 0;
+        up_req_state <= 0;
+        up_test_mode <= 0;
       end
       else
       begin
@@ -168,52 +226,52 @@ begin : adc_app
           case (rx_control_index)
             0:
             begin
-              req_state <= rx_control_data[1:0];
-              if (req_state[1] != rx_control_data[1])
+              up_req_state <= rx_control_data[1:0];
+              if (up_req_state[1] != rx_control_data[1])
               begin
                 if (rx_control_data[1])
                 begin
-                  req_start <= 1;
-                  req_stop <= 0;
+                  up_req_start <= 1;
+                  up_req_stop <= 0;
                 end
                 else
                 begin
-                  req_start <= 0;
-                  req_stop <= 1;
+                  up_req_start <= 0;
+                  up_req_stop <= 1;
                 end
               end
               else
               begin
-                req_start <= 0;
-                req_stop <= 0;
+                up_req_start <= 0;
+                up_req_stop <= 0;
               end
             end
 
             1:
             begin
-              req_start <= 0;
-              req_stop <= 0;
-              test_mode <= rx_control_data;
+              up_req_start <= 0;
+              up_req_stop <= 0;
+              up_test_mode <= rx_control_data;
             end
 
             default:
             begin
-              req_start <= 0;
-              req_stop <= 0;
+              up_req_start <= 0;
+              up_req_stop <= 0;
             end
           endcase
         end
         else
         begin
-          req_start <= 0;
-          req_stop <= 0;
+          up_req_start <= 0;
+          up_req_stop <= 0;
         end
       end
      end
 
-    always @ ( posedge clk ) 
+    always @ ( posedge up_clk ) 
     begin
-      if (reset)
+      if (up_reset)
       begin
         spi_write <= 0;
         adc_started <= 0;
@@ -221,25 +279,25 @@ begin : adc_app
         adc_running <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
-        pend_start <= 0;
-        spi_test_done <= 0;
+        up_pend_start <= 0;
+        up_spi_test_done <= 0;
       end
       else
       begin
-        if (req_start)
+        if (up_req_start)
         begin
           up_rstn <= 0;
           qpll_rst <= 1;
-          pll_rst_cnt <= 4'h8; 
-          adc_rst_cnt <= 4'h8;    
-          adc_user_ready_cnt <= 7'h00;  
-          pend_start <= 1;
+          up_pll_rst_cnt <= 4'h8; 
+          up_adc_rst_cnt <= 4'h8;    
+          up_adc_user_ready_cnt <= 7'h00;  
+          up_pend_start <= 1;
         end
         else
         begin
           qpll_rst <= 0;
 
-          if (req_stop)
+          if (up_req_stop)
           begin
             adc_started <= 0;
             up_rstn <= 0;
@@ -248,39 +306,39 @@ begin : adc_app
           begin
             up_rstn <= 1;
 
-            if (pend_start)
+            if (up_pend_start)
             begin
               if (adc_started)
               begin
                 if (spi_done)
                 begin
-                  spi_test_done <= 1;
+                  up_spi_test_done <= 1;
                   spi_write <= 0;
                 end
 
-                if (spi_test_done)
+                if (up_spi_test_done)
                 begin
                   if (qpll_locked)
-                    if (pll_rst_cnt[3] == 1'b1) 
-                      pll_rst_cnt <= pll_rst_cnt + 1'b1;
+                    if (up_pll_rst_cnt[3] == 1'b1) 
+                      up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
 
-                  if ((pll_rst_cnt[3] == 1'b1) || (adc_pll_locked != 4'b1111))
-                    adc_rst_cnt <= 4'h8; 
+                  if ((up_pll_rst_cnt[3] == 1'b1) || (adc_pll_locked != 4'b1111))
+                    up_adc_rst_cnt <= 4'h8; 
                   else 
-                    if (adc_rst_cnt[3] == 1'b1) 
-                      adc_rst_cnt <= adc_rst_cnt + 1'b1;
+                    if (up_adc_rst_cnt[3] == 1'b1) 
+                      up_adc_rst_cnt <= up_adc_rst_cnt + 1'b1;
 
-                  if (adc_rst_cnt[3] == 1'b1) 
-                    adc_user_ready_cnt <= 7'h00;   
+                  if (up_adc_rst_cnt[3] == 1'b1) 
+                    up_adc_user_ready_cnt <= 7'h00;   
                   else 
                   begin
-                    if (adc_user_ready_cnt[6] == 1'b0) 
-                      adc_user_ready_cnt <= adc_user_ready_cnt + 1'b1;
+                    if (up_adc_user_ready_cnt[6] == 1'b0) 
+                      up_adc_user_ready_cnt <= up_adc_user_ready_cnt + 1'b1;
                     else
                     begin
                       if (adc_rst_done == 4'b1111)
                       begin
-                        pend_start <= 0;
+                        up_pend_start <= 0;
                         adc_probing <= 1;
                       end
                     end
@@ -311,7 +369,7 @@ begin : adc_app
                 if (adc_sync_ok)
                 begin
                   spi_adr <= 12'h550;
-                  spi_out_data <= test_mode;
+                  spi_out_data <= up_test_mode;
                   spi_write <= 1;
                   adc_running <= 1;
                 end
@@ -333,17 +391,17 @@ begin : adc_app
       end
     end
 
-    always @ ( posedge clk ) 
+    always @ ( posedge up_clk ) 
     begin
-      if (reset)
+      if (up_reset)
       begin
         tx_control_msg <= 0;
-        curr_state <= 0;
+        up_curr_state <= 0;
       end
       else
       begin
-        curr_state <= state;
-        if (curr_state != state)
+        up_curr_state <= state;
+        if (up_curr_state != state)
         begin
           tx_control_index <= 0;
           tx_control_data <= state;
@@ -354,110 +412,101 @@ begin : adc_app
       end
     end
 
-    always @ ( posedge clk ) 
+    always @ ( posedge pci_clk ) 
     begin
-      if (reset)
-        next_valid <= 0;
-      else
-      begin
-        if (adc_phys_valid)
-        begin
-          next_valid <= 1;
-          next_page <= adc_phys_page;
-        end
-        else
-        begin
-          if (adc_clear || adc_next)
-            next_valid <= 0;
-        end
-      end
+      adc_started_1 <= adc_started;
+      pci_adc_started <= adc_started_1;
     end
 
-    always @ ( posedge clk ) 
+    always @ ( posedge pci_clk ) 
     begin
-      if (reset)
-      begin
-        adc_clear <= 1;
-        adc_next <= 0;
-        pkt_index <= 0;
-      end
-      else
-      begin
-        if (adc_started)
-        begin
-          adc_clear <= 0;
+      adc_probing_1 <= adc_probing;
+      pci_adc_probing <= adc_probing_1;
+    end
 
-          if (fifo_rd)
+    always @ ( posedge pci_clk ) 
+    begin
+      adc_running_1 <= adc_running;
+      pci_adc_running <= adc_running_1;
+    end
+
+    always @ ( posedge pci_clk ) 
+    begin
+      if (pci_adc_started)
+      begin
+        phys_clear <= 0;
+
+        if (phys_valid)
+          pci_page <= phys_page;
+
+        if (adc_out)
+        begin
+          pci_index <= pci_index + 1;
+          if (pci_page)
           begin
-            pkt_index <= pkt_index + 1;
-            if (next_page)
+            if (pci_index == 14'b11111111111111)
             begin
-              if (pkt_index == 14'b11111111111111)
-                adc_next <= 1;
-              else
-                adc_next <= 0;
+              phys_next <= 1;
+              pci_page <= 0;
             end
             else
-              adc_next <= 0;
+              phys_next <= 0;
           end
+          else
+            phys_next <= 0;
         end
-        else
-        begin
-          if (req_start)
-            adc_clear <= 1;
-        end
-      end
-    end
-
-    always @ ( posedge clk ) 
-    begin
-      if (reset)
-      begin
-        delay <= 0;
-        adc_out <= 0;
-        busy <= 0;
-        fifo_rd <= 0;
       end
       else
       begin
-        if (busy)
-        begin
-          if (delay)
-            delay <= delay - 1;
-          else
-          begin
-            fifo_rd <= adc_out;
-            busy <= adc_out_busy;
-            adc_out <= 0;
-          end
-        end
-        else
-        begin
-          fifo_rd <= 0;
+        phys_next <= 0;
+        phys_clear <= 1;
+        pci_page <= 0;
+        pci_index <= 0;
+      end
+    end
 
-          if (fifo_empty || next_page == 0)
-            adc_out <= 0;
-          else
+
+    always @ ( posedge pci_clk ) 
+    begin
+      if (pci_started)
+      begin
+        pci_has_data <= fifo_rd;
+
+        if (pci_has_data)
+        begin
+          adc_out <= 0;
+
+          if (adc_out_ack)
+            pci_busy <= 0;
+
+          pci_data[1023:896] <= fifo_data;
+          pci_data[895:0] <= adc_data[1023:128];
+          pci_adc_cnt <= pci_adc_cnt + 1;
+
+          if (pci_adc_cnt == 3'b111)
           begin
+            pci_pend <= 1;
+            adc_out_data <= pci_data;
+
             adc_out_header[63:48] <= 0;                      // Requester ID
             adc_out_header[47:40] <= 0;                      // tag
             adc_out_header[39:36] <= 4'b1111;                // last be
             adc_out_header[35:32] <= 4'b1111;                // 1st be
 
-            if (next_page[19:11] == 0)
+            if (pci_page[19:11] == 0)
             begin
               adc_out_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
               adc_out_header[70:64] <= 0;
-              adc_out_header[84:71] <= pkt_index;
-              adc_out_header[95:85] <= next_page[10:0];
+              adc_out_header[84:71] <= pci_index;
+              adc_out_header[95:85] <= pci_page[10:0];
             end
             else
             begin
               adc_out_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
-              adc_out_header[72:64] <= next_page[19:11];
+              adc_out_header[72:64] <= pci_page[19:11];
               adc_out_header[102:96] <= 0;
-              adc_out_header[116:103] <= pkt_index;
-              adc_out_header[127:117] <= next_page[10:0];
+              adc_out_header[116:103] <= pci_index;
+              adc_out_header[127:117] <= pci_page[10:0];
             end
 
             adc_out_header[23] <= 1'b0;                      // R
@@ -467,11 +516,45 @@ begin : adc_app
             adc_out_header[11:10] <= 2'b0;                   // AT
             adc_out_header[9:8] <= 2'b0;                     // len high
             adc_out_header[7:0] <= 8'h20;                    // 128 byte size
-            adc_out <= 1;
-            delay <= 2;
-            busy <= 1;
           end
         end
+        else
+        begin
+          if (pci_page)
+          begin
+            if (adc_out_ack)
+            begin
+              adc_out <= 1;
+              pci_busy <= 1;
+              pci_pend <= 0;
+            end
+            else
+            begin
+              if (pci_busy)
+                adc_out <= 0;
+              else
+              begin
+                adc_out <= 1;
+                pci_busy <= 1;
+                pci_pend <= 0;
+              end
+            end
+          end
+          else
+          begin
+            adc_out <= 0;
+            if (adc_out_ack)
+              pci_busy <= 0;
+          end
+        end
+      end
+      else
+      begin
+        adc_out <= 0;
+        pci_busy <= 0;
+        pci_pend <= 0;
+        pci_has_data <= 0;
+        pci_adc_cnt <= 0;
       end
     end
 

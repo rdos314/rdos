@@ -76,7 +76,7 @@ module daq2_app
   output wire             adc_sync_fail,
 
   output reg              adc_wr,
-  output reg [1023:0]     adc_data
+  output reg [127:0]      adc_data
 );
 
  wire [15:0]              rx_phy_charisk;
@@ -121,9 +121,6 @@ module daq2_app
  wire [13:0]              adcB_1;
  wire [13:0]              adcB_2;
  wire [13:0]              adcB_3;
-
- reg [2:0]                adc_cnt;
- reg [1023:0]             adc_curr;
 
 system_util_daq2_xcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
@@ -514,58 +511,58 @@ generate
     begin
       if (rx_valid)
       begin
-        adc_curr[909:896] <= adcA_0;
-        adc_curr[910] <= adcA_0[13];
-        adc_curr[911] <= adcA_0[13];
-        adc_curr[925:912] <= adcB_0;
-        adc_curr[926] <= adcB_0[13];
-        adc_curr[927] <= adcB_0[13];
+        adc_data[13:0] <= adcA_0;
+        adc_data[14] <= adcA_0[13];
+        adc_data[15] <= adcA_0[13];
+        adc_data[29:16] <= adcB_0;
+        adc_data[30] <= adcB_0[13];
+        adc_data[31] <= adcB_0[13];
 
-        adc_curr[941:928] <= adcA_1;
-        adc_curr[942] <= adcA_1[13];
-        adc_curr[943] <= adcA_1[13];
-        adc_curr[957:944] <= adcB_1;
-        adc_curr[958] <= adcB_1[13];
-        adc_curr[959] <= adcB_1[13];
+        adc_data[45:32] <= adcA_1;
+        adc_data[46] <= adcA_1[13];
+        adc_data[47] <= adcA_1[13];
+        adc_data[61:48] <= adcB_1;
+        adc_data[62] <= adcB_1[13];
+        adc_data[63] <= adcB_1[13];
 
-        adc_curr[973:960] <= adcA_2;
-        adc_curr[974] <= adcA_2[13];
-        adc_curr[975] <= adcA_2[13];
-        adc_curr[989:976] <= adcB_2;
-        adc_curr[990] <= adcB_2[13];
-        adc_curr[991] <= adcB_2[13];
+        adc_data[77:64] <= adcA_2;
+        adc_data[78] <= adcA_2[13];
+        adc_data[79] <= adcA_2[13];
+        adc_data[93:80] <= adcB_2;
+        adc_data[94] <= adcB_2[13];
+        adc_data[95] <= adcB_2[13];
 
-        adc_curr[1005:992] <= adcA_3;
-        adc_curr[1006] <= adcA_3[13];
-        adc_curr[1007] <= adcA_3[13];
-        adc_curr[1021:1008] <= adcB_3;
-        adc_curr[1022] <= adcB_3[13];
-        adc_curr[1023] <= adcB_3[13];
-
-        adc_curr[895:0] <= adc_curr[1023:128];
+        adc_data[109:96] <= adcA_3;
+        adc_data[110] <= adcA_3[13];
+        adc_data[111] <= adcA_3[13];
+        adc_data[125:112] <= adcB_3;
+        adc_data[126] <= adcB_3[13];
+        adc_data[127] <= adcB_3[13];
 
         if (adc_running)
         begin
           if (adc_probing && !adc_start_found)
           begin
-            if (!rx_test_ok)
+            if (rx_test_ok)
+              adc_wr <= 0;
+            else
             begin
-              adc_cnt <= adc_cnt + 1;
+              adc_wr <= 1;
               adc_start_found <= 1;
             end
           end
           else
-            adc_cnt <= adc_cnt + 1;
+            adc_wr <= 1
         end
         else
         begin
-          adc_cnt <= 0;
+          adc_wr <= 0;
           adc_start_found <= 0;
         end
       end
       else
       begin
-        adc_cnt <= 0;
+        adc_wr <= 0;
         adc_start_found <= 0;
       end
     end
@@ -589,22 +586,6 @@ generate
       end
     end
 
-    always @ ( posedge rx_clk ) 
-    begin
-      if (rx_valid && adc_running)
-      begin
-        case (adc_cnt)
-          3: adc_wr <= 0;
-          7:
-          begin
-            adc_data <= adc_curr;
-            adc_wr <= 1;
-          end
-        endcase
-      end
-      else
-        adc_wr <= 0;
-    end
 
   end
 endgenerate
