@@ -125,7 +125,7 @@ module adc_app (
   wire                    fifo_reset;
   wire                    fifo_full;
   wire                    fifo_empty;
-  reg [127:0]             fifo_data;
+  wire [127:0]            fifo_data;
 
 
 // clock domain crossings
@@ -140,18 +140,18 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
 
-
-adc_fifo adc_fifo_inst (
-  .rd_clk(pci_clk),      // input wire read clk
-  .wr_clk(rx_clk),       // input wire write clk
-  .srst(fifo_reset),     // input wire srst
-  .din(adc_in_data),     // input wire [127 : 0] din
-  .wr_en(adc_in),        // input wire wr_en
-  .rd_en(fifo_rd),       // input wire rd_en
-  .dout(fifo_data),      // output wire [127 : 0] dout
-  .full(fifo_full),      // output wire full
-  .empty(fifo_empty)     // output wire empty
+adc_fifo your_instance_name (
+  .rst(fifo_reset),       // input wire rst
+  .wr_clk(rx_clk),        // input wire wr_clk
+  .rd_clk(pci_clk),       // input wire rd_clk
+  .din(adc_in_data),      // input wire [127 : 0] din
+  .wr_en(adc_in),         // input wire wr_en
+  .rd_en(fifo_rd),        // input wire rd_en
+  .dout(fifo_data),       // output wire [127 : 0] dout
+  .full(fifo_full),       // output wire full
+  .empty(fifo_empty)      // output wire empty
 );
+
 
 phys_bar adc_bar_inst (
     .clk(pci_clk),
@@ -468,7 +468,7 @@ begin : adc_app
 
     always @ ( posedge pci_clk ) 
     begin
-      if (pci_started)
+      if (pci_adc_started)
       begin
         pci_has_data <= fifo_rd;
 
@@ -480,7 +480,7 @@ begin : adc_app
             pci_busy <= 0;
 
           pci_data[1023:896] <= fifo_data;
-          pci_data[895:0] <= adc_data[1023:128];
+          pci_data[895:0] <= pci_data[1023:128];
           pci_adc_cnt <= pci_adc_cnt + 1;
 
           if (pci_adc_cnt == 3'b111)
@@ -520,27 +520,36 @@ begin : adc_app
         end
         else
         begin
-          if (pci_page)
+          if (pci_pend)
           begin
-            if (adc_out_ack)
+            if (pci_page)
             begin
-              adc_out <= 1;
-              pci_busy <= 1;
-              pci_pend <= 0;
-            end
-            else
-            begin
-              if (pci_busy)
-                adc_out <= 0;
-              else
+              if (adc_out_ack)
               begin
                 adc_out <= 1;
                 pci_busy <= 1;
                 pci_pend <= 0;
               end
+              else
+              begin
+                if (pci_busy)
+                  adc_out <= 0;
+                else
+                begin
+                  adc_out <= 1;
+                  pci_busy <= 1;
+                  pci_pend <= 0;
+                end
+              end
+            end
+            else
+            begin
+              adc_out <= 0;
+              if (adc_out_ack)
+                pci_busy <= 0;
             end
           end
-          else
+         else
           begin
             adc_out <= 0;
             if (adc_out_ack)

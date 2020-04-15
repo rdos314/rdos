@@ -568,7 +568,7 @@ adc_app adc_app_inst (
     .adc_sync_fail(up_adc_sync_fail),
 
     .adc_in(rx_adc_wr),
-    .adc_in_data(rx_adc_data)
+    .adc_in_data(rx_adc_data),
 
     .adc_out(pci_adc_wr),
     .adc_out_ack(pci_adc_ack),

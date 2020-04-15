@@ -552,7 +552,7 @@ generate
             end
           end
           else
-            adc_wr <= 1
+            adc_wr <= 1;
         end
         else
         begin
