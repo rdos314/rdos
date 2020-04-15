@@ -190,9 +190,10 @@ ila_1 ila_1_inst (
     .probe10(fifo_full),               // input wire [0:0]  probe0  
     .probe11(fifo_rd),                 // input wire [0:0]  probe0  
     .probe12(adc_out),                 // input wire [0:0]  probe0  
-    .probe13(adc_out_header[127:64]),  // input wire [63:0]  probe0  
-    .probe14(adc_out_data[15:0]),      // input wire [15:0]  probe0  
-    .probe15(adc_out_data[31:16])      // input wire [15:0]  probe0  
+    .probe13(adc_out_ack),             // input wire [0:0]  probe0  
+    .probe14(adc_out_header[127:64]),  // input wire [63:0]  probe0  
+    .probe15(adc_out_data[15:0]),      // input wire [15:0]  probe0  
+    .probe16(adc_out_data[31:16])      // input wire [15:0]  probe0  
 );
 
   assign fifo_reset = !adc_started;
@@ -549,7 +550,7 @@ begin : adc_app
                 pci_busy <= 0;
             end
           end
-         else
+          else
           begin
             adc_out <= 0;
             if (adc_out_ack)
