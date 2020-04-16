@@ -109,7 +109,6 @@ module adc_app (
   reg                     pci_has_data;
   reg [1023:0]            pci_data;
 
-  reg [19:0]              phys_page;
   reg [13:0]              phys_offset;
   reg [15:0]              phys_index;
   wire [19:0]             phys_page;
@@ -201,7 +200,7 @@ ila_1 ila_1_inst (
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
 
-  assign fifo_want_data = pci_page ? !fifo_empty : 1'b0;
+  assign fifo_want_data = phys_page ? !fifo_empty : 1'b0;
   assign fifo_rd = pci_pend ? 1'b0 : fifo_want_data;
 
 generate
