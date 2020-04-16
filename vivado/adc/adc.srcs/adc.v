@@ -512,9 +512,7 @@ phys_bar dac_bar_inst (
     .wr_be(pci_bar2_wr_be),
     .wr(pci_bar2_wr),
 
-    .clear(1),
-    .next(0),
-    .index(),
+    .index(0),
     .page(),
     .valid()
 );

@@ -40,9 +40,7 @@ module phys_bar (
   input wire [3:0]        wr_be,
   input wire              wr,
 
-  input wire              clear,
-  input wire              next,
-  output reg [16:0]       index,
+  input wire [15:0]       index,
   output reg [19:0]       page,
   output reg              valid
 );
@@ -51,6 +49,7 @@ module phys_bar (
 
   wire [15:0]            rd_only_adr;
   wire [15:0]            rd_adr;
+  reg  [15:0]            q_curr_index;
 
   reg                    q_rd;
   reg                    q_rd_msb;
@@ -178,33 +177,33 @@ begin : phys_bar_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset || clear)
+    if (reset)
     begin
       valid <= 0;
       page <= 0;
-      index <= 0;
     end
     else
     begin
-      if (next)
+      q_curr_index <= index;
+
+      if (q_wr && q_wr_adr == index)
       begin
-        index <= index + 1;
-        valid <= 0;
+        page <= q_wr_data;
+        valid <= 1;
       end
       else
       begin
-        if (wr)
-          valid <= 0;
-        else
+        if (q_rd_adr == index)
         begin
-          if (q_rd_adr == index)
-          begin
-            page <= q_rd_data;
-            valid <= 1;
-          end
+          page <= q_rd_data;
+          valid <= 1;
         end
+        else
+          if (q_curr_index != index)
+            valid <= 0;
       end
     end
+
   end
 
 endgenerate

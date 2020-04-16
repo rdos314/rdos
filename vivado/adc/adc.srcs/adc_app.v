@@ -103,17 +103,15 @@ module adc_app (
 
 // pci domain
 
-  reg [19:0]              pci_page;
-  reg [13:0]              pci_index;
   reg [2:0]               pci_adc_cnt;
   reg                     pci_busy;
   reg                     pci_pend;
   reg                     pci_has_data;
   reg [1023:0]            pci_data;
 
-  reg                     phys_clear;
-  reg                     phys_next;
-  wire [16:0]             phys_index;
+  reg [19:0]              phys_page;
+  reg [13:0]              phys_offset;
+  reg [15:0]              phys_index;
   wire [19:0]             phys_page;
   wire                    phys_valid;
 
@@ -167,8 +165,6 @@ phys_bar adc_bar_inst (
     .wr_be(bar_wr_be),
     .wr(bar_wr),
 
-    .clear(phys_clear),
-    .next(phys_next),
     .index(phys_index),
     .page(phys_page),
     .valid(phys_valid)
@@ -180,8 +176,8 @@ ila_1 ila_1_inst (
     .probe0(pci_adc_started),          // input wire [0:0]  probe0  
     .probe1(pci_adc_probing),          // input wire [0:0]  probe0  
     .probe2(pci_adc_running),          // input wire [0:0]  probe0  
-    .probe3(pci_page),                 // input wire [19:0]  probe0  
-    .probe4(pci_index),                // input wire [13:0]  probe0  
+    .probe3(phys_page),                // input wire [19:0]  probe0  
+    .probe4(phys_offset),              // input wire [13:0]  probe0  
     .probe5(pci_adc_cnt),              // input wire [2:0]  probe0  
     .probe6(pci_busy),                 // input wire [0:0]  probe0  
     .probe7(pci_pend),                 // input wire [0:0]  probe0  
@@ -435,34 +431,18 @@ begin : adc_app
     begin
       if (pci_adc_started)
       begin
-        phys_clear <= 0;
-
-        if (phys_valid)
-          pci_page <= phys_page;
-
         if (adc_out)
         begin
-          pci_index <= pci_index + 1;
-          if (pci_page)
-          begin
-            if (pci_index == 14'b11111111111111)
-            begin
-              phys_next <= 1;
-              pci_page <= 0;
-            end
-            else
-              phys_next <= 0;
-          end
-          else
-            phys_next <= 0;
+          phys_offset <= phys_offset + 1;
+          if (phys_page)
+            if (phys_offset == 14'b11111111111111)
+              phys_index <= phys_index + 1;
         end
       end
       else
       begin
-        phys_next <= 0;
-        phys_clear <= 1;
-        pci_page <= 0;
-        pci_index <= 0;
+        phys_index <= 0;
+        phys_offset <= 0;
       end
     end
 
@@ -494,20 +474,20 @@ begin : adc_app
             adc_out_header[39:36] <= 4'b1111;                // last be
             adc_out_header[35:32] <= 4'b1111;                // 1st be
 
-            if (pci_page[19:11] == 0)
+            if (phys_page[19:11] == 0)
             begin
               adc_out_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
               adc_out_header[70:64] <= 0;
-              adc_out_header[84:71] <= pci_index;
-              adc_out_header[95:85] <= pci_page[10:0];
+              adc_out_header[84:71] <= phys_offset;
+              adc_out_header[95:85] <= phys_page[10:0];
             end
             else
             begin
               adc_out_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
-              adc_out_header[72:64] <= pci_page[19:11];
+              adc_out_header[72:64] <= phys_page[19:11];
               adc_out_header[102:96] <= 0;
-              adc_out_header[116:103] <= pci_index;
-              adc_out_header[127:117] <= pci_page[10:0];
+              adc_out_header[116:103] <= phys_offset;
+              adc_out_header[127:117] <= phys_page[10:0];
             end
 
             adc_out_header[23] <= 1'b0;                      // R
@@ -523,7 +503,7 @@ begin : adc_app
         begin
           if (pci_pend)
           begin
-            if (pci_page)
+            if (phys_page)
             begin
               if (adc_out_ack)
               begin

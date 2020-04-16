@@ -71,7 +71,6 @@ module pci_tx (
 
   reg [127:0]               q_bar_header;
   reg [127:0]               q_bar_data;
-  reg [127:0]               pend_bar_data;
   reg [127:0]               q_adc_header;
   reg [1023:0]              q_adc_data;
   reg [1023:0]              pend_adc_data;
@@ -178,15 +177,6 @@ generate
 
     always @ ( posedge clk ) 
     begin
-      if (bar_wr)
-      begin
-        q_bar_header <= bar_header;
-        pend_bar_data <= bar_data;
-      end
-    end
-
-    always @ ( posedge clk ) 
-    begin
       if (reset)
       begin
         bar_tx_tvalid <= 0;
@@ -204,10 +194,7 @@ generate
           begin
             bar_tx_tdata <= bar_pkt_data;
             bar_tx_tlast <= 1;
-            bar_busy <= bar_wr;
-            bar_start <= (bar_busy && !adc_loaded);
-            if (bar_busy && !adc_loaded )
-              q_bar_data <= pend_bar_data;
+            bar_busy <= 0;
  
             case (bar_count)
               0: bar_tx_tkeep[15:0] <= 16'h0000;
@@ -219,9 +206,10 @@ generate
           end
           else
           begin
-            if (bar_start)
+            if (bar_start && !adc_tx_tvalid)
             begin
               bar_tx_tvalid <= 1;
+              bar_start <= 0;
 
               if (bar_pkt_type[5] == 0)  // 3 DW header
               begin
@@ -234,8 +222,6 @@ generate
 
                   if (bar_pkt_len > 1)
                   begin
-                    bar_start <= 0;
-                    bar_busy <= bar_wr;
                     bar_tx_tlast <= 0;
                     bar_count <= bar_pkt_len - 1;
                     q_bar_data[95:0] <= q_bar_data[127:32];
@@ -243,10 +229,7 @@ generate
                   else
                   begin
                     bar_tx_tlast <= 1;
-                    bar_busy <= bar_wr;
-                    bar_start <= (bar_busy && !adc_loaded);
-                    if (bar_busy && !adc_loaded )
-                      q_bar_data <= pend_bar_data;
+                    bar_busy <= 0;
                   end
                 end
                 else
@@ -256,10 +239,7 @@ generate
                   bar_tx_tdata[95:0] <= q_bar_header[95:0];
                   bar_tx_tkeep[11:0] <= 12'hfff;
                   bar_tx_tlast <= 1;
-                  bar_busy <= bar_wr;
-                  bar_start <= (bar_busy && !adc_loaded);
-                  if (bar_busy && !adc_loaded )
-                    q_bar_data <= pend_bar_data;
+                  bar_busy <= 0;
                 end
               end
               else
@@ -271,37 +251,30 @@ generate
                 begin
                   bar_count <= bar_pkt_len;
                   if (bar_pkt_len)
-                  begin
                     bar_tx_tlast <= 0;
-                    bar_start <= 0;
-                    bar_busy <= bar_wr;
-                  end
                   else
                   begin
                     bar_tx_tlast <= 1;
-                    bar_busy <= bar_wr;
-                    bar_start <= (bar_busy && !adc_loaded);
-                    if (bar_busy && !adc_loaded )
-                      q_bar_data <= pend_bar_data;
+                    bar_busy <= 0;
                   end
                 end
                 else
                 begin
                   bar_tx_tlast <= 1;
-                  bar_busy <= bar_wr;
-                  bar_start <= (bar_busy && !adc_loaded);
-                  if (bar_busy && !adc_loaded )
-                    q_bar_data <= pend_bar_data;
+                  bar_busy <= 0;
                 end
               end
             end
             else
             begin
               bar_tx_tvalid <= 0;
-              bar_busy <= bar_wr;
-              bar_start <= (bar_busy && !adc_loaded);
-              if (bar_busy && !adc_loaded )
-                q_bar_data <= pend_bar_data;
+              if (bar_wr)
+              begin
+                q_bar_header <= bar_header;
+                q_bar_data <= bar_data;
+                bar_busy <= 1;
+                bar_start <= 1;
+              end
             end
           end                
         end
@@ -373,7 +346,7 @@ generate
           end
           else
           begin
-            if (adc_start)
+            if (adc_start && !bar_start && !bar_tx_tvalid)
             begin
               adc_ack <= 1;
               adc_start <= 0;
