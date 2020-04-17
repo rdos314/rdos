@@ -53,8 +53,10 @@ data    SEGMENT byte public 'DATA'
 
 board_linear	DD ?
 
+adc_bar_thread  DW ?
 adc_index       DW ?
 adc_irq         DB ?
+
 
 data	ENDS
 
@@ -87,6 +89,9 @@ AdcBarInt Proc far
     mov bx,SEG data
     mov ds,ebx
     or ds:adc_irq,al
+;
+    mov bx,ds:adc_bar_thread
+    Signal
     ret
 AdcBarInt	Endp
 
@@ -626,6 +631,7 @@ InitPciFound:
 InitPciDone:
     ret
 InitPciAdapter   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -674,6 +680,93 @@ setup_adc_phys_loop:
     pop ds
     ret
 setup_adc  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           start_adc
+;
+;       DESCRIPTION:    Start ADC
+;
+;       RETURNS:        AL	Irq bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_adc_name	DB 'Start ADC', 0
+
+start_adc  Proc far
+    push ds
+    push es
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,ebx
+    GetThread
+    mov ds:adc_bar_thread,ax
+    mov ds:adc_irq,0
+    ClearSignal
+;
+    mov bx,anio_control_sel
+    mov es,ebx
+    or es:cb_adc_control,80h
+
+saLoop:
+    WaitForSignal
+    test ds:adc_irq,60h
+    jz saLoop
+;
+    xor ax,ax
+    mov ds:adc_bar_thread,ax
+    xchg al,ds:adc_irq
+;
+    pop ebx
+    pop es
+    pop ds
+    ret
+start_adc  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           stop_adc
+;
+;       DESCRIPTION:    Stop ADC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_adc_name	DB 'Stop ADC', 0
+
+stop_adc  Proc far
+    push ds
+    push ebx
+;
+    mov bx,anio_control_sel
+    mov ds,ebx
+    and es:cb_adc_control,7Fh
+;
+    pop ebx
+    pop ds
+    ret
+stop_adc  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           map_adc_block
+;
+;       DESCRIPTION:    Map adc 2M block to buffer
+;
+;       PARAMETERS:     EAX     Block #
+;                       ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_adc_block_name	DB 'Map ADC Block', 0
+
+map_adc_block  Proc far
+    ret
+map_adc_block  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -734,6 +827,24 @@ init_pci    PROC far
     xor dx,dx
     mov ax,setup_adc_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET start_adc
+    mov edi,OFFSET start_adc_name
+    xor dx,dx
+    mov ax,start_adc_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET stop_adc
+    mov edi,OFFSET stop_adc_name
+    xor dx,dx
+    mov ax,stop_adc_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET map_adc_block
+    mov edi,OFFSET map_adc_block_name
+    xor dx,dx
+    mov ax,map_adc_block_nr
+    RegisterBimodalUserGate
 
 ipDone:
     popad
@@ -759,6 +870,7 @@ Init    Proc far
     mov ax,SEG data
     mov ds,eax
     mov ds:adc_irq,0
+    mov ds:adc_bar_thread,0
 ;
     mov eax,cs
     mov ds,eax

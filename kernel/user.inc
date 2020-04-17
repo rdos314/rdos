@@ -3406,14 +3406,30 @@ MoveSprite      MACRO
                                                 ENDM
 
 
-;       IN  AL          Test mode
-;       IN  AH          Speed (0 = 750MHz, 1 = 600MHz)
-;       IN  ECX         Number of 2M buffer pages
+;   IN  AL      Test mode
+;   IN  AH      Speed (0 = 750MHz, 1 = 600MHz)
+;   IN  ECX     Number of 2M buffer pages
 SetupAdc      MACRO
         UserGate setup_adc_nr
                                                 ENDM
                                                 
 
+;   OUT AL      IRQ bits
+StartAdc      MACRO
+        UserGate start_adc_nr
+                                                ENDM
+
+
+StopAdc      MACRO
+        UserGate stop_adc_nr
+                                                ENDM
+
+
+;   IN  EAX     2M buffer #
+;   IN  ES:EDI  Memory buffer area to map
+MapAdcBlock     MACRO
+        UserGate map_adc_block_nr
+                                                ENDM
 
 ;       IN  AX          Adc channel
 ;       OUT BX          Adc handle

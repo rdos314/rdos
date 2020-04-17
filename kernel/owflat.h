@@ -3269,6 +3269,18 @@
     CallGate_setup_adc  \
     __parm [__al] [__ah] [__ecx] 
 
+#pragma aux RdosStartAdc = \
+    CallGate_start_adc \
+    __value [__al]
+
+#pragma aux RdosStopAdc = \
+    CallGate_stop_adc 
+
+#pragma aux RdosMapAdcBlock = \
+    CallGate_map_adc_block  \
+    __parm [__eax] [__edi] 
+
+
 #pragma aux RdosReadSerialLines = \
     "mov dh,cl" \
     CallGate_read_serial_lines  \

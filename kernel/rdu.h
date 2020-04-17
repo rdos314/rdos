@@ -924,6 +924,9 @@
 #define usergate_wait_anio 0x000002D6
 
 #define usergate_setup_adc 0x000002D7
+#define usergate_start_adc 0x000002D8
+#define usergate_stop_adc 0x000002D9
+#define usergate_map_adc_block 0x000002DA
 
 
 
@@ -1854,6 +1857,9 @@
 #define CallGate_wait_anio 0x55 0x67 0x9a 214 2 0 0 3 0 0x5d
 
 #define CallGate_setup_adc 0x55 0x67 0x9a 215 2 0 0 3 0 0x5d
+#define CallGate_start_adc 0x55 0x67 0x9a 216 2 0 0 3 0 0x5d
+#define CallGate_stop_adc 0x55 0x67 0x9a 217 2 0 0 3 0 0x5d
+#define CallGate_map_adc_block 0x55 0x67 0x9a 218 2 0 0 3 0 0x5d
 
 #else
 
@@ -2782,5 +2788,8 @@
 #define CallGate_wait_anio 0x3e 0x67 0x9a 214 2 0 0 3 0
 
 #define CallGate_setup_adc 0x3e 0x67 0x9a 215 2 0 0 3 0
+#define CallGate_start_adc 0x3e 0x67 0x9a 216 2 0 0 3 0
+#define CallGate_stop_adc 0x3e 0x67 0x9a 217 2 0 0 3 0
+#define CallGate_map_adc_block 0x3e 0x67 0x9a 218 2 0 0 3 0
 
 #endif
