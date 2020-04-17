@@ -54,6 +54,7 @@ void main()
     TRealtimeDevice dev;
     char state;
     int i;
+    int ok;
     char *buf = (char *)RdosAllocateMem(0x200000);
     
     RdosSetupAdc(0x5, 0, 5000);
@@ -63,19 +64,13 @@ void main()
 
     if (state & 0x40)
     {
-        for (i = 0; i < 5000; i++)
+        for (i = 0; i < 5000 && ok; i++)
         {
-            RdosMapAdcBlock(i, buf);
+            ok = RdosMapAdcBlock(i, buf);
+            if (ok)
+                printf("Block: %d\r\n", i);
         }
     }    
 
-    RdosTestGate("");
-
-    dev.OnSignal = NotifySignal;
-    dev.AddCore(1, "realtest.bin");
-
-    for (;;)
-        RdosWaitMilli(250);
-
-
+//    RdosTestGate("");
 }

@@ -3278,7 +3278,9 @@
 
 #pragma aux RdosMapAdcBlock = \
     CallGate_map_adc_block  \
-    __parm [__eax] [__edi] 
+    CarryToBool \
+    __parm [__eax] [__edi] \
+    __value [__eax]
 
 
 #pragma aux RdosReadSerialLines = \

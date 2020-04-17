@@ -720,6 +720,7 @@ start_adc  Proc far
     GetThread
     mov ds:adc_bar_thread,ax
     mov ds:adc_irq,0
+    mov ds:adc_index,0
     ClearSignal
 ;
     mov bx,anio_control_sel
@@ -785,6 +786,32 @@ map_adc_block  Proc far
 ;
     mov bx,SEG data
     mov ds,bx
+    cmp ax,ds:adc_index
+    jb mabPresent
+;
+    push eax
+;
+    sub ax,ds:adc_index
+    inc ax
+    mov dx,1193
+    mul dx
+    push dx
+    push ax
+    pop ebx
+;
+    GetSystemTime
+    add eax,ebx
+    adc edx,0
+    WaitUntil
+;
+    pop eax
+    cmp ax,ds:adc_index
+    jb mabPresent
+;
+    stc
+    jmp mabDone
+
+mabPresent:
     mov ds,ds:adc_buf_sel
 ;
     mov ebx,eax
