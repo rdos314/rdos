@@ -53,6 +53,7 @@ data    SEGMENT byte public 'DATA'
 
 board_linear	DD ?
 
+adc_buf_sel     DW ?
 adc_bar_thread  DW ?
 adc_index       DW ?
 adc_irq         DB ?
@@ -649,6 +650,7 @@ setup_adc_name	DB 'Setup ADC', 0
 
 setup_adc  Proc far
     push ds
+    push es
     push eax
     push ebx
     push ecx
@@ -658,6 +660,17 @@ setup_adc  Proc far
     mov ds,ebx
     mov ds:cb_adc_test_mode,al
 ;
+    mov bx,SEG data
+    mov ds,ebx
+;
+    mov es,ds:adc_buf_sel
+    FreeMem
+;
+    mov eax,ecx
+    shl eax,3
+    AllocateGlobalMem
+    mov ds:adc_buf_sel,es   
+;
     mov bx,anio_adc_sel
     mov ds,bx
     xor edi,edi
@@ -666,6 +679,8 @@ setup_adc_phys_loop:
     AllocatePhysicalDir
     mov ds:[edi],eax
     mov ds:[edi+4],ebx
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
     add edi,8
     loop setup_adc_phys_loop
 ;
@@ -677,6 +692,7 @@ setup_adc_phys_loop:
     pop ecx
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 setup_adc  Endp
@@ -764,6 +780,40 @@ stop_adc  Endp
 map_adc_block_name	DB 'Map ADC Block', 0
 
 map_adc_block  Proc far
+    push ds
+    pushad
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov ds,ds:adc_buf_sel
+;
+    mov ebx,eax
+    shl ebx,3
+    mov eax,ds:[ebx]
+    mov ebx,ds:[ebx+4]
+    mov edx,eax
+    or edx,ebx
+    stc
+    jz mabDone
+;
+    mov ebx,es
+    GetSelectorBaseSize
+    add edx,edi
+;
+    mov al,67h
+    mov ecx,200h
+
+mabLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop mabLoop
+;
+    clc
+
+mabDone:
+    popad
+    pop ds  
     ret
 map_adc_block  Endp
 
@@ -871,6 +921,7 @@ Init    Proc far
     mov ds,eax
     mov ds:adc_irq,0
     mov ds:adc_bar_thread,0
+    mov ds:adc_buf_sel,0
 ;
     mov eax,cs
     mov ds,eax
