@@ -75,6 +75,10 @@ module adc_app (
   output reg              adc_probing,
   output reg              adc_running,
 
+  output reg              bar_irq,
+  output reg              block_irq,
+  output reg [15:0]       phys_index;
+
   input wire              adc_in,
   input wire [127:0]      adc_in_data,
 
@@ -91,6 +95,13 @@ module adc_app (
   reg [1:0]               up_req_state;
   reg [2:0]               up_curr_state;
   reg [7:0]               up_test_mode;
+
+  reg [3:0]               irq_state;
+  reg [3:0]               up_curr_irq;
+
+  reg [3:0]               up_bar_irq_cnt;
+  reg                     up_bar_irq;
+  reg                     pci_bar_irq_3;
 
   reg                     up_req_start;
   reg                     up_req_stop;
@@ -110,7 +121,6 @@ module adc_app (
   reg [1023:0]            pci_data;
 
   reg [13:0]              phys_offset;
-  reg [15:0]              phys_index;
   wire [19:0]             phys_page;
   wire                    phys_valid;
 
@@ -136,6 +146,9 @@ module adc_app (
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
+
+ (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
 
 adc_fifo your_instance_name (
   .rst(fifo_reset),       // input wire rst
@@ -279,6 +292,7 @@ begin : adc_app
         qpll_rst <= 0;
         up_pend_start <= 0;
         up_spi_test_done <= 0;
+        irq_state <= 0;
       end
       else
       begin
@@ -290,6 +304,7 @@ begin : adc_app
           up_adc_rst_cnt <= 4'h8;    
           up_adc_user_ready_cnt <= 7'h00;  
           up_pend_start <= 1;
+          irq_state <= 1;
         end
         else
         begin
@@ -299,6 +314,7 @@ begin : adc_app
           begin
             adc_started <= 0;
             up_rstn <= 0;
+            irq_state <= 0;
           end
           else
           begin
@@ -325,7 +341,7 @@ begin : adc_app
                   else 
                     if (up_adc_rst_cnt[3] == 1'b1) 
                       up_adc_rst_cnt <= up_adc_rst_cnt + 1'b1;
-
+ 
                   if (up_adc_rst_cnt[3] == 1'b1) 
                     up_adc_user_ready_cnt <= 7'h00;   
                   else 
@@ -338,6 +354,7 @@ begin : adc_app
                       begin
                         up_pend_start <= 0;
                         adc_probing <= 1;
+                        irq_state <= 2;
                       end
                     end
                   end
@@ -349,6 +366,7 @@ begin : adc_app
                 spi_out_data <= 8'h37;
                 spi_write <= 1;
                 adc_started <= 1;
+                irq_state <= 3;
               end
             end
             else
@@ -360,6 +378,7 @@ begin : adc_app
                 begin
                   adc_started <= 0;
                   adc_running <= 0;
+                  irq_state <= 4;
                 end
               end
               else
@@ -370,16 +389,18 @@ begin : adc_app
                   spi_out_data <= up_test_mode;
                   spi_write <= 1;
                   adc_running <= 1;
+                  irq_state <= 5;
                 end
                 else
                 begin
                   if (spi_done)
                     spi_write <= 0;
-
+ 
                   if (adc_sync_fail)
                   begin
                     adc_started <= 0;
                     adc_probing <= 0;
+                    irq_state <= 6;
                   end
                 end
               end
@@ -395,18 +416,42 @@ begin : adc_app
       begin
         tx_control_msg <= 0;
         up_curr_state <= 0;
+        up_curr_irq <= 0;
+        up_bar_irq <= 0;
       end
       else
       begin
-        up_curr_state <= state;
-        if (up_curr_state != state)
+        up_curr_irq <= irq_state;
+        if (up_curr_irq != irq_state)
         begin
-          tx_control_index <= 0;
-          tx_control_data <= state;
+          tx_control_index <= 1;
+          tx_control_data <= irq_state;
           tx_control_msg <= 1;
+          up_bar_irq <= 1;
+          up_bar_irq_cnt <= 0;
         end
         else
-          tx_control_msg <= 0;
+        begin
+          up_curr_state <= state;
+          if (up_curr_state != state)
+          begin
+            tx_control_index <= 0;
+            tx_control_data <= state;
+            tx_control_msg <= 1;
+          end
+          else
+          begin
+            tx_control_msg <= 0;
+
+            if (up_bar_irq)
+            begin
+              if (up_bar_irq_cnt[3])
+                up_bar_irq <= 0;
+              else
+                up_bar_irq_cnt <= up_bar_irq_cnt + 1;
+            end
+          end
+        end
       end
     end
 
@@ -430,20 +475,44 @@ begin : adc_app
 
     always @ ( posedge pci_clk ) 
     begin
+      pci_bar_irq_1 <= up_bar_irq;
+      pci_bar_irq_2 <= pci_bar_irq_1;
+      pci_bar_irq_3 <= pci_bar_irq_2;
+      
+      if (!pci_bar_irq_3 && pci_bar_irq_2)
+        bar_irq <= 1;
+      else
+        bar_irq <= 0;
+    end
+
+    always @ ( posedge pci_clk ) 
+    begin
       if (pci_adc_started)
       begin
         if (adc_out)
         begin
           phys_offset <= phys_offset + 1;
           if (phys_page)
+          begin
             if (phys_offset == 14'b11111111111111)
+            begin
               phys_index <= phys_index + 1;
+              block_irq <= 1;
+            end
+            else
+              block_irq <= 0;
+          end
+          else
+            block_irq <= 0;
         end
+        else
+          block_irq <= 0;
       end
       else
       begin
         phys_index <= 0;
         phys_offset <= 0;
+        block_irq <= 0;
       end
     end
 

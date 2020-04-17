@@ -923,6 +923,8 @@
 
 #define usergate_wait_anio 0x000002D6
 
+#define usergate_setup_adc 0x000002D7
+
 
 
 #ifdef __FLAT__
@@ -1851,6 +1853,8 @@
 
 #define CallGate_wait_anio 0x55 0x67 0x9a 214 2 0 0 3 0 0x5d
 
+#define CallGate_setup_adc 0x55 0x67 0x9a 215 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2776,5 +2780,7 @@
 #define CallGate_has_usb_card_reader_error 0x3e 0x67 0x9a 213 2 0 0 3 0
 
 #define CallGate_wait_anio 0x3e 0x67 0x9a 214 2 0 0 3 0
+
+#define CallGate_setup_adc 0x3e 0x67 0x9a 215 2 0 0 3 0
 
 #endif

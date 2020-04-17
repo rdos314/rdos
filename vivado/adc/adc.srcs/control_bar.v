@@ -48,6 +48,7 @@ module control_bar (
   output reg              spi_rp_ack,
 
   input [127:0]           adc_sysref_cnt,
+  input [15:0]            adc_phys_index,
 
   input wire              rx_control_msg,
   input wire [7:0]        rx_control_index,
@@ -72,6 +73,9 @@ module control_bar (
   reg                     ack_send_adc_state;
   reg [7:0]               adc_state;
   reg [1:0]               adc_req_state;
+  reg [7:0]               adc_irq_state;
+  reg [7:0]               adc_irq_clear;
+  reg                     adc_irq_ack;
 
   reg                     req_send_adc_test_mode;
   reg                     ack_send_adc_test_mode;
@@ -87,6 +91,7 @@ generate
     begin
       if (reset)
       begin
+        adc_irq_clear <= 0;
         adc_state[5:0] <= 0;
         adc_req_state <= 0;
         adc_test_mode <= 0;
@@ -108,15 +113,22 @@ generate
         if (rd)
         begin
           case (rd_address)
-            0: rp_data <= {16'h0, adc_test_mode, adc_state};
+            0: rp_data <= {24'hffffff, adc_state};
             1: rp_data <= bar_spi_clk;
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
-            4: rp_data <= adc_sysref_cnt[31:0];
-            5: rp_data <= adc_sysref_cnt[63:32];
+            4: rp_data <= {adc_phys_index, adc_test_mode, adc_irq_state};
+            5: rp_data <= adc_sysref_cnt[31:0];
+            6: rp_data <= adc_sysref_cnt[63:32];
+            7: rp_data <= adc_sysref_cnt[95:64];
             default: rp_data <= 32'hffffffff;
           endcase     
+
           rp <= 1;
+
+          spi_clk_valid <= 0;
+          spi_adc_valid <= 0;
+          spi_dac_valid <= 0;
         end
         else
         begin
@@ -134,12 +146,9 @@ generate
                   req_send_adc_state <= 1;
                 end
 
-                if (wr_be[1])
-                begin
-                  adc_test_mode[7:0] <= wr_data[15:8]; 
-                  if (adc_test_mode[7:0] != wr_data[15:8])
-                    req_send_adc_test_mode <= 1;
-                end
+                spi_clk_valid <= 0;
+                spi_adc_valid <= 0;
+                spi_dac_valid <= 0;
               end
             
               1:
@@ -267,6 +276,23 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
               end
+
+              4:
+              begin
+                if (wr_be[0])
+                  adc_irq_clear <= adc_irq_clear | wr_be[0];
+
+                if (wr_be[1])
+                begin
+                  adc_test_mode[7:0] <= wr_data[15:8]; 
+                  if (adc_test_mode[7:0] != wr_data[15:8])
+                    req_send_adc_test_mode <= 1;
+                end
+
+                spi_clk_valid <= 0;
+                spi_adc_valid <= 0;
+                spi_dac_valid <= 0;
+              end
             
               default:
               begin
@@ -278,6 +304,9 @@ generate
           end
           else
           begin
+            if (adc_irq_ack)
+              adc_irq_clear <= 0;
+
             if (ack_send_adc_state)
               req_send_adc_state <= 0;
           
@@ -514,11 +543,17 @@ generate
     always @ ( posedge clk ) 
     begin
       if (reset)
+      begin
         adc_state[7:6] <= 0;
+        adc_irq_state <= 0;
+        adc_irq_ack <= 1;
+      end
       else
       begin
         if (rx_control_msg)
         begin
+          adc_irq__ack <= 0;
+
           case (rx_control_index)
             0: 
             if (rx_control_data[0])
@@ -542,7 +577,26 @@ generate
               adc_state[6] <= 0;
               adc_state[7] <= 0;
             end
+
+            1: 
+            begin
+              case (rx_control_data[3:0])
+                0: adc_irq_state[0] <= 1;
+                1: adc_irq_state[1] <= 1;
+                2: adc_irq_state[2] <= 1;
+                3: adc_irq_state[3] <= 1;
+                4: adc_irq_state[4] <= 1;
+                5: adc_irq_state[5] <= 1;
+                6: adc_irq_state[6] <= 1;
+                7: adc_irq_state[7] <= 1;
+              endcase
+            end
           endcase
+        end
+        else
+        begin
+          adc_irq_ack <= 1;
+          adc_irq_state <= adc_irq_state & (~adc_irq_clear);
         end
       end
     end  

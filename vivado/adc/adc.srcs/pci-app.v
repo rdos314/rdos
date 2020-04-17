@@ -74,6 +74,8 @@ module pci_app (
     bar2_wr_be,
     bar2_wr,
 
+    adc_bar_irq,
+    adc_block_irq,
     adc_header,
     adc_data,
     adc_wr,
@@ -129,6 +131,8 @@ module pci_app (
   output reg [3:0]     bar2_wr_be;
   output reg           bar2_wr;
 
+  input wire           adc_bar_irq;
+  input wire           adc_block_irq;
   input wire [127:0]   adc_header;
   input wire [1023:0]  adc_data;
   input wire           adc_wr;
@@ -144,6 +148,12 @@ module pci_app (
   wire             user_lnk_rate;
   wire [1:0]       user_lnk_width;
   wire             cfg_interrupt_msienable;
+
+  reg              int_req;
+  wire             int_ack;
+  reg              int_num;
+  reg              pend_adc_bar_irq;
+  reg              pend_adc_block_irq;
   
   // Tx
   wire             s_axis_tx_tready;
@@ -215,7 +225,6 @@ module pci_app (
   reg  [31:0]      q_bar2_data;
   reg              q_bar2_send;
   reg              bar2_ack;
-
   
   
   //-------------------------------------------------------
@@ -351,10 +360,10 @@ pcie_7x_0 pcie_i
   //------------------------------------------------//
   // EP Only                                        //
   //------------------------------------------------//
-  .cfg_interrupt                             ( 0 ),
+  .cfg_interrupt                             ( int_req ),
   .cfg_interrupt_rdy                         ( int_ack ),
   .cfg_interrupt_assert                      ( cfg_interrupt_assert ),
-  .cfg_interrupt_di                          ( 0 ),
+  .cfg_interrupt_di                          ( int_num ),
   .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
   .cfg_interrupt_msienable                   ( cfg_interrupt_msienable ),
@@ -820,6 +829,81 @@ generate
       end
     end
    
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (user_reset)
+      begin
+        int_req <= 0;
+        int_num <= 0;
+        pend_adc_bar_irq <= 0;
+        pend_adc_block_irq <= 0;
+      end
+      else
+      begin
+        if (adc_bar_irq)
+        begin
+          if (adc_block_irq)
+            pend_adc_block_irq <= 1;
+
+          if (int_req)
+          begin
+            pend_adc_bar_irq <= 1;
+            if (int_ack)
+              int_req <= 0;
+          end
+          else
+          begin       
+            int_req <= 1;
+            int_num <= 0;
+          end
+        end
+        else
+        begin
+          if (adc_block_irq)
+          begin
+            if (int_req)
+            begin
+              pend_adc_block_irq <= 1;
+              if (int_ack)
+                int_req <= 0;
+            end
+            else
+            begin       
+              int_req <= 1;
+              int_num <= 1;
+            end
+          end
+          else
+          begin
+            if (int_req)
+            begin
+              if (int_ack)
+                int_req <= 0;
+            end
+            else
+            begin
+              if (pend_adc_bar_irq)
+              begin
+                pend_adc_bar_irq <= 0;
+                int_req <= 1;
+                int_num <= 0;
+              end
+              else
+              begin
+                if (pend_adc_block_irq)
+                begin
+                  pend_adc_block_irq <= 0;
+                  int_req <= 1;
+                  int_num <= 1;
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
   end
 endgenerate
 

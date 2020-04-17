@@ -3405,6 +3405,16 @@ MoveSprite      MACRO
         UserGate move_sprite_nr
                                                 ENDM
 
+
+;       IN  AL          Test mode
+;       IN  AH          Speed (0 = 750MHz, 1 = 600MHz)
+;       IN  ECX         Number of 2M buffer pages
+SetupAdc      MACRO
+        UserGate setup_adc_nr
+                                                ENDM
+                                                
+
+
 ;       IN  AX          Adc channel
 ;       OUT BX          Adc handle
 OpenAdc      MACRO

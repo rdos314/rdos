@@ -3264,6 +3264,11 @@
     __parm [__ebx] \
     __value [__eax]
 
+
+#pragma aux RdosSetupAdc = \
+    CallGate_setup_adc  \
+    __parm [__al] [__ah] [__ecx] 
+
 #pragma aux RdosReadSerialLines = \
     "mov dh,cl" \
     CallGate_read_serial_lines  \

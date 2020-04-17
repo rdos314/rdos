@@ -153,10 +153,15 @@ module adc (
   wire                 rx_adc_wr;
   wire [1023:0]        rx_adc_data;
 
+  wire                 pci_adc_bar_irq;
+  wire                 pci_adc_block_irq;
+
   wire [127:0]         pci_adc_header;
   wire [1023:0]        pci_adc_data;
   wire                 pci_adc_wr;
   wire                 pci_adc_ack;
+
+  wire [15:0]          pci_adc_phys_index;
 
   wire                 up_adc_started;
   wire                 up_adc_probing;
@@ -431,7 +436,9 @@ pci_app pci_app_inst (
     .bar2_wr_data(pci_bar2_wr_data),
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
-    
+
+    .adc_bar_irq(pci_adc_bar_irq),
+    .adc_block_irq(pci_adc_block_irq),    
     .adc_header(pci_adc_header),
     .adc_data(pci_adc_data),
     .adc_wr(pci_adc_wr),
@@ -488,6 +495,7 @@ control_bar control_bar_inst (
     .spi_rp_ack (spi_rp_ack),
 
     .adc_sysref_cnt(pci_adc_sysref_cnt),
+    .adc_phys_index(pci_adc_phys_index),
     
     .tx_control_msg(tx_pci_control_msg),
     .tx_control_index(tx_pci_control_index),
@@ -564,6 +572,10 @@ adc_app adc_app_inst (
 
     .adc_sync_ok(up_adc_sync_ok),
     .adc_sync_fail(up_adc_sync_fail),
+
+    .bar_irq(pci_adc_bar_irq),
+    .block_irq(pci_adc_block_irq),
+    .phys_index(pci_adc_phys_index),
 
     .adc_in(rx_adc_wr),
     .adc_in_data(rx_adc_data),

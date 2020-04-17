@@ -37,16 +37,24 @@ INCLUDE ..\os\core.inc
 
 control_bar	STRUC
 
-cb_0	DD ?
-cb_clk	DD ?
-cb_adc	DD ?
-cb_dac  DD ?
+cb_adc_control	  DB ?
+cd_resv1          DB ?,?,?
+cb_spi_clk        DD ?
+cb_spi_adc        DD ?
+cb_spi_dac        DD ?
+cb_adc_irq        DB ?
+cb_adc_test_mode  DB ?
+cb_adc_index      DW ?
+cb_adc_sysref     DD ?,?,?
 
 control_bar	ENDS
 
 data    SEGMENT byte public 'DATA'
 
 board_linear	DD ?
+
+adc_index       DW ?
+adc_irq         DB ?
 
 data	ENDS
 
@@ -61,8 +69,46 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-PciInt:
-    CrashGate
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AdcBarInt
+;
+;           DESCRIPTION:    Adc bar interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdcBarInt Proc far
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov al,ds:cb_adc_irq
+    mov ds:cb_adc_irq,al
+;
+    mov bx,SEG data
+    mov ds,ebx
+    or ds:adc_irq,al
+    ret
+AdcBarInt	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AdcBlockInt
+;
+;           DESCRIPTION:    Adc block interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdcBlockInt Proc far
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov ax,ds:cb_adc_index
+;
+    mov bx,SEG data
+    mov ds,ebx
+    mov ds:adc_index,ax
+    ret
+AdcBlockInt	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -137,97 +183,6 @@ rswWait:
     mov ax,ds:[bx]
     ret    
 ReadSpiWord	Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NextPn
-;
-;       DESCRIPTION:    Next PN value
-;
-;       PARAMETERS:     EAX	Value
-;                       EDX     Result
-;                       ECX     Rotations
-;
-;       RETURNS:        EAX     New value
-;                       EDX     New result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NextPn	proc near
-    mov ebx,eax
-    shr ebx,5
-    xor ebx,eax
-    shr ebx,17
-    rcr bl,1
-    rcl eax,1
-    rcl edx,1
-    loop NextPn
-    ret
-NextPn	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InitPciAdapter
-;
-;           DESCRIPTION:    Init PCI adapter if found
-;
-;       PARAMETERS:     AX      Device number
-;
-;           RETURNS:        NC          Adapter found
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PciVendorTab:
-pci00   DW 10EEh, 0AACCh
-pci07   DW 0,     0
-
-InitPciAdapter   Proc near
-    mov esi,OFFSET PciVendorTab
-
-InitPciLoop:
-    mov dx,cs:[esi]
-    mov cx,cs:[esi+2]
-    or dx,dx
-    stc
-    jz InitPciDone
-;
-    FindPciDevice
-    jnc InitPciFound
-;
-    add esi,4
-    jmp InitPciLoop
-
-InitPciFound:
-    PciPowerOn
-;
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr
-    WritePciWord
-;
-    GetPciMsi
-    jc InitPciDone
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-;    
-    mov dl,1
-    SetupPciMsi
-;    
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET PciInt
-    RequestMsiHandler
-    clc
-
-InitPciDone:
-    ret
-InitPciAdapter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -318,16 +273,16 @@ InitAdcBar	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupClk
+;       NAME:           InitClk
 ;
-;       DESCRIPTION:    Setup clk driver chip
+;       DESCRIPTION:    Init clk driver chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupClk	proc near
+InitClk	proc near
     mov bx,anio_control_sel
     mov ds,ebx
-    mov bx,OFFSET cb_clk
+    mov bx,OFFSET cb_spi_clk
 ;
     mov dx,10h
     mov al,1
@@ -494,21 +449,21 @@ SetupClk	proc near
     call WriteSpiByte
 ;
     ret
-SetupClk	Endp
+InitClk	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupAdc
+;       NAME:           InitAdc
 ;
-;       DESCRIPTION:    Setup ADC chip
+;       DESCRIPTION:    Init ADC chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupAdc	proc near
+InitAdc	proc near
     mov bx,anio_control_sel
     mov ds,ebx
-    mov bx,OFFSET cb_adc
+    mov bx,OFFSET cb_spi_adc
 ;
     mov dx,580h
     mov al,0
@@ -599,188 +554,193 @@ SetupAdc	proc near
     call WriteSpiByte
 ;
     ret
-SetupAdc	Endp
+InitAdc	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitPciAdapter
+;
+;           DESCRIPTION:    Init PCI adapter if found
+;
+;       PARAMETERS:     AX      Device number
+;
+;           RETURNS:        NC          Adapter found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PciVendorTab:
+pci00   DW 10EEh, 0AACCh
+pci07   DW 0,     0
+
+InitPciAdapter   Proc near
+    mov esi,OFFSET PciVendorTab
+
+InitPciLoop:
+    mov dx,cs:[esi]
+    mov cx,cs:[esi+2]
+    or dx,dx
+    stc
+    jz InitPciDone
+;
+    FindPciDevice
+    jnc InitPciFound
+;
+    add esi,4
+    jmp InitPciLoop
+
+InitPciFound:
+    PciPowerOn
+;
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_busmstr
+    WritePciWord
+;
+    GetPciMsi
+    jc InitPciDone
+;
+    push cx
+    mov cx,2
+    mov al,14h
+    AllocateInts
+    pop cx
+;    
+    mov dl,2
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AdcBarInt
+    RequestMsiHandler
+;    
+    inc al
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AdcBlockInt
+    RequestMsiHandler
+    
+    clc
+
+InitPciDone:
+    ret
+InitPciAdapter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           VerifyData
+;       NAME:           setup_adc
 ;
-;           DESCRIPTION:    Verify data
+;       DESCRIPTION:    Setup ADC
+;
+;       PARAMETERS:     AL	Test mode
+;                       AH      Speed
+;                       ECX     2M buffer pages
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VerifyData 	Proc near
-    mov bx,anio_adc_sel
-    mov ds,bx
-    mov bx,flat_sel
-    mov es,bx
-;
-    xor esi,esi
-    mov eax,1000h
-    AllocateBigLinear
-    mov edi,edx
-    mov ebp,07D007Dh
-    
-vdLoop:
-    mov eax,ds:[esi]
-    mov ebx,ds:[esi+4]
-    mov ecx,eax
-    or eax,ebx
-    jz vdDone
-;
-    mov edx,edi
-    mov ecx,200h
+setup_adc_name	DB 'Setup ADC', 0
 
-vdMapLoop:
-    mov al,67h
-    SetPageEntry
-;
+setup_adc  Proc far
+    push ds
     push eax
     push ebx
     push ecx
-    push edx
+    push edi
 ;
-    mov ecx,400h
-;
-    push ebp
-    pop ax
-    pop bx
-
-vdCheckLoop:
-    cmp ax,es:[edx]
-    je vdCheckBx
-;
-    jmp vdCheckFail
-
-vdCheckBx:
-    cmp bx,es:[edx+2]
-    je vdCheckNext
-    
-vdCheckFail:
-    int 3
-    mov ax,es:[edx]
-    mov bx,es:[edx+2]
-
-vdCheckNext:
-    inc ax
-    cmp ax,80h
-    jne vdCheckLowOk
-;
-    xor ax,ax
-
-vdCheckLowOk:
-    inc bx
-    cmp bx,80h
-    jne vdCheckHiOk
-;
-    xor bx,bx
-
-vdCheckHiOk:
-    add edx,4
-    loop vdCheckLoop
-;
-    push bx
-    push ax
-    pop ebp
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    add eax,1000h
-    sub ecx,1
-    jnz vdMapLoop
-;
-    add esi,8
-    jmp vdLoop
-
-vdDone:
-    ret    
-VerifyData	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           adc_thread
-;
-;           DESCRIPTION:    Adc thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-adc_thread_name	DB 'ADC', 0
-
-adc_thread:
-    int 3
-    call InitPciAdapter
-    jc atDone
-;
-    call InitControlBar
-    call InitAdcBar
-    call SetupClk
-    call SetupAdc
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov ds:cb_adc_test_mode,al
 ;
     mov bx,anio_adc_sel
     mov ds,bx
     xor edi,edi
-    mov ecx,10h
 
-adc_phys_loop:
+setup_adc_phys_loop:
     AllocatePhysicalDir
     mov ds:[edi],eax
     mov ds:[edi+4],ebx
     add edi,8
-    loop adc_phys_loop
+    loop setup_adc_phys_loop
 ;
-    xor ebx,ebx
     xor eax,eax
     mov ds:[edi],eax
-    mov ds:[edi+4],ebx
+    mov ds:[edi+4],eax
 ;
-    int 3
-    mov bx,anio_control_sel
-    mov ds,bx
-    xor bx,bx
-    mov al,80h
-    mov ds:[bx],al
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+setup_adc  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    int 3
-    call VerifyData
+;
+;       NAME:           NextPn
+;
+;       DESCRIPTION:    Next PN value
+;
+;       PARAMETERS:     EAX	Value
+;                       EDX     Result
+;                       ECX     Rotations
+;
+;       RETURNS:        EAX     New value
+;                       EDX     New result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-atDone:
-    TerminateThread
+NextPn	proc near
+    mov ebx,eax
+    shr ebx,5
+    xor ebx,eax
+    shr ebx,17
+    rcr bl,1
+    rcl eax,1
+    rcl edx,1
+    loop NextPn
+    ret
+NextPn	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           init_thread
+;           NAME:           init_pci
 ;
-;           DESCRIPTION:    Init thread
+;           DESCRIPTION:    Init PCI
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread    PROC far
+init_pci    PROC far
     push ds
     push es
     pushad
+;
+    call InitPciAdapter
+    jc ipDone
+;
+    call InitControlBar
+    call InitAdcBar
+    call InitClk
+    call InitAdc
 ;
     mov eax,cs
     mov ds,eax
     mov es,eax
 ;
-    mov esi,OFFSET adc_thread
-    mov edi,OFFSET adc_thread_name
-    mov ecx,stack0_size
-    mov ax,4
-    CreateThread
-;
+    mov esi,OFFSET setup_adc
+    mov edi,OFFSET setup_adc_name
+    xor dx,dx
+    mov ax,setup_adc_nr
+    RegisterBimodalUserGate
+
+ipDone:
     popad
     pop es
     pop ds
     ret
-init_thread    ENDP
+init_pci    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -796,9 +756,14 @@ init_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Init    Proc far
+    mov ax,SEG data
+    mov ds,eax
+    mov ds:adc_irq,0
+;
     mov eax,cs
+    mov ds,eax
     mov es,eax
-    mov edi,OFFSET init_thread
+    mov edi,OFFSET init_pci
     HookInitPci
     clc
     ret

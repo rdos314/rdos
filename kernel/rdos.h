@@ -818,6 +818,9 @@ void RDOSAPI RdosCloseAdc(int handle);
 void RDOSAPI RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);
 long RDOSAPI RdosReadAdc(int handle);
 
+void RDOSAPI RdosSetupAdc(char TestMode, char Speed, int BufCount);
+
+
 int RDOSAPI RdosReadSerialLines(int device, int *val);
 int RDOSAPI RdosToggleSerialLine(int device, int line);
 int RDOSAPI RdosSetSerialLine(int device, int line);

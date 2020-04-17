@@ -923,4 +923,6 @@ has_usb_card_reader_error_nr      = 725
 
 wait_anio_nr                      = 726
 
+setup_adc_nr                      = 727
+
 usergate_entries                 = 750
