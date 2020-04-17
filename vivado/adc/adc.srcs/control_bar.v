@@ -552,7 +552,7 @@ generate
       begin
         if (rx_control_msg)
         begin
-          adc_irq__ack <= 0;
+          adc_irq_ack <= 0;
 
           case (rx_control_index)
             0: 

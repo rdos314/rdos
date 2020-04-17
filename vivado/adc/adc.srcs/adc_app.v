@@ -77,7 +77,7 @@ module adc_app (
 
   output reg              bar_irq,
   output reg              block_irq,
-  output reg [15:0]       phys_index;
+  output reg [15:0]       phys_index,
 
   input wire              adc_in,
   input wire [127:0]      adc_in_data,
@@ -188,22 +188,24 @@ ila_1 ila_1_inst (
     .probe0(pci_adc_started),          // input wire [0:0]  probe0  
     .probe1(pci_adc_probing),          // input wire [0:0]  probe0  
     .probe2(pci_adc_running),          // input wire [0:0]  probe0  
-    .probe3(phys_index),               // input wire [15:0]  probe0  
-    .probe4(phys_valid),               // input wire [0:0]  probe0  
-    .probe5(phys_page),                // input wire [19:0]  probe0  
-    .probe6(phys_offset),              // input wire [13:0]  probe0  
-    .probe7(pci_adc_cnt),              // input wire [2:0]  probe0  
-    .probe8(pci_busy),                 // input wire [0:0]  probe0  
-    .probe9(pci_pend),                 // input wire [0:0]  probe0  
-    .probe10(pci_has_data),            // input wire [0:0]  probe0  
-    .probe11(fifo_empty),              // input wire [0:0]  probe0  
-    .probe12(fifo_full),               // input wire [0:0]  probe0  
-    .probe13(fifo_rd),                 // input wire [0:0]  probe0  
-    .probe14(adc_out),                 // input wire [0:0]  probe0  
-    .probe15(adc_out_ack),             // input wire [0:0]  probe0  
-    .probe16(adc_out_header[127:64]),  // input wire [63:0]  probe0  
-    .probe17(adc_out_data[15:0]),      // input wire [15:0]  probe0  
-    .probe18(adc_out_data[31:16])      // input wire [15:0]  probe0  
+    .probe3(bar_irq),                  // input wire [0:0]  probe0  
+    .probe4(block_irq),                // input wire [0:0]  probe0  
+    .probe5(phys_index),               // input wire [15:0]  probe0  
+    .probe6(phys_valid),               // input wire [0:0]  probe0  
+    .probe7(phys_page),                // input wire [19:0]  probe0  
+    .probe8(phys_offset),              // input wire [13:0]  probe0  
+    .probe9(pci_adc_cnt),              // input wire [2:0]  probe0  
+    .probe10(pci_busy),                 // input wire [0:0]  probe0  
+    .probe11(pci_pend),                 // input wire [0:0]  probe0  
+    .probe12(pci_has_data),            // input wire [0:0]  probe0  
+    .probe13(fifo_empty),              // input wire [0:0]  probe0  
+    .probe14(fifo_full),               // input wire [0:0]  probe0  
+    .probe15(fifo_rd),                 // input wire [0:0]  probe0  
+    .probe16(adc_out),                 // input wire [0:0]  probe0  
+    .probe17(adc_out_ack),             // input wire [0:0]  probe0  
+    .probe18(adc_out_header[127:64]),  // input wire [63:0]  probe0  
+    .probe19(adc_out_data[15:0]),      // input wire [15:0]  probe0  
+    .probe20(adc_out_data[31:16])      // input wire [15:0]  probe0  
 );
 
   assign fifo_reset = !adc_started;

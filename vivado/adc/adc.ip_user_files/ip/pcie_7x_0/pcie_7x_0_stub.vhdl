@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Apr  4 22:25:57 2020
+-- Date        : Fri Apr 17 21:37:01 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_stub.vhdl
 -- Design      : pcie_7x_0

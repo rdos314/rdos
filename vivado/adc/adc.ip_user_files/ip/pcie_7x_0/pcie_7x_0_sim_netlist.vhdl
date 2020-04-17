@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Apr  4 22:25:58 2020
+-- Date        : Fri Apr 17 21:37:02 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim C:/rdos/vivado/adc/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
 -- Design      : pcie_7x_0
@@ -134043,7 +134043,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       MSI_BASE_PTR => X"48",
       MSI_CAP_64_BIT_ADDR_CAPABLE => "TRUE",
       MSI_CAP_ID => X"05",
-      MSI_CAP_MULTIMSGCAP => 0,
+      MSI_CAP_MULTIMSGCAP => 1,
       MSI_CAP_MULTIMSG_EXTENSION => 0,
       MSI_CAP_NEXTPTR => X"60",
       MSI_CAP_ON => "TRUE",
@@ -137988,7 +137988,7 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_lnk_bndwdt_notif : string;
   attribute c_lnk_bndwdt_notif of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_msi : string;
-  attribute c_msi of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
+  attribute c_msi of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "1";
   attribute c_msi_64b_addr : string;
   attribute c_msi_64b_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_msi_cap_on : string;
@@ -139582,7 +139582,7 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_lnk_bndwdt_notif : string;
   attribute c_lnk_bndwdt_notif of inst : label is "FALSE";
   attribute c_msi : string;
-  attribute c_msi of inst : label is "0";
+  attribute c_msi of inst : label is "1";
   attribute c_msi_64b_addr : string;
   attribute c_msi_64b_addr of inst : label is "TRUE";
   attribute c_msi_cap_on : string;
