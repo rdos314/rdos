@@ -11,6 +11,13 @@
 
 int count = 0;
 
+struct AdcBuf
+{
+    short int chA;
+    short int chB;
+};
+
+
 /*##########################################################################
 #
 #   Name       : NotifySignal
@@ -45,6 +52,22 @@ static void NotifySignal(TRealtimeDevice *Dev, int ID, int Signal)
 void main()
 {
     TRealtimeDevice dev;
+    char state;
+    int i;
+    char *buf = (char *)RdosAllocateMem(0x200000);
+    
+    RdosSetupAdc(0x5, 0, 5000);
+    state = RdosStartAdc();
+
+    printf("State: %02hX\r\n", state);
+
+    if (state & 0x40)
+    {
+        for (i = 0; i < 5000; i++)
+        {
+            RdosMapAdcBlock(i, buf);
+        }
+    }    
 
     RdosTestGate("");
 
