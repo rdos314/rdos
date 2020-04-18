@@ -50,7 +50,7 @@
 // IP VLNV: analog.com:user:jesd204_rx:1.0
 // IP Revision: 1
 
-(* X_CORE_INFO = "jesd204_rx,Vivado 2019.2" *)
+(* X_CORE_NFO = "jesd204_rx,Vivado 2019.2" *)
 (* CHECK_LICENSE_TYPE = "system_rx_0,jesd204_rx,{}" *)
 (* IP_DEFINITION_SOURCE = "package_project" *)
 (* DowngradeIPIdentifiedWarnings = "yes" *)

@@ -1,12 +1,10 @@
-//-----------------------------------------------------------------------------
-//
-// (c) Copyright 2010-2011 Xilinx, Inc. All rights reserved.
-//
+// (c) Copyright 1995-2020 Xilinx, Inc. All rights reserved.
+// 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
 // international copyright and other intellectual property
 // laws.
-//
+// 
 // DISCLAIMER
 // This disclaimer is not a license and does not grant any
 // rights to the materials distributed herewith. Except as
@@ -28,7 +26,7 @@
 // by a third party) even if such damage or loss was
 // reasonably foreseeable or Xilinx had been advised of the
 // possibility of the same.
-//
+// 
 // CRITICAL APPLICATIONS
 // Xilinx products are not designed or intended to be fail-
 // safe, or for use in any application requiring fail-safe
@@ -42,27 +40,34 @@
 // liability of any use of Xilinx products in Critical
 // Applications, subject only to applicable laws and
 // regulations governing limitations on product liability.
-//
+// 
 // THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
 // PART OF THIS FILE AT ALL TIMES.
-//
-//-----------------------------------------------------------------------------
-// Project    : Series-7 Integrated Block for PCI Express
-// File       : pcie_gtx_cpllpd_ovrd.v
-// Version    : 3.3
-`timescale 1ns / 1ps
-module pcie_gtx_cpllpd_ovrd (                                                                                        
-    input   i_ibufds_gte2,                                                                                     
-    output  o_cpllpd_ovrd,                                                                                     
-    output  o_cpllreset_ovrd                                                                                   
-    );                                                                                                         
-    (* equivalent_register_removal="no" *)  reg [95:0] cpllpd_wait = 96'hFFFFFFFFFFFFFFFFFFFFFFFF;             
-    (* equivalent_register_removal="no" *)  reg [127:0] cpllreset_wait = 128'h000000000000000000000000000000FF;
-    always @(posedge i_ibufds_gte2)                                                                            
-    begin                                                                                                      
-        cpllpd_wait <= {cpllpd_wait[94:0], 1'b0};                                                              
-        cpllreset_wait <= {cpllreset_wait[126:0], 1'b0};                                                       
-    end                                                                                                        
-    assign o_cpllpd_ovrd = cpllpd_wait[95];                                                                    
-    assign o_cpllreset_ovrd = cpllreset_wait[127];                                                             
-endmodule
+// 
+// DO NOT MODIFY THIS FILE.
+
+// IP VLNV: xilinx.com:ip:fifo_generator:13.2
+// IP Revision: 5
+
+// The following must be inserted into your Verilog file for this
+// core to be instantiated. Change the instance name and port connections
+// (in parentheses) to your own signal names.
+
+//----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
+adc_fifo your_instance_name (
+  .rst(rst),        // input wire rst
+  .wr_clk(wr_clk),  // input wire wr_clk
+  .rd_clk(rd_clk),  // input wire rd_clk
+  .din(din),        // input wire [127 : 0] din
+  .wr_en(wr_en),    // input wire wr_en
+  .rd_en(rd_en),    // input wire rd_en
+  .dout(dout),      // output wire [127 : 0] dout
+  .full(full),      // output wire full
+  .empty(empty)    // output wire empty
+);
+// INST_TAG_END ------ End INSTANTIATION Template ---------
+
+// You must compile the wrapper file adc_fifo.v when simulating
+// the core, adc_fifo. When compiling the wrapper file, be sure to
+// reference the Verilog simulation library.
+
