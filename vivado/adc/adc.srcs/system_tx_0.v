@@ -156,13 +156,7 @@ output wire [0 : 0] status_sync;
 (* X_INTERFACE_INFO = "analog.com:interface:jesd204_tx_status:1.0 tx_status state" *)
 output wire [1 : 0] status_state;
 
-  jesd204_tx #(
-    .NUM_LANES(4),
-    .NUM_LINKS(1),
-    .NUM_OUTPUT_PIPELINE(0),
-    .LINK_MODE(1),
-    .DATA_PATH_WIDTH(4)
-  ) inst (
+  jesd204_tx inst (
     .clk(clk),
     .reset(reset),
     .phy_data(phy_data),

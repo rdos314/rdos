@@ -174,13 +174,7 @@ output wire [55 : 0] status_lane_latency;
 (* X_INTERFACE_INFO = "analog.com:interface:jesd204_rx_status:1.0 rx_status lane_emb_state" *)
 output wire [11 : 0] status_lane_emb_state;
 
-  jesd204_rx #(
-    .NUM_LANES(4),
-    .NUM_LINKS(1),
-    .NUM_INPUT_PIPELINE(1),
-    .LINK_MODE(1),
-    .DATA_PATH_WIDTH(4)
-  ) inst (
+  jesd204_rx_0  inst (
     .clk(clk),
     .reset(reset),
     .phy_data(phy_data),

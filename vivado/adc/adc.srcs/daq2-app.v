@@ -349,7 +349,7 @@ system_util_daq2_xcvr_0 util_daq2_xcvr
         .up_tx_wr_2(0),
         .up_tx_wr_3(0));
 
-system_rx_0 system_rx_0_inst
+jesd204_rx_0 jesd204_rx_0_inst
        (.cfg_beats_per_multiframe(3),
         .cfg_buffer_delay(0),
         .cfg_buffer_early_release(0),
