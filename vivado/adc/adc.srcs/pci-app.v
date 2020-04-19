@@ -500,16 +500,6 @@ pci_tx pci_tx_inst (
     .adc_ack (adc_ack)                       // O
 );
 
-ila_3 ila_3_inst (
-    .clk(user_clk),                     // input wire clk
-    .probe0(int_req),                   // input wire [0:0]  probe0  
-    .probe1(int_num),                   // input wire [0:0]  probe0  
-    .probe2(int_ack),                   // input wire [0:0]  probe0  
-    .probe3(adc_bar_irq),               // input wire [0:0]  probe0  
-    .probe4(adc_block_irq),             // input wire [0:0]  probe0  
-    .probe5(pend_adc_bar_irq),          // input wire [0:0]  probe0  
-    .probe6(pend_adc_block_irq)         // input wire [0:0]  probe0  
-);
  
 generate
   begin : pci_app

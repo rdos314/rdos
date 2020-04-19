@@ -51,18 +51,17 @@ static void NotifySignal(TRealtimeDevice *Dev, int ID, int Signal)
 ##########################################################################*/
 void main()
 {
-    TRealtimeDevice dev;
     char state;
     int i;
     int ok;
     char *buf = (char *)RdosAllocateMem(0x200000);
-    
-    RdosSetupAdc(0x5, 0, 5000);
+
+    RdosSetupAdc(0xF, 0, 5000);
     state = RdosStartAdc();
 
     printf("State: %02hX\r\n", state);
 
-    if (state & 0x40)
+    if (state & 0x20)
     {
         for (i = 0; i < 5000 && ok; i++)
         {
@@ -70,7 +69,7 @@ void main()
             if (ok)
                 printf("Block: %d\r\n", i);
         }
-    }    
+    }
 
 //    RdosTestGate("");
 }

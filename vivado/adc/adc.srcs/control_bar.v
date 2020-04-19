@@ -74,8 +74,6 @@ module control_bar (
   reg [7:0]               adc_state;
   reg [1:0]               adc_req_state;
   reg [7:0]               adc_irq_state;
-  reg [7:0]               adc_irq_clear;
-  reg                     adc_irq_ack;
 
   reg                     req_send_adc_test_mode;
   reg                     ack_send_adc_test_mode;
@@ -91,7 +89,6 @@ generate
     begin
       if (reset)
       begin
-        adc_irq_clear <= 0;
         adc_state[5:0] <= 0;
         adc_req_state <= 0;
         adc_test_mode <= 0;
@@ -279,9 +276,6 @@ generate
 
               4:
               begin
-                if (wr_be[0])
-                  adc_irq_clear <= adc_irq_clear | wr_be[0];
-
                 if (wr_be[1])
                 begin
                   adc_test_mode[7:0] <= wr_data[15:8]; 
@@ -304,9 +298,6 @@ generate
           end
           else
           begin
-            if (adc_irq_ack)
-              adc_irq_clear <= 0;
-
             if (ack_send_adc_state)
               req_send_adc_state <= 0;
           
@@ -546,14 +537,11 @@ generate
       begin
         adc_state[7:6] <= 0;
         adc_irq_state <= 0;
-        adc_irq_ack <= 1;
       end
       else
       begin
         if (rx_control_msg)
         begin
-          adc_irq_ack <= 0;
-
           case (rx_control_index)
             0: 
             if (rx_control_data[0])
@@ -580,23 +568,9 @@ generate
 
             1: 
             begin
-              case (rx_control_data[3:0])
-                0: adc_irq_state[0] <= 1;
-                1: adc_irq_state[1] <= 1;
-                2: adc_irq_state[2] <= 1;
-                3: adc_irq_state[3] <= 1;
-                4: adc_irq_state[4] <= 1;
-                5: adc_irq_state[5] <= 1;
-                6: adc_irq_state[6] <= 1;
-                7: adc_irq_state[7] <= 1;
-              endcase
+              adc_irq_state <= rx_control_data;
             end
           endcase
-        end
-        else
-        begin
-          adc_irq_ack <= 1;
-          adc_irq_state <= adc_irq_state & (~adc_irq_clear);
         end
       end
     end  

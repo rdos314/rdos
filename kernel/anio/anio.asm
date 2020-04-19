@@ -82,15 +82,8 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AdcBarInt Proc far
-    mov bx,anio_control_sel
-    mov ds,ebx
-    mov al,ds:cb_adc_irq
-    mov ds:cb_adc_irq,al
-;
     mov bx,SEG data
     mov ds,ebx
-    or ds:adc_irq,al
-;
     mov bx,ds:adc_bar_thread
     Signal
     ret
@@ -106,13 +99,9 @@ AdcBarInt	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AdcBlockInt Proc far
-    mov bx,anio_control_sel
-    mov ds,ebx
-    mov ax,ds:cb_adc_index
-;
     mov bx,SEG data
     mov ds,ebx
-    mov ds:adc_index,ax
+    inc ds:adc_index
     ret
 AdcBlockInt	Endp
 
@@ -729,12 +718,12 @@ start_adc  Proc far
 
 saLoop:
     WaitForSignal
-    test ds:adc_irq,60h
+    mov al,es:cb_adc_irq
+    test al,60h
     jz saLoop
 ;
-    xor ax,ax
-    mov ds:adc_bar_thread,ax
-    xchg al,ds:adc_irq
+    xor bx,bx
+    mov ds:adc_bar_thread,bx
 ;
     pop ebx
     pop es

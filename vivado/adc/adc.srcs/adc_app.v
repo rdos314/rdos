@@ -96,8 +96,8 @@ module adc_app (
   reg [2:0]               up_curr_state;
   reg [7:0]               up_test_mode;
 
-  reg [3:0]               irq_state;
-  reg [3:0]               up_curr_irq;
+  reg [7:0]               irq_state;
+  reg [7:0]               up_curr_irq;
 
   reg [3:0]               up_bar_irq_cnt;
   reg                     up_bar_irq;
@@ -150,7 +150,7 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
 
-adc_fifo your_instance_name (
+adc_fifo adc_fifo_inst (
   .rst(fifo_reset),       // input wire rst
   .wr_clk(rx_clk),        // input wire wr_clk
   .rd_clk(pci_clk),       // input wire rd_clk
@@ -300,13 +300,17 @@ begin : adc_app
       begin
         if (up_req_start)
         begin
+          adc_started <= 0;
+          adc_probing <= 0;
+          adc_running <= 0;
+          up_spi_test_done <= 0;
           up_rstn <= 0;
           qpll_rst <= 1;
           up_pll_rst_cnt <= 4'h8; 
           up_adc_rst_cnt <= 4'h8;    
           up_adc_user_ready_cnt <= 7'h00;  
           up_pend_start <= 1;
-          irq_state <= 1;
+          irq_state <= 0;
         end
         else
         begin
@@ -316,7 +320,7 @@ begin : adc_app
           begin
             adc_started <= 0;
             up_rstn <= 0;
-            irq_state <= 0;
+            irq_state <= irq_state | 8'h80;
           end
           else
           begin
@@ -356,7 +360,7 @@ begin : adc_app
                       begin
                         up_pend_start <= 0;
                         adc_probing <= 1;
-                        irq_state <= 2;
+                        irq_state <= irq_state | 8'h1;
                       end
                     end
                   end
@@ -368,7 +372,7 @@ begin : adc_app
                 spi_out_data <= 8'h37;
                 spi_write <= 1;
                 adc_started <= 1;
-                irq_state <= 3;
+                irq_state <= irq_state | 8'h2;
               end
             end
             else
@@ -380,7 +384,7 @@ begin : adc_app
                 begin
                   adc_started <= 0;
                   adc_running <= 0;
-                  irq_state <= 4;
+                  irq_state <= irq_state | 8'h10;
                 end
               end
               else
@@ -391,7 +395,7 @@ begin : adc_app
                   spi_out_data <= up_test_mode;
                   spi_write <= 1;
                   adc_running <= 1;
-                  irq_state <= 5;
+                  irq_state <= irq_state | 8'h20;
                 end
                 else
                 begin
@@ -402,7 +406,7 @@ begin : adc_app
                   begin
                     adc_started <= 0;
                     adc_probing <= 0;
-                    irq_state <= 6;
+                    irq_state <= irq_state | 8'h40;
                   end
                 end
               end
