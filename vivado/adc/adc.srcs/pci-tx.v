@@ -112,16 +112,10 @@ ila_2 ila_2_inst (
     .probe6(s_axis_tx_tready),           // input wire [0:0]  probe0  
     .probe7(s_axis_tx_tvalid),           // input wire [0:0]  probe0  
     .probe8(s_axis_tx_tlast),            // input wire [0:0]  probe0  
-    .probe9(s_axis_tx_tdata[15:0]),      // input wire [15:0]  probe0  
-    .probe10(s_axis_tx_tdata[31:16]),     // input wire [15:0]  probe0  
-    .probe11(s_axis_tx_tdata[47:32]),    // input wire [15:0]  probe0  
-    .probe12(s_axis_tx_tdata[63:48]),    // input wire [15:0]  probe0  
-    .probe13(s_axis_tx_tdata[79:64]),    // input wire [15:0]  probe0  
-    .probe14(s_axis_tx_tdata[95:80]),    // input wire [15:0]  probe0  
-    .probe15(s_axis_tx_tdata[111:96]),   // input wire [15:0]  probe0  
-    .probe16(s_axis_tx_tdata[127:112])   // input wire [15:0]  probe0  
-);
-
+    .probe9(bar_tx_tvalid),              // input wire [0:0]  probe0  
+    .probe10(bar_tx_tlast),              // input wire [0:0]  probe0  
+    .probe11(bar_start)                  // input wire [0:0]  probe0  
+ );
 
 generate
   begin : gen_pci_tx
