@@ -392,38 +392,6 @@ jesd204_rx_0 jesd204_rx_0_inst
         .lmfc_clk(lmfc_clk)
 );
 
-system_tx_0 system_tx_0_inst
-       (.cfg_beats_per_multiframe(3),
-        .cfg_continuous_cgs(0),
-        .cfg_continuous_ilas(0),
-        .cfg_disable_char_replacement(0),
-        .cfg_disable_scrambler(0),
-        .cfg_lanes_disable(0),
-        .cfg_links_disable(0),
-        .cfg_lmfc_offset(0),
-        .cfg_mframes_per_ilas(0),
-        .cfg_octets_per_frame(0),
-        .cfg_skip_ilas(0),
-        .cfg_sysref_disable(0),
-        .cfg_sysref_oneshot(0),
-        .clk(tx_clk),
-        .ctrl_manual_sync_request(0),
-        .event_sysref_alignment_error(),
-        .event_sysref_edge(),
-        .ilas_config_addr(),
-        .ilas_config_data(0),
-        .ilas_config_rd(),
-        .phy_charisk(tx_phy_charisk),
-        .phy_data(tx_phy_data),
-        .reset(reset),
-        .status_state(),
-        .status_sync(),
-        .sync(tx_sync),
-        .sysref(tx_sysref),
-        .tx_data(tx_data),
-        .tx_ready(),
-        .tx_valid(1'b1));
-
 
 ila_0 ila_0_inst (
     .clk(rx_clk),                      // input wire clk
