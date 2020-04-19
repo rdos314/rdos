@@ -74,6 +74,7 @@ module pci_app (
     bar2_wr_be,
     bar2_wr,
 
+    adc_full,
     adc_bar_irq,
     adc_block_irq,
     adc_header,
@@ -131,6 +132,7 @@ module pci_app (
   output reg [3:0]     bar2_wr_be;
   output reg           bar2_wr;
 
+  input wire           adc_full;
   input wire           adc_bar_irq;
   input wire           adc_block_irq;
   input wire [127:0]   adc_header;
@@ -493,7 +495,8 @@ pci_tx pci_tx_inst (
     .bar_header( tx_bar_header),             // I
     .bar_wr (tx_bar_wr),                     // I
     .bar_busy (tx_bar_busy),                 // O
-    
+
+    .adc_full( adc_full),    
     .adc_data( adc_data),                    // I
     .adc_header( adc_header),                // I
     .adc_wr (adc_wr),                        // I

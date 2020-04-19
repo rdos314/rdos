@@ -40,6 +40,7 @@ module pci_tx (
   bar_wr,
   bar_busy,
 
+  adc_full,
   adc_data,
   adc_header,
   adc_wr,
@@ -61,6 +62,7 @@ module pci_tx (
   input  wire               bar_wr;
   output reg                bar_busy;
 
+  input  wire               adc_full;
   input  wire [1023:0]      adc_data;
   input  wire [127:0]       adc_header;
   input  wire               adc_wr;
@@ -97,6 +99,28 @@ module pci_tx (
   reg [15:0]                adc_tx_tkeep;
   reg                       adc_tx_tlast;
   reg                       adc_tx_tvalid;
+
+
+ila_2 ila_2_inst (
+    .clk(clk),                           // input wire clk
+    .probe0(adc_wr),                     // input wire [0:0]  probe0  
+    .probe1(adc_ack),                    // input wire [0:0]  probe0  
+    .probe2(adc_loaded),                 // input wire [0:0]  probe0  
+    .probe3(adc_start),                  // input wire [0:0]  probe0  
+    .probe4(adc_count),                  // input wire [9:0]  probe0  
+    .probe5(adc_full),                   // input wire [0:0]  probe0  
+    .probe6(s_axis_tx_tready),           // input wire [0:0]  probe0  
+    .probe7(s_axis_tx_tvalid),           // input wire [0:0]  probe0  
+    .probe8(s_axis_tx_tlast),            // input wire [0:0]  probe0  
+    .probe9(s_axis_tx_tdata[15:0]),      // input wire [15:0]  probe0  
+    .probe10(s_axis_tx_tdata[31:16]),     // input wire [15:0]  probe0  
+    .probe11(s_axis_tx_tdata[47:32]),    // input wire [15:0]  probe0  
+    .probe12(s_axis_tx_tdata[63:48]),    // input wire [15:0]  probe0  
+    .probe13(s_axis_tx_tdata[79:64]),    // input wire [15:0]  probe0  
+    .probe14(s_axis_tx_tdata[95:80]),    // input wire [15:0]  probe0  
+    .probe15(s_axis_tx_tdata[111:96]),   // input wire [15:0]  probe0  
+    .probe16(s_axis_tx_tdata[127:112])   // input wire [15:0]  probe0  
+);
 
 
 generate

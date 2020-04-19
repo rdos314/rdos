@@ -82,6 +82,7 @@ module adc_app (
   input wire              adc_in,
   input wire [127:0]      adc_in_data,
 
+  output wire             adc_full,
   output reg              adc_out,
   input wire              adc_out_ack,
   output reg [127:0]      adc_out_header,
@@ -207,6 +208,8 @@ ila_1 ila_1_inst (
     .probe19(adc_out_data[15:0]),      // input wire [15:0]  probe0  
     .probe20(adc_out_data[31:16])      // input wire [15:0]  probe0  
 );
+
+  assign adc_full = fifo_full;
 
   assign fifo_reset = !adc_started;
 

@@ -156,6 +156,8 @@ module adc (
   wire                 pci_adc_bar_irq;
   wire                 pci_adc_block_irq;
 
+  wire                 adc_full;
+
   wire [127:0]         pci_adc_header;
   wire [1023:0]        pci_adc_data;
   wire                 pci_adc_wr;
@@ -437,6 +439,7 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
 
+    .adc_full(adc_full),
     .adc_bar_irq(pci_adc_bar_irq),
     .adc_block_irq(pci_adc_block_irq),    
     .adc_header(pci_adc_header),
@@ -580,6 +583,7 @@ adc_app adc_app_inst (
     .adc_in(rx_adc_wr),
     .adc_in_data(rx_adc_data),
 
+    .adc_full(adc_full),
     .adc_out(pci_adc_wr),
     .adc_out_ack(pci_adc_ack),
     .adc_out_header(pci_adc_header),

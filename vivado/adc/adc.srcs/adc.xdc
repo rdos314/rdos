@@ -175,7 +175,9 @@ create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
 create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
  
 set_false_path -from [get_ports pci_rst_n]
-set_clock_groups -name async_group -async -group pci_ref_clk -group rx_ref_clk -group rx_sysref -group tx_ref_clk -group tx_sysref -group user_clk -group sys_clk -group [get_clocks -of_objects [get_pins clk_up_inst/clk_out1]] -group [get_clocks -of_objects [get_pins pci_app_inst/pcie_i/inst/inst/gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/mmcm_i/CLKOUT3]]
+set_false_path -from [get_ports rx_sysref_p]
+set_false_path -from [get_ports tx_sysref_p]
+set_clock_groups -name async_group -async -group pci_ref_clk -group rx_ref_clk  -group user_clk -group sys_clk -group [get_clocks -of_objects [get_pins clk_up_inst/clk_out1]] -group [get_clocks -of_objects [get_pins pci_app_inst/pcie_i/inst/inst/gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/mmcm_i/CLKOUT3]]
 
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
