@@ -122,7 +122,7 @@ module daq2_app
  wire [13:0]              adcB_2;
  wire [13:0]              adcB_3;
 
-system_util_daq2_xcvr_0 util_daq2_xcvr
+util_adxcvr_0 util_daq2_xcvr
        (.cpll_ref_clk_0(rx_ref_clk),
         .cpll_ref_clk_1(rx_ref_clk),
         .cpll_ref_clk_2(rx_ref_clk),
@@ -222,7 +222,6 @@ system_util_daq2_xcvr_0 util_daq2_xcvr
         .up_es_wr_2(0),
         .up_es_wr_3(0),
         .up_qpll_rst_0(adc_qpll_rst),
-        .up_qpll_locked_0(adc_qpll_locked),
         .up_rstn(adc_up_rstn),
         .up_rx_addr_0(0),
         .up_rx_addr_1(0),
@@ -456,6 +455,8 @@ endfunction
   assign clkd_sync = 2'bz;
   assign dac_txen = 1'bz;
   assign dac_reset = 1'bz;
+
+  assign adc_qpll_locked = 1;
   
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
   

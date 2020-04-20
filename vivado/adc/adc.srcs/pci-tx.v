@@ -92,6 +92,7 @@ module pci_tx (
   reg                       bar_tx_tlast;
   reg                       bar_tx_tvalid;
 
+  reg                       adc_pend_ack;
   reg                       adc_loaded;
   reg                       adc_start;
   reg [9:0]                 adc_count;
