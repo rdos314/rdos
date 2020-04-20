@@ -61,7 +61,6 @@ module adc_app (
 
   output reg              up_rstn,
   output reg              qpll_rst,
-  input wire              qpll_locked,
 
   output wire             adc_rst,
   output wire             adc_user_ready,
@@ -341,9 +340,8 @@ begin : adc_app
 
                 if (up_spi_test_done)
                 begin
-                  if (qpll_locked)
-                    if (up_pll_rst_cnt[3] == 1'b1) 
-                      up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
+                  if (up_pll_rst_cnt[3] == 1'b1) 
+                    up_pll_rst_cnt <= up_pll_rst_cnt + 1'b1;
 
                   if ((up_pll_rst_cnt[3] == 1'b1) || (adc_pll_locked != 4'b1111))
                     up_adc_rst_cnt <= 4'h8; 

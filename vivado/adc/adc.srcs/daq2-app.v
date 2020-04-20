@@ -61,7 +61,6 @@ module daq2_app
 
   input                   adc_up_rstn,
   input                   adc_qpll_rst,
-  output wire             adc_qpll_locked,
 
   input                   adc_rst,
   input                   adc_user_ready,
@@ -356,7 +355,7 @@ jesd204_rx_0 jesd204_rx_0_inst
         .cfg_disable_scrambler(0),
         .cfg_lanes_disable(0),
         .cfg_links_disable(0),
-        .cfg_lmfc_offset(0),
+        .cfg_lmfc_offset(3),
         .cfg_octets_per_frame(0),
         .cfg_sysref_disable(0),
         .cfg_sysref_oneshot(0),
@@ -455,8 +454,6 @@ endfunction
   assign clkd_sync = 2'bz;
   assign dac_txen = 1'bz;
   assign dac_reset = 1'bz;
-
-  assign adc_qpll_locked = 1;
   
   assign adc_pd = adc_started ? 1'b0 : 1'b1;
   
