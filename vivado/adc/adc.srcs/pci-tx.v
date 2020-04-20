@@ -115,7 +115,11 @@ ila_2 ila_2_inst (
     .probe8(s_axis_tx_tlast),            // input wire [0:0]  probe0  
     .probe9(bar_tx_tvalid),              // input wire [0:0]  probe0  
     .probe10(bar_tx_tlast),              // input wire [0:0]  probe0  
-    .probe11(bar_start)                  // input wire [0:0]  probe0  
+    .probe11(bar_start),                 // input wire [0:0]  probe0  
+    .probe12(s_axis_tx_tdata[31:0]),      // input wire [31:0]  probe0  
+    .probe13(s_axis_tx_tdata[63:32]),     // input wire [31:0]  probe0  
+    .probe14(s_axis_tx_tdata[95:64]),     // input wire [31:0]  probe0  
+    .probe15(s_axis_tx_tdata[127:96])     // input wire [31:0]  probe0  
  );
 
 generate
