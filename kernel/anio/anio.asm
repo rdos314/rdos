@@ -782,7 +782,7 @@ map_adc_block  Proc far
 ;
     sub ax,ds:adc_index
     inc ax
-    mov dx,1193
+    mov dx,835
     mul dx
     push dx
     push ax

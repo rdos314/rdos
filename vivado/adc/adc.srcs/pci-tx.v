@@ -288,6 +288,7 @@ generate
         adc_count <= 0;
         adc_start <= 0;
         adc_loaded <= 0;
+        adc_pend_ack <= 0;
         adc_ack <= 0;
       end
       else
@@ -296,8 +297,13 @@ generate
         begin
           if (adc_tx_tvalid && !adc_tx_tlast)
           begin
+            adc_pend_ack <= 0;
+            if (adc_pend_ack)
+              adc_ack <= 1;
+            else
+              adc_ack <= 0;
+
             adc_tx_tdata <= adc_pkt_data;
-            adc_ack <= 0;
 
             if (adc_count > 4)
             begin
@@ -343,9 +349,11 @@ generate
           end
           else
           begin
+            adc_ack <= 0;
+
             if (adc_start && !bar_start && !bar_tx_tvalid)
             begin
-              adc_ack <= 1;
+              adc_pend_ack <= 1;
               adc_start <= 0;
 
               if (adc_wr)
@@ -375,7 +383,6 @@ generate
             else
             begin
               adc_tx_tvalid <= 0;
-              adc_ack <= 0;
               adc_loaded <= 0;
 
               if (adc_wr)
