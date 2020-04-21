@@ -61,7 +61,7 @@ core_tlb32_struc        ENDS
 
 MAX_IRQ_NESTING     = 64
 CORE_LOG_ENTRIES    = 200h
-CORE_WAKEUP_ENTRIES = 16
+CORE_WAKEUP_ENTRIES = 64
 
 core_seg   STRUC
 
