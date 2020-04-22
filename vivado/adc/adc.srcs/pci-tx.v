@@ -45,7 +45,7 @@ module pci_tx (
   input wire                adc_valid_address,
   input wire [63:0]         adc_address,
   output reg                adc_rd,
-  input wire [127:0]        adc_rd_data,
+  input wire [127:0]        adc_data,
   input wire                adc_almost_full,
   input wire                adc_almost_empty
 );
@@ -56,14 +56,15 @@ module pci_tx (
 
   reg [127:0]               q_bar_header;
   reg [127:0]               q_bar_data;
+  reg [127:0]               loaded_bar_data;
 
   wire [127:0]              bar_pkt_data;
   wire [7:0]                bar_pkt_type;
   wire [9:0]                bar_pkt_len;
 
+  reg                       bar_loaded;
   reg                       bar_pend;
   reg                       bar_start;
-  reg                       bar_ack;
   reg [9:0]                 bar_count;
 
   wire [127:0]              adc_pkt_data;
@@ -82,11 +83,11 @@ ila_2 ila_2_inst (
     .probe7(bar_busy),                   // input wire [0:0]  probe0  
     .probe8(bar_start),                  // input wire [0:0]  probe0  
     .probe9(bar_pend),                   // input wire [0:0]  probe0  
-    .probe10(bar_ack),                   // input wire [0:0]  probe0  
+    .probe10(bar_loaded),                // input wire [0:0]  probe0  
     .probe11(bar_count),                 // input wire [9:0]  probe0  
     .probe12(s_axis_tx_tready),          // input wire [0:0]  probe0  
     .probe13(s_axis_tx_tvalid),          // input wire [0:0]  probe0  
-    .probe14(s_axis_tx_tlast)            // input wire [0:0]  probe0  
+    .probe14(s_axis_tx_tlast),            // input wire [0:0]  probe0  
     .probe15(adc_address),               // input wire [63:0]  probe0  
     .probe16(s_axis_tx_tdata[31:0]),     // input wire [31:0]  probe0  
     .probe17(s_axis_tx_tdata[63:32]),    // input wire [31:0]  probe0  
@@ -99,7 +100,7 @@ generate
   begin : gen_pci_tx
 
     assign s_axis_tx_tuser = 0;
-    assign bar_busy = bar_start | bar_pend;
+    assign bar_busy = bar_start | bar_pend | bar_loaded;
 
     assign bar_pkt_type = q_bar_header[31:24];
     assign bar_pkt_len = q_bar_header[9:0];
@@ -148,18 +149,18 @@ generate
     always @ ( posedge clk ) 
     begin
       if (reset)
-        bar_start <= 0;
+        bar_loaded <= 0;
       else
       begin
         if (bar_wr)
         begin
           q_bar_header <= bar_header;
-          q_bar_data <= bar_data;
-          bar_start <= 1;
+          loaded_bar_data <= bar_data;
+          bar_loaded <= 1;
         end
         else
-          if (bar_ack)
-            bar_start <= 0;
+          if (bar_start)
+            bar_loaded <= 0;
       end
     end
 
@@ -174,7 +175,7 @@ generate
         s_axis_tx_tkeep <= 0;
         bar_count <= 0;
         bar_pend <= 0;
-        bar_ack <= 0;
+        bar_start <= 0;
         adc_next_address <= 0;
       end
       else
@@ -183,14 +184,13 @@ generate
         begin
           if (adc_rd)
           begin
-            bar_ack <= 0;
             adc_next_address <= 0;
             adc_count <= adc_count + 1;
 
             s_axis_tx_tdata <= adc_pkt_data;
             s_axis_tx_tkeep[15:0] <= 16'hffff;
 
-            if (adc_count == 3b'111)
+            if (adc_count == 3'b111)
             begin
               s_axis_tx_tlast <= 1;
               adc_rd <= 0;
@@ -202,7 +202,6 @@ generate
           begin
             if (bar_pend)
             begin
-              bar_ack <= 0;
               bar_pend <= 0;
               adc_next_address <= 0;
 
@@ -221,7 +220,7 @@ generate
             begin
               if (bar_start && !adc_almost_full)
               begin
-                bar_ack <= 1;
+                bar_start <= 0;
                 adc_next_address <= 0;
 
                 s_axis_tx_tvalid <= 1;
@@ -233,7 +232,7 @@ generate
                     s_axis_tx_tdata[127:96] <= bar_pkt_data[31:0];
                     s_axis_tx_tdata[15:12] <= 4'b1111;
                     s_axis_tx_tdata[95:0] <= q_bar_header[95:0];
-                    bar_tx_tkeep[11:0] <= 12'hfff;
+                    s_axis_tx_tkeep[11:0] <= 12'hfff;
 
                     if (bar_pkt_len > 1)
                     begin
@@ -281,7 +280,6 @@ generate
                   adc_rd <= 1;
                   adc_count <= 0;
                   adc_next_address <= 1;
-                  bar_ack <= 0;
 
                   s_axis_tx_tvalid <= 1;
                   s_axis_tx_tkeep[15:0] <= 16'hffff;
@@ -303,7 +301,15 @@ generate
                   s_axis_tx_tdata[7:0] <= 8'h20;                    // 128 byte size
                 end
                 else
+                begin
                   s_axis_tx_tvalid <= 0;
+
+                  if (bar_loaded)
+                  begin
+                    bar_start <= 1;
+                    q_bar_data <= loaded_bar_data;
+                  end
+                end
               end
             end
           end

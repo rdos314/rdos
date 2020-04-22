@@ -62,7 +62,9 @@ module adc_fifo (
   rd_en,
   dout,
   full,
-  empty
+  empty,
+  prog_full,
+  prog_empty
 );
 
 input wire rst;
@@ -84,6 +86,8 @@ output wire [127 : 0] dout;
 output wire full;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *)
 output wire empty;
+output wire prog_full;
+output wire prog_empty;
 
   fifo_generator_v13_2_5 #(
     .C_COMMON_CLOCK(0),
@@ -122,12 +126,12 @@ output wire empty;
     .C_PRELOAD_LATENCY(1),
     .C_PRELOAD_REGS(0),
     .C_PRIM_FIFO_TYPE("512x72"),
-    .C_PROG_EMPTY_THRESH_ASSERT_VAL(5),
-    .C_PROG_EMPTY_THRESH_NEGATE_VAL(6),
-    .C_PROG_EMPTY_TYPE(0),
-    .C_PROG_FULL_THRESH_ASSERT_VAL(503),
-    .C_PROG_FULL_THRESH_NEGATE_VAL(502),
-    .C_PROG_FULL_TYPE(0),
+    .C_PROG_EMPTY_THRESH_ASSERT_VAL(7),
+    .C_PROG_EMPTY_THRESH_NEGATE_VAL(8),
+    .C_PROG_EMPTY_TYPE(1),
+    .C_PROG_FULL_THRESH_ASSERT_VAL(400),
+    .C_PROG_FULL_THRESH_NEGATE_VAL(399),
+    .C_PROG_FULL_TYPE(1),
     .C_RD_DATA_COUNT_WIDTH(9),
     .C_RD_DEPTH(512),
     .C_RD_FREQ(250),
@@ -323,8 +327,8 @@ output wire empty;
     .data_count(),
     .rd_data_count(),
     .wr_data_count(),
-    .prog_full(),
-    .prog_empty(),
+    .prog_full(prog_full),
+    .prog_empty(prog_empty),
     .sbiterr(),
     .dbiterr(),
     .wr_rst_busy(),

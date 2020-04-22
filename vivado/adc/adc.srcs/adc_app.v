@@ -158,10 +158,9 @@ adc_fifo adc_fifo_inst (
   .rd_en(adc_rd),                   // input wire rd_en
   .dout(adc_rd_data),               // output wire [127 : 0] dout
   .full(fifo_full),                 // output wire full
-  .almost_full(fifo_almost_full),   // output wire almost full
-  .almost_empty(fifo_almost_empty)  // output wire almost empty
+  .prog_full(fifo_almost_full),   // output wire almost full
+  .prog_empty(fifo_almost_empty)  // output wire almost empty
 );
-
 
 phys_bar adc_bar_inst (
     .clk(pci_clk),
@@ -368,7 +367,7 @@ begin : adc_app
             end
             else
             begin
-              if (adc_in)
+              if (adc_next_address)
               begin
                 adc_probing <= 0;
                 if (fifo_full)

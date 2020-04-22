@@ -438,11 +438,14 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
 
+    .adc_bar_irq(pci_adc_bar_irq),
+    .adc_block_irq(pci_adc_block_irq),
+
     .adc_next_address(pci_adc_next_address),
     .adc_valid_address(pci_adc_valid_address),
     .adc_address(pci_adc_address),
     .adc_rd(pci_adc_rd),
-    .adc_rd_data(pci_adc_rd_data),
+    .adc_data(pci_adc_rd_data),
     .adc_almost_full(pci_adc_almost_full),
     .adc_almost_empty(pci_adc_almost_empty)
 );

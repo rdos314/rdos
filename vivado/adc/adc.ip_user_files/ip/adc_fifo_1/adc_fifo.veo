@@ -55,15 +55,17 @@
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 adc_fifo your_instance_name (
-  .rst(rst),        // input wire rst
-  .wr_clk(wr_clk),  // input wire wr_clk
-  .rd_clk(rd_clk),  // input wire rd_clk
-  .din(din),        // input wire [127 : 0] din
-  .wr_en(wr_en),    // input wire wr_en
-  .rd_en(rd_en),    // input wire rd_en
-  .dout(dout),      // output wire [127 : 0] dout
-  .full(full),      // output wire full
-  .empty(empty)    // output wire empty
+  .rst(rst),                // input wire rst
+  .wr_clk(wr_clk),          // input wire wr_clk
+  .rd_clk(rd_clk),          // input wire rd_clk
+  .din(din),                // input wire [127 : 0] din
+  .wr_en(wr_en),            // input wire wr_en
+  .rd_en(rd_en),            // input wire rd_en
+  .dout(dout),              // output wire [127 : 0] dout
+  .full(full),              // output wire full
+  .empty(empty),            // output wire empty
+  .prog_full(prog_full),    // output wire prog_full
+  .prog_empty(prog_empty)  // output wire prog_empty
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 

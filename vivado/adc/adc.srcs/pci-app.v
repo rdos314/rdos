@@ -75,11 +75,14 @@ module pci_app (
   output reg [3:0]     bar2_wr_be,
   output reg           bar2_wr,
 
+  input wire           adc_bar_irq,
+  input wire           adc_block_irq,
+
   output wire          adc_next_address,
   input wire           adc_valid_address,
   input wire [63:0]    adc_address,
   output wire          adc_rd,
-  input wire [127:0]   adc_rd_data,
+  input wire [127:0]   adc_data,
   input wire           adc_almost_full,
   input wire           adc_almost_empty
 );
@@ -88,13 +91,6 @@ module pci_app (
 // Wire Declarations
 
   wire             req_stop;
-
-  wire             user_clk;
-  wire             user_reset;
-  wire             user_lnk_up;
-  wire             user_lnk_rate;
-  wire [1:0]       user_lnk_width;
-  wire             cfg_interrupt_msienable;
 
   reg              int_req;
   wire             int_ack;
@@ -445,7 +441,7 @@ pci_tx pci_tx_inst (
     .adc_valid_address(adc_valid_address),   // I
     .adc_address(adc_address),               // I
     .adc_rd(adc_rd),                         // O
-    .adc_rd_data(adc_rd_data),               // I
+    .adc_data(adc_data),                     // I
     .adc_almost_full(adc_almost_full),       // I
     .adc_almost_empty(adc_almost_empty)      // I
 );
