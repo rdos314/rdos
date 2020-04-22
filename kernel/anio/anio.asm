@@ -812,9 +812,11 @@ mabPresent:
     stc
     jz mabDone
 ;
+    push ebx
     mov ebx,es
     GetSelectorBaseSize
     add edx,edi
+    pop ebx
 ;
     mov al,67h
     mov ecx,200h

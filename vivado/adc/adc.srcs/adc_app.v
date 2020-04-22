@@ -116,6 +116,7 @@ module adc_app (
 
 // pci domain
 
+  reg                     adc_stopped;
   reg [13:0]              phys_offset;
   wire [19:0]             phys_page;
   wire                    phys_valid;
@@ -148,6 +149,12 @@ module adc_app (
 
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
+
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_started_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_started;
+
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped;
 
 adc_fifo adc_fifo_inst (
   .rst(fifo_reset),                 // input wire rst
@@ -193,13 +200,15 @@ ila_1 ila_1_inst (
     .probe6(phys_valid),               // input wire [0:0]  probe0  
     .probe7(phys_page),                // input wire [19:0]  probe0  
     .probe8(phys_offset),              // input wire [13:0]  probe0  
-    .probe9(adc_almost_empty),         // input wire [0:0]  probe0  
-    .probe10(adc_almost_full),         // input wire [0:0]  probe0  
-    .probe11(adc_next_address),        // input wire [0:0]  probe0  
-    .probe12(adc_address),             // input wire [63:0]  probe0  
-    .probe13(adc_rd),                  // input wire [0:0]  probe0  
-    .probe14(adc_rd_data[15:0]),       // input wire [15:0]  probe0  
-    .probe15(adc_rd_data[31:16])       // input wire [15:0]  probe0  
+    .probe9(adc_started),              // input wire [0:0]  probe0  
+    .probe10(adc_stopped),             // input wire [0:0]  probe0  
+    .probe11(adc_almost_empty),        // input wire [0:0]  probe0  
+    .probe12(adc_almost_full),         // input wire [0:0]  probe0  
+    .probe13(adc_next_address),        // input wire [0:0]  probe0  
+    .probe14(adc_address),             // input wire [63:0]  probe0  
+    .probe15(adc_rd),                  // input wire [0:0]  probe0  
+    .probe16(adc_rd_data[15:0]),       // input wire [15:0]  probe0  
+    .probe17(adc_rd_data[31:16])       // input wire [15:0]  probe0  
 );
 
   assign fifo_reset = !adc_started;
@@ -307,7 +316,7 @@ begin : adc_app
         begin
           qpll_rst <= 0;
 
-          if (up_req_stop)
+          if (up_req_stop | up_adc_stopped)
           begin
             adc_started <= 0;
             up_rstn <= 0;
@@ -367,7 +376,7 @@ begin : adc_app
             end
             else
             begin
-              if (adc_next_address)
+              if (up_adc_started)
               begin
                 adc_probing <= 0;
                 if (fifo_full)
@@ -453,6 +462,34 @@ begin : adc_app
 
     always @ ( posedge pci_clk ) 
     begin
+      if (pci_adc_started)
+      begin
+        if (phys_valid)
+        begin
+          if (phys_page == 0)
+            adc_stopped <= 1;
+          else
+            adc_stopped <= 0;
+        end
+      end
+      else
+        adc_stopped <= 0;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_started_1 <= adc_wr;
+      up_adc_started <= up_adc_started_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_stopped_1 <= adc_stopped;
+      up_adc_stopped <= up_adc_stopped_1;
+    end
+
+    always @ ( posedge pci_clk ) 
+    begin
       adc_started_1 <= adc_started;
       pci_adc_started <= adc_started_1;
     end
@@ -518,7 +555,10 @@ begin : adc_app
         else
         begin
           block_irq <= 0;
-          adc_valid_address <= phys_valid;
+          if (phys_page)
+            adc_valid_address <= phys_valid;
+          else          
+            adc_valid_address <= 0;
           adc_address[6:0] <= 0;
           adc_address[20:7] <= phys_offset;
           adc_address[40:21] <= phys_page;
