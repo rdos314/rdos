@@ -78,14 +78,16 @@ module adc_app (
   output reg              block_irq,
   output reg [15:0]       phys_index,
 
-  input wire              adc_in,
-  input wire [127:0]      adc_in_data,
+  input wire              adc_wr,
+  input wire [127:0]      adc_wr_data,
 
-  output reg              adc_full,
-  output reg              adc_out,
-  input wire              adc_out_ack,
-  output reg [127:0]      adc_out_header,
-  output reg [1023:0]     adc_out_data,
+  input wire              adc_next_address,
+  output reg              adc_valid_address,
+  output reg [63:0]       adc_address,
+  input wire              adc_rd,
+  output wire [127:0]     adc_rd_data,
+  output reg              adc_almost_full,
+  output reg              adc_almost_empty,
 
   output wire [2:0]       state
 );
@@ -114,25 +116,16 @@ module adc_app (
 
 // pci domain
 
-  reg [2:0]               pci_adc_cnt;
-  reg                     pci_busy;
-  reg                     pci_pend;
-  reg                     pci_has_data;
-  reg [1023:0]            pci_data;
-
   reg [13:0]              phys_offset;
   wire [19:0]             phys_page;
   wire                    phys_valid;
 
 // FIFO
 
-  wire                    fifo_want_data;
-  wire                    fifo_rd;
-
   wire                    fifo_reset;
   wire                    fifo_full;
-  wire                    fifo_empty;
-  wire [127:0]            fifo_data;
+  wire                    fifo_almost_full;
+  wire                    fifo_almost_empty;
 
 
 // clock domain crossings
@@ -147,22 +140,26 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
 
- (* ASYNC_REG="TRUE" *)  reg                  adc_full_1;
- (* ASYNC_REG="TRUE" *)  reg                  adc_full_2;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_1;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_2;
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_almost_empty_1;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_almost_empty_2;
 
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
 
 adc_fifo adc_fifo_inst (
-  .rst(fifo_reset),       // input wire rst
-  .wr_clk(rx_clk),        // input wire wr_clk
-  .rd_clk(pci_clk),       // input wire rd_clk
-  .din(adc_in_data),      // input wire [127 : 0] din
-  .wr_en(adc_in),         // input wire wr_en
-  .rd_en(fifo_rd),        // input wire rd_en
-  .dout(fifo_data),       // output wire [127 : 0] dout
-  .full(fifo_full),       // output wire full
-  .empty(fifo_empty)      // output wire empty
+  .rst(fifo_reset),                 // input wire rst
+  .wr_clk(rx_clk),                  // input wire wr_clk
+  .rd_clk(pci_clk),                 // input wire rd_clk
+  .din(adc_wr_data),                // input wire [127 : 0] din
+  .wr_en(adc_wr),                   // input wire wr_en
+  .rd_en(adc_rd),                   // input wire rd_en
+  .dout(adc_rd_data),               // output wire [127 : 0] dout
+  .full(fifo_full),                 // output wire full
+  .almost_full(fifo_almost_full),   // output wire almost full
+  .almost_empty(fifo_almost_empty)  // output wire almost empty
 );
 
 
@@ -197,18 +194,13 @@ ila_1 ila_1_inst (
     .probe6(phys_valid),               // input wire [0:0]  probe0  
     .probe7(phys_page),                // input wire [19:0]  probe0  
     .probe8(phys_offset),              // input wire [13:0]  probe0  
-    .probe9(pci_adc_cnt),              // input wire [2:0]  probe0  
-    .probe10(pci_busy),                 // input wire [0:0]  probe0  
-    .probe11(pci_pend),                 // input wire [0:0]  probe0  
-    .probe12(pci_has_data),            // input wire [0:0]  probe0  
-    .probe13(fifo_empty),              // input wire [0:0]  probe0  
-    .probe14(fifo_full),               // input wire [0:0]  probe0  
-    .probe15(fifo_rd),                 // input wire [0:0]  probe0  
-    .probe16(adc_out),                 // input wire [0:0]  probe0  
-    .probe17(adc_out_ack),             // input wire [0:0]  probe0  
-    .probe18(adc_out_header[127:64]),  // input wire [63:0]  probe0  
-    .probe19(adc_out_data[15:0]),      // input wire [15:0]  probe0  
-    .probe20(adc_out_data[31:16])      // input wire [15:0]  probe0  
+    .probe9(adc_almost_empty),         // input wire [0:0]  probe0  
+    .probe10(adc_almost_full),         // input wire [0:0]  probe0  
+    .probe11(adc_next_address),        // input wire [0:0]  probe0  
+    .probe12(adc_address),             // input wire [63:0]  probe0  
+    .probe13(adc_rd),                  // input wire [0:0]  probe0  
+    .probe14(adc_rd_data[15:0]),       // input wire [15:0]  probe0  
+    .probe15(adc_rd_data[31:16])       // input wire [15:0]  probe0  
 );
 
   assign fifo_reset = !adc_started;
@@ -219,9 +211,6 @@ ila_1 ila_1_inst (
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
-
-  assign fifo_want_data = phys_page ? !fifo_empty : 1'b0;
-  assign fifo_rd = pci_pend ? 1'b0 : fifo_want_data;
 
 generate
 begin : adc_app
@@ -483,9 +472,16 @@ begin : adc_app
 
     always @ ( posedge pci_clk ) 
     begin
-      adc_full_1 <= fifo_full;
-      adc_full_2 <= adc_full_1;
-      adc_full <= adc_full_2;
+      adc_almost_full_1 <= fifo_almost_full;
+      adc_almost_full_2 <= adc_almost_full_1;
+      adc_almost_full <= adc_almost_full_2;
+    end
+
+    always @ ( posedge pci_clk ) 
+    begin
+      adc_almost_empty_1 <= fifo_almost_empty;
+      adc_almost_empty_2 <= adc_almost_empty_1;
+      adc_almost_empty <= adc_almost_empty_2;
     end
 
     always @ ( posedge pci_clk ) 
@@ -504,7 +500,7 @@ begin : adc_app
     begin
       if (pci_adc_started)
       begin
-        if (adc_out)
+        if (adc_next_address)
         begin
           phys_offset <= phys_offset + 1;
           if (phys_page)
@@ -521,7 +517,14 @@ begin : adc_app
             block_irq <= 0;
         end
         else
+        begin
           block_irq <= 0;
+          adc_valid_address <= phys_valid;
+          adc_address[6:0] <= 0;
+          adc_address[20:7] <= phys_offset;
+          adc_address[40:21] <= phys_page;
+          adc_address[63:41] <= 0;
+        end
       end
       else
       begin
@@ -531,107 +534,6 @@ begin : adc_app
       end
     end
 
-
-    always @ ( posedge pci_clk ) 
-    begin
-      if (pci_adc_started)
-      begin
-        pci_has_data <= fifo_rd;
-
-        if (pci_has_data)
-        begin
-          adc_out <= 0;
-
-          if (adc_out_ack)
-            pci_busy <= 0;
-
-          pci_data[1023:896] <= fifo_data;
-          pci_data[895:0] <= pci_data[1023:128];
-          pci_adc_cnt <= pci_adc_cnt + 1;
-
-          if (pci_adc_cnt == 3'b111)
-          begin
-            pci_pend <= 1;
-            adc_out_data <= pci_data;
-
-            adc_out_header[63:48] <= 0;                      // Requester ID
-            adc_out_header[47:40] <= 0;                      // tag
-            adc_out_header[39:36] <= 4'b1111;                // last be
-            adc_out_header[35:32] <= 4'b1111;                // 1st be
-
-            if (phys_page[19:11] == 0)
-            begin
-              adc_out_header[31:24] <= 8'b010_00000;         // Type + Fmt (32-bit)
-              adc_out_header[70:64] <= 0;
-              adc_out_header[84:71] <= phys_offset;
-              adc_out_header[95:85] <= phys_page[10:0];
-            end
-            else
-            begin
-              adc_out_header[31:24] <= 8'b011_00000;         // Type + Fmt (64-bit)
-              adc_out_header[72:64] <= phys_page[19:11];
-              adc_out_header[102:96] <= 0;
-              adc_out_header[116:103] <= phys_offset;
-              adc_out_header[127:117] <= phys_page[10:0];
-            end
-
-            adc_out_header[23] <= 1'b0;                      // R
-            adc_out_header[22:20] <= 3'b000;                 // TC
-            adc_out_header[19:16] <= 4'b0000;                // TH, AttrH, R
-            adc_out_header[15:12] <= 4'b0000;                // TD, EP, Attr
-            adc_out_header[11:10] <= 2'b0;                   // AT
-            adc_out_header[9:8] <= 2'b0;                     // len high
-            adc_out_header[7:0] <= 8'h20;                    // 128 byte size
-          end
-        end
-        else
-        begin
-          if (pci_pend)
-          begin
-            if (phys_page)
-            begin
-              if (adc_out_ack)
-              begin
-                adc_out <= 1;
-                pci_busy <= 1;
-                pci_pend <= 0;
-              end
-              else
-              begin
-                if (pci_busy)
-                  adc_out <= 0;
-                else
-                begin
-                  adc_out <= 1;
-                  pci_busy <= 1;
-                  pci_pend <= 0;
-                end
-              end
-            end
-            else
-            begin
-              adc_out <= 0;
-              if (adc_out_ack)
-                pci_busy <= 0;
-            end
-          end
-          else
-          begin
-            adc_out <= 0;
-            if (adc_out_ack)
-              pci_busy <= 0;
-          end
-        end
-      end
-      else
-      begin
-        adc_out <= 0;
-        pci_busy <= 0;
-        pci_pend <= 0;
-        pci_has_data <= 0;
-        pci_adc_cnt <= 0;
-      end
-    end
 
 end
 endgenerate

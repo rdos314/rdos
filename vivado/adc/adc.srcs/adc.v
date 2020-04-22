@@ -151,17 +151,18 @@ module adc (
 // ADC
 
   wire                 rx_adc_wr;
-  wire [1023:0]        rx_adc_data;
+  wire [127:0]         rx_adc_data;
 
   wire                 pci_adc_bar_irq;
   wire                 pci_adc_block_irq;
 
-  wire                 adc_full;
-
-  wire [127:0]         pci_adc_header;
-  wire [1023:0]        pci_adc_data;
-  wire                 pci_adc_wr;
-  wire                 pci_adc_ack;
+  wire                 pci_adc_next_address;
+  wire                 pci_adc_valid_address;
+  wire [63:0]          pci_adc_address;
+  wire                 pci_adc_rd;
+  wire [127:0]         pci_adc_rd_data;
+  wire                 pci_adc_almost_full;
+  wire                 pci_adc_almost_empty;
 
   wire [15:0]          pci_adc_phys_index;
 
@@ -437,14 +438,15 @@ pci_app pci_app_inst (
     .bar2_wr_be(pci_bar2_wr_be),
     .bar2_wr(pci_bar2_wr),
 
-    .adc_full(adc_full),
-    .adc_bar_irq(pci_adc_bar_irq),
-    .adc_block_irq(pci_adc_block_irq),    
-    .adc_header(pci_adc_header),
-    .adc_data(pci_adc_data),
-    .adc_wr(pci_adc_wr),
-    .adc_ack(pci_adc_ack)
+    .adc_next_address(pci_adc_next_address),
+    .adc_valid_address(pci_adc_valid_address),
+    .adc_address(pci_adc_address),
+    .adc_rd(pci_adc_rd),
+    .adc_rd_data(pci_adc_rd_data),
+    .adc_almost_full(pci_adc_almost_full),
+    .adc_almost_empty(pci_adc_almost_empty)
 );
+
 
 daq2_spi daq2_spi_inst (
     .spi_cs_clk (spi_csn_clk),
@@ -577,17 +579,21 @@ adc_app adc_app_inst (
     .block_irq(pci_adc_block_irq),
     .phys_index(pci_adc_phys_index),
 
-    .adc_in(rx_adc_wr),
-    .adc_in_data(rx_adc_data),
+    .adc_wr(rx_adc_wr),
+    .adc_wr_data(rx_adc_data),
 
-    .adc_full(adc_full),
-    .adc_out(pci_adc_wr),
-    .adc_out_ack(pci_adc_ack),
-    .adc_out_header(pci_adc_header),
-    .adc_out_data(pci_adc_data),
+    .adc_next_address(pci_adc_next_address),
+    .adc_valid_address(pci_adc_valid_address),
+    .adc_address(pci_adc_address),
+    .adc_rd(pci_adc_rd),
+    .adc_rd_data(pci_adc_rd_data),
+    .adc_almost_full(pci_adc_almost_full),
+    .adc_almost_empty(pci_adc_almost_empty),
 
     .state(adc_state)
 );
+
+
 
  //-----------------------------I/O BUFFERS------------------------//
 

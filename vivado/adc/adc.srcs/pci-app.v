@@ -26,119 +26,64 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module pci_app (
-    pci_exp_txp,
-    pci_exp_txn,
-    pci_exp_rxp,
-    pci_exp_rxn,
+  output  [7:0]        pci_exp_txp,
+  output  [7:0]        pci_exp_txn,
+  input   [7:0]        pci_exp_rxp,
+  input   [7:0]        pci_exp_rxn,
 
-    sys_clk,
-    sys_rst_n,
-    
-    user_clk,
-    user_reset,
-    user_lnk_up,
-    user_lnk_rate,
-    user_lnk_width,
-    cfg_interrupt_msienable,
+  input                sys_clk,
+  input                sys_rst_n,
+  
+  output               user_clk,
+  output               user_reset,
+  output               user_lnk_up,
+  
+  output               user_lnk_rate,
+  output   [1:0]       user_lnk_width,
+  output               cfg_interrupt_msienable,
 
-    bar0_rd_address,
-    bar0_rd,
+  output reg [9:0]     bar0_rd_address,
+  output reg           bar0_rd,
 
-    bar0_rp_data,
-    bar0_rp,
+  input wire [31:0]    bar0_rp_data,
+  input wire           bar0_rp,
 
-    bar0_wr_address,
-    bar0_wr_data,
-    bar0_wr_be,
-    bar0_wr,
+  output reg [9:0]     bar0_wr_address,
+  output reg [31:0]    bar0_wr_data,
+  output reg [3:0]     bar0_wr_be,
+  output reg           bar0_wr,
 
-    bar1_rd_address,
-    bar1_rd,
+  output reg [16:0]    bar1_rd_address,
+  output reg           bar1_rd,
 
-    bar1_rp_data,
-    bar1_rp,
+  input wire [31:0]    bar1_rp_data,
+  input wire           bar1_rp,
 
-    bar1_wr_address,
-    bar1_wr_data,
-    bar1_wr_be,
-    bar1_wr,
+  output reg [16:0]    bar1_wr_address,
+  output reg [31:0]    bar1_wr_data,
+  output reg [3:0]     bar1_wr_be,
+  output reg           bar1_wr,
 
-    bar2_rd_address,
-    bar2_rd,
+  output reg [16:0]    bar2_rd_address,
+  output reg           bar2_rd,
 
-    bar2_rp_data,
-    bar2_rp,
+  input wire [31:0]    bar2_rp_data,
+  input wire           bar2_rp,
 
-    bar2_wr_address,
-    bar2_wr_data,
-    bar2_wr_be,
-    bar2_wr,
+  output reg [16:0]    bar2_wr_address,
+  output reg [31:0]    bar2_wr_data,
+  output reg [3:0]     bar2_wr_be,
+  output reg           bar2_wr,
 
-    adc_full,
-    adc_bar_irq,
-    adc_block_irq,
-    adc_header,
-    adc_data,
-    adc_wr,
-    adc_ack
+  output wire          adc_next_address,
+  input wire           adc_valid_address,
+  input wire [63:0]    adc_address,
+  output wire          adc_rd,
+  input wire [127:0]   adc_rd_data,
+  input wire           adc_almost_full,
+  input wire           adc_almost_empty
 );
 
-  output  [7:0]        pci_exp_txp;
-  output  [7:0]        pci_exp_txn;
-  input   [7:0]        pci_exp_rxp;
-  input   [7:0]        pci_exp_rxn;
-
-  input                sys_clk;
-  input                sys_rst_n;
-  
-  output               user_clk;
-  output               user_reset;
-  output               user_lnk_up;
-  
-  output               user_lnk_rate;
-  output   [1:0]       user_lnk_width;
-  output               cfg_interrupt_msienable;
-
-  output reg [9:0]     bar0_rd_address;
-  output reg           bar0_rd;
-
-  input wire [31:0]    bar0_rp_data;
-  input wire           bar0_rp;
-
-  output reg [9:0]     bar0_wr_address;
-  output reg [31:0]    bar0_wr_data;
-  output reg [3:0]     bar0_wr_be;
-  output reg           bar0_wr;
-
-  output reg [16:0]    bar1_rd_address;
-  output reg           bar1_rd;
-
-  input wire [31:0]    bar1_rp_data;
-  input wire           bar1_rp;
-
-  output reg [16:0]    bar1_wr_address;
-  output reg [31:0]    bar1_wr_data;
-  output reg [3:0]     bar1_wr_be;
-  output reg           bar1_wr;
-
-  output reg [16:0]    bar2_rd_address;
-  output reg           bar2_rd;
-
-  input wire [31:0]    bar2_rp_data;
-  input wire           bar2_rp;
-
-  output reg [16:0]    bar2_wr_address;
-  output reg [31:0]    bar2_wr_data;
-  output reg [3:0]     bar2_wr_be;
-  output reg           bar2_wr;
-
-  input wire           adc_full;
-  input wire           adc_bar_irq;
-  input wire           adc_block_irq;
-  input wire [127:0]   adc_header;
-  input wire [1023:0]  adc_data;
-  input wire           adc_wr;
-  output wire          adc_ack;
 
 // Wire Declarations
 
@@ -496,11 +441,13 @@ pci_tx pci_tx_inst (
     .bar_wr (tx_bar_wr),                     // I
     .bar_busy (tx_bar_busy),                 // O
 
-    .adc_full( adc_full),    
-    .adc_data( adc_data),                    // I
-    .adc_header( adc_header),                // I
-    .adc_wr (adc_wr),                        // I
-    .adc_ack (adc_ack)                       // O
+    .adc_next_address(adc_next_address),     // O
+    .adc_valid_address(adc_valid_address),   // I
+    .adc_address(adc_address),               // I
+    .adc_rd(adc_rd),                         // O
+    .adc_rd_data(adc_rd_data),               // I
+    .adc_almost_full(adc_almost_full),       // I
+    .adc_almost_empty(adc_almost_empty)      // I
 );
 
  
