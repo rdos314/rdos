@@ -39,13 +39,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="331"/>
-    <Option Name="WTModelSimExportSim" Val="330"/>
-    <Option Name="WTQuestaExportSim" Val="330"/>
-    <Option Name="WTIesExportSim" Val="329"/>
-    <Option Name="WTVcsExportSim" Val="329"/>
-    <Option Name="WTRivieraExportSim" Val="329"/>
-    <Option Name="WTActivehdlExportSim" Val="329"/>
+    <Option Name="WTXSimExportSim" Val="333"/>
+    <Option Name="WTModelSimExportSim" Val="332"/>
+    <Option Name="WTQuestaExportSim" Val="332"/>
+    <Option Name="WTIesExportSim" Val="331"/>
+    <Option Name="WTVcsExportSim" Val="331"/>
+    <Option Name="WTRivieraExportSim" Val="331"/>
+    <Option Name="WTActivehdlExportSim" Val="331"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -168,38 +168,6 @@
       </File>
       <File Path="$PSRCDIR/adc.v">
         <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/system_util_daq2_xcvr_0.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/util_adxcvr.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/util_adxcvr_xch.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/util_adxcvr_xcm.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
