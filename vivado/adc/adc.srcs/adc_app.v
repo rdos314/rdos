@@ -81,7 +81,7 @@ module adc_app (
   input wire              adc_in,
   input wire [127:0]      adc_in_data,
 
-  output wire             adc_full,
+  output reg              adc_full,
   output reg              adc_out,
   input wire              adc_out_ack,
   output reg [127:0]      adc_out_header,
@@ -147,6 +147,9 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
 
+ (* ASYNC_REG="TRUE" *)  reg                  adc_full_1;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_full_2;
+
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
 
@@ -207,8 +210,6 @@ ila_1 ila_1_inst (
     .probe19(adc_out_data[15:0]),      // input wire [15:0]  probe0  
     .probe20(adc_out_data[31:16])      // input wire [15:0]  probe0  
 );
-
-  assign adc_full = fifo_full;
 
   assign fifo_reset = !adc_started;
 
@@ -478,6 +479,13 @@ begin : adc_app
     begin
       adc_running_1 <= adc_running;
       pci_adc_running <= adc_running_1;
+    end
+
+    always @ ( posedge pci_clk ) 
+    begin
+      adc_full_1 <= fifo_full;
+      adc_full_2 <= adc_full_1;
+      adc_full <= adc_full_2;
     end
 
     always @ ( posedge pci_clk ) 

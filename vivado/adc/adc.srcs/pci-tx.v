@@ -92,6 +92,7 @@ module pci_tx (
   reg                       bar_tx_tlast;
   reg                       bar_tx_tvalid;
 
+  reg                       adc_busy;
   reg                       adc_pend_ack;
   reg                       adc_loaded;
   reg                       adc_start;
@@ -110,16 +111,13 @@ ila_2 ila_2_inst (
     .probe3(adc_start),                  // input wire [0:0]  probe0  
     .probe4(adc_count),                  // input wire [9:0]  probe0  
     .probe5(adc_full),                   // input wire [0:0]  probe0  
-    .probe6(s_axis_tx_tready),           // input wire [0:0]  probe0  
-    .probe7(s_axis_tx_tvalid),           // input wire [0:0]  probe0  
-    .probe8(s_axis_tx_tlast),            // input wire [0:0]  probe0  
-    .probe9(bar_tx_tvalid),              // input wire [0:0]  probe0  
-    .probe10(bar_tx_tlast),              // input wire [0:0]  probe0  
-    .probe11(bar_start),                 // input wire [0:0]  probe0  
-    .probe12(s_axis_tx_tdata[31:0]),      // input wire [31:0]  probe0  
-    .probe13(s_axis_tx_tdata[63:32]),     // input wire [31:0]  probe0  
-    .probe14(s_axis_tx_tdata[95:64]),     // input wire [31:0]  probe0  
-    .probe15(s_axis_tx_tdata[127:96])     // input wire [31:0]  probe0  
+    .probe6(adc_busy),                   // input wire [0:0]  probe0  
+    .probe7(s_axis_tx_tready),           // input wire [0:0]  probe0  
+    .probe8(s_axis_tx_tvalid),           // input wire [0:0]  probe0  
+    .probe9(s_axis_tx_tlast),            // input wire [0:0]  probe0  
+    .probe10(bar_tx_tvalid),              // input wire [0:0]  probe0  
+    .probe11(bar_tx_tlast),              // input wire [0:0]  probe0  
+    .probe12(bar_start)                  // input wire [0:0]  probe0  
  );
 
 generate
@@ -290,6 +288,7 @@ generate
         adc_tx_tvalid <= 0;
         adc_tx_tlast <= 0;
         adc_tx_tkeep <= 0;
+        adc_busy <= 0;
         adc_count <= 0;
         adc_start <= 0;
         adc_loaded <= 0;
@@ -300,7 +299,8 @@ generate
       begin
         if (s_axis_tx_tready)
         begin
-          if (adc_tx_tvalid && !adc_tx_tlast)
+          adc_tx_tvalid <= 1;
+          if (adc_busy && !adc_tx_tlast)
           begin
             adc_pend_ack <= 0;
             if (adc_pend_ack)
@@ -360,6 +360,7 @@ generate
             begin
               adc_pend_ack <= 1;
               adc_start <= 0;
+              adc_busy <= 1;
 
               if (adc_wr)
               begin
@@ -388,6 +389,7 @@ generate
             else
             begin
               adc_tx_tvalid <= 0;
+              adc_busy <= 0;
               adc_loaded <= 0;
 
               if (adc_wr)
@@ -410,6 +412,7 @@ generate
         else
         begin
           adc_ack <= 0;
+          adc_tx_tvalid <= 0;
 
           if (adc_wr)
           begin

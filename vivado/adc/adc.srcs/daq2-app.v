@@ -107,7 +107,7 @@ module daq2_app
 
  reg                      rx_run;
 
- reg [2:0]                adc_sync_fail_cnt;
+ reg [15:0]               adc_sync_fail_cnt;
  reg [15:0]               adc_sync_ok_cnt;
  reg                      adc_start_found;
  
@@ -406,9 +406,9 @@ ila_0 ila_0_inst (
     .probe10(adcA_2),                  // input wire [13:0]  probe0  
     .probe11(adcB_2),                  // input wire [13:0]  probe0  
     .probe12(adcA_3),                  // input wire [13:0]  probe0  
-    .probe13(adcB_3),                   // input wire [13:0]  probe0  
+    .probe13(adcB_3),                  // input wire [13:0]  probe0  
     .probe14(adc_sync_ok_cnt),         // input wire [15:0]  probe0
-    .probe15(adc_sync_fail_cnt)        // input wire [2:0]  probe0
+    .probe15(adc_sync_fail_cnt)        // input wire [15:0]  probe0
 );
 
 function check_valid;
@@ -468,8 +468,8 @@ endfunction
 
   assign rx_test_ok = check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3);
 
-  assign adc_sync_ok = adc_sync_ok_cnt[15];
-  assign adc_sync_fail = adc_sync_fail_cnt[2];
+  assign adc_sync_ok = adc_sync_ok_cnt[3];
+  assign adc_sync_fail = adc_sync_fail_cnt[15];
 
 generate
   begin : daq2_app
