@@ -70,7 +70,32 @@ module pci_tx (
   wire [127:0]              adc_pkt_data;
   reg [2:0]                 adc_count;
   reg                       adc_pend_rd;
+  reg [127:0]               adc_pend_data;
 
+
+ila_2 ila_2_inst (
+    .clk(clk),                           // input wire clk
+    .probe0(adc_next_address),           // input wire [0:0]  probe0  
+    .probe1(adc_valid_address),          // input wire [0:0]  probe0  
+    .probe2(adc_rd),                     // input wire [0:0]  probe0  
+    .probe3(adc_pend_rd),                // input wire [0:0]  probe0  
+    .probe4(adc_almost_full),            // input wire [0:0]  probe0  
+    .probe5(adc_almost_empty),           // input wire [0:0]  probe0  
+    .probe6(adc_count),                  // input wire [2:0]  probe0  
+    .probe7(bar_wr),                     // input wire [0:0]  probe0  
+    .probe8(bar_busy),                   // input wire [0:0]  probe0  
+    .probe9(bar_start),                  // input wire [0:0]  probe0  
+    .probe10(bar_pend),                  // input wire [0:0]  probe0  
+    .probe11(bar_loaded),                // input wire [0:0]  probe0  
+    .probe12(bar_count),                 // input wire [9:0]  probe0  
+    .probe13(s_axis_tx_tready),          // input wire [0:0]  probe0  
+    .probe14(s_axis_tx_tvalid),          // input wire [0:0]  probe0  
+    .probe15(s_axis_tx_tlast),           // input wire [0:0]  probe0  
+    .probe16(s_axis_tx_tdata[31:0]),     // input wire [31:0]  probe0  
+    .probe17(s_axis_tx_tdata[63:32]),    // input wire [31:0]  probe0  
+    .probe18(s_axis_tx_tdata[95:64]),    // input wire [31:0]  probe0  
+    .probe19(s_axis_tx_tdata[127:96])    // input wire [31:0]  probe0  
+ );
 
 generate
   begin : gen_pci_tx
@@ -165,7 +190,11 @@ generate
             adc_next_address <= 0;
             adc_count <= adc_count + 1;
 
-            s_axis_tx_tdata <= adc_pkt_data;
+            if (adc_rd)
+              s_axis_tx_tdata <= adc_pkt_data;
+            else
+              s_axis_tx_tdata <= adc_pend_data;
+
             s_axis_tx_tkeep[15:0] <= 16'hffff;
 
             if (adc_count == 3'b111)
@@ -304,8 +333,9 @@ generate
           adc_next_address <= 0;
           if (adc_rd)
           begin
-            adc_rd < = 0;
+            adc_rd <= 0;
             adc_pend_rd <= 1;
+            adc_pend_data <= adc_pkt_data;
           end
         end
       end
