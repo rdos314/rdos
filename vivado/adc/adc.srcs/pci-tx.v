@@ -69,6 +69,7 @@ module pci_tx (
 
   wire [127:0]              adc_pkt_data;
   reg [2:0]                 adc_count;
+  reg                       adc_pend_rd;
 
 
 generate
@@ -151,14 +152,16 @@ generate
         bar_count <= 0;
         bar_pend <= 0;
         bar_start <= 0;
+        adc_pend_rd <= 0;
         adc_next_address <= 0;
       end
       else
       begin
         if (s_axis_tx_tready)
         begin
-          if (adc_rd)
+          if (adc_rd | adc_pend_rd)
           begin
+            adc_pend_rd <= 0;
             adc_next_address <= 0;
             adc_count <= adc_count + 1;
 
@@ -171,7 +174,10 @@ generate
               adc_rd <= 0;
             end
             else
+            begin
               s_axis_tx_tlast <= 0;
+              adc_rd <= 1;
+            end
           end
           else
           begin
@@ -281,6 +287,7 @@ generate
                   s_axis_tx_tdata <= 0;
                   s_axis_tx_tkeep <= 0;
                   s_axis_tx_tlast <= 0;
+                  adc_next_address <= 0;
 
                   if (bar_loaded)
                   begin
@@ -290,6 +297,15 @@ generate
                 end
               end
             end
+          end
+        end
+        else
+        begin
+          adc_next_address <= 0;
+          if (adc_rd)
+          begin
+            adc_rd < = 0;
+            adc_pend_rd <= 1;
           end
         end
       end
