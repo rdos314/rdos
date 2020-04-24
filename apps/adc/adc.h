@@ -45,6 +45,8 @@ public:
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
 
+    char CheckRamp(TAdcData *data, int Block, int Samples, char Start);
+
     int FBlocks;
     char FTestMode;
     char *FBuf;

@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
 #include <rdos.h>
 #include "adc.h"
 
@@ -153,3 +154,49 @@ TAdcData *TAdc::FindStart(int *Entries)
     return 0;
 }
 
+
+/*##########################################################################
+#
+#   Name       : TAdc::CheckRamp
+#
+#   Purpose....: Check ramp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
+{
+    int i;
+    char curr = Start;
+    int Errors = 0;
+
+    for (i = 0; i < Samples; i++)
+    {
+        if (data[i].chA != curr || data[i].chB != curr)
+        {
+            if (Errors < 16)
+            {
+                if (data[i].chA == data[i].chB)
+                {
+                    printf("Block %d, sample %d: Expected <%02hX>, found <%02hX>\r\n", Block, i, curr, data[i].chA);
+                    curr = (char)data[i].chA & 0x7F;
+                }
+                else
+                    printf("Block %d, sample %d: A <%02hX>, B <%02hX>\r\n", Block, i, data[i].chA, data[i].chB);
+            }
+            Errors++;
+        }
+
+        if (curr == 0x7F)
+            curr = 0;
+        else
+            curr++;
+    }            
+
+    if (Errors >= 16)
+        printf("Block %d has %d errors\r\n", Block, Errors);
+
+    return curr;
+}

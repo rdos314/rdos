@@ -49,9 +49,23 @@ void main()
     TAdc Adc(0xF, 5000);
     TAdcData *data;
     int entries;
+    char ch;
+    int i;
 
     if (Adc.Start())
     {
         data = Adc.FindStart(&entries);
+
+        if (data)
+        {
+            ch = Adc.CheckRamp(data, 0, entries, 0);
+
+            for (i = 1; i < 5000; i++)
+            {
+                data = Adc.GetBlock(i);
+                if (data)
+                    ch = Adc.CheckRamp(data, 0, 0x80000, ch);
+            }
+        }
     }
 }
