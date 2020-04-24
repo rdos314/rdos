@@ -240,7 +240,7 @@ generate
                   if (bar_pkt_type[6] && bar_pkt_len)
                   begin
                     s_axis_tx_tdata[127:96] <= bar_pkt_data[31:0];
-                    s_axis_tx_tdata[15:12] <= 4'b1111;
+                    s_axis_tx_tkeep[15:12] <= 4'b1111;
                     s_axis_tx_tdata[95:0] <= q_bar_header[95:0];
                     s_axis_tx_tkeep[11:0] <= 12'hfff;
 
