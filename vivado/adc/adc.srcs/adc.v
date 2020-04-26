@@ -183,8 +183,6 @@ module adc (
   wire [3:0]           adc_pll_locked;
   wire [3:0]           adc_rst_done;
 
-  wire [63:0]          rx_sysref_cnt;
-
   
 // PCI bar
 
@@ -249,7 +247,7 @@ module adc (
 
   reg [31:0]           pcie_cnt;
   reg [31:0]           rx_cnt;
-  reg [7:0]            control_led_cnt;
+  reg [8:0]            control_led_cnt;
 
   reg                  pcie_led;
   reg                  rx_led;
@@ -257,9 +255,6 @@ module adc (
 
 
 // clock domain crossings
-
- (* ASYNC_REG="TRUE" *)  reg [63:0]           adc_sysref_cnt_1;
- (* ASYNC_REG="TRUE" *)  reg [63:0]           pci_adc_sysref_cnt;
 
  (* ASYNC_REG="TRUE" *)  reg                  up_reset_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_reset;
@@ -390,8 +385,6 @@ daq2_app daq2_app_inst (
     .adc_sync_ok(rx_adc_sync_ok),    
     .adc_sync_fail(rx_adc_sync_fail),    
 
-    .rx_sysref_cnt(rx_sysref_cnt),
-  
     .adc_wr(rx_adc_wr),
     .adc_data(rx_adc_data)
 );
@@ -506,7 +499,6 @@ control_bar control_bar_inst (
     .spi_rp_data (spi_rp_data),
     .spi_rp_ack (spi_rp_ack),
 
-    .adc_sysref_cnt(pci_adc_sysref_cnt),
     .adc_phys_index(pci_adc_phys_index),
     
     .tx_control_msg(tx_pci_control_msg),
@@ -653,7 +645,7 @@ generate
       begin
         if (control_rd)
         begin
-          if (control_led_cnt[7])
+          if (control_led_cnt == 499)
           begin
             control_led_cnt <= 0;
             control_led <= !control_led;
@@ -664,12 +656,6 @@ generate
       end
     end
 
-
-    always @ ( posedge pcie_user_clk ) 
-    begin
-      adc_sysref_cnt_1 <= rx_sysref_cnt;
-      pci_adc_sysref_cnt <= adc_sysref_cnt_1;
-    end
     
     always @ ( posedge up_clk ) 
     begin

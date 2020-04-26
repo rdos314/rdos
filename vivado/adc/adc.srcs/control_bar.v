@@ -49,7 +49,6 @@ module control_bar (
   input wire [29:0]       spi_rp_data,
   output reg              spi_rp_ack,
 
-  input [127:0]           adc_sysref_cnt,
   input [15:0]            adc_phys_index,
 
   input wire              rx_control_msg,
@@ -119,9 +118,6 @@ generate
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
             4: rp_data <= {adc_phys_index, adc_test_mode, adc_irq_state};
-            5: rp_data <= adc_sysref_cnt[31:0];
-            6: rp_data <= adc_sysref_cnt[63:32];
-            7: rp_data <= adc_sysref_cnt[95:64];
             8: rp_data <= control_base;
             default: rp_data <= 32'hffffffff;
           endcase     

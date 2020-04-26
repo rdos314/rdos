@@ -1005,7 +1005,7 @@ Init    Proc far
     mov eax,cs
     mov ds,eax
     mov es,eax
-    mov edi,OFFSET init_thread
+    mov edi,OFFSET init_pci
     HookInitPci
     clc
     ret

@@ -93,6 +93,11 @@ module pci_app (
 
 // Wire Declarations
 
+  reg [31:0]       rd_address;
+  reg [7:0]        rd_dw_cnt;
+  reg [7:0]        rd_tag;
+  reg              rd_req;
+
   reg [17:0]       poll_cnt;
 
   wire             req_stop;
@@ -524,6 +529,11 @@ pci_tx pci_tx_inst (
     .fc_nph( fc_nph),
     .fc_pd( fc_pd),
     .fc_ph( fc_ph),
+
+    .rd_address( rd_address),
+    .rd_dw_cnt( rd_dw_cnt),
+    .rd_tag( rd_tag),
+    .rd_req( rd_req),
     
     .bar_data( tx_bar_data),                 // I
     .bar_header( tx_bar_header),             // I
@@ -551,7 +561,7 @@ generate
     begin
       if (control_base)
       begin
-        if (poll_cnt[17])
+        if (poll_cnt == 249999)
         begin
           poll_cnt <= 0;
           control_rd <= 1;
@@ -568,6 +578,19 @@ generate
         control_rd <= 0;
       end
     end       
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (control_rd)
+      begin
+        rd_address <= control_base;
+        rd_dw_cnt <= 1;
+        rd_tag <= 1;
+        rd_req <= 1;
+      end
+      else
+        rd_req <= 0;
+    end
 
     always @ ( posedge user_clk ) 
     begin

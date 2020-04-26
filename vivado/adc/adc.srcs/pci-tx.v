@@ -49,6 +49,10 @@ module pci_tx (
   input wire [11:0]         fc_pd,
   input wire [7:0]          fc_ph,
 
+  input wire [31:0]         rd_address,
+  input wire [7:0]          rd_dw_cnt,
+  input wire [7:0]          rd_tag,
+  input wire                rd_req,
 
   input  wire [127:0]       bar_data,
   input  wire [127:0]       bar_header,
@@ -67,6 +71,14 @@ module pci_tx (
 
 
 // local
+
+  wire [15:0]               req_id;
+
+  reg [31:0]                q_rd_address;
+  reg [7:0]                 q_rd_tag;
+  reg [7:0]                 q_rd_dw_cnt;
+  reg                       rd_active;
+  reg                       rd_sent;
 
   reg [127:0]               q_bar_header;
   reg [127:0]               q_bar_data;
@@ -89,39 +101,25 @@ module pci_tx (
 
 ila_2 ila_2_inst (
     .clk(clk),                           // input wire clk
-    .probe0(adc_next_address),           // input wire [0:0]  probe0  
-    .probe1(adc_valid_address),          // input wire [0:0]  probe0  
-    .probe2(adc_rd),                     // input wire [0:0]  probe0  
-    .probe3(adc_pend_rd),                // input wire [0:0]  probe0  
-    .probe4(adc_almost_full),            // input wire [0:0]  probe0  
-    .probe5(adc_almost_empty),           // input wire [0:0]  probe0  
-    .probe6(adc_count),                  // input wire [2:0]  probe0  
-    .probe7(bar_wr),                     // input wire [0:0]  probe0  
-    .probe8(bar_busy),                   // input wire [0:0]  probe0  
-    .probe9(bar_start),                  // input wire [0:0]  probe0  
-    .probe10(bar_pend),                  // input wire [0:0]  probe0  
-    .probe11(bar_loaded),                // input wire [0:0]  probe0  
-    .probe12(bar_count),                 // input wire [9:0]  probe0  
-    .probe13(s_axis_tx_tready),          // input wire [0:0]  probe0  
-    .probe14(s_axis_tx_tvalid),          // input wire [0:0]  probe0  
-    .probe15(s_axis_tx_tlast),           // input wire [0:0]  probe0  
-    .probe16(s_axis_tx_tdata[31:0]),     // input wire [31:0]  probe0  
-    .probe17(s_axis_tx_tdata[63:32]),    // input wire [31:0]  probe0  
-    .probe18(s_axis_tx_tdata[95:64]),    // input wire [31:0]  probe0  
-    .probe19(s_axis_tx_tdata[127:96]),   // input wire [31:0]  probe0  
-    .probe20(s_axis_tx_tkeep),           // input wire [15:0]  probe0  
-    .probe21(tx_buf_av),                 // input wire [5:0]  probe0  
-    .probe22(tx_cfg_req),                // input wire [0:0]  probe0  
-    .probe23(tx_err_drop),               // input wire [0:0]  probe0  
-    .probe24(fc_pd),                     // input wire [11:0]  probe0  
-    .probe25(fc_ph),                     // input wire [7:0]  probe0  
-    .probe26(cfg_bus_number),            // input wire [7:0]  probe0  
-    .probe27(cfg_device_number),         // input wire [4:0]  probe0  
-    .probe28(cfg_function_number)        // input wire [2:0]  probe0  
+    .probe0(s_axis_tx_tready),          // input wire [0:0]  probe0  
+    .probe1(s_axis_tx_tvalid),          // input wire [0:0]  probe0  
+    .probe2(s_axis_tx_tlast),           // input wire [0:0]  probe0  
+    .probe3(s_axis_tx_tdata[31:0]),     // input wire [31:0]  probe0  
+    .probe4(s_axis_tx_tdata[63:32]),    // input wire [31:0]  probe0  
+    .probe5(s_axis_tx_tdata[95:64]),    // input wire [31:0]  probe0  
+    .probe6(s_axis_tx_tdata[127:96]),   // input wire [31:0]  probe0  
+    .probe7(s_axis_tx_tkeep),           // input wire [15:0]  probe0  
+    .probe8(tx_buf_av),                 // input wire [5:0]  probe0  
+    .probe9(tx_cfg_req),                // input wire [0:0]  probe0  
+    .probe10(tx_err_drop),               // input wire [0:0]  probe0  
+    .probe11(fc_pd),                     // input wire [11:0]  probe0  
+    .probe12(fc_ph)                      // input wire [7:0]  probe0  
  );
 
 generate
   begin : gen_pci_tx
+
+    assign req_id = {cfg_bus_number, cfg_device_number, cfg_function_number};
 
     assign s_axis_tx_tuser = 0;
     assign bar_busy = bar_start | bar_pend | bar_loaded;
@@ -188,6 +186,25 @@ generate
       end
     end
 
+    always @ ( posedge clk ) 
+    begin
+      if (reset)
+        rd_active <= 0;
+      else
+      begin
+        if (rd_req)
+        begin
+          q_rd_address <= rd_address;
+          q_rd_tag <= rd_tag;
+          q_rd_dw_cnt <= rd_dw_cnt;
+          rd_active <= 1;
+        end
+        else
+          if (rd_sent)
+            rd_active <= 0;
+      end
+    end
+
 
     always @ ( posedge clk ) 
     begin
@@ -209,6 +226,7 @@ generate
         begin
           if (adc_rd | adc_pend_rd)
           begin
+            rd_sent <= 0;
             adc_pend_rd <= 0;
             adc_next_address <= 0;
             adc_count <= adc_count + 1;
@@ -235,6 +253,7 @@ generate
           begin
             if (bar_pend)
             begin
+              rd_sent <= 0;
               bar_pend <= 0;
               adc_next_address <= 0;
 
@@ -253,6 +272,7 @@ generate
             begin
               if (bar_start && !adc_almost_full)
               begin
+                rd_sent <= 0;
                 bar_start <= 0;
                 adc_next_address <= 0;
 
@@ -310,6 +330,7 @@ generate
               begin
                 if (!adc_almost_empty && adc_valid_address)
                 begin
+                  rd_sent <= 0;
                   adc_rd <= 1;
                   adc_count <= 0;
                   adc_next_address <= 1;
@@ -320,7 +341,7 @@ generate
 
                   s_axis_tx_tdata[127:96] <= adc_address[31:0];     // address low
                   s_axis_tx_tdata[95:64] <= adc_address[63:32];     // address high
-                  s_axis_tx_tdata[63:48] <= {cfg_bus_number, cfg_device_number, cfg_function_number};   // Requester ID
+                  s_axis_tx_tdata[63:48] <= req_id;                 // Requester ID
                   s_axis_tx_tdata[47:40] <= 0;                      // tag
                   s_axis_tx_tdata[39:36] <= 4'b1111;                // last be
                   s_axis_tx_tdata[35:32] <= 4'b1111;                // 1st be
@@ -335,16 +356,40 @@ generate
                 end
                 else
                 begin
-                  s_axis_tx_tvalid <= 0;
-                  s_axis_tx_tdata <= 0;
-                  s_axis_tx_tkeep <= 0;
-                  s_axis_tx_tlast <= 0;
-                  adc_next_address <= 0;
-
-                  if (bar_loaded)
+                  if (rd_active & !rd_sent)
                   begin
-                    bar_start <= 1;
-                    q_bar_data <= loaded_bar_data;
+                    rd_sent <= 1;
+                    s_axis_tx_tvalid <= 1;
+                    s_axis_tx_tkeep[15:0] <= 16'h0fff;
+                    s_axis_tx_tlast <= 1;
+                    s_axis_tx_tdata[95:64] <= q_rd_address;         // address
+                    s_axis_tx_tdata[63:48] <= req_id;               // Requester ID
+                    s_axis_tx_tdata[47:40] <= q_rd_tag;             // tag
+                    s_axis_tx_tdata[39:36] <= 4'b0000;              // last be
+                    s_axis_tx_tdata[35:32] <= 4'b1111;              // 1st be
+                    s_axis_tx_tdata[31:24] <= 8'b000_00000;         // Type + 32-bit FMT
+                    s_axis_tx_tdata[23] <= 1'b0;                    // R
+                    s_axis_tx_tdata[22:20] <= 3'b000;               // TC
+                    s_axis_tx_tdata[19:16] <= 4'b0000;              // TH, AttrH, R
+                    s_axis_tx_tdata[15:12] <= 4'b0010;              // TD, EP, Attr
+                    s_axis_tx_tdata[11:10] <= 2'b0;                 // AT
+                    s_axis_tx_tdata[9:8] <= 2'b0;                   // len high
+                    s_axis_tx_tdata[7:0] <= 1;                      // read DWs
+                  end
+                  else
+                  begin
+                    rd_sent <= 0;
+                    s_axis_tx_tvalid <= 0;
+                    s_axis_tx_tdata <= 0;
+                    s_axis_tx_tkeep <= 0;
+                    s_axis_tx_tlast <= 0;
+                    adc_next_address <= 0;
+
+                    if (bar_loaded)
+                    begin
+                      bar_start <= 1;
+                      q_bar_data <= loaded_bar_data;
+                    end
                   end
                 end
               end
@@ -353,6 +398,7 @@ generate
         end
         else
         begin
+          rd_sent <= 0;
           adc_next_address <= 0;
           if (adc_rd)
           begin

@@ -4,7 +4,7 @@
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.        -->
 
 <hwsession version="1" minor="2">
-  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;],dashboard2=hw_ila_1[xc7k325t_0/hw_ila_1/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_1/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_1/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_1/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_1/Capture Setup=ILA_CAPTURE_1;],dashboard3=hw_ila_2[xc7k325t_0/hw_ila_2/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_2/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_2/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_2/Waveform=ILA_WAVE_1;xc7k325t_0/hw_ila_2/Settings=ILA_SETTINGS_1;],dashboard4=hw_ila_3[xc7k325t_0/hw_ila_3/Status=ILA_STATUS_1;xc7k325t_0/hw_ila_3/Capture Setup=ILA_CAPTURE_1;xc7k325t_0/hw_ila_3/Settings=ILA_SETTINGS_1;xc7k325t_0/hw_ila_3/Trigger Setup=ILA_TRIGGER_1;xc7k325t_0/hw_ila_3/Waveform=ILA_WAVE_1;]"/>
+  <device name="xc7k325t_0" gui_info="dashboard1=dashboard_1[xc7k325t_0/XADC=XADC_PLOT_1;]"/>
   <ObjectList object_type="hw_device" gui_info="">
     <Object name="xc7k325t_0" gui_info="">
       <Properties Property="FULL_PROBES.FILE" value="$_project_name_.runs/impl_1/$_project_name_.ltx"/>
@@ -126,6 +126,10 @@
       <Properties Property="CONTROL.TRIGGER_CONDITION" value="AND"/>
       <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
     </Object>
+    <Object name="pci_app_inst/ila_2_inst" gui_info="">
+      <Properties Property="CONTROL.TRIGGER_CONDITION" value="AND"/>
+      <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
+    </Object>
     <Object name="pci_app_inst/ila_3_inst" gui_info="">
       <Properties Property="CONTROL.TRIGGER_CONDITION" value="OR"/>
       <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
@@ -234,7 +238,7 @@
     <Object name="pci_app_inst/int_trig" gui_info="Trigger Setup=0"/>
     <Object name="pci_app_inst/local_address[4:0]" gui_info=""/>
     <Object name="pci_app_inst/local_wr" gui_info=""/>
-    <Object name="pci_app_inst/m_axis_rx_tvalid" gui_info=""/>
+    <Object name="pci_app_inst/m_axis_rx_tvalid" gui_info="Trigger Setup=0"/>
     <Object name="pci_app_inst/pci_fifo_wr" gui_info="Trigger Setup=0"/>
     <Object name="pci_app_inst/pci_rx_inst/bar_sel[7:0]" gui_info="Trigger Setup=1"/>
     <Object name="pci_app_inst/pci_rx_inst/calc_blk_size[9:0]" gui_info=""/>
@@ -252,6 +256,8 @@
     <Object name="pci_app_inst/pci_tx_inst/q_pkt_count[9:0]" gui_info="Trigger Setup=0"/>
     <Object name="pci_app_inst/pci_tx_inst/s_axis_tx_tready" gui_info="Trigger Setup=0"/>
     <Object name="pci_app_inst/pci_tx_inst/s_axis_tx_tvalid" gui_info="Trigger Setup=1"/>
+    <Object name="pci_app_inst/rd_req" gui_info=""/>
+    <Object name="pci_app_inst/s_axis_tx_tvalid" gui_info=""/>
     <Object name="pci_app_inst/sdram_fifo[23:0]" gui_info=""/>
     <Object name="pci_app_inst/sdram_rd" gui_info="Trigger Setup=0"/>
     <Object name="pci_app_inst/sdram_wr" gui_info=""/>
@@ -3376,7 +3382,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="HW_ILA" value="adc_app_inst/ila_1_inst"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe15[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -3465,7 +3471,7 @@
         <net name="adc_app_inst/adc_rd_data[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -3501,7 +3507,7 @@
         <net name="adc_app_inst/adc_rd_data[16]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -5155,7 +5161,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="HW_ILA" value="adc_app_inst/ila_1_inst"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe2[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -5347,7 +5353,7 @@
         <net name="adc_app_inst/pend_start"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -5383,7 +5389,7 @@
         <net name="adc_app_inst/phys_index[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq14&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq14&apos;hXXXX"/>
@@ -11181,7 +11187,7 @@
         <net name="daq2_app_inst/adcA_0[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq14&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq14&apos;hXXXX"/>
@@ -11257,7 +11263,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="HW_ILA" value="daq2_app_inst/ila_0_inst"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe12[13:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -11283,7 +11289,7 @@
         <net name="daq2_app_inst/adcA_3[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq14&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq14&apos;hXXXX"/>
@@ -11291,7 +11297,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="daq2_app_inst/ila_0_inst"/>
+        <Option Id="HW_ILA" value="hw_ila_2"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe7[13:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -11317,7 +11323,7 @@
         <net name="daq2_app_inst/adcB_0[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq14&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq14&apos;hXXXX"/>
@@ -11351,7 +11357,7 @@
         <net name="daq2_app_inst/adcB_1[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq14&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq14&apos;hXXXX"/>
@@ -12867,7 +12873,7 @@
         <net name="daq2_app_inst/adc_sync_ok_cnt[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
@@ -14734,7 +14740,7 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="HW_ILA" value="daq2_app_inst/ila_0_inst"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe5[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
@@ -32504,6 +32510,58 @@
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe8[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tdata[127]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[126]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[125]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[124]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[123]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[122]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[121]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[120]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[119]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[118]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[117]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[116]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[115]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[114]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[113]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[112]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[111]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[110]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[109]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[108]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[107]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[106]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[105]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[104]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[103]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[102]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[101]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[100]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[99]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[98]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[97]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata[96]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq128&apos;hXXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq128&apos;hXXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
@@ -32652,6 +32710,162 @@
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe5[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[31]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[30]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[29]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[28]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[27]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[26]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[25]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[24]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[23]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[22]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[21]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[20]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[19]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[18]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[17]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[16]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[15]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[14]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[13]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[12]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[11]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[10]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[9]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[8]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[7]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[6]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[5]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[4]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[3]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[2]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[1]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe6[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[63]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[62]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[61]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[60]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[59]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[58]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[57]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[56]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[55]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[54]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[53]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[52]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[51]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[50]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[49]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[48]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[47]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[46]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[45]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[44]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[43]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[42]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[41]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[40]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[39]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[38]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[37]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[36]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[35]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[34]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[33]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_2[32]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe7[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[95]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[94]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[93]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[92]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[91]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[90]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[89]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[88]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[87]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[86]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[85]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[84]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[83]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[82]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[81]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[80]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[79]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[78]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[77]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[76]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[75]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[74]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[73]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[72]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[71]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[70]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[69]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[68]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[67]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[66]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[65]"/>
+        <net name="pci_app_inst/m_axis_rx_tdata_3[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
@@ -32715,9 +32929,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe2[0]"/>
+        <Option Id="MAP" value="probe1[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -32736,13 +32950,76 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe4[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tuser[21]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe2[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tuser_1[13]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe3[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/m_axis_rx_tuser_2[14]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
         <Option Id="MAP" value="probe0[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
@@ -47979,7 +48256,7 @@
         <net name="pci_app_inst/pci_tx_inst/adc_count[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq3&apos;hX"/>
         <Option Id="COMPARE_VALUE.0" value="eq3&apos;hX"/>
@@ -48560,7 +48837,7 @@
         <net name="pci_app_inst/pci_tx_inst/calc_remain_size[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
@@ -48588,7 +48865,7 @@
         <net name="pci_app_inst/pci_tx_inst/cfg_bus_number[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq5&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq5&apos;hXX"/>
@@ -48762,7 +49039,7 @@
         <net name="pci_app_inst/pci_tx_inst/fc_nph[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq12&apos;hXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq12&apos;hXXX"/>
@@ -48770,9 +49047,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="pci_app_inst/pci_tx_inst/ila_2_inst"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe24[11:0]"/>
+        <Option Id="MAP" value="probe11[11:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -48794,7 +49071,7 @@
         <net name="pci_app_inst/pci_tx_inst/fc_pd[0]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
@@ -48802,9 +49079,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="pci_app_inst/pci_tx_inst/ila_2_inst"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe25[7:0]"/>
+        <Option Id="MAP" value="probe12[7:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -53594,7 +53871,7 @@
         <net name="pci_app_inst/pci_tx_inst/s_axis_tx_tdata[112]"/>
       </nets>
     </probe>
-    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+    <probe type="ila" busType="bus" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
@@ -53602,9 +53879,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_4"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe19[31:0]"/>
+        <Option Id="MAP" value="probe6[31:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -53812,7 +54089,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe16[31:0]"/>
+        <Option Id="MAP" value="probe3[31:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -53984,7 +54261,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe17[31:0]"/>
+        <Option Id="MAP" value="probe4[31:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54072,7 +54349,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe18[31:0]"/>
+        <Option Id="MAP" value="probe5[31:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54268,7 +54545,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe20[15:0]"/>
+        <Option Id="MAP" value="probe7[15:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54304,7 +54581,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe15[0]"/>
+        <Option Id="MAP" value="probe2[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54325,7 +54602,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe13[0]"/>
+        <Option Id="MAP" value="probe0[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54344,9 +54621,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="pci_app_inst/pci_tx_inst/ila_2_inst"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe14[0]"/>
+        <Option Id="MAP" value="probe1[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54409,7 +54686,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe21[5:0]"/>
+        <Option Id="MAP" value="probe8[5:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54435,7 +54712,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe22[0]"/>
+        <Option Id="MAP" value="probe9[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54456,7 +54733,7 @@
         <Option Id="DISPLAY_VISIBILITY" value=""/>
         <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe23[0]"/>
+        <Option Id="MAP" value="probe10[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54643,6 +54920,187 @@
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe17[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/rd_address[31]"/>
+        <net name="pci_app_inst/rd_address[30]"/>
+        <net name="pci_app_inst/rd_address[29]"/>
+        <net name="pci_app_inst/rd_address[28]"/>
+        <net name="pci_app_inst/rd_address[27]"/>
+        <net name="pci_app_inst/rd_address[26]"/>
+        <net name="pci_app_inst/rd_address[25]"/>
+        <net name="pci_app_inst/rd_address[24]"/>
+        <net name="pci_app_inst/rd_address[23]"/>
+        <net name="pci_app_inst/rd_address[22]"/>
+        <net name="pci_app_inst/rd_address[21]"/>
+        <net name="pci_app_inst/rd_address[20]"/>
+        <net name="pci_app_inst/rd_address[19]"/>
+        <net name="pci_app_inst/rd_address[18]"/>
+        <net name="pci_app_inst/rd_address[17]"/>
+        <net name="pci_app_inst/rd_address[16]"/>
+        <net name="pci_app_inst/rd_address[15]"/>
+        <net name="pci_app_inst/rd_address[14]"/>
+        <net name="pci_app_inst/rd_address[13]"/>
+        <net name="pci_app_inst/rd_address[12]"/>
+        <net name="pci_app_inst/rd_address[11]"/>
+        <net name="pci_app_inst/rd_address[10]"/>
+        <net name="pci_app_inst/rd_address[9]"/>
+        <net name="pci_app_inst/rd_address[8]"/>
+        <net name="pci_app_inst/rd_address[7]"/>
+        <net name="pci_app_inst/rd_address[6]"/>
+        <net name="pci_app_inst/rd_address[5]"/>
+        <net name="pci_app_inst/rd_address[4]"/>
+        <net name="pci_app_inst/rd_address[3]"/>
+        <net name="pci_app_inst/rd_address[2]"/>
+        <net name="pci_app_inst/rd_address[1]"/>
+        <net name="pci_app_inst/rd_address[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe18[7:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/rd_dw_cnt[7]"/>
+        <net name="pci_app_inst/rd_dw_cnt[6]"/>
+        <net name="pci_app_inst/rd_dw_cnt[5]"/>
+        <net name="pci_app_inst/rd_dw_cnt[4]"/>
+        <net name="pci_app_inst/rd_dw_cnt[3]"/>
+        <net name="pci_app_inst/rd_dw_cnt[2]"/>
+        <net name="pci_app_inst/rd_dw_cnt[1]"/>
+        <net name="pci_app_inst/rd_dw_cnt[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe20[0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/rd_req"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq8&apos;hXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe19[7:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq8&apos;hXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/rd_tag[7]"/>
+        <net name="pci_app_inst/rd_tag[6]"/>
+        <net name="pci_app_inst/rd_tag[5]"/>
+        <net name="pci_app_inst/rd_tag[4]"/>
+        <net name="pci_app_inst/rd_tag[3]"/>
+        <net name="pci_app_inst/rd_tag[2]"/>
+        <net name="pci_app_inst/rd_tag[1]"/>
+        <net name="pci_app_inst/rd_tag[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe15[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/s_axis_tx_tdata[127]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[126]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[125]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[124]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[123]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[122]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[121]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[120]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[119]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[118]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[117]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[116]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[115]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[114]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[113]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[112]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[111]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[110]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[109]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[108]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[107]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[106]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[105]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[104]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[103]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[102]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[101]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[100]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[99]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[98]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[97]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata[96]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq128&apos;hXXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq128&apos;hXXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX_XXXX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
@@ -54791,15 +55249,171 @@
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe12[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[31]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[30]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[29]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[28]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[27]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[26]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[25]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[24]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[23]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[22]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[21]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[20]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[19]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[18]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[17]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[16]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[15]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[14]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[13]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[12]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[11]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[10]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[9]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[8]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[7]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[6]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[5]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[4]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[3]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[2]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[1]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_1[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe13[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[63]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[62]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[61]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[60]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[59]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[58]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[57]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[56]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[55]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[54]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[53]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[52]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[51]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[50]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[49]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[48]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[47]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[46]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[45]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[44]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[43]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[42]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[41]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[40]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[39]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[38]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[37]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[36]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[35]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[34]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[33]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_2[32]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="CAPTURE_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe14[31:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq32&apos;hXXXX_XXXX"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[95]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[94]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[93]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[92]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[91]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[90]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[89]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[88]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[87]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[86]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[85]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[84]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[83]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[82]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[81]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[80]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[79]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[78]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[77]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[76]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[75]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[74]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[73]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[72]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[71]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[70]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[69]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[68]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[67]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[66]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[65]"/>
+        <net name="pci_app_inst/s_axis_tx_tdata_3[64]"/>
+      </nets>
+    </probe>
+    <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq16&apos;hXXXX"/>
         <Option Id="COMPARE_VALUE.0" value="eq16&apos;hXXXX"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe8[15:0]"/>
+        <Option Id="MAP" value="probe16[15:0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54833,9 +55447,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe6[0]"/>
+        <Option Id="MAP" value="probe11[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54854,9 +55468,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe7[0]"/>
+        <Option Id="MAP" value="probe9[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
@@ -54875,9 +55489,9 @@
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
         <Option Id="DISPLAY_VISIBILITY" value=""/>
-        <Option Id="HW_ILA" value="hw_ila_2"/>
+        <Option Id="HW_ILA" value="hw_ila_3"/>
         <Option Id="LINK_TO_WAVEFORM" value="1"/>
-        <Option Id="MAP" value="probe5[0]"/>
+        <Option Id="MAP" value="probe10[0]"/>
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>

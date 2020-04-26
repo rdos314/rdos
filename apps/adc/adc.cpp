@@ -132,13 +132,13 @@ TAdcData *TAdc::FindStart(int *Entries)
         {
             case 0:
                 *Entries -= 0x20;
-                return data + 0x20;           
+                return data + 0x20;
 
             case 0xF:
                 for (i = 0; i < 0x20; i++)
                 {
                     if (data->chA == 0 && data->chB == 0)
-                        break;
+                        return data;
                     else
                     {
                         data++;
@@ -150,7 +150,7 @@ TAdcData *TAdc::FindStart(int *Entries)
            default:
                return 0;
         }
-    }                    
+    }
     return 0;
 }
 
@@ -193,7 +193,7 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
             curr = 0;
         else
             curr++;
-    }            
+    }
 
     if (Errors >= 16)
         printf("Block %d has %d errors\r\n", Block, Errors);
