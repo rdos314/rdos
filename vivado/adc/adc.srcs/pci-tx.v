@@ -29,12 +29,26 @@ module pci_tx (
   input                     clk,
   input                     reset,
 
+  input wire [5:0]          tx_buf_av,
   input wire                s_axis_tx_tready,
   output reg [127:0]        s_axis_tx_tdata,
   output reg [15:0]         s_axis_tx_tkeep,
   output reg                s_axis_tx_tlast,
   output reg                s_axis_tx_tvalid,
   output wire [3:0]         s_axis_tx_tuser,
+
+  input wire [7:0]          cfg_bus_number,
+  input wire [4:0]          cfg_device_number,
+  input wire [2:0]          cfg_function_number,
+
+  input wire                tx_cfg_req,
+  input wire                tx_err_drop,
+
+  input wire [11:0]         fc_npd,
+  input wire [7:0]          fc_nph,
+  input wire [11:0]         fc_pd,
+  input wire [7:0]          fc_ph,
+
 
   input  wire [127:0]       bar_data,
   input  wire [127:0]       bar_header,
@@ -94,7 +108,16 @@ ila_2 ila_2_inst (
     .probe16(s_axis_tx_tdata[31:0]),     // input wire [31:0]  probe0  
     .probe17(s_axis_tx_tdata[63:32]),    // input wire [31:0]  probe0  
     .probe18(s_axis_tx_tdata[95:64]),    // input wire [31:0]  probe0  
-    .probe19(s_axis_tx_tdata[127:96])    // input wire [31:0]  probe0  
+    .probe19(s_axis_tx_tdata[127:96]),   // input wire [31:0]  probe0  
+    .probe20(s_axis_tx_tkeep),           // input wire [15:0]  probe0  
+    .probe21(tx_buf_av),                 // input wire [5:0]  probe0  
+    .probe22(tx_cfg_req),                // input wire [0:0]  probe0  
+    .probe23(tx_err_drop),               // input wire [0:0]  probe0  
+    .probe24(fc_pd),                     // input wire [11:0]  probe0  
+    .probe25(fc_ph),                     // input wire [7:0]  probe0  
+    .probe26(cfg_bus_number),            // input wire [7:0]  probe0  
+    .probe27(cfg_device_number),         // input wire [4:0]  probe0  
+    .probe28(cfg_function_number)        // input wire [2:0]  probe0  
  );
 
 generate
@@ -297,7 +320,7 @@ generate
 
                   s_axis_tx_tdata[127:96] <= adc_address[31:0];     // address low
                   s_axis_tx_tdata[95:64] <= adc_address[63:32];     // address high
-                  s_axis_tx_tdata[63:48] <= 0;                      // Requester ID
+                  s_axis_tx_tdata[63:48] <= {cfg_bus_number, cfg_device_number, cfg_function_number};   // Requester ID
                   s_axis_tx_tdata[47:40] <= 0;                      // tag
                   s_axis_tx_tdata[39:36] <= 4'b1111;                // last be
                   s_axis_tx_tdata[35:32] <= 4'b1111;                // 1st be
@@ -305,7 +328,7 @@ generate
                   s_axis_tx_tdata[23] <= 1'b0;                      // R
                   s_axis_tx_tdata[22:20] <= 3'b000;                 // TC
                   s_axis_tx_tdata[19:16] <= 4'b0000;                // TH, AttrH, R
-                  s_axis_tx_tdata[15:12] <= 4'b0000;                // TD, EP, Attr
+                  s_axis_tx_tdata[15:12] <= 4'b0010;                // TD, EP, Attr
                   s_axis_tx_tdata[11:10] <= 2'b0;                   // AT
                   s_axis_tx_tdata[9:8] <= 2'b0;                     // len high
                   s_axis_tx_tdata[7:0] <= 8'h20;                    // 128 byte size

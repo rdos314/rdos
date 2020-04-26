@@ -417,10 +417,10 @@ module pcie_7x_0_core_top # (
   parameter         PCIE_TXBUF_EN  = "FALSE",
   parameter         PL_INTERFACE = "TRUE",
   parameter         CFG_MGMT_IF = "FALSE",
-  parameter         CFG_CTL_IF = "FALSE",
-  parameter         CFG_STATUS_IF = "FALSE",
+  parameter         CFG_CTL_IF = "TRUE",
+  parameter         CFG_STATUS_IF = "TRUE",
   parameter         RCV_MSG_IF = "FALSE",
-  parameter         CFG_FC_IF = "FALSE",
+  parameter         CFG_FC_IF = "TRUE",
   parameter         EXT_PIPE_INTERFACE = "FALSE",
 
   parameter         TX_MARGIN_FULL_0  = 7'b1001111,

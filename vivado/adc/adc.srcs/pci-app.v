@@ -99,6 +99,11 @@ module pci_app (
   reg              pend_adc_block_irq;
   
   // Tx
+  wire [5:0]       tx_buf_av;
+  wire             tx_cfg_req;
+  wire             tx_err_drop;
+  wire             tx_cfg_gnt;
+
   wire             s_axis_tx_tready;
   wire [3:0]       s_axis_tx_tuser;
   wire [127:0]     s_axis_tx_tdata;
@@ -107,12 +112,38 @@ module pci_app (
   wire             s_axis_tx_tvalid;
 
   // Rx
+
+  wire             rx_np_ok;
+  wire             rx_np_req;
+
   wire [127:0]     m_axis_rx_tdata;
   wire [15:0]      m_axis_rx_tkeep;
   wire             m_axis_rx_tlast;
   wire             m_axis_rx_tvalid;
   wire             m_axis_rx_tready;
   wire [21:0]      m_axis_rx_tuser;
+
+  wire [11:0]      fc_cpld;
+  wire [7:0]       fc_cplh;
+  wire [11:0]      fc_npd;
+  wire [7:0]       fc_nph;
+  wire [11:0]      fc_pd;
+  wire [7:0]       fc_ph;
+  wire [2:0]       fc_sel;
+
+  wire             cfg_trn_pending;
+  wire             cfg_pm_halt_aspm_l0s;
+  wire             cfg_pm_halt_aspm_l1;
+  wire             cfg_pm_force_state_en;
+  wire [1:0]       cfg_pm_force_state;
+  wire [63:0]      cfg_dsn;
+  wire             cfg_pm_wake;
+  wire             cfg_pm_send_pme_to;
+
+  wire [7:0]       cfg_bus_number;
+  wire [4:0]       cfg_device_number;
+  wire [2:0]       cfg_function_number;
+  wire             cfg_turnoff_ok;
 
 // PCIe -> local
 
@@ -253,12 +284,18 @@ pcie_7x_0 pcie_i
   .user_app_rdy                              ( ),
 
   // TX
+
   .s_axis_tx_tready                          ( s_axis_tx_tready ),
   .s_axis_tx_tdata                           ( s_axis_tx_tdata ),
   .s_axis_tx_tkeep                           ( s_axis_tx_tkeep ),
   .s_axis_tx_tuser                           ( s_axis_tx_tuser ),
   .s_axis_tx_tlast                           ( s_axis_tx_tlast ),
   .s_axis_tx_tvalid                          ( s_axis_tx_tvalid ),
+
+  .tx_buf_av                                 ( tx_buf_av), 
+  .tx_cfg_req                                ( tx_cfg_req),
+  .tx_err_drop                               ( tx_err_drop),
+  .tx_cfg_gnt                                ( tx_cfg_gnt),
 
   // Rx
   .m_axis_rx_tdata                           ( m_axis_rx_tdata ),
@@ -268,9 +305,30 @@ pcie_7x_0 pcie_i
   .m_axis_rx_tready                          ( m_axis_rx_tready ),
   .m_axis_rx_tuser                           ( m_axis_rx_tuser ),
 
+  .rx_np_ok                                  ( rx_np_ok),
+  .rx_np_req                                 ( rx_np_req),
 
+  .fc_cpld                                   ( fc_cpld),
+  .fc_cplh                                   ( fc_cplh),
+  .fc_npd                                    ( fc_npd),
+  .fc_nph                                    ( fc_nph),
+  .fc_pd                                     ( fc_pd),
+  .fc_ph                                     ( fc_ph),
+  .fc_sel                                    ( fc_sel), 
 
+  .cfg_bus_number                            ( cfg_bus_number),
+  .cfg_device_number                         ( cfg_device_number),
+  .cfg_function_number                       ( cfg_function_number),
+  .cfg_turnoff_ok                            ( cfg_turnoff_ok),
 
+  .cfg_trn_pending                           ( cfg_trn_pending),                                                        // input wire cfg_trn_pending
+  .cfg_pm_halt_aspm_l0s                      ( cfg_pm_halt_aspm_l0s),
+  .cfg_pm_halt_aspm_l1                       ( cfg_pm_halt_aspm_l1),
+  .cfg_pm_force_state_en                     ( cfg_pm_force_state_en),
+  .cfg_pm_force_state                        ( cfg_pm_force_state),
+  .cfg_dsn                                   ( cfg_dsn),
+  .cfg_pm_wake                               ( cfg_pm_wake),
+  .cfg_pm_send_pme_to                        ( cfg_pm_send_pme_to),
 
   // Error Reporting Interface
   .cfg_err_ecrc                              ( cfg_err_ecrc ),
@@ -394,6 +452,23 @@ pcie_7x_0 pcie_i
   assign pl_directed_link_auton = 1'b0;            // Zero out link autonomous input
   assign pl_upstream_prefer_deemph = 1'b1;         // Zero out preferred de-emphasis of upstream port
 
+  assign rx_np_ok = 1'b1;
+  assign rx_np_req = 1'b1;
+
+  assign tx_cfg_gnt = 1'b1;
+  assign cfg_turnoff_ok = 1'b1;
+
+  assign cfg_trn_pending = 1'b0;
+  assign cfg_pm_halt_aspm_l0s = 1'b0;
+  assign cfg_pm_halt_aspm_l1 = 1'b0;
+  assign cfg_pm_force_state_en = 1'b0;
+  assign cfg_pm_force_state = 2'b0;
+  assign cfg_dsn = 64'h123456789abcdef;
+  assign cfg_pm_wake = 1'b0;
+  assign cfg_pm_send_pme_to = 1'b0;
+
+  assign fc_sel = 3'b100;
+
 pci_rx pci_rx_inst (
 
     .clk(user_clk),                             // I
@@ -425,12 +500,25 @@ pci_tx pci_tx_inst (
     .reset(user_reset),                         // I
 
     // AXIS Tx
+    .tx_buf_av( tx_buf_av),                     // O
     .s_axis_tx_tready( s_axis_tx_tready ),      // I
     .s_axis_tx_tdata( s_axis_tx_tdata ),        // O
     .s_axis_tx_tkeep( s_axis_tx_tkeep ),        // O
     .s_axis_tx_tlast( s_axis_tx_tlast ),        // O
     .s_axis_tx_tvalid( s_axis_tx_tvalid ),      // O
     .s_axis_tx_tuser( s_axis_tx_tuser ),        // I
+    
+    .cfg_bus_number( cfg_bus_number),
+    .cfg_device_number( cfg_device_number),
+    .cfg_function_number( cfg_function_number),
+
+    .tx_cfg_req( tx_cfg_req),
+    .tx_err_drop( tx_err_drop),
+
+    .fc_npd( fc_npd),
+    .fc_nph( fc_nph),
+    .fc_pd( fc_pd),
+    .fc_ph( fc_ph),
     
     .bar_data( tx_bar_data),                 // I
     .bar_header( tx_bar_header),             // I

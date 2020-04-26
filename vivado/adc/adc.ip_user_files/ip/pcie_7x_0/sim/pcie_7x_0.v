@@ -74,18 +74,43 @@ module pcie_7x_0 (
   user_reset_out,
   user_lnk_up,
   user_app_rdy,
+  tx_buf_av,
+  tx_cfg_req,
+  tx_err_drop,
   s_axis_tx_tready,
   s_axis_tx_tdata,
   s_axis_tx_tkeep,
   s_axis_tx_tlast,
   s_axis_tx_tvalid,
   s_axis_tx_tuser,
+  tx_cfg_gnt,
   m_axis_rx_tdata,
   m_axis_rx_tkeep,
   m_axis_rx_tlast,
   m_axis_rx_tvalid,
   m_axis_rx_tready,
   m_axis_rx_tuser,
+  rx_np_ok,
+  rx_np_req,
+  fc_cpld,
+  fc_cplh,
+  fc_npd,
+  fc_nph,
+  fc_pd,
+  fc_ph,
+  fc_sel,
+  cfg_status,
+  cfg_command,
+  cfg_dstatus,
+  cfg_dcommand,
+  cfg_lstatus,
+  cfg_lcommand,
+  cfg_dcommand2,
+  cfg_pcie_link_state,
+  cfg_pmcsr_pme_en,
+  cfg_pmcsr_powerstate,
+  cfg_pmcsr_pme_status,
+  cfg_received_func_lvl_rst,
   cfg_err_ecrc,
   cfg_err_ur,
   cfg_err_cpl_timeout,
@@ -104,6 +129,12 @@ module pcie_7x_0 (
   cfg_err_locked,
   cfg_err_acs,
   cfg_err_internal_uncor,
+  cfg_trn_pending,
+  cfg_pm_halt_aspm_l0s,
+  cfg_pm_halt_aspm_l1,
+  cfg_pm_force_state_en,
+  cfg_pm_force_state,
+  cfg_dsn,
   cfg_interrupt,
   cfg_interrupt_rdy,
   cfg_interrupt_assert,
@@ -115,6 +146,28 @@ module pcie_7x_0 (
   cfg_interrupt_msixfm,
   cfg_interrupt_stat,
   cfg_pciecap_interrupt_msgnum,
+  cfg_to_turnoff,
+  cfg_turnoff_ok,
+  cfg_bus_number,
+  cfg_device_number,
+  cfg_function_number,
+  cfg_pm_wake,
+  cfg_pm_send_pme_to,
+  cfg_ds_bus_number,
+  cfg_ds_device_number,
+  cfg_ds_function_number,
+  cfg_bridge_serr_en,
+  cfg_slot_control_electromech_il_ctl_pulse,
+  cfg_root_control_syserr_corr_err_en,
+  cfg_root_control_syserr_non_fatal_err_en,
+  cfg_root_control_syserr_fatal_err_en,
+  cfg_root_control_pme_int_en,
+  cfg_aer_rooterr_corr_err_reporting_en,
+  cfg_aer_rooterr_non_fatal_err_reporting_en,
+  cfg_aer_rooterr_fatal_err_reporting_en,
+  cfg_aer_rooterr_corr_err_received,
+  cfg_aer_rooterr_non_fatal_err_received,
+  cfg_aer_rooterr_fatal_err_received,
   pl_directed_link_change,
   pl_directed_link_width,
   pl_directed_link_speed,
@@ -140,6 +193,7 @@ module pcie_7x_0 (
   cfg_err_aer_headerlog_set,
   cfg_aer_ecrc_check_en,
   cfg_aer_ecrc_gen_en,
+  cfg_vc_tcvc_map,
   sys_clk,
   sys_rst_n
 );
@@ -184,6 +238,12 @@ output wire user_clk_out;
 output wire user_reset_out;
 output wire user_lnk_up;
 output wire user_app_rdy;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status tx_buf_av" *)
+output wire [5 : 0] tx_buf_av;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status tx_cfg_req" *)
+output wire tx_cfg_req;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status tx_err_drop" *)
+output wire tx_err_drop;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TREADY" *)
 output wire s_axis_tx_tready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TDATA" *)
@@ -197,6 +257,8 @@ input wire s_axis_tx_tvalid;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME s_axis_tx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 4, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_tx TUSER" *)
 input wire [3 : 0] s_axis_tx_tuser;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control tx_cfg_gnt" *)
+input wire tx_cfg_gnt;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TDATA" *)
 output wire [127 : 0] m_axis_rx_tdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TKEEP" *)
@@ -210,6 +272,48 @@ input wire m_axis_rx_tready;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME m_axis_rx, TDATA_NUM_BYTES 16, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 22, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rx TUSER" *)
 output wire [21 : 0] m_axis_rx_tuser;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control rx_np_ok" *)
+input wire rx_np_ok;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control rx_np_req" *)
+input wire rx_np_req;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc CPLD" *)
+output wire [11 : 0] fc_cpld;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc CPLH" *)
+output wire [7 : 0] fc_cplh;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc NPD" *)
+output wire [11 : 0] fc_npd;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc NPH" *)
+output wire [7 : 0] fc_nph;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc PD" *)
+output wire [11 : 0] fc_pd;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc PH" *)
+output wire [7 : 0] fc_ph;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie_cfg_fc:1.0 pcie_cfg_fc SEL" *)
+input wire [2 : 0] fc_sel;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status status" *)
+output wire [15 : 0] cfg_status;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status command" *)
+output wire [15 : 0] cfg_command;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status dstatus" *)
+output wire [15 : 0] cfg_dstatus;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status dcommand" *)
+output wire [15 : 0] cfg_dcommand;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status lstatus" *)
+output wire [15 : 0] cfg_lstatus;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status lcommand" *)
+output wire [15 : 0] cfg_lcommand;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status dcommand2" *)
+output wire [15 : 0] cfg_dcommand2;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status pcie_link_state" *)
+output wire [2 : 0] cfg_pcie_link_state;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status pmcsr_pme_en" *)
+output wire cfg_pmcsr_pme_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status pmcsr_powerstate" *)
+output wire [1 : 0] cfg_pmcsr_powerstate;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status pmcsr_pme_status" *)
+output wire cfg_pmcsr_pme_status;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status received_func_lvl_rst" *)
+output wire cfg_received_func_lvl_rst;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err ecrc" *)
 input wire cfg_err_ecrc;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err ur" *)
@@ -246,6 +350,18 @@ input wire cfg_err_locked;
 input wire cfg_err_acs;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err internal_uncor" *)
 input wire cfg_err_internal_uncor;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control trn_pending" *)
+input wire cfg_trn_pending;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control pm_halt_aspm_l0s" *)
+input wire cfg_pm_halt_aspm_l0s;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control pm_halt_aspm_l1" *)
+input wire cfg_pm_halt_aspm_l1;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control pm_force_state_en" *)
+input wire cfg_pm_force_state_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control pm_force_state" *)
+input wire [1 : 0] cfg_pm_force_state;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control dsn" *)
+input wire [63 : 0] cfg_dsn;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt interrupt" *)
 input wire cfg_interrupt;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt rdy" *)
@@ -268,6 +384,50 @@ output wire cfg_interrupt_msixfm;
 input wire cfg_interrupt_stat;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_interrupt:1.0 pcie2_cfg_interrupt pciecap_interrupt_msgnum" *)
 input wire [4 : 0] cfg_pciecap_interrupt_msgnum;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status turnoff" *)
+output wire cfg_to_turnoff;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control turnoff_ok" *)
+input wire cfg_turnoff_ok;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status bus_number" *)
+output wire [7 : 0] cfg_bus_number;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status device_number" *)
+output wire [4 : 0] cfg_device_number;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status function_number" *)
+output wire [2 : 0] cfg_function_number;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control pm_wake" *)
+input wire cfg_pm_wake;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control pm_send_pme_to" *)
+input wire cfg_pm_send_pme_to;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control ds_bus_number" *)
+input wire [7 : 0] cfg_ds_bus_number;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control ds_device_number" *)
+input wire [4 : 0] cfg_ds_device_number;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_control:1.0 pcie2_cfg_control ds_function_number" *)
+input wire [2 : 0] cfg_ds_function_number;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status bridge_serr_en" *)
+output wire cfg_bridge_serr_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status slot_control_electromech_il_ctl_pulse" *)
+output wire cfg_slot_control_electromech_il_ctl_pulse;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status root_control_syserr_corr_err_en" *)
+output wire cfg_root_control_syserr_corr_err_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status root_control_syserr_non_fatal_err_en" *)
+output wire cfg_root_control_syserr_non_fatal_err_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status root_control_syserr_fatal_err_en" *)
+output wire cfg_root_control_syserr_fatal_err_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status root_control_pme_int_en" *)
+output wire cfg_root_control_pme_int_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status aer_rooterr_corr_err_reporting_en" *)
+output wire cfg_aer_rooterr_corr_err_reporting_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status aer_rooterr_non_fatal_err_reporting_en" *)
+output wire cfg_aer_rooterr_non_fatal_err_reporting_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status aer_rooterr_fatal_err_reporting_en" *)
+output wire cfg_aer_rooterr_fatal_err_reporting_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status aer_rooterr_corr_err_received" *)
+output wire cfg_aer_rooterr_corr_err_received;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status aer_rooterr_non_fatal_err_received" *)
+output wire cfg_aer_rooterr_non_fatal_err_received;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status aer_rooterr_fatal_err_received" *)
+output wire cfg_aer_rooterr_fatal_err_received;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_change" *)
 input wire [1 : 0] pl_directed_link_change;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_pl:1.0 pcie2_pl directed_link_width" *)
@@ -318,6 +478,8 @@ output wire cfg_err_aer_headerlog_set;
 output wire cfg_aer_ecrc_check_en;
 (* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_err:1.0 pcie2_cfg_err aer_ecrc_gen_en" *)
 output wire cfg_aer_ecrc_gen_en;
+(* X_INTERFACE_INFO = "xilinx.com:interface:pcie2_cfg_status:1.0 pcie2_cfg_status vc_tcvc_map" *)
+output wire [6 : 0] cfg_vc_tcvc_map;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.sys_clk, FREQ_HZ 100000000, PHASE 0.000, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.sys_clk CLK" *)
 input wire sys_clk;
@@ -529,10 +691,10 @@ input wire sys_rst_n;
     .ERR_REPORTING_IF("TRUE"),
     .PL_INTERFACE("TRUE"),
     .CFG_MGMT_IF("FALSE"),
-    .CFG_CTL_IF("FALSE"),
-    .CFG_STATUS_IF("FALSE"),
+    .CFG_CTL_IF("TRUE"),
+    .CFG_STATUS_IF("TRUE"),
     .RCV_MSG_IF("FALSE"),
-    .CFG_FC_IF("FALSE"),
+    .CFG_FC_IF("TRUE"),
     .EXT_PIPE_INTERFACE("FALSE"),
     .EXT_STARTUP_PRIMITIVE("FALSE"),
     .KEEP_WIDTH(16),
@@ -571,45 +733,45 @@ input wire sys_rst_n;
     .user_reset_out(user_reset_out),
     .user_lnk_up(user_lnk_up),
     .user_app_rdy(user_app_rdy),
-    .tx_buf_av(),
-    .tx_cfg_req(),
-    .tx_err_drop(),
+    .tx_buf_av(tx_buf_av),
+    .tx_cfg_req(tx_cfg_req),
+    .tx_err_drop(tx_err_drop),
     .s_axis_tx_tready(s_axis_tx_tready),
     .s_axis_tx_tdata(s_axis_tx_tdata),
     .s_axis_tx_tkeep(s_axis_tx_tkeep),
     .s_axis_tx_tlast(s_axis_tx_tlast),
     .s_axis_tx_tvalid(s_axis_tx_tvalid),
     .s_axis_tx_tuser(s_axis_tx_tuser),
-    .tx_cfg_gnt(1'B1),
+    .tx_cfg_gnt(tx_cfg_gnt),
     .m_axis_rx_tdata(m_axis_rx_tdata),
     .m_axis_rx_tkeep(m_axis_rx_tkeep),
     .m_axis_rx_tlast(m_axis_rx_tlast),
     .m_axis_rx_tvalid(m_axis_rx_tvalid),
     .m_axis_rx_tready(m_axis_rx_tready),
     .m_axis_rx_tuser(m_axis_rx_tuser),
-    .rx_np_ok(1'B1),
-    .rx_np_req(1'B1),
-    .fc_cpld(),
-    .fc_cplh(),
-    .fc_npd(),
-    .fc_nph(),
-    .fc_pd(),
-    .fc_ph(),
-    .fc_sel(3'B0),
+    .rx_np_ok(rx_np_ok),
+    .rx_np_req(rx_np_req),
+    .fc_cpld(fc_cpld),
+    .fc_cplh(fc_cplh),
+    .fc_npd(fc_npd),
+    .fc_nph(fc_nph),
+    .fc_pd(fc_pd),
+    .fc_ph(fc_ph),
+    .fc_sel(fc_sel),
     .cfg_mgmt_do(),
     .cfg_mgmt_rd_wr_done(),
-    .cfg_status(),
-    .cfg_command(),
-    .cfg_dstatus(),
-    .cfg_dcommand(),
-    .cfg_lstatus(),
-    .cfg_lcommand(),
-    .cfg_dcommand2(),
-    .cfg_pcie_link_state(),
-    .cfg_pmcsr_pme_en(),
-    .cfg_pmcsr_powerstate(),
-    .cfg_pmcsr_pme_status(),
-    .cfg_received_func_lvl_rst(),
+    .cfg_status(cfg_status),
+    .cfg_command(cfg_command),
+    .cfg_dstatus(cfg_dstatus),
+    .cfg_dcommand(cfg_dcommand),
+    .cfg_lstatus(cfg_lstatus),
+    .cfg_lcommand(cfg_lcommand),
+    .cfg_dcommand2(cfg_dcommand2),
+    .cfg_pcie_link_state(cfg_pcie_link_state),
+    .cfg_pmcsr_pme_en(cfg_pmcsr_pme_en),
+    .cfg_pmcsr_powerstate(cfg_pmcsr_powerstate),
+    .cfg_pmcsr_pme_status(cfg_pmcsr_pme_status),
+    .cfg_received_func_lvl_rst(cfg_received_func_lvl_rst),
     .cfg_mgmt_di(32'B0),
     .cfg_mgmt_byte_en(4'B0),
     .cfg_mgmt_dwaddr(10'B0),
@@ -634,12 +796,12 @@ input wire sys_rst_n;
     .cfg_err_locked(cfg_err_locked),
     .cfg_err_acs(cfg_err_acs),
     .cfg_err_internal_uncor(cfg_err_internal_uncor),
-    .cfg_trn_pending(1'B0),
-    .cfg_pm_halt_aspm_l0s(1'B0),
-    .cfg_pm_halt_aspm_l1(1'B0),
-    .cfg_pm_force_state_en(1'B0),
-    .cfg_pm_force_state(2'B0),
-    .cfg_dsn(64'B0),
+    .cfg_trn_pending(cfg_trn_pending),
+    .cfg_pm_halt_aspm_l0s(cfg_pm_halt_aspm_l0s),
+    .cfg_pm_halt_aspm_l1(cfg_pm_halt_aspm_l1),
+    .cfg_pm_force_state_en(cfg_pm_force_state_en),
+    .cfg_pm_force_state(cfg_pm_force_state),
+    .cfg_dsn(cfg_dsn),
     .cfg_interrupt(cfg_interrupt),
     .cfg_interrupt_rdy(cfg_interrupt_rdy),
     .cfg_interrupt_assert(cfg_interrupt_assert),
@@ -651,31 +813,31 @@ input wire sys_rst_n;
     .cfg_interrupt_msixfm(cfg_interrupt_msixfm),
     .cfg_interrupt_stat(cfg_interrupt_stat),
     .cfg_pciecap_interrupt_msgnum(cfg_pciecap_interrupt_msgnum),
-    .cfg_to_turnoff(),
-    .cfg_turnoff_ok(1'B0),
-    .cfg_bus_number(),
-    .cfg_device_number(),
-    .cfg_function_number(),
-    .cfg_pm_wake(1'B0),
-    .cfg_pm_send_pme_to(1'B0),
-    .cfg_ds_bus_number(8'B0),
-    .cfg_ds_device_number(5'B0),
-    .cfg_ds_function_number(3'B0),
+    .cfg_to_turnoff(cfg_to_turnoff),
+    .cfg_turnoff_ok(cfg_turnoff_ok),
+    .cfg_bus_number(cfg_bus_number),
+    .cfg_device_number(cfg_device_number),
+    .cfg_function_number(cfg_function_number),
+    .cfg_pm_wake(cfg_pm_wake),
+    .cfg_pm_send_pme_to(cfg_pm_send_pme_to),
+    .cfg_ds_bus_number(cfg_ds_bus_number),
+    .cfg_ds_device_number(cfg_ds_device_number),
+    .cfg_ds_function_number(cfg_ds_function_number),
     .cfg_mgmt_wr_rw1c_as_rw(1'B0),
     .cfg_msg_received(),
     .cfg_msg_data(),
-    .cfg_bridge_serr_en(),
-    .cfg_slot_control_electromech_il_ctl_pulse(),
-    .cfg_root_control_syserr_corr_err_en(),
-    .cfg_root_control_syserr_non_fatal_err_en(),
-    .cfg_root_control_syserr_fatal_err_en(),
-    .cfg_root_control_pme_int_en(),
-    .cfg_aer_rooterr_corr_err_reporting_en(),
-    .cfg_aer_rooterr_non_fatal_err_reporting_en(),
-    .cfg_aer_rooterr_fatal_err_reporting_en(),
-    .cfg_aer_rooterr_corr_err_received(),
-    .cfg_aer_rooterr_non_fatal_err_received(),
-    .cfg_aer_rooterr_fatal_err_received(),
+    .cfg_bridge_serr_en(cfg_bridge_serr_en),
+    .cfg_slot_control_electromech_il_ctl_pulse(cfg_slot_control_electromech_il_ctl_pulse),
+    .cfg_root_control_syserr_corr_err_en(cfg_root_control_syserr_corr_err_en),
+    .cfg_root_control_syserr_non_fatal_err_en(cfg_root_control_syserr_non_fatal_err_en),
+    .cfg_root_control_syserr_fatal_err_en(cfg_root_control_syserr_fatal_err_en),
+    .cfg_root_control_pme_int_en(cfg_root_control_pme_int_en),
+    .cfg_aer_rooterr_corr_err_reporting_en(cfg_aer_rooterr_corr_err_reporting_en),
+    .cfg_aer_rooterr_non_fatal_err_reporting_en(cfg_aer_rooterr_non_fatal_err_reporting_en),
+    .cfg_aer_rooterr_fatal_err_reporting_en(cfg_aer_rooterr_fatal_err_reporting_en),
+    .cfg_aer_rooterr_corr_err_received(cfg_aer_rooterr_corr_err_received),
+    .cfg_aer_rooterr_non_fatal_err_received(cfg_aer_rooterr_non_fatal_err_received),
+    .cfg_aer_rooterr_fatal_err_received(cfg_aer_rooterr_fatal_err_received),
     .cfg_msg_received_err_cor(),
     .cfg_msg_received_err_non_fatal(),
     .cfg_msg_received_err_fatal(),
@@ -716,7 +878,7 @@ input wire sys_rst_n;
     .cfg_err_aer_headerlog_set(cfg_err_aer_headerlog_set),
     .cfg_aer_ecrc_check_en(cfg_aer_ecrc_check_en),
     .cfg_aer_ecrc_gen_en(cfg_aer_ecrc_gen_en),
-    .cfg_vc_tcvc_map(),
+    .cfg_vc_tcvc_map(cfg_vc_tcvc_map),
     .sys_clk(sys_clk),
     .sys_rst_n(sys_rst_n),
     .pipe_mmcm_rst_n(1'B1),

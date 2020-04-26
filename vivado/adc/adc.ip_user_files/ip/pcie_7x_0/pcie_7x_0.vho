@@ -74,18 +74,43 @@ COMPONENT pcie_7x_0
     user_reset_out : OUT STD_LOGIC;
     user_lnk_up : OUT STD_LOGIC;
     user_app_rdy : OUT STD_LOGIC;
+    tx_buf_av : OUT STD_LOGIC_VECTOR(5 DOWNTO 0);
+    tx_cfg_req : OUT STD_LOGIC;
+    tx_err_drop : OUT STD_LOGIC;
     s_axis_tx_tready : OUT STD_LOGIC;
     s_axis_tx_tdata : IN STD_LOGIC_VECTOR(127 DOWNTO 0);
     s_axis_tx_tkeep : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
     s_axis_tx_tlast : IN STD_LOGIC;
     s_axis_tx_tvalid : IN STD_LOGIC;
     s_axis_tx_tuser : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+    tx_cfg_gnt : IN STD_LOGIC;
     m_axis_rx_tdata : OUT STD_LOGIC_VECTOR(127 DOWNTO 0);
     m_axis_rx_tkeep : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
     m_axis_rx_tlast : OUT STD_LOGIC;
     m_axis_rx_tvalid : OUT STD_LOGIC;
     m_axis_rx_tready : IN STD_LOGIC;
     m_axis_rx_tuser : OUT STD_LOGIC_VECTOR(21 DOWNTO 0);
+    rx_np_ok : IN STD_LOGIC;
+    rx_np_req : IN STD_LOGIC;
+    fc_cpld : OUT STD_LOGIC_VECTOR(11 DOWNTO 0);
+    fc_cplh : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+    fc_npd : OUT STD_LOGIC_VECTOR(11 DOWNTO 0);
+    fc_nph : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+    fc_pd : OUT STD_LOGIC_VECTOR(11 DOWNTO 0);
+    fc_ph : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+    fc_sel : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
+    cfg_status : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_command : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_dstatus : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_dcommand : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_lstatus : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_lcommand : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_dcommand2 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    cfg_pcie_link_state : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+    cfg_pmcsr_pme_en : OUT STD_LOGIC;
+    cfg_pmcsr_powerstate : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    cfg_pmcsr_pme_status : OUT STD_LOGIC;
+    cfg_received_func_lvl_rst : OUT STD_LOGIC;
     cfg_err_ecrc : IN STD_LOGIC;
     cfg_err_ur : IN STD_LOGIC;
     cfg_err_cpl_timeout : IN STD_LOGIC;
@@ -104,6 +129,12 @@ COMPONENT pcie_7x_0
     cfg_err_locked : IN STD_LOGIC;
     cfg_err_acs : IN STD_LOGIC;
     cfg_err_internal_uncor : IN STD_LOGIC;
+    cfg_trn_pending : IN STD_LOGIC;
+    cfg_pm_halt_aspm_l0s : IN STD_LOGIC;
+    cfg_pm_halt_aspm_l1 : IN STD_LOGIC;
+    cfg_pm_force_state_en : IN STD_LOGIC;
+    cfg_pm_force_state : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+    cfg_dsn : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
     cfg_interrupt : IN STD_LOGIC;
     cfg_interrupt_rdy : OUT STD_LOGIC;
     cfg_interrupt_assert : IN STD_LOGIC;
@@ -115,6 +146,28 @@ COMPONENT pcie_7x_0
     cfg_interrupt_msixfm : OUT STD_LOGIC;
     cfg_interrupt_stat : IN STD_LOGIC;
     cfg_pciecap_interrupt_msgnum : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+    cfg_to_turnoff : OUT STD_LOGIC;
+    cfg_turnoff_ok : IN STD_LOGIC;
+    cfg_bus_number : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+    cfg_device_number : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
+    cfg_function_number : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+    cfg_pm_wake : IN STD_LOGIC;
+    cfg_pm_send_pme_to : IN STD_LOGIC;
+    cfg_ds_bus_number : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+    cfg_ds_device_number : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+    cfg_ds_function_number : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
+    cfg_bridge_serr_en : OUT STD_LOGIC;
+    cfg_slot_control_electromech_il_ctl_pulse : OUT STD_LOGIC;
+    cfg_root_control_syserr_corr_err_en : OUT STD_LOGIC;
+    cfg_root_control_syserr_non_fatal_err_en : OUT STD_LOGIC;
+    cfg_root_control_syserr_fatal_err_en : OUT STD_LOGIC;
+    cfg_root_control_pme_int_en : OUT STD_LOGIC;
+    cfg_aer_rooterr_corr_err_reporting_en : OUT STD_LOGIC;
+    cfg_aer_rooterr_non_fatal_err_reporting_en : OUT STD_LOGIC;
+    cfg_aer_rooterr_fatal_err_reporting_en : OUT STD_LOGIC;
+    cfg_aer_rooterr_corr_err_received : OUT STD_LOGIC;
+    cfg_aer_rooterr_non_fatal_err_received : OUT STD_LOGIC;
+    cfg_aer_rooterr_fatal_err_received : OUT STD_LOGIC;
     pl_directed_link_change : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
     pl_directed_link_width : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
     pl_directed_link_speed : IN STD_LOGIC;
@@ -140,6 +193,7 @@ COMPONENT pcie_7x_0
     cfg_err_aer_headerlog_set : OUT STD_LOGIC;
     cfg_aer_ecrc_check_en : OUT STD_LOGIC;
     cfg_aer_ecrc_gen_en : OUT STD_LOGIC;
+    cfg_vc_tcvc_map : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
     sys_clk : IN STD_LOGIC;
     sys_rst_n : IN STD_LOGIC
   );
@@ -172,18 +226,43 @@ your_instance_name : pcie_7x_0
     user_reset_out => user_reset_out,
     user_lnk_up => user_lnk_up,
     user_app_rdy => user_app_rdy,
+    tx_buf_av => tx_buf_av,
+    tx_cfg_req => tx_cfg_req,
+    tx_err_drop => tx_err_drop,
     s_axis_tx_tready => s_axis_tx_tready,
     s_axis_tx_tdata => s_axis_tx_tdata,
     s_axis_tx_tkeep => s_axis_tx_tkeep,
     s_axis_tx_tlast => s_axis_tx_tlast,
     s_axis_tx_tvalid => s_axis_tx_tvalid,
     s_axis_tx_tuser => s_axis_tx_tuser,
+    tx_cfg_gnt => tx_cfg_gnt,
     m_axis_rx_tdata => m_axis_rx_tdata,
     m_axis_rx_tkeep => m_axis_rx_tkeep,
     m_axis_rx_tlast => m_axis_rx_tlast,
     m_axis_rx_tvalid => m_axis_rx_tvalid,
     m_axis_rx_tready => m_axis_rx_tready,
     m_axis_rx_tuser => m_axis_rx_tuser,
+    rx_np_ok => rx_np_ok,
+    rx_np_req => rx_np_req,
+    fc_cpld => fc_cpld,
+    fc_cplh => fc_cplh,
+    fc_npd => fc_npd,
+    fc_nph => fc_nph,
+    fc_pd => fc_pd,
+    fc_ph => fc_ph,
+    fc_sel => fc_sel,
+    cfg_status => cfg_status,
+    cfg_command => cfg_command,
+    cfg_dstatus => cfg_dstatus,
+    cfg_dcommand => cfg_dcommand,
+    cfg_lstatus => cfg_lstatus,
+    cfg_lcommand => cfg_lcommand,
+    cfg_dcommand2 => cfg_dcommand2,
+    cfg_pcie_link_state => cfg_pcie_link_state,
+    cfg_pmcsr_pme_en => cfg_pmcsr_pme_en,
+    cfg_pmcsr_powerstate => cfg_pmcsr_powerstate,
+    cfg_pmcsr_pme_status => cfg_pmcsr_pme_status,
+    cfg_received_func_lvl_rst => cfg_received_func_lvl_rst,
     cfg_err_ecrc => cfg_err_ecrc,
     cfg_err_ur => cfg_err_ur,
     cfg_err_cpl_timeout => cfg_err_cpl_timeout,
@@ -202,6 +281,12 @@ your_instance_name : pcie_7x_0
     cfg_err_locked => cfg_err_locked,
     cfg_err_acs => cfg_err_acs,
     cfg_err_internal_uncor => cfg_err_internal_uncor,
+    cfg_trn_pending => cfg_trn_pending,
+    cfg_pm_halt_aspm_l0s => cfg_pm_halt_aspm_l0s,
+    cfg_pm_halt_aspm_l1 => cfg_pm_halt_aspm_l1,
+    cfg_pm_force_state_en => cfg_pm_force_state_en,
+    cfg_pm_force_state => cfg_pm_force_state,
+    cfg_dsn => cfg_dsn,
     cfg_interrupt => cfg_interrupt,
     cfg_interrupt_rdy => cfg_interrupt_rdy,
     cfg_interrupt_assert => cfg_interrupt_assert,
@@ -213,6 +298,28 @@ your_instance_name : pcie_7x_0
     cfg_interrupt_msixfm => cfg_interrupt_msixfm,
     cfg_interrupt_stat => cfg_interrupt_stat,
     cfg_pciecap_interrupt_msgnum => cfg_pciecap_interrupt_msgnum,
+    cfg_to_turnoff => cfg_to_turnoff,
+    cfg_turnoff_ok => cfg_turnoff_ok,
+    cfg_bus_number => cfg_bus_number,
+    cfg_device_number => cfg_device_number,
+    cfg_function_number => cfg_function_number,
+    cfg_pm_wake => cfg_pm_wake,
+    cfg_pm_send_pme_to => cfg_pm_send_pme_to,
+    cfg_ds_bus_number => cfg_ds_bus_number,
+    cfg_ds_device_number => cfg_ds_device_number,
+    cfg_ds_function_number => cfg_ds_function_number,
+    cfg_bridge_serr_en => cfg_bridge_serr_en,
+    cfg_slot_control_electromech_il_ctl_pulse => cfg_slot_control_electromech_il_ctl_pulse,
+    cfg_root_control_syserr_corr_err_en => cfg_root_control_syserr_corr_err_en,
+    cfg_root_control_syserr_non_fatal_err_en => cfg_root_control_syserr_non_fatal_err_en,
+    cfg_root_control_syserr_fatal_err_en => cfg_root_control_syserr_fatal_err_en,
+    cfg_root_control_pme_int_en => cfg_root_control_pme_int_en,
+    cfg_aer_rooterr_corr_err_reporting_en => cfg_aer_rooterr_corr_err_reporting_en,
+    cfg_aer_rooterr_non_fatal_err_reporting_en => cfg_aer_rooterr_non_fatal_err_reporting_en,
+    cfg_aer_rooterr_fatal_err_reporting_en => cfg_aer_rooterr_fatal_err_reporting_en,
+    cfg_aer_rooterr_corr_err_received => cfg_aer_rooterr_corr_err_received,
+    cfg_aer_rooterr_non_fatal_err_received => cfg_aer_rooterr_non_fatal_err_received,
+    cfg_aer_rooterr_fatal_err_received => cfg_aer_rooterr_fatal_err_received,
     pl_directed_link_change => pl_directed_link_change,
     pl_directed_link_width => pl_directed_link_width,
     pl_directed_link_speed => pl_directed_link_speed,
@@ -238,6 +345,7 @@ your_instance_name : pcie_7x_0
     cfg_err_aer_headerlog_set => cfg_err_aer_headerlog_set,
     cfg_aer_ecrc_check_en => cfg_aer_ecrc_check_en,
     cfg_aer_ecrc_gen_en => cfg_aer_ecrc_gen_en,
+    cfg_vc_tcvc_map => cfg_vc_tcvc_map,
     sys_clk => sys_clk,
     sys_rst_n => sys_rst_n
   );

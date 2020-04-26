@@ -249,7 +249,7 @@ InitAdcBar	proc near
     mov ecx,80000h
     CreateDataSelector16
 ;
-    or ax,813h
+    or ax,80Bh
     xor ebx,ebx
     mov ecx,80h
 
@@ -715,6 +715,10 @@ start_adc  Proc far
     mov bx,anio_control_sel
     mov es,ebx
     or es:cb_adc_control,80h
+;
+    mov ax,10000
+    WaitMilliSec
+    int 3
 
 saLoop:
     WaitForSignal
