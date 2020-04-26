@@ -29,6 +29,8 @@ module control_bar (
   input                   reset,
   input                   clk,
 
+  output reg [31:0]       control_base,
+
   input [9:0]             rd_address,
   input                   rd,
 
@@ -89,6 +91,8 @@ generate
     begin
       if (reset)
       begin
+        control_base <= 0;
+
         adc_state[5:0] <= 0;
         adc_req_state <= 0;
         adc_test_mode <= 0;
@@ -118,6 +122,7 @@ generate
             5: rp_data <= adc_sysref_cnt[31:0];
             6: rp_data <= adc_sysref_cnt[63:32];
             7: rp_data <= adc_sysref_cnt[95:64];
+            8: rp_data <= control_base;
             default: rp_data <= 32'hffffffff;
           endcase     
 
@@ -293,6 +298,21 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
+              end
+
+              8:
+              begin
+                if (wr_be[0])
+                  control_base[7:0] <= wr_data[7:0];
+
+                if (wr_be[1])
+                  control_base[15:8] <= wr_data[15:8];
+
+                if (wr_be[2])
+                  control_base[23:16] <= wr_data[23:16];
+
+                if (wr_be[3])
+                  control_base[31:24] <= wr_data[31:24];
               end
             endcase
           end

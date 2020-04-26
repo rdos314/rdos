@@ -188,6 +188,9 @@ module adc (
   
 // PCI bar
 
+  wire [31:0]          control_base;
+  wire                 control_rd;
+
   wire [9:0]           pci_bar0_rd_address;
   wire                 pci_bar0_rd;
 
@@ -244,15 +247,13 @@ module adc (
 
 // LED
 
-  reg [31:0]           sys_cnt;
-  reg [31:0]           user_cnt;
   reg [31:0]           pcie_cnt;
   reg [31:0]           rx_cnt;
+  reg [7:0]            control_led_cnt;
 
-  reg                  sys_led;
-  reg                  user_led;
   reg                  pcie_led;
   reg                  rx_led;
+  reg                  control_led;
 
 
 // clock domain crossings
@@ -411,6 +412,9 @@ pci_app pci_app_inst (
     .user_lnk_width(pcie_user_lnk_width),
     .cfg_interrupt_msienable(cfg_interrupt_msienable),
 
+    .control_base(control_base),
+    .control_rd(control_rd),
+
     .bar0_rd_address(pci_bar0_rd_address),
     .bar0_rd(pci_bar0_rd),
     .bar0_rp_data(pci_bar0_rp_data),
@@ -482,6 +486,8 @@ daq2_spi daq2_spi_inst (
 control_bar control_bar_inst (
     .reset(pcie_user_reset),
     .clk(pcie_user_clk),
+
+    .control_base(control_base),
 
     .rd_address(pci_bar0_rd_address),
     .rd(pci_bar0_rd),
@@ -602,9 +608,9 @@ adc_app adc_app_inst (
 
 
   OBUF   led_0_obuf (.O(led_0), .I(pcie_led));
-  OBUF   led_1_obuf (.O(led_1), .I(user_led));
-  OBUF   led_2_obuf (.O(led_2), .I(sys_led));
-  OBUF   led_3_obuf (.O(led_3), .I(rx_led));
+  OBUF   led_1_obuf (.O(led_1), .I(control_led));
+  OBUF   led_2_obuf (.O(led_2), .I(rx_led));
+  OBUF   led_3_obuf (.O(led_3), .I(0));
   OBUF   led_4_obuf (.O(led_4), .I(rx_adc_sync_ok));
   OBUF   led_5_obuf (.O(led_5), .I(adc_state[0]));
   OBUF   led_6_obuf (.O(led_6), .I(adc_state[1]));
@@ -625,28 +631,6 @@ generate
         pcie_cnt <= pcie_cnt + 1;
     end
 
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_cnt == 78125000)
-      begin
-        user_led <= !user_led;
-        user_cnt <= 0;
-      end
-      else
-        user_cnt <= user_cnt + 1;
-    end
-
-    always @ ( posedge sys_clk ) 
-    begin
-      if (sys_cnt == 100000000)
-      begin
-        sys_led <= !sys_led;
-        sys_cnt <= 0;
-      end
-      else
-        sys_cnt <= sys_cnt + 1;
-    end
-
     always @ ( posedge rx_clk ) 
     begin
       if (rx_cnt == 93750000)
@@ -657,6 +641,29 @@ generate
       else
         rx_cnt <= rx_cnt + 1;
     end
+
+    always @ ( posedge pcie_ref_clk ) 
+    begin
+      if (pcie_user_reset)
+      begin
+        control_led_cnt <= 0;
+        control_led <= 0;
+      end
+      else
+      begin
+        if (control_rd)
+        begin
+          if (control_led_cnt[7])
+          begin
+            control_led_cnt <= 0;
+            control_led <= !control_led;
+          end
+          else
+            control_led_cnt <= control_led_cnt + 1;
+        end
+      end
+    end
+
 
     always @ ( posedge pcie_user_clk ) 
     begin

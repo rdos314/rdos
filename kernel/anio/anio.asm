@@ -871,6 +871,63 @@ NextPn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           adc_thread
+;
+;           DESCRIPTION:    Adc thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+adc_thread_name	DB 'ADC', 0
+
+adc_thread:
+    int 3
+    call InitPciAdapter
+    jc atDone
+;
+    call InitControlBar
+;
+    mov bx,anio_control_sel
+    mov ds,ebx
+    AllocatePhysical32
+    mov bx,20h
+    mov ds:[bx],eax
+
+atDone:
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_thread
+;
+;           DESCRIPTION:    Init thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_thread    PROC far
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+;
+    mov esi,OFFSET adc_thread
+    mov edi,OFFSET adc_thread_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+init_thread    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_pci
 ;
 ;           DESCRIPTION:    Init PCI
@@ -948,7 +1005,7 @@ Init    Proc far
     mov eax,cs
     mov ds,eax
     mov es,eax
-    mov edi,OFFSET init_pci
+    mov edi,OFFSET init_thread
     HookInitPci
     clc
     ret

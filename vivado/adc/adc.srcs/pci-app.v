@@ -42,6 +42,9 @@ module pci_app (
   output   [1:0]       user_lnk_width,
   output               cfg_interrupt_msienable,
 
+  input wire [31:0]    control_base,
+  output reg           control_rd,
+
   output reg [9:0]     bar0_rd_address,
   output reg           bar0_rd,
 
@@ -89,6 +92,8 @@ module pci_app (
 
 
 // Wire Declarations
+
+  reg [17:0]       poll_cnt;
 
   wire             req_stop;
 
@@ -541,6 +546,28 @@ generate
     assign rx_bar_len = rx_bar_header[9:0];
     assign rx_bar_type = rx_bar_header[31:24];
     assign rx_bar_address = rx_bar_header[95:64];
+
+    always @ ( posedge user_clk ) 
+    begin
+      if (control_base)
+      begin
+        if (poll_cnt[17])
+        begin
+          poll_cnt <= 0;
+          control_rd <= 1;
+        end
+        else
+        begin
+          poll_cnt <= poll_cnt + 1;
+          control_rd <= 0;
+        end
+      end
+      else
+      begin
+        poll_cnt <= 0;
+        control_rd <= 0;
+      end
+    end       
 
     always @ ( posedge user_clk ) 
     begin
