@@ -136,31 +136,33 @@ create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
 create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
 create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
 
+# Synchronization paths
+
 set_false_path -from [get_ports pci_rst_n]
 set_false_path -from [get_ports rx_sysref_p]
 set_false_path -from [get_ports tx_sysref_p]
 
+set_false_path -from [get_pins adc.q_user_reset/C] -to [get_pins adc.up_reset_reg/D]
+set_false_path -from [get_pins adc.adc_sync_ok_reg/C] -to [get_pins adc.adc_sync_ok_1_reg/D]
+set_false_path -from [get_pins adc.adc_sync_fail_reg/C] -to [get_pins adc.adc_sync_fail_1_reg/D]
 
-set_false_path -to [get_pins adc.up_reset_reg/D]
+set_false_path -from [get_pins control_bar_inst/control_bar.tx_control_msg_reg/C] -to [get_pins adc.rx_up_control_msg_1_reg/D]
+set_false_path -from [get_pins {control_bar_inst/control_bar.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_up_control_index_reg[*]/D}]
+set_false_path -from [get_pins {control_bar_inst/control_bar.tx_control_data_reg[*]/C}] -to [get_pins {adc.rx_up_control_data_reg[*]/D}]
+
+set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_msg_reg/C] -to [get_pins adc.rx_pci_control_msg_1_reg/D]
+set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_pci_control_index_reg[*]/D}]
+set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_data_reg[*]/C}] -to [get_pins {adc.rx_pci_control_data_reg[*]/D}]
+
 set_false_path -from [get_pins adc_app_inst/adc_app.up_adc_started_reg/C] -to [get_pins adc.adc_started_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_probing_reg/C] -to [get_pins adc.adc_probing_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_running_reg/C] -to [get_pins adc.adc_running_1_reg/D]
-set_false_path -to [get_pins adc.adc_sync_ok_1_reg/D]
-set_false_path -to [get_pins adc.adc_sync_fail_1_reg/D]
-
-set_false_path -to [get_pins adc.rx_up_control_msg_2_reg/D]
-set_false_path -to [get_pins {adc.rx_up_control_index_reg[*]/D}]
-set_false_path -to [get_pins {adc.rx_up_control_data_reg[*]/D}]
-set_false_path -to [get_pins adc.rx_pci_control_msg_2_reg/D]
-set_false_path -to [get_pins {adc.rx_pci_control_index_reg[*]/D}]
-set_false_path -to [get_pins {adc.rx_pci_control_data_reg[*]/D}]
 
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_started_reg/C] -to [get_pins adc_app_inst/adc_app.adc_started_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_probing_reg/C] -to [get_pins adc_app_inst/adc_app.adc_probing_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_running_reg/C] -to [get_pins adc_app_inst/adc_app.adc_running_1_reg/D]
-
-set_false_path -to [get_pins adc_app_inst/adc_app.adc_almost_full_2_reg/D]
-set_false_path -to [get_pins adc_app_inst/adc_app.adc_almost_empty_2_reg/D]
+set_false_path -from [get_pins adc_app_inst/adc_app.q_full_reg/C] -to [get_pins adc_app_inst/adc_app.adc_full_1_reg/D]
+set_false_path -from [get_pins adc_app_inst/adc_app.q_almost_full_reg/C] -to [get_pins adc_app_inst/adc_app.adc_almost_full_1_reg/D]
 
 set_false_path -from [get_pins adc_app_inst/adc_app.up_bar_irq_reg/C] -to [get_pins adc_app_inst/adc_app.pci_bar_irq_1_reg/D]
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_wr_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_started_1_reg/D]

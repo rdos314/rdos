@@ -87,7 +87,7 @@ module adc_app (
   input wire              adc_rd,
   output wire [127:0]     adc_rd_data,
   output reg              adc_almost_full,
-  output reg              adc_almost_empty,
+  output wire             adc_almost_empty,
 
   output wire [2:0]       state
 );
@@ -126,7 +126,9 @@ module adc_app (
   wire                    fifo_reset;
   wire                    fifo_full;
   wire                    fifo_almost_full;
-  wire                    fifo_almost_empty;
+  reg                     q_full;
+  reg                     up_fifo_full;
+  reg                     q_almost_full;
 
 
 // clock domain crossings
@@ -141,11 +143,11 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
 
+ (* ASYNC_REG="TRUE" *)  reg                  adc_full_1;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_full_2;
+
  (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_1;
  (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_2;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_almost_empty_1;
- (* ASYNC_REG="TRUE" *)  reg                  adc_almost_empty_2;
 
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
  (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
@@ -165,8 +167,8 @@ adc_fifo adc_fifo_inst (
   .rd_en(adc_rd),                   // input wire rd_en
   .dout(adc_rd_data),               // output wire [127 : 0] dout
   .full(fifo_full),                 // output wire full
-  .prog_full(fifo_almost_full),   // output wire almost full
-  .prog_empty(fifo_almost_empty)  // output wire almost empty
+  .prog_full(fifo_almost_full),     // output wire almost full
+  .prog_empty(adc_almost_empty)     // output wire almost empty
 );
 
 phys_bar adc_bar_inst (
@@ -379,7 +381,7 @@ begin : adc_app
               if (up_adc_started)
               begin
                 adc_probing <= 0;
-                if (fifo_full)
+                if (up_fifo_full)
                 begin
                   adc_started <= 0;
                   adc_running <= 0;
@@ -414,6 +416,7 @@ begin : adc_app
         end
       end
     end
+
 
     always @ ( posedge up_clk ) 
     begin
@@ -506,18 +509,28 @@ begin : adc_app
       pci_adc_running <= adc_running_1;
     end
 
-    always @ ( posedge pci_clk ) 
+    always @ ( posedge rx_clk ) 
     begin
-      adc_almost_full_1 <= fifo_almost_full;
-      adc_almost_full_2 <= adc_almost_full_1;
-      adc_almost_full <= adc_almost_full_2;
+      q_full <= fifo_full;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_full_1 <= q_full;
+      adc_full_2 <= adc_full_1;
+      up_fifo_full <= adc_full_2;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      q_almost_full <= fifo_almost_full;
     end
 
     always @ ( posedge pci_clk ) 
     begin
-      adc_almost_empty_1 <= fifo_almost_empty;
-      adc_almost_empty_2 <= adc_almost_empty_1;
-      adc_almost_empty <= adc_almost_empty_2;
+      adc_almost_full_1 <= q_almost_full;
+      adc_almost_full_2 <= adc_almost_full_1;
+      adc_almost_full <= adc_almost_full_2;
     end
 
     always @ ( posedge pci_clk ) 

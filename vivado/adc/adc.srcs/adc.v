@@ -145,6 +145,7 @@ module adc (
 
 // Reset
 
+  reg                  q_user_reset;
   reg [7:0]            pci_reset_cnt;
 
 
@@ -172,6 +173,10 @@ module adc (
 
   wire                 rx_adc_sync_ok;
   wire                 rx_adc_sync_fail;
+
+  reg                  adc_sync_ok;
+  reg                  adc_sync_fail;
+
 
   wire [2:0]           adc_state;
 
@@ -656,10 +661,14 @@ generate
       end
     end
 
+    always @ ( posedge pcie_ref_clk ) 
+    begin
+      q_user_reset <= pcie_user_reset;
+    end
     
     always @ ( posedge up_clk ) 
     begin
-      up_reset_1 <= pcie_user_reset;
+      up_reset_1 <= q_user_reset;
       up_reset <= up_reset_1;
     end
 
@@ -681,15 +690,25 @@ generate
       rx_adc_running <= adc_running_1;
     end
 
-    always @ ( posedge up_clk ) 
+    always @ ( posedge rx_clk ) 
     begin
-      adc_sync_ok_1 <= rx_adc_sync_ok;
-      up_adc_sync_ok <= adc_sync_ok_1;
+      adc_sync_ok <= rx_adc_sync_ok;
     end
 
     always @ ( posedge up_clk ) 
     begin
-      adc_sync_fail_1 <= rx_adc_sync_fail;
+      adc_sync_ok_1 <= adc_sync_ok;
+      up_adc_sync_ok <= adc_sync_ok_1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_sync_fail <= rx_adc_sync_fail;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_sync_fail_1 <= adc_sync_fail;
       up_adc_sync_fail <= adc_sync_fail_1;
     end
 
