@@ -639,7 +639,7 @@ generate
         rx_cnt <= rx_cnt + 1;
     end
 
-    always @ ( posedge pcie_ref_clk ) 
+    always @ ( posedge pcie_user_clk ) 
     begin
       if (pcie_user_reset)
       begin
@@ -661,7 +661,7 @@ generate
       end
     end
 
-    always @ ( posedge pcie_ref_clk ) 
+    always @ ( posedge pcie_user_clk ) 
     begin
       q_user_reset <= pcie_user_reset;
     end

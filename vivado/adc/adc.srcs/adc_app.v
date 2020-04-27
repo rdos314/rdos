@@ -191,28 +191,6 @@ phys_bar adc_bar_inst (
 );
 
 
-ila_1 ila_1_inst (
-    .clk(pci_clk),                     // input wire clk
-    .probe0(pci_adc_started),          // input wire [0:0]  probe0  
-    .probe1(pci_adc_probing),          // input wire [0:0]  probe0  
-    .probe2(pci_adc_running),          // input wire [0:0]  probe0  
-    .probe3(bar_irq),                  // input wire [0:0]  probe0  
-    .probe4(block_irq),                // input wire [0:0]  probe0  
-    .probe5(phys_index),               // input wire [15:0]  probe0  
-    .probe6(phys_valid),               // input wire [0:0]  probe0  
-    .probe7(phys_page),                // input wire [19:0]  probe0  
-    .probe8(phys_offset),              // input wire [13:0]  probe0  
-    .probe9(adc_started),              // input wire [0:0]  probe0  
-    .probe10(adc_stopped),             // input wire [0:0]  probe0  
-    .probe11(adc_almost_empty),        // input wire [0:0]  probe0  
-    .probe12(adc_almost_full),         // input wire [0:0]  probe0  
-    .probe13(adc_next_address),        // input wire [0:0]  probe0  
-    .probe14(adc_address),             // input wire [63:0]  probe0  
-    .probe15(adc_rd),                  // input wire [0:0]  probe0  
-    .probe16(adc_rd_data[15:0]),       // input wire [15:0]  probe0  
-    .probe17(adc_rd_data[31:16])       // input wire [15:0]  probe0  
-);
-
   assign fifo_reset = !adc_started;
 
   assign adc_rst = up_adc_rst_cnt[3];
