@@ -3431,6 +3431,11 @@ MapAdcBlock     MACRO
         UserGate map_adc_block_nr
                                                 ENDM
 
+;   IN  EAX     2M buffer #
+VerifyAdcBlock     MACRO
+        UserGate verify_adc_block_nr
+                                                ENDM
+
 ;       IN  AX          Adc channel
 ;       OUT BX          Adc handle
 OpenAdc      MACRO

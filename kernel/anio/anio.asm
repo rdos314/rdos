@@ -839,6 +839,39 @@ mabDone:
     ret
 map_adc_block  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           verify_adc_block
+;
+;       DESCRIPTION:    Verify adc 2M block
+;
+;       PARAMETERS:     EAX     Block #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+verify_adc_block_name	DB 'Verify ADC Block', 0
+
+verify_adc_block  Proc far
+    push ds
+    push es
+    pushad
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov ds,ds:adc_buf_sel
+;
+    mov bx,anio_adc_sel
+    mov es,bx
+;
+    mov ebx,eax
+    shl ebx,3
+;
+    popad
+    pop es
+    pop ds  
+    ret
+verify_adc_block  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -973,6 +1006,12 @@ init_pci    PROC far
     mov edi,OFFSET map_adc_block_name
     xor dx,dx
     mov ax,map_adc_block_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET verify_adc_block
+    mov edi,OFFSET verify_adc_block_name
+    xor dx,dx
+    mov ax,verify_adc_block_nr
     RegisterBimodalUserGate
 
 ipDone:

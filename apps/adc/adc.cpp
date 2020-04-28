@@ -196,7 +196,10 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
     }
 
     if (Errors >= 4)
+    {
         printf("Block %d has %d errors\r\n", Block, Errors);
+        RdosVerifyAdcBlock(Block);
+    }
 
     return curr;
 }

@@ -822,7 +822,7 @@ void RDOSAPI RdosSetupAdc(char TestMode, char Speed, int BufCount);
 char RDOSAPI RdosStartAdc();
 void RDOSAPI RdosStopAdc();
 int RDOSAPI RdosMapAdcBlock(int Index, void *Buf);
-
+void RDOSAPI RdosVerifyAdcBlock(int Index);
 
 int RDOSAPI RdosReadSerialLines(int device, int *val);
 int RDOSAPI RdosToggleSerialLine(int device, int line);
