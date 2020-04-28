@@ -176,7 +176,7 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
     {
         if (data[i].chA != curr || data[i].chB != curr)
         {
-            if (Errors < 16)
+            if (Errors < 4)
             {
                 if (data[i].chA == data[i].chB)
                 {
@@ -195,7 +195,7 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
             curr++;
     }
 
-    if (Errors >= 16)
+    if (Errors >= 4)
         printf("Block %d has %d errors\r\n", Block, Errors);
 
     return curr;

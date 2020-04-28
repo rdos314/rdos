@@ -64,7 +64,7 @@ void main()
             {
                 data = Adc.GetBlock(i);
                 if (data)
-                    ch = Adc.CheckRamp(data, 0, 0x80000, ch);
+                    ch = Adc.CheckRamp(data, i, 0x80000, ch);
             }
         }
     }
