@@ -218,6 +218,39 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
 
 /*##########################################################################
 #
+#   Name       : TAdc::CheckRamp
+#
+#   Purpose....: Check ramp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CheckRamp()
+{
+    TAdcData *data;
+    int entries;
+    char ch;
+    int i;
+
+    data = FindStart(&entries);
+
+    if (data)
+    {
+        ch = CheckRamp(data, 0, entries, 0);
+
+        for (i = 1; i < 5000; i++)
+        {
+            data = GetBlock(i);
+            if (data)
+                ch = CheckRamp(data, i, 0x80000, ch);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::InitPn
 #
 #   Purpose....: Init PN generator
@@ -251,7 +284,7 @@ int TAdc::UpdatePn(int start)
 
     for (i = 0; i < 14; i++)
     {
-        bit = (((a >> 22) ^ (a >> 17)) & 1); 
+        bit = (((a >> 22) ^ (a >> 17)) & 1);
         a = (a << 1) | bit;
     }
 
@@ -305,4 +338,63 @@ int TAdc::CheckPn(TAdcData *data, int Block, int Samples, int Start)
         printf("Block %d has %d errors\r\n", Block, Errors);
 
     return curr;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CheckPn
+#
+#   Purpose....: Check long PN sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CheckPn()
+{
+    TAdcData *data;
+    int entries;
+    int pn;
+    int i;
+
+    data = FindStart(&entries);
+
+    if (data)
+    {
+        pn = InitPn();
+        pn = CheckPn(data, 0, entries, pn);
+
+        for (i = 1; i < FBlocks; i++)
+        {
+            data = GetBlock(i);
+            if (data)
+                pn = CheckPn(data, i, 0x80000, pn);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::Check
+#
+#   Purpose....: Check test sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::Check()
+{
+    switch (FTestMode)
+    {
+        case 0x5:
+            CheckPn();
+            break;
+
+        case 0xF:
+            CheckRamp();
+            break;
+    }
 }

@@ -47,26 +47,7 @@
 void main()
 {
     TAdc Adc(0x5, 5000);
-    TAdcData *data;
-    int entries;
-    int pn;
-    int i;
 
     if (Adc.Start())
-    {
-        data = Adc.FindStart(&entries);
-
-        if (data)
-        {
-            pn = Adc.InitPn();
-            pn = Adc.CheckPn(data, 0, entries, pn);
-
-            for (i = 1; i < 5000; i++)
-            {
-                data = Adc.GetBlock(i);
-                if (data)
-                    pn = Adc.CheckPn(data, i, 0x80000, pn);
-            }
-        }
-    }
+        Adc.Check();
 }

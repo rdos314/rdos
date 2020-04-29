@@ -45,12 +45,17 @@ public:
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
 
+    void Check();
+
+protected:
     char CheckRamp(TAdcData *data, int Block, int Samples, char Start);
+    void CheckRamp();
 
     int InitPn();
     int UpdatePn(int start);
     int CheckPn(TAdcData *data, int Block, int Samples, int Start);
-    
+    void CheckPn();
+
     int FBlocks;
     char FTestMode;
     char *FBuf;
