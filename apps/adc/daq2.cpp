@@ -46,8 +46,13 @@
 ##########################################################################*/
 void main()
 {
-    TAdc Adc(0x5, 5000);
+    TAdc Adc(0x0, 5000);
+    TAdcData *data;
+    int i;
 
     if (Adc.Start())
-        Adc.Check();
+    {
+        for (i = 0; i < 5000; i++)
+            data = Adc.GetBlock(i);
+    }
 }
