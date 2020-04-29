@@ -46,10 +46,10 @@
 ##########################################################################*/
 void main()
 {
-    TAdc Adc(0xF, 5000);
+    TAdc Adc(0x5, 5000);
     TAdcData *data;
     int entries;
-    char ch;
+    int pn;
     int i;
 
     if (Adc.Start())
@@ -58,13 +58,14 @@ void main()
 
         if (data)
         {
-            ch = Adc.CheckRamp(data, 0, entries, 0);
+            pn = Adc.InitPn();
+            pn = Adc.CheckPn(data, 0, entries, pn);
 
             for (i = 1; i < 5000; i++)
             {
                 data = Adc.GetBlock(i);
                 if (data)
-                    ch = Adc.CheckRamp(data, i, 0x80000, ch);
+                    pn = Adc.CheckPn(data, i, 0x80000, pn);
             }
         }
     }
