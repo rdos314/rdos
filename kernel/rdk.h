@@ -618,8 +618,6 @@
 #define osgate_init_freq 557
 #define osgate_update_freq 558
 
-#define osgate_add_thread_int 559
-
 #define osgate_do_flush_tlb 561
 
 #define osgate_get_sel_bitness 562
@@ -836,6 +834,19 @@
 
 #define osgate_allocate_realtime_core 731
 #define osgate_free_realtime_core 732
+#define osgate_debug_realtime 733
+#define osgate_run_realtime 734
+#define osgate_allocate_physical_dir 735
+#define osgate_free_physical_dir 736
+
+#define osgate_set_usb_over_current 738
+#define osgate_set_usb_reset_failed 739
+
+#define osgate_get_pci_msi_info 740
+#define osgate_move_pci_msi 741
+
+#define osgate_disable_freq_adjust 742
+#define osgate_enable_freq_adjust 743
 
 
 
@@ -1459,8 +1470,6 @@
 #define OsGate_init_freq 0x3E 0x67 0x9a 45 2 0 0 2 0
 #define OsGate_update_freq 0x3E 0x67 0x9a 46 2 0 0 2 0
 
-#define OsGate_add_thread_int 0x3E 0x67 0x9a 47 2 0 0 2 0
-
 #define OsGate_do_flush_tlb 0x3E 0x67 0x9a 49 2 0 0 2 0
 
 #define OsGate_get_sel_bitness 0x3E 0x67 0x9a 50 2 0 0 2 0
@@ -1677,4 +1686,17 @@
 
 #define OsGate_allocate_realtime_core 0x3E 0x67 0x9a 219 2 0 0 2 0
 #define OsGate_free_realtime_core 0x3E 0x67 0x9a 220 2 0 0 2 0
+#define OsGate_debug_realtime 0x3E 0x67 0x9a 221 2 0 0 2 0
+#define OsGate_run_realtime 0x3E 0x67 0x9a 222 2 0 0 2 0
+#define OsGate_allocate_physical_dir 0x3E 0x67 0x9a 223 2 0 0 2 0
+#define OsGate_free_physical_dir 0x3E 0x67 0x9a 224 2 0 0 2 0
+
+#define OsGate_set_usb_over_current 0x3E 0x67 0x9a 226 2 0 0 2 0
+#define OsGate_set_usb_reset_failed 0x3E 0x67 0x9a 227 2 0 0 2 0
+
+#define OsGate_get_pci_msi_info 0x3E 0x67 0x9a 228 2 0 0 2 0
+#define OsGate_move_pci_msi 0x3E 0x67 0x9a 229 2 0 0 2 0
+
+#define OsGate_disable_freq_adjust 0x3E 0x67 0x9a 230 2 0 0 2 0
+#define OsGate_enable_freq_adjust 0x3E 0x67 0x9a 231 2 0 0 2 0
 

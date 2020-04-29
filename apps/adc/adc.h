@@ -47,6 +47,10 @@ public:
 
     char CheckRamp(TAdcData *data, int Block, int Samples, char Start);
 
+    int InitPn();
+    int UpdatePn(int start);
+    int CheckPn(TAdcData *data, int Block, int Samples, int Start);
+    
     int FBlocks;
     char FTestMode;
     char *FBuf;

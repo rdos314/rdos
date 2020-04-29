@@ -134,6 +134,19 @@ TAdcData *TAdc::FindStart(int *Entries)
                 *Entries -= 0x20;
                 return data + 0x20;
 
+            case 0x5:
+                for (i = 0; i < 0x20; i++)
+                {
+                    if (data->chA == -41 && data->chB == -41)
+                        return data;
+                    else
+                    {
+                        data++;
+                        (*Entries)--;
+                    }
+                }
+                return 0;
+
             case 0xF:
                 for (i = 0; i < 0x20; i++)
                 {
@@ -153,7 +166,6 @@ TAdcData *TAdc::FindStart(int *Entries)
     }
     return 0;
 }
-
 
 /*##########################################################################
 #
@@ -180,11 +192,11 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
             {
                 if (data[i].chA == data[i].chB)
                 {
-                    printf("Block %d, sample %d: Expected <%02hX>, found <%02hX>\r\n", Block, i, curr, data[i].chA);
+                    printf("Block %d, sample %d: Expected <%02hX>, found <%04hX>\r\n", Block, i, curr, data[i].chA);
                     curr = (char)data[i].chA & 0x7F;
                 }
                 else
-                    printf("Block %d, sample %d: A <%02hX>, B <%02hX>\r\n", Block, i, data[i].chA, data[i].chB);
+                    printf("Block %d, sample %d: A <%04hX>, B <%04hX>\r\n", Block, i, data[i].chA, data[i].chB);
             }
             Errors++;
         }
@@ -200,6 +212,97 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
         printf("Block %d has %d errors\r\n", Block, Errors);
         RdosVerifyAdcBlock(Block);
     }
+
+    return curr;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::InitPn
+#
+#   Purpose....: Init PN generator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::InitPn()
+{
+    return 0x7FAE00;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::UpdatePn
+#
+#   Purpose....: Update PN generator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::UpdatePn(int start)
+{
+    int i;
+    int a = start;
+    int bit;
+
+    for (i = 0; i < 14; i++)
+    {
+        bit = (((a >> 22) ^ (a >> 17)) & 1); 
+        a = (a << 1) | bit;
+    }
+
+    return a;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CheckPn
+#
+#   Purpose....: Check long PN sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::CheckPn(TAdcData *data, int Block, int Samples, int Start)
+{
+    int i;
+    int curr = Start;
+    short int exp;
+    short int a, b;
+    int Errors = 0;
+
+    for (i = 0; i < Samples; i++)
+    {
+        exp = (short int)((curr >> 9) & 0x3FFF);
+        a = data[i].chA & 0x3FFF;
+        b = data[i].chB & 0x3FFF;
+
+        if (a != exp || b != exp)
+        {
+            if (Errors < 4)
+            {
+                if (data[i].chA == data[i].chB)
+                {
+                    printf("Block %d, sample %d: Expected <%04hX>, found <%04hX>\r\n", Block, i, exp, data[i].chA);
+                    curr = (char)data[i].chA & 0x7F;
+                }
+                else
+                    printf("Block %d, sample %d: A <%04hX>, B <%04hX>\r\n", Block, i, data[i].chA, data[i].chB);
+            }
+            Errors++;
+        }
+
+        curr = UpdatePn(curr);
+    }
+
+    if (Errors >= 4)
+        printf("Block %d has %d errors\r\n", Block, Errors);
 
     return curr;
 }

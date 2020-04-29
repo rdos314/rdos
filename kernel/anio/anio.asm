@@ -704,6 +704,10 @@ start_adc  Proc far
     push es
     push ebx
 ;
+    DisableFreqAdjust
+    mov ax,500
+    WaitMilliSec
+;
     mov bx,SEG data
     mov ds,ebx
     GetThread
@@ -716,9 +720,6 @@ start_adc  Proc far
     mov es,ebx
     or es:cb_adc_control,80h
 ;
-    mov ax,10000
-    WaitMilliSec
-    int 3
 
 saLoop:
     WaitForSignal
@@ -749,6 +750,8 @@ stop_adc_name	DB 'Stop ADC', 0
 stop_adc  Proc far
     push ds
     push ebx
+;
+    EnableFreqAdjust
 ;
     mov bx,anio_control_sel
     mov ds,ebx

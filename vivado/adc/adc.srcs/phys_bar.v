@@ -64,6 +64,10 @@ module phys_bar (
   reg  [15:0]            q_wr_adr;
   reg  [19:0]            q_wr_data;
 
+  reg  [1:0]             q_we;
+  reg  [15:0]            q_adr;
+  reg  [19:0]            q_data;
+
 bram_phys bram_phys_inst (
   .clka(clk),         // input wire clka
   .wea(q_wr),         // input wire [0 : 0] wea
@@ -108,6 +112,7 @@ begin : phys_bar_gen
       q_wr <= 0;
       q_rd_adr <= 0;
       q_pend_wr <= 0;
+      q_we <= 0;
     end
     else
     begin
@@ -115,13 +120,34 @@ begin : phys_bar_gen
 
       if (wr)
       begin
-        q_wr_adr <= wr_address[16:1];
-        q_wr_msb <= wr_address[0];
-        q_pend_data <= wr_data;
-        q_pend_be <= wr_be;
-        q_rd <= 0;
-        q_wr <= 0;
-        q_pend_wr <= 1;
+        if (wr_be == 4'b1111)
+        begin
+          q_adr <= wr_address[16:1];
+          if (wr_address[0])
+          begin
+            q_data[19:11] <= wr_data[8:0];
+            q_we[1] <= 0;
+            if (q_adr != wr_address[16:1])
+              q_we[0] <= 0;
+          end
+          else
+          begin
+            q_data[10:0] <= wr_data[31:21];
+            q_we[0] <= 0;
+            if (q_adr != wr_address[16:1])
+              q_we[1] <= 0;
+          end
+        end
+        else
+        begin
+          q_wr_adr <= wr_address[16:1];
+          q_wr_msb <= wr_address[0];
+          q_pend_data <= wr_data;
+          q_pend_be <= wr_be;
+          q_rd <= 0;
+          q_wr <= 0;
+          q_pend_wr <= 1;
+        end
       end
       else
       begin
@@ -133,43 +159,51 @@ begin : phys_bar_gen
         else
           q_rd <= 0;
 
-        if (q_pend_wr)
+        if (q_we == 2'b11)
         begin
-          if (q_wr_msb)
-          begin
-            if (q_pend_be[1])
-              q_wr_data[19] <= q_pend_data[8];
-            else
-              q_wr_data[19] <= q_rd_data[19];
-
-            if (q_pend_be[0])
-              q_wr_data[18:11] <= q_pend_data[7:0];
-            else
-              q_wr_data[18:11] <= q_rd_data[18:11];
-            
-            q_wr_data[10:0] <= q_rd_data[10:0];
-          end
-          else
-          begin
-            if (q_pend_be[3])
-              q_wr_data[10:3] <= q_pend_data[31:24];
-            else
-              q_wr_data[10:3] <= q_rd_data[10:3];
-
-            if (q_pend_be[2])
-              q_wr_data[2:0] <= q_pend_data[23:21];
-            else
-              q_wr_data[2:0] <= q_rd_data[2:0];
-
-            q_wr_data[19:11] <= q_rd_data[19:11];
-          end
-
+          q_we <= 0;
+          q_wr_adr <= q_adr;
+          q_wr_data <= q_data;
           q_wr <= 1;
-          q_pend_wr <= 0;
         end
         else
-          q_wr <= 0;
+        begin
+          if (q_pend_wr)
+          begin
+            if (q_wr_msb)
+            begin
+              if (q_pend_be[1])
+                q_wr_data[19] <= q_pend_data[8];
+              else
+                q_wr_data[19] <= q_rd_data[19];
 
+              if (q_pend_be[0])
+                q_wr_data[18:11] <= q_pend_data[7:0];
+              else
+                q_wr_data[18:11] <= q_rd_data[18:11];
+            
+              q_wr_data[10:0] <= q_rd_data[10:0];
+            end
+            else
+            begin
+              if (q_pend_be[3])
+                q_wr_data[10:3] <= q_pend_data[31:24];
+              else
+                q_wr_data[10:3] <= q_rd_data[10:3];
+  
+              if (q_pend_be[2])
+                q_wr_data[2:0] <= q_pend_data[23:21];
+              else
+                q_wr_data[2:0] <= q_rd_data[2:0];
+
+              q_wr_data[19:11] <= q_rd_data[19:11];
+            end
+
+            q_wr <= 1;
+            q_pend_wr <= 0;
+          end
+          else
+            q_wr <= 0;
         end
       end
     end
