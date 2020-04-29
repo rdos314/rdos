@@ -70,6 +70,7 @@ module daq2_app
   input                   adc_started,
   input                   adc_probing,
   input                   adc_running,
+  input                   adc_delay,
 
   output wire             adc_sync_ok,
   output wire             adc_sync_fail,
@@ -107,9 +108,10 @@ module daq2_app
 
  reg                      rx_run;
 
- reg [15:0]               adc_sync_fail_cnt;
+ reg [1:0]                adc_sync_fail_cnt;
  reg [15:0]               adc_sync_ok_cnt;
  reg                      adc_start_found;
+ reg [7:0]                delay_cnt;
  
  wire [13:0]              adcA_0;
  wire [13:0]              adcA_1;
@@ -468,8 +470,8 @@ endfunction
 
   assign rx_test_ok = check_valid(adcA_0, adcB_0, adcA_1, adcB_1, adcA_2, adcB_2, adcA_3, adcB_3);
 
-  assign adc_sync_ok = adc_sync_ok_cnt[3];
-  assign adc_sync_fail = adc_sync_fail_cnt[15];
+  assign adc_sync_ok = adc_sync_ok_cnt[15];
+  assign adc_sync_fail = adc_sync_fail_cnt[1];
 
 generate
   begin : daq2_app
@@ -534,8 +536,18 @@ generate
               adc_wr <= 0;
             else
             begin
-              adc_wr <= 1;
-              adc_start_found <= 1;
+              if (adc_delay)
+              begin
+                if (delay_cnt)
+                  delay_cnt <= delay_cnt - 1;
+                else
+                  adc_start_found <= 1;
+              end
+              else
+              begin               
+                adc_wr <= 1;
+                adc_start_found <= 1;
+              end
             end
           end
           else
@@ -545,12 +557,14 @@ generate
         begin
           adc_wr <= 0;
           adc_start_found <= 0;
+          delay_cnt <= 8'hFF;
         end
       end
       else
       begin
         adc_wr <= 0;
         adc_start_found <= 0;
+        delay_cnt <= 8'hFF;
       end
     end
 

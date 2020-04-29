@@ -73,6 +73,7 @@ module adc_app (
   output reg              adc_started,
   output reg              adc_probing,
   output reg              adc_running,
+  output wire             adc_delay,
 
   output reg              bar_irq,
   output reg              block_irq,
@@ -199,6 +200,8 @@ phys_bar adc_bar_inst (
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
+
+  assign adc_delay = up_test_mode ? 0 : 1;
 
 generate
 begin : adc_app

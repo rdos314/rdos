@@ -170,6 +170,8 @@ module adc (
   wire                 up_adc_started;
   wire                 up_adc_probing;
   wire                 up_adc_running;
+  wire                 up_adc_delay;
+  reg                  adc_delay;
 
   wire                 rx_adc_sync_ok;
   wire                 rx_adc_sync_fail;
@@ -279,6 +281,9 @@ module adc (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_adc_running;
 
+ (* ASYNC_REG="TRUE" *)  reg                  adc_delay_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_adc_delay;
+
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_ok_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok;
 
@@ -386,6 +391,7 @@ daq2_app daq2_app_inst (
     .adc_started(rx_adc_started),    
     .adc_probing(rx_adc_probing),    
     .adc_running(rx_adc_running),    
+    .adc_delay(rx_adc_delay),    
 
     .adc_sync_ok(rx_adc_sync_ok),    
     .adc_sync_fail(rx_adc_sync_fail),    
@@ -577,6 +583,7 @@ adc_app adc_app_inst (
     .adc_started(up_adc_started),
     .adc_probing(up_adc_probing),
     .adc_running(up_adc_running),
+    .adc_delay(up_adc_delay),
 
     .adc_sync_ok(up_adc_sync_ok),
     .adc_sync_fail(up_adc_sync_fail),
@@ -688,6 +695,17 @@ generate
     begin
       adc_running_1 <= up_adc_running;
       rx_adc_running <= adc_running_1;
+    end
+    
+    always @ ( posedge up_clk ) 
+    begin
+      adc_delay <= up_adc_delay;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_delay_1 <= adc_delay;
+      rx_adc_delay <= adc_delay_1;
     end
 
     always @ ( posedge rx_clk ) 

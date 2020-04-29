@@ -78,22 +78,6 @@ bram_phys bram_phys_inst (
   .doutb(q_rd_data)   // output wire [19 : 0] doutb
 );
 
-ila_1 ila_1_inst (
-    .clk(clk),                           // input wire clk
-    .probe0(wr),                        // input wire [0:0]  probe0  
-    .probe1(wr_be),                     // input wire [3:0]  probe0  
-    .probe2(wr_data),                   // input wire [31:0]  probe0  
-    .probe3(wr_adr),                    // input wire [16:0]  probe0  
-    .probe4(q_we),                      // input wire [1:0]  probe0  
-    .probe5(q_adr),                     // input wire [15:0]  probe0  
-    .probe6(q_data),                    // input wire [19:0]  probe0  
-    .probe7(q_wr),                      // input wire [0:0]  probe0  
-    .probe8(q_wr_adr),                  // input wire [15:0]  probe0  
-    .probe9(q_wr_data),                 // input wire [19:0]  probe0  
-    .probe10(rd_adr),                   // input wire [15:0]  probe0  
-    .probe11(q_rd_data)                 // input wire [19:0]  probe0  
- );
-
 generate
 begin : phys_bar_gen
 
