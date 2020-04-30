@@ -29,6 +29,31 @@
 #include <rdos.h>
 #include "adc.h"
 
+struct TAdcPower
+{
+    long long SinA;
+    long long SinB;
+    long long CosA;
+    long long CosB;
+};
+
+
+#pragma aux ANAAPI "_*" \
+       parm routine [] \
+       value struct float struct routine [eax] \
+       modify [eax ecx edx];
+
+extern "C" {
+
+int GetSin(int Phase);
+#pragma aux (ANAAPI) GetSin;
+
+void CalcPower(TAdcData *Data, int Size, int RelFreq, struct TAdcPower *Res);
+#pragma aux (ANAAPI) CalcPower;
+
+};
+
+
 /*##########################################################################
 #
 #   Name       : TAdc::TAdc
@@ -208,10 +233,7 @@ char TAdc::CheckRamp(TAdcData *data, int Block, int Samples, char Start)
     }
 
     if (Errors >= 4)
-    {
         printf("Block %d has %d errors\r\n", Block, Errors);
-        RdosVerifyAdcBlock(Block);
-    }
 
     return curr;
 }
@@ -397,4 +419,45 @@ void TAdc::Check()
             CheckRamp();
             break;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::GetSin
+#
+#   Purpose....: Get sin() value
+#
+#   In params..: Phase
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::GetSin(int Phase)
+{
+    return ::GetSin(Phase);
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CalcPower
+#
+#   Purpose....: Calc power
+#
+#   In params..: Data, Size, RelFreq, PowerA, PowerB
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB)
+{
+    struct TAdcPower res;
+    long long val;
+
+    ::CalcPower(Data, Size, RelFreq, &res);
+
+    val = (res.SinA + res.CosA) / Size / 0x7FFF;
+    *PowerA = (int)val;
+
+    val = (res.SinB + res.CosB) / Size / 0x7FFF;
+    *PowerB = (int)val;
 }

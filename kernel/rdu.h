@@ -927,7 +927,6 @@
 #define usergate_start_adc 0x000002D8
 #define usergate_stop_adc 0x000002D9
 #define usergate_map_adc_block 0x000002DA
-#define usergate_verify_adc_block 0x000002DB
 
 
 
@@ -1861,7 +1860,6 @@
 #define CallGate_start_adc 0x55 0x67 0x9a 216 2 0 0 3 0 0x5d
 #define CallGate_stop_adc 0x55 0x67 0x9a 217 2 0 0 3 0 0x5d
 #define CallGate_map_adc_block 0x55 0x67 0x9a 218 2 0 0 3 0 0x5d
-#define CallGate_verify_adc_block 0x55 0x67 0x9a 219 2 0 0 3 0 0x5d
 
 #else
 
@@ -2793,6 +2791,5 @@
 #define CallGate_start_adc 0x3e 0x67 0x9a 216 2 0 0 3 0
 #define CallGate_stop_adc 0x3e 0x67 0x9a 217 2 0 0 3 0
 #define CallGate_map_adc_block 0x3e 0x67 0x9a 218 2 0 0 3 0
-#define CallGate_verify_adc_block 0x3e 0x67 0x9a 219 2 0 0 3 0
 
 #endif

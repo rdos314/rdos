@@ -845,9 +845,6 @@
 #define osgate_get_pci_msi_info 740
 #define osgate_move_pci_msi 741
 
-#define osgate_disable_freq_adjust 742
-#define osgate_enable_freq_adjust 743
-
 
 
 
@@ -1696,7 +1693,4 @@
 
 #define OsGate_get_pci_msi_info 0x3E 0x67 0x9a 228 2 0 0 2 0
 #define OsGate_move_pci_msi 0x3E 0x67 0x9a 229 2 0 0 2 0
-
-#define OsGate_disable_freq_adjust 0x3E 0x67 0x9a 230 2 0 0 2 0
-#define OsGate_enable_freq_adjust 0x3E 0x67 0x9a 231 2 0 0 2 0
 

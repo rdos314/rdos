@@ -927,6 +927,5 @@ setup_adc_nr                      = 727
 start_adc_nr                      = 728
 stop_adc_nr                       = 729
 map_adc_block_nr                  = 730
-verify_adc_block_nr               = 731
 
 usergate_entries                 = 750

@@ -54,9 +54,10 @@ data    SEGMENT byte public 'DATA'
 board_linear	DD ?
 
 adc_buf_sel     DW ?
-adc_bar_thread  DW ?
 adc_index       DW ?
-adc_irq         DB ?
+adc_pages       DW ?
+
+start_thread    DW ?
 
 
 data	ENDS
@@ -82,10 +83,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AdcBarInt Proc far
-    mov bx,SEG data
-    mov ds,ebx
-    mov bx,ds:adc_bar_thread
-    Signal
     ret
 AdcBarInt	Endp
 
@@ -645,6 +642,10 @@ setup_adc  Proc far
     push ecx
     push edi
 ;
+    mov bx,SEG data
+    mov ds,ebx
+    mov ds:adc_pages,cx
+;
     mov bx,anio_control_sel
     mov ds,ebx
     mov ds:cb_adc_test_mode,al
@@ -689,11 +690,40 @@ setup_adc  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           adc_thread
+;
+;           DESCRIPTION:    Adc thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+adc_thread_name	DB 'ADC', 0
+
+adc_thread:
+    mov ax,SEG data
+    mov ds,eax
+    mov cx,ds:adc_pages
+
+adc_wait_signal:
+    mov ax,ds:adc_index
+    jz adc_wait_signal
+;
+    mov bx,ds:start_thread
+    Signal
+
+adc_loop:
+    cmp cx,ds:adc_index
+    jne adc_loop
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           start_adc
 ;
 ;       DESCRIPTION:    Start ADC
 ;
-;       RETURNS:        AL	Irq bits
+;       RETURNS:        NC	OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -703,33 +733,37 @@ start_adc  Proc far
     push ds
     push es
     push ebx
-;
-    DisableFreqAdjust
-    mov ax,500
-    WaitMilliSec
+    push ecx
+    push esi
+    push edi
 ;
     mov bx,SEG data
     mov ds,ebx
     GetThread
-    mov ds:adc_bar_thread,ax
-    mov ds:adc_irq,0
+    mov ds:start_thread,ax
     mov ds:adc_index,0
     ClearSignal
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET adc_thread
+    mov edi,OFFSET adc_thread_name
+    mov ecx,stack0_size
+    mov ax,1
+    CreateThread
+;
+    mov ax,500
+    WaitMilliSec
 ;
     mov bx,anio_control_sel
     mov es,ebx
     or es:cb_adc_control,80h
-;
-
-saLoop:
     WaitForSignal
-    mov al,es:cb_adc_irq
-    test al,60h
-    jz saLoop
 ;
-    xor bx,bx
-    mov ds:adc_bar_thread,bx
-;
+    pop edi
+    pop esi
+    pop ecx
     pop ebx
     pop es
     pop ds
@@ -750,8 +784,6 @@ stop_adc_name	DB 'Stop ADC', 0
 stop_adc  Proc far
     push ds
     push ebx
-;
-    EnableFreqAdjust
 ;
     mov bx,anio_control_sel
     mov ds,ebx
@@ -842,124 +874,6 @@ mabDone:
     ret
 map_adc_block  Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           verify_adc_block
-;
-;       DESCRIPTION:    Verify adc 2M block
-;
-;       PARAMETERS:     EAX     Block #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-verify_adc_block_name	DB 'Verify ADC Block', 0
-
-verify_adc_block  Proc far
-    push ds
-    push es
-    pushad
-;
-    mov bx,SEG data
-    mov ds,bx
-    mov ds,ds:adc_buf_sel
-;
-    mov bx,anio_adc_sel
-    mov es,bx
-;
-    mov ebx,eax
-    shl ebx,3
-;
-    popad
-    pop es
-    pop ds  
-    ret
-verify_adc_block  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NextPn
-;
-;       DESCRIPTION:    Next PN value
-;
-;       PARAMETERS:     EAX	Value
-;                       EDX     Result
-;                       ECX     Rotations
-;
-;       RETURNS:        EAX     New value
-;                       EDX     New result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NextPn	proc near
-    mov ebx,eax
-    shr ebx,5
-    xor ebx,eax
-    shr ebx,17
-    rcr bl,1
-    rcl eax,1
-    rcl edx,1
-    loop NextPn
-    ret
-NextPn	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           adc_thread
-;
-;           DESCRIPTION:    Adc thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-adc_thread_name	DB 'ADC', 0
-
-adc_thread:
-    int 3
-    call InitPciAdapter
-    jc atDone
-;
-    call InitControlBar
-;
-    mov bx,anio_control_sel
-    mov ds,ebx
-    AllocatePhysical32
-    mov bx,20h
-    mov ds:[bx],eax
-
-atDone:
-    int 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           init_thread
-;
-;           DESCRIPTION:    Init thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_thread    PROC far
-    push ds
-    push es
-    pushad
-;
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-;
-    mov esi,OFFSET adc_thread
-    mov edi,OFFSET adc_thread_name
-    mov ecx,stack0_size
-    mov ax,4
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    ret
-init_thread    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1010,12 +924,6 @@ init_pci    PROC far
     xor dx,dx
     mov ax,map_adc_block_nr
     RegisterBimodalUserGate
-;
-    mov esi,OFFSET verify_adc_block
-    mov edi,OFFSET verify_adc_block_name
-    xor dx,dx
-    mov ax,verify_adc_block_nr
-    RegisterBimodalUserGate
 
 ipDone:
     popad
@@ -1040,8 +948,7 @@ init_pci    ENDP
 Init    Proc far
     mov ax,SEG data
     mov ds,eax
-    mov ds:adc_irq,0
-    mov ds:adc_bar_thread,0
+    mov ds:start_thread,0
     mov ds:adc_buf_sel,0
 ;
     mov eax,cs

@@ -111,7 +111,6 @@ int NextTid = 1;
 int NextPid = 1;
 int ActiveThreads = 0;
 int ActiveProcesses = 0;
-int FreqAdjOff = 0;
 
 struct TProcess ProcessArr[MAX_PROCESSES];
 struct TThread ThreadArr[MAX_THREADS];
@@ -436,29 +435,6 @@ void MoveThread(int Core, int ThreadId)
 
         RdosLeaveKernelSection(&ThreadSection);
     }
-}
-
-/*##########################################################################
-#
-#   Name       : EnableFreqAdjust
-#
-##########################################################################*/
-#pragma aux ImplEnableFreqAdjust "*" rdosdev parm routine
-void __far ImplEnableFreqAdjust()
-{
-    if (FreqAdjOff)
-        FreqAdjOff--;
-}
-
-/*##########################################################################
-#
-#   Name       : DisableFreqAdjust
-#
-##########################################################################*/
-#pragma aux ImplDisableFreqAdjust "*" rdosdev parm routine
-void __far ImplDisableFreqAdjust()
-{
-    FreqAdjOff++;
 }
 
 /*##########################################################################
@@ -1068,19 +1044,14 @@ void __far SchedulerThread(void *param)
 
         RdosEnterKernelSection(&CoreSection);
 
-        if (FreqAdjOff)
-            RdosUpdateFreq(-1000);
+        if (MaxLoad > 600)
+            RdosUpdateFreq(-1);
         else
         {
-            if (MaxLoad > 600)
-                RdosUpdateFreq(-1);
+            if (MaxLoad < 300)
+                RdosUpdateFreq(1);
             else
-            {
-                if (MaxLoad < 300)
-                    RdosUpdateFreq(1);
-                else
-                    RdosUpdateFreq(0);
-            }
+                RdosUpdateFreq(0);
         }
 
         RdosLeaveKernelSection(&CoreSection);
@@ -1241,9 +1212,6 @@ int main()
     RdosRegisterOsGate(osgate_get_program_id, (__rdos_gate_callback *)&ImplGetProgramID, "Get Program ID");
     RdosRegisterOsGate(osgate_allocate_realtime_core, (__rdos_gate_callback *)&ImplAllocateRealTimeCore, "Allocate Realtime Core");
     RdosRegisterOsGate(osgate_free_realtime_core, (__rdos_gate_callback *)&ImplFreeRealTimeCore, "Free Realtime Core");
-
-    RdosRegisterOsGate(osgate_enable_freq_adjust, (__rdos_gate_callback *)&ImplEnableFreqAdjust, "Enable Freq Adjust");
-    RdosRegisterOsGate(osgate_disable_freq_adjust, (__rdos_gate_callback *)&ImplDisableFreqAdjust, "Disable Freq Adjust");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");

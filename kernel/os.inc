@@ -1141,14 +1141,6 @@ UpdateFreq    MACRO
     OsGate update_freq_nr
                     ENDM
 
-EnableFreqAdjust      MACRO
-    OsGate enable_freq_adjust_nr
-                    ENDM
-
-DisableFreqAdjust      MACRO
-    OsGate disable_freq_adjust_nr
-                    ENDM
-
 ;   OUT AX      Thread ID
 CreateThreadId    MACRO
     OsGate create_thread_id_nr

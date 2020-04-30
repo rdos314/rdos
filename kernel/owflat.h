@@ -3282,9 +3282,6 @@
     __parm [__eax] [__edi] \
     __value [__eax]
 
-#pragma aux RdosVerifyAdcBlock = \
-    CallGate_verify_adc_block  \
-    __parm [__eax]
 
 #pragma aux RdosReadSerialLines = \
     "mov dh,cl" \

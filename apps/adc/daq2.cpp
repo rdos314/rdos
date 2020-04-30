@@ -46,9 +46,27 @@
 ##########################################################################*/
 void main()
 {
-    TAdc Adc(0x0, 5000);
-    TAdcData *data;
     int i;
+    int PowerA;
+    int PowerB;
+    TAdcData *data;
+
+    data = new TAdcData[32768];
+
+    for (i = 0; i < 32768; i++)
+    {
+        data[i].chA = TAdc::GetSin(1024 * i);
+        data[i].chB = TAdc::GetSin(1024 * i + 56000);
+    } 
+
+    for (i = 700; i < 1300; i++)
+    {
+        TAdc::CalcPower(data, 32768, i, &PowerA, &PowerB);
+        printf("%d: %d %d\r\n", i, PowerA, PowerB);
+    }
+
+
+    TAdc Adc(0x0, 5000);
 
     if (Adc.Start())
     {
