@@ -3271,7 +3271,8 @@
 
 #pragma aux RdosStartAdc = \
     CallGate_start_adc \
-    __value [__al]
+    CarryToBool \
+    __value [__eax]
 
 #pragma aux RdosStopAdc = \
     CallGate_stop_adc

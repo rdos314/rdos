@@ -103,12 +103,7 @@ TAdc::~TAdc()
 ##########################################################################*/
 bool TAdc::Start()
 {
-    char state = RdosStartAdc();
-
-    if (state & 0x20)
-         return true;
-    else
-        return false;
+    return RdosStartAdc();
 }
 
 /*##########################################################################
