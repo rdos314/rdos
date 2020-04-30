@@ -47,32 +47,46 @@
 void main()
 {
     int i;
+    int j;
+    int k;
     int PowerA;
     int PowerB;
     TAdcData *data;
+    static int PowerSumA[3000];
+    static int PowerSumB[3000];
 
-//    data = new TAdcData[32768];
+    for (i = 0; i < 3000; i++)
+    {
+        PowerSumA[i] = 0;
+        PowerSumB[i] = 0;
+    }
 
-//    for (i = 0; i < 32768; i++)
-//    {
-//        data[i].chA = TAdc::GetSin(1024 * i);
-//        data[i].chB = TAdc::GetSin(1024 * i + 56000);
-//    }
-
-//    for (i = 700; i < 1300; i++)
-//    {
-//        TAdc::CalcPower(data, 32768, i, &PowerA, &PowerB);
-//        printf("%d: %d %d\r\n", i, PowerA, PowerB);
-//    }
-
-
-    TAdc Adc(0x5, 5000);
+    TAdc Adc(0x0, 5000);
 
     if (Adc.Start())
-        Adc.Check();
+    {
+        for (i = 0; i < 5000; i++)
+        {
+            data = Adc.GetBlock(i);
 
-//    {
-//        for (i = 0; i < 5000; i++)
-//            data = Adc.GetBlock(i);
-//    }
+            for (k = 0; k < 16; k++)
+            {
+                for (j = 300; j < 3000; j++)
+                {
+                    TAdc::CalcPower(data + 0x8000 * k, 0x8000, j * 0x40000 / 7500 , &PowerA, &PowerB);
+                    if (PowerA >= 2 && PowerB >= 2)
+                    {
+                        PowerSumA[j] += PowerA;
+                        PowerSumB[j] += PowerB;
+                    }
+                }
+            }
+        }
+
+        for (i = 300; i < 3000; i++)
+        {
+            if (PowerSumA[i] && PowerSumB[i])
+                printf("%d.%01d: %d %d\r\n", i / 10, i % 10, PowerSumA[i], PowerSumB[i]);
+        }
+    }
 }

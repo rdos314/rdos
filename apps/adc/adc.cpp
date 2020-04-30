@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <stdio.h>
+#include <math.h>
 #include <rdos.h>
 #include "adc.h"
 
@@ -447,12 +448,20 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
 {
     struct TAdcPower res;
     long long val;
+    double dval;
 
     ::CalcPower(Data, Size, RelFreq, &res);
 
-    val = (res.SinA + res.CosA) / Size / 0x7FFF;
-    *PowerA = (int)val;
+    res.SinA = res.SinA / Size / 0x2000;
+    res.SinB = res.SinB / Size / 0x2000;
+    res.CosA = res.CosA / Size / 0x2000;
+    res.CosB = res.CosB / Size / 0x2000;
 
-    val = (res.SinB + res.CosB) / Size / 0x7FFF;
-    *PowerB = (int)val;
+    val = res.SinA * res.SinA + res.CosA * res.CosA;
+    dval = sqrt(val);
+    *PowerA = (int)dval;
+
+    val = res.SinB * res.SinB + res.CosB * res.CosB;
+    dval = sqrt(val);
+    *PowerB = (int)dval;
 }
