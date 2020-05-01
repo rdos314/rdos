@@ -664,6 +664,9 @@ setup_adc  Proc far
     mov bx,anio_adc_sel
     mov ds,bx
     xor edi,edi
+;
+    mov ax,25
+    WaitMilliSec
 
 setup_adc_phys_loop:
     AllocatePhysicalDir
