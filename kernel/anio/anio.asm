@@ -325,7 +325,8 @@ InitClk	proc near
     call WriteSpiByte
 ;
     mov dx,0F4h
-    mov al,11h
+    mov al,11h   ; 750 MHz
+;    mov al,22h   ; 600 MHz
     call WriteSpiByte
 ;
     mov dx,0F5h
@@ -542,7 +543,8 @@ InitAdc	proc near
     call WriteSpiByte
 ;
     mov dx,56Eh
-    mov al,0          ; should be 10h for 600 MHz!
+    mov al,0          ; 750 MHz
+;    mov al,10h         ; 600 MHz
     call WriteSpiByte
 ;
     ret

@@ -131,10 +131,17 @@ set_property PACKAGE_PIN E28 [get_ports trig_p]
 set_property PACKAGE_PIN D28 [get_ports trig_n]
 
 # ADC/DAC clocks
+# 750 MHz
 create_clock -period 2.667 -name rx_ref_clk [get_ports rx_ref_clk_p]
 create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
 create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
 create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
+
+# 600 MHz
+# create_clock -period 3.333 -name rx_ref_clk [get_ports rx_ref_clk_p]
+# create_clock -period 3.333 -name tx_ref_clk [get_ports tx_ref_clk_p]
+# create_clock -period 213.333 -name rx_sysref [get_ports rx_sysref_p]
+# create_clock -period 213.333 -name tx_sysref [get_ports tx_sysref_p]
 
 # Synchronization paths
 

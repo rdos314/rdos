@@ -1,9 +1,10 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Wed Apr 22 20:49:40 2020
+// Date        : Thu Apr 30 18:05:15 2020
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim C:/rdos/vivado/adc/adc.runs/adc_fifo_synth_1/adc_fifo_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top adc_fifo -prefix
+//               adc_fifo_ adc_fifo_sim_netlist.v
 // Design      : adc_fifo
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -281,8 +282,8 @@ module adc_fifo
   (* C_OPTIMIZATION_MODE = "0" *) 
   (* C_OVERFLOW_LOW = "0" *) 
   (* C_POWER_SAVING_MODE = "0" *) 
-  (* C_PRELOAD_LATENCY = "1" *) 
-  (* C_PRELOAD_REGS = "0" *) 
+  (* C_PRELOAD_LATENCY = "0" *) 
+  (* C_PRELOAD_REGS = "1" *) 
   (* C_PRIM_FIFO_TYPE = "512x72" *) 
   (* C_PRIM_FIFO_TYPE_AXIS = "1kx18" *) 
   (* C_PRIM_FIFO_TYPE_RACH = "512x36" *) 
@@ -606,19 +607,18 @@ module adc_fifo
         .wr_rst_busy(NLW_U0_wr_rst_busy_UNCONNECTED));
 endmodule
 
-(* ORIG_REF_NAME = "builtin_extdepth_v6" *) 
 module adc_fifo_builtin_extdepth_v6
    (prog_full,
     prog_empty,
-    full,
-    FULL,
     empty,
     EMPTY,
+    full,
+    FULL,
     dout,
     PROG_FULL,
     PROG_EMPTY,
-    full_0,
     empty_0,
+    full_0,
     rd_clk,
     RD_EN,
     RST,
@@ -627,15 +627,15 @@ module adc_fifo_builtin_extdepth_v6
     din);
   output prog_full;
   output prog_empty;
-  output full;
-  output FULL;
   output empty;
   output EMPTY;
+  output full;
+  output FULL;
   output [71:0]dout;
   input PROG_FULL;
   input PROG_EMPTY;
-  input full_0;
   input empty_0;
+  input full_0;
   input rd_clk;
   input RD_EN;
   input RST;
@@ -707,31 +707,31 @@ endmodule
 
 (* ORIG_REF_NAME = "builtin_extdepth_v6" *) 
 module adc_fifo_builtin_extdepth_v6_0
-   (WR_EN,
-    FULL,
-    RD_EN,
+   (RD_EN,
     EMPTY,
+    WR_EN,
+    FULL,
     PROG_EMPTY,
     PROG_FULL,
     dout,
-    wr_en,
-    \dout[127] ,
     rd_en,
+    \dout[127] ,
+    wr_en,
     \dout[127]_0 ,
     rd_clk,
     RST,
     wr_clk,
     din);
-  output WR_EN;
-  output FULL;
   output RD_EN;
   output EMPTY;
+  output WR_EN;
+  output FULL;
   output PROG_EMPTY;
   output PROG_FULL;
   output [55:0]dout;
-  input wr_en;
-  input \dout[127] ;
   input rd_en;
+  input \dout[127] ;
+  input wr_en;
   input \dout[127]_0 ;
   input rd_clk;
   input RST;
@@ -796,7 +796,6 @@ module adc_fifo_builtin_extdepth_v6_0
         .O(dbr_as_reg));
 endmodule
 
-(* ORIG_REF_NAME = "builtin_prim_v6" *) 
 module adc_fifo_builtin_prim_v6
    (PROG_EMPTY,
     PROG_FULL,
@@ -809,9 +808,9 @@ module adc_fifo_builtin_prim_v6
     RST,
     wr_clk,
     din,
-    wr_en,
-    \dout[127] ,
     rd_en,
+    \dout[127] ,
+    wr_en,
     \dout[127]_0 );
   output PROG_EMPTY;
   output PROG_FULL;
@@ -824,9 +823,9 @@ module adc_fifo_builtin_prim_v6
   input RST;
   input wr_clk;
   input [55:0]din;
-  input wr_en;
-  input \dout[127] ;
   input rd_en;
+  input \dout[127] ;
+  input wr_en;
   input \dout[127]_0 ;
 
   wire EMPTY;
@@ -889,14 +888,14 @@ module adc_fifo_builtin_prim_v6
   (* box_type = "PRIMITIVE" *) 
   FIFO36E1 #(
     .ALMOST_EMPTY_OFFSET(13'h0007),
-    .ALMOST_FULL_OFFSET(13'h0070),
+    .ALMOST_FULL_OFFSET(13'h0071),
     .DATA_WIDTH(72),
     .DO_REG(1),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .EN_SYN("FALSE"),
     .FIFO_MODE("FIFO36_72"),
-    .FIRST_WORD_FALL_THROUGH("FALSE"),
+    .FIRST_WORD_FALL_THROUGH("TRUE"),
     .INIT(72'h000000000000000000),
     .IS_RDCLK_INVERTED(1'b0),
     .IS_RDEN_INVERTED(1'b0),
@@ -936,14 +935,14 @@ module adc_fifo_builtin_prim_v6
     \gf36e1_inst.sngfifo36e1_i_1 
        (.I0(rd_en),
         .I1(EMPTY),
-        .I2(\dout[127]_0 ),
+        .I2(\dout[127] ),
         .O(RD_EN));
   LUT3 #(
     .INIT(8'h02)) 
     \gf36e1_inst.sngfifo36e1_i_3 
        (.I0(wr_en),
         .I1(FULL),
-        .I2(\dout[127] ),
+        .I2(\dout[127]_0 ),
         .O(WR_EN));
 endmodule
 
@@ -954,8 +953,8 @@ module adc_fifo_builtin_prim_v6_1
     dout,
     prog_full,
     prog_empty,
-    full,
     empty,
+    full,
     rd_clk,
     RD_EN,
     RST,
@@ -964,15 +963,15 @@ module adc_fifo_builtin_prim_v6_1
     din,
     PROG_FULL,
     PROG_EMPTY,
-    full_0,
-    empty_0);
+    empty_0,
+    full_0);
   output EMPTY;
   output FULL;
   output [71:0]dout;
   output prog_full;
   output prog_empty;
-  output full;
   output empty;
+  output full;
   input rd_clk;
   input RD_EN;
   input RST;
@@ -981,8 +980,8 @@ module adc_fifo_builtin_prim_v6_1
   input [71:0]din;
   input PROG_FULL;
   input PROG_EMPTY;
-  input full_0;
   input empty_0;
+  input full_0;
 
   wire EMPTY;
   wire FULL;
@@ -1044,14 +1043,14 @@ module adc_fifo_builtin_prim_v6_1
   (* box_type = "PRIMITIVE" *) 
   FIFO36E1 #(
     .ALMOST_EMPTY_OFFSET(13'h0007),
-    .ALMOST_FULL_OFFSET(13'h0070),
+    .ALMOST_FULL_OFFSET(13'h0071),
     .DATA_WIDTH(72),
     .DO_REG(1),
     .EN_ECC_READ("FALSE"),
     .EN_ECC_WRITE("FALSE"),
     .EN_SYN("FALSE"),
     .FIFO_MODE("FIFO36_72"),
-    .FIRST_WORD_FALL_THROUGH("FALSE"),
+    .FIRST_WORD_FALL_THROUGH("TRUE"),
     .INIT(72'h000000000000000000),
     .IS_RDCLK_INVERTED(1'b0),
     .IS_RDEN_INVERTED(1'b0),
@@ -1100,30 +1099,29 @@ module adc_fifo_builtin_prim_v6_1
         .O(prog_full));
 endmodule
 
-(* ORIG_REF_NAME = "builtin_top_v6" *) 
 module adc_fifo_builtin_top_v6
    (prog_full,
     prog_empty,
+    empty,
     dout,
     full,
-    empty,
+    rd_en,
     rd_clk,
     RST,
     wr_clk,
     din,
-    wr_en,
-    rd_en);
+    wr_en);
   output prog_full;
   output prog_empty;
+  output empty;
   output [127:0]dout;
   output full;
-  output empty;
+  input rd_en;
   input rd_clk;
   input RST;
   input wr_clk;
   input [127:0]din;
   input wr_en;
-  input rd_en;
 
   wire RST;
   wire [127:0]din;
@@ -1132,13 +1130,13 @@ module adc_fifo_builtin_top_v6
   wire empty;
   wire [2:1]ful;
   wire full;
+  wire \gextw[2].gnll_fifo.inst_extd_n_0 ;
   wire [2:2]pe;
   wire [2:2]pf;
   wire prog_empty;
   wire prog_full;
   wire rd_clk;
   wire rd_en;
-  wire rd_tmp;
   wire wr_clk;
   wire wr_en;
   wire wr_tmp;
@@ -1148,7 +1146,7 @@ module adc_fifo_builtin_top_v6
         .FULL(ful[1]),
         .PROG_EMPTY(pe),
         .PROG_FULL(pf),
-        .RD_EN(rd_tmp),
+        .RD_EN(\gextw[2].gnll_fifo.inst_extd_n_0 ),
         .RST(RST),
         .WR_EN(wr_tmp),
         .din(din[71:0]),
@@ -1166,43 +1164,42 @@ module adc_fifo_builtin_top_v6
         .FULL(ful[2]),
         .PROG_EMPTY(pe),
         .PROG_FULL(pf),
-        .RD_EN(rd_tmp),
+        .RD_EN(\gextw[2].gnll_fifo.inst_extd_n_0 ),
         .RST(RST),
         .WR_EN(wr_tmp),
         .din(din[127:72]),
         .dout(dout[127:72]),
-        .\dout[127] (ful[1]),
-        .\dout[127]_0 (emp[1]),
+        .\dout[127] (emp[1]),
+        .\dout[127]_0 (ful[1]),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .wr_clk(wr_clk),
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_top" *) 
 module adc_fifo_fifo_generator_top
    (dout,
     full,
-    empty,
     prog_full,
     prog_empty,
+    empty,
     wr_clk,
+    rd_en,
     rd_clk,
     din,
     rst,
-    wr_en,
-    rd_en);
+    wr_en);
   output [127:0]dout;
   output full;
-  output empty;
   output prog_full;
   output prog_empty;
+  output empty;
   input wr_clk;
+  input rd_en;
   input rd_clk;
   input [127:0]din;
   input rst;
   input wr_en;
-  input rd_en;
 
   wire [127:0]din;
   wire [127:0]dout;
@@ -1267,7 +1264,7 @@ endmodule
 (* C_IMPLEMENTATION_TYPE_WRCH = "1" *) (* C_INIT_WR_PNTR_VAL = "0" *) (* C_INTERFACE_TYPE = "0" *) 
 (* C_MEMORY_TYPE = "4" *) (* C_MIF_FILE_NAME = "BlankString" *) (* C_MSGON_VAL = "1" *) 
 (* C_OPTIMIZATION_MODE = "0" *) (* C_OVERFLOW_LOW = "0" *) (* C_POWER_SAVING_MODE = "0" *) 
-(* C_PRELOAD_LATENCY = "1" *) (* C_PRELOAD_REGS = "0" *) (* C_PRIM_FIFO_TYPE = "512x72" *) 
+(* C_PRELOAD_LATENCY = "0" *) (* C_PRELOAD_REGS = "1" *) (* C_PRIM_FIFO_TYPE = "512x72" *) 
 (* C_PRIM_FIFO_TYPE_AXIS = "1kx18" *) (* C_PRIM_FIFO_TYPE_RACH = "512x36" *) (* C_PRIM_FIFO_TYPE_RDCH = "1kx36" *) 
 (* C_PRIM_FIFO_TYPE_WACH = "512x36" *) (* C_PRIM_FIFO_TYPE_WDCH = "1kx36" *) (* C_PRIM_FIFO_TYPE_WRCH = "512x36" *) 
 (* C_PROG_EMPTY_THRESH_ASSERT_VAL = "7" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
@@ -1297,7 +1294,7 @@ endmodule
 (* C_WR_DEPTH_WRCH = "16" *) (* C_WR_FREQ = "187" *) (* C_WR_PNTR_WIDTH = "9" *) 
 (* C_WR_PNTR_WIDTH_AXIS = "10" *) (* C_WR_PNTR_WIDTH_RACH = "4" *) (* C_WR_PNTR_WIDTH_RDCH = "10" *) 
 (* C_WR_PNTR_WIDTH_WACH = "4" *) (* C_WR_PNTR_WIDTH_WDCH = "10" *) (* C_WR_PNTR_WIDTH_WRCH = "4" *) 
-(* C_WR_RESPONSE_LATENCY = "1" *) (* ORIG_REF_NAME = "fifo_generator_v13_2_5" *) 
+(* C_WR_RESPONSE_LATENCY = "1" *) 
 module adc_fifo_fifo_generator_v13_2_5
    (backup,
     backup_marker,
@@ -2314,30 +2311,29 @@ module adc_fifo_fifo_generator_v13_2_5
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_v13_2_5_builtin" *) 
 module adc_fifo_fifo_generator_v13_2_5_builtin
    (dout,
     full,
-    empty,
     prog_full,
     prog_empty,
+    empty,
     wr_clk,
+    rd_en,
     rd_clk,
     din,
     rst,
-    wr_en,
-    rd_en);
+    wr_en);
   output [127:0]dout;
   output full;
-  output empty;
   output prog_full;
   output prog_empty;
+  output empty;
   input wr_clk;
+  input rd_en;
   input rd_clk;
   input [127:0]din;
   input rst;
   input wr_en;
-  input rd_en;
 
   wire [127:0]din;
   wire [127:0]dout;
@@ -2371,30 +2367,29 @@ module adc_fifo_fifo_generator_v13_2_5_builtin
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_v13_2_5_synth" *) 
 module adc_fifo_fifo_generator_v13_2_5_synth
    (dout,
     full,
-    empty,
     prog_full,
     prog_empty,
+    empty,
     wr_clk,
+    rd_en,
     rd_clk,
     din,
     rst,
-    wr_en,
-    rd_en);
+    wr_en);
   output [127:0]dout;
   output full;
-  output empty;
   output prog_full;
   output prog_empty;
+  output empty;
   input wr_clk;
+  input rd_en;
   input rd_clk;
   input [127:0]din;
   input rst;
   input wr_en;
-  input rd_en;
 
   wire [127:0]din;
   wire [127:0]dout;
@@ -2422,7 +2417,6 @@ module adc_fifo_fifo_generator_v13_2_5_synth
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "reset_builtin" *) 
 module adc_fifo_reset_builtin
    (RST,
     wr_clk,

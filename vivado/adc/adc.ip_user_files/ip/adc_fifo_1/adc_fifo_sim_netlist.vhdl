@@ -1,9 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Wed Apr 22 20:49:40 2020
+-- Date        : Thu Apr 30 18:05:15 2020
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim C:/rdos/vivado/adc/adc.runs/adc_fifo_synth_1/adc_fifo_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top adc_fifo -prefix
+--               adc_fifo_ adc_fifo_sim_netlist.vhdl
 -- Design      : adc_fifo
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -26,13 +27,11 @@ entity adc_fifo_builtin_prim_v6 is
     RST : in STD_LOGIC;
     wr_clk : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 55 downto 0 );
-    \^wr_en\ : in STD_LOGIC;
-    \dout[127]\ : in STD_LOGIC;
     \^rd_en\ : in STD_LOGIC;
+    \dout[127]\ : in STD_LOGIC;
+    \^wr_en\ : in STD_LOGIC;
     \dout[127]_0\ : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_builtin_prim_v6 : entity is "builtin_prim_v6";
 end adc_fifo_builtin_prim_v6;
 
 architecture STRUCTURE of adc_fifo_builtin_prim_v6 is
@@ -91,14 +90,14 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"0007",
-      ALMOST_FULL_OFFSET => X"0070",
+      ALMOST_FULL_OFFSET => X"0071",
       DATA_WIDTH => 72,
       DO_REG => 1,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       EN_SYN => false,
       FIFO_MODE => "FIFO36_72",
-      FIRST_WORD_FALL_THROUGH => false,
+      FIRST_WORD_FALL_THROUGH => true,
       INIT => X"000000000000000000",
       IS_RDCLK_INVERTED => '0',
       IS_RDEN_INVERTED => '0',
@@ -180,7 +179,7 @@ begin
         port map (
       I0 => \^rd_en\,
       I1 => \^empty\,
-      I2 => \dout[127]_0\,
+      I2 => \dout[127]\,
       O => \^rd_en_1\
     );
 \gf36e1_inst.sngfifo36e1_i_3\: unisim.vcomponents.LUT3
@@ -190,7 +189,7 @@ begin
         port map (
       I0 => \^wr_en\,
       I1 => \^full\,
-      I2 => \dout[127]\,
+      I2 => \dout[127]_0\,
       O => \^wr_en_1\
     );
 end STRUCTURE;
@@ -205,8 +204,8 @@ entity adc_fifo_builtin_prim_v6_1 is
     dout : out STD_LOGIC_VECTOR ( 71 downto 0 );
     \^prog_full\ : out STD_LOGIC;
     \^prog_empty\ : out STD_LOGIC;
-    \^full\ : out STD_LOGIC;
     \^empty\ : out STD_LOGIC;
+    \^full\ : out STD_LOGIC;
     rd_clk : in STD_LOGIC;
     RD_EN : in STD_LOGIC;
     RST : in STD_LOGIC;
@@ -215,8 +214,8 @@ entity adc_fifo_builtin_prim_v6_1 is
     din : in STD_LOGIC_VECTOR ( 71 downto 0 );
     PROG_FULL : in STD_LOGIC;
     PROG_EMPTY : in STD_LOGIC;
-    full_0 : in STD_LOGIC;
-    empty_0 : in STD_LOGIC
+    empty_0 : in STD_LOGIC;
+    full_0 : in STD_LOGIC
   );
   attribute ORIG_REF_NAME : string;
   attribute ORIG_REF_NAME of adc_fifo_builtin_prim_v6_1 : entity is "builtin_prim_v6";
@@ -278,14 +277,14 @@ full_INST_0: unisim.vcomponents.LUT2
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"0007",
-      ALMOST_FULL_OFFSET => X"0070",
+      ALMOST_FULL_OFFSET => X"0071",
       DATA_WIDTH => 72,
       DO_REG => 1,
       EN_ECC_READ => false,
       EN_ECC_WRITE => false,
       EN_SYN => false,
       FIFO_MODE => "FIFO36_72",
-      FIRST_WORD_FALL_THROUGH => false,
+      FIRST_WORD_FALL_THROUGH => true,
       INIT => X"000000000000000000",
       IS_RDCLK_INVERTED => '0',
       IS_RDEN_INVERTED => '0',
@@ -374,8 +373,6 @@ entity adc_fifo_reset_builtin is
     \^rst\ : in STD_LOGIC;
     rd_clk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_reset_builtin : entity is "reset_builtin";
 end adc_fifo_reset_builtin;
 
 architecture STRUCTURE of adc_fifo_reset_builtin is
@@ -697,15 +694,15 @@ entity adc_fifo_builtin_extdepth_v6 is
   port (
     \^prog_full\ : out STD_LOGIC;
     \^prog_empty\ : out STD_LOGIC;
-    \^full\ : out STD_LOGIC;
-    FULL : out STD_LOGIC;
     \^empty\ : out STD_LOGIC;
     EMPTY : out STD_LOGIC;
+    \^full\ : out STD_LOGIC;
+    FULL : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 71 downto 0 );
     PROG_FULL : in STD_LOGIC;
     PROG_EMPTY : in STD_LOGIC;
-    full_0 : in STD_LOGIC;
     empty_0 : in STD_LOGIC;
+    full_0 : in STD_LOGIC;
     rd_clk : in STD_LOGIC;
     RD_EN : in STD_LOGIC;
     RST : in STD_LOGIC;
@@ -713,8 +710,6 @@ entity adc_fifo_builtin_extdepth_v6 is
     WR_EN : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 71 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_builtin_extdepth_v6 : entity is "builtin_extdepth_v6";
 end adc_fifo_builtin_extdepth_v6;
 
 architecture STRUCTURE of adc_fifo_builtin_extdepth_v6 is
@@ -792,16 +787,16 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity adc_fifo_builtin_extdepth_v6_0 is
   port (
-    WR_EN : out STD_LOGIC;
-    FULL : out STD_LOGIC;
     RD_EN : out STD_LOGIC;
     EMPTY : out STD_LOGIC;
+    WR_EN : out STD_LOGIC;
+    FULL : out STD_LOGIC;
     PROG_EMPTY : out STD_LOGIC;
     PROG_FULL : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 55 downto 0 );
-    \^wr_en\ : in STD_LOGIC;
-    \dout[127]\ : in STD_LOGIC;
     \^rd_en\ : in STD_LOGIC;
+    \dout[127]\ : in STD_LOGIC;
+    \^wr_en\ : in STD_LOGIC;
     \dout[127]_0\ : in STD_LOGIC;
     rd_clk : in STD_LOGIC;
     RST : in STD_LOGIC;
@@ -887,26 +882,24 @@ entity adc_fifo_builtin_top_v6 is
   port (
     prog_full : out STD_LOGIC;
     prog_empty : out STD_LOGIC;
+    empty : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 127 downto 0 );
     full : out STD_LOGIC;
-    empty : out STD_LOGIC;
+    rd_en : in STD_LOGIC;
     rd_clk : in STD_LOGIC;
     RST : in STD_LOGIC;
     wr_clk : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 127 downto 0 );
-    wr_en : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    wr_en : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_builtin_top_v6 : entity is "builtin_top_v6";
 end adc_fifo_builtin_top_v6;
 
 architecture STRUCTURE of adc_fifo_builtin_top_v6 is
   signal emp : STD_LOGIC_VECTOR ( 2 downto 1 );
   signal ful : STD_LOGIC_VECTOR ( 2 downto 1 );
+  signal \gextw[2].gnll_fifo.inst_extd_n_0\ : STD_LOGIC;
   signal pe : STD_LOGIC_VECTOR ( 2 to 2 );
   signal pf : STD_LOGIC_VECTOR ( 2 to 2 );
-  signal rd_tmp : STD_LOGIC;
   signal wr_tmp : STD_LOGIC;
 begin
 \gextw[1].gnll_fifo.inst_extd\: entity work.adc_fifo_builtin_extdepth_v6
@@ -915,7 +908,7 @@ begin
       FULL => ful(1),
       PROG_EMPTY => pe(2),
       PROG_FULL => pf(2),
-      RD_EN => rd_tmp,
+      RD_EN => \gextw[2].gnll_fifo.inst_extd_n_0\,
       RST => RST,
       WR_EN => wr_tmp,
       din(71 downto 0) => din(71 downto 0),
@@ -935,13 +928,13 @@ begin
       FULL => ful(2),
       PROG_EMPTY => pe(2),
       PROG_FULL => pf(2),
-      RD_EN => rd_tmp,
+      RD_EN => \gextw[2].gnll_fifo.inst_extd_n_0\,
       RST => RST,
       WR_EN => wr_tmp,
       din(55 downto 0) => din(127 downto 72),
       dout(55 downto 0) => dout(127 downto 72),
-      \dout[127]\ => ful(1),
-      \dout[127]_0\ => emp(1),
+      \dout[127]\ => emp(1),
+      \dout[127]_0\ => ful(1),
       rd_clk => rd_clk,
       \^rd_en\ => rd_en,
       wr_clk => wr_clk,
@@ -956,18 +949,16 @@ entity adc_fifo_fifo_generator_v13_2_5_builtin is
   port (
     dout : out STD_LOGIC_VECTOR ( 127 downto 0 );
     full : out STD_LOGIC;
-    empty : out STD_LOGIC;
     prog_full : out STD_LOGIC;
     prog_empty : out STD_LOGIC;
+    empty : out STD_LOGIC;
     wr_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
     rd_clk : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 127 downto 0 );
     rst : in STD_LOGIC;
-    wr_en : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    wr_en : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_fifo_generator_v13_2_5_builtin : entity is "fifo_generator_v13_2_5_builtin";
 end adc_fifo_fifo_generator_v13_2_5_builtin;
 
 architecture STRUCTURE of adc_fifo_fifo_generator_v13_2_5_builtin is
@@ -1003,18 +994,16 @@ entity adc_fifo_fifo_generator_top is
   port (
     dout : out STD_LOGIC_VECTOR ( 127 downto 0 );
     full : out STD_LOGIC;
-    empty : out STD_LOGIC;
     prog_full : out STD_LOGIC;
     prog_empty : out STD_LOGIC;
+    empty : out STD_LOGIC;
     wr_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
     rd_clk : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 127 downto 0 );
     rst : in STD_LOGIC;
-    wr_en : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    wr_en : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_fifo_generator_top : entity is "fifo_generator_top";
 end adc_fifo_fifo_generator_top;
 
 architecture STRUCTURE of adc_fifo_fifo_generator_top is
@@ -1042,18 +1031,16 @@ entity adc_fifo_fifo_generator_v13_2_5_synth is
   port (
     dout : out STD_LOGIC_VECTOR ( 127 downto 0 );
     full : out STD_LOGIC;
-    empty : out STD_LOGIC;
     prog_full : out STD_LOGIC;
     prog_empty : out STD_LOGIC;
+    empty : out STD_LOGIC;
     wr_clk : in STD_LOGIC;
+    rd_en : in STD_LOGIC;
     rd_clk : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 127 downto 0 );
     rst : in STD_LOGIC;
-    wr_en : in STD_LOGIC;
-    rd_en : in STD_LOGIC
+    wr_en : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_fifo_generator_v13_2_5_synth : entity is "fifo_generator_v13_2_5_synth";
 end adc_fifo_fifo_generator_v13_2_5_synth;
 
 architecture STRUCTURE of adc_fifo_fifo_generator_v13_2_5_synth is
@@ -1534,9 +1521,9 @@ entity adc_fifo_fifo_generator_v13_2_5 is
   attribute C_POWER_SAVING_MODE : integer;
   attribute C_POWER_SAVING_MODE of adc_fifo_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PRELOAD_LATENCY : integer;
-  attribute C_PRELOAD_LATENCY of adc_fifo_fifo_generator_v13_2_5 : entity is 1;
+  attribute C_PRELOAD_LATENCY of adc_fifo_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PRELOAD_REGS : integer;
-  attribute C_PRELOAD_REGS of adc_fifo_fifo_generator_v13_2_5 : entity is 0;
+  attribute C_PRELOAD_REGS of adc_fifo_fifo_generator_v13_2_5 : entity is 1;
   attribute C_PRIM_FIFO_TYPE : string;
   attribute C_PRIM_FIFO_TYPE of adc_fifo_fifo_generator_v13_2_5 : entity is "512x72";
   attribute C_PRIM_FIFO_TYPE_AXIS : string;
@@ -1715,8 +1702,6 @@ entity adc_fifo_fifo_generator_v13_2_5 is
   attribute C_WR_PNTR_WIDTH_WRCH of adc_fifo_fifo_generator_v13_2_5 : entity is 4;
   attribute C_WR_RESPONSE_LATENCY : integer;
   attribute C_WR_RESPONSE_LATENCY of adc_fifo_fifo_generator_v13_2_5 : entity is 1;
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of adc_fifo_fifo_generator_v13_2_5 : entity is "fifo_generator_v13_2_5";
 end adc_fifo_fifo_generator_v13_2_5;
 
 architecture STRUCTURE of adc_fifo_fifo_generator_v13_2_5 is
@@ -2639,9 +2624,9 @@ architecture STRUCTURE of adc_fifo is
   attribute C_POWER_SAVING_MODE : integer;
   attribute C_POWER_SAVING_MODE of U0 : label is 0;
   attribute C_PRELOAD_LATENCY : integer;
-  attribute C_PRELOAD_LATENCY of U0 : label is 1;
+  attribute C_PRELOAD_LATENCY of U0 : label is 0;
   attribute C_PRELOAD_REGS : integer;
-  attribute C_PRELOAD_REGS of U0 : label is 0;
+  attribute C_PRELOAD_REGS of U0 : label is 1;
   attribute C_PRIM_FIFO_TYPE : string;
   attribute C_PRIM_FIFO_TYPE of U0 : label is "512x72";
   attribute C_PRIM_FIFO_TYPE_AXIS : string;
