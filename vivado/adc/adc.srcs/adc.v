@@ -260,6 +260,10 @@ module adc (
   reg                  rx_led;
   reg                  control_led;
 
+  reg [17:0]           phase;
+  wire                 sin_cos_valid;
+  wire [31:0]          sin_cos_data;
+
 
 // clock domain crossings
 
@@ -606,6 +610,22 @@ adc_app adc_app_inst (
     .state(adc_state)
 );
 
+sincos_0 sin_cos_inst (
+  .aclk(rx_clk),                                      // input wire aclk
+  .s_axis_phase_tvalid(1),                            // input wire s_axis_phase_tvalid
+  .s_axis_phase_tdata({phase[17], phase[17], phase}), // input wire [23 : 0] s_axis_phase_tdata
+  .m_axis_dout_tvalid(sin_cos_valid),                 // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(sin_cos_data)                    // output wire [31 : 0] m_axis_dout_tdata
+);
+
+
+ila_1 ila_1_inst (
+    .clk(rx_clk),                   // input wire clk
+    .probe0(phase),                 // input wire [17:0]  probe0  
+    .probe1(sin_cos_valid),         // input wire [0:0]  probe0  
+    .probe2(sin_cos_data[15:0]),     // input wire [15:0]  probe0  
+    .probe3(sin_cos_data[31:16])    // input wire [15:0]  probe0  
+ );
 
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -623,6 +643,11 @@ adc_app adc_app_inst (
 
 generate
   begin : adc
+
+    always @ ( posedge rx_clk ) 
+    begin
+      phase <= phase + 1;
+    end
 
     always @ ( posedge pcie_ref_clk ) 
     begin
