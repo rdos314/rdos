@@ -56,9 +56,9 @@
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 multiply_0 your_instance_name (
   .CLK(CLK),  // input wire CLK
-  .A(A),      // input wire [14 : 0] A
-  .B(B),      // input wire [13 : 0] B
-  .P(P)      // output wire [28 : 0] P
+  .A(A),      // input wire [15 : 0] A
+  .B(B),      // input wire [15 : 0] B
+  .P(P)      // output wire [31 : 0] P
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 

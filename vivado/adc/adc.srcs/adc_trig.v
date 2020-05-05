@@ -32,6 +32,15 @@ module adc_trig (
   input [17:0]            phase_incr
 );
 
+  wire [15:0]             adc_A0;
+  wire [15:0]             adc_B0;
+  wire [15:0]             adc_A1;
+  wire [15:0]             adc_B1;
+  wire [15:0]             adc_A2;
+  wire [15:0]             adc_B2;
+  wire [15:0]             adc_A3;
+  wire [15:0]             adc_B3;
+
   reg [17:0]              phase_0;
   reg [17:0]              phase_1;
   reg [17:0]              phase_2;
@@ -42,42 +51,50 @@ module adc_trig (
   wire [31:0]             sin_cos_2;
   wire [31:0]             sin_cos_3;
 
-  wire [14:0]             sin_0;
-  wire [14:0]             cos_0;
-  wire [14:0]             sin_1;
-  wire [14:0]             cos_1;
-  wire [14:0]             sin_2;
-  wire [14:0]             cos_2;
-  wire [14:0]             sin_3;
-  wire [14:0]             cos_3;
+  wire [15:0]             sin_0;
+  wire [15:0]             cos_0;
+  wire [15:0]             sin_1;
+  wire [15:0]             cos_1;
+  wire [15:0]             sin_2;
+  wire [15:0]             cos_2;
+  wire [15:0]             sin_3;
+  wire [15:0]             cos_3;
 
-  wire [28:0]             p_sin_A0;
-  wire [28:0]             p_cos_A0;
-  wire [28:0]             p_sin_B0;
-  wire [28:0]             p_cos_B0;
+  wire [31:0]             p_sin_A0;
+  wire [31:0]             p_cos_A0;
+  wire [31:0]             p_sin_B0;
+  wire [31:0]             p_cos_B0;
 
-  wire [28:0]             p_sin_A1;
-  wire [28:0]             p_cos_A1;
-  wire [28:0]             p_sin_B1;
-  wire [28:0]             p_cos_B1;
+  wire [31:0]             p_sin_A1;
+  wire [31:0]             p_cos_A1;
+  wire [31:0]             p_sin_B1;
+  wire [31:0]             p_cos_B1;
 
-  wire [28:0]             p_sin_A2;
-  wire [28:0]             p_cos_A2;
-  wire [28:0]             p_sin_B2;
-  wire [28:0]             p_cos_B2;
+  wire [31:0]             p_sin_A2;
+  wire [31:0]             p_cos_A2;
+  wire [31:0]             p_sin_B2;
+  wire [31:0]             p_cos_B2;
 
-  wire [28:0]             p_sin_A3;
-  wire [28:0]             p_cos_A3;
-  wire [28:0]             p_sin_B3;
-  wire [28:0]             p_cos_B3;
+  wire [31:0]             p_sin_A3;
+  wire [31:0]             p_cos_A3;
+  wire [31:0]             p_sin_B3;
+  wire [31:0]             p_cos_B3;
 
-  reg  [28:0]             p_sin_A01;
-  reg  [28:0]             p_sin_A23;
-  reg  [28:0]             p_sin;
+  reg  [31:0]             p_sin_A01;
+  reg  [31:0]             p_sin_A23;
+  reg  [31:0]             p_sin_A;
 
-  reg  [28:0]             p_cos_A01;
-  reg  [28:0]             p_cos_A23;
-  reg  [28:0]             p_cos;
+  reg  [31:0]             p_cos_A01;
+  reg  [31:0]             p_cos_A23;
+  reg  [31:0]             p_cos_A;
+
+  reg  [31:0]             p_sin_B01;
+  reg  [31:0]             p_sin_B23;
+  reg  [31:0]             p_sin_B;
+
+  reg  [31:0]             p_cos_B01;
+  reg  [31:0]             p_cos_B23;
+  reg  [31:0]             p_cos_B;
 
 sincos_0 sin_cos_inst_0 (
   .aclk(rx_clk),                                            // input wire aclk
@@ -113,158 +130,166 @@ sincos_0 sin_cos_inst_3 (
 
 multiply_0 mul_sin_A0_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_0),               // input wire [14 : 0] A
-  .B(rx_adc_data[13:0]),   // input wire [13 : 0] B
-  .P(p_sin_A0)             // output wire [28 : 0] P
+  .A(sin_0),               // input wire [15 : 0] A
+  .B(adc_A0),              // input wire [15 : 0] B
+  .P(p_sin_A0)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_A0_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_0),               // input wire [14 : 0] A
-  .B(rx_adc_data[13:0]),   // input wire [13 : 0] B
-  .P(p_cos_A0)             // output wire [28 : 0] P
+  .A(cos_0),               // input wire [15 : 0] A
+  .B(adc_A0),              // input wire [15 : 0] B
+  .P(p_cos_A0)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_B0_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_0),               // input wire [14 : 0] A
-  .B(rx_adc_data[29:16]),  // input wire [13 : 0] B
-  .P(p_sin_B0)             // output wire [28 : 0] P
+  .A(sin_0),               // input wire [15 : 0] A
+  .B(adc_B0),              // input wire [15 : 0] B
+  .P(p_sin_B0)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_B0_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_0),               // input wire [14 : 0] A
-  .B(rx_adc_data[29:16]),  // input wire [13 : 0] B
-  .P(p_cos_B0)             // output wire [28 : 0] P
+  .A(cos_0),               // input wire [15 : 0] A
+  .B(adc_B0),              // input wire [15 : 0] B
+  .P(p_cos_B0)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_A1_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_1),               // input wire [14 : 0] A
-  .B(rx_adc_data[45:32]),  // input wire [13 : 0] B
-  .P(p_sin_A1)             // output wire [28 : 0] P
+  .A(sin_1),               // input wire [15 : 0] A
+  .B(adc_A1),              // input wire [15 : 0] B
+  .P(p_sin_A1)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_A1_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_1),               // input wire [14 : 0] A
-  .B(rx_adc_data[45:32]),   // input wire [13 : 0] B
-  .P(p_cos_A1)             // output wire [28 : 0] P
+  .A(cos_1),               // input wire [15 : 0] A
+  .B(adc_A1),              // input wire [15 : 0] B
+  .P(p_cos_A1)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_B1_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_1),               // input wire [14 : 0] A
-  .B(rx_adc_data[61:48]),  // input wire [13 : 0] B
-  .P(p_sin_B1)             // output wire [28 : 0] P
+  .A(sin_1),               // input wire [15 : 0] A
+  .B(adc_B1),              // input wire [15 : 0] B
+  .P(p_sin_B1)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_B1_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_1),               // input wire [14 : 0] A
-  .B(rx_adc_data[61:48]),  // input wire [13 : 0] B
-  .P(p_cos_B1)             // output wire [28 : 0] P
+  .A(cos_1),               // input wire [15 : 0] A
+  .B(adc_B1),              // input wire [15 : 0] B
+  .P(p_cos_B1)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_A2_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_2),               // input wire [14 : 0] A
-  .B(rx_adc_data[76:64]),  // input wire [13 : 0] B
-  .P(p_sin_A2)             // output wire [28 : 0] P
+  .A(sin_2),               // input wire [15 : 0] A
+  .B(adc_A2),              // input wire [15 : 0] B
+  .P(p_sin_A2)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_A2_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_2),               // input wire [14 : 0] A
-  .B(rx_adc_data[76:64]),   // input wire [13 : 0] B
-  .P(p_cos_A2)             // output wire [28 : 0] P
+  .A(cos_2),               // input wire [15 : 0] A
+  .B(adc_A2),              // input wire [15 : 0] B
+  .P(p_cos_A2)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_B2_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_2),               // input wire [14 : 0] A
-  .B(rx_adc_data[93:80]),  // input wire [13 : 0] B
-  .P(p_sin_B2)             // output wire [28 : 0] P
+  .A(sin_2),               // input wire [15 : 0] A
+  .B(adc_B2),              // input wire [15 : 0] B
+  .P(p_sin_B2)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_B2_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_2),               // input wire [14 : 0] A
-  .B(rx_adc_data[93:80]),  // input wire [13 : 0] B
-  .P(p_cos_B2)             // output wire [28 : 0] P
+  .A(cos_2),               // input wire [15 : 0] A
+  .B(adc_B2),              // input wire [15 : 0] B
+  .P(p_cos_B2)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_A3_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_3),               // input wire [14 : 0] A
-  .B(rx_adc_data[109:96]), // input wire [13 : 0] B
-  .P(p_sin_A3)             // output wire [28 : 0] P
+  .A(sin_3),               // input wire [15 : 0] A
+  .B(adc_A3),              // input wire [15 : 0] B
+  .P(p_sin_A3)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_A3_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_3),               // input wire [14 : 0] A
-  .B(rx_adc_data[109:96]), // input wire [13 : 0] B
-  .P(p_cos_A3)             // output wire [28 : 0] P
+  .A(cos_3),               // input wire [15 : 0] A
+  .B(adc_A3),              // input wire [15 : 0] B
+  .P(p_cos_A3)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_sin_B3_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(sin_3),               // input wire [14 : 0] A
-  .B(rx_adc_data[125:112]), // input wire [13 : 0] B
-  .P(p_sin_B3)             // output wire [28 : 0] P
+  .A(sin_3),               // input wire [15 : 0] A
+  .B(adc_B3),              // input wire [15 : 0] B
+  .P(p_sin_B3)             // output wire [31 : 0] P
 );
 
 multiply_0 mul_cos_B3_inst (
   .CLK(rx_clk),            // input wire CLK
-  .A(cos_3),               // input wire [14 : 0] A
-  .B(rx_adc_data[125:112]), // input wire [13 : 0] B
-  .P(p_cos_B3)             // output wire [28 : 0] P
+  .A(cos_3),               // input wire [15 : 0] A
+  .B(adc_B3),              // input wire [15 : 0] B
+  .P(p_cos_B3)             // output wire [31 : 0] P
 );
 
 ila_1 ila_1_inst (
     .clk(rx_clk),                   // input wire clk
-    .probe0(phase_0),               // input wire [17:0]  probe0  
-    .probe1(phase_1),               // input wire [17:0]  probe0  
-    .probe2(phase_2),               // input wire [17:0]  probe0  
-    .probe3(phase_3),               // input wire [17:0]  probe0  
-    .probe4(p_sin_A0),              // input wire [28:0]  probe0  
-    .probe5(p_sin_B0),              // input wire [28:0]  probe0  
-    .probe6(p_cos_A0),              // input wire [28:0]  probe0  
-    .probe7(p_cos_B0),              // input wire [28:0]  probe0  
-    .probe8(p_sin_A1),              // input wire [28:0]  probe0  
-    .probe9(p_sin_B1),              // input wire [28:0]  probe0  
-    .probe10(p_cos_A1),             // input wire [28:0]  probe0  
-    .probe11(p_cos_B1),             // input wire [28:0]  probe0  
-    .probe12(p_sin_A2),             // input wire [28:0]  probe0  
-    .probe13(p_sin_B2),             // input wire [28:0]  probe0  
-    .probe14(p_cos_A2),             // input wire [28:0]  probe0  
-    .probe15(p_cos_B2),             // input wire [28:0]  probe0  
-    .probe16(p_sin_A3),             // input wire [28:0]  probe0  
-    .probe17(p_sin_B3),             // input wire [28:0]  probe0  
-    .probe18(p_cos_A3),             // input wire [28:0]  probe0  
-    .probe19(p_cos_B3),             // input wire [28:0]  probe0  
-    .probe20(p_sin_A01),            // input wire [28:0]  probe0  
-    .probe21(p_sin_B01),            // input wire [28:0]  probe0  
-    .probe22(p_cos_A01),            // input wire [28:0]  probe0  
-    .probe23(p_cos_B01),            // input wire [28:0]  probe0  
-    .probe24(p_sin_A23),            // input wire [28:0]  probe0  
-    .probe25(p_sin_B23),            // input wire [28:0]  probe0  
-    .probe26(p_cos_A23),            // input wire [28:0]  probe0  
-    .probe27(p_cos_B23),            // input wire [28:0]  probe0  
-    .probe28(p_sin),                // input wire [28:0]  probe0  
-    .probe29(p_cos)                // input wire [28:0]  probe0  
+    .probe0(rx_adc_wr),             // input wire [0:0]  probe0  
+    .probe1(phase_0),               // input wire [17:0]  probe0  
+    .probe2(phase_1),               // input wire [17:0]  probe0  
+    .probe3(phase_2),               // input wire [17:0]  probe0  
+    .probe4(phase_3),               // input wire [17:0]  probe0  
+    .probe5(sin_0),                 // input wire [15:0]  probe0  
+    .probe6(sin_1),                 // input wire [15:0]  probe0  
+    .probe7(sin_2),                 // input wire [15:0]  probe0  
+    .probe8(sin_3),                 // input wire [15:0]  probe0  
+    .probe9(cos_0),                 // input wire [15:0]  probe0  
+    .probe10(cos_1),                // input wire [15:0]  probe0  
+    .probe11(cos_2),                // input wire [15:0]  probe0  
+    .probe12(cos_3),                // input wire [15:0]  probe0  
+    .probe13(adc_A0),               // input wire [15:0]  probe0  
+    .probe14(adc_B0),               // input wire [15:0]  probe0  
+    .probe15(adc_A1),               // input wire [15:0]  probe0  
+    .probe16(adc_B1),               // input wire [15:0]  probe0  
+    .probe17(p_sin_A0),             // input wire [31:0]  probe0  
+    .probe18(p_sin_B0),             // input wire [31:0]  probe0  
+    .probe19(p_cos_A0),             // input wire [31:0]  probe0  
+    .probe20(p_cos_B0),             // input wire [31:0]  probe0  
+    .probe21(p_sin_A1),             // input wire [31:0]  probe0  
+    .probe22(p_sin_B1),             // input wire [31:0]  probe0  
+    .probe23(p_cos_A1),             // input wire [31:0]  probe0  
+    .probe24(p_cos_B1),             // input wire [31:0]  probe0  
+    .probe25(p_sin_A01),            // input wire [31:0]  probe0  
+    .probe26(p_cos_A01),            // input wire [31:0]  probe0  
+    .probe27(p_sin_A),              // input wire [31:0]  probe0  
+    .probe28(p_cos_A)               // input wire [31:0]  probe0  
  );
 
-  assign sin_0 = sin_cos_0[30:16];
-  assign cos_0 = sin_cos_0[14:0];
-  assign sin_1 = sin_cos_1[30:16];
-  assign cos_1 = sin_cos_1[14:0];
-  assign sin_2 = sin_cos_2[30:16];
-  assign cos_2 = sin_cos_2[14:0];
-  assign sin_3 = sin_cos_3[30:16];
-  assign cos_3 = sin_cos_3[14:0];
+  assign sin_0 = {sin_cos_0[30], sin_cos_0[30:16]};
+  assign cos_0 = {sin_cos_0[14], sin_cos_0[14:0]};
+  assign sin_1 = {sin_cos_1[30], sin_cos_1[30:16]};
+  assign cos_1 = {sin_cos_1[14], sin_cos_1[14:0]};
+  assign sin_2 = {sin_cos_2[30], sin_cos_2[30:16]};
+  assign cos_2 = {sin_cos_2[14], sin_cos_2[14:0]};
+  assign sin_3 = {sin_cos_3[30], sin_cos_3[30:16]};
+  assign cos_3 = {sin_cos_3[14], sin_cos_3[14:0]};
+
+  assign adc_A0 = rx_adc_data[15:0];
+  assign adc_B0 = rx_adc_data[31:16];
+  assign adc_A1 = rx_adc_data[47:32];
+  assign adc_B1 = rx_adc_data[63:48];
+  assign adc_A2 = rx_adc_data[79:64];
+  assign adc_B2 = rx_adc_data[95:80];
+  assign adc_A3 = rx_adc_data[111:96];
+  assign adc_B3 = rx_adc_data[127:112];
 
 
 generate
@@ -283,8 +308,8 @@ begin : adc_trig
       begin
         phase_0 <= 0;
         phase_1 <= phase_incr;
-        phase_2 <= phase_incr[17:1];
-        phase_3 <= phase_incr[17:1] + phase_incr;
+        phase_2 <= {phase_incr, 1'b0};
+        phase_3 <= {phase_incr, 1'b0} + phase_incr;
       end
     end
 
@@ -296,6 +321,11 @@ begin : adc_trig
         p_sin_A23 <= p_sin_A2 + p_sin_A3;
         p_cos_A01 <= p_cos_A0 + p_cos_A1;
         p_cos_A23 <= p_cos_A2 + p_cos_A3;
+
+        p_sin_B01 <= p_sin_B0 + p_sin_B1;
+        p_sin_B23 <= p_sin_B2 + p_sin_B3;
+        p_cos_B01 <= p_cos_B0 + p_cos_B1;
+        p_cos_B23 <= p_cos_B2 + p_cos_B3;
       end
     end
 
@@ -303,8 +333,10 @@ begin : adc_trig
     begin
       if (rx_adc_wr) 
       begin
-        p_sin <= p_sin_A01 + p_sin_A23;
-        p_cos <= p_cos_A01 + p_cos_A23;
+        p_sin_A <= p_sin_A01 + p_sin_A23;
+        p_cos_A <= p_cos_A01 + p_cos_A23;
+        p_sin_B <= p_sin_B01 + p_sin_B23;
+        p_cos_B <= p_cos_B01 + p_cos_B23;
       end
     end
 
