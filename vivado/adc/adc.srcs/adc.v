@@ -197,9 +197,9 @@ module adc (
   wire                 control_rd;
 
   wire [17:0]          det_phase_incr;
-  wire [15:0]          det_window_size;
+  wire [12:0]          det_window_size;
   reg [17:0]           pci_det_phase_incr;
-  reg [15:0]           pci_det_window_size;
+  reg [12:0]           pci_det_window_size;
   reg                  pci_det_change;
   reg [2:0]            pci_det_cnt;
 

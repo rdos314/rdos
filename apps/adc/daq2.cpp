@@ -116,7 +116,7 @@ void main()
 
     freq = 45;
     freq = freq * 0x40000 / 750;
-    Adc.SetTrigger(freq, 0x8000);
+    Adc.SetTrigger(freq, 5000);
 
     if (Adc.Start())
     {

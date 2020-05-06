@@ -158,8 +158,8 @@ set_false_path -from [get_pins {control_bar_inst/ctrl_bar_gen.tx_control_index_r
 set_false_path -from [get_pins {control_bar_inst/ctrl_bar_gen.tx_control_data_reg[*]/C}] -to [get_pins {adc.rx_up_control_data_reg[*]/D}]
 
 set_false_path -from [get_pins adc.pci_det_change_reg/C] -to [get_pins adc.det_change_1_reg/D]
-set_false_path -from [get_pins {adc_app_inst/adc_app.pci_det_phase_incr_reg[*]/C}] -to [get_pins {adc.rx_det_phase_incr_reg[*]/D}]
-set_false_path -from [get_pins {adc_app_inst/adc_app.pci_det_window_size_reg[*]/C}] -to [get_pins {adc.rx_det_windows_size_reg[*]/D}]
+set_false_path -from [get_pins {adc.pci_det_phase_incr_reg[*]/C}] -to [get_pins {adc.rx_det_phase_incr_reg[*]/D}]
+set_false_path -from [get_pins {adc.pci_det_window_size_reg[*]/C}] -to [get_pins {adc.rx_det_window_size_reg[*]/D}]
 
 set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_msg_reg/C] -to [get_pins adc.rx_pci_control_msg_1_reg/D]
 set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_pci_control_index_reg[*]/D}]
