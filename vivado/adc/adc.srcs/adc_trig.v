@@ -29,7 +29,8 @@ module adc_trig (
   input                   rx_clk,
   input                   rx_adc_wr,
   input [127:0]           rx_adc_data,
-  input [17:0]            phase_incr
+  input [17:0]            phase_incr,
+  input [15:0]            window_size
 );
 
   wire [15:0]             adc_A0;

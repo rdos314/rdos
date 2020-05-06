@@ -196,6 +196,17 @@ module adc (
   wire [31:0]          control_base;
   wire                 control_rd;
 
+  wire [17:0]          det_phase_incr;
+  wire [15:0]          det_window_size;
+  reg [17:0]           pci_det_phase_incr;
+  reg [15:0]           pci_det_windows_size;
+  reg                  pci_det_change;
+  reg [2:0]            pci_det_cnt;
+
+  reg                  det_change_3;
+  reg [17:0]           rx_det_phase_incr;
+  reg [15:0]           rx_det_window_size;
+
   wire [9:0]           pci_bar0_rd_address;
   wire                 pci_bar0_rd;
 
@@ -260,10 +271,6 @@ module adc (
   reg                  rx_led;
   reg                  control_led;
 
-  reg [17:0]           phase;
-  wire                 sin_cos_valid;
-  wire [31:0]          sin_cos_data;
-
 
 // clock domain crossings
 
@@ -293,6 +300,9 @@ module adc (
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail;
+
+ (* ASYNC_REG="TRUE" *)  reg                  det_change_1;
+ (* ASYNC_REG="TRUE" *)  reg                  det_change_2;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -496,6 +506,8 @@ control_bar control_bar_inst (
     .clk(pcie_user_clk),
 
     .control_base(control_base),
+    .det_phase_incr(det_phase_incr),
+    .det_window_size(det_window_size),
 
     .rd_address(pci_bar0_rd_address),
     .rd(pci_bar0_rd),
@@ -614,7 +626,8 @@ adc_trig adc_trig_inst (
   .rx_clk( rx_clk),
   .rx_adc_wr( rx_adc_wr),
   .rx_adc_data( rx_adc_data),
-  .phase_incr(18'h3D70)
+  .phase_incr(rx_det_phase_incr),
+  .window_size(rx_det_window_size)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -675,6 +688,46 @@ generate
           else
             control_led_cnt <= control_led_cnt + 1;
         end
+      end
+    end
+
+    always @ ( posedge pcie_user_clk ) 
+    begin
+      if (pcie_user_reset)
+      begin
+        pci_det_phase_incr <= 0;
+        pci_det_change <= 0;
+        pci_det_cnt <= 0;
+      end
+      else
+      begin
+        if ((pci_det_phase_incr == det_phase_incr) && (pci_det_window_size == det_window_size))
+        begin
+          if (pci_det_cnt)
+            pci_det_cnt <= pci_det_cnt - 1;
+          else
+            pci_det_change <= 0;
+        end
+        else
+        begin
+          pci_det_phase_incr <= det_phase_incr;
+          pci_det_window_size <= det_window_size;
+          pci_det_change <= 1;
+          pci_det_cnt <= 7;
+        end
+      end
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      det_change_1 <= pci_det_change;
+      det_change_2 <= det_change_1;
+      det_change_3 <= det_change_2;
+      
+      if (!det_change_3 && det_change_2)
+      begin
+        rx_det_phase_incr <= pci_det_phase_incr;
+        rx_det_window_size <= pci_det_window_size;
       end
     end
 

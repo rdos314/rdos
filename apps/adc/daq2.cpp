@@ -114,6 +114,8 @@ void main()
 
     TAdc Adc(0x0, 10000);
 
+    Adc.SetTrigger(45000 * 0x40000 / 750000, 0x8000);
+
     if (Adc.Start())
     {
         CurrBlock = -1;

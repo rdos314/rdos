@@ -93,6 +93,22 @@ TAdc::~TAdc()
 
 /*##########################################################################
 #
+#   Name       : TAdc::SetTrigger
+#
+#   Purpose....: set trigger
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::SetTrigger(int PhaseIncr, int Window)
+{
+    RdosSetAdcTrigger(PhaseIncr, Window);
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::Start
 #
 #   Purpose....: start ADC

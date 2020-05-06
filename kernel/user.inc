@@ -3425,10 +3425,10 @@ StopAdc      MACRO
                                                 ENDM
 
 
-;   IN  EAX     2M buffer #
-;   IN  ES:EDI  Memory buffer area to map
-MapAdcBlock     MACRO
-        UserGate map_adc_block_nr
+; IN  EAX     Phase increment (0..3FFFF)
+; IN  ECX     Window     
+SetAdcTrigger     MACRO
+        UserGate set_adc_trigger_nr
                                                 ENDM
 
 ;       IN  AX          Adc channel

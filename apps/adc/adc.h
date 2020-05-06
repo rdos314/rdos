@@ -41,6 +41,7 @@ public:
     TAdc(char TestMode, int Blocks);
     ~TAdc();
 
+    void SetTrigger(int PhaseIncr, int Window);
     bool Start();
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);

@@ -3283,6 +3283,10 @@
     __parm [__eax] [__edi] \
     __value [__eax]
 
+#pragma aux RdosSetAdcTrigger = \
+    CallGate_set_adc_trigger  \
+    __parm [__eax] [__ecx]
+
 
 #pragma aux RdosReadSerialLines = \
     "mov dh,cl" \

@@ -37,15 +37,16 @@ INCLUDE ..\os\core.inc
 
 control_bar	STRUC
 
-cb_adc_control	  DB ?
+cb_adc_control	  DB ?          ; 0
 cd_resv1          DB ?,?,?
-cb_spi_clk        DD ?
-cb_spi_adc        DD ?
-cb_spi_dac        DD ?
-cb_adc_irq        DB ?
+cb_spi_clk        DD ?          ; 1
+cb_spi_adc        DD ?          ; 2
+cb_spi_dac        DD ?          ; 3
+cb_adc_irq        DB ?          ; 4
 cb_adc_test_mode  DB ?
 cb_adc_index      DW ?
-cb_adc_sysref     DD ?,?,?
+cb_adc_phase_incr DD ?          ; 5
+cb_adc_window     DD ?          ; 6
 
 control_bar	ENDS
 
@@ -724,6 +725,34 @@ adc_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           set_adc_trigger
+;
+;       DESCRIPTION:    Set ADC trigger
+;
+;       PARAMETERS:     EAX	Phase incr
+;                       ECX     Window
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_adc_trigger_name	DB 'Set ADC Trigger', 0
+
+set_adc_trigger  Proc far
+    push ds
+    push ebx
+;
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov ds:cb_adc_phase_incr,eax
+    mov ds:cb_adc_window,ecx
+;
+    pop ebx
+    pop ds
+    ret
+set_adc_trigger	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           start_adc
 ;
 ;       DESCRIPTION:    Start ADC
@@ -928,6 +957,12 @@ init_pci    PROC far
     mov edi,OFFSET map_adc_block_name
     xor dx,dx
     mov ax,map_adc_block_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_adc_trigger
+    mov edi,OFFSET set_adc_trigger_name
+    xor dx,dx
+    mov ax,set_adc_trigger_nr
     RegisterBimodalUserGate
 
 ipDone:
