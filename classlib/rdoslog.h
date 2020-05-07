@@ -49,6 +49,9 @@ protected:
     int FCurrId;
     TFile *FCurrFile;
     int FRowNum;
+    bool FInitDone;
+    bool FWasEmpty;
+    bool FTimeError;
 };
 
 class TRdosLog
@@ -63,6 +66,8 @@ public:
 
     TString GetClass();
     TRdosLogThread *GetLogger();
+    bool WasLogEmpty();
+    bool HasTimeError();
 
 protected:
     virtual void Add(int level, TString &str);

@@ -131,6 +131,7 @@ void TRdosLogThread::Init()
     FLogLevel = 0;
     FRowNum = 0;
     FCurrFile = 0;
+    FInitDone = false;
 }
 
 /*##########################################################################
@@ -326,6 +327,8 @@ void TRdosLogThread::InitFiles()
     TDirEntry entry;
     TString basename;
     TPathName path;
+    TDateTime lasttime;
+    TDateTime currtime;
     char *file;
     char *ptr;
     int index;
@@ -341,6 +344,8 @@ void TRdosLogThread::InitFiles()
 
     ok = FileList.GotoFirst();
 
+    FWasEmpty = !ok;
+
     while (ok)
     {
         entry = FileList.Get();
@@ -355,7 +360,10 @@ void TRdosLogThread::InitFiles()
             index = atoi(file);            
 
             if (index > FCurrId)
+            {
                 FCurrId = index;
+                lasttime = entry.GetTime();
+            }
         }
         else
         {
@@ -365,6 +373,31 @@ void TRdosLogThread::InitFiles()
             
         ok = FileList.GotoNext();
     }    
+
+    
+    if (FWasEmpty)
+        FTimeError = false;
+    else
+    {
+        if (currtime < lasttime)
+        {
+            FTimeError = true;
+            lasttime.Set();
+        }
+        else
+        {
+            currtime.AddMonth(-1);
+            if (currtime > lasttime)
+            {
+                FTimeError = true;
+                lasttime.Set();
+            }
+            else
+                FTimeError = false;
+        }
+    }
+
+    FInitDone = true;
 
     delete file;
 
@@ -585,6 +618,44 @@ TRdosLogThread *TRdosLog::GetLogger()
 void TRdosLog::Add(int level, TString &str)
 {
     FDev->Add(level, str);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::WasLogEmpty
+#
+#   Purpose....: Was log empty
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TRdosLog::WasLogEmpty()
+{
+    while (!FDev->FInitDone)
+        RdosWaitMilli(50);
+
+    return FDev->FWasEmpty;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::HasTimeError
+#
+#   Purpose....: Has time error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TRdosLog::HasTimeError()
+{
+    while (!FDev->FInitDone)
+        RdosWaitMilli(50);
+
+    return FDev->FTimeError;
 }
 
 /*##########################################################################
