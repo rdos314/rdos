@@ -121,6 +121,18 @@ module adc_trig (
   reg                     started;
   reg [15:0]              remain_0;
   reg [15:0]              remain_1;
+  reg                     wr_0;
+  reg                     wr_1;
+
+  reg [47:0]              sum_sin_A0;
+  reg [47:0]              sum_cos_A0;
+  reg [47:0]              sum_sin_B0;
+  reg [47:0]              sum_cos_B0;
+
+  reg [47:0]              sum_sin_A1;
+  reg [47:0]              sum_cos_A1;
+  reg [47:0]              sum_sin_B1;
+  reg [47:0]              sum_cos_B1;
 
   wire                    empty;
 
@@ -283,12 +295,18 @@ ila_1 ila_1_inst (
     .probe0(rx_adc_wr),             // input wire [0:0]  probe0  
     .probe1(start_cnt),             // input wire [3:0]  probe0  
     .probe2(started),               // input wire [0:0]  probe0  
-    .probe3(sin_A),                 // input wire [47:0]  probe0  
-    .probe4(cos_A),                 // input wire [47:0]  probe0  
-    .probe5(sin_B),                 // input wire [47:0]  probe0  
-    .probe6(cos_B),                 // input wire [47:0]  probe0  
-    .probe7(remain_0),              // input wire [15:0]  probe0  
-    .probe8(remain_1)               // input wire [15:0]  probe0  
+    .probe3(sum_sin_A0),            // input wire [47:0]  probe0  
+    .probe4(sum_cos_A0),            // input wire [47:0]  probe0  
+    .probe5(sum_sin_B0),            // input wire [47:0]  probe0  
+    .probe6(sum_cos_B0),            // input wire [47:0]  probe0  
+    .probe7(sum_sin_A1),            // input wire [47:0]  probe0  
+    .probe8(sum_cos_A1),            // input wire [47:0]  probe0  
+    .probe9(sum_sin_B1),            // input wire [47:0]  probe0  
+    .probe10(sum_cos_B1),           // input wire [47:0]  probe0  
+    .probe11(remain_0),             // input wire [15:0]  probe0  
+    .probe12(remain_1),             // input wire [15:0]  probe0  
+    .probe13(wr_0),                 // input wire [0:0]  probe0  
+    .probe14(wr_1)                  // input wire [0:0]  probe0  
  );
 
   assign sin_0 = {sin_cos_0[30], sin_cos_0[30:16]};
@@ -345,11 +363,7 @@ begin : adc_trig
         if (start_cnt)
           start_cnt <= start_cnt - 1;
         else 
-        begin
           started <= 1;
-          remain_0 <= window_size[15:1];
-          remain_1 <= window_size;
-        end
       end
       else
       begin
@@ -387,6 +401,71 @@ begin : adc_trig
         cos_A <= cos_A01 + cos_A23;
         sin_B <= sin_B01 + sin_B23;
         cos_B <= cos_B01 + cos_B23;
+      end
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (started)
+      begin
+        if (remain_0)
+        begin
+          if (remain_0 == 1)
+            wr_0 <= 1;
+          else
+            wr_0 <= 0;
+          remain_0 <= remain_0 - 1;
+          sum_sin_A0 <= sum_sin_A0 + sin_A0;
+          sum_cos_A0 <= sum_cos_A0 + cos_A0;
+          sum_sin_B0 <= sum_sin_B0 + sin_B0;
+          sum_cos_B0 <= sum_cos_B0 + cos_B0;
+        end
+        else
+        begin
+          wr_0 <= 0;
+          remain_0 <= window_size;
+          sum_sin_A0 <= sin_A0;
+          sum_cos_A0 <= cos_A0;
+          sum_sin_B0 <= sin_B0;
+          sum_cos_B0 <= cos_B0;
+        end
+
+        if (remain_1)
+        begin
+          if (remain_1 == 1)
+            wr_1 <= 1;
+          else
+            wr_1 <= 0;
+          remain_1 <= remain_1 - 1;
+          sum_sin_A1 <= sum_sin_A1 + sin_A0;
+          sum_cos_A1 <= sum_cos_A1 + cos_A0;
+          sum_sin_B1 <= sum_sin_B1 + sin_B0;
+          sum_cos_B1 <= sum_cos_B1 + cos_B0;
+        end
+        else
+        begin
+          wr_1 <= 0;
+          remain_1 <= window_size;
+          sum_sin_A1 <= sin_A0;
+          sum_cos_A1 <= cos_A0;
+          sum_sin_B1 <= sin_B0;
+          sum_cos_B1 <= cos_B0;
+        end
+      end
+      else
+      begin 
+        sum_sin_A0 <= 0;
+        sum_cos_A0 <= 0;
+        sum_sin_B0 <= 0;
+        sum_cos_B0 <= 0;
+        sum_sin_A1 <= 0;
+        sum_cos_A1 <= 0;
+        sum_sin_B1 <= 0;
+        sum_cos_B1 <= 0;
+        wr_0 <= 0;
+        wr_1 <= 0;
+        remain_0 <= window_size[15:1];
+        remain_1 <= window_size;
       end
     end
 
