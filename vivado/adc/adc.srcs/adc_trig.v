@@ -30,7 +30,7 @@ module adc_trig (
   input                   rx_adc_wr,
   input [127:0]           rx_adc_data,
   input [17:0]            phase_incr,
-  input [12:0]            window_size
+  input [15:0]            window_size
 );
 
   wire [15:0]             adc_A0;
@@ -81,39 +81,48 @@ module adc_trig (
   wire [31:0]             p_sin_B3;
   wire [31:0]             p_cos_B3;
 
-  reg  [31:0]             p_sin_A01;
-  reg  [31:0]             p_sin_A23;
-  reg  [31:0]             p_sin_A;
+  wire [47:0]             sin_A0;
+  wire [47:0]             cos_A0;
+  wire [47:0]             sin_B0;
+  wire [47:0]             cos_B0;
 
-  reg  [31:0]             p_cos_A01;
-  reg  [31:0]             p_cos_A23;
-  reg  [31:0]             p_cos_A;
+  wire [47:0]             sin_A1;
+  wire [47:0]             cos_A1;
+  wire [47:0]             sin_B1;
+  wire [47:0]             cos_B1;
 
-  reg  [31:0]             p_sin_B01;
-  reg  [31:0]             p_sin_B23;
-  reg  [31:0]             p_sin_B;
+  wire [47:0]             sin_A2;
+  wire [47:0]             cos_A2;
+  wire [47:0]             sin_B2;
+  wire [47:0]             cos_B2;
 
-  reg  [31:0]             p_cos_B01;
-  reg  [31:0]             p_cos_B23;
-  reg  [31:0]             p_cos_B;
+  wire [47:0]             sin_A3;
+  wire [47:0]             cos_A3;
+  wire [47:0]             sin_B3;
+  wire [47:0]             cos_B3;
 
-  wire [31:0]             f_sin_A;
-  wire [31:0]             f_cos_A;
-  wire [31:0]             f_sin_B;
-  wire [31:0]             f_cos_B;
+  reg  [47:0]             sin_A01;
+  reg  [47:0]             sin_A23;
+  reg  [47:0]             sin_A;
+
+  reg  [47:0]             cos_A01;
+  reg  [47:0]             cos_A23;
+  reg  [47:0]             cos_A;
+
+  reg  [47:0]             sin_B01;
+  reg  [47:0]             sin_B23;
+  reg  [47:0]             sin_B;
+
+  reg  [47:0]             cos_B01;
+  reg  [47:0]             cos_B23;
+  reg  [47:0]             cos_B;
 
   reg [3:0]               start_cnt;
-  reg [12:0]              rd_delay;
-  reg                     wr_en;
-  reg                     rd_en;
-  wire [127:0]            fifo_out;
-  wire                    full;
-  wire                    empty;
+  reg                     started;
+  reg [15:0]              remain_0;
+  reg [15:0]              remain_1;
 
-  reg [31:0]              sin_A;
-  reg [31:0]              cos_A;
-  reg [31:0]              sin_B;
-  reg [31:0]              cos_B;
+  wire                    empty;
 
 sincos_0 sin_cos_inst_0 (
   .aclk(rx_clk),                                            // input wire aclk
@@ -260,42 +269,26 @@ multiply_0 mul_cos_B3_inst (
 );
 
 trig_fifo_0 trig_fifo_inst (
-  .clk(rx_clk),                                // input wire clk
-  .din({p_sin_A, p_cos_A, p_sin_B, p_cos_B}),  // input wire [127 : 0] din
-  .wr_en(wr_en),                               // input wire wr_en
-  .rd_en(rd_en),                               // input wire rd_en
-  .dout(fifo_out),                             // output wire [127 : 0] dout
-  .full(full),                                 // output wire full
-  .empty(empty)                                // output wire empty
+  .clk(rx_clk),           // input wire clk
+  .din(rx_adc_data),      // input wire [127 : 0] din
+  .wr_en(rx_adc_wr),      // input wire wr_en
+  .rd_en(!empty),         // input wire rd_en
+  .dout(),                // output wire [127 : 0] dout
+  .full(),                // output wire full
+  .empty(empty)           // output wire empty
 );
-
-  reg [3:0]               start_cnt;
-  reg [12:0]              rd_delay;
-  reg                     wr_en;
-  reg                     rd_en;
-  wire [127:0]            fifo_out;
-  wire                    full;
-  wire                    empty;
 
 ila_1 ila_1_inst (
     .clk(rx_clk),                   // input wire clk
     .probe0(rx_adc_wr),             // input wire [0:0]  probe0  
     .probe1(start_cnt),             // input wire [3:0]  probe0  
-    .probe2(rd_delay),              // input wire [12:0]  probe0  
-    .probe3(wr_en),                 // input wire [0:0]  probe0  
-    .probe4(rd_en),                 // input wire [0:0]  probe0  
-    .probe5(p_sin_A),               // input wire [31:0]  probe0  
-    .probe6(p_cos_A),               // input wire [31:0]  probe0  
-    .probe7(p_sin_B),               // input wire [31:0]  probe0  
-    .probe8(p_cos_B),               // input wire [31:0]  probe0  
-    .probe9(f_sin_A),               // input wire [31:0]  probe0  
-    .probe10(f_cos_A),              // input wire [31:0]  probe0  
-    .probe11(f_sin_B),              // input wire [31:0]  probe0  
-    .probe12(f_cos_B),              // input wire [31:0]  probe0  
-    .probe13(sin_A),                // input wire [31:0]  probe0  
-    .probe14(cos_A),                // input wire [31:0]  probe0  
-    .probe15(sin_B),                // input wire [31:0]  probe0  
-    .probe16(cos_B)                 // input wire [31:0]  probe0  
+    .probe2(started),               // input wire [0:0]  probe0  
+    .probe3(sin_A),                 // input wire [47:0]  probe0  
+    .probe4(cos_A),                 // input wire [47:0]  probe0  
+    .probe5(sin_B),                 // input wire [47:0]  probe0  
+    .probe6(cos_B),                 // input wire [47:0]  probe0  
+    .probe7(remain_0),              // input wire [15:0]  probe0  
+    .probe8(remain_1)               // input wire [15:0]  probe0  
  );
 
   assign sin_0 = {sin_cos_0[30], sin_cos_0[30:16]};
@@ -307,10 +300,25 @@ ila_1 ila_1_inst (
   assign sin_3 = {sin_cos_3[30], sin_cos_3[30:16]};
   assign cos_3 = {sin_cos_3[14], sin_cos_3[14:0]};
 
-  assign f_sin_A = fifo_out[127:96];
-  assign f_cos_A = fifo_out[95:64];
-  assign f_sin_B = fifo_out[63:32];
-  assign f_cos_B = fifo_out[31:0];
+  assign sin_A0 = {{16{p_sin_A0[31]}}, p_sin_A0};
+  assign cos_A0 = {{16{p_cos_A0[31]}}, p_cos_A0};
+  assign sin_B0 = {{16{p_sin_B0[31]}}, p_sin_B0};
+  assign cos_B0 = {{16{p_cos_B0[31]}}, p_cos_B0};
+
+  assign sin_A1 = {{16{p_sin_A1[31]}}, p_sin_A1};
+  assign cos_A1 = {{16{p_cos_A1[31]}}, p_cos_A1};
+  assign sin_B1 = {{16{p_sin_B1[31]}}, p_sin_B1};
+  assign cos_B1 = {{16{p_cos_B1[31]}}, p_cos_B1};
+
+  assign sin_A2 = {{16{p_sin_A2[31]}}, p_sin_A2};
+  assign cos_A2 = {{16{p_cos_A2[31]}}, p_cos_A2};
+  assign sin_B2 = {{16{p_sin_B2[31]}}, p_sin_B2};
+  assign cos_B2 = {{16{p_cos_B2[31]}}, p_cos_B2};
+
+  assign sin_A3 = {{16{p_sin_A3[31]}}, p_sin_A3};
+  assign cos_A3 = {{16{p_cos_A3[31]}}, p_cos_A3};
+  assign sin_B3 = {{16{p_sin_B3[31]}}, p_sin_B3};
+  assign cos_B3 = {{16{p_cos_B3[31]}}, p_cos_B3};
 
   assign adc_A0 = rx_adc_data[15:0];
   assign adc_B0 = rx_adc_data[31:16];
@@ -333,6 +341,15 @@ begin : adc_trig
         phase_1[17:2] <= phase_1[17:2] + phase_incr[15:0];
         phase_2[17:2] <= phase_2[17:2] + phase_incr[15:0];
         phase_3[17:2] <= phase_3[17:2] + phase_incr[15:0];
+
+        if (start_cnt)
+          start_cnt <= start_cnt - 1;
+        else 
+        begin
+          started <= 1;
+          remain_0 <= window_size[15:1];
+          remain_1 <= window_size;
+        end
       end
       else
       begin
@@ -340,33 +357,9 @@ begin : adc_trig
         phase_1 <= phase_incr;
         phase_2 <= {phase_incr, 1'b0};
         phase_3 <= {phase_incr, 1'b0} + phase_incr;
-      end
-    end
 
-    always @ ( posedge rx_clk ) 
-    begin
-      if (rx_adc_wr) 
-      begin
-        p_sin_A01 <= p_sin_A0 + p_sin_A1;
-        p_sin_A23 <= p_sin_A2 + p_sin_A3;
-        p_cos_A01 <= p_cos_A0 + p_cos_A1;
-        p_cos_A23 <= p_cos_A2 + p_cos_A3;
-
-        p_sin_B01 <= p_sin_B0 + p_sin_B1;
-        p_sin_B23 <= p_sin_B2 + p_sin_B3;
-        p_cos_B01 <= p_cos_B0 + p_cos_B1;
-        p_cos_B23 <= p_cos_B2 + p_cos_B3;
-      end
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      if (rx_adc_wr) 
-      begin
-        p_sin_A <= p_sin_A01 + p_sin_A23;
-        p_cos_A <= p_cos_A01 + p_cos_A23;
-        p_sin_B <= p_sin_B01 + p_sin_B23;
-        p_cos_B <= p_cos_B01 + p_cos_B23;
+        start_cnt <= 7;
+        started <= 0;
       end
     end
 
@@ -374,58 +367,28 @@ begin : adc_trig
     begin
       if (rx_adc_wr)
       begin
-        if (start_cnt)
-          start_cnt <= start_cnt - 1;
-        else
-        begin
-          if (wr_en)
-          begin
-            if (rd_delay)
-              rd_delay <= rd_delay - 1;
-            else
-              rd_en <= 1;
-          end
-          else
-           begin
-            rd_delay <= window_size;
-            wr_en <= 1;
-          end
-        end
+        sin_A01 <= sin_A0 + sin_A1;
+        sin_A23 <= sin_A2 + sin_A3;
+        cos_A01 <= cos_A0 + cos_A1;
+        cos_A23 <= cos_A2 + cos_A3;
+
+        sin_B01 <= sin_B0 + sin_B1;
+        sin_B23 <= sin_B2 + sin_B3;
+        cos_B01 <= cos_B0 + cos_B1;
+        cos_B23 <= cos_B2 + cos_B3;
       end
-      else
-      begin
-        wr_en <= 0;
-        rd_en <= 0;
-      end
-    end    
+    end
 
     always @ ( posedge rx_clk ) 
     begin
-      if (wr_en)
+      if (rx_adc_wr)
       begin
-        if (rd_en)
-        begin
-          sin_A <= sin_A + p_sin_A - f_sin_A;
-          cos_A <= cos_A + p_cos_A - f_cos_A;
-          sin_B <= sin_B + p_sin_B - f_sin_B;
-          cos_B <= cos_B + p_cos_B - f_cos_B;
-        end
-        else
-        begin
-          sin_A <= sin_A + p_sin_A;
-          cos_A <= cos_A + p_cos_A;
-          sin_B <= sin_B + p_sin_B;
-          cos_B <= cos_B + p_cos_B;
-        end
+        sin_A <= sin_A01 + sin_A23;
+        cos_A <= cos_A01 + cos_A23;
+        sin_B <= sin_B01 + sin_B23;
+        cos_B <= cos_B01 + cos_B23;
       end
-      else
-      begin
-        sin_A <= 0;
-        cos_A <= 0;
-        sin_B <= 0;
-        cos_B <= 0;
-      end
-    end    
+    end
 
 end
 endgenerate

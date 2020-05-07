@@ -31,7 +31,7 @@ module control_bar (
 
   output reg [31:0]       control_base,
   output reg [17:0]       det_phase_incr,
-  output reg [12:0]       det_window_size,
+  output reg [15:0]       det_window_size,
 
   input [9:0]             rd_address,
   input                   rd,
@@ -122,7 +122,7 @@ generate
             3: rp_data <= bar_spi_dac;
             4: rp_data <= {adc_phys_index, adc_test_mode, adc_irq_state};
             5: rp_data <= {14'h0000, det_phase_incr};
-            6: rp_data <= {19'h0000, det_window_size};
+            6: rp_data <= {16'h0000, det_window_size};
             8: rp_data <= control_base;
             default: rp_data <= 32'hffffffff;
           endcase     
@@ -319,7 +319,7 @@ generate
                   det_window_size[7:0] <= wr_data[7:0];
 
                 if (wr_be[1])
-                  det_window_size[12:8] <= wr_data[12:8];
+                  det_window_size[15:8] <= wr_data[15:8];
               end
 
               8:
