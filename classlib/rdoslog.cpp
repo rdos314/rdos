@@ -815,6 +815,28 @@ TRdosDefaultLog::TRdosDefaultLog(const char *path, int filecount, int filesize, 
 
 /*##########################################################################
 #
+#   Name       : TRdosDefaultLog::TRdosDefaultLog
+#
+#   Purpose....: Default log constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDefaultLog::TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl, int maxmonths)
+ : TRdosLog(0, cl),
+   TRdosLogThread(path, filecount, filesize, maxmonths)
+{
+    Section.Enter();
+    LogThread = this;
+    Section.Leave();
+
+    FDev = LogThread;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosDefaultLog::~TRdosDefaultLog
 #
 #   Purpose....: Default log destructor

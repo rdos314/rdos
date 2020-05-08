@@ -84,6 +84,7 @@ class TRdosDefaultLog : public TRdosLog, public TRdosLogThread
 public:
     TRdosDefaultLog(const char *path, int filecount, int filesize, const char *threadname, const char *cl);
     TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl);
+    TRdosDefaultLog(const char *path, int filecount, int filesize, const char *cl, int MaxMonths);
     virtual ~TRdosDefaultLog();
 };
 
