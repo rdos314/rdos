@@ -52,6 +52,7 @@ protected:
     bool FInitDone;
     bool FWasEmpty;
     bool FTimeError;
+    bool FAdjustTime;
 };
 
 class TRdosLog

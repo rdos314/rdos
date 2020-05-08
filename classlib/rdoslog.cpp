@@ -54,6 +54,7 @@ TRdosLogThread::TRdosLogThread()
 {
     FFileCount = 0;
     FFileSize = 0;
+    FAdjustTime = false;
 
     Init();
 }
@@ -74,6 +75,7 @@ TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize)
 {
     FFileCount = filecount;
     FFileSize = filesize;
+    FAdjustTime = true;
 
     Init();
     StartLog("Log Thread");
@@ -95,6 +97,7 @@ TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize, co
 {
     FFileCount = filecount;
     FFileSize = filesize;
+    FAdjustTime = true;
 
     Init();
     StartLog(name);
@@ -153,6 +156,7 @@ void TRdosLogThread::Setup(const char *path, int filecount, int filesize)
     FLogPath = path;
     FFileCount = filecount;
     FFileSize = filesize;
+    FAdjustTime = false;
     StartLog("Log Thread");
 }
 
@@ -375,27 +379,32 @@ void TRdosLogThread::InitFiles()
     }    
 
     
-    if (FWasEmpty)
-        FTimeError = false;
-    else
+    if (FAdjustTime)
     {
-        if (currtime < lasttime)
-        {
-            FTimeError = true;
-            lasttime.Set();
-        }
+        if (FWasEmpty)
+            FTimeError = false;
         else
         {
-            currtime.AddMonth(-1);
-            if (currtime > lasttime)
+            if (currtime < lasttime)
             {
                 FTimeError = true;
                 lasttime.Set();
             }
             else
-                FTimeError = false;
+            {
+                currtime.AddMonth(-1);
+                if (currtime > lasttime)
+                {
+                    FTimeError = true;
+                    lasttime.Set();
+                }
+                else
+                    FTimeError = false;
+            }
         }
     }
+    else
+        FTimeError = false;
 
     FInitDone = true;
 
