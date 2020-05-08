@@ -13,6 +13,7 @@ class TRdosLogThread : public TThread
 {
     friend class TRdosLog;
 public:
+    TRdosLogThread(const char *path, int filecount, int filesize, int MaxFutureMonths);
     TRdosLogThread(const char *path, int filecount, int filesize, const char *ThreadName);
     TRdosLogThread(const char *path, int filecount, int filesize);
     TRdosLogThread();
@@ -53,6 +54,7 @@ protected:
     bool FWasEmpty;
     bool FTimeError;
     bool FAdjustTime;
+    int FMaxMonths;
 };
 
 class TRdosLog

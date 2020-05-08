@@ -75,7 +75,30 @@ TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize)
 {
     FFileCount = filecount;
     FFileSize = filesize;
+    FAdjustTime = false;
+
+    Init();
+    StartLog("Log Thread");
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLogThread::TRdosLogThread
+#
+#   Purpose....: TRdosLogThread constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize, int maxmonths)
+  : FLogPath(path)
+{
+    FFileCount = filecount;
+    FFileSize = filesize;
     FAdjustTime = true;
+    FMaxMonths = maxmonths;
 
     Init();
     StartLog("Log Thread");
@@ -97,7 +120,7 @@ TRdosLogThread::TRdosLogThread(const char *path, int filecount, int filesize, co
 {
     FFileCount = filecount;
     FFileSize = filesize;
-    FAdjustTime = true;
+    FAdjustTime = false;
 
     Init();
     StartLog(name);
@@ -392,7 +415,7 @@ void TRdosLogThread::InitFiles()
             }
             else
             {
-                currtime.AddMonth(-1);
+                currtime.AddMonth(-FMaxMonths);
                 if (currtime > lasttime)
                 {
                     FTimeError = true;
