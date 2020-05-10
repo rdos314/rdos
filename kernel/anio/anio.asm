@@ -46,7 +46,7 @@ cb_adc_irq        DB ?          ; 4
 cb_adc_test_mode  DB ?
 cb_adc_index      DW ?
 cb_adc_phase_incr DD ?          ; 5
-cb_adc_window     DD ?          ; 6
+cb_adc_window     DB ?,?,?,?    ; 6
 
 control_bar	ENDS
 
@@ -730,7 +730,7 @@ adc_loop:
 ;       DESCRIPTION:    Set ADC trigger
 ;
 ;       PARAMETERS:     EAX	Phase incr
-;                       ECX     Window
+;                       CL      Window bits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -743,7 +743,7 @@ set_adc_trigger  Proc far
     mov bx,anio_control_sel
     mov ds,ebx
     mov ds:cb_adc_phase_incr,eax
-    mov ds:cb_adc_window,ecx
+    mov ds:cb_adc_window,cl
 ;
     pop ebx
     pop ds

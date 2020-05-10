@@ -197,15 +197,15 @@ module adc (
   wire                 control_rd;
 
   wire [17:0]          det_phase_incr;
-  wire [15:0]          det_window_size;
+  wire [3:0]           det_window_bits;
   reg [17:0]           pci_det_phase_incr;
-  reg [12:0]           pci_det_window_size;
+  reg [3:0]            pci_det_window_bits;
   reg                  pci_det_change;
   reg [2:0]            pci_det_cnt;
 
   reg                  det_change_3;
   reg [17:0]           rx_det_phase_incr;
-  reg [15:0]           rx_det_window_size;
+  reg [3:0]            rx_det_window_bits;
 
   wire [9:0]           pci_bar0_rd_address;
   wire                 pci_bar0_rd;
@@ -507,7 +507,7 @@ control_bar control_bar_inst (
 
     .control_base(control_base),
     .det_phase_incr(det_phase_incr),
-    .det_window_size(det_window_size),
+    .det_window_bits(det_window_bits),
 
     .rd_address(pci_bar0_rd_address),
     .rd(pci_bar0_rd),
@@ -627,7 +627,7 @@ adc_trig adc_trig_inst (
   .rx_adc_wr( rx_adc_wr),
   .rx_adc_data( rx_adc_data),
   .phase_incr(rx_det_phase_incr),
-  .window_size(rx_det_window_size)
+  .window_bits(rx_det_window_bits)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
@@ -701,7 +701,7 @@ generate
       end
       else
       begin
-        if ((pci_det_phase_incr == det_phase_incr) && (pci_det_window_size == det_window_size))
+        if ((pci_det_phase_incr == det_phase_incr) && (pci_det_window_bits == det_window_bits))
         begin
           if (pci_det_cnt)
             pci_det_cnt <= pci_det_cnt - 1;
@@ -711,7 +711,7 @@ generate
         else
         begin
           pci_det_phase_incr <= det_phase_incr;
-          pci_det_window_size <= det_window_size;
+          pci_det_window_bits <= det_window_bits;
           pci_det_change <= 1;
           pci_det_cnt <= 7;
         end
@@ -727,7 +727,7 @@ generate
       if (!det_change_3 && det_change_2)
       begin
         rx_det_phase_incr <= pci_det_phase_incr;
-        rx_det_window_size <= pci_det_window_size;
+        rx_det_window_bits <= pci_det_window_bits;
       end
     end
 

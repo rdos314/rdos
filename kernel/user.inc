@@ -3426,7 +3426,7 @@ StopAdc      MACRO
 
 
 ; IN  EAX     Phase increment (0..3FFFF)
-; IN  ECX     Window     
+; IN  CL      Window bits    
 SetAdcTrigger     MACRO
         UserGate set_adc_trigger_nr
                                                 ENDM

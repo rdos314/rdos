@@ -3285,7 +3285,7 @@
 
 #pragma aux RdosSetAdcTrigger = \
     CallGate_set_adc_trigger  \
-    __parm [__eax] [__ecx]
+    __parm [__eax] [__cl]
 
 
 #pragma aux RdosReadSerialLines = \

@@ -30,7 +30,7 @@ module adc_trig (
   input                   rx_adc_wr,
   input [127:0]           rx_adc_data,
   input [17:0]            phase_incr,
-  input [15:0]            window_size
+  input [3:0]             window_bits
 );
 
   wire [15:0]             adc_A0;
@@ -117,6 +117,7 @@ module adc_trig (
   reg  [47:0]             cos_B23;
   reg  [47:0]             cos_B;
 
+  reg [15:0]              window_size;
   reg [3:0]               start_cnt;
   reg                     started;
   reg [15:0]              remain_0;
@@ -371,6 +372,25 @@ begin : adc_trig
         phase_1 <= phase_incr;
         phase_2 <= {phase_incr, 1'b0};
         phase_3 <= {phase_incr, 1'b0} + phase_incr;
+
+        case (window_bits)
+          0: window_size <= 16'h0;
+          1: window_size <= 16'h2;
+          2: window_size <= 16'h4;
+          3: window_size <= 16'h8;
+          4: window_size <= 16'h10;
+          5: window_size <= 16'h20;
+          6: window_size <= 16'h40;
+          7: window_size <= 16'h80;
+          8: window_size <= 16'h100;
+          9: window_size <= 16'h200;
+          10: window_size <= 16'h400;
+          11: window_size <= 16'h800;
+          12: window_size <= 16'h1000;
+          13: window_size <= 16'h2000;
+          14: window_size <= 16'h4000;
+          15: window_size <= 16'h8000;
+        endcase
 
         start_cnt <= 7;
         started <= 0;
