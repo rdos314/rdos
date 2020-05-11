@@ -135,6 +135,13 @@ module adc_trig (
   reg [47:0]              sum_sin_B1;
   reg [47:0]              sum_cos_B1;
 
+  reg                     res_wr;
+  reg [19:0]              res_sin_A;
+  reg [19:0]              res_cos_A;
+  reg [19:0]              res_sin_B;
+  reg [19:0]              res_cos_B;
+
+
   wire                    empty;
 
 sincos_0 sin_cos_inst_0 (
@@ -307,7 +314,12 @@ ila_1 ila_1_inst (
     .probe11(remain_0),             // input wire [15:0]  probe0  
     .probe12(remain_1),             // input wire [15:0]  probe0  
     .probe13(wr_0),                 // input wire [0:0]  probe0  
-    .probe14(wr_1)                  // input wire [0:0]  probe0  
+    .probe14(wr_1),                 // input wire [0:0]  probe0  
+    .probe15(res_wr),               // input wire [0:0]  probe0  
+    .probe16(res_sin_A),            // input wire [19:0]  probe0  
+    .probe17(res_cos_A),            // input wire [19:0]  probe0  
+    .probe18(res_sin_B),            // input wire [19:0]  probe0  
+    .probe19(res_cos_B)             // input wire [19:0]  probe0  
  );
 
   assign sin_0 = {sin_cos_0[30], sin_cos_0[30:16]};
@@ -488,6 +500,268 @@ begin : adc_trig
         remain_1 <= window_size;
       end
     end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (wr_0)
+      begin
+        res_wr <= 1;
+
+        case (window_bits)
+          1:
+          begin
+            res_sin_A <= sum_sin_A0[33:14];
+            res_cos_A <= sum_cos_A0[33:14];
+            res_sin_B <= sum_sin_B0[33:14];
+            res_cos_B <= sum_cos_B0[33:14];
+          end
+
+          2:
+          begin
+            res_sin_A <= sum_sin_A0[34:15];
+            res_cos_A <= sum_cos_A0[34:15];
+            res_sin_B <= sum_sin_B0[34:15];
+            res_cos_B <= sum_cos_B0[34:15];
+          end
+
+          3:
+          begin
+            res_sin_A <= sum_sin_A0[35:16];
+            res_cos_A <= sum_cos_A0[35:16];
+            res_sin_B <= sum_sin_B0[35:16];
+            res_cos_B <= sum_cos_B0[35:16];
+          end
+
+          4:
+          begin
+            res_sin_A <= sum_sin_A0[36:17];
+            res_cos_A <= sum_cos_A0[36:17];
+            res_sin_B <= sum_sin_B0[36:17];
+            res_cos_B <= sum_cos_B0[36:17];
+          end
+
+          5:
+          begin
+            res_sin_A <= sum_sin_A0[37:18];
+            res_cos_A <= sum_cos_A0[37:18];
+            res_sin_B <= sum_sin_B0[37:18];
+            res_cos_B <= sum_cos_B0[37:18];
+          end
+
+          6:
+          begin
+            res_sin_A <= sum_sin_A0[38:19];
+            res_cos_A <= sum_cos_A0[38:19];
+            res_sin_B <= sum_sin_B0[38:19];
+            res_cos_B <= sum_cos_B0[38:19];
+          end
+
+          7:
+          begin
+            res_sin_A <= sum_sin_A0[39:20];
+            res_cos_A <= sum_cos_A0[39:20];
+            res_sin_B <= sum_sin_B0[39:20];
+            res_cos_B <= sum_cos_B0[39:20];
+          end
+
+          8:
+          begin
+            res_sin_A <= sum_sin_A0[40:21];
+            res_cos_A <= sum_cos_A0[40:21];
+            res_sin_B <= sum_sin_B0[40:21];
+            res_cos_B <= sum_cos_B0[40:21];
+          end
+
+          9:
+          begin
+            res_sin_A <= sum_sin_A0[41:22];
+            res_cos_A <= sum_cos_A0[41:22];
+            res_sin_B <= sum_sin_B0[41:22];
+            res_cos_B <= sum_cos_B0[41:22];
+          end
+
+          10:
+          begin
+            res_sin_A <= sum_sin_A0[42:23];
+            res_cos_A <= sum_cos_A0[42:23];
+            res_sin_B <= sum_sin_B0[42:23];
+            res_cos_B <= sum_cos_B0[42:23];
+          end
+
+          11:
+          begin
+            res_sin_A <= sum_sin_A0[43:24];
+            res_cos_A <= sum_cos_A0[43:24];
+            res_sin_B <= sum_sin_B0[43:24];
+            res_cos_B <= sum_cos_B0[43:24];
+          end
+
+          12:
+          begin
+            res_sin_A <= sum_sin_A0[44:25];
+            res_cos_A <= sum_cos_A0[44:25];
+            res_sin_B <= sum_sin_B0[44:25];
+            res_cos_B <= sum_cos_B0[44:25];
+          end
+
+          13:
+          begin
+            res_sin_A <= sum_sin_A0[45:26];
+            res_cos_A <= sum_cos_A0[45:26];
+            res_sin_B <= sum_sin_B0[45:26];
+            res_cos_B <= sum_cos_B0[45:26];
+          end
+
+          14:
+          begin
+            res_sin_A <= sum_sin_A0[46:27];
+            res_cos_A <= sum_cos_A0[46:27];
+            res_sin_B <= sum_sin_B0[46:27];
+            res_cos_B <= sum_cos_B0[46:27];
+          end
+
+          15:
+          begin
+            res_sin_A <= sum_sin_A0[47:28];
+            res_cos_A <= sum_cos_A0[47:28];
+            res_sin_B <= sum_sin_B0[47:28];
+            res_cos_B <= sum_cos_B0[47:28];
+          end
+        endcase
+      end
+      else
+      begin
+        if (wr_1)
+        begin
+          res_wr <= 1;
+
+          case (window_bits)
+            1:
+            begin
+              res_sin_A <= sum_sin_A1[33:14];
+              res_cos_A <= sum_cos_A1[33:14];
+              res_sin_B <= sum_sin_B1[33:14];
+              res_cos_B <= sum_cos_B1[33:14];
+            end
+
+            2:
+            begin
+              res_sin_A <= sum_sin_A1[34:15];
+              res_cos_A <= sum_cos_A1[34:15];
+              res_sin_B <= sum_sin_B1[34:15];
+              res_cos_B <= sum_cos_B1[34:15];
+            end
+
+            3:
+            begin
+              res_sin_A <= sum_sin_A1[35:16];
+              res_cos_A <= sum_cos_A1[35:16];
+              res_sin_B <= sum_sin_B1[35:16];
+              res_cos_B <= sum_cos_B1[35:16];
+            end
+
+            4:
+            begin
+              res_sin_A <= sum_sin_A1[36:17];
+              res_cos_A <= sum_cos_A1[36:17];
+              res_sin_B <= sum_sin_B1[36:17];
+              res_cos_B <= sum_cos_B1[36:17];
+            end
+
+            5:
+            begin
+              res_sin_A <= sum_sin_A1[37:18];
+              res_cos_A <= sum_cos_A1[37:18];
+              res_sin_B <= sum_sin_B1[37:18];
+              res_cos_B <= sum_cos_B1[37:18];
+            end
+
+            6:
+            begin
+              res_sin_A <= sum_sin_A1[38:19];
+              res_cos_A <= sum_cos_A1[38:19];
+              res_sin_B <= sum_sin_B1[38:19];
+              res_cos_B <= sum_cos_B1[38:19];
+            end
+
+            7:
+            begin
+              res_sin_A <= sum_sin_A1[39:20];
+              res_cos_A <= sum_cos_A1[39:20];
+              res_sin_B <= sum_sin_B1[39:20];
+              res_cos_B <= sum_cos_B1[39:20];
+            end
+
+            8:
+            begin
+              res_sin_A <= sum_sin_A1[40:21];
+              res_cos_A <= sum_cos_A1[40:21];
+              res_sin_B <= sum_sin_B1[40:21];
+              res_cos_B <= sum_cos_B1[40:21];
+            end
+
+            9:
+            begin
+              res_sin_A <= sum_sin_A1[41:22];
+              res_cos_A <= sum_cos_A1[41:22];
+              res_sin_B <= sum_sin_B1[41:22];
+              res_cos_B <= sum_cos_B1[41:22];
+            end
+
+            10:
+            begin
+              res_sin_A <= sum_sin_A1[42:23];
+              res_cos_A <= sum_cos_A1[42:23];
+              res_sin_B <= sum_sin_B1[42:23];
+              res_cos_B <= sum_cos_B1[42:23];
+            end
+
+            11:
+            begin
+              res_sin_A <= sum_sin_A1[43:24];
+              res_cos_A <= sum_cos_A1[43:24];
+              res_sin_B <= sum_sin_B1[43:24];
+              res_cos_B <= sum_cos_B1[43:24];
+            end
+
+            12:
+            begin
+              res_sin_A <= sum_sin_A1[44:25];
+              res_cos_A <= sum_cos_A1[44:25];
+              res_sin_B <= sum_sin_B1[44:25];
+              res_cos_B <= sum_cos_B1[44:25];
+            end
+
+            13:
+            begin
+              res_sin_A <= sum_sin_A1[45:26];
+              res_cos_A <= sum_cos_A1[45:26];
+              res_sin_B <= sum_sin_B1[45:26];
+              res_cos_B <= sum_cos_B1[45:26];
+            end
+
+            14:
+            begin
+              res_sin_A <= sum_sin_A1[46:27];
+              res_cos_A <= sum_cos_A1[46:27];
+              res_sin_B <= sum_sin_B1[46:27];
+              res_cos_B <= sum_cos_B1[46:27];
+            end
+
+            15:
+            begin
+              res_sin_A <= sum_sin_A1[47:28];
+              res_cos_A <= sum_cos_A1[47:28];
+              res_sin_B <= sum_sin_B1[47:28];
+              res_cos_B <= sum_cos_B1[47:28];
+            end
+          endcase
+        end
+        else
+          res_wr <= 0;
+      end
+    end
+
 
 end
 endgenerate
