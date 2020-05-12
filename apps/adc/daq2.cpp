@@ -114,9 +114,9 @@ void main()
 
     TAdc Adc(0x0, 10000);
 
-    freq = 45;
+    freq = 107;
     freq = freq * 0x40000 / 750;
-    Adc.SetTrigger(freq, 12);
+    Adc.SetTrigger(freq, 14);
 
     if (Adc.Start())
     {
