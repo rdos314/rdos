@@ -141,6 +141,15 @@ module adc_trig (
   reg [19:0]              res_sin_B;
   reg [19:0]              res_cos_B;
 
+  wire [39:0]             sin_sq_A;
+  wire [39:0]             cos_sq_A;
+  wire [39:0]             sin_sq_B;
+  wire [39:0]             cos_sq_B;
+
+  reg [39:0]              sq_sum_A;
+  reg [39:0]              sq_sum_B;
+  reg                     sq_en;
+  reg [1:0]               sq_delay;  
 
   wire                    empty;
 
@@ -288,6 +297,38 @@ multiply_0 mul_cos_B3_inst (
   .P(p_cos_B3)             // output wire [31 : 0] P
 );
 
+mult_square_0 sin_sq_A_inst (
+  .CLK(rx_clk),          // input wire CLK
+  .A(res_sin_A),         // input wire [19 : 0] A
+  .B(res_sin_A),         // input wire [19 : 0] B
+  .CE(sq_en),            // input wire CE
+  .P(sin_sq_A)           // output wire [39 : 0] P
+);
+
+mult_square_0 sin_sq_B_inst (
+  .CLK(rx_clk),          // input wire CLK
+  .A(res_sin_B),         // input wire [19 : 0] A
+  .B(res_sin_B),         // input wire [19 : 0] B
+  .CE(sq_en),            // input wire CE
+  .P(sin_sq_B)           // output wire [39 : 0] P
+);
+
+mult_square_0 cos_sq_A_inst (
+  .CLK(rx_clk),          // input wire CLK
+  .A(res_cos_A),         // input wire [19 : 0] A
+  .B(res_cos_A),         // input wire [19 : 0] B
+  .CE(sq_en),            // input wire CE
+  .P(cos_sq_A)           // output wire [39 : 0] P
+);
+
+mult_square_0 cos_sq_B_inst (
+  .CLK(rx_clk),          // input wire CLK
+  .A(res_cos_B),         // input wire [19 : 0] A
+  .B(res_cos_B),         // input wire [19 : 0] B
+  .CE(sq_en),            // input wire CE
+  .P(cos_sq_B)           // output wire [39 : 0] P
+);
+
 trig_fifo_0 trig_fifo_inst (
   .clk(rx_clk),           // input wire clk
   .din(rx_adc_data),      // input wire [127 : 0] din
@@ -319,7 +360,15 @@ ila_1 ila_1_inst (
     .probe16(res_sin_A),            // input wire [19:0]  probe0  
     .probe17(res_cos_A),            // input wire [19:0]  probe0  
     .probe18(res_sin_B),            // input wire [19:0]  probe0  
-    .probe19(res_cos_B)             // input wire [19:0]  probe0  
+    .probe19(res_cos_B),            // input wire [19:0]  probe0  
+    .probe20(sin_sq_A),             // input wire [39:0]  probe0  
+    .probe21(cos_sq_A),             // input wire [39:0]  probe0  
+    .probe22(sin_sq_B),             // input wire [39:0]  probe0  
+    .probe23(cos_sq_B),             // input wire [39:0]  probe0  
+    .probe24(sq_en),                // input wire [0:0]  probe0  
+    .probe25(sq_delay),             // input wire [1:0]  probe0  
+    .probe26(sq_sum_A),             // input wire [39:0]  probe0  
+    .probe27(sq_sum_B)              // input wire [39:0]  probe0  
  );
 
   assign sin_0 = {sin_cos_0[30], sin_cos_0[30:16]};
@@ -759,6 +808,26 @@ begin : adc_trig
         end
         else
           res_wr <= 0;
+      end
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      if (res_wr)
+      begin
+        sq_en <= 1;
+        sq_delay <= 3;
+      end
+      else
+      begin
+        if (sq_delay)
+          sq_delay <= sq_delay - 1;
+        else
+        begin
+          sq_sum_A <= sin_sq_A + cos_sq_A;
+          sq_sum_B <= sin_sq_B + cos_sq_B;
+          sq_en <= 0;
+        end
       end
     end
 
