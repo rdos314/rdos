@@ -153,6 +153,12 @@ module adc_trig (
 
   wire                    empty;
 
+  reg                     sqrt_en;
+  wire                    pow_valid_A;
+  wire                    pow_valid_B;
+  wire [23:0]             pow_A;
+  wire [23:0]             pow_B;
+
 sincos_0 sin_cos_inst_0 (
   .aclk(rx_clk),                                            // input wire aclk
   .s_axis_phase_tvalid(1),                                  // input wire s_axis_phase_tvalid
@@ -329,6 +335,22 @@ mult_square_0 cos_sq_B_inst (
   .P(cos_sq_B)           // output wire [39 : 0] P
 );
 
+sqrt_0 sqrt_A_inst (
+  .aclk(rx_clk),                                        // input wire aclk
+  .s_axis_cartesian_tvalid(sqrt_en),                    // input wire s_axis_cartesian_tvalid
+  .s_axis_cartesian_tdata(sq_sum_A),                    // input wire [39 : 0] s_axis_cartesian_tdata
+  .m_axis_dout_tvalid(pow_valid_A),                     // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(pow_A)                             // output wire [23 : 0] m_axis_dout_tdata
+);
+
+sqrt_0 sqrt_B_inst (
+  .aclk(rx_clk),                                        // input wire aclk
+  .s_axis_cartesian_tvalid(sqrt_en),                    // input wire s_axis_cartesian_tvalid
+  .s_axis_cartesian_tdata(sq_sum_B),                    // input wire [39 : 0] s_axis_cartesian_tdata
+  .m_axis_dout_tvalid(pow_valid_B),                     // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(pow_B)                             // output wire [23 : 0] m_axis_dout_tdata
+);
+
 trig_fifo_0 trig_fifo_inst (
   .clk(rx_clk),           // input wire clk
   .din(rx_adc_data),      // input wire [127 : 0] din
@@ -368,7 +390,12 @@ ila_1 ila_1_inst (
     .probe24(sq_en),                // input wire [0:0]  probe0  
     .probe25(sq_delay),             // input wire [1:0]  probe0  
     .probe26(sq_sum_A),             // input wire [39:0]  probe0  
-    .probe27(sq_sum_B)              // input wire [39:0]  probe0  
+    .probe27(sq_sum_B),             // input wire [39:0]  probe0  
+    .probe28(sqrt_en),              // input wire [0:0]  probe0  
+    .probe29(pow_valid_A),          // input wire [0:0]  probe0  
+    .probe30(pow_valid_B),          // input wire [0:0]  probe0  
+    .probe31(pow_A),                // input wire [23:0]  probe0  
+    .probe32(pow_B)                 // input wire [23:0]  probe0  
  );
 
   assign sin_0 = {sin_cos_0[30], sin_cos_0[30:16]};
@@ -824,9 +851,15 @@ begin : adc_trig
           sq_delay <= sq_delay - 1;
         else
         begin
-          sq_sum_A <= sin_sq_A + cos_sq_A;
-          sq_sum_B <= sin_sq_B + cos_sq_B;
-          sq_en <= 0;
+          if (sq_en)
+          begin
+            sq_sum_A <= sin_sq_A + cos_sq_A;
+            sq_sum_B <= sin_sq_B + cos_sq_B;
+            sq_en <= 0;
+            sqrt_en <= 1;
+          end
+          else
+            sqrt_en <= 0;
         end
       end
     end
