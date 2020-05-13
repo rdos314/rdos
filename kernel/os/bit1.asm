@@ -87,7 +87,7 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-curr_start  EQU -10
+curr_start  EQU -12
 curr_size   EQU -8
 curr_x      EQU -6
 curr_y      EQU -4
@@ -100,15 +100,14 @@ curr_y      EQU -4
 ;           DESCRIPTION:    Do a physical update on real hardware
 ;
 ;           PARAMETERS:     ECX         Pixels
-;                           ES:ESI      Current pos in bitmap
-;                           ES:EDI      Current physical pos
+;                           EDI         Pixel #
+;                           ES:ESI      Bitmap
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 phys_update Proc far
     ret
 phys_update Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -127,11 +126,9 @@ DrawDone    Proc near
     push esi
     push edi
 ;    
+    mov esi,ds:v_app_base
     movzx ecx,word ptr [ebp].curr_size
-    mov esi,[ebp].curr_start
-    mov edi,esi
-    sub edi,ds:v_app_base
-    add edi,ds:v_phys_base
+    mov edi,[ebp].curr_start
     call fword ptr ds:v_phys_update_proc
 ;
     pop edi
@@ -166,11 +163,9 @@ SpriteDone    Proc near
     push esi
     push edi
 ;
+    mov esi,ds:v_app_base
     movzx ecx,word ptr [ebp].curr_size
-    mov esi,[ebp].curr_start
-    mov edi,esi
-    sub edi,ds:v_app_base
-    add edi,ds:v_phys_base
+    mov edi,[ebp].curr_start
     call fword ptr ds:v_phys_update_proc
 ;
     pop edi

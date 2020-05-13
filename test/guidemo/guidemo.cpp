@@ -489,7 +489,7 @@ void cdecl main()
 
         bitmap->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
-        Planets = new TPlanetThread(vbe, 8);
+//        Planets = new TPlanetThread(vbe, 8);
         RdosWaitMilli(5000);
 
         font = new TFont(24);
