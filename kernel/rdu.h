@@ -929,6 +929,8 @@
 #define usergate_map_adc_block 0x000002DA
 #define usergate_set_adc_trigger 0x000002DB
 
+#define usergate_create_can_module_bitmap 0x000002DC
+
 
 
 #ifdef __FLAT__
@@ -1863,6 +1865,8 @@
 #define CallGate_map_adc_block 0x55 0x67 0x9a 218 2 0 0 3 0 0x5d
 #define CallGate_set_adc_trigger 0x55 0x67 0x9a 219 2 0 0 3 0 0x5d
 
+#define CallGate_create_can_module_bitmap 0x55 0x67 0x9a 220 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2794,5 +2798,7 @@
 #define CallGate_stop_adc 0x3e 0x67 0x9a 217 2 0 0 3 0
 #define CallGate_map_adc_block 0x3e 0x67 0x9a 218 2 0 0 3 0
 #define CallGate_set_adc_trigger 0x3e 0x67 0x9a 219 2 0 0 3 0
+
+#define CallGate_create_can_module_bitmap 0x3e 0x67 0x9a 220 2 0 0 3 0
 
 #endif

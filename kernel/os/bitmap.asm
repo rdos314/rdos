@@ -257,6 +257,218 @@ create_bitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreatePhysBitmap
+;
+;           DESCRIPTION:    Create physical device bitmap
+;
+;           PARAMETERS:     AL          Bits per pixel
+;                           CX          Width
+;                           DX          Height
+;                           ES:EDI      Phys update proc
+;
+;           RETURNS:        BX          Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_phys_bitmap_name      DB 'Create Phys Bitmap', 0
+
+create_phys_bitmap   Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push eax
+    mov ax,es
+    mov fs,ax
+    mov ax,dx
+    shl ax,2    
+    add ax,SIZE video_api_struc
+    movzx eax,ax
+    AllocateSmallKernelMem
+    pop eax
+;
+    push si
+    mov si,es
+    mov ds,si
+    InitSection ds:v_section
+    InitSection ds:v_sprite_section
+    pop si
+;    
+    mov es:v_usage_count,1
+    mov es:v_color,0
+    mov es:v_alpha,0
+    mov es:v_lgop,1
+    mov es:v_font,0
+    mov es:v_text_font,0
+    mov es:v_style,0
+    mov es:v_phys_base,0
+    mov es:v_has_focus,1
+    mov es:v_bpp,al
+    cmp al,1
+    jne create_phys_bitmap_no_pad
+;
+    dec cx
+    and cx,0FFF8h
+    add cx,8
+
+create_phys_bitmap_no_pad:
+    mov es:v_width,cx
+    mov es:v_height,dx
+    mov es:v_sprite_count,0
+    mov es:v_sprite_size,0
+    mov es:v_sprite_sel,0
+    mov es:v_x_min,0
+    mov es:v_y_min,0
+    mov es:v_text,0
+    mov si,cx
+    dec si
+    mov es:v_x_max,si
+    mov si,dx
+    dec si
+    mov es:v_y_max,si
+;
+    mov si,cs
+    mov ds,si
+;
+    cmp al,1
+    je cr_phys_bitmap1
+;
+    cmp al,8
+    je cr_phys_bitmap8
+;
+    cmp al,16
+    je cr_phys_bitmap16
+;
+    cmp al,24
+    je cr_phys_bitmap24
+;
+    cmp al,32
+    je cr_phys_bitmap32
+;
+    FreeMem
+    stc
+    jmp cr_phys_bitmap_end
+
+cr_phys_bitmap1:
+    mov es:v_color,1
+    mov esi,OFFSET BitmapTab1
+    mov ax,es:v_width
+    dec ax
+    shr ax,3
+    inc ax
+    mov es:v_row_size,ax
+    jmp cr_phys_bitmap_copy
+
+cr_phys_bitmap8:
+    mov esi,OFFSET BitmapTab8
+    mov ax,es:v_width
+    mov es:v_row_size,ax
+    jmp cr_phys_bitmap_copy
+
+cr_phys_bitmap16:
+    mov esi,OFFSET BitmapTab16
+    mov ax,es:v_width
+    add ax,ax
+    mov es:v_row_size,ax
+    jmp cr_phys_bitmap_copy
+
+cr_phys_bitmap24:
+    mov esi,OFFSET BitmapTab24
+    mov ax,es:v_width
+    add ax,ax
+    add ax,es:v_width
+    dec ax
+    add ax,4
+    mov es:v_row_size,ax
+    jmp cr_phys_bitmap_copy
+
+cr_phys_bitmap32:
+    mov esi,OFFSET BitmapTab32
+    mov ax,es:v_width
+    add ax,ax
+    add ax,ax
+    mov es:v_row_size,ax
+    jmp cr_phys_bitmap_copy
+
+cr_phys_bitmap_copy:
+    push edi
+    mov ecx,2 * VIDEO_ENTRIES
+    xor edi,edi
+    rep movsd
+    pop edi
+;
+    mov es:v_phys_update_proc,edi
+    mov es:v_phys_update_proc+4,fs
+;
+    mov edi,SIZE video_api_struc
+    mov es:v_sprite_lines,di
+    movzx ecx,es:v_height
+    mov eax,-1
+    rep stosd
+    mov es:v_sprite_max_pos,di
+;
+    movzx eax,es:v_row_size
+    movzx edx,es:v_height
+    mul edx
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov es:v_app_size,eax
+    AllocateLocalLinear
+    mov es:v_app_base,edx
+;
+    push es
+    mov ecx,eax
+    shr ecx,2
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov cx,SIZE bitmap_struc
+    AllocateHandle
+    mov ds:[ebx].bm_sel,es
+    mov ds:[ebx].bm_flag,BM_FLAG_BITMAP
+    mov ds:[ebx].hh_sign,BITMAP_HANDLE
+    mov eax,es:v_color
+    mov ds:[ebx].bm_color,eax
+    mov ds:[ebx].bm_lgop,1
+    mov ds:[ebx].bm_font,0
+    mov ds:[ebx].bm_style,0
+    mov ds:[ebx].bm_x_min,0
+    mov ds:[ebx].bm_y_min,0
+    mov ax,es:v_width
+    dec ax
+    mov ds:[ebx].bm_x_max,ax
+    mov ax,es:v_height
+    dec ax
+    mov ds:[ebx].bm_y_max,ax
+    mov bx,[ebx].hh_handle
+    mov es:v_bitmap,bx
+    clc
+
+cr_phys_bitmap_end:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+create_phys_bitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CreateVideoBitmap
 ;
 ;           DESCRIPTION:    Create video bitmap
@@ -1095,6 +1307,11 @@ init_bitmap     PROC near
     mov ax,BITMAP_HANDLE
     mov edi,OFFSET delete_handle
     RegisterHandle
+;
+    mov esi,OFFSET create_phys_bitmap
+    mov edi,OFFSET create_phys_bitmap_name
+    mov ax,create_phys_bitmap_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET create_bitmap
     mov edi,OFFSET create_bitmap_name

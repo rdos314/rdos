@@ -3524,6 +3524,18 @@ InitVideoBitmap MACRO
     OsGate init_video_bitmap_nr
                     ENDM
 
+;  IN  AL      Bits per pixel
+;  IN  CX      Width
+;  IN  DX      Height
+;  IN  ES:EDI  Update proc
+;      ECX     Number of pixels
+;      ES:ESI  Bitmap buffer
+;      EDI     Bitmap offset
+;  OUT BX      Bitmap handle
+CreatePhysBitmap MACRO
+    OsGate create_phys_bitmap_nr
+                    ENDM
+
 ;   IN  AX      size
 ;   IN  CX      x
 ;   IN  DX      y

@@ -1249,6 +1249,12 @@
     __parm [__ebx] [__edi] \
     __value [__eax]
 
+
+#pragma aux RdosCreateCanModuleBitmap = \
+    CallGate_create_can_module_bitmap  \
+    ValidateHandle  \
+    __value [__ebx]
+
 #pragma aux RdosGetCanModuleInfo = \
     CallGate_get_can_module_info  \
     CarryToBool \

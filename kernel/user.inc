@@ -4279,6 +4279,11 @@ IsCanOnline      MACRO
         UserGate is_can_online_nr
                                                 ENDM
 
+;   OUT BX      Bitmap handle
+CreateCanModuleBitmap       MACRO
+        UserGate create_can_module_bitmap_nr
+                                                ENDM
+
 ;   IN  EAX         Device #
 ;   OUT CX          Number of com ports
 ;   OUT DX          Module type
