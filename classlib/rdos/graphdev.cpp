@@ -37,6 +37,31 @@
 #
 #   Purpose....: Constructor for TGraphicDevice		                          
 #
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGraphicDevice::TGraphicDevice()
+{
+    FBpp = 0;
+    FWidth = 0;
+    FHeight = 0;
+    FBitmapHandle = 0;
+    FColor = 0;
+    FLgop = LGOP_NONE;
+    FFilledStyle = FALSE;
+    FFontHandle = 0;
+
+    InitDevice();
+}
+
+/*##########################################################################
+#
+#   Name       : TGraphicDevice::TGraphicDevice
+#
+#   Purpose....: Constructor for TGraphicDevice		                          
+#
 #   In params..: handle
 #   Out params.: *
 #   Returns....: *
@@ -44,16 +69,16 @@
 ##########################################################################*/
 TGraphicDevice::TGraphicDevice(int handle)
 {
-	FBpp = 0;
-	FWidth = 0;
-	FHeight = 0;
-	FBitmapHandle = RdosDuplicateBitmapHandle(handle);
+    FBpp = 0;
+    FWidth = 0;
+    FHeight = 0;
+    FBitmapHandle = RdosDuplicateBitmapHandle(handle);
     FColor = 0;
-	FLgop = LGOP_NONE;
-	FFilledStyle = FALSE;
+    FLgop = LGOP_NONE;
+    FFilledStyle = FALSE;
     FFontHandle = 0;
 
-	InitDevice();
+    InitDevice();
 }
 
 /*##########################################################################
@@ -71,19 +96,19 @@ TGraphicDevice::TGraphicDevice(int handle)
 ##########################################################################*/
 TGraphicDevice::TGraphicDevice(int bpp, int width, int height)
 {
-	FBpp = bpp;
-	FWidth = width;
-	FHeight = height;
-	FBitmapHandle = 0;
-	if (bpp == 1)
-		FColor = 0xFFFFFF;
-	else
-		FColor = 0;
-	FLgop = LGOP_NONE;
-	FFilledStyle = FALSE;
+    FBpp = bpp;
+    FWidth = width;
+    FHeight = height;
+    FBitmapHandle = 0;
+    if (bpp == 1)
+	FColor = 0xFFFFFF;
+    else
+	FColor = 0;
+    FLgop = LGOP_NONE;
+    FFilledStyle = FALSE;
     FFontHandle = 0;
 
-	InitDevice();
+    InitDevice();
 }
 
 /*##########################################################################
@@ -99,21 +124,21 @@ TGraphicDevice::TGraphicDevice(int bpp, int width, int height)
 ##########################################################################*/
 TGraphicDevice::TGraphicDevice(const TGraphicDevice &dev)
 {
-	FBpp = dev.FBpp;
-	FWidth = dev.FWidth;
-	FHeight = dev.FHeight;
-	FRowSize = dev.FRowSize;
-	FLinear = dev.FLinear;
-	if (FBpp == 1)
-		FColor = 0xFFFFFF;
-	else
-		FColor = 0;
-	FLgop = LGOP_NONE;
-	FFilledStyle = FALSE;
-	if (dev.FBitmapHandle)
-		FBitmapHandle = RdosDuplicateBitmapHandle(dev.FBitmapHandle);
-	else
-		FBitmapHandle = 0;
+    FBpp = dev.FBpp;
+    FWidth = dev.FWidth;
+    FHeight = dev.FHeight;
+    FRowSize = dev.FRowSize;
+    FLinear = dev.FLinear;
+    if (FBpp == 1)
+        FColor = 0xFFFFFF;
+    else
+        FColor = 0;
+    FLgop = LGOP_NONE;
+    FFilledStyle = FALSE;
+    if (dev.FBitmapHandle)
+        FBitmapHandle = RdosDuplicateBitmapHandle(dev.FBitmapHandle);
+    else
+        FBitmapHandle = 0;
     FFontHandle = 0;
 
     InitDevice();
@@ -168,8 +193,8 @@ TGraphicDevice &TGraphicDevice::operator=(const TGraphicDevice &dev)
 ##########################################################################*/
 TGraphicDevice::~TGraphicDevice()
 {
-	if (FBitmapHandle)
-		RdosCloseBitmap(FBitmapHandle);
+    if (FBitmapHandle)
+        RdosCloseBitmap(FBitmapHandle);
 }
 
 /*##########################################################################
@@ -188,15 +213,15 @@ void TGraphicDevice::InitDevice()
     if (FBitmapHandle)
     {
         RdosSetDrawColor(FBitmapHandle, FColor);
-		RdosSetLGOP(FBitmapHandle, FLgop);
+        RdosSetLGOP(FBitmapHandle, FLgop);
 
         if (FFontHandle)
             RdosSetFont(FBitmapHandle, FFontHandle);
 
         if (FFilledStyle)
-    		RdosSetFilledStyle(FBitmapHandle);
+    	    RdosSetFilledStyle(FBitmapHandle);
         else
-    		RdosSetHollowStyle(FBitmapHandle);
+    	    RdosSetHollowStyle(FBitmapHandle);
     }
 }
 
