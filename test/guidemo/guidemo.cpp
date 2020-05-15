@@ -411,6 +411,9 @@ void cdecl main()
         char str[128];
         char RusStr[] = {0xd0, 0x82, 0xd0, 0x8a, 0};
 
+	int Handle = RdosCreateFile("can.log", 0);
+        RdosStartCanCapture(Handle);
+
         RdosWaitMilli(250);
 
         Keyboard = new TKeyboardDevice;
@@ -489,17 +492,23 @@ void cdecl main()
 
         bitmap->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
-//        Planets = new TPlanetThread(vbe, 8);
+        Planets = new TPlanetThread(vbe, 8);
         RdosWaitMilli(5000);
+
+        vbe->SetFilledStyle();
+        vbe->SetDrawColor(255, 255, 255);
+        vbe->DrawRect(0, 0, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+        vbe->SetDrawColor(0, 0, 0);
+        vbe->DrawRect(0, 0, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
 
         font = new TFont(24);
         vbe->SetFont(font);
-        vbe->SetDrawColor(255, 127, 80);
+        vbe->SetDrawColor(255, 255, 255);
         sprintf(str, "Resolution: [%dx%d]", vbe->GetWidth(), vbe->GetHeight());
         vbe->DrawString(0, 0, str);
 
-        vbe->SetHollowStyle();
-        vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
+        vbe->DrawEllipse(vbe->GetWidth() / 4, vbe->GetHeight() / 4, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
 
         RdosWaitMilli(5000);
 
@@ -520,6 +529,8 @@ void cdecl main()
         vbe->SetLgopNone();
         vbe->SetDrawColor(0, 255, 255);
         vbe->DrawString(40, 111, "RDOS operating system");
+
+        RdosStopCanCapture();
 
         delete font;
 

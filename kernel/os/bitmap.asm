@@ -425,12 +425,31 @@ cr_phys_bitmap_copy:
     push es
     mov ecx,eax
     shr ecx,2
-    mov edi,edx
+    mov edi,es:v_app_base
     mov ax,flat_sel
     mov es,ax
     xor eax,eax
     rep stos dword ptr es:[edi]
     pop es
+;
+    mov eax,es:v_app_size
+    AllocateBigLinear
+    mov es:v_phys_base,edx
+;
+    mov esi,es:v_app_base
+    mov edi,es:v_phys_base
+    mov ecx,es:v_app_size
+    shr ecx,12
+
+cr_phys_copy_pages:
+    mov edx,esi
+    GetPageEntry
+    mov edx,edi
+    SetPageEntry
+;
+    add esi,1000h
+    add edi,1000h
+    loop cr_phys_copy_pages
 ;
     mov cx,SIZE bitmap_struc
     AllocateHandle

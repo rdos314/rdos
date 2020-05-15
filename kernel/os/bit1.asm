@@ -126,7 +126,7 @@ DrawDone    Proc near
     push esi
     push edi
 ;    
-    mov esi,ds:v_app_base
+    mov esi,ds:v_phys_base
     movzx ecx,word ptr [ebp].curr_size
     mov edi,[ebp].curr_start
     call fword ptr ds:v_phys_update_proc
@@ -163,7 +163,7 @@ SpriteDone    Proc near
     push esi
     push edi
 ;
-    mov esi,ds:v_app_base
+    mov esi,ds:v_phys_base
     movzx ecx,word ptr [ebp].curr_size
     mov edi,[ebp].curr_start
     call fword ptr ds:v_phys_update_proc

@@ -878,6 +878,7 @@ HideLineBuffer  MACRO y
     local not_upper
     local empty
     local upper_loop
+    local upper_dec
     local lower_loop
     local done
 
@@ -895,6 +896,13 @@ HideLineBuffer  MACRO y
     push bx
 
 upper_loop:
+    or bx,bx
+    jnz upper_dec
+;
+    pop bx
+    jmp done
+
+upper_dec:
     sub bx,16
     test ds:[bx].spi_flags,SP_FLAG_VISIBLE
     jz upper_loop
