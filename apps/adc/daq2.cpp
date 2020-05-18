@@ -32,12 +32,11 @@
 #include <string.h>
 #include "adc.h"
 
-static int PowerCount[16][101];
-static int PowerSumA[16][101];
-static int PowerSumB[16][101];
+static int PowerSumA[32][3500];
+static int PowerSumB[32][3500];
 static int CurrBlock;
 static TAdcData *CurrData;
-static int FreqPos[16];
+static int FreqPos[32];
 
 /*##########################################################################
 #
@@ -56,13 +55,11 @@ static void FreqThread(void *param)
     int pos = *p;
     int i;
     int j;
-    int k;
     int PowerA;
     int PowerB;
 
-    for (i = 0; i < 101; i++)
+    for (i = 0; i < 3500; i++)
     {
-        PowerCount[pos][i] = 0;
         PowerSumA[pos][i] = 0;
         PowerSumB[pos][i] = 0;
     }
@@ -74,12 +71,11 @@ static void FreqThread(void *param)
         while (CurrBlock < i)
             RdosWaitMilli(25);
 
-        for (j = 0; j < 101; j++)
+        for (j = 1; j < 3500; j++)
         {
-            TAdc::CalcPower(CurrData + 0x8000 * pos, 0x8000, (j + 45000) * 0x40000 / 750000 , &PowerA, &PowerB);
+            TAdc::CalcPower(CurrData + 0x4000 * pos, 0x4000, j * 0x40000 / 7500 , &PowerA, &PowerB);
             if (PowerA >= 2 && PowerB >= 2)
             {
-                PowerCount[pos][j]++;
                 PowerSumA[pos][j] += PowerA;
                 PowerSumB[pos][j] += PowerB;
             }
@@ -104,25 +100,19 @@ void main()
     int i;
     int j;
     int k;
-    int freq;
     bool ok;
     char str[80];
     int *parm;
-    static int TotalCount[101];
-    static int TotalSumA[101];
-    static int TotalSumB[101];
+    static int TotalSumA[3500];
+    static int TotalSumB[3500];
 
     TAdc Adc(0x0, 10000);
-
-    freq = 107;
-    freq = freq * 0x40000 / 750;
-    Adc.SetTrigger(freq, 14);
 
     if (Adc.Start())
     {
         CurrBlock = -1;
 
-        for (i = 0; i < 16; i++)
+        for (i = 0; i < 32; i++)
         {
             parm = new int[1];
             *parm = i;
@@ -141,7 +131,7 @@ void main()
             for (;;)
             {
                 ok = true;
-                for (j = 0; j < 16 && ok; j++)
+                for (j = 0; j < 32 && ok; j++)
                     if (FreqPos[j] != i)
                         ok = false;
 
@@ -152,22 +142,19 @@ void main()
             }
         }
 
-        for (i = 0; i < 101; i++)
+        for (i = 1; i < 3500; i++)
         {
-            freq = 45000 + i;
-            TotalCount[i] = 0;
             TotalSumA[i] = 0;
             TotalSumB[i] = 0;
 
-            for (j = 0; j < 16; j++)
+            for (j = 0; j < 32; j++)
             {
-                TotalCount[i] += PowerCount[j][i];
                 TotalSumA[i] += PowerSumA[j][i];
                 TotalSumB[i] += PowerSumB[j][i];
             }
 
             if (TotalSumA[i] && TotalSumB[i])
-                printf("%d.%03d: %d %d (%d)\r\n", freq / 1000, freq % 1000, TotalSumA[i], TotalSumB[i], TotalCount[i]);
+                printf("%d.%01d: %d %d\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i]);
         }
     }
 
