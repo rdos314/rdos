@@ -30,14 +30,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "adc.h"
 
 static int PowerCount[32][3500];
 static int PowerSumA[32][3500];
 static int PowerSumB[32][3500];
+static long long DelaySum[32][3500];
+static long long DelaySqSum[32][3500];
 static int CurrBlock;
 static TAdcData *CurrData;
 static int FreqPos[32];
+
+#define M_PI 3.14159265358979323846
 
 /*##########################################################################
 #
@@ -58,12 +63,17 @@ static void FreqThread(void *param)
     int j;
     int PowerA;
     int PowerB;
+    double Delay;
+    int diff;
+    int SCALE = 10;
 
     for (i = 0; i < 3500; i++)
     {
         PowerCount[pos][i] = 0;
         PowerSumA[pos][i] = 0;
         PowerSumB[pos][i] = 0;
+        DelaySum[pos][i] = 0;
+        DelaySqSum[pos][i] = 0;
     }
 
     FreqPos[pos] = -1;
@@ -75,12 +85,16 @@ static void FreqThread(void *param)
 
         for (j = 1; j < 3500; j++)
         {
-            TAdc::CalcPower(CurrData + 0x4000 * pos, 0x4000, j * 0x40000 / 7500 , &PowerA, &PowerB);
+            TAdc::CalcPower(CurrData + 0x4000 * pos, 0x4000, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
             if (PowerA >= 2 && PowerB >= 2)
             {
                 PowerCount[pos][j]++;
                 PowerSumA[pos][j] += PowerA;
                 PowerSumB[pos][j] += PowerB;
+
+                diff = (int)(Delay * 30 * 1000 * SCALE / j);
+                DelaySum[pos][j] += diff;
+                DelaySqSum[pos][j] += diff * diff;
             }
         }
         FreqPos[pos] = i;
@@ -107,9 +121,14 @@ void main()
     char str[80];
     int *parm;
     int freq;
+    long long val;
+    int ival;
+    double dval;
     static int TotalCount[3500];
     static int TotalSumA[3500];
     static int TotalSumB[3500];
+    static long long TotalDelay[3500];
+    static long long TotalDelaySq[3500];
 
     TAdc Adc(0x0, 10000);
 
@@ -162,10 +181,18 @@ void main()
                 TotalCount[i] += PowerCount[j][i];
                 TotalSumA[i] += PowerSumA[j][i];
                 TotalSumB[i] += PowerSumB[j][i];
+                TotalDelay[i] += DelaySum[j][i];
+                TotalDelaySq[i] += DelaySqSum[j][i];
             }
 
             if (TotalSumA[i] && TotalSumB[i])
-                printf("%d.%01d: %d %d (%d)\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i], TotalCount[i]);
+            {
+                val = TotalDelaySq[i] * TotalCount[i] - TotalDelay[i] * TotalDelay[i];
+                dval = sqrt(val) / TotalCount[i];
+                ival = (int)dval;
+
+                printf("%d.%01d: %d %d (%d), %d (%d)\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i], TotalCount[i], TotalDelay[i] / TotalCount[i], ival);
+            }
         }
     }
 

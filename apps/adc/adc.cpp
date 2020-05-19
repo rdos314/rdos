@@ -54,6 +54,7 @@ void CalcPower(TAdcData *Data, int Size, int RelFreq, struct TAdcPower *Res);
 
 };
 
+#define M_PI 3.14159265358979323846
 
 /*##########################################################################
 #
@@ -460,11 +461,14 @@ int TAdc::GetSin(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB)
+void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, double *Delay)
 {
     struct TAdcPower res;
     long long val;
     double dval;
+    double x, y;
+    double phaseA;
+    double phaseB;
 
     ::CalcPower(Data, Size, RelFreq, &res);
 
@@ -472,6 +476,24 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
     res.SinB = res.SinB / Size / 0x2000;
     res.CosA = res.CosA / Size / 0x2000;
     res.CosB = res.CosB / Size / 0x2000;
+
+    x = (double)res.CosA;
+    y = (double)res.SinA;
+    phaseA = atan2(y, x);
+
+    x = (double)res.CosB;
+    y = (double)res.SinB;
+    phaseB = atan2(y, x);
+
+    dval =  (phaseA - phaseB) / 2 / M_PI * 0x40000 / RelFreq;
+
+    while (dval > M_PI)
+        dval -= M_PI;
+
+    while (dval < -M_PI)
+        dval += M_PI;
+
+    *Delay = dval;
 
     val = res.SinA * res.SinA + res.CosA * res.CosA;
     dval = sqrt(val);
