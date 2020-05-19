@@ -32,6 +32,7 @@
 #include <string.h>
 #include "adc.h"
 
+static int PowerCount[32][3500];
 static int PowerSumA[32][3500];
 static int PowerSumB[32][3500];
 static int CurrBlock;
@@ -60,6 +61,7 @@ static void FreqThread(void *param)
 
     for (i = 0; i < 3500; i++)
     {
+        PowerCount[pos][i] = 0;
         PowerSumA[pos][i] = 0;
         PowerSumB[pos][i] = 0;
     }
@@ -76,6 +78,7 @@ static void FreqThread(void *param)
             TAdc::CalcPower(CurrData + 0x4000 * pos, 0x4000, j * 0x40000 / 7500 , &PowerA, &PowerB);
             if (PowerA >= 2 && PowerB >= 2)
             {
+                PowerCount[pos][j]++;
                 PowerSumA[pos][j] += PowerA;
                 PowerSumB[pos][j] += PowerB;
             }
@@ -103,10 +106,16 @@ void main()
     bool ok;
     char str[80];
     int *parm;
+    int freq;
+    static int TotalCount[3500];
     static int TotalSumA[3500];
     static int TotalSumB[3500];
 
     TAdc Adc(0x0, 10000);
+
+    freq = 107;
+    freq = freq * 0x40000 / 750;
+    Adc.SetTrigger(freq, 14);
 
     if (Adc.Start())
     {
@@ -144,17 +153,19 @@ void main()
 
         for (i = 1; i < 3500; i++)
         {
+            TotalCount[i] = 0;
             TotalSumA[i] = 0;
             TotalSumB[i] = 0;
 
             for (j = 0; j < 32; j++)
             {
+                TotalCount[i] += PowerCount[j][i];
                 TotalSumA[i] += PowerSumA[j][i];
                 TotalSumB[i] += PowerSumB[j][i];
             }
 
             if (TotalSumA[i] && TotalSumB[i])
-                printf("%d.%01d: %d %d\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i]);
+                printf("%d.%01d: %d %d (%d)\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i], TotalCount[i]);
         }
     }
 
