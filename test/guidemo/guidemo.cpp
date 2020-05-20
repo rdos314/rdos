@@ -6,7 +6,6 @@
 
 #include "bitdev.h"
 #include "videodev.h"
-#include "canbit.h"
 #include "planthr.h"
 #include "waitdev.h"
 #include "keyboard.h"
@@ -411,9 +410,6 @@ void cdecl main()
         char str[128];
         char RusStr[] = {0xd0, 0x82, 0xd0, 0x8a, 0};
 
-	int Handle = RdosCreateFile("can.log", 0);
-        RdosStartCanCapture(Handle);
-
         RdosWaitMilli(250);
 
         Keyboard = new TKeyboardDevice;
@@ -435,8 +431,7 @@ void cdecl main()
 
         RdosWaitMilli(2500);
 
-        vbe = new TCanModuleGraphicDevice;
-//        vbe = new TVideoGraphicDevice(32, 1366, 768);
+        vbe = new TVideoGraphicDevice(32, 1366, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //      vbe = new TVideoGraphicDevice(24, 1280, 1024);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
@@ -495,20 +490,14 @@ void cdecl main()
         Planets = new TPlanetThread(vbe, 8);
         RdosWaitMilli(5000);
 
-        vbe->SetFilledStyle();
-        vbe->SetDrawColor(255, 255, 255);
-        vbe->DrawRect(0, 0, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
-
-        vbe->SetDrawColor(0, 0, 0);
-        vbe->DrawRect(0, 0, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
-
         font = new TFont(24);
         vbe->SetFont(font);
-        vbe->SetDrawColor(255, 255, 255);
+        vbe->SetDrawColor(255, 127, 80);
         sprintf(str, "Resolution: [%dx%d]", vbe->GetWidth(), vbe->GetHeight());
         vbe->DrawString(0, 0, str);
 
-        vbe->DrawEllipse(vbe->GetWidth() / 4, vbe->GetHeight() / 4, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
+        vbe->SetHollowStyle();
+        vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
 
         RdosWaitMilli(5000);
 
@@ -529,8 +518,6 @@ void cdecl main()
         vbe->SetLgopNone();
         vbe->SetDrawColor(0, 255, 255);
         vbe->DrawString(40, 111, "RDOS operating system");
-
-        RdosStopCanCapture();
 
         delete font;
 
