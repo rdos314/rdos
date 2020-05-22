@@ -36,14 +36,10 @@
 static int PowerCount[32][3500];
 static int PowerSumA[32][3500];
 static int PowerSumB[32][3500];
-static long long DelaySum[32][3500];
-static long long DelayMin[32][3500];
-static long long DelayMax[32][3500];
+static int DelayCount[32][3500][360];
 static int CurrBlock;
 static TAdcData *CurrData;
 static int FreqPos[32];
-
-#define M_PI 3.14159265358979323846
 
 /*##########################################################################
 #
@@ -64,7 +60,7 @@ static void FreqThread(void *param)
     int j;
     int PowerA;
     int PowerB;
-    double Delay;
+    int Delay;
     int diff;
     int SCALE = 10;
 
@@ -73,9 +69,9 @@ static void FreqThread(void *param)
         PowerCount[pos][i] = 0;
         PowerSumA[pos][i] = 0;
         PowerSumB[pos][i] = 0;
-        DelaySum[pos][i] = 0;
-        DelayMin[pos][i] = 0;
-        DelayMax[pos][i] = 0;
+
+        for (j = 0; j < 360; j++)
+            DelayCount[pos][i][j] = 0;
     }
 
     FreqPos[pos] = -1;
@@ -90,29 +86,110 @@ static void FreqThread(void *param)
             TAdc::CalcPower(CurrData + 0x4000 * pos, 0x4000, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
             if (PowerA >= 2 && PowerB >= 2)
             {
-                diff = (int)(Delay * 30 * 1000 * SCALE / j);
-                DelaySum[pos][j] += diff;
-                if (PowerCount[pos][j])
-                {
-                    if (diff > DelayMax[pos][j])
-                        DelayMax[pos][j] = diff;
-
-                    if (diff < DelayMin[pos][j])
-                        DelayMin[pos][j] = diff;
-                }
-                else
-                {
-                    DelayMin[pos][j] = diff;
-                    DelayMax[pos][j] = diff;
-                }
-
                 PowerCount[pos][j]++;
                 PowerSumA[pos][j] += PowerA;
                 PowerSumB[pos][j] += PowerB;
+                DelayCount[pos][j][Delay]++;
             }
         }
         FreqPos[pos] = i;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : CalcMeanSdPos
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void CalcMeanSdPos(int DelayArr[360], int Start, int *Mean, double *Sd)
+{
+    int i;
+    int pos;
+    long long sum;
+    int count;
+    int mean;
+    double dval;
+
+    sum = 0;
+    count = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        pos = i - Start;
+
+        if (pos < -180)
+            pos += 360;
+
+        if (pos >= 180)
+            pos -= 360;
+
+        sum += DelayArr[i] * pos;
+        count += DelayArr[i];
+    }
+
+    mean = (int)(sum / (long long)count);
+    *Mean = mean;
+
+    sum = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        pos = i - Start;
+
+        if (pos < -180)
+            pos += 360;
+
+        if (pos >= 180)
+            pos -= 360;
+
+        sum += DelayArr[i] * (pos - mean) * (pos - mean);
+    }
+
+    dval = (double)(sum / (long long)count);
+    dval = sqrt(dval);
+    *Sd = dval;    
+}
+
+/*##########################################################################
+#
+#   Name       : CalcMeanSd
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
+{
+    int pos;
+    int mean;
+    int cmean;
+    double sd;
+    double csd;
+
+    cmean = 0;
+    csd = 1000000.0;
+
+    for (pos = 0; pos < 360; pos++)
+    {
+        CalcMeanSdPos(DelayArr, pos, &mean, &sd);
+        if (sd < csd)
+        {
+            csd = sd;
+            cmean = pos + mean;
+        }
+    }
+
+    *Sd = (int)csd;
+    *Mean = cmean;
 }
 
 /*##########################################################################
@@ -141,8 +218,9 @@ void main()
     static int TotalCount[3500];
     static int TotalSumA[3500];
     static int TotalSumB[3500];
-    static long long TotalDelay[3500];
-    static long long TotalDelaySq[3500];
+    static int TotalDelayMean[3500];
+    static int TotalDelaySd[3500];
+    static int DelayArr[360];
 
     TAdc Adc(0x0, 10000);
 
@@ -190,16 +268,29 @@ void main()
             TotalSumA[i] = 0;
             TotalSumB[i] = 0;
 
+            for (k = 0; k < 360; k++)
+                DelayArr[k] = 0;
+
             for (j = 0; j < 32; j++)
             {
                 TotalCount[i] += PowerCount[j][i];
                 TotalSumA[i] += PowerSumA[j][i];
                 TotalSumB[i] += PowerSumB[j][i];
-                TotalDelay[i] += DelaySum[j][i];
+
+                for (k = 0; k < 360; k++)
+                    DelayArr[k] += DelayCount[j][i][k];
+            }
+
+            if (TotalCount[i])
+                CalcMeanSd(DelayArr, &TotalDelayMean[i], &TotalDelaySd[i]);
+            else
+            {
+                TotalDelayMean[i] = 0;
+                TotalDelaySd[i] = 0;
             }
 
             if (TotalSumA[i] && TotalSumB[i])
-                printf("%d.%01d: %d %d (%d), %d\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i], TotalCount[i], TotalDelay[i] / TotalCount[i]);
+                printf("%d.%01d: %d %d (%d), %d (%d)\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i], TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
         }
     }
 

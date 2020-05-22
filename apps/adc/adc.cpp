@@ -461,10 +461,11 @@ int TAdc::GetSin(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, double *Delay)
+void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay)
 {
     struct TAdcPower res;
     long long val;
+    int ival;
     double dval;
     double x, y;
     double phaseA;
@@ -486,14 +487,16 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
     phaseB = atan2(y, x);
 
     dval =  (phaseA - phaseB) / 2 / M_PI * 0x40000 / RelFreq;
+    dval = dval * 180.0 / M_PI;
+    ival = (int)dval;
 
-    while (dval > M_PI)
-        dval -= M_PI;
+    while (ival < 0)
+        ival += 360;
 
-    while (dval < -M_PI)
-        dval += M_PI;
+    while (ival >= 360)
+        ival -= 360;
 
-    *Delay = dval;
+    *Delay = ival;
 
     val = res.SinA * res.SinA + res.CosA * res.CosA;
     dval = sqrt(val);
