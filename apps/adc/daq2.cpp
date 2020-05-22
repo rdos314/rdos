@@ -41,6 +41,8 @@ static int CurrBlock;
 static TAdcData *CurrData;
 static int FreqPos[32];
 
+int SCALE = 10;
+
 /*##########################################################################
 #
 #   Name       : FreqThread
@@ -62,7 +64,6 @@ static void FreqThread(void *param)
     int PowerB;
     int Delay;
     int diff;
-    int SCALE = 10;
 
     for (i = 0; i < 3500; i++)
     {
@@ -214,6 +215,10 @@ void main()
     int freq;
     long long val;
     int ival;
+    int mean;
+    int sd;
+    int RelA;
+    int RelB;
     double dval;
     static int TotalCount[3500];
     static int TotalSumA[3500];
@@ -282,7 +287,11 @@ void main()
             }
 
             if (TotalCount[i])
-                CalcMeanSd(DelayArr, &TotalDelayMean[i], &TotalDelaySd[i]);
+            {
+                CalcMeanSd(DelayArr, &mean, &sd);
+                TotalDelayMean[i] = mean * 30 * 1000 / 360 * SCALE / i;
+                TotalDelaySd[i] = sd * 30 * 1000 / 360 * SCALE / i;
+            }
             else
             {
                 TotalDelayMean[i] = 0;
@@ -290,7 +299,11 @@ void main()
             }
 
             if (TotalSumA[i] && TotalSumB[i])
-                printf("%d.%01d: %d %d (%d), %d (%d)\r\n", i / 10, i % 10, TotalSumA[i], TotalSumB[i], TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
+            {
+                RelA = 10 * TotalSumA[i] / TotalCount[i];
+                RelB = 10 * TotalSumB[i] / TotalCount[i];
+                printf("%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
+            }
         }
     }
 
