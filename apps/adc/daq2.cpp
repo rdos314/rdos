@@ -60,6 +60,7 @@ static void FreqThread(void *param)
     int pos = *p;
     int i;
     int j;
+    int k;
     int PowerA;
     int PowerB;
     int Delay;
@@ -84,13 +85,16 @@ static void FreqThread(void *param)
 
         for (j = 1; j < 3500; j++)
         {
-            TAdc::CalcPower(CurrData + 0x4000 * pos, 0x4000, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
-            if (PowerA >= 2 && PowerB >= 2)
+            for (k = 0; k < 2; k++)
             {
-                PowerCount[pos][j]++;
-                PowerSumA[pos][j] += PowerA;
-                PowerSumB[pos][j] += PowerB;
-                DelayCount[pos][j][Delay]++;
+                TAdc::CalcPower(CurrData + 0x2000 * (pos + k), 0x2000, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
+                if (PowerA >= 2 && PowerB >= 2)
+                {
+                    PowerCount[pos][j]++;
+                    PowerSumA[pos][j] += PowerA;
+                    PowerSumB[pos][j] += PowerB;
+                    DelayCount[pos][j][Delay]++;
+                }
             }
         }
         FreqPos[pos] = i;
@@ -154,7 +158,7 @@ static void CalcMeanSdPos(int DelayArr[360], int Start, int *Mean, double *Sd)
 
     dval = (double)(sum / (long long)count);
     dval = sqrt(dval);
-    *Sd = dval;    
+    *Sd = dval;
 }
 
 /*##########################################################################
@@ -188,6 +192,12 @@ static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
             cmean = pos + mean;
         }
     }
+
+    while (cmean < -180)
+        cmean += 360;
+
+    while (cmean >= 180)
+        cmean -= 360;
 
     *Sd = (int)csd;
     *Mean = cmean;
@@ -289,8 +299,10 @@ void main()
             if (TotalCount[i])
             {
                 CalcMeanSd(DelayArr, &mean, &sd);
-                TotalDelayMean[i] = mean * 30 * 1000 / 360 * SCALE / i;
-                TotalDelaySd[i] = sd * 30 * 1000 / 360 * SCALE / i;
+                TotalDelayMean[i] = mean;
+                TotalDelaySd[i] = sd;
+//                TotalDelayMean[i] = mean * 30 * 1000 / 360 * SCALE / i;
+//                TotalDelaySd[i] = sd * 30 * 1000 / 360 * SCALE / i;
             }
             else
             {

@@ -486,8 +486,7 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
     y = (double)res.SinB;
     phaseB = atan2(y, x);
 
-    dval =  (phaseA - phaseB) / 2 / M_PI * 0x40000 / RelFreq;
-    dval = dval * 180.0 / M_PI;
+    dval =  (phaseB - phaseA) * 180.0 / M_PI;
     ival = (int)dval;
 
     while (ival < 0)
