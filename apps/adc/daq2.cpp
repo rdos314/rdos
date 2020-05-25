@@ -41,6 +41,7 @@ static int CurrBlock;
 static TAdcData *CurrData;
 static int FreqPos[32];
 
+#define M_PI 3.14159265358979323846
 int SCALE = 10;
 
 /*##########################################################################
@@ -205,6 +206,53 @@ static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
 
 /*##########################################################################
 #
+#   Name       : CalcDirections
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Distance)
+{
+    int Pos;
+    int Count;
+    double Dir;
+    int Tol = Sd * WaveLen / 360;
+
+    Pos = Mean * WaveLen / 360;
+    while (Pos - WaveLen + Tol > -Distance)
+        Pos -= WaveLen;
+
+    for (Count = 0; Count < 16; Count++)
+    {
+        if (Pos <= -Distance)
+            DirArr[Count] = -90;
+        else
+        {
+            if (Pos >= Distance)
+                DirArr[Count] = 90;
+            else
+            {
+                Dir = (double)Pos / (double)Distance;
+                Dir = asin(Dir) * 180.0 / M_PI;
+                DirArr[Count] = (int)(Dir + 0.5);
+            }
+        }
+
+        if (Pos + WaveLen - Tol < Distance)
+            Pos += WaveLen;
+        else
+            break;
+    }
+
+    return Count + 1;
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....:
@@ -227,6 +275,7 @@ void main()
     int ival;
     int mean;
     int sd;
+    int vl;
     int RelA;
     int RelB;
     double dval;
@@ -235,6 +284,8 @@ void main()
     static int TotalSumB[3500];
     static int TotalDelayMean[3500];
     static int TotalDelaySd[3500];
+    static int TotalDirCount[3500];
+    static int TotalDirArr[3500][16];
     static int DelayArr[360];
 
     TAdc Adc(0x0, 10000);
@@ -301,8 +352,9 @@ void main()
                 CalcMeanSd(DelayArr, &mean, &sd);
                 TotalDelayMean[i] = mean;
                 TotalDelaySd[i] = sd;
-//                TotalDelayMean[i] = mean * 30 * 1000 / 360 * SCALE / i;
-//                TotalDelaySd[i] = sd * 30 * 1000 / 360 * SCALE / i;
+
+                vl = 30 * 1000 * SCALE / i;
+                TotalDirCount[i] = CalcDirections(TotalDirArr[i], vl, mean, sd, 250);
             }
             else
             {
@@ -314,7 +366,12 @@ void main()
             {
                 RelA = 10 * TotalSumA[i] / TotalCount[i];
                 RelB = 10 * TotalSumB[i] / TotalCount[i];
-                printf("%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
+                printf("%d.%01d: %d.%01d %d.%01d (%d), %d (%d)", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
+
+                for (j = 0; j < TotalDirCount[i]; j++)
+                    printf(" %d", TotalDirArr[i][j]);
+
+                printf("\r\n");
             }
         }
     }
