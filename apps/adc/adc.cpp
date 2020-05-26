@@ -480,14 +480,16 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
 
     x = (double)res.CosA;
     y = (double)res.SinA;
-    phaseA = atan2(y, x);
+    phaseA = atan2(x, y);
+    phaseA =  phaseA * 180.0 / M_PI;
 
     x = (double)res.CosB;
     y = (double)res.SinB;
-    phaseB = atan2(y, x);
+    phaseB = atan2(x, y);
+    phaseB =  phaseB * 180.0 / M_PI;
 
-    dval =  (phaseB - phaseA) * 180.0 / M_PI;
-    ival = (int)dval;
+    dval =  phaseB - phaseA;
+    ival = round(dval);
 
     while (ival < 0)
         ival += 360;
@@ -499,9 +501,9 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
 
     val = res.SinA * res.SinA + res.CosA * res.CosA;
     dval = sqrt(val);
-    *PowerA = (int)dval;
+    *PowerA = round(dval);
 
     val = res.SinB * res.SinB + res.CosB * res.CosB;
     dval = sqrt(val);
-    *PowerB = (int)dval;
+    *PowerB = round(dval);
 }

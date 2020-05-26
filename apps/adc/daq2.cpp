@@ -139,7 +139,7 @@ static void CalcMeanSdPos(int DelayArr[360], int Start, int *Mean, double *Sd)
         count += DelayArr[i];
     }
 
-    mean = (int)(sum / (long long)count);
+    mean = round(sum / (long long)count);
     *Mean = mean;
 
     sum = 0;
@@ -200,7 +200,7 @@ static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
     while (cmean >= 180)
         cmean -= 360;
 
-    *Sd = (int)csd;
+    *Sd = round(csd);
     *Mean = cmean;
 }
 
@@ -226,19 +226,49 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
     while (Pos - WaveLen + Tol > -Distance)
         Pos -= WaveLen;
 
-    for (Count = 0; Count < 16; Count++)
+    Count = 0;
+
+    while (Count < 16)
     {
         if (Pos <= -Distance)
+        {
             DirArr[Count] = -90;
+            Count++;
+        }
         else
         {
             if (Pos >= Distance)
+            {
                 DirArr[Count] = 90;
+                Count++;
+            }
             else
             {
                 Dir = (double)Pos / (double)Distance;
                 Dir = asin(Dir) * 180.0 / M_PI;
-                DirArr[Count] = (int)(Dir + 0.5);
+
+                if (Dir >= 0)
+                {
+                    DirArr[Count] = round(Dir);
+                    Count++;
+
+                    if (Count < 16)
+                    {
+                        DirArr[Count] = 180 - round(Dir);
+                        Count++;
+                    }
+                }
+                else
+                {
+                    DirArr[Count] = 360 + round(Dir);
+                    Count++;
+
+                    if (Count < 16)
+                    {
+                        DirArr[Count] = 180 - round(Dir);
+                        Count++;
+                    }
+                }
             }
         }
 
@@ -248,7 +278,7 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
             break;
     }
 
-    return Count + 1;
+    return Count;
 }
 
 /*##########################################################################
@@ -287,6 +317,59 @@ void main()
     static int TotalDirCount[3500];
     static int TotalDirArr[3500][16];
     static int DelayArr[360];
+
+
+    int count;
+    int DirArr[16];
+    int phaseA;
+    int phaseB;
+    int delay;
+    double ns;
+    int phase_diff;
+    int phase_add;
+    int phase;
+    int PowerA;
+    int PowerB;
+    int Delay;
+    int phi;
+    double v;
+    TAdcData *data;
+
+    data = new TAdcData[32768];
+    freq = 1614;
+    vl = 30 * 1000 * SCALE / freq;
+    phase_add = freq * 0x40000 / 750 / SCALE;
+
+    for (phi = 0; phi < 360; phi++)
+    {
+        v = (double)phi * M_PI / 180.0;
+        v = 250 * sin(v);
+        ns = (double)v / 100.0 / 0.3;
+
+        phase_diff = round(0.75 * ns * (double)phase_add);
+
+        phaseA = 0;
+        phaseB = phase_diff;
+
+        for (i = 0; i < 32768; i++)
+        {
+            data[i].chA = TAdc::GetSin(phaseA);
+            data[i].chB = TAdc::GetSin(phaseB);
+
+            phaseA += phase_add;
+            phaseB += phase_add;
+        } 
+        
+        TAdc::CalcPower(data, 32768, freq * 0x40000 / 750 / SCALE, &PowerA, &PowerB, &Delay);
+
+        count = CalcDirections(DirArr, vl, Delay, 1, 250);
+ 
+        printf("%d: ", phi);
+        for (i = 0; i < count; i++)
+            printf(" %d", DirArr[i]);
+
+        printf("\r\n");
+    }
 
     TAdc Adc(0x0, 10000);
 
