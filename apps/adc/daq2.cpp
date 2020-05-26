@@ -232,7 +232,7 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
     {
         if (Pos <= -Distance)
         {
-            DirArr[Count] = -90;
+            DirArr[Count] = 270;
             Count++;
         }
         else
