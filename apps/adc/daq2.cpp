@@ -358,7 +358,7 @@ static void PrintAna()
 
             for (j = 0; j < TotalDirCount[i]; j++)
             {
-                printf(str, " %d", TotalDirArr[i][j]);
+                sprintf(str, " %d", TotalDirArr[i][j]);
                 RdosWriteString(str);
             }
 
