@@ -131,6 +131,9 @@ struct TIrqState IrqStatArr[256];
 
 extern void InitScheduler();
 
+extern int GetCurrentThread();
+#pragma aux GetCurrentThread parm routine value [eax]
+
 extern void SetThreadCore(int Core, int ThreadHandle);
 #pragma aux SetThreadCore parm routine [edx eax]
 
@@ -401,7 +404,7 @@ int CreateTid()
 #
 #   Name       : MoveThread
 #
-#   Descr      : Move thread to new core
+#   Descr      : Move thread to another core
 #
 ##########################################################################*/
 #pragma aux MoveThread "*" rdosdev parm routine [eax ebx]
@@ -417,6 +420,54 @@ void MoveThread(int Core, int ThreadId)
         ok = CoreArr[Core].Active && !CoreArr[Core].Realtime;
 
     if (ok)
+    {
+        RdosEnterKernelSection(&ThreadSection);
+
+        for (i = 0; i < ActiveThreads; i++)
+        {
+            if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId)
+            {
+                if (Core != ThreadArr[i].Core)
+                {
+                    ThreadArr[i].Core = Core;
+                    SetThreadCore(Core, ThreadArr[i].Handle);
+                }
+                break;
+            }
+        }
+
+        RdosLeaveKernelSection(&ThreadSection);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : ImplMoveToNewCore
+#
+#   Descr      : Move thread to new core
+#
+##########################################################################*/
+#pragma aux ImplMoveToNewCore "*" rdosdev parm routine
+void ImplMoveToNewCore()
+{
+    int ThreadId = GetCurrentThread();
+    int Core;
+    int CoreId = 0;
+    int i;
+
+    for (Core = 0; Core < ProcessorCount; Core++)
+    {
+        if (!CoreArr[Core].Realtime && !CoreArr[Core].Active)
+        {
+            CoreArr[Core].Active = TRUE;
+            CoreId = RdosGetCoreNum(Core);
+            RdosStartCore(CoreId);
+            ActiveProcessors++;
+            break;
+        }
+    }
+
+    if (CoreId)
     {
         RdosEnterKernelSection(&ThreadSection);
 

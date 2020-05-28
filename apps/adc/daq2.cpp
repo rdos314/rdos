@@ -67,6 +67,8 @@ static void FreqThread(void *param)
     int Delay;
     int diff;
 
+    RdosMoveToNewCore();
+
     for (i = 0; i < 3500; i++)
     {
         PowerCount[pos][i] = 0;
@@ -281,6 +283,90 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
     return Count;
 }
 
+
+/*##########################################################################
+#
+#   Name       : PrintAna
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintAna()
+{
+    int i;
+    int j;
+    int k;
+    int mean;
+    int sd;
+    int vl;
+    int RelA;
+    int RelB;
+    char str[100];
+    static int TotalCount[3500];
+    static int TotalSumA[3500];
+    static int TotalSumB[3500];
+    static int TotalDelayMean[3500];
+    static int TotalDelaySd[3500];
+    static int TotalDirCount[3500];
+    static int TotalDirArr[3500][16];
+    static int DelayArr[360];
+
+    for (i = 1; i < 3500; i++)
+    {
+        TotalCount[i] = 0;
+        TotalSumA[i] = 0;
+        TotalSumB[i] = 0;
+
+        for (j = 0; j < 360; j++)
+            DelayArr[j] = 0;
+
+        for (j = 0; j < 32; j++)
+        {
+            TotalCount[i] += PowerCount[j][i];
+            TotalSumA[i] += PowerSumA[j][i];
+            TotalSumB[i] += PowerSumB[j][i];
+
+            for (k = 0; k < 360; k++)
+                DelayArr[k] += DelayCount[j][i][k];
+        }
+
+        if (TotalCount[i])
+        {
+            CalcMeanSd(DelayArr, &mean, &sd);
+            TotalDelayMean[i] = mean;
+            TotalDelaySd[i] = sd;
+
+            vl = 30 * 1000 * SCALE / i;
+            TotalDirCount[i] = CalcDirections(TotalDirArr[i], vl, mean, sd, 250);
+        }
+        else
+        {
+            TotalDelayMean[i] = 0;
+            TotalDelaySd[i] = 0;
+        }
+
+        if (TotalSumA[i] && TotalSumB[i])
+        {
+            RelA = 10 * TotalSumA[i] / TotalCount[i];
+            RelB = 10 * TotalSumB[i] / TotalCount[i];
+            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
+            RdosWriteString(str);
+
+            for (j = 0; j < TotalDirCount[i]; j++)
+            {
+                printf(str, " %d", TotalDirArr[i][j]);
+                RdosWriteString(str);
+            }
+
+            RdosWriteString("\r\n");
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : main
@@ -296,27 +382,10 @@ void main()
 {
     int i;
     int j;
-    int k;
     bool ok;
     char str[80];
     int *parm;
     int freq;
-    long long val;
-    int ival;
-    int mean;
-    int sd;
-    int vl;
-    int RelA;
-    int RelB;
-    double dval;
-    static int TotalCount[3500];
-    static int TotalSumA[3500];
-    static int TotalSumB[3500];
-    static int TotalDelayMean[3500];
-    static int TotalDelaySd[3500];
-    static int TotalDirCount[3500];
-    static int TotalDirArr[3500][16];
-    static int DelayArr[360];
 
     TAdc Adc(0x0, 10000);
 
@@ -342,7 +411,16 @@ void main()
         {
             CurrData = Adc.GetBlock(i);
             CurrBlock = i;
-            printf("%d\r\n", i);
+
+            if (i && ((i % 100) == 0))
+            {
+                RdosWriteString("\r\n");
+                PrintAna();
+                sprintf(str, "%d", i);
+                RdosWriteString(str);
+            }
+            else
+                RdosWriteChar('.');
 
             for (;;)
             {
@@ -358,52 +436,8 @@ void main()
             }
         }
 
-        for (i = 1; i < 3500; i++)
-        {
-            TotalCount[i] = 0;
-            TotalSumA[i] = 0;
-            TotalSumB[i] = 0;
+        PrintAna();
 
-            for (k = 0; k < 360; k++)
-                DelayArr[k] = 0;
-
-            for (j = 0; j < 32; j++)
-            {
-                TotalCount[i] += PowerCount[j][i];
-                TotalSumA[i] += PowerSumA[j][i];
-                TotalSumB[i] += PowerSumB[j][i];
-
-                for (k = 0; k < 360; k++)
-                    DelayArr[k] += DelayCount[j][i][k];
-            }
-
-            if (TotalCount[i])
-            {
-                CalcMeanSd(DelayArr, &mean, &sd);
-                TotalDelayMean[i] = mean;
-                TotalDelaySd[i] = sd;
-
-                vl = 30 * 1000 * SCALE / i;
-                TotalDirCount[i] = CalcDirections(TotalDirArr[i], vl, mean, sd, 250);
-            }
-            else
-            {
-                TotalDelayMean[i] = 0;
-                TotalDelaySd[i] = 0;
-            }
-
-            if (TotalSumA[i] && TotalSumB[i])
-            {
-                RelA = 10 * TotalSumA[i] / TotalCount[i];
-                RelB = 10 * TotalSumB[i] / TotalCount[i];
-                printf("%d.%01d: %d.%01d %d.%01d (%d), %d (%d)", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
-
-                for (j = 0; j < TotalDirCount[i]; j++)
-                    printf(" %d", TotalDirArr[i][j]);
-
-                printf("\r\n");
-            }
-        }
     }
 
     for (;;)

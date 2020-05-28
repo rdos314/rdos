@@ -530,6 +530,7 @@ int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 void RDOSAPI RdosMoveToCore(int Core);
 void RDOSAPI RdosMoveThreadToCore(int Core, int ThreadNr);
+void RDOSAPI RdosMoveToNewCore();
 
 int RDOSAPI RdosGetModuleCount();
 int RDOSAPI RdosGetModuleInfo(int Index, int *ID, char *NameBuf, int NameSize);

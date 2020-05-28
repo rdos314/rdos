@@ -1802,6 +1802,9 @@
     CallGate_move_thread_to_core  \
     __parm [__eax __ebx]
 
+#pragma aux RdosMoveToNewCore = \
+    CallGate_move_to_new_core
+
 #pragma aux RdosGetModuleCount = \
     CallGate_get_module_count  \
     "jc fail" \

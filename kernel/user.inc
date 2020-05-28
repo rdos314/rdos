@@ -477,6 +477,10 @@ MoveThreadToCore        MACRO
         UserGate move_thread_to_core_nr
                                                 ENDM
 
+MoveToNewCore        MACRO
+        UserGate move_to_new_core_nr
+                                                ENDM
+
 ; IN  AX         Number of milliseconds
 WaitMilliSec        MACRO
         UserGate wait_milli_nr

@@ -57,6 +57,7 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IdToHandle:near
     extrn IndexToHandle:near
     extrn MoveThread:near
+    extrn ImplMoveToNewCore:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -459,6 +460,30 @@ ProbeFlatAppCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetCurrentThread
+;
+;           DESCRIPTION:    Get current thread handle
+;
+;           RETURNS:        EAX         Thread handle         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetCurrentThread_
+
+GetCurrentThread_    Proc near
+    push es
+;    
+    GetThread
+    mov es,eax
+    movzx eax,es:p_id
+;
+    pop es
+    ret
+GetCurrentThread_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetThreadHandle
 ;
 ;           DESCRIPTION:    Get current thread handle
@@ -755,7 +780,7 @@ suspend_and_signal_thread       ENDP
 ;
 ;           NAME:           MoveToCore
 ;
-;           DESCRIPTION:    Move current thread to new core
+;           DESCRIPTION:    Move current thread to another core
 ;
 ;           PARAMETER:      AX          Core #
 ;
@@ -808,6 +833,22 @@ move_thread_to_core PROC far
     pop eax    
     ret
 move_thread_to_core ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           MoveToNewCore
+;
+;           DESCRIPTION:    Move current thread to new core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_to_new_core_name  DB 'Move To New Core',0
+
+move_to_new_core PROC far
+    call ImplMoveToNewCore
+    ret
+move_to_new_core ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1245,6 +1286,12 @@ init_state_hooks:
     mov edi,OFFSET move_thread_to_core_name
     xor dx,dx
     mov ax,move_thread_to_core_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET move_to_new_core
+    mov edi,OFFSET move_to_new_core_name
+    xor dx,dx
+    mov ax,move_to_new_core_nr
     RegisterBimodalUserGate
 ;
     popad
