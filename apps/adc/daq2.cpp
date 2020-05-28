@@ -84,7 +84,7 @@ static void FreqThread(void *param)
     for (i = 0; i < 10000; i++)
     {
         while (CurrBlock < i)
-            RdosWaitMilli(25);
+            RdosWaitMilli(5);
 
         for (j = 1; j < 3500; j++)
         {
@@ -395,6 +395,8 @@ void main()
 
     if (Adc.Start())
     {
+        RdosWriteString("ADC started\r\n");
+
         CurrBlock = -1;
 
         for (i = 0; i < 32; i++)
@@ -412,7 +414,7 @@ void main()
             CurrData = Adc.GetBlock(i);
             CurrBlock = i;
 
-            if (i && ((i % 100) == 0))
+            if (i && ((i % 50) == 0))
             {
                 RdosWriteString("\r\n");
                 PrintAna();
@@ -432,7 +434,7 @@ void main()
                 if (ok)
                     break;
                 else
-                    RdosWaitMilli(25);
+                    RdosWaitMilli(5);
             }
         }
 
