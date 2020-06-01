@@ -32,6 +32,8 @@
 #include <string.h>
 #include <math.h>
 #include "adc.h"
+#include "file.h"
+#include "datetime.h"
 
 static int PowerCount[32][3500];
 static int PowerSumA[32][3500];
@@ -295,7 +297,7 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
 #   Returns....: *
 #
 ##########################################################################*/
-static void PrintAna()
+static void PrintAna(bool final)
 {
     int i;
     int j;
@@ -306,6 +308,8 @@ static void PrintAna()
     int RelA;
     int RelB;
     char str[100];
+    TFile *file;
+    int count = 0;
     static int TotalCount[3500];
     static int TotalSumA[3500];
     static int TotalSumB[3500];
@@ -314,6 +318,9 @@ static void PrintAna()
     static int TotalDirCount[3500];
     static int TotalDirArr[3500][16];
     static int DelayArr[360];
+
+    if (final)
+        file = new TFile("res.txt", 0);
 
     for (i = 1; i < 3500; i++)
     {
@@ -355,16 +362,38 @@ static void PrintAna()
             RelB = 10 * TotalSumB[i] / TotalCount[i];
             sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
             RdosWriteString(str);
+            if (final)
+                file->Write(str, strlen(str));
 
             for (j = 0; j < TotalDirCount[i]; j++)
             {
                 sprintf(str, " %d", TotalDirArr[i][j]);
                 RdosWriteString(str);
+
+                if (final)
+                    file->Write(str, strlen(str));
             }
 
             RdosWriteString("\r\n");
+
+            if (final)
+                file->Write("\r\n", 2);      
+
+            if (final)
+            {
+                if (count == 30)
+                {
+                    count = 0;
+                    RdosReadKeyboard();
+                }
+                else
+                    count++;
+            }
         }
     }
+
+    if (final)
+        delete file;
 }
 
 /*##########################################################################
@@ -378,7 +407,7 @@ static void PrintAna()
 #   Returns....: *
 #
 ##########################################################################*/
-void main()
+int main(int argc, char **argv)
 {
     int i;
     int j;
@@ -386,8 +415,22 @@ void main()
     char str[80];
     int *parm;
     int freq;
+    int hour;
+    TDateTime curr;
 
     TAdc Adc(0x0, 10000);
+
+    if (argc == 2)
+    {
+        hour = atoi(argv[1]);
+        sprintf(str, "Wait unti %d:00", hour);
+        RdosWriteString(str);
+
+        TDateTime starttime(curr.GetYear(), curr.GetMonth(), curr.GetDay(), hour, 0, 0);
+
+        while (!starttime.HasExpired())
+            RdosWaitMilli(1000);
+    }
 
     freq = 107;
     freq = freq * 0x40000 / 750;
@@ -417,7 +460,7 @@ void main()
             if (i && ((i % 50) == 0))
             {
                 RdosWriteString("\r\n");
-                PrintAna();
+                PrintAna(false);
                 sprintf(str, "%d", i);
                 RdosWriteString(str);
             }
@@ -438,7 +481,7 @@ void main()
             }
         }
 
-        PrintAna();
+        PrintAna(true);
 
     }
 

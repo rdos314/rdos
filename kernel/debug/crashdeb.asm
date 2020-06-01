@@ -874,10 +874,13 @@ DetectFlags Proc near
     push es
     pushad
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:mon_fixed_lfb,0
+;
     mov ax,SEG data
     mov ds,ax
     mov ds:switch_flags,0
-    mov ds:mon_fixed_lfb,0
 ;
     pushfd
     pop eax
@@ -933,6 +936,8 @@ dfVectLoop:
     jmp dfVideoOk
 
 dfVideoAcpi:
+    mov ax,system_data_sel
+    mov ds,ax
     mov ds:mon_fixed_lfb,lfb_linear
 
 dfVideoOk:    

@@ -1978,7 +1978,6 @@ avCmp:
 avSet:
     mov ds:efi_lfb,edi
     mov ds:efi_lfb+4,0
-    mov ds:mon_fixed_lfb,edi
     mov ds:efi_width,cx
     mov ds:efi_height,dx
     movzx esi,si
