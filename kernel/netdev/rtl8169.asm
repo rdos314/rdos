@@ -3352,6 +3352,7 @@ GetBuffer1:
     push bx
     push edx
     push si
+    push bp
 ;
     mov ax,ether_data_sel
     mov ds,ax
@@ -3362,11 +3363,13 @@ GetBuffer2:
     push bx
     push edx
     push si
+    push bp
 ;
     mov ax,ether_data2_sel
     mov ds,ax
 
 get_buffer:
+    xor bp,bp
     mov es,ds:TxRingSel
 
 get_buffer_retry:
@@ -3391,7 +3394,7 @@ get_buffer_save_curr:
     jz get_buffer_take
 ;
     LeaveSection ds:TxSection
-    int 3
+;
     mov dx,ds:MemSel
     or dx,dx
     jz ioget_poll
@@ -3413,7 +3416,14 @@ ioget_poll:
 get_buffer_polled:
     mov ax,5
     WaitMilliSec    
-    jmp get_buffer_retry
+;
+    inc bp
+    cmp bp,1000
+    jb get_buffer_retry
+;
+    int 3
+    stc
+    jmp get_buffer_done
 
 get_buffer_take:
     mov ds:TxCurrDescr,ax
@@ -3434,6 +3444,7 @@ get_buffer_take:
     clc
 
 get_buffer_done:
+    pop bp
     pop si
     pop edx
     pop bx

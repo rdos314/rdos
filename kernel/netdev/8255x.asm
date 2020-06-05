@@ -1289,6 +1289,7 @@ gbSizeOk:
     AllocateGlobalMem
     mov edi,14
     pop eax
+    clc
     retf32
 GetBuffer       Endp
 
