@@ -43,6 +43,14 @@ static int CurrBlock;
 static TAdcData *CurrData;
 static int FreqPos[32];
 
+static int TotalCount[3500][100];
+static int TotalSumA[3500][100];
+static int TotalSumB[3500][100];
+static int TotalDelayMean[3500][100];
+static int TotalDelaySd[3500][100];
+
+static int DelayArr[360];
+
 #define M_PI 3.14159265358979323846
 int SCALE = 10;
 
@@ -67,29 +75,28 @@ static void FreqThread(void *param)
     int PowerA;
     int PowerB;
     int Delay;
-    int diff;
 
     RdosMoveToNewCore();
 
-    for (i = 0; i < 3500; i++)
-    {
-        PowerCount[pos][i] = 0;
-        PowerSumA[pos][i] = 0;
-        PowerSumB[pos][i] = 0;
-
-        for (j = 0; j < 360; j++)
-            DelayCount[pos][i][j] = 0;
-    }
-
     FreqPos[pos] = -1;
 
-    for (i = 0; i < 10000; i++)
+    for (i = 0; i < 40000; i++)
     {
         while (CurrBlock < i)
             RdosWaitMilli(5);
 
         for (j = 1; j < 3500; j++)
         {
+            if ((CurrBlock % 400) == 0)
+            {
+                PowerCount[pos][j] = 0;
+                PowerSumA[pos][j] = 0;
+                PowerSumB[pos][j] = 0;
+
+                for (k = 0; k < 360; k++)
+                    DelayCount[pos][j][k] = 0;
+            }
+
             for (k = 0; k < 2; k++)
             {
                 TAdc::CalcPower(CurrData + 0x2000 * (pos + k), 0x2000, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
@@ -288,7 +295,7 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
 
 /*##########################################################################
 #
-#   Name       : PrintAna
+#   Name       : PrintSpot
 #
 #   Purpose....:
 #
@@ -297,7 +304,7 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
 #   Returns....: *
 #
 ##########################################################################*/
-static void PrintAna(bool final)
+static void PrintSpot(int index)
 {
     int i;
     int j;
@@ -308,92 +315,292 @@ static void PrintAna(bool final)
     int RelA;
     int RelB;
     char str[100];
-    TFile *file;
-    int count = 0;
-    static int TotalCount[3500];
-    static int TotalSumA[3500];
-    static int TotalSumB[3500];
-    static int TotalDelayMean[3500];
-    static int TotalDelaySd[3500];
     static int TotalDirCount[3500];
     static int TotalDirArr[3500][16];
-    static int DelayArr[360];
-
-    if (final)
-        file = new TFile("res.txt", 0);
+    int count = 0;
 
     for (i = 1; i < 3500; i++)
     {
-        TotalCount[i] = 0;
-        TotalSumA[i] = 0;
-        TotalSumB[i] = 0;
+        TotalCount[i][index] = 0;
+        TotalSumA[i][index] = 0;
+        TotalSumB[i][index] = 0;
 
         for (j = 0; j < 360; j++)
             DelayArr[j] = 0;
 
         for (j = 0; j < 32; j++)
         {
-            TotalCount[i] += PowerCount[j][i];
-            TotalSumA[i] += PowerSumA[j][i];
-            TotalSumB[i] += PowerSumB[j][i];
+            TotalCount[i][index] += PowerCount[j][i];
+            TotalSumA[i][index] += PowerSumA[j][i];
+            TotalSumB[i][index] += PowerSumB[j][i];
 
             for (k = 0; k < 360; k++)
                 DelayArr[k] += DelayCount[j][i][k];
         }
 
-        if (TotalCount[i])
+        if (TotalCount[i][index])
         {
             CalcMeanSd(DelayArr, &mean, &sd);
-            TotalDelayMean[i] = mean;
-            TotalDelaySd[i] = sd;
-
-            vl = 30 * 1000 * SCALE / i;
-            TotalDirCount[i] = CalcDirections(TotalDirArr[i], vl, mean, sd, 250);
+            TotalDelayMean[i][index] = mean;
+            TotalDelaySd[i][index] = sd;
         }
         else
         {
-            TotalDelayMean[i] = 0;
-            TotalDelaySd[i] = 0;
+            TotalDelayMean[i][index] = 0;
+            TotalDelaySd[i][index] = 0;
         }
 
-        if (TotalSumA[i] && TotalSumB[i])
+        if (TotalSumA[i][index] && TotalSumB[i][index])
         {
-            RelA = 10 * TotalSumA[i] / TotalCount[i];
-            RelB = 10 * TotalSumB[i] / TotalCount[i];
-            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i], TotalDelayMean[i], TotalDelaySd[i]);
+            RelA = 10 * TotalSumA[i][index] / TotalCount[i][index];
+            RelB = 10 * TotalSumB[i][index] / TotalCount[i][index];
+            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i][index], TotalDelayMean[i][index], TotalDelaySd[i][index]);
             RdosWriteString(str);
-            if (final)
-                file->Write(str, strlen(str));
+        }
+    }
+}
 
-            for (j = 0; j < TotalDirCount[i]; j++)
-            {
-                sprintf(str, " %d", TotalDirArr[i][j]);
-                RdosWriteString(str);
+/*##########################################################################
+#
+#   Name       : PrintSeries
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintSeries(TFile &file, int SumArr[100], int CountArr[100])
+{
+    int i;
+    int count;
+    double sum;
+    double mean;
+    double sd;
+    double val;
+    int Rel;
+    char str[100];
 
-                if (final)
-                    file->Write(str, strlen(str));
-            }
-
-            RdosWriteString("\r\n");
-
-            if (final)
-                file->Write("\r\n", 2);      
-
-            if (final)
-            {
-                if (count == 30)
-                {
-                    count = 0;
-                    RdosReadKeyboard();
-                }
-                else
-                    count++;
-            }
+    sum = 0;
+    count = 0;
+    for (i = 0; i < 100; i++)
+    {
+        if (CountArr[i])
+        {
+            sum += (double)SumArr[i] / (double)CountArr[i];
+            count++;
         }
     }
 
-    if (final)
-        delete file;
+    mean = sum / (double)count;
+
+    if (count >= 10)
+    {
+        sum = 0;
+        count = 0;
+        for (i = 0; i < 100; i++)
+        {
+            if (CountArr[i])
+            {
+                val = (double)SumArr[i] / (double)CountArr[i];
+                val = val - mean;
+                sum += val * val;
+                count++;
+            }
+        }
+
+        val = sum / (double)(count - 1);
+        sd = sqrt(val);
+    }
+    else
+        sd = 0.0;
+
+    if (sd > 2.0)
+    {
+        if (count > 10)
+        {
+            for (i = 0; i < 100; i++)
+            {
+                if (CountArr[i])
+                {
+                    Rel = 10 * SumArr[i] / CountArr[i];
+                    sprintf(str, "%d.%01d ", Rel / 10, Rel % 10);
+                }
+                else
+                    strcpy(str, "* ");
+
+                RdosWriteString(str);
+                file.Write(str, strlen(str));
+            }
+
+            sprintf(str, "\r\n");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+        }
+        else
+        {
+            for (i = 0; i < 100; i++)
+            {
+                if (CountArr[i])
+                {
+                    Rel = 10 * SumArr[i] / CountArr[i];
+                    sprintf(str, "%d: %d.%01d ", i, Rel / 10, Rel % 10);
+                    RdosWriteString(str);
+                    file.Write(str, strlen(str));
+                }
+            }
+
+            sprintf(str, "\r\n");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+        }
+    }
+    else
+    {
+        sprintf(str, "%5.1Lf (%5.1Lf)\r\n", mean, sd);
+        RdosWriteString(str);
+        file.Write(str, strlen(str));
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : PrintDelay
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintDelay(TFile &file, int MeanArr[100], int CountArr[100])
+{
+    int i;
+    int val;
+    int mean;
+    int sd;
+    int count;
+    char str[100];
+
+    for (i = 0; i < 360; i++)
+        DelayArr[i] = 0;
+
+    count = 0;
+    for (i = 0; i < 100; i++)
+    {
+        if (CountArr[i])
+        {
+            count++;
+            val = MeanArr[i];
+
+            while (val < 0)
+                val += 360;
+
+            while (val >= 360)
+                val -= 360;
+
+            DelayArr[val]++;
+        }
+    }
+
+    CalcMeanSd(DelayArr, &mean, &sd);
+
+    if (sd > 5)
+    {
+        if (count > 10)
+        {
+            for (i = 0; i < 100; i++)
+            {
+                if (CountArr[i])
+                    sprintf(str, "%d ", MeanArr[i]);
+                else
+                    strcpy(str, "* ");
+
+                RdosWriteString(str);
+                file.Write(str, strlen(str));
+            }
+
+            sprintf(str, "\r\n");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+        }
+        else
+        {
+            for (i = 0; i < 100; i++)
+            {
+                if (CountArr[i])
+                {
+                    sprintf(str, "%d: %d ", i, MeanArr[i]);
+                    RdosWriteString(str);
+                    file.Write(str, strlen(str));
+                }
+            }
+
+            sprintf(str, "\r\n");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+        }
+    }
+    else
+    {
+        sprintf(str, "%d.%01d (%d.%01d)\r\n", mean / 10, mean % 10, sd / 10, sd % 10);
+        RdosWriteString(str);
+        file.Write(str, strlen(str));
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : PrintFinal
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintFinal()
+{
+    int i;
+    int j;
+    bool ok;
+    char str[100];
+    TFile file("res.txt", 0);
+
+    for (i = 1; i < 3500; i++)
+    {
+        ok = false;
+        for (j = 0; j < 100 && !ok; j++)
+            ok = TotalSumA[i][j] && TotalSumB[i][j];
+
+        if (ok)
+        {
+            sprintf(str, "%d.%01d: \r\n",  i / 10, i % 10);
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+
+            sprintf(str, "A: ");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+
+            PrintSeries(file, TotalSumA[i], TotalCount[i]);
+
+            sprintf(str, "B: ");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+
+            PrintSeries(file, TotalSumB[i], TotalCount[i]);
+
+            sprintf(str, "Delay: ");
+            RdosWriteString(str);
+            file.Write(str, strlen(str));
+
+            PrintDelay(file, TotalDelayMean[i], TotalCount[i]);
+        }
+    }
 }
 
 /*##########################################################################
@@ -418,7 +625,7 @@ int main(int argc, char **argv)
     int hour;
     TDateTime curr;
 
-    TAdc Adc(0x0, 10000);
+    TAdc Adc(0x0, 40000);
 
     if (argc == 2)
     {
@@ -452,20 +659,10 @@ int main(int argc, char **argv)
 
         RdosWaitMilli(100);
 
-        for (i = 0; i < 10000; i++)
+        for (i = 0; i < 40000; i++)
         {
             CurrData = Adc.GetBlock(i);
             CurrBlock = i;
-
-            if (i && ((i % 50) == 0))
-            {
-                RdosWriteString("\r\n");
-                PrintAna(false);
-                sprintf(str, "%d", i);
-                RdosWriteString(str);
-            }
-            else
-                RdosWriteChar('.');
 
             for (;;)
             {
@@ -479,9 +676,19 @@ int main(int argc, char **argv)
                 else
                     RdosWaitMilli(5);
             }
+
+            if ((i % 50) == 49)
+            {
+                RdosWriteString("\r\n");
+                PrintSpot(i / 400);
+                sprintf(str, "%d", i);
+                RdosWriteString(str);
+            }
+            else
+                RdosWriteChar('.');
         }
 
-        PrintAna(true);
+        PrintFinal();
 
     }
 
