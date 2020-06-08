@@ -36,13 +36,6 @@ INCLUDE ..\os.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 
-IFDEF __WASM__
-    .686p
-    .xmm2
-ELSE
-    .386p
-ENDIF
-
 MAX_PCI_DEVICES = 256
 
 pci_struc   STRUC
@@ -96,6 +89,13 @@ ext_pci_dev_count       DW ?
 ext_pci_dev_arr         DW MAX_PCI_DEVICES DUP(?)
 
 data    ENDS
+
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
