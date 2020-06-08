@@ -34,13 +34,13 @@ INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-    .386p
-
 data    SEGMENT byte public 'DATA'
 
 PnpSection      section_typ <>
 
 data    ENDS
+
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
