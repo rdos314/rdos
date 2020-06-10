@@ -99,9 +99,9 @@ static void FreqThread(void *param)
                     DelayCount[pos][j][k] = 0;
             }
 
-            for (k = 0; k < 4; k++)
+            for (k = 0; k < 16; k++)
             {
-                TAdc::CalcPower(CurrData + 0x1000 * (pos + k), 0x1000, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
+                TAdc::CalcPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
                 if (PowerA >= 2 && PowerB >= 2)
                 {
                     PowerCount[pos][j]++;
@@ -806,7 +806,7 @@ static void PrintFinal()
     for (i = 1; i < 3500; i++)
     {
         count = 0;
-        for (j = 0; j < 100 && !ok; j++)
+        for (j = 0; j < 100; j++)
             if (TotalCount[i][j])
                 count++;
 
