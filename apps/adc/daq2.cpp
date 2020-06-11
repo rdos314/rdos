@@ -54,7 +54,7 @@ static int DelayArr[360];
 
 #define M_PI 3.14159265358979323846
 int SCALE = 10;
-int MAX_COUNT = 25600;
+int MAX_COUNT = 25600 * 8;
 
 /*##########################################################################
 #
@@ -82,12 +82,12 @@ static void FreqThread(void *param)
 
     FreqPos[pos] = -1;
 
-    for (i = 0; i < 40000; i++)
+    for (i = 0; i < 30000; i++)
     {
         while (CurrBlock < i)
             RdosWaitMilli(5);
 
-        for (j = 1; j < 3500; j++)
+        for (j = 1; j < 3000; j++)
         {
             if ((CurrBlock % 400) == 0)
             {
@@ -101,7 +101,7 @@ static void FreqThread(void *param)
 
             for (k = 0; k < 16; k++)
             {
-                TAdc::CalcPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 750 / SCALE , &PowerA, &PowerB, &Delay);
+                TAdc::CalcPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 600 / SCALE , &PowerA, &PowerB, &Delay);
                 if (PowerA >= 2 && PowerB >= 2)
                 {
                     PowerCount[pos][j]++;
@@ -321,7 +321,7 @@ static void PrintSpot(int index)
     static int TotalDirArr[3500][16];
     int count = 0;
 
-    for (i = 1; i < 3500; i++)
+    for (i = 1; i < 3000; i++)
     {
         TotalCount[i][index] = 0;
         TotalSumA[i][index] = 0;
@@ -532,7 +532,7 @@ static void PrintSeriesSumary(const char *Header, TFile &file, int SumArr[100], 
         sd = 0.0;
 
     RdosWriteString(Header);
-    file.Write(str, strlen(Header));
+    file.Write(Header, strlen(Header));
 
     sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
     RdosWriteString(str);
@@ -598,7 +598,7 @@ static bool PrintSeriesDetail(const char *Header, TFile &file, int SumArr[100], 
     if (sd > 2.0)
     {
         RdosWriteString(Header);
-        file.Write(str, strlen(Header));
+        file.Write(Header, strlen(Header));
 
         if (count > 10)
         {
@@ -803,7 +803,7 @@ static void PrintFinal()
     char str[100];
     TFile file("res.txt", 0);
 
-    for (i = 1; i < 3500; i++)
+    for (i = 1; i < 3000; i++)
     {
         count = 0;
         for (j = 0; j < 100; j++)
@@ -862,7 +862,7 @@ int main(int argc, char **argv)
     int hour;
     TDateTime curr;
 
-    TAdc Adc(0x0, 40000);
+    TAdc Adc(0x0, 30000);
 
     if (argc == 2)
     {
@@ -877,7 +877,7 @@ int main(int argc, char **argv)
     }
 
     freq = 107;
-    freq = freq * 0x40000 / 750;
+    freq = freq * 0x40000 / 600;
     Adc.SetTrigger(freq, 14);
 
     if (Adc.Start())
@@ -896,7 +896,7 @@ int main(int argc, char **argv)
 
         RdosWaitMilli(100);
 
-        for (i = 0; i < 40000; i++)
+        for (i = 0; i < 30000; i++)
         {
             CurrData = Adc.GetBlock(i);
             CurrBlock = i;
