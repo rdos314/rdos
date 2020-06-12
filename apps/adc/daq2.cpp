@@ -38,6 +38,8 @@
 static int PowerCount[32][3500];
 static int PowerSumA[32][3500];
 static int PowerSumB[32][3500];
+static int PowerMaxA[32][3500];
+static int PowerMaxB[32][3500];
 static int DelayCount[32][3500][360];
 static int CurrBlock;
 static TAdcData *CurrData;
@@ -46,6 +48,8 @@ static int FreqPos[32];
 static int TotalCount[3500][100];
 static int TotalSumA[3500][100];
 static int TotalSumB[3500][100];
+static int TotalMaxA[3500][100];
+static int TotalMaxB[3500][100];
 static int TotalDelayMean[3500][100];
 static int TotalDelaySd[3500][100];
 
@@ -94,6 +98,8 @@ static void FreqThread(void *param)
                 PowerCount[pos][j] = 0;
                 PowerSumA[pos][j] = 0;
                 PowerSumB[pos][j] = 0;
+                PowerMaxA[pos][j] = 0;
+                PowerMaxB[pos][j] = 0;
 
                 for (k = 0; k < 360; k++)
                     DelayCount[pos][j][k] = 0;
@@ -102,6 +108,13 @@ static void FreqThread(void *param)
             for (k = 0; k < 16; k++)
             {
                 TAdc::CalcPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 600 / SCALE , &PowerA, &PowerB, &Delay);
+
+                if (PowerA > PowerMaxA[pos][j])
+                    PowerMaxA[pos][j] = PowerA;
+
+                if (PowerB > PowerMaxB[pos][j])
+                    PowerMaxB[pos][j] = PowerB;
+
                 if (PowerA >= 2 && PowerB >= 2)
                 {
                     PowerCount[pos][j]++;
@@ -326,12 +339,20 @@ static void PrintSpot(int index)
         TotalCount[i][index] = 0;
         TotalSumA[i][index] = 0;
         TotalSumB[i][index] = 0;
+        TotalMaxA[i][index] = 0;
+        TotalMaxB[i][index] = 0;
 
         for (j = 0; j < 360; j++)
             DelayArr[j] = 0;
 
         for (j = 0; j < 32; j++)
         {
+            if (PowerMaxA[j][i] > TotalMaxA[i][index])
+                TotalMaxA[i][index] = PowerMaxA[j][i];
+
+            if (PowerMaxB[j][i] > TotalMaxB[i][index])
+                TotalMaxB[i][index] = PowerMaxB[j][i];
+
             TotalCount[i][index] += PowerCount[j][i];
             TotalSumA[i][index] += PowerSumA[j][i];
             TotalSumB[i][index] += PowerSumB[j][i];
@@ -473,7 +494,6 @@ static bool PrintCountDetail(TFile &file, int CountArr[100])
     else
         return false;
 }
-
 
 /*##########################################################################
 #
@@ -641,6 +661,36 @@ static bool PrintSeriesDetail(const char *Header, TFile &file, int SumArr[100], 
     }
     else
         return false;
+}
+
+/*##########################################################################
+#
+#   Name       : PrintMaxSumary
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintMaxSumary(const char *Header, TFile &file, int MaxArr[100])
+{
+    int i;
+    int max;
+    char str[100];
+
+    max = 0;  
+    for (i = 0; i < 100; i++)
+        if (MaxArr[i] > max)
+            max = MaxArr[i];
+
+    RdosWriteString(Header);
+    file.Write(Header, strlen(Header));
+
+    sprintf(str, "%d ", max);
+    RdosWriteString(str);
+    file.Write(str, strlen(str));
 }
 
 /*##########################################################################
@@ -819,6 +869,8 @@ static void PrintFinal()
             PrintCountSumary(file, TotalCount[i]);
             PrintSeriesSumary("A: ", file, TotalSumA[i], TotalCount[i]);
             PrintSeriesSumary("B: ", file, TotalSumB[i], TotalCount[i]);
+            PrintMaxSumary("Max A: ", file, TotalMaxA[i]);
+            PrintMaxSumary("Max B: ", file, TotalMaxB[i]);
             PrintDelaySumary(file, TotalDelayMean[i], TotalCount[i]);
 
             sprintf(str, "\r\n");
