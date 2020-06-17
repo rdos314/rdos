@@ -49,7 +49,8 @@ public:
     void Check();
 
     static int GetSin(int Phase);
-    static void CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay);
+    static void CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB);
+    static void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay);
 
 protected:
     char CheckRamp(TAdcData *data, int Block, int Samples, char Start);

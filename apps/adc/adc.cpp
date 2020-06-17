@@ -30,12 +30,18 @@
 #include <rdos.h>
 #include "adc.h"
 
-struct TAdcPower
+struct TAdcFreqPower
 {
     long long SinA;
     long long SinB;
     long long CosA;
     long long CosB;
+};
+
+struct TAdcPower
+{
+    long long PowA;
+    long long PowB;
 };
 
 
@@ -49,8 +55,11 @@ extern "C" {
 int GetSin(int Phase);
 #pragma aux (ANAAPI) GetSin;
 
-void CalcPower(TAdcData *Data, int Size, int RelFreq, struct TAdcPower *Res);
+void CalcPower(TAdcData *Data, int Size, struct TAdcPower *Res);
 #pragma aux (ANAAPI) CalcPower;
+
+void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, struct TAdcFreqPower *Res);
+#pragma aux (ANAAPI) CalcFreqPower;
 
 };
 
@@ -456,14 +465,44 @@ int TAdc::GetSin(int Phase)
 #
 #   Purpose....: Calc power
 #
+#   In params..: Data, Size, PowerA, PowerB
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB)
+{
+    struct TAdcPower res;
+    long long val;
+    int ival;
+    double dval;
+
+    ::CalcPower(Data, Size, &res);
+
+    val  = res.PowA / Size;
+    dval = sqrt(val);
+    *PowerA = round(dval);
+
+    val  = res.PowB / Size;
+    dval = sqrt(val);
+    *PowerB = round(dval);
+
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CalcFreqPower
+#
+#   Purpose....: Calc power at a given frequency
+#
 #   In params..: Data, Size, RelFreq, PowerA, PowerB
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay)
+void TAdc::CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay)
 {
-    struct TAdcPower res;
+    struct TAdcFreqPower res;
     long long val;
     int ival;
     double dval;
@@ -471,7 +510,7 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *Po
     double phaseA;
     double phaseB;
 
-    ::CalcPower(Data, Size, RelFreq, &res);
+    ::CalcFreqPower(Data, Size, RelFreq, &res);
 
     res.SinA = res.SinA / Size / 0x2000;
     res.SinB = res.SinB / Size / 0x2000;

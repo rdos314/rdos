@@ -28,12 +28,19 @@
 .386
 .model flat
 
-AdcPower	STRUC
+AdcFreqPower	STRUC
 
 sin_a		DD ?,?
 sin_b		DD ?,?
 cos_a		DD ?,?
 cos_b		DD ?,?
+
+AdcFreqPower	ENDS
+
+AdcPower	STRUC
+
+pow_a		DD ?,?
+pow_b		DD ?,?
 
 AdcPower	ENDS
 
@@ -16461,9 +16468,9 @@ _GetSin    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CalcPower
+;       NAME:           CalcFreqPower
 ;
-;       DESCRIPTION:    Calc signal power
+;       DESCRIPTION:    Calc power at a given frequency
 ;
 ;       PARAMETERS:     Data
 ;                       Size
@@ -16472,9 +16479,9 @@ _GetSin    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public _CalcPower
+    public _CalcFreqPower
 
-_CalcPower  Proc near
+_CalcFreqPower  Proc near
     pushad
 ;
     mov esi,[esp+24h]
@@ -16493,7 +16500,7 @@ _CalcPower  Proc near
     mov [edi].cos_b,eax
     mov [edi].cos_b+4,eax
 
-cpLoop:
+cfpLoop:
     mov ax,[2*ebx].sin_tab
     imul word ptr [esi]
     movsx edx,dx
@@ -16526,7 +16533,7 @@ cpLoop:
     add ebp,[esp+2Ch]
     and ebp,3FFFFh
 ;
-    loop cpLoop
+    loop cfpLoop
 ;
     movsx eax,word ptr [edi].sin_a+4
     mov [edi].sin_a+4,eax
@@ -16542,6 +16549,55 @@ cpLoop:
 ;
     popad
     ret 16
+_CalcFreqPower    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcPower
+;
+;       DESCRIPTION:    Calc signal power
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       Res
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CalcPower
+
+_CalcPower  Proc near
+    pushad
+;
+    mov esi,[esp+24h]
+    mov ecx,[esp+28h]
+    mov edi,[esp+2Ch]
+;
+    xor eax,eax
+    mov [edi].pow_a,eax
+    mov [edi].pow_a+4,eax
+    mov [edi].pow_b,eax
+    mov [edi].pow_b+4,eax
+
+cpLoop:
+    mov ax,[esi]
+    imul ax
+    movsx edx,dx
+    add word ptr [edi].pow_a,ax
+    adc dword ptr [edi].pow_a+2,edx
+    add esi,2
+;
+    mov ax,[esi]
+    imul ax
+    movsx edx,dx
+    add word ptr [edi].pow_b,ax
+    adc dword ptr [edi].pow_b+2,edx
+    add esi,2
+;
+    loop cpLoop
+;
+    popad
+    ret 12
 _CalcPower    Endp
 
   END

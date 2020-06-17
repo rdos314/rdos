@@ -107,7 +107,7 @@ static void FreqThread(void *param)
 
             for (k = 0; k < 16; k++)
             {
-                TAdc::CalcPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 600 / SCALE , &PowerA, &PowerB, &Delay);
+                TAdc::CalcFreqPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 600 / SCALE , &PowerA, &PowerB, &Delay);
 
                 if (PowerA > PowerMaxA[pos][j])
                     PowerMaxA[pos][j] = PowerA;
