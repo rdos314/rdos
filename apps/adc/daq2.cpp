@@ -34,6 +34,69 @@
 #include "adc.h"
 #include "file.h"
 #include "datetime.h"
+#include "thread.h"
+#include "sigdev.h"
+
+class TFreqData
+{
+friend class TFreqPos;
+public:
+    TFreqData(double Freq, double SampleFreq, int Periods);
+    ~TFreqData();
+
+    int UsedSamples;
+    int Count;
+    int Step;
+
+protected:
+    int Overlap;
+    int Remain;
+};
+
+class TFreqPos
+{
+public:
+    TFreqPos();
+    ~TFreqPos();
+
+    void Clear(TFreqData *fd);
+    void Next(TFreqData *fd);
+
+    int Pos;
+
+protected:
+    int Sum;
+};
+
+class TAdcThread : TThread
+{
+public:
+    TAdcThread(int Id);
+    ~TAdcThread();
+
+    void Clear();
+    void Run(TAdcData *AdcData);
+
+    bool Done;
+ 
+    int Total[3500];
+    int Count[3500];
+    int SumA[3500];
+    int SumB[3500];
+    int MaxA[3500];
+    int MaxB[3500];
+    int Delay[3500][360];
+
+protected:
+    virtual void Execute();
+
+    TAdcData *AdcData;
+    TSignalDevice Signal;
+};
+
+
+static TFreqData *FreqData[3500];
+static TAdcThread *AdcThread[23];
 
 static int PowerCount[32][3500];
 static int PowerSumA[32][3500];
@@ -60,71 +123,293 @@ static int DelayArr[360];
 int SCALE = 10;
 int MAX_COUNT = 25600 * 8;
 
+
 /*##########################################################################
 #
-#   Name       : FreqThread
+#   Name       : TFreqData::TFreqData
 #
-#   Purpose....:
+#   Purpose....: Determine samples & interval
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-static void FreqThread(void *param)
+TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
 {
-    int *p = (int *)param;
-    int pos = *p;
-    int i;
+    int diff;
+    double dval;
+
+    if (Freq)
+    {
+        dval = SampleFreq * (double)Periods / Freq;
+        UsedSamples = (int)(dval + 0.5);
+        if (UsedSamples > 0x80000)
+            UsedSamples = 0;
+    }
+    else
+        UsedSamples = 0;
+
+    if (UsedSamples)
+    {
+        dval = Freq / SampleFreq * 0x40000;
+        Step = (int)(dval + 0.5);
+
+        Count = 0x80000 / UsedSamples;
+        diff = 0x80000 - UsedSamples * Count;
+
+        if (diff)
+        {
+            Count++;
+            diff = UsedSamples * Count - 0x80000;
+            Overlap = diff / (Count - 1);
+            Remain = diff - Overlap * (Count - 1);
+        }
+        else
+        {
+            Overlap = 0;
+            Remain = 0;
+        }
+    }
+    else
+        Step = 0;
+}
+
+
+/*##########################################################################
+#
+#   Name       : TFreqData::~TFreqData
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqData::~TFreqData()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::TFreqPos
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqPos::TFreqPos()
+{
+    Pos = 0;
+    Sum = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::~TFreqPos
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqPos::~TFreqPos()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::Clear
+#
+#   Purpose....: Clear pos
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFreqPos::Clear(TFreqData *fd)
+{
+    Sum = fd->Remain;
+    Pos = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::Next
+#
+#   Purpose....: Next pos
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFreqPos::Next(TFreqData *fd)
+{
+    Pos += fd->UsedSamples - fd->Overlap;
+
+    Sum += fd->Remain;
+    if (Sum >= fd->Count)
+    {
+        Pos--;
+        Sum -= fd->Count;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::TAdcThread
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAdcThread::TAdcThread(int Id)
+{
+    char str[40];
+
+    AdcData = 0;
+    Clear();
+    Done = true;
+
+    sprintf(str, "Freq %d", Id);
+    Start(str, 0x4000);
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::~TAdcThread
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAdcThread::~TAdcThread()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::Clear
+#
+#   Purpose....: Clear accs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcThread::Clear()
+{
+    int j;
+    int k;
+
+    for (j = 1; j < 3500; j++)
+    {
+        Total[j] = 0;
+        Count[j] = 0;
+        SumA[j] = 0;
+        SumB[j] = 0;
+        MaxA[j] = 0;
+        MaxB[j] = 0;
+
+        for (k = 0; k < 360; k++)
+            Delay[j][k] = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::Run
+#
+#   Purpose....: Start
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcThread::Run(TAdcData *Data)
+{
+    Done = false;
+    AdcData = Data;
+    Signal.Signal();
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::Execute
+#
+#   Purpose....: Execute
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcThread::Execute()
+{
     int j;
     int k;
     int PowerA;
     int PowerB;
-    int Delay;
+    int Phase;
+    TFreqPos fp;
+    TFreqData *fd;
 
     RdosMoveToNewCore();
 
-    FreqPos[pos] = -1;
-
-    for (i = 0; i < 30000; i++)
+    for (;;)
     {
-        while (CurrBlock < i)
-            RdosWaitMilli(5);
+        Signal.WaitForever();
 
-        for (j = 1; j < 3000; j++)
+        if (AdcData)
         {
-            if ((CurrBlock % 400) == 0)
+            for (j = 1; j < 3500; j++)
             {
-                PowerCount[pos][j] = 0;
-                PowerSumA[pos][j] = 0;
-                PowerSumB[pos][j] = 0;
-                PowerMaxA[pos][j] = 0;
-                PowerMaxB[pos][j] = 0;
-
-                for (k = 0; k < 360; k++)
-                    DelayCount[pos][j][k] = 0;
-            }
-
-            for (k = 0; k < 16; k++)
-            {
-                TAdc::CalcFreqPower(CurrData + 0x400 * (pos + k), 0x400, j * 0x40000 / 600 / SCALE , &PowerA, &PowerB, &Delay);
-
-                if (PowerA > PowerMaxA[pos][j])
-                    PowerMaxA[pos][j] = PowerA;
-
-                if (PowerB > PowerMaxB[pos][j])
-                    PowerMaxB[pos][j] = PowerB;
-
-                if (PowerA >= 2 && PowerB >= 2)
+                fd = FreqData[j];
+                if (fd && fd->UsedSamples)
                 {
-                    PowerCount[pos][j]++;
-                    PowerSumA[pos][j] += PowerA;
-                    PowerSumB[pos][j] += PowerB;
-                    DelayCount[pos][j][Delay]++;
+                    fp.Clear(fd);
+                    Total[j] += fd->Count;
+                
+                    for (k = 0; k < fd->Count; k++)
+                    {
+                        TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, fd->Step , &PowerA, &PowerB, &Phase);
+
+                        if (PowerA > MaxA[j])
+                            MaxA[j] = PowerA;
+
+                        if (PowerB > MaxB[j])
+                            MaxB[j] = PowerB;
+
+                        if (PowerA >= 2 && PowerB >= 2)
+                        {
+                            Count[j]++;
+                            SumA[j] += PowerA;
+                            SumB[j] += PowerB;
+                            Delay[j][Phase]++;
+                        }
+
+                        fp.Next(fd);
+                    }
                 }
             }
+            Done = true;
         }
-        FreqPos[pos] = i;
     }
 }
 
@@ -913,6 +1198,17 @@ int main(int argc, char **argv)
     int freq;
     int hour;
     TDateTime curr;
+    TFreqData *fd;
+    TAdcData *data;
+    int tindex;
+    TAdcThread *tf;
+    int last;
+
+    for (i = 0; i < 3500; i++)
+        FreqData[i] = 0;
+
+    for (i = 1; i < 3000; i++)
+        FreqData[i] = new TFreqData((double)i / 10.0, 600.0, 100);
 
     TAdc Adc(0x0, 30000);
 
@@ -938,33 +1234,20 @@ int main(int argc, char **argv)
 
         CurrBlock = -1;
 
-        for (i = 0; i < 32; i++)
-        {
-            parm = new int[1];
-            *parm = i;
-            sprintf(str, "Freq %d", i);
-            RdosCreateThread(FreqThread, str, parm, 0x4000);
-        }
-
-        RdosWaitMilli(100);
+        for (i = 0; i < 23; i++)
+            AdcThread[i] = new TAdcThread(i);
 
         for (i = 0; i < 30000; i++)
         {
-            CurrData = Adc.GetBlock(i);
-            CurrBlock = i;
+            data = Adc.GetBlock(i);
 
-            for (;;)
-            {
-                ok = true;
-                for (j = 0; j < 32 && ok; j++)
-                    if (FreqPos[j] != i)
-                        ok = false;
+            tindex = i % 23;
+            tf = AdcThread[tindex];
+            
+            while (!tf->Done)
+                RdosWaitMilli(5);
 
-                if (ok)
-                    break;
-                else
-                    RdosWaitMilli(5);
-            }
+            tf->Run(data);
 
             if ((i % 50) == 49)
             {
@@ -975,6 +1258,7 @@ int main(int argc, char **argv)
             }
             else
                 RdosWriteChar('.');
+
         }
 
         PrintFinal();
