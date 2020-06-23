@@ -68,6 +68,8 @@ protected:
     int Sum;
 };
 
+class TAdcAna;
+
 class TAdcThread : TThread
 {
 public:
@@ -75,7 +77,7 @@ public:
     ~TAdcThread();
 
     void Clear();
-    void Run(TAdcData *AdcData);
+    void Run(TAdcData *Data, TAdcAna *Ana);
 
     bool Done;
  
@@ -91,12 +93,36 @@ protected:
     virtual void Execute();
 
     TAdcData *AdcData;
+    TAdcAna *AdcAna;
     TSignalDevice Signal;
+};
+
+class TAdcAna : TThread
+{
+public:
+    TAdcAna();
+    ~TAdcAna();
+
+    void Add(TAdcThread *Adc);
+
+    int Total[3500];
+    int Count[3500];
+    int SumA[3500];
+    int SumB[3500];
+    int MaxA[3500];
+    int MaxB[3500];
+    int DelayMean[3500];
+    int DelaySd[3500];
+
+protected:
+    void Clear();
+    virtual void Execute();
 };
 
 
 static TFreqData *FreqData[3500];
 static TAdcThread *AdcThread[23];
+static TAdcAna *AdcAna[100];
 
 static int TotalCount[3500][100];
 static int TotalSumA[3500][100];
@@ -111,6 +137,108 @@ static int DelayArr[360];
 
 #define M_PI 3.14159265358979323846
 int MAX_COUNT = 25600 * 8;
+
+/*##########################################################################
+#
+#   Name       : CalcMeanSdPos
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void CalcMeanSdPos(int DelayArr[360], int Start, int *Mean, double *Sd)
+{
+    int i;
+    int pos;
+    long long sum;
+    int count;
+    int mean;
+    double dval;
+
+    sum = 0;
+    count = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        pos = i - Start;
+
+        if (pos < -180)
+            pos += 360;
+
+        if (pos >= 180)
+            pos -= 360;
+
+        sum += DelayArr[i] * pos;
+        count += DelayArr[i];
+    }
+
+    mean = round(sum / (long long)count);
+    *Mean = mean;
+
+    sum = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        pos = i - Start;
+
+        if (pos < -180)
+            pos += 360;
+
+        if (pos >= 180)
+            pos -= 360;
+
+        sum += DelayArr[i] * (pos - mean) * (pos - mean);
+    }
+
+    dval = (double)(sum / (long long)count);
+    dval = sqrt(dval);
+    *Sd = dval;
+}
+
+/*##########################################################################
+#
+#   Name       : CalcMeanSd
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
+{
+    int pos;
+    int mean;
+    int cmean;
+    double sd;
+    double csd;
+
+    cmean = 0;
+    csd = 1000000.0;
+
+    for (pos = 0; pos < 360; pos++)
+    {
+        CalcMeanSdPos(DelayArr, pos, &mean, &sd);
+        if (sd < csd)
+        {
+            csd = sd;
+            cmean = pos + mean;
+        }
+    }
+
+    while (cmean < -180)
+        cmean += 360;
+
+    while (cmean >= 180)
+        cmean -= 360;
+
+    *Sd = round(csd);
+    *Mean = cmean;
+}
 
 
 /*##########################################################################
@@ -268,6 +396,7 @@ TAdcThread::TAdcThread(int Id)
     char str[40];
 
     AdcData = 0;
+    AdcAna = 0;
     Clear();
     Done = true;
 
@@ -331,10 +460,11 @@ void TAdcThread::Clear()
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcThread::Run(TAdcData *Data)
+void TAdcThread::Run(TAdcData *Data, TAdcAna *Ana)
 {
     Done = false;
     AdcData = Data;
+    AdcAna = Ana;
     Signal.Signal();
 }
 
@@ -399,111 +529,10 @@ void TAdcThread::Execute()
                     }
                 }
             }
+            AdcAna->Add(this);
             Done = true;
         }
     }
-}
-
-/*##########################################################################
-#
-#   Name       : CalcMeanSdPos
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void CalcMeanSdPos(int DelayArr[360], int Start, int *Mean, double *Sd)
-{
-    int i;
-    int pos;
-    long long sum;
-    int count;
-    int mean;
-    double dval;
-
-    sum = 0;
-    count = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += DelayArr[i] * pos;
-        count += DelayArr[i];
-    }
-
-    mean = round(sum / (long long)count);
-    *Mean = mean;
-
-    sum = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += DelayArr[i] * (pos - mean) * (pos - mean);
-    }
-
-    dval = (double)(sum / (long long)count);
-    dval = sqrt(dval);
-    *Sd = dval;
-}
-
-/*##########################################################################
-#
-#   Name       : CalcMeanSd
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
-{
-    int pos;
-    int mean;
-    int cmean;
-    double sd;
-    double csd;
-
-    cmean = 0;
-    csd = 1000000.0;
-
-    for (pos = 0; pos < 360; pos++)
-    {
-        CalcMeanSdPos(DelayArr, pos, &mean, &sd);
-        if (sd < csd)
-        {
-            csd = sd;
-            cmean = pos + mean;
-        }
-    }
-
-    while (cmean < -180)
-        cmean += 360;
-
-    while (cmean >= 180)
-        cmean -= 360;
-
-    *Sd = round(csd);
-    *Mean = cmean;
 }
 
 /*##########################################################################
@@ -1209,6 +1238,7 @@ int main(int argc, char **argv)
     TAdcData *data;
     int tindex;
     TAdcThread *tf;
+    TAdcAna *tf;
     int last;
 
     for (i = 0; i < 3500; i++)
@@ -1218,7 +1248,7 @@ int main(int argc, char **argv)
         FreqData[i] = new TFreqData((double)i / 10.0, 600.0, 100);
 
     for (i = 0; i < 100; i++)
-        ClearTotal(i);
+        AdcAna[i] = new TAdcAna();
 
     TAdc Adc(0x0, 30000);
 
@@ -1251,23 +1281,14 @@ int main(int argc, char **argv)
 
             tindex = i % 23;
             tf = AdcThread[tindex];
+
+            tindex = i / 300;
+            ta = AdcAna[tindex];
             
             while (!tf->Done)
                 RdosWaitMilli(5);
 
-            AddTotal(i / 300, tf);
-
-            tf->Run(data);
-
-            if ((i % 50) == 49)
-            {
-                RdosWriteString("\r\n");
-                sprintf(str, "%d", i);
-                RdosWriteString(str);
-            }
-            else
-                RdosWriteChar('.');
-
+            tf->Run(data, ta);
         }
 
         PrintFinal();
