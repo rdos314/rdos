@@ -98,16 +98,6 @@ protected:
 static TFreqData *FreqData[3500];
 static TAdcThread *AdcThread[23];
 
-static int PowerCount[32][3500];
-static int PowerSumA[32][3500];
-static int PowerSumB[32][3500];
-static int PowerMaxA[32][3500];
-static int PowerMaxB[32][3500];
-static int DelayCount[32][3500][360];
-static int CurrBlock;
-static TAdcData *CurrData;
-static int FreqPos[32];
-
 static int TotalCount[3500][100];
 static int TotalSumA[3500][100];
 static int TotalSumB[3500][100];
@@ -120,7 +110,6 @@ static int DelayArr[360];
 
 
 #define M_PI 3.14159265358979323846
-int SCALE = 10;
 int MAX_COUNT = 25600 * 8;
 
 
@@ -378,6 +367,8 @@ void TAdcThread::Execute()
 
         if (AdcData)
         {
+            Clear();
+
             for (j = 1; j < 3500; j++)
             {
                 fd = FreqData[j];
@@ -517,6 +508,98 @@ static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
 
 /*##########################################################################
 #
+#   Name       : ClearTotal
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ClearTotal(int index)
+{
+    int i;
+    int j;
+
+    for (i = 1; i < 3500; i++)
+    {
+        TotalCount[i][index] = 0;
+        TotalSumA[i][index] = 0;
+        TotalSumB[i][index] = 0;
+        TotalMaxA[i][index] = 0;
+        TotalMaxB[i][index] = 0;
+
+        for (j = 0; j < 360; j++)
+            DelayArr[j] = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : AddTotal
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void AddTotal(int index, TAdcThread *adc)
+{
+    int i;
+    int j;
+    int k;
+    int mean;
+    int sd;
+    int vl;
+    int RelA;
+    int RelB;
+    char str[100];
+    static int TotalDirCount[3500];
+    static int TotalDirArr[3500][16];
+    int count = 0;
+
+    for (i = 1; i < 3000; i++)
+    {
+        if (adc->MaxA[i] > TotalMaxA[i][index])
+            TotalMaxA[i][index] = adc->MaxA[i];
+
+        if (adc->MaxB[i] > TotalMaxB[i][index])
+            TotalMaxB[i][index] = adc->MaxB[i];
+
+        TotalCount[i][index] += adc->Count[i];
+        TotalSumA[i][index] += adc->SumA[i];
+        TotalSumB[i][index] += adc->SumB[i];
+
+        for (k = 0; k < 360; k++)
+            DelayArr[k] += adc->Delay[i][k];
+
+        if (TotalCount[i][index])
+        {
+            CalcMeanSd(DelayArr, &mean, &sd);
+            TotalDelayMean[i][index] = mean;
+            TotalDelaySd[i][index] = sd;
+        }
+        else
+        {
+            TotalDelayMean[i][index] = 0;
+            TotalDelaySd[i][index] = 0;
+        }
+
+        if (TotalSumA[i][index] && TotalSumB[i][index])
+        {
+            RelA = 10 * TotalSumA[i][index] / TotalCount[i][index];
+            RelB = 10 * TotalSumB[i][index] / TotalCount[i][index];
+            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i][index], TotalDelayMean[i][index], TotalDelaySd[i][index]);
+            RdosWriteString(str);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : CalcDirections
 #
 #   Purpose....:
@@ -590,82 +673,6 @@ static int CalcDirections(int DirArr[16], int WaveLen, int Mean, int Sd, int Dis
     }
 
     return Count;
-}
-
-
-/*##########################################################################
-#
-#   Name       : PrintSpot
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void PrintSpot(int index)
-{
-    int i;
-    int j;
-    int k;
-    int mean;
-    int sd;
-    int vl;
-    int RelA;
-    int RelB;
-    char str[100];
-    static int TotalDirCount[3500];
-    static int TotalDirArr[3500][16];
-    int count = 0;
-
-    for (i = 1; i < 3000; i++)
-    {
-        TotalCount[i][index] = 0;
-        TotalSumA[i][index] = 0;
-        TotalSumB[i][index] = 0;
-        TotalMaxA[i][index] = 0;
-        TotalMaxB[i][index] = 0;
-
-        for (j = 0; j < 360; j++)
-            DelayArr[j] = 0;
-
-        for (j = 0; j < 32; j++)
-        {
-            if (PowerMaxA[j][i] > TotalMaxA[i][index])
-                TotalMaxA[i][index] = PowerMaxA[j][i];
-
-            if (PowerMaxB[j][i] > TotalMaxB[i][index])
-                TotalMaxB[i][index] = PowerMaxB[j][i];
-
-            TotalCount[i][index] += PowerCount[j][i];
-            TotalSumA[i][index] += PowerSumA[j][i];
-            TotalSumB[i][index] += PowerSumB[j][i];
-
-            for (k = 0; k < 360; k++)
-                DelayArr[k] += DelayCount[j][i][k];
-        }
-
-        if (TotalCount[i][index])
-        {
-            CalcMeanSd(DelayArr, &mean, &sd);
-            TotalDelayMean[i][index] = mean;
-            TotalDelaySd[i][index] = sd;
-        }
-        else
-        {
-            TotalDelayMean[i][index] = 0;
-            TotalDelaySd[i][index] = 0;
-        }
-
-        if (TotalSumA[i][index] && TotalSumB[i][index])
-        {
-            RelA = 10 * TotalSumA[i][index] / TotalCount[i][index];
-            RelB = 10 * TotalSumB[i][index] / TotalCount[i][index];
-            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, TotalCount[i][index], TotalDelayMean[i][index], TotalDelaySd[i][index]);
-            RdosWriteString(str);
-        }
-    }
 }
 
 /*##########################################################################
@@ -1210,6 +1217,9 @@ int main(int argc, char **argv)
     for (i = 1; i < 3000; i++)
         FreqData[i] = new TFreqData((double)i / 10.0, 600.0, 100);
 
+    for (i = 0; i < 100; i++)
+        ClearTotal(i);
+
     TAdc Adc(0x0, 30000);
 
     if (argc == 2)
@@ -1232,8 +1242,6 @@ int main(int argc, char **argv)
     {
         RdosWriteString("ADC started\r\n");
 
-        CurrBlock = -1;
-
         for (i = 0; i < 23; i++)
             AdcThread[i] = new TAdcThread(i);
 
@@ -1247,12 +1255,13 @@ int main(int argc, char **argv)
             while (!tf->Done)
                 RdosWaitMilli(5);
 
+            AddTotal(i / 300, tf);
+
             tf->Run(data);
 
             if ((i % 50) == 49)
             {
                 RdosWriteString("\r\n");
-                PrintSpot(i / 400);
                 sprintf(str, "%d", i);
                 RdosWriteString(str);
             }
