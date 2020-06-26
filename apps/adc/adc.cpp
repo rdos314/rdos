@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <rdos.h>
+#include "adcthr.h"
+#include "adcana.h"
 #include "adc.h"
 
 struct TAdcFreqPower
@@ -76,13 +78,17 @@ void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, struct TAdcFreqPower *
 #   Returns....: *
 #
 ##########################################################################*/
-TAdc::TAdc(char TestMode, int Blocks)
+TAdc::TAdc(char TestMode, int Blocks, TFreq *f)
 {
     FTestMode = TestMode;
     FBlocks = Blocks;
     FBuf = (char *)RdosAllocateMem(0x200000);
 
     RdosSetupAdc(TestMode, 0, FBlocks);
+
+    Intervals = 0;
+    AdcAna = 0;
+    Freq = f;
 }
 
 /*##########################################################################
@@ -98,6 +104,16 @@ TAdc::TAdc(char TestMode, int Blocks)
 ##########################################################################*/
 TAdc::~TAdc()
 {
+    int i;
+
+    if (AdcAna)
+    {
+        for (i = 0; i < Intervals; i++)
+            delete AdcAna[i];
+
+        delete AdcAna;
+    }
+
     RdosFreeMem(FBuf);
 }
 
@@ -119,7 +135,7 @@ void TAdc::SetTrigger(int PhaseIncr, int Window)
 
 /*##########################################################################
 #
-#   Name       : TAdc::Start
+#   Name       : TAdc::StartAdc
 #
 #   Purpose....: start ADC
 #
@@ -128,9 +144,25 @@ void TAdc::SetTrigger(int PhaseIncr, int Window)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::Start()
+bool TAdc::StartAdc(int iv, int tc)
 {
-    return RdosStartAdc();
+    int i;
+
+    if (RdosStartAdc())
+    {
+        Intervals = iv;
+        Threads = tc;
+
+        AdcAna = new TAdcAna*[Intervals];
+        
+        for (i = 0; i < Intervals; i++)
+            AdcAna[i] = new TAdcAna(Freq);
+
+        Start("Adc", 0x4000);
+        return true;
+    }
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -647,4 +679,57 @@ void TAdc::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
 
     *Sd = round(csd);
     *Mean = cmean;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::Execute
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::Execute()
+{
+    int i;
+    int t;
+    int count = FBlocks / Intervals;
+    TAdcData *data;
+    TAdcThread **AdcThread;
+    TAdcThread *tf;
+    TAdcAna *ta;
+
+    AdcThread = new TAdcThread*[Threads];
+
+    for (i = 0; i < Threads; i++)
+        AdcThread[i] = new TAdcThread(i, Freq);
+
+    for (i = 0; i < FBlocks; i++)
+    {
+        data = GetBlock(i);
+
+        t = i % Threads;
+        tf = AdcThread[t];
+
+        t = i / count;
+        ta = AdcAna[t];
+            
+        while (!tf->Done)
+            RdosWaitMilli(5);
+
+        tf->Process(data, ta);
+    }
+
+    for (i = 0; i < Threads; i++)
+    {
+        tf = AdcThread[i];
+        while (!tf->Done)
+            RdosWaitMilli(5);
+
+        delete tf;
+    }
+    delete AdcThread;
 }

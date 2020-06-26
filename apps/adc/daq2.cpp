@@ -31,16 +31,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "adc.h"
 #include "file.h"
 #include "datetime.h"
 #include "freq.h"
 #include "adcthr.h"
 #include "adcana.h"
-
-static TFreq *Freq;
-static TAdcThread *AdcThread[23];
-static TAdcAna *AdcAna[100];
+#include "adc.h"
 
 static int TotalCount[3500][100];
 static int TotalSumA[3500][100];
@@ -670,10 +666,10 @@ int main(int argc, char **argv)
     TAdcThread *tf;
     TAdcAna *ta;
     int last;
-
     double SampleFreq = 600.0;
+    TFreq Freq(0.1, SampleFreq / 2.0, 0.1, SampleFreq, 100);
 
-    TAdc Adc(0x0, 30000);
+    TAdc Adc(0x0, 30000, &Freq);
 
     if (argc == 2)
     {
@@ -691,36 +687,10 @@ int main(int argc, char **argv)
     freq = freq * 0x40000 / 600;
     Adc.SetTrigger(freq, 14);
 
-    if (Adc.Start())
+    if (Adc.StartAdc(100, 23))
     {
-        Freq = new TFreq(0.1, SampleFreq / 2.0, 0.1, SampleFreq, 100);
-
-        for (i = 0; i < 100; i++)
-            AdcAna[i] = new TAdcAna(Freq);
-
         RdosWriteString("ADC started\r\n");
-
-        for (i = 0; i < 23; i++)
-            AdcThread[i] = new TAdcThread(i, Freq);
-
-        for (i = 0; i < 30000; i++)
-        {
-            data = Adc.GetBlock(i);
-
-            tindex = i % 23;
-            tf = AdcThread[tindex];
-
-            tindex = i / 300;
-            ta = AdcAna[tindex];
-            
-            while (!tf->Done)
-                RdosWaitMilli(5);
-
-            tf->Run(data, ta);
-        }
-
         PrintFinal();
-
     }
 
     for (;;)

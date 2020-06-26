@@ -28,7 +28,6 @@
 #ifndef _ADCANA_H
 #define _ADCANA_H
 
-#include "adc.h"
 #include "adcthr.h"
 
 class TAdcAna

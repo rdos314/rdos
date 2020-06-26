@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# adc.h
-# ADC class
+# adcthr.h
+# ADC thread class
 #
 ########################################################################*/
 
@@ -30,10 +30,11 @@
 
 #include "thread.h"
 #include "sigdev.h"
-#include "adc.h"
 #include "freq.h"
 
+class TAdc;
 class TAdcAna;
+class TAdcData;
 
 class TAdcThread : public TThread
 {
@@ -42,7 +43,7 @@ public:
     ~TAdcThread();
 
     void Clear();
-    void Run(TAdcData *Data, TAdcAna *Ana);
+    void Process(TAdcData *Data, TAdcAna *Ana);
 
     bool Done;
     int FreqCount;

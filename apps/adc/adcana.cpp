@@ -32,6 +32,7 @@
 #include <string.h>
 #include <math.h>
 #include "adcana.h"
+#include "adc.h"
 
 /*##########################################################################
 #

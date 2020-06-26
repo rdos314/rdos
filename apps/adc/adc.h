@@ -28,6 +28,9 @@
 #ifndef _ADC_H
 #define _ADC_H
 
+#include "thread.h"
+#include "freq.h"
+
 class TAdcData
 {
 public:
@@ -40,14 +43,16 @@ struct TDelay
     int Phase[360];
 };
 
-class TAdc
+class TAdaAna;
+
+class TAdc : public TThread
 {
 public:
-    TAdc(char TestMode, int Blocks);
+    TAdc(char TestMode, int Blocks, TFreq *Freq);
     ~TAdc();
 
     void SetTrigger(int PhaseIncr, int Window);
-    bool Start();
+    bool StartAdc(int Intervals, int Threads);
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
 
@@ -69,6 +74,13 @@ protected:
     int UpdatePn(int start);
     int CheckPn(TAdcData *data, int Block, int Samples, int Start);
     void CheckPn();
+
+    virtual void Execute();
+
+    int Intervals;
+    int Threads;
+    TAdcAna **AdcAna;
+    TFreq *Freq;
 
     int FBlocks;
     char FTestMode;

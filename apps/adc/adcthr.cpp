@@ -33,6 +33,7 @@
 #include <math.h>
 #include "adcthr.h"
 #include "adcana.h"
+#include "adc.h"
 
 /*##########################################################################
 #
@@ -123,7 +124,7 @@ void TAdcThread::Clear()
 
 /*##########################################################################
 #
-#   Name       : TAdcThread::Run
+#   Name       : TAdcThread::Process
 #
 #   Purpose....: Start
 #
@@ -132,7 +133,7 @@ void TAdcThread::Clear()
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcThread::Run(TAdcData *Data, TAdcAna *Ana)
+void TAdcThread::Process(TAdcData *Data, TAdcAna *Ana)
 {
     Done = false;
     AdcData = Data;
