@@ -1,0 +1,215 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2020, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# freq.cpp
+# ADC freq class
+#
+########################################################################*/
+
+#include <rdos.h>
+#include "freq.h"
+
+/*##########################################################################
+#
+#   Name       : TFreqData::TFreqData
+#
+#   Purpose....: Determine samples & interval
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
+{
+    int diff;
+    double dval;
+
+    if (Freq)
+    {
+        dval = SampleFreq * (double)Periods / Freq;
+        UsedSamples = (int)(dval + 0.5);
+        if (UsedSamples > 0x80000)
+            UsedSamples = 0;
+    }
+    else
+        UsedSamples = 0;
+
+    if (UsedSamples)
+    {
+        dval = Freq / SampleFreq * 0x40000;
+        Step = (int)(dval + 0.5);
+
+        Count = 0x80000 / UsedSamples;
+        diff = 0x80000 - UsedSamples * Count;
+
+        if (diff)
+        {
+            Count++;
+            diff = UsedSamples * Count - 0x80000;
+            Overlap = diff / (Count - 1);
+            Remain = diff - Overlap * (Count - 1);
+        }
+        else
+        {
+            Overlap = 0;
+            Remain = 0;
+        }
+    }
+    else
+        Step = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqData::~TFreqData
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqData::~TFreqData()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::TFreqPos
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqPos::TFreqPos()
+{
+    Pos = 0;
+    Sum = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::~TFreqPos
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqPos::~TFreqPos()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::Clear
+#
+#   Purpose....: Clear pos
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFreqPos::Clear(TFreqData *fd)
+{
+    Sum = fd->Remain;
+    Pos = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqPos::Next
+#
+#   Purpose....: Next pos
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFreqPos::Next(TFreqData *fd)
+{
+    Pos += fd->UsedSamples - fd->Overlap;
+
+    Sum += fd->Remain;
+    if (Sum >= fd->Count)
+    {
+        Pos--;
+        Sum -= fd->Count;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFreq::TFreq
+#
+#   Purpose....: Create frequencies
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreq::TFreq(double Start, double Stop, double Step, double SampleFreq, int Periods)
+{
+    double temp;
+    int i;
+
+    temp = (Stop - Start) / Step;
+    FreqCount = (int)temp + 1;
+    FreqData = new TFreqData*[FreqCount];
+
+    for (i = 0; i < FreqCount; i++)
+    {
+        temp = Start + i * Step;
+        FreqData[i] = new TFreqData(temp, SampleFreq, Periods);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFreq::~TFreq
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreq::~TFreq()
+{
+    int i;
+
+    for (i = 0; i < FreqCount; i++)
+        delete FreqData[i];
+
+    delete FreqData;
+}
