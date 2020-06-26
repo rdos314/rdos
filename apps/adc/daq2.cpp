@@ -652,20 +652,16 @@ static void PrintFinal()
 ##########################################################################*/
 int main(int argc, char **argv)
 {
-    int i;
-    int j;
-    bool ok;
+    int CurrInt;
+    int Pos;
+    int CurrPos;
+    TAdcAna *CurrAna;
+    int CurrIndex;
     char str[80];
     int *parm;
-    int freq;
     int hour;
     TDateTime curr;
-    TFreqData *fd;
-    TAdcData *data;
-    int tindex;
-    TAdcThread *tf;
-    TAdcAna *ta;
-    int last;
+
     double SampleFreq = 600.0;
     TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 100);
 
@@ -683,13 +679,29 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    freq = 107;
-    freq = freq * 0x40000 / 600;
-    Adc.SetTrigger(freq, 14);
-
     if (Adc.StartAdc(100, 23))
     {
         RdosWriteString("ADC started\r\n");
+
+        CurrInt = 0;
+        Pos = 0;
+
+        for (CurrInt = 0; CurrInt < Adc.Intervals; CurrInt++)
+        {
+            CurrAna = Adc.AdcAna[0];
+
+            while (!CurrAna->IsDone())
+            {
+                CurrPos = CurrInt * Adc.AnaSize + CurrAna->GetPos();
+                if (Pos == CurrPos)
+                    RdosWaitMilli(250);
+                else
+                {
+                    Pos = CurrPos;
+                }
+            }
+        }
+
         PrintFinal();
     }
 
