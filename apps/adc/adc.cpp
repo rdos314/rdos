@@ -752,3 +752,80 @@ void TAdc::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
     *Sd = round(csd);
     *Mean = cmean;
 }
+
+/*##########################################################################
+#
+#   Name       : TAdc::CalcDirections
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance)
+{
+    int Pos;
+    int Count;
+    double Dir;
+    int Tol = Sd * WaveLen / 360;
+
+    Pos = Mean * WaveLen / 360;
+    while (Pos - WaveLen + Tol > -Distance)
+        Pos -= WaveLen;
+
+    Count = 0;
+
+    while (Count < MAX_DIR)
+    {
+        if (Pos <= -Distance)
+        {
+            DirArr[Count] = 270;
+            Count++;
+        }
+        else
+        {
+            if (Pos >= Distance)
+            {
+                DirArr[Count] = 90;
+                Count++;
+            }
+            else
+            {
+                Dir = (double)Pos / (double)Distance;
+                Dir = asin(Dir) * 180.0 / M_PI;
+
+                if (Dir >= 0)
+                {
+                    DirArr[Count] = round(Dir);
+                    Count++;
+
+                    if (Count < 16)
+                    {
+                        DirArr[Count] = 180 - round(Dir);
+                        Count++;
+                    }
+                }
+                else
+                {
+                    DirArr[Count] = 360 + round(Dir);
+                    Count++;
+
+                    if (Count < MAX_DIR)
+                    {
+                        DirArr[Count] = 180 - round(Dir);
+                        Count++;
+                    }
+                }
+            }
+        }
+
+        if (Pos + WaveLen - Tol < Distance)
+            Pos += WaveLen;
+        else
+            break;
+    }
+
+    return Count;
+}

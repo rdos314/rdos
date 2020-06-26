@@ -32,6 +32,8 @@
 #include "sigdev.h"
 #include "freq.h"
 
+#define MAX_DIR	16
+
 class TAdcData
 {
 public:
@@ -64,6 +66,7 @@ public:
     static void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay);
 
     static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
+    static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance);
 
     TFreq *Freq;
     TAdcAna **AdcAna;
