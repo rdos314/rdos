@@ -25,6 +25,10 @@
 #
 ########################################################################*/
 
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <rdos.h>
 #include "freq.h"
 
@@ -177,11 +181,33 @@ void TFreqPos::Next(TFreqData *fd)
 #   Returns....: *
 #
 ##########################################################################*/
-TFreq::TFreq(double Start, double Stop, double Step, double SampleFreq, int Periods)
+TFreq::TFreq(double start, double stop, int decimals, double SampleFreq, int Periods)
 {
     double temp;
     int i;
 
+    Start = start;
+    Stop = stop;
+    Decimals = decimals;
+
+    Step = 1.0;
+    while (decimals > 0)
+    {
+        Step = Step / 10.0;
+        decimals--;
+    }
+
+    while (decimals < 0)
+    {
+        Step = Step * 10.0;
+        decimals++;
+    }
+
+    if (Decimals > 0)
+        sprintf(CodeStr, "%%d.%dLf", 2 + Decimals, Decimals);
+    else
+        strcpy(CodeStr, "%2Lf");
+    
     temp = (Stop - Start) / Step;
     FreqCount = (int)temp + 1;
     FreqData = new TFreqData*[FreqCount];
@@ -212,4 +238,47 @@ TFreq::~TFreq()
         delete FreqData[i];
 
     delete FreqData;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreq::GetFreq
+#
+#   Purpose....: Get frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TFreq::GetFreq(int index)
+{
+    if (index >= 0 && index < FreqCount)
+        return Start + index * Step;
+    else
+        return 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreq::CodeFreq
+#
+#   Purpose....: Code frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFreq::CodeFreq(int index, char *str)
+{
+    double val;
+
+    if (index >= 0 && index < FreqCount)
+    {
+        val = Start + index * Step;
+        sprintf(str, CodeStr, val);
+    }
+    else
+        strcpy(str, "!");
 }

@@ -234,6 +234,7 @@ void TAdcAna::Print()
     int vl;
     int RelA;
     int RelB;
+    char fstr[40];
     char str[100];
     int count = 0;
 
@@ -253,7 +254,8 @@ void TAdcAna::Print()
         {
             RelA = 10 * SumA[i] / Count[i];
             RelB = 10 * SumB[i] / Count[i];
-            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], mean, sd);
+            Freq->CodeFreq(i, fstr);
+            sprintf(str, "%s: %d.%01d %d.%01d (%d), %d (%d)\r\n", fstr, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], mean, sd);
             RdosWriteString(str);
         }
     }

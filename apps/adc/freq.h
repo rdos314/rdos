@@ -62,11 +62,22 @@ protected:
 class TFreq
 {
 public:
-    TFreq(double Start, double Stop, double Step, double SampleFreq, int Periods);
+    TFreq(double Start, double Stop, int Decimals, double SampleFreq, int Periods);
     ~TFreq();
 
+    void CodeFreq(int index, char *str);
+    double GetFreq(int index);
+
+    int Decimals;
     int FreqCount;
     TFreqData **FreqData;
+
+protected:
+    double Start;
+    double Stop;
+    double Step;
+
+    char CodeStr[80];
 };
 
 

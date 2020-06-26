@@ -667,7 +667,7 @@ int main(int argc, char **argv)
     TAdcAna *ta;
     int last;
     double SampleFreq = 600.0;
-    TFreq Freq(0.1, SampleFreq / 2.0, 0.1, SampleFreq, 100);
+    TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 100);
 
     TAdc Adc(0x0, 30000, &Freq);
 
