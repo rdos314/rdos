@@ -697,7 +697,20 @@ int main(int argc, char **argv)
                     RdosWaitMilli(250);
                 else
                 {
-                    Pos = CurrPos;
+                    while (Pos != CurrPos)
+                    {
+                        if ((Pos % 50) == 0)
+                        {
+                            RdosWriteString("\r\n");
+                            CurrAna->Print();
+                            sprintf(str, "%d", Pos);
+                            RdosWriteString(str);
+                        }
+                        else
+                            RdosWriteChar('.');
+
+                        Pos++;
+                    }
                 }
             }
         }
