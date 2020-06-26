@@ -34,33 +34,11 @@
 #include "adc.h"
 #include "file.h"
 #include "datetime.h"
-#include "thread.h"
-#include "sigdev.h"
+#include "freq.h"
+#include "adcthr.h"
+#include "adcana.h"
 
-
-class TAdcAna : TThread
-{
-public:
-    TAdcAna();
-    ~TAdcAna();
-
-    void Add(TAdcThread *Adc);
-
-    int Total[3500];
-    int Count[3500];
-    int SumA[3500];
-    int SumB[3500];
-    int MaxA[3500];
-    int MaxB[3500];
-    int DelayMean[3500];
-    int DelaySd[3500];
-
-protected:
-    void Clear();
-    virtual void Execute();
-};
-
-
+static TFreq *Freq;
 static TAdcThread *AdcThread[23];
 static TAdcAna *AdcAna[100];
 
@@ -388,7 +366,7 @@ static void AddTotal(int index, TAdcThread *adc)
         TotalSumB[i][index] += adc->SumB[i];
 
         for (k = 0; k < 360; k++)
-            DelayArr[k] += adc->Delay[i][k];
+            DelayArr[k] += adc->Delay[i].Phase[k];
 
         if (TotalCount[i][index])
         {
@@ -1023,17 +1001,10 @@ int main(int argc, char **argv)
     TAdcData *data;
     int tindex;
     TAdcThread *tf;
-    TAdcAna *tf;
+    TAdcAna *ta;
     int last;
 
-    for (i = 0; i < 3500; i++)
-        FreqData[i] = 0;
-
-    for (i = 1; i < 3000; i++)
-        FreqData[i] = new TFreqData((double)i / 10.0, 600.0, 100);
-
-    for (i = 0; i < 100; i++)
-        AdcAna[i] = new TAdcAna();
+    double SampleFreq = 600.0;
 
     TAdc Adc(0x0, 30000);
 
@@ -1055,10 +1026,15 @@ int main(int argc, char **argv)
 
     if (Adc.Start())
     {
+        Freq = new TFreq(0.1, SampleFreq / 2.0, 0.1, SampleFreq, 100);
+
+        for (i = 0; i < 100; i++)
+            AdcAna[i] = new TAdcAna();
+
         RdosWriteString("ADC started\r\n");
 
         for (i = 0; i < 23; i++)
-            AdcThread[i] = new TAdcThread(i);
+            AdcThread[i] = new TAdcThread(i, Freq);
 
         for (i = 0; i < 30000; i++)
         {
