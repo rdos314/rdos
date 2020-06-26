@@ -36,23 +36,32 @@
 class TAdcAna : public TThread
 {
 public:
-    TAdcAna();
+    TAdcAna(TFreq *Freq);
     ~TAdcAna();
 
     void Add(TAdcThread *Adc);
+    void Print();
 
-    int Total[3500];
-    int Count[3500];
-    int SumA[3500];
-    int SumB[3500];
-    int MaxA[3500];
-    int MaxB[3500];
-    int DelayMean[3500];
-    int DelaySd[3500];
+    int *Total;
+    int *Count;
+    int *SumA;
+    int *SumB;
+    int *MaxA;
+    int *MaxB;
+    struct TDelay *Delay;
+    int *DelayMean;
+    int *DelaySd;
+
+    TFreq *Freq;
+    int FreqCount;
 
 protected:
+    void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
+    void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
+
     void Clear();
     virtual void Execute();
+
 };
 
 #endif

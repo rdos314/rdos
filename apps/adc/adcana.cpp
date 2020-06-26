@@ -33,3 +33,267 @@
 #include <math.h>
 #include "adcana.h"
 
+/*##########################################################################
+#
+#   Name       : TAdcAna::TAdcAna
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAdcAna::TAdcAna(TFreq *f)
+{
+    FreqCount = f->FreqCount;
+    Freq = f;
+
+    Total = new int[FreqCount];
+    Count = new int[FreqCount];
+    SumA = new int[FreqCount];
+    SumB = new int[FreqCount];
+    MaxA = new int[FreqCount];
+    MaxB = new int[FreqCount];
+    Delay = new struct TDelay[FreqCount];
+
+    DelayMean = new int[FreqCount];
+    DelaySd = new int[FreqCount];
+
+    Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::~TAdcAna
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAdcAna::~TAdcAna()
+{
+    delete Total;
+    delete Count;
+    delete SumA;
+    delete SumB;
+    delete MaxA;
+    delete MaxB;
+    delete Delay;
+    delete DelayMean;
+    delete DelaySd;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::CalcMeanSdPos
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcAna::CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd)
+{
+    int i;
+    int pos;
+    long long sum;
+    int count;
+    int mean;
+    double dval;
+
+    sum = 0;
+    count = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        pos = i - Start;
+
+        if (pos < -180)
+            pos += 360;
+
+        if (pos >= 180)
+            pos -= 360;
+
+        sum += Delay->Phase[i] * pos;
+        count += Delay->Phase[i];
+    }
+
+    mean = round(sum / (long long)count);
+    *Mean = mean;
+
+    sum = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        pos = i - Start;
+
+        if (pos < -180)
+            pos += 360;
+
+        if (pos >= 180)
+            pos -= 360;
+
+        sum += Delay->Phase[i] * (pos - mean) * (pos - mean);
+    }
+
+    dval = (double)(sum / (long long)count);
+    dval = sqrt(dval);
+    *Sd = dval;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::CalcMeanSd
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcAna::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
+{
+    int pos;
+    int mean;
+    int cmean;
+    double sd;
+    double csd;
+
+    cmean = 0;
+    csd = 1000000.0;
+
+    for (pos = 0; pos < 360; pos++)
+    {
+        CalcMeanSdPos(Delay, pos, &mean, &sd);
+        if (sd < csd)
+        {
+            csd = sd;
+            cmean = pos + mean;
+        }
+    }
+
+    while (cmean < -180)
+        cmean += 360;
+
+    while (cmean >= 180)
+        cmean -= 360;
+
+    *Sd = round(csd);
+    *Mean = cmean;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::Clear
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcAna::Clear()
+{
+    int i;
+    int j;
+
+    for (i = 0; i < FreqCount; i++)
+    {
+        Count[i] = 0;
+        SumA[i] = 0;
+        SumB[i] = 0;
+        MaxA[i] = 0;
+        MaxB[i] = 0;
+
+        for (j = 0; j < 360; j++)
+            Delay[i].Phase[j] = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::Add
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcAna::Add(TAdcThread *adc)
+{
+    int i;
+    int j;
+
+    for (i = 0; i < FreqCount; i++)
+    {
+        if (adc->MaxA[i] > MaxA[i])
+            MaxA[i] = adc->MaxA[i];
+
+        if (adc->MaxB[i] > MaxB[i])
+            MaxB[i] = adc->MaxB[i];
+
+        Count[i] += adc->Count[i];
+        SumA[i] += adc->SumA[i];
+        SumB[i] += adc->SumB[i];
+
+        for (j = 0; j < 360; j++)
+            Delay[i].Phase[j] += adc->Delay[i].Phase[j];
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::Print
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcAna::Print()
+{
+    int i;
+    int mean;
+    int sd;
+    int vl;
+    int RelA;
+    int RelB;
+    char str[100];
+    int count = 0;
+
+    for (i = 0; i < FreqCount; i++)
+    {
+        if (Count[i])
+        {
+            CalcMeanSd(Delay, &mean, &sd);
+            DelayMean[i] = mean;
+            DelaySd[i] = sd;
+        }
+        else
+        {
+            DelayMean[i] = 0;
+            DelaySd[i] = 0;
+        }
+
+        if (SumA[i] && SumB[i])
+        {
+            RelA = 10 * SumA[i] / Count[i];
+            RelB = 10 * SumB[i] / Count[i];
+            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], DelayMean[i], DelaySd[i]);
+            RdosWriteString(str);
+        }
+    }
+}
+
