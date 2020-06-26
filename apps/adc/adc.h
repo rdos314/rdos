@@ -29,6 +29,7 @@
 #define _ADC_H
 
 #include "thread.h"
+#include "sigdev.h"
 #include "freq.h"
 
 class TAdcData
@@ -53,6 +54,8 @@ public:
 
     bool StartAdc(int Intervals, int Threads);
 
+    void NotifyDone();
+
     void SetTrigger(int PhaseIncr, int Window);
     void Check();
 
@@ -62,6 +65,7 @@ public:
 
     static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
 
+    TFreq *Freq;
     TAdcAna **AdcAna;
     int Intervals;
     int AnaSize;
@@ -82,10 +86,10 @@ protected:
 
     virtual void Execute();
 
-    TFreq *Freq;
-
     int Threads;
+
     int FBlocks;
+    TSignalDevice FSignal;
     char FTestMode;
     char *FBuf;
 };

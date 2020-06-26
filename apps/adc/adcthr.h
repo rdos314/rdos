@@ -39,7 +39,7 @@ class TAdcData;
 class TAdcThread : public TThread
 {
 public:
-    TAdcThread(int Id, TFreq *Freq);
+    TAdcThread(int Id, TAdc *Adc);
     ~TAdcThread();
 
     void Clear();
@@ -59,6 +59,7 @@ public:
 protected:
     virtual void Execute();
 
+    TAdc *Adc;
     TFreq *Freq;
     TAdcData *AdcData;
     TAdcAna *AdcAna;

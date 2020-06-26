@@ -46,12 +46,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TAdcThread::TAdcThread(int Id, TFreq *f)
+TAdcThread::TAdcThread(int Id, TAdc *adc)
 {
     char str[40];
 
-    FreqCount = f->FreqCount;
-    Freq = f;
+    Adc = adc;
+    Freq = Adc->Freq;
+    FreqCount = Freq->FreqCount;
 
     Total = new int[FreqCount];
     Count = new int[FreqCount];
@@ -205,6 +206,7 @@ void TAdcThread::Execute()
             }
             AdcAna->Add(this);
             Done = true;
+            Adc->NotifyDone();
         }
     }
 }

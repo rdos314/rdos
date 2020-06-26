@@ -171,6 +171,74 @@ bool TAdc::StartAdc(int iv, int tc)
 
 /*##########################################################################
 #
+#   Name       : TAdc::NotifyDone
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::NotifyDone()
+{
+    FSignal.Signal();
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::Execute
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::Execute()
+{
+    int i;
+    int t;
+    TAdcData *data;
+    TAdcThread **AdcThread;
+    TAdcThread *tf;
+    TAdcAna *ta;
+
+    AdcThread = new TAdcThread*[Threads];
+
+    for (i = 0; i < Threads; i++)
+        AdcThread[i] = new TAdcThread(i, this);
+
+    for (i = 0; i < FBlocks; i++)
+    {
+        data = GetBlock(i);
+
+        t = i % Threads;
+        tf = AdcThread[t];
+
+        t = i / AnaSize;
+        ta = AdcAna[t];
+            
+        while (!tf->Done)
+            FSignal.WaitForever();
+
+        tf->Process(data, ta);
+    }
+
+    for (i = 0; i < Threads; i++)
+    {
+        tf = AdcThread[i];
+        while (!tf->Done)
+            FSignal.WaitForever();
+
+        delete tf;
+    }
+    delete AdcThread;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::GetBlock
 #
 #   Purpose....: Get ADC block
@@ -683,56 +751,4 @@ void TAdc::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
 
     *Sd = round(csd);
     *Mean = cmean;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::Execute
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::Execute()
-{
-    int i;
-    int t;
-    TAdcData *data;
-    TAdcThread **AdcThread;
-    TAdcThread *tf;
-    TAdcAna *ta;
-
-    AdcThread = new TAdcThread*[Threads];
-
-    for (i = 0; i < Threads; i++)
-        AdcThread[i] = new TAdcThread(i, Freq);
-
-    for (i = 0; i < FBlocks; i++)
-    {
-        data = GetBlock(i);
-
-        t = i % Threads;
-        tf = AdcThread[t];
-
-        t = i / AnaSize;
-        ta = AdcAna[t];
-            
-        while (!tf->Done)
-            RdosWaitMilli(5);
-
-        tf->Process(data, ta);
-    }
-
-    for (i = 0; i < Threads; i++)
-    {
-        tf = AdcThread[i];
-        while (!tf->Done)
-            RdosWaitMilli(5);
-
-        delete tf;
-    }
-    delete AdcThread;
 }
