@@ -51,11 +51,9 @@ public:
     TAdc(char TestMode, int Blocks, TFreq *Freq);
     ~TAdc();
 
-    void SetTrigger(int PhaseIncr, int Window);
     bool StartAdc(int Intervals, int Threads);
-    TAdcData *GetBlock(int Block);
-    TAdcData *FindStart(int *Entries);
 
+    void SetTrigger(int PhaseIncr, int Window);
     void Check();
 
     static int GetSin(int Phase);
@@ -64,8 +62,15 @@ public:
 
     static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
 
+    TAdcAna **AdcAna;
+    int Intervals;
+    int AnaSize;
+
 protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
+
+    TAdcData *GetBlock(int Block);
+    TAdcData *FindStart(int *Entries);
 
     char CheckRamp(TAdcData *data, int Block, int Samples, char Start);
     void CheckRamp();
@@ -77,11 +82,9 @@ protected:
 
     virtual void Execute();
 
-    int Intervals;
-    int Threads;
-    TAdcAna **AdcAna;
     TFreq *Freq;
 
+    int Threads;
     int FBlocks;
     char FTestMode;
     char *FBuf;

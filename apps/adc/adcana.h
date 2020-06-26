@@ -29,15 +29,18 @@
 #define _ADCANA_H
 
 #include "adcthr.h"
+#include "section.h"
 
 class TAdcAna
 {
 public:
-    TAdcAna(TFreq *Freq);
+    TAdcAna(int Count, TFreq *Freq);
     ~TAdcAna();
 
     void Add(TAdcThread *Adc);
     void Print();
+    bool IsDone();
+    int GetPos();
 
     int *Total;
     int *Count;
@@ -54,6 +57,10 @@ public:
 
 protected:
     void Clear();
+
+    int Pos;
+    int Size;
+    TSection FSection;
 };
 
 #endif

@@ -152,11 +152,12 @@ bool TAdc::StartAdc(int iv, int tc)
     {
         Intervals = iv;
         Threads = tc;
+        AnaSize = FBlocks / Intervals;
 
         AdcAna = new TAdcAna*[Intervals];
         
         for (i = 0; i < Intervals; i++)
-            AdcAna[i] = new TAdcAna(Freq);
+            AdcAna[i] = new TAdcAna(AnaSize, Freq);
 
         Start("Adc", 0x4000);
         return true;
@@ -696,7 +697,6 @@ void TAdc::Execute()
 {
     int i;
     int t;
-    int count = FBlocks / Intervals;
     TAdcData *data;
     TAdcThread **AdcThread;
     TAdcThread *tf;
@@ -714,7 +714,7 @@ void TAdc::Execute()
         t = i % Threads;
         tf = AdcThread[t];
 
-        t = i / count;
+        t = i / AnaSize;
         ta = AdcAna[t];
             
         while (!tf->Done)

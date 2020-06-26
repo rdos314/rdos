@@ -45,10 +45,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TAdcAna::TAdcAna(TFreq *f)
+TAdcAna::TAdcAna(int c, TFreq *f)
+ : FSection("Ana")
 {
     FreqCount = f->FreqCount;
     Freq = f;
+
+    Size = c;
+    Pos = 0;
 
     Total = new int[FreqCount];
     Count = new int[FreqCount];
@@ -86,6 +90,41 @@ TAdcAna::~TAdcAna()
     delete Delay;
     delete DelayMean;
     delete DelaySd;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::GetPos
+#
+#   Purpose....: Get current position
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdcAna::GetPos()
+{
+    return Pos;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcAna::IsDone
+#
+#   Purpose....: Check if done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdcAna::IsDone()
+{
+    if (Pos == Size)
+        return true;
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -132,6 +171,10 @@ void TAdcAna::Add(TAdcThread *adc)
 {
     int i;
     int j;
+    int mean;
+    int sd;
+
+    FSection.Enter();
 
     for (i = 0; i < FreqCount; i++)
     {
@@ -148,6 +191,28 @@ void TAdcAna::Add(TAdcThread *adc)
         for (j = 0; j < 360; j++)
             Delay[i].Phase[j] += adc->Delay[i].Phase[j];
     }
+
+    Pos++;
+
+    if (Pos == Size)
+    {
+        for (i = 0; i < FreqCount; i++)
+        {
+            if (Count[i])
+            {
+                TAdc::CalcMeanSd(Delay, &mean, &sd);
+                DelayMean[i] = mean;
+                DelaySd[i] = sd;
+            }
+            else
+            {
+                DelayMean[i] = 0;
+                DelaySd[i] = 0;
+            }
+        }
+    }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -172,27 +237,26 @@ void TAdcAna::Print()
     char str[100];
     int count = 0;
 
+    FSection.Enter();
+
     for (i = 0; i < FreqCount; i++)
     {
         if (Count[i])
-        {
             TAdc::CalcMeanSd(Delay, &mean, &sd);
-            DelayMean[i] = mean;
-            DelaySd[i] = sd;
-        }
         else
         {
-            DelayMean[i] = 0;
-            DelaySd[i] = 0;
+            mean = 0;
+            sd = 0;
         }
 
         if (SumA[i] && SumB[i])
         {
             RelA = 10 * SumA[i] / Count[i];
             RelB = 10 * SumB[i] / Count[i];
-            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], DelayMean[i], DelaySd[i]);
+            sprintf(str, "%d.%01d: %d.%01d %d.%01d (%d), %d (%d)\r\n", i / 10, i % 10, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], mean, sd);
             RdosWriteString(str);
         }
     }
-}
 
+    FSection.Leave();
+}
