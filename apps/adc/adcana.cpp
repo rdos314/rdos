@@ -145,6 +145,7 @@ void TAdcAna::Clear()
 
     for (i = 0; i < FreqCount; i++)
     {
+        Total[i] = 0;
         Count[i] = 0;
         SumA[i] = 0;
         SumB[i] = 0;
@@ -184,6 +185,7 @@ void TAdcAna::Add(TAdcThread *adc)
         if (adc->MaxB[i] > MaxB[i])
             MaxB[i] = adc->MaxB[i];
 
+        Total[i] += adc->Total[i];
         Count[i] += adc->Count[i];
         SumA[i] += adc->SumA[i];
         SumB[i] += adc->SumB[i];
