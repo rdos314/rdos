@@ -31,6 +31,7 @@
 #include "thread.h"
 #include "sigdev.h"
 #include "freq.h"
+#include "file.h"
 
 #define MAX_DIR	16
 
@@ -76,6 +77,9 @@ public:
 protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
 
+    void Write(const char *str);
+    void PrintCountSumary(int Index);
+
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
 
@@ -90,6 +94,7 @@ protected:
     virtual void Execute();
 
     int Threads;
+    TFile *file;
 
     int FBlocks;
     TSignalDevice FSignal;

@@ -92,6 +92,7 @@ TAdc::TAdc(char TestMode, int Blocks, TFreq *f)
     Intervals = 0;
     AdcAna = 0;
     Freq = f;
+    file = 0;
 }
 
 /*##########################################################################
@@ -828,4 +829,83 @@ int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int
     }
 
     return Count;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::Write
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::Write(const char *str)
+{
+    RdosWriteString(str);
+    if (file)
+        file->Write(str, strlen(str));
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::PrintCountSumary
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintCountSumary(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    double sum;
+    double mean;
+    double sd;
+    double val;
+    int Rel;
+    char str[100];
+
+    sum = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];   
+        sum += (double)ana->Count[Index];
+    }
+
+    mean = sum / (double)Intervals;
+
+    if (Intervals > 1)
+    {
+        sum = 0;
+        for (i = 0; i < Intervals; i++)
+        {
+            ana = AdcAna[i];   
+            val += (double)ana->Count[Index];
+            val = mean - val;
+            sum += val * val;
+        }
+
+        val = sum / (double)(Intervals - 1);
+        sd = sqrt(val);
+    }
+    else
+        sd = 0;
+
+    ana = AdcAna[0];
+    val = (double)ana->Total[Index];
+
+    mean = mean * 100.0 / val;
+    sd = sd * 100.0 / val;
+
+    strcpy(str, "Count: ");
+    Write(str);
+
+    sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
+    Write(str);
 }
