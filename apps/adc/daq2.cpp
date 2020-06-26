@@ -50,113 +50,11 @@ static int TotalMaxB[3500][100];
 static int TotalDelayMean[3500][100];
 static int TotalDelaySd[3500][100];
 
-static int DelayArr[360];
+static struct TDelay DelayArr;
 
 
 #define M_PI 3.14159265358979323846
 int MAX_COUNT = 25600 * 8;
-
-/*##########################################################################
-#
-#   Name       : CalcMeanSdPos
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void CalcMeanSdPos(int DelayArr[360], int Start, int *Mean, double *Sd)
-{
-    int i;
-    int pos;
-    long long sum;
-    int count;
-    int mean;
-    double dval;
-
-    sum = 0;
-    count = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += DelayArr[i] * pos;
-        count += DelayArr[i];
-    }
-
-    mean = round(sum / (long long)count);
-    *Mean = mean;
-
-    sum = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += DelayArr[i] * (pos - mean) * (pos - mean);
-    }
-
-    dval = (double)(sum / (long long)count);
-    dval = sqrt(dval);
-    *Sd = dval;
-}
-
-/*##########################################################################
-#
-#   Name       : CalcMeanSd
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void CalcMeanSd(int DelayArr[360], int *Mean, int *Sd)
-{
-    int pos;
-    int mean;
-    int cmean;
-    double sd;
-    double csd;
-
-    cmean = 0;
-    csd = 1000000.0;
-
-    for (pos = 0; pos < 360; pos++)
-    {
-        CalcMeanSdPos(DelayArr, pos, &mean, &sd);
-        if (sd < csd)
-        {
-            csd = sd;
-            cmean = pos + mean;
-        }
-    }
-
-    while (cmean < -180)
-        cmean += 360;
-
-    while (cmean >= 180)
-        cmean -= 360;
-
-    *Sd = round(csd);
-    *Mean = cmean;
-}
 
 
 /*##########################################################################
@@ -567,7 +465,7 @@ static void PrintDelaySumary(TFile &file, int MeanArr[100], int CountArr[100])
     char str[100];
 
     for (i = 0; i < 360; i++)
-        DelayArr[i] = 0;
+        DelayArr.Phase[i] = 0;
 
     count = 0;
     for (i = 0; i < 100; i++)
@@ -583,11 +481,11 @@ static void PrintDelaySumary(TFile &file, int MeanArr[100], int CountArr[100])
             while (val >= 360)
                 val -= 360;
 
-            DelayArr[val]++;
+            DelayArr.Phase[val]++;
         }
     }
 
-    CalcMeanSd(DelayArr, &mean, &sd);
+    TAdc::CalcMeanSd(&DelayArr, &mean, &sd);
 
     sprintf(str, "Phase: ");
     RdosWriteString(str);
@@ -619,7 +517,7 @@ static bool PrintDelayDetail(TFile &file, int MeanArr[100], int CountArr[100])
     char str[100];
 
     for (i = 0; i < 360; i++)
-        DelayArr[i] = 0;
+        DelayArr.Phase[i] = 0;
 
     count = 0;
     for (i = 0; i < 100; i++)
@@ -635,11 +533,11 @@ static bool PrintDelayDetail(TFile &file, int MeanArr[100], int CountArr[100])
             while (val >= 360)
                 val -= 360;
 
-            DelayArr[val]++;
+            DelayArr.Phase[val]++;
         }
     }
 
-    CalcMeanSd(DelayArr, &mean, &sd);
+    TAdc::CalcMeanSd(&DelayArr, &mean, &sd);
 
     if (sd > 5)
     {

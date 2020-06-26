@@ -35,11 +35,6 @@
 
 class TAdcAna;
 
-struct TDelay
-{
-    int Phase[360];
-};
-
 class TAdcThread : public TThread
 {
 public:

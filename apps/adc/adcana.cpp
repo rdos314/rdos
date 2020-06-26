@@ -89,108 +89,6 @@ TAdcAna::~TAdcAna()
 
 /*##########################################################################
 #
-#   Name       : TAdcAna::CalcMeanSdPos
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdcAna::CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd)
-{
-    int i;
-    int pos;
-    long long sum;
-    int count;
-    int mean;
-    double dval;
-
-    sum = 0;
-    count = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += Delay->Phase[i] * pos;
-        count += Delay->Phase[i];
-    }
-
-    mean = round(sum / (long long)count);
-    *Mean = mean;
-
-    sum = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += Delay->Phase[i] * (pos - mean) * (pos - mean);
-    }
-
-    dval = (double)(sum / (long long)count);
-    dval = sqrt(dval);
-    *Sd = dval;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdcAna::CalcMeanSd
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdcAna::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
-{
-    int pos;
-    int mean;
-    int cmean;
-    double sd;
-    double csd;
-
-    cmean = 0;
-    csd = 1000000.0;
-
-    for (pos = 0; pos < 360; pos++)
-    {
-        CalcMeanSdPos(Delay, pos, &mean, &sd);
-        if (sd < csd)
-        {
-            csd = sd;
-            cmean = pos + mean;
-        }
-    }
-
-    while (cmean < -180)
-        cmean += 360;
-
-    while (cmean >= 180)
-        cmean -= 360;
-
-    *Sd = round(csd);
-    *Mean = cmean;
-}
-
-/*##########################################################################
-#
 #   Name       : TAdcAna::Clear
 #
 #   Purpose....:
@@ -277,7 +175,7 @@ void TAdcAna::Print()
     {
         if (Count[i])
         {
-            CalcMeanSd(Delay, &mean, &sd);
+            TAdc::CalcMeanSd(Delay, &mean, &sd);
             DelayMean[i] = mean;
             DelaySd[i] = sd;
         }

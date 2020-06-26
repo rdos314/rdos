@@ -28,12 +28,10 @@
 #ifndef _ADCANA_H
 #define _ADCANA_H
 
-#include "thread.h"
-#include "sigdev.h"
 #include "adc.h"
 #include "adcthr.h"
 
-class TAdcAna : public TThread
+class TAdcAna
 {
 public:
     TAdcAna(TFreq *Freq);
@@ -56,12 +54,7 @@ public:
     int FreqCount;
 
 protected:
-    void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
-    void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
-
     void Clear();
-    virtual void Execute();
-
 };
 
 #endif

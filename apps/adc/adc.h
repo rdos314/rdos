@@ -35,6 +35,11 @@ public:
     short int chB;
 };
 
+struct TDelay
+{
+    int Phase[360];
+};
+
 class TAdc
 {
 public:
@@ -52,7 +57,11 @@ public:
     static void CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB);
     static void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay);
 
+    static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
+
 protected:
+    static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
+
     char CheckRamp(TAdcData *data, int Block, int Samples, char Start);
     void CheckRamp();
 
