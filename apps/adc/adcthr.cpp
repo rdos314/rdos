@@ -109,7 +109,7 @@ void TAdcThread::Clear()
     int j;
     int k;
 
-    for (j = 1; j < FreqCount; j++)
+    for (j = 0; j < FreqCount; j++)
     {
         Total[j] = 0;
         Count[j] = 0;
@@ -181,7 +181,7 @@ void TAdcThread::Execute()
                 {
                     fp.Clear(fd);
                     Total[j] += fd->Count;
-                
+
                     for (k = 0; k < fd->Count; k++)
                     {
                         TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, fd->Step , &PowerA, &PowerB, &Phase);

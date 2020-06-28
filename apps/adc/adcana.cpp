@@ -245,7 +245,7 @@ void TAdcAna::Print()
     for (i = 0; i < FreqCount; i++)
     {
         if (Count[i])
-            TAdc::CalcMeanSd(Delay, &mean, &sd);
+            TAdc::CalcMeanSd(&Delay[i], &mean, &sd);
         else
         {
             mean = 0;

@@ -204,10 +204,10 @@ TFreq::TFreq(double start, double stop, int decimals, double SampleFreq, int Per
     }
 
     if (Decimals > 0)
-        sprintf(CodeStr, "%%d.%dLf", 2 + Decimals, Decimals);
+        sprintf(CodeStr, "%%%d.%dLf", 2 + Decimals, Decimals);
     else
         strcpy(CodeStr, "%2Lf");
-    
+
     temp = (Stop - Start) / Step;
     FreqCount = (int)temp + 1;
     FreqData = new TFreqData*[FreqCount];

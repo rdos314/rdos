@@ -350,7 +350,7 @@ static void PrintMaxSumary(const char *Header, TFile &file, int MaxArr[100])
     int max;
     char str[100];
 
-    max = 0;  
+    max = 0;
     for (i = 0; i < 100; i++)
         if (MaxArr[i] > max)
             max = MaxArr[i];
@@ -593,7 +593,7 @@ int main(int argc, char **argv)
     if (argc == 2)
     {
         hour = atoi(argv[1]);
-        sprintf(str, "Wait unti %d:00", hour);
+        sprintf(str, "Wait until %d:00", hour);
         RdosWriteString(str);
 
         TDateTime starttime(curr.GetYear(), curr.GetMonth(), curr.GetDay(), hour, 0, 0);
@@ -602,7 +602,7 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    if (Adc.StartAdc(100, 23))
+    if (Adc.StartAdc(100, 22))
     {
         RdosWriteString("ADC started\r\n");
 
@@ -611,7 +611,7 @@ int main(int argc, char **argv)
 
         for (CurrInt = 0; CurrInt < Adc.Intervals; CurrInt++)
         {
-            CurrAna = Adc.AdcAna[0];
+            CurrAna = Adc.AdcAna[CurrInt];
 
             while (!CurrAna->IsDone())
             {
@@ -622,7 +622,7 @@ int main(int argc, char **argv)
                 {
                     while (Pos != CurrPos)
                     {
-                        if ((Pos % 50) == 0)
+                        if ((Pos % Adc.AnaSize) != 0 && (Pos % 50) == 0)
                         {
                             RdosWriteString("\r\n");
                             CurrAna->Print();
@@ -636,6 +636,10 @@ int main(int argc, char **argv)
                     }
                 }
             }
+            RdosWriteString("\r\n");
+            CurrAna->Print();
+            sprintf(str, "%d", Pos);
+            RdosWriteString(str);
         }
 
         PrintFinal();

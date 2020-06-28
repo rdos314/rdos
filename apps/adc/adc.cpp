@@ -159,7 +159,7 @@ bool TAdc::StartAdc(int iv, int tc)
         AnaSize = FBlocks / Intervals;
 
         AdcAna = new TAdcAna*[Intervals];
-        
+
         for (i = 0; i < Intervals; i++)
             AdcAna[i] = new TAdcAna(AnaSize, Freq);
 
@@ -213,17 +213,16 @@ void TAdc::Execute()
 
     for (i = 0; i < FBlocks; i++)
     {
-        data = GetBlock(i);
-
         t = i % Threads;
         tf = AdcThread[t];
 
-        t = i / AnaSize;
-        ta = AdcAna[t];
-            
         while (!tf->Done)
             FSignal.WaitForever();
 
+        t = i / AnaSize;
+        ta = AdcAna[t];
+
+        data = GetBlock(i);
         tf->Process(data, ta);
     }
 
@@ -874,7 +873,7 @@ void TAdc::PrintCountSumary(int Index)
     sum = 0;
     for (i = 0; i < Intervals; i++)
     {
-        ana = AdcAna[i];   
+        ana = AdcAna[i];
         sum += (double)ana->Count[Index];
     }
 
@@ -885,7 +884,7 @@ void TAdc::PrintCountSumary(int Index)
         sum = 0;
         for (i = 0; i < Intervals; i++)
         {
-            ana = AdcAna[i];   
+            ana = AdcAna[i];
             val += (double)ana->Count[Index];
             val = mean - val;
             sum += val * val;
