@@ -31,7 +31,7 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdl1.h"
+#include "quizdl4.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -55,8 +55,7 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("RU4a: %d AS: %d, NT: %d", Row->ID, Row->AsResult, Row->NtResult);
-    printf("\r\n");
+    printf("RU4a: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
 }
 
 /*##################  ProcessRow ##########################
@@ -78,6 +77,8 @@ static void ProcessRow(char *str)
     TDateTime *time;
     TQuizRow Row;
 
+    str++;
+
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
     {
@@ -87,6 +88,8 @@ static void ProcessRow(char *str)
             *ptr = 0;
 
         str = ptr + 1;
+
+        valstr++;
 
         switch (fieldno)
         {
@@ -99,6 +102,9 @@ static void ProcessRow(char *str)
                 break;
 
             case 2:
+                break;
+
+            case 3:
                 sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
                         &year, &month, &day,
                         &hour, &min, &sec);
@@ -109,7 +115,7 @@ static void ProcessRow(char *str)
                 delete time;
                 break;
 
-            case 3:
+            case 4:
                 sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
                         &year, &month, &day,
                         &hour, &min, &sec);
@@ -119,135 +125,58 @@ static void ProcessRow(char *str)
                 delete time;
                 break;
 
-            case 4:
+            case 5:
                 Row.BirthYear = atoi(valstr);
                 break;
 
-            case 5:
+            case 6:
                 Row.BirthMonth = atoi(valstr);
                 break;
 
-            case 6:
+            case 7:
                 Row.Gender = atoi(valstr);
                 break;
 
-            case 7:
+            case 8:
                  Row.Ancestry = atoi(valstr);
                  break;
 
-            case 8:
+            case 9:
                  Row.Aspie = atoi(valstr);
                  break;
 
-            case 9:
+            case 10:
                  Row.ADHD = atoi(valstr);
                  break;
 
-            case 10:
+            case 11:
                  Row.OCD = atoi(valstr);
                  break;
 
-            case 11:
+            case 12:
                  Row.Social = atoi(valstr);
                  break;
 
-            case 12:
+            case 13:
+                break;
+
+            case 14:
                  Row.AsResult = atoi(valstr);
                  break;
 
-            case 13:
+            case 15:
                  Row.NtResult = atoi(valstr);
                  break;
 
-            case 14:
-                 val = atoi(valstr); // your age
-                 if (val)
-                     Row.HasCatCall = TRUE;
-                 else                     
-                     Row.HasCatCall = FALSE;
-
-                 if (val != 1)
-                     val = 2 + (val - 10) / 5;
-                 Row.Quiz[122] = val;
-                 break;
-
-            case 15:
-                 if (Row.HasCatCall)
-                 {
-                     val = atoi(valstr); // their age
-                     if (val != 1)
-                         val = 2 + (val - 10) / 5;
-                 }
-                 else
-                     val = 0;
-                 Row.Quiz[123] = val;
-                 break;
-
-            case 16:
-                 if (Row.HasCatCall)
-                     Row.Quiz[124] = atoi(valstr); // catcall guys
-                 else
-                     Row.Quiz[124] = 0;
-                 break;
-
-            case 17:
-                 if (Row.HasCatCall)
-                     Row.Quiz[125] = 1 + atoi(valstr); // girls
-                 else
-                     Row.Quiz[125] = 0;
-                 break;
-
-            case 18:
-                 if (Row.HasCatCall)
-                     Row.Quiz[126] = 1 + atoi(valstr); // guys
-                 else
-                     Row.Quiz[126] = 0;
-                 break;
-
-            case 19:
-                 if (Row.HasCatCall)
-                     Row.Quiz[127] = 1 + atoi(valstr); // they approach
-                 else
-                     Row.Quiz[127] = 0;
-                 break;
-
-            case 20:
-                 if (Row.HasCatCall)
-                     Row.Quiz[128] = 1 + atoi(valstr); // you approach
-                 else
-                     Row.Quiz[128] = 0;
-                 break;
-
-            case 21:
-                 if (Row.HasCatCall)
-                     Row.Quiz[129] = atoi(valstr); // scared
-                 else
-                     Row.Quiz[129] = 0;
-                 break;
-
-            case 22:
-                 if (Row.HasCatCall)
-                     Row.Quiz[130] = atoi(valstr); // disgust
-                 else
-                     Row.Quiz[130] = 0;
-                 break;
-
-            case 23:
-                 if (Row.HasCatCall)
-                     Row.Quiz[131] = atoi(valstr); // trauma
-                 else
-                     Row.Quiz[131] = 0;
-                 break;
-
             default:
-                 i = fieldno - 24;
+                 i = fieldno - 16;
                  Row.Quiz[i] = atoi(valstr);
                  break;
         }
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 130);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 121);
 }
 
 /*################## ConvRu4a ##########################
@@ -262,8 +191,8 @@ void ConvRu4a()
     char buf[MAX_IN_ROW];
     int size;
     long pos = 0;
-    TFile infile("raw\\aspie-quiz-ru4a.csv");
-    TFile outfile("bin\\quizru4a.bin", 0);
+    TFile infile("raw\\aspie-quiz-ru4.csv");
+    TFile outfile("bin\\quizru4.bin", 0);
     char *ptr;
 
     quizfile = &outfile;

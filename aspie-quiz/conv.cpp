@@ -166,11 +166,8 @@ void ConvNl1();
 void ConvFr1();
 void ConvEs1();
 
-void ConvRu();
-void ConvRu4();
 void ConvRu4a();
-void ConvPl4a();
-void ConvSw4a();
+void ConvCn4a();
 
 #define MAX_QUESTIONS 400
 
@@ -700,10 +697,13 @@ int main(int argc, char **argv)
     ConvL17();
     ConvL18();
     ConvL20();
+
+    ConvL4();
+    ConvCn4a();
  
 */
+    ConvRu4a();
 
-    ConvL22();
         
     return 0;
 }
