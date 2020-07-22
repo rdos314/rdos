@@ -374,7 +374,7 @@ void TWebSocketServer::SendText(const char *str)
     {
         if (size >= 126)
         {
-            header[1] = 127;
+            header[1] = 126;
 
             ssize = RdosSwapShort((short int)size);
             memcpy(header + 2, &ssize, 2);
@@ -433,7 +433,7 @@ void TWebSocketServer::SendBinary(const char *str, int size)
     {
         if (size >= 126)
         {
-            header[1] = 127;
+            header[1] = 126;
 
             ssize = RdosSwapShort((short int)size);
             memcpy(header + 2, &ssize, 2);
@@ -493,7 +493,7 @@ void TWebSocketServer::SendControl(char op, const char *str)
     {
         if (size >= 126)
         {
-            header[1] = 127;
+            header[1] = 126;
 
             ssize = RdosSwapShort((short int)size);
             memcpy(header + 2, &ssize, 2);
