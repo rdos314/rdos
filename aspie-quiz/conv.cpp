@@ -170,6 +170,7 @@ void ConvRu4a();
 void ConvCn4a();
 void ConvPl4();
 void ConvFr4();
+void ConvBr4();
 
 #define MAX_QUESTIONS 400
 
@@ -704,10 +705,11 @@ int main(int argc, char **argv)
     ConvCn4a();
     ConvRu4a();
     ConvPl4();
+    ConvFr4();
  
 */
 
-    ConvFr4();
+    ConvBr4();
         
     return 0;
 }
