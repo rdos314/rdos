@@ -642,7 +642,7 @@ int main(int argc, char **argv)
             RdosWriteString(str);
         }
 
-        PrintFinal();
+        Adc.PrintFinal();
     }
 
     for (;;)

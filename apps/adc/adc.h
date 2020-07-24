@@ -56,6 +56,7 @@ public:
     ~TAdc();
 
     bool StartAdc(int Intervals, int Threads);
+    void PrintFinal();
 
     void NotifyDone();
 
@@ -73,6 +74,7 @@ public:
     TAdcAna **AdcAna;
     int Intervals;
     int AnaSize;
+    int FreqCount;
 
 protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);

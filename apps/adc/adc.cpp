@@ -92,6 +92,7 @@ TAdc::TAdc(char TestMode, int Blocks, TFreq *f)
     Intervals = 0;
     AdcAna = 0;
     Freq = f;
+    FreqCount = f->FreqCount;
     file = 0;
 }
 
@@ -135,106 +136,6 @@ TAdc::~TAdc()
 void TAdc::SetTrigger(int PhaseIncr, int Window)
 {
     RdosSetAdcTrigger(PhaseIncr, Window);
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::StartAdc
-#
-#   Purpose....: start ADC
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TAdc::StartAdc(int iv, int tc)
-{
-    int i;
-
-    if (RdosStartAdc())
-    {
-        Intervals = iv;
-        Threads = tc;
-        AnaSize = FBlocks / Intervals;
-
-        AdcAna = new TAdcAna*[Intervals];
-
-        for (i = 0; i < Intervals; i++)
-            AdcAna[i] = new TAdcAna(AnaSize, Freq);
-
-        Start("Adc", 0x4000);
-        return true;
-    }
-    else
-        return false;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::NotifyDone
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::NotifyDone()
-{
-    FSignal.Signal();
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::Execute
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::Execute()
-{
-    int i;
-    int t;
-    TAdcData *data;
-    TAdcThread **AdcThread;
-    TAdcThread *tf;
-    TAdcAna *ta;
-
-    AdcThread = new TAdcThread*[Threads];
-
-    for (i = 0; i < Threads; i++)
-        AdcThread[i] = new TAdcThread(i, this);
-
-    for (i = 0; i < FBlocks; i++)
-    {
-        t = i % Threads;
-        tf = AdcThread[t];
-
-        while (!tf->Done)
-            FSignal.WaitForever();
-
-        t = i / AnaSize;
-        ta = AdcAna[t];
-
-        data = GetBlock(i);
-        tf->Process(data, ta);
-    }
-
-    for (i = 0; i < Threads; i++)
-    {
-        tf = AdcThread[i];
-        while (!tf->Done)
-            FSignal.WaitForever();
-
-        delete tf;
-    }
-    delete AdcThread;
 }
 
 /*##########################################################################
@@ -832,6 +733,106 @@ int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int
 
 /*##########################################################################
 #
+#   Name       : TAdc::StartAdc
+#
+#   Purpose....: start ADC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::StartAdc(int iv, int tc)
+{
+    int i;
+
+    if (RdosStartAdc())
+    {
+        Intervals = iv;
+        Threads = tc;
+        AnaSize = FBlocks / Intervals;
+
+        AdcAna = new TAdcAna*[Intervals];
+
+        for (i = 0; i < Intervals; i++)
+            AdcAna[i] = new TAdcAna(AnaSize, Freq);
+
+        Start("Adc", 0x4000);
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::NotifyDone
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::NotifyDone()
+{
+    FSignal.Signal();
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::Execute
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::Execute()
+{
+    int i;
+    int t;
+    TAdcData *data;
+    TAdcThread **AdcThread;
+    TAdcThread *tf;
+    TAdcAna *ta;
+
+    AdcThread = new TAdcThread*[Threads];
+
+    for (i = 0; i < Threads; i++)
+        AdcThread[i] = new TAdcThread(i, this);
+
+    for (i = 0; i < FBlocks; i++)
+    {
+        t = i % Threads;
+        tf = AdcThread[t];
+
+        while (!tf->Done)
+            FSignal.WaitForever();
+
+        t = i / AnaSize;
+        ta = AdcAna[t];
+
+        data = GetBlock(i);
+        tf->Process(data, ta);
+    }
+
+    for (i = 0; i < Threads; i++)
+    {
+        tf = AdcThread[i];
+        while (!tf->Done)
+            FSignal.WaitForever();
+
+        delete tf;
+    }
+    delete AdcThread;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::Write
 #
 #   Purpose....:
@@ -907,4 +908,70 @@ void TAdc::PrintCountSumary(int Index)
 
     sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
     Write(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::PrintFinal
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintFinal()
+{
+    TAdcAna *ana;
+    int i;
+    int j;
+    bool ok;
+    int count;
+    char fstr[40];
+    char str[100];
+
+    file = new TFile("res.txt", 0);
+
+    for (i = 0; i < FreqCount; i++)
+    {
+        count = 0;
+        for (j = 0; j < Intervals; j++)
+        {
+            ana = AdcAna[j];
+            count += ana->Count[i];
+        }
+
+        if (count)
+        {
+            Freq->CodeFreq(i, fstr);
+            sprintf(str, "%s: %d ", count);
+            Write(str);
+
+            PrintCountSumary(i);
+//            PrintSeriesSumary("A: ", file, TotalSumA[i], TotalCount[i]);
+//            PrintSeriesSumary("B: ", file, TotalSumB[i], TotalCount[i]);
+//            PrintMaxSumary("Max A: ", file, TotalMaxA[i]);
+//            PrintMaxSumary("Max B: ", file, TotalMaxB[i]);
+//            PrintDelaySumary(file, TotalDelayMean[i], TotalCount[i]);
+
+            sprintf(str, "\r\n");
+            Write(str);
+
+            ok = false;
+//            ok = PrintCountDetail(file, TotalCount[i]);
+//            ok |= PrintSeriesDetail("A: ", file, TotalSumA[i], TotalCount[i]);
+//            ok |= PrintSeriesDetail("B: ", file, TotalSumB[i], TotalCount[i]);
+//            ok |= PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
+
+            if (ok)
+            {
+                sprintf(str, "\r\n");
+                Write(str);
+            }
+        }
+    }
+
+    delete file;
+    file = 0;
 }
