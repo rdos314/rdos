@@ -49,8 +49,6 @@ public:
     int *MaxA;
     int *MaxB;
     struct TDelay *Delay;
-    int *DelayMean;
-    int *DelaySd;
 
     TFreq *Freq;
     int FreqCount;

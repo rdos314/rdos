@@ -62,9 +62,6 @@ TAdcAna::TAdcAna(int c, TFreq *f)
     MaxB = new int[FreqCount];
     Delay = new struct TDelay[FreqCount];
 
-    DelayMean = new int[FreqCount];
-    DelaySd = new int[FreqCount];
-
     Clear();
 }
 
@@ -88,8 +85,6 @@ TAdcAna::~TAdcAna()
     delete MaxA;
     delete MaxB;
     delete Delay;
-    delete DelayMean;
-    delete DelaySd;
 }
 
 /*##########################################################################
@@ -195,24 +190,6 @@ void TAdcAna::Add(TAdcThread *adc)
     }
 
     Pos++;
-
-    if (Pos == Size)
-    {
-        for (i = 0; i < FreqCount; i++)
-        {
-            if (Count[i])
-            {
-                TAdc::CalcMeanSd(Delay, &mean, &sd);
-                DelayMean[i] = mean;
-                DelaySd[i] = sd;
-            }
-            else
-            {
-                DelayMean[i] = 0;
-                DelaySd[i] = 0;
-            }
-        }
-    }
 
     FSection.Leave();
 }
