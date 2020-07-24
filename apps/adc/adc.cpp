@@ -963,9 +963,6 @@ void TAdc::PrintASumary(int Index)
     else
         sd = 0.0;
 
-    strcpy(str, "A: ");
-    Write(str);
-
     sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
     Write(str);
 }
@@ -1024,10 +1021,67 @@ void TAdc::PrintBSumary(int Index)
     else
         sd = 0.0;
 
-    strcpy(str, "B: ");
-    Write(str);
-
     sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
+    Write(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::PrintMaxA
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintMaxA(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    int max;
+    char str[100];
+
+    max = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+        if (ana->MaxA[Index] > max)
+            max = ana->MaxA[Index];
+    }
+
+    sprintf(str, "< %d ", max);
+    Write(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::PrintMaxB
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintMaxB(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    int max;
+    char str[100];
+
+    max = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+        if (ana->MaxB[Index] > max)
+            max = ana->MaxB[Index];
+    }
+
+    sprintf(str, "< %d ", max);
     Write(str);
 }
 
@@ -1070,10 +1124,17 @@ void TAdc::PrintFinal()
             Write(str);
 
             PrintCountSumary(i);
+
+            strcpy(str, "A: ");
+            Write(str);
+            PrintMaxA(i);
             PrintASumary(i);
+
+            strcpy(str, "B: ");
+            Write(str);
+            PrintMaxB(i);
             PrintBSumary(i);
-//            PrintMaxSumary("Max A: ", file, TotalMaxA[i]);
-//            PrintMaxSumary("Max B: ", file, TotalMaxB[i]);
+
 //            PrintDelaySumary(file, TotalDelayMean[i], TotalCount[i]);
 
             sprintf(str, "\r\n");

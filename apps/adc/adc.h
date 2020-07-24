@@ -84,6 +84,8 @@ protected:
     void PrintCountSumary(int Index);
     void PrintASumary(int Index);
     void PrintBSumary(int Index);
+    void PrintMaxA(int Index);
+    void PrintMaxB(int Index);
 
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);

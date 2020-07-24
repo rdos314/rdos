@@ -119,70 +119,6 @@ static bool PrintCountDetail(TFile &file, int CountArr[100])
 
 /*##########################################################################
 #
-#   Name       : PrintSeriesSumary
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void PrintSeriesSumary(const char *Header, TFile &file, int SumArr[100], int CountArr[100])
-{
-    int i;
-    int count;
-    double sum;
-    double mean;
-    double sd;
-    double val;
-    int Rel;
-    char str[100];
-
-    sum = 0;
-    count = 0;
-    for (i = 0; i < 100; i++)
-    {
-        if (CountArr[i])
-        {
-            sum += (double)SumArr[i] / (double)CountArr[i];
-            count++;
-        }
-    }
-
-    mean = sum / (double)count;
-
-    if (count >= 10)
-    {
-        sum = 0;
-        count = 0;
-        for (i = 0; i < 100; i++)
-        {
-            if (CountArr[i])
-            {
-                val = (double)SumArr[i] / (double)CountArr[i];
-                val = val - mean;
-                sum += val * val;
-                count++;
-            }
-        }
-
-        val = sum / (double)(count - 1);
-        sd = sqrt(val);
-    }
-    else
-        sd = 0.0;
-
-    RdosWriteString(Header);
-    file.Write(Header, strlen(Header));
-
-    sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
-    RdosWriteString(str);
-    file.Write(str, strlen(str));
-}
-
-/*##########################################################################
-#
 #   Name       : PrintSeriesDetail
 #
 #   Purpose....:
@@ -283,36 +219,6 @@ static bool PrintSeriesDetail(const char *Header, TFile &file, int SumArr[100], 
     }
     else
         return false;
-}
-
-/*##########################################################################
-#
-#   Name       : PrintMaxSumary
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void PrintMaxSumary(const char *Header, TFile &file, int MaxArr[100])
-{
-    int i;
-    int max;
-    char str[100];
-
-    max = 0;
-    for (i = 0; i < 100; i++)
-        if (MaxArr[i] > max)
-            max = MaxArr[i];
-
-    RdosWriteString(Header);
-    file.Write(Header, strlen(Header));
-
-    sprintf(str, "%d ", max);
-    RdosWriteString(str);
-    file.Write(str, strlen(str));
 }
 
 /*##########################################################################
@@ -488,10 +394,6 @@ static void PrintFinal()
             RdosWriteString(str);
             file.Write(str, strlen(str));
 
-            PrintSeriesSumary("A: ", file, TotalSumA[i], TotalCount[i]);
-            PrintSeriesSumary("B: ", file, TotalSumB[i], TotalCount[i]);
-            PrintMaxSumary("Max A: ", file, TotalMaxA[i]);
-            PrintMaxSumary("Max B: ", file, TotalMaxB[i]);
             PrintDelaySumary(file, TotalDelayMean[i], TotalCount[i]);
 
             sprintf(str, "\r\n");
