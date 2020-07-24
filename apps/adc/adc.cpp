@@ -1414,6 +1414,87 @@ bool TAdc::PrintBDetail(int Index)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintDelayDetail
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::PrintDelayDetail(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    int j;
+    int val;
+    int mean;
+    int sd;
+    int count;
+    char str[100];
+
+    for (i = 0; i < 360; i++)
+        Delay.Phase[i] = 0;
+
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+
+        for (j = 0; j < 360; j++)
+            Delay.Phase[j] += ana->Delay[Index].Phase[j];
+    }
+
+    CalcMeanSd(&Delay, &mean, &sd);
+
+    if (sd > 5)
+    {
+        sprintf(str, "Phase: ");
+        Write(str);
+
+        if (count > 10)
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    CalcMeanSd(&ana->Delay[Index], &mean, &sd);
+                    sprintf(str, "%d ", mean);
+                }
+                else
+                    strcpy(str, "* ");
+
+                Write(str);
+            }
+
+            sprintf(str, "\r\n");
+            Write(str);
+        }
+        else
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    CalcMeanSd(&ana->Delay[Index], &mean, &sd);
+                    sprintf(str, "%d:%d ", i, mean);
+                    Write(str);
+                }
+            }
+
+            sprintf(str, "\r\n");
+            Write(str);
+        }
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintFinal
 #
 #   Purpose....:
@@ -1472,7 +1553,7 @@ void TAdc::PrintFinal()
             ok = PrintCountDetail(i);
             ok |= PrintADetail(i);
             ok |= PrintBDetail(i);
-//            ok |= PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
+            ok |= PrintDelayDetail(i);
 
             if (ok)
             {

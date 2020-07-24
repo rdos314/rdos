@@ -91,6 +91,7 @@ protected:
     bool PrintCountDetail(int Index);
     bool PrintADetail(int Index);
     bool PrintBDetail(int Index);
+    bool PrintDelayDetail(int Index);
 
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
