@@ -88,6 +88,8 @@ protected:
     void PrintMaxB(int Index);
     void PrintDelaySumary(int Index);
 
+    bool PrintCountDetail(int Index);
+
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
 

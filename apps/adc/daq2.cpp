@@ -56,69 +56,6 @@ int MAX_COUNT = 25600 * 8;
 
 /*##########################################################################
 #
-#   Name       : PrintCountDetail
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static bool PrintCountDetail(TFile &file, int CountArr[100])
-{
-    int i;
-    double sum;
-    double mean;
-    double sd;
-    double val;
-    int Rel;
-    char str[100];
-
-    sum = 0;
-    for (i = 0; i < 100; i++)
-        sum += CountArr[i];
-
-    mean = sum / 100.0;
-
-    sum = 0;
-    for (i = 0; i < 100; i++)
-    {
-        val = mean - (double)CountArr[i];
-        sum += val * val;
-    }
-
-    val = sum / 99.0;
-    sd = sqrt(val);
-
-    mean = mean * 100.0 / (double)MAX_COUNT;
-    sd = sd * 100.0 / (double)MAX_COUNT;
-
-    if (sd > 5.0)
-    {
-        strcpy(str, "Count: ");
-        RdosWriteString(str);
-        file.Write(str, strlen(str));
-
-        for (i = 0; i < 100; i++)
-        {
-            val = (double)CountArr[i] * 100.0 / (double)MAX_COUNT;
-            sprintf(str, "%5.1Lf ", val);
-            RdosWriteString(str);
-            file.Write(str, strlen(str));
-        }
-
-        sprintf(str, "\r\n");
-        RdosWriteString(str);
-        file.Write(str, strlen(str));
-        return true;
-    }
-    else
-        return false;
-}
-
-/*##########################################################################
-#
 #   Name       : PrintSeriesDetail
 #
 #   Purpose....:
@@ -346,8 +283,7 @@ static void PrintFinal()
             RdosWriteString(str);
             file.Write(str, strlen(str));
 
-            ok = PrintCountDetail(file, TotalCount[i]);
-            ok |= PrintSeriesDetail("A: ", file, TotalSumA[i], TotalCount[i]);
+            ok = PrintSeriesDetail("A: ", file, TotalSumA[i], TotalCount[i]);
             ok |= PrintSeriesDetail("B: ", file, TotalSumB[i], TotalCount[i]);
             ok |= PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
 

@@ -868,6 +868,7 @@ void TAdc::PrintCountSumary(int Index)
     double mean;
     double sd;
     double val;
+    double total;
     char str[100];
 
     sum = 0;
@@ -897,10 +898,10 @@ void TAdc::PrintCountSumary(int Index)
         sd = 0;
 
     ana = AdcAna[0];
-    val = (double)ana->Total[Index];
+    total = (double)(Intervals * ana->Total[Index]);
 
-    mean = mean * 100.0 / val;
-    sd = sd * 100.0 / val;
+    mean = mean * 100.0 / total;
+    sd = sd * 100.0 / total;
 
     strcpy(str, "Count: ");
     Write(str);
@@ -935,8 +936,11 @@ void TAdc::PrintASumary(int Index)
     for (i = 0; i < Intervals; i++)
     {
         ana = AdcAna[i];
-        sum += (double)ana->SumA[Index] / (double)ana->Count[Index];
-        count++;
+        if (ana->Count[Index])
+        {
+            sum += (double)ana->SumA[Index] / (double)ana->Count[Index];
+            count++;
+        }
     }
 
     mean = sum / (double)count;
@@ -993,8 +997,11 @@ void TAdc::PrintBSumary(int Index)
     for (i = 0; i < Intervals; i++)
     {
         ana = AdcAna[i];
-        sum += (double)ana->SumB[Index] / (double)ana->Count[Index];
-        count++;
+        if (ana->Count[Index])
+        {
+            sum += (double)ana->SumB[Index] / (double)ana->Count[Index];
+            count++;
+        }
     }
 
     mean = sum / (double)count;
@@ -1127,6 +1134,78 @@ void TAdc::PrintDelaySumary(int Index)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintCountDetail
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::PrintCountDetail(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    double sum;
+    double mean;
+    double sd;
+    double val;
+    double total;
+    char str[100];
+
+    ana = AdcAna[0];
+    total = (double)ana->Total[Index];
+
+    sum = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+        sum += (double)ana->Count[Index];
+    }
+
+    mean = sum / (double)Intervals;
+
+    if (Intervals > 1)
+    {
+        sum = 0;
+        for (i = 0; i < Intervals; i++)
+        {
+            ana = AdcAna[i];
+            val += (double)ana->Count[Index];
+            val = mean - val;
+            sum += val * val;
+        }
+
+        val = sum / (double)(Intervals - 1);
+        sd = sqrt(val);
+    }
+    else
+        sd = 0;
+
+    if (sd > 5.0)
+    {
+        strcpy(str, "Count: ");
+        Write(str);
+
+        for (i = 0; i < Intervals; i++)
+        {
+            ana = AdcAna[i];
+            val = (double)ana->Count[Index] * 100.0 / total;
+            sprintf(str, "%5.1Lf ", val);
+            Write(str);
+        }
+
+        sprintf(str, "\r\n");
+        Write(str);
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintFinal
 #
 #   Purpose....:
@@ -1182,8 +1261,8 @@ void TAdc::PrintFinal()
             sprintf(str, "\r\n");
             Write(str);
 
-            ok = false;
-//            ok = PrintCountDetail(file, TotalCount[i]);
+            ok = PrintCountDetail(i);
+
 //            ok |= PrintSeriesDetail("A: ", file, TotalSumA[i], TotalCount[i]);
 //            ok |= PrintSeriesDetail("B: ", file, TotalSumB[i], TotalCount[i]);
 //            ok |= PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
