@@ -1206,6 +1206,214 @@ bool TAdc::PrintCountDetail(int Index)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintADetail
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::PrintADetail(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    int count;
+    double sum;
+    double mean;
+    double sd;
+    double val;
+    int Rel;
+    char str[100];
+
+    sum = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+        if (ana->Count[Index])
+        {
+            sum += (double)ana->SumA[Index] / (double)ana->Count[Index];
+            count++;
+        }
+    }
+
+    mean = sum / (double)count;
+
+    if (count >= 10)
+    {
+        sum = 0;
+        count = 0;
+        for (i = 0; i < Intervals; i++)
+        {
+            ana = AdcAna[i];
+            if (ana->Count[Index])
+            {
+                val = (double)ana->SumA[Index] / (double)ana->Count[Index];
+                val = val - mean;
+                sum += val * val;
+                count++;
+            }
+        }
+
+        val = sum / (double)(count - 1);
+        sd = sqrt(val);
+    }
+    else
+        sd = 0.0;
+
+    if (sd > 2.0)
+    {
+        strcpy(str, "A: ");
+        Write(str);
+
+        if (count > 10)
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    Rel = 10 * ana->SumA[Index] / ana->Count[Index];
+                    sprintf(str, "%d.%01d ", Rel / 10, Rel % 10);
+                }
+                else
+                    strcpy(str, "* ");
+
+                Write(str);
+            }
+
+            sprintf(str, "\r\n");
+            Write(str);
+        }
+        else
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    Rel = 10 * ana->SumA[Index] / ana->Count[Index];
+                    sprintf(str, "%d:%d.%01d ", i, Rel / 10, Rel % 10);
+                    Write(str);
+                }
+            }
+
+            sprintf(str, "\r\n");
+            Write(str);
+        }
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::PrintBDetail
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::PrintBDetail(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    int count;
+    double sum;
+    double mean;
+    double sd;
+    double val;
+    int Rel;
+    char str[100];
+
+    sum = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+        if (ana->Count[Index])
+        {
+            sum += (double)ana->SumB[Index] / (double)ana->Count[Index];
+            count++;
+        }
+    }
+
+    mean = sum / (double)count;
+
+    if (count >= 10)
+    {
+        sum = 0;
+        count = 0;
+        for (i = 0; i < Intervals; i++)
+        {
+            ana = AdcAna[i];
+            if (ana->Count[Index])
+            {
+                val = (double)ana->SumB[Index] / (double)ana->Count[Index];
+                val = val - mean;
+                sum += val * val;
+                count++;
+            }
+        }
+
+        val = sum / (double)(count - 1);
+        sd = sqrt(val);
+    }
+    else
+        sd = 0.0;
+
+    if (sd > 2.0)
+    {
+        strcpy(str, "B: ");
+        Write(str);
+
+        if (count > 10)
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    Rel = 10 * ana->SumB[Index] / ana->Count[Index];
+                    sprintf(str, "%d.%01d ", Rel / 10, Rel % 10);
+                }
+                else
+                    strcpy(str, "* ");
+
+                Write(str);
+            }
+
+            sprintf(str, "\r\n");
+            Write(str);
+        }
+        else
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    Rel = 10 * ana->SumB[Index] / ana->Count[Index];
+                    sprintf(str, "%d:%d.%01d ", i, Rel / 10, Rel % 10);
+                    Write(str);
+                }
+            }
+
+            sprintf(str, "\r\n");
+            Write(str);
+        }
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintFinal
 #
 #   Purpose....:
@@ -1262,9 +1470,8 @@ void TAdc::PrintFinal()
             Write(str);
 
             ok = PrintCountDetail(i);
-
-//            ok |= PrintSeriesDetail("A: ", file, TotalSumA[i], TotalCount[i]);
-//            ok |= PrintSeriesDetail("B: ", file, TotalSumB[i], TotalCount[i]);
+            ok |= PrintADetail(i);
+            ok |= PrintBDetail(i);
 //            ok |= PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
 
             if (ok)

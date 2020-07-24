@@ -53,111 +53,6 @@ static struct TDelay DelayArr;
 int MAX_COUNT = 25600 * 8;
 
 
-
-/*##########################################################################
-#
-#   Name       : PrintSeriesDetail
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static bool PrintSeriesDetail(const char *Header, TFile &file, int SumArr[100], int CountArr[100])
-{
-    int i;
-    int count;
-    double sum;
-    double mean;
-    double sd;
-    double val;
-    int Rel;
-    char str[100];
-
-    sum = 0;
-    count = 0;
-    for (i = 0; i < 100; i++)
-    {
-        if (CountArr[i])
-        {
-            sum += (double)SumArr[i] / (double)CountArr[i];
-            count++;
-        }
-    }
-
-    mean = sum / (double)count;
-
-    if (count >= 10)
-    {
-        sum = 0;
-        count = 0;
-        for (i = 0; i < 100; i++)
-        {
-            if (CountArr[i])
-            {
-                val = (double)SumArr[i] / (double)CountArr[i];
-                val = val - mean;
-                sum += val * val;
-                count++;
-            }
-        }
-
-        val = sum / (double)(count - 1);
-        sd = sqrt(val);
-    }
-    else
-        sd = 0.0;
-
-    if (sd > 2.0)
-    {
-        RdosWriteString(Header);
-        file.Write(Header, strlen(Header));
-
-        if (count > 10)
-        {
-            for (i = 0; i < 100; i++)
-            {
-                if (CountArr[i])
-                {
-                    Rel = 10 * SumArr[i] / CountArr[i];
-                    sprintf(str, "%d.%01d ", Rel / 10, Rel % 10);
-                }
-                else
-                    strcpy(str, "* ");
-
-                RdosWriteString(str);
-                file.Write(str, strlen(str));
-            }
-
-            sprintf(str, "\r\n");
-            RdosWriteString(str);
-            file.Write(str, strlen(str));
-        }
-        else
-        {
-            for (i = 0; i < 100; i++)
-            {
-                if (CountArr[i])
-                {
-                    Rel = 10 * SumArr[i] / CountArr[i];
-                    sprintf(str, "%d:%d.%01d ", i, Rel / 10, Rel % 10);
-                    RdosWriteString(str);
-                    file.Write(str, strlen(str));
-                }
-            }
-
-            sprintf(str, "\r\n");
-            RdosWriteString(str);
-            file.Write(str, strlen(str));
-        }
-        return true;
-    }
-    else
-        return false;
-}
-
 /*##########################################################################
 #
 #   Name       : PrintDelayDetail
@@ -283,9 +178,7 @@ static void PrintFinal()
             RdosWriteString(str);
             file.Write(str, strlen(str));
 
-            ok = PrintSeriesDetail("A: ", file, TotalSumA[i], TotalCount[i]);
-            ok |= PrintSeriesDetail("B: ", file, TotalSumB[i], TotalCount[i]);
-            ok |= PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
+            ok = PrintDelayDetail(file, TotalDelayMean[i], TotalCount[i]);
 
             if (ok)
             {

@@ -89,6 +89,8 @@ protected:
     void PrintDelaySumary(int Index);
 
     bool PrintCountDetail(int Index);
+    bool PrintADetail(int Index);
+    bool PrintBDetail(int Index);
 
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
