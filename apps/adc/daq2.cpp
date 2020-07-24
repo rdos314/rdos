@@ -51,11 +51,6 @@
 ##########################################################################*/
 int main(int argc, char **argv)
 {
-    int CurrInt;
-    int Pos;
-    int CurrPos;
-    TAdcAna *CurrAna;
-    int CurrIndex;
     char str[80];
     int *parm;
     int hour;
@@ -78,48 +73,8 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    if (Adc.StartAdc(100, 22))
-    {
-        RdosWriteString("ADC started\r\n");
-
-        CurrInt = 0;
-        Pos = 0;
-
-        for (CurrInt = 0; CurrInt < Adc.Intervals; CurrInt++)
-        {
-            CurrAna = Adc.AdcAna[CurrInt];
-
-            while (!CurrAna->IsDone())
-            {
-                CurrPos = CurrInt * Adc.AnaSize + CurrAna->GetPos();
-                if (Pos == CurrPos)
-                    RdosWaitMilli(250);
-                else
-                {
-                    while (Pos != CurrPos)
-                    {
-                        if ((Pos % Adc.AnaSize) != 0 && (Pos % 50) == 0)
-                        {
-                            RdosWriteString("\r\n");
-                            CurrAna->PrintSnap();
-                            sprintf(str, "%d", Pos);
-                            RdosWriteString(str);
-                        }
-                        else
-                            RdosWriteChar('.');
-
-                        Pos++;
-                    }
-                }
-            }
-            RdosWriteString("\r\n");
-            CurrAna->PrintSnap();
-            sprintf(str, "%d", Pos);
-            RdosWriteString(str);
-        }
-
+    if (Adc.RunAdc(100, 22))
         Adc.PrintFinal();
-    }
 
     for (;;)
         RdosWaitMilli(100);

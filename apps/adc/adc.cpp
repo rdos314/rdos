@@ -733,39 +733,6 @@ int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int
 
 /*##########################################################################
 #
-#   Name       : TAdc::StartAdc
-#
-#   Purpose....: start ADC
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TAdc::StartAdc(int iv, int tc)
-{
-    int i;
-
-    if (RdosStartAdc())
-    {
-        Intervals = iv;
-        Threads = tc;
-        AnaSize = FBlocks / Intervals;
-
-        AdcAna = new TAdcAna*[Intervals];
-
-        for (i = 0; i < Intervals; i++)
-            AdcAna[i] = new TAdcAna(AnaSize, Freq);
-
-        Start("Adc", 0x4000);
-        return true;
-    }
-    else
-        return false;
-}
-
-/*##########################################################################
-#
 #   Name       : TAdc::NotifyDone
 #
 #   Purpose....:
@@ -829,6 +796,92 @@ void TAdc::Execute()
         delete tf;
     }
     delete AdcThread;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::RunAdc
+#
+#   Purpose....: Run ADC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::RunAdc(int iv, int tc)
+{
+    int i;
+    int CurrInt;
+    int Pos;
+    int CurrPos;
+    TAdcAna *ana;
+    char str[100];
+
+    if (RdosStartAdc())
+    {
+        Intervals = iv;
+        Threads = tc;
+        AnaSize = FBlocks / Intervals;
+
+        AdcAna = new TAdcAna*[Intervals];
+
+        for (i = 0; i < Intervals; i++)
+            AdcAna[i] = new TAdcAna(AnaSize, Freq);
+
+        Start("Adc", 0x4000);
+
+        RdosWriteString("ADC started\r\n");
+
+        CurrInt = 0;
+        Pos = 0;
+
+        for (CurrInt = 0; CurrInt < Intervals; CurrInt++)
+        {
+            ana = AdcAna[CurrInt];
+
+            while (!ana->IsDone())
+            {
+                CurrPos = CurrInt * AnaSize + ana->GetPos();
+                if (Pos == CurrPos)
+                    RdosWaitMilli(250);
+                else
+                {
+                    while (Pos != CurrPos)
+                    {
+                        if ((Pos % AnaSize) != 0 && (Pos % 50) == 0)
+                        {
+                            RdosWriteString("\r\n");
+                            ana->PrintSnap();
+                            sprintf(str, "%d", Pos);
+                            RdosWriteString(str);
+                        }
+                        else
+                            RdosWriteChar('.');
+
+                        Pos++;
+                    }
+                }
+            }
+            RdosWriteString("\r\n");
+            ana->PrintSnap();
+            sprintf(str, "%d", Pos);
+            RdosWriteString(str);
+        }
+
+        while (IsRunning())
+            RdosWaitMilli(250);
+
+        for (i = 0; i < Intervals; i++)
+            delete AdcAna[i];
+
+        delete AdcAna;
+        AdcAna = 0;
+
+        return true;
+    }
+    else
+        return false;
 }
 
 /*##########################################################################
