@@ -58,6 +58,8 @@ TAdcAna::TAdcAna(int c, TFreq *f)
     Count = new int[FreqCount];
     SumA = new int[FreqCount];
     SumB = new int[FreqCount];
+    MinA = new int[FreqCount];
+    MinB = new int[FreqCount];
     MaxA = new int[FreqCount];
     MaxB = new int[FreqCount];
     Delay = new struct TDelay[FreqCount];
@@ -82,6 +84,8 @@ TAdcAna::~TAdcAna()
     delete Count;
     delete SumA;
     delete SumB;
+    delete MinA;
+    delete MinB;
     delete MaxA;
     delete MaxB;
     delete Delay;
@@ -144,6 +148,8 @@ void TAdcAna::Clear()
         Count[i] = 0;
         SumA[i] = 0;
         SumB[i] = 0;
+        MinA[i] = 30000;
+        MinB[i] = 30000;
         MaxA[i] = 0;
         MaxB[i] = 0;
 
@@ -179,6 +185,12 @@ void TAdcAna::Add(TAdcThread *adc)
 
         if (adc->MaxB[i] > MaxB[i])
             MaxB[i] = adc->MaxB[i];
+
+        if (adc->MinA[i] < MinA[i])
+            MinA[i] = adc->MinA[i];
+
+        if (adc->MinB[i] < MinB[i])
+            MinB[i] = adc->MinB[i];
 
         Total[i] += adc->Total[i];
         Count[i] += adc->Count[i];

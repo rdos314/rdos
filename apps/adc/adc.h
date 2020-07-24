@@ -84,8 +84,8 @@ protected:
     void PrintCountSumary(int Index);
     void PrintASumary(int Index);
     void PrintBSumary(int Index);
-    void PrintMaxA(int Index);
-    void PrintMaxB(int Index);
+    void PrintAInterval(int Index);
+    void PrintBInterval(int Index);
     void PrintDelaySumary(int Index);
 
     bool PrintCountDetail(int Index);

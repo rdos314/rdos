@@ -985,7 +985,7 @@ void TAdc::PrintBSumary(int Index)
 
 /*##########################################################################
 #
-#   Name       : TAdc::PrintMaxA
+#   Name       : TAdc::PrintAInterval
 #
 #   Purpose....:
 #
@@ -994,28 +994,34 @@ void TAdc::PrintBSumary(int Index)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::PrintMaxA(int Index)
+void TAdc::PrintAInterval(int Index)
 {
     TAdcAna *ana;
     int i;
+    int min;
     int max;
     char str[100];
 
+    min = 30000;
     max = 0;
     for (i = 0; i < Intervals; i++)
     {
         ana = AdcAna[i];
+
         if (ana->MaxA[Index] > max)
             max = ana->MaxA[Index];
+
+        if (ana->MinA[Index] < min)
+            min = ana->MinA[Index];
     }
 
-    sprintf(str, "< %d ", max);
+    sprintf(str, "[%d-%d] ", min, max);
     Write(str);
 }
 
 /*##########################################################################
 #
-#   Name       : TAdc::PrintMaxB
+#   Name       : TAdc::PrintBInterval
 #
 #   Purpose....:
 #
@@ -1024,22 +1030,28 @@ void TAdc::PrintMaxA(int Index)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::PrintMaxB(int Index)
+void TAdc::PrintBInterval(int Index)
 {
     TAdcAna *ana;
     int i;
+    int min;
     int max;
     char str[100];
 
+    min = 30000;
     max = 0;
     for (i = 0; i < Intervals; i++)
     {
         ana = AdcAna[i];
+
         if (ana->MaxB[Index] > max)
             max = ana->MaxB[Index];
+
+        if (ana->MinB[Index] < min)
+            min = ana->MinB[Index];
     }
 
-    sprintf(str, "< %d ", max);
+    sprintf(str, "[%d-%d] ", min, max);
     Write(str);
 }
 
@@ -1487,14 +1499,14 @@ void TAdc::PrintFinal()
             strcpy(str, "A: ");
             Write(str);
 
-            PrintMaxA(i);
             PrintASumary(i);
+            PrintAInterval(i);
 
             strcpy(str, "B: ");
             Write(str);
 
-            PrintMaxB(i);
             PrintBSumary(i);
+            PrintBInterval(i);
 
             PrintDelaySumary(i);
 

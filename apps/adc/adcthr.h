@@ -52,6 +52,8 @@ public:
     int *Count;
     int *SumA;
     int *SumB;
+    int *MinA;
+    int *MinB;
     int *MaxA;
     int *MaxB;
     struct TDelay *Delay;

@@ -58,6 +58,8 @@ TAdcThread::TAdcThread(int Id, TAdc *adc)
     Count = new int[FreqCount];
     SumA = new int[FreqCount];
     SumB = new int[FreqCount];
+    MinA = new int[FreqCount];
+    MinB = new int[FreqCount];
     MaxA = new int[FreqCount];
     MaxB = new int[FreqCount];
     Delay = new struct TDelay[FreqCount];
@@ -93,6 +95,8 @@ TAdcThread::~TAdcThread()
     delete Count;
     delete SumA;
     delete SumB;
+    delete MinA;
+    delete MinB;
     delete MaxA;
     delete MaxB;
     delete Delay;
@@ -120,6 +124,8 @@ void TAdcThread::Clear()
         Count[j] = 0;
         SumA[j] = 0;
         SumB[j] = 0;
+        MinA[j] = 30000;
+        MinB[j] = 30000;
         MaxA[j] = 0;
         MaxB[j] = 0;
 
@@ -191,14 +197,20 @@ void TAdcThread::Execute()
                     {
                         TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, fd->Step , &PowerA, &PowerB, &Phase);
 
-                        if (PowerA > MaxA[j])
-                            MaxA[j] = PowerA;
-
-                        if (PowerB > MaxB[j])
-                            MaxB[j] = PowerB;
-
                         if (PowerA >= 2 && PowerB >= 2)
                         {
+                            if (PowerA > MaxA[j])
+                                MaxA[j] = PowerA;
+
+                            if (PowerB > MaxB[j])
+                                MaxB[j] = PowerB;
+
+                            if (PowerA < MinA[j])
+                                MinA[j] = PowerA;
+
+                            if (PowerB < MinB[j])
+                                MinB[j] = PowerB;
+
                             Count[j]++;
                             SumA[j] += PowerA;
                             SumB[j] += PowerB;
