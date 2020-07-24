@@ -927,7 +927,12 @@ void TAdc::PrintASumary(int Index)
     int count;
     double sum;
     double mean;
+    int min;
+    int max;
     char str[100];
+
+    strcpy(str, "A: ");
+    Write(str);
 
     count = 0;
     sum = 0;
@@ -943,6 +948,22 @@ void TAdc::PrintASumary(int Index)
 
     mean = sum / (double)count;
     sprintf(str, "%5.1Lf ", mean);
+    Write(str);
+
+    min = 30000;
+    max = 0;
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+
+        if (ana->MaxA[Index] > max)
+            max = ana->MaxA[Index];
+
+        if (ana->MinA[Index] < min)
+            min = ana->MinA[Index];
+    }
+
+    sprintf(str, "[%d-%d] ", min, max);
     Write(str);
 }
 
@@ -964,7 +985,12 @@ void TAdc::PrintBSumary(int Index)
     int count;
     double sum;
     double mean;
+    int min;
+    int max;
     char str[100];
+
+    strcpy(str, "B: ");
+    Write(str);
 
     count = 0;
     sum = 0;
@@ -981,62 +1007,6 @@ void TAdc::PrintBSumary(int Index)
     mean = sum / (double)count;
     sprintf(str, "%5.1Lf ", mean);
     Write(str);
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::PrintAInterval
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::PrintAInterval(int Index)
-{
-    TAdcAna *ana;
-    int i;
-    int min;
-    int max;
-    char str[100];
-
-    min = 30000;
-    max = 0;
-    for (i = 0; i < Intervals; i++)
-    {
-        ana = AdcAna[i];
-
-        if (ana->MaxA[Index] > max)
-            max = ana->MaxA[Index];
-
-        if (ana->MinA[Index] < min)
-            min = ana->MinA[Index];
-    }
-
-    sprintf(str, "[%d-%d] ", min, max);
-    Write(str);
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::PrintBInterval
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::PrintBInterval(int Index)
-{
-    TAdcAna *ana;
-    int i;
-    int min;
-    int max;
-    char str[100];
 
     min = 30000;
     max = 0;
@@ -1495,19 +1465,8 @@ void TAdc::PrintFinal()
             Write(str);
 
             PrintCountSumary(i);
-
-            strcpy(str, "A: ");
-            Write(str);
-
             PrintASumary(i);
-            PrintAInterval(i);
-
-            strcpy(str, "B: ");
-            Write(str);
-
             PrintBSumary(i);
-            PrintBInterval(i);
-
             PrintDelaySumary(i);
 
             sprintf(str, "\r\n");
