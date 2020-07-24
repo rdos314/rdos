@@ -219,7 +219,7 @@ void TAdcAna::Add(TAdcThread *adc)
 
 /*##########################################################################
 #
-#   Name       : TAdcAna::Print
+#   Name       : TAdcAna::PrintSnap
 #
 #   Purpose....:
 #
@@ -228,7 +228,7 @@ void TAdcAna::Add(TAdcThread *adc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcAna::Print()
+void TAdcAna::PrintSnap()
 {
     int i;
     int mean;

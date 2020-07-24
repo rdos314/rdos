@@ -84,6 +84,11 @@ TAdcThread::TAdcThread(int Id, TAdc *adc)
 ##########################################################################*/
 TAdcThread::~TAdcThread()
 {
+    AdcData = 0;
+    AdcAna = 0;
+    FInstalled = false;
+    Signal.Signal();
+
     delete Total;
     delete Count;
     delete SumA;
@@ -165,7 +170,7 @@ void TAdcThread::Execute()
 
     RdosMoveToNewCore();
 
-    for (;;)
+    while (FInstalled)
     {
         Signal.WaitForever();
 

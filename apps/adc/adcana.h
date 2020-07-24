@@ -38,7 +38,7 @@ public:
     ~TAdcAna();
 
     void Add(TAdcThread *Adc);
-    void Print();
+    void PrintSnap();
     bool IsDone();
     int GetPos();
 

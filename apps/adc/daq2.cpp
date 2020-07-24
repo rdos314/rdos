@@ -625,7 +625,7 @@ int main(int argc, char **argv)
                         if ((Pos % Adc.AnaSize) != 0 && (Pos % 50) == 0)
                         {
                             RdosWriteString("\r\n");
-                            CurrAna->Print();
+                            CurrAna->PrintSnap();
                             sprintf(str, "%d", Pos);
                             RdosWriteString(str);
                         }
@@ -637,7 +637,7 @@ int main(int argc, char **argv)
                 }
             }
             RdosWriteString("\r\n");
-            CurrAna->Print();
+            CurrAna->PrintSnap();
             sprintf(str, "%d", Pos);
             RdosWriteString(str);
         }
