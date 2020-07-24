@@ -90,7 +90,6 @@ TAdc::TAdc(char TestMode, int Blocks, TFreq *f)
     RdosSetupAdc(TestMode, 0, FBlocks);
 
     Intervals = 0;
-    AdcAna = 0;
     Freq = f;
     FreqCount = f->FreqCount;
     file = 0;
@@ -109,16 +108,6 @@ TAdc::TAdc(char TestMode, int Blocks, TFreq *f)
 ##########################################################################*/
 TAdc::~TAdc()
 {
-    int i;
-
-    if (AdcAna)
-    {
-        for (i = 0; i < Intervals; i++)
-            delete AdcAna[i];
-
-        delete AdcAna;
-    }
-
     RdosFreeMem(FBuf);
 }
 
@@ -872,6 +861,8 @@ bool TAdc::RunAdc(int iv, int tc)
         while (IsRunning())
             RdosWaitMilli(250);
 
+        PrintResult();
+
         for (i = 0; i < Intervals; i++)
             delete AdcAna[i];
 
@@ -1481,7 +1472,7 @@ bool TAdc::PrintDelayDetail(int Index)
 
 /*##########################################################################
 #
-#   Name       : TAdc::PrintFinal
+#   Name       : TAdc::PrintResult
 #
 #   Purpose....:
 #
@@ -1490,7 +1481,7 @@ bool TAdc::PrintDelayDetail(int Index)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::PrintFinal()
+void TAdc::PrintResult()
 {
     TAdcAna *ana;
     int i;

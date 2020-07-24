@@ -56,7 +56,6 @@ public:
     ~TAdc();
 
     bool RunAdc(int Intervals, int Threads);
-    void PrintFinal();
 
     void NotifyDone();
 
@@ -71,10 +70,6 @@ public:
     static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance);
 
     TFreq *Freq;
-    TAdcAna **AdcAna;
-    int Intervals;
-    int AnaSize;
-    int FreqCount;
 
 protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
@@ -91,6 +86,8 @@ protected:
     bool PrintBDetail(int Index);
     bool PrintDelayDetail(int Index);
 
+    void PrintResult();
+
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
 
@@ -103,6 +100,11 @@ protected:
     void CheckPn();
 
     virtual void Execute();
+
+    TAdcAna **AdcAna;
+    int Intervals;
+    int AnaSize;
+    int FreqCount;
 
     int Threads;
     TFile *file;

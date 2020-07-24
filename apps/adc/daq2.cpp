@@ -73,8 +73,7 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    if (Adc.RunAdc(100, 22))
-        Adc.PrintFinal();
+    Adc.RunAdc(100, 22);
 
     for (;;)
         RdosWaitMilli(100);
