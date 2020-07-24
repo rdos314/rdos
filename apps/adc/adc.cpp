@@ -798,7 +798,7 @@ void TAdc::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::RunAdc(int iv, int tc)
+bool TAdc::RunAdc(int iv, int tc, const char *ResultFile)
 {
     int i;
     int CurrInt;
@@ -861,7 +861,12 @@ bool TAdc::RunAdc(int iv, int tc)
         while (IsRunning())
             RdosWaitMilli(250);
 
+        file = new TFile(ResultFile, 0);
+
         PrintResult();
+
+        delete file;
+        file = 0;
 
         for (i = 0; i < Intervals; i++)
             delete AdcAna[i];
@@ -1491,8 +1496,6 @@ void TAdc::PrintResult()
     char fstr[40];
     char str[100];
 
-    file = new TFile("res.txt", 0);
-
     for (i = 0; i < FreqCount; i++)
     {
         count = 0;
@@ -1528,7 +1531,4 @@ void TAdc::PrintResult()
             }
         }
     }
-
-    delete file;
-    file = 0;
 }
