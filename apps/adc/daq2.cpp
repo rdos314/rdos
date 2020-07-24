@@ -53,54 +53,6 @@ static struct TDelay DelayArr;
 int MAX_COUNT = 25600 * 8;
 
 
-/*##########################################################################
-#
-#   Name       : PrintCountSumary
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void PrintCountSumary(TFile &file, int CountArr[100])
-{
-    int i;
-    double sum;
-    double mean;
-    double sd;
-    double val;
-    int Rel;
-    char str[100];
-
-    sum = 0;
-    for (i = 0; i < 100; i++)
-        sum += CountArr[i];
-
-    mean = sum / 100.0;
-
-    sum = 0;
-    for (i = 0; i < 100; i++)
-    {
-        val = mean - (double)CountArr[i];
-        sum += val * val;
-    }
-
-    val = sum / 99.0;
-    sd = sqrt(val);
-
-    mean = mean * 100.0 / (double)MAX_COUNT;
-    sd = sd * 100.0 / (double)MAX_COUNT;
-
-    strcpy(str, "Count: ");
-    RdosWriteString(str);
-    file.Write(str, strlen(str));
-
-    sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
-    RdosWriteString(str);
-    file.Write(str, strlen(str));
-}
 
 /*##########################################################################
 #
@@ -536,7 +488,6 @@ static void PrintFinal()
             RdosWriteString(str);
             file.Write(str, strlen(str));
 
-            PrintCountSumary(file, TotalCount[i]);
             PrintSeriesSumary("A: ", file, TotalSumA[i], TotalCount[i]);
             PrintSeriesSumary("B: ", file, TotalSumB[i], TotalCount[i]);
             PrintMaxSumary("Max A: ", file, TotalMaxA[i]);

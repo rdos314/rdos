@@ -80,7 +80,10 @@ protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
 
     void Write(const char *str);
+
     void PrintCountSumary(int Index);
+    void PrintASumary(int Index);
+    void PrintBSumary(int Index);
 
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
