@@ -945,7 +945,7 @@ void TAdc::PrintFinal()
         if (count)
         {
             Freq->CodeFreq(i, fstr);
-            sprintf(str, "%s: %d ", count);
+            sprintf(str, "%s: ", fstr);
             Write(str);
 
             PrintCountSumary(i);
