@@ -86,6 +86,7 @@ protected:
     void PrintBSumary(int Index);
     void PrintMaxA(int Index);
     void PrintMaxB(int Index);
+    void PrintDelaySumary(int Index);
 
     TAdcData *GetBlock(int Block);
     TAdcData *FindStart(int *Entries);
@@ -102,6 +103,7 @@ protected:
 
     int Threads;
     TFile *file;
+    struct TDelay Delay;
 
     int FBlocks;
     TSignalDevice FSignal;

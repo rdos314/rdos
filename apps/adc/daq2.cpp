@@ -223,58 +223,6 @@ static bool PrintSeriesDetail(const char *Header, TFile &file, int SumArr[100], 
 
 /*##########################################################################
 #
-#   Name       : PrintDelaySumary
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void PrintDelaySumary(TFile &file, int MeanArr[100], int CountArr[100])
-{
-    int i;
-    int val;
-    int mean;
-    int sd;
-    int count;
-    char str[100];
-
-    for (i = 0; i < 360; i++)
-        DelayArr.Phase[i] = 0;
-
-    count = 0;
-    for (i = 0; i < 100; i++)
-    {
-        if (CountArr[i])
-        {
-            count++;
-            val = MeanArr[i];
-
-            while (val < 0)
-                val += 360;
-
-            while (val >= 360)
-                val -= 360;
-
-            DelayArr.Phase[val]++;
-        }
-    }
-
-    TAdc::CalcMeanSd(&DelayArr, &mean, &sd);
-
-    sprintf(str, "Phase: ");
-    RdosWriteString(str);
-    file.Write(str, strlen(str));
-
-    sprintf(str, "%d (%d) ", mean, sd);
-    RdosWriteString(str);
-    file.Write(str, strlen(str));
-}
-
-/*##########################################################################
-#
 #   Name       : PrintDelayDetail
 #
 #   Purpose....:
@@ -393,8 +341,6 @@ static void PrintFinal()
             sprintf(str, "%d.%01d: %d ",  i / 10, i % 10, count);
             RdosWriteString(str);
             file.Write(str, strlen(str));
-
-            PrintDelaySumary(file, TotalDelayMean[i], TotalCount[i]);
 
             sprintf(str, "\r\n");
             RdosWriteString(str);

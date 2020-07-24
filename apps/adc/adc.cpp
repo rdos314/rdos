@@ -1087,6 +1087,46 @@ void TAdc::PrintMaxB(int Index)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintDelaySumary
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintDelaySumary(int Index)
+{
+    TAdcAna *ana;
+    int i;
+    int j;
+    int mean;
+    int sd;
+    char str[100];
+
+    for (i = 0; i < 360; i++)
+        Delay.Phase[i] = 0;
+
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+
+        for (j = 0; j < 360; j++)
+            Delay.Phase[j] += ana->Delay[Index].Phase[j];
+    }
+
+    CalcMeanSd(&Delay, &mean, &sd);
+
+    sprintf(str, "Phase: ");
+    Write(str);
+
+    sprintf(str, "%d (%d) ", mean, sd);
+    Write(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintFinal
 #
 #   Purpose....:
@@ -1127,15 +1167,17 @@ void TAdc::PrintFinal()
 
             strcpy(str, "A: ");
             Write(str);
+
             PrintMaxA(i);
             PrintASumary(i);
 
             strcpy(str, "B: ");
             Write(str);
+
             PrintMaxB(i);
             PrintBSumary(i);
 
-//            PrintDelaySumary(file, TotalDelayMean[i], TotalCount[i]);
+            PrintDelaySumary(i);
 
             sprintf(str, "\r\n");
             Write(str);
