@@ -757,14 +757,12 @@ void TAdc::PrintCountSumary(int Index)
     double mean;
     double sd;
     double val;
-    double total;
     char str[100];
 
     strcpy(str, "Count: ");
     Write(str);
 
     ana = AdcAna[0];
-    total = (double)(Intervals * ana->Total[Index]);
 
     sum = 0;
     for (i = 0; i < Intervals; i++)
@@ -773,7 +771,7 @@ void TAdc::PrintCountSumary(int Index)
         sum += (double)ana->Count[Index];
     }
 
-    mean = sum * 100.0 / total;
+    mean = sum / (double)Intervals;
 
     if (Intervals > 1)
     {
@@ -789,11 +787,15 @@ void TAdc::PrintCountSumary(int Index)
         val = sum / (double)(Intervals - 1);
         sd = sqrt(val);
         sd = sd * 100.0 / (double)ana->Total[Index];
+        mean = mean * 100.0 / (double)ana->Total[Index];
 
         sprintf(str, "%5.1Lf (%5.1Lf) ", mean, sd);
     }
     else
+    {
+        mean = mean * 100.0 / (double)ana->Total[Index];
         sprintf(str, "%5.1Lf ", mean);
+    }
 
     Write(str);
 }
@@ -994,7 +996,7 @@ bool TAdc::PrintCountDetail(int Index)
         for (i = 0; i < Intervals; i++)
         {
             ana = AdcAna[i];
-            val += (double)ana->Count[Index];
+            val = (double)ana->Count[Index];
             val = mean - val;
             sum += val * val;
         }
@@ -1050,6 +1052,7 @@ bool TAdc::PrintADetail(int Index)
     char str[100];
 
     sum = 0;
+    count = 0;
     for (i = 0; i < Intervals; i++)
     {
         ana = AdcAna[i];
@@ -1154,6 +1157,7 @@ bool TAdc::PrintBDetail(int Index)
     char str[100];
 
     sum = 0;
+    count = 0;
     for (i = 0; i < Intervals; i++)
     {
         ana = AdcAna[i];
@@ -1451,7 +1455,7 @@ void TAdc::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::RunAdc(int iv, int tc, const char *ResultFile)
+bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
 {
     int i;
     int CurrInt;
@@ -1462,6 +1466,7 @@ bool TAdc::RunAdc(int iv, int tc, const char *ResultFile)
 
     if (RdosStartAdc())
     {
+        Min = min;
         Intervals = iv;
         Threads = tc;
         AnaSize = FBlocks / Intervals;

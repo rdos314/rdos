@@ -33,7 +33,7 @@
 #include "freq.h"
 #include "file.h"
 
-#define MAX_DIR	16
+#define MAX_DIR 16
 
 class TAdcData
 {
@@ -55,7 +55,7 @@ public:
     TAdc(char TestMode, int Blocks, TFreq *Freq);
     ~TAdc();
 
-    bool RunAdc(int Intervals, int Threads, const char *ResultName);
+    bool RunAdc(int Intervals, int Threads, int Min, const char *ResultName);
 
     void NotifyDone();
 
@@ -70,6 +70,7 @@ public:
     static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance);
 
     TFreq *Freq;
+    int Min;
 
 protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);

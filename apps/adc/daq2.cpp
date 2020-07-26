@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     double SampleFreq = 600.0;
     TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 100);
 
-    TAdc Adc(0x0, 30000, &Freq);
+    TAdc Adc(0x0, 300, &Freq);
 
     if (argc == 2)
     {
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    Adc.RunAdc(100, 22, "res.txt");
+    Adc.RunAdc(3, 22, 10, "res.txt");
 
     for (;;)
         RdosWaitMilli(100);

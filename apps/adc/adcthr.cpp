@@ -91,6 +91,9 @@ TAdcThread::~TAdcThread()
     FInstalled = false;
     Signal.Signal();
 
+    while (IsRunning())
+        RdosWaitMilli(25);
+
     delete Total;
     delete Count;
     delete SumA;
@@ -197,7 +200,7 @@ void TAdcThread::Execute()
                     {
                         TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, fd->Step , &PowerA, &PowerB, &Phase);
 
-                        if (PowerA >= 2 && PowerB >= 2)
+                        if (PowerA >= Adc->Min && PowerB >= Adc->Min)
                         {
                             if (PowerA > MaxA[j])
                                 MaxA[j] = PowerA;
