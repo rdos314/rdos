@@ -1621,6 +1621,10 @@ bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
 
         for (CurrInt = 0; CurrInt < Intervals; CurrInt++)
         {
+            CurrPos = CurrInt * AnaSize;
+            sprintf(str, "%d", CurrPos);
+            RdosWriteString(str);
+
             ana = AdcAna[CurrInt];
 
             while (!ana->IsDone())
@@ -1648,8 +1652,6 @@ bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
             }
             RdosWriteString("\r\n");
             ana->PrintSnap();
-            sprintf(str, "%d", Pos);
-            RdosWriteString(str);
         }
 
         while (IsRunning())
