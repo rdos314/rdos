@@ -740,6 +740,139 @@ void TAdc::Write(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintDelay
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintDelay(struct TDelay *d, bool header)
+{
+    int i;
+    int limit;
+    int index;
+    double val;
+    double sum;
+    double mean;
+    int HiIndex;
+    int HiVal;
+    bool First;
+    bool Used[360];
+    char str[100];
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+        sum += (double)d->Phase[i];
+
+    mean = sum / 360.0;
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+    {
+        val = mean - (double)d->Phase[i];
+        sum += val * val;
+    }
+
+    val = sum / 359.0;
+    limit = (int)(2.0 * sqrt(val));
+    if (limit < 3)
+        limit = 3;
+
+    for (i = 0; i < 360; i++)
+        Used[i] = false;
+
+    HiIndex = 0;
+    First = true;
+
+    while (HiIndex >= 0)
+    {
+        HiIndex = -1;
+        HiVal = 0;
+
+        for (i = 0; i < 360; i++)
+        {
+            if (!Used[i] && d->Phase[i] >= limit)
+            {
+                if (d->Phase[i] > HiVal)
+                {
+                    HiVal = d->Phase[i];
+                    HiIndex = i;
+                }
+            }
+        }
+
+        if (HiIndex >= 0)
+        {
+            for (i = 0; i < 360; i++)
+            {
+                index = (HiIndex + i) % 360;
+                if (Used[index])
+                    break;
+                else
+                {
+                    if (d->Phase[i] >= limit)
+                        Used[index] = true;
+                    else
+                        break;
+                }
+            }
+
+            for (i = 1; i < 360; i++)
+            {
+                index = (HiIndex + 360 - i) % 360;
+                if (Used[index])
+                    break;
+                else
+                {
+                    if (d->Phase[i] >= limit)
+                        Used[index] = true;
+                    else
+                        break;
+                }
+            }
+
+            if (First)
+            {
+                First = false;
+
+                if (header)
+                    sprintf(str, "Peaks: ");
+                else
+                    sprintf(str, "{");
+
+                Write(str);
+            }
+            else
+            {
+                sprintf(str, " ");
+                Write(str);
+            }
+            
+            sprintf(str, "%d", HiIndex);
+            Write(str);
+        }
+    }
+
+    if (First)
+    {
+        sprintf(str, "Noise ");
+        Write(str);
+    }
+    else
+    {
+        if (!header)
+        {
+            sprintf(str, "} ");
+            Write(str);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintCountSumary
 #
 #   Purpose....:
@@ -934,15 +1067,6 @@ void TAdc::PrintDelaySumary(int Index)
     int j;
     int mean;
     int sd;
-    double val;
-    double sum;
-    double dmean;
-    int limit;
-    int HiIndex;
-    int HiVal;
-    int index;
-    bool First;
-    bool Used[360];
     char str[100];
 
     for (i = 0; i < 360; i++)
@@ -964,95 +1088,7 @@ void TAdc::PrintDelaySumary(int Index)
     sprintf(str, "%d (%d) ", mean, sd);
     Write(str);
 
-    sum = 0;
-    for (i = 0; i < 360; i++)
-        sum += (double)Delay.Phase[i];
-
-    dmean = sum / 360.0;
-
-    sum = 0;
-    for (i = 0; i < 360; i++)
-    {
-        val = dmean - (double)Delay.Phase[i];
-        sum += val * val;
-    }
-
-    val = sum / 359.0;
-    limit = (int)(2.0 * sqrt(val));
-    if (limit < 3)
-        limit = 3;
-
-    for (i = 0; i < 360; i++)
-        Used[i] = false;
-
-    HiIndex = 0;
-    First = true;
-
-    while (HiIndex >= 0)
-    {
-        HiIndex = -1;
-        HiVal = 0;
-
-        for (i = 0; i < 360; i++)
-        {
-            if (!Used[i] && Delay.Phase[i] >= limit)
-            {
-                if (Delay.Phase[i] > HiVal)
-                {
-                    HiVal = Delay.Phase[i];
-                    HiIndex = i;
-                }
-            }
-        }
-
-        if (HiIndex >= 0)
-        {
-            for (i = 0; i < 360; i++)
-            {
-                index = (HiIndex + i) % 360;
-                if (Used[index])
-                    break;
-                else
-                {
-                    if (Delay.Phase[i] >= limit)
-                        Used[index] = true;
-                    else
-                        break;
-                }
-            }
-
-            for (i = 1; i < 360; i++)
-            {
-                index = (HiIndex + 360 - i) % 360;
-                if (Used[index])
-                    break;
-                else
-                {
-                    if (Delay.Phase[i] >= limit)
-                        Used[index] = true;
-                    else
-                        break;
-                }
-            }
-
-            if (First)
-            {
-                First = false;
-
-               sprintf(str, "Peaks: ");
-               Write(str);
-            }
-
-            sprintf(str, "%d ", HiIndex);
-            Write(str);
-        }
-    }
-
-    if (First)
-    {
-        sprintf(str, "Noise ");
-        Write(str);
-    }
+    PrintDelay(&Delay, true);
 }
 
 /*##########################################################################
@@ -1377,41 +1413,20 @@ bool TAdc::PrintDelayDetail(int Index)
         sprintf(str, "Phase: ");
         Write(str);
 
-        if (count > 10)
+        for (i = 0; i < Intervals; i++)
         {
-            for (i = 0; i < Intervals; i++)
+            ana = AdcAna[i];
+            if (ana->Count[Index])
+                PrintDelay(&ana->Delay[Index], false);
+            else
             {
-                ana = AdcAna[i];
-                if (ana->Count[Index])
-                {
-                    CalcMeanSd(&ana->Delay[Index], &mean, &sd);
-                    sprintf(str, "%d ", mean);
-                }
-                else
-                    strcpy(str, "* ");
-
+                strcpy(str, "* ");
                 Write(str);
             }
-
-            sprintf(str, "\r\n");
-            Write(str);
         }
-        else
-        {
-            for (i = 0; i < Intervals; i++)
-            {
-                ana = AdcAna[i];
-                if (ana->Count[Index])
-                {
-                    CalcMeanSd(&ana->Delay[Index], &mean, &sd);
-                    sprintf(str, "%d:%d ", i, mean);
-                    Write(str);
-                }
-            }
 
-            sprintf(str, "\r\n");
-            Write(str);
-        }
+        sprintf(str, "\r\n");
+        Write(str);
         return true;
     }
     else
