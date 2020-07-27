@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL23::TQuizL23(const char *FileName)
-  : TQuiz(122),
+  : TQuiz(124),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizL23::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL23::GetQuizN()
 {
-    return 122;
+    return 124;
 }
 
 /*##########################################################################
@@ -415,6 +415,8 @@ void TQuizL23::SetupTexts()
   Quiz[119].MyGroup = GROUP_MIXED;
   Quiz[120].MyGroup = GROUP_MIXED;
   Quiz[121].MyGroup = GROUP_MIXED;
+  Quiz[122].MyGroup = GROUP_MIXED;
+  Quiz[123].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -538,6 +540,8 @@ void TQuizL23::SetupTexts()
   Quiz[119].Text = "Do you accept criticism, correction and direction?";
   Quiz[120].Text = "Do you find it easy to estimate the age of people?";
   Quiz[121].Text = "If you get injured in an activity, can you still continue with that activity despite feeling pain?";
+  Quiz[122].Text = "Can you ignore pain?";
+  Quiz[123].Text = "Do you enjoy hourseback riding?";
 }
 
 /*##########################################################################
@@ -721,7 +725,7 @@ void TQuizL23::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 122; i++)
+    for (i = 0; i < 124; i++)
             DefineGlobalId(i, i);
 }
 
