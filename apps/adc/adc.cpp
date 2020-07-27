@@ -1395,6 +1395,8 @@ bool TAdc::PrintDelayDetail(int Index)
     int count;
     char str[100];
 
+    count = 0;
+
     for (i = 0; i < 360; i++)
         Delay.Phase[i] = 0;
 
@@ -1404,6 +1406,9 @@ bool TAdc::PrintDelayDetail(int Index)
 
         for (j = 0; j < 360; j++)
             Delay.Phase[j] += ana->Delay[Index].Phase[j];
+
+        if (ana->Count[Index])
+            count++;
     }
 
     CalcMeanSd(&Delay, &mean, &sd);
@@ -1413,20 +1418,37 @@ bool TAdc::PrintDelayDetail(int Index)
         sprintf(str, "Phase: ");
         Write(str);
 
-        for (i = 0; i < Intervals; i++)
+        if (count > 10)
         {
-            ana = AdcAna[i];
-            if (ana->Count[Index])
-                PrintDelay(&ana->Delay[Index], false);
-            else
+            for (i = 0; i < Intervals; i++)
             {
-                strcpy(str, "* ");
-                Write(str);
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                    PrintDelay(&ana->Delay[Index], false);
+                else
+                {
+                    strcpy(str, "* ");
+                    Write(str);
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    sprintf(str, "%d:", i);
+                    Write(str);
+                    PrintDelay(&ana->Delay[Index], false);
+                }
             }
         }
 
         sprintf(str, "\r\n");
         Write(str);
+
         return true;
     }
     else
