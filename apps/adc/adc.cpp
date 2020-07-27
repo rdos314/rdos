@@ -752,7 +752,8 @@ void TAdc::Write(const char *str)
 void TAdc::PrintDelay(struct TDelay *d, bool header)
 {
     int i;
-    int limit;
+    int hil;
+    int lowl;
     int index;
     double val;
     double sum;
@@ -777,9 +778,13 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
     }
 
     val = sum / 359.0;
-    limit = (int)(2.0 * sqrt(val));
-    if (limit < 3)
-        limit = 3;
+    hil = (int)(mean + 2.0 * sqrt(val));
+    if (hil < 3)
+        hil = 3;
+
+    lowl = (int)(mean - 2.0 * sqrt(val));
+    if (lowl < 0)
+        lowl = 0;
 
     for (i = 0; i < 360; i++)
         Used[i] = false;
@@ -794,7 +799,7 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
 
         for (i = 0; i < 360; i++)
         {
-            if (!Used[i] && d->Phase[i] >= limit)
+            if (!Used[i] && d->Phase[i] >= hil)
             {
                 if (d->Phase[i] > HiVal)
                 {
@@ -813,7 +818,7 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
                     break;
                 else
                 {
-                    if (d->Phase[i] >= limit)
+                    if (d->Phase[index] >= lowl)
                         Used[index] = true;
                     else
                         break;
@@ -827,7 +832,7 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
                     break;
                 else
                 {
-                    if (d->Phase[i] >= limit)
+                    if (d->Phase[index] >= lowl)
                         Used[index] = true;
                     else
                         break;
@@ -850,7 +855,10 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
                 sprintf(str, " ");
                 Write(str);
             }
-            
+
+            if (HiIndex > 180)
+                HiIndex -= 360;
+
             sprintf(str, "%d", HiIndex);
             Write(str);
         }
