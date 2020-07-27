@@ -934,6 +934,15 @@ void TAdc::PrintDelaySumary(int Index)
     int j;
     int mean;
     int sd;
+    double val;
+    double sum;
+    double dmean;
+    int limit;
+    int HiIndex;
+    int HiVal;
+    int index;
+    bool First;
+    bool Used[360];
     char str[100];
 
     for (i = 0; i < 360; i++)
@@ -954,6 +963,96 @@ void TAdc::PrintDelaySumary(int Index)
 
     sprintf(str, "%d (%d) ", mean, sd);
     Write(str);
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+        sum += (double)Delay.Phase[i];
+
+    dmean = sum / 360.0;
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+    {
+        val = dmean - (double)Delay.Phase[i];
+        sum += val * val;
+    }
+
+    val = sum / 359.0;
+    limit = (int)(2.0 * sqrt(val));
+    if (limit < 3)
+        limit = 3;
+
+    for (i = 0; i < 360; i++)
+        Used[i] = false;
+
+    HiIndex = 0;
+    First = true;
+
+    while (HiIndex >= 0)
+    {
+        HiIndex = -1;
+        HiVal = 0;
+
+        for (i = 0; i < 360; i++)
+        {
+            if (!Used[i] && Delay.Phase[i] >= limit)
+            {
+                if (Delay.Phase[i] > HiVal)
+                {
+                    HiVal = Delay.Phase[i];
+                    HiIndex = i;
+                }
+            }
+        }
+
+        if (HiIndex >= 0)
+        {
+            for (i = 0; i < 360; i++)
+            {
+                index = (HiIndex + i) % 360;
+                if (Used[index])
+                    break;
+                else
+                {
+                    if (Delay.Phase[i] >= limit)
+                        Used[index] = true;
+                    else
+                        break;
+                }
+            }
+
+            for (i = 1; i < 360; i++)
+            {
+                index = (HiIndex + 360 - i) % 360;
+                if (Used[index])
+                    break;
+                else
+                {
+                    if (Delay.Phase[i] >= limit)
+                        Used[index] = true;
+                    else
+                        break;
+                }
+            }
+
+            if (First)
+            {
+                First = false;
+
+               sprintf(str, "Peaks: ");
+               Write(str);
+            }
+
+            sprintf(str, "%d ", HiIndex);
+            Write(str);
+        }
+    }
+
+    if (First)
+    {
+        sprintf(str, "Noise ");
+        Write(str);
+    }
 }
 
 /*##########################################################################
