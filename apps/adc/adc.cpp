@@ -782,7 +782,7 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
     if (hil < 3)
         hil = 3;
 
-    lowl = (int)(mean - 2.0 * sqrt(val));
+    lowl = (int)mean;
     if (lowl < 0)
         lowl = 0;
 
