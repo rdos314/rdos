@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL23::TQuizL23(const char *FileName)
-  : TQuiz(124),
+  : TQuiz(150),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizL23::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL23::GetQuizN()
 {
-    return 124;
+    return 150;
 }
 
 /*##########################################################################
@@ -417,6 +417,32 @@ void TQuizL23::SetupTexts()
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_MIXED;
   Quiz[123].MyGroup = GROUP_MIXED;
+  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[126].MyGroup = GROUP_MIXED;
+  Quiz[127].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -542,6 +568,33 @@ void TQuizL23::SetupTexts()
   Quiz[121].Text = "If you get injured in an activity, can you still continue with that activity despite feeling pain?";
   Quiz[122].Text = "Can you ignore pain?";
   Quiz[123].Text = "Do you enjoy hourseback riding?";
+  Quiz[124].Text = "Do you enjoy walking on your toes?";
+  Quiz[125].Text = "Do you like sniffing people or things?";
+  Quiz[126].Text = "Do you enjoy biting people - if they let you?";
+  Quiz[127].Text = "Do you love to collect things?";
+  Quiz[128].Text = "Do you enjoy hanging upside down?";
+  Quiz[129].Text = "Do you enjoy mimicking animal sounds?";
+  Quiz[130].Text = "Do you get an urge to climb?";
+  Quiz[131].Text = "Have you been fascinated about making traps?";
+  Quiz[132].Text = "Do you suddenly feel distracted by distant sounds?";
+  Quiz[133].Text = "Do you enjoy sneaking through the woods?";
+  Quiz[134].Text = "Do you enjoy chasing people or animals?";
+  Quiz[135].Text = "Do you enjoy to throw small things like stones?";
+  Quiz[136].Text = "Do you naturally communicate feelings with animals?";
+  Quiz[137].Text = "Do you have a fascination for caves?";
+  Quiz[138].Text = "Do you like to dig holes in the ground?";
+  Quiz[139].Text = "Do you have a fascination with fire?";
+  Quiz[140].Text = "Do you feel good in mist or fog?";
+  Quiz[141].Text = "Do you enjoy lying on the ground looking at the sky?";
+  Quiz[142].Text = "Are you concerned about animal welfare?";
+  Quiz[143].Text = "Do you like to know what people are thinking all the time?";
+  Quiz[144].Text = "Do you have favorite places nearby that you need to visit from time to time?";
+  Quiz[145].Text = "Do you have unusual eating patterns?";
+  Quiz[146].Text = "Do you have unusual sleeping patterns?";
+  Quiz[147].Text = "Are you afraid of floods and/or fast running streams?";
+  Quiz[148].Text = "Do you have a strong grip?";
+  Quiz[149].Text = "Do you scan your environment for good hiding places?";
+
 }
 
 /*##########################################################################
@@ -725,7 +778,7 @@ void TQuizL23::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 124; i++)
+    for (i = 0; i < 150; i++)
             DefineGlobalId(i, i);
 }
 
