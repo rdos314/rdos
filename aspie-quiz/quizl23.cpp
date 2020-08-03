@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL23::TQuizL23(const char *FileName)
-  : TQuiz(150),
+  : TQuiz(151),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizL23::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL23::GetQuizN()
 {
-    return 150;
+    return 151;
 }
 
 /*##########################################################################
@@ -443,6 +443,7 @@ void TQuizL23::SetupTexts()
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -594,6 +595,7 @@ void TQuizL23::SetupTexts()
   Quiz[147].Text = "Are you afraid of floods and/or fast running streams?";
   Quiz[148].Text = "Do you have a strong grip?";
   Quiz[149].Text = "Do you scan your environment for good hiding places?";
+  Quiz[150].Text = "Do you prefer to keep love interests secret?";
 
 }
 
@@ -646,7 +648,7 @@ void TQuizL23::LoadPopulations()
                                 Quiz[i].NoAnswer++;
                         else
                         {
-                                if (i < 150)
+                                if (i < 151)
                                 {
                                         score = Row.Quiz[i] - 1;
                                         id = IdArr[i];
@@ -778,7 +780,7 @@ void TQuizL23::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 150; i++)
+    for (i = 0; i < 151; i++)
             DefineGlobalId(i, i);
 }
 
