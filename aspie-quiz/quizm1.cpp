@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# QuizL23.cpp
-# Quiz class for L23
+# QuizM1.cpp
+# Quiz class for M1
 #
 #######################################################################*/
 
@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizl23.h"
-#include "quizdl23.h"
+#include "quizm1.h"
+#include "quizdm.h"
 
 #define CI      1
 
@@ -41,17 +41,17 @@
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::TQuizL23
+#   Name       : TQuizM1::TQuizM1
 #
-#   Purpose....: Constructor for TQuizL23
+#   Purpose....: Constructor for TQuizM1
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizL23::TQuizL23(const char *FileName)
-  : TQuiz(151),
+TQuizM1::TQuizM1(const char *FileName)
+  : TQuiz(134),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -63,39 +63,39 @@ TQuizL23::TQuizL23(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::~TQuizL23
+#   Name       : TQuizM1::~TQuizM1
 #
-#   Purpose....: Destructor for TQuizL23
+#   Purpose....: Destructor for TQuizM1
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizL23::~TQuizL23()
+TQuizM1::~TQuizM1()
 {
 }
 
-/*##################  TQuizL23::GetPcaCount ##########################
+/*##################  TQuizM1::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL23::GetPcaCount()
+int TQuizM1::GetPcaCount()
 {
     return 4;
 }
 
-/*##################  TQuizL23::GetCatCount ##########################
+/*##################  TQuizM1::GetCatCount ##########################
 *   Purpose....: Return number of categories for question                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL23::GetCatCount(int Question)
+int TQuizM1::GetCatCount(int Question)
 {
     return 3;
 }
@@ -107,14 +107,14 @@ int TQuizL23::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL23::GetQuizN()
+int TQuizM1::GetQuizN()
 {
-    return 151;
+    return 134;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::WriteName
+#   Name       : TQuizM1::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -123,14 +123,14 @@ int TQuizL23::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL23::WriteName(TFile &File)
+void TQuizM1::WriteName(TFile &File)
 {
-    File.Write("L23");
+    File.Write("M1");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::WriteLongName
+#   Name       : TQuizM1::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -139,14 +139,14 @@ void TQuizL23::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL23::WriteLongName(TFile &File)
+void TQuizM1::WriteLongName(TFile &File)
 {
-    File.Write("L23");
+    File.Write("M1");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::SetupTexts
+#   Name       : TQuizM1::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -155,30 +155,30 @@ void TQuizL23::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL23::SetupTexts()
+void TQuizM1::SetupTexts()
 {
   Quiz[0].Aspie = TRUE;
   Quiz[1].Aspie = TRUE;
   Quiz[2].Aspie = TRUE;
   Quiz[3].Aspie = TRUE;
   Quiz[4].Aspie = TRUE;
-  Quiz[5].Nt = TRUE;
-  Quiz[6].Nt = TRUE;
-  Quiz[7].Nt = TRUE;
-  Quiz[8].Nt = TRUE;
-  Quiz[9].Nt = TRUE;
-  Quiz[10].Nt = TRUE;
-  Quiz[11].Nt = TRUE;
-  Quiz[12].Nt = TRUE;
+  Quiz[5].Aspie = TRUE;
+  Quiz[6].Aspie = TRUE;
+  Quiz[7].Aspie = TRUE;
+  Quiz[8].Aspie = TRUE;
+  Quiz[9].Aspie = TRUE;
+  Quiz[10].Aspie = TRUE;
+  Quiz[11].Aspie = TRUE;
+  Quiz[12].Aspie = TRUE;
   Quiz[13].Nt = TRUE;
   Quiz[14].Nt = TRUE;
   Quiz[15].Nt = TRUE;
   Quiz[16].Nt = TRUE;
   Quiz[17].Nt = TRUE;
   Quiz[18].Nt = TRUE;
-  Quiz[19].Aspie = TRUE;
-  Quiz[20].Aspie = TRUE;
-  Quiz[21].Aspie = TRUE;
+  Quiz[19].Nt = TRUE;
+  Quiz[20].Nt = TRUE;
+  Quiz[21].Nt = TRUE;
   Quiz[22].Aspie = TRUE;
   Quiz[23].Aspie = TRUE;
   Quiz[24].Aspie = TRUE;
@@ -189,7 +189,7 @@ void TQuizL23::SetupTexts()
   Quiz[29].Aspie = TRUE;
   Quiz[30].Aspie = TRUE;
   Quiz[31].Aspie = TRUE;
-  Quiz[32].Nt = TRUE;
+  Quiz[32].Aspie = TRUE;
   Quiz[33].Nt = TRUE;
   Quiz[34].Nt = TRUE;
   Quiz[35].Nt = TRUE;
@@ -207,35 +207,35 @@ void TQuizL23::SetupTexts()
   Quiz[47].Aspie = TRUE;
   Quiz[48].Aspie = TRUE;
   Quiz[49].Aspie = TRUE;
-  Quiz[50].Aspie = TRUE;
-  Quiz[51].Aspie = TRUE;
-  Quiz[52].Aspie = TRUE;
-  Quiz[53].Aspie = TRUE;
-  Quiz[54].Aspie = TRUE;
-  Quiz[55].Aspie = TRUE;
+  Quiz[50].Nt = TRUE;
+  Quiz[51].Nt = TRUE;
+  Quiz[52].Nt = TRUE;
+  Quiz[53].Nt = TRUE;
+  Quiz[54].Nt = TRUE;
+  Quiz[55].Nt = TRUE;
   Quiz[56].Nt = TRUE;
   Quiz[57].Nt = TRUE;
   Quiz[58].Nt = TRUE;
   Quiz[59].Nt = TRUE;
   Quiz[60].Nt = TRUE;
-  Quiz[61].Nt = TRUE;
-  Quiz[62].Nt = TRUE;
-  Quiz[63].Nt = TRUE;
-  Quiz[64].Nt = TRUE;
-  Quiz[65].Nt = TRUE;
-  Quiz[66].Nt = TRUE;
-  Quiz[67].Nt = TRUE;
-  Quiz[68].Nt = TRUE;
+  Quiz[61].Aspie = TRUE;
+  Quiz[62].Aspie = TRUE;
+  Quiz[63].Aspie = TRUE;
+  Quiz[64].Aspie = TRUE;
+  Quiz[65].Aspie = TRUE;
+  Quiz[66].Aspie = TRUE;
+  Quiz[67].Aspie = TRUE;
+  Quiz[68].Aspie = TRUE;
   Quiz[69].Aspie = TRUE;
   Quiz[70].Aspie = TRUE;
   Quiz[71].Aspie = TRUE;
   Quiz[72].Aspie = TRUE;
-  Quiz[73].Aspie = TRUE;
-  Quiz[74].Aspie = TRUE;
-  Quiz[75].Aspie = TRUE;
-  Quiz[76].Aspie = TRUE;
-  Quiz[77].Aspie = TRUE;
-  Quiz[78].Aspie = TRUE;
+  Quiz[73].Nt = TRUE;
+  Quiz[74].Nt = TRUE;
+  Quiz[75].Nt = TRUE;
+  Quiz[76].Nt = TRUE;
+  Quiz[77].Nt = TRUE;
+  Quiz[78].Nt = TRUE;
   Quiz[79].Aspie = TRUE;
   Quiz[80].Aspie = TRUE;
   Quiz[81].Aspie = TRUE;
@@ -243,92 +243,84 @@ void TQuizL23::SetupTexts()
   Quiz[83].Aspie = TRUE;
   Quiz[84].Aspie = TRUE;
   Quiz[85].Aspie = TRUE;
-  Quiz[86].Nt = TRUE;
-  Quiz[87].Nt = TRUE;
+  Quiz[86].Aspie = TRUE;
+  Quiz[87].Aspie = TRUE;
   Quiz[88].Nt = TRUE;
   Quiz[89].Nt = TRUE;
   Quiz[90].Nt = TRUE;
   Quiz[91].Nt = TRUE;
-  Quiz[92].Aspie = TRUE;
-  Quiz[93].Aspie = TRUE;
-  Quiz[94].Aspie = TRUE;
-  Quiz[95].Aspie = TRUE;
-  Quiz[96].Aspie = TRUE;  
-  Quiz[97].Aspie = TRUE;
-  Quiz[98].Aspie = TRUE;
-  Quiz[99].Aspie = TRUE;
-  Quiz[100].Aspie = TRUE;
+  Quiz[92].Nt = TRUE;
+  Quiz[93].Nt = TRUE;
+  Quiz[94].Nt = TRUE;
+  Quiz[95].Nt = TRUE;
+  Quiz[96].Nt = TRUE;  
+  Quiz[97].Nt = TRUE;
+  Quiz[98].Nt = TRUE;
+  Quiz[99].Nt = TRUE;
+  Quiz[100].Nt = TRUE;
   Quiz[101].Nt = TRUE;
   Quiz[102].Nt = TRUE;
   Quiz[103].Nt = TRUE;
-  Quiz[104].Nt = TRUE;
-  Quiz[105].Nt = TRUE;
-  Quiz[106].Nt = TRUE;
-  Quiz[107].Nt = TRUE;
-  Quiz[108].Nt = TRUE;  
-  Quiz[109].Nt = TRUE;
-  Quiz[110].Nt = TRUE;
-  Quiz[111].Nt = TRUE;
-  Quiz[112].Nt = TRUE;
-  Quiz[113].Nt = TRUE;
-  Quiz[114].Nt = TRUE;
-  Quiz[115].Nt = TRUE;
-  Quiz[116].Nt = TRUE;
 
-  Quiz[14].Reverse = TRUE;
-  Quiz[32].Reverse = TRUE;
-  Quiz[35].Reverse = TRUE;
+  Quiz[16].Reverse = TRUE;
   Quiz[36].Reverse = TRUE;
-  Quiz[86].Reverse = TRUE;
-  Quiz[87].Reverse = TRUE;
-  Quiz[89].Reverse = TRUE;
-  Quiz[90].Reverse = TRUE;
+  Quiz[55].Reverse = TRUE;
+  Quiz[36].Reverse = TRUE;
+  Quiz[73].Reverse = TRUE;
+  Quiz[74].Reverse = TRUE;
+  Quiz[75].Reverse = TRUE;
+  Quiz[76].Reverse = TRUE;
+  Quiz[78].Reverse = TRUE;
   Quiz[91].Reverse = TRUE;
+  Quiz[92].Reverse = TRUE;
+  Quiz[93].Reverse = TRUE;
+  Quiz[94].Reverse = TRUE;
+  Quiz[97].Reverse = TRUE;
+  Quiz[100].Reverse = TRUE;
+  Quiz[104].Reverse = TRUE;
   Quiz[105].Reverse = TRUE;
+  Quiz[106].Reverse = TRUE;
   Quiz[107].Reverse = TRUE;
-  Quiz[111].Reverse = TRUE;
-  Quiz[114].Reverse = TRUE;
-  Quiz[117].Reverse = TRUE;
-  Quiz[118].Reverse = TRUE;
-  Quiz[119].Reverse = TRUE;
-  Quiz[120].Reverse = TRUE;
+  Quiz[127].Reverse = TRUE;
+  Quiz[129].Reverse = TRUE;
+  Quiz[130].Reverse = TRUE;
  
-  Quiz[0].MyGroup = GROUP_MIXED;
-  Quiz[1].MyGroup = GROUP_MIXED;
-  Quiz[2].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[4].MyGroup = GROUP_MIXED;
-  Quiz[5].MyGroup = GROUP_NT_TALENT;
-  Quiz[6].MyGroup = GROUP_NT_SENSORY;
-  Quiz[7].MyGroup = GROUP_NT_TALENT;
-  Quiz[8].MyGroup = GROUP_NT_TALENT;
-  Quiz[9].MyGroup = GROUP_NT_TALENT;
-  Quiz[10].MyGroup = GROUP_NT_SENSORY;
-  Quiz[11].MyGroup = GROUP_NT_TALENT;
-  Quiz[12].MyGroup = GROUP_NT_SENSORY;
+  Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[8].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[9].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[10].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[11].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[12].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[13].MyGroup = GROUP_NT_TALENT;
   Quiz[14].MyGroup = GROUP_NT_TALENT;
   Quiz[15].MyGroup = GROUP_NT_TALENT;
-  Quiz[16].MyGroup = GROUP_NT_SENSORY;
+  Quiz[16].MyGroup = GROUP_NT_TALENT;
   Quiz[17].MyGroup = GROUP_NT_TALENT;
-  Quiz[18].MyGroup = GROUP_NT_SENSORY;
-  Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[20].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[21].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[18].MyGroup = GROUP_NT_TALENT;
+  Quiz[19].MyGroup = GROUP_NT_TALENT;
+  Quiz[20].MyGroup = GROUP_NT_TALENT;
+  Quiz[21].MyGroup = GROUP_NT_TALENT;
   Quiz[22].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[23].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[24].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[25].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[26].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[26].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[27].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[28].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[29].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[30].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[31].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[32].MyGroup = GROUP_NT_NVC;
-  Quiz[33].MyGroup = GROUP_NT_NVC;
-  Quiz[34].MyGroup = GROUP_MIXED;
-  Quiz[35].MyGroup = GROUP_MIXED;
+  Quiz[32].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[33].MyGroup = GROUP_NT_SENSORY;
+  Quiz[34].MyGroup = GROUP_NT_SENSORY;
+  Quiz[35].MyGroup = GROUP_NT_SENSORY;
   Quiz[36].MyGroup = GROUP_NT_SENSORY;
   Quiz[37].MyGroup = GROUP_NT_SENSORY;
   Quiz[38].MyGroup = GROUP_NT_SENSORY;
@@ -339,269 +331,234 @@ void TQuizL23::SetupTexts()
   Quiz[43].MyGroup = GROUP_ASPIE_NVC;
   Quiz[44].MyGroup = GROUP_ASPIE_NVC;
   Quiz[45].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[46].MyGroup = GROUP_MIXED;
+  Quiz[46].MyGroup = GROUP_ASPIE_NVC;
   Quiz[47].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[48].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[49].MyGroup = GROUP_ASPIE_TALENT;  
-  Quiz[50].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[51].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[52].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[53].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[54].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[55].MyGroup = GROUP_MIXED;
+  Quiz[48].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[49].MyGroup = GROUP_ASPIE_NVC;  
+  Quiz[50].MyGroup = GROUP_NT_NVC;
+  Quiz[51].MyGroup = GROUP_NT_NVC;
+  Quiz[52].MyGroup = GROUP_NT_NVC;
+  Quiz[53].MyGroup = GROUP_NT_NVC;
+  Quiz[54].MyGroup = GROUP_NT_NVC;
+  Quiz[55].MyGroup = GROUP_NT_NVC;
   Quiz[56].MyGroup = GROUP_NT_NVC;
   Quiz[57].MyGroup = GROUP_NT_NVC;
   Quiz[58].MyGroup = GROUP_NT_NVC;
   Quiz[59].MyGroup = GROUP_NT_NVC;
   Quiz[60].MyGroup = GROUP_NT_NVC;
-  Quiz[61].MyGroup = GROUP_NT_NVC;
-  Quiz[62].MyGroup = GROUP_NT_NVC;
-  Quiz[63].MyGroup = GROUP_NT_NVC;
-  Quiz[64].MyGroup = GROUP_NT_NVC;
-  Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[66].MyGroup = GROUP_MIXED;
+  Quiz[61].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[62].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[63].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[64].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[65].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[66].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[67].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[68].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[68].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[69].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[70].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[71].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[72].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[73].MyGroup = GROUP_MIXED;
-  Quiz[74].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[75].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[76].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[77].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[78].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[79].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[80].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[81].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[82].MyGroup = GROUP_MIXED;
-  Quiz[83].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[72].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[73].MyGroup = GROUP_NT_RELATION;
+  Quiz[74].MyGroup = GROUP_NT_RELATION;
+  Quiz[75].MyGroup = GROUP_NT_RELATION;
+  Quiz[76].MyGroup = GROUP_NT_RELATION;
+  Quiz[77].MyGroup = GROUP_NT_RELATION;
+  Quiz[78].MyGroup = GROUP_NT_RELATION;
+  Quiz[79].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[81].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[83].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[84].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[85].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[86].MyGroup = GROUP_NT_RELATION;
-  Quiz[87].MyGroup = GROUP_NT_RELATION;
-  Quiz[88].MyGroup = GROUP_NT_RELATION;
-  Quiz[89].MyGroup = GROUP_NT_RELATION;
-  Quiz[90].MyGroup = GROUP_NT_RELATION;
-  Quiz[91].MyGroup = GROUP_NT_RELATION;
-  Quiz[92].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[94].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[96].MyGroup = GROUP_MIXED;
-  Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[98].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[99].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[100].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[85].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[86].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[87].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[88].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[89].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[90].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[91].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[92].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[93].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[94].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[95].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[96].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[97].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[98].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[99].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[100].MyGroup = GROUP_NT_SOCIAL;
   Quiz[101].MyGroup = GROUP_NT_SOCIAL;
   Quiz[102].MyGroup = GROUP_NT_SOCIAL;
   Quiz[103].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[104].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[105].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[106].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[107].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[108].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[109].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[110].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[111].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[104].MyGroup = GROUP_MIXED;
+  Quiz[105].MyGroup = GROUP_MIXED;
+  Quiz[106].MyGroup = GROUP_MIXED;
+  Quiz[107].MyGroup = GROUP_MIXED;
+  Quiz[108].MyGroup = GROUP_MIXED;
+  Quiz[109].MyGroup = GROUP_MIXED;
+  Quiz[110].MyGroup = GROUP_MIXED;
+  Quiz[111].MyGroup = GROUP_MIXED;
   Quiz[112].MyGroup = GROUP_MIXED;
-  Quiz[113].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[114].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[115].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[116].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[113].MyGroup = GROUP_MIXED;
+  Quiz[114].MyGroup = GROUP_MIXED;
+  Quiz[115].MyGroup = GROUP_MIXED;
+  Quiz[116].MyGroup = GROUP_MIXED;
   Quiz[117].MyGroup = GROUP_MIXED;
   Quiz[118].MyGroup = GROUP_MIXED;
   Quiz[119].MyGroup = GROUP_MIXED;
   Quiz[120].MyGroup = GROUP_MIXED;
-  Quiz[121].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[122].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[123].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[124].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[125].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[126].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[127].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[128].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[129].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[130].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[131].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[132].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[133].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[134].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[135].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[136].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[137].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[138].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[139].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[140].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[141].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[142].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[143].MyGroup = GROUP_MIXED;
-  Quiz[144].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[148].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[149].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[150].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[121].MyGroup = GROUP_MIXED;
+  Quiz[122].MyGroup = GROUP_MIXED;
+  Quiz[123].MyGroup = GROUP_MIXED;
+  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[126].MyGroup = GROUP_MIXED;
+  Quiz[127].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
 
-  Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
-  Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
-  Quiz[2].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
-  Quiz[3].Text = "Do you notice patterns in things all the time?";
-  Quiz[4].Text = "Do you have one special talent which you have emphasised and worked on?";
-  Quiz[5].Text = "Do you get confused by several verbal instructions at the same time?";
-  Quiz[6].Text = "Do you find it difficult to take messages on the telephone and pass them on correctly?";
-  Quiz[7].Text = "Do you find it very hard to learn things that you are not interested in?";
-  Quiz[8].Text = "Do you have difficulty describing & summarising things for example events, conversations or something you've read?";
-  Quiz[9].Text = "Do you have problems filling out forms?";
-  Quiz[10].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
-  Quiz[11].Text = "Do you find it difficult to take notes in lectures?";
-  Quiz[12].Text = "Do you need to do things yourself in order to remember them?";
-  Quiz[13].Text = "Are you easily distracted?";
-  Quiz[14].Text = "If there is an interruption, can you  Quickly return to what you were doing before?";
-  Quiz[15].Text = "Do you need a lot of motivation to do things?";
-  Quiz[16].Text = "Do you have problems finding your way to new places?";
-  Quiz[17].Text = "Do you work slowly on jobs you dislike?";
-  Quiz[18].Text = "Do you have trouble reading clocks?";
-  Quiz[19].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
-  Quiz[20].Text = "Do you find it disturbing or upsetting when others show up either later or sooner than agreed?";
-  Quiz[21].Text = "Do you dislike when people walk behind you?";
-  Quiz[22].Text = "Do you have certain routines which you need to follow?";
+  Quiz[0].Text = "Do you have a fascination for slowly flowing water?";
+  Quiz[1].Text = "Do you have an urge to observe the habits of animals?";
+  Quiz[2].Text = "Do you notice patterns in nature?";
+  Quiz[3].Text = "Do you love to collect things?";
+  Quiz[4].Text = "Do you scan your environment for good hiding places?";  
+  Quiz[5].Text = "Do you enjoy walking on your toes?";
+  Quiz[6].Text = "Do you have an urge to jump over things?";
+  Quiz[7].Text = "Do you enjoy mimicking animal sounds?";
+  Quiz[8].Text = "Do you like to sniff things?";
+  Quiz[9].Text = "Do you enjoy spinning in circles?";
+  Quiz[10].Text = "Do you naturally communicate feelings with animals?";
+  Quiz[11].Text = "Do you enjoy sneaking through the woods?";
+  Quiz[12].Text = "Do you use small sounds that others don't seem to use?";
+  Quiz[13].Text = "Do you get confused by several verbal instructions at the same time?";
+  Quiz[14].Text = "Do you have difficulty describing & summarising things for example events, conversations or something you've read?";
+  Quiz[15].Text = "Do you find it very hard to learn things that you are not interested in?";
+  Quiz[16].Text = "If there is an interruption, can you quickly return to what you were doing before?";
+  Quiz[17].Text = "Do you have problems filling out forms?";
+  Quiz[18].Text = "Do you need a lot of motivation to do things?";
+  Quiz[19].Text = "Are you easily distracted?";
+  Quiz[20].Text = "Do you find it difficult to take notes in lectures?";
+  Quiz[21].Text = "Do you work slowly on jobs you dislike?";
+  Quiz[22].Text = "Do you suddenly feel distracted by distant sounds?";
   Quiz[23].Text = "Do you tend to shut down or have a meltdown when stressed or overwhelmed?";
-  Quiz[24].Text = "Are you bothered by clothes tags or light touch?";
-  Quiz[25].Text = "Are you sensitive to changes in humidity and air pressure?";
-  Quiz[26].Text = "Are you sometimes afraid in safe situations?";
-  Quiz[27].Text = "Do you have extra sensitive hearing?";
-  Quiz[28].Text = "Are your eyes extra sensitive to strong light and glare?";
-  Quiz[29].Text = "Do you dislike it when people stamp their foot in the floor?";
-  Quiz[30].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
-  Quiz[31].Text = "Do you need lists and schedules in order to get things done?";
-  Quiz[32].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
-  Quiz[33].Text = "Do you have problems with timing in conversations?";
-  Quiz[34].Text = "Do you have problems recognizing faces (prosopagnosia)?";
-  Quiz[35].Text = "Are you good at interpreting facial expressions?";
+  Quiz[24].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
+  Quiz[25].Text = "Are you bothered by clothes tags or light touch?";
+  Quiz[26].Text = "Do you dislike when people walk behind you?";
+  Quiz[27].Text = "Are your eyes extra sensitive to strong light and glare?";
+  Quiz[28].Text = "Do you have certain routines which you need to follow?";
+  Quiz[29].Text = "Do you have extra sensitive hearing?";
+  Quiz[30].Text = "Are you sensitive to changes in humidity and air pressure?";
+  Quiz[31].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
+  Quiz[32].Text = "Do you dislike it when people stamp their foot in the floor?";
+  Quiz[33].Text = "Do you have difficulties judging distances, height, depth or speed?";
+  Quiz[34].Text = "Do you find it hard to tell the age of people?";
+  Quiz[35].Text = "Do you have problems finding your way to new places?";
   Quiz[36].Text = "Do you have a good sense of how much pressure to apply when doing things with your hands?";
-  Quiz[37].Text = "Do you find it hard to tell the age of people?";
-  Quiz[38].Text = "Do you have difficulties judging distances, height, depth or speed?";
+  Quiz[37].Text = "Do you have trouble reading clocks?"; 
+  Quiz[38].Text = "Do you have a poor concept of time?";
   Quiz[39].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
-  Quiz[40].Text = "In conversations, do you use small sounds that others don't seem to use?";
-  Quiz[41].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
-  Quiz[42].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
-  Quiz[43].Text = "Do you fiddle with things?";
+  Quiz[40].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
+  Quiz[41].Text = "Do you fiddle with things?";
+  Quiz[42].Text = "Have you been accused of staring?";
+  Quiz[43].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
   Quiz[44].Text = "Do you mistake noises for voices?";
-  Quiz[45].Text = "Have you been accused of staring?";
-  Quiz[46].Text = "Do recently heard tunes or rhythms tend to stick and replay themselves repeatedly in your head?";
-  Quiz[47].Text = "Have your thoughts ever been so vivid that you were worried other people would hear them?";
-  Quiz[48].Text = "Do you have a fascination for slowly flowing water?";
-  Quiz[49].Text = "Do you enjoy spinning in circles?";
-  Quiz[50].Text = "Do you have an urge to jump over things?";
-  Quiz[51].Text = "Do you bite your lip, cheek or tongue (e.g. when thinking, when anxious or nervous)?";
-  Quiz[52].Text = "Do you pace (e.g. when thinking or anxious)?";
-  Quiz[53].Text = "Do you get a pleasurable tingling sensation in the head, scalp or back of the body in response to certain sounds?";
-  Quiz[54].Text = "Do you talk to yourself?";
-  Quiz[55].Text = "Do you feel an urge to peel flakes off yourself and / or others?";
-  Quiz[56].Text = "Do you tend to say things that are considered socially inappropriate when you are tired, frustrated or when you act naturally?";
-  Quiz[57].Text = "Do you tend to express your feelings in ways that may baffle others?";
-  Quiz[58].Text = "Do others often misunderstand you?";
-  Quiz[59].Text = "Is your sense of humor different from mainstream or considered odd?";
-  Quiz[60].Text = "As a teenager, were you usually unaware of social rules & boundaries unless they were clearly spelled out?";
-  Quiz[61].Text = "Do people sometimes think you are smiling at the wrong occasion?";
-  Quiz[62].Text = "Do you forget you are in a social situation when something gets your attention?";
-  Quiz[63].Text = "Is it hard for you to see why some things upset people so much?";
-  Quiz[64].Text = "Do you tend to interpret things literally?";
-  Quiz[65].Text = "In a conversation, do you tend to focus on your own thoughts rather than on what your listener might be thinking?";
-  Quiz[66].Text = "Have others told you that you have an odd posture or gait?";
-  Quiz[67].Text = "Do you realize hours later that somebody that you have a romantic interest for actually showed interest for you, and then feel bad about the missed opportunity to connect?";
-  Quiz[68].Text = "Do you have a monotonous voice?";
-  Quiz[69].Text = "Do you find it easier to understand and communicate with odd & unusual people than with ordinary people?";
-  Quiz[70].Text = "Have you experienced stronger than normal attachments to certain people?";
-  Quiz[71].Text = "Do you have an alternative view of what is attractive in the opposite sex?";
-  Quiz[72].Text = "Do you have an urge to learn the routines of people you know?";
-  Quiz[73].Text = "Do you like to follow (walk behind) people you are attached to?";
-  Quiz[74].Text = "Do you have an urge to observe the habits of humans and/or animals?";
-  Quiz[75].Text = "Have people you formed strong attachments to taken advantage of you?";
-  Quiz[76].Text = "Do you have unusual sexual preferences?";
-  Quiz[77].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";
-  Quiz[78].Text = "Do you feel that you are a very special or unusual person?";
-  Quiz[79].Text = "Do you examine the hair of people you like a lot?";
-  Quiz[80].Text = "Do you have, or used to have, imaginary relationships?";
-  Quiz[81].Text = "Do you tend to look a lot at people you like and little or not at all at people you dislike?";
-  Quiz[82].Text = "Do you have odd hair (for example multiple whorls, standing up when short or other peculiarities)?";
-  Quiz[83].Text = "Do you prefer to construct your own set of spiritual beliefs rather than following existing religions / belief-systems?";
-  Quiz[84].Text = "Are you more sexually attracted to strangers than to people you know well?";
-  Quiz[85].Text = "Do you tend to get romantic feelings for people that persistently shows interest for you?";
-  Quiz[86].Text = "Do you enjoy traditional dating?";
-  Quiz[87].Text = "Do you find yourself at ease in romantic situations?";
-  Quiz[88].Text = "Are you asexual?";
-  Quiz[89].Text = "Do you like tongue-kissing?";
-  Quiz[90].Text = "Do you enjoy travel?";
-  Quiz[91].Text = "Do you take pride in your appearance?";
-  Quiz[92].Text = "Do you see your own activities as more important than other people's?";
-  Quiz[93].Text = "Would you  Quickly become impatient and irritated if you would not find a solution to a problem?";
-  Quiz[94].Text = "Do you usually find faults with opinions that you don't share?";
-  Quiz[95].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
-  Quiz[96].Text = "Do you feel as if you are being persecuted in some way?";
-  Quiz[97].Text = "Do you have difficulty accepting criticism, correction, and direction?";
-  Quiz[98].Text = "Will you abandon your friends if your activities or ideals clash?";
-  Quiz[99].Text = "Do you obstruct others' plans?";
-  Quiz[100].Text = "Do you feel irritated when one person disagrees with what everyone else in a group believes?";
-  Quiz[101].Text = "Do you prefer to keep to yourself?";
-  Quiz[102].Text = "Do you find it hard to be emotionally close to other people?";
-  Quiz[103].Text = "Do you have a tendency to become stuck when asked  Questions in social situation?";
-  Quiz[104].Text = "Has it been harder for you than for others to keep friends?";
-  Quiz[105].Text = "Are you good at team-work?";
-  Quiz[106].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
-  Quiz[107].Text = "Do you enjoy big events even if they are crowded?";
-  Quiz[108].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
-  Quiz[109].Text = "Do you stay away from situations where people might express affection for you?";
-  Quiz[110].Text = "Do you prefer to do things on your own even if you could use others' help or expertise?";
-  Quiz[111].Text = "Do you find it easy to describe your feelings?";
-  Quiz[112].Text = "Do you dislike it when people drop by to visit you uninvited?";
-  Quiz[113].Text = "Is it hard for you to approach somebody you are attracted to?";
-  Quiz[114].Text = "Do you find it natural to wave or say 'hi' when you meet people?";
-  Quiz[115].Text = "Are you shy?";
-  Quiz[116].Text = "Do you prefer to hug only a romantic partner?";
-  Quiz[117].Text = "Is your sense of humor fairly conventional?";
-  Quiz[118].Text = "Can you easily remember verbal instructions?";
-  Quiz[119].Text = "Do you accept criticism, correction and direction?";
-  Quiz[120].Text = "Do you find it easy to estimate the age of people?";
-  Quiz[121].Text = "If you get injured in an activity, can you still continue with that activity despite feeling pain?";
-  Quiz[122].Text = "Can you ignore pain?";
-  Quiz[123].Text = "Do you enjoy hourseback riding?";
-  Quiz[124].Text = "Do you enjoy walking on your toes?";
-  Quiz[125].Text = "Do you like sniffing people or things?";
-  Quiz[126].Text = "Do you enjoy biting people - if they let you?";
-  Quiz[127].Text = "Do you love to collect things?";
-  Quiz[128].Text = "Do you enjoy hanging upside down?";
-  Quiz[129].Text = "Do you enjoy mimicking animal sounds?";
-  Quiz[130].Text = "Do you get an urge to climb?";
-  Quiz[131].Text = "Have you been fascinated about making traps?";
-  Quiz[132].Text = "Do you suddenly feel distracted by distant sounds?";
-  Quiz[133].Text = "Do you enjoy sneaking through the woods?";
-  Quiz[134].Text = "Do you enjoy chasing people or animals?";
-  Quiz[135].Text = "Do you enjoy to throw small things like stones?";
-  Quiz[136].Text = "Do you naturally communicate feelings with animals?";
-  Quiz[137].Text = "Do you have a fascination for caves?";
-  Quiz[138].Text = "Do you like to dig holes in the ground?";
-  Quiz[139].Text = "Do you have a fascination with fire?";
-  Quiz[140].Text = "Do you feel good in mist or fog?";
-  Quiz[141].Text = "Do you enjoy lying on the ground looking at the sky?";
-  Quiz[142].Text = "Are you concerned about animal welfare?";
-  Quiz[143].Text = "Do you like to know what people are thinking all the time?";
-  Quiz[144].Text = "Do you have favorite places nearby that you need to visit from time to time?";
-  Quiz[145].Text = "Do you have unusual eating patterns?";
-  Quiz[146].Text = "Do you have unusual sleeping patterns?";
-  Quiz[147].Text = "Are you afraid of floods and/or fast running streams?";
-  Quiz[148].Text = "Do you have a strong grip?";
-  Quiz[149].Text = "Do you scan your environment for good hiding places?";
-  Quiz[150].Text = "Do you prefer to keep love interests secret?";
-
+  Quiz[45].Text = "Do you bite your lip, cheek or tongue (e.g. when thinking, when anxious or nervous)?";
+  Quiz[46].Text = "Have your thoughts ever been so vivid that you were worried other people would hear them?";
+  Quiz[47].Text = "Do you pace (e.g. when thinking or anxious)?";
+  Quiz[48].Text = "Do you have, or used to have, imaginary relationships?";
+  Quiz[49].Text = "Do you talk to yourself?";
+  Quiz[50].Text = "Do others often misunderstand you?";
+  Quiz[51].Text = "Do you have problems with timing in conversations?";
+  Quiz[52].Text = "Do you tend to express your feelings in ways that may baffle others?";
+  Quiz[53].Text = "Do you tend to say things that are considered socially inappropriate when you are tired, frustrated or when you act naturally?";
+  Quiz[54].Text = "Do you forget you are in a social situation when something gets your attention?";
+  Quiz[55].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
+  Quiz[56].Text = "As a teenager, were you usually unaware of social rules & boundaries unless they were clearly spelled out?";
+  Quiz[57].Text = "Do people sometimes think you are smiling at the wrong occasion?";
+  Quiz[58].Text = "Is your sense of humor different from mainstream or considered odd?";
+  Quiz[59].Text = "Is it hard for you to see why some things upset people so much?";
+  Quiz[60].Text = "Do you tend to interpret things literally?";
+  Quiz[61].Text = "Do you find it easier to understand and communicate with odd & unusual people than with ordinary people?";
+  Quiz[62].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
+  Quiz[63].Text = "Have you experienced stronger than normal attachments to certain people?";
+  Quiz[64].Text = "Do you have an alternative view of what is attractive in the opposite sex?";
+  Quiz[65].Text = "Do you tend to look a lot at people you like and little or not at all at people you dislike?";
+  Quiz[66].Text = "Have people you formed strong attachments to taken advantage of you?";
+  Quiz[67].Text = "Do you feel that you are a very special or unusual person?";
+  Quiz[68].Text = "Do you realize hours later that somebody that you have a romantic interest for actually showed interest for you, and then feel bad about the missed opportunity to connect?";
+  Quiz[69].Text = "Do you have unusual sexual preferences?";
+  Quiz[70].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";  
+  Quiz[71].Text = "Do you tend to develop romantic feelings for people that persistently shows interest for you?";
+  Quiz[72].Text = "Do you tend to study people you are interested in?";
+  Quiz[73].Text = "Do you enjoy traditional dating?";
+  Quiz[74].Text = "Do you find yourself at ease in romantic situations?";
+  Quiz[75].Text = "Do you like tongue-kissing?";
+  Quiz[76].Text = "Do you enjoy travel?";
+  Quiz[77].Text = "Are you asexual?";
+  Quiz[78].Text = "Do you take pride in your appearance?";
+  Quiz[79].Text = "In a conversation, do you tend to focus on your own thoughts rather than on what your listener might be thinking?";
+  Quiz[80].Text = "Do you have difficulty accepting criticism, correction, and direction?";  
+  Quiz[81].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
+  Quiz[82].Text = "Do you usually find faults with others' opinions that you don't share?";
+  Quiz[83].Text = "Will you abandon your friends if your activities or ideals clash?";
+  Quiz[84].Text = "Do you obstruct others' plans?";
+  Quiz[85].Text = "Do you see your own activities as more important than other people's?";
+  Quiz[86].Text = "Do you feel irritated when one person disagrees with what everyone else in a group believes?";
+  Quiz[87].Text = "Are you more sexually attracted to strangers than to people you know well?";
+  Quiz[88].Text = "Do you have a tendency to become stuck when asked questions in social situation?";
+  Quiz[89].Text = "Has it been harder for you than for others to keep friends?";
+  Quiz[90].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
+  Quiz[91].Text = "Are you good at team-work?";
+  Quiz[92].Text = "Do you find it hard to be emotionally close to other people?";
+  Quiz[93].Text = "Do you stay away from situations where people might express affection for you?";
+  Quiz[94].Text = "Do you find it easy to describe your feelings?";
+  Quiz[95].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
+  Quiz[96].Text = "Do you prefer to do things on your own even if you could use others' help or expertise?";
+  Quiz[97].Text = "Do you enjoy big events even if they are crowded?";
+  Quiz[98].Text = "Do you prefer to keep to yourself?";
+  Quiz[99].Text = "Is it hard for you to approach somebody you are attracted to?";
+  Quiz[100].Text = "Do you find it natural to wave or say 'hi' when you meet people?";
+  Quiz[101].Text = "Are you shy?";
+  Quiz[102].Text = "Do you prefer to hug only a romantic partner?";
+  Quiz[103].Text = "Do you have a monotonous voice?";
+  Quiz[104].Text = "Is your sense of humor fairly conventional?";
+  Quiz[105].Text = "Can you easily remember verbal instructions?";
+  Quiz[106].Text = "Do you accept criticism, correction and direction?";
+  Quiz[107].Text = "Do you find it easy to estimate the age of people?";
+  Quiz[108].Text = "Do you like to examine hair?";
+  Quiz[109].Text = "Do you enjoy horseback riding?";
+  Quiz[110].Text = "Have you been fascinated about making traps?";
+  Quiz[111].Text = "Do you have a fascination for caves?";
+  Quiz[112].Text = "Do you have a fascination with fire?";
+  Quiz[113].Text = "Do you feel good in mist or fog?";
+  Quiz[114].Text = "Do you enjoy lying on the ground looking at the sky?";
+  Quiz[115].Text = "Are you concerned about animal welfare?";
+  Quiz[116].Text = "Can you ignore pain?";
+  Quiz[117].Text = "Do you have a strong grip?";
+  Quiz[118].Text = "Do you enjoy hanging upside down?";
+  Quiz[119].Text = "Do you enjoy chasing animals?";
+  Quiz[120].Text = "Do you get an urge to climb?";
+  Quiz[121].Text = "Do you enjoy to throw small things like stones?";
+  Quiz[122].Text = "Do you like to dig holes in the ground?";
+  Quiz[123].Text = "Do you enjoy biting people - if they let you?";
+  Quiz[124].Text = "Do you have irregular sleeping patterns?";
+  Quiz[125].Text = "Do you like spicey food?";
+  Quiz[126].Text = "Do you like to eat vegetables?";
+  Quiz[127].Text = "Can you throw things with precision?";
+  Quiz[128].Text = "Would you eat food that is nutrious even if it is not so tasty?";
+  Quiz[129].Text = "Do you enjoy sharing food with others?";
+  Quiz[130].Text = "Do you enjoy team sports?";
+  Quiz[131].Text = "Do you confuse left and right?";
+  Quiz[132].Text = "Do you mix up dates and times and miss appointments?";
+  Quiz[133].Text = "Are you poor at organizing your work and / or life?";
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::LoadPopulations
+#   Name       : TQuizM1::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -610,7 +567,7 @@ void TQuizL23::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL23::LoadPopulations()
+void TQuizM1::LoadPopulations()
 {
         TQuizRow Row;
         int i;
@@ -648,7 +605,7 @@ void TQuizL23::LoadPopulations()
                                 Quiz[i].NoAnswer++;
                         else
                         {
-                                if (i < 151)
+                                if (i < 134)
                                 {
                                         score = Row.Quiz[i] - 1;
                                         id = IdArr[i];
@@ -767,7 +724,7 @@ void TQuizL23::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::SetupCross
+#   Name       : TQuizM1::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -776,17 +733,17 @@ void TQuizL23::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL23::SetupCross()
+void TQuizM1::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 151; i++)
+    for (i = 0; i < 134; i++)
             DefineGlobalId(i, i);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL23::GetReferer
+#   Name       : TQuizM1::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -795,18 +752,18 @@ void TQuizL23::SetupCross()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL23::GetReferer(const char *referer, TPopulation *pop)
+void TQuizM1::GetReferer(const char *referer, TPopulation *pop)
 {
 }
 
-/*##################  TQuizL23::ImportMvsp ##########################
+/*##################  TQuizM1::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizL23::ImportMvsp(const char *filename, int PcaType)
+void TQuizM1::ImportMvsp(const char *filename, int PcaType)
 {
         char buf[MAX_IN_ROW];
         int size;
