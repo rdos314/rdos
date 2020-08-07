@@ -253,7 +253,7 @@ void TQuizM1::SetupTexts()
   Quiz[93].Nt = TRUE;
   Quiz[94].Nt = TRUE;
   Quiz[95].Nt = TRUE;
-  Quiz[96].Nt = TRUE;  
+  Quiz[96].Nt = TRUE;
   Quiz[97].Nt = TRUE;
   Quiz[98].Nt = TRUE;
   Quiz[99].Nt = TRUE;
@@ -272,8 +272,6 @@ void TQuizM1::SetupTexts()
   Quiz[76].Reverse = TRUE;
   Quiz[78].Reverse = TRUE;
   Quiz[91].Reverse = TRUE;
-  Quiz[92].Reverse = TRUE;
-  Quiz[93].Reverse = TRUE;
   Quiz[94].Reverse = TRUE;
   Quiz[97].Reverse = TRUE;
   Quiz[100].Reverse = TRUE;
@@ -284,7 +282,7 @@ void TQuizM1::SetupTexts()
   Quiz[127].Reverse = TRUE;
   Quiz[129].Reverse = TRUE;
   Quiz[130].Reverse = TRUE;
- 
+
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
@@ -334,7 +332,7 @@ void TQuizM1::SetupTexts()
   Quiz[46].MyGroup = GROUP_ASPIE_NVC;
   Quiz[47].MyGroup = GROUP_ASPIE_NVC;
   Quiz[48].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[49].MyGroup = GROUP_ASPIE_NVC;  
+  Quiz[49].MyGroup = GROUP_ASPIE_NVC;
   Quiz[50].MyGroup = GROUP_NT_NVC;
   Quiz[51].MyGroup = GROUP_NT_NVC;
   Quiz[52].MyGroup = GROUP_NT_NVC;
@@ -393,30 +391,30 @@ void TQuizM1::SetupTexts()
   Quiz[105].MyGroup = GROUP_MIXED;
   Quiz[106].MyGroup = GROUP_MIXED;
   Quiz[107].MyGroup = GROUP_MIXED;
-  Quiz[108].MyGroup = GROUP_MIXED;
+  Quiz[108].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[109].MyGroup = GROUP_MIXED;
-  Quiz[110].MyGroup = GROUP_MIXED;
-  Quiz[111].MyGroup = GROUP_MIXED;
-  Quiz[112].MyGroup = GROUP_MIXED;
-  Quiz[113].MyGroup = GROUP_MIXED;
-  Quiz[114].MyGroup = GROUP_MIXED;
-  Quiz[115].MyGroup = GROUP_MIXED;
-  Quiz[116].MyGroup = GROUP_MIXED;
-  Quiz[117].MyGroup = GROUP_MIXED;
-  Quiz[118].MyGroup = GROUP_MIXED;
-  Quiz[119].MyGroup = GROUP_MIXED;
-  Quiz[120].MyGroup = GROUP_MIXED;
-  Quiz[121].MyGroup = GROUP_MIXED;
-  Quiz[122].MyGroup = GROUP_MIXED;
-  Quiz[123].MyGroup = GROUP_MIXED;
+  Quiz[110].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[111].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[112].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[113].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[114].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[115].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[116].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[117].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[118].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[119].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[120].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[121].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[122].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[123].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_MIXED;
-  Quiz[127].MyGroup = GROUP_MIXED;
+  Quiz[127].MyGroup = GROUP_NT_SENSORY;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_MIXED;
-  Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_MIXED;
 
@@ -424,7 +422,7 @@ void TQuizM1::SetupTexts()
   Quiz[1].Text = "Do you have an urge to observe the habits of animals?";
   Quiz[2].Text = "Do you notice patterns in nature?";
   Quiz[3].Text = "Do you love to collect things?";
-  Quiz[4].Text = "Do you scan your environment for good hiding places?";  
+  Quiz[4].Text = "Do you scan your environment for good hiding places?";
   Quiz[5].Text = "Do you enjoy walking on your toes?";
   Quiz[6].Text = "Do you have an urge to jump over things?";
   Quiz[7].Text = "Do you enjoy mimicking animal sounds?";
@@ -457,7 +455,7 @@ void TQuizM1::SetupTexts()
   Quiz[34].Text = "Do you find it hard to tell the age of people?";
   Quiz[35].Text = "Do you have problems finding your way to new places?";
   Quiz[36].Text = "Do you have a good sense of how much pressure to apply when doing things with your hands?";
-  Quiz[37].Text = "Do you have trouble reading clocks?"; 
+  Quiz[37].Text = "Do you have trouble reading clocks?";
   Quiz[38].Text = "Do you have a poor concept of time?";
   Quiz[39].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
   Quiz[40].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
@@ -490,7 +488,7 @@ void TQuizM1::SetupTexts()
   Quiz[67].Text = "Do you feel that you are a very special or unusual person?";
   Quiz[68].Text = "Do you realize hours later that somebody that you have a romantic interest for actually showed interest for you, and then feel bad about the missed opportunity to connect?";
   Quiz[69].Text = "Do you have unusual sexual preferences?";
-  Quiz[70].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";  
+  Quiz[70].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";
   Quiz[71].Text = "Do you tend to develop romantic feelings for people that persistently shows interest for you?";
   Quiz[72].Text = "Do you tend to study people you are interested in?";
   Quiz[73].Text = "Do you enjoy traditional dating?";
@@ -500,7 +498,7 @@ void TQuizM1::SetupTexts()
   Quiz[77].Text = "Are you asexual?";
   Quiz[78].Text = "Do you take pride in your appearance?";
   Quiz[79].Text = "In a conversation, do you tend to focus on your own thoughts rather than on what your listener might be thinking?";
-  Quiz[80].Text = "Do you have difficulty accepting criticism, correction, and direction?";  
+  Quiz[80].Text = "Do you have difficulty accepting criticism, correction, and direction?";
   Quiz[81].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
   Quiz[82].Text = "Do you usually find faults with others' opinions that you don't share?";
   Quiz[83].Text = "Will you abandon your friends if your activities or ideals clash?";
@@ -789,9 +787,9 @@ void TQuizM1::ImportMvsp(const char *filename, int PcaType)
 
             infile.SetPos(pos);
         }
-        
+
         infile.SetPos(pos);
-                                
+
         while (size = infile.Read(buf, MAX_IN_ROW))
         {
                 buf[size] = 0;
