@@ -279,7 +279,10 @@ void TQuizM1::SetupTexts()
   Quiz[105].Reverse = TRUE;
   Quiz[106].Reverse = TRUE;
   Quiz[107].Reverse = TRUE;
+  Quiz[125].Reverse = TRUE;
+  Quiz[126].Reverse = TRUE;
   Quiz[127].Reverse = TRUE;
+  Quiz[128].Reverse = TRUE;
   Quiz[129].Reverse = TRUE;
   Quiz[130].Reverse = TRUE;
 
@@ -295,7 +298,7 @@ void TQuizM1::SetupTexts()
   Quiz[9].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[10].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[11].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[12].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[12].MyGroup = GROUP_ASPIE_NVC;
   Quiz[13].MyGroup = GROUP_NT_TALENT;
   Quiz[14].MyGroup = GROUP_NT_TALENT;
   Quiz[15].MyGroup = GROUP_NT_TALENT;
@@ -318,10 +321,10 @@ void TQuizM1::SetupTexts()
   Quiz[32].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[33].MyGroup = GROUP_NT_SENSORY;
   Quiz[34].MyGroup = GROUP_NT_SENSORY;
-  Quiz[35].MyGroup = GROUP_NT_SENSORY;
+  Quiz[35].MyGroup = GROUP_NT_TALENT;
   Quiz[36].MyGroup = GROUP_NT_SENSORY;
   Quiz[37].MyGroup = GROUP_NT_SENSORY;
-  Quiz[38].MyGroup = GROUP_NT_SENSORY;
+  Quiz[38].MyGroup = GROUP_NT_TALENT;
   Quiz[39].MyGroup = GROUP_ASPIE_NVC;
   Quiz[40].MyGroup = GROUP_ASPIE_NVC;
   Quiz[41].MyGroup = GROUP_ASPIE_NVC;
@@ -349,7 +352,7 @@ void TQuizM1::SetupTexts()
   Quiz[63].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[64].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[65].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[66].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[66].MyGroup = GROUP_MIXED;
   Quiz[67].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[68].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[69].MyGroup = GROUP_ASPIE_RELATION;
@@ -392,7 +395,7 @@ void TQuizM1::SetupTexts()
   Quiz[106].MyGroup = GROUP_MIXED;
   Quiz[107].MyGroup = GROUP_MIXED;
   Quiz[108].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[109].MyGroup = GROUP_MIXED;
+  Quiz[109].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[110].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[111].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[112].MyGroup = GROUP_ASPIE_TALENT;
@@ -412,11 +415,11 @@ void TQuizM1::SetupTexts()
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_NT_SENSORY;
   Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_NT_SOCIAL;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_NT_TALENT;
 
   Quiz[0].Text = "Do you have a fascination for slowly flowing water?";
   Quiz[1].Text = "Do you have an urge to observe the habits of animals?";
