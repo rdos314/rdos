@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convm1.cpp
-# Convert exported quiz-m1 to binary file
+# convl24.cpp
+# Convert exported quiz-l24 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -56,7 +56,7 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("M1: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+    printf("L24: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
 }
 
 /*##################  ProcessRow ##########################
@@ -209,27 +209,27 @@ static void ProcessRow(char *str)
     }
         
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 134);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 133);
 }
 
-/*################## ConvM1 ##########################
-*   Purpose....: Convert quiz m1                                                         #
+/*################## ConvL24 ##########################
+*   Purpose....: Convert quiz L24                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void ConvM1()
+void ConvL24()
 {
     char buf[MAX_IN_ROW];
     int size;
     long pos = 0;
-    TFile infile("raw\\aspie-quiz-m1.csv");
-    TFile outfile("bin\\quizm1.bin", 0);
+    TFile infile("raw\\aspie-quiz-l24.csv");
+    TFile outfile("bin\\quizl24.bin", 0);
     char *ptr;
 
     quizfile = &outfile;
-    OpenPca("M1");
+    OpenPca("L24");
 
     size = infile.Read(buf, MAX_IN_ROW);
     buf[size] = 0;

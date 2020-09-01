@@ -156,6 +156,7 @@ void ConvL20();
 void ConvL21();
 void ConvL22();
 void ConvL23();
+void ConvL24();
 
 void ConvM1();
 
@@ -705,6 +706,7 @@ int main(int argc, char **argv)
     ConvL18();
     ConvL20();
     ConvL23();
+    ConvM1();
 
     ConvL4();
     ConvCn4a();
@@ -715,7 +717,8 @@ int main(int argc, char **argv)
     ConvIt4();
  
 */
-    ConvM1();
+
+    ConvL24();
         
     return 0;
 }
