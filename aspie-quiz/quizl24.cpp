@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL24::TQuizL24(const char *FileName)
-  : TQuiz(133),
+  : TQuiz(138),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizL24::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL24::GetQuizN()
 {
-    return 133;
+    return 138;
 }
 
 /*##########################################################################
@@ -293,25 +293,25 @@ void TQuizL24::SetupTexts()
   Quiz[119].Reverse = TRUE;
   Quiz[120].Reverse = TRUE;
  
-  Quiz[0].MyGroup = GROUP_MIXED;
-  Quiz[1].MyGroup = GROUP_MIXED;
-  Quiz[2].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[4].MyGroup = GROUP_MIXED;
+  Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[5].MyGroup = GROUP_NT_TALENT;
-  Quiz[6].MyGroup = GROUP_NT_SENSORY;
+  Quiz[6].MyGroup = GROUP_NT_TALENT;
   Quiz[7].MyGroup = GROUP_NT_TALENT;
   Quiz[8].MyGroup = GROUP_NT_TALENT;
   Quiz[9].MyGroup = GROUP_NT_TALENT;
-  Quiz[10].MyGroup = GROUP_NT_SENSORY;
+  Quiz[10].MyGroup = GROUP_NT_TALENT;
   Quiz[11].MyGroup = GROUP_NT_TALENT;
-  Quiz[12].MyGroup = GROUP_NT_SENSORY;
+  Quiz[12].MyGroup = GROUP_NT_TALENT;
   Quiz[13].MyGroup = GROUP_NT_TALENT;
   Quiz[14].MyGroup = GROUP_NT_TALENT;
   Quiz[15].MyGroup = GROUP_NT_TALENT;
-  Quiz[16].MyGroup = GROUP_NT_SENSORY;
+  Quiz[16].MyGroup = GROUP_NT_TALENT;
   Quiz[17].MyGroup = GROUP_NT_TALENT;
-  Quiz[18].MyGroup = GROUP_NT_SENSORY;
+  Quiz[18].MyGroup = GROUP_NT_TALENT;
   Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[20].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[21].MyGroup = GROUP_ASPIE_SENSORY;
@@ -319,16 +319,16 @@ void TQuizL24::SetupTexts()
   Quiz[23].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[24].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[25].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[26].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[26].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[27].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[28].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[29].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[30].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[31].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[32].MyGroup = GROUP_NT_NVC;
-  Quiz[33].MyGroup = GROUP_NT_NVC;
-  Quiz[34].MyGroup = GROUP_MIXED;
-  Quiz[35].MyGroup = GROUP_MIXED;
+  Quiz[32].MyGroup = GROUP_NT_SENSORY;
+  Quiz[33].MyGroup = GROUP_NT_SENSORY;
+  Quiz[34].MyGroup = GROUP_NT_SENSORY;
+  Quiz[35].MyGroup = GROUP_NT_SENSORY;
   Quiz[36].MyGroup = GROUP_NT_SENSORY;
   Quiz[37].MyGroup = GROUP_NT_SENSORY;
   Quiz[38].MyGroup = GROUP_NT_SENSORY;
@@ -339,16 +339,16 @@ void TQuizL24::SetupTexts()
   Quiz[43].MyGroup = GROUP_ASPIE_NVC;
   Quiz[44].MyGroup = GROUP_ASPIE_NVC;
   Quiz[45].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[46].MyGroup = GROUP_MIXED;
+  Quiz[46].MyGroup = GROUP_ASPIE_NVC;
   Quiz[47].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[48].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[49].MyGroup = GROUP_ASPIE_TALENT;  
-  Quiz[50].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[48].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[49].MyGroup = GROUP_ASPIE_NVC;  
+  Quiz[50].MyGroup = GROUP_ASPIE_NVC;
   Quiz[51].MyGroup = GROUP_ASPIE_NVC;
   Quiz[52].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[53].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[53].MyGroup = GROUP_ASPIE_NVC;
   Quiz[54].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[55].MyGroup = GROUP_MIXED;
+  Quiz[55].MyGroup = GROUP_ASPIE_NVC;
   Quiz[56].MyGroup = GROUP_NT_NVC;
   Quiz[57].MyGroup = GROUP_NT_NVC;
   Quiz[58].MyGroup = GROUP_NT_NVC;
@@ -358,26 +358,26 @@ void TQuizL24::SetupTexts()
   Quiz[62].MyGroup = GROUP_NT_NVC;
   Quiz[63].MyGroup = GROUP_NT_NVC;
   Quiz[64].MyGroup = GROUP_NT_NVC;
-  Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[66].MyGroup = GROUP_MIXED;
-  Quiz[67].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[68].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[65].MyGroup = GROUP_NT_NVC;
+  Quiz[66].MyGroup = GROUP_NT_NVC;
+  Quiz[67].MyGroup = GROUP_NT_NVC;
+  Quiz[68].MyGroup = GROUP_NT_NVC;
   Quiz[69].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[70].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[71].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[72].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[73].MyGroup = GROUP_MIXED;
-  Quiz[74].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[72].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[73].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[74].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[75].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[76].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[77].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[78].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[79].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[80].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[79].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[80].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[81].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[82].MyGroup = GROUP_MIXED;
+  Quiz[82].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[83].MyGroup = GROUP_ASPIE_RELATION;
-  Quiz[84].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[84].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[85].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[86].MyGroup = GROUP_NT_RELATION;
   Quiz[87].MyGroup = GROUP_NT_RELATION;
@@ -389,7 +389,7 @@ void TQuizL24::SetupTexts()
   Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[94].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[96].MyGroup = GROUP_MIXED;
+  Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[98].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[99].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -405,7 +405,7 @@ void TQuizL24::SetupTexts()
   Quiz[109].MyGroup = GROUP_NT_SOCIAL;
   Quiz[110].MyGroup = GROUP_NT_SOCIAL;
   Quiz[111].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[112].MyGroup = GROUP_MIXED;
+  Quiz[112].MyGroup = GROUP_NT_SOCIAL;
   Quiz[113].MyGroup = GROUP_NT_SOCIAL;
   Quiz[114].MyGroup = GROUP_NT_SOCIAL;
   Quiz[115].MyGroup = GROUP_NT_SOCIAL;
@@ -426,6 +426,11 @@ void TQuizL24::SetupTexts()
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -561,6 +566,11 @@ void TQuizL24::SetupTexts()
   Quiz[130].Text = "Do you have panic attacks?";
   Quiz[131].Text = "Have you been sexually abused?";
   Quiz[132].Text = "Have you been talked into having sex even if you really didn't want to?";
+  Quiz[133].Text = "Were you abused by parents as a child?";
+  Quiz[134].Text = "Do you miss having a soul mate?";
+  Quiz[135].Text = "Do you miss being in a relationship?";
+  Quiz[136].Text = "Do you miss having a lot of friends?";
+  Quiz[137].Text = "Do you miss being popular?";
 
 }
 
@@ -745,7 +755,7 @@ void TQuizL24::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 133; i++)
+    for (i = 0; i < 138; i++)
             DefineGlobalId(i, i);
 }
 
