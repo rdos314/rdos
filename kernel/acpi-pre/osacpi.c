@@ -59,6 +59,9 @@ void WriteBytePort(short int address, char val);
 void WriteWordPort(short int address, short int val);
 void WriteDwordPort(short int address, long val);
 
+extern void LinkIrq(int Irq, void *Handler, void *Context);
+#pragma aux LinkIrq parm routine [eax] [fs esi] [es edi] 
+
 void Load();
 
 #pragma aux ReadBytePort = \
@@ -130,6 +133,17 @@ ACPI_STATUS AcpiOsPredefinedOverride(const ACPI_PREDEFINED_NAMES *Obj, ACPI_STRI
 ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *Table, ACPI_TABLE_HEADER **NewTable)
 {
     *NewTable = 0;
+    return AE_OK;
+}
+
+/*##########################################################################
+#
+#   Name       : AcpiOsPhysicalTableOverride
+#
+##########################################################################*/
+ACPI_STATUS AcpiOsPhysicalTableOverride(ACPI_TABLE_HEADER *ExistingTable, ACPI_PHYSICAL_ADDRESS *NewAddress, UINT32 *NewTableLength)
+{
+    *NewAddress = 0;
     return AE_OK;
 }
 
@@ -811,21 +825,13 @@ void AcpiOsVprintf(const char *Format, va_list Args)
     
 /*##########################################################################
 #
-#   Name       : IrqStub
+#   Name       : IrqStart
 #
 ##########################################################################*/
-#pragma aux IrqStub "*" rdosdev parm routine
-void __far IrqStub()
+#pragma aux IrqStart "*" rdosdev parm routine [fs esi] [es edi]
+void IrqStart(ACPI_OSD_HANDLER Handler, void *Context)
 {
-    int sel;
-    struct TIntReq *req;
-
-    _asm int 3
-
-    sel = RdosGetGateDs();
-    req = (struct TIntReq *)RdosSelectorToPointer(sel);
-
-    (*req->Handler)(req->Context);
+    (*Handler)(Context);
 }
     
 /*##########################################################################
@@ -835,16 +841,7 @@ void __far IrqStub()
 ##########################################################################*/
 ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler, void *Context)
 {
-    struct TIntReq *req;
-    int sel;
-
-    req = (struct TIntReq *)RdosAllocateSmallGlobalMem(sizeof(struct TIntReq));
-    req->Handler = Handler;
-    req->Context = Context;
-                
-    sel = RdosPointerToSelector(req);        
-
-//    RdosRequestIrqHandler(Level, 0x10, &IrqStub, sel);
+    LinkIrq(Level, Handler, Context);
     return AE_OK;
 }
     
@@ -895,6 +892,17 @@ void __far AcpiThread(void *param)
         RdosWaitForSignal();
 //        RdosWaitMilli(100);
     }
+}
+
+    /*##########################################################################
+#
+#   Name       : AcpiWaitEventsComplete
+#
+##########################################################################*/
+void AcpiOsWaitEventsComplete()
+{
+    while (ExecList)
+        RdosWaitMilli(100);
 }
     
 /*##########################################################################

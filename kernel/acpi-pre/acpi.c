@@ -46,6 +46,9 @@ extern void InitOsAcpi();
 extern int UseAcpiReset();
 #pragma aux UseAcpiReset value [eax]
 
+extern int GetPicMode();
+#pragma aux GetPicMode value [eax]
+
 extern int GetTermalLimit();
 #pragma aux GetTermalLimit value [eax]
 
@@ -67,13 +70,10 @@ extern int GetIntelTermOffset();
 extern int GetAmdTemp();
 #pragma aux GetAmdTemp value [eax]
 
-#define MAX_DEVICE_COUNT        1024
-#define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
-#define MAX_PCI_DEV_COUNT       256
 #define MAX_PROCESSOR_COUNT     32
-#define MAX_PROCESSOR_PSTATES   32
-#define MAX_PROCESSOR_TSTATES   32
+
+#define AMD_WATCHDOG         0xC0010074
 
 #define AMD8_PERF_STATUS     0xC0010042
 #define AMD8_PERF_CTL        0xC0010041
@@ -284,31 +284,43 @@ UINT16 CurrBus;
 struct TDeviceEntry *Root;
 
 int DeviceCount = 0;
-struct TDeviceEntry *DeviceArr[MAX_DEVICE_COUNT];
+int DeviceSize = 0;
+struct TDeviceEntry **DeviceArr;
 
 int HardwareCount = 0;
-struct TDeviceEntry *HardwareArr[MAX_DEVICE_COUNT];
-
-int PciRootCount = 0;
-struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
+int HardwareSize = 0;
+struct TDeviceEntry **HardwareArr;
 
 int PciDevCount = 0;
-struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
+int PciDevSize = 0;
+struct TDeviceEntry **PciDevArr;
+
+int PciLnkDevCount = 0;
+int PciLnkDevSize = 0;
+struct TDeviceEntry **PciLnkDevArr;
+
+int PciRootCount = 0;
+int PciRootSize = 0;
+struct TDeviceEntry **PciRootArr;
 
 int ProcessorCount = 0;
-struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
+int ProcessorSize = 0;
+struct TProcessorEntry **ProcessorArr;
+
 
 ACPI_GENERIC_ADDRESS *PowerControl = 0;
 ACPI_GENERIC_ADDRESS *PowerStatus = 0;
 
 int PowerStateCount = 0;
-struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
+int PowerStateSize = 0;
+struct TProcessorState* *PowerStateArr;
 
 ACPI_GENERIC_ADDRESS *ThrottlingControl = 0;
 ACPI_GENERIC_ADDRESS *ThrottlingStatus = 0;
 
 int ThrottlingStateCount = 0;
-struct TThrottlingState *ThrottlingStateArr[MAX_PROCESSOR_TSTATES];
+int ThrottlingStateSize = 0;
+struct TThrottlingState **ThrottlingStateArr;
 
 int PowerState;
 int ThrottleState;
@@ -343,18 +355,23 @@ char TempResourceBuf[0x4000];
 
 long long StateArr[MAX_PROCESSOR_COUNT];
     
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
+/*##########################################################################
+#
+#   Name       : AllocateSelector
+#
+##########################################################################*/
+void *AllocateSelector(ACPI_SIZE Size)
 {
-    ACPI_EVENT_STATUS status;
-    ACPI_STATUS ok;
+    long linear;
+    char *ptr;
 
+    if (Size <= 0 || Size > 0x100000)
+        return 0;
+    
+    ptr = (char *)RdosAllocateBigGlobalMem(Size);
 
-    ok = AcpiGetEventStatus(ACPI_EVENT_POWER_BUTTON, &status);
-    if (status & ACPI_EVENT_FLAG_SET)
-        RdosSoftReset();
-            
+    memset(ptr, 0, Size);
+    return ptr;
 }
     
 /*##########################################################################
@@ -714,6 +731,8 @@ void InitAmdK10()
 {
     int i;
     int StateId = (int)ReadMsr(AMD10_PERF_STATUS) & 0xFFFF;
+
+    WriteMsr(AMD_WATCHDOG, 0);
 
     PowerState = 0;
 
@@ -1862,6 +1881,44 @@ void AddProcObject(struct TProcessorEntry *Parent, struct TObjectEntry *Object)
 
 /*##########################################################################
 #
+#   Name       : AddProcessor
+#
+#   Purpose....: Add processor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddProcessor(struct TProcessorEntry *Proc)
+{
+    struct TProcessorEntry **ProcList;
+    int i;
+
+    if (ProcessorCount == ProcessorSize)
+    {
+        if (ProcessorSize)
+            ProcessorSize = 2 * ProcessorSize;
+        else
+            ProcessorSize = 2;
+
+        ProcList = (struct TProcessorEntry **)AllocateSelector(ProcessorSize * sizeof(struct TProcessorEntry *));
+  
+        for (i = 0; i < ProcessorCount; i++)
+            ProcList[i] = ProcessorArr[i];
+
+        if (ProcessorCount)
+            AcpiOsFree(ProcessorArr);
+
+        ProcessorArr = ProcList;
+    }                
+
+    ProcessorArr[ProcessorCount] = Proc;
+    ProcessorCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : AddAcpiObject
 #
 #   Purpose....: Walk callback for creating device-tree
@@ -1883,6 +1940,8 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
     struct TProcessorEntry *ProcEntry;
     struct TDeviceEntry *OwnerDev;
     struct TProcessorEntry *OwnerProc;
+    struct TDeviceEntry **DevList;
+    int i;
         
     Status = AcpiGetType(Object, &Type);
 
@@ -1911,11 +1970,27 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                     Root = DevEntry;
             }
 
-            if (DeviceCount < MAX_DEVICE_COUNT)
+            if (DeviceCount == DeviceSize)
             {
-                DeviceArr[DeviceCount] = DevEntry;
-                DeviceCount++;
-            }
+                if (DeviceSize)
+                    DeviceSize = 2 * DeviceSize;
+                else
+                    DeviceSize = 16;
+
+                DevList = (struct TDeviceEntry **)AllocateSelector(DeviceSize * sizeof(struct TDeviceEntry *));
+
+                for (i = 0; i < DeviceCount; i++)
+                    DevList[i] = DeviceArr[i];
+
+                if (DeviceCount)
+                    AcpiOsFree(DeviceArr);
+
+                DeviceArr = DevList;
+            }                
+
+            DeviceArr[DeviceCount] = DevEntry;
+            DeviceCount++;
+
             return AE_OK;
         }
         else
@@ -1934,12 +2009,8 @@ ACPI_STATUS AddAcpiObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, voi
                 ProcEntry->Id = ProcObj->ProcId;
                 ProcEntry->PblkAds = (unsigned char *)&ProcObj->Address;
                 ProcEntry->PblkLen = ProcObj->Length; 
-    
-                if (ProcessorCount < MAX_PROCESSOR_COUNT)
-                {
-                    ProcessorArr[ProcessorCount] = ProcEntry;
-                    ProcessorCount++;
-                }
+
+                AddProcessor(ProcEntry);
                 return AE_OK;
             }
             else
@@ -1994,6 +2065,9 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
     int CopyLen;
     int AllocLen;
     char *ptr;
+    int count;
+    int i;
+    int irq;
     ACPI_RESOURCE *Resource;
     struct TResourceIrq *IrqResource;
     struct TResourceExtendedIrq *ExtendedIrqResource;
@@ -2022,6 +2096,14 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
                     memcpy(&IrqResource->Data, &Resource->Data, CopyLen);
                     IrqResource->Next = DevEntry->IrqResourceList;
                     DevEntry->IrqResourceList = IrqResource;
+
+//                    count = IrqResource->Data.InterruptCount;
+//                    for (i = 0; i < count; i++)
+//                    {
+//                        irq = IrqResource->Data.Interrupts[i];
+//                        if (irq)
+//                            IrqArr[irq] = DevEntry;
+//                    }
                     break;
                             
                 case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
@@ -2099,6 +2181,68 @@ void AddResource(struct TDeviceEntry *DevEntry, int size)
 
 /*##########################################################################
 #
+#   Name       : SetIrqMode
+#
+#   Purpose....: Set IRQ mode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetIrqMode()
+{
+   ACPI_OBJECT arg1;
+   ACPI_OBJECT_LIST args;
+
+   arg1.Type = ACPI_TYPE_INTEGER;
+   arg1.Integer.Value = GetPicMode();            /* 0 - PIC, 1 - IOAPIC, 2 - IOSAPIC */
+   args.Count = 1;
+   args.Pointer = &arg1;
+
+   AcpiEvaluateObject(ACPI_ROOT_OBJECT, "_PIC", &args, NULL);
+}
+
+/*##########################################################################
+#
+#   Name       : AddPciRoot
+#
+#   Purpose....: Add PCI root
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPciRoot(struct TDeviceEntry *PciDev)
+{
+    struct TDeviceEntry **DevList;
+    int i;
+
+    if (PciRootCount == PciRootSize)
+    {
+        if (PciRootSize)
+            PciRootSize = 2 * PciRootSize;
+        else
+            PciRootSize = 2;
+
+        DevList = (struct TDeviceEntry **)AllocateSelector(PciRootSize * sizeof(struct TDeviceEntry *));
+  
+        for (i = 0; i < PciRootCount; i++)
+            DevList[i] = PciRootArr[i];
+
+        if (PciRootCount)
+            AcpiOsFree(PciRootArr);
+    
+        PciRootArr = DevList;
+    }                
+
+    PciRootArr[PciRootCount] = PciDev;
+    PciRootCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : GetHardware
 #
 #   Purpose....: Get hardware devices
@@ -2118,94 +2262,187 @@ void GetHardware()
     ACPI_HANDLE Handle;
     struct TResourceList *List;
     struct TDeviceEntry *DevEntry;
+    struct TDeviceEntry **HwList;
     int i;
     int j;
 
     while (ProcessorCount > 1 && ProcessorArr[ProcessorCount-1]->ObjectList == 0)
         ProcessorCount--;
 
-    for (i = 0; i < MAX_DEVICE_COUNT; i++)
+    for (i = 0; i < DeviceCount; i++)
     {
         DevEntry = DeviceArr[i];
-        if (DevEntry)
-        {        
-            for (j = 0; j < 4; j++)
-                DevEntry->PciIrq[j] = 0;
 
-            DevEntry->IsPci = FALSE;
-            DevEntry->DevNr = i;
-            DevEntry->IrqResourceList = 0;
-            DevEntry->ExtendedIrqResourceList = 0;
-            DevEntry->DmaResourceList = 0;
-            DevEntry->IoResourceList = 0;
-            DevEntry->FixedIoResourceList = 0;
-            DevEntry->Memory24ResourceList = 0;
-            DevEntry->Memory32ResourceList = 0;
-            DevEntry->FixedMemory32ResourceList = 0;
-            DevEntry->Address16ResourceList = 0;
-            DevEntry->Address32ResourceList = 0;
+        for (j = 0; j < 4; j++)
+            DevEntry->PciIrq[j] = 0;
+
+        DevEntry->IsPci = FALSE;
+        DevEntry->DevNr = i;
+        DevEntry->IrqResourceList = 0;
+        DevEntry->ExtendedIrqResourceList = 0;
+        DevEntry->DmaResourceList = 0;
+        DevEntry->IoResourceList = 0;
+        DevEntry->FixedIoResourceList = 0;
+        DevEntry->Memory24ResourceList = 0;
+        DevEntry->Memory32ResourceList = 0;
+        DevEntry->FixedMemory32ResourceList = 0;
+        DevEntry->Address16ResourceList = 0;
+        DevEntry->Address32ResourceList = 0;
             
-            Buffer.Length = 0x10;
-            Buffer.Pointer = TempResourceBuf;
-            Status = AcpiGetName(DevEntry->Handle, ACPI_SINGLE_NAME, &Buffer);
+        Buffer.Length = 0x10;
+        Buffer.Pointer = TempResourceBuf;
+        Status = AcpiGetName(DevEntry->Handle, ACPI_SINGLE_NAME, &Buffer);
 
-            if (strstr(TempResourceBuf, "MEM"))
-                Status = -1;
+        if (strstr(TempResourceBuf, "MEM"))
+            Status = -1;
+
+        if (Status == AE_OK)
+        {
+            Buffer.Length = 0x4000;
+            Buffer.Pointer = TempResourceBuf;
+
+            Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
 
             if (Status == AE_OK)
             {
-                Buffer.Length = 0x4000;
-                Buffer.Pointer = TempResourceBuf;
+                AddResource(DevEntry, Buffer.Length);
 
-                Status = AcpiGetCurrentResources(DevEntry->Handle, &Buffer);
-
-                if (Status == AE_OK)
+                if (HardwareCount == HardwareSize)
                 {
-                    AddResource(DevEntry, Buffer.Length);
-
-                    HardwareArr[HardwareCount] = DevEntry;
-                    HardwareCount++;
-                }
-
-                Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
-                if (Status == AE_OK)
-                { 
-                    if (DevInfo->HardwareId.String)
-                    {
-                        strncpy(DevEntry->PnpName, DevInfo->HardwareId.String, 8);
-                        DevEntry->PnpName[8] = 0;
-                    }
+                    if (HardwareSize)
+                        HardwareSize = 2 * HardwareSize;
                     else
-                        DevEntry->PnpName[0] = 0;
-                
-                    if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
-                    {
-                        Handle = DevEntry->Handle;
-        
-                        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
+                        HardwareSize = 16;
 
-                        if (DevStatus == AE_OK)
-                            CurrSegment = ACPI_LOWORD (PciValue);
-                        else
-                            CurrSegment = 0;
+                    HwList = (struct TDeviceEntry **)AllocateSelector(HardwareSize * sizeof(struct TDeviceEntry *));
+  
+                    for (j = 0; j < HardwareCount; j++)
+                        HwList[j] = HardwareArr[j];
 
-                        DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
+                    if (HardwareCount)
+                        AcpiOsFree(HardwareArr);
+    
+                    HardwareArr = HwList;
+                }                
 
-                        if (DevStatus == AE_OK)
-                            DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
-                        else
-                            DevEntry->PciId.Bus = 0;
-                            
-                        DevEntry->SecondaryBus = DevEntry->PciId.Bus;
+                HardwareArr[HardwareCount] = DevEntry;
+                HardwareCount++;
+            }
 
-                        PciRootArr[PciRootCount] = DevEntry;
-                        PciRootCount++;
-                    }        
+            Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
+            if (Status == AE_OK)
+            { 
+                if (DevInfo->HardwareId.String)
+                {
+                    strncpy(DevEntry->PnpName, DevInfo->HardwareId.String, 8);
+                    DevEntry->PnpName[8] = 0;
                 }
+                else
+                    DevEntry->PnpName[0] = 0;
+                
+                if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
+                {
+                    Handle = DevEntry->Handle;
+        
+                    DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__SEG, Handle, &PciValue);
+
+                    if (DevStatus == AE_OK)
+                        CurrSegment = ACPI_LOWORD (PciValue);
+                    else
+                        CurrSegment = 0;
+
+                    DevStatus = AcpiUtEvaluateNumericObject (METHOD_NAME__BBN, Handle, &PciValue);
+
+                    if (DevStatus == AE_OK)
+                        DevEntry->PciId.Bus = ACPI_LOWORD (PciValue);
+                    else
+                        DevEntry->PciId.Bus = 0;
+
+                            
+                    DevEntry->SecondaryBus = DevEntry->PciId.Bus;
+                    AddPciRoot(DevEntry);
+                }        
             }
         }
     }
 }
+
+/*##########################################################################
+#
+#   Name       : AddPciDev
+#
+#   Purpose....: Add PCI device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPciDev(struct TDeviceEntry *PciDev)
+{
+    struct TDeviceEntry **DevList;
+    int i;
+
+    if (PciDevCount == PciDevSize)
+    {
+        if (PciDevSize)
+            PciDevSize = 2 * PciDevSize;
+        else
+            PciDevSize = 8;
+
+        DevList = (struct TDeviceEntry **)AllocateSelector(PciDevSize * sizeof(struct TDeviceEntry *));
+  
+        for (i = 0; i < PciDevCount; i++)
+            DevList[i] = PciDevArr[i];
+
+        if (PciDevCount)
+            AcpiOsFree(PciDevArr);
+    
+        PciDevArr = DevList;
+    }                
+
+    PciDevArr[PciDevCount] = PciDev;
+    PciDevCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : AddPciLnkDev
+#
+#   Purpose....: Add PCI link device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPciLnkDev(struct TDeviceEntry *PciDev)
+{
+    struct TDeviceEntry **DevList;
+    int i;
+
+    if (PciLnkDevCount == PciLnkDevSize)
+    {
+        if (PciLnkDevSize)
+            PciLnkDevSize = 2 * PciLnkDevSize;
+        else
+            PciLnkDevSize = 2;
+
+        DevList = (struct TDeviceEntry **)AllocateSelector(PciLnkDevSize * sizeof(struct TDeviceEntry *));
+  
+        for (i = 0; i < PciLnkDevCount; i++)
+            DevList[i] = PciLnkDevArr[i];
+
+        if (PciLnkDevCount)
+            AcpiOsFree(PciLnkDevArr);
+    
+        PciLnkDevArr = DevList;
+    }                
+
+    PciLnkDevArr[PciLnkDevCount] = PciDev;
+    PciLnkDevCount++;
+}
+
 
 /*##########################################################################
 #
@@ -2239,8 +2476,8 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
                     DeviceArr[i]->PciId.Device   = ACPI_HIWORD (ACPI_LODWORD (DevInfo->Address));
                     DeviceArr[i]->PciId.Function = ACPI_LOWORD (ACPI_LODWORD (DevInfo->Address));
                     DeviceArr[i]->IsPci = TRUE;
-                    PciDevArr[PciDevCount] = DeviceArr[i];
-                    PciDevCount++;
+
+                    AddPciDev(DeviceArr[i]);
 
                     PciVal = 0;
                     AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 10, &PciVal, 16);
@@ -2249,9 +2486,8 @@ ACPI_STATUS AddPciObject(ACPI_HANDLE Object, UINT32 Nesting, void *Context, void
                         PciVal = 0;
                         AcpiOsReadPciConfiguration(&DeviceArr[i]->PciId, 25, &PciVal, 8);
                         DeviceArr[i]->SecondaryBus = PciVal;
-                        
-                        PciRootArr[PciRootCount] = DeviceArr[i];
-                        PciRootCount++;
+
+                        AddPciRoot(DeviceArr[i]);
                     }
                     break;
                 }
@@ -2316,6 +2552,7 @@ void GetIrqRouting()
     int Device;
     int Pin;
     int Irq;
+    int found;
 
     for (i = 0; i < PciRootCount; i++)
     {
@@ -2341,6 +2578,7 @@ void GetIrqRouting()
 
                     if (Pin >= 0 && Pin < 4)
                     {
+                        LnkDev = 0;
                         Irq = RouteEntry->SourceIndex;
 
                         if (!Irq)
@@ -2353,6 +2591,8 @@ void GetIrqRouting()
                                     LnkDev = HardwareArr[j];
                                     if (LnkDev->Handle == Object)
                                         break;
+                                    else
+                                        LnkDev = 0;
                                 }
 
                                 if (LnkDev)
@@ -2424,9 +2664,35 @@ void GetIrqRouting()
                                 TargDev->PciId.Function = 0;
                                 TargDev->PciIrq[Pin] = Irq;
 
-                                PciDevArr[PciDevCount] = TargDev;
-                                PciDevCount++;
+                                AddPciDev(TargDev);
                             }                                          
+                        }
+                        else
+                        {
+                            if (LnkDev)
+                            {
+                                TargDev = 0;
+                            
+                                for (j = 0; j < PciDevCount && !TargDev; j++)
+                                {
+                                    PciDev = PciDevArr[j];
+                                    if (PciDev)
+                                        if (PciDev->PciId.Bus == Bus && PciDev->PciId.Device == Device)
+                                            TargDev = PciDev;
+                                }       
+
+                                if (TargDev)
+                                {
+                                    found = 0;
+
+                                    for (j = 0; j < PciLnkDevCount && !found; j++)
+                                        if (PciLnkDevArr[j] == LnkDev)
+                                            found = 1;
+
+                                    if (!found)
+                                        AddPciLnkDev(LnkDev);
+                                }
+                            }
                         }
                     }
                     ptr +=  RouteEntry->Length;
@@ -2546,6 +2812,44 @@ void GetPct()
 
 /*##########################################################################
 #
+#   Name       : AddPowerState
+#
+#   Purpose....: Add power state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddPowerState(struct TProcessorState *State)
+{
+    struct TProcessorState **StateList;
+    int i;
+
+    if (PowerStateCount == PowerStateSize)
+    {
+        if (PowerStateSize)
+            PowerStateSize = 2 * PowerStateSize;
+        else
+            PowerStateSize = 8;
+
+        StateList = (struct TProcessorState **)AllocateSelector(PowerStateSize * sizeof(struct TProcessorState *));
+  
+        for (i = 0; i < PowerStateCount; i++)
+            StateList[i] = PowerStateArr[i];
+
+        if (PowerStateCount)
+            AcpiOsFree(PowerStateArr);
+    
+        PowerStateArr = StateList;
+    }                
+
+    PowerStateArr[PowerStateCount] = State;
+    PowerStateCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : GetPss
 #
 #   Purpose....: Get PSS resource
@@ -2578,9 +2882,6 @@ void GetPss()
         if (Pss->Type == ACPI_TYPE_PACKAGE)
         {
             Count = Pss->Package.Count;
-
-            if (Count > MAX_PROCESSOR_PSTATES)
-                Count = MAX_PROCESSOR_PSTATES;
                 
             ok = TRUE;
 
@@ -2629,15 +2930,51 @@ void GetPss()
                             }
                         }
                     }
+
                     if (ok)
-                        PowerStateArr[j] = State;
+                        AddPowerState(State);
                 }
             }
-
-            if (ok)
-                PowerStateCount = Count;
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : AddThrottlingState
+#
+#   Purpose....: Add throttling state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddThrottlingState(struct TThrottlingState *State)
+{
+    struct TThrottlingState **StateList;
+    int i;
+
+    if (ThrottlingStateCount == ThrottlingStateSize)
+    {
+        if (ThrottlingStateSize)
+            ThrottlingStateSize = 2 * ThrottlingStateSize;
+        else
+            ThrottlingStateSize = 8;
+
+        StateList = (struct TThrottlingState **)AllocateSelector(ThrottlingStateSize * sizeof(struct TThrottlingState *));
+  
+        for (i = 0; i < ThrottlingStateCount; i++)
+            StateList[i] = ThrottlingStateArr[i];
+
+        if (ThrottlingStateCount)
+            AcpiOsFree(ThrottlingStateArr);
+    
+        ThrottlingStateArr = StateList;
+    }                
+
+    ThrottlingStateArr[ThrottlingStateCount] = State;
+    ThrottlingStateCount++;
 }
 
 /*##########################################################################
@@ -2674,9 +3011,6 @@ void GetTss()
         if (Tss->Type == ACPI_TYPE_PACKAGE)
         {
             Count = Tss->Package.Count;
-
-            if (Count > MAX_PROCESSOR_TSTATES)
-                Count = MAX_PROCESSOR_TSTATES;
                 
             ok = TRUE;
 
@@ -2721,13 +3055,11 @@ void GetTss()
                             }
                         }
                     }
+
                     if (ok)
-                        ThrottlingStateArr[j] = State;
+                        AddThrottlingState(State);
                 }
             }
-
-            if (ok)
-                ThrottlingStateCount = Count;
         }
     }
 }
@@ -2753,7 +3085,7 @@ void GlobalEvent(UINT32 type, ACPI_HANDLE device, UINT32 event, void *Param)
             break;
     }
 }
-
+    
 /*##########################################################################
 #
 #   Name       : Load
@@ -2767,8 +3099,6 @@ void GlobalEvent(UINT32 type, ACPI_HANDLE device, UINT32 event, void *Param)
 ##########################################################################*/
 void Load()
 {
-    int i;
-
     if (Status == 0)
     {
         Status = AcpiLoadTables();
@@ -2789,9 +3119,12 @@ void Load()
         if (Status != 0)
             Status |= 0x40000;
     }
+
     if (Status == 0)
     {
         AcpiWalkNamespace(ACPI_TYPE_ANY, ACPI_ROOT_OBJECT, 10, AddAcpiObject, 0, 0, 0);
+
+        SetIrqMode();
         GetHardware();        
         GetPciDevices();
         GetIrqRouting();
@@ -2809,7 +3142,6 @@ void Load()
         }
     }
 }
-
 
 /*##########################################################################
 #
@@ -2835,6 +3167,7 @@ void __far InitTasking()
     }        
 
     InitOsAcpi();
+
     Load();
 
     if (strstr(CpuVendor, "AMD"))
@@ -2919,6 +3252,12 @@ void __far InitTasking()
 
     ProcessorCount = RdosGetCoreCount();
 } 
+    
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+}
 
 /*##########################################################################
 #
@@ -2939,6 +3278,7 @@ int main()
     InitAcpiTables();
 
     Status = AcpiInitializeSubsystem();
+
     if (Status == 0)
     {
         AcpiUtInstallInterface("Module Device");

@@ -31,7 +31,7 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
-INCLUDE ..\..\kernel\os\proc.inc
+INCLUDE ..\..\kernel\os\core.inc
 INCLUDE acpi.inc
 
     .686p
@@ -42,6 +42,13 @@ acpi_table_count    DW ?
 acpi_table_arr      DD ?
 
 acpi_data_seg ENDS
+
+acpi_int_seg	STRUC
+
+acpi_proc       DD ?,?
+acpi_context	DD ?,?
+
+acpi_int_seg	ENDS
 
 _TEXT    SEGMENT byte public 'CODE'
 
@@ -608,6 +615,7 @@ get_table_set_phys:
     mov si,SIZE acpi_header
     mov ecx,ds:acpi_size
     sub ecx,SIZE acpi_header
+    jz get_table_copied
 ;
     xor ah,ah
 
@@ -616,7 +624,8 @@ get_table_copy:
     add ah,al
     stos byte ptr es:[di]
     loop get_table_copy
-;
+
+get_table_copied:
     mov cx,SIZE acpi_header
     xor si,si
 
@@ -979,7 +988,7 @@ enter_c3    Proc far
     push eax
 ;    
     GetCore
-    movzx eax,fs:ps_acpi
+    movzx eax,fs:cs_acpi
     call ImplEnterC3
 ;
     pop eax    
@@ -1009,7 +1018,12 @@ GetIntelTermOffset_    Proc near
 ;
     shr eax,16
     and eax,7Fh
-;    
+    cmp ax,7Fh - 0Ah
+    jbe gitoDone
+;
+    or eax,0FFFFFF00h
+
+gitoDone:    
     pop edx
     pop ecx
     ret
@@ -1122,7 +1136,7 @@ ReqPStateUpdate_    Proc near
 
 req_update_loop:    
     GetCoreNumber
-    lock or fs:ps_flags,PS_FLAG_P_STATE
+    lock or fs:cs_flags,CS_FLAG_P_STATE
 ;
     inc eax
     cmp eax,ecx
@@ -1150,7 +1164,7 @@ ReqShutdown_    Proc near
     push fs
 ;    
     GetCoreNumber
-    lock or fs:ps_flags,PS_FLAG_SHUTDOWN
+    lock or fs:cs_flags,CS_FLAG_SHUTDOWN
 ;
     pop fs                
     ret
@@ -1370,6 +1384,85 @@ uarOk:
     pop es    
     ret
 UseAcpiReset_     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IrqEntry
+;
+;           DESCRIPTION:    IRQ entrypoint
+;
+;           PARAMETERS:     DS		ACPI int seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn IrqStart:near
+
+IrqEntry	Proc far
+    mov esi,ds:acpi_proc
+    mov fs,ds:acpi_proc+4
+    mov edi,ds:acpi_context
+    mov es,ds:acpi_context+4
+    call IrqStart    
+    ret
+IrqEntry	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LinkIrq
+;
+;           DESCRIPTION:    Link IRQ
+;
+;           PARAMETERS:     AL		Irq
+;                           FS:ESI      Handler
+;                           ES:EDI      Context
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LinkIrq_
+
+LinkIrq_    Proc near
+    push ds
+    push es
+    push edi
+;    
+    push es
+    push eax
+    mov eax,SIZE acpi_int_seg
+    AllocateSmallGlobalMem
+    mov eax,es
+    mov ds,eax
+    pop eax
+    pop es
+;
+    mov ds:acpi_proc,esi
+    mov ds:acpi_proc+4,fs
+    mov ds:acpi_context,edi
+    mov ds:acpi_context+4,es
+;
+    cmp al,2
+    je liNmi
+;
+    mov ah,10h
+    mov edi,cs
+    mov es,edi
+    mov edi,OFFSET IrqEntry
+    RequestIrqHandler
+    jmp liDone
+
+liNmi:
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET IrqEntry
+    SetupNmiHandler
+
+liDone:
+    pop edi
+    pop es
+    pop ds    
+    ret
+LinkIrq_    Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
