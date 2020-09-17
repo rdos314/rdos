@@ -932,4 +932,7 @@ set_adc_trigger_nr                = 731
 create_can_module_bitmap_nr       = 732
 move_to_new_core_nr               = 733
 
+has_usb_card_dev_reset_nr         = 734
+has_usb_card_usb_reset_nr         = 735
+
 usergate_entries                  = 750

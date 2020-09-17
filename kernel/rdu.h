@@ -932,6 +932,9 @@
 #define usergate_create_can_module_bitmap 0x000002DC
 #define usergate_move_to_new_core 0x000002DD
 
+#define usergate_has_usb_card_dev_reset 0x000002DE
+#define usergate_has_usb_card_usb_reset 0x000002DF
+
 
 
 #ifdef __FLAT__
@@ -1869,6 +1872,9 @@
 #define CallGate_create_can_module_bitmap 0x55 0x67 0x9a 220 2 0 0 3 0 0x5d
 #define CallGate_move_to_new_core 0x55 0x67 0x9a 221 2 0 0 3 0 0x5d
 
+#define CallGate_has_usb_card_dev_reset 0x55 0x67 0x9a 222 2 0 0 3 0 0x5d
+#define CallGate_has_usb_card_usb_reset 0x55 0x67 0x9a 223 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2803,5 +2809,8 @@
 
 #define CallGate_create_can_module_bitmap 0x3e 0x67 0x9a 220 2 0 0 3 0
 #define CallGate_move_to_new_core 0x3e 0x67 0x9a 221 2 0 0 3 0
+
+#define CallGate_has_usb_card_dev_reset 0x3e 0x67 0x9a 222 2 0 0 3 0
+#define CallGate_has_usb_card_usb_reset 0x3e 0x67 0x9a 223 2 0 0 3 0
 
 #endif

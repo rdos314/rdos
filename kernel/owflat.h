@@ -3558,6 +3558,16 @@
     CarryToBool \
     __value [__eax]
 
+#pragma aux RdosHasUsbCardDevReset = \
+    CallGate_has_usb_card_dev_reset \
+    CarryToBool \
+    __value [__eax]
+
+#pragma aux RdosHasUsbCardUsbReset = \
+    CallGate_has_usb_card_usb_reset \
+    CarryToBool \
+    __value [__eax]
+
 #pragma aux RdosGetUsbDevice = \
     CallGate_get_usb_device \
     ValidateEax \

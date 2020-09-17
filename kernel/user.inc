@@ -3739,6 +3739,15 @@ HasUsbCardReaderError      MACRO
         UserGate has_usb_card_reader_error_nr
                                                 ENDM
 
+;   OUT NC          Has device RESET
+HasUsbCardDevReset      MACRO
+        UserGate has_usb_card_dev_reset_nr
+                                                ENDM
+
+;   OUT NC          Has USB RESET
+HasUsbCardUsbReset      MACRO
+        UserGate has_usb_card_usb_reset_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)

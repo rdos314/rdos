@@ -71,6 +71,10 @@ hid_was_inserted    DB ?
 hid_reset_req       DB ?
 hid_activity        DB ?
 
+hid_dev_reset       DB ?
+hid_usb_reset       DB ?
+
+
 hid_card   ENDS
 
 mcp_frame	STRUC
@@ -990,6 +994,7 @@ hcWait:
     jz hcNotReset
 
 hcReset:
+    mov ds:hid_dev_reset,1
     mov ds:card_was_off,0
     call ResetDevice
     mov ax,1000
@@ -1007,6 +1012,7 @@ hcReset:
     jmp hcInit
 
 hcResetHid:
+    mov ds:hid_usb_reset,1
     mov ds:card_was_off,0
     mov es,ebx
     mov ax,es
@@ -2573,6 +2579,68 @@ has_usb_card_reader_error	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Has USB card device RESET
+;
+;           DESCRIPTION:    Has usb card device reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_usb_card_dev_reset_name	DB 'Has USB Card Device Reset', 0
+
+has_usb_card_dev_reset	Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,ebx
+    xor al,al
+    xchg al,ds:hid_dev_reset
+    or al,al
+    stc
+    jz hucdrDone
+;
+    clc
+
+hucdrDone:
+    pop ebx
+    pop ds
+    ret
+has_usb_card_dev_reset	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Has USB card USB RESET
+;
+;           DESCRIPTION:    Has usb card USB reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_usb_card_usb_reset_name	DB 'Has USB Card USB Reset', 0
+
+has_usb_card_usb_reset	Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,ebx
+    xor al,al
+    xchg al,ds:hid_usb_reset
+    or al,al
+    stc
+    jz hucurDone
+;
+    clc
+
+hucurDone:
+    pop ebx
+    pop ds
+    ret
+has_usb_card_usb_reset	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init
 ;
 ;           DESCRIPTION:    init device
@@ -2603,6 +2671,8 @@ Init    Proc far
     mov ds:mcp_pcb,0
     mov ds:mcp_rec_start,0
     mov ds:fatal_error,0
+    mov ds:hid_dev_reset,1
+    mov ds:hid_usb_reset,1
 ;
     mov eax,cs
     mov ds,eax
@@ -2624,6 +2694,18 @@ Init    Proc far
     mov edi,OFFSET has_usb_card_reader_error_name
     xor dx,dx
     mov ax,has_usb_card_reader_error_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET has_usb_card_dev_reset
+    mov edi,OFFSET has_usb_card_dev_reset_name
+    xor dx,dx
+    mov ax,has_usb_card_dev_reset_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET has_usb_card_usb_reset
+    mov edi,OFFSET has_usb_card_usb_reset_name
+    xor dx,dx
+    mov ax,has_usb_card_usb_reset_nr
     RegisterBimodalUserGate
     ret
 Init    Endp
