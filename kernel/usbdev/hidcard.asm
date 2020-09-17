@@ -71,10 +71,6 @@ hid_was_inserted    DB ?
 hid_reset_req       DB ?
 hid_activity        DB ?
 
-hid_dev_reset       DB ?
-hid_usb_reset       DB ?
-
-
 hid_card   ENDS
 
 mcp_frame	STRUC
@@ -138,6 +134,9 @@ card_setup          DB ?
 card_active         DB ?
 card_was_off        DB ?
 fatal_error         DB ?
+card_dev_reset      DB ?
+card_usb_reset      DB ?
+
 
 track2              DB 40 DUP(?)
 
@@ -880,7 +879,6 @@ hcInit:
 
 hcGetConfig:
     mov ds:card_active,1
-    mov es:hid_activity,0
     mov bl,4
     call GetPropertyByte
     jnc hcOn
@@ -933,7 +931,8 @@ hcWaitInserted:
     jz hcOff
 ;
     mov es,ebx
-    mov al,es:hid_activity
+    xor al,al
+    xchg al,es:hid_activity
     or al,al
     jnz hcWait
 ;
@@ -960,7 +959,8 @@ hcWaitReport:
     jz hcOff
 ;
     mov es,ebx
-    mov al,es:hid_activity
+    xor al,al
+    xchg al,es:hid_activity
     or al,al
     jnz hcWait
 ;
@@ -994,7 +994,7 @@ hcWait:
     jz hcNotReset
 
 hcReset:
-    mov ds:hid_dev_reset,1
+    mov ds:card_dev_reset,1
     mov ds:card_was_off,0
     call ResetDevice
     mov ax,1000
@@ -1012,7 +1012,7 @@ hcReset:
     jmp hcInit
 
 hcResetHid:
-    mov ds:hid_usb_reset,1
+    mov ds:card_usb_reset,1
     mov ds:card_was_off,0
     mov es,ebx
     mov ax,es
@@ -1103,7 +1103,9 @@ hcsWait:
     jmp hcsLoop
 
 hcsFailed:
-    int 3
+    mov ds:fatal_error,1
+    mov ax,100
+    WaitMilliSec
     jmp hcsLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1154,6 +1156,8 @@ hid_begin   Proc far
     mov es:hid_report_offset,esi
     mov es:hid_report_sel,fs    
     mov es:hid_device_sel,gs
+    mov es:hid_reset_req,0
+    mov es:hid_activity,0
     mov es:hid_stat1_index,-1
     mov es:hid_stat2_index,-1
     mov es:hid_stat3_index,-1
@@ -2594,7 +2598,7 @@ has_usb_card_dev_reset	Proc far
     mov bx,SEG data
     mov ds,ebx
     xor al,al
-    xchg al,ds:hid_dev_reset
+    xchg al,ds:card_dev_reset
     or al,al
     stc
     jz hucdrDone
@@ -2625,7 +2629,7 @@ has_usb_card_usb_reset	Proc far
     mov bx,SEG data
     mov ds,ebx
     xor al,al
-    xchg al,ds:hid_usb_reset
+    xchg al,ds:card_usb_reset
     or al,al
     stc
     jz hucurDone
@@ -2671,8 +2675,8 @@ Init    Proc far
     mov ds:mcp_pcb,0
     mov ds:mcp_rec_start,0
     mov ds:fatal_error,0
-    mov ds:hid_dev_reset,1
-    mov ds:hid_usb_reset,1
+    mov ds:card_dev_reset,1
+    mov ds:card_usb_reset,1
 ;
     mov eax,cs
     mov ds,eax

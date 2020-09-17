@@ -44,11 +44,12 @@ public:
     virtual int WasCardInserted() const;
     virtual void ClearCardInserted() const;
 
-	void (*GoodCard)(TCardReaderDevice *CardReader, const char *strip);
+    void (*GoodCard)(TCardReaderDevice *CardReader, const char *strip);
 	void (*BadCard)(TCardReaderDevice *CardReader);
 
-	void *Owner;
+    void *Owner;
     
+
 protected:
     virtual void Execute();
 
