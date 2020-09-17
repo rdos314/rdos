@@ -68,6 +68,9 @@ hid_status_index        DW ?
 hid_inserted        DB ?
 hid_was_inserted    DB ?
 
+hid_reset_req       DB ?
+hid_activity        DB ?
+
 hid_card   ENDS
 
 mcp_frame	STRUC
@@ -122,9 +125,16 @@ mcp_pcb             DB ?
 mcp_rec_start       DB ?
 
 card_hid_handle     DW ?
+card_hid_thread     DW ?
 card_dev            DW ?
 carddev_thread      DW ?
+card_retries        DW ?
 card_state          DB ?
+card_setup          DB ?
+card_active         DB ?
+card_was_off        DB ?
+fatal_error         DB ?
+
 track2              DB 40 DUP(?)
 
 data	ENDS
@@ -820,6 +830,279 @@ ResetDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           hid_card_thread
+;
+;   DESCRIPTION:    Hid card thread
+;
+;   PARAMETERS:     BX      Handle
+;
+;   RETURNS:        NC      Use
+;                   CY      Discard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_card_thread_name DB 'Hid Card Reader', 0
+
+hid_card_thread:
+    mov eax,SEG data
+    mov ds,eax
+    GetThread
+    mov ds:card_hid_thread,ax
+;
+    mov bx,ds:card_hid_handle
+    mov es,ebx
+
+hcInit:
+    mov ds:card_setup,0
+    mov ds:card_retries,0
+;
+    mov bl,3
+    call GetPropertyByte
+    cmp al,3
+    je hcGetConfig
+;
+    mov bl,2
+    mov al,1
+    call SetPropertyByte
+;
+    mov bl,5
+    mov al,32
+    call SetPropertyByte
+;
+    mov bl,3
+    mov al,3
+    call SetPropertyByte
+    jmp hcReset
+
+hcGetConfig:
+    mov ds:card_active,1
+    mov es:hid_activity,0
+    mov bl,4
+    call GetPropertyByte
+    jnc hcOn
+
+hcConfigFail:
+    mov ax,ds:card_retries
+    inc ax
+    mov ds:card_retries,ax
+    cmp ax,25
+    jae hcReset
+;
+    xor eax,eax
+    mov es,eax
+;
+    mov ax,100
+    WaitMilliSec
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    jmp hcGetConfig
+   
+hcOn:
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    mov ds:card_retries,0
+    or al,al
+    jz hcSaveInserted
+;
+    mov es:hid_was_inserted,al
+
+hcSaveInserted:
+    mov es:hid_inserted,al
+    jz hcWait
+
+hcWaitInserted:
+    xor eax,eax
+    mov es,eax
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    mov al,es:hid_activity
+    or al,al
+    jnz hcWait
+;
+    mov ds:card_active,1
+    mov bl,4
+    call GetPropertyByte
+    jc hcConfigFail
+;
+    or al,al
+    jnz hcWaitInserted
+;
+    mov ebp,20
+
+hcWaitReport:
+    xor eax,eax
+    mov es,eax
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    mov al,es:hid_activity
+    or al,al
+    jnz hcWait
+;
+    mov ds:card_active,1
+    mov bl,4
+    call GetPropertyByte
+    jc hcConfigFail
+;
+    sub ebp,1
+    jnz hcWaitReport
+;
+    jmp hcReset
+
+hcWait:
+    xor eax,eax
+    mov es,eax
+;
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    xor al,al
+    xchg al,es:hid_reset_req
+    or al,al
+    jz hcNotReset
+
+hcReset:
+    mov ds:card_was_off,0
+    call ResetDevice
+    mov ax,1000
+    WaitMilliSec
+;
+    mov al,ds:card_was_off
+    or al,al
+    jz hcResetHid
+;
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    jmp hcInit
+
+hcResetHid:
+    mov ds:card_was_off,0
+    mov es,ebx
+    mov ax,es
+    or ax,ax
+    jz hcFatalError
+;
+    mov bx,es:hid_device_sel
+    ResetHid
+;
+    mov ax,1000
+    WaitMilliSec
+;
+    mov al,ds:card_was_off
+    or al,al
+    jz hcFatalError
+;
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jz hcOff
+;
+    mov es,ebx
+    jmp hcInit
+
+hcNotReset:
+    mov al,ds:card_setup
+    or al,al
+    jz hcGetConfig
+;
+    jmp hcInit
+
+hcOff:
+    mov cx,100
+
+hcOffWait:
+    mov ds:card_active,1
+    mov ax,100
+    WaitMilliSec
+;
+    mov bx,ds:card_hid_handle
+    or bx,bx
+    jnz hcInit
+;
+    sub cx,1
+    jnz hcOffWait
+
+hcFatalError:
+    mov ds:fatal_error,1
+    mov ax,100
+    WaitMilliSec
+    jmp hcFatalError
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           hid_card_super
+;
+;   DESCRIPTION:    Hid card supervisor
+;
+;   PARAMETERS:     BX      Handle
+;
+;   RETURNS:        NC      Use
+;                   CY      Discard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_card_super_name DB 'Hid Card Super', 0
+
+hid_card_super:
+    mov eax,SEG data
+    mov ds,eax
+    xor ecx,ecx
+
+hcsLoop:
+    xor al,al
+    xchg al,ds:card_active
+    or al,al
+    jz hcsWait
+;
+    xor ecx,ecx
+
+hcsWait:
+    inc ecx
+    cmp ecx,100
+    jae hcsFailed
+;
+    mov ax,100
+    WaitMilliSec
+    jmp hcsLoop
+
+hcsFailed:
+    int 3
+    jmp hcsLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           hid_begin
 ;
 ;   DESCRIPTION:    Begin initialization
@@ -1040,6 +1323,7 @@ hdDone:
     ret
 hid_define   Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1106,34 +1390,43 @@ hid_end   Proc far
 
 heHasDev:
     mov es:card_hid_handle,bx 
-    mov es,ebx
+    mov es:card_was_off,1
 ;
-    mov bl,3
-    call GetPropertyByte
-    cmp al,3
-    je heConfigOk
+    push ebx
+    mov bx,es:card_hid_thread
+    or bx,bx
+    jnz heHasThread
 ;
-    mov bl,2
-    mov al,1
-    call SetPropertyByte
+    push ds
+    push es
+    pushad
 ;
-    mov bl,5
-    mov al,32
-    call SetPropertyByte
+    mov edx,cs
+    mov ds,edx
+    mov es,edx
+    mov edi,OFFSET hid_card_thread_name
+    mov esi,OFFSET hid_card_thread
+    mov ax,2
+    mov ecx,stack0_size
+    CreateThread
 ;
-    mov bl,3
-    mov al,3
-    call SetPropertyByte
+    mov edi,OFFSET hid_card_super_name
+    mov esi,OFFSET hid_card_super
+    mov ax,2
+    mov ecx,stack0_size
+    CreateThread
 ;
-    call ResetDevice
-    clc
+    popad
+    pop es
+    pop ds
+;
+    pop ebx
     jmp heDone
 
-heConfigOk:
-    mov bl,4
-    call GetPropertyByte
-    mov es:hid_inserted,al
-    mov es:hid_was_inserted,al
+heHasThread:
+    mov es:card_setup,1
+    Signal
+    pop ebx
     clc
     jmp heDone
 
@@ -1172,6 +1465,9 @@ hid_close   Proc far
     mov bx,SEG data
     mov es,ebx
     mov es:card_hid_handle,0
+    mov es:card_was_off,1
+    mov bx,es:card_hid_thread
+    Signal
 ;
     pop ebx
     pop es
@@ -1204,11 +1500,11 @@ hid_handle_report   Proc far
     test al,0FEh
     jz hhrValid
 ;
-    mov bx,es:hid_device_sel
-    ResetHid
+    mov es:hid_reset_req,1
     jmp hhrDone
 
 hhrValid:
+    mov es:hid_activity,1
     or al,al
     jz hhrSaveInserted
 ;
@@ -2256,7 +2552,21 @@ usb_detach  Endp
 has_usb_card_reader_error_name	DB 'Has USB Cardreader error', 0
 
 has_usb_card_reader_error	Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,ebx
+    mov al,ds:fatal_error
+    or al,al
     stc
+    jz hucreDone
+;
+    clc
+
+hucreDone:
+    pop ebx
+    pop ds
     ret
 has_usb_card_reader_error	Endp
 
@@ -2285,11 +2595,14 @@ Init    Proc far
     mov ds,eax
     mov ds:card_hid_handle,0
     mov ds:card_dev,0
+    mov ds:card_setup,0
+    mov ds:card_hid_thread,0
     mov ds:carddev_thread,0
     mov ds:card_state,0
     mov ds:mcp_card_thread,0
     mov ds:mcp_pcb,0
     mov ds:mcp_rec_start,0
+    mov ds:fatal_error,0
 ;
     mov eax,cs
     mov ds,eax

@@ -6,6 +6,7 @@ copy ..\..\kernel\os\task.rdv files
 copy ..\..\kernel\freetype\freetype.rdv files
 copy ..\..\kernel\os\util.rdv files
 copy ..\..\kernel\acpi\acpi.rdv files
+copy ..\..\kernel\acpi-pre\acpi.rdv files\acpipre.rdv
 copy ..\..\kernel\os\fs.rdv files
 copy ..\..\kernel\os\inifile.rdv files
 copy ..\..\kernel\os\drive.rdv files
