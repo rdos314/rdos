@@ -2456,6 +2456,12 @@
     __parm [__edx] [__edi] [__ecx] \
     __value [__eax]
 
+#pragma aux RdosIpToMac = \
+    CallGate_ip_to_mac  \
+    CarryToBool \
+    __parm [__edx] [__edi] \
+    __value [__eax]
+
 #pragma aux RdosSendUdp = \
     CallGate_send_udp  \
     __parm [__edx] [__esi] [__ebx] [__edi] [__ecx]

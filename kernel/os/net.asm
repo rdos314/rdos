@@ -1634,7 +1634,110 @@ get_net_buf_done:
     pop fs
     retf32
 get_net_buffer  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetNetAddress
+;
+;       Purpose:        Get network address
+;
+;       Parameters:     BX      protocol handle
+;                       DS:ESI  logical address
+;
+;       returns:        ES:EDI  physical address
+;                       ECX     size of physical address
+;                       NC      success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+get_net_address_name     DB 'Get Net Address',0
+
+get_net_address  Proc far
+    push fs
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,ds
+    mov fs,ax
+    mov ds,bx
+    call FindAddress
+    jnc get_adr_do
+;
+    push bx
+    push es
+    push cx
+    push si
+    push di
+;
+    movzx eax,ds:p_logical_addr_len
+    add ax,OFFSET arp_logical_addr
+    AllocateSmallGlobalMem
+    mov es:arp_protocol,ds
+    mov es:arp_retries,3
+    mov es:arp_timeout,0
+    mov es:arp_timeout+4,0
+    GetThread
+    mov es:arp_owner,ax
+    mov al,ds:p_logical_addr_len
+    mov es:arp_logical_addr_len,al
+    mov di,OFFSET arp_logical_addr
+    movzx cx,al
+    rep movs byte ptr es:[di],fs:[si]
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:arp_section
+    mov ax,ds:arp_send_list
+    or ax,ax
+    je get_adr_arp_empty
+;
+    push fs
+    mov fs,ax
+    mov si,fs:arp_prev
+    mov fs:arp_prev,es
+    mov fs,si
+    mov fs:arp_next,es
+    mov es:arp_next,ax
+    mov es:arp_prev,si
+    pop fs
+    jmp get_adr_arp_done
+
+get_adr_arp_empty:
+    mov es:arp_next,es
+    mov es:arp_prev,es
+    mov ds:arp_send_list,es
+
+get_adr_arp_done:
+    LeaveSection ds:arp_section
+    pop di
+    pop si
+    pop cx
+    pop es
+    mov bx,ds:arp_thread
+    Signal
+    pop bx
+;       
+    mov ds,bx
+    WaitForSignal
+    call FindAddress
+    jc get_adr_done
+
+get_adr_do:
+    mov es,ax
+    movzx eax,es:prot_logical_addr_len
+    mov edi,OFFSET prot_logical_addr
+    add edi,eax
+    movzx ecx,es:prot_hardware_addr_len
+    clc
+
+get_adr_done:
+    pop ebx
+    pop eax
+    pop ds
+    pop fs
+    retf32
+get_net_address  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2939,6 +3042,12 @@ init    PROC far
     mov edi,OFFSET get_net_buffer_name
     xor cl,cl
     mov ax,get_net_buffer_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_net_address
+    mov edi,OFFSET get_net_address_name
+    xor cl,cl
+    mov ax,get_net_address_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_net

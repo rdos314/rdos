@@ -649,6 +649,7 @@ void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, int ID);
 
 long RDOSAPI RdosGetIp();
 long RDOSAPI RdosGetGateway();
+int RDOSAPI RdosIpToMac(int Ip, char *mac);
 long RDOSAPI RdosGetDhcpEntry(int Index, unsigned long *MsbTime, unsigned long *LsbTime);
 int RDOSAPI RdosNameToIp(const char *HostName);
 int RDOSAPI RdosIpToName(int Ip, char *HostName, int MaxSize);

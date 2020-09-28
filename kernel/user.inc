@@ -1921,6 +1921,12 @@ IPToName                MACRO
         UserGate ip_to_name_nr
                         ENDM
 
+; IN  EDX               IP address
+; IN  ES:(E)DI          Mac buffer
+IPToMac                MACRO
+        UserGate ip_to_mac_nr
+                        ENDM
+
 ; IN  EAX                               Timeout in ms
 ; IN  EDX                               IP address
 Ping            MACRO

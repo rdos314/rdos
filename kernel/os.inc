@@ -2669,6 +2669,15 @@ GetNetBuffer    MACRO
     OsGate get_net_buffer_nr
                         ENDM
 
+; IN  BX        Protocol handle
+; IN  DS:ESI    Logical address
+; OUT ES:EDI    Physical address
+; OUT ECX       Size of address
+; OUT NC        OK
+GetNetAddress    MACRO
+    OsGate get_net_address_nr
+                        ENDM
+
 ; IN  BX        PROTOCOL HANDLE
 ; IN  DS:ESI    DEST ADDRESS
 ; OUT NC        SUCCESS

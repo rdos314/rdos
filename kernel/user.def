@@ -935,4 +935,6 @@ move_to_new_core_nr               = 733
 has_usb_card_dev_reset_nr         = 734
 has_usb_card_usb_reset_nr         = 735
 
+ip_to_mac_nr                      = 736
+
 usergate_entries                  = 750

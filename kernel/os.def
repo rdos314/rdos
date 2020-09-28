@@ -847,4 +847,6 @@ move_pci_msi_nr             = 741
 
 create_phys_bitmap_nr       = 742
 
+get_net_address_nr          = 743
+
 osgate_entries              = 750

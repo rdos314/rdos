@@ -361,7 +361,6 @@ get_ip_mask     Proc far
     pop ds
     retf32
 get_ip_mask     Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2107,6 +2106,88 @@ link_up_done:
     retf32
 link_up_arp Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           IpToMac
+;
+;       Purpose:        Get Mac of IP address
+;
+;       Parameters:     EDX     	IP
+;			ES:(E)DI	Mac buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ip_to_mac_name   DB 'IP to MAC',0
+
+ip_to_mac	proc near
+    push ds
+    push fs
+    pushad
+
+itmDhcpLoop:
+    call IsDhcpDone
+    jnc itmDhcpDone
+;
+    push ax
+    mov ax,10
+    WaitMilliSec
+    pop ax
+    jmp itmDhcpLoop
+
+itmDhcpDone:
+    mov bx,SEG data
+    mov fs,bx
+    mov bx,fs:ip_handle
+;
+    push edx
+    and edx,fs:ip_mask
+    mov eax,fs:my_ip
+    and eax,fs:ip_mask
+    cmp eax,edx
+    pop edx
+    stc
+    jnz itmDone
+;
+    push es
+    push edi
+    push edx
+    mov ax,ss
+    mov ds,ax
+    mov esi,esp
+    GetNetAddress
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+;
+    pop ebx
+    pop edi
+    pop es
+    jc itmDone
+;       
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+
+itmDone:
+    popad
+    pop fs
+    pop ds  
+    ret
+ip_to_mac    Endp
+
+ip_to_mac32:
+    call ip_to_mac
+    retf32
+
+ip_to_mac16   PROC far
+    push edi
+    movzx edi,di
+    call ip_to_mac
+    pop edi
+    retf32
+ip_to_mac16   ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2299,6 +2380,13 @@ init    PROC far
     xor dx,dx
     mov ax,get_ip_mask_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET ip_to_mac16
+    mov esi,OFFSET ip_to_mac32
+    mov edi,OFFSET ip_to_mac_name
+    mov dx,virt_es_in
+    mov ax,ip_to_mac_nr
+    RegisterUserGate
 ;
     mov cx,4
     mov dx,800h
