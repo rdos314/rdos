@@ -37,7 +37,7 @@ INCLUDE net.inc
 INCLUDE udp.inc
 INCLUDE dhcp.inc
 
-DEFAULT_LEASE = 60
+DEFAULT_LEASE = 60 * 60
 
 Reverse MACRO
     xchg al,ah
@@ -1381,6 +1381,72 @@ ulDone:
     pop eax
     ret
 UpdateLease	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           UpdateReplyServerIp
+;
+;       Purpose:        Update reply server IP
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        CX       New message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReplyServerIp   Proc near
+    push eax
+    push bx
+    push edx
+;
+    mov al,54
+    call FindOption
+    jc urpsiDone
+;
+    GetIpAddress
+    mov es:[bx+2],edx
+
+urpsiDone:
+    pop edx
+    pop bx
+    pop eax
+    ret
+UpdateReplyServerIp	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           UpdateReqServerIp
+;
+;       Purpose:        Update req server IP
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        CX       New message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReqServerIp   Proc near
+    push eax
+    push bx
+;
+    mov al,54
+    call FindOption
+    jc urqsiDone
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:dhcp_server    
+    mov es:[bx+2],eax
+    pop ds
+
+urqsiDone:
+    pop bx
+    pop eax
+    ret
+UpdateReqServerIp	Endp
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1531,6 +1597,7 @@ discover_relay_copy_data:
     call UpdateRequestedIp
 
 discover_update_req_ip_ok:
+    call UpdateReqServerIp
     call UpdateLease
 ;
     or es:[di].dhcp_flags,80h
@@ -1698,6 +1765,8 @@ ReceiveRelayOffer Proc near
     pop di
     pop cx
 ;
+    call UpdateReplyServerIp
+;
     or es:[di].dhcp_flags,80h
     call SendDhcpBroadcast
 ;
@@ -1788,6 +1857,7 @@ req_relay_copy_data:
     pop di
     pop cx
 ;
+    call UpdateReqServerIp
     call UpdateLease
     or es:[di].dhcp_flags,80h
 ;
@@ -1950,6 +2020,8 @@ ReceiveRelayAck Proc near
     pop di
     pop cx
 ;
+    call UpdateReplyServerIp
+;
     or es:[di].dhcp_flags,80h
     call SendDhcpBroadcast
 ;
@@ -2001,6 +2073,8 @@ ReceiveRelayNak Proc near
     rep movsb
     pop di
     pop cx
+;
+    call UpdateReplyServerIp
 ;
     or es:[di].dhcp_flags,80h
     call SendDhcpBroadcast
