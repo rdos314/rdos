@@ -40,7 +40,123 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
-    extrn ShowChar:near
+    extrn font8x19:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ShowChar
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowChar Proc near
+    push ds
+    push es
+    pushad
+;   
+    push eax
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
+    pop eax
+    jnz scLfb
+
+scText:
+    push eax
+    mov ax,mon_text_sel
+    mov es,ax
+;
+    mov ax,ds:int_deb_row
+    mov cx,80
+    mul cx
+    add ax,ds:int_deb_col
+    add ax,ax
+    movzx edi,ax
+    pop eax
+    mov ah,7
+    stosw
+    jmp scUpdate
+
+scLfb:
+    push eax
+    mov ax,mon_flat_sel
+    mov es,ax
+; 
+    mov ax,ds:int_deb_row
+    mov cx,19
+    mul cx
+    movzx eax,ax
+    movzx edx,ds:int_deb_col
+    shl edx,3
+    xchg eax,edx
+;
+    push eax
+    mov eax,ds:efi_scan_size
+    mul edx
+    mov edi,ds:mon_fixed_lfb
+    add edi,eax
+    pop eax
+    shl eax,2
+    add edi,eax
+    pop eax
+;
+    mov ah,19
+    mul ah
+    movzx ebx,ax
+    add ebx,OFFSET font8x19
+;
+    mov ecx,19
+
+scRowLoop:    
+    push ecx
+    push edi
+    mov ecx,8
+    mov al,cs:[ebx]
+
+scLoop:
+    test al,80h
+    jz scBack
+
+scFore:
+    mov edx,dword ptr ds:efi_fore_col
+    mov es:[edi],edx
+    jmp scNext
+
+scBack:
+    mov edx,dword ptr ds:efi_back_col
+    mov es:[edi],edx
+
+scNext:
+    add edi,4
+    shl al,1
+;
+    loop scLoop    
+;
+    pop edi
+    pop ecx
+    add edi,ds:efi_scan_size
+    inc ebx
+;
+    loop scRowLoop    
+
+scUpdate:
+    inc ds:int_deb_col
+    mov ax,ds:int_deb_col
+    cmp ax,80
+    jne scDone
+;
+    mov ds:int_deb_col,0
+    inc ds:int_deb_row    
+
+scDone:
+    popad        
+    pop es
+    pop ds
+    ret
+ShowChar Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -87,8 +203,8 @@ cLoop:
     loop cLoop
 
 cUpdate:
-    mov ds:efi_text_col,0
-    mov ds:efi_text_row,0
+    mov ds:int_deb_col,0
+    mov ds:int_deb_row,0
 ;
     popad
     pop es
@@ -117,7 +233,7 @@ nlRetry:
     mov al,' '
     call ShowChar
 ;
-    mov dx,ds:efi_text_col
+    mov dx,ds:int_deb_col
     or dx,dx
     jnz nlRetry
 ;

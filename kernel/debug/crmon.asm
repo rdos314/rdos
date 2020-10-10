@@ -1675,6 +1675,8 @@ GetBitness   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+   public font8x19
+
 font8x19:
 f00 db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 f01 db 000h, 000h, 000h, 07Eh, 081h, 081h, 0A5h, 081h, 081h, 081h, 0BDh, 099h, 081h, 081h, 07Eh, 000h, 000h, 000h, 000h
@@ -1996,8 +1998,6 @@ move_cursor Endp
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public ShowChar
 
 ShowChar Proc near
     push ds
@@ -4962,6 +4962,7 @@ handle_monitor:
     call InitCrashKeyboard
     mov bx,ds:[ebp].debug_core_id
 ;
+    int 3
     mov ax,mon_data_sel
     mov ds,ax
     mov ds:mon_curr_row,0
