@@ -4962,7 +4962,6 @@ handle_monitor:
     call InitCrashKeyboard
     mov bx,ds:[ebp].debug_core_id
 ;
-    int 3
     mov ax,mon_data_sel
     mov ds,ax
     mov ds:mon_curr_row,0
