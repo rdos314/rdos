@@ -54,11 +54,14 @@ code    SEGMENT byte public use32 'CODE'
 ShowChar Proc near
     push ds
     push es
+    push fs
     pushad
 ;   
     push eax
     mov ax,mon_system_data_sel
     mov ds,ax
+    mov ax,mon_data_sel
+    mov fs,ax
     mov eax,ds:mon_fixed_lfb
     or eax,eax
     pop eax
@@ -69,10 +72,10 @@ scText:
     mov ax,mon_text_sel
     mov es,ax
 ;
-    mov ax,ds:int_deb_row
+    mov ax,fs:int_deb_row
     mov cx,80
     mul cx
-    add ax,ds:int_deb_col
+    add ax,fs:int_deb_col
     add ax,ax
     movzx edi,ax
     pop eax
@@ -85,11 +88,11 @@ scLfb:
     mov ax,mon_flat_sel
     mov es,ax
 ; 
-    mov ax,ds:int_deb_row
+    mov ax,fs:int_deb_row
     mov cx,19
     mul cx
     movzx eax,ax
-    movzx edx,ds:int_deb_col
+    movzx edx,fs:int_deb_col
     shl edx,3
     xchg eax,edx
 ;
@@ -143,16 +146,17 @@ scNext:
     loop scRowLoop    
 
 scUpdate:
-    inc ds:int_deb_col
-    mov ax,ds:int_deb_col
+    inc fs:int_deb_col
+    mov ax,fs:int_deb_col
     cmp ax,80
     jne scDone
 ;
-    mov ds:int_deb_col,0
-    inc ds:int_deb_row    
+    mov fs:int_deb_col,0
+    inc fs:int_deb_row    
 
 scDone:
     popad        
+    pop fs
     pop es
     pop ds
     ret
@@ -170,10 +174,13 @@ ShowChar Endp
 Clear Proc near
     push ds
     push es
+    push fs
     pushad
 ;    
     mov ax,mon_system_data_sel
     mov ds,ax 
+    mov ax,mon_data_sel
+    mov fs,ax
     mov eax,ds:mon_fixed_lfb
     or eax,eax
     jnz cLfb
@@ -203,10 +210,11 @@ cLoop:
     loop cLoop
 
 cUpdate:
-    mov ds:int_deb_col,0
-    mov ds:int_deb_row,0
+    mov fs:int_deb_col,0
+    mov fs:int_deb_row,0
 ;
     popad
+    pop fs
     pop es
     pop ds    
     ret
@@ -226,7 +234,7 @@ NewLine Proc near
     push ax
     push dx
 ;
-    mov ax,mon_system_data_sel
+    mov ax,mon_data_sel
     mov ds,ax
 
 nlRetry:    
