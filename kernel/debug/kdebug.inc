@@ -262,8 +262,13 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
+int_count           DW ?
 int_deb_row         DW ?
 int_deb_col         DW ?
+
+int_key_code        DW ?
+int_c_vk_code       DB ?
+int_scan_code       DB ?
 
 mon_com_buf         DB 14 DUP(?)
 

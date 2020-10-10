@@ -4964,6 +4964,9 @@ handle_monitor:
 ;
     mov ax,mon_data_sel
     mov ds,ax
+    mov ds:int_count,0
+;
+    int 3
     mov ds:mon_curr_row,0
     mov ds:mon_curr_col,0
     mov ds:mon_curr_core,bx
