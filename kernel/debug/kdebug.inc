@@ -282,4 +282,6 @@ int_key_code        DW ?
 int_c_vk_code       DB ?
 int_scan_code       DB ?
 
+int_dis_buf         DB 40 DUP(?)
+
 monitor_deb_sel        ENDS

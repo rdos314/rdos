@@ -85,6 +85,7 @@ code    SEGMENT byte public use32 'CODE'
 
     extrn font8x19:near
     extrn LocalCpuReset:near
+    extrn IntDisAsmCode:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1883,9 +1884,6 @@ ke19    DB 'NMI                     '
 ke1A    DB 'Crash Gate              '
 
 WriteFault    Proc near
-    mov al,' '
-    call ShowChar
-;
     movzx edx,ds:[ebp].fault_vect
     cmp dl,1Ah
     jbe wfDo
@@ -1980,8 +1978,6 @@ et_15   DB 0,0,0,       0,0,0
 et_16   DB 0,0,0,       0,0,0
 et_vm   DB 'PM ',       'VM '
 
-iopl_text       DB ' IOPL=',0
-
 WriteEflags     PROC near
     push eax
     push ecx
@@ -2017,15 +2013,6 @@ eflags_next:
     add esi,6
 ;
     loop eflags_loop
-;
-    mov esi,OFFSET iopl_text
-    call showCodeAsciiz
-;    
-    mov ax,word ptr ds:[ebp].reg_eflags
-    shr ax,12
-    and ax,3
-    add al,'0'
-    call ShowChar
 ;
     pop esi
     pop edx
@@ -2138,6 +2125,45 @@ WriteWordRegs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WriteInstr
+;
+;       DESCRIPTION:    Write instruction
+;
+;       PARAMETERS:     DS:EBP      Cpu registers
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteInstr  Proc near
+    push es
+    push ecx
+    push esi
+    push edi
+;    
+    mov ax,mon_deb_sel
+    mov es,ax
+;
+    mov ecx,40
+    mov edi,OFFSET int_dis_buf
+    call IntDisAsmCode
+;
+    mov esi,OFFSET int_dis_buf
+    mov ecx,40
+
+wiLoop:
+    lods byte ptr es:[esi]
+    call ShowChar
+    loop wiLoop
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    ret
+WriteInstr      Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DumpFault
 ;
 ;           DESCRIPTION:    Dump fault
@@ -2198,10 +2224,6 @@ DumpFault:
     mov ax,mon_deb_sel
     mov ds,ax
     xor ebp,ebp    
-;    
-    call WriteFault
-    call WriteErrorReason
-    call NewLine
 ;
     mov esi,OFFSET fault_reg_tab1
     call WriteDwordRegs
@@ -2209,14 +2231,21 @@ DumpFault:
 ;
     mov esi,OFFSET fault_reg_tab2
     call WriteDwordRegs
-;
-    mov al,' '
-    call ShowChar
-    call WriteEflags    
     call NewLine
 ;
     mov esi,OFFSET fault_reg_tab
     call WriteWordRegs
+    call NewLine
+;
+    call WriteEflags    
+    call NewLine
+;    
+    call WriteFault
+    call WriteErrorReason
+    call NewLine
+;
+    call WriteInstr
+    call NewLine
 ;
     mov ax,mon_deb_sel
     mov ds,ax

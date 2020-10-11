@@ -4026,6 +4026,126 @@ dacDone:
     ret
 DisAsmCode     ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           IntDisAsmCode
+;
+;               DESCRIPTION:    Disassemble code.
+;
+;               PARAMETERS:     DS:EBP    Cpu
+;                               ES:EDI    Decoded instruction buffer
+;                               ECX       Buffer size
+;
+;               RETURNS:        EAX       Instruction size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public IntDisAsmCode
+
+IntDisAsmCode     PROC near
+    push ebx
+    push edx
+    push esi
+;    
+    push es
+    push ecx
+    push edi
+;
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lsl ecx,edx
+    jnz idacFail
+;
+    mov esi,ds:[ebp].reg_eip
+    mov ds:[ebp].em_flags,a32 OR d32
+    sub ecx,esi
+    jbe idacFail
+;
+    cmp ecx,32
+    jb idacRead
+;
+    mov es,dx
+    mov ecx,32
+    lea ebx,ds:[ebp].code_cache
+
+idacRead:
+    mov al,es:[esi]
+    mov ds:[ebx],al
+    inc esi
+    inc ebx
+    loop idacRead
+;       
+    mov ebx,OFFSET main_tab
+    lea esi,ds:[ebp].code_cache
+    mov al,[esi]
+    movzx eax,al
+    lea edi,[ebp].op_codes
+;
+    mov ds:[ebp].op_syntax,ebx
+    mov ds:[ebp].root_tab,ebx
+;
+    mov ds:[ebp].ignore_ptr,0
+    mov ds:[ebp].override,0
+    mov ds:[ebp].data_sel,0
+    mov ds:[ebp].data_offset,0
+    mov ds:[ebp].data_offset+4,0
+    mov ds:[ebp].data_valid,0
+;
+; esi = opcode
+; edi = result
+; eax = index in table
+;
+    call decode_opcode
+    push esi
+    mov dword ptr [edi],0FFFFFFFFh
+    call put_opcode_in_text
+    call decode_data_sel
+    pop ecx
+    lea eax,ds:[ebp].code_cache        
+    sub ecx,eax
+    inc ecx
+    mov eax,ecx
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    push eax
+    push ecx
+;    
+    lea esi,[ebp].opcode_text
+
+idacMoveLoop:
+    lodsb
+    or al,al
+    jz idacPad
+;
+    stosb
+    loop idacMoveLoop
+    jmp idacDone
+
+idacFail:
+    pop edi
+    pop ecx
+    pop es
+;
+    push eax
+    push ecx
+
+idacPad:
+    mov al,' '
+    rep stosb
+
+idacDone:
+    pop ecx    
+    pop eax
+;
+    pop esi
+    pop edx
+    pop ebx
+    ret
+IntDisAsmCode     ENDP
+
 code ENDS
 
         END 
