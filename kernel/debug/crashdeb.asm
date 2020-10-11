@@ -989,6 +989,12 @@ InitMonData Proc near
     mov ecx,1000h
     call CreateDataSel32        
 ;
+    call AllocateRam
+    call ZeroPage
+    mov bx,mon_deb_sel
+    mov ecx,1000h
+    call CreateDataSel32        
+;
     popad
     pop es
     pop ds

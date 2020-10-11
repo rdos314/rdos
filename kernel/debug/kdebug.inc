@@ -233,6 +233,7 @@ mon_flat_sel            = 20h
 mon_system_data_sel     = 28h
 mon_shutdown_code_sel	= 38h
 mon_process_page_sel    = 40h
+mon_deb_sel             = 48h
 mon_shutdown_gate_sel   = 68h
 mon_text_sel            = 0D0h
 
@@ -262,14 +263,6 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
-int_count           DW ?
-int_deb_row         DW ?
-int_deb_col         DW ?
-
-int_key_code        DW ?
-int_c_vk_code       DB ?
-int_scan_code       DB ?
-
 mon_com_buf         DB 14 DUP(?)
 
 ; should be last!
@@ -278,3 +271,16 @@ mon_core_regs       DB ?
 
 monitor_data_sel        ENDS
 
+monitor_deb_sel        STRUC
+
+int_fault_regs      cpu_struc <>
+
+int_count           DW ?
+int_deb_row         DW ?
+int_deb_col         DW ?
+
+int_key_code        DW ?
+int_c_vk_code       DB ?
+int_scan_code       DB ?
+
+monitor_deb_sel        ENDS

@@ -86,6 +86,211 @@ code    SEGMENT byte public use32 'CODE'
     extrn font8x19:near
     extrn LocalCpuReset:near
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetSelectorBaseSizeType
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     BX          Selector
+;
+;           RETURNS:        NC
+;                               EDX     Base
+;                               ECX     Size
+;                               AL      Type (+5)
+;                               AH      Big (+6)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSelectorBaseSizeType   PROC near
+    push ds
+    push ebx
+;
+    movzx ebx,bx
+    and bx,NOT 3
+    or bx,bx
+    jz get_info_fail
+;
+    test bx,4
+    jnz get_info_fail
+;
+    cmp bx,800h
+    jae get_info_fail
+;
+    mov ax,mon_gdt_sel
+    mov ds,ax
+    mov eax,ds:[bx]
+    mov edx,ds:[bx+4]
+;
+    test dh,80h
+    jz get_info_fail
+;
+    mov ecx,edx
+    and ecx,0F0000h
+    mov cx,ax
+    test edx,800000h
+    jz get_info_small
+;
+    shl ecx,12
+    or cx,0FFFh
+
+get_info_small:
+    mov ebx,edx
+    shr ebx,8
+;    
+    shr eax,16
+    and eax,0FFFFh
+;
+    rol edx,8
+    xchg dl,dh
+    shl edx,16
+    or edx,eax
+    mov ax,bx
+    clc
+    jmp get_info_done
+
+get_info_fail:
+    stc
+
+get_info_done:
+    pop ebx
+    pop ds
+    ret
+GetSelectorBaseSizeType   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX:EBX      Address
+;
+;           RETURNS:        NC
+;                               AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadByte   PROC near
+    push ds
+    push ebx
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    pop ebx
+    jc rbDone
+;
+    inc ecx
+    cmp ecx,ebx
+    jc rbDone
+;
+    add ebx,edx 
+    mov ax,mon_flat_sel
+    mov ds,ax
+    mov al,ds:[ebx]
+    clc
+
+rbDone:    
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+ReadByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX:EBX      Address
+;
+;           RETURNS:        NC
+;                               AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadWord   PROC near
+    push ds
+    push ebx
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    pop ebx
+    jc rwDone
+;
+    add ecx,2
+    cmp ecx,ebx
+    jc rwDone
+;
+    add ebx,edx 
+    mov ax,mon_flat_sel
+    mov ds,ax
+    mov ax,ds:[ebx]
+    clc
+
+rwDone:    
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+ReadWord   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX:EBX      Address
+;
+;           RETURNS:        NC
+;                               EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadDword   PROC near
+    push ds
+    push ebx
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    pop ebx
+    jc rdDone
+;
+    add ecx,4
+    cmp ecx,ebx
+    jc rdDone
+;
+    add ebx,edx 
+    mov ax,mon_flat_sel
+    mov ds,ax
+    mov eax,ds:[ebx]
+    clc
+
+rdDone:    
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+ReadDword   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -101,9 +306,17 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveKeyboardCode    PROC near
+    push ds
+    push bx
+;
+    mov bx,mon_deb_sel
+    mov ds,bx
     mov ds:int_key_code,ax
     mov ds:int_c_vk_code,dl
     mov ds:int_scan_code,dh
+;
+    pop bx
+    pop ds
     ret
 SaveKeyboardCode   ENDP
 
@@ -1058,7 +1271,7 @@ InitKey Proc near
     push ds
     push ax
 ;
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov ds,ax
 ;
     mov ds:int_key_code,0
@@ -1263,11 +1476,11 @@ UpdateMode      ENDP
 GetKey      PROC near
     push ds
 ;    
-    mov ax,mon_data_sel
-    mov ds,ax
     call UpdateKeyboard
     call UpdateMode
 ;
+    mov ax,mon_deb_sel
+    mov ds,ax
     mov ah,ds:int_scan_code
     or ah,ah
     stc
@@ -1301,7 +1514,7 @@ ShowChar Proc near
     push eax
     mov ax,mon_system_data_sel
     mov ds,ax
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov fs,ax
     mov eax,ds:mon_fixed_lfb
     or eax,eax
@@ -1420,7 +1633,7 @@ Clear Proc near
 ;    
     mov ax,mon_system_data_sel
     mov ds,ax 
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov fs,ax
     mov eax,ds:mon_fixed_lfb
     or eax,eax
@@ -1475,7 +1688,7 @@ NewLine Proc near
     push ax
     push dx
 ;
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov ds,ax
 
 nlRetry:    
@@ -2005,7 +2218,7 @@ DumpFault:
     mov esi,OFFSET fault_reg_tab
     call WriteWordRegs
 ;
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov ds,ax
     mov ax,ds:int_count
     or ax,ax
@@ -2021,6 +2234,8 @@ fdKey:
 fdLoop:
     call GetKey
     jmp fdLoop
+
+fdTest dd 12345678h
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
