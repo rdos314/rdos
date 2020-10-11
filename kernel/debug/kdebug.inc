@@ -246,8 +246,6 @@ mon_core_struc     ENDS
 
 monitor_data_sel        STRUC
 
-mon_fault_regs      cpu_struc <>
-
 mon_map_linear      DD ?
 
 mon_core_count      DW ?
@@ -263,6 +261,7 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
+mon_dis_buf         DB 40 DUP(?)
 mon_com_buf         DB 14 DUP(?)
 
 ; should be last!

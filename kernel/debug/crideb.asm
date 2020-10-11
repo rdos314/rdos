@@ -2149,7 +2149,7 @@ WriteWordRegs  ENDP
 DumpFault:
     push es
 ;
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov es,ax
 ;    
     mov al,byte ptr [ebp].trap_exc_nr
@@ -2195,7 +2195,7 @@ DumpFault:
     mov ds:efi_text_row,20
     mov ds:efi_text_col,0
 ;    
-    mov ax,mon_data_sel
+    mov ax,mon_deb_sel
     mov ds,ax
     xor ebp,ebp    
 ;    

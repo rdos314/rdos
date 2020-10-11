@@ -3433,10 +3433,10 @@ WriteInstr  Proc near
     mov es,ax
 ;
     mov ecx,40
-    xor edi,edi
+    mov edi,OFFSET mon_dis_buf
     call DisAsmCode
 ;
-    xor esi,esi
+    mov esi,OFFSET mon_dis_buf
     mov ecx,40
 
 wiLoop:
