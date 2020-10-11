@@ -1627,49 +1627,21 @@ ShowChar Endp
 
 Clear Proc near
     push ds
-    push es
-    push fs
     pushad
 ;    
-    mov ax,mon_system_data_sel
-    mov ds,ax 
     mov ax,mon_deb_sel
-    mov fs,ax
-    mov eax,ds:mon_fixed_lfb
-    or eax,eax
-    jnz cLfb
-
-cText:
-    xor edi,edi
-    mov ax,mon_text_sel
-    mov es,ax
-    mov ax,0720h
-    mov ecx,80 * 24
-    rep stosw
-    jmp cUpdate
-
-cLfb:
-    mov ax,mon_flat_sel
-    mov es,ax
+    mov ds,ax
+    mov ds:int_deb_col,0
+    mov ds:int_deb_row,14
 ;
-    mov edi,ds:mon_fixed_lfb
-    movzx ecx,ds:efi_height
-
+    mov ecx,80
+    mov al,'+'
+    
 cLoop:
-    push ecx    
-    mov ecx,ds:efi_scan_size    
-    xor ax,ax
-    rep stos byte ptr es:[edi]
-    pop ecx
+    call ShowChar
     loop cLoop
-
-cUpdate:
-    mov fs:int_deb_col,0
-    mov fs:int_deb_row,0
 ;
     popad
-    pop fs
-    pop es
     pop ds    
     ret
 Clear Endp
@@ -2064,19 +2036,22 @@ fault_reg_tab1:
     DD OFFSET reg_ecx
     DB ' EDX='
     DD OFFSET reg_edx
+    DB 0
+    
+fault_reg_tab2:
     DB ' ESI='
     DD OFFSET reg_esi
     DB ' EDI='
     DD OFFSET reg_edi
-    DB 0
-    
-fault_reg_tab2:
-    DB ' EPC='
-    DD OFFSET reg_eip
     DB ' ESP='
     DD OFFSET reg_esp
     DB ' EBP='
     DD OFFSET reg_ebp
+    DB 0
+
+fault_reg_tab3:
+    DB ' EPC='
+    DD OFFSET reg_eip
     DB 0
 
 WriteDwordRegs  PROC near
@@ -2361,15 +2336,19 @@ DumpFault:
     call WriteDwordRegs
     call NewLine
 ;
+    mov esi,OFFSET fault_reg_tab3
+    call WriteDwordRegs
+    mov al,' '
+    call ShowChar
+    call WriteFault
+    call WriteErrorReason
+    call NewLine
+;
     mov esi,OFFSET fault_reg_tab
     call WriteWordRegs
     call NewLine
 ;
     call WriteEflags    
-    call NewLine
-;    
-    call WriteFault
-    call WriteErrorReason
     call NewLine
 ;
     call WriteInstr
