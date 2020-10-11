@@ -292,7 +292,6 @@ rdDone:
     ret
 ReadDword   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1678,6 +1677,30 @@ Clear Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Blank
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:         ECX          Number of blanks to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Blank   Proc near
+    push eax
+    push ecx
+    mov al,' '
+    
+blank_loop:
+    call ShowChar
+    loop blank_loop
+    pop ecx
+    pop eax
+    ret
+Blank   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           NewLine
 ;
 ;           DESCRIPTION:    
@@ -2164,6 +2187,111 @@ WriteInstr      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WriteDataRow
+;
+;       DESCRIPTION:    Write a data row
+;
+;       PARAMETERS:     DS:EBP      Cpu registers
+;                       BX:EDX      Address
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteDataRow    Proc near
+    push es
+    mov ax,mon_flat_sel
+    mov es,ax
+;
+    mov ax,bx
+    call WriteHexWord
+    mov al,':'
+    call ShowChar
+    mov eax,edx
+    call WriteHexDword
+    mov al,' '
+    call ShowChar
+;    
+    push edx
+    call GetSelectorBaseSizeType
+    mov ebx,edx    
+    mov esi,ecx
+    pop edx
+;
+    pushf
+    add ebx,edx
+    popf
+;
+    push ebx
+    push edx
+;    
+    mov ecx,16    
+    pushf
+
+wrDataLoop:
+    popf
+    jc wrDataInv
+;    
+    cmp esi,edx
+    jc wrDataInv 
+;    
+    mov al,es:[ebx]
+    call WriteHexByte
+    clc
+    jmp wrDataNext
+
+wrDataInv:
+    mov al,'!'
+    call ShowChar
+    call ShowChar
+    stc
+
+wrDataNext:
+    pushf
+    mov al,' '
+    call ShowChar
+;   
+    inc ebx
+    inc edx
+    loop wrDataLoop
+;
+    popf    
+    pop edx
+    pop ebx
+;    
+    mov ecx,16    
+    pushf
+
+wrCharLoop:
+    popf
+    jc wrCharInv
+;    
+    cmp esi,edx
+    jc wrCharInv 
+;    
+    mov al,es:[ebx]
+    call ShowChar
+    clc
+    jmp wrCharNext
+
+wrCharInv:
+    mov al,'!'
+    call ShowChar
+    stc
+
+wrCharNext:
+    pushf
+    inc ebx
+    inc edx
+    loop wrCharLoop
+;
+    popf    
+;
+    pop es
+    ret
+WriteDataRow    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DumpFault
 ;
 ;           DESCRIPTION:    Dump fault
@@ -2246,6 +2374,37 @@ DumpFault:
 ;
     call WriteInstr
     call NewLine
+;
+    mov al,ds:[ebp].data_valid
+    or al,al
+    jz wcNoPtr
+;
+    mov ebx,ds:[ebp].data_sel
+    mov edx,ds:[ebp].data_offset
+    call WriteDataRow
+    jmp wcPtrOk
+
+wcNoPtr:
+    mov ecx,79
+    call Blank
+    
+wcPtrOk:    
+    call NewLine    
+;    
+    mov bx,ds:[ebp].reg_cs.d_selector
+    mov edx,ds:[ebp].reg_eip
+    call WriteDataRow
+    call NewLine    
+;
+    mov bx,ds:[ebp].reg_ss.d_selector
+    mov edx,ds:[ebp].reg_esp
+    call WriteDataRow
+    call NewLine    
+;    
+    mov bx,ds:[ebp].reg_usel.d_selector
+    mov edx,ds:[ebp].reg_uoffs
+    call WriteDataRow
+    call NewLine    
 ;
     mov ax,mon_deb_sel
     mov ds,ax
