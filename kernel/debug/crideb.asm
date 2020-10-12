@@ -2843,7 +2843,6 @@ dds32   exec_s <18, 20, 4, OFFSET reg_ds,       OFFSET inc_sreg_byte,  OFFSET de
 des32   exec_s <18, 28, 4, OFFSET reg_es,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 dfs32   exec_s <18, 36, 4, OFFSET reg_fs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 dgs32   exec_s <18, 44, 4, OFFSET reg_gs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dus32   exec_s <24, 4,  4, OFFSET reg_usel,     OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 duss32  exec_s <24, 0,  4, OFFSET reg_usel,     OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 duso32  exec_s <24, 5,  8, OFFSET reg_uoffs,    OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dend32 DW     0FFFFh, 0FFFFh
