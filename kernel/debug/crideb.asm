@@ -2577,9 +2577,11 @@ error_sw Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-trace_sw  Proc near
-    ret
-trace_sw  Endp
+trace_sw:
+    mov ax,word ptr ds:[ebp].reg_eflags
+    or ax,100h
+    mov word ptr ds:[ebp].reg_eflags,ax
+    jmp RestartFault
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2592,9 +2594,11 @@ trace_sw  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-go_sw  Proc near
-    ret
-go_sw  Endp
+go_sw:
+    mov ax,word ptr ds:[ebp].reg_eflags
+    and ax,NOT 100h
+    mov word ptr ds:[ebp].reg_eflags,ax
+    jmp RestartFault
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2844,8 +2848,6 @@ mebp32  exec_s <16, 40, 3, OFFSET reg_ebp,      OFFSET inc_reg4,       OFFSET de
 debp32  exec_s <16, 44, 8, OFFSET reg_ebp,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 meip32  exec_s <17, 1,  3, OFFSET reg_eip,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
 deip32  exec_s <17, 5,  8, OFFSET reg_eip,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-dcs32   exec_s <18, 4,  4, OFFSET reg_cs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dss32   exec_s <18, 12, 4, OFFSET reg_ss,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 dds32   exec_s <18, 20, 4, OFFSET reg_ds,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 des32   exec_s <18, 28, 4, OFFSET reg_es,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 dfs32   exec_s <18, 36, 4, OFFSET reg_fs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
@@ -3305,6 +3307,36 @@ DoFunc   ENDP
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RestartFault:
+    mov ax,mon_deb_sel
+    mov ds,ax
+    mov ds:int_count,0
+;
+    mov esp,ds:reg_esp
+;
+    mov eax,ds:reg_eflags
+    push eax
+;
+    mov eax,cs
+    push eax
+;
+    mov eax,ds:reg_eip
+    push eax
+;
+    mov eax,ds:reg_eax
+    mov ebx,ds:reg_ebx
+    mov ecx,ds:reg_ecx
+    mov edx,ds:reg_edx
+    mov esi,ds:reg_esi
+    mov edi,ds:reg_edi
+    mov ebp,ds:reg_ebp
+;
+    mov es,ds:reg_es.d_selector
+    mov fs,ds:reg_fs.d_selector
+    mov gs,ds:reg_gs.d_selector
+    mov ds,ds:reg_ds.d_selector
+    iretd
 
 DumpFault:
     push es
