@@ -148,6 +148,24 @@ AddXhci      ENDP
     
 CheckFunc       PROC near
     int 3
+    mov al,es:[edx+7]
+    mov ds:mon_xhci_ports,al
+;
+    mov eax,es:[edx+10h]
+    mov ds:mon_xhci_param,eax
+;
+    mov eax,es:[edx+14h]
+    add eax,edx
+    mov ds:mon_xhci_door_bell,eax
+;
+    mov eax,es:[edx+18h]
+    add eax,edx
+    mov ds:mon_xhci_runtime,eax
+;
+    movzx eax,byte ptr es:[edx]
+    add eax,edx
+    mov ds:mon_xhci_oper,eax
+    mov edx,eax
     ret
 CheckFunc	Endp
 
