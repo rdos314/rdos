@@ -79,6 +79,18 @@ vk_code         EQU 5
 vk_num_code     EQU 6
 key_type                EQU 7
 
+exec_s  STRUC
+
+exec_row         DW ?
+exec_col         DW ?
+exec_size        DW ?
+exec_reg         DD ?
+exec_inc_proc    DD ?
+exec_dec_proc    DD ?
+exec_set_proc    DD ?
+
+exec_s  ENDS
+
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
@@ -2454,65 +2466,15 @@ WriteDataRow    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DumpFault
+;       NAME:           WriteRegs
 ;
-;           DESCRIPTION:    Dump fault
+;       DESCRIPTION:    Write registers
 ;
-;           PARAMETERS:         
-;
+;       PARAMETERS:     DS:EBP      Cpu registers
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DumpFault:
-    push es
-;
-    mov ax,mon_deb_sel
-    mov es,ax
-;    
-    mov al,byte ptr [ebp].trap_exc_nr
-    mov es:fault_vect,al
-;
-    mov eax,[ebp].trap_err
-    mov es:fault_error,eax
-;
-    mov eax,[ebp].trap_eip
-    mov es:reg_eip,eax
-;
-    mov eax,[ebp].trap_eflags
-    mov es:reg_eflags,eax
-    mov eax,[ebp].trap_eax
-    mov es:reg_eax,eax
-    mov es:reg_ecx,ecx
-    mov es:reg_edx,edx
-    mov eax,[ebp].trap_ebx
-    mov es:reg_ebx,eax
-    mov eax,ebp
-    add eax,20
-    mov es:reg_esp,eax
-    mov es:reg_esi,esi
-    mov es:reg_edi,edi
-    mov ax,[ebp].trap_cs
-    mov es:reg_cs.d_selector,ax
-    mov es:reg_ss.d_selector,ss
-    mov ax,[ebp].trap_pds
-    mov es:reg_ds.d_selector,ax
-    pop ax
-    mov es:reg_es.d_selector,ax
-    mov es:reg_fs.d_selector,fs
-    mov es:reg_gs.d_selector,gs
-    mov ebp,[ebp].trap_ebp
-    mov es:reg_ebp,ebp
-    sldt ax
-    mov es:reg_ldt.d_selector,ax       
-;
-    mov al,es:int_started
-    or al,al
-    jnz wcStarted
-;
-    mov es:int_started,1
-    mov es:int_curr_row,15
-    mov es:int_curr_col,0
-
-wcStarted:
+WriteRegs    Proc near
     call Clear
 ;    
     mov ax,mon_deb_sel
@@ -2576,6 +2538,821 @@ wcPtrOk:
     call WriteDataRow
     call NewLine    
 ;
+    ret
+WriteRegs	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           error_sw
+;
+;           DESCRIPTION:    Error sw
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pace_sw:
+reg_sw:
+
+error_sw Proc near
+    ret
+error_sw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           trace_sw
+;
+;           DESCRIPTION:    Trace sw
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trace_sw  Proc near
+    ret
+trace_sw  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           go_sw
+;
+;           DESCRIPTION:    Go sw
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+go_sw  Proc near
+    ret
+go_sw  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ignore
+;
+;           DESCRIPTION:    Ignore
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ignore  Proc near
+    ret
+ignore  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg_byte
+;
+;           DESCRIPTION:    Perform inc on byte in reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;                           EBX     Table entry
+;                           CX      Digit #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_reg_byte    Proc near
+    mov ax,cs:[ebx].exec_size
+    sub ax,cx
+    dec ax
+    mov cl,al
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+;    
+    mov eax,ds:[ebp+esi]
+    and eax,edx
+    shr eax,cl
+    inc al
+    and al,0Fh
+    shl eax,cl
+    not edx
+    and edx,ds:[ebp+esi]
+    or eax,edx
+    mov ds:[ebp+esi],eax
+    ret
+inc_reg_byte  Endp
+
+inc_sreg_byte  Proc near
+    push esi
+    add esi,d_selector
+    call inc_reg_byte
+    pop esi
+    ret
+inc_sreg_byte  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_reg_byte
+;
+;           DESCRIPTION:    Perform dec on byte in reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;                           EBX     Table entry
+;                           CX      Digit #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_reg_byte    Proc near
+    mov ax,cs:[ebx].exec_size
+    sub ax,cx
+    dec ax
+    mov cl,al
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+;    
+    mov eax,ds:[ebp+esi]
+    and eax,edx
+    shr eax,cl
+    dec al
+    and al,0Fh
+    shl eax,cl
+    not edx
+    and edx,ds:[ebp+esi]
+    or eax,edx
+    mov ds:[ebp+esi],eax
+    ret
+dec_reg_byte  Endp
+
+dec_sreg_byte  Proc near
+    push esi
+    add esi,d_selector
+    call dec_reg_byte
+    pop esi
+    ret
+dec_sreg_byte  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg4
+;
+;           DESCRIPTION:    Perform dword inc on reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_reg4    Proc near
+    inc dword ptr ds:[ebp+esi]
+    ret
+inc_reg4  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_reg4
+;
+;           DESCRIPTION:    Perform dword dec on reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_reg4    Proc near
+    dec dword ptr ds:[ebp+esi]
+    ret
+dec_reg4  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg8
+;
+;           DESCRIPTION:    Perform qword inc on reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_reg8    Proc near
+    add dword ptr ds:[ebp+esi],1
+    adc dword ptr ds:[ebp+esi+4],0
+    ret
+inc_reg8  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_reg8
+;
+;           DESCRIPTION:    Perform qword dec on reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_reg8    Proc near
+    sub dword ptr ds:[ebp+esi],1
+    sbb dword ptr ds:[ebp+esi+4],0
+    ret
+dec_reg8  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_reg_byte
+;
+;           DESCRIPTION:    Perform set on reg
+;
+;           PARAMETERS:     DS:EBP  Core regs
+;                           ESI     Register offset
+;                           EBX     Table entry
+;                           AL      Value to set
+;                           CX      Digit number
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_reg_byte    Proc near
+    mov dx,cs:[ebx].exec_size
+    sub dx,cx
+    dec dx
+    mov cl,dl
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+    not edx
+    and edx,ds:[ebp+esi]
+    movzx eax,al
+    shl eax,cl
+    or eax,edx
+    mov ds:[ebp+esi],eax
+;
+    push ds
+    mov ax,mon_deb_sel
+    mov ds,ax
+    inc ds:int_curr_col
+    pop ds
+    ret
+set_reg_byte  Endp
+
+set_sreg_byte  Proc near
+    push esi
+    add esi,d_selector
+    call set_reg_byte
+    pop esi
+    ret
+set_sreg_byte  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Func
+;
+;           DESCRIPTION:    Function on regs
+;
+;           PARAMETERS:     DS:EBP              Registers
+;                           EDI                 Function ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+exec_table:
+meax32  exec_s <15, 1,  3, OFFSET reg_eax,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deax32  exec_s <15, 5,  8, OFFSET reg_eax,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebx32  exec_s <15, 14, 3, OFFSET reg_ebx,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debx32  exec_s <15, 18, 8, OFFSET reg_ebx,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mecx32  exec_s <15, 27, 3, OFFSET reg_ecx,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+decx32  exec_s <15, 31, 8, OFFSET reg_ecx,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medx32  exec_s <15, 40, 3, OFFSET reg_edx,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedx32  exec_s <15, 44, 8, OFFSET reg_edx,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesi32  exec_s <16, 1,  3, OFFSET reg_esi,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desi32  exec_s <16, 5,  8, OFFSET reg_esi,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medi32  exec_s <16, 14, 3, OFFSET reg_edi,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedi32  exec_s <16, 18, 8, OFFSET reg_edi,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesp32  exec_s <16, 27, 3, OFFSET reg_esp,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desp32  exec_s <16, 31, 8, OFFSET reg_esp,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebp32  exec_s <16, 40, 3, OFFSET reg_ebp,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debp32  exec_s <16, 44, 8, OFFSET reg_ebp,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meip32  exec_s <17, 1,  3, OFFSET reg_eip,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deip32  exec_s <17, 5,  8, OFFSET reg_eip,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dcs32   exec_s <18, 4,  4, OFFSET reg_cs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dss32   exec_s <18, 12, 4, OFFSET reg_ss,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dds32   exec_s <18, 20, 4, OFFSET reg_ds,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+des32   exec_s <18, 28, 4, OFFSET reg_es,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dfs32   exec_s <18, 36, 4, OFFSET reg_fs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dgs32   exec_s <18, 44, 4, OFFSET reg_gs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dus32   exec_s <24, 4,  4, OFFSET reg_usel,     OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+duss32  exec_s <24, 0,  4, OFFSET reg_usel,     OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+duso32  exec_s <24, 5,  8, OFFSET reg_uoffs,    OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dend32 DW     0FFFFh, 0FFFFh
+
+Func  PROC near
+    push es
+    mov bx,mon_deb_sel
+    mov es,bx
+    mov ebx,OFFSET exec_table
+
+fLoop:
+    mov cx,cs:[ebx].exec_row
+    cmp cx,0FFFFh
+    je fDone
+;    
+    cmp cx,es:int_curr_row
+    jne fNext
+;
+    mov cx,es:int_curr_col
+    sub cx,cs:[ebx].exec_col
+    jc fNext
+;    
+    cmp cx,cs:[ebx].exec_size
+    jnc fNext
+;    
+    mov esi,cs:[ebx].exec_reg
+    call dword ptr cs:[ebx+edi]
+    jmp fDone
+    
+fNext:
+    add ebx,SIZE exec_s
+    jmp fLoop
+    
+fDone:
+    pop es
+    ret
+Func  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_sw
+;
+;           DESCRIPTION:    Inc
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_sw  PROC near
+    pushad
+    mov edi,exec_inc_proc
+    call Func
+    popad
+    ret
+inc_sw  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_sw
+;
+;           DESCRIPTION:    Dec
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_sw  PROC near
+    pushad
+    mov edi,exec_dec_proc
+    call Func
+    popad
+    ret
+dec_sw  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_base_sw
+;
+;           DESCRIPTION:    Set
+;
+;           PARAMETERS:     DS:EBP              Registers
+;                           CH                  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_base_sw   Proc near
+    pushad
+    mov edi,exec_set_proc
+    call Func
+    popad
+    ret
+set_base_sw   Endp
+
+set0_sw:
+    mov al,0
+    jmp set_base_sw
+
+set1_sw:
+    mov al,1
+    jmp set_base_sw
+
+set2_sw:
+    mov al,2
+    jmp set_base_sw
+
+set3_sw:
+    mov al,3
+    jmp set_base_sw
+
+set4_sw:
+    mov al,4
+    jmp set_base_sw
+
+set5_sw:
+    mov al,5
+    jmp set_base_sw
+
+set6_sw:
+    mov al,6
+    jmp set_base_sw
+
+set7_sw:
+    mov al,7
+    jmp set_base_sw
+
+set8_sw:
+    mov al,8
+    jmp set_base_sw
+
+set9_sw:
+    mov al,9
+    jmp set_base_sw
+
+setA_sw:
+    mov al,0Ah
+    jmp set_base_sw
+
+setB_sw:
+    mov al,0Bh
+    jmp set_base_sw
+
+setC_sw:
+    mov al,0Ch
+    jmp set_base_sw
+
+setD_sw:
+    mov al,0Dh
+    jmp set_base_sw
+
+setE_sw:
+    mov al,0Eh
+    jmp set_base_sw
+
+setF_sw:
+    mov al,0Fh
+    jmp set_base_sw
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoFunc
+;
+;           DESCRIPTION:    Do function
+;
+;           PARAMETERS:     AL          Key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+virt_sw_func_tab:
+vs_00   DD OFFSET error_sw
+vs_01   DD OFFSET error_sw
+vs_02   DD OFFSET error_sw
+vs_03   DD OFFSET error_sw
+vs_04   DD OFFSET error_sw
+vs_05   DD OFFSET error_sw
+vs_06   DD OFFSET error_sw
+vs_07   DD OFFSET error_sw
+vs_08   DD OFFSET error_sw
+vs_09   DD OFFSET error_sw
+vs_0A   DD OFFSET error_sw
+vs_0B   DD OFFSET error_sw
+vs_0C   DD OFFSET error_sw
+vs_0D   DD OFFSET error_sw
+vs_0E   DD OFFSET error_sw
+vs_0F   DD OFFSET error_sw
+vs_10   DD OFFSET error_sw
+vs_11   DD OFFSET error_sw
+vs_12   DD OFFSET error_sw
+vs_13   DD OFFSET error_sw
+vs_14   DD OFFSET error_sw
+vs_15   DD OFFSET error_sw
+vs_16   DD OFFSET error_sw
+vs_17   DD OFFSET error_sw
+vs_18   DD OFFSET error_sw
+vs_19   DD OFFSET error_sw
+vs_1A   DD OFFSET error_sw
+vs_1B   DD OFFSET error_sw
+vs_1C   DD OFFSET error_sw
+vs_1D   DD OFFSET error_sw
+vs_1E   DD OFFSET error_sw
+vs_1F   DD OFFSET error_sw
+vs_20   DD OFFSET error_sw
+vs_21   DD OFFSET error_sw
+vs_22   DD OFFSET error_sw
+vs_23   DD OFFSET error_sw
+vs_24   DD OFFSET error_sw
+vs_25   DD OFFSET error_sw
+vs_26   DD OFFSET error_sw
+vs_27   DD OFFSET error_sw
+vs_28   DD OFFSET error_sw
+vs_29   DD OFFSET error_sw
+vs_2A   DD OFFSET error_sw
+vs_2B   DD OFFSET inc_sw
+vs_2C   DD OFFSET error_sw
+vs_2D   DD OFFSET dec_sw
+vs_2E   DD OFFSET error_sw
+vs_2F   DD OFFSET error_sw
+vs_30   DD OFFSET set0_sw
+vs_31   DD OFFSET set1_sw
+vs_32   DD OFFSET set2_sw
+vs_33   DD OFFSET set3_sw
+vs_34   DD OFFSET set4_sw
+vs_35   DD OFFSET set5_sw
+vs_36   DD OFFSET set6_sw
+vs_37   DD OFFSET set7_sw
+vs_38   DD OFFSET set8_sw
+vs_39   DD OFFSET set9_sw
+vs_3A   DD OFFSET error_sw
+vs_3B   DD OFFSET error_sw
+vs_3C   DD OFFSET error_sw
+vs_3D   DD OFFSET error_sw
+vs_3E   DD OFFSET error_sw
+vs_3F   DD OFFSET error_sw
+vs_40   DD OFFSET error_sw
+vs_41   DD OFFSET setA_sw
+vs_42   DD OFFSET setB_sw
+vs_43   DD OFFSET setC_sw
+vs_44   DD OFFSET setD_sw
+vs_45   DD OFFSET setE_sw
+vs_46   DD OFFSET setF_sw
+vs_47   DD OFFSET go_sw
+vs_48   DD OFFSET error_sw
+vs_49   DD OFFSET error_sw
+vs_4A   DD OFFSET error_sw
+vs_4B   DD OFFSET error_sw
+vs_4C   DD OFFSET error_sw
+vs_4D   DD OFFSET error_sw
+vs_4E   DD OFFSET error_sw
+vs_4F   DD OFFSET error_sw
+vs_50   DD OFFSET pace_sw
+vs_51   DD OFFSET error_sw
+vs_52   DD OFFSET error_sw
+vs_53   DD OFFSET error_sw
+vs_54   DD OFFSET trace_sw
+vs_55   DD OFFSET error_sw
+vs_56   DD OFFSET error_sw
+vs_57   DD OFFSET error_sw
+vs_58   DD OFFSET error_sw
+vs_59   DD OFFSET error_sw
+vs_5A   DD OFFSET error_sw
+vs_5B   DD OFFSET error_sw
+vs_5C   DD OFFSET error_sw
+vs_5D   DD OFFSET error_sw
+vs_5E   DD OFFSET error_sw
+vs_5F   DD OFFSET error_sw
+vs_60   DD OFFSET error_sw
+vs_61   DD OFFSET setA_sw
+vs_62   DD OFFSET setB_sw
+vs_63   DD OFFSET setC_sw
+vs_64   DD OFFSET setD_sw
+vs_65   DD OFFSET setE_sw
+vs_66   DD OFFSET setF_sw
+vs_67   DD OFFSET go_sw
+vs_68   DD OFFSET error_sw
+vs_69   DD OFFSET error_sw
+vs_6A   DD OFFSET error_sw
+vs_6B   DD OFFSET inc_sw
+vs_6C   DD OFFSET error_sw
+vs_6D   DD OFFSET dec_sw
+vs_6E   DD OFFSET error_sw
+vs_6F   DD OFFSET error_sw
+vs_70   DD OFFSET pace_sw
+vs_71   DD OFFSET error_sw
+vs_72   DD OFFSET error_sw
+vs_73   DD OFFSET error_sw
+vs_74   DD OFFSET trace_sw
+vs_75   DD OFFSET error_sw
+vs_76   DD OFFSET error_sw
+vs_77   DD OFFSET error_sw
+vs_78   DD OFFSET error_sw
+vs_79   DD OFFSET error_sw
+vs_7A   DD OFFSET error_sw
+vs_7B   DD OFFSET error_sw
+vs_7C   DD OFFSET error_sw
+vs_7D   DD OFFSET error_sw
+vs_7E   DD OFFSET error_sw
+vs_7F   DD OFFSET error_sw
+vs_80   DD OFFSET error_sw
+vs_81   DD OFFSET error_sw
+vs_82   DD OFFSET error_sw
+vs_83   DD OFFSET error_sw
+vs_84   DD OFFSET error_sw
+vs_85   DD OFFSET error_sw
+vs_86   DD OFFSET error_sw
+vs_87   DD OFFSET error_sw
+vs_88   DD OFFSET error_sw
+vs_89   DD OFFSET error_sw
+vs_8A   DD OFFSET error_sw
+vs_8B   DD OFFSET error_sw
+vs_8C   DD OFFSET error_sw
+vs_8D   DD OFFSET error_sw
+vs_8E   DD OFFSET error_sw
+vs_8F   DD OFFSET error_sw
+vs_90   DD OFFSET error_sw
+vs_91   DD OFFSET error_sw
+vs_92   DD OFFSET error_sw
+vs_93   DD OFFSET error_sw
+vs_94   DD OFFSET error_sw
+vs_95   DD OFFSET error_sw
+vs_96   DD OFFSET error_sw
+vs_97   DD OFFSET error_sw
+vs_98   DD OFFSET error_sw
+vs_99   DD OFFSET error_sw
+vs_9A   DD OFFSET error_sw
+vs_9B   DD OFFSET error_sw
+vs_9C   DD OFFSET error_sw
+vs_9D   DD OFFSET error_sw
+vs_9E   DD OFFSET error_sw
+vs_9F   DD OFFSET error_sw
+vs_A0   DD OFFSET error_sw
+vs_A1   DD OFFSET error_sw
+vs_A2   DD OFFSET error_sw
+vs_A3   DD OFFSET error_sw
+vs_A4   DD OFFSET error_sw
+vs_A5   DD OFFSET error_sw
+vs_A6   DD OFFSET error_sw
+vs_A7   DD OFFSET error_sw
+vs_A8   DD OFFSET error_sw
+vs_A9   DD OFFSET error_sw
+vs_AA   DD OFFSET error_sw
+vs_AB   DD OFFSET error_sw
+vs_AC   DD OFFSET error_sw
+vs_AD   DD OFFSET error_sw
+vs_AE   DD OFFSET error_sw
+vs_AF   DD OFFSET error_sw
+vs_B0   DD OFFSET error_sw
+vs_B1   DD OFFSET error_sw
+vs_B2   DD OFFSET error_sw
+vs_B3   DD OFFSET error_sw
+vs_B4   DD OFFSET error_sw
+vs_B5   DD OFFSET error_sw
+vs_B6   DD OFFSET error_sw
+vs_B7   DD OFFSET error_sw
+vs_B8   DD OFFSET error_sw
+vs_B9   DD OFFSET error_sw
+vs_BA   DD OFFSET error_sw
+vs_BB   DD OFFSET error_sw
+vs_BC   DD OFFSET error_sw
+vs_BD   DD OFFSET error_sw
+vs_BE   DD OFFSET error_sw
+vs_BF   DD OFFSET error_sw
+vs_C0   DD OFFSET error_sw
+vs_C1   DD OFFSET error_sw
+vs_C2   DD OFFSET error_sw
+vs_C3   DD OFFSET error_sw
+vs_C4   DD OFFSET error_sw
+vs_C5   DD OFFSET error_sw
+vs_C6   DD OFFSET error_sw
+vs_C7   DD OFFSET error_sw
+vs_C8   DD OFFSET error_sw
+vs_C9   DD OFFSET error_sw
+vs_CA   DD OFFSET error_sw
+vs_CB   DD OFFSET error_sw
+vs_CC   DD OFFSET error_sw
+vs_CD   DD OFFSET error_sw
+vs_CE   DD OFFSET error_sw
+vs_CF   DD OFFSET error_sw
+vs_D0   DD OFFSET error_sw
+vs_D1   DD OFFSET error_sw
+vs_D2   DD OFFSET error_sw
+vs_D3   DD OFFSET error_sw
+vs_D4   DD OFFSET error_sw
+vs_D5   DD OFFSET error_sw
+vs_D6   DD OFFSET error_sw
+vs_D7   DD OFFSET error_sw
+vs_D8   DD OFFSET error_sw
+vs_D9   DD OFFSET error_sw
+vs_DA   DD OFFSET error_sw
+vs_DB   DD OFFSET error_sw
+vs_DC   DD OFFSET error_sw
+vs_DD   DD OFFSET error_sw
+vs_DE   DD OFFSET error_sw
+vs_DF   DD OFFSET error_sw
+vs_E0   DD OFFSET error_sw
+vs_E1   DD OFFSET error_sw
+vs_E2   DD OFFSET error_sw
+vs_E3   DD OFFSET error_sw
+vs_E4   DD OFFSET error_sw
+vs_E5   DD OFFSET error_sw
+vs_E6   DD OFFSET error_sw
+vs_E7   DD OFFSET error_sw
+vs_E8   DD OFFSET error_sw
+vs_E9   DD OFFSET error_sw
+vs_EA   DD OFFSET error_sw
+vs_EB   DD OFFSET error_sw
+vs_EC   DD OFFSET error_sw
+vs_ED   DD OFFSET error_sw
+vs_EE   DD OFFSET error_sw
+vs_EF   DD OFFSET error_sw
+vs_F0   DD OFFSET error_sw
+vs_F1   DD OFFSET error_sw
+vs_F2   DD OFFSET error_sw
+vs_F3   DD OFFSET error_sw
+vs_F4   DD OFFSET error_sw
+vs_F5   DD OFFSET error_sw
+vs_F6   DD OFFSET error_sw
+vs_F7   DD OFFSET error_sw
+vs_F8   DD OFFSET error_sw
+vs_F9   DD OFFSET error_sw
+vs_FA   DD OFFSET error_sw
+vs_FB   DD OFFSET error_sw
+vs_FC   DD OFFSET error_sw
+vs_FD   DD OFFSET error_sw
+vs_FE   DD OFFSET error_sw
+vs_FF   DD OFFSET error_sw
+
+DoFunc   PROC near
+    pushad
+;    
+    movzx ebx,al
+    shl ebx,2
+    call dword ptr cs:[ebx].virt_sw_func_tab
+;
+    call HideMarker
+    call WriteRegs
+    call ShowMarker
+
+debug_end:
+    popad
+    ret
+DoFunc   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DumpFault
+;
+;           DESCRIPTION:    Dump fault
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DumpFault:
+    push es
+;
+    mov ax,mon_deb_sel
+    mov es,ax
+;    
+    mov al,byte ptr [ebp].trap_exc_nr
+    mov es:fault_vect,al
+;
+    mov eax,[ebp].trap_err
+    mov es:fault_error,eax
+;
+    mov eax,[ebp].trap_eip
+    mov es:reg_eip,eax
+;
+    mov eax,[ebp].trap_eflags
+    mov es:reg_eflags,eax
+    mov eax,[ebp].trap_eax
+    mov es:reg_eax,eax
+    mov es:reg_ecx,ecx
+    mov es:reg_edx,edx
+    mov eax,[ebp].trap_ebx
+    mov es:reg_ebx,eax
+    mov eax,ebp
+    add eax,20
+    mov es:reg_esp,eax
+    mov es:reg_esi,esi
+    mov es:reg_edi,edi
+    mov ax,[ebp].trap_cs
+    mov es:reg_cs.d_selector,ax
+    mov es:reg_ss.d_selector,ss
+    mov ax,[ebp].trap_pds
+    mov es:reg_ds.d_selector,ax
+    pop ax
+    mov es:reg_es.d_selector,ax
+    mov es:reg_fs.d_selector,fs
+    mov es:reg_gs.d_selector,gs
+    mov ebp,[ebp].trap_ebp
+    mov es:reg_ebp,ebp
+    sldt ax
+    mov es:reg_ldt.d_selector,ax       
+;
+    mov al,es:int_started
+    or al,al
+    jnz wcStarted
+;
+    mov es:int_started,1
+    mov es:int_curr_row,15
+    mov es:int_curr_col,0
+
+wcStarted:
+    call WriteRegs
+;
     mov ax,mon_deb_sel
     mov ds,ax
     mov al,ds:int_count
@@ -2592,9 +3369,65 @@ fdKey:
     
 fdLoop:
     call GetKey
+    jc fdLoop
+;    
+    test ah,80h
+    jnz fdLoop
+;    
+    cmp al,25h
+    je fdLeft
+;
+    cmp al,27h
+    je fdRight
+;        
+    cmp al,26h
+    je fdUp
+;
+    cmp al,28h
+    je fdDown
+;
+    call DoFunc
     jmp fdLoop
 
-fdTest dd 12345678h
+fdUp:
+    mov dx,ds:int_curr_row
+    cmp dx,15
+    jbe fdLoop
+;    
+    call HideMarker
+    dec ds:int_curr_row
+    call ShowMarker
+    jmp fdLoop
+
+fdDown:
+    mov dx,ds:int_curr_row
+    cmp dx,24
+    je fdLoop
+;
+    call HideMarker
+    inc ds:int_curr_row
+    call ShowMarker
+    jmp fdLoop
+
+fdLeft:
+    mov dx,ds:int_curr_col
+    or dx,dx
+    jz fdLoop
+;
+    call HideMarker
+    dec ds:int_curr_col
+    call ShowMarker
+    jmp fdLoop    
+
+fdRight:
+    mov dx,ds:int_curr_col
+    cmp dx,79
+    je fdLoop
+;
+    call HideMarker
+    inc ds:int_curr_col
+    call ShowMarker
+    jmp fdLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
