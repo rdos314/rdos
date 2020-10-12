@@ -263,6 +263,8 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
+mon_ohci_count      DB ?
+
 mon_xhci_param      DD ?
 mon_xhci_door_bell  DD ?
 mon_xhci_runtime    DD ?
