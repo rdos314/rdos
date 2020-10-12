@@ -35,6 +35,7 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
+    extrn MapUsbFunc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -120,7 +121,6 @@ AddXhci      PROC near
     test al,4
     jz axDone
 ;
-    int 3
     inc ds:mon_xhci_count
     shl ebx,3
     and al,0F0h
@@ -134,6 +134,73 @@ axDone:
     pop ds
     ret
 AddXhci      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckFunc
+;
+;           DESCRIPTION:    Check function
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CheckFunc       PROC near
+    int 3
+    ret
+CheckFunc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckXhci
+;
+;           DESCRIPTION:    Check XHCI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CheckXhci
+    
+CheckXhci       PROC near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;    
+    mov ax,mon_data_sel
+    mov ds,ax
+    mov ax,mon_flat_sel
+    mov es,ax
+;
+    movzx ecx,ds:mon_xhci_count
+    or ecx,ecx
+    jz cxDone
+;
+    mov esi,OFFSET mon_xhci_arr
+
+cxLoop:
+    mov ebx,[esi+4]
+    mov eax,[esi]
+    call MapUsbFunc
+    call CheckFunc
+;
+    add esi,8
+    loop cxLoop
+
+cxDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+CheckXhci	Endp
 
 code    ENDS
 

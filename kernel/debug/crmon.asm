@@ -59,6 +59,65 @@ code    SEGMENT byte public use32 'CODE'
 
     extrn InitXhci:near
     extrn AddXhci:near
+    extrn CheckXhci:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapUsbFunc
+;
+;           DESCRIPTION:    Map USB function
+;
+;           PARAMETERS:     EBX:EAX     physical address
+;
+;           RETURNS:        EDX         Linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public MapUsbFunc
+
+MapUsbFunc       Proc near
+    push ds
+    push eax
+    push ecx
+;
+    mov al,67h
+    and ah,0F0h
+;
+    mov cx,mon_data_sel
+    mov ds,cx
+    mov edx,ds:mon_usb_func_linear
+    push edx
+;    
+    mov cx,mon_process_page_sel
+    mov ds,cx
+;
+    mov ecx,cr4
+    test cl,20h
+    jnz mufPae
+
+mufProt:    
+    shr edx,10
+    and dl,0FCh
+    mov [edx],eax
+    jmp mufDone
+
+mufPae:
+    shr edx,9
+    and dl,0F8h
+    mov [edx],eax
+    mov [edx+4],ebx
+
+mufDone:
+    mov ecx,cr3
+    mov cr3,ecx
+    pop edx
+;    
+    pop ecx
+    pop eax
+    pop ds
+    ret
+MapUsbFunc       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5039,6 +5098,8 @@ handle_monitor:
 ;
     call InitXhci
     call EnumPci
+;
+    call CheckXhci
 ;
     mov bx,ds:[ebp].debug_core_id
 ;

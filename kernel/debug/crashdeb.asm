@@ -40,6 +40,7 @@ INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc
 
 code_page_linear  = 100000h
+usb_page_linear   = 1E0000h
 map_page_linear   = 1FF000h
 lfb_page_linear   = 0C0000000h
 
@@ -974,6 +975,7 @@ InitMonData Proc near
     mov edx,esi
     mov es:[edx].mon_core_count,1
     mov es:[edx].mon_map_linear,map_page_linear
+    mov es:[edx].mon_usb_func_linear,usb_page_linear
     mov edi,OFFSET mon_core_regs
     add edi,edx
 ;

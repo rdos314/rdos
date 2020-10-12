@@ -247,6 +247,7 @@ mon_core_struc     ENDS
 monitor_data_sel        STRUC
 
 mon_map_linear      DD ?
+mon_usb_func_linear DD ?
 
 mon_core_count      DW ?
 
