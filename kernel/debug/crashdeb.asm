@@ -985,6 +985,10 @@ InitMonData Proc near
     mov es:[edi].mc_mon_linear,eax
     mov es:[edi].mc_sys_linear,eax
 ;
+    call AllocateRam
+    call ZeroPage
+    mov es:[edx].mon_usb_linear,esi
+;
     mov bx,mon_data_sel
     mov edx,ds:switch_gdt
     pop esi

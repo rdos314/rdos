@@ -166,7 +166,6 @@ CheckFunc       PROC near
     mov ds:mon_xhci_oper,eax
     mov edx,eax
 ;
-    int 3
     mov eax,es:[edx]
     test al,1
     jz cfResetOk
@@ -180,6 +179,8 @@ cfWaitReset:
     jnz cfWaitReset
 
 cfResetOk:
+    int 3
+    mov eax,ds:mon_usb_linear
 
     ret
 CheckFunc	Endp
