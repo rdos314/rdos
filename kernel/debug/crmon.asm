@@ -4951,6 +4951,70 @@ DoFunc   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           NotifyUsb
+;
+;           DESCRIPTION:    Notify USB device
+;
+;           PARAMETERS:     ECX		PCI address
+;                           AL          Interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyUsb	Proc near
+    int 3
+    ret
+NotifyUsb	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EnumPci
+;
+;           DESCRIPTION:    Enumerate PCI devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnumPci    Proc near
+    mov ecx,80000000h
+
+epLoop:
+    mov eax,ecx
+    mov dx,0CF8h
+    and al,0FCh
+    out dx,eax
+    mov dx,0CFCh
+    in eax,dx
+;       
+    or eax,eax
+    jz epNext
+;   
+    cmp eax,-1
+    je epNext
+;   
+    mov eax,ecx
+    mov dx,0CF8h
+    mov al,8
+    out dx,eax
+    mov dx,0CFCh
+    in eax,dx
+    mov edx,eax
+    shr edx,16
+    cmp dx,0C03h
+    jne epNext
+;
+    shr eax,8
+    call NotifyUsb
+
+epNext:
+    add ecx,100h
+    cmp ecx,81000000h
+    jne epLoop  
+    ret
+EnumPci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           handle_monitor
 ;
 ;           DESCRIPTION:    Handle monitor
@@ -4966,7 +5030,8 @@ handle_monitor:
     mov ds,ax
     mov ds:int_count,0
 ;
-    int 3
+    call EnumPci
+
     mov ds:mon_curr_row,0
     mov ds:mon_curr_col,0
     mov ds:mon_curr_core,bx
