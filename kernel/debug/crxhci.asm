@@ -147,7 +147,6 @@ AddXhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 CheckFunc       PROC near
-    int 3
     mov al,es:[edx+7]
     mov ds:mon_xhci_ports,al
 ;
@@ -166,6 +165,22 @@ CheckFunc       PROC near
     add eax,edx
     mov ds:mon_xhci_oper,eax
     mov edx,eax
+;
+    int 3
+    mov eax,es:[edx]
+    test al,1
+    jz cfResetOk
+;
+    or al,2
+    mov es:[edx],al
+
+cfWaitReset:
+    mov eax,es:[edx]
+    test al,2
+    jnz cfWaitReset
+
+cfResetOk:
+
     ret
 CheckFunc	Endp
 
