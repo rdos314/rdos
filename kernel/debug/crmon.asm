@@ -57,6 +57,9 @@ code    SEGMENT byte public use32 'CODE'
     extrn GetCrashKey:near
     extrn Emulate:near
 
+    extrn InitXhci:near
+    extrn AddXhci:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4961,7 +4964,16 @@ DoFunc   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyUsb	Proc near
-    int 3
+    cmp al,30h
+    je nuXhci
+;
+    jmp nuDone
+
+nuXhci:
+    call AddXhci
+    jmp nuDone
+
+nuDone:
     ret
 NotifyUsb	Endp
 
@@ -5024,14 +5036,16 @@ EnumPci    Endp
 handle_monitor:
     call WriteCpuReg
     call InitCrashKeyboard
+;
+    call InitXhci
+    call EnumPci
+;
     mov bx,ds:[ebp].debug_core_id
 ;
     mov ax,mon_data_sel
     mov ds,ax
     mov ds:int_count,0
 ;
-    call EnumPci
-
     mov ds:mon_curr_row,0
     mov ds:mon_curr_col,0
     mov ds:mon_curr_core,bx
