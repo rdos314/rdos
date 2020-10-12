@@ -160,6 +160,13 @@ get_info_small:
     shl edx,16
     or edx,eax
     mov ax,bx
+;
+    cmp ecx,200000h
+    jb get_info_limit_ok
+;
+    mov ecx,1FFFFFh
+
+get_info_limit_ok:
     clc
     jmp get_info_done
 
