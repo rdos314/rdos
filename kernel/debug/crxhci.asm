@@ -90,6 +90,52 @@ InitXhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ResetXhci
+;
+;           DESCRIPTION:    Reset XHCI
+;
+;           PARAMETERS:     ES:EDX		PIC BAR0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+ResetXhci      PROC near
+    push eax
+    push ecx
+    push edx
+;
+    movzx ecx,byte ptr es:[edx]
+    add edx,ecx
+    mov eax,es:[edx]
+    test al,1    
+    clc
+    jz rxResetDone
+;
+    and al,NOT 1
+    or al,2
+    mov es:[edx],eax
+;
+    mov ecx,100000h
+
+rxWait:
+    mov eax,es:[edx]
+    test al,2
+    clc
+    jz rxResetDone
+;
+    loop rxWait
+;
+    stc
+
+rxResetDone:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+ResetXhci	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddXhci
 ;
 ;           DESCRIPTION:    Add XHCI
@@ -121,9 +167,20 @@ AddXhci      PROC near
     test al,4
     jz axDone
 ;
+    and al,0F0h
+    push eax
+    push ebx
+    push edx
+    mov ebx,edx
+    call MapUsbFunc
+    call ResetXhci
+    pop edx
+    pop ebx
+    pop eax
+    jc axDone
+;
     inc ds:mon_xhci_count
     shl ebx,3
-    and al,0F0h
     mov ds:[ebx].mon_xhci_arr,eax
     mov ds:[ebx+4].mon_xhci_arr,edx
 
@@ -165,22 +222,6 @@ CheckFunc       PROC near
     add eax,edx
     mov ds:mon_xhci_oper,eax
     mov edx,eax
-;
-    mov eax,es:[edx]
-    test al,1
-    jz cfResetOk
-;
-    or al,2
-    mov es:[edx],al
-
-cfWaitReset:
-    mov eax,es:[edx]
-    test al,2
-    jnz cfWaitReset
-
-cfResetOk:
-    int 3
-    mov eax,ds:mon_usb_linear
 
     ret
 CheckFunc	Endp

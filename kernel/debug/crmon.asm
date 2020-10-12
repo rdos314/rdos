@@ -5035,7 +5035,6 @@ NotifyUsb	Proc near
     jmp nuDone
 
 nuOhci:
-    int 3
     call AddOhci
     jmp nuDone
 
@@ -5092,7 +5091,6 @@ epNext:
     cmp ecx,81000000h
     jne epLoop  
 ;
-    int 3
     ret
 EnumPci    Endp
 
@@ -5114,7 +5112,6 @@ handle_monitor:
     call EnumPci
 ;
     call CheckXhci
-    int 3
 ;
     mov bx,ds:[ebp].debug_core_id
 ;
