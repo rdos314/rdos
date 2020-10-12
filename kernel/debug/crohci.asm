@@ -38,6 +38,32 @@ code    SEGMENT byte public use32 'CODE'
     extrn MapUsbFunc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPciDword
+;
+;           DESCRIPTION:    Read PCI dword
+;
+;           PARAMETERS:     ECX		Pci address
+;
+;           RETURNS:        EAX         Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPciDword    Proc near
+    push edx
+;
+    mov eax,ecx
+    mov dx,0CF8h
+    out dx,eax
+    mov dx,0CFCh
+    in eax,dx
+;
+    pop edx
+    ret
+ReadPciDword	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           InitOhci
@@ -64,6 +90,49 @@ InitOhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ResetOhci
+;
+;           DESCRIPTION:    Reset OHCI
+;
+;           PARAMETERS:     ES:EDX		PIC BAR0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+ResetOhci      PROC near
+    push eax
+    push ecx
+    push edx
+;
+    mov eax,es:[edx+8]
+    test al,1    
+    stc
+    jnz roResetDone
+;
+    or al,1
+    mov es:[edx+8],eax
+;
+    mov ecx,100000h
+
+roWait:
+    mov eax,es:[edx+8]
+    test al,1
+    clc
+    jz roResetDone
+;
+    loop roWait
+;
+    stc
+
+roResetDone:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+ResetOhci	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddOhci
 ;
 ;           DESCRIPTION:    Add OHCI
@@ -79,6 +148,7 @@ AddOhci      PROC near
     push eax
     push ebx
     push ecx
+    push edx
 ;    
     mov ax,mon_data_sel
     mov ds,ax
@@ -86,9 +156,30 @@ AddOhci      PROC near
     cmp bl,10
     jae aoDone
 ;
+    mov cl,10h
+    call ReadPciDword
+    or eax,eax
+    jz aoDone
+;    
+    test al,7
+    jnz aoDone
+;
+    and al,0F0h
+    push eax
+    push ebx
+    xor ebx,ebx
+    call MapUsbFunc
+    call ResetOhci
+    pop ebx
+    pop eax
+    jc aoDone
+;
     inc ds:mon_ohci_count
+    shl ebx,2
+    mov ds:[ebx].mon_ohci_arr,eax
 
 aoDone:
+    pop edx
     pop ecx
     pop ebx
     pop eax

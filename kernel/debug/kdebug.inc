@@ -264,6 +264,7 @@ mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
 mon_ohci_count      DB ?
+mon_ohci_arr        DD 10 DUP(?)
 
 mon_xhci_param      DD ?
 mon_xhci_door_bell  DD ?
