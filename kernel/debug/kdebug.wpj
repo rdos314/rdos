@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-64
-360
+821
+290
 8320
 9216
 2
@@ -48,10 +48,10 @@ kdebug.tgt
 VComponent
 12
 WRect
-1029
-1261
+1024
+1254
 5664
-4266
+4258
 0
 0
 13
@@ -60,4 +60,4 @@ WFileName
 pcshut.tgt
 0
 1
-11
+8
