@@ -1619,6 +1619,193 @@ ShowChar Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InvertChar
+;
+;           DESCRIPTION:    CX  Col
+;                           DX  Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+InvertChar Proc near
+    push ds
+    push es
+    pushad
+;   
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
+    jz icDone
+
+icLfb:
+    mov ax,mon_flat_sel
+    mov es,ax
+; 
+    push cx
+    mov ax,dx
+    mov cx,19
+    mul cx
+    movzx eax,ax
+    pop dx
+    movzx edx,dx
+    shl edx,3
+    xchg eax,edx
+;
+    push eax
+    mov eax,ds:efi_scan_size
+    mul edx
+    mov edi,ds:mon_fixed_lfb
+    add edi,eax
+    pop eax
+    shl eax,2
+    add edi,eax
+;
+    mov ecx,19
+
+icRowLoop:    
+    push ecx
+    push edi
+    mov ecx,8
+
+icLoop:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop icLoop    
+;
+    pop edi
+    pop ecx
+    add edi,ds:efi_scan_size
+;
+    loop icRowLoop    
+
+icDone:
+    popad        
+    pop es
+    pop ds
+    ret
+InvertChar Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ShowMarker
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowMarker Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
+    jnz smLfb
+
+smText:
+    mov ax,mon_text_sel
+    mov es,ax
+;    
+    mov ax,mon_deb_sel
+    mov ds,ax
+;
+    mov ax,ds:int_curr_row
+    mov dx,80
+    mul dx
+    add ax,ds:int_curr_col
+    add ax,ax
+    movzx edi,ax
+    inc edi
+    mov al,70h
+    stosb
+    jmp smDone
+
+smLfb:
+    mov ax,mon_deb_sel
+    mov ds,ax
+    mov dx,ds:int_curr_row
+    mov cx,ds:int_curr_col
+    call InvertChar
+
+smDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds    
+    ret
+ShowMarker Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HideMarker
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HideMarker Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov eax,ds:mon_fixed_lfb
+    or eax,eax
+    jnz hmLfb
+
+hmText:
+    mov ax,mon_text_sel
+    mov es,ax
+;    
+    mov ax,mon_deb_sel
+    mov ds,ax
+;
+    mov ax,ds:int_curr_row
+    mov dx,80
+    mul dx
+    add ax,ds:int_curr_col
+    add ax,ax
+    movzx edi,ax
+    inc edi
+    mov al,7
+    stosb
+    jmp hmDone
+
+hmLfb:
+    mov ax,mon_deb_sel
+    mov ds,ax
+    mov dx,ds:int_curr_row
+    mov cx,ds:int_curr_col
+    call InvertChar
+
+hmDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds    
+    ret
+HideMarker Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Clear
 ;
 ;           DESCRIPTION:    Clear screen
@@ -2317,12 +2504,16 @@ DumpFault:
     sldt ax
     mov es:reg_ldt.d_selector,ax       
 ;
+    mov al,es:int_started
+    or al,al
+    jnz wcStarted
+;
+    mov es:int_started,1
+    mov es:int_curr_row,15
+    mov es:int_curr_col,0
+
+wcStarted:
     call Clear
-;    
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:efi_text_row,20
-    mov ds:efi_text_col,0
 ;    
     mov ax,mon_deb_sel
     mov ds,ax
@@ -2387,8 +2578,8 @@ wcPtrOk:
 ;
     mov ax,mon_deb_sel
     mov ds,ax
-    mov ax,ds:int_count
-    or ax,ax
+    mov al,ds:int_count
+    or al,al
     jz fdKey
 
 fdStop:
@@ -2396,6 +2587,7 @@ fdStop:
     
 fdKey:
     mov ds:int_count,1
+    call ShowMarker
     call InitKey
     
 fdLoop:

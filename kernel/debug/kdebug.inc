@@ -274,9 +274,13 @@ monitor_deb_sel        STRUC
 
 int_fault_regs      cpu_struc <>
 
-int_count           DW ?
+int_started         DB ?
+int_count           DB ?
 int_deb_row         DW ?
 int_deb_col         DW ?
+
+int_curr_row        DW ?
+int_curr_col        DW ?
 
 int_key_code        DW ?
 int_c_vk_code       DB ?
