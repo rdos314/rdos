@@ -177,6 +177,7 @@ AddXhci      PROC near
     pop edx
     pop ebx
     pop eax
+    int 3
     jc axDone
 ;
     inc ds:mon_xhci_count
