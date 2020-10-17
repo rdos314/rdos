@@ -238,6 +238,37 @@ CheckWait       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           WaitMs
+;
+;           DESCRIPTION:    Wait milliseconds
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           AX          Ms to wait
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+WaitMs       PROC near
+    pushad
+;
+    movzx ecx,ax
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET sd_frame
+    mov ax,es:[edi]
+
+wmLoop:
+    cmp ax,es:[edi]
+    je wmLoop
+;
+    mov ax,es:[edi]
+    loop wmLoop
+;
+    popad
+    ret
+WaitMs       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckFunc
 ;
 ;           DESCRIPTION:    Check function
@@ -316,6 +347,37 @@ cfPowerLoop:
     mov eax,100h
 
 cfConnLoop:    
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    mov ax,50
+    call WaitMs
+;
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    mov eax,10h
+    mov es:[edi],eax
+
+cfWaitReset:
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    test al,10h
+    jnz cfWaitReset
+;
+    test ax,200h
+    jz cfConnNext
+;
+    mov eax,2
+    mov es:[edi],eax
+;
+    mov ax,50
+    call WaitMs
+;
     mov eax,es:[edi]
     test al,1
     jz cfConnNext
