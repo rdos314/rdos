@@ -187,6 +187,73 @@ aoDone:
     ret
 AddOhci      ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckFunc
+;
+;           DESCRIPTION:    Check function
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CheckFunc       PROC near
+    ret
+CheckFunc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckOhci
+;
+;           DESCRIPTION:    Check OHCI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CheckOhci
+    
+CheckOhci       PROC near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;    
+    int 3
+    mov ax,mon_data_sel
+    mov ds,ax
+    mov ax,mon_flat_sel
+    mov es,ax
+;
+    movzx ecx,ds:mon_ohci_count
+    or ecx,ecx
+    jz coDone
+;
+    mov esi,OFFSET mon_ohci_arr
+
+coLoop:
+    xor ebx,ebx
+    mov eax,[esi]
+    call MapUsbFunc
+    call CheckFunc
+;
+    add esi,4
+    loop coLoop
+
+coDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+CheckOhci	Endp
+
 code    ENDS
 
     END

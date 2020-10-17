@@ -59,6 +59,7 @@ code    SEGMENT byte public use32 'CODE'
 
     extrn InitOhci:near
     extrn AddOhci:near
+    extrn CheckOhci:near
 
     extrn InitXhci:near
     extrn AddXhci:near
@@ -5111,6 +5112,7 @@ handle_monitor:
     call InitXhci
     call EnumPci
 ;
+    call CheckOhci
     call CheckXhci
 ;
     mov bx,ds:[ebp].debug_core_id
