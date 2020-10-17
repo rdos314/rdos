@@ -202,6 +202,42 @@ AddOhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CheckWait
+;
+;           DESCRIPTION:    Check wait
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CheckWait       PROC near
+    mov eax,es:[edx+4]
+    and al,0C0h
+    cmp al,80h
+    stc
+    jne cwDone
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET sd_frame
+    mov ax,es:[edi]
+;
+    mov ecx,1000000
+
+cwLoop:
+    cmp ax,es:[edi]
+    clc
+    jne cwDone
+    loop cwLoop
+;
+    stc
+
+cwDone:    
+    ret
+CheckWait       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckFunc
 ;
 ;           DESCRIPTION:    Check function
@@ -211,6 +247,8 @@ AddOhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 CheckFunc       PROC near
+    pushad
+;
     xor eax,eax
     mov es:[edx+20h],eax
     mov es:[edx+28h],eax
@@ -237,8 +275,8 @@ CheckFunc       PROC near
     stosd
 ;
     mov eax,es:[edx+4]
-    and ax,0F83Fh
-    or al,0BCh
+    and ax,0F803h
+    or al,94h
     mov es:[edx+4],eax
 ;
     mov eax,es:[edx+48h]
@@ -258,7 +296,40 @@ CheckFunc       PROC near
 
 cfPortsOk:    
     mov ds:mon_usb_ports,al
+;
+    movzx ecx,ds:mon_usb_ports
+    mov edi,edx
+    add edi,54h
+    mov eax,100h
 
+cfPowerLoop:    
+    mov es:[edi],eax
+    add edi,4
+    loop cfPowerLoop
+;
+    call CheckWait
+    jc cfFailed
+;
+    movzx ecx,ds:mon_usb_ports
+    mov edi,edx
+    add edi,54h
+    mov eax,100h
+
+cfConnLoop:    
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    int 3
+
+cfConnNext:
+    add edi,4
+    loop cfConnLoop
+
+cfFailed:
+    stc
+;
+    popad
     ret
 CheckFunc	Endp
 
@@ -282,7 +353,6 @@ CheckOhci       PROC near
     push edx
     push esi
 ;    
-    int 3
     mov ax,mon_data_sel
     mov ds,ax
     mov ax,mon_flat_sel
@@ -299,9 +369,14 @@ coLoop:
     mov eax,[esi]
     call MapUsbFunc
     call CheckFunc
+    jnc coFound
+;
+    call ResetOhci
 ;
     add esi,4
     loop coLoop
+
+coFound:
 
 coDone:
     pop esi
