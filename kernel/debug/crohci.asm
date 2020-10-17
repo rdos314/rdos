@@ -29,6 +29,18 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
 
+usb_struc	STRUC
+
+sd_int		DD 32 DUP(?)
+sd_frame	DW ?
+sd_pad		DW ?
+sd_done_head    DD ?
+sd_resv         DB 120 DUP (?)
+
+sd_hid_int      DD 4 DUP(?)
+
+usb_struc	ENDS
+
     .386p
 
 code    SEGMENT byte public use32 'CODE'
@@ -199,6 +211,54 @@ AddOhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 CheckFunc       PROC near
+    xor eax,eax
+    mov es:[edx+20h],eax
+    mov es:[edx+28h],eax
+    mov es:[edx+30h],eax
+    mov edi,ds:mon_usb_linear
+    mov es:[edx+18h],edi
+; 
+    mov ecx,32
+    mov eax,OFFSET sd_hid_int
+    add eax,edi
+    rep stosd
+;
+    mov ecx,32
+    xor eax,eax
+    rep stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET sd_hid_int
+    mov eax,4000h
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    stosd
+;
+    mov eax,es:[edx+4]
+    and ax,0F83Fh
+    or al,0BCh
+    mov es:[edx+4],eax
+;
+    mov eax,es:[edx+48h]
+    and ah,NOT 3
+    or ah,1
+    mov es:[edx+48h],eax
+;    
+    mov eax,es:[edx+4Ch]
+    or eax,0FFFF0000h
+    mov es:[edx+4Ch],eax    
+;
+    mov eax,es:[edx+48h]
+    or al,al
+    jnz cfPortsOk
+;
+    inc al
+
+cfPortsOk:    
+    mov ds:mon_usb_ports,al
+
     ret
 CheckFunc	Endp
 

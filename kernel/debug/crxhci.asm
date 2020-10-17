@@ -205,7 +205,7 @@ AddXhci      ENDP
     
 CheckFunc       PROC near
     mov al,es:[edx+7]
-    mov ds:mon_xhci_ports,al
+    mov ds:mon_usb_ports,al
 ;
     mov eax,es:[edx+10h]
     mov ds:mon_xhci_param,eax
