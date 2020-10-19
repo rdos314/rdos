@@ -5095,6 +5095,109 @@ epNext:
     ret
 EnumPci    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleKey
+;
+;           DESCRIPTION:    Handle key
+;
+;           PARAMETERS:     AX		Key code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleKey    Proc near
+    test ah,80h
+    jnz hkDone
+;    
+    cmp al,25h
+    je hkLeftArrow
+;
+    cmp al,27h
+    je hkRightArrow
+;        
+    cmp al,26h
+    je hkUpArrow
+;
+    cmp al,28h
+    je hkDownArrow
+;
+    call DoFunc
+    jmp hkDone
+
+hkUpArrow:
+    mov dx,ds:mon_curr_row
+    or dx,dx
+    jz hkDone
+;    
+    call HideMarker
+    dec ds:mon_curr_row
+    call ShowMarker
+    jmp hkDone
+
+hkDownArrow:
+    mov dx,ds:mon_curr_row
+    cmp dx,24
+    je hkDone
+;
+    call HideMarker
+    inc ds:mon_curr_row
+    call ShowMarker
+    jmp hkDone
+
+hkLeftArrow:
+    mov dx,ds:mon_curr_col
+    or dx,dx
+    jz hkDone
+;
+    call HideMarker
+    dec ds:mon_curr_col
+    call ShowMarker
+    jmp hkDone
+
+hkRightArrow:
+    mov dx,ds:mon_curr_col
+    cmp dx,79
+    je hkDone
+;
+    call HideMarker
+    inc ds:mon_curr_col
+    call ShowMarker
+
+hkDone:
+    ret
+HandleKey	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PollKey
+;
+;           DESCRIPTION:    Poll keyboard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public PollKey
+
+PollKey	Proc near
+    push ds
+    pushad
+;
+    mov ax,mon_data_sel
+    mov ds,ax
+;
+    call GetCrashKey
+    jc pkDone
+;
+    call HandleKey
+
+pkDone:
+    popad
+    pop ds
+    ret
+PollKey	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5128,65 +5231,7 @@ handle_monitor:
     call ShowMarker
 
 handle_loop:
-    call GetCrashKey
-    jc handle_loop
-;    
-    test ah,80h
-    jnz handle_loop
-;    
-    cmp al,25h
-    je left_arrow
-;
-    cmp al,27h
-    je right_arrow
-;        
-    cmp al,26h
-    je up_arrow
-;
-    cmp al,28h
-    je down_arrow
-;
-    call DoFunc
-    jmp handle_loop
-
-up_arrow:
-    mov dx,ds:mon_curr_row
-    or dx,dx
-    jz handle_loop
-;    
-    call HideMarker
-    dec ds:mon_curr_row
-    call ShowMarker
-    jmp handle_loop
-
-down_arrow:
-    mov dx,ds:mon_curr_row
-    cmp dx,24
-    je handle_loop
-;
-    call HideMarker
-    inc ds:mon_curr_row
-    call ShowMarker
-    jmp handle_loop
-
-left_arrow:
-    mov dx,ds:mon_curr_col
-    or dx,dx
-    jz handle_loop
-;
-    call HideMarker
-    dec ds:mon_curr_col
-    call ShowMarker
-    jmp handle_loop    
-
-right_arrow:
-    mov dx,ds:mon_curr_col
-    cmp dx,79
-    je handle_loop
-;
-    call HideMarker
-    inc ds:mon_curr_col
-    call ShowMarker
+    call PollKey
     jmp handle_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
