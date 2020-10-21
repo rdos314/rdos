@@ -517,6 +517,7 @@ gdLoop:
     stosd
 ;
     mov ax,cx
+    dec ax
     cmp ax,8
     jb gdSave
 ;
@@ -697,8 +698,24 @@ cfWaitReset:
     mov cx,8
     mov ax,100h
     call GetDescr 
+    pop ecx
+    jc cfDisable
+;
+    mov ax,1
+    call WaitMs
+;
+    push ecx
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    movzx cx,byte ptr es:[edi]
+    mov ax,100h
+    call GetDescr 
     int 3
     pop ecx
+    jc cfDisable
+;
+    mov ax,1
+    call WaitMs
 
 cfDisable:
     mov eax,1
