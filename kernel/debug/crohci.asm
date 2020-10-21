@@ -370,7 +370,7 @@ cfWaitReset:
     jnz cfWaitReset
 ;
     test ax,200h
-    jz cfConnNext
+    jz cfDisable
 ;
     mov eax,2
     mov es:[edi],eax
@@ -380,9 +380,18 @@ cfWaitReset:
 ;
     mov eax,es:[edi]
     test al,1
-    jz cfConnNext
+    jz cfDisable
 ;
     int 3
+
+cfDisable:
+    mov eax,1
+    mov es:[edi],eax
+
+cfCheckDisabled:
+    mov eax,es:[edi]
+    test al,2
+    jnz cfCheckDisabled
 
 cfConnNext:
     add edi,4
