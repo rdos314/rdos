@@ -445,7 +445,6 @@ AddressDev	Proc near
     mov es:[edx+8],eax
 ;
     call WaitControl
-    int 3
     ret
 AddressDev	Endp
 
@@ -567,6 +566,13 @@ cfWaitReset:
 ;
     call CreateControl
     call AddressDev
+    int 3
+    jc cfDisable
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_ed
+    mov al,1
+    mov es:[edi],al
 
 cfDisable:
     mov eax,1
