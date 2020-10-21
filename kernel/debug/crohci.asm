@@ -313,12 +313,20 @@ WaitControl       PROC near
 wcRetry:
     mov eax,es:[esi]
     test al,1
+    stc
     jz wcDone
 ;
     mov eax,es:[edi+4]
     sub eax,es:[edi+8]
     and eax,0FFFFFFF0h
     jnz wcRetry
+;
+    mov eax,es:[edi+8]
+    test al,1
+    stc
+    jnz wcDone
+;
+    clc
 
 wcDone:
     ret
