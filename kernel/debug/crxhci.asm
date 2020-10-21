@@ -351,6 +351,8 @@ CheckFunc       PROC near
     or al,1
     mov es:[edi],eax
 ;
+    mov edi,ds:mon_xhci_runtime
+
     movzx ecx,ds:mon_usb_ports
     mov edi,ds:mon_xhci_oper
     add edi,400h
