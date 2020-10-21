@@ -61,7 +61,9 @@ code    SEGMENT byte public use32 'CODE'
 usb_struc	STRUC
 
 dc1             DB 100h DUP(?)
+erst1           DB 100h DUP(?)
 cmd             DB 40h DUP(?)
+erst            DB 10h DUP(?)
 
 dcba            DD ?,?
 
@@ -285,7 +287,6 @@ CheckFunc       PROC near
     xor eax,eax
     rep stosd
 ;
-    int 3
     mov eax,ds:mon_usb_linear
     add eax,OFFSET cmd
     stosd
@@ -301,7 +302,48 @@ CheckFunc       PROC near
     xor eax,eax
     mov es:[edx+1Ch],eax
 ;
-    ret
+    int 3
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET erst1
+    mov ecx,40h
+    xor eax,eax
+    rep stosd
+;
+    mov edi,ds:mon_usb_linear
+    add eax,OFFSET erst1
+    add eax,edi
+    add edi,OFFSET erst
+    stosd
+    xor eax,eax
+    stosd
+    mov eax,10h
+    stosd
+    xor eax,eax
+    stosd
+;
+    mov edi,ds:mon_xhci_runtime
+    add edi,20h
+    xor eax,eax
+    stosd
+    stosd
+;
+    mov eax,1
+    stosd
+    xor eax,eax
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET erst
+    stosd
+    xor eax,eax
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET erst
+    stosd
+    xor eax,eax
+    stosd
+        ret
 CheckFunc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
