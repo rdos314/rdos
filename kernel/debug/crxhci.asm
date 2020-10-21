@@ -242,6 +242,8 @@ AddXhci      ENDP
 CheckFunc       PROC near
     mov al,es:[edx+7]
     mov ds:mon_usb_ports,al
+    or al,al
+    jz cfFail
 ;
     mov eax,es:[edx+10h]
     mov ds:mon_xhci_param,eax
@@ -302,7 +304,6 @@ CheckFunc       PROC near
     xor eax,eax
     mov es:[edx+1Ch],eax
 ;
-    int 3
     mov edi,ds:mon_usb_linear
     add edi,OFFSET erst1
     mov ecx,40h
@@ -343,7 +344,21 @@ CheckFunc       PROC near
     stosd
     xor eax,eax
     stosd
-        ret
+;
+    int 3
+    mov edi,ds:mon_xhci_oper
+    mov eax,es:[edi]
+    or al,1
+    mov es:[edi],eax
+;
+    movzx ecx,ds:mon_usb_ports
+    mov edi,ds:mon_xhci_oper
+    add edi,400h
+
+
+cfFail:
+    stc
+    ret
 CheckFunc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
