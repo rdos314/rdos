@@ -29,9 +29,43 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
 
+TRB_TYPE_NORMAL         = 1
+TRB_TYPE_SETUP          = 2
+TRB_TYPE_DATA           = 3
+TRB_TYPE_STATUS         = 4
+TRB_TYPE_ISO            = 5
+TRB_TYPE_LINK           = 6
+TRB_TYPE_EVENT          = 7
+TRB_TYPE_NO_OP          = 8
+TRB_TYPE_ENABLE_SLOT    = 9
+TRB_TYPE_DISABLE_SLOT   = 10
+TRB_TYPE_ADDRESS_DEV    = 11
+TRB_TYPE_CONFIGURE_ENDP = 12
+TRB_TYPE_EVALUATE       = 13
+TRB_TYPE_RESET_ENDP     = 14
+TRB_TYPE_STOP_ENDP      = 15
+TRB_TYPE_SET_TR         = 16
+TRB_TYPE_RESET_DEV      = 17
+TRB_TYPE_NO_OP_CMD      = 23
+TRB_TYPE_TRANSFER       = 32
+TRB_TYPE_CMD_COMPLETE   = 33
+TRB_TYPE_PORT_CHANGE    = 34
+TRB_TYPE_CONTROLLER     = 37
+TRB_TYPE_DEV_NOTIFY     = 38
+TRB_TYPE_MFI_WRAP       = 39
+
     .386p
 
 code    SEGMENT byte public use32 'CODE'
+
+usb_struc	STRUC
+
+dc1             DB 100h DUP(?)
+cmd             DB 40h DUP(?)
+
+dcba            DD ?,?
+
+usb_struc	ENDS
 
     assume cs:code
 
@@ -222,7 +256,51 @@ CheckFunc       PROC near
     add eax,edx
     mov ds:mon_xhci_oper,eax
     mov edx,eax
-
+;
+    mov eax,1
+    mov es:[edx+38h],eax
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET dc1
+    mov ecx,40h
+    xor eax,eax
+    rep stosd
+;
+    mov edi,ds:mon_usb_linear
+    mov eax,OFFSET dc1
+    add eax,edi
+    mov es:[edi].dcba,eax
+    xor eax,eax
+    mov es:[edi+4].dcba,eax
+;    
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET dcba
+    mov es:[edx+30h],eax
+    xor eax,eax
+    mov es:[edx+34h],eax
+;    
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET cmd
+    mov ecx,0Ch
+    xor eax,eax
+    rep stosd
+;
+    int 3
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET cmd
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    mov eax,2 + (TRB_TYPE_LINK SHL 10)
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET cmd
+    mov es:[edx+18h],eax
+    xor eax,eax
+    mov es:[edx+1Ch],eax
+;
     ret
 CheckFunc	Endp
 
