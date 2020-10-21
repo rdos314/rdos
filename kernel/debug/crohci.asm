@@ -29,6 +29,28 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
 
+GET_STATUS = 0
+CLEAR_FEATURE = 1
+SET_FEATURE = 3
+SET_ADDRESS = 5
+GET_DESCR = 6
+SET_DESCR = 7
+GET_CONFIG = 8
+SET_CONFIG = 9
+GET_INTERFACE = 10
+SET_INTERFACE = 11
+SYNC_FRAME = 12
+
+usb_setup_data  STRUC
+
+usd_type        DB ?
+usd_req         DB ?
+usd_value       DW ?
+usd_index       DW ?
+usd_len         DW ?
+
+usb_setup_data  ENDS
+
 usb_struc	STRUC
 
 sd_int		DD 32 DUP(?)
@@ -38,6 +60,12 @@ sd_done_head    DD ?
 sd_resv         DB 120 DUP (?)
 
 sd_hid_int      DD 4 DUP(?)
+
+control_ed      DD 4 DUP(?)
+control_setup   DD 4 DUP(?)
+control_end     DD 4 DUP(?)
+control_status  DD 4 DUP(?)
+control_msg     DB 8 DUP(?)
 
 usb_struc	ENDS
 
@@ -269,6 +297,153 @@ WaitMs       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           WaitControl
+;
+;           DESCRIPTION:    Wait for control completed
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           ES:ESI      Hub entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+WaitControl       PROC near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_ed
+
+wcRetry:
+    mov eax,es:[esi]
+    test al,1
+    jz wcDone
+;
+    mov eax,es:[edi+4]
+    sub eax,es:[edi+8]
+    and eax,0FFFFFFF0h
+    jnz wcRetry
+
+wcDone:
+    ret
+WaitControl       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateControl
+;
+;           DESCRIPTION:    Create control
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControl	Proc near    
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_end
+    mov eax,0E40000h
+    stosd
+;
+    xor eax,eax
+    stosd
+    stosd
+    stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_ed
+    mov eax,82000h
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_end
+    stosd
+    stosd
+;
+    mov eax,es:[edx+20h]
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_ed
+    mov es:[edx+20h],eax
+;
+    ret
+CreateControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddressDev
+;
+;           DESCRIPTION:    Address device
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           ES:ESI      Hub entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev	Proc near    
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_ADDRESS
+    mov es:[edi].usd_value,1
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,0
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_setup
+;    
+    mov ax,0F2E4h
+    shl eax,16
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_msg
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_status
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_msg
+    add eax,7
+    stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_status
+;
+    mov ax,0F3F4h
+    shl eax,16
+    stosd
+;
+    xor eax,eax
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_end
+    stosd
+;
+    xor eax,eax
+    stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_ed
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_setup
+    mov es:[edi+8],eax
+;
+    mov eax,es:[edx+8]
+    or al,2
+    mov es:[edx+8],eax
+;
+    call WaitControl
+    int 3
+    ret
+AddressDev	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckFunc
 ;
 ;           DESCRIPTION:    Check function
@@ -325,44 +500,44 @@ CheckFunc       PROC near
 ;
     inc al
 
-cfPortsOk:    
+cfPortsOk:   
     mov ds:mon_usb_ports,al
 ;
     movzx ecx,ds:mon_usb_ports
-    mov edi,edx
-    add edi,54h
+    mov esi,edx
+    add esi,54h
     mov eax,100h
 
 cfPowerLoop:    
-    mov es:[edi],eax
-    add edi,4
+    mov es:[esi],eax
+    add esi,4
     loop cfPowerLoop
 ;
     call CheckWait
     jc cfFailed
 ;
     movzx ecx,ds:mon_usb_ports
-    mov edi,edx
-    add edi,54h
+    mov esi,edx
+    add esi,54h
     mov eax,100h
 
 cfConnLoop:    
-    mov eax,es:[edi]
+    mov eax,es:[esi]
     test al,1
     jz cfConnNext
 ;
     mov ax,50
     call WaitMs
 ;
-    mov eax,es:[edi]
+    mov eax,es:[esi]
     test al,1
     jz cfConnNext
 ;
     mov eax,10h
-    mov es:[edi],eax
+    mov es:[esi],eax
 
 cfWaitReset:
-    mov eax,es:[edi]
+    mov eax,es:[esi]
     test al,1
     jz cfConnNext
 ;
@@ -373,28 +548,29 @@ cfWaitReset:
     jz cfDisable
 ;
     mov eax,2
-    mov es:[edi],eax
+    mov es:[esi],eax
 ;
     mov ax,50
     call WaitMs
 ;
-    mov eax,es:[edi]
+    mov eax,es:[esi]
     test al,1
     jz cfDisable
 ;
-    int 3
+    call CreateControl
+    call AddressDev
 
 cfDisable:
     mov eax,1
-    mov es:[edi],eax
+    mov es:[esi],eax
 
 cfCheckDisabled:
-    mov eax,es:[edi]
+    mov eax,es:[esi]
     test al,2
     jnz cfCheckDisabled
 
 cfConnNext:
-    add edi,4
+    add esi,4
     loop cfConnLoop
 
 cfFailed:
