@@ -65,6 +65,44 @@ udd_configs	DB ?
 
 usb_device_descr	ENDS
 
+usb_config_descr	STRUC
+
+ucd_len	    		DB ?
+ucd_type	    	DB ?
+ucd_size		    DW ?
+ucd_interface_count	DB ?
+ucd_config_id		DB ?
+ucd_config_str		DB ?
+ucd_attrib  		DB ?
+ucd_power	    	DB ?
+
+usb_config_descr	ENDS
+
+usb_endpoint_descr  STRUC
+
+ued_len             DB ?
+ued_type            DB ?
+ued_address         DB ?
+ued_attrib          DB ?
+ued_maxsize         DW ?
+ued_interval        DB ?
+
+usb_endpoint_descr  ENDS
+
+usb_interface_descr  STRUC
+
+uid_len             DB ?
+uid_type            DB ?
+uid_id              DB ?
+uid_alt_id          DB ?
+uid_endpoints       DB ?
+uid_class           DB ?
+uid_sub_class       DB ?
+uid_proto           DB ?
+uid_interface_id    DB ?
+
+usb_interface_descr  ENDS
+
     .386p
 
 code    SEGMENT byte public use32 'CODE'
@@ -5159,6 +5197,107 @@ cudDone:
     pop eax
     ret
 CheckUsbDev    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckUsbConfig
+;
+;           DESCRIPTION:    Check USB config for keyboard
+;
+;           PARAMETERS:     ES:EDI        Descriptor
+;
+;           RETURNS:        AL            Config ID
+;                           AH            Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CheckUsbConfig
+
+CheckUsbConfig    Proc near
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov si,es:[edi].ucd_size
+    mov dl,es:[edi].ucd_config_id
+    movzx ecx,es:[edi].ucd_len
+    add edi,ecx
+    sub si,cx
+    jbe cucFail
+
+cucCheckLoop:
+    mov cl,es:[edi].ucd_type
+    cmp cl,4
+    jne cucCheckNext
+;    
+    mov cl,es:[edi].uid_class
+    cmp cl,3
+    jne cucCheckNext
+;
+    mov cl,es:[edi].uid_sub_class
+    cmp cl,1
+    jne cucCheckNext
+;
+    mov cl,es:[edi].uid_proto
+    cmp cl,1
+    jne cucCheckNext
+;
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz cucFail
+;    
+    add edi,ecx
+    sub si,cx
+    jbe cucFail
+
+cucDescrLoop:
+    mov cl,es:[edi].ucd_type
+    cmp cl,5
+    jne cucDescrNext
+;    
+    mov cl,es:[edi].ued_attrib
+    and cl,3
+    cmp cl,3
+    jne cucDescrNext
+;
+    mov dh,es:[edi].ued_address
+    and dh,0Fh
+    mov ax,dx
+    clc
+    jmp cucDone
+
+cucDescrNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz cucFail
+;    
+    add edi,ecx
+    sub si,cx
+    ja cucDescrLoop
+;
+    jmp cucFail
+
+cucCheckNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz cucFail
+;    
+    add edi,ecx
+    sub si,cx
+    ja cucCheckLoop
+
+cucFail:
+    stc
+
+cucDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    ret
+CheckUsbConfig    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

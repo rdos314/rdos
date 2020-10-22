@@ -79,6 +79,7 @@ code    SEGMENT byte public use32 'CODE'
 
     extrn MapUsbFunc:near
     extrn CheckUsbDev:near
+    extrn CheckUsbConfig:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -757,7 +758,6 @@ cfConfigLoop:
     mov al,bl
     mov ah,2
     call GetDescr
-    int 3
 ;
     pop ebp
     pop ecx
@@ -766,11 +766,20 @@ cfConfigLoop:
 ;
     mov ax,1
     call WaitMs
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    call CheckUsbConfig
+    int 3
+    jnc cfConfig
 
 cfConfigNext:
     inc bx
     sub ebp,1
     jnz cfConfigLoop
+    jmp cfDisable
+
+cfConfig:
 
 
 
