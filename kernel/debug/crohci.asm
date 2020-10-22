@@ -78,6 +78,7 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
 
     extrn MapUsbFunc:near
+    extrn CheckUsbDev:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -710,12 +711,68 @@ cfWaitReset:
     movzx cx,byte ptr es:[edi]
     mov ax,100h
     call GetDescr 
-    int 3
     pop ecx
     jc cfDisable
 ;
     mov ax,1
     call WaitMs
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    call CheckUsbDev
+    jc cfDisable
+;
+    movzx ebp,byte ptr es:[edi+17]
+    xor bx,bx
+
+cfConfigLoop:
+    push ebx
+    push ecx
+    push ebp
+;
+    mov cx,8
+    mov al,bl
+    mov ah,2
+    call GetDescr
+;
+    pop ebp
+    pop ecx
+    pop ebx
+    jc cfDisable
+;
+    mov ax,1
+    call WaitMs
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    mov ax,es:[edi+2]
+    cmp ax,200h
+    jae cfConfigNext
+;
+    push ebx
+    push ecx
+    push ebp
+;
+    mov cx,ax
+    mov al,bl
+    mov ah,2
+    call GetDescr
+    int 3
+;
+    pop ebp
+    pop ecx
+    pop ebx
+    jc cfDisable
+;
+    mov ax,1
+    call WaitMs
+
+cfConfigNext:
+    inc bx
+    sub ebp,1
+    jnz cfConfigLoop
+
+
 
 cfDisable:
     mov eax,1

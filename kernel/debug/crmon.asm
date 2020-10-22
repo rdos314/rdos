@@ -46,6 +46,25 @@ exec_set_proc    DD ?
 
 exec_s  ENDS
 
+usb_device_descr	STRUC
+
+udd_len		DB ?
+udd_type	DB ?
+udd_usb_ver	DW ?
+udd_class	DB ?
+udd_sub_class	DB ?
+udd_proto	DB ?
+udd_maxlen	DB ?
+udd_vendor	DW ?
+udd_prod	DW ?
+udd_device	DW ?
+udd_man		DB ?
+udd_prodid	DB ?
+udd_num		DB ?
+udd_configs	DB ?
+
+usb_device_descr	ENDS
+
     .386p
 
 code    SEGMENT byte public use32 'CODE'
@@ -5095,6 +5114,51 @@ epNext:
     ret
 EnumPci    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckUsbDev
+;
+;           DESCRIPTION:    Check USB device for keyboard
+;
+;           PARAMETERS:     ES:EDI        Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CheckUsbDev
+
+CheckUsbDev    Proc near
+    push eax
+;
+    movzx eax,es:[edi].udd_len
+    cmp eax,SIZE usb_device_descr
+    jb cudDone
+;
+    mov al,es:[edi].udd_class
+    or al,al
+    clc
+    jz cudDone
+;
+    cmp al,3
+    stc
+    jnz cudDone
+;
+    mov al,es:[edi].udd_sub_class
+    cmp al,1
+    stc
+    jnz cudDone
+;
+    mov al,es:[edi].udd_proto
+    cmp al,1
+    stc
+    jnz cudDone
+;
+    clc
+
+cudDone:
+    pop eax
+    ret
+CheckUsbDev    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
