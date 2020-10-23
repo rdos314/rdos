@@ -268,7 +268,8 @@ mon_cmd_pcs         DW ?
 mon_cmd_enque       DD ?
 mon_event_deque     DD ?
 mon_event_ccs       DW ?
- 
+
+mon_usb_adr         DB ? 
 mon_usb_ports       DB ?
 
 mon_ohci_count      DB ?

@@ -355,6 +355,28 @@ GetEvent   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ClearEvents
+;
+;       DESCRIPTION:    Clear events
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearEvents   Proc near
+    push eax
+    push edi
+
+ceLoop:
+    call GetEvent
+    jnc ceLoop
+;
+    pop edi
+    pop eax
+    ret
+ClearEvents  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetCommandTrb
 ;
 ;       DESCRIPTION:    Get empty command TRB
@@ -390,11 +412,12 @@ GetCommandTrb    Endp
 ;       PARAMETERS:     AL      TRB type
 ;                       ES:EDI  TRB offset
 ;
+;       RETURNS:        ES:EDI  Event data
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendCommandTrb   Proc near
     push eax
-    push edi
 ;
     movzx ax,al
     shl ax,10
@@ -405,7 +428,17 @@ SendCommandTrb   Proc near
     xor eax,eax
     mov es:[edi],eax
 ;
-    pop edi
+    mov ax,1
+    call WaitMs
+
+sctWait:
+    call GetEvent
+    jc sctDone
+;
+    cmp al,21h
+    jnz sctWait
+
+sctDone:
     pop eax
     ret
 SendCommandTrb  Endp
@@ -423,24 +456,11 @@ SendCommandTrb  Endp
 
 EnableSlot   Proc near
     push edi
-
-esClear:
-    call GetEvent
-    jnc esClear
 ;
     call GetCommandTrb
     mov al,TRB_TYPE_ENABLE_SLOT
     call SendCommandTrb
-;
-    mov ax,1
-    call WaitMs
-
-esWait:
-    call GetEvent
     jc esDone
-;
-    cmp al,21h
-    jnz esWait
 ;
     mov al,es:[edi+15]
     clc
@@ -449,6 +469,42 @@ esDone:
     pop edi
     ret
 EnableSlot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisableSlot
+;
+;       DESCRIPTION:    Disable slot
+;
+;       PARAMETERS:     AL      Slot ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableSlot  Proc near
+    push edx
+    push edi
+;
+    mov dl,al
+    call GetCommandTrb
+    mov ah,dl
+    xor al,al
+    mov es:[edi].trb_control,ax
+    mov al,TRB_TYPE_DISABLE_SLOT
+    call SendCommandTrb
+    jc dsDone
+;
+    cmp dl,es:[edi+15]
+    stc 
+    jne dsDone
+;
+    clc
+
+dsDone:
+    pop edi
+    pop edx
+    ret
+DisableSlot  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -628,10 +684,7 @@ cfResetLoop:
     jmp cfResetLoop    
 
 cfResetDone:
-    push edi
-    call GetEvent
-    pop edi
-    jnc cfResetDone
+    call ClearEvents
 ;
     mov eax,es:[edi]
     shr ax,10
@@ -644,7 +697,14 @@ cfResetDone:
     jz cfDisable
 ;
     call EnableSlot
+    jc cfDisable
+;
     int 3
+    mov ds:mon_usb_adr,al
+
+cfDisableSlot:
+    mov al,ds:mon_usb_adr
+    call DisableSlot
 
 cfDisable:
     mov eax,2
@@ -656,6 +716,7 @@ cfConnNext:
 ;
     mov edi,ds:mon_xhci_oper
     mov eax,es:[edi]
+    and al,NOT 1
     or al,2
     mov es:[edi],eax
 
