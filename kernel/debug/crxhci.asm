@@ -231,6 +231,67 @@ AddXhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CheckWait
+;
+;           DESCRIPTION:    Check wait
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CheckWait       PROC near
+    mov edi,ds:mon_xhci_runtime
+    mov ecx,1000000
+    mov eax,es:[edi]
+
+cwLoop:
+    cmp eax,es:[edi]
+    clc
+    jne cwDone
+    loop cwLoop
+;
+    stc
+
+cwDone:    
+    ret
+CheckWait       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WaitMs
+;
+;           DESCRIPTION:    Wait milliseconds
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           AX          Ms to wait
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+WaitMs       PROC near
+    pushad
+;
+    movzx ecx,ax
+    shl ecx,3
+    mov edi,ds:mon_xhci_runtime
+    mov eax,es:[edi]
+
+wmLoop:
+    cmp eax,es:[edi]
+    je wmLoop
+;
+    mov eax,es:[edi]
+    loop wmLoop
+;
+    popad
+    ret
+WaitMs       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckFunc
 ;
 ;           DESCRIPTION:    Check function
@@ -345,18 +406,29 @@ CheckFunc       PROC near
     xor eax,eax
     stosd
 ;
-    int 3
     mov edi,ds:mon_xhci_oper
     mov eax,es:[edi]
     or al,1
     mov es:[edi],eax
 ;
-    mov edi,ds:mon_xhci_runtime
-
     movzx ecx,ds:mon_usb_ports
     mov edi,ds:mon_xhci_oper
     add edi,400h
 
+cfPowerLoop:
+    mov eax,es:[edi]
+    and eax,00FE3FE3h
+    or ax,202h
+    mov es:[edi],eax
+    add edi,10h
+    loop cfPowerLoop
+;
+    call CheckWait
+    int 3
+    jc cfFail
+;
+    mov ax,1
+    call WaitMs
 
 cfFail:
     stc
