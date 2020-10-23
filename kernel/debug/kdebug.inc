@@ -263,6 +263,7 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
+mon_context_size    DW ?
 mon_usb_ports       DB ?
 
 mon_ohci_count      DB ?

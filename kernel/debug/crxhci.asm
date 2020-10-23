@@ -301,6 +301,8 @@ WaitMs       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 CheckFunc       PROC near
+    pushad
+;
     mov al,es:[edx+7]
     mov ds:mon_usb_ports,al
     or al,al
@@ -308,6 +310,15 @@ CheckFunc       PROC near
 ;
     mov eax,es:[edx+10h]
     mov ds:mon_xhci_param,eax
+;
+    mov cx,20h
+    test al,4
+    jz cfContextSizeOk
+;
+    mov cx,40h
+
+cfContextSizeOk:
+    mov ds:mon_context_size,cx    
 ;
     mov eax,es:[edx+14h]
     add eax,edx
@@ -435,19 +446,57 @@ cfConnLoop:
     test al,1
     jz cfConnNext
 ;
+    mov eax,210h
+    mov es:[edi],eax
+
+cfResetLoop:
+    mov eax,es:[edi]
+    test al,1
+    jz cfDisable
+;
+    test al,10h
+    jz cfResetDone    
+;
+    mov ax,25
+    call WaitMs
+    jmp cfResetLoop    
+
+cfResetDone:
+    mov eax,es:[edi]
     shr ax,10
     and al,0Fh
     cmp al,2
-    jne cfConnNext
+    jne cfDisable
+;
+    mov eax,es:[edi]
+    test al,2
+    jz cfDisable
 ;
     int 3
+
+cfDisable:
+    mov eax,2
+    mov es:[edi],eax
 
 cfConnNext:
     add edi,10h
     loop cfConnLoop
+;
+    mov edi,ds:mon_xhci_oper
+    mov eax,es:[edi]
+    or al,2
+    mov es:[edi],eax
 
+cfWaitHlt:
+    mov eax,es:[edi+4]
+    test al,1
+    jz cfWaitHlt
+ 
 cfFail:
     stc
+
+cfDone:
+    popad
     ret
 CheckFunc	Endp
 
