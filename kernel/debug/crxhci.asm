@@ -54,9 +54,14 @@ TRB_TYPE_CONTROLLER     = 37
 TRB_TYPE_DEV_NOTIFY     = 38
 TRB_TYPE_MFI_WRAP       = 39
 
-    .386p
+trb_struc   STRUC
 
-code    SEGMENT byte public use32 'CODE'
+trb_param   DD ?,?
+trb_status  DD ?
+trb_type    DW ?
+trb_control DW ?
+
+trb_struc   ENDS
 
 usb_struc	STRUC
 
@@ -68,6 +73,10 @@ erst            DB 10h DUP(?)
 dcba            DD ?,?
 
 usb_struc	ENDS
+
+    .386p
+
+code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
@@ -288,7 +297,159 @@ wmLoop:
     ret
 WaitMs       ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetEvent
+;
+;       DESCRIPTION:    Get event
+;
+;       RETURNS:        AL		Event ID
+;                       ES:EDI          Event data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+GetEvent   Proc near
+    push edx
+    push esi
+;
+    mov esi,ds:mon_event_deque
+    mov eax,es:[esi+12]
+    mov dx,ds:mon_event_ccs
+    and al,1
+    xor dl,al
+    stc
+    jnz geDone
+;
+    shr ax,10
+    and ax,3Fh
+    mov dl,al
+;    
+    mov edi,esi
+    add esi,10h
+    mov eax,esi
+    sub eax,ds:mon_usb_linear
+    sub eax,OFFSET erst1
+    cmp eax,100h
+    jne geSave
+;
+    xor ds:mon_event_ccs,1
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET erst1
+
+geSave:
+    mov ds:mon_event_deque,esi
+    mov eax,esi
+    or al,8
+    mov esi,ds:mon_xhci_runtime
+    mov es:[esi+38h],eax
+    mov al,dl
+    clc
+
+geDone:
+    pop esi
+    pop edx
+    ret
+GetEvent   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetCommandTrb
+;
+;       DESCRIPTION:    Get empty command TRB
+;
+;       RETURNS:        ES:EDI     TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCommandTrb   Proc near
+    push eax
+;
+    mov edi,ds:mon_cmd_enque
+    mov eax,edi
+    add eax,SIZE trb_struc
+    mov ds:mon_cmd_enque,eax
+;
+    mov es:[edi].trb_param,0
+    mov es:[edi].trb_param+4,0
+    mov es:[edi].trb_status,0
+    mov es:[edi].trb_control,0
+;
+    pop eax        
+    ret
+GetCommandTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCommandTrb
+;
+;       DESCRIPTION:    Send command TRB
+;
+;       PARAMETERS:     AL      TRB type
+;                       ES:EDI  TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCommandTrb   Proc near
+    push eax
+    push edi
+;
+    movzx ax,al
+    shl ax,10
+    or ax,ds:mon_cmd_pcs
+    mov es:[edi].trb_type,ax
+;
+    mov edi,ds:mon_xhci_door_bell
+    xor eax,eax
+    mov es:[edi],eax
+;
+    pop edi
+    pop eax
+    ret
+SendCommandTrb  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           EnableSlot
+;
+;       DESCRIPTION:    Enable slot
+;
+;       RETURNS:        AL	Slot
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnableSlot   Proc near
+    push edi
+
+esClear:
+    call GetEvent
+    jnc esClear
+;
+    call GetCommandTrb
+    mov al,TRB_TYPE_ENABLE_SLOT
+    call SendCommandTrb
+;
+    mov ax,1
+    call WaitMs
+
+esWait:
+    call GetEvent
+    jc esDone
+;
+    cmp al,21h
+    jnz esWait
+;
+    mov al,es:[edi+15]
+    clc
+
+esDone:
+    pop edi
+    ret
+EnableSlot	Endp
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -357,6 +518,8 @@ cfContextSizeOk:
 ;    
     mov edi,ds:mon_usb_linear
     add edi,OFFSET cmd
+    mov ds:mon_cmd_enque,edi
+    mov ds:mon_cmd_pcs,1
     mov ecx,0Ch
     xor eax,eax
     rep stosd
@@ -372,12 +535,15 @@ cfContextSizeOk:
 ;
     mov eax,ds:mon_usb_linear
     add eax,OFFSET cmd
+    or al,1
     mov es:[edx+18h],eax
     xor eax,eax
     mov es:[edx+1Ch],eax
 ;
     mov edi,ds:mon_usb_linear
     add edi,OFFSET erst1
+    mov ds:mon_event_deque,edi
+    mov ds:mon_event_ccs,1
     mov ecx,40h
     xor eax,eax
     rep stosd
@@ -462,6 +628,11 @@ cfResetLoop:
     jmp cfResetLoop    
 
 cfResetDone:
+    push edi
+    call GetEvent
+    pop edi
+    jnc cfResetDone
+;
     mov eax,es:[edi]
     shr ax,10
     and al,0Fh
@@ -472,6 +643,7 @@ cfResetDone:
     test al,2
     jz cfDisable
 ;
+    call EnableSlot
     int 3
 
 cfDisable:
