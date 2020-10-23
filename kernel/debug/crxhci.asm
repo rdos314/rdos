@@ -424,11 +424,27 @@ cfPowerLoop:
     loop cfPowerLoop
 ;
     call CheckWait
-    int 3
     jc cfFail
 ;
-    mov ax,1
-    call WaitMs
+    movzx ecx,ds:mon_usb_ports
+    mov edi,ds:mon_xhci_oper
+    add edi,400h
+
+cfConnLoop:
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    shr ax,10
+    and al,0Fh
+    cmp al,2
+    jne cfConnNext
+;
+    int 3
+
+cfConnNext:
+    add edi,10h
+    loop cfConnLoop
 
 cfFail:
     stc
