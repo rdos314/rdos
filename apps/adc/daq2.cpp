@@ -73,7 +73,7 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    Adc.RunAdc(100, 22, 2, "res.txt");
+    Adc.RunAdc(100, 22, 10, "res.txt");
 
     for (;;)
         RdosWaitMilli(100);
