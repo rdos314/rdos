@@ -54,6 +54,18 @@ TRB_TYPE_CONTROLLER     = 37
 TRB_TYPE_DEV_NOTIFY     = 38
 TRB_TYPE_MFI_WRAP       = 39
 
+GET_STATUS = 0
+CLEAR_FEATURE = 1
+SET_FEATURE = 3
+SET_ADDRESS = 5
+GET_DESCR = 6
+SET_DESCR = 7
+GET_CONFIG = 8
+SET_CONFIG = 9
+GET_INTERFACE = 10
+SET_INTERFACE = 11
+SYNC_FRAME = 12
+
 trb_struc   STRUC
 
 trb_param   DD ?,?
@@ -105,16 +117,27 @@ ec_esit_low     DD ?
 
 endpoint_context_struc  ENDS
 
+usb_setup_data  STRUC
+
+usd_type        DB ?
+usd_req         DB ?
+usd_value       DW ?
+usd_index       DW ?
+usd_len         DW ?
+
+usb_setup_data  ENDS
 
 usb_struc	STRUC
 
-input_context   DB 200h DUP(?)
-erst1           DB 100h DUP(?)
-control_ring    DB 100h DUP(?)
-cmd             DB 40h DUP(?)
-erst            DB 10h DUP(?)
+input_context   DB 200h DUP(?)  ; 7000
+erst1           DB 100h DUP(?)  ; 7200
+control_ring    DB 100h DUP(?)  ; 7300
+cmd             DB 40h DUP(?)   ; 7400
+erst            DB 10h DUP(?)   ; 7440
+dcba            DD ?,?          ; 7450
 
-dcba            DD ?,?
+control_msg     DB 8 DUP(?)     ; 7458
+descr           DB 8 * 64 DUP(?) ; 7460
 
 usb_struc	ENDS
 
@@ -433,9 +456,18 @@ GetCommandTrb   Proc near
     push eax
 ;
     mov edi,ds:mon_cmd_enque
-    mov eax,edi
-    add eax,SIZE trb_struc
-    mov ds:mon_cmd_enque,eax
+    push edi
+    add edi,SIZE trb_struc
+    mov eax,es:[edi-4]
+    cmp eax,2 + (TRB_TYPE_LINK SHL 10)
+    jne gcmdtSave
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET cmd
+
+gcmdtSave:
+    mov ds:mon_cmd_enque,edi
+    pop edi
 ;
     mov es:[edi].trb_param,0
     mov es:[edi].trb_param+4,0
@@ -486,6 +518,74 @@ sctDone:
     pop eax
     ret
 SendCommandTrb  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetControlTrb
+;
+;       DESCRIPTION:    Get empty control TRB
+;
+;       RETURNS:        ES:EDI     TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetControlTrb   Proc near
+    push eax
+;
+    mov edi,ds:mon_control_enque
+    push edi
+    add edi,SIZE trb_struc
+    mov eax,es:[edi-4]
+    cmp eax,2 + (TRB_TYPE_LINK SHL 10)
+    jne gctSave
+;
+    mov edi,ds:mon_usb_linear
+    mov edi,OFFSET control_ring
+
+gctSave:
+    mov ds:mon_control_enque,edi
+    pop edi
+;
+    mov es:[edi].trb_param,0
+    mov es:[edi].trb_param+4,0
+    mov es:[edi].trb_status,0
+    mov es:[edi].trb_control,0
+;
+    pop eax        
+    ret
+GetControlTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendSlotTrb
+;
+;       DESCRIPTION:    Send slot TRB
+;
+;       RETURNS:        ES:EDI  Event data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendSlotTrb   Proc near
+    push eax
+;
+    mov edi,ds:mon_xhci_door_bell
+    movzx eax,ds:mon_usb_adr
+    shl eax,2
+    add edi,eax
+    xor eax,eax
+    mov es:[edi],eax
+;
+    mov ax,1
+    call WaitMs
+;
+    call GetEvent
+    jc sctDone
+;
+    pop eax
+    ret
+SendSlotTrb  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -653,6 +753,73 @@ adDone:
     pop ecx
     ret
 AddressDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetDescr
+;
+;           DESCRIPTION:    Get descriptor
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           ES:ESI      Hub entry
+;                           CX          Size
+;                           AX          Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDescr	Proc near    
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+    mov es:[edi].usd_type,80h
+    mov es:[edi].usd_req,GET_DESCR
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,cx
+;
+    int 3
+    call GetControlTrb
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_msg
+    mov es:[edi].trb_param,eax
+    xor eax,eax
+    mov es:[edi].trb_param+4,eax
+;
+    mov eax,8
+    mov es:[edi].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,ds:mon_control_pcs
+    or al,40h
+    mov es:[edi].trb_type,ax
+;
+    call GetControlTrb
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET descr
+    mov es:[edi].trb_param,eax
+    xor eax,eax
+    mov es:[edi].trb_param+4,eax
+;
+    movzx eax,cx
+    mov es:[edi].trb_status,eax    
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,ds:mon_control_pcs
+    mov es:[edi].trb_type,ax
+    mov es:[edi].trb_control,3
+;    
+    call GetControlTrb
+;
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,ds:mon_control_pcs
+    or al,20h
+    mov es:[edi].trb_type,ax
+;
+    int 3
+    call SendSlotTrb
+;
+    ret
+GetDescr	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -854,7 +1021,12 @@ cfResetDone:
     call AddressDevice
     jc cfDisableSlot
 ;
-    int 3
+    push ecx
+    mov cx,8
+    mov ax,100h
+    call GetDescr 
+    pop ecx
+    jc cfDisableSlot
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
