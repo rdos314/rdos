@@ -108,9 +108,8 @@ endpoint_context_struc  ENDS
 
 usb_struc	STRUC
 
-dc1             DB 100h DUP(?)
+input_context   DB 200h DUP(?)
 erst1           DB 100h DUP(?)
-input_context   DB 100h DUP(?)
 control_ring    DB 100h DUP(?)
 cmd             DB 40h DUP(?)
 erst            DB 10h DUP(?)
@@ -592,12 +591,6 @@ AddressDevice   Proc near
 ;
     mov edi,ds:mon_usb_linear
     add edi,OFFSET input_context
-    mov ecx,40h
-    xor eax,eax
-    rep stosd
-;
-    mov edi,ds:mon_usb_linear
-    add edi,OFFSET input_context
     mov es:[edi].icc_add_mask,3
 ;    
     movzx eax,ds:mon_context_size
@@ -709,13 +702,15 @@ cfContextSizeOk:
     mov es:[edx+38h],eax
 ;
     mov edi,ds:mon_usb_linear
-    add edi,OFFSET dc1
-    mov ecx,40h
+    add edi,OFFSET input_context
+    mov ecx,80h
     xor eax,eax
     rep stosd
 ;
     mov edi,ds:mon_usb_linear
-    mov eax,OFFSET dc1
+    mov eax,OFFSET input_context
+    add eax,edi
+    movzx eax,ds:mon_context_size
     add eax,edi
     mov es:[edi].dcba,eax
     xor eax,eax
@@ -855,10 +850,11 @@ cfResetDone:
     call EnableSlot
     jc cfDisable
 ;
-    int 3
     mov ds:mon_usb_adr,al
     call AddressDevice
     jc cfDisableSlot
+;
+    int 3
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
