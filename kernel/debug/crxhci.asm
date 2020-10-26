@@ -135,8 +135,7 @@ control_ring    DB 100h DUP(?)  ; 7300
 cmd             DB 40h DUP(?)   ; 7400
 erst            DB 10h DUP(?)   ; 7440
 dcba            DD ?,?          ; 7450
-
-control_msg     DB 8 DUP(?)     ; 7458
+resv            DD ?,?          ; 7458
 descr           DB 8 * 64 DUP(?) ; 7460
 
 usb_struc	ENDS
@@ -148,6 +147,8 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
 
     extrn MapUsbFunc:near
+    extrn CheckUsbDev:near
+    extrn CheckUsbConfig:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -574,15 +575,20 @@ SendSlotTrb   Proc near
     movzx eax,ds:mon_usb_adr
     shl eax,2
     add edi,eax
-    xor eax,eax
+    mov eax,1
     mov es:[edi],eax
 ;
-    mov ax,1
+    mov ax,20
     call WaitMs
-;
+
+sstWait:
     call GetEvent
-    jc sctDone
+    jc sstDone
 ;
+    cmp al,20h
+    jnz sstWait
+
+sstDone:
     pop eax
     ret
 SendSlotTrb  Endp
@@ -769,21 +775,13 @@ AddressDevice   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDescr	Proc near    
-    mov edi,ds:mon_usb_linear
-    add edi,OFFSET control_msg
+    call GetControlTrb
+;
     mov es:[edi].usd_type,80h
     mov es:[edi].usd_req,GET_DESCR
     mov es:[edi].usd_value,ax
     mov es:[edi].usd_index,0
     mov es:[edi].usd_len,cx
-;
-    int 3
-    call GetControlTrb
-    mov eax,ds:mon_usb_linear
-    add eax,OFFSET control_msg
-    mov es:[edi].trb_param,eax
-    xor eax,eax
-    mov es:[edi].trb_param+4,eax
 ;
     mov eax,8
     mov es:[edi].trb_status,eax    
@@ -815,9 +813,17 @@ GetDescr	Proc near
     or al,20h
     mov es:[edi].trb_type,ax
 ;
-    int 3
     call SendSlotTrb
+    jc gdDone
 ;
+    mov al,es:[edi+11]
+    cmp al,1    
+    stc
+    jnz gdDone
+;
+    clc
+
+gdDone:
     ret
 GetDescr	Endp
     
@@ -1027,6 +1033,68 @@ cfResetDone:
     call GetDescr 
     pop ecx
     jc cfDisableSlot
+;
+    push ecx
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    movzx cx,byte ptr es:[edi]
+    mov ax,100h
+    call GetDescr 
+    pop ecx
+    jc cfDisableSlot
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    call CheckUsbDev
+    jc cfDisableSlot
+;
+    movzx ebp,byte ptr es:[edi+17]
+    xor bx,bx
+
+cfConfigLoop:
+    push ebx
+    push ecx
+;
+    mov cx,8
+    mov al,bl
+    mov ah,2
+    call GetDescr
+;
+    pop ecx
+    pop ebx
+    jc cfDisableSlot
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    mov ax,es:[edi+2]
+    cmp ax,200h
+    jae cfConfigNext
+;
+    push ebx
+    push ecx
+;
+    mov cx,ax
+    mov al,bl
+    mov ah,2
+    call GetDescr
+;
+    pop ecx
+    pop ebx
+    jc cfDisableSlot
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    call CheckUsbConfig
+    jnc cfConfig
+
+cfConfigNext:
+    inc bx
+    sub ebp,1
+    jnz cfConfigLoop
+    jmp cfDisableSlot
+
+cfConfig:
+    int 3
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
@@ -1039,7 +1107,8 @@ cfDisable:
 cfConnNext:
     inc ds:mon_usb_port
     add edi,10h
-    loop cfConnLoop
+    sub ecx,1
+    jnz cfConnLoop
 ;
     mov edi,ds:mon_xhci_oper
     mov eax,es:[edi]
