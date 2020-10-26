@@ -63,10 +63,55 @@ trb_control DW ?
 
 trb_struc   ENDS
 
+input_control_context_struc STRUC
+
+icc_drop_mask   DD ?
+icc_add_mask    DD ?
+icc_pad1        DD 5 DUP(?)
+icc_config      DB ?
+icc_interface   DB ?
+icc_alt         DB ?
+icc_pad2        DB ?
+
+input_control_context_struc ENDS
+
+slot_struc  STRUC
+
+s_misc          DD ?
+s_exit_latency  DW ?
+s_root_hub      DB ?
+s_hub_ports     DB ?
+s_tt_slot_id    DB ?
+s_tt_port_nr    DB ?
+s_ttt_int       DW ?
+s_address       DB ?
+s_pad1          DB ?
+s_state         DW ?
+
+slot_struc  ENDS
+
+endpoint_context_struc  STRUC
+
+ec_state        DB ?
+ec_param1       DB ?
+ec_interval     DB ?
+ec_esit_hi      DB ?
+ec_param2       DB ?
+ec_burst_size   DB ?
+ec_packet_size  DW ?
+ec_tr_dequeue   DD ?,?
+ec_avg_len      DW ?
+ec_esit_low     DD ?
+
+endpoint_context_struc  ENDS
+
+
 usb_struc	STRUC
 
 dc1             DB 100h DUP(?)
 erst1           DB 100h DUP(?)
+input_context   DB 100h DUP(?)
+control_ring    DB 100h DUP(?)
 cmd             DB 40h DUP(?)
 erst            DB 10h DUP(?)
 
@@ -505,6 +550,116 @@ dsDone:
     pop edx
     ret
 DisableSlot  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddressDevice
+;
+;   DESCRIPTION:    Address device
+;
+;   PARAMETERS:     AL      Slot ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+AddressDevice   Proc near
+    push ecx
+    push edx
+    push edi
+;    
+    mov dl,al
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_ring
+    mov ecx,3Ch
+    xor eax,eax
+    rep stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_ring
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    mov eax,2 + (TRB_TYPE_LINK SHL 10)
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_ring
+    mov ds:mon_control_enque,eax
+    mov ds:mon_control_deque,eax
+    mov ds:mon_control_pcs,1
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET input_context
+    mov ecx,40h
+    xor eax,eax
+    rep stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET input_context
+    mov es:[edi].icc_add_mask,3
+;    
+    movzx eax,ds:mon_context_size
+    add edi,eax
+;
+    mov eax,2 SHL 20
+    or eax,08000000h
+    mov es:[edi].s_misc,eax
+    mov al,ds:mon_usb_port
+    mov es:[edi].s_root_hub,al
+;    
+    movzx eax,ds:mon_context_size
+    add edi,eax
+;
+    mov ax,8
+    mov es:[edi].ec_packet_size,ax
+    mov es:[edi].ec_avg_len,ax
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET control_ring
+    or al,1
+    mov es:[edi].ec_tr_dequeue,eax
+    xor eax,eax
+    mov es:[edi].ec_tr_dequeue+4,eax        
+;
+    mov al,3 SHL 1
+    or al,4 SHL 3
+    mov es:[edi].ec_param2,al
+;
+    call GetCommandTrb
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET input_context
+    mov es:[edi].trb_param,eax
+    xor eax,eax
+    mov es:[edi].trb_param+4,eax
+;
+    mov ah,dl
+    xor al,al
+    mov es:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_ADDRESS_DEV
+    call SendCommandTrb
+    jc adDone
+;
+    mov al,es:[edi+11]
+    cmp al,1    
+    stc
+    jnz adDone
+;
+    cmp dl,es:[edi+15]
+    stc 
+    jne adDone
+;
+    clc
+
+adDone:
+    pop edi
+    pop edx
+    pop ecx
+    ret
+AddressDevice   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -662,6 +817,7 @@ cfPowerLoop:
     movzx ecx,ds:mon_usb_ports
     mov edi,ds:mon_xhci_oper
     add edi,400h
+    mov ds:mon_usb_port,1
 
 cfConnLoop:
     mov eax,es:[edi]
@@ -701,6 +857,8 @@ cfResetDone:
 ;
     int 3
     mov ds:mon_usb_adr,al
+    call AddressDevice
+    jc cfDisableSlot
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
@@ -711,6 +869,7 @@ cfDisable:
     mov es:[edi],eax
 
 cfConnNext:
+    inc ds:mon_usb_port
     add edi,10h
     loop cfConnLoop
 ;
