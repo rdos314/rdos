@@ -5269,6 +5269,66 @@ CheckUsbConfig    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetUsbEp
+;
+;           DESCRIPTION:    Get USB endpoint for keyboard
+;
+;           PARAMETERS:     ES:EDI        Interface descriptor
+;
+;           RETURNS:        ES:EDI        Endpoint descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetUsbEp
+
+GetUsbEp    Proc near
+    push ecx
+    push edx
+    push esi
+
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz gueFail
+;    
+    add edi,ecx
+    sub si,cx
+    jbe gueFail
+
+gueLoop:
+    mov cl,es:[edi].ucd_type
+    cmp cl,5
+    jne gueNext
+;    
+    mov cl,es:[edi].ued_attrib
+    and cl,3
+    cmp cl,3
+    jne gueNext
+;
+    clc
+    jmp gueDone
+
+gueNext:
+    movzx ecx,es:[edi].ucd_len
+    or ecx,ecx
+    jz gueFail
+;    
+    add edi,ecx
+    sub si,cx
+    ja gueLoop
+
+gueFail:
+    stc
+
+gueDone:
+    pop esi
+    pop edx
+    pop ecx
+    ret
+GetUsbEp    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           HandleKey
 ;
 ;           DESCRIPTION:    Handle key

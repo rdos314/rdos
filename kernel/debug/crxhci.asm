@@ -173,6 +173,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn MapUsbFunc:near
     extrn CheckUsbDev:near
     extrn CheckUsbConfig:near
+    extrn GetUsbEp:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1263,7 +1264,13 @@ cfConfig:
     call SetInterface
     jc cfDisableSlot
 ;
+    call GetUsbEp
+    jc cfDisableSlot
+;
     int 3
+    mov al,es:[edi].ued_address
+    mov cl,es:[edi].ued_interval
+
 
 
 cfDisableSlot:
