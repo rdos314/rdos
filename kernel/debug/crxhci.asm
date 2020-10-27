@@ -66,6 +66,8 @@ GET_INTERFACE = 10
 SET_INTERFACE = 11
 SYNC_FRAME = 12
 
+SET_PROTOCOL = 11
+
 trb_struc   STRUC
 
 trb_param   DD ?,?
@@ -926,16 +928,15 @@ ConfigDevice   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SetInterface
+;   NAME:           SetProtocol
 ;
-;   DESCRIPTION:    Set interface
+;   DESCRIPTION:    Set protocol
 ;
 ;   PARAMETERS:     AL      Interface #
-;                   AH      Alt setting
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetInterface   Proc near
+SetProtocol   Proc near
     push ecx
     push edx
     push edi
@@ -944,10 +945,9 @@ SetInterface   Proc near
 ;
     call GetControlTrb
 ;
-    mov es:[edi].usd_type,0
-    mov es:[edi].usd_req,SET_INTERFACE
-    movzx ax,dh
-    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_type,21h
+    mov es:[edi].usd_req,SET_PROTOCOL
+    mov es:[edi].usd_value,0
     movzx ax,dl
     mov es:[edi].usd_index,ax
     mov es:[edi].usd_len,0
@@ -969,21 +969,21 @@ SetInterface   Proc near
     mov es:[edi].trb_control,1
 ;
     call SendSlotTrb
-    jc siDone
+    jc spDone
 ;
     mov al,es:[edi+11]
     cmp al,1    
     stc
-    jnz siDone
+    jnz spDone
 ;
     clc
 
-siDone:
+spDone:
     pop edi
     pop edx
     pop ecx
     ret
-SetInterface   Endp
+SetProtocol   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1392,12 +1392,10 @@ cfConfigNext:
 
 cfConfig:
     call ConfigDevice
-    int 3
     jc cfDisableSlot
 ;
     mov al,es:[edi].uid_id
-    mov ah,es:[edi].uid_alt_id
-    call SetInterface
+    call SetProtocol
     int 3
     jc cfDisableSlot
 ;

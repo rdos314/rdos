@@ -41,6 +41,8 @@ GET_INTERFACE = 10
 SET_INTERFACE = 11
 SYNC_FRAME = 12
 
+SET_PROTOCOL = 11
+
 usb_setup_data  STRUC
 
 usd_type        DB ?
@@ -50,6 +52,20 @@ usd_index       DW ?
 usd_len         DW ?
 
 usb_setup_data  ENDS
+
+usb_interface_descr  STRUC
+
+uid_len             DB ?
+uid_type            DB ?
+uid_id              DB ?
+uid_alt_id          DB ?
+uid_endpoints       DB ?
+uid_class           DB ?
+uid_sub_class       DB ?
+uid_proto           DB ?
+uid_interface_id    DB ?
+
+usb_interface_descr  ENDS
 
 usb_endpoint_descr  STRUC
 
@@ -334,9 +350,9 @@ wcRetry:
     stc
     jz wcDone
 ;
-    mov eax,es:[edi+4]
-    sub eax,es:[edi+8]
+    mov eax,es:[edi+8]
     and eax,0FFFFFFF0h
+    sub eax,es:[edi+4]
     jnz wcRetry
 ;
     mov eax,es:[edi+8]
@@ -395,25 +411,13 @@ CreateControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AddressDev
+;           NAME:           AddSetup
 ;
-;           DESCRIPTION:    Address device
-;
-;           PARAMETERS:     ES:EDX	Function linear
-;                           ES:ESI      Hub entry
+;           DESCRIPTION:    Add setup
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddressDev	Proc near    
-    mov edi,ds:mon_usb_linear
-    add edi,OFFSET control_msg
-;
-    mov es:[edi].usd_type,0
-    mov es:[edi].usd_req,SET_ADDRESS
-    mov es:[edi].usd_value,1
-    mov es:[edi].usd_index,0
-    mov es:[edi].usd_len,0
-;
+AddSetup	Proc near
     mov edi,ds:mon_usb_linear
     add edi,OFFSET control_setup
 ;    
@@ -433,7 +437,19 @@ AddressDev	Proc near
     add eax,OFFSET control_msg
     add eax,7
     stosd
+    ret
+AddSetup	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;           NAME:           AddStatusOut
+;
+;           DESCRIPTION:    Add status out
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatusOut	Proc near
     mov edi,ds:mon_usb_linear
     add edi,OFFSET control_status
 ;
@@ -450,7 +466,19 @@ AddressDev	Proc near
 ;
     xor eax,eax
     stosd
+    ret
+AddStatusOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;           NAME:           RunControl
+;
+;           DESCRIPTION:    Run control
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunControl	Proc near
     mov edi,ds:mon_usb_linear
     add edi,OFFSET control_ed
 ;
@@ -461,7 +489,34 @@ AddressDev	Proc near
     mov eax,es:[edx+8]
     or al,2
     mov es:[edx+8],eax
+    ret
+RunControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;           NAME:           AddressDev
+;
+;           DESCRIPTION:    Address device
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           ES:ESI      Hub entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev	Proc near    
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_ADDRESS
+    mov es:[edi].usd_value,1
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,0
+;
+    call AddSetup
+    call AddStatusOut
+    call RunControl
     call WaitControl
     ret
 AddressDev	Endp
@@ -578,6 +633,66 @@ gdSave:
 ;
     ret
 GetDescr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigDevice
+;
+;   DESCRIPTION:    Config device
+;
+;   PARAMETERS:     AL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice   Proc near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_CONFIG
+    movzx ax,al
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,0
+;
+    call AddSetup
+    call AddStatusOut
+    call RunControl
+    call WaitControl
+    ret
+ConfigDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetProtocol
+;
+;   DESCRIPTION:    Set protocol
+;
+;   PARAMETERS:     AL      Interface #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetProtocol   Proc near
+    mov dx,ax
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,21h
+    mov es:[edi].usd_req,SET_PROTOCOL
+    mov es:[edi].usd_value,0
+    movzx ax,dl
+    mov es:[edi].usd_index,ax
+    mov es:[edi].usd_len,0
+;
+    call AddSetup
+    call AddStatusOut
+    call RunControl
+    call WaitControl
+    ret
+SetProtocol	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -790,12 +905,21 @@ cfConfigNext:
     jmp cfDisable
 
 cfConfig:
+    push edi
+    call ConfigDevice
+    pop edi
+    jc cfDisable
+;
+    mov ax,1
+    call WaitMs
+;
+    mov al,es:[edi].uid_id
+    call SetProtocol
+    jc cfDisable
+;
+    mov ax,1
+    call WaitMs
     int 3
-    mov dl,al
-    mov al,es:[edi].ued_address
-    and al,0Fh
-
-
 
 cfDisable:
     mov eax,1
