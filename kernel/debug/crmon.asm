@@ -5208,7 +5208,7 @@ CheckUsbDev    Endp
 ;           PARAMETERS:     ES:EDI        Descriptor
 ;
 ;           RETURNS:        AL            Config ID
-;                           AH            Pipe #
+;                           ES:EDI        Interface descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5218,7 +5218,6 @@ CheckUsbConfig    Proc near
     push ecx
     push edx
     push esi
-    push edi
 ;
     mov si,es:[edi].ucd_size
     mov dl,es:[edi].ucd_config_id
@@ -5244,40 +5243,9 @@ cucCheckLoop:
     cmp cl,1
     jne cucCheckNext
 ;
-    movzx ecx,es:[edi].ucd_len
-    or ecx,ecx
-    jz cucFail
-;    
-    add edi,ecx
-    sub si,cx
-    jbe cucFail
-
-cucDescrLoop:
-    mov cl,es:[edi].ucd_type
-    cmp cl,5
-    jne cucDescrNext
-;    
-    mov cl,es:[edi].ued_attrib
-    and cl,3
-    cmp cl,3
-    jne cucDescrNext
-;
-    mov dh,es:[edi].ued_address
-    and dh,0Fh
-    mov ax,dx
+    mov al,dl
     clc
     jmp cucDone
-
-cucDescrNext:
-    movzx ecx,es:[edi].ucd_len
-    or ecx,ecx
-    jz cucFail
-;    
-    add edi,ecx
-    sub si,cx
-    ja cucDescrLoop
-;
-    jmp cucFail
 
 cucCheckNext:
     movzx ecx,es:[edi].ucd_len
@@ -5292,7 +5260,6 @@ cucFail:
     stc
 
 cucDone:
-    pop edi
     pop esi
     pop edx
     pop ecx

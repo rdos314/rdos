@@ -51,6 +51,17 @@ usd_len         DW ?
 
 usb_setup_data  ENDS
 
+usb_endpoint_descr  STRUC
+
+ued_len             DB ?
+ued_type            DB ?
+ued_address         DB ?
+ued_attrib          DB ?
+ued_maxsize         DW ?
+ued_interval        DB ?
+
+usb_endpoint_descr  ENDS
+
 usb_struc	STRUC
 
 sd_int		DD 32 DUP(?)
@@ -770,7 +781,6 @@ cfConfigLoop:
     mov edi,ds:mon_usb_linear
     add edi,OFFSET descr
     call CheckUsbConfig
-    int 3
     jnc cfConfig
 
 cfConfigNext:
@@ -780,6 +790,10 @@ cfConfigNext:
     jmp cfDisable
 
 cfConfig:
+    int 3
+    mov dl,al
+    mov al,es:[edi].ued_address
+    and al,0Fh
 
 
 

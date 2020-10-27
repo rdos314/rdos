@@ -117,6 +117,31 @@ ec_esit_low     DD ?
 
 endpoint_context_struc  ENDS
 
+usb_interface_descr  STRUC
+
+uid_len             DB ?
+uid_type            DB ?
+uid_id              DB ?
+uid_alt_id          DB ?
+uid_endpoints       DB ?
+uid_class           DB ?
+uid_sub_class       DB ?
+uid_proto           DB ?
+uid_interface_id    DB ?
+
+usb_interface_descr  ENDS
+
+usb_endpoint_descr  STRUC
+
+ued_len             DB ?
+ued_type            DB ?
+ued_address         DB ?
+ued_attrib          DB ?
+ued_maxsize         DW ?
+ued_interval        DB ?
+
+usb_endpoint_descr  ENDS
+
 usb_setup_data  STRUC
 
 usd_type        DB ?
@@ -133,10 +158,9 @@ input_context   DB 200h DUP(?)  ; 7000
 erst1           DB 100h DUP(?)  ; 7200
 control_ring    DB 100h DUP(?)  ; 7300
 cmd             DB 40h DUP(?)   ; 7400
-erst            DB 10h DUP(?)   ; 7440
-dcba            DD ?,?          ; 7450
-resv            DD ?,?          ; 7458
-descr           DB 8 * 64 DUP(?) ; 7460
+dcba            DB 40h DUP(?)   ; 7440
+erst            DB 10h DUP(?)   ; 7480
+descr           DB 8 * 64 DUP(?) ; 7490
 
 usb_struc	ENDS
 
@@ -455,20 +479,25 @@ ClearEvents  Endp
 
 GetCommandTrb   Proc near
     push eax
-;
+
     mov edi,ds:mon_cmd_enque
-    push edi
-    add edi,SIZE trb_struc
-    mov eax,es:[edi-4]
-    cmp eax,2 + (TRB_TYPE_LINK SHL 10)
-    jne gcmdtSave
+    mov eax,es:[edi+12]
+    shr ax,10
+    cmp al,TRB_TYPE_LINK
+    jne gcmtNext
+;    
+    mov eax,es:[edi+12]
+    xor al,1
+    mov es:[edi+12],al
 ;
     mov edi,ds:mon_usb_linear
     add edi,OFFSET cmd
+    xor ds:mon_cmd_pcs,1
 
-gcmdtSave:
-    mov ds:mon_cmd_enque,edi
-    pop edi
+gcmtNext:
+    mov eax,edi
+    add eax,SIZE trb_struc
+    mov ds:mon_cmd_enque,eax
 ;
     mov es:[edi].trb_param,0
     mov es:[edi].trb_param+4,0
@@ -535,18 +564,23 @@ GetControlTrb   Proc near
     push eax
 ;
     mov edi,ds:mon_control_enque
-    push edi
-    add edi,SIZE trb_struc
-    mov eax,es:[edi-4]
-    cmp eax,2 + (TRB_TYPE_LINK SHL 10)
-    jne gctSave
+    mov eax,es:[edi+12]
+    shr ax,10
+    cmp al,TRB_TYPE_LINK
+    jne gctNext
+;    
+    mov eax,es:[edi+12]
+    xor al,1
+    mov es:[edi+12],al
 ;
     mov edi,ds:mon_usb_linear
-    mov edi,OFFSET control_ring
+    add edi,OFFSET control_ring
+    xor ds:mon_control_pcs,1
 
-gctSave:
-    mov ds:mon_control_enque,edi
-    pop edi
+gctNext:
+    mov eax,edi
+    add eax,SIZE trb_struc
+    mov ds:mon_control_enque,eax
 ;
     mov es:[edi].trb_param,0
     mov es:[edi].trb_param+4,0
@@ -826,6 +860,128 @@ GetDescr	Proc near
 gdDone:
     ret
 GetDescr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigDevice
+;
+;   DESCRIPTION:    Config device
+;
+;   PARAMETERS:     AL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice   Proc near
+    push ecx
+    push edx
+    push edi
+;    
+    mov dl,al
+;
+    call GetControlTrb
+;
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_CONFIG
+    movzx ax,dl
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,0
+;
+    mov eax,8
+    mov es:[edi].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,ds:mon_control_pcs
+    or al,40h
+    mov es:[edi].trb_type,ax
+;    
+    call GetControlTrb
+;
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,ds:mon_control_pcs
+    or al,20h
+    mov es:[edi].trb_type,ax
+    mov es:[edi].trb_control,1
+;
+    call SendSlotTrb
+    jc cdDone
+;
+    mov al,es:[edi+11]
+    cmp al,1    
+    stc
+    jnz cdDone
+;
+    clc
+
+cdDone:
+    pop edi
+    pop edx
+    pop ecx
+    ret
+ConfigDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetInterface
+;
+;   DESCRIPTION:    Set interface
+;
+;   PARAMETERS:     AL      Interface #
+;                   AH      Alt setting
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetInterface   Proc near
+    push ecx
+    push edx
+    push edi
+;    
+    mov dx,ax
+;
+    call GetControlTrb
+;
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_INTERFACE
+    movzx ax,dh
+    mov es:[edi].usd_value,ax
+    movzx ax,dl
+    mov es:[edi].usd_index,ax
+    mov es:[edi].usd_len,0
+;
+    mov eax,8
+    mov es:[edi].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,ds:mon_control_pcs
+    or al,40h
+    mov es:[edi].trb_type,ax
+;    
+    call GetControlTrb
+;
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,ds:mon_control_pcs
+    or al,20h
+    mov es:[edi].trb_type,ax
+    mov es:[edi].trb_control,1
+;
+    call SendSlotTrb
+    jc siDone
+;
+    mov al,es:[edi+11]
+    cmp al,1    
+    stc
+    jnz siDone
+;
+    clc
+
+siDone:
+    pop edi
+    pop edx
+    pop ecx
+    ret
+SetInterface   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -881,13 +1037,18 @@ cfContextSizeOk:
     rep stosd
 ;
     mov edi,ds:mon_usb_linear
-    mov eax,OFFSET input_context
-    add eax,edi
-    movzx eax,ds:mon_context_size
-    add eax,edi
-    mov es:[edi].dcba,eax
+    add edi,OFFSET dcba
     xor eax,eax
-    mov es:[edi+4].dcba,eax
+    stosd
+    stosd
+;
+    movzx eax,ds:mon_context_size
+    add eax,OFFSET input_context
+    add eax,ds:mon_usb_linear
+;
+    stosd
+    xor eax,eax    
+    stosd
 ;    
     mov eax,ds:mon_usb_linear
     add eax,OFFSET dcba
@@ -1094,7 +1255,16 @@ cfConfigNext:
     jmp cfDisableSlot
 
 cfConfig:
+    call ConfigDevice
+    jc cfDisableSlot
+;
+    mov al,es:[edi].uid_id
+    mov ah,es:[edi].uid_alt_id
+    call SetInterface
+    jc cfDisableSlot
+;
     int 3
+
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
