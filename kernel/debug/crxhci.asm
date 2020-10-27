@@ -1392,11 +1392,13 @@ cfConfigNext:
 
 cfConfig:
     call ConfigDevice
+    int 3
     jc cfDisableSlot
 ;
     mov al,es:[edi].uid_id
     mov ah,es:[edi].uid_alt_id
     call SetInterface
+    int 3
     jc cfDisableSlot
 ;
     call GetUsbEp
