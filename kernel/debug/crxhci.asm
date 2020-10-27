@@ -157,10 +157,11 @@ usb_struc	STRUC
 input_context   DB 200h DUP(?)  ; 7000
 erst1           DB 100h DUP(?)  ; 7200
 control_ring    DB 100h DUP(?)  ; 7300
-cmd             DB 40h DUP(?)   ; 7400
-dcba            DB 40h DUP(?)   ; 7440
-erst            DB 10h DUP(?)   ; 7480
-descr           DB 8 * 64 DUP(?) ; 7490
+data_ring       DB 100h DUP(?)  ; 7400
+cmd             DB 40h DUP(?)   ; 7500
+dcba            DB 40h DUP(?)   ; 7540
+erst            DB 10h DUP(?)   ; 7580
+descr           DB 8 * 64 DUP(?) ; 7590
 
 usb_struc	ENDS
 
@@ -983,6 +984,140 @@ siDone:
     pop ecx
     ret
 SetInterface   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigEndpoint
+;
+;   DESCRIPTION:    Configure data endpoint
+;
+;   PARAMETERS:     AL      Endpoint #1
+;                   AH      Interval
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigEndpoint   Proc near
+    push ecx
+    push edx
+    push edi
+;    
+    mov dl,al
+    mov al,ah
+    mov ah,3
+
+ceIntLoop:
+    shr al,1
+    jz ceIntOk
+;
+    inc ah
+    jmp ceIntLoop
+
+ceIntOk:    
+    mov dh,ah
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET data_ring
+    mov ecx,3Ch
+    xor eax,eax
+    rep stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET data_ring
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    mov eax,2 + (TRB_TYPE_LINK SHL 10)
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET data_ring
+    mov ds:mon_data_enque,eax
+    mov ds:mon_data_deque,eax
+    mov ds:mon_data_pcs,1
+    mov ds:mon_data_ep,dl
+;
+    mov cl,dh
+    cmp dl,1
+    je cde1
+;
+    cmp dl,2
+    stc
+    jne cdeDone
+
+cde2:
+    mov ax,ds:mon_context_size
+    mov dx,6
+    mul dx
+    mov dx,40h
+    jmp cdeCom
+
+cde1:
+    mov ax,ds:mon_context_size
+    mov dx,4
+    mul dx
+    mov dx,10h
+
+cdeCom:
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET input_context
+    movzx edx,dx
+    mov es:[edi].icc_add_mask,edx
+;    
+    movzx eax,ax
+    add edi,eax
+;
+    mov eax,8
+    mov es:[edi].ec_packet_size,ax
+    mov es:[edi].ec_avg_len,ax
+    mov es:[edi].ec_esit_low,eax
+    mov es:[edi].ec_interval,cl
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET data_ring
+    or al,1
+    mov es:[edi].ec_tr_dequeue,eax
+    xor eax,eax
+    mov es:[edi].ec_tr_dequeue+4,eax        
+;
+    mov al,3 SHL 1
+    or al,7 SHL 3
+    mov es:[edi].ec_param2,al
+;
+    call GetCommandTrb
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET input_context
+    mov es:[edi].trb_param,eax
+    xor eax,eax
+    mov es:[edi].trb_param+4,eax
+;
+    mov ah,ds:mon_usb_adr
+    xor al,al
+    mov es:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_CONFIGURE_ENDP
+    call SendCommandTrb
+    jc cdeDone
+;
+    mov al,es:[edi+11]
+    cmp al,1    
+    stc
+    jnz cdeDone
+;
+    cmp dl,es:[edi+15]
+    stc 
+    jne cdeDone
+;
+    clc
+
+cdeDone:
+    pop edi
+    pop edx
+    pop ecx
+    ret
+ConfigEndpoint	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1269,9 +1404,9 @@ cfConfig:
 ;
     int 3
     mov al,es:[edi].ued_address
-    mov cl,es:[edi].ued_interval
-
-
+    and al,0Fh
+    mov ah,es:[edi].ued_interval
+    call ConfigEndpoint
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr

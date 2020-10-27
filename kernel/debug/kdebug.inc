@@ -273,6 +273,11 @@ mon_control_enque   DD ?
 mon_control_deque   DD ?
 mon_control_pcs     DW ?
 
+mon_data_enque      DD ?
+mon_data_deque      DD ?
+mon_data_pcs        DW ?
+mon_data_ep         DB ?
+
 mon_usb_port        DB ? 
 mon_usb_adr         DB ? 
 mon_usb_ports       DB ?
