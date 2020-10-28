@@ -92,20 +92,37 @@ code    SEGMENT byte public use32 'CODE'
 
     public LocalCpuReset
 
+fake_idt  DD 0, 0
+
 LocalCpuReset   Proc near
     cli
+    mov ecx,10000h
+
 wait_gate1:
     in al,64h
     and al,2
-    jnz wait_gate1
+    jz done_gate1
+;
+    loop wait_gate1
+
+done_gate1:
     mov al,0D1h
     out 64h,al
+    mov ecx,10000h
+
 wait_gate2:
     in al,64h
     and al,2
-    jnz wait_gate2
+    jz done_gate2
+;
+    loop wait_gate2
+
+done_gate2:
     mov al,0FEh
     out 60h,al
+;
+    mov ebx,OFFSET fake_idt
+    lidt fword ptr cs:[ebx]
 ;
     xor eax,eax
     mov cr3,eax
