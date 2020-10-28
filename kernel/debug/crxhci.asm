@@ -177,6 +177,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn CheckUsbDev:near
     extrn CheckUsbConfig:near
     extrn GetUsbEp:near
+    extrn UpdateUsbKeyboard:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -289,12 +290,15 @@ ResetXhci	Endp
     
 AddXhci      PROC near
     push ds
+    push es
     push eax
     push ebx
     push ecx
 ;    
     mov ax,mon_data_sel
     mov ds,ax
+    mov ax,mon_flat_sel
+    mov es,ax    
     movzx ebx,ds:mon_xhci_count
     cmp bl,10
     jae axDone
@@ -329,6 +333,7 @@ axDone:
     pop ecx
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 AddXhci      ENDP
@@ -1529,15 +1534,16 @@ cfInputLoop:
     call GetEvent
     jc cfInputLoop
 ;
-    int 3
     cmp al,20h
     jnz cfDisableSlot
 ;
     mov edi,ds:mon_usb_linear
     add edi,OFFSET descr
+    call UpdateUsbKeyboard
     jmp cfAddInput
 
 cfDisableSlot:
+    int 3
     mov al,ds:mon_usb_adr
     call DisableSlot
 

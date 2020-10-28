@@ -1100,11 +1100,14 @@ InitCrashKeyboard Proc near
 ;
     mov ax,mon_data_sel
     mov ds,ax
+    mov es,ax
     mov ds:mon_key_status,0
     mov ds:mon_shift_states,0
     mov ds:mon_key_code,0
     mov ds:mon_c_vk_code,0
     mov ds:mon_scan_code,0
+    mov ds:mon_usb_shift,0
+    mov ds:mon_usb_keys,0
 ;
     mov al,83h
     mov dx,PORT_BASE + 3
@@ -1246,6 +1249,33 @@ crash_key_done:
     pop ds
     ret
 UpdateKeyboard  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateUsbKeyboard
+;
+;           DESCRIPTION:    Update USB keyboard
+;
+;           PARAMETERS:     ES:EDI	Keyboard report
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateUsbKeyboard
+
+UpdateUsbKeyboard  Proc near
+    mov eax,es:[edi+2]
+    cmp eax,ds:mon_usb_keys
+    je uukDone
+;
+    int 3
+    mov ds:mon_usb_keys,eax
+
+uukDone:
+    ret
+UpdateUsbKeyboard  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

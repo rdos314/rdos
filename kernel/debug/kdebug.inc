@@ -282,6 +282,9 @@ mon_usb_port        DB ?
 mon_usb_adr         DB ? 
 mon_usb_ports       DB ?
 
+mon_usb_shift       DB ?
+mon_usb_keys        DD ?
+
 mon_ohci_count      DB ?
 mon_ohci_arr        DD 10 DUP(?)
 
