@@ -528,6 +528,7 @@ GetCommandTrb    Endp
 
 SendCommandTrb   Proc near
     push eax
+    push ecx
 ;
     movzx ax,al
     shl ax,10
@@ -537,18 +538,32 @@ SendCommandTrb   Proc near
     mov edi,ds:mon_xhci_door_bell
     xor eax,eax
     mov es:[edi],eax
-;
+
+sctRetry:
+    mov cx,25
+
+sctLoop:
     mov ax,1
     call WaitMs
 
 sctWait:
     call GetEvent
-    jc sctDone
+    jnc sctEvent
 ;
+    sub cx,1
+    jnz sctLoop
+;
+    stc
+    jmp sctDone
+
+sctEvent:
     cmp al,21h
-    jnz sctWait
+    jnz sctRetry
+;
+    clc
 
 sctDone:
+    pop ecx
     pop eax
     ret
 SendCommandTrb  Endp
@@ -1000,6 +1015,7 @@ SetProtocol   Endp
 ConfigEndpoint   Proc near
     push ecx
     push edx
+    push esi
     push edi
 ;    
     mov dl,al
@@ -1014,7 +1030,7 @@ ceIntLoop:
     jmp ceIntLoop
 
 ceIntOk:    
-    mov dh,ah
+    mov bl,ah
 ;
     mov edi,ds:mon_usb_linear
     add edi,OFFSET data_ring
@@ -1038,7 +1054,6 @@ ceIntOk:
     mov ds:mon_data_pcs,1
     mov ds:mon_data_ep,dl
 ;
-    mov cl,dh
     cmp dl,1
     je cde1
 ;
@@ -1048,31 +1063,40 @@ ceIntOk:
 
 cde2:
     mov ax,ds:mon_context_size
-    mov dx,6
-    mul dx
-    mov dx,40h
+    mov cx,5
+    mul cx
+    movzx esi,ax
     jmp cdeCom
 
 cde1:
     mov ax,ds:mon_context_size
-    mov dx,4
-    mul dx
-    mov dx,10h
+    mov cx,3
+    mul cx
+    movzx esi,ax
 
 cdeCom:
     mov edi,ds:mon_usb_linear
     add edi,OFFSET input_context
-    movzx edx,dx
-    mov es:[edi].icc_add_mask,edx
-;    
-    movzx eax,ax
-    add edi,eax
+    mov eax,1
+    shl eax,cl
+    mov es:[edi].icc_add_mask,eax
 ;
+    movzx eax,ds:mon_context_size
+    add edi,eax
+    movzx eax,cl
+    inc al
+    shl eax,27
+    mov edx,es:[edi].s_misc
+    and edx,07FFFFFFh
+    or eax,edx
+    mov es:[edi].s_misc,eax
+;    
+    add edi,esi
     mov eax,8
     mov es:[edi].ec_packet_size,ax
     mov es:[edi].ec_avg_len,ax
     mov es:[edi].ec_esit_low,eax
-    mov es:[edi].ec_interval,cl
+    mov es:[edi].ec_interval,bl
 ;
     mov eax,ds:mon_usb_linear
     add eax,OFFSET data_ring
@@ -1106,7 +1130,8 @@ cdeCom:
     stc
     jnz cdeDone
 ;
-    cmp dl,es:[edi+15]
+    mov al,ds:mon_usb_adr
+    cmp al,es:[edi+15]
     stc 
     jne cdeDone
 ;
@@ -1114,6 +1139,7 @@ cdeCom:
 
 cdeDone:
     pop edi
+    pop esi
     pop edx
     pop ecx
     ret
@@ -1396,17 +1422,18 @@ cfConfig:
 ;
     mov al,es:[edi].uid_id
     call SetProtocol
-    int 3
     jc cfDisableSlot
 ;
     call GetUsbEp
     jc cfDisableSlot
 ;
-    int 3
     mov al,es:[edi].ued_address
     and al,0Fh
     mov ah,es:[edi].ued_interval
     call ConfigEndpoint
+    int 3
+    jc cfDisableSlot
+;
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
