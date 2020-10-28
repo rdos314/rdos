@@ -430,8 +430,8 @@ GetEvent   Proc near
     jne geSave
 ;
     xor ds:mon_event_ccs,1
-    mov eax,ds:mon_usb_linear
-    add eax,OFFSET erst1
+    mov esi,ds:mon_usb_linear
+    add esi,OFFSET erst1
 
 geSave:
     mov ds:mon_event_deque,esi
@@ -609,6 +609,48 @@ gctNext:
     pop eax        
     ret
 GetControlTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetDataTrb
+;
+;       DESCRIPTION:    Get empty data TRB
+;
+;       RETURNS:        ES:EDI     TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDataTrb   Proc near
+    push eax
+;
+    mov edi,ds:mon_data_enque
+    mov eax,es:[edi+12]
+    shr ax,10
+    cmp al,TRB_TYPE_LINK
+    jne gdtNext
+;    
+    mov eax,es:[edi+12]
+    xor al,1
+    mov es:[edi+12],al
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET data_ring
+    xor ds:mon_data_pcs,1
+
+gdtNext:
+    mov eax,edi
+    add eax,SIZE trb_struc
+    mov ds:mon_data_enque,eax
+;
+    mov es:[edi].trb_param,0
+    mov es:[edi].trb_param+4,0
+    mov es:[edi].trb_status,0
+    mov es:[edi].trb_control,0
+;
+    pop eax        
+    ret
+GetDataTrb    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1052,7 +1094,6 @@ ceIntOk:
     mov ds:mon_data_enque,eax
     mov ds:mon_data_deque,eax
     mov ds:mon_data_pcs,1
-    mov ds:mon_data_ep,dl
 ;
     cmp dl,1
     je cde1
@@ -1075,6 +1116,8 @@ cde1:
     movzx esi,ax
 
 cdeCom:
+    mov ds:mon_data_ep,cl
+;
     mov edi,ds:mon_usb_linear
     add edi,OFFSET input_context
     mov eax,1
@@ -1144,6 +1187,49 @@ cdeDone:
     pop ecx
     ret
 ConfigEndpoint	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddIn
+;
+;   DESCRIPTION:    Add keyboard in entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIn   Proc near
+    push ecx
+    push edx
+    push edi
+;
+    call GetDataTrb
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET descr
+    mov es:[edi].trb_param,eax
+    xor eax,eax
+    mov es:[edi].trb_param+4,eax
+;
+    mov eax,8
+    mov es:[edi].trb_status,eax    
+;
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or ax,ds:mon_data_pcs
+    or ax,20h
+    mov es:[edi].trb_type,ax
+;
+    mov edi,ds:mon_xhci_door_bell
+    movzx eax,ds:mon_usb_adr
+    shl eax,2
+    add edi,eax
+    movzx eax,ds:mon_data_ep
+    mov es:[edi],eax
+;
+    pop edi
+    pop edx
+    pop ecx
+    ret
+AddIn	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1431,9 +1517,25 @@ cfConfig:
     and al,0Fh
     mov ah,es:[edi].ued_interval
     call ConfigEndpoint
-    int 3
     jc cfDisableSlot
+
+cfAddInput:
+    call AddIn
+
+cfInputLoop:
+    mov ax,1
+    call WaitMs
 ;
+    call GetEvent
+    jc cfInputLoop
+;
+    int 3
+    cmp al,20h
+    jnz cfDisableSlot
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    jmp cfAddInput
 
 cfDisableSlot:
     mov al,ds:mon_usb_adr
