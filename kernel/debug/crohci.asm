@@ -94,6 +94,7 @@ control_data    DD 4 * 64 DUP(?)
 control_status  DD 4 DUP(?)
 control_end     DD 4 DUP(?)
 intr_ed         DD 4 DUP(?)
+intr_td         DD 4 DUP(?)
 intr_end        DD 4 DUP(?)
 control_msg     DB 8 DUP(?)
 descr           DB 8 * 64 DUP(?)
@@ -771,6 +772,61 @@ UnlinkIntr	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddIntr
+;
+;           DESCRIPTION:    Add intr TD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIntr	Proc near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_td
+;    
+    mov ax,0FFF4h
+    shl eax,16
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET descr
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET intr_end
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET descr
+    add eax,7
+    stosd
+    ret
+AddIntr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RunIntr
+;
+;           DESCRIPTION:    Run intr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunIntr	Proc near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_ed
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET intr_td
+    mov es:[edi+8],eax
+;
+    mov eax,es:[edx+8]
+    or al,2
+    mov es:[edx+8],eax
+    ret
+RunIntr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckFunc
 ;
 ;           DESCRIPTION:    Check function
@@ -1002,9 +1058,12 @@ cfConfig:
     mov al,es:[edi].ued_address
     and al,0Fh
     mov ah,es:[edi].ued_interval
-    int 3
     mov edx,ds:mon_usb_func_linear
     call LinkIntr
+;
+    int 3
+    call AddIntr
+    call RunIntr
 
 cfDisableUnlink:
     call UnlinkIntr
