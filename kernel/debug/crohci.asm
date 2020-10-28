@@ -107,6 +107,8 @@ code    SEGMENT byte public use32 'CODE'
     extrn MapUsbFunc:near
     extrn CheckUsbDev:near
     extrn CheckUsbConfig:near
+    extrn GetUsbEp:near
+    extrn UpdateUsbKeyboard:near
     extrn PollKey:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -917,12 +919,22 @@ cfConfig:
     mov ax,1
     call WaitMs
 ;
+    push edi
     mov al,es:[edi].uid_id
     call SetProtocol
+    pop edi
     jc cfDisable
 ;
     mov ax,1
     call WaitMs
+;
+    int 3
+    call GetUsbEp
+    jc cfDisable
+;
+    mov al,es:[edi].ued_address
+    and al,0Fh
+    mov ah,es:[edi].ued_interval
     int 3
 
 cfDisable:
