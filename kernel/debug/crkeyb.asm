@@ -126,6 +126,8 @@ LocalCpuReset   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public SaveKeyboardCode
+
 SaveKeyboardCode    PROC near
     push ds
     push ax
@@ -1261,8 +1263,16 @@ UpdateKeyboard  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyUsbPressed	Proc near
-    int 3
-    mov al,1
+    pushad
+;
+    movzx ebx,al
+    shl ebx,2
+    call dword ptr cs:[ebx].handle_scan_code_tab
+    jc crash_key_done
+;
+    call DecodeScanCode
+;
+    popad
     ret
 NotifyUsbPressed	Endp
 
@@ -1278,8 +1288,6 @@ NotifyUsbPressed	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyUsbReleased	Proc near
-    int 3
-    mov al,-1
     ret
 NotifyUsbReleased	Endp
 
