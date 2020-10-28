@@ -178,6 +178,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn CheckUsbConfig:near
     extrn GetUsbEp:near
     extrn UpdateUsbKeyboard:near
+    extrn PollKey:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -259,6 +260,7 @@ ResetXhci      PROC near
     mov ecx,100000h
 
 rxWait:
+    call PollKey
     mov eax,es:[edx]
     test al,2
     clc
@@ -355,6 +357,7 @@ CheckWait       PROC near
     mov eax,es:[edi]
 
 cwLoop:
+    call PollKey
     cmp eax,es:[edi]
     clc
     jne cwDone
@@ -388,6 +391,7 @@ WaitMs       PROC near
     mov eax,es:[edi]
 
 wmLoop:
+    call PollKey
     cmp eax,es:[edi]
     je wmLoop
 ;

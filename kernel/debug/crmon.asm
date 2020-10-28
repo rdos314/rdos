@@ -5412,6 +5412,7 @@ HandleKey	Endp
 
 PollKey	Proc near
     push ds
+    push es
     pushad
 ;
     mov ax,mon_data_sel
@@ -5424,6 +5425,7 @@ PollKey	Proc near
 
 pkDone:
     popad
+    pop es
     pop ds
     ret
 PollKey	Endp
@@ -5445,9 +5447,6 @@ handle_monitor:
     call InitXhci
     call EnumPci
 ;
-    call CheckOhci
-    call CheckXhci
-;
     mov bx,ds:[ebp].debug_core_id
 ;
     mov ax,mon_data_sel
@@ -5461,7 +5460,8 @@ handle_monitor:
     call ShowMarker
 
 handle_loop:
-    call PollKey
+    call CheckOhci
+    call CheckXhci
     jmp handle_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

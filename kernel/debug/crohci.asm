@@ -107,6 +107,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn MapUsbFunc:near
     extrn CheckUsbDev:near
     extrn CheckUsbConfig:near
+    extrn PollKey:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -182,9 +183,10 @@ ResetOhci      PROC near
     or al,1
     mov es:[edx+8],eax
 ;
-    mov ecx,100000h
+    mov ecx,10000h
 
 roWait:
+    call PollKey
     mov eax,es:[edx+8]
     test al,1
     clc
@@ -283,6 +285,7 @@ CheckWait       PROC near
     mov ecx,1000000
 
 cwLoop:
+    call PollKey
     cmp ax,es:[edi]
     clc
     jne cwDone
@@ -315,6 +318,7 @@ WaitMs       PROC near
     mov ax,es:[edi]
 
 wmLoop:
+    call PollKey
     cmp ax,es:[edi]
     je wmLoop
 ;
