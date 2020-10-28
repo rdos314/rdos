@@ -1249,6 +1249,142 @@ crash_key_done:
     ret
 UpdateKeyboard  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyUsbPressed
+;
+;           DESCRIPTION:    Notify pressed key
+;
+;           PARAMETERS:     AL	key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyUsbPressed	Proc near
+    int 3
+    mov al,1
+    ret
+NotifyUsbPressed	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           NotifyUsbReleased
+;
+;           DESCRIPTION:    Notify release key
+;
+;           PARAMETERS:     AL	key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyUsbReleased	Proc near
+    int 3
+    mov al,-1
+    ret
+NotifyUsbReleased	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateUsbPressed
+;
+;           DESCRIPTION:    Update pressed key
+;
+;           PARAMETERS:     EAX		New keys
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateUsbPressed	Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov ecx,4
+
+hupLoop:
+    or al,al
+    jz hupDone
+;
+    push ecx
+    mov ecx,4
+    mov edx,ds:mon_usb_keys
+
+hupFindLoop:
+    or dl,dl
+    je hupNew
+;
+    cmp al,dl
+    je hupNext
+;
+    shr edx,8
+    loop hupFindLoop
+
+hupNew:
+    call NotifyusbPressed
+
+hupNext:
+    pop ecx
+    shr eax,8
+    loop hupLoop
+
+hupDone:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+UpdateUsbPressed	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateUsbReleased
+;
+;           DESCRIPTION:    Update released key
+;
+;           PARAMETERS:     EAX		New keys
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateUsbReleased	Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov ecx,4
+    xchg eax,ds:mon_usb_keys
+
+hurLoop:
+    or al,al
+    jz hurDone
+;
+    push ecx
+    mov ecx,4
+    mov edx,ds:mon_usb_keys
+
+hurFindLoop:
+    or dl,dl
+    je hurNew
+;
+    cmp al,dl
+    je hurNext
+;
+    shr edx,8
+    loop hurFindLoop
+
+hurNew:
+    call NotifyUsbReleased
+
+hurNext:
+    pop ecx
+    shr eax,8
+    loop hurLoop
+
+hurDone:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+UpdateUsbReleased	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1268,8 +1404,8 @@ UpdateUsbKeyboard  Proc near
     cmp eax,ds:mon_usb_keys
     je uukDone
 ;
-    int 3
-    mov ds:mon_usb_keys,eax
+    call UpdateUsbPressed
+    call UpdateUsbReleased
 
 uukDone:
     ret
