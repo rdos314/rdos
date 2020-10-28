@@ -1100,7 +1100,6 @@ InitCrashKeyboard Proc near
 ;
     mov ax,mon_data_sel
     mov ds,ax
-    mov es,ax
     mov ds:mon_key_status,0
     mov ds:mon_shift_states,0
     mov ds:mon_key_code,0
