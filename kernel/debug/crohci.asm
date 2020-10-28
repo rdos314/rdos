@@ -61,7 +61,7 @@ uid_id              DB ?
 uid_alt_id          DB ?
 uid_endpoints       DB ?
 uid_class           DB ?
-uid_sub_class       DB ?
+id_sub_class       DB ?
 uid_proto           DB ?
 uid_interface_id    DB ?
 
@@ -782,7 +782,7 @@ AddIntr	Proc near
     mov edi,ds:mon_usb_linear
     add edi,OFFSET intr_td
 ;    
-    mov ax,0FFF4h
+    mov ax,0FCF4h
     shl eax,16
     stosd
 ;
@@ -823,6 +823,94 @@ RunIntr	Proc near
     mov es:[edx+8],eax
     ret
 RunIntr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReloadIntr
+;
+;           DESCRIPTION:    Reload intr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReloadIntr	Proc near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_td
+;    
+    mov ax,0FCF4h
+    shl eax,16
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET descr
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET intr_end
+    stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_ed
+;
+    mov eax,es:[edi+8]
+    test al,1
+    stc
+    jnz riDone
+;
+    and eax,3
+    add eax,ds:mon_usb_linear
+    add eax,OFFSET intr_td
+    mov es:[edi+8],eax
+;
+    mov eax,es:[edx+8]
+    or al,2
+    mov es:[edx+8],eax
+    clc
+
+riDone:
+    ret
+ReloadIntr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WaitData
+;
+;           DESCRIPTION:    Wait for intr completed
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           ES:ESI      Hub entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+WaitData       PROC near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_ed
+
+wdRetry:
+    mov ax,1
+    call WaitMs
+;
+    mov eax,es:[esi]
+    test al,1
+    stc
+    jz wdDone
+;
+    mov eax,es:[edi+8]
+    and eax,0FFFFFFF0h
+    sub eax,es:[edi+4]
+    jnz wdRetry
+;
+    mov eax,es:[edi+8]
+    test al,1
+    stc
+    jnz wdDone
+;
+    clc
+
+wdDone:
+    ret
+WaitData       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1060,12 +1148,25 @@ cfConfig:
     mov ah,es:[edi].ued_interval
     mov edx,ds:mon_usb_func_linear
     call LinkIntr
-;
-    int 3
+
     call AddIntr
     call RunIntr
 
+cfDataLoop:
+    call WaitData
+    jc cfDisableUnlink
+;
+    mov ax,1
+    call WaitMs
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+    call UpdateUsbKeyboard
+    call ReloadIntr
+    jnc cfDataLoop
+
 cfDisableUnlink:
+    int 3
     call UnlinkIntr
 
 cfDisable:
