@@ -93,6 +93,8 @@ control_setup   DD 4 DUP(?)
 control_data    DD 4 * 64 DUP(?)
 control_status  DD 4 DUP(?)
 control_end     DD 4 DUP(?)
+intr_ed         DD 4 DUP(?)
+intr_end        DD 4 DUP(?)
 control_msg     DB 8 DUP(?)
 descr           DB 8 * 64 DUP(?)
 
@@ -701,6 +703,72 @@ SetProtocol   Proc near
 SetProtocol	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LinkIntr
+;
+;   DESCRIPTION:    Link data endpoint
+;
+;   PARAMETERS:     AL      Endpoint #1
+;                   AH      Interval
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinkIntr   Proc near
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_ed
+    movzx eax,al
+    shl eax,7
+    or eax,83001h
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET intr_end
+    stosd
+    stosd
+;
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET sd_hid_int
+    stosd
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET intr_end
+    mov eax,0E40000h
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    stosd
+;
+    mov edi,ds:mon_usb_linear
+    mov eax,ds:mon_usb_linear
+    add eax,OFFSET intr_ed
+    mov es:[edi],eax
+    ret
+LinkIntr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UnlinkIntr
+;
+;   DESCRIPTION:    Unlink data endpoint
+;
+;   PARAMETERS:     AL      Endpoint #1
+;                   AH      Interval
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkIntr   Proc near
+    mov ecx,32
+    mov edi,ds:mon_usb_linear
+    mov eax,OFFSET sd_hid_int
+    add eax,edi
+    rep stosd
+    ret
+UnlinkIntr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           CheckFunc
@@ -928,7 +996,6 @@ cfConfig:
     mov ax,1
     call WaitMs
 ;
-    int 3
     call GetUsbEp
     jc cfDisable
 ;
@@ -936,6 +1003,11 @@ cfConfig:
     and al,0Fh
     mov ah,es:[edi].ued_interval
     int 3
+    mov edx,ds:mon_usb_func_linear
+    call LinkIntr
+
+cfDisableUnlink:
+    call UnlinkIntr
 
 cfDisable:
     mov eax,1
