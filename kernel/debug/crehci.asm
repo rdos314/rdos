@@ -212,7 +212,6 @@ AddEhci      PROC near
     push ecx
     push edx
 ;    
-    int 3
     mov ax,mon_data_sel
     mov ds,ax
     movzx ebx,ds:mon_ehci_count
@@ -232,6 +231,12 @@ AddEhci      PROC near
     push ebx
     xor ebx,ebx
     call MapUsbFunc
+;
+    int 3
+    mov ax,es:[edx+2]
+    cmp ah,1
+    jne aeDone
+;
     call ResetEhci
     pop ebx
     pop eax
