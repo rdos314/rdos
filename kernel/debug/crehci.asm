@@ -261,6 +261,36 @@ AddEhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           WaitReset
+;
+;           DESCRIPTION:    Wait reset
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+WaitReset       PROC near
+    mov ecx,1000000
+    mov edi,ds:mon_usb_oper
+
+wrLoop:
+    call PollKey
+    mov eax,es:[edi]
+    test al,2
+    clc
+    jz wrDone
+;
+    loop wrLoop
+;
+    stc
+
+wrDone:    
+    ret
+WaitReset       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckWait
 ;
 ;           DESCRIPTION:    Check wait
@@ -270,16 +300,15 @@ AddEhci      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 CheckWait       PROC near
-    mov ecx,1000000
     mov edi,ds:mon_usb_oper
+    mov ecx,1000000
+    mov eax,es:[edi+0Ch]
 
 cwLoop:
     call PollKey
-    mov eax,es:[edi]
-    test al,2
+    cmp eax,es:[edi+0Ch]
     clc
-    jz cwDone
-;
+    jne cwDone
     loop cwLoop
 ;
     stc
@@ -314,9 +343,18 @@ CheckFunc       PROC near
     mov eax,es:[edi]
     or al,2
     mov es:[edi],eax
-    call CheckWait
-    int 3
+    call WaitReset
     jc cfFail
+;
+    int 3
+    mov eax,es:[edi]
+    and al,0F3h
+    or al,9
+    mov es:[edi],eax
+;
+    call CheckWait
+    jc cfFail
+;
 
 cfFail:
     popad
