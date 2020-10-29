@@ -212,6 +212,7 @@ AddEhci      PROC near
     push ecx
     push edx
 ;    
+    int 3
     mov ax,mon_data_sel
     mov ds,ax
     movzx ebx,ds:mon_ehci_count
@@ -300,6 +301,9 @@ CheckFunc       PROC near
     movzx eax,byte ptr es:[edx]
     add eax,edx
     mov ds:mon_usb_oper,eax
+;
+    mov eax,es:[edx+8]
+    int 3
 ;
     mov edi,eax
     mov eax,es:[edi]
