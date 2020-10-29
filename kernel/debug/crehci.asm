@@ -346,7 +346,6 @@ CheckFunc       PROC near
     call WaitReset
     jc cfFail
 ;
-    int 3
     mov eax,es:[edi]
     and al,0F3h
     or al,9
@@ -355,6 +354,10 @@ CheckFunc       PROC near
     call CheckWait
     jc cfFail
 ;
+    int 3
+
+cfStop:
+   call ResetEhci
 
 cfFail:
     popad
