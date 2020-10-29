@@ -232,10 +232,13 @@ AddEhci      PROC near
     xor ebx,ebx
     call MapUsbFunc
 ;
-    int 3
     mov ax,es:[edx+2]
     cmp ah,1
     jne aeDone
+;
+    mov eax,es:[edx+8]
+    test al,2
+    jz aeDone
 ;
     call ResetEhci
     pop ebx
@@ -306,9 +309,6 @@ CheckFunc       PROC near
     movzx eax,byte ptr es:[edx]
     add eax,edx
     mov ds:mon_usb_oper,eax
-;
-    mov eax,es:[edx+8]
-    int 3
 ;
     mov edi,eax
     mov eax,es:[edi]
