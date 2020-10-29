@@ -118,6 +118,10 @@ code    SEGMENT byte public use32 'CODE'
     extrn AddOhci:near
     extrn CheckOhci:near
 
+    extrn InitEhci:near
+    extrn AddEhci:near
+    extrn CheckEhci:near
+
     extrn InitXhci:near
     extrn AddXhci:near
     extrn CheckXhci:near
@@ -5087,6 +5091,9 @@ NotifyUsb	Proc near
     cmp al,10h
     je nuOhci
 ;
+    cmp al,20h
+    je nuEhci
+;
     cmp al,30h
     je nuXhci
 ;
@@ -5094,6 +5101,10 @@ NotifyUsb	Proc near
 
 nuOhci:
     call AddOhci
+    jmp nuDone
+
+nuEhci:
+    call AddEhci
     jmp nuDone
 
 nuXhci:
@@ -5444,6 +5455,7 @@ handle_monitor:
     call InitCrashKeyboard
 ;
     call InitOhci
+    call InitEhci
     call InitXhci
     call EnumPci
 ;
@@ -5461,6 +5473,7 @@ handle_monitor:
 
 handle_loop:
     call CheckOhci
+    call CheckEhci
     call CheckXhci
     jmp handle_loop
 

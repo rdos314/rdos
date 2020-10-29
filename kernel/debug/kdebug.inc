@@ -288,6 +288,9 @@ mon_usb_keys        DD ?
 mon_ohci_count      DB ?
 mon_ohci_arr        DD 10 DUP(?)
 
+mon_ehci_count      DB ?
+mon_ehci_arr        DD 10 DUP(?)
+
 mon_xhci_param      DD ?
 mon_xhci_door_bell  DD ?
 mon_xhci_runtime    DD ?
