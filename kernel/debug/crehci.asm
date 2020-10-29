@@ -145,6 +145,7 @@ InitEhci      PROC near
     pop ds
     ret
 InitEhci      ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -161,9 +162,30 @@ ResetEhci      PROC near
     push ecx
     push edx
 ;
+    movzx edi,byte ptr es:[edx]
+    add edi,edx
+    mov eax,es:[edi]
+    test al,1
     clc
+    jz reDone
+;
+    and al,NOT 31h
+    mov es:[edi],eax
+;
+    mov ecx,100000h
 
-reResetDone:
+reLoop:
+    call PollKey
+    mov eax,es:[edi+4]
+    test ax,1000h
+    clc
+    jne reDone
+;
+    loop reLoop
+;
+    stc
+
+reDone:    
     pop edx
     pop ecx
     pop eax
@@ -226,6 +248,36 @@ aeDone:
     pop ds
     ret
 AddEhci      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckWait
+;
+;           DESCRIPTION:    Check wait
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CheckWait       PROC near
+    mov ecx,1000000
+    mov edi,ds:mon_usb_oper
+
+cwLoop:
+    call PollKey
+    mov eax,es:[edi]
+    test al,2
+    clc
+    jz cwDone
+;
+    loop cwLoop
+;
+    stc
+
+cwDone:    
+    ret
+CheckWait       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -241,7 +293,6 @@ AddEhci      ENDP
 CheckFunc       PROC near
     pushad
 ;
-    int 3
     mov eax,es:[edx+4]
     and al,0Fh
     mov ds:mon_usb_ports,al
@@ -250,6 +301,15 @@ CheckFunc       PROC near
     add eax,edx
     mov ds:mon_usb_oper,eax
 ;
+    mov edi,eax
+    mov eax,es:[edi]
+    or al,2
+    mov es:[edi],eax
+    call CheckWait
+    int 3
+    jc cfFail
+
+cfFail:
     popad
     ret
 CheckFunc	Endp
