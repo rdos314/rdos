@@ -190,7 +190,6 @@ AddEhci      PROC near
     push ecx
     push edx
 ;    
-    int 3
     mov ax,mon_data_sel
     mov ds,ax
     movzx ebx,ds:mon_ehci_count
@@ -227,6 +226,33 @@ aeDone:
     pop ds
     ret
 AddEhci      ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckFunc
+;
+;           DESCRIPTION:    Check function
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+CheckFunc       PROC near
+    pushad
+;
+    int 3
+    mov eax,es:[edx+4]
+    and al,0Fh
+    mov ds:mon_usb_ports,al
+;
+    movzx eax,byte ptr es:[edx]
+    add eax,edx
+    mov ds:mon_usb_oper,eax
+;
+    popad
+    ret
+CheckFunc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -258,6 +284,15 @@ CheckEhci       PROC near
     jz ceDone
 ;
     mov esi,OFFSET mon_ehci_arr
+
+ceLoop:
+    xor ebx,ebx
+    mov eax,[esi]
+    call MapUsbFunc
+    call CheckFunc
+;
+    add esi,4
+    loop ceLoop
 
 ceDone:
     pop esi

@@ -1281,7 +1281,7 @@ cfContextSizeOk:
 ;
     movzx eax,byte ptr es:[edx]
     add eax,edx
-    mov ds:mon_xhci_oper,eax
+    mov ds:mon_usb_oper,eax
     mov edx,eax
 ;
     mov eax,1
@@ -1380,13 +1380,13 @@ cfContextSizeOk:
     xor eax,eax
     stosd
 ;
-    mov edi,ds:mon_xhci_oper
+    mov edi,ds:mon_usb_oper
     mov eax,es:[edi]
     or al,1
     mov es:[edi],eax
 ;
     movzx ecx,ds:mon_usb_ports
-    mov edi,ds:mon_xhci_oper
+    mov edi,ds:mon_usb_oper
     add edi,400h
 
 cfPowerLoop:
@@ -1401,7 +1401,7 @@ cfPowerLoop:
     jc cfFail
 ;
     movzx ecx,ds:mon_usb_ports
-    mov edi,ds:mon_xhci_oper
+    mov edi,ds:mon_usb_oper
     add edi,400h
     mov ds:mon_usb_port,1
 
@@ -1561,7 +1561,7 @@ cfConnNext:
     sub ecx,1
     jnz cfConnLoop
 ;
-    mov edi,ds:mon_xhci_oper
+    mov edi,ds:mon_usb_oper
     mov eax,es:[edi]
     and al,NOT 1
     or al,2

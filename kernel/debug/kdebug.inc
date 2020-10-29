@@ -278,6 +278,8 @@ mon_data_deque      DD ?
 mon_data_pcs        DW ?
 mon_data_ep         DB ?
 
+mon_usb_oper        DD ?
+
 mon_usb_port        DB ? 
 mon_usb_adr         DB ? 
 mon_usb_ports       DB ?
@@ -294,7 +296,6 @@ mon_ehci_arr        DD 10 DUP(?)
 mon_xhci_param      DD ?
 mon_xhci_door_bell  DD ?
 mon_xhci_runtime    DD ?
-mon_xhci_oper       DD ?
 mon_xhci_count      DB ?
 mon_xhci_arr        DD 10 DUP(?,?)
 
