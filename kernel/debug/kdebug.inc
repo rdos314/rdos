@@ -279,7 +279,7 @@ mon_data_pcs        DW ?
 mon_data_ep         DB ?
 
 mon_usb_oper        DD ?
-
+mon_usb_root_port   DD ?
 mon_usb_port        DB ? 
 mon_usb_adr         DB ? 
 mon_usb_ports       DB ?

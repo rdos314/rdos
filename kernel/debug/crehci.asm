@@ -53,6 +53,25 @@ usd_len         DW ?
 
 usb_setup_data  ENDS
 
+usb_device_descr	STRUC
+
+udd_len		DB ?
+udd_type	DB ?
+udd_usb_ver	DW ?
+udd_class	DB ?
+udd_sub_class	DB ?
+udd_proto	DB ?
+udd_maxlen	DB ?
+udd_vendor	DW ?
+udd_prod	DW ?
+udd_device	DW ?
+udd_man		DB ?
+udd_prodid	DB ?
+udd_num		DB ?
+udd_configs	DB ?
+
+usb_device_descr	ENDS
+
 usb_interface_descr  STRUC
 
 uid_len             DB ?
@@ -61,7 +80,7 @@ uid_id              DB ?
 uid_alt_id          DB ?
 uid_endpoints       DB ?
 uid_class           DB ?
-id_sub_class       DB ?
+uid_sub_class       DB ?
 uid_proto           DB ?
 uid_interface_id    DB ?
 
@@ -98,7 +117,8 @@ qh_page1        DD ?
 qh_page2        DD ?
 qh_page3        DD ?
 qh_page4        DD ?
-qh_space        DB 10h DUP(?)
+
+qh_space        DB 16 DUP(?)
 
 qh_struc      ENDS
 
@@ -126,7 +146,10 @@ hub1_dev        qtd_struc <>
 hub2_dev        qtd_struc <>
 
 control_setup   DD 8 DUP(?)
+control_data    DD 8 DUP(?)
 control_status  DD 8 DUP(?)
+
+descr           DB 8 * 64 DUP(?)
 control_msg     DB 8 DUP(?)
 
 usb_struc	ENDS
@@ -412,6 +435,8 @@ WaitMs       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl	Proc near    
+    mov ds:mon_usb_adr,al
+;
     cmp al,1
     je ccRoot
 ;
@@ -518,6 +543,91 @@ AddSetup	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddIn
+;
+;           DESCRIPTION:    Add in
+;
+;           PARAMETERS:     ES:EDI	Device
+;                           ES:ESI      Data
+;                           CX          Size
+;                           EDX         Prev QTD
+;
+;           RETURNS:        EDX         QTD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIn	Proc near
+    push eax
+;
+    mov eax,edx
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET control_data
+;
+    mov es:[eax].qtd_next,edx
+;    
+    mov es:[edx].qtd_next,1
+    mov es:[edx].qtd_alt,1
+    mov es:[edx].qtd_status,80h
+;
+    mov al,0Dh  
+    mov es:[edx].qtd_flags,al
+;
+    mov es:[edx].qtd_page0,esi
+    mov es:[edx].qtd_page1,0
+    mov es:[edx].qtd_page2,0
+    mov es:[edx].qtd_page3,0
+    mov es:[edx].qtd_page4,0
+    mov ax,cx
+    or ax,8000h
+    mov es:[edx].qtd_size,ax
+;
+    pop eax
+    ret
+AddIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddStatusIn
+;
+;           DESCRIPTION:    Add status in
+;
+;           PARAMETERS:     ES:EDI	Device
+;                           EDX         Prev QTD
+;
+;           RETURNS:        EDX         QTD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatusIn	Proc near
+    push eax
+;
+    mov eax,edx
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET control_status
+    mov es:[eax].qtd_next,edx
+;    
+    mov es:[edx].qtd_next,1
+    mov es:[edx].qtd_alt,1
+    mov es:[edx].qtd_status,80h
+    mov es:[edx].qtd_size,8000h
+;
+    mov al,0Dh  
+    mov es:[edx].qtd_flags,al
+;
+    mov es:[edx].qtd_page0,0
+    mov es:[edx].qtd_page1,0
+    mov es:[edx].qtd_page2,0
+    mov es:[edx].qtd_page3,0
+    mov es:[edx].qtd_page4,0
+;
+    pop eax
+    ret
+AddStatusIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddStatusOut
 ;
 ;           DESCRIPTION:    Add status out
@@ -536,16 +646,13 @@ AddStatusOut	Proc near
     mov edx,ds:mon_usb_linear
     add edx,OFFSET control_status
     mov es:[eax].qtd_next,edx
-    mov ax,es:[eax].qtd_size
-    and ax,8000h
-    xor ax,8000h
 ;    
     mov es:[edx].qtd_next,1
     mov es:[edx].qtd_alt,1
     mov es:[edx].qtd_status,80h
-    mov es:[edx].qtd_size,ax
+    mov es:[edx].qtd_size,8000h
 ;
-    mov al,0Dh  
+    mov al,0Ch  
     mov es:[edx].qtd_flags,al
 ;
     mov es:[edx].qtd_page0,0
@@ -588,19 +695,25 @@ RunControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitControl	Proc near
+    mov esi,ds:mon_usb_root_port
 
 wcRetry:
+    mov eax,es:[esi]
+    test al,1
+    stc
+    jz wcDone
+;
     mov ax,1
     call WaitMs
+;
+    mov al,es:[edi].qh_status
+    test al,40h
+    stc
+    jnz wcDone
 ;
     mov eax,es:[edi].qh_next_qtd
     test al,1
     jz wcRetry
-;
-    mov al,es:[edx].qh_status
-    test al,40h
-    stc
-    jnz wcDone
 ;
     clc
 
@@ -625,17 +738,61 @@ AddressDev	Proc near
     add edi,OFFSET control_msg
     mov es:[edi].usd_type,0
     mov es:[edi].usd_req,SET_ADDRESS
-    mov es:[edi].usd_value,1
+    movzx ax,ds:mon_usb_adr
+    mov es:[edi].usd_value,ax
     mov es:[edi].usd_index,0
     mov es:[edi].usd_len,0
     pop edi
 ;
     call AddSetup
+    call AddStatusIn
+    call RunControl
+    call WaitControl
+    jc adDone
+;
+    mov al,ds:mon_usb_adr
+    mov es:[edi].qh_adress,al
+    clc
+
+adDone:
+    ret
+AddressDev	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetDescr
+;
+;           DESCRIPTION:    Get descriptor
+;
+;           PARAMETERS:     ES:EDI	Device
+;                           CX          Size
+;                           AX          Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDescr	Proc near    
+    push edi
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,80h
+    mov es:[edi].usd_req,GET_DESCR
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,cx
+    pop edi
+;
+    mov esi,ds:mon_usb_linear
+    add esi,OFFSET descr
+    call AddSetup
+    call AddIn
     call AddStatusOut
     call RunControl
     call WaitControl
+;
     ret
-AddressDev	Endp
+GetDescr	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -702,6 +859,7 @@ cfConnLoop:
     test al,1
     jz cfConnNext
 ;
+    mov ds:mon_usb_root_port,edi
     mov bx,10
 
 cfCheck:    
@@ -773,6 +931,37 @@ cfEnabled:
     jc cfDisable
 ;
     call AddressDev
+    jc cfDisable
+;
+    push ecx
+    mov cx,8
+    mov ax,100h
+    call GetDescr 
+    pop ecx
+    jc cfDisable
+;    
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET descr
+    movzx ax,es:[edx].udd_maxlen
+    or ax,ax
+    jz cfDisable
+;
+    or ax,0A000h
+    mov es:[edi].qh_max_packet,ax
+;
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET descr
+    movzx ax,byte ptr es:[edx]
+    cmp ax,es:[edi].qh_max_packet
+    ja cfDisable
+;
+    push ecx
+    mov cx,ax
+    mov ax,100h
+    call GetDescr 
+    pop ecx
+    jc cfDisable
+;
     int 3
 
 cfDisable:
