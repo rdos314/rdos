@@ -43,6 +43,26 @@ SYNC_FRAME = 12
 
 SET_PROTOCOL = 11
 
+CLEAR_TT = 8
+RESET_TT = 9
+GET_TT_STATE = 10
+STOP_TT = 11
+
+PORT_CONNECTION     = 0
+PORT_ENABLE         = 1
+PORT_SUSPEND        = 2
+PORT_OVER_CURRENT   = 3
+PORT_RESET          = 4
+PORT_POWER          = 8
+PORT_LOW_SPEED      = 9
+C_PORT_CONNECTION   = 16
+C_PORT_ENABLE       = 17
+C_PORT_SUSPEND      = 18
+C_PORT_OVER_CURRENT = 19
+C_PORT_RESET        = 20
+PORT_TEST           = 21
+PORT_INDICATOR      = 22
+
 usb_setup_data  STRUC
 
 usd_type        DB ?
@@ -174,6 +194,7 @@ control_status  DD 8 DUP(?)
 
 descr           DB 8 * 64 DUP(?)
 control_msg     DB 8 DUP(?)
+port_state      DD ?
 
 usb_struc	ENDS
 
@@ -549,6 +570,8 @@ AddSetup	Proc near
     mov es:[edx].qtd_page3,0
     mov es:[edx].qtd_page4,0
 ;
+    mov es:[edi].qh_status,0
+;
     pop eax
     ret
 AddSetup	Endp
@@ -870,31 +893,125 @@ GetHubDescr	Proc near
     call AddStatusIn
     call RunControl
     call WaitControl
-;
     ret
 GetHubDescr	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetPortFeature
+;
+;   description:    Set port feature
+;
+;   PARAMETERS:     ES:EDI	Device
+;                   DX          Port [0..ports]
+;                   AX          Feature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPortFeature  Proc near
+    push edi
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,23h
+    mov es:[edi].usd_req,SET_FEATURE
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,0
+    pop edi
+;
+    push edx
+    call AddSetup
+    call AddStatusOut
+    call RunControl
+    call WaitControl
+    pop edx
+    ret
+SetPortFeature Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;
+;   NAME:           GetPortStatus
+;
+;   description:    Get port status
+;
+;   PARAMETERS:     ES:EDI	Device
+;                   DX          Port [0..ports]
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPortStatus  Proc near
+    push edi
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,0A3h
+    mov es:[edi].usd_req,GET_STATUS
+    mov es:[edi].usd_value,0
+    mov es:[edi].usd_index,dx
+    mov es:[edi].usd_len,4
+    pop edi
+;
+    push edx
+    mov esi,ds:mon_usb_linear
+    add esi,OFFSET port_state
+    call AddSetup
+    call AddIn
+    call AddStatusIn
+    call RunControl
+    call WaitControl
+    pop edx
+    ret
+GetPortStatus Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CheckHub
+;   NAME:           CheckHub
 ;
-;           DESCRIPTION:    Check hub
+;   DESCRIPTION:    Check hub
+;
+;   PARAMETERS:     ES:EDI	Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckHub	Proc near    
     pushad
 ;
-    mov edi,ds:mon_usb_linear
-    add edi,OFFSET descr
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET descr
 ;
-    mov al,es:[edi].uhd_ports
+    mov al,es:[edx].uhd_ports
     mov ds:mon_usb_ports,al
 ;
-    mov al,es:[edi].uhd_power_time
+    mov al,es:[edx].uhd_power_time
     mov ds:mon_hub_power,al
 ;
+    movzx ecx,ds:mon_usb_ports
+    xor dx,dx
+
+chPowerLoop:
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;
+    inc dx
+    loop chPowerLoop
+
+    int 3
+;
+    movzx ecx,ds:mon_usb_ports
+    xor dx,dx
+
+chStateLoop:
+    call GetPortStatus
+    int 3
+;
+    inc dx
+    loop chStateLoop
+
+chDone:
     popad
     ret
 CheckHub	Endp
@@ -1105,7 +1222,6 @@ cfConfig:
     pop ecx
     jc cfDisable
 ;
-    int 3
     call CheckHub
 
 cfDisable:
