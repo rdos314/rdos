@@ -437,6 +437,28 @@ cfCheck:
     jmp cfConnNext
 
 cfDoReset:
+    mov eax,es:[edi]
+    and al,NOT 4
+    or ax,100h
+    mov es:[edi],eax
+;
+    mov ax,25
+    call WaitMs
+;
+    mov eax,es:[edi]
+    and ax,NOT 100h
+    mov es:[edi],eax
+;
+    mov ax,25
+    call WaitMs
+;
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    test al,4
+    jz cfConnNext
+;
     int 3
 
 cfConnNext:
