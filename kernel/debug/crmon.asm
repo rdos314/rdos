@@ -5454,8 +5454,8 @@ handle_monitor:
     call WriteCpuReg
     call InitCrashKeyboard
 ;
-    call InitOhci
     call InitEhci
+    call InitOhci
     call InitXhci
     call EnumPci
 ;
@@ -5472,8 +5472,8 @@ handle_monitor:
     call ShowMarker
 
 handle_loop:
-    call CheckOhci
     call CheckEhci
+    call CheckOhci
     call CheckXhci
     jmp handle_loop
 

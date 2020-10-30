@@ -316,6 +316,38 @@ cwLoop:
 cwDone:    
     ret
 CheckWait       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WaitMs
+;
+;           DESCRIPTION:    Wait milliseconds
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           AX          Ms to wait
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+WaitMs       PROC near
+    pushad
+;
+    movzx ecx,ax
+    shl ecx,3
+    mov edi,ds:mon_usb_oper
+    mov eax,es:[edi+0Ch]
+
+wmLoop:
+    call PollKey
+    cmp eax,es:[edi+0Ch]
+    je wmLoop
+;
+    mov eax,es:[edi+0Ch]
+    loop wmLoop
+;
+    popad
+    ret
+WaitMs       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -354,7 +386,6 @@ CheckFunc       PROC near
     call CheckWait
     jc cfFail
 ;
-    int 3
     mov eax,es:[edi+40h]
     or al,1
     mov es:[edi+40h],eax
@@ -373,7 +404,47 @@ cfPowerLoop:
 cfPowerOk:
     add edi,4
     loop cfPowerLoop
+;
+    movzx ecx,ds:mon_usb_ports
+    mov edi,ds:mon_usb_oper
+    add edi,44h
 
+cfConnLoop:    
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    mov dx,10
+
+cfCheck:    
+    mov ax,5
+    call WaitMs
+    int 3
+;
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    sub dx,1
+    jnz cfCheck
+;
+    int 3
+    and ax,0C00h
+    cmp ax,400h
+    jne cfDoReset
+;
+    mov eax,es:[edi]
+    or ax,2000h
+    mov es:[edi],eax
+    jmp cfConnNext
+
+cfDoReset:
+    int 3
+
+cfConnNext:
+    add edi,4
+    sub ecx,1
+    jnz cfConnLoop
 
 cfStop:
    call ResetEhci
