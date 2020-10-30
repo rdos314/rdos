@@ -414,21 +414,19 @@ cfConnLoop:
     test al,1
     jz cfConnNext
 ;
-    mov dx,10
+    mov bx,10
 
 cfCheck:    
     mov ax,5
     call WaitMs
-    int 3
 ;
     mov eax,es:[edi]
     test al,1
     jz cfConnNext
 ;
-    sub dx,1
+    sub bx,1
     jnz cfCheck
 ;
-    int 3
     and ax,0C00h
     cmp ax,400h
     jne cfDoReset
