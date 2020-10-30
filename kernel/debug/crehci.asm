@@ -355,6 +355,25 @@ CheckFunc       PROC near
     jc cfFail
 ;
     int 3
+    mov eax,es:[edi+40h]
+    or al,1
+    mov es:[edi+40h],eax
+;
+    movzx ecx,ds:mon_usb_ports
+    add edi,44h
+
+cfPowerLoop:
+    mov eax,es:[edi]
+    test ax,1000h
+    jnz cfPowerOk
+;
+    or ax,1000h
+    mov es:[edi],eax
+
+cfPowerOk:
+    add edi,4
+    loop cfPowerLoop
+
 
 cfStop:
    call ResetEhci
