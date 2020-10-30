@@ -459,13 +459,59 @@ cfDoReset:
     test al,4
     jz cfConnNext
 ;
+    mov bx,10
+
+cfWaitEnable:    
+    mov ax,1
+    call WaitMs
+;
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    test al,4
+    jz cfConnNext
+;
+    test ax,100h
+    jz cfEnabled
+;
+    sub bx,1
+    jnz cfWaitEnable
+    jmp cfConnNext
+
+cfEnabled:
     int 3
+
+
+
+
+cfDisable:
+    mov eax,es:[edi]
+    and al,NOT 4
+    mov es:[edi],eax
+;
+    mov bx,10
+
+cfWaitDisable:    
+    mov ax,1
+    call WaitMs
+;
+    mov eax,es:[edi]
+    test al,1
+    jz cfConnNext
+;
+    test al,4
+    jz cfConnNext
+;
+    sub bx,1
+    jnz cfWaitDisable
 
 cfConnNext:
     add edi,4
     sub ecx,1
     jnz cfConnLoop
 
+    
 cfStop:
    call ResetEhci
 
