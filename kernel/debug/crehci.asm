@@ -601,46 +601,6 @@ AddIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AddStatusIn
-;
-;           DESCRIPTION:    Add status in
-;
-;           PARAMETERS:     ES:EDI	Device
-;                           EDX         Prev QTD
-;
-;           RETURNS:        EDX         QTD
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddStatusIn	Proc near
-    push eax
-;
-    mov eax,edx
-    mov edx,ds:mon_usb_linear
-    add edx,OFFSET control_status
-    mov es:[eax].qtd_next,edx
-;    
-    mov es:[edx].qtd_next,1
-    mov es:[edx].qtd_alt,1
-    mov es:[edx].qtd_status,80h
-    mov es:[edx].qtd_size,8000h
-;
-    mov al,0Dh  
-    mov es:[edx].qtd_flags,al
-;
-    mov es:[edx].qtd_page0,0
-    mov es:[edx].qtd_page1,0
-    mov es:[edx].qtd_page2,0
-    mov es:[edx].qtd_page3,0
-    mov es:[edx].qtd_page4,0
-;
-    pop eax
-    ret
-AddStatusIn	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           AddStatusOut
 ;
 ;           DESCRIPTION:    Add status out
@@ -665,7 +625,7 @@ AddStatusOut	Proc near
     mov es:[edx].qtd_status,80h
     mov es:[edx].qtd_size,8000h
 ;
-    mov al,0Ch  
+    mov al,0Dh  
     mov es:[edx].qtd_flags,al
 ;
     mov es:[edx].qtd_page0,0
@@ -677,6 +637,46 @@ AddStatusOut	Proc near
     pop eax
     ret
 AddStatusOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddStatusIn
+;
+;           DESCRIPTION:    Add status in
+;
+;           PARAMETERS:     ES:EDI	Device
+;                           EDX         Prev QTD
+;
+;           RETURNS:        EDX         QTD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatusIn	Proc near
+    push eax
+;
+    mov eax,edx
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET control_status
+    mov es:[eax].qtd_next,edx
+;    
+    mov es:[edx].qtd_next,1
+    mov es:[edx].qtd_alt,1
+    mov es:[edx].qtd_status,80h
+    mov es:[edx].qtd_size,8000h
+;
+    mov al,0Ch  
+    mov es:[edx].qtd_flags,al
+;
+    mov es:[edx].qtd_page0,0
+    mov es:[edx].qtd_page1,0
+    mov es:[edx].qtd_page2,0
+    mov es:[edx].qtd_page3,0
+    mov es:[edx].qtd_page4,0
+;
+    pop eax
+    ret
+AddStatusIn	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -758,7 +758,7 @@ AddressDev	Proc near
     pop edi
 ;
     call AddSetup
-    call AddStatusIn
+    call AddStatusOut
     call RunControl
     call WaitControl
     jc adDone
@@ -800,7 +800,7 @@ GetDescr	Proc near
     add esi,OFFSET descr
     call AddSetup
     call AddIn
-    call AddStatusOut
+    call AddStatusIn
     call RunControl
     call WaitControl
 ;
