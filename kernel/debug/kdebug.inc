@@ -283,6 +283,7 @@ mon_usb_root_port   DD ?
 mon_usb_port        DB ? 
 mon_usb_adr         DB ? 
 mon_usb_ports       DB ?
+mon_hub_power       DB ?
 
 mon_usb_shift       DB ?
 mon_usb_keys        DD ?

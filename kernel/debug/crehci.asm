@@ -110,6 +110,17 @@ ued_interval        DB ?
 
 usb_endpoint_descr  ENDS
 
+usb_hub_descr   STRUC
+
+uhd_len             DB ?
+uhd_type            DB ?
+uhd_ports           DB ?
+uhd_info            DW ?
+uhd_power_time  DB ?
+uhd_current     DB ?
+
+usb_hub_descr   ENDS
+
 qh_struc       STRUC
 
 qh_link         DD ?
@@ -155,8 +166,7 @@ usb_struc	STRUC
 u_per		DB 1024 DUP (?)
 
 root_dev        qtd_struc <>
-hub1_dev        qtd_struc <>
-hub2_dev        qtd_struc <>
+hub_dev         qtd_struc <>
 
 control_setup   DD 8 DUP(?)
 control_data    DD 8 DUP(?)
@@ -454,10 +464,7 @@ CreateControl	Proc near
     je ccRoot
 ;
     cmp al,2
-    je ccHub1
-;
-    cmp al,3
-    je ccHub2
+    je ccHub
 ;
     stc
     jmp ccDone
@@ -497,17 +504,10 @@ ccRoot:
     clc
     jmp ccDone
 
-ccHub1:
+ccHub:
     int 3
     mov edi,ds:mon_usb_linear
-    add edi,OFFSET hub1_dev
-    clc
-    jmp ccDone
-
-ccHub2:
-    int 3
-    mov edi,ds:mon_usb_linear
-    add edi,OFFSET hub2_dev
+    add edi,OFFSET hub_dev
     clc
 
 ccDone:
@@ -842,6 +842,66 @@ ConfigDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetHubDescr
+;
+;           DESCRIPTION:    Get hub descriptor
+;
+;           PARAMETERS:     ES:EDI	Device
+;                           CX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetHubDescr	Proc near    
+    push edi
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,0A0h
+    mov es:[edi].usd_req,GET_DESCR
+    mov es:[edi].usd_value,2900h
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,cx
+    pop edi
+;
+    mov esi,ds:mon_usb_linear
+    add esi,OFFSET descr
+    call AddSetup
+    call AddIn
+    call AddStatusIn
+    call RunControl
+    call WaitControl
+;
+    ret
+GetHubDescr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckHub
+;
+;           DESCRIPTION:    Check hub
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckHub	Proc near    
+    pushad
+;
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET descr
+;
+    mov al,es:[edi].uhd_ports
+    mov ds:mon_usb_ports,al
+;
+    mov al,es:[edi].uhd_power_time
+    mov ds:mon_hub_power,al
+;
+    popad
+    ret
+CheckHub	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CheckFunc
 ;
 ;           DESCRIPTION:    Check function
@@ -1013,47 +1073,40 @@ cfEnabled:
     cmp al,9
     jne cfDisable
 ;
-    push ebx
     push ecx
-    push ebp
-;
     mov cx,8
     mov ax,200h
     call GetDescr
-;
-    pop ebp
     pop ecx
-    pop ebx
     jc cfDisable
 ;
     mov edx,ds:mon_usb_linear
     add edx,OFFSET descr
     mov ax,es:[edx+2]
 ;
-    push ebx
     push ecx
-    push ebp
-;
     mov cx,ax
     mov ax,200h
     call GetDescr
-;
-    pop ebp
     pop ecx
-    pop ebx
+;
     jc cfDisable
 
 cfConfig:
-    int 3
     mov edx,ds:mon_usb_linear
     add edx,OFFSET descr
     mov al,es:[edx].ucd_config_id
     call ConfigDevice
-    int 3
     jc cfDisable
 ;
-
-
+    push ecx
+    mov cx,SIZE usb_hub_descr
+    call GetHubDescr
+    pop ecx
+    jc cfDisable
+;
+    int 3
+    call CheckHub
 
 cfDisable:
     mov eax,es:[edi]
