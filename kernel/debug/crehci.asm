@@ -78,8 +78,57 @@ ued_interval        DB ?
 
 usb_endpoint_descr  ENDS
 
+qh_struc       STRUC
+
+qh_link         DD ?
+qh_adress       DB ?
+qh_endpoint     DB ?
+qh_max_packet   DW ?
+qh_s_mask       DB ?
+qh_c_mask       DB ?
+qh_hub_port     DW ?
+qh_current_qtd  DD ?
+qh_next_qtd     DD ?
+qh_alt_qtd      DD ?
+qh_status       DB ?
+qh_flags        DB ?
+qh_size         DW ?
+qh_page0        DD ?
+qh_page1        DD ?
+qh_page2        DD ?
+qh_page3        DD ?
+qh_page4        DD ?
+qh_space        DB 10h DUP(?)
+
+qh_struc      ENDS
+
+qtd_struc       STRUC
+
+qtd_next        DD ?
+qtd_alt         DD ?
+qtd_status      DB ?
+qtd_flags       DB ?
+qtd_size        DW ?
+qtd_page0       DD ?
+qtd_page1       DD ?
+qtd_page2       DD ?
+qtd_page3       DD ?
+qtd_page4       DD ?
+
+qtd_struc       ENDS
+
+dev_struc       STRUC
+
+d_qh            qh_struc <>
+
+dev_struc       ENDS
+
 usb_struc	STRUC
 
+u_per		DB 1024 DUP (?)
+root_dev        dev_struc <>
+hub1_dev        dev_struc <>
+hub2_dev        dev_struc <>
 
 usb_struc	ENDS
 
@@ -348,7 +397,87 @@ wmLoop:
     popad
     ret
 WaitMs       ENDP
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateControl
+;
+;           DESCRIPTION:    Create control
+;
+;           PARAMETERS:     ES:EDX	Function linear
+;                           AL          Address
+;
+;           RETURNS:        ES:EDI      QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControl	Proc near    
+    cmp al,1
+    je ccRoot
+;
+    cmp al,2
+    je ccHub1
+;
+    cmp al,3
+    je ccHub2
+;
+    stc
+    jmp ccDone
+
+ccRoot:
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET root_dev
+    mov es:[edi].d_qh.qh_link,1
+    mov es:[edi].d_qh.qh_adress,0
+    mov es:[edi].d_qh.qh_endpoint,60h
+    mov es:[edi].d_qh.qh_max_packet,0A008h
+    mov es:[edi].d_qh.qh_s_mask,0
+    mov es:[edi].d_qh.qh_c_mask,0
+    mov es:[edi].d_qh.qh_hub_port,4000h
+    mov es:[edi].d_qh.qh_current_qtd,0
+    mov es:[edi].d_qh.qh_next_qtd,1
+    mov es:[edi].d_qh.qh_alt_qtd,1
+    mov es:[edi].d_qh.qh_status,0
+    mov es:[edi].d_qh.qh_flags,0
+    mov es:[edi].d_qh.qh_size,0
+    mov es:[edi].d_qh.qh_page0,0    
+    mov es:[edi].d_qh.qh_page1,0    
+    mov es:[edi].d_qh.qh_page2,0    
+    mov es:[edi].d_qh.qh_page3,0    
+    mov es:[edi].d_qh.qh_page4,0
+;
+    int 3
+    push edi
+    mov eax,edi
+    mov edi,ds:mon_usb_oper
+    mov es:[edi+18h],eax
+    xor eax,eax
+    mov es:[edi+10h],eax
+    mov eax,es:[edi]
+    or al,20h
+    mov es:[edi],eax
+    pop edi
+    clc
+    jmp ccDone
+
+ccHub1:
+    int 3
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET hub1_dev
+    clc
+    jmp ccDone
+
+ccHub2:
+    int 3
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET hub2_dev
+    clc
+
+ccDone:
+    ret
+CreateControl	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -480,10 +609,8 @@ cfWaitEnable:
     jmp cfConnNext
 
 cfEnabled:
-    int 3
-
-
-
+    mov al,1
+    call CreateControl
 
 cfDisable:
     mov eax,es:[edi]
