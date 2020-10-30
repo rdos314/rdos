@@ -72,6 +72,19 @@ udd_configs	DB ?
 
 usb_device_descr	ENDS
 
+usb_config_descr	STRUC
+
+ucd_len	    		DB ?
+ucd_type	    	DB ?
+ucd_size		    DW ?
+ucd_interface_count	DB ?
+ucd_config_id		DB ?
+ucd_config_str		DB ?
+ucd_attrib  		DB ?
+ucd_power	    	DB ?
+
+usb_config_descr	ENDS
+
 usb_interface_descr  STRUC
 
 uid_len             DB ?
@@ -795,6 +808,38 @@ GetDescr	Proc near
 GetDescr	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigDevice
+;
+;   DESCRIPTION:    Config device
+;
+;   PARAMETERS:     ES:EDI	Device
+;                   AL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice   Proc near
+    push edi
+    mov edi,ds:mon_usb_linear
+    add edi,OFFSET control_msg
+;
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_CONFIG
+    movzx ax,al
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,0
+    pop edi
+;
+    call AddSetup
+    call AddStatusOut
+    call RunControl
+    call WaitControl
+    ret
+ConfigDevice	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           CheckFunc
@@ -962,7 +1007,53 @@ cfEnabled:
     pop ecx
     jc cfDisable
 ;
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET descr
+    mov al,es:[edx].udd_class
+    cmp al,9
+    jne cfDisable
+;
+    push ebx
+    push ecx
+    push ebp
+;
+    mov cx,8
+    mov ax,200h
+    call GetDescr
+;
+    pop ebp
+    pop ecx
+    pop ebx
+    jc cfDisable
+;
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET descr
+    mov ax,es:[edx+2]
+;
+    push ebx
+    push ecx
+    push ebp
+;
+    mov cx,ax
+    mov ax,200h
+    call GetDescr
+;
+    pop ebp
+    pop ecx
+    pop ebx
+    jc cfDisable
+
+cfConfig:
     int 3
+    mov edx,ds:mon_usb_linear
+    add edx,OFFSET descr
+    mov al,es:[edx].ucd_config_id
+    call ConfigDevice
+    int 3
+    jc cfDisable
+;
+
+
 
 cfDisable:
     mov eax,es:[edi]
