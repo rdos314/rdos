@@ -851,7 +851,5 @@ create_phys_bitmap_nr       = 742
 get_net_address_nr          = 743
 
 allocate_2m_physical_32_nr  = 744
-allocate_4m_physical_nr     = 745
-free_4m_physical_nr         = 746
 
 osgate_entries              = 750

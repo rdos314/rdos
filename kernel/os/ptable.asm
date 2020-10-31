@@ -91,6 +91,7 @@ code    SEGMENT byte public use16 'CODE'
     public reserve_page_entries_proc
     public allocate_page_entries_proc
     public allocate_sys_page_entries_proc
+    public allocate_test_page_entries_proc
     public free_page_entries_proc
     public free_global_page_entries_proc
     public copy_page_entries_proc
@@ -132,6 +133,7 @@ create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 allocate_sys_page_entries_proc  DW OFFSET local_allocate_sys_page_entries32
+allocate_test_page_entries_proc DW OFFSET local_allocate_test_page_entries32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
@@ -174,6 +176,7 @@ create_sys_page_dir_p64         DW OFFSET local_create_sys_page_dir64
 reserve_page_entries_p64        DW OFFSET local_reserve_page_entries64
 allocate_page_entries_p64       DW OFFSET local_allocate_page_entries64
 allocate_sys_page_entries_p64   DW OFFSET local_allocate_sys_page_entries64
+allocate_test_page_entries_p64  DW OFFSET local_allocate_test_page_entries64
 free_page_entries_p64           DW OFFSET local_free_page_entries64
 free_global_page_entries_p64    DW OFFSET local_free_global_page_entries64
 copy_page_entries_p64           DW OFFSET local_copy_page_entries64
@@ -1435,6 +1438,86 @@ aspeDone:
     pop eax
     ret
 local_allocate_sys_page_entries32       Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_test_page_entries32
+;
+;           DESCRIPTION:    Allocate test page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_test_page_entries32       Proc near
+    push eax
+    push ebx
+    push esi
+;
+    mov esi,eax
+    shr edx,10
+    shr esi,10
+;    
+    mov bx,sys_page_sel
+    mov ds,bx
+;    
+    xor ebx,ebx
+
+atpeLoop:
+    cmp edx,esi
+    stc
+    je atpeFail
+;
+    inc ebx
+    mov eax,[edx]
+    or eax,eax
+    jz atpeNext
+;    
+    xor ebx,ebx
+    
+atpeNext:
+    add edx,4
+    cmp ecx,ebx
+    jne atpeLoop
+;
+    mov eax,ecx
+    shl eax,2
+    sub edx,eax
+;
+    push edx
+    push ecx
+;    
+    mov eax,2
+    
+atpeMark:
+    mov [edx],eax
+    add edx,4
+    sub ecx,1
+    jnz atpeMark
+;
+    pop ecx
+    pop edx
+;    
+    shl edx,10
+    clc
+    jmp atpeDone
+
+atpeFail:
+    stc
+
+atpeDone:
+    pop esi
+    pop ebx
+    pop eax
+    ret
+local_allocate_test_page_entries32       Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4113,6 +4196,116 @@ aspeDone64:
     pop eax
     ret
 local_allocate_sys_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_test_page_entries64
+;
+;           DESCRIPTION:    Allocate test page entries 
+;
+;           PARAMETERS:     EAX         allocate limit
+;                           ECX         number of entries
+;                           EDX         start linear address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_test_page_entries64       Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    mov esi,eax
+    shr edx,9
+    shr esi,9
+;
+    mov edi,edx
+    shr edi,9
+    and di,0FFF8h
+;    
+    mov bx,sys_page_sel
+    mov ds,bx
+    mov bx,sys_dir_sel
+    mov es,bx
+;    
+    xor ebx,ebx
+
+atpeCheckDir64:
+    mov al,es:[edi]
+    test al,1
+    jz atpeCheckPage64
+;
+    test al,80h
+    je atpeCheckPage64
+;
+    add edi,8
+    mov edx,edi
+    shl edx,9
+    jmp atpeCheckDir64
+
+atpeLoop64:
+    test edx,0FFFh
+    jnz atpeCheckPage64
+;
+    add edi,8
+    jmp atpeCheckDir64
+
+atpeCheckPage64:
+    cmp edx,esi
+    stc
+    je atpeFail64
+;
+    inc ebx
+    mov eax,[edx]
+    or eax,eax
+    jz atpeNext64
+;    
+    xor ebx,ebx
+    
+atpeNext64:
+    add edx,8
+    cmp ecx,ebx
+    jne atpeLoop64
+;
+    mov eax,ecx
+    shl eax,3
+    sub edx,eax
+;
+    push edx
+    push ecx
+;    
+    mov eax,2
+    
+atpeMark64:
+    mov [edx],eax
+    add edx,8
+    sub ecx,1
+    jnz atpeMark64
+;
+    pop ecx
+    pop edx
+;    
+    shl edx,9
+    clc
+    jmp atpeDone64
+
+atpeFail64:
+    stc
+
+atpeDone64:
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+local_allocate_test_page_entries64       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

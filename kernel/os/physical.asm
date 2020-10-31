@@ -503,97 +503,6 @@ a2fbOk:
 a2fbDone:
     ret
 Allocate2MFromBitmap  Endp    
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           Allocate4MFromBitmap
-;
-;       DESCRIPTION:    Try to allocate 4M from bitmap
-;
-;       PARAMETERS:     EBX     Position
-;                       EDX     Max postion
-;                       SI      Header offset
-;                       EDI     Bitmap offset
-;
-;       RETURNS:        EBX     New position
-;                       ECX     Allocated bit
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Allocate4MFromBitmap  Proc near
-
-a4fbLoop:
-    cmp ebx,edx
-    jae a4fbFail
-;    
-    push ebx
-    mov cx,32
-    mov eax,-1
-    add ebx,edi
-
-a4fbCheckLoop:
-    and eax,ds:[ebx]
-    add ebx,4
-    loop a4fbCheckLoop
-;
-    pop ebx
-    cmp eax,-1
-    jnz a4fbNext
-;
-    push ebx
-    mov cx,32
-    add ebx,edi
-
-a4fbTakeLoop:
-    xor eax,eax
-    xchg eax,ds:[ebx]
-    cmp eax,-1
-    jne a4fbRevert
-;
-    add ebx,4
-    loop a4fbTakeLoop
-;
-    pop ebx
-    mov ecx,ebx
-    shl ecx,3
-;
-    mov ax,si
-    sub ax,phys_header_start
-    movzx eax,ax
-    shl eax,13
-    add ecx,eax
-    jmp a4fbOk
-
-a4fbRevert:
-    lock or ds:[ebx],eax
-    cmp cx,32
-    je a4fbRevertDone
-;
-    sub ebx,4
-    inc cx
-    mov eax,-1
-    jmp a4fbRevert
-
-a4fbRevertDone:
-    pop ebx
-
-a4fbNext:
-    add ebx,128
-    jmp a4fbLoop
-
-a4fbFail:
-    xor bx,bx
-    stc
-    jmp a4fbDone
-
-a4fbOk:
-    lock sub ds:[si].phys_bitmap_free,1024
-    clc
-
-a4fbDone:
-    ret
-Allocate4MFromBitmap  Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1128,83 +1037,6 @@ allocate_2m_physical32   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Allocate4MPhysical
-;
-;           DESCRIPTION:    Allocate physical 4M page
-;
-;           RETURNS:        EBX:EAX         Address
-;                                                   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_4m_physical_name      DB 'Allocate 4M Physical',0
-
-allocate_4m_physical   PROC far
-    push ds
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov ax,phys_bit_sel
-    mov ds,ax
-;
-    mov bp,ds:phys_bitmap_count
-    sub bp,1
-    jc a4pDone
-    stc
-    jz a4pDone
-;    
-    cmp bp,31
-    jbe a4pStart
-;
-    mov bp,31
-
-a4pStart:
-    mov si,4 + phys_header_start
-    mov edi,4096 + phys_bitmap_start
-
-a4pLoop:
-    mov ax,ds:[si].phys_bitmap_free
-    cmp ax,1024
-    jb a4pNext
-;
-    movzx ebx,ds:[si].phys_bitmap_pos
-    and bl,0C0h
-    mov edx,1000h
-    call Allocate4MFromBitmap
-    jnc a4pOk
-
-a4pNext:
-    add si,4
-    add edi,4096
-    sub bp,1
-    jnz a4pLoop
-
-a4pFail:
-    stc
-    jmp a4pDone
-
-a4pOk:
-    mov eax,ecx
-    mov ebx,ecx
-    shl eax,12
-    shr ebx,20
-    clc
-
-a4pDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ds
-    retf32
-allocate_4m_physical   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LocalFreePhysical
 ;
 ;           DESCRIPTION:    Free physical page
@@ -1365,74 +1197,6 @@ f2pDo:
     pop ds
     retf32
 free_2m_physical   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Free4MPhysical
-;
-;           DESCRIPTION:    Free physical 4M page
-;
-;           PARAMETERS:     EBX:EAX         Address
-;                           
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-free_4m_physical_name      DB 'Free 4M Physical',0
-
-free_4m_physical  PROC far
-    push ds
-    push es
-    push fs
-    push eax
-    push ebx
-    push ecx
-    push esi
-    push edi
-;
-    mov cx,phys_bit_sel
-    mov ds,cx
-    mov es,cx    
-;
-    mov ecx,ebx
-    shl ecx,20
-    mov esi,eax
-    shr esi,12
-    add ecx,esi
-    mov ebx,ecx
-    shr ebx,15
-    and ecx,7FFFh
-;
-    cmp bx,ds:phys_bitmap_count
-    jb f4pDo
-;
-    int 3
-
-f4pDo:
-    mov edi,ebx
-    shl edi,12
-    add edi,phys_bitmap_start
-    shr ecx,3
-    add edi,ecx
-    mov eax,-1
-    mov ecx,32
-    rep stos dword ptr es:[edi]
-;
-    shl ebx,2
-    add ebx,phys_header_start
-    lock add ds:[ebx].phys_bitmap_free,1024
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
-    pop fs
-    pop es
-    pop ds
-    retf32
-free_4m_physical   ENDP
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2525,22 +2289,10 @@ init_physical_gates     PROC near
     mov ax,allocate_2m_physical_32_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_4m_physical
-    mov edi,OFFSET allocate_4m_physical_name
-    xor cl,cl
-    mov ax,allocate_4m_physical_nr
-    RegisterOsGate
-;
     mov esi,OFFSET free_2m_physical
     mov edi,OFFSET free_2m_physical_name
     xor cl,cl
     mov ax,free_2m_physical_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_4m_physical
-    mov edi,OFFSET free_4m_physical_name
-    xor cl,cl
-    mov ax,free_4m_physical_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_multiple_physical32

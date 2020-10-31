@@ -114,6 +114,8 @@ long_mem_seg   ENDS
     extrn free_page_entries_proc:word
     extrn free_global_page_entries_proc:word
 
+    extrn allocate_test_page_entries_proc:word
+
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -498,6 +500,15 @@ init_mem    PROC near
     xor dx,dx
     mov ax,resize_flat_linear_nr
     RegisterBimodalUserGate
+
+
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+
 ;
     pop ds
     popa
@@ -3909,6 +3920,29 @@ write_thread64_done:
     retf32
 write_thread64   ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_name    DB 'Test',0
+
+test_pr:
+    int 3
+;
+    mov dx,mem_sel
+    mov ds,dx
+    mov es,dx
+;    
+    mov edx,global_page_size
+    sub edx,es:big_avail_mem
+    add edx,global_page_linear
+;
+    mov ecx,10h
+    mov eax,global_page_linear + global_page_size
+    call cs:allocate_test_page_entries_proc
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
