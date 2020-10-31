@@ -35,9 +35,9 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\core.inc
 
-control_bar	STRUC
+control_bar     STRUC
 
-cb_adc_control	  DB ?          ; 0
+cb_adc_control    DB ?          ; 0
 cd_resv1          DB ?,?,?
 cb_spi_clk        DD ?          ; 1
 cb_spi_adc        DD ?          ; 2
@@ -48,11 +48,11 @@ cb_adc_index      DW ?
 cb_adc_phase_incr DD ?          ; 5
 cb_adc_window     DB ?,?,?,?    ; 6
 
-control_bar	ENDS
+control_bar     ENDS
 
 data    SEGMENT byte public 'DATA'
 
-board_linear	DD ?
+board_linear    DD ?
 
 adc_buf_sel     DW ?
 adc_index       DW ?
@@ -61,7 +61,7 @@ adc_pages       DW ?
 start_thread    DW ?
 
 
-data	ENDS
+data    ENDS
 
 IFDEF __WASM__
     .686p
@@ -85,7 +85,7 @@ code    SEGMENT byte public 'CODE'
 
 AdcBarInt Proc far
     ret
-AdcBarInt	Endp
+AdcBarInt       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -101,7 +101,7 @@ AdcBlockInt Proc far
     mov ds,ebx
     inc ds:adc_index
     ret
-AdcBlockInt	Endp
+AdcBlockInt     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -111,12 +111,12 @@ AdcBlockInt	Endp
 ;       DESCRIPTION:    Write SPI byte
 ;
 ;       PARAMETERS:     DS:BX   SPI function
-;			DX      Register
+;                       DX      Register
 ;                       AL      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteSpiByte	Proc near
+WriteSpiByte    Proc near
     push edx
     or dh,10h
     shl edx,16
@@ -124,7 +124,7 @@ WriteSpiByte	Proc near
     mov ds:[bx],edx
     pop edx
     ret    
-WriteSpiByte	Endp   
+WriteSpiByte    Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -134,12 +134,12 @@ WriteSpiByte	Endp
 ;       DESCRIPTION:    Write SPI word
 ;
 ;       PARAMETERS:     DS:BX   SPI function
-;			DX      Register
+;                       DX      Register
 ;                       AX      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteSpiWord	Proc near
+WriteSpiWord    Proc near
     push edx
     or dh,20h
     shl edx,16
@@ -147,7 +147,7 @@ WriteSpiWord	Proc near
     mov ds:[bx],edx
     pop edx
     ret    
-WriteSpiWord	Endp   
+WriteSpiWord    Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -157,13 +157,13 @@ WriteSpiWord	Endp
 ;       DESCRIPTION:    Read SPI word
 ;
 ;       PARAMETERS:     DS:BX   SPI function
-;			DX      Register
+;                       DX      Register
 ;
 ;       RETURNS:        AX      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadSpiWord	Proc near
+ReadSpiWord     Proc near
     mov ax,dx
     or ah,0C0h
     mov ds:[bx+2],ax
@@ -175,7 +175,7 @@ rswWait:
 ;
     mov ax,ds:[bx]
     ret    
-ReadSpiWord	Endp   
+ReadSpiWord     Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -188,7 +188,7 @@ ReadSpiWord	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitControlBar	proc near
+InitControlBar  proc near
     pushad
 ;
     mov cl,PCI_nbr_base_address0
@@ -217,7 +217,7 @@ InitControlBar	proc near
 icbDone:
     popad
     ret
-InitControlBar	Endp
+InitControlBar  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -230,7 +230,7 @@ InitControlBar	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitAdcBar	proc near
+InitAdcBar      proc near
     pushad
 ;
     mov cl,PCI_nbr_base_address1
@@ -260,7 +260,7 @@ iabLoop:
 iabDone:
     popad
     ret
-InitAdcBar	Endp
+InitAdcBar      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -272,7 +272,7 @@ InitAdcBar	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitClk	proc near
+InitClk proc near
     mov bx,anio_control_sel
     mov ds,ebx
     mov bx,OFFSET cb_spi_clk
@@ -443,7 +443,7 @@ InitClk	proc near
     call WriteSpiByte
 ;
     ret
-InitClk	Endp
+InitClk Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -454,7 +454,7 @@ InitClk	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitAdc	proc near
+InitAdc proc near
     mov bx,anio_control_sel
     mov ds,ebx
     mov bx,OFFSET cb_spi_adc
@@ -549,7 +549,7 @@ InitAdc	proc near
     call WriteSpiByte
 ;
     ret
-InitAdc	Endp
+InitAdc Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -629,13 +629,13 @@ InitPciAdapter   Endp
 ;
 ;       DESCRIPTION:    Setup ADC
 ;
-;       PARAMETERS:     AL	Test mode
+;       PARAMETERS:     AL      Test mode
 ;                       AH      Speed
 ;                       ECX     2M buffer pages
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_adc_name	DB 'Setup ADC', 0
+setup_adc_name  DB 'Setup ADC', 0
 
 setup_adc  Proc far
     push ds
@@ -672,7 +672,7 @@ setup_adc  Proc far
     WaitMilliSec
 
 setup_adc_phys_loop:
-    AllocatePhysicalDir
+    Allocate2MPhysical64
     mov ds:[edi],eax
     mov ds:[edi+4],ebx
     mov es:[edi],eax
@@ -702,7 +702,7 @@ setup_adc  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-adc_thread_name	DB 'ADC', 0
+adc_thread_name DB 'ADC', 0
 
 adc_thread:
     mov ax,SEG data
@@ -729,12 +729,12 @@ adc_loop:
 ;
 ;       DESCRIPTION:    Set ADC trigger
 ;
-;       PARAMETERS:     EAX	Phase incr
+;       PARAMETERS:     EAX     Phase incr
 ;                       CL      Window bits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_adc_trigger_name	DB 'Set ADC Trigger', 0
+set_adc_trigger_name    DB 'Set ADC Trigger', 0
 
 set_adc_trigger  Proc far
     push ds
@@ -748,7 +748,7 @@ set_adc_trigger  Proc far
     pop ebx
     pop ds
     ret
-set_adc_trigger	Endp
+set_adc_trigger Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -757,11 +757,11 @@ set_adc_trigger	Endp
 ;
 ;       DESCRIPTION:    Start ADC
 ;
-;       RETURNS:        NC	OK
+;       RETURNS:        NC      OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_adc_name	DB 'Start ADC', 0
+start_adc_name  DB 'Start ADC', 0
 
 start_adc  Proc far
     push ds
@@ -813,7 +813,7 @@ start_adc  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_adc_name	DB 'Stop ADC', 0
+stop_adc_name   DB 'Stop ADC', 0
 
 stop_adc  Proc far
     push ds
@@ -840,7 +840,7 @@ stop_adc  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-map_adc_block_name	DB 'Map ADC Block', 0
+map_adc_block_name      DB 'Map ADC Block', 0
 
 map_adc_block  Proc far
     push ds

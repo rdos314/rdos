@@ -22,14 +22,5 @@
 ##########################################################################*/
 void main()
 {
-    int x, y;
-
-    for (;;)
-    {    
-        RdosGetMousePosition(&x, &y);
-        printf("x: %d, y: %d\r\n", x, y);
-        RdosWaitMilli(250);
-    }
-
     RdosTestGate("");
 }

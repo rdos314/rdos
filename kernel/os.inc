@@ -992,13 +992,28 @@ FreePhysical    MACRO
                     ENDM
 
 ; OUT EBX:EAX       Physical base address
-AllocatePhysicalDir    MACRO
-    OsGate allocate_physical_dir_nr
+Allocate2MPhysical64    MACRO
+    OsGate allocate_2m_physical_64_nr
+                    ENDM
+
+; OUT EBX:EAX       Physical base address
+Allocate2MPhysical32    MACRO
+    OsGate allocate_2m_physical_32_nr
+                    ENDM
+
+; OUT EBX:EAX       Physical base address
+Allocate4MPhysical    MACRO
+    OsGate allocate_4m_physical_nr
                     ENDM
 
 ; IN  EBX:EAX       Physical base address
-FreePhysicalDir    MACRO
-    OsGate free_physical_dir_nr
+Free2MPhysical    MACRO
+    OsGate free_2m_physical_nr
+                    ENDM
+
+; IN  EBX:EAX       Physical base address
+Free4MPhysical    MACRO
+    OsGate free_4m_physical_nr
                     ENDM
 
 ; OUT EBX:EAX       Highest physical address
