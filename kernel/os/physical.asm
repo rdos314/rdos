@@ -2445,18 +2445,6 @@ init_phys_done:
     ret
 init_physical   ENDP
 
-test_name	DB 'Test', 0
-
-test_pr:
-    int 3
-    Allocate2mPhysical32
-;
-    int 3
-    Allocate2mPhysical64
-;
-    int 3
-    Allocate4mPhysical
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2572,12 +2560,6 @@ init_physical_gates     PROC near
     xor cl,cl
     mov ax,get_highest_physical_nr
     RegisterOsGate
-;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterUserGate32
 ;    
     pop ds
     popa
