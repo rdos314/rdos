@@ -3938,8 +3938,11 @@ test_pr:
     mov cx,flat_sel
     mov ds,cx
     mov eax,ds:[edx]
-    int 3    
+    CrashGate
+    inc edx
     mov eax,ds:[edx]
+    inc eax
+    mov ds:[edx],eax
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

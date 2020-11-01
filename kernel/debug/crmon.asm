@@ -342,6 +342,16 @@ mrlPae:
     test al,1
     jz mrlFail
 ;
+    test al,80h
+    jz mrlNot2M
+;
+    mov ebx,edx
+    and ebx,1FF000h
+    or eax,ebx
+    and al,NOT 80h
+    jmp mrlMapFinal
+
+mrlNot2M:
     mov ebx,es:[esi+4]
     call MapPhysical
 ;
@@ -352,7 +362,8 @@ mrlPae:
     mov eax,es:[esi]
     test al,1
     jz mrlFail
-;
+
+mrlMapFinal:
     mov ebx,es:[esi+4]
     call MapPhysical
 ;    
@@ -541,6 +552,16 @@ mwlPae:
     test al,2
     jz mwlFail
 ;
+    test al,80h
+    jz mwlNot2M
+;
+    mov ebx,edx
+    and ebx,1FF000h
+    or eax,ebx
+    and al,NOT 80h
+    jmp mwlMapFinal
+
+mwlNot2M:
     mov ebx,es:[esi+4]
     call MapPhysical
 ;
@@ -554,7 +575,8 @@ mwlPae:
 ;
     test al,2
     jz mwlFail
-;
+
+mwlMapFinal:
     mov ebx,es:[esi+4]
     call MapPhysical
 ;    
