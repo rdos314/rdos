@@ -114,8 +114,6 @@ long_mem_seg   ENDS
     extrn free_page_entries_proc:word
     extrn free_global_page_entries_proc:word
 
-    extrn allocate_test_page_entries_proc:word
-
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -3940,9 +3938,8 @@ test_pr:
     sub edx,es:big_avail_mem
     add edx,global_page_linear
 ;
-    mov ecx,10h
+    mov ecx,200h
     mov eax,global_page_linear + global_page_size
-    call cs:allocate_test_page_entries_proc
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
