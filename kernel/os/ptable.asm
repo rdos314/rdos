@@ -91,6 +91,7 @@ code    SEGMENT byte public use16 'CODE'
     public reserve_page_entries_proc
     public allocate_page_entries_proc
     public allocate_sys_page_entries_proc
+    public allocate_and_map_sys_dir_proc
     public free_page_entries_proc
     public free_global_page_entries_proc
     public copy_page_entries_proc
@@ -132,6 +133,7 @@ create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 allocate_sys_page_entries_proc  DW OFFSET local_allocate_sys_page_entries32
+allocate_and_map_sys_dir_proc   DW OFFSET local_allocate_and_map_sys_dir32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
@@ -174,6 +176,7 @@ create_sys_page_dir_p64         DW OFFSET local_create_sys_page_dir64
 reserve_page_entries_p64        DW OFFSET local_reserve_page_entries64
 allocate_page_entries_p64       DW OFFSET local_allocate_page_entries64
 allocate_sys_page_entries_p64   DW OFFSET local_allocate_sys_page_entries64
+allocate_and_map_sys_dir_p64    DW OFFSET local_allocate_and_map_sys_dir64
 free_page_entries_p64           DW OFFSET local_free_page_entries64
 free_global_page_entries_p64    DW OFFSET local_free_global_page_entries64
 copy_page_entries_p64           DW OFFSET local_copy_page_entries64
@@ -1435,6 +1438,26 @@ aspeDone:
     pop eax
     ret
 local_allocate_sys_page_entries32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_and_map_sys_dir32
+;
+;           DESCRIPTION:    Allocate and map sys dir
+;
+;           PARAMETERS:     ECX         allocate limit
+;                           EDX         start linear address
+;                           EBX:EAX     physical address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_and_map_sys_dir32       Proc near
+    stc
+    ret
+local_allocate_and_map_sys_dir32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4082,6 +4105,7 @@ aspeCheckDir64:
     test al,80h
     je aspeCheckPage64
 ;
+    xor ebx,ebx
     add edi,8
     mov edx,edi
     shl edx,9
@@ -4145,6 +4169,62 @@ aspeDone64:
     pop ds
     ret
 local_allocate_sys_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_allocate_and_map_sys_dir64
+;
+;           DESCRIPTION:    Allocate and map sys dir
+;
+;           PARAMETERS:     ECX         allocate limit
+;                           EDX         start linear address
+;                           EBX:EAX     physical address
+;
+;           RETURNS:        EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_allocate_and_map_sys_dir64       Proc near
+    push ds
+    push eax
+    push ecx
+;
+    push ax
+    mov ax,sys_dir_sel
+    mov ds,ax
+    pop ax
+;
+    shr edx,18
+    and dx,0FFF8h
+    shr ecx,18
+    and cx,0FFF8h
+
+aamsdLoop:
+    cmp edx,ecx
+    stc
+    je aamsdDone
+;
+    mov al,ds:[edx]
+    test al,1
+    jz aamsdFound
+;
+    add edx,8
+    jmp aamsdLoop
+
+aamsdFound:
+    mov al,93h
+    mov ds:[edx],eax
+    mov ds:[edx+4],ebx
+    shl edx,18
+    clc
+
+aamsdDone:
+    pop ecx
+    pop eax
+    pop ds
+    ret
+local_allocate_and_map_sys_dir64       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

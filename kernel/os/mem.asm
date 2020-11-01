@@ -113,6 +113,7 @@ long_mem_seg   ENDS
     extrn allocate_sys_page_entries_proc:word
     extrn free_page_entries_proc:word
     extrn free_global_page_entries_proc:word
+    extrn allocate_and_map_sys_dir_proc:word
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -3929,18 +3930,18 @@ test_name    DB 'Test',0
 
 test_pr:
     int 3
-;
-    mov dx,mem_sel
-    mov ds,dx
-    mov es,dx
 ;    
-    mov edx,global_page_size
-    sub edx,es:big_avail_mem
-    add edx,global_page_linear
+    Allocate2MPhysical64
 ;
-    mov ecx,200h
-    mov eax,global_page_linear + global_page_size
- 
+    mov edx,global_page_linear
+    mov ecx,global_page_linear + global_page_size
+    call cs:allocate_and_map_sys_dir_proc
+;
+    mov cx,flat_sel
+    mov ds,cx
+    mov eax,ds:[edx]
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
