@@ -4681,13 +4681,15 @@ local_get_thread_page_entry64    Proc near
     push edx
     push esi
     push edi
+    push ebp
 ;    
     and dx,0F000h
     mov es,bp
+    mov ebp,edx
     mov ax,system_data_sel
     mov ds,ax
     RequestSpinlock ds:page_spinlock
-;    
+;
     mov ax,es
     or ax,ax
     stc
@@ -4785,6 +4787,15 @@ gtpBaseOk:
     test al,1
     jz get_thread_page_fail64
 ;
+    test al,80h
+    jz get_thread_page_not_2m_64
+;
+    and ebp,01FF000h
+    or eax,ebp
+    and al,NOT 80h
+    jmp get_thread_page_done64
+    
+get_thread_page_not_2m_64:
     mov ax,flat_sel
     mov ds,ax
     mov eax,[edx]
@@ -4800,6 +4811,7 @@ get_thread_page_done64:
     mov ds,dx
     ReleaseSpinlock ds:page_spinlock
 ;
+    pop ebp
     pop edi
     pop esi
     pop edx

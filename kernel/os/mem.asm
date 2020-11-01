@@ -3929,8 +3929,6 @@ write_thread64   ENDP
 test_name    DB 'Test',0
 
 test_pr:
-    int 3
-;    
     Allocate2MPhysical64
 ;
     mov edx,global_page_linear
@@ -3939,6 +3937,8 @@ test_pr:
 ;
     mov cx,flat_sel
     mov ds,cx
+    mov eax,ds:[edx]
+    int 3    
     mov eax,ds:[edx]
 
 
