@@ -3931,6 +3931,7 @@ test_name    DB 'Test',0
 test_pr:
     Allocate2MPhysical64
 ;
+    int 3
     mov edx,global_page_linear
     mov ecx,global_page_linear + global_page_size
     call cs:allocate_and_map_sys_dir_proc

@@ -1455,7 +1455,45 @@ local_allocate_sys_page_entries32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_allocate_and_map_sys_dir32       Proc near
+    or ebx,ebx
     stc
+    jnz aamsdDone32
+;
+    push eax
+    push ecx
+    mov eax,ecx
+    mov ecx,512
+    call local_allocate_sys_page_entries32
+    pop ecx
+    pop eax
+    jc aamsdDone32
+;
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    and ax,0F000h
+    mov al,13h
+;
+    mov cx,sys_page_sel
+    mov ds,cx
+    shr edx,10
+    mov ecx,512
+
+aamsdLoop32:
+    mov [edx],eax
+    add edx,4
+    add eax,1000h
+    loop aamsdLoop32
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    clc
+
+aamsdDone32:
     ret
 local_allocate_and_map_sys_dir32       Endp
 
