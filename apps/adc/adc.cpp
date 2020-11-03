@@ -1672,14 +1672,69 @@ bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
         delete file;
         file = 0;
 
-        for (i = 0; i < Intervals; i++)
-            delete AdcAna[i];
-
-        delete AdcAna;
-        AdcAna = 0;
-
         return true;
     }
     else
         return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::GetMaxPeriodic
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::GetMaxPeriodic()
+{
+    TAdcAna *ana;
+    int i;
+    int j;
+    double MaxCount = 0.0;
+    double MaxPower = 0.0;
+    int MaxIndex = 0;
+    int SumA;
+    int SumB;
+    int count;
+    double dcount;
+    double dpow;
+
+    for (i = 0; i < FreqCount; i++)
+    {
+        count = 0;
+        SumA = 0;
+        SumB = 0;
+
+        for (j = 0; j < Intervals; j++)
+        {
+            ana = AdcAna[j];
+            count += ana->Count[i];
+            SumA += ana->SumA[i];
+            SumB += ana->SumA[i];
+        }
+
+        dcount = (double)count / (double)ana->Total[i];
+        dpow = sqrt((double)SumA * (double)SumA + (double)SumB * (double)SumB) / (double)count;
+
+        if (dcount > MaxCount)
+        {
+            MaxPower = dpow;
+            MaxCount = dcount;
+            MaxIndex = i;
+        }
+        else
+        {
+            if (dcount == MaxCount && dpow > MaxPower)
+            {
+                MaxPower = dpow;
+                MaxCount = dcount;
+                MaxIndex = i;
+            }
+        }
+    }
+    return MaxIndex;
 }

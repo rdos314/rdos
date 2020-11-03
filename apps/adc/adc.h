@@ -62,6 +62,8 @@ public:
     void SetTrigger(int PhaseIncr, int Window);
     void Check();
 
+    int GetMaxPeriodic();
+
     static int GetSin(int Phase);
     static void CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB);
     static void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay);

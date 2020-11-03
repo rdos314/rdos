@@ -54,12 +54,13 @@ int main(int argc, char **argv)
     char str[80];
     int *parm;
     int hour;
+    int Max;
     TDateTime curr;
 
     double SampleFreq = 600.0;
     TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 250);
 
-    TAdc Adc(0x0, 30000, &Freq);
+    TAdc Adc(0x0, 300, &Freq);
 
     if (argc == 2)
     {
@@ -73,7 +74,15 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    Adc.RunAdc(100, 22, 10, "res.txt");
+// remove 107.0
+
+    Adc.RunAdc(10, 22, 10, "res.txt");
+
+    Max =  Adc.GetMaxPeriodic();
+    Freq.CodeFreq(Max, str);
+
+    RdosWriteString("Max: ");
+    RdosWriteString(str);
 
     for (;;)
         RdosWaitMilli(100);
