@@ -454,7 +454,9 @@ update_mouse    PROC far
     push bx
     GetFocusConsole
     mov ds,ebx
+    or bx,bx
     pop bx
+    jz update_mouse_done
 ;
     inc ds:c_m_counter
     mov ax,ds:c_m_notify_thread
