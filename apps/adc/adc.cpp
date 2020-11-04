@@ -1657,9 +1657,6 @@ bool TAdc::RunAdc()
     {
         RdosWriteString("ADC started\r\n");
 
-        for (i = 0; i < Intervals; i++)
-            AdcAna[i] = new TAdcAna(AnaSize, Freq);
-
         for (i = 0; i < FBlocks; i++)
             data = GetBlock(i);
 
@@ -1694,6 +1691,9 @@ void TAdc::RunAna(int iv, int tc, int min, const char *ResultFile)
     AnaSize = FBlocks / Intervals;
 
     AdcAna = new TAdcAna*[Intervals];
+
+    for (i = 0; i < Intervals; i++)
+        AdcAna[i] = new TAdcAna(AnaSize, Freq);
 
     Min = min;
     Threads = tc;
