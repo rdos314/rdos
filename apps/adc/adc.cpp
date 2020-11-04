@@ -1639,29 +1639,23 @@ void TAdc::Execute()
 
 /*##########################################################################
 #
-#   Name       : TAdc::StartAdc
+#   Name       : TAdc::RunAdc
 #
-#   Purpose....: Start ADC
+#   Purpose....: Run ADC
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::StartAdc(int iv)
+bool TAdc::RunAdc()
 {
     int i;
     TAdcData *data;
-    char str[100];
 
     if (RdosStartAdc())
     {
         RdosWriteString("ADC started\r\n");
-
-        Intervals = iv;
-        AnaSize = FBlocks / Intervals;
-
-        AdcAna = new TAdcAna*[Intervals];
 
         for (i = 0; i < Intervals; i++)
             AdcAna[i] = new TAdcAna(AnaSize, Freq);
@@ -1678,16 +1672,16 @@ bool TAdc::StartAdc(int iv)
 
 /*##########################################################################
 #
-#   Name       : TAdc::RunAdc
+#   Name       : TAdc::RunAna
 #
-#   Purpose....: Run ADC
+#   Purpose....: Run analysis
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::RunAdc(int tc, int min, const char *ResultFile)
+void TAdc::RunAna(int iv, int tc, int min, const char *ResultFile)
 {
     int i;
     int CurrInt;
@@ -1695,6 +1689,11 @@ void TAdc::RunAdc(int tc, int min, const char *ResultFile)
     int CurrPos;
     TAdcAna *ana;
     char str[100];
+
+    Intervals = iv;
+    AnaSize = FBlocks / Intervals;
+
+    AdcAna = new TAdcAna*[Intervals];
 
     Min = min;
     Threads = tc;
@@ -1746,6 +1745,31 @@ void TAdc::RunAdc(int tc, int min, const char *ResultFile)
     PrintResult();
     delete file;
     file = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CleanupAna
+#
+#   Purpose....: Cleanup analysis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CleanupAna()
+{
+    int i;
+
+    if (AdcAna)
+    {
+        for (i = 0; i < Intervals; i++)
+            delete AdcAna[i];
+
+        delete AdcAna;
+        AdcAna = 0;
+    }
 }
 
 /*##########################################################################
