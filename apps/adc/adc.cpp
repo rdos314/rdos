@@ -1657,6 +1657,13 @@ bool TAdc::RunAdc()
     {
         RdosWriteString("ADC started\r\n");
 
+        file = new TFile("raw.dat", 0);
+        data = GetBlock(0);
+
+        for (i = 0; i < 0x80000; i++)
+            file->Write(&data[i], sizeof(TAdcData));
+        delete file;
+
         for (i = 0; i < FBlocks; i++)
             data = GetBlock(i);
 
