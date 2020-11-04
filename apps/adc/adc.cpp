@@ -63,7 +63,7 @@ int GetSin(int Phase);
 void CalcPower(TAdcData *Data, int Size, struct TAdcPower *Res);
 #pragma aux (ANAAPI) CalcPower;
 
-void CalcFreqPower(TAdcData *Data, int Size, int RelFreq, struct TAdcFreqPower *Res);
+void CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, struct TAdcFreqPower *Res);
 #pragma aux (ANAAPI) CalcFreqPower;
 
 };
@@ -494,7 +494,7 @@ void TAdc::CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int *PowerB, int *Delay)
+void TAdc::CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *PowerA, int *PowerB, int *Delay)
 {
     struct TAdcFreqPower res;
     long long val;
@@ -504,7 +504,7 @@ void TAdc::CalcFreqPower(TAdcData *Data, int Size, int RelFreq, int *PowerA, int
     double phaseA;
     double phaseB;
 
-    ::CalcFreqPower(Data, Size, RelFreq, &res);
+    ::CalcFreqPower(Data, Size, InitPhase, PhaseIncr, &res);
 
     res.SinA = res.SinA / Size / 0x2000;
     res.SinB = res.SinB / Size / 0x2000;

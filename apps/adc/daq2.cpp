@@ -39,18 +39,6 @@
 #include "adc.h"
 
 
-#pragma aux ANAAPI "_*" \
-       parm routine [] \
-       value struct float struct routine [eax] \
-       modify [eax ecx edx];
-
-extern "C" {
-
-int GetSin32(int Phase);
-#pragma aux (ANAAPI) GetSin32;
-}
-
-
 /*##########################################################################
 #
 #   Name       : main
@@ -69,21 +57,6 @@ int main(int argc, char **argv)
     int hour;
     int Max;
     TDateTime curr;
-
-    int i;
-    int val;
-
-    for (i = 0x4000; i < 0x40000000; i++)
-    {
-        val = GetSin32(i);
-        sprintf(str, "%d\r\n", val);
-        RdosWriteString(str);
-    }
-
-    for (;;)
-        RdosWaitMilli(100);
-      
-
 
     double SampleFreq = 600.0;
     TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 250);

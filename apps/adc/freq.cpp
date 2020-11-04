@@ -46,6 +46,8 @@
 TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
 {
     int diff;
+    long long lval;
+    double freq;
     double dval;
 
     if (Freq)
@@ -60,8 +62,15 @@ TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
 
     if (UsedSamples)
     {
-        dval = Freq / SampleFreq * 0x40000;
-        Step = (int)(dval + 0.5);
+        freq = 1000000.0 * Freq;
+        lval = (long long)freq;
+        lval = lval * (long long)0x10000;
+        lval = lval * (long long)0x10000;
+
+        freq = 1000000.0 * SampleFreq;
+        lval = lval / (long long)freq;
+
+        Step = (int)lval;
 
         Count = 0x80000 / UsedSamples;
         diff = 0x80000 - UsedSamples * Count;

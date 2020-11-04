@@ -198,7 +198,7 @@ void TAdcThread::Execute()
 
                     for (k = 0; k < fd->Count; k++)
                     {
-                        TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, fd->Step , &PowerA, &PowerB, &Phase);
+                        TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, 0, fd->Step , &PowerA, &PowerB, &Phase);
 
                         if (PowerA >= Adc->Min && PowerB >= Adc->Min)
                         {

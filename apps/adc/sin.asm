@@ -16441,29 +16441,6 @@ sin_tab:
  dw 0FFDAh, 0FFDBh, 0FFDCh, 0FFDDh, 0FFDDh, 0FFDEh, 0FFDFh, 0FFE0h, 0FFE1h, 0FFE1h, 0FFE2h, 0FFE3h, 0FFE4h, 0FFE5h, 0FFE5h, 0FFE6h
  dw 0FFE7h, 0FFE8h, 0FFE8h, 0FFE9h, 0FFEAh, 0FFEBh, 0FFECh, 0FFECh, 0FFEDh, 0FFEEh, 0FFEFh, 0FFF0h, 0FFF0h, 0FFF1h, 0FFF2h, 0FFF3h
  dw 0FFF3h, 0FFF4h, 0FFF5h, 0FFF6h, 0FFF7h, 0FFF7h, 0FFF8h, 0FFF9h, 0FFFAh, 0FFFBh, 0FFFBh, 0FFFCh, 0FFFDh, 0FFFEh, 0FFFEh, 0FFFFh
- dw 0
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetSin
-;
-;       DESCRIPTION:    Get sin value from 18-bit phase
-;
-;       PARAMETERS:     Phase
-;
-;       RETURNS:        Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public _GetSin
-
-_GetSin  Proc near
-    mov eax,[esp+4]
-    and eax,3FFFFh
-    movsx eax,word ptr [2*eax].sin_tab
-    ret 4
-_GetSin    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -16478,26 +16455,27 @@ _GetSin    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public _GetSin32
+    public _GetSin
 
-_GetSin32  Proc near
+_GetSin  Proc near
     mov eax,[esp+4]
     shr eax,13
     and al,0FEh
-    movsx eax,word ptr [2*ebx].sin_tab
+    movsx eax,word ptr [eax].sin_tab
     ret 4
-_GetSin32    Endp
+_GetSin    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           CalcFreqPower
 ;
-;       DESCRIPTION:    Calc power at a given frequency
+;       DESCRIPTION:    Calc power at a given frequency using 32-bit frequency
 ;
 ;       PARAMETERS:     Data
 ;                       Size
-;                       RelFreq
+;                       InitPhase
+;                       PhaseIncr
 ;                       Res
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -16509,9 +16487,8 @@ _CalcFreqPower  Proc near
 ;
     mov esi,[esp+24h]
     mov ecx,[esp+28h]
-    mov edi,[esp+30h]
-    xor ebx,ebx
-    mov ebp,10000h
+    mov ebp,[esp+30h]
+    mov edi,[esp+34h]
 ;
     xor eax,eax
     mov [edi].sin_a,eax
@@ -16524,91 +16501,6 @@ _CalcFreqPower  Proc near
     mov [edi].cos_b+4,eax
 
 cfpLoop:
-    mov ax,[2*ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].sin_a,ax
-    adc dword ptr [edi].sin_a+2,edx
-;
-    mov ax,ds:[2*ebp].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].cos_a,ax
-    adc dword ptr [edi].cos_a+2,edx
-    add esi,2
-;
-    mov ax,[2*ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].sin_b,ax
-    adc dword ptr [edi].sin_b+2,edx
-;
-    mov ax,ds:[2*ebp].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].cos_b,ax
-    adc dword ptr [edi].cos_b+2,edx
-    add esi,2
-;
-    add ebx,[esp+2Ch]
-    and ebx,3FFFFh
-;
-    add ebp,[esp+2Ch]
-    and ebp,3FFFFh
-;
-    loop cfpLoop
-;
-    movsx eax,word ptr [edi].sin_a+4
-    mov [edi].sin_a+4,eax
-;
-    movsx eax,word ptr [edi].sin_b+4
-    mov [edi].sin_b+4,eax
-;
-    movsx eax,word ptr [edi].cos_a+4
-    mov [edi].cos_a+4,eax
-;
-    movsx eax,word ptr [edi].cos_b+4
-    mov [edi].cos_b+4,eax
-;
-    popad
-    ret 16
-_CalcFreqPower    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CalcFreqPower32
-;
-;       DESCRIPTION:    Calc power at a given frequency using 32-bit frequency
-;
-;       PARAMETERS:     Data
-;                       Size
-;                       RelFreq
-;                       Res
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public _CalcFreqPower32
-
-_CalcFreqPower32  Proc near
-    pushad
-;
-    mov esi,[esp+24h]
-    mov ecx,[esp+28h]
-    mov edi,[esp+30h]
-    xor ebp,ebp
-;
-    xor eax,eax
-    mov [edi].sin_a,eax
-    mov [edi].sin_a+4,eax
-    mov [edi].sin_b,eax
-    mov [edi].sin_b+4,eax
-    mov [edi].cos_a,eax
-    mov [edi].cos_a+4,eax
-    mov [edi].cos_b,eax
-    mov [edi].cos_b+4,eax
-
-cfpLoop32:
     mov ebx,ebp
     shr ebx,13
     and bl,0FEh
@@ -16644,7 +16536,7 @@ cfpLoop32:
 ;
     add esi,4
     add ebp,[esp+2Ch]
-    loop cfpLoop32
+    loop cfpLoop
 ;
     movsx eax,word ptr [edi].sin_a+4
     mov [edi].sin_a+4,eax
@@ -16659,8 +16551,8 @@ cfpLoop32:
     mov [edi].cos_b+4,eax
 ;
     popad
-    ret 16
-_CalcFreqPower32    Endp
+    ret 20
+_CalcFreqPower    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
