@@ -55,7 +55,8 @@ public:
     TAdc(char TestMode, int Blocks, TFreq *Freq);
     ~TAdc();
 
-    bool RunAdc(int Intervals, int Threads, int Min, const char *ResultName);
+    bool StartAdc(int Intervals);
+    void RunAdc(int Threads, int Min, const char *ResultName);
 
     void NotifyDone();
 

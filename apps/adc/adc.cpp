@@ -1639,6 +1639,45 @@ void TAdc::Execute()
 
 /*##########################################################################
 #
+#   Name       : TAdc::StartAdc
+#
+#   Purpose....: Start ADC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::StartAdc(int iv)
+{
+    int i;
+    TAdcData *data;
+    char str[100];
+
+    if (RdosStartAdc())
+    {
+        RdosWriteString("ADC started\r\n");
+
+        Intervals = iv;
+        AnaSize = FBlocks / Intervals;
+
+        AdcAna = new TAdcAna*[Intervals];
+
+        for (i = 0; i < Intervals; i++)
+            AdcAna[i] = new TAdcAna(AnaSize, Freq);
+
+        for (i = 0; i < FBlocks; i++)
+            data = GetBlock(i);
+
+        RdosWriteString("ADC done\r\n");
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::RunAdc
 #
 #   Purpose....: Run ADC
@@ -1648,7 +1687,7 @@ void TAdc::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
+void TAdc::RunAdc(int tc, int min, const char *ResultFile)
 {
     int i;
     int CurrInt;
@@ -1657,74 +1696,56 @@ bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
     TAdcAna *ana;
     char str[100];
 
-    if (RdosStartAdc())
+    Min = min;
+    Threads = tc;
+
+    Start("Adc", 0x4000);
+
+    CurrInt = 0;
+    Pos = 0;
+
+    for (CurrInt = 0; CurrInt < Intervals; CurrInt++)
     {
-        Min = min;
-        Intervals = iv;
-        Threads = tc;
-        AnaSize = FBlocks / Intervals;
+        CurrPos = CurrInt * AnaSize;
+        sprintf(str, "%d", CurrPos);
+        RdosWriteString(str);
 
-        AdcAna = new TAdcAna*[Intervals];
+        ana = AdcAna[CurrInt];
 
-        for (i = 0; i < Intervals; i++)
-            AdcAna[i] = new TAdcAna(AnaSize, Freq);
-
-        Start("Adc", 0x4000);
-
-        RdosWriteString("ADC started\r\n");
-
-        CurrInt = 0;
-        Pos = 0;
-
-        for (CurrInt = 0; CurrInt < Intervals; CurrInt++)
+        while (!ana->IsDone())
         {
-            CurrPos = CurrInt * AnaSize;
-            sprintf(str, "%d", CurrPos);
-            RdosWriteString(str);
-
-            ana = AdcAna[CurrInt];
-
-            while (!ana->IsDone())
+            CurrPos = CurrInt * AnaSize + ana->GetPos();
+            if (Pos == CurrPos)
+                RdosWaitMilli(250);
+            else
             {
-                CurrPos = CurrInt * AnaSize + ana->GetPos();
-                if (Pos == CurrPos)
-                    RdosWaitMilli(250);
-                else
+                while (Pos != CurrPos)
                 {
-                    while (Pos != CurrPos)
+                    if ((Pos % AnaSize) != 0 && (Pos % 50) == 0)
                     {
-                        if ((Pos % AnaSize) != 0 && (Pos % 50) == 0)
-                        {
-                            RdosWriteString("\r\n");
-                            ana->PrintSnap();
-                            sprintf(str, "%d", Pos);
-                            RdosWriteString(str);
-                        }
-                        else
-                            RdosWriteChar('.');
-
-                        Pos++;
+                        RdosWriteString("\r\n");
+                        ana->PrintSnap();
+                        sprintf(str, "%d", Pos);
+                        RdosWriteString(str);
                     }
+                    else
+                        RdosWriteChar('.');
+
+                    Pos++;
                 }
             }
-            RdosWriteString("\r\n");
-            ana->PrintSnap();
         }
-
-        while (IsRunning())
-            RdosWaitMilli(250);
-
-        file = new TFile(ResultFile, 0);
-
-        PrintResult();
-
-        delete file;
-        file = 0;
-
-        return true;
+        RdosWriteString("\r\n");
+        ana->PrintSnap();
     }
-    else
-        return false;
+
+    while (IsRunning())
+        RdosWaitMilli(250);
+
+    file = new TFile(ResultFile, 0);
+    PrintResult();
+    delete file;
+    file = 0;
 }
 
 /*##########################################################################
