@@ -16482,33 +16482,9 @@ _GetSin    Endp
 
 _GetSin32  Proc near
     mov eax,[esp+4]
-    push ebx
-    push ecx
-    push edx
-;
-    movzx ecx,ax
-    and cx,3FFFh
-;
     shr eax,13
     and al,0FEh
-    mov ebx,eax
-;
-    movsx eax,word ptr [ebx].sin_tab+2
-    imul ecx
-;
-    mov edx,4000h
-    sub edx,ecx
-    mov ecx,eax
-;
-    movsx eax,word ptr [ebx].sin_tab
-    imul edx
-;
-    add eax,ecx
-    shr eax,14
-;
-    pop edx
-    pop ecx
-    pop ebx
+    movsx eax,word ptr [2*ebx].sin_tab
     ret 4
 _GetSin32    Endp
 
@@ -16597,6 +16573,94 @@ cfpLoop:
     popad
     ret 16
 _CalcFreqPower    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcFreqPower32
+;
+;       DESCRIPTION:    Calc power at a given frequency using 32-bit frequency
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       RelFreq
+;                       Res
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CalcFreqPower32
+
+_CalcFreqPower32  Proc near
+    pushad
+;
+    mov esi,[esp+24h]
+    mov ecx,[esp+28h]
+    mov edi,[esp+30h]
+    xor ebp,ebp
+;
+    xor eax,eax
+    mov [edi].sin_a,eax
+    mov [edi].sin_a+4,eax
+    mov [edi].sin_b,eax
+    mov [edi].sin_b+4,eax
+    mov [edi].cos_a,eax
+    mov [edi].cos_a+4,eax
+    mov [edi].cos_b,eax
+    mov [edi].cos_b+4,eax
+
+cfpLoop32:
+    mov ebx,ebp
+    shr ebx,13
+    and bl,0FEh
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi]
+    movsx edx,dx
+    add word ptr [edi].sin_a,ax
+    adc dword ptr [edi].sin_a+2,edx
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi+2]
+    movsx edx,dx
+    add word ptr [edi].sin_b,ax
+    adc dword ptr [edi].sin_b+2,edx
+;
+    mov ebx,ebp
+    add ebx,40000000h
+    shr ebx,13
+    and bl,0FEh
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi]
+    movsx edx,dx
+    add word ptr [edi].cos_a,ax
+    adc dword ptr [edi].cos_a+2,edx
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi+2]
+    movsx edx,dx
+    add word ptr [edi].cos_b,ax
+    adc dword ptr [edi].cos_b+2,edx
+;
+    add esi,4
+    add ebp,[esp+2Ch]
+    loop cfpLoop32
+;
+    movsx eax,word ptr [edi].sin_a+4
+    mov [edi].sin_a+4,eax
+;
+    movsx eax,word ptr [edi].sin_b+4
+    mov [edi].sin_b+4,eax
+;
+    movsx eax,word ptr [edi].cos_a+4
+    mov [edi].cos_a+4,eax
+;
+    movsx eax,word ptr [edi].cos_b+4
+    mov [edi].cos_b+4,eax
+;
+    popad
+    ret 16
+_CalcFreqPower32    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
