@@ -57,8 +57,13 @@ int main(int argc, char **argv)
     int hour;
     int Max;
     TDateTime curr;
-
     double SampleFreq = 600.0;
+
+    int Data[256];
+    int Incr = TAdc::GetPhaseIncr(107.0, SampleFreq);
+
+    TAdc::CreateSignal(Data, 256, 0, Incr, 200);    
+
     TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 250);
 
     TAdc Adc(0x0, 300, &Freq);
@@ -74,8 +79,6 @@ int main(int argc, char **argv)
         while (!starttime.HasExpired())
             RdosWaitMilli(1000);
     }
-
-// remove 107.0
 
     Adc.RunAdc(10, 22, 10, "res.txt");
 

@@ -66,6 +66,9 @@ void CalcPower(TAdcData *Data, int Size, struct TAdcPower *Res);
 int CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, struct TAdcFreqPower *Res);
 #pragma aux (ANAAPI) CalcFreqPower;
 
+int CreateSignal(int *Data, int Size, int InitPhase, int PhaseIncr, int Amp);
+#pragma aux (ANAAPI) CreateSignal;
+
 };
 
 #define M_PI 3.14159265358979323846
@@ -542,6 +545,49 @@ int TAdc::CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, 
     *PowerB = round(dval);
 
     return phase;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::GetPhaseIncr
+#
+#   Purpose....: Get phase incr
+#
+#   In params..: Freq, SampleFreq
+#   Out params.: *
+#   Returns....: Phase incr
+#
+##########################################################################*/
+int TAdc::GetPhaseIncr(double Freq, double SampleFreq)
+{
+    long long lval;
+    double freq;
+
+    freq = 1000000.0 * Freq;
+    lval = (long long)freq;
+    lval = lval * (long long)0x10000;
+    lval = lval * (long long)0x10000;
+
+    freq = 1000000.0 * SampleFreq;
+    lval = lval / (long long)freq;
+
+    return (int)lval;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CreateSignal
+#
+#   Purpose....: Create a signal at a given phase & frequency
+#
+#   In params..: Data, Size, RelFreq, PowerA, PowerB
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdc::CreateSignal(int *Buf, int Size, int InitPhase, int PhaseIncr, int Amp)
+{
+    return ::CreateSignal(Buf, Size, InitPhase, PhaseIncr, Amp);
 }
 
 /*##########################################################################

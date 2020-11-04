@@ -16492,10 +16492,10 @@ _CalcFreqPower  Proc near
     push edi
     push ebp
 ;
-    mov esi,[esp+24h]
-    mov ecx,[esp+28h]
-    mov ebp,[esp+30h]
-    mov edi,[esp+34h]
+    mov esi,[esp+1Ch]
+    mov ecx,[esp+20h]
+    mov ebp,[esp+24h]
+    mov edi,[esp+2Ch]
 ;
     xor eax,eax
     mov [edi].sin_a,eax
@@ -16542,7 +16542,7 @@ cfpLoop:
     adc dword ptr [edi].cos_b+2,edx
 ;
     add esi,4
-    add ebp,[esp+2Ch]
+    add ebp,[esp+28h]
     loop cfpLoop
 ;
     movsx eax,word ptr [edi].sin_a+4
@@ -16616,5 +16616,61 @@ cpLoop:
     popad
     ret 12
 _CalcPower    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateSignal
+;
+;       DESCRIPTION:    Create signal
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       InitPhase
+;                       PhaseIncr
+;                       Amp
+;
+;       RETURNS:        End phase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CreateSignal
+
+_CreateSignal  Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov edi,[esp+18h]
+    mov ecx,[esp+1Ch]
+    mov esi,[esp+20h]
+
+csLoop:
+    mov ebx,esi
+    shr ebx,13
+    and bl,0FEh
+;
+    movsx eax,word ptr [ebx].sin_tab
+    imul dword ptr [esp+28h]
+;
+    mov ebx,7FFFh
+    idiv ebx
+    stosd
+;
+    add esi,[esp+24h]
+    loop csLoop
+;
+    mov eax,esi
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 20
+_CreateSignal    Endp
 
   END
