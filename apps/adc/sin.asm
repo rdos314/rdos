@@ -16441,14 +16441,14 @@ sin_tab:
  dw 0FFDAh, 0FFDBh, 0FFDCh, 0FFDDh, 0FFDDh, 0FFDEh, 0FFDFh, 0FFE0h, 0FFE1h, 0FFE1h, 0FFE2h, 0FFE3h, 0FFE4h, 0FFE5h, 0FFE5h, 0FFE6h
  dw 0FFE7h, 0FFE8h, 0FFE8h, 0FFE9h, 0FFEAh, 0FFEBh, 0FFECh, 0FFECh, 0FFEDh, 0FFEEh, 0FFEFh, 0FFF0h, 0FFF0h, 0FFF1h, 0FFF2h, 0FFF3h
  dw 0FFF3h, 0FFF4h, 0FFF5h, 0FFF6h, 0FFF7h, 0FFF7h, 0FFF8h, 0FFF9h, 0FFFAh, 0FFFBh, 0FFFBh, 0FFFCh, 0FFFDh, 0FFFEh, 0FFFEh, 0FFFFh
-
+ dw 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           GetSin
 ;
-;       DESCRIPTION:    Get sin value
+;       DESCRIPTION:    Get sin value from 18-bit phase
 ;
 ;       PARAMETERS:     Phase
 ;
@@ -16464,6 +16464,53 @@ _GetSin  Proc near
     movsx eax,word ptr [2*eax].sin_tab
     ret 4
 _GetSin    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetSin32
+;
+;       DESCRIPTION:    Get sin value from 32-bit phase
+;
+;       PARAMETERS:     Phase
+;
+;       RETURNS:        Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _GetSin32
+
+_GetSin32  Proc near
+    mov eax,[esp+4]
+    push ebx
+    push ecx
+    push edx
+;
+    movzx ecx,ax
+    and cx,3FFFh
+;
+    shr eax,13
+    and al,0FEh
+    mov ebx,eax
+;
+    movsx eax,word ptr [ebx].sin_tab+2
+    imul ecx
+;
+    mov edx,4000h
+    sub edx,ecx
+    mov ecx,eax
+;
+    movsx eax,word ptr [ebx].sin_tab
+    imul edx
+;
+    add eax,ecx
+    shr eax,14
+;
+    pop edx
+    pop ecx
+    pop ebx
+    ret 4
+_GetSin32    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
