@@ -16478,12 +16478,19 @@ _GetSin    Endp
 ;                       PhaseIncr
 ;                       Res
 ;
+;       RETURNS:        End phase
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public _CalcFreqPower
 
 _CalcFreqPower  Proc near
-    pushad
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
     mov esi,[esp+24h]
     mov ecx,[esp+28h]
@@ -16550,7 +16557,14 @@ cfpLoop:
     movsx eax,word ptr [edi].cos_b+4
     mov [edi].cos_b+4,eax
 ;
-    popad
+    mov eax,ebp
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
     ret 20
 _CalcFreqPower    Endp
 
