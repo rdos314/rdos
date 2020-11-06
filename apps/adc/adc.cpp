@@ -92,8 +92,10 @@ TAdc::TAdc(char TestMode, int Blocks, TFreq *f)
 
     RdosSetupAdc(TestMode, 0, FBlocks);
 
+    TestData = 0;
     Intervals = 0;
     Freq = f;
+    SampleFreq = f->SampleFreq;
     FreqCount = f->FreqCount;
     file = 0;
 }
@@ -558,7 +560,7 @@ int TAdc::CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, 
 #   Returns....: Phase incr
 #
 ##########################################################################*/
-int TAdc::GetPhaseIncr(double Freq, double SampleFreq)
+int TAdc::GetPhaseIncr(double Freq)
 {
     long long lval;
     double freq;
@@ -1676,6 +1678,32 @@ bool TAdc::RunAdc()
 
 /*##########################################################################
 #
+#   Name       : TAdc::LoadTestData
+#
+#   Purpose....: Load test data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TAdc::LoadTestData(const char *FileName)
+{
+    TFile file(FileName);
+    TAdcData *data;
+
+    if (file.IsOpen())
+    {
+        TestData = new TAdcData[0x80000];
+        file.Read(TestData, 0x200000);
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::RunAna
 #
 #   Purpose....: Run analysis
@@ -1838,4 +1866,190 @@ int TAdc::GetMaxPeriodic()
         }
     }
     return MaxIndex;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CalcPowerPhase
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CalcPowerPhase(double Freq, TAdcData *Data, int Size)
+{
+    double x, y;
+    double phase;
+    int pi = GetPhaseIncr(Freq);
+    struct TAdcFreqPower res;
+    int val;
+    double dval;
+
+    ::CalcFreqPower(Data, Size, 0, pi, &res);
+
+    res.SinA = res.SinA / Size / 0x2000;
+    res.SinB = res.SinB / Size / 0x2000;
+    res.CosA = res.CosA / Size / 0x2000;
+    res.CosB = res.CosB / Size / 0x2000;
+
+    val = res.SinA * res.SinA + res.CosA * res.CosA;
+    dval = sqrt(val / 4.0);
+    PowerA = round(dval);
+
+    val = res.SinB * res.SinB + res.CosB * res.CosB;
+    dval = sqrt(val / 4.0);
+    PowerB = round(dval);
+
+    x = (double)res.CosA;
+    y = (double)res.SinA;
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
+    phase = phase * (double)0x10000;
+    phase = phase * (double)0x10000;
+    PhaseA =  (int)phase;
+
+    x = (double)res.CosB;
+    y = (double)res.SinB;
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
+    phase = phase * (double)0x10000;
+    phase = phase * (double)0x10000;
+    PhaseB =  (int)phase;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CreateRef
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CreateRef(double Freq, TAdcData *Ref, TAdcData *Data, int Size)
+{
+    int *Buf;
+    int i;
+    int pi = GetPhaseIncr(Freq);
+
+    Buf = new int[Size];
+
+    ::CreateSignal(Buf, Size, PhaseA, pi, PowerA);
+
+    for (i = 0; i < Size; i++)
+        Data[i].chA = Ref[i].chA - (short int)Buf[i];    
+
+    ::CreateSignal(Buf, Size, PhaseB, pi, PowerB);
+
+    for (i = 0; i < Size; i++)
+        Data[i].chB = Ref[i].chB - (short int)Buf[i];    
+
+    delete Buf;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CalcDiff
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CalcDiff(double Freq, TAdcData *Data, int Size, int *DiffA, int *DiffB)
+{
+    struct TAdcFreqPower res;
+    int pi = GetPhaseIncr(Freq);
+
+    ::CalcFreqPower(Data, Size, 0, pi, &res);
+
+    res.SinA = res.SinA / 0x2000;
+    res.SinB = res.SinB / 0x2000;
+    res.CosA = res.CosA / 0x2000;
+    res.CosB = res.CosB / 0x2000;
+
+    *DiffA = res.SinA * res.SinA + res.CosA * res.CosA;
+    *DiffB = res.SinB * res.SinB + res.CosB * res.CosB;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::RemoveFreq
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::RemoveFreq(double Freq)
+{
+    double CurrFreq;
+    double Step;
+    int i;
+    int DiffA, DiffB;
+    int low, mid, high;
+    int Size = 256;
+    TAdcData *Data = TestData;
+    TAdcData *LocalData = new TAdcData[Size];
+
+    CalcPowerPhase(Freq, Data, Size);
+
+    CurrFreq = Freq;
+
+    CreateRef(CurrFreq, Data, LocalData, Size);    
+    CalcDiff(CurrFreq, LocalData, Size, &DiffA, &DiffB);
+    mid = DiffA + DiffB;
+
+    Step = 0.1;
+
+    CurrFreq = Freq;
+
+    for (i = 0; i < 20; i++)
+    {
+        CreateRef(CurrFreq + Step, Data, LocalData, Size);    
+        CalcDiff(CurrFreq + Step, LocalData, Size, &DiffA, &DiffB);
+        high = DiffA + DiffB;
+
+        while (high < mid)
+        {
+            mid = high;
+            CurrFreq = CurrFreq + Step;
+
+            CreateRef(CurrFreq + Step, Data, LocalData, Size);    
+            CalcDiff(CurrFreq + Step, LocalData, Size, &DiffA, &DiffB);
+            high = DiffA + DiffB;
+        }
+
+        CreateRef(CurrFreq - Step, Data, LocalData, Size);    
+        CalcDiff(CurrFreq - Step, LocalData, Size, &DiffA, &DiffB);
+        low = DiffA + DiffB;
+
+        while (low < mid)
+        {
+            mid = low;
+            CurrFreq = CurrFreq - Step;
+
+            CreateRef(CurrFreq - Step, Data, LocalData, Size);    
+            CalcDiff(CurrFreq - Step, LocalData, Size, &DiffA, &DiffB);
+            low = DiffA + DiffB;
+        }
+
+        if (low == high)
+            break;
+        else
+            Step = Step / 2.0;
+    }
+
+
+    delete LocalData;
+
 }

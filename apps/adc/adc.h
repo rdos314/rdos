@@ -56,8 +56,11 @@ public:
     ~TAdc();
 
     bool RunAdc();
+    bool LoadTestData(const char *FileName);
     void RunAna(int Intervals, int Threads, int Min, const char *ResultName);
     void CleanupAna();
+
+    void RemoveFreq(double Freq);
 
     void NotifyDone();
 
@@ -66,7 +69,6 @@ public:
 
     int GetMaxPeriodic();
 
-    static int GetPhaseIncr(double Freq, double SampleFreq);
     static int GetSin(int Phase);
     static void CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB);
     static int CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *PowerA, int *PowerB, int *Delay);
@@ -75,6 +77,7 @@ public:
     static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
     static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance);
 
+    double SampleFreq;
     TFreq *Freq;
     int Min;
 
@@ -108,8 +111,19 @@ protected:
     int CheckPn(TAdcData *data, int Block, int Samples, int Start);
     void CheckPn();
 
+    int GetPhaseIncr(double Freq);
+    void CalcPowerPhase(double Freq, TAdcData *Data, int Size);
+    void CreateRef(double Freq, TAdcData *Ref, TAdcData *Data, int Size);
+    void CalcDiff(double Freq, TAdcData *Data, int Size, int *DiffA, int *DiffB);
+
     virtual void Execute();
 
+    int PowerA;
+    int PowerB;
+    int PhaseA;
+    int PhaseB;
+
+    TAdcData *TestData;
     TAdcAna **AdcAna;
     int Intervals;
     int AnaSize;

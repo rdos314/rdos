@@ -190,11 +190,12 @@ void TFreqPos::Next(TFreqData *fd)
 #   Returns....: *
 #
 ##########################################################################*/
-TFreq::TFreq(double start, double stop, int decimals, double SampleFreq, int Periods)
+TFreq::TFreq(double start, double stop, int decimals, double sf, int Periods)
 {
     double temp;
     int i;
 
+    SampleFreq = sf;
     Start = start;
     Stop = stop;
     Decimals = decimals;

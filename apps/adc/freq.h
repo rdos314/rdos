@@ -68,6 +68,7 @@ public:
     void CodeFreq(int index, char *str);
     double GetFreq(int index);
 
+    double SampleFreq;
     int Decimals;
     int FreqCount;
     TFreqData **FreqData;
