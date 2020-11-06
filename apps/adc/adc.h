@@ -123,6 +123,9 @@ protected:
     void OptimizeAmp(TAdcData *Ref);
     void OptimizePhase(TAdcData *Ref);
 
+    void CreateFmPhaseRef(TAdcData *Ref, int PhaseA, int PhaseB);
+    void OptimizeFmPhase(TAdcData *Ref);
+
     virtual void Execute();
 
     int CurrPowerA;
@@ -131,8 +134,15 @@ protected:
     int CurrPhaseB;
     int CurrFreqIncr;
 
+    int InitPhaseA;
+    int InitPhaseB;
+    int InitPeriod;
+    int WorkPeriodSize;
+    int WorkPeriodCount;
+
     int WorkSize;
     int *WorkBuf;
+    int *WorkPeriodArr;
     TAdcData *WorkData;
 
     TAdcData *TestData;

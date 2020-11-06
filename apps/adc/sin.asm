@@ -16673,4 +16673,85 @@ csLoop:
     ret 20
 _CreateSignal    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateFmSignal
+;
+;       DESCRIPTION:    Create FM signal
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       Amp
+;                       InitPhase
+;                       InitPeriod
+;                       PeriodDiffArr
+;                       PeriodSamples
+;
+;       RETURNS:        End phase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CreateFmSignal
+
+cfs_data          = 8
+cfs_size          = 12
+cfs_amp           = 16
+cfs_phase         = 20
+cfs_period        = 24
+cfs_per_diff_arr  = 28
+cfs_per_size      = 32
+
+_CreateFmSignal  Proc near
+    push ebp
+    mov ebp,esp
+;
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov edi,[ebp].cfs_data
+    mov esi,[ebp].cfs_per_diff_arr
+
+cfsEntryLoop:
+    mov ecx,[ebp].cfs_per_size
+
+cfsLoop:
+    mov ebx,[ebp].cfs_phase
+    shr ebx,13
+    and bl,0FEh
+;
+    movsx eax,word ptr [ebx].sin_tab
+    imul dword ptr [ebp].cfs_amp
+;
+    mov ebx,7FFFh
+    idiv ebx
+    stosd
+;
+    mov ebx,[ebp].cfs_period
+    add [ebp].cfs_phase,ebx
+    mov ebx,[esi]
+    add [ebp].cfs_period,ebx
+    sub dword ptr [ebp].cfs_size,1
+    jz cfsDone
+;
+    loop cfsLoop
+;
+    add esi,4
+    jmp cfsEntryLoop
+
+cfsDone:
+    mov eax,[ebp].cfs_phase
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ebp
+    ret 28
+_CreateFmSignal    Endp
+
   END

@@ -69,6 +69,9 @@ int CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, struct
 int CreateSignal(int *Data, int Size, int InitPhase, int PhaseIncr, int Amp);
 #pragma aux (ANAAPI) CreateSignal;
 
+int CreateFmSignal(int *Data, int Size, int Amp, int InitPhase, int InitPeriod, int *PeriodDifd, int PeriodSize);
+#pragma aux (ANAAPI) CreateFmSignal;
+
 };
 
 #define M_PI 3.14159265358979323846
@@ -1971,12 +1974,12 @@ void TAdc::CreateFreqRef(int FreqIncr, TAdcData *Ref)
     ::CreateSignal(WorkBuf, WorkSize, CurrPhaseA, FreqIncr, CurrPowerA);
 
     for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];    
+        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
 
     ::CreateSignal(WorkBuf, WorkSize, CurrPhaseB, FreqIncr, CurrPowerB);
 
     for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];    
+        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
 }
 
 /*##########################################################################
@@ -1997,12 +2000,12 @@ void TAdc::CreateAmpRef(int PowerA, int PowerB, TAdcData *Ref)
     ::CreateSignal(WorkBuf, WorkSize, CurrPhaseA, CurrFreqIncr, PowerA);
 
     for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];    
+        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
 
     ::CreateSignal(WorkBuf, WorkSize, CurrPhaseB, CurrFreqIncr, PowerB);
 
     for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];    
+        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
 }
 
 /*##########################################################################
@@ -2023,12 +2026,12 @@ void TAdc::CreatePhaseRef(int PhaseA, int PhaseB, TAdcData *Ref)
     ::CreateSignal(WorkBuf, WorkSize, PhaseA, CurrFreqIncr, CurrPowerA);
 
     for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];    
+        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
 
     ::CreateSignal(WorkBuf, WorkSize, PhaseB, CurrFreqIncr, CurrPowerB);
 
     for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];    
+        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
 }
 
 /*##########################################################################
@@ -2049,12 +2052,12 @@ void TAdc::UpdateRef(TAdcData *Ref)
     ::CreateSignal(WorkBuf, WorkSize, CurrPhaseA, CurrFreqIncr, CurrPowerA);
 
     for (i = 0; i < WorkSize; i++)
-        Ref[i].chA = Ref[i].chA - (short int)WorkBuf[i];    
+        Ref[i].chA = Ref[i].chA - (short int)WorkBuf[i];
 
     ::CreateSignal(WorkBuf, WorkSize, CurrPhaseB, CurrFreqIncr, CurrPowerB);
 
     for (i = 0; i < WorkSize; i++)
-        Ref[i].chB = Ref[i].chB - (short int)WorkBuf[i];    
+        Ref[i].chB = Ref[i].chB - (short int)WorkBuf[i];
 
 }
 
@@ -2108,12 +2111,12 @@ double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref)
     Step = InitStep;
 
     fi = GetPhaseIncr(CurrFreq);
-    CreateFreqRef(fi, Ref);    
+    CreateFreqRef(fi, Ref);
     CalcDiff(fi, &DiffA, &DiffB);
     mid = DiffA + DiffB;
 
     fi = GetPhaseIncr(CurrFreq + Step);
-    CreateFreqRef(fi, Ref);    
+    CreateFreqRef(fi, Ref);
     CalcDiff(fi, &DiffA, &DiffB);
     high = DiffA + DiffB;
 
@@ -2123,13 +2126,13 @@ double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref)
         CurrFreq = CurrFreq + Step;
 
         fi = GetPhaseIncr(CurrFreq + Step);
-        CreateFreqRef(fi, Ref);    
+        CreateFreqRef(fi, Ref);
         CalcDiff(fi, &DiffA, &DiffB);
         high = DiffA + DiffB;
     }
 
     fi = GetPhaseIncr(CurrFreq - Step);
-    CreateFreqRef(fi, Ref);    
+    CreateFreqRef(fi, Ref);
     CalcDiff(fi, &DiffA, &DiffB);
     low = DiffA + DiffB;
 
@@ -2139,7 +2142,7 @@ double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref)
         CurrFreq = CurrFreq - Step;
 
         fi = GetPhaseIncr(CurrFreq - Step);
-        CreateFreqRef(fi, Ref);    
+        CreateFreqRef(fi, Ref);
         CalcDiff(fi, &DiffA, &DiffB);
         low = DiffA + DiffB;
     }
@@ -2149,7 +2152,7 @@ double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref)
         Step = Step / 2.0;
 
         fi = GetPhaseIncr(CurrFreq + Step);
-        CreateFreqRef(fi, Ref);    
+        CreateFreqRef(fi, Ref);
         CalcDiff(fi, &DiffA, &DiffB);
         high = DiffA + DiffB;
 
@@ -2161,7 +2164,7 @@ double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref)
         else
         {
             fi = GetPhaseIncr(CurrFreq - Step);
-            CreateFreqRef(fi, Ref);    
+            CreateFreqRef(fi, Ref);
             CalcDiff(fi, &DiffA, &DiffB);
             low = DiffA + DiffB;
 
@@ -2204,10 +2207,10 @@ void TAdc::OptimizeAmp(TAdcData *Ref)
     if (sb <= 0)
         sb = 1;
 
-    CreateAmpRef(CurrPowerA, CurrPowerB, Ref);    
+    CreateAmpRef(CurrPowerA, CurrPowerB, Ref);
     CalcDiff(CurrFreqIncr, &mida, &midb);
 
-    CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);    
+    CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);
     CalcDiff(CurrFreqIncr, &higha, &highb);
 
     while (higha < mida || highb < midb)
@@ -2224,11 +2227,11 @@ void TAdc::OptimizeAmp(TAdcData *Ref)
             CurrPowerB += sa;
         }
 
-        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);    
+        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);
         CalcDiff(CurrFreqIncr, &higha, &highb);
     }
 
-    CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);    
+    CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);
     CalcDiff(CurrFreqIncr, &lowa, &lowb);
 
     while (lowa < mida || lowb < midb)
@@ -2244,8 +2247,8 @@ void TAdc::OptimizeAmp(TAdcData *Ref)
             midb = lowb;
             CurrPowerB -= sb;
         }
- 
-        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);    
+
+        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);
         CalcDiff(CurrFreqIncr, &lowa, &lowb);
     }
 
@@ -2254,7 +2257,7 @@ void TAdc::OptimizeAmp(TAdcData *Ref)
         sa = sa / 2;
         sb = sb / 2;
 
-        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);    
+        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);
         CalcDiff(CurrFreqIncr, &higha, &highb);
 
         if (higha < mida)
@@ -2269,7 +2272,7 @@ void TAdc::OptimizeAmp(TAdcData *Ref)
             CurrPowerB += sb;
         }
 
-        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);    
+        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);
         CalcDiff(CurrFreqIncr, &lowa, &lowb);
 
         if (lowa < mida)
@@ -2306,10 +2309,10 @@ void TAdc::OptimizePhase(TAdcData *Ref)
 
     step = 0x10000000;
 
-    CreatePhaseRef(CurrPhaseA, CurrPhaseB, Ref);    
+    CreatePhaseRef(CurrPhaseA, CurrPhaseB, Ref);
     CalcDiff(CurrFreqIncr, &mida, &midb);
 
-    CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);    
+    CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);
     CalcDiff(CurrFreqIncr, &higha, &highb);
 
     while (higha < mida || highb < midb)
@@ -2326,11 +2329,11 @@ void TAdc::OptimizePhase(TAdcData *Ref)
             CurrPhaseB += step;
         }
 
-        CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);    
+        CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);
         CalcDiff(CurrFreqIncr, &higha, &highb);
     }
 
-    CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);    
+    CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);
     CalcDiff(CurrFreqIncr, &lowa, &lowb);
 
     while (lowa < mida || lowb < midb)
@@ -2346,8 +2349,8 @@ void TAdc::OptimizePhase(TAdcData *Ref)
             midb = lowb;
             CurrPhaseB -= step;
         }
- 
-        CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);    
+
+        CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);
         CalcDiff(CurrFreqIncr, &lowa, &lowb);
     }
 
@@ -2355,7 +2358,7 @@ void TAdc::OptimizePhase(TAdcData *Ref)
     {
         step = step / 2;
 
-        CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);    
+        CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);
         CalcDiff(CurrFreqIncr, &higha, &highb);
 
         if (higha < mida)
@@ -2370,7 +2373,134 @@ void TAdc::OptimizePhase(TAdcData *Ref)
             CurrPhaseB += step;
         }
 
-        CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);    
+        CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);
+        CalcDiff(CurrFreqIncr, &lowa, &lowb);
+
+        if (lowa < mida)
+        {
+            mida = lowa;
+            CurrPhaseA -= step;
+        }
+
+        if (lowb < midb)
+        {
+            midb = lowb;
+            CurrPhaseB -= step;
+        }
+    }
+
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::CreatePhaseFmRef
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CreateFmPhaseRef(TAdcData *Ref, int PhaseA, int PhaseB)
+{
+    int i;
+
+    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerA, PhaseA, InitPeriod, WorkPeriodArr, WorkPeriodSize);
+
+    for (i = 0; i < WorkSize; i++)
+        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
+
+    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerB, PhaseB, InitPeriod, WorkPeriodArr, WorkPeriodSize);
+
+    for (i = 0; i < WorkSize; i++)
+        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TAdc::OptimizeFmPhase
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::OptimizeFmPhase(TAdcData *Ref)
+{
+    int step;
+    long long lowa, mida, higha;
+    long long lowb, midb, highb;
+
+    step = 0x10000000;
+
+    CreateFmPhaseRef(Ref, CurrPhaseA, CurrPhaseB);
+    CalcDiff(CurrFreqIncr, &mida, &midb);
+
+    CreateFmPhaseRef(Ref, CurrPhaseA + step, CurrPhaseB + step);
+    CalcDiff(CurrFreqIncr, &higha, &highb);
+
+    while (higha < mida || highb < midb)
+    {
+        if (higha < mida)
+        {
+            mida = higha;
+            CurrPhaseA += step;
+        }
+
+        if (highb < midb)
+        {
+            midb = highb;
+            CurrPhaseB += step;
+        }
+
+        CreateFmPhaseRef(Ref, CurrPhaseA + step, CurrPhaseB + step);
+        CalcDiff(CurrFreqIncr, &higha, &highb);
+    }
+
+    CreateFmPhaseRef(Ref, CurrPhaseA - step, CurrPhaseB - step);
+    CalcDiff(CurrFreqIncr, &lowa, &lowb);
+
+    while (lowa < mida || lowb < midb)
+    {
+        if (lowa < mida)
+        {
+            mida = lowa;
+            CurrPhaseA -= step;
+        }
+
+        if (lowb < midb)
+        {
+            midb = lowb;
+            CurrPhaseB -= step;
+        }
+
+        CreateFmPhaseRef(Ref, CurrPhaseA - step, CurrPhaseB - step);
+        CalcDiff(CurrFreqIncr, &lowa, &lowb);
+    }
+
+    while (step > 1)
+    {
+        step = step / 2;
+
+        CreateFmPhaseRef(Ref, CurrPhaseA + step, CurrPhaseB + step);
+        CalcDiff(CurrFreqIncr, &higha, &highb);
+
+        if (higha < mida)
+        {
+            mida = higha;
+            CurrPhaseA += step;
+        }
+
+        if (highb < midb)
+        {
+            midb = highb;
+            CurrPhaseB += step;
+        }
+
+        CreateFmPhaseRef(Ref, CurrPhaseA - step, CurrPhaseB - step);
         CalcDiff(CurrFreqIncr, &lowa, &lowb);
 
         if (lowa < mida)
@@ -2407,12 +2537,25 @@ void TAdc::RemoveFreq(double Freq)
     TAdcData *Data = TestData;
     double rel;
     char str[40];
+    int MaxWorkSize = 1024;
 
-    WorkSize = 512;
-    WorkData = new TAdcData[WorkSize];
-    WorkBuf = new int[WorkSize];
+    WorkData = new TAdcData[MaxWorkSize];
+    WorkBuf = new int[MaxWorkSize];
+
+    WorkPeriodSize = 16;
+    WorkPeriodArr = new int[MaxWorkSize / WorkPeriodSize];
+
+    WorkSize = WorkPeriodSize;
+
+    InitPhaseA = 0;
+    InitPhaseB = 0;
+    InitPeriod = GetPhaseIncr(Freq);
+    WorkPeriodCount = 1;
+    WorkPeriodArr[0] = 0;
 
     CalcFmPower(Freq, Data);
+    OptimizeFmPhase(Data);
+
 
     while (Base < 0x80000)
     {
