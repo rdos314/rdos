@@ -2116,14 +2116,99 @@ double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref, TAdcD
 ##########################################################################*/
 void TAdc::OptimizeAmp(TAdcData *Ref, TAdcData *Data, int Size)
 {
-    int ca, cb;
+    int i;
     int sa, sb;
+    int lowa, mida, higha;
+    int lowb, midb, highb;
 
-    ca = CurrPowerA;
-    cb = CurrPowerB;
+    sa = CurrPowerA / 2;
+    if (sa <= 0)
+        sa = 1;
 
-    sa = ca;
-    sb = cb;
+    sb = CurrPowerB / 2;
+    if (sb <= 0)
+        sb = 1;
+
+    CreateAmpRef(CurrPowerA, CurrPowerB, Ref, Data, Size);    
+    CalcDiff(CurrFreqIncr, Data, Size, &mida, &midb);
+
+    CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref, Data, Size);    
+    CalcDiff(CurrFreqIncr, Data, Size, &higha, &highb);
+
+    while (higha < mida || highb < midb)
+    {
+        if (higha < mida)
+        {
+            mida = higha;
+            CurrPowerA += sa;
+        }
+
+        if (highb < midb)
+        {
+            midb = highb;
+            CurrPowerB += sa;
+        }
+
+        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref, Data, Size);    
+        CalcDiff(CurrFreqIncr, Data, Size, &higha, &highb);
+    }
+
+    CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref, Data, Size);    
+    CalcDiff(CurrFreqIncr, Data, Size, &lowa, &lowb);
+
+    while (lowa < mida || lowb < midb)
+    {
+        if (lowa < mida)
+        {
+            mida = lowa;
+            CurrPowerA -= sa;
+        }
+
+        if (lowb < midb)
+        {
+            midb = lowb;
+            CurrPowerB -= sb;
+        }
+ 
+        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref, Data, Size);    
+        CalcDiff(CurrFreqIncr, Data, Size, &lowa, &lowb);
+    }
+
+    while (sa > 1 && sb > 1)
+    {
+        sa = sa / 2.0;
+        sb = sb / 2.0;
+
+        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref, Data, Size);    
+        CalcDiff(CurrFreqIncr, Data, Size, &higha, &highb);
+
+        if (higha < mida)
+        {
+            mida = higha;
+            CurrPowerA += sa;
+        }
+
+        if (highb < midb)
+        {
+            midb = highb;
+            CurrPowerB += sb;
+        }
+
+        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref, Data, Size);    
+        CalcDiff(CurrFreqIncr, Data, Size, &lowa, &lowb);
+
+        if (lowa < mida)
+        {
+            mida = lowa;
+            CurrPowerA -= sa;
+        }
+
+        if (lowb < midb)
+        {
+            midb = lowb;
+            CurrPowerB -= sb;
+        }
+    }
 
 }
 
