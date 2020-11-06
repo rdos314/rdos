@@ -112,12 +112,16 @@ protected:
     void CheckPn();
 
     int GetPhaseIncr(double Freq);
-    void CalcPowerPhase(double Freq, TAdcData *Data, int Size);
-    void CreateFreqRef(int FreqIncr, TAdcData *Ref, TAdcData *Data, int Size);
-    void CreateAmpRef(int PowerA, int PowerB, TAdcData *Ref, TAdcData *Data, int Size);
-    void CalcDiff(int FreqIncr, TAdcData *Data, int Size, int *DiffA, int *DiffB);
-    double OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref, TAdcData *Data, int Size);
-    void OptimizeAmp(TAdcData *Ref, TAdcData *Data, int Size);
+    void CalcFmPower(double Freq, TAdcData *Ref);
+    void CalcInitPhase(double Freq, TAdcData *Ref);
+    void CreateFreqRef(int FreqIncr, TAdcData *Ref);
+    void CreateAmpRef(int PowerA, int PowerB, TAdcData *Ref);
+    void CreatePhaseRef(int PhaseA, int PhaseB, TAdcData *Ref);
+    void UpdateRef(TAdcData *Ref);
+    void CalcDiff(int FreqIncr, long long *DiffA, long long *DiffB);
+    double OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref);
+    void OptimizeAmp(TAdcData *Ref);
+    void OptimizePhase(TAdcData *Ref);
 
     virtual void Execute();
 
@@ -126,6 +130,10 @@ protected:
     int CurrPhaseA;
     int CurrPhaseB;
     int CurrFreqIncr;
+
+    int WorkSize;
+    int *WorkBuf;
+    TAdcData *WorkData;
 
     TAdcData *TestData;
     TAdcAna **AdcAna;
