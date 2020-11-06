@@ -113,15 +113,19 @@ protected:
 
     int GetPhaseIncr(double Freq);
     void CalcPowerPhase(double Freq, TAdcData *Data, int Size);
-    void CreateRef(double Freq, TAdcData *Ref, TAdcData *Data, int Size);
-    void CalcDiff(double Freq, TAdcData *Data, int Size, int *DiffA, int *DiffB);
+    void CreateFreqRef(int FreqIncr, TAdcData *Ref, TAdcData *Data, int Size);
+    void CreateAmpRef(int PowerA, int PowerB, TAdcData *Ref, TAdcData *Data, int Size);
+    void CalcDiff(int FreqIncr, TAdcData *Data, int Size, int *DiffA, int *DiffB);
+    double OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref, TAdcData *Data, int Size);
+    void OptimizeAmp(TAdcData *Ref, TAdcData *Data, int Size);
 
     virtual void Execute();
 
-    int PowerA;
-    int PowerB;
-    int PhaseA;
-    int PhaseB;
+    int CurrPowerA;
+    int CurrPowerB;
+    int CurrPhaseA;
+    int CurrPhaseB;
+    int CurrFreqIncr;
 
     TAdcData *TestData;
     TAdcAna **AdcAna;
