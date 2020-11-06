@@ -127,6 +127,8 @@ protected:
     void OptimizeFmPhase(TAdcData *Ref);
     void CreateFmPeriodRef(TAdcData *Ref, int Period);
     void OptimizeFmPeriod(TAdcData *Ref);
+    void CreateFmInitSeriesRef(TAdcData *Ref, int Period, int Incr);
+    void OptimizeFmInitSeries(TAdcData *Ref);
 
     virtual void Execute();
 
