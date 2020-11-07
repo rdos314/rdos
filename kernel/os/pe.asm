@@ -468,6 +468,8 @@ create_us_section   Proc near
     push ecx
     push edx
     push edi
+
+csRetry:
     
 p1:
     mov edx,12345678h
@@ -480,26 +482,28 @@ p1:
 ;
     mov ebx,MAX_SECTIONS
     sub ebx,ecx
-    push ebx
 ;
+    push ebx
     dec ebx
     sub edi,4
     mov eax,16
     mul ebx
     add eax,4 * MAX_SECTIONS
     mov edx,eax
+    pop ebx
 
 p2:    
     add edx,12345678h    
-    mov [edi],edx
-;    
+    xchg edx,[edi]
+    or edx,edx
+    jnz csRetry
+;
+    mov edx,[edi]
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
     mov [edx].fs_owner,0
     mov [edx].fs_sect_name,0
-;
-    pop ebx
     clc
 
 csDone:
@@ -518,6 +522,8 @@ create_named_us_section   Proc near
     push ebp
 ;
     mov ebp,edi
+
+cnsRetry:
     
 p1n:
     mov edx,12345678h
@@ -530,26 +536,29 @@ p1n:
 ;
     mov ebx,MAX_SECTIONS
     sub ebx,ecx
-    push ebx
 ;
+    push ebx
     dec ebx
     sub edi,4
     mov eax,16
     mul ebx
     add eax,4 * MAX_SECTIONS
     mov edx,eax
+    pop ebx
 
 p2n:    
     add edx,12345678h    
-    mov [edi],edx
-;    
+    xchg edx,[edi]
+    or edx,edx
+    jnz cnsRetry
+;
+    mov edx,[edi]    
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
     mov [edx].fs_owner,0
     mov [edx].fs_sect_name,ebp
 ;
-    pop ebx
     clc
 
 cnsDone:
