@@ -107,6 +107,7 @@ protected:
 
     int GetPhaseIncr(double Freq);
     void CalcFmPower(double Freq, TAdcData *Ref, int DataSize);
+    void CalcFmPhase(double Freq, TAdcData *Ref, int DataSize);
 
     void CalcInitPhase(double Freq, TAdcData *Ref);
     void CreateFreqRef(int FreqIncr, TAdcData *Ref);

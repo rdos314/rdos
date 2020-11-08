@@ -36,9 +36,11 @@
 class TFmSignal
 {
 public:
-    TFmSignal(double SampleFreq, double Freq, int PowerA, int PowerB, int DataSize, int DataSamples);
+    TFmSignal(double SampleFreq, double Freq, double BandWidth, int DataSize, int DataSamples);
     ~TFmSignal();
 
+    void SetPower(int PowerA, int PowerB);
+    void SetPhase(int PhaseA, int PhaseB);
     void Add(TAdcData *Data);
 
 protected:
@@ -56,6 +58,8 @@ protected:
 
     double SampleFreq;
     double Freq;
+    int PhaseIncr;
+    int MaxPhaseIncr;
 
     TAdcData *SampleData;
     int SampleSize;
@@ -63,7 +67,6 @@ protected:
 
     int PowerA;
     int PowerB;
-    int PhaseIncr;
 
     int OffsetA;
     int OffsetB;

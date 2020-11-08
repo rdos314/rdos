@@ -85,16 +85,20 @@ int CreateFmSignal(int *Data, int Size, int Amp, int InitPhase, int InitPeriod, 
 #   Returns....: *
 #
 ##########################################################################*/
-TFmSignal::TFmSignal(double sf, double f, int pA, int pB, int DataSize, int DataSamples)
+TFmSignal::TFmSignal(double sf, double f, double bw, int DataSize, int DataSamples)
 {
     int Size;
+    int val;
 
     SampleFreq = sf;
     Freq = f;
 
-    PowerA = pA;
-    PowerB = pB;
+    PowerA = 0;
+    PowerB = 0;
+
     PhaseIncr = GetPhaseIncr(Freq);
+    val = GetPhaseIncr(Freq + bw);
+    MaxPhaseIncr = (val - PhaseIncr) / DataSize;
 
     PhaseIncrSamples = DataSize;
     PhaseIncrCount = 0;
@@ -140,6 +144,40 @@ TFmSignal::~TFmSignal()
 
 /*##########################################################################
 #
+#   Name       : TFmSignal::SetPower
+#
+#   Purpose....: Set power
+#
+#   In params..:
+#   Out params.: *
+#   Returns....:
+#
+##########################################################################*/
+void TFmSignal::SetPower(int pA, int pB)
+{
+    PowerA = pA;
+    PowerB = pB;
+}
+
+/*##########################################################################
+#
+#   Name       : TFmSignal::SetPhase
+#
+#   Purpose....: Set phase
+#
+#   In params..:
+#   Out params.: *
+#   Returns....:
+#
+##########################################################################*/
+void TFmSignal::SetPhase(int pA, int pB)
+{
+    InitPhaseA = pA;
+    InitPhaseB = pB;
+}
+
+/*##########################################################################
+#
 #   Name       : TFmSignal::GetPhaseIncr
 #
 #   Purpose....: Get phase incr
@@ -179,17 +217,12 @@ int TFmSignal::GetPhaseIncr(double Freq)
 ##########################################################################*/
 void TFmSignal::CalcDiff(long long *DiffA, long long *DiffB)
 {
-    struct TAdcFreqPower res;
+    struct TAdcPower res;
 
-    ::CalcFreqPower(WorkData, WorkSize, 0, PhaseIncr, &res);
+    ::CalcPower(WorkData, WorkSize, &res);
 
-    res.SinA = res.SinA / 0x2000;
-    res.SinB = res.SinB / 0x2000;
-    res.CosA = res.CosA / 0x2000;
-    res.CosB = res.CosB / 0x2000;
-
-    *DiffA = (res.SinA * res.SinA + res.CosA * res.CosA) / WorkSize;
-    *DiffB = (res.SinB * res.SinB + res.CosB * res.CosB) / WorkSize;
+    *DiffA  = res.PowA;
+    *DiffB  = res.PowB;
 }
 
 /*##########################################################################
@@ -362,39 +395,11 @@ void TFmSignal::OptimizePhaseIncr()
     long long DiffA, DiffB;
     long long low, mid, high;
 
-    Step = 0x10000000;
+    Step = MaxPhaseIncr;
 
     CreatePhaseIncrRef(InitPhaseIncr);
     CalcDiff(&DiffA, &DiffB);
     mid = DiffA + DiffB;
-
-    CreatePhaseIncrRef(InitPhaseIncr + Step);
-    CalcDiff(&DiffA, &DiffB);
-    high = DiffA + DiffB;
-
-    while (high < mid)
-    {
-        mid = high;
-        InitPhaseIncr += Step;
-
-        CreatePhaseIncrRef(InitPhaseIncr + Step);
-        CalcDiff(&DiffA, &DiffB);
-        high = DiffA + DiffB;
-    }
-
-    CreatePhaseIncrRef(InitPhaseIncr - Step);
-    CalcDiff(&DiffA, &DiffB);
-    low = DiffA + DiffB;
-
-    while (low < mid)
-    {
-        mid = low;
-        InitPhaseIncr -= Step;
-
-        CreatePhaseIncrRef(InitPhaseIncr - Step);
-        CalcDiff(&DiffA, &DiffB);
-        low = DiffA + DiffB;
-    }
 
     for (i = 0; i < 20; i++)
     {
@@ -475,41 +480,11 @@ void TFmSignal::OptimizeInitSeries()
     long long DiffA, DiffB;
     long long low, mid, high;
 
-    Step = InitPhaseIncr / 8;
+    Step = MaxPhaseIncr;
 
     CreateInitSeriesRef(InitPhaseIncr, PhaseIncr0);
     CalcDiff(&DiffA, &DiffB);
     mid = DiffA + DiffB;
-
-    CreateInitSeriesRef(InitPhaseIncr + Step, PhaseIncr0 - Step / PhaseDiv);
-    CalcDiff(&DiffA, &DiffB);
-    high = DiffA + DiffB;
-
-    while (high < mid)
-    {
-        mid = high;
-        InitPhaseIncr += Step;
-        PhaseIncr0 -= Step / PhaseDiv;
-
-        CreateInitSeriesRef(InitPhaseIncr + Step, PhaseIncr0 - Step / PhaseDiv);
-        CalcDiff(&DiffA, &DiffB);
-        high = DiffA + DiffB;
-    }
-
-    CreateInitSeriesRef(InitPhaseIncr - Step, PhaseIncr0 + Step / PhaseDiv);
-    CalcDiff(&DiffA, &DiffB);
-    low = DiffA + DiffB;
-
-    while (low < mid)
-    {
-        mid = low;
-        InitPhaseIncr -= Step;
-        PhaseIncr0 += Step / PhaseDiv;
-
-        CreateInitSeriesRef(InitPhaseIncr - Step, PhaseIncr0 + Step / PhaseDiv);
-        CalcDiff(&DiffA, &DiffB);
-        low = DiffA + DiffB;
-    }
 
     for (i = 0; i < 20; i++)
     {
@@ -593,39 +568,11 @@ void TFmSignal::OptimizeSeries()
     long long DiffA, DiffB;
     long long low, mid, high;
 
-    Step = PhaseIncr / 8;
+    Step = MaxPhaseIncr;
 
     CreateSeriesRef(pi);
     CalcDiff(&DiffA, &DiffB);
     mid = DiffA + DiffB;
-
-    CreateSeriesRef(pi + Step);
-    CalcDiff(&DiffA, &DiffB);
-    high = DiffA + DiffB;
-
-    while (high < mid)
-    {
-        mid = high;
-        pi += Step;
-
-        CreateSeriesRef(pi + Step);
-        CalcDiff(&DiffA, &DiffB);
-        high = DiffA + DiffB;
-    }
-
-    CreateSeriesRef(pi - Step);
-    CalcDiff(&DiffA, &DiffB);
-    low = DiffA + DiffB;
-
-    while (low < mid)
-    {
-        mid = low;
-        pi -= Step;
-
-        CreateSeriesRef(pi - Step);
-        CalcDiff(&DiffA, &DiffB);
-        low = DiffA + DiffB;
-    }
 
     for (i = 0; i < 20; i++)
     {
@@ -697,7 +644,6 @@ void TFmSignal::Add(TAdcData *Data)
 
             for (i = 0; i < 4; i++)
             {
-                OptimizePhase();
                 OptimizePhaseIncr();
                 OptimizeInitSeries();
             }

@@ -1916,6 +1916,48 @@ void TAdc::CalcFmPower(double Freq, TAdcData *Ref, int DataSize)
 
 /*##########################################################################
 #
+#   Name       : TAdc::CalcFmPhase
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::CalcFmPhase(double Freq, TAdcData *Ref, int DataSize)
+{
+    double x, y;
+    double phase;
+    int pi = GetPhaseIncr(Freq);
+    struct TAdcFreqPower res;
+
+    ::CalcFreqPower(Ref, DataSize, 0, pi, &res);
+
+    res.SinA = res.SinA / DataSize / 0x2000;
+    res.SinB = res.SinB / DataSize / 0x2000;
+    res.CosA = res.CosA / DataSize / 0x2000;
+    res.CosB = res.CosB / DataSize / 0x2000;
+
+    x = (double)res.CosA;
+    y = (double)res.SinA;
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
+    phase = phase * (double)0x10000;
+    phase = phase * (double)0x10000;
+    CurrPhaseA =  (int)phase;
+
+    x = (double)res.CosB;
+    y = (double)res.SinB;
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
+    phase = phase * (double)0x10000;
+    phase = phase * (double)0x10000;
+    CurrPhaseB =  (int)phase;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::CalcInitPhase
 #
 #   Purpose....:
@@ -2405,13 +2447,17 @@ void TAdc::OptimizePhase(TAdcData *Ref)
 void TAdc::RemoveFreq(double Freq)
 {
     int i;
-    TFmSignal *fm;
+    int Samples = 16;
+    int Count = 0x80000 / Samples;
+    TFmSignal fm(SampleFreq, Freq, 0.1, Samples, 64);
     TAdcData *Data = TestData;
 
-    CalcFmPower(Freq, Data, 16);
+    CalcFmPower(Freq, Data, Samples);
+    CalcFmPhase(Freq, Data, Samples);
 
-    fm = new TFmSignal(SampleFreq, Freq, CurrPowerA, CurrPowerB, 16, 8);
+    fm.SetPower(CurrPowerA, CurrPowerB);
+    fm.SetPhase(CurrPhaseA, CurrPhaseB);
 
-    for (i = 0; i < 0x8000; i++)
-        fm->Add(Data + 0x10 * i);
+    for (i = 0; i < Count; i++)
+        fm.Add(Data + Samples * i);
 }
