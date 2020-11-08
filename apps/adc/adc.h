@@ -32,15 +32,9 @@
 #include "sigdev.h"
 #include "freq.h"
 #include "file.h"
+#include "adcdata.h"
 
 #define MAX_DIR 16
-
-class TAdcData
-{
-public:
-    short int chA;
-    short int chB;
-};
 
 struct TDelay
 {
@@ -112,7 +106,8 @@ protected:
     void CheckPn();
 
     int GetPhaseIncr(double Freq);
-    void CalcFmPower(double Freq, TAdcData *Ref);
+    void CalcFmPower(double Freq, TAdcData *Ref, int DataSize);
+
     void CalcInitPhase(double Freq, TAdcData *Ref);
     void CreateFreqRef(int FreqIncr, TAdcData *Ref);
     void CreateAmpRef(int PowerA, int PowerB, TAdcData *Ref);
@@ -123,13 +118,6 @@ protected:
     void OptimizeAmp(TAdcData *Ref);
     void OptimizePhase(TAdcData *Ref);
 
-    void CreateFmPhaseRef(TAdcData *Ref, int PhaseA, int PhaseB);
-    void OptimizeFmPhase(TAdcData *Ref);
-    void CreateFmPeriodRef(TAdcData *Ref, int Period);
-    void OptimizeFmPeriod(TAdcData *Ref);
-    void CreateFmInitSeriesRef(TAdcData *Ref, int Period, int Incr);
-    void OptimizeFmInitSeries(TAdcData *Ref);
-
     virtual void Execute();
 
     int CurrPowerA;
@@ -138,15 +126,8 @@ protected:
     int CurrPhaseB;
     int CurrFreqIncr;
 
-    int InitPhaseA;
-    int InitPhaseB;
-    int InitPeriod;
-    int WorkPeriodSize;
-    int WorkPeriodCount;
-
     int WorkSize;
     int *WorkBuf;
-    int *WorkPeriodArr;
     TAdcData *WorkData;
 
     TAdcData *TestData;

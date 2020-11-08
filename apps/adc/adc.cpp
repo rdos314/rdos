@@ -34,6 +34,7 @@
 #include "adcthr.h"
 #include "adcana.h"
 #include "adc.h"
+#include "fmsig.h"
 
 struct TAdcFreqPower
 {
@@ -1882,26 +1883,25 @@ int TAdc::GetMaxPeriodic()
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::CalcFmPower(double Freq, TAdcData *Ref)
+void TAdc::CalcFmPower(double Freq, TAdcData *Ref, int DataSize)
 {
     int pi = GetPhaseIncr(Freq);
     struct TAdcFreqPower res;
     int val;
     double dval;
-    int Base = 0;
-    int Count = 0x80000 / WorkSize;
+    int Count = 0x80000 / DataSize;
     double PowerA = 0;
     double PowerB = 0;
     int i;
 
     for (i = 0; i < Count; i++)
     {
-        ::CalcFreqPower(Ref + i * WorkSize, WorkSize, 0, pi, &res);
+        ::CalcFreqPower(Ref + i * DataSize, DataSize, 0, pi, &res);
 
-        res.SinA = res.SinA / WorkSize / 0x2000;
-        res.SinB = res.SinB / WorkSize / 0x2000;
-        res.CosA = res.CosA / WorkSize / 0x2000;
-        res.CosB = res.CosB / WorkSize / 0x2000;
+        res.SinA = res.SinA / DataSize / 0x2000;
+        res.SinB = res.SinB / DataSize / 0x2000;
+        res.CosA = res.CosA / DataSize / 0x2000;
+        res.CosB = res.CosB / DataSize / 0x2000;
 
         val = res.SinA * res.SinA + res.CosA * res.CosA;
         PowerA += sqrt(val) / 2.0;
@@ -2393,360 +2393,6 @@ void TAdc::OptimizePhase(TAdcData *Ref)
 
 /*##########################################################################
 #
-#   Name       : TAdc::CreatePhaseFmRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CreateFmPhaseRef(TAdcData *Ref, int PhaseA, int PhaseB)
-{
-    int i;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerA, PhaseA, InitPeriod, WorkPeriodArr, WorkPeriodSize);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerB, PhaseB, InitPeriod, WorkPeriodArr, WorkPeriodSize);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::OptimizeFmPhase
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::OptimizeFmPhase(TAdcData *Ref)
-{
-    int step;
-    long long lowa, mida, higha;
-    long long lowb, midb, highb;
-
-    step = 0x10000000;
-
-    CreateFmPhaseRef(Ref, InitPhaseA, InitPhaseB);
-    CalcDiff(CurrFreqIncr, &mida, &midb);
-
-    CreateFmPhaseRef(Ref, InitPhaseA + step, InitPhaseB + step);
-    CalcDiff(CurrFreqIncr, &higha, &highb);
-
-    while (higha < mida || highb < midb)
-    {
-        if (higha < mida)
-        {
-            mida = higha;
-            InitPhaseA += step;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            InitPhaseB += step;
-        }
-
-        CreateFmPhaseRef(Ref, InitPhaseA + step, InitPhaseB + step);
-        CalcDiff(CurrFreqIncr, &higha, &highb);
-    }
-
-    CreateFmPhaseRef(Ref, InitPhaseA - step, InitPhaseB - step);
-    CalcDiff(CurrFreqIncr, &lowa, &lowb);
-
-    while (lowa < mida || lowb < midb)
-    {
-        if (lowa < mida)
-        {
-            mida = lowa;
-            InitPhaseA -= step;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            InitPhaseB -= step;
-        }
-
-        CreateFmPhaseRef(Ref, InitPhaseA - step, InitPhaseB - step);
-        CalcDiff(CurrFreqIncr, &lowa, &lowb);
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-        CreateFmPhaseRef(Ref, InitPhaseA + step, InitPhaseB + step);
-        CalcDiff(CurrFreqIncr, &higha, &highb);
-
-        if (higha < mida)
-        {
-            mida = higha;
-            InitPhaseA += step;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            InitPhaseB += step;
-        }
-
-        CreateFmPhaseRef(Ref, InitPhaseA - step, InitPhaseB - step);
-        CalcDiff(CurrFreqIncr, &lowa, &lowb);
-
-        if (lowa < mida)
-        {
-            mida = lowa;
-            InitPhaseA -= step;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            InitPhaseB -= step;
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreateFmPeriodRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CreateFmPeriodRef(TAdcData *Ref, int Period)
-{
-    int i;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerA, InitPhaseA, Period, WorkPeriodArr, WorkPeriodSize);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerB, InitPhaseB, Period, WorkPeriodArr, WorkPeriodSize);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::OptimizeFmPeriod
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::OptimizeFmPeriod(TAdcData *Ref)
-{
-    int i;
-    int Step;
-    long long DiffA, DiffB;
-    long long low, mid, high;
-
-    Step = 0x10000000;
-
-    CreateFmPeriodRef(Ref, InitPeriod);
-    CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-    mid = DiffA + DiffB;
-
-    CreateFmPeriodRef(Ref, InitPeriod + Step);
-    CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-    high = DiffA + DiffB;
-
-    while (high < mid)
-    {
-        mid = high;
-        InitPeriod += Step;
-
-        CreateFmPeriodRef(Ref, InitPeriod + Step);
-        CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-        high = DiffA + DiffB;
-    }
-
-    CreateFmPeriodRef(Ref, InitPeriod - Step);
-    CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-    low = DiffA + DiffB;
-
-    while (low < mid)
-    {
-        mid = low;
-        InitPeriod -= Step;
-
-        CreateFmPeriodRef(Ref, InitPeriod - Step);
-        CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-        low = DiffA + DiffB;
-    }
-
-    for (i = 0; i < 20; i++)
-    {
-        Step = Step / 2;
-
-        CreateFmPeriodRef(Ref, InitPeriod + Step);
-        CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-        high = DiffA + DiffB;
-
-        if (high < mid)
-        {
-            mid = high;
-            InitPeriod += Step;
-        }
-        else
-        {
-            CreateFmPeriodRef(Ref, InitPeriod - Step);
-            CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-            low = DiffA + DiffB;
-
-            if (low < mid)
-            {
-                mid = low;
-                InitPeriod -= Step;
-            }
-        }
-
-        if (low == high)
-            break;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreateFmInitSeriesRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CreateFmInitSeriesRef(TAdcData *Ref, int Period, int Incr)
-{
-    int i;
-
-    WorkPeriodArr[0] = Incr;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerA, InitPhaseA, Period, WorkPeriodArr, WorkPeriodSize);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, CurrPowerB, InitPhaseB, Period, WorkPeriodArr, WorkPeriodSize);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::OptimizeFmInitSeries
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::OptimizeFmInitSeries(TAdcData *Ref)
-{
-    int i;
-    int Step;
-    int PeriodIncr = WorkPeriodArr[0];
-    int PeriodDiv = WorkPeriodSize / 2;
-    long long DiffA, DiffB;
-    long long low, mid, high;
-
-    Step = InitPeriod / 8;
-
-    CreateFmInitSeriesRef(Ref, InitPeriod, PeriodIncr);
-    CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-    mid = DiffA + DiffB;
-
-    CreateFmInitSeriesRef(Ref, InitPeriod + Step, PeriodIncr - Step / PeriodDiv);
-    CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-    high = DiffA + DiffB;
-
-    while (high < mid)
-    {
-        mid = high;
-        InitPeriod += Step;
-        PeriodIncr -= Step / PeriodDiv;
-
-        CreateFmInitSeriesRef(Ref, InitPeriod + Step, PeriodIncr - Step / PeriodDiv);
-        CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-        high = DiffA + DiffB;
-    }
-
-    CreateFmInitSeriesRef(Ref, InitPeriod - Step, PeriodIncr + Step / PeriodDiv);
-    CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-    low = DiffA + DiffB;
-
-    while (low < mid)
-    {
-        mid = low;
-        InitPeriod -= Step;
-        PeriodIncr += Step / PeriodDiv;
-
-        CreateFmInitSeriesRef(Ref, InitPeriod - Step, PeriodIncr + Step / PeriodDiv);
-        CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-        low = DiffA + DiffB;
-    }
-
-    for (i = 0; i < 20; i++)
-    {
-        Step = Step / 2;
-
-        CreateFmInitSeriesRef(Ref, InitPeriod + Step, PeriodIncr - Step / PeriodDiv);
-        CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-        high = DiffA + DiffB;
-
-        if (high < mid)
-        {
-            mid = high;
-            InitPeriod += Step;
-            PeriodIncr -= Step / PeriodDiv;
-        }
-        else
-        {
-            CreateFmInitSeriesRef(Ref, InitPeriod - Step, PeriodIncr + Step / PeriodDiv);
-            CalcDiff(CurrFreqIncr, &DiffA, &DiffB);
-            low = DiffA + DiffB;
-
-            if (low < mid)
-            {
-                mid = low;
-                InitPeriod -= Step;
-                PeriodIncr += Step / PeriodDiv;
-            }
-        }
-
-        if (low == high)
-            break;
-    }
-
-    WorkPeriodArr[0] = PeriodIncr;
-}
-
-/*##########################################################################
-#
 #   Name       : TAdc::RemoveFreq
 #
 #   Purpose....:
@@ -2759,52 +2405,13 @@ void TAdc::OptimizeFmInitSeries(TAdcData *Ref)
 void TAdc::RemoveFreq(double Freq)
 {
     int i;
-    double CurrFreq;
-    int Base = 0;
+    TFmSignal *fm;
     TAdcData *Data = TestData;
-    double rel;
-    char str[40];
-    int MaxWorkSize = 1024;
 
-    WorkData = new TAdcData[MaxWorkSize];
-    WorkBuf = new int[MaxWorkSize];
+    CalcFmPower(Freq, Data, 16);
 
-    WorkPeriodSize = 16;
-    WorkPeriodArr = new int[MaxWorkSize / WorkPeriodSize];
+    fm = new TFmSignal(SampleFreq, Freq, CurrPowerA, CurrPowerB, 16, 8);
 
-    WorkSize = WorkPeriodSize;
-
-    InitPhaseA = 0;
-    InitPhaseB = 0;
-    InitPeriod = GetPhaseIncr(Freq);
-    WorkPeriodCount = 1;
-    WorkPeriodArr[0] = 0;
-
-    CalcFmPower(Freq, Data);
-
-    for (i = 0; i < 4; i++)
-    {
-        OptimizeFmPhase(Data);
-        OptimizeFmPeriod(Data);
-        OptimizeFmInitSeries(Data);
-    }
-
-    while (Base < 0x80000)
-    {
-        CalcInitPhase(Freq, Data + Base);
-        CurrFreq = OptimizeFreq(Freq, 0.1, Data + Base);
-        CurrFreqIncr = GetPhaseIncr(CurrFreq);
-
-        rel = 1000.0 * (CurrFreq - Freq);
-        sprintf(str, "%10.2Lf kHz\r\n", rel);
-        Write(str);
-
-        CurrPhaseA += WorkSize * CurrFreqIncr / 2;
-        CurrPhaseB += WorkSize * CurrFreqIncr / 2;
-        Base += WorkSize / 2;
-    }
-
-    delete WorkBuf;
-    delete WorkData;
-
+    for (i = 0; i < 0x8000; i++)
+        fm->Add(Data + 0x10 * i);
 }
