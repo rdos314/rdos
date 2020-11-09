@@ -32,6 +32,7 @@
 #include "sigdev.h"
 #include "file.h"
 #include "adcdata.h"
+#include "freq.h"
 
 class TFmSignal
 {
@@ -43,8 +44,8 @@ public:
 
 protected:
     int GetPhasePerSample(double Freq);
-    int CalcPhaseA(TAdcData *Data, int Size);
-    int CalcPhaseB(TAdcData *Data, int Size);
+    double CalcPhaseA(TAdcData *Data, int Size);
+    double CalcPhaseB(TAdcData *Data, int Size);
 
     double SampleFreq;
     double Freq;

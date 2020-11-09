@@ -158,7 +158,7 @@ int TFmSignal::GetPhasePerSample(double Freq)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFmSignal::CalcPhaseA(TAdcData *Data, int Size)
+double TFmSignal::CalcPhaseA(TAdcData *Data, int Size)
 {
     double x, y;
     double phase;
@@ -170,9 +170,7 @@ int TFmSignal::CalcPhaseA(TAdcData *Data, int Size)
     y = (double)res.SinP;
     phase = atan2(x, y);
     phase = phase / M_PI / 2.0;
-    phase = phase * (double)0x10000;
-    phase = phase * (double)0x10000;
-    return (int)phase;
+    return phase;
 }
 
 /*##########################################################################
@@ -186,7 +184,7 @@ int TFmSignal::CalcPhaseA(TAdcData *Data, int Size)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFmSignal::CalcPhaseB(TAdcData *Data, int Size)
+double TFmSignal::CalcPhaseB(TAdcData *Data, int Size)
 {
     double x, y;
     double phase;
@@ -198,9 +196,7 @@ int TFmSignal::CalcPhaseB(TAdcData *Data, int Size)
     y = (double)res.SinP;
     phase = atan2(x, y);
     phase = phase / M_PI / 2.0;
-    phase = phase * (double)0x10000;
-    phase = phase * (double)0x10000;
-    return (int)phase;
+    return phase;
 }
 
 /*##########################################################################
@@ -216,8 +212,64 @@ int TFmSignal::CalcPhaseB(TAdcData *Data, int Size)
 ##########################################################################*/
 void TFmSignal::AddBlock(TAdcData *Data)
 {
-    int phase;
+    double rel = SampleFreq / Freq;
+    double phaseA, phaseB;
+    double offsetA, offsetB;
+    int offA, offB;
+    double diff;
+    TFreqData freq(Freq, SampleFreq, 20);
 
-    phase = CalcPhaseA(Data, 16);
-    phase = CalcPhaseB(Data, 16);
+    phaseA = CalcPhaseA(Data, freq.UsedSamples);
+    phaseB = CalcPhaseB(Data, freq.UsedSamples);
+
+    offsetA = (1.0 - phaseA) * rel;
+    offsetB = (1.0 - phaseB) * rel;
+
+    if (offsetA > offsetB)
+    {
+        if (offsetA - offsetB > rel / 2)
+            offsetB += rel;
+    }
+    else
+    {
+        if (offsetB - offsetA > rel / 2)
+            offsetA += rel;
+    }
+
+    offA = (int)(offsetA + 0.5);
+    offB = (int)(offsetB + 0.5);
+
+    phaseA = CalcPhaseA(Data + offA, freq.UsedSamples);
+    phaseB = CalcPhaseB(Data + offB, freq.UsedSamples);
+
+    offsetA = phaseA * rel;
+    offsetB = phaseB * rel;
+        
+    while (offsetA > 0.5)
+    {
+        offA--;
+        phaseA = CalcPhaseA(Data + offA, freq.UsedSamples);
+        offsetA = phaseA * rel;
+    }
+
+    while (offsetB > 0.5)
+    {
+        offB--;
+        phaseB = CalcPhaseB(Data + offB, freq.UsedSamples);
+        offsetB = phaseB * rel;
+    }
+        
+    while (offsetA < -0.5)
+    {
+        offA++;
+        phaseA = CalcPhaseA(Data + offA, freq.UsedSamples);
+        offsetA = phaseA * rel;
+    }
+
+    while (offsetB < -0.5)
+    {
+        offB++;
+        phaseB = CalcPhaseB(Data + offB, freq.UsedSamples);
+        offsetB = phaseB * rel;
+    }
 }
