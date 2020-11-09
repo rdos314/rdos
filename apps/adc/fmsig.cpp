@@ -149,6 +149,62 @@ int TFmSignal::GetPhasePerSample(double Freq)
 
 /*##########################################################################
 #
+#   Name       : TFmSignal::CalcPhaseA
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFmSignal::CalcPhaseA(TAdcData *Data, int Size)
+{
+    double x, y;
+    double phase;
+    TAdcFreqChanPower res;
+
+    ::CalcFreqPowerA(Data, Size, 0, PhasePerSample, &res);
+
+    x = (double)res.CosP;
+    y = (double)res.SinP;
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
+    phase = phase * (double)0x10000;
+    phase = phase * (double)0x10000;
+    return (int)phase;
+}
+
+/*##########################################################################
+#
+#   Name       : TFmSignal::CalcPhaseB
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFmSignal::CalcPhaseB(TAdcData *Data, int Size)
+{
+    double x, y;
+    double phase;
+    TAdcFreqChanPower res;
+
+    ::CalcFreqPowerB(Data, Size, 0, PhasePerSample, &res);
+
+    x = (double)res.CosP;
+    y = (double)res.SinP;
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
+    phase = phase * (double)0x10000;
+    phase = phase * (double)0x10000;
+    return (int)phase;
+}
+
+/*##########################################################################
+#
 #   Name       : TFmSignal::AddBlock
 #
 #   Purpose....:
@@ -160,11 +216,8 @@ int TFmSignal::GetPhasePerSample(double Freq)
 ##########################################################################*/
 void TFmSignal::AddBlock(TAdcData *Data)
 {
-    TAdcFreqChanPower resA;
-    TAdcFreqChanPower resB;
-    TAdcFreqPower res;
+    int phase;
 
-    ::CalcFreqPower(Data, 16, 0, PhasePerSample, &res);
-    ::CalcFreqPowerA(Data, 16, 0, PhasePerSample, &resA);
-    ::CalcFreqPowerB(Data, 16, 0, PhasePerSample, &resB);
+    phase = CalcPhaseA(Data, 16);
+    phase = CalcPhaseB(Data, 16);
 }

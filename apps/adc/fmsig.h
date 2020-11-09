@@ -43,6 +43,8 @@ public:
 
 protected:
     int GetPhasePerSample(double Freq);
+    int CalcPhaseA(TAdcData *Data, int Size);
+    int CalcPhaseB(TAdcData *Data, int Size);
 
     double SampleFreq;
     double Freq;
