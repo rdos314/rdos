@@ -53,6 +53,12 @@ struct TAdcPower
     long long PowB;
 };
 
+struct TAdcFmPower
+{
+    long long SinFm;
+    long long SinSig;
+    long long CosSig;
+};
 
 #pragma aux ANAAPI "_*" \
        parm routine [] \
@@ -75,6 +81,12 @@ int CalcFreqPowerA(TAdcData *Data, int Size, int InitPhase, int PhasePerSample, 
 
 int CalcFreqPowerB(TAdcData *Data, int Size, int InitPhase, int PhasePerSample, struct TAdcFreqChanPower *Res);
 #pragma aux (ANAAPI) CalcFreqPowerB;
+
+int CalcFmPowerA(TAdcData *Data, int Size, int InitPhase, int InitPhasePerSample, int PhasePerSampleIncr, int Amp, struct TAdcFmPower *Res);
+#pragma aux (ANAAPI) CalcFmPowerA;
+
+int CalcFmPowerB(TAdcData *Data, int Size, int InitPhase, int InitPhasePerSample, int PhasePerSampleIncr, int Amp, struct TAdcFmPower *Res);
+#pragma aux (ANAAPI) CalcFmPowerB;
 
 int CreateSignal(int *Data, int Size, int InitPhase, int PhaseIncr, int Amp);
 #pragma aux (ANAAPI) CreateSignal;
@@ -216,8 +228,10 @@ void TFmSignal::AddBlock(TAdcData *Data)
     double phaseA, phaseB;
     double offsetA, offsetB;
     int offA, offB;
-    double diff;
+    double dval;
     TFreqData freq(Freq, SampleFreq, 20);
+
+    TAdcFmPower res;
 
     phaseA = CalcPhaseA(Data, freq.UsedSamples);
     phaseB = CalcPhaseB(Data, freq.UsedSamples);
@@ -244,32 +258,38 @@ void TFmSignal::AddBlock(TAdcData *Data)
 
     offsetA = phaseA * rel;
     offsetB = phaseB * rel;
-        
-    while (offsetA > 0.5)
+
+    if (offsetA > 0.5)
     {
         offA--;
         phaseA = CalcPhaseA(Data + offA, freq.UsedSamples);
         offsetA = phaseA * rel;
     }
 
-    while (offsetB > 0.5)
+    if (offsetB > 0.5)
     {
         offB--;
         phaseB = CalcPhaseB(Data + offB, freq.UsedSamples);
         offsetB = phaseB * rel;
     }
-        
-    while (offsetA < -0.5)
+
+    if (offsetA < -0.5)
     {
         offA++;
         phaseA = CalcPhaseA(Data + offA, freq.UsedSamples);
         offsetA = phaseA * rel;
     }
 
-    while (offsetB < -0.5)
+    if (offsetB < -0.5)
     {
         offB++;
         phaseB = CalcPhaseB(Data + offB, freq.UsedSamples);
         offsetB = phaseB * rel;
     }
+
+    dval = -offsetA * (double)PhasePerSample;
+
+    CalcFmPowerA(Data + offA, freq.UsedSamples, (int)dval , PhasePerSample, 0, 60, &res);
+
+    dval = -offsetB * (double)PhasePerSample;
 }

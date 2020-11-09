@@ -51,6 +51,14 @@ pow_b		DD ?,?
 
 AdcPower	ENDS
 
+AdcFmPower	STRUC
+
+sin_fm         DD ?,?
+sin_sig        DD ?,?
+cos_sig        DD ?,?
+
+AdcFmPower     ENDS
+
 .code
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -16923,5 +16931,220 @@ cfsDone:
     pop ebp
     ret 28
 _CreateFmSignal    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcFmPowerA
+;
+;       DESCRIPTION:    Calc FM power for channel A at a given frequency using 32-bit frequency
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       InitPhase
+;                       InitPhasePerSample
+;                       PhasePerSampleIncr
+;                       Amp
+;                       Res
+;
+;       RETURNS:        End phase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CalcFmPowerA
+
+_CalcFmPowerA  Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov esi,[esp+1Ch]  ; data
+    mov ecx,[esp+20h]  ; size
+    mov ebp,[esp+24h]  ; init phase
+    mov edi,[esp+34h]  ; res
+;
+    xor eax,eax
+    mov [edi].sin_fm,eax
+    mov [edi].sin_fm+4,eax
+    mov [edi].sin_sig,eax
+    mov [edi].sin_sig+4,eax
+    mov [edi].cos_sig,eax
+    mov [edi].cos_sig+4,eax
+
+cfmaLoop:
+    mov ebx,ebp
+    shr ebx,13
+    and bl,0FEh
+;
+    movsx eax,word ptr [ebx].sin_tab
+    mov edx,[esp+30h]   ; amp
+    shl edx,16
+    imul edx
+    movsx eax,word ptr [esi]
+    sub eax,edx
+    push edx
+    imul word ptr [ebx].sin_tab
+    movsx edx,dx
+    add word ptr [edi].sin_sig,ax
+    adc dword ptr [edi].sin_sig+2,edx
+    pop eax
+    imul word ptr [ebx].sin_tab
+    movsx edx,dx
+    add word ptr [edi].sin_fm,ax
+    adc dword ptr [edi].sin_fm+2,edx
+;
+    mov ebx,ebp
+    add ebx,40000000h
+    shr ebx,13
+    and bl,0FEh
+;
+    movsx eax,word ptr [ebx].sin_tab
+    mov edx,[esp+30h]   ; amp
+    shl edx,16
+    imul edx
+    movsx eax,word ptr [esi]
+    sub eax,edx
+    imul word ptr [ebx].sin_tab
+    movsx edx,dx
+    add word ptr [edi].cos_sig,ax
+    adc dword ptr [edi].cos_sig+2,edx
+;
+    add esi,4
+    add ebp,[esp+28h]  ; phase per sample
+    mov eax,[esp+2Ch]  ; phase per sample incr
+    add [esp+28h],eax  
+    sub ecx,1
+    jnz cfmaLoop
+;
+    movsx eax,word ptr [edi].sin_fm+4
+    mov [edi].sin_fm+4,eax
+;
+    movsx eax,word ptr [edi].sin_sig+4
+    mov [edi].sin_sig+4,eax
+;
+    movsx eax,word ptr [edi].cos_sig+4
+    mov [edi].cos_sig+4,eax
+;
+    mov eax,ebp
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 24
+_CalcFmPowerA    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcFmPowerB
+;
+;       DESCRIPTION:    Calc FM power for channel B at a given frequency using 32-bit frequency
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       InitPhase
+;                       InitPhasePerSample
+;                       PhasePerSampleIncr
+;                       Amp
+;                       Res
+;
+;       RETURNS:        End phase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CalcFmPowerB
+
+_CalcFmPowerB  Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov esi,[esp+1Ch]  ; data
+    mov ecx,[esp+20h]  ; size
+    mov ebp,[esp+24h]  ; init phase
+    mov edi,[esp+34h]  ; res
+;
+    xor eax,eax
+    mov [edi].sin_fm,eax
+    mov [edi].sin_fm+4,eax
+    mov [edi].sin_sig,eax
+    mov [edi].sin_sig+4,eax
+    mov [edi].cos_sig,eax
+    mov [edi].cos_sig+4,eax
+
+cfmbLoop:
+    mov ebx,ebp
+    shr ebx,13
+    and bl,0FEh
+;
+    movsx eax,word ptr [ebx].sin_tab
+    mov edx,[esp+30h]   ; amp
+    shl edx,16
+    imul edx
+    movsx eax,word ptr [esi]
+    sub eax,edx
+    push edx
+    imul word ptr [ebx].sin_tab
+    movsx edx,dx
+    add word ptr [edi].sin_sig,ax
+    adc dword ptr [edi].sin_sig+2,edx
+    pop eax
+    imul word ptr [ebx].sin_tab
+    movsx edx,dx
+    add word ptr [edi].sin_fm,ax
+    adc dword ptr [edi].sin_fm+2,edx
+;
+    mov ebx,ebp
+    add ebx,40000000h
+    shr ebx,13
+    and bl,0FEh
+;
+    movsx eax,word ptr [ebx].sin_tab
+    mov edx,[esp+30h]   ; amp
+    shl edx,16
+    imul edx
+    movsx eax,word ptr [esi]
+    sub eax,edx
+    imul word ptr [ebx].sin_tab
+    movsx edx,dx
+    add word ptr [edi].cos_sig,ax
+    adc dword ptr [edi].cos_sig+2,edx
+;
+    add esi,4
+    add ebp,[esp+28h]  ; phase per sample
+    mov eax,[esp+2Ch]  ; phase per sample incr
+    add [esp+28h],eax  
+    sub ecx,1
+    jnz cfmbLoop
+;
+    movsx eax,word ptr [edi].sin_fm+4
+    mov [edi].sin_fm+4,eax
+;
+    movsx eax,word ptr [edi].sin_sig+4
+    mov [edi].sin_sig+4,eax
+;
+    movsx eax,word ptr [edi].cos_sig+4
+    mov [edi].cos_sig+4,eax
+;
+    mov eax,ebp
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 24
+_CalcFmPowerB    Endp
+
 
   END
