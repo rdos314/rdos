@@ -41,6 +41,12 @@ struct TAdcFreqPower
     long long CosB;
 };
 
+struct TAdcFreqChanPower
+{
+    long long SinP;
+    long long CosP;
+};
+
 struct TAdcPower
 {
     long long PowA;
@@ -64,6 +70,12 @@ void CalcPower(TAdcData *Data, int Size, struct TAdcPower *Res);
 int CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, struct TAdcFreqPower *Res);
 #pragma aux (ANAAPI) CalcFreqPower;
 
+int CalcFreqPowerA(TAdcData *Data, int Size, int InitPhase, int PhasePerSample, struct TAdcFreqChanPower *Res);
+#pragma aux (ANAAPI) CalcFreqPowerA;
+
+int CalcFreqPowerB(TAdcData *Data, int Size, int InitPhase, int PhasePerSample, struct TAdcFreqChanPower *Res);
+#pragma aux (ANAAPI) CalcFreqPowerB;
+
 int CreateSignal(int *Data, int Size, int InitPhase, int PhaseIncr, int Amp);
 #pragma aux (ANAAPI) CreateSignal;
 
@@ -85,43 +97,12 @@ int CreateFmSignal(int *Data, int Size, int Amp, int InitPhase, int InitPeriod, 
 #   Returns....: *
 #
 ##########################################################################*/
-TFmSignal::TFmSignal(double sf, double f, double bw, int DataSize, int DataSamples)
+TFmSignal::TFmSignal(double sf, double f)
 {
-    int Size;
-    int val;
-
     SampleFreq = sf;
     Freq = f;
 
-    PowerA = 0;
-    PowerB = 0;
-
-    PhaseIncr = GetPhaseIncr(Freq);
-    val = GetPhaseIncr(Freq + bw);
-    MaxPhaseIncr = (val - PhaseIncr) / DataSize;
-
-    PhaseIncrSamples = DataSize;
-    PhaseIncrCount = 0;
-    PhaseIncrArr = new int[DataSamples];
-
-    WorkSize = 0;
-    Size = DataSize * DataSamples;
-    WorkData = new TAdcData[Size];
-    WorkBuf = new int[Size];
-
-    SampleCount = 0;
-    SampleSize = DataSamples;
-    SampleData = new TAdcData[Size + DataSize];
-
-    OffsetA = 0;
-    OffsetB = 0;
-
-    InitPhaseA = 0;
-    InitPhaseB = 0;
-    InitPhaseIncr = PhaseIncr;
-
-    PhaseIncrCount = 1;
-    PhaseIncrArr[0] = 0;
+    PhasePerSample = GetPhasePerSample(Freq);
 }
 
 /*##########################################################################
@@ -137,57 +118,20 @@ TFmSignal::TFmSignal(double sf, double f, double bw, int DataSize, int DataSampl
 ##########################################################################*/
 TFmSignal::~TFmSignal()
 {
-    delete WorkData;
-    delete WorkBuf;
-    delete SampleData;
 }
 
 /*##########################################################################
 #
-#   Name       : TFmSignal::SetPower
+#   Name       : TFmSignal::GetPhasePerSample
 #
-#   Purpose....: Set power
-#
-#   In params..:
-#   Out params.: *
-#   Returns....:
-#
-##########################################################################*/
-void TFmSignal::SetPower(int pA, int pB)
-{
-    PowerA = pA;
-    PowerB = pB;
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::SetPhase
-#
-#   Purpose....: Set phase
-#
-#   In params..:
-#   Out params.: *
-#   Returns....:
-#
-##########################################################################*/
-void TFmSignal::SetPhase(int pA, int pB)
-{
-    InitPhaseA = pA;
-    InitPhaseB = pB;
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::GetPhaseIncr
-#
-#   Purpose....: Get phase incr
+#   Purpose....: Get phase per sample
 #
 #   In params..: Freq, SampleFreq
 #   Out params.: *
 #   Returns....: Phase incr
 #
 ##########################################################################*/
-int TFmSignal::GetPhaseIncr(double Freq)
+int TFmSignal::GetPhasePerSample(double Freq)
 {
     long long lval;
     double freq;
@@ -203,10 +147,9 @@ int TFmSignal::GetPhaseIncr(double Freq)
     return (int)lval;
 }
 
-
 /*##########################################################################
 #
-#   Name       : TFmSignal::CalcDiff
+#   Name       : TFmSignal::AddBlock
 #
 #   Purpose....:
 #
@@ -215,444 +158,13 @@ int TFmSignal::GetPhaseIncr(double Freq)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFmSignal::CalcDiff(long long *DiffA, long long *DiffB)
+void TFmSignal::AddBlock(TAdcData *Data)
 {
-    struct TAdcPower res;
-
-    ::CalcPower(WorkData, WorkSize, &res);
-
-    *DiffA  = res.PowA;
-    *DiffB  = res.PowB;
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::CreatePhaseRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::CreatePhaseRef(int PhaseA, int PhaseB)
-{
-    int i;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerA, PhaseA, InitPhaseIncr, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = SampleData[i + OffsetA].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerB, PhaseB, InitPhaseIncr, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = SampleData[i + OffsetB].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::OptimizePhase
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::OptimizePhase()
-{
-    int step;
-    long long lowa, mida, higha;
-    long long lowb, midb, highb;
-
-    step = 0x10000000;
-
-    CreatePhaseRef(InitPhaseA, InitPhaseB);
-    CalcDiff(&mida, &midb);
-
-    CreatePhaseRef(InitPhaseA + step, InitPhaseB + step);
-    CalcDiff(&higha, &highb);
-
-    while (higha < mida || highb < midb)
-    {
-        if (higha < mida)
-        {
-            mida = higha;
-            InitPhaseA += step;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            InitPhaseB += step;
-        }
-
-        CreatePhaseRef(InitPhaseA + step, InitPhaseB + step);
-        CalcDiff(&higha, &highb);
-    }
-
-    CreatePhaseRef(InitPhaseA - step, InitPhaseB - step);
-    CalcDiff(&lowa, &lowb);
-
-    while (lowa < mida || lowb < midb)
-    {
-        if (lowa < mida)
-        {
-            mida = lowa;
-            InitPhaseA -= step;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            InitPhaseB -= step;
-        }
-
-        CreatePhaseRef(InitPhaseA - step, InitPhaseB - step);
-        CalcDiff(&lowa, &lowb);
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-        CreatePhaseRef(InitPhaseA + step, InitPhaseB + step);
-        CalcDiff(&higha, &highb);
-
-        if (higha < mida)
-        {
-            mida = higha;
-            InitPhaseA += step;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            InitPhaseB += step;
-        }
-
-        CreatePhaseRef(InitPhaseA - step, InitPhaseB - step);
-        CalcDiff(&lowa, &lowb);
-
-        if (lowa < mida)
-        {
-            mida = lowa;
-            InitPhaseA -= step;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            InitPhaseB -= step;
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::CreatePhaseIncrRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::CreatePhaseIncrRef(int pi)
-{
-    int i;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerA, InitPhaseA, pi, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = SampleData[i + OffsetA].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerB, InitPhaseB, pi, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = SampleData[i + OffsetB].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::OptimizePhaseIncr
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::OptimizePhaseIncr()
-{
-    int i;
-    int Step;
-    long long DiffA, DiffB;
-    long long low, mid, high;
-
-    Step = MaxPhaseIncr;
-
-    CreatePhaseIncrRef(InitPhaseIncr);
-    CalcDiff(&DiffA, &DiffB);
-    mid = DiffA + DiffB;
-
-    for (i = 0; i < 20; i++)
-    {
-        Step = Step / 2;
-
-        CreatePhaseIncrRef(InitPhaseIncr + Step);
-        CalcDiff(&DiffA, &DiffB);
-        high = DiffA + DiffB;
-
-        if (high < mid)
-        {
-            mid = high;
-            InitPhaseIncr += Step;
-        }
-        else
-        {
-            CreatePhaseIncrRef(InitPhaseIncr - Step);
-            CalcDiff(&DiffA, &DiffB);
-            low = DiffA + DiffB;
-
-            if (low < mid)
-            {
-                mid = low;
-                InitPhaseIncr -= Step;
-            }
-        }
-
-        if (low == high)
-            break;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreateInitSeriesRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::CreateInitSeriesRef(int pi, int PhaseIncr0)
-{
-    int i;
-
-    PhaseIncrArr[0] = PhaseIncr0;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerA, InitPhaseA, pi, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = SampleData[i + OffsetA].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerB, InitPhaseB, pi, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = SampleData[i + OffsetB].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::OptimizeInitSeries
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::OptimizeInitSeries()
-{
-    int i;
-    int Step;
-    int PhaseIncr0 = PhaseIncrArr[0];
-    int PhaseDiv = PhaseIncrSamples / 2;
-    long long DiffA, DiffB;
-    long long low, mid, high;
-
-    Step = MaxPhaseIncr;
-
-    CreateInitSeriesRef(InitPhaseIncr, PhaseIncr0);
-    CalcDiff(&DiffA, &DiffB);
-    mid = DiffA + DiffB;
-
-    for (i = 0; i < 20; i++)
-    {
-        Step = Step / 2;
-
-        CreateInitSeriesRef(InitPhaseIncr + Step, PhaseIncr0 - Step / PhaseDiv);
-        CalcDiff(&DiffA, &DiffB);
-        high = DiffA + DiffB;
-
-        if (high < mid)
-        {
-            mid = high;
-            InitPhaseIncr += Step;
-            PhaseIncr0 -= Step / PhaseDiv;
-        }
-        else
-        {
-            CreateInitSeriesRef(InitPhaseIncr - Step, PhaseIncr0 + Step / PhaseDiv);
-            CalcDiff(&DiffA, &DiffB);
-            low = DiffA + DiffB;
-
-            if (low < mid)
-            {
-                mid = low;
-                InitPhaseIncr -= Step;
-                PhaseIncr0 += Step / PhaseDiv;
-            }
-        }
-
-        if (low == high)
-            break;
-    }
-
-    PhaseIncrArr[0] = PhaseIncr0;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreateSeriesRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::CreateSeriesRef(int p)
-{
-    int i;
-
-    PhaseIncrArr[PhaseIncrCount - 1] = p;
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerA, InitPhaseA, InitPhaseIncr, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = SampleData[i + OffsetA].chA - (short int)WorkBuf[i];
-
-    ::CreateFmSignal(WorkBuf, WorkSize, PowerB, InitPhaseB, InitPhaseIncr, PhaseIncrArr, PhaseIncrSamples);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = SampleData[i + OffsetB].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::OptimizeSeries
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::OptimizeSeries()
-{
-    int i;
-    int Step;
-    int pi = 0;
-    long long DiffA, DiffB;
-    long long low, mid, high;
-
-    Step = MaxPhaseIncr;
-
-    CreateSeriesRef(pi);
-    CalcDiff(&DiffA, &DiffB);
-    mid = DiffA + DiffB;
-
-    for (i = 0; i < 20; i++)
-    {
-        Step = Step / 2;
-
-        CreateSeriesRef(pi + Step);
-        CalcDiff(&DiffA, &DiffB);
-        high = DiffA + DiffB;
-
-        if (high < mid)
-        {
-            mid = high;
-            pi += Step;
-        }
-        else
-        {
-            CreateSeriesRef(pi - Step);
-            CalcDiff(&DiffA, &DiffB);
-            low = DiffA + DiffB;
-
-            if (low < mid)
-            {
-                mid = low;
-                pi -= Step;
-            }
-        }
-
-        if (low == high)
-            break;
-    }
-
-    PhaseIncrArr[PhaseIncrCount - 1] = pi;
-}
-
-/*##########################################################################
-#
-#   Name       : TFmSignal::Add
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFmSignal::Add(TAdcData *Data)
-{
-    int i;
-    int Base;
-
-    if (SampleCount < SampleSize)
-    {
-        Base = SampleCount * PhaseIncrSamples;
-
-        for (i = 0; i < PhaseIncrSamples; i++)
-            SampleData[i + Base] = Data[i];
-
-        SampleCount++;
-    }
-
-    switch (SampleCount)
-    {
-        case 1:
-             break;
-
-        case 2:
-            PhaseIncrCount = 1;
-            WorkSize = PhaseIncrSamples;
-
-            for (i = 0; i < 4; i++)
-            {
-                OptimizePhaseIncr();
-                OptimizeInitSeries();
-            }
-            break;
-
-        default:
-            PhaseIncrCount = SampleCount - 1;
-            WorkSize = PhaseIncrCount * PhaseIncrSamples;
-            OptimizeSeries();
-            break;
-    }
+    TAdcFreqChanPower resA;
+    TAdcFreqChanPower resB;
+    TAdcFreqPower res;
+
+    ::CalcFreqPower(Data, 16, 0, PhasePerSample, &res);
+    ::CalcFreqPowerA(Data, 16, 0, PhasePerSample, &resA);
+    ::CalcFreqPowerB(Data, 16, 0, PhasePerSample, &resB);
 }

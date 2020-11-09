@@ -2447,17 +2447,8 @@ void TAdc::OptimizePhase(TAdcData *Ref)
 void TAdc::RemoveFreq(double Freq)
 {
     int i;
-    int Samples = 16;
-    int Count = 0x80000 / Samples;
-    TFmSignal fm(SampleFreq, Freq, 0.1, Samples, 64);
     TAdcData *Data = TestData;
+    TFmSignal fm(SampleFreq, Freq);
 
-    CalcFmPower(Freq, Data, Samples);
-    CalcFmPhase(Freq, Data, Samples);
-
-    fm.SetPower(CurrPowerA, CurrPowerB);
-    fm.SetPhase(CurrPhaseA, CurrPhaseB);
-
-    for (i = 0; i < Count; i++)
-        fm.Add(Data + Samples * i);
+    fm.AddBlock(Data);
 }

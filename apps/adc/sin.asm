@@ -37,6 +37,13 @@ cos_b		DD ?,?
 
 AdcFreqPower	ENDS
 
+AdcFreqChanPower	STRUC
+
+sin_p		DD ?,?
+cos_p		DD ?,?
+
+AdcFreqChanPower	ENDS
+
 AdcPower	STRUC
 
 pow_a		DD ?,?
@@ -16567,6 +16574,169 @@ cfpLoop:
     pop ebx
     ret 20
 _CalcFreqPower    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcFreqPowerA
+;
+;       DESCRIPTION:    Calc power for channel A at a given frequency using 32-bit frequency
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       InitPhase
+;                       PhasePerSample
+;                       Res
+;
+;       RETURNS:        End phase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CalcFreqPowerA
+
+_CalcFreqPowerA  Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov esi,[esp+1Ch]
+    mov ecx,[esp+20h]
+    mov ebp,[esp+24h]
+    mov edi,[esp+2Ch]
+;
+    xor eax,eax
+    mov [edi].sin_p,eax
+    mov [edi].sin_p+4,eax
+    mov [edi].cos_p,eax
+    mov [edi].cos_p+4,eax
+
+cfpaLoop:
+    mov ebx,ebp
+    shr ebx,13
+    and bl,0FEh
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi]
+    movsx edx,dx
+    add word ptr [edi].sin_p,ax
+    adc dword ptr [edi].sin_p+2,edx
+;
+    mov ebx,ebp
+    add ebx,40000000h
+    shr ebx,13
+    and bl,0FEh
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi]
+    movsx edx,dx
+    add word ptr [edi].cos_p,ax
+    adc dword ptr [edi].cos_p+2,edx
+;
+    add esi,4
+    add ebp,[esp+28h]
+    loop cfpaLoop
+;
+    movsx eax,word ptr [edi].sin_p+4
+    mov [edi].sin_p+4,eax
+;
+    movsx eax,word ptr [edi].cos_p+4
+    mov [edi].cos_p+4,eax
+;
+    mov eax,ebp
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 20
+_CalcFreqPowerA    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CalcFreqPowerB
+;
+;       DESCRIPTION:    Calc power for channel B at a given frequency using 32-bit frequency
+;
+;       PARAMETERS:     Data
+;                       Size
+;                       InitPhase
+;                       PhasePerSample
+;                       Res
+;
+;       RETURNS:        End phase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _CalcFreqPowerB
+
+_CalcFreqPowerB  Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov esi,[esp+1Ch]
+    add esi,2
+    mov ecx,[esp+20h]
+    mov ebp,[esp+24h]
+    mov edi,[esp+2Ch]
+;
+    xor eax,eax
+    mov [edi].sin_p,eax
+    mov [edi].sin_p+4,eax
+    mov [edi].cos_p,eax
+    mov [edi].cos_p+4,eax
+
+cfpbLoop:
+    mov ebx,ebp
+    shr ebx,13
+    and bl,0FEh
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi]
+    movsx edx,dx
+    add word ptr [edi].sin_p,ax
+    adc dword ptr [edi].sin_p+2,edx
+;
+    mov ebx,ebp
+    add ebx,40000000h
+    shr ebx,13
+    and bl,0FEh
+;
+    mov ax,[ebx].sin_tab
+    imul word ptr [esi]
+    movsx edx,dx
+    add word ptr [edi].cos_p,ax
+    adc dword ptr [edi].cos_p+2,edx
+;
+    add esi,4
+    add ebp,[esp+28h]
+    loop cfpbLoop
+;
+    movsx eax,word ptr [edi].sin_p+4
+    mov [edi].sin_p+4,eax
+;
+    movsx eax,word ptr [edi].cos_p+4
+    mov [edi].cos_p+4,eax
+;
+    mov eax,ebp
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 20
+_CalcFreqPowerB    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

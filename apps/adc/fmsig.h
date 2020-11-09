@@ -36,50 +36,17 @@
 class TFmSignal
 {
 public:
-    TFmSignal(double SampleFreq, double Freq, double BandWidth, int DataSize, int DataSamples);
+    TFmSignal(double SampleFreq, double Freq);
     ~TFmSignal();
 
-    void SetPower(int PowerA, int PowerB);
-    void SetPhase(int PhaseA, int PhaseB);
-    void Add(TAdcData *Data);
+    void AddBlock(TAdcData *Data);
 
 protected:
-    int GetPhaseIncr(double Freq);
-
-    void CalcDiff(long long *DiffA, long long *DiffB);
-    void CreatePhaseRef(int PhaseA, int PhaseB);
-    void OptimizePhase();
-    void CreatePhaseIncrRef(int PhaseIncr);
-    void OptimizePhaseIncr();
-    void CreateInitSeriesRef(int PhaseIncr, int Incr0);
-    void OptimizeInitSeries();
-    void CreateSeriesRef(int p);
-    void OptimizeSeries();
+    int GetPhasePerSample(double Freq);
 
     double SampleFreq;
     double Freq;
-    int PhaseIncr;
-    int MaxPhaseIncr;
-
-    TAdcData *SampleData;
-    int SampleSize;
-    int SampleCount;
-
-    int PowerA;
-    int PowerB;
-
-    int OffsetA;
-    int OffsetB;
-    int InitPhaseA;
-    int InitPhaseB;
-    int InitPhaseIncr;
-    int PhaseIncrCount;
-    int PhaseIncrSamples;
-
-    int WorkSize;
-    int *WorkBuf;
-    TAdcData *WorkData;
-    int *PhaseIncrArr;
+    int PhasePerSample;
 };
 
 #endif
