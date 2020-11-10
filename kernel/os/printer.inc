@@ -27,44 +27,44 @@
 
 printer_struc	STRUC
 
-pr_jammed_proc              DD ?
+pr_jammed_proc              DD ?,?
 
-pr_paper_low_proc           DD ?
+pr_paper_low_proc           DD ?,?
 
-pr_paper_end_proc           DD ?
+pr_paper_end_proc           DD ?,?
 
-pr_cutter_jammed_proc       DD ?
+pr_cutter_jammed_proc       DD ?,?
 
-pr_ok_proc                  DD ?
+pr_ok_proc                  DD ?,?
 
-pr_head_lifted_proc         DD ?
+pr_head_lifted_proc         DD ?,?
 
-pr_paper_in_presenter_proc  DD ?
+pr_paper_in_presenter_proc  DD ?,?
 
-pr_temp_error_proc          DD ?
+pr_temp_error_proc          DD ?,?
 
-pr_feed_error_proc          DD ?
+pr_feed_error_proc          DD ?,?
 
-pr_print_test_proc          DD ?
+pr_print_test_proc          DD ?,?
 
 ; IN  DX    Height
 ; OUT BX    Bitmap
-pr_create_bitmap_proc       DD ?
+pr_create_bitmap_proc       DD ?,?
 
 ; IN  BX    Bitmap
-pr_print_bitmap_proc        DD ?
+pr_print_bitmap_proc        DD ?,?
 
 ; IN  AX    Amount in mm
-pr_present_media_proc       DD ?
+pr_present_media_proc       DD ?,?
 
-pr_eject_media_proc         DD ?
+pr_eject_media_proc         DD ?,?
 
-pr_wait_for_print_proc      DD ?
+pr_wait_for_print_proc      DD ?,?
 
 ; IN  ES:EDI    Name
-pr_get_name_proc            DD ?
+pr_get_name_proc            DD ?,?
 
-pr_reset_proc               DD ?
+pr_reset_proc               DD ?,?
 
 printer_device              DW ?
 

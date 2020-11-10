@@ -35,6 +35,8 @@ include ..\os\printer.inc
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
 
+        .386p
+
 MAX_OUT_SIZE = 260 * 16
 
 FLAG_ATTACHED          = 1
@@ -100,8 +102,6 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
-
-        .386p
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -927,7 +927,7 @@ StatusTimeout  Proc far
     StartTimer
 
 stDone:    
-    retf32
+    ret
 StatusTimeout  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1082,56 +1082,56 @@ pmu_thread:
     AddPrinter
     pop ds
 ;
-    mov word ptr es:pr_get_name_proc,OFFSET get_printer_name
-    mov word ptr es:pr_get_name_proc+2,cs
+    mov es:pr_get_name_proc,OFFSET get_printer_name
+    mov es:pr_get_name_proc+4,cs
 ;
-    mov word ptr es:pr_jammed_proc,OFFSET is_jammed
-    mov word ptr es:pr_jammed_proc+2,cs
+    mov es:pr_jammed_proc,OFFSET is_jammed
+    mov es:pr_jammed_proc+4,cs
 ;    
-    mov word ptr es:pr_paper_low_proc,OFFSET is_paper_low
-    mov word ptr es:pr_paper_low_proc+2,cs
+    mov es:pr_paper_low_proc,OFFSET is_paper_low
+    mov es:pr_paper_low_proc+4,cs
 ;    
-    mov word ptr es:pr_paper_end_proc,OFFSET is_paper_end
-    mov word ptr es:pr_paper_end_proc+2,cs
+    mov es:pr_paper_end_proc,OFFSET is_paper_end
+    mov es:pr_paper_end_proc+4,cs
 ;    
-    mov word ptr es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
-    mov word ptr es:pr_cutter_jammed_proc+2,cs
+    mov es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
+    mov es:pr_cutter_jammed_proc+4,cs
 ;    
-    mov word ptr es:pr_ok_proc,OFFSET is_ok
-    mov word ptr es:pr_ok_proc+2,cs
+    mov es:pr_ok_proc,OFFSET is_ok
+    mov es:pr_ok_proc+4,cs
 ;    
-    mov word ptr es:pr_head_lifted_proc,OFFSET is_head_lifted
-    mov word ptr es:pr_head_lifted_proc+2,cs
+    mov es:pr_head_lifted_proc,OFFSET is_head_lifted
+    mov es:pr_head_lifted_proc+4,cs
 ;    
-    mov word ptr es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
-    mov word ptr es:pr_paper_in_presenter_proc+2,cs
+    mov es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
+    mov es:pr_paper_in_presenter_proc+4,cs
 ;    
-    mov word ptr es:pr_temp_error_proc,OFFSET has_temp_error
-    mov word ptr es:pr_temp_error_proc+2,cs
+    mov es:pr_temp_error_proc,OFFSET has_temp_error
+    mov es:pr_temp_error_proc+4,cs
 ;    
-    mov word ptr es:pr_feed_error_proc,OFFSET has_feed_error
-    mov word ptr es:pr_feed_error_proc+2,cs
+    mov es:pr_feed_error_proc,OFFSET has_feed_error
+    mov es:pr_feed_error_proc+4,cs
 ;    
-    mov word ptr es:pr_print_test_proc,OFFSET print_test
-    mov word ptr es:pr_print_test_proc+2,cs
+    mov es:pr_print_test_proc,OFFSET print_test
+    mov es:pr_print_test_proc+4,cs
 ;    
-    mov word ptr es:pr_create_bitmap_proc,OFFSET create_bitmap
-    mov word ptr es:pr_create_bitmap_proc+2,cs
+    mov es:pr_create_bitmap_proc,OFFSET create_bitmap
+    mov es:pr_create_bitmap_proc+4,cs
 ;    
-    mov word ptr es:pr_print_bitmap_proc,OFFSET print_bitmap
-    mov word ptr es:pr_print_bitmap_proc+2,cs
+    mov es:pr_print_bitmap_proc,OFFSET print_bitmap
+    mov es:pr_print_bitmap_proc+4,cs
 ;    
-    mov word ptr es:pr_present_media_proc,OFFSET present_media
-    mov word ptr es:pr_present_media_proc+2,cs
+    mov es:pr_present_media_proc,OFFSET present_media
+    mov es:pr_present_media_proc+4,cs
 ;    
-    mov word ptr es:pr_eject_media_proc,OFFSET eject_media
-    mov word ptr es:pr_eject_media_proc+2,cs
+    mov es:pr_eject_media_proc,OFFSET eject_media
+    mov es:pr_eject_media_proc+4,cs
 ;    
-    mov word ptr es:pr_wait_for_print_proc,OFFSET wait_for_print
-    mov word ptr es:pr_wait_for_print_proc+2,cs
+    mov es:pr_wait_for_print_proc,OFFSET wait_for_print
+    mov es:pr_wait_for_print_proc+4,cs
 ;    
-    mov word ptr es:pr_reset_proc,OFFSET reset_printer
-    mov word ptr es:pr_reset_proc+2,cs
+    mov es:pr_reset_proc,OFFSET reset_printer
+    mov es:pr_reset_proc+4,cs
 ;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s
@@ -1143,7 +1143,8 @@ pmu_thread:
     mov cx,ds       
     StartTimer
 
-krRestart:
+pmuRestart:
+    int 3
     mov ax,250
     WaitMilliSec
 ;
@@ -1157,36 +1158,36 @@ krRestart:
     mov ax,2
     call StartThread
     
-krLoop:
+pmuLoop:
     test ds:pmu_flag,FLAG_ATTACHED
-    jz krDetached
+    jz pmuDetached
 
-krDoSession:
+pmuDoSession:
     call DoSession
 ;
     test ds:pmu_flag,FLAG_INIT
-    jz krDoStatus
+    jz pmuDoStatus
 ;
     mov ax,50
     WaitMilliSec
-    jmp krLoop        
+    jmp pmuLoop        
 
-krDoStatus:
+pmuDoStatus:
     mov bx,ds:pmu_session_list
     or bx,bx
-    jnz krLoop
+    jnz pmuLoop
 
-krWait:    
+pmuWait:    
     WaitForSignal
-    jmp krLoop
+    jmp pmuLoop
         
-krDetached:
+pmuDetached:
     mov ax,5
     WaitMilliSec
 ;    
     mov ax,ds:pmu_session_list
     or ax,ax
-    jz krDetachClose
+    jz pmuDetachClose
 ;
     EnterSection ds:pmu_section
     mov es,ds:pmu_session_list
@@ -1197,31 +1198,31 @@ krDetached:
 ;
     mov bx,es:cs_wait
     or bx,bx
-    jz krFreeSession
+    jz pmuFreeSession
 ;
     Signal
     xor ax,ax
     mov es,ax
-    jmp krDetached
+    jmp pmuDetached
         
-krFreeSession:
+pmuFreeSession:
     call FreeSessionSel
     xor ax,ax
     mov es,ax
-    jmp krDetached
+    jmp pmuDetached
 
-krDetachClose:
+pmuDetachClose:
     test ds:pmu_flag,FLAG_INIT
-    jnz krDetached
+    jnz pmuDetached
 ;    
     call ClosePipes
 
-krWaitAttach:
+pmuWaitAttach:
     test ds:pmu_flag,FLAG_ATTACHED
-    jnz krRestart
+    jnz pmuRestart
 ;
     WaitForSignal
-    jmp krWaitAttach        
+    jmp pmuWaitAttach        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1367,7 +1368,6 @@ aNext:
     jmp aDone    
 
 aFound:
-    int 3
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -1404,7 +1404,7 @@ aDone:
     FreeMem
 ;
     pop es    
-    retf32
+    ret
 usb_attach  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1455,7 +1455,7 @@ udWaitDone:
     WaitMilliSec
 
 udDone:    
-    retf32
+    ret
 usb_detach  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

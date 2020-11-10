@@ -34,6 +34,9 @@ include ..\driver.def
 include ..\os\printer.inc
 INCLUDE ..\os\protseg.def
 
+
+        .386p
+
 ENQ = 5
 ESC = 1Bh
 RS = 1Eh
@@ -62,8 +65,6 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
-
-        .386p
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -408,44 +409,44 @@ CreatePrinter   Proc near
     xor dx,dx    
     AddPrinter
 ;
-    mov word ptr ds:pr_get_name_proc,OFFSET get_printer_name
-    mov word ptr ds:pr_get_name_proc+2,cs
+    mov ds:pr_get_name_proc,OFFSET get_printer_name
+    mov ds:pr_get_name_proc+4,cs
 ;
-    mov word ptr ds:pr_jammed_proc,OFFSET is_jammed
-    mov word ptr ds:pr_jammed_proc+2,cs
+    mov ds:pr_jammed_proc,OFFSET is_jammed
+    mov ds:pr_jammed_proc+4,cs
 ;    
-    mov word ptr ds:pr_paper_low_proc,OFFSET is_paper_low
-    mov word ptr ds:pr_paper_low_proc+2,cs
+    mov ds:pr_paper_low_proc,OFFSET is_paper_low
+    mov ds:pr_paper_low_proc+4,cs
 ;    
-    mov word ptr ds:pr_paper_end_proc,OFFSET is_paper_end
-    mov word ptr ds:pr_paper_end_proc+2,cs
+    mov ds:pr_paper_end_proc,OFFSET is_paper_end
+    mov ds:pr_paper_end_proc+4,cs
 ;    
-    mov word ptr ds:pr_ok_proc,OFFSET is_ok
-    mov word ptr ds:pr_ok_proc+2,cs
+    mov ds:pr_ok_proc,OFFSET is_ok
+    mov ds:pr_ok_proc+4,cs
 ;    
-    mov word ptr ds:pr_head_lifted_proc,OFFSET is_head_lifted
-    mov word ptr ds:pr_head_lifted_proc+2,cs
+    mov ds:pr_head_lifted_proc,OFFSET is_head_lifted
+    mov ds:pr_head_lifted_proc+4,cs
 ;    
-    mov word ptr ds:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
-    mov word ptr ds:pr_paper_in_presenter_proc+2,cs
+    mov ds:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
+    mov ds:pr_paper_in_presenter_proc+4,cs
 ;    
-    mov word ptr ds:pr_print_test_proc,OFFSET print_test
-    mov word ptr ds:pr_print_test_proc+2,cs
+    mov ds:pr_print_test_proc,OFFSET print_test
+    mov ds:pr_print_test_proc+4,cs
 ;    
-    mov word ptr ds:pr_create_bitmap_proc,OFFSET create_bitmap
-    mov word ptr ds:pr_create_bitmap_proc+2,cs
+    mov ds:pr_create_bitmap_proc,OFFSET create_bitmap
+    mov ds:pr_create_bitmap_proc+4,cs
 ;    
-    mov word ptr ds:pr_print_bitmap_proc,OFFSET print_bitmap
-    mov word ptr ds:pr_print_bitmap_proc+2,cs
+    mov ds:pr_print_bitmap_proc,OFFSET print_bitmap
+    mov ds:pr_print_bitmap_proc+4,cs
 ;    
-    mov word ptr ds:pr_present_media_proc,OFFSET present_media
-    mov word ptr ds:pr_present_media_proc+2,cs
+    mov ds:pr_present_media_proc,OFFSET present_media
+    mov ds:pr_present_media_proc+4,cs
 ;    
-    mov word ptr ds:pr_eject_media_proc,OFFSET eject_media
-    mov word ptr ds:pr_eject_media_proc+2,cs
+    mov ds:pr_eject_media_proc,OFFSET eject_media
+    mov ds:pr_eject_media_proc+4,cs
 ;    
-    mov word ptr ds:pr_wait_for_print_proc,OFFSET wait_for_print
-    mov word ptr ds:pr_wait_for_print_proc+2,cs
+    mov ds:pr_wait_for_print_proc,OFFSET wait_for_print
+    mov ds:pr_wait_for_print_proc+4,cs
     ret
 CreatePrinter   Endp
     
@@ -600,7 +601,7 @@ init_task      Proc far
 ;
     pop es
     pop ds
-    retf32
+    ret
 init_task      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

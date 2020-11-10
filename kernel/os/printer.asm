@@ -34,6 +34,8 @@ include ..\handle.inc
 include ..\wait.inc
 include printer.inc
 
+    .386p
+
 MAX_PORTS = 32
 
 printer_handle_seg  STRUC
@@ -56,8 +58,6 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
-
-    .386p
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -87,7 +87,7 @@ delete_handle_done:
     pop ax
     pop es
     pop ds
-    retf32
+    ret
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -110,7 +110,7 @@ get_max_printer        Proc far
     mov ax,ds:p_port_count
     clc
     pop ds
-    retf32
+    ret
 get_max_printer    Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -164,7 +164,7 @@ open_printer_done:
     pop ax
     pop es
     pop ds
-    retf32 
+    ret
 open_printer        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -195,7 +195,7 @@ close_printer_done:
     pop dx
     pop ax
     pop ds
-    retf32
+    ret
 close_printer       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -225,18 +225,18 @@ get_printer_name16       Proc far
     movzx edi,di
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_get_name_proc
-    or eax,eax
+    or eax,ds:pr_get_name_proc+4
     clc
     jz get_printer_name_done16
 ;       
-    call ds:pr_get_name_proc
+    call fword ptr ds:pr_get_name_proc
 
 get_printer_name_done16:
     pop edi
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 get_printer_name16       Endp
 
 get_printer_name32       Proc far
@@ -250,17 +250,17 @@ get_printer_name32       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_get_name_proc
-    or eax,eax
+    or eax,ds:pr_get_name_proc+4
     clc
     jz get_printer_name_done32
 ;       
-    call ds:pr_get_name_proc
+    call fword ptr ds:pr_get_name_proc
 
 get_printer_name_done32:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 get_printer_name32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -289,17 +289,17 @@ is_printer_jammed       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_jammed_proc
-    or eax,eax
+    or eax,ds:pr_jammed_proc+4
     clc
     jz is_printer_jammed_done
 ;       
-    call ds:pr_jammed_proc
+    call fword ptr ds:pr_jammed_proc
 
 is_printer_jammed_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_printer_jammed       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -328,17 +328,17 @@ is_printer_paper_low       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_paper_low_proc
-    or eax,eax
+    or eax,ds:pr_paper_low_proc+4
     clc
     jz is_printer_paper_low_done
 ;       
-    call ds:pr_paper_low_proc
+    call fword ptr ds:pr_paper_low_proc
 
 is_printer_paper_low_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_printer_paper_low       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -367,17 +367,17 @@ is_printer_paper_end       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_paper_end_proc
-    or eax,eax
+    or eax,ds:pr_paper_end_proc+4
     clc
     jz is_printer_paper_end_done
 ;       
-    call ds:pr_paper_end_proc
+    call fword ptr ds:pr_paper_end_proc
 
 is_printer_paper_end_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_printer_paper_end       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -406,17 +406,17 @@ is_printer_ok       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_ok_proc
-    or eax,eax
+    or eax,ds:pr_ok_proc+4
     stc
     jz is_printer_ok_done
 ;       
-    call ds:pr_ok_proc
+    call fword ptr ds:pr_ok_proc
 
 is_printer_ok_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_printer_ok       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -445,17 +445,17 @@ is_printer_head_lifted       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_head_lifted_proc
-    or eax,eax
+    or eax,ds:pr_head_lifted_proc+4
     clc
     jz is_printer_head_lifted_done
 ;       
-    call ds:pr_head_lifted_proc
+    call fword ptr ds:pr_head_lifted_proc
 
 is_printer_head_lifted_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_printer_head_lifted       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -484,17 +484,17 @@ is_printer_cutter_jammed       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_cutter_jammed_proc
-    or eax,eax
+    or eax,ds:pr_cutter_jammed_proc+4
     clc
     jz is_printer_cutter_jammed_done
 ;       
-    call ds:pr_cutter_jammed_proc
+    call fword ptr ds:pr_cutter_jammed_proc
 
 is_printer_cutter_jammed_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_printer_cutter_jammed       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -523,17 +523,17 @@ has_printer_paper_in_presenter       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_paper_in_presenter_proc
-    or eax,eax
+    or eax,ds:pr_paper_in_presenter_proc+4
     clc
     jz has_printer_paper_in_presenter_done
 ;       
-    call ds:pr_paper_in_presenter_proc
+    call fword ptr ds:pr_paper_in_presenter_proc
 
 has_printer_paper_in_presenter_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 has_printer_paper_in_presenter       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -562,17 +562,17 @@ has_printer_temp_error       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_temp_error_proc
-    or eax,eax
+    or eax,ds:pr_temp_error_proc+4
     clc
     jz has_printer_temp_error_done
 ;       
-    call ds:pr_temp_error_proc
+    call fword ptr ds:pr_temp_error_proc
 
 has_printer_temp_error_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 has_printer_temp_error       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -601,17 +601,17 @@ has_printer_feed_error       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_feed_error_proc
-    or eax,eax
+    or eax,ds:pr_feed_error_proc+4
     clc
     jz has_printer_feed_error_done
 ;       
-    call ds:pr_feed_error_proc
+    call fword ptr ds:pr_feed_error_proc
 
 has_printer_feed_error_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 has_printer_feed_error       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -638,16 +638,16 @@ print_test       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_print_test_proc
-    or eax,eax
+    or eax,ds:pr_print_test_proc+4
     jz print_test_done
 ;       
-    call ds:pr_print_test_proc
+    call fword ptr ds:pr_print_test_proc
 
 print_test_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 print_test       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -676,17 +676,17 @@ create_bitmap       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov eax,ds:pr_create_bitmap_proc
-    or eax,eax
+    or eax,ds:pr_create_bitmap_proc+4
     stc
     jz create_bitmap_done
 ;       
-    call ds:pr_create_bitmap_proc
+    call fword ptr ds:pr_create_bitmap_proc
     mov ax,bx
 
 create_bitmap_done:
     pop ebx
     pop ds
-    retf32
+    ret
 create_bitmap      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -717,16 +717,16 @@ print_bitmap       Proc far
     mov ds,[ebx].printer_sel
     mov bx,ax
     mov eax,ds:pr_print_bitmap_proc
-    or eax,eax
+    or eax,ds:pr_print_bitmap_proc+4
     jz print_bitmap_done
 ;       
-    call ds:pr_print_bitmap_proc
+    call fword ptr ds:pr_print_bitmap_proc
 
 print_bitmap_done:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 print_bitmap      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -756,16 +756,16 @@ present_media       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov ebx,ds:pr_present_media_proc
-    or ebx,ebx
+    or ebx,ds:pr_present_media_proc+4
     jz present_media_done
 ;       
-    call ds:pr_present_media_proc
+    call fword ptr ds:pr_present_media_proc
 
 present_media_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 present_media      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -794,16 +794,16 @@ eject_media       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov ebx,ds:pr_eject_media_proc
-    or ebx,ebx
+    or ebx,ds:pr_eject_media_proc+4
     jz eject_media_done
 ;       
-    call ds:pr_eject_media_proc
+    call fword ptr ds:pr_eject_media_proc
 
 eject_media_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 eject_media      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -832,16 +832,16 @@ reset_printer       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov ebx,ds:pr_reset_proc
-    or ebx,ebx
+    or ebx,ds:pr_reset_proc+4
     jz reset_done
 ;       
-    call ds:pr_reset_proc
+    call fword ptr ds:pr_reset_proc
 
 reset_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 reset_printer      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -870,16 +870,16 @@ wait_for_print       Proc far
 ;
     mov ds,[ebx].printer_sel
     mov ebx,ds:pr_wait_for_print_proc
-    or ebx,ebx
+    or ebx,ds:pr_wait_for_print_proc+4
     jz wait_for_print_done
 ;       
-    call ds:pr_wait_for_print_proc
+    call fword ptr ds:pr_wait_for_print_proc
 
 wait_for_print_done:
     pop ebx
     pop ax
     pop ds
-    retf32
+    ret
 wait_for_print      Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -903,22 +903,55 @@ add_printer    Proc far
     push dx
 ;
     mov ds:pr_jammed_proc,0
+    mov ds:pr_jammed_proc+4,0
+
     mov ds:pr_paper_low_proc,0
+    mov ds:pr_paper_low_proc+4,0
+
     mov ds:pr_paper_end_proc,0
+    mov ds:pr_paper_end_proc+4,0
+;
     mov ds:pr_cutter_jammed_proc,0
+    mov ds:pr_cutter_jammed_proc+4,0
+;
     mov ds:pr_ok_proc,0
+    mov ds:pr_ok_proc+4,0
+;
     mov ds:pr_head_lifted_proc,0
+    mov ds:pr_head_lifted_proc+4,0
+;
     mov ds:pr_paper_in_presenter_proc,0
+    mov ds:pr_paper_in_presenter_proc+4,0
+;
     mov ds:pr_temp_error_proc,0
+    mov ds:pr_temp_error_proc+4,0
+;
     mov ds:pr_feed_error_proc,0
+    mov ds:pr_feed_error_proc+4,0
+;
     mov ds:pr_print_test_proc,0
+    mov ds:pr_print_test_proc+4,0
+;
     mov ds:pr_create_bitmap_proc,0
+    mov ds:pr_create_bitmap_proc+4,0
+;
     mov ds:pr_print_bitmap_proc,0
+    mov ds:pr_print_bitmap_proc+4,0
+;
     mov ds:pr_present_media_proc,0
+    mov ds:pr_present_media_proc+4,0
+;
     mov ds:pr_eject_media_proc,0
+    mov ds:pr_eject_media_proc+4,0
+;
     mov ds:pr_wait_for_print_proc,0
+    mov ds:pr_wait_for_print_proc+4,0
+;
     mov ds:pr_get_name_proc,0
+    mov ds:pr_get_name_proc+4,0
+;
     mov ds:pr_reset_proc,0
+    mov ds:pr_reset_proc+4,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -932,7 +965,7 @@ add_printer    Proc far
     pop dx
     pop bx
     pop ds    
-    retf32
+    ret
 add_printer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
