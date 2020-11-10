@@ -115,8 +115,8 @@ TFmSignal::TFmSignal(double sf, double f)
     Freq = f;
 
     SamplesPerPeriod = SampleFreq / Freq;
-    PhasePerSample = GetPhasePerSample(Freq);
-    UsedSamples = round(10.0 * SamplesPerPeriod);
+    PhasePerSample = FreqToPhasePerSample(Freq);
+    UsedSamples = round(20.0 * SamplesPerPeriod);
 
     FirstBlock = true;
 }
@@ -138,7 +138,7 @@ TFmSignal::~TFmSignal()
 
 /*##########################################################################
 #
-#   Name       : TFmSignal::GetPhasePerSample
+#   Name       : TFmSignal::FreqToPhasePerSample
 #
 #   Purpose....: Get phase per sample
 #
@@ -147,7 +147,7 @@ TFmSignal::~TFmSignal()
 #   Returns....: Phase incr
 #
 ##########################################################################*/
-int TFmSignal::GetPhasePerSample(double Freq)
+int TFmSignal::FreqToPhasePerSample(double Freq)
 {
     long long lval;
     double freq;
@@ -161,6 +161,29 @@ int TFmSignal::GetPhasePerSample(double Freq)
     lval = lval / (long long)freq;
 
     return (int)lval;
+}
+
+/*##########################################################################
+#
+#   Name       : TFmSignal::PhasePerSampleToFreq
+#
+#   Purpose....: Get freq from phase per sample
+#
+#   In params..: Freq, SampleFreq
+#   Out params.: *
+#   Returns....: Phase incr
+#
+##########################################################################*/
+double TFmSignal::PhasePerSampleToFreq(int ps)
+{
+    long long lval;
+    double freq;
+
+    freq = SampleFreq * (double)ps;
+    freq = freq / (double)0x10000;
+    freq = freq / (double)0x10000;
+
+    return freq;
 }
 
 /*##########################################################################
@@ -380,6 +403,79 @@ void TFmSignal::OptimizePhaseA(TAdcData *Data)
 
 /*##########################################################################
 #
+#   Name       : TFmSignal::OptimizePhaseB
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmSignal::OptimizePhaseB(TAdcData *Data)
+{
+    int step;
+    long long low, mid, high;
+    TAdcFmPower res;
+
+    step = 0x10000000;
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB, &res);
+    mid = res.CosSig * res.CosSig;
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB + step, PhasePerSample, 0, CurrPowerB, &res);
+    high = res.CosSig * res.CosSig;
+
+    while (high < mid)
+    {
+        mid = high;
+        CurrPhaseB += step;
+
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB + step, PhasePerSample, 0, CurrPowerB, &res);
+        high = res.CosSig * res.CosSig;
+    }
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB - step, PhasePerSample, 0, CurrPowerB, &res);
+    low = res.CosSig * res.CosSig;
+
+    while (low < mid)
+    {
+        mid = low;
+        CurrPhaseB -= step;
+
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB - step, PhasePerSample, 0, CurrPowerB, &res);
+        low = res.CosSig * res.CosSig;
+    }
+
+    while (step > 1)
+    {
+        step = step / 2;
+
+
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB + step, PhasePerSample, 0, CurrPowerB, &res);
+        high = res.CosSig * res.CosSig;
+
+        if (high < mid)
+        {
+            mid = high;
+            CurrPhaseB += step;
+        }
+        else
+        {
+            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB - step, PhasePerSample, 0, CurrPowerB, &res);
+            low = res.CosSig * res.CosSig;
+
+            if (low < mid)
+            {
+                mid = low;
+                CurrPhaseB -= step;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFmSignal::OptimizePowerA
 #
 #   Purpose....:
@@ -396,6 +492,8 @@ void TFmSignal::OptimizePowerA(TAdcData *Data)
     TAdcFmPower res;
 
     step = CurrPowerA / 8;
+    if (step < 2)
+        step = 2;
 
     CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, 0, CurrPowerA, &res);
     mid = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
@@ -453,6 +551,167 @@ void TFmSignal::OptimizePowerA(TAdcData *Data)
 
 /*##########################################################################
 #
+#   Name       : TFmSignal::OptimizePowerB
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmSignal::OptimizePowerB(TAdcData *Data)
+{
+    int step;
+    long long low, mid, high;
+    TAdcFmPower res;
+
+    step = CurrPowerB / 8;
+    if (step < 2)
+        step = 2;
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB, &res);
+    mid = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB + step, &res);
+    high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+    while (high < mid)
+    {
+        mid = high;
+        CurrPowerB += step;
+
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB + step, &res);
+        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    }
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB - step, &res);
+    low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+    while (low < mid)
+    {
+        mid = low;
+        CurrPowerB -= step;
+
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB - step, &res);
+        low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    }
+
+    while (step > 1)
+    {
+        step = step / 2;
+
+
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB + step, &res);
+        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+        if (high < mid)
+        {
+            mid = high;
+            CurrPowerB += step;
+        }
+        else
+        {
+            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB - step, &res);
+            low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+            if (low < mid)
+            {
+                mid = low;
+                CurrPowerB -= step;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFmSignal::OptimizeFreq
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmSignal::OptimizeFreq(TAdcData *Data)
+{
+    int step;
+    long long low, mid, high;
+    TAdcFmPower res;
+
+    step = PhasePerSample / 16;
+
+    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, 0, CurrPowerA, &res);
+    mid = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, 0, CurrPowerB, &res);
+    mid += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample + step, 0, CurrPowerA, &res);
+    high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample + step, 0, CurrPowerB, &res);
+    high += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+    while (high < mid)
+    {
+        mid = high;
+        PhasePerSample += step;
+
+        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample + step, 0, CurrPowerA, &res);
+        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample + step, 0, CurrPowerB, &res);
+        high += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    }
+
+    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample - step, 0, CurrPowerA, &res);
+    low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample - step, 0, CurrPowerB, &res);
+    low += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+    while (low < mid)
+    {
+        mid = low;
+        PhasePerSample -= step;
+
+        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample - step, 0, CurrPowerA, &res);
+        low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample - step, 0, CurrPowerB, &res);
+        low += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+    }
+
+    while (step > 1)
+    {
+        step = step / 2;
+
+        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample + step, 0, CurrPowerA, &res);
+        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample + step, 0, CurrPowerB, &res);
+        high += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+        if (high < mid)
+        {
+            mid = high;
+            PhasePerSample += step;
+        }
+        else
+        {
+            CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample - step, 0, CurrPowerA, &res);
+            low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample - step, 0, CurrPowerB, &res);
+            low += res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+
+            if (low < mid)
+            {
+                mid = low;
+                PhasePerSample -= step;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFmSignal::SetupA
 #
 #   Purpose....:
@@ -483,12 +742,40 @@ void TFmSignal::SetupA(TAdcData *Data)
     dval = Phase * (double)0x10000;
     dval = dval * (double)0x10000;
     CurrPhaseA = round(dval);
+}
 
-    for (i = 0; i < 5; i++)
-    {
-        OptimizePhaseA(Data);
-        OptimizePowerA(Data);
-    }
+/*##########################################################################
+#
+#   Name       : TFmSignal::SetupB
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmSignal::SetupB(TAdcData *Data)
+{
+    double Phase;
+    double Amp;
+    double dval;
+    int i;
+
+    Amp = CalcPowerB(Data, UsedSamples);
+    CurrPowerB = round(Amp);
+
+    Phase = CalcPhaseB(Data + CurrPosB, UsedSamples);
+
+    while (Phase >= 1.0)
+        Phase -= 1.0;
+
+    while (Phase <= -1.0)
+        Phase += 1.0;
+
+    dval = Phase * (double)0x10000;
+    dval = dval * (double)0x10000;
+    CurrPhaseB = round(dval);
 }
 
 /*##########################################################################
@@ -504,11 +791,28 @@ void TFmSignal::SetupA(TAdcData *Data)
 ##########################################################################*/
 void TFmSignal::AddBlock(TAdcData *Data)
 {
+    int i;
+    double freq;
+
     if (FirstBlock)
     {
         FirstBlock = false;
 
         CalcOffsets(Data);
         SetupA(Data);
+        SetupB(Data);
+
+        for (i = 0; i < 10; i++)
+        {
+            OptimizePhaseA(Data);
+            OptimizePhaseB(Data);
+            OptimizePowerA(Data);
+            OptimizePowerB(Data);
+            OptimizeFreq(Data);
+        }
+
+        freq = PhasePerSampleToFreq(PhasePerSample);
+        freq -= Freq;
+
     }
 }

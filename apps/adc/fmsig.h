@@ -43,7 +43,8 @@ public:
     void AddBlock(TAdcData *Data);
 
 protected:
-    int GetPhasePerSample(double Freq);
+    int FreqToPhasePerSample(double Freq);
+    double PhasePerSampleToFreq(int PhasePerSample);
     double CalcPhaseA(TAdcData *Data, int Size);
     double CalcPhaseB(TAdcData *Data, int Size);
     double CalcPowerA(TAdcData *Data, int Size);
@@ -51,8 +52,12 @@ protected:
 
     void CalcOffsets(TAdcData *Data);
     void OptimizePhaseA(TAdcData *Data);
+    void OptimizePhaseB(TAdcData *Data);
     void OptimizePowerA(TAdcData *Data);
+    void OptimizePowerB(TAdcData *Data);
+    void OptimizeFreq(TAdcData *Data);
     void SetupA(TAdcData *Data);
+    void SetupB(TAdcData *Data);
 
     double SampleFreq;
     double Freq;

@@ -17069,6 +17069,7 @@ _CalcFmPowerB  Proc near
     push ebp
 ;
     mov esi,[esp+1Ch]  ; data
+    add esi,2
     mov ecx,[esp+20h]  ; size
     mov ebp,[esp+24h]  ; init phase
     mov edi,[esp+34h]  ; res
