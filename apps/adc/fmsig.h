@@ -46,10 +46,28 @@ protected:
     int GetPhasePerSample(double Freq);
     double CalcPhaseA(TAdcData *Data, int Size);
     double CalcPhaseB(TAdcData *Data, int Size);
+    double CalcPowerA(TAdcData *Data, int Size);
+    double CalcPowerB(TAdcData *Data, int Size);
+
+    void CalcOffsets(TAdcData *Data);
+    void OptimizePhaseA(TAdcData *Data);
+    void OptimizePowerA(TAdcData *Data);
+    void SetupA(TAdcData *Data);
 
     double SampleFreq;
     double Freq;
+    double SamplesPerPeriod;
+    int UsedSamples;
     int PhasePerSample;
+
+    int CurrPosA;
+    int CurrPosB;
+    int CurrPowerA;
+    int CurrPowerB;
+    int CurrPhaseA;
+    int CurrPhaseB;
+
+    bool FirstBlock;
 };
 
 #endif
