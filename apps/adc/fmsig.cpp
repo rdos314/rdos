@@ -210,7 +210,7 @@ double TFmSignal::CalcPowerA(TAdcData *Data, int Size)
     res.CosP = res.CosP / Size / 0x2000;
 
     val = res.SinP * res.SinP + res.CosP * res.CosP;
-    return sqrt(val) / 2.0;
+    return sqrt(val * 2.0);
 }
 
 /*##########################################################################
@@ -236,7 +236,7 @@ double TFmSignal::CalcPowerB(TAdcData *Data, int Size)
     res.CosP = res.CosP / Size / 0x2000;
 
     val = res.SinP * res.SinP + res.CosP * res.CosP;
-    return sqrt(val) / 2.0;
+    return sqrt(val * 2.0);
 }
 
 /*##########################################################################
@@ -346,7 +346,7 @@ void TFmSignal::OptimizePhaseA(TAdcData *Data)
     long long low, mid, high;
     TAdcFmPower res;
 
-    step = 0x10000000;
+    step = 0x1000000;
 
     CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
     mid = res.CosSig * res.CosSig;
@@ -419,7 +419,7 @@ void TFmSignal::OptimizePhaseB(TAdcData *Data)
     long long low, mid, high;
     TAdcFmPower res;
 
-    step = 0x10000000;
+    step = 0x1000000;
 
     CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
     mid = res.CosSig * res.CosSig;
@@ -488,65 +488,51 @@ void TFmSignal::OptimizePhaseB(TAdcData *Data)
 ##########################################################################*/
 void TFmSignal::OptimizePowerA(TAdcData *Data)
 {
-    int step;
-    long long low, mid, high;
+    long long val, pval;
+    int i;
     TAdcFmPower res;
 
-    step = CurrPowerA / 8;
-    if (step < 2)
-        step = 2;
-
     CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-    mid = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
 
-    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA + step, &res);
-    high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-
-    while (high < mid)
+    if (res.SinSig > 0)
     {
-        mid = high;
-        CurrPowerA += step;
-
-        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA + step, &res);
-        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-    }
-
-    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA - step, &res);
-    low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-
-    while (low < mid)
-    {
-        mid = low;
-        CurrPowerA -= step;
-
-        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA - step, &res);
-        low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-
-        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA + step, &res);
-        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-
-        if (high < mid)
+        val = res.SinSig * res.SinSig;
+        for (i = 0; i < 5 && res.SinSig > 0; i++)
         {
-            mid = high;
-            CurrPowerA += step;
-        }
-        else
-        {
-            CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA - step, &res);
-            low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+            pval = val;
+            CurrPowerA++;
+            CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA + 1, &res);
+            val = res.SinSig * res.SinSig;
 
-            if (low < mid)
+            if (val > pval)
             {
-                mid = low;
-                CurrPowerA -= step;
+                CurrPowerA--;
+                break;
             }
         }
+
+        if (val < pval)
+            CurrPowerA++;
+    }
+    else
+    {
+        val = res.SinSig * res.SinSig;
+        for (i = 0; i < 5 && CurrPowerA > 0 && res.SinSig < 0; i++)
+        {
+            pval = val;
+            CurrPowerA--;
+            CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA - 1, &res);
+            val = res.SinSig * res.SinSig;
+
+            if (val > pval)
+            {
+                CurrPowerA++;
+                break;
+            }
+        }
+
+        if (val < pval)
+            CurrPowerA--;
     }
 }
 
@@ -563,65 +549,51 @@ void TFmSignal::OptimizePowerA(TAdcData *Data)
 ##########################################################################*/
 void TFmSignal::OptimizePowerB(TAdcData *Data)
 {
-    int step;
-    long long low, mid, high;
+    long long val, pval;
+    int i;
     TAdcFmPower res;
 
-    step = CurrPowerB / 8;
-    if (step < 2)
-        step = 2;
-
     CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-    mid = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
 
-    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB + step, &res);
-    high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-
-    while (high < mid)
+    if (res.SinSig > 0)
     {
-        mid = high;
-        CurrPowerB += step;
-
-        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB + step, &res);
-        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-    }
-
-    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB - step, &res);
-    low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-
-    while (low < mid)
-    {
-        mid = low;
-        CurrPowerB -= step;
-
-        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB - step, &res);
-        low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-
-        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB + step, &res);
-        high = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
-
-        if (high < mid)
+        val = res.SinSig * res.SinSig;
+        for (i = 0; i < 5 && res.SinSig > 0; i++)
         {
-            mid = high;
-            CurrPowerB += step;
-        }
-        else
-        {
-            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB - step, &res);
-            low = res.CosSig * res.CosSig + res.SinSig * res.SinSig;
+            pval = val;
+            CurrPowerB++;
+            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB + 1, &res);
+            val = res.SinSig * res.SinSig;
 
-            if (low < mid)
+            if (val > pval)
             {
-                mid = low;
-                CurrPowerB -= step;
+                CurrPowerB--;
+                break;
             }
         }
+
+        if (val < pval)
+            CurrPowerB++;
+    }
+    else
+    {
+        val = res.SinSig * res.SinSig;
+        for (i = 0; i < 5 && CurrPowerB > 0 && res.SinSig < 0; i++)
+        {
+            pval = val;
+            CurrPowerB--;
+            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB - 1, &res);
+            val = res.SinSig * res.SinSig;
+
+            if (val > pval)
+            {
+                CurrPowerB++;
+                break;
+            }
+        }
+
+        if (val < pval)
+            CurrPowerB--;
     }
 }
 
@@ -810,14 +782,14 @@ void TFmSignal::Update(TAdcData *Data)
     }
 
     CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-    PowA = (double)res.SinFm / (double)UsedSamples;
-    SinA = (double)res.SinSig / (double)UsedSamples;
-    CosA = (double)res.CosSig / (double)UsedSamples;
+    PowA = (double)res.SinFm / (double)UsedSamples / 8192.0;
+    SinA = (double)res.SinSig / (double)UsedSamples / 8192.0;
+    CosA = (double)res.CosSig / (double)UsedSamples / 8192.0;
 
     CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-    PowB = (double)res.SinFm / (double)UsedSamples;
-    SinB = (double)res.SinSig / (double)UsedSamples;
-    CosB = (double)res.CosSig / (double)UsedSamples;
+    PowB = (double)res.SinFm / (double)UsedSamples / 8192.0;
+    SinB = (double)res.SinSig / (double)UsedSamples / 8192.0;
+    CosB = (double)res.CosSig / (double)UsedSamples / 8192.0;
 }
 
 /*##########################################################################
