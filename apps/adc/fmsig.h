@@ -74,6 +74,13 @@ protected:
     int CurrPhaseA;
     int CurrPhaseB;
 
+    double PowA;
+    double SinA;
+    double CosA;
+    double PowB;
+    double SinB;
+    double CosB;
+
     bool FirstBlock;
 };
 

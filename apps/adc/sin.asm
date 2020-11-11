@@ -16981,7 +16981,7 @@ cfmaLoop:
 ;
     movsx eax,word ptr [ebx].sin_tab
     mov edx,[esp+30h]   ; amp
-    shl edx,16
+    shl edx,17
     imul edx
     movsx eax,word ptr [esi]
     sub eax,edx
@@ -17003,7 +17003,7 @@ cfmaLoop:
 ;
     movsx eax,word ptr [ebx].sin_tab
     mov edx,[esp+30h]   ; amp
-    shl edx,16
+    shl edx,17
     imul edx
     movsx eax,word ptr [esi]
     sub eax,edx
@@ -17089,7 +17089,7 @@ cfmbLoop:
 ;
     movsx eax,word ptr [ebx].sin_tab
     mov edx,[esp+30h]   ; amp
-    shl edx,16
+    shl edx,17
     imul edx
     movsx eax,word ptr [esi]
     sub eax,edx
@@ -17111,7 +17111,7 @@ cfmbLoop:
 ;
     movsx eax,word ptr [ebx].sin_tab
     mov edx,[esp+30h]   ; amp
-    shl edx,16
+    shl edx,17
     imul edx
     movsx eax,word ptr [esi]
     sub eax,edx

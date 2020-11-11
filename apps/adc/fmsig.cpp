@@ -210,7 +210,7 @@ double TFmSignal::CalcPowerA(TAdcData *Data, int Size)
     res.CosP = res.CosP / Size / 0x2000;
 
     val = res.SinP * res.SinP + res.CosP * res.CosP;
-    return sqrt(val / 2.0);
+    return sqrt(val) / 2.0;
 }
 
 /*##########################################################################
@@ -236,7 +236,7 @@ double TFmSignal::CalcPowerB(TAdcData *Data, int Size)
     res.CosP = res.CosP / Size / 0x2000;
 
     val = res.SinP * res.SinP + res.CosP * res.CosP;
-    return sqrt(val / 2.0);
+    return sqrt(val) / 2.0;
 }
 
 /*##########################################################################
@@ -773,6 +773,8 @@ void TFmSignal::Setup(TAdcData *Data)
 ##########################################################################*/
 void TFmSignal::Update(TAdcData *Data)
 {
+    TAdcFmPower res;
+
     while (CurrPhaseA < -PhasePerSample / 2)
     {
         CurrPhaseA += PhasePerSample;
@@ -806,6 +808,16 @@ void TFmSignal::Update(TAdcData *Data)
         else
             CurrPosB -= SamplesPerPeriod;
     }
+
+    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
+    PowA = (double)res.SinFm / (double)UsedSamples;
+    SinA = (double)res.SinSig / (double)UsedSamples;
+    CosA = (double)res.CosSig / (double)UsedSamples;
+
+    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
+    PowB = (double)res.SinFm / (double)UsedSamples;
+    SinB = (double)res.SinSig / (double)UsedSamples;
+    CosB = (double)res.CosSig / (double)UsedSamples;
 }
 
 /*##########################################################################
