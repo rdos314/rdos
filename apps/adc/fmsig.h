@@ -51,19 +51,20 @@ protected:
     double CalcPowerB(TAdcData *Data, int Size);
 
     void CalcOffsets(TAdcData *Data);
+    void Setup(TAdcData *Data);
+
     void OptimizePhaseA(TAdcData *Data);
     void OptimizePhaseB(TAdcData *Data);
     void OptimizePowerA(TAdcData *Data);
     void OptimizePowerB(TAdcData *Data);
     void OptimizeFreq(TAdcData *Data);
-    void SetupA(TAdcData *Data);
-    void SetupB(TAdcData *Data);
 
     double SampleFreq;
     double Freq;
     double SamplesPerPeriod;
     int UsedSamples;
     int PhasePerSample;
+    int PhasePerSampleIncr;
 
     int CurrPosA;
     int CurrPosB;
