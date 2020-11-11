@@ -52,6 +52,7 @@ protected:
 
     void CalcOffsets(TAdcData *Data);
     void Setup(TAdcData *Data);
+    void Update(TAdcData *Data);
 
     void OptimizePhaseA(TAdcData *Data);
     void OptimizePhaseB(TAdcData *Data);

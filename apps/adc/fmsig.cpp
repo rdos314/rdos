@@ -762,6 +762,54 @@ void TFmSignal::Setup(TAdcData *Data)
 
 /*##########################################################################
 #
+#   Name       : TFmSignal::Update
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmSignal::Update(TAdcData *Data)
+{
+    while (CurrPhaseA < -PhasePerSample / 2)
+    {
+        CurrPhaseA += PhasePerSample;
+        CurrPosA++;
+    }
+
+    while (CurrPhaseB < -PhasePerSample / 2)
+    {
+        CurrPhaseB += PhasePerSample;
+        CurrPosB++;
+    }
+
+    while (CurrPhaseA > PhasePerSample / 2)
+    {
+        if (CurrPosA)
+        {
+            CurrPhaseA -= PhasePerSample;
+            CurrPosA--;
+        }
+        else
+            CurrPosA -= SamplesPerPeriod;
+    }
+
+    while (CurrPhaseB > PhasePerSample / 2)
+    {
+        if (CurrPosB)
+        {
+            CurrPhaseB -= PhasePerSample;
+            CurrPosB--;
+        }
+        else
+            CurrPosB -= SamplesPerPeriod;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFmSignal::AddBlock
 #
 #   Purpose....:
@@ -790,6 +838,7 @@ void TFmSignal::AddBlock(TAdcData *Data)
             OptimizePowerA(Data);
             OptimizePowerB(Data);
             OptimizeFreq(Data);
+            Update(Data);
         }
 
         freq = PhasePerSampleToFreq(PhasePerSample);
