@@ -615,31 +615,45 @@ void TFmSignal::Setup(TAdcData *Data)
     double dval;
     int i;
 
-    Amp = CalcPowerA(Data, UsedSamples);
+    Amp = CalcPowerA(Data + CurrPosA, UsedSamples);
     CurrPowerA = round(Amp);
 
     Phase = CalcPhaseA(Data + CurrPosA, UsedSamples);
+    Phase = -Phase * SamplesPerPeriod;
 
     while (Phase >= 1.0)
+    {
         Phase -= 1.0;
+        CurrPosA++;
+    }
 
     while (Phase <= -1.0)
+    {
         Phase += 1.0;
+        CurrPosA--;
+    }
 
     dval = Phase * (double)0x10000;
     dval = dval * (double)0x10000;
     CurrPhaseA = round(dval);
 
-    Amp = CalcPowerB(Data, UsedSamples);
+    Amp = CalcPowerB(Data + CurrPosB, UsedSamples);
     CurrPowerB = round(Amp);
 
     Phase = CalcPhaseB(Data + CurrPosB, UsedSamples);
+    Phase = -Phase * SamplesPerPeriod;
 
     while (Phase >= 1.0)
+    {
         Phase -= 1.0;
+        CurrPosB++;
+    }
 
     while (Phase <= -1.0)
+    {
         Phase += 1.0;
+        CurrPosB--;
+    }
 
     dval = Phase * (double)0x10000;
     dval = dval * (double)0x10000;
