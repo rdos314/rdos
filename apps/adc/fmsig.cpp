@@ -342,64 +342,21 @@ void TFmSignal::CalcOffsets(TAdcData *Data)
 ##########################################################################*/
 void TFmSignal::OptimizePhaseA(TAdcData *Data)
 {
-    int step;
-    long long low, mid, high;
+    double x, y;
+    double phase;
+    double dval;
     TAdcFmPower res;
 
-    step = 0x1000000;
-
     CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-    mid = res.CosSig * res.CosSig;
 
-    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA + step, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-    high = res.CosSig * res.CosSig;
+    x = (double)res.CosSig;
+    y = (double)(res.SinSig + res.SinFm);
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
 
-    while (high < mid)
-    {
-        mid = high;
-        CurrPhaseA += step;
-
-        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA + step, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-        high = res.CosSig * res.CosSig;
-    }
-
-    CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA - step, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-    low = res.CosSig * res.CosSig;
-
-    while (low < mid)
-    {
-        mid = low;
-        CurrPhaseA -= step;
-
-        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA - step, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-        low = res.CosSig * res.CosSig;
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-
-        CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA + step, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-        high = res.CosSig * res.CosSig;
-
-        if (high < mid)
-        {
-            mid = high;
-            CurrPhaseA += step;
-        }
-        else
-        {
-            CalcFmPowerA(Data + CurrPosA, UsedSamples, CurrPhaseA - step, PhasePerSample, PhasePerSampleIncr, CurrPowerA, &res);
-            low = res.CosSig * res.CosSig;
-
-            if (low < mid)
-            {
-                mid = low;
-                CurrPhaseA -= step;
-            }
-        }
-    }
+    dval = phase * (double)0x10000;
+    dval = dval * (double)0x10000;
+    CurrPhaseA = -round(dval);
 }
 
 /*##########################################################################
@@ -415,64 +372,21 @@ void TFmSignal::OptimizePhaseA(TAdcData *Data)
 ##########################################################################*/
 void TFmSignal::OptimizePhaseB(TAdcData *Data)
 {
-    int step;
-    long long low, mid, high;
+    double x, y;
+    double phase;
+    double dval;
     TAdcFmPower res;
 
-    step = 0x1000000;
-
     CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-    mid = res.CosSig * res.CosSig;
 
-    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB + step, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-    high = res.CosSig * res.CosSig;
+    x = (double)res.CosSig;
+    y = (double)(res.SinSig + res.SinFm);
+    phase = atan2(x, y);
+    phase = phase / M_PI / 2.0;
 
-    while (high < mid)
-    {
-        mid = high;
-        CurrPhaseB += step;
-
-        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB + step, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-        high = res.CosSig * res.CosSig;
-    }
-
-    CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB - step, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-    low = res.CosSig * res.CosSig;
-
-    while (low < mid)
-    {
-        mid = low;
-        CurrPhaseB -= step;
-
-        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB - step, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-        low = res.CosSig * res.CosSig;
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-
-        CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB + step, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-        high = res.CosSig * res.CosSig;
-
-        if (high < mid)
-        {
-            mid = high;
-            CurrPhaseB += step;
-        }
-        else
-        {
-            CalcFmPowerB(Data + CurrPosB, UsedSamples, CurrPhaseB - step, PhasePerSample, PhasePerSampleIncr, CurrPowerB, &res);
-            low = res.CosSig * res.CosSig;
-
-            if (low < mid)
-            {
-                mid = low;
-                CurrPhaseB -= step;
-            }
-        }
-    }
+    dval = phase * (double)0x10000;
+    dval = dval * (double)0x10000;
+    CurrPhaseB = -round(dval);
 }
 
 /*##########################################################################
