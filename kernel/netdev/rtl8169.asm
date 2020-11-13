@@ -2377,7 +2377,7 @@ ioihResetDone:
     and ax,NOT 700h
     or ax,600h
     and al,0C0h
-    or al,0Ah
+    or al,0Eh
     out dx,eax
     clc
 
@@ -2491,7 +2491,7 @@ mihResetDone:
     and ax,NOT 700h
     or ax,600h
     and al,0C0h
-    or al,0Ah
+    or al,0Eh
     mov fs:mem_rcr,eax
     clc
 

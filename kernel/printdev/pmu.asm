@@ -45,6 +45,8 @@ FLAG_CLOSED            = 4
 FLAG_INIT              = 8
 FLAG_STATUS            = 10h
 
+GS_CH                  = 1Dh
+
 usb_printer_struc       STRUC
 
 ups_base_struc  printer_struc <>
@@ -454,6 +456,93 @@ NotifyUsbData   Proc near
     int 3
     ret
 NotifyUsbData   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetId
+;
+;       DESCRIPTION:    Get printer ID
+;
+;       PARAMETERS:     DS      Data
+;                       AL      ID #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetId   Proc near
+    push es
+    push cx
+    push di
+;
+    mov ah,al
+    mov bx,ds:pmu_out_req
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;    
+    mov al,GS_CH
+    stosb
+;
+    mov al,'I'
+    stosb
+;
+    mov al,ah
+    stosb
+;
+    test ds:pmu_flag,FLAG_ATTACHED
+    jz giOffline
+;    
+    mov cx,3
+    StartUsbReq
+;
+    xor dx,dx
+    mov bx,ds:pmu_in_req
+    IsUsbReqStarted
+    jnc giLoop
+;
+    StartUsbReq
+
+giLoop:
+    mov ax,5
+    WaitMilliSec
+;
+    test ds:pmu_flag,FLAG_ATTACHED
+    jz giOffline
+;
+    mov bx,ds:pmu_in_req
+    IsUsbReqReady
+    jnc giRead
+;
+    inc dx
+    cmp dx,30
+    jne giLoop
+;
+    jmp giOffline
+
+giRead:
+    GetUsbReqData
+    mov es,ds:pmu_in_buffer
+;
+    StartUsbReq
+;
+    mov ax,5
+    WaitMilliSec
+;
+    test ds:pmu_flag,FLAG_ATTACHED
+    jz giOffline
+;
+    mov bx,ds:pmu_in_req
+    IsUsbReqReady
+    jnc giRead
+    jmp giOk
+
+giOffline:    
+
+giOk:
+    pop di
+    pop cx
+    pop es
+    ret
+GetId    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1144,13 +1233,16 @@ pmu_thread:
     StartTimer
 
 pmuRestart:
-    int 3
     mov ax,250
     WaitMilliSec
 ;
     call OpenPipes
     call ClearReceiver
 ;    
+    int 3
+    mov al,'1'
+    call GetId
+
     lock or ds:pmu_flag, FLAG_INIT
 ;    
     mov esi,OFFSET init_thread
