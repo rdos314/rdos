@@ -1299,7 +1299,6 @@ receive_checksum_loop:
 receive_check_ok:
     mov ax,SEG data
     mov ds,ax
-;
     mov eax,es:[di].ip_source
     cmp al,127
     je receive_dhcp_done
@@ -1343,9 +1342,14 @@ receive_dhcp_done:
     mov eax,es:[di].ip_dest
     cmp eax,ds:my_ip
     je receive_this_node
+;
     cmp eax,-1
     je receive_this_node
+;
     cmp al,127
+    je receive_this_node
+;
+    cmp al,239
     je receive_this_node
 ;
     push edx
