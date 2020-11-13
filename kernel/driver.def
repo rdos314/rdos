@@ -498,6 +498,9 @@ anio_dac_sel        EQU 0C40h
 pmu_code_sel        EQU 0C50h
 pmu_data_sel        EQU 0C58h
 
+sma_code_sel        EQU 0C60h
+sma_data_sel        EQU 0C68h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 
