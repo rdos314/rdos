@@ -4574,14 +4574,26 @@ GetAcCurrent    MACRO
 
 ; IN  BL             Phase (0 = sum, 1-3)
 ; OUT EAX            Power (0.1W)
-GetAcPower    MACRO
-        UserGate get_ac_power_nr
+GetAcConsumePower    MACRO
+        UserGate get_ac_consume_power_nr
+                ENDM
+
+; IN  BL             Phase (0 = sum, 1-3)
+; OUT EAX            Power (0.1W)
+GetAcProducePower    MACRO
+        UserGate get_ac_produce_power_nr
                 ENDM
 
 ; IN  BL             Phase (0 = sum, 1-3)
 ; OUT EDX:EAX        Energy (Ws)
-GetAcEnergy    MACRO
-        UserGate get_ac_energy_nr
+GetAcConsumeEnergy    MACRO
+        UserGate get_ac_consume_energy_nr
+                ENDM
+
+; IN  BL             Phase (0 = sum, 1-3)
+; OUT EDX:EAX        Energy (Ws)
+GetAcProduceEnergy    MACRO
+        UserGate get_ac_produce_energy_nr
                 ENDM
 
 ;;;;;;;;;;; Realtime ;;;;;;;;;;

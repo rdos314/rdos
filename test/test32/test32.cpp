@@ -58,26 +58,53 @@ void main()
         }
         printf("\r\n");
 
-        printf("Power: ");
+        printf("Consume power: ");
         for (p = 0; p <=3; p++)
         {
             if (p != 0)
                 printf(", ");
 
-            ival = RdosGetAcPower(p);
+            ival = RdosGetAcConsumePower(p);
             val = (double)ival;
             val = val / 10.0;
             printf("%05.1Lf W", val);
         }
         printf("\r\n");
 
-        printf("Energy: ");
+        printf("Produce power: ");
         for (p = 0; p <=3; p++)
         {
             if (p != 0)
                 printf(", ");
 
-            lval = RdosGetAcEnergy(p);
+            ival = RdosGetAcProducePower(p);
+            val = (double)ival;
+            val = val / 10.0;
+            printf("%05.1Lf W", val);
+        }
+        printf("\r\n");
+
+        printf("Consume energy: ");
+        for (p = 0; p <=3; p++)
+        {
+            if (p != 0)
+                printf(", ");
+
+            lval = RdosGetAcConsumeEnergy(p);
+            val = (double)lval;
+            val = val / 1000.0;
+            val = val / 3600.0;
+            printf("%05.3Lf kWh", val);
+        }
+        printf("\r\n");
+
+        printf("Produce energy: ");
+        for (p = 0; p <=3; p++)
+        {
+            if (p != 0)
+                printf(", ");
+
+            lval = RdosGetAcProduceEnergy(p);
             val = (double)lval;
             val = val / 1000.0;
             val = val / 3600.0;

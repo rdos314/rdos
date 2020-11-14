@@ -1012,9 +1012,9 @@ get_ac_current	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetAcPower
+;       NAME:           GetAcConsumePower
 ;
-;       DESCRIPTION:    Get AC Power
+;       DESCRIPTION:    Get AC Consume Power
 ;
 ;       PARAMETERS:     BL	Phase (0 = total, 1 = L1, 2 = L2, 3 = L3)          
 ;
@@ -1022,9 +1022,9 @@ get_ac_current	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_ac_power_name	DB 'Get AC Power', 0
+get_ac_consume_power_name	DB 'Get AC Consume Power', 0
 
-get_ac_power  PROC far
+get_ac_consume_power  PROC far
     push ds
     push ebx
 ;
@@ -1032,23 +1032,144 @@ get_ac_power  PROC far
     mov ds,eax
 ;
     cmp bl,3
-    ja gpFail
+    ja gcpFail
 ;
     movzx ebx,bl
     shl ebx,2
     mov eax,ds:[ebx].sma_active_pos_power
-    sub eax,ds:[ebx].sma_active_neg_power
     clc
-    jmp gpDone
+    jmp gcpDone
 
-gpFail:
+gcpFail:
     stc
 
-gpDone: 
+gcpDone: 
     pop ebx
     pop ds
     ret
-get_ac_power	Endp
+get_ac_consume_power	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcProducePower
+;
+;       DESCRIPTION:    Get AC Produce Power
+;
+;       PARAMETERS:     BL	Phase (0 = total, 1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EAX	Power (0.1W)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_produce_power_name	DB 'Get AC Produce Power', 0
+
+get_ac_produce_power  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    cmp bl,3
+    ja gppFail
+;
+    movzx ebx,bl
+    shl ebx,2
+    mov eax,ds:[ebx].sma_active_neg_power
+    clc
+    jmp gppDone
+
+gppFail:
+    stc
+
+gppDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_produce_power	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcConsumeEnergy
+;
+;       DESCRIPTION:    Get AC Consume Energy
+;
+;       PARAMETERS:     BL	Phase (0 = total, 1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EDX:EAX	Energy (Ws)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_consume_energy_name	DB 'Get AC Consume Energy', 0
+
+get_ac_consume_energy  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    cmp bl,3
+    ja gceFail
+;
+    movzx ebx,bl
+    shl ebx,3
+    mov eax,ds:[ebx].sma_active_pos_energy
+    mov edx,ds:[ebx+4].sma_active_pos_energy
+    clc
+    jmp gceDone
+
+gceFail:
+    stc
+
+gceDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_consume_energy	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcProduceEnergy
+;
+;       DESCRIPTION:    Get AC Produce Energy
+;
+;       PARAMETERS:     BL	Phase (0 = total, 1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EDX:EAX	Energy (Ws)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_produce_energy_name	DB 'Get AC Produce Energy', 0
+
+get_ac_produce_energy  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    cmp bl,3
+    ja gpeFail
+;
+    movzx ebx,bl
+    shl ebx,3
+    mov eax,ds:[ebx].sma_active_neg_energy
+    mov edx,ds:[ebx+4].sma_active_neg_energy
+    clc
+    jmp gpeDone
+
+gpeFail:
+    stc
+
+gpeDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_produce_energy	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1156,18 +1277,29 @@ init    PROC far
     mov ax,get_ac_current_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_ac_power
-    mov edi,OFFSET get_ac_power_name
+    mov esi,OFFSET get_ac_consume_power
+    mov edi,OFFSET get_ac_consume_power_name
     xor dx,dx
-    mov ax,get_ac_power_nr
+    mov ax,get_ac_consume_power_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_ac_energy
-    mov edi,OFFSET get_ac_energy_name
+    mov esi,OFFSET get_ac_produce_power
+    mov edi,OFFSET get_ac_produce_power_name
     xor dx,dx
-    mov ax,get_ac_energy_nr
+    mov ax,get_ac_produce_power_nr
     RegisterBimodalUserGate
-
+;
+    mov esi,OFFSET get_ac_consume_energy
+    mov edi,OFFSET get_ac_consume_energy_name
+    xor dx,dx
+    mov ax,get_ac_consume_energy_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_ac_produce_energy
+    mov edi,OFFSET get_ac_produce_energy_name
+    xor dx,dx
+    mov ax,get_ac_produce_energy_nr
+    RegisterBimodalUserGate
     ret
 init    ENDP
     

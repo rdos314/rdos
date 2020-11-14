@@ -4070,13 +4070,23 @@
     __parm [__bl] \
     __value [__eax]
 
-#pragma aux RdosGetAcPower = \
-    CallGate_get_ac_power  \
+#pragma aux RdosGetAcConsumePower = \
+    CallGate_get_ac_consume_power  \
     __parm [__bl] \
     __value [__eax]
 
-#pragma aux RdosGetAcEnergy = \
-    CallGate_get_ac_energy  \
+#pragma aux RdosGetAcProducePower = \
+    CallGate_get_ac_produce_power  \
+    __parm [__bl] \
+    __value [__eax]
+
+#pragma aux RdosGetAcConsumeEnergy = \
+    CallGate_get_ac_consume_energy  \
+    __parm [__bl] \
+    __value [__edx __eax]
+
+#pragma aux RdosGetAcProduceEnergy = \
+    CallGate_get_ac_produce_energy  \
     __parm [__bl] \
     __value [__edx __eax]
 

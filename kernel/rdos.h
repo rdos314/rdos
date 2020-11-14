@@ -986,8 +986,10 @@ int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 void RDOSAPI RdosWaitAcMeassure();
 int RDOSAPI RdosGetAcVoltage(char Phase);
 int RDOSAPI RdosGetAcCurrent(char Phase);
-int RDOSAPI RdosGetAcPower(char Phase);
-long long RDOSAPI RdosGetAcEnergy(char Phase);
+int RDOSAPI RdosGetAcConsumePower(char Phase);
+int RDOSAPI RdosGetAcProducePower(char Phase);
+long long RDOSAPI RdosGetAcConsumeEnergy(char Phase);
+long long RDOSAPI RdosGetAcProduceEnergy(char Phase);
 
 int RDOSAPI RdosCreateRealtime();
 int RDOSAPI RdosAddRealtimeCore(int handle, const char *exename);
