@@ -941,6 +941,7 @@
 #define usergate_get_ac_current 0x000002E2
 #define usergate_get_ac_power 0x000002E3
 #define usergate_get_ac_energy 0x000002E4
+#define usergate_wait_ac_meassure 0x000002E5
 
 
 
@@ -1888,6 +1889,7 @@
 #define CallGate_get_ac_current 0x55 0x67 0x9a 226 2 0 0 3 0 0x5d
 #define CallGate_get_ac_power 0x55 0x67 0x9a 227 2 0 0 3 0 0x5d
 #define CallGate_get_ac_energy 0x55 0x67 0x9a 228 2 0 0 3 0 0x5d
+#define CallGate_wait_ac_meassure 0x55 0x67 0x9a 229 2 0 0 3 0 0x5d
 
 #else
 
@@ -2833,5 +2835,6 @@
 #define CallGate_get_ac_current 0x3e 0x67 0x9a 226 2 0 0 3 0
 #define CallGate_get_ac_power 0x3e 0x67 0x9a 227 2 0 0 3 0
 #define CallGate_get_ac_energy 0x3e 0x67 0x9a 228 2 0 0 3 0
+#define CallGate_wait_ac_meassure 0x3e 0x67 0x9a 229 2 0 0 3 0
 
 #endif

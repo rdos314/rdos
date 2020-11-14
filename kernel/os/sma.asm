@@ -53,6 +53,7 @@ sma_im_pos_energy       DD 4 DUP(?,?)
 sma_im_neg_energy       DD 4 DUP(?,?)
 sma_phi                 DD ?
 
+sma_wait                DW ?
 sma_thread              DW ?
 sma_busy                DB ?
 sma_msg                 DB 600 DUP (?)
@@ -878,6 +879,7 @@ sma_pr:
     GetThread
     mov ds:sma_thread,ax
     mov ds:sma_busy,0
+    mov ds:sma_wait,0
 ;
     mov si,9522
     mov eax,cs
@@ -889,7 +891,37 @@ sLoop:
     WaitForSignal
     call HandleMsg
     mov ds:sma_busy,0
+    xor bx,bx
+    xchg bx,ds:sma_wait
+    Signal
     jmp sLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitAcMeassure
+;
+;       DESCRIPTION:    Wait AC Meassure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_ac_meassure_name	DB 'Wait AC Meassure', 0
+
+wait_ac_meassure  PROC far
+    push ds
+    push ebx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    GetThread
+    ClearSignal
+    mov ds:sma_wait,ax
+    WaitForSignal
+;
+    pop ebx
+    pop ds
+    ret
+wait_ac_meassure  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1105,6 +1137,12 @@ init    PROC far
     mov es,eax  
     mov edi,OFFSET init_sma
     HookInitTasking
+;
+    mov esi,OFFSET wait_ac_meassure
+    mov edi,OFFSET wait_ac_meassure_name
+    xor dx,dx
+    mov ax,wait_ac_meassure_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_ac_voltage
     mov edi,OFFSET get_ac_voltage_name

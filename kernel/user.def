@@ -941,5 +941,6 @@ get_ac_voltage_nr                 = 737
 get_ac_current_nr                 = 738
 get_ac_power_nr                   = 739
 get_ac_energy_nr                  = 740
+wait_ac_meassure_nr               = 741
 
 usergate_entries                  = 750

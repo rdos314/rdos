@@ -4057,6 +4057,9 @@
     __parm [__ebx] [__esi] \
     __value [__ebx]
 
+#pragma aux RdosWaitAcMeassure = \
+    CallGate_wait_ac_meassure
+
 #pragma aux RdosGetAcVoltage = \
     CallGate_get_ac_voltage  \
     __parm [__bl] \

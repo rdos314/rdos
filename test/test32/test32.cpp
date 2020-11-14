@@ -29,6 +29,9 @@ void main()
 
     for (;;)
     {
+        RdosWaitAcMeassure();
+        printf("\r\n");
+
         printf("Volt: ");
         for (p = 1; p <=3; p++)
         {
@@ -81,8 +84,6 @@ void main()
             printf("%05.3Lf kWh", val);
         }
         printf("\r\n");
-
-        RdosWaitMilli(1000);
     }
 
     RdosTestGate("");

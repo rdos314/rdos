@@ -4556,6 +4556,10 @@ FactorPow2BigNum        MACRO
 
 ;;;;;;;;;;; AC ;;;;;;;;;;
 
+WaitAcMeassure    MACRO
+        UserGate wait_ac_meassure_nr
+                ENDM
+
 ; IN  BL             Phase (1-3)
 ; OUT EAX            Voltage (mV)
 GetAcVoltage    MACRO
