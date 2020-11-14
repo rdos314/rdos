@@ -889,8 +889,177 @@ sLoop:
     WaitForSignal
     call HandleMsg
     mov ds:sma_busy,0
-    int 3
     jmp sLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcVoltage
+;
+;       DESCRIPTION:    Get AC Voltage
+;
+;       PARAMETERS:     BL	Phase (1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EAX	Voltage (mv)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_voltage_name	DB 'Get AC Voltage', 0
+
+get_ac_voltage  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    or bl,bl
+    jz gvFail
+;
+    cmp bl,3
+    ja gvFail
+;
+    movzx ebx,bl
+    shl ebx,2
+    mov eax,ds:[ebx].sma_volt
+    clc
+    jmp gvDone
+
+gvFail:
+    stc
+
+gvDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_voltage	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcCurrent
+;
+;       DESCRIPTION:    Get AC Current
+;
+;       PARAMETERS:     BL	Phase (1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EAX	Current (mA)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_current_name	DB 'Get AC Current', 0
+
+get_ac_current  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    or bl,bl
+    jz gcFail
+;
+    cmp bl,3
+    ja gcFail
+;
+    movzx ebx,bl
+    shl ebx,2
+    mov eax,ds:[ebx].sma_current
+    clc
+    jmp gcDone
+
+gcFail:
+    stc
+
+gcDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_current	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcPower
+;
+;       DESCRIPTION:    Get AC Power
+;
+;       PARAMETERS:     BL	Phase (0 = total, 1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EAX	Power (0.1W)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_power_name	DB 'Get AC Power', 0
+
+get_ac_power  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    cmp bl,3
+    ja gpFail
+;
+    movzx ebx,bl
+    shl ebx,2
+    mov eax,ds:[ebx].sma_active_pos_power
+    sub eax,ds:[ebx].sma_active_neg_power
+    clc
+    jmp gpDone
+
+gpFail:
+    stc
+
+gpDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_power	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetAcEnergy
+;
+;       DESCRIPTION:    Get AC Energy
+;
+;       PARAMETERS:     BL	Phase (0 = total, 1 = L1, 2 = L2, 3 = L3)          
+;
+;       RETURNS:        EDX:EAX	Energy (Ws)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ac_energy_name	DB 'Get AC Energy', 0
+
+get_ac_energy  PROC far
+    push ds
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    cmp bl,3
+    ja geFail
+;
+    movzx ebx,bl
+    shl ebx,3
+    mov eax,ds:[ebx].sma_active_pos_energy
+    mov edx,ds:[ebx+4].sma_active_pos_energy
+    sub eax,ds:[ebx].sma_active_neg_energy
+    sbb eax,ds:[ebx+4].sma_active_neg_energy
+    clc
+    jmp geDone
+
+geFail:
+    stc
+
+geDone: 
+    pop ebx
+    pop ds
+    ret
+get_ac_energy	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -937,6 +1106,30 @@ init    PROC far
     mov edi,OFFSET init_sma
     HookInitTasking
 ;
+    mov esi,OFFSET get_ac_voltage
+    mov edi,OFFSET get_ac_voltage_name
+    xor dx,dx
+    mov ax,get_ac_voltage_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_ac_current
+    mov edi,OFFSET get_ac_current_name
+    xor dx,dx
+    mov ax,get_ac_current_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_ac_power
+    mov edi,OFFSET get_ac_power_name
+    xor dx,dx
+    mov ax,get_ac_power_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_ac_energy
+    mov edi,OFFSET get_ac_energy_name
+    xor dx,dx
+    mov ax,get_ac_energy_nr
+    RegisterBimodalUserGate
+
     ret
 init    ENDP
     

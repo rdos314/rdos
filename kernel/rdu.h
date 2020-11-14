@@ -937,6 +937,11 @@
 
 #define usergate_ip_to_mac 0x000002E0
 
+#define usergate_get_ac_voltage 0x000002E1
+#define usergate_get_ac_current 0x000002E2
+#define usergate_get_ac_power 0x000002E3
+#define usergate_get_ac_energy 0x000002E4
+
 
 
 #ifdef __FLAT__
@@ -1879,6 +1884,11 @@
 
 #define CallGate_ip_to_mac 0x55 0x67 0x9a 224 2 0 0 3 0 0x5d
 
+#define CallGate_get_ac_voltage 0x55 0x67 0x9a 225 2 0 0 3 0 0x5d
+#define CallGate_get_ac_current 0x55 0x67 0x9a 226 2 0 0 3 0 0x5d
+#define CallGate_get_ac_power 0x55 0x67 0x9a 227 2 0 0 3 0 0x5d
+#define CallGate_get_ac_energy 0x55 0x67 0x9a 228 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2818,5 +2828,10 @@
 #define CallGate_has_usb_card_usb_reset 0x3e 0x67 0x9a 223 2 0 0 3 0
 
 #define CallGate_ip_to_mac 0x3e 0x67 0x9a 224 2 0 0 3 0
+
+#define CallGate_get_ac_voltage 0x3e 0x67 0x9a 225 2 0 0 3 0
+#define CallGate_get_ac_current 0x3e 0x67 0x9a 226 2 0 0 3 0
+#define CallGate_get_ac_power 0x3e 0x67 0x9a 227 2 0 0 3 0
+#define CallGate_get_ac_energy 0x3e 0x67 0x9a 228 2 0 0 3 0
 
 #endif

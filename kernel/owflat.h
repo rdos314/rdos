@@ -4057,6 +4057,26 @@
     __parm [__ebx] [__esi] \
     __value [__ebx]
 
+#pragma aux RdosGetAcVoltage = \
+    CallGate_get_ac_voltage  \
+    __parm [__bl] \
+    __value [__eax]
+
+#pragma aux RdosGetAcCurrent = \
+    CallGate_get_ac_current  \
+    __parm [__bl] \
+    __value [__eax]
+
+#pragma aux RdosGetAcPower = \
+    CallGate_get_ac_power  \
+    __parm [__bl] \
+    __value [__eax]
+
+#pragma aux RdosGetAcEnergy = \
+    CallGate_get_ac_energy  \
+    __parm [__bl] \
+    __value [__edx __eax]
+
 #pragma aux RdosCreateRealtime = \
     CallGate_create_realtime  \
     ValidateHandle \

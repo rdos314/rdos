@@ -4554,6 +4554,32 @@ FactorPow2BigNum        MACRO
         UserGate factor_pow2_bignum_nr
                 ENDM
 
+;;;;;;;;;;; AC ;;;;;;;;;;
+
+; IN  BL             Phase (1-3)
+; OUT EAX            Voltage (mV)
+GetAcVoltage    MACRO
+        UserGate get_ac_voltage_nr
+                ENDM
+
+; IN  BL             Phase (1-3)
+; OUT EAX            Current (mA)
+GetAcCurrent    MACRO
+        UserGate get_ac_current_nr
+                ENDM
+
+; IN  BL             Phase (0 = sum, 1-3)
+; OUT EAX            Power (0.1W)
+GetAcPower    MACRO
+        UserGate get_ac_power_nr
+                ENDM
+
+; IN  BL             Phase (0 = sum, 1-3)
+; OUT EDX:EAX        Energy (Ws)
+GetAcEnergy    MACRO
+        UserGate get_ac_energy_nr
+                ENDM
+
 ;;;;;;;;;;; Realtime ;;;;;;;;;;
 
 ; OUT BX            Realtime handle

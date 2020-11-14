@@ -983,6 +983,11 @@ int RDOSAPI RdosCreateRandomBigNum(int bits);
 int RDOSAPI RdosCreateRandomOddBigNum(int bits);
 int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 
+int RDOSAPI RdosGetAcVoltage(char Phase);
+int RDOSAPI RdosGetAcCurrent(char Phase);
+int RDOSAPI RdosGetAcPower(char Phase);
+long long RDOSAPI RdosGetAcEnergy(char Phase);
+
 int RDOSAPI RdosCreateRealtime();
 int RDOSAPI RdosAddRealtimeCore(int handle, const char *exename);
 void RDOSAPI RdosWaitForRealtimeSignal(int handle);
