@@ -169,7 +169,8 @@ mem_struc	STRUC
 
 mem_idr0      DD ?
 mem_idr1      DD ?
-mem_mar0      DD ?,?
+mem_mar0      DD ?
+mem_mar1      DD ?
 mem_dtccr     DD ?, ?, ?, ?
 mem_tnpds     DD ?,?
 mem_thpds     DD ?,?
@@ -2290,6 +2291,13 @@ ioihResetDone:
     pop cx
 ;
     mov dx,ds:IoBase
+    add dx,REG_MAR0
+    mov eax,-1
+    out dx,eax
+    add edx,4
+    out dx,eax
+;
+    mov dx,ds:IoBase
     add dx,REG_IDR0
     in eax,dx
     mov dword ptr ds:EthernetAddress,eax
@@ -2433,6 +2441,10 @@ mihResetWait:
 
 mihResetDone:
     pop cx
+;
+    mov eax,-1
+    mov fs:mem_mar0,eax
+    mov fs:mem_mar1,eax
 ;
     mov eax,fs:mem_idr0
     mov dword ptr ds:EthernetAddress,eax
