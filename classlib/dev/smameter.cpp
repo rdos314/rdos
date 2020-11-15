@@ -80,6 +80,22 @@ TSmaMeter::~TSmaMeter()
 
 /*##########################################################################
 #
+#   Name       : TEch200::WaitForMeassure
+#
+#   Purpose....: Wait for new meassure
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmaMeter::WaitForMeassure()
+{
+    FSignal.WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : TEch200::GetVolt
 #
 #   Purpose....: Get phase voltage
@@ -384,5 +400,6 @@ void TSmaMeter::Execute()
             FProduceEnergy[p] = val / 3600.0;
         }
         FSection.Leave();
+        FSignal.Signal();
     }
 }

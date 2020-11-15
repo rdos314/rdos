@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "realtime.h"
+#include "smameter.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -22,93 +22,79 @@
 ##########################################################################*/
 void main()
 {
-    char p;
-    int ival;
-    long long lval;
+    int p;
     double val;
+    TSmaMeter sma;
 
     for (;;)
     {
-        RdosWaitAcMeassure();
+        sma.WaitForMeassure();
+
         printf("\r\n");
 
         printf("Volt: ");
-        for (p = 1; p <=3; p++)
+        for (p = 1; p <= 3; p++)
         {
             if (p != 1)
                 printf(", ");
 
-            ival = RdosGetAcVoltage(p);
-            val = (double)ival;
-            val = val / 1000.0;
-            printf("%05.3Lf V", val);
+            val = sma.GetVolt(p);
+            printf("%9.3Lf V", val);
         }
         printf("\r\n");
 
         printf("Current: ");
-        for (p = 1; p <=3; p++)
+        for (p = 1; p <= 3; p++)
         {
             if (p != 1)
                 printf(", ");
 
-            ival = RdosGetAcCurrent(p);
-            val = (double)ival;
-            val = val / 1000.0;
-            printf("%05.3Lf A", val);
+            val = sma.GetCurrent(p);
+            printf("%9.3Lf A", val);
         }
         printf("\r\n");
 
         printf("Consume power: ");
-        for (p = 0; p <=3; p++)
-        {
-            if (p != 0)
-                printf(", ");
+        val = sma.GetConsumePower();
+        printf("%9.1Lf W", val);
 
-            ival = RdosGetAcConsumePower(p);
-            val = (double)ival;
-            val = val / 10.0;
-            printf("%05.1Lf W", val);
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetConsumePower(p);
+            printf("%9.1Lf W", val);
         }
         printf("\r\n");
 
         printf("Produce power: ");
-        for (p = 0; p <=3; p++)
-        {
-            if (p != 0)
-                printf(", ");
+        val = sma.GetProducePower();
+        printf("%9.1Lf W", val);
 
-            ival = RdosGetAcProducePower(p);
-            val = (double)ival;
-            val = val / 10.0;
-            printf("%05.1Lf W", val);
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetProducePower(p);
+            printf("%9.1Lf W", val);
         }
         printf("\r\n");
 
         printf("Consume energy: ");
-        for (p = 0; p <=3; p++)
-        {
-            if (p != 0)
-                printf(", ");
+        val = sma.GetConsumeEnergy();
+        printf("%9.3Lf kWh", val);
 
-            lval = RdosGetAcConsumeEnergy(p);
-            val = (double)lval;
-            val = val / 1000.0;
-            val = val / 3600.0;
-            printf("%05.3Lf kWh", val);
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetConsumeEnergy(p);
+            printf("%9.3Lf kWh", val);
         }
         printf("\r\n");
 
         printf("Produce energy: ");
-        for (p = 0; p <=3; p++)
-        {
-            if (p != 0)
-                printf(", ");
+        val = sma.GetProduceEnergy();
+        printf("%9.3Lf kWh", val);
 
-            lval = RdosGetAcProduceEnergy(p);
-            val = (double)lval;
-            val = val / 1000.0;
-            val = val / 3600.0;
-            printf("%05.3Lf kWh", val);
+        for (p = 1; p <=3; p++)
+        {
+            val = sma.GetProduceEnergy(p);
+            printf("%9.3Lf kWh", val);
         }
         printf("\r\n");
     }

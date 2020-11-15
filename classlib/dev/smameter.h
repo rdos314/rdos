@@ -31,12 +31,15 @@
 #include "thread.h"
 #include "rdos.h"
 #include "section.h"
+#include "sigdev.h"
 
 class TSmaMeter : public TThread
 {
 public:
     TSmaMeter();
     virtual ~TSmaMeter();
+
+    void WaitForMeassure();
 
     double GetVolt(int Phase);
     double GetCurrent(int Phase);
@@ -59,6 +62,7 @@ protected:
     double FConsumeEnergy[4];
     double FProduceEnergy[4];
     TSection FSection;
+    TSignalDevice FSignal;
 };
 
 #endif

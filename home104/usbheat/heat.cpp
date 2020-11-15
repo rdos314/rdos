@@ -52,6 +52,7 @@
 #include "linyaxis.h"
 #include "png.h"
 #include "ddns.h"
+#include "smameter.h"
 
 int GetWebConnectionCount();
 
@@ -740,6 +741,133 @@ void TimeThread(void *Param)
     }
 }
 
+/*##########################################################################
+#
+#   Name       : SmaThread
+#
+#   Purpose....: SMA meter thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SmaThread(void *Param)
+{
+    int p;
+    double val;
+    TSmaMeter sma;
+    TTableControl *Table;
+    TLabelFactory CommentFactory;
+    TLabelFactory ValueFactory;
+    TLabelFactory UnitFactory;
+    char str[100];
+
+    RdosWaitMilli(5000);
+
+    LockGUI();
+
+    CommentFactory.SetSpace(4, 4);
+    CommentFactory.SetFont(30);
+    CommentFactory.SetBackTransparent();
+    CommentFactory.SetDrawColor(0, 0, 0);
+    CommentFactory.AlignLeft();
+
+    ValueFactory.SetSpace(4, 4);
+    ValueFactory.SetFont(30);
+    ValueFactory.SetBackColor(100, 100, 100);
+    ValueFactory.SetDrawColor(0, 0, 0);
+    ValueFactory.AlignRight();
+
+    UnitFactory.SetSpace(4, 4);
+    UnitFactory.SetFont(35);
+    UnitFactory.SetBackTransparent();
+    UnitFactory.SetDrawColor(0, 0, 0);
+    UnitFactory.AlignLeft();
+
+    Table = new TTableControl(control, 550, 420, 700, 300);
+    Table->SetBackColor(0, 20, 50);
+    Table->SetRowSpacing(10);
+    Table->SetColSpacing(16);
+    Table->SetSpacingColor(0, 20, 50);
+    Table->AddLabelColumn(&CommentFactory, 150);
+    Table->AddLabelColumn(&ValueFactory, 125);
+    Table->AddLabelColumn(&ValueFactory, 125);
+    Table->AddLabelColumn(&ValueFactory, 125);
+    Table->AddLabelColumn(&UnitFactory, 100);
+
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+
+    Table->SetText(0, 0, "Volt");
+    Table->SetText(1, 0, "Current");
+    Table->SetText(2, 0, "Power, prod");
+    Table->SetText(3, 0, "Power, cons");
+    Table->SetText(4, 0, "Energy, prod");
+    Table->SetText(5, 0, "Energy, cons");
+
+    Table->SetText(0, 4, "V");
+    Table->SetText(1, 4, "A");
+    Table->SetText(2, 4, "W");
+    Table->SetText(3, 4, "W");
+    Table->SetText(4, 4, "kWh");
+    Table->SetText(5, 4, "kWh");
+    Table->Show();
+
+    UnlockGUI();
+
+    for (;;)
+    {
+        sma.WaitForMeassure();
+
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetVolt(p);
+            sprintf(str, "%5.3Lf", val);
+            Table->SetText(0, p, str);
+        }
+
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetCurrent(p);
+            sprintf(str, "%5.3Lf", val);
+            Table->SetText(1, p, str);
+        }
+
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetProducePower(p);
+            sprintf(str, "%3.1Lf", val);
+            Table->SetText(2, p, str);
+        }
+
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetConsumePower(p);
+            sprintf(str, "%3.1Lf", val);
+            Table->SetText(3, p, str);
+        }
+
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetProduceEnergy(p);
+            sprintf(str, "%5.3Lf", val);
+            Table->SetText(4, p, str);
+        }
+
+        for (p = 1; p <= 3; p++)
+        {
+            val = sma.GetConsumeEnergy(p);
+            sprintf(str, "%5.3Lf", val);
+            Table->SetText(5, p, str);
+        }
+    }
+}
+
 /*##################  PerfThread  ##############################################
  *   Purpose....: Watchdog thread                                                                           #
  *   In params..: *                                                          #
@@ -1022,6 +1150,7 @@ int main()
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
     RdosCreateThread(PerfThread, "Perf", vbe, 0x4000);
+    RdosCreateThread(SmaThread, "Sma", control, 0x4000);
 
     LockGUI();
     Label = new TLabelControl(control, 1700, 50, 200, 35);
