@@ -64,8 +64,8 @@ int GetWebConnectionCount();
 #define MAX_SAMPLES 5 * 60
 
 #define ROOT_DIR "e:/data/power"
-#define CSV_DAY_HEADER "time;solar;grid;dump\r\n"
-#define CSV_MONTH_HEADER "day;solar;wind\r\n"
+#define CSV_DAY_HEADER "time;solar;grid;dump;prod;cons\r\n"
+#define CSV_MONTH_HEADER "day;solar;wind;prod;cons\r\n"
 
 #define WIDTH 240
 #define HEIGHT 15
@@ -89,14 +89,17 @@ static int WindGridSum;
 static int WindDumpCount;
 static int WindDumpSum;
 
+static long double WindDayE = 0.0;
+static long double WindNewDayE = 0.0;
+
 static int ProdPowerCount = 0;
 static double ProdPowerSum;
 
 static int ConsPowerCount = 0;
 static double ConsPowerSum;
 
-static long double WindDayE = 0.0;
-static long double WindNewDayE = 0.0;
+static double ProdDayE = 0.0;
+static double ConsDayE = 0.0;
 
 int WdTimeout;
 
@@ -291,6 +294,46 @@ static void NotifyConsPower(double val)
 
     ConsPowerSum += val;
     ConsPowerCount++;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyProdDayEnergy
+#
+#   Purpose....: Notify production day energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyProdDayEnergy(double val)
+{
+    FDataSection.Enter();
+
+    ProdDayE = val;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyConsDayEnergy
+#
+#   Purpose....: Notify consume day energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyConsDayEnergy(double val)
+{
+    FDataSection.Enter();
+
+    ConsDayE = val;
 
     FDataSection.Leave();
 }
@@ -635,13 +678,21 @@ static void UpdateMonthData()
     File->Write(str, strlen(str));
 
     val = (int)(10.0 * WindNewDayE);
-    sprintf(str, "%d.%01d\r\n", val / 10, val % 10);
+    sprintf(str, "%d.%01d;", val / 10, val % 10);
+    File->Write(str, strlen(str));
+
+    sprintf(str, "%3.1Lf;", ProdDayE);
+    File->Write(str, strlen(str));
+
+    sprintf(str, "%3.1Lf\r\n", ConsDayE);
     File->Write(str, strlen(str));
 
     delete File;
 
     SolarNewDayE = 0;
     WindNewDayE = 0;
+    ProdDayE = 0.0;
+    ConsDayE = 0.0;
 }
 
 /*##########################################################################
@@ -876,7 +927,8 @@ void SmaThread(void *Param)
     TLabelFactory CommentFactory;
     TLabelFactory ValueFactory;
     TLabelFactory UnitFactory;
-    int iyear, imonth, iday;
+    int currday;
+    int pyear, pmonth, pday;
     int year, month, day;
     int hour, min, sec;
     int ms, us;
@@ -978,13 +1030,13 @@ void SmaThread(void *Param)
     ok = ini.ReadVar("Date", str, 50);
     if (ok)
     {
-        count = sscanf(str, "%04d%02d%02d", &iyear, &imonth, &iday);
+        count = sscanf(str, "%04d%02d%02d", &pyear, &pmonth, &pday);
         if (count != 3)
             ok = FALSE;
     }
 
     if (ok)
-        if (year != iyear || month != imonth || day != iday)
+        if (year != pyear || month != pmonth || day != pday)
             ok = FALSE;
 
     if (ok)
@@ -1020,6 +1072,8 @@ void SmaThread(void *Param)
         sprintf(str, "%5.3Lf", val);
         ini.WriteVar("Cons", str);
     }
+
+    currday = day;
 
     for (;;)
     {
@@ -1076,6 +1130,29 @@ void SmaThread(void *Param)
         sprintf(str, "%3.1Lf", val);
         SumTable->SetText(1, 1, str);
         NotifyConsPower(val);
+
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+
+        if (day != currday)
+        {
+            val = sma.GetProduceEnergy();
+            sprintf(str, "%5.3Lf", val);
+            ini.WriteVar("Prod", str);
+            NotifyProdDayEnergy(val - ProdBase);
+            ProdBase = val;
+
+            val = sma.GetConsumeEnergy();
+            sprintf(str, "%5.3Lf", val);
+            ini.WriteVar("Cons", str);
+            NotifyConsDayEnergy(val - ConsBase);
+            ConsBase = val;
+
+            sprintf(str, "%04d%02d%02d", year, month, day);
+            ini.WriteVar("Date", str);
+
+            currday = day;
+        }
 
         val = sma.GetProduceEnergy() - ProdBase;
         sprintf(str, "%5.3Lf", val);
@@ -1771,7 +1848,7 @@ int main()
             LastMin = CurrTime->GetMin();
             UpdateDataStore(CurrTime->GetHour(), CurrTime->GetMin());
 
-            if (SolarNewDayE && WindNewDayE)
+            if (SolarNewDayE && (WindNewDayE || WindDayE == 0.0))
                 UpdateMonthData();
         }
 

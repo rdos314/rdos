@@ -1079,12 +1079,12 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
                         obj->AddArray();
                         text = ReadFile(file);
                         obj->AddString("legendText", "produce");
-                        AddMonthData(obj, text, 3);
+                        AddMonthData(obj, text, 2);
 
                         obj->AddArray();
                         text = ReadFile(file);
                         obj->AddString("legendText", "consume");
-                        AddMonthData(obj, text, 4);
+                        AddMonthData(obj, text, 3);
                         break;
                 }
                 delete text;
@@ -1127,10 +1127,10 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
                             valB[FMonth - 1] = GetMonthTotal(text, 1);
 
                             text = ReadFile(file);
-                            valC[FMonth - 1] = GetMonthTotal(text, 3);
+                            valC[FMonth - 1] = GetMonthTotal(text, 2);
 
                             text = ReadFile(file);
-                            valD[FMonth - 1] = GetMonthTotal(text, 4);
+                            valD[FMonth - 1] = GetMonthTotal(text, 3);
                             break;
                     }
                     delete text;
