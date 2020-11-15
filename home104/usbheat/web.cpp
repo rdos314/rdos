@@ -35,16 +35,16 @@
 
 #include "web.h"
 
-#define BUF_SIZE	0x4000
+#define BUF_SIZE        0x4000
 #define STACK_SIZE      0x4000
 
-#define REQ_WIND	1
-#define REQ_SOLAR	2
-#define REQ_SOLAR_WIND	3
+#define REQ_WIND        1
+#define REQ_SOLAR       2
+#define REQ_SOLAR_WIND  3
 
-#define SUBMIT_NONE	0
-#define SUBMIT_MONTH	1
-#define SUBMIT_DAY	2
+#define SUBMIT_NONE     0
+#define SUBMIT_MONTH    1
+#define SUBMIT_DAY      2
 #define SUBMIT_POWER    3
 #define SUBMIT_SOLAR    4
 #define SUBMIT_WIND     5
@@ -255,51 +255,51 @@ void TPowerJsonPage::CreateTitle(TJsonCollection *obj)
                 case 1:
                     strcpy(dstr, "Jan");
                     break;
-    
+
                 case 2:
                     strcpy(dstr, "Feb");
                     break;
-    
+
                 case 3:
                     strcpy(dstr, "Mar");
                     break;
-    
+
                 case 4:
                     strcpy(dstr, "Apr");
                     break;
-    
+
                 case 5:
                     strcpy(dstr, "May");
                     break;
-    
+
                 case 6:
                     strcpy(dstr, "Jun");
-                    break;    
+                    break;
 
                 case 7:
                     strcpy(dstr, "Jul");
                     break;
-    
+
                 case 8:
                     strcpy(dstr, "Aug");
                     break;
-    
+
                 case 9:
                     strcpy(dstr, "Sep");
                     break;
-    
+
                 case 10:
                     strcpy(dstr, "Oct");
                     break;
-    
+
                 case 11:
                     strcpy(dstr, "Nov");
                     break;
-    
+
                 case 12:
                     strcpy(dstr, "Dec");
                     break;
-    
+
                 default:
                     dstr[0] = 0;
                     break;
@@ -504,12 +504,12 @@ void TPowerJsonPage::CreateScaleX(TJsonCollection *obj, TDateTime &time)
                     break;
             }
             sprintf(str, "%s %d", month, FYear);
-            obj->AddString("label", str);        
+            obj->AddString("label", str);
         }
         else
         {
             sprintf(str, "%d", FYear);
-            obj->AddString("label", str);        
+            obj->AddString("label", str);
 
             arr = obj->AddStringArray("values");
             arr->Add("Jan");
@@ -1006,7 +1006,7 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
         if (file->IsOpen())
         {
             text = ReadFile(file);
-            
+
             switch (FReqType)
             {
                 case REQ_SOLAR:
@@ -1028,6 +1028,16 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
                     text = ReadFile(file);
                     obj->AddString("legendText", "wind");
                     AddDayData(obj, text, 1);
+
+                    obj->AddArray();
+                    text = ReadFile(file);
+                    obj->AddString("legendText", "produce");
+                    AddDayData(obj, text, 2);
+
+                    obj->AddArray();
+                    text = ReadFile(file);
+                    obj->AddString("legendText", "consume");
+                    AddDayData(obj, text, 3);
                     break;
              }
             delete text;
@@ -1043,7 +1053,7 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
             if (file->IsOpen())
             {
                 text = ReadFile(file);
-                        
+
                 switch (FReqType)
                 {
                     case REQ_SOLAR:
@@ -1065,6 +1075,16 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
                         text = ReadFile(file);
                         obj->AddString("legendText", "wind");
                         AddMonthData(obj, text, 1);
+
+                        obj->AddArray();
+                        text = ReadFile(file);
+                        obj->AddString("legendText", "produce");
+                        AddMonthData(obj, text, 2);
+
+                        obj->AddArray();
+                        text = ReadFile(file);
+                        obj->AddString("legendText", "consume");
+                        AddMonthData(obj, text, 3);
                         break;
                 }
                 delete text;
@@ -1075,6 +1095,8 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
         {
             double valA[12];
             double valB[12];
+            double valC[12];
+            double valD[12];
             bool Valid[12];
 
             for (FMonth = 1; FMonth <= 12; FMonth++)
@@ -1086,7 +1108,7 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
                     Valid[FMonth - 1] = true;
 
                     text = ReadFile(file);
-                        
+
                     switch (FReqType)
                     {
                         case REQ_SOLAR:
@@ -1103,13 +1125,19 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
 
                             text = ReadFile(file);
                             valB[FMonth - 1] = GetMonthTotal(text, 1);
+
+                            text = ReadFile(file);
+                            valC[FMonth - 1] = GetMonthTotal(text, 2);
+
+                            text = ReadFile(file);
+                            valD[FMonth - 1] = GetMonthTotal(text, 3);
                             break;
                     }
                     delete text;
                 }
                 else
                     Valid[FMonth - 1] = false;
-                
+
                 delete file;
             }
 
@@ -1132,6 +1160,14 @@ void TPowerJsonPage::CreateDataSerie(TJsonArrayCollection *obj)
                     obj->AddArray();
                     obj->AddString("legendText", "wind");
                     AddYearData(obj, valB, Valid);
+
+                    obj->AddArray();
+                    obj->AddString("legendText", "produce");
+                    AddYearData(obj, valC, Valid);
+
+                    obj->AddArray();
+                    obj->AddString("legendText", "consume");
+                    AddYearData(obj, valD, Valid);
                     break;
             }
         }
@@ -1168,40 +1204,40 @@ void TPowerJsonPage::SendAnswer()
     root->AddString("backgroundColor", "#2C2C39");
 
     obj = root->AddCollection("title");
-    CreateTitle(obj);    
+    CreateTitle(obj);
 
     if (FReqType == REQ_SOLAR_WIND)
     {
         obj = root->AddCollection("legend");
-        CreateLegend(obj);    
+        CreateLegend(obj);
     }
 
     obj = root->AddCollection("plot");
-    CreatePlot(obj);    
+    CreatePlot(obj);
 
     obj = root->AddCollection("plotarea");
-    CreatePlotArea(obj);    
+    CreatePlotArea(obj);
 
     obj = root->AddCollection("scaleX");
-    CreateScaleX(obj, time);    
+    CreateScaleX(obj, time);
 
     obj = root->AddCollection("scaleY");
-    CreateScaleY(obj);    
+    CreateScaleY(obj);
 
     obj = root->AddCollection("crosshairX");
-    CreateCrosshairX(obj);    
+    CreateCrosshairX(obj);
 
     obj = root->AddCollection("crosshairY");
-    CreateCrosshairY(obj);    
+    CreateCrosshairY(obj);
 
     obj = root->AddCollection("shapes");
-    CreateShapes(obj);    
+    CreateShapes(obj);
 
     obj = root->AddCollection("tooltip");
-    CreateToolTip(obj);    
+    CreateToolTip(obj);
 
     arr = root->AddArrayCollection("series");
-    CreateDataSerie(arr);    
+    CreateDataSerie(arr);
 
     json.Write(str);
     Write(str.GetData());
@@ -1242,7 +1278,7 @@ bool TPowerJsonPage::DecodeReq(const char *ReqStr)
                 ok = true;
                 ptr += strlen("wind");
             }
-            
+
             if (!ok)
             {
                 ptr = strstr(bptr, "solar");
@@ -1740,7 +1776,7 @@ void TPowerWebPage::Fixup()
                 if (time > currtime)
                 {
                     time = currtime;
- 
+
                     if (!HasMonthFile(time))
                         time.AddMonth(-1);
                 }
@@ -1766,7 +1802,7 @@ void TPowerWebPage::Fixup()
                 if (time > currtime)
                 {
                     time = currtime;
- 
+
                     if (!HasMonthFile(time))
                         time.AddYear(-1);
                 }
@@ -1820,7 +1856,7 @@ bool TPowerWebPage::DecodeReq(const char *ReqStr)
                 ok = true;
                 ptr += strlen("wind");
             }
-            
+
             if (!ok)
             {
                 ptr = strstr(bptr, "solar");
@@ -2060,7 +2096,7 @@ void TPowerWebPage::SendAnswer()
 
             if (HasPrevMonth())
                 Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
-   
+
             if (HasNextMonth())
                 Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
         }
@@ -2073,7 +2109,7 @@ void TPowerWebPage::SendAnswer()
 
             if (HasPrevYear())
                 Write("<input type=\"Submit\" value=\"prev\" name=\"prev\">\r\n");
-   
+
             if (HasNextYear())
                 Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
         }
@@ -2104,17 +2140,17 @@ void TPowerWebPage::SendAnswer()
             break;
     }
 
-    sprintf(str, "/%d", FYear);        
+    sprintf(str, "/%d", FYear);
     Write(str);
 
     if (FUseMonth)
     {
-        sprintf(str, "/%d", FMonth);        
+        sprintf(str, "/%d", FMonth);
         Write(str);
 
         if (FUseDay)
         {
-            sprintf(str, "/%d", FDay);        
+            sprintf(str, "/%d", FDay);
             Write(str);
         }
     }
