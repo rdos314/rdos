@@ -53,6 +53,7 @@
 #include "png.h"
 #include "ddns.h"
 #include "smameter.h"
+#include "ini.h"
 
 int GetWebConnectionCount();
 
@@ -756,12 +757,22 @@ void SmaThread(void *Param)
 {
     int p;
     double val;
+    double ProdBase;
+    double ConsBase;
     TSmaMeter sma;
+    TIniFile ini("d:/heat/setting.ini");
     TTableControl *Table;
     TTableControl *SumTable;
     TLabelFactory CommentFactory;
     TLabelFactory ValueFactory;
     TLabelFactory UnitFactory;
+    int iyear, imonth, iday;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+    int ok;
+    int count;
+    unsigned long msb, lsb;
     char str[100];
 
     RdosWaitMilli(5000);
@@ -847,6 +858,59 @@ void SmaThread(void *Param)
 
     UnlockGUI();
 
+    sma.WaitForMeassure();
+
+    RdosGetTime(&msb, &lsb);
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+    ini.GotoSection("SMA");
+    ok = ini.ReadVar("Date", str, 50);
+    if (ok)
+    {
+        count = sscanf(str, "%04d%02d%02d", &iyear, &imonth, &iday);
+        if (count != 3)
+            ok = FALSE;
+    }
+
+    if (ok)
+        if (year != iyear || month != imonth || day != iday)
+            ok = FALSE;
+
+    if (ok)
+        ok = ini.ReadVar("Prod", str, 50);
+
+    if (ok)
+    {
+        count = sscanf(str, "%Lf", &ProdBase);
+        if (count != 1)
+            ok = FALSE;
+    }
+
+    if (ok)
+        ok = ini.ReadVar("Cons", str, 50);
+
+    if (ok)
+    {
+        count = sscanf(str, "%Lf", &ConsBase);
+        if (count != 1)
+            ok = FALSE;
+    }
+
+    if (!ok)
+    {
+        sprintf(str, "%04d%02d%02d", year, month, day);
+        ini.WriteVar("Date", str);
+
+        val = sma.GetProduceEnergy();
+        sprintf(str, "%5.3Lf", val);
+        ini.WriteVar("Prod", str);
+
+        val = sma.GetConsumeEnergy();
+        sprintf(str, "%5.3Lf", val);
+        ini.WriteVar("Cons", str);
+    }
+
     for (;;)
     {
         sma.WaitForMeassure();
@@ -901,12 +965,12 @@ void SmaThread(void *Param)
         sprintf(str, "%3.1Lf", val);
         SumTable->SetText(1, 1, str);
 
-        val = sma.GetProduceEnergy();
-        sprintf(str, "%3.1Lf", val);
+        val = sma.GetProduceEnergy() - ProdBase;
+        sprintf(str, "%5.3Lf", val);
         SumTable->SetText(2, 1, str);
 
-        val = sma.GetConsumeEnergy();
-        sprintf(str, "%3.1Lf", val);
+        val = sma.GetConsumeEnergy() - ConsBase;
+        sprintf(str, "%5.3Lf", val);
         SumTable->SetText(3, 1, str);
     }
 }
