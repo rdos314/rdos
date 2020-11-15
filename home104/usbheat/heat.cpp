@@ -59,7 +59,7 @@ int GetWebConnectionCount();
 #define FALSE   0
 #define TRUE    !FALSE
 
-#define MAX_CORES   4
+#define MAX_CORES   2
 #define MAX_SAMPLES 5 * 60
 
 #define ROOT_DIR "e:/data/power"
@@ -758,6 +758,7 @@ void SmaThread(void *Param)
     double val;
     TSmaMeter sma;
     TTableControl *Table;
+    TTableControl *SumTable;
     TLabelFactory CommentFactory;
     TLabelFactory ValueFactory;
     TLabelFactory UnitFactory;
@@ -768,13 +769,13 @@ void SmaThread(void *Param)
     LockGUI();
 
     CommentFactory.SetSpace(4, 4);
-    CommentFactory.SetFont(30);
+    CommentFactory.SetFont(35);
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
 
     ValueFactory.SetSpace(4, 4);
-    ValueFactory.SetFont(30);
+    ValueFactory.SetFont(35);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
@@ -785,7 +786,7 @@ void SmaThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 550, 420, 700, 300);
+    Table = new TTableControl(control, 1100, 350, 700, 300);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -805,10 +806,10 @@ void SmaThread(void *Param)
 
     Table->SetText(0, 0, "Volt");
     Table->SetText(1, 0, "Current");
-    Table->SetText(2, 0, "Power, prod");
-    Table->SetText(3, 0, "Power, cons");
-    Table->SetText(4, 0, "Energy, prod");
-    Table->SetText(5, 0, "Energy, cons");
+    Table->SetText(2, 0, "Prod (P)");
+    Table->SetText(3, 0, "Cons (P)");
+    Table->SetText(4, 0, "Prod (E)");
+    Table->SetText(5, 0, "Cons (E)");
 
     Table->SetText(0, 4, "V");
     Table->SetText(1, 4, "A");
@@ -817,6 +818,32 @@ void SmaThread(void *Param)
     Table->SetText(4, 4, "kWh");
     Table->SetText(5, 4, "kWh");
     Table->Show();
+
+    SumTable = new TTableControl(control, 550, 420, 500, 200);
+    SumTable->SetBackColor(0, 20, 50);
+    SumTable->SetRowSpacing(10);
+    SumTable->SetColSpacing(16);
+    SumTable->SetSpacingColor(0, 20, 50);
+    SumTable->AddLabelColumn(&CommentFactory, 175);
+    SumTable->AddLabelColumn(&ValueFactory, 175);
+    SumTable->AddLabelColumn(&UnitFactory, 100);
+
+    SumTable->AddRow(35, 55);
+    SumTable->AddRow(35, 55);
+    SumTable->AddRow(35, 55);
+    SumTable->AddRow(35, 55);
+
+    SumTable->SetText(0, 0, "Prod (P)");
+    SumTable->SetText(1, 0, "Cons (P)");
+    SumTable->SetText(2, 0, "Prod (E)");
+    SumTable->SetText(3, 0, "Cons (E)");
+
+    SumTable->SetText(0, 2, "W");
+    SumTable->SetText(1, 2, "W");
+    SumTable->SetText(2, 2, "kWh");
+    SumTable->SetText(3, 2, "kWh");
+
+    SumTable->Show();
 
     UnlockGUI();
 
@@ -865,6 +892,22 @@ void SmaThread(void *Param)
             sprintf(str, "%5.3Lf", val);
             Table->SetText(5, p, str);
         }
+
+        val = sma.GetProducePower();
+        sprintf(str, "%3.1Lf", val);
+        SumTable->SetText(0, 1, str);
+
+        val = sma.GetConsumePower();
+        sprintf(str, "%3.1Lf", val);
+        SumTable->SetText(1, 1, str);
+
+        val = sma.GetProduceEnergy();
+        sprintf(str, "%3.1Lf", val);
+        SumTable->SetText(2, 1, str);
+
+        val = sma.GetConsumeEnergy();
+        sprintf(str, "%3.1Lf", val);
+        SumTable->SetText(3, 1, str);
     }
 }
 
@@ -884,9 +927,6 @@ void PerfThread(void *ptr)
     TChart *PerfChart[MAX_CORES];
     TTimeXAxis *XAxis[MAX_CORES];
     TLinYAxis *YAxis[MAX_CORES];
-    TChart *FreqChart;
-    TTimeXAxis *FreqXAxis;
-    TLinYAxis *FreqYAxis;
     long long CoreTicsArr[MAX_CORES];
     long long NullTicsArr[MAX_CORES];
     long long CoreTics;
@@ -897,23 +937,6 @@ void PerfThread(void *ptr)
     long double YVal;
     unsigned long Msb, Lsb;
     int Count = 0;
-    char CpuVendor[80];
-    int CpuVer;
-    int FeatureBits;
-    int Freq;
-
-    FreqXAxis = new TTimeXAxis(&AxisFont);
-    FreqXAxis->SetBackColor(0, 0, 0);
-    FreqXAxis->SetForeColor(255, 255, 255);
-    FreqYAxis = new TLinYAxis(&AxisFont);
-    FreqYAxis->SetBackColor(0, 0, 0);
-    FreqYAxis->SetForeColor(255, 255, 255);
-    FreqChart = new TChart(vbe, FreqXAxis, FreqYAxis);
-
-    FreqChart->SetWindow(1500, 470, 1790, 610);
-    FreqChart->SetBackColor(0, 0, 0);
-    FreqChart->SetLineColor(0, 50, 200, 100);
-    FreqChart->SetYAxis(1000.0, 3000.0);
 
     for (Cores = 0; Cores < MAX_CORES; Cores++)
     {
@@ -945,14 +968,6 @@ void PerfThread(void *ptr)
         RdosGetTime(&Msb, &Lsb);
         XVal = (long double)Lsb / 65536.0 / 65536.0;
         XVal += (long double)Msb;
-
-        CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureBits, &Freq);
-        YVal = (long double)Freq;
-        if (Count == MAX_SAMPLES)
-            FreqChart->Remove(0);
-
-        FreqChart->Add(0, XVal, YVal);
-        FreqChart->Draw();
 
         for (i = 0; i < Cores; i++)
         {
