@@ -1,0 +1,388 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2003, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# smameter.cpp
+# SMA energy meter
+#
+########################################################################*/
+
+#include <stdio.h>
+#include <string.h>
+#include "rdos.h"
+#include "smameter.h"
+
+/*##########################################################################
+#
+#   Name       : TSmaMeter::TSmaMeter
+#
+#   Purpose....: SMA meter constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSmaMeter::TSmaMeter()
+  : FSection("SMA Meter")
+{
+    int i;
+
+    for (i = 0; i < 2; i++)
+    {
+       FVolt[i] = 0.0;
+       FCurrent[i] = 0.0;
+    }
+
+    for (i = 0; i < 3; i++)
+    {
+        FConsumePower[i] = 0.0;
+        FProducePower[i] = 0.0;
+        FConsumeEnergy[i] = 0.0;
+        FProduceEnergy[i] = 0.0;
+    }
+
+    Start("SMA Meter", 0x8000);
+}
+
+/*##########################################################################
+#
+#   Name       : TSmaMeter::~TSmaMeter
+#
+#   Purpose....: SMA meter destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSmaMeter::~TSmaMeter()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetVolt
+#
+#   Purpose....: Get phase voltage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetVolt(int Phase)
+{
+    double val = 0.0;
+
+    if (Phase >= 1 && Phase <= 3)
+    {
+        FSection.Enter();
+        val = FVolt[Phase - 1];
+        FSection.Leave();
+    }
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetCurrent
+#
+#   Purpose....: Get phase current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetCurrent(int Phase)
+{
+    double val = 0.0;
+
+    if (Phase >= 1 && Phase <= 3)
+    {
+        FSection.Enter();
+        val = FCurrent[Phase - 1];
+        FSection.Leave();
+    }
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetConsumePower
+#
+#   Purpose....: Get consume power sum
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetConsumePower()
+{
+    double val;
+
+    FSection.Enter();
+    val = FConsumePower[0];
+    FSection.Leave();
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetConsumePower
+#
+#   Purpose....: Get phase consumed power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetConsumePower(int Phase)
+{
+    double val = 0.0;
+
+    if (Phase >= 1 && Phase <= 3)
+    {
+        FSection.Enter();
+        val = FConsumePower[Phase];
+        FSection.Leave();
+    }
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetProducePower
+#
+#   Purpose....: Get produce power sum
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetProducePower()
+{
+    double val;
+
+    FSection.Enter();
+    val = FProducePower[0];
+    FSection.Leave();
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetProducePower
+#
+#   Purpose....: Get phase produced power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetProducePower(int Phase)
+{
+    double val = 0.0;
+
+    if (Phase >= 1 && Phase <= 3)
+    {
+        FSection.Enter();
+        val = FProducePower[Phase];
+        FSection.Leave();
+    }
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetConsumeEnergy
+#
+#   Purpose....: Get consume energy sum
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetConsumeEnergy()
+{
+    double val;
+
+    FSection.Enter();
+    val = FConsumeEnergy[0];
+    FSection.Leave();
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetConsumeEnergy
+#
+#   Purpose....: Get phase consumed energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetConsumeEnergy(int Phase)
+{
+    double val = 0.0;
+
+    if (Phase >= 1 && Phase <= 3)
+    {
+        FSection.Enter();
+        val = FConsumeEnergy[Phase];
+        FSection.Leave();
+    }
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetProduceEnergy
+#
+#   Purpose....: Get produce energy sum
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetProduceEnergy()
+{
+    double val;
+
+    FSection.Enter();
+    val = FProduceEnergy[0];
+    FSection.Leave();
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::GetProduceEnergy
+#
+#   Purpose....: Get phase produced energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TSmaMeter::GetProduceEnergy(int Phase)
+{
+    double val = 0.0;
+
+    if (Phase >= 1 && Phase <= 3)
+    {
+        FSection.Enter();
+        val = FProduceEnergy[Phase];
+        FSection.Leave();
+    }
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TSmaMeter::Execute
+#
+#   Purpose....: Execute method
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSmaMeter::Execute()
+{
+    char p;
+    int ival;
+    long long lval;
+    double val;
+
+    for (;;)
+    {
+        RdosWaitAcMeassure();
+
+        FSection.Enter();
+
+        for (p = 1; p <= 3; p++)
+        {
+            ival = RdosGetAcVoltage(p);
+            val = (double)ival;
+            FVolt[p - 1] = val / 1000.0;
+        }
+
+        for (p = 1; p <= 3; p++)
+        {
+            ival = RdosGetAcCurrent(p);
+            val = (double)ival;
+            FCurrent[p - 1] = val / 1000.0;
+        }
+
+        for (p = 0; p <= 3; p++)
+        {
+            ival = RdosGetAcConsumePower(p);
+            val = (double)ival;
+            FConsumePower[p] = val / 10.0;
+        }
+
+        for (p = 0; p <= 3; p++)
+        {
+            ival = RdosGetAcProducePower(p);
+            val = (double)ival;
+            FProducePower[p] = val / 10.0;
+        }
+
+        for (p = 0; p <= 3; p++)
+        {
+            lval = RdosGetAcConsumeEnergy(p);
+            val = (double)lval;
+            val = val / 1000.0;
+            FConsumeEnergy[p] = val / 3600.0;
+        }
+
+        for (p = 0; p <= 3; p++)
+        {
+            lval = RdosGetAcProduceEnergy(p);
+            val = (double)lval;
+            val = val / 1000.0;
+            FProduceEnergy[p] = val / 3600.0;
+        }
+        FSection.Leave();
+    }
+}
