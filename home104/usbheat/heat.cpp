@@ -89,6 +89,12 @@ static int WindGridSum;
 static int WindDumpCount;
 static int WindDumpSum;
 
+static int ProdPowerCount = 0;
+static double ProdPowerSum;
+
+static int ConsPowerCount = 0;
+static double ConsPowerSum;
+
 static long double WindDayE = 0.0;
 static long double WindNewDayE = 0.0;
 
@@ -249,6 +255,48 @@ static void NotifyWindDayEnergy(TSmartPowInverter *Device, long double val)
 
 /*##########################################################################
 #
+#   Name       : NotifyProdPower
+#
+#   Purpose....: Notify prod power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyProdPower(double val)
+{
+    FDataSection.Enter();
+
+    ProdPowerSum += val;
+    ProdPowerCount++;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyConsPower
+#
+#   Purpose....: Notify consume power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyConsPower(double val)
+{
+    FDataSection.Enter();
+
+    ConsPowerSum += val;
+    ConsPowerCount++;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : ResetSolarWind
 #
 #   Purpose....: Reset wind counters
@@ -268,6 +316,12 @@ static void ResetSolarWind()
 
     WindDumpCount = 0;
     WindDumpSum = 0;
+
+    ProdPowerCount = 0;
+    ProdPowerSum = 0.0;
+
+    ConsPowerCount = 0;
+    ConsPowerSum = 0.0;
 }
 
 /*##########################################################################
@@ -339,6 +393,54 @@ static void GetWindDumpPower(char *str)
     {
         val = 10 * WindDumpSum / WindDumpCount;
         sprintf(str, "%d.%01d", val / 10, val % 10);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetProdPower
+#
+#   Purpose....: Get produce power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void GetProdPower(char *str)
+{
+    double val;
+
+    if (ProdPowerCount == 0)
+        str[0] = 0;
+    else
+    {
+        val = ProdPowerSum / ProdPowerCount;
+        sprintf(str, "%3.1Lf", val);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetConsPower
+#
+#   Purpose....: Get consume power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void GetConsPower(char *str)
+{
+    double val;
+
+    if (ConsPowerCount == 0)
+        str[0] = 0;
+    else
+    {
+        val = ConsPowerSum / ConsPowerCount;
+        sprintf(str, "%3.1Lf", val);
     }
 }
 
@@ -487,6 +589,14 @@ static void UpdateDataStore(int hour, int min)
     DayFile->Write(str, strlen(str));
 
     GetWindDumpPower(str);
+    strcat(str, ";");
+    DayFile->Write(str, strlen(str));
+
+    GetProdPower(str);
+    strcat(str, ";");
+    DayFile->Write(str, strlen(str));
+
+    GetConsPower(str);
     strcat(str, "\r\n");
     DayFile->Write(str, strlen(str));
 
@@ -960,10 +1070,12 @@ void SmaThread(void *Param)
         val = sma.GetProducePower();
         sprintf(str, "%3.1Lf", val);
         SumTable->SetText(0, 1, str);
+        NotifyProdPower(val);
 
         val = sma.GetConsumePower();
         sprintf(str, "%3.1Lf", val);
         SumTable->SetText(1, 1, str);
+        NotifyConsPower(val);
 
         val = sma.GetProduceEnergy() - ProdBase;
         sprintf(str, "%5.3Lf", val);
