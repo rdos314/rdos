@@ -2468,6 +2468,67 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PollPipe
+;
+        DESCRIPTION:    Poll pipe
+;
+;       PARAMETERS:     FS      Pipe selector
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollPipe   Proc far
+    int 3
+    ret
+PollPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadPipe
+;
+;       DESCRIPTION:    Read pipe
+;
+;       PARAMETERS:     FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Max size
+;
+;       RETURNS:        NC        OK
+;                           CX    Actual size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPipe   Proc far
+    int 3
+    ret
+ReadPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WritePipe
+;
+;       DESCRIPTION:    Write pipe
+;
+;       PARAMETERS:     FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Size
+;
+;       RETURNS:        NC        OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePipe   Proc far
+    int 3
+    ret
+WritePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ClosePipe
 ;
 ;           DESCRIPTION:    Close pipe
@@ -3845,6 +3906,9 @@ et1B DD OFFSET AddressDev,         SEG code
 et1C DD OFFSET ConfigDev,          SEG code
 et1D DD OFFSET SetMaxLen,          SEG code
 ec1E DD OFFSET IssueOne,           SEG code
+ec1F DD OFFSET PollPipe,           SEG code
+ec20 DD OFFSET ReadPipe,           SEG code
+ec21 DD OFFSET WritePipe,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3866,7 +3930,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*22h
 
 ifTabLoop:
     lods dword ptr cs:[si]

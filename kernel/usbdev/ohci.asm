@@ -2525,6 +2525,67 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PollPipe
+;
+        DESCRIPTION:    Poll pipe
+;
+;       PARAMETERS:     FS      Pipe selector
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollPipe   Proc far
+    int 3
+    ret
+PollPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadPipe
+;
+;       DESCRIPTION:    Read pipe
+;
+;       PARAMETERS:     FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Max size
+;
+;       RETURNS:        NC        OK
+;                           CX    Actual size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPipe   Proc far
+    int 3
+    ret
+ReadPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WritePipe
+;
+;       DESCRIPTION:    Write pipe
+;
+;       PARAMETERS:     FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Size
+;
+;       RETURNS:        NC        OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePipe   Proc far
+    int 3
+    ret
+WritePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateAddress
 ;
 ;       DESCRIPTION:    Allocate address
@@ -3588,6 +3649,9 @@ ot1B DD OFFSET AddressDev,          SEG code
 ot1C DD OFFSET ConfigDev,           SEG code
 ot1D DD OFFSET SetMaxLen,           SEG code
 ot1E DD OFFSET IssueOne,            SEG code
+ot1F DD OFFSET PollPipe,            SEG code
+ot20 DD OFFSET ReadPipe,            SEG code
+ot21 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3645,7 +3709,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*22h
 
 ifTabLoop:
     lods dword ptr cs:[si]

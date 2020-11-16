@@ -531,6 +531,70 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PollPipe
+;
+        DESCRIPTION:    Poll pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollPipe   Proc far
+    int 3
+    ret
+PollPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadPipe
+;
+;       DESCRIPTION:    Read pipe
+;
+;       PARAMETERS:     DS        Function selector
+;                       FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Max size
+;
+;       RETURNS:        NC        OK
+;                           CX    Actual size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPipe   Proc far
+    int 3
+    ret
+ReadPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WritePipe
+;
+;       DESCRIPTION:    Write pipe
+;
+;       PARAMETERS:     DS        Function selector
+;                       FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Size
+;
+;       RETURNS:        NC        OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePipe   Proc far
+    int 3
+    ret
+WritePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ClosePipe
 ;
 ;       DESCRIPTION:    Close pipe
@@ -807,6 +871,9 @@ ht1B DD OFFSET AddressDev,          SEG code
 ht1C DD OFFSET ConfigDev,           SEG code
 ht1D DD OFFSET SetMaxLen,           SEG code
 ht1E DD OFFSET IssueOne,            SEG code
+ht1F DD OFFSET PollPipe,            SEG code
+ht20 DD OFFSET ReadPipe,            SEG code
+ht21 DD OFFSET WritePipe,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2809,7 +2876,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Fh
+    mov ecx,2*22h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

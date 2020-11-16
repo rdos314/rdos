@@ -156,6 +156,23 @@ set_max_len_proc        DD ?,?
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?
 
+; IN  FS        Pipe selector
+poll_pipe_proc      DD ?,?
+
+; IN  FS        Pipe selector
+; IN  EAX       Timeout i ms
+; IN  ES:EDI    Buffer
+; IN  CX        Max size
+; OUT CX        Actual size
+read_pipe_proc      DD ?,?
+
+; IN  FS        Pipe selector
+; IN  EAX       Timeout in ms
+; IN  ES:EDI    Buffer
+; IN  CX        Size
+write_pipe_proc      DD ?,?
+
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?
@@ -204,6 +221,8 @@ usbp_hub_sel        DW ?
 usbp_hub_port       DW ?
 usbp_signal         DW ?
 usbp_wait           DW ?
+usbp_buf_size       DW ?
+usbp_buf_sel        DW ?
 usbp_config_sel     DW 16 DUP(?)
 
 usb_pipe_struc   ENDS

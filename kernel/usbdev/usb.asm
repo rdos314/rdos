@@ -498,6 +498,7 @@ CreateDefaultControl    Proc near
     mov fs:usbp_device_sel,0
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
+    mov fs:usbp_buf_sel,0
 ;
     ClearSignal
     GetThread
@@ -560,6 +561,7 @@ cbEndpointOk:
     mov fs:usbp_device_sel,0
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
+    mov fs:usbp_buf_sel,0
 ;
     push ds
     mov ax,fs
@@ -617,6 +619,7 @@ CreateInterrupt    Proc near
     mov fs:usbp_device_sel,0
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
+    mov fs:usbp_buf_sel,0
 ;
     push ds
     mov ax,fs
@@ -711,6 +714,14 @@ ClosePipe   Proc near
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
 ;
+    mov ax,fs:usbp_buf_sel
+    or ax,ax
+    jz cpBufOk
+;
+    mov es,ax
+    FreeMem
+
+cpBufOk:
     mov ax,fs:usbp_device_sel
     or ax,ax
     jz cpDevOk

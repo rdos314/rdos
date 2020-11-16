@@ -2887,6 +2887,67 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PollPipe
+;
+        DESCRIPTION:    Poll pipe
+;
+;       PARAMETERS:     FS      Pipe selector
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollPipe   Proc far
+    int 3
+    ret
+PollPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadPipe
+;
+;       DESCRIPTION:    Read pipe
+;
+;       PARAMETERS:     FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Max size
+;
+;       RETURNS:        NC        OK
+;                           CX    Actual size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPipe   Proc far
+    int 3
+    ret
+ReadPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WritePipe
+;
+;       DESCRIPTION:    Write pipe
+;
+;       PARAMETERS:     FS        Pipe selector
+;                       EAX       Timeout i ms
+;                       ES:EDI    Buffer
+;                       CX        Size
+;
+;       RETURNS:        NC        OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePipe   Proc far
+    int 3
+    ret
+WritePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateAddress
 ;
 ;       DESCRIPTION:    Allocate address (slot)
@@ -4152,6 +4213,9 @@ et1B DD OFFSET AddressDevice,       SEG code
 et1C DD OFFSET ConfigDevice,        SEG code
 et1D DD OFFSET SetMaxLen,           SEG code
 et1E DD OFFSET IssueOne,            SEG code
+et1F DD OFFSET PollPipe,            SEG code
+et20 DD OFFSET ReadPipe,            SEG code
+et21 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push es
@@ -4298,7 +4362,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*22h
 
 ifTabLoop:
     lods dword ptr cs:[si]
