@@ -2842,14 +2842,24 @@ htHandle:
     jmp htAttached
 
 htUnlock:
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz htDoUnlock
+;
+    mov eax,1
+    mov es:[si].HcRhPortStatus,eax
+;
+    mov ax,25
+    WaitMilliSec
+
+htDoUnlock:
     UnlockUsb
     jmp htDetached
 
 htDetach:
     mov al,cl
     NotifyUsbDetach
-
-htDetached:
+;
     mov es,ds:ohc_reg_sel
     mov eax,es:[si].HcRhPortStatus
     test al,1
@@ -2857,6 +2867,14 @@ htDetached:
 ;
     mov eax,1
     mov es:[si].HcRhPortStatus,eax
+;
+    mov ax,25
+    WaitMilliSec
+
+htDetached:
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz htDone
 ;
     mov dx,10
 
