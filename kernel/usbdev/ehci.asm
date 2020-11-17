@@ -3038,11 +3038,21 @@ htAttached:
     lock and ds:ehc_reset,ax
     jmp htDetach
 
-
 htHandle:
     jmp htAttached
 
 htUnlock:
+    mov eax,es:[2*edi].HcPortSc
+    test ax,2000h
+    jnz htDoUnlock
+;
+    and al,NOT 4
+    mov es:[2*edi].HcPortSc,eax
+
+htDoUnlock:
+    mov ax,5
+    WaitMilliSec
+;
     UnlockUsb
     jmp htDetached
 

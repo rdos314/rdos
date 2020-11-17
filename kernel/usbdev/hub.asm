@@ -1261,13 +1261,13 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:
-    LockUsb
-;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htUnlock
+    jnz htDetached
 ;
     test ds:[edi].hub_status_arr,1
-    jz htUnlock
+    jz htDetached
+;
+    LockUsb
 ;
     movzx dx,cl
     mov ax,PORT_RESET
@@ -1301,6 +1301,9 @@ htWaitLoop:
 htIsEnabled:
     mov ax,25
     WaitMilliSec
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htUnlock
 ;
     test ds:[edi].hub_status_arr,2
     jz htUnlock
@@ -1348,11 +1351,13 @@ htCreate:
     jc htDetach
 ;
     mov al,cl
-    UnlockUsb
     NotifyUsbAttach
 
 htAttached:
     WaitForSignal
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDetach
 ;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
@@ -1371,31 +1376,59 @@ htHandle:
     jmp htAttached
 
 htUnlock:
-    UnlockUsb
-    jmp htDetached
-
-htDetach:
-    mov al,cl
-    NotifyUsbDetach
-
-htDetached:
-    mov ax,bp
-    cmp ah,2
-    je htDisable
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDoUnlock
 ;
-    call ClearControlTT
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz htDoUnlock
 ;
-    xor al,al
-    call ClearControlTT
-
-htDisable:
     movzx dx,cl
     mov ax,PORT_ENABLE
     call ClearPortFeature    
 ;
     mov ax,50
     WaitMilliSec
+
+htDoUnlock:
+    UnlockUsb
+    jmp htDetached
+
+htDetach:
+    mov al,cl
+    NotifyUsbDetach
 ;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDone
+;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz htDone
+;
+    movzx dx,cl
+    mov ax,PORT_ENABLE
+    call ClearPortFeature    
+;
+    mov ax,50
+    WaitMilliSec
+
+htDetached:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDone
+;
+    mov ax,bp
+    cmp ah,2
+    je htDisable
+;
+    call ClearControlTT
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDone
+;
+    xor al,al
+    call ClearControlTT
+
+htDisable:
     movzx dx,cl
     mov ax,PORT_POWER
     call ClearPortFeature    
@@ -1403,12 +1436,22 @@ htDisable:
     mov ax,200
     WaitMilliSec
 ;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDone
+;
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz htDone
+;
     movzx dx,cl
     mov ax,PORT_POWER
     call SetPortFeature    
 ;
     mov ax,20
     WaitMilliSec
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDone
 ;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
