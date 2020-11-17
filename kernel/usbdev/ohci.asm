@@ -2846,10 +2846,8 @@ htUnlock:
     jmp htDetached
 
 htDetach:
-    push edi
     mov al,cl
     NotifyUsbDetach
-    pop edi
 
 htDetached:
     mov es,ds:ohc_reg_sel
