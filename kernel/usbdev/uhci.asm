@@ -2798,12 +2798,12 @@ CreateDev   Proc far
     push cx
     push di
 ;
-    mov eax,SIZE usb_device_struc
+    mov eax,1000h
     AllocateSmallGlobalMem
     xor di,di
-    mov cx,SIZE usb_device_struc
-    xor al,al
-    rep stosb
+    mov cx,400h
+    xor eax,eax
+    rep stosd
 ;
     pop di
     pop cx

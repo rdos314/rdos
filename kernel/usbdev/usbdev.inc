@@ -182,6 +182,8 @@ usb_fresv              DB ?
 usb_root_port          DB ?
 usb_route_str          DD ?
 usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
+usb_thread_arr         DW MAX_USB_HUB_PORTS DUP(?)
+
 usb_attach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
 usb_detach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
 usb_reset_thread_arr   DW MAX_USB_HUB_PORTS DUP(?)
@@ -200,8 +202,11 @@ usbd_address            DB ?
 usbd_speed              DB ?
 usbd_pad                DB ?
 
+usbd_section            section_typ <>
+
 usbd_in_endpoint_arr    DW 16 DUP(?)
 usbd_out_endpoint_arr   DW 16 DUP(?)
+usbd_control_buf        DB 8 DUP(?)
 
 usb_device_struc  ENDS
 

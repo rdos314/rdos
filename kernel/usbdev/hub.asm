@@ -150,12 +150,12 @@ CreateDev   Proc far
     push edi
     push eax
 ;
-    mov eax,SIZE usb_device_struc
-    AllocateSmallGlobalMem
+    mov eax,1000h
+    AllocateGlobalMem
     xor edi,edi
-    mov ecx,SIZE usb_device_struc
-    xor al,al
-    rep stosb
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
 ;
     pop eax
     pop edi
