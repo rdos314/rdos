@@ -1538,13 +1538,9 @@ hhrNotGood2:
     movzx ebx,es:hid_encode_index
     mov al,fs:[ebx+esi]
     or al,al
-    jz hhrNotBad
+    jz hhrDone
 ;
     call HandleBadCard
-    jmp hhrDone
-
-hhrNotBad:
-    int 3
 
 hhrDone:
     pop ebx

@@ -3047,7 +3047,7 @@ CreateDev       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-handler_thread_name  DB 'XHCI Dev', 0
+handler_thread_name  DB 'XHCI Dev ', 0
 
 handler_thread:
     mov cl,dl
@@ -3203,6 +3203,7 @@ htDetached:
     not eax
     lock and ds:xhc_detach_pend,eax
 ;
+    mov es,ds:xhc_port_sel
     mov eax,es:[si]
     test al,1
     jnz htTryAttach
@@ -3560,6 +3561,44 @@ CreateEventThread   Proc near
     pop ds
     ret
 CreateEventThread   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3623,14 +3662,44 @@ upCheckAttach:
     mov bx,ds
     mov dx,cx
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET handler_thread_name
+    mov esi,OFFSET handler_thread_name
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+sfCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,cl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    xor edi,edi
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET handler_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
+;
+    FreeMem
     jmp upDone
 
 upDetach:
