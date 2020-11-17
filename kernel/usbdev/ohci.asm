@@ -2853,11 +2853,29 @@ htDetached:
     mov es,ds:ohc_reg_sel
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jnz htTryAttach
+    jz htDone
 ;
-    movzx edi,cl
-    add edi,edi    
-;    
+    mov eax,1
+    mov es:[si].HcRhPortStatus,eax
+;
+    mov dx,10
+
+htWaitDisable:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz htDone
+;
+    test al,2
+    jz htTryAttach
+;
+    sub dx,1
+    jnz htWaitDisable
+    jmp htTryAttach
+
+htDone:    
     EnterSection ds:usb_section
     mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section

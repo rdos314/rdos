@@ -3069,15 +3069,11 @@ htWaitDisable:
     jz htDone
 ;
     test al,4
-    jz htCheckAttach
+    jz httryAttach
 ;
     sub dx,1
     jnz htWaitDisable
-
-htCheckAttach:
-    mov eax,es:[2*edi].HcPortSc
-    test al,1
-    jnz htTryAttach
+    jmp htTryAttach
 
 htDone:    
     EnterSection ds:usb_section
