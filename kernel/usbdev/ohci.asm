@@ -2723,18 +2723,18 @@ UpdateQueue   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           AttachThread
+;   NAME:           HandlerThread
 ;
-;   DESCRIPTION:    Attach thread
+;   DESCRIPTION:    Handler thread
 ;
 ;   PARAMETERS:     BX      Function selector
 ;                   DL      Port # (0..OHCI ports)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-attach_thread_name  DB 'OHCI Attach ', 0
+handler_thread_name  DB 'OHCI Dev ', 0
 
-attach_thread:
+handler_thread:
     mov ds,bx
     mov cl,dl
     mov es,ds:ohc_reg_sel
@@ -2746,61 +2746,60 @@ attach_thread:
 ;    
     EnterSection ds:usb_section    
     GetThread
-    mov ds:[di].usb_attach_thread_arr,ax
+    mov ds:[di].usb_thread_arr,ax
     LeaveSection ds:usb_section
-;
+
+htTryAttach:
     mov dx,10
 
-atCheck:    
+htCheck:    
     mov ax,5
     WaitMilliSec
 ;
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jz atDone
+    jz htDetached
 ;
     sub dx,1
-    jnz atCheck
+    jnz htCheck
 ;    
     LockUsb
 ;    
     mov eax,10h
     mov es:[si].HcRhPortStatus,eax
 
-atResetLoop:
+htResetLoop:
     mov ax,5
     WaitMilliSec
 ;
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jz atUnlock
+    jz htUnlock
 ;    
     test al,10h
-    jnz atResetLoop
+    jnz htResetLoop
 ; 
     mov eax,2
     mov es:[si].HcRhPortStatus,eax
 ;
     mov dx,40
 
-atWaitNotify:    
+htWaitNotify:    
     mov ax,5
     WaitMilliSec
 ;
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jz atUnlock
+    jz htUnlock
 ;
     sub dx,1
-    jnz atWaitNotify
+    jnz htWaitNotify
 ;    
     mov ax,25
     WaitMilliSec
 ;
     call fword ptr ds:allocate_address_proc
-    jc atUnlock
-;
-    push es
+    jc htUnlock
 ;
     mov dl,al
     mov eax,es:[si].HcRhPortStatus
@@ -2815,184 +2814,96 @@ atWaitNotify:
     pushf
     UnlockUsb
     popf
-    jc atFail
+    jc htDetach
 ;
     ReadUsbDescriptors
-    jnc atAttach
-
-atFail:
-    pop es
-    mov eax,1
-    mov es:[si].HcRhPortStatus,eax
+    jc htDetach
 ;
-    mov al,cl
-    NotifyUsbDetach
-    jmp atDone
-
-atAttach:
     mov al,cl
     NotifyUsbAttach
-    pop es
-    jmp atDone
 
-atUnlock:
-    UnlockUsb    
-
-atDone:
-    EnterSection ds:usb_section
-    mov ds:[di].usb_attach_thread_arr,0
-    LeaveSection ds:usb_section
-    TerminateThread
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           DetachThread
-;
-;   DESCRIPTION:    Detach thread
-;
-;   PARAMETERS:     BX      Function selector
-;                   DL      Port # (0..OHCI ports)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-detach_thread_name  DB 'OHCI Detach ', 0
-
-detach_thread:
-    mov cl,dl
-    mov ds,bx
-    mov es,ds:ohc_reg_sel
-;    
-    movzx si,cl
-    shl si,2
-    movzx di,cl
-    add di,di
-;    
-    EnterSection ds:usb_section
-    GetThread
-    mov ds:[di].usb_detach_thread_arr,ax
-    LeaveSection ds:usb_section
-;    
-    mov al,cl
-    NotifyUsbDetach
-;
-    EnterSection ds:usb_section
-    mov ds:[di].usb_detach_thread_arr,0
-    LeaveSection ds:usb_section    
-    TerminateThread
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ResetThread
-;
-;   DESCRIPTION:    Reset thread
-;
-;   PARAMETERS:     BX      Function selector
-;                   DL      Port # (0..OHCI ports)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reset_thread_name  DB 'OHCI Reset ', 0
-
-reset_thread:
-    mov cl,dl
-    mov ds,bx
-    mov es,ds:ohc_reg_sel
-;    
-    movzx si,cl
-    shl si,2
-    movzx di,cl
-    add di,di
-;    
-    EnterSection ds:usb_section
-    GetThread
-    mov ds:[di].usb_reset_thread_arr,ax
-    LeaveSection ds:usb_section
-;
-    mov eax,10h
-    mov es:[si].HcRhPortStatus,eax
-;    
-    mov al,cl
-    NotifyUsbDetach
-;    
-    LockUsb
-
-rtWaitRes:        
-    mov ax,5
-    WaitMilliSec
+htAttached:
+    WaitForSignal
 ;
     mov eax,es:[si].HcRhPortStatus
     test al,1
-    jz rtUnlock
+    jz htDetach
 ;
-    test al,10h
-    jnz rtWaitRes
-;    
-    mov eax,2
-    mov es:[si].HcRhPortStatus,eax
+    mov ax,1
+    shl ax,cl
+    test ax,ds:ohc_reset
+    jz htHandle
 ;
-    mov dx,40
+    not ax
+    lock and ds:ohc_reset,ax
+    jmp htDetach
 
-rtWaitNotify:    
-    mov ax,5
-    WaitMilliSec
-;
-    mov eax,es:[si].HcRhPortStatus
-    test al,1
-    jz rtUnlock
-;
-    sub dx,1
-    jnz rtWaitNotify
-;
-    call fword ptr ds:allocate_address_proc
-    jc rtUnlock
-;
-    push es
-;
-    mov dl,al
-    mov eax,es:[si].HcRhPortStatus
-    shr ah,1
-    and ah,1
-    xor ah,1
-    mov al,dl
-    movzx dx,cl
-    call fword ptr ds:create_dev_proc
-;
-    StartUsbDevice
-    pushf
+htHandle:
+    jmp htAttached
+
+htUnlock:
     UnlockUsb
-    popf
-    jc rtFail
-;
-    ReadUsbDescriptors
-    jnc rtAttach
+    jmp htDetached
 
-rtFail:
-    pop es
-    mov eax,1
-    mov es:[si].HcRhPortStatus,eax
-;
+htDetach:
+    push edi
     mov al,cl
     NotifyUsbDetach
-    jmp rtDone
+    pop edi
 
-rtAttach:
-    mov al,cl
-    NotifyUsbAttach
-    pop es
-    jmp rtDone
-
-rtUnlock:
-    UnlockUsb    
-
-rtDone:
+htDetached:
+    mov es,ds:ohc_reg_sel
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jnz htTryAttach
+;
+    movzx edi,cl
+    add edi,edi    
+;    
     EnterSection ds:usb_section
-    mov ds:[di].usb_reset_thread_arr,0
+    mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section
+;
     TerminateThread
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3017,48 +2928,6 @@ UpdatePort   Proc near
     add edi,edi
     mov es,ds:ohc_reg_sel
 ;
-    mov ax,1
-    shl ax,cl
-    test ax,ds:ohc_reset
-    jz upNoReset
-;
-    not ax
-    lock and ds:ohc_reset,ax
-;        
-    mov eax,es:[si].HcRhPortStatus
-    test al,1
-    jz upNoReset
-;
-    mov bx,ds:[edi].usb_port_arr
-    or bx,bx
-    jz upNoReset
-;    
-    mov fs,bx
-    mov bx,fs:usb_function_sel
-    or bx,bx
-    jz upNoReset
-;
-    mov bx,ds:[edi].usb_attach_thread_arr
-    or bx,ds:[edi].usb_detach_thread_arr
-    or bx,ds:[edi].usb_reset_thread_arr
-    jnz upCheckTimeout
-;
-    mov ds:[edi].usb_reset_thread_arr,-1
-    mov ds:[edi].usb_retry_arr,0
-    GetSystemTime
-    add eax,1193 * 2500
-    adc edx,0
-    mov ds:[4*edi].usb_timeout_arr,eax
-    mov ds:[4*edi].usb_timeout_arr+4,edx
-;
-    mov dx,cx
-    mov si,OFFSET reset_thread
-    mov di,OFFSET reset_thread_name
-    mov ax,2
-    call StartThread
-    jmp upDone
-    
-upNoReset:
     mov eax,es:[si].HcRhPortStatus
     test al,1
     stc
@@ -3072,120 +2941,66 @@ upAttach:
     mov fs,bx
     mov bx,fs:usb_function_sel
     or bx,bx
-    jnz upCheckTimeout
+    jnz upDone
 
 upCheckAttach:
-    mov bx,ds:[edi].usb_attach_thread_arr
-    or bx,ds:[edi].usb_detach_thread_arr
-    or bx,ds:[edi].usb_reset_thread_arr
-    jnz upCheckTimeout
+    mov bx,ds:[edi].usb_thread_arr
+    or bx,bx
+    jnz upDone
 ;
     mov ds:[edi].usb_attach_thread_arr,-1
     mov ds:[edi].usb_retry_arr,0
-    GetSystemTime
-    add eax,1193 * 2500
-    adc edx,0
-    mov ds:[4*edi].usb_timeout_arr,eax
-    mov ds:[4*edi].usb_timeout_arr+4,edx
 ;    
+    mov bx,ds
     mov dx,cx
-    mov si,OFFSET attach_thread
-    mov di,OFFSET attach_thread_name
+;
+    mov esi,OFFSET handler_thread_name
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+upCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz upCopyDone
+;
+    stosb
+    jmp upCopyLoop
+
+upCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,cl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    xor edi,edi
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET handler_thread
     mov ax,2
-    call StartThread
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
     jmp upDone
 
 upDetach:
+    EnterSection ds:usb_section
     mov bx,ds:[edi].usb_port_arr
     or bx,bx
-    jz upCheckTimeout
-;
-    mov fs,bx
-    mov bx,fs:usb_function_sel
-    or bx,bx
-    jz upCheckTimeout
-;    
-    mov bx,ds:[edi].usb_attach_thread_arr
-    or bx,ds:[edi].usb_detach_thread_arr
-    or bx,ds:[edi].usb_reset_thread_arr
-    jnz upCheckTimeout
-;
-    mov ds:[edi].usb_detach_thread_arr,-1    
-    mov ds:[edi].usb_retry_arr,0
-    GetSystemTime
-    add eax,1193 * 2500
-    adc edx,0
-    mov ds:[4*edi].usb_timeout_arr,eax
-    mov ds:[4*edi].usb_timeout_arr+4,edx
-;    
-    mov dx,cx
-    mov si,OFFSET detach_thread
-    mov di,OFFSET detach_thread_name
-    mov ax,2
-    call StartThread
-    jmp upDone
-
-upCheckTimeout:
-    mov bx,ds:[edi].usb_attach_thread_arr
-    or bx,ds:[edi].usb_detach_thread_arr
-    or bx,ds:[edi].usb_reset_thread_arr
-    jz upDone
-;
-    GetSystemTime
-    sub eax,ds:[4*edi].usb_timeout_arr
-    sbb edx,ds:[4*edi].usb_timeout_arr+4
-    jc upDone
-;
-    mov ax,ds:[edi].usb_retry_arr
-    inc ax
-    mov ds:[edi].usb_retry_arr,ax
-;
-    cmp ax,100
-    jb upNotFatal
-;
-    SetUsbResetFailed
-    mov ds:[4*edi].usb_timeout_arr,0
-    mov ds:[4*edi].usb_timeout_arr+4,0
-    mov ds:[edi].usb_attach_thread_arr,0
-    mov ds:[edi].usb_detach_thread_arr,0
-    mov ds:[edi].usb_reset_thread_arr,0
-    jmp upLeave
-
-upNotFatal:
-    cmp ax,10
-    jnz upDoSignal
-;   
-    mov eax,1
-    mov es:[si].HcRhPortStatus,eax
-
-upDoSignal:
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov ds:[4*edi].usb_timeout_arr,eax
-    mov ds:[4*edi].usb_timeout_arr+4,edx
-;
-    EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_attach_thread_arr
-    cmp bx,-1
-    jz upCheckDetach
-;
-    Signal
-    jmp upLeave
-
-upCheckDetach:    
-    mov bx,ds:[edi].usb_detach_thread_arr
-    cmp bx,-1
-    jz upCheckReset
-;
-    Signal
-    jmp upLeave
-            
-upCheckReset:    
-    mov bx,ds:[edi].usb_reset_thread_arr
-    cmp bx,-1
     jz upLeave
-;
+;    
+    mov bx,ds:[edi].usb_thread_arr
     Signal
 
 upLeave:
@@ -3490,44 +3305,6 @@ ofhLoop:
     WaitForSignal    
     call UpdatePipeList
     jmp ofhLoop
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HexToAscii
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     AL      Number to convert
-;
-;   RETURNS:        AX      Ascii result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HexToAscii      PROC near
-    mov ah,al
-    and al,0F0h
-    rol al,1
-    rol al,1
-    rol al,1
-    rol al,1
-    cmp al,0Ah
-    jb ok_low1
-;
-    add al,7
-
-ok_low1:
-    add al,30h
-    and ah,0Fh
-    cmp ah,0Ah
-    jb ok_high1
-;
-    add ah,7
-
-ok_high1:
-    add ah,30h
-    ret
-HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

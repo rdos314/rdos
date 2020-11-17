@@ -3649,7 +3649,7 @@ upAttach:
     mov gs,bx
     mov bx,gs:usb_function_sel
     or bx,bx
-    jnz upLeave
+    jnz upDone
 
 upCheckAttach:
     mov bx,ds:[edi].usb_thread_arr
@@ -3667,16 +3667,16 @@ upCheckAttach:
     AllocateSmallGlobalMem
     xor edi,edi
 
-sfCopyLoop:
+upCopyLoop:
     mov al,cs:[esi]
     inc esi
     or al,al
-    jz sfCopyDone
+    jz upCopyDone
 ;
     stosb
-    jmp sfCopyLoop
+    jmp upCopyLoop
 
-sfCopyDone:
+upCopyDone:
     mov ax,ds:usb_controller_id
     call HexToAscii
     stosw
