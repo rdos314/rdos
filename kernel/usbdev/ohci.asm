@@ -2944,6 +2944,15 @@ UpdatePort   Proc near
     add edi,edi
     mov es,ds:ohc_reg_sel
 ;
+    mov ax,1
+    shl ax,cl
+    test ax,ds:ohc_reset
+    jz htNoReset
+;
+    mov bx,ds:[edi].usb_thread_arr
+    Signal
+
+htNoReset:
     mov eax,es:[si].HcRhPortStatus
     test al,1
     stc

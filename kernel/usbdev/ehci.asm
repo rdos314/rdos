@@ -2871,7 +2871,7 @@ SetMaxLen   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-handler_thread_name  DB 'EHCI ', 0
+handler_thread_name  DB 'EHCI Dev ', 0
 
 handler_thread:
     mov cl,dl
@@ -3038,6 +3038,7 @@ htAttached:
     lock and ds:ehc_reset,ax
     jmp htDetach
 
+
 htHandle:
     jmp htAttached
 
@@ -3069,7 +3070,7 @@ htWaitDisable:
     jz htDone
 ;
     test al,4
-    jz httryAttach
+    jz htTryAttach
 ;
     sub dx,1
     jnz htWaitDisable
@@ -3143,6 +3144,15 @@ UpdatePort   Proc near
     movzx edi,cl
     add edi,edi
 ;
+    mov ax,1
+    shl ax,cl
+    test ax,ds:ehc_reset
+    jz upNoReset
+;
+    mov bx,ds:[edi].usb_thread_arr
+    Signal
+
+upNoReset:
     mov eax,es:[2*edi].HcPortSc
     test ax,2000h
     jnz upDone
