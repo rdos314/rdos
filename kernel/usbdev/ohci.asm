@@ -2991,8 +2991,7 @@ upCheckAttach:
     or bx,bx
     jnz upDone
 ;
-    mov ds:[edi].usb_attach_thread_arr,-1
-    mov ds:[edi].usb_retry_arr,0
+    mov ds:[edi].usb_thread_arr,-1
 ;    
     mov bx,ds
     mov dx,cx

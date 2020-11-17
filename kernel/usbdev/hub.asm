@@ -659,10 +659,6 @@ IsConnected   Proc far
     test ds:[ebx].hub_status_arr,1
     jz icFail
 ;
-    mov ax,ds:[ebx].usb_retry_arr
-    cmp ax,10
-    jae icFail
-;
     clc
     jmp icDone
 
@@ -1091,20 +1087,13 @@ cpcOverCurrentOk:
     movzx edi,dx
     add edi,edi
 ;
-    mov bx,ds:[edi].usb_attach_thread_arr
+    mov bx,ds:[edi].usb_thread_arr
     cmp bx,-1
     je cpcSigAttachOK
 ;
     Signal
 
 cpcSigAttachOk:
-    mov bx,ds:[edi].usb_reset_thread_arr
-    cmp bx,-1
-    je cpcSigResetOk
-;
-    Signal
-
-cpcSigResetOk:
     pop edi
     pop ebx
                 
@@ -1514,8 +1503,7 @@ upCheckAttach:
     or bx,bx
     jnz upDone
 ;
-    mov ds:[edi].usb_attach_thread_arr,-1
-    mov ds:[edi].usb_retry_arr,0
+    mov ds:[edi].usb_thread_arr,-1
 ;    
     mov bx,ds
     mov dx,cx

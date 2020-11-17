@@ -425,21 +425,6 @@ init_usb_function Proc far
     mov di,OFFSET usb_port_arr
     xor ax,ax
     rep stosw
-;    
-    mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_attach_thread_arr
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_detach_thread_arr
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_reset_thread_arr
-    xor ax,ax
-    rep stosw
 ;
     mov cx,128
     mov di,OFFSET usb_addr_arr

@@ -183,12 +183,6 @@ usb_root_port          DB ?
 usb_route_str          DD ?
 usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
 usb_thread_arr         DW MAX_USB_HUB_PORTS DUP(?)
-
-usb_attach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
-usb_detach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
-usb_reset_thread_arr   DW MAX_USB_HUB_PORTS DUP(?)
-usb_retry_arr          DW MAX_USB_HUB_PORTS DUP(?)
-usb_timeout_arr        DD MAX_USB_HUB_PORTS DUP(?,?)
 usb_addr_arr           DW 128 DUP(?)
 
 usb_function_struc   ENDS
