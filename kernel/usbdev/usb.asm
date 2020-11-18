@@ -114,8 +114,6 @@ usbdev_handle_struc    ENDS
 
 usbdev_dev_struc    STRUC
 
-udd_prev         DW ?
-udd_next         DW ?
 udd_sel          DW ?
 udd_ref_count    DW ?
 udd_section      section_typ <>
@@ -130,11 +128,9 @@ data    SEGMENT byte public 'DATA'
 usb_enum_section    section_typ <>
 usb_over_current    DW ?
 usb_reset_failure   DW ?
-usb_dev_list        DW ?
-usb_dev_section     section_typ <>
 
-usb_dev_count       DW ?
-usb_dev_arr         DW 256 DUP(?)
+usb_func_count      DW ?
+usb_func_arr        DW 256 DUP(?)
 
 usb_attach_hooks    DW ?
 usb_attach_arr      DD 2 * MAX_ATTACH_HOOKS DUP(?)
@@ -149,124 +145,6 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LinkDev
-;
-;           DESCRIPTION:    Link device
-;
-;                           ES          Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LinkDev Proc near
-    push ds
-    push eax
-;
-    mov ax,SEG data
-    mov ds,eax
-    EnterSection ds:usb_dev_section
-;
-    mov ax,ds:usb_dev_list
-    or ax,ax
-    jz ldEmpty
-;    
-    push ds
-    push esi
-;
-    mov ds,eax
-    mov si,ds:udd_prev
-    mov ds:udd_prev,es
-    mov ds,esi
-    mov ds:udd_next,es
-    mov es:udd_next,ax
-    mov es:udd_prev,si
-;
-    pop esi
-    pop ds
-    jmp ldDone
-    
-ldEmpty:
-    mov es:udd_next,es
-    mov es:udd_prev,es
-    mov ds:usb_dev_list,es
-
-ldDone:
-    LeaveSection ds:usb_dev_section
-;
-    pop eax
-    pop ds
-    ret
-LinkDev Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           UnlinkDev
-;
-;           DESCRIPTION:    Unlink device
-;
-;           PARAMETERS:     ES          Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkDev Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,SEG data
-    mov ds,eax
-    EnterSection ds:usb_dev_section
-;
-    mov ax,es
-    mov si,ds:usb_dev_list
-    or si,si
-    stc
-    jz uldDone
-;
-
-uldLoop:
-    mov es,si
-    cmp ax,si
-    je uldRemove
-;
-    mov si,es:udd_next
-    cmp si,ds:usb_dev_list
-    jne uldLoop
-;
-    stc
-    jmp uldDone
-
-uldRemove:
-    mov di,es:udd_next
-    mov ds:usb_dev_list,di
-;
-    mov si,es:udd_prev
-    mov fs,di
-    mov fs:udd_prev,si
-    mov fs,si
-    mov fs:udd_next,di
-;
-    cmp ax,di
-    clc
-    jne uldDone
-;    
-    mov ds:usb_dev_list,0
-    clc
-
-uldDone:
-    LeaveSection ds:usb_dev_section
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-UnlinkDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -303,7 +181,6 @@ AddDev Proc near
     mov es:udd_deleted,0
     mov es:udd_ref_count,1
     InitSection es:udd_section
-    call LinkDev
 ;
     popad
     pop fs
@@ -311,61 +188,6 @@ AddDev Proc near
     pop ds
     ret
 AddDev Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindDev
-;
-;       DESCRIPTION:    Find device
-;
-;       parameters:     BX	Usb controller
-;                       AL      Usb port
-;
-;       RETURNS:        NC
-;                           ES  Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindDev	Proc near
-    push ds
-    push esi
-;
-    mov si,SEG data
-    mov ds,esi
-    EnterSection ds:usb_dev_section
-;
-    mov si,ds:usb_dev_list
-    or si,si
-    stc
-    jz fdDone
-
-fdLoop:
-    mov es,esi
-    cmp bx,es:udd_controller
-    jne fdNext
-;
-    cmp al,es:udd_port
-    je fdOk
-
-fdNext:
-    mov si,es:udd_next
-    cmp si,ds:usb_dev_list
-    jnz fdLoop
-;
-    stc
-    jmp fdDone
-
-fdOk:
-    clc
-
-fdDone:
-    LeaveSection ds:usb_dev_section
-;
-    pop esi
-    pop ds
-    ret
-FindDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -383,12 +205,11 @@ RemoveDev	Proc near
     push es
     pushad
 ;
-    mov bx,ds:usb_controller_id
-    call FindDev
-    jc rdDone
+    movzx bx,al
+    add bx,bx
+    xor ax,ax
+    xchg ax,ds:[bx].usb_dev_arr
 ;
-
-rdDone:
     popad
     pop es
     ret
@@ -687,8 +508,14 @@ init_usb_function Proc far
     InitSection ds:usb_section
     mov ax,ds
     mov es,ax
+;
     mov cx,MAX_USB_HUB_PORTS
     mov di,OFFSET usb_port_arr
+    xor ax,ax
+    rep stosw
+;
+    mov cx,MAX_USB_HUB_PORTS
+    mov di,OFFSET usb_dev_arr
     xor ax,ax
     rep stosw
 ;
@@ -699,14 +526,14 @@ init_usb_function Proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov bx,ds:usb_dev_count
+    mov bx,ds:usb_func_count
     mov es:usb_controller_id,bx
     mov es:usb_hub_id,0
     mov es:usb_route_depth,0
     mov es:usb_route_str,0
     add bx,bx
-    mov ds:[bx].usb_dev_arr,es
-    inc ds:usb_dev_count
+    mov ds:[bx].usb_func_arr,es
+    inc ds:usb_func_count
 ;
     pop di
     pop cx
@@ -1510,7 +1337,11 @@ usdNoHub:
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,es
-;    
+;
+    movzx bx,dl
+    add bx,bx
+    mov ds:[bx].usb_dev_arr,es
+;        
     mov cx,16
     mov di,OFFSET usbd_in_endpoint_arr
     xor ax,ax
@@ -1627,6 +1458,9 @@ RemoveUsbDevice       Proc near
     push ds
     push ax
     push ebx
+;
+    int 3
+    call RemoveDev
 ;
     movzx bx,al
     add bx,bx
@@ -2841,13 +2675,13 @@ get_hub_descr  Proc near
 ;
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae ghdFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz ghdFail
 ;
@@ -2948,13 +2782,13 @@ get_usb_device  Proc near
 ;
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae gudFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz gudFail
 ;
@@ -3052,13 +2886,13 @@ get_usb_config  Proc near
 ;
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae gucFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz gucFail
 ;
@@ -3164,13 +2998,13 @@ ConfigUsb      Proc near
 ;
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae cudFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz cudFail
 ;
@@ -3414,13 +3248,13 @@ CreateRoute      Proc near
 ;
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae crrDone
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz crrDone
 ;
@@ -3518,13 +3352,13 @@ get_usb_interface       Proc far
     xor cl,cl
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae guiFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz guiFail
 ;
@@ -3619,13 +3453,13 @@ set_usb_interface       Proc far
 ;    
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae suiFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz suiFail
 ;
@@ -3781,13 +3615,13 @@ open_usb_pipe    Proc far
 ;
     mov si,SEG data
     mov ds,si
-    mov si,ds:usb_dev_count
+    mov si,ds:usb_func_count
     cmp bx,si
     jae oupFail
 ;
     mov si,bx
     add si,si
-    mov si,ds:[si].usb_dev_arr
+    mov si,ds:[si].usb_func_arr
     or si,si
     jz oupFail
 ;
@@ -5377,14 +5211,11 @@ init    Proc far
     mov ax,SEG data
     mov ds,ax
     InitSection ds:usb_enum_section
-    mov ds:usb_dev_count,0
+    mov ds:usb_func_count,0
     mov ds:usb_attach_hooks,0
     mov ds:usb_detach_hooks,0
     mov ds:usb_over_current,0
     mov ds:usb_reset_failure,0
-;
-    mov ds:usb_dev_list,0
-    InitSection ds:usb_dev_section
 ;
     mov ax,cs
     mov ds,ax
