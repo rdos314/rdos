@@ -2853,17 +2853,17 @@ ConfigDev   Endp
 ;
 ;   DESCRIPTION:    Handler thread
 ;
-;   PARAMETERS:     FS      Function selector
-;                   BX      Attach param
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..OHCI ports)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 handler_thread_name  DB 'UHCI Dev ', 0
 
 handler_thread:
-    mov cl,bl
-    mov ax,fs
-    mov ds,ax
+    mov ds,bx
+    mov cl,dl
+    mov bl,dl
 ;    
     movzx di,cl
     add di,di
@@ -2888,9 +2888,6 @@ htTryAttach:
     LockUsb
 ;
     in ax,dx
-    test al,1
-    jz htUnlock
-;
     and ax,NOT 200h
     out dx,ax
 ;
@@ -2957,6 +2954,7 @@ htAttached:
     test al,1
     jz htDetach
 ;
+    mov cl,bl
     mov ax,1
     shl ax,cl
     test ax,ds:uhc_reset
@@ -2975,7 +2973,7 @@ htUnlock:
     jz htDoUnlock
 ;
     in ax,dx
-    or ax,200h
+    and al,NOT 4
     out dx,ax
 ;
     mov ax,25
@@ -2994,7 +2992,7 @@ htDetach:
     jz htDone
 ;
     in ax,dx
-    or ax,200h
+    and al,NOT 4
     out dx,ax
 ;
     mov ax,25
