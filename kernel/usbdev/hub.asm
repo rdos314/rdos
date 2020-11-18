@@ -1599,6 +1599,43 @@ uhpDone:
     pop ax
     ret
 UpdatePorts    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateClose
+;
+;       DESCRIPTION:    Update & close
+;
+;       PARAMETERS:     DS      Function selector
+;                       DX      Port # (0..ports)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateClose   Proc near
+    push ebx
+    push edi
+;    
+    movzx edi,dx
+    add edi,edi
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    clc
+    jz ucLeave
+;    
+    mov bx,ds:[edi].usb_thread_arr
+    Signal
+    stc
+
+ucLeave:
+    LeaveSection ds:usb_section
+;                
+    pop edi
+    pop edx
+    ret
+UpdateClose   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1620,7 +1657,7 @@ ClosePorts    Proc near
     xor dx,dx
 
 chpoLoop:
-    call UpdatePort
+    call UpdateClose
     jc chpfNext
 ;
     inc dx
@@ -1631,7 +1668,7 @@ chpoLoop:
     jmp chpDone
 
 chpfLoop:
-    call UpdatePort
+    call UpdateClose
 
 chpfNext:
     inc dx
