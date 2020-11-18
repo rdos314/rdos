@@ -1620,12 +1620,11 @@ UpdateClose   Proc near
     add edi,edi
 ;
     EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_port_arr
+    mov bx,ds:[edi].usb_thread_arr
     or bx,bx
     clc
     jz ucLeave
 ;    
-    mov bx,ds:[edi].usb_thread_arr
     Signal
     stc
 
@@ -1633,7 +1632,7 @@ ucLeave:
     LeaveSection ds:usb_section
 ;                
     pop edi
-    pop edx
+    pop ebx
     ret
 UpdateClose   Endp
 
@@ -1844,6 +1843,9 @@ tpExit:
 
 tpClosed:
     mov ds:hub_port_thread,0
+    mov bx,ds:hub_status_thread
+    Signal
+;
     mov bx,ds:hub_detach
     Signal
 
