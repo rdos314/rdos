@@ -275,8 +275,8 @@ UnlinkDev Endp
 ;
 ;       DESCRIPTION:    Add device
 ;
-;       Parameters:     DS      USB device selector
-;                       ES      USB function selector
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -311,6 +311,88 @@ AddDev Proc near
     pop ds
     ret
 AddDev Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindDev
+;
+;       DESCRIPTION:    Find device
+;
+;       parameters:     BX	Usb controller
+;                       AL      Usb port
+;
+;       RETURNS:        NC
+;                           ES  Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindDev	Proc near
+    push ds
+    push esi
+;
+    mov si,SEG data
+    mov ds,esi
+    EnterSection ds:usb_dev_section
+;
+    mov si,ds:usb_dev_list
+    or si,si
+    stc
+    jz fdDone
+
+fdLoop:
+    mov es,esi
+    cmp bx,es:udd_controller
+    jne fdNext
+;
+    cmp al,es:udd_port
+    je fdOk
+
+fdNext:
+    mov si,es:udd_next
+    cmp si,ds:usb_dev_list
+    jnz fdLoop
+;
+    stc
+    jmp fdDone
+
+fdOk:
+    clc
+
+fdDone:
+    LeaveSection ds:usb_dev_section
+;
+    pop esi
+    pop ds
+    ret
+FindDev Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RemoveDev
+;
+;       DESCRIPTION:    Remove device
+;
+;       parameters:     DS      USB function selector
+;                       AL      Usb port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveDev	Proc near
+    push es
+    pushad
+;
+    mov bx,ds:usb_controller_id
+    call FindDev
+    jc rdDone
+;
+
+rdDone:
+    popad
+    pop es
+    ret
+RemoveDev	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1484,7 +1566,6 @@ AddUsbDevice       Proc near
     push cx
     push di
 ;
-    int 3
     call AddDev
 ;
     movzx bx,es:usbd_port
@@ -1833,6 +1914,9 @@ detach_text DB 'Detach', 0
 notify_usb_detach       Proc far
     push es
     pushad
+;
+    int 3
+    call RemoveDev
 ;
     mov ah,al
     call RemoveUsbDevice
