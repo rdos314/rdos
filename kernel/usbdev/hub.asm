@@ -1233,7 +1233,7 @@ GetPortStatus Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-handler_thread_name  DB 'Hub ', 0
+handler_thread_name  DB 'Hub Dev ', 0
 
 handler_thread:
     mov cl,dl
