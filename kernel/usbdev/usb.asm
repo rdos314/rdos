@@ -1284,16 +1284,16 @@ is_usb_pipe_connected       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddUsbFunction
+;       NAME:           AddUsbDevice
 ;
-;       Description:    Add USB function
+;       Description:    Add USB device
 ;
 ;       Parameters:     DS      USB device selector
 ;                       ES      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddUsbFunction       Proc near
+AddUsbDevice       Proc near
     push fs
     push ax
     push bx
@@ -1304,7 +1304,7 @@ AddUsbFunction       Proc near
     add bx,bx
     mov ax,ds:[bx].usb_port_arr
     or ax,ax
-    jnz aufAdd
+    jnz audAdd
 ;    
     push es
     mov eax,SIZE usb_port_struc
@@ -1327,7 +1327,7 @@ AddUsbFunction       Proc near
     pop es
     mov ds:[bx].usb_port_arr,ax
 
-aufAdd:
+audAdd:
     mov fs,ax
     mov fs:usb_function_sel,es
     mov fs:usb_configured,0
@@ -1338,14 +1338,14 @@ aufAdd:
     pop ax
     pop fs
     ret
-AddUsbFunction	Endp
+AddUsbDevice	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RemoveUsbFunction
+;       NAME:           RemoveUsbDevice
 ;
-;       Description:    Remove USB function
+;       Description:    Remove USB device
 ;
 ;       Parameters:     DS      USB device selector
 ;                       AL      Port
@@ -1355,7 +1355,7 @@ AddUsbFunction	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveUsbFunction       Proc near
+RemoveUsbDevice       Proc near
     push ds
     push ax
     push ebx
@@ -1365,7 +1365,7 @@ RemoveUsbFunction       Proc near
     mov ax,ds:[bx].usb_port_arr
     or ax,ax
     stc
-    jz rufDone
+    jz rudvDone
 ;
     mov ds,ax
     EnterSection ds:usb_sync_section
@@ -1374,10 +1374,10 @@ RemoveUsbFunction       Proc near
     mov cx,16
     mov si,OFFSET usb_in_pipe_arr
 
-rufInLoop:
+rudvInLoop:
     mov ax,ds:[si]
     or ax,ax
-    jz rufInNext
+    jz rudvInNext
 ;
     push ds
     mov ds,ax
@@ -1387,17 +1387,17 @@ rufInLoop:
     LeaveSection ds:usbu_section
     pop ds
 
-rufInNext:
+rudvInNext:
     add si,2
-    loop rufInLoop
+    loop rudvInLoop
 ;
     mov cx,16
     mov si,OFFSET usb_out_pipe_arr
 
-rufOutLoop:
+rudvOutLoop:
     mov ax,ds:[si]
     or ax,ax
-    jz rufOutNext
+    jz rudvOutNext
 ;
     push ds
     mov ds,ax
@@ -1407,9 +1407,9 @@ rufOutLoop:
     LeaveSection ds:usbu_section
     pop ds
 
-rufOutNext:
+rudvOutNext:
     add si,2
-    loop rufOutLoop
+    loop rudvOutLoop
 ;
     xor ax,ax
     xchg ax,ds:usb_function_sel
@@ -1417,17 +1417,17 @@ rufOutNext:
 ;
     or ax,ax
     stc
-    jz rufDone
+    jz rudvDone
 ;
     mov es,ax
     clc
 
-rufDone:
+rudvDone:
     pop ebx
     pop ax
     pop ds
     ret
-RemoveUsbFunction	Endp
+RemoveUsbDevice	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1449,7 +1449,7 @@ start_usb_device       Proc far
     push ax
 ;
     mov al,es:usbd_address
-    call AddUsbFunction
+    call AddUsbDevice
 ;
     call CreateDefaultControl
 ;
@@ -1648,7 +1648,7 @@ notify_usb_detach       Proc far
     pushad
 ;
     mov ah,al
-    call RemoveUsbFunction
+    call RemoveUsbDevice
     jc nudDone
 ; 
     mov bx,ds:usb_controller_id
