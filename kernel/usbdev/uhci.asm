@@ -3004,8 +3004,12 @@ htDetached:
     jnz htTryAttach
 
 htDone:    
+    in ax,dx
+    or al,4
+    out dx,ax
+;
     EnterSection ds:usb_section
-    mov ds:[edi].usb_thread_arr,0
+    mov ds:[di].usb_thread_arr,0
     LeaveSection ds:usb_section
 ;
     TerminateThread
@@ -3096,7 +3100,7 @@ upAttach:
     mov fs,bx
     mov bx,fs:usb_function_sel
     or bx,bx
-    jz upDone
+    jnz upDone
 
 upCheckAttach:
     mov bx,ds:[edi].usb_thread_arr
