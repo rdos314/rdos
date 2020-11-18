@@ -191,6 +191,7 @@ usb_device_struc  STRUC
 
 usbd_func_sel           DW ?
 usbd_hub_sel            DW ?
+usbd_dev_sel            DW ?
 usbd_port               DB ?
 usbd_address            DB ?
 usbd_speed              DB ?

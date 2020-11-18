@@ -119,6 +119,8 @@ udd_next         DW ?
 udd_sel          DW ?
 udd_ref_count    DW ?
 udd_section      section_typ <>
+udd_controller   DW ?
+udd_port         DB ?
 udd_deleted      DB ?
 
 usbdev_dev_struc    ENDS
@@ -151,15 +153,15 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           InsertDev
+;           NAME:           LinkDev
 ;
-;           DESCRIPTION:    Insert device
+;           DESCRIPTION:    Link device
 ;
 ;                           ES          Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertDev Proc near
+LinkDev Proc near
     push ds
     push eax
 ;
@@ -169,7 +171,7 @@ InsertDev Proc near
 ;
     mov ax,ds:usb_dev_list
     or ax,ax
-    jz idEmpty
+    jz ldEmpty
 ;    
     push ds
     push esi
@@ -184,33 +186,33 @@ InsertDev Proc near
 ;
     pop esi
     pop ds
-    jmp idDone
+    jmp ldDone
     
-idEmpty:
+ldEmpty:
     mov es:udd_next,es
     mov es:udd_prev,es
     mov ds:usb_dev_list,es
 
-idDone:
+ldDone:
     LeaveSection ds:usb_dev_section
 ;
     pop eax
     pop ds
     ret
-InsertDev Endp
+LinkDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           RemoveDev
+;           NAME:           UnlinkDev
 ;
-;           DESCRIPTION:    Remove device
+;           DESCRIPTION:    Unlink device
 ;
 ;           PARAMETERS:     ES          Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveDev Proc near
+UnlinkDev Proc near
     push ds
     push es
     push fs
@@ -224,22 +226,22 @@ RemoveDev Proc near
     mov si,ds:usb_dev_list
     or si,si
     stc
-    jz rdDone
+    jz uldDone
 ;
 
-rdLoop:
+uldLoop:
     mov es,si
     cmp ax,si
-    je rdRemove
+    je uldRemove
 ;
     mov si,es:udd_next
     cmp si,ds:usb_dev_list
-    jne rdLoop
+    jne uldLoop
 ;
     stc
-    jmp rdDone
+    jmp uldDone
 
-rdRemove:
+uldRemove:
     mov di,es:udd_next
     mov ds:usb_dev_list,di
 ;
@@ -251,12 +253,12 @@ rdRemove:
 ;
     cmp ax,di
     clc
-    jne rdDone
+    jne uldDone
 ;    
     mov ds:usb_dev_list,0
     clc
 
-rdDone:
+uldDone:
     LeaveSection ds:usb_dev_section
 ;
     popad
@@ -264,7 +266,51 @@ rdDone:
     pop es
     pop ds
     ret
-RemoveDev Endp
+UnlinkDev Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddDev
+;
+;       DESCRIPTION:    Add device
+;
+;       Parameters:     DS      USB device selector
+;                       ES      USB function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDev Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov eax,es
+    mov fs,eax
+;
+    mov eax,SIZE usbdev_dev_struc
+    AllocateSmallGlobalMem
+;
+    mov ax,ds:usb_controller_id
+    mov es:udd_controller,ax
+;
+    mov al,fs:usbd_port
+    mov es:udd_port,al
+;
+    mov fs:usbd_dev_sel,es
+    mov es:udd_sel,fs
+    mov es:udd_deleted,0
+    mov es:udd_ref_count,1
+    InitSection es:udd_section
+    call LinkDev
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+AddDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1437,6 +1483,9 @@ AddUsbDevice       Proc near
     push bx
     push cx
     push di
+;
+    int 3
+    call AddDev
 ;
     movzx bx,es:usbd_port
     add bx,bx
