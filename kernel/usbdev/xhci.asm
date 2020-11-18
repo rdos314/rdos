@@ -3642,19 +3642,9 @@ upAttach:
     mov ax,es
     mov ds,ax
 ;
-    mov bx,ds:[edi].usb_port_arr
-    or bx,bx
-    jz upCheckAttach
-;
-    mov gs,bx
-    mov bx,gs:usb_function_sel
-    or bx,bx
-    jnz upDone
-
-upCheckAttach:
     mov bx,ds:[edi].usb_thread_arr
     or bx,bx
-    jnz upDone
+    jnz upCheckReset
 ;
     mov ds:[edi].usb_thread_arr,-1
 ;    
@@ -3701,13 +3691,22 @@ upCopyDone:
     FreeMem
     jmp upDone
 
+upCheckReset:
+    mov eax,1
+    shl eax,cl
+    test eax,es:xhc_reset
+    jz upDone
+;
+    Signal
+    jmp upDone    
+
 upDetach:
     mov ax,es
     mov ds,ax
 ;
     EnterSection ds:usb_section
 ;
-    mov bx,ds:[edi].usb_port_arr
+    mov bx,ds:[edi].usb_thread_arr
     or bx,bx
     jz upLeave
 ;
@@ -3716,7 +3715,6 @@ upDetach:
     test eax,es:xhc_detach_pend
     jnz upLeave
 ;
-    mov bx,ds:[edi].usb_thread_arr
     Signal
 
 upLeave:

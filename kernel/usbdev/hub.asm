@@ -1474,34 +1474,14 @@ UpdatePort   Proc near
     movzx edi,dx
     add edi,edi
 ;    
-    mov eax,1
-    mov cx,dx
-    shl eax,cl
-    test eax,ds:hub_reset
-    jz upNoReset
-;
-    mov bx,ds:[edi].usb_thread_arr
-    Signal
-    
-upNoReset:
     mov ax,ds:[edi].hub_status_arr
     test al,1
     jz upDetach
     
 upAttach:
-    mov bx,ds:[edi].usb_port_arr
-    or bx,bx
-    jz upCheckAttach
-;
-    mov fs,bx
-    mov bx,fs:usb_function_sel
-    or bx,bx
-    jnz upDone
-
-upCheckAttach:    
     mov bx,ds:[edi].usb_thread_arr
     or bx,bx
-    jnz upDone
+    jnz upCheckReset
 ;
     mov ds:[edi].usb_thread_arr,-1
 ;    
@@ -1548,13 +1528,22 @@ upCopyDone:
     FreeMem
     jmp upDone
 
+upCheckReset:
+    mov eax,1
+    mov cx,dx
+    shl eax,cl
+    test eax,ds:hub_reset
+    jz upDone
+;
+    Signal
+    jmp upDone
+
 upDetach:
     EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_port_arr
+    mov bx,ds:[edi].usb_thread_arr
     or bx,bx
     jz upLeave
 ;    
-    mov bx,ds:[edi].usb_thread_arr
     Signal
 
 upLeave:
