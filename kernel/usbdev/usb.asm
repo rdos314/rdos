@@ -1031,7 +1031,7 @@ CloseDevice Endp
 ;           PARAMETERS:     BX      Controller #
 ;                           AH      Port #
 ;                           AL      Device address (1..128)
-;                           DS      USB device
+;                           DS      USB function
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1086,7 +1086,7 @@ trap_usb_attach ENDP
 ;           PARAMETERS:     BX      Controller #
 ;                           AH      Port #
 ;                           AL      Device address (1..128)
-;                           DS      USB device
+;                           DS      USB function
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1385,8 +1385,8 @@ is_usb_pipe_connected       Endp
 ;
 ;       Description:    Add USB device
 ;
-;       Parameters:     DS      USB device selector
-;                       ES      USB function selector
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1396,8 +1396,6 @@ AddUsbDevice       Proc near
     push bx
     push cx
     push di
-;
-    call AddDev
 ;
     movzx bx,es:usbd_port
     add bx,bx
@@ -1446,11 +1444,11 @@ AddUsbDevice	Endp
 ;
 ;       Description:    Remove USB device
 ;
-;       Parameters:     DS      USB device selector
+;       Parameters:     DS      USB function selector
 ;                       AL      Port
 ;
 ;       Returns:        NC
-;                           ES  USB function selector
+;                           ES  USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1458,9 +1456,6 @@ RemoveUsbDevice       Proc near
     push ds
     push ax
     push ebx
-;
-    int 3
-    call RemoveDev
 ;
     movzx bx,al
     add bx,bx
@@ -1538,8 +1533,8 @@ RemoveUsbDevice	Endp
 ;
 ;       Description:    Start USB device
 ;
-;       Parameters:     DS      USB device selector
-;                       ES      USB function selector
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
 ;
 ;       Returns:        FS      Control pipe
 ;
@@ -1549,6 +1544,8 @@ start_usb_device_name DB 'Start USB Device', 0
 
 start_usb_device       Proc far
     push ax
+;
+    call AddDev
 ;
     mov al,es:usbd_address
     call AddUsbDevice
@@ -1579,8 +1576,8 @@ start_usb_device	Endp
 ;
 ;       Description:    Read USB descriptors
 ;
-;       Parameters:     DS      USB device selector
-;                       ES      USB function selector
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
 ;                       FS      Control pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1703,8 +1700,8 @@ read_usb_descriptors   Endp
 ;
 ;       Description:    Notify USB attach event
 ;
-;       Parameters:     DS      USB device selector
-;                       ES      USB function selector
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
 ;                       FS      Control pipe
 ;                       AL      Port
 ;
@@ -1736,8 +1733,8 @@ notify_usb_attach   Endp
 ;
 ;           description:    Notify USB detach event
 ;
-;       parameters:     AL      Usb port
-;               DS      USB device selector
+;       parameters:         AL      Usb port
+;                           DS      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
