@@ -105,11 +105,31 @@ re_type     DB ?
 
 req_entry_struc ENDS
 
+usbdev_handle_struc    STRUC
+
+udh_base        handle_header <>
+udh_dev_sel     DW ?
+
+usbdev_handle_struc    ENDS
+
+usbdev_dev_struc    STRUC
+
+udd_prev         DW ?
+udd_next         DW ?
+udd_sel          DW ?
+udd_ref_count    DW ?
+udd_section      section_typ <>
+udd_deleted      DB ?
+
+usbdev_dev_struc    ENDS
+
 data    SEGMENT byte public 'DATA'
 
 usb_enum_section    section_typ <>
 usb_over_current    DW ?
 usb_reset_failure   DW ?
+usb_dev_list        DW ?
+usb_dev_section     section_typ <>
 
 usb_dev_count       DW ?
 usb_dev_arr         DW 256 DUP(?)
@@ -127,6 +147,124 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InsertDev
+;
+;           DESCRIPTION:    Insert device
+;
+;                           ES          Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertDev Proc near
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:usb_dev_section
+;
+    mov ax,ds:usb_dev_list
+    or ax,ax
+    jz idEmpty
+;    
+    push ds
+    push esi
+;
+    mov ds,eax
+    mov si,ds:udd_prev
+    mov ds:udd_prev,es
+    mov ds,esi
+    mov ds:udd_next,es
+    mov es:udd_next,ax
+    mov es:udd_prev,si
+;
+    pop esi
+    pop ds
+    jmp idDone
+    
+idEmpty:
+    mov es:udd_next,es
+    mov es:udd_prev,es
+    mov ds:usb_dev_list,es
+
+idDone:
+    LeaveSection ds:usb_dev_section
+;
+    pop eax
+    pop ds
+    ret
+InsertDev Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveDev
+;
+;           DESCRIPTION:    Remove device
+;
+;           PARAMETERS:     ES          Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveDev Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:usb_dev_section
+;
+    mov ax,es
+    mov si,ds:usb_dev_list
+    or si,si
+    stc
+    jz rdDone
+;
+
+rdLoop:
+    mov es,si
+    cmp ax,si
+    je rdRemove
+;
+    mov si,es:udd_next
+    cmp si,ds:usb_dev_list
+    jne rdLoop
+;
+    stc
+    jmp rdDone
+
+rdRemove:
+    mov di,es:udd_next
+    mov ds:usb_dev_list,di
+;
+    mov si,es:udd_prev
+    mov fs,di
+    mov fs:udd_prev,si
+    mov fs,si
+    mov fs:udd_next,di
+;
+    cmp ax,di
+    clc
+    jne rdDone
+;    
+    mov ds:usb_dev_list,0
+    clc
+
+rdDone:
+    LeaveSection ds:usb_dev_section
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+RemoveDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5111,6 +5249,9 @@ init    Proc far
     mov ds:usb_detach_hooks,0
     mov ds:usb_over_current,0
     mov ds:usb_reset_failure,0
+;
+    mov ds:usb_dev_list,0
+    InitSection ds:usb_dev_section
 ;
     mov ax,cs
     mov ds,ax
