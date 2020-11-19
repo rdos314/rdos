@@ -23,8 +23,11 @@
 void main()
 {
     int handle;
+    int size;
+    char buf[8];
 
-    handle = RdosOpenUsbDevice(5, 3);
+    handle = RdosOpenUsbDevice(1, 2);  
+    size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x100, 0, buf, 8);
     RdosCloseUsbDevice(handle);
 
     RdosTestGate("");

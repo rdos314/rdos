@@ -433,7 +433,7 @@ send_usb_dev_control_msg    Proc near
     or al,al
     pop ax
     stc
-    jz sudcmDone
+    jnz sudcmDone
 ;
     EnterSection ds:udd_section
     push ds

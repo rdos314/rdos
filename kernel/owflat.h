@@ -3609,7 +3609,7 @@
     "mov cx,-1 " \
     "extend: " \
     "movzx eax,cx " \
-    __parm [__ebx] [__al] [__ah] [__edx] [__esi] [__edi] [__ecx] \
+    __parm [__ebx] [__ah] [__al] [__edx] [__esi] [__edi] [__ecx] \
     __value [__eax] \
     __modify [__ecx]
 
