@@ -945,4 +945,7 @@ get_ac_consume_energy_nr          = 741
 get_ac_produce_energy_nr          = 742
 wait_ac_meassure_nr               = 743
 
+open_usb_dev_nr                   = 744
+close_usb_dev_nr                  = 745
+
 usergate_entries                  = 750

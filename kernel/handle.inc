@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 ADC_HANDLE =        015FCh 
 FM_INSTR_HANDLE =   017DEh
 DLL_HANDLE16 =      026CFh
@@ -32,6 +33,7 @@ DLL_HANDLE32 =      026DFh
 SPRITE_HANDLE =     02CF5h
 CRC_HANDLE =        0367Ah
 FILE_HANDLE = 	    03AB6h
+USB_DEV_HANDLE =    04AFEh
 UDP_LISTEN_HANDLE = 05236h
 SERIAL_HANDLE =     05A45h
 ENV_HANDLE =        05FAEh

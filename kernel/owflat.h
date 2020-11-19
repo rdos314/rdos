@@ -3593,6 +3593,16 @@
     __parm [__ebx] [__eax] [__edx] \
     __value [__ecx]
 
+#pragma aux RdosOpenUsbDevice = \
+    CallGate_open_usb_dev \
+    ValidateHandle \
+    __parm [__ebx] [__eax] \
+    __value [__ebx]
+
+#pragma aux RdosCloseUsbDevice = \
+    CallGate_close_usb_dev \
+    __parm [__ebx]
+
 #pragma aux RdosOpenUsbPipe = \
     CallGate_open_usb_pipe \
     ValidateHandle \

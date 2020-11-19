@@ -217,7 +217,7 @@ RemoveDev	Proc near
     jz rdDone
 ;
     push ds
-    mov ds,eax
+    mov ds,ax
     mov ds:udd_deleted,1
     EnterSection ds:udd_section
     LeaveSection ds:udd_section
@@ -225,7 +225,7 @@ RemoveDev	Proc near
     pop ds
     jnz rdDone
 ;
-    mov es,eax
+    mov es,ax
     FreeMem
 
 rdDone:
@@ -233,6 +233,163 @@ rdDone:
     pop es
     ret
 RemoveDev	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       OpenUsbDev
+;
+;       description:    Open USB pipe
+;
+;       parameters:     BX      Controller #
+;                       AL      Port
+;
+;       RETURNS:        BX      USB device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_usb_dev_name DB 'Open USB Device', 0
+
+open_usb_dev    Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push dx
+    push si
+;
+    mov si,SEG data
+    mov ds,si
+    mov si,ds:usb_func_count
+    cmp bx,si
+    jae oudvFail
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_func_arr
+    or si,si
+    jz oudvFail
+;
+    mov es,si
+    cmp al,MAX_USB_HUB_PORTS
+    jae oudvFail
+;    
+    movzx si,al
+    add si,si
+    mov si,es:[si].usb_dev_arr
+    or si,si
+    jz oudvFail
+;
+    mov ds,si
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    jnz oudvLeaveFail
+;
+    lock add ds:udd_ref_count,1
+    LeaveSection ds:udd_section
+;
+    mov ax,ds
+    mov cx,SIZE usbdev_handle_struc
+    AllocateHandle
+    mov [ebx].udh_dev_sel,ax
+    mov [ebx].hh_sign,USB_DEV_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+    jmp oudvDone    
+
+oudvLeaveFail:
+    LeaveSection ds:udd_section
+
+oudvFail:
+    xor bx,bx
+    stc
+
+oudvDone:
+    pop si
+    pop dx
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    retf32
+open_usb_dev    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CloseUsbDev
+;
+;           DESCRIPTION:    Close a USB device handle
+;
+;           PARAMETERS:         BX          Device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_usb_dev_name     DB 'Close USB Device',0
+
+close_usb_dev  Proc far
+    push ds
+    push es
+    push ax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc cudvDone
+;
+    mov es,ds:[ebx].udh_dev_sel
+    lock sub es:udd_ref_count,1
+    jnz cudvFreeHandle
+;
+    FreeMem
+
+cudvFreeHandle:
+    FreeHandle
+    clc
+
+cudvDone:
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    retf32
+close_usb_dev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           delete_dev_handle
+;
+;           DESCRIPTION:    BX              USB dev handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_dev_handle   Proc far
+    push ds
+    push es
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc ddhDone
+;
+    mov es,ds:[ebx].udh_dev_sel
+    lock sub es:udd_ref_count,1
+    jnz ddhFreeHandle
+;
+    FreeMem
+
+ddhFreeHandle:
+    FreeHandle
+    clc
+
+ddhDone:
+    pop ebx
+    pop es
+    pop ds
+    retf32
+delete_dev_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3854,19 +4011,19 @@ reset_usb_pipe     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           delete_handle
+;           NAME:           delete_pipe_handle
 ;
 ;           DESCRIPTION:    BX              USB pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_handle   Proc far
+delete_pipe_handle   Proc far
     push ds
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
-    jc delete_handle_done
+    jc delete_pipe_handle_done
 ;
     push ds
     mov ds,ds:[ebx].up_pipe_sel
@@ -3876,11 +4033,11 @@ delete_handle   Proc far
     FreeHandle
     clc
 
-delete_handle_done:
+delete_pipe_handle_done:
     pop ebx
     pop ds
     retf32
-delete_handle   Endp
+delete_pipe_handle   Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5232,8 +5389,12 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
+    mov ax,USB_DEV_HANDLE
+    mov edi,OFFSET delete_dev_handle
+    RegisterHandle
+;
     mov ax,USB_PIPE_HANDLE
-    mov edi,OFFSET delete_handle
+    mov edi,OFFSET delete_pipe_handle
     RegisterHandle
 ;
     mov esi,OFFSET init_usb_function
@@ -5575,6 +5736,18 @@ init    Proc far
     mov edi,OFFSET has_usb_reset_failed_name
     xor dx,dx
     mov ax,has_usb_reset_failed_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET open_usb_dev
+    mov edi,OFFSET open_usb_dev_name
+    xor dx,dx
+    mov ax,open_usb_dev_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_usb_dev
+    mov edi,OFFSET close_usb_dev_name
+    xor dx,dx
+    mov ax,close_usb_dev_nr
     RegisterBimodalUserGate
     clc
     ret

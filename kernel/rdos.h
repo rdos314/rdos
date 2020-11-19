@@ -887,6 +887,8 @@ int RDOSAPI RdosHasUsbCardUsbReset();
 int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
 int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
 int RDOSAPI RdosGetUsbInterface(int Controller, int Device, int Interface);
+int RDOSAPI RdosOpenUsbDevice(int Controller, int Port);
+void RDOSAPI RdosCloseUsbDevice(int handle);
 int RDOSAPI RdosOpenUsbPipe(int Controller, int Device, int Pipe);
 void RDOSAPI RdosCloseUsbPipe(int handle);
 void RDOSAPI RdosResetUsbPipe(int handle);

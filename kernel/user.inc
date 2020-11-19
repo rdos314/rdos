@@ -3598,6 +3598,20 @@ CalcCrc32      MACRO
                                                 ENDM
 
 ;   IN  BX          Controller #
+;   IN  AL          Port #
+;   OUT BX          Handle
+OpenUsbDevice      MACRO
+        UserGate open_usb_dev_nr
+                                                ENDM
+
+;   IN  BX          Handle
+CloseUsbDevice      MACRO
+        UserGate close_usb_dev_nr
+                                                ENDM
+
+
+
+;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  (E)CX       Buffer size
 ;   IN  ES:(E)DI    Buffer
