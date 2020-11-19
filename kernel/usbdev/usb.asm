@@ -209,7 +209,6 @@ RemoveDev	Proc near
     push es
     pushad
 ;
-    int 3
     movzx bx,al
     add bx,bx
     xor ax,ax
