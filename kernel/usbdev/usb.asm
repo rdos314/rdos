@@ -182,6 +182,10 @@ AddDev Proc near
     mov es:udd_ref_count,1
     InitSection es:udd_section
 ;
+    movzx bx,al
+    add bx,bx
+    mov ds:[bx].usb_dev_arr,es
+;
     popad
     pop fs
     pop es
@@ -205,11 +209,27 @@ RemoveDev	Proc near
     push es
     pushad
 ;
+    int 3
     movzx bx,al
     add bx,bx
     xor ax,ax
     xchg ax,ds:[bx].usb_dev_arr
+    or ax,ax
+    jz rdDone
 ;
+    push ds
+    mov ds,eax
+    mov ds:udd_deleted,1
+    EnterSection ds:udd_section
+    LeaveSection ds:udd_section
+    lock sub ds:udd_ref_count,1
+    pop ds
+    jnz rdDone
+;
+    mov es,eax
+    FreeMem
+
+rdDone:
     popad
     pop es
     ret
@@ -1337,10 +1357,6 @@ usdNoHub:
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,es
-;
-    movzx bx,dl
-    add bx,bx
-    mov ds:[bx].usb_dev_arr,es
 ;        
     mov cx,16
     mov di,OFFSET usbd_in_endpoint_arr
