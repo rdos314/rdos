@@ -405,10 +405,10 @@ close_usb_dev  Endp
 ;                       AH        Type
 ;                       DX        Value
 ;                       SI        Index
-;                       (E)CX     Size
+;                       CX        Size
 ;                       ES:(E)DI  Buffer
 ;
-;       RETURNS:        ECX       Transfer size
+;       RETURNS:        CX        Transfer size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

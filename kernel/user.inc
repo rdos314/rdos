@@ -3610,6 +3610,16 @@ CloseUsbDevice      MACRO
                                                 ENDM
 
 
+;   IN  BX          Handle
+;   IN  AL          Msg
+;   IN  AH          Type
+;   IN  DX          Value
+;   IN  SI          Index
+;   IN  CX          Size
+;   IN  ES:(E)DI    Buffer
+SendUsbDeviceControlMsg      MACRO
+        UserGate send_usb_dev_control_msg_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)

@@ -947,6 +947,7 @@
 
 #define usergate_open_usb_dev 0x000002E8
 #define usergate_close_usb_dev 0x000002E9
+#define usergate_send_usb_dev_control_msg 0x000002EA
 
 
 
@@ -1900,6 +1901,7 @@
 
 #define CallGate_open_usb_dev 0x55 0x67 0x9a 232 2 0 0 3 0 0x5d
 #define CallGate_close_usb_dev 0x55 0x67 0x9a 233 2 0 0 3 0 0x5d
+#define CallGate_send_usb_dev_control_msg 0x55 0x67 0x9a 234 2 0 0 3 0 0x5d
 
 #else
 
@@ -2851,5 +2853,6 @@
 
 #define CallGate_open_usb_dev 0x3e 0x67 0x9a 232 2 0 0 3 0
 #define CallGate_close_usb_dev 0x3e 0x67 0x9a 233 2 0 0 3 0
+#define CallGate_send_usb_dev_control_msg 0x3e 0x67 0x9a 234 2 0 0 3 0
 
 #endif

@@ -3603,6 +3603,16 @@
     CallGate_close_usb_dev \
     __parm [__ebx]
 
+#pragma aux RdosSendUsbDeviceControlMsg = \
+    CallGate_send_usb_dev_control_msg \
+    "jnc extend "    \
+    "mov cx,-1 " \
+    "extend: " \
+    "movzx eax,cx " \
+    __parm [__ebx] [__al] [__ah] [__edx] [__esi] [__edi] [__ecx] \
+    __value [__eax] \
+    __modify [__ecx]
+
 #pragma aux RdosOpenUsbPipe = \
     CallGate_open_usb_pipe \
     ValidateHandle \
