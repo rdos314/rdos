@@ -193,19 +193,7 @@ usb_addr_arr           DW 128 DUP(?)
 
 usb_function_struc   ENDS
 
-USB_DEV_SIZE   = 384
-USB_PIPE_SIZE   = 128
-
 usb_device_struc  STRUC
-
-usbd_base           DB USB_DEV_SIZE DUP(?)
-usdb_control_ep     DB USB_PIPE_SIZE DUP(?)
-usdb_in_ep          DB 14 * USB_PIPE_SIZE DUP(?)
-usdb_out_ep         DB 14 * USB_PIPE_SIZE DUP(?)
-
-usb_device_struc  ENDS
-
-usb_device_base_struc  STRUC
 
 usbd_linear_base        DD ?
 usbd_physical_base      DD ?,?
@@ -223,7 +211,7 @@ usbd_in_endpoint_arr    DW 16 DUP(?)
 usbd_out_endpoint_arr   DW 16 DUP(?)
 usbd_control_buf        DB 8 DUP(?)
 
-usb_device_base_struc  ENDS
+usb_device_struc  ENDS
 
 usb_pipe_struc      STRUC
 
