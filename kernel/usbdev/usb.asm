@@ -237,6 +237,43 @@ RemoveDev	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SendDevControlMsg
+;
+;       description:    Send control msg to device
+;
+;       parameters:     DS        Usb function
+;                       ES        Usb device
+;                       AL        Msg
+;                       AH        Type
+;                       BX        Index
+;                       CX        Size
+;                       DX        Value
+;                       GS:EDI    Buffer
+;
+;       RETURNS:        CX        Transfer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendDevControlMsg    Proc near
+    push fs
+    push esi
+;
+    mov si,OFFSET usbd_control_buf
+    mov es:[si].usd_type,ah
+    mov es:[si].usd_req,al
+    mov es:[si].usd_value,dx
+    mov es:[si].usd_index,bx
+    mov es:[si].usd_len,cx
+    call fword ptr ds:control_msg_proc    
+;
+    pop esi
+    pop fs
+    ret
+SendDevControlMsg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:       OpenUsbDev
 ;
 ;       description:    Open USB pipe
@@ -355,6 +392,89 @@ cudvDone:
     pop ds
     retf32
 close_usb_dev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendUsbDevControlMsg
+;
+;       description:    Send control msg to USB device
+;
+;       parameters:     BX        Handle
+;                       AL        Msg
+;                       AH        Type
+;                       DX        Value
+;                       SI        Index
+;                       (E)CX     Size
+;                       ES:(E)DI  Buffer
+;
+;       RETURNS:        ECX       Transfer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_usb_dev_control_msg_name DB 'Send Device Control Msg', 0
+
+send_usb_dev_control_msg    Proc near
+    push ds
+    push es
+    push gs
+    push ebx
+    push esi
+;
+    push ax
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    pop ax
+    jc sudcmDone
+;
+    push ax
+    mov ds,ds:[ebx].udh_dev_sel
+    mov al,ds:udd_deleted
+    or al,al
+    pop ax
+    stc
+    jz sudcmDone
+;
+    EnterSection ds:udd_section
+    push ds
+;
+    mov bx,es
+    mov gs,bx
+    mov es,ds:udd_sel    
+;
+    mov bx,OFFSET usbd_control_buf
+    mov es:[bx].usd_type,ah
+    mov es:[bx].usd_req,al
+    mov es:[bx].usd_value,dx
+    mov es:[bx].usd_index,si
+    mov es:[bx].usd_len,cx
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:control_msg_proc    
+;
+    pop ds
+    LeaveSection ds:udd_section
+
+sudcmDone:
+    pop esi
+    pop ebx
+    pop gs
+    pop es
+    pop ds
+    ret
+send_usb_dev_control_msg    Endp
+
+send_usb_dev_control_msg16    Proc far
+    push edi
+    movzx edi,di
+    call send_usb_dev_control_msg
+    pop edi
+    retf32
+send_usb_dev_control_msg16	Endp
+
+send_usb_dev_control_msg32    Proc far
+    call send_usb_dev_control_msg
+    retf32
+send_usb_dev_control_msg32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5749,6 +5869,13 @@ init    Proc far
     xor dx,dx
     mov ax,close_usb_dev_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET send_usb_dev_control_msg16
+    mov esi,OFFSET send_usb_dev_control_msg32
+    mov edi,OFFSET send_usb_dev_control_msg_name
+    mov dx,virt_es_in
+    mov ax,send_usb_dev_control_msg_nr
+    RegisterUserGate
     clc
     ret
 init    Endp

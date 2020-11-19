@@ -947,5 +947,6 @@ wait_ac_meassure_nr               = 743
 
 open_usb_dev_nr                   = 744
 close_usb_dev_nr                  = 745
+send_usb_dev_control_msg_nr       = 746
 
 usergate_entries                  = 750

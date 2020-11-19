@@ -531,6 +531,30 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ControlMsg
+;
+;       DESCRIPTION:    Send message over control pipe
+;
+;       PARAMETERS:     ES      Usb device
+;                       GS:EDI  Buffer
+;                       CX      Size
+;
+;       RETURNS:        NC      OK
+;                          CX   Transfer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ControlMsg   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:control_msg_proc
+    pop ds
+    ret
+ControlMsg   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PollPipe
 ;
         DESCRIPTION:    Poll pipe
@@ -867,9 +891,10 @@ ht1B DD OFFSET AddressDev,          SEG code
 ht1C DD OFFSET ConfigDev,           SEG code
 ht1D DD OFFSET SetMaxLen,           SEG code
 ht1E DD OFFSET IssueOne,            SEG code
-ht1F DD OFFSET PollPipe,            SEG code
-ht20 DD OFFSET ReadPipe,            SEG code
-ht21 DD OFFSET WritePipe,           SEG code
+ht1F DD OFFSET ControlMsg,          SEG code
+ht20 DD OFFSET PollPipe,            SEG code
+ht21 DD OFFSET ReadPipe,            SEG code
+ht22 DD OFFSET WritePipe,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2522,7 +2547,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*22h
+    mov ecx,2*23h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

@@ -156,6 +156,11 @@ set_max_len_proc        DD ?,?
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?
 
+; IN  ES        Device
+; IN  GS:EDI    Buffer
+; OUT CX        Actual size
+control_msg_proc      DD ?,?
+
 ; IN  FS        Pipe selector
 poll_pipe_proc      DD ?,?
 

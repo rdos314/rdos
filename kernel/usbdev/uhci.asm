@@ -2683,9 +2683,30 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ControlMsg
+;
+;       DESCRIPTION:    Send message over control pipe
+;
+;       PARAMETERS:     ES      Usb device
+;                       GS:EDI  Buffer
+;                       CX      Size
+;
+;       RETURNS:        NC      OK
+;                          CX   Transfer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ControlMsg   Proc far
+    int 3
+    ret
+ControlMsg   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PollPipe
 ;
-        DESCRIPTION:    Poll pipe
+;       DESCRIPTION:    Poll pipe
 ;
 ;       PARAMETERS:     FS      Pipe selector
 ;
@@ -3228,9 +3249,10 @@ ut1B DD OFFSET AddressDev,          SEG code
 ut1C DD OFFSET ConfigDev,           SEG code
 ut1D DD OFFSET SetMaxLen,           SEG code
 ut1E DD OFFSET IssueOne,            SEG code
-ut1F DD OFFSET PollPipe,            SEG code
-ut20 DD OFFSET ReadPipe,            SEG code
-ut21 DD OFFSET WritePipe,           SEG code
+ut1F DD OFFSET ControlMsg,          SEG code
+ut20 DD OFFSET PollPipe,            SEG code
+ut21 DD OFFSET ReadPipe,            SEG code
+ut22 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3252,7 +3274,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*22h
+    mov cx,2*23h
 
 ifTabLoop:
     lods dword ptr cs:[si]
