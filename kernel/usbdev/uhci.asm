@@ -38,6 +38,7 @@ INCLUDE usb.inc
 INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
+DEVICE_SIZE = 1000h
 
 UsbCommandReg = 0
 UsbStatusReg = 2
@@ -2800,39 +2801,67 @@ FreeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateDev
+;       NAME:               CreateDev
 ;
-;       DESCRIPTION:    Create device sel
+;       DESCRIPTION:        Create device sel
 ;
-;       PARAMETERS:     DS      Function sel
-;                       AL      Address
-;                       AH      Speed
-;                       BX      Hub sel
-;                       DX      Port #
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;                           AH      Speed
+;                           BX      Hub selector
+;                           DX      Port #
 ;
-;       RETURNS:        ES      Device sel
+;       RETURNS:            ES      Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDev   Proc far
+    pushad
+;
+    mov eax,DEVICE_SIZE
+    AllocateBigLinear
+;
+    mov ecx,DEVICE_SIZE SHR 12
+    AllocatePhysical32
+;
     push eax
-    push cx
-    push di
+    push ebx
+    push edx
 ;
-    mov eax,1000h
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,400h
+    mov ecx,DEVICE_SIZE SHR 12
+    mov al,63h
+
+cdLoop:
+    SetPageEntry
+    add eax,1000h
+    adc ebx,0
+    add edx,1000h
+    loop cdLoop
+;
+    pop edx
+;
+    AllocateGdt
+    mov ecx,DEVICE_SIZE
+    CreateDataSelector32
+    mov es,bx
+;
+    xor edi,edi
+    mov ecx,DEVICE_SIZE SHR 2
     xor eax,eax
-    rep stosd
+    rep stos dword ptr es:[edi]
 ;
-    pop di
-    pop cx
+    pop ebx
     pop eax
+;
+    mov es:usbd_linear_base,edx
+    mov es:usbd_physical_base,eax
+    mov es:usbd_physical_base+4,ebx
+;
+    popad
 ;
     InitUsbDev
     retf32
-CreateDev   Endp
+CreateDev  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
