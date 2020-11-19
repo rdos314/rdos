@@ -225,9 +225,6 @@ xhci_dev_struc   STRUC
 
 usb_dev_base             usb_device_struc <>
 
-xd_phys                  DD ?,?
-xd_linear                DD ?
-
 xd_dev_sel               DW ?
 
 xd_input_context_offset  DW ?
@@ -1063,9 +1060,9 @@ AllocateDevice    Proc near
 ;
     pop eax
     pop ebx
-    mov es:xd_phys,eax
-    mov es:xd_phys+4,ebx
-    mov es:xd_linear,edx
+    mov es:usbd_physical_base,eax
+    mov es:usbd_physical_base+4,ebx
+    mov es:usbd_linear_base,edx
     mov es:xd_dev_sel,ds
 ;
     pop eax
@@ -1112,7 +1109,7 @@ adoEpLoop:
     and bx,0FFC0h
 ;    
     movzx ecx,bx
-    mov edx,es:xd_linear
+    mov edx,es:usbd_linear_base
     mov bx,es
     CreateDataSelector16
     mov es,bx
@@ -1612,9 +1609,9 @@ AddressDevice   Proc far
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,3
     movzx eax,bx
-    add eax,es:xd_phys
+    add eax,es:usbd_physical_base
     mov gs:[edi].trb_param,eax
-    mov eax,es:xd_phys+4
+    mov eax,es:usbd_physical_base+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,fs:xp_slot
@@ -1678,9 +1675,9 @@ ConfigDevice   Proc far
 ;
     call WaitForCommandTrb
     movzx eax,es:xd_input_context_offset
-    add eax,es:xd_phys
+    add eax,es:usbd_physical_base
     mov gs:[edi].trb_param,eax
-    mov eax,es:xd_phys+4
+    mov eax,es:usbd_physical_base+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,fs:xp_slot
@@ -2767,9 +2764,9 @@ SetMaxLen   Proc far
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,2
     movzx eax,bx
-    add eax,es:xd_phys
+    add eax,es:usbd_physical_base
     mov gs:[edi].trb_param,eax
-    mov eax,es:xd_phys+4
+    mov eax,es:usbd_physical_base+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,fs:xp_slot
@@ -3041,9 +3038,9 @@ CreateDev   Proc far
     movzx bx,al
     shl bx,3
     movzx edx,es:xd_output_context_offset
-    add edx,es:xd_phys
+    add edx,es:usbd_physical_base
     mov fs:[bx],edx
-    mov edx,es:xd_phys+4
+    mov edx,es:usbd_physical_base+4
     mov fs:[bx+4],edx
 ;
     pop dx
