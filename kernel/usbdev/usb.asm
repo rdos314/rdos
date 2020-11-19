@@ -1746,7 +1746,6 @@ notify_usb_detach       Proc far
     push es
     pushad
 ;
-    int 3
     call RemoveDev
 ;
     mov ah,al

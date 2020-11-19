@@ -1250,9 +1250,6 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDetached
-;
     test ds:[edi].hub_status_arr,1
     jz htDetached
 ;
@@ -1272,9 +1269,6 @@ htWaitLoop:
     WaitForSignalWithTimeout
     pop edx
 ;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htUnlock
-;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jz htUnlock
@@ -1290,9 +1284,6 @@ htWaitLoop:
 htIsEnabled:
     mov ax,25
     WaitMilliSec
-;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htUnlock
 ;
     test ds:[edi].hub_status_arr,2
     jz htUnlock
@@ -1345,9 +1336,6 @@ htCreate:
 htAttached:
     WaitForSignal
 ;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDetach
-;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jz htDetach
@@ -1365,9 +1353,6 @@ htHandle:
     jmp htAttached
 
 htUnlock:
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDoUnlock
-;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jz htDoUnlock
@@ -1387,9 +1372,6 @@ htDetach:
     mov al,cl
     NotifyUsbDetach
 ;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDone
-;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jz htDone
@@ -1402,17 +1384,15 @@ htDetach:
     WaitMilliSec
 
 htDetached:
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDone
+    mov ax,ds:[edi].hub_status_arr
+    test ax,1
+    jz htDone
 ;
     mov ax,bp
     cmp ah,2
     je htDisable
 ;
     call ClearControlTT
-;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDone
 ;
     xor al,al
     call ClearControlTT
@@ -1425,9 +1405,6 @@ htDisable:
     mov ax,200
     WaitMilliSec
 ;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDone
-;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jz htDone
@@ -1438,9 +1415,6 @@ htDisable:
 ;
     mov ax,20
     WaitMilliSec
-;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz htDone
 ;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
@@ -1473,6 +1447,7 @@ UpdatePort   Proc near
 ;    
     movzx edi,dx
     add edi,edi
+    mov cx,dx
 ;    
     mov ax,ds:[edi].hub_status_arr
     test al,1
@@ -1608,6 +1583,20 @@ UpdateClose   Proc near
     movzx edi,dx
     add edi,edi
 ;
+    xor bx,bx
+    xchg bx,ds:[edi].hub_status_arr
+    test bx,1
+    jnz ucSignal
+;
+    mov bx,ds:[edi].usb_thread_arr
+    or bx,bx
+    stc
+    jnz ucDone
+;
+    clc
+    jmp ucDone
+
+ucSignal:
     EnterSection ds:usb_section
     mov bx,ds:[edi].usb_thread_arr
     or bx,bx
@@ -1619,7 +1608,8 @@ UpdateClose   Proc near
 
 ucLeave:
     LeaveSection ds:usb_section
-;                
+
+ucDone:                
     pop edi
     pop ebx
     ret
