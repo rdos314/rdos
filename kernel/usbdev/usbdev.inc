@@ -195,8 +195,8 @@ usb_function_struc   ENDS
 
 usb_device_struc  STRUC
 
-usbd_linear_base        DD ?
-usbd_physical_base      DD ?,?
+usbd_mem_blk            mem_blk_header <>
+
 usbd_func_sel           DW ?
 usbd_hub_sel            DW ?
 usbd_dev_sel            DW ?

@@ -25,20 +25,20 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-mem_blk_header_struc	STRUC
+mem_blk_header	STRUC
 
-mblh_phys_base    DD ?,?
-mblh_linear_base  DD ?
-mblh_info_offset  DW ?
+mblk_physical_base   DD ?,?
+mblk_linear_base     DD ?
+mblk_info_offset     DW ?
 
-mem_blk_header_struc	ENDS
+mem_blk_header	ENDS
 
-mem_blk_info_struc	STRUC
+mem_blk_info	STRUC
 
-mbli_bitmap_offset   DW ?
-mbli_data_offset     DW ?
-mbli_free_bits       DW ?
-mbli_size_shift      DB ?
+mblk_bitmap_offset   DW ?
+mblk_data_offset     DW ?
+mblk_free_bits       DW ?
+mblk_size_shift      DB ?
 
-mem_blk_info_struc	ENDS
+mem_blk_info	ENDS
 

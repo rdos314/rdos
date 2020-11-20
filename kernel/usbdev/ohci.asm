@@ -34,6 +34,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
@@ -2696,9 +2697,9 @@ cdLoop:
     pop ebx
     pop eax
 ;
-    mov es:usbd_linear_base,edx
-    mov es:usbd_physical_base,eax
-    mov es:usbd_physical_base+4,ebx
+    mov es:mblk_linear_base,edx
+    mov es:mblk_physical_base,eax
+    mov es:mblk_physical_base+4,ebx
 ;
     popad
 ;

@@ -34,6 +34,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
+INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 include hub.inc
 
@@ -1060,9 +1061,9 @@ AllocateDevice    Proc near
 ;
     pop eax
     pop ebx
-    mov es:usbd_physical_base,eax
-    mov es:usbd_physical_base+4,ebx
-    mov es:usbd_linear_base,edx
+    mov es:mblk_physical_base,eax
+    mov es:mblk_physical_base+4,ebx
+    mov es:mblk_linear_base,edx
     mov es:xd_dev_sel,ds
 ;
     pop eax
@@ -1109,7 +1110,7 @@ adoEpLoop:
     and bx,0FFC0h
 ;    
     movzx ecx,bx
-    mov edx,es:usbd_linear_base
+    mov edx,es:mblk_linear_base
     mov bx,es
     CreateDataSelector16
     mov es,bx
@@ -1609,9 +1610,9 @@ AddressDevice   Proc far
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,3
     movzx eax,bx
-    add eax,es:usbd_physical_base
+    add eax,es:mblk_physical_base
     mov gs:[edi].trb_param,eax
-    mov eax,es:usbd_physical_base+4
+    mov eax,es:mblk_physical_base+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,fs:xp_slot
@@ -1675,9 +1676,9 @@ ConfigDevice   Proc far
 ;
     call WaitForCommandTrb
     movzx eax,es:xd_input_context_offset
-    add eax,es:usbd_physical_base
+    add eax,es:mblk_physical_base
     mov gs:[edi].trb_param,eax
-    mov eax,es:usbd_physical_base+4
+    mov eax,es:mblk_physical_base+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,fs:xp_slot
@@ -2764,9 +2765,9 @@ SetMaxLen   Proc far
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,2
     movzx eax,bx
-    add eax,es:usbd_physical_base
+    add eax,es:mblk_physical_base
     mov gs:[edi].trb_param,eax
-    mov eax,es:usbd_physical_base+4
+    mov eax,es:mblk_physical_base+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,fs:xp_slot
@@ -3038,9 +3039,9 @@ CreateDev   Proc far
     movzx bx,al
     shl bx,3
     movzx edx,es:xd_output_context_offset
-    add edx,es:usbd_physical_base
+    add edx,es:mblk_physical_base
     mov fs:[bx],edx
-    mov edx,es:usbd_physical_base+4
+    mov edx,es:mblk_physical_base+4
     mov fs:[bx+4],edx
 ;
     pop dx

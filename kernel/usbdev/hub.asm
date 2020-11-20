@@ -33,6 +33,7 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
+INCLUDE ..\os\memblk.inc
 include usbdev.inc
 include hub.inc
 

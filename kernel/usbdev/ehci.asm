@@ -35,6 +35,7 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
+INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 INCLUDE hub.inc
 
@@ -1662,9 +1663,9 @@ cdLoop:
     pop ebx
     pop eax
 ;
-    mov es:usbd_linear_base,edx
-    mov es:usbd_physical_base,eax
-    mov es:usbd_physical_base+4,ebx
+    mov es:mblk_linear_base,edx
+    mov es:mblk_physical_base,eax
+    mov es:mblk_physical_base+4,ebx
 ;
     popad
 ;
