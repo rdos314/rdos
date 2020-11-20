@@ -2673,8 +2673,11 @@ CreateDev   Proc far
     CreateMemBlk32
 ;
     int 3
+
+cdLoop:
     mov cx,16
     AllocateMemBlk
+    jmp cdLoop
 ;
     popad
 ;

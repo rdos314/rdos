@@ -30,6 +30,7 @@ mem_blk_header	STRUC
 mblk_physical_base   DD ?,?
 mblk_linear_base     DD ?
 mblk_info_offset     DW ?
+mblk_sign            DW ?
 
 mem_blk_header	ENDS
 
@@ -37,13 +38,26 @@ mem_blk_info	STRUC
 
 mblk_bitmap_offset   DW ?
 mblk_data_offset     DW ?
-mblk_bitmap_size     DW ?
+mblk_bitmap_dd_count DW ?
 mblk_free_bits       DW ?
 mblk_size_shift      DB ?
-mblk_pad             DB ?
+mblk_is64            DB ?
 mblk_ext_size        DW ?
 mblk_ext_count       DW ?
 mblk_ext_arr         DW ?
 
 mem_blk_info	ENDS
+
+mem_blk_extend	STRUC
+
+mblke_header          mem_blk_header <>
+
+mblke_bitmap_offset   DW ?
+mblke_data_offset     DW ?
+mblke_bitmap_dd_count DW ?
+mblke_free_bits       DW ?
+mblke_size_shift      DB ?
+mblke_pad             DB ?
+
+mem_blk_extend	ENDS
 

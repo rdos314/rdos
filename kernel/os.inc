@@ -959,6 +959,7 @@ CreateMemBlk64    MACRO
     OsGate create_mem_blk64_nr
                     ENDM
 
+;  IN  ES      Memory block selector
 ;  IN  CX      Allocation size
 ;  OUT EDX     Linear address
 ;  OUT EBX:EAX Physical address
