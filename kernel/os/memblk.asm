@@ -527,6 +527,114 @@ AllocateBit2    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateBit4
+;
+;   DESCRIPTION:    Allocate a four bit block
+;
+;   PARAMETERS:     ES      Memory block selector
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBit4    Proc near
+    push eax
+    push ecx
+    push edx
+    push ebp
+;
+    mov bx,es:[si].mblk_bitmap_offset
+    mov cx,es:[si].mblk_bitmap_dd_count
+    xor dx,dx
+
+abLoop4:
+    mov eax,es:[bx]
+    cmp eax,-1
+    je abNext4
+;
+    xor bp,bp
+
+abBitLoop4:
+    rcr eax,1
+    jc abSkip43
+;
+    rcr eax,1
+    jc abSkip42
+;
+    rcr eax,1
+    jc abSkip41
+;
+    rcr eax,1
+    jc abBitNext4
+;
+    add bp,dx
+    mov ax,bp
+    mov bx,es:[si].mblk_bitmap_offset
+    lock bts es:[bx],ax
+    jc abLoop4
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc abBitRevert41
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc abBitRevert42
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc abBitRevert43
+;
+    mov bx,bp
+    clc
+    jmp abDone4
+
+abBitRevert43:
+    dec ax
+    lock btr es:[bx],ax
+
+abBitRevert42:
+    dec ax
+    lock btr es:[bx],ax
+
+abBitRevert41:
+    dec ax
+    lock btr es:[bx],ax
+    jmp abLoop4
+
+abSkip43:
+    rcr eax,1
+
+abSkip42:
+    rcr eax,1
+
+abSkip41:
+    rcr eax,1
+
+abBitNext4:
+    add bp,4
+    cmp bp,32
+    jne abBitLoop4
+
+abNext4:
+    add dx,32
+    add bx,4
+    loop abLoop4
+;
+    stc
+
+abDone4:
+    pop ebp
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateBit4    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateExtendBit1
 ;
 ;   DESCRIPTION:    Allocate single bit block
@@ -661,6 +769,114 @@ AllocateExtendBit2      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateExtendBit4
+;
+;   DESCRIPTION:    Allocate a four bit block
+;
+;   PARAMETERS:     ES      Extended memory block selector
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateExtendBit4    Proc near
+    push eax
+    push ecx
+    push edx
+    push ebp
+;
+    mov bx,es:mblke_bitmap_offset
+    mov cx,es:mblke_bitmap_dd_count
+    xor dx,dx
+
+aebLoop4:
+    mov eax,es:[bx]
+    cmp eax,-1
+    je aebNext4
+;
+    xor bp,bp
+
+aebBitLoop4:
+    rcr eax,1
+    jc aebSkip43
+;
+    rcr eax,1
+    jc aebSkip42
+;
+    rcr eax,1
+    jc aebSkip41
+;
+    rcr eax,1
+    jc aebBitNext4
+;
+    add bp,dx
+    mov ax,bp
+    mov bx,es:mblke_bitmap_offset
+    lock bts es:[bx],ax
+    jc aebLoop4
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc aebBitRevert41
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc aebBitRevert42
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc aebBitRevert43
+;
+    mov bx,bp
+    clc
+    jmp aebDone4
+
+aebBitRevert43:
+    dec ax
+    lock btr es:[bx],ax
+
+aebBitRevert42:
+    dec ax
+    lock btr es:[bx],ax
+
+aebBitRevert41:
+    dec ax
+    lock btr es:[bx],ax
+    jmp abLoop4
+
+aebSkip43:
+    rcr eax,1
+
+aebSkip42:
+    rcr eax,1
+
+aebSkip41:
+    rcr eax,1
+
+aebBitNext4:
+    add bp,4
+    cmp bp,32
+    jne aebBitLoop4
+
+aebNext4:
+    add dx,32
+    add bx,4
+    loop aebLoop4
+;
+    stc
+
+aebDone4:
+    pop ebp
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateExtendBit4    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateBase
 ;
 ;   DESCRIPTION:    Allocate in base block
@@ -693,6 +909,9 @@ AllocateBase    Proc near
     shr ax,1
     jz ab2
 ;
+    shr ax,1
+    jz ab4
+;
     int 3
 
 ab1:
@@ -707,6 +926,13 @@ ab2:
     jc abDone
 ;
     lock sub es:[si].mblk_free_bits,2
+    jmp abOk
+
+ab4:
+    call AllocateBit4
+    jc abDone
+;
+    lock sub es:[si].mblk_free_bits,4
     jmp abOk
 
 abOk:
@@ -768,6 +994,9 @@ aeSignOk:
     shr ax,1
     jz ae2
 ;
+    shr ax,1
+    jz ae4
+;
     int 3
 
 ae1:
@@ -782,6 +1011,13 @@ ae2:
     jc aeDone
 ;
     lock sub es:mblke_free_bits,2
+    jmp aeOk
+
+ae4:
+    call AllocateExtendBit4
+    jc aeDone
+;
+    lock sub es:mblke_free_bits,4
     jmp aeOk
 
 aeOk:

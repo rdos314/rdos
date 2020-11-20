@@ -2678,6 +2678,9 @@ cdLoop:
     mov cx,16
     AllocateMemBlk
 ;
+    mov cx,64
+    AllocateMemBlk
+;
     mov cx,32
     AllocateMemBlk
     jmp cdLoop
