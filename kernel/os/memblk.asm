@@ -452,6 +452,78 @@ AllocateBit1	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateBit2
+;
+;   DESCRIPTION:    Allocate a two bit block
+;
+;   PARAMETERS:     ES      Memory block selector
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBit2	Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov bx,es:[si].mblk_bitmap_offset
+    mov cx,es:[si].mblk_bitmap_dd_count
+    xor dx,dx
+
+abLoop2:
+    mov eax,es:[bx]
+    cmp eax,-1
+    je abNext2
+;
+    xor cx,cx
+
+abBitLoop2:
+    rcr eax,1
+    jc abSkip2
+;
+    rcr eax,1
+    jc abBitNext2
+    jmp abFound2
+
+abSkip2:
+    rcr eax,1
+
+abBitNext2:
+    add cx,2
+    cmp cx,32
+    jne abBitLoop2
+
+abNext2:
+    add dx,32
+    add bx,4
+    loop abLoop2
+;
+    stc
+    jmp abDone2
+
+abFound2:
+    add dx,cx
+    mov bx,es:[si].mblk_bitmap_offset
+    mov cx,dx
+    bts es:[bx],cx
+    jc abDone2
+;
+    inc cx
+    bts es:[bx],cx
+    mov bx,dx
+
+abDone2:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateBit2	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateExtendBit1
 ;
 ;   DESCRIPTION:    Allocate single bit block
@@ -505,6 +577,78 @@ AllocateExtendBit1      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateExtendBit2
+;
+;   DESCRIPTION:    Allocate a two bit block
+;
+;   PARAMETERS:     ES      Extended memory block selector
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateExtendBit2	Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov bx,es:mblke_bitmap_offset
+    mov cx,es:mblke_bitmap_dd_count
+    xor dx,dx
+
+aebLoop2:
+    mov eax,es:[bx]
+    cmp eax,-1
+    je aebNext2
+;
+    xor cx,cx
+
+aebBitLoop2:
+    rcr eax,1
+    jc aebSkip2
+;
+    rcr eax,1
+    jc aebBitNext2
+    jmp aebFound2
+
+aebSkip2:
+    rcr eax,1
+
+aebBitNext2:
+    add cx,2
+    cmp cx,32
+    jne aebBitLoop2
+
+aebNext2:
+    add dx,32
+    add bx,4
+    loop aebLoop2
+;
+    stc
+    jmp aebDone2
+
+aebFound2:
+    add dx,cx
+    mov bx,es:mblke_bitmap_offset
+    mov cx,dx
+    bts es:[bx],cx
+    jc aebDone2
+;
+    inc cx
+    bts es:[bx],cx
+    mov bx,dx
+
+aebDone2:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateExtendBit2	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateBase
 ;
 ;   DESCRIPTION:    Allocate in base block
@@ -534,7 +678,6 @@ AllocateBase	Proc near
     shr ax,cl
     jz ab1
 ;
-    int 3
     shr ax,1
     jz ab2
 ;
@@ -548,7 +691,7 @@ ab1:
     jmp abOk
 
 ab2:
-;    call AllocateBit2
+    call AllocateBit2
     jc abDone
 ;
     sub es:[si].mblk_free_bits,2
@@ -610,7 +753,6 @@ aeSignOk:
     shr ax,cl
     je ae1
 ;
-    int 3
     shr ax,1
     jz ae2
 ;
@@ -625,7 +767,7 @@ ae1:
     jmp aeOk
 
 ae2:
-;    call AllocateExtendBit2
+    call AllocateExtendBit2
     jc aeDone
 ;
     sub es:mblke_free_bits,2

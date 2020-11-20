@@ -2677,6 +2677,9 @@ CreateDev   Proc far
 cdLoop:
     mov cx,16
     AllocateMemBlk
+;
+    mov cx,32
+    AllocateMemBlk
     jmp cdLoop
 ;
     popad
