@@ -38,7 +38,6 @@ INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
-DEVICE_SIZE = 1000h
 
 hc_reg  STRUC
 
@@ -170,6 +169,12 @@ ohc_1_cnt       DB ?
 ohc_curr_cnt    DB 32 DUP(?)
 
 ohci_func_sel    ENDS
+
+ohci_dev_sel   STRUC
+
+usb_dev_base    usb_device_struc <>
+
+ohci_dev_sel   ENDS
 
 
 ; this should be at 700h in the ohci_func_sel, interrupt ES descriptors
@@ -2662,44 +2667,10 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    mov eax,DEVICE_SIZE
-    AllocateBigLinear
-;
-    mov ecx,DEVICE_SIZE SHR 12
-    AllocatePhysical32
-;
-    push eax
-    push ebx
-    push edx
-;
-    mov ecx,DEVICE_SIZE SHR 12
-    mov al,63h
-
-cdLoop:
-    SetPageEntry
-    add eax,1000h
-    adc ebx,0
-    add edx,1000h
-    loop cdLoop
-;
-    pop edx
-;
-    AllocateGdt
-    mov ecx,DEVICE_SIZE
-    CreateDataSelector32
-    mov es,bx
-;
-    xor edi,edi
-    mov ecx,DEVICE_SIZE SHR 2
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    pop ebx
-    pop eax
-;
-    mov es:mblk_linear_base,edx
-    mov es:mblk_physical_base,eax
-    mov es:mblk_physical_base+4,ebx
+    mov ax,16
+    mov si,SIZE ohci_dev_sel
+    mov cx,16
+    CreateMemBlk32
 ;
     popad
 ;
