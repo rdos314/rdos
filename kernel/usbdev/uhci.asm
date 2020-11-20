@@ -39,7 +39,6 @@ INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
-DEVICE_SIZE = 1000h
 
 UsbCommandReg = 0
 UsbStatusReg = 2
@@ -102,6 +101,12 @@ uhc_1_cnt    DB ?
 uhc_curr_cnt     DB 128 DUP(?)
 
 uhci_func_sel    ENDS
+
+uhci_dev_sel    STRUC
+
+usb_dev_base     usb_device_struc <>
+
+uhci_dev_sel    ENDS
 
 USP_FLAG_TRANSFER_PENDING   = 1
 USP_FLAG_TRANSFER_OK    = 2
@@ -2819,44 +2824,10 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    mov eax,DEVICE_SIZE
-    AllocateBigLinear
-;
-    mov ecx,DEVICE_SIZE SHR 12
-    AllocatePhysical32
-;
-    push eax
-    push ebx
-    push edx
-;
-    mov ecx,DEVICE_SIZE SHR 12
-    mov al,63h
-
-cdLoop:
-    SetPageEntry
-    add eax,1000h
-    adc ebx,0
-    add edx,1000h
-    loop cdLoop
-;
-    pop edx
-;
-    AllocateGdt
-    mov ecx,DEVICE_SIZE
-    CreateDataSelector32
-    mov es,bx
-;
-    xor edi,edi
-    mov ecx,DEVICE_SIZE SHR 2
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    pop ebx
-    pop eax
-;
-    mov es:mblk_linear_base,edx
-    mov es:mblk_physical_base,eax
-    mov es:mblk_physical_base+4,ebx
+    mov ax,16
+    mov si,SIZE uhci_dev_sel
+    mov cx,16
+    CreateMemBlk32
 ;
     popad
 ;
