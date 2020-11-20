@@ -89,6 +89,115 @@ CreateBlock	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           InitBlock
+;
+;   DESCRIPTION:    Init memory block
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   AX      Base allocation size
+;                   CX      Minimum additional blocks
+;                   SI      Reserved size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitBlock     Proc near
+    pusha
+;
+    test si,1
+    jz ibStartOk
+;
+    inc si
+
+ibStartOk:
+    mov es:mblk_info_offset,si
+    mov es:[si].mblk_ext_size,cx
+;
+    xor cl,cl
+    dec ax
+
+ibShiftLoop:
+    or ax,ax
+    jz ibShiftOk;
+;
+    shr ax,1
+    inc cl
+    jmp ibShiftLoop
+
+ibShiftOk:
+    mov es:[si].mblk_size_shift,cl
+;
+    mov bx,es:[si].mblk_ext_size
+    add bx,bx
+    add bx,OFFSET mblk_ext_arr
+    add bx,es:mblk_info_offset
+    mov ax,1000h
+    sub ax,bx
+    shr ax,cl
+    mov es:[si].mblk_free_bits,ax
+    dec ax
+    shr ax,3
+    inc ax
+    mov es:[si].mblk_bitmap_size,ax
+;
+    mov ax,es:[si].mblk_ext_size
+    add ax,ax
+    add ax,es:[si].mblk_bitmap_size
+    add ax,OFFSET mblk_ext_arr
+    add ax,es:mblk_info_offset
+    dec ax
+    mov cl,es:[si].mblk_size_shift
+    add cl,3
+    shr ax,cl
+    inc ax
+    shl ax,cl
+    mov es:[si].mblk_data_offset,ax
+;
+    mov bx,ax
+    mov ax,1000h
+    sub ax,bx
+    mov cl,es:[si].mblk_size_shift
+    shr ax,cl    
+    mov es:[si].mblk_free_bits,ax
+    dec ax
+    shr ax,5
+    inc ax
+    shl ax,2
+    mov es:[si].mblk_bitmap_size,ax
+;
+    mov bx,es:[si].mblk_data_offset
+    sub bx,ax
+    mov es:[si].mblk_bitmap_offset,bx
+; 
+    mov ax,es:[si].mblk_bitmap_offset
+    sub ax,OFFSET mblk_ext_arr
+    sub ax,es:mblk_info_offset
+    shr ax,1
+    mov es:[si].mblk_ext_size,ax
+;
+    mov bx,es:[si].mblk_free_bits
+    mov cl,3
+    shr bx,cl
+    mov ax,es:[si].mblk_bitmap_size
+    sub ax,bx
+    jz ibDone
+;
+    mov dl,-1
+    mov bx,es:[si].mblk_data_offset
+
+ibPadLoop:
+    dec bx
+    mov es:[bx],dl
+    sub ax,1
+    jnz ibPadLoop
+    
+ibDone:
+    popa
+    ret
+InitBlock     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           CreateMemBlk32
 ;
 ;   DESCRIPTION:    Create new 32-bit memory block
@@ -112,6 +221,8 @@ create_mem_blk32     Proc far
 ;
     pop ebx
     pop eax
+;
+    call InitBlock
     retf32
 create_mem_blk32     Endp    
 
@@ -141,6 +252,8 @@ create_mem_blk64     Proc far
 ;
     pop ebx
     pop eax
+;
+    call InitBlock
     retf32
 create_mem_blk64     Endp    
 

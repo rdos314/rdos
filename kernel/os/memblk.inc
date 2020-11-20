@@ -37,8 +37,13 @@ mem_blk_info	STRUC
 
 mblk_bitmap_offset   DW ?
 mblk_data_offset     DW ?
+mblk_bitmap_size     DW ?
 mblk_free_bits       DW ?
 mblk_size_shift      DB ?
+mblk_pad             DB ?
+mblk_ext_size        DW ?
+mblk_ext_count       DW ?
+mblk_ext_arr         DW ?
 
 mem_blk_info	ENDS
 

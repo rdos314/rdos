@@ -131,6 +131,12 @@ ehc_curr_cnt        DD 1024 DUP(?)
 
 ehci_func_sel    ENDS
 
+ehci_dev_sel     STRUC
+
+usb_dev_base        usb_device_struc <>
+
+ehci_dev_sel     ENDS
+
 ESP_FLAG_TRANSFER_PENDING   = 1
 ESP_FLAG_TRANSFER_OK        = 2
 ESP_FLAG_SINGLE             = 4
@@ -1618,9 +1624,8 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    int 3
     mov ax,32
-    mov si,SIZE usb_device_struc
+    mov si,SIZE ehci_dev_sel
     mov cx,16
 ;
     test ds:ehc_hcc_flags,1
