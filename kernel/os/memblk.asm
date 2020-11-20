@@ -32,7 +32,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE memblk.inc
 
-MEM_BLK_SIGN	= 0B45Ah
+MEM_BLK_SIGN    = 0B45Ah
 
     .386p
 
@@ -53,7 +53,7 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateBlock	Proc near
+CreateBlock     Proc near
     pushad
 ;
     push eax
@@ -87,7 +87,7 @@ CreateBlock	Proc near
 ;
     popad
     ret
-CreateBlock	Endp
+CreateBlock     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -170,12 +170,6 @@ ibShiftOk:
     mov bx,es:[si].mblk_data_offset
     sub bx,ax
     mov es:[si].mblk_bitmap_offset,bx
-; 
-    mov ax,es:[si].mblk_bitmap_offset
-    sub ax,OFFSET mblk_ext_arr
-    sub ax,es:mblk_info_offset
-    shr ax,1
-    mov es:[si].mblk_ext_size,ax
 ;
     mov bx,es:[si].mblk_free_bits
     mov cl,3
@@ -354,9 +348,9 @@ create_mem_blk64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           Extend
+;   NAME:           CreateExtend
 ;
-;   DESCRIPTION:    Extend  Memory block selector
+;   DESCRIPTION:    Create extend memory block selector
 ;
 ;   PARAMETERS:     ES      Memory block selector
 ;
@@ -364,7 +358,7 @@ create_mem_blk64     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Extend     Proc near
+CreateExtend     Proc near
     push es
     push ebx
     push ecx
@@ -375,17 +369,17 @@ Extend     Proc near
 ;
     mov al,es:[si].mblk_is64
     or al,al
-    jnz e64
+    jnz ce64
 ;
     AllocatePhysical32
     call CreateBlock
-    jmp eInit
+    jmp ceInit
 
-e64:
+ce64:
     AllocatePhysical64
     call CreateBlock
 
-eInit:
+ceInit:
     call InitExtend
     mov ax,es
 ;
@@ -394,7 +388,7 @@ eInit:
     pop ebx
     pop es
     ret
-Extend     Endp    
+CreateExtend     Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -410,7 +404,7 @@ Extend     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateBit1	Proc near
+AllocateBit1    Proc near
     push eax
     push ecx
     push edx
@@ -426,7 +420,15 @@ abLoop1:
 ;
     not eax
     bsf ecx,eax
-    jmp abFound1
+;
+    add cx,dx
+    mov bx,es:[si].mblk_bitmap_offset
+    lock bts es:[bx],cx
+    jc abLoop1
+;
+    mov bx,cx
+    clc
+    jmp abDone1
 
 abNext1:
     add dx,32
@@ -434,20 +436,13 @@ abNext1:
     loop abLoop1
 ;
     stc
-    jmp abDone1
-
-abFound1:
-    add dx,cx
-    mov bx,es:[si].mblk_bitmap_offset
-    bts es:[bx],dx
-    mov bx,dx
 
 abDone1:
     pop edx
     pop ecx
     pop eax
     ret
-AllocateBit1	Endp
+AllocateBit1    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -463,10 +458,11 @@ AllocateBit1	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateBit2	Proc near
+AllocateBit2    Proc near
     push eax
     push ecx
     push edx
+    push ebp
 ;
     mov bx,es:[si].mblk_bitmap_offset
     mov cx,es:[si].mblk_bitmap_dd_count
@@ -477,7 +473,7 @@ abLoop2:
     cmp eax,-1
     je abNext2
 ;
-    xor cx,cx
+    xor bp,bp
 
 abBitLoop2:
     rcr eax,1
@@ -485,14 +481,32 @@ abBitLoop2:
 ;
     rcr eax,1
     jc abBitNext2
-    jmp abFound2
+;
+    add bp,dx
+    mov ax,bp
+    mov bx,es:[si].mblk_bitmap_offset
+    lock bts es:[bx],ax
+    jc abLoop2
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc abBitRevert2
+;
+    mov bx,bp
+    clc
+    jmp abDone2
+
+abBitRevert2:
+    dec ax
+    lock btr es:[bx],ax
+    jmp abLoop2
 
 abSkip2:
     rcr eax,1
 
 abBitNext2:
-    add cx,2
-    cmp cx,32
+    add bp,2
+    cmp bp,32
     jne abBitLoop2
 
 abNext2:
@@ -501,25 +515,14 @@ abNext2:
     loop abLoop2
 ;
     stc
-    jmp abDone2
-
-abFound2:
-    add dx,cx
-    mov bx,es:[si].mblk_bitmap_offset
-    mov cx,dx
-    bts es:[bx],cx
-    jc abDone2
-;
-    inc cx
-    bts es:[bx],cx
-    mov bx,dx
 
 abDone2:
+    pop ebp
     pop edx
     pop ecx
     pop eax
     ret
-AllocateBit2	Endp
+AllocateBit2    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -535,7 +538,7 @@ AllocateBit2	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateExtendBit1	Proc near
+AllocateExtendBit1      Proc near
     push eax
     push ecx
     push edx
@@ -551,7 +554,15 @@ aebLoop1:
 ;
     not eax
     bsf ecx,eax
-    jmp aebFound1
+;    
+    add cx,dx
+    mov bx,es:mblke_bitmap_offset
+    lock bts es:[bx],cx
+    jc aebLoop1
+;
+    mov bx,cx
+    clc
+    jmp aebDone1
 
 aebNext1:
     add dx,32
@@ -559,13 +570,6 @@ aebNext1:
     loop aebLoop1
 ;
     stc
-    jmp aebDone1
-
-aebFound1:
-    add dx,cx
-    mov bx,es:mblke_bitmap_offset
-    bts es:[bx],dx
-    mov bx,dx
 
 aebDone1:
     pop edx
@@ -588,10 +592,11 @@ AllocateExtendBit1      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateExtendBit2	Proc near
+AllocateExtendBit2      Proc near
     push eax
     push ecx
     push edx
+    push ebp
 ;
     mov bx,es:mblke_bitmap_offset
     mov cx,es:mblke_bitmap_dd_count
@@ -602,7 +607,7 @@ aebLoop2:
     cmp eax,-1
     je aebNext2
 ;
-    xor cx,cx
+    xor bp,bp
 
 aebBitLoop2:
     rcr eax,1
@@ -610,14 +615,32 @@ aebBitLoop2:
 ;
     rcr eax,1
     jc aebBitNext2
-    jmp aebFound2
+;
+    add bp,dx
+    mov ax,bp
+    mov bx,es:mblke_bitmap_offset
+    lock bts es:[bx],ax
+    jc aebLoop2
+;
+    inc ax
+    lock bts es:[bx],ax
+    jc aebRevert2
+;
+    mov bx,bp
+    clc
+    jmp aebDone2
+
+aebRevert2:
+    dec ax
+    lock btr es:[bx],ax
+    jmp aebLoop2
 
 aebSkip2:
     rcr eax,1
 
 aebBitNext2:
-    add cx,2
-    cmp cx,32
+    add bp,2
+    cmp bp,32
     jne aebBitLoop2
 
 aebNext2:
@@ -626,25 +649,14 @@ aebNext2:
     loop aebLoop2
 ;
     stc
-    jmp aebDone2
-
-aebFound2:
-    add dx,cx
-    mov bx,es:mblke_bitmap_offset
-    mov cx,dx
-    bts es:[bx],cx
-    jc aebDone2
-;
-    inc cx
-    bts es:[bx],cx
-    mov bx,dx
 
 aebDone2:
+    pop ebp
     pop edx
     pop ecx
     pop eax
     ret
-AllocateExtendBit2	Endp
+AllocateExtendBit2      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -661,7 +673,7 @@ AllocateExtendBit2	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateBase	Proc near
+AllocateBase    Proc near
     push ecx
     push esi
 ;
@@ -687,14 +699,14 @@ ab1:
     call AllocateBit1
     jc abDone
 ;
-    sub es:[si].mblk_free_bits,1
+    lock sub es:[si].mblk_free_bits,1
     jmp abOk
 
 ab2:
     call AllocateBit2
     jc abDone
 ;
-    sub es:[si].mblk_free_bits,2
+    lock sub es:[si].mblk_free_bits,2
     jmp abOk
 
 abOk:
@@ -712,14 +724,14 @@ abDone:
     pop esi
     pop ecx
     ret
-AllocateBase	Endp
+AllocateBase    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;   NAME:           AllocateExtend
 ;
-;   DESCRIPTION:    Allocate in extended block
+;   DESCRIPTION:    Allocate from extended block
 ;
 ;   PARAMETERS:     ES      Extended memory block selector
 ;                   CX      Size
@@ -729,7 +741,7 @@ AllocateBase	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateExtend	Proc near
+AllocateExtend  Proc near
     push ecx
     push esi
 ;
@@ -758,19 +770,18 @@ aeSignOk:
 ;
     int 3
 
-
 ae1:
     call AllocateExtendBit1
     jc aeDone
 ;
-    sub es:mblke_free_bits,1
+    lock sub es:mblke_free_bits,1
     jmp aeOk
 
 ae2:
     call AllocateExtendBit2
     jc aeDone
 ;
-    sub es:mblke_free_bits,2
+    lock sub es:mblke_free_bits,2
     jmp aeOk
 
 aeOk:
@@ -788,7 +799,7 @@ aeDone:
     pop esi
     pop ecx
     ret
-AllocateExtend	Endp
+AllocateExtend  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -827,42 +838,49 @@ ambSignOk:
 
 ambExtend:
     mov si,es:mblk_info_offset
-    mov bp,es:[si].mblk_ext_count
-    or bp,bp
-    jz ambDoExtend
-;
+    mov bp,es:[si].mblk_ext_size
     lea di,[si].mblk_ext_arr
 
 ambExtendLoop:
+    mov ax,es:[di]
+    cmp ax,-1
+    stc
+    je ambExtendNext
+;
+    or ax,ax
+    jne ambCheck
+;
+    mov ax,-1
+    xchg ax,es:[di]
+    cmp ax,-1
+    stc
+    je ambExtendNext
+;
+    or ax,ax
+    jz ambAllocate
+;
+    mov es:[di],ax
+    jmp ambCheck
+
+ambAllocate:
+    call CreateExtend
+    mov es:[di],ax
+
+ambCheck:
     push es
-    mov es,es:[di]
+    mov es,ax
     call AllocateExtend
     pop es
+
+ambExtendNext:
     jnc ambDone
 ;
     add di,2
     sub bp,1
     jnz ambExtendLoop
-
-ambDoExtend:
-    mov bp,es:[si].mblk_ext_count
-    inc bp
-    cmp bp,es:[si].mblk_ext_size
-    jne ambNotFull
 ;
     int 3
     stc
-    jmp ambDone
-
-ambNotFull:
-    lea bx,[si].mblk_ext_arr
-    mov ax,es:[si].mblk_ext_count
-    add ax,ax
-    add bx,ax
-    call Extend
-    mov es:[bx],ax
-    inc es:[si].mblk_ext_count
-    jmp ambExtend
 
 ambDone:
     pop ebp
