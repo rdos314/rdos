@@ -20,68 +20,47 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; UTIL.ASM
-; Various utilities
+; MEMBLK.ASM
+; Memory block interface module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-INCLUDE protseg.def
-INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
+INCLUDE memblk.inc
 
-        .386p
-
-    extrn init_cpu_gates:near
-    extrn init_random:near
-    extrn init_crc:near
-    extrn init_time:near
-    extrn init_env:near
-    extrn init_wait:near
-    extrn init_swap:near
-    extrn init_io:near
-    extrn init_ldt:near
-    extrn init_chandle:near
-    extrn init_ser_io:near
-    extrn init_log:near
-    extrn init_mem_blk:near
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT
+;   NAME:           init_mem_blk
 ;
-;               DESCRIPTION:    Init driver
+;   DESCRIPTION:    Init memory block
 ;
-;               PARAMETERS:             
+;   PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    PROC far
-    call init_ldt
-    call init_chandle
-    call init_io
-    call init_swap
-    call init_cpu_gates
-    call init_random
-    call init_crc
-    call init_time
-    call init_env
-    call init_wait
-    call init_ser_io
-    call init_log
-    call init_mem_blk
+    public init_mem_blk
+    
+init_mem_blk   PROC near
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
     clc
-        ret
-init    ENDP
+;
+    ret
+init_mem_blk  ENDP
 
 code    ENDS
 
-        END init
+    END
