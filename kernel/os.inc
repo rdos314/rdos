@@ -959,6 +959,13 @@ CreateMemBlk64    MACRO
     OsGate create_mem_blk64_nr
                     ENDM
 
+;  IN  CX      Allocation size
+;  OUT EDX     Linear address
+;  OUT EBX:EAX Physical address
+AllocateMemBlk    MACRO
+    OsGate allocate_mem_blk_nr
+                    ENDM
+
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;       EAX         FYSISK ADDRESS

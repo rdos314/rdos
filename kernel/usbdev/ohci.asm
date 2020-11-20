@@ -2672,6 +2672,10 @@ CreateDev   Proc far
     mov cx,16
     CreateMemBlk32
 ;
+    int 3
+    mov cx,16
+    AllocateMemBlk
+;
     popad
 ;
     InitUsbDev

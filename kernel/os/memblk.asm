@@ -260,6 +260,27 @@ create_mem_blk64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateMemBlk
+;
+;   DESCRIPTION:    Allocate memory block
+;
+;   PARAMETERS:     CX      Size
+;
+;   RETURNS:        EDX     Linear address
+;                   EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_mem_blk_name    DB 'Allocate Mem Blk', 0
+
+allocate_mem_blk     Proc far
+    int 3
+    retf32
+allocate_mem_blk     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           init_mem_blk
 ;
 ;   DESCRIPTION:    Init memory block
@@ -285,6 +306,12 @@ init_mem_blk   PROC near
     mov edi,OFFSET create_mem_blk64_name
     xor cl,cl
     mov ax,create_mem_blk64_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_mem_blk
+    mov edi,OFFSET allocate_mem_blk_name
+    xor cl,cl
+    mov ax,allocate_mem_blk_nr
     RegisterOsGate
 ;
     clc
