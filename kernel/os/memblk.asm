@@ -635,6 +635,98 @@ AllocateBit4    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateByte
+;
+;   DESCRIPTION:    Allocate byte block
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   AX      Byte count
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateByte    Proc near
+    push eax
+    push ecx
+    push edx
+    push ebp    
+;
+    mov bp,ax
+    mov bx,es:[si].mblk_bitmap_offset
+    mov cx,es:[si].mblk_bitmap_dd_count
+    shl cx,2
+    mov dx,bp
+
+abtCheck:
+    mov al,es:[bx]
+    or al,al
+    jnz abtNext
+;
+    sub dx,1
+    jz abtTake
+;
+    inc bx
+    loop abtCheck
+;
+    stc
+    jmp abtDone
+
+abtTake:
+    mov al,-1
+    xchg al,es:[bx]
+    cmp al,-1
+    je abtRevert
+;
+    or al,al
+    jne abtRestore
+;
+    inc dx
+    cmp dx,bp
+    je abtTaken
+;
+    dec bx
+    jmp abtTake
+
+abtTaken:
+    sub bx,es:[si].mblk_bitmap_offset
+    shl bx,3
+    clc
+    jmp abtDone
+
+abtRestore:
+    mov es:[bx],al
+
+abtRevert:
+    or dx,dx
+    jz abtNext
+;
+    inc bx
+    dec dx
+    xor al,al
+    mov es:[bx],al
+    jmp abtRevert
+
+abtNext:
+    inc bx    
+    mov dx,bp
+    sub cx,1
+    jnz abtCheck
+;
+    stc
+
+abtDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateByte    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateExtendBit1
 ;
 ;   DESCRIPTION:    Allocate single bit block
@@ -877,6 +969,98 @@ AllocateExtendBit4    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateExtendByte
+;
+;   DESCRIPTION:    Allocate byte block
+;
+;   PARAMETERS:     ES      Extended memory block selector
+;                   AX      Byte count
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateExtendByte    Proc near
+    push eax
+    push ecx
+    push edx
+    push ebp    
+;
+    mov bp,ax
+    mov bx,es:mblke_bitmap_offset
+    mov cx,es:mblke_bitmap_dd_count
+    shl cx,2
+    mov dx,bp
+
+aebtCheck:
+    mov al,es:[bx]
+    or al,al
+    jnz aebtNext
+;
+    sub dx,1
+    jz aebtTake
+;
+    inc bx
+    loop aebtCheck
+;
+    stc
+    jmp aebtDone
+
+aebtTake:
+    mov al,-1
+    xchg al,es:[bx]
+    cmp al,-1
+    je aebtRevert
+;
+    or al,al
+    jne aebtRestore
+;
+    inc dx
+    cmp dx,bp
+    je aebtTaken
+;
+    dec bx
+    jmp aebtTake
+
+aebtTaken:
+    sub bx,es:mblke_bitmap_offset
+    shl bx,3
+    clc
+    jmp aebtDone
+
+aebtRestore:
+    mov es:[bx],al
+
+aebtRevert:
+    or dx,dx
+    jz aebtNext
+;
+    inc bx
+    dec dx
+    xor al,al
+    mov es:[bx],al
+    jmp aebtRevert
+
+aebtNext:
+    inc bx    
+    mov dx,bp
+    sub cx,1
+    jnz aebtCheck
+;
+    stc
+
+aebtDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateExtendByte    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateBase
 ;
 ;   DESCRIPTION:    Allocate in base block
@@ -912,7 +1096,14 @@ AllocateBase    Proc near
     shr ax,1
     jz ab4
 ;
-    int 3
+    shr ax,1
+    inc ax
+    call AllocateByte
+    jc abDone
+;
+    shl ax,3
+    lock sub es:[si].mblk_free_bits,ax
+    jmp abOk
 
 ab1:
     call AllocateBit1
@@ -997,7 +1188,14 @@ aeSignOk:
     shr ax,1
     jz ae4
 ;
-    int 3
+    shr ax,1
+    inc ax
+    call AllocateExtendByte
+    jc aeDone
+;
+    shl ax,3
+    lock sub es:[si].mblk_free_bits,ax
+    jmp aeOk
 
 ae1:
     call AllocateExtendBit1

@@ -2678,6 +2678,12 @@ cdLoop:
     mov cx,16
     AllocateMemBlk
 ;
+    mov cx,128
+    AllocateMemBlk
+;
+    mov cx,256
+    AllocateMemBlk
+;
     mov cx,64
     AllocateMemBlk
 ;
