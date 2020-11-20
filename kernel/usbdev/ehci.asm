@@ -40,7 +40,6 @@ INCLUDE usbdev.inc
 INCLUDE hub.inc
 
 MAX_USB_DEVICES = 16
-DEVICE_SIZE = 1000h
 
 ; ehc_flags
 
@@ -1619,54 +1618,22 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    mov eax,DEVICE_SIZE
-    AllocateBigLinear
+    int 3
+    mov ax,32
+    mov si,SIZE usb_device_struc
+    mov cx,16
 ;
-    mov ecx,DEVICE_SIZE SHR 12
     test ds:ehc_hcc_flags,1
     jz cd32
 
 cd64:
-    AllocatePhysical64
-    jmp cdHasPhys
+    CreateMemBlk64
+    jmp cdHasMemBlk
 
 cd32:    
-    AllocatePhysical32
+    CreateMemBlk32
 
-cdHasPhys:
-    push eax
-    push ebx
-    push edx
-;
-    mov ecx,DEVICE_SIZE SHR 12
-    mov al,63h
-
-cdLoop:
-    SetPageEntry
-    add eax,1000h
-    adc ebx,0
-    add edx,1000h
-    loop cdLoop
-;
-    pop edx
-;
-    AllocateGdt
-    mov ecx,DEVICE_SIZE
-    CreateDataSelector32
-    mov es,bx
-;
-    xor edi,edi
-    mov ecx,DEVICE_SIZE SHR 2
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    pop ebx
-    pop eax
-;
-    mov es:mblk_linear_base,edx
-    mov es:mblk_physical_base,eax
-    mov es:mblk_physical_base+4,ebx
-;
+cdHasMemBlk:
     popad
 ;
     InitUsbDev

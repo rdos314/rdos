@@ -947,8 +947,16 @@ AllocateFixedVMLinear   MACRO
 ;  IN  CX      Minimum additional blocks
 ;  IN  SI      Reserved size
 ;  OUT ES      Memory block selector
-CreateMemBlk    MACRO
-    OsGate create_mem_blk_nr
+CreateMemBlk32    MACRO
+    OsGate create_mem_blk32_nr
+                    ENDM
+
+;  IN  AX      Base allocation size
+;  IN  CX      Minimum additional blocks
+;  IN  SI      Reserved size
+;  OUT ES      Memory block selector
+CreateMemBlk64    MACRO
+    OsGate create_mem_blk64_nr
                     ENDM
 
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;

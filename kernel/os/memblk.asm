@@ -38,13 +38,60 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateBlock
+;
+;   DESCRIPTION:    Create new memory block
+;
+;   PARAMETERS:     EBX:EAX Physical address
+;
+;   RETURNS:        ES      Memory block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBlock	Proc near
+    pushad
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    push ebx
+;
+    mov al,63h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector32
+    mov es,bx
+;
+    xor edi,edi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop ebx
+    pop eax
+;
+    mov es:mblk_linear_base,edx
+    mov es:mblk_physical_base,eax
+    mov es:mblk_physical_base+4,ebx
+;
+    popad
+    ret
+CreateBlock	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           CreateMemBlk
+;   NAME:           CreateMemBlk32
 ;
-;   DESCRIPTION:    Create new memory block
+;   DESCRIPTION:    Create new 32-bit memory block
 ;
 ;   PARAMETERS:     AX      Base allocation size
 ;                   CX      Minimum additional blocks
@@ -54,11 +101,48 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_mem_blk_name    DB 'Create Mem Blk', 0
+create_mem_blk32_name    DB 'Create 32-bit Mem Blk', 0
 
-create_mem_blk     Proc far
+create_mem_blk32     Proc far
+    push eax
+    push ebx
+;
+    AllocatePhysical32
+    call CreateBlock
+;
+    pop ebx
+    pop eax
     retf32
-create_mem_blk     Endp    
+create_mem_blk32     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateMemBlk64
+;
+;   DESCRIPTION:    Create new 64-bit memory block
+;
+;   PARAMETERS:     AX      Base allocation size
+;                   CX      Minimum additional blocks
+;                   SI      Reserved size
+;
+;   RETURNS:        ES      Memory block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_mem_blk64_name    DB 'Create 64-bit Mem Blk', 0
+
+create_mem_blk64     Proc far
+    push eax
+    push ebx
+;
+    AllocatePhysical64
+    call CreateBlock
+;
+    pop ebx
+    pop eax
+    retf32
+create_mem_blk64     Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -78,10 +162,16 @@ init_mem_blk   PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET create_mem_blk
-    mov edi,OFFSET create_mem_blk_name
+    mov esi,OFFSET create_mem_blk32
+    mov edi,OFFSET create_mem_blk32_name
     xor cl,cl
-    mov ax,create_mem_blk_nr
+    mov ax,create_mem_blk32_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_mem_blk64
+    mov edi,OFFSET create_mem_blk64_name
+    xor cl,cl
+    mov ax,create_mem_blk64_nr
     RegisterOsGate
 ;
     clc

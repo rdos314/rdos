@@ -852,6 +852,7 @@ get_net_address_nr          = 743
 
 allocate_2m_physical_32_nr  = 744
 
-create_mem_blk_nr           = 745
+create_mem_blk32_nr         = 745
+create_mem_blk64_nr         = 746
 
 osgate_entries              = 750
