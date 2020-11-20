@@ -415,11 +415,6 @@ AllocateBit1	Proc near
     push ecx
     push edx
 ;
-    mov bx,es:[si].mblk_free_bits
-    or bx,bx
-    stc
-    jz abDone1
-;
     mov bx,es:[si].mblk_bitmap_offset
     mov cx,es:[si].mblk_bitmap_dd_count
     xor dx,dx
@@ -457,6 +452,205 @@ AllocateBit1	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateExtendBit1
+;
+;   DESCRIPTION:    Allocate single bit block
+;
+;   PARAMETERS:     ES          Extended memory block selector
+;
+;   RETURNS:        NC
+;                       BX      Memory bit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateExtendBit1	Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov bx,es:mblke_bitmap_offset
+    mov cx,es:mblke_bitmap_dd_count
+    xor dx,dx
+
+aebLoop1:
+    mov eax,es:[bx]
+    cmp eax,-1
+    je aebNext1
+;
+    not eax
+    bsf ecx,eax
+    jmp aebFound1
+
+aebNext1:
+    add dx,32
+    add bx,4
+    loop aebLoop1
+;
+    stc
+    jmp aebDone1
+
+aebFound1:
+    add dx,cx
+    mov bx,es:mblke_bitmap_offset
+    bts es:[bx],dx
+    mov bx,dx
+
+aebDone1:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateExtendBit1      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AllocateBase
+;
+;   DESCRIPTION:    Allocate in base block
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   CX      Size
+;
+;   RETURNS:        EDX     Linear address
+;                   EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBase	Proc near
+    push ecx
+    push esi
+;
+    mov si,es:mblk_info_offset
+;
+    mov bx,es:[si].mblk_free_bits
+    or bx,bx
+    stc
+    jz abDone
+;
+    mov ax,cx
+    mov cl,es:[si].mblk_size_shift
+    dec ax
+    shr ax,cl
+    jz ab1
+;
+    int 3
+    shr ax,1
+    jz ab2
+;
+    int 3
+
+ab1:
+    call AllocateBit1
+    jc abDone
+;
+    sub es:[si].mblk_free_bits,1
+    jmp abOk
+
+ab2:
+;    call AllocateBit2
+    jc abDone
+;
+    sub es:[si].mblk_free_bits,2
+    jmp abOk
+
+abOk:
+    shl bx,cl
+    add bx,es:[si].mblk_data_offset
+    movzx ecx,bx
+    mov edx,es:mblk_linear_base
+    add edx,ecx
+    mov eax,es:mblk_physical_base
+    add eax,ecx
+    mov ebx,es:mblk_physical_base+4
+    clc
+
+abDone:
+    pop esi
+    pop ecx
+    ret
+AllocateBase	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AllocateExtend
+;
+;   DESCRIPTION:    Allocate in extended block
+;
+;   PARAMETERS:     ES      Extended memory block selector
+;                   CX      Size
+;
+;   RETURNS:        EDX     Linear address
+;                   EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateExtend	Proc near
+    push ecx
+    push esi
+;
+    mov ax,es:mblk_sign
+    cmp ax,MEM_BLK_SIGN
+    je aeSignOk
+;
+    int 3
+    stc
+    jmp aeDone
+
+aeSignOk:
+    mov ax,es:mblke_free_bits
+    or ax,ax
+    stc
+    jz aeDone
+;
+    mov ax,cx
+    mov cl,es:mblke_size_shift
+    dec ax
+    shr ax,cl
+    je ae1
+;
+    int 3
+    shr ax,1
+    jz ae2
+;
+    int 3
+
+
+ae1:
+    call AllocateExtendBit1
+    jc aeDone
+;
+    sub es:mblke_free_bits,1
+    jmp aeOk
+
+ae2:
+;    call AllocateExtendBit2
+    jc aeDone
+;
+    sub es:mblke_free_bits,2
+    jmp aeOk
+
+aeOk:
+    shl bx,cl
+    add bx,es:mblke_data_offset
+    movzx ecx,bx
+    mov edx,es:mblk_linear_base
+    add edx,ecx
+    mov eax,es:mblk_physical_base
+    add eax,ecx
+    mov ebx,es:mblk_physical_base+4
+    clc
+
+aeDone:
+    pop esi
+    pop ecx
+    ret
+AllocateExtend	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           AllocateMemBlk
 ;
 ;   DESCRIPTION:    Allocate memory block
@@ -473,45 +667,65 @@ allocate_mem_blk_name    DB 'Allocate Mem Blk', 0
 
 allocate_mem_blk     Proc far
     push ecx
+    push esi
+    push edi
+    push ebp
 ;
     mov ax,es:mblk_sign
     cmp ax,MEM_BLK_SIGN
-    stc
-    jne ambDone
-;
-    mov si,es:mblk_info_offset
-    mov ax,cx
-    mov cl,es:[si].mblk_size_shift
-    dec ax
-    shr ax,cl
-    or al,al
-    je amb1
+    je ambSignOk
 ;
     int 3
+    stc
+    jmp ambDone
 
-amb1:
-    call AllocateBit1
-    jc ambExtend
-;
-    sub es:[si].mblk_free_bits,1
-    jmp ambOk
+ambSignOk:
+    call AllocateBase
+    jnc ambDone
 
 ambExtend:
-    int 3
-    call Extend
+    mov si,es:mblk_info_offset
+    mov bp,es:[si].mblk_ext_count
+    or bp,bp
+    jz ambDoExtend
+;
+    lea di,[si].mblk_ext_arr
 
-ambOk:
-    shl bx,cl
-    add bx,es:[si].mblk_data_offset
-    movzx ecx,bx
-    mov edx,es:mblk_linear_base
-    add edx,ecx
-    mov eax,es:mblk_physical_base
-    add eax,ecx
-    mov ebx,es:mblk_physical_base+4
-    clc
+ambExtendLoop:
+    push es
+    mov es,es:[di]
+    call AllocateExtend
+    pop es
+    jnc ambDone
+;
+    add di,2
+    sub bp,1
+    jnz ambExtendLoop
+
+ambDoExtend:
+    mov bp,es:[si].mblk_ext_count
+    inc bp
+    cmp bp,es:[si].mblk_ext_size
+    jne ambNotFull
+;
+    int 3
+    stc
+    jmp ambDone
+
+ambNotFull:
+    lea bx,[si].mblk_ext_arr
+    mov ax,es:[si].mblk_ext_count
+    add ax,ax
+    add bx,ax
+    call Extend
+    mov es:[bx],ax
+    inc es:[si].mblk_ext_count
+    jmp ambExtend
 
 ambDone:
+    pop ebp
+    pop edi
+    pop esi
     pop ecx
     retf32
 allocate_mem_blk     Endp    
