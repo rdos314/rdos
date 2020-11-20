@@ -941,6 +941,16 @@ AllocateFixedVMLinear   MACRO
     OsGate allocate_fixed_vm_linear_nr
                     ENDM
 
+;;;;;;;;;;;;; MEMORY BLOCK MANAGEMENT ;;;;;;;;;;
+
+;  IN  AX      Base allocation size
+;  IN  CX      Minimum additional blocks
+;  IN  SI      Reserved size
+;  OUT ES      Memory block selector
+CreateMemBlk    MACRO
+    OsGate create_mem_blk_nr
+                    ENDM
+
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;       EAX         FYSISK ADDRESS

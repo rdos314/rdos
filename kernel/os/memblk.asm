@@ -38,6 +38,28 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateMemBlk
+;
+;   DESCRIPTION:    Create new memory block
+;
+;   PARAMETERS:     AX      Base allocation size
+;                   CX      Minimum additional blocks
+;                   SI      Reserved size
+;
+;   RETURNS:        ES      Memory block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_mem_blk_name    DB 'Create Mem Blk', 0
+
+create_mem_blk     Proc far
+    retf32
+create_mem_blk     Endp    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -55,6 +77,12 @@ init_mem_blk   PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET create_mem_blk
+    mov edi,OFFSET create_mem_blk_name
+    xor cl,cl
+    mov ax,create_mem_blk_nr
+    RegisterOsGate
 ;
     clc
 ;
