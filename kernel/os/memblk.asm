@@ -1195,7 +1195,7 @@ aeSignOk:
     jc aeDone
 ;
     shl ax,3
-    lock sub es:[si].mblk_free_bits,ax
+    lock sub es:mblke_free_bits,ax
     jmp aeOk
 
 ae1:
@@ -1510,6 +1510,7 @@ linear_to_physical_mem_blk     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBase    Proc near
+    mov si,es:mblk_info_offset
     mov di,es:[si].mblk_bitmap_offset
     mov bx,ax
     sub bx,es:[si].mblk_data_offset
@@ -1564,6 +1565,7 @@ fb1:
     lock btr es:[di],bx
     jc fb1Ok1
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1575,6 +1577,7 @@ fb2:
     lock btr es:[di],bx
     jc fb2Ok1
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1583,6 +1586,7 @@ fb2Ok1:
     lock btr es:[di],bx
     jc fb2Ok2
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1594,6 +1598,7 @@ fb4:
     lock btr es:[di],bx
     jc fb4Ok1
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1602,6 +1607,7 @@ fb4Ok1:
     lock btr es:[di],bx
     jc fb4Ok2
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1610,6 +1616,7 @@ fb4Ok2:
     lock btr es:[di],bx
     jc fb4Ok3
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1618,6 +1625,7 @@ fb4Ok3:
     lock btr es:[di],bx
     jc fb4Ok4
 ;
+    int 3
     stc
     jmp fbDone
 
@@ -1643,6 +1651,129 @@ FreeBase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeExt    Proc near
+    mov di,es:mblke_bitmap_offset
+    mov bx,ax
+    sub bx,es:mblke_data_offset
+    jnc feBaseOk
+;
+    int 3
+    stc
+    jmp feDone
+
+feBaseOk:
+    mov ax,cx
+    mov cl,es:mblke_size_shift
+    shr bx,cl
+;
+    dec ax
+    shr ax,cl
+    jz fe1
+;
+    shr ax,1
+    jz fe2
+;
+    shr ax,1
+    jz fe4
+;
+    shr ax,1
+    inc ax
+;
+    shr bx,3
+    add di,bx
+    mov cx,ax
+
+feByteLoop:
+    xor dl,dl
+    xchg dl,es:[di]
+    cmp dl,-1
+    je feByteNext
+;
+    int 3
+    stc
+    jmp feDone
+
+feByteNext:
+    inc di
+    loop feByteLoop
+;
+    shl ax,3    
+    lock add es:mblke_free_bits,ax
+    clc
+    jmp feDone
+
+fe1:
+    lock btr es:[di],bx
+    jc fe1Ok1
+;
+    int 3
+    stc
+    jmp feDone
+
+fe1Ok1:
+    lock add es:mblke_free_bits,1
+    jmp feDone
+
+fe2:
+    lock btr es:[di],bx
+    jc fe2Ok1
+;
+    int 3
+    stc
+    jmp feDone
+
+fe2Ok1:
+    inc bx
+    lock btr es:[di],bx
+    jc fe2Ok2
+;
+    int 3
+    stc
+    jmp feDone
+
+fe2Ok2:
+    lock add es:mblke_free_bits,2
+    jmp feDone
+
+fe4:
+    lock btr es:[di],bx
+    jc fe4Ok1
+;
+    int 3
+    stc
+    jmp feDone
+
+fe4Ok1:
+    inc bx
+    lock btr es:[di],bx
+    jc fe4Ok2
+;
+    int 3
+    stc
+    jmp feDone
+
+fe4Ok2:
+    inc bx
+    lock btr es:[di],bx
+    jc fe4Ok3
+;
+    int 3
+    stc
+    jmp feDone
+
+fe4Ok3:
+    inc bx
+    lock btr es:[di],bx
+    jc fe4Ok4
+;
+    int 3
+    stc
+    jmp feDone
+
+fe4Ok4:
+    lock add es:mblke_free_bits,4
+    clc
+
+feDone:
     ret
 FreeExt    Endp
 
