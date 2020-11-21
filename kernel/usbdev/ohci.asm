@@ -2678,6 +2678,10 @@ cdLoop:
     mov cx,16
     AllocateMemBlk
 ;
+    PhysicalToLinearMemBlk
+    LinearToPhysicalMemBlk
+    FreePhysicalMemBlk
+;
     mov cx,128
     AllocateMemBlk
 ;
@@ -2689,6 +2693,7 @@ cdLoop:
 ;
     mov cx,32
     AllocateMemBlk
+    FreeLinearMemBlk
     jmp cdLoop
 ;
     popad

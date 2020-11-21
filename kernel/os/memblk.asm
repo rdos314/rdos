@@ -1327,6 +1327,84 @@ allocate_mem_blk     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           PhysicalToLinearMemBlk
+;
+;   DESCRIPTION:    Convert between physical and linear address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EBX:EAX Physical address
+;
+;   RETURNS:        EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+physical_to_linear_mem_blk_name    DB 'Physical To Linear Mem Blk', 0
+
+physical_to_linear_mem_blk     Proc far
+    retf32
+physical_to_linear_mem_blk     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LinearToPhysicalMemBlk
+;
+;   DESCRIPTION:    Convert between linear and physical address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EDX     Linear address
+;
+;   RETURNS:        EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+linear_to_physical_mem_blk_name    DB 'Linear To Physical Mem Blk', 0
+
+linear_to_physical_mem_blk     Proc far
+    retf32
+linear_to_physical_mem_blk     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreePhysicalMemBlk
+;
+;   DESCRIPTION:    Free mem block based on physical address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EBX:EAX Physical address
+;                   CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_physical_mem_blk_name    DB 'Free Physical Mem Blk', 0
+
+free_physical_mem_blk     Proc far
+    retf32
+free_physical_mem_blk     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeLinearMemBlk
+;
+;   DESCRIPTION:    Free mem block based on linear address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EDX     Linear address
+;                   CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_linear_mem_blk_name    DB 'Free Linear Mem Blk', 0
+
+free_linear_mem_blk     Proc far
+    retf32
+free_linear_mem_blk     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           init_mem_blk
 ;
 ;   DESCRIPTION:    Init memory block
@@ -1360,8 +1438,30 @@ init_mem_blk   PROC near
     mov ax,allocate_mem_blk_nr
     RegisterOsGate
 ;
-    clc
+    mov esi,OFFSET linear_to_physical_mem_blk
+    mov edi,OFFSET linear_to_physical_mem_blk_name
+    xor cl,cl
+    mov ax,linear_to_physical_mem_blk_nr
+    RegisterOsGate
 ;
+    mov esi,OFFSET physical_to_linear_mem_blk
+    mov edi,OFFSET physical_to_linear_mem_blk_name
+    xor cl,cl
+    mov ax,physical_to_linear_mem_blk_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_physical_mem_blk
+    mov edi,OFFSET free_physical_mem_blk_name
+    xor cl,cl
+    mov ax,free_physical_mem_blk_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_linear_mem_blk
+    mov edi,OFFSET free_linear_mem_blk_name
+    xor cl,cl
+    mov ax,free_linear_mem_blk_nr
+    RegisterOsGate
+    clc
     ret
 init_mem_blk  ENDP
 

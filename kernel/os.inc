@@ -967,6 +967,34 @@ AllocateMemBlk    MACRO
     OsGate allocate_mem_blk_nr
                     ENDM
 
+;  IN  ES      Memory block selector
+;  IN  EBX:EAX Physical address
+;  OUT EDX     Linear address
+PhysicalToLinearMemBlk    MACRO
+    OsGate physical_to_linear_mem_blk_nr
+                    ENDM
+
+;  IN  ES      Memory block selector
+;  IN  EDX     Linear address
+;  OUT EBX:EAX Physical address
+LinearToPhysicalMemBlk    MACRO
+    OsGate linear_to_physical_mem_blk_nr
+                    ENDM
+
+;  IN  ES      Memory block selector
+;  IN  EBX:EAX Physical address
+;  IN  CX      Allocation size
+FreePhysicalMemBlk    MACRO
+    OsGate free_physical_mem_blk_nr
+                    ENDM
+
+;  IN  ES      Memory block selector
+;  IN  EDX     Linear address
+;  IN  CX      Allocation size
+FreeLinearMemBlk    MACRO
+    OsGate free_linear_mem_blk_nr
+                    ENDM
+
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;       EAX         FYSISK ADDRESS
