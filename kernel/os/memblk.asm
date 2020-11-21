@@ -1499,6 +1499,40 @@ linear_to_physical_mem_blk     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           FreeBase
+;
+;   DESCRIPTION:    Free in base block
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   AX      Offset
+;                   CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBase    Proc near
+    ret
+FreeBase    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeExt
+;
+;   DESCRIPTION:    Free in extended block
+;
+;   PARAMETERS:     ES      Extended memory block selector
+;                   AX      Offset
+;                   CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeExt    Proc near
+    ret
+FreeExt    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           FreePhysicalMemBlk
 ;
 ;   DESCRIPTION:    Free mem block based on physical address
@@ -1512,6 +1546,78 @@ linear_to_physical_mem_blk     Endp
 free_physical_mem_blk_name    DB 'Free Physical Mem Blk', 0
 
 free_physical_mem_blk     Proc far
+    push ds
+    push es
+    pushad
+;
+    mov dx,ax
+    and dx,0FFFh
+;
+    and ax,0F000h
+    cmp eax,es:mblk_physical_base
+    jne fpCheckExt
+;
+    cmp ebx,es:mblk_physical_base+4
+    jne fpCheckExt
+;
+    mov ax,dx
+    call FreeBase
+    jmp fpDone
+    
+fpCheckExt:
+    mov bp,cx
+    mov si,es
+    mov ds,si
+;
+    mov si,ds:mblk_info_offset
+    mov cx,ds:[si].mblk_ext_count
+    or cx,cx
+    jnz fpDoCheck
+;
+    int 3
+    stc
+    jmp fpDone
+
+fpDoCheck:
+    lea di,[si].mblk_ext_arr 
+
+fpExtLoop:
+    push cx
+;
+    mov cx,ds:[di]
+    or cx,cx
+    jz fpExtNext
+;
+    cmp cx,-1
+    je fpExtNext
+;
+    mov es,cx
+;
+    cmp eax,es:mblk_physical_base
+    jne fpExtNext
+;
+    cmp ebx,es:mblk_physical_base+4
+    jne fpExtNext
+;
+    mov ax,dx
+    mov cx,bp
+    call FreeExt
+;
+    pop cx
+    jmp fpDone
+
+fpExtNext:
+    pop cx
+    add di,2
+    loop fpExtLoop
+;
+    int 3
+    stc
+
+fpDone:
+    popad
+    pop es
+    pop ds
     retf32
 free_physical_mem_blk     Endp
 
