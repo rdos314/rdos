@@ -2675,26 +2675,29 @@ CreateDev   Proc far
     int 3
 
 cdLoop:
-    mov cx,16
+    mov cx,32
     AllocateMemBlk
-;
-    PhysicalToLinearMemBlk
-    LinearToPhysicalMemBlk
+    mov ebp,edx
 ;
     mov cx,128
     AllocateMemBlk
-    FreePhysicalMemBlk
 ;
     mov cx,256
     AllocateMemBlk
-    FreeLinearMemBlk
+    mov esi,edx
 ;
     mov cx,64
     AllocateMemBlk
-    FreeLinearMemBlk
+;
+    mov cx,16
+    AllocateMemBlk
 ;
     mov cx,32
-    AllocateMemBlk
+    mov edx,ebp
+    FreeLinearMemBlk
+;
+    mov cx,256
+    mov edx,esi
     FreeLinearMemBlk
     jmp cdLoop
 ;
