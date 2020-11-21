@@ -42,6 +42,7 @@ mblk_bitmap_dd_count DW ?
 mblk_free_bits       DW ?
 mblk_size_shift      DB ?
 mblk_is64            DB ?
+mblk_ext_count       DW ?
 mblk_ext_size        DW ?
 mblk_ext_arr         DW ?
 

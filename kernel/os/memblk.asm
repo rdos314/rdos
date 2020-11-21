@@ -114,6 +114,7 @@ InitBlock     Proc near
 ibStartOk:
     mov es:mblk_info_offset,si
     mov es:[si].mblk_ext_size,cx
+    mov es:[si].mblk_ext_count,0
 ;
     xor cl,cl
     dec ax
@@ -1299,6 +1300,7 @@ ambExtendLoop:
 ambAllocate:
     call CreateExtend
     mov es:[di],ax
+    lock add es:[si].mblk_ext_count,1
 
 ambCheck:
     push es
@@ -1341,6 +1343,74 @@ allocate_mem_blk     Endp
 physical_to_linear_mem_blk_name    DB 'Physical To Linear Mem Blk', 0
 
 physical_to_linear_mem_blk     Proc far
+    push es
+    push eax
+;
+    and ax,0F000h
+    cmp eax,es:mblk_physical_base
+    jne ptlCheckExt
+;
+    cmp ebx,es:mblk_physical_base+4
+    clc
+    je ptlDone
+
+ptlCheckExt:
+    push ds
+    push ecx
+    push esi
+    push edi
+;
+    mov dx,es
+    mov ds,dx
+;
+    mov si,ds:mblk_info_offset
+    mov cx,ds:[si].mblk_ext_count
+    or cx,cx
+    stc
+    jz ptlExtDone
+;
+    lea di,[si].mblk_ext_arr 
+
+ptlExtLoop:
+    mov dx,ds:[di]
+    or dx,dx
+    jz ptlExtNext
+;
+    cmp dx,-1
+    je ptlExtNext
+;
+    mov es,dx
+;
+    cmp eax,es:mblk_physical_base
+    jne ptlExtNext
+;
+    cmp ebx,es:mblk_physical_base+4
+    clc
+    je ptlExtDone
+
+ptlExtNext:
+    add di,2
+    loop ptlExtLoop
+;
+    stc
+
+ptlExtDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+
+ptlDone:
+    pop eax
+    jc ptlPop
+;
+    movzx edx,ax
+    and dx,0FFFh
+    or edx,es:mblk_linear_base
+    clc
+
+ptlPop:
+    pop es
     retf32
 physical_to_linear_mem_blk     Endp
 
