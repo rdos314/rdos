@@ -2680,16 +2680,18 @@ cdLoop:
 ;
     PhysicalToLinearMemBlk
     LinearToPhysicalMemBlk
-    FreePhysicalMemBlk
 ;
     mov cx,128
     AllocateMemBlk
+    FreePhysicalMemBlk
 ;
     mov cx,256
     AllocateMemBlk
+    FreeLinearMemBlk
 ;
     mov cx,64
     AllocateMemBlk
+    FreeLinearMemBlk
 ;
     mov cx,32
     AllocateMemBlk

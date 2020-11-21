@@ -1510,6 +1510,122 @@ linear_to_physical_mem_blk     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBase    Proc near
+    mov di,es:[si].mblk_bitmap_offset
+    mov bx,ax
+    sub bx,es:[si].mblk_data_offset
+    jnc fbBaseOk
+;
+    int 3
+    stc
+    jmp fbDone
+
+fbBaseOk:
+    mov ax,cx
+    mov cl,es:[si].mblk_size_shift
+    shr bx,cl
+;
+    dec ax
+    shr ax,cl
+    jz fb1
+;
+    shr ax,1
+    jz fb2
+;
+    shr ax,1
+    jz fb4
+;
+    shr ax,1
+    inc ax
+;
+    shr bx,3
+    add di,bx
+    mov cx,ax
+
+fbByteLoop:
+    xor dl,dl
+    xchg dl,es:[di]
+    cmp dl,-1
+    je fbByteNext
+;
+    int 3
+    stc
+    jmp fbDone
+
+fbByteNext:
+    inc di
+    loop fbByteLoop
+;
+    shl ax,3    
+    lock add es:[si].mblk_free_bits,ax
+    clc
+    jmp fbDone
+
+fb1:
+    lock btr es:[di],bx
+    jc fb1Ok1
+;
+    stc
+    jmp fbDone
+
+fb1Ok1:
+    lock add es:[si].mblk_free_bits,1
+    jmp fbDone
+
+fb2:
+    lock btr es:[di],bx
+    jc fb2Ok1
+;
+    stc
+    jmp fbDone
+
+fb2Ok1:
+    inc bx
+    lock btr es:[di],bx
+    jc fb2Ok2
+;
+    stc
+    jmp fbDone
+
+fb2Ok2:
+    lock add es:[si].mblk_free_bits,2
+    jmp fbDone
+
+fb4:
+    lock btr es:[di],bx
+    jc fb4Ok1
+;
+    stc
+    jmp fbDone
+
+fb4Ok1:
+    inc bx
+    lock btr es:[di],bx
+    jc fb4Ok2
+;
+    stc
+    jmp fbDone
+
+fb4Ok2:
+    inc bx
+    lock btr es:[di],bx
+    jc fb4Ok3
+;
+    stc
+    jmp fbDone
+
+fb4Ok3:
+    inc bx
+    lock btr es:[di],bx
+    jc fb4Ok4
+;
+    stc
+    jmp fbDone
+
+fb4Ok4:
+    lock add es:[si].mblk_free_bits,4
+    clc
+
+fbDone:
     ret
 FreeBase    Endp
 
