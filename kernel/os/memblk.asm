@@ -1637,6 +1637,65 @@ free_physical_mem_blk     Endp
 free_linear_mem_blk_name    DB 'Free Linear Mem Blk', 0
 
 free_linear_mem_blk     Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,dx
+    and ax,0FFFh
+;
+    and dx,0F000h
+    cmp edx,es:mblk_linear_base
+    jne flCheckExt
+;
+    call FreeBase
+    jmp flDone
+    
+flCheckExt:
+    mov bp,cx
+    mov si,es
+    mov ds,si
+;
+    mov si,ds:mblk_info_offset
+    mov cx,ds:[si].mblk_ext_count
+    or cx,cx
+    jnz flDoCheck
+;
+    int 3
+    stc
+    jmp flDone
+
+flDoCheck:
+    lea di,[si].mblk_ext_arr 
+
+flExtLoop:
+    mov bx,ds:[di]
+    or bx,bx
+    jz flExtNext
+;
+    cmp bx,-1
+    je flExtNext
+;
+    mov es,bx
+;
+    cmp edx,es:mblk_linear_base
+    jne flExtNext
+;
+    mov cx,bp
+    call FreeExt
+    jmp flDone
+
+flExtNext:
+    add di,2
+    loop flExtLoop
+;
+    int 3
+    stc
+
+flDone:
+    popad
+    pop es
+    pop ds
     retf32
 free_linear_mem_blk     Endp
 
