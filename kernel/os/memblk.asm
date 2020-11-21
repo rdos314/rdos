@@ -1431,6 +1431,68 @@ physical_to_linear_mem_blk     Endp
 linear_to_physical_mem_blk_name    DB 'Linear To Physical Mem Blk', 0
 
 linear_to_physical_mem_blk     Proc far
+    push es
+    push edx
+;
+    and dx,0F000h
+    cmp edx,es:mblk_linear_base
+    clc
+    je ltpDone
+;
+    push ds
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,es
+    mov ds,ax
+;
+    mov si,ds:mblk_info_offset
+    mov cx,ds:[si].mblk_ext_count
+    or cx,cx
+    stc
+    jz ltpExtDone
+;
+    lea di,[si].mblk_ext_arr 
+
+ltpExtLoop:
+    mov ax,ds:[di]
+    or ax,ax
+    jz ltpExtNext
+;
+    cmp ax,-1
+    je ltpExtNext
+;
+    mov es,ax
+;
+    cmp edx,es:mblk_linear_base
+    clc
+    je ltpExtDone
+
+ltpExtNext:
+    add di,2
+    loop ltpExtLoop
+;
+    stc
+
+ltpExtDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+
+ltpDone:
+    pop edx
+    jc ltpPop
+;
+    movzx eax,dx
+    and ax,0FFFh
+    or eax,es:mblk_physical_base
+    mov ebx,es:mblk_physical_base+4
+    clc
+
+ltpPop:
+    pop es
     retf32
 linear_to_physical_mem_blk     Endp
 
