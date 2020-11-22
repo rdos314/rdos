@@ -26,7 +26,7 @@ void main()
     int size;
     char buf[8];
 
-    handle = RdosOpenUsbDevice(1, 2);  
+    handle = RdosOpenUsbDevice(7, 1);
     size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x100, 0, buf, 8);
     RdosCloseUsbDevice(handle);
 

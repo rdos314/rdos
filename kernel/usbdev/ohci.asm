@@ -35,6 +35,7 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\memblk.inc
+INCLUDE usb.inc
 INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
@@ -172,7 +173,12 @@ ohci_func_sel    ENDS
 
 ohci_dev_sel   STRUC
 
-usb_dev_base    usb_device_struc <>
+usb_dev_base       usb_device_struc <>
+
+dev_control_ed     DD ?
+dev_control_tail   DD ?
+dev_control_head   DD ?
+dev_maxlen         DW ?
 
 ohci_dev_sel   ENDS
 
@@ -1236,10 +1242,13 @@ CreateInterrupt Endp
 
 CreateControl   Proc far
     push es
+    push gs
     pushad
-;    
+;
     mov ah,es:usbd_speed
     push ax
+    mov ax,es
+    mov gs,ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
     xor di,di
@@ -1264,7 +1273,11 @@ CreateControl   Proc far
     mov fs:osp_ed,edx
     call InsertPipe
 ;
+    mov gs:dev_control_ed,edx
+    mov gs:dev_maxlen,8
+;
     popad
+    pop gs
     pop es
     retf32
 CreateControl   Endp
@@ -2547,6 +2560,143 @@ IssueOne   Endp
 
 ControlMsg   Proc far
     int 3
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov edx,es:dev_control_head
+    or cx,cx
+    jz cmZeroSize
+;
+    mov esi,edx
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_flags,0F2E4h
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+;
+    mov ebx,OFFSET usbd_control_buf
+    mov eax,ebx
+    add eax,es:mblk_physical_base
+    mov fs:[edx].otd_cbp,eax
+;    
+    add eax,7
+    mov fs:[edx].otd_be,eax
+;
+    mov al,es:[ebx].usd_type
+    test al,80h
+    jz cmDataOut
+
+cmDataLoop:
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+    jc cmClean
+;
+    mov fs:[esi].otd_next_td,eax
+    mov fs:[esi].otd_next_va,edx
+    mov esi,edx
+    mov fs:[esi].otd_resv,0
+    mov fs:[esi].otd_flags,0F0F4h
+    mov fs:[esi].otd_next_td,0
+    mov fs:[esi].otd_cbp,0
+    mov fs:[esi].otd_next_va,0
+    mov fs:[esi].otd_buffer_va,0
+;
+    mov bx,cx
+    cmp bx,es:dev_maxlen
+    jb cmInMinOk
+;
+    mov bx,es:dev_maxlen
+
+cmInMinOk:
+    push bx
+    push cx
+    mov cx,bx
+    AllocateMemBlk
+    pop cx
+    pop bx
+    jc cmClean
+;
+    mov fs:[esi].otd_cbp,eax
+    mov fs:[esi].otd_buffer_va,edx
+    mov fs:[esi].otd_buffer_size,bx
+;
+    add ax,bx
+    dec ax
+    mov fs:[esi].otd_be,eax
+;
+    sub cx,bx
+    jnz cmDataLoop
+;    
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+    jc cmClean
+;
+    mov fs:[esi].otd_next_td,eax
+    mov fs:[esi].otd_next_va,edx
+    mov esi,edx
+    mov fs:[esi].otd_resv,0
+    mov fs:[esi].otd_flags,0F3ECh
+    mov fs:[esi].otd_cbp,0
+    mov fs:[esi].otd_be,0
+    mov edx,es:dev_control_ed
+    mov eax,es:dev_control_tail
+    mov fs:[edx].oes_tailp,eax
+    mov fs:[esi].otd_next_td,eax
+    mov fs:[esi].otd_next_va,0
+    mov fs:[esi].otd_buffer_va,0
+    mov edx,es:dev_control_head
+    LinearToPhysicalMemBlk
+    jc cmClean
+;
+    mov edx,es:dev_control_ed
+    mov fs:[edx].oes_headp,eax
+    and fs:[edx].oes_fa_en,NOT 4000h
+;
+    push ds
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,2
+    mov ds:HcCommandStatus,eax
+    pop ds
+;
+    jmp cmClean
+
+
+
+cmDataOut:
+    int 3
+
+cmZeroSize:
+    int 3
+
+cmClean:
+    int 3
+    mov esi,es:dev_control_head
+    mov esi,fs:[esi].otd_next_va
+
+cmCleanLoop:
+    or esi,esi
+    jz cmDone
+;
+    mov edx,fs:[esi].otd_buffer_va
+    or edx,edx
+    jz cmBufferOk
+;
+    mov cx,fs:[esi].otd_buffer_size
+    FreeLinearMemBlk
+
+cmBufferOk:
+    xchg edx,esi
+    mov esi,fs:[edx].otd_next_va
+;
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    jmp cmCleanLoop
+
+cmDone:
     ret
 ControlMsg   Endp
 
@@ -2667,43 +2817,42 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    mov ax,16
+    mov ax,SIZE ohc_td_struc
     mov si,SIZE ohci_dev_sel
     mov cx,16
     CreateMemBlk32
 ;
-    int 3
-
-cdLoop:
-    mov cx,32
-    AllocateMemBlk
-    mov ebp,edx
-;
-    mov cx,128
-    AllocateMemBlk
-;
-    mov cx,256
-    AllocateMemBlk
-    mov esi,edx
-;
-    mov cx,64
-    AllocateMemBlk
-;
-    mov cx,16
-    AllocateMemBlk
-;
-    mov cx,32
-    mov edx,ebp
-    FreeLinearMemBlk
-;
-    mov cx,256
-    mov edx,esi
-    FreeLinearMemBlk
-    jmp cdLoop
-;
     popad
 ;
     InitUsbDev
+;
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_flags,0E4h
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov es:dev_control_tail,eax
+;    
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_flags,0E4h
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov es:dev_control_head,edx
+;
+    popad
+    pop fs
     retf32
 CreateDev  Endp
 

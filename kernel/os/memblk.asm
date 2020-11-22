@@ -299,14 +299,15 @@ create_mem_blk32     Proc far
     AllocatePhysical32
     call CreateBlock
 ;
-    mov si,es:mblk_info_offset
-    mov es:[si].mblk_is64,0
-;
     pop esi
     pop ebx
     pop eax
 ;
     call InitBlock
+    push si
+    mov si,es:mblk_info_offset
+    mov es:[si].mblk_is64,0
+    pop si
     retf32
 create_mem_blk32     Endp    
 
@@ -335,14 +336,15 @@ create_mem_blk64     Proc far
     AllocatePhysical64
     call CreateBlock
 ;
-    mov si,es:mblk_info_offset
-    mov es:[si].mblk_is64,1
-;
     pop esi
     pop ebx
     pop eax
 ;
     call InitBlock
+    push si
+    mov si,es:mblk_info_offset
+    mov es:[si].mblk_is64,1
+    pop si
     retf32
 create_mem_blk64     Endp    
 
