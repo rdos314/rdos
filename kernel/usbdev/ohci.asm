@@ -2662,9 +2662,81 @@ cmInMinOk:
     mov ds:HcCommandStatus,eax
     pop ds
 ;
-    jmp cmClean
+    mov edx,es:dev_control_ed
+    mov cx,100
 
+cmWaitRead:
+    test fs:[edx].oes_fa_en,4000h
+    jnz cmClean
+;
+    mov eax,fs:[edx].oes_headp
+    test al,1
+;
+    cmp eax,fs:[edx].oes_tailp
+    je cmCopyRead
+;
+    mov ax,5
+    WaitMilliSec
+;
+    loop cmWaitRead
+    
+cmCopyRead:
+    int 3
+    xor cx,cx
+    mov esi,es:dev_control_head
+    mov esi,fs:[esi].otd_next_va
 
+cmCopyLoop:
+    or esi,esi
+    clc
+    jz cmDone
+;
+    mov edx,fs:[esi].otd_buffer_va
+    or edx,edx
+    jz cmCopyNext
+;
+    mov bp,fs:[esi].otd_buffer_size
+    mov eax,fs:[esi].otd_cbp
+    or eax,eax
+    jz cmCopyDo
+;
+    PhysicalToLinearMemBlk
+    jc cmCopyNext
+;
+    mov eax,fs:[esi].otd_buffer_va
+    sub edx,eax
+    mov bp,dx
+
+cmCopyDo:
+    push es
+    push ecx
+    push esi
+    mov ax,gs
+    mov es,ax
+    mov esi,fs:[esi].otd_buffer_va
+    movzx ecx,bp
+    rep movs byte ptr es:[edi],fs:[esi]
+    pop esi
+    pop ecx
+    pop es
+;
+    push cx
+    mov cx,bp
+    mov edx,fs:[esi].otd_buffer_va
+    FreeLinearMemBlk
+    pop cx
+;
+    add cx,bp
+
+cmCopyNext:
+    xchg edx,esi
+    mov esi,fs:[edx].otd_next_va
+;
+    push cx
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    pop cx
+    jmp cmCopyLoop
 
 cmDataOut:
     int 3
@@ -2679,16 +2751,17 @@ cmClean:
 
 cmCleanLoop:
     or esi,esi
+    stc
     jz cmDone
 ;
     mov edx,fs:[esi].otd_buffer_va
     or edx,edx
-    jz cmBufferOk
+    jz cmCleanBufferOk
 ;
     mov cx,fs:[esi].otd_buffer_size
     FreeLinearMemBlk
 
-cmBufferOk:
+cmCleanBufferOk:
     xchg edx,esi
     mov esi,fs:[edx].otd_next_va
 ;
