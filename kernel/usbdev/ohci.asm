@@ -2545,29 +2545,22 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ControlMsg
+;       NAME:           SetupControl
 ;
-;       DESCRIPTION:    Send message over control pipe
+;       DESCRIPTION:    Setup control msg
 ;
 ;       PARAMETERS:     ES      Usb device
-;                       GS:EDI  Buffer
+;                       FS      Flat sel
 ;                       CX      Size
-;
-;       RETURNS:        NC      OK
-;                          CX   Transfer size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ControlMsg   Proc far
-    int 3
-    mov ax,flat_sel
-    mov fs,ax
+SetupControl   Proc near
+    push eax
+    push ebx
+    push edx
 ;
     mov edx,es:dev_control_head
-    or cx,cx
-    jz cmZeroSize
-;
-    mov esi,edx
     mov fs:[edx].otd_resv,0
     mov fs:[edx].otd_flags,0F2E4h
     mov fs:[edx].otd_next_td,0
@@ -2581,16 +2574,36 @@ ControlMsg   Proc far
     add eax,7
     mov fs:[edx].otd_be,eax
 ;
-    mov al,es:[ebx].usd_type
-    test al,80h
-    jz cmDataOut
+    pop edx
+    pop ebx
+    pop eax
+    ret
+SetupControl	Endp
 
-cmDataLoop:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupControlIn
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlIn   Proc near
+    pushad
+;
+    mov esi,es:dev_control_head
+
+sciLoop:
     push cx
     mov cx,SIZE ohc_td_struc
     AllocateMemBlk
     pop cx
-    jc cmClean
+    jc sciDone
 ;
     mov fs:[esi].otd_next_td,eax
     mov fs:[esi].otd_next_va,edx
@@ -2604,18 +2617,18 @@ cmDataLoop:
 ;
     mov bx,cx
     cmp bx,es:dev_maxlen
-    jb cmInMinOk
+    jb sciInMinOk
 ;
     mov bx,es:dev_maxlen
 
-cmInMinOk:
+sciInMinOk:
     push bx
     push cx
     mov cx,bx
     AllocateMemBlk
     pop cx
     pop bx
-    jc cmClean
+    jc sciDone
 ;
     mov fs:[esi].otd_cbp,eax
     mov fs:[esi].otd_buffer_va,edx
@@ -2626,13 +2639,13 @@ cmInMinOk:
     mov fs:[esi].otd_be,eax
 ;
     sub cx,bx
-    jnz cmDataLoop
+    jnz sciLoop
 ;    
     push cx
     mov cx,SIZE ohc_td_struc
     AllocateMemBlk
     pop cx
-    jc cmClean
+    jc sciDone
 ;
     mov fs:[esi].otd_next_td,eax
     mov fs:[esi].otd_next_va,edx
@@ -2641,73 +2654,68 @@ cmInMinOk:
     mov fs:[esi].otd_flags,0F3ECh
     mov fs:[esi].otd_cbp,0
     mov fs:[esi].otd_be,0
-    mov edx,es:dev_control_ed
+;
     mov eax,es:dev_control_tail
-    mov fs:[edx].oes_tailp,eax
     mov fs:[esi].otd_next_td,eax
     mov fs:[esi].otd_next_va,0
     mov fs:[esi].otd_buffer_va,0
-    mov edx,es:dev_control_head
-    LinearToPhysicalMemBlk
-    jc cmClean
-;
-    mov edx,es:dev_control_ed
-    mov fs:[edx].oes_headp,eax
-    and fs:[edx].oes_fa_en,NOT 4000h
-;
-    push ds
-    mov ds,ds:ohc_reg_sel
-    mov eax,ds:HcCommandStatus
-    or al,2
-    mov ds:HcCommandStatus,eax
-    pop ds
-;
-    mov edx,es:dev_control_ed
-    mov cx,100
+    clc
 
-cmWaitRead:
-    test fs:[edx].oes_fa_en,4000h
-    jnz cmClean
+sciDone:
+    popad
+    ret
+SetupControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    mov eax,fs:[edx].oes_headp
-    test al,1
 ;
-    cmp eax,fs:[edx].oes_tailp
-    je cmCopyRead
+;       NAME:           CopyControlIn
 ;
-    mov ax,5
-    WaitMilliSec
+;       DESCRIPTION:    Copy control IN
 ;
-    loop cmWaitRead
-    
-cmCopyRead:
-    int 3
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;       RETURNS:        CX      Size returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyControlIn   Proc near
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
     xor cx,cx
     mov esi,es:dev_control_head
     mov esi,fs:[esi].otd_next_va
 
-cmCopyLoop:
+cciCopyLoop:
     or esi,esi
     clc
-    jz cmDone
+    jz cciDone
 ;
     mov edx,fs:[esi].otd_buffer_va
     or edx,edx
-    jz cmCopyNext
+    jz cciCopyNext
 ;
     mov bp,fs:[esi].otd_buffer_size
     mov eax,fs:[esi].otd_cbp
     or eax,eax
-    jz cmCopyDo
+    jz cciCopyDo
 ;
     PhysicalToLinearMemBlk
-    jc cmCopyNext
+    jc cciCopyNext
 ;
     mov eax,fs:[esi].otd_buffer_va
     sub edx,eax
     mov bp,dx
 
-cmCopyDo:
+cciCopyDo:
     push es
     push ecx
     push esi
@@ -2728,7 +2736,7 @@ cmCopyDo:
 ;
     add cx,bp
 
-cmCopyNext:
+cciCopyNext:
     xchg edx,esi
     mov esi,fs:[edx].otd_next_va
 ;
@@ -2736,41 +2744,178 @@ cmCopyNext:
     mov cx,SIZE ohc_td_struc
     FreeLinearMemBlk
     pop cx
-    jmp cmCopyLoop
+    jmp cciCopyLoop
 
+cciDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    ret
+CopyControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunControl
+;
+;       DESCRIPTION:    Run control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunControl   Proc near
+    push ds
+    pushad
+;
+    mov edx,es:dev_control_ed
+    mov eax,es:dev_control_tail
+    mov fs:[edx].oes_tailp,eax
+    mov edx,es:dev_control_head
+    LinearToPhysicalMemBlk
+;
+    mov edx,es:dev_control_ed
+    mov fs:[edx].oes_headp,eax
+    and fs:[edx].oes_fa_en,NOT 4000h
+;
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,2
+    mov ds:HcCommandStatus,eax
+;
+    mov edx,es:dev_control_ed
+    mov cx,100
+
+rcWait:
+    test fs:[edx].oes_fa_en,4000h
+    stc
+    jnz rcDone
+;
+    mov eax,fs:[edx].oes_headp
+    test al,1
+    stc
+    jnz rcDone
+;
+    cmp eax,fs:[edx].oes_tailp
+    clc
+    je rcDone
+;
+    mov ax,5
+    WaitMilliSec
+;
+    loop rcWait
+;
+    stc
+
+rcDone:
+    popad
+    pop ds
+    ret
+RunControl Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CleanupControl
+;
+;       DESCRIPTION:    Cleanup control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupControl   Proc near
+    pushad
+;
+    mov esi,es:dev_control_head
+    mov esi,fs:[esi].otd_next_va
+
+ccLoop:
+    or esi,esi
+    jz ccDone
+;
+    mov edx,fs:[esi].otd_buffer_va
+    or edx,edx
+    jz ccBufferOk
+;
+    mov cx,fs:[esi].otd_buffer_size
+    FreeLinearMemBlk
+
+ccBufferOk:
+    xchg edx,esi
+    mov esi,fs:[edx].otd_next_va
+;
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    jmp ccLoop
+
+ccDone:
+    popad
+    ret
+CleanupControl  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ControlMsg
+;
+;       DESCRIPTION:    Send message over control pipe
+;
+;       PARAMETERS:     ES      Usb device
+;                       GS:EDI  Buffer
+;                       CX      Size
+;
+;       RETURNS:        NC      OK
+;                          CX   Transfer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ControlMsg   Proc far
+    push fs
+    push eax
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    or cx,cx
+    jz cmZeroSize
+;
+    call SetupControl
+;
+    test es:usbd_control_buf.usd_type,80h
+    jz cmDataOut
+;
+    call SetupControlIn
+    jc cmFail
+;
+    call RunControl
+    jc cmFail
+;
+    call CopyControlIn
+    jmp cmDone
+    
 cmDataOut:
     int 3
 
 cmZeroSize:
     int 3
 
-cmClean:
+cmFail:
     int 3
-    mov esi,es:dev_control_head
-    mov esi,fs:[esi].otd_next_va
-
-cmCleanLoop:
-    or esi,esi
+    call CleanupControl
     stc
-    jz cmDone
-;
-    mov edx,fs:[esi].otd_buffer_va
-    or edx,edx
-    jz cmCleanBufferOk
-;
-    mov cx,fs:[esi].otd_buffer_size
-    FreeLinearMemBlk
-
-cmCleanBufferOk:
-    xchg edx,esi
-    mov esi,fs:[edx].otd_next_va
-;
-    mov cx,SIZE ohc_td_struc
-    FreeLinearMemBlk
-    jmp cmCleanLoop
 
 cmDone:
-    ret
+    pop eax
+    pop fs
+    retf32
 ControlMsg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
