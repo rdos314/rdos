@@ -133,7 +133,9 @@ ehci_func_sel    ENDS
 
 ehci_dev_sel     STRUC
 
-usb_dev_base        usb_device_struc <>
+usb_dev_base     usb_device_struc <>
+
+dev_control      DD ?
 
 ehci_dev_sel     ENDS
 
@@ -1624,24 +1626,22 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    mov ax,32
+    mov ax,SIZE qtd_struc
     mov si,SIZE ehci_dev_sel
     mov cx,16
-;
-    test ds:ehc_hcc_flags,1
-    jz cd32
-
-cd64:
-    CreateMemBlk64
-    jmp cdHasMemBlk
-
-cd32:    
     CreateMemBlk32
-
-cdHasMemBlk:
+;
     popad
 ;
     InitUsbDev
+;
+    pushad
+;    
+    mov cx,SIZE qtd_struc
+    AllocateMemBlk
+    mov es:dev_control,edx
+;
+    popad
     retf32
 CreateDev  Endp
 
@@ -1696,7 +1696,7 @@ ConfigDev   Endp
 CreateControl   Proc far
     push es
     pushad
-;    
+;
     push es
     push ax
     mov eax,SIZE ehci_pipe
@@ -2479,6 +2479,186 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupControl
+;
+;       DESCRIPTION:    Setup control msg
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControl   Proc near
+    push eax
+    push edx
+;
+    mov edx,es:dev_control
+    mov fs:[edx].qtd_next,1
+    mov fs:[edx].qtd_alt,1
+    mov fs:[edx].qtd_status,80h
+    mov fs:[edx].qtd_flags,0Eh
+    mov fs:[edx].qtd_size,8
+;
+    mov eax,OFFSET usbd_control_buf
+    add eax,es:mblk_physical_base
+    mov fs:[edx].qtdl_page0,eax
+;
+    mov fs:[edx].qtdl_page1,0
+    mov fs:[edx].qtdl_page2,0
+    mov fs:[edx].qtdl_page3,0
+    mov fs:[edx].qtdl_page4,0
+    mov fs:[edx].qtdu_page0,0
+    mov fs:[edx].qtdu_page1,0
+    mov fs:[edx].qtdu_page2,0
+    mov fs:[edx].qtdu_page3,0
+    mov fs:[edx].qtdu_page4,0
+    mov fs:[edx].qtd_next_va,0
+    mov fs:[edx].qtd_buffer_va,0
+    mov fs:[edx].qtd_buffer_size,8
+;
+    pop edx
+    pop eax
+    ret
+SetupControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupControlIn
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlIn   Proc near
+    pushad
+;
+    mov esi,es:dev_control
+    or cx,cx
+    jz sciStatusOut
+;
+    push cx
+    mov cx,SIZE qtd_struc
+    AllocateMemBlk
+    pop cx
+    jc sciDone
+;
+    mov fs:[esi].qtd_next,eax
+    mov fs:[esi].qtd_next_va,edx
+;
+    mov esi,edx
+    mov fs:[esi].qtd_next,1
+    mov fs:[esi].qtd_alt,1
+    mov fs:[esi].qtd_status,80h
+    mov fs:[esi].qtd_flags,0Dh
+    mov ax,cx
+    or ax,8000h    
+    mov fs:[esi].qtd_size,ax
+    mov fs:[esi].qtdl_page0,0
+    mov fs:[esi].qtdl_page1,0
+    mov fs:[esi].qtdl_page2,0
+    mov fs:[esi].qtdl_page3,0
+    mov fs:[esi].qtdl_page4,0
+    mov fs:[esi].qtdu_page0,0
+    mov fs:[esi].qtdu_page1,0
+    mov fs:[esi].qtdu_page2,0
+    mov fs:[esi].qtdu_page3,0
+    mov fs:[esi].qtdu_page4,0
+    mov fs:[esi].qtd_next_va,0
+    mov fs:[esi].qtd_buffer_va,0
+    mov fs:[esi].qtd_buffer_size,cx
+;
+    AllocateMemBlk
+    jc sciDone
+;
+    mov fs:[esi].qtdl_page0,eax
+    mov fs:[esi].qtd_buffer_va,edx
+
+sciStatusOut: 
+    mov cx,SIZE qtd_struc
+    AllocateMemBlk
+    jc sciDone
+;
+    mov fs:[esi].qtd_next,eax
+    mov fs:[esi].qtd_next_va,edx
+;
+    mov esi,edx
+    mov fs:[esi].qtd_next,1
+    mov fs:[esi].qtd_alt,1
+    mov fs:[esi].qtd_status,80h
+    mov fs:[esi].qtd_flags,0Ch
+    mov fs:[esi].qtd_size,8000h
+    mov fs:[esi].qtdl_page0,0
+    mov fs:[esi].qtdl_page1,0
+    mov fs:[esi].qtdl_page2,0
+    mov fs:[esi].qtdl_page3,0
+    mov fs:[esi].qtdl_page4,0
+    mov fs:[esi].qtdu_page0,0
+    mov fs:[esi].qtdu_page1,0
+    mov fs:[esi].qtdu_page2,0
+    mov fs:[esi].qtdu_page3,0
+    mov fs:[esi].qtdu_page4,0
+    mov fs:[esi].qtd_next_va,0
+    mov fs:[esi].qtd_buffer_va,0
+    mov fs:[esi].qtd_buffer_size,0
+    clc
+
+sciDone:
+    popad
+    ret
+SetupControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CleanupControl
+;
+;       DESCRIPTION:    Cleanup control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupControl   Proc near
+    pushad
+;
+    mov esi,es:dev_control
+    mov esi,fs:[esi].qtd_next_va
+
+ccLoop:
+    or esi,esi
+    jz ccDone
+;
+    mov edx,fs:[esi].qtd_buffer_va
+    or edx,edx
+    jz ccBufferOk
+;
+    mov cx,fs:[esi].qtd_buffer_size
+    FreeLinearMemBlk
+
+ccBufferOk:
+    xchg edx,esi
+    mov esi,fs:[edx].qtd_next_va
+;
+    mov cx,SIZE qtd_struc
+    FreeLinearMemBlk
+    jmp ccLoop
+
+ccDone:
+    popad
+    ret
+CleanupControl  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ControlMsg
 ;
 ;       DESCRIPTION:    Send message over control pipe
@@ -2494,6 +2674,26 @@ IssueOne   Endp
 
 ControlMsg   Proc far
     int 3
+    push fs
+    push eax
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call SetupControl
+;
+    test es:usbd_control_buf.usd_type,80h
+    jz cmDataOut
+;
+    call SetupControlIn
+    jc cmFail
+
+
+cmFail:
+    call CleanupControl
+    stc
+
+cmDataOut:
     ret
 ControlMsg   Endp
 
