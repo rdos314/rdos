@@ -2645,6 +2645,84 @@ SetupControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CopyControlIn
+;
+;       DESCRIPTION:    Copy control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;       RETURNS:        CX      Size returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyControlIn   Proc near
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    xor cx,cx
+    mov esi,es:dev_control_qtd
+    mov esi,fs:[esi].qtd_next_va
+
+cciCopyLoop:
+    or esi,esi
+    clc
+    jz cciDone
+;
+    mov edx,fs:[esi].qtd_buffer_va
+    or edx,edx
+    jz cciCopyNext
+;
+    mov bp,fs:[esi].qtd_buffer_size
+    push es
+    push ecx
+    push esi
+    mov ax,gs
+    mov es,ax
+    mov esi,fs:[esi].qtd_buffer_va
+    movzx ecx,bp
+    rep movs byte ptr es:[edi],fs:[esi]
+    pop esi
+    pop ecx
+    pop es
+;
+    push cx
+    mov cx,bp
+    mov edx,fs:[esi].qtd_buffer_va
+    FreeLinearMemBlk
+    pop cx
+;
+    add cx,bp
+
+cciCopyNext:
+    xchg edx,esi
+    mov esi,fs:[edx].qtd_next_va
+;
+    push cx
+    mov cx,SIZE qtd_struc
+    FreeLinearMemBlk
+    pop cx
+    jmp cciCopyLoop
+
+cciDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    ret
+CopyControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -2759,7 +2837,6 @@ CleanupControl  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ControlMsg   Proc far
-    int 3
     push fs
     push eax
 ;
@@ -2777,14 +2854,20 @@ ControlMsg   Proc far
     call RunControl
     jc cmFail
 ;
+    call CopyControlIn
+    jmp cmDone
 
+cmDataOut:
+    int 3
 
 cmFail:
     call CleanupControl
     stc
 
-cmDataOut:
-    ret
+cmDone:
+    pop eax
+    pop fs
+    retf32
 ControlMsg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2802,7 +2885,7 @@ ControlMsg   Endp
 
 PollPipe   Proc far
     int 3
-    ret
+    retf32
 PollPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2824,7 +2907,7 @@ PollPipe   Endp
 
 ReadPipe   Proc far
     int 3
-    ret
+    retf32
 ReadPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2845,7 +2928,7 @@ ReadPipe   Endp
 
 WritePipe   Proc far
     int 3
-    ret
+    retf32
 WritePipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
