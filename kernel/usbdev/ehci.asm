@@ -137,6 +137,7 @@ usb_dev_base     usb_device_struc <>
 
 dev_control_qtd  DD ?
 dev_control_qh   DD ?
+dev_maxlen       DW ?
 
 ehci_dev_sel     ENDS
 
@@ -1729,6 +1730,7 @@ CreateControl   Proc far
     call AddControlQh
     mov fs:esp_qh,edx
     mov gs:dev_control_qh,edx
+    mov gs:dev_maxlen,64
     call InsertPipe
 ;
     popad
@@ -2548,6 +2550,9 @@ SetupControlIn   Proc near
     or cx,cx
     jz sciStatusOut
 ;
+    mov bp,8000h
+
+sciLoop:
     push cx
     mov cx,SIZE qtd_struc
     AllocateMemBlk
@@ -2562,9 +2567,6 @@ SetupControlIn   Proc near
     mov fs:[esi].qtd_alt,1
     mov fs:[esi].qtd_status,80h
     mov fs:[esi].qtd_flags,0Dh
-    mov ax,cx
-    or ax,8000h    
-    mov fs:[esi].qtd_size,ax
     mov fs:[esi].qtdl_page0,0
     mov fs:[esi].qtdl_page1,0
     mov fs:[esi].qtdl_page2,0
@@ -2577,13 +2579,34 @@ SetupControlIn   Proc near
     mov fs:[esi].qtdu_page4,0
     mov fs:[esi].qtd_next_va,0
     mov fs:[esi].qtd_buffer_va,0
-    mov fs:[esi].qtd_buffer_size,cx
+    mov fs:[esi].qtd_buffer_size,0
 ;
+    mov bx,cx
+    cmp bx,es:dev_maxlen
+    jb sciInMinOk
+;
+    mov bx,es:dev_maxlen
+
+sciInMinOk:
+    push bx
+    push cx
+    mov cx,bx
     AllocateMemBlk
+    pop cx
+    pop bx
     jc sciDone
 ;
-    mov fs:[esi].qtdl_page0,eax
     mov fs:[esi].qtd_buffer_va,edx
+    mov fs:[esi].qtd_buffer_size,bx
+;
+    mov fs:[esi].qtdl_page0,eax
+    mov ax,bx    
+    or ax,bp
+    mov fs:[esi].qtd_size,ax
+;
+    xor bp,8000h
+    sub cx,bx
+    jnz sciLoop
 
 sciStatusOut: 
     mov cx,SIZE qtd_struc
