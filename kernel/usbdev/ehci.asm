@@ -2656,19 +2656,14 @@ rcWait:
     mov al,fs:[edx].qh_status
     test al,80h
     jz rcCheckStatus
-;    
-    int 3
-
 
 rcNext:
     loop rcWait
 ;
-    int 3
     stc
     jmp rcDone
 
 rcCheckStatus:
-    int 3
     test al,40h
     stc
     jnz rcDone
@@ -2758,6 +2753,7 @@ ControlMsg   Proc far
 ;
     call RunControl
     jc cmFail
+;
 
 
 cmFail:
