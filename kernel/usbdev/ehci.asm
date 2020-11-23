@@ -2639,17 +2639,41 @@ RunControl   Proc near
     mov edx,es:dev_control_qtd
     LinearToPhysicalMemBlk
     mov edx,es:dev_control_qh
+    mov fs:[edx].qh_status,0
+    mov fs:[edx].qh_current_qtd,0
     mov fs:[edx].qh_next_qtd,eax
 ;
     mov cx,100
 
 rcWait:
-    mov ax,4
+    mov ax,1
     WaitMilliSec
 ;
+    mov eax,fs:[edx].qh_current_qtd
+    or eax,eax
+    jz rcNext
+;
+    mov al,fs:[edx].qh_status
+    test al,80h
+    jz rcCheckStatus
+;    
+    int 3
+
+
+rcNext:
     loop rcWait
 ;
+    int 3
     stc
+    jmp rcDone
+
+rcCheckStatus:
+    int 3
+    test al,40h
+    stc
+    jnz rcDone
+;
+    clc
 
 rcDone:
     popad
