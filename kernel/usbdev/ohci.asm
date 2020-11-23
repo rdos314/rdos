@@ -2597,6 +2597,8 @@ SetupControlIn   Proc near
     pushad
 ;
     mov esi,es:dev_control_head
+    or cx,cx
+    jz sciStatusOut
 
 sciLoop:
     push cx
@@ -2640,11 +2642,10 @@ sciInMinOk:
 ;
     sub cx,bx
     jnz sciLoop
-;    
-    push cx
+
+sciStatusOut: 
     mov cx,SIZE ohc_td_struc
     AllocateMemBlk
-    pop cx
     jc sciDone
 ;
     mov fs:[esi].otd_next_td,eax
@@ -2759,6 +2760,109 @@ CopyControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupControlOut
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlOut  Proc near
+    pushad
+;
+    mov esi,edi
+    mov edi,es:dev_control_head
+    or cx,cx
+    jz scoStatusIn
+
+scoLoop:
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+    jc scoDone
+;
+    mov fs:[edi].otd_next_td,eax
+    mov fs:[edi].otd_next_va,edx
+    mov edi,edx
+    mov fs:[edi].otd_resv,0
+    mov fs:[edi].otd_flags,0F0ECh
+    mov fs:[edi].otd_next_td,0
+    mov fs:[edi].otd_cbp,0
+    mov fs:[edi].otd_next_va,0
+    mov fs:[edi].otd_buffer_va,0
+;
+    mov bx,cx
+    cmp bx,es:dev_maxlen
+    jb scoOutMinOk
+;
+    mov bx,es:dev_maxlen
+
+scoOutMinOk:
+    push bx
+    push cx
+    mov cx,bx
+    AllocateMemBlk
+    pop cx
+    pop bx
+    jc scoDone
+;
+    mov fs:[edi].otd_cbp,eax
+    mov fs:[edi].otd_buffer_va,edx
+    mov fs:[edi].otd_buffer_size,bx
+;
+    add ax,bx
+    dec ax
+    mov fs:[edi].otd_be,eax
+;
+    push es
+    push ecx
+    push edi
+;
+    mov ax,fs
+    mov es,ax
+    mov edi,edx
+    movzx ecx,bx
+    rep movs byte ptr es:[edi],gs:[esi]
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    sub cx,bx
+    jnz scoLoop
+
+scoStatusIn: 
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    jc scoDone
+;
+    mov fs:[edi].otd_next_td,eax
+    mov fs:[edi].otd_next_va,edx
+    mov edi,edx
+    mov fs:[edi].otd_resv,0
+    mov fs:[edi].otd_flags,0F3F4h
+    mov fs:[edi].otd_cbp,0
+    mov fs:[edi].otd_be,0
+;
+    mov eax,es:dev_control_tail
+    mov fs:[edi].otd_next_td,eax
+    mov fs:[edi].otd_next_va,0
+    mov fs:[edi].otd_buffer_va,0
+    clc
+
+scoDone:
+    popad
+    ret
+SetupControlOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -2788,10 +2892,16 @@ RunControl   Proc near
     or al,2
     mov ds:HcCommandStatus,eax
 ;
+    movzx si,es:usbd_port    
+    shl si,2
+;
     mov edx,es:dev_control_ed
     mov cx,100
 
 rcWait:
+    mov ax,4
+    WaitMilliSec
+;
     test fs:[edx].oes_fa_en,4000h
     stc
     jnz rcDone
@@ -2805,8 +2915,19 @@ rcWait:
     clc
     je rcDone
 ;
-    mov ax,5
-    WaitMilliSec
+    mov eax,ds:[si].HcRhPortStatus
+    test al,2
+    stc
+    jz rcDone
+;
+    test al,1
+    stc
+    jz rcDone
+;
+    mov eax,ds:HcInterruptStatus
+    test al,10h
+    stc
+    jnz rcDone
 ;
     loop rcWait
 ;
@@ -2884,9 +3005,6 @@ ControlMsg   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    or cx,cx
-    jz cmZeroSize
-;
     call SetupControl
 ;
     test es:usbd_control_buf.usd_type,80h
@@ -2902,10 +3020,15 @@ ControlMsg   Proc far
     jmp cmDone
     
 cmDataOut:
-    int 3
-
-cmZeroSize:
-    int 3
+    call SetupControlOut
+    jc cmFail
+;
+    call RunControl
+    jc cmFail
+;
+    call CleanupControl
+    clc
+    jmp cmDone
 
 cmFail:
     int 3
