@@ -2636,8 +2636,9 @@ RunControl   Proc near
     push ds
     pushad
 ;
+    mov edx,es:dev_control_qtd
+    LinearToPhysicalMemBlk
     mov edx,es:dev_control_qh
-    mov eax,es:dev_control_qtd
     mov fs:[edx].qh_next_qtd,eax
 ;
     mov cx,100
