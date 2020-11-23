@@ -1032,7 +1032,6 @@ GetDescr    Proc near
     push cx
     push edi
 ;    
-    int 3
     push ax
     mov eax,8
     call AllocateBufSel

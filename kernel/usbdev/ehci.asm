@@ -135,7 +135,8 @@ ehci_dev_sel     STRUC
 
 usb_dev_base     usb_device_struc <>
 
-dev_control      DD ?
+dev_control_qtd  DD ?
+dev_control_qh   DD ?
 
 ehci_dev_sel     ENDS
 
@@ -1639,7 +1640,7 @@ CreateDev   Proc far
 ;    
     mov cx,SIZE qtd_struc
     AllocateMemBlk
-    mov es:dev_control,edx
+    mov es:dev_control_qtd,edx
 ;
     popad
     retf32
@@ -1695,10 +1696,13 @@ ConfigDev   Endp
 
 CreateControl   Proc far
     push es
+    push gs
     pushad
 ;
     push es
     push ax
+    mov ax,es
+    mov gs,ax
     mov eax,SIZE ehci_pipe
     AllocateSmallGlobalMem
     xor di,di
@@ -1724,9 +1728,11 @@ CreateControl   Proc far
     mov es,dx
     call AddControlQh
     mov fs:esp_qh,edx
+    mov gs:dev_control_qh,edx
     call InsertPipe
 ;
     popad
+    pop gs
     pop es
     retf32
 CreateControl   Endp
@@ -2493,7 +2499,7 @@ SetupControl   Proc near
     push eax
     push edx
 ;
-    mov edx,es:dev_control
+    mov edx,es:dev_control_qtd
     mov fs:[edx].qtd_next,1
     mov fs:[edx].qtd_alt,1
     mov fs:[edx].qtd_status,80h
@@ -2538,7 +2544,7 @@ SetupControl	Endp
 SetupControlIn   Proc near
     pushad
 ;
-    mov esi,es:dev_control
+    mov esi,es:dev_control_qtd
     or cx,cx
     jz sciStatusOut
 ;
@@ -2616,6 +2622,43 @@ SetupControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           RunControl
+;
+;       DESCRIPTION:    Run control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunControl   Proc near
+    push ds
+    pushad
+;
+    mov edx,es:dev_control_qh
+    mov eax,es:dev_control_qtd
+    mov fs:[edx].qh_next_qtd,eax
+;
+    mov cx,100
+
+rcWait:
+    mov ax,4
+    WaitMilliSec
+;
+    loop rcWait
+;
+    stc
+
+rcDone:
+    popad
+    pop ds
+    ret
+RunControl Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CleanupControl
 ;
 ;       DESCRIPTION:    Cleanup control
@@ -2629,7 +2672,7 @@ SetupControlIn	Endp
 CleanupControl   Proc near
     pushad
 ;
-    mov esi,es:dev_control
+    mov esi,es:dev_control_qtd
     mov esi,fs:[esi].qtd_next_va
 
 ccLoop:
@@ -2686,6 +2729,9 @@ ControlMsg   Proc far
     jz cmDataOut
 ;
     call SetupControlIn
+    jc cmFail
+;
+    call RunControl
     jc cmFail
 
 
