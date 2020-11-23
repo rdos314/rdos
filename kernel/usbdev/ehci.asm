@@ -2723,6 +2723,134 @@ CopyControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupControlOut
+;
+;       DESCRIPTION:    Setup control OUT
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlOut   Proc near
+    pushad
+;
+    mov esi,edi
+    mov edi,es:dev_control_qtd
+    or cx,cx
+    jz scoStatusIn
+;
+    mov bp,8000h
+
+scoLoop:
+    push cx
+    mov cx,SIZE qtd_struc
+    AllocateMemBlk
+    pop cx
+    jc scoDone
+;
+    mov fs:[edi].qtd_next,eax
+    mov fs:[edi].qtd_next_va,edx
+;
+    mov edi,edx
+    mov fs:[edi].qtd_next,1
+    mov fs:[edi].qtd_alt,1
+    mov fs:[edi].qtd_status,80h
+    mov fs:[edi].qtd_flags,0Ch
+    mov fs:[edi].qtdl_page0,0
+    mov fs:[edi].qtdl_page1,0
+    mov fs:[edi].qtdl_page2,0
+    mov fs:[edi].qtdl_page3,0
+    mov fs:[edi].qtdl_page4,0
+    mov fs:[edi].qtdu_page0,0
+    mov fs:[edi].qtdu_page1,0
+    mov fs:[edi].qtdu_page2,0
+    mov fs:[edi].qtdu_page3,0
+    mov fs:[edi].qtdu_page4,0
+    mov fs:[edi].qtd_next_va,0
+    mov fs:[edi].qtd_buffer_va,0
+    mov fs:[edi].qtd_buffer_size,0
+;
+    mov bx,cx
+    cmp bx,es:dev_maxlen
+    jb scoOutMinOk
+;
+    mov bx,es:dev_maxlen
+
+scoOutMinOk:
+    push bx
+    push cx
+    mov cx,bx
+    AllocateMemBlk
+    pop cx
+    pop bx
+    jc sciDone
+;
+    mov fs:[edi].qtd_buffer_va,edx
+    mov fs:[edi].qtd_buffer_size,bx
+;
+    mov fs:[edi].qtdl_page0,eax
+    mov ax,bx    
+    or ax,bp
+    mov fs:[edi].qtd_size,ax
+;
+    push es
+    push ecx
+    push edi
+;
+    mov ax,fs
+    mov es,ax
+    mov edi,edx
+    movzx ecx,bx
+    rep movs byte ptr es:[edi],gs:[esi]
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    xor bp,8000h
+    sub cx,bx
+    jnz scoLoop
+
+scoStatusIn: 
+    mov cx,SIZE qtd_struc
+    AllocateMemBlk
+    jc scoDone
+;
+    mov fs:[edi].qtd_next,eax
+    mov fs:[edi].qtd_next_va,edx
+;
+    mov edi,edx
+    mov fs:[edi].qtd_next,1
+    mov fs:[edi].qtd_alt,1
+    mov fs:[edi].qtd_status,80h
+    mov fs:[edi].qtd_flags,0Dh
+    mov fs:[edi].qtd_size,8000h
+    mov fs:[edi].qtdl_page0,0
+    mov fs:[edi].qtdl_page1,0
+    mov fs:[edi].qtdl_page2,0
+    mov fs:[edi].qtdl_page3,0
+    mov fs:[edi].qtdl_page4,0
+    mov fs:[edi].qtdu_page0,0
+    mov fs:[edi].qtdu_page1,0
+    mov fs:[edi].qtdu_page2,0
+    mov fs:[edi].qtdu_page3,0
+    mov fs:[edi].qtdu_page4,0
+    mov fs:[edi].qtd_next_va,0
+    mov fs:[edi].qtd_buffer_va,0
+    mov fs:[edi].qtd_buffer_size,0
+    clc
+
+scoDone:
+    popad
+    ret
+SetupControlOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -2858,7 +2986,15 @@ ControlMsg   Proc far
     jmp cmDone
 
 cmDataOut:
-    int 3
+    call SetupControlOut
+    jc cmFail
+;
+    call RunControl
+    jc cmFail
+;
+    call CleanupControl
+    clc
+    jmp cmDone
 
 cmFail:
     call CleanupControl
