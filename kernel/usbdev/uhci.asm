@@ -2927,6 +2927,119 @@ CopyControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupControlOut
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlOut  Proc near
+    pushad
+;
+    mov esi,edi
+    mov edi,es:dev_control_head
+    or cx,cx
+    jz scoStatusIn
+;
+    mov ebp,80000h 
+
+scoLoop:
+    push cx
+    mov cx,SIZE uhci_td
+    AllocateMemBlk
+    pop cx
+    jc scoDone
+;
+    or al,4
+    mov fs:[edi].utd_link,eax
+    mov fs:[edi].utd_va_link,edx
+    mov edi,edx
+;
+    mov fs:[edi].utd_link,5
+    mov fs:[edi].utd_va_link,0
+;
+    mov eax,es:dev_utd_control
+    mov fs:[edi].utd_control,eax
+    mov fs:[edi].utd_host,0
+;
+    mov bx,cx
+    cmp bx,es:usbd_maxlen
+    jb scoOutMinOk
+;
+    mov bx,es:usbd_maxlen
+
+scoOutMinOk:
+    push bx
+    push cx
+    mov cx,bx
+    AllocateMemBlk
+    pop cx
+    pop bx
+    jc scoDone
+;
+    mov fs:[edi].utd_buf,eax
+    movzx eax,bx
+    dec ax
+    shl eax,21
+    or eax,ebp
+    or ah,es:usbd_address
+    mov al,PID_OUT
+    mov fs:[edi].utd_host,eax
+;
+    push es
+    push ecx
+    push edi
+;
+    mov ax,fs
+    mov es,ax
+    mov edi,edx
+    movzx ecx,bx
+    rep movs byte ptr es:[edi],gs:[esi]
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    xor ebp,80000h 
+    sub cx,bx
+    jnz scoLoop
+
+scoStatusIn: 
+    mov cx,SIZE uhci_td
+    AllocateMemBlk
+    jc scoDone
+;
+    or al,4
+    mov fs:[edi].utd_link,eax
+    mov fs:[edi].utd_va_link,edx
+    mov edi,edx
+;
+    mov fs:[edi].utd_link,5
+    mov fs:[edi].utd_va_link,0
+;
+    mov eax,es:dev_utd_control
+    mov fs:[edi].utd_control,eax
+;
+    mov eax,0FFE80000h
+    or ah,es:usbd_address
+    mov al,PID_IN
+    mov fs:[edi].utd_host,eax
+    mov fs:[edi].utd_buf,0
+    clc
+
+scoDone:
+    popad
+    ret
+SetupControlOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -3077,7 +3190,15 @@ ControlMsg   Proc far
     jmp cmDone
 
 cmDataOut:
-    int 3
+    call SetupControlOut
+    jc cmFail
+;
+    call RunControl
+    jc cmFail
+;
+    call CleanupControl
+    clc
+    jmp cmDone
 
 cmFail:
     int 3
