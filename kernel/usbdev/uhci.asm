@@ -2839,6 +2839,94 @@ SetupControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CopyControlIn
+;
+;       DESCRIPTION:    Copy control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;       RETURNS:        CX      Size returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyControlIn   Proc near
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    xor cx,cx
+    mov esi,es:dev_control_head
+    mov eax,fs:[esi].utd_control
+    cmp ax,7
+    stc 
+    jne cciDone
+;
+    shr eax,16
+    test al,40h
+    stc
+    jne cciDone
+;
+    mov esi,fs:[esi].utd_va_link
+
+cciCopyLoop:
+    or esi,esi
+    clc
+    jz cciDone
+;
+    mov eax,fs:[esi].utd_control
+    mov bp,ax
+    inc bp
+    shr eax,16
+    test al,40h
+    stc
+    jne cciDone
+;
+    mov eax,fs:[esi].utd_buf
+    or eax,eax
+    jz cciCopyNext
+;
+    xor ebx,ebx
+    PhysicalToLinearMemBlk
+    jc cciCopyNext
+;
+    push es
+    push ecx
+    push esi
+    mov ax,gs
+    mov es,ax
+    mov esi,edx
+    movzx ecx,bp
+    rep movs byte ptr es:[edi],fs:[esi]
+    pop esi
+    pop ecx
+    pop es
+;
+    add cx,bp
+
+cciCopyNext:
+    xchg edx,esi
+    mov esi,fs:[edx].utd_va_link
+    jmp cciCopyLoop
+
+cciDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    ret
+CopyControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -2858,6 +2946,44 @@ RunControl   Proc near
     mov edx,es:dev_control_qh
     mov fs:[edx].uqh_elem,eax
 ;
+    movzx si,es:usbd_port
+    add si,si
+    add si,ds:uhc_io_base
+    add si,PortscReg1
+;
+    mov cx,100
+
+rcWait:
+    mov ax,4
+    WaitMilliSec
+;
+    mov dx,si
+    in ax,dx
+    test al,1
+    stc
+    jz rcDone
+;
+    test al,4
+    stc
+    jz rcDone
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx
+    test al,20h
+    stc
+    jnz rcDone
+;
+    mov edx,es:dev_control_head
+    test fs:[edx].uqh_elem,1
+    clc
+    jnz rcDone
+;
+    loop rcWait
+;
+    stc
+
+rcDone:
     popad
     pop ds
     ret
@@ -2929,7 +3055,6 @@ ControlMsg   Proc far
     push fs
     push eax
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2942,6 +3067,14 @@ ControlMsg   Proc far
     jc cmFail
 ;
     call RunControl
+    jc cmFail
+;
+    call CopyControlIn
+;
+    pushf
+    call CleanupControl
+    popf
+    jmp cmDone
 
 cmDataOut:
     int 3
@@ -2953,7 +3086,7 @@ cmFail:
 cmDone:
     pop eax
     pop fs
-    ret
+    retf32
 ControlMsg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2971,7 +3104,7 @@ ControlMsg   Endp
 
 PollPipe   Proc far
     int 3
-    ret
+    retf32
 PollPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2993,7 +3126,7 @@ PollPipe   Endp
 
 ReadPipe   Proc far
     int 3
-    ret
+    retf32
 ReadPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3014,7 +3147,7 @@ ReadPipe   Endp
 
 WritePipe   Proc far
     int 3
-    ret
+    retf32
 WritePipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
