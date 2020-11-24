@@ -2831,6 +2831,52 @@ SetupControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CleanupControl
+;
+;       DESCRIPTION:    Cleanup control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupControl   Proc near
+    pushad
+;
+    mov esi,es:dev_control_head
+    mov esi,fs:[esi].utd_va_link
+
+ccLoop:
+    or esi,esi
+    jz ccDone
+;
+    mov eax,fs:[esi].utd_buf
+    or eax,eax
+    jz ccBufferOk
+;
+    mov ecx,fs:[esi].utd_host
+    shr ecx,21
+    inc cx
+    xor ebx,ebx
+    FreePhysicalMemBlk
+
+ccBufferOk:
+    xchg edx,esi
+    mov esi,fs:[edx].utd_va_link
+;
+    mov cx,SIZE uhci_td
+    FreeLinearMemBlk
+    jmp ccLoop
+
+ccDone:
+    popad
+    ret
+CleanupControl  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ControlMsg
 ;
 ;       DESCRIPTION:    Send message over control pipe
@@ -2865,6 +2911,7 @@ cmDataOut:
 
 cmFail:
     int 3
+    call CleanupControl
 
 cmDone:
     pop eax
