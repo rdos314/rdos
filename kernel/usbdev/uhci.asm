@@ -106,6 +106,7 @@ uhci_dev_sel    STRUC
 
 usb_dev_base     usb_device_struc <>
 
+dev_control_qh   DD ?
 dev_control_head DD ?
 dev_utd_control  DD ?
 
@@ -1593,10 +1594,13 @@ GetIntrQh  ENDP
 
 CreateControl   Proc far
     push es
+    push gs
     pushad
 ;    
     mov ah,es:usbd_speed
     push ax
+    mov ax,es
+    mov gs,ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
     xor di,di
@@ -1629,10 +1633,12 @@ CreateControl   Proc far
 
 ccLinkPeriod:
     mov eax,fs:usp_qh
+    mov gs:dev_control_qh,eax
     call InsertTdFirst
     call InsertPipe
 ;
     popad
+    pop gs
     pop es
     retf32
 CreateControl   Endp
@@ -2718,7 +2724,6 @@ SetupControl   Proc near
     mov fs:[edx].utd_control,eax
 ;
     mov eax,7 SHL 21
-    or eax,80000h 
     or ah,es:usbd_address
     mov al,PID_SETUP
     mov fs:[edx].utd_host,eax
@@ -2753,6 +2758,8 @@ SetupControlIn   Proc near
     mov esi,es:dev_control_head
     or cx,cx
     jz sciStatusOut
+;
+    mov ebp,80000h 
 
 sciLoop:
     push cx
@@ -2792,11 +2799,12 @@ sciInMinOk:
     movzx eax,bx
     dec ax
     shl eax,21
-    or eax,80000h 
+    or eax,ebp
     or ah,es:usbd_address
     mov al,PID_IN
     mov fs:[esi].utd_host,eax
 ;
+    xor ebp,80000h 
     sub cx,bx
     jnz sciLoop
 
@@ -2816,10 +2824,10 @@ sciStatusOut:
     mov eax,es:dev_utd_control
     mov fs:[esi].utd_control,eax
 ;
-    mov eax,80000h 
+    mov eax,0FFE80000h
     or ah,es:usbd_address
     mov al,PID_OUT
-    mov fs:[esi].utd_host,0
+    mov fs:[esi].utd_host,eax
     mov fs:[esi].utd_buf,0
     clc
 
@@ -2827,6 +2835,33 @@ sciDone:
     popad
     ret
 SetupControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunControl
+;
+;       DESCRIPTION:    Run control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunControl   Proc near
+    push ds
+    pushad
+;
+    mov edx,es:dev_control_head
+    LinearToPhysicalMemBlk
+    mov edx,es:dev_control_qh
+    mov fs:[edx].uqh_elem,eax
+;
+    popad
+    pop ds
+    ret
+RunControl  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2905,6 +2940,8 @@ ControlMsg   Proc far
 ;
     call SetupControlIn
     jc cmFail
+;
+    call RunControl
 
 cmDataOut:
     int 3
