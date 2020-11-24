@@ -3608,7 +3608,7 @@
     "jnc extend "    \
     "mov cx,-1 " \
     "extend: " \
-    "movzx eax,cx " \
+    "movsx eax,cx " \
     __parm [__ebx] [__ah] [__al] [__edx] [__esi] [__edi] [__ecx] \
     __value [__eax] \
     __modify [__ecx]
