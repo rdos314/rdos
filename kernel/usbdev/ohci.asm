@@ -2940,6 +2940,50 @@ RunControl Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CheckResult
+;
+;       DESCRIPTION:    Chech result
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckResult   Proc near
+    push eax
+    push esi
+;
+    mov esi,es:dev_control_head
+    mov ax,fs:[esi].otd_flags
+    shl ax,12
+    or ax,ax
+    stc
+    jnz crDone
+;
+    mov esi,fs:[esi].otd_next_va
+
+crLoop:
+    or esi,esi
+    clc
+    jz crDone
+;
+    mov ax,fs:[esi].otd_flags
+    shl ax,12
+    or ax,ax
+    stc
+    jnz crDone
+;
+    jmp crLoop
+
+crDone:
+    pop esi
+    pop eax
+    ret
+CheckResult	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CleanupControl
 ;
 ;       DESCRIPTION:    Cleanup control
@@ -3014,6 +3058,9 @@ ControlMsg   Proc far
     call RunControl
     jc cmFail
 ;
+    call CheckResult
+    jc cmFail
+;
     call CopyControlIn
     jmp cmDone
     
@@ -3022,6 +3069,9 @@ cmDataOut:
     jc cmFail
 ;
     call RunControl
+    jc cmFail
+;
+    call CheckResult
     jc cmFail
 ;
     call CleanupControl
