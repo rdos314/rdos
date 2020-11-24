@@ -2995,6 +2995,12 @@ cmDataOut:
     jmp cmDone
 
 cmFail:
+    mov fs:[edx].qh_status,0
+    mov fs:[edx].qh_next_qtd,1
+;
+    mov ax,25
+    WaitMilliSec
+;
     call CleanupControl
     stc
 
