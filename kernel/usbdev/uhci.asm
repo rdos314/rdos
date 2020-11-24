@@ -106,6 +106,8 @@ uhci_dev_sel    STRUC
 
 usb_dev_base     usb_device_struc <>
 
+dev_control      DD ?
+
 uhci_dev_sel    ENDS
 
 USP_FLAG_TRANSFER_PENDING   = 1
@@ -140,6 +142,8 @@ utd_va_link DD ?
 utd_phys    DD ?
 
 uhci_td ENDS
+
+
 
 ; this structure is always allocated as 32 bytes!
 
@@ -2690,6 +2694,54 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupControl
+;
+;       DESCRIPTION:    Setup control msg
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControl   Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,es:dev_control
+    mov fs:[edx].utd_link,5
+    mov fs:[edx].utd_va_link,0
+;
+    mov eax,18800000h
+    cmp es:usbd_speed,0
+    jnz stSpeedOk
+;
+    or eax, 4000000h
+    
+stSpeedOk:
+    mov fs:[edx].utd_control,eax
+;
+    mov eax,7 SHL 21
+    or eax,80000h 
+    or ah,es:usbd_address
+    mov al,PID_SETUP
+    mov fs:[edx].utd_host,eax
+;
+    mov ebx,OFFSET usbd_control_buf
+    mov eax,ebx
+    add eax,es:mblk_physical_base
+    mov fs:[edx].utd_buf,eax
+;
+    pop edx
+    pop ebx
+    pop eax
+    ret
+SetupControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ControlMsg
 ;
 ;       DESCRIPTION:    Send message over control pipe
@@ -2704,7 +2756,17 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ControlMsg   Proc far
+    push fs
+    push eax
+;
     int 3
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call SetupControl
+;
+    pop eax
+    pop fs
     ret
 ControlMsg   Endp
 
@@ -2824,7 +2886,7 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
-    mov ax,16
+    mov ax,SIZE uhci_td
     mov si,SIZE uhci_dev_sel
     mov cx,16
     CreateMemBlk32
@@ -2832,6 +2894,25 @@ CreateDev   Proc far
     popad
 ;
     InitUsbDev
+;
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;    
+    mov cx,SIZE uhci_td
+    AllocateMemBlk
+    mov fs:[edx].utd_link,0
+    mov fs:[edx].utd_control,0
+    mov fs:[edx].utd_host,0
+    mov fs:[edx].utd_buf,0
+    mov fs:[edx].utd_va_link,0
+    mov fs:[edx].utd_phys,0
+    mov es:dev_control,edx
+;
+    popad
+    pop fs
     retf32
 CreateDev  Endp
 

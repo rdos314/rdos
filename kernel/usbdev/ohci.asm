@@ -178,7 +178,6 @@ usb_dev_base       usb_device_struc <>
 dev_control_ed     DD ?
 dev_control_tail   DD ?
 dev_control_head   DD ?
-dev_maxlen         DW ?
 
 ohci_dev_sel   ENDS
 
@@ -1274,7 +1273,6 @@ CreateControl   Proc far
     call InsertPipe
 ;
     mov gs:dev_control_ed,edx
-    mov gs:dev_maxlen,8
 ;
     popad
     pop gs
@@ -2618,10 +2616,10 @@ sciLoop:
     mov fs:[esi].otd_buffer_va,0
 ;
     mov bx,cx
-    cmp bx,es:dev_maxlen
+    cmp bx,es:usbd_maxlen
     jb sciInMinOk
 ;
-    mov bx,es:dev_maxlen
+    mov bx,es:usbd_maxlen
 
 sciInMinOk:
     push bx
@@ -2797,10 +2795,10 @@ scoLoop:
     mov fs:[edi].otd_buffer_va,0
 ;
     mov bx,cx
-    cmp bx,es:dev_maxlen
+    cmp bx,es:usbd_maxlen
     jb scoOutMinOk
 ;
-    mov bx,es:dev_maxlen
+    mov bx,es:usbd_maxlen
 
 scoOutMinOk:
     push bx

@@ -137,7 +137,6 @@ usb_dev_base     usb_device_struc <>
 
 dev_control_qtd  DD ?
 dev_control_qh   DD ?
-dev_maxlen       DW ?
 
 ehci_dev_sel     ENDS
 
@@ -1730,7 +1729,6 @@ CreateControl   Proc far
     call AddControlQh
     mov fs:esp_qh,edx
     mov gs:dev_control_qh,edx
-    mov gs:dev_maxlen,64
     call InsertPipe
 ;
     popad
@@ -2582,10 +2580,10 @@ sciLoop:
     mov fs:[esi].qtd_buffer_size,0
 ;
     mov bx,cx
-    cmp bx,es:dev_maxlen
+    cmp bx,es:usbd_maxlen
     jb sciInMinOk
 ;
-    mov bx,es:dev_maxlen
+    mov bx,es:usbd_maxlen
 
 sciInMinOk:
     push bx
@@ -2774,10 +2772,10 @@ scoLoop:
     mov fs:[edi].qtd_buffer_size,0
 ;
     mov bx,cx
-    cmp bx,es:dev_maxlen
+    cmp bx,es:usbd_maxlen
     jb scoOutMinOk
 ;
-    mov bx,es:dev_maxlen
+    mov bx,es:usbd_maxlen
 
 scoOutMinOk:
     push bx

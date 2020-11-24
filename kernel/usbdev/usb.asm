@@ -864,6 +864,8 @@ CreateDefaultControl    Proc near
 ;    
     mov es:usbd_in_endpoint_arr,fs    
     mov es:usbd_out_endpoint_arr,fs    
+    mov es:usbd_maxlen,8
+;
     mov fs:usbp_dev_sel,es
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
@@ -1882,6 +1884,9 @@ read_usb_descriptors       Proc far
     push es
     pushad
 ;
+    mov ax,es
+    mov gs,ax
+;
     mov eax,8
     call AllocateBufSel
 
@@ -1900,6 +1905,7 @@ rudRetry:
     cmp ax,fs:usbp_maxlen
     je rudLenOk
 ;    
+    mov gs:usbd_maxlen,ax
     mov fs:usbp_maxlen,ax
     call fword ptr ds:set_max_len_proc
     
