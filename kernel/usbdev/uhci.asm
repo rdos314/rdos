@@ -3253,6 +3253,12 @@ cmDataOut:
     jmp cmDone
 
 cmFail:
+    mov edx,es:dev_control_qh
+    mov fs:[edx].uqh_elem,1
+;
+    mov ax,25
+    WaitMilliSec
+;
     call CleanupControl
     stc
 
