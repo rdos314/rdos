@@ -106,7 +106,8 @@ uhci_dev_sel    STRUC
 
 usb_dev_base     usb_device_struc <>
 
-dev_control      DD ?
+dev_control_head DD ?
+dev_utd_control  DD ?
 
 uhci_dev_sel    ENDS
 
@@ -2709,17 +2710,11 @@ SetupControl   Proc near
     push ebx
     push edx
 ;
-    mov edx,es:dev_control
+    mov edx,es:dev_control_head
     mov fs:[edx].utd_link,5
     mov fs:[edx].utd_va_link,0
 ;
-    mov eax,18800000h
-    cmp es:usbd_speed,0
-    jnz stSpeedOk
-;
-    or eax, 4000000h
-    
-stSpeedOk:
+    mov eax,es:dev_utd_control
     mov fs:[edx].utd_control,eax
 ;
     mov eax,7 SHL 21
@@ -2738,6 +2733,100 @@ stSpeedOk:
     pop eax
     ret
 SetupControl	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupControlIn
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlIn   Proc near
+    pushad
+;
+    mov esi,es:dev_control_head
+    or cx,cx
+    jz sciStatusOut
+
+sciLoop:
+    push cx
+    mov cx,SIZE uhci_td
+    AllocateMemBlk
+    pop cx
+    jc sciDone
+;
+    or al,4
+    mov fs:[esi].utd_link,eax
+    mov fs:[esi].utd_va_link,edx
+    mov esi,edx
+;
+    mov fs:[esi].utd_link,5
+    mov fs:[esi].utd_va_link,0
+;
+    mov eax,es:dev_utd_control
+    mov fs:[esi].utd_control,eax
+    mov fs:[esi].utd_host,0
+;
+    mov bx,cx
+    cmp bx,es:usbd_maxlen
+    jb sciInMinOk
+;
+    mov bx,es:usbd_maxlen
+
+sciInMinOk:
+    push bx
+    push cx
+    mov cx,bx
+    AllocateMemBlk
+    pop cx
+    pop bx
+    jc sciDone
+;
+    mov fs:[esi].utd_buf,eax
+    movzx eax,bx
+    dec ax
+    shl eax,21
+    or eax,80000h 
+    or ah,es:usbd_address
+    mov al,PID_IN
+    mov fs:[esi].utd_host,eax
+;
+    sub cx,bx
+    jnz sciLoop
+
+sciStatusOut: 
+    mov cx,SIZE uhci_td
+    AllocateMemBlk
+    jc sciDone
+;
+    or al,4
+    mov fs:[esi].utd_link,eax
+    mov fs:[esi].utd_va_link,edx
+    mov esi,edx
+;
+    mov fs:[esi].utd_link,5
+    mov fs:[esi].utd_va_link,0
+;
+    mov eax,es:dev_utd_control
+    mov fs:[esi].utd_control,eax
+;
+    mov eax,80000h 
+    or ah,es:usbd_address
+    mov al,PID_OUT
+    mov fs:[esi].utd_host,0
+    mov fs:[esi].utd_buf,0
+    clc
+
+sciDone:
+    popad
+    ret
+SetupControlIn	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2765,6 +2854,19 @@ ControlMsg   Proc far
 ;
     call SetupControl
 ;
+    test es:usbd_control_buf.usd_type,80h
+    jz cmDataOut
+;
+    call SetupControlIn
+    jc cmFail
+
+cmDataOut:
+    int 3
+
+cmFail:
+    int 3
+
+cmDone:
     pop eax
     pop fs
     ret
@@ -2909,7 +3011,16 @@ CreateDev   Proc far
     mov fs:[edx].utd_buf,0
     mov fs:[edx].utd_va_link,0
     mov fs:[edx].utd_phys,0
-    mov es:dev_control,edx
+    mov es:dev_control_head,edx
+;
+    mov eax,18800000h
+    cmp es:usbd_speed,0
+    jnz cdSpeedOk
+;
+    or eax, 4000000h
+    
+cdSpeedOk:
+    mov es:dev_utd_control,eax
 ;
     popad
     pop fs
