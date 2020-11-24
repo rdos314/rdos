@@ -3040,6 +3040,55 @@ SetupControlOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CheckControlOut
+;
+;       DESCRIPTION:    Copy control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckControlOut   Proc near
+    pushad
+;
+    mov esi,es:dev_control_head
+    mov eax,fs:[esi].utd_control
+    cmp ax,7
+    stc 
+    jne ccoDone
+;
+    shr eax,16
+    test al,40h
+    stc
+    jne ccoDone
+;
+    mov esi,fs:[esi].utd_va_link
+
+ccoLoop:
+    or esi,esi
+    clc
+    jz ccoDone
+;
+    mov eax,fs:[esi].utd_control
+    shr eax,16
+    test al,40h
+    stc
+    jne ccoDone
+
+ccoNext:
+    xchg edx,esi
+    mov esi,fs:[edx].utd_va_link
+    jmp ccoLoop
+
+ccoDone:
+    popad
+    ret
+CheckControlOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -3196,13 +3245,16 @@ cmDataOut:
     call RunControl
     jc cmFail
 ;
+    call CheckControlOut
+    jc cmFail
+;
     call CleanupControl
     clc
     jmp cmDone
 
 cmFail:
-    int 3
     call CleanupControl
+    stc
 
 cmDone:
     pop eax

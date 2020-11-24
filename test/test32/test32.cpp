@@ -36,7 +36,7 @@ void main()
         size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x100, 0, dev, size);
     }
 
-    size = RdosSendUsbDeviceControlMsg(handle, 0, 9, 1, 0, 0, 0);
+    size = RdosSendUsbDeviceControlMsg(handle, 0, 9, 1, 0, buf, 8);
     RdosCloseUsbDevice(handle);
 
     RdosTestGate("");
