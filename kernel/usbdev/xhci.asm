@@ -2884,6 +2884,148 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupControlIn
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Pipe sel
+;                       GS:EDI  Buffer
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlIn   Proc near
+    pushad
+;
+    call WaitForEndpointTrb
+    mov eax,dword ptr es:usbd_control_buf
+    mov fs:[si].trb_param,eax
+    mov eax,dword ptr es:usbd_control_buf+4
+    mov fs:[si].trb_param+4,eax
+;
+    mov eax,8
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,40h
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,0
+;
+    or cx,cx
+    jz sciStatusOut
+;
+    mov fs:[si].trb_control,3
+
+sciLoop:
+    push es
+    push cx
+;
+    mov bx,gs
+    GetSelectorBaseSize
+    add edx,edi
+    mov cx,flat_sel
+    mov es,cx
+    mov al,es:[edx]
+    GetPageEntry
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+;
+    pop cx
+    pop es
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    and ax,0FFFh
+    mov bx,1000h
+    sub bx,ax
+    xchg ax,bx
+;
+    mov bx,cx
+    cmp bx,es:usbd_maxlen
+    jb sciMinOk
+;
+    mov bx,es:usbd_maxlen
+
+sciMinOk:
+    cmp ax,bx
+    jb sciChain
+
+sciOne:
+    movzx eax,bx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,1
+    jmp sciNext
+
+sciChain:
+    int 3
+    mov bx,ax
+    movzx eax,bp
+    shl eax,17
+    mov ax,bx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    or ax,10h
+    mov fs:[si].trb_type,ax
+
+sciNext:
+    sub cx,bx
+    jnz sciLoop
+
+sciStatusOut: 
+    call WaitForEndpointTrb
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,20h
+    mov fs:[si].trb_type,ax
+    clc
+
+sciDone:
+    popad
+    ret
+SetupControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunControl
+;
+;       DESCRIPTION:    Run control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunControl   Proc near
+    push ds
+    pushad
+;
+    mov ds,ds:xhc_db_sel
+    movzx si,fs:xp_slot
+    shl si,2
+    movzx eax,fs:xp_db_target
+    mov ds:[si],eax
+    clc
+;
+    popad
+    pop ds
+    ret
+RunControl   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ControlMsg
 ;
 ;       DESCRIPTION:    Send message over control pipe
@@ -2898,8 +3040,33 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ControlMsg   Proc far
-    int 3
-    ret
+    push fs
+    push gs
+    push eax
+    push edx
+    push ebp
+;
+    mov fs,es:usbd_in_endpoint_arr
+    mov ax,flat_sel
+    mov gs,ax
+;
+    test es:usbd_control_buf.usd_type,80h
+    jz cmDataOut
+;
+    call SetupControlIn
+    jc cmFail
+;
+    call RunControl
+
+cmDataOut:
+cmFail:
+cmDone:
+    pop ebp
+    pop edx
+    pop eax
+    pop gs
+    pop fs
+    retf32
 ControlMsg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2917,7 +3084,7 @@ ControlMsg   Endp
 
 PollPipe   Proc far
     int 3
-    ret
+    retf32
 PollPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2939,7 +3106,7 @@ PollPipe   Endp
 
 ReadPipe   Proc far
     int 3
-    ret
+    retf32
 ReadPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2960,7 +3127,7 @@ ReadPipe   Endp
 
 WritePipe   Proc far
     int 3
-    ret
+    retf32
 WritePipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
