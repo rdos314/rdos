@@ -2954,26 +2954,19 @@ CheckResult   Proc near
     push esi
 ;
     mov esi,es:dev_control_head
+
+crLoop:
     mov ax,fs:[esi].otd_flags
-    shl ax,12
+    shr ax,12
     or ax,ax
     stc
     jnz crDone
 ;
     mov esi,fs:[esi].otd_next_va
-
-crLoop:
     or esi,esi
+    jnz crLoop
+;
     clc
-    jz crDone
-;
-    mov ax,fs:[esi].otd_flags
-    shl ax,12
-    or ax,ax
-    stc
-    jnz crDone
-;
-    jmp crLoop
 
 crDone:
     pop esi
