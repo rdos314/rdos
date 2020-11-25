@@ -2485,6 +2485,42 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsDeviceConnected
+;
+;           DESCRIPTION:    Check if device is connected
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsDeviceConnected   Proc far
+    push eax
+    push si
+;    
+    movzx si,es:usbd_port
+    shl si,2
+    mov es,ds:ehc_reg_sel
+    mov eax,es:[si].HcPortSc
+    test al,4
+    jz idcFail
+;
+    test al,1
+    clc
+    jnz idcDone
+
+idcFail:   
+    stc
+
+idcDone:
+    pop si
+    pop eax
+    retf32
+IsDeviceConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupControl
 ;
 ;       DESCRIPTION:    Setup control msg
@@ -2875,6 +2911,9 @@ RunControl   Proc near
 rcWait:
     mov ax,1
     WaitMilliSec
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
 ;
     mov eax,fs:[edx].qh_current_qtd
     or eax,eax
@@ -4262,10 +4301,11 @@ et1B DD OFFSET AddressDev,         SEG code
 et1C DD OFFSET ConfigDev,          SEG code
 et1D DD OFFSET SetMaxLen,          SEG code
 ec1E DD OFFSET IssueOne,           SEG code
-ec1F DD OFFSET ControlMsg,         SEG code
-ec20 DD OFFSET PollPipe,           SEG code
-ec21 DD OFFSET ReadPipe,           SEG code
-ec22 DD OFFSET WritePipe,          SEG code
+ec1F DD OFFSET IsDeviceConnected,  SEG code
+ec20 DD OFFSET ControlMsg,         SEG code
+ec21 DD OFFSET PollPipe,           SEG code
+ec22 DD OFFSET ReadPipe,           SEG code
+ec23 DD OFFSET WritePipe,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4287,7 +4327,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*23h
+    mov cx,2*24h
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -2884,6 +2884,41 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsDeviceConnected
+;
+;           DESCRIPTION:    Check if device is connected
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsDeviceConnected   Proc far
+    push fs
+    push eax
+    push si
+;
+    mov fs,es:usbd_in_endpoint_arr
+    movzx si,fs:xp_port_nr
+    shl si,4
+    mov es,fs:xp_port_sel
+    mov eax,es:[si]
+    test al,1
+    clc
+    jnz idcDone
+;    
+    stc
+
+idcDone:
+    pop si
+    pop eax
+    pop fs
+    retf32
+IsDeviceConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupControlIn
 ;
 ;       DESCRIPTION:    Setup control IN
@@ -4093,10 +4128,11 @@ et1B DD OFFSET AddressDevice,       SEG code
 et1C DD OFFSET ConfigDevice,        SEG code
 et1D DD OFFSET SetMaxLen,           SEG code
 et1E DD OFFSET IssueOne,            SEG code
-et1F DD OFFSET ControlMsg,          SEG code
-et20 DD OFFSET PollPipe,            SEG code
-et21 DD OFFSET ReadPipe,            SEG code
-et22 DD OFFSET WritePipe,           SEG code
+et1F DD OFFSET IsDeviceConnected,   SEG code
+et20 DD OFFSET ControlMsg,          SEG code
+et21 DD OFFSET PollPipe,            SEG code
+et22 DD OFFSET ReadPipe,            SEG code
+et23 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push es
@@ -4243,7 +4279,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*23h
+    mov cx,2*24h
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -532,6 +532,42 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsDeviceConnected
+;
+;       DESCRIPTION:    Check if device is connected
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsDeviceConnected   Proc far
+    push eax
+    push ebx
+;
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz idcFail
+;
+    movzx ebx,es:usbd_port
+    add ebx,ebx
+    test ds:[ebx].hub_status_arr,1
+    jz idcFail
+;
+    clc
+    jmp idcDone
+
+idcFail:
+    stc
+
+idcDone:
+    pop ebx
+    pop eax
+    ret
+IsDeviceConnected   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ControlMsg
 ;
 ;       DESCRIPTION:    Send message over control pipe
@@ -892,10 +928,11 @@ ht1B DD OFFSET AddressDev,          SEG code
 ht1C DD OFFSET ConfigDev,           SEG code
 ht1D DD OFFSET SetMaxLen,           SEG code
 ht1E DD OFFSET IssueOne,            SEG code
-ht1F DD OFFSET ControlMsg,          SEG code
-ht20 DD OFFSET PollPipe,            SEG code
-ht21 DD OFFSET ReadPipe,            SEG code
-ht22 DD OFFSET WritePipe,           SEG code
+ht1F DD OFFSET IsDeviceConnected,   SEG code
+ht20 DD OFFSET ControlMsg,          SEG code
+ht21 DD OFFSET PollPipe,            SEG code
+ht22 DD OFFSET ReadPipe,            SEG code
+ht23 DD OFFSET WritePipe,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2548,7 +2585,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*23h
+    mov ecx,2*24h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

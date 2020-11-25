@@ -2701,6 +2701,54 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsDeviceConnected
+;
+;           DESCRIPTION:    Check if device is connected
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsDeviceConnected   Proc far
+    push ax
+    push dx
+    push si
+;    
+    movzx si,es:usbd_port    
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,si
+    add dx,si
+;
+    in ax,dx
+    test al,1
+    stc
+    jz idcDone
+;
+    test al,4
+    stc
+    jz idcDone
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx
+    test al,20h
+    stc
+    jnz idcDone
+;
+    clc
+
+idcDone:
+    pop si
+    pop dx
+    pop ax
+    retf32
+IsDeviceConnected   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupControl
 ;
 ;       DESCRIPTION:    Setup control msg
@@ -3100,7 +3148,6 @@ CheckControlOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunControl   Proc near
-    push ds
     pushad
 ;
     mov edx,es:dev_control_head
@@ -3119,22 +3166,8 @@ rcWait:
     mov ax,4
     WaitMilliSec
 ;
-    mov dx,si
-    in ax,dx
-    test al,1
-    stc
-    jz rcDone
-;
-    test al,4
-    stc
-    jz rcDone
-;
-    mov dx,ds:uhc_io_base
-    add dx,UsbStatusReg
-    in ax,dx
-    test al,20h
-    stc
-    jnz rcDone
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
 ;
     mov edx,es:dev_control_head
     test fs:[edx].uqh_elem,1
@@ -3147,7 +3180,6 @@ rcWait:
 
 rcDone:
     popad
-    pop ds
     ret
 RunControl  Endp
 
@@ -3844,10 +3876,11 @@ ut1B DD OFFSET AddressDev,          SEG code
 ut1C DD OFFSET ConfigDev,           SEG code
 ut1D DD OFFSET SetMaxLen,           SEG code
 ut1E DD OFFSET IssueOne,            SEG code
-ut1F DD OFFSET ControlMsg,          SEG code
-ut20 DD OFFSET PollPipe,            SEG code
-ut21 DD OFFSET ReadPipe,            SEG code
-ut22 DD OFFSET WritePipe,           SEG code
+ut1F DD OFFSET IsDeviceConnected,   SEG code
+ut20 DD OFFSET ControlMsg,          SEG code
+ut21 DD OFFSET PollPipe,            SEG code
+ut22 DD OFFSET ReadPipe,            SEG code
+ut23 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3869,7 +3902,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*23h
+    mov cx,2*24h
 
 ifTabLoop:
     lods dword ptr cs:[si]

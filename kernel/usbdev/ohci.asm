@@ -2543,6 +2543,51 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsDeviceConnected
+;
+;           DESCRIPTION:    Check if device is connected
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsDeviceConnected   Proc far
+    push fs
+    push eax
+    push dx
+    push si
+;    
+    movzx si,es:usbd_port    
+    shl si,2
+    mov fs,ds:ohc_reg_sel
+    mov eax,fs:[si].HcRhPortStatus
+    test al,2
+    stc
+    jz idcDone
+;
+    test al,1
+    stc
+    jz idcDone
+;
+    mov eax,fs:HcInterruptStatus
+    test al,10h
+    stc
+    jnz idcDone
+;
+    clc
+
+idcDone:
+    pop si
+    pop dx
+    pop eax
+    pop fs
+    retf32
+IsDeviceConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupControl
 ;
 ;       DESCRIPTION:    Setup control msg
@@ -2872,7 +2917,6 @@ SetupControlOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunControl   Proc near
-    push ds
     pushad
 ;
     mov edx,es:dev_control_ed
@@ -2885,13 +2929,12 @@ RunControl   Proc near
     mov fs:[edx].oes_headp,eax
     and fs:[edx].oes_fa_en,NOT 4000h
 ;
+    push ds
     mov ds,ds:ohc_reg_sel
     mov eax,ds:HcCommandStatus
     or al,2
     mov ds:HcCommandStatus,eax
-;
-    movzx si,es:usbd_port    
-    shl si,2
+    pop ds
 ;
     mov edx,es:dev_control_ed
     mov cx,100
@@ -2899,6 +2942,9 @@ RunControl   Proc near
 rcWait:
     mov ax,4
     WaitMilliSec
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
 ;
     test fs:[edx].oes_fa_en,4000h
     stc
@@ -2913,27 +2959,12 @@ rcWait:
     clc
     je rcDone
 ;
-    mov eax,ds:[si].HcRhPortStatus
-    test al,2
-    stc
-    jz rcDone
-;
-    test al,1
-    stc
-    jz rcDone
-;
-    mov eax,ds:HcInterruptStatus
-    test al,10h
-    stc
-    jnz rcDone
-;
     loop rcWait
 ;
     stc
 
 rcDone:
     popad
-    pop ds
     ret
 RunControl Endp
 
@@ -4051,10 +4082,11 @@ ot1B DD OFFSET AddressDev,          SEG code
 ot1C DD OFFSET ConfigDev,           SEG code
 ot1D DD OFFSET SetMaxLen,           SEG code
 ot1E DD OFFSET IssueOne,            SEG code
-ot1F DD OFFSET ControlMsg,          SEG code
-ot20 DD OFFSET PollPipe,            SEG code
-ot21 DD OFFSET ReadPipe,            SEG code
-ot22 DD OFFSET WritePipe,           SEG code
+ot1F DD OFFSET IsDeviceConnected,   SEG code
+ot20 DD OFFSET ControlMsg,          SEG code
+ot21 DD OFFSET PollPipe,            SEG code
+ot22 DD OFFSET ReadPipe,            SEG code
+ot23 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4112,7 +4144,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*23h
+    mov cx,2*24h
 
 ifTabLoop:
     lods dword ptr cs:[si]
