@@ -27,7 +27,7 @@ void main()
     char buf[8];
     char *dev;
 
-    handle = RdosOpenUsbDevice(1, 2);
+    handle = RdosOpenUsbDevice(5, 0);
     size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x100, 0, buf, 8);
     if (size == 8)
     {

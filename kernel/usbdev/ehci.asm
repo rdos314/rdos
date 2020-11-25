@@ -2996,7 +2996,7 @@ cmDataOut:
 
 cmFail:
     push edx
-    mov edx,es:dev_control_qtd
+    mov edx,es:dev_control_qh
     mov fs:[edx].qh_status,0
     mov eax,1
     xchg eax,fs:[edx].qh_next_qtd
