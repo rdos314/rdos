@@ -2995,12 +2995,19 @@ cmDataOut:
     jmp cmDone
 
 cmFail:
+    push edx
+    mov edx,es:dev_control_qtd
     mov fs:[edx].qh_status,0
-    mov fs:[edx].qh_next_qtd,1
+    mov eax,1
+    xchg eax,fs:[edx].qh_next_qtd
+    test al,1
+    pop edx
+    jnz cmFailClean
 ;
     mov ax,25
     WaitMilliSec
-;
+
+cmFailClean:
     call CleanupControl
     stc
 

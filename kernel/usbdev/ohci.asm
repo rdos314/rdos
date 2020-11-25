@@ -3079,13 +3079,19 @@ cmDataOut:
     jmp cmDone
 
 cmFail:
+    push edx
+    mov edx,es:dev_control_ed
     mov eax,es:dev_control_tail
     mov fs:[edx].oes_tailp,eax
-    mov fs:[edx].oes_headp,eax
+    xchg eax,fs:[edx].oes_headp
+    cmp eax,es:dev_control_tail
+    pop edx
+    je cmCleanFail
 ;
     mov ax,25
     WaitMilliSec
-;
+
+cmCleanFail:
     call CleanupControl
     stc
 
