@@ -546,18 +546,26 @@ IsDeviceConnected   Proc far
     push ebx
 ;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz idcFail
+    stc
+    jnz idcDone
 ;
     movzx ebx,es:usbd_port
     add ebx,ebx
     test ds:[ebx].hub_status_arr,1
-    jz idcFail
-;
-    clc
-    jmp idcDone
-
-idcFail:
     stc
+    jz idcDone
+;
+    push ds
+    push es
+;
+    movzx ebx,ds:hub_port
+    add ebx,ebx
+    mov ds,ds:hub_parent_sel
+    mov es,ds:[ebx].usb_dev_arr
+    call fword ptr ds:is_dev_connected_proc
+;
+    pop es
+    pop ds
 
 idcDone:
     pop ebx
