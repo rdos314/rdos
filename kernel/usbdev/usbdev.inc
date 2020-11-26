@@ -194,6 +194,7 @@ usb_route_str          DD ?
 usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
 usb_thread_arr         DW MAX_USB_HUB_PORTS DUP(?)
 usb_dev_arr            DW MAX_USB_HUB_PORTS DUP(?)
+usb_descr_arr          DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr           DW 128 DUP(?)
 
 usb_function_struc   ENDS

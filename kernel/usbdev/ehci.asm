@@ -2905,7 +2905,10 @@ RunControl   Proc near
     push ds
     pushad
 ;
+    push ds
+    mov ds,es:usbd_func_sel
     call fword ptr ds:is_dev_connected_proc
+    pop ds
     jc rcDone
 ;
     mov edx,es:dev_control_qtd
@@ -2921,7 +2924,10 @@ rcWait:
     mov ax,1
     WaitMilliSec
 ;
+    push ds
+    mov ds,es:usbd_func_sel
     call fword ptr ds:is_dev_connected_proc
+    pop ds
     jc rcDone
 ;
     mov eax,fs:[edx].qh_current_qtd

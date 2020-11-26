@@ -185,7 +185,8 @@ AddDev Proc near
 ;
     movzx bx,al
     add bx,bx
-    mov ds:[bx].usb_dev_arr,es
+    mov ds:[bx].usb_descr_arr,es
+    mov ds:[bx].usb_dev_arr,fs
 ;
     popad
     pop fs
@@ -213,7 +214,7 @@ RemoveDev	Proc near
     movzx bx,al
     add bx,bx
     xor ax,ax
-    xchg ax,ds:[bx].usb_dev_arr
+    xchg ax,ds:[bx].usb_descr_arr
     or ax,ax
     jz rdDone
 ;
@@ -314,7 +315,7 @@ open_usb_dev    Proc far
 ;    
     movzx si,al
     add si,si
-    mov si,es:[si].usb_dev_arr
+    mov si,es:[si].usb_descr_arr
     or si,si
     jz oudvFail
 ;
@@ -818,6 +819,11 @@ init_usb_function Proc far
 ;
     mov cx,MAX_USB_HUB_PORTS
     mov di,OFFSET usb_thread_arr
+    xor ax,ax
+    rep stosw
+;
+    mov cx,MAX_USB_HUB_PORTS
+    mov di,OFFSET usb_descr_arr
     xor ax,ax
     rep stosw
 ;
