@@ -1537,7 +1537,7 @@ DumpInputContext        Proc near
     push es
     mov es,fs:usbp_dev_sel
     mov edi,OFFSET usbd_port
-    mov ecx,OFFSET usbd_pad
+    mov ecx,OFFSET usbd_flags
     sub ecx,edi
     call AddDump
     pop es
@@ -3273,7 +3273,7 @@ handler_thread_name  DB 'XHCI Dev ', 0
 handler_thread:
     mov cl,dl
     mov ds,bx
-    mov es,ds:xhc_port_sel
+    mov gs,ds:xhc_port_sel
 ;    
     movzx edi,cl
     add edi,edi    
@@ -3292,16 +3292,16 @@ htTryAttach:
     shl si,4
 ;    
     LockUsb
-    mov eax,es:[si]
+    mov eax,gs:[si]
     test al,1
     jz htUnlock
 ;
     and eax,0EE03E1h
     or al,10h
-    mov es:[si],eax
+    mov gs:[si],eax
 
 htCheckResetLoop:
-    mov eax,es:[si]
+    mov eax,gs:[si]
     test al,1
     jz htUnlock
 ;
@@ -3326,7 +3326,7 @@ htResetDone:
     mov dx,100
 
 htSlotLoop:
-    mov eax,es:[si]
+    mov eax,gs:[si]
     call PortToSpeed
     cmp al,-1
     jne htSlotAlloc
@@ -3369,17 +3369,16 @@ htSlotAlloc:
 htAttached:
     WaitForSignal
 ;
-    mov eax,es:[si]
-    test al,1
-    jz htDetach
+    call fword ptr ds:is_dev_connected_proc
+    jc htDetach
 ;
     mov eax,1
     shl eax,cl
-    test eax,es:xhc_reset
+    test eax,gs:xhc_reset
     jz htHandle
 ;
     not eax
-    lock and es:xhc_reset,eax
+    lock and gs:xhc_reset,eax
     jmp htDetach
 
 htHandle:
@@ -3424,8 +3423,7 @@ htDetached:
     not eax
     lock and ds:xhc_detach_pend,eax
 ;
-    mov es,ds:xhc_port_sel
-    mov eax,es:[si]
+    mov eax,gs:[si]
     test al,1
     jnz htTryAttach
 ;

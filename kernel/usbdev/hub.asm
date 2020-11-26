@@ -1407,9 +1407,8 @@ htCreate:
 htAttached:
     WaitForSignal
 ;
-    mov ax,ds:[edi].hub_status_arr
-    test ax,1
-    jz htDetach
+    call fword ptr ds:is_dev_connected_proc
+    jc htDetach
 ;    
     mov eax,1
     shl eax,cl

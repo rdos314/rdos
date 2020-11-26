@@ -27,6 +27,8 @@
 
 MAX_USB_HUB_PORTS = 32
 
+FLAG_DETACHED  = 1
+
 PID_IN = 69h
 PID_OUT = 0E1h
 PID_SETUP = 2Dh
@@ -207,7 +209,7 @@ usbd_maxlen             DW ?
 usbd_port               DB ?
 usbd_address            DB ?
 usbd_speed              DB ?
-usbd_pad                DB ?
+usbd_flags              DB ?
 
 usbd_section            section_typ <>
 

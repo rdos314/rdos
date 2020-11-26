@@ -3365,7 +3365,7 @@ handler_thread_name  DB 'OHCI Dev ', 0
 handler_thread:
     mov ds,bx
     mov cl,dl
-    mov es,ds:ohc_reg_sel
+    mov gs,ds:ohc_reg_sel
 ;    
     movzx si,cl
     shl si,2
@@ -3384,7 +3384,7 @@ htCheck:
     mov ax,5
     WaitMilliSec
 ;
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htDetached
 ;
@@ -3394,13 +3394,13 @@ htCheck:
     LockUsb
 ;    
     mov eax,10h
-    mov es:[si].HcRhPortStatus,eax
+    mov gs:[si].HcRhPortStatus,eax
 
 htResetLoop:
     mov ax,5
     WaitMilliSec
 ;
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htUnlock
 ;    
@@ -3408,7 +3408,7 @@ htResetLoop:
     jnz htResetLoop
 ; 
     mov eax,2
-    mov es:[si].HcRhPortStatus,eax
+    mov gs:[si].HcRhPortStatus,eax
 ;
     mov dx,40
 
@@ -3416,7 +3416,7 @@ htWaitNotify:
     mov ax,5
     WaitMilliSec
 ;
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htUnlock
 ;
@@ -3430,7 +3430,7 @@ htWaitNotify:
     jc htUnlock
 ;
     mov dl,al
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     shr ah,1
     and ah,1
     xor ah,1
@@ -3453,9 +3453,8 @@ htWaitNotify:
 htAttached:
     WaitForSignal
 ;
-    mov eax,es:[si].HcRhPortStatus
-    test al,1
-    jz htDetach
+    call fword ptr ds:is_dev_connected_proc
+    jc htDetach
 ;
     mov ax,1
     shl ax,cl
@@ -3470,12 +3469,12 @@ htHandle:
     jmp htAttached
 
 htUnlock:
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htDoUnlock
 ;
     mov eax,1
-    mov es:[si].HcRhPortStatus,eax
+    mov gs:[si].HcRhPortStatus,eax
 ;
     mov ax,25
     WaitMilliSec
@@ -3488,19 +3487,18 @@ htDetach:
     mov al,cl
     NotifyUsbDetach
 ;
-    mov es,ds:ohc_reg_sel
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htDone
 ;
     mov eax,1
-    mov es:[si].HcRhPortStatus,eax
+    mov gs:[si].HcRhPortStatus,eax
 ;
     mov ax,25
     WaitMilliSec
 
 htDetached:
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htDone
 ;
@@ -3510,7 +3508,7 @@ htWaitDisable:
     mov ax,5
     WaitMilliSec
 ;
-    mov eax,es:[si].HcRhPortStatus
+    mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htDone
 ;

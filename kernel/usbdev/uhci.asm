@@ -3598,9 +3598,8 @@ htNotify:
 htAttached:
     WaitForSignal
 ;
-    in ax,dx
-    test al,1
-    jz htDetach
+    call fword ptr ds:is_dev_connected_proc
+    jc htDetach
 ;
     mov cl,bl
     mov ax,1

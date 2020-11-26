@@ -3467,7 +3467,7 @@ handler_thread_name  DB 'EHCI Dev ', 0
 handler_thread:
     mov cl,dl
     mov ds,bx
-    mov es,ds:ehc_reg_sel
+    mov gs,ds:ehc_reg_sel
 ;    
     movzx edi,cl
     add edi,edi
@@ -3484,7 +3484,7 @@ htCheck:
     mov ax,5
     WaitMilliSec
 ;
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test al,1
     jz htDetached
 ;
@@ -3502,28 +3502,28 @@ htCheck:
     jae htDetached
 ;    
     mov eax,3000h
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
     jmp htDetached
     
 htDoReset:    
     LockUsb
 ;    
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     and al,NOT 4
     or ax,100h
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
 ;
     mov ax,25
     WaitMilliSec
 ;    
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     and ax,NOT 100h
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
 ;
     mov ax,25
     WaitMilliSec
 ;
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test al,1
     jz htUnlock
 ;    
@@ -3537,15 +3537,15 @@ htDoReset:
     jae htUnlock
 ;    
     mov ax,3000h
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
     jmp htUnlock
         
 htHighSpeed:    
     and ax,NOT 100h
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
     
 htResetLoop:
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test al,1
     jz htUnlock
 ;    
@@ -3560,7 +3560,7 @@ htResetDone:
     mov ax,2
     WaitMilliSec
 ;
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test al,1
     jz htUnlock
 ;    
@@ -3574,7 +3574,7 @@ htResetDone:
     jae htUnlock
 ;    
     mov eax,3000h
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
     jmp htUnlock
         
 htNotify:
@@ -3584,7 +3584,7 @@ htWaitNotify:
     mov ax,10
     WaitMilliSec
 ;
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test al,1
     jz htUnlock
 ;
@@ -3616,9 +3616,8 @@ htWaitNotify:
 htAttached:
     WaitForSignal
 ;
-    mov eax,es:[2*edi].HcPortSc
-    test al,1
-    jz htDetach
+    call fword ptr ds:is_dev_connected_proc
+    jc htDetach
 ;
     mov ax,1
     shl ax,cl
@@ -3633,12 +3632,12 @@ htHandle:
     jmp htAttached
 
 htUnlock:
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test ax,2000h
     jnz htDoUnlock
 ;
     and al,NOT 4
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
 
 htDoUnlock:
     mov ax,5
@@ -3652,13 +3651,12 @@ htDetach:
     NotifyUsbDetach
 
 htDetached:
-    mov es,ds:ehc_reg_sel
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test ax,2000h
     jnz htDone
 ;
     and al,NOT 4
-    mov es:[2*edi].HcPortSc,eax
+    mov gs:[2*edi].HcPortSc,eax
 ;
     mov dx,10
 
@@ -3666,7 +3664,7 @@ htWaitDisable:
     mov ax,5
     WaitMilliSec
 ;
-    mov eax,es:[2*edi].HcPortSc
+    mov eax,gs:[2*edi].HcPortSc
     test al,1
     jz htDone
 ;
