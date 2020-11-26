@@ -226,8 +226,9 @@ xhci_dev_struc   STRUC
 
 usb_dev_base             usb_device_struc <>
 
-xd_dev_sel               DW ?
 xd_device_context        DD ?
+xd_dev_sel               DW ?
+xd_control_trb           DW ?
 
 xd_input_context_offset  DW ?
 xd_input_slot_offset     DW ?
@@ -2835,6 +2836,7 @@ SetupControlIn   Proc near
     pushad
 ;
     call WaitForEndpointTrb
+    mov es:xd_control_trb,si
     mov eax,dword ptr es:usbd_control_buf
     mov fs:[si].trb_param,eax
     mov eax,dword ptr es:usbd_control_buf+4
@@ -2853,69 +2855,18 @@ SetupControlIn   Proc near
     jz sciStatusOut
 ;
     mov fs:[si].trb_control,3
-
-sciLoop:
-    push es
-    push cx
-;
-    mov bx,gs
-    GetSelectorBaseSize
-    add edx,edi
-    mov cx,flat_sel
-    mov es,cx
-    mov al,es:[edx]
-    GetPageEntry
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-;
-    pop cx
-    pop es
+    AllocateMemBlk
 ;
     call WaitForEndpointTrb
     mov fs:[si].trb_param,eax
     mov fs:[si].trb_param+4,ebx
 ;
-    and ax,0FFFh
-    mov bx,1000h
-    sub bx,ax
-    xchg ax,bx
-;
-    mov bx,cx
-    cmp bx,es:usbd_maxlen
-    jb sciMinOk
-;
-    mov bx,es:usbd_maxlen
-
-sciMinOk:
-    cmp ax,bx
-    jb sciChain
-
-sciOne:
-    movzx eax,bx
+    movzx eax,cx
     mov fs:[si].trb_status,eax    
     mov ax,TRB_TYPE_DATA SHL 10
     or ax,fs:xp_ring_pcs
     mov fs:[si].trb_type,ax
     mov fs:[si].trb_control,1
-    jmp sciNext
-
-sciChain:
-    int 3
-    mov bx,ax
-    movzx eax,bp
-    shl eax,17
-    mov ax,bx
-    mov fs:[si].trb_status,eax    
-    mov ax,TRB_TYPE_DATA SHL 10
-    or ax,fs:xp_ring_pcs
-    or ax,10h
-    mov fs:[si].trb_type,ax
-
-sciNext:
-    sub cx,bx
-    jnz sciLoop
 
 sciStatusOut: 
     call WaitForEndpointTrb
