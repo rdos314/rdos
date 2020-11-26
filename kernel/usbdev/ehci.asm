@@ -2495,9 +2495,14 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsDeviceConnected   Proc far
+    push es
     push eax
-    push si
+    push esi
 ;    
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz idcFail
+;
     movzx si,es:usbd_port
     shl si,2
     mov es,ds:ehc_reg_sel
@@ -2513,8 +2518,9 @@ idcFail:
     stc
 
 idcDone:
-    pop si
+    pop esi
     pop eax
+    pop es
     retf32
 IsDeviceConnected Endp
 
@@ -2898,6 +2904,9 @@ SetupControlOut	Endp
 RunControl   Proc near
     push ds
     pushad
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
 ;
     mov edx,es:dev_control_qtd
     LinearToPhysicalMemBlk
