@@ -545,6 +545,10 @@ IsDeviceConnected   Proc far
     push eax
     push ebx
 ;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz idcDone
+;
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     stc
     jnz idcDone
