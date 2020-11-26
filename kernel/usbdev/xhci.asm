@@ -3118,7 +3118,6 @@ FreeAddress       Endp
 AllocateDevice    Proc near
     pushad
 ;
-    push eax
     mov eax,1000h
     AllocateBigLinear
 ;    
@@ -3144,10 +3143,6 @@ AllocateDevice    Proc near
     mov es:mblk_physical_base,eax
     mov es:mblk_physical_base+4,ebx
     mov es:mblk_linear_base,edx
-    mov es:xd_dev_sel,ds
-;
-    pop eax
-    mov es:usbd_speed,al
 ;    
     mov bx,SIZE xhci_dev_struc
     add bx,40h
@@ -3253,6 +3248,9 @@ CreateDev   Proc far
     mov al,ah
     call AllocateDevice
     pop ax
+;
+    mov es:xd_dev_sel,ds
+    mov es:usbd_speed,al
 ;
     pushad
 ;
