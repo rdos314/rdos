@@ -1619,6 +1619,7 @@ init_usb_dev       Proc far
     mov es:usbd_port,dl
     mov es:usbd_address,al
     mov es:usbd_speed,ah
+    mov es:usbd_flags,0
 ;
     or bx,bx
     jz usdNoHub
@@ -2034,6 +2035,7 @@ notify_usb_attach   Endp
 ;
 ;       parameters:         AL      Usb port
 ;                           DS      USB function selector
+;                           ES      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2045,6 +2047,7 @@ notify_usb_detach       Proc far
     push es
     pushad
 ;
+    lock or es:usbd_flags,FLAG_DETACHED
     call RemoveDev
 ;
     mov ah,al

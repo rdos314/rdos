@@ -2558,6 +2558,10 @@ IsDeviceConnected   Proc far
     push dx
     push si
 ;    
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz idcDone
+;
     movzx si,es:usbd_port    
     shl si,2
     mov fs,ds:ohc_reg_sel
