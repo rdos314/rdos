@@ -227,13 +227,12 @@ xhci_dev_struc   STRUC
 usb_dev_base             usb_device_struc <>
 
 xd_dev_sel               DW ?
+xd_device_context        DD ?
 
 xd_input_context_offset  DW ?
 xd_input_slot_offset     DW ?
-xd_output_context_offset DW ?
 xd_ep_size               DW ?
 xd_input_ep_arr_offset   DW 32 DUP (?)
-xd_output_ep_arr_offset  DW 32 DUP (?)
 
 xd_ep_sel_arr            DW 32 DUP(?)
 
@@ -3175,21 +3174,6 @@ adiEpLoop:
     dec bx
     and bx,0FFC0h
 ;    
-    mov es:xd_output_context_offset,bx
-    mov di,OFFSET xd_output_ep_arr_offset
-    mov cx,32
-
-adoEpLoop:
-    add bx,dx
-    mov es:[di],bx
-    add di,2 
-    loop adoEpLoop      
-;
-    add bx,dx
-    add bx,40h
-    dec bx
-    and bx,0FFC0h
-;    
     movzx ecx,bx
     mov edx,es:mblk_linear_base
     mov bx,es
@@ -3282,6 +3266,7 @@ CreateDev   Proc far
     mov bx,xhci_device_ptr_sel
     mov fs,bx
     call AllocateDeviceContext
+    mov es:xd_device_context,edx
     mov fs:[di],eax
     mov fs:[di+4],ebx
 ;
