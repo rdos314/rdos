@@ -2929,6 +2929,9 @@ RunControl   Proc near
     mov fs:[edx].oes_headp,eax
     and fs:[edx].oes_fa_en,NOT 4000h
 ;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
+;
     push ds
     mov ds,ds:ohc_reg_sel
     mov eax,ds:HcCommandStatus
