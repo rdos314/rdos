@@ -3118,62 +3118,32 @@ FreeAddress       Endp
 AllocateDevice    Proc near
     pushad
 ;
-    mov eax,1000h
-    AllocateBigLinear
+    mov ax,ds:xhc_context_size
+    mov si,SIZE xhci_dev_struc
+    mov cx,16
+    CreateMemBlk64
 ;    
-    AllocatePhysical64
-    push ebx
-    push eax
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    sub edx,es:mblk_linear_base
+    mov es:xd_input_context_offset,dx
 ;
-    mov al,13h
-    SetPageEntry
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    sub edx,es:mblk_linear_base
+    mov es:xd_input_slot_offset,dx
 ;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es,bx
-;    
-    xor edi,edi
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
-;
-    pop eax
-    pop ebx
-    mov es:mblk_physical_base,eax
-    mov es:mblk_physical_base+4,ebx
-    mov es:mblk_linear_base,edx
-;    
-    mov bx,SIZE xhci_dev_struc
-    add bx,40h
-    dec bx
-    and bx,0FFC0h
-    mov dx,ds:xhc_context_size
-    mov es:xd_ep_size,dx
-;    
-    mov es:xd_input_context_offset,bx
-;
-    add bx,dx
-    mov es:xd_input_slot_offset,bx
     mov di,OFFSET xd_input_ep_arr_offset
-    mov cx,32
+    mov bp,32
 
 adiEpLoop:
-    add bx,dx
-    mov es:[di],bx
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    sub edx,es:mblk_linear_base
+    mov es:[di],dx
     add di,2 
-    loop adiEpLoop      
-;
-    add bx,dx
-    add bx,40h
-    dec bx
-    and bx,0FFC0h
-;    
-    movzx ecx,bx
-    mov edx,es:mblk_linear_base
-    mov bx,es
-    CreateDataSelector16
-    mov es,bx
+    sub bp,1
+    jnz adiEpLoop      
 ;
     popad
     ret
@@ -3253,6 +3223,9 @@ CreateDev   Proc far
     mov es:usbd_speed,al
 ;
     pushad
+;
+    mov bx,ds:xhc_context_size
+    mov es:xd_ep_size,bx
 ;
     movzx bx,al
     shl bx,1
