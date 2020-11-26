@@ -229,6 +229,7 @@ usb_dev_base             usb_device_struc <>
 xd_device_context        DD ?
 xd_dev_sel               DW ?
 xd_control_trb           DW ?
+xd_control_buf           DD ?
 
 xd_input_context_offset  DW ?
 xd_input_slot_offset     DW ?
@@ -2796,6 +2797,7 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsDeviceConnected   Proc far
+    push es
     push fs
     push eax
     push si
@@ -2815,6 +2817,7 @@ idcDone:
     pop si
     pop eax
     pop fs
+    pop es
     retf32
 IsDeviceConnected Endp
 
@@ -2827,7 +2830,6 @@ IsDeviceConnected Endp
 ;
 ;       PARAMETERS:     ES      Usb device
 ;                       FS      Pipe sel
-;                       GS:EDI  Buffer
 ;                       CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2851,11 +2853,14 @@ SetupControlIn   Proc near
     mov fs:[si].trb_type,ax
     mov fs:[si].trb_control,0
 ;
+    mov fs:xp_size,cx
+;
     or cx,cx
     jz sciStatusOut
 ;
     mov fs:[si].trb_control,3
     AllocateMemBlk
+    mov es:xd_control_buf,edx
 ;
     call WaitForEndpointTrb
     mov fs:[si].trb_param,eax
@@ -2884,13 +2889,76 @@ SetupControlIn	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CopyControlIn
+;
+;       DESCRIPTION:    Copy control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Control pipe
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;       RETURNS:        CX      Size returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyControlIn   Proc near
+    push eax
+;
+    mov al,fs:xp_result
+    or cx,cx
+    jz cciNoData
+
+cciData:
+    cmp al,1
+    stc 
+    jne cciDone
+;
+    push ds
+    push es
+    pushad
+;
+    mov esi,es:xd_control_buf
+    movzx ecx,fs:xp_size
+    sub cx,fs:xp_remain_size
+    mov bx,cx
+    mov ax,gs
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    popad
+    pop es
+    pop ds
+;
+    mov cx,fs:xp_size
+    sub cx,fs:xp_remain_size
+    clc
+    jmp cciDone
+
+cciNoData:
+    cmp al,0Dh
+    stc
+    jne cciDone
+;
+    clc
+
+cciDone:
+    pop eax
+    ret
+CopyControlIn   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
 ;
 ;       PARAMETERS:     DS      Usb function
 ;                       ES      Usb device
-;                       FS      Flat sel
+;                       FS      Control pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2898,13 +2966,41 @@ RunControl   Proc near
     push ds
     pushad
 ;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
+;
+    mov fs:xp_result,-1
+;
+    push ds
     mov ds,ds:xhc_db_sel
     movzx si,fs:xp_slot
     shl si,2
     movzx eax,fs:xp_db_target
     mov ds:[si],eax
-    clc
+    pop ds
 ;
+    mov cx,100
+
+rcWait:
+    mov ax,4
+    WaitMilliSec
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
+;
+    mov al,fs:xp_result
+    cmp al,-1
+    jne rcCheck
+;
+    loop rcWait
+;
+    stc
+    jmp rcDone
+
+rcCheck:
+    clc
+
+rcDone:
     popad
     pop ds
     ret
@@ -2928,30 +3024,54 @@ RunControl   Endp
 
 ControlMsg   Proc far
     push fs
-    push gs
     push eax
     push edx
     push ebp
 ;
+    mov fs:xp_size,0
+    mov es:xd_control_buf,0
     mov fs,es:usbd_in_endpoint_arr
-    mov ax,flat_sel
-    mov gs,ax
 ;
     test es:usbd_control_buf.usd_type,80h
     jz cmDataOut
 ;
     call SetupControlIn
-    jc cmFail
+    jc cmDone
 ;
     call RunControl
+    jc cmDone
+;
+    call CopyControlIn
+    jmp cmDone
 
 cmDataOut:
-cmFail:
+    int 3
+
 cmDone:
+    pushf
+    push ecx
+    push edx
+;
+    xor cx,cx
+    xchg cx,fs:xp_size
+    or cx,cx
+    jz cmFreeOk
+;
+    xor edx,edx
+    xchg edx,es:xd_control_buf
+    or edx,edx
+    jz cmFreeOk
+;
+    FreeLinearMemBlk
+
+cmFreeOk:
+    pop edx
+    pop ecx
+    popf
+;
     pop ebp
     pop edx
     pop eax
-    pop gs
     pop fs
     retf32
 ControlMsg   Endp
