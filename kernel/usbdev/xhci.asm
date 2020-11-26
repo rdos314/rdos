@@ -1024,104 +1024,6 @@ ResetSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateDevice
-;
-;       DESCRIPTION:    Allocate device
-;
-;       PARAMETERS:     DS      Device sel
-;                       AL      Speed
-;
-;       RETURNS:        ES      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateDevice    Proc near
-    pushad
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-;    
-    AllocatePhysical64
-    push ebx
-    push eax
-;
-    mov al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es,bx
-;    
-    xor edi,edi
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
-;
-    pop eax
-    pop ebx
-    mov es:mblk_physical_base,eax
-    mov es:mblk_physical_base+4,ebx
-    mov es:mblk_linear_base,edx
-    mov es:xd_dev_sel,ds
-;
-    pop eax
-    mov es:usbd_speed,al
-;    
-    mov bx,SIZE xhci_dev_struc
-    add bx,40h
-    dec bx
-    and bx,0FFC0h
-    mov dx,ds:xhc_context_size
-    mov es:xd_ep_size,dx
-;    
-    mov es:xd_input_context_offset,bx
-;
-    add bx,dx
-    mov es:xd_input_slot_offset,bx
-    mov di,OFFSET xd_input_ep_arr_offset
-    mov cx,32
-
-adiEpLoop:
-    add bx,dx
-    mov es:[di],bx
-    add di,2 
-    loop adiEpLoop      
-;
-    add bx,dx
-    add bx,40h
-    dec bx
-    and bx,0FFC0h
-;    
-    mov es:xd_output_context_offset,bx
-    mov di,OFFSET xd_output_ep_arr_offset
-    mov cx,32
-
-adoEpLoop:
-    add bx,dx
-    mov es:[di],bx
-    add di,2 
-    loop adoEpLoop      
-;
-    add bx,dx
-    add bx,40h
-    dec bx
-    and bx,0FFC0h
-;    
-    movzx ecx,bx
-    mov edx,es:mblk_linear_base
-    mov bx,es
-    CreateDataSelector16
-    mov es,bx
-;
-    popad
-    ret
-AllocateDevice    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           SetupRootDevice
 ;
 ;       DESCRIPTION:    Setup root device context
@@ -3203,6 +3105,145 @@ FreeAddress       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateDevice
+;
+;       DESCRIPTION:    Allocate device
+;
+;       PARAMETERS:     DS      Device sel
+;                       AL      Speed
+;
+;       RETURNS:        ES      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDevice    Proc near
+    pushad
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+;    
+    AllocatePhysical64
+    push ebx
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es,bx
+;    
+    xor edi,edi
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    pop eax
+    pop ebx
+    mov es:mblk_physical_base,eax
+    mov es:mblk_physical_base+4,ebx
+    mov es:mblk_linear_base,edx
+    mov es:xd_dev_sel,ds
+;
+    pop eax
+    mov es:usbd_speed,al
+;    
+    mov bx,SIZE xhci_dev_struc
+    add bx,40h
+    dec bx
+    and bx,0FFC0h
+    mov dx,ds:xhc_context_size
+    mov es:xd_ep_size,dx
+;    
+    mov es:xd_input_context_offset,bx
+;
+    add bx,dx
+    mov es:xd_input_slot_offset,bx
+    mov di,OFFSET xd_input_ep_arr_offset
+    mov cx,32
+
+adiEpLoop:
+    add bx,dx
+    mov es:[di],bx
+    add di,2 
+    loop adiEpLoop      
+;
+    add bx,dx
+    add bx,40h
+    dec bx
+    and bx,0FFC0h
+;    
+    mov es:xd_output_context_offset,bx
+    mov di,OFFSET xd_output_ep_arr_offset
+    mov cx,32
+
+adoEpLoop:
+    add bx,dx
+    mov es:[di],bx
+    add di,2 
+    loop adoEpLoop      
+;
+    add bx,dx
+    add bx,40h
+    dec bx
+    and bx,0FFC0h
+;    
+    movzx ecx,bx
+    mov edx,es:mblk_linear_base
+    mov bx,es
+    CreateDataSelector16
+    mov es,bx
+;
+    popad
+    ret
+AllocateDevice    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateDeviceContext
+;
+;       DESCRIPTION:    Allocate device context
+;
+;       RETURNS:        EBX:EAX		Physical address
+;                       EDX             Device context linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDeviceContext    Proc near
+    push es
+    push ecx
+    push edi
+;
+    mov eax,1000h
+    AllocateBigLinear
+;    
+    AllocatePhysical64
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop eax
+;
+    pop edi
+    pop ecx
+    pop es
+    ret
+AllocateDeviceContext	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateDev
 ;
 ;       DESCRIPTION:    Create device sel
@@ -3221,13 +3262,15 @@ CreateDev   Proc far
     push fs
     pushad
 ;
+    movzx di,al
+    shl di,3
+;
     push ax
     mov al,ah
     call AllocateDevice
     pop ax
 ;
-    push bx
-    push dx
+    pushad
 ;
     movzx bx,al
     shl bx,1
@@ -3238,16 +3281,11 @@ CreateDev   Proc far
 ;
     mov bx,xhci_device_ptr_sel
     mov fs,bx
-    movzx bx,al
-    shl bx,3
-    movzx edx,es:xd_output_context_offset
-    add edx,es:mblk_physical_base
-    mov fs:[bx],edx
-    mov edx,es:mblk_physical_base+4
-    mov fs:[bx+4],edx
+    call AllocateDeviceContext
+    mov fs:[di],eax
+    mov fs:[di+4],ebx
 ;
-    pop dx
-    pop bx
+    popad
 ;
     InitUsbDev
 ;
@@ -3344,7 +3382,6 @@ htSlotAlloc:
     xor bx,bx
     movzx dx,cl
     call fword ptr ds:create_dev_proc
-    jc htUnlock
 ;
     mov ax,25
     WaitMilliSec
