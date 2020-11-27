@@ -556,19 +556,12 @@
 #define usergate_get_pci_device_class 0x000001C9
 #define usergate_get_pci_device_irq 0x000001CA
 
-#define usergate_open_hid 0x000001CB
-#define usergate_close_hid 0x000001CC
-#define usergate_get_hid_pipe 0x000001CD
-
 #define usergate_get_core_load 0x000001CE
 #define usergate_get_core_duty 0x000001CF
 
 #define usergate_has_global_timer 0x000001D0
 
 #define usergate_remote_debug 0x000001D1
-
-#define usergate_read_hid 0x000001D2
-#define usergate_write_hid 0x000001D3
 
 #define usergate_ansi_to_utf8 0x000001D4
 #define usergate_utf8_to_ansi 0x000001D5
@@ -1510,19 +1503,12 @@
 #define CallGate_get_pci_device_class 0x55 0x67 0x9a 201 1 0 0 3 0 0x5d
 #define CallGate_get_pci_device_irq 0x55 0x67 0x9a 202 1 0 0 3 0 0x5d
 
-#define CallGate_open_hid 0x55 0x67 0x9a 203 1 0 0 3 0 0x5d
-#define CallGate_close_hid 0x55 0x67 0x9a 204 1 0 0 3 0 0x5d
-#define CallGate_get_hid_pipe 0x55 0x67 0x9a 205 1 0 0 3 0 0x5d
-
 #define CallGate_get_core_load 0x55 0x67 0x9a 206 1 0 0 3 0 0x5d
 #define CallGate_get_core_duty 0x55 0x67 0x9a 207 1 0 0 3 0 0x5d
 
 #define CallGate_has_global_timer 0x55 0x67 0x9a 208 1 0 0 3 0 0x5d
 
 #define CallGate_remote_debug 0x55 0x67 0x9a 209 1 0 0 3 0 0x5d
-
-#define CallGate_read_hid 0x55 0x67 0x9a 210 1 0 0 3 0 0x5d
-#define CallGate_write_hid 0x55 0x67 0x9a 211 1 0 0 3 0 0x5d
 
 #define CallGate_ansi_to_utf8 0x55 0x67 0x9a 212 1 0 0 3 0 0x5d
 #define CallGate_utf8_to_ansi 0x55 0x67 0x9a 213 1 0 0 3 0 0x5d
@@ -2462,19 +2448,12 @@
 #define CallGate_get_pci_device_class 0x3e 0x67 0x9a 201 1 0 0 3 0
 #define CallGate_get_pci_device_irq 0x3e 0x67 0x9a 202 1 0 0 3 0
 
-#define CallGate_open_hid 0x3e 0x67 0x9a 203 1 0 0 3 0
-#define CallGate_close_hid 0x3e 0x67 0x9a 204 1 0 0 3 0
-#define CallGate_get_hid_pipe 0x3e 0x67 0x9a 205 1 0 0 3 0
-
 #define CallGate_get_core_load 0x3e 0x67 0x9a 206 1 0 0 3 0
 #define CallGate_get_core_duty 0x3e 0x67 0x9a 207 1 0 0 3 0
 
 #define CallGate_has_global_timer 0x3e 0x67 0x9a 208 1 0 0 3 0
 
 #define CallGate_remote_debug 0x3e 0x67 0x9a 209 1 0 0 3 0
-
-#define CallGate_read_hid 0x3e 0x67 0x9a 210 1 0 0 3 0
-#define CallGate_write_hid 0x3e 0x67 0x9a 211 1 0 0 3 0
 
 #define CallGate_ansi_to_utf8 0x3e 0x67 0x9a 212 1 0 0 3 0
 #define CallGate_utf8_to_ansi 0x3e 0x67 0x9a 213 1 0 0 3 0
