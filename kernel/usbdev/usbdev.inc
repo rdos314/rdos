@@ -143,7 +143,7 @@ clear_stalled_proc      DD ?,?
 ; OUT AL        Maxlen
 get_max_len_proc        DD ?,?
 
-; IN  FS        Pipe selector
+;  IN  AL       Address
 address_device_proc	DD ?,?
 
 ; IN  FS        Pipe selector

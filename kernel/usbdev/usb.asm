@@ -1573,34 +1573,18 @@ free_usb_address       Endp
 address_usb_dev_name DB 'Address USB Device', 0
 
 address_usb_dev       Proc far
-    push es
-    pushad
+    push di
 ;
-    push ax
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    pop ax
-;
+    mov di,OFFSET usbd_control_buf
     movzx ax,al
-    mov es:usd_type,0
-    mov es:usd_req,SET_ADDRESS
-    mov es:usd_value,ax
-    mov es:usd_index,0
-    mov es:usd_len,0
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    call fword ptr ds:add_status_in_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
+    mov es:[di].usd_type,0
+    mov es:[di].usd_req,SET_ADDRESS
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    call fword ptr ds:control_msg_proc
 ;
-    pushf
-    FreeMem
-    popf
-
-audDone:
-    popad
-    pop es
+    pop di
     retf32
 address_usb_dev       Endp
 
