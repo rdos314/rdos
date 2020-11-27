@@ -4065,14 +4065,6 @@ CreateUsbReq      MACRO
 ; IN  CX    Size of data
 ; IN  AX    Additional data space
 ; OUT ES    Selector (do not free)
-AddWriteUsbContolReq      MACRO
-    OsGate add_write_usb_control_req_nr
-                        ENDM
-                        
-; IN  BX    Req handle
-; IN  CX    Size of data
-; IN  AX    Additional data space
-; OUT ES    Selector (do not free)
 AddWriteUsbDataReq      MACRO
     OsGate add_write_usb_data_req_nr
                         ENDM
@@ -4083,16 +4075,6 @@ AddWriteUsbDataReq      MACRO
 ; OUT ES    Selector (do not free)
 AddReadUsbDataReq      MACRO
     OsGate add_read_usb_data_req_nr
-                        ENDM
-
-; IN  BX    Req handle
-AddUsbStatusInReq      MACRO
-    OsGate add_usb_status_in_req_nr
-                        ENDM
-
-; IN  BX    Req handle
-AddUsbStatusOutReq      MACRO
-    OsGate add_usb_status_out_req_nr
                         ENDM
 
 ; IN  AX    Thread to signal on completion

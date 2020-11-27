@@ -88,11 +88,8 @@ rh_flags        DB ?
 
 req_handle_struc    ENDS
 
-REQ_TYPE_WRITE_CONTROL   = 1
-REQ_TYPE_WRITE_DATA = 2
-REQ_TYPE_READ_DATA = 3
-REQ_TYPE_STATUS_IN = 4
-REQ_TYPE_STATUS_OUT = 5
+REQ_TYPE_WRITE_DATA = 1
+REQ_TYPE_READ_DATA = 2
 
 REQ_FLAG_STARTED = 1
 REQ_FLAG_ACTIVE  = 2
@@ -2085,57 +2082,6 @@ create_usb_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddWriteUsbControlReq
-;
-;       description:    Add write control req
-;
-;       parameters:     BX      Req handle
-;                       CX      Size of data
-;                       AX      Additional data size
-;
-;       Returns:        ES      Data selector (do not free)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_write_usb_control_req_name DB 'Add Write USB control req', 0
-
-add_write_usb_control_req       Proc far
-    push ds
-    push eax
-    push ebx
-;
-    push ax
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    pop ax
-    jc awucDone
-;
-    push ds
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov ds,ds:usbu_func_sel
-    movzx eax,ax
-    call AllocateBufSel     
-    mov ax,es
-    pop ds
-;    
-    call AddReqBlock
-    mov es:re_type,REQ_TYPE_WRITE_CONTROL
-    mov es:re_size,cx
-    mov es:re_buf_sel,ax
-    mov es,ax    
-    clc
-    
-awucDone:    
-    pop ebx
-    pop eax
-    pop ds
-    retf32
-add_write_usb_control_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AddWriteUsbDataReq
 ;
 ;       description:    Add write data req
@@ -2236,111 +2182,6 @@ arudDone:
     retf32
 add_read_usb_data_req   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddUsbStatusInReq
-;
-;           description:    Add status in req
-;
-;       parameters:     BX      Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_usb_status_in_req_name DB 'Add USB status in req', 0
-
-add_usb_status_in_req   Proc far
-    push ds
-    push es
-    push ax
-    push ebx
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc ausiDone
-;
-    call AddReqBlock
-    mov es:re_type,REQ_TYPE_STATUS_IN
-    mov es:re_size,0
-    mov es:re_buf_sel,0
-    clc
-    
-ausiDone:    
-    pop ebx
-    pop ax
-    pop es
-    pop ds
-    retf32
-add_usb_status_in_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddUsbStatusOutReq
-;
-;           description:    Add status out req
-;
-;       parameters:     BX      Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_usb_status_out_req_name DB 'Add USB status out req', 0
-
-add_usb_status_out_req  Proc far
-    push ds
-    push es
-    push ax
-    push ebx
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc ausoDone
-;
-    call AddReqBlock
-    mov es:re_type,REQ_TYPE_STATUS_OUT
-    mov es:re_size,0
-    mov es:re_buf_sel,0
-    clc
-    
-ausoDone:    
-    pop ebx
-    pop ax
-    pop es
-    pop ds
-    retf32
-add_usb_status_out_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReqWriteControl
-;
-;           description:    Do Write control req
-;
-;       parameters:     DS      Function sel
-;               ES      Req sel
-;               FS      Pipe sel
-;               CX      Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqWriteControl Proc near
-    push es
-    push edi
-;       
-    mov es,es:re_buf_sel
-    xor edi,edi
-    call fword ptr ds:add_setup_proc
-;       
-    pop edi
-    pop es      
-    ret
-ReqWriteControl Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2398,45 +2239,6 @@ ReqReadData     Proc near
     ret
 ReqReadData Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReqStatusIn
-;
-;           description:    Do status in
-;
-;       parameters:     DS      Function sel
-;               ES      Req sel
-;               FS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqStatusIn     Proc near
-    call fword ptr ds:add_status_in_proc
-    ret
-ReqStatusIn Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReqStatusOut
-;
-;           description:    Do status out
-;
-;       parameters:     DS      Function sel
-;               ES      Req sel
-;               FS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqStatusOut    Proc near
-    call fword ptr ds:add_status_out_proc
-    ret
-ReqStatusOut Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2453,11 +2255,8 @@ ReqStatusOut Endp
 start_usb_req_name DB 'Start USB req', 0
 
 req_tab:
-rt01 DW OFFSET ReqWriteControl
 rt02 DW OFFSET ReqWriteData
 rt03 DW OFFSET ReqReadData
-rt04 DW OFFSET ReqStatusIn
-rt05 DW OFFSET ReqStatusOut   
 
 start_usb_req   Proc far
     push ds
@@ -5526,12 +5325,6 @@ init    Proc far
     mov ax,create_usb_req_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET add_write_usb_control_req
-    mov edi,OFFSET add_write_usb_control_req_name
-    xor cl,cl
-    mov ax,add_write_usb_control_req_nr
-    RegisterOsGate
-;
     mov esi,OFFSET add_write_usb_data_req
     mov edi,OFFSET add_write_usb_data_req_name
     xor cl,cl
@@ -5542,18 +5335,6 @@ init    Proc far
     mov edi,OFFSET add_read_usb_data_req_name
     xor cl,cl
     mov ax,add_read_usb_data_req_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET add_usb_status_in_req
-    mov edi,OFFSET add_usb_status_in_req_name
-    xor cl,cl
-    mov ax,add_usb_status_in_req_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET add_usb_status_out_req
-    mov edi,OFFSET add_usb_status_out_req_name
-    xor cl,cl
-    mov ax,add_usb_status_out_req_nr
     RegisterOsGate
 ;
     mov esi,OFFSET start_usb_req
