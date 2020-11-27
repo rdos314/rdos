@@ -71,10 +71,10 @@ extern int HidBegin(int Index, struct THidDevice *Dev, struct THidReportIdEntry 
 #pragma aux HidBegin parm routine [edi] [gs ebx] [fs esi] value [ebx]
 
 extern void HidDefine(int Index, int Handle, int Entry, int UsagePage, int Usage, int ItemParams);
-#pragma aux HidDefine parm routine [edi] [ebx] [esi] [ecx] [eax] [edx] 
+#pragma aux HidDefine parm routine [edi] [ebx] [esi] [ecx] [eax] [edx]
 
 extern int HidEnd(int Index, int Handle);
-#pragma aux HidEnd parm routine [edi] [ebx] value [eax] 
+#pragma aux HidEnd parm routine [edi] [ebx] value [eax]
 
 extern void HidClose(int Index, int Handle);
 #pragma aux HidClose parm routine [edi] [ebx]
@@ -190,7 +190,7 @@ struct THidReportIdEntry
 {
     struct THidDevice *Device;
     int ReportId;
-    
+
     int InputCount;
     int OutputCount;
     int FeatureCount;
@@ -199,22 +199,24 @@ struct THidReportIdEntry
     struct THidTable TableArr[MAX_HID_TABLES];
 
     int ReportHandle;
-    
+
     struct THidReportEntry *InputArr;
     struct THidReportEntry *OutputArr;
     struct THidReportEntry *FeatureArr;
 };
 
-/* shared with asm */    
-    
+/* shared with asm */
+
 struct THidDevice
 {
     unsigned short int Controller;
     unsigned char Device;
+    unsigned char Port;
 
     unsigned char Interface;
     unsigned char Protocol;
     unsigned char IntrIn;
+    unsigned char Pad;
 
     short int ControlPipe;
     short int ControlWait;
@@ -232,7 +234,7 @@ struct THidDevice
 
 /* not shared */
     char *ConfigBuf;
-    
+
     int DeviceNr;
     int IsRunning;
     int ItemCount;
@@ -251,10 +253,10 @@ struct TUsageCacheEntry
 struct TTagCache
 {
     int UsagePage;
-    
+
     int ReportCount;
     int ReportSize;
-    
+
     int InputBit;
     int OutputBit;
     int FeatureBit;
@@ -322,7 +324,7 @@ static unsigned char DefaultKeyboardDescriptor[DEFAULT_KEYBOARD_SIZE] =
             0x19,0x0,
             0x29,0x65,
             0x81,0x0,
-            0xC0           
+            0xC0
         };
 
 #define DEFAULT_MOUSE_SIZE  50
@@ -355,7 +357,7 @@ static unsigned char DefaultMouseDescriptor[DEFAULT_MOUSE_SIZE] =
             0x81,0x6,
             0xC0, 0xC0
         };
-            
+
 
 #define EFF_TOUCH_SIZE  45
 
@@ -383,9 +385,9 @@ static unsigned char EffTouchDescriptor[EFF_TOUCH_SIZE] =
             0x9, 0x31,
             0x81,0x2,
             0xC0,
-            0xC0           
+            0xC0
         };
-                
+
 
 /*##########################################################################
 #
@@ -410,12 +412,12 @@ void CloseHid(struct THidDevice *dev)
     for (i = 0; i < MAX_REPORT_IDS; i++)
     {
         report = dev->ReportIdArr[i];
-        
+
         if (report)
         {
             for (j = 0; j < report->TableCount; j++)
                 HidClose(report->TableArr[j].Index, report->TableArr[j].Handle);
-            
+
             if (report->InputCount)
                 RdosFreeMem(RdosPointerToSelector(report->InputArr));
 
@@ -474,7 +476,7 @@ int OpenHid(struct THidDevice *dev)
                 else
                     break;
 
-           case 2:                
+           case 2:
                 if (dev->ReportDescrSize >= DEFAULT_KEYBOARD_SIZE)
                 {
                     dev->ReportDescrSize = DEFAULT_MOUSE_SIZE;
@@ -484,10 +486,10 @@ int OpenHid(struct THidDevice *dev)
                 else
                     break;
 
-            default:            
+            default:
                 break;
         }
-        
+
         dev->ItemCount = 0;
         dev->ReportDescrSize = 0;
         return FALSE;
@@ -522,7 +524,7 @@ int GetReportItemSigned(struct THidReportItem *item)
             memcpy(&sval, item->Data, 2);
             val = sval;
             break;
-            
+
         case 4:
             memcpy(&val, item->Data, 4);
             break;
@@ -558,7 +560,7 @@ int GetReportItemUnsigned(struct THidReportItem *item)
             memcpy(&sval, item->Data, 2);
             val = sval;
             break;
-            
+
         case 4:
             memcpy(&val, item->Data, 4);
             break;
@@ -656,7 +658,7 @@ void LoadReportItems(struct THidDevice *dev)
             len = ptr[1];
             item->Len = len;
             item->Type = 3;
-            item->Tag = ptr[2]; 
+            item->Tag = ptr[2];
             item->Data = ptr + 3;
             len += 3;
         }
@@ -682,7 +684,7 @@ void LoadReportItems(struct THidDevice *dev)
             }
             item->Len = len;
             item->Type = ((*ptr) >> 2) & 3;
-            item->Tag = ((*ptr) >> 2) & 0x3F; 
+            item->Tag = ((*ptr) >> 2) & 0x3F;
             item->Data = ptr + 1;
             len++;
         }
@@ -731,7 +733,7 @@ void PrepareReportIds(struct THidDevice *dev)
                 CurrReport->InputCount = 0;
                 CurrReport->OutputCount = 0;
                 CurrReport->FeatureCount = 0;
-                    
+
                 CurrReport->InputArr = 0;
                 CurrReport->OutputArr = 0;
                 CurrReport->FeatureArr = 0;
@@ -760,12 +762,12 @@ void PrepareReportIds(struct THidDevice *dev)
                     CurrReport->InputCount = 0;
                     CurrReport->OutputCount = 0;
                     CurrReport->FeatureCount = 0;
-                    
+
                     CurrReport->InputArr = 0;
                     CurrReport->OutputArr = 0;
                     CurrReport->FeatureArr = 0;
 
-                    CurrReport->ReportHandle = 0;                
+                    CurrReport->ReportHandle = 0;
                 }
                 break;
 
@@ -776,16 +778,16 @@ void PrepareReportIds(struct THidDevice *dev)
         }
 
         if (CurrReport)
-        {                    
+        {
             if (item->Tag == MAIN_INPUT)
                 CurrReport->InputCount += ReportCount;
-            
+
             if (item->Tag == MAIN_OUTPUT)
                 CurrReport->OutputCount += ReportCount;
 
             if (item->Tag == MAIN_FEATURE)
                 CurrReport->FeatureCount += ReportCount;
-        }         
+        }
     }
 }
 
@@ -841,7 +843,7 @@ void CreateReportIdArrays(struct THidDevice *dev)
                 for (i = 0; i < report->InputCount; i++)
                     InitReportEntry(&arr[i]);
                 report->InputArr = arr;
-            }            
+            }
 
             if (report->OutputCount)
             {
@@ -849,7 +851,7 @@ void CreateReportIdArrays(struct THidDevice *dev)
                 for (i = 0; i < report->OutputCount; i++)
                     InitReportEntry(&arr[i]);
                 report->OutputArr = arr;
-            }            
+            }
 
             if (report->FeatureCount)
             {
@@ -857,9 +859,9 @@ void CreateReportIdArrays(struct THidDevice *dev)
                 for (i = 0; i < report->FeatureCount; i++)
                     InitReportEntry(&arr[i]);
                 report->FeatureArr = arr;
-            }            
+            }
         }
-    }    
+    }
 }
 
 /*##########################################################################
@@ -881,7 +883,7 @@ void InitReport(struct TTagCache *cache)
 
     cache->InputEntry = 0;
     cache->OutputEntry = 0;
-    cache->FeatureEntry = 0;   
+    cache->FeatureEntry = 0;
 
     cache->UsageEmpty = FALSE;
 
@@ -964,7 +966,7 @@ void ClearCache(struct TTagCache *cache)
 void DeleteUsageHead(struct TTagCache *cache)
 {
     int i;
-    
+
     if (cache->UsageCount > 1)
     {
         for (i = 1; i < cache->UsageCount; i++)
@@ -972,8 +974,8 @@ void DeleteUsageHead(struct TTagCache *cache)
             cache->UsageArr[i - 1].MinUsage = cache->UsageArr[i].MinUsage;
             cache->UsageArr[i - 1].MaxUsage = cache->UsageArr[i].MaxUsage;
         }
-        cache->UsageCount--;    
-    }    
+        cache->UsageCount--;
+    }
     else
         cache->UsageEmpty = TRUE;
 }
@@ -1016,17 +1018,17 @@ void ProcessInputCache(struct TTagCache *cache, int val)
             {
                 entry->UsageIdLow = cache->UsageArr[0].MinUsage;
                 entry->UsageIdHigh = cache->UsageArr[0].MinUsage;
-    
+
                 if (cache->UsageArr[0].MinUsage == cache->UsageArr[0].MaxUsage)
                     DeleteUsageHead(cache);
                 else
-                    cache->UsageArr[0].MinUsage++;                
-            }   
+                    cache->UsageArr[0].MinUsage++;
+            }
             else
             {
-                entry->UsageIdLow = cache->UsageArr[0].MinUsage;    
-                entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;    
-        
+                entry->UsageIdLow = cache->UsageArr[0].MinUsage;
+                entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;
+
                 DeleteUsageHead(cache);
             }
 
@@ -1034,7 +1036,7 @@ void ProcessInputCache(struct TTagCache *cache, int val)
             cache->InputEntry++;
         }
         else
-        {   
+        {
             entry = &cache->CurrReport->InputArr[cache->InputEntry];
             entry->StartBit = cache->InputBit;
             entry->BitCount = cache->ReportSize;
@@ -1047,13 +1049,13 @@ void ProcessInputCache(struct TTagCache *cache, int val)
             entry->PhysicalMax = cache->PhysicalMax;
             cache->InputBit += cache->ReportSize;
 
-            entry->UsageIdLow = -1;    
-            entry->UsageIdHigh = -1;    
+            entry->UsageIdLow = -1;
+            entry->UsageIdHigh = -1;
             entry->UsagePage = cache->UsagePage;
             cache->InputEntry++;
         }
         Count--;
-    }    
+    }
 
     if (cache->UsageEmpty)
         cache->UsageCount = 0;
@@ -1100,20 +1102,20 @@ void ProcessOutputCache(struct TTagCache *cache, int val)
             {
                 entry->UsageIdLow = cache->UsageArr[0].MinUsage;
                 entry->UsageIdHigh = cache->UsageArr[0].MinUsage;
-    
+
                 if (cache->UsageArr[0].MinUsage == cache->UsageArr[0].MaxUsage)
                     DeleteUsageHead(cache);
                 else
-                    cache->UsageArr[0].MinUsage++;                
+                    cache->UsageArr[0].MinUsage++;
             }
             else
             {
-                entry->UsageIdLow = cache->UsageArr[0].MinUsage;    
-                entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;    
+                entry->UsageIdLow = cache->UsageArr[0].MinUsage;
+                entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;
 
                 DeleteUsageHead(cache);
             }
-    
+
             entry->UsagePage = cache->UsagePage;
             cache->OutputEntry++;
         }
@@ -1131,8 +1133,8 @@ void ProcessOutputCache(struct TTagCache *cache, int val)
             entry->PhysicalMax = cache->PhysicalMax;
             cache->OutputBit += cache->ReportSize;
 
-            entry->UsageIdLow = -1;    
-            entry->UsageIdHigh = -1;    
+            entry->UsageIdLow = -1;
+            entry->UsageIdHigh = -1;
             entry->UsagePage = cache->UsagePage;
             cache->OutputEntry++;
         }
@@ -1179,22 +1181,22 @@ void ProcessFeatureCache(struct TTagCache *cache, int val)
             entry->PhysicalMin = cache->PhysicalMin;
             entry->PhysicalMax = cache->PhysicalMax;
             cache->FeatureBit += cache->ReportSize;
-    
+
             if (entry->ItemParams & 0x2)
             {
                 entry->UsageIdLow = cache->UsageArr[0].MinUsage;
                 entry->UsageIdHigh = cache->UsageArr[0].MinUsage;
-    
+
                 if (cache->UsageArr[0].MinUsage == cache->UsageArr[0].MaxUsage)
                     DeleteUsageHead(cache);
                 else
-                    cache->UsageArr[0].MinUsage++;                
+                    cache->UsageArr[0].MinUsage++;
             }
             else
             {
-                entry->UsageIdLow = cache->UsageArr[0].MinUsage;    
-                entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;    
-        
+                entry->UsageIdLow = cache->UsageArr[0].MinUsage;
+                entry->UsageIdHigh = cache->UsageArr[0].MaxUsage;
+
                 DeleteUsageHead(cache);
             }
 
@@ -1215,13 +1217,13 @@ void ProcessFeatureCache(struct TTagCache *cache, int val)
             entry->PhysicalMax = cache->PhysicalMax;
             cache->FeatureBit += cache->ReportSize;
 
-            entry->UsageIdLow = -1;    
-            entry->UsageIdHigh = -1;    
+            entry->UsageIdLow = -1;
+            entry->UsageIdHigh = -1;
             entry->UsagePage = cache->UsagePage;
             cache->FeatureEntry++;
         }
         Count--;
-    }    
+    }
 
     if (cache->UsageEmpty)
         cache->UsageCount = 0;
@@ -1315,7 +1317,7 @@ void AddUsageMin(struct TTagCache *cache, int UsageId)
     struct TUsageCacheEntry *entry;
 
     if (cache->CurrReport && cache->UsageCount < MAX_USAGE_TAGS)
-    {      
+    {
         cache->UsageEmpty = FALSE;
 
         if (cache->HasMax)
@@ -1332,7 +1334,7 @@ void AddUsageMin(struct TTagCache *cache, int UsageId)
             cache->UsageMin = UsageId;
             cache->HasMin = TRUE;
         }
-    }                    
+    }
 }
 
 /*##########################################################################
@@ -1351,7 +1353,7 @@ void AddUsageMax(struct TTagCache *cache, int UsageId)
     struct TUsageCacheEntry *entry;
 
     if (cache->CurrReport && cache->UsageCount < MAX_USAGE_TAGS)
-    {      
+    {
         cache->UsageEmpty = FALSE;
 
         if (cache->HasMin)
@@ -1368,7 +1370,7 @@ void AddUsageMax(struct TTagCache *cache, int UsageId)
             cache->UsageMax = UsageId;
             cache->HasMax = TRUE;
         }
-    }                    
+    }
 }
 
 /*##########################################################################
@@ -1387,7 +1389,7 @@ void AddUsage(struct TTagCache *cache, int UsageId)
     struct TUsageCacheEntry *entry;
 
     if (cache->CurrReport && cache->UsageCount < MAX_USAGE_TAGS)
-    {      
+    {
         cache->UsageEmpty = FALSE;
 
         entry = &cache->UsageArr[cache->UsageCount];
@@ -1493,7 +1495,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 else
                     SetReport(cache, 0);
                 break;
-            
+
             case GLOBAL_REPORT_SIZE:
                 val = GetReportItemUnsigned(item);
                 SetReportSize(cache, val);
@@ -1508,7 +1510,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 val = GetReportItemUnsigned(item);
                 SetUsagePage(cache, val);
                 break;
-                    
+
             case LOCAL_USE:
                 val = GetReportItemUnsigned(item);
                 AddUsage(cache, val);
@@ -1523,7 +1525,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 val = GetReportItemUnsigned(item);
                 AddUsageMax(cache, val);
                 break;
-                
+
             case MAIN_INPUT:
                 val = GetReportItemUnsigned(item);
                 AddInput(cache, val);
@@ -1538,7 +1540,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                 val = GetReportItemUnsigned(item);
                 AddFeature(cache, val);
                 break;
-                
+
             case GLOBAL_LOG_MIN:
                 val = GetReportItemSigned(item);
                 if (cache->HasLogical)
@@ -1550,7 +1552,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                     cache->HasLogical = TRUE;
                 }
                 break;
-                
+
             case GLOBAL_LOG_MAX:
                 val = GetReportItemSigned(item);
                 if (cache->HasLogical)
@@ -1562,7 +1564,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                     cache->HasLogical = TRUE;
                 }
                 break;
-                                
+
             case GLOBAL_PHYS_MIN:
                 val = GetReportItemSigned(item);
                 if (cache->HasPhysical)
@@ -1574,7 +1576,7 @@ void LoadReportIdArrays(struct THidDevice *dev)
                     cache->HasPhysical = TRUE;
                 }
                 break;
-                                                
+
             case GLOBAL_PHYS_MAX:
                 val = GetReportItemSigned(item);
                 if (cache->HasPhysical)
@@ -1586,8 +1588,8 @@ void LoadReportIdArrays(struct THidDevice *dev)
                     cache->HasPhysical = TRUE;
                 }
                 break;
-                
-        }         
+
+        }
     }
     FreeTagCache(cache);
 }
@@ -1619,11 +1621,11 @@ void StartInputReports(struct THidDevice *dev)
     for (Report = 0; Report < MAX_REPORT_IDS; Report++)
     {
         report = dev->ReportIdArr[Report];
-        
+
         if (report)
         {
             report->TableCount = 0;
-            
+
             for (Index = 0; Index < Count; Index++)
             {
                 Handle = HidBegin(Index, dev, report);
@@ -1636,11 +1638,11 @@ void StartInputReports(struct THidDevice *dev)
                         HidDefine(Index, Handle, Inp, entry->UsagePage, entry->UsageIdLow + (entry->UsageIdHigh << 8), entry->ItemParams);
                     }
 
-                    ok = HidEnd(Index, Handle);        
+                    ok = HidEnd(Index, Handle);
                     if (ok)
                     {
                         report->TableArr[report->TableCount].Index = Index;
-                        report->TableArr[report->TableCount].Handle = Handle; 
+                        report->TableArr[report->TableCount].Handle = Handle;
                         report->TableCount++;
                     }
                 }
@@ -1667,17 +1669,17 @@ int CreateIntrPipe(struct THidDevice *dev)
     int maxsize = 0;
     struct THidReportIdEntry *report;
     struct THidReportEntry *entry;
-    
+
     for (i = 0; i < MAX_REPORT_IDS; i++)
     {
         report = dev->ReportIdArr[i];
-        
+
         if (report && report->InputCount)
         {
             entry = &report->InputArr[report->InputCount - 1];
             size = entry->StartBit + entry->BitCount;
             if (size > maxsize)
-                maxsize = size;                
+                maxsize = size;
         }
     }
 
@@ -1718,8 +1720,8 @@ int __far ImplGetSignedHidInput(struct THidReportIdEntry *report, char *buf, int
 
     if (BitCount > 32)
         BitCount = 32;
-    
-    return GetSignedValue(buf, StartBit, BitCount);    
+
+    return GetSignedValue(buf, StartBit, BitCount);
 }
 
 /*##########################################################################
@@ -1745,8 +1747,8 @@ int __far ImplGetUnsignedHidInput(struct THidReportIdEntry *report, char *buf, i
 
     if (BitCount > 32)
         BitCount = 32;
-    
-    return GetUnsignedValue(buf, StartBit, BitCount);    
+
+    return GetUnsignedValue(buf, StartBit, BitCount);
 }
 
 /*##########################################################################
@@ -1814,7 +1816,7 @@ struct THidReportIdEntry *GetOutputReport(struct THidDevice *dev, int UsagePage,
     for (ReportId = 0; ReportId < MAX_REPORT_IDS; ReportId++)
     {
         report = dev->ReportIdArr[ReportId];
-        
+
         if (report)
         {
             for (Index = 0; Index < report->OutputCount; Index++)
@@ -1844,7 +1846,7 @@ int GetOutputReportSize(struct THidReportIdEntry *report)
 {
     int size = 0;
     struct THidReportEntry *entry;
-    
+
     if (report && report->OutputCount)
     {
         entry = &report->OutputArr[report->OutputCount - 1];
@@ -1882,7 +1884,7 @@ struct THidReportIdEntry *GetFeatureReport(struct THidDevice *dev, int UsagePage
     for (ReportId = 0; ReportId < MAX_REPORT_IDS; ReportId++)
     {
         report = dev->ReportIdArr[ReportId];
-        
+
         if (report)
         {
             for (Index = 0; Index < report->FeatureCount; Index++)
@@ -1912,7 +1914,7 @@ int GetFeatureReportSize(struct THidReportIdEntry *report)
 {
     int size = 0;
     struct THidReportEntry *entry;
-    
+
     if (report && report->FeatureCount)
     {
         entry = &report->FeatureArr[report->FeatureCount - 1];
@@ -1968,7 +1970,7 @@ int IsCustomHid(struct THidDevice *dev)
         }
     }
     return TRUE;
-}        
+}
 
 /*##########################################################################
 #
@@ -1996,7 +1998,7 @@ struct THidReportIdEntry * __far ImplFindHidOutput(int DevSel, int Page, int ID)
     {
         size = GetOutputReportSize(report);
         report->ReportHandle = CreateOutputReport(dev, report->ReportId, size);
-    }    
+    }
 
     if (report)
         RdosSetSuccess();
@@ -2043,8 +2045,8 @@ void __far ImplSetHidOutput(struct THidReportIdEntry *Report, int Page, int ID, 
 
             if (BitCount > 32)
                 BitCount = 32;
-    
-            SetReportValue(Report->ReportHandle, StartBit, BitCount, Value);    
+
+            SetReportValue(Report->ReportHandle, StartBit, BitCount, Value);
             break;
         }
     }
@@ -2095,7 +2097,7 @@ struct THidReportIdEntry * __far ImplFindHidFeature(int DevSel, int Page, int ID
     {
         size = GetFeatureReportSize(report);
         report->ReportHandle = CreateFeatureReport(dev, report->ReportId, size);
-    }    
+    }
 
     if (report)
         RdosSetSuccess();
@@ -2190,7 +2192,7 @@ void __far ImplWriteHidFeature(struct THidReportIdEntry *Report)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplSetHidIdle "*" rdosdev parm routine [es edi] [eax] 
+#pragma aux ImplSetHidIdle "*" rdosdev parm routine [es edi] [eax]
 void __far ImplSetHidIdle(struct THidReportIdEntry *report, int value)
 {
     struct THidDevice *dev = report->Device;
@@ -2212,10 +2214,10 @@ void __far ImplSetHidIdle(struct THidReportIdEntry *report, int value)
 ##########################################################################*/
 void AddReportItemSigned(struct THidReportItem *item, char *buf)
 {
-    char str[10];    
+    char str[10];
     int val = GetReportItemSigned(item);
     sprintf(str, " (%d)", val);
-    strcat(buf, str);     
+    strcat(buf, str);
 }
 
 /*##########################################################################
@@ -2231,10 +2233,10 @@ void AddReportItemSigned(struct THidReportItem *item, char *buf)
 ##########################################################################*/
 void AddReportItemUnsigned(struct THidReportItem *item, char *buf)
 {
-    char str[10];    
+    char str[10];
     int val = GetReportItemUnsigned(item);
     sprintf(str, " (%d)", val);
-    strcat(buf, str);     
+    strcat(buf, str);
 }
 
 /*##########################################################################
@@ -2250,15 +2252,15 @@ void AddReportItemUnsigned(struct THidReportItem *item, char *buf)
 ##########################################################################*/
 void AddReportUsageItem(struct THidReportItem *item, char *buf)
 {
-    char str[10];    
+    char str[10];
     int val = GetReportItemUnsigned(item);
 
     if (item->Len == 4)
         sprintf(str, " (%04hX)", val);
-    else    
+    else
         sprintf(str, " (%02hX)", val);
 
-    strcat(buf, str);     
+    strcat(buf, str);
 }
 
 /*##########################################################################
@@ -2281,7 +2283,7 @@ void AddReportControl(char *buf, int val)
     else
         strcat(buf, "Data");
 
-    if (val & 2)    
+    if (val & 2)
         strcat(buf, ", Var");
     else
         strcat(buf, ", Array");
@@ -2307,7 +2309,7 @@ void AddReportControl(char *buf, int val)
 
     if (val & 0x80)
         strcat(buf, ", Volatile");
-                
+
     strcat(buf, ")");
 }
 
@@ -2390,7 +2392,7 @@ void AddReportCollectionItem(struct THidReportItem *item, char *buf)
 void AddReportUnitItem(struct THidReportItem *item, char *buf)
 {
     int val = GetReportItemUnsigned(item);
-    
+
     strcat(buf, " (");
 
     if (val & 0xF)
@@ -2452,7 +2454,7 @@ void AddReportUnitItem(struct THidReportItem *item, char *buf)
 
         if (val & 0xF000)
             strcat(buf, " seconds");
-            
+
         switch ((val & 0xF0000) >> 16)
         {
             case 1:
@@ -2490,14 +2492,14 @@ void AddReportUnitItem(struct THidReportItem *item, char *buf)
 ##########################################################################*/
 void AddReportExpItem(struct THidReportItem *item, char *buf)
 {
-    char str[10];    
+    char str[10];
     int val = GetReportItemSigned(item);
 
     if (val & 8)
         val -= 0x10;
 
     sprintf(str, " (%d)", val);
-    strcat(buf, str);     
+    strcat(buf, str);
 }
 
 /*##########################################################################
@@ -2539,17 +2541,17 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
                     if (item->Tag == MAIN_END)
                         Ins--;
                     item++;
-                }  
+                }
 
                 if (item->Tag == MAIN_END)
                     Ins--;
 
                 Buf[0] = 0;
                 for (i = 0; i < Ins; i++)
-                    strcat(Buf, "  ");                  
-                
+                    strcat(Buf, "  ");
+
                 ok = TRUE;
-                
+
                 item = dev->ItemArr + Index;
 
                 switch (item->Tag)
@@ -2602,40 +2604,40 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
                         strcat(Buf, "Physical Max");
                         AddReportItemSigned(item, Buf);
                         break;
-                        
+
                     case GLOBAL_UNIT_EXP:
                         strcat(Buf, "Unit Exp");
                         AddReportExpItem(item, Buf);
                         break;
-                        
+
                     case GLOBAL_UNIT:
                         strcat(Buf, "Unit");
                         AddReportUnitItem(item, Buf);
                         break;
-                        
+
                     case GLOBAL_REPORT_SIZE:
                         strcat(Buf, "Report Size");
                         AddReportItemUnsigned(item, Buf);
                         break;
-                        
+
                     case GLOBAL_REPORT_ID:
                         strcat(Buf, "Report ID");
                         AddReportItemUnsigned(item, Buf);
                         break;
-                        
+
                     case GLOBAL_REPORT_COUNT:
                         strcat(Buf, "Report Count");
                         AddReportItemUnsigned(item, Buf);
                         break;
-                                                
+
                     case GLOBAL_PUSH:
                         strcat(Buf, "Push");
                         break;
-                                                
+
                     case GLOBAL_POP:
                         strcat(Buf, "Pop");
                         break;
-                        
+
                     case LOCAL_USE:
                         strcat(Buf, "Usage ID");
                         AddReportUsageItem(item, Buf);
@@ -2683,7 +2685,7 @@ void __far ImplGetHidReportItem(int Device, int Index, char *Buf)
                         strcat(Buf, "Unknown");
                         break;
                 }
-                
+
             }
         }
     }
@@ -2727,18 +2729,18 @@ void __far ImplGetHidReportInputData(int Device, int ReportId, int Index, char *
             if (ReportId >= 0 && ReportId < MAX_REPORT_IDS)
             {
                 report = dev->ReportIdArr[ReportId];
-            
+
                 if (report)
                 {
                     if (Index >= 0 && Index < report->InputCount)
                     {
                         ok = TRUE;
-                        
+
                         entry = &report->InputArr[Index];
 
                         if (entry->BitCount <= 1)
                             sprintf(Buf, "bit %d: ", entry->StartBit);
-                        else                            
+                        else
                             sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
                         if (entry->UsageIdLow != -1)
@@ -2755,13 +2757,13 @@ void __far ImplGetHidReportInputData(int Device, int ReportId, int Index, char *
                         if (entry->HasLogical)
                         {
                             sprintf(str, " Logical [%d, %d]", entry->LogicalMin, entry->LogicalMax);
-                            strcat(Buf, str);                          
+                            strcat(Buf, str);
                         }
 
                         if (entry->HasPhysical)
                         {
                             sprintf(str, " Physical [%d, %d]", entry->PhysicalMin, entry->PhysicalMax);
-                            strcat(Buf, str);                          
+                            strcat(Buf, str);
                         }
 
                     }
@@ -2809,18 +2811,18 @@ void __far ImplGetHidReportOutputData(int Device, int ReportId, int Index, char 
             if (ReportId >= 0 && ReportId < MAX_REPORT_IDS)
             {
                 report = dev->ReportIdArr[ReportId];
-            
+
                 if (report)
                 {
                     if (Index >= 0 && Index < report->OutputCount)
                     {
                         ok = TRUE;
-                        
+
                         entry = &report->OutputArr[Index];
 
                         if (entry->BitCount <= 1)
                             sprintf(Buf, "bit %d: ", entry->StartBit);
-                        else                            
+                        else
                             sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
                         if (entry->UsageIdLow != -1)
@@ -2830,20 +2832,20 @@ void __far ImplGetHidReportOutputData(int Device, int ReportId, int Index, char 
                             else
                                 sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
                             strcat(Buf, str);
-    
+
                             AddReportControl(Buf, entry->ItemParams);
                         }
 
                         if (entry->HasLogical)
                         {
                             sprintf(str, " Logical [%d, %d]", entry->LogicalMin, entry->LogicalMax);
-                            strcat(Buf, str);                          
+                            strcat(Buf, str);
                         }
 
                         if (entry->HasPhysical)
                         {
                             sprintf(str, " Physical [%d, %d]", entry->PhysicalMin, entry->PhysicalMax);
-                            strcat(Buf, str);                          
+                            strcat(Buf, str);
                         }
 
                     }
@@ -2891,18 +2893,18 @@ void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char
             if (ReportId >= 0 && ReportId < MAX_REPORT_IDS)
             {
                 report = dev->ReportIdArr[ReportId];
-            
+
                 if (report)
                 {
                     if (Index >= 0 && Index < report->FeatureCount)
                     {
                         ok = TRUE;
-                        
+
                         entry = &report->FeatureArr[Index];
 
                         if (entry->BitCount <= 1)
                             sprintf(Buf, "bit %d: ", entry->StartBit);
-                        else                            
+                        else
                             sprintf(Buf, "bit %d-%d: ", entry->StartBit, entry->StartBit + entry->BitCount - 1);
 
                         if (entry->UsageIdLow != -1)
@@ -2912,20 +2914,20 @@ void __far ImplGetHidReportFeatureData(int Device, int ReportId, int Index, char
                             else
                                 sprintf(str, "%02hX.%02hX-%02hX ", entry->UsagePage, entry->UsageIdLow, entry->UsageIdHigh);
                             strcat(Buf, str);
-    
+
                             AddReportControl(Buf, entry->ItemParams);
                         }
 
                         if (entry->HasLogical)
                         {
                             sprintf(str, " Logical [%d, %d]", entry->LogicalMin, entry->LogicalMax);
-                            strcat(Buf, str);                          
+                            strcat(Buf, str);
                         }
 
                         if (entry->HasPhysical)
                         {
                             sprintf(str, " Physical [%d, %d]", entry->PhysicalMin, entry->PhysicalMax);
-                            strcat(Buf, str);                          
+                            strcat(Buf, str);
                         }
                     }
                 }
@@ -2999,14 +3001,14 @@ void __far HidThread(void *param)
                             Report = *ReportData;
                             ReportData++;
                         }
-    
+
                         report = dev->ReportIdArr[Report];
 
                         if (report)
                             for (Table = 0; Table < report->TableCount; Table++)
                                 HidHandleReport(report->TableArr[Table].Index,
                                             report->TableArr[Table].Handle,
-                                            ReportData); 
+                                            ReportData);
                     }
                 }
             }
@@ -3047,7 +3049,7 @@ void CreateHid(int controller, int device, int port, char *config)
         if (HidArr[i] == 0)
         {
             size = RdosGetUsbConfig(controller, device, 0, buf, 0x1000);
-                   
+
             ptr = buf;
             while (size > 0)
             {
@@ -3057,8 +3059,9 @@ void CreateHid(int controller, int device, int port, char *config)
                     dev = (struct THidDevice *)RdosAllocateSmallGlobalMem(sizeof(struct THidDevice) + descr->DescriptorLen);
                     dev->Controller = controller;
                     dev->Device = device;
+                    dev->Port = port;
                     dev->ReportDescrSize = descr->DescriptorLen;
-                    HidArr[i] = dev;        
+                    HidArr[i] = dev;
                     break;
                 }
                 ptr += descr->Len;
@@ -3196,28 +3199,28 @@ int main()
     InitMouse();
     InitTouch();
 
-    RdosRegisterOsGate(osgate_get_signed_hid_input, (__rdos_gate_callback *)&ImplGetSignedHidInput, "Get Signed Hid Input"); 
-    RdosRegisterOsGate(osgate_get_unsigned_hid_input, (__rdos_gate_callback *)&ImplGetUnsignedHidInput, "Get Unsigned Hid Input"); 
-    RdosRegisterOsGate(osgate_set_hid_idle, (__rdos_gate_callback *)&ImplSetHidIdle, "Set Hid Idle"); 
+    RdosRegisterOsGate(osgate_get_signed_hid_input, (__rdos_gate_callback *)&ImplGetSignedHidInput, "Get Signed Hid Input");
+    RdosRegisterOsGate(osgate_get_unsigned_hid_input, (__rdos_gate_callback *)&ImplGetUnsignedHidInput, "Get Unsigned Hid Input");
+    RdosRegisterOsGate(osgate_set_hid_idle, (__rdos_gate_callback *)&ImplSetHidIdle, "Set Hid Idle");
 
-    RdosRegisterOsGate(osgate_get_hid_log_min, (__rdos_gate_callback *)&ImplGetHidLogMin, "Get Hid Log Min"); 
-    RdosRegisterOsGate(osgate_get_hid_log_max, (__rdos_gate_callback *)&ImplGetHidLogMax, "Get Hid Log Max"); 
+    RdosRegisterOsGate(osgate_get_hid_log_min, (__rdos_gate_callback *)&ImplGetHidLogMin, "Get Hid Log Min");
+    RdosRegisterOsGate(osgate_get_hid_log_max, (__rdos_gate_callback *)&ImplGetHidLogMax, "Get Hid Log Max");
 
-    RdosRegisterOsGate(osgate_get_hid_report_size, (__rdos_gate_callback *)&ImplGetHidReportSize, "Get Hid Report Size"); 
-    RdosRegisterOsGate(osgate_get_hid_report_buf, (__rdos_gate_callback *)&ImplGetHidReportBuf, "Get Hid Report Buf"); 
+    RdosRegisterOsGate(osgate_get_hid_report_size, (__rdos_gate_callback *)&ImplGetHidReportSize, "Get Hid Report Size");
+    RdosRegisterOsGate(osgate_get_hid_report_buf, (__rdos_gate_callback *)&ImplGetHidReportBuf, "Get Hid Report Buf");
 
-    RdosRegisterOsGate(osgate_find_hid_output_report, (__rdos_gate_callback *)&ImplFindHidOutput, "Find Hid Output"); 
-    RdosRegisterOsGate(osgate_set_hid_output, (__rdos_gate_callback *)&ImplSetHidOutput, "Set Hid Output"); 
-    RdosRegisterOsGate(osgate_update_hid_output, (__rdos_gate_callback *)&ImplUpdateHidOutput, "Update Hid Output"); 
+    RdosRegisterOsGate(osgate_find_hid_output_report, (__rdos_gate_callback *)&ImplFindHidOutput, "Find Hid Output");
+    RdosRegisterOsGate(osgate_set_hid_output, (__rdos_gate_callback *)&ImplSetHidOutput, "Set Hid Output");
+    RdosRegisterOsGate(osgate_update_hid_output, (__rdos_gate_callback *)&ImplUpdateHidOutput, "Update Hid Output");
 
-    RdosRegisterOsGate(osgate_find_hid_feature_report, (__rdos_gate_callback *)&ImplFindHidFeature, "Find Hid Feature"); 
-    RdosRegisterOsGate(osgate_read_hid_feature, (__rdos_gate_callback *)&ImplReadHidFeature, "Read Hid Feature"); 
-    RdosRegisterOsGate(osgate_write_hid_feature, (__rdos_gate_callback *)&ImplWriteHidFeature, "Write Hid Feature"); 
+    RdosRegisterOsGate(osgate_find_hid_feature_report, (__rdos_gate_callback *)&ImplFindHidFeature, "Find Hid Feature");
+    RdosRegisterOsGate(osgate_read_hid_feature, (__rdos_gate_callback *)&ImplReadHidFeature, "Read Hid Feature");
+    RdosRegisterOsGate(osgate_write_hid_feature, (__rdos_gate_callback *)&ImplWriteHidFeature, "Write Hid Feature");
 
-    RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item"); 
-    RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data"); 
-    RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data"); 
-    RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data"); 
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_item, (__rdos_gate_callback *)&ImplGetHidReportItem, "Get Hid Report Item");
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_input_data, (__rdos_gate_callback *)&ImplGetHidReportInputData, "Get Hid Report Input Data");
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data");
+    RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data");
 
 //    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 

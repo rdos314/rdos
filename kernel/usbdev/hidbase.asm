@@ -1001,8 +1001,7 @@ ihsEndDescr:
 
 ihsDone:    
     mov bx,fs:hid_controller
-    mov al,fs:hid_device
-    xor dl,dl
+    mov al,fs:hid_port
     OpenUsbDevice
     mov fs:hid_control_handle,bx
 ;    

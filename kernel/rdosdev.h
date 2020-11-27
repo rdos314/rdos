@@ -792,11 +792,8 @@ void RdosHookUsbAttach(__rdos_usb_state_callback *callb_proc);
 void RdosHookUsbDetach(__rdos_usb_state_callback *callb_proc);
 
 int RdosCreateUsbReq(int pipe_handle);
-void RdosAddWriteUsbControlReq(int req_handle, int size, int sel);
 void RdosAddWriteUsbDataReq(int req_handle, int size, int sel);
 void RdosAddReadUsbDataReq(int req_handle, int size, int sel);
-void RdosAddUsbStatusInReq(int req_handle);
-void RdosAddUsbStatusOutReq(int req_handle);
 void RdosStartUsbReq(int req_handle, int signal_thread_sel, int out_buf_size);
 void RdosStopUsbReq(int req_handle);
 int RdosIsUsbReqStarted(int req_handle);
@@ -2109,10 +2106,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     __parm [__ebx] \
     __value [__ebx]
 
-#pragma aux RdosAddWriteUsbControlReq = \
-    OsGate_add_write_usb_control_req \
-    __parm [__ebx] [__ecx] [__es]
-
 #pragma aux RdosAddWriteUsbDataReq = \
     OsGate_add_write_usb_data_req \
     __parm [__ebx] [__ecx] [__es]
@@ -2120,14 +2113,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosAddReadUsbDataReq = \
     OsGate_add_read_usb_data_req \
     __parm [__ebx] [__ecx] [__es]
-
-#pragma aux RdosAddUsbStatusInReq = \
-    OsGate_add_usb_status_in_req \
-    __parm [__ebx]
-
-#pragma aux RdosAddUsbStatusOutReq = \
-    OsGate_add_usb_status_out_req \
-    __parm [__ebx]
 
 #pragma aux RdosStartUsbReq = \
     OsGate_start_usb_req \

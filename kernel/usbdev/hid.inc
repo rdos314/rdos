@@ -31,10 +31,12 @@ hid_device_struc   STRUC
 
 hid_controller      DW ?
 hid_device          DB ?
+hid_port            DB ?
 
 hid_interface       DB ?
 hid_protocol        DB ?
 hid_intr_in         DB ?
+hid_pad             DB ?
 hid_control_handle  DW ?
 hid_control_wait    DW ?
 hid_intr_handle     DW ?

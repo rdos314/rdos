@@ -318,11 +318,8 @@
 #define osgate_get_net_driver 310
 
 #define osgate_create_usb_req 311
-#define osgate_add_write_usb_control_req 312
 #define osgate_add_write_usb_data_req 313
 #define osgate_add_read_usb_data_req 314
-#define osgate_add_usb_status_in_req 315
-#define osgate_add_usb_status_out_req 316
 #define osgate_start_usb_req 317
 #define osgate_is_usb_req_started 318
 #define osgate_is_usb_req_ready 319
@@ -836,14 +833,29 @@
 #define osgate_free_realtime_core 732
 #define osgate_debug_realtime 733
 #define osgate_run_realtime 734
-#define osgate_allocate_physical_dir 735
-#define osgate_free_physical_dir 736
+
+#define osgate_allocate_2m_physical_64 735
+#define osgate_free_2m_physical 736
 
 #define osgate_set_usb_over_current 738
 #define osgate_set_usb_reset_failed 739
 
 #define osgate_get_pci_msi_info 740
 #define osgate_move_pci_msi 741
+
+#define osgate_create_phys_bitmap 742
+
+#define osgate_get_net_address 743
+
+#define osgate_allocate_2m_physical_32 744
+
+#define osgate_create_mem_blk32 745
+#define osgate_create_mem_blk64 746
+#define osgate_allocate_mem_blk 747
+#define osgate_physical_to_linear_mem_blk 748
+#define osgate_linear_to_physical_mem_blk 749
+#define osgate_free_physical_mem_blk 750
+#define osgate_free_linear_mem_blk 751
 
 
 
@@ -1167,11 +1179,8 @@
 #define OsGate_get_net_driver 0x3E 0x67 0x9a 54 1 0 0 2 0
 
 #define OsGate_create_usb_req 0x3E 0x67 0x9a 55 1 0 0 2 0
-#define OsGate_add_write_usb_control_req 0x3E 0x67 0x9a 56 1 0 0 2 0
 #define OsGate_add_write_usb_data_req 0x3E 0x67 0x9a 57 1 0 0 2 0
 #define OsGate_add_read_usb_data_req 0x3E 0x67 0x9a 58 1 0 0 2 0
-#define OsGate_add_usb_status_in_req 0x3E 0x67 0x9a 59 1 0 0 2 0
-#define OsGate_add_usb_status_out_req 0x3E 0x67 0x9a 60 1 0 0 2 0
 #define OsGate_start_usb_req 0x3E 0x67 0x9a 61 1 0 0 2 0
 #define OsGate_is_usb_req_started 0x3E 0x67 0x9a 62 1 0 0 2 0
 #define OsGate_is_usb_req_ready 0x3E 0x67 0x9a 63 1 0 0 2 0
@@ -1685,12 +1694,27 @@
 #define OsGate_free_realtime_core 0x3E 0x67 0x9a 220 2 0 0 2 0
 #define OsGate_debug_realtime 0x3E 0x67 0x9a 221 2 0 0 2 0
 #define OsGate_run_realtime 0x3E 0x67 0x9a 222 2 0 0 2 0
-#define OsGate_allocate_physical_dir 0x3E 0x67 0x9a 223 2 0 0 2 0
-#define OsGate_free_physical_dir 0x3E 0x67 0x9a 224 2 0 0 2 0
+
+#define OsGate_allocate_2m_physical_64 0x3E 0x67 0x9a 223 2 0 0 2 0
+#define OsGate_free_2m_physical 0x3E 0x67 0x9a 224 2 0 0 2 0
 
 #define OsGate_set_usb_over_current 0x3E 0x67 0x9a 226 2 0 0 2 0
 #define OsGate_set_usb_reset_failed 0x3E 0x67 0x9a 227 2 0 0 2 0
 
 #define OsGate_get_pci_msi_info 0x3E 0x67 0x9a 228 2 0 0 2 0
 #define OsGate_move_pci_msi 0x3E 0x67 0x9a 229 2 0 0 2 0
+
+#define OsGate_create_phys_bitmap 0x3E 0x67 0x9a 230 2 0 0 2 0
+
+#define OsGate_get_net_address 0x3E 0x67 0x9a 231 2 0 0 2 0
+
+#define OsGate_allocate_2m_physical_32 0x3E 0x67 0x9a 232 2 0 0 2 0
+
+#define OsGate_create_mem_blk32 0x3E 0x67 0x9a 233 2 0 0 2 0
+#define OsGate_create_mem_blk64 0x3E 0x67 0x9a 234 2 0 0 2 0
+#define OsGate_allocate_mem_blk 0x3E 0x67 0x9a 235 2 0 0 2 0
+#define OsGate_physical_to_linear_mem_blk 0x3E 0x67 0x9a 236 2 0 0 2 0
+#define OsGate_linear_to_physical_mem_blk 0x3E 0x67 0x9a 237 2 0 0 2 0
+#define OsGate_free_physical_mem_blk 0x3E 0x67 0x9a 238 2 0 0 2 0
+#define OsGate_free_linear_mem_blk 0x3E 0x67 0x9a 239 2 0 0 2 0
 
