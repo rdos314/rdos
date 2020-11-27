@@ -1019,66 +1019,6 @@ CreateInterrupt    Proc near
     ret
 CreateInterrupt    Endp    
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetDescr
-;
-;           description:    Get descriptor
-;
-;       parameters:     FS      Pipe control selector
-;               AX      Config code
-;               CX      Size of requested data
-;               ES:EDI  Data buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDescr    Proc near    
-    push es
-    push bx
-;    
-    push es
-    push cx
-    push edi
-;    
-    push ax
-    mov eax,8
-    call AllocateBufSel
-    mov bx,es
-    pop ax
-    xor edi,edi
-    mov es:usd_type,80h
-    mov es:usd_req,GET_DESCR
-    mov es:usd_value,ax
-    mov es:usd_index,0
-    mov es:usd_len,cx
-;    
-    push cx
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    pop cx
-;
-    pop edi
-    pop cx
-    pop es
-;    
-    call fword ptr ds:add_in_proc
-    call fword ptr ds:add_status_out_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
-;    
-    pushf
-    mov es,bx
-    FreeMem    
-    call fword ptr ds:get_data_size_proc
-    popf
-;
-    pop bx
-    pop es   
-    ret
-GetDescr    Endp    
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1969,7 +1909,7 @@ rudGetFull:
     jmp rudDone
 
 rudSave:
-    mov di,bx
+    movzx di,bl
     add di,di
     mov es:[di].usbd_config_sel,gs
     inc bl
@@ -3290,47 +3230,24 @@ ConfigUsb      Proc near
     or si,si
     jz cudFail
 ;
-    mov fs,si
-    movzx si,fs:usbd_port
+    mov es,si
+    mov di,OFFSET usbd_control_buf
+    mov es:[di].usd_type,0
+    mov es:[di].usd_req,SET_CONFIG
+;
+    movzx si,es:usbd_port
     add si,si
     mov bp,ds:[si].usb_port_arr
 ;
-    mov si,fs:usbd_in_endpoint_arr
-    or si,si
-    jz cudFail
-;
-    mov fs,si    
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    mov es:usd_type,0
-    mov es:usd_req,SET_CONFIG
     movzx ax,dl
-    mov es:usd_value,ax
-    mov es:usd_index,0
-    mov es:usd_len,0
-;    
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    call fword ptr ds:add_status_in_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
-    call fword ptr ds:was_transfer_ok_proc
-;
-    mov fs:usbp_signal,0
-;
-    pushf
-    FreeMem
-    popf
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    call fword ptr ds:control_msg_proc
     jc cudFail
 ;
     mov cx,16
     xor si,si
-    mov es,fs:usbp_dev_sel
 
 cudFindConfigLoop:
     mov ax,es:[si].usbd_config_sel
