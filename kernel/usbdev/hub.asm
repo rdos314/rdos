@@ -982,38 +982,20 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPortFeature  Proc near
-    push es
     pushad
 ;    
     EnterSection ds:hub_section
     inc dx
-    mov ebx,ds
-    mov es,ebx
-    mov bx,ds:hub_control_handle
-;    
-    mov edi,OFFSET hub_control_data
-    mov es:[edi].usd_type,23h
-    mov es:[edi].usd_req,SET_FEATURE
-    mov es:[edi].usd_value,ax
-    mov es:[edi].usd_index,dx
-    mov es:[edi].usd_len,0
-    mov ecx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,ds:hub_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hub_control_handle
-    WasUsbTransactionOk
+    mov bx,ds:hub_device_handle
+    mov si,dx
+    mov dx,ax
+    xor cx,cx
+    mov al,SET_FEATURE
+    mov ah,23h
+    SendUsbDeviceControlMsg
     LeaveSection ds:hub_section
 ;
     popad
-    pop es
     ret
 SetPortFeature Endp
 
@@ -1031,38 +1013,22 @@ SetPortFeature Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearPortFeature  Proc near
-    push es
     pushad
 ;    
     EnterSection ds:hub_section
     inc dx
     mov ebx,ds
     mov es,ebx
-    mov bx,ds:hub_control_handle
-;    
-    mov edi,OFFSET hub_control_data
-    mov es:[edi].usd_type,23h
-    mov es:[edi].usd_req,CLEAR_FEATURE
-    mov es:[edi].usd_value,ax
-    mov es:[edi].usd_index,dx
-    mov es:[edi].usd_len,0
-    mov ecx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,ds:hub_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hub_control_handle
-    WasUsbTransactionOk
+    mov bx,ds:hub_device_handle
+    mov si,dx
+    mov dx,ax
+    mov al,CLEAR_FEATURE
+    mov ah,23h
+    xor cx,cx
+    SendUsbDeviceControlMsg
     LeaveSection ds:hub_section
 ;
     popad
-    pop es
     ret
 ClearPortFeature Endp
 
@@ -1174,41 +1140,21 @@ ClearPortChange Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearControlTT  Proc near
-    push es
     pushad
 ;    
     EnterSection ds:hub_section
-    mov ebx,ds
-    mov es,ebx
-    mov bx,ds:hub_control_handle
-;    
-    mov edi,OFFSET hub_control_data
-    mov es:[edi].usd_type,23h
-    mov es:[edi].usd_req,CLEAR_TT
-;
+    mov bx,ds:hub_device_handle    
     movzx ax,al
     shl ax,4
-    mov es:[edi].usd_value,ax
-;
-    mov es:[edi].usd_index,1
-    mov es:[edi].usd_len,0
-    mov ecx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,ds:hub_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hub_control_handle
-    WasUsbTransactionOk
+    mov dx,ax
+    mov si,1
+    xor cx,cx
+    mov ah,23h
+    mov al,CLEAR_TT
+    SendUsbDeviceControlMsg
     LeaveSection ds:hub_section
 ;
     popad
-    pop es
     ret
 ClearControlTT Endp
 
@@ -1225,46 +1171,27 @@ ClearControlTT Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPortStatus  Proc near
-    push es
     pushad
 ;    
+    push dx
     EnterSection ds:hub_section
-    inc dx
+;
     mov eax,ds
     mov es,eax
-    mov bx,ds:hub_control_handle
-;    
-    mov edi,OFFSET hub_control_data
-    mov es:[edi].usd_type,0A3h
-    mov es:[edi].usd_req,GET_STATUS
-    mov es:[edi].usd_value,0
-    mov es:[edi].usd_index,dx
-    mov es:[edi].usd_len,4
-    mov ecx,8
-    WriteUsbControl
-;
-    mov ecx,4
+    inc dx
+    mov bx,ds:hub_device_handle    
+    mov ah,0A3h
+    mov al,GET_STATUS
+    mov si,dx
+    xor dx,dx
+    mov cx,4
     mov edi,OFFSET hub_buf
-    mov es:[edi].uhd_type,0
-    ReqUsbData    
-;    
-    WriteUsbStatus
-    StartUsbTransaction
+    SendUsbDeviceControlMsg
 ;
-    push edx
-    GetSystemTime
-    add eax,1000 * 1193    
-    adc edx,0
-    mov bx,es:hub_control_wait
-    WaitWithTimeout
-    pop edx
-;    
-    mov bx,es:hub_control_handle
-    WasUsbTransactionOk
     LeaveSection ds:hub_section
+    pop dx
     jc gpsDone
 ;    
-    dec dx
     movzx edi,dx
     add edi,edi
     mov eax,dword ptr ds:hub_buf
@@ -1275,7 +1202,6 @@ GetPortStatus  Proc near
 
 gpsDone:    
     popad
-    pop es
     ret
 GetPortStatus Endp
     
@@ -1733,19 +1659,10 @@ CreateHub  Proc near
     push es
     pushad
 ;
-    CreateWait
-    mov ds:hub_control_wait,bx
-;
     mov bx,ds:hub_controller
-    mov al,ds:hub_address
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:hub_control_handle,bx
-;
-    mov ax,ds:hub_control_handle
-    mov bx,ds:hub_control_wait
-    xor ecx,ecx
-    AddWaitForUsbPipe
+    mov al,ds:hub_port
+    OpenUsbDevice
+    mov ds:hub_device_handle,bx
 ;    
     mov bx,ds:hub_controller
     mov al,ds:hub_address
@@ -1787,11 +1704,8 @@ CloseHub  Proc near
     mov bx,ds:hub_status_handle
     CloseUsbPipe
 ;    
-    mov bx,ds:hub_control_handle
-    CloseUsbPipe
-;    
-    mov bx,ds:hub_control_wait
-    CloseWait
+    mov bx,ds:hub_device_handle
+    CloseUsbDevice
 ;
     pop bx
     ret

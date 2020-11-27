@@ -1765,7 +1765,7 @@ RemoveUsbDevice	Endp
 start_usb_device_name DB 'Start USB Device', 0
 
 start_usb_device       Proc far
-    push ax
+    pushad
 ;
     call AddDev
 ;
@@ -1787,7 +1787,7 @@ sudFail:
     stc
 
 sudDone:
-    pop ax
+    popad
     retf32
 start_usb_device	Endp
 

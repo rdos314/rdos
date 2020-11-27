@@ -61,8 +61,7 @@ hub_controller          DW ?
 hub_port                DB ?
 hub_address             DB ?
 
-hub_control_handle      DW ?
-hub_control_wait        DW ?
+hub_device_handle       DW ?
 
 hub_status_handle       DW ?
 hub_status_req          DW ?
