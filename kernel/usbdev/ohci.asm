@@ -2434,34 +2434,30 @@ ClearStalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetMaxLen
+;           NAME:           UpdateMaxLen
 ;
-;           DESCRIPTION:    Get max len
+;           DESCRIPTION:    Update max len
 ;
-;           RETURNS:        AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetMaxLen   Proc far
-    mov al,8
-    retf32
-GetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetMaxLen
-;
-;           DESCRIPTION:    Set max len
-;
-;           PARAMETERS:     FS      Pipe
+;           PARAMETERS:     ES      Device selector
 ;                           AL      Maxlen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetMaxLen   Proc far
+UpdateMaxLen   Proc far
+    push fs
+    push edx
+;
+    movzx ax,al
+    mov dx,flat_sel
+    mov fs,dx
+    mov edx,es:dev_control_ed
+    mov byte ptr fs:[edx].oes_mps,al
+;
+    pop edx
+    pop fs
+    clc
     retf32
-SetMaxLen   Endp
+UpdateMaxLen   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4120,16 +4116,15 @@ ot16 DD OFFSET UnlockEnum,          SEG code
 ot17 DD OFFSET Has64Bit,            SEG code
 ot18 DD OFFSET IsStalled,           SEG code
 ot19 DD OFFSET ClearStalled,        SEG code
-ot1A DD OFFSET GetMaxLen,           SEG code
-ot1B DD OFFSET AddressDev,          SEG code
-ot1C DD OFFSET ConfigDev,           SEG code
-ot1D DD OFFSET SetMaxLen,           SEG code
-ot1E DD OFFSET IssueOne,            SEG code
-ot1F DD OFFSET IsDeviceConnected,   SEG code
-ot20 DD OFFSET ControlMsg,          SEG code
-ot21 DD OFFSET PollPipe,            SEG code
-ot22 DD OFFSET ReadPipe,            SEG code
-ot23 DD OFFSET WritePipe,           SEG code
+ot1A DD OFFSET AddressDev,          SEG code
+ot1B DD OFFSET ConfigDev,           SEG code
+ot1C DD OFFSET UpdateMaxLen,        SEG code
+ot1D DD OFFSET IssueOne,            SEG code
+ot1E DD OFFSET IsDeviceConnected,   SEG code
+ot1F DD OFFSET ControlMsg,          SEG code
+ot20 DD OFFSET PollPipe,            SEG code
+ot21 DD OFFSET ReadPipe,            SEG code
+ot22 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4187,7 +4182,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*24h
+    mov cx,2*23h
 
 ifTabLoop:
     lods dword ptr cs:[si]

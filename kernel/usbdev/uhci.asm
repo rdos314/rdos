@@ -2614,34 +2614,18 @@ ClearStalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetMaxLen
+;           NAME:           UpdateMaxLen
 ;
-;           DESCRIPTION:    Get max len
+;           DESCRIPTION:    Update max len
 ;
-;           RETURNS:        AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetMaxLen   Proc far
-    mov al,8
-    retf32
-GetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetMaxLen
-;
-;           DESCRIPTION:    Set max len
-;
-;           PARAMETERS:     FS      Pipe
+;           PARAMETERS:     ES      Device selector
 ;                           AL      Maxlen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetMaxLen   Proc far
+UpdateMaxLen   Proc far
     retf32
-SetMaxLen   Endp
+UpdateMaxLen   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3870,16 +3854,15 @@ ut16 DD OFFSET UnlockEnum,          SEG code
 ut17 DD OFFSET Has64Bit,            SEG code
 ut18 DD OFFSET IsStalled,           SEG code
 ut19 DD OFFSET ClearStalled,        SEG code
-ut1A DD OFFSET GetMaxLen,           SEG code
-ut1B DD OFFSET AddressDev,          SEG code
-ut1C DD OFFSET ConfigDev,           SEG code
-ut1D DD OFFSET SetMaxLen,           SEG code
-ut1E DD OFFSET IssueOne,            SEG code
-ut1F DD OFFSET IsDeviceConnected,   SEG code
-ut20 DD OFFSET ControlMsg,          SEG code
-ut21 DD OFFSET PollPipe,            SEG code
-ut22 DD OFFSET ReadPipe,            SEG code
-ut23 DD OFFSET WritePipe,           SEG code
+ut1A DD OFFSET AddressDev,          SEG code
+ut1B DD OFFSET ConfigDev,           SEG code
+ut1C DD OFFSET UpdateMaxLen,        SEG code
+ut1D DD OFFSET IssueOne,            SEG code
+ut1E DD OFFSET IsDeviceConnected,   SEG code
+ut1F DD OFFSET ControlMsg,          SEG code
+ut20 DD OFFSET PollPipe,            SEG code
+ut21 DD OFFSET ReadPipe,            SEG code
+ut22 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3901,7 +3884,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*24h
+    mov cx,2*23h
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -1896,7 +1896,7 @@ read_usb_descriptors       Proc far
 ;    
     mov es:usbd_maxlen,ax
     mov fs:usbp_maxlen,ax
-    call fword ptr ds:set_max_len_proc
+    call fword ptr ds:update_control_maxlen_proc
 
 rudLenOk:
     movzx eax,es:[di].udd_len

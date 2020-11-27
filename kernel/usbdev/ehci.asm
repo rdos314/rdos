@@ -3436,34 +3436,33 @@ ClearStalled Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetMaxLen
+;           NAME:           UpdateMaxLen
 ;
-;           DESCRIPTION:    Get max len
+;           DESCRIPTION:    Update max len
 ;
-;           RETURNS:        AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetMaxLen   Proc far
-    mov al,64
-    retf32
-GetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetMaxLen
-;
-;           DESCRIPTION:    Set max len
-;
-;           PARAMETERS:     FS      Pipe
+;           PARAMETERS:     ES      Device selector
 ;                           AL      Maxlen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetMaxLen   Proc far
+UpdateMaxLen   Proc far
+    push fs
+    push eax
+    push edx
+;    
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,es:dev_control_qh
+    mov ax,fs:[edx].qh_max_packet
+    and ax,0F800h
+    or ax,es:usbd_maxlen
+    mov fs:[edx].qh_max_packet,ax
+;
+    pop edx
+    pop eax
+    pop fs
     retf32
-SetMaxLen   Endp
+UpdateMaxLen   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4309,16 +4308,15 @@ et16 DD OFFSET UnlockEnum,         SEG code
 et17 DD OFFSET Has64Bit,           SEG code
 et18 DD OFFSET IsStalled,          SEG code
 et19 DD OFFSET ClearStalled,       SEG code
-et1A DD OFFSET GetMaxLen,          SEG code
-et1B DD OFFSET AddressDev,         SEG code
-et1C DD OFFSET ConfigDev,          SEG code
-et1D DD OFFSET SetMaxLen,          SEG code
-ec1E DD OFFSET IssueOne,           SEG code
-ec1F DD OFFSET IsDeviceConnected,  SEG code
-ec20 DD OFFSET ControlMsg,         SEG code
-ec21 DD OFFSET PollPipe,           SEG code
-ec22 DD OFFSET ReadPipe,           SEG code
-ec23 DD OFFSET WritePipe,          SEG code
+et1A DD OFFSET AddressDev,         SEG code
+et1B DD OFFSET ConfigDev,          SEG code
+et1C DD OFFSET UpdateMaxLen,       SEG code
+ec1D DD OFFSET IssueOne,           SEG code
+ec1E DD OFFSET IsDeviceConnected,  SEG code
+ec1F DD OFFSET ControlMsg,         SEG code
+ec20 DD OFFSET PollPipe,           SEG code
+ec21 DD OFFSET ReadPipe,           SEG code
+ec22 DD OFFSET WritePipe,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4340,7 +4338,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*24h
+    mov cx,2*23h
 
 ifTabLoop:
     lods dword ptr cs:[si]

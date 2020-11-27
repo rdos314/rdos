@@ -140,9 +140,6 @@ is_stalled_proc      DD ?,?
 ;  IN FS        Clear stalled
 clear_stalled_proc      DD ?,?
 
-; OUT AL        Maxlen
-get_max_len_proc        DD ?,?
-
 ;  IN  ES       Device selector
 ;  IN  AL       Address
 address_device_proc	DD ?,?
@@ -152,9 +149,9 @@ address_device_proc	DD ?,?
 ; IN  DL        Configuration #
 config_device_proc	DD ?,?
 
-; IN  FS        Pipe selector
+; IN  ES        Device selector
 ; IN  AL        Max len
-set_max_len_proc        DD ?,?
+update_control_maxlen_proc        DD ?,?
 
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?

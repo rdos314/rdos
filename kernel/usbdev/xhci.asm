@@ -2623,42 +2623,25 @@ ClearStalled Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetMaxLen
+;           NAME:           UpdateMaxLen
 ;
-;           DESCRIPTION:    Get max len
+;           DESCRIPTION:    Update max len
 ;
-;           RETURNS:        AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetMaxLen   Proc far
-    int 3
-    stc
-    retf32
-GetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetMaxLen
-;
-;           DESCRIPTION:    Set max len
-;
-;           PARAMETERS:     FS      Pipe
+;           PARAMETERS:     ES      Device selector
 ;                           AL      Maxlen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-maxlen_text  DB 'MaxLen ', 0
-
-SetMaxLen   Proc far
+UpdateMaxLen   Proc far
     push es
+    push fs
     push gs
     push eax
     push ebx
     push ecx
     push edi
 ;
+    mov fs,es:usbd_in_endpoint_arr
     mov es,fs:xp_dev_sel
     mov bx,es:xd_input_ep_arr_offset
     mov es:[bx].ec_avg_len,ax
@@ -2680,11 +2663,6 @@ SetMaxLen   Proc far
     mov al,TRB_TYPE_EVALUATE
     call SendCommandTrb
 ;
-;    push esi
-;    mov esi,OFFSET maxlen_text
-;    call DumpInputContext
-;    pop esi
-;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
 ;
@@ -2702,9 +2680,10 @@ smlDone:
     pop ebx
     pop eax
     pop gs    
+    pop fs
     pop es
     retf32
-SetMaxLen   Endp
+UpdateMaxLen   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4272,16 +4251,15 @@ et16 DD OFFSET UnlockEnum,          SEG code
 et17 DD OFFSET Has64Bit,            SEG code
 et18 DD OFFSET IsStalled,           SEG code
 et19 DD OFFSET ClearStalled,        SEG code
-et1A DD OFFSET GetMaxLen,           SEG code
-et1B DD OFFSET AddressDevice,       SEG code
-et1C DD OFFSET ConfigDevice,        SEG code
-et1D DD OFFSET SetMaxLen,           SEG code
-et1E DD OFFSET IssueOne,            SEG code
-et1F DD OFFSET IsDeviceConnected,   SEG code
-et20 DD OFFSET ControlMsg,          SEG code
-et21 DD OFFSET PollPipe,            SEG code
-et22 DD OFFSET ReadPipe,            SEG code
-et23 DD OFFSET WritePipe,           SEG code
+et1A DD OFFSET AddressDevice,       SEG code
+et1B DD OFFSET ConfigDevice,        SEG code
+et1C DD OFFSET UpdateMaxLen,        SEG code
+et1D DD OFFSET IssueOne,            SEG code
+et1E DD OFFSET IsDeviceConnected,   SEG code
+et1F DD OFFSET ControlMsg,          SEG code
+et20 DD OFFSET PollPipe,            SEG code
+et21 DD OFFSET ReadPipe,            SEG code
+et22 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push es
@@ -4428,7 +4406,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*24h
+    mov cx,2*23h
 
 ifTabLoop:
     lods dword ptr cs:[si]

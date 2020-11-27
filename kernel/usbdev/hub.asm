@@ -868,38 +868,22 @@ ClearStalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetMaxLen
+;           NAME:           UpdateMaxLen
 ;
-;           DESCRIPTION:    Get max len
+;           DESCRIPTION:    Update max len
 ;
-;           RETURNS:        AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetMaxLen   Proc far
-    int 3
-    ret
-GetMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetMaxLen
-;
-;           DESCRIPTION:    Set max len
-;
-;           PARAMETERS:     FS      Pipe
+;           PARAMETERS:     ES      Device
 ;                           AL      Maxlen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetMaxLen   Proc far
+UpdateMaxLen   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:set_max_len_proc
+    call fword ptr ds:update_control_maxlen_proc
     pop ds
     ret
-SetMaxLen   Endp
+UpdateMaxLen   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -935,16 +919,15 @@ ht16 DD OFFSET UnlockEnum,          SEG code
 ht17 DD OFFSET Has64Bit,            SEG code
 ht18 DD OFFSET IsStalled,           SEG code
 ht19 DD OFFSET ClearStalled,        SEG code
-ht1A DD OFFSET GetMaxLen,           SEG code
-ht1B DD OFFSET AddressDev,          SEG code
-ht1C DD OFFSET ConfigDev,           SEG code
-ht1D DD OFFSET SetMaxLen,           SEG code
-ht1E DD OFFSET IssueOne,            SEG code
-ht1F DD OFFSET IsDeviceConnected,   SEG code
-ht20 DD OFFSET ControlMsg,          SEG code
-ht21 DD OFFSET PollPipe,            SEG code
-ht22 DD OFFSET ReadPipe,            SEG code
-ht23 DD OFFSET WritePipe,           SEG code
+ht1A DD OFFSET AddressDev,          SEG code
+ht1B DD OFFSET ConfigDev,           SEG code
+ht1C DD OFFSET UpdateMaxLen,        SEG code
+ht1D DD OFFSET IssueOne,            SEG code
+ht1E DD OFFSET IsDeviceConnected,   SEG code
+ht1F DD OFFSET ControlMsg,          SEG code
+ht20 DD OFFSET PollPipe,            SEG code
+ht21 DD OFFSET ReadPipe,            SEG code
+ht22 DD OFFSET WritePipe,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2596,7 +2579,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*24h
+    mov ecx,2*23h
 
 uaTabLoop:
     lods dword ptr cs:[esi]
