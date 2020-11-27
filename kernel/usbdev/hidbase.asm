@@ -694,26 +694,14 @@ SendOutputReport_   Proc near
     mov es,ebx
     mov ds,es:h_dev
     mov bx,ds:hid_control_handle
-;
     mov edi,OFFSET h_req_type
-    mov ecx,8
-    WriteUsbControl
-;
+    mov al,es:[edi].usd_req
+    mov ah,es:[edi].usd_type
+    mov dx,es:[edi].usd_value
+    mov si,es:[edi].usd_index
+    mov cx,es:[edi].usd_len
     mov edi,OFFSET h_buf
-    mov cx,ds:h_size
-    WriteUsbData
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es
@@ -742,27 +730,14 @@ ReadFeatureReport_   Proc near
     mov es,ebx
     mov ds,es:h_dev
     mov bx,ds:hid_control_handle
-;
-    mov es:h_req_type,0A1h
-    mov es:h_req,1
     mov edi,OFFSET h_req_type
-    mov ecx,8
-    WriteUsbControl
-;
+    mov al,1
+    mov ah,0A1h
+    mov dx,es:[edi].usd_value
+    mov si,es:[edi].usd_index
+    mov cx,es:[edi].usd_len
     mov edi,OFFSET h_buf
-    mov cx,es:h_size
-    ReqUsbData    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es
@@ -791,27 +766,14 @@ WriteFeatureReport_   Proc near
     mov es,ebx
     mov ds,es:h_dev
     mov bx,ds:hid_control_handle
-;
-    mov es:h_req_type,21h
-    mov es:h_req,9
     mov edi,OFFSET h_req_type
-    mov ecx,8
-    WriteUsbControl
-;
+    mov al,9
+    mov ah,21h
+    mov dx,es:[edi].usd_value
+    mov si,es:[edi].usd_index
+    mov cx,es:[edi].usd_len
     mov edi,OFFSET h_buf
-    mov cx,es:h_size
-    WriteUsbData    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:hid_control_handle
-    WasUsbTransactionOk
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es
@@ -843,54 +805,12 @@ GetReportDescr_   Proc near
     push edx
     push ebp
 ;    
-    push es
-    push ecx
-    push edi
-;   
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov es:usd_type,81h
-    mov es:usd_req,6
-    mov es:usd_value,2200h
-    mov es:usd_index,dx
-    mov es:usd_len,cx
-    xor edi,edi
-    mov ebp,es
     mov bx,fs:[esi].hid_control_handle
-;
-    mov ecx,8
-    WriteUsbControl
-;    
-    pop edi
-    pop ecx
-    pop es
-;
-    ReqUsbData
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:[esi].hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:[esi].hid_control_handle
-    WasUsbTransactionOk
-    jc grdFail
-;
-    GetUsbDataSize
-    jmp grdUnlock
-
-grdFail:
-    xor eax,eax
-    
-grdUnlock:    
-    push es
-    mov es,ebp
-    FreeMem
-    pop es
+    mov ah,81h
+    mov al,6
+    mov si,dx
+    mov dx,2200h
+    SendUsbDeviceControlMsg
 ;
     pop ebp
     pop edx
@@ -918,32 +838,13 @@ SetHidProtocol   Proc near
     push edx
     push edi
 ;    
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,21h
-    mov es:usd_req,0Bh
-    mov es:usd_value,1
-    movzx ax,fs:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,0
-    xor di,di
     mov bx,fs:hid_control_handle
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-    FreeMem
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:hid_control_handle
-    WasUsbTransactionOk
+    mov ah,21h
+    mov al,0Bh
+    mov dx,1
+    movzx si,fs:hid_interface
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     pop edi
     pop edx
@@ -979,35 +880,14 @@ SetIdle_   Proc near
     push edi
 ;    
     mov ah,al
-    mov al,bl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,21h
-    mov es:usd_req,0Ah
-    pop ax
-    mov es:usd_value,ax
-    movzx ax,fs:hid_interface
-    mov es:usd_index,ax
-    mov es:usd_len,0
-    xor di,di
+    mov al,bl    
     mov bx,fs:hid_control_handle
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-    FreeMem
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:hid_control_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:hid_control_handle
-    WasUsbTransactionOk
+    mov dx,ax
+    mov ah,21h
+    mov al,0Ah
+    movzx si,fs:hid_interface
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     pop edi
     pop edx
@@ -1123,16 +1003,8 @@ ihsDone:
     mov bx,fs:hid_controller
     mov al,fs:hid_device
     xor dl,dl
-    OpenUsbPipe
+    OpenUsbDevice
     mov fs:hid_control_handle,bx
-;
-    CreateWait
-    mov fs:hid_control_wait,bx
-;
-    mov ax,fs:hid_control_handle
-    mov bx,fs:hid_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
 ;    
     mov fs:hid_intr_handle,0
     mov fs:hid_intr_size,0
@@ -1168,13 +1040,10 @@ CloseHidDev_ Proc near
     push ebx
 ;
     mov bx,fs:hid_control_handle
-    CloseUsbPipe    
+    CloseUsbDevice    
 ;
     mov bx,fs:hid_intr_handle
     CloseUsbPipe    
-;    
-    mov bx,fs:hid_control_wait
-    CloseWait
 ;    
     mov bx,fs:hid_intr_req
     CloseUsbReq
@@ -1909,7 +1778,7 @@ reset_hid  Proc far
 ;
     mov ds,ebx
     mov bx,ds:hid_control_handle
-    ResetUsbPipe    
+;    ResetUsbPipe    
 ;
     pop ebx
     pop ds
