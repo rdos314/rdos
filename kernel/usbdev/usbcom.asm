@@ -131,6 +131,7 @@ usb_com_struc	STRUC
 uc_vendor               DW ?
 uc_product              DW ?
 uc_controller           DW ?
+uc_dev_handle           DW ?
 uc_port                 DB ?
 uc_device               DB ?
 
@@ -3813,6 +3814,14 @@ tLoop:
     WaitForSignal
 
 TSignalled:
+    mov es:uc_dev_handle,0
+    mov bx,es:uc_controller
+    mov al,es:uc_port
+    OpenUsbDevice
+    jc tExit
+;
+    mov es:uc_dev_handle,bx
+;
     test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
@@ -3888,6 +3897,9 @@ tCloseNext:
     add si,2
     sub cx,1
     jnz tCloseLoop
+;
+    mov bx,es:uc_dev_handle
+    CloseUsbDevice
 ;
     mov es:uc_thread,0
     mov bx,es:uc_detach
