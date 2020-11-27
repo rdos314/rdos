@@ -168,13 +168,13 @@ void TUsbCommand::ShowClass(char class_id, char sub_class, char protocol, int in
 #   Returns....: *
 #
 ##########################################################################*/
-void TUsbCommand::ShowDevice(int control, int device, TUsbDevice *dev)
+void TUsbCommand::ShowDevice(int control, int port, TUsbDevice *dev)
 {
     char str[100];
     int minor;
     int major;
 
-        sprintf(str, "\r\n\r\nController: %d, Device: %d\r\n", control, device);
+        sprintf(str, "\r\n\r\nController: %d, Port: %d\r\n", control, port);
         Write(str);
 
     minor = dev->usb_ver & 0xFF;
@@ -211,7 +211,7 @@ void TUsbCommand::ShowConfig(int config, TUsbConfig *dev)
 {
     char str[100];
     int power;
-        
+
     sprintf(str, "\r\n  Configuration: %d\r\n", dev->config_id);
     Write(str);
 
@@ -228,10 +228,10 @@ void TUsbCommand::ShowConfig(int config, TUsbConfig *dev)
 
     power = (unsigned char)dev->power;
     power = 2 * (power + 1);
-        
+
     sprintf(str, ", %d mA\r\n", power);
     Write(str);
-            
+
 }
 
 /*##########################################################################
@@ -318,12 +318,12 @@ void TUsbCommand::ShowEndpoint(TUsbEndpoint *descr)
     Write("\r\n");
 
     size = (unsigned char)descr->maxsize;
-        
+
     sprintf(str, "    Packet size %d\r\n", size);
     Write(str);
 
     sprintf(str, "    Interval %d\r\n", descr->interval);
-    Write(str);     
+    Write(str);
 }
 
 /*##########################################################################
@@ -350,7 +350,7 @@ void TUsbCommand::ShowDescr(int control, int device, TUsbDescr *descr)
         case 5:
             ShowEndpoint((TUsbEndpoint *)descr);
             break;
-            
+
         default:
             sprintf(str, "\r\n    Unknown descriptor: %02hX\r\n", descr->type);
             Write(str);
@@ -372,9 +372,11 @@ void TUsbCommand::ShowDescr(int control, int device, TUsbDescr *descr)
 void TUsbCommand::Show()
 {
     int contr;
-    int device;
+    int port;
     int config;
+    int handle;
     char *buf;
+    short int *sptr;
     char *ptr;
     int pos;
     int size;
@@ -383,39 +385,57 @@ void TUsbCommand::Show()
     TUsbDescr *descr;
 
     buf = new char[4096];
-    
+
     for (contr = 0; contr < 256; contr++)
     {
-        for (device = 1; device < 128; device++)
+        for (port = 0; port < 32; port++)
         {
-            size = RdosGetUsbDevice(contr, device, &UsbDevice, sizeof(TUsbDevice));
-            if (size >= sizeof(TUsbDevice))
+            handle = RdosOpenUsbDevice(contr, port);
+            if (handle)
             {
-                ShowDevice(contr, device, &UsbDevice);
-
-                for (config = 0; config < UsbDevice.configs; config++)
+                size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x100, 0, buf, 8);
+                if (size == 8)
                 {
-                    size = RdosGetUsbConfig(contr, device, config, buf, 4096);
-                    if (size >= sizeof(TUsbConfig))
+                    size = (int)buf[0];
+                    size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x100, 0, buf, size);
+                }
+
+                if (size >= sizeof(TUsbDevice))
+                {
+                    ShowDevice(contr, port, &UsbDevice);
+
+                    for (config = 0; config < UsbDevice.configs; config++)
                     {
-                        UsbConfig = (TUsbConfig *)buf;
-                        ShowConfig(config, UsbConfig);
-
-                        pos = 0;
-                        ptr = buf;
-                        descr = (TUsbDescr *)ptr;
-                        ptr += descr->len;
-                        pos += descr->len;
-
-                        while (pos < size)
+                        size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x200 + config, 0, buf, 8);
+                        if (size == 8)
                         {
+                            sptr = (short int *)(buf + 2);
+                            size = *sptr;
+                            size = RdosSendUsbDeviceControlMsg(handle, 0x80, 6, 0x200 + config, 0, buf, size);
+                        }
+
+                        if (size >= sizeof(TUsbConfig))
+                        {
+                            UsbConfig = (TUsbConfig *)buf;
+                            ShowConfig(config, UsbConfig);
+
+                            pos = 0;
+                            ptr = buf;
                             descr = (TUsbDescr *)ptr;
-                            ShowDescr(contr, device, descr);
                             ptr += descr->len;
                             pos += descr->len;
+
+                            while (pos < size)
+                            {
+                                descr = (TUsbDescr *)ptr;
+                                ShowDescr(contr, port, descr);
+                                ptr += descr->len;
+                                pos += descr->len;
+                             }
                         }
                     }
                 }
+                RdosCloseUsbDevice(handle);
 
                 RdosWaitMilli(250);
 
@@ -445,7 +465,7 @@ void TUsbCommand::Reset()
     int size;
     TUsbDevice UsbDevice;
     TUsbControlPipe *pipe;
-    
+
     for (contr = 0; contr < 256; contr++)
     {
         for (device = 1; device < 128; device++)
