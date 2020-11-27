@@ -2921,7 +2921,6 @@ cciData:
     mov esi,es:xd_control_buf
     movzx ecx,fs:xp_size
     sub cx,fs:xp_remain_size
-    mov bx,cx
     mov ax,gs
     mov es,ax
     mov ax,flat_sel
@@ -2948,6 +2947,89 @@ cciDone:
     pop eax
     ret
 CopyControlIn   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupControlOut
+;
+;       DESCRIPTION:    Setup control OUT
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Pipe sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlOut   Proc near
+    pushad
+;
+    call WaitForEndpointTrb
+    mov es:xd_control_trb,si
+    mov eax,dword ptr es:usbd_control_buf
+    mov fs:[si].trb_param,eax
+    mov eax,dword ptr es:usbd_control_buf+4
+    mov fs:[si].trb_param+4,eax
+;
+    mov eax,8
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,40h
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,0
+;
+    mov fs:xp_size,cx
+;
+    or cx,cx
+    jz scoStatusIn
+;
+    mov fs:[si].trb_control,2
+    AllocateMemBlk
+    mov es:xd_control_buf,edx
+;
+    push ds
+    push es
+    pushad
+;
+    mov esi,edi
+    mov edi,es:xd_control_buf
+    mov ax,gs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    popad
+    pop es
+    pop ds
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,0
+
+scoStatusIn: 
+    call WaitForEndpointTrb
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,20h
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,1
+    clc
+
+scoDone:
+    popad
+    ret
+SetupControlOut	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3045,7 +3127,11 @@ ControlMsg   Proc far
     jmp cmDone
 
 cmDataOut:
-    int 3
+    call SetupControlOut
+    jc cmDone
+;
+    call RunControl
+    jmp cmDone
 
 cmDone:
     pushf
