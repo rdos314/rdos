@@ -3687,39 +3687,6 @@
     CallGate_get_usb_close_count \
     __value [__eax]
 
-#pragma aux RdosOpenHid = \
-    CallGate_open_hid \
-    ValidateHandle \
-    __parm [__ebx] [__eax] \
-    __value [__ebx]
-
-#pragma aux RdosCloseHid = \
-    CallGate_close_hid \
-    __parm [__ebx]
-
-#pragma aux RdosGetHidPipe = \
-    CallGate_get_hid_pipe \
-    "jc Fail" \
-    "movzx eax,al" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    __parm [__ebx] \
-    __value [__eax]
-
-#pragma aux RdosReadHid = \
-    CallGate_read_hid \
-    CarryToBool \
-    __parm [__ebx] [__edi] [__ecx] [__eax] \
-    __value [__eax]
-
-#pragma aux RdosWriteHid = \
-    CallGate_write_hid \
-    CarryToBool \
-    __parm [__ebx] [__edi] [__ecx] \
-    __value [__eax]
-
 #pragma aux RdosHasICSP = \
     CallGate_has_icsp \
     CarryToBool \

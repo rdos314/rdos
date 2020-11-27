@@ -905,12 +905,6 @@ int RDOSAPI RdosIsUsbTransactionDone(int Handle);
 int RDOSAPI RdosWasUsbTransactionOk(int Handle);
 void RDOSAPI RdosStartOnetransaction(int Handle);
 
-int RDOSAPI RdosOpenHid(int Controller, int Device);
-void RDOSAPI RdosCloseHid(int handle);
-int RDOSAPI RdosGetHidPipe(int Handle);
-int RDOSAPI RdosReadHid(int Handle, char *buf, int size, int ms);
-int RDOSAPI RdosWriteHid(int Handle, const char *buf, int size);
-
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();
 

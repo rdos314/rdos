@@ -3778,40 +3778,6 @@ HasUsbCardDevReset      MACRO
 HasUsbCardUsbReset      MACRO
         UserGate has_usb_card_usb_reset_nr
                                                 ENDM
-
-;   IN  BX          Controller #
-;   IN  AL          Device address (1..128)
-;   OUT BX          Handle
-OpenHid      MACRO
-        UserGate open_hid_nr
-                                                ENDM
-
-;   IN  BX          Handle
-CloseHid      MACRO
-        UserGate close_hid_nr
-                                                ENDM
-
-;   IN  BX          Handle
-;   OUT AX          Pipe #
-GetHidPipe      MACRO
-        UserGate get_hid_pipe_nr
-                                                ENDM
-
-;   IN  BX          Handle
-;   IN  ES:(E)DI    Buffer
-;   IN  CX          Buffer Size
-;   IN  EAX         Timeout, milliseconds
-ReadHid      MACRO
-        UserGate read_hid_nr
-                                                ENDM
-
-;   IN  BX          Handle
-;   IN  ES:(E)DI    Buffer
-;   IN  CX          Buffer Size
-WriteHid      MACRO
-        UserGate write_hid_nr
-                                                ENDM
-
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
 
 HasICSP      MACRO
