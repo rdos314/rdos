@@ -2924,6 +2924,28 @@ RunControl   Proc near
     pushad
 ;
     mov edx,es:dev_control_ed
+    test fs:[edx].oes_fa_en,4000h
+    jz rcEnabled
+;
+    mov ax,es:usbd_maxlen
+    cmp ax,800h
+    jb rcMaxSizeOk
+;    
+    mov ax,7FFh
+
+rcMaxSizeOk:
+    mov fs:[edx].oes_mps,ax
+;
+    xor ax,ax
+    cmp es:usbd_speed,0
+    jnz rcSpeedOk
+;
+    or ah,20h
+
+rcSpeedOk:    
+    mov fs:[edx].oes_fa_en,ax
+
+rcEnabled:    
     mov eax,es:dev_control_tail
     mov fs:[edx].oes_tailp,eax
     mov edx,es:dev_control_head
@@ -3296,12 +3318,28 @@ CreateDev  Endp
 ;       DESCRIPTION:        Address usb dev
 ;
 ;       PARAMETERS:         DS      Function selector
+;                           ES      Device selector
 ;                           AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddressDev   Proc far
     AddressUsbDev    
+    jc adDone
+;
+    push fs
+    push edx
+;
+    mov dx,flat_sel
+    mov fs,dx
+    mov edx,es:dev_control_ed
+    mov byte ptr fs:[edx].oes_fa_en,al
+;
+    pop edx
+    pop fs
+    clc
+
+adDone:
     retf32
 AddressDev   Endp
 

@@ -1107,21 +1107,6 @@ ClosePipe   Proc near
     FreeMem
 
 cpBufOk:
-    mov cx,16
-    mov bx,OFFSET usbp_config_sel
-
-cpConfLoop:
-    mov ax,fs:[bx]
-    or ax,ax
-    jz cpConfNext
-;
-    mov es,ax
-    FreeMem
-
-cpConfNext:
-    add bx,2
-    loop cpConfLoop    
-;
     call fword ptr ds:close_pipe_proc
 ;
     pop es
@@ -1309,6 +1294,23 @@ cdCloseInEndpointNext:
     inc al
     add bx,2
     loop cdCloseInEndpointLoop       
+;
+    mov cx,16
+    mov bx,OFFSET usbd_config_sel
+
+cdConfLoop:
+    mov ax,fs:[bx]
+    or ax,ax
+    jz cdConfNext
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+cdConfNext:
+    add bx,2
+    loop cdConfLoop    
 ;
     FreeMem
 ;
@@ -1858,7 +1860,6 @@ start_usb_device	Endp
 ;
 ;       Parameters:     DS      USB function selector
 ;                       ES      USB device selector
-;                       FS      Control pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1871,7 +1872,7 @@ read_usb_descriptors       Proc far
 ;
     mov ax,es
     mov gs,ax
-    mov di,OFFSET usbd_device_descr
+    mov edi,OFFSET usbd_device_descr
     mov si,OFFSET usbd_control_buf
     mov es:[si].usd_type,80h
     mov es:[si].usd_req,GET_DESCR
@@ -1879,17 +1880,16 @@ read_usb_descriptors       Proc far
     mov es:[si].usd_index,0
     mov es:[si].usd_len,8
     call fword ptr ds:control_msg_proc
-    int 3
-    jc rudEnd
+    jc rudDone
 ;
     cmp cx,8
     stc
-    jnz rudEnd
+    jnz rudDone
 ;
     movzx ax,es:[di].udd_maxlen
     or ax,ax
     stc
-    jz rudEnd
+    jz rudDone
 ;
     cmp ax,fs:usbp_maxlen
     je rudLenOk
@@ -1902,88 +1902,80 @@ rudLenOk:
     movzx eax,es:[di].udd_len
     cmp ax,18
     stc
-    jne rudEnd
+    jne rudDone
 ;
     mov es:[si].usd_len,ax
     call fword ptr ds:control_msg_proc
-    jc rudEnd
+    jc rudDone
 ;
     cmp ax,18
     stc
-    jnz rudEnd
-
-
-
-    mov ax,es
-    mov gs,ax
+    jnz rudDone
 ;
-    mov eax,8
-    call AllocateBufSel
-
-rudRetry:
-    xor bx,bx
+    mov bh,-1
+    xor bl,bl
 
 rudLoop:
-    call fword ptr ds:is_connected_proc
-    jc rudDone
-;    
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    mov cx,8
+    mov ax,es
+    mov gs,ax
+    mov edi,OFFSET usbd_temp_buf
+;
     mov al,bl
     mov ah,2
-    call GetDescr
-    movzx eax,es:ucd_size
-    FreeMem
+    mov es:[si].usd_type,80h
+    mov es:[si].usd_req,GET_DESCR
+    mov es:[si].usd_value,ax
+    mov es:[si].usd_index,0
+    mov es:[si].usd_len,8
+    call fword ptr ds:control_msg_proc
+    jnc rudGetFull
 ;
-    call fword ptr ds:is_connected_proc
-    jc rudDone
+    or bx,bx
+    stc
+    jz rudDone
 ;
-    call AllocateBufSel
-    xor edi,edi
-    mov cx,ax
-    mov al,bl
-    mov ah,2
-    call GetDescr
-    mov di,bx
-    add di,di
-    mov fs:[di].usbp_config_sel,es
-;
-    inc bl
-    cmp bl,16
-    je rudNotify
-;    
-    cmp bl,gs:udd_configs
-    jb rudLoop
-
-rudNotify:
-    call fword ptr ds:is_connected_proc
+    clc
     jmp rudDone
 
-rudFreeDone:
-    FreeMem    
+rudGetFull:
+    mov al,es:[di].ucd_config_id
+    cmp al,bh
+    clc
+    je rudDone
+;
+    mov bh,al
+    mov cx,es:[di].ucd_size
+;
+    push es
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    xor edi,edi
+    pop es
+;
+    mov es:[si].usd_len,cx
+    call fword ptr ds:control_msg_proc
+    jnc rudSave
+;
+    push es
+    mov ax,gs
+    mov es,ax
+    xor ax,ax
+    mov gs,ax
+    FreeMem
+    pop es
     stc
-    
+    jmp rudDone
+
+rudSave:
+    mov di,bx
+    add di,di
+    mov es:[di].usbd_config_sel,gs
+    inc bl
+    jmp rudLoop
+
 rudDone:
-    mov fs:usbp_signal,0
-    jnc rudPipeOk
-;
-    call fword ptr ds:is_connected_proc
-    jc rudDoClose
-;
-    call fword ptr ds:reset_pipe_proc
-;
-    mov ax,200
-    WaitMilliSec
-
-rudDoClose:
-    call ClosePipe
-    stc
-
-rudPipeOk:
-
-rudEnd:
     popad
     pop es
     pop gs
@@ -3191,18 +3183,13 @@ get_usb_config  Proc near
     or si,si
     jz gucFail
 ;
-    mov ds,si
-    mov si,ds:usbd_in_endpoint_arr
-    or si,si
-    jz gucFail
-;
     cmp dl,16
     jae gucFail
 ;    
     mov ds,si
     movzx si,dl
     add si,si
-    mov si,ds:[si].usbp_config_sel
+    mov si,ds:[si].usbd_config_sel
     or si,si
     jz gucFail
 ;
@@ -3346,7 +3333,7 @@ ConfigUsb      Proc near
     mov es,fs:usbp_dev_sel
 
 cudFindConfigLoop:
-    mov ax,fs:[si].usbp_config_sel
+    mov ax,es:[si].usbd_config_sel
     or ax,ax
     jz cudFindConfigNext
 ;

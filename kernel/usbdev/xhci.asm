@@ -3505,6 +3505,7 @@ htSlotAlloc:
     popf
     jc htDetach
 ;
+    int 3
     ReadUsbDescriptors
     jc htDetach
 ;

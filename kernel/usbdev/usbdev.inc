@@ -143,6 +143,7 @@ clear_stalled_proc      DD ?,?
 ; OUT AL        Maxlen
 get_max_len_proc        DD ?,?
 
+;  IN  ES       Device selector
 ;  IN  AL       Address
 address_device_proc	DD ?,?
 
@@ -217,7 +218,9 @@ usbd_section            section_typ <>
 usbd_in_endpoint_arr    DW 16 DUP(?)
 usbd_out_endpoint_arr   DW 16 DUP(?)
 usbd_control_buf        DB 8 DUP(?)
+usbd_temp_buf           DB 8 DUP(?)
 usbd_device_descr       DB 18 DUP(?)
+usbd_config_sel         DW 16 DUP(?)
 
 usb_device_struc  ENDS
 
@@ -238,7 +241,6 @@ usbp_signal         DW ?
 usbp_wait           DW ?
 usbp_buf_size       DW ?
 usbp_buf_sel        DW ?
-usbp_config_sel     DW 16 DUP(?)
 
 usb_pipe_struc   ENDS
 
