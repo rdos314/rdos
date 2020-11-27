@@ -1239,7 +1239,7 @@ cdCloseInEndpointNext:
     mov bx,OFFSET usbd_config_sel
 
 cdConfLoop:
-    mov ax,fs:[bx]
+    mov ax,es:[bx]
     or ax,ax
     jz cdConfNext
 ;
