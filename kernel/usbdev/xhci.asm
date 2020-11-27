@@ -3097,7 +3097,6 @@ RunControl   Endp
 ;
 ;       PARAMETERS:     ES      Usb device
 ;                       GS:EDI  Buffer
-;                       CX      Size
 ;
 ;       RETURNS:        NC      OK
 ;                          CX   Transfer size
@@ -3110,6 +3109,7 @@ ControlMsg   Proc far
     push edx
     push ebp
 ;
+    mov cx,es:usbd_control_buf.usd_len
     mov fs:xp_size,0
     mov es:xd_control_buf,0
     mov fs,es:usbd_in_endpoint_arr

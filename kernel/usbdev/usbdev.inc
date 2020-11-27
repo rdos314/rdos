@@ -217,6 +217,7 @@ usbd_section            section_typ <>
 usbd_in_endpoint_arr    DW 16 DUP(?)
 usbd_out_endpoint_arr   DW 16 DUP(?)
 usbd_control_buf        DB 8 DUP(?)
+usbd_device_descr       DB 18 DUP(?)
 
 usb_device_struc  ENDS
 
@@ -231,7 +232,6 @@ usbp_dir            DB ?
 usbp_speed          DB ?
 usbp_maxlen         DW ?
 usbp_section        section_typ <>
-usbp_device_sel     DW ?
 usbp_hub_sel        DW ?
 usbp_hub_port       DW ?
 usbp_signal         DW ?

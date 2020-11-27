@@ -883,7 +883,6 @@ CreateDefaultControl    Proc near
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_CONTROL
     mov fs:usbp_maxlen,8
-    mov fs:usbp_device_sel,0
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
     mov fs:usbp_buf_sel,0
@@ -946,7 +945,6 @@ cbEndpointOk:
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_BULK
     mov fs:usbp_maxlen,cx
-    mov fs:usbp_device_sel,0
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
     mov fs:usbp_buf_sel,0
@@ -1004,7 +1002,6 @@ CreateInterrupt    Proc near
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_INTR
     mov fs:usbp_maxlen,cx
-    mov fs:usbp_device_sel,0
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
     mov fs:usbp_buf_sel,0
@@ -1110,14 +1107,6 @@ ClosePipe   Proc near
     FreeMem
 
 cpBufOk:
-    mov ax,fs:usbp_device_sel
-    or ax,ax
-    jz cpDevOk
-;
-    mov es,ax
-    FreeMem
-
-cpDevOk:
     mov cx,16
     mov bx,OFFSET usbp_config_sel
 
@@ -1882,45 +1871,56 @@ read_usb_descriptors       Proc far
 ;
     mov ax,es
     mov gs,ax
+    mov di,OFFSET usbd_device_descr
+    mov si,OFFSET usbd_control_buf
+    mov es:[si].usd_type,80h
+    mov es:[si].usd_req,GET_DESCR
+    mov es:[si].usd_value,100h
+    mov es:[si].usd_index,0
+    mov es:[si].usd_len,8
+    call fword ptr ds:control_msg_proc
+    int 3
+    jc rudEnd
+;
+    cmp cx,8
+    stc
+    jnz rudEnd
+;
+    movzx ax,es:[di].udd_maxlen
+    or ax,ax
+    stc
+    jz rudEnd
+;
+    cmp ax,fs:usbp_maxlen
+    je rudLenOk
+;    
+    mov es:usbd_maxlen,ax
+    mov fs:usbp_maxlen,ax
+    call fword ptr ds:set_max_len_proc
+
+rudLenOk:
+    movzx eax,es:[di].udd_len
+    cmp ax,18
+    stc
+    jne rudEnd
+;
+    mov es:[si].usd_len,ax
+    call fword ptr ds:control_msg_proc
+    jc rudEnd
+;
+    cmp ax,18
+    stc
+    jnz rudEnd
+
+
+
+    mov ax,es
+    mov gs,ax
 ;
     mov eax,8
     call AllocateBufSel
 
 rudRetry:
-    call fword ptr ds:is_connected_proc
-    jc rudFreeDone
-;
-    xor edi,edi
-    mov cx,8
-    mov ax,100h
-    call GetDescr
-    movzx ax,es:udd_maxlen
-    or ax,ax
-    jz rudRetry
-;
-    cmp ax,fs:usbp_maxlen
-    je rudLenOk
-;    
-    mov gs:usbd_maxlen,ax
-    mov fs:usbp_maxlen,ax
-    call fword ptr ds:set_max_len_proc
-    
-rudLenOk:
-    movzx eax,es:udd_len
-    FreeMem
-;
-    call fword ptr ds:is_connected_proc
-    jc rudDone
-;    
-    call AllocateBufSel
-    xor edi,edi
-    mov cx,ax
-    mov ax,100h
-    call GetDescr
-    mov fs:usbp_device_sel,es
-    mov ax,es
-    mov gs,ax
-;
     xor bx,bx
 
 rudLoop:
@@ -1982,6 +1982,8 @@ rudDoClose:
     stc
 
 rudPipeOk:
+
+rudEnd:
     popad
     pop es
     pop gs
@@ -3095,22 +3097,12 @@ get_usb_device  Proc near
     or si,si
     jz gudFail
 ;
-    mov ds,si
-    mov si,ds:usbd_in_endpoint_arr
-    or si,si
-    jz gudFail
-;
-    mov ds,si
-    mov si,ds:usbp_device_sel
-    or si,si
-    jz gudFail
-;
     push ecx
     push edi
 ;
     mov ds,si
-    xor esi,esi
-    movzx ax,ds:udd_len
+    mov esi,OFFSET usbd_device_descr
+    movzx ax,ds:[si].udd_len
     cmp cx,ax
     jbe gudCopy
 ;

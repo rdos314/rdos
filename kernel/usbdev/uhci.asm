@@ -3238,7 +3238,6 @@ CleanupControl  Endp
 ;
 ;       PARAMETERS:     ES      Usb device
 ;                       GS:EDI  Buffer
-;                       CX      Size
 ;
 ;       RETURNS:        NC      OK
 ;                          CX   Transfer size
@@ -3249,6 +3248,7 @@ ControlMsg   Proc far
     push fs
     push eax
 ;
+    mov cx,es:usbd_control_buf.usd_len
     mov ax,flat_sel
     mov fs,ax
 ;
