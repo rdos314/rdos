@@ -857,4 +857,6 @@ free_linear_mem_blk_nr      = 751
 init_usb_control_pipe_nr    = 752
 add_usb_device_nr           = 753
 
+free_mem_blk_nr             = 754
+
 osgate_entries              = 780

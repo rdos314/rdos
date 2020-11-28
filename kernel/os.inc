@@ -995,6 +995,11 @@ FreeLinearMemBlk    MACRO
     OsGate free_linear_mem_blk_nr
                     ENDM
 
+;  IN  ES      Memory block selector
+FreeMemBlk    MACRO
+    OsGate free_mem_blk_nr
+                    ENDM
+
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;       EAX         FYSISK ADDRESS

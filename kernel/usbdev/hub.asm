@@ -147,24 +147,31 @@ FreeAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDev   Proc far
-    push ecx    
-    push edi
-    push eax
-;
-    mov eax,1000h
-    AllocateGlobalMem
-    xor edi,edi
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
-;
-    pop eax
-    pop edi
-    pop ecx
-;
-    InitUsbDev
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:create_dev_proc
+    pop ds
     ret
 CreateDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeDev
+;
+;       DESCRIPTION:    Free dev
+;
+;       PARAMETERS:     ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_dev_proc
+    pop ds
+    ret
+FreeDev	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -896,38 +903,39 @@ hub_tab:
 ht00 DD OFFSET AllocateAddress,     SEG code
 ht01 DD OFFSET FreeAddress,         SEG code
 ht02 DD OFFSET CreateDev,           SEG code
-ht03 DD OFFSET CreateControl,       SEG code
-ht04 DD OFFSET CreateBulk,          SEG code
-ht05 DD OFFSET CreateIntr,          SEG code
-ht06 DD OFFSET AddSetup,            SEG code
-ht07 DD OFFSET AddOut,              SEG code
-ht08 DD OFFSET AddIn,               SEG code
-ht09 DD OFFSET AddStatusOut,        SEG code
-ht0A DD OFFSET AddStatusIn,         SEG code
-ht0B DD OFFSET IssueTransfer,       SEG code
-ht0C DD OFFSET IsTransferDone,      SEG code
-ht0D DD OFFSET EndTransfer,         SEG code
-ht0E DD OFFSET WasTransferOk,       SEG code
-ht0F DD OFFSET GetDataSize,         SEG code
-ht10 DD OFFSET ClosePipe,           SEG code
-ht11 DD OFFSET WaitForCompletion,   SEG code
-ht12 DD OFFSET ChangeAddress,       SEG code
-ht13 DD OFFSET IsConnected,         SEG code
-ht14 DD OFFSET ResetPipe,           SEG code
-ht15 DD OFFSET LockEnum,            SEG code
-ht16 DD OFFSET UnlockEnum,          SEG code
-ht17 DD OFFSET Has64Bit,            SEG code
-ht18 DD OFFSET IsStalled,           SEG code
-ht19 DD OFFSET ClearStalled,        SEG code
-ht1A DD OFFSET AddressDev,          SEG code
-ht1B DD OFFSET ConfigDev,           SEG code
-ht1C DD OFFSET UpdateMaxLen,        SEG code
-ht1D DD OFFSET IssueOne,            SEG code
-ht1E DD OFFSET IsDeviceConnected,   SEG code
-ht1F DD OFFSET ControlMsg,          SEG code
-ht20 DD OFFSET PollPipe,            SEG code
-ht21 DD OFFSET ReadPipe,            SEG code
-ht22 DD OFFSET WritePipe,           SEG code
+ht03 DD OFFSET FreeDev,             SEG code
+ht04 DD OFFSET CreateControl,       SEG code
+ht05 DD OFFSET CreateBulk,          SEG code
+ht06 DD OFFSET CreateIntr,          SEG code
+ht07 DD OFFSET AddSetup,            SEG code
+ht08 DD OFFSET AddOut,              SEG code
+ht09 DD OFFSET AddIn,               SEG code
+ht0A DD OFFSET AddStatusOut,        SEG code
+ht0B DD OFFSET AddStatusIn,         SEG code
+ht0C DD OFFSET IssueTransfer,       SEG code
+ht0D DD OFFSET IsTransferDone,      SEG code
+ht0E DD OFFSET EndTransfer,         SEG code
+ht0F DD OFFSET WasTransferOk,       SEG code
+ht10 DD OFFSET GetDataSize,         SEG code
+ht11 DD OFFSET ClosePipe,           SEG code
+ht12 DD OFFSET WaitForCompletion,   SEG code
+ht13 DD OFFSET ChangeAddress,       SEG code
+ht14 DD OFFSET IsConnected,         SEG code
+ht15 DD OFFSET ResetPipe,           SEG code
+ht16 DD OFFSET LockEnum,            SEG code
+ht17 DD OFFSET UnlockEnum,          SEG code
+ht18 DD OFFSET Has64Bit,            SEG code
+ht19 DD OFFSET IsStalled,           SEG code
+ht1A DD OFFSET ClearStalled,        SEG code
+ht1B DD OFFSET AddressDev,          SEG code
+ht1C DD OFFSET ConfigDev,           SEG code
+ht1D DD OFFSET UpdateMaxLen,        SEG code
+ht1E DD OFFSET IssueOne,            SEG code
+ht1F DD OFFSET IsDeviceConnected,   SEG code
+ht20 DD OFFSET ControlMsg,          SEG code
+ht21 DD OFFSET PollPipe,            SEG code
+ht22 DD OFFSET ReadPipe,            SEG code
+ht23 DD OFFSET WritePipe,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2496,7 +2504,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*23h
+    mov ecx,2*24h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

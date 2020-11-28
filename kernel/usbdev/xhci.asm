@@ -3392,6 +3392,22 @@ CreateDev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreeDev
+;
+;       DESCRIPTION:    Free device sel
+;
+;       PARAMETERS:     ES        Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    FreeMemBlk
+    retf32
+FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandlerThread
 ;
 ;   DESCRIPTION:    Handler thread
@@ -4228,38 +4244,39 @@ xhci_tab:
 et00 DD OFFSET AllocateAddress,     SEG code
 et01 DD OFFSET FreeAddress,         SEG code
 et02 DD OFFSET CreateDev,           SEG code
-et03 DD OFFSET CreateControl,       SEG code
-et04 DD OFFSET CreateBulk,          SEG code
-et05 DD OFFSET CreateIntr,          SEG code
-et06 DD OFFSET AddSetup,            SEG code
-et07 DD OFFSET AddOut,              SEG code
-et08 DD OFFSET AddIn,               SEG code
-et09 DD OFFSET AddStatusOut,        SEG code
-et0A DD OFFSET AddStatusIn,         SEG code
-et0B DD OFFSET IssueTransfer,       SEG code
-et0C DD OFFSET IsTransferDone,      SEG code
-et0D DD OFFSET EndTransfer,         SEG code
-et0E DD OFFSET WasTransferOk,       SEG code
-et0F DD OFFSET GetDataSize,         SEG code
-et10 DD OFFSET ClosePipe,           SEG code
-et11 DD OFFSET WaitForCompletion,   SEG code
-et12 DD OFFSET ChangeAddress,       SEG code
-et13 DD OFFSET IsConnected,         SEG code
-et14 DD OFFSET ResetPipe,           SEG code
-et15 DD OFFSET LockEnum,            SEG code
-et16 DD OFFSET UnlockEnum,          SEG code
-et17 DD OFFSET Has64Bit,            SEG code
-et18 DD OFFSET IsStalled,           SEG code
-et19 DD OFFSET ClearStalled,        SEG code
-et1A DD OFFSET AddressDevice,       SEG code
-et1B DD OFFSET ConfigDevice,        SEG code
-et1C DD OFFSET UpdateMaxLen,        SEG code
-et1D DD OFFSET IssueOne,            SEG code
-et1E DD OFFSET IsDeviceConnected,   SEG code
-et1F DD OFFSET ControlMsg,          SEG code
-et20 DD OFFSET PollPipe,            SEG code
-et21 DD OFFSET ReadPipe,            SEG code
-et22 DD OFFSET WritePipe,           SEG code
+et03 DD OFFSET FreeDev,             SEG code
+et04 DD OFFSET CreateControl,       SEG code
+et05 DD OFFSET CreateBulk,          SEG code
+et06 DD OFFSET CreateIntr,          SEG code
+et07 DD OFFSET AddSetup,            SEG code
+et08 DD OFFSET AddOut,              SEG code
+et09 DD OFFSET AddIn,               SEG code
+et0A DD OFFSET AddStatusOut,        SEG code
+et0B DD OFFSET AddStatusIn,         SEG code
+et0C DD OFFSET IssueTransfer,       SEG code
+et0D DD OFFSET IsTransferDone,      SEG code
+et0E DD OFFSET EndTransfer,         SEG code
+et0F DD OFFSET WasTransferOk,       SEG code
+et10 DD OFFSET GetDataSize,         SEG code
+et11 DD OFFSET ClosePipe,           SEG code
+et12 DD OFFSET WaitForCompletion,   SEG code
+et13 DD OFFSET ChangeAddress,       SEG code
+et14 DD OFFSET IsConnected,         SEG code
+et15 DD OFFSET ResetPipe,           SEG code
+et16 DD OFFSET LockEnum,            SEG code
+et17 DD OFFSET UnlockEnum,          SEG code
+et18 DD OFFSET Has64Bit,            SEG code
+et19 DD OFFSET IsStalled,           SEG code
+et1A DD OFFSET ClearStalled,        SEG code
+et1B DD OFFSET AddressDevice,       SEG code
+et1C DD OFFSET ConfigDevice,        SEG code
+et1D DD OFFSET UpdateMaxLen,        SEG code
+et1E DD OFFSET IssueOne,            SEG code
+et1F DD OFFSET IsDeviceConnected,   SEG code
+et20 DD OFFSET ControlMsg,          SEG code
+et21 DD OFFSET PollPipe,            SEG code
+et22 DD OFFSET ReadPipe,            SEG code
+et23 DD OFFSET WritePipe,           SEG code
 
 InitFunction    Proc near
     push es
@@ -4406,7 +4423,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*23h
+    mov cx,2*24h
 
 ifTabLoop:
     lods dword ptr cs:[si]

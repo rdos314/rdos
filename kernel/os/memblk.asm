@@ -351,6 +351,64 @@ create_mem_blk64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           FreeMemBlk
+;
+;   DESCRIPTION:    Free memory block
+;
+;   PARAMETERS:     ES      Memory block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_mem_blk_name    DB 'Free Mem Blk', 0
+
+free_mem_blk     Proc far
+    push eax
+    push ecx
+    push esi
+;
+    mov ax,es:mblk_sign
+    cmp ax,MEM_BLK_SIGN
+    je fmbSignOk
+;
+    int 3
+    stc
+    jmp fmbDone
+
+fmbSignOk:
+    mov si,es:mblk_info_offset
+    mov cx,es:[si].mblk_ext_size
+    lea si,[si].mblk_ext_arr
+
+fmbLoop:
+    mov ax,es:[si]
+    or ax,ax
+    je fmbNext
+;
+    cmp ax,-1
+    je fmbNext
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+fmbNext:
+    add si,2
+    loop fmbLoop
+;
+    FreeMem
+    clc
+
+fmbDone:
+    pop esi
+    pop ecx
+    pop eax    
+    retf32
+free_mem_blk     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           CreateExtend
 ;
 ;   DESCRIPTION:    Create extend memory block selector
@@ -1976,6 +2034,12 @@ init_mem_blk   PROC near
     mov edi,OFFSET create_mem_blk64_name
     xor cl,cl
     mov ax,create_mem_blk64_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_mem_blk
+    mov edi,OFFSET free_mem_blk_name
+    xor cl,cl
+    mov ax,free_mem_blk_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_mem_blk

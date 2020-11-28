@@ -1172,7 +1172,7 @@ cdConfNext:
     add bx,2
     loop cdConfLoop    
 ;
-    FreeMem
+    call fword ptr ds:free_dev_proc
 ;
     pop dx
     pop cx
