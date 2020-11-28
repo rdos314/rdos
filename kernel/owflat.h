@@ -264,6 +264,24 @@
     "TempDone: " \
     __value [__eax]
 
+#pragma aux RdosGetHidDevice = \
+    CallGate_get_hid_device  \
+    "jc Fail" \
+    "push edx" \
+    "movzx edx,bx" \
+    "mov [esi],edx" \
+    "movzx edx,al" \
+    "mov [edi],edx" \
+    "mov eax,1" \
+    "pop edx" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__eax] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
 #pragma aux RdosGetHidReportItem = \
     CallGate_get_hid_report_item  \
     CarryToBool \

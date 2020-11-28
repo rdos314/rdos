@@ -101,23 +101,25 @@ void THidCommand::ShowDevices()
     int ok;
     char ItemName[256];
     int DevNr;
+    int Controller;
+    int Port;
     int ReportNr;
     int ObjNr;
 
     for (DevNr = 0; DevNr < 0x40; DevNr++)
     {
-        ok = RdosGetHidReportItem(DevNr, 0, ItemName);
+        ok = RdosGetHidDevice(DevNr, &Controller, &Port);
         if (ok)
         {
-            sprintf(ItemName, "HID Device: %d\r\n", DevNr + 1);
+            sprintf(ItemName, "HID Device: %02hX.%02hX\r\n", Controller, Port);
             Write(ItemName);
-            
+
             for (ObjNr = 0; ObjNr < 0x1000; ObjNr++)
             {
                 ok = RdosGetHidReportItem(DevNr, ObjNr, ItemName);
                 if (ok)
                 {
-                    Write(ItemName);           
+                    Write(ItemName);
                     Write("\r\n");
                 }
                 else
@@ -133,23 +135,23 @@ void THidCommand::ShowDevices()
                     ok = RdosGetHidReportOutputData(DevNr, ReportNr, 0, ItemName);
                 if (!ok)
                     ok = RdosGetHidReportFeatureData(DevNr, ReportNr, 0, ItemName);
-                
+
                 if (ok)
                 {
                     sprintf(ItemName, "Report ID: %d\r\n", ReportNr);
                     Write(ItemName);
-        
+
                     ok = RdosGetHidReportInputData(DevNr, ReportNr, 0, ItemName);
                     if (ok)
                     {
                         Write("Input: \r\n");
-                        
+
                         for (ObjNr = 0; ObjNr < 256; ObjNr++)
                         {
                             ok = RdosGetHidReportInputData(DevNr, ReportNr, ObjNr, ItemName);
                             if (ok)
                             {
-                                Write(ItemName);           
+                                Write(ItemName);
                                 Write("\r\n");
                             }
                             else
@@ -161,13 +163,13 @@ void THidCommand::ShowDevices()
                     if (ok)
                     {
                         Write("Output: \r\n");
-                        
+
                         for (ObjNr = 0; ObjNr < 256; ObjNr++)
                         {
                             ok = RdosGetHidReportOutputData(DevNr, ReportNr, ObjNr, ItemName);
                             if (ok)
                             {
-                                Write(ItemName);           
+                                Write(ItemName);
                                 Write("\r\n");
                             }
                             else
@@ -179,13 +181,13 @@ void THidCommand::ShowDevices()
                     if (ok)
                     {
                         Write("Output: \r\n");
-                        
+
                         for (ObjNr = 0; ObjNr < 256; ObjNr++)
                         {
                             ok = RdosGetHidReportFeatureData(DevNr, ReportNr, ObjNr, ItemName);
                             if (ok)
                             {
-                                Write(ItemName);           
+                                Write(ItemName);
                                 Write("\r\n");
                             }
                             else

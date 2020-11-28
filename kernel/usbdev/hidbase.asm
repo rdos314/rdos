@@ -1339,6 +1339,41 @@ register_hid_input  Proc far
 register_hid_input  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetHidDevice
+;
+;           DESCRIPTION:    Get HID usb device
+;
+;           PARAMETERS:     EAX		Device #
+;
+;           RETURNS:        BX          USB controller
+;                           AL          USB port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_hid_device_name     DB 'Register HID Input',0
+
+    extern GetHidController:near
+    extern GetHidPort:near
+
+get_hid_device  Proc far
+    push eax
+    call GetHidController
+    mov ebx,eax
+    cmp eax,-1
+    pop eax
+    stc
+    jz ghdDone
+;
+    call GetHidPort
+    clc
+
+ghdDone:
+    ret
+get_hid_device  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           WaitForReport
@@ -1486,6 +1521,12 @@ InitHid_    Proc near
     xor dx,dx
     mov ax,reset_hid_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_hid_device
+    mov edi,OFFSET get_hid_device_name
+    xor dx,dx
+    mov ax,get_hid_device_nr
+    RegisterBimodalUserGate
     clc
 ;
     popad

@@ -3164,6 +3164,48 @@ struct THidDevice *GetHid(int controller, int device)
 
 /*##########################################################################
 #
+#   Name       : GetHidController
+#
+#   Purpose....: Get Hid controller
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetHidController "*" rdosdev parm routine [eax]  value [eax]
+int GetHidController(int device)
+{
+    if (device >= 0 && device < MAX_HID_DEVICES)
+        if (HidArr[device])
+            return HidArr[device]->Controller;
+
+    return -1;
+}
+
+/*##########################################################################
+#
+#   Name       : GetHidPort
+#
+#   Purpose....: Get Hid port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetHidPort "*" rdosdev parm routine [eax]  value [eax]
+int GetHidPort(int device)
+{
+    if (device >= 0 && device < MAX_HID_DEVICES)
+        if (HidArr[device])
+            return HidArr[device]->Port;
+
+    return -1;
+}
+
+/*##########################################################################
+#
 #   Name       : Test gate
 #
 ##########################################################################*/

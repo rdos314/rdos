@@ -942,6 +942,8 @@
 #define usergate_close_usb_dev 0x000002E9
 #define usergate_send_usb_dev_control_msg 0x000002EA
 
+#define usergate_get_hid_device 0x000002EB
+
 
 
 #ifdef __FLAT__
@@ -1889,6 +1891,8 @@
 #define CallGate_close_usb_dev 0x55 0x67 0x9a 233 2 0 0 3 0 0x5d
 #define CallGate_send_usb_dev_control_msg 0x55 0x67 0x9a 234 2 0 0 3 0 0x5d
 
+#define CallGate_get_hid_device 0x55 0x67 0x9a 235 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2833,5 +2837,7 @@
 #define CallGate_open_usb_dev 0x3e 0x67 0x9a 232 2 0 0 3 0
 #define CallGate_close_usb_dev 0x3e 0x67 0x9a 233 2 0 0 3 0
 #define CallGate_send_usb_dev_control_msg 0x3e 0x67 0x9a 234 2 0 0 3 0
+
+#define CallGate_get_hid_device 0x3e 0x67 0x9a 235 2 0 0 3 0
 
 #endif

@@ -942,4 +942,6 @@ open_usb_dev_nr                   = 744
 close_usb_dev_nr                  = 745
 send_usb_dev_control_msg_nr       = 746
 
+get_hid_device_nr                 = 747
+
 usergate_entries                  = 750

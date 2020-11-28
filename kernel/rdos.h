@@ -241,6 +241,7 @@ int RDOSAPI RdosGetPciDeviceClass(int Index, int *Class, int *Subclass);
 int RDOSAPI RdosGetPciDeviceIrq(int Index);
 int RDOSAPI RdosGetCpuTemperature();
 
+int RDOSAPI RdosGetHidDevice(int Device, int *UsbController, int *UsbPort);
 int RDOSAPI RdosGetHidReportItem(int Device, int Index, char *Name);
 int RDOSAPI RdosGetHidReportInputData(int Device, int Report, int Index, char *Name);
 int RDOSAPI RdosGetHidReportOutputData(int Device, int Report, int Index, char *Name);

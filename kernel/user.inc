@@ -4222,6 +4222,13 @@ GetCpuTemperature      MACRO
 ;;;;;;;;;;; HID ;;;;;;;;;;
 
 ;   IN  EAX         Device #
+;   OUT BX          USB controller
+;   OUT AX          USB device
+GetHidDevice      MACRO
+        UserGate get_hid_device_nr
+                        ENDM
+
+;   IN  EAX         Device #
 ;   IN  EDX         Item #
 ;   IN  ES:(E)DI    HID item buffer
 GetHidReportItem      MACRO
