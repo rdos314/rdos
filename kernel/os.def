@@ -421,8 +421,6 @@ reload_preempt_timer_nr     = 399
 start_sys_preempt_timer_nr  = 400
 reload_sys_preempt_timer_nr = 401
 
-is_valid_usb_pipe_sel_nr    = 403
-
 hook_net_link_up_nr         = 404
 req_arp_nr                  = 405
 

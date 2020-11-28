@@ -4055,12 +4055,6 @@ AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
                     ENDM
 
-; IN  ES      Usb function selector
-; IN  AX      Pipe sel
-IsValidUsbPipeSel   MACRO
-    OsGate is_valid_usb_pipe_sel_nr
-                    ENDM
-
 ; IN  BX    Pipe handle
 ; OUT BX    Req handle
 CreateUsbReq      MACRO

@@ -1054,81 +1054,6 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IsValidUsbPipeSel
-;
-;           description:    Check if selector is a valid USB pipe selector
-;
-;       parameters:     DS      Device sel
-;                       AX      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_valid_usb_pipe_sel_name  DB 'Is Valid USB Pipe Sel', 0
-
-is_valid_usb_pipe_sel    Proc far
-    push es
-    push bx
-    push cx
-    push si
-;    
-    mov cx,MAX_USB_HUB_PORTS
-    mov si,OFFSET usb_port_arr
-
-ivupFunctionLoop:
-    push cx
-    mov cx,[si]
-    or cx,cx
-    jz ivupFunctionNext
-;    
-    mov es,cx
-    mov cx,es:usb_function_sel
-    or cx,cx
-    jz ivupFunctionNext
-;
-    mov es,cx
-    mov bx,OFFSET usbd_in_endpoint_arr
-    mov cx,16
-
-ivupCheckIn:
-    cmp ax,es:[bx]
-    je ivupOk
-;
-    add bx,2
-    loop ivupCheckIn
-;
-    mov bx,OFFSET usbd_out_endpoint_arr
-    mov cx,16            
-
-ivupCheckOut:
-    cmp ax,es:[bx]
-    je ivupOk
-;
-    add bx,2
-    loop ivupCheckOut
-
-ivupFunctionNext:
-    pop cx
-    add si,2
-    loop ivupFunctionLoop
-;
-    stc
-    jmp ivupDone
-
-ivupOk:
-    pop cx
-    clc
-
-ivupDone:   
-    pop si
-    pop cx
-    pop bx
-    pop es
-    retf32
-is_valid_usb_pipe_sel    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CloseEndpoint
 ;
 ;           description:    Close endpoint
@@ -5298,12 +5223,6 @@ init    Proc far
     mov edi,OFFSET is_usb_pipe_connected_name
     xor cl,cl
     mov ax,is_usb_pipe_connected_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET is_valid_usb_pipe_sel
-    mov edi,OFFSET is_valid_usb_pipe_sel_name
-    xor cl,cl
-    mov ax,is_valid_usb_pipe_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_usb_req
