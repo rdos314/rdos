@@ -849,27 +849,25 @@ init_usb_function Proc far
     retf32
 init_usb_function   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateDefaultControl
+;       NAME:           InitUsbControlPipe
 ;
-;       description:    Create default control-pipe
+;       Description:    Init USB control pipe
 ;
-;       parameters:     DS      USB device selector
-;                       ES      Function selector
-;
-;       RETURNS:        FS      Pipe control selector
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
+;                       FS      Control pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateDefaultControl    Proc near    
+init_usb_control_pipe_name DB 'Init USB Control Pipe', 0
+
+init_usb_control_pipe    Proc far
     push ds
     push ax
 ;
-    call fword ptr ds:create_control_proc
-;    
     mov es:usbd_in_endpoint_arr,fs    
     mov es:usbd_out_endpoint_arr,fs    
     mov es:usbd_maxlen,8
@@ -894,8 +892,8 @@ CreateDefaultControl    Proc near
 ;    
     pop ax
     pop ds
-    ret
-CreateDefaultControl    Endp    
+    retf32
+init_usb_control_pipe    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1501,7 +1499,7 @@ free_usb_address       Endp
 address_usb_dev_name DB 'Address USB Device', 0
 
 address_usb_dev       Proc far
-    push di
+    pushad
 ;
     mov di,OFFSET usbd_control_buf
     movzx ax,al
@@ -1512,7 +1510,7 @@ address_usb_dev       Proc far
     mov es:[di].usd_len,0
     call fword ptr ds:control_msg_proc
 ;
-    pop di
+    popad
     retf32
 address_usb_dev       Endp
 
@@ -1600,7 +1598,7 @@ is_usb_pipe_connected       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddUsbDevice
+;       NAME:           AddUsbDev
 ;
 ;       Description:    Add USB device
 ;
@@ -1609,7 +1607,7 @@ is_usb_pipe_connected       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddUsbDevice       Proc near
+AddUsbDev       Proc near
     push fs
     push ax
     push bx
@@ -1654,7 +1652,7 @@ audAdd:
     pop ax
     pop fs
     ret
-AddUsbDevice	Endp
+AddUsbDev	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1748,45 +1746,28 @@ RemoveUsbDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartUsbDevice
+;       NAME:           AddUsbDevice
 ;
-;       Description:    Start USB device
+;       Description:    Add USB device
 ;
 ;       Parameters:     DS      USB function selector
 ;                       ES      USB device selector
 ;
-;       Returns:        FS      Control pipe
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_usb_device_name DB 'Start USB Device', 0
+add_usb_device_name DB 'Add USB Device', 0
 
-start_usb_device       Proc far
+add_usb_device       Proc far
     pushad
 ;
     call AddDev
 ;
     mov al,es:usbd_address
-    call AddUsbDevice
+    call AddUsbDev
 ;
-    call CreateDefaultControl
-;
-    call fword ptr ds:address_device_proc
-    jc sudFail
-;
-    mov fs:usbp_address,al
-;
-    call fword ptr ds:change_address_proc
-    jnc sudDone
-
-sudFail:
-    call ClosePipe
-    stc
-
-sudDone:
     popad
     retf32
-start_usb_device	Endp
+add_usb_device	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5235,10 +5216,16 @@ init    Proc far
     mov ax,unlock_usb_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_usb_device
-    mov edi,OFFSET start_usb_device_name
+    mov esi,OFFSET init_usb_control_pipe
+    mov edi,OFFSET init_usb_control_pipe_name
     xor cl,cl
-    mov ax,start_usb_dev_nr
+    mov ax,init_usb_control_pipe_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_usb_device
+    mov edi,OFFSET add_usb_device_name
+    xor cl,cl
+    mov ax,add_usb_device_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_hub_descr

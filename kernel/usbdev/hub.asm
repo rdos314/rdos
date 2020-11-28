@@ -1305,12 +1305,15 @@ htCreate:
     call fword ptr ds:create_dev_proc
     pop ds
 ;
-    StartUsbDevice
-    pushf
-    UnlockUsb
-    popf
-    jc htDetach
+    call fword ptr ds:create_control_proc
+    call fword ptr ds:address_device_proc
+    jc htUnlock
 ;
+    call fword ptr ds:change_address_proc
+    jc htUnlock
+;
+    AddUsbDevice
+    UnlockUsb
     ReadUsbDescriptors
     jc htDetach
 ;

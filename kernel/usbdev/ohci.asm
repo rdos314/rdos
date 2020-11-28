@@ -1240,10 +1240,10 @@ CreateInterrupt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl   Proc far
-    push es
     push gs
     pushad
 ;
+    push es
     mov ah,es:usbd_speed
     push ax
     mov ax,es
@@ -1273,10 +1273,11 @@ CreateControl   Proc far
     call InsertPipe
 ;
     mov gs:dev_control_ed,edx
+    pop es
+    InitUsbControlPipe
 ;
     popad
     pop gs
-    pop es
     retf32
 CreateControl   Endp
 
@@ -2251,15 +2252,20 @@ ClosePipe   Endp
 
 ChangeAddress   Proc far
     push es
+    push eax
     push edx
 ;
-    mov dx,flat_sel
-    mov es,dx    
+    mov al,es:usbd_address
+    mov fs:usbp_address,al
+;
+    mov ax,flat_sel
+    mov es,ax    
 ;
     mov edx,fs:osp_ed
     call InitPipeEd 
 ;
     pop edx
+    pop eax
     pop es
     retf32
 ChangeAddress   Endp
@@ -3476,12 +3482,13 @@ htWaitNotify:
     movzx dx,cl
     call fword ptr ds:create_dev_proc
 ;
-    StartUsbDevice
-    pushf
-    UnlockUsb
-    popf
-    jc htDetach
+    call fword ptr ds:create_control_proc
+    call fword ptr ds:address_device_proc
+    jc htUnlock
 ;
+    call fword ptr ds:change_address_proc
+    AddUsbDevice
+    UnlockUsb
     ReadUsbDescriptors
     jc htDetach
 ;

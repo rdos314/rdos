@@ -1347,6 +1347,7 @@ CreateControl   Proc far
     mov al,3 SHL 1
     or al,4 SHL 3
     mov es:[bx].ec_param2,al
+    InitUsbControlPipe
     clc
 ;
     popad
@@ -2495,7 +2496,6 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
-    clc
     retf32
 ChangeAddress  Endp
 
@@ -3381,6 +3381,9 @@ CreateDev   Proc far
 ;
     InitUsbDev
 ;
+    mov ax,25
+    WaitMilliSec
+;
     popad
     pop fs
     retf32   
@@ -3475,16 +3478,13 @@ htSlotAlloc:
     movzx dx,cl
     call fword ptr ds:create_dev_proc
 ;
-    mov ax,25
-    WaitMilliSec
+    call fword ptr ds:create_control_proc
+    call fword ptr ds:address_device_proc
+    jc htUnlock
 ;
-    StartUsbDevice
-    pushf
+    call fword ptr ds:change_address_proc
+    AddUsbDevice
     UnlockUsb
-    popf
-    jc htDetach
-;
-    int 3
     ReadUsbDescriptors
     jc htDetach
 ;

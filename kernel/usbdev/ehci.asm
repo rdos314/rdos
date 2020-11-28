@@ -1695,7 +1695,6 @@ ConfigDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl   Proc far
-    push es
     push gs
     pushad
 ;
@@ -1724,16 +1723,18 @@ CreateControl   Proc far
     mov fs:usbp_hub_port,ax
     pop ax
 ;    
+    push es
     mov dx,flat_sel
     mov es,dx
     call AddControlQh
     mov fs:esp_qh,edx
     mov gs:dev_control_qh,edx
     call InsertPipe
+    pop es
+    InitUsbControlPipe
 ;
     popad
     pop gs
-    pop es
     retf32
 CreateControl   Endp
 
@@ -3224,6 +3225,9 @@ ChangeAddress   Proc far
     push ax
     push edx
 ;
+    mov al,es:usbd_address
+    mov fs:usbp_address,al
+;
     mov ax,flat_sel
     mov es,ax
 ;    
@@ -3615,12 +3619,13 @@ htWaitNotify:
     call fword ptr ds:create_dev_proc
     pop dx
 ;
-    StartUsbDevice
-    pushf
-    UnlockUsb
-    popf
-    jc htDetach
+    call fword ptr ds:create_control_proc
+    call fword ptr ds:address_device_proc
+    jc htUnlock
 ;
+    call fword ptr ds:change_address_proc
+    AddUsbDevice
+    UnlockUsb
     ReadUsbDescriptors
     jc htDetach
 ;

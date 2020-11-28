@@ -1593,10 +1593,10 @@ GetIntrQh  ENDP
 
 
 CreateControl   Proc far
-    push es
     push gs
     pushad
 ;    
+    push es
     mov ah,es:usbd_speed
     push ax
     mov ax,es
@@ -1637,9 +1637,11 @@ ccLinkPeriod:
     call InsertTdFirst
     call InsertPipe
 ;
+    pop es
+    InitUsbControlPipe
+;
     popad
     pop gs
-    pop es
     retf32
 CreateControl   Endp
 
@@ -2449,6 +2451,10 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
+    push ax
+    mov al,es:usbd_address
+    mov fs:usbp_address,al
+    pop ax
     retf32
 ChangeAddress   Endp
 
@@ -3567,12 +3573,13 @@ htNotify:
     pop dx
     pop bx
 ;
-    StartUsbDevice
-    pushf
-    UnlockUsb
-    popf
-    jc htDetach
+    call fword ptr ds:create_control_proc
+    call fword ptr ds:address_device_proc
+    jc htUnlock
 ;
+    call fword ptr ds:change_address_proc
+    AddUsbDevice
+    UnlockUsb
     ReadUsbDescriptors
     jc htDetach
 ;

@@ -821,7 +821,6 @@ init_usb_dev_nr             = 722
 address_usb_dev_nr          = 723
 
 is_usb_pipe_connected_nr    = 724
-start_usb_dev_nr            = 725
 read_usb_descriptors_nr     = 726
 get_usb_hub_descriptor_nr   = 727
 config_usb_hub_nr           = 728
@@ -856,5 +855,8 @@ physical_to_linear_mem_blk_nr = 748
 linear_to_physical_mem_blk_nr = 749
 free_physical_mem_blk_nr    = 750
 free_linear_mem_blk_nr      = 751
+
+init_usb_control_pipe_nr    = 752
+add_usb_device_nr           = 753
 
 osgate_entries              = 780
