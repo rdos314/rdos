@@ -803,16 +803,24 @@ GetReportDescr_   Proc near
     push ebx
     push ecx
     push edx
-    push ebp
+    push esi
 ;    
-    mov bx,fs:[esi].hid_control_handle
+    mov bx,fs:hid_control_handle
     mov ah,81h
     mov al,6
     mov si,dx
     mov dx,2200h
     SendUsbDeviceControlMsg
+    jc grdFail
 ;
-    pop ebp
+    movzx eax,cx
+    jmp grdDone
+
+grdFail:
+    xor eax,eax
+
+grdDone:
+    pop esi
     pop edx
     pop ecx
     pop ebx
@@ -836,6 +844,7 @@ SetHidProtocol   Proc near
     push ebx
     push ecx
     push edx
+    push esi
     push edi
 ;    
     mov bx,fs:hid_control_handle
@@ -847,6 +856,7 @@ SetHidProtocol   Proc near
     SendUsbDeviceControlMsg
 ;
     pop edi
+    pop esi
     pop edx
     pop ecx
     pop ebx
@@ -1345,7 +1355,7 @@ register_hid_input  Endp
 ;
 ;           DESCRIPTION:    Get HID usb device
 ;
-;           PARAMETERS:     EAX		Device #
+;           PARAMETERS:     EAX         Device #
 ;
 ;           RETURNS:        BX          USB controller
 ;                           AL          USB port
