@@ -81,23 +81,12 @@ create_interrupt_proc	DD ?,?
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
-add_setup_proc      DD ?,?
-
-; IN  FS        Pipe selector
-; IN  CX        Size
-; IN  ES:EDI    Data
 add_out_proc      DD ?,?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Buffer size
 ; IN  ES:EDI    Buffer
 add_in_proc      DD ?,?
-
-; IN  FS        Pipe selector
-add_status_out_proc      DD ?,?
-
-; IN  FS        Pipe selector
-add_status_in_proc      DD ?,?
 
 ; IN  FS        Pipe selector
 issue_transfer_proc      DD ?,?

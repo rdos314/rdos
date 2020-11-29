@@ -1866,46 +1866,6 @@ CreateIntr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddSetup
-;
-;           DESCRIPTION:    Add setup transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddSetup    Proc far
-    push es
-    push eax
-    push edx
-;    
-    call AllocateFillQtd
-;
-    mov al,2    
-    call InsertQtd
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,fs:esp_qh
-    mov es:[edx].qh_size,0
-;
-    mov ax,es:[edx].qh_max_packet
-    and ax,0F800h
-    or ax,fs:usbp_maxlen
-    mov es:[edx].qh_max_packet,ax
-;
-    pop edx
-    pop eax
-    pop es
-    retf32
-AddSetup    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           AddOut
 ;
 ;           DESCRIPTION:    Add out transaction to queue
@@ -2014,66 +1974,6 @@ aiDone:
     pop es
     retf32
 AddIn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddStatusOut
-;
-;           DESCRIPTION:    Add status OUT transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddStatusOut    Proc far
-    push es
-    push eax
-    push cx
-    push edx
-;    
-    xor cx,cx
-    call AllocateFillQtd
-;
-    mov al,0
-    call InsertQtd
-;
-    pop edx
-    pop cx
-    pop eax
-    pop es
-    retf32
-AddStatusOut    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddStatusIn
-;
-;           DESCRIPTION:    Add status IN transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddStatusIn    Proc far
-    push eax
-    push cx
-    push edx
-;    
-    xor cx,cx
-    call AllocateFillQtd
-;
-    mov al,1   
-    call InsertQtd
-;
-    pop edx
-    pop cx
-    pop eax
-    retf32
-AddStatusIn    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4310,35 +4210,32 @@ ec03 DD OFFSET FreeDev,            SEG code
 et04 DD OFFSET CreateControl,      SEG code
 et05 DD OFFSET CreateBulk,         SEG code
 et06 DD OFFSET CreateIntr,         SEG code
-et07 DD OFFSET AddSetup,           SEG code
-et08 DD OFFSET AddOut,             SEG code
-et09 DD OFFSET AddIn,              SEG code
-et0A DD OFFSET AddStatusOut,       SEG code
-et0B DD OFFSET AddStatusIn,        SEG code
-et0C DD OFFSET IssueTransfer,      SEG code
-et0D DD OFFSET IsTransferDone,     SEG code
-et0E DD OFFSET EndTransfer,        SEG code
-et0F DD OFFSET WasTransferOk,      SEG code
-et10 DD OFFSET GetDataSize,        SEG code
-et11 DD OFFSET ClosePipe,          SEG code
-et12 DD OFFSET WaitForCompletion,  SEG code
-et13 DD OFFSET ChangeAddress,      SEG code
-et14 DD OFFSET IsConnected,        SEG code
-et15 DD OFFSET ResetPipe,          SEG code
-et16 DD OFFSET LockEnum,           SEG code
-et17 DD OFFSET UnlockEnum,         SEG code
-et18 DD OFFSET Has64Bit,           SEG code
-et19 DD OFFSET IsStalled,          SEG code
-et1A DD OFFSET ClearStalled,       SEG code
-et1B DD OFFSET AddressDev,         SEG code
-et1C DD OFFSET ConfigDev,          SEG code
-et1D DD OFFSET UpdateMaxLen,       SEG code
-ec1E DD OFFSET IssueOne,           SEG code
-ec1F DD OFFSET IsDeviceConnected,  SEG code
-ec20 DD OFFSET ControlMsg,         SEG code
-ec21 DD OFFSET PollPipe,           SEG code
-ec22 DD OFFSET ReadPipe,           SEG code
-ec23 DD OFFSET WritePipe,          SEG code
+et07 DD OFFSET AddOut,             SEG code
+et08 DD OFFSET AddIn,              SEG code
+et09 DD OFFSET IssueTransfer,      SEG code
+et0A DD OFFSET IsTransferDone,     SEG code
+et0B DD OFFSET EndTransfer,        SEG code
+et0C DD OFFSET WasTransferOk,      SEG code
+et0D DD OFFSET GetDataSize,        SEG code
+et0E DD OFFSET ClosePipe,          SEG code
+et0F DD OFFSET WaitForCompletion,  SEG code
+et10 DD OFFSET ChangeAddress,      SEG code
+et11 DD OFFSET IsConnected,        SEG code
+et12 DD OFFSET ResetPipe,          SEG code
+et13 DD OFFSET LockEnum,           SEG code
+et14 DD OFFSET UnlockEnum,         SEG code
+et15 DD OFFSET Has64Bit,           SEG code
+et16 DD OFFSET IsStalled,          SEG code
+et17 DD OFFSET ClearStalled,       SEG code
+et18 DD OFFSET AddressDev,         SEG code
+et19 DD OFFSET ConfigDev,          SEG code
+et1A DD OFFSET UpdateMaxLen,       SEG code
+ec1B DD OFFSET IssueOne,           SEG code
+ec1C DD OFFSET IsDeviceConnected,  SEG code
+ec1D DD OFFSET ControlMsg,         SEG code
+ec1E DD OFFSET PollPipe,           SEG code
+ec1F DD OFFSET ReadPipe,           SEG code
+ec20 DD OFFSET WritePipe,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4360,7 +4257,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*24h
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]
