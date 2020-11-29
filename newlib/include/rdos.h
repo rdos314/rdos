@@ -93,7 +93,7 @@ typedef struct Tss
 #define uss_owner 10
 #define uss_size 12
 
-// Exception handling prototypes 
+// Exception handling prototypes
 
 #define STATUS_BREAKPOINT               0x80000003L
 #define STATUS_SINGLE_STEP              0x80000004L
@@ -128,7 +128,7 @@ typedef struct _FLOATING_SAVE_AREA {
     int   Cr0NpxState;
 } FLOATING_SAVE_AREA;
 
-typedef struct _CONTEXT 
+typedef struct _CONTEXT
 {
     long ContextFlags;
     long Dr0;
@@ -227,7 +227,7 @@ void RDOSAPI RdosSetPixel(int handle, int x, int y);
 void RDOSAPI RdosBlit(int SrcHandle, int DestHandle, int width, int height,
                                 int SrcX, int SrcY, int DestX, int DestY);
 void RDOSAPI RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
-                                int SrcX, int SrcY, int DestX, int DestY); 
+                                int SrcX, int SrcY, int DestX, int DestY);
 void RDOSAPI RdosDrawLine(int handle, int x1, int y1, int x2, int y2);
 void RDOSAPI RdosDrawString(int handle, int x, int y, const char *str);
 void RDOSAPI RdosDrawRect(int handle, int x, int y, int width, int height);
@@ -239,7 +239,7 @@ int RDOSAPI RdosCreateStringBitmap(int font, const char *str);
 void RDOSAPI RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
                                            int *linesize, void **buffer);
 
-int RDOSAPI RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop); 
+int RDOSAPI RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop);
 void RDOSAPI RdosCloseSprite(int handle);
 void RDOSAPI RdosShowSprite(int handle);
 void RDOSAPI RdosHideSprite(int handle);
@@ -287,7 +287,7 @@ int RDOSAPI RdosGetFreeHandles();
 int RDOSAPI RdosGetFreeHandleMem();
 
 int RDOSAPI RdosGetMaxComPort();
-int RDOSAPI RdosOpenCom(char ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
+int RDOSAPI RdosOpenCom(char ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize);
 void RDOSAPI RdosCloseCom(int Handle);
 void RDOSAPI RdosFlushCom(int Handle);
 char RDOSAPI RdosReadCom(int Handle);
@@ -352,7 +352,7 @@ void RDOSAPI RdosGetFileTime(int Handle, unsigned long *MsbTime, unsigned long *
 void RDOSAPI RdosSetFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
 int RDOSAPI RdosCreateMapping(int Size);
-int RDOSAPI RdosCreateNamedMapping(const char *Name, int Size); 
+int RDOSAPI RdosCreateNamedMapping(const char *Name, int Size);
 int RDOSAPI RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
 int RDOSAPI RdosOpenNamedMapping(const char *Name);
 void RDOSAPI RdosSyncMapping(int Handle);
@@ -438,10 +438,10 @@ void RDOSAPI RdosDosTimeDateToTics(unsigned short date, unsigned short time, uns
 void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
 
 void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *year, int *month, int *day, int *hour);
-void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
+void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro);
 
 unsigned long RDOSAPI RdosCodeMsbTics(int year, int month, int day, int hour);
-unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro); 
+unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro);
 
 void RDOSAPI RdosAddTics(unsigned long *msb, unsigned long *lsb, long tics);
 void RDOSAPI RdosAddMicro(unsigned long *msb, unsigned long *lsb, long us);
@@ -648,23 +648,6 @@ void RDOSAPI RdosStopWatchdog();
 void RDOSAPI RdosStartNetCapture(int FileHandle);
 void RDOSAPI RdosStopNetCapture();
 
-int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
-int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
-int RDOSAPI RdosOpenUsbPipe(int Controller, int Device, int Pipe);
-void RDOSAPI RdosCloseUsbPipe(int handle);
-void RDOSAPI RdosResetUsbPipe(int handle);
-void RDOSAPI RdosLockUsbPipe(int handle);
-void RDOSAPI RdosUnlockUsbPipe(int handle);
-void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
-void RDOSAPI RdosWriteUsbControl(int Handle, const char *buf, int size);
-void RDOSAPI RdosReqUsbData(int Handle, char *buf, int maxsize);
-int RDOSAPI RdosGetUsbDataSize(int Handle);
-void RDOSAPI RdosWriteUsbData(int Handle, const char *buf, int size);
-void RDOSAPI RdosReqUsbStatus(int Handle);
-void RDOSAPI RdosWriteUsbStatus(int Handle);
-int RDOSAPI RdosIsUsbTransactionDone(int Handle);
-int RDOSAPI RdosWasUsbTransactionOk(int Handle);
-
 int RDOSAPI RdosOpenHid(int Controller, int Device);
 void RDOSAPI RdosCloseHid(int handle);
 int RDOSAPI RdosGetHidPipe(int Handle);
@@ -694,7 +677,7 @@ int RDOSAPI RdosHasAudio();
 
 int RDOSAPI RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
 void RDOSAPI RdosCloseAudioOutChannel(int Handle);
-void RDOSAPI RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
+void RDOSAPI RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples);
 
 int RDOSAPI RdosOpenFm(int SampleRate);
 void RDOSAPI RdosCloseFm(int FmHandle);
