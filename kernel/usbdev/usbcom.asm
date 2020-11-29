@@ -252,100 +252,6 @@ get_usb_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           LockUsbComControl
-;
-;   DESCRIPTION:    Lock control pipe
-;
-;   PARAMETERS:     DS      Port selector
-;
-;   RETURNS:        NC      OK
-;                   BX      Pipe handle
-;                   SI      Wait handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lock_usb_com_control_name    DB 'Lock USB Com Control', 0
-
-lock_usb_com_control Proc far
-    push ds
-    push ax
-    push dx
-;
-    mov ds,ds:ups_device_sel
-    mov ds,ds:uds_device_sel
-    EnterSection ds:uc_section
-;
-    mov bx,ds:uc_controller
-    mov al,ds:uc_device
-    xor dl,dl
-    OpenUsbPipe
-    jc luccDone
-;
-    mov si,bx
-    CreateWait
-    xchg bx,si
-;
-    push bx
-;
-    mov ax,bx
-    mov bx,si
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    pop bx
-    clc
-
-luccDone:
-    pop dx
-    pop ax
-    pop ds
-    retf32
-lock_usb_com_control Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UnlockUsbComControl
-;
-;   DESCRIPTION:    Unlock control pipe
-;
-;   PARAMETERS:     DS      Port selector
-;                   BX      Pipe handle
-;                   SI      Wait handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_usb_com_control_name    DB 'Unlock USB Com Control', 0
-
-unlock_usb_com_control Proc far
-    push ds
-    push bx
-    push si
-    pushf
-;
-    xchg bx,si
-    CloseWait
-;
-    xchg bx,si
-    CloseUsbPipe    
-;
-    xor bx,bx
-    xor si,si
-;
-    mov ds,ds:ups_device_sel
-    mov ds,ds:uds_device_sel
-    LeaveSection ds:uc_section
-;
-    popf
-    pop si
-    pop bx
-    pop ds
-    retf32
-unlock_usb_com_control Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SendSignal
 ;
 ;           description:    Sends signal to USB-handler thread
@@ -687,36 +593,16 @@ reset_sio       PROC near
     push es
     pushad
 ;
-    mov dx,ds:ups_index
-    inc dx
-;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,0
-    mov es:usd_value,0
-    mov es:usd_index,dx
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    xor al,al
+    xor dx,dx
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -739,36 +625,16 @@ set_latency_timer       PROC near
     push es
     pushad
 ;
-    mov dx,ds:ups_index
-    inc dx
-;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,9
-    mov es:usd_value,10
-    mov es:usd_index,dx
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,9
+    mov dx,10
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -790,47 +656,25 @@ set_baud    PROC near
     push es
     pushad
 ;
-    mov dx,ds:ups_index
-    inc dx
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,3
+    mov dx,word ptr ds:ups_divisor
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,3
-;
-    mov ax,word ptr ds:ups_divisor
-    mov es:usd_value,ax
-;
-    mov ax,word ptr ds:ups_divisor+2   
+    mov si,word ptr ds:ups_divisor+2   
     cmp ds:ups_device_type,DEVICE_TYPE_FT2232C
     jne set_baud_index_ok
 ;
-    shl ax,8
-    or ax,dx
+    shl si,8
+    mov di,ds:ups_index
+    inc di
+    or si,di
 
 set_baud_index_ok:
-    mov es:usd_index,ax    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -853,16 +697,6 @@ set_data    PROC near
     push es
     pushad
 ;
-    mov dx,ds:ups_index
-    inc dx
-;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,4
-;    
     mov al,ds:ups_data_bits
     mov ah,ds:ups_parity
 ;
@@ -891,27 +725,17 @@ set_data_parity_ok:
     or ah,10h
 
 set_data_stop_ok:
-    mov es:usd_value,ax
-    mov es:usd_index,dx
-    mov es:usd_len,0
-    xor di,di
+    mov dx,ax
 ;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,4
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1142,37 +966,18 @@ enable_cts_ftdi PROC near
     pushad
 ;
     or ds:ups_control,CONTROL_CTS
-    mov dx,ds:ups_index
-    inc dx
-    mov dx,200h
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,2
-    mov es:usd_value,0
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,2
+    xor dx,dx
+    mov si,ds:ups_index
+    inc si
+    or si,200h
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1200,36 +1005,17 @@ disable_cts_ftdi    PROC near
     pushad
 ;
     and ds:ups_control,NOT CONTROL_CTS
-    mov dx,ds:ups_index
-    inc dx
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,2
-    mov es:usd_value,0
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,2
+    xor dx,dx
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1257,36 +1043,17 @@ set_dtr_ftdi    Proc near
     pushad
 ;    
     or ds:ups_control,CONTROL_DTR
-    mov dx,ds:ups_index
-    inc dx
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_value,101h
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,1
+    mov dx,101h
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1314,36 +1081,17 @@ reset_dtr_ftdi  Proc near
     pushad
 ;
     and ds:ups_control,NOT CONTROL_DTR
-    mov dx,ds:ups_index
-    inc dx
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_value,100h
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,1
+    mov dx,100h
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1371,36 +1119,17 @@ set_rts_ftdi    Proc near
     pushad
 ;
     or ds:ups_control,CONTROL_RTS
-    mov dx,ds:ups_index
-    inc dx
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_value,202h
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,1
+    mov dx,202h
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1428,36 +1157,17 @@ reset_rts_ftdi  Proc near
     pushad
 ;
     and ds:ups_control,NOT CONTROL_RTS
-    mov dx,ds:ups_index
-    inc dx
 ;
-    LockUsbComControl
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_value,200h
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,1
+    mov dx,200h
+    mov si,ds:ups_index
+    inc si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1486,39 +1196,24 @@ Fish    Proc near
     push es
     pushad
 ;
-    LockUsbComControl
+    push bp   
     push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,0C0h
-    mov es:usd_req,1
-    mov es:usd_value,ax
-    mov es:usd_index,dx
-    mov es:usd_len,1
-    xor di,di
+    mov bp,sp
 ;
-    mov cx,8
-    WriteUsbControl
-;
+    mov si,dx
+    mov dx,ax
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ax,ss
+    mov es,ax
+    mov ah,0C0h
+    mov al,1
     mov cx,1
-    ReqUsbData
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov di,bp
+    SendUsbDeviceControlMsg
+    pop ax
+    pop bp
 ;
     popad
     pop es    
@@ -1541,46 +1236,19 @@ ReadLineState   Proc near
     push es
     pushad
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,0A1h
-    mov es:usd_req,21h
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,7
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ds
     mov es,ax
+    mov ah,0A1h
+    mov al,21h
+    xor dx,dx
+    xor si,si
     mov cx,7
     mov edi,OFFSET ups_pl_buf
-    ReqUsbData
-    pop es
-;    
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
+    SendUsbDeviceControlMsg
 ;
-    UnlockUsbComControl
-    
-rlsDone:    
     popad
     pop es    
     ret
@@ -1650,44 +1318,18 @@ WriteLineState  Proc near
     push es
     pushad
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,21h
-    mov es:usd_req,20h
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,7
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ds
     mov es,ax
-    mov di,OFFSET ups_pl_buf
+    mov ah,21h
+    mov al,20h
+    xor dx,dx
+    xor si,si
     mov cx,7
-    WriteUsbData
-    pop es
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov edi,OFFSET ups_pl_buf
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1710,39 +1352,15 @@ WriteControl    Proc near
     push es
     pushad
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,21h
-    mov es:usd_req,22h
-    mov es:usd_index,0
-;
-    movzx ax,ds:ups_pl_control
-    mov es:usd_value,ax
-;    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,21h
+    mov al,22h
+    movzx dx,ds:ups_pl_control
+    xor si,si
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -1767,36 +1385,15 @@ Soup    Proc near
     push es
     pushad
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_value,ax
-    mov es:usd_index,dx
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    mov si,dx
+    mov dx,ax
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,1
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -2049,44 +1646,22 @@ enable_cts_pl   PROC near
 ;
     or ds:ups_control,CONTROL_CTS
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_index,61h
-    mov ax,ds:ups_device_type
-;
-    cmp ax,DEVICE_TYPE_PL_HX
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
+    mov ah,40h
+    mov al,1
+    mov si,61h
+    mov di,ds:ups_device_type
+    cmp di,DEVICE_TYPE_PL_HX
     je ecpIndexOk
 ;
-    mov es:usd_index,41h
+    mov si,41h
 
 ecpIndexOk:    
-    mov es:usd_value,0    
-    mov es:usd_len,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    xor dx,dx
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;
     popad
     pop es    
@@ -2355,61 +1930,29 @@ GetVariableMctDivisor   Endp
 
 SetBaudMct      PROC near
     push es
-    push bx
-    push cx
-    push edx
-    push edi
+    pushad
 ;
     push bp   
     mov eax,ds:ups_divisor
     push eax    
     mov bp,sp
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,5
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,4
-    xor edi,edi
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
+    mov ah,40h
+    mov al,5
+    xor dx,dx
+    xor si,si
     mov cx,4
-    WriteUsbData
-    pop es
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    SendUsbDeviceControlMsg
 ;
     pop eax
     pop bp
-    pop edi
-    pop edx
-    pop cx
-    pop bx
+    popad
     pop es    
     ret
 SetBaudMct Endp
@@ -2428,61 +1971,29 @@ SetBaudMct Endp
 
 SendUnknownMct  Proc near
     push es
-    push bx
-    push cx
-    push edx
-    push edi
+    pushad
 ;
     push bp   
     xor ax,ax
     push ax    
     mov bp,sp
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,0Bh
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,1
-    xor edi,edi
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
+    mov ah,40h
+    mov al,0Bh
+    xor dx,dx
+    xor si,si
     mov cx,1
-    WriteUsbData
-    pop es
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    SendUsbDeviceControlMsg
 ;
     pop ax
     pop bp
-    pop edi
-    pop edx
-    pop cx
-    pop bx
+    popad
     pop es    
     ret
 SendUnknownMct    Endp
@@ -2501,10 +2012,7 @@ SendUnknownMct    Endp
 
 SendCtsMct      Proc near
     push es
-    push bx
-    push cx
-    push edx
-    push edi
+    pushad
 ;
     push bp   
     xor ax,ax
@@ -2517,51 +2025,22 @@ scmValOk:
     push ax    
     mov bp,sp
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,0Ch
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,1
-    xor edi,edi
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
+    mov ah,40h
+    mov al,0Ch
+    xor dx,dx
+    xor si,si
     mov cx,1
-    WriteUsbData
-    pop es
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    SendUsbDeviceControlMsg
 ;
     pop ax
     pop bp
-    pop edi
-    pop edx
-    pop cx
-    pop bx
+    popad
     pop es    
     ret
 SendCtsMct    Endp
@@ -2580,10 +2059,7 @@ SendCtsMct    Endp
 
 SetLineControl  Proc near
     push es
-    push bx
-    push cx
-    push edx
-    push edi
+    pushad
 ;
     push bp  
 ;    
@@ -2617,51 +2093,22 @@ slcParityOk:
     push ax    
     mov bp,sp
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,7
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,1
-    xor edi,edi
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
+    mov ah,40h
+    mov al,7
+    xor dx,dx
+    xor si,si
     mov cx,1
-    WriteUsbData
-    pop es
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    SendUsbDeviceControlMsg
 ;
     pop ax
     pop bp
-    pop edi
-    pop edx
-    pop cx
-    pop bx
+    popad
     pop es    
     ret
 SetLineControl    Endp
@@ -2680,10 +2127,7 @@ SetLineControl    Endp
 
 WriteModemControl       Proc near
     push es
-    push bx
-    push cx
-    push edx
-    push edi
+    pushad
 ;
     push bp   
     mov ax,8
@@ -2702,51 +2146,22 @@ rmcDtrOk:
     push ax    
     mov bp,sp
 ;
-    LockUsbComControl
-    push ax
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    pop ax
-    mov es:usd_type,40h
-    mov es:usd_req,0Ah
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,1
-    xor edi,edi
-;
-    mov cx,8
-    WriteUsbControl
-;
-    push es
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov bx,es:uc_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
+    mov ah,40h
+    mov al,0Ah
+    xor dx,dx
+    xor si,si
     mov cx,1
-    WriteUsbData
-    pop es
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,si
-    WaitWithTimeout
-    FreeMem
-;    
-    xchg bx,si
-    WasUsbTransactionOk
-;
-    UnlockUsbComControl
+    SendUsbDeviceControlMsg
 ;
     pop ax
     pop bp
-    pop edi
-    pop edx
-    pop cx
-    pop bx
+    popad
     pop es    
     ret
 WriteModemControl    Endp
@@ -3814,14 +3229,6 @@ tLoop:
     WaitForSignal
 
 TSignalled:
-    mov es:uc_dev_handle,0
-    mov bx,es:uc_controller
-    mov al,es:uc_port
-    OpenUsbDevice
-    jc tExit
-;
-    mov es:uc_dev_handle,bx
-;
     test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
@@ -4769,6 +4176,11 @@ CreateServerThread    Proc near
     mov bx,es
     mov ds,bx
 ;
+    mov bx,ds:uc_controller
+    mov al,ds:uc_port
+    OpenUsbDevice
+    mov ds:uc_dev_handle,bx
+;
     mov eax,100h
     AllocateSmallGlobalMem
     xor edi,edi
@@ -5361,18 +4773,6 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET lock_usb_com_control
-    mov edi,OFFSET lock_usb_com_control_name
-    xor cl,cl
-    mov ax,lock_usb_com_control_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET unlock_usb_com_control
-    mov edi,OFFSET unlock_usb_com_control_name
-    xor cl,cl
-    mov ax,unlock_usb_com_control_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET get_usb_com_par
     mov edi,OFFSET get_usb_com_par_name
