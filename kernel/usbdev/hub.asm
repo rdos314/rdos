@@ -2238,7 +2238,7 @@ ProcessHubDescr  Proc near
     mov ax,ds
     mov es,ax
     mov bx,ds:hub_controller
-    mov al,ds:hub_address
+    mov al,ds:hub_port
     mov ecx,SIZE usb_hub_descr
     mov edi,OFFSET hub_buf
     GetUsbHubDescriptor

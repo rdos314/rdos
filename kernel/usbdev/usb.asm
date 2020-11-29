@@ -204,7 +204,7 @@ AddDev Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveDev	Proc near
+RemoveDev       Proc near
     push es
     pushad
 ;
@@ -231,7 +231,7 @@ rdDone:
     popad
     pop es
     ret
-RemoveDev	Endp
+RemoveDev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -468,12 +468,12 @@ send_usb_dev_control_msg16    Proc far
     call send_usb_dev_control_msg
     pop edi
     retf32
-send_usb_dev_control_msg16	Endp
+send_usb_dev_control_msg16      Endp
 
 send_usb_dev_control_msg32    Proc far
     call send_usb_dev_control_msg
     retf32
-send_usb_dev_control_msg32	Endp
+send_usb_dev_control_msg32      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1342,7 +1342,7 @@ unlock_usb    Endp
 ;
 ;       Description:    Allocate USB address
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;
 ;       RETURNS:        AL      Address
 ;
@@ -1388,7 +1388,7 @@ allocate_usb_address      Endp
 ;
 ;       Description:    Free USB address
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;                       AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1415,7 +1415,7 @@ free_usb_address       Endp
 ;
 ;       Description:    Address usb device
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;                       ES      Device sel
 ;                       AL      Address
 ;
@@ -1446,7 +1446,7 @@ address_usb_dev       Endp
 ;
 ;       Description:    Init usb device
 ;
-;       PARAMETERS:     DS	Function sel
+;       PARAMETERS:     DS      Function sel
 ;                       ES      Device sel
 ;                       AL      Address
 ;                       AH      Speed
@@ -1577,7 +1577,7 @@ audAdd:
     pop ax
     pop fs
     ret
-AddUsbDev	Endp
+AddUsbDev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1666,7 +1666,7 @@ rudvDone:
     pop ax
     pop ds
     ret
-RemoveUsbDevice	Endp
+RemoveUsbDevice Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1692,7 +1692,7 @@ add_usb_device       Proc far
 ;
     popad
     retf32
-add_usb_device	Endp
+add_usb_device  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2589,7 +2589,7 @@ close_usb_req   Endp
 ;       description:        Get USB hub descriptor
 ;
 ;       parameters:         BX       Controller #
-;                           AL       Device address (1..128)
+;                           AL       Device port #
 ;                           CX       Buffer size
 ;                           ES:EDI   Buffer
 ;
@@ -2601,10 +2601,13 @@ get_hub_descr_name DB 'Get USB Hub Descriptor', 0
 
 get_hub_descr  Proc near
     push ds
-    push fs
+    push es
+    push gs
     push ebx
     push esi
 ;
+    mov si,es
+    mov gs,si
     mov si,SEG data
     mov ds,si
     mov si,ds:usb_func_count
@@ -2618,74 +2621,38 @@ get_hub_descr  Proc near
     jz ghdFail
 ;
     mov ds,si
-    cmp al,128
+    cmp al,MAX_USB_HUB_PORTS
     jae ghdFail
 ;    
     movzx si,al
     add si,si
-    mov si,ds:[si].usb_addr_arr
+    mov si,ds:[si].usb_dev_arr
     or si,si
     jz ghdFail
 ;
-    mov fs,si
-    mov si,fs:usbd_in_endpoint_arr
-    or si,si
-    jz ghdFail
+    mov es,si
+    mov si,OFFSET usbd_control_buf
+    mov es:[si].usd_type,0A0h
+    mov es:[si].usd_req,GET_DESCR
+    mov es:[si].usd_value,2900h
+    mov es:[si].usd_index,0
+    mov es:[si].usd_len,cx
+    call fword ptr ds:control_msg_proc    
+    jc ghdFail
 ;
-    mov fs,si
-;
-    push es
-    push cx
-    push edi
-;    
-    mov eax,8
-    call AllocateBufSel
-    mov bx,es
-    xor edi,edi
-    mov es:usd_type,0A0h
-    mov es:usd_req,GET_DESCR
-    mov es:usd_value,2900h
-    mov es:usd_index,0
-    mov es:usd_len,cx
-;    
-    push cx
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    pop cx
-;
-    pop edi
-    pop cx
-    pop es
-;    
-    call fword ptr ds:add_in_proc
-    call fword ptr ds:add_status_out_proc
-;
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
-;
-    mov fs:usbp_signal,0
-;
-    push es
-    pushf
-    mov es,bx
-    FreeMem    
-    call fword ptr ds:get_data_size_proc
     mov ax,cx
-    popf
-    pop es
+    clc
     jmp ghdDone
 
 ghdFail:
+    xor ax,ax
     stc
 
 ghdDone:        
     pop esi
     pop ebx
-    pop fs
+    pop gs
+    pop es
     pop ds
     retf32
 get_hub_descr  Endp
@@ -3421,7 +3388,7 @@ set_usb_interface    Endp
 ;
 ;       description:    Create user pipe
 ;
-;       parameters:     DS	Port sel
+;       parameters:     DS      Port sel
 ;                       ES      Function sel
 ;                       DL      Pipe #
 ;                       DH      Copy
@@ -3431,7 +3398,7 @@ set_usb_interface    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateUserPipe	Proc near
+CreateUserPipe  Proc near
     push ds
     push es
     push bx

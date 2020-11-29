@@ -3997,6 +3997,7 @@ NotifyUsbDetach MACRO
 ; IN  ES:EDI  Callback
 ;       BX    Controller #
 ;       AL    Device address
+;       AH    Device port #
 HookUsbAttach   MACRO
     OsGate hook_usb_attach_nr
                     ENDM
@@ -4004,12 +4005,13 @@ HookUsbAttach   MACRO
 ; IN  ES:EDI  Callback
 ;       BX    Controller #
 ;       AL    Device address
+;       AH    Device port #
 HookUsbDetach   MACRO
     OsGate hook_usb_detach_nr
                     ENDM
 
 ; IN  BX       Controller #
-; IN  AL       Device address (1..128)
+; IN  AL       Device port #
 ; IN  CX       Buffer size
 ; IN  ES:EDI   Buffer
 ; OUT AX       Size of descriptor
