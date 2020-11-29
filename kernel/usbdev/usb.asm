@@ -3187,101 +3187,6 @@ config_usb_hub    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SetUsbInterface
-;
-;   description:    Set USB interface
-;
-;   parameters:     BX      Controller #
-;                   AL      Device address (1..128)
-;                   DX      Interface #
-;                   CL      Alt setting
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_usb_interface_name DB 'Set USB Interface', 0
-
-set_usb_interface       Proc far
-    push ds
-    push es
-    push fs
-    push ax
-    push bx
-    push cx
-    push esi
-    push edi
-;    
-    mov si,SEG data
-    mov ds,si
-    mov si,ds:usb_func_count
-    cmp bx,si
-    jae suiFail
-;
-    mov si,bx
-    add si,si
-    mov si,ds:[si].usb_func_arr
-    or si,si
-    jz suiFail
-;
-    mov ds,si
-    cmp al,128
-    jae suiFail
-;    
-    movzx si,al
-    add si,si
-    mov si,ds:[si].usb_addr_arr
-    or si,si
-    jz suiFail
-;
-    mov fs,si
-    mov si,fs:usbd_in_endpoint_arr
-    or si,si
-    jz suiFail
-;
-    mov fs,si    
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    mov es:usd_type,1
-    mov es:usd_req,SET_INTERFACE
-    movzx ax,cl
-    mov es:usd_value,ax
-    mov es:usd_index,dx
-    mov es:usd_len,0
-;    
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    call fword ptr ds:add_status_in_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
-    mov fs:usbp_signal,0
-;
-    pushf
-    FreeMem
-    popf
-    jmp suiDone
-
-suiFail:
-    stc
-    
-suiDone: 
-    pop edi
-    pop esi
-    pop cx
-    pop bx
-    pop ax
-    pop fs
-    pop es
-    pop ds
-    retf32
-set_usb_interface    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:       CreateUserPipe
 ;
 ;       description:    Create user pipe
@@ -4965,12 +4870,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET set_usb_interface
-    mov edi,OFFSET set_usb_interface_name
-    xor dx,dx
-    mov ax,set_usb_interface_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_usb_pipe

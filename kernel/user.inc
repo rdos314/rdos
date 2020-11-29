@@ -3649,14 +3649,6 @@ ConfigUsbDevice      MACRO
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
-;   IN  DX          Interface #
-;   IN  CL          Alt setting
-SetUsbInterface      MACRO
-        UserGate set_usb_interface_nr
-                                                ENDM
-
-;   IN  BX          Controller #
-;   IN  AL          Device address (1..128)
 ;   IN  DL          Pipe #
 ;   OUT BX          Handle
 OpenUsbPipe      MACRO
