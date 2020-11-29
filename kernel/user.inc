@@ -3684,13 +3684,6 @@ ResetUsbPipe      MACRO
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
-WriteUsbControl      MACRO
-        UserGate write_usb_control_nr
-                                                ENDM
-
-;   IN  BX          Handle
-;   IN  CX          Size of data
-;   IN  ES:(E)DI    Buffer
 ReqUsbData      MACRO
         UserGate req_usb_data_nr
                                                 ENDM
@@ -3706,16 +3699,6 @@ GetUsbDataSize      MACRO
 ;   IN  ES:(E)DI    Buffer
 WriteUsbData      MACRO
         UserGate write_usb_data_nr
-                                                ENDM
-
-;   IN  BX          Handle
-ReqUsbStatus      MACRO
-        UserGate req_usb_status_nr
-                                                ENDM
-
-;   IN  BX          Handle
-WriteUsbStatus      MACRO
-        UserGate write_usb_status_nr
                                                 ENDM
 
 ;   IN  BX          Handle

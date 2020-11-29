@@ -3983,121 +3983,6 @@ add_wait_for_pipe       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WriteUsbControl
-;
-;           DESCRIPTION:    Write USB control
-;
-;           PARAMETERS:         BX          Pipe handle
-;               CX      Size of data to request
-;               ES:(E)DI    Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_usb_control_name  DB 'Write USB Control',0
-
-write_usb_control16     Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-    push cx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc wucDone16
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz wucDone16
-;
-    push es
-    push edi
-;    
-    movzx edi,di
-    call HandlePipeWrite
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz wucLeave16
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:add_setup_proc
-    pop ds
-
-wucLeave16:
-    LeaveSection ds:usbu_section
-;
-    pop edi
-    pop es
-
-wucDone16:
-    pop cx
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-write_usb_control16     Endp
-
-write_usb_control32     Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-    push cx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc wucDone32
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz wucDone32
-;
-    push es
-    push edi
-;
-    call HandlePipeWrite 
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz wucLeave32
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:add_setup_proc
-    pop ds
-
-wucLeave32:
-    LeaveSection ds:usbu_section
-;
-    pop edi
-    pop es    
-
-wucDone32:
-    pop cx
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-write_usb_control32     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           ReqUsbData
 ;
 ;           DESCRIPTION:    Setup request for input data on pipe
@@ -4496,112 +4381,6 @@ wudncDone:
     pop ds
     retf32
 write_usb_data_no_copy    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReqUsbStatus
-;
-;           DESCRIPTION:    Request status input
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-req_usb_status_name     DB 'Request USB Status',0
-
-req_usb_status  Proc far
-    push ds
-    push fs
-    push ebx
-    push cx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc rusDone
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz rusDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz rusLeave
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:add_status_in_proc
-    pop ds
-
-rusLeave:
-    LeaveSection ds:usbu_section
-
-rusDone:
-    pop cx
-    pop ebx
-    pop fs
-    pop ds
-    retf32
-req_usb_status  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           WriteUsbStatus
-;
-;           DESCRIPTION:    Write status output
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_usb_status_name   DB 'Write USB Status',0
-
-write_usb_status    Proc far
-    push ds
-    push fs
-    push ebx
-    push cx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc wusDone
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz wusDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz wusLeave
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:add_status_out_proc
-    pop ds
-
-wusLeave:
-    LeaveSection ds:usbu_section
-
-wusDone:
-    pop cx
-    pop ebx
-    pop fs
-    pop ds
-    retf32
-write_usb_status    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5359,13 +5138,6 @@ init    Proc far
     mov ax,add_wait_for_usb_pipe_nr
     RegisterBimodalUserGate
 ;
-    mov ebx,OFFSET write_usb_control16
-    mov esi,OFFSET write_usb_control32
-    mov edi,OFFSET write_usb_control_name
-    mov dx,virt_es_in
-    mov ax,write_usb_control_nr
-    RegisterUserGate
-;
     mov esi,OFFSET req_usb_data
     mov edi,OFFSET req_usb_data_name
     xor dx,dx
@@ -5385,18 +5157,6 @@ init    Proc far
     mov dx,virt_es_in
     mov ax,write_usb_data_nr
     RegisterUserGate
-;
-    mov esi,OFFSET req_usb_status
-    mov edi,OFFSET req_usb_status_name
-    xor dx,dx
-    mov ax,req_usb_status_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET write_usb_status
-    mov edi,OFFSET write_usb_status_name
-    xor dx,dx
-    mov ax,write_usb_status_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET start_usb_trans
     mov edi,OFFSET start_usb_trans_name
