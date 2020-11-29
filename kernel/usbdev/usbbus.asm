@@ -56,10 +56,6 @@ usbcom_port_struc       STRUC
 ups_base_struc  com_port_struc <>
 
 ups_device_sel      DW ?
-ups_controller      DW ?
-ups_device          DW ?
-ups_control_wait    DW ?
-ups_control_pipe    DW ?
 ups_index           DW ?
 ups_divisor         DW ?
 ups_timer_active    DB ?
@@ -93,7 +89,7 @@ uds_port_nr         DW ?
 
 usbcom_device_struc   ENDS
 
-io_entry	STRUC
+io_entry        STRUC
 
 io_id               DB ?
 io_status           DB ?
@@ -103,9 +99,9 @@ io_val              DB 4 DUP(?)
 
 io_wait_thread      DW ?
 
-io_entry	ENDS
+io_entry        ENDS
 
-io_seg	STRUC
+io_seg  STRUC
 
 io_serv_thread      DW ?
 io_controller       DW ?
@@ -138,10 +134,11 @@ sd_thread       DW ?
 sd_dead         DW ?
 sd_spinlock     spinlock_typ <>
 sd_port         DW ?
+sd_dev_handle   DW ?
 
 io_sel          DW ?
 
-data	ENDS
+data    ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -158,7 +155,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;   PARAMETERS:     DS  IO bus sel
 ;
-;   RETURNS:        BX	Entry offset
+;   RETURNS:        BX  Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -203,11 +200,11 @@ AllocateBusReq Endp
 ;
 ;   DESCRIPTION:    Start req
 ;
-;   PARAMETERS:     BX		Entry offset
+;   PARAMETERS:     BX          Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartReq	Proc near
+StartReq        Proc near
     push es
     pushad
 ;
@@ -224,7 +221,7 @@ StartReq	Proc near
     popad
     pop es
     ret
-StartReq	Endp
+StartReq        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -235,7 +232,7 @@ StartReq	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleReply	Proc near
+HandleReply     Proc near
     push ds
     push es
     pushad
@@ -263,7 +260,7 @@ HandleReply	Proc near
     pop es
     pop ds
     ret
-HandleReply	Endp
+HandleReply     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -878,99 +875,44 @@ InitCom   Proc near
     push es
     pushad
 ;
-    mov bx,ds:ups_control_pipe
-;    
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,0
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:sd_dev_handle
+    pop ds
 ;
-    mov es:usd_req,SET_DATA_BITS
-    movzx ax,ds:ups_data_bits
-    mov es:usd_value,ax
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:ups_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:ups_control_pipe
-    WasUsbTransactionOk
+    mov ah,40h
+    mov al,SET_DATA_BITS
+    xor si,si
+    movzx dx,ds:ups_data_bits
+    xor cx,cx
+    SendUsbDeviceControlMsg
     jc icDone
 ;
-    mov es:usd_req,SET_PARITY
-    movzx ax,ds:ups_parity
-    mov es:usd_value,ax
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:ups_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:ups_control_pipe
-    WasUsbTransactionOk
+    mov ah,40h
+    mov al,SET_PARITY
+    xor si,si
+    movzx dx,ds:ups_parity
+    xor cx,cx
+    SendUsbDeviceControlMsg
     jc icDone
 ;
-    mov es:usd_req,SET_BAUD
-    mov ax,ds:ups_divisor
-    mov es:usd_value,ax
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:ups_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:ups_control_pipe
-    WasUsbTransactionOk
+    mov ah,40h
+    mov al,SET_BAUD
+    xor si,si
+    mov dx,ds:ups_divisor
+    xor cx,cx
+    SendUsbDeviceControlMsg
     jc icDone
 ;
-    mov es:usd_req,START_SERIAL
-    mov es:usd_value,0
-    xor di,di
-;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:ups_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:ups_control_pipe
-    WasUsbTransactionOk
+    mov ah,40h
+    mov al,START_SERIAL
+    xor si,si
+    xor dx,dx
+    xor cx,cx
+    SendUsbDeviceControlMsg
 
 icDone:
-    pushf
-    FreeMem
-    popf
-;
     popad
     pop es
     ret
@@ -1047,22 +989,7 @@ open_com    Proc far
     call GetBaudDivisor
     jc ocDone
 ;
-    mov ds:ups_divisor,ax
-;
-    CreateWait
-    mov ds:ups_control_wait,bx
-;
-    mov bx,ds:ups_controller
-    mov ax,ds:ups_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:ups_control_pipe,bx
-;
-    mov ax,ds:ups_control_pipe
-    mov bx,ds:ups_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;    
+    mov ds:ups_divisor,ax    
     call InitCom
 ;    
     mov ds:ups_device_sel,es
@@ -1099,38 +1026,22 @@ open_com Endp
 
 close_com   Proc far
     push ds
-    push bx
+    pushad
 ;    
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,STOP_SERIAL
-    mov es:usd_value,0
-    mov es:usd_index,0
-    mov es:usd_len,0
+
 ;
-    xor di,di
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:sd_dev_handle
+    pop ds
 ;
-    mov cx,8
-    WriteUsbControl
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:ups_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:ups_control_pipe
-    WasUsbTransactionOk
-;    
-    mov bx,ds:ups_control_wait
-    CloseWait
-;
-    mov bx,ds:ups_control_pipe
-    CloseUsbPipe    
+    mov ah,40h
+    mov al,STOP_SERIAL
+    xor si,si
+    xor dx,dx
+    xor cx,cx
+    SendUsbDeviceControlMsg
 ;    
     mov ax,ds
     mov bx,ds:ups_device_sel
@@ -1154,7 +1065,7 @@ ccfNoDevice:
     mov ax,150
     WaitMilliSec    
 ;
-    pop bx
+    popad
     pop ds    
     ret
 close_com   Endp
@@ -1171,24 +1082,6 @@ close_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_port       PROC far
-    push ds
-    push es
-    push ax
-    push cx
-    push di
-;
-    mov bx,ds:ups_controller
-    mov ax,ds:ups_device
-    xor dl,dl
-    OpenUsbPipe
-    ResetUsbPipe
-    CloseUsbPipe
-;
-    pop di
-    pop cx
-    pop ax
-    pop es
-    pop ds
     ret
 reset_port Endp
 
@@ -1238,9 +1131,9 @@ start_send      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-error_req	Proc far
+error_req       Proc far
     ret
-error_req	Endp
+error_req       Endp
 
 port_tab:
 pt00 DD OFFSET open_com,               SEG code
@@ -1277,10 +1170,6 @@ CreatePort  Proc far
 ;
     movzx ax,ds:uds_interface
     mov es:ups_index,ax    
-    mov ax,ds:cd_controller
-    mov es:ups_controller,ax
-    mov ax,ds:cd_device
-    mov es:ups_device,ax
 ;    
     popad
     ret
@@ -1386,21 +1275,6 @@ ReInit    Proc near
     mov ax,ds
     mov es,ax
     mov ds,es:uds_port_sel
-;
-    mov bx,es:cd_controller
-    mov ax,es:cd_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:ups_control_pipe,bx
-;
-    CreateWait
-    mov ds:ups_control_wait,bx
-;
-    mov ax,ds:ups_control_pipe
-    mov bx,ds:ups_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
     call InitCom
 ;
     pop di
@@ -1758,6 +1632,11 @@ utLoop:
 ;
     pop si
     pop cx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:sd_dev_handle
+    CloseUsbDevice
     jmp utLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1768,6 +1647,7 @@ utLoop:
 ;   DESCRIPTION:    Handle device attach
 ;
 ;   PARAMETERS:     AL      Device address
+;                   AH      Device port
 ;                   BX      Controller id
 ;                   ES:DI   Interface descriptor + endpoints
 ;
@@ -1782,6 +1662,13 @@ CreateDevice Proc near
     push di
     mov dx,SEG data
     mov ds,dx
+;
+    push ax
+    mov al,ah
+    OpenUsbDevice
+    pop ax
+    mov ds:sd_dev_handle,bx
+;
     mov dx,ds:sd_thread
     or dx,dx
     jnz cdThreadStarted
@@ -1949,7 +1836,8 @@ CreateDevice Endp
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AL      Device address
+;                           AH      Device port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2044,7 +1932,8 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AL      Device address
+;                           AH      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2053,7 +1942,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    movzx ax,al
     mov dx,SEG data
     mov ds,dx
     mov dx,ds:sd_port
@@ -2064,6 +1952,7 @@ usb_detach  Proc far
     cmp bx,es:cd_controller
     jne udDone
 ;
+    movzx ax,al
     cmp ax,es:cd_device
     jne udDone
 ;
@@ -2087,14 +1976,6 @@ usb_detach  Proc far
 ;
     push es
     mov es,ax
-    mov bx,es:ups_control_wait
-    CloseWait
-    mov es:ups_control_wait,0
-;    
-    mov bx,es:ups_control_pipe
-    CloseUsbPipe    
-    mov es:ups_control_pipe,0
-;
     mov es:send_count,0
     mov bx,es:send_wait
     or bx,bx
