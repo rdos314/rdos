@@ -84,12 +84,11 @@ cd_super_thread  DW ?
 cd_rec_thread    DW ?
 cd_send_thread   DW ?
 cd_controller    DW ?
-cd_control_pipe  DW ?
-cd_control_wait  DW ?
 cd_in_pipe       DW ?
 cd_in_wait       DW ?
 cd_out_pipe      DW ?
 cd_out_wait      DW ?
+cd_dev_handle    DW ?
 cd_device        DB ?
 cd_port          DB ?
 cd_active        DB ?
@@ -125,7 +124,6 @@ capture_thread          DW ?
 capture_list            DD ?
 capture_section         section_typ <>
 
-cd_setup         usb_setup_data <>
 cd_data          DB 8 DUP(?)
 
 data    ENDS
@@ -154,7 +152,7 @@ ENDIF
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateSendBuf	Proc near
+CreateSendBuf   Proc near
     push es
     push ebx
     push ecx
@@ -188,7 +186,7 @@ CreateSendBuf	Proc near
     pop ebx
     pop es
     ret
-CreateSendBuf	Endp
+CreateSendBuf   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -202,7 +200,7 @@ CreateSendBuf	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateRecBuf	Proc near
+CreateRecBuf    Proc near
     push ds
     push ebx
     push ecx
@@ -226,7 +224,7 @@ CreateRecBuf	Proc near
     pop ebx
     pop ds
     ret
-CreateRecBuf	Endp
+CreateRecBuf    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -437,7 +435,7 @@ casbDone:
     pop es
     pop ds
     ret
-CheckAnySendBuffer	Endp    
+CheckAnySendBuffer      Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -564,7 +562,7 @@ UpdateSent   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetIdMsg	Proc near
+GetIdMsg        Proc near
     push ds
     push cx
     push si
@@ -598,7 +596,7 @@ gimNext:
     pop cx
     pop ds
     ret
-GetIdMsg	Endp
+GetIdMsg        Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -714,32 +712,19 @@ GetRecBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetSoftwareVersion   Proc near
-    mov bx,ds:cd_control_pipe
+    push es
+    pushad
 ;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,0C1h
-    mov es:[di].usd_req,92h
-    mov es:[di].usd_value,0
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,6
-    WriteUsbControl
-;
+    mov ax,ds
+    mov es,ax
+    mov bx,ds:cd_dev_handle
+    mov ah,0C1h
+    mov al,92h
+    xor dx,dx
+    xor si,si
     mov cx,6
     mov di,OFFSET cd_data
-    ReqUsbData
-;
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
+    SendUsbDeviceControlMsg
     jc gsvDone
 ;
     mov bx,OFFSET cd_data
@@ -757,48 +742,10 @@ GetSoftwareVersion   Proc near
     mov ds:ver_sub,al
 
 gsvDone:
+    popad
+    pop es
     ret
 GetSoftwareVersion  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetBufferSize
-;
-;       DESCRIPTION:    Get max buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetBufferSize   Proc near
-    mov bx,ds:cd_control_pipe
-;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,0C1h
-    mov es:[di].usd_req,83h
-    mov es:[di].usd_value,0
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,4
-    WriteUsbControl
-;
-    mov cx,4
-    mov di,OFFSET cd_data
-    ReqUsbData
-;
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
-    ret
-GetBufferSize  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -810,28 +757,17 @@ GetBufferSize  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerUpModules   Proc near
-    mov bx,ds:cd_control_pipe
+    pushad
 ;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,41h
-    mov es:[di].usd_req,93h
-    mov es:[di].usd_value,101h
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,0
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
+    mov bx,ds:cd_dev_handle
+    mov ah,41h
+    mov al,93h
+    mov dx,101h
+    xor si,si
+    xor cx,cx
+    SendUsbDeviceControlMsg
+;
+    popad
     ret
 PowerUpModules  Endp
 
@@ -845,28 +781,17 @@ PowerUpModules  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerDownModules   Proc near
-    mov bx,ds:cd_control_pipe
+    pushad
 ;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,41h
-    mov es:[di].usd_req,93h
-    mov es:[di].usd_value,100h
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,0
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
+    mov bx,ds:cd_dev_handle
+    mov ah,41h
+    mov al,93h
+    mov dx,100h
+    xor si,si
+    xor cx,cx
+    SendUsbDeviceControlMsg
+;
+    popad
     ret
 PowerDownModules  Endp
 
@@ -880,28 +805,17 @@ PowerDownModules  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartModules   Proc near
-    mov bx,ds:cd_control_pipe
+    pushad
 ;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,41h
-    mov es:[di].usd_req,91h
-    mov es:[di].usd_value,0
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,0
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
+    mov bx,ds:cd_dev_handle
+    mov ah,41h
+    mov al,91h
+    xor dx,dx
+    xor si,si
+    xor cx,cx
+    SendUsbDeviceControlMsg
+;
+    popad
     ret
 StartModules  Endp
 
@@ -915,28 +829,17 @@ StartModules  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartDownload   Proc near
-    mov bx,ds:cd_control_pipe
+    pushad
 ;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,41h
-    mov es:[di].usd_req,90h
-    mov es:[di].usd_value,1
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,0
-    WriteUsbControl
-;    
-    ReqUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
+    mov bx,ds:cd_dev_handle
+    mov ah,41h
+    mov al,90h
+    mov dx,1
+    xor si,si
+    xor cx,cx
+    SendUsbDeviceControlMsg
+;
+    popad
     ret
 StartDownload  Endp
 
@@ -954,46 +857,31 @@ StartDownload  Endp
 
 GetDownloadStatus   Proc near
     push es
-    push ecx
-    push edi
+    push cx
+    push dx
+    push si
+    push di
 ;
     mov ax,SEG data
     mov es,ax
-    mov bx,ds:cd_control_pipe
-;
-    mov cx,8
-    mov di,OFFSET cd_setup
-    mov es:[di].usd_type,0C1h
-    mov es:[di].usd_req,96h
-    mov es:[di].usd_value,0
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,1
-    WriteUsbControl
-;
+    mov bx,ds:cd_dev_handle
+    mov ah,0C1h
+    mov al,96h
+    xor dx,dx
+    xor si,si
     mov cx,1
     mov di,OFFSET cd_data
-    ReqUsbData
-;
-    WriteUsbStatus
-    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,ds:cd_control_wait
-    WaitWithTimeout
-;    
-    mov bx,ds:cd_control_pipe
-    WasUsbTransactionOk
+    SendUsbDeviceControlMsg
     jc gdsDone
 ;
-    mov bx,OFFSET cd_data
-    mov al,[bx]
+    mov al,[di]
     clc
 
 gdsDone:
-    pop edi
-    pop ecx
+    pop di
+    pop si
+    pop dx
+    pop cx
     pop es
     ret
 GetDownloadStatus  Endp
@@ -1005,7 +893,7 @@ GetDownloadStatus  Endp
 ;
 ;       DESCRIPTION:    Check is can bus is online
 ;
-;       RETURNS:        NC	Online
+;       RETURNS:        NC      Online
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1022,7 +910,7 @@ is_can_online   Proc far
     cmp ax,-1
     jz icoFail
 ;
-    mov ax,ds:cd_control_pipe
+    mov ax,ds:cd_in_pipe
     or ax,ax
     jz icoFail
 ;
@@ -1410,33 +1298,14 @@ usbcan_super_thread:
     mov ds:cd_super_thread,ax
 ;
     NotifyCanOnline
+;
+    call GetSoftwareVersion
 
 usuLoop:
     mov al,ds:cd_active
     or al,al
     jz usuEnd
 ;
-    mov ax,ds:cd_control_pipe
-    or ax,ax
-    jnz usuPipeOk
-;
-    CreateWait
-    mov ds:cd_control_wait,bx
-;
-    mov bx,ds:cd_controller
-    movzx ax,ds:cd_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:cd_control_pipe,bx
-; 
-    mov ax,ds:cd_control_pipe
-    mov bx,ds:cd_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    call GetSoftwareVersion
-    jc usuEnd
-
 usuPipeOk:
     mov ax,ds:can_prog_sel
     or ax,ax
@@ -1652,18 +1521,10 @@ usuAllDead:
     jz usuResetDone
 ;
     mov ds:req_reset,0
-    mov bx,ds:cd_control_pipe
-    ResetUsbPipe
+;    mov bx,ds:cd_control_pipe
+;    ResetUsbPipe
 
 usuResetDone:
-    mov bx,ds:cd_control_pipe
-    CloseUsbPipe
-    mov ds:cd_control_pipe,0
-;
-    mov bx,ds:cd_control_wait
-    CloseWait
-    mov ds:cd_control_wait,0
-;
     mov bx,ds:cd_in_wait
     CloseWait
     mov ds:cd_in_wait,0
@@ -1671,6 +1532,9 @@ usuResetDone:
     mov bx,ds:cd_out_wait
     CloseWait
     mov ds:cd_out_wait,0
+;
+    mov bx,ds:cd_dev_handle
+    CloseUsbDevice
 ;
     mov ds:can_active,0
     mov ds:cd_active,0
@@ -1964,6 +1828,9 @@ AddDevice Proc near
     mov ds:cd_controller,bx
     mov ds:cd_active,1
 ;
+    OpenUsbDevice
+    mov ds:cd_dev_handle,bx
+;
     mov dx,ds:cd_super_thread
     or dx,dx
     jnz adThreadStarted
@@ -2080,7 +1947,8 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AL      Device address
+;                           AH      Device port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2094,7 +1962,7 @@ usb_detach  Proc far
     cmp bx,ds:cd_controller
     jne udDone
 ;
-    cmp al,ds:cd_device
+    cmp ah,ds:cd_port
     jne udDone
 ;
     mov ds:can_active,0
@@ -2570,7 +2438,7 @@ init    Proc far
     mov es:cd_controller,-1
     mov es:cd_device,0
     mov es:cd_active,0
-    mov es:cd_control_pipe,0
+    mov es:cd_dev_handle,0
     mov es:cd_in_pipe,0
     mov es:cd_out_pipe,0
     mov es:can_active,0
