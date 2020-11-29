@@ -3187,108 +3187,6 @@ config_usb_hub    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           GetUsbInterface
-;
-;   description:    Get USB interface
-;
-;   parameters:     BX      Controller #
-;                   AL      Device address (1..128)
-;                   DX      Interface #
-;
-;   Returns:        CL      Alt setting
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_usb_interface_name DB 'Get USB Interface', 0
-
-get_usb_interface       Proc far
-    push ds
-    push es
-    push fs
-    push ax
-    push bx
-    push esi
-    push edi
-;    
-    xor cl,cl
-    mov si,SEG data
-    mov ds,si
-    mov si,ds:usb_func_count
-    cmp bx,si
-    jae guiFail
-;
-    mov si,bx
-    add si,si
-    mov si,ds:[si].usb_func_arr
-    or si,si
-    jz guiFail
-;
-    mov ds,si
-    cmp al,128
-    jae guiFail
-;    
-    movzx si,al
-    add si,si
-    mov si,ds:[si].usb_addr_arr
-    or si,si
-    jz guiFail
-;
-    mov fs,si
-    mov si,fs:usbd_in_endpoint_arr
-    or si,si
-    jz guiFail
-;
-    mov fs,si    
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;
-    mov eax,9
-    call AllocateBufSel
-    xor edi,edi
-    mov es:usd_type,81h
-    mov es:usd_req,GET_INTERFACE
-    mov es:usd_value,0
-    mov es:usd_index,dx
-    mov es:usd_len,1
-;    
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-;
-    mov edi,8
-    xor dl,dl
-    mov es:[edi],dl
-    mov cx,1
-    call fword ptr ds:add_in_proc
-    call fword ptr ds:add_status_out_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
-    mov fs:usbp_signal,0
-;
-    pushf
-    call fword ptr ds:get_data_size_proc
-    mov cl,es:[edi]
-    FreeMem
-    popf
-    jmp guiDone
-
-guiFail:
-    stc
-    
-guiDone: 
-    pop edi
-    pop esi
-    pop bx
-    pop ax
-    pop fs
-    pop es
-    pop ds
-    retf32
-get_usb_interface    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           SetUsbInterface
 ;
 ;   description:    Set USB interface
@@ -5067,12 +4965,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_usb_interface
-    mov edi,OFFSET get_usb_interface_name
-    xor dx,dx
-    mov ax,get_usb_interface_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_usb_interface
