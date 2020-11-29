@@ -33,8 +33,6 @@
 #include "usb.h"
 #include "rdos.h"
 
-#include "ctlpipe.h"
-
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -453,23 +451,6 @@ void TUsbCommand::Show()
 ##########################################################################*/
 void TUsbCommand::Reset()
 {
-    int contr;
-    int device;
-    int config;
-    int size;
-    TUsbDevice UsbDevice;
-    TUsbControlPipe *pipe;
-
-    for (contr = 0; contr < 256; contr++)
-    {
-        for (device = 1; device < 128; device++)
-        {
-            size = RdosGetUsbDevice(contr, device, &UsbDevice, sizeof(TUsbDevice));
-            pipe = new TUsbControlPipe(contr, device, 0);
-            pipe->Reset();
-            delete pipe;
-        }
-   }
 }
 
 /*##########################################################################
