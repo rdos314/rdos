@@ -1417,7 +1417,8 @@ OpenPrinterPipes Endp
 ;               description:    USB attach callback
 ;
 ;               Parameters:     BX      Controller #
-;                       AL      Device address
+;                               AL      Device address
+;                               AH      Device port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1434,6 +1435,7 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
+    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax

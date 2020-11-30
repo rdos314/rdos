@@ -2230,6 +2230,7 @@ usb_attach  Proc far
 ;
     xor di,di
     push eax
+    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop eax

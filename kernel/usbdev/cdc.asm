@@ -404,6 +404,7 @@ usb_attach  Proc far
 ;
     xor edi,edi
     push ax
+    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax

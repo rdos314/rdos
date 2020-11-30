@@ -4630,6 +4630,7 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
+    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax

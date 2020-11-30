@@ -1132,7 +1132,7 @@ hid_begin   Proc far
     AllocateSmallGlobalMem
 ;
     mov bx,gs:hid_controller
-    mov al,gs:hid_device
+    mov al,gs:hid_port
 ;
     mov ecx,SIZE usb_device_descr
     xor edi,edi
@@ -1573,7 +1573,7 @@ valid_custom_hid   Proc far
     AllocateSmallGlobalMem
 ;
     mov bx,fs:hid_controller
-    mov al,fs:hid_device
+    mov al,fs:hid_port
 ;
     mov ecx,SIZE usb_device_descr
     xor edi,edi
@@ -2341,7 +2341,8 @@ mctNext:
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AL      Device address
+;                           AH      Device port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2360,6 +2361,7 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
+    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
