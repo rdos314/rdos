@@ -1306,8 +1306,7 @@ StopEndpoint   Endp
 ;
 ;       PARAMETERS:     DS      Device selector
 ;                       ES      Function selector
-;
-;       RETURNS:    FS      Pipe selector
+;                       FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1504,9 +1503,7 @@ address_text DB 'Address ',0
 AddressDevice   Proc far
     push es
     push gs
-    push eax
-    push bx
-    push edi
+    pushad
 ;
     call WaitForCommandTrb
 ;    
@@ -1546,9 +1543,7 @@ adOk:
     clc        
 
 adDone:
-    pop edi
-    pop bx
-    pop eax
+    popad
     pop gs    
     pop es
     retf32
@@ -3423,11 +3418,11 @@ htAttached:
 ;
     mov eax,1
     shl eax,cl
-    test eax,gs:xhc_reset
+    test eax,ds:xhc_reset
     jz htHandle
 ;
     not eax
-    lock and gs:xhc_reset,eax
+    lock and ds:xhc_reset,eax
     jmp htDetach
 
 htHandle:
