@@ -2151,7 +2151,7 @@ StatusTimeout  Endp
 
 init_thread_name  DB 'Init KR203 ', 0
 
-init_thread Proc far
+init_thread:
     mov ax,SEG data
     mov ds,ax
     mov ds:kr_init_count,0
@@ -2211,9 +2211,7 @@ init_thread_do:
     jnz init_thread_retry
 
 init_done:
-    lock and ds:kr_flag, NOT FLAG_INIT
-    ret
-init_thread Endp
+    TerminateThread
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
