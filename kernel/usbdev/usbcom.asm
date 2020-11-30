@@ -82,7 +82,6 @@ usbcom_port_struc       STRUC
 ups_base_struc  com_port_struc <>
 
 ups_device_sel      DW ?
-ups_dev_handle      DW ?
 ups_index           DW ?
 ups_device_type     DW ?
 ups_divisor         DD ?
@@ -250,6 +249,50 @@ gscpDone:
     pop ds
     retf32
 get_usb_com_par     ENDP    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           OpenDevHandle
+;
+;   DESCRIPTION:    Open device handle
+;
+;   PARAMETERS:     DS      Port selector
+;
+;   RETURNS:        NC      OK
+;                   BX      Device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenDevHandle Proc near
+    push es
+;
+    mov es,ds:ups_device_sel
+    mov es,es:uds_device_sel
+    mov es,es:uc_dev_sel
+    OpenUsbDeviceSel
+;
+    pop es
+    ret
+OpenDevHandle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CloseDevHandle
+;
+;   DESCRIPTION:    Close device handle
+;
+;   PARAMETERS:     BX      Device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseDevHandle Proc near
+    pushf
+    CloseUsbDevice
+    popf
+    ret
+CloseDevHandle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -595,7 +638,7 @@ reset_sio       PROC near
     push es
     pushad
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     xor al,al
     xor dx,dx
@@ -603,6 +646,7 @@ reset_sio       PROC near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -625,7 +669,7 @@ set_latency_timer       PROC near
     push es
     pushad
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,9
     mov dx,10
@@ -633,6 +677,7 @@ set_latency_timer       PROC near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -654,7 +699,7 @@ set_baud    PROC near
     push es
     pushad
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,3
     mov dx,word ptr ds:ups_divisor
@@ -671,6 +716,7 @@ set_baud    PROC near
 set_baud_index_ok:
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -723,13 +769,14 @@ set_data_parity_ok:
 set_data_stop_ok:
     mov dx,ax
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,4
     mov si,ds:ups_index
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -837,15 +884,7 @@ open_com_ftdi   Proc far
     mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
     mov ds:ups_device_sel,es
 ;
-    push es
-    push bx
-    mov es,es:uds_device_sel
-    mov es,es:uc_dev_sel
-    OpenUsbDeviceSel
-    mov ds:ups_dev_handle,bx
-    pop bx
-    pop es
-;         
+     
     call InitComFtdi
     jc open_ftdi_done
 ;    
@@ -895,9 +934,6 @@ ccfTimerClosed:
     call reset_rts_ftdi
     call reset_dtr_ftdi
 ;    
-    mov bx,ds:ups_dev_handle
-    CloseUsbDevice
-;
     mov ax,ds
     mov bx,ds:ups_device_sel
     or bx,bx
@@ -972,7 +1008,7 @@ enable_cts_ftdi PROC near
 ;
     or ds:ups_control,CONTROL_CTS
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,2
     xor dx,dx
@@ -981,6 +1017,7 @@ enable_cts_ftdi PROC near
     or si,200h
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1009,7 +1046,7 @@ disable_cts_ftdi    PROC near
 ;
     and ds:ups_control,NOT CONTROL_CTS
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,2
     xor dx,dx
@@ -1017,6 +1054,7 @@ disable_cts_ftdi    PROC near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1045,7 +1083,7 @@ set_dtr_ftdi    Proc near
 ;    
     or ds:ups_control,CONTROL_DTR
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,1
     mov dx,101h
@@ -1053,6 +1091,7 @@ set_dtr_ftdi    Proc near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1081,7 +1120,7 @@ reset_dtr_ftdi  Proc near
 ;
     and ds:ups_control,NOT CONTROL_DTR
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,1
     mov dx,100h
@@ -1089,6 +1128,7 @@ reset_dtr_ftdi  Proc near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1117,7 +1157,7 @@ set_rts_ftdi    Proc near
 ;
     or ds:ups_control,CONTROL_RTS
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,1
     mov dx,202h
@@ -1125,6 +1165,7 @@ set_rts_ftdi    Proc near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1153,7 +1194,7 @@ reset_rts_ftdi  Proc near
 ;
     and ds:ups_control,NOT CONTROL_RTS
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,1
     mov dx,200h
@@ -1161,6 +1202,7 @@ reset_rts_ftdi  Proc near
     inc si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1195,7 +1237,7 @@ Fish    Proc near
 ;
     mov si,dx
     mov dx,ax
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ss
     mov es,ax
     mov ah,0C0h
@@ -1203,6 +1245,7 @@ Fish    Proc near
     mov cx,1
     mov di,bp
     SendUsbDeviceControlMsg
+    call CloseDevHandle
     pop ax
     pop bp
 ;
@@ -1227,7 +1270,7 @@ ReadLineState   Proc near
     push es
     pushad
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ds
     mov es,ax
     mov ah,0A1h
@@ -1237,6 +1280,7 @@ ReadLineState   Proc near
     mov cx,7
     mov edi,OFFSET ups_pl_buf
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1307,7 +1351,7 @@ WriteLineState  Proc near
     push es
     pushad
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ds
     mov es,ax
     mov ah,21h
@@ -1317,6 +1361,7 @@ WriteLineState  Proc near
     mov cx,7
     mov edi,OFFSET ups_pl_buf
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1339,13 +1384,14 @@ WriteControl    Proc near
     push es
     pushad
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,21h
     mov al,22h
     movzx dx,ds:ups_pl_control
     xor si,si
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1372,11 +1418,12 @@ Soup    Proc near
 ;
     mov si,dx
     mov dx,ax
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,1
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1540,15 +1587,6 @@ open_com_pl     Proc far
     mov ax,es:uds_device_type
     mov ds:ups_device_type,ax
 ;
-    push es
-    push bx
-    mov es,es:uds_device_sel
-    mov es,es:uc_dev_sel
-    OpenUsbDeviceSel
-    mov ds:ups_dev_handle,bx
-    pop bx
-    pop es
-;    
     call InitComPl
 ;    
     mov dx,ds
@@ -1597,9 +1635,6 @@ ccpTimerClosed:
     call reset_rts_pl
     call reset_dtr_pl
 ;    
-    mov bx,ds:ups_dev_handle
-    CloseUsbDevice
-;    
     mov ax,ds
     mov bx,ds:ups_device_sel
     or bx,bx
@@ -1641,7 +1676,7 @@ enable_cts_pl   PROC near
 ;
     or ds:ups_control,CONTROL_CTS
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ah,40h
     mov al,1
     mov si,61h
@@ -1655,6 +1690,7 @@ ecpIndexOk:
     xor dx,dx
     xor cx,cx
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     popad
     pop es    
@@ -1930,7 +1966,7 @@ SetBaudMct      PROC near
     push eax    
     mov bp,sp
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -1940,6 +1976,7 @@ SetBaudMct      PROC near
     xor si,si
     mov cx,4
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     pop eax
     pop bp
@@ -1969,7 +2006,7 @@ SendUnknownMct  Proc near
     push ax    
     mov bp,sp
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -1979,6 +2016,7 @@ SendUnknownMct  Proc near
     xor si,si
     mov cx,1
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     pop ax
     pop bp
@@ -2014,7 +2052,7 @@ scmValOk:
     push ax    
     mov bp,sp
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2024,6 +2062,7 @@ scmValOk:
     xor si,si
     mov cx,1
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     pop ax
     pop bp
@@ -2080,7 +2119,7 @@ slcParityOk:
     push ax    
     mov bp,sp
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2090,6 +2129,7 @@ slcParityOk:
     xor si,si
     mov cx,1
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     pop ax
     pop bp
@@ -2131,7 +2171,7 @@ rmcDtrOk:
     push ax    
     mov bp,sp
 ;
-    mov bx,ds:ups_dev_handle
+    call OpenDevHandle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2141,6 +2181,7 @@ rmcDtrOk:
     xor si,si
     mov cx,1
     SendUsbDeviceControlMsg
+    call CloseDevHandle
 ;
     pop ax
     pop bp
@@ -2222,15 +2263,6 @@ icmDivisorOk:
     mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
     mov ds:ups_device_sel,es
 ;
-    push es
-    push bx
-    mov es,es:uds_device_sel
-    mov es,es:uc_dev_sel
-    OpenUsbDeviceSel
-    mov ds:ups_dev_handle,bx
-    pop bx
-    pop es
-;    
     call InitComMct
 ;    
     mov dx,ds
@@ -3296,10 +3328,6 @@ tCloseNext:
     add si,2
     sub cx,1
     jnz tCloseLoop
-;
-    mov es:uc_dev_sel,0
-    mov bx,es:uc_dev_handle
-    CloseUsbDevice
 ;
     mov es:uc_thread,0
     mov bx,es:uc_detach
