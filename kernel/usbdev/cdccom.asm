@@ -551,11 +551,10 @@ reset_port       PROC far
 ;
     mov es,ds:ucp_cdc_sel
     mov bx,es:cdc_controller
-    movzx ax,es:cdc_device
-    xor dl,dl
-    OpenUsbPipe
-    ResetUsbPipe
-    CloseUsbPipe
+    movzx ax,es:cdc_port
+    OpenUsbDevice
+    ResetUsbDevice
+    CloseUsbDevice
 ;
     pop edi
     pop ecx

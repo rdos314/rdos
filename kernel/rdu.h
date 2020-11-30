@@ -374,9 +374,6 @@
 #define usergate_req_usb_data 0x00000146
 #define usergate_get_usb_data_size 0x00000147
 #define usergate_write_usb_data 0x00000148
-#define usergate_req_usb_status 0x00000149
-#define usergate_write_usb_status 0x0000014A
-#define usergate_write_usb_control 0x0000014B
 
 #define usergate_get_max_com_port 0x0000014F
 
@@ -703,9 +700,6 @@
 #define usergate_ansi_to_utf16 0x00000237
 #define usergate_utf16_to_ansi 0x00000238
 
-#define usergate_get_usb_interface 0x00000239
-#define usergate_set_usb_interface 0x0000023A
-
 #define usergate_remote_gui 0x0000023B
 
 #define usergate_is_com_available 0x0000023C
@@ -943,6 +937,8 @@
 #define usergate_send_usb_dev_control_msg 0x000002EA
 
 #define usergate_get_hid_device 0x000002EB
+
+#define usergate_reset_usb_dev 0x000002EC
 
 
 
@@ -1323,9 +1319,6 @@
 #define CallGate_req_usb_data 0x55 0x67 0x9a 70 1 0 0 3 0 0x5d
 #define CallGate_get_usb_data_size 0x55 0x67 0x9a 71 1 0 0 3 0 0x5d
 #define CallGate_write_usb_data 0x55 0x67 0x9a 72 1 0 0 3 0 0x5d
-#define CallGate_req_usb_status 0x55 0x67 0x9a 73 1 0 0 3 0 0x5d
-#define CallGate_write_usb_status 0x55 0x67 0x9a 74 1 0 0 3 0 0x5d
-#define CallGate_write_usb_control 0x55 0x67 0x9a 75 1 0 0 3 0 0x5d
 
 #define CallGate_get_max_com_port 0x55 0x67 0x9a 79 1 0 0 3 0 0x5d
 
@@ -1652,9 +1645,6 @@
 #define CallGate_ansi_to_utf16 0x55 0x67 0x9a 55 2 0 0 3 0 0x5d
 #define CallGate_utf16_to_ansi 0x55 0x67 0x9a 56 2 0 0 3 0 0x5d
 
-#define CallGate_get_usb_interface 0x55 0x67 0x9a 57 2 0 0 3 0 0x5d
-#define CallGate_set_usb_interface 0x55 0x67 0x9a 58 2 0 0 3 0 0x5d
-
 #define CallGate_remote_gui 0x55 0x67 0x9a 59 2 0 0 3 0 0x5d
 
 #define CallGate_is_com_available 0x55 0x67 0x9a 60 2 0 0 3 0 0x5d
@@ -1892,6 +1882,8 @@
 #define CallGate_send_usb_dev_control_msg 0x55 0x67 0x9a 234 2 0 0 3 0 0x5d
 
 #define CallGate_get_hid_device 0x55 0x67 0x9a 235 2 0 0 3 0 0x5d
+
+#define CallGate_reset_usb_dev 0x55 0x67 0x9a 236 2 0 0 3 0 0x5d
 
 #else
 
@@ -2270,9 +2262,6 @@
 #define CallGate_req_usb_data 0x3e 0x67 0x9a 70 1 0 0 3 0
 #define CallGate_get_usb_data_size 0x3e 0x67 0x9a 71 1 0 0 3 0
 #define CallGate_write_usb_data 0x3e 0x67 0x9a 72 1 0 0 3 0
-#define CallGate_req_usb_status 0x3e 0x67 0x9a 73 1 0 0 3 0
-#define CallGate_write_usb_status 0x3e 0x67 0x9a 74 1 0 0 3 0
-#define CallGate_write_usb_control 0x3e 0x67 0x9a 75 1 0 0 3 0
 
 #define CallGate_get_max_com_port 0x3e 0x67 0x9a 79 1 0 0 3 0
 
@@ -2599,9 +2588,6 @@
 #define CallGate_ansi_to_utf16 0x3e 0x67 0x9a 55 2 0 0 3 0
 #define CallGate_utf16_to_ansi 0x3e 0x67 0x9a 56 2 0 0 3 0
 
-#define CallGate_get_usb_interface 0x3e 0x67 0x9a 57 2 0 0 3 0
-#define CallGate_set_usb_interface 0x3e 0x67 0x9a 58 2 0 0 3 0
-
 #define CallGate_remote_gui 0x3e 0x67 0x9a 59 2 0 0 3 0
 
 #define CallGate_is_com_available 0x3e 0x67 0x9a 60 2 0 0 3 0
@@ -2839,5 +2825,7 @@
 #define CallGate_send_usb_dev_control_msg 0x3e 0x67 0x9a 234 2 0 0 3 0
 
 #define CallGate_get_hid_device 0x3e 0x67 0x9a 235 2 0 0 3 0
+
+#define CallGate_reset_usb_dev 0x3e 0x67 0x9a 236 2 0 0 3 0
 
 #endif

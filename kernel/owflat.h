@@ -3602,6 +3602,10 @@
     CallGate_close_usb_dev \
     __parm [__ebx]
 
+#pragma aux RdosResetUsbDevice = \
+    CallGate_reset_usb_dev \
+    __parm [__ebx]
+
 #pragma aux RdosSendUsbDeviceControlMsg = \
     CallGate_send_usb_dev_control_msg \
     "jnc extend "    \

@@ -117,8 +117,8 @@ change_address_proc      DD ?,?
 ;  IN FS        Is connected?
 is_connected_proc      DD ?,?
 
-; IN  FS        Pipe selector
-reset_pipe_proc        DD ?,?
+; IN  ES        Device selector
+reset_dev_proc        DD ?,?
 
 obs_lock_enum_proc         DD ?,?
 

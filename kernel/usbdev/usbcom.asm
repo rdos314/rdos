@@ -2554,14 +2554,9 @@ reset_port       PROC far
     push cx
     push di
 ;
-    mov ds,ds:ups_device_sel
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_controller
-    mov al,ds:uc_device
-    xor dl,dl
-    OpenUsbPipe
-    ResetUsbPipe
-    CloseUsbPipe
+    call OpenDevHandle
+    ResetUsbDevice
+    call CloseDevHandle
 ;
     pop di
     pop cx

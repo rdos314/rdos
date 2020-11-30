@@ -3609,6 +3609,10 @@ CloseUsbDevice      MACRO
         UserGate close_usb_dev_nr
                                                 ENDM
 
+;   IN  BX          Handle
+ResetUsbDevice      MACRO
+        UserGate reset_usb_dev_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  AL          Msg
@@ -3658,11 +3662,6 @@ OpenUsbPipe      MACRO
 ;   IN  BX          Handle
 CloseUsbPipe      MACRO
         UserGate close_usb_pipe_nr
-                                                ENDM
-
-;   IN  BX          Handle
-ResetUsbPipe      MACRO
-        UserGate reset_usb_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Handle

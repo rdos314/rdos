@@ -481,6 +481,51 @@ oudsDone:
 open_usb_dev_sel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ResetUsbDevice
+;
+;       DESCRIPTION:    Reset USB device
+;
+;       PARAMETERS:     BX      Device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_usb_dev_name  DB 'Reset USB Device',0
+
+reset_usb_dev     Proc far
+    push ds
+    push es
+    push ax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc rdvDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz rdvDone
+;
+    EnterSection ds:udd_section
+    push ds
+    mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:reset_dev_proc
+    pop ds
+    LeaveSection ds:udd_section
+
+rdvDone:
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    retf32
+reset_usb_dev     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SendUsbDevControlMsg
@@ -3541,60 +3586,6 @@ close_usb_pipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ResetUsbPipe
-;
-;           DESCRIPTION:    Reset USB pipe
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reset_usb_pipe_name  DB 'Reset USB Pipe',0
-
-reset_usb_pipe     Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc rupDone
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    call CleanupPipe
-;
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz rupDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz rupLeave
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:reset_pipe_proc
-    pop ds
-
-rupLeave:
-    LeaveSection ds:usbu_section
-
-rupDone:
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-reset_usb_pipe     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           delete_pipe_handle
 ;
 ;           DESCRIPTION:    BX              USB pipe handle
@@ -4978,12 +4969,6 @@ init    Proc far
     mov ax,open_usb_pipe_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET reset_usb_pipe
-    mov edi,OFFSET reset_usb_pipe_name
-    xor dx,dx
-    mov ax,reset_usb_pipe_nr
-    RegisterBimodalUserGate
-;
     mov esi,OFFSET close_usb_pipe
     mov edi,OFFSET close_usb_pipe_name
     xor dx,dx
@@ -5074,6 +5059,12 @@ init    Proc far
     mov edi,OFFSET close_usb_dev_name
     xor dx,dx
     mov ax,close_usb_dev_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET reset_usb_dev
+    mov edi,OFFSET reset_usb_dev_name
+    xor dx,dx
+    mov ax,reset_usb_dev_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET send_usb_dev_control_msg16

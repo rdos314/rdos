@@ -2209,21 +2209,19 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ResetPipe
+;           NAME:           ResetDev
 ;
-;           DESCRIPTION:    Reset port for pipe
+;           DESCRIPTION:    Reset device
 ;
 ;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
+;                           ES      Device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ResetPipe   Proc far
-    push es
+ResetDev   Proc far
     push ax
     push cx
 ;    
-    mov es,fs:usbp_dev_sel
     mov cl,es:usbd_port
     mov ax,1
     shl ax,cl
@@ -2231,9 +2229,8 @@ ResetPipe   Proc far
 ;
     pop cx
     pop ax
-    pop es
     retf32
-ResetPipe   Endp
+ResetDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4015,7 +4012,7 @@ ot0E DD OFFSET ClosePipe,           SEG code
 ot0F DD OFFSET WaitForCompletion,   SEG code
 ot10 DD OFFSET ChangeAddress,       SEG code
 ot11 DD OFFSET IsConnected,         SEG code
-ot12 DD OFFSET ResetPipe,           SEG code
+ot12 DD OFFSET ResetDev,            SEG code
 ot13 DD OFFSET LockEnum,            SEG code
 ot14 DD OFFSET UnlockEnum,          SEG code
 ot15 DD OFFSET Has64Bit,            SEG code

@@ -971,11 +971,10 @@ reset_printer   Proc far
 ;    
     lock and ds:pmu_flag,NOT FLAG_ATTACHED
     mov bx,ds:pmu_controller
-    mov al,ds:pmu_device
-    xor dl,dl
-    OpenUsbPipe
-    ResetUsbPipe
-    CloseUsbPipe
+    mov al,ds:pmu_port
+    OpenUsbDevice
+    ResetUsbDevice
+    CloseUsbDevice
     clc
 
 reset_done:    

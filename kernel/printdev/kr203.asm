@@ -559,11 +559,10 @@ nsReset:
     lock and ds:kr_flag,NOT FLAG_ATTACHED
     pushad
     mov bx,ds:kr_controller
-    mov al,ds:kr_device
-    xor dl,dl
-    OpenUsbPipe
-    ResetUsbPipe
-    CloseUsbPipe
+    mov al,ds:kr_port
+    OpenUsbDevice
+    ResetUsbDevice
+    CloseUsbDevice
     popad
 
 nsDone:
@@ -2092,11 +2091,10 @@ reset_printer   Proc far
 ;    
     lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_controller
-    mov al,ds:kr_device
-    xor dl,dl
-    OpenUsbPipe
-    ResetUsbPipe
-    CloseUsbPipe
+    mov al,ds:kr_port
+    OpenUsbDevice
+    ResetUsbDevice
+    CloseUsbDevice
     clc
 
 reset_done:    
@@ -2165,9 +2163,7 @@ init_thread_retry:
     cmp ax,50
     jb init_thread_do
 ;
-    and ds:kr_flag,NOT FLAG_ATTACHED
-    mov bx,ds:kr_in_handle
-    ResetUsbPipe
+    call reset_printer
     jmp init_done
 
 init_thread_do:
