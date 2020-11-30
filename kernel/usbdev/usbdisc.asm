@@ -2122,7 +2122,10 @@ uaFound:
     cmp cl,50h
     jne uaFail
 ;        
+    push ax
+    mov al,ah
     ConfigUsbDevice
+    pop ax
 ;
     push es
     push eax

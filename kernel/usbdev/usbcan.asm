@@ -1926,8 +1926,11 @@ uaFound:
     or cx,cx
     jz uaDone
 ;
+    push ax
+    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
+    pop ax
     jc uaDone
 ;
     call AddDevice

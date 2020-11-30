@@ -2674,8 +2674,11 @@ aFound:
     or cx,cx
     jz aDone
 ;
+    push ax
+    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
+    pop ax
     jc aDone
 ;
     xor di,di

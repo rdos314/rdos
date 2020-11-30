@@ -2995,7 +2995,7 @@ get_usb_config16    Endp
 ;       description:    Configure USB
 ;
 ;       parameters:     BX      Controller #
-;                       AL      Device address (1..128)
+;                       AL      Port #
 ;                       CX      Hub sel
 ;                       DL      Config #
 ;
@@ -3026,12 +3026,12 @@ ConfigUsb      Proc near
     jz cudFail
 ;
     mov ds,si
-    cmp al,128
+    cmp al,MAX_USB_HUB_PORTS
     jae cudFail
 ;    
     movzx si,al
     add si,si
-    mov si,ds:[si].usb_addr_arr
+    mov si,ds:[si].usb_dev_arr
     or si,si
     jz cudFail
 ;
@@ -3304,6 +3304,7 @@ CreateRoute  Endp
 ;
 ;       parameters:     BX      Controller #
 ;                       AL      Device address (1..128)
+;                       AH      Port #
 ;                       CX      Hub sel
 ;                       DL      Config #
 ;
@@ -3312,8 +3313,11 @@ CreateRoute  Endp
 config_usb_hub_name DB 'Config USB Hub', 0
 
 config_usb_hub       Proc near
+    push ax
     call CreateRoute
+    mov al,ah
     call ConfigUsb
+    pop ax
     retf32
 config_usb_hub    Endp    
 

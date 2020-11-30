@@ -4474,8 +4474,11 @@ ConfigDevice  Proc near
     stc
     jz cdDone
 ;
+    push ax
+    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
+    pop ax
     jc cdDone
 ;
     push ebp

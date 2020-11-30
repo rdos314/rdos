@@ -3645,7 +3645,7 @@ GetUsbConfig      MACRO
                                                 ENDM
 
 ;   IN  BX          Controller #
-;   IN  AL          Device address (1..128)
+;   IN  AL          Port #
 ;   IN  DL          Configuration id
 ConfigUsbDevice      MACRO
         UserGate config_usb_device_nr

@@ -488,7 +488,10 @@ uaRecreate:
 uaReConfig:
     LeaveSection ds:sd_section
 ;
+    push ax
+    mov al,ah
     ConfigUsbDevice
+    pop ax
     jc uaFail
 ;
     mov gs:cdc_controller,bx
@@ -618,7 +621,7 @@ uaDevNext:
 
 uaDevOk:
     mov bx,es:cdc_controller
-    mov al,es:cdc_device
+    mov al,es:cdc_port
     ConfigUsbDevice
     jc uaFail
 ;

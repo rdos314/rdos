@@ -1189,7 +1189,10 @@ uaFail:
     jmp uaDone
 
 uaFound:
+    push ax
+    mov al,ah
     ConfigUsbDevice
+    pop ax
 ;
     movzx edx,ah
     movzx eax,al
