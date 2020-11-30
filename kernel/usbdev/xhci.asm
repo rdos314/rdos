@@ -2393,6 +2393,10 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
+    push ax
+    mov al,es:usbd_address
+    mov fs:usbp_address,al
+    pop ax
     retf32
 ChangeAddress  Endp
 
@@ -3143,7 +3147,6 @@ FreeAddress       Endp
 ;       DESCRIPTION:    Allocate device
 ;
 ;       PARAMETERS:     DS      Device sel
-;                       AL      Speed
 ;
 ;       RETURNS:        ES      Function sel
 ;
@@ -3248,10 +3251,7 @@ CreateDev   Proc far
     movzx di,al
     shl di,3
 ;
-    push ax
-    mov al,ah
     call AllocateDevice
-    pop ax
 ;
     mov es:xd_dev_sel,ds
     mov es:usbd_speed,al
