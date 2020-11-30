@@ -4010,6 +4010,18 @@ HookUsbDetach   MACRO
     OsGate hook_usb_detach_nr
                     ENDM
 
+; IN  BX      Device handle
+; OUT ES      Device sel
+GetUsbDeviceSel   MACRO
+    OsGate get_usb_dev_sel_nr
+                    ENDM
+
+; IN  ES      Device sel
+; OUT BX      Device handle
+OpenUsbDeviceSel   MACRO
+    OsGate open_usb_dev_sel_nr
+                    ENDM
+
 ; IN  BX       Controller #
 ; IN  AL       Device port #
 ; IN  CX       Buffer size

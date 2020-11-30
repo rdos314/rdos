@@ -82,6 +82,7 @@ usbcom_port_struc       STRUC
 ups_base_struc  com_port_struc <>
 
 ups_device_sel      DW ?
+ups_dev_handle      DW ?
 ups_index           DW ?
 ups_device_type     DW ?
 ups_divisor         DD ?
@@ -132,6 +133,7 @@ uc_vendor               DW ?
 uc_product              DW ?
 uc_controller           DW ?
 uc_dev_handle           DW ?
+uc_dev_sel              DW ?
 uc_port                 DB ?
 uc_device               DB ?
 
@@ -593,9 +595,7 @@ reset_sio       PROC near
     push es
     pushad
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     xor al,al
     xor dx,dx
@@ -625,9 +625,7 @@ set_latency_timer       PROC near
     push es
     pushad
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,9
     mov dx,10
@@ -656,9 +654,7 @@ set_baud    PROC near
     push es
     pushad
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,3
     mov dx,word ptr ds:ups_divisor
@@ -727,9 +723,7 @@ set_data_parity_ok:
 set_data_stop_ok:
     mov dx,ax
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,4
     mov si,ds:ups_index
@@ -842,8 +836,16 @@ open_com_ftdi   Proc far
     mov ds:ups_divisor,ecx
     mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
     mov ds:ups_device_sel,es
-;    
-     
+;
+    push es
+    push bx
+    mov es,es:uds_device_sel
+    mov es,es:uc_dev_sel
+    OpenUsbDeviceSel
+    mov ds:ups_dev_handle,bx
+    pop bx
+    pop es
+;         
     call InitComFtdi
     jc open_ftdi_done
 ;    
@@ -893,6 +895,9 @@ ccfTimerClosed:
     call reset_rts_ftdi
     call reset_dtr_ftdi
 ;    
+    mov bx,ds:ups_dev_handle
+    CloseUsbDevice
+;
     mov ax,ds
     mov bx,ds:ups_device_sel
     or bx,bx
@@ -967,9 +972,7 @@ enable_cts_ftdi PROC near
 ;
     or ds:ups_control,CONTROL_CTS
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,2
     xor dx,dx
@@ -1006,9 +1009,7 @@ disable_cts_ftdi    PROC near
 ;
     and ds:ups_control,NOT CONTROL_CTS
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,2
     xor dx,dx
@@ -1044,9 +1045,7 @@ set_dtr_ftdi    Proc near
 ;    
     or ds:ups_control,CONTROL_DTR
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,1
     mov dx,101h
@@ -1082,9 +1081,7 @@ reset_dtr_ftdi  Proc near
 ;
     and ds:ups_control,NOT CONTROL_DTR
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,1
     mov dx,100h
@@ -1120,9 +1117,7 @@ set_rts_ftdi    Proc near
 ;
     or ds:ups_control,CONTROL_RTS
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,1
     mov dx,202h
@@ -1158,9 +1153,7 @@ reset_rts_ftdi  Proc near
 ;
     and ds:ups_control,NOT CONTROL_RTS
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,1
     mov dx,200h
@@ -1202,9 +1195,7 @@ Fish    Proc near
 ;
     mov si,dx
     mov dx,ax
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ss
     mov es,ax
     mov ah,0C0h
@@ -1236,9 +1227,7 @@ ReadLineState   Proc near
     push es
     pushad
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ds
     mov es,ax
     mov ah,0A1h
@@ -1318,9 +1307,7 @@ WriteLineState  Proc near
     push es
     pushad
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ds
     mov es,ax
     mov ah,21h
@@ -1352,9 +1339,7 @@ WriteControl    Proc near
     push es
     pushad
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,21h
     mov al,22h
     movzx dx,ds:ups_pl_control
@@ -1387,9 +1372,7 @@ Soup    Proc near
 ;
     mov si,dx
     mov dx,ax
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,1
     xor cx,cx
@@ -1556,6 +1539,15 @@ open_com_pl     Proc far
 ;
     mov ax,es:uds_device_type
     mov ds:ups_device_type,ax
+;
+    push es
+    push bx
+    mov es,es:uds_device_sel
+    mov es,es:uc_dev_sel
+    OpenUsbDeviceSel
+    mov ds:ups_dev_handle,bx
+    pop bx
+    pop es
 ;    
     call InitComPl
 ;    
@@ -1605,6 +1597,9 @@ ccpTimerClosed:
     call reset_rts_pl
     call reset_dtr_pl
 ;    
+    mov bx,ds:ups_dev_handle
+    CloseUsbDevice
+;    
     mov ax,ds
     mov bx,ds:ups_device_sel
     or bx,bx
@@ -1646,9 +1641,7 @@ enable_cts_pl   PROC near
 ;
     or ds:ups_control,CONTROL_CTS
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ah,40h
     mov al,1
     mov si,61h
@@ -1937,9 +1930,7 @@ SetBaudMct      PROC near
     push eax    
     mov bp,sp
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -1978,9 +1969,7 @@ SendUnknownMct  Proc near
     push ax    
     mov bp,sp
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2025,9 +2014,7 @@ scmValOk:
     push ax    
     mov bp,sp
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2093,9 +2080,7 @@ slcParityOk:
     push ax    
     mov bp,sp
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2146,9 +2131,7 @@ rmcDtrOk:
     push ax    
     mov bp,sp
 ;
-    mov es,ds:ups_device_sel
-    mov es,es:uds_device_sel
-    mov bx,es:uc_dev_handle
+    mov bx,ds:ups_dev_handle
     mov ax,ss
     mov es,ax
     mov di,bp
@@ -2238,6 +2221,15 @@ icmDivisorOk:
     mov ds:ups_divisor,ecx
     mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
     mov ds:ups_device_sel,es
+;
+    push es
+    push bx
+    mov es,es:uds_device_sel
+    mov es,es:uc_dev_sel
+    OpenUsbDeviceSel
+    mov ds:ups_dev_handle,bx
+    pop bx
+    pop es
 ;    
     call InitComMct
 ;    
@@ -3305,6 +3297,7 @@ tCloseNext:
     sub cx,1
     jnz tCloseLoop
 ;
+    mov es:uc_dev_sel,0
     mov bx,es:uc_dev_handle
     CloseUsbDevice
 ;
@@ -4176,12 +4169,16 @@ CreateServerThread    Proc near
     mov bx,es
     mov ds,bx
 ;
+    push es
     push bx
     mov bx,ds:uc_controller
     mov al,ds:uc_port
     OpenUsbDevice
     mov ds:uc_dev_handle,bx
+    GetUsbDeviceSel
+    mov ds:uc_dev_sel,es
     pop bx
+    pop es
 ;
     mov eax,100h
     AllocateSmallGlobalMem

@@ -856,4 +856,7 @@ add_usb_device_nr           = 753
 
 free_mem_blk_nr             = 754
 
+get_usb_dev_sel_nr          = 755
+open_usb_dev_sel_nr         = 756
+
 osgate_entries              = 780

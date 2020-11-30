@@ -275,7 +275,7 @@ SendDevControlMsg    Endp
 ;
 ;           NAME:       OpenUsbDev
 ;
-;       description:    Open USB pipe
+;       description:    Open USB device
 ;
 ;       parameters:     BX      Controller #
 ;                       AL      Port
@@ -391,6 +391,94 @@ cudvDone:
     pop ds
     retf32
 close_usb_dev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetUsbDevSel
+;
+;           DESCRIPTION:    Get USB device selector from handle
+;
+;           PARAMETERS:     BX          Device handle
+;
+;           RETURNS:        ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_dev_sel_name     DB 'Get USB Device Sel',0
+
+get_usb_dev_sel  Proc far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc gudsDone
+;
+    mov es,ds:[ebx].udh_dev_sel
+    clc
+
+gudsDone:
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+get_usb_dev_sel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       OpenUsbDevSel
+;
+;       description:    Open usb device through selector
+;
+;       parameters:     ES      Sel
+;
+;       RETURNS:        BX      USB device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_usb_dev_sel_name DB 'Open USB Device Sel', 0
+
+open_usb_dev_sel    Proc far
+    push ds
+    push ax
+    push cx
+    push dx
+    push si
+;
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    jnz oudsLeaveFail
+;
+    lock add ds:udd_ref_count,1
+    LeaveSection ds:udd_section
+;
+    mov ax,ds
+    mov cx,SIZE usbdev_handle_struc
+    AllocateHandle
+    mov [ebx].udh_dev_sel,ax
+    mov [ebx].hh_sign,USB_DEV_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+    jmp oudsDone    
+
+oudsLeaveFail:
+    LeaveSection ds:udd_section
+    stc
+
+oudsDone:
+    pop si
+    pop dx
+    pop cx
+    pop ax
+    pop ds
+    retf32
+open_usb_dev_sel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4766,6 +4854,18 @@ init    Proc far
     mov edi,OFFSET address_usb_dev_name
     xor cl,cl
     mov ax,address_usb_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_usb_dev_sel
+    mov edi,OFFSET get_usb_dev_sel_name
+    xor cl,cl
+    mov ax,get_usb_dev_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_usb_dev_sel
+    mov edi,OFFSET open_usb_dev_sel_name
+    xor cl,cl
+    mov ax,open_usb_dev_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_usb_pipe_connected
