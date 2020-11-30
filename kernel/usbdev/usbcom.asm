@@ -4176,10 +4176,12 @@ CreateServerThread    Proc near
     mov bx,es
     mov ds,bx
 ;
+    push bx
     mov bx,ds:uc_controller
     mov al,ds:uc_port
     OpenUsbDevice
     mov ds:uc_dev_handle,bx
+    pop bx
 ;
     mov eax,100h
     AllocateSmallGlobalMem
