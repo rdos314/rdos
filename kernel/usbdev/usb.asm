@@ -2891,10 +2891,10 @@ get_usb_device16    Endp
 ;           description:    Get USB config descriptor
 ;
 ;       parameters:     BX      Controller #
-;               AL      Device address (1..128)
-;               DL      Config #
-;               (E)CX       Buffer size
-;               ES:(E)DI    Buffer
+;                       AL      Port #
+;                       DL      Config #
+;                       (E)CX       Buffer size
+;                       ES:(E)DI    Buffer
 ;
 ;       Returns:    (E)AX       Size of descriptor
 ;
@@ -2919,12 +2919,12 @@ get_usb_config  Proc near
     jz gucFail
 ;
     mov ds,si
-    cmp al,128
+    cmp al,MAX_USB_HUB_PORTS
     jae gucFail
 ;    
     movzx si,al
     add si,si
-    mov si,ds:[si].usb_addr_arr
+    mov si,ds:[si].usb_dev_arr
     or si,si
     jz gucFail
 ;

@@ -3048,7 +3048,7 @@ void CreateHid(int controller, int device, int port, char *config)
     {
         if (HidArr[i] == 0)
         {
-            size = RdosGetUsbConfig(controller, device, 0, buf, 0x1000);
+            size = RdosGetUsbConfig(controller, port, 0, buf, 0x1000);
 
             ptr = buf;
             while (size > 0)

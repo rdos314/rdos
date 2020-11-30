@@ -4466,6 +4466,7 @@ ConfigDevice  Proc near
     mov cx,1000h
     xor di,di
     push ax
+    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax

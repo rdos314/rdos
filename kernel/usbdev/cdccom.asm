@@ -638,7 +638,7 @@ FindInterfaces	Proc near
     mov cx,SIZE usb_device_descr
 ;
     mov bx,ds:cdc_controller
-    mov al,ds:cdc_device
+    mov al,ds:cdc_port
     xor dl,dl
     mov ecx,1000h
     xor edi,edi

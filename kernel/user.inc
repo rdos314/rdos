@@ -3635,7 +3635,7 @@ GetUsbDevice      MACRO
                                                 ENDM
 
 ;   IN  BX          Controller #
-;   IN  AL          Device address (1..128)
+;   IN  AL          Port #
 ;   IN  DL          Config #
 ;   IN  (E)CX       Buffer size
 ;   IN  ES:(E)DI    Buffer

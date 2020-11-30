@@ -2248,6 +2248,7 @@ usb_attach  Proc far
     mov ecx,1000h
     xor edi,edi
     push eax
+    mov al,ah
     GetUsbConfig
     mov ecx,eax
     pop eax
