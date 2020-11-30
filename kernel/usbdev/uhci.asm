@@ -1640,7 +1640,6 @@ ccLinkPeriod:
 ;
     pop es
     mov es:dev_curr_address,0
-    InitUsbControlPipe
 ;
     popad
     pop gs

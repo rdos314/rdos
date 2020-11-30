@@ -1747,7 +1747,6 @@ CreateControl   Proc far
     mov gs:dev_control_qh,edx
     call InsertPipe
     pop es
-    InitUsbControlPipe
 ;
     popad
     pop gs

@@ -230,6 +230,7 @@ xd_device_context        DD ?
 xd_dev_sel               DW ?
 xd_control_trb           DW ?
 xd_control_buf           DD ?
+xd_control_pipe          DW ?
 
 xd_input_context_offset  DW ?
 xd_input_slot_offset     DW ?
@@ -1321,6 +1322,7 @@ CreateControl   Proc far
     call CreateEndpointRing
 ;
     push ax
+    mov es:xd_control_pipe,fs
     mov fs:xp_dev_sel,es
     mov al,es:usbd_port
     mov fs:xp_port_nr,al
@@ -1346,7 +1348,6 @@ CreateControl   Proc far
     mov al,3 SHL 1
     or al,4 SHL 3
     mov es:[bx].ec_param2,al
-    InitUsbControlPipe
     clc
 ;
     popad
@@ -2413,15 +2414,13 @@ ChangeAddress  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDev   Proc far
-    push fs
     push ax
     push bx
     push cx
-;    
-    mov fs,es:usbd_in_endpoint_arr
-    mov cl,fs:xp_port_nr
-    mov eax,1
-    shl eax,cl
+;
+    mov cl,es:usbd_port
+    mov ax,1
+    shl ax,cl
     lock or ds:xhc_reset,eax
 ;
     mov bx,ds:xhc_port_thread
@@ -2430,7 +2429,6 @@ ResetDev   Proc far
     pop cx
     pop bx
     pop ax
-    pop fs
     retf32
 ResetDev Endp
 
@@ -2536,15 +2534,12 @@ ClearStalled Endp
 
 UpdateMaxLen   Proc far
     push es
-    push fs
     push gs
     push eax
     push ebx
     push ecx
     push edi
 ;
-    mov fs,es:usbd_in_endpoint_arr
-    mov es,fs:xp_dev_sel
     mov bx,es:xd_input_ep_arr_offset
     mov es:[bx].ec_avg_len,ax
     mov es:[bx].ec_packet_size,ax
@@ -2582,7 +2577,6 @@ smlDone:
     pop ebx
     pop eax
     pop gs    
-    pop fs
     pop es
     retf32
 UpdateMaxLen   Endp
@@ -2683,10 +2677,8 @@ IsDeviceConnected   Proc far
     push eax
     push si
 ;
-    mov fs,es:usbd_in_endpoint_arr
-    movzx si,fs:xp_port_nr
+    movzx si,es:usbd_port
     shl si,4
-    mov es,fs:xp_port_sel
     mov eax,es:[si]
     test al,1
     clc
@@ -2993,7 +2985,7 @@ ControlMsg   Proc far
     mov cx,es:usbd_control_buf.usd_len
     mov fs:xp_size,0
     mov es:xd_control_buf,0
-    mov fs,es:usbd_in_endpoint_arr
+    mov fs,es:xd_control_pipe
 ;
     test es:usbd_control_buf.usd_type,80h
     jz cmDataOut

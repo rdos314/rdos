@@ -1274,7 +1274,6 @@ CreateControl   Proc far
 ;
     mov gs:dev_control_ed,edx
     pop es
-    InitUsbControlPipe
 ;
     popad
     pop gs

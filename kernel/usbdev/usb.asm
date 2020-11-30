@@ -1599,6 +1599,7 @@ init_usb_dev       Proc far
     mov es:usbd_address,al
     mov es:usbd_speed,ah
     mov es:usbd_flags,0
+    mov es:usbd_maxlen,8
 ;
     or bx,bx
     jz usdNoHub
