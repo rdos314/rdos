@@ -109,6 +109,7 @@ usb_dev_base     usb_device_struc <>
 dev_control_qh   DD ?
 dev_control_head DD ?
 dev_utd_control  DD ?
+dev_curr_address DB ?
 
 uhci_dev_sel    ENDS
 
@@ -1638,6 +1639,7 @@ ccLinkPeriod:
     call InsertPipe
 ;
     pop es
+    mov es:dev_curr_address,0
     InitUsbControlPipe
 ;
     popad
@@ -2327,7 +2329,7 @@ ClosePipe   Endp
 ChangeAddress   Proc far
     push ax
     mov al,es:usbd_address
-    mov fs:usbp_address,al
+    mov es:dev_curr_address,al
     pop ax
     retf32
 ChangeAddress   Endp
@@ -2633,7 +2635,7 @@ SetupControl   Proc near
     mov fs:[edx].utd_control,eax
 ;
     mov eax,7 SHL 21
-    or ah,es:usbd_address
+    or ah,es:dev_curr_address
     mov al,PID_SETUP
     mov fs:[edx].utd_host,eax
 ;
@@ -2709,7 +2711,7 @@ sciInMinOk:
     dec ax
     shl eax,21
     or eax,ebp
-    or ah,es:usbd_address
+    or ah,es:dev_curr_address
     mov al,PID_IN
     mov fs:[esi].utd_host,eax
 ;
@@ -2734,7 +2736,7 @@ sciStatusOut:
     mov fs:[esi].utd_control,eax
 ;
     mov eax,0FFE80000h
-    or ah,es:usbd_address
+    or ah,es:dev_curr_address
     mov al,PID_OUT
     mov fs:[esi].utd_host,eax
     mov fs:[esi].utd_buf,0
@@ -2896,7 +2898,7 @@ scoOutMinOk:
     dec ax
     shl eax,21
     or eax,ebp
-    or ah,es:usbd_address
+    or ah,es:dev_curr_address
     mov al,PID_OUT
     mov fs:[edi].utd_host,eax
 ;
@@ -2935,7 +2937,7 @@ scoStatusIn:
     mov fs:[edi].utd_control,eax
 ;
     mov eax,0FFE80000h
-    or ah,es:usbd_address
+    or ah,es:dev_curr_address
     mov al,PID_IN
     mov fs:[edi].utd_host,eax
     mov fs:[edi].utd_buf,0
