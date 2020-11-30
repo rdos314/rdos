@@ -2338,6 +2338,7 @@ UpdateMaxLen   Proc far
     mov fs,dx
     mov edx,es:dev_control_ed
     mov byte ptr fs:[edx].oes_mps,al
+    mov es:usbd_maxlen,ax
 ;
     pop edx
     pop fs
