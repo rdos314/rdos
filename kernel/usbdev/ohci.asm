@@ -1401,7 +1401,7 @@ SetupControl   Proc near
     pop ebx
     pop eax
     ret
-SetupControl	Endp
+SetupControl    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1488,7 +1488,7 @@ sciStatusOut:
 sciDone:
     popad
     ret
-SetupControlIn	Endp
+SetupControlIn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1578,7 +1578,7 @@ cciDone:
     pop ebx
     pop eax
     ret
-CopyControlIn	Endp
+CopyControlIn   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1681,7 +1681,7 @@ scoStatusIn:
 scoDone:
     popad
     ret
-SetupControlOut	Endp
+SetupControlOut Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1808,7 +1808,7 @@ crDone:
     pop esi
     pop eax
     ret
-CheckResult	Endp
+CheckResult     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1937,7 +1937,7 @@ ControlMsg   Endp
 ;
 ;       DESCRIPTION:    Allocate pipe
 ;
-;       PARAMETERS:     FS	Flat sel
+;       PARAMETERS:     FS      Flat sel
 ;                       CX      Buffer count
 ;                       AX      Buffer size
 ;                       GS:EDI  Descriptor
@@ -1946,7 +1946,7 @@ ControlMsg   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocatePipe	Proc near
+AllocatePipe    Proc near
     push ds
     push eax
     push ecx
@@ -2010,7 +2010,7 @@ apTdLoop:
     pop eax
     pop ds
     ret
-AllocatePipe	Endp
+AllocatePipe    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2021,11 +2021,11 @@ AllocatePipe	Endp
 ;
 ;       PARAMETERS:     DS      Pipe sel
 ;                       ES      Device sel
-;                       FS	Flat sel
+;                       FS      Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartInPipe	Proc near
+StartInPipe     Proc near
     pushad
 ;
     mov si,OFFSET op_entry_arr
@@ -2245,6 +2245,231 @@ cpDone:
     pop ds
     retf32
 ConfigPipe   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkControl
+;
+;       DESCRIPTION:    Unlink control
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkControl   Proc near
+    push fs
+    push gs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    xor ecx,ecx
+    mov ebx,ds:ohc_control_linear
+    mov edx,es:dev_control_ed
+
+ulcLoop:
+    cmp ebx,edx
+    je ulcUnlink
+;
+    mov ecx,ebx
+    mov ebx,es:[ebx].oes_next_va
+    or ebx,ebx
+    jnz ulcLoop
+;
+    int 3
+    jmp ulcDone
+
+ulcUnlink:
+    or ecx,ecx
+    jz ulcHead
+;
+    mov esi,fs:[edx].oes_next_va
+    mov edi,fs:[edx].oes_nexted
+    mov fs:[ecx].oes_next_va,esi
+    mov fs:[ecx].oes_nexted,edi
+    jmp ulcDone
+
+ulcHead:
+    mov gs,ds:ohc_reg_sel
+    mov esi,fs:[edx].oes_next_va
+    mov edi,fs:[edx].oes_nexted
+    mov ds:ohc_control_linear,esi
+    mov gs:HcControlHeadEd,edi
+
+ulcDone:
+    popad
+    pop gs
+    pop fs
+    ret
+UnlinkControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkPipe
+;
+;       DESCRIPTION:    Unlink pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device
+;                       BX      Pipe sel
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipe   Proc near
+    push fs
+    push gs
+    pushad
+;
+    mov fs,bx
+    mov al,fs:ued_attrib
+    and al,3
+    cmp al,2
+    je ulpBulk
+;
+    cmp al,3
+    je ulpIntr
+;
+    int 3
+    jmp ulpDone
+
+ulpBulk:
+    mov dx,flat_sel
+    mov fs,dx
+    xor ecx,ecx
+    mov ebx,ds:ohc_bulk_linear
+
+ulpBulkLoop:
+    cmp ebx,edx
+    je ulpBulkUnlink
+;
+    mov ecx,ebx
+    mov ebx,fs:[ebx].oes_next_va
+    or ebx,ebx
+    jnz ulpBulkLoop
+;
+    int 3
+    jmp ulpDone
+
+ulpBulkUnlink:
+    or ecx,ecx
+    jz ulpBulkHead
+;
+    mov esi,fs:[edx].oes_next_va
+    mov edi,fs:[edx].oes_nexted
+    mov fs:[ecx].oes_next_va,esi
+    mov fs:[ecx].oes_nexted,edi
+    jmp ulpDone
+
+ulpBulkHead:
+    mov gs,ds:ohc_reg_sel
+    mov esi,fs:[edx].oes_next_va
+    mov edi,fs:[edx].oes_nexted
+    mov ds:ohc_bulk_linear,esi
+    mov gs:HcBulkHeadEd,edi
+    jmp ulpDone
+
+ulpIntr:
+    mov di,fs:op_intr_count
+    dec byte ptr ds:[di]
+;
+    mov di,fs:op_intr_list
+    mov ebx,ds:[di].oes_next_va
+    xor ecx,ecx
+    mov ax,flat_sel
+    mov fs,ax
+
+ulpIntrLoop:
+    cmp ebx,edx
+    je ulpIntrUnlink
+;
+    mov ecx,ebx
+    mov ebx,fs:[ebx].oes_next_va
+    or ebx,ebx
+    jnz ulpIntrLoop
+;
+    int 3
+    jmp ulpDone
+
+ulpIntrUnlink:
+    or ecx,ecx
+    jz ulpIntrHead
+;
+    mov esi,fs:[edx].oes_next_va
+    mov edi,fs:[edx].oes_nexted
+    mov fs:[ecx].oes_next_va,esi
+    mov fs:[ecx].oes_nexted,edi
+    jmp ulpDone
+
+ulpIntrHead:
+    mov esi,fs:[edx].oes_next_va
+    mov ecx,fs:[edx].oes_nexted
+    mov ds:[di].oes_next_va,esi
+    mov ds:[di].oes_nexted,ecx
+
+ulpDone:
+    popad
+    pop gs
+    pop fs
+    ret
+UnlinkPipe      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkPipes
+;
+;       DESCRIPTION:    Unlink pipes
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipes   Proc near
+    push ebx
+    push ecx
+    push esi
+;
+    call UnlinkControl
+;
+    mov cx,15
+    mov si,OFFSET dev_in_ep_arr
+
+upInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz upInNext
+;
+    call UnlinkPipe
+
+upInNext:
+    add si,2
+    loop upInLoop
+;
+    mov cx,15
+    mov si,OFFSET dev_out_ep_arr
+
+upOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz upOutNext
+;
+    call UnlinkPipe
+
+upOutNext:
+    add si,2
+    loop upOutLoop
+;
+    pop esi
+    pop ecx
+    pop ebx
+    ret
+UnlinkPipes     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2564,6 +2789,8 @@ htDoUnlock:
     jmp htDetached
 
 htDetach:
+    call UnlinkPipes
+;
     mov al,cl
     NotifyUsbDetach
 ;
