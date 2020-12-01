@@ -67,8 +67,6 @@ HcRhPortStatus      DD ?
 
 hc_reg  ENDS
 
-; this structure should be kept less than 32 bytes long!
-
 ohc_es_struc    STRUC
 
 ;HC part
@@ -85,8 +83,6 @@ oes_next_va     DD ?
 
 ohc_es_struc    ENDS
 
-
-; this structure should be kept less than 32 bytes long!
 
 ohc_td_struc    STRUC
 
@@ -180,8 +176,9 @@ op_wr_ptr       DW ?
 op_entry_count  DW ?
 op_intr_count   DW ?
 op_intr_list    DW ?
-op_pad          DW ?
+op_maxlen       DW ?
 op_ed           DD ?
+op_tail         DD ?
 
 op_entry_arr    DD ?
 
@@ -1984,7 +1981,7 @@ apTdLoop:
     AllocateMemBlk
 ;
     mov fs:[esi].otd_resv,0
-    mov fs:[esi].otd_flags,0E4h
+    mov fs:[esi].otd_flags,0F0E4h
     mov fs:[esi].otd_cbp,eax
     mov fs:[esi].otd_next_td,0
     add eax,ebp
@@ -1999,6 +1996,7 @@ apTdLoop:
     pop cx
     loop apTdLoop
 ;
+    mov ds:op_maxlen,bp
     mov bx,ds
 ;
     pop ebp
@@ -2010,6 +2008,106 @@ apTdLoop:
     pop ds
     ret
 AllocatePipe	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartInPipe
+;
+;       DESCRIPTION:    Start input pipe
+;
+;       PARAMETERS:     DS      Pipe sel
+;                       ES      Device sel
+;                       FS	Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartInPipe	Proc near
+    pushad
+;
+    mov si,OFFSET op_entry_arr
+    mov cx,ds:op_entry_count
+    xor edi,edi
+
+sipLoop:
+    mov edx,ds:[si]
+    or edi,edi
+    jz sipNext
+;
+    LinearToPhysicalMemBlk
+    mov fs:[edi].otd_next_td,eax
+
+sipNext:
+    mov edi,edx
+    add si,4
+    loop sipLoop
+;
+    mov eax,ds:op_tail
+    mov fs:[edi].otd_next_td,eax
+;
+    mov edx,ds:op_entry_arr
+    LinearToPhysicalMemBlk
+    mov edx,ds:op_ed
+    mov fs:[edx].oes_headp,eax
+;
+    popad
+    ret
+StartInPipe     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPipe
+;
+;       DESCRIPTION:    Start pipe
+;
+;       PARAMETERS:     DS      Pipe selector
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       DL      Endpoint
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPipe  Proc near
+    push eax
+    push esi
+;
+    mov esi,ds:op_ed
+    mov ax,ds:op_maxlen
+    mov fs:[esi].oes_mps,ax
+;
+    mov ah,dl
+    and ah,0Fh
+    xor al,al
+    shr ax,1
+    mov dh,es:usbd_address
+    and dh,7Fh
+    or al,dh
+;    
+    cmp es:usbd_speed,0
+    jnz spSpeedOk
+;
+    or ah,20h
+
+spSpeedOk:    
+    test dl,80h
+    jz spOut
+
+spIn:
+    or ah,10h
+    jmp spSave
+
+spOut:
+    or ah,8
+
+spSave:
+    mov fs:[esi].oes_fa_en,ax
+
+spDone:
+    pop esi
+    pop eax
+    ret
+StartPipe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2032,7 +2130,6 @@ ConfigPipe   Proc far
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2062,10 +2159,25 @@ cpBulk:
 cpBulkIn:
     call AddBulkEd
     mov es:[si].dev_in_ep_arr,bx
+;
+    push ds
     mov ds,bx
     mov ds:op_intr_count,0
     mov ds:op_intr_list,0
     mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    call StartInPipe
+;
+    mov dl,gs:[di].ued_address
+    call StartPipe
+    pop ds
+;
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,4
+    mov ds:HcCommandStatus,eax
+    clc
     jmp cpDone
 
 cpBulkOut:
@@ -2075,6 +2187,12 @@ cpBulkOut:
     mov ds:op_intr_count,0
     mov ds:op_intr_list,0
     mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+;
+    mov dl,gs:[di].ued_address
+    call StartPipe
+    clc
     jmp cpDone
 
 cpIntr:
@@ -2089,21 +2207,38 @@ cpIntr:
     jz cpIntrOut
 
 cpIntrIn:
+    push di
     call AddIntrEd
     mov es:[si].dev_in_ep_arr,bx
     mov ds,bx
     mov ds:op_intr_count,si
     mov ds:op_intr_list,di
     mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    pop di
+    call StartInPipe
+;
+    mov dl,gs:[di].ued_address
+    call StartPipe
+    clc
     jmp cpDone
 
 cpIntrOut:
+    push di
     call AddIntrEd
     mov es:[si].dev_out_ep_arr,bx
     mov ds,bx
     mov ds:op_intr_count,si
     mov ds:op_intr_list,di
     mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    pop di
+;
+    mov dl,gs:[di].ued_address
+    call StartPipe
+    clc
 
 cpDone:
     popad
