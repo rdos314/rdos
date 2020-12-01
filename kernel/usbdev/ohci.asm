@@ -178,8 +178,12 @@ ohci_pipe_struc    STRUC
 op_rd_ptr       DW ?
 op_wr_ptr       DW ?
 op_entry_count  DW ?
+op_intr_count   DW ?
+op_intr_list    DW ?
+op_pad          DW ?
+op_ed           DD ?
 
-op_entry_arr    DW ?
+op_entry_arr    DD ?
 
 ohci_pipe_struc    ENDS
 
@@ -1931,6 +1935,85 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocatePipe
+;
+;       DESCRIPTION:    Allocate pipe
+;
+;       PARAMETERS:     FS	Flat sel
+;                       CX      Buffer count
+;                       AX      Buffer size
+;
+;       RETURNS:        BX      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePipe	Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    movzx ebp,ax
+;
+    push es
+    movzx eax,cx
+    shl ax,2
+    add ax,OFFSET op_entry_arr
+    AllocateSmallGlobalMem
+;
+    mov es:op_rd_ptr,0
+    mov es:op_wr_ptr,0
+    mov es:op_entry_count,cx
+    mov ax,es
+    mov ds,ax
+    pop es
+;
+    mov di,OFFSET op_entry_arr
+
+apTdLoop:
+    push cx
+;
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    mov esi,edx
+;
+    mov cx,bp
+    AllocateMemBlk
+;
+    mov fs:[esi].otd_resv,0
+    mov fs:[esi].otd_flags,0E4h
+    mov fs:[esi].otd_cbp,eax
+    mov fs:[esi].otd_next_td,0
+    add eax,ebp
+    dec eax
+    mov fs:[esi].otd_be,eax
+    mov fs:[esi].otd_next_va,0
+    mov fs:[esi].otd_buffer_va,edx
+    mov fs:[esi].otd_buffer_size,bp
+;
+    mov ds:[di],esi
+    add di,4
+    pop cx
+    loop apTdLoop
+;
+    mov bx,ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+AllocatePipe	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ConfigPipe
 ;
 ;       DESCRIPTION:    Config pipe
@@ -1945,6 +2028,10 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ConfigPipe   Proc far
+    push ds
+    push fs
+    pushad
+;
     int 3
     mov ax,flat_sel
     mov fs,ax
@@ -1955,44 +2042,73 @@ ConfigPipe   Proc far
     je cpBulk
 ;
     cmp al,3
-    je cpInt
+    je cpIntr
 ;
     stc
     jmp cpDone
 
 cpBulk:
-    mov cx,gs:[di].ued_maxsize
-    mov dl,gs:[di].ued_address
-    and dl,8Fh
-
-    call AddBulkEd
+    mov ax,gs:[di].ued_maxsize
+    call AllocatePipe
 ;
     mov dl,gs:[di].ued_address
-    and dl,80h
-    mov fs:usbp_dir,dl
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    test dl,80h
+    jz cpBulkOut
+
+cpBulkIn:
+    call AddBulkEd
+    mov es:[si].dev_in_ep_arr,bx
+    mov ds,bx
+    mov ds:op_intr_count,0
+    mov ds:op_intr_list,0
+    mov ds:op_ed,edx
     jmp cpDone
 
-cpInt:
-    mov cx,gs:[di].ued_maxsize
+cpBulkOut:
+    call AddBulkEd
+    mov es:[si].dev_out_ep_arr,bx
+    mov ds,bx
+    mov ds:op_intr_count,0
+    mov ds:op_intr_list,0
+    mov ds:op_ed,edx
+    jmp cpDone
+
+cpIntr:
+    mov ax,gs:[di].ued_maxsize
+    call AllocatePipe
     mov dl,gs:[di].ued_address
-    and dl,0Fh
-    mov cl,gs:[di].ued_interval
-;    
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    test dl,80h
+    jz cpIntrOut
+
+cpIntrIn:
     call AddIntrEd
-;    mov fs:osp_ed,edx
-;    mov fs:osp_intr_count,si
-;    mov fs:osp_intr_list,di
-;    call InsertPipe
-;
+    mov es:[si].dev_in_ep_arr,bx
+    mov ds,bx
+    mov ds:op_intr_count,si
+    mov ds:op_intr_list,di
+    mov ds:op_ed,edx
+    jmp cpDone
+
+cpIntrOut:
+    call AddIntrEd
+    mov es:[si].dev_out_ep_arr,bx
+    mov ds,bx
+    mov ds:op_intr_count,si
+    mov ds:op_intr_list,di
+    mov ds:op_ed,edx
+
+cpDone:
     popad
-    pop es
-
-    mov dl,gs:[di].ued_address
-    and dl,80h
-    mov fs:usbp_dir,dl
-
-cpDone:    
-
+    pop fs
+    pop ds
     retf32
 ConfigPipe   Endp
 
