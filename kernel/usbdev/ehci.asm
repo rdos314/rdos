@@ -3011,6 +3011,22 @@ ConfigPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UnlinkPipes
+;
+;       DESCRIPTION:    Unlink pipe
+;
+;       PARAMETERS:     ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipes   Proc far
+    int 3
+    retf32
+UnlinkPipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ClosePipe
 ;
 ;           DESCRIPTION:    Close pipe
@@ -4190,6 +4206,7 @@ ec1B DD OFFSET IssueOne,           SEG code
 ec1C DD OFFSET IsDeviceConnected,  SEG code
 ec1D DD OFFSET ControlMsg,         SEG code
 ec1E DD OFFSET ConfigPipe,         SEG code
+ec1F DD OFFSET UnlinkPipes,        SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4211,7 +4228,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

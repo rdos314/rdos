@@ -2246,7 +2246,6 @@ cpDone:
     retf32
 ConfigPipe   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2430,7 +2429,7 @@ UnlinkPipe      Endp
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkPipes   Proc near
+UnlinkPipes   Proc far
     push ebx
     push ecx
     push esi
@@ -2468,7 +2467,7 @@ upOutNext:
     pop esi
     pop ecx
     pop ebx
-    ret
+    retf32
 UnlinkPipes     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2789,7 +2788,7 @@ htDoUnlock:
     jmp htDetached
 
 htDetach:
-    call UnlinkPipes
+    call fword ptr ds:unlink_proc
 ;
     mov al,cl
     NotifyUsbDetach
@@ -3290,6 +3289,7 @@ ot1B DD OFFSET IssueOne,            SEG code
 ot1C DD OFFSET IsDeviceConnected,   SEG code
 ot1D DD OFFSET ControlMsg,          SEG code
 ot1E DD OFFSET ConfigPipe,          SEG code
+ot1F DD OFFSET UnlinkPipes,         SEG code
 
 InitFunction    Proc near
     push ds
@@ -3347,7 +3347,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

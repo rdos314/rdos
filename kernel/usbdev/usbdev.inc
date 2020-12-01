@@ -162,6 +162,8 @@ control_msg_proc      DD ?,?
 ; IN  GS:EDI    Endpoint descriptor
 config_pipe_proc      DD ?,?
 
+;  IN ES        Device
+unlink_proc      DD ?,?
 
 usb_section            section_typ <>
 

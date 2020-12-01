@@ -3059,6 +3059,22 @@ ConfigPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UnlinkPipes
+;
+;       DESCRIPTION:    Unlink pipes
+;
+;       PARAMETERS:     ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipes   Proc far
+    int 3
+    retf32
+UnlinkPipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateAddress
 ;
 ;       DESCRIPTION:    Allocate address (slot)
@@ -4122,6 +4138,7 @@ et1B DD OFFSET IssueOne,            SEG code
 et1C DD OFFSET IsDeviceConnected,   SEG code
 et1D DD OFFSET ControlMsg,          SEG code
 et1E DD OFFSET ConfigPipe,          SEG code
+et1F DD OFFSET UnlinkPipes,         SEG code
 
 InitFunction    Proc near
     push es
@@ -4268,7 +4285,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

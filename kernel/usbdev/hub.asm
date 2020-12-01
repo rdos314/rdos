@@ -573,6 +573,25 @@ ConfigPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UnlinkPipes
+;
+;       DESCRIPTION:    Unlink pipes
+;
+;       PARAMETERS:     ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipes   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:unlink_proc
+    pop ds
+    ret
+UnlinkPipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ClosePipe
 ;
 ;       DESCRIPTION:    Close pipe
@@ -826,6 +845,7 @@ ht1B DD OFFSET IssueOne,            SEG code
 ht1C DD OFFSET IsDeviceConnected,   SEG code
 ht1D DD OFFSET ControlMsg,          SEG code
 ht1E DD OFFSET ConfigPipe,          SEG code
+ht1F DD OFFSET UnlinkPipes,         SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2396,7 +2416,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Fh
+    mov ecx,2*20h
 
 uaTabLoop:
     lods dword ptr cs:[esi]
