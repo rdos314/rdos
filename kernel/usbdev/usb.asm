@@ -145,54 +145,6 @@ code    SEGMENT byte public use16 'CODE'
     assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddDev
-;
-;       DESCRIPTION:    Add device
-;
-;       Parameters:     DS      USB function selector
-;                       ES      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddDev Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov eax,es
-    mov fs,eax
-;
-    mov eax,SIZE usbdev_dev_struc
-    AllocateSmallGlobalMem
-;
-    mov ax,ds:usb_controller_id
-    mov es:udd_controller,ax
-;
-    mov al,fs:usbd_port
-    mov es:udd_port,al
-;
-    mov fs:usbd_dev_sel,es
-    mov es:udd_sel,fs
-    mov es:udd_deleted,0
-    mov es:udd_ref_count,1
-    InitSection es:udd_section
-;
-    movzx bx,al
-    add bx,bx
-    mov ds:[bx].usb_port_arr,es
-    mov ds:[bx].usb_dev_arr,fs
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-AddDev Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SendDevControlMsg
@@ -1456,11 +1408,38 @@ is_usb_pipe_connected       Endp
 add_usb_device_name DB 'Add USB Device', 0
 
 add_usb_device       Proc far
+    push ds
+    push es
+    push fs
     pushad
 ;
-    call AddDev
+    mov eax,es
+    mov fs,eax
+;
+    mov eax,SIZE usbdev_dev_struc
+    AllocateSmallGlobalMem
+;
+    mov ax,ds:usb_controller_id
+    mov es:udd_controller,ax
+;
+    mov al,fs:usbd_port
+    mov es:udd_port,al
+;
+    mov fs:usbd_dev_sel,es
+    mov es:udd_sel,fs
+    mov es:udd_deleted,0
+    mov es:udd_ref_count,1
+    InitSection es:udd_section
+;
+    movzx bx,al
+    add bx,bx
+    mov ds:[bx].usb_port_arr,es
+    mov ds:[bx].usb_dev_arr,fs
 ;
     popad
+    pop fs
+    pop es
+    pop ds
     retf32
 add_usb_device  Endp
 
@@ -1700,690 +1679,6 @@ nudDone:
     pop es
     retf32
 notify_usb_detach   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddReqBlock
-;
-;           description:    Add an request block
-;
-;       parameters:     DS:EBX   Req handle struc
-;               
-;       Returns:    ES      Req block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddReqBlock     Proc near
-    push eax
-;    
-    mov eax,SIZE req_entry_struc
-    AllocateSmallGlobalMem
-    mov es:re_type,0
-    mov es:re_next,0
-;
-    mov ax,ds:[ebx].rh_list
-    or ax,ax
-    je arbEmpty
-;       
-    push ds
-
-arbLoop:
-    mov ds,ax
-    mov ax,ds:re_next
-    or ax,ax
-    jnz arbLoop
-;
-    mov ds:re_next,es
-    pop ds
-    jmp arbDone
-    
-arbEmpty:
-    mov ds:[ebx].rh_list,es
-
-arbDone:
-    pop eax    
-    ret
-AddReqBlock Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateUsbReq
-;
-;           description:    Create an asynchronous USB req handle
-;
-;       parameters:     BX      Pipe handle
-;               
-;       Returns:    BX      Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_usb_req_name DB 'Create USB req', 0
-
-create_usb_req  Proc far
-    push ds
-    push ax
-    push cx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc curDone
-;
-    mov ax,ds:[ebx].up_pipe_sel       
-    mov cx,SIZE req_handle_struc
-    AllocateHandle
-    mov [ebx].rh_pipe_sel,ax
-    mov [ebx].rh_list,0
-    mov [ebx].rh_flags,0
-    mov [ebx].hh_sign,USB_REQ_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
-
-curDone:
-    pop cx
-    pop ax
-    pop ds
-    retf32
-create_usb_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AddWriteUsbDataReq
-;
-;       description:    Add write data req
-;
-;       parameters:     BX      Req handle
-;                       CX      Size of data
-;                       AX      Additional data size
-;               
-;       Returns:        ES      Data selector (do not free)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_write_usb_data_req_name DB 'Add Write USB data req', 0
-
-add_write_usb_data_req  Proc far
-    push ds
-    push ax
-    push ebx
-;
-    push ax
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    pop ax
-    jc awudDone
-;
-    push ds
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov ds,ds:usbu_func_sel
-    add ax,cx
-    movzx eax,ax
-    call AllocateBufSel     
-    mov ax,es
-    pop ds
-;
-    call AddReqBlock
-    mov es:re_type,REQ_TYPE_WRITE_DATA
-    mov es:re_size,cx
-    mov es:re_buf_sel,ax
-    mov es,ax    
-    clc
-    
-awudDone:    
-    pop ebx
-    pop ax
-    pop ds
-    retf32
-add_write_usb_data_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AddReadUsbDataReq
-;
-;       description:    Add read data req
-;
-;       parameters:     BX      Req handle
-;                       CX      Size of data
-;                       AX      Additional data size
-;               
-;       Returns:        ES      Data selector (do not free)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_read_usb_data_req_name DB 'Add Read USB data req', 0
-
-add_read_usb_data_req   Proc far
-    push ds
-    push ax
-    push ebx
-;
-    push ax
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    pop ax
-    jc arudDone
-;
-    push ds
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov ds,ds:usbu_func_sel
-    add ax,cx
-    movzx eax,ax
-    call AllocateBufSel     
-    mov ax,es
-    pop ds
-;
-    call AddReqBlock
-    mov es:re_type,REQ_TYPE_READ_DATA
-    mov es:re_size,cx
-    mov es:re_buf_sel,ax
-    mov es,ax
-    clc
-    
-arudDone:    
-    pop ebx
-    pop ax
-    pop ds
-    retf32
-add_read_usb_data_req   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReqWriteData
-;
-;           description:    Do Write data req
-;
-;       parameters:     DS      Function sel
-;               ES      Req sel
-;               FS      Pipe sel
-;               CX      Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqWriteData    Proc near
-    push es
-    push edi
-;       
-    mov es,es:re_buf_sel
-    xor edi,edi
-    call fword ptr ds:add_out_proc
-;       
-    pop edi
-    pop es      
-    ret
-ReqWriteData Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReqReadData
-;
-;           description:    Do read data req
-;
-;       parameters:     DS      Function sel
-;               ES      Req sel
-;               FS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqReadData     Proc near
-    push es
-    push cx
-    push edi
-;       
-    xor edi,edi
-    mov cx,es:re_size
-    mov es,es:re_buf_sel
-    call fword ptr ds:add_in_proc
-;       
-    pop edi
-    pop cx
-    pop es
-    ret
-ReqReadData Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           StartUsbReq
-;
-;           description:    Start req
-;
-;       parameters:     AX      Thread to signal
-;               BX      Req handle
-;               CX      Size of out buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_usb_req_name DB 'Start USB req', 0
-
-req_tab:
-rt02 DW OFFSET ReqWriteData
-rt03 DW OFFSET ReqReadData
-
-start_usb_req   Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-    push dx
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc surDone
-;
-    mov ax,ds
-    mov fs,ax
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz surDone
-;
-    EnterSection ds:usbu_section
-    mov dx,ds:usbu_pipe_sel
-    or dx,dx
-    stc
-    jz surLeave
-;
-    or fs:[ebx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
-    mov ax,fs:[ebx].rh_list
-;
-    push ds
-;
-    mov fs,dx
-    mov ds,ds:usbu_func_sel
-;
-    call fword ptr ds:end_transfer_proc
-
-surReqLoop:
-    or ax,ax
-    jz surIssue
-;
-    mov es,ax
-    movzx bx,es:re_type
-    or bx,bx    
-    jz surIssue
-;
-    cmp bx,5
-    ja surIssue
-;
-    dec bx
-    add bx,bx
-    call word ptr cs:[bx].req_tab
-    mov ax,es:re_next    
-    jmp surReqLoop
-
-surIssue:
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-    call fword ptr ds:issue_transfer_proc
-;
-    pop ds
-
-surLeave:
-    LeaveSection ds:usbu_section
-
-surDone:    
-    pop dx
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-start_usb_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           StopUsbReq
-;
-;           description:    Stop req
-;
-;       parameters:     BX      Req handle
-;               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_usb_req_name DB 'Stop USB req', 0
-
-stop_usb_req    Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc sturEnd
-;
-    mov ax,ds
-    mov fs,ax
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz sturDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz sturLeave
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:end_transfer_proc
-    pop ds
-
-sturLeave:
-    LeaveSection ds:usbu_section
-;
-    mov ax,5
-    WaitMilliSec    
-
-sturDone:
-    and fs:[ebx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
-
-sturEnd:
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-stop_usb_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsUsbReqStarted
-;
-;           description:    Check if request is started
-;
-;       parameters:     BX      Req handle
-;
-;       Returns:    NC      Req is started
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_usb_req_started_name DB 'Is USB Req Started', 0
-
-is_usb_req_started      Proc far
-    push ds
-    push ax
-    push ebx
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc iursDone
-;
-    test ds:[ebx].rh_flags,REQ_FLAG_STARTED
-    stc
-    jz iursDone
-;
-    clc
-
-iursDone:       
-    pop ebx
-    pop ax
-    pop ds
-    retf32
-is_usb_req_started   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsUsbReqReady
-;
-;           description:    Check if request is ready
-;
-;       parameters:     BX      Req handle
-;
-;       Returns:    NC      Req is done
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_usb_req_ready_name DB 'Is USB Req Ready', 0
-
-is_usb_req_ready    Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc iurrDone
-;
-    mov ax,ds
-    mov fs,ax
-;
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    clc
-    jnz iurrDone
-;
-    test fs:[ebx].rh_flags,REQ_FLAG_ACTIVE
-    stc
-    jz iurrDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    clc
-    jz iurrLeave
-;
-    push ds
-    push fs
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:is_transfer_done_proc
-    pop fs
-    pop ds
-
-iurrLeave:
-    LeaveSection ds:usbu_section
-    jc iurrDone
-;
-    and fs:[ebx].rh_flags,NOT REQ_FLAG_STARTED
-    clc
-    
-iurrDone:       
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-is_usb_req_ready   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetUsbReqData
-;
-;           description:    Get req data
-;
-;       parameters:     BX      Req handle
-;
-;       Returns:    NC      Req is done
-;               CX      Bytes transfered to buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_usb_req_data_name DB 'Get USB Req Data', 0
-
-get_usb_req_data    Proc far
-    push ds
-    push fs
-    push ax
-    push ebx
-    push dx
-;
-    xor cx,cx
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc gurdDone
-;
-    mov ax,ds
-    mov fs,ax
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz gurdDone
-;
-    test fs:[ebx].rh_flags,REQ_FLAG_ACTIVE
-    stc
-    jz gurdDone
-;
-    EnterSection ds:usbu_section
-    mov dx,ds:usbu_pipe_sel
-    or dx,dx
-    stc
-    jz gurdLeave
-;
-    mov ax,fs:[ebx].rh_list
-;
-    push ds
-    mov fs,dx
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:was_transfer_ok_proc
-    jc gurdPopLeave
-
-gurdReqLoop:
-    or ax,ax
-    clc
-    jz gurdPopLeave
-;
-    mov es,ax
-    mov al,es:re_type
-    cmp al,REQ_TYPE_READ_DATA
-    jne gurdNext
-;    
-    call fword ptr ds:get_data_size_proc
-    jmp gurdPopLeave
-
-gurdNext:
-    mov ax,es:re_next    
-    jmp gurdReqLoop
-
-gurdPopLeave:
-    pop ds
-
-gurdLeave:
-    LeaveSection ds:usbu_section
-
-gurdDone:       
-    pop dx
-    pop ebx
-    pop ax
-    pop fs
-    pop ds
-    retf32
-get_usb_req_data   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseUsbReq
-;
-;           description:    Close USB req
-;
-;       parameters:     BX      Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_usb_req_name DB 'Close USB req', 0
-
-close_usb_req   Proc far
-    push ds
-    push es
-    push fs
-    push ax
-;
-    mov ax,USB_REQ_HANDLE
-    DerefHandle
-    jc crDone
-;
-    mov ax,ds
-    mov fs,ax
-    mov ds,ds:[ebx].rh_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    jnz crFreeList
-;
-    test fs:[ebx].rh_flags,REQ_FLAG_STARTED
-    jz crFreeList
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz curLeave
-;
-    push ds
-    push fs
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:end_transfer_proc
-    pop fs
-    pop ds
-
-curLeave:
-    LeaveSection ds:usbu_section
-;    
-    mov ax,5
-    WaitMilliSec    
-
-crFreeList:
-    mov ax,fs:[ebx].rh_list
-
-crFreeLoop:
-    or ax,ax
-    jz crFreeHandle
-;
-    cmp ax,-1
-    jz crFreeHandle
-;
-    mov es,ax
-    mov ax,es:re_buf_sel
-    or ax,ax
-    jz crBufFree
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-    
-crBufFree:    
-    mov ax,es:re_next    
-    FreeMem
-    jmp crFreeLoop
-
-crFreeHandle:
-   FreeHandle
-
-crDone: 
-    pop ax
-    pop fs
-    pop es
-    pop ds
-    retf32
-close_usb_req   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2887,313 +2182,6 @@ config_usb_hub       Proc near
     pop ax
     retf32
 config_usb_hub    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       CreateUserPipe
-;
-;       description:    Create user pipe
-;
-;       parameters:     DS      Port sel
-;                       ES      Function sel
-;                       DL      Pipe #
-;                       DH      Copy
-;
-;       RETURNS:        AX      User pipe
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateUserPipe  Proc near
-    stc
-    ret
-CreateUserPipe  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:       OpenUsbPipe
-;
-;       description:    Open USB pipe
-;
-;       parameters:     BX      Controller #
-;                       AL      Device address (1..128)
-;                       DL      Pipe # (bit 7 is direction)
-;
-;       RETURNS:        BX      Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_usb_pipe_name DB 'Open USB Pipe', 0
-
-open_usb_pipe    Proc far
-    stc
-    retf32
-open_usb_pipe    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CloseUsbPipe
-;
-;           DESCRIPTION:    Close a USB pipe handle
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_usb_pipe_name     DB 'Close USB Pipe',0
-
-close_usb_pipe  Proc far
-    retf32
-close_usb_pipe  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           delete_pipe_handle
-;
-;           DESCRIPTION:    BX              USB pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_pipe_handle   Proc far
-    push ds
-    push ebx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc delete_pipe_handle_done
-;
-    push ds
-    mov ds,ds:[ebx].up_pipe_sel
-    call CleanupPipe
-    pop ds
-;
-    FreeHandle
-    clc
-
-delete_pipe_handle_done:
-    pop ebx
-    pop ds
-    retf32
-delete_pipe_handle   Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StartWaitForPipe
-;
-;           DESCRIPTION:    Start a wait for pipe
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_wait_for_pipe     PROC far
-    push ds
-    push fs
-;
-    mov ds,es:pw_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    jz swfpLock
-;
-    SignalWait
-    jmp swfpDone
-
-swfpLock:
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    jz swfpSignalLeave
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    mov fs:usbp_wait,es
-    call fword ptr ds:is_transfer_done_proc
-    pop ds
-    jc swfpLeave
-;    
-    mov fs:usbp_wait,0
-
-swfpSignalLeave:
-    SignalWait
-
-swfpLeave:
-    LeaveSection ds:usbu_section
-
-swfpDone:
-    pop fs
-    pop ds    
-    retf32
-start_wait_for_pipe Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StopWaitForPipe
-;
-;           DESCRIPTION:    Stop a wait for pipe
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_wait_for_pipe      PROC far
-    push ds
-    push fs
-;
-    mov ds,es:pw_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz swDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz swLeave
-;
-    mov fs,ax
-    mov fs:usbp_wait,0
-
-swLeave:
-    LeaveSection ds:usbu_section
-
-swDone:
-    pop fs
-    pop ds    
-    retf32
-stop_wait_for_pipe Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ClearWaitForPipe
-;
-;           DESCRIPTION:    Clear wait for pipe
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_wait_for_pipe     PROC far
-    retf32
-clear_wait_for_pipe Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           IsPipeIdle
-;
-;           DESCRIPTION:    Check if pipe is idle
-;
-;           PARAMETERS:         ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_pipe_idle    PROC far
-    push ds
-    push fs
-;
-    mov ds,es:pw_pipe_sel
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz ipdDone
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz ipdLeave
-;
-    push ds
-    mov fs,ax
-    mov ds,ds:usbu_func_sel
-    call fword ptr ds:is_transfer_done_proc
-    cmc
-    pop ds
-
-ipdLeave:
-    LeaveSection ds:usbu_section
-
-ipdDone:
-    pop fs
-    pop ds    
-    retf32
-is_pipe_idle Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           AddWaitForPipe
-;
-;           DESCRIPTION:    Add a wait for pipe
-;
-;           PARAMETERS:         BX      Wait handle
-;               AX      Pipe handle
-;               ECX     Signalled ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_pipe_name  DB 'Add Wait For Pipe',0
-
-add_wait_tab:
-aw0 DD OFFSET start_wait_for_pipe,      SEG code
-aw1 DD OFFSET stop_wait_for_pipe,       SEG code
-aw2 DD OFFSET clear_wait_for_pipe,      SEG code
-aw3 DD OFFSET is_pipe_idle,             SEG code
-
-add_wait_for_pipe       PROC far
-    push ds
-    push es
-    push fs
-    push eax
-    push ebx
-    push edx
-    push edi
-;
-    push bx
-    mov bx,ax
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc add_wait_pop_done
-;
-    mov dx,ds:[ebx].up_pipe_sel
-    pop bx
-;
-    mov ax,cs
-    mov es,ax
-    mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
-    mov edi,OFFSET add_wait_tab
-    AddWait
-    jc add_wait_done
-;
-    mov es:pw_pipe_sel,dx
-    clc
-    jmp add_wait_done
-
-add_wait_pop_done:
-    pop bx
-    
-add_wait_done:
-    pop edi
-    pop edx
-    pop ebx
-    pop eax
-    pop fs
-    pop es
-    pop ds
-    retf32
-add_wait_for_pipe       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4084,6 +3072,97 @@ hurfDone:
     retf32
 has_usb_reset_failed   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;  obsolete code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_usb_pipe_name DB 'Open USB Pipe', 0
+
+open_usb_pipe    Proc far
+    stc
+    retf32
+open_usb_pipe    Endp
+
+close_usb_pipe_name     DB 'Close USB Pipe',0
+
+close_usb_pipe  Proc far
+    retf32
+close_usb_pipe  Endp
+    
+add_wait_for_pipe_name DB 'Add Wait for pipe', 0
+
+add_wait_for_pipe       PROC far
+    stc
+    retf32
+add_wait_for_pipe       ENDP
+
+create_usb_req_name DB 'Create USB req', 0
+
+create_usb_req  Proc far
+    stc
+    retf32
+create_usb_req   Endp
+
+add_write_usb_data_req_name DB 'Add Write USB data req', 0
+
+add_write_usb_data_req  Proc far
+    stc
+    retf32
+add_write_usb_data_req   Endp
+
+add_read_usb_data_req_name DB 'Add Read USB data req', 0
+
+add_read_usb_data_req   Proc far
+    stc
+    retf32
+add_read_usb_data_req   Endp
+
+start_usb_req_name DB 'Start USB req', 0
+
+start_usb_req   Proc far
+    stc
+    retf32
+start_usb_req   Endp
+
+stop_usb_req_name DB 'Stop USB req', 0
+
+stop_usb_req    Proc far
+    stc
+    retf32
+stop_usb_req   Endp
+
+is_usb_req_started_name DB 'Is USB Req Started', 0
+
+is_usb_req_started      Proc far
+    stc
+    retf32
+is_usb_req_started   Endp
+
+is_usb_req_ready_name DB 'Is USB Req Ready', 0
+
+is_usb_req_ready    Proc far
+    stc
+    retf32
+is_usb_req_ready   Endp
+
+get_usb_req_data_name DB 'Get USB Req Data', 0
+
+get_usb_req_data    Proc far
+    stc
+    retf32
+get_usb_req_data   Endp
+
+close_usb_req_name DB 'Close USB req', 0
+
+close_usb_req   Proc far
+    stc
+    retf32
+close_usb_req   Endp
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4111,10 +3190,6 @@ init    Proc far
 ;
     mov ax,USB_DEV_HANDLE
     mov edi,OFFSET delete_dev_handle
-    RegisterHandle
-;
-    mov ax,USB_PIPE_HANDLE
-    mov edi,OFFSET delete_pipe_handle
     RegisterHandle
 ;
     mov esi,OFFSET init_usb_function
