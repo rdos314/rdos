@@ -145,17 +145,6 @@ ohc_curr_cnt    DB 32 DUP(?)
 
 ohci_func_sel    ENDS
 
-ohci_dev_sel   STRUC
-
-usb_dev_base       usb_device_struc <>
-
-dev_control_ed     DD ?
-dev_control_tail   DD ?
-dev_control_head   DD ?
-dev_curr_addr      DB ?
-
-ohci_dev_sel   ENDS
-
 
 ; this should be at 700h in the ohci_func_sel, interrupt ES descriptors
 
@@ -183,6 +172,31 @@ hcca_pad1       DW ?
 hcca_done_head      DD ?
 
 hcca_struc  ENDS
+
+ohci_pipe_struc    STRUC
+
+op_rd_ptr       DW ?
+op_wr_ptr       DW ?
+op_entry_count  DW ?
+
+op_entry_arr    DW ?
+
+ohci_pipe_struc    ENDS
+
+ohci_dev_sel   STRUC
+
+usb_dev_base       usb_device_struc <>
+
+dev_control_ed     DD ?
+dev_control_tail   DD ?
+dev_control_head   DD ?
+dev_curr_addr      DB ?
+dev_pad            DB ?,?,?
+
+dev_in_ep_arr      DW 15 DUP(?)
+dev_out_ep_arr     DW 15 DUP(?)
+
+ohci_dev_sel   ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -299,7 +313,6 @@ InitTd  PROC near
     mov fs:[edx].otd_next_va,0
     ret
 InitTd  ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -855,6 +868,8 @@ CreateControl   Proc far
     mov fs,dx
     call AddControlEd
     mov es:dev_control_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov es:dev_control_tail,eax
 ;
     xor ax,ax
     mov fs,ax
@@ -880,19 +895,6 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBulk   Proc far
-    push es
-    pushad
-;    
-    mov ax,es
-    mov fs,ax
-    mov dx,flat_sel
-    mov es,dx
-    call AddBulkEd
-;    mov fs:osp_ed,edx
-;    call InsertPipe
-;
-    popad
-    pop es
     retf32
 CreateBulk   Endp
 
@@ -914,23 +916,6 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntr   Proc far
-    push es
-    pushad
-;    
-    mov cl,al
-;    
-    mov ax,es
-    mov fs,ax
-    mov dx,flat_sel
-    mov es,dx
-    call AddIntrEd
-;    mov fs:osp_ed,edx
-;    mov fs:osp_intr_count,si
-;    mov fs:osp_intr_list,di
-;    call InsertPipe
-;
-    popad
-    pop es
     retf32
 CreateIntr  Endp
 
@@ -1961,6 +1946,8 @@ ControlMsg   Endp
 
 ConfigPipe   Proc far
     int 3
+    mov ax,flat_sel
+    mov fs,ax
 ;
     mov al,gs:[di].ued_attrib
     and al,3
@@ -1977,7 +1964,9 @@ cpBulk:
     mov cx,gs:[di].ued_maxsize
     mov dl,gs:[di].ued_address
     and dl,8Fh
-;    call CreateBulk
+
+    call AddBulkEd
+;
     mov dl,gs:[di].ued_address
     and dl,80h
     mov fs:usbp_dir,dl
@@ -1987,8 +1976,17 @@ cpInt:
     mov cx,gs:[di].ued_maxsize
     mov dl,gs:[di].ued_address
     and dl,0Fh
-    mov dh,gs:[di].ued_interval
-;    call CreateInterrupt
+    mov cl,gs:[di].ued_interval
+;    
+    call AddIntrEd
+;    mov fs:osp_ed,edx
+;    mov fs:osp_intr_count,si
+;    mov fs:osp_intr_list,di
+;    call InsertPipe
+;
+    popad
+    pop es
+
     mov dl,gs:[di].ued_address
     and dl,80h
     mov fs:usbp_dir,dl
@@ -2052,45 +2050,34 @@ FreeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDev   Proc far
+    push fs
     pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
 ;
     mov ax,SIZE ohc_td_struc
     mov si,SIZE ohci_dev_sel
     mov cx,16
     CreateMemBlk32
 ;
-    popad
+    xor ax,ax
+    mov cx,15
+    mov di,OFFSET dev_in_ep_arr
+    rep stosw
 ;
-    InitUsbDev
+    mov cx,15
+    mov di,OFFSET dev_out_ep_arr
+    rep stosw
 ;
-    push fs
-    pushad
-;
-    mov ax,flat_sel
-    mov fs,ax
-    mov cx,SIZE ohc_td_struc
-    AllocateMemBlk
-    mov fs:[edx].otd_resv,0
-    mov fs:[edx].otd_flags,0E4h
-    mov fs:[edx].otd_cbp,0
-    mov fs:[edx].otd_be,0
-    mov fs:[edx].otd_next_td,0
-    mov fs:[edx].otd_next_va,0
-    mov es:dev_control_tail,eax
-;    
-    mov cx,SIZE ohc_td_struc
-    AllocateMemBlk
-    mov fs:[edx].otd_resv,0
-    mov fs:[edx].otd_flags,0E4h
-    mov fs:[edx].otd_cbp,0
-    mov fs:[edx].otd_be,0
-    mov fs:[edx].otd_next_td,0
-    mov fs:[edx].otd_next_va,0
+    call AllocateTd
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
 ;
     popad
     pop fs
+;
+    InitUsbDev
     retf32
 CreateDev  Endp
 
