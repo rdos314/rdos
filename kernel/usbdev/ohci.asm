@@ -74,16 +74,13 @@ ohc_es_struc    STRUC
 ;HC part
 
 oes_fa_en       DW ?
-oes_mps     DW ?
+oes_mps         DW ?
 oes_tailp       DD ?
 oes_headp       DD ?
 oes_nexted      DD ?
 
 ;driver part
 
-oes_my_va       DD ?
-oes_tail_va     DD ?
-oes_head_va     DD ?
 oes_next_va     DD ?
 
 ohc_es_struc    ENDS
@@ -95,39 +92,19 @@ ohc_td_struc    STRUC
 
 ;HC part
 
-otd_resv    DW ?
+otd_resv        DW ?
 otd_flags       DW ?
-otd_cbp     DD ?
+otd_cbp         DD ?
 otd_next_td     DD ?
-otd_be      DD ?
+otd_be          DD ?
 
 ;driver part
 
-otd_phys        DD ?
 otd_next_va     DD ?
 otd_buffer_va   DD ?
 otd_buffer_size DW ?
-otd_spare       DW ?
 
 ohc_td_struc    ENDS
-
-OSP_FLAG_TRANSFER_PENDING   = 1
-OSP_FLAG_TRANSFER_OK        = 2
-OSP_FLAG_SINGLE             = 4
-
-ohci_pipe   STRUC
-
-osp_pipe_base       usb_pipe_struc <>
-osp_ed          DD ?
-osp_prev        DW ?
-osp_next        DW ?
-osp_intr_list       DW ?
-osp_intr_count      DW ?
-osp_data_size       DW ?
-osp_flags       DB ?
-osp_done        DB ?
-
-ohci_pipe   ENDS
 
 ohci_func_sel   STRUC
 
@@ -294,9 +271,6 @@ InitEd  PROC near
     mov fs:[edx].oes_tailp,0
     mov fs:[edx].oes_headp,0
     mov fs:[edx].oes_nexted,0
-    mov fs:[edx].oes_my_va,edx
-    mov fs:[edx].oes_tail_va,0
-    mov fs:[edx].oes_head_va,0
     mov fs:[edx].oes_next_va,0
     ret
 InitEd  ENDP
@@ -322,7 +296,6 @@ InitTd  PROC near
     mov fs:[edx].otd_cbp,0
     mov fs:[edx].otd_next_td,0
     mov fs:[edx].otd_be,0
-    mov fs:[edx].otd_phys,eax
     mov fs:[edx].otd_next_va,0
     ret
 InitTd  ENDP
@@ -423,8 +396,6 @@ AddControlEd    PROC near
     call AllocateTd
     mov fs:[ebx].oes_headp,eax
     mov fs:[ebx].oes_tailp,eax
-    mov fs:[ebx].oes_head_va,edx
-    mov fs:[ebx].oes_tail_va,edx
 ;    
     pop edx
     pop eax
@@ -471,8 +442,6 @@ AddBulkEd       PROC near
     call AllocateTd
     mov fs:[ebx].oes_headp,eax
     mov fs:[ebx].oes_tailp,eax
-    mov fs:[ebx].oes_head_va,edx
-    mov fs:[ebx].oes_tail_va,edx
 ;    
     pop edx
     pop eax
@@ -672,8 +641,6 @@ AddIntrEd       PROC near
     call AllocateTd
     mov fs:[ebx].oes_headp,eax
     mov fs:[ebx].oes_tailp,eax
-    mov fs:[ebx].oes_head_va,edx
-    mov fs:[ebx].oes_tail_va,edx
 ;    
     pop edx
     pop eax
@@ -916,23 +883,12 @@ CreateBulk   Proc far
     push es
     pushad
 ;    
-    mov ah,es:usbd_speed
-    push ax
-    mov eax,SIZE ohci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    pop ax
-    mov es:usbp_speed,ah
-;    
     mov ax,es
     mov fs,ax
     mov dx,flat_sel
     mov es,dx
     call AddBulkEd
-    mov fs:osp_ed,edx
+;    mov fs:osp_ed,edx
 ;    call InsertPipe
 ;
     popad
@@ -961,16 +917,6 @@ CreateIntr   Proc far
     push es
     pushad
 ;    
-    mov ah,es:usbd_speed
-    push ax
-    mov eax,SIZE ohci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    pop ax
-    mov es:usbp_speed,ah
     mov cl,al
 ;    
     mov ax,es
@@ -978,9 +924,9 @@ CreateIntr   Proc far
     mov dx,flat_sel
     mov es,dx
     call AddIntrEd
-    mov fs:osp_ed,edx
-    mov fs:osp_intr_count,si
-    mov fs:osp_intr_list,di
+;    mov fs:osp_ed,edx
+;    mov fs:osp_intr_count,si
+;    mov fs:osp_intr_list,di
 ;    call InsertPipe
 ;
     popad
