@@ -1951,11 +1951,10 @@ read_usb_descriptors       Proc far
     stc
     jz rudDone
 ;
-    cmp ax,fs:usbp_maxlen
+    cmp ax,es:usbd_maxlen
     je rudLenOk
 ;    
     mov es:usbd_maxlen,ax
-    mov fs:usbp_maxlen,ax
     call fword ptr ds:update_control_maxlen_proc
 
 rudLenOk:
@@ -2065,7 +2064,7 @@ notify_usb_attach       Proc far
     pushad
 ;
     mov ah,al
-    mov al,fs:usbp_address
+    mov al,es:usbd_address
     mov bx,ds:usb_controller_id
     call trap_usb_attach
     clc
