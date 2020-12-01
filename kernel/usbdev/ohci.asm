@@ -171,12 +171,13 @@ hcca_struc  ENDS
 
 ohci_pipe_struc    STRUC
 
+op_descr        DB 8 DUP(?)
+
 op_rd_ptr       DW ?
 op_wr_ptr       DW ?
 op_entry_count  DW ?
 op_intr_count   DW ?
 op_intr_list    DW ?
-op_maxlen       DW ?
 op_ed           DD ?
 op_tail         DD ?
 
@@ -1939,6 +1940,7 @@ ControlMsg   Endp
 ;       PARAMETERS:     FS	Flat sel
 ;                       CX      Buffer count
 ;                       AX      Buffer size
+;                       GS:EDI  Descriptor
 ;
 ;       RETURNS:        BX      Pipe sel
 ;
@@ -1951,15 +1953,18 @@ AllocatePipe	Proc near
     push edx
     push esi
     push edi
-    push ebp
 ;
-    movzx ebp,ax
-;
+    mov esi,edi
+    mov ax,gs:[di].ued_maxsize
     push es
     movzx eax,cx
     shl ax,2
     add ax,OFFSET op_entry_arr
     AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov ecx,SIZE usb_endpoint_descr
+    rep movs es:[edi],gs:[esi]
 ;
     mov es:op_rd_ptr,0
     mov es:op_wr_ptr,0
@@ -1977,7 +1982,7 @@ apTdLoop:
     AllocateMemBlk
     mov esi,edx
 ;
-    mov cx,bp
+    mov cx,ds:ued_maxsize
     AllocateMemBlk
 ;
     mov fs:[esi].otd_resv,0
@@ -1996,10 +2001,8 @@ apTdLoop:
     pop cx
     loop apTdLoop
 ;
-    mov ds:op_maxlen,bp
     mov bx,ds
 ;
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -2064,18 +2067,19 @@ StartInPipe     Endp
 ;       PARAMETERS:     DS      Pipe selector
 ;                       ES      Device selector
 ;                       FS      Flat sel
-;                       DL      Endpoint
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartPipe  Proc near
     push eax
+    push edx
     push esi
 ;
     mov esi,ds:op_ed
-    mov ax,ds:op_maxlen
+    mov ax,ds:ued_maxsize
     mov fs:[esi].oes_mps,ax
 ;
+    mov dl,ds:ued_address
     mov ah,dl
     and ah,0Fh
     xor al,al
@@ -2105,6 +2109,7 @@ spSave:
 
 spDone:
     pop esi
+    pop edx
     pop eax
     ret
 StartPipe  Endp
@@ -2145,7 +2150,6 @@ ConfigPipe   Proc far
     jmp cpDone
 
 cpBulk:
-    mov ax,gs:[di].ued_maxsize
     call AllocatePipe
 ;
     mov dl,gs:[di].ued_address
@@ -2167,9 +2171,8 @@ cpBulkIn:
     mov ds:op_ed,edx
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
-    call StartInPipe
 ;
-    mov dl,gs:[di].ued_address
+    call StartInPipe
     call StartPipe
     pop ds
 ;
@@ -2190,13 +2193,11 @@ cpBulkOut:
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
 ;
-    mov dl,gs:[di].ued_address
     call StartPipe
     clc
     jmp cpDone
 
 cpIntr:
-    mov ax,gs:[di].ued_maxsize
     call AllocatePipe
     mov dl,gs:[di].ued_address
     movzx si,dl
@@ -2217,9 +2218,8 @@ cpIntrIn:
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
     pop di
-    call StartInPipe
 ;
-    mov dl,gs:[di].ued_address
+    call StartInPipe
     call StartPipe
     clc
     jmp cpDone
@@ -2236,7 +2236,6 @@ cpIntrOut:
     mov ds:op_tail,eax
     pop di
 ;
-    mov dl,gs:[di].ued_address
     call StartPipe
     clc
 
