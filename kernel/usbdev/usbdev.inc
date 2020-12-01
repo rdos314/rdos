@@ -222,26 +222,3 @@ usbp_buf_size       DW ?
 usbp_buf_sel        DW ?
 
 usb_pipe_struc   ENDS
-
-usb_port_struc  STRUC
-
-usb_function_sel    DW ?
-usb_sync_section    section_typ <>
-usb_in_pipe_arr     DW 16 DUP(?)
-usb_out_pipe_arr    DW 16 DUP(?)
-usb_port            DB ?
-
-usb_port_struc  ENDS
-
-usb_user_pipe_struc     STRUC
-
-usbu_func_sel       DW ?
-usbu_port_sel       DW ?
-usbu_pipe_sel       DW ?
-usbu_data_list      DW ?
-usbu_section        section_typ <>
-usbu_copy           DB ?
-usbu_pipe           DB ?
-usbu_deleted        DB ?
-
-usb_user_pipe_struc     ENDS
