@@ -3401,6 +3401,8 @@ htUnlock:
     jmp htDetached
 
 htDetach:
+    UnlinkUsbDev
+;
     mov eax,1
     shl eax,cl
     lock or ds:xhc_detach_pend,eax

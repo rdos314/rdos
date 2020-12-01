@@ -1273,6 +1273,8 @@ htDoUnlock:
     jmp htDetached
 
 htDetach:
+    UnlinkUsbDev
+;
     mov al,cl
     NotifyUsbDetach
 ;
