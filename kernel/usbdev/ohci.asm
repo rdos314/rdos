@@ -178,6 +178,7 @@ usb_dev_base       usb_device_struc <>
 dev_control_ed     DD ?
 dev_control_tail   DD ?
 dev_control_head   DD ?
+dev_curr_addr      DB ?
 
 ohci_dev_sel   ENDS
 
@@ -2129,27 +2130,25 @@ ClosePipe   Endp
 ;           DESCRIPTION:    Change address for pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChangeAddress   Proc far
-    push es
+    push fs
     push eax
     push edx
 ;
-    mov al,es:usbd_address
-    mov fs:usbp_address,al
-;
     mov ax,flat_sel
-    mov es,ax    
+    mov fs,ax
 ;
-    mov edx,fs:osp_ed
-    call InitPipeEd 
+    mov al,es:usbd_address
+    mov es:dev_curr_addr,al
+    mov edx,es:dev_control_ed
+    or fs:[edx].oes_fa_en,4000h
 ;
     pop edx
     pop eax
-    pop es
+    pop fs
     retf32
 ChangeAddress   Endp
 
@@ -2819,7 +2818,7 @@ RunControl   Proc near
 rcMaxSizeOk:
     mov fs:[edx].oes_mps,ax
 ;
-    xor ax,ax
+    movzx ax,es:dev_curr_addr
     cmp es:usbd_speed,0
     jnz rcSpeedOk
 ;
@@ -3147,6 +3146,7 @@ CreateDev   Proc far
     mov fs:[edx].otd_next_td,0
     mov fs:[edx].otd_next_va,0
     mov es:dev_control_head,edx
+    mov es:dev_curr_addr,0
 ;
     popad
     pop fs
