@@ -61,6 +61,7 @@ udh_base        handle_header <>
 udh_dev_sel     DW ?
 
 usbdev_handle_struc    ENDS
+
 usbdev_dev_struc    STRUC
 
 udd_sel          DW ?
@@ -592,89 +593,6 @@ delete_dev_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateBuf32
-;
-;       description:    Allocate 32-bit buffer
-;
-;       parameters:     CX      Size
-;
-;       Returns:        EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateBuf32   Proc near
-    push eax
-    push ebx
-    push ecx
-;
-    movzx eax,cx
-    AllocateBigLinear
-;
-    push edx
-
-abLoop:
-    AllocatePhysical32
-    mov al,13h
-    SetPageEntry
-    add edx,1000h
-    loop abLoop
-;
-    pop edx
-;
-    pop ecx
-    pop ebx
-    pop eax        
-    ret
-AllocateBuf32   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateBufSel
-;
-;       description:    Allocate buffer selector
-;
-;       parameters:     AX      Size
-;                       DS      USB device sel
-;
-;       Returns:        ES      Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateBufSel   Proc near
-    call fword ptr ds:has_64bit_proc
-    jnc abfNorm
-;
-    HasPhysical64
-    jc abfNorm
-
-abf32:
-    push bx
-    push ecx
-    push edx
-;
-    movzx eax,ax
-    mov ecx,eax
-    call AllocateBuf32
-    AllocateGdt
-    CreateDataSelector16
-    mov es,bx
-;
-    pop edx
-    pop ecx
-    pop bx    
-    jmp abfDone
-
-abfNorm:
-    AllocateSmallGlobalMem
-
-abfDone:        
-    ret
-AllocateBufSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitUsbFunction
 ;
 ;           description:    Init USB function selector
@@ -1135,28 +1053,6 @@ usdNoHub:
     popa
     retf32
 init_usb_dev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IsUsbPipeConnected
-;
-;       Description:    Is usb pipe connected
-;
-;       PARAMETERS:     FS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_usb_pipe_connected_name DB 'Is Usb Pipe Connected', 0
-
-is_usb_pipe_connected       Proc far
-    push ds
-    mov ds,fs:usbp_dev_sel
-    mov ds,ds:usbd_func_sel
-    call fword ptr ds:is_connected_proc
-    pop ds
-    retf32
-is_usb_pipe_connected       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2127,6 +2023,13 @@ has_usb_reset_failed   Endp
 ;  obsolete code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_pipe_connected_name DB 'Is Usb Pipe Connected', 0
+
+is_usb_pipe_connected       Proc far
+    clc
+    retf32
+is_usb_pipe_connected       Endp
 
 open_usb_pipe_name DB 'Open USB Pipe', 0
 
