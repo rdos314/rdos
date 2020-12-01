@@ -193,47 +193,6 @@ AddDev Proc near
 AddDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           RemoveDev
-;
-;       DESCRIPTION:    Remove device
-;
-;       parameters:     DS      USB function selector
-;                       AL      Usb port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveDev       Proc near
-    push es
-    pushad
-;
-    movzx bx,al
-    add bx,bx
-    xor ax,ax
-    xchg ax,ds:[bx].usb_descr_arr
-    or ax,ax
-    jz rdDone
-;
-    push ds
-    mov ds,ax
-    mov ds:udd_deleted,1
-    EnterSection ds:udd_section
-    LeaveSection ds:udd_section
-    lock sub ds:udd_ref_count,1
-    pop ds
-    jnz rdDone
-;
-    mov es,ax
-    FreeMem
-
-rdDone:
-    popad
-    pop es
-    ret
-RemoveDev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SendDevControlMsg
@@ -2077,6 +2036,50 @@ notify_usb_attach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UnlinkUsbDevice
+;
+;           description:    Unlink USB device
+;
+;       parameters:         DS      USB function selector
+;                           ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlink_usb_dev_name DB 'Unlink USB', 0
+
+unlink_usb_dev       Proc far
+    pushad
+;
+    lock or es:usbd_flags,FLAG_DETACHED
+    movzx bx,es:usbd_port
+    add bx,bx
+    xor ax,ax
+    xchg ax,ds:[bx].usb_descr_arr
+    or ax,ax
+    jz uudDone
+;
+    push ds
+    mov ds,ax
+    mov ds:udd_deleted,1
+    EnterSection ds:udd_section
+    LeaveSection ds:udd_section
+    lock sub ds:udd_ref_count,1
+    pop ds
+    jnz uudDone
+;
+    mov es,ax
+    FreeMem
+
+uudDone:
+    call fword ptr ds:unlink_proc
+;
+    popad
+    retf32
+unlink_usb_dev     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           NotifyUsbDetach
 ;
 ;           description:    Notify USB detach event
@@ -2089,18 +2092,9 @@ notify_usb_attach   Endp
 
 notify_usb_detach_name DB 'Notify USB Detach', 0
 
-detach_text DB 'Detach', 0
-
 notify_usb_detach       Proc far
     push es
     pushad
-;
-    lock or es:usbd_flags,FLAG_DETACHED
-    call RemoveDev
-;
-    mov ah,al
-    call RemoveUsbDevice
-    jc nudDone
 ; 
     mov bx,ds:usb_controller_id
     mov al,es:usbd_address
@@ -4818,6 +4812,12 @@ init    Proc far
     mov edi,OFFSET init_usb_dev_name
     xor cl,cl
     mov ax,init_usb_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET unlink_usb_dev
+    mov edi,OFFSET unlink_usb_dev_name
+    xor cl,cl
+    mov ax,unlink_usb_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET address_usb_dev

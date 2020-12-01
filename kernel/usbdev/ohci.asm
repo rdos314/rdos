@@ -2788,7 +2788,7 @@ htDoUnlock:
     jmp htDetached
 
 htDetach:
-    call fword ptr ds:unlink_proc
+    UnlinkUsbDev
 ;
     mov al,cl
     NotifyUsbDetach
