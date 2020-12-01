@@ -644,8 +644,8 @@ AddIntrEd       PROC near
     mov ebx,ds:[di].oes_nexted
     mov fs:[edx].oes_nexted,ebx
 ;
-    mov fs:[di].oes_next_va,edx
-    mov fs:[di].oes_nexted,eax
+    mov ds:[di].oes_next_va,edx
+    mov ds:[di].oes_nexted,eax
 ;
     mov ebx,edx
     push eax
