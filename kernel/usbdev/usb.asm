@@ -608,6 +608,90 @@ send_usb_dev_control_msg32    Proc far
     retf32
 send_usb_dev_control_msg32      Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigUsbPipe
+;
+;       description:    Configure USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       CX        Buffer entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_usb_pipe_name DB 'Configure Usb Pipe', 0
+
+config_usb_pipe	Proc far
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push edi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc cdpDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz cdpDone
+;
+    EnterSection ds:udd_section
+;
+    mov es,ds:udd_sel    
+    mov ax,es:usbd_curr_config
+    or ax,ax
+    jz cdpLeaveFail
+;
+    mov gs,ax
+    xor edi,edi
+    movzx bx,gs:ucd_len
+    add di,bx
+
+cdpDescrLoop:
+    mov al,gs:[di].udd_type
+    cmp al,5
+    jne cdpNextDescr
+;
+    cmp dl,gs:[di].ued_address
+    jne cdpNextDescr
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:config_pipe_proc
+    pop ds
+    LeaveSection ds:udd_section
+    jmp cdpDone
+
+cdpNextDescr:
+    movzx bx,gs:[di].ucd_len
+    or bx,bx
+    jz cdpLeaveFail
+;
+    add di,bx
+    cmp di,gs:ucd_size
+    jb cdpDescrLoop    
+
+cdpLeaveFail:
+    LeaveSection ds:udd_section
+    stc
+
+cdpDone:
+    pop edi
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds    
+    retf32
+config_usb_pipe Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1600,6 +1684,7 @@ init_usb_dev       Proc far
     mov es:usbd_speed,ah
     mov es:usbd_flags,0
     mov es:usbd_maxlen,8
+    mov es:usbd_curr_config,0
 ;
     or bx,bx
     jz usdNoHub
@@ -1703,7 +1788,6 @@ AddUsbDev       Proc near
 audAdd:
     mov fs,ax
     mov fs:usb_function_sel,es
-    mov fs:usb_configured,0
 ;
     pop di
     pop cx
@@ -1742,7 +1826,6 @@ RemoveUsbDevice       Proc near
 ;
     mov ds,ax
     EnterSection ds:usb_sync_section
-    mov ds:usb_configured,0
 ;
     mov cx,16
     mov si,OFFSET usb_in_pipe_arr
@@ -3037,21 +3120,6 @@ ConfigUsb      Proc near
     jz cudFail
 ;
     mov es,si
-    mov di,OFFSET usbd_control_buf
-    mov es:[di].usd_type,0
-    mov es:[di].usd_req,SET_CONFIG
-;
-    movzx si,es:usbd_port
-    add si,si
-    mov bp,ds:[si].usb_port_arr
-;
-    movzx ax,dl
-    mov es:[di].usd_value,ax
-    mov es:[di].usd_index,0
-    mov es:[di].usd_len,0
-    call fword ptr ds:control_msg_proc
-    jc cudFail
-;
     mov cx,16
     xor si,si
 
@@ -3071,112 +3139,22 @@ cudFindConfigNext:
     jmp cudFail
 
 cudFindConfigOk:
-    xor di,di
-    movzx cx,gs:ucd_len
-    add di,cx
-
-cudDescrLoop:
-    mov al,gs:[di].udd_type
-    cmp al,5
-    jne cudNextDescr
-;
-    mov al,gs:[di].ued_attrib
-    and al,3
-    cmp al,2
-    je cudCreateBulk
-;
-    cmp al,3
-    je cudCreateInterrupt
-;
-    jmp cudNextDescr
-
-cudCreateBulk:
-    mov cx,gs:[di].ued_maxsize
-    mov dl,gs:[di].ued_address
-    and dl,8Fh
-    call CreateBulk
-    mov dl,gs:[di].ued_address
-    and dl,80h
-    mov fs:usbp_dir,dl
-    jmp cudNextDescr
-
-cudCreateInterrupt:
-    mov cx,gs:[di].ued_maxsize
-    mov dl,gs:[di].ued_address
-    and dl,0Fh
-    mov dh,gs:[di].ued_interval
-    call CreateInterrupt
-    mov dl,gs:[di].ued_address
-    and dl,80h
-    mov fs:usbp_dir,dl
-    
-cudNextDescr:
-    movzx cx,gs:[di].ucd_len
-    or cx,cx
-    jz cudFail
-;
-    add di,cx
-    cmp di,gs:ucd_size
-    jb cudDescrLoop    
-;
-    or bp,bp
-    jz cudConfig
-;
-    push ds
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-;
-    mov cx,16
-    mov si,OFFSET usb_in_pipe_arr
-    mov di,OFFSET usbd_in_endpoint_arr
-
-cudInLoop:
-    mov ax,ds:[si]
-    or ax,ax
-    jz cudInNext
-;
-    push ds
-    mov ds,ax
-    EnterSection ds:usbu_section
-    mov ax,es:[di]
-    mov ds:usbu_pipe_sel,ax
-    LeaveSection ds:usbu_section
-    pop ds
-
-cudInNext:
-    add si,2
-    add di,2
-    loop cudInLoop
-;
-    mov cx,16
-    mov si,OFFSET usb_out_pipe_arr
-    mov di,OFFSET usbd_out_endpoint_arr
-
-cudOutLoop:
-    mov ax,ds:[si]
-    or ax,ax
-    jz cudOutNext
-;
-    push ds
-    mov ds,ax
-    EnterSection ds:usbu_section
-    mov ax,es:[di]
-    mov ds:usbu_pipe_sel,ax
-    LeaveSection ds:usbu_section
-    pop ds
-
-cudOutNext:
-    add si,2
-    add di,2
-    loop cudOutLoop
-;
-    mov ds:usb_configured,1
-    LeaveSection ds:usb_sync_section
-    pop ds
+    mov di,OFFSET usbd_control_buf
+    mov es:[di].usd_type,0
+    mov es:[di].usd_req,SET_CONFIG
+    movzx ax,dl
+    mov es:[di].usd_value,ax
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    call fword ptr ds:control_msg_proc
+    jc cudFail
 
 cudConfig:
     pop cx
     call fword ptr ds:config_device_proc
+    jc cudDone
+;
+    mov es:usbd_curr_config,gs
     jmp cudDone
 
 cudFail:
@@ -3220,6 +3198,7 @@ config_usb_device       Proc near
     pop cx
     retf32
 config_usb_device    Endp    
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3461,10 +3440,6 @@ oupAlloc:
     mov ds,bx
 
 oupConfigRetry:
-    mov al,ds:usb_configured
-    or al,al
-    jnz oupConfigOk
-;
     mov ax,25
     WaitMilliSec
     jmp oupConfigRetry
@@ -5078,6 +5053,12 @@ init    Proc far
     mov dx,virt_es_in
     mov ax,send_usb_dev_control_msg_nr
     RegisterUserGate
+;
+    mov esi,OFFSET config_usb_pipe
+    mov edi,OFFSET config_usb_pipe_name
+    xor dx,dx
+    mov ax,config_usb_pipe_nr
+    RegisterBimodalUserGate
     clc
     ret
 init    Endp

@@ -22,5 +22,14 @@
 ##########################################################################*/
 void main()
 {
+    int handle;
+    int size;
+    char buf[8];
+    char *dev;
+    bool ok;
+
+    handle = RdosOpenUsbDevice(1, 2);
+    ok = RdosConfigUsbPipe(handle, 0x81, 16);
+
     RdosTestGate("");
 }
