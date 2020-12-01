@@ -176,7 +176,6 @@ usb_route_str          DD ?
 usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
 usb_thread_arr         DW MAX_USB_HUB_PORTS DUP(?)
 usb_dev_arr            DW MAX_USB_HUB_PORTS DUP(?)
-usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr           DW 128 DUP(?)
 
 usb_function_struc   ENDS
@@ -197,8 +196,6 @@ usbd_curr_config        DW ?
 
 usbd_section            section_typ <>
 
-usbd_in_endpoint_arr    DW 16 DUP(?)
-usbd_out_endpoint_arr   DW 16 DUP(?)
 usbd_control_buf        DB 8 DUP(?)
 usbd_temp_buf           DB 8 DUP(?)
 usbd_device_descr       DB 18 DUP(?)

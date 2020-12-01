@@ -1039,8 +1039,6 @@ init_usb_control_pipe    Proc far
     push ds
     push ax
 ;
-    mov es:usbd_in_endpoint_arr,fs    
-    mov es:usbd_out_endpoint_arr,fs    
     mov es:usbd_maxlen,8
 ;
     mov fs:usbp_dev_sel,es
@@ -1069,213 +1067,6 @@ init_usb_control_pipe    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateBulk
-;
-;           description:    Create bulk-pipe
-;
-;       parameters:     DS      USB device selector
-;                       ES      Usb function selector
-;               CX      Max data size
-;               DL      Pipe # (bit 7 is direction)
-;
-;       RETURNS:    FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBulk    Proc near    
-    push es
-    push ax
-    push bx
-    push dx
-;    
-    call fword ptr ds:create_bulk_proc    
-    movzx bx,dl
-    and bx,0Fh
-    add bx,bx    
-    test dl,80h
-    jz cbOut
-
-cbIn:
-    mov es:[bx].usbd_in_endpoint_arr,fs
-    jmp cbEndpointOK
-
-cbOut:
-    mov es:[bx].usbd_out_endpoint_arr,fs
-
-cbEndpointOk:    
-    and dl,0Fh
-    mov fs:usbp_dev_sel,es
-    mov al,es:usbd_address
-    mov fs:usbp_address,al
-    mov fs:usbp_endpoint,dl
-    mov fs:usbp_seq,0
-    mov fs:usbp_mode,MODE_BULK
-    mov fs:usbp_maxlen,cx
-    mov fs:usbp_signal,0
-    mov fs:usbp_wait,0
-    mov fs:usbp_buf_sel,0
-;
-    push ds
-    mov ax,fs
-    mov ds,ax
-    InitSection ds:usbp_section
-    pop ds    
-;
-    pop dx
-    pop bx
-    pop ax
-    pop es
-    ret
-CreateBulk    Endp    
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateInterrupt
-;
-;           description:    Create interrupt-pipe
-;
-;       parameters:     DS      USB device selector
-;                       ES      USB function selector
-;               CX      Max data size
-;               DL      Pipe #
-;               DH      Interval
-;
-;       RETURNS:    FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateInterrupt    Proc near    
-    push es
-    push ax
-    push bx
-    push dx
-;    
-    mov al,dh
-    mov ah,es:usbd_speed
-    call fword ptr ds:create_interrupt_proc    
-    movzx bx,dl
-    and bx,0Fh
-    add bx,bx    
-    mov es:[bx].usbd_in_endpoint_arr,fs
-;    
-    and dl,0Fh
-    mov fs:usbp_dev_sel,es
-    mov al,es:usbd_address
-    mov fs:usbp_address,al
-    mov fs:usbp_endpoint,dl
-    mov fs:usbp_seq,0
-    mov fs:usbp_mode,MODE_INTR
-    mov fs:usbp_maxlen,cx
-    mov fs:usbp_signal,0
-    mov fs:usbp_wait,0
-    mov fs:usbp_buf_sel,0
-;
-    push ds
-    mov ax,fs
-    mov ds,ax
-    InitSection ds:usbp_section
-    pop ds    
-;
-    pop dx
-    pop bx
-    pop ax
-    pop es
-    ret
-CreateInterrupt    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClosePipe
-;
-;           description:    Close pipe
-;
-;       parameters:     FS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClosePipe   Proc near
-    push ax
-    push bx
-    push cx
-    push es
-;
-    mov fs:usbp_signal,0
-    mov fs:usbp_wait,0
-;
-    mov ax,fs:usbp_buf_sel
-    or ax,ax
-    jz cpBufOk
-;
-    mov es,ax
-    FreeMem
-
-cpBufOk:
-    call fword ptr ds:close_pipe_proc
-;
-    pop es
-    pop cx
-    pop bx
-    pop ax
-    ret
-ClosePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseEndpoint
-;
-;           description:    Close endpoint
-;
-;       parameters:     ES      Device
-;               AL      Endpoint # (bit 7 is direction)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseEndpoint   Proc near
-    push ax
-    push bx
-;
-    movzx bx,al
-    and bx,0Fh
-    add bx,bx
-    test al,80h
-    jz cOut
-
-cIn:
-    mov ax,es:[bx].usbd_in_endpoint_arr
-    mov es:[bx].usbd_in_endpoint_arr,0
-    jmp cEndpointOK
-
-cOut:
-    mov ax,es:[bx].usbd_out_endpoint_arr
-    mov es:[bx].usbd_out_endpoint_arr,0
-
-cEndpointOk:    
-    verr ax
-    jnz ceDone
-
-ceClose:
-    push fs
-;    
-    mov fs,ax
-    call ClosePipe    
-
-ceCloseDone:
-    pop fs
-    
-ceDone:
-    pop bx
-    pop ax
-    ret
-CloseEndpoint   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CloseDevice
 ;
 ;           description:    Close device and cleanup resources
@@ -1292,39 +1083,6 @@ CloseDevice Proc near
 ;    
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
-;
-    mov cx,16
-    mov bx,OFFSET usbd_out_endpoint_arr
-    xor al,al
-
-cdCloseOutEndpointLoop:
-    mov dx,es:[bx]
-    or dx,dx
-    jz cdCloseOutEndpointNext
-;
-    call CloseEndpoint
-
-cdCloseOutEndpointNext:
-    inc al
-    add bx,2
-    loop cdCloseOutEndpointLoop       
-;
-    mov cx,15
-    mov bx,OFFSET usbd_in_endpoint_arr
-    add bx,2
-    mov al,81h
-
-cdCloseInEndpointLoop:
-    mov dx,es:[bx]
-    or dx,dx
-    jz cdCloseInEndpointNext
-;
-    call CloseEndpoint
-
-cdCloseInEndpointNext:
-    inc al
-    add bx,2
-    loop cdCloseInEndpointLoop       
 ;
     mov cx,16
     mov bx,OFFSET usbd_config_sel
@@ -1656,16 +1414,6 @@ usdNoHub:
     movzx bx,al
     add bx,bx
     mov ds:[bx].usb_addr_arr,es
-;        
-    mov cx,16
-    mov di,OFFSET usbd_in_endpoint_arr
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,16
-    mov di,OFFSET usbd_out_endpoint_arr
-    xor ax,ax
-    rep stosw
 ;
     popa
     retf32
@@ -3158,53 +2906,7 @@ config_usb_hub    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateUserPipe  Proc near
-    push ds
-    push es
-    push bx
-    push si
-;
-    mov bx,es
-    mov eax,SIZE usb_user_pipe_struc
-    AllocateSmallGlobalMem
-;
-    InitSection es:usbu_section
-    mov es:usbu_func_sel,bx
-    mov es:usbu_port_sel,ds
-    mov es:usbu_data_list,0
-    mov es:usbu_pipe,dl
-    mov es:usbu_copy,dh
-    mov es:usbu_deleted,0
-;
-    mov ax,ds:usb_function_sel
-    or ax,ax
-    jz cupSave
-;
-    mov ds,ax
-    and dl,8Fh
-    test dl,80h
-    jz cupOut    
-
-cupIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov ax,ds:[si].usbd_in_endpoint_arr
-    jmp cupSave
-
-cupOut:
-    movzx si,dl
-    add si,si
-    mov ax,ds:[si].usbd_out_endpoint_arr
-    jmp cupSave
-
-cupSave:
-    mov es:usbu_pipe_sel,ax
-    mov ax,es
-;
-    pop si
-    pop bx
-    pop es
-    pop ds
+    stc
     ret
 CreateUserPipe  Endp
 
