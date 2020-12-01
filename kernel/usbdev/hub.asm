@@ -549,66 +549,26 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PollPipe
+;       NAME:           ConfigPipe
 ;
-        DESCRIPTION:    Poll pipe
+;       DESCRIPTION:    Config pipe
 ;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe
+;                       CX      Buffer count
+;                       GS:EDI  Endpoint descriptor
 ;
 ;       RETURNS:        NC      OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PollPipe   Proc far
-    int 3
+ConfigPipe   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:config_pipe_proc
+    pop ds
     ret
-PollPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReadPipe
-;
-;       DESCRIPTION:    Read pipe
-;
-;       PARAMETERS:     DS        Function selector
-;                       FS        Pipe selector
-;                       EAX       Timeout i ms
-;                       ES:EDI    Buffer
-;                       CX        Max size
-;
-;       RETURNS:        NC        OK
-;                           CX    Actual size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadPipe   Proc far
-    int 3
-    ret
-ReadPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WritePipe
-;
-;       DESCRIPTION:    Write pipe
-;
-;       PARAMETERS:     DS        Function selector
-;                       FS        Pipe selector
-;                       EAX       Timeout i ms
-;                       ES:EDI    Buffer
-;                       CX        Size
-;
-;       RETURNS:        NC        OK
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WritePipe   Proc far
-    int 3
-    ret
-WritePipe   Endp
+ConfigPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -865,9 +825,7 @@ ht1A DD OFFSET UpdateMaxLen,        SEG code
 ht1B DD OFFSET IssueOne,            SEG code
 ht1C DD OFFSET IsDeviceConnected,   SEG code
 ht1D DD OFFSET ControlMsg,          SEG code
-ht1E DD OFFSET PollPipe,            SEG code
-ht1F DD OFFSET ReadPipe,            SEG code
-ht20 DD OFFSET WritePipe,           SEG code
+ht1E DD OFFSET ConfigPipe,          SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2438,7 +2396,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*21h
+    mov ecx,2*1Fh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

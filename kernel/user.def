@@ -939,5 +939,6 @@ send_usb_dev_control_msg_nr       = 746
 get_hid_device_nr                 = 747
 
 reset_usb_dev_nr                  = 748
+config_usb_pipe_nr                = 749
 
-usergate_entries                  = 750
+usergate_entries                  = 780

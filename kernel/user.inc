@@ -3625,6 +3625,13 @@ SendUsbDeviceControlMsg      MACRO
         UserGate send_usb_dev_control_msg_nr
                                                 ENDM
 
+;   IN  BX          Device handle
+;   IN  CX          Buffer entries
+;   IN  DL          Pipe #
+ConfigUsbPipe      MACRO
+        UserGate config_usb_pipe_nr
+                                                ENDM
+
 ;   IN  BX          Controller #
 ;   IN  AL          Port #
 ;   IN  (E)CX       Buffer size

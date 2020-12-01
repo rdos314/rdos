@@ -889,6 +889,7 @@ int RDOSAPI RdosOpenUsbDevice(int Controller, int Port);
 void RDOSAPI RdosCloseUsbDevice(int handle);
 int RDOSAPI RdosSendUsbDeviceControlMsg(int handle, char Type, char Req, int Value, int Index, char *Buf, int Size);
 void RDOSAPI RdosResetUsbDevice(int handle);
+int RDOSAPI RdosConfigUsbPipe(int handle, char pipe, int entries);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();

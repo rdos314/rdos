@@ -2990,63 +2990,23 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PollPipe
+;       NAME:           ConfigPipe
 ;
-;       DESCRIPTION:    Poll pipe
+;       DESCRIPTION:    Config pipe
 ;
-;       PARAMETERS:     FS      Pipe selector
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe
+;                       CX      Buffer count
+;                       GS:EDI  Endpoint descriptor
 ;
 ;       RETURNS:        NC      OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PollPipe   Proc far
+ConfigPipe   Proc far
     int 3
     retf32
-PollPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReadPipe
-;
-;       DESCRIPTION:    Read pipe
-;
-;       PARAMETERS:     FS        Pipe selector
-;                       EAX       Timeout i ms
-;                       ES:EDI    Buffer
-;                       CX        Max size
-;
-;       RETURNS:        NC        OK
-;                           CX    Actual size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadPipe   Proc far
-    int 3
-    retf32
-ReadPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WritePipe
-;
-;       DESCRIPTION:    Write pipe
-;
-;       PARAMETERS:     FS        Pipe selector
-;                       EAX       Timeout i ms
-;                       ES:EDI    Buffer
-;                       CX        Size
-;
-;       RETURNS:        NC        OK
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WritePipe   Proc far
-    int 3
-    retf32
-WritePipe   Endp
+ConfigPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4229,9 +4189,7 @@ et1A DD OFFSET UpdateMaxLen,       SEG code
 ec1B DD OFFSET IssueOne,           SEG code
 ec1C DD OFFSET IsDeviceConnected,  SEG code
 ec1D DD OFFSET ControlMsg,         SEG code
-ec1E DD OFFSET PollPipe,           SEG code
-ec1F DD OFFSET ReadPipe,           SEG code
-ec20 DD OFFSET WritePipe,          SEG code
+ec1E DD OFFSET ConfigPipe,         SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4253,7 +4211,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

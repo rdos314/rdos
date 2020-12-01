@@ -939,6 +939,7 @@
 #define usergate_get_hid_device 0x000002EB
 
 #define usergate_reset_usb_dev 0x000002EC
+#define usergate_config_usb_pipe 0x000002ED
 
 
 
@@ -1884,6 +1885,7 @@
 #define CallGate_get_hid_device 0x55 0x67 0x9a 235 2 0 0 3 0 0x5d
 
 #define CallGate_reset_usb_dev 0x55 0x67 0x9a 236 2 0 0 3 0 0x5d
+#define CallGate_config_usb_pipe 0x55 0x67 0x9a 237 2 0 0 3 0 0x5d
 
 #else
 
@@ -2827,5 +2829,6 @@
 #define CallGate_get_hid_device 0x3e 0x67 0x9a 235 2 0 0 3 0
 
 #define CallGate_reset_usb_dev 0x3e 0x67 0x9a 236 2 0 0 3 0
+#define CallGate_config_usb_pipe 0x3e 0x67 0x9a 237 2 0 0 3 0
 
 #endif

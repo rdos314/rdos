@@ -156,21 +156,11 @@ is_dev_connected_proc      DD ?,?
 ; OUT CX        Actual size
 control_msg_proc      DD ?,?
 
-; IN  FS        Pipe selector
-poll_pipe_proc      DD ?,?
-
-; IN  FS        Pipe selector
-; IN  EAX       Timeout i ms
-; IN  ES:EDI    Buffer
-; IN  CX        Max size
-; OUT CX        Actual size
-read_pipe_proc      DD ?,?
-
-; IN  FS        Pipe selector
-; IN  EAX       Timeout in ms
-; IN  ES:EDI    Buffer
-; IN  CX        Size
-write_pipe_proc      DD ?,?
+; IN  ES        Device
+; IN  DL        Pipe #
+; IN  CX        Buffer count
+; IN  GS:EDI    Endpoint descriptor
+config_pipe_proc      DD ?,?
 
 
 usb_section            section_typ <>

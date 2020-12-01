@@ -3616,6 +3616,10 @@
     __value [__eax] \
     __modify [__ecx]
 
+#pragma aux RdosConfigUsbPipe = \
+    CallGate_config_usb_pipe \
+    CarryToBool \
+    __parm [__ebx] [__dl] [__ecx]
 
 #pragma aux RdosHasICSP = \
     CallGate_has_icsp \
