@@ -182,7 +182,7 @@ AddDev Proc near
 ;
     movzx bx,al
     add bx,bx
-    mov ds:[bx].usb_descr_arr,es
+    mov ds:[bx].usb_port_arr,es
     mov ds:[bx].usb_dev_arr,fs
 ;
     popad
@@ -271,7 +271,7 @@ open_usb_dev    Proc far
 ;    
     movzx si,al
     add si,si
-    mov si,es:[si].usb_descr_arr
+    mov si,es:[si].usb_port_arr
     or si,si
     jz oudvFail
 ;
@@ -981,11 +981,6 @@ init_usb_function Proc far
     mov es,ax
 ;
     mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_port_arr
-    xor ax,ax
-    rep stosw
-;
-    mov cx,MAX_USB_HUB_PORTS
     mov di,OFFSET usb_dev_arr
     xor ax,ax
     rep stosw
@@ -996,7 +991,7 @@ init_usb_function Proc far
     rep stosw
 ;
     mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_descr_arr
+    mov di,OFFSET usb_port_arr
     xor ax,ax
     rep stosw
 ;
@@ -1701,152 +1696,6 @@ is_usb_pipe_connected       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddUsbDev
-;
-;       Description:    Add USB device
-;
-;       Parameters:     DS      USB function selector
-;                       ES      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddUsbDev       Proc near
-    push fs
-    push ax
-    push bx
-    push cx
-    push di
-;
-    movzx bx,es:usbd_port
-    add bx,bx
-    mov ax,ds:[bx].usb_port_arr
-    or ax,ax
-    jnz audAdd
-;    
-    push es
-    mov eax,SIZE usb_port_struc
-    AllocateSmallGlobalMem
-    mov es:usb_function_sel,0
-    mov es:usb_port,bl
-    InitSection es:usb_sync_section
-;
-    mov cx,16
-    mov di,OFFSET usb_in_pipe_arr
-    xor ax,ax
-    rep stosw
-;
-    mov cx,16
-    mov di,OFFSET usb_out_pipe_arr
-    xor ax,ax
-    rep stosw
-;
-    mov ax,es
-    pop es
-    mov ds:[bx].usb_port_arr,ax
-
-audAdd:
-    mov fs,ax
-    mov fs:usb_function_sel,es
-;
-    pop di
-    pop cx
-    pop bx
-    pop ax
-    pop fs
-    ret
-AddUsbDev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RemoveUsbDevice
-;
-;       Description:    Remove USB device
-;
-;       Parameters:     DS      USB function selector
-;                       AL      Port
-;
-;       Returns:        NC
-;                           ES  USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveUsbDevice       Proc near
-    push ds
-    push ax
-    push ebx
-;
-    movzx bx,al
-    add bx,bx
-    mov ax,ds:[bx].usb_port_arr
-    or ax,ax
-    stc
-    jz rudvDone
-;
-    mov ds,ax
-    EnterSection ds:usb_sync_section
-;
-    mov cx,16
-    mov si,OFFSET usb_in_pipe_arr
-
-rudvInLoop:
-    mov ax,ds:[si]
-    or ax,ax
-    jz rudvInNext
-;
-    push ds
-    mov ds,ax
-    EnterSection ds:usbu_section
-    mov ds:usbu_pipe_sel,0
-    mov ds:usbu_deleted,1
-    LeaveSection ds:usbu_section
-    pop ds
-
-rudvInNext:
-    add si,2
-    loop rudvInLoop
-;
-    mov cx,16
-    mov si,OFFSET usb_out_pipe_arr
-
-rudvOutLoop:
-    mov ax,ds:[si]
-    or ax,ax
-    jz rudvOutNext
-;
-    push ds
-    mov ds,ax
-    EnterSection ds:usbu_section
-    mov ds:usbu_pipe_sel,0
-    mov ds:usbu_deleted,1
-    LeaveSection ds:usbu_section
-    pop ds
-
-rudvOutNext:
-    add si,2
-    loop rudvOutLoop
-;
-    xor ax,ax
-    xchg ax,ds:usb_function_sel
-    LeaveSection ds:usb_sync_section
-;
-    or ax,ax
-    stc
-    jz rudvDone
-;
-    mov es,ax
-    clc
-
-rudvDone:
-    pop ebx
-    pop ax
-    pop ds
-    ret
-RemoveUsbDevice Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AddUsbDevice
 ;
 ;       Description:    Add USB device
@@ -1862,9 +1711,6 @@ add_usb_device       Proc far
     pushad
 ;
     call AddDev
-;
-    mov al,es:usbd_address
-    call AddUsbDev
 ;
     popad
     retf32
@@ -2045,7 +1891,7 @@ notify_usb_attach   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unlink_usb_dev_name DB 'Unlink USB', 0
+unlink_usb_dev_name DB 'Unlink USB Device', 0
 
 unlink_usb_dev       Proc far
     pushad
@@ -2054,7 +1900,7 @@ unlink_usb_dev       Proc far
     movzx bx,es:usbd_port
     add bx,bx
     xor ax,ax
-    xchg ax,ds:[bx].usb_descr_arr
+    xchg ax,ds:[bx].usb_port_arr
     or ax,ax
     jz uudDone
 ;
@@ -3380,120 +3226,7 @@ CreateUserPipe  Endp
 open_usb_pipe_name DB 'Open USB Pipe', 0
 
 open_usb_pipe    Proc far
-    push ds
-    push es
-    push ax
-    push cx
-    push dx
-    push si
-;
-    mov si,SEG data
-    mov ds,si
-    mov si,ds:usb_func_count
-    cmp bx,si
-    jae oupFail
-;
-    mov si,bx
-    add si,si
-    mov si,ds:[si].usb_func_arr
-    or si,si
-    jz oupFail
-;
-    mov es,si
-    cmp al,128
-    jae oupFail
-;    
-    movzx si,al
-    add si,si
-    mov si,es:[si].usb_addr_arr
-    or si,si
-    jz oupFail
-;
-    mov ds,si
-    movzx bx,ds:usbd_port
-    add bx,bx
-    mov bx,es:[bx].usb_port_arr
-    or bx,bx
-    jz oupFail
-;
-    xor dh,dh
-    and dl,8Fh
-;
-    mov ax,es
-    mov ds,ax
-    call fword ptr ds:has_64bit_proc
-    jnc oupAlloc
-;
-    HasPhysical64
-    jc oupAlloc
-;
-    mov dh,1
-
-oupAlloc:
-    mov ds,bx
-
-oupConfigRetry:
-    mov ax,25
-    WaitMilliSec
-    jmp oupConfigRetry
-
-oupConfigOk:
-    EnterSection ds:usb_sync_section
-;
-    and dl,8Fh
-    test dl,80h
-    jz oupOut    
-
-oupIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov ax,ds:[si].usb_in_pipe_arr
-    or ax,ax
-    jnz oupOk
-;
-    call CreateUserPipe
-    mov ds:[si].usb_in_pipe_arr,ax
-    jmp oupOk
-
-oupOut:
-    movzx si,dl
-    add si,si
-    mov ax,ds:[si].usb_out_pipe_arr
-    or ax,ax
-    jnz oupOk    
-;
-    call CreateUserPipe
-    mov ds:[si].usb_out_pipe_arr,ax
-
-oupOk:
-    push ds
-    mov ds,ax
-    EnterSection ds:usbu_section
-    mov ds:usbu_deleted,0
-    LeaveSection ds:usbu_section
-    pop ds
-    LeaveSection ds:usb_sync_section
-;
-    mov cx,SIZE pipe_handle_struc
-    AllocateHandle
-    mov [ebx].up_pipe_sel,ax
-    mov [ebx].hh_sign,USB_PIPE_HANDLE
-    mov esi,ebx
-    mov bx,[ebx].hh_handle
-    clc
-    jmp oupDone
-
-oupFail:
     stc
-
-oupDone:
-    pop si
-    pop dx
-    pop cx
-    pop ax
-    pop es
-    pop ds
     retf32
 open_usb_pipe    Endp
 
@@ -3511,48 +3244,6 @@ open_usb_pipe    Endp
 close_usb_pipe_name     DB 'Close USB Pipe',0
 
 close_usb_pipe  Proc far
-    push ds
-    push ax
-    push ebx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc cupDone
-;
-    push ds
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    call CleanupPipe
-;
-    mov al,ds:usbu_deleted
-    or al,al
-    stc
-    jnz cupFree
-;
-    EnterSection ds:usbu_section
-    mov ax,ds:usbu_pipe_sel
-    or ax,ax
-    stc
-    jz cupLeave
-;
-    push fs
-    mov fs,ax
-    mov fs:usbp_signal,0
-    mov fs:usbp_wait,0
-    pop fs
-
-cupLeave:
-    LeaveSection ds:usbu_section
-
-cupFree:
-    pop ds
-    FreeHandle
-    clc
-
-cupDone:
-    pop ebx
-    pop ax
-    pop ds
     retf32
 close_usb_pipe  Endp
 
