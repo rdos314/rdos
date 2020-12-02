@@ -251,7 +251,8 @@ OhciInt Proc far
     jz oiQueueDone
 ;
     NotifyIrqActivity
-    call UpdateQueue
+    mov bx,ds:ohc_thread
+    Signal
 
 oiQueueDone:
     test al,20h
@@ -2155,7 +2156,7 @@ sipLoop:
 
 sipNext:
     mov edi,edx
-    mov fs:[edi].otd_flags,0F0E4h
+    mov fs:[edi].otd_flags,0F004h
     mov edx,fs:[edi].otd_buffer_va
     LinearToPhysicalMemBlk
     mov fs:[edi].otd_cbp,eax
@@ -2793,37 +2794,6 @@ ConfigDev   Proc far
     clc
     retf32
 ConfigDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateQueue
-;
-;           DESCRIPTION:    Update done queue
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateQueue   Proc near
-    push eax
-    push bx
-;    
-    xor eax,eax
-    mov bx,ohc_hca_base + OFFSET hcca_done_head
-    lock xchg eax,ds:[bx]
-    and al,NOT 1
-    or eax,eax
-    jz update_queue_done
-;
-    mov bx,ds:ohc_thread
-    Signal
-
-update_queue_done:
-    pop bx
-    pop eax
-    ret
-UpdateQueue   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3240,7 +3210,10 @@ otLoop:
     test al,2
     jz otQueueDone
 ;
-    call UpdateQueue
+    push bx
+    mov bx,ds:ohc_thread
+    Signal
+    pop bx
 
 otQueueDone:
     test al,20h
@@ -3345,6 +3318,21 @@ ohci_function_handler:
 
 ofhLoop:
     WaitForSignal    
+    int 3
+;
+    xor eax,eax
+    mov bx,ohc_hca_base + OFFSET hcca_done_head
+    lock xchg eax,ds:[bx]
+    and al,NOT 1
+    or eax,eax
+    jz ofhEnable
+;
+
+ofhEnable:
+    mov es,ds:ohc_reg_sel
+    mov eax,es:HcInterruptStatus
+    and al,NOT 2
+    mov es:HcInterruptStatus,eax
     jmp ofhLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
