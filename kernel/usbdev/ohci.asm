@@ -2268,7 +2268,12 @@ epOut:
     jz epDone
 ;
     mov ds,bx
+    test ds:op_flags,OP_FLAG_ENABLED
+    clc
+    jnz epDone
+;
     EnterSection ds:op_section
+    or ds:op_flags,OP_FLAG_ENABLED
     call StartPipe
     LeaveSection ds:op_section
     clc
@@ -2285,7 +2290,12 @@ epIn:
     jz epDone
 ;
     mov ds,bx
+    test ds:op_flags,OP_FLAG_ENABLED
+    clc
+    jnz epDone
+;
     EnterSection ds:op_section
+    or ds:op_flags,OP_FLAG_ENABLED
     call StartInPipe
     call StartPipe
     LeaveSection ds:op_section
@@ -2312,6 +2322,33 @@ EnablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StopPipe
+;
+;       DESCRIPTION:    Stop pipe
+;
+;       PARAMETERS:     DS      Pipe selector
+;                       ES      Device selector
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopPipe  Proc near
+    push eax
+    push edx
+;
+    mov edx,ds:op_ed
+    mov eax,ds:op_tail
+    mov fs:[edx].oes_tailp,eax
+    mov fs:[edx].oes_headp,eax
+;
+    pop edx
+    pop eax
+    ret
+StopPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           DisablePipe
 ;
 ;       DESCRIPTION:    Disable pipe
@@ -2322,7 +2359,62 @@ EnablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DisablePipe   Proc far
-    int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    test dl,80h
+    jnz dpIn
+
+dpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].dev_out_ep_arr
+    or bx,bx
+    stc
+    jz dpDone
+;
+    mov ds,bx
+    test ds:op_flags,OP_FLAG_ENABLED
+    clc
+    jz dpDone
+;
+    EnterSection ds:op_section
+    and ds:op_flags,NOT OP_FLAG_ENABLED
+    call StopPipe
+    LeaveSection ds:op_section
+    clc
+    jmp dpDone
+
+dpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].dev_in_ep_arr
+    or bx,bx
+    stc
+    jz dpDone
+;
+    mov ds,bx
+    test ds:op_flags,OP_FLAG_ENABLED
+    clc
+    jz dpDone
+;
+    EnterSection ds:op_section
+    and ds:op_flags,NOT OP_FLAG_ENABLED
+    call StopPipe
+    LeaveSection ds:op_section
+
+dpDone:
+    popad
+    pop fs
+    pop ds
     retf32
 DisablePipe   Endp
 
