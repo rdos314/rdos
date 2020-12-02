@@ -62,75 +62,13 @@ create_dev_proc       DD ?,?
 free_dev_proc       DD ?,?
 
 ; IN  ES        Device sel
-; OUT FS        Pipe selector
 create_control_proc	DD ?,?
 
 ; IN  ES        Device sel
-; IN  DL        Pipe #, bit 7 IN.
-; IN  CX        Max packet size
-; OUT FS        Pipe selector
-create_bulk_proc	DD ?,?
-
-; IN  ES        Device sel
-; IN  AL        Interval
-; IN  DL        Pipe #
-; IN  CX        Max packet size
-; OUT FS        Pipe selector
-create_interrupt_proc	DD ?,?
-
-; IN  FS        Pipe selector
-; IN  CX        Size
-; IN  ES:EDI    Data
-add_out_proc      DD ?,?
-
-; IN  FS        Pipe selector
-; IN  CX        Buffer size
-; IN  ES:EDI    Buffer
-add_in_proc      DD ?,?
-
-; IN  FS        Pipe selector
-issue_transfer_proc      DD ?,?
-
-;  IN FS        Is request ready?
-is_transfer_done_proc      DD ?,?
-
-; IN  FS        Pipe selector
-end_transfer_proc      DD ?,?
-
-; IN  FS        Pipe selector
-; OUT NC        Transaction ok
-was_transfer_ok_proc      DD ?,?
-
-; IN  FS        Pipe selector
-; OUT CX        Returned size
-get_data_size_proc      DD ?,?
-
-; IN  FS        Pipe selector
-close_pipe_proc     DD ?,?
-
-; IN  FS        Pipe selector
-wait_for_completion_proc      DD ?,?
-
-; IN  FS        Pipe selector
 change_address_proc      DD ?,?
-
-;  IN FS        Is connected?
-is_connected_proc      DD ?,?
 
 ; IN  ES        Device selector
 reset_dev_proc        DD ?,?
-
-obs_lock_enum_proc         DD ?,?
-
-obs_unlock_enum_proc       DD ?,?
-
-has_64bit_proc         DD ?,?
-
-;  IN FS        Is stalled?
-is_stalled_proc      DD ?,?
-
-;  IN FS        Clear stalled
-clear_stalled_proc      DD ?,?
 
 ;  IN  ES       Device selector
 ;  IN  AL       Address
@@ -144,9 +82,6 @@ config_device_proc	DD ?,?
 ; IN  ES        Device selector
 ; IN  AL        Max len
 update_control_maxlen_proc        DD ?,?
-
-; IN  FS        Pipe selector
-issue_one_proc       DD ?,?
 
 ;  IN ES        Device
 is_dev_connected_proc      DD ?,?

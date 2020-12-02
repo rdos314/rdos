@@ -4182,33 +4182,15 @@ et01 DD OFFSET FreeAddress,        SEG code
 ec02 DD OFFSET CreateDev,          SEG code
 ec03 DD OFFSET FreeDev,            SEG code
 et04 DD OFFSET CreateControl,      SEG code
-et05 DD OFFSET CreateBulk,         SEG code
-et06 DD OFFSET CreateIntr,         SEG code
-et07 DD OFFSET AddOut,             SEG code
-et08 DD OFFSET AddIn,              SEG code
-et09 DD OFFSET IssueTransfer,      SEG code
-et0A DD OFFSET IsTransferDone,     SEG code
-et0B DD OFFSET EndTransfer,        SEG code
-et0C DD OFFSET WasTransferOk,      SEG code
-et0D DD OFFSET GetDataSize,        SEG code
-et0E DD OFFSET ClosePipe,          SEG code
-et0F DD OFFSET WaitForCompletion,  SEG code
-et10 DD OFFSET ChangeAddress,      SEG code
-et11 DD OFFSET IsConnected,        SEG code
-et12 DD OFFSET ResetDev,           SEG code
-et13 DD OFFSET LockEnum,           SEG code
-et14 DD OFFSET UnlockEnum,         SEG code
-et15 DD OFFSET Has64Bit,           SEG code
-et16 DD OFFSET IsStalled,          SEG code
-et17 DD OFFSET ClearStalled,       SEG code
-et18 DD OFFSET AddressDev,         SEG code
-et19 DD OFFSET ConfigDev,          SEG code
-et1A DD OFFSET UpdateMaxLen,       SEG code
-ec1B DD OFFSET IssueOne,           SEG code
-ec1C DD OFFSET IsDeviceConnected,  SEG code
-ec1D DD OFFSET ControlMsg,         SEG code
-ec1E DD OFFSET ConfigPipe,         SEG code
-ec1F DD OFFSET UnlinkPipes,        SEG code
+et05 DD OFFSET ChangeAddress,      SEG code
+et06 DD OFFSET ResetDev,           SEG code
+et07 DD OFFSET AddressDev,         SEG code
+et08 DD OFFSET ConfigDev,          SEG code
+et09 DD OFFSET UpdateMaxLen,       SEG code
+ec0A DD OFFSET IsDeviceConnected,  SEG code
+ec0B DD OFFSET ControlMsg,         SEG code
+ec0C DD OFFSET ConfigPipe,         SEG code
+ec0D DD OFFSET UnlinkPipes,        SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4230,7 +4212,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*0Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

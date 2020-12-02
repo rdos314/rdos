@@ -237,246 +237,6 @@ CreateControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateBulk
-;
-;       DESCRIPTION:    Create bulk pipe
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device selector
-;                       DL      Pipe # (bit 7 IN)
-;                       CX      Max packet size
-;
-;       RETURNS:        FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBulk   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:create_bulk_proc
-    pop ds
-    ret
-CreateBulk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CreateIntr
-;
-;   DESCRIPTION:    Create interrupt pipe
-;
-;   PARAMETERS:     DS      Function selector
-;                   ES      Device selector
-;                   AL      Interval
-;                   DL      Pipe # (bit 7 IN)
-;                   CX      Max packet size
-;
-;   RETURNS:        FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateIntr   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:create_interrupt_proc
-    pop ds
-    ret
-CreateIntr   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AddOut
-;
-;       DESCRIPTION:    Add out transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       CX      Buffer size
-;                       ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddOut    Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:add_out_proc
-    pop ds
-    ret
-AddOut    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           AddIn
-;
-;   DESCRIPTION:    Add in transaction to queue
-;
-;   PARAMETERS:     DS      Function selector
-;                   FS      Pipe selector
-;                   CX      Buffer size
-;                   ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddIn    Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:add_in_proc
-    pop ds
-    ret
-AddIn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IssueTransfer
-;
-;       DESCRIPTION:    Issue transfer
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       EDX     Queue handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueTransfer    Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:issue_transfer_proc
-    pop ds
-    ret
-IssueTransfer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IsTransferDone
-;
-;       DESCRIPTION:    Check if transfer is done
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;       RETURNS:        NC      Transfer is done
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsTransferDone   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:is_transfer_done_proc
-    pop ds
-    ret
-IsTransferDone   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WaitForCompletion
-;
-;       DESCRIPTION:    Wait for transfer to complete
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForCompletion   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:wait_for_completion_proc
-    pop ds
-    ret
-WaitForCompletion   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           EndTransfer
-;
-;       DESCRIPTION:    End transfer
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EndTransfer   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:end_transfer_proc
-    pop ds
-    ret
-EndTransfer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WasTransferOk
-;
-;       DESCRIPTION:    Was transfer ok
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;       RETURNS:        NC      Transfer ok
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WasTransferOk   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:was_transfer_ok_proc
-    pop ds
-    ret
-WasTransferOk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetDataSize
-;
-;       DESCRIPTION:    Get data size
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;       RETURNS:        CX      Bytes read
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDataSize   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:get_data_size_proc
-    pop ds
-    ret
-GetDataSize   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IssueOne
-;
-;       DESCRIPTION:    Issue one transfer
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueOne   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:issue_one_proc
-    pop ds
-    ret
-IssueOne   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           IsDeviceConnected
 ;
 ;       DESCRIPTION:    Check if device is connected
@@ -592,26 +352,6 @@ UnlinkPipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClosePipe
-;
-;       DESCRIPTION:    Close pipe
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClosePipe   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:close_pipe_proc
-    pop ds
-    ret
-ClosePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           ChangeAddress
 ;
 ;   DESCRIPTION:    Change address for pipe
@@ -629,45 +369,6 @@ ChangeAddress   Proc far
     pop ds
     ret
 ChangeAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IsConnected
-;
-;       DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    push es
-    push eax
-    push ebx
-;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz icFail
-;
-    mov es,fs:usbp_dev_sel
-    movzx ebx,es:usbd_port
-    add ebx,ebx
-    test ds:[ebx].hub_status_arr,1
-    jz icFail
-;
-    clc
-    jmp icDone
-
-icFail:
-    stc
-
-icDone:
-    pop ebx
-    pop eax
-    pop es
-    ret
-IsConnected   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -694,97 +395,6 @@ ResetDev   Proc far
     pop eax
     ret
 ResetDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           LockEnum
-;
-;       DESCRIPTION:    Lock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockEnum   Proc far
-    int 3
-    ret
-LockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UnlockEnum
-;
-;       DESCRIPTION:    Unlock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockEnum   Proc far
-    int 3
-    ret
-UnlockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           Has64Bit
-;
-;       DESCRIPTION:    Check for 64-bit support
-;
-;       PARAMETERS:         DS      Function selector
-;
-;       RETURNS:            NC      Supports 64-bit addresses
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Has64Bit   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:has_64bit_proc
-    pop ds
-    ret
-Has64Bit   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               IsStalled
-;
-;       DESCRIPTION:        Check if pipe is stalled
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;       RETURNS:            CY      Stalled
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsStalled   Proc far
-    int 3
-    ret
-IsStalled   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               ClearStalled
-;
-;       DESCRIPTION:        Clear stalled pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;       RETURNS:            CY      Stalled
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearStalled   Proc far
-    int 3
-    ret
-ClearStalled   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -819,33 +429,15 @@ ht01 DD OFFSET FreeAddress,         SEG code
 ht02 DD OFFSET CreateDev,           SEG code
 ht03 DD OFFSET FreeDev,             SEG code
 ht04 DD OFFSET CreateControl,       SEG code
-ht05 DD OFFSET CreateBulk,          SEG code
-ht06 DD OFFSET CreateIntr,          SEG code
-ht07 DD OFFSET AddOut,              SEG code
-ht08 DD OFFSET AddIn,               SEG code
-ht09 DD OFFSET IssueTransfer,       SEG code
-ht0A DD OFFSET IsTransferDone,      SEG code
-ht0B DD OFFSET EndTransfer,         SEG code
-ht0C DD OFFSET WasTransferOk,       SEG code
-ht0D DD OFFSET GetDataSize,         SEG code
-ht0E DD OFFSET ClosePipe,           SEG code
-ht0F DD OFFSET WaitForCompletion,   SEG code
-ht10 DD OFFSET ChangeAddress,       SEG code
-ht11 DD OFFSET IsConnected,         SEG code
-ht12 DD OFFSET ResetDev,            SEG code
-ht13 DD OFFSET LockEnum,            SEG code
-ht14 DD OFFSET UnlockEnum,          SEG code
-ht15 DD OFFSET Has64Bit,            SEG code
-ht16 DD OFFSET IsStalled,           SEG code
-ht17 DD OFFSET ClearStalled,        SEG code
-ht18 DD OFFSET AddressDev,          SEG code
-ht19 DD OFFSET ConfigDev,           SEG code
-ht1A DD OFFSET UpdateMaxLen,        SEG code
-ht1B DD OFFSET IssueOne,            SEG code
-ht1C DD OFFSET IsDeviceConnected,   SEG code
-ht1D DD OFFSET ControlMsg,          SEG code
-ht1E DD OFFSET ConfigPipe,          SEG code
-ht1F DD OFFSET UnlinkPipes,         SEG code
+ht05 DD OFFSET ChangeAddress,       SEG code
+ht06 DD OFFSET ResetDev,            SEG code
+ht07 DD OFFSET AddressDev,          SEG code
+ht08 DD OFFSET ConfigDev,           SEG code
+ht09 DD OFFSET UpdateMaxLen,        SEG code
+ht0A DD OFFSET IsDeviceConnected,   SEG code
+ht0B DD OFFSET ControlMsg,          SEG code
+ht0C DD OFFSET ConfigPipe,          SEG code
+ht0D DD OFFSET UnlinkPipes,         SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2418,7 +2010,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*20h
+    mov ecx,2*0Eh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

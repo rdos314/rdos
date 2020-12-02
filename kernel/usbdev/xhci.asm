@@ -4114,33 +4114,15 @@ et01 DD OFFSET FreeAddress,         SEG code
 et02 DD OFFSET CreateDev,           SEG code
 et03 DD OFFSET FreeDev,             SEG code
 et04 DD OFFSET CreateControl,       SEG code
-et05 DD OFFSET CreateBulk,          SEG code
-et06 DD OFFSET CreateIntr,          SEG code
-et07 DD OFFSET AddOut,              SEG code
-et08 DD OFFSET AddIn,               SEG code
-et09 DD OFFSET IssueTransfer,       SEG code
-et0A DD OFFSET IsTransferDone,      SEG code
-et0B DD OFFSET EndTransfer,         SEG code
-et0C DD OFFSET WasTransferOk,       SEG code
-et0D DD OFFSET GetDataSize,         SEG code
-et0E DD OFFSET ClosePipe,           SEG code
-et0F DD OFFSET WaitForCompletion,   SEG code
-et10 DD OFFSET ChangeAddress,       SEG code
-et11 DD OFFSET IsConnected,         SEG code
-et12 DD OFFSET ResetDev,            SEG code
-et13 DD OFFSET LockEnum,            SEG code
-et14 DD OFFSET UnlockEnum,          SEG code
-et15 DD OFFSET Has64Bit,            SEG code
-et16 DD OFFSET IsStalled,           SEG code
-et17 DD OFFSET ClearStalled,        SEG code
-et18 DD OFFSET AddressDevice,       SEG code
-et19 DD OFFSET ConfigDevice,        SEG code
-et1A DD OFFSET UpdateMaxLen,        SEG code
-et1B DD OFFSET IssueOne,            SEG code
-et1C DD OFFSET IsDeviceConnected,   SEG code
-et1D DD OFFSET ControlMsg,          SEG code
-et1E DD OFFSET ConfigPipe,          SEG code
-et1F DD OFFSET UnlinkPipes,         SEG code
+et05 DD OFFSET ChangeAddress,       SEG code
+et06 DD OFFSET ResetDev,            SEG code
+et07 DD OFFSET AddressDevice,       SEG code
+et08 DD OFFSET ConfigDevice,        SEG code
+et09 DD OFFSET UpdateMaxLen,        SEG code
+et0A DD OFFSET IsDeviceConnected,   SEG code
+et0B DD OFFSET ControlMsg,          SEG code
+et0C DD OFFSET ConfigPipe,          SEG code
+et0D DD OFFSET UnlinkPipes,         SEG code
 
 InitFunction    Proc near
     push es
@@ -4287,7 +4269,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*0Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]
