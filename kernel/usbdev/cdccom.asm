@@ -788,7 +788,7 @@ OpenControl	Proc near
     mov ds:cdc_control_wait,bx
 ;
     mov bx,ds:cdc_controller
-    mov al,ds:cdc_device
+;    mov al,ds:cdc_device
     xor dl,dl
     OpenUsbPipe
     mov ds:cdc_control_pipe,bx
@@ -853,7 +853,7 @@ CreateComDevice	Proc near
     mov dword ptr es:cd_create_proc+4,cs
 ;
     mov ax,ds:cdc_controller
-    movzx dx,ds:cdc_device
+    movzx dx,ds:cdc_port
 ;
     push ds
     mov esi,SEG data
@@ -911,7 +911,7 @@ Reinit	Endp
 
 OpenPort    Proc near
     mov bx,es:cdc_controller
-    mov al,es:cdc_device
+;    mov al,es:cdc_device
     mov dl,fs:unit_bulk_in
     OpenUsbPipe
     mov ds:ucd_in_handle,bx
@@ -927,7 +927,7 @@ OpenPort    Proc near
     pop es
 ;
     mov bx,es:cdc_controller
-    mov al,es:cdc_device
+;    mov al,es:cdc_device
     mov dl,fs:unit_bulk_out
     OpenUsbPipe    
     mov ds:ucd_out_handle,bx

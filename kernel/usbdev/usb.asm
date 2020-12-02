@@ -1347,8 +1347,6 @@ notify_usb_attach       Proc far
     push es
     pushad
 ;
-    mov ah,al
-    mov al,es:usbd_address
     mov bx,ds:usb_controller_id
     call trap_usb_attach
     clc
@@ -1422,7 +1420,6 @@ notify_usb_detach       Proc far
     pushad
 ; 
     mov bx,ds:usb_controller_id
-    mov al,es:usbd_address
     call trap_usb_detach      
 
 nudDone:    
@@ -1841,8 +1838,7 @@ config_usb_device    Endp
 ;       description:    Create route string
 ;
 ;       parameters:     BX      Controller #
-;                       AH      Port
-;                       AL      Device address (1..128)
+;                       AL      Port
 ;                       CX      Hub sel
 ;                       DL      Config #
 ;
@@ -1875,7 +1871,6 @@ CreateRoute      Proc near
     or dl,dl
     jnz crrAdd
 ;
-    mov al,ah
     inc al
     mov es:usb_root_port,al
     jmp crrPop
@@ -1886,7 +1881,7 @@ crrAdd:
 ;
     mov cl,ds:usb_route_depth
     shl cl,2
-    movzx eax,ah
+    movzx eax,al
     inc eax
     shl eax,cl
     or eax,ds:usb_route_str
@@ -1916,8 +1911,7 @@ CreateRoute  Endp
 ;       description:    Configure USB dhub
 ;
 ;       parameters:     BX      Controller #
-;                       AL      Device address (1..128)
-;                       AH      Port #
+;                       AL      Port #
 ;                       CX      Hub sel
 ;                       DL      Config #
 ;
@@ -1928,7 +1922,6 @@ config_usb_hub_name DB 'Config USB Hub', 0
 config_usb_hub       Proc near
     push ax
     call CreateRoute
-    mov al,ah
     call ConfigUsb
     pop ax
     retf32

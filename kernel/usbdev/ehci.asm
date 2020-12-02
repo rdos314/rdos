@@ -3551,7 +3551,7 @@ htWaitNotify:
     ReadUsbDescriptors
     jc htDetach
 ;
-    movzx ax,cl
+    mov al,cl
     NotifyUsbAttach
 
 htAttached:

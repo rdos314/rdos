@@ -210,13 +210,11 @@ struct THidReportIdEntry
 struct THidDevice
 {
     unsigned short int Controller;
-    unsigned char Device;
     unsigned char Port;
 
     unsigned char Interface;
     unsigned char Protocol;
     unsigned char IntrIn;
-    unsigned char Pad;
 
     short int ControlPipe;
     short int ControlWait;
@@ -3032,8 +3030,8 @@ void __far HidThread(void *param)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CreateHid "*" rdosdev parm routine [ebx] [eax] [edx] [es edi]
-void CreateHid(int controller, int device, int port, char *config)
+#pragma aux CreateHid "*" rdosdev parm routine [ebx] [eax] [es edi]
+void CreateHid(int controller, int port, char *config)
 {
     int i;
     int j;
@@ -3058,7 +3056,6 @@ void CreateHid(int controller, int device, int port, char *config)
                 {
                     dev = (struct THidDevice *)RdosAllocateSmallGlobalMem(sizeof(struct THidDevice) + descr->DescriptorLen);
                     dev->Controller = controller;
-                    dev->Device = device;
                     dev->Port = port;
                     dev->ReportDescrSize = descr->DescriptorLen;
                     HidArr[i] = dev;
@@ -3097,7 +3094,7 @@ void CreateHid(int controller, int device, int port, char *config)
 #
 ##########################################################################*/
 #pragma aux RemoveHid "*" rdosdev parm routine [ebx] [eax]
-void RemoveHid(int controller, int device)
+void RemoveHid(int controller, int port)
 {
     int i;
     struct THidDevice *dev;
@@ -3107,7 +3104,7 @@ void RemoveHid(int controller, int device)
         dev = HidArr[i];
         if (dev)
         {
-            if (dev->Controller == controller && dev->Device == device)
+            if (dev->Controller == controller && dev->Port == port)
             {
                 dev->StopReq = TRUE;
                 HidArr[i] = 0;
@@ -3139,7 +3136,7 @@ void RemoveHid(int controller, int device)
 #
 ##########################################################################*/
 #pragma aux GetHid "*" rdosdev parm routine [ebx] [eax]
-struct THidDevice *GetHid(int controller, int device)
+struct THidDevice *GetHid(int controller, int port)
 {
     int i;
     struct THidDevice *dev;
@@ -3149,7 +3146,7 @@ struct THidDevice *GetHid(int controller, int device)
         dev = HidArr[i];
         if (dev)
         {
-            if (dev->Controller == controller && dev->Device == device)
+            if (dev->Controller == controller && dev->Port == port)
             {
                 if (dev->Thread)
                     return 0;

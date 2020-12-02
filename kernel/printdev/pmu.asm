@@ -71,7 +71,6 @@ cmd_session_struc   ENDS
 data    SEGMENT byte public 'DATA'
 
 pmu_controller       DW ?
-pmu_device           DB ?
 pmu_port             DB ?
 
 pmu_max_in           DW ?
@@ -594,7 +593,7 @@ ClearReceiver    Endp
 
 OpenPipes   Proc near
     mov bx,ds:pmu_controller
-    mov al,ds:pmu_device
+;    mov al,ds:pmu_device
     mov dl,ds:pmu_in_pipe
     OpenUsbPipe
     mov ds:pmu_in_handle,bx
@@ -606,7 +605,7 @@ OpenPipes   Proc near
     mov ds:pmu_in_buffer,es
 ;
     mov bx,ds:pmu_controller
-    mov al,ds:pmu_device
+;    mov al,ds:pmu_device
     mov dl,ds:pmu_out_pipe
     OpenUsbPipe    
     mov ds:pmu_out_handle,bx
@@ -1163,7 +1162,7 @@ pmu_thread:
     mov es:printer_device,0
 ;    
     mov ax,ds:pmu_controller
-    movzx dx,ds:pmu_device
+    movzx dx,ds:pmu_port
     push ds
     mov bx,es
     mov ds,bx
@@ -1339,8 +1338,7 @@ OpenPrinterPipes Proc near
     mov ds,si
 ;    
     mov ds:pmu_controller,bx
-    mov ds:pmu_device,al
-    mov ds:pmu_port,ah
+    mov ds:pmu_port,al
     mov ds:pmu_out_pipe,0
     mov ds:pmu_in_pipe,0
     mov ds:pmu_max_in,0
@@ -1417,8 +1415,7 @@ OpenPrinterPipes Endp
 ;               description:    USB attach callback
 ;
 ;               Parameters:     BX      Controller #
-;                               AL      Device address
-;                               AH      Device port #
+;                               AL      Device port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1435,7 +1432,6 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -1465,7 +1461,6 @@ aFound:
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
@@ -1473,7 +1468,6 @@ aFound:
     jz aDone
 ;
     push ax
-    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
     pop ax
@@ -1512,7 +1506,7 @@ usb_attach  Endp
 ;               description:    USB detach callback
 ;
 ;               Parameters:     BX      Controller #
-;                       AL      Device address
+;                               AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1522,7 +1516,7 @@ usb_detach  Proc far
     test ds:pmu_flag,FLAG_ATTACHED
     jz udDone
 ;    
-    cmp al,byte ptr ds:pmu_device
+    cmp al,byte ptr ds:pmu_port
     jne udDone
 ;
     cmp bx,ds:pmu_controller

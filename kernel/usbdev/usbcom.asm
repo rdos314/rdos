@@ -134,7 +134,6 @@ uc_controller           DW ?
 uc_dev_handle           DW ?
 uc_dev_sel              DW ?
 uc_port                 DB ?
-uc_device               DB ?
 
 uc_section              section_typ <>
 
@@ -2776,7 +2775,7 @@ CreatePortMct   Endp
 
 OpenPort    Proc near
     mov bx,es:uc_controller
-    mov al,es:uc_device
+;    mov al,es:uc_device
     mov dl,ds:uds_bulk_in
     OpenUsbPipe
     mov ds:uds_in_handle,bx
@@ -2792,7 +2791,7 @@ OpenPort    Proc near
     pop es
 ;
     mov bx,es:uc_controller
-    mov al,es:uc_device
+;    mov al,es:uc_device
     mov dl,ds:uds_bulk_out
     OpenUsbPipe    
     mov ds:uds_out_handle,bx
@@ -2812,7 +2811,7 @@ OpenPort    Proc near
     jz opDone
 ;    
     mov bx,es:uc_controller
-    mov al,es:uc_device
+;    mov al,es:uc_device
     OpenUsbPipe    
     mov ds:uds_intr_handle,bx
 ;    
@@ -3341,8 +3340,7 @@ tEnd:
 ;
 ;   DESCRIPTION:    Add port to list of available ports
 ;
-;   PARAMETERS:     AL      Device address
-;                   AH      Port #
+;   PARAMETERS:     AL      Port #
 ;                   BX      Controller id
 ;                   DX      Device type
 ;                   ES      Device sel
@@ -3501,7 +3499,7 @@ apDescrDone:
     mov dword ptr ds:cd_create_proc,edi
     mov dword ptr ds:cd_create_proc+4,cs
 ;    
-    movzx dx,ah
+    movzx dx,al
     mov ax,bx
     AddComPort
     mov ds:uds_port_nr,ax
@@ -3531,8 +3529,7 @@ AddUnit	Proc near
     push si
 ;
     mov bx,es:uc_controller
-    mov al,es:uc_device
-    mov ah,es:uc_port
+    mov al,es:uc_port
     call AddPort
 ;
     mov ds:uds_device_sel,es
@@ -4540,8 +4537,7 @@ cdAdd:
     shr esi,16
     mov es:uc_vendor,si
     mov es:uc_controller,bx
-    mov es:uc_port,ah
-    mov es:uc_device,al
+    mov es:uc_port,al
     mov es:uc_unit_count,0
     mov es:uc_flags,0
 ;
@@ -4580,8 +4576,7 @@ cdDeadOk:
     mov cx,gs
     mov es,cx
     mov es:uc_controller,bx
-    mov es:uc_port,ah
-    mov es:uc_device,al
+    mov es:uc_port,al
 ;
     mov ebp,OFFSET usb_com_recreate
     call CreateServerThread
@@ -4601,8 +4596,7 @@ ConfigDevice  Endp
 ;   Description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
-;                   AH      Port #
-;                   AL      Device address
+;                   AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4634,7 +4628,6 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -4693,8 +4686,7 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;                           AH      Port #
-;                           AL      Device address
+;                           AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4719,7 +4711,7 @@ udCheckLoop:
     cmp bx,es:uc_controller
     jne udCheckNext
 ;
-    cmp ah,es:uc_port
+    cmp al,es:uc_port
     jne udCheckNext
 ;
     GetThread

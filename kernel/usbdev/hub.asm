@@ -1226,7 +1226,7 @@ CreateHub  Proc near
     mov ds:hub_device_handle,bx
 ;    
     mov bx,ds:hub_controller
-    mov al,ds:hub_address
+;    mov al,ds:hub_address
     mov dl,ds:hub_intr
     OpenUsbPipe
     mov ds:hub_status_handle,bx
@@ -1824,8 +1824,7 @@ ProcessHubDescr Endp
 ;   description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
-;                   AH      Port #
-;                   AL      Device address
+;                   AL      Port #
 ;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1848,7 +1847,6 @@ usb_attach  Proc far
 ;
     xor di,di
     push eax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop eax
@@ -1866,7 +1864,6 @@ usb_attach  Proc far
     mov ecx,1000h
     xor edi,edi
     push eax
-    mov al,ah
     GetUsbConfig
     mov ecx,eax
     pop eax
@@ -1937,8 +1934,7 @@ uaReConfig:
     jc uaFail
 ;
     mov gs:hub_controller,bx
-    mov gs:hub_port,ah
-    mov gs:hub_address,al
+    mov gs:hub_port,al
     mov gs:hub_parent_sel,fs
 ;
     mov ebx,gs
@@ -1988,8 +1984,7 @@ uaNotDead:
     shr esi,16
     mov es:hub_vendor,si
     mov es:hub_controller,bx
-    mov es:hub_port,ah
-    mov es:hub_address,al
+    mov es:hub_port,al
     mov es:hub_intr,0
     mov es:hub_detach,0
     mov es:hub_flags,0
@@ -2039,8 +2034,7 @@ uaDevConfig:
 ;
     mov ds:usb_hub_id,-1
     mov bx,ds:hub_controller
-    mov al,ds:hub_address
-    mov ah,ds:hub_port
+    mov al,ds:hub_port
     mov cx,ds
     ConfigUsbHub
     jc uaFailDs

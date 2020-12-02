@@ -101,7 +101,6 @@ disc_bulk_out_wait      DW ?
 
 disc_controller         DW ?
 disc_port               DB ?
-disc_device             DB ?
 
 disc_nr                 DB ?
 disc_handle             DW ?
@@ -1819,7 +1818,7 @@ dtInsDo:
     mov fs:disc_cbw_lun,0
 ;
     mov bx,fs:disc_controller
-    movzx ax,fs:disc_device
+;    movzx ax,fs:disc_device
     mov dl,fs:disc_bulk_in_pipe
     OpenUsbPipe
     mov fs:disc_bulk_in_handle,bx
@@ -1833,7 +1832,7 @@ dtInsDo:
     AddWaitForUsbPipe
 ;
     mov bx,fs:disc_controller
-    movzx ax,fs:disc_device
+;    movzx ax,fs:disc_device
     mov dl,fs:disc_bulk_out_pipe
     OpenUsbPipe
     mov fs:disc_bulk_out_handle,bx
@@ -2029,8 +2028,7 @@ HexToAscii      ENDP
 ;   description:    USB attach callback
 ;
 ;   Parameters:     BX      Controller #
-;                   AH      Port #
-;                   AL      Device address
+;                   AL      Port #
 ;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2049,7 +2047,6 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -2074,7 +2071,6 @@ uaPossible:
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
@@ -2123,7 +2119,6 @@ uaFound:
     jne uaFail
 ;        
     push ax
-    mov al,ah
     ConfigUsbDevice
     pop ax
 ;
@@ -2133,8 +2128,7 @@ uaFound:
     AllocateSmallGlobalMem
     pop eax
     mov es:disc_controller,bx
-    mov es:disc_port,ah
-    mov es:disc_device,al
+    mov es:disc_port,al
     mov ax,es
     mov gs,ax
     pop es
@@ -2239,8 +2233,7 @@ usb_attach  Endp
 ;   description:    USB detach callback
 ;
 ;   Parameters:     BX      Controller #
-;                   AH      Port #
-;                   AL      Device address
+;                   AL      Port #
 ;                   DS      USB device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2265,7 +2258,7 @@ udCheckLoop:
     cmp bx,es:disc_controller
     jne udCheckNext
 ;
-    cmp ah,es:disc_port
+    cmp al,es:disc_port
     jne udCheckNext
 ;
     mov bx,es:disc_handle

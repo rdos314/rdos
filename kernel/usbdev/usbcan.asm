@@ -89,7 +89,6 @@ cd_in_wait       DW ?
 cd_out_pipe      DW ?
 cd_out_wait      DW ?
 cd_dev_handle    DW ?
-cd_device        DB ?
 cd_port          DB ?
 cd_active        DB ?
 
@@ -1353,7 +1352,7 @@ usuRestart:
     mov ds:cd_in_wait,bx
 ;
     mov bx,ds:cd_controller
-    movzx ax,ds:cd_device
+;    movzx ax,ds:cd_device
     mov dl,81h
     OpenUsbPipe
     mov ds:cd_in_pipe,bx
@@ -1367,7 +1366,7 @@ usuRestart:
     mov ds:cd_out_wait,bx
 ;
     mov bx,ds:cd_controller
-    movzx ax,ds:cd_device
+;    movzx ax,ds:cd_device
     mov dl,2
     OpenUsbPipe
     mov ds:cd_out_pipe,bx
@@ -1809,8 +1808,7 @@ StartThread Endp
 ;
 ;       DESCRIPTION:    Add device
 ;
-;       PARAMETERS:     AL      Device address
-;                       AH      Port #
+;       PARAMETERS:     AL      Port #
 ;                       BX      Controller id
 ;                       ES:DI   Interface descriptor + endpoints
 ;
@@ -1823,8 +1821,7 @@ AddDevice Proc near
 ;
     mov dx,SEG data
     mov ds,dx
-    mov ds:cd_device,al
-    mov ds:cd_port,ah
+    mov ds:cd_port,al
     mov ds:cd_controller,bx
     mov ds:cd_active,1
 ;
@@ -1871,8 +1868,7 @@ AddDevice Endp
 ;       description:    USB attach callback
 ;
 ;       Parameters:     BX      Controller #
-;                       AH      Device port
-;                       AL      Device address
+;                       AL      Device port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1889,7 +1885,6 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -1919,7 +1914,6 @@ uaFound:
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
@@ -1927,7 +1921,6 @@ uaFound:
     jz uaDone
 ;
     push ax
-    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
     pop ax
@@ -1952,8 +1945,7 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;                           AL      Device address
-;                           AH      Device port #
+;                           AL      Device port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1972,7 +1964,6 @@ usb_detach  Proc far
 ;
     mov ds:can_active,0
     mov ds:cd_controller,-1
-    mov ds:cd_device,0
     mov ds:cd_active,0
     mov ds:can_restart,1
 ;
@@ -2441,7 +2432,6 @@ init    Proc far
     mov es:cd_rec_thread,0
     mov es:cd_send_thread,0
     mov es:cd_controller,-1
-    mov es:cd_device,0
     mov es:cd_active,0
     mov es:cd_dev_handle,0
     mov es:cd_in_pipe,0

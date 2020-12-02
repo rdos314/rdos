@@ -1188,7 +1188,7 @@ CreatePort  Endp
 
 OpenPort Proc far
     mov bx,ds:cd_controller
-    mov ax,ds:cd_device
+;    mov ax,ds:cd_device
     mov dl,ds:uds_bulk_in
     OpenUsbPipe
     mov ds:uds_in_handle,bx
@@ -1202,7 +1202,7 @@ OpenPort Proc far
     mov ds:uds_in_buffer,es
 ;
     mov bx,ds:cd_controller
-    mov ax,ds:cd_device
+;    mov ax,ds:cd_device
     mov dl,ds:uds_bulk_out
     OpenUsbPipe    
     mov ds:uds_out_handle,bx
@@ -1836,8 +1836,7 @@ CreateDevice Endp
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
-;                           AL      Device address
-;                           AH      Device port
+;                           AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1856,7 +1855,6 @@ usb_attach  Proc far
     pop ax
     xor di,di
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -1886,7 +1884,6 @@ uaFound:
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
@@ -1894,7 +1891,6 @@ uaFound:
     jz uaDone
 ;
     push ax
-    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
     pop ax
@@ -1937,8 +1933,7 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;                           AL      Device address
-;                           AH      Port #
+;                           AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

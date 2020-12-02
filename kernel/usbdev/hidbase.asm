@@ -1091,7 +1091,7 @@ OpenIntrPipe_ Proc near
     pushad
 ;    
     mov bx,fs:hid_controller
-    mov al,fs:hid_device
+;    mov al,fs:hid_device
     mov dl,fs:hid_intr_in
     OpenUsbPipe
     mov fs:hid_intr_handle,bx
@@ -1117,8 +1117,7 @@ OpenIntrPipe_   Endp
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AH      Port
-;               AL      Device address
+;                           AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1136,7 +1135,6 @@ usb_attach  Proc far
     pop ax
     xor edi,edi
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -1154,7 +1152,6 @@ uaPossibleHid:
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
@@ -1190,12 +1187,10 @@ uaFail:
 
 uaFound:
     push ax
-    mov al,ah
     ConfigUsbDevice
     pop ax
 ;
-    movzx edx,ah
-    movzx eax,al
+    movzx edx,al
     movzx ebx,bx
     call CreateHid
 
@@ -1215,7 +1210,7 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AL      Device address
+;                           AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

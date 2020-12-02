@@ -208,7 +208,7 @@ FindAnyDevice	Endp
 ;
 ;    Parameters:     DS      Data seg
 ;                    BX      Controller #
-;                    AL      Device address
+;                    AL      Port #
 ;
 ;    Returns:        NC	     Found
 ;                        GS  CDC sel
@@ -232,7 +232,7 @@ fsdLoop:
     cmp bx,ds:cdc_controller
     jne fsdNext
 ;
-    cmp al,ds:cdc_device
+    cmp al,ds:cdc_port
     jne fsdNext
 ;
     mov ecx,ds
@@ -262,8 +262,7 @@ FindSpecificDevice	Endp
 ;           description:    USB attach callback
 ;
 ;           Parameters:     BX      Controller #
-;               AH      Port
-;               AL      Device address
+;                           AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -404,7 +403,6 @@ usb_attach  Proc far
 ;
     xor edi,edi
     push ax
-    mov al,ah
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -423,7 +421,6 @@ uaCdc:
     mov ecx,1000h
     xor edi,edi
     push eax
-    mov al,ah
     GetUsbConfig
     mov ecx,eax
     pop eax
@@ -495,8 +492,7 @@ uaReConfig:
     jc uaFail
 ;
     mov gs:cdc_controller,bx
-    mov gs:cdc_port,ah
-    mov gs:cdc_device,al
+    mov gs:cdc_port,al
 ;
     mov ebx,gs
     mov ds,ebx
@@ -582,8 +578,7 @@ uaNotDead:
     shr esi,16
     mov es:cdc_vendor,si
     mov es:cdc_controller,bx
-    mov es:cdc_port,ah
-    mov es:cdc_device,al
+    mov es:cdc_port,al
     mov es:cdc_abs_control_cap,0
     mov es:cdc_unit_count,0
     mov es:cdc_com_dev_sel,0

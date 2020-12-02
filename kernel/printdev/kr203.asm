@@ -86,7 +86,6 @@ usb_printer_struc       ENDS
 data    SEGMENT byte public 'DATA'
 
 kr_controller       DW ?
-kr_device           DB ?
 kr_port             DB ?
 
 kr_max_in           DW ?
@@ -977,7 +976,7 @@ ClearReceiver    Endp
 
 OpenPipes   Proc near
     mov bx,ds:kr_controller
-    mov al,ds:kr_device
+;    mov al,ds:kr_device
     mov dl,ds:kr_in_pipe
     OpenUsbPipe
     mov ds:kr_in_handle,bx
@@ -989,7 +988,7 @@ OpenPipes   Proc near
     mov ds:kr_in_buffer,es
 ;
     mov bx,ds:kr_controller
-    mov al,ds:kr_device
+;    mov al,ds:kr_device
     mov dl,ds:kr_out_pipe
     OpenUsbPipe    
     mov ds:kr_out_handle,bx
@@ -2336,7 +2335,7 @@ kr203_thread:
     mov es:printer_device,0
 ;    
     mov ax,ds:kr_controller
-    movzx dx,ds:kr_device
+    movzx dx,ds:kr_port
     push ds
     mov bx,es
     mov ds,bx
@@ -2541,8 +2540,7 @@ OpenPrinterPipes Proc near
     mov ds,si
 ;    
     mov ds:kr_controller,bx
-    mov ds:kr_device,al
-    mov ds:kr_port,ah
+    mov ds:kr_port,al
     mov ds:kr_out_pipe,0
     mov ds:kr_in_pipe,0
     mov ds:kr_max_in,0
@@ -2619,8 +2617,7 @@ OpenPrinterPipes Endp
 ;               description:    USB attach callback
 ;
 ;               Parameters:     BX      Controller #
-;                               AL      Device address
-;                               AH      Device port #
+;                               AL      Device port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2635,9 +2632,9 @@ usb_attach  Proc far
     AllocateSmallGlobalMem
     mov cx,SIZE usb_device_descr
     pop ax
-    xor di,di
+;
     push ax
-    mov al,ah
+    xor di,di
     GetUsbDevice
     cmp ax,cx
     pop ax
@@ -2667,18 +2664,14 @@ aFound:
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
     or cx,cx
     jz aDone
 ;
-    push ax
-    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
-    pop ax
     jc aDone
 ;
     xor di,di
@@ -2714,7 +2707,7 @@ usb_attach  Endp
 ;               description:    USB detach callback
 ;
 ;               Parameters:     BX      Controller #
-;                       AL      Device address
+;                               AL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2724,7 +2717,7 @@ usb_detach  Proc far
     test ds:kr_flag,FLAG_ATTACHED
     jz udDone
 ;    
-    cmp al,byte ptr ds:kr_device
+    cmp al,byte ptr ds:kr_port
     jne udDone
 ;
     cmp bx,ds:kr_controller
