@@ -2247,7 +2247,6 @@ StartPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnablePipe   Proc far
-    int 3
     push ds
     push fs
     pushad
@@ -2406,6 +2405,7 @@ UnlinkPipe   Proc near
     pushad
 ;
     mov fs,bx
+    mov edx,fs:op_ed
     mov al,fs:ued_attrib
     and al,3
     cmp al,2
@@ -2418,8 +2418,8 @@ UnlinkPipe   Proc near
     jmp ulpDone
 
 ulpBulk:
-    mov dx,flat_sel
-    mov fs,dx
+    mov cx,flat_sel
+    mov fs,cx
     xor ecx,ecx
     mov ebx,ds:ohc_bulk_linear
 
