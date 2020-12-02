@@ -722,10 +722,13 @@ init_usb_function Proc far
     xor ax,ax
     rep stosw
 ;
-    mov cx,128
-    mov di,OFFSET usb_addr_arr
-    xor ax,ax
-    rep stosw
+    mov eax,1
+    mov di,OFFSET usb_addr_bitmap
+    stosd
+    xor eax,eax
+    stosd
+    stosd
+    stosd
 ;
     mov ax,SEG data
     mov ds,ax
@@ -960,33 +963,42 @@ unlock_usb    Endp
 allocate_usb_address_name DB 'Allocate USB Address', 0
 
 allocate_usb_address       Proc far
-    push es
-    push cx
-    push si
-    push di
+    push ebx
+    push ecx
+    push esi
+
+auaRetry:
+    mov si,OFFSET usb_addr_bitmap
+    xor al,al
+    mov cx,4
+
+auaLoop:
+    mov ebx,ds:[si]
+    cmp ebx,-1
+    je auaNext
 ;
-    mov ax,ds
-    mov es,ax
+    not ebx
+    bsf ecx,ebx
+    add al,cl
+    jmp auaTake
+
+auaNext:
+    add al,32
+    add si,4
+    loop auaNext
 ;
-    EnterSection ds:usb_section
-    mov di,OFFSET usb_addr_arr
-    mov cx,128
-    add di,2
-    xor ax,ax
-    repnz scasw
-    sub di,2
-    mov word ptr ds:[di],-1
-    LeaveSection ds:usb_section
-;
-    sub di,OFFSET usb_addr_arr
-    shr di,1
-    mov ax,di
-    clc
-;
-    pop di
-    pop si
-    pop cx
-    pop es
+    stc
+    jmp auaDone
+
+auaTake:
+    movzx eax,al
+    bts ds:usb_addr_bitmap,eax
+    jc auaRetry
+
+auaDone:
+    pop esi
+    pop ecx
+    pop ebx
     retf32
 allocate_usb_address      Endp
 
@@ -1005,15 +1017,11 @@ allocate_usb_address      Endp
 free_usb_address_name DB 'Free USB Address', 0
 
 free_usb_address       Proc far
-    push bx
-;
-    EnterSection ds:usb_section
-    movzx bx,al
-    add bx,bx
-    mov ds:[bx].usb_addr_arr,0
-    LeaveSection ds:usb_section
-;
-    pop bx
+    push eax
+    movzx eax,al
+    btc ds:usb_addr_bitmap,eax
+    cmc
+    pop eax
     retf32
 free_usb_address       Endp
 
@@ -1082,19 +1090,8 @@ init_usb_dev       Proc far
     jz usdNoHub
 ;
     mov es:usbd_func_sel,bx
-;
-    push ds
-    mov ds,bx
-    movzx bx,al
-    add bx,bx
-    mov ds:[bx].usb_addr_arr,es
-    pop ds
 
 usdNoHub:
-    movzx bx,al
-    add bx,bx
-    mov ds:[bx].usb_addr_arr,es
-;
     popa
     retf32
 init_usb_dev       Endp
