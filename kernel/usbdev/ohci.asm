@@ -1939,7 +1939,6 @@ ControlMsg   Endp
 ;
 ;       PARAMETERS:     FS      Flat sel
 ;                       CX      Buffer count
-;                       AX      Buffer size
 ;                       GS:EDI  Descriptor
 ;
 ;       RETURNS:        BX      Pipe sel
@@ -1955,16 +1954,17 @@ AllocatePipe    Proc near
     push edi
 ;
     mov esi,edi
-    mov ax,gs:[di].ued_maxsize
     push es
     movzx eax,cx
     shl ax,2
     add ax,OFFSET op_entry_arr
     AllocateSmallGlobalMem
 ;
+    push cx
     xor edi,edi
     mov ecx,SIZE usb_endpoint_descr
     rep movs es:[edi],gs:[esi]
+    pop cx
 ;
     mov es:op_rd_ptr,0
     mov es:op_wr_ptr,0
@@ -1989,7 +1989,8 @@ apTdLoop:
     mov fs:[esi].otd_flags,0F0E4h
     mov fs:[esi].otd_cbp,eax
     mov fs:[esi].otd_next_td,0
-    add eax,ebp
+    movzx ebx,ds:ued_maxsize
+    add eax,ebx
     dec eax
     mov fs:[esi].otd_be,eax
     mov fs:[esi].otd_next_va,0
