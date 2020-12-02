@@ -3543,7 +3543,7 @@ htWaitNotify:
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
-    jc htUnlock
+    jc htUnlockFree
 ;
     call fword ptr ds:change_address_proc
     AddUsbDevice
@@ -3572,6 +3572,9 @@ htAttached:
 htHandle:
     jmp htAttached
 
+htUnlockFree:
+    FreeUsbDev
+
 htUnlock:
     mov eax,gs:[2*edi].HcPortSc
     test ax,2000h
@@ -3592,6 +3595,8 @@ htDetach:
 ;
     mov al,cl
     NotifyUsbDetach
+;
+    FreeUsbDev
 
 htDetached:
     mov eax,gs:[2*edi].HcPortSc

@@ -859,10 +859,10 @@ htCreate:
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
-    jc htUnlock
+    jc htUnlockFree
 ;
     call fword ptr ds:change_address_proc
-    jc htUnlock
+    jc htUnlockFree
 ;
     AddUsbDevice
     UnlockUsb
@@ -890,6 +890,9 @@ htAttached:
 htHandle:
     jmp htAttached
 
+htUnlockFree:
+    FreeUsbDev
+
 htUnlock:
     mov ax,ds:[edi].hub_status_arr
     test ax,1
@@ -911,6 +914,7 @@ htDetach:
 ;
     mov al,cl
     NotifyUsbDetach
+    FreeUsbDev
 ;
     mov ax,ds:[edi].hub_status_arr
     test ax,1

@@ -3397,7 +3397,7 @@ htSlotAlloc:
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
-    jc htUnlock
+    jc htUnlockFree
 ;
     call fword ptr ds:change_address_proc
     AddUsbDevice
@@ -3431,6 +3431,9 @@ htAttached:
 htHandle:
     jmp htAttached
 
+htUnlockFree:
+    FreeUsbDev
+
 htUnlock:
     UnlockUsb
     jmp htDetached
@@ -3461,6 +3464,7 @@ htDetach:
     mov al,cl
     NotifyUsbDetach
     pop edi
+    FreeUsbDev
 ;
     movzx bx,cl    
     mov al,ds:[bx].xhc_port_slot_arr

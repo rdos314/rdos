@@ -790,54 +790,7 @@ init_usb_control_pipe    Proc far
     pop ds
     retf32
 init_usb_control_pipe    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseDevice
-;
-;           description:    Close device and cleanup resources
-;
-;       parameters:     ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseDevice Proc near    
-    push ax
-    push bx
-    push cx
-    push dx
-;    
-    mov al,es:usbd_address
-    call fword ptr ds:free_address_proc
-;
-    mov cx,16
-    mov bx,OFFSET usbd_config_sel
-
-cdConfLoop:
-    mov ax,es:[bx]
-    or ax,ax
-    jz cdConfNext
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-
-cdConfNext:
-    add bx,2
-    loop cdConfLoop    
-;
-    call fword ptr ds:free_dev_proc
-;
-    pop dx
-    pop cx
-    pop bx
-    pop ax    
-    ret
-CloseDevice Endp
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1149,6 +1102,55 @@ init_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreeUsbDev
+;
+;       Description:    Free usb device
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_usb_dev_name DB 'Free USB Device', 0
+
+free_usb_dev       Proc far
+    push ax
+    push bx
+    push cx
+    push dx
+;    
+    mov al,es:usbd_address
+    call fword ptr ds:free_address_proc
+;
+    mov cx,16
+    mov bx,OFFSET usbd_config_sel
+
+fudConfLoop:
+    mov ax,es:[bx]
+    or ax,ax
+    jz fudConfNext
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+fudConfNext:
+    add bx,2
+    loop fudConfLoop    
+;
+    call fword ptr ds:free_dev_proc
+;
+    pop dx
+    pop cx
+    pop bx
+    pop ax    
+    retf32
+free_usb_dev       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddUsbDevice
 ;
 ;       Description:    Add USB device
@@ -1425,7 +1427,6 @@ notify_usb_detach       Proc far
     mov bx,ds:usb_controller_id
     mov al,es:usbd_address
     call trap_usb_detach      
-    call CloseDevice
 
 nudDone:    
     popad
@@ -2417,6 +2418,12 @@ init    Proc far
     mov edi,OFFSET unlink_usb_dev_name
     xor cl,cl
     mov ax,unlink_usb_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_usb_dev
+    mov edi,OFFSET free_usb_dev_name
+    xor cl,cl
+    mov ax,free_usb_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET address_usb_dev

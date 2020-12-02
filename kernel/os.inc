@@ -4068,6 +4068,12 @@ UnlinkUsbDev MACRO
     OsGate unlink_usb_dev_nr
                     ENDM
 
+; IN  DS      Function sel
+; IN  ES      Dev sel
+FreeUsbDev MACRO
+    OsGate free_usb_dev_nr
+                    ENDM
+
 ; IN  FS      Pipe sel
 ; OUT NC      Connected
 IsUsbPipeConnected MACRO
