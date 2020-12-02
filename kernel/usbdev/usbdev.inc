@@ -100,6 +100,14 @@ config_pipe_proc      DD ?,?
 ;  IN ES        Device
 unlink_proc      DD ?,?
 
+;  IN ES        Device
+;  IN DL        Pipe #
+enable_pipe_proc      DD ?,?
+
+;  IN ES        Device
+;  IN DL        Pipe #
+disable_pipe_proc      DD ?,?
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?

@@ -940,5 +940,7 @@ get_hid_device_nr                 = 747
 
 reset_usb_dev_nr                  = 748
 config_usb_pipe_nr                = 749
+enable_usb_pipe_nr                = 750
+disable_usb_pipe_nr               = 751
 
 usergate_entries                  = 780

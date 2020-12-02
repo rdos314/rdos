@@ -30,6 +30,8 @@ void main()
 
     handle = RdosOpenUsbDevice(1, 2);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);
+    if (ok)
+        ok = RdosEnableUsbPipe(handle, 0x81);
 
     RdosTestGate("");
 }

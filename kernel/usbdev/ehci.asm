@@ -3027,6 +3027,40 @@ UnlinkPipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           EnablePipe
+;
+;       DESCRIPTION:    Enable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnablePipe   Proc far
+    int 3
+    retf32
+EnablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisablePipe
+;
+;       DESCRIPTION:    Disable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePipe   Proc far
+    int 3
+    retf32
+DisablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ClosePipe
 ;
 ;           DESCRIPTION:    Close pipe
@@ -4191,6 +4225,8 @@ ec0A DD OFFSET IsDeviceConnected,  SEG code
 ec0B DD OFFSET ControlMsg,         SEG code
 ec0C DD OFFSET ConfigPipe,         SEG code
 ec0D DD OFFSET UnlinkPipes,        SEG code
+ec0E DD OFFSET EnablePipe,         SEG code
+ec0F DD OFFSET DisablePipe,        SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4212,7 +4248,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*0Eh
+    mov cx,2*10h
 
 ifTabLoop:
     lods dword ptr cs:[si]

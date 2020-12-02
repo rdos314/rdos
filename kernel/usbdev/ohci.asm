@@ -40,6 +40,8 @@ INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
 
+OP_FLAG_ENABLED = 1
+
 hc_reg  STRUC
 
 HcRevision      DD ?
@@ -171,7 +173,10 @@ hcca_struc  ENDS
 
 ohci_pipe_struc    STRUC
 
-op_descr        DB 8 DUP(?)
+op_descr        usb_endpoint_descr <>
+op_flags        DB ?
+
+op_section      section_typ <>
 
 op_rd_ptr       DW ?
 op_wr_ptr       DW ?
@@ -1966,6 +1971,8 @@ AllocatePipe    Proc near
     rep movs es:[edi],gs:[esi]
     pop cx
 ;
+    mov es:op_flags,0
+    InitSection es:op_section
     mov es:op_rd_ptr,0
     mov es:op_wr_ptr,0
     mov es:op_entry_count,cx
@@ -2012,6 +2019,118 @@ apTdLoop:
     pop ds
     ret
 AllocatePipe    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigPipe
+;
+;       DESCRIPTION:    Config pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe
+;                       CX      Buffer count
+;                       GS:EDI  Endpoint descriptor
+;
+;       RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigPipe   Proc far
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:[di].ued_attrib
+    and al,3
+    cmp al,2
+    je cpBulk
+;
+    cmp al,3
+    je cpIntr
+;
+    stc
+    jmp cpDone
+
+cpBulk:
+    call AllocatePipe
+;
+    mov dl,gs:[di].ued_address
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    test dl,80h
+    jz cpBulkOut
+
+cpBulkIn:
+    mov es:[si].dev_in_ep_arr,bx
+    call AddBulkEd
+;
+    push ds
+    mov ds,bx
+    mov ds:op_intr_count,0
+    mov ds:op_intr_list,0
+    mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    clc
+    jmp cpDone
+
+cpBulkOut:
+    mov es:[si].dev_out_ep_arr,bx
+    call AddBulkEd
+    mov ds,bx
+    mov ds:op_intr_count,0
+    mov ds:op_intr_list,0
+    mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    clc
+    jmp cpDone
+
+cpIntr:
+    call AllocatePipe
+    mov dl,gs:[di].ued_address
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    test dl,80h
+    jz cpIntrOut
+
+cpIntrIn:
+    mov es:[si].dev_in_ep_arr,bx
+    call AddIntrEd
+    mov ds,bx
+    mov ds:op_intr_count,si
+    mov ds:op_intr_list,di
+    mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    clc
+    jmp cpDone
+
+cpIntrOut:
+    mov es:[si].dev_out_ep_arr,bx
+    call AddIntrEd
+    mov ds,bx
+    mov ds:op_intr_count,si
+    mov ds:op_intr_list,di
+    mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    clc
+
+cpDone:
+    popad
+    pop fs
+    pop ds
+    retf32
+ConfigPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2118,20 +2237,17 @@ StartPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigPipe
+;       NAME:           EnablePipe
 ;
-;       DESCRIPTION:    Config pipe
+;       DESCRIPTION:    Enable pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe
-;                       CX      Buffer count
-;                       GS:EDI  Endpoint descriptor
-;
-;       RETURNS:        NC      OK
+;                       DL      Pipe #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConfigPipe   Proc far
+EnablePipe   Proc far
+    int 3
     push ds
     push fs
     pushad
@@ -2139,113 +2255,77 @@ ConfigPipe   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    mov al,gs:[di].ued_attrib
-    and al,3
-    cmp al,2
-    je cpBulk
-;
-    cmp al,3
-    je cpIntr
-;
-    stc
-    jmp cpDone
+    test dl,80h
+    jnz epIn
 
-cpBulk:
-    call AllocatePipe
-;
-    mov dl,gs:[di].ued_address
+epOut:
     movzx si,dl
     and si,0Fh
     dec si
     add si,si
-    test dl,80h
-    jz cpBulkOut
-
-cpBulkIn:
-    call AddBulkEd
-    mov es:[si].dev_in_ep_arr,bx
+    mov bx,es:[si].dev_out_ep_arr
+    or bx,bx
+    stc
+    jz epDone
 ;
-    push ds
     mov ds,bx
-    mov ds:op_intr_count,0
-    mov ds:op_intr_list,0
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
+    EnterSection ds:op_section
+    call StartPipe
+    LeaveSection ds:op_section
+    clc
+    jmp epDone
+
+epIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].dev_in_ep_arr
+    or bx,bx
+    stc
+    jz epDone
 ;
+    mov ds,bx
+    EnterSection ds:op_section
     call StartInPipe
     call StartPipe
-    pop ds
+    LeaveSection ds:op_section
+;
+    mov al,ds:ued_attrib
+    and al,3
+    cmp al,2
+    clc
+    jne epDone
 ;
     mov ds,ds:ohc_reg_sel
     mov eax,ds:HcCommandStatus
     or al,4
     mov ds:HcCommandStatus,eax
     clc
-    jmp cpDone
 
-cpBulkOut:
-    call AddBulkEd
-    mov es:[si].dev_out_ep_arr,bx
-    mov ds,bx
-    mov ds:op_intr_count,0
-    mov ds:op_intr_list,0
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-;
-    call StartPipe
-    clc
-    jmp cpDone
-
-cpIntr:
-    call AllocatePipe
-    mov dl,gs:[di].ued_address
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    test dl,80h
-    jz cpIntrOut
-
-cpIntrIn:
-    push di
-    call AddIntrEd
-    mov es:[si].dev_in_ep_arr,bx
-    mov ds,bx
-    mov ds:op_intr_count,si
-    mov ds:op_intr_list,di
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-    pop di
-;
-    call StartInPipe
-    call StartPipe
-    clc
-    jmp cpDone
-
-cpIntrOut:
-    push di
-    call AddIntrEd
-    mov es:[si].dev_out_ep_arr,bx
-    mov ds,bx
-    mov ds:op_intr_count,si
-    mov ds:op_intr_list,di
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-    pop di
-;
-    call StartPipe
-    clc
-
-cpDone:
+epDone:
     popad
     pop fs
     pop ds
     retf32
-ConfigPipe   Endp
+EnablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisablePipe
+;
+;       DESCRIPTION:    Disable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePipe   Proc far
+    int 3
+    retf32
+DisablePipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3273,6 +3353,8 @@ ot0A DD OFFSET IsDeviceConnected,   SEG code
 ot0B DD OFFSET ControlMsg,          SEG code
 ot0C DD OFFSET ConfigPipe,          SEG code
 ot0D DD OFFSET UnlinkPipes,         SEG code
+ot0E DD OFFSET EnablePipe,          SEG code
+ot0F DD OFFSET DisablePipe,         SEG code
 
 InitFunction    Proc near
     push ds
@@ -3330,7 +3412,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*0Eh
+    mov cx,2*10h
 
 ifTabLoop:
     lods dword ptr cs:[si]

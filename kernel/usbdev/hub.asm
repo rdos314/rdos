@@ -333,6 +333,46 @@ ConfigPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           EnablePipe
+;
+;       DESCRIPTION:    Enable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnablePipe   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:enable_pipe_proc
+    pop ds
+    ret
+EnablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisablePipe
+;
+;       DESCRIPTION:    Disable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePipe   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:disable_pipe_proc
+    pop ds
+    ret
+DisablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -438,6 +478,8 @@ ht0A DD OFFSET IsDeviceConnected,   SEG code
 ht0B DD OFFSET ControlMsg,          SEG code
 ht0C DD OFFSET ConfigPipe,          SEG code
 ht0D DD OFFSET UnlinkPipes,         SEG code
+ht0E DD OFFSET EnablePipe,          SEG code
+ht0F DD OFFSET DisablePipe,         SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2010,7 +2052,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*0Eh
+    mov ecx,2*10h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

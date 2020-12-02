@@ -3632,6 +3632,19 @@ ConfigUsbPipe      MACRO
         UserGate config_usb_pipe_nr
                                                 ENDM
 
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+EnableUsbPipe      MACRO
+        UserGate enable_usb_pipe_nr
+                                                ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+DisableUsbPipe      MACRO
+        UserGate disable_usb_pipe_nr
+                                                ENDM
+
+
 ;   IN  BX          Controller #
 ;   IN  AL          Port #
 ;   IN  (E)CX       Buffer size

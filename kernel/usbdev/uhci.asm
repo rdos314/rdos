@@ -3192,6 +3192,40 @@ ConfigPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           EnablePipe
+;
+;       DESCRIPTION:    Enable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnablePipe   Proc far
+    int 3
+    retf32
+EnablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisablePipe
+;
+;       DESCRIPTION:    Disable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       DL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePipe   Proc far
+    int 3
+    retf32
+DisablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -3715,6 +3749,8 @@ ut0A DD OFFSET IsDeviceConnected,   SEG code
 ut0B DD OFFSET ControlMsg,          SEG code
 ut0C DD OFFSET ConfigPipe,          SEG code
 ut0D DD OFFSET UnlinkPipes,         SEG code
+ut0E DD OFFSET EnablePipe,          SEG code
+ut0F DD OFFSET DisablePipe,         SEG code
 
 InitFunction    Proc near
     push ds
@@ -3736,7 +3772,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*0Eh
+    mov cx,2*10h
 
 ifTabLoop:
     lods dword ptr cs:[si]

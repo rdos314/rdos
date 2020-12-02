@@ -3621,6 +3621,16 @@
     CarryToBool \
     __parm [__ebx] [__dl] [__ecx]
 
+#pragma aux RdosEnableUsbPipe = \
+    CallGate_enable_usb_pipe \
+    CarryToBool \
+    __parm [__ebx] [__dl]
+
+#pragma aux RdosDisableUsbPipe = \
+    CallGate_disable_usb_pipe \
+    CarryToBool \
+    __parm [__ebx] [__dl]
+
 #pragma aux RdosHasICSP = \
     CallGate_has_icsp \
     CarryToBool \

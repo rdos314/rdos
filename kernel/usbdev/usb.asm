@@ -556,6 +556,98 @@ cdpDone:
 config_usb_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           EnableUsbPipe
+;
+;       description:    Enable USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_usb_pipe_name DB 'Enable Usb Pipe', 0
+
+enable_usb_pipe	Proc far
+    push ds
+    push es
+    push eax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc edpDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz edpDone
+;
+    EnterSection ds:udd_section
+    push ds
+    mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:enable_pipe_proc
+    pop ds
+    LeaveSection ds:udd_section
+
+edpDone:
+    pop ebx
+    pop eax
+    pop es
+    pop ds    
+    retf32
+enable_usb_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisableUsbPipe
+;
+;       description:    Disable USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_usb_pipe_name DB 'Disable Usb Pipe', 0
+
+disable_usb_pipe	Proc far
+    push ds
+    push es
+    push eax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc ddpDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz ddpDone
+;
+    EnterSection ds:udd_section
+    push ds
+    mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:disable_pipe_proc
+    pop ds
+    LeaveSection ds:udd_section
+
+ddpDone:
+    pop ebx
+    pop eax
+    pop es
+    pop ds    
+    retf32
+disable_usb_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           delete_dev_handle
@@ -2564,6 +2656,18 @@ init    Proc far
     mov edi,OFFSET config_usb_pipe_name
     xor dx,dx
     mov ax,config_usb_pipe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET enable_usb_pipe
+    mov edi,OFFSET enable_usb_pipe_name
+    xor dx,dx
+    mov ax,enable_usb_pipe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET disable_usb_pipe
+    mov edi,OFFSET disable_usb_pipe_name
+    xor dx,dx
+    mov ax,disable_usb_pipe_nr
     RegisterBimodalUserGate
     clc
     ret
