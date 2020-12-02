@@ -1993,16 +1993,9 @@ apTdLoop:
     AllocateMemBlk
 ;
     mov fs:[esi].otd_resv,0
-    mov fs:[esi].otd_flags,0F0E4h
-    mov fs:[esi].otd_cbp,eax
     mov fs:[esi].otd_next_td,0
-    movzx ebx,ds:ued_maxsize
-    add eax,ebx
-    dec eax
-    mov fs:[esi].otd_be,eax
     mov fs:[esi].otd_next_va,0
     mov fs:[esi].otd_buffer_va,edx
-    mov fs:[esi].otd_buffer_size,bp
 ;
     mov ds:[di],esi
     add di,4
@@ -2162,6 +2155,14 @@ sipLoop:
 
 sipNext:
     mov edi,edx
+    mov fs:[edi].otd_flags,0F0E4h
+    mov edx,fs:[edi].otd_buffer_va
+    LinearToPhysicalMemBlk
+    mov fs:[edi].otd_cbp,eax
+    movzx ebx,ds:ued_maxsize
+    add eax,ebx
+    dec eax
+    mov fs:[edi].otd_be,eax
     add si,4
     loop sipLoop
 ;
