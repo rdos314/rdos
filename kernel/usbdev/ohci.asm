@@ -182,9 +182,6 @@ dev_control_thread DW ?
 dev_curr_addr      DB ?
 dev_cc             DB ?
 
-dev_in_ep_arr      DW 15 DUP(?)
-dev_out_ep_arr     DW 15 DUP(?)
-
 ohci_dev_sel   ENDS
 
 ohci_pipe_struc    STRUC
@@ -1691,7 +1688,7 @@ cpBulk:
     jz cpBulkOut
 
 cpBulkIn:
-    mov es:[si].dev_in_ep_arr,bx
+    mov es:[si].usbd_in_pipe_arr,bx
     call AddBulkEd
 ;
     push ds
@@ -1705,7 +1702,7 @@ cpBulkIn:
     jmp cpDone
 
 cpBulkOut:
-    mov es:[si].dev_out_ep_arr,bx
+    mov es:[si].usbd_out_pipe_arr,bx
     call AddBulkEd
     mov ds,bx
     mov ds:op_intr_count,0
@@ -1727,7 +1724,7 @@ cpIntr:
     jz cpIntrOut
 
 cpIntrIn:
-    mov es:[si].dev_in_ep_arr,bx
+    mov es:[si].usbd_in_pipe_arr,bx
     mov cl,ds:ued_interval
     call AddIntrEd
     mov ds,bx
@@ -1740,7 +1737,7 @@ cpIntrIn:
     jmp cpDone
 
 cpIntrOut:
-    mov es:[si].dev_out_ep_arr,bx
+    mov es:[si].usbd_out_pipe_arr,bx
     mov cl,ds:ued_interval
     call AddIntrEd
     mov ds,bx
@@ -1911,7 +1908,7 @@ epOut:
     and si,0Fh
     dec si
     add si,si
-    mov bx,es:[si].dev_out_ep_arr
+    mov bx,es:[si].usbd_out_pipe_arr
     or bx,bx
     stc
     jz epDone
@@ -1931,7 +1928,7 @@ epIn:
     and si,0Fh
     dec si
     add si,si
-    mov bx,es:[si].dev_in_ep_arr
+    mov bx,es:[si].usbd_in_pipe_arr
     or bx,bx
     stc
     jz epDone
@@ -2019,7 +2016,7 @@ dpOut:
     and si,0Fh
     dec si
     add si,si
-    mov bx,es:[si].dev_out_ep_arr
+    mov bx,es:[si].usbd_out_pipe_arr
     or bx,bx
     stc
     jz dpDone
@@ -2039,7 +2036,7 @@ dpIn:
     and si,0Fh
     dec si
     add si,si
-    mov bx,es:[si].dev_in_ep_arr
+    mov bx,es:[si].usbd_in_pipe_arr
     or bx,bx
     stc
     jz dpDone
@@ -2088,7 +2085,7 @@ bwpOut:
     and si,0Fh
     dec si
     add si,si
-    mov si,es:[si].dev_out_ep_arr
+    mov si,es:[si].usbd_out_pipe_arr
     or si,si
     jz bwpDoSignal
 ;
@@ -2104,7 +2101,7 @@ bwpIn:
     and si,0Fh
     dec si
     add si,si
-    mov si,es:[si].dev_in_ep_arr
+    mov si,es:[si].usbd_in_pipe_arr
     or si,si
     jz bwpDoSignal
 ;
@@ -2180,7 +2177,7 @@ NotifyIn  Proc near
     and esi,0Fh
     dec esi
     add esi,esi
-    mov bx,fs:[edi+esi].dev_in_ep_arr
+    mov bx,fs:[edi+esi].usbd_in_pipe_arr
     or bx,bx
     jz niDone
 ;
@@ -2500,7 +2497,7 @@ UnlinkPipes   Proc far
     call UnlinkControl
 ;
     mov cx,15
-    mov si,OFFSET dev_in_ep_arr
+    mov si,OFFSET usbd_in_pipe_arr
 
 upInLoop:
     mov bx,es:[si]
@@ -2514,7 +2511,7 @@ upInNext:
     loop upInLoop
 ;
     mov cx,15
-    mov si,OFFSET dev_out_ep_arr
+    mov si,OFFSET usbd_out_pipe_arr
 
 upOutLoop:
     mov bx,es:[si]
@@ -2601,11 +2598,11 @@ CreateDev   Proc far
 ;
     xor ax,ax
     mov cx,15
-    mov di,OFFSET dev_in_ep_arr
+    mov di,OFFSET usbd_in_pipe_arr
     rep stosw
 ;
     mov cx,15
-    mov di,OFFSET dev_out_ep_arr
+    mov di,OFFSET usbd_out_pipe_arr
     rep stosw
 ;
     call AllocateTd

@@ -150,6 +150,9 @@ usbd_speed              DB ?
 usbd_flags              DB ?
 usbd_curr_config        DW ?
 
+usbd_in_pipe_arr        DW 15 DUP(?)
+usbd_out_pipe_arr       DW 15 DUP(?)
+
 usbd_section            section_typ <>
 
 usbd_control_buf        DB 8 DUP(?)
