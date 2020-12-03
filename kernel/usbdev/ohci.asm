@@ -1760,13 +1760,23 @@ rcEnabled:
     mov ds:HcCommandStatus,eax
     pop ds
 ;
-;    GetSystemTime
-;    add eax,1193 * 250
-;    adc edx,0
-;    WaitForSignalWithTimeout
-    WaitForSignal
-    int 3
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
+    mov al,es:dev_cc
+    cmp al,0Fh
+    je rcTimed
 ;
+    or al,al
+    clc
+    jz rcDone
+;
+    stc
+    jmp rcDone
+
+rcTimed:
+    int 3
     mov edx,es:dev_control_ed
     mov cx,100
 
@@ -1798,43 +1808,6 @@ rcDone:
     popad
     ret
 RunControl Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CheckResult
-;
-;       DESCRIPTION:    Chech result
-;
-;       PARAMETERS:     ES      Usb device
-;                       FS      Flat sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckResult   Proc near
-    push eax
-    push esi
-;
-    mov esi,es:dev_control_head
-
-crLoop:
-    mov ax,fs:[esi].otd_flags
-    shr ax,12
-    or ax,ax
-    stc
-    jnz crDone
-;
-    mov esi,fs:[esi].otd_next_va
-    or esi,esi
-    jnz crLoop
-;
-    clc
-
-crDone:
-    pop esi
-    pop eax
-    ret
-CheckResult     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1913,9 +1886,6 @@ ControlMsg   Proc far
     call RunControl
     jc cmFail
 ;
-    call CheckResult
-    jc cmFail
-;
     call CopyControlIn
     jmp cmDone
     
@@ -1924,9 +1894,6 @@ cmDataOut:
     jc cmFail
 ;
     call RunControl
-    jc cmFail
-;
-    call CheckResult
     jc cmFail
 ;
     call CleanupControl
