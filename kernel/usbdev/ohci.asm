@@ -40,9 +40,6 @@ INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
 
-OP_FLAG_ENABLED = 1
-OP_FLAG_FULL    = 2
-
 hc_reg  STRUC
 
 HcRevision      DD ?
@@ -2231,11 +2228,11 @@ epOut:
     jz epDone
 ;
     mov ds,bx
-    test ds:usbdp_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     clc
     jnz epDone
 ;
-    lock or ds:usbdp_flags,OP_FLAG_ENABLED
+    lock or ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     call StartPipe
     clc
     jmp epDone
@@ -2251,11 +2248,11 @@ epIn:
     jz epDone
 ;
     mov ds,bx
-    test ds:usbdp_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     clc
     jnz epDone
 ;
-    lock or ds:usbdp_flags,OP_FLAG_ENABLED
+    lock or ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     call StartInPipe
     call StartPipe
 ;
@@ -2339,11 +2336,11 @@ dpOut:
     jz dpDone
 ;
     mov ds,bx
-    test ds:usbdp_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     clc
     jz dpDone
 ;
-    lock and ds:usbdp_flags,NOT OP_FLAG_ENABLED
+    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
     call StopPipe
     clc
     jmp dpDone
@@ -2359,11 +2356,11 @@ dpIn:
     jz dpDone
 ;
     mov ds,bx
-    test ds:usbdp_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     clc
     jz dpDone
 ;
-    lock and ds:usbdp_flags,NOT OP_FLAG_ENABLED
+    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
     call StopPipe
 
 dpDone:
@@ -2407,7 +2404,7 @@ bwpOut:
     jz bwpDoSignal
 ;
     mov ds,si
-    test ds:usbdp_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     jz bwpDoSignal
 ;
     int 3
@@ -2423,11 +2420,11 @@ bwpIn:
     jz bwpDoSignal
 ;
     mov ds,si
-    test ds:usbdp_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     jz bwpDoSignal
 ;
     mov ds:usbdp_wait,bx
-    test ds:usbdp_flags,OP_FLAG_FULL
+    test ds:usbdp_flags,USB_PIPE_FLAG_FULL
     jnz bwpCheckSignal
 ;
     mov ax,ds:usbdp_wr_ptr
@@ -2520,7 +2517,7 @@ niSave:
     cmp bx,ds:usbdp_rd_ptr
     jne niSignal
 ;
-    lock or ds:usbdp_flags,OP_FLAG_FULL
+    lock or ds:usbdp_flags,USB_PIPE_FLAG_FULL
 
 niSignal:
     xor bx,bx

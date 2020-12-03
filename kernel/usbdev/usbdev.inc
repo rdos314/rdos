@@ -43,6 +43,10 @@ DIR_OUT = 0
 
 USBF_XHCI   = 1
 
+USB_PIPE_FLAG_ENABLED = 1
+USB_PIPE_FLAG_FULL    = 2
+USB_PIPE_FLAG_EMPTY   = 4
+
 usb_function_struc   STRUC
 
 ; OUT AL        Address
