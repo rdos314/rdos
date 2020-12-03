@@ -101,6 +101,7 @@ otd_be          DD ?
 otd_next_va     DD ?
 otd_buffer_va   DD ?
 otd_buffer_size DW ?
+otd_pipe        DB ?
 
 ohc_td_struc    ENDS
 
@@ -321,6 +322,7 @@ InitTd  PROC near
     mov fs:[edx].otd_next_td,0
     mov fs:[edx].otd_be,0
     mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_pipe,0
     ret
 InitTd  ENDP
 
@@ -1396,6 +1398,7 @@ SetupControl   Proc near
     mov fs:[edx].otd_flags,0F2E4h
     mov fs:[edx].otd_next_td,0
     mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_pipe,0
 ;
     mov ebx,OFFSET usbd_control_buf
     mov eax,ebx
@@ -1447,6 +1450,7 @@ sciLoop:
     mov fs:[esi].otd_cbp,0
     mov fs:[esi].otd_next_va,0
     mov fs:[esi].otd_buffer_va,0
+    mov fs:[esi].otd_pipe,0
 ;
     mov bx,cx
     cmp bx,es:usbd_maxlen
@@ -1486,6 +1490,7 @@ sciStatusOut:
     mov fs:[esi].otd_flags,0F30Ch
     mov fs:[esi].otd_cbp,0
     mov fs:[esi].otd_be,0
+    mov fs:[esi].otd_pipe,0
 ;
     mov eax,es:dev_control_tail
     mov fs:[esi].otd_next_td,eax
@@ -1626,6 +1631,7 @@ scoLoop:
     mov fs:[edi].otd_cbp,0
     mov fs:[edi].otd_next_va,0
     mov fs:[edi].otd_buffer_va,0
+    mov fs:[edi].otd_pipe,0
 ;
     mov bx,cx
     cmp bx,es:usbd_maxlen
@@ -1679,6 +1685,7 @@ scoStatusIn:
     mov fs:[edi].otd_flags,0F314h
     mov fs:[edi].otd_cbp,0
     mov fs:[edi].otd_be,0
+    mov fs:[edi].otd_pipe,0
 ;
     mov eax,es:dev_control_tail
     mov fs:[edi].otd_next_td,eax
@@ -1993,13 +2000,12 @@ apTdLoop:
     AllocateMemBlk
     mov esi,edx
 ;
-    mov cx,ds:ued_maxsize
-    AllocateMemBlk
-;
     mov fs:[esi].otd_resv,0
+    mov fs:[edi].otd_cbp,0
+    mov fs:[edi].otd_be,0
     mov fs:[esi].otd_next_td,0
     mov fs:[esi].otd_next_va,0
-    mov fs:[esi].otd_buffer_va,edx
+    mov fs:[esi].otd_buffer_va,0
 ;
     mov ds:[di],esi
     add di,4
@@ -2161,12 +2167,25 @@ sipNext:
     mov edi,edx
     mov fs:[edi].otd_flags,0F004h
     mov edx,fs:[edi].otd_buffer_va
+    or edx,edx
+    jz sipConv
+;
+    mov cx,ds:ued_maxsize
+    AllocateMemBlk
+    mov fs:[edi].otd_buffer_va,edx
+    jmp sipSave
+
+sipConv:
     LinearToPhysicalMemBlk
+
+sipSave:
     mov fs:[edi].otd_cbp,eax
     movzx ebx,ds:ued_maxsize
     add eax,ebx
     dec eax
     mov fs:[edi].otd_be,eax
+    mov al,ds:ued_address
+    mov fs:[edi].otd_pipe,al
     add si,4
     loop sipLoop
 ;
@@ -2422,6 +2441,23 @@ dpDone:
     pop ds
     retf32
 DisablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyTransfer
+;
+;       DESCRIPTION:    Notify transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDX     Transfer descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyTransfer   Proc near
+    ret
+NotifyTransfer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2732,7 +2768,7 @@ CreateDev   Proc far
     movzx di,al
     shl di,2
     mov edx,es:mblk_linear_base
-    mov es:[di].ohc_linear_dev_arr,edx
+    mov ds:[di].ohc_linear_dev_arr,edx
 ;
     popad
     pop fs
@@ -2763,7 +2799,7 @@ FreeDev   Proc far
     dec al
     movzx di,al
     shl di,2
-    mov es:[di].ohc_linear_dev_arr,0
+    mov ds:[di].ohc_linear_dev_arr,0
 ;
     mov ax,10
     WaitMilliSec
@@ -3343,6 +3379,9 @@ ohci_function_handler:
     mov ds,bx
     GetThread
     mov ds:ohc_thread,ax
+;
+    mov ax,flat_sel
+    mov fs,ax
 
 ofhLoop:
     WaitForSignal    
@@ -3352,10 +3391,37 @@ ofhLoop:
     mov bx,ohc_hca_base + OFFSET hcca_done_head
     lock xchg eax,ds:[bx]
     and al,NOT 1
+
+ofhProcessLoop:
     or eax,eax
     jz ofhEnable
 ;
+    mov si,OFFSET ohc_linear_dev_arr
+    mov cx,127
+    mov edi,eax
+    and di,0F000h
 
+ofhMainBlk:
+    mov edx,[si]
+    or edx,edx
+    jz ofhMainNext
+;
+    cmp edi,fs:[edx].mblk_physical_base        
+    jne ofhMainNext
+;
+    int 3
+    sub eax,fs:[edx].mblk_physical_base
+    add eax,fs:[edx].mblk_linear_base
+    mov edx,eax
+    mov eax,fs:[edx].otd_next_td
+    call NotifyTransfer
+    jmp ofhProcessLoop
+
+ofhMainNext:
+    add si,4
+    loop ofhMainBlk
+;
+    int 3
 
 ofhEnable:
     mov es,ds:ohc_reg_sel
