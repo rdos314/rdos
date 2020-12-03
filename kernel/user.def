@@ -942,5 +942,6 @@ reset_usb_dev_nr                  = 748
 config_usb_pipe_nr                = 749
 enable_usb_pipe_nr                = 750
 disable_usb_pipe_nr               = 751
+add_wait_for_usb_dev_pipe_nr      = 752
 
 usergate_entries                  = 780

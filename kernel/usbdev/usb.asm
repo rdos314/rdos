@@ -73,6 +73,14 @@ udd_deleted      DB ?
 
 usbdev_dev_struc    ENDS
 
+pipe_wait_header    STRUC
+
+pw_obj           wait_obj_header <>
+pw_handle_sel    DW ?
+pw_pipe          DB ?
+
+pipe_wait_header    ENDS
+
 data    SEGMENT byte public 'DATA'
 
 usb_enum_section    section_typ <>
@@ -646,6 +654,135 @@ ddpDone:
     pop ds    
     retf32
 disable_usb_pipe Endp
+
+
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForPipe
+;
+;           DESCRIPTION:    Start a wait for pipe
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_pipe     PROC far
+    int 3
+    retf32
+start_wait_for_pipe Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForPipe
+;
+;           DESCRIPTION:    Stop a wait for pipe
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_pipe      PROC far
+    retf32
+stop_wait_for_pipe Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearWaitForPipe
+;
+;           DESCRIPTION:    Clear wait for pipe
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_wait_for_pipe     PROC far
+    retf32
+clear_wait_for_pipe Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsPipeIdle
+;
+;           DESCRIPTION:    Check if pipe is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_pipe_idle    PROC far
+    retf32
+is_pipe_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddWaitForPipe
+;
+;           DESCRIPTION:    Add a wait for pipe
+;
+;           PARAMETERS:     BX      Wait handle
+;                           AX      Device handle
+;                           DL      Pipe #
+;                           ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_dev_pipe_name  DB 'Add Wait For Dev Pipe',0
+
+add_wait_tab:
+aw0 DD OFFSET start_wait_for_pipe,      SEG code
+aw1 DD OFFSET stop_wait_for_pipe,       SEG code
+aw2 DD OFFSET clear_wait_for_pipe,      SEG code
+aw3 DD OFFSET is_pipe_idle,             SEG code
+
+add_wait_for_dev_pipe       PROC far
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push edx
+    push edi
+    push ebp
+;
+    mov bp,bx
+    mov bx,ax
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc awpDone
+;
+    mov si,ds:[ebx].udh_dev_sel
+    mov bx,bp
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
+    AddWait
+    jc awpDone
+;
+    mov es:pw_handle_sel,si
+    mov es:pw_pipe,dl
+    clc
+
+awpDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    retf32
+add_wait_for_dev_pipe       ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2665,6 +2802,12 @@ init    Proc far
     mov edi,OFFSET disable_usb_pipe_name
     xor dx,dx
     mov ax,disable_usb_pipe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_dev_pipe
+    mov edi,OFFSET add_wait_for_dev_pipe_name
+    xor dx,dx
+    mov ax,add_wait_for_usb_dev_pipe_nr
     RegisterBimodalUserGate
     clc
     ret

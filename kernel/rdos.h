@@ -892,6 +892,7 @@ void RDOSAPI RdosResetUsbDevice(int handle);
 int RDOSAPI RdosConfigUsbPipe(int handle, char pipe, int entries);
 int RDOSAPI RdosEnableUsbPipe(int handle, char pipe);
 int RDOSAPI RdosDisableUsbPipe(int handle, char pipe);
+void RDOSAPI RdosAddWaitForUsbPipe(int whandle, int devhandle, char pipe, int ID);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();

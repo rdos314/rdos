@@ -3631,6 +3631,10 @@
     CarryToBool \
     __parm [__ebx] [__dl]
 
+#pragma aux RdosAddWaitForUsbPipe = \
+    CallGate_add_wait_for_usb_dev_pipe  \
+    __parm [__ebx] [__eax] [__dl] [__ecx]
+
 #pragma aux RdosHasICSP = \
     CallGate_has_icsp \
     CarryToBool \

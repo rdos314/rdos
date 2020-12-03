@@ -725,6 +725,14 @@ AddWaitForUsbPipe       MACRO
         UserGate add_wait_for_usb_pipe_nr
                                                 ENDM
 
+; IN  AX        USB dev handle
+; IN  BX        Wait handle
+; IN  DL        Pipe #
+; IN  ECX       Object ID
+AddWaitForUsbDevicePipe       MACRO
+        UserGate add_wait_for_usb_dev_pipe_nr
+                                                ENDM
+
 ; IN  AX        ADC handle
 ; IN  BX                Wait handle
 ; IN  ECX       Object ID

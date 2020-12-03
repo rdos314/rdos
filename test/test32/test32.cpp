@@ -27,15 +27,15 @@ void main()
     char buf[8];
     char *dev;
     bool ok;
+    int wait;
 
     handle = RdosOpenUsbDevice(1, 2);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
-    while (ok)
-    {
-        RdosEnableUsbPipe(handle, 0x81);
-        RdosDisableUsbPipe(handle, 0x81);
-    }
+    wait = RdosCreateWait();
+    RdosAddWaitForUsbPipe(wait, handle, 0x81, 0x1234);
+    RdosEnableUsbPipe(handle, 0x81);
+    RdosWaitForever(wait);
 
     RdosTestGate("");
 }
