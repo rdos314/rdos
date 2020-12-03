@@ -2620,14 +2620,6 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
-    pushad
-;
-    mov ax,10
-    WaitMilliSec
-;
-    FreeMemBlk
-;
-    popad
     retf32
 FreeDev   Endp
 

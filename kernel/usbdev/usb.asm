@@ -1280,10 +1280,7 @@ init_usb_dev       Endp
 free_usb_dev_name DB 'Free USB Device', 0
 
 free_usb_dev       Proc far
-    push ax
-    push bx
-    push cx
-    push dx
+    pushad
 ;    
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
@@ -1314,12 +1311,46 @@ fudConfNext:
     shl di,2
     mov ds:[di].usb_linear_dev_arr,0
 ;
-    call fword ptr ds:free_dev_proc
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+fudInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fudInNext
 ;
-    pop dx
-    pop cx
-    pop bx
-    pop ax    
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fudInNext:
+    add si,2
+    loop fudInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+fudOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fudOutNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fudOutNext:
+    add si,2
+    loop fudOutLoop
+;
+    mov ax,10
+    WaitMilliSec
+;
+    FreeMemBlk
+;
+    popad
     retf32
 free_usb_dev       Endp
 
