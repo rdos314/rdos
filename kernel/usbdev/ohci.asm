@@ -2427,7 +2427,58 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartWaitPipe   Proc far
+    push ds
+    push fs
+    pushad
+;
     int 3
+    mov ax,flat_sel
+    mov fs,ax
+;
+    test dl,80h
+    jnz bwpIn
+
+bwpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].dev_out_ep_arr
+    or si,si
+    jz bwpSignal
+;
+    mov ds,si
+    test ds:op_flags,OP_FLAG_ENABLED
+    jz bwpSignal
+;
+    int 3
+    jmp bwpDone
+
+bwpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].dev_in_ep_arr
+    or si,si
+    jz bwpSignal
+;
+    mov ds,si
+    test ds:op_flags,OP_FLAG_ENABLED
+    jz bwpSignal
+;
+    jmp bwpDone
+
+bwpSignal:
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+bwpDone:
+    popad
+    pop fs
+    pop ds
     retf32
 StartWaitPipe   Endp
 
