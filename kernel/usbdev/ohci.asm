@@ -174,24 +174,6 @@ hcca_done_head      DD ?
 
 hcca_struc  ENDS
 
-ohci_pipe_struc    STRUC
-
-op_descr        usb_endpoint_descr <>
-op_flags        DB ?
-
-op_wait         DW ?
-op_rd_ptr       DW ?
-op_wr_ptr       DW ?
-op_entry_count  DW ?
-op_intr_count   DW ?
-op_intr_list    DW ?
-op_ed           DD ?
-op_tail         DD ?
-
-op_entry_arr    DD ?
-
-ohci_pipe_struc    ENDS
-
 ohci_dev_sel   STRUC
 
 usb_dev_base       usb_device_struc <>
@@ -207,6 +189,19 @@ dev_in_ep_arr      DW 15 DUP(?)
 dev_out_ep_arr     DW 15 DUP(?)
 
 ohci_dev_sel   ENDS
+
+ohci_pipe_struc    STRUC
+
+op_pipe            usb_device_pipe_struc <>
+
+op_intr_count      DW ?
+op_intr_list       DW ?
+op_ed              DD ?
+op_tail            DD ?
+
+op_entry_arr       DD ?
+
+ohci_pipe_struc    ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -1923,10 +1918,10 @@ AllocatePipe    Proc near
     rep movs es:[edi],gs:[esi]
     pop cx
 ;
-    mov es:op_flags,0
-    mov es:op_rd_ptr,0
-    mov es:op_wr_ptr,0
-    mov es:op_entry_count,cx
+    mov es:usbdp_flags,0
+    mov es:usbdp_rd_ptr,0
+    mov es:usbdp_wr_ptr,0
+    mov es:usbdp_entry_count,cx
     mov ax,es
     mov ds,ax
     pop es
@@ -2094,7 +2089,7 @@ StartInPipe     Proc near
     pushad
 ;
     mov si,OFFSET op_entry_arr
-    mov cx,ds:op_entry_count
+    mov cx,ds:usbdp_entry_count
     xor edi,edi
 
 sipLoop:
@@ -2236,11 +2231,11 @@ epOut:
     jz epDone
 ;
     mov ds,bx
-    test ds:op_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,OP_FLAG_ENABLED
     clc
     jnz epDone
 ;
-    lock or ds:op_flags,OP_FLAG_ENABLED
+    lock or ds:usbdp_flags,OP_FLAG_ENABLED
     call StartPipe
     clc
     jmp epDone
@@ -2256,11 +2251,11 @@ epIn:
     jz epDone
 ;
     mov ds,bx
-    test ds:op_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,OP_FLAG_ENABLED
     clc
     jnz epDone
 ;
-    lock or ds:op_flags,OP_FLAG_ENABLED
+    lock or ds:usbdp_flags,OP_FLAG_ENABLED
     call StartInPipe
     call StartPipe
 ;
@@ -2344,11 +2339,11 @@ dpOut:
     jz dpDone
 ;
     mov ds,bx
-    test ds:op_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,OP_FLAG_ENABLED
     clc
     jz dpDone
 ;
-    lock and ds:op_flags,NOT OP_FLAG_ENABLED
+    lock and ds:usbdp_flags,NOT OP_FLAG_ENABLED
     call StopPipe
     clc
     jmp dpDone
@@ -2364,11 +2359,11 @@ dpIn:
     jz dpDone
 ;
     mov ds,bx
-    test ds:op_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,OP_FLAG_ENABLED
     clc
     jz dpDone
 ;
-    lock and ds:op_flags,NOT OP_FLAG_ENABLED
+    lock and ds:usbdp_flags,NOT OP_FLAG_ENABLED
     call StopPipe
 
 dpDone:
@@ -2412,7 +2407,7 @@ bwpOut:
     jz bwpDoSignal
 ;
     mov ds,si
-    test ds:op_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,OP_FLAG_ENABLED
     jz bwpDoSignal
 ;
     int 3
@@ -2428,20 +2423,20 @@ bwpIn:
     jz bwpDoSignal
 ;
     mov ds,si
-    test ds:op_flags,OP_FLAG_ENABLED
+    test ds:usbdp_flags,OP_FLAG_ENABLED
     jz bwpDoSignal
 ;
-    mov ds:op_wait,bx
-    test ds:op_flags,OP_FLAG_FULL
+    mov ds:usbdp_wait,bx
+    test ds:usbdp_flags,OP_FLAG_FULL
     jnz bwpCheckSignal
 ;
-    mov ax,ds:op_wr_ptr
-    cmp ax,ds:op_rd_ptr
+    mov ax,ds:usbdp_wr_ptr
+    cmp ax,ds:usbdp_rd_ptr
     je bwpDone
 
 bwpCheckSignal:
     xor bx,bx
-    xchg bx,ds:op_wait
+    xchg bx,ds:usbdp_wait
     or bx,bx
     jz bwpDone
 
@@ -2504,7 +2499,7 @@ NotifyIn  Proc near
     jz niDone
 ;
     mov ds,bx
-    mov bx,ds:op_wr_ptr
+    mov bx,ds:usbdp_wr_ptr
     mov si,bx
     shl si,2
     cmp edx,ds:[si].op_entry_arr
@@ -2515,21 +2510,21 @@ NotifyIn  Proc near
 
 niAdvance:
     inc bx
-    cmp bx,ds:op_entry_count
+    cmp bx,ds:usbdp_entry_count
     jb niSave
 ;
     xor bx,bx
 
 niSave:
-    mov ds:op_wr_ptr,bx
-    cmp bx,ds:op_rd_ptr
+    mov ds:usbdp_wr_ptr,bx
+    cmp bx,ds:usbdp_rd_ptr
     jne niSignal
 ;
-    lock or ds:op_flags,OP_FLAG_FULL
+    lock or ds:usbdp_flags,OP_FLAG_FULL
 
 niSignal:
     xor bx,bx
-    xchg bx,ds:op_wait
+    xchg bx,ds:usbdp_wait
     or bx,bx
     jz niDone
 ;
