@@ -118,7 +118,6 @@ ohc_phys        DD ?
 ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_thread          DW ?
-
 ohc_linear_dev_arr  DD 127 DUP(?)
 
 ohc_enum_section    section_typ <>
@@ -2470,11 +2469,11 @@ DisablePipe   Endp
 NotifyTransfer   Proc near
     push bx
 ;
-    int 3
     mov bl,fs:[edx].otd_pipe
     or bl,bl
     jz ntControl
 ;
+    int 3
 
 ntControl:
     mov bx,fs:[edx].otd_flags
@@ -3434,15 +3433,15 @@ ohci_function_handler:
 ofhLoop:
     WaitForSignal    
 ;
-    int 3
     xor eax,eax
+    xor ebp,ebp
     mov bx,ohc_hca_base + OFFSET hcca_done_head
     lock xchg eax,ds:[bx]
     and al,NOT 1
 
-ofhProcessLoop:
+ofhAddLoop:
     or eax,eax
-    jz ofhEnable
+    jz ofhProcess
 ;
     mov si,OFFSET ohc_linear_dev_arr
     mov cx,127
@@ -3460,14 +3459,26 @@ ofhMainBlk:
     sub edx,fs:[edi].mblk_physical_base
     add edx,fs:[edi].mblk_linear_base
     mov eax,fs:[edx].otd_next_td
-    call NotifyTransfer
-    jmp ofhProcessLoop
+    mov fs:[edx].otd_next_td,ebp
+    mov ebp,edx
+    jmp ofhAddLoop
 
 ofhMainNext:
     add si,4
     loop ofhMainBlk
 ;
     int 3
+
+ofhProcess:
+    mov edx,ebp
+
+ofhProcessLoop:
+    or edx,edx
+    jz ofhEnable
+;
+    call NotifyTransfer
+    mov edx,fs:[edx].otd_next_td
+    jmp ofhProcessLoop
 
 ofhEnable:
     mov es,ds:ohc_reg_sel
