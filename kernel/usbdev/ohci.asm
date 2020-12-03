@@ -179,8 +179,6 @@ ohci_pipe_struc    STRUC
 op_descr        usb_endpoint_descr <>
 op_flags        DB ?
 
-op_section      section_typ <>
-
 op_rd_ptr       DW ?
 op_wr_ptr       DW ?
 op_entry_count  DW ?
@@ -1961,7 +1959,6 @@ AllocatePipe    Proc near
     pop cx
 ;
     mov es:op_flags,0
-    InitSection es:op_section
     mov es:op_rd_ptr,0
     mov es:op_wr_ptr,0
     mov es:op_entry_count,cx
@@ -2278,10 +2275,8 @@ epOut:
     clc
     jnz epDone
 ;
-    EnterSection ds:op_section
-    or ds:op_flags,OP_FLAG_ENABLED
+    lock or ds:op_flags,OP_FLAG_ENABLED
     call StartPipe
-    LeaveSection ds:op_section
     clc
     jmp epDone
 
@@ -2300,11 +2295,9 @@ epIn:
     clc
     jnz epDone
 ;
-    EnterSection ds:op_section
-    or ds:op_flags,OP_FLAG_ENABLED
+    lock or ds:op_flags,OP_FLAG_ENABLED
     call StartInPipe
     call StartPipe
-    LeaveSection ds:op_section
 ;
     mov al,ds:ued_attrib
     and al,3
@@ -2390,10 +2383,8 @@ dpOut:
     clc
     jz dpDone
 ;
-    EnterSection ds:op_section
-    and ds:op_flags,NOT OP_FLAG_ENABLED
+    lock and ds:op_flags,NOT OP_FLAG_ENABLED
     call StopPipe
-    LeaveSection ds:op_section
     clc
     jmp dpDone
 
@@ -2412,10 +2403,8 @@ dpIn:
     clc
     jz dpDone
 ;
-    EnterSection ds:op_section
-    and ds:op_flags,NOT OP_FLAG_ENABLED
+    lock and ds:op_flags,NOT OP_FLAG_ENABLED
     call StopPipe
-    LeaveSection ds:op_section
 
 dpDone:
     popad
@@ -2453,7 +2442,6 @@ NotifyIn  Proc near
     jz niDone
 ;
     mov ds,bx
-    EnterSection ds:op_section
     mov bx,ds:op_wr_ptr
     mov si,bx
     shl si,2
@@ -2461,7 +2449,7 @@ NotifyIn  Proc near
     je niAdvance
 ;
     int 3
-    jmp niLeave
+    jmp niDone
 
 niAdvance:
     inc bx
@@ -2473,13 +2461,10 @@ niAdvance:
 niSave:
     mov ds:op_wr_ptr,bx
     cmp bx,ds:op_rd_ptr
-    jne niLeave
+    jne niDone
 ;
     int 3
-    or ds:op_flags,OP_FLAG_FULL
-
-niLeave:
-    LeaveSection ds:op_section
+    lock or ds:op_flags,OP_FLAG_FULL
 
 niDone:
     pop esi
