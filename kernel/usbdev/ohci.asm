@@ -1481,7 +1481,7 @@ sciStatusOut:
     mov fs:[esi].otd_next_va,edx
     mov esi,edx
     mov fs:[esi].otd_resv,0
-    mov fs:[esi].otd_flags,0F3ECh
+    mov fs:[esi].otd_flags,0F30Ch
     mov fs:[esi].otd_cbp,0
     mov fs:[esi].otd_be,0
 ;
@@ -1674,7 +1674,7 @@ scoStatusIn:
     mov fs:[edi].otd_next_va,edx
     mov edi,edx
     mov fs:[edi].otd_resv,0
-    mov fs:[edi].otd_flags,0F3F4h
+    mov fs:[edi].otd_flags,0F314h
     mov fs:[edi].otd_cbp,0
     mov fs:[edi].otd_be,0
 ;
@@ -1745,6 +1745,7 @@ rcEnabled:
     mov eax,ds:HcCommandStatus
     or al,2
     mov ds:HcCommandStatus,eax
+    int 3
     pop ds
 ;
     mov edx,es:dev_control_ed
