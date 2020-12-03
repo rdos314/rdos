@@ -654,9 +654,6 @@ ddpDone:
     pop ds    
     retf32
 disable_usb_pipe Endp
-
-
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -670,7 +667,40 @@ disable_usb_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_wait_for_pipe     PROC far
-    int 3
+    push ds
+    push ax
+    push bx
+    push dx
+;
+    mov dl,es:pw_pipe
+    mov ds,es:pw_handle_sel
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz bwfpSignal
+;
+    EnterSection ds:udd_section
+    push ds
+    push es
+;
+    mov bx,es
+    mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:start_wait_pipe_proc
+;
+    pop es
+    pop ds
+    LeaveSection ds:udd_section
+    jmp bwfpDone
+
+bwfpSignal:
+    SignalWait
+
+bwfpDone:
+    pop dx
+    pop bx
+    pop ax
+    pop ds
     retf32
 start_wait_for_pipe Endp
     
@@ -686,9 +716,34 @@ start_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_pipe      PROC far
+    push ax
+    push dx
+;
+    int 3
+    mov dl,es:pw_pipe
+    mov ds,es:pw_handle_sel
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz ewfpDone
+;
+    EnterSection ds:udd_section
+    push ds
+    push es
+;
+    mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:stop_wait_pipe_proc
+;
+    pop es
+    pop ds
+    LeaveSection ds:udd_section
+
+ewfpDone:
+    pop dx
+    pop ax
     retf32
 stop_wait_for_pipe Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -745,13 +800,7 @@ aw3 DD OFFSET is_pipe_idle,             SEG code
 
 add_wait_for_dev_pipe       PROC far
     push ds
-    push es
-    push fs
-    push eax
-    push ebx
-    push edx
-    push edi
-    push ebp
+    pushad
 ;
     mov bp,bx
     mov bx,ax
@@ -773,12 +822,7 @@ add_wait_for_dev_pipe       PROC far
     clc
 
 awpDone:
-    pop edi
-    pop edx
-    pop ebx
-    pop eax
-    pop fs
-    pop es
+    popad
     pop ds
     retf32
 add_wait_for_dev_pipe       ENDP
