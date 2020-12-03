@@ -200,8 +200,9 @@ usb_dev_base       usb_device_struc <>
 dev_control_ed     DD ?
 dev_control_tail   DD ?
 dev_control_head   DD ?
+dev_control_thread DW ?
 dev_curr_addr      DB ?
-dev_pad            DB ?,?,?
+dev_cc             DB ?
 
 dev_in_ep_arr      DW 15 DUP(?)
 dev_out_ep_arr     DW 15 DUP(?)
@@ -1749,13 +1750,23 @@ rcEnabled:
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
 ;
+    GetThread
+    mov es:dev_control_thread,ax
+    mov es:dev_cc,0Fh
+;
     push ds
     mov ds,ds:ohc_reg_sel
     mov eax,ds:HcCommandStatus
     or al,2
     mov ds:HcCommandStatus,eax
-    int 3
     pop ds
+;
+;    GetSystemTime
+;    add eax,1193 * 250
+;    adc edx,0
+;    WaitForSignalWithTimeout
+    WaitForSignal
+    int 3
 ;
     mov edx,es:dev_control_ed
     mov cx,100
@@ -2451,11 +2462,47 @@ DisablePipe   Endp
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       FS      Flat sel
+;                       EDI     Device linear
 ;                       EDX     Transfer descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyTransfer   Proc near
+    push bx
+;
+    int 3
+    mov bl,fs:[edx].otd_pipe
+    or bl,bl
+    jz ntControl
+;
+
+ntControl:
+    mov bx,fs:[edx].otd_flags
+    shr bx,12
+    or bx,bx
+    jz ntControlOk
+;
+    mov fs:[edi].dev_cc,bl
+    jmp ntControlSignal
+
+ntControlOk:
+    mov bx,fs:[edx].otd_flags
+    shr bx,5
+    and bx,7
+    jnz ntDone
+;
+    mov fs:[edi].dev_cc,0
+     
+ntControlSignal:
+    xor bx,bx
+    xchg bx,fs:[edi].dev_control_thread
+    or bx,bx
+    jz ntDone
+;
+    Signal
+
+ntDone:
+    pop bx
     ret
 NotifyTransfer   Endp
 
@@ -2762,6 +2809,7 @@ CreateDev   Proc far
     call AllocateTd
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
+    mov es:dev_control_thread,0
     pop eax
 ;
     dec al
@@ -3385,8 +3433,8 @@ ohci_function_handler:
 
 ofhLoop:
     WaitForSignal    
-    int 3
 ;
+    int 3
     xor eax,eax
     mov bx,ohc_hca_base + OFFSET hcca_done_head
     lock xchg eax,ds:[bx]
@@ -3398,21 +3446,19 @@ ofhProcessLoop:
 ;
     mov si,OFFSET ohc_linear_dev_arr
     mov cx,127
-    mov edi,eax
-    and di,0F000h
+    mov edx,eax
+    and ax,0F000h
 
 ofhMainBlk:
-    mov edx,[si]
-    or edx,edx
+    mov edi,[si]
+    or edi,edi
     jz ofhMainNext
 ;
-    cmp edi,fs:[edx].mblk_physical_base        
+    cmp eax,fs:[edi].mblk_physical_base        
     jne ofhMainNext
 ;
-    int 3
-    sub eax,fs:[edx].mblk_physical_base
-    add eax,fs:[edx].mblk_linear_base
-    mov edx,eax
+    sub edx,fs:[edi].mblk_physical_base
+    add edx,fs:[edi].mblk_linear_base
     mov eax,fs:[edx].otd_next_td
     call NotifyTransfer
     jmp ofhProcessLoop
