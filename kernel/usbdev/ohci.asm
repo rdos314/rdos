@@ -118,6 +118,8 @@ ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_thread          DW ?
 
+ohc_linear_dev_arr  DD 127 DUP(?)
+
 ohc_enum_section    section_typ <>
 
 ohc_root_ports      DW ?
@@ -2703,6 +2705,7 @@ CreateDev   Proc far
     push fs
     pushad
 ;
+    push eax
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2723,6 +2726,13 @@ CreateDev   Proc far
     call AllocateTd
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
+    pop eax
+;
+    dec al
+    movzx di,al
+    shl di,2
+    mov edx,es:mblk_linear_base
+    mov es:[di].ohc_linear_dev_arr,edx
 ;
     popad
     pop fs
@@ -2743,7 +2753,24 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
+    pushad
+;
+    int 3
+    mov ax,10
+    WaitMilliSec
+;
+    mov al,es:usbd_address
+    dec al
+    movzx di,al
+    shl di,2
+    mov es:[di].ohc_linear_dev_arr,0
+;
+    mov ax,10
+    WaitMilliSec
+;
     FreeMemBlk
+;
+    popad
     retf32
 FreeDev   Endp
 
@@ -3328,6 +3355,7 @@ ofhLoop:
     or eax,eax
     jz ofhEnable
 ;
+
 
 ofhEnable:
     mov es,ds:ohc_reg_sel
