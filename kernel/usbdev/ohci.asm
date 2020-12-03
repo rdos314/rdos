@@ -179,6 +179,7 @@ ohci_pipe_struc    STRUC
 op_descr        usb_endpoint_descr <>
 op_flags        DB ?
 
+op_wait         DW ?
 op_rd_ptr       DW ?
 op_wr_ptr       DW ?
 op_entry_count  DW ?
@@ -2431,7 +2432,6 @@ StartWaitPipe   Proc far
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2445,11 +2445,11 @@ bwpOut:
     add si,si
     mov si,es:[si].dev_out_ep_arr
     or si,si
-    jz bwpSignal
+    jz bwpDoSignal
 ;
     mov ds,si
     test ds:op_flags,OP_FLAG_ENABLED
-    jz bwpSignal
+    jz bwpDoSignal
 ;
     int 3
     jmp bwpDone
@@ -2461,16 +2461,28 @@ bwpIn:
     add si,si
     mov si,es:[si].dev_in_ep_arr
     or si,si
-    jz bwpSignal
+    jz bwpDoSignal
 ;
     mov ds,si
     test ds:op_flags,OP_FLAG_ENABLED
-    jz bwpSignal
+    jz bwpDoSignal
 ;
-    jmp bwpDone
+    mov ds:op_wait,bx
+    test ds:op_flags,OP_FLAG_FULL
+    jnz bwpCheckSignal
+;
+    mov ax,ds:op_wr_ptr
+    cmp ax,ds:op_rd_ptr
+    je bwpDone
 
-bwpSignal:
-    push es
+bwpCheckSignal:
+    xor bx,bx
+    xchg bx,ds:op_wait
+    or bx,bx
+    jz bwpDone
+
+bwpDoSignal:
+    push es    
     mov es,bx
     SignalWait
     pop es
@@ -2547,10 +2559,20 @@ niAdvance:
 niSave:
     mov ds:op_wr_ptr,bx
     cmp bx,ds:op_rd_ptr
-    jne niDone
+    jne niSignal
 ;
-    int 3
     lock or ds:op_flags,OP_FLAG_FULL
+
+niSignal:
+    xor bx,bx
+    xchg bx,ds:op_wait
+    or bx,bx
+    jz niDone
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
 
 niDone:
     pop esi
