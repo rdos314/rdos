@@ -63,9 +63,6 @@ free_address_proc     DD ?,?
 create_dev_proc       DD ?,?
 
 ; IN  ES        Device sel
-free_dev_proc       DD ?,?
-
-; IN  ES        Device sel
 create_control_proc	DD ?,?
 
 ; IN  ES        Device sel

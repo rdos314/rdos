@@ -157,25 +157,6 @@ CreateDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeDev
-;
-;       DESCRIPTION:    Free dev
-;
-;       PARAMETERS:     ES      Device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeDev   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_dev_proc
-    pop ds
-    ret
-FreeDev	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AddressDev
 ;
 ;       DESCRIPTION:    Address device
@@ -508,21 +489,20 @@ hub_tab:
 ht00 DD OFFSET AllocateAddress,     SEG code
 ht01 DD OFFSET FreeAddress,         SEG code
 ht02 DD OFFSET CreateDev,           SEG code
-ht03 DD OFFSET FreeDev,             SEG code
-ht04 DD OFFSET CreateControl,       SEG code
-ht05 DD OFFSET ChangeAddress,       SEG code
-ht06 DD OFFSET ResetDev,            SEG code
-ht07 DD OFFSET AddressDev,          SEG code
-ht08 DD OFFSET ConfigDev,           SEG code
-ht09 DD OFFSET UpdateMaxLen,        SEG code
-ht0A DD OFFSET IsDeviceConnected,   SEG code
-ht0B DD OFFSET ControlMsg,          SEG code
-ht0C DD OFFSET ConfigPipe,          SEG code
-ht0D DD OFFSET UnlinkPipes,         SEG code
-ht0E DD OFFSET EnablePipe,          SEG code
-ht0F DD OFFSET DisablePipe,         SEG code
-ht10 DD OFFSET StartWaitPipe,       SEG code
-ht11 DD OFFSET StopWaitPipe,        SEG code
+ht03 DD OFFSET CreateControl,       SEG code
+ht04 DD OFFSET ChangeAddress,       SEG code
+ht05 DD OFFSET ResetDev,            SEG code
+ht06 DD OFFSET AddressDev,          SEG code
+ht07 DD OFFSET ConfigDev,           SEG code
+ht08 DD OFFSET UpdateMaxLen,        SEG code
+ht09 DD OFFSET IsDeviceConnected,   SEG code
+ht0A DD OFFSET ControlMsg,          SEG code
+ht0B DD OFFSET ConfigPipe,          SEG code
+ht0C DD OFFSET UnlinkPipes,         SEG code
+ht0D DD OFFSET EnablePipe,          SEG code
+ht0E DD OFFSET DisablePipe,         SEG code
+ht0F DD OFFSET StartWaitPipe,       SEG code
+ht10 DD OFFSET StopWaitPipe,        SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2093,7 +2073,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*12h
+    mov ecx,2*11h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

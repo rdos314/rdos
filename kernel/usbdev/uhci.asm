@@ -3391,22 +3391,6 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:               FreeDev
-;
-;       DESCRIPTION:        Free device sel
-;
-;       PARAMETERS:         ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeDev   Proc far
-    FreeMemBlk
-    retf32
-FreeDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:               AddressDev
 ;
 ;       DESCRIPTION:        Address usb dev
@@ -3797,21 +3781,20 @@ uhci_tab:
 ut00 DD OFFSET AllocateAddress,     SEG code
 ut01 DD OFFSET FreeAddress,         SEG code
 ut02 DD OFFSET CreateDev,           SEG code
-ut03 DD OFFSET FreeDev,             SEG code
-ut04 DD OFFSET CreateControl,       SEG code
-ut05 DD OFFSET ChangeAddress,       SEG code
-ut06 DD OFFSET ResetDev,            SEG code
-ut07 DD OFFSET AddressDev,          SEG code
-ut08 DD OFFSET ConfigDev,           SEG code
-ut09 DD OFFSET UpdateMaxLen,        SEG code
-ut0A DD OFFSET IsDeviceConnected,   SEG code
-ut0B DD OFFSET ControlMsg,          SEG code
-ut0C DD OFFSET ConfigPipe,          SEG code
-ut0D DD OFFSET UnlinkPipes,         SEG code
-ut0E DD OFFSET EnablePipe,          SEG code
-ut0F DD OFFSET DisablePipe,         SEG code
-ut10 DD OFFSET StartWaitPipe,       SEG code
-ut11 DD OFFSET StopWaitPipe,        SEG code
+ut03 DD OFFSET CreateControl,       SEG code
+ut04 DD OFFSET ChangeAddress,       SEG code
+ut05 DD OFFSET ResetDev,            SEG code
+ut06 DD OFFSET AddressDev,          SEG code
+ut07 DD OFFSET ConfigDev,           SEG code
+ut08 DD OFFSET UpdateMaxLen,        SEG code
+ut09 DD OFFSET IsDeviceConnected,   SEG code
+ut0A DD OFFSET ControlMsg,          SEG code
+ut0B DD OFFSET ConfigPipe,          SEG code
+ut0C DD OFFSET UnlinkPipes,         SEG code
+ut0D DD OFFSET EnablePipe,          SEG code
+ut0E DD OFFSET DisablePipe,         SEG code
+ut0F DD OFFSET StartWaitPipe,       SEG code
+ut10 DD OFFSET StopWaitPipe,        SEG code
 
 InitFunction    Proc near
     push ds
@@ -3833,7 +3816,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*11h
 
 ifTabLoop:
     lods dword ptr cs:[si]

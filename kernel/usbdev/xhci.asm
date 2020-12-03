@@ -3189,22 +3189,6 @@ CreateDev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeDev
-;
-;       DESCRIPTION:    Free device sel
-;
-;       PARAMETERS:     ES        Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeDev   Proc far
-    FreeMemBlk
-    retf32
-FreeDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           HandlerThread
 ;
 ;   DESCRIPTION:    Handler thread
@@ -4047,21 +4031,20 @@ xhci_tab:
 et00 DD OFFSET AllocateAddress,     SEG code
 et01 DD OFFSET FreeAddress,         SEG code
 et02 DD OFFSET CreateDev,           SEG code
-et03 DD OFFSET FreeDev,             SEG code
-et04 DD OFFSET CreateControl,       SEG code
-et05 DD OFFSET ChangeAddress,       SEG code
-et06 DD OFFSET ResetDev,            SEG code
-et07 DD OFFSET AddressDevice,       SEG code
-et08 DD OFFSET ConfigDevice,        SEG code
-et09 DD OFFSET UpdateMaxLen,        SEG code
-et0A DD OFFSET IsDeviceConnected,   SEG code
-et0B DD OFFSET ControlMsg,          SEG code
-et0C DD OFFSET ConfigPipe,          SEG code
-et0D DD OFFSET UnlinkPipes,         SEG code
-et0E DD OFFSET EnablePipe,          SEG code
-et0F DD OFFSET DisablePipe,         SEG code
-et10 DD OFFSET StartWaitPipe,       SEG code
-et11 DD OFFSET StopWaitPipe,        SEG code
+et03 DD OFFSET CreateControl,       SEG code
+et04 DD OFFSET ChangeAddress,       SEG code
+et05 DD OFFSET ResetDev,            SEG code
+et06 DD OFFSET AddressDevice,       SEG code
+et07 DD OFFSET ConfigDevice,        SEG code
+et08 DD OFFSET UpdateMaxLen,        SEG code
+et09 DD OFFSET IsDeviceConnected,   SEG code
+et0A DD OFFSET ControlMsg,          SEG code
+et0B DD OFFSET ConfigPipe,          SEG code
+et0C DD OFFSET UnlinkPipes,         SEG code
+et0D DD OFFSET EnablePipe,          SEG code
+et0E DD OFFSET DisablePipe,         SEG code
+et0F DD OFFSET StartWaitPipe,       SEG code
+et10 DD OFFSET StopWaitPipe,        SEG code
 
 InitFunction    Proc near
     push es
@@ -4208,7 +4191,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*11h
 
 ifTabLoop:
     lods dword ptr cs:[si]
