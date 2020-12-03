@@ -116,7 +116,6 @@ ohc_phys        DD ?
 ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_thread          DW ?
-ohc_linear_dev_arr  DD 127 DUP(?)
 
 ohc_enum_section    section_typ <>
 
@@ -2596,26 +2595,11 @@ CreateDev   Proc far
     mov cx,16
     CreateMemBlk32
 ;
-    xor ax,ax
-    mov cx,15
-    mov di,OFFSET usbd_in_pipe_arr
-    rep stosw
-;
-    mov cx,15
-    mov di,OFFSET usbd_out_pipe_arr
-    rep stosw
-;
     call AllocateTd
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
     mov es:dev_control_thread,0
     pop eax
-;
-    dec al
-    movzx di,al
-    shl di,2
-    mov edx,es:mblk_linear_base
-    mov ds:[di].ohc_linear_dev_arr,edx
 ;
     popad
     pop fs
@@ -2637,15 +2621,6 @@ CreateDev  Endp
 
 FreeDev   Proc far
     pushad
-;
-    mov ax,10
-    WaitMilliSec
-;
-    mov al,es:usbd_address
-    dec al
-    movzx di,al
-    shl di,2
-    mov ds:[di].ohc_linear_dev_arr,0
 ;
     mov ax,10
     WaitMilliSec
@@ -3242,7 +3217,7 @@ ofhAddLoop:
     or eax,eax
     jz ofhProcess
 ;
-    mov si,OFFSET ohc_linear_dev_arr
+    mov si,OFFSET usb_linear_dev_arr
     mov cx,127
     mov edx,eax
     and ax,0F000h
