@@ -41,6 +41,7 @@ INCLUDE usbdev.inc
 MAX_USB_DEVICES = 16
 
 OP_FLAG_ENABLED = 1
+OP_FLAG_FULL    = 2
 
 hc_reg  STRUC
 
@@ -2426,6 +2427,90 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           NotifyIn
+;
+;       DESCRIPTION:    Notify IN transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;                       BL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyIn  Proc near
+    push ds
+    push ebx
+    push esi
+;
+    movzx esi,bl
+    and esi,0Fh
+    dec esi
+    add esi,esi
+    mov bx,fs:[edi+esi].dev_in_ep_arr
+    or bx,bx
+    jz niDone
+;
+    mov ds,bx
+    EnterSection ds:op_section
+    mov bx,ds:op_wr_ptr
+    mov si,bx
+    shl si,2
+    cmp edx,ds:[si].op_entry_arr
+    je niAdvance
+;
+    int 3
+    jmp niLeave
+
+niAdvance:
+    inc bx
+    cmp bx,ds:op_entry_count
+    jb niSave
+;
+    xor bx,bx
+
+niSave:
+    mov ds:op_wr_ptr,bx
+    cmp bx,ds:op_rd_ptr
+    jne niLeave
+;
+    int 3
+    or ds:op_flags,OP_FLAG_FULL
+
+niLeave:
+    LeaveSection ds:op_section
+
+niDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+NotifyIn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyOut
+;
+;       DESCRIPTION:    Notify OUT transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;                       BL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyOut  Proc near
+    int 3
+    ret
+NotifyOut  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           NotifyTransfer
 ;
 ;       DESCRIPTION:    Notify transfer completed
@@ -2444,7 +2529,16 @@ NotifyTransfer   Proc near
     or bl,bl
     jz ntControl
 ;
-    int 3
+    test bl,80h
+    jz ntOut
+
+ntIn:
+    call NotifyIn
+    jmp ntDone
+
+ntOut:
+    call NotifyOut
+    jmp ntDone
 
 ntControl:
     mov bx,fs:[edx].otd_flags
