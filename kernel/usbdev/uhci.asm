@@ -49,6 +49,26 @@ SofReg = 12
 PortscReg1 = 16
 PortscReg2 = 18
 
+usb_pipe_struc      STRUC
+
+usbp_dev_sel        DW ?
+usbp_address        DB ?
+usbp_endpoint       DB ?
+usbp_seq            DB ?
+usbp_mode           DB ?
+usbp_dir            DB ?
+usbp_speed          DB ?
+usbp_maxlen         DW ?
+usbp_section        section_typ <>
+usbp_hub_sel        DW ?
+usbp_hub_port       DW ?
+usbp_signal         DW ?
+usbp_wait           DW ?
+usbp_buf_size       DW ?
+usbp_buf_sel        DW ?
+
+usb_pipe_struc   ENDS
+
 ; this structure should be smaller than or equal to one page (4k)
 
 int_struc   STRUC

@@ -48,6 +48,27 @@ EHC_COMPANION       = 2
 EHC_PORT_POWER      = 4
 
 
+usb_pipe_struc      STRUC
+
+usbp_dev_sel        DW ?
+usbp_address        DB ?
+usbp_endpoint       DB ?
+usbp_seq            DB ?
+usbp_mode           DB ?
+usbp_dir            DB ?
+usbp_speed          DB ?
+usbp_maxlen         DW ?
+usbp_section        section_typ <>
+usbp_hub_sel        DW ?
+usbp_hub_port       DW ?
+usbp_signal         DW ?
+usbp_wait           DW ?
+usbp_buf_size       DW ?
+usbp_buf_sel        DW ?
+
+usb_pipe_struc   ENDS
+
+
 hccap   STRUC
 
 hcp_CAPLEN      DB ?

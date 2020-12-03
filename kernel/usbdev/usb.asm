@@ -930,50 +930,6 @@ init_usb_function Proc far
     pop ds
     retf32
 init_usb_function   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitUsbControlPipe
-;
-;       Description:    Init USB control pipe
-;
-;       Parameters:     DS      USB function selector
-;                       ES      USB device selector
-;                       FS      Control pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_usb_control_pipe_name DB 'Init USB Control Pipe', 0
-
-init_usb_control_pipe    Proc far
-    push ds
-    push ax
-;
-    mov es:usbd_maxlen,8
-;
-    mov fs:usbp_dev_sel,es
-    mov fs:usbp_address,0
-    mov fs:usbp_endpoint,0
-    mov fs:usbp_seq,0
-    mov fs:usbp_mode,MODE_CONTROL
-    mov fs:usbp_maxlen,8
-    mov fs:usbp_signal,0
-    mov fs:usbp_wait,0
-    mov fs:usbp_buf_sel,0
-;
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;    
-    mov ax,fs
-    mov ds,ax
-    InitSection ds:usbp_section
-;    
-    pop ax
-    pop ds
-    retf32
-init_usb_control_pipe    Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2465,6 +2421,11 @@ close_usb_req   Proc far
     retf32
 close_usb_req   Endp
 
+init_usb_control_pipe_name DB 'Init USB Control Pipe', 0
+
+init_usb_control_pipe    Proc far
+    retf32
+init_usb_control_pipe    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

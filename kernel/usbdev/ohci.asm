@@ -1130,42 +1130,6 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsConnected   Proc far
-    push es
-    push eax
-    push dx
-    push si
-;    
-    mov es,fs:usbp_dev_sel
-    movzx si,es:usbd_port
-;    
-    shl si,2
-    mov es,ds:ohc_reg_sel
-    mov eax,es:[si].HcRhPortStatus
-    test al,2
-    jz icDisabled
-;
-    test al,1
-    clc
-    jnz icDone
-    jmp icFail
-
-icDisabled:
-    push cx
-    mov es,fs:usbp_dev_sel
-    mov cl,es:usbd_port
-    mov ax,1
-    shl ax,cl
-    lock or ds:ohc_reset,ax
-    pop cx
-
-icFail:
-    stc
-
-icDone:
-    pop si
-    pop dx
-    pop eax
-    pop es
     retf32
 IsConnected Endp
 
