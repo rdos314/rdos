@@ -375,17 +375,19 @@ reset_usb_dev     Proc far
     jc rdvDone
 ;
     mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz rdvDone
+    jnz rdvLeave
 ;
-    EnterSection ds:udd_section
     push ds
     mov es,ds:udd_sel    
     mov ds,es:usbd_func_sel
     call fword ptr ds:reset_dev_proc
     pop ds
+
+rdvLeave:
     LeaveSection ds:udd_section
 
 rdvDone:
@@ -432,13 +434,13 @@ send_usb_dev_control_msg    Proc near
 ;
     push ax
     mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     pop ax
     stc
-    jnz sudcmDone
+    jnz sudcmLeave
 ;
-    EnterSection ds:udd_section
     push ds
 ;
     mov bx,es
@@ -455,6 +457,8 @@ send_usb_dev_control_msg    Proc near
     call fword ptr ds:control_msg_proc    
 ;
     pop ds
+
+sudcmLeave:
     LeaveSection ds:udd_section
 
 sudcmDone:
@@ -508,12 +512,11 @@ config_usb_pipe	Proc far
     jc cdpDone
 ;
     mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz cdpDone
-;
-    EnterSection ds:udd_section
+    jnz cdpLeaveFail
 ;
     mov es,ds:udd_sel    
     mov ax,es:usbd_curr_config
@@ -588,17 +591,19 @@ enable_usb_pipe	Proc far
     jc edpDone
 ;
     mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz edpDone
+    jnz edpLeave
 ;
-    EnterSection ds:udd_section
     push ds
     mov es,ds:udd_sel    
     mov ds,es:usbd_func_sel
     call fword ptr ds:enable_pipe_proc
     pop ds
+
+edpLeave:
     LeaveSection ds:udd_section
 
 edpDone:
@@ -634,17 +639,19 @@ disable_usb_pipe	Proc far
     jc ddpDone
 ;
     mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz ddpDone
+    jnz ddpLeave
 ;
-    EnterSection ds:udd_section
     push ds
     mov es,ds:udd_sel    
     mov ds,es:usbd_func_sel
     call fword ptr ds:disable_pipe_proc
     pop ds
+
+ddpLeave:
     LeaveSection ds:udd_section
 
 ddpDone:
@@ -674,12 +681,12 @@ start_wait_for_pipe     PROC far
 ;
     mov dl,es:pw_pipe
     mov ds,es:pw_handle_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz bwfpSignal
+    jnz bwfpLeaveSignal
 ;
-    EnterSection ds:udd_section
     push ds
     push es
 ;
@@ -692,6 +699,9 @@ start_wait_for_pipe     PROC far
     pop ds
     LeaveSection ds:udd_section
     jmp bwfpDone
+
+bwfpLeaveSignal:
+    LeaveSection ds:udd_section
 
 bwfpSignal:
     SignalWait
@@ -722,12 +732,12 @@ stop_wait_for_pipe      PROC far
     int 3
     mov dl,es:pw_pipe
     mov ds,es:pw_handle_sel
+    EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz ewfpDone
+    jnz ewfpLeave
 ;
-    EnterSection ds:udd_section
     push ds
     push es
 ;
@@ -737,6 +747,8 @@ stop_wait_for_pipe      PROC far
 ;
     pop es
     pop ds
+
+ewfpLeave:
     LeaveSection ds:udd_section
 
 ewfpDone:
