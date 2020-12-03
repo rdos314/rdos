@@ -1978,8 +1978,8 @@ apTdLoop:
     mov esi,edx
 ;
     mov fs:[esi].otd_resv,0
-    mov fs:[edi].otd_cbp,0
-    mov fs:[edi].otd_be,0
+    mov fs:[esi].otd_cbp,0
+    mov fs:[esi].otd_be,0
     mov fs:[esi].otd_next_td,0
     mov fs:[esi].otd_next_va,0
     mov fs:[esi].otd_buffer_va,0
@@ -2084,6 +2084,7 @@ cpIntr:
 
 cpIntrIn:
     mov es:[si].dev_in_ep_arr,bx
+    mov cl,ds:ued_interval
     call AddIntrEd
     mov ds,bx
     mov ds:op_intr_count,si
@@ -2096,6 +2097,7 @@ cpIntrIn:
 
 cpIntrOut:
     mov es:[si].dev_out_ep_arr,bx
+    mov cl,ds:ued_interval
     call AddIntrEd
     mov ds,bx
     mov ds:op_intr_count,si
@@ -2145,11 +2147,13 @@ sipNext:
     mov fs:[edi].otd_flags,0F004h
     mov edx,fs:[edi].otd_buffer_va
     or edx,edx
-    jz sipConv
+    jnz sipConv
 ;
+    push cx
     mov cx,ds:ued_maxsize
     AllocateMemBlk
     mov fs:[edi].otd_buffer_va,edx
+    pop cx
     jmp sipSave
 
 sipConv:
