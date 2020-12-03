@@ -885,203 +885,6 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateBulk
-;
-;           DESCRIPTION:    Create bulk pipe
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       DL      Pipe # (bit 7, IN)
-;                       CX      Max data size
-;
-;       RETURNS:    FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBulk   Proc far
-    retf32
-CreateBulk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateIntr
-;
-;           DESCRIPTION:    Create interrupt pipe
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       AL      Interval
-;                       DL      Pipe # (bit 7, IN)
-;                       CX      Max data size
-;
-;       RETURNS:    FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateIntr   Proc far
-    retf32
-CreateIntr  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddOut
-;
-;           DESCRIPTION:    Add out transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddOut    Proc far
-    retf32
-AddOut    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddIn
-;
-;           DESCRIPTION:    Add in transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddIn    Proc far
-    retf32
-AddIn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IssueTransfer
-;
-;           DESCRIPTION:    Issue transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               EDX     Queue handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueTransfer    Proc far
-    retf32
-IssueTransfer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsTransferDone
-;
-;           DESCRIPTION:    Check if transfer is done
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsTransferDone   Proc far
-    stc
-    retf32
-IsTransferDone   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WaitForCompletion
-;
-;           DESCRIPTION:    Wait for transfer to complete
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForCompletion   Proc far
-    retf32
-WaitForCompletion   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WasTransferOk
-;
-;           DESCRIPTION:    Check if transfer was ok
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    NC      Transfer ok
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WasTransferOk   Proc far
-    stc
-    retf32
-WasTransferOk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           EndTransfer
-;
-;           DESCRIPTION:    End transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EndTransfer   Proc far
-    retf32
-EndTransfer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetDataSize
-;
-;           DESCRIPTION:    Get data size
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    CX      Bytes read
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDataSize   Proc far
-    xor cx,cx
-    retf32
-GetDataSize   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClosePipe
-;
-;           DESCRIPTION:    Close pipe
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClosePipe   Proc far
-    retf32
-ClosePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ChangeAddress
 ;
 ;           DESCRIPTION:    Change address for pipe
@@ -1108,22 +911,6 @@ ChangeAddress   Proc far
     pop fs
     retf32
 ChangeAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    retf32
-IsConnected Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1186,60 +973,6 @@ UnlockEnum   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Has64Bit
-;
-;           DESCRIPTION:    Check for 64-bit support
-;
-;       PARAMETERS:         DS      Function selector
-;
-;       RETURNS:            NC      Supports 64-bit addresses
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Has64Bit   Proc far
-    stc
-    retf32
-Has64Bit     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsStalled
-;
-;           DESCRIPTION:    Check if pipe is stalled
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsStalled   Proc far
-    int 3
-    clc
-    retf32
-IsStalled   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClearStalled
-;
-;           DESCRIPTION:    Clear stalled pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearStalled   Proc far
-    int 3
-    clc
-    retf32
-ClearStalled   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           UpdateMaxLen
 ;
 ;           DESCRIPTION:    Update max len
@@ -1265,22 +998,6 @@ UpdateMaxLen   Proc far
     clc
     retf32
 UpdateMaxLen   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IssueOne
-;
-;           DESCRIPTION:    Issue one transfer
-;
-;       PARAMETERS:         FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueOne   Proc far
-    retf32
-IssueOne   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1720,43 +1437,15 @@ rcEnabled:
     add eax,1193 * 250
     adc edx,0
     WaitForSignalWithTimeout
+    mov es:dev_control_thread,0
     mov al,es:dev_cc
     cmp al,0Fh
-    je rcTimed
+    stc
+    je rcDone
 ;
     or al,al
     clc
     jz rcDone
-;
-    stc
-    jmp rcDone
-
-rcTimed:
-    int 3
-    mov edx,es:dev_control_ed
-    mov cx,100
-
-rcWait:
-    mov ax,4
-    WaitMilliSec
-;
-    call fword ptr ds:is_dev_connected_proc
-    jc rcDone
-;
-    test fs:[edx].oes_fa_en,4000h
-    stc
-    jnz rcDone
-;
-    mov eax,fs:[edx].oes_headp
-    test al,1
-    stc
-    jnz rcDone
-;
-    cmp eax,fs:[edx].oes_tailp
-    clc
-    je rcDone
-;
-    loop rcWait
 ;
     stc
 
@@ -2952,7 +2641,6 @@ CreateDev  Endp
 FreeDev   Proc far
     pushad
 ;
-    int 3
     mov ax,10
     WaitMilliSec
 ;
