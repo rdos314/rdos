@@ -503,9 +503,7 @@ config_usb_pipe	Proc far
     push ds
     push es
     push gs
-    push eax
-    push ebx
-    push edi
+    pushad
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
@@ -536,10 +534,54 @@ cdpDescrLoop:
     cmp dl,gs:[di].ued_address
     jne cdpNextDescr
 ;
+    mov al,gs:[di].ued_attrib
+    and al,3
+    cmp al,2
+    je cdpBulk
+;
+    cmp al,3
+    jne cdpLeaveFail
+
+cdpIntr:
+    mov dh,gs:[di].ued_interval
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:config_pipe_proc
+    call fword ptr ds:create_intr_pipe_proc
     pop ds
+    jmp cdpSave
+
+cdpBulk:
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:create_bulk_pipe_proc
+    pop ds
+
+cdpSave:
+    push es
+    mov es,bx
+    mov si,di
+    mov di,OFFSET usbdp_descr
+    mov cx,SIZE usb_endpoint_descr
+    rep movs es:[di],gs:[si]
+    pop es
+;
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+;
+    test dl,80h
+    jz cdpOut
+
+cdpIn:
+    mov es:[si].usbd_in_pipe_arr,bx
+    jmp cdpLeave
+
+cdpOut:
+    mov es:[si].usbd_out_pipe_arr,bx
+
+cdpLeave:
+    clc
     LeaveSection ds:udd_section
     jmp cdpDone
 
@@ -557,9 +599,7 @@ cdpLeaveFail:
     stc
 
 cdpDone:
-    pop edi
-    pop ebx
-    pop eax
+    popad
     pop gs
     pop es
     pop ds    

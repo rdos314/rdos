@@ -1573,7 +1573,6 @@ ControlMsg   Endp
 ;
 ;       PARAMETERS:     FS      Flat sel
 ;                       CX      Buffer count
-;                       GS:EDI  Descriptor
 ;
 ;       RETURNS:        BX      Pipe sel
 ;
@@ -1593,12 +1592,6 @@ AllocatePipe    Proc near
     shl ax,2
     add ax,OFFSET op_entry_arr
     AllocateSmallGlobalMem
-;
-    push cx
-    xor edi,edi
-    mov ecx,SIZE usb_endpoint_descr
-    rep movs es:[edi],gs:[esi]
-    pop cx
 ;
     mov es:usbdp_flags,0
     mov es:usbdp_rd_ptr,0
@@ -1643,54 +1636,40 @@ AllocatePipe    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigPipe
+;       NAME:           CreateBulkPipe
 ;
-;       DESCRIPTION:    Config pipe
+;       DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe
 ;                       CX      Buffer count
-;                       GS:EDI  Endpoint descriptor
+;                       DL      Pipe #
 ;
 ;       RETURNS:        NC      OK
+;                         BX    Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConfigPipe   Proc far
+CreateBulkPipe   Proc far
     push ds
     push fs
-    pushad
+    push eax
+    push edx
+    push esi
 ;
     mov ax,flat_sel
     mov fs,ax
-;
-    mov al,gs:[di].ued_attrib
-    and al,3
-    cmp al,2
-    je cpBulk
-;
-    cmp al,3
-    je cpIntr
-;
-    stc
-    jmp cpDone
-
-cpBulk:
     call AllocatePipe
 ;
-    mov dl,gs:[di].ued_address
     movzx si,dl
     and si,0Fh
     dec si
     add si,si
     test dl,80h
-    jz cpBulkOut
+    jz cbpOut
 
-cpBulkIn:
-    mov es:[si].usbd_in_pipe_arr,bx
+cbpIn:
     call AddBulkEd
 ;
-    push ds
     mov ds,bx
     mov ds:op_intr_count,0
     mov ds:op_intr_list,0
@@ -1698,10 +1677,9 @@ cpBulkIn:
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
     clc
-    jmp cpDone
+    jmp cbpDone
 
-cpBulkOut:
-    mov es:[si].usbd_out_pipe_arr,bx
+cbpOut:
     call AddBulkEd
     mov ds,bx
     mov ds:op_intr_count,0
@@ -1710,49 +1688,85 @@ cpBulkOut:
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
     clc
-    jmp cpDone
+    jmp cbpDone
 
-cpIntr:
-    call AllocatePipe
-    mov dl,gs:[di].ued_address
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    test dl,80h
-    jz cpIntrOut
-
-cpIntrIn:
-    mov es:[si].usbd_in_pipe_arr,bx
-    mov cl,ds:ued_interval
-    call AddIntrEd
-    mov ds,bx
-    mov ds:op_intr_count,si
-    mov ds:op_intr_list,di
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-    clc
-    jmp cpDone
-
-cpIntrOut:
-    mov es:[si].usbd_out_pipe_arr,bx
-    mov cl,ds:ued_interval
-    call AddIntrEd
-    mov ds,bx
-    mov ds:op_intr_count,si
-    mov ds:op_intr_list,di
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-    clc
-
-cpDone:
-    popad
+cbpDone:
+    pop esi
+    pop edx
+    pop eax
     pop fs
     pop ds
     retf32
-ConfigPipe   Endp
+CreateBulkPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateIntrPipe
+;
+;       DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     ES      Device
+;                       CX      Buffer count
+;                       DL      Pipe #
+;                       DH      Interval
+;
+;       RETURNS:        NC      OK
+;                         BX    Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntrPipe   Proc far
+    push ds
+    push fs
+    push eax
+    push edx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call AllocatePipe
+;
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    test dl,80h
+    jz cipOut
+
+cipIn:
+    mov cl,dh
+    call AddIntrEd
+    mov ds,bx
+    mov ds:op_intr_count,si
+    mov ds:op_intr_list,di
+    mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    clc
+    jmp cipDone
+
+cipOut:
+    mov cl,ds:ued_interval
+    call AddIntrEd
+    mov ds,bx
+    mov ds:op_intr_count,si
+    mov ds:op_intr_list,di
+    mov ds:op_ed,edx
+    mov eax,fs:[edx].oes_tailp
+    mov ds:op_tail,eax
+    clc
+
+cipDone:
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+    pop fs
+    pop ds
+    retf32
+CreateIntrPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3338,12 +3352,13 @@ ot07 DD OFFSET ConfigDev,           SEG code
 ot08 DD OFFSET UpdateMaxLen,        SEG code
 ot09 DD OFFSET IsDeviceConnected,   SEG code
 ot0A DD OFFSET ControlMsg,          SEG code
-ot0B DD OFFSET ConfigPipe,          SEG code
-ot0C DD OFFSET UnlinkPipes,         SEG code
-ot0D DD OFFSET EnablePipe,          SEG code
-ot0E DD OFFSET DisablePipe,         SEG code
-ot0F DD OFFSET StartWaitPipe,       SEG code
-ot10 DD OFFSET StopWaitPipe,        SEG code
+ot0B DD OFFSET CreateBulkPipe,      SEG code
+ot0C DD OFFSET CreateIntrPipe,      SEG code
+ot0D DD OFFSET UnlinkPipes,         SEG code
+ot0E DD OFFSET EnablePipe,          SEG code
+ot0F DD OFFSET DisablePipe,         SEG code
+ot10 DD OFFSET StartWaitPipe,       SEG code
+ot11 DD OFFSET StopWaitPipe,        SEG code
 
 InitFunction    Proc near
     push ds
@@ -3401,7 +3416,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*11h
+    mov cx,2*12h
 
 ifTabLoop:
     lods dword ptr cs:[si]

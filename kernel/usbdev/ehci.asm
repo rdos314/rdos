@@ -2995,23 +2995,46 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigPipe
+;       NAME:           CreateBulkPipe
 ;
-;       DESCRIPTION:    Config pipe
+;       DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe
 ;                       CX      Buffer count
-;                       GS:EDI  Endpoint descriptor
+;                       DL      Pipe #
 ;
 ;       RETURNS:        NC      OK
+;                         BX    Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConfigPipe   Proc far
+
+CreateBulkPipe   Proc far
     int 3
     retf32
-ConfigPipe   Endp
+CreateBulkPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateIntrPipe
+;
+;       DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     ES      Device
+;                       CX      Buffer count
+;                       DL      Pipe #
+;                       DH      Interval
+;
+;       RETURNS:        NC      OK
+;                         BX    Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntrPipe   Proc far
+    int 3
+    retf32
+CreateIntrPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4267,12 +4290,13 @@ et07 DD OFFSET ConfigDev,          SEG code
 et08 DD OFFSET UpdateMaxLen,       SEG code
 ec09 DD OFFSET IsDeviceConnected,  SEG code
 ec0A DD OFFSET ControlMsg,         SEG code
-ec0B DD OFFSET ConfigPipe,         SEG code
-ec0C DD OFFSET UnlinkPipes,        SEG code
-ec0D DD OFFSET EnablePipe,         SEG code
-ec0E DD OFFSET DisablePipe,        SEG code
-ec0F DD OFFSET StartWaitPipe,      SEG code
-ec10 DD OFFSET StopWaitPipe,       SEG code
+ec0B DD OFFSET CreateBulkPipe,     SEG code
+ec0C DD OFFSET CreateIntrPipe,     SEG code
+ec0D DD OFFSET UnlinkPipes,        SEG code
+ec0E DD OFFSET EnablePipe,         SEG code
+ec0F DD OFFSET DisablePipe,        SEG code
+ec10 DD OFFSET StartWaitPipe,      SEG code
+ec11 DD OFFSET StopWaitPipe,       SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4294,7 +4318,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*11h
+    mov cx,2*12h
 
 ifTabLoop:
     lods dword ptr cs:[si]

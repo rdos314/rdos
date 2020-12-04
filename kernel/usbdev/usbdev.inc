@@ -93,10 +93,17 @@ is_dev_connected_proc      DD ?,?
 control_msg_proc      DD ?,?
 
 ; IN  ES        Device
-; IN  DL        Pipe #
 ; IN  CX        Buffer count
-; IN  GS:EDI    Endpoint descriptor
-config_pipe_proc      DD ?,?
+; IN  DL        Pipe #
+; OUT BX        Pipe sel
+create_bulk_pipe_proc      DD ?,?
+
+; IN  ES        Device
+; IN  CX        Buffer count
+; IN  DL        Pipe #
+; IN  DH        Interval
+; OUT BX        Pipe sel
+create_intr_pipe_proc      DD ?,?
 
 ;  IN ES        Device
 unlink_proc      DD ?,?
