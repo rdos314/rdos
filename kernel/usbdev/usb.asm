@@ -183,7 +183,7 @@ open_usb_dev    Proc far
 ;    
     movzx si,al
     add si,si
-    mov si,es:[si].usb_port_arr
+    mov si,es:[si].usb_handle_arr
     or si,si
     jz oudvFail
 ;
@@ -1180,7 +1180,7 @@ init_usb_function Proc far
     rep stosw
 ;
     mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_port_arr
+    mov di,OFFSET usb_handle_arr
     xor ax,ax
     rep stosw
 ;
@@ -1663,7 +1663,7 @@ add_usb_device       Proc far
 ;
     movzx bx,al
     add bx,bx
-    mov ds:[bx].usb_port_arr,es
+    mov ds:[bx].usb_handle_arr,es
     mov ds:[bx].usb_dev_arr,fs
 ;
     popad
@@ -1855,7 +1855,8 @@ unlink_usb_dev       Proc far
     movzx bx,es:usbd_port
     add bx,bx
     xor ax,ax
-    xchg ax,ds:[bx].usb_port_arr
+    mov ds:[bx].usb_dev_arr,ax
+    xchg ax,ds:[bx].usb_handle_arr
     or ax,ax
     jz uudDone
 ;

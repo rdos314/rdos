@@ -125,7 +125,7 @@ usb_fresv              DB ?
 usb_root_port          DB ?
 usb_route_str          DD ?
 usb_addr_bitmap        DD 4 DUP(?)
-usb_port_arr           DW MAX_USB_HUB_PORTS DUP(?)
+usb_handle_arr         DW MAX_USB_HUB_PORTS DUP(?)
 usb_thread_arr         DW MAX_USB_HUB_PORTS DUP(?)
 usb_dev_arr            DW MAX_USB_HUB_PORTS DUP(?)
 usb_linear_dev_arr     DD 127 DUP(?)
