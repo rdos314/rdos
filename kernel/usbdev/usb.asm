@@ -1919,8 +1919,10 @@ uudOutNext:
     pop ds
     jnz uudDone
 ;
+    push es
     mov es,ax
     FreeMem
+    pop es
 
 uudDone:
     call fword ptr ds:unlink_proc
