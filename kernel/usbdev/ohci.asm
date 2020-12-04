@@ -1775,9 +1775,10 @@ CreateIntrPipe   Endp
 ;
 ;       DESCRIPTION:    Start input pipe
 ;
-;       PARAMETERS:     DS      Pipe sel
-;                       ES      Device sel
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
 ;                       FS      Flat sel
+;                       GS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1785,11 +1786,11 @@ StartInPipe     Proc near
     pushad
 ;
     mov si,OFFSET op_entry_arr
-    mov cx,ds:usbdp_entry_count
+    mov cx,gs:usbdp_entry_count
     xor edi,edi
 
 sipLoop:
-    mov edx,ds:[si]
+    mov edx,gs:[si]
     or edi,edi
     jz sipNext
 ;
@@ -1804,7 +1805,7 @@ sipNext:
     jnz sipConv
 ;
     push cx
-    mov cx,ds:ued_maxsize
+    mov cx,gs:ued_maxsize
     AllocateMemBlk
     mov fs:[edi].otd_buffer_va,edx
     pop cx
@@ -1815,21 +1816,21 @@ sipConv:
 
 sipSave:
     mov fs:[edi].otd_cbp,eax
-    movzx ebx,ds:ued_maxsize
+    movzx ebx,gs:ued_maxsize
     add eax,ebx
     dec eax
     mov fs:[edi].otd_be,eax
-    mov al,ds:ued_address
+    mov al,gs:ued_address
     mov fs:[edi].otd_pipe,al
     add si,4
     loop sipLoop
 ;
-    mov eax,ds:op_tail
+    mov eax,gs:op_tail
     mov fs:[edi].otd_next_td,eax
 ;
-    mov edx,ds:op_entry_arr
+    mov edx,gs:op_entry_arr
     LinearToPhysicalMemBlk
-    mov edx,ds:op_ed
+    mov edx,gs:op_ed
     mov fs:[edx].oes_headp,eax
 ;
     popad
@@ -1843,9 +1844,11 @@ StartInPipe     Endp
 ;
 ;       DESCRIPTION:    Start pipe
 ;
-;       PARAMETERS:     DS      Pipe selector
+;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
 ;                       FS      Flat sel
+;                       GS      Pipe selector
+;                       
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1854,11 +1857,11 @@ StartPipe  Proc near
     push edx
     push esi
 ;
-    mov esi,ds:op_ed
-    mov ax,ds:ued_maxsize
+    mov esi,gs:op_ed
+    mov ax,gs:ued_maxsize
     mov fs:[esi].oes_mps,ax
 ;
-    mov dl,ds:ued_address
+    mov dl,gs:ued_address
     mov ah,dl
     and ah,0Fh
     xor al,al
@@ -1901,7 +1904,7 @@ StartPipe  Endp
 ;       DESCRIPTION:    Enable pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1913,49 +1916,20 @@ EnablePipe   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
+    mov dl,gs:ued_address
     test dl,80h
     jnz epIn
 
 epOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz epDone
-;
-    mov ds,bx
-    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jnz epDone
-;
-    lock or ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     call StartPipe
     clc
     jmp epDone
 
 epIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_in_pipe_arr
-    or bx,bx
-    stc
-    jz epDone
-;
-    mov ds,bx
-    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jnz epDone
-;
-    lock or ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
     call StartInPipe
     call StartPipe
 ;
-    mov al,ds:ued_attrib
+    mov al,gs:ued_attrib
     and al,3
     cmp al,2
     clc

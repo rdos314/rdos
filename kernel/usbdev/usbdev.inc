@@ -109,7 +109,7 @@ create_intr_pipe_proc      DD ?,?
 unlink_proc      DD ?,?
 
 ;  IN ES        Device
-;  IN DL        Pipe #
+;  IN GS        Pipe sel
 enable_pipe_proc      DD ?,?
 
 ;  IN ES        Device

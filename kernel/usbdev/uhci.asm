@@ -3240,7 +3240,7 @@ CreateIntrPipe   Endp
 ;       DESCRIPTION:    Enable pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
