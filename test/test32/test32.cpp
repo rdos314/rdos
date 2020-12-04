@@ -36,6 +36,8 @@ void main()
     RdosAddWaitForUsbPipe(wait, handle, 0x81, 0x1234);
     RdosEnableUsbPipe(handle, 0x81);
     RdosWaitForever(wait);
+    RdosCloseUsbDevice(handle);
+    RdosCloseWait(wait);
 
     RdosTestGate("");
 }

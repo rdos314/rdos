@@ -240,41 +240,16 @@ close_usb_dev  Proc far
     push es
     push ax
     push ebx
-    push dx
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
     jc cudvDone
 ;
-    mov ax,ds:[ebx].udh_dev_sel
-    push ds
-    mov ds,ax
-    mov es,ax
-    EnterSection ds:udd_section
-    pop ds
-;
-    mov dl,es:udd_deleted
-    or dl,dl
-    jnz cudvCanDelete
-;
+    mov es,ds:[ebx].udh_dev_sel
     lock sub es:udd_ref_count,1
-
-cudvLeave:
-    push ds
-    mov ds,ax
-    LeaveSection ds:udd_section
-    pop ds
-    jmp cudvFreeHandle
-
-cudvCanDelete:
-    lock sub es:udd_ref_count,1
-    jnz cudvLeave
+    jnz cudvFreeHandle
 ;
-    push ds
-    mov ds,ax
-    LeaveSection ds:udd_section
-    pop ds
-    mov es,ax
+    int 3
     FreeMem
 
 cudvFreeHandle:
@@ -282,7 +257,6 @@ cudvFreeHandle:
     clc
 
 cudvDone:
-    pop dx
     pop ebx
     pop ax
     pop es
@@ -590,6 +564,8 @@ cdpSave:
     mov es:usbdp_flags,USB_PIPE_FLAG_EMPTY
     mov es:usbdp_rd_ptr,0
     mov es:usbdp_wr_ptr,0
+    mov es:usbdp_wait,0
+    InitSpinlock es:usbdp_spinlock
 ;
     mov si,di
     mov di,OFFSET usbdp_descr
@@ -996,34 +972,18 @@ is_pipe_idle Endp
 delete_wait_pipe    PROC far
     push ds
     push es
-    push ax
+;
+    mov ds,es:pw_handle_sel
+    lock sub ds:udd_ref_count,1
+    jnz dwpDone
 ;
     int 3
-    mov ds,es:pw_handle_sel
-    EnterSection ds:udd_section
-;
-    mov al,ds:udd_deleted
-    or al,al
-    jnz dwpCanDelete
-;
-    lock sub ds:udd_ref_count,1
-
-dwpLeave:
-    LeaveSection ds:udd_section
-    jmp dwpDone
-
-dwpCanDelete:
-    lock sub ds:udd_ref_count,1
-    jnz dwpLeave
-;
-    LeaveSection ds:udd_section
+    push es
     mov es,es:pw_handle_sel
-    xor ax,ax
-    mov ds,ax
     FreeMem
+    pop es
 
 dwpDone:
-    pop ax
     pop es
     pop ds
     retf32
@@ -1078,8 +1038,13 @@ add_wait_for_dev_pipe       PROC far
     mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
     mov edi,OFFSET add_wait_tab
     AddWaitDelete
-    jc awpLeave
+    jnc awpSave
 ;
+    lock sub ds:udd_ref_count,1
+    stc
+    jmp awpLeave
+
+awpSave:
     mov es:pw_handle_sel,si
     mov es:pw_pipe,dl
     clc
@@ -1116,6 +1081,7 @@ delete_dev_handle   Proc far
     lock sub es:udd_ref_count,1
     jnz ddhFreeHandle
 ;
+    int 3
     FreeMem
 
 ddhFreeHandle:
@@ -1853,6 +1819,7 @@ unlink_usb_dev       Proc far
     pop ds
     jnz uudDone
 ;
+    int 3
     mov es,ax
     FreeMem
 
