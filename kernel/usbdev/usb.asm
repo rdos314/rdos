@@ -240,15 +240,41 @@ close_usb_dev  Proc far
     push es
     push ax
     push ebx
+    push dx
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
     jc cudvDone
 ;
-    mov es,ds:[ebx].udh_dev_sel
-    lock sub es:udd_ref_count,1
-    jnz cudvFreeHandle
+    mov ax,ds:[ebx].udh_dev_sel
+    push ds
+    mov ds,ax
+    mov es,ax
+    EnterSection ds:udd_section
+    pop ds
 ;
+    mov dl,es:udd_deleted
+    or dl,dl
+    jnz cudvCanDelete
+;
+    lock sub es:udd_ref_count,1
+
+cudvLeave:
+    push ds
+    mov ds,ax
+    LeaveSection ds:udd_section
+    pop ds
+    jmp cudvFreeHandle
+
+cudvCanDelete:
+    lock sub es:udd_ref_count,1
+    jnz cudvLeave
+;
+    push ds
+    mov ds,ax
+    LeaveSection ds:udd_section
+    pop ds
+    mov es,ax
     FreeMem
 
 cudvFreeHandle:
@@ -256,6 +282,7 @@ cudvFreeHandle:
     clc
 
 cudvDone:
+    pop dx
     pop ebx
     pop ax
     pop es
@@ -958,6 +985,53 @@ is_pipe_idle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           DeleteWaitPipe
+;
+;           DESCRIPTION:    Decrease lock
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_wait_pipe    PROC far
+    push ds
+    push es
+    push ax
+;
+    int 3
+    mov ds,es:pw_handle_sel
+    EnterSection ds:udd_section
+;
+    mov al,ds:udd_deleted
+    or al,al
+    jnz dwpCanDelete
+;
+    lock sub ds:udd_ref_count,1
+
+dwpLeave:
+    LeaveSection ds:udd_section
+    jmp dwpDone
+
+dwpCanDelete:
+    lock sub ds:udd_ref_count,1
+    jnz dwpLeave
+;
+    LeaveSection ds:udd_section
+    mov es,es:pw_handle_sel
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+
+dwpDone:
+    pop ax
+    pop es
+    pop ds
+    retf32
+delete_wait_pipe Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddWaitForPipe
 ;
 ;           DESCRIPTION:    Add a wait for pipe
@@ -976,6 +1050,7 @@ aw0 DD OFFSET start_wait_for_pipe,      SEG code
 aw1 DD OFFSET stop_wait_for_pipe,       SEG code
 aw2 DD OFFSET clear_wait_for_pipe,      SEG code
 aw3 DD OFFSET is_pipe_idle,             SEG code
+aw4 DD OFFSET delete_wait_pipe,         SEG code
 
 add_wait_for_dev_pipe       PROC far
     push ds
@@ -988,17 +1063,29 @@ add_wait_for_dev_pipe       PROC far
     jc awpDone
 ;
     mov si,ds:[ebx].udh_dev_sel
+    mov ds,si
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz awpLeave
+;
+    lock add ds:udd_ref_count,1
+;
     mov bx,bp
     mov ax,cs
     mov es,ax
     mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
     mov edi,OFFSET add_wait_tab
-    AddWait
-    jc awpDone
+    AddWaitDelete
+    jc awpLeave
 ;
     mov es:pw_handle_sel,si
     mov es:pw_pipe,dl
     clc
+
+awpLeave:
+    LeaveSection ds:udd_section
 
 awpDone:
     popad
