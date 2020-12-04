@@ -2977,42 +2977,6 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           startWaitPipe
-;
-;       DESCRIPTION:    Start wait for pipe
-;
-;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
-;                       BX      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartWaitPipe   Proc far
-    int 3
-    retf32
-StartWaitPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           stopWaitPipe
-;
-;       DESCRIPTION:    Stop wait for pipe
-;
-;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopWaitPipe   Proc far
-    int 3
-    retf32
-StopWaitPipe   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -4067,8 +4031,6 @@ et0C DD OFFSET CreateIntrPipe,      SEG code
 et0D DD OFFSET UnlinkPipes,         SEG code
 et0E DD OFFSET EnablePipe,          SEG code
 et0F DD OFFSET DisablePipe,         SEG code
-et10 DD OFFSET StartWaitPipe,       SEG code
-et11 DD OFFSET StopWaitPipe,        SEG code
 
 InitFunction    Proc near
     push es
@@ -4215,7 +4177,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*10h
 
 ifTabLoop:
     lods dword ptr cs:[si]

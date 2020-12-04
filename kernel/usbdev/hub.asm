@@ -380,47 +380,6 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           startWaitPipe
-;
-;       DESCRIPTION:    Start wait for pipe
-;
-;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
-;                       BX      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartWaitPipe   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:start_wait_pipe_proc
-    pop ds
-    ret
-StartWaitPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           stopWaitPipe
-;
-;       DESCRIPTION:    Stop wait for pipe
-;
-;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopWaitPipe   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:stop_wait_pipe_proc
-    pop ds
-    ret
-StopWaitPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -528,8 +487,6 @@ ht0C DD OFFSET CreateIntrPipe,      SEG code
 ht0D DD OFFSET UnlinkPipes,         SEG code
 ht0E DD OFFSET EnablePipe,          SEG code
 ht0F DD OFFSET DisablePipe,         SEG code
-ht10 DD OFFSET StartWaitPipe,       SEG code
-ht11 DD OFFSET StopWaitPipe,        SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2100,7 +2057,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*12h
+    mov ecx,2*10h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

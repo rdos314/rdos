@@ -116,15 +116,6 @@ enable_pipe_proc      DD ?,?
 ;  IN GS        Pipe sel
 disable_pipe_proc      DD ?,?
 
-;  IN ES        Device
-;  IN DL        Pipe #
-;  IN BX        Wait object
-start_wait_pipe_proc      DD ?,?
-
-;  IN ES        Device
-;  IN DL        Pipe #
-stop_wait_pipe_proc      DD ?,?
-
 usb_section            section_typ <>
 
 usb_controller_id      DW ?
