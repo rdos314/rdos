@@ -249,7 +249,6 @@ close_usb_dev  Proc far
     lock sub es:udd_ref_count,1
     jnz cudvFreeHandle
 ;
-    int 3
     FreeMem
 
 cudvFreeHandle:
@@ -909,7 +908,6 @@ stop_wait_for_pipe      PROC far
     push ax
     push dx
 ;
-    int 3
     mov dl,es:pw_pipe
     mov ds,es:pw_handle_sel
     EnterSection ds:udd_section
@@ -939,9 +937,62 @@ stop_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_wait_for_pipe     PROC far
+    push ds
+    push fs
+    push gs
+    pushad
+;
+    mov dl,es:pw_pipe
+    mov ds,es:pw_handle_sel
+    EnterSection ds:udd_section
+    mov bx,es
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz cwfpLeave
+;
+    mov es,ds:udd_sel    
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    test dl,80h
+    jnz cwfpIn
+
+cwfpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].usbd_out_pipe_arr
+    or si,si
+    jz cwfpLeave
+;
+    mov gs,si
+    mov gs:usbdp_wait,0
+    jmp cwfpLeave
+
+cwfpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].usbd_in_pipe_arr
+    or si,si
+    jz cwfpLeave
+;
+    mov gs,si
+    mov gs:usbdp_wait,0
+
+cwfpLeave:
+    LeaveSection ds:udd_section
+;
+    popad
+    pop gs
+    pop fs
+    pop ds
     retf32
 clear_wait_for_pipe Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -977,7 +1028,6 @@ delete_wait_pipe    PROC far
     lock sub ds:udd_ref_count,1
     jnz dwpDone
 ;
-    int 3
     push es
     mov es,es:pw_handle_sel
     FreeMem
@@ -1081,7 +1131,6 @@ delete_dev_handle   Proc far
     lock sub es:udd_ref_count,1
     jnz ddhFreeHandle
 ;
-    int 3
     FreeMem
 
 ddhFreeHandle:
@@ -1810,7 +1859,6 @@ unlink_usb_dev       Proc far
     or ax,ax
     jz uudDone
 ;
-    int 3
     push ds
     mov ds,ax
     mov ds:udd_deleted,1
