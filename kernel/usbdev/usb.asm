@@ -823,12 +823,12 @@ start_wait_for_pipe     PROC far
     mov dl,es:pw_pipe
     mov ds,es:pw_handle_sel
     EnterSection ds:udd_section
+    mov bx,es
     mov al,ds:udd_deleted
     or al,al
     stc
     jnz bwfpLeaveSignal
 ;
-    mov bx,es
     mov es,ds:udd_sel    
 ;
     mov ax,flat_sel
@@ -1810,16 +1810,67 @@ unlink_usb_dev       Proc far
     or ax,ax
     jz uudDone
 ;
+    int 3
     push ds
     mov ds,ax
     mov ds:udd_deleted,1
     EnterSection ds:udd_section
     LeaveSection ds:udd_section
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+uudInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz uudInNext
+;
+    push es
+    mov es,bx
+    xor bx,bx
+    xchg bx,es:usbdp_wait
+    or bx,bx
+    jz uudInPop
+;
+    mov es,bx
+    SignalWait
+
+uudInPop:
+    pop es
+
+uudInNext:
+    add si,2
+    loop uudInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+uudOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz uudOutNext
+;
+    push es
+    mov es,bx
+    xor bx,bx
+    xchg bx,es:usbdp_wait
+    or bx,bx
+    jz uudOutPop
+;
+    mov es,bx
+    SignalWait
+
+uudOutPop:
+    pop es
+
+uudOutNext:
+    add si,2
+    loop uudOutLoop
+;
     lock sub ds:udd_ref_count,1
     pop ds
     jnz uudDone
 ;
-    int 3
     mov es,ax
     FreeMem
 
