@@ -1312,6 +1312,14 @@ AddWait MACRO
     OsGate add_wait_nr
                     ENDM
 
+; IN  AX      Extra bytes needed in wait object
+; IN  BX      Wait handle
+; IN  ES:EDI  Method table (init, abort, peek & delete)
+; OUT ES      Wait object
+AddWaitDelete MACRO
+    OsGate add_wait_del_nr
+                    ENDM
+
 ; IN  ES      Wait object
 SignalWait      MACRO
     OsGate signal_wait_nr

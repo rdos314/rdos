@@ -126,6 +126,7 @@ delete_wait Proc near
 
 delete_wait_loop:
     mov es,dx
+    call fword ptr es:wo_delete_proc
     mov dx,es:wo_next
     FreeMem
     or dx,dx
@@ -684,6 +685,18 @@ stop_wait  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DefaultDelete
+;
+;       DESCRIPTION:    Default delete method
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_delete:
+    retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddWait
 ;
 ;           DESCRIPTION:    Add a generic wait object
@@ -725,6 +738,9 @@ add_wait    Proc far
     mov ecx,8
     rep movs dword ptr es:[edi],fs:[esi]
 ;
+    mov es:wo_delete_proc,OFFSET default_delete
+    mov es:wo_delete_proc+4,cs
+;
     mov ax,ds:[ebx].wh_obj_list
     mov es:wo_next,ax
     mov ds:[ebx].wh_obj_list,es
@@ -752,6 +768,78 @@ add_wait_done:
     pop ds
     retf32
 add_wait    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddWaitDelete
+;
+;       DESCRIPTION:    Add a generic wait object with delete method
+;
+;       PARAMETERS:     AX      Extra bytes needed in wait object
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;                       ES:EDI   Method table
+;
+;       RETURNS:        ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_del_name   DB 'Add Wait Delete', 0
+
+add_wait_del    Proc far
+    push ds
+    push fs
+    pushad
+;
+    mov si,es
+    mov fs,si
+    mov esi,edi
+;
+    push ax
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    pop ax
+    jc awdDone
+;
+    EnterSection ds:[ebx].wh_section
+;    
+    movzx eax,ax
+    add eax,SIZE wait_obj_header
+    AllocateSmallGlobalMem
+;
+    mov es:wo_id,ecx
+    mov edi,OFFSET wo_init_proc
+    mov ecx,10
+    rep movs dword ptr es:[edi],fs:[esi]
+;
+    mov ax,ds:[ebx].wh_obj_list
+    mov es:wo_next,ax
+    mov ds:[ebx].wh_obj_list,es
+;
+    mov al,ds:[ebx].wh_running
+    or al,al
+    jz awdLeave
+;
+    mov ax,ds:[ebx].wh_thread
+    or ax,ax
+    jz awdLeave
+;
+    push bx
+    mov bx,ax
+    Signal
+    pop bx
+
+awdLeave:
+    LeaveSection ds:[ebx].wh_section
+    clc
+
+awdDone:
+    popad
+    pop fs
+    pop ds
+    retf32
+add_wait_del    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -797,6 +885,7 @@ remove_wait_loop:
 
 remove_wait_do:
     mov ax,es:wo_next
+    call fword ptr es:wo_delete_proc
     FreeMem
     or dx,dx
     jz remove_wait_head
@@ -1349,6 +1438,11 @@ init_wait       PROC near
     mov esi,OFFSET add_wait
     mov edi,OFFSET add_wait_name
     mov ax,add_wait_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_wait_del
+    mov edi,OFFSET add_wait_del_name
+    mov ax,add_wait_del_nr
     RegisterOsGate
 ;
     mov esi,OFFSET signal_wait
