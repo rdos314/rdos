@@ -559,10 +559,16 @@ cdpBulk:
 cdpSave:
     push es
     mov es,bx
+;
+    mov es:usbdp_flags,USB_PIPE_FLAG_EMPTY
+    mov es:usbdp_rd_ptr,0
+    mov es:usbdp_wr_ptr,0
+;
     mov si,di
     mov di,OFFSET usbdp_descr
     mov cx,SIZE usb_endpoint_descr
     rep movs es:[di],gs:[si]
+;
     pop es
 ;
     movzx si,dl
@@ -807,9 +813,9 @@ disable_usb_pipe Endp
 
 start_wait_for_pipe     PROC far
     push ds
-    push ax
-    push bx
-    push dx
+    push fs
+    push gs
+    pushad
 ;
     mov dl,es:pw_pipe
     mov ds,es:pw_handle_sel
@@ -819,29 +825,68 @@ start_wait_for_pipe     PROC far
     stc
     jnz bwfpLeaveSignal
 ;
-    push ds
-    push es
-;
     mov bx,es
     mov es,ds:udd_sel    
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:start_wait_pipe_proc
 ;
-    pop es
-    pop ds
-    LeaveSection ds:udd_section
-    jmp bwfpDone
+    mov ax,flat_sel
+    mov fs,ax
+;
+    test dl,80h
+    jnz bwfpIn
+
+bwfpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].usbd_out_pipe_arr
+    or si,si
+    jz bwfpLeaveSignal
+;
+    mov gs,si
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    jz bwfpLeaveSignal
+;
+    mov gs:usbdp_wait,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_FULL
+    jnz bwfpLeave
+    jmp bwfpCheckSignal
+
+bwfpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].usbd_in_pipe_arr
+    or si,si
+    jz bwfpLeaveSignal
+;
+    mov gs,si
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    jz bwfpLeaveSignal
+;
+    mov gs:usbdp_wait,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_EMPTY
+    jnz bwfpLeave
+
+bwfpCheckSignal:
+    xor bx,bx
+    xchg bx,gs:usbdp_wait
+    or bx,bx
+    jz bwfpLeave
 
 bwfpLeaveSignal:
-    LeaveSection ds:udd_section
-
-bwfpSignal:
+    push es    
+    mov es,bx
     SignalWait
+    pop es
 
-bwfpDone:
-    pop dx
-    pop bx
-    pop ax
+bwfpLeave:
+    LeaveSection ds:udd_section
+;
+    popad
+    pop gs
+    pop fs
     pop ds
     retf32
 start_wait_for_pipe Endp
@@ -869,16 +914,6 @@ stop_wait_for_pipe      PROC far
     or al,al
     stc
     jnz ewfpLeave
-;
-    push ds
-    push es
-;
-    mov es,ds:udd_sel    
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:stop_wait_pipe_proc
-;
-    pop es
-    pop ds
 
 ewfpLeave:
     LeaveSection ds:udd_section

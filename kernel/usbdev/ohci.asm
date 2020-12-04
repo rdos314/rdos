@@ -1593,9 +1593,6 @@ AllocatePipe    Proc near
     add ax,OFFSET op_entry_arr
     AllocateSmallGlobalMem
 ;
-    mov es:usbdp_flags,0
-    mov es:usbdp_rd_ptr,0
-    mov es:usbdp_wr_ptr,0
     mov es:usbdp_entry_count,cx
     mov ax,es
     mov ds,ax
@@ -1981,103 +1978,6 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           startWaitPipe
-;
-;       DESCRIPTION:    Start wait for pipe
-;
-;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
-;                       BX      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartWaitPipe   Proc far
-    push ds
-    push fs
-    pushad
-;
-    mov ax,flat_sel
-    mov fs,ax
-;
-    test dl,80h
-    jnz bwpIn
-
-bwpOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov si,es:[si].usbd_out_pipe_arr
-    or si,si
-    jz bwpDoSignal
-;
-    mov ds,si
-    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    jz bwpDoSignal
-;
-    int 3
-    jmp bwpDone
-
-bwpIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov si,es:[si].usbd_in_pipe_arr
-    or si,si
-    jz bwpDoSignal
-;
-    mov ds,si
-    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    jz bwpDoSignal
-;
-    mov ds:usbdp_wait,bx
-    test ds:usbdp_flags,USB_PIPE_FLAG_FULL
-    jnz bwpCheckSignal
-;
-    mov ax,ds:usbdp_wr_ptr
-    cmp ax,ds:usbdp_rd_ptr
-    je bwpDone
-
-bwpCheckSignal:
-    xor bx,bx
-    xchg bx,ds:usbdp_wait
-    or bx,bx
-    jz bwpDone
-
-bwpDoSignal:
-    push es    
-    mov es,bx
-    SignalWait
-    pop es
-
-bwpDone:
-    popad
-    pop fs
-    pop ds
-    retf32
-StartWaitPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           stopWaitPipe
-;
-;       DESCRIPTION:    Stop wait for pipe
-;
-;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopWaitPipe   Proc far
-    int 3
-    retf32
-StopWaitPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           NotifyIn
 ;
 ;       DESCRIPTION:    Notify IN transfer completed
@@ -2121,6 +2021,7 @@ niAdvance:
     xor bx,bx
 
 niSave:
+    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_EMPTY
     mov ds:usbdp_wr_ptr,bx
     cmp bx,ds:usbdp_rd_ptr
     jne niSignal
@@ -3266,8 +3167,6 @@ ot0C DD OFFSET CreateIntrPipe,      SEG code
 ot0D DD OFFSET UnlinkPipes,         SEG code
 ot0E DD OFFSET EnablePipe,          SEG code
 ot0F DD OFFSET DisablePipe,         SEG code
-ot10 DD OFFSET StartWaitPipe,       SEG code
-ot11 DD OFFSET StopWaitPipe,        SEG code
 
 InitFunction    Proc near
     push ds
@@ -3325,7 +3224,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*10h
 
 ifTabLoop:
     lods dword ptr cs:[si]
