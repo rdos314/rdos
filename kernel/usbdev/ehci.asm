@@ -3077,7 +3077,7 @@ EnablePipe   Endp
 ;       DESCRIPTION:    Disable pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

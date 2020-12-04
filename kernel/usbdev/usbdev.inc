@@ -113,7 +113,7 @@ unlink_proc      DD ?,?
 enable_pipe_proc      DD ?,?
 
 ;  IN ES        Device
-;  IN DL        Pipe #
+;  IN GS        Pipe sel
 disable_pipe_proc      DD ?,?
 
 ;  IN ES        Device

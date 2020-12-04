@@ -717,8 +717,10 @@ disable_usb_pipe_name DB 'Disable Usb Pipe', 0
 disable_usb_pipe	Proc far
     push ds
     push es
+    push gs
     push eax
     push ebx
+    push esi
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
@@ -731,8 +733,50 @@ disable_usb_pipe	Proc far
     stc
     jnz ddpLeave
 ;
-    push ds
     mov es,ds:udd_sel    
+;
+    test dl,80h
+    jnz ddpIn
+
+ddpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz ddpLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    clc
+    jz ddpLeave
+;
+    lock and gs:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:disable_pipe_proc
+    pop ds
+    jmp ddpLeave
+
+ddpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz ddpLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    clc
+    jz ddpLeave
+;
+    lock and gs:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
+    push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:disable_pipe_proc
     pop ds
@@ -741,8 +785,10 @@ ddpLeave:
     LeaveSection ds:udd_section
 
 ddpDone:
+    pop esi
     pop ebx
     pop eax
+    pop gs
     pop es
     pop ds    
     retf32

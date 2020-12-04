@@ -1951,95 +1951,30 @@ EnablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopPipe
-;
-;       DESCRIPTION:    Stop pipe
-;
-;       PARAMETERS:     DS      Pipe selector
-;                       ES      Device selector
-;                       FS      Flat sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopPipe  Proc near
-    push eax
-    push edx
-;
-    mov edx,ds:op_ed
-    mov eax,ds:op_tail
-    mov fs:[edx].oes_tailp,eax
-    mov fs:[edx].oes_headp,eax
-;
-    pop edx
-    pop eax
-    ret
-StopPipe  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           DisablePipe
 ;
 ;       DESCRIPTION:    Disable pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       DL      Pipe #
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DisablePipe   Proc far
-    push ds
     push fs
-    pushad
+    push eax
+    push edx
 ;
     mov ax,flat_sel
     mov fs,ax
+    mov edx,gs:op_ed
+    mov eax,gs:op_tail
+    mov fs:[edx].oes_tailp,eax
+    mov fs:[edx].oes_headp,eax
 ;
-    test dl,80h
-    jnz dpIn
-
-dpOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz dpDone
-;
-    mov ds,bx
-    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jz dpDone
-;
-    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
-    call StopPipe
-    clc
-    jmp dpDone
-
-dpIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_in_pipe_arr
-    or bx,bx
-    stc
-    jz dpDone
-;
-    mov ds,bx
-    test ds:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jz dpDone
-;
-    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
-    call StopPipe
-
-dpDone:
-    popad
+    pop edx
+    pop eax
     pop fs
-    pop ds
     retf32
 DisablePipe   Endp
 
