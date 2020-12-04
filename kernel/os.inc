@@ -3973,6 +3973,16 @@ AddUsbDevice MACRO
     OsGate add_usb_device_nr
                     ENDM
 
+; IN  DS      Usb pipe selector
+AdvanceUsbRead MACRO
+    OsGate advance_usb_read_nr
+                    ENDM
+
+; IN  DS      Usb pipe selector
+AdvanceUsbWrite MACRO
+    OsGate advance_usb_write_nr
+                    ENDM
+
 ; IN  DS      Usb device selector
 ; IN  ES      Usb function selector
 ; IN  FS      Control pipe selector

@@ -117,8 +117,6 @@ ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_thread          DW ?
 
-ohc_enum_section    section_typ <>
-
 ohc_root_ports      DW ?
 ohc_reset           DW ?
 
@@ -933,38 +931,6 @@ ResetDev   Proc far
     pop ax
     retf32
 ResetDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockEnum
-;
-;           DESCRIPTION:    Lock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockEnum   Proc far
-    EnterSection ds:ohc_enum_section
-    retf32
-LockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockEnum
-;
-;           DESCRIPTION:    Unlock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockEnum   Proc far
-    LeaveSection ds:ohc_enum_section
-    retf32
-UnlockEnum   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2004,8 +1970,7 @@ NotifyIn  Proc near
     jz niDone
 ;
     mov ds,bx
-    mov bx,ds:usbdp_wr_ptr
-    mov si,bx
+    mov si,ds:usbdp_wr_ptr
     shl si,2
     cmp edx,ds:[si].op_entry_arr
     je niAdvance
@@ -2014,30 +1979,7 @@ NotifyIn  Proc near
     jmp niDone
 
 niAdvance:
-    inc bx
-    cmp bx,ds:usbdp_entry_count
-    jb niSave
-;
-    xor bx,bx
-
-niSave:
-    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_EMPTY
-    mov ds:usbdp_wr_ptr,bx
-    cmp bx,ds:usbdp_rd_ptr
-    jne niSignal
-;
-    lock or ds:usbdp_flags,USB_PIPE_FLAG_FULL
-
-niSignal:
-    xor bx,bx
-    xchg bx,ds:usbdp_wait
-    or bx,bx
-    jz niDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    AdvanceUsbWrite
 
 niDone:
     pop esi
@@ -3363,7 +3305,6 @@ AddFunction  Proc near
     mov cx,400h
     rep stosd
 ;
-    InitSection ds:ohc_enum_section
     mov ds:ohc_reset,0
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
