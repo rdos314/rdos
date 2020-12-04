@@ -117,6 +117,7 @@ enable_pipe_proc      DD ?,?
 disable_pipe_proc      DD ?,?
 
 usb_section            section_typ <>
+usb_addr_section       section_typ <>
 
 usb_controller_id      DW ?
 usb_hub_id             DB ?

@@ -83,7 +83,6 @@ pipe_wait_header    ENDS
 
 data    SEGMENT byte public 'DATA'
 
-usb_enum_section    section_typ <>
 usb_over_current    DW ?
 usb_reset_failure   DW ?
 
@@ -1277,6 +1276,7 @@ init_usb_function Proc far
     push di
 ;
     InitSection ds:usb_section
+    InitSection ds:usb_addr_section
     mov ax,ds
     mov es,ax
 ;
@@ -1449,13 +1449,7 @@ trap_usb_detach ENDP
 lock_usb_name DB 'Lock USB', 0
 
 lock_usb       Proc far
-    push ds
-    push ax
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:usb_enum_section
-    pop ax
-    pop ds
+    EnterSection ds:usb_addr_section
     retf32
 lock_usb    Endp
 
@@ -1471,13 +1465,7 @@ lock_usb    Endp
 unlock_usb_name DB 'Unlock USB', 0
 
 unlock_usb       Proc far
-    push ds
-    push ax
-    mov ax,SEG data
-    mov ds,ax
-    LeaveSection ds:usb_enum_section
-    pop ax
-    pop ds
+    LeaveSection ds:usb_addr_section
     retf32
 unlock_usb    Endp
 
@@ -2947,7 +2935,6 @@ init_usb_control_pipe    Endp
 init    Proc far
     mov ax,SEG data
     mov ds,ax
-    InitSection ds:usb_enum_section
     mov ds:usb_func_count,0
     mov ds:usb_attach_hooks,0
     mov ds:usb_detach_hooks,0
