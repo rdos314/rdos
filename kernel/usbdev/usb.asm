@@ -1295,11 +1295,6 @@ init_usb_function Proc far
     xor ax,ax
     rep stosw
 ;
-    mov cx,127
-    mov di,OFFSET usb_linear_dev_arr
-    xor eax,eax
-    rep stosd
-;
     mov eax,1
     mov di,OFFSET usb_addr_bitmap
     stosd
@@ -1608,12 +1603,6 @@ init_usb_dev       Proc far
     mov es:usbd_maxlen,8
     mov es:usbd_curr_config,0
 ;
-    dec al
-    movzx di,al
-    shl di,2
-    mov edx,es:mblk_linear_base
-    mov ds:[di].usb_linear_dev_arr,edx
-;
     xor ax,ax
     mov cx,15
     mov di,OFFSET usbd_in_pipe_arr
@@ -1672,12 +1661,6 @@ fudConfNext:
 ;
     mov ax,10
     WaitMilliSec
-;
-    mov al,es:usbd_address
-    dec al
-    movzx di,al
-    shl di,2
-    mov ds:[di].usb_linear_dev_arr,0
 ;
     mov cx,15
     mov si,OFFSET usbd_in_pipe_arr

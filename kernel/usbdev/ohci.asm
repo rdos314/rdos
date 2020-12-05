@@ -125,6 +125,8 @@ ohc_usb_dev         DB ?
 ohc_usb_func        DB ?
 ohc_irq             DB ?
 
+ohc_linear_dev_arr  DD 127 DUP(?)
+
 ohc_fm_reg          DD ?
 
 ohc_section     section_typ <>
@@ -2330,7 +2332,6 @@ FreeAddress   Proc far
     retf32
 FreeAddress   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2360,12 +2361,18 @@ CreateDev   Proc far
     mov si,SIZE ohci_dev_sel
     mov cx,16
     CreateMemBlk32
+    pop eax
+;
+    dec al
+    movzx di,al
+    shl di,2
+    mov edx,es:mblk_linear_base
+    mov ds:[di].ohc_linear_dev_arr,edx
 ;
     call AllocateTd
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
     mov es:dev_control_thread,0
-    pop eax
 ;
     popad
     pop fs
@@ -2373,6 +2380,33 @@ CreateDev   Proc far
     InitUsbDev
     retf32
 CreateDev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               FreeDev
+;
+;       DESCRIPTION:        Free device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupDev   Proc near
+    push ax
+    push di
+;
+    mov al,es:usbd_address
+    dec al
+    movzx di,al
+    shl di,2
+    mov ds:[di].ohc_linear_dev_arr,0
+;
+    pop di
+    pop ax
+    ret
+CleanupDev	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2545,6 +2579,7 @@ htHandle:
     jmp htAttached
 
 htUnlockFree:
+    call CleanupDev
     FreeUsbDev
 
 htUnlock:
@@ -2564,9 +2599,11 @@ htDoUnlock:
 
 htDetach:
     UnlinkUsbDev
+    call CleanupDev
 ;
     mov al,cl
     NotifyUsbDetach
+;
     FreeUsbDev
 ;
     mov eax,gs:[si].HcRhPortStatus
@@ -2960,7 +2997,7 @@ ofhAddLoop:
     or eax,eax
     jz ofhProcess
 ;
-    mov si,OFFSET usb_linear_dev_arr
+    mov si,OFFSET ohc_linear_dev_arr
     mov cx,127
     mov edx,eax
     and ax,0F000h
@@ -3173,6 +3210,15 @@ ifTabLoop:
     mov ds:[di],eax
     add di,4
     loop ifTabLoop    
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    mov cx,127
+    mov di,OFFSET ohc_linear_dev_arr
+    xor eax,eax
+    rep stosd
+    pop es
 ;
     InitUsbFunction
 ;    

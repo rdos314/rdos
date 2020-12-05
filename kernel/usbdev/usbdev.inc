@@ -129,7 +129,6 @@ usb_addr_bitmap        DD 4 DUP(?)
 usb_handle_arr         DW MAX_USB_HUB_PORTS DUP(?)
 usb_thread_arr         DW MAX_USB_HUB_PORTS DUP(?)
 usb_dev_arr            DW MAX_USB_HUB_PORTS DUP(?)
-usb_linear_dev_arr     DD 127 DUP(?)
 
 usb_function_struc   ENDS
 
