@@ -138,7 +138,7 @@ usb_dev_base        usb_device_struc <>
 dev_control_qtd     DD ?
 dev_control_qh      DD ?
 dev_control_thread  DW ?
-dev_cc              DB ?
+dev_control_status  DB ?
 
 ehci_dev_sel     ENDS
 
@@ -2004,7 +2004,7 @@ RunControl   Proc near
 ;
     GetThread
     mov es:dev_control_thread,ax
-    mov es:dev_cc,0Fh
+    mov es:dev_control_status,0FFh
 ;
     mov edx,es:dev_control_qtd
     LinearToPhysicalMemBlk
@@ -2016,42 +2016,10 @@ RunControl   Proc near
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    WaitForSignal
+    WaitForSignalWithTimeout
     mov es:dev_control_thread,0
-    mov al,es:dev_cc
-    cmp al,0Fh
-    stc
-    je rcDone
-
-
-    mov cx,100
-
-rcWait:
-    mov ax,1
-    WaitMilliSec
-;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:is_dev_connected_proc
-    pop ds
-    jc rcDone
-;
-    mov eax,fs:[edx].qh_current_qtd
-    or eax,eax
-    jz rcNext
-;
-    mov al,fs:[edx].qh_status
-    test al,80h
-    jz rcCheckStatus
-
-rcNext:
-    loop rcWait
-;
-    stc
-    jmp rcDone
-
-rcCheckStatus:
-    test al,40h
+    mov al,es:dev_control_status
+    or al,al
     stc
     jnz rcDone
 ;
@@ -2125,7 +2093,6 @@ ControlMsg   Proc far
     push fs
     push eax
 ;
-    int 3
     mov cx,es:usbd_control_buf.usd_len
     mov ax,flat_sel
     mov fs,ax
@@ -2950,26 +2917,45 @@ UpdateUsb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UpdateDev
+;       NAME:           CheckControl
 ;
-;       DESCRIPTION:    Update device
+;       DESCRIPTION:    Check control
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device sel
+;                       FS      Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateDev   Proc near
+CheckControl   Proc near
+    push ebx
+    push edx
+;
+    mov edx,es:dev_control_qtd
+
+cctLoop:
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jnz cctDone
+;
+    and al,7Ch
+    jnz cctSignal
+;
+    mov edx,fs:[edx].qtd_next_va
+    or edx,edx
+    jnz cctLoop
+
+cctSignal:
+    mov es:dev_control_status,al
     xor bx,bx
     xchg bx,es:dev_control_thread
-    or bx,bx
-    jz udDone
-;
     Signal
 
-udDone:
+cctDone:
+    pop edx
+    pop ebx
     ret
-UpdateDev   Endp
+CheckControl   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2986,10 +2972,11 @@ ehci_function_handler:
     mov ds,bx
     GetThread
     mov ds:ehc_thread,ax
+    mov ax,flat_sel
+    mov fs,ax
 
 efhLoop:
     WaitForSignal
-    int 3
 ;
     movzx cx,ds:ehc_ports
     mov bx,OFFSET ehc_dev_arr
@@ -3000,7 +2987,13 @@ efhDevLoop:
     jz efhDevNext
 ;
     mov es,ax
-    call UpdateDev
+    mov ax,es:dev_control_thread
+    or ax,ax
+    jz efhDevPipes
+;
+    call CheckControl
+
+efhDevPipes:
 
 efhDevNext:
     add bx,2
