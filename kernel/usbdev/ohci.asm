@@ -67,6 +67,8 @@ HcRhPortStatus      DD ?
 
 hc_reg  ENDS
 
+; this structure should be kept less than 32 bytes long!
+
 ohc_es_struc    STRUC
 
 ;HC part
@@ -79,6 +81,9 @@ oes_nexted      DD ?
 
 ;driver part
 
+oes_my_va       DD ?
+oes_tail_va     DD ?
+oes_head_va     DD ?
 oes_next_va     DD ?
 
 ohc_es_struc    ENDS
@@ -284,6 +289,9 @@ InitEd  PROC near
     mov fs:[edx].oes_tailp,0
     mov fs:[edx].oes_headp,0
     mov fs:[edx].oes_nexted,0
+    mov fs:[edx].oes_my_va,edx
+    mov fs:[edx].oes_tail_va,0
+    mov fs:[edx].oes_head_va,0
     mov fs:[edx].oes_next_va,0
     ret
 InitEd  ENDP
@@ -409,6 +417,8 @@ AddControlEd    PROC near
     call AllocateTd
     mov fs:[ebx].oes_headp,eax
     mov fs:[ebx].oes_tailp,eax
+    mov fs:[ebx].oes_head_va,edx
+    mov fs:[ebx].oes_tail_va,edx
 ;    
     pop edx
     pop eax
@@ -455,6 +465,8 @@ AddBulkEd       PROC near
     call AllocateTd
     mov fs:[ebx].oes_headp,eax
     mov fs:[ebx].oes_tailp,eax
+    mov fs:[ebx].oes_head_va,edx
+    mov fs:[ebx].oes_tail_va,edx
 ;    
     pop edx
     pop eax
@@ -654,6 +666,8 @@ AddIntrEd       PROC near
     call AllocateTd
     mov fs:[ebx].oes_headp,eax
     mov fs:[ebx].oes_tailp,eax
+    mov fs:[ebx].oes_head_va,edx
+    mov fs:[ebx].oes_tail_va,edx
 ;    
     pop edx
     pop eax
@@ -2157,7 +2171,7 @@ ulpIntr:
     dec byte ptr ds:[di]
 ;
     mov di,fs:op_intr_list
-    mov ebx,ds:[di].oes_next_va
+    mov ebx,ds:[di].oes_my_va
     xor ecx,ecx
     mov ax,flat_sel
     mov fs,ax
