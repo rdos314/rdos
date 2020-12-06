@@ -889,9 +889,6 @@ AllocateIntQh PROC near
     push ebx
     push ecx
 ;    
-    push ds
-    push eax
-;    
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:EhciSection
@@ -937,7 +934,6 @@ aiqOk:
     mov cx,dx
     and cx,0FFFh
     or ax,cx
-    pop cx
 ;
     call InitQh
 ;
@@ -2648,6 +2644,7 @@ htWaitNotify:
     call fword ptr ds:allocate_address_proc
     jc htUnlock
 ;
+    int 3
     push dx
     mov ah,2
     xor bx,bx
