@@ -596,7 +596,6 @@ AllocateQtd  ENDP
 ;                       ES      Device sel
 ;                       FS      Flat sel
 ;                       EDX     QH linear
-;                       EAX     QH physical
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -604,7 +603,7 @@ AddAsyncQh    PROC near
     push gs
     pushad
 ;
-    mov ebx,eax
+    mov ebx,fs:[edx].qh_my_phys
     mov eax,ds:ehc_async_head_va
     or eax,eax
     jnz aaqInsert
@@ -2629,7 +2628,6 @@ htWaitNotify:
     call fword ptr ds:allocate_address_proc
     jc htUnlock
 ;
-    int 3
     push dx
     mov ah,2
     xor bx,bx
@@ -2644,6 +2642,7 @@ htWaitNotify:
     call fword ptr ds:change_address_proc
     AddUsbDevice
     UnlockUsb
+    int 3
     ReadUsbDescriptors
     jc htDetach
 ;
