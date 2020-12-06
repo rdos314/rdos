@@ -2214,16 +2214,17 @@ UnlinkPipe      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UnlinkPipes
+;       NAME:           Unlink
 ;
-;       DESCRIPTION:    Unlink pipes
+;       DESCRIPTION:    Unlink dev
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkPipes   Proc far
+Unlink   Proc far
+    push eax
     push ebx
     push ecx
     push esi
@@ -2233,36 +2234,43 @@ UnlinkPipes   Proc far
     mov cx,15
     mov si,OFFSET usbd_in_pipe_arr
 
-upInLoop:
+udvInLoop:
     mov bx,es:[si]
     or bx,bx
-    jz upInNext
+    jz udvInNext
 ;
     call UnlinkPipe
 
-upInNext:
+udvInNext:
     add si,2
-    loop upInLoop
+    loop udvInLoop
 ;
     mov cx,15
     mov si,OFFSET usbd_out_pipe_arr
 
-upOutLoop:
+udvOutLoop:
     mov bx,es:[si]
     or bx,bx
-    jz upOutNext
+    jz udvOutNext
 ;
     call UnlinkPipe
 
-upOutNext:
+udvOutNext:
     add si,2
-    loop upOutLoop
+    loop udvOutLoop
+;
+    mov al,es:usbd_address
+    dec al
+    movzx si,al
+    shl si,2
+    mov ds:[si].ohc_linear_dev_arr,0
 ;
     pop esi
     pop ecx
     pop ebx
+    pop eax
     retf32
-UnlinkPipes     Endp
+Unlink     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2347,33 +2355,6 @@ CreateDev   Proc far
     InitUsbDev
     retf32
 CreateDev  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               FreeDev
-;
-;       DESCRIPTION:        Free device sel
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CleanupDev   Proc near
-    push ax
-    push di
-;
-    mov al,es:usbd_address
-    dec al
-    movzx di,al
-    shl di,2
-    mov ds:[di].ohc_linear_dev_arr,0
-;
-    pop di
-    pop ax
-    ret
-CleanupDev	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3109,7 +3090,7 @@ ot09 DD OFFSET IsDeviceConnected,   SEG code
 ot0A DD OFFSET ControlMsg,          SEG code
 ot0B DD OFFSET CreateBulkPipe,      SEG code
 ot0C DD OFFSET CreateIntrPipe,      SEG code
-ot0D DD OFFSET UnlinkPipes,         SEG code
+ot0D DD OFFSET Unlink,              SEG code
 ot0E DD OFFSET EnablePipe,          SEG code
 ot0F DD OFFSET DisablePipe,         SEG code
 
