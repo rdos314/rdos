@@ -43,10 +43,13 @@ MAX_USB_DEVICES = 16
 
 ; ehc_flags
 
-EHC_PORT_IND    = 1
+EHC_PORT_IND        = 1
 EHC_COMPANION       = 2
 EHC_PORT_POWER      = 4
 
+; HCC flags
+
+HCC_64              = 1
 
 usb_pipe_struc      STRUC
 
@@ -109,7 +112,6 @@ usb_func_base        usb_function_struc <>
 ehc_reg_sel         DW ?
 ehc_thread          DW ?
 
-
 ehc_bus             DB ?
 ehc_device          DB ?
 ehc_function        DB ?
@@ -127,11 +129,7 @@ ehc_section         section_typ <>
 
 ehc_reset           DW ?
 
-ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
-
-ehc_pipe_section    section_typ <>
-ehc_enum_section    section_typ <>
 
 ehc_periodic_sel    DW ?
 ehc_periodic_phys   DD ?
@@ -161,62 +159,79 @@ dev_control_qh   DD ?
 
 ehci_dev_sel     ENDS
 
-ESP_FLAG_TRANSFER_PENDING   = 1
-ESP_FLAG_TRANSFER_OK        = 2
-ESP_FLAG_SINGLE             = 4
+ehci_pipe_struc    STRUC
 
-ehci_pipe   STRUC
+ep_pipe            usb_device_pipe_struc <>
 
-esp_pipe_base   usb_pipe_struc <>
-esp_qh          DD ?
-esp_prev        DW ?
-esp_next        DW ?
-esp_table       DW ?
-esp_entry       DW ?
-esp_table_size  DW ?
+ep_qh              DD ?
+ep_table           DW ?
+ep_table_size      DW ?
+ep_entry           DW ?
 
-esp_pending     DD ?
-esp_first       DD ?
-esp_current     DD ?
-esp_size        DW ?
-esp_flags       DB ?
-esp_done        DB ?
+ep_entry_arr       DD ?
 
-ehci_pipe   ENDS
+ehci_pipe_struc    ENDS
 
-; this structure should be kept less than 128 bytes long!
+qtd_struc         STRUC
 
-qtd_struc       STRUC
+qtd_next          DD ?
+qtd_alt           DD ?
+qtd_status        DB ?
+qtd_flags         DB ?
+qtd_size          DW ?
+qtd_page0         DD ?
+qtd_page1         DD ?
+qtd_page2         DD ?
+qtd_page3         DD ?
+qtd_page4         DD ?
+
+qtd_struc         ENDS
+
+qtd32_struc       STRUC
 
 ; HC part
 
-qtd_next        DD ?
-qtd_alt         DD ?
-qtd_status      DB ?
-qtd_flags       DB ?
-qtd_size        DW ?
-qtdl_page0      DD ?
-qtdl_page1      DD ?
-qtdl_page2      DD ?
-qtdl_page3      DD ?
-qtdl_page4      DD ?
-
-qtdu_page0      DD ?
-qtdu_page1      DD ?
-qtdu_page2      DD ?
-qtdu_page3      DD ?
-qtdu_page4      DD ?
+qtd32_base        qtd_struc <>
 
 ; driver part
 
-qtd_my_phys     DD ?
-qtd_my_va       DD ?
-qtd_next_va     DD ?
-qtd_alt_va      DD ?
-qtd_buffer_va   DD ?
-qtd_buffer_size DW ?
+qtd32_next_va     DD ?
+qtd32_buffer_va   DD ?
+qtd32_buffer_size DW ?
+qtd32_pipe        DB ?
 
-qtd_struc       ENDS
+qtd32_struc       ENDS
+
+qtd64_struc       STRUC
+
+; HC part
+
+qtd64_base        qtd_struc <>
+
+qtdu64_page0      DD ?
+qtdu64_page1      DD ?
+qtdu64_page2      DD ?
+qtdu64_page3      DD ?
+qtdu64_page4      DD ?
+
+; driver part
+
+qtd64_next_va     DD ?
+qtd64_alt_va      DD ?
+qtd64_buffer_va   DD ?
+qtd64_buffer_size DW ?
+qtd64_pipe        DB ?
+
+qtd64_struc       ENDS
+
+control_qtd_struc       STRUC
+
+cq_base           qtd64_struc <>
+
+qtd_next_va       DD ?
+qtd_buffer_va     DD ?
+
+control_qtd_struc        ENDS
 
 ; this structure should be kept less than 128 bytes long!
 
@@ -259,9 +274,10 @@ qh_alt_va       DD ?
 
 qh_struc    ENDS
 
+
 data    SEGMENT byte public 'DATA'
 
-EhciList128     DD ?
+EhciQhList      DD ?
 EhciSection     section_typ <>
 PortThread      DW ?
 
@@ -409,189 +425,6 @@ etDone:
     retf32
 ehci_timer  Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateBlock128
-;
-;       DESCRIPTION:    Allocate 128-byte block with page-alignment
-;
-;       PARAMETERS:     ES      Flat sel
-;
-;       RETURNS:        EDX         Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateBlock128 PROC near
-    push ds
-    push eax
-;    
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:EhciSection
-    mov edx,ds:EhciList128
-    or edx,edx
-    jnz allocate_block128_done
-;
-    push ecx    
-    mov eax,1000h
-    AllocateBigLinear
-;
-    push ebx
-    AllocatePhysical32
-    mov al,13h
-    SetPageEntry
-    pop ebx
-;    
-    mov ecx,128
-    mov ds:EhciList128,edx
-    
-allocate_block128_loop:
-    mov eax,edx
-    add eax,ecx
-    mov es:[edx],eax
-    mov edx,eax
-    test dx,0FFFh
-    jnz allocate_block128_loop
-;
-    sub edx,ecx
-    mov dword ptr es:[edx],0
-    mov edx,ds:EhciList128
-    pop ecx
-
-allocate_block128_done:
-    mov eax,es:[edx]
-    mov ds:EhciList128,eax
-    LeaveSection ds:EhciSection
-;
-    pop eax
-    pop ds
-    ret
-AllocateBlock128 ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeBlock128
-;
-;       DESCRIPTION:    Free 128-byte block
-;
-;       PARAMETERS:     ES      Flat sel
-;
-;       PARAMETERS:         EDX         Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeBlock128     PROC near
-    push ds
-    push eax
-;
-    mov ax,SEG data
-    mov ds,ax
-;    
-    EnterSection ds:EhciSection
-    mov eax,ds:EhciList128
-    mov es:[edx],eax
-    mov ds:EhciList128,edx
-    LeaveSection ds:EhciSection
-;       
-    pop eax
-    pop ds
-    ret
-FreeBlock128     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InsertPipe
-;
-;       DESCRIPTION:    Insert pipe into function pipe-list
-;
-;       PARAMETERS:     DS      Function
-;                       FS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertPipe  Proc near
-    push di
-    EnterSection ds:ehc_pipe_section
-    mov di,ds:ehc_pipe_list
-    or di,di
-    je ipEmpty
-;       
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:esp_prev
-    mov ds:esp_prev,fs
-    mov ds,si
-    mov ds:esp_next,fs
-    mov fs:esp_next,di
-    mov fs:esp_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ipDone
-    
-ipEmpty:
-    mov fs:esp_next,fs
-    mov fs:esp_prev,fs
-    pop di
-    mov ds:ehc_pipe_list,fs
-
-ipDone:
-    LeaveSection ds:ehc_pipe_section
-    ret
-InsertPipe  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RemovePipe
-;
-;       DESCRIPTION:    Remove pipe from function pipe-list
-;
-;       PARAMETERS:     DS      Function
-;                       FS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemovePipe  Proc near
-    push si
-    push di
-;       
-    EnterSection ds:ehc_pipe_section
-    push ds
-    mov si,fs:esp_prev
-    mov di,fs:esp_next
-    mov ds,di
-    mov ds:esp_prev,si
-    mov ds,si
-    mov ds:esp_next,di
-    pop ds
-;
-    mov si,fs
-    cmp si,ds:ehc_pipe_list
-    jne rpDone
-;
-    cmp si,di
-    je rpEmpty
-;
-    mov ds:ehc_pipe_list,di
-    jmp rpDone    
-
-rpEmpty:
-    mov ds:ehc_pipe_list,0    
-
-rpDone:
-    LeaveSection ds:ehc_pipe_section
-    pop di
-    pop si
-    ret
-RemovePipe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -601,82 +434,102 @@ RemovePipe  Endp
 ;       DESCRIPTION:    Initialize an already allocated qh
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       EDX     QH
+;                       FS      Flat sel
+;                       EDX     QH linear
+;                       EAX     QH physical
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitQh  PROC near
-    mov es:[edx].qh_link,1
-    mov es:[edx].qh_adress,0
-    mov es:[edx].qh_endpoint,0
-    mov es:[edx].qh_max_packet,0A000h
-    mov es:[edx].qh_s_mask,0
-    mov es:[edx].qh_c_mask,0
-    mov es:[edx].qh_hub_port,4000h
-    mov es:[edx].qh_current_qtd,0
-    mov es:[edx].qh_next_qtd,1
-    mov es:[edx].qh_alt_qtd,1
-    mov es:[edx].qh_status,0
-    mov es:[edx].qh_flags,0
-    mov es:[edx].qh_size,0
-    mov es:[edx].qhl_page0,0    
-    mov es:[edx].qhl_page1,0    
-    mov es:[edx].qhl_page2,0    
-    mov es:[edx].qhl_page3,0    
-    mov es:[edx].qhl_page4,0
-    mov es:[edx].qhu_page0,0    
-    mov es:[edx].qhu_page1,0    
-    mov es:[edx].qhu_page2,0    
-    mov es:[edx].qhu_page3,0    
-    mov es:[edx].qhu_page4,0
-    mov es:[edx].qh_my_va,edx
-    mov es:[edx].qh_link_va,0
-    mov es:[edx].qh_next_va,0
-    mov es:[edx].qh_alt_va,0    
+InitQh   Proc near
+    mov fs:[edx].qh_link,1
+    mov fs:[edx].qh_adress,0
+    mov fs:[edx].qh_endpoint,0
+    mov fs:[edx].qh_max_packet,0A000h
+    mov fs:[edx].qh_s_mask,0
+    mov fs:[edx].qh_c_mask,0
+    mov fs:[edx].qh_hub_port,4000h
+    mov fs:[edx].qh_current_qtd,0
+    mov fs:[edx].qh_next_qtd,1
+    mov fs:[edx].qh_alt_qtd,1
+    mov fs:[edx].qh_status,0
+    mov fs:[edx].qh_flags,0
+    mov fs:[edx].qh_size,0
+    mov fs:[edx].qhl_page0,0    
+    mov fs:[edx].qhl_page1,0    
+    mov fs:[edx].qhl_page2,0    
+    mov fs:[edx].qhl_page3,0    
+    mov fs:[edx].qhl_page4,0
+    mov fs:[edx].qhu_page0,0    
+    mov fs:[edx].qhu_page1,0    
+    mov fs:[edx].qhu_page2,0    
+    mov fs:[edx].qhu_page3,0    
+    mov fs:[edx].qhu_page4,0
+    mov fs:[edx].qh_my_va,edx
+    mov fs:[edx].qh_link_va,0
+    mov fs:[edx].qh_next_va,0
+    mov fs:[edx].qh_alt_va,0    
+    mov fs:[edx].qh_my_phys,eax
     ret
-InitQh  ENDP
-
+InitQh   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitQtd
+;       NAME:           InitQtd32
 ;
 ;       DESCRIPTION:    Initialize an already allocated qTD
 ;
-;       PARAMETERS:     ES      Flat sel
-;                       FS      Pipe sel
-;                       EAX     qTD physical
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
 ;                       EDX     qTD linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitQtd PROC near
-    mov es:[edx].qtd_next,1
-    mov es:[edx].qtd_alt,1
-    mov es:[edx].qtd_status,80h
-    mov es:[edx].qtd_flags,8Fh
-    mov es:[edx].qtd_size,0
-    mov es:[edx].qtdl_page0,0
-    mov es:[edx].qtdl_page1,0
-    mov es:[edx].qtdl_page2,0
-    mov es:[edx].qtdl_page3,0
-    mov es:[edx].qtdl_page4,0
-    mov es:[edx].qtdu_page0,0
-    mov es:[edx].qtdu_page1,0
-    mov es:[edx].qtdu_page2,0
-    mov es:[edx].qtdu_page3,0
-    mov es:[edx].qtdu_page4,0
-    mov es:[edx].qtd_my_va,edx
-    mov es:[edx].qtd_my_phys,eax
-    mov es:[edx].qtd_next_va,0
-    mov es:[edx].qtd_alt_va,0
-    mov es:[edx].qtd_buffer_va,0
-    mov es:[edx].qtd_buffer_size,0
+InitQtd32 PROC near
+    mov fs:[edx].qtd_next,1
+    mov fs:[edx].qtd_alt,1
+    mov fs:[edx].qtd_status,80h
+    mov fs:[edx].qtd_flags,8Fh
+    mov fs:[edx].qtd_size,0
+    mov fs:[edx].qtd_page0,0
+    mov fs:[edx].qtd_page1,0
+    mov fs:[edx].qtd_page2,0
+    mov fs:[edx].qtd_page3,0
+    mov fs:[edx].qtd_page4,0
     ret
-InitQtd  ENDP
+InitQtd32  ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitQtd64
+;
+;       DESCRIPTION:    Initialize an already allocated qTD
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDX     qTD linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitQtd64 PROC near
+    mov fs:[edx].qtd_next,1
+    mov fs:[edx].qtd_alt,1
+    mov fs:[edx].qtd_status,80h
+    mov fs:[edx].qtd_flags,8Fh
+    mov fs:[edx].qtd_size,0
+    mov fs:[edx].qtd_page0,0
+    mov fs:[edx].qtd_page1,0
+    mov fs:[edx].qtd_page2,0
+    mov fs:[edx].qtd_page3,0
+    mov fs:[edx].qtd_page4,0
+    mov fs:[edx].qtdu64_page0,0
+    mov fs:[edx].qtdu64_page1,0
+    mov fs:[edx].qtdu64_page2,0
+    mov fs:[edx].qtdu64_page3,0
+    mov fs:[edx].qtdu64_page4,0
+    ret
+InitQtd64  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -686,7 +539,8 @@ InitQtd  ENDP
 ;       DESCRIPTION:    Allocate & initialize an qh descriptor
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       ES      Flat sel
+;                       ES      Device sel
+;                       FS      Flat sel
 ;
 ;       RETURNS:        EDX     Linear address of qh
 ;                       EAX     Physical address of qh
@@ -694,23 +548,17 @@ InitQtd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateQh      PROC near
-    push cx
-    call AllocateBlock128
+    push ebx
+    push ecx
+;
+    mov cx,SIZE qh_struc
+    AllocateMemBlk
     call InitQh
 ;
-    push ebx
-    GetPageEntry
+    pop ecx
     pop ebx
-;    
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-    pop cx
-    mov es:[edx].qh_my_phys,eax
     ret
 AllocateQh  ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -719,52 +567,173 @@ AllocateQh  ENDP
 ;
 ;       DESCRIPTION:    Allocate & initialize qTD
 ;
-;       PARAMETERS:     ES      Flat sel
-;                       FS      Pipe sel
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
 ;
-;       RETURNS:        EDX         Linear address of qTD
+;       RETURNS:        EDX     Linear address of qTD
 ;                       EAX     Physical address of qTD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateQtd     PROC near
-    push cx
-    call AllocateBlock128
-;
     push ebx
-    GetPageEntry
+    push ecx
+;
+    test ds:ehc_hcc_flags,HCC_64
+    jz aqt32
+
+aqt64:
+    mov cx,SIZE qtd64_struc
+    AllocateMemBlk
+    call InitQtd64
+    jmp aqtDone
+
+aqt32:    
+    mov cx,SIZE qtd32_struc
+    AllocateMemBlk
+    call InitQtd32
+
+aqtDone:
+    pop ecx
     pop ebx
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-    pop cx
-;    
-    call InitQtd
     ret
 AllocateQtd  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateInactiveQh
+;       NAME:           AddAsyncQh
 ;
-;       DESCRIPTION:    Allocate & initialize an inactive qh descriptor
+;       DESCRIPTION:    Add async qh
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       ES      Flat sel
-;
-;       RETURNS:        EDX     Linear address of qh
-;                       EAX     Physical address of qh
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       EDX     QH linear
+;                       EAX     QH physical
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateInactiveQh      PROC near
-    call AllocateQh
-    mov es:[edx].qh_adress,80h
-    ret
-AllocateInactiveQh  ENDP
+AddAsyncQh    PROC near
+    push gs
+    pushad
+;
+    mov ebx,eax
+    mov eax,ds:ehc_async_head_va
+    or eax,eax
+    jnz aaqInsert
+;
+    or fs:[edx].qh_endpoint,80h
+    mov ds:ehc_async_head_va,edx
+    mov eax,ebx
+    or al,2
+    mov fs:[edx].qh_link,eax
+    mov fs:[edx].qh_link_va,0
+;
+    mov gs,ds:ehc_reg_sel
+    mov gs:HcAsyncList,ebx
+;
+    mov ax,25
+    WaitMilliSec    
+;
+    mov eax,gs:HcCommand
+    or al,20h
+    mov gs:HcCommand,eax
+    jmp aaqDone
 
+aaqInsert:
+    mov esi,eax
+    mov edi,fs:[esi].qh_my_phys    
+
+aaqInsLoop:
+    mov esi,eax    
+    mov eax,fs:[esi].qh_link_va
+    or eax,eax
+    jnz aaqInsLoop
+;
+    mov fs:[edx].qh_link_va,0    
+    mov eax,edi
+    or al,2
+    mov fs:[edx].qh_link,eax
+;
+    mov fs:[esi].qh_link_va,edx
+    mov eax,ebx
+    or al,2
+    mov fs:[esi].qh_link,eax
+
+aaqDone:
+    popad
+    pop gs
+    ret
+AddAsyncQh  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkAsyncQh
+;
+;       DESCRIPTION:    Unlink async qh
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       EDX     Linear address of qh to remove
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkAsyncQh    PROC near
+    push gs
+    pushad
+;
+    test fs:[edx].qh_endpoint,80h
+    jz uaqList
+
+uaqHead:
+    mov edi,fs:[edx].qh_link_va
+    mov ds:ehc_async_head_va,edi
+    or edi,edi
+    jz uaqHeadEmpty
+;    
+    mov eax,fs:[edi].qh_my_phys
+;
+    mov gs,ds:ehc_reg_sel
+    mov gs:HcAsyncList,eax
+    jmp uaqDone
+
+uaqHeadEmpty:
+    mov gs,ds:ehc_reg_sel
+    mov eax,gs:HcCommand
+    and al,NOT 20h
+    mov gs:HcCommand,eax
+    mov gs:HcAsyncList,0
+    jmp uaqDone
+    
+uaqList:
+    mov edi,ds:ehc_async_head_va
+
+uaqSearch:    
+    or edi,edi
+    jz uaqDone
+;    
+    cmp edx,fs:[edi].qh_link_va
+    je uaqFound
+;
+    mov edi,fs:[edi].qh_link_va
+    jmp uaqSearch
+
+uaqFound:        
+    mov eax,fs:[edx].qh_link_va
+    mov fs:[edi].qh_link_va,eax
+;
+    mov eax,fs:[edx].qh_link
+    mov fs:[edi].qh_link,eax   
+
+uaqDone:
+    popad
+    pop gs   
+    ret    
+UnlinkAsyncQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -773,31 +742,29 @@ AllocateInactiveQh  ENDP
 ;
 ;       DESCRIPTION:    Add control qh
 ;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
 ;
-;       RETURNS:        EDX     Linear address of qh added
-;                       EAX     Physical address of qh added
+;      RETURNS:         EDX     QH
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddControlQh    PROC near
     push gs
-    push ebx
+    push eax
 ;
     EnterSection ds:ehc_section
     call AllocateQh
-    mov ebx,eax
 ;
-    mov es:[edx].qh_endpoint,60h
+    mov fs:[edx].qh_endpoint,60h
 ;    
     mov ax,0A008h
-    mov es:[edx].qh_max_packet,ax
+    mov fs:[edx].qh_max_packet,ax
 ;
-    mov al,fs:usbp_speed
+    mov al,es:usbd_speed
     cmp al,2
-    je acqSpeedOk
+    je acqAdd
 ;
     cmp al,0
     je acqLowSpeed
@@ -812,156 +779,28 @@ acqLowSpeed:
 acqSetSpeed:    
     mov al,40h
     or al,ah
-    mov es:[edx].qh_endpoint,al
+    mov fs:[edx].qh_endpoint,al
 ;
-    mov ax,fs:usbp_hub_sel
-    or ax,ax
-    jz acqDone
-;    
-    push gs
-    mov gs,ax
-    mov ax,fs:usbp_hub_port
+    movzx ax,es:usbd_port
     inc ax
     shl ax,7
     or ax,4000h    
+    mov gs,es:usbd_hub_sel
     or al,gs:hub_address
-    pop gs        
-    mov es:[edx].qh_hub_port,ax
-;
-    mov es:[edx].qh_c_mask,2
+    mov fs:[edx].qh_hub_port,ax
+    mov fs:[edx].qh_c_mask,2
 ;    
     mov ax,0A808h
-    mov es:[edx].qh_max_packet,ax
+    mov fs:[edx].qh_max_packet,ax
     
-acqSpeedOk:
-    mov eax,ds:ehc_async_head_va
-    or eax,eax
-    jnz acqInsert
-;
-    or es:[edx].qh_endpoint,80h
-    mov ds:ehc_async_head_va,edx
-    mov eax,ebx
-    or al,2
-    mov es:[edx].qh_link,eax
-    mov es:[edx].qh_link_va,0
-;
-    mov gs,ds:ehc_reg_sel
-    mov gs:HcAsyncList,ebx
-;
-    mov ax,25
-    WaitMilliSec    
-;
-    mov eax,gs:HcCommand
-    or al,20h
-    mov gs:HcCommand,eax
-    jmp acqDone
-
-acqInsert:
-    push esi
-    push edi
-;
-    mov esi,eax
-    mov edi,es:[esi].qh_my_phys    
-
-acqInsLoop:
-    mov esi,eax    
-    mov eax,es:[esi].qh_link_va
-    or eax,eax
-    jnz acqInsLoop
-;
-    mov es:[edx].qh_link_va,0    
-    mov eax,edi
-    or al,2
-    mov es:[edx].qh_link,eax
-;
-    mov es:[esi].qh_link_va,edx
-    mov eax,ebx
-    or al,2
-    mov es:[esi].qh_link,eax
-;
-    pop edi
-    pop esi
-
-acqDone:
-    mov eax,ebx
+acqAdd:
+    call AddAsyncQh
     LeaveSection ds:ehc_section
 ;    
-    pop ebx
+    pop eax
     pop gs
     ret
 AddControlQh  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RemoveAsyncQh
-;
-;       DESCRIPTION:    Remove async qh
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
-;                       EDX     Linear address of qh added
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveAsyncQh    PROC near
-    push eax
-    push edi
-;
-    test es:[edx].qh_endpoint,80h
-    jz raqList
-
-raqHead:
-    mov edi,es:[edx].qh_link_va
-    mov ds:ehc_async_head_va,edi
-    or edi,edi
-    jz raqHeadEmpty
-;    
-    mov eax,es:[edi].qh_my_phys
-;
-    push es
-    mov es,ds:ehc_reg_sel
-    mov es:HcAsyncList,eax
-    pop es
-    jmp raqFree
-
-raqHeadEmpty:
-    push es
-    mov es,ds:ehc_reg_sel
-    mov es:HcAsyncList,0
-    pop es
-    jmp raqFree
-    
-raqList:
-    mov edi,ds:ehc_async_head_va
-
-raqSearch:    
-    or edi,edi
-    jz raqFree
-;    
-    cmp edx,es:[edi].qh_link_va
-    je raqFound
-;
-    mov edi,es:[edi].qh_link_va
-    jmp raqSearch
-
-raqFound:        
-    mov eax,es:[edx].qh_link_va
-    mov es:[edi].qh_link_va,eax
-;
-    mov eax,es:[edx].qh_link
-    mov es:[edi].qh_link,eax   
-
-raqFree:
-    mov ax,10
-    WaitMilliSec
-    call FreeBlock128
-;
-    pop edi
-    pop eax
-    ret    
-RemoveAsyncQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -970,29 +809,26 @@ RemoveAsyncQh  ENDP
 ;
 ;       DESCRIPTION:    Add bulk qh
 ;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
-;
-;       RETURNS:        EDX     Linear address of qh added
-;                       EAX     Physical address of qh added
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddBulkQh    PROC near
-    push gs
-    push ebx
+    push eax
+    push edx
 ;
     EnterSection ds:ehc_section
     call AllocateQh
-    mov ebx,eax
 ;
-    mov es:[edx].qh_endpoint,20h
+    mov fs:[edx].qh_endpoint,20h
 ;    
     mov ax,0A008h
-    mov es:[edx].qh_max_packet,ax
+    mov fs:[edx].qh_max_packet,ax
 ;
-    mov al,fs:usbp_speed
+    mov al,es:usbd_speed
     cmp al,2
     je abqSpeedOk
 ;
@@ -1008,77 +844,308 @@ abqLowSpeed:
 
 abqSetSpeed:    
     mov al,ah
-    mov es:[edx].qh_endpoint,al
+    mov fs:[edx].qh_endpoint,al
 ;
-    push gs
-    mov ax,fs:usbp_hub_port
+    movzx ax,es:usbd_port
     inc ax
     shl ax,7
     or ax,4000h    
-    mov gs,fs:usbp_hub_sel
+    push gs
+    mov gs,es:usbd_hub_sel
     or al,gs:hub_address
-    pop gs        
-    mov es:[edx].qh_hub_port,ax
+    pop gs
+    mov fs:[edx].qh_hub_port,ax
 ;
-    mov es:[edx].qh_c_mask,2
+    mov fs:[edx].qh_c_mask,2
 ;    
     mov ax,0A008h
-    mov es:[edx].qh_max_packet,ax
+    mov fs:[edx].qh_max_packet,ax
     
 abqSpeedOk:
-    mov eax,ds:ehc_async_head_va
-    or eax,eax
-    jnz abqInsert
-;
-    or es:[edx].qh_endpoint,80h
-    mov ds:ehc_async_head_va,edx
-    mov eax,ebx
-    or al,2
-    mov es:[edx].qh_link,eax
-    mov es:[edx].qh_link_va,0
-;
-    mov gs,ds:ehc_reg_sel
-    mov gs:HcAsyncList,ebx
-;
-    mov eax,gs:HcCommand
-    or al,20h
-    mov gs:HcCommand,eax
-    jmp abqDone
-
-abqInsert:
-    push esi
-    push edi
-;
-    mov esi,eax
-    mov edi,es:[esi].qh_my_phys    
-
-abqInsLoop:
-    mov esi,eax    
-    mov eax,es:[esi].qh_link_va
-    or eax,eax
-    jnz abqInsLoop
-;
-    mov es:[edx].qh_link_va,0    
-    mov eax,edi
-    or al,2
-    mov es:[edx].qh_link,eax
-;
-    mov es:[esi].qh_link_va,edx
-    mov eax,ebx
-    or al,2
-    mov es:[esi].qh_link,eax
-;
-    pop edi
-    pop esi
-
-abqDone:
-    mov eax,ebx
+    call AddAsyncQh
     LeaveSection ds:ehc_section
+;
+    mov gs:ep_qh,edx
 ;    
-    pop ebx
-    pop gs
+    pop edx
+    pop eax
     ret
 AddBulkQh  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateIntQh
+;
+;       DESCRIPTION:    Allocate int QH
+;
+;       RETURNS:        EDX     Linear address
+;                       EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateIntQh PROC near
+    push ds
+    push ebx
+    push ecx
+;    
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:EhciSection
+    mov edx,ds:EhciQhList
+    or edx,edx
+    jnz aiqOk
+;
+    push ecx    
+    mov eax,1000h
+    AllocateBigLinear
+;
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
+;    
+    mov ecx,128
+    mov ds:EhciQhList,edx
+    
+aiqLoop:
+    mov eax,edx
+    add eax,ecx
+    mov fs:[edx],eax
+    mov edx,eax
+    test dx,0FFFh
+    jnz aiqLoop
+;
+    sub edx,ecx
+    mov dword ptr fs:[edx],0
+    mov edx,ds:EhciQhList
+    pop ecx
+
+aiqOk:
+    mov eax,fs:[edx]
+    mov ds:EhciQhList,eax
+    LeaveSection ds:EhciSection
+;
+    push ebx
+    GetPageEntry
+    pop ebx    
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop cx
+;
+    call InitQh
+;
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+AllocateIntQh ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateInactiveIntQh
+;
+;       DESCRIPTION:    Allocate inactive int QH
+;
+;       RETURNS:        EDX     Linear address
+;                       EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateInactiveIntQh PROC near
+    call AllocateIntQh
+    mov fs:[edx].qh_adress,80h
+    ret
+AllocateInactiveIntQh ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeIntQh
+;
+;       DESCRIPTION:    Free interrupt qh
+;
+;       PARAMETERS:     FS      Flat sel
+;
+;       PARAMETERS:     EDX     QH linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeIntQh     PROC near
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    EnterSection ds:EhciSection
+    mov eax,ds:EhciQhList
+    mov fs:[edx],eax
+    mov ds:EhciQhList,edx
+    LeaveSection ds:EhciSection
+;       
+    pop eax
+    pop ds
+    ret
+FreeIntQh     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LinkInterrupt
+;
+;       DESCRIPTION:    Link interrupts in tree
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       BX      Table offset
+;                       CX      Table size / 2
+;                       AX      Entry
+;                       BP      Table size
+;                       EDX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinkInterrupt     PROC near
+    pushad
+;    
+    shl cx,1    
+    mov si,ax
+    shl si,3    
+    mov edi,[bx+si].ehc_qh
+    mov fs:[edi].qh_next_va,edx
+    mov edx,fs:[edx].qh_my_phys
+    or dl,2
+    mov fs:[edi].qh_link,edx    
+;
+    cmp bx,OFFSET ehc_1024
+    je liDone
+;   
+    mov edx,edi
+    shl bp,1
+    sub bx,bp
+    call LinkInterrupt 
+;
+    add ax,cx
+    call LinkInterrupt
+
+liDone:
+    popad
+    ret
+LinkInterrupt     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateInterrupt
+;
+;   DESCRIPTION:    Creae interrupt lists
+;
+;   PARAMETERS:     DS  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateInterrupt  Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call AllocateInactiveIntQh
+    or al,3
+    mov fs:[edx].qh_link,eax
+;
+    mov bx,OFFSET ehc_1
+    push edx
+    call AllocateInactiveIntQh
+    mov ds:[bx].ehc_cnt,0
+    mov ds:[bx].ehc_qh,edx
+    pop eax
+;
+    mov fs:[edx].qh_next_va,eax
+    mov eax,fs:[eax].qh_my_phys
+    or al,3
+    mov fs:[edx].qh_link,eax
+;
+    mov cx,2+4+8+16+32+64+128+256+512+1024 
+    mov bx,OFFSET ehc_1024
+
+ciInitLoop:
+    call AllocateInactiveIntQh
+    mov ds:[bx].ehc_cnt,0
+    mov ds:[bx].ehc_qh,edx
+;
+    add bx,8
+    loop ciInitLoop    
+
+    mov bx,OFFSET ehc_1
+    mov edx,ds:[bx].ehc_qh
+;    
+    mov bx,OFFSET ehc_2
+    mov cx,1
+    mov bp,2*8
+    xor ax,ax
+    call LinkInterrupt
+;
+    inc ax
+    call LinkInterrupt
+;    
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    mov ds:ehc_periodic_phys,eax
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov gs,bx
+    mov ds:ehc_periodic_sel,bx
+;
+    mov cx,1024    
+    mov si,OFFSET ehc_1024
+    xor di,di
+
+ciLoop:    
+    mov edx,ds:[si].ehc_qh
+    mov edx,fs:[edx].qh_my_phys
+    or dl,2
+    mov gs:[di],edx
+    add si,8
+    add di,4
+    loop ciLoop
+;
+    mov gs,ds:ehc_reg_sel
+    mov eax,ds:ehc_periodic_phys
+    mov gs:HcPeriodicListBase,eax
+;    
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,gs:HcCommand    
+    or al,10h
+    mov gs:HcCommand,eax
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds    
+    ret
+CreateInterrupt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1088,7 +1155,7 @@ AddBulkQh  ENDP
 ;       DESCRIPTION:    Get intr entry
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
+;                       FS      Flat sel
 ;                       BX      Table offset
 ;                       CX      Entry count
 ;
@@ -1136,47 +1203,44 @@ GetIntrEntry    Endp
 ;       DESCRIPTION:    Add intr entry
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       BX      Table offset
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
 ;                       AX      Entry
-;                       BP      Table size
-;
-;       RETURNS:        EDX     QH linear
+;                       BX      Table offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIntrEntry    PROC near
-    push eax
-    push esi
-    push edi
+    pushad
 ;    
     mov si,ax
     shl si,3
     mov edx,ds:[bx+si].ehc_qh
-    mov al,es:[edx].qh_adress
+    mov al,fs:[edx].qh_adress
     test al,80h
     jnz aieQhOk
 ;
-    call AllocateQh 
+    call AllocateIntQh 
 
 aieQhOk:
-    mov fs:esp_table,bx
-    mov fs:esp_entry,si
-    mov fs:esp_table_size,bp
+    mov gs:ep_table,bx
+    mov gs:ep_entry,ax
+    mov gs:ep_qh,edx
 ;    
-    mov es:[edx].qh_s_mask,1    
-    mov es:[edx].qh_c_mask,2
+    mov fs:[edx].qh_s_mask,1    
+    mov fs:[edx].qh_c_mask,2
 ;
-    mov es:[edx].qh_endpoint,20h
+    mov fs:[edx].qh_endpoint,20h
 ;    
     mov ax,8h
-    mov es:[edx].qh_max_packet,ax
+    mov fs:[edx].qh_max_packet,ax
 ;
-    mov al,fs:usbp_speed
+    mov al,es:usbd_speed
     cmp al,2
     je aieSpeedOk
 ;
-    mov es:[edx].qh_c_mask,1Ch
+    mov fs:[edx].qh_c_mask,1Ch
     cmp al,0
     je aieLowSpeed
 
@@ -1188,17 +1252,17 @@ aieLowSpeed:
     mov ah,10h
 
 aieSetSpeed:    
-    mov es:[edx].qh_endpoint,ah
+    mov fs:[edx].qh_endpoint,ah
 ;
     push gs
-    mov ax,fs:usbp_hub_port
+    movzx ax,es:usbd_port
     inc ax
     shl ax,7
     or ax,4000h    
-    mov gs,fs:usbp_hub_sel
+    mov gs,es:usbd_hub_sel
     or al,gs:hub_address
     pop gs        
-    mov es:[edx].qh_hub_port,ax
+    mov fs:[edx].qh_hub_port,ax
     
 aieSpeedOk:
     inc ds:[bx+si].ehc_cnt
@@ -1207,20 +1271,18 @@ aieSpeedOk:
     je aieDone
 ;
     mov edi,ds:[bx+si].ehc_qh
-    mov eax,es:[edi].qh_link_va
+    mov eax,fs:[edi].qh_link_va
     mov es:[edx].qh_link_va,eax
-    mov eax,es:[ecx].qh_link
+    mov eax,fs:[ecx].qh_link
     mov es:[edx].qh_link,eax    
 ;    
     mov es:[edi].qh_link_va,edx
-    mov eax,es:[edx].qh_my_phys
+    mov eax,fs:[edx].qh_my_phys
     or al,2
-    mov es:[edi].qh_link,eax    
+    mov fs:[edi].qh_link,eax    
     
 aieDone:
-    pop edi
-    pop esi        
-    pop eax
+    popad
     ret
 AddIntrEntry    Endp
 
@@ -1232,11 +1294,10 @@ AddIntrEntry    Endp
 ;       DESCRIPTION:    Add intr propagate in tree
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
+;                       FS      Flat sel
 ;                       BX      Table offset
 ;                       CX      Table size / 2
 ;                       AX      Entry
-;                       EDX     QH linear
 ;                       BP      Table size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1272,41 +1333,38 @@ AddIntrProp     Endp
 ;       DESCRIPTION:    Add interrupt qh
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
 ;                       AL      Interval
-;
-;       RETURNS:        EDX     Linear address of qh added
-;                       EAX     Physical address of qh added
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIntrQh   PROC near
-    push fs
-    push bx
-    push cx
-    push bp
+    pushad
 ;    
     mov cx,1024
     movzx ax,al
     mov bx,OFFSET ehc_1024
     mov bp,8 * 1024
 
-aiqLoop:    
+aiqhLoop:    
     cmp ax,cx
-    jae aiqFound
+    jae aiqhFound
 ;
     add bx,bp
     shr bp,1
     shr cx,1
-    jnz aiqLoop    
+    jnz aiqhLoop    
 
-aiqFound:
+aiqhFound:
+    mov gs:ep_table_size,bp
+;
     call GetIntrEntry
     call AddIntrEntry
 ;    
     cmp bx,OFFSET ehc_1024
-    je aiqDone
+    je aiqhDone
 ;
     shl bp,1
     sub bx,bp
@@ -1315,11 +1373,8 @@ aiqFound:
     add ax,cx
     call AddIntrProp
 
-aiqDone:
-    pop bp
-    pop cx
-    pop bx
-    pop fs    
+aiqhDone:
+    popad
     ret
 AddIntrQh   Endp
 
@@ -1331,11 +1386,11 @@ AddIntrQh   Endp
 ;       DESCRIPTION:    Remove intr propagate in tree
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
+;                       ES      Device sel
+;                       FS      Flat sel
 ;                       BX      Table offset
 ;                       CX      Table size / 2
 ;                       AX      Entry
-;                       EDX     QH linear
 ;                       BP      Table size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1366,70 +1421,68 @@ RemoveIntrProp     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RemoveIntrQh
+;       NAME:           UnlinkIntrQh
 ;
-;       DESCRIPTION:    Remove intr qh
+;       DESCRIPTION:    Unlink intr qh
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
-;                       EDX     Linear address of qh added
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveIntrQh    PROC near
+UnlinkIntrQh    PROC near
     pushad
 ;
-    mov bx,fs:esp_table
-    mov si,fs:esp_entry
-    mov bp,fs:esp_table_size
+    mov edx,gs:ep_qh
+    mov bx,gs:ep_table
+    mov si,gs:ep_entry
+    mov bp,gs:ep_table_size
     mov cx,bp
     shr cx,4
 ;    
     mov edi,ds:[bx+si].ehc_qh
     cmp edx,edi
-    jne riqSearch
+    jne uiqSearch
 ;
-    mov eax,es:[edx].qh_link_va
+    mov eax,fs:[edx].qh_link_va
     or eax,eax
-    jnz riqFirst
+    jnz uiqFirst
 ;
-    mov es:[edx].qh_current_qtd,0
-    mov es:[edx].qh_next_qtd,1
-    mov es:[edx].qh_alt_qtd,1
-    mov es:[edx].qh_status,0
-    mov es:[edx].qh_adress,80h
-    jmp riqUpdate
+    mov fs:[edx].qh_current_qtd,0
+    mov fs:[edx].qh_next_qtd,1
+    mov fs:[edx].qh_alt_qtd,1
+    mov fs:[edx].qh_status,0
+    mov fs:[edx].qh_adress,80h
+    jmp uiqUpdate
 
-riqFirst:
+uiqFirst:
     int 3
         
-riqSearch:    
+uiqSearch:    
     or edi,edi
-    jz riqFree
+    jz uiqUpdate
 ;    
     cmp edx,es:[edi].qh_link_va
-    je riqFound
+    je uiqUpdate
 ;
     mov edi,es:[edi].qh_link_va
-    jmp riqSearch
+    jmp uiqSearch
 
-riqFound:        
+uiqFound:        
     mov eax,es:[edx].qh_link_va
     mov es:[edi].qh_link_va,eax
 ;
     mov eax,es:[edx].qh_link
     mov es:[edi].qh_link,eax   
 
-riqFree:
-    call FreeBlock128
-
-riqUpdate:
+uiqUpdate:
     mov ax,si
     shr ax,3
 ;    
     cmp bx,OFFSET ehc_1024
-    je riqDone
+    je uiqDone
 ;
     shl bp,1
     sub bx,bp
@@ -1438,268 +1491,10 @@ riqUpdate:
     add ax,cx
     call RemoveIntrProp
 
-riqDone:    
+uiqDone:    
     popad
     ret
-RemoveIntrQh    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateFillQtd
-;
-;       DESCRIPTION:    Allocate and fill qtd buffer pointers from buffer
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES:EDI  Data buffer
-;                       CX      Size of data
-;
-;       RETURNS:        EDX     Allocated & filled qTD 
-;                       EAX     qTD physical
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateFillQtd PROC near
-    push es
-    push ebx
-    push ecx
-    push esi
-    push edi
-;   
-    push ecx 
-    mov bx,es
-    GetSelectorBaseSize
-    add edx,edi
-    mov cx,flat_sel
-    mov es,cx
-    pop ecx
-;
-    push edx
-    call AllocateQtd
-    mov esi,edx
-    mov edi,eax
-    pop edx
-;
-    mov es:[esi].qtd_size,cx
-    mov es:[esi].qtd_buffer_size,cx
-    or cx,cx
-    jz afqDone
-;
-    mov al,es:[edx]
-    push ebx
-    GetPageEntry
-    mov es:[esi].qtdu_page0,ebx
-    pop ebx
-    and ax,0F000h
-    mov bx,dx
-    and bx,0FFFh
-    or ax,bx
-    mov es:[esi].qtdl_page0,eax
-;
-    mov ax,1000h
-    sub ax,bx
-    sub cx,ax
-    jc afqDone
-;
-    movzx ebx,ax
-    add edx,ebx
-    mov edi,OFFSET qtdl_page1
-
-afqLoop:    
-    mov al,es:[edx]
-    GetPageEntry
-;    
-    and ax,0F000h
-    mov es:[esi+edi],eax
-    mov es:[esi+edi+20],ebx
-    sub cx,1000h
-    jc afqDone
-;
-    add edx,1000h
-    add edi,4
-    jmp afqLoop    
-
-afqDone:    
-    mov edx,esi
-    mov eax,es:[edx].qtd_my_phys
-;    
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop es
-    ret
-AllocateFillQtd   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InsertQtd
-;
-;       DESCRIPTION:    Insert qTD into pipe schedule
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       AL      PID code
-;                       EDX     qTD linear 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertQtd       PROC near
-    push es
-    push eax
-    push ebx
-;
-    mov bx,flat_sel
-    mov es,bx
-;    
-    and al,3
-    or al,8Ch
-    mov es:[edx].qtd_flags,al
-;
-    mov ebx,fs:esp_pending
-    or ebx,ebx
-    jz iqEmpty
-
-ipLoop:    
-    mov eax,es:[ebx].qtd_next_va
-    or eax,eax
-    jz ipAdd
-;
-    mov ebx,eax
-    jmp ipLoop
-
-ipAdd:
-    mov es:[edx].qtd_next_va,0
-    mov es:[edx].qtd_next,1
-;    
-    mov es:[ebx].qtd_next_va,edx
-    mov edx,es:[edx].qtd_my_phys
-    mov es:[ebx].qtd_next,edx
-    jmp iqLinked
-
-iqEmpty:
-    mov ebx,es:[edx].qtd_my_phys
-    mov fs:esp_first,ebx
-    mov es:[edx].qtd_next_va,0
-    mov es:[edx].qtd_next,1
-    mov fs:esp_pending,edx
-
-iqLinked:
-    pop ebx
-    pop eax
-    pop es
-    ret
-InsertQtd   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               AllocateAddress
-;
-;       DESCRIPTION:        Allocate address
-;
-;       PARAMETERS:         DS      Function selector
-;
-;       RETURNS:            AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateAddress   Proc far
-    AllocateUsbAddress    
-    retf32
-AllocateAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               FreeAddress
-;
-;       DESCRIPTION:        Free address
-;
-;       PARAMETERS:         DS      Function selector
-;                           AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeAddress   Proc far
-    FreeUsbAddress    
-    retf32
-FreeAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               CreateDev
-;
-;       DESCRIPTION:        Create device sel
-;
-;       PARAMETERS:         DS      Function selector
-;                           AL      Address
-;                           AH      Speed
-;                           BX      Hub selector
-;                           DX      Port #
-;
-;       RETURNS:            ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateDev   Proc far
-    pushad
-;
-    mov ax,SIZE qtd_struc
-    mov si,SIZE ehci_dev_sel
-    mov cx,16
-    CreateMemBlk32
-;
-    popad
-;
-    InitUsbDev
-;
-    pushad
-;    
-    mov cx,SIZE qtd_struc
-    AllocateMemBlk
-    mov es:dev_control_qtd,edx
-;
-    popad
-    retf32
-CreateDev  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               AddressDev
-;
-;       DESCRIPTION:        Address usb dev
-;
-;       PARAMETERS:         DS      Function selector
-;                           AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddressDev   Proc far
-    AddressUsbDev    
-    retf32
-AddressDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               ConfigDev
-;
-;       DESCRIPTION:        Config usb dev
-;
-;       PARAMETERS:         DS      Function selector
-;                           DL      Config #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConfigDev   Proc far
-    clc
-    retf32
-ConfigDev   Endp
+UnlinkIntrQh    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1711,697 +1506,108 @@ ConfigDev   Endp
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device selector
 ;
-;       RETURNS:    FS      Pipe selector
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl   Proc far
-    push gs
+    push fs
     pushad
-;
-    push es
-    push ax
-    mov ax,es
-    mov gs,ax
-    mov eax,SIZE ehci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    mov ax,es
+;    
+    mov ax,flat_sel
     mov fs,ax
-    pop ax
-    pop es    
-;
-    mov ah,es:usbd_speed
-    mov fs:usbp_speed,ah
-;    
-    push ax
-    mov ax,es:usbd_hub_sel
-    mov fs:usbp_hub_sel,ax
-    movzx ax,es:usbd_port
-    mov fs:usbp_hub_port,ax
-    pop ax
-;    
-    push es
-    mov dx,flat_sel
-    mov es,dx
     call AddControlQh
-    mov fs:esp_qh,edx
-    mov gs:dev_control_qh,edx
-    call InsertPipe
-    pop es
+    mov es:dev_control_qh,edx
 ;
     popad
-    pop gs
+    pop fs
     retf32
 CreateControl   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateBulk
+;   NAME:           ChangeAddress
 ;
-;           DESCRIPTION:    Create bulk pipe
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       DL      Pipe # (bit 7, IN)
-;                       CX      Max data size
-;
-;       RETURNS:    FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBulk   Proc far
-    push es
-    pushad
-;    
-    push es
-    push ax
-    mov eax,SIZE ehci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    mov ax,es
-    mov fs,ax
-    pop ax
-    pop es    
-;
-    mov ah,es:usbd_speed
-    mov fs:usbp_speed,ah
-;    
-    push ax
-    mov ax,es:usbd_hub_sel
-    mov fs:usbp_hub_sel,ax
-    movzx ax,es:usbd_port
-    mov fs:usbp_hub_port,ax
-    pop ax
-;    
-    mov dx,flat_sel
-    mov es,dx
-    call AddBulkQh
-    mov fs:esp_qh,edx
-    call InsertPipe
-;
-    popad
-    pop es
-    retf32
-CreateBulk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CreateIntr
-;
-;   DESCRIPTION:    Create interrupt pipe
+;   DESCRIPTION:    Change address for pipe
 ;
 ;   PARAMETERS:     DS      Function selector
-;                   ES      Device sel
-;                   AL      Interval
-;                   DL      Pipe # (bit 7, IN)
-;                   CX      Max data size
-;
-;   RETURNS:        FS      Pipe selector
+;                   AL      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIntr   Proc far
-    push es
-    pushad
-;    
-    push es
+ChangeAddress   Proc far
+    push fs
     push ax
-    mov eax,SIZE ehci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    mov ax,es
+    push edx
+;
+    mov ax,flat_sel
     mov fs,ax
-    pop ax
-    pop es
-;
-    mov ah,es:usbd_speed
-    mov fs:usbp_speed,ah
 ;    
+    mov edx,es:dev_control_qh
+    mov al,es:usbd_address
+    mov fs:[edx].qh_adress,al
+;
+    pop edx
+    pop ax
+    pop fs
+    retf32
+ChangeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ResetDev
+;
+;           DESCRIPTION:    Reset device
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetDev   Proc far
     push ax
-    mov ax,es:usbd_hub_sel
-    mov fs:usbp_hub_sel,ax
-    movzx ax,es:usbd_port
-    mov fs:usbp_hub_port,ax
-    pop ax
-;    
-    mov dx,flat_sel
-    mov es,dx
-    call AddIntrQh
-    mov fs:esp_qh,edx
-    call InsertPipe
-;
-    popad
-    pop es
-    retf32
-CreateIntr  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddOut
-;
-;           DESCRIPTION:    Add out transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddOut    Proc far
-    push es
-    push eax
-    push edx
-;    
-    call AllocateFillQtd
-;
-    mov al,0
-    call InsertQtd
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,fs:esp_qh
-;    
-    mov ax,es:[edx].qh_size
-    and ax,8000h
-    mov es:[edx].qh_size,ax
-;
-    mov al,fs:usbp_endpoint
-    or al,al
-    jz aoControl
-
-aoData:    
-    mov ax,es:[edx].qh_max_packet
-    and ax,0F000h
-    or ax,fs:usbp_maxlen
-    mov es:[edx].qh_max_packet,ax
-    jmp aoDone
-
-aoControl:    
-    mov ax,es:[edx].qh_max_packet
-    and ax,0F800h
-    or ax,fs:usbp_maxlen
-    mov es:[edx].qh_max_packet,ax
-
-aoDone:
-    pop edx
-    pop eax
-    pop es
-    retf32
-AddOut    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           AddIn
-;
-;   DESCRIPTION:    Add in transaction to queue
-;
-;   PARAMETERS:     DS      Function selector
-;                   FS      Pipe selector
-;                   CX      Buffer size
-;                   ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddIn    Proc far
-    push es
-    push eax
-    push edx
-;    
-    call AllocateFillQtd
-;
-    mov al,1
-    call InsertQtd
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,fs:esp_qh
-;    
-    mov al,fs:usbp_endpoint
-    or al,al
-    jz aiControl
-
-aiData:    
-    mov ax,es:[edx].qh_max_packet
-    and ax,0F000h
-    or ax,fs:usbp_maxlen
-    mov es:[edx].qh_max_packet,ax
-    jmp aiDone
-
-aiControl:    
-    mov ax,es:[edx].qh_size
-    and ax,8000h
-    mov es:[edx].qh_size,ax
-;
-    mov ax,es:[edx].qh_max_packet
-    and ax,0F800h
-    or ax,fs:usbp_maxlen
-    mov es:[edx].qh_max_packet,ax
-
-aiDone:
-    pop edx
-    pop eax
-    pop es
-    retf32
-AddIn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IssueTransfer
-;
-;           DESCRIPTION:    Issue transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               EDX     Queue handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueTransfer    Proc far
-    push es
-    push eax
-    push ebx
-    push edx
-;    
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov fs:esp_done,0
-    and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
-    or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-;    
-    cmp fs:usbp_mode,MODE_CONTROL
-    jne itDo
-;
-    mov dx,0
-    mov ebx,fs:esp_pending
-    or ebx,ebx
-    jz itDo
-
-itLoop:    
-    mov al,es:[ebx].qtd_flags
-    and al,7Fh
-    mov es:[ebx].qtd_flags,al
-;
-    mov ax,es:[ebx].qtd_size
-    and ax,7FFFh
-    or ax,dx
-    mov es:[ebx].qtd_size,ax
-;
-    mov eax,es:[ebx].qtd_next_va
-    or eax,eax
-    jz itLast
-;
-    xor dx,8000h
-    mov ebx,eax
-    jmp itLoop
-
-itLast:
-    or es:[ebx].qtd_size,8000h
-    mov al,es:[ebx].qtd_flags
-    or al,80h
-    mov es:[ebx].qtd_flags,al
-
-itDo:
-    mov edx,fs:esp_qh
-    mov al,fs:usbp_address
-    mov es:[edx].qh_adress,al
-;    
-    mov al,fs:usbp_endpoint
-    and al,0Fh
-    mov ah,es:[edx].qh_endpoint
-    and ah,0F0h
-    or al,ah
-    mov es:[edx].qh_endpoint,al    
-;
-    mov eax,fs:esp_first
-    mov es:[edx].qh_next_qtd,eax
-;
-    pop edx
-    pop ebx
-    pop eax
-    pop es    
-    retf32
-IssueTransfer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LocalIsTransferDone
-;
-;           DESCRIPTION:    Check if transfer is done
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    NC      Transfer is done
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LocalIsTransferDone   Proc near
-    push es
-    push eax
-    push edx
-;
-    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-    jz itdOk
-;    
-    IsUsbPipeConnected
-    jc itdOk
-;
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov edx,fs:esp_qh
-    mov eax,es:[edx].qh_current_qtd
-    or eax,eax
-    jz itdFail
-;
-    test fs:esp_flags, ESP_FLAG_SINGLE
-    jz itdMulti
-;
-    cmp eax,fs:esp_current
-    je itdFail
-;
-    jmp itdOk
-
-itdMulti:
-    mov al,es:[edx].qh_status
-    test al,80h
-    jnz itdFail
-;    
-    mov eax,es:[edx].qh_next_qtd
-    test al,1
-    jnz itdOk
-;
-    mov al,es:[edx].qh_status
-    test al,40h
-    jz itdFail
-;
-;    int 3
-    jmp itdOk
-
-itdFail:
-    stc
-    jmp itdEnd   
-
-itdOk:
-    clc
-
-itdEnd:    
-    pop edx
-    pop eax
-    pop es
-    ret
-LocalIsTransferDone   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsTransferDone
-;
-;           DESCRIPTION:    Check if transfer is done
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    NC      Transfer is done
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsTransferDone   Proc far
-    call LocalIsTransferDone
-    retf32
-IsTransferDone   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WaitForCompletion
-;
-;           DESCRIPTION:    Wait for transfer to complete
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForCompletion   Proc far
-    push eax
-;
-    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-    jz wfcDone
-
-wfcWait:
-    call LocalIsTransferDone
-    jnc wfcDone
-;
-    WaitForSignal
-    jmp wfcWait
-
-wfcDone:
-    call LocalEndTransfer
-;    
-    pop eax
-    retf32
-WaitForCompletion   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LocalEndTransfer
-;
-;           DESCRIPTION:    End transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LocalEndTransfer   Proc near
-    push es
-    push eax
     push cx
-    push edx
-    push esi
-    push edi
-    push bp
 ;    
-    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-    jz etrDone
+    mov cl,es:usbd_port
+    mov ax,1
+    shl ax,cl
+    lock or ds:ehc_reset,ax
 ;
-    and fs:esp_flags, NOT ESP_FLAG_TRANSFER_PENDING
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov edx,fs:esp_qh
-    mov al,es:[edx].qh_status
-    test al,40h
-    jnz etrFail
-;
-    or fs:esp_flags, ESP_FLAG_TRANSFER_OK
-    jmp etrDecode
-
-etrFail:    
-;    int 3    
-
-etrDecode:    
-    xor edx,edx
-    xchg edx,fs:esp_pending
-;
-    xor bp,bp
-    or edx,edx
-    jz etrSaveOk
-
-etrLoop:
-    mov al,es:[edx].qtd_flags
-    and al,3
-    cmp al,1
-    jne etrNext
-;
-    mov cx,es:[edx].qtd_buffer_size
-    sub cx,es:[edx].qtd_size
-    and cx,7FFFh
-    add bp,cx
-
-etrNext:
-    mov edi,es:[edx].qtd_next_va
-    call FreeBlock128
-    mov edx,edi
-    or edx,edx
-    jnz etrLoop
-        
-etrSaveOk:
-    mov fs:esp_size,bp    
-
-etrClear:
-    mov edx,fs:esp_qh
-    mov es:[edx].qh_next_qtd,1
-    mov es:[edx].qh_current_qtd,0
-    mov es:[edx].qh_status,0    
-
-etrDone:
-    pop bp
-    pop edi
-    pop esi
-    pop edx
     pop cx
-    pop eax
-    pop es
-    ret
-LocalEndTransfer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           EndTransfer
-;
-;           DESCRIPTION:    End transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EndTransfer   Proc far
-    call LocalEndTransfer
+    pop ax
     retf32
-EndTransfer   Endp
+ResetDev Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WasTransferOk
+;           NAME:           UpdateMaxLen
 ;
-;           DESCRIPTION:    Was transfer ok
+;           DESCRIPTION:    Update max len
 ;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    NC      Transfer ok
+;           PARAMETERS:     ES      Device selector
+;                           AL      Maxlen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WasTransferOk   Proc far
-    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-    jz wtoNotPending
-;    
-    call LocalEndTransfer
-
-wtoNotPending:
-    test fs:esp_flags, ESP_FLAG_TRANSFER_OK
-    jnz wtoOk
-;    
-    stc
-    jmp wtoDone
-
-wtoOk:
-    clc
-
-wtoDone:
-    retf32
-WasTransferOk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetDataSize
-;
-;           DESCRIPTION:    Get data size
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    CX      Bytes read
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDataSize   Proc far
-    xor cx,cx
-    test fs:esp_flags, ESP_FLAG_TRANSFER_OK
-    jz gdsDone
-;    
-    mov cx,fs:esp_size
-
-gdsDone:
-    retf32
-GetDataSize   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               IssueOne
-;
-;       DESCRIPTION:        Issue one transfer
-;
-;       PARAMETERS:         FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueOne   Proc far
-    push es
+UpdateMaxLen   Proc far
+    push fs
     push eax
-    push ebx
     push edx
 ;    
     mov ax,flat_sel
-    mov es,ax
+    mov fs,ax
+    mov edx,es:dev_control_qh
+    mov ax,fs:[edx].qh_max_packet
+    and ax,0F800h
+    or ax,es:usbd_maxlen
+    mov fs:[edx].qh_max_packet,ax
 ;
-    mov fs:esp_done,0
-    test fs:esp_flags, ESP_FLAG_SINGLE
-    jnz iotNew
-;
-    and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
-    or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING OR ESP_FLAG_SINGLE
-    mov edx,fs:esp_qh
-    mov al,fs:usbp_address
-    mov es:[edx].qh_adress,al
-;    
-    mov al,fs:usbp_endpoint
-    and al,0Fh
-    mov ah,es:[edx].qh_endpoint
-    and ah,0F0h
-    or al,ah
-    mov es:[edx].qh_endpoint,al    
-;
-    mov eax,fs:esp_pending
-    mov eax,es:[eax].qtd_my_phys
-    mov es:[edx].qh_next_qtd,eax
-    mov fs:esp_current,eax
-    jmp iotDone
-
-iotNew:
-    mov edx,fs:esp_pending
-    mov eax,es:[edx].qtd_next_va
-    mov fs:esp_pending,eax
-;
-    mov eax,es:[eax].qtd_my_phys
-    mov fs:esp_current,eax
-    call FreeBlock128
-
-iotDone:
     pop edx
-    pop ebx
     pop eax
-    pop es    
+    pop fs
     retf32
-IssueOne   Endp
+UpdateMaxLen   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2471,20 +1677,19 @@ SetupControl   Proc near
 ;
     mov eax,OFFSET usbd_control_buf
     add eax,es:mblk_physical_base
-    mov fs:[edx].qtdl_page0,eax
+    mov fs:[edx].qtd_page0,eax
 ;
-    mov fs:[edx].qtdl_page1,0
-    mov fs:[edx].qtdl_page2,0
-    mov fs:[edx].qtdl_page3,0
-    mov fs:[edx].qtdl_page4,0
-    mov fs:[edx].qtdu_page0,0
-    mov fs:[edx].qtdu_page1,0
-    mov fs:[edx].qtdu_page2,0
-    mov fs:[edx].qtdu_page3,0
-    mov fs:[edx].qtdu_page4,0
+    mov fs:[edx].qtd_page1,0
+    mov fs:[edx].qtd_page2,0
+    mov fs:[edx].qtd_page3,0
+    mov fs:[edx].qtd_page4,0
+    mov fs:[edx].qtdu64_page0,0
+    mov fs:[edx].qtdu64_page1,0
+    mov fs:[edx].qtdu64_page2,0
+    mov fs:[edx].qtdu64_page3,0
+    mov fs:[edx].qtdu64_page4,0
     mov fs:[edx].qtd_next_va,0
     mov fs:[edx].qtd_buffer_va,0
-    mov fs:[edx].qtd_buffer_size,8
 ;
     pop edx
     pop eax
@@ -2515,7 +1720,7 @@ SetupControlIn   Proc near
 
 sciLoop:
     push cx
-    mov cx,SIZE qtd_struc
+    mov cx,SIZE control_qtd_struc
     AllocateMemBlk
     pop cx
     jc sciDone
@@ -2528,19 +1733,18 @@ sciLoop:
     mov fs:[esi].qtd_alt,1
     mov fs:[esi].qtd_status,80h
     mov fs:[esi].qtd_flags,0Dh
-    mov fs:[esi].qtdl_page0,0
-    mov fs:[esi].qtdl_page1,0
-    mov fs:[esi].qtdl_page2,0
-    mov fs:[esi].qtdl_page3,0
-    mov fs:[esi].qtdl_page4,0
-    mov fs:[esi].qtdu_page0,0
-    mov fs:[esi].qtdu_page1,0
-    mov fs:[esi].qtdu_page2,0
-    mov fs:[esi].qtdu_page3,0
-    mov fs:[esi].qtdu_page4,0
+    mov fs:[esi].qtd_page0,0
+    mov fs:[esi].qtd_page1,0
+    mov fs:[esi].qtd_page2,0
+    mov fs:[esi].qtd_page3,0
+    mov fs:[esi].qtd_page4,0
+    mov fs:[esi].qtdu64_page0,0
+    mov fs:[esi].qtdu64_page1,0
+    mov fs:[esi].qtdu64_page2,0
+    mov fs:[esi].qtdu64_page3,0
+    mov fs:[esi].qtdu64_page4,0
     mov fs:[esi].qtd_next_va,0
     mov fs:[esi].qtd_buffer_va,0
-    mov fs:[esi].qtd_buffer_size,0
 ;
     mov bx,cx
     cmp bx,es:usbd_maxlen
@@ -2558,9 +1762,8 @@ sciInMinOk:
     jc sciDone
 ;
     mov fs:[esi].qtd_buffer_va,edx
-    mov fs:[esi].qtd_buffer_size,bx
 ;
-    mov fs:[esi].qtdl_page0,eax
+    mov fs:[esi].qtd_page0,eax
     mov ax,bx    
     or ax,bp
     mov fs:[esi].qtd_size,ax
@@ -2570,7 +1773,7 @@ sciInMinOk:
     jnz sciLoop
 
 sciStatusOut: 
-    mov cx,SIZE qtd_struc
+    mov cx,SIZE control_qtd_struc
     AllocateMemBlk
     jc sciDone
 ;
@@ -2583,19 +1786,18 @@ sciStatusOut:
     mov fs:[esi].qtd_status,80h
     mov fs:[esi].qtd_flags,0Ch
     mov fs:[esi].qtd_size,8000h
-    mov fs:[esi].qtdl_page0,0
-    mov fs:[esi].qtdl_page1,0
-    mov fs:[esi].qtdl_page2,0
-    mov fs:[esi].qtdl_page3,0
-    mov fs:[esi].qtdl_page4,0
-    mov fs:[esi].qtdu_page0,0
-    mov fs:[esi].qtdu_page1,0
-    mov fs:[esi].qtdu_page2,0
-    mov fs:[esi].qtdu_page3,0
-    mov fs:[esi].qtdu_page4,0
+    mov fs:[esi].qtd_page0,0
+    mov fs:[esi].qtd_page1,0
+    mov fs:[esi].qtd_page2,0
+    mov fs:[esi].qtd_page3,0
+    mov fs:[esi].qtd_page4,0
+    mov fs:[esi].qtdu64_page0,0
+    mov fs:[esi].qtdu64_page1,0
+    mov fs:[esi].qtdu64_page2,0
+    mov fs:[esi].qtdu64_page3,0
+    mov fs:[esi].qtdu64_page4,0
     mov fs:[esi].qtd_next_va,0
     mov fs:[esi].qtd_buffer_va,0
-    mov fs:[esi].qtd_buffer_size,0
     clc
 
 sciDone:
@@ -2627,7 +1829,6 @@ CopyControlIn   Proc near
     push edi
     push ebp
 ;
-    xor cx,cx
     mov esi,es:dev_control_qtd
     mov esi,fs:[esi].qtd_next_va
 
@@ -2640,7 +1841,13 @@ cciCopyLoop:
     or edx,edx
     jz cciCopyNext
 ;
-    mov bp,fs:[esi].qtd_buffer_size
+    mov bp,cx
+    cmp bp,es:usbd_maxlen
+    jb cciMinOk
+;
+    mov bp,es:usbd_maxlen
+
+cciMinOk:
     push es
     push ecx
     push esi
@@ -2659,14 +1866,14 @@ cciCopyLoop:
     FreeLinearMemBlk
     pop cx
 ;
-    add cx,bp
+    sub cx,bp
 
 cciCopyNext:
     xchg edx,esi
     mov esi,fs:[edx].qtd_next_va
 ;
     push cx
-    mov cx,SIZE qtd_struc
+    mov cx,SIZE control_qtd_struc
     FreeLinearMemBlk
     pop cx
     jmp cciCopyLoop
@@ -2707,7 +1914,7 @@ SetupControlOut   Proc near
 
 scoLoop:
     push cx
-    mov cx,SIZE qtd_struc
+    mov cx,SIZE control_qtd_struc
     AllocateMemBlk
     pop cx
     jc scoDone
@@ -2720,19 +1927,18 @@ scoLoop:
     mov fs:[edi].qtd_alt,1
     mov fs:[edi].qtd_status,80h
     mov fs:[edi].qtd_flags,0Ch
-    mov fs:[edi].qtdl_page0,0
-    mov fs:[edi].qtdl_page1,0
-    mov fs:[edi].qtdl_page2,0
-    mov fs:[edi].qtdl_page3,0
-    mov fs:[edi].qtdl_page4,0
-    mov fs:[edi].qtdu_page0,0
-    mov fs:[edi].qtdu_page1,0
-    mov fs:[edi].qtdu_page2,0
-    mov fs:[edi].qtdu_page3,0
-    mov fs:[edi].qtdu_page4,0
+    mov fs:[edi].qtd_page0,0
+    mov fs:[edi].qtd_page1,0
+    mov fs:[edi].qtd_page2,0
+    mov fs:[edi].qtd_page3,0
+    mov fs:[edi].qtd_page4,0
+    mov fs:[edi].qtdu64_page0,0
+    mov fs:[edi].qtdu64_page1,0
+    mov fs:[edi].qtdu64_page2,0
+    mov fs:[edi].qtdu64_page3,0
+    mov fs:[edi].qtdu64_page4,0
     mov fs:[edi].qtd_next_va,0
     mov fs:[edi].qtd_buffer_va,0
-    mov fs:[edi].qtd_buffer_size,0
 ;
     mov bx,cx
     cmp bx,es:usbd_maxlen
@@ -2750,9 +1956,8 @@ scoOutMinOk:
     jc sciDone
 ;
     mov fs:[edi].qtd_buffer_va,edx
-    mov fs:[edi].qtd_buffer_size,bx
 ;
-    mov fs:[edi].qtdl_page0,eax
+    mov fs:[edi].qtd_page0,eax
     mov ax,bx    
     or ax,bp
     mov fs:[edi].qtd_size,ax
@@ -2776,7 +1981,7 @@ scoOutMinOk:
     jnz scoLoop
 
 scoStatusIn: 
-    mov cx,SIZE qtd_struc
+    mov cx,SIZE control_qtd_struc
     AllocateMemBlk
     jc scoDone
 ;
@@ -2789,19 +1994,18 @@ scoStatusIn:
     mov fs:[edi].qtd_status,80h
     mov fs:[edi].qtd_flags,0Dh
     mov fs:[edi].qtd_size,8000h
-    mov fs:[edi].qtdl_page0,0
-    mov fs:[edi].qtdl_page1,0
-    mov fs:[edi].qtdl_page2,0
-    mov fs:[edi].qtdl_page3,0
-    mov fs:[edi].qtdl_page4,0
-    mov fs:[edi].qtdu_page0,0
-    mov fs:[edi].qtdu_page1,0
-    mov fs:[edi].qtdu_page2,0
-    mov fs:[edi].qtdu_page3,0
-    mov fs:[edi].qtdu_page4,0
+    mov fs:[edi].qtd_page0,0
+    mov fs:[edi].qtd_page1,0
+    mov fs:[edi].qtd_page2,0
+    mov fs:[edi].qtd_page3,0
+    mov fs:[edi].qtd_page4,0
+    mov fs:[edi].qtdu64_page0,0
+    mov fs:[edi].qtdu64_page1,0
+    mov fs:[edi].qtdu64_page2,0
+    mov fs:[edi].qtdu64_page3,0
+    mov fs:[edi].qtdu64_page4,0
     mov fs:[edi].qtd_next_va,0
     mov fs:[edi].qtd_buffer_va,0
-    mov fs:[edi].qtd_buffer_size,0
     clc
 
 scoDone:
@@ -2894,6 +2098,7 @@ RunControl Endp
 CleanupControl   Proc near
     pushad
 ;
+    mov cx,es:usbd_control_buf.usd_len
     mov esi,es:dev_control_qtd
     mov esi,fs:[esi].qtd_next_va
 
@@ -2905,14 +2110,24 @@ ccLoop:
     or edx,edx
     jz ccBufferOk
 ;
-    mov cx,fs:[esi].qtd_buffer_size
+    mov bx,cx
+    cmp bx,es:usbd_maxlen
+    jb ccMinOk
+;
+    mov bx,es:usbd_maxlen
+
+ccMinOk:
+    push cx
+    mov cx,bx
     FreeLinearMemBlk
+    pop cx
+    sub cx,bx
 
 ccBufferOk:
     xchg edx,esi
     mov esi,fs:[edx].qtd_next_va
 ;
-    mov cx,SIZE qtd_struc
+    mov cx,SIZE control_qtd_struc
     FreeLinearMemBlk
     jmp ccLoop
 
@@ -2995,6 +2210,59 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocatePipe
+;
+;       DESCRIPTION:    Allocate pipe
+;
+;       PARAMETERS:     FS      Flat sel
+;                       CX      Buffer count
+;
+;       RETURNS:        BX      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePipe    Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov esi,edi
+    push es
+    movzx eax,cx
+    shl ax,2
+    add ax,OFFSET ep_entry_arr
+    AllocateSmallGlobalMem
+;
+    mov es:usbdp_entry_count,cx
+    mov ax,es
+    mov ds,ax
+    pop es
+;
+    mov di,OFFSET ep_entry_arr
+
+apTdLoop:
+    call AllocateQtd
+    mov ds:[di],edx
+    add di,4
+    loop apTdLoop
+;
+    mov bx,ds
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+AllocatePipe    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateBulkPipe
 ;
 ;       DESCRIPTION:    Create bulk pipe
@@ -3008,9 +2276,23 @@ ControlMsg   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 CreateBulkPipe   Proc far
-    int 3
+    push fs
+    push gs
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call AllocatePipe
+    mov gs,bx
+    call AddBulkQh
+    clc
+;
+    pop edx
+    pop eax
+    pop gs
+    pop fs
     retf32
 CreateBulkPipe   Endp
 
@@ -3032,7 +2314,23 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntrPipe   Proc far
-    int 3
+    push fs
+    push gs
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call AllocatePipe
+    mov gs,bx
+    mov al,dh
+    call AddIntrQh
+    clc
+;
+    pop edx
+    pop eax
+    pop gs
+    pop fs
     retf32
 CreateIntrPipe   Endp
 
@@ -3051,6 +2349,126 @@ UnlinkPipes   Proc far
     int 3
     retf32
 UnlinkPipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               AllocateAddress
+;
+;       DESCRIPTION:        Allocate address
+;
+;       PARAMETERS:         DS      Function selector
+;
+;       RETURNS:            AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateAddress   Proc far
+    AllocateUsbAddress    
+    retf32
+AllocateAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               FreeAddress
+;
+;       DESCRIPTION:        Free address
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    FreeUsbAddress    
+    retf32
+FreeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               CreateDev
+;
+;       DESCRIPTION:        Create device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;                           AH      Speed
+;                           BX      Hub selector
+;                           DX      Port #
+;
+;       RETURNS:            ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    test ds:ehc_hcc_flags,HCC_64
+    jz cd32
+
+cd64:
+    mov ax,SIZE qtd64_struc
+    jmp cdCreate
+
+cd32:
+    mov ax,SIZE qtd32_struc
+
+cdCreate:
+    mov si,SIZE ehci_dev_sel
+    mov cx,16
+    CreateMemBlk32
+;
+    mov cx,SIZE control_qtd_struc
+    AllocateMemBlk
+    call InitQtd64
+    mov es:dev_control_qtd,edx
+;
+    popad
+    popf
+;
+    InitUsbDev
+    retf32
+CreateDev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               AddressDev
+;
+;       DESCRIPTION:        Address usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev   Proc far
+    AddressUsbDev    
+    retf32
+AddressDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               ConfigDev
+;
+;       DESCRIPTION:        Config usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDev   Proc far
+    clc
+    retf32
+ConfigDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3086,338 +2504,6 @@ DisablePipe   Proc far
     retf32
 DisablePipe   Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClosePipe
-;
-;           DESCRIPTION:    Close pipe
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClosePipe   Proc far
-    push es
-    pushad
-;    
-    call RemovePipe
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    EnterSection ds:ehc_section
-    xor edx,edx
-    xchg edx,fs:esp_pending
-    or edx,edx
-    jz cpReqFree
-
-cpReqLoop:
-    mov edi,es:[edx].qtd_next_va
-    call FreeBlock128
-    mov edx,edi
-    or edx,edx
-    jnz cpReqLoop
-
-cpReqFree:
-    mov edx,fs:esp_qh
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je cpControl
-;
-    cmp al,MODE_BULK
-    je cpBulk
-;    
-    cmp al,MODE_INTR
-    je cpIntr
-;    
-    int 3
-    jmp cpDelPipe
-
-cpControl:
-    call RemoveAsyncQh
-    jmp cpDelPipe
-
-cpBulk:
-    call RemoveAsyncQh
-    jmp cpDelPipe
-
-cpIntr:
-    call RemoveIntrQh
-    jmp cpDelPipe
-
-cpDelPipe:
-    LeaveSection ds:ehc_section
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
-    FreeMem
-;
-    popad
-    pop es
-    retf32
-ClosePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ChangeAddress
-;
-;   DESCRIPTION:    Change address for pipe
-;
-;   PARAMETERS:     DS      Function selector
-;                   FS      Pipe selector
-;                   AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ChangeAddress   Proc far
-    push es
-    push ax
-    push edx
-;
-    mov al,es:usbd_address
-    mov fs:usbp_address,al
-;
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov edx,fs:esp_qh
-    mov al,fs:usbp_address
-    mov es:[edx].qh_adress,al
-;
-    pop edx
-    pop ax
-    pop es
-    retf32
-ChangeAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    push eax
-    push si
-;    
-    push es
-    mov es,fs:usbp_dev_sel
-    movzx si,es:usbd_port
-    shl si,2
-    mov es,ds:ehc_reg_sel
-    mov eax,es:[si].HcPortSc
-    pop es
-    test al,4
-    jz icFail
-;
-    test al,1
-    clc
-    jnz icDone
-
-icFail:   
-    stc
-
-icDone:
-    pop si
-    pop eax
-    retf32
-IsConnected Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ResetDev
-;
-;           DESCRIPTION:    Reset device
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetDev   Proc far
-    push ax
-    push cx
-;    
-    mov cl,es:usbd_port
-    mov ax,1
-    shl ax,cl
-    or ds:ehc_reset,ax
-;
-    pop cx
-    pop ax
-    retf32
-ResetDev Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockEnum
-;
-;           DESCRIPTION:    Lock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockEnum   Proc far
-    EnterSection ds:ehc_enum_section
-    retf32
-LockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockEnum
-;
-;           DESCRIPTION:    Unlock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockEnum   Proc far
-    LeaveSection ds:ehc_enum_section
-    retf32
-UnlockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Has64Bit
-;
-;           DESCRIPTION:    Check for 64-bit support
-;
-;       PARAMETERS:         DS      Function selector
-;
-;       RETURNS:            NC      Supports 64-bit addresses
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Has64Bit   Proc far
-    test ds:ehc_hcc_flags,1
-    jz hb64Fail
-;
-    clc
-    jmp hb64Done    
-
-hb64Fail:    
-    stc
-
-hb64Done:    
-    retf32
-Has64Bit     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsStalled
-;
-;           DESCRIPTION:    Check if pipe is stalled
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;       RETURNS:            CY      Stalled
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsStalled   Proc far
-    push es
-    push eax
-    push edx
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov edx,fs:esp_qh
-    mov al,es:[edx].qh_status
-    test al,40h
-    stc
-    jnz issDone
-;
-    clc
-
-issDone:
-    pop edx
-    pop eax
-    pop es        
-    retf32
-IsStalled Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClearStalled
-;
-;           DESCRIPTION:    Clear stalled pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;       RETURNS:            CY      Stalled
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearStalled   Proc far
-    push es
-    push eax
-    push edx
-;    
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov edx,fs:esp_qh
-    mov es:[edx].qh_size,0
-    mov es:[edx].qh_status,80h
-;
-    pop edx
-    pop eax
-    pop es        
-    retf32
-ClearStalled Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateMaxLen
-;
-;           DESCRIPTION:    Update max len
-;
-;           PARAMETERS:     ES      Device selector
-;                           AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateMaxLen   Proc far
-    push fs
-    push eax
-    push edx
-;    
-    mov ax,flat_sel
-    mov fs,ax
-    mov edx,es:dev_control_qh
-    mov ax,fs:[edx].qh_max_packet
-    and ax,0F800h
-    or ax,es:usbd_maxlen
-    mov fs:[edx].qh_max_packet,ax
-;
-    pop edx
-    pop eax
-    pop fs
-    retf32
-UpdateMaxLen   Endp
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3883,256 +2969,6 @@ uuNext:
 uuDone:    
     ret
 UpdateUsb   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           LinkInterrupt
-;
-;       DESCRIPTION:    Link interrupts in tree
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       BX      Table offset
-;                       CX      Table size / 2
-;                       AX      Entry
-;                       BP      Table size
-;                       EDX     QH to link
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LinkInterrupt     PROC near
-    pushad
-;    
-    shl cx,1    
-    mov si,ax
-    shl si,3    
-    mov edi,[bx+si].ehc_qh
-    mov es:[edi].qh_next_va,edx
-    mov edx,es:[edx].qh_my_phys
-    or dl,2
-    mov es:[edi].qh_link,edx    
-;
-    cmp bx,OFFSET ehc_1024
-    je liDone
-;   
-    mov edx,edi
-    shl bp,1
-    sub bx,bp
-    call LinkInterrupt 
-;
-    add ax,cx
-    call LinkInterrupt
-
-liDone:
-    popad
-    ret
-LinkInterrupt     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CreateInterrupt
-;
-;   DESCRIPTION:    Creae interrupt lists
-;
-;   PARAMETERS:     DS  Function sel
-;                   FS  Reg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateInterrupt  Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,flat_sel
-    mov es,ax
-;
-    call AllocateInactiveQh
-    or al,3
-    mov es:[edx].qh_link,eax
-;
-    mov bx,OFFSET ehc_1
-    push edx
-    call AllocateInactiveQh
-    mov ds:[bx].ehc_cnt,0
-    mov ds:[bx].ehc_qh,edx
-    pop eax
-;
-    mov es:[edx].qh_next_va,eax
-    mov eax,es:[eax].qh_my_phys
-    or al,3
-    mov es:[edx].qh_link,eax
-;
-    mov cx,2+4+8+16+32+64+128+256+512+1024 
-    mov bx,OFFSET ehc_1024
-
-ciInitLoop:
-    call AllocateInactiveQh
-    mov ds:[bx].ehc_cnt,0
-    mov ds:[bx].ehc_qh,edx
-;
-    add bx,8
-    loop ciInitLoop    
-
-    mov bx,OFFSET ehc_1
-    mov edx,ds:[bx].ehc_qh
-;    
-    mov bx,OFFSET ehc_2
-    mov cx,1
-    mov bp,2*8
-    xor ax,ax
-    call LinkInterrupt
-;
-    inc ax
-    call LinkInterrupt
-;    
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical32
-    mov ds:ehc_periodic_phys,eax
-    mov al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov fs,bx
-    mov ds:ehc_periodic_sel,bx
-;
-    mov cx,1024    
-    mov si,OFFSET ehc_1024
-    xor di,di
-
-ciLoop:    
-    mov edx,ds:[si].ehc_qh
-    mov edx,es:[edx].qh_my_phys
-    or dl,2
-    mov fs:[di],edx
-    add si,8
-    add di,4
-    loop ciLoop
-;
-    mov fs,ds:ehc_reg_sel
-    mov eax,ds:ehc_periodic_phys
-    mov fs:HcPeriodicListBase,eax
-;    
-    mov ax,25
-    WaitMilliSec
-;
-    mov eax,fs:HcCommand    
-    or al,10h
-    mov fs:HcCommand,eax
-;
-    popad
-    pop fs
-    pop es
-    pop ds    
-    ret
-CreateInterrupt Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdatePipeList
-;
-;           DESCRIPTION:    Update pipe list
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePipeList  Proc near
-    push ax
-    EnterSection ds:ehc_pipe_section
-    mov ax,ds:ehc_pipe_list
-    or ax,ax
-    jz uplDone
-;
-    push es
-    push fs
-    push ebx
-    push edx
-    push di
-;
-    mov di,ax
-    mov fs,ax
-;
-    mov ax,flat_sel
-    mov es,ax
-
-uplElemLoop:
-    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-    jz uplNext
-;
-    mov edx,fs:esp_qh
-    or edx,edx
-    jz uplNext
-;    
-    mov eax,es:[edx].qh_current_qtd
-    or eax,eax
-    jz uplNext
-;    
-    test fs:esp_flags, ESP_FLAG_SINGLE
-    jz uplMulti
-;
-    cmp eax,fs:esp_current
-    je uplNext
-;
-    jmp uplSignal
-
-uplMulti:
-    mov al,es:[edx].qh_status
-    test al,80h
-    jnz uplNext
-;
-    mov eax,es:[edx].qh_next_qtd
-    test al,1
-    jz uplNext
-
-uplSignal:
-    mov al,1
-    xchg al,fs:esp_done
-;
-    cmp al,1
-    je uplNext
-;
-    mov bx,fs:usbp_signal
-    or bx,bx
-    jz uplSignalDone
-;
-    Signal
-
-uplSignalDone:
-    mov bx,fs:usbp_wait
-    or bx,bx
-    jz uplNext
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-uplNext:    
-    mov ax,fs:esp_next
-    mov fs,ax
-    cmp ax,di
-    jne uplElemLoop
-;
-    pop di
-    pop edx
-    pop ebx
-    pop fs
-    pop es    
-
-uplDone:    
-    LeaveSection ds:ehc_pipe_section
-    pop ax
-    ret
-UpdatePipeList  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4152,7 +2988,6 @@ ehci_function_handler:
 
 efhLoop:
     WaitForSignal
-    call UpdatePipeList
     jmp efhLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4514,11 +3349,8 @@ AddFunction  Proc near
     mov ds:ehc_function,ch    
 ;
     mov ds:ehc_reg_sel,bp
-    mov ds:ehc_pipe_list,0
     mov ds:ehc_reset,0
     mov ds:ehc_async_head_va,0
-    InitSection ds:ehc_pipe_section
-    InitSection ds:ehc_enum_section
 ;
     mov es,bp
     mov cl,es:hcp_CAPLEN
@@ -4838,8 +3670,8 @@ wait_for_ehci   Endp
 Init    Proc far
     mov bx,SEG data
     mov ds,bx
-    InitSection ds:EhciSection
     mov ds:EhciFuncCount,0
+    mov ds:EhciQhList,0
 ;
     InitSection ds:WaitSection
     mov ds:WaitThreadArr,0

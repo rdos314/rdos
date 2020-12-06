@@ -862,6 +862,7 @@ CreateInterrupt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl   Proc far
+    push fs
     pushad
 ;    
     mov dx,flat_sel
@@ -871,10 +872,8 @@ CreateControl   Proc far
     mov eax,fs:[edx].oes_tailp
     mov es:dev_control_tail,eax
 ;
-    xor ax,ax
-    mov fs,ax
-;
     popad
+    pop fs
     retf32
 CreateControl   Endp
 
@@ -1619,20 +1618,10 @@ CreateBulkPipe   Proc far
     push fs
     push eax
     push edx
-    push esi
 ;
     mov ax,flat_sel
     mov fs,ax
     call AllocatePipe
-;
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    test dl,80h
-    jz cbpOut
-
-cbpIn:
     call AddBulkEd
 ;
     mov ds,bx
@@ -1642,21 +1631,7 @@ cbpIn:
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
     clc
-    jmp cbpDone
-
-cbpOut:
-    call AddBulkEd
-    mov ds,bx
-    mov ds:op_intr_count,0
-    mov ds:op_intr_list,0
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-    clc
-    jmp cbpDone
-
-cbpDone:
-    pop esi
+;
     pop edx
     pop eax
     pop fs
@@ -1692,15 +1667,6 @@ CreateIntrPipe   Proc far
     mov ax,flat_sel
     mov fs,ax
     call AllocatePipe
-;
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    test dl,80h
-    jz cipOut
-
-cipIn:
     mov cl,dh
     call AddIntrEd
     mov ds,bx
@@ -1710,20 +1676,7 @@ cipIn:
     mov eax,fs:[edx].oes_tailp
     mov ds:op_tail,eax
     clc
-    jmp cipDone
-
-cipOut:
-    mov cl,ds:ued_interval
-    call AddIntrEd
-    mov ds,bx
-    mov ds:op_intr_count,si
-    mov ds:op_intr_list,di
-    mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
-    clc
-
-cipDone:
+;
     pop edi
     pop esi
     pop edx
