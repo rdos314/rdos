@@ -2631,6 +2631,7 @@ htHandle:
     jmp htAttached
 
 htUnlockFree:
+    UnlinkUsbDev
     FreeUsbDev
 
 htUnlock:

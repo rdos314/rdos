@@ -898,6 +898,7 @@ htHandle:
     jmp htAttached
 
 htUnlockFree:
+    UnlinkUsbDev
     FreeUsbDev
 
 htUnlock:
@@ -921,6 +922,7 @@ htDetach:
 ;
     mov al,cl
     NotifyUsbDetach
+;
     FreeUsbDev
 ;
     mov ax,ds:[edi].hub_status_arr

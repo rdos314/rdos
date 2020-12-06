@@ -3299,6 +3299,7 @@ htHandle:
     jmp htAttached
 
 htUnlockFree:
+    UnlinkUsbDev
     FreeUsbDev
 
 htUnlock:
@@ -3331,6 +3332,7 @@ htDetach:
     mov al,cl
     NotifyUsbDetach
     pop edi
+;
     FreeUsbDev
 ;
     movzx bx,cl    

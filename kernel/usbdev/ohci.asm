@@ -2546,7 +2546,7 @@ htHandle:
     jmp htAttached
 
 htUnlockFree:
-    call CleanupDev
+    UnlinkUsbDev
     FreeUsbDev
 
 htUnlock:
@@ -2566,7 +2566,6 @@ htDoUnlock:
 
 htDetach:
     UnlinkUsbDev
-    call CleanupDev
 ;
     mov al,cl
     NotifyUsbDetach

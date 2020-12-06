@@ -3531,6 +3531,7 @@ htHandle:
     jmp htAttached
 
 htUnlockFree:
+    UnlinkUsbDev
     FreeUsbDev
 
 htUnlock:
@@ -3554,6 +3555,7 @@ htDetach:
 ;
     mov al,bl
     NotifyUsbDetach
+;
     FreeUsbDev
 ;
     in ax,dx
