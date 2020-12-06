@@ -2275,18 +2275,95 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UnlinkPipes
+;       NAME:           UnlinkControl
 ;
-;       DESCRIPTION:    Unlink pipe
+;       DESCRIPTION:    Unlink control
 ;
-;       PARAMETERS:     ES      Device
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkPipes   Proc far
+UnlinkControl   Proc near
+    ret
+UnlinkControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkPipe
+;
+;       DESCRIPTION:    Unlink pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device
+;                       BX      Pipe sel
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipe   Proc near
+    ret
+UnlinkPipe      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Unlink
+;
+;       DESCRIPTION:    Unlink dev
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Unlink   Proc far
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
     int 3
+    call UnlinkControl
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+udvInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udvInNext
+;
+    call UnlinkPipe
+
+udvInNext:
+    add si,2
+    loop udvInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+udvOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udvOutNext
+;
+    call UnlinkPipe
+
+udvOutNext:
+    add si,2
+    loop udvOutLoop
+;
+    movzx si,es:usbd_port
+    add si,si
+    mov ds:[si].ehc_dev_arr,0
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
     retf32
-UnlinkPipes   Endp
+Unlink     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3104,7 +3181,7 @@ ec09 DD OFFSET IsDeviceConnected,  SEG code
 ec0A DD OFFSET ControlMsg,         SEG code
 ec0B DD OFFSET CreateBulkPipe,     SEG code
 ec0C DD OFFSET CreateIntrPipe,     SEG code
-ec0D DD OFFSET UnlinkPipes,        SEG code
+ec0D DD OFFSET Unlink,             SEG code
 ec0E DD OFFSET EnablePipe,         SEG code
 ec0F DD OFFSET DisablePipe,        SEG code
 
