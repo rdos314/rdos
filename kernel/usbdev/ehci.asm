@@ -51,27 +51,6 @@ EHC_PORT_POWER      = 4
 
 HCC_64              = 1
 
-usb_pipe_struc      STRUC
-
-usbp_dev_sel        DW ?
-usbp_address        DB ?
-usbp_endpoint       DB ?
-usbp_seq            DB ?
-usbp_mode           DB ?
-usbp_dir            DB ?
-usbp_speed          DB ?
-usbp_maxlen         DW ?
-usbp_section        section_typ <>
-usbp_hub_sel        DW ?
-usbp_hub_port       DW ?
-usbp_signal         DW ?
-usbp_wait           DW ?
-usbp_buf_size       DW ?
-usbp_buf_sel        DW ?
-
-usb_pipe_struc   ENDS
-
-
 hccap   STRUC
 
 hcp_CAPLEN      DB ?
@@ -107,7 +86,9 @@ count_struc ENDS
 
 ehci_func_sel   STRUC
 
-usb_func_base        usb_function_struc <>
+usb_func_base       usb_function_struc <>
+
+ehc_dev_arr         DW MAX_USB_HUB_PORTS DUP(?)
 
 ehc_reg_sel         DW ?
 ehc_thread          DW ?
@@ -148,14 +129,16 @@ ehc_1               DD ?,?
 
 ehc_curr_cnt        DD 1024 DUP(?)
 
-ehci_func_sel    ENDS
+ehci_func_sel       ENDS
 
-ehci_dev_sel     STRUC
+ehci_dev_sel        STRUC
 
-usb_dev_base     usb_device_struc <>
+usb_dev_base        usb_device_struc <>
 
-dev_control_qtd  DD ?
-dev_control_qh   DD ?
+dev_control_qtd     DD ?
+dev_control_qh      DD ?
+dev_control_thread  DW ?
+dev_cc              DB ?
 
 ehci_dev_sel     ENDS
 
@@ -2019,6 +2002,10 @@ RunControl   Proc near
     pop ds
     jc rcDone
 ;
+    GetThread
+    mov es:dev_control_thread,ax
+    mov es:dev_cc,0Fh
+;
     mov edx,es:dev_control_qtd
     LinearToPhysicalMemBlk
     mov edx,es:dev_control_qh
@@ -2026,6 +2013,17 @@ RunControl   Proc near
     mov fs:[edx].qh_current_qtd,0
     mov fs:[edx].qh_next_qtd,eax
 ;
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignal
+    mov es:dev_control_thread,0
+    mov al,es:dev_cc
+    cmp al,0Fh
+    stc
+    je rcDone
+
+
     mov cx,100
 
 rcWait:
@@ -2379,6 +2377,7 @@ CreateDev   Proc far
     push fs
     pushad
 ;
+    push dx
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2401,6 +2400,11 @@ cdCreate:
     AllocateMemBlk
     call InitQtd64
     mov es:dev_control_qtd,edx
+    mov es:dev_control_thread,0
+;
+    pop di
+    add di,di
+    mov ds:[di].ehc_dev_arr,es
 ;
     popad
     pop fs
@@ -2942,6 +2946,30 @@ uuNext:
 uuDone:    
     ret
 UpdateUsb   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateDev
+;
+;       DESCRIPTION:    Update device
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateDev   Proc near
+    xor bx,bx
+    xchg bx,es:dev_control_thread
+    or bx,bx
+    jz udDone
+;
+    Signal
+
+udDone:
+    ret
+UpdateDev   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2962,6 +2990,22 @@ ehci_function_handler:
 efhLoop:
     WaitForSignal
     int 3
+;
+    movzx cx,ds:ehc_ports
+    mov bx,OFFSET ehc_dev_arr
+
+efhDevLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz efhDevNext
+;
+    mov es,ax
+    call UpdateDev
+
+efhDevNext:
+    add bx,2
+    loop efhDevLoop
+;
     jmp efhLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3100,6 +3144,15 @@ ifTabLoop:
 ;
     InitUsbFunction
     InitSection ds:ehc_section
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    mov di,OFFSET ehc_dev_arr
+    mov cx,MAX_USB_HUB_PORTS
+    xor ax,ax
+    rep stosw
+    pop es
 ;
     mov bh,ds:ehc_bus
     mov bl,ds:ehc_device
