@@ -1768,7 +1768,7 @@ sciStatusOut:
     mov fs:[esi].qtd_next,1
     mov fs:[esi].qtd_alt,1
     mov fs:[esi].qtd_status,80h
-    mov fs:[esi].qtd_flags,0Ch
+    mov fs:[esi].qtd_flags,8Ch
     mov fs:[esi].qtd_size,8000h
     mov fs:[esi].qtd_page0,0
     mov fs:[esi].qtd_page1,0
@@ -1974,7 +1974,7 @@ scoStatusIn:
     mov fs:[edi].qtd_next,1
     mov fs:[edi].qtd_alt,1
     mov fs:[edi].qtd_status,80h
-    mov fs:[edi].qtd_flags,0Dh
+    mov fs:[edi].qtd_flags,8Dh
     mov fs:[edi].qtd_size,8000h
     mov fs:[edi].qtd_page0,0
     mov fs:[edi].qtd_page1,0
@@ -2127,6 +2127,7 @@ ControlMsg   Proc far
     push fs
     push eax
 ;
+    int 3
     mov cx,es:usbd_control_buf.usd_len
     mov ax,flat_sel
     mov fs,ax
@@ -2960,6 +2961,7 @@ ehci_function_handler:
 
 efhLoop:
     WaitForSignal
+    int 3
     jmp efhLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
