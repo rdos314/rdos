@@ -193,13 +193,6 @@ qtd32_struc       STRUC
 
 qtd32_base        qtd_struc <>
 
-; driver part
-
-qtd32_next_va     DD ?
-qtd32_buffer_va   DD ?
-qtd32_buffer_size DW ?
-qtd32_pipe        DB ?
-
 qtd32_struc       ENDS
 
 qtd64_struc       STRUC
@@ -213,14 +206,6 @@ qtdu64_page1      DD ?
 qtdu64_page2      DD ?
 qtdu64_page3      DD ?
 qtdu64_page4      DD ?
-
-; driver part
-
-qtd64_next_va     DD ?
-qtd64_alt_va      DD ?
-qtd64_buffer_va   DD ?
-qtd64_buffer_size DW ?
-qtd64_pipe        DB ?
 
 qtd64_struc       ENDS
 
