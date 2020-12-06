@@ -215,6 +215,7 @@ cq_base           qtd64_struc <>
 
 qtd_next_va       DD ?
 qtd_buffer_va     DD ?
+qtd_buffer_size DW ?
 
 control_qtd_struc        ENDS
 
@@ -1670,6 +1671,7 @@ SetupControl   Proc near
     mov fs:[edx].qtdu64_page4,0
     mov fs:[edx].qtd_next_va,0
     mov fs:[edx].qtd_buffer_va,0
+    mov fs:[edx].qtd_buffer_size,8
 ;
     pop edx
     pop eax
@@ -1725,6 +1727,7 @@ sciLoop:
     mov fs:[esi].qtdu64_page4,0
     mov fs:[esi].qtd_next_va,0
     mov fs:[esi].qtd_buffer_va,0
+    mov fs:[esi].qtd_buffer_size,0
 ;
     mov bx,cx
     cmp bx,es:usbd_maxlen
@@ -1742,6 +1745,7 @@ sciInMinOk:
     jc sciDone
 ;
     mov fs:[esi].qtd_buffer_va,edx
+    mov fs:[esi].qtd_buffer_size,bx
 ;
     mov fs:[esi].qtd_page0,eax
     mov ax,bx    
@@ -1778,6 +1782,7 @@ sciStatusOut:
     mov fs:[esi].qtdu64_page4,0
     mov fs:[esi].qtd_next_va,0
     mov fs:[esi].qtd_buffer_va,0
+    mov fs:[esi].qtd_buffer_size,0
     clc
 
 sciDone:
@@ -1809,6 +1814,7 @@ CopyControlIn   Proc near
     push edi
     push ebp
 ;
+    xor cx,cx
     mov esi,es:dev_control_qtd
     mov esi,fs:[esi].qtd_next_va
 
@@ -1821,13 +1827,7 @@ cciCopyLoop:
     or edx,edx
     jz cciCopyNext
 ;
-    mov bp,cx
-    cmp bp,es:usbd_maxlen
-    jb cciMinOk
-;
-    mov bp,es:usbd_maxlen
-
-cciMinOk:
+    mov bp,fs:[esi].qtd_buffer_size
     push es
     push ecx
     push esi
@@ -1846,7 +1846,7 @@ cciMinOk:
     FreeLinearMemBlk
     pop cx
 ;
-    sub cx,bp
+    add cx,bp
 
 cciCopyNext:
     xchg edx,esi
@@ -1919,6 +1919,7 @@ scoLoop:
     mov fs:[edi].qtdu64_page4,0
     mov fs:[edi].qtd_next_va,0
     mov fs:[edi].qtd_buffer_va,0
+    mov fs:[edi].qtd_buffer_size,0
 ;
     mov bx,cx
     cmp bx,es:usbd_maxlen
@@ -1936,6 +1937,7 @@ scoOutMinOk:
     jc sciDone
 ;
     mov fs:[edi].qtd_buffer_va,edx
+    mov fs:[edi].qtd_buffer_size,bx
 ;
     mov fs:[edi].qtd_page0,eax
     mov ax,bx    
@@ -1986,6 +1988,7 @@ scoStatusIn:
     mov fs:[edi].qtdu64_page4,0
     mov fs:[edi].qtd_next_va,0
     mov fs:[edi].qtd_buffer_va,0
+    mov fs:[edi].qtd_buffer_size,0
     clc
 
 scoDone:
@@ -2078,7 +2081,6 @@ RunControl Endp
 CleanupControl   Proc near
     pushad
 ;
-    mov cx,es:usbd_control_buf.usd_len
     mov esi,es:dev_control_qtd
     mov esi,fs:[esi].qtd_next_va
 
@@ -2090,18 +2092,8 @@ ccLoop:
     or edx,edx
     jz ccBufferOk
 ;
-    mov bx,cx
-    cmp bx,es:usbd_maxlen
-    jb ccMinOk
-;
-    mov bx,es:usbd_maxlen
-
-ccMinOk:
-    push cx
-    mov cx,bx
+    mov cx,fs:[esi].qtd_buffer_size
     FreeLinearMemBlk
-    pop cx
-    sub cx,bx
 
 ccBufferOk:
     xchg edx,esi
@@ -2642,7 +2634,6 @@ htWaitNotify:
     call fword ptr ds:change_address_proc
     AddUsbDevice
     UnlockUsb
-    int 3
     ReadUsbDescriptors
     jc htDetach
 ;
