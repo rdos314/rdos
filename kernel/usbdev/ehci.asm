@@ -2411,7 +2411,7 @@ cdCreate:
     mov es:dev_control_qtd,edx
 ;
     popad
-    popf
+    pop fs
 ;
     InitUsbDev
     retf32
