@@ -2281,10 +2281,13 @@ CreateIntrPipe   Endp
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device sel
+;                       FS      Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkControl   Proc near
+    mov edx,es:dev_control_qh
+    call UnlinkAsyncQh
     ret
 UnlinkControl   Endp
 
@@ -2318,12 +2321,12 @@ UnlinkPipe      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Unlink   Proc far
-    push eax
-    push ebx
-    push ecx
-    push esi
+    push fs
+    pushad
 ;
-    int 3
+    mov ax,flat_sel
+    mov fs,ax
+;
     call UnlinkControl
 ;
     mov cx,15
@@ -2358,10 +2361,8 @@ udvOutNext:
     add si,si
     mov ds:[si].ehc_dev_arr,0
 ;
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
+    popad
+    pop fs
     retf32
 Unlink     Endp
 
