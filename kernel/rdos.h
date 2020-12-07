@@ -894,6 +894,9 @@ int RDOSAPI RdosEnableUsbPipe(int handle, char pipe);
 int RDOSAPI RdosDisableUsbPipe(int handle, char pipe);
 int RDOSAPI RdosGetUsedUsbBuffers(int handle, char pipe);
 int RDOSAPI RdosGetFreeUsbBuffers(int handle, char pipe);
+int RDOSAPI RdosGetUsbBufferSize(int handle, char pipe);
+int RDOSAPI RdosReadUsbPipe(int handle, char pipe, char *Buf);
+void RDOSAPI RdosWriteUsbPipe(int handle, char pipe, char *Buf, int Size);
 void RDOSAPI RdosAddWaitForUsbPipe(int whandle, int devhandle, char pipe, int ID);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();

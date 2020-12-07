@@ -3654,17 +3654,41 @@ DisableUsbPipe      MACRO
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
-;   OUT CX          Bufffers
+;   OUT CX          Buffers
 GetUsedUsbBuffers      MACRO
         UserGate get_used_usb_buffers_nr
                                                 ENDM
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
-;   OUT CX          Bufffers
+;   OUT CX          Buffers
 GetFreeUsbBuffers      MACRO
         UserGate get_free_usb_buffers_nr
                                                 ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+;   OUT CX          Buffer size
+GetUsbBufferSize      MACRO
+        UserGate get_usb_buffer_size_nr
+                                                ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+;   IN  ES(E)DI     Buffer
+;   OUT CX          Read size
+ReadUsbPipe      MACRO
+        UserGate read_usb_pipe_nr
+                                                ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+;   IN  ES(E)DI     Buffer
+;   IN  CX          Write size
+WriteUsbPipe      MACRO
+        UserGate write_usb_pipe_nr
+                                                ENDM
+
 
 ;   IN  BX          Controller #
 ;   IN  AL          Port #

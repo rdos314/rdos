@@ -124,6 +124,17 @@ used_buffers_proc      DD ?,?
 ;  OUT CX        Free buffer count
 free_buffers_proc      DD ?,?
 
+;  IN  ES        Device
+;  IN  GS        Pipe sel
+;  OUT EDX       Buffer linear
+;  OUT CX        Size
+req_buffer_proc      DD ?,?
+
+;  IN  ES        Device
+;  IN  GS        Pipe sel
+;  IN  CX        Size
+rel_buffer_proc      DD ?,?
+
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
 

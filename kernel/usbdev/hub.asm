@@ -424,6 +424,48 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReqBuffer
+;
+;       DESCRIPTION:    Req pipe buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        EDX     Buffer linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqBuffer   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:req_buffer_proc
+    pop ds
+    ret
+ReqBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RelBuffer
+;
+;       DESCRIPTION:    Release pipe buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RelBuffer   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:rel_buffer_proc
+    pop ds
+    ret
+RelBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -533,6 +575,8 @@ ht0E DD OFFSET EnablePipe,          SEG code
 ht0F DD OFFSET DisablePipe,         SEG code
 ht10 DD OFFSET UsedBuffers,         SEG code
 ht11 DD OFFSET FreeBuffers,         SEG code
+ht12 DD OFFSET ReqBuffer,           SEG code
+ht13 DD OFFSET RelBuffer,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2105,7 +2149,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*12h
+    mov ecx,2*14h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

@@ -994,7 +994,324 @@ gfubDone:
     pop ds    
     retf32
 get_free_usb_buffers Endp
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetUsbBufferSize
+;
+;       description:    Get buffer size for pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;       returns:        CX        Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_buffer_size_name DB 'Get Usb Buffer Size', 0
+
+get_usb_buffer_size	Proc far
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc gubsDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz gubsLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    jnz gubsIn
+
+gubsOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz gubsLeave
+;
+    mov gs,bx
+    mov cx,gs:ued_maxsize
+    clc
+    jmp gubsLeave
+
+gubsIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz gubsLeave
+;
+    mov gs,bx
+    mov cx,gs:ued_maxsize
+    clc
+
+gubsLeave:
+    LeaveSection ds:udd_section
+
+gubsDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds    
+    retf32
+get_usb_buffer_size Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadUsbPipe
+;
+;       description:    Read USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       ES:(E)DI  Buffer
+;
+;       returns:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_usb_pipe_name DB 'Read Usb Pipe', 0
+
+ReadPipe	Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov bp,es
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc rupDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz rupLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    stc
+    jz rupLeave
+;
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz rupLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    stc
+    jz rupLeave
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:req_buffer_proc
+    jc rupPop
+;
+    movzx ecx,cx
+    push es
+    push ecx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov es,bp
+    mov esi,edx
+    rep movs byte ptr es:[edi],fs:[esi]
+;
+    pop ecx
+    pop es
+;
+    mov cx,gs:ued_maxsize
+    call fword ptr ds:rel_buffer_proc
+    clc
+
+rupPop:
+    pop ds
+
+rupLeave:
+    LeaveSection ds:udd_section
+
+rupDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds    
+    ret
+ReadPipe Endp
+
+read_usb_pipe32	Proc far
+    call ReadPipe
+    retf32
+read_usb_pipe32 Endp
+
+read_usb_pipe16	Proc far
+    push edi
+    movzx edi,di
+    call ReadPipe
+    pop edi
+    retf32
+read_usb_pipe16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteUsbPipe
+;
+;       description:    Write USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       ES:(E)DI  Buffer
+;                       CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_usb_pipe_name DB 'Write Usb Pipe', 0
+
+WritePipe	Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov bp,es
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc wupDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz wupLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    stc
+    jnz wupLeave
+;
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz wupLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    stc
+    jz wupLeave
+;
+    push ds
+    push cx
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:req_buffer_proc
+    pop cx
+    jc wupPop
+;
+    movzx ecx,cx
+    push ds
+    push es
+    push ecx
+;
+    mov ds,bp
+    mov esi,edi
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    rep movs byte ptr es:[edi],fs:[esi]
+;
+    pop ecx
+    pop es
+    pop ds
+;
+    call fword ptr ds:rel_buffer_proc
+    clc
+
+wupPop:
+    pop ds
+
+wupLeave:
+    LeaveSection ds:udd_section
+
+wupDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds    
+    ret
+WritePipe Endp
+
+write_usb_pipe32	Proc far
+    call WritePipe
+    retf32
+write_usb_pipe32 Endp
+
+write_usb_pipe16	Proc far
+    push edi
+    movzx edi,di
+    call WritePipe
+    pop edi
+    retf32
+write_usb_pipe16 Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3392,6 +3709,26 @@ init    Proc far
     xor dx,dx
     mov ax,get_free_usb_buffers_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_usb_buffer_size
+    mov edi,OFFSET get_usb_buffer_size_name
+    xor dx,dx
+    mov ax,get_usb_buffer_size_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_usb_pipe16
+    mov esi,OFFSET read_usb_pipe32
+    mov edi,OFFSET read_usb_pipe_name
+    mov dx,virt_es_in
+    mov ax,read_usb_pipe_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_usb_pipe16
+    mov esi,OFFSET write_usb_pipe32
+    mov edi,OFFSET write_usb_pipe_name
+    mov dx,virt_es_in
+    mov ax,write_usb_pipe_nr
+    RegisterUserGate
     clc
     ret
 init    Endp

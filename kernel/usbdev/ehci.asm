@@ -2567,6 +2567,42 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReqBuffer
+;
+;       DESCRIPTION:    Req buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        EDX     Buffer linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqBuffer   Proc far
+    int 3
+    retf32
+ReqBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RelBuffer
+;
+;       DESCRIPTION:    Release buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RelBuffer   Proc far
+    int 3
+    retf32
+RelBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandlerThread
 ;
 ;   DESCRIPTION:    Handler thread
@@ -3225,6 +3261,8 @@ ec0E DD OFFSET EnablePipe,         SEG code
 ec0F DD OFFSET DisablePipe,        SEG code
 ec10 DD OFFSET UsedBuffers,        SEG code
 ec11 DD OFFSET FreeBuffers,        SEG code
+ec12 DD OFFSET ReqBuffer,          SEG code
+ec13 DD OFFSET RelBuffer,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3246,7 +3284,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*14h
 
 ifTabLoop:
     lods dword ptr cs:[si]

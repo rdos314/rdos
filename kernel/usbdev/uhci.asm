@@ -3307,6 +3307,42 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReqBuffer
+;
+;       DESCRIPTION:    Req buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        EDX     Buffer linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqBuffer   Proc far
+    int 3
+    retf32
+ReqBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RelBuffer
+;
+;       DESCRIPTION:    Release buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RelBuffer   Proc far
+    int 3
+    retf32
+RelBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -3824,6 +3860,8 @@ ut0E DD OFFSET EnablePipe,          SEG code
 ut0F DD OFFSET DisablePipe,         SEG code
 ut10 DD OFFSET UsedBuffers,         SEG code
 ut11 DD OFFSET FreeBuffers,         SEG code
+ut12 DD OFFSET ReqBuffer,           SEG code
+ut13 DD OFFSET RelBuffer,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3845,7 +3883,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*14h
 
 ifTabLoop:
     lods dword ptr cs:[si]

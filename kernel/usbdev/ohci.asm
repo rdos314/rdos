@@ -1977,6 +1977,42 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReqBuffer
+;
+;       DESCRIPTION:    Req buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        EDX     Buffer linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqBuffer   Proc far
+    int 3
+    retf32
+ReqBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RelBuffer
+;
+;       DESCRIPTION:    Release buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RelBuffer   Proc far
+    int 3
+    retf32
+RelBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           NotifyIn
 ;
 ;       DESCRIPTION:    Notify IN transfer completed
@@ -3177,6 +3213,8 @@ ot0E DD OFFSET EnablePipe,          SEG code
 ot0F DD OFFSET DisablePipe,         SEG code
 ot10 DD OFFSET UsedBuffers,         SEG code
 ot11 DD OFFSET FreeBuffers,         SEG code
+ot12 DD OFFSET ReqBuffer,           SEG code
+ot13 DD OFFSET RelBuffer,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3234,7 +3272,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*12h
+    mov cx,2*14h
 
 ifTabLoop:
     lods dword ptr cs:[si]

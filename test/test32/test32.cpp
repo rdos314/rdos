@@ -24,7 +24,7 @@ void main()
 {
     int handle;
     int size;
-    char buf[8];
+    char *buf;
     char *dev;
     bool ok;
     int wait;
@@ -37,7 +37,10 @@ void main()
     RdosAddWaitForUsbPipe(wait, handle, 0x81, 0x1234);
     RdosEnableUsbPipe(handle, 0x81);
     count = RdosGetUsedUsbBuffers(handle, 0x81);
+    size = RdosGetUsbBufferSize(handle, 0x81);
+    buf = new char[size + 1];
     RdosWaitForever(wait);
+    count = RdosReadUsbPipe(handle, 0x81, buf);
     RdosCloseUsbDevice(handle);
     RdosCloseWait(wait);
 
