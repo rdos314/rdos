@@ -1581,6 +1581,7 @@ aw4 DD OFFSET delete_wait_pipe,         SEG code
 
 add_wait_for_dev_pipe       PROC far
     push ds
+    push es
     pushad
 ;
     mov bp,bx
@@ -1621,6 +1622,7 @@ awpLeave:
 
 awpDone:
     popad
+    pop es
     pop ds
     retf32
 add_wait_for_dev_pipe       ENDP

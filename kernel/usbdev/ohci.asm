@@ -1985,11 +1985,65 @@ FreeBuffers   Endp
 ;                       GS      Pipe
 ;
 ;       RETURNS:        EDX     Buffer linear address
+;                       CX      Message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqBuffer   Proc far
     int 3
+    push fs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_address
+    test al,80h
+    jnz rbIn
+
+rbOut:
+    mov bx,gs:op_wr_ptr
+    cmp bx,gs:op_rd_ptr
+    jne rbGet
+;
+    stc
+    jmp rbDone
+
+rbIn:
+    mov bx,gs:op_rd_ptr
+    cmp bx,gs:op_wr_ptr
+    jne rbGet
+;
+    stc
+    jmp rbDone
+
+rbGet:
+    shl bx,2
+    mov esi,gs:[bx].op_entry_arr
+    mov eax,fs:[esi].otd_cbp
+    or eax,eax
+    jnz rbCalc
+;
+    mov edx,fs:[esi].otd_buffer_va
+    movzx ecx,gs:ued_maxsize
+    clc
+    jmp rbDone
+
+rbCalc:
+    xor ebx,ebx
+    PhysicalToLinearMemBlk
+    mov ecx,fs:[esi].otd_buffer_va
+    sub ecx,edx
+    mov edx,fs:[esi].otd_buffer_va
+    clc
+
+rbDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop fs
     retf32
 ReqBuffer   Endp
 
