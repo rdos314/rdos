@@ -1990,7 +1990,6 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqBuffer   Proc far
-    int 3
     push fs
     push eax
     push ebx
@@ -2001,37 +2000,37 @@ ReqBuffer   Proc far
 ;
     mov al,gs:ued_address
     test al,80h
-    jnz rbIn
+    jnz rqbIn
 
-rbOut:
+rqbOut:
     mov bx,gs:op_wr_ptr
     cmp bx,gs:op_rd_ptr
-    jne rbGet
+    jne rqbGet
 ;
     stc
-    jmp rbDone
+    jmp rqbDone
 
-rbIn:
+rqbIn:
     mov bx,gs:op_rd_ptr
     cmp bx,gs:op_wr_ptr
-    jne rbGet
+    jne rqbGet
 ;
     stc
-    jmp rbDone
+    jmp rqbDone
 
-rbGet:
+rqbGet:
     shl bx,2
     mov esi,gs:[bx].op_entry_arr
     mov eax,fs:[esi].otd_cbp
     or eax,eax
-    jnz rbCalc
+    jnz rqbCalc
 ;
     mov edx,fs:[esi].otd_buffer_va
     movzx ecx,gs:ued_maxsize
     clc
-    jmp rbDone
+    jmp rqbDone
 
-rbCalc:
+rqbCalc:
     xor ebx,ebx
     PhysicalToLinearMemBlk
     mov ecx,fs:[esi].otd_buffer_va
@@ -2039,7 +2038,7 @@ rbCalc:
     mov edx,fs:[esi].otd_buffer_va
     clc
 
-rbDone:
+rqbDone:
     pop esi
     pop ebx
     pop eax
@@ -2061,6 +2060,92 @@ ReqBuffer   Endp
 
 RelBuffer   Proc far
     int 3
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_address
+    test al,80h
+    jnz rlbIn
+
+rlbOut:
+    mov bx,gs:op_wr_ptr
+    cmp bx,gs:op_rd_ptr
+    stc
+    je rlbDone
+;
+    int 3
+    jmp rlbDone
+
+rlbIn:
+    mov bx,gs:op_rd_ptr
+    cmp bx,gs:op_wr_ptr
+    stc
+    je rlbDone
+;
+    inc bx
+    cmp bx,gs:op_entry_count
+    jb rlbRdOk
+;
+    xor bx,bx
+
+rlbRdOk:
+    mov gs:op_rd_ptr,bx
+;
+    mov bx,gs:op_tail_ptr
+    mov si,bx
+    shl si,2
+    mov esi,gs:[si].op_entry_arr
+;
+    mov fs:[esi].otd_flags,0F004h
+    mov edx,fs:[esi].otd_buffer_va
+    or edx,edx
+    jnz rlbRdConv
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    AllocateMemBlk
+    mov fs:[esi].otd_buffer_va,edx
+    pop cx
+    jmp rlbRdSave
+
+rlbRdConv:
+    LinearToPhysicalMemBlk
+
+rlbRdSave:
+    mov fs:[esi].otd_cbp,eax
+    movzx ebx,gs:ued_maxsize
+    add eax,ebx
+    dec eax
+    mov fs:[esi].otd_be,eax
+    mov al,gs:ued_address
+    mov fs:[esi].otd_pipe,al
+;
+    mov bx,gs:op_tail_ptr
+    inc bx
+    cmp bx,gs:op_entry_count
+    jb rlbRdTailOk
+;
+    xor bx,bx
+
+rlbRdTailOk:
+    mov gs:op_tail_ptr,bx
+;
+    shl bx,2
+    mov edx,gs:[bx].op_entry_arr
+    LinearToPhysicalMemBlk
+    mov fs:[esi].otd_next_td,eax
+;
+    mov edx,gs:op_ed
+    mov fs:[edx].oes_tailp,eax
+;
+    clc
+
+rlbDone:
+    popad
+    pop fs
     retf32
 RelBuffer   Endp
 
