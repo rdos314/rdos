@@ -802,6 +802,198 @@ ddpDone:
     pop ds    
     retf32
 disable_usb_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetUsedUsbBuffers
+;
+;       description:    Get used USB pipe buffers
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;       returns:        CX        Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_used_usb_buffers_name DB 'Get Used Usb Buffers', 0
+
+get_used_usb_buffers	Proc far
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc guubDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz guubLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    jnz guubIn
+
+guubOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz guubLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    stc
+    jz guubLeave
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:used_buffers_proc
+    pop ds
+    clc
+    jmp guubLeave
+
+guubIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz guubLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    stc
+    jz guubLeave
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:used_buffers_proc
+    pop ds
+    clc
+
+guubLeave:
+    LeaveSection ds:udd_section
+
+guubDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds    
+    retf32
+get_used_usb_buffers Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetFreeUsbBuffers
+;
+;       description:    Get free USB pipe buffers
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;       returns:        CX        Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_usb_buffers_name DB 'Get Free Usb Buffers', 0
+
+get_free_usb_buffers	Proc far
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc gfubDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz gfubLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    jnz gfubIn
+
+gfubOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz gfubLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    stc
+    jz gfubLeave
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:free_buffers_proc
+    pop ds
+    clc
+    jmp gfubLeave
+
+gfubIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz gfubLeave
+;
+    mov gs,bx
+    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
+    stc
+    jz gfubLeave
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:free_buffers_proc
+    pop ds
+    clc
+
+gfubLeave:
+    LeaveSection ds:udd_section
+
+gfubDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds    
+    retf32
+get_free_usb_buffers Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3187,6 +3379,18 @@ init    Proc far
     mov edi,OFFSET add_wait_for_dev_pipe_name
     xor dx,dx
     mov ax,add_wait_for_usb_dev_pipe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_used_usb_buffers
+    mov edi,OFFSET get_used_usb_buffers_name
+    xor dx,dx
+    mov ax,get_used_usb_buffers_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_free_usb_buffers
+    mov edi,OFFSET get_free_usb_buffers_name
+    xor dx,dx
+    mov ax,get_free_usb_buffers_nr
     RegisterBimodalUserGate
     clc
     ret

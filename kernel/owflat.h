@@ -3631,6 +3631,30 @@
     CarryToBool \
     __parm [__ebx] [__dl]
 
+#pragma aux RdosGetUsedUsbBuffers = \
+    CallGate_get_used_usb_buffers \
+    "jc fail" \
+    "movzx eax,cx" \
+    "jmp done" \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__ebx] [__dl] \
+    __value [eax] \
+    __modify [__ecx]
+
+#pragma aux RdosGetFreeUsbBuffers = \
+    CallGate_get_free_usb_buffers \
+    "jc fail" \
+    "movzx eax,cx" \
+    "jmp done" \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__ebx] [__dl] \
+    __value [eax] \
+    __modify [__ecx]
+
 #pragma aux RdosAddWaitForUsbPipe = \
     CallGate_add_wait_for_usb_dev_pipe  \
     __parm [__ebx] [__eax] [__dl] [__ecx]

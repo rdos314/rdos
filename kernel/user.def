@@ -943,5 +943,7 @@ config_usb_pipe_nr                = 749
 enable_usb_pipe_nr                = 750
 disable_usb_pipe_nr               = 751
 add_wait_for_usb_dev_pipe_nr      = 752
+get_used_usb_buffers_nr           = 753
+get_free_usb_buffers_nr           = 754
 
 usergate_entries                  = 780

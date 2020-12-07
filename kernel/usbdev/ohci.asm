@@ -1625,7 +1625,6 @@ AllocatePipe    Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       CX      Buffer count
-;                       DL      Pipe #
 ;
 ;       RETURNS:        NC      OK
 ;                         BX    Pipe sel
@@ -1668,7 +1667,6 @@ CreateBulkPipe   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       CX      Buffer count
-;                       DL      Pipe #
 ;                       DH      Interval
 ;
 ;       RETURNS:        NC      OK
@@ -1686,8 +1684,10 @@ CreateIntrPipe   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov cl,dh
+    push dx
     call AllocatePipe
+    pop cx
+    mov cl,ch
     call AddIntrEd
     mov ds,bx
     mov ds:op_intr_count,si
