@@ -29,6 +29,7 @@ void main()
     bool ok;
     int wait;
     int count;
+    int i;
 
     handle = RdosOpenUsbDevice(1, 2);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);
@@ -39,8 +40,17 @@ void main()
     count = RdosGetUsedUsbBuffers(handle, 0x81);
     size = RdosGetUsbBufferSize(handle, 0x81);
     buf = new char[size + 1];
-    RdosWaitForever(wait);
-    count = RdosReadUsbPipe(handle, 0x81, buf);
+
+    for (;;)
+    {
+        RdosWaitForever(wait);
+        count = RdosReadUsbPipe(handle, 0x81, buf);
+
+        for (i = 0; i < count; i++)
+            printf("%02hX ", buf[i]);
+        printf("\r\n");
+    }
+
     RdosCloseUsbDevice(handle);
     RdosCloseWait(wait);
 
