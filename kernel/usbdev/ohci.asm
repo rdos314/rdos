@@ -1647,7 +1647,6 @@ CreateBulkPipe   Proc far
     mov ds:op_intr_count,0
     mov ds:op_intr_list,0
     mov ds:op_ed,edx
-    mov ds:usbdp_flags,USB_PIPE_FLAG_EMPTY
     mov ds:op_rd_ptr,0
     mov ds:op_wr_ptr,0
     mov ds:op_tail_ptr,0
@@ -1694,7 +1693,6 @@ CreateIntrPipe   Proc far
     mov ds:op_intr_count,si
     mov ds:op_intr_list,di
     mov ds:op_ed,edx
-    mov ds:usbdp_flags,USB_PIPE_FLAG_EMPTY
     mov ds:op_rd_ptr,0
     mov ds:op_wr_ptr,0
     mov ds:op_tail_ptr,0
@@ -1918,6 +1916,63 @@ DisablePipe   Proc far
     pop fs
     retf32
 DisablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UsedBuffers
+;
+;       DESCRIPTION:    Return used buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UsedBuffers   Proc far
+    mov cx,gs:op_wr_ptr
+    sub cx,gs:op_rd_ptr
+    jnc ubDone
+;
+    add cx,gs:op_entry_count
+
+ubDone:
+    retf32
+UsedBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeBuffers
+;
+;       DESCRIPTION:    Return free buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffers   Proc far
+    push ax
+;
+    mov ax,gs:op_tail_ptr
+    sub ax,gs:op_rd_ptr
+    jnc fbDone
+;
+    add ax,gs:op_entry_count
+
+fbDone:
+    mov cx,gs:op_entry_count
+    sub cx,ax
+    dec cx
+;
+    pop ax
+    retf32
+FreeBuffers   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3120,6 +3175,8 @@ ot0C DD OFFSET CreateIntrPipe,      SEG code
 ot0D DD OFFSET Unlink,              SEG code
 ot0E DD OFFSET EnablePipe,          SEG code
 ot0F DD OFFSET DisablePipe,         SEG code
+ot10 DD OFFSET UsedBuffers,         SEG code
+ot11 DD OFFSET FreeBuffers,         SEG code
 
 InitFunction    Proc near
     push ds
@@ -3177,7 +3234,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*10h
+    mov cx,2*12h
 
 ifTabLoop:
     lods dword ptr cs:[si]

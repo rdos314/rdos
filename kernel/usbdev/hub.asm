@@ -380,6 +380,50 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UsedBuffers
+;
+;       DESCRIPTION:    Return used buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UsedBuffers   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:used_buffers_proc
+    pop ds
+    ret
+UsedBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeBuffers
+;
+;       DESCRIPTION:    Return free buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffers   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_buffers_proc
+    pop ds
+    ret
+FreeBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -487,6 +531,8 @@ ht0C DD OFFSET CreateIntrPipe,      SEG code
 ht0D DD OFFSET UnlinkPipes,         SEG code
 ht0E DD OFFSET EnablePipe,          SEG code
 ht0F DD OFFSET DisablePipe,         SEG code
+ht10 DD OFFSET UsedBuffers,         SEG code
+ht11 DD OFFSET FreeBuffers,         SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2059,7 +2105,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*10h
+    mov ecx,2*12h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

@@ -44,8 +44,6 @@ DIR_OUT = 0
 USBF_XHCI   = 1
 
 USB_PIPE_FLAG_ENABLED = 1
-USB_PIPE_FLAG_FULL    = 2
-USB_PIPE_FLAG_EMPTY   = 4
 
 usb_function_struc   STRUC
 
@@ -115,6 +113,16 @@ enable_pipe_proc      DD ?,?
 ;  IN ES        Device
 ;  IN GS        Pipe sel
 disable_pipe_proc      DD ?,?
+
+;  IN  ES        Device
+;  IN  GS        Pipe sel
+;  OUT CX        Used buffer count
+used_buffers_proc      DD ?,?
+
+;  IN  ES        Device
+;  IN  GS        Pipe sel
+;  OUT CX        Free buffer count
+free_buffers_proc      DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>

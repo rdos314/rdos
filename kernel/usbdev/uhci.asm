@@ -3269,6 +3269,44 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UsedBuffers
+;
+;       DESCRIPTION:    Return used buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UsedBuffers   Proc far
+    int 3
+    retf32
+UsedBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeBuffers
+;
+;       DESCRIPTION:    Return free buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffers   Proc far
+    int 3
+    retf32
+FreeBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -3784,6 +3822,8 @@ ut0C DD OFFSET CreateIntrPipe,      SEG code
 ut0D DD OFFSET UnlinkPipes,         SEG code
 ut0E DD OFFSET EnablePipe,          SEG code
 ut0F DD OFFSET DisablePipe,         SEG code
+ut10 DD OFFSET UsedBuffers,         SEG code
+ut11 DD OFFSET FreeBuffers,         SEG code
 
 InitFunction    Proc near
     push ds
@@ -3805,7 +3845,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*10h
+    mov cx,2*12h
 
 ifTabLoop:
     lods dword ptr cs:[si]

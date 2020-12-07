@@ -565,6 +565,7 @@ cdpSave:
     mov es,bx
 ;
     mov es:usbdp_wait,0
+    mov es:usbdp_flags,0
 ;
     mov si,di
     mov di,OFFSET usbdp_descr
@@ -850,8 +851,11 @@ bwfpOut:
     jz bwfpLeaveSignal
 ;
     mov gs:usbdp_wait,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_FULL
-    jnz bwfpLeave
+    push ds
+    call fword ptr ds:free_buffers_proc
+    pop ds
+    or cx,cx
+    jz bwfpLeave
     jmp bwfpCheckSignal
 
 bwfpIn:
@@ -868,8 +872,12 @@ bwfpIn:
     jz bwfpLeaveSignal
 ;
     mov gs:usbdp_wait,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_EMPTY
-    jnz bwfpLeave
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:used_buffers_proc
+    pop ds
+    or cx,cx
+    jz bwfpLeave
 
 bwfpCheckSignal:
     xor bx,bx

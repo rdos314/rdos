@@ -2533,6 +2533,40 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UsedBuffers
+;
+;       DESCRIPTION:    Used buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UsedBuffers   Proc far
+    int 3
+    retf32
+UsedBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeBuffers
+;
+;       DESCRIPTION:    Free buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffers   Proc far
+    int 3
+    retf32
+FreeBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandlerThread
 ;
 ;   DESCRIPTION:    Handler thread
@@ -3189,6 +3223,8 @@ ec0C DD OFFSET CreateIntrPipe,     SEG code
 ec0D DD OFFSET Unlink,             SEG code
 ec0E DD OFFSET EnablePipe,         SEG code
 ec0F DD OFFSET DisablePipe,        SEG code
+ec10 DD OFFSET UsedBuffers,        SEG code
+ec11 DD OFFSET FreeBuffers,        SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3210,7 +3246,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*10h
+    mov cx,2*12h
 
 ifTabLoop:
     lods dword ptr cs:[si]
