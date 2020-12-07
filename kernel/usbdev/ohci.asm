@@ -2059,7 +2059,6 @@ ReqBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RelBuffer   Proc far
-    int 3
     push fs
     pushad
 ;
