@@ -797,9 +797,6 @@ AddBulkQh    PROC near
 ;
     mov fs:[edx].qh_endpoint,20h
 ;    
-    mov ax,0A008h
-    mov fs:[edx].qh_max_packet,ax
-;
     mov al,es:usbd_speed
     cmp al,2
     je abqSpeedOk
@@ -829,9 +826,6 @@ abqSetSpeed:
     mov fs:[edx].qh_hub_port,ax
 ;
     mov fs:[edx].qh_c_mask,2
-;    
-    mov ax,0A008h
-    mov fs:[edx].qh_max_packet,ax
     
 abqSpeedOk:
     call AddAsyncQh
@@ -1200,10 +1194,6 @@ aieQhOk:
     mov fs:[edx].qh_c_mask,2
 ;
     mov fs:[edx].qh_endpoint,20h
-;    
-    mov ax,8h
-    mov fs:[edx].qh_max_packet,ax
-;
     mov al,es:usbd_speed
     cmp al,2
     je aieSpeedOk
@@ -2171,10 +2161,11 @@ AllocatePipe    Proc near
     push esi
     push edi
 ;
+    inc cx
     mov esi,edi
     push es
     movzx eax,cx
-    shl ax,2
+    shl ax,3
     add ax,OFFSET ep_entry_arr
     AllocateSmallGlobalMem
 ;
@@ -2188,7 +2179,9 @@ AllocatePipe    Proc near
 apTdLoop:
     call AllocateQtd
     mov ds:[di],edx
-    add di,4
+    xor edx,edx
+    mov ds:[di+4],edx
+    add di,8
     loop apTdLoop
 ;
     mov bx,ds
@@ -2229,6 +2222,10 @@ CreateBulkPipe   Proc far
     call AllocatePipe
     mov gs,bx
     call AddBulkQh
+;
+    mov gs:ep_rd_ptr,0
+    mov gs:ep_wr_ptr,0
+    mov gs:ep_tail_ptr,0
     clc
 ;
     pop edx
@@ -2267,6 +2264,10 @@ CreateIntrPipe   Proc far
     mov gs,bx
     mov al,dh
     call AddIntrQh
+;
+    mov gs:ep_rd_ptr,0
+    mov gs:ep_wr_ptr,0
+    mov gs:ep_tail_ptr,0
     clc
 ;
     pop edx
@@ -2275,6 +2276,249 @@ CreateIntrPipe   Proc far
     pop fs
     retf32
 CreateIntrPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartInPipe
+;
+;       DESCRIPTION:    Start input pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartInPipe     Proc near
+    pushad
+;
+    mov si,OFFSET ep_entry_arr
+    mov cx,gs:ep_entry_count
+    xor edi,edi
+
+sipLoop:
+    mov edx,gs:[si]
+    or edi,edi
+    jz sipNext
+;
+    LinearToPhysicalMemBlk
+    mov fs:[edi].qtd_next,eax
+
+sipNext:
+    mov edi,edx
+    mov fs:[edi].qtd_next,1
+    mov fs:[edi].qtd_alt,1
+    mov fs:[edi].qtd_status,80h
+    mov fs:[edi].qtd_flags,8Dh
+;
+    mov edx,gs:[si+4]
+    or edx,edx
+    jnz sipConv
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    AllocateMemBlk
+    mov gs:[si+4],edx
+    pop cx
+    jmp sipSave
+
+sipConv:
+    LinearToPhysicalMemBlk
+
+sipSave:
+    mov fs:[edi].qtd_page0,eax
+    mov ax,gs:ued_maxsize
+    mov fs:[edi].qtd_size,ax
+    add si,8
+    loop sipLoop
+;
+    mov ax,gs:ep_entry_count
+    dec ax
+    mov gs:ep_tail_ptr,ax
+;
+    popad
+    ret
+StartInPipe     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPipe
+;
+;       DESCRIPTION:    Start pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;                       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPipe  Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,gs:ep_qh
+    mov al,es:usbd_address
+    mov fs:[edx].qh_adress,al
+    mov al,gs:ued_address
+    and al,0Fh
+    mov ah,fs:[edx].qh_endpoint
+    and ah,0B0h
+    or al,ah
+    mov fs:[edx].qh_endpoint,al
+    mov ax,gs:ued_maxsize
+    or ax,0F000h
+    mov fs:[edx].qh_max_packet,ax
+;
+    mov bx,gs:ep_tail_ptr
+    or bx,bx
+    jz spDone
+;
+    mov edx,gs:ep_entry_arr
+    LinearToPhysicalMemBlk
+    mov edx,gs:ep_qh
+    mov fs:[edx].qh_next_qtd,eax
+
+spDone:
+    pop edx
+    pop ebx
+    pop eax
+    ret
+StartPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           EnablePipe
+;
+;       DESCRIPTION:    Enable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnablePipe   Proc far
+    int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov dl,gs:ued_address
+    test dl,80h
+    jnz epIn
+
+epOut:
+    call StartPipe
+    clc
+    jmp epDone
+
+epIn:
+    call StartInPipe
+    call StartPipe
+    clc
+
+epDone:
+    popad
+    pop fs
+    pop ds
+    retf32
+EnablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisablePipe
+;
+;       DESCRIPTION:    Disable pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePipe   Proc far
+    int 3
+    retf32
+DisablePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UsedBuffers
+;
+;       DESCRIPTION:    Used buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UsedBuffers   Proc far
+    int 3
+    retf32
+UsedBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeBuffers
+;
+;       DESCRIPTION:    Free buffers in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffers   Proc far
+    int 3
+    retf32
+FreeBuffers   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReqBuffer
+;
+;       DESCRIPTION:    Req buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        EDX     Buffer linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqBuffer   Proc far
+    int 3
+    retf32
+ReqBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RelBuffer
+;
+;       DESCRIPTION:    Release buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RelBuffer   Proc far
+    int 3
+    retf32
+RelBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2495,110 +2739,6 @@ ConfigDev   Proc far
     clc
     retf32
 ConfigDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           EnablePipe
-;
-;       DESCRIPTION:    Enable pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnablePipe   Proc far
-    int 3
-    retf32
-EnablePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           DisablePipe
-;
-;       DESCRIPTION:    Disable pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisablePipe   Proc far
-    int 3
-    retf32
-DisablePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UsedBuffers
-;
-;       DESCRIPTION:    Used buffers in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedBuffers   Proc far
-    int 3
-    retf32
-UsedBuffers   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeBuffers
-;
-;       DESCRIPTION:    Free buffers in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeBuffers   Proc far
-    int 3
-    retf32
-FreeBuffers   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReqBuffer
-;
-;       DESCRIPTION:    Req buffer
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        EDX     Buffer linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqBuffer   Proc far
-    int 3
-    retf32
-ReqBuffer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RelBuffer
-;
-;       DESCRIPTION:    Release buffer
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RelBuffer   Proc far
-    int 3
-    retf32
-RelBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
