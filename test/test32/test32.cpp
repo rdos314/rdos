@@ -31,7 +31,7 @@ void main()
     int count;
     int i;
 
-    handle = RdosOpenUsbDevice(0, 2);
+    handle = RdosOpenUsbDevice(1, 2);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
     wait = RdosCreateWait();
