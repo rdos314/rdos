@@ -3274,7 +3274,26 @@ cctDone:
     pop ebx
     ret
 CheckControl   Endp
-        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckPipe
+;
+;       DESCRIPTION:    Check pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckPipe   Proc near
+    int 3
+    ret
+CheckPipe   Endp        
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3312,6 +3331,41 @@ efhDevLoop:
     call CheckControl
 
 efhDevPipes:
+    push ebx
+    push ecx
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+efhDevInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz efhDevInNext
+;
+    mov gs,bx
+    call CheckPipe
+
+efhDevInNext:
+    add si,2
+    loop efhDevInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+efhDevOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz efhDevOutNext
+;
+    mov gs,bx
+    call CheckPipe
+
+efhDevOutNext:
+    add si,2
+    loop efhDevOutLoop
+;
+    pop ecx
+    pop ebx
 
 efhDevNext:
     add bx,2
