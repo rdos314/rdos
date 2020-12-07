@@ -1908,6 +1908,7 @@ DisablePipe   Proc far
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:op_ed
+    mov fs:[edx].oes_fa_en,4000h
     mov eax,fs:[edx].oes_tailp
     mov fs:[edx].oes_headp,eax
 ;

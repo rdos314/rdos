@@ -2154,7 +2154,7 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocatePipe    Proc near
-    push ds
+    push gs
     push eax
     push ecx
     push edx
@@ -2171,27 +2171,27 @@ AllocatePipe    Proc near
 ;
     mov es:ep_entry_count,cx
     mov ax,es
-    mov ds,ax
+    mov gs,ax
     pop es
 ;
     mov di,OFFSET ep_entry_arr
 
 apTdLoop:
     call AllocateQtd
-    mov ds:[di],edx
+    mov gs:[di],edx
     xor edx,edx
-    mov ds:[di+4],edx
+    mov gs:[di+4],edx
     add di,8
     loop apTdLoop
 ;
-    mov bx,ds
+    mov bx,gs
 ;
     pop edi
     pop esi
     pop edx
     pop ecx
     pop eax
-    pop ds
+    pop gs
     ret
 AllocatePipe    Endp
 
@@ -2371,10 +2371,24 @@ StartPipe  Proc near
     and ah,0B0h
     or al,ah
     mov fs:[edx].qh_endpoint,al
+
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,3
+    je spIntr
+
+spBulk:
     mov ax,gs:ued_maxsize
     or ax,0F000h
     mov fs:[edx].qh_max_packet,ax
-;
+    jmp spDo
+
+spIntr:
+    mov ax,gs:ued_maxsize
+    mov fs:[edx].qh_max_packet,ax
+
+spDo:
     mov bx,gs:ep_tail_ptr
     or bx,bx
     jz spDone
@@ -2404,7 +2418,6 @@ StartPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnablePipe   Proc far
-    int 3
     push ds
     push fs
     pushad
@@ -2446,7 +2459,19 @@ EnablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DisablePipe   Proc far
-    int 3
+    push fs
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,gs:ep_qh
+    mov fs:[edx].qh_next_qtd,1
+    mov fs:[edx].qh_status,0
+;
+    pop edx
+    pop eax
+    pop fs
     retf32
 DisablePipe   Endp
 
