@@ -162,11 +162,6 @@ usb_device_pipe_struc    STRUC
 
 usbdp_descr        usb_endpoint_descr <>
 usbdp_flags        DB ?
-
-usbdp_spinlock     spinlock_typ <>
 usbdp_wait         DW ?
-usbdp_rd_ptr       DW ?
-usbdp_wr_ptr       DW ?
-usbdp_entry_count  DW ?
 
 usb_device_pipe_struc   ENDS

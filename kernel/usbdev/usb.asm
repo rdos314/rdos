@@ -405,112 +405,6 @@ reset_usb_dev     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AdvanceUsbRead
-;
-;       description:    Advance USB read ptr
-;
-;       parameters:     DS        Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-advance_usb_read_name DB 'Advance USB Read ptr', 0
-
-advance_usb_read    Proc far
-    push ebx
-    push esi
-;
-    RequestSpinlock ds:usbdp_spinlock
-;
-    mov bx,ds:usbdp_rd_ptr
-    inc bx
-    cmp bx,ds:usbdp_entry_count
-    jb aurSave
-;
-    xor bx,bx
-
-aurSave:
-    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_FULL
-    mov ds:usbdp_rd_ptr,bx
-    cmp bx,ds:usbdp_wr_ptr
-    jne aurRel
-;
-    lock or ds:usbdp_flags,USB_PIPE_FLAG_EMPTY
-
-aurRel:
-    ReleaseSpinlock ds:usbdp_spinlock
-;
-    xor bx,bx
-    xchg bx,ds:usbdp_wait
-    or bx,bx
-    jz aurDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-aurDone:
-    pop esi
-    pop ebx
-    retf32
-advance_usb_read	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AdvanceUsbWrite
-;
-;       description:    Advance USB write ptr
-;
-;       parameters:     DS        Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-advance_usb_write_name DB 'Advance USB Write ptr', 0
-
-advance_usb_write    Proc far
-    push ebx
-    push esi
-;
-    RequestSpinlock ds:usbdp_spinlock
-;
-    mov bx,ds:usbdp_wr_ptr
-    inc bx
-    cmp bx,ds:usbdp_entry_count
-    jb auwSave
-;
-    xor bx,bx
-
-auwSave:
-    lock and ds:usbdp_flags,NOT USB_PIPE_FLAG_EMPTY
-    mov ds:usbdp_wr_ptr,bx
-    cmp bx,ds:usbdp_rd_ptr
-    jne auwRel
-;
-    lock or ds:usbdp_flags,USB_PIPE_FLAG_FULL
-
-auwRel:
-    ReleaseSpinlock ds:usbdp_spinlock
-;
-    xor bx,bx
-    xchg bx,ds:usbdp_wait
-    or bx,bx
-    jz auwDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-auwDone:
-    pop esi
-    pop ebx
-    retf32
-advance_usb_write	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           SendUsbDevControlMsg
 ;
 ;       description:    Send control msg to USB device
@@ -670,11 +564,7 @@ cdpSave:
     push es
     mov es,bx
 ;
-    mov es:usbdp_flags,USB_PIPE_FLAG_EMPTY
-    mov es:usbdp_rd_ptr,0
-    mov es:usbdp_wr_ptr,0
     mov es:usbdp_wait,0
-    InitSpinlock es:usbdp_spinlock
 ;
     mov si,di
     mov di,OFFSET usbdp_descr
@@ -3026,18 +2916,6 @@ init    Proc far
     mov edi,OFFSET unlink_usb_dev_name
     xor cl,cl
     mov ax,unlink_usb_dev_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET advance_usb_read
-    mov edi,OFFSET advance_usb_read_name
-    xor cl,cl
-    mov ax,advance_usb_read_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET advance_usb_write
-    mov edi,OFFSET advance_usb_write_name
-    xor cl,cl
-    mov ax,advance_usb_write_nr
     RegisterOsGate
 ;
     mov esi,OFFSET free_usb_dev

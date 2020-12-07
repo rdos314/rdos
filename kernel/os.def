@@ -863,7 +863,4 @@ unlink_usb_dev_nr           = 757
 free_usb_dev_nr             = 758
 add_wait_del_nr             = 759
 
-advance_usb_read_nr         = 760
-advance_usb_write_nr        = 761
-
 osgate_entries              = 780

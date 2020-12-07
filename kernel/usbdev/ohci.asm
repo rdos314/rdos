@@ -195,7 +195,10 @@ op_pipe            usb_device_pipe_struc <>
 op_intr_count      DW ?
 op_intr_list       DW ?
 op_ed              DD ?
-op_tail            DD ?
+op_rd_ptr          DW ?
+op_wr_ptr          DW ?
+op_tail_ptr        DW ?
+op_entry_count     DW ?
 
 op_entry_arr       DD ?
 
@@ -438,6 +441,7 @@ AddControlEd  ENDP
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       FS      Flat sel
+;                       EDX     Head element
 ;
 ;       RETURNS:        EDX     Linear address of ED added
 ;                       EAX     Physical address of ED added
@@ -448,7 +452,20 @@ AddBulkEd       PROC near
     push gs
     push ebx
 ;
+    LinearToPhysicalMemBlk
+    push edx
+    push eax
+;
     call AllocateEd
+;
+    pop ebx
+    mov fs:[edx].oes_headp,ebx
+    mov fs:[edx].oes_tailp,ebx
+;
+    pop ebx
+    mov fs:[edx].oes_head_va,ebx
+    mov fs:[edx].oes_tail_va,ebx
+;
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcBulkHeadEd
     mov fs:[edx].oes_nexted,ebx
@@ -457,19 +474,6 @@ AddBulkEd       PROC near
 ;
     mov ds:ohc_bulk_linear,edx
     mov gs:HcBulkHeadEd,eax
-;
-    mov ebx,edx
-    push eax
-    push edx
-;    
-    call AllocateTd
-    mov fs:[ebx].oes_headp,eax
-    mov fs:[ebx].oes_tailp,eax
-    mov fs:[ebx].oes_head_va,edx
-    mov fs:[ebx].oes_tail_va,edx
-;    
-    pop edx
-    pop eax
 ;    
     pop ebx
     pop gs
@@ -637,6 +641,7 @@ GetIntrEd  ENDP
 ;       PARAMETERS:     DS      Function sel
 ;                       FS      Flat sel
 ;                       CL      Interval
+;                       EDX     Head & tail TD
 ;
 ;       RETURNS:        EDX     Linear address of ED added
 ;                       EAX     Physical address of ED added
@@ -648,7 +653,19 @@ GetIntrEd  ENDP
 AddIntrEd       PROC near
     push ebx
 ;
+    LinearToPhysicalMemBlk
+    push edx
+    push eax
+;
     call AllocateEd
+;
+    pop ebx
+    mov fs:[edx].oes_headp,ebx
+    mov fs:[edx].oes_tailp,ebx
+;
+    pop ebx
+    mov fs:[edx].oes_head_va,ebx
+    mov fs:[edx].oes_tail_va,ebx
 ;
     call GetIntrEd
     mov ebx,ds:[di].oes_next_va
@@ -658,19 +675,6 @@ AddIntrEd       PROC near
 ;
     mov ds:[di].oes_next_va,edx
     mov ds:[di].oes_nexted,eax
-;
-    mov ebx,edx
-    push eax
-    push edx
-;    
-    call AllocateTd
-    mov fs:[ebx].oes_headp,eax
-    mov fs:[ebx].oes_tailp,eax
-    mov fs:[ebx].oes_head_va,edx
-    mov fs:[ebx].oes_tail_va,edx
-;    
-    pop edx
-    pop eax
 ;    
     pop ebx
     ret
@@ -1556,6 +1560,7 @@ ControlMsg   Endp
 ;                       CX      Buffer count
 ;
 ;       RETURNS:        BX      Pipe sel
+;                       EDX     Head TD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1563,10 +1568,10 @@ AllocatePipe    Proc near
     push ds
     push eax
     push ecx
-    push edx
     push esi
     push edi
 ;
+    inc cx
     mov esi,edi
     push es
     movzx eax,cx
@@ -1574,7 +1579,7 @@ AllocatePipe    Proc near
     add ax,OFFSET op_entry_arr
     AllocateSmallGlobalMem
 ;
-    mov es:usbdp_entry_count,cx
+    mov es:op_entry_count,cx
     mov ax,es
     mov ds,ax
     pop es
@@ -1601,10 +1606,10 @@ apTdLoop:
     loop apTdLoop
 ;
     mov bx,ds
+    mov edx,ds:op_entry_arr
 ;
     pop edi
     pop esi
-    pop edx
     pop ecx
     pop eax
     pop ds
@@ -1642,8 +1647,10 @@ CreateBulkPipe   Proc far
     mov ds:op_intr_count,0
     mov ds:op_intr_list,0
     mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
+    mov ds:usbdp_flags,USB_PIPE_FLAG_EMPTY
+    mov ds:op_rd_ptr,0
+    mov ds:op_wr_ptr,0
+    mov ds:op_tail_ptr,0
     clc
 ;
     pop edx
@@ -1680,15 +1687,17 @@ CreateIntrPipe   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    call AllocatePipe
     mov cl,dh
+    call AllocatePipe
     call AddIntrEd
     mov ds,bx
     mov ds:op_intr_count,si
     mov ds:op_intr_list,di
     mov ds:op_ed,edx
-    mov eax,fs:[edx].oes_tailp
-    mov ds:op_tail,eax
+    mov ds:usbdp_flags,USB_PIPE_FLAG_EMPTY
+    mov ds:op_rd_ptr,0
+    mov ds:op_wr_ptr,0
+    mov ds:op_tail_ptr,0
     clc
 ;
     pop edi
@@ -1718,7 +1727,7 @@ StartInPipe     Proc near
     pushad
 ;
     mov si,OFFSET op_entry_arr
-    mov cx,gs:usbdp_entry_count
+    mov cx,gs:op_entry_count
     xor edi,edi
 
 sipLoop:
@@ -1757,13 +1766,14 @@ sipSave:
     add si,4
     loop sipLoop
 ;
-    mov eax,gs:op_tail
-    mov fs:[edi].otd_next_td,eax
+    mov ax,gs:op_entry_count
+    dec ax
+    mov gs:op_tail_ptr,ax
 ;
-    mov edx,gs:op_entry_arr
+    mov edx,edi
     LinearToPhysicalMemBlk
     mov edx,gs:op_ed
-    mov fs:[edx].oes_headp,eax
+    mov fs:[edx].oes_tailp,eax
 ;
     popad
     ret
@@ -1900,8 +1910,7 @@ DisablePipe   Proc far
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:op_ed
-    mov eax,gs:op_tail
-    mov fs:[edx].oes_tailp,eax
+    mov eax,fs:[edx].oes_tailp
     mov fs:[edx].oes_headp,eax
 ;
     pop edx
@@ -1939,7 +1948,8 @@ NotifyIn  Proc near
     jz niDone
 ;
     mov ds,bx
-    mov si,ds:usbdp_wr_ptr
+    mov ax,ds:op_wr_ptr
+    mov si,ax
     shl si,2
     cmp edx,ds:[si].op_entry_arr
     je niAdvance
@@ -1948,7 +1958,14 @@ NotifyIn  Proc near
     jmp niDone
 
 niAdvance:
-    AdvanceUsbWrite
+    inc ax
+    cmp ax,ds:op_entry_count
+    jb niSave
+;
+    xor ax,ax
+
+niSave:
+    mov ds:op_wr_ptr,ax    
 
 niDone:
     pop esi

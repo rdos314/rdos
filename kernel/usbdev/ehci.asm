@@ -150,6 +150,10 @@ ep_qh              DD ?
 ep_table           DW ?
 ep_table_size      DW ?
 ep_entry           DW ?
+ep_entry_count     DW ?
+ep_rd_ptr          DW ?
+ep_wr_ptr          DW ?
+ep_tail_ptr        DW ?
 
 ep_entry_arr       DD ?
 
@@ -2174,7 +2178,7 @@ AllocatePipe    Proc near
     add ax,OFFSET ep_entry_arr
     AllocateSmallGlobalMem
 ;
-    mov es:usbdp_entry_count,cx
+    mov es:ep_entry_count,cx
     mov ax,es
     mov ds,ax
     pop es
