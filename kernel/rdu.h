@@ -949,6 +949,11 @@
 #define usergate_read_usb_pipe 0x000002F4
 #define usergate_write_usb_pipe 0x000002F5
 
+#define usergate_open_usb_attach 0x000002F6
+#define usergate_close_usb_attach 0x000002F7
+#define usergate_add_wait_for_usb_attach 0x000002F8
+#define usergate_get_usb_attach 0x000002F9
+
 
 
 #ifdef __FLAT__
@@ -1903,6 +1908,11 @@
 #define CallGate_read_usb_pipe 0x55 0x67 0x9a 244 2 0 0 3 0 0x5d
 #define CallGate_write_usb_pipe 0x55 0x67 0x9a 245 2 0 0 3 0 0x5d
 
+#define CallGate_open_usb_attach 0x55 0x67 0x9a 246 2 0 0 3 0 0x5d
+#define CallGate_close_usb_attach 0x55 0x67 0x9a 247 2 0 0 3 0 0x5d
+#define CallGate_add_wait_for_usb_attach 0x55 0x67 0x9a 248 2 0 0 3 0 0x5d
+#define CallGate_get_usb_attach 0x55 0x67 0x9a 249 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2854,5 +2864,10 @@
 #define CallGate_get_usb_buffer_size 0x3e 0x67 0x9a 243 2 0 0 3 0
 #define CallGate_read_usb_pipe 0x3e 0x67 0x9a 244 2 0 0 3 0
 #define CallGate_write_usb_pipe 0x3e 0x67 0x9a 245 2 0 0 3 0
+
+#define CallGate_open_usb_attach 0x3e 0x67 0x9a 246 2 0 0 3 0
+#define CallGate_close_usb_attach 0x3e 0x67 0x9a 247 2 0 0 3 0
+#define CallGate_add_wait_for_usb_attach 0x3e 0x67 0x9a 248 2 0 0 3 0
+#define CallGate_get_usb_attach 0x3e 0x67 0x9a 249 2 0 0 3 0
 
 #endif

@@ -30,8 +30,22 @@ void main()
     int wait;
     int count;
     int i;
+    int controller;
+    int port;
 
-    handle = RdosOpenUsbDevice(1, 2);
+    handle = RdosOpenUsbAttach(16);
+    wait = RdosCreateWait();
+    RdosAddWaitForUsbAttach(wait, handle, 0x1234);
+    for (;;)
+    {
+        RdosWaitForever(wait);
+        ok = RdosGetUsbAttach(handle, &controller, &port);
+        if (ok)
+            printf("Attached %02hX.%02hX\r\n", controller, port);
+    }
+
+
+    handle = RdosOpenUsbDevice(7, 1);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
     wait = RdosCreateWait();

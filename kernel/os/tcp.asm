@@ -6836,7 +6836,7 @@ init_task_tcp    PROC near
     RegisterHandle
 ;
     mov edi,OFFSET delete_listen_handle
-    mov ax,TCP_SOCKET_HANDLE
+    mov ax,TCP_LISTEN_HANDLE
     RegisterHandle
 ;
     mov esi,OFFSET update_tcp_mtu
