@@ -1948,8 +1948,8 @@ NotifyIn  Proc near
     jz niDone
 ;
     mov ds,bx
-    mov ax,ds:op_wr_ptr
-    mov si,ax
+    mov bx,ds:op_wr_ptr
+    mov si,bx
     shl si,2
     cmp edx,ds:[si].op_entry_arr
     je niAdvance
@@ -1958,14 +1958,24 @@ NotifyIn  Proc near
     jmp niDone
 
 niAdvance:
-    inc ax
-    cmp ax,ds:op_entry_count
+    inc bx
+    cmp bx,ds:op_entry_count
     jb niSave
 ;
-    xor ax,ax
+    xor bx,bx
 
 niSave:
-    mov ds:op_wr_ptr,ax    
+    mov ds:op_wr_ptr,bx    
+;
+    xor bx,bx
+    xchg bx,ds:usbdp_wait
+    or bx,bx
+    jz niDone
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
 
 niDone:
     pop esi
