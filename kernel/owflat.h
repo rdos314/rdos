@@ -3690,35 +3690,25 @@
     CallGate_add_wait_for_usb_dev_pipe  \
     __parm [__ebx] [__eax] [__dl] [__ecx]
 
-#pragma aux RdosOpenUsbAttach = \
-    CallGate_open_usb_attach \
+#pragma aux RdosOpenUsbEvent = \
+    CallGate_open_usb_event \
     ValidateHandle \
     __parm [__ecx] \
     __value [__ebx]
 
-#pragma aux RdosCloseUsbAttach = \
-    CallGate_close_usb_attach \
+#pragma aux RdosCloseUsbEvent = \
+    CallGate_close_usb_event \
     __parm [__ebx]
 
-#pragma aux RdosAddWaitForUsbAttach = \
-    CallGate_add_wait_for_usb_attach  \
+#pragma aux RdosAddWaitForUsbEvent = \
+    CallGate_add_wait_for_usb_event  \
     __parm [__ebx] [__eax] [__ecx]
 
-#pragma aux RdosGetUsbAttach = \
-    CallGate_get_usb_attach \
-    "jc Fail" \
-    "movzx ebx,bx" \
-    "mov [esi],ebx" \
-    "movzx eax,al" \
-    "mov [edi],eax" \
-    "mov eax,1" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    __parm [__ebx] [__esi] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
+#pragma aux RdosGetUsbEvent = \
+    CallGate_get_usb_event \
+    CarryToBool \
+    __parm [__ebx] [__edi] \
+    __value [__eax]
 
 #pragma aux RdosHasICSP = \
     CallGate_has_icsp \

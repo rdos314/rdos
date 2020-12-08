@@ -32,16 +32,17 @@ void main()
     int i;
     int controller;
     int port;
+    UsbEvent event;
 
-    handle = RdosOpenUsbAttach(16);
+    handle = RdosOpenUsbEvent(16);
     wait = RdosCreateWait();
-    RdosAddWaitForUsbAttach(wait, handle, 0x1234);
+    RdosAddWaitForUsbEvent(wait, handle, 0x1234);
     for (;;)
     {
         RdosWaitForever(wait);
-        ok = RdosGetUsbAttach(handle, &controller, &port);
+        ok = RdosGetUsbEvent(handle, &event);
         if (ok)
-            printf("Attached %02hX.%02hX\r\n", controller, port);
+            printf("Event %d device %02hX.%02hX pipe %02hX\r\n", event.Event, event.Controller, event.Port, event.Pipe);
     }
 
 

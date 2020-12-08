@@ -55,31 +55,31 @@ GET_INTERFACE = 10
 SET_INTERFACE = 11
 SYNC_FRAME = 12
 
-usb_attach_handle_struc    STRUC
+usb_event_handle_struc    STRUC
 
-uah_base        handle_header <>
-uah_sel         DW ?
+ueh_base        handle_header <>
+ueh_sel         DW ?
 
-usb_attach_handle_struc    ENDS
+usb_event_handle_struc    ENDS
 
-usb_attach_struc    STRUC
+usb_event_struc    STRUC
 
-uas_next        DW ?
-uas_size        DW ?
-uas_rd_ptr      DW ?
-uas_wr_ptr      DW ?
-uas_wait        DW ?
+ues_next        DW ?
+ues_size        DW ?
+ues_rd_ptr      DW ?
+ues_wr_ptr      DW ?
+ues_wait        DW ?
 
-uas_dev_arr     DW ?,?
+ues_event_arr   DW ?,?,?,?
 
-usb_attach_struc    ENDS    
+usb_event_struc    ENDS    
 
-attach_wait_header    STRUC
+event_wait_header    STRUC
 
-aw_obj         wait_obj_header <>
-aw_sel         DW ?
+ew_obj         wait_obj_header <>
+ew_sel         DW ?
 
-attach_wait_header    ENDS
+event_wait_header    ENDS
 
 
 usbdev_handle_struc    STRUC
@@ -116,8 +116,8 @@ usb_reset_failure   DW ?
 usb_func_count      DW ?
 usb_func_arr        DW 256 DUP(?)
 
-usb_attach_section  section_typ <>
-usb_attach_list     DW ?
+usb_event_section   section_typ <>
+usb_event_list      DW ?
 
 usb_attach_hooks    DW ?
 usb_attach_arr      DD 2 * MAX_ATTACH_HOOKS DUP(?)
@@ -137,6 +137,458 @@ ENDIF
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           OpenUsbEvent
+;
+;       DESCRIPTION:    Open USB event
+;
+;       PARAMETERS:     CX	Max events
+;
+;       RETURNS:        BX      Event handle       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_usb_event_name DB 'Open USB Event', 0
+
+open_usb_event    Proc far
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    movzx eax,cx
+    shl eax,3
+    add ax,OFFSET ues_event_arr
+    AllocateSmallGlobalMem
+    mov es:ues_size,cx
+    mov es:ues_rd_ptr,0
+    mov es:ues_wr_ptr,0
+    mov es:ues_wait,0
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:usb_func_count
+    mov bx,OFFSET usb_func_arr
+    xor si,si
+
+oueFuncLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz oueFuncNext
+;
+    push ds
+    push ecx
+    push ebx
+;
+    xor di,di
+    mov ds,ax
+    mov cx,MAX_USB_HUB_PORTS
+    mov bx,OFFSET usb_dev_arr
+
+oueDevLoop:
+    mov ax,ds:[bx]    
+    or ax,ax
+    jz oueDevNext
+;
+    mov ax,es:ues_wr_ptr
+    inc ax
+    cmp ax,es:ues_size
+    je oueDevNext
+;
+    push bx
+    mov bx,es:ues_wr_ptr
+    shl bx,3
+    add bx,OFFSET ues_event_arr
+    mov es:[bx].ue_event,USB_EVENT_ATTACH
+    mov es:[bx].ue_controller,si
+    mov es:[bx].ue_port,di
+    mov es:[bx].ue_pipe,-1
+    inc es:ues_wr_ptr
+    pop bx
+
+oueDevNext:
+    inc di
+    add bx,2
+    loop oueDevLoop
+
+oueFuncNext:
+    pop ebx
+    pop ecx
+    pop ds
+;
+    inc si
+    add bx,2
+    loop oueFuncLoop
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:usb_event_section
+    mov ax,ds:usb_event_list
+    mov es:ues_next,ax
+    mov ds:usb_event_list,es
+    LeaveSection ds:usb_event_section
+;
+    mov cx,SIZE usb_event_handle_struc
+    AllocateHandle
+    mov [ebx].ueh_sel,es
+    mov [ebx].hh_sign,USB_EVENT_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+
+oueDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    retf32
+open_usb_event    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:       DeleteEventSel
+;
+;       Purpose:    Delete event sel
+;
+;       Parameters: ES       Event sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteEventSel    Proc near
+    push ds
+    push ax
+    push bx
+    push ecx
+    push edx
+;
+    mov bx,es
+    mov dx,es:ues_next
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:usb_event_section
+;       
+    mov ax,ds:usb_event_list
+    cmp ax,bx
+    jne desLoop
+;
+    mov ds:usb_event_list,dx
+    jmp desUnlinked
+
+desLoop:
+    or ax,ax
+    jz desUnlinked
+;       
+    mov ds,ax
+    mov cx,ax
+    mov ax,ds:ues_next
+    cmp ax,bx
+    jne desLoop
+;
+    mov ds,cx
+    mov ds:ues_next,bx
+
+desUnlinked:
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:usb_event_section
+;
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+DeleteEventSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseUsbEvent
+;
+;       DESCRIPTION:    Close event handle
+;
+;       PARAMETERS:     BX      Event handle       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_usb_event_name DB 'Close USB Event', 0
+
+close_usb_event    Proc far
+    push ds
+    push es
+    push ax
+;
+    mov ax,USB_EVENT_HANDLE
+    DerefHandle
+    jc cueDone
+;
+    mov es,[ebx].ueh_sel
+    FreeHandle
+    call DeleteEventSel
+
+cueDone:
+    pop ax
+    pop es
+    pop ds
+    retf32
+close_usb_event    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForEvent
+;
+;           DESCRIPTION:    Start a wait for event
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_event     PROC far
+    push ds
+    push ax
+;
+    mov ds,es:ew_sel
+    mov ax,ds:ues_rd_ptr
+    cmp ax,ds:ues_wr_ptr
+    je swfeDone
+;
+    SignalWait
+
+swfeDone:
+    pop ax
+    pop ds
+    retf32
+start_wait_for_event Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForEvent
+;
+;           DESCRIPTION:    Stop a wait for event
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_event      PROC far
+    push ds
+;
+    mov ds,es:ew_sel
+    mov ds:ues_wait,0
+;
+    pop ds
+    retf32
+stop_wait_for_event Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearWaitForEvent
+;
+;           DESCRIPTION:    Clear wait for event
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_wait_for_event     PROC far
+    push ds
+;
+    mov ds,es:ew_sel
+    mov ds:ues_wait,0
+;
+    pop ds
+    retf32
+clear_wait_for_event Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsEventIdle
+;
+;           DESCRIPTION:    Check if event is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_event_idle    PROC far
+    clc
+    retf32
+is_event_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddWaitForUsbEvent
+;
+;           DESCRIPTION:    Add a wait for USB event
+;
+;           PARAMETERS:     BX      Wait handle
+;                           AX      Event handle
+;                           ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_usb_event_name  DB 'Add Wait For USB Event',0
+
+add_wait_event_tab:
+awe0 DD OFFSET start_wait_for_event,      SEG code
+awe1 DD OFFSET stop_wait_for_event,       SEG code
+awe2 DD OFFSET clear_wait_for_event,      SEG code
+awe3 DD OFFSET is_event_idle,             SEG code
+
+add_wait_for_usb_event       PROC far
+    push ds
+    push es
+    pushad
+;
+    mov bp,bx
+    mov bx,ax
+    mov ax,USB_EVENT_HANDLE
+    DerefHandle
+    jc aweDone
+;
+    mov si,ds:[ebx].ueh_sel
+    mov bx,bp
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE event_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_event_tab
+    AddWait
+    jc aweDone
+;
+    mov es:ew_sel,si
+    clc
+
+aweDone:
+    popad
+    pop es
+    pop ds
+    retf32
+add_wait_for_usb_event       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetUsbEvent
+;
+;       DESCRIPTION:    Get event
+;
+;       PARAMETERS:     BX         Event handle       
+;                       ES:(E)DI   Event buffer
+;
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_event_name DB 'Get USB Event', 0
+
+get_usb_event    Proc near
+    push ds
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,USB_EVENT_HANDLE
+    DerefHandle
+    jc gueDone
+;
+    mov ds,[ebx].ueh_sel
+    mov bx,ds:ues_rd_ptr
+    cmp bx,ds:ues_wr_ptr
+    stc
+    je gueDone
+;
+    movzx esi,bx
+    shl esi,3
+    add esi,OFFSET ues_event_arr
+    mov ecx,SIZE usb_event
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    inc bx
+    cmp bx,ds:ues_size
+    jb gueSave
+;
+    xor bx,bx
+
+gueSave:
+    mov ds:ues_rd_ptr,bx
+    clc
+
+gueDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+get_usb_event    Endp
+
+get_usb_event32  Proc far
+    call get_usb_event
+    retf32
+get_usb_event32  Endp
+
+get_usb_event16  Proc far
+    push edi
+    movzx edi,di
+    call get_usb_event
+    pop edi
+    retf32
+get_usb_event16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete_event_handle
+;
+;           DESCRIPTION:    Delete event handle (called from handle module)
+;
+;           PARAMETERS:     BX         USB event handle
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_event_handle    Proc far
+    push ds
+    push es
+    push ax
+    push dx
+;
+    mov ax,USB_EVENT_HANDLE
+    DerefHandle
+    jc dehDone
+;
+    push [ebx].ueh_sel
+    FreeHandle
+    pop ds
+;    
+    or ax,ax
+    stc
+    jz dehDone
+;    
+    mov es,ax
+    call DeleteEventSel
+    clc
+
+dehDone:
+    pop dx
+    pop ax
+    pop es
+    pop ds
+    retf32
+delete_event_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3154,438 +3606,6 @@ hurfDone:
 has_usb_reset_failed   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           OpenUsbAttach
-;
-;       DESCRIPTION:    Open attach handle
-;
-;       PARAMETERS:     CX	Max attaches
-;
-;       RETURNS:        BX      Attach handle       
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_usb_attach_name DB 'Open USB Attach', 0
-
-open_usb_attach    Proc far
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    movzx eax,cx
-    shl eax,2
-    add ax,OFFSET uas_dev_arr
-    AllocateSmallGlobalMem
-    mov es:uas_size,cx
-    mov es:uas_rd_ptr,0
-    mov es:uas_wr_ptr,0
-    mov es:uas_wait,0
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:usb_func_count
-    mov bx,OFFSET usb_func_arr
-    xor si,si
-
-ouaFuncLoop:
-    mov ax,ds:[bx]
-    or ax,ax
-    jz ouaFuncNext
-;
-    push ds
-    push ecx
-    push ebx
-;
-    xor di,di
-    mov ds,ax
-    mov cx,MAX_USB_HUB_PORTS
-    mov bx,OFFSET usb_dev_arr
-
-ouaDevLoop:
-    mov ax,ds:[bx]    
-    or ax,ax
-    jz ouaDevNext
-;
-    mov ax,es:uas_wr_ptr
-    inc ax
-    cmp ax,es:uas_size
-    je ouaDevNext
-;
-    push bx
-    mov bx,es:uas_wr_ptr
-    shl bx,2
-    mov es:[bx].uas_dev_arr,si
-    mov es:[bx].uas_dev_arr+2,di
-    inc es:uas_wr_ptr
-    pop bx
-
-ouaDevNext:
-    inc di
-    add bx,2
-    loop ouaDevLoop
-
-ouaFuncNext:
-    pop ebx
-    pop ecx
-    pop ds
-;
-    inc si
-    add bx,2
-    loop ouaFuncLoop
-;
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:usb_attach_section
-    mov ax,ds:usb_attach_list
-    mov es:uas_next,ax
-    mov ds:usb_attach_list,es
-    LeaveSection ds:usb_attach_section
-;
-    mov cx,SIZE usb_attach_handle_struc
-    AllocateHandle
-    mov [ebx].uah_sel,es
-    mov [ebx].hh_sign,USB_ATTACH_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
-
-ouaDone:
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    retf32
-open_usb_attach    Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:       DeleteAttachObj
-;
-;       Purpose:    Delete attach object
-;
-;       Parameters: ES       Attach sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteAttachObj    Proc near
-    push ds
-    push ax
-    push bx
-    push ecx
-    push edx
-;
-    mov bx,es
-    mov dx,es:uas_next
-;
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:usb_attach_section
-;       
-    mov ax,ds:usb_attach_list
-    cmp ax,bx
-    jne daLoop
-;
-    mov ds:usb_attach_list,dx
-    jmp daUnlinked
-
-daLoop:
-    or ax,ax
-    jz daUnlinked
-;       
-    mov ds,ax
-    mov cx,ax
-    mov ax,ds:uas_next
-    cmp ax,bx
-    jne daLoop
-;
-    mov ds,cx
-    mov ds:uas_next,bx
-
-daUnlinked:
-    mov ax,SEG data
-    mov ds,ax
-    LeaveSection ds:usb_attach_section
-;
-    FreeMem
-;
-    pop edx
-    pop ecx
-    pop bx
-    pop ax
-    pop ds
-    ret
-DeleteAttachObj    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseUsbAttach
-;
-;       DESCRIPTION:    Close attach handle
-;
-;       PARAMETERS:     BX      Attach handle       
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_usb_attach_name DB 'Close USB Attach', 0
-
-close_usb_attach    Proc far
-    push ds
-    push es
-    push ax
-;
-    mov ax,USB_ATTACH_HANDLE
-    DerefHandle
-    jc cuaDone
-;
-    mov es,[ebx].uah_sel
-    FreeHandle
-    call DeleteAttachObj
-
-cuaDone:
-    pop ax
-    pop es
-    pop ds
-    retf32
-close_usb_attach    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StartWaitForAttach
-;
-;           DESCRIPTION:    Start a wait for attach
-;
-;           PARAMETERS:     ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_wait_for_attach     PROC far
-    push ds
-    push ax
-;
-    mov ds,es:aw_sel
-    mov ax,ds:uas_rd_ptr
-    cmp ax,ds:uas_wr_ptr
-    je swfaDone
-;
-    SignalWait
-
-swfaDone:
-    pop ax
-    pop ds
-    retf32
-start_wait_for_attach Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           StopWaitForAttach
-;
-;           DESCRIPTION:    Stop a wait for attach
-;
-;           PARAMETERS:     ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_wait_for_attach      PROC far
-    push ds
-;
-    mov ds,es:aw_sel
-    mov ds:uas_wait,0
-;
-    pop ds
-    retf32
-stop_wait_for_attach Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ClearWaitForAttach
-;
-;           DESCRIPTION:    Clear wait for pipe
-;
-;           PARAMETERS:     ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_wait_for_attach     PROC far
-    push ds
-;
-    mov ds,es:aw_sel
-    mov ds:uas_wait,0
-;
-    pop ds
-    retf32
-clear_wait_for_attach Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           IsAttachIdle
-;
-;           DESCRIPTION:    Check if attach is idle
-;
-;           PARAMETERS:     ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_attach_idle    PROC far
-    retf32
-is_attach_idle Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           AddWaitForAttach
-;
-;           DESCRIPTION:    Add a wait for attach
-;
-;           PARAMETERS:     BX      Wait handle
-;                           AX      Attach handle
-;                           ECX     Signalled ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_usb_attach_name  DB 'Add Wait For USB Attach',0
-
-add_wait_att_tab:
-awa0 DD OFFSET start_wait_for_attach,      SEG code
-awa1 DD OFFSET stop_wait_for_attach,       SEG code
-awa2 DD OFFSET clear_wait_for_attach,      SEG code
-awa3 DD OFFSET is_attach_idle,             SEG code
-
-add_wait_for_usb_attach       PROC far
-    push ds
-    push es
-    pushad
-;
-    mov bp,bx
-    mov bx,ax
-    mov ax,USB_ATTACH_HANDLE
-    DerefHandle
-    jc awaDone
-;
-    mov si,ds:[ebx].uah_sel
-    mov bx,bp
-    mov ax,cs
-    mov es,ax
-    mov ax,SIZE attach_wait_header - SIZE wait_obj_header
-    mov edi,OFFSET add_wait_att_tab
-    AddWait
-    jc awaDone
-;
-    mov es:aw_sel,si
-    clc
-
-awaDone:
-    popad
-    pop es
-    pop ds
-    retf32
-add_wait_for_usb_attach       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetUsbAttach
-;
-;       DESCRIPTION:    Get attach device
-;
-;       PARAMETERS:     BX      Attach handle       
-;
-;       RETURNS:        BX      Controller
-;                       AL      Port
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_usb_attach_name DB 'Get USB Attach', 0
-
-get_usb_attach    Proc far
-    push ds
-;
-    mov ax,USB_ATTACH_HANDLE
-    DerefHandle
-    jc guaDone
-;
-    mov ds,[ebx].uah_sel
-    mov bx,ds:uas_rd_ptr
-    cmp bx,ds:uas_wr_ptr
-    stc
-    je guaDone
-;
-    shl bx,2
-    add bx,OFFSET uas_dev_arr
-    mov al,ds:[bx+2]
-    mov bx,ds:[bx]
-;
-    push bx
-;
-    mov bx,ds:uas_rd_ptr
-    inc bx
-    cmp bx,ds:uas_size
-    jb guaSave
-;
-    xor bx,bx
-
-guaSave:
-    mov ds:uas_rd_ptr,bx
-;
-    pop bx
-    clc
-
-guaDone:
-    pop ds
-    retf32
-get_usb_attach    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Delete_attach_handle
-;
-;           DESCRIPTION:    Delete attach handle (called from handle module)
-;
-;           PARAMETERS:     BX         USB attach handle
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_attach_handle    Proc far
-    push ds
-    push es
-    push ax
-    push dx
-;
-    mov ax,USB_ATTACH_HANDLE
-    DerefHandle
-    jc dahDone
-;
-    push [ebx].uah_sel
-    FreeHandle
-    pop ds
-;    
-    or ax,ax
-    stc
-    jz dahDone
-;    
-    mov es,ax
-    call DeleteAttachObj
-    clc
-
-dahDone:
-    pop dx
-    pop ax
-    pop es
-    pop ds
-    retf32
-delete_attach_handle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;  obsolete code
 ;
@@ -3793,8 +3813,8 @@ init    Proc far
     mov ds:usb_detach_hooks,0
     mov ds:usb_over_current,0
     mov ds:usb_reset_failure,0
-    InitSection ds:usb_attach_section
-    mov ds:usb_attach_list,0
+    InitSection ds:usb_event_section
+    mov ds:usb_event_list,0
 ;
     mov ax,cs
     mov ds,ax
@@ -3804,8 +3824,8 @@ init    Proc far
     mov edi,OFFSET delete_dev_handle
     RegisterHandle
 ;
-    mov ax,USB_ATTACH_HANDLE
-    mov edi,OFFSET delete_attach_handle
+    mov ax,USB_EVENT_HANDLE
+    mov edi,OFFSET delete_event_handle
     RegisterHandle
 ;
     mov esi,OFFSET init_usb_function
@@ -4199,29 +4219,30 @@ init    Proc far
     mov ax,write_usb_pipe_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET open_usb_attach
-    mov edi,OFFSET open_usb_attach_name
+    mov esi,OFFSET open_usb_event
+    mov edi,OFFSET open_usb_event_name
     xor dx,dx
-    mov ax,open_usb_attach_nr
+    mov ax,open_usb_event_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET close_usb_attach
-    mov edi,OFFSET close_usb_attach_name
+    mov esi,OFFSET close_usb_event
+    mov edi,OFFSET close_usb_event_name
     xor dx,dx
-    mov ax,close_usb_attach_nr
+    mov ax,close_usb_event_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET add_wait_for_usb_attach
-    mov edi,OFFSET add_wait_for_usb_attach_name
+    mov esi,OFFSET add_wait_for_usb_event
+    mov edi,OFFSET add_wait_for_usb_event_name
     xor dx,dx
-    mov ax,add_wait_for_usb_attach_nr
+    mov ax,add_wait_for_usb_event_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_usb_attach
-    mov edi,OFFSET get_usb_attach_name
-    xor dx,dx
-    mov ax,get_usb_attach_nr
-    RegisterBimodalUserGate
+    mov ebx,OFFSET get_usb_event16
+    mov esi,OFFSET get_usb_event32
+    mov edi,OFFSET get_usb_event_name
+    mov dx,virt_es_in
+    mov ax,get_usb_event_nr
+    RegisterUserGate
     clc
     ret
 init    Endp

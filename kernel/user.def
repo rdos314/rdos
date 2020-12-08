@@ -949,9 +949,9 @@ get_usb_buffer_size_nr            = 755
 read_usb_pipe_nr                  = 756
 write_usb_pipe_nr                 = 757
 
-open_usb_attach_nr                = 758
-close_usb_attach_nr               = 759
-add_wait_for_usb_attach_nr        = 760
-get_usb_attach_nr                 = 761
+open_usb_event_nr                 = 758
+close_usb_event_nr                = 759
+add_wait_for_usb_event_nr         = 760
+get_usb_event_nr                  = 761
 
 usergate_entries                  = 780

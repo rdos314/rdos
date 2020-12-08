@@ -117,6 +117,19 @@ typedef struct Tss
     char WcSpace[16];
 } Tss;
 
+
+typedef struct UsbEvent
+{
+    short int Event;
+    short int Controller;
+    short int Port;
+    char Pipe;
+} UsbEvent;
+
+#define USB_EVENT_ATTACH	1
+#define USB_EVENT_DETACH	2
+
+
 #define uss_handle  0
 #define uss_counter 4
 #define uss_val 8
@@ -898,10 +911,10 @@ int RDOSAPI RdosGetUsbBufferSize(int handle, char pipe);
 int RDOSAPI RdosReadUsbPipe(int handle, char pipe, char *Buf);
 void RDOSAPI RdosWriteUsbPipe(int handle, char pipe, char *Buf, int Size);
 void RDOSAPI RdosAddWaitForUsbPipe(int whandle, int devhandle, char pipe, int ID);
-int RDOSAPI RdosOpenUsbAttach(int MaxAttachCount);
-void RDOSAPI RdosCloseUsbAttach(int handle);
-void RDOSAPI RdosAddWaitForUsbAttach(int whandle, int atthandle, int ID);
-int RDOSAPI RdosGetUsbAttach(int handle, int *controller, int *port);
+int RDOSAPI RdosOpenUsbEvent(int QueueSize);
+void RDOSAPI RdosCloseUsbEvent(int handle);
+void RDOSAPI RdosAddWaitForUsbEvent(int whandle, int evhandle, int ID);
+int RDOSAPI RdosGetUsbEvent(int handle, UsbEvent *event);
 
 int RDOSAPI RdosGetAllocatedUsbBlocks();
 int RDOSAPI RdosGetUsbCloseCount();

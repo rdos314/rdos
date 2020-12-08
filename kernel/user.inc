@@ -3718,27 +3718,26 @@ ConfigUsbDevice      MACRO
 
 ;   IN  CX          Max attaches
 ;   OUT BX          Handle
-OpenUsbAttach      MACRO
-        UserGate open_usb_attach_nr
+OpenUsbEvent      MACRO
+        UserGate open_usb_event_nr
                                                 ENDM
 
 ;   IN  BX          Handle
-CloseUsbAttach      MACRO
-        UserGate close_usb_attach_nr
+CloseUsbEvent      MACRO
+        UserGate close_usb_event_nr
                                                 ENDM
 
-; IN  AX        Attach handle
+; IN  AX        Event handle
 ; IN  BX        Wait handle
 ; IN  ECX       Object ID
-AddWaitForUsbAttach      MACRO
-        UserGate add_wait_for_usb_attach_nr
+AddWaitForUsbEvent      MACRO
+        UserGate add_wait_for_usb_event_nr
                                                 ENDM
 
 ;   IN  BX          Handle
-;   OUT BX          Controller
-;   OUT AL          Port
-GetUsbAttach      MACRO
-        UserGate get_usb_attach_nr
+;   IN  ES:(E)DI    Event buffer
+GetUsbEvent      MACRO
+        UserGate get_usb_event_nr
                                                 ENDM
 
 ;   IN  BX          Controller #

@@ -25,6 +25,18 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+USB_EVENT_ATTACH      = 1
+USB_EVENT_DETACH      = 2
+
+usb_event       STRUC
+
+ue_event        DW ?
+ue_controller   DW ?
+ue_port         DW ?
+ue_pipe         DB ?
+
+usb_event       ENDS
+
 usb_setup_data  STRUC
 
 usd_type        DB ?
