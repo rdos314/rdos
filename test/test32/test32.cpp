@@ -173,7 +173,7 @@ void main()
     TMyUsbEvent event;
     event.Start();
 
-    handle = RdosOpenUsbDevice(7, 1);
+    handle = RdosOpenUsbDevice(1, 2);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
     wait = RdosCreateWait();
