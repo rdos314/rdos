@@ -3262,6 +3262,76 @@ UpdateUsb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReportStatus
+;
+;       DESCRIPTION:    Report status
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       AL      Status
+;                       DL      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReportStatus   Proc near
+    push ax
+    push si
+;
+    movzx si,es:usbd_port
+;
+    test al,40h
+    jz rsNotStalled
+;
+    mov ax,USB_EVENT_STALL
+    ReportUsbRegPipeEvent
+    jmp rsDone
+
+rsNotStalled:
+    test al,20h
+    jz rsNotBufferError
+;
+    mov ax,USB_EVENT_DATA_BUFFER_ERROR
+    ReportUsbRegPipeEvent
+    jmp rsDone
+
+rsNotBufferError:
+    test al,10h
+    jz rsNotBabble
+;
+    mov ax,USB_EVENT_BABBLE
+    ReportUsbRegPipeEvent
+    jmp rsDone
+
+rsNotBabble:
+    test al,8
+    jz rsNotTransErr
+;
+    mov ax,USB_EVENT_TRANS_ERROR
+    ReportUsbRegPipeEvent
+    jmp rsDone
+
+rsNotTransErr:
+    test al,4
+    jz rsNotMicro
+;
+    mov ax,USB_EVENT_MISSED_MICROFRAME
+    ReportUsbRegPipeEvent
+    jmp rsDone
+
+rsNotMicro:
+    mov ax,USB_EVENT_HALTED
+    ReportUsbRegPipeEvent
+
+rsDone:
+    pop si
+    pop ax
+    ret
+ReportStatus   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckControl
 ;
 ;       DESCRIPTION:    Check control
@@ -3276,13 +3346,6 @@ CheckControl   Proc near
     push ebx
     push edx
 ;
-    push si
-    mov ax,USB_EVENT_STALL
-    movzx si,es:usbd_port
-    xor dl,dl
-    ReportUsbRegPipeEvent
-    pop si
-    
     mov edx,es:dev_control_qtd
 
 cctLoop:
@@ -3302,6 +3365,12 @@ cctSignal:
     xor bx,bx
     xchg bx,es:dev_control_thread
     Signal
+;    
+    or al,al
+    jz cctDone
+;
+    xor dl,dl
+    call ReportStatus
 
 cctDone:
     pop edx
