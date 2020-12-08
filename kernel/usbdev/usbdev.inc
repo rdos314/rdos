@@ -135,6 +135,8 @@ req_buffer_proc      DD ?,?
 ;  IN  CX        Size
 rel_buffer_proc      DD ?,?
 
+is_running_proc      DD ?,?
+
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
 

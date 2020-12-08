@@ -126,8 +126,9 @@ typedef struct UsbEvent
     char Pipe;
 } UsbEvent;
 
-#define USB_EVENT_ATTACH	1
-#define USB_EVENT_DETACH	2
+#define USB_EVENT_ATTACH		1
+#define USB_EVENT_DETACH		2
+#define USB_EVENT_CONTROLLER_ERROR	3
 
 
 #define uss_handle  0

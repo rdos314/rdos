@@ -129,6 +129,21 @@ void TUsbEvent::NotifyDetach(int Controller, int Port)
 
 /*##########################################################################
 #
+#   Name       : TUsbEvent::NotifyControllerError
+#
+#   Purpose....: Notify controller error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyControllerError(int Controller)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbEvent::SignalNewData
 #
 #   Purpose....: Signal new data is available
@@ -154,6 +169,10 @@ void TUsbEvent::SignalNewData()
 
             case USB_EVENT_DETACH:
                 NotifyDetach(event.Controller, event.Port);
+                break;
+
+            case USB_EVENT_CONTROLLER_ERROR:
+                NotifyControllerError(event.Controller);
                 break;
         }
     }

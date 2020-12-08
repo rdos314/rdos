@@ -2548,6 +2548,20 @@ RelBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsRunning
+;
+;       DESCRIPTION:    Check if conntroller is running
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsRunning   Proc far
+    stc
+    retf32
+IsRunning   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkControl
 ;
 ;       DESCRIPTION:    Unlink control
@@ -3482,6 +3496,7 @@ ec10 DD OFFSET UsedBuffers,        SEG code
 ec11 DD OFFSET FreeBuffers,        SEG code
 ec12 DD OFFSET ReqBuffer,          SEG code
 ec13 DD OFFSET RelBuffer,          SEG code
+ec14 DD OFFSET IsRunning,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3503,7 +3518,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*14h
+    mov cx,2*15h
 
 ifTabLoop:
     lods dword ptr cs:[si]

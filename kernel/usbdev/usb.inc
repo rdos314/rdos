@@ -25,8 +25,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-USB_EVENT_ATTACH      = 1
-USB_EVENT_DETACH      = 2
+USB_EVENT_ATTACH            = 1
+USB_EVENT_DETACH            = 2
+USB_EVENT_CONTROLLER_ERROR  = 3
 
 usb_event       STRUC
 

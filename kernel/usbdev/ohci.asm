@@ -2149,6 +2149,21 @@ rlbDone:
     retf32
 RelBuffer   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsRunning
+;
+;       DESCRIPTION:    Check if controller is running
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsRunning   Proc far
+    clc
+    retf32
+IsRunning   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3354,6 +3369,7 @@ ot10 DD OFFSET UsedBuffers,         SEG code
 ot11 DD OFFSET FreeBuffers,         SEG code
 ot12 DD OFFSET ReqBuffer,           SEG code
 ot13 DD OFFSET RelBuffer,           SEG code
+ot14 DD OFFSET IsRunning,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3411,7 +3427,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*14h
+    mov cx,2*15h
 
 ifTabLoop:
     lods dword ptr cs:[si]

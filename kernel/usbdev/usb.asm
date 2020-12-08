@@ -187,6 +187,21 @@ oueFuncLoop:
 ;
     xor di,di
     mov ds,ax
+    call fword ptr ds:is_running_proc
+    jnc oueFuncOk
+;
+    push bx
+    mov bx,es:ues_wr_ptr
+    shl bx,3
+    add bx,OFFSET ues_event_arr
+    mov es:[bx].ue_event,USB_EVENT_CONTROLLER_ERROR
+    mov es:[bx].ue_controller,si
+    mov es:[bx].ue_port,-1
+    mov es:[bx].ue_pipe,-1
+    inc es:ues_wr_ptr
+    pop bx
+
+oueFuncOk:
     mov cx,MAX_USB_HUB_PORTS
     mov bx,OFFSET usb_dev_arr
 
@@ -223,7 +238,8 @@ oueFuncNext:
 ;
     inc si
     add bx,2
-    loop oueFuncLoop
+    sub cx,1
+    jnz oueFuncLoop
 ;
     mov ax,SEG data
     mov ds,ax

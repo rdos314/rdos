@@ -19,6 +19,7 @@ public:
 
     virtual void NotifyAttach(int Controller, int Port);
     virtual void NotifyDetach(int Controller, int Port);
+    virtual void NotifyControllerError(int Controller);
 	
 };
 
@@ -44,6 +45,11 @@ void TMyUsbEvent::NotifyAttach(int Controller, int Port)
 void TMyUsbEvent::NotifyDetach(int Controller, int Port)
 {
     printf("Detach %02hX.%02hX\r\n", Controller, Port);
+}
+
+void TMyUsbEvent::NotifyControllerError(int Controller)
+{
+    printf("Controller error %02hX\r\n", Controller);
 }
 
 /*##########################################################################

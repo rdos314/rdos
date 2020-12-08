@@ -40,6 +40,7 @@ public:
 
     virtual void NotifyAttach(int Controller, int Port);
     virtual void NotifyDetach(int Controller, int Port);
+    virtual void NotifyControllerError(int Controller);
 	
 protected:
     virtual void SignalNewData();

@@ -3343,6 +3343,20 @@ RelBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsTRunning
+;
+;       DESCRIPTION:    Check if controller is running
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsRunning   Proc far
+    stc
+    retf32
+IsRunning   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -3862,6 +3876,7 @@ ut10 DD OFFSET UsedBuffers,         SEG code
 ut11 DD OFFSET FreeBuffers,         SEG code
 ut12 DD OFFSET ReqBuffer,           SEG code
 ut13 DD OFFSET RelBuffer,           SEG code
+ut14 DD OFFSET IsRunning,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3883,7 +3898,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*14h
+    mov cx,2*15h
 
 ifTabLoop:
     lods dword ptr cs:[si]

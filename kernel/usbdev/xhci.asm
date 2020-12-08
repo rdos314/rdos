@@ -3051,6 +3051,20 @@ RelBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsRunning
+;
+;       DESCRIPTION:    Check if running
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsRunning   Proc far
+    stc
+    retf32
+IsRunning   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkPipes
 ;
 ;       DESCRIPTION:    Unlink pipes
@@ -4111,6 +4125,7 @@ et10 DD OFFSET UsedBuffers,         SEG code
 et11 DD OFFSET FreeBuffers,         SEG code
 et12 DD OFFSET ReqBuffer,           SEG code
 et13 DD OFFSET RelBuffer,           SEG code
+et14 DD OFFSET IsRunning,           SEG code
 
 InitFunction    Proc near
     push es
@@ -4257,7 +4272,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*14h
+    mov cx,2*15h
 
 ifTabLoop:
     lods dword ptr cs:[si]
