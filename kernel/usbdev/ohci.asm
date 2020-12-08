@@ -3221,6 +3221,13 @@ ohci_function_handler:
 ofhLoop:
     WaitForSignal    
 ;
+    call fword ptr ds:is_running_proc
+    jnc ofhRunning
+;
+    mov ax,USB_EVENT_CONTROLLER_ERROR
+    ReportUsbFunctionEvent
+
+ofhRunning:
     xor eax,eax
     xor ebp,ebp
     mov bx,ohc_hca_base + OFFSET hcca_done_head

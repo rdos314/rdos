@@ -3342,6 +3342,13 @@ ehci_function_handler:
 efhLoop:
     WaitForSignal
 ;
+    call fword ptr ds:is_running_proc
+    jnc efhRunning
+;
+    mov ax,USB_EVENT_CONTROLLER_ERROR
+    ReportUsbFunctionEvent
+
+efhRunning:
     movzx cx,ds:ehc_ports
     mov bx,OFFSET ehc_dev_arr
 
