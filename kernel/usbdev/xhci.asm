@@ -3714,8 +3714,6 @@ evt3F DW OFFSET error_event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-event_thread_name   DB 'XHCI Event', 0
-
 event_thread:
     mov es,bx
     GetThread
@@ -3758,38 +3756,6 @@ etDeq:
     mov gs:rrsDequeue,eax
     mov gs:rrsDequeue+4,ebx    
     jmp etWait
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateEventThread
-;
-;           DESCRIPTION:    Create event thread
-;
-;       PARAMETERS:         ES  Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateEventThread   Proc near
-    push ds
-    push es
-    pushad
-;
-    mov bx,es
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET event_thread_name
-    mov si,OFFSET event_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
-    popad    
-    pop es
-    pop ds
-    ret
-CreateEventThread   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3998,8 +3964,6 @@ SetPortPower    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-port_thread_name   DB 'XHCI Port', 0
-
 port_thread:
     mov es,bx
     GetThread
@@ -4072,26 +4036,139 @@ ptPortNext:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+xhci_name   DB 'XHCI ', 0
+port_name   DB ' Port', 0
+event_name  DB ' Event', 0
+
 CreatePortThread   Proc near
     push ds
     push es
     pushad
 ;
     mov bx,es
+    mov ds,bx
+;
+    mov si,di
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET xhci_name
+
+cptXhciLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz cptXhciDone
+;
+    stosb
+    jmp cptXhciLoop
+
+cptXhciDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov si,OFFSET port_name
+
+cptPortLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz cptPortDone
+;
+    stosb
+    jmp cptPortLoop
+
+cptPortDone:
+    xor al,al
+    stosb
+;
     mov ax,cs
     mov ds,ax
-    mov es,ax
-    mov di,OFFSET port_thread_name
+    xor di,di
     mov si,OFFSET port_thread
     mov ax,4
     mov cx,stack0_size
     CreateThread
+;
+    FreeMem
 ;
     popad    
     pop es
     pop ds
     ret
 CreatePortThread   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateEventThread
+;
+;           DESCRIPTION:    Create event thread
+;
+;       PARAMETERS:         ES  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEventThread   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,es
+    mov ds,bx
+;
+    mov si,di
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET xhci_name
+
+cetXhciLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz cetXhciDone
+;
+    stosb
+    jmp cetXhciLoop
+
+cetXhciDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov si,OFFSET event_name
+
+cetEventLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz cetEventDone
+;
+    stosb
+    jmp cetEventLoop
+
+cetEventDone:
+    xor al,al
+    stosb
+;
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET event_thread
+    xor di,di
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad    
+    pop es
+    pop ds
+    ret
+CreateEventThread   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
