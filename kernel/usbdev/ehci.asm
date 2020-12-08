@@ -2555,7 +2555,20 @@ RelBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsRunning   Proc far
+    push gs
+    push eax
+;
+    mov gs,ds:ehc_reg_sel
+    mov eax,gs:HcCommand
+    test al,1
     stc
+    jz irDone
+;
+    clc
+
+irDone:
+    pop eax
+    pop gs
     retf32
 IsRunning   Endp
 
