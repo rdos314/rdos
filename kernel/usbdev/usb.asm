@@ -681,6 +681,7 @@ AddEvent        Endp
 
 DistEvent	Proc near
     push ds
+    push es
     push cx
 ;
     mov cx,SEG data
@@ -701,6 +702,7 @@ dueLeave:
     LeaveSection ds:usb_event_section
 ;
     pop cx
+    pop es
     pop ds
     ret
 DistEvent	Endp
@@ -816,14 +818,10 @@ report_usb_reg_pipe_event_name     DB 'Report USB Reg Pipe Event',0
 
 report_usb_reg_pipe_event  Proc far
     push bx
-    push dx
-    push si
 ;
     mov bx,ds:usb_controller_id
     call DistEvent
 ;
-    pop si
-    pop dx
     pop bx
     retf32
 report_usb_reg_pipe_event  Endp

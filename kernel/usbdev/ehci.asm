@@ -3276,6 +3276,13 @@ CheckControl   Proc near
     push ebx
     push edx
 ;
+    push si
+    mov ax,USB_EVENT_STALL
+    movzx si,es:usbd_port
+    xor dl,dl
+    ReportUsbRegPipeEvent
+    pop si
+    
     mov edx,es:dev_control_qtd
 
 cctLoop:
@@ -3317,7 +3324,6 @@ CheckControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPipe   Proc near
-    int 3
     ret
 CheckPipe   Endp        
 
