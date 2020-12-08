@@ -2179,6 +2179,32 @@ irDone:
     retf32
 IsRunning   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CC table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cc_tab:
+cc00 DW 0
+cc01 DW USB_EVENT_CRC_ERROR
+cc02 DW USB_EVENT_BIT_STUFFING_ERROR
+cc03 DW USB_EVENT_DATA_TOGGLE_ERROR
+cc04 DW USB_EVENT_STALL
+cc05 DW USB_EVENT_NOT_RESPONDING
+cc06 DW USB_EVENT_PID_FAILURE
+cc07 DW USB_EVENT_UNEXPECTED_PID
+cc08 DW USB_EVENT_DATA_OVERRUN
+cc09 DW USB_EVENT_DATA_UNDERRUN
+cc0A DW 0
+cc0B DW 0
+cc0C DW USB_EVENT_BUFFER_OVERRUN
+cc0D DW USB_EVENT_BUFFER_UNDERRUN
+cc0E DW 0
+cc0F DW USB_EVENT_HALTED
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2199,13 +2225,25 @@ NotifyIn  Proc near
     push ebx
     push esi
 ;
+    mov si,fs:[edx].otd_flags
+    shr si,12
+    add si,si
+    mov si,word ptr cs:[si].cc_tab
+    or si,si
+    je niOk
+;
+    push ax
     push dx
-    mov ax,USB_EVENT_STALL
+;
+    mov ax,si
     mov dl,bl
     movzx si,fs:[edi].usbd_port
     ReportUsbRegPipeEvent
-    pop dx
 ;
+    pop dx
+    pop ax
+
+niOk:
     movzx esi,bl
     and esi,0Fh
     dec esi
@@ -2284,24 +2322,6 @@ NotifyOut  Endp
 ;                       EDX     Transfer descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-cc_tab:
-cc00 DW 0
-cc01 DW USB_EVENT_CRC_ERROR
-cc02 DW USB_EVENT_BIT_STUFFING_ERROR
-cc03 DW USB_EVENT_DATA_TOGGLE_ERROR
-cc04 DW USB_EVENT_STALL
-cc05 DW USB_EVENT_NOT_RESPONDING
-cc06 DW USB_EVENT_PID_FAILURE
-cc07 DW USB_EVENT_UNEXPECTED_PID
-cc08 DW USB_EVENT_DATA_OVERRUN
-cc09 DW USB_EVENT_DATA_UNDERRUN
-cc0A DW 0
-cc0B DW 0
-cc0C DW USB_EVENT_BUFFER_OVERRUN
-cc0D DW USB_EVENT_BUFFER_UNDERRUN
-cc0E DW 0
-cc0F DW USB_EVENT_HALTED
 
 NotifyTransfer   Proc near
     push bx
