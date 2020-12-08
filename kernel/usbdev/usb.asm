@@ -360,9 +360,13 @@ start_wait_for_event     PROC far
     mov ds,es:ew_sel
     mov ax,ds:ues_rd_ptr
     cmp ax,ds:ues_wr_ptr
-    je swfeDone
+    je swfeWait
 ;
     SignalWait
+    jmp swfeDone
+
+swfeWait:
+    mov ds:ues_wait,es
 
 swfeDone:
     pop ax
@@ -589,6 +593,194 @@ dehDone:
     pop ds
     retf32
 delete_event_handle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddEvent
+;
+;       DESCRIPTION:    Add USB event
+;
+;       PARAMETERS:     ES      Event sel
+;                       AX      Event
+;                       BX      Controller
+;                       SI      Port
+;                       DL      Pipe
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddEvent	Proc near
+    push di
+;
+    mov di,es:ues_wr_ptr
+    inc di
+    cmp di,es:ues_size
+    jc aeSave
+;
+    xor di,di
+
+aeSave:
+    cmp di,es:ues_rd_ptr
+    je aeDone
+;
+    push di
+    mov di,es:ues_wr_ptr
+    shl di,3
+    add di,OFFSET ues_event_arr
+    mov es:[di].ue_event,ax
+    mov es:[di].ue_controller,bx
+    mov es:[di].ue_port,si
+    mov es:[di].ue_pipe,dl
+    pop di
+    mov es:ues_wr_ptr,di
+;
+    xor di,di
+    xchg di,es:ues_wait
+    or di,di
+    jz aeDone
+;
+    push es
+    mov es,di
+    SignalWait
+    pop es
+
+aeDone:
+    pop di
+    ret
+AddEvent        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DistEvent
+;
+;       DESCRIPTION:    Distribute USB event
+;
+;       PARAMETERS:     AX      Event
+;                       BX      Controller
+;                       SI      Port
+;                       DL      Pipe
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DistEvent	Proc near
+    push ds
+    push cx
+;
+    mov cx,SEG data
+    mov ds,cx
+    EnterSection ds:usb_event_section
+    mov cx,ds:usb_event_list
+
+dueLoop:
+    or cx,cx
+    jz dueLeave
+;
+    mov es,cx
+    call AddEvent
+    mov cx,es:ues_next
+    jmp dueLoop
+
+dueLeave:
+    LeaveSection ds:usb_event_section
+;
+    pop cx
+    pop ds
+    ret
+DistEvent	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReportUsbFuncEvent
+;
+;           DESCRIPTION:    Report USB function event
+;
+;           PARAMETERS:     AX      Event #
+;                           DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+report_usb_func_event_name     DB 'Report USB Function Event',0
+
+report_usb_func_event  Proc far
+    push bx
+    push dx
+    push si
+;
+    mov bx,ds:usb_controller_id
+    mov si,-1
+    mov dl,-1
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop bx
+    retf32
+report_usb_func_event  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReportUsbDeviceEvent
+;
+;           DESCRIPTION:    Report USB device event
+;
+;           PARAMETERS:     AX      Event #
+;                           DS      Function sel
+;                           ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+report_usb_dev_event_name     DB 'Report USB Device Event',0
+
+report_usb_dev_event  Proc far
+    push bx
+    push dx
+    push si
+;
+    mov bx,ds:usb_controller_id
+    movzx si,es:usbd_port
+    mov dl,-1
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop bx
+    retf32
+report_usb_dev_event  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReportUsbPipeEvent
+;
+;           DESCRIPTION:    Report USB pipe event
+;
+;           PARAMETERS:     AX      Event #
+;                           DS      Function sel
+;                           ES      Device sel
+;                           GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+report_usb_pipe_event_name     DB 'Report USB Pipe Event',0
+
+report_usb_pipe_event  Proc far
+    push bx
+    push dx
+    push si
+;
+    mov bx,ds:usb_controller_id
+    movzx si,es:usbd_port
+    mov dl,gs:ued_address
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop bx
+    retf32
+report_usb_pipe_event  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2799,6 +2991,20 @@ notify_usb_attach       Proc far
     pushad
 ;
     mov bx,ds:usb_controller_id
+;
+    push ax
+    push dx
+    push si
+;
+    movzx si,al
+    mov ax,USB_EVENT_ATTACH
+    mov dl,-1
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop ax
+;
     call trap_usb_attach
     clc
 ;
@@ -2925,6 +3131,20 @@ notify_usb_detach       Proc far
     pushad
 ; 
     mov bx,ds:usb_controller_id
+;
+    push ax
+    push dx
+    push si
+;
+    movzx si,al
+    mov ax,USB_EVENT_DETACH
+    mov dl,-1
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop ax
+;
     call trap_usb_detach      
 
 nudDone:    
@@ -3898,6 +4118,24 @@ init    Proc far
     mov edi,OFFSET hook_usb_detach_name
     xor cl,cl
     mov ax,hook_usb_detach_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET report_usb_func_event
+    mov edi,OFFSET report_usb_func_event_name
+    xor cl,cl
+    mov ax,report_usb_func_event_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET report_usb_dev_event
+    mov edi,OFFSET report_usb_dev_event_name
+    xor cl,cl
+    mov ax,report_usb_dev_event_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET report_usb_pipe_event
+    mov edi,OFFSET report_usb_pipe_event_name
+    xor cl,cl
+    mov ax,report_usb_pipe_event_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_usb_address

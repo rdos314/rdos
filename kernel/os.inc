@@ -4018,6 +4018,27 @@ HookUsbDetach   MACRO
     OsGate hook_usb_detach_nr
                     ENDM
 
+; IN  DS      Function sel
+; IN  AX      Event
+ReportUsbFunctionEvent MACRO
+    OsGate report_usb_func_event_nr
+                    ENDM
+
+; IN  DS      Function sel
+; IN  ES      Device sel
+; IN  AX      Event
+ReportUsbDeviceEvent MACRO
+    OsGate report_usb_dev_event_nr
+                    ENDM
+
+; IN  DS      Function sel
+; IN  ES      Device sel
+; IN  GS      Pipe sel
+; IN  AX      Event
+ReportUsbPipeEvent MACRO
+    OsGate report_usb_pipe_event_nr
+                    ENDM
+
 ; IN  BX      Device handle
 ; OUT ES      Device sel
 GetUsbDeviceSel   MACRO
