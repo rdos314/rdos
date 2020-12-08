@@ -298,7 +298,7 @@ eiLoop:
     mov es:HcStatus,eax
     jz eiDone
 ;    
-    test al,6
+    test al,4
     jz eiSignal
 ;
     push ds
@@ -357,7 +357,7 @@ etLoop:
     mov es:HcStatus,eax
     jz etNext
 ;
-    test al,6
+    test al,4
     jz etSignal
 ;
     push ds
