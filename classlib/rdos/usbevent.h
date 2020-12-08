@@ -33,12 +33,13 @@
 class TUsbEvent : public TWaitDevice
 {
 public:
-    TUsbEvent(const char *ThreadName, int QueueSize);
     TUsbEvent(int QueueSize);
     virtual ~TUsbEvent();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
 
+    virtual void NotifyAttach(int Controller, int Port);
+    virtual void NotifyDetach(int Controller, int Port);
 	
 protected:
     virtual void SignalNewData();

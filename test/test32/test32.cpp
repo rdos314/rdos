@@ -4,10 +4,47 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "smameter.h"
+#include "usbevent.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+class TMyUsbEvent : public TUsbEvent
+{
+public:
+    TMyUsbEvent();
+    virtual ~TMyUsbEvent();
+
+    void Start();
+
+    virtual void NotifyAttach(int Controller, int Port);
+    virtual void NotifyDetach(int Controller, int Port);
+	
+};
+
+TMyUsbEvent::TMyUsbEvent()
+ : TUsbEvent(32)
+{
+}
+
+TMyUsbEvent::~TMyUsbEvent()
+{
+}
+
+void TMyUsbEvent::Start()
+{
+    StartHandler("USB Event", 0x4000);
+}
+
+void TMyUsbEvent::NotifyAttach(int Controller, int Port)
+{
+    printf("Attach %02hX.%02hX\r\n", Controller, Port);
+}
+
+void TMyUsbEvent::NotifyDetach(int Controller, int Port)
+{
+    printf("Detach %02hX.%02hX\r\n", Controller, Port);
+}
 
 /*##########################################################################
 #
@@ -30,21 +67,9 @@ void main()
     int wait;
     int count;
     int i;
-    int controller;
-    int port;
-    UsbEvent event;
 
-    handle = RdosOpenUsbEvent(16);
-    wait = RdosCreateWait();
-    RdosAddWaitForUsbEvent(wait, handle, 0x1234);
-    for (;;)
-    {
-        RdosWaitForever(wait);
-        ok = RdosGetUsbEvent(handle, &event);
-        if (ok)
-            printf("Event %d device %02hX.%02hX pipe %02hX\r\n", event.Event, event.Controller, event.Port, event.Pipe);
-    }
-
+    TMyUsbEvent event;
+    event.Start();
 
     handle = RdosOpenUsbDevice(7, 1);
     ok = RdosConfigUsbPipe(handle, 0x81, 16);

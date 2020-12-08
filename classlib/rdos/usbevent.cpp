@@ -34,25 +34,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define STACK_SIZE 0x4000
-
-/*##########################################################################
-#
-#   Name       : TUsbEvent::TUsbEvent
-#
-#   Purpose....: Constructor for TUsbEvent                                          
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TUsbEvent::TUsbEvent(const char *ThreadName, int QueueSize)
-{
-    FHandle = RdosOpenUsbEvent(QueueSize);
-    StartHandler(ThreadName, STACK_SIZE);
-}
-
 /*##########################################################################
 #
 #   Name       : TUsbEvent::TUsbEvent
@@ -118,6 +99,36 @@ void TUsbEvent::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
+#   Name       : TUsbEvent::NotifyAttach
+#
+#   Purpose....: Notify attach
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyAttach(int Controller, int Port)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifyDetach
+#
+#   Purpose....: Notify detach
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyDetach(int Controller, int Port)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbEvent::SignalNewData
 #
 #   Purpose....: Signal new data is available
@@ -133,4 +144,17 @@ void TUsbEvent::SignalNewData()
     int ok;
 
     ok = RdosGetUsbEvent(FHandle, &event);
+    if (ok)
+    {
+        switch (event.Event)
+        {
+            case USB_EVENT_ATTACH:
+                NotifyAttach(event.Controller, event.Port);
+                break;
+
+            case USB_EVENT_DETACH:
+                NotifyDetach(event.Controller, event.Port);
+                break;
+        }
+    }
 }
