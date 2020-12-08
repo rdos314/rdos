@@ -2418,7 +2418,7 @@ ulcLoop:
     je ulcUnlink
 ;
     mov ecx,ebx
-    mov ebx,es:[ebx].oes_next_va
+    mov ebx,fs:[ebx].oes_next_va
     or ebx,ebx
     jnz ulcLoop
 ;

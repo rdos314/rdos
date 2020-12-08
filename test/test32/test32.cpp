@@ -36,7 +36,7 @@ public:
     virtual void NotifyTransError(int Controller, int Port, char Pipe);
     virtual void NotifyMissedMicroframe(int Controller, int Port, char Pipe);
     virtual void NotifyHalted(int Controller, int Port, char Pipe);
-	
+
 };
 
 TMyUsbEvent::TMyUsbEvent()
@@ -175,7 +175,7 @@ void main()
 
     for (;;)
     {
-        handle = RdosOpenUsbDevice(1, 2);
+        handle = RdosOpenUsbDevice(7, 0);
         ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
         wait = RdosCreateWait();
