@@ -41,6 +41,22 @@ public:
     virtual void NotifyAttach(int Controller, int Port);
     virtual void NotifyDetach(int Controller, int Port);
     virtual void NotifyControllerError(int Controller);
+    virtual void NotifyCrcError(int Controller, int Port, char Pipe);
+    virtual void NotifyBitStuffingError(int Controller, int Port, char Pipe);
+    virtual void NotifyDataToggleError(int Controller, int Port, char Pipe);
+    virtual void NotifyStall(int Controller, int Port, char Pipe);
+    virtual void NotifyNotResponding(int Controller, int Port, char Pipe);
+    virtual void NotifyPidFailure(int Controller, int Port, char Pipe);
+    virtual void NotifyUnexpectedPid(int Controller, int Port, char Pipe);
+    virtual void NotifyDataOverrun(int Controller, int Port, char Pipe);
+    virtual void NotifyDataUnderrun(int Controller, int Port, char Pipe);
+    virtual void NotifyBufferOverrun(int Controller, int Port, char Pipe);
+    virtual void NotifyBufferUnderrun(int Controller, int Port, char Pipe);
+    virtual void NotifyDataBufferError(int Controller, int Port, char Pipe);
+    virtual void NotifyBabble(int Controller, int Port, char Pipe);
+    virtual void NotifyTransError(int Controller, int Port, char Pipe);
+    virtual void NotifyMissedMicroframe(int Controller, int Port, char Pipe);
+    virtual void NotifyHalted(int Controller, int Port, char Pipe);
 	
 protected:
     virtual void SignalNewData();

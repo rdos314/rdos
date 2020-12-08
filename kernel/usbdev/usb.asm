@@ -799,6 +799,36 @@ report_usb_pipe_event  Proc far
 report_usb_pipe_event  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReportUsbRegPipeEvent
+;
+;           DESCRIPTION:    Report USB pipe event
+;
+;           PARAMETERS:     AX      Event #
+;                           DS      Function sel
+;                           SI      Port
+;                           DL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+report_usb_reg_pipe_event_name     DB 'Report USB Reg Pipe Event',0
+
+report_usb_reg_pipe_event  Proc far
+    push bx
+    push dx
+    push si
+;
+    mov bx,ds:usb_controller_id
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop bx
+    retf32
+report_usb_reg_pipe_event  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SendDevControlMsg
@@ -4152,6 +4182,12 @@ init    Proc far
     mov edi,OFFSET report_usb_pipe_event_name
     xor cl,cl
     mov ax,report_usb_pipe_event_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET report_usb_reg_pipe_event
+    mov edi,OFFSET report_usb_reg_pipe_event_name
+    xor cl,cl
+    mov ax,report_usb_reg_pipe_event_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_usb_address

@@ -25,9 +25,26 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-USB_EVENT_ATTACH            = 1
-USB_EVENT_DETACH            = 2
-USB_EVENT_CONTROLLER_ERROR  = 3
+USB_EVENT_ATTACH                = 1
+USB_EVENT_DETACH                = 2
+USB_EVENT_CONTROLLER_ERROR      = 3
+USB_EVENT_CRC_ERROR             = 4
+USB_EVENT_BIT_STUFFING_ERROR    = 5
+USB_EVENT_DATA_TOGGLE_ERROR     = 6
+USB_EVENT_STALL                 = 7
+USB_EVENT_NOT_RESPONDING        = 8
+USB_EVENT_PID_FAILURE           = 9
+USB_EVENT_UNEXPECTED_PID        = 10
+USB_EVENT_DATA_OVERRUN          = 11
+USB_EVENT_DATA_UNDERRUN         = 12
+USB_EVENT_BUFFER_OVERRUN        = 13
+USB_EVENT_BUFFER_UNDERRUN       = 14 
+USB_EVENT_DATA_BUFFER_ERROR     = 15
+USB_EVENT_BABBLE                = 16
+USB_EVENT_TRANS_ERROR           = 17
+USB_EVENT_MISSED_MICROFRAME     = 18
+USB_EVENT_HALTED                = 19
+
 
 usb_event       STRUC
 

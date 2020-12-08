@@ -2199,6 +2199,13 @@ NotifyIn  Proc near
     push ebx
     push esi
 ;
+    push dx
+    mov ax,USB_EVENT_STALL
+    mov dl,bl
+    movzx si,fs:[edi].usbd_port
+    ReportUsbRegPipeEvent
+    pop dx
+;
     movzx esi,bl
     and esi,0Fh
     dec esi
@@ -2297,6 +2304,20 @@ ntOut:
     jmp ntDone
 
 ntControl:
+    push ax
+    push dx
+    push si
+;
+    mov ax,USB_EVENT_STALL
+    xor dl,dl
+    movzx si,fs:[edi].usbd_port
+    ReportUsbRegPipeEvent
+;
+    pop si
+    pop dx
+    pop ax
+
+
     mov bx,fs:[edx].otd_flags
     shr bx,12
     or bx,bx

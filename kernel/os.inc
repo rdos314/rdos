@@ -4039,6 +4039,14 @@ ReportUsbPipeEvent MACRO
     OsGate report_usb_pipe_event_nr
                     ENDM
 
+; IN  DS      Function sel
+; IN  SI      Port
+; IN  DL      Pipe #
+; IN  AX      Event
+ReportUsbRegPipeEvent MACRO
+    OsGate report_usb_reg_pipe_event_nr
+                    ENDM
+
 ; IN  BX      Device handle
 ; OUT ES      Device sel
 GetUsbDeviceSel   MACRO
