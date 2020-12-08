@@ -9,6 +9,12 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+struct TParam
+{
+    int controller;
+    int port;
+};
+
 class TMyUsbEvent : public TUsbEvent
 {
 public:
@@ -148,18 +154,7 @@ void TMyUsbEvent::NotifyHalted(int Controller, int Port, char Pipe)
     printf("Halted %02hX:%02hX #%02hX\r\n", Controller, Port, Pipe);
 }
 
-/*##########################################################################
-#
-#   Name       : main
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void main()
+static void UsbThread(void *ptr)
 {
     int handle;
     int size;
@@ -169,13 +164,11 @@ void main()
     int wait;
     int count;
     int i;
-
-    TMyUsbEvent event;
-    event.Start();
+    struct TParam *p = (struct TParam *)ptr;
 
     for (;;)
     {
-        handle = RdosOpenUsbDevice(7, 0);
+        handle = RdosOpenUsbDevice(p->controller, p->port);
         ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
         wait = RdosCreateWait();
@@ -198,6 +191,37 @@ void main()
         RdosCloseUsbDevice(handle);
         RdosCloseWait(wait);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : main
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void main()
+{
+    struct TParam p1;
+    struct TParam p2;
+
+    TMyUsbEvent event;
+    event.Start();
+
+    p1.controller = 7;
+    p1.port = 0;
+    RdosCreateThread(UsbThread, "Dev1", &p1, 0x4000);
+
+    p2.controller = 7;
+    p2.port = 1;
+    RdosCreateThread(UsbThread, "Dev2", &p2, 0x4000);
+
+    for (;;)
+        RdosWaitMilli(250);
 
     RdosTestGate("");
 }
