@@ -173,28 +173,31 @@ void main()
     TMyUsbEvent event;
     event.Start();
 
-    handle = RdosOpenUsbDevice(1, 2);
-    ok = RdosConfigUsbPipe(handle, 0x81, 16);
-
-    wait = RdosCreateWait();
-    RdosAddWaitForUsbPipe(wait, handle, 0x81, 0x1234);
-    RdosEnableUsbPipe(handle, 0x81);
-    count = RdosGetUsedUsbBuffers(handle, 0x81);
-    size = RdosGetUsbBufferSize(handle, 0x81);
-    buf = new char[size + 1];
-
     for (;;)
     {
-        RdosWaitForever(wait);
-        count = RdosReadUsbPipe(handle, 0x81, buf);
+        handle = RdosOpenUsbDevice(1, 2);
+        ok = RdosConfigUsbPipe(handle, 0x81, 16);
 
-        for (i = 0; i < count; i++)
-            printf("%02hX ", buf[i]);
-        printf("\r\n");
+        wait = RdosCreateWait();
+        RdosAddWaitForUsbPipe(wait, handle, 0x81, 0x1234);
+        RdosEnableUsbPipe(handle, 0x81);
+        count = RdosGetUsedUsbBuffers(handle, 0x81);
+        size = RdosGetUsbBufferSize(handle, 0x81);
+        buf = new char[size + 1];
+
+        while (RdosGetUsbBufferSize(handle, 0x81))
+        {
+            RdosWaitForever(wait);
+            count = RdosReadUsbPipe(handle, 0x81, buf);
+
+            for (i = 0; i < count; i++)
+                printf("%02hX ", buf[i]);
+            printf("\r\n");
+        }
+
+        RdosCloseUsbDevice(handle);
+        RdosCloseWait(wait);
     }
-
-    RdosCloseUsbDevice(handle);
-    RdosCloseWait(wait);
 
     RdosTestGate("");
 }
