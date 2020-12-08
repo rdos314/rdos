@@ -3362,15 +3362,17 @@ cctLoop:
 
 cctSignal:
     mov es:dev_control_status,al
-    xor bx,bx
-    xchg bx,es:dev_control_thread
-    Signal
 ;    
     or al,al
-    jz cctDone
+    jz cctReportDone
 ;
     xor dl,dl
     call ReportStatus
+
+cctReportDone:
+    xor bx,bx
+    xchg bx,es:dev_control_thread
+    Signal
 
 cctDone:
     pop edx
