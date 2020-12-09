@@ -221,6 +221,7 @@ struct THidDevice
     short int IntrWait;
     short int IntrSize;
     short int IntrBufSel;
+    short int PipeSize;
 
     unsigned char CountryCode;
     unsigned char DescrCount;

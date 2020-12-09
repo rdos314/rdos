@@ -2036,6 +2036,7 @@ rqbCalc:
     PhysicalToLinearMemBlk
     mov ecx,fs:[esi].otd_buffer_va
     sub ecx,edx
+    neg ecx
     mov edx,fs:[esi].otd_buffer_va
     clc
 

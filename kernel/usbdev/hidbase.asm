@@ -994,6 +994,9 @@ ihsEndDescr:
 ;
     and al,8Fh    
     mov fs:hid_intr_in,al    
+;
+    mov ax,es:[edi].ued_maxsize
+    mov fs:hid_pipe_size,ax
     jmp ihsDescrLoop
 
 ihsDone:    
@@ -1073,9 +1076,14 @@ OpenIntrPipe_ Proc near
     push es
     pushad
 ;    
+    mov cx,fs:hid_pipe_size
+    mov ax,fs:hid_intr_size
+    xor dx,dx
+    div cx
+    add ax,8
+    mov cx,ax
     mov bx,fs:hid_device_handle
     mov dl,fs:hid_intr_in
-    mov cx,8
     ConfigUsbPipe
 ;
     CreateWait
@@ -1393,6 +1401,7 @@ WaitForReport_    Proc near
     push ds
     push bx
     push dx
+    push si
 ;
     mov bx,fs:hid_intr_wait
     WaitWithoutTimeout
@@ -1401,8 +1410,17 @@ WaitForReport_    Proc near
     xor edi,edi
     mov bx,fs:hid_device_handle
     mov dl,fs:hid_intr_in
+    mov si,fs:hid_intr_size
+
+wfrRead:
     ReadUsbPipe
-    jnc wfrOk
+    jc wfrFail
+;
+    sub si,cx
+    jz wfrOk
+;
+    add di,cx
+    jmp wfrRead    
 
 wfrFail:
     xor edi,edi
@@ -1414,6 +1432,7 @@ wfrOk:
     xor edi,edi
 
 wfrDone:
+    pop si
     pop dx
     pop bx
     pop ds
