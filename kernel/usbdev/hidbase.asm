@@ -1423,6 +1423,9 @@ wfrRead:
     jmp wfrRead    
 
 wfrFail:
+    mov ax,10
+    WaitMilliSec
+;
     xor edi,edi
     mov es,edi
     jmp wfrDone
