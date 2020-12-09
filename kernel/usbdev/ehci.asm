@@ -3452,6 +3452,7 @@ UpdateUsb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReportStatus   Proc near
+    push ds
     push ax
     push si
 ;
@@ -3461,7 +3462,7 @@ ReportStatus   Proc near
     jz rsNotStalled
 ;
     mov ax,USB_EVENT_STALL
-    ReportUsbRegPipeEvent
+    ReportUsbPipeEvent
     jmp rsDone
 
 rsNotStalled:
@@ -3469,7 +3470,7 @@ rsNotStalled:
     jz rsNotBufferError
 ;
     mov ax,USB_EVENT_DATA_BUFFER_ERROR
-    ReportUsbRegPipeEvent
+    ReportUsbPipeEvent
     jmp rsDone
 
 rsNotBufferError:
@@ -3477,7 +3478,7 @@ rsNotBufferError:
     jz rsNotBabble
 ;
     mov ax,USB_EVENT_BABBLE
-    ReportUsbRegPipeEvent
+    ReportUsbPipeEvent
     jmp rsDone
 
 rsNotBabble:
@@ -3485,7 +3486,7 @@ rsNotBabble:
     jz rsNotTransErr
 ;
     mov ax,USB_EVENT_TRANS_ERROR
-    ReportUsbRegPipeEvent
+    ReportUsbPipeEvent
     jmp rsDone
 
 rsNotTransErr:
@@ -3493,16 +3494,17 @@ rsNotTransErr:
     jz rsNotMicro
 ;
     mov ax,USB_EVENT_MISSED_MICROFRAME
-    ReportUsbRegPipeEvent
+    ReportUsbPipeEvent
     jmp rsDone
 
 rsNotMicro:
     mov ax,USB_EVENT_HALTED
-    ReportUsbRegPipeEvent
+    ReportUsbPipeEvent
 
 rsDone:
     pop si
     pop ax
+    pop ds
     ret
 ReportStatus   Endp
 

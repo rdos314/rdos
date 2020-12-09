@@ -776,27 +776,28 @@ report_usb_dev_event  Endp
 ;           DESCRIPTION:    Report USB pipe event
 ;
 ;           PARAMETERS:     AX      Event #
-;                           DS      Function sel
 ;                           ES      Device sel
-;                           GS      Pipe sel
+;                           DL      Pipe #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 report_usb_pipe_event_name     DB 'Report USB Pipe Event',0
 
 report_usb_pipe_event  Proc far
+    push ds
     push bx
     push dx
     push si
 ;
+    mov ds,es:usbd_func_sel
     mov bx,ds:usb_controller_id
     movzx si,es:usbd_port
-    mov dl,gs:ued_address
     call DistEvent
 ;
     pop si
     pop dx
     pop bx
+    pop ds
     retf32
 report_usb_pipe_event  Endp
 
