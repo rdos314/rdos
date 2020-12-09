@@ -62,10 +62,7 @@ hub_port                DB ?
 hub_address             DB ?
 
 hub_device_handle       DW ?
-
-hub_status_handle       DW ?
-hub_status_req          DW ?
-hub_status_sel          DW ?
+hub_wait_handle         DW ?
 
 hub_power_time          DW ?
 hub_info                DW ?

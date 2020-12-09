@@ -1342,20 +1342,22 @@ CreateHub  Proc near
     OpenUsbDevice
     mov ds:hub_device_handle,bx
 ;    
-    mov bx,ds:hub_controller
-;    mov al,ds:hub_address
+    mov bx,ds:hub_device_handle
     mov dl,ds:hub_intr
-    OpenUsbPipe
-    mov ds:hub_status_handle,bx
+    mov cx,8
+    ConfigUsbPipe
 ;
-    mov bx,ds:hub_status_handle
-    CreateUsbReq
-    mov ds:hub_status_req,bx
+    CreateWait
+    mov ds:hub_wait_handle,bx
 ;
-    mov cx,ds:hub_status_size
-    xor ax,ax
-    AddReadUsbDataReq
-    mov ds:hub_status_sel,es
+    mov ax,ds:hub_device_handle
+    mov dl,ds:hub_intr
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
+;
+    mov bx,ds:hub_device_handle
+    mov dl,ds:hub_intr
+    EnableUsbPipe
 ;
     popad
     pop es
@@ -1376,11 +1378,12 @@ CreateHub   Endp
 CloseHub  Proc near
     push bx
 ;
-    mov bx,ds:hub_status_req
-    CloseUsbReq
-;    
-    mov bx,ds:hub_status_handle
-    CloseUsbPipe
+    mov bx,ds:hub_device_handle
+    mov dl,ds:hub_intr
+    DisableUsbPipe
+;
+    mov bx,ds:hub_wait_handle
+    CloseWait
 ;    
     mov bx,ds:hub_device_handle
     CloseUsbDevice
@@ -1565,6 +1568,7 @@ hub_status_name    DB 'Hub Status ', 0
 
 usb_hub_status:
     mov ds,ebx
+    mov es,ebx
 ;
     GetThread
     mov ds:hub_detach,0
@@ -1601,27 +1605,18 @@ tsNotOver:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz tsExit
 ;    
-    mov bx,ds:hub_status_req
-    IsUsbReqStarted
-    jnc tsWaitSignal
+    mov bx,ds:hub_wait_handle
+    WaitWithoutTimeout
 ;
-    GetThread
-    StartUsbReq    
-
-tsWaitSignal:
-    WaitForSignal
-;
-    mov bx,ds:hub_status_req
-    IsUsbReqReady
-    jc tsNext
-;
-    GetUsbReqData
-    cmp cx,ds:hub_status_size
-    jne tsNext
+    mov ebx,ds
+    mov es,ebx
+    mov edi,OFFSET hub_buf
+    mov bx,ds:hub_device_handle
+    mov dl,ds:hub_intr
+    ReadUsbPipe
+    jc tsLoop
 ;
     mov bx,cx
-    mov es,ds:hub_status_sel
-    xor edi,edi
     mov al,es:[edi]
     shr al,1
     xor dx,dx
