@@ -214,7 +214,6 @@ void main()
 
     p1.controller = 0;
     p1.port = 2;
-    UsbThread(&p1);
 //    RdosCreateThread(UsbThread, "Dev1", &p1, 0x4000);
 
     p2.controller = 7;
