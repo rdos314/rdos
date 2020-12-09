@@ -212,13 +212,14 @@ void main()
     TMyUsbEvent event;
     event.Start();
 
-    p1.controller = 7;
-    p1.port = 0;
-    RdosCreateThread(UsbThread, "Dev1", &p1, 0x4000);
+    p1.controller = 0;
+    p1.port = 2;
+    UsbThread(&p1);
+//    RdosCreateThread(UsbThread, "Dev1", &p1, 0x4000);
 
     p2.controller = 7;
     p2.port = 1;
-    RdosCreateThread(UsbThread, "Dev2", &p2, 0x4000);
+//    RdosCreateThread(UsbThread, "Dev2", &p2, 0x4000);
 
     for (;;)
         RdosWaitMilli(250);

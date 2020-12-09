@@ -3383,9 +3383,9 @@ CheckControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CheckPipe
+;       NAME:           CheckIn
 ;
-;       DESCRIPTION:    Check pipe
+;       DESCRIPTION:    Check IN pipe
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device sel
@@ -3394,9 +3394,104 @@ CheckControl   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckPipe   Proc near
+CheckIn   Proc near
+    push ebx
+    push edx
+    push esi
+;
+    mov bx,gs:ep_wr_ptr
+    cmp bx,gs:ep_tail_ptr
+    je citDone
+;
+    mov si,bx
+    shl si,3
+    mov edx,gs:[si].ep_entry_arr
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jnz citCheckRun
+
+citLoop:
+    inc bx
+    cmp bx,gs:ep_entry_count
+    jb citSave
+;
+    xor bx,bx
+
+citSave:
+    mov gs:ep_wr_ptr,bx
+;
+    and al,7Ch
+    jnz citReport
+;
+    cmp bx,gs:ep_tail_ptr
+    je citSignal
+;
+    mov si,bx
+    shl si,3
+    mov edx,gs:[si].ep_entry_arr
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jz citLoop
+    jmp citSignal
+
+citReport:
+    push edx
+    mov dl,gs:ued_address
+    call ReportStatus
+    pop edx
+
+citSignal:
+    xor bx,bx
+    xchg bx,gs:usbdp_wait
+    or bx,bx
+    jz citSignalOk
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+citSignalOk:
+    mov bx,gs:ep_wr_ptr
+    cmp bx,gs:ep_tail_ptr
+    je citDone
+
+citCheckRun:
+    mov esi,gs:ep_qh
+    mov edx,fs:[esi].qh_next_qtd
+    test dl,1
+    jz citDone
+;
+    shl bx,3
+    mov edx,gs:[bx].ep_entry_arr
+    LinearToPhysicalMemBlk
+    mov fs:[esi].qh_next_qtd,eax
+
+citDone:
+    pop esi
+    pop edx
+    pop ebx
     ret
-CheckPipe   Endp        
+CheckIn   Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckOut
+;
+;       DESCRIPTION:    Check OUT pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckOut   Proc near
+    int 3
+    ret
+CheckOut   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3454,7 +3549,7 @@ efhDevInLoop:
     jz efhDevInNext
 ;
     mov gs,bx
-    call CheckPipe
+    call CheckIn
 
 efhDevInNext:
     add si,2
@@ -3469,7 +3564,7 @@ efhDevOutLoop:
     jz efhDevOutNext
 ;
     mov gs,bx
-    call CheckPipe
+    call CheckOut
 
 efhDevOutNext:
     add si,2
