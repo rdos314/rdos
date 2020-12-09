@@ -2296,6 +2296,7 @@ StartInPipe     Proc near
 ;
     mov si,OFFSET ep_entry_arr
     mov cx,gs:ep_entry_count
+    dec cx
     xor edi,edi
 
 sipLoop:
@@ -2539,6 +2540,7 @@ FreeBuffers   Endp
 ;                       GS      Pipe
 ;
 ;       RETURNS:        EDX     Buffer linear address
+;                       CX      Message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2573,6 +2575,11 @@ rqbIn:
 
 rqbGet:
     shl bx,3
+    mov edx,gs:[bx].ep_entry_arr
+    mov cx,gs:ued_maxsize
+    mov ax,fs:[edx].qtd_size
+    and ax,7FFFh
+    sub cx,ax
     mov edx,gs:[bx+4].ep_entry_arr
     clc
 
@@ -2597,7 +2604,122 @@ ReqBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RelBuffer   Proc far
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_address
+    test al,80h
+    jnz rlbIn
+
+rlbOut:
+    mov bx,gs:ep_wr_ptr
+    cmp bx,gs:ep_rd_ptr
+    stc
+    je rlbDone
+;
     int 3
+    jmp rlbDone
+
+rlbIn:
+    mov bx,gs:ep_rd_ptr
+    cmp bx,gs:ep_wr_ptr
+    stc
+    je rlbDone
+;
+    inc bx
+    cmp bx,gs:ep_entry_count
+    jb rlbRdPtrOk
+;
+    xor bx,bx
+
+rlbRdPtrOk:
+    mov gs:ep_rd_ptr,bx
+;
+    mov bx,gs:ep_tail_ptr
+    sub bx,1
+    jnc rlbRdPrevOk
+;
+    mov bx,gs:ep_entry_count
+    dec bx
+
+rlbRdPrevOk:
+    shl bx,3
+    mov esi,gs:[bx].ep_entry_arr
+;
+    mov bx,gs:ep_tail_ptr
+    shl bx,3
+;
+    mov edx,gs:[bx+4].ep_entry_arr
+    or edx,edx
+    jnz rlbRdHasBuffer
+;
+    mov cx,gs:ued_maxsize
+    AllocateMemBlk
+    mov gs:[bx+4].ep_entry_arr,edx
+
+rlbRdHasBuffer:
+    LinearToPhysicalMemBlk
+;
+    mov bx,gs:ep_tail_ptr
+    shl bx,3
+    mov edx,gs:[bx].ep_entry_arr
+    mov fs:[edx].qtd_alt,1
+    mov fs:[edx].qtd_status,80h
+    mov fs:[edx].qtd_flags,8Dh
+    mov fs:[edx].qtd_next,1
+    mov fs:[edx].qtd_page0,eax
+    mov ax,gs:ued_maxsize
+    mov fs:[edx].qtd_size,ax
+;
+    LinearToPhysicalMemBlk
+    mov fs:[esi].qtd_next,eax
+;
+    mov bx,gs:ep_tail_ptr
+    cmp bx,gs:ep_wr_ptr
+    pushf
+;
+    inc bx
+    cmp bx,gs:ep_entry_count
+    jb rlbRdTailOk
+;
+    xor bx,bx
+
+rlbRdTailOk:
+    mov gs:ep_tail_ptr,bx
+;
+    popf
+    je rlbRdCheckStart
+;
+    mov esi,gs:ep_qh
+    mov al,fs:[esi].qh_status
+    test al,80h
+    jnz rlbRdOk
+;
+    mov bx,ds:ehc_thread
+    Signal
+    jmp rlbRdOk
+
+rlbRdCheckStart:
+    mov ebx,eax
+    mov esi,gs:ep_qh
+    mov al,fs:[esi].qh_status
+    test al,80h
+    jnz rlbRdOk
+;
+    and al,7Ch
+    jnz rlbRdOk
+;
+    mov fs:[esi].qh_next_qtd,ebx
+    
+rlbRdOk:
+    clc
+
+rlbDone:
+    popad
+    pop fs
     retf32
 RelBuffer   Endp
 
