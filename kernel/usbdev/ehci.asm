@@ -2650,22 +2650,21 @@ rlbRdPrevOk:
     mov esi,gs:[bx].ep_entry_arr
 ;
     mov bx,gs:ep_tail_ptr
-    shl bx,3
+    mov di,bx
+    shl di,3
 ;
-    mov edx,gs:[bx+4].ep_entry_arr
+    mov edx,gs:[di+4].ep_entry_arr
     or edx,edx
     jnz rlbRdHasBuffer
 ;
     mov cx,gs:ued_maxsize
     AllocateMemBlk
-    mov gs:[bx+4].ep_entry_arr,edx
+    mov gs:[di+4].ep_entry_arr,edx
 
 rlbRdHasBuffer:
     LinearToPhysicalMemBlk
 ;
-    mov bx,gs:ep_tail_ptr
-    shl bx,3
-    mov edx,gs:[bx].ep_entry_arr
+    mov edx,gs:[di].ep_entry_arr
     mov fs:[edx].qtd_alt,1
     mov fs:[edx].qtd_status,80h
     mov fs:[edx].qtd_flags,8Dh
