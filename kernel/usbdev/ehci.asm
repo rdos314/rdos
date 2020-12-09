@@ -3635,9 +3635,12 @@ citSignalOk:
 
 citCheckRun:
     mov esi,gs:ep_qh
-    mov edx,fs:[esi].qh_next_qtd
-    test dl,1
-    jz citDone
+    mov al,fs:[esi].qh_status
+    test al,80h
+    jnz citDone
+;
+    and al,7Ch
+    jnz citDone
 ;
     shl bx,3
     mov edx,gs:[bx].ep_entry_arr
