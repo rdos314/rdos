@@ -954,4 +954,6 @@ close_usb_event_nr                = 759
 add_wait_for_usb_event_nr         = 760
 get_usb_event_nr                  = 761
 
+get_usb_address_nr                = 762
+
 usergate_entries                  = 780

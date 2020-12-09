@@ -3200,6 +3200,67 @@ notify_usb_detach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               GetUsbAddress
+;
+;       description:        Get USB address
+;
+;       parameters:         BX       Controller #
+;                           AL       Device port #
+;
+;       Returns:            AL       Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_address_name DB 'Get USB Address', 0
+
+get_usb_address  Proc far
+    push ds
+    push es
+    push ebx
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    mov si,ds:usb_func_count
+    cmp bx,si
+    jae guaFail
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_func_arr
+    or si,si
+    jz guaFail
+;
+    mov ds,si
+    cmp al,MAX_USB_HUB_PORTS
+    jae guaFail
+;    
+    movzx si,al
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz guaFail
+;
+    mov es,si
+    mov al,es:usbd_address
+    clc
+    jmp guaDone
+
+guaFail:
+    xor ax,ax
+    stc
+
+guaDone:        
+    pop esi
+    pop ebx
+    pop es
+    pop ds
+    retf32
+get_usb_address  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:               GetUsbHubDescriptor
 ;
 ;       description:        Get USB hub descriptor
@@ -4424,6 +4485,12 @@ init    Proc far
     mov edi,OFFSET has_usb_reset_failed_name
     xor dx,dx
     mov ax,has_usb_reset_failed_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_usb_address
+    mov edi,OFFSET get_usb_address_name
+    xor dx,dx
+    mov ax,get_usb_address_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_usb_dev

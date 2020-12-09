@@ -954,6 +954,8 @@
 #define usergate_add_wait_for_usb_event 0x000002F8
 #define usergate_get_usb_event 0x000002F9
 
+#define usergate_get_usb_address 0x000002FA
+
 
 
 #ifdef __FLAT__
@@ -1913,6 +1915,8 @@
 #define CallGate_add_wait_for_usb_event 0x55 0x67 0x9a 248 2 0 0 3 0 0x5d
 #define CallGate_get_usb_event 0x55 0x67 0x9a 249 2 0 0 3 0 0x5d
 
+#define CallGate_get_usb_address 0x55 0x67 0x9a 250 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2869,5 +2873,7 @@
 #define CallGate_close_usb_event 0x3e 0x67 0x9a 247 2 0 0 3 0
 #define CallGate_add_wait_for_usb_event 0x3e 0x67 0x9a 248 2 0 0 3 0
 #define CallGate_get_usb_event 0x3e 0x67 0x9a 249 2 0 0 3 0
+
+#define CallGate_get_usb_address 0x3e 0x67 0x9a 250 2 0 0 3 0
 
 #endif

@@ -3692,6 +3692,13 @@ WriteUsbPipe      MACRO
 
 ;   IN  BX          Controller #
 ;   IN  AL          Port #
+;   OUT AL          Address
+GetUsbAddress      MACRO
+        UserGate get_usb_address_nr
+                                                ENDM
+
+;   IN  BX          Controller #
+;   IN  AL          Port #
 ;   IN  (E)CX       Buffer size
 ;   IN  ES:(E)DI    Buffer
 ;   OUT (E)AX       Size of descriptor

@@ -3592,6 +3592,12 @@
     CarryToBool \
     __value [__eax]
 
+#pragma aux RdosGetUsbAddress = \
+    CallGate_get_usb_address \
+    ValidateHandle \
+    __parm [__ebx] [__eax] \
+    __value [__al]
+
 #pragma aux RdosOpenUsbDevice = \
     CallGate_open_usb_dev \
     ValidateHandle \

@@ -126,9 +126,9 @@ typedef struct UsbEvent
     char Pipe;
 } UsbEvent;
 
-#define USB_EVENT_ATTACH		1
-#define USB_EVENT_DETACH		2
-#define USB_EVENT_CONTROLLER_ERROR	3
+#define USB_EVENT_ATTACH                1
+#define USB_EVENT_DETACH                2
+#define USB_EVENT_CONTROLLER_ERROR      3
 #define USB_EVENT_CRC_ERROR             4
 #define USB_EVENT_BIT_STUFFING_ERROR    5
 #define USB_EVENT_DATA_TOGGLE_ERROR     6
@@ -139,7 +139,7 @@ typedef struct UsbEvent
 #define USB_EVENT_DATA_OVERRUN         11
 #define USB_EVENT_DATA_UNDERRUN        12
 #define USB_EVENT_BUFFER_OVERRUN       13
-#define USB_EVENT_BUFFER_UNDERRUN      14 
+#define USB_EVENT_BUFFER_UNDERRUN      14
 #define USB_EVENT_DATA_BUFFER_ERROR    15
 #define USB_EVENT_BABBLE               16
 #define USB_EVENT_TRANS_ERROR          17
@@ -915,6 +915,7 @@ int RDOSAPI RdosHasUsbResetFailed();
 int RDOSAPI RdosHasUsbCardReaderError();
 int RDOSAPI RdosHasUsbCardDevReset();
 int RDOSAPI RdosHasUsbCardUsbReset();
+char RDOSAPI RdosGetUsbAddress(int Controller, int Port);
 int RDOSAPI RdosOpenUsbDevice(int Controller, int Port);
 void RDOSAPI RdosCloseUsbDevice(int handle);
 int RDOSAPI RdosSendUsbDeviceControlMsg(int handle, char Type, char Req, int Value, int Index, char *Buf, int Size);

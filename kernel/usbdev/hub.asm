@@ -1339,6 +1339,11 @@ CreateHub  Proc near
 ;
     mov bx,ds:hub_controller
     mov al,ds:hub_port
+    GetUsbAddress
+    mov ds:hub_address,al
+;
+    mov bx,ds:hub_controller
+    mov al,ds:hub_port
     OpenUsbDevice
     mov ds:hub_device_handle,bx
 ;    
