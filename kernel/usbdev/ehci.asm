@@ -2488,7 +2488,13 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UsedBuffers   Proc far
-    int 3
+    mov cx,gs:ep_wr_ptr
+    sub cx,gs:ep_rd_ptr
+    jnc ubDone
+;
+    add cx,gs:ep_entry_count
+
+ubDone:
     retf32
 UsedBuffers   Endp
 
@@ -2505,7 +2511,20 @@ UsedBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBuffers   Proc far
-    int 3
+    push ax
+;
+    mov ax,gs:ep_tail_ptr
+    sub ax,gs:ep_rd_ptr
+    jnc fbDone
+;
+    add ax,gs:ep_entry_count
+
+fbDone:
+    mov cx,gs:ep_entry_count
+    sub cx,ax
+    dec cx
+;
+    pop ax
     retf32
 FreeBuffers   Endp
 
@@ -2524,7 +2543,44 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqBuffer   Proc far
-    int 3
+    push fs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_address
+    test al,80h
+    jnz rqbIn
+
+rqbOut:
+    mov bx,gs:ep_wr_ptr
+    cmp bx,gs:ep_rd_ptr
+    jne rqbGet
+;
+    stc
+    jmp rqbDone
+
+rqbIn:
+    mov bx,gs:ep_rd_ptr
+    cmp bx,gs:ep_wr_ptr
+    jne rqbGet
+;
+    stc
+    jmp rqbDone
+
+rqbGet:
+    shl bx,3
+    mov edx,gs:[bx+4].ep_entry_arr
+    clc
+
+rqbDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop fs
     retf32
 ReqBuffer   Endp
 
