@@ -53,19 +53,6 @@ uhad_descr_len       DW ?
 
 usb_hid_arr_descr   ENDS
 
-hid_handle_struc       STRUC
-
-hh_base                 handle_header <>
-hh_hid_sel              DW ?
-hh_control_handle       DW ?
-hh_control_wait         DW ?
-hh_intr_handle          DW ?
-hh_intr_req             DW ?
-hh_intr_buf             DW ?
-
-hid_handle_struc       ENDS
-
-
 hid_output_struc        STRUC
 
 h_dev          DW ?
@@ -693,7 +680,7 @@ SendOutputReport_   Proc near
 ;   
     mov es,ebx
     mov ds,es:h_dev
-    mov bx,ds:hid_control_handle
+    mov bx,ds:hid_device_handle
     mov edi,OFFSET h_req_type
     mov al,es:[edi].usd_req
     mov ah,es:[edi].usd_type
@@ -729,7 +716,7 @@ ReadFeatureReport_   Proc near
 ;   
     mov es,ebx
     mov ds,es:h_dev
-    mov bx,ds:hid_control_handle
+    mov bx,ds:hid_device_handle
     mov edi,OFFSET h_req_type
     mov al,1
     mov ah,0A1h
@@ -765,7 +752,7 @@ WriteFeatureReport_   Proc near
 ;   
     mov es,ebx
     mov ds,es:h_dev
-    mov bx,ds:hid_control_handle
+    mov bx,ds:hid_device_handle
     mov edi,OFFSET h_req_type
     mov al,9
     mov ah,21h
@@ -805,7 +792,7 @@ GetReportDescr_   Proc near
     push edx
     push esi
 ;    
-    mov bx,fs:hid_control_handle
+    mov bx,fs:hid_device_handle
     mov ah,81h
     mov al,6
     mov si,dx
@@ -847,7 +834,7 @@ SetHidProtocol   Proc near
     push esi
     push edi
 ;    
-    mov bx,fs:hid_control_handle
+    mov bx,fs:hid_device_handle
     mov ah,21h
     mov al,0Bh
     mov dx,1
@@ -891,7 +878,7 @@ SetIdle_   Proc near
 ;    
     mov ah,al
     mov al,bl    
-    mov bx,fs:hid_control_handle
+    mov bx,fs:hid_device_handle
     mov dx,ax
     mov ah,21h
     mov al,0Ah
@@ -1013,11 +1000,10 @@ ihsDone:
     mov bx,fs:hid_controller
     mov al,fs:hid_port
     OpenUsbDevice
-    mov fs:hid_control_handle,bx
+    mov fs:hid_device_handle,bx
 ;    
-    mov fs:hid_intr_handle,0
+    mov fs:hid_intr_wait,0
     mov fs:hid_intr_size,0
-    mov fs:hid_intr_req,0
 ;
     call SetHidProtocol
 
@@ -1048,24 +1034,21 @@ CloseHidDev_ Proc near
     push eax
     push ebx
 ;
-    mov bx,fs:hid_control_handle
+    mov bx,fs:hid_device_handle
     CloseUsbDevice    
 ;
-    mov bx,fs:hid_intr_handle
-    CloseUsbPipe    
-;    
-    mov bx,fs:hid_intr_req
-    CloseUsbReq
-    mov fs:hid_intr_req,0
-    mov fs:hid_intr_buf,0
-;
-    mov bx,fs:hid_intr_handle
-    CloseUsbPipe    
-    mov fs:hid_intr_handle,0
+    mov bx,fs:hid_intr_wait
+    CloseWait
 ;   
+    push es
+    mov es,fs:hid_intr_buf
+    FreeMem
+    pop es
+;
     mov fs:hid_intr_buf,0
-    mov fs:hid_control_handle,0
+    mov fs:hid_device_handle,0
     mov fs:hid_control_wait,0
+    mov fs:hid_intr_wait,0
 ;
     pop ebx
     pop eax
@@ -1090,18 +1073,26 @@ OpenIntrPipe_ Proc near
     push es
     pushad
 ;    
-    mov bx,fs:hid_controller
-;    mov al,fs:hid_device
+    mov bx,fs:hid_device_handle
     mov dl,fs:hid_intr_in
-    OpenUsbPipe
-    mov fs:hid_intr_handle,bx
+    mov cx,8
+    ConfigUsbPipe
 ;
-    CreateUsbReq
-    mov fs:hid_intr_req,bx
+    CreateWait
+    mov fs:hid_intr_wait,bx
 ;
-    mov cx,fs:hid_intr_size
-    mov ax,4
-    AddReadUsbDataReq
+    mov ax,fs:hid_device_handle
+    mov dl,fs:hid_intr_in
+    mov ecx,fs
+    AddWaitForUsbDevicePipe
+;
+    mov bx,fs:hid_device_handle
+    mov dl,fs:hid_intr_in
+    EnableUsbPipe
+;
+    movzx eax,fs:hid_intr_size
+    add eax,10h
+    AllocateSmallGlobalMem
     mov fs:hid_intr_buf,es
 ;
     popad
@@ -1310,7 +1301,7 @@ reset_hid  Proc far
     push ebx
 ;
     mov ds,ebx
-    mov bx,ds:hid_control_handle
+    mov bx,ds:hid_device_handle
 ;    ResetUsbPipe    
 ;
     pop ebx
@@ -1401,16 +1392,16 @@ get_hid_device  Endp
 WaitForReport_    Proc near
     push ds
     push bx
+    push dx
 ;
-    mov bx,fs:hid_intr_req
-    GetThread
-    StartUsbReq
-    WaitForSignal
-;       
-    IsUsbReqReady
-    jc wfrFail
-;    
-    GetUsbReqData
+    mov bx,fs:hid_intr_wait
+    WaitWithoutTimeout
+;
+    mov es,fs:hid_intr_buf
+    xor edi,edi
+    mov bx,fs:hid_device_handle
+    mov dl,fs:hid_intr_in
+    ReadUsbPipe
     jnc wfrOk
 
 wfrFail:
@@ -1423,6 +1414,7 @@ wfrOk:
     xor edi,edi
 
 wfrDone:
+    pop dx
     pop bx
     pop ds
     ret

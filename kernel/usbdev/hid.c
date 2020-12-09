@@ -216,13 +216,11 @@ struct THidDevice
     unsigned char Protocol;
     unsigned char IntrIn;
 
-    short int ControlPipe;
+    short int DeviceHandle;
     short int ControlWait;
-
-    short int IntrHandle;
+    short int IntrWait;
     short int IntrSize;
     short int IntrBufSel;
-    short int IntrReq;
 
     unsigned char CountryCode;
     unsigned char DescrCount;

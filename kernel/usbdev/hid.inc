@@ -35,12 +35,11 @@ hid_port            DB ?
 hid_interface       DB ?
 hid_protocol        DB ?
 hid_intr_in         DB ?
-hid_control_handle  DW ?
+hid_device_handle   DW ?
 hid_control_wait    DW ?
-hid_intr_handle     DW ?
+hid_intr_wait       DW ?
 hid_intr_size       DW ?
 hid_intr_buf        DW ?
-hid_intr_req        DW ?
 
 hid_country_code    DB ?
 hid_descr_count     DB ?
