@@ -3159,6 +3159,17 @@ unlink_usb_dev       Proc far
     push ds
     pushad
 ;
+    mov ax,es:usbd_my_hub
+    or ax,ax
+    jz uudHubDone
+;
+    int 3
+    push ds
+    mov ds,ax
+    call fword ptr ds:unlink_func_proc
+    pop ds
+
+uudHubDone:
     lock or es:usbd_flags,FLAG_DETACHED
     movzx bx,es:usbd_port
     add bx,bx
