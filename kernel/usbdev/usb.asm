@@ -3938,13 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-is_usb_connected_name  DB 'Is USB Connected',0
-
-is_usb_connected       Proc far
-    stc
-    retf32
-is_usb_connected       Endp
-
 was_usb_trans_ok_name   DB 'Was USB Transaction Ok',0
 
 was_usb_trans_ok    Proc far
@@ -4297,12 +4290,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET is_usb_connected
-    mov edi,OFFSET is_usb_connected_name
-    xor dx,dx
-    mov ax,is_usb_connected_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET was_usb_trans_ok

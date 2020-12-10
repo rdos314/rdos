@@ -3741,11 +3741,6 @@ GetUsbEvent      MACRO
                                                 ENDM
 
 ;   IN  BX          Handle
-IsUsbConnected      MACRO
-        UserGate is_usb_connected_nr
-                                                ENDM
-
-;   IN  BX          Handle
 ;   IN  CY          Transaction failed
 ;   IN  NC          Transaction ok
 WasUsbTransactionOk      MACRO
