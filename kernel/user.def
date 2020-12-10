@@ -428,7 +428,6 @@ show_exception_text_nr      = 375
 
 get_watchdog_tics_nr        = 376
 
-is_usb_trans_done_nr        = 377
 was_usb_trans_ok_nr         = 378
 
 is_tcp_connection_idle_nr       = 379

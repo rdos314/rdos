@@ -645,7 +645,7 @@ psRetry:
     WaitWithTimeout
 ;
     mov bx,ds:cd_out_pipe
-    IsUsbTransactionDone
+;    IsUsbTransactionDone
     jc psRetry
 ;
     mov bx,ds:cd_out_pipe
@@ -1240,7 +1240,7 @@ ureLoop:
     jnz ureEnd
 ;
     mov bx,ds:cd_in_pipe
-    IsUsbTransactionDone
+;    IsUsbTransactionDone
     jc ureLoop
 ;
     call GetRecBuffer
@@ -1668,7 +1668,7 @@ usWaitLoop:
     WaitWithTimeout
 ;
     mov bx,ds:cd_out_pipe
-    IsUsbTransactionDone
+;    IsUsbTransactionDone
     pop ecx
     jnc usProgDone
 ;

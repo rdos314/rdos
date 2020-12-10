@@ -3746,13 +3746,6 @@ IsUsbConnected      MACRO
                                                 ENDM
 
 ;   IN  BX          Handle
-;   IN  CY          Transaction pending
-;   IN  NC          Transaction done
-IsUsbTransactionDone      MACRO
-        UserGate is_usb_trans_done_nr
-                                                ENDM
-
-;   IN  BX          Handle
 ;   IN  CY          Transaction failed
 ;   IN  NC          Transaction ok
 WasUsbTransactionOk      MACRO
