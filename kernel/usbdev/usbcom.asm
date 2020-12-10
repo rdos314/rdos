@@ -2777,7 +2777,7 @@ OpenPort    Proc near
     mov bx,es:uc_controller
 ;    mov al,es:uc_device
     mov dl,ds:uds_bulk_in
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:uds_in_handle,bx
 ;
     CreateUsbReq
@@ -2793,7 +2793,7 @@ OpenPort    Proc near
     mov bx,es:uc_controller
 ;    mov al,es:uc_device
     mov dl,ds:uds_bulk_out
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:uds_out_handle,bx
 ;
     CreateUsbReq
@@ -2812,7 +2812,7 @@ OpenPort    Proc near
 ;    
     mov bx,es:uc_controller
 ;    mov al,es:uc_device
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:uds_intr_handle,bx
 ;    
     CreateUsbReq

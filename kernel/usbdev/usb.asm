@@ -3937,19 +3937,6 @@ has_usb_reset_failed   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_usb_pipe_connected_name DB 'Is Usb Pipe Connected', 0
-
-is_usb_pipe_connected       Proc far
-    clc
-    retf32
-is_usb_pipe_connected       Endp
-
-open_usb_pipe_name DB 'Open USB Pipe', 0
-
-open_usb_pipe    Proc far
-    stc
-    retf32
-open_usb_pipe    Endp
 
 close_usb_pipe_name     DB 'Close USB Pipe',0
 
@@ -4298,12 +4285,6 @@ init    Proc far
     mov ax,open_usb_dev_sel_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET is_usb_pipe_connected
-    mov edi,OFFSET is_usb_pipe_connected_name
-    xor cl,cl
-    mov ax,is_usb_pipe_connected_nr
-    RegisterOsGate
-;
     mov esi,OFFSET create_usb_req
     mov edi,OFFSET create_usb_req_name
     xor cl,cl
@@ -4400,12 +4381,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET open_usb_pipe
-    mov edi,OFFSET open_usb_pipe_name
-    xor dx,dx
-    mov ax,open_usb_pipe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_usb_pipe

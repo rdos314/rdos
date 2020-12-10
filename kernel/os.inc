@@ -4111,12 +4111,6 @@ FreeUsbDev MACRO
     OsGate free_usb_dev_nr
                     ENDM
 
-; IN  FS      Pipe sel
-; OUT NC      Connected
-IsUsbPipeConnected MACRO
-    OsGate is_usb_pipe_connected_nr
-                    ENDM
-
 ; IN  DS      Usb function selector
 ; IN  AL      Address
 AddressUsbDev   MACRO

@@ -1354,7 +1354,7 @@ usuRestart:
     mov bx,ds:cd_controller
 ;    movzx ax,ds:cd_device
     mov dl,81h
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:cd_in_pipe,bx
 ;
     mov ax,ds:cd_in_pipe
@@ -1368,7 +1368,7 @@ usuRestart:
     mov bx,ds:cd_controller
 ;    movzx ax,ds:cd_device
     mov dl,2
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:cd_out_pipe,bx
 ;
     mov ax,ds:cd_out_pipe

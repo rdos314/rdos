@@ -1820,7 +1820,7 @@ dtInsDo:
     mov bx,fs:disc_controller
 ;    movzx ax,fs:disc_device
     mov dl,fs:disc_bulk_in_pipe
-    OpenUsbPipe
+;    OpenUsbPipe
     mov fs:disc_bulk_in_handle,bx
 ;
     CreateWait
@@ -1834,7 +1834,7 @@ dtInsDo:
     mov bx,fs:disc_controller
 ;    movzx ax,fs:disc_device
     mov dl,fs:disc_bulk_out_pipe
-    OpenUsbPipe
+;    OpenUsbPipe
     mov fs:disc_bulk_out_handle,bx
 ;
     CreateWait

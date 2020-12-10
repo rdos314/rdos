@@ -1992,7 +1992,7 @@ LocalIsTransferDone   Proc near
     test fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;
-    IsUsbPipeConnected
+;    IsUsbPipeConnected
     jc itdOk
 ;
     test fs:xp_flags, XP_FLAG_SINGLE

@@ -1993,7 +1993,7 @@ LocalIsTransferDone   Proc near
     test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;    
-    IsUsbPipeConnected
+;    IsUsbPipeConnected
     jc itdOk
 ;    
     mov ax,flat_sel

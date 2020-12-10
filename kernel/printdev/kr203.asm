@@ -978,7 +978,7 @@ OpenPipes   Proc near
     mov bx,ds:kr_controller
 ;    mov al,ds:kr_device
     mov dl,ds:kr_in_pipe
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:kr_in_handle,bx
 ;
     CreateUsbReq
@@ -990,7 +990,7 @@ OpenPipes   Proc near
     mov bx,ds:kr_controller
 ;    mov al,ds:kr_device
     mov dl,ds:kr_out_pipe
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:kr_out_handle,bx
 ;
     CreateUsbReq

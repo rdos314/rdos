@@ -3747,14 +3747,6 @@ GetUsbEvent      MACRO
         UserGate get_usb_event_nr
                                                 ENDM
 
-;   IN  BX          Controller #
-;   IN  AL          Device address (1..128)
-;   IN  DL          Pipe #
-;   OUT BX          Handle
-OpenUsbPipe      MACRO
-        UserGate open_usb_pipe_nr
-                                                ENDM
-
 ;   IN  BX          Handle
 CloseUsbPipe      MACRO
         UserGate close_usb_pipe_nr

@@ -595,7 +595,7 @@ OpenPipes   Proc near
     mov bx,ds:pmu_controller
 ;    mov al,ds:pmu_device
     mov dl,ds:pmu_in_pipe
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:pmu_in_handle,bx
 ;
     CreateUsbReq
@@ -607,7 +607,7 @@ OpenPipes   Proc near
     mov bx,ds:pmu_controller
 ;    mov al,ds:pmu_device
     mov dl,ds:pmu_out_pipe
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:pmu_out_handle,bx
 ;
     CreateUsbReq

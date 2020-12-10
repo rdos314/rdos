@@ -307,7 +307,7 @@ btCreate:
     mov bx,ds:io_controller
     movzx ax,ds:io_address
     mov dl,ds:io_intr_in
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:io_in_handle,bx
 ;
     CreateUsbReq
@@ -321,7 +321,7 @@ btCreate:
     mov bx,ds:io_controller
     movzx ax,ds:io_address
     mov dl,ds:io_bulk_out
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:io_out_handle,bx
 ;
     CreateUsbReq
@@ -1190,7 +1190,7 @@ OpenPort Proc far
     mov bx,ds:cd_controller
 ;    mov ax,ds:cd_device
     mov dl,ds:uds_bulk_in
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:uds_in_handle,bx
 ;
     CreateUsbReq
@@ -1204,7 +1204,7 @@ OpenPort Proc far
     mov bx,ds:cd_controller
 ;    mov ax,ds:cd_device
     mov dl,ds:uds_bulk_out
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:uds_out_handle,bx
 ;
     CreateUsbReq

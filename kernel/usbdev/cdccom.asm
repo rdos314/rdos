@@ -790,7 +790,7 @@ OpenControl	Proc near
     mov bx,ds:cdc_controller
 ;    mov al,ds:cdc_device
     xor dl,dl
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:cdc_control_pipe,bx
 ;
     mov ax,ds:cdc_control_pipe
@@ -913,7 +913,7 @@ OpenPort    Proc near
     mov bx,es:cdc_controller
 ;    mov al,es:cdc_device
     mov dl,fs:unit_bulk_in
-    OpenUsbPipe
+;    OpenUsbPipe
     mov ds:ucd_in_handle,bx
 ;
     CreateUsbReq
@@ -929,7 +929,7 @@ OpenPort    Proc near
     mov bx,es:cdc_controller
 ;    mov al,es:cdc_device
     mov dl,fs:unit_bulk_out
-    OpenUsbPipe    
+;    OpenUsbPipe    
     mov ds:ucd_out_handle,bx
 ;
     CreateUsbReq
