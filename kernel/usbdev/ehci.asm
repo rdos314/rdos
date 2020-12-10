@@ -1230,11 +1230,11 @@ aieSpeedOk:
 ;
     mov edi,ds:[bx+si].ehc_qh
     mov eax,fs:[edi].qh_link_va
-    mov es:[edx].qh_link_va,eax
+    mov fs:[edx].qh_link_va,eax
     mov eax,fs:[ecx].qh_link
-    mov es:[edx].qh_link,eax    
+    mov fs:[edx].qh_link,eax    
 ;    
-    mov es:[edi].qh_link_va,edx
+    mov fs:[edi].qh_link_va,edx
     mov eax,fs:[edx].qh_my_phys
     or al,2
     mov fs:[edi].qh_link,eax    
