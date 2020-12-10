@@ -3127,7 +3127,7 @@ hdInitOk:
     IsUsbReqStarted
     jnc hdOpenOk
 ;
-    StartUsbReq
+;    StartUsbReq
 
 hdOpenOk:    
     mov bx,ds:uds_in_req
@@ -3155,7 +3155,7 @@ hdPollReadDo:
 
 hdReadRestart:
     mov bx,ds:uds_in_req
-    StartUsbReq
+;    StartUsbReq
 
 hdReadDone:
     mov bx,ds:uds_intr_req
@@ -3172,7 +3172,7 @@ hdReadDone:
     mov es,ds:uds_intr_buffer
 
 hdStartIntr:
-    StartUsbReq
+;    StartUsbReq
     
 hdWrite:
     mov bx,ds:uds_out_req
@@ -3197,7 +3197,7 @@ hdCheckWrite:
     jz hdDone
 ;
     mov bx,ds:uds_out_req
-    StartUsbReq
+;    StartUsbReq
     jmp hdDone
 
 hdClosed:

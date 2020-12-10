@@ -292,7 +292,7 @@ dsWriteDo:
     mov cx,ds:cs_req_size
     rep movsb
     mov cx,ds:cs_req_size
-    StartUsbReq
+;    StartUsbReq
 
 dsWritePop:
     popa
@@ -318,7 +318,7 @@ dsReadLoop:
     jnc dsReadStarted
 ;
     push es
-    StartUsbReq
+;    StartUsbReq
     pop es
 
 dsReadStarted:    
@@ -378,7 +378,7 @@ dsReadMore:
 ;
     mov bx,ds:pmu_in_req
     push es
-    StartUsbReq
+;    StartUsbReq
     pop es
 ;    
     mov ax,5
@@ -491,14 +491,14 @@ GetId   Proc near
     jz giOffline
 ;    
     mov cx,3
-    StartUsbReq
+;    StartUsbReq
 ;
     xor dx,dx
     mov bx,ds:pmu_in_req
     IsUsbReqStarted
     jnc giLoop
 ;
-    StartUsbReq
+;    StartUsbReq
 
 giLoop:
     mov ax,5
@@ -521,7 +521,7 @@ giRead:
     GetUsbReqData
     mov es,ds:pmu_in_buffer
 ;
-    StartUsbReq
+;    StartUsbReq
 ;
     mov ax,5
     WaitMilliSec
@@ -559,7 +559,7 @@ ClearReceiver    Proc near
     IsUsbReqStarted
     jnc crLoop
 
-    StartUsbReq
+;    StartUsbReq
     mov ax,50
     WaitMilliSec
 
@@ -572,7 +572,7 @@ crLoop:
     pop es
     jc crDone
 ;
-    StartUsbReq
+;    StartUsbReq
 ;
     mov ax,50
     WaitMilliSec

@@ -606,14 +606,14 @@ UpdateStatus   Proc near
     jz dsOffline
 ;    
     mov cx,3
-    StartUsbReq
+;    StartUsbReq
 ;
     xor dx,dx
     mov bx,ds:kr_in_req
     IsUsbReqStarted
     jnc dsStatusLoop
 ;
-    StartUsbReq
+;    StartUsbReq
 
 dsStatusLoop:
     mov ax,5
@@ -637,7 +637,7 @@ dsGetStatus:
     mov es,ds:kr_in_buffer
     call NotifyStatus
 ;
-    StartUsbReq
+;    StartUsbReq
 ;
     mov ax,5
     WaitMilliSec
@@ -690,7 +690,7 @@ DoHardReset   Proc near
     stosb
 ;    
     mov cx,2
-    StartUsbReq
+;    StartUsbReq
 ;    
     mov ax,250
     WaitMilliSec
@@ -762,7 +762,7 @@ dsWriteDo:
     mov cx,ds:cs_req_size
     rep movsb
     mov cx,ds:cs_req_size
-    StartUsbReq
+;    StartUsbReq
 
 dsWritePop:
     popa
@@ -788,7 +788,7 @@ dsReadLoop:
     jnc dsReadStarted
 ;
     push es
-    StartUsbReq
+;    StartUsbReq
     pop es
 
 dsReadStarted:    
@@ -848,7 +848,7 @@ dsReadMore:
 ;
     mov bx,ds:kr_in_req
     push es
-    StartUsbReq
+;    StartUsbReq
     pop es
 ;    
     mov ax,5
@@ -942,7 +942,7 @@ ClearReceiver    Proc near
     IsUsbReqStarted
     jnc crLoop
 
-    StartUsbReq
+;    StartUsbReq
     mov ax,50
     WaitMilliSec
 
@@ -955,7 +955,7 @@ crLoop:
     pop es
     jc crDone
 ;
-    StartUsbReq
+;    StartUsbReq
 ;
     mov ax,50
     WaitMilliSec

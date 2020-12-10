@@ -216,7 +216,7 @@ StartReq        Proc near
 ;
     mov ecx,8
     mov bx,ds:io_out_req
-    StartUsbReq
+;    StartUsbReq
 ;
     popad
     pop es
@@ -341,7 +341,7 @@ btRestart:
 ;
     mov cx,8
     mov bx,ds:io_in_req
-    StartUsbReq
+;    StartUsbReq
 
 btOn:
     mov bx,ds:io_in_req
@@ -356,7 +356,7 @@ btOn:
 btDataDone:
     mov cx,8
     mov bx,ds:io_in_req
-    StartUsbReq
+;    StartUsbReq
 
 btReadDone:
     mov bx,ds:io_out_req
@@ -1535,7 +1535,7 @@ hdIsOpen:
     IsUsbReqStarted
     jnc hdOpenOk
 ;
-    StartUsbReq
+;    StartUsbReq
 
 hdOpenOk:    
     mov bx,ds:uds_in_req
@@ -1553,7 +1553,7 @@ hdOpenOk:
 
 hdReadRestart:
     mov bx,ds:uds_in_req
-    StartUsbReq
+;    StartUsbReq
 
 hdReadDone:
     mov bx,ds:uds_out_req
@@ -1578,7 +1578,7 @@ hdCheckWrite:
     jz hdDone
 ;
     mov bx,ds:uds_out_req
-    StartUsbReq
+;    StartUsbReq
     jmp hdDone
 
 hdClosed:

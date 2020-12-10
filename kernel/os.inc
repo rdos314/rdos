@@ -4116,13 +4116,6 @@ FreeUsbDev MACRO
 AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
                     ENDM
-                        
-; IN  AX    Thread to signal on completion
-; IN  BX    Req handle
-; IN  CX    Size of out buffer
-StartUsbReq      MACRO
-    OsGate start_usb_req_nr
-                        ENDM
 
 ; IN  BX    Req handle
 StopUsbReq      MACRO
