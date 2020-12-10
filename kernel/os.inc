@@ -4116,12 +4116,6 @@ FreeUsbDev MACRO
 AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
                     ENDM
-
-; IN  BX    Pipe handle
-; OUT BX    Req handle
-CreateUsbReq      MACRO
-    OsGate create_usb_req_nr
-                        ENDM
                         
 ; IN  BX    Req handle
 ; IN  CX    Size of data

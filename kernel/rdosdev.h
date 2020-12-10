@@ -791,16 +791,6 @@ void RdosNotifyUsbDetach(int usb_dev_sel, char port);
 void RdosHookUsbAttach(__rdos_usb_state_callback *callb_proc);
 void RdosHookUsbDetach(__rdos_usb_state_callback *callb_proc);
 
-int RdosCreateUsbReq(int pipe_handle);
-void RdosAddWriteUsbDataReq(int req_handle, int size, int sel);
-void RdosAddReadUsbDataReq(int req_handle, int size, int sel);
-void RdosStartUsbReq(int req_handle, int signal_thread_sel, int out_buf_size);
-void RdosStopUsbReq(int req_handle);
-int RdosIsUsbReqStarted(int req_handle);
-int RdosIsUsbReqReady(int req_handle);
-int RdosGetUsbReqData(int req_handle);
-void RdosCloseUsbReq(int req_handle);
-
 short int RdosReadCodec(int reg);
 void RdosWriteCodec(int reg, short int val);
 

@@ -981,7 +981,7 @@ OpenPipes   Proc near
 ;    OpenUsbPipe
     mov ds:kr_in_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:kr_in_req,bx    
     mov cx,ds:kr_max_in
     AddReadUsbDataReq
@@ -993,7 +993,7 @@ OpenPipes   Proc near
 ;    OpenUsbPipe    
     mov ds:kr_out_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:kr_out_req,bx
     mov cx,MAX_OUT_SIZE
     AddWriteUsbDataReq

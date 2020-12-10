@@ -598,7 +598,7 @@ OpenPipes   Proc near
 ;    OpenUsbPipe
     mov ds:pmu_in_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:pmu_in_req,bx    
     mov cx,ds:pmu_max_in
     AddReadUsbDataReq
@@ -610,7 +610,7 @@ OpenPipes   Proc near
 ;    OpenUsbPipe    
     mov ds:pmu_out_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:pmu_out_req,bx
     mov cx,MAX_OUT_SIZE
     AddWriteUsbDataReq

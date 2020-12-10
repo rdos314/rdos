@@ -3937,14 +3937,6 @@ has_usb_reset_failed   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-create_usb_req_name DB 'Create USB req', 0
-
-create_usb_req  Proc far
-    stc
-    retf32
-create_usb_req   Endp
-
 add_write_usb_data_req_name DB 'Add Write USB data req', 0
 
 add_write_usb_data_req  Proc far
@@ -4183,12 +4175,6 @@ init    Proc far
     mov edi,OFFSET open_usb_dev_sel_name
     xor cl,cl
     mov ax,open_usb_dev_sel_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET create_usb_req
-    mov edi,OFFSET create_usb_req_name
-    xor cl,cl
-    mov ax,create_usb_req_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_write_usb_data_req

@@ -317,7 +317,6 @@ set_mouse_limit_nr          = 309
 
 get_net_driver_nr           = 310
 
-create_usb_req_nr           = 311
 add_write_usb_data_req_nr   = 313
 add_read_usb_data_req_nr    = 314
 start_usb_req_nr            = 317

@@ -916,7 +916,7 @@ OpenPort    Proc near
 ;    OpenUsbPipe
     mov ds:ucd_in_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:ucd_in_req,bx    
 ;    
     push es
@@ -932,7 +932,7 @@ OpenPort    Proc near
 ;    OpenUsbPipe    
     mov ds:ucd_out_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:ucd_out_req,bx
 ;    
     push es

@@ -2780,7 +2780,7 @@ OpenPort    Proc near
 ;    OpenUsbPipe
     mov ds:uds_in_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:uds_in_req,bx    
 ;    
     push es
@@ -2796,7 +2796,7 @@ OpenPort    Proc near
 ;    OpenUsbPipe    
     mov ds:uds_out_handle,bx
 ;
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:uds_out_req,bx
 ;    
     push es
@@ -2815,7 +2815,7 @@ OpenPort    Proc near
 ;    OpenUsbPipe    
     mov ds:uds_intr_handle,bx
 ;    
-    CreateUsbReq
+;    CreateUsbReq
     mov ds:uds_intr_req,bx
 ;
     push es
