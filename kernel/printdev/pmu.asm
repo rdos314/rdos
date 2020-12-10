@@ -601,7 +601,7 @@ OpenPipes   Proc near
 ;    CreateUsbReq
     mov ds:pmu_in_req,bx    
     mov cx,ds:pmu_max_in
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:pmu_in_buffer,es
 ;
     mov bx,ds:pmu_controller

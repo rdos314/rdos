@@ -984,7 +984,7 @@ OpenPipes   Proc near
 ;    CreateUsbReq
     mov ds:kr_in_req,bx    
     mov cx,ds:kr_max_in
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:kr_in_buffer,es
 ;
     mov bx,ds:kr_controller

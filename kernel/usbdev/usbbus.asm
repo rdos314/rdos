@@ -315,7 +315,7 @@ btCreate:
 ;    
     mov cx,ds:io_in_size
     xor ax,ax
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:io_in_buffer,es
 ;
     mov bx,ds:io_controller
@@ -1198,7 +1198,7 @@ OpenPort Proc far
 ;    
     mov cx,ds:uds_in_size
     xor ax,ax
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:uds_in_buffer,es
 ;
     mov bx,ds:cd_controller

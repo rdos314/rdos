@@ -4117,14 +4117,6 @@ AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
                     ENDM
                         
-; IN  BX    Req handle
-; IN  CX    Size of data
-; IN  AX    Additional data space
-; OUT ES    Selector (do not free)
-AddReadUsbDataReq      MACRO
-    OsGate add_read_usb_data_req_nr
-                        ENDM
-
 ; IN  AX    Thread to signal on completion
 ; IN  BX    Req handle
 ; IN  CX    Size of out buffer

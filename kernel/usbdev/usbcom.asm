@@ -2786,7 +2786,7 @@ OpenPort    Proc near
     push es
     mov cx,ds:uds_in_size
     xor ax,ax
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:uds_in_buffer,es
     pop es
 ;
@@ -2821,7 +2821,7 @@ OpenPort    Proc near
     push es
     mov cx,ds:uds_in_size
     xor ax,ax
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:uds_intr_buffer,es
     pop es
 

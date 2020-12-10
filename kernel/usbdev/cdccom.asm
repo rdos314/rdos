@@ -922,7 +922,7 @@ OpenPort    Proc near
     push es
     mov cx,fs:unit_in_size
     xor ax,ax
-    AddReadUsbDataReq
+;    AddReadUsbDataReq
     mov ds:ucd_in_buffer,es
     pop es
 ;
