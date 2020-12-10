@@ -3741,13 +3741,6 @@ GetUsbEvent      MACRO
                                                 ENDM
 
 ;   IN  BX          Handle
-;   IN  CY          Transaction failed
-;   IN  NC          Transaction ok
-WasUsbTransactionOk      MACRO
-        UserGate was_usb_trans_ok_nr
-                                                ENDM
-
-;   IN  BX          Handle
 StartOneUsbTransaction      MACRO
         UserGate start_one_usb_trans_nr
                                                 ENDM

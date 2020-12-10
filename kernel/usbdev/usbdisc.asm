@@ -491,7 +491,7 @@ SendCbw Proc near
     WaitWithTimeout
 ;    
     mov bx,fs:disc_bulk_out_handle
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
 ;   
     pop es    
     ret
@@ -527,7 +527,7 @@ ReceiveCsw Proc near
     WaitWithTimeout
 ;    
     mov bx,fs:disc_bulk_in_handle
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     jc rcswDone
     
 rcswOk:
@@ -578,7 +578,7 @@ ReceiveData Proc near
     WaitWithTimeout
 ;    
     mov bx,fs:disc_bulk_in_handle
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     ret
 ReceiveData Endp
 
@@ -607,7 +607,7 @@ WriteData Proc near
     WaitWithTimeout
 ;    
     mov bx,fs:disc_bulk_out_handle
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     ret
 WriteData Endp
 
@@ -1528,7 +1528,7 @@ rdBufLoop:
     WaitWithTimeout
 ;    
     mov bx,fs:disc_bulk_in_handle
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     jc rdFail
 ;    
     call ReceiveCsw
@@ -1688,7 +1688,7 @@ wdBufLoop:
     WaitWithTimeout
 ;    
     mov bx,fs:disc_bulk_out_handle
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     jc wdFail
 ;    
     call ReceiveCsw

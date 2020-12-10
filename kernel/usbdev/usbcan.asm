@@ -649,7 +649,7 @@ psRetry:
     jc psRetry
 ;
     mov bx,ds:cd_out_pipe
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     jc psReset
 
 psUpdate:
@@ -1678,7 +1678,7 @@ usWaitLoop:
 
 usProgDone:
     mov bx,ds:cd_out_pipe
-    WasUsbTransactionOk
+;    WasUsbTransactionOk
     jc usProgFail
 
 usSignal:

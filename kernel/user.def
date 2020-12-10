@@ -428,8 +428,6 @@ show_exception_text_nr      = 375
 
 get_watchdog_tics_nr        = 376
 
-was_usb_trans_ok_nr         = 378
-
 is_tcp_connection_idle_nr       = 379
 
 set_codec_gpio0_nr              = 380
