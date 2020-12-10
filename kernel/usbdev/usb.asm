@@ -2934,6 +2934,7 @@ add_usb_device       Proc far
     push fs
     pushad
 ;
+    mov ds,es:usbd_func_sel
     mov eax,es
     mov fs,eax
 ;
@@ -3154,8 +3155,10 @@ notify_usb_attach   Endp
 unlink_usb_dev_name DB 'Unlink USB Device', 0
 
 unlink_usb_dev       Proc far
+    push ds
     pushad
 ;
+    mov ds,es:usbd_func_sel
     lock or es:usbd_flags,FLAG_DETACHED
     movzx bx,es:usbd_port
     add bx,bx
@@ -3234,6 +3237,7 @@ uudDone:
     call fword ptr ds:unlink_proc
 ;
     popad
+    pop ds
     retf32
 unlink_usb_dev     Endp
 

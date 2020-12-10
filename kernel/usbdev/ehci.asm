@@ -88,7 +88,7 @@ ehci_func_sel   STRUC
 
 usb_func_base       usb_function_struc <>
 
-ehc_dev_arr         DW MAX_USB_HUB_PORTS DUP(?)
+ehc_dev_arr         DW 127 DUP(?)
 
 ehc_reg_sel         DW ?
 ehc_thread          DW ?
@@ -2849,7 +2849,7 @@ udvOutNext:
     add si,2
     loop udvOutLoop
 ;
-    movzx si,es:usbd_port
+    movzx si,es:usbd_address
     add si,si
     mov ds:[si].ehc_dev_arr,0
 ;
@@ -2914,7 +2914,7 @@ CreateDev   Proc far
     push fs
     pushad
 ;
-    push dx
+    push ax
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2939,7 +2939,8 @@ cdCreate:
     mov es:dev_control_qtd,edx
     mov es:dev_control_thread,0
 ;
-    pop di
+    pop ax
+    movzx di,al
     add di,di
     mov ds:[di].ehc_dev_arr,es
 ;
@@ -3718,7 +3719,7 @@ efhLoop:
     ReportUsbFunctionEvent
 
 efhRunning:
-    movzx cx,ds:ehc_ports
+    mov cx,127
     mov bx,OFFSET ehc_dev_arr
 
 efhDevLoop:
@@ -3922,7 +3923,7 @@ ifTabLoop:
     mov ax,ds
     mov es,ax
     mov di,OFFSET ehc_dev_arr
-    mov cx,MAX_USB_HUB_PORTS
+    mov cx,127
     xor ax,ax
     rep stosw
     pop es
