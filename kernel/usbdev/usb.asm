@@ -3933,19 +3933,6 @@ has_usb_reset_failed   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
-;  obsolete code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-init_usb_control_pipe_name DB 'Init USB Control Pipe', 0
-
-init_usb_control_pipe    Proc far
-    retf32
-init_usb_control_pipe    Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
 ;           NAME:           init
 ;
@@ -3994,12 +3981,6 @@ init    Proc far
     mov edi,OFFSET unlock_usb_name
     xor cl,cl
     mov ax,unlock_usb_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET init_usb_control_pipe
-    mov edi,OFFSET init_usb_control_pipe_name
-    xor cl,cl
-    mov ax,init_usb_control_pipe_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_usb_device

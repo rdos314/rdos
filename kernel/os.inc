@@ -3962,13 +3962,6 @@ SetUsbResetFailed   MACRO
 
 ; IN  DS      Usb device selector
 ; IN  ES      Usb function selector
-; IN  FS      Control pipe selector
-InitUsbControlPipe MACRO
-    OsGate init_usb_control_pipe_nr
-                    ENDM
-
-; IN  DS      Usb device selector
-; IN  ES      Usb function selector
 AddUsbDevice MACRO
     OsGate add_usb_device_nr
                     ENDM
