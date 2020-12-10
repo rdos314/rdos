@@ -398,7 +398,6 @@ etDone:
     retf32
 ehci_timer  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -444,6 +443,111 @@ InitQh   Proc near
     mov fs:[edx].qh_my_phys,eax
     ret
 InitQh   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateQh
+;
+;       DESCRIPTION:    Allocate & initialize an qh descriptor
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;
+;       RETURNS:        EDX     Linear address of qh
+;                       EAX     Physical address of qh
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateQh      PROC near
+    push ds
+    push ebx
+    push ecx
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:EhciSection
+    mov edx,ds:EhciQhList
+    or edx,edx
+    jnz aiqOk
+;
+    push ecx    
+    mov eax,1000h
+    AllocateBigLinear
+;
+    push ebx
+    AllocatePhysical32
+    mov al,13h
+    SetPageEntry
+    pop ebx
+;    
+    mov ecx,128
+    mov ds:EhciQhList,edx
+    
+aiqLoop:
+    mov eax,edx
+    add eax,ecx
+    mov fs:[edx],eax
+    mov edx,eax
+    test dx,0FFFh
+    jnz aiqLoop
+;
+    sub edx,ecx
+    mov dword ptr fs:[edx],0
+    mov edx,ds:EhciQhList
+    pop ecx
+
+aiqOk:
+    mov eax,fs:[edx]
+    mov ds:EhciQhList,eax
+    LeaveSection ds:EhciSection
+;
+    push ebx
+    GetPageEntry
+    pop ebx    
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    call InitQh
+;
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+AllocateQh  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeQh
+;
+;       DESCRIPTION:    Free QH
+;
+;       PARAMETERS:     FS      Flat sel
+;
+;       PARAMETERS:     EDX     QH linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeQh     PROC near
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    EnterSection ds:EhciSection
+    mov eax,ds:EhciQhList
+    mov fs:[edx],eax
+    mov ds:EhciQhList,edx
+    LeaveSection ds:EhciSection
+;       
+    pop eax
+    pop ds
+    ret
+FreeQh     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -503,35 +607,6 @@ InitQtd64 PROC near
     mov fs:[edx].qtdu64_page4,0
     ret
 InitQtd64  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateQh
-;
-;       DESCRIPTION:    Allocate & initialize an qh descriptor
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       FS      Flat sel
-;
-;       RETURNS:        EDX     Linear address of qh
-;                       EAX     Physical address of qh
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateQh      PROC near
-    push ebx
-    push ecx
-;
-    mov cx,SIZE qh_struc
-    AllocateMemBlk
-    call InitQh
-;
-    pop ecx
-    pop ebx
-    ret
-AllocateQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -841,77 +916,6 @@ AddBulkQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateIntQh
-;
-;       DESCRIPTION:    Allocate int QH
-;
-;       RETURNS:        EDX     Linear address
-;                       EAX     Physical address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateIntQh PROC near
-    push ds
-    push ebx
-    push ecx
-;    
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:EhciSection
-    mov edx,ds:EhciQhList
-    or edx,edx
-    jnz aiqOk
-;
-    push ecx    
-    mov eax,1000h
-    AllocateBigLinear
-;
-    push ebx
-    AllocatePhysical32
-    mov al,13h
-    SetPageEntry
-    pop ebx
-;    
-    mov ecx,128
-    mov ds:EhciQhList,edx
-    
-aiqLoop:
-    mov eax,edx
-    add eax,ecx
-    mov fs:[edx],eax
-    mov edx,eax
-    test dx,0FFFh
-    jnz aiqLoop
-;
-    sub edx,ecx
-    mov dword ptr fs:[edx],0
-    mov edx,ds:EhciQhList
-    pop ecx
-
-aiqOk:
-    mov eax,fs:[edx]
-    mov ds:EhciQhList,eax
-    LeaveSection ds:EhciSection
-;
-    push ebx
-    GetPageEntry
-    pop ebx    
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-;
-    call InitQh
-;
-    pop ecx
-    pop ebx
-    pop ds
-    ret
-AllocateIntQh ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AllocateInactiveIntQh
 ;
 ;       DESCRIPTION:    Allocate inactive int QH
@@ -922,41 +926,10 @@ AllocateIntQh ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateInactiveIntQh PROC near
-    call AllocateIntQh
+    call AllocateQh
     mov fs:[edx].qh_adress,80h
     ret
 AllocateInactiveIntQh ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeIntQh
-;
-;       DESCRIPTION:    Free interrupt qh
-;
-;       PARAMETERS:     FS      Flat sel
-;
-;       PARAMETERS:     EDX     QH linear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeIntQh     PROC near
-    push ds
-    push eax
-;
-    mov ax,SEG data
-    mov ds,ax
-;    
-    EnterSection ds:EhciSection
-    mov eax,ds:EhciQhList
-    mov fs:[edx],eax
-    mov ds:EhciQhList,edx
-    LeaveSection ds:EhciSection
-;       
-    pop eax
-    pop ds
-    ret
-FreeIntQh     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1183,7 +1156,7 @@ AddIntrEntry    PROC near
     test al,80h
     jnz aieQhOk
 ;
-    call AllocateIntQh 
+    call AllocateQh 
 
 aieQhOk:
     mov gs:ep_table,bx
@@ -1301,6 +1274,8 @@ AddIntrProp     Endp
 AddIntrQh   PROC near
     pushad
 ;    
+    EnterSection ds:ehc_section
+;
     mov cx,1024
     movzx ax,al
     mov bx,OFFSET ehc_1024
@@ -1332,6 +1307,8 @@ aiqhFound:
     call AddIntrProp
 
 aiqhDone:
+    LeaveSection ds:ehc_section
+;
     popad
     ret
 AddIntrQh   Endp
@@ -1386,14 +1363,13 @@ RemoveIntrProp     Endp
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device sel
 ;                       FS      Flat sel
-;                       GS      Pipe sel
+;                       EDX     QH linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkIntrQh    PROC near
     pushad
 ;
-    mov edx,gs:ep_qh
     mov bx,gs:ep_table
     mov si,gs:ep_entry
     mov bp,gs:ep_table_size
@@ -1422,18 +1398,18 @@ uiqSearch:
     or edi,edi
     jz uiqUpdate
 ;    
-    cmp edx,es:[edi].qh_link_va
+    cmp edx,fs:[edi].qh_link_va
     je uiqUpdate
 ;
-    mov edi,es:[edi].qh_link_va
+    mov edi,fs:[edi].qh_link_va
     jmp uiqSearch
 
 uiqFound:        
-    mov eax,es:[edx].qh_link_va
-    mov es:[edi].qh_link_va,eax
+    mov eax,fs:[edx].qh_link_va
+    mov fs:[edi].qh_link_va,eax
 ;
-    mov eax,es:[edx].qh_link
-    mov es:[edi].qh_link,eax   
+    mov eax,fs:[edx].qh_link
+    mov fs:[edi].qh_link,eax   
 
 uiqUpdate:
     mov ax,si
@@ -2763,8 +2739,12 @@ IsRunning   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkControl   Proc near
+    EnterSection ds:ehc_section
+;
     mov edx,es:dev_control_qh
     call UnlinkAsyncQh
+;
+    LeaveSection ds:ehc_section
     ret
 UnlinkControl   Endp
 
@@ -2782,6 +2762,41 @@ UnlinkControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkPipe   Proc near
+    push fs
+    push gs
+    pushad
+;   
+    mov gs,bx
+    mov edx,gs:ep_qh
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,2
+    je ulpBulk
+;
+    cmp al,3
+    je ulpIntr
+;
+    int 3
+    jmp ulpDone
+
+ulpBulk:
+    EnterSection ds:ehc_section
+    call UnlinkAsyncQh
+    LeaveSection ds:ehc_section
+    jmp ulpDone
+
+ulpIntr:
+    EnterSection ds:ehc_section
+    call UnlinkIntrQh
+    LeaveSection ds:ehc_section
+
+ulpDone:
+    popad
+    pop gs
+    pop fs
     ret
 UnlinkPipe      Endp
 
@@ -2814,7 +2829,7 @@ udvInLoop:
     or bx,bx
     jz udvInNext
 ;
-    call UnlinkPipe
+;    call UnlinkPipe
 
 udvInNext:
     add si,2
@@ -2828,7 +2843,7 @@ udvOutLoop:
     or bx,bx
     jz udvOutNext
 ;
-    call UnlinkPipe
+;    call UnlinkPipe
 
 udvOutNext:
     add si,2

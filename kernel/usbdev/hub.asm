@@ -1077,6 +1077,9 @@ htDisable:
     mov ax,20
     WaitMilliSec
 ;
+    movzx dx,cl
+    call GetPortStatus
+;
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jnz htTryAttach

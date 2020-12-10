@@ -2185,23 +2185,60 @@ start_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_pipe      PROC far
-    push ax
-    push dx
+    push ds
+    push fs
+    push gs
+    pushad
 ;
     mov dl,es:pw_pipe
     mov ds,es:pw_handle_sel
     EnterSection ds:udd_section
+    mov bx,es
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz ewfpLeave
+    jnz swfpLeave
+;
+    mov es,ds:udd_sel    
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    test dl,80h
+    jnz swfpIn
 
-ewfpLeave:
+swfpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].usbd_out_pipe_arr
+    or si,si
+    jz swfpLeave
+;
+    mov gs,si
+    mov gs:usbdp_wait,0
+    jmp swfpLeave
+
+swfpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov si,es:[si].usbd_in_pipe_arr
+    or si,si
+    jz swfpLeave
+;
+    mov gs,si
+    mov gs:usbdp_wait,0
+
+swfpLeave:
     LeaveSection ds:udd_section
-
-ewfpDone:
-    pop dx
-    pop ax
+;
+    popad
+    pop gs
+    pop fs
+    pop ds
     retf32
 stop_wait_for_pipe Endp
     
