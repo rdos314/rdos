@@ -887,7 +887,6 @@ map_realtime_buf_nr               = 718
 unmap_realtime_buf_nr             = 719
 
 is_can_module_online_nr           = 722
-has_usb_reset_failed_nr           = 724
 has_usb_card_reader_error_nr      = 725
 
 wait_anio_nr                      = 726

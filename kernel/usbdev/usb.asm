@@ -110,8 +110,6 @@ pipe_wait_header    ENDS
 
 data    SEGMENT byte public 'DATA'
 
-usb_reset_failure   DW ?
-
 usb_func_count      DW ?
 usb_func_arr        DW 256 DUP(?)
 
@@ -3821,60 +3819,6 @@ hook_usb_detach Proc far
 hook_usb_detach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetUsbResetFailed
-;
-;           description:    Set USB reset failed
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_usb_reset_failed_name DB 'Set USB Reset Failed', 0
-
-set_usb_reset_failed Proc far
-    push ds
-    push bx
-;       
-    mov bx,SEG data
-    mov ds,bx
-    mov ds:usb_reset_failure,1
-;
-    pop bx
-    pop ds
-    retf32
-set_usb_reset_failed   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HasUsbResetFailed
-;
-;           description:    Has USB reset failed
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_usb_reset_failed_name DB 'Has USB Reset Failed', 0
-
-has_usb_reset_failed Proc far
-    push ds
-    push bx
-;       
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:usb_reset_failure
-    or bx,bx
-    clc
-    jnz hurfDone
-;
-    stc
-
-hurfDone:
-    pop bx
-    pop ds
-    retf32
-has_usb_reset_failed   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init
@@ -3891,7 +3835,6 @@ init    Proc far
     mov ds:usb_func_count,0
     mov ds:usb_attach_hooks,0
     mov ds:usb_detach_hooks,0
-    mov ds:usb_reset_failure,0
     InitSection ds:usb_event_section
     mov ds:usb_event_list,0
 ;
@@ -4045,12 +3988,6 @@ init    Proc far
     mov ax,open_usb_dev_sel_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET set_usb_reset_failed
-    mov edi,OFFSET set_usb_reset_failed_name
-    xor cl,cl
-    mov ax,set_usb_reset_failed_nr
-    RegisterOsGate
-;
     mov ebx,OFFSET get_usb_device16
     mov esi,OFFSET get_usb_device32
     mov edi,OFFSET get_usb_device_name
@@ -4069,12 +4006,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET has_usb_reset_failed
-    mov edi,OFFSET has_usb_reset_failed_name
-    xor dx,dx
-    mov ax,has_usb_reset_failed_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_usb_address

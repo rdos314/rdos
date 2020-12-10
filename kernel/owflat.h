@@ -3567,11 +3567,6 @@
     ValidateEax \
     __value [__eax]
 
-#pragma aux RdosHasUsbResetFailed = \
-    CallGate_has_usb_reset_failed \
-    CarryToBool \
-    __value [__eax]
-
 #pragma aux RdosHasUsbCardReaderError = \
     CallGate_has_usb_card_reader_error \
     CarryToBool \

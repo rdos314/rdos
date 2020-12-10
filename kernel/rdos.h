@@ -910,7 +910,6 @@ void RDOSAPI RdosStopCanCapture();
 void RDOSAPI RdosStartLonCapture(int FileHandle);
 void RDOSAPI RdosStopLonCapture();
 
-int RDOSAPI RdosHasUsbResetFailed();
 int RDOSAPI RdosHasUsbCardReaderError();
 int RDOSAPI RdosHasUsbCardDevReset();
 int RDOSAPI RdosHasUsbCardUsbReset();

@@ -3740,11 +3740,6 @@ GetUsbEvent      MACRO
         UserGate get_usb_event_nr
                                                 ENDM
 
-;   OUT NC          Reset failure
-HasUsbResetFailed      MACRO
-        UserGate has_usb_reset_failed_nr
-                                                ENDM
-
 ;   OUT NC          Fatal error
 HasUsbCardReaderError      MACRO
         UserGate has_usb_card_reader_error_nr
