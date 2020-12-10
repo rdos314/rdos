@@ -337,7 +337,7 @@ dsReadStarted:
 
 dsGetData:
     push es
-    GetUsbReqData
+;    GetUsbReqData
     pop es
     jc dsSignal
 ;
@@ -388,7 +388,7 @@ dsReadMore:
     jc dsSignal
 ;
     push es
-    GetUsbReqData
+;    GetUsbReqData
     pop es
     jc dsSignal
 ;
@@ -518,7 +518,7 @@ giLoop:
     jmp giOffline
 
 giRead:
-    GetUsbReqData
+;    GetUsbReqData
     mov es,ds:pmu_in_buffer
 ;
 ;    StartUsbReq
@@ -568,7 +568,7 @@ crLoop:
     jc crDone
 ;
     push es
-    GetUsbReqData
+;    GetUsbReqData
     pop es
     jc crDone
 ;

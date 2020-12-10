@@ -1176,7 +1176,7 @@ hdOpenOk:
 ;    IsUsbReqReady
     jc hdReadDone
 ;
-    GetUsbReqData
+;    GetUsbReqData
     jc hdReadRestart
 ;    
     call PollRead

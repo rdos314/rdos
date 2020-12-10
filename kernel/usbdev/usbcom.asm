@@ -3134,7 +3134,7 @@ hdOpenOk:
 ;    IsUsbReqReady
     jc hdReadDone
 ;
-    GetUsbReqData
+;    GetUsbReqData
     jc hdReadRestart
 ;    
     mov ax,ds:uds_device_type
@@ -3168,7 +3168,7 @@ hdReadDone:
 ;    IsUsbReqReady
     jc hdWrite
 ;
-    GetUsbReqData
+;    GetUsbReqData
     mov es,ds:uds_intr_buffer
 
 hdStartIntr:

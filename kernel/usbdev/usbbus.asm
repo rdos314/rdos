@@ -348,7 +348,7 @@ btOn:
 ;    IsUsbReqReady
     jc btReadDone
 ;
-    GetUsbReqData
+;    GetUsbReqData
     jc btDataDone
 ;
     call HandleReply
@@ -1542,7 +1542,7 @@ hdOpenOk:
 ;    IsUsbReqReady
     jc hdReadDone
 ;
-    GetUsbReqData
+;    GetUsbReqData
     jc hdReadRestart
 ;    
     xor si,si

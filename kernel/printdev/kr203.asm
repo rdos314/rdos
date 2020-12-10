@@ -633,7 +633,7 @@ dsStatusLoop:
     jmp dsOffline
 
 dsGetStatus:
-    GetUsbReqData
+;    GetUsbReqData
     mov es,ds:kr_in_buffer
     call NotifyStatus
 ;
@@ -807,7 +807,7 @@ dsReadStarted:
 
 dsGetData:
     push es
-    GetUsbReqData
+;    GetUsbReqData
     pop es
     jc dsSignal
 ;
@@ -858,7 +858,7 @@ dsReadMore:
     jc dsSignal
 ;
     push es
-    GetUsbReqData
+;    GetUsbReqData
     pop es
     jc dsSignal
 ;
@@ -951,7 +951,7 @@ crLoop:
     jc crDone
 ;
     push es
-    GetUsbReqData
+;    GetUsbReqData
     pop es
     jc crDone
 ;
