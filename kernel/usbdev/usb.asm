@@ -3158,7 +3158,6 @@ unlink_usb_dev       Proc far
     push ds
     pushad
 ;
-    mov ds,es:usbd_func_sel
     lock or es:usbd_flags,FLAG_DETACHED
     movzx bx,es:usbd_port
     add bx,bx

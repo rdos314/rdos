@@ -251,9 +251,15 @@ IsDeviceConnected   Proc far
     movzx ebx,ds:hub_port
     add ebx,ebx
     mov ds,ds:hub_parent_sel
-    mov es,ds:[ebx].usb_dev_arr
-    call fword ptr ds:is_dev_connected_proc
+    mov ax,ds:[ebx].usb_dev_arr
+    or ax,ax
+    stc
+    jz idcPop
 ;
+    mov es,ax
+    call fword ptr ds:is_dev_connected_proc
+
+idcPop:
     pop es
     pop ds
 
