@@ -3740,12 +3740,6 @@ GetUsbEvent      MACRO
         UserGate get_usb_event_nr
                                                 ENDM
 
-;   IN  BX          Handle
-;   OUT CY          Stalled
-IsUsbPipeStalled      MACRO
-        UserGate is_usb_pipe_stalled_nr
-                                                ENDM
-
 
 ;   OUT NC          Over current
 HasUsbOverCurrent      MACRO

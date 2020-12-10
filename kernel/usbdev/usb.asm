@@ -3938,13 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-is_usb_pipe_stalled_name   DB 'Is Usb Pipe Stalled',0
-
-is_usb_pipe_stalled    Proc far
-    stc
-    retf32
-is_usb_pipe_stalled    Endp
-
 create_usb_req_name DB 'Create USB req', 0
 
 create_usb_req  Proc far
@@ -4276,12 +4269,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET is_usb_pipe_stalled
-    mov edi,OFFSET is_usb_pipe_stalled_name
-    xor dx,dx
-    mov ax,is_usb_pipe_stalled_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET has_usb_over_current

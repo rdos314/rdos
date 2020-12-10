@@ -673,8 +673,6 @@ write_long_disc_nr              = 554
 create_named_user_section_nr    = 555
 acquire_named_futex_nr          = 556
 
-is_usb_pipe_stalled_nr          = 557
-
 get_lon_modules_nr              = 559
 open_lon_module_nr              = 560
 close_lon_module_nr             = 561
