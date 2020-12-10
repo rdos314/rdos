@@ -793,8 +793,6 @@ add_unsigned_bignum_nr           = 646
 sub_signed_bignum_nr             = 647
 sub_unsigned_bignum_nr           = 648
 
-start_one_usb_trans_nr           = 650
-
 get_thread_count_nr              = 651
 
 is_can_online_nr                 = 652

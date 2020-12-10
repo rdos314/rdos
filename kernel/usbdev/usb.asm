@@ -3938,13 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-start_one_usb_trans_name   DB 'Start One USB Transaction',0
-
-start_one_usb_trans    Proc far
-    stc
-    retf32
-start_one_usb_trans    Endp
-
 is_usb_pipe_stalled_name   DB 'Is Usb Pipe Stalled',0
 
 is_usb_pipe_stalled    Proc far
@@ -4283,12 +4276,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET start_one_usb_trans
-    mov edi,OFFSET start_one_usb_trans_name
-    xor dx,dx
-    mov ax,start_one_usb_trans_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_usb_pipe_stalled

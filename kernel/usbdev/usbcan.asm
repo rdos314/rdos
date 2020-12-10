@@ -1214,7 +1214,7 @@ ureAddReqLoop:
 ;
     loop ureAddReqLoop
 ;
-    StartOneUsbTransaction
+;    StartOneUsbTransaction
 
 ureLoop:
     mov al,ds:cd_active
@@ -1259,7 +1259,7 @@ ureLoop:
     mov bx,ds:cd_in_pipe
     mov ecx,10
 ;    ReqUsbDataNoCopy
-    StartOneUsbTransaction
+;    StartOneUsbTransaction
 ;
     jmp ureLoop
 
