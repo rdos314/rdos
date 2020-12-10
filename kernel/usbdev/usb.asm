@@ -3938,25 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-write_usb_data_name     DB 'Write USB Data',0
-
-write_usb_data16    Proc far
-    stc
-    retf32
-write_usb_data16    Endp
-
-write_usb_data32    Proc far
-    stc
-    retf32
-write_usb_data32    Endp
-
-write_usb_data_no_copy_name     DB 'Write USB Data, No Copy',0
-
-write_usb_data_no_copy    Proc far
-    stc
-    retf32
-write_usb_data_no_copy    Endp
-
 start_usb_trans_name    DB 'Start USB Transaction',0
 
 start_usb_trans Proc far
@@ -4300,12 +4281,6 @@ init    Proc far
     mov ax,close_usb_req_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET write_usb_data_no_copy
-    mov edi,OFFSET write_usb_data_no_copy_name
-    xor cl,cl
-    mov ax,write_usb_data_no_copy_nr
-    RegisterOsGate
-;
     mov esi,OFFSET set_usb_over_current
     mov edi,OFFSET set_usb_over_current_name
     xor cl,cl
@@ -4337,13 +4312,6 @@ init    Proc far
     xor dx,dx
     mov ax,config_usb_device_nr
     RegisterBimodalUserGate
-;
-    mov ebx,OFFSET write_usb_data16
-    mov esi,OFFSET write_usb_data32
-    mov edi,OFFSET write_usb_data_name
-    mov dx,virt_es_in
-    mov ax,write_usb_data_nr
-    RegisterUserGate
 ;
     mov esi,OFFSET start_usb_trans
     mov edi,OFFSET start_usb_trans_name

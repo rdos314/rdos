@@ -481,7 +481,7 @@ SendCbw Proc near
     mov bx,fs:disc_bulk_out_handle
     mov edi,OFFSET disc_cbw_sign
     mov ecx,31
-    WriteUsbData
+;    WriteUsbData
     StartUsbTransaction
 ;    
     GetSystemTime
@@ -597,7 +597,7 @@ ReceiveData Endp
 
 WriteData Proc near
     mov bx,fs:disc_bulk_out_handle
-    UserGateForce32 write_usb_data_nr
+;    UserGateForce32 write_usb_data_nr
     StartUsbTransaction
 ;    
     GetSystemTime
@@ -1670,7 +1670,7 @@ wdBufLoop:
     mov edi,es:[edi].dh_data
     mov ecx,200h
     mov bx,fs:disc_bulk_out_handle
-    UserGateForce32 write_usb_data_nr
+;    UserGateForce32 write_usb_data_nr
 ;
     add esi,4
     sub ebp,1

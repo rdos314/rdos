@@ -4174,13 +4174,6 @@ CloseUsbReq      MACRO
     OsGate close_usb_req_nr
                         ENDM
 
-; IN  BX      Handle
-; IN  ES:EDI  Data
-; IN  CX      Size
-WriteUsbDataNoCopy      MACRO
-    OsGate write_usb_data_no_copy_nr
-                        ENDM
-
 ;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register

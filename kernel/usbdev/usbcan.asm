@@ -582,7 +582,7 @@ gimLoop:
     movzx edi,di
     mov bx,ds:cd_out_pipe
     mov ecx,10
-    WriteUsbDataNoCopy
+;    WriteUsbDataNoCopy
 ;
     pop si
     pop cx
@@ -624,7 +624,7 @@ psPoll:
     movzx edi,di
     mov bx,ds:cd_out_pipe
     mov ecx,10
-    WriteUsbDataNoCopy
+;    WriteUsbDataNoCopy
     jmp psPoll
 
 psStart:
@@ -1653,7 +1653,7 @@ usSendDo:
     mov ecx,10
     xor edi,edi
     mov bx,ds:cd_out_pipe
-    WriteUsbData
+;    WriteUsbData
 ;
     StartUsbTransaction        
 ;
