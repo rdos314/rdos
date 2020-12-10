@@ -372,8 +372,6 @@ get_max_com_port_nr         = 335
 
 config_usb_device_nr        = 336
 
-start_usb_transaction_nr    = 337
-
 open_ini_nr                 = 338
 
 open_icsp_nr                = 339

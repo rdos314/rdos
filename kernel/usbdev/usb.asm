@@ -3938,13 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-start_usb_trans_name    DB 'Start USB Transaction',0
-
-start_usb_trans Proc far
-    stc
-    retf32
-start_usb_trans Endp
-
 is_usb_trans_done_name  DB 'Is USB Transaction Done',0
 
 is_usb_trans_done       Proc far
@@ -4311,12 +4304,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET start_usb_trans
-    mov edi,OFFSET start_usb_trans_name
-    xor dx,dx
-    mov ax,start_usb_transaction_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_usb_trans_done

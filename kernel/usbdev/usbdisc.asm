@@ -482,7 +482,7 @@ SendCbw Proc near
     mov edi,OFFSET disc_cbw_sign
     mov ecx,31
 ;    WriteUsbData
-    StartUsbTransaction
+;    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -518,7 +518,7 @@ ReceiveCsw Proc near
     mov edi,OFFSET disc_csw_sign
     mov ecx,13
 ;    ReqUsbData
-    StartUsbTransaction
+;    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -569,7 +569,7 @@ ReceiveCsw Endp
 ReceiveData Proc near
     mov bx,fs:disc_bulk_in_handle
 ;    ReqUsbData
-    StartUsbTransaction
+;    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -598,7 +598,7 @@ ReceiveData Endp
 WriteData Proc near
     mov bx,fs:disc_bulk_out_handle
 ;    UserGateForce32 write_usb_data_nr
-    StartUsbTransaction
+;    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1519,7 +1519,7 @@ rdBufLoop:
     pop esi
     pop ebp
 ;
-    StartUsbTransaction
+;    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000
@@ -1679,7 +1679,7 @@ wdBufLoop:
     pop esi
     pop ebp
 ;
-    StartUsbTransaction
+;    StartUsbTransaction
 ;    
     GetSystemTime
     add eax,1193 * 1000

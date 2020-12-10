@@ -630,7 +630,7 @@ psPoll:
 psStart:
     call GetIdMsg
 ;
-    StartUsbTransaction        
+;    StartUsbTransaction        
 ;
     mov bp, 5 * 5
 
@@ -1655,7 +1655,7 @@ usSendDo:
     mov bx,ds:cd_out_pipe
 ;    WriteUsbData
 ;
-    StartUsbTransaction        
+;    StartUsbTransaction        
 ;
     mov ecx,10
 
