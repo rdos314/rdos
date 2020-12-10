@@ -1149,6 +1149,7 @@ GetIntrEntry    Endp
 AddIntrEntry    PROC near
     pushad
 ;    
+    push ax
     mov si,ax
     shl si,3
     mov edx,ds:[bx+si].ehc_qh
@@ -1159,6 +1160,7 @@ AddIntrEntry    PROC near
     call AllocateQh 
 
 aieQhOk:
+    pop ax
     mov gs:ep_table,bx
     mov gs:ep_entry,ax
     mov gs:ep_qh,edx
@@ -1372,6 +1374,7 @@ UnlinkIntrQh    PROC near
 ;
     mov bx,gs:ep_table
     mov si,gs:ep_entry
+    shl si,3
     mov bp,gs:ep_table_size
     mov cx,bp
     shr cx,4
@@ -2829,7 +2832,7 @@ udvInLoop:
     or bx,bx
     jz udvInNext
 ;
-;    call UnlinkPipe
+    call UnlinkPipe
 
 udvInNext:
     add si,2
@@ -2843,7 +2846,7 @@ udvOutLoop:
     or bx,bx
     jz udvOutNext
 ;
-;    call UnlinkPipe
+    call UnlinkPipe
 
 udvOutNext:
     add si,2
