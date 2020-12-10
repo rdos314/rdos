@@ -2802,7 +2802,7 @@ OpenPort    Proc near
     push es
     mov cx,ds:uds_out_size
     mov ax,1
-    AddWriteUsbDataReq
+;    AddWriteUsbDataReq
     mov ds:uds_out_buffer,es
     pop es
 ;

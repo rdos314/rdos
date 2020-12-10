@@ -2091,49 +2091,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_hook_usb_detach \
     __parm [__es __edi]
 
-#pragma aux RdosCreateUsbReq = \
-    OsGate_create_usb_req \
-    __parm [__ebx] \
-    __value [__ebx]
-
-#pragma aux RdosAddWriteUsbDataReq = \
-    OsGate_add_write_usb_data_req \
-    __parm [__ebx] [__ecx] [__es]
-
-#pragma aux RdosAddReadUsbDataReq = \
-    OsGate_add_read_usb_data_req \
-    __parm [__ebx] [__ecx] [__es]
-
-#pragma aux RdosStartUsbReq = \
-    OsGate_start_usb_req \
-    __parm [__ebx] [__eax] [__ecx]
-
-#pragma aux RdosStopUsbReq = \
-    OsGate_stop_usb_req \
-    __parm [__ebx]
-
-#pragma aux RdosIsUsbReqStarted = \
-    OsGate_is_usb_req_started \
-    CarryToBool \
-    __parm [__ebx] \
-    __value [__eax]
-
-#pragma aux RdosIsUsbReqReady = \
-    OsGate_is_usb_req_ready \
-    CarryToBool \
-    __parm [__ebx] \
-    __value [__eax]
-
-#pragma aux RdosGetUsbReqData = \
-    OsGate_get_usb_req_data \
-    "movzx ecx,cx" \
-    __parm [__ebx] \
-    __value [__ecx]
-
-#pragma aux RdosCloseUsbReq = \
-    OsGate_close_usb_req \
-    __parm [__ebx]
-
 #pragma aux RdosReadCodec = \
     OsGate_read_codec \
     __parm [__ebx] \

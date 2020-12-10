@@ -938,7 +938,7 @@ OpenPort    Proc near
     push es
     mov cx,fs:unit_out_size
     mov ax,1
-    AddWriteUsbDataReq
+;    AddWriteUsbDataReq
     mov ds:ucd_out_buffer,es
     pop es
     ret

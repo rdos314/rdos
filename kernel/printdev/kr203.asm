@@ -996,7 +996,7 @@ OpenPipes   Proc near
 ;    CreateUsbReq
     mov ds:kr_out_req,bx
     mov cx,MAX_OUT_SIZE
-    AddWriteUsbDataReq
+;    AddWriteUsbDataReq
     mov ds:kr_out_buffer,es
 ;
     ret

@@ -329,7 +329,7 @@ btCreate:
 ;    
     mov cx,ds:io_out_size
     xor ax,ax
-    AddWriteUsbDataReq
+;    AddWriteUsbDataReq
     mov ds:io_out_buffer,es
 
 btRestart:
@@ -1212,7 +1212,7 @@ OpenPort Proc far
 ;    
     mov cx,ds:uds_out_size
     xor ax,ax
-    AddWriteUsbDataReq
+;    AddWriteUsbDataReq
     mov ds:uds_out_buffer,es
     ret
 OpenPort Endp
