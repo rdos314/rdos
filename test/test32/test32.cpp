@@ -220,8 +220,8 @@ void main()
     p2.port = 1;
 //    RdosCreateThread(UsbThread, "Dev2", &p2, 0x4000);
 
-    for (;;)
-        RdosWaitMilli(250);
+//    for (;;)
+//        RdosWaitMilli(250);
 
     RdosTestGate("");
 }
