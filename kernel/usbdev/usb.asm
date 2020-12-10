@@ -3936,13 +3936,6 @@ has_usb_reset_failed   Endp
 ;  obsolete code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-close_usb_pipe_name     DB 'Close USB Pipe',0
-
-close_usb_pipe  Proc far
-    retf32
-close_usb_pipe  Endp
     
 add_wait_for_pipe_name DB 'Add Wait for pipe', 0
 
@@ -4381,12 +4374,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET close_usb_pipe
-    mov edi,OFFSET close_usb_pipe_name
-    xor dx,dx
-    mov ax,close_usb_pipe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_pipe

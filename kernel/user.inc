@@ -3748,11 +3748,6 @@ GetUsbEvent      MACRO
                                                 ENDM
 
 ;   IN  BX          Handle
-CloseUsbPipe      MACRO
-        UserGate close_usb_pipe_nr
-                                                ENDM
-
-;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 ReqUsbData      MACRO

@@ -2853,7 +2853,7 @@ ClosePort    Proc near
     mov ds:uds_in_req,0
 ;
     mov bx,ds:uds_in_handle
-    CloseUsbPipe    
+;    CloseUsbPipe    
     mov ds:uds_in_handle,0
 ;
     mov bx,ds:uds_out_req
@@ -2861,7 +2861,7 @@ ClosePort    Proc near
     mov ds:uds_out_req,0
 ;
     mov bx,ds:uds_out_handle
-    CloseUsbPipe    
+;    CloseUsbPipe    
     mov ds:uds_out_handle,0
 ;
     mov bx,ds:uds_intr_req
@@ -2876,7 +2876,7 @@ cIntrReqDone:
     or bx,bx
     jz cIntrHandleDone
 ;    
-    CloseUsbPipe
+;    CloseUsbPipe
     mov ds:uds_intr_handle,0
 
 cIntrHandleDone:    

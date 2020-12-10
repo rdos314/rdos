@@ -410,7 +410,7 @@ btCheckOn:
     mov ds:io_in_req,0
 ;
     mov bx,ds:io_in_handle
-    CloseUsbPipe
+;    CloseUsbPipe
     mov ds:io_in_handle,0
 ;
     mov bx,ds:io_out_req
@@ -418,7 +418,7 @@ btCheckOn:
     mov ds:io_out_req,0
 ;
     mov bx,ds:io_out_handle
-    CloseUsbPipe
+;    CloseUsbPipe
     mov ds:io_out_handle,0
     jmp btOff
 
@@ -1240,7 +1240,7 @@ ClosePort    Proc near
     mov ds:uds_in_req,0
 ;
     mov bx,ds:uds_in_handle
-    CloseUsbPipe    
+;    CloseUsbPipe    
     mov ds:uds_in_handle,0
 ;
     mov bx,ds:uds_out_req
@@ -1248,7 +1248,7 @@ ClosePort    Proc near
     mov ds:uds_out_req,0
 ;
     mov bx,ds:uds_out_handle
-    CloseUsbPipe    
+;    CloseUsbPipe    
     mov ds:uds_out_handle,0
     mov ds:uds_in_buffer,0
     mov ds:uds_out_buffer,0

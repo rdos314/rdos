@@ -813,7 +813,7 @@ OpenControl	Endp
 
 CloseControl	Proc near
     mov bx,ds:cdc_control_pipe
-    CloseUsbPipe
+;    CloseUsbPipe
 ;
     mov bx,ds:cdc_control_wait
     CloseWait
@@ -966,7 +966,7 @@ ClosePort    Proc near
     mov ds:ucd_in_req,0
 ;
     mov bx,ds:ucd_in_handle
-    CloseUsbPipe    
+;    CloseUsbPipe    
     mov ds:ucd_in_handle,0
 ;
     mov bx,ds:ucd_out_req
@@ -974,7 +974,7 @@ ClosePort    Proc near
     mov ds:ucd_out_req,0
 ;
     mov bx,ds:ucd_out_handle
-    CloseUsbPipe    
+;    CloseUsbPipe    
     mov ds:ucd_out_handle,0
 ;
     mov ds:ucd_in_buffer,0

@@ -1414,7 +1414,7 @@ usuProgWaitDead:
 
 usuProgAllDead:
     mov bx,ds:cd_in_pipe
-    CloseUsbPipe
+;    CloseUsbPipe
 ;
     mov ax,100
     WaitMilliSec
@@ -1482,15 +1482,15 @@ usuProgDone:
     FreeMem
 ;
     mov bx,ds:cd_out_pipe
-    CloseUsbPipe
+;    CloseUsbPipe
     jmp usuWaitDead
 
 usuEnd:
     mov bx,ds:cd_in_pipe
-    CloseUsbPipe
+;    CloseUsbPipe
 ;
     mov bx,ds:cd_out_pipe
-    CloseUsbPipe
+;    CloseUsbPipe
 
 usuWaitDead:
     mov ax,25

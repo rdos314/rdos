@@ -1944,13 +1944,13 @@ dtEnd:
     CloseWait
 ;
     mov bx,fs:disc_bulk_in_handle
-    CloseUsbPipe
+;    CloseUsbPipe
 ;
     mov bx,fs:disc_bulk_out_wait
     CloseWait
 ;
     mov bx,fs:disc_bulk_out_handle
-    CloseUsbPipe
+;    CloseUsbPipe
 ;
     mov bx,fs:disc_handle
     StopDisc    
