@@ -3163,7 +3163,6 @@ unlink_usb_dev       Proc far
     or ax,ax
     jz uudHubDone
 ;
-    int 3
     push ds
     mov ds,ax
     call fword ptr ds:unlink_func_proc

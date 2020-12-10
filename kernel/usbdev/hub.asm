@@ -188,6 +188,8 @@ UnlinkHub   Proc far
     push es
     pushad
 ;
+    lock or ds:hub_flags,FLAG_HUB_DISCONNECT
+;
     mov bx,OFFSET hub_status_arr
     mov cx,ds:hub_ports
     xor ax,ax
@@ -1097,8 +1099,12 @@ htDoUnlock:
     jmp htDetached
 
 htDetach:
-    UnlinkUsbDev
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz htDone
 ;
+    UnlinkUsbDev
+
+htUnlinked:
     mov al,cl
     NotifyUsbDetach
 ;
