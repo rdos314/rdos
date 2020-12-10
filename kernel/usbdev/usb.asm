@@ -2804,7 +2804,8 @@ init_usb_dev       Proc far
     pusha
 ;
     mov es:usbd_func_sel,ds
-    mov es:usbd_hub_sel,bx
+    mov es:usbd_parent_hub,bx
+    mov es:usbd_my_hub,0
     mov es:usbd_port,dl
     mov es:usbd_address,al
     mov es:usbd_speed,ah
@@ -3809,6 +3810,21 @@ crrAdd:
 crrPop:
     pop ecx    
     pop eax
+    pop es
+;
+    mov ds,si
+    cmp al,MAX_USB_HUB_PORTS
+    jae crrDone
+;    
+    movzx si,al
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz crrDone
+;
+    push es
+    mov es,si
+    mov es:usbd_my_hub,cx
     pop es
 
 crrDone:

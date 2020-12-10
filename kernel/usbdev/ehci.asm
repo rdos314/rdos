@@ -832,7 +832,7 @@ acqSetSpeed:
     inc ax
     shl ax,7
     or ax,4000h    
-    mov gs,es:usbd_hub_sel
+    mov gs,es:usbd_parent_hub
     or al,gs:hub_address
     mov fs:[edx].qh_hub_port,ax
     mov fs:[edx].qh_c_mask,2
@@ -895,7 +895,7 @@ abqSetSpeed:
     shl ax,7
     or ax,4000h    
     push gs
-    mov gs,es:usbd_hub_sel
+    mov gs,es:usbd_parent_hub
     or al,gs:hub_address
     pop gs
     mov fs:[edx].qh_hub_port,ax
@@ -1192,7 +1192,7 @@ aieSetSpeed:
     inc ax
     shl ax,7
     or ax,4000h    
-    mov gs,es:usbd_hub_sel
+    mov gs,es:usbd_parent_hub
     or al,gs:hub_address
     pop gs        
     mov fs:[edx].qh_hub_port,ax

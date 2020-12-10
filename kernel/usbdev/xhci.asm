@@ -1051,7 +1051,7 @@ SetupRootDevice    Proc near
     inc al
     mov es:[bx].s_root_hub,al
 ;
-    mov dx,es:usbd_hub_sel
+    mov dx,es:usbd_parent_hub
     or dx,dx
     jz srdDone
 ;
