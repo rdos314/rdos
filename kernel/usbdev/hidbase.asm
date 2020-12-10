@@ -1385,6 +1385,39 @@ get_hid_device  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsHidConnected
+;
+;       description:    Is HID connected?
+;
+;       parameters:     FS:ESI      Device
+;
+;       RETURNS:        EAX         Connected = 1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsHidConnected_
+
+IsHidConnected_    Proc near
+    push bx
+;
+    mov bx,fs:hid_device_handle
+    IsUsbDeviceConnected
+    jc ihcFail
+;
+    mov eax,1
+    jmp ihcDone
+
+ihcFail:
+    xor eax,eax
+
+ihcDone:
+    pop bx
+    ret
+IsHidConnected_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WaitForReport
 ;
 ;       description:    Wait for report
@@ -1423,9 +1456,6 @@ wfrRead:
     jmp wfrRead    
 
 wfrFail:
-    mov ax,10
-    WaitMilliSec
-;
     xor edi,edi
     mov es,edi
     jmp wfrDone

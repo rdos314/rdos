@@ -58,6 +58,9 @@ extern void CloseHidDev(struct THidDevice *dev);
 extern void OpenIntrPipe(struct THidDevice *dev);
 #pragma aux OpenIntrPipe parm routine [fs esi]
 
+extern int IsHidConnected(struct THidDevice *dev);
+#pragma aux IsHidConnected parm routine [fs esi] value [eax]
+
 extern char *WaitForReport(struct THidDevice *dev);
 #pragma aux WaitForReport parm routine [fs esi] value [es edi]
 
@@ -2982,7 +2985,7 @@ void __far HidThread(void *param)
             StartInputReports(dev);
             if (CreateIntrPipe(dev))
             {
-                while (!dev->StopReq)
+                while (IsHidConnected(dev) && !dev->StopReq)
                 {
                     ReportData = WaitForReport(dev);
 
