@@ -122,7 +122,6 @@ AllocateAddress	Endp
 
 FreeAddress   Proc far
     push ds
-    FreeUsbAddress
     mov ds,ds:hub_parent_sel
     call fword ptr ds:free_address_proc
     pop ds
