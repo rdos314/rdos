@@ -4118,12 +4118,6 @@ AddressUsbDev   MACRO
                     ENDM
 
 ; IN  BX    Req handle
-; OUT NC    Req is started
-IsUsbReqStarted      MACRO
-    OsGate is_usb_req_started_nr
-                        ENDM
-
-; IN  BX    Req handle
 ; OUT NC    Req is done
 IsUsbReqReady      MACRO
     OsGate is_usb_req_ready_nr

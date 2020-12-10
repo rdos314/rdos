@@ -3938,13 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-is_usb_req_started_name DB 'Is USB Req Started', 0
-
-is_usb_req_started      Proc far
-    stc
-    retf32
-is_usb_req_started   Endp
-
 is_usb_req_ready_name DB 'Is USB Req Ready', 0
 
 is_usb_req_ready    Proc far
@@ -4148,12 +4141,6 @@ init    Proc far
     mov edi,OFFSET open_usb_dev_sel_name
     xor cl,cl
     mov ax,open_usb_dev_sel_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET is_usb_req_started
-    mov edi,OFFSET is_usb_req_started_name
-    xor cl,cl
-    mov ax,is_usb_req_started_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_usb_req_ready

@@ -360,7 +360,7 @@ btDataDone:
 
 btReadDone:
     mov bx,ds:io_out_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jc btCheckReq
 ;    
     IsUsbReqReady
@@ -1532,7 +1532,7 @@ hdOpen:
 
 hdIsOpen:    
     mov bx,ds:uds_in_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jnc hdOpenOk
 ;
 ;    StartUsbReq
@@ -1557,7 +1557,7 @@ hdReadRestart:
 
 hdReadDone:
     mov bx,ds:uds_out_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jc hdCheckWrite
 ;    
     IsUsbReqReady

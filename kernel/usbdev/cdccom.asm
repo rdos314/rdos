@@ -1166,7 +1166,7 @@ hdOpen:
 
 hdIsOpen:    
     mov bx,ds:ucd_in_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jnc hdOpenOk
 ;
 ;    StartUsbReq
@@ -1187,7 +1187,7 @@ hdReadRestart:
 
 hdReadDone:
     mov bx,ds:ucd_out_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jc hdCheckWrite
 ;    
     IsUsbReqReady

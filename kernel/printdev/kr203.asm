@@ -610,7 +610,7 @@ UpdateStatus   Proc near
 ;
     xor dx,dx
     mov bx,ds:kr_in_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jnc dsStatusLoop
 ;
 ;    StartUsbReq
@@ -737,7 +737,7 @@ dsLoop:
 ;    
     mov cx,50
     mov bx,ds:kr_out_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jc dsWriteDo
 
 dsWriteWait:    
@@ -784,7 +784,7 @@ dsCheckRead:
 
 dsReadLoop:
     mov bx,ds:kr_in_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jnc dsReadStarted
 ;
     push es
@@ -939,7 +939,7 @@ NotifyUsbData   Endp
 
 ClearReceiver    Proc near
     mov bx,ds:kr_in_req
-    IsUsbReqStarted
+;    IsUsbReqStarted
     jnc crLoop
 
 ;    StartUsbReq
