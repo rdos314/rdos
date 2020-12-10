@@ -368,8 +368,6 @@ calc_crc_nr                 = 320
 get_usb_device_nr           = 321
 get_usb_config_nr           = 322
 
-add_wait_for_usb_pipe_nr    = 325
-get_usb_data_size_nr        = 327
 write_usb_data_nr           = 328
 
 get_max_com_port_nr         = 335

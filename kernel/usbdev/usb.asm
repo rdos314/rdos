@@ -3938,18 +3938,6 @@ has_usb_reset_failed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-get_usb_data_size_name  DB 'Get USB Data Size',0
-
-get_usb_data_size16     Proc far
-    stc
-    retf32
-get_usb_data_size16     Endp
-
-get_usb_data_size32     Proc far
-    stc
-    retf32
-get_usb_data_size32     Endp
-
 write_usb_data_name     DB 'Write USB Data',0
 
 write_usb_data16    Proc far
@@ -4349,13 +4337,6 @@ init    Proc far
     xor dx,dx
     mov ax,config_usb_device_nr
     RegisterBimodalUserGate
-;
-    mov ebx,OFFSET get_usb_data_size16
-    mov esi,OFFSET get_usb_data_size32
-    mov edi,OFFSET get_usb_data_size_name
-    mov dx,virt_es_in
-    mov ax,get_usb_data_size_nr
-    RegisterUserGate
 ;
     mov ebx,OFFSET write_usb_data16
     mov esi,OFFSET write_usb_data32

@@ -1829,7 +1829,7 @@ dtInsDo:
     mov ax,fs:disc_bulk_in_handle
     mov bx,fs:disc_bulk_in_wait
     movzx ecx,bx
-    AddWaitForUsbPipe
+;    AddWaitForUsbPipe
 ;
     mov bx,fs:disc_controller
 ;    movzx ax,fs:disc_device
@@ -1843,7 +1843,7 @@ dtInsDo:
     mov ax,fs:disc_bulk_out_handle
     mov bx,fs:disc_bulk_out_wait
     movzx ecx,bx
-    AddWaitForUsbPipe
+;    AddWaitForUsbPipe
 ;
     mov cx,32
 

@@ -796,7 +796,7 @@ OpenControl	Proc near
     mov ax,ds:cdc_control_pipe
     mov bx,ds:cdc_control_wait
     movzx ecx,bx
-    AddWaitForUsbPipe
+;    AddWaitForUsbPipe
     ret
 OpenControl	Endp
 

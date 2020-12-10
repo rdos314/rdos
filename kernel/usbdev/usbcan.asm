@@ -1360,7 +1360,7 @@ usuRestart:
     mov ax,ds:cd_in_pipe
     mov bx,ds:cd_in_wait
     movzx ecx,bx
-    AddWaitForUsbPipe
+;    AddWaitForUsbPipe
 ;
     CreateWait
     mov ds:cd_out_wait,bx
@@ -1374,7 +1374,7 @@ usuRestart:
     mov ax,ds:cd_out_pipe
     mov bx,ds:cd_out_wait
     movzx ecx,bx
-    AddWaitForUsbPipe
+;    AddWaitForUsbPipe
 
 usuRestartWait:
     mov ds:can_active,1

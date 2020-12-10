@@ -718,13 +718,6 @@ AddWaitForUdpListen       MACRO
         UserGate add_wait_for_udp_listen_nr
                                                 ENDM
 
-; IN  AX        USB pipe handle
-; IN  BX                Wait handle
-; IN  ECX       Object ID
-AddWaitForUsbPipe       MACRO
-        UserGate add_wait_for_usb_pipe_nr
-                                                ENDM
-
 ; IN  AX        USB dev handle
 ; IN  BX        Wait handle
 ; IN  DL        Pipe #
@@ -3745,12 +3738,6 @@ AddWaitForUsbEvent      MACRO
 ;   IN  ES:(E)DI    Event buffer
 GetUsbEvent      MACRO
         UserGate get_usb_event_nr
-                                                ENDM
-
-;   IN  BX          Handle
-;   OUT (E)AX       Read size
-GetUsbDataSize      MACRO
-        UserGate get_usb_data_size_nr
                                                 ENDM
 
 ;   IN  BX          Handle
