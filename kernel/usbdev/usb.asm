@@ -110,7 +110,6 @@ pipe_wait_header    ENDS
 
 data    SEGMENT byte public 'DATA'
 
-usb_over_current    DW ?
 usb_reset_failure   DW ?
 
 usb_func_count      DW ?
@@ -3821,62 +3820,6 @@ hook_usb_detach Proc far
     retf32
 hook_usb_detach   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetUsbOverCurrent
-;
-;           description:    Set USB overcurrent
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_usb_over_current_name DB 'Set USB Over Current', 0
-
-set_usb_over_current Proc far
-    push ds
-    push bx
-;       
-    mov bx,SEG data
-    mov ds,bx
-    mov ds:usb_over_current,1
-;
-    pop bx
-    pop ds
-    retf32
-set_usb_over_current   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HasUsbOverCurrent
-;
-;           description:    Has USB overcurrent
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_usb_over_current_name DB 'Has USB Over Current', 0
-
-has_usb_over_current Proc far
-    push ds
-    push bx
-;       
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:usb_over_current
-    or bx,bx
-    clc
-    jnz huscDone
-;
-    stc
-
-huscDone:
-    pop bx
-    pop ds
-    retf32
-has_usb_over_current   Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3948,7 +3891,6 @@ init    Proc far
     mov ds:usb_func_count,0
     mov ds:usb_attach_hooks,0
     mov ds:usb_detach_hooks,0
-    mov ds:usb_over_current,0
     mov ds:usb_reset_failure,0
     InitSection ds:usb_event_section
     mov ds:usb_event_list,0
@@ -4103,12 +4045,6 @@ init    Proc far
     mov ax,open_usb_dev_sel_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET set_usb_over_current
-    mov edi,OFFSET set_usb_over_current_name
-    xor cl,cl
-    mov ax,set_usb_over_current_nr
-    RegisterOsGate
-;
     mov esi,OFFSET set_usb_reset_failed
     mov edi,OFFSET set_usb_reset_failed_name
     xor cl,cl
@@ -4133,12 +4069,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET has_usb_over_current
-    mov edi,OFFSET has_usb_over_current_name
-    xor dx,dx
-    mov ax,has_usb_over_current_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET has_usb_reset_failed

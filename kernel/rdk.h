@@ -317,16 +317,6 @@
 
 #define osgate_get_net_driver 310
 
-#define osgate_create_usb_req 311
-#define osgate_add_write_usb_data_req 313
-#define osgate_add_read_usb_data_req 314
-#define osgate_start_usb_req 317
-#define osgate_is_usb_req_started 318
-#define osgate_is_usb_req_ready 319
-#define osgate_get_usb_req_data 320
-#define osgate_usb_req_done 321
-#define osgate_close_usb_req 322
-
 #define osgate_notify_ir_data 323
 
 #define osgate_read_codec 324
@@ -349,8 +339,6 @@
 #define osgate_alias_module_handle 341
 
 #define osgate_thread_to_sel 342
-
-#define osgate_stop_usb_req 344
 
 #define osgate_reserve_com_line 346
 
@@ -420,8 +408,6 @@
 
 #define osgate_start_sys_preempt_timer 400
 #define osgate_reload_sys_preempt_timer 401
-
-#define osgate_is_valid_usb_pipe_sel 403
 
 #define osgate_hook_net_link_up 404
 #define osgate_req_arp 405
@@ -672,9 +658,6 @@
 
 #define osgate_notify_can_offline 615
 
-#define osgate_req_usb_data_no_copy 616
-#define osgate_write_usb_data_no_copy 617
-
 #define osgate_notify_can_modules_up 619
 #define osgate_notify_can_online 620
 
@@ -812,16 +795,11 @@
 
 #define osgate_setup_nmi_handler 717
 
-#define osgate_lock_usb_com_control 718
-#define osgate_unlock_usb_com_control 719
-
 #define osgate_allocate_usb_address 720
 #define osgate_free_usb_address 721
 #define osgate_init_usb_dev 722
 #define osgate_address_usb_dev 723
 
-#define osgate_is_usb_pipe_connected 724
-#define osgate_start_usb_dev 725
 #define osgate_read_usb_descriptors 726
 #define osgate_get_usb_hub_descriptor 727
 #define osgate_config_usb_hub 728
@@ -837,7 +815,6 @@
 #define osgate_allocate_2m_physical_64 735
 #define osgate_free_2m_physical 736
 
-#define osgate_set_usb_over_current 738
 #define osgate_set_usb_reset_failed 739
 
 #define osgate_get_pci_msi_info 740
@@ -856,6 +833,22 @@
 #define osgate_linear_to_physical_mem_blk 749
 #define osgate_free_physical_mem_blk 750
 #define osgate_free_linear_mem_blk 751
+
+#define osgate_add_usb_device 753
+
+#define osgate_free_mem_blk 754
+
+#define osgate_get_usb_dev_sel 755
+#define osgate_open_usb_dev_sel 756
+#define osgate_unlink_usb_dev 757
+
+#define osgate_free_usb_dev 758
+#define osgate_add_wait_del 759
+
+#define osgate_report_usb_func_event 760
+#define osgate_report_usb_dev_event 761
+#define osgate_report_usb_pipe_event 762
+#define osgate_report_usb_reg_pipe_event 763
 
 
 
@@ -1178,16 +1171,6 @@
 
 #define OsGate_get_net_driver 0x3E 0x67 0x9a 54 1 0 0 2 0
 
-#define OsGate_create_usb_req 0x3E 0x67 0x9a 55 1 0 0 2 0
-#define OsGate_add_write_usb_data_req 0x3E 0x67 0x9a 57 1 0 0 2 0
-#define OsGate_add_read_usb_data_req 0x3E 0x67 0x9a 58 1 0 0 2 0
-#define OsGate_start_usb_req 0x3E 0x67 0x9a 61 1 0 0 2 0
-#define OsGate_is_usb_req_started 0x3E 0x67 0x9a 62 1 0 0 2 0
-#define OsGate_is_usb_req_ready 0x3E 0x67 0x9a 63 1 0 0 2 0
-#define OsGate_get_usb_req_data 0x3E 0x67 0x9a 64 1 0 0 2 0
-#define OsGate_usb_req_done 0x3E 0x67 0x9a 65 1 0 0 2 0
-#define OsGate_close_usb_req 0x3E 0x67 0x9a 66 1 0 0 2 0
-
 #define OsGate_notify_ir_data 0x3E 0x67 0x9a 67 1 0 0 2 0
 
 #define OsGate_read_codec 0x3E 0x67 0x9a 68 1 0 0 2 0
@@ -1210,8 +1193,6 @@
 #define OsGate_alias_module_handle 0x3E 0x67 0x9a 85 1 0 0 2 0
 
 #define OsGate_thread_to_sel 0x3E 0x67 0x9a 86 1 0 0 2 0
-
-#define OsGate_stop_usb_req 0x3E 0x67 0x9a 88 1 0 0 2 0
 
 #define OsGate_reserve_com_line 0x3E 0x67 0x9a 90 1 0 0 2 0
 
@@ -1281,8 +1262,6 @@
 
 #define OsGate_start_sys_preempt_timer 0x3E 0x67 0x9a 144 1 0 0 2 0
 #define OsGate_reload_sys_preempt_timer 0x3E 0x67 0x9a 145 1 0 0 2 0
-
-#define OsGate_is_valid_usb_pipe_sel 0x3E 0x67 0x9a 147 1 0 0 2 0
 
 #define OsGate_hook_net_link_up 0x3E 0x67 0x9a 148 1 0 0 2 0
 #define OsGate_req_arp 0x3E 0x67 0x9a 149 1 0 0 2 0
@@ -1533,9 +1512,6 @@
 
 #define OsGate_notify_can_offline 0x3E 0x67 0x9a 103 2 0 0 2 0
 
-#define OsGate_req_usb_data_no_copy 0x3E 0x67 0x9a 104 2 0 0 2 0
-#define OsGate_write_usb_data_no_copy 0x3E 0x67 0x9a 105 2 0 0 2 0
-
 #define OsGate_notify_can_modules_up 0x3E 0x67 0x9a 107 2 0 0 2 0
 #define OsGate_notify_can_online 0x3E 0x67 0x9a 108 2 0 0 2 0
 
@@ -1673,16 +1649,11 @@
 
 #define OsGate_setup_nmi_handler 0x3E 0x67 0x9a 205 2 0 0 2 0
 
-#define OsGate_lock_usb_com_control 0x3E 0x67 0x9a 206 2 0 0 2 0
-#define OsGate_unlock_usb_com_control 0x3E 0x67 0x9a 207 2 0 0 2 0
-
 #define OsGate_allocate_usb_address 0x3E 0x67 0x9a 208 2 0 0 2 0
 #define OsGate_free_usb_address 0x3E 0x67 0x9a 209 2 0 0 2 0
 #define OsGate_init_usb_dev 0x3E 0x67 0x9a 210 2 0 0 2 0
 #define OsGate_address_usb_dev 0x3E 0x67 0x9a 211 2 0 0 2 0
 
-#define OsGate_is_usb_pipe_connected 0x3E 0x67 0x9a 212 2 0 0 2 0
-#define OsGate_start_usb_dev 0x3E 0x67 0x9a 213 2 0 0 2 0
 #define OsGate_read_usb_descriptors 0x3E 0x67 0x9a 214 2 0 0 2 0
 #define OsGate_get_usb_hub_descriptor 0x3E 0x67 0x9a 215 2 0 0 2 0
 #define OsGate_config_usb_hub 0x3E 0x67 0x9a 216 2 0 0 2 0
@@ -1698,7 +1669,6 @@
 #define OsGate_allocate_2m_physical_64 0x3E 0x67 0x9a 223 2 0 0 2 0
 #define OsGate_free_2m_physical 0x3E 0x67 0x9a 224 2 0 0 2 0
 
-#define OsGate_set_usb_over_current 0x3E 0x67 0x9a 226 2 0 0 2 0
 #define OsGate_set_usb_reset_failed 0x3E 0x67 0x9a 227 2 0 0 2 0
 
 #define OsGate_get_pci_msi_info 0x3E 0x67 0x9a 228 2 0 0 2 0
@@ -1717,4 +1687,20 @@
 #define OsGate_linear_to_physical_mem_blk 0x3E 0x67 0x9a 237 2 0 0 2 0
 #define OsGate_free_physical_mem_blk 0x3E 0x67 0x9a 238 2 0 0 2 0
 #define OsGate_free_linear_mem_blk 0x3E 0x67 0x9a 239 2 0 0 2 0
+
+#define OsGate_add_usb_device 0x3E 0x67 0x9a 241 2 0 0 2 0
+
+#define OsGate_free_mem_blk 0x3E 0x67 0x9a 242 2 0 0 2 0
+
+#define OsGate_get_usb_dev_sel 0x3E 0x67 0x9a 243 2 0 0 2 0
+#define OsGate_open_usb_dev_sel 0x3E 0x67 0x9a 244 2 0 0 2 0
+#define OsGate_unlink_usb_dev 0x3E 0x67 0x9a 245 2 0 0 2 0
+
+#define OsGate_free_usb_dev 0x3E 0x67 0x9a 246 2 0 0 2 0
+#define OsGate_add_wait_del 0x3E 0x67 0x9a 247 2 0 0 2 0
+
+#define OsGate_report_usb_func_event 0x3E 0x67 0x9a 248 2 0 0 2 0
+#define OsGate_report_usb_dev_event 0x3E 0x67 0x9a 249 2 0 0 2 0
+#define OsGate_report_usb_pipe_event 0x3E 0x67 0x9a 250 2 0 0 2 0
+#define OsGate_report_usb_reg_pipe_event 0x3E 0x67 0x9a 251 2 0 0 2 0
 

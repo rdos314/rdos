@@ -1604,7 +1604,7 @@ tsLoop:
     test ds:hub_flags,FLAG_HUB_OVER_CURRENT
     jz tsNotOver
 ;
-    SetUsbOverCurrent
+;    SetUsbOverCurrent
 
 tsNotOver:
     test ds:hub_flags,FLAG_HUB_DISCONNECT

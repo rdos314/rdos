@@ -815,7 +815,6 @@ run_realtime_nr             = 734
 allocate_2m_physical_64_nr  = 735
 free_2m_physical_nr         = 736
 
-set_usb_over_current_nr     = 738
 set_usb_reset_failed_nr     = 739
 
 get_pci_msi_info_nr         = 740

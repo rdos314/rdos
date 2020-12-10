@@ -3952,10 +3952,6 @@ InitUsbFunction   MACRO
     OsGate init_usb_function_nr
                     ENDM
 
-SetUsbOverCurrent   MACRO
-    OsGate set_usb_over_current_nr
-                    ENDM
-
 SetUsbResetFailed   MACRO
     OsGate set_usb_reset_failed_nr
                     ENDM

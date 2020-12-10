@@ -3567,11 +3567,6 @@
     ValidateEax \
     __value [__eax]
 
-#pragma aux RdosHasUsbOverCurrent = \
-    CallGate_has_usb_over_current \
-    CarryToBool \
-    __value [__eax]
-
 #pragma aux RdosHasUsbResetFailed = \
     CallGate_has_usb_reset_failed \
     CarryToBool \
