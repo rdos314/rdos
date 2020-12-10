@@ -3264,6 +3264,37 @@ CreateDev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               FreeDev
+;
+;       DESCRIPTION:        Free device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    retf32
+FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               UnlinkFunc
+;
+;       DESCRIPTION:        Unlink function
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkFunc   Proc far
+    retf32
+UnlinkFunc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandlerThread
 ;
 ;   DESCRIPTION:    Handler thread
@@ -4203,6 +4234,8 @@ et11 DD OFFSET FreeBuffers,         SEG code
 et12 DD OFFSET ReqBuffer,           SEG code
 et13 DD OFFSET RelBuffer,           SEG code
 et14 DD OFFSET IsRunning,           SEG code
+et15 DD OFFSET FreeDev,             SEG code
+et16 DD OFFSET UnlinkFunc,          SEG code
 
 InitFunction    Proc near
     push es
@@ -4349,7 +4382,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*15h
+    mov cx,2*17h
 
 ifTabLoop:
     lods dword ptr cs:[si]

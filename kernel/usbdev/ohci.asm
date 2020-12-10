@@ -2710,6 +2710,37 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               FreeDev
+;
+;       DESCRIPTION:        Free device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    retf32
+FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               UnlinkFunc
+;
+;       DESCRIPTION:        Unlink function
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkFunc   Proc far
+    retf32
+UnlinkFunc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:               AddressDev
 ;
 ;       DESCRIPTION:        Address usb dev
@@ -3456,6 +3487,8 @@ ot11 DD OFFSET FreeBuffers,         SEG code
 ot12 DD OFFSET ReqBuffer,           SEG code
 ot13 DD OFFSET RelBuffer,           SEG code
 ot14 DD OFFSET IsRunning,           SEG code
+ot15 DD OFFSET FreeDev,             SEG code
+ot16 DD OFFSET UnlinkFunc,          SEG code
 
 InitFunction    Proc near
     push ds
@@ -3513,7 +3546,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*15h
+    mov cx,2*17h
 
 ifTabLoop:
     lods dword ptr cs:[si]

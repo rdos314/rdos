@@ -137,6 +137,11 @@ rel_buffer_proc      DD ?,?
 
 is_running_proc      DD ?,?
 
+;  IN  ES        Device
+free_dev_proc        DD ?,?
+
+unlink_func_proc     DD ?,?
+
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
 

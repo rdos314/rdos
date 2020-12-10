@@ -135,7 +135,7 @@ FreeAddress	Endp
 ;
 ;       DESCRIPTION:    Create device
 ;
-;       PARAMETERS:     DS      Device selector
+;       PARAMETERS:     DS      Function selector
 ;                       AL      Address
 ;                       AH      Speed
 ;                       BX      Hub sel
@@ -152,6 +152,41 @@ CreateDev   Proc far
     pop ds
     ret
 CreateDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeDev
+;
+;       DESCRIPTION:    Free device
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_dev_proc
+    pop ds
+    ret
+FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkHub
+;
+;       DESCRIPTION:    Unlink hub
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkHub   Proc far
+    ret
+UnlinkHub   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -600,6 +635,8 @@ ht11 DD OFFSET FreeBuffers,         SEG code
 ht12 DD OFFSET ReqBuffer,           SEG code
 ht13 DD OFFSET RelBuffer,           SEG code
 ht14 DD OFFSET IsRunning,           SEG code
+ht15 DD OFFSET FreeDev,             SEG code
+ht16 DD OFFSET UnlinkHub,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2187,7 +2224,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*15h
+    mov ecx,2*17h
 
 uaTabLoop:
     lods dword ptr cs:[esi]
