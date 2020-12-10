@@ -623,7 +623,7 @@ dsStatusLoop:
     jz dsOffline
 ;
     mov bx,ds:kr_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc dsGetStatus
 ;
     inc dx
@@ -646,7 +646,7 @@ dsGetStatus:
     jz dsOffline
 ;
     mov bx,ds:kr_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc dsGetStatus
     jmp dsStatusOk
 
@@ -741,7 +741,7 @@ dsLoop:
     jc dsWriteDo
 
 dsWriteWait:    
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc dsWriteDo
 ;
     test ds:kr_flag,FLAG_ATTACHED
@@ -793,7 +793,7 @@ dsReadLoop:
 
 dsReadStarted:    
     mov bx,ds:kr_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc dsGetData
 ;
     test ds:kr_flag,FLAG_ATTACHED
@@ -854,7 +854,7 @@ dsReadMore:
     mov ax,5
     WaitMilliSec
 ;    
-    IsUsbReqReady
+;    IsUsbReqReady
     jc dsSignal
 ;
     push es
@@ -947,7 +947,7 @@ ClearReceiver    Proc near
     WaitMilliSec
 
 crLoop:
-    IsUsbReqReady
+;    IsUsbReqReady
     jc crDone
 ;
     push es

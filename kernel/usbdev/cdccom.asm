@@ -1173,7 +1173,7 @@ hdIsOpen:
 
 hdOpenOk:    
     mov bx,ds:ucd_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jc hdReadDone
 ;
     GetUsbReqData
@@ -1190,7 +1190,7 @@ hdReadDone:
 ;    IsUsbReqStarted
     jc hdCheckWrite
 ;    
-    IsUsbReqReady
+;    IsUsbReqReady
     jc hdDone
 ;
     push ds

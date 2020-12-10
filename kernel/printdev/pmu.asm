@@ -271,7 +271,7 @@ dsLoop:
     jc dsWriteDo
 
 dsWriteWait:    
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc dsWriteDo
 ;
     test ds:pmu_flag,FLAG_ATTACHED
@@ -323,7 +323,7 @@ dsReadLoop:
 
 dsReadStarted:    
     mov bx,ds:pmu_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc dsGetData
 ;
     test ds:pmu_flag,FLAG_ATTACHED
@@ -384,7 +384,7 @@ dsReadMore:
     mov ax,5
     WaitMilliSec
 ;    
-    IsUsbReqReady
+;    IsUsbReqReady
     jc dsSignal
 ;
     push es
@@ -508,7 +508,7 @@ giLoop:
     jz giOffline
 ;
     mov bx,ds:pmu_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc giRead
 ;
     inc dx
@@ -530,7 +530,7 @@ giRead:
     jz giOffline
 ;
     mov bx,ds:pmu_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jnc giRead
     jmp giOk
 
@@ -564,7 +564,7 @@ ClearReceiver    Proc near
     WaitMilliSec
 
 crLoop:
-    IsUsbReqReady
+;    IsUsbReqReady
     jc crDone
 ;
     push es

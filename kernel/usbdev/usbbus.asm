@@ -345,7 +345,7 @@ btRestart:
 
 btOn:
     mov bx,ds:io_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jc btReadDone
 ;
     GetUsbReqData
@@ -363,7 +363,7 @@ btReadDone:
 ;    IsUsbReqStarted
     jc btCheckReq
 ;    
-    IsUsbReqReady
+;    IsUsbReqReady
     jc btWaitOn
 
 btCheckReq:
@@ -1539,7 +1539,7 @@ hdIsOpen:
 
 hdOpenOk:    
     mov bx,ds:uds_in_req
-    IsUsbReqReady
+;    IsUsbReqReady
     jc hdReadDone
 ;
     GetUsbReqData
@@ -1560,7 +1560,7 @@ hdReadDone:
 ;    IsUsbReqStarted
     jc hdCheckWrite
 ;    
-    IsUsbReqReady
+;    IsUsbReqReady
     jc hdDone
 ;
     push ds
