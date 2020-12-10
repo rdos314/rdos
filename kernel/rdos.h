@@ -917,6 +917,7 @@ char RDOSAPI RdosGetUsbAddress(int Controller, int Port);
 int RDOSAPI RdosOpenUsbDevice(int Controller, int Port);
 void RDOSAPI RdosCloseUsbDevice(int handle);
 int RDOSAPI RdosSendUsbDeviceControlMsg(int handle, char Type, char Req, int Value, int Index, char *Buf, int Size);
+int RDOSAPI RdosIsUsbDeviceConnected(int handle);
 void RDOSAPI RdosResetUsbDevice(int handle);
 int RDOSAPI RdosConfigUsbPipe(int handle, char pipe, int entries);
 int RDOSAPI RdosEnableUsbPipe(int handle, char pipe);

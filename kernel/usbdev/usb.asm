@@ -1074,6 +1074,53 @@ open_usb_dev_sel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsUsbDeviceConnected
+;
+;       DESCRIPTION:    Is USB device connected
+;
+;       PARAMETERS:     BX      Device handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_dev_connected_name  DB 'Reset USB Device Connected',0
+
+is_usb_dev_connected     Proc far
+    push ds
+    push es
+    push ax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc idvcDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz idvcLeave
+;
+    push ds
+    mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:is_dev_connected_proc
+    pop ds
+
+idvcLeave:
+    LeaveSection ds:udd_section
+
+idvcDone:
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    retf32
+is_usb_dev_connected     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ResetUsbDevice
 ;
 ;       DESCRIPTION:    Reset USB device
@@ -4030,6 +4077,12 @@ init    Proc far
     mov edi,OFFSET reset_usb_dev_name
     xor dx,dx
     mov ax,reset_usb_dev_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_usb_dev_connected
+    mov edi,OFFSET is_usb_dev_connected_name
+    xor dx,dx
+    mov ax,is_usb_dev_connected_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET send_usb_dev_control_msg16

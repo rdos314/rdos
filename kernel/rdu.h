@@ -936,6 +936,7 @@
 #define usergate_get_usb_event 0x000002F9
 
 #define usergate_get_usb_address 0x000002FA
+#define usergate_is_usb_dev_connected 0x000002FB
 
 
 
@@ -1878,6 +1879,7 @@
 #define CallGate_get_usb_event 0x55 0x67 0x9a 249 2 0 0 3 0 0x5d
 
 #define CallGate_get_usb_address 0x55 0x67 0x9a 250 2 0 0 3 0 0x5d
+#define CallGate_is_usb_dev_connected 0x55 0x67 0x9a 251 2 0 0 3 0 0x5d
 
 #else
 
@@ -2818,5 +2820,6 @@
 #define CallGate_get_usb_event 0x3e 0x67 0x9a 249 2 0 0 3 0
 
 #define CallGate_get_usb_address 0x3e 0x67 0x9a 250 2 0 0 3 0
+#define CallGate_is_usb_dev_connected 0x3e 0x67 0x9a 251 2 0 0 3 0
 
 #endif

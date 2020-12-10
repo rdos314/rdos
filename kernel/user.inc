@@ -3611,6 +3611,11 @@ CloseUsbDevice      MACRO
                                                 ENDM
 
 ;   IN  BX          Handle
+IsUsbDeviceConnected      MACRO
+        UserGate is_usb_dev_connected_nr
+                                                ENDM
+
+;   IN  BX          Handle
 ResetUsbDevice      MACRO
         UserGate reset_usb_dev_nr
                                                 ENDM
