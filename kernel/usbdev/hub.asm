@@ -1610,6 +1610,10 @@ tsNotOver:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz tsExit
 ;    
+    mov bx,ds:hub_device_handle
+    IsUsbDeviceConnected
+    jc tsWaitDisc
+;
     mov bx,ds:hub_wait_handle
     WaitWithoutTimeout
 ;
@@ -1660,6 +1664,14 @@ tsSignalled:
     jnz tsExit
 ;
     jmp tsLoop
+
+tsWaitDisc:
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    jnz tsExit
+;
+    mov ax,25
+    WaitMilliSec
+    jmp tsWaitDisc
 
 tsExit:
     mov bx,ds:hub_port_thread
