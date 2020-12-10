@@ -346,8 +346,6 @@ alias_module_handle_nr      = 341
 
 thread_to_sel_nr            = 342
 
-stop_usb_req_nr             = 344
-
 reserve_com_line_nr         = 346
 
 device_set_dtr_nr           = 347
