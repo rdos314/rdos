@@ -962,7 +962,7 @@ ClosePort    Proc near
     WaitMilliSec
 ;    
     mov bx,ds:ucd_in_req
-    CloseUsbReq
+;    CloseUsbReq
     mov ds:ucd_in_req,0
 ;
     mov bx,ds:ucd_in_handle
@@ -970,7 +970,7 @@ ClosePort    Proc near
     mov ds:ucd_in_handle,0
 ;
     mov bx,ds:ucd_out_req
-    CloseUsbReq
+;    CloseUsbReq
     mov ds:ucd_out_req,0
 ;
     mov bx,ds:ucd_out_handle

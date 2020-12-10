@@ -317,9 +317,6 @@ set_mouse_limit_nr          = 309
 
 get_net_driver_nr           = 310
 
-usb_req_done_nr             = 321
-close_usb_req_nr            = 322
-
 notify_ir_data_nr           = 323
 
 read_codec_nr               = 324

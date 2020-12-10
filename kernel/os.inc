@@ -4117,11 +4117,6 @@ AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
                     ENDM
 
-; IN  BX    Req handle
-CloseUsbReq      MACRO
-    OsGate close_usb_req_nr
-                        ENDM
-
 ;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register

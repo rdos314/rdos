@@ -636,7 +636,7 @@ ClosePipes    Proc near
     mov fs,ax
 ;    
     mov bx,ds:pmu_in_req
-    CloseUsbReq
+;    CloseUsbReq
     mov ds:pmu_in_req,0
 ;
     mov bx,ds:pmu_in_handle
@@ -644,7 +644,7 @@ ClosePipes    Proc near
     mov ds:pmu_in_handle,0
 ;
     mov bx,ds:pmu_out_req
-    CloseUsbReq
+;    CloseUsbReq
     mov ds:pmu_out_req,0
 ;
     mov bx,ds:pmu_out_handle
