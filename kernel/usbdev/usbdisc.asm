@@ -517,7 +517,7 @@ ReceiveCsw Proc near
     mov bx,fs:disc_bulk_in_handle
     mov edi,OFFSET disc_csw_sign
     mov ecx,13
-    ReqUsbData
+;    ReqUsbData
     StartUsbTransaction
 ;    
     GetSystemTime
@@ -568,7 +568,7 @@ ReceiveCsw Endp
 
 ReceiveData Proc near
     mov bx,fs:disc_bulk_in_handle
-    ReqUsbData
+;    ReqUsbData
     StartUsbTransaction
 ;    
     GetSystemTime
@@ -1510,7 +1510,7 @@ rdBufLoop:
     mov edi,es:[edi].dh_data
     mov ecx,200h
     mov bx,fs:disc_bulk_in_handle
-    ReqUsbData
+;    ReqUsbData
 ;
     add esi,4
     sub ebp,1

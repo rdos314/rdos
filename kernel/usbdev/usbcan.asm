@@ -1209,7 +1209,7 @@ ureAddReqLoop:
 ;
     push cx
     mov ecx,10
-    ReqUsbDataNoCopy
+;    ReqUsbDataNoCopy
     pop cx
 ;
     loop ureAddReqLoop
@@ -1258,7 +1258,7 @@ ureLoop:
 ;
     mov bx,ds:cd_in_pipe
     mov ecx,10
-    ReqUsbDataNoCopy
+;    ReqUsbDataNoCopy
     StartOneUsbTransaction
 ;
     jmp ureLoop

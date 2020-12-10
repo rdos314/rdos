@@ -4177,13 +4177,6 @@ CloseUsbReq      MACRO
 ; IN  BX      Handle
 ; IN  ES:EDI  Data
 ; IN  CX      Size
-ReqUsbDataNoCopy      MACRO
-    OsGate req_usb_data_no_copy_nr
-                        ENDM
-
-; IN  BX      Handle
-; IN  ES:EDI  Data
-; IN  CX      Size
 WriteUsbDataNoCopy      MACRO
     OsGate write_usb_data_no_copy_nr
                         ENDM

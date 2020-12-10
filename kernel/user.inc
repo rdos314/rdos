@@ -3748,13 +3748,6 @@ GetUsbEvent      MACRO
                                                 ENDM
 
 ;   IN  BX          Handle
-;   IN  CX          Size of data
-;   IN  ES:(E)DI    Buffer
-ReqUsbData      MACRO
-        UserGate req_usb_data_nr
-                                                ENDM
-
-;   IN  BX          Handle
 ;   OUT (E)AX       Read size
 GetUsbDataSize      MACRO
         UserGate get_usb_data_size_nr

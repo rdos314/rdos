@@ -3936,27 +3936,7 @@ has_usb_reset_failed   Endp
 ;  obsolete code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-add_wait_for_pipe_name DB 'Add Wait for pipe', 0
 
-add_wait_for_pipe       PROC far
-    stc
-    retf32
-add_wait_for_pipe       ENDP
-
-req_usb_data_name       DB 'Request USB Data',0
-
-req_usb_data    Proc far
-    stc
-    retf32
-req_usb_data    Endp
-
-req_usb_data_no_copy_name       DB 'Request USB Data, No Copy',0
-
-req_usb_data_no_copy    Proc far
-    stc
-    retf32
-req_usb_data_no_copy    Endp
 
 get_usb_data_size_name  DB 'Get USB Data Size',0
 
@@ -4332,12 +4312,6 @@ init    Proc far
     mov ax,close_usb_req_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET req_usb_data_no_copy
-    mov edi,OFFSET req_usb_data_no_copy_name
-    xor cl,cl
-    mov ax,req_usb_data_no_copy_nr
-    RegisterOsGate
-;
     mov esi,OFFSET write_usb_data_no_copy
     mov edi,OFFSET write_usb_data_no_copy_name
     xor cl,cl
@@ -4374,18 +4348,6 @@ init    Proc far
     mov edi,OFFSET config_usb_device_name
     xor dx,dx
     mov ax,config_usb_device_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET add_wait_for_pipe
-    mov edi,OFFSET add_wait_for_pipe_name
-    xor dx,dx
-    mov ax,add_wait_for_usb_pipe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET req_usb_data
-    mov edi,OFFSET req_usb_data_name
-    xor dx,dx
-    mov ax,req_usb_data_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_usb_data_size16
