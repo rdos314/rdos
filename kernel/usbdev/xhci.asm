@@ -3248,6 +3248,7 @@ CreateDev   Proc far
     mov es:xd_device_context,edx
     mov fs:[di],eax
     mov fs:[di+4],ebx
+    mov es:usbd_func_sel,ds
 ;
     popad
 ;

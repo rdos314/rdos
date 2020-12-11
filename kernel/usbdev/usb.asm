@@ -3872,12 +3872,7 @@ usb_attach_name DB 'Usb Attach', 0
 usb_attach    Proc far
     pusha
 ;
-    push ds
-;
     call fword ptr ds:create_dev_proc
-    mov es:usbd_func_sel,ds
-;
-    pop ds
 ;
     mov es:usbd_parent_hub,bx
     mov es:usbd_my_hub,0

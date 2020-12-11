@@ -141,14 +141,15 @@ FreeAddress	Endp
 ;                       BX      Hub sel
 ;                       DX      Port #
 ;
-;       RETURNS:        DS      Root function selector
-;                       ES      Device sel
+;       RETURNS:        ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDev   Proc far
+    push ds
     mov ds,ds:hub_parent_sel
     call fword ptr ds:create_dev_proc
+    pop ds
     ret
 CreateDev   Endp
 

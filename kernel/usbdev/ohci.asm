@@ -2699,6 +2699,7 @@ CreateDev   Proc far
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
     mov es:dev_control_thread,0
+    mov es:usbd_func_sel,ds
 ;
     popad
     pop fs

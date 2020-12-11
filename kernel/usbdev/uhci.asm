@@ -3458,6 +3458,7 @@ CreateDev   Proc far
     mov si,SIZE uhci_dev_sel
     mov cx,16
     CreateMemBlk32
+    mov es:usbd_func_sel,ds
 ;
     popad
     retf32

@@ -2946,6 +2946,7 @@ cdCreate:
     movzx di,al
     add di,di
     mov ds:[di].ehc_dev_arr,es
+    mov es:usbd_func_sel,ds
 ;
     popad
     pop fs
