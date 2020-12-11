@@ -4047,6 +4047,7 @@ npsAttach:
 ;
     mov ds:[edi].usb_thread_arr,-1
 ;    
+    push ds
     push es
     pushad
 ;
@@ -4093,6 +4094,7 @@ npsCopyDone:
 ;
     popad
     pop es
+    pop ds
 
 npsDone:
     pop edi
