@@ -2531,60 +2531,6 @@ init_usb_function Proc far
     pop ds
     retf32
 init_usb_function   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TrapUsbAttach
-;
-;           DESCRIPTION:    Run notification handlers for attach
-;
-;           PARAMETERS:     BX      Controller #
-;                           AH      Port #
-;                           AL      Device address (1..128)
-;                           DS      USB function
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_usb_attach PROC near
-    push ds
-    push es
-    push cx
-    push si
-;       
-    mov cx,SEG data
-    mov es,cx
-    mov cx,es:usb_attach_hooks
-    or cx,cx
-    je trap_attach_done
-    
-    mov si,OFFSET usb_attach_arr
-
-trap_attach_loop:
-    push ds
-    push es
-    push ax
-    push bx
-    push cx
-    push si
-    call fword ptr es:[si]
-    pop si
-    pop cx
-    pop bx
-    pop ax
-    pop es
-    pop ds
-;       
-    add si,8
-    loop trap_attach_loop
-
-trap_attach_done:
-    pop si
-    pop cx
-    pop es
-    pop ds
-    ret
-trap_usb_attach ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3869,6 +3815,7 @@ ReadDescriptors   Endp
 
 
 NotifyAttach       Proc near
+    push ds
     push es
     pushad
 ;
@@ -3886,12 +3833,37 @@ NotifyAttach       Proc near
     pop si
     pop dx
     pop ax
-;
-    call trap_usb_attach
-    clc
-;
+;       
+    mov cx,SEG data
+    mov es,cx
+    mov cx,es:usb_attach_hooks
+    or cx,cx
+    je trap_attach_done
+    
+    mov si,OFFSET usb_attach_arr
+
+trap_attach_loop:
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    call fword ptr es:[si]
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+;       
+    add si,8
+    loop trap_attach_loop
+
+trap_attach_done:
     popad
     pop es
+    pop ds
     ret
 NotifyAttach   Endp
 
