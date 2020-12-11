@@ -3850,6 +3850,7 @@ NotifyAttach       Proc near
     push es
     pushad
 ;
+    mov bx,ds:usb_controller_id
     movzx si,es:usbd_port
     mov ax,USB_EVENT_ATTACH
     mov dl,-1
