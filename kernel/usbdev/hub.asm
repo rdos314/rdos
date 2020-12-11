@@ -1038,12 +1038,9 @@ htCreate:
     mov al,bl
     mov bp,ax
 ;
-    push ds
     mov bx,ds
-    mov ds,ds:hub_parent_sel
     movzx dx,cl
     call fword ptr ds:create_dev_proc
-    pop ds
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
