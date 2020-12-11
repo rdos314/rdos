@@ -927,22 +927,6 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ResetDev
-;
-;           DESCRIPTION:    Reset device
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetDev   Proc far
-    retf32
-ResetDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           UpdateMaxLen
 ;
 ;           DESCRIPTION:    Update max len
@@ -2800,6 +2784,41 @@ ResetPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           DisablePort
+;
+;       DESCRIPTION:    Disable port
+;
+;       PARAMETERS:     DS      Function selector
+;                       DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePort   Proc far
+    push gs
+    push eax
+    push edi
+;
+    mov gs,ds:ohc_reg_sel
+;    
+    movzx di,dl
+    shl di,2
+    add di,OFFSET HcRhPortStatus
+;
+    mov eax,1
+    mov gs:[di],eax
+;
+    mov ax,25
+    WaitMilliSec
+;
+    pop edi
+    pop eax
+    pop gs
+    retf32
+DisablePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:               AddressDev
 ;
 ;       DESCRIPTION:        Address usb dev
@@ -3449,7 +3468,7 @@ ot01 DD OFFSET FreeAddress,         SEG code
 ot02 DD OFFSET CreateDev,           SEG code
 ot03 DD OFFSET CreateControl,       SEG code
 ot04 DD OFFSET ChangeAddress,       SEG code
-ot05 DD OFFSET ResetDev,            SEG code
+ot05 DD OFFSET DisablePort,         SEG code
 ot06 DD OFFSET AddressDev,          SEG code
 ot07 DD OFFSET ConfigDev,           SEG code
 ot08 DD OFFSET UpdateMaxLen,        SEG code

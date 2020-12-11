@@ -3930,6 +3930,7 @@ uaConnected:
     jmp uaDetach
 
 uaLockedError:
+    call fword ptr ds:disable_port_proc
     LeaveSection ds:usb_addr_section
 
 uaDetach:

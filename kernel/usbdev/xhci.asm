@@ -2263,18 +2263,18 @@ ChangeAddress  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ResetDev
+;           NAME:           DisablePort
 ;
-;           DESCRIPTION:    Reset device
+;           DESCRIPTION:    Disable port
 ;
 ;       PARAMETERS:         DS      Function selector
-;                           ES      Device selector
+;                           DL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ResetDev   Proc far
+DisablePort   Proc far
     retf32
-ResetDev Endp
+DisablePort Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4169,7 +4169,7 @@ et01 DD OFFSET FreeAddress,         SEG code
 et02 DD OFFSET CreateDev,           SEG code
 et03 DD OFFSET CreateControl,       SEG code
 et04 DD OFFSET ChangeAddress,       SEG code
-et05 DD OFFSET ResetDev,            SEG code
+et05 DD OFFSET DisablePort,         SEG code
 et06 DD OFFSET AddressDevice,       SEG code
 et07 DD OFFSET ConfigDevice,        SEG code
 et08 DD OFFSET UpdateMaxLen,        SEG code

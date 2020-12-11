@@ -313,6 +313,34 @@ ResetPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           DisablePort
+;
+;       DESCRIPTION:    Disable port
+;
+;       PARAMETERS:     DS      Function selector
+;                       DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePort   Proc far
+    push ax
+    push dx
+;
+    movzx dx,dl
+    mov ax,PORT_ENABLE
+    call ClearPortFeature    
+;
+    mov ax,50
+    WaitMilliSec
+;
+    pop dx
+    pop ax
+    ret
+DisablePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddressDev
 ;
 ;       DESCRIPTION:    Address device
@@ -685,22 +713,6 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ResetDev
-;
-;       DESCRIPTION:    Reset device
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetDev   Proc far
-    ret
-ResetDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           UpdateMaxLen
 ;
 ;           DESCRIPTION:    Update max len
@@ -731,7 +743,7 @@ ht01 DD OFFSET FreeAddress,         SEG code
 ht02 DD OFFSET CreateDev,           SEG code
 ht03 DD OFFSET CreateControl,       SEG code
 ht04 DD OFFSET ChangeAddress,       SEG code
-ht05 DD OFFSET ResetDev,            SEG code
+ht05 DD OFFSET DisablePort,         SEG code
 ht06 DD OFFSET AddressDev,          SEG code
 ht07 DD OFFSET ConfigDev,           SEG code
 ht08 DD OFFSET UpdateMaxLen,        SEG code

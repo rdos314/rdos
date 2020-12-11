@@ -2428,22 +2428,6 @@ IsConnected   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ResetDev
-;
-;           DESCRIPTION:    Reset device
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetDev   Proc far
-    retf32
-ResetDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LockEnum
 ;
 ;           DESCRIPTION:    Lock enumeration process
@@ -3483,12 +3467,9 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetPort   Proc far
-    push bx
     push dx
-;
-    mov bl,dl
 ;    
-    movzx di,bl
+    movzx di,dl
     add di,di
 ;
     mov dx,ds:uhc_io_base
@@ -3539,9 +3520,43 @@ rpFail:
 
 rpDone:
     pop dx
-    pop bx
     retf32
 ResetPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DisablePort
+;
+;           DESCRIPTION:    Disable port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePort   Proc far
+    push ax
+    push dx
+;    
+    movzx di,dl
+    add di,di
+;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
+    in ax,dx
+    and al,NOT 4
+    out dx,ax
+;
+    mov ax,25
+    WaitMilliSec
+;
+    pop dx
+    pop ax
+    retf32
+DisablePort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3861,7 +3876,7 @@ ut01 DD OFFSET FreeAddress,         SEG code
 ut02 DD OFFSET CreateDev,           SEG code
 ut03 DD OFFSET CreateControl,       SEG code
 ut04 DD OFFSET ChangeAddress,       SEG code
-ut05 DD OFFSET ResetDev,            SEG code
+ut05 DD OFFSET DisablePort,         SEG code
 ut06 DD OFFSET AddressDev,          SEG code
 ut07 DD OFFSET ConfigDev,           SEG code
 ut08 DD OFFSET UpdateMaxLen,        SEG code

@@ -64,8 +64,8 @@ create_control_proc	DD ?,?
 ; IN  ES        Device sel
 change_address_proc      DD ?,?
 
-; IN  ES        Device selector
-reset_dev_proc        DD ?,?
+; IN  DL        Port
+disable_port_proc        DD ?,?
 
 ;  IN  ES       Device selector
 ;  IN  AL       Address
