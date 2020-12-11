@@ -2835,7 +2835,7 @@ unlink_usb_dev       Proc far
 ;
     push ds
     mov ds,ax
-    call fword ptr ds:unlink_func_proc
+;    call fword ptr ds:unlink_func_proc
     pop ds
 
 uudHubDone:

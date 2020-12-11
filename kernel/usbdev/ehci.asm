@@ -2972,17 +2972,149 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:               UnlinkFunc
+;       NAME:               ResetPort
 ;
-;       DESCRIPTION:        Unlink function
+;       DESCRIPTION:        Reset port
 ;
 ;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;       RETURNS:            AL      Speed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkFunc   Proc far
+ResetPort   Proc far
+    push gs
+    push ecx
+    push edi
+;
+    mov gs,ds:ehc_reg_sel
+    movzx edi,dl
+    shl edi,2
+    add edi,OFFSET HcPortSc
+;
+    mov cx,10
+
+rpCheck:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,gs:[edi]
+    test al,1
+    jz rpFail
+;
+    loop rpCheck
+;
+    and ax,0C00h
+    cmp ax,400h
+    jne rpDoReset
+;
+    test ds:ehc_flags,EHC_COMPANION
+    jz rpFail
+;
+    cmp dl,ds:ehc_comp_ports
+    jae rpFail
+;    
+    mov eax,3000h
+    mov gs:[edi],eax
+    jmp rpFail
+
+rpDoReset:    
+    mov eax,gs:[edi]
+    and al,NOT 4
+    or ax,100h
+    mov gs:[edi],eax
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov eax,gs:[edi]
+    and ax,NOT 100h
+    mov gs:[edi],eax
+;
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,gs:[edi]
+    test al,1
+    jz rpFail
+;    
+    test al,4
+    jnz rpHighSpeed
+;
+    test ds:ehc_flags,EHC_COMPANION
+    jz rpFail
+;
+    cmp dl,ds:ehc_comp_ports
+    jae rpFail
+;    
+    mov ax,3000h
+    mov gs:[edi],eax
+    jmp rpFail
+        
+rpHighSpeed:    
+    and ax,NOT 100h
+    mov gs:[edi],eax
+    
+rpResetLoop:
+    mov eax,gs:[edi]
+    test al,1
+    jz rpFail
+;    
+    test ax,100h
+    jz rpResetDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp rpResetLoop
+
+rpResetDone:
+    mov ax,2
+    WaitMilliSec
+;
+    mov eax,gs:[edi]
+    test al,1
+    jz rpFail
+;    
+    test al,4
+    jnz rpNotify
+;    
+    test ds:ehc_flags,EHC_COMPANION
+    jz rpFail
+;
+    cmp dl,ds:ehc_comp_ports
+    jae rpFail
+;    
+    mov eax,3000h
+    mov gs:[edi],eax
+    jmp rpFail
+        
+rpNotify:
+    mov cx,40
+
+rpWaitNotify:    
+    mov ax,10
+    WaitMilliSec
+;
+    mov eax,gs:[edi]
+    test al,1
+    jz rpFail
+;
+    loop rpWaitNotify
+;
+    mov al,2
+    clc
+    jmp rpDone
+
+rpFail:
+    stc
+
+rpDone:
+    pop edi
+    pop ecx
+    pop gs
     retf32
-UnlinkFunc   Endp
+ResetPort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3046,125 +3178,17 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:
-    mov dx,10
-
-htCheck:    
-    mov ax,5
-    WaitMilliSec
+    xor ax,ax
+    mov es,ax
 ;
-    mov eax,gs:[2*edi].HcPortSc
-    test al,1
-    jz htDetached
-;
-    sub dx,1
-    jnz htCheck
-;
-    and ax,0C00h
-    cmp ax,400h
-    jne htDoReset
-;
-    test ds:ehc_flags,EHC_COMPANION
-    jz htDetached
-;
-    cmp cl,ds:ehc_comp_ports
-    jae htDetached
-;    
-    mov eax,3000h
-    mov gs:[2*edi].HcPortSc,eax
-    jmp htDetached
-    
-htDoReset:    
     LockUsb
-;    
-    mov eax,gs:[2*edi].HcPortSc
-    and al,NOT 4
-    or ax,100h
-    mov gs:[2*edi].HcPortSc,eax
+    call fword ptr ds:reset_port_proc
+    jc htUnlock
 ;
-    mov ax,25
-    WaitMilliSec
-;    
-    mov eax,gs:[2*edi].HcPortSc
-    and ax,NOT 100h
-    mov gs:[2*edi].HcPortSc,eax
-;
-    mov ax,25
-    WaitMilliSec
-;
-    mov eax,gs:[2*edi].HcPortSc
-    test al,1
-    jz htUnlock
-;    
-    test al,4
-    jnz htHighSpeed
-;
-    test ds:ehc_flags,EHC_COMPANION
-    jz htUnlock
-;
-    cmp cl,ds:ehc_comp_ports
-    jae htUnlock
-;    
-    mov ax,3000h
-    mov gs:[2*edi].HcPortSc,eax
-    jmp htUnlock
-        
-htHighSpeed:    
-    and ax,NOT 100h
-    mov gs:[2*edi].HcPortSc,eax
-    
-htResetLoop:
-    mov eax,gs:[2*edi].HcPortSc
-    test al,1
-    jz htUnlock
-;    
-    test ax,100h
-    jz htResetDone
-;
-    mov ax,5
-    WaitMilliSec
-    jmp htResetLoop
-
-htResetDone:
-    mov ax,2
-    WaitMilliSec
-;
-    mov eax,gs:[2*edi].HcPortSc
-    test al,1
-    jz htUnlock
-;    
-    test al,4
-    jnz htNotify
-;    
-    test ds:ehc_flags,EHC_COMPANION
-    jz htUnlock
-;
-    cmp cl,ds:ehc_comp_ports
-    jae htUnlock
-;    
-    mov eax,3000h
-    mov gs:[2*edi].HcPortSc,eax
-    jmp htUnlock
-        
-htNotify:
-    mov dx,40
-
-htWaitNotify:    
-    mov ax,10
-    WaitMilliSec
-;
-    mov eax,gs:[2*edi].HcPortSc
-    test al,1
-    jz htUnlock
-;
-    sub dx,1
-    jnz htWaitNotify
-;
-    push dx
-    mov ah,2
+    mov ah,al
     xor bx,bx
     movzx dx,cl
     UsbAttach
-    pop dx
     jc htUnlock
 
 htAttached:
@@ -3913,7 +3937,7 @@ ec12 DD OFFSET ReqBuffer,          SEG code
 ec13 DD OFFSET RelBuffer,          SEG code
 ec14 DD OFFSET IsRunning,          SEG code
 ec15 DD OFFSET FreeDev,            SEG code
-ec16 DD OFFSET UnlinkFunc,         SEG code
+ec16 DD OFFSET ResetPort,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus

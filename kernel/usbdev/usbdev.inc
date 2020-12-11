@@ -55,11 +55,6 @@ allocate_address_proc DD ?,?
 ; IN  AL        Address
 free_address_proc     DD ?,?
 
-; IN  AL        Address
-; IN  AH        Speed
-; IN  BX        Hub selector
-; IN  DX        Port
-; OUT DS        Root function sel
 ; OUT ES        Device sel
 create_dev_proc       DD ?,?
 
@@ -143,7 +138,9 @@ is_running_proc      DD ?,?
 ;  IN  ES        Device
 free_dev_proc        DD ?,?
 
-unlink_func_proc     DD ?,?
+;  IN  DL        Port
+;  OUT AL        Speed
+reset_port_proc     DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
