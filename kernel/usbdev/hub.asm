@@ -1037,9 +1037,6 @@ htCreate:
     movzx dx,cl
     UsbAttach
     jc htUnlock
-;
-    mov al,cl
-    NotifyUsbAttach
 
 htAttached:
     WaitForSignal

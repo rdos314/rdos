@@ -3917,6 +3917,7 @@ ReadDescriptors   Endp
 usb_attach_name DB 'Usb Attach', 0
 
 usb_attach    Proc far
+    push ax
     push cx
 ;
     xor cx,cx
@@ -3933,15 +3934,22 @@ usb_attach    Proc far
     call fword ptr ds:address_device_proc
     jc uaDone
 ;
-    or es:usbd_flags,FLAG_ADDRESSED
     call fword ptr ds:change_address_proc
     call AddDevice
+;
+    or es:usbd_flags,FLAG_ADDRESSED
     LeaveSection ds:usb_addr_section
 ;
     call ReadDescriptors
+    jc uaDone
+;
+    mov al,dl
+    NotifyUsbAttach
+    or es:usbd_flags,FLAG_ATTACHED
 
 uaDone:
     pop cx
+    pop ax
     retf32
 usb_attach    Endp    
 

@@ -3166,9 +3166,6 @@ htWaitNotify:
     UsbAttach
     pop dx
     jc htUnlock
-;
-    mov al,cl
-    NotifyUsbAttach
 
 htAttached:
     WaitForSignal

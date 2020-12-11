@@ -3376,9 +3376,6 @@ htSlotAlloc:
     UsbAttach
     jc htUnlock
 ;
-    mov al,cl
-    NotifyUsbAttach
-;
     mov eax,1
     shl eax,cl
     not eax

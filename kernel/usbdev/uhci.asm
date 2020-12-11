@@ -3614,9 +3614,6 @@ htNotify:
     pop dx
     pop bx
     jc htUnlock
-;
-    mov al,bl
-    NotifyUsbAttach
 
 htAttached:
     WaitForSignal
