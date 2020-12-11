@@ -3964,15 +3964,20 @@ uaCheck:
     jmp uaDetach
 
 uaLockedError:
-    int 3
     call fword ptr ds:disable_port_proc
     LeaveSection ds:usb_addr_section
+    mov ax,es
+    or ax,ax
+    jmp uaDone
 
 uaDetach:
     int 3
     stc    
 
 uaDone:
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_thread_arr,0
+    LeaveSection ds:usb_section
     TerminateThread
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
