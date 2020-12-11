@@ -848,4 +848,6 @@ report_usb_dev_event_nr     = 761
 report_usb_pipe_event_nr    = 762
 report_usb_reg_pipe_event_nr = 763
 
+usb_attach_nr               = 764
+
 osgate_entries              = 780

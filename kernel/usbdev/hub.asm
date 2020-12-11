@@ -1037,12 +1037,9 @@ htCreate:
     mov al,bl
     mov bp,ax
 ;
-    push ds
     mov bx,ds
     movzx dx,cl
-    call fword ptr ds:create_dev_proc
-    InitUsbDev
-    pop ds
+    UsbAttach
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc

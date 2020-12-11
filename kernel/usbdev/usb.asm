@@ -2785,56 +2785,6 @@ address_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitUsbDev
-;
-;       Description:    Init usb device
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
-;                       AL      Address
-;                       AH      Speed
-;                       BX      Hub selector
-;                       DX      Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_usb_dev_name DB 'Init USB Device', 0
-
-init_usb_dev       Proc far
-    pusha
-;
-    mov es:usbd_func_sel,ds
-    mov es:usbd_parent_hub,bx
-    mov es:usbd_my_hub,0
-    mov es:usbd_port,dl
-    mov es:usbd_address,al
-    mov es:usbd_speed,ah
-    mov es:usbd_flags,0
-    mov es:usbd_maxlen,8
-    mov es:usbd_curr_config,0
-;
-    xor ax,ax
-    mov cx,15
-    mov di,OFFSET usbd_in_pipe_arr
-    rep stosw
-;
-    mov cx,15
-    mov di,OFFSET usbd_out_pipe_arr
-    rep stosw
-;
-    or bx,bx
-    jz usdNoHub
-;
-    mov es:usbd_func_sel,bx
-
-usdNoHub:
-    popa
-    retf32
-init_usb_dev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           FreeUsbDev
 ;
 ;       Description:    Free usb device
@@ -3903,6 +3853,64 @@ hook_usb_attach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UsbAttach
+;
+;       description:    USB attach
+;
+;       parameters:     DS      Function sel
+;                       AL      Address
+;                       AH      Speed
+;                       BX      Hub selector
+;                       DL      Port #
+;
+;       Returns:        ES     Dev sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_attach_name DB 'Usb Attach', 0
+
+usb_attach    Proc far
+    pusha
+;
+    push ds
+;
+    call fword ptr ds:create_dev_proc
+    mov es:usbd_func_sel,ds
+;
+    pop ds
+;
+    mov es:usbd_parent_hub,bx
+    mov es:usbd_my_hub,0
+    mov es:usbd_port,dl
+    mov es:usbd_address,al
+    mov es:usbd_speed,ah
+    mov es:usbd_flags,0
+    mov es:usbd_maxlen,8
+    mov es:usbd_curr_config,0
+;
+    xor ax,ax
+    mov cx,15
+    mov di,OFFSET usbd_in_pipe_arr
+    rep stosw
+;
+    mov cx,15
+    mov di,OFFSET usbd_out_pipe_arr
+    rep stosw
+;
+    or bx,bx
+    jz usdNoHub
+;
+    mov es:usbd_func_sel,bx
+
+usdNoHub:
+    popa
+    retf32
+usb_attach    Endp    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           HookUsbDetach
 ;
 ;           description:    Hook USB detach event
@@ -4065,12 +4073,6 @@ init    Proc far
     mov ax,free_usb_address_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET init_usb_dev
-    mov edi,OFFSET init_usb_dev_name
-    xor cl,cl
-    mov ax,init_usb_dev_nr
-    RegisterOsGate
-;
     mov esi,OFFSET unlink_usb_dev
     mov edi,OFFSET unlink_usb_dev_name
     xor cl,cl
@@ -4099,6 +4101,12 @@ init    Proc far
     mov edi,OFFSET open_usb_dev_sel_name
     xor cl,cl
     mov ax,open_usb_dev_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET usb_attach
+    mov edi,OFFSET usb_attach_name
+    xor cl,cl
+    mov ax,usb_attach_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16

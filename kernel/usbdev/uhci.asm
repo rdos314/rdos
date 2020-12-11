@@ -3611,8 +3611,7 @@ htNotify:
     mov ah,bh
     movzx dx,bl
     xor bx,bx
-    call fword ptr ds:create_dev_proc
-    InitUsbDev
+    UsbAttach
 ;
     pop dx
     pop bx

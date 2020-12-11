@@ -3377,8 +3377,7 @@ htSlotAlloc:
     mov al,bl
     xor bx,bx
     movzx dx,cl
-    call fword ptr ds:create_dev_proc
-    InitUsbDev
+    UsbAttach
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc

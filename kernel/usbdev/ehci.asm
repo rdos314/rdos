@@ -3165,8 +3165,7 @@ htWaitNotify:
     mov ah,2
     xor bx,bx
     movzx dx,cl
-    call fword ptr ds:create_dev_proc
-    InitUsbDev
+    UsbAttach
     pop dx
 ;
     call fword ptr ds:create_control_proc
