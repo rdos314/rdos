@@ -2702,8 +2702,6 @@ CreateDev   Proc far
 ;
     popad
     pop fs
-;
-    InitUsbDev
     retf32
 CreateDev  Endp
 
@@ -2876,6 +2874,7 @@ htWaitNotify:
     mov al,dl
     movzx dx,cl
     call fword ptr ds:create_dev_proc
+    InitUsbDev
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc

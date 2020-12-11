@@ -3251,8 +3251,6 @@ CreateDev   Proc far
 ;
     popad
 ;
-    InitUsbDev
-;
     mov ax,25
     WaitMilliSec
 ;
@@ -3380,6 +3378,7 @@ htSlotAlloc:
     xor bx,bx
     movzx dx,cl
     call fword ptr ds:create_dev_proc
+    InitUsbDev
 ;
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc

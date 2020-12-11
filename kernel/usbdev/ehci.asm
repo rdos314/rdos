@@ -2949,8 +2949,6 @@ cdCreate:
 ;
     popad
     pop fs
-;
-    InitUsbDev
     retf32
 CreateDev  Endp
 
@@ -3168,6 +3166,7 @@ htWaitNotify:
     xor bx,bx
     movzx dx,cl
     call fword ptr ds:create_dev_proc
+    InitUsbDev
     pop dx
 ;
     call fword ptr ds:create_control_proc

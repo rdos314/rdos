@@ -1616,6 +1616,35 @@ GetIntrQh  ENDP
 CreateControl   Proc far
     push gs
     pushad
+;
+;
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;    
+    mov cx,SIZE uhci_td
+    AllocateMemBlk
+    mov fs:[edx].utd_link,0
+    mov fs:[edx].utd_control,0
+    mov fs:[edx].utd_host,0
+    mov fs:[edx].utd_buf,0
+    mov fs:[edx].utd_va_link,0
+    mov fs:[edx].utd_phys,0
+    mov es:dev_control_head,edx
+;
+    mov eax,18800000h
+    cmp es:usbd_speed,0
+    jnz cdSpeedOk
+;
+    or eax, 4000000h
+    
+cdSpeedOk:
+    mov es:dev_utd_control,eax
+;
+    popad
+    pop fs
 ;    
     push es
     mov ah,es:usbd_speed
@@ -3431,36 +3460,6 @@ CreateDev   Proc far
     CreateMemBlk32
 ;
     popad
-;
-    InitUsbDev
-;
-    push fs
-    pushad
-;
-    mov ax,flat_sel
-    mov fs,ax
-;    
-    mov cx,SIZE uhci_td
-    AllocateMemBlk
-    mov fs:[edx].utd_link,0
-    mov fs:[edx].utd_control,0
-    mov fs:[edx].utd_host,0
-    mov fs:[edx].utd_buf,0
-    mov fs:[edx].utd_va_link,0
-    mov fs:[edx].utd_phys,0
-    mov es:dev_control_head,edx
-;
-    mov eax,18800000h
-    cmp es:usbd_speed,0
-    jnz cdSpeedOk
-;
-    or eax, 4000000h
-    
-cdSpeedOk:
-    mov es:dev_utd_control,eax
-;
-    popad
-    pop fs
     retf32
 CreateDev  Endp
 
@@ -3613,6 +3612,7 @@ htNotify:
     movzx dx,bl
     xor bx,bx
     call fword ptr ds:create_dev_proc
+    InitUsbDev
 ;
     pop dx
     pop bx
