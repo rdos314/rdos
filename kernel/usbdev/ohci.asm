@@ -2725,17 +2725,88 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:               UnlinkFunc
+;       NAME:               ResetPort
 ;
-;       DESCRIPTION:        Unlink function
+;       DESCRIPTION:        Reset port
 ;
 ;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;       RETURNS:            AL      Speed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkFunc   Proc far
+ResetPort   Proc far
+    push gs
+    push cx
+    push di
+;
+    mov gs,ds:ohc_reg_sel
+;    
+    movzx di,dl
+    shl di,2
+    add di,OFFSET HcRhPortStatus
+;
+    mov cx,10
+
+rpCheck:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,gs:[di]
+    test al,1
+    jz rpFail
+;
+    loop rpCheck
+;    
+    mov eax,10h
+    mov gs:[di],eax
+
+rpResetLoop:
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,gs:[di]
+    test al,1
+    jz rpFail
+;    
+    test al,10h
+    jnz rpResetLoop
+; 
+    mov eax,2
+    mov gs:[di],eax
+;
+    mov cx,40
+
+rpWaitNotify:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,gs:[di]
+    test al,1
+    jz rpFail
+;
+    loop rpWaitNotify
+;    
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,gs:[di]
+    shr ax,9
+    and al,1
+    xor al,1
+    clc
+    jmp rpDone
+
+rpFail:
+    stc
+
+rpDone:
+    pop di
+    pop cx
+    pop gs
     retf32
-UnlinkFunc   Endp
+ResetPort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2816,58 +2887,11 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:
-    mov dx,10
-
-htCheck:    
-    mov ax,5
-    WaitMilliSec
+    call fword ptr ds:reset_port_proc
+    jc htUnlock
 ;
-    mov eax,gs:[si].HcRhPortStatus
-    test al,1
-    jz htDetached
-;
-    sub dx,1
-    jnz htCheck
-;    
-    LockUsb
-;    
-    mov eax,10h
-    mov gs:[si].HcRhPortStatus,eax
-
-htResetLoop:
-    mov ax,5
-    WaitMilliSec
-;
-    mov eax,gs:[si].HcRhPortStatus
-    test al,1
-    jz htUnlock
-;    
-    test al,10h
-    jnz htResetLoop
-; 
-    mov eax,2
-    mov gs:[si].HcRhPortStatus,eax
-;
-    mov dx,40
-
-htWaitNotify:    
-    mov ax,5
-    WaitMilliSec
-;
-    mov eax,gs:[si].HcRhPortStatus
-    test al,1
-    jz htUnlock
-;
-    sub dx,1
-    jnz htWaitNotify
-;    
-    mov ax,25
-    WaitMilliSec
-;
-    mov eax,gs:[si].HcRhPortStatus
-    shr ah,1
-    and ah,1
-    xor ah,1
+    mov ah,al
+    xor bx,bx
     movzx dx,cl
     UsbAttach
     jc htUnlock
@@ -3477,7 +3501,7 @@ ot12 DD OFFSET ReqBuffer,           SEG code
 ot13 DD OFFSET RelBuffer,           SEG code
 ot14 DD OFFSET IsRunning,           SEG code
 ot15 DD OFFSET FreeDev,             SEG code
-ot16 DD OFFSET UnlinkFunc,          SEG code
+ot16 DD OFFSET ResetPort,           SEG code
 
 InitFunction    Proc near
     push ds
