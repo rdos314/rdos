@@ -3952,14 +3952,6 @@ InitUsbFunction   MACRO
     OsGate init_usb_function_nr
                     ENDM
 
-; IN  DS      Usb device selector
-; IN  ES      Usb function selector
-; IN  FS      Control pipe selector
-; IN  AL      Port #
-NotifyUsbAttach MACRO
-    OsGate notify_usb_attach_nr
-                    ENDM
-
 LockUsb MACRO
     OsGate lock_usb_nr
                     ENDM

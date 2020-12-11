@@ -2868,51 +2868,6 @@ free_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           NotifyUsbAttach
-;
-;       Description:    Notify USB attach event
-;
-;       Parameters:     DS      USB function selector
-;                       ES      USB device selector
-;                       FS      Control pipe
-;                       AL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_usb_attach_name DB 'Notify USB Attach', 0
-
-attach_text DB 'Attach', 0
-
-notify_usb_attach       Proc far
-    push es
-    pushad
-;
-    mov bx,ds:usb_controller_id
-;
-    push ax
-    push dx
-    push si
-;
-    movzx si,al
-    mov ax,USB_EVENT_ATTACH
-    mov dl,-1
-    call DistEvent
-;
-    pop si
-    pop dx
-    pop ax
-;
-    call trap_usb_attach
-    clc
-;
-    popad
-    pop es
-    retf32
-notify_usb_attach   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           UnlinkUsbDevice
 ;
 ;           description:    Unlink USB device
@@ -3901,6 +3856,48 @@ ReadDescriptors   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           NotifyAttach
+;
+;       Description:    Notify attach
+;
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
+;                       FS      Control pipe
+;                       AL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+NotifyAttach       Proc near
+    push es
+    pushad
+;
+    mov bx,ds:usb_controller_id
+;
+    push ax
+    push dx
+    push si
+;
+    movzx si,al
+    mov ax,USB_EVENT_ATTACH
+    mov dl,-1
+    call DistEvent
+;
+    pop si
+    pop dx
+    pop ax
+;
+    call trap_usb_attach
+    clc
+;
+    popad
+    pop es
+    ret
+NotifyAttach   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UsbAttach
 ;
 ;       description:    USB attach
@@ -3944,8 +3941,9 @@ usb_attach    Proc far
     jc uaDone
 ;
     mov al,dl
-    NotifyUsbAttach
+    call NotifyAttach
     or es:usbd_flags,FLAG_ATTACHED
+    clc
 
 uaDone:
     pop cx
@@ -4044,12 +4042,6 @@ init    Proc far
     mov edi,OFFSET config_usb_hub_name
     xor cl,cl
     mov ax,config_usb_hub_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET notify_usb_attach
-    mov edi,OFFSET notify_usb_attach_name
-    xor cl,cl
-    mov ax,notify_usb_attach_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_detach
