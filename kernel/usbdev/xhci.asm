@@ -3353,11 +3353,7 @@ htResetDone:
 ;
     mov bx,ds:xhc_port_thread
     Signal
-;    
-    call fword ptr ds:allocate_address_proc
-    jc htUnlock
 ;
-    mov bl,al
     mov dx,100
 
 htSlotLoop:
@@ -3375,11 +3371,10 @@ htSlotLoop:
 
 htSlotAlloc:
     mov ah,al
-    mov al,bl
     xor bx,bx
     movzx dx,cl
     UsbAttach
-    jc htUnlockFree
+    jc htUnlock
 ;
     call fword ptr ds:change_address_proc
     AddUsbDevice
@@ -3413,11 +3408,15 @@ htAttached:
 htHandle:
     jmp htAttached
 
-htUnlockFree:
+htUnlock:
+    mov ax,es
+    or ax,ax
+    jz htFreed
+;
     UnlinkUsbDev
     FreeUsbDev
 
-htUnlock:
+htFreed:
     UnlockUsb
     jmp htDetached
 

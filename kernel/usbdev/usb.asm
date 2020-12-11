@@ -3910,7 +3910,6 @@ InitDevice Endp
 ;       description:    USB attach
 ;
 ;       parameters:     DS      Function sel
-;                       AL      Address
 ;                       AH      Speed
 ;                       BX      Hub selector
 ;                       DL      Port #
@@ -3922,10 +3921,23 @@ InitDevice Endp
 usb_attach_name DB 'Usb Attach', 0
 
 usb_attach    Proc far
+    push cx
+;
+    xor cx,cx
+    mov es,cx
+    mov cl,ah
+;
+    call fword ptr ds:allocate_address_proc
+    jc uaDone
+;
+    mov ah,cl
     call fword ptr ds:create_dev_proc
     call InitDevice
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
+
+uaDone:
+    pop cx
     retf32
 usb_attach    Endp    
 

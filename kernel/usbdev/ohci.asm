@@ -2864,18 +2864,13 @@ htWaitNotify:
     mov ax,25
     WaitMilliSec
 ;
-    call fword ptr ds:allocate_address_proc
-    jc htUnlock
-;
-    mov dl,al
     mov eax,gs:[si].HcRhPortStatus
     shr ah,1
     and ah,1
     xor ah,1
-    mov al,dl
     movzx dx,cl
     UsbAttach
-    jc htUnlockFree
+    jc htUnlock
 ;
     call fword ptr ds:change_address_proc
     AddUsbDevice
@@ -2904,11 +2899,15 @@ htAttached:
 htHandle:
     jmp htAttached
 
-htUnlockFree:
+htUnlock:
+    mov ax,es
+    or ax,ax
+    jz htFreed
+;
     UnlinkUsbDev
     FreeUsbDev
 
-htUnlock:
+htFreed:
     mov eax,gs:[si].HcRhPortStatus
     test al,1
     jz htDoUnlock

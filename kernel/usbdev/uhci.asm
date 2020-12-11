@@ -3603,9 +3603,6 @@ htNotify:
     and ah,1
     mov bh,ah
 ;
-    call fword ptr ds:allocate_address_proc
-    jc htUnlock
-;
     push bx
     push dx
 ;
@@ -3616,7 +3613,7 @@ htNotify:
 ;
     pop dx
     pop bx
-    jc htUnlockFree
+    jc htUnlock
 ;
     call fword ptr ds:change_address_proc
     AddUsbDevice
@@ -3646,11 +3643,15 @@ htAttached:
 htHandle:
     jmp htAttached
 
-htUnlockFree:
+htUnlock:
+    mov ax,es
+    or ax,ax
+    jz htFreed
+;
     UnlinkUsbDev
     FreeUsbDev
 
-htUnlock:
+htFreed:
     in ax,dx
     test al,1
     jz htDoUnlock

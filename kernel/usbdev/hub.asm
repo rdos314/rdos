@@ -1012,10 +1012,6 @@ htIsEnabled:
     test ds:[edi].hub_status_arr,2
     jz htUnlock
 ;
-    call fword ptr ds:allocate_address_proc
-    jc htUnlock
-;
-    mov bl,al
     mov ax,ds:[edi].hub_status_arr
     test ax,200h
     jnz htLowSpeed
@@ -1035,16 +1031,15 @@ htLowSpeed:
     mov ah,0
         
 htCreate:
-    mov al,bl
     mov bp,ax
 ;
     mov bx,ds
     movzx dx,cl
     UsbAttach
-    jc htUnlockFree
+    jc htUnlock
 ;
     call fword ptr ds:change_address_proc
-    jc htUnlockFree
+    jc htUnlock
 ;
     AddUsbDevice
     UnlockUsb
@@ -1072,11 +1067,15 @@ htAttached:
 htHandle:
     jmp htAttached
 
-htUnlockFree:
+htUnlock:
+    mov ax,es
+    or ax,ax
+    jz htFreed
+;
     UnlinkUsbDev
     FreeUsbDev
 
-htUnlock:
+htFreed:
     mov ax,ds:[edi].hub_status_arr
     test ax,1
     jz htDoUnlock
