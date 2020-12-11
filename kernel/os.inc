@@ -3954,12 +3954,6 @@ InitUsbFunction   MACRO
 
 ; IN  DS      Usb device selector
 ; IN  ES      Usb function selector
-AddUsbDevice MACRO
-    OsGate add_usb_device_nr
-                    ENDM
-
-; IN  DS      Usb device selector
-; IN  ES      Usb function selector
 ; IN  FS      Control pipe selector
 ReadUsbDescriptors MACRO
     OsGate read_usb_descriptors_nr

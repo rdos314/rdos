@@ -2868,57 +2868,6 @@ free_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddUsbDevice
-;
-;       Description:    Add USB device
-;
-;       Parameters:     DS      USB function selector
-;                       ES      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_usb_device_name DB 'Add USB Device', 0
-
-add_usb_device       Proc far
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ds,es:usbd_func_sel
-    mov eax,es
-    mov fs,eax
-;
-    mov eax,SIZE usbdev_dev_struc
-    AllocateSmallGlobalMem
-;
-    mov ax,ds:usb_controller_id
-    mov es:udd_controller,ax
-;
-    mov al,fs:usbd_port
-    mov es:udd_port,al
-;
-    mov fs:usbd_dev_sel,es
-    mov es:udd_sel,fs
-    mov es:udd_deleted,0
-    mov es:udd_ref_count,1
-    InitSection es:udd_section
-;
-    movzx bx,al
-    add bx,bx
-    mov ds:[bx].usb_handle_arr,es
-    mov ds:[bx].usb_dev_arr,fs
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    retf32
-add_usb_device  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ReadUsbDescriptors
 ;
 ;       Description:    Read USB descriptors
@@ -3905,6 +3854,55 @@ InitDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddDevice
+;
+;       Description:    Add device
+;
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDevice       Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ds,es:usbd_func_sel
+    mov eax,es
+    mov fs,eax
+;
+    mov eax,SIZE usbdev_dev_struc
+    AllocateSmallGlobalMem
+;
+    mov ax,ds:usb_controller_id
+    mov es:udd_controller,ax
+;
+    mov al,fs:usbd_port
+    mov es:udd_port,al
+;
+    mov fs:usbd_dev_sel,es
+    mov es:udd_sel,fs
+    mov es:udd_deleted,0
+    mov es:udd_ref_count,1
+    InitSection es:udd_section
+;
+    movzx bx,al
+    add bx,bx
+    mov ds:[bx].usb_handle_arr,es
+    mov ds:[bx].usb_dev_arr,fs
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+AddDevice  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UsbAttach
 ;
 ;       description:    USB attach
@@ -3939,7 +3937,7 @@ usb_attach    Proc far
 ;
     or es:usbd_flags,FLAG_ADDRESSED
     call fword ptr ds:change_address_proc
-    AddUsbDevice
+    call AddDevice
     UnlockUsb
     ReadUsbDescriptors
 
@@ -4027,12 +4025,6 @@ init    Proc far
     mov edi,OFFSET unlock_usb_name
     xor cl,cl
     mov ax,unlock_usb_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET add_usb_device
-    mov edi,OFFSET add_usb_device_name
-    xor cl,cl
-    mov ax,add_usb_device_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_hub_descr
