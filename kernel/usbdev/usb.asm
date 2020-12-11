@@ -3808,8 +3808,6 @@ ReadDescriptors   Endp
 ;
 ;       Parameters:     DS      USB function selector
 ;                       ES      USB device selector
-;                       FS      Control pipe
-;                       AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3819,21 +3817,13 @@ NotifyAttach       Proc near
     push es
     pushad
 ;
-    mov bx,ds:usb_controller_id
-;
-    push ax
-    push dx
-    push si
-;
-    movzx si,al
+    movzx si,es:usbd_port
     mov ax,USB_EVENT_ATTACH
     mov dl,-1
     call DistEvent
-;
-    pop si
-    pop dx
-    pop ax
 ;       
+    mov bx,ds:usb_controller_id
+    mov al,es:usbd_port
     mov cx,SEG data
     mov es,cx
     mov cx,es:usb_attach_hooks
@@ -3912,7 +3902,6 @@ usb_attach    Proc far
     call ReadDescriptors
     jc uaDone
 ;
-    mov al,dl
     call NotifyAttach
     or es:usbd_flags,FLAG_ATTACHED
     clc
