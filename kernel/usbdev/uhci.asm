@@ -3734,104 +3734,27 @@ HexToAscii      ENDP
 ;           DESCRIPTION:    Update root-hub port status
 ;
 ;       PARAMETERS:     DS      Function selector
-;               CL      Port # (0,1)
+;                       DL      Port # (0,1)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
-    push ds
-    push es
-    push fs
-    pushad
+    push ax
+    push si
 ;    
-    movzx si,cl
+    movzx si,dl
     add si,si
-    movzx edi,cl
-    add edi,edi
 ;    
+    push dx
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
-    add dx,si
-;    
+    add dx,si    
     in ax,dx
-    test al,1
-    jz upDetach
-
-upAttach:
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jnz upCheckReset
+    pop dx
+    NotifyUsbPortState
 ;
-    mov ds:[edi].usb_thread_arr,-1
-;    
-    mov bx,ds
-    mov dx,cx
-;
-    mov esi,OFFSET handler_thread_name
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-
-upCopyLoop:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz upCopyDone
-;
-    stosb
-    jmp upCopyLoop
-
-upCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,cl
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;   
-    xor edi,edi
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET handler_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-    jmp upDone
-
-upCheckReset:
-    mov ax,1
-    shl ax,cl
-;    test ax,ds:uhc_reset
-;    jz upDone
-;
-;    Signal
-    jmp upDone
-
-upDetach:
-    EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jz upLeave
-;    
-    Signal
-
-upLeave:
-    LeaveSection ds:usb_section
-
-upDone:    
-    popad
-    pop fs
-    pop es
-    pop ds
+    pop si
+    pop ax
     ret
 UpdatePort   Endp
 
@@ -3991,12 +3914,6 @@ ifTabLoop:
     or al,4
     out dx,ax
 ;
-;    mov cl,0
-;    call UpdatePort    
-;
-;    mov cl,1
-;    call UpdatePort    
-;
     popad
     pop fs
     pop es
@@ -4095,10 +4012,10 @@ AddFunction   Endp
 PollFunction  Proc near
     pusha
 ;    
-    mov cl,0
+    mov dl,0
     call UpdatePort
 ;    
-    mov cl,1
+    mov dl,1
     call UpdatePort
 ;
     popa

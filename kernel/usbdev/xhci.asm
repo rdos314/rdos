@@ -3792,119 +3792,16 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort  Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;        
-    mov ax,ds
-    mov fs,ax
+    push eax
+    push esi
 ;
-    movzx si,cl
+    movzx si,dl
     shl si,4
-    movzx edi,cl
-    add edi,edi
-;        
     mov eax,ds:[si]
-    test al,2
-    jnz upAttach
+    NotifyUsbPortState
 ;
-    test al,1
-    jz upDetach
-;
-    or ax,10h
-    mov ds:[si],eax
-    jmp upDone
-
-upAttach:
-    mov ax,es
-    mov ds,ax
-;
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jnz upCheckReset
-;
-    mov ds:[edi].usb_thread_arr,-1
-;    
-    mov bx,ds
-    mov dx,cx
-;
-    mov esi,OFFSET handler_thread_name
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-
-upCopyLoop:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz upCopyDone
-;
-    stosb
-    jmp upCopyLoop
-
-upCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,cl
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;   
-    xor edi,edi
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET handler_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-    jmp upDone
-
-upCheckReset:
-    mov eax,1
-    shl eax,cl
-;    test eax,es:xhc_reset
-;    jz upDone
-;
-;    Signal
-    jmp upDone    
-
-upDetach:
-    mov ax,es
-    mov ds,ax
-;
-    EnterSection ds:usb_section
-;
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jz upLeave
-;
-    mov eax,1
-    shl eax,cl
-    test eax,es:xhc_detach_pend
-    jnz upLeave
-;
-    Signal
-
-upLeave:
-    LeaveSection ds:usb_section
-
-upDone:
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
+    pop esi
+    pop eax
     ret        
 UpdatePort  Endp
     
@@ -3982,20 +3879,16 @@ ptRetry:
     or eax,es:xhc_detach_pend
     jz ptLoop
 ;
-    xor cl,cl
+    xor dl,dl
 
 ptPortLoop:    
     test al,1
     jz ptPortNext
 ;
-    push eax
-    push cx
     call UpdatePort
-    pop cx
-    pop eax 
 
 ptPortNext:
-    inc cl
+    inc dl
     shr eax,1
     jnz ptPortLoop   
 ;    
