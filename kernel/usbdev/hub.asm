@@ -246,6 +246,9 @@ ResetPort   Proc far
     test al,1
     jz rpFail
 ;
+    movzx dx,dl
+    mov ax,PORT_RESET
+    call SetPortFeature
     clc
     jmp rpDone
 
@@ -1017,10 +1020,6 @@ htTryAttach:
 ;
     call fword ptr ds:reset_port_proc
     jc htUnlock
-;
-    movzx dx,cl
-    mov ax,PORT_RESET
-    call SetPortFeature
 ;        
     mov dx,10
 
