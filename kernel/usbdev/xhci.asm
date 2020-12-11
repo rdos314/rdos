@@ -3279,17 +3279,75 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:               UnlinkFunc
+;       NAME:               ResetPort
 ;
-;       DESCRIPTION:        Unlink function
+;       DESCRIPTION:        Reset port
 ;
 ;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;       RETURNS:            AL      Speed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkFunc   Proc far
+ResetPort   Proc far
+    push gs
+    push cx
+    push di
+;    
+    mov gs,ds:xhc_port_sel
+    movzx di,dl
+    shl di,4
+;    
+    mov eax,gs:[di]
+    test al,1
+    jz rpFail
+;
+    and eax,0EE03E1h
+    or al,10h
+    mov gs:[di],eax
+
+rpCheckResetLoop:
+    mov eax,gs:[di]
+    test al,1
+    jz rpFail
+;
+    test al,10h
+    jz rpResetDone    
+;
+    mov ax,25
+    WaitMilliSec
+    jmp rpCheckResetLoop    
+
+rpResetDone:
+    mov ax,25
+    WaitMilliSec
+;
+    mov bx,ds:xhc_port_thread
+    Signal
+;
+    mov cx,100
+
+rpSlotLoop:
+    mov eax,gs:[di]
+    call PortToSpeed
+    cmp al,-1
+    clc
+    jne rpDone
+;
+    mov ax,25
+    WaitMilliSec
+    loop rpSlotLoop    
+
+rpFail:
+    stc
+
+rpDone:
+    pop di
+    pop cx
+    pop gs
     retf32
-UnlinkFunc   Endp
+ResetPort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3319,57 +3377,11 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:    
-    mov eax,1
-    shl eax,cl
-    lock or ds:xhc_attach_pend,eax
-;    
-    movzx si,cl
-    shl si,4
-;    
     LockUsb
-    mov eax,gs:[si]
-    test al,1
-    jz htUnlock
 ;
-    and eax,0EE03E1h
-    or al,10h
-    mov gs:[si],eax
-
-htCheckResetLoop:
-    mov eax,gs:[si]
-    test al,1
-    jz htUnlock
+    call dword ptr ds:reset_port_proc
+    jc htUnlock
 ;
-    test al,10h
-    jz htResetDone    
-;
-    mov ax,25
-    WaitMilliSec
-    jmp htCheckResetLoop    
-
-htResetDone:
-    mov ax,25
-    WaitMilliSec
-;
-    mov bx,ds:xhc_port_thread
-    Signal
-;
-    mov dx,100
-
-htSlotLoop:
-    mov eax,gs:[si]
-    call PortToSpeed
-    cmp al,-1
-    jne htSlotAlloc
-;
-    sub dx,1
-    jz htUnlock
-;
-    mov ax,25
-    WaitMilliSec
-    jmp htSlotLoop    
-
-htSlotAlloc:
     mov ah,al
     xor bx,bx
     movzx dx,cl
@@ -4224,7 +4236,7 @@ et12 DD OFFSET ReqBuffer,           SEG code
 et13 DD OFFSET RelBuffer,           SEG code
 et14 DD OFFSET IsRunning,           SEG code
 et15 DD OFFSET FreeDev,             SEG code
-et16 DD OFFSET UnlinkFunc,          SEG code
+et16 DD OFFSET ResetPort,           SEG code
 
 InitFunction    Proc near
     push es
