@@ -249,6 +249,55 @@ ResetPort   Proc far
     movzx dx,dl
     mov ax,PORT_RESET
     call SetPortFeature
+;        
+    mov cx,10
+
+rpWaitLoop:
+    push edx
+    GetSystemTime
+    add eax,1193 * 200
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+;
+    mov ax,ds:[edi]
+    test ax,1
+    jz rpFail
+;
+    test ax,2
+    jnz rpIsEnabled
+;
+    loop rpWaitLoop
+;
+    jmp rpFail
+
+rpIsEnabled:
+    mov ax,25
+    WaitMilliSec
+;
+    mov ax,ds:[edi]
+    test al,2
+    jz rpFail
+;
+    mov ax,ds:[edi]
+    test ax,200h
+    jnz rpLowSpeed
+;
+    test ax,400h
+    jnz rpHighSpeed
+
+rpFullSpeed:
+    mov al,1
+    clc
+    jmp rpDone
+
+rpHighSpeed:
+    mov al,2
+    clc
+    jmp rpDone
+
+rpLowSpeed:
+    mov al,0
     clc
     jmp rpDone
 
@@ -1020,57 +1069,8 @@ htTryAttach:
 ;
     call fword ptr ds:reset_port_proc
     jc htUnlock
-;        
-    mov dx,10
-
-htWaitLoop:
-    push edx
-    GetSystemTime
-    add eax,1193 * 200
-    adc edx,0
-    WaitForSignalWithTimeout
-    pop edx
 ;
-    mov ax,ds:[edi].hub_status_arr
-    test ax,1
-    jz htUnlock
-;
-    test ax,2
-    jnz htIsEnabled
-;
-    sub dx,1
-    jnz htWaitLoop
-;
-    jmp htUnlock
-
-htIsEnabled:
-    mov ax,25
-    WaitMilliSec
-;
-    test ds:[edi].hub_status_arr,2
-    jz htUnlock
-;
-    mov ax,ds:[edi].hub_status_arr
-    test ax,200h
-    jnz htLowSpeed
-;
-    test ax,400h
-    jnz htHighSpeed
-
-htFullSpeed:
-    mov ah,1
-    jmp htCreate
-
-htHighSpeed:
-    mov ah,2
-    jmp htCreate
-
-htLowSpeed:
-    mov ah,0
-        
-htCreate:
-    mov bp,ax
-;
+    mov ah,al
     mov bx,ds
     movzx dx,cl
     UsbAttach
