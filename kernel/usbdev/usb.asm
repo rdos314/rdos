@@ -3881,7 +3881,12 @@ usb_attach    Proc far
 ;
     xor cx,cx
     mov es,cx
-    mov cl,ah
+    EnterSection ds:usb_addr_section
+;
+    call fword ptr ds:reset_port_proc
+    jc uaDone
+;
+    mov cl,al
 ;
     call fword ptr ds:allocate_address_proc
     jc uaDone

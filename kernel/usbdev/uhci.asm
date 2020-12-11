@@ -3616,12 +3616,6 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:
-    LockUsb
-;
-    call fword ptr ds:reset_port_proc
-    jc htUnlock
-;
-    mov ah,al
     movzx dx,dl
     xor bx,bx
     UsbAttach
