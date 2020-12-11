@@ -834,7 +834,6 @@ free_mem_blk_nr             = 754
 
 get_usb_dev_sel_nr          = 755
 open_usb_dev_sel_nr         = 756
-unlink_usb_dev_nr           = 757
 
 free_usb_dev_nr             = 758
 add_wait_del_nr             = 759

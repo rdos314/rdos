@@ -39,6 +39,7 @@ INCLUDE usb.inc
 INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 INCLUDE ..\os\chandle.inc
+INCLUDE hub.inc
 
 MAX_ATTACH_HOOKS = 32
 MAX_DETACH_HOOKS = 32
@@ -2817,116 +2818,6 @@ free_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UnlinkUsbDevice
-;
-;           description:    Unlink USB device
-;
-;       parameters:         DS      USB function selector
-;                           ES      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlink_usb_dev_name DB 'Unlink USB Device', 0
-
-unlink_usb_dev       Proc far
-    push ds
-    pushad
-;
-    mov ax,es:usbd_my_hub
-    or ax,ax
-    jz uudHubDone
-;
-    push ds
-    mov ds,ax
-;    call fword ptr ds:unlink_func_proc
-    pop ds
-
-uudHubDone:
-    lock or es:usbd_flags,FLAG_DETACHED
-    movzx bx,es:usbd_port
-    add bx,bx
-    xor ax,ax
-    mov ds:[bx].usb_dev_arr,ax
-    xchg ax,ds:[bx].usb_handle_arr
-    or ax,ax
-    jz uudDone
-;
-    push ds
-    mov ds,ax
-    mov ds:udd_deleted,1
-    EnterSection ds:udd_section
-    LeaveSection ds:udd_section
-;
-    mov cx,15
-    mov si,OFFSET usbd_in_pipe_arr
-
-uudInLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz uudInNext
-;
-    push es
-    mov es,bx
-    xor bx,bx
-    xchg bx,es:usbdp_wait
-    or bx,bx
-    jz uudInPop
-;
-    mov es,bx
-    SignalWait
-
-uudInPop:
-    pop es
-
-uudInNext:
-    add si,2
-    loop uudInLoop
-;
-    mov cx,15
-    mov si,OFFSET usbd_out_pipe_arr
-
-uudOutLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz uudOutNext
-;
-    push es
-    mov es,bx
-    xor bx,bx
-    xchg bx,es:usbdp_wait
-    or bx,bx
-    jz uudOutPop
-;
-    mov es,bx
-    SignalWait
-
-uudOutPop:
-    pop es
-
-uudOutNext:
-    add si,2
-    loop uudOutLoop
-;
-    lock sub ds:udd_ref_count,1
-    pop ds
-    jnz uudDone
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-
-uudDone:
-    call fword ptr ds:unlink_proc
-;
-    popad
-    pop ds
-    retf32
-unlink_usb_dev     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           NotifyUsbDetach
 ;
 ;           description:    Notify USB detach event
@@ -3894,6 +3785,159 @@ NotifyAttach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UnlinkHub
+;
+;           description:    Unlink Hub
+;
+;       parameters:         DS      USB function selector
+;                           ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkHub       Proc near
+    push es
+    pushad
+;
+    mov bx,OFFSET hub_status_arr
+    mov cx,ds:hub_ports
+    xor ax,ax
+
+ulhStatusLoop:
+    mov ds:[bx],ax
+    add bx,2
+    loop ulhStatusLoop
+;
+    mov bx,OFFSET usb_dev_arr
+    mov cx,ds:hub_ports
+
+ulhDevLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz ulhDevNext
+;
+    mov es,ax
+    call UnlinkDevice
+
+ulhDevNext:
+    add bx,2
+    loop ulhDevLoop
+;
+    popad
+    pop es
+    ret
+UnlinkHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlinkDevice
+;
+;           description:    Unlink USB device
+;
+;       parameters:         DS      USB function selector
+;                           ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkDevice       Proc near
+    push ds
+    pushad
+;
+    mov ax,es:usbd_my_hub
+    or ax,ax
+    jz udHubDone
+;
+    push ds
+    mov ds,ax
+    call UnlinkHub
+    pop ds
+
+udHubDone:
+    lock or es:usbd_flags,FLAG_DETACHED
+    movzx bx,es:usbd_port
+    add bx,bx
+    xor ax,ax
+    mov ds:[bx].usb_dev_arr,ax
+    xchg ax,ds:[bx].usb_handle_arr
+    or ax,ax
+    jz udDone
+;
+    push ds
+    mov ds,ax
+    mov ds:udd_deleted,1
+    EnterSection ds:udd_section
+    LeaveSection ds:udd_section
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+udInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udInNext
+;
+    push es
+    mov es,bx
+    xor bx,bx
+    xchg bx,es:usbdp_wait
+    or bx,bx
+    jz udInPop
+;
+    mov es,bx
+    SignalWait
+
+udInPop:
+    pop es
+
+udInNext:
+    add si,2
+    loop udInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+udOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udOutNext
+;
+    push es
+    mov es,bx
+    xor bx,bx
+    xchg bx,es:usbdp_wait
+    or bx,bx
+    jz udOutPop
+;
+    mov es,bx
+    SignalWait
+
+udOutPop:
+    pop es
+
+udOutNext:
+    add si,2
+    loop udOutLoop
+;
+    lock sub ds:udd_ref_count,1
+    pop ds
+    jnz udDone
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+udDone:
+    call fword ptr ds:unlink_proc
+;
+    popad
+    pop ds
+    ret
+UnlinkDevice    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandlerThread
 ;
 ;       description:    USB server thread
@@ -3976,7 +4020,7 @@ uaDisableDev:
 
 uaDetach:
     int 3
-    stc    
+    call UnlinkDevice
 
 uaDone:
     EnterSection ds:usb_section
@@ -4226,12 +4270,6 @@ init    Proc far
     mov edi,OFFSET free_usb_address_name
     xor cl,cl
     mov ax,free_usb_address_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET unlink_usb_dev
-    mov edi,OFFSET unlink_usb_dev_name
-    xor cl,cl
-    mov ax,unlink_usb_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET free_usb_dev

@@ -185,40 +185,8 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkHub   Proc far
-    push es
-    pushad
-;
-    lock or ds:hub_flags,FLAG_HUB_DISCONNECT
-;
-    mov bx,OFFSET hub_status_arr
-    mov cx,ds:hub_ports
-    xor ax,ax
-
-ulhStatusLoop:
-    mov ds:[bx],ax
-    add bx,2
-    loop ulhStatusLoop
-;
-    mov bx,OFFSET usb_dev_arr
-    mov cx,ds:hub_ports
-
-ulhDevLoop:
-    mov ax,ds:[bx]
-    or ax,ax
-    jz ulhDevNext
-;
-    mov es,ax
-    UnlinkUsbDev
-
-ulhDevNext:
-    add bx,2
-    loop ulhDevLoop
-;
-    popad
-    pop es
     ret
 UnlinkHub   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
