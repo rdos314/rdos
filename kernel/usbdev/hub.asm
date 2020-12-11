@@ -219,6 +219,45 @@ ulhDevNext:
     ret
 UnlinkHub   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ResetPort
+;
+;       DESCRIPTION:    Reset port
+;
+;       PARAMETERS:     DS      Function selector
+;                       DL      Port
+;
+;       RETURNS:        AL      Speed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetPort   Proc far
+    push ecx
+    push edi
+;
+    movzx edi,dl
+    add edi,edi
+    add edi,OFFSET hub_status_arr
+;
+    mov ax,ds:[edi]
+    test al,1
+    jz rpFail
+;
+    clc
+    jmp rpDone
+
+rpFail:
+    stc
+
+rpDone: 
+    pop edi
+    pop ecx
+    ret
+ResetPort   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -667,7 +706,7 @@ ht12 DD OFFSET ReqBuffer,           SEG code
 ht13 DD OFFSET RelBuffer,           SEG code
 ht14 DD OFFSET IsRunning,           SEG code
 ht15 DD OFFSET FreeDev,             SEG code
-ht16 DD OFFSET UnlinkHub,           SEG code
+ht16 DD OFFSET ResetPort,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -974,10 +1013,10 @@ handler_thread:
     LeaveSection ds:usb_section
 
 htTryAttach:
-    test ds:[edi].hub_status_arr,1
-    jz htDetached
-;
     LockUsb
+;
+    call fword ptr ds:reset_port_proc
+    jc htUnlock
 ;
     movzx dx,cl
     mov ax,PORT_RESET
