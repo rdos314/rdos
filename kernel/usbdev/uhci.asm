@@ -3538,7 +3538,45 @@ ResetPort   Endp
 DisablePort   Proc far
     push ax
     push dx
+    push di
 ;    
+    movzx di,dl
+    add di,di
+;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
+    in ax,dx
+    and al,NOT 4
+    out dx,ax
+;
+    mov ax,25
+    WaitMilliSec
+;
+    pop di
+    pop dx
+    pop ax
+    retf32
+DisablePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DisableDev
+;
+;           DESCRIPTION:    Disable device
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableDev   Proc far
+    push ax
+    push dx
+;    
+    mov dl,es:usbd_port
     movzx di,dl
     add di,di
 ;
@@ -3556,7 +3594,7 @@ DisablePort   Proc far
     pop dx
     pop ax
     retf32
-DisablePort   Endp
+DisableDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3817,6 +3855,7 @@ ut13 DD OFFSET RelBuffer,           SEG code
 ut14 DD OFFSET IsRunning,           SEG code
 ut15 DD OFFSET FreeDev,             SEG code
 ut16 DD OFFSET ResetPort,           SEG code
+ut17 DD OFFSET DisableDev,          SEG code
 
 InitFunction    Proc near
     push ds
@@ -3838,7 +3877,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*17h
+    mov cx,2*18h
 
 ifTabLoop:
     lods dword ptr cs:[si]

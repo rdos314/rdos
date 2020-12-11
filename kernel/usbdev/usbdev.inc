@@ -142,6 +142,9 @@ free_dev_proc        DD ?,?
 ;  OUT AL        Speed
 reset_port_proc     DD ?,?
 
+;  IN  ES        Device
+disable_device_proc     DD ?,?
+
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
 

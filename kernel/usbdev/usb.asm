@@ -3944,12 +3944,10 @@ handler_thread:
 ;
     call NotifyAttach
     or es:usbd_flags,FLAG_ATTACHED
-    jmp uaCheck
 
 uaConnected:
     WaitForSignal
-
-uaCheck:
+;
     call fword ptr ds:is_dev_connected_proc
     jc uaDetach
 ;
@@ -3964,11 +3962,17 @@ uaCheck:
     jmp uaDetach
 
 uaLockedError:
-    call fword ptr ds:disable_port_proc
-    LeaveSection ds:usb_addr_section
     mov ax,es
     or ax,ax
+    jnz uaDisableDev
+;
+    call fword ptr ds:disable_port_proc
+    LeaveSection ds:usb_addr_section
     jmp uaDone
+
+uaDisableDev:
+    call fword ptr ds:disable_device_proc
+    LeaveSection ds:usb_addr_section
 
 uaDetach:
     int 3

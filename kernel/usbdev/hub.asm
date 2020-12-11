@@ -323,20 +323,99 @@ ResetPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DisablePort   Proc far
-    push ax
-    push dx
+    push eax
+    push edx
+    push edi
 ;
     movzx dx,dl
+    movzx edi,dl
+    add edi,edi
+    add edi,OFFSET hub_status_arr
+;
+    mov ax,ds:[edi]
+    test ax,1
+    jz dpDone
+;
+    mov ax,PORT_ENABLE
+    call ClearPortFeature    
+;
+    mov ax,50
+    WaitMilliSec
+
+dpDone:
+    pop edi
+    pop edx
+    pop eax
+    ret
+DisablePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisableDev
+;
+;       DESCRIPTION:    Disable device
+;
+;       PARAMETERS:     DS      Function selector
+;                       DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableDev   Proc far
+    push eax
+    push edx
+    push edi
+;
+    movzx dx,es:usbd_port
+    movzx edi,dl
+    add edi,edi
+    add edi,OFFSET hub_status_arr
+;
+    mov ax,ds:[edi]
+    test ax,1
+    jz ddDone
+;
     mov ax,PORT_ENABLE
     call ClearPortFeature    
 ;
     mov ax,50
     WaitMilliSec
 ;
-    pop dx
-    pop ax
+    mov ax,ds:[edi]
+    test ax,1
+    jz ddDone
+;
+    mov al,es:usbd_speed
+    cmp al,2
+    je ddDisable
+;
+    mov al,es:usbd_address
+    call ClearControlTT
+;
+    xor al,al
+    call ClearControlTT
+
+ddDisable:
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;
+    mov ax,200
+    WaitMilliSec
+;
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;
+    mov ax,20
+    WaitMilliSec
+;
+    call GetPortStatus
+
+ddDone:
+    pop edi
+    pop edx
+    pop eax
     ret
-DisablePort   Endp
+DisableDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -761,6 +840,7 @@ ht13 DD OFFSET RelBuffer,           SEG code
 ht14 DD OFFSET IsRunning,           SEG code
 ht15 DD OFFSET FreeDev,             SEG code
 ht16 DD OFFSET ResetPort,           SEG code
+ht17 DD OFFSET DisableDev,          SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2184,7 +2264,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*17h
+    mov ecx,2*18h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

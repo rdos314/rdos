@@ -2798,11 +2798,54 @@ DisablePort   Proc far
     push eax
     push edi
 ;
-    mov gs,ds:ohc_reg_sel
-;    
     movzx di,dl
     shl di,2
     add di,OFFSET HcRhPortStatus
+    mov gs,ds:ohc_reg_sel
+;
+    mov eax,gs:[di]
+    test al,1
+    jz dpDone
+;    
+    mov eax,1
+    mov gs:[di],eax
+;
+    mov ax,25
+    WaitMilliSec
+
+dpDone:
+    pop edi
+    pop eax
+    pop gs
+    retf32
+DisablePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DisableDev
+;
+;       DESCRIPTION:    Disable device
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableDev   Proc far
+    push gs
+    push eax
+    push edi
+;
+    mov dl,es:usbd_port
+    movzx di,dl
+    shl di,2
+    add di,OFFSET HcRhPortStatus
+    mov gs,ds:ohc_reg_sel
+;
+    mov eax,gs:[di]
+    test al,1
+    jz ddDone
 ;
     mov eax,1
     mov gs:[di],eax
@@ -2810,11 +2853,31 @@ DisablePort   Proc far
     mov ax,25
     WaitMilliSec
 ;
+    mov eax,gs:[di]
+    test al,1
+    jz ddDone
+;
+    mov cx,10
+
+ddWaitDisable:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,gs:[di]
+    test al,1
+    jz ddDone
+;
+    test al,2
+    jz ddDone
+;
+    loop ddWaitDisable
+
+ddDone:
     pop edi
     pop eax
     pop gs
     retf32
-DisablePort   Endp
+DisableDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3409,6 +3472,7 @@ ot13 DD OFFSET RelBuffer,           SEG code
 ot14 DD OFFSET IsRunning,           SEG code
 ot15 DD OFFSET FreeDev,             SEG code
 ot16 DD OFFSET ResetPort,           SEG code
+ot17 DD OFFSET DisableDev,          SEG code
 
 InitFunction    Proc near
     push ds
@@ -3466,7 +3530,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*17h
+    mov cx,2*18h
 
 ifTabLoop:
     lods dword ptr cs:[si]

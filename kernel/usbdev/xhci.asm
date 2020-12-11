@@ -2279,6 +2279,31 @@ DisablePort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DisableDev
+;
+;           DESCRIPTION:    Disable device
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableDev   Proc far
+    push ax
+    push bx
+;
+    movzx bx,es:usbd_port    
+    mov al,ds:[bx].xhc_port_slot_arr
+    call DisableSlot
+;
+    pop bx
+    pop ax
+    retf32
+DisableDev Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockEnum
 ;
 ;           DESCRIPTION:    Lock enumeration process
@@ -4080,6 +4105,7 @@ et13 DD OFFSET RelBuffer,           SEG code
 et14 DD OFFSET IsRunning,           SEG code
 et15 DD OFFSET FreeDev,             SEG code
 et16 DD OFFSET ResetPort,           SEG code
+et17 DD OFFSET DisableDev,          SEG code
 
 InitFunction    Proc near
     push es
@@ -4226,7 +4252,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*17h
+    mov cx,2*18h
 
 ifTabLoop:
     lods dword ptr cs:[si]

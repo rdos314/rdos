@@ -3130,6 +3130,62 @@ DisablePort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DisableDev
+;
+;           DESCRIPTION:    Disable device
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableDev   Proc far
+    push gs
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov dl,es:usbd_port
+    mov gs,ds:ehc_reg_sel
+    movzx edi,dl
+    shl edi,2
+    add edi,OFFSET HcPortSc
+;
+    mov eax,gs:[edi]
+    test ax,2000h
+    jnz ddDone
+;
+    and al,NOT 4
+    mov gs:[edi],eax
+;
+    mov cx,10
+
+ddWaitDisable:    
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,gs:[edi]
+    test al,1
+    jz ddDone
+;
+    test al,4
+    jz ddDone
+;
+    loop ddWaitDisable
+
+ddDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    retf32
+DisableDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:               AddressDev
 ;
 ;       DESCRIPTION:        Address usb dev
@@ -3847,6 +3903,7 @@ ec13 DD OFFSET RelBuffer,          SEG code
 ec14 DD OFFSET IsRunning,          SEG code
 ec15 DD OFFSET FreeDev,            SEG code
 ec16 DD OFFSET ResetPort,          SEG code
+ec17 DD OFFSET DisableDev,         SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3868,7 +3925,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*17h
+    mov cx,2*18h
 
 ifTabLoop:
     lods dword ptr cs:[si]
