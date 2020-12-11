@@ -4054,13 +4054,11 @@ FreeUsbAddress MACRO
                     ENDM
 
 ; IN  DS      Function sel
-; IN  AL      Address
-; IN  AH      Speed
 ; IN  BX      Hub selector
 ; IN  DL      Port #
-; OUT ES      Dev sel
-UsbAttach MACRO
-    OsGate usb_attach_nr
+; IN  AX      Port state
+NotifyUsbPortState MACRO
+    OsGate notify_usb_port_state_nr
                     ENDM
 
 ; IN  DS      Function sel

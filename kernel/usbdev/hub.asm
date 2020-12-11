@@ -1069,7 +1069,7 @@ handler_thread:
 htTryAttach:
     mov bx,ds
     movzx dx,cl
-    UsbAttach
+;    UsbAttach
 ;
     mov ax,es
     or ax,ax
@@ -1181,93 +1181,20 @@ htDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
-    push ds
-    push fs
-    pushad
+    push eax
+    push ebx
+    push edi
 ;    
     movzx edi,dx
     add edi,edi
-    mov cx,dx
-;    
-    mov ax,ds:[edi].hub_status_arr
-    test al,1
-    jz upDetach
-    
-upAttach:
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jnz upCheckReset
-;
-    mov ds:[edi].usb_thread_arr,-1
-;    
-    mov bx,ds
-    mov dx,cx
-;
-    mov esi,OFFSET handler_thread_name
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-
-upCopyLoop:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz upCopyDone
-;
-    stosb
-    jmp upCopyLoop
-
-upCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,cl
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
 ;   
-    xor edi,edi
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET handler_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    mov bx,ds 
+    mov ax,ds:[edi].hub_status_arr
+    NotifyUsbPortState
 ;
-    FreeMem
-    jmp upDone
-
-upCheckReset:
-    mov eax,1
-    mov cx,dx
-    shl eax,cl
-;    test eax,ds:hub_reset
-;    jz upDone
-;
-;    Signal
-    jmp upDone
-
-upDetach:
-    EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jz upLeave
-;    
-    Signal
-
-upLeave:
-    LeaveSection ds:usb_section
-                
-upDone:    
-    popad
-    pop fs
-    pop ds    
+    pop edi
+    pop ebx
+    pop eax
     ret
 UpdatePort   Endp
 

@@ -2897,7 +2897,7 @@ handler_thread:
 htTryAttach:
     xor bx,bx
     movzx dx,cl
-    UsbAttach
+;    UsbAttach
 ;
     mov ax,es
     or ax,ax

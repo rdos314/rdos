@@ -3621,7 +3621,7 @@ handler_thread:
 htTryAttach:
     movzx dx,dl
     xor bx,bx
-    UsbAttach
+;    UsbAttach
 ;
     mov dx,ds:uhc_io_base
     add dx,PortscReg1

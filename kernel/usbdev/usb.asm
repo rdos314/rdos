@@ -3576,6 +3576,37 @@ hook_usb_attach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           HookUsbDetach
+;
+;           description:    Hook USB detach event
+;
+;       parameters:     ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_usb_detach_name DB 'Hook USB Detach', 0
+
+hook_usb_detach Proc far
+    push ds
+    push bx
+;       
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:usb_detach_hooks
+    shl bx,3
+    add bx,OFFSET usb_detach_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc ds:usb_detach_hooks
+;
+    pop bx
+    pop ds
+    retf32
+hook_usb_detach   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitDevice
 ;
 ;       description:    Init device
@@ -3814,7 +3845,6 @@ ReadDescriptors   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 NotifyAttach       Proc near
     push ds
     push es
@@ -3863,24 +3893,25 @@ NotifyAttach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UsbAttach
+;       NAME:           HandlerThread
 ;
-;       description:    USB attach
+;       description:    USB server thread
 ;
-;       parameters:     DS      Function sel
-;                       AH      Speed
+;       parameters:     BP      Function sel
 ;                       BX      Hub selector
 ;                       DL      Port #
 ;
-;       Returns:        ES     Dev sel
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usb_attach_name DB 'Usb Attach', 0
-
-usb_attach    Proc far
-    push eax
-    push cx
+handler_thread:
+    mov ds,bp
+    movzx edi,dl
+    add edi,edi
+;    
+    EnterSection ds:usb_section    
+    GetThread
+    mov ds:[edi].usb_thread_arr,ax
+    LeaveSection ds:usb_section
 ;
     xor cx,cx
     mov es,cx
@@ -3912,10 +3943,12 @@ usb_attach    Proc far
 ;
     call NotifyAttach
     or es:usbd_flags,FLAG_ATTACHED
+    jmp uaCheck
 
 uaConnected:
     WaitForSignal
-;
+
+uaCheck:
     call fword ptr ds:is_dev_connected_proc
     jc uaDetach
 ;
@@ -3930,48 +3963,142 @@ uaConnected:
     jmp uaDetach
 
 uaLockedError:
+    int 3
     call fword ptr ds:disable_port_proc
     LeaveSection ds:usb_addr_section
 
 uaDetach:
+    int 3
     stc    
 
 uaDone:
-    pop cx
-    pop eax
-    retf32
-usb_attach    Endp    
+    TerminateThread
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           HookUsbDetach
+;       NAME:           NotifyUsbPortState
 ;
-;           description:    Hook USB detach event
+;       description:    Notify USB port state
 ;
-;       parameters:     ES:EDI       Callback
+;       parameters:     DS	Function
+;                       BX      Hub sel
+;                       DL      Port
+;                       AX      State
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hook_usb_detach_name DB 'Hook USB Detach', 0
+notify_usb_port_state_name DB 'Notify USB Port State', 0
 
-hook_usb_detach Proc far
-    push ds
-    push bx
-;       
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:usb_detach_hooks
-    shl bx,3
-    add bx,OFFSET usb_detach_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc ds:usb_detach_hooks
+name_base DB 'USB Dev ', 0
+
+notify_usb_port_state Proc far
+    push ebx
+    push edi
 ;
-    pop bx
-    pop ds
+    movzx edi,dl
+    add edi,edi
+;
+    test al,1
+    jz npsDone
+    
+npsAttach:
+    mov si,ds:[edi].usb_thread_arr
+    or si,si
+    jnz npsDone
+;
+    mov ds:[edi].usb_thread_arr,-1
+;    
+    push es
+    pushad
+;
+    mov bp,ds
+;
+    mov esi,OFFSET name_base
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+
+npsCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz npsCopyDone
+;
+    stosb
+    jmp npsCopyLoop
+
+npsCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,dl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET handler_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+;
+    popad
+    pop es
+
+npsDone:
+    pop edi
+    pop ebx
     retf32
-hook_usb_detach   Endp
+notify_usb_port_state Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4119,10 +4246,10 @@ init    Proc far
     mov ax,open_usb_dev_sel_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET usb_attach
-    mov edi,OFFSET usb_attach_name
+    mov esi,OFFSET notify_usb_port_state
+    mov edi,OFFSET notify_usb_port_state_name
     xor cl,cl
-    mov ax,usb_attach_nr
+    mov ax,notify_usb_port_state_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16

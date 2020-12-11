@@ -3191,7 +3191,7 @@ handler_thread:
 htTryAttach:
     xor bx,bx
     movzx dx,cl
-    UsbAttach
+;    UsbAttach
 ;
     mov ax,es
     or ax,ax
@@ -3304,103 +3304,29 @@ HexToAscii      ENDP
 ;           DESCRIPTION:    Update root-hub port status
 ;
 ;       PARAMETERS:     DS      Function selector
-;               CL      Port # (0..EHCI ports)
+;                       DL      Port # (0..EHCI ports)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
-    push ds
-    push es
-    push fs
-    pushad
+    push eax
+    push ebx
+    push edi
 ;    
-    movzx si,cl
-    shl si,2
-    movzx edi,cl
+    movzx edi,dl
     add edi,edi
+    xor bx,bx
 ;
     mov eax,es:[2*edi].HcPortSc
     test ax,2000h
     jnz upDone
-;    
-    test al,1
-    jz upDetach
-    
-upAttach:
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jnz upCheckReset
-;
-    mov ds:[edi].usb_thread_arr,-1
-;    
-    mov bx,ds
-    mov dx,cx
-;
-    mov esi,OFFSET handler_thread_name
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-
-upCopyLoop:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz upCopyDone
-;
-    stosb
-    jmp upCopyLoop
-
-upCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,cl
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;   
-    xor edi,edi
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET handler_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-    jmp upDone
-
-upCheckReset:
-    mov ax,1
-    shl ax,cl
-;    test ax,ds:ehc_reset
-;    jz upDone
-;
-;    Signal
-    jmp upDone
-
-upDetach:
-    EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jz upLeave
-;    
-    Signal
-
-upLeave:
-    LeaveSection ds:usb_section
+; 
+    NotifyUsbPortState   
                 
 upDone:    
-    popad
-    pop fs
-    pop es
-    pop ds    
+    pop edi
+    pop ebx
+    pop eax
     ret
 UpdatePort   Endp
 
@@ -3416,9 +3342,9 @@ UpdatePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateAllPorts   Proc near
-    push cx
+    push dx
 ;    
-    xor cl,cl
+    xor dl,dl
     mov es,ds:ehc_reg_sel
     mov eax,es:HcCommand
     test al,1
@@ -3427,16 +3353,16 @@ UpdateAllPorts   Proc near
     int 3
 
 uaPortLoop:
-    cmp cl,ds:ehc_ports
+    cmp dl,ds:ehc_ports
     jae uaPortDone
 ;    
     call UpdatePort
 ;
-    inc cl
+    inc dl
     jmp uaPortLoop    
 
 uaPortDone:
-    pop cx
+    pop dx
     ret
 UpdateAllPorts  Endp
 
