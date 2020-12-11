@@ -3935,12 +3935,18 @@ usb_attach    Proc far
     call InitDevice
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
+    jc uaDone
+;
+    or es:usbd_flags,FLAG_ADDRESSED
+    call fword ptr ds:change_address_proc
+    AddUsbDevice
+    UnlockUsb
+    ReadUsbDescriptors
 
 uaDone:
     pop cx
     retf32
 usb_attach    Endp    
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

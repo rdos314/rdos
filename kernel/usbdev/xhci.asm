@@ -3376,12 +3376,6 @@ htSlotAlloc:
     UsbAttach
     jc htUnlock
 ;
-    call fword ptr ds:change_address_proc
-    AddUsbDevice
-    UnlockUsb
-    ReadUsbDescriptors
-    jc htDetach
-;
     mov al,cl
     NotifyUsbAttach
 ;
@@ -3412,6 +3406,9 @@ htUnlock:
     mov ax,es
     or ax,ax
     jz htFreed
+;
+    test es:usbd_flags,FLAG_ADDRESSED
+    jnz htDetach
 ;
     UnlinkUsbDev
     FreeUsbDev
