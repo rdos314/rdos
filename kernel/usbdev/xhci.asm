@@ -204,8 +204,6 @@ xhc_edqe            DD ?,?
 xhc_cmd_enque       DW ?
 xhc_cmd_pcs         DW ?
 
-xhc_reset           DD ?
-
 xhc_attach_pend     DD ?
 xhc_detach_pend     DD ?
 
@@ -2275,21 +2273,6 @@ ChangeAddress  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDev   Proc far
-    push ax
-    push bx
-    push cx
-;
-    mov cl,es:usbd_port
-    mov ax,1
-    shl ax,cl
-    lock or ds:xhc_reset,eax
-;
-    mov bx,ds:xhc_port_thread
-    Signal  
-;
-    pop cx
-    pop bx
-    pop ax
     retf32
 ResetDev Endp
 
@@ -3380,32 +3363,7 @@ htTryAttach:
     xor bx,bx
     movzx dx,cl
     UsbAttach
-    jc htUnlock
 ;
-    mov eax,1
-    shl eax,cl
-    not eax
-    lock and ds:xhc_attach_pend,eax
-
-htAttached:
-    WaitForSignal
-;
-    call fword ptr ds:is_dev_connected_proc
-    jc htDetach
-;
-    mov eax,1
-    shl eax,cl
-    test eax,ds:xhc_reset
-    jz htHandle
-;
-    not eax
-    lock and ds:xhc_reset,eax
-    jmp htDetach
-
-htHandle:
-    jmp htAttached
-
-htUnlock:
     mov ax,es
     or ax,ax
     jz htFreed
@@ -3915,10 +3873,10 @@ upCopyDone:
 upCheckReset:
     mov eax,1
     shl eax,cl
-    test eax,es:xhc_reset
-    jz upDone
+;    test eax,es:xhc_reset
+;    jz upDone
 ;
-    Signal
+;    Signal
     jmp upDone    
 
 upDetach:
@@ -3995,7 +3953,6 @@ port_thread:
     GetThread
 ;        
     mov es:xhc_port_thread,ax
-    mov es:xhc_reset,0
     mov es:xhc_attach_pend,0
     mov es:xhc_detach_pend,0
     mov ds,es:xhc_port_sel
@@ -4021,7 +3978,6 @@ ptLoop:
 ptRetry:    
     xor eax,eax
     xchg eax,es:xhc_port_change_mask
-    or eax,es:xhc_reset
     or eax,es:xhc_attach_pend
     or eax,es:xhc_detach_pend
     jz ptLoop

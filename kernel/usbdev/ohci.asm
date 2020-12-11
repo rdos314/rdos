@@ -123,7 +123,6 @@ ohc_bulk_linear     DD ?
 ohc_thread          DW ?
 
 ohc_root_ports      DW ?
-ohc_reset           DW ?
 
 ohc_usb_bus         DB ?
 ohc_usb_dev         DB ?
@@ -938,16 +937,6 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDev   Proc far
-    push ax
-    push cx
-;    
-    mov cl,es:usbd_port
-    mov ax,1
-    shl ax,cl
-    lock or ds:ohc_reset,ax
-;
-    pop cx
-    pop ax
     retf32
 ResetDev   Endp
 
@@ -2890,27 +2879,7 @@ htTryAttach:
     xor bx,bx
     movzx dx,cl
     UsbAttach
-    jc htUnlock
-
-htAttached:
-    WaitForSignal
 ;
-    call fword ptr ds:is_dev_connected_proc
-    jc htDetach
-;
-    mov ax,1
-    shl ax,cl
-    test ax,ds:ohc_reset
-    jz htHandle
-;
-    not ax
-    lock and ds:ohc_reset,ax
-    jmp htDetach
-
-htHandle:
-    jmp htAttached
-
-htUnlock:
     mov ax,es
     or ax,ax
     jz htFreed
@@ -3103,10 +3072,10 @@ upCopyDone:
 upCheckReset:
     mov ax,1
     shl ax,cl
-    test ax,ds:ohc_reset
-    jz upDone
+;    test ax,ds:ohc_reset
+;    jz upDone
 ;
-    Signal
+;    Signal
     jmp upDone
 
 upDetach:
@@ -3703,7 +3672,6 @@ AddFunction  Proc near
     mov cx,400h
     rep stosd
 ;
-    mov ds:ohc_reset,0
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
     mov ds:ohc_linear,edx

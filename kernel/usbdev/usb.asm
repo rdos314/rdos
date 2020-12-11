@@ -1134,8 +1134,9 @@ reset_usb_dev_name  DB 'Reset USB Device',0
 reset_usb_dev     Proc far
     push ds
     push es
-    push ax
+    push eax
     push ebx
+    push ecx
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
@@ -1148,18 +1149,19 @@ reset_usb_dev     Proc far
     stc
     jnz rdvLeave
 ;
-    push ds
     mov es,ds:udd_sel    
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:reset_dev_proc
-    pop ds
+    mov cl,es:usbd_port
+    mov eax,1
+    shl eax,cl
+    lock or ds:usb_reset_bitmap,eax
 
 rdvLeave:
     LeaveSection ds:udd_section
 
 rdvDone:
+    pop ecx
     pop ebx
-    pop ax
+    pop eax
     pop es
     pop ds
     retf32
@@ -2486,6 +2488,7 @@ init_usb_function Proc far
 ;
     InitSection ds:usb_section
     InitSection ds:usb_addr_section
+    mov ds:usb_reset_bitmap,0
     mov ax,ds
     mov es,ax
 ;
@@ -3876,7 +3879,7 @@ NotifyAttach   Endp
 usb_attach_name DB 'Usb Attach', 0
 
 usb_attach    Proc far
-    push ax
+    push eax
     push cx
 ;
     xor cx,cx
@@ -3884,19 +3887,19 @@ usb_attach    Proc far
     EnterSection ds:usb_addr_section
 ;
     call fword ptr ds:reset_port_proc
-    jc uaDone
+    jc uaLockedError
 ;
     mov cl,al
 ;
     call fword ptr ds:allocate_address_proc
-    jc uaDone
+    jc uaLockedError
 ;
     mov ah,cl
     call fword ptr ds:create_dev_proc
     call InitDevice
     call fword ptr ds:create_control_proc
     call fword ptr ds:address_device_proc
-    jc uaDone
+    jc uaLockedError
 ;
     call fword ptr ds:change_address_proc
     call AddDevice
@@ -3905,15 +3908,36 @@ usb_attach    Proc far
     LeaveSection ds:usb_addr_section
 ;
     call ReadDescriptors
-    jc uaDone
+    jc uaDetach
 ;
     call NotifyAttach
     or es:usbd_flags,FLAG_ATTACHED
-    clc
+
+uaConnected:
+    WaitForSignal
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc uaDetach
+;
+    mov cl,es:usbd_port
+    mov eax,1
+    shl eax,cl
+    test eax,ds:usb_reset_bitmap
+    jz uaConnected
+;
+    not eax
+    lock and ds:usb_reset_bitmap,eax
+    jmp uaDetach
+
+uaLockedError:
+    LeaveSection ds:usb_addr_section
+
+uaDetach:
+    stc    
 
 uaDone:
     pop cx
-    pop ax
+    pop eax
     retf32
 usb_attach    Endp    
 

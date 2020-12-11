@@ -695,16 +695,6 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDev   Proc far
-    push eax
-    push ecx
-;
-    mov cl,es:usbd_port
-    mov eax,1
-    shl eax,cl
-    or ds:hub_reset,eax
-;
-    pop ecx
-    pop eax
     ret
 ResetDev   Endp
 
@@ -1068,27 +1058,7 @@ htTryAttach:
     mov bx,ds
     movzx dx,cl
     UsbAttach
-    jc htUnlock
-
-htAttached:
-    WaitForSignal
 ;
-    call fword ptr ds:is_dev_connected_proc
-    jc htDetach
-;    
-    mov eax,1
-    shl eax,cl
-    test eax,ds:hub_reset
-    jz htHandle
-;
-    not eax
-    lock and ds:hub_reset,eax
-    jmp htDetach
-
-htHandle:
-    jmp htAttached
-
-htUnlock:
     mov ax,es
     or ax,ax
     jz htFreed
@@ -1265,10 +1235,10 @@ upCheckReset:
     mov eax,1
     mov cx,dx
     shl eax,cl
-    test eax,ds:hub_reset
-    jz upDone
+;    test eax,ds:hub_reset
+;    jz upDone
 ;
-    Signal
+;    Signal
     jmp upDone
 
 upDetach:
@@ -2216,7 +2186,6 @@ uaNotDead:
     mov es:hub_flags,0
     mov es:hub_status_thread,0
     mov es:hub_port_thread,0
-    mov es:hub_reset,0
     InitSection es:hub_section
     jmp uaDevNext
 

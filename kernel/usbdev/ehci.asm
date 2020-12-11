@@ -108,8 +108,6 @@ ehc_comp_ports      DB ?
 
 ehc_section         section_typ <>
 
-ehc_reset           DW ?
-
 ehc_async_head_va   DD ?
 
 ehc_periodic_sel    DW ?
@@ -1502,16 +1500,6 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDev   Proc far
-    push ax
-    push cx
-;    
-    mov cl,es:usbd_port
-    mov ax,1
-    shl ax,cl
-    lock or ds:ehc_reset,ax
-;
-    pop cx
-    pop ax
     retf32
 ResetDev Endp
 
@@ -3181,27 +3169,7 @@ htTryAttach:
     xor bx,bx
     movzx dx,cl
     UsbAttach
-    jc htUnlock
-
-htAttached:
-    WaitForSignal
 ;
-    call fword ptr ds:is_dev_connected_proc
-    jc htDetach
-;
-    mov ax,1
-    shl ax,cl
-    test ax,ds:ehc_reset
-    jz htHandle
-;
-    not ax
-    lock and ds:ehc_reset,ax
-    jmp htDetach
-
-htHandle:
-    jmp htAttached
-
-htUnlock:
     mov ax,es
     or ax,ax
     jz htFreed
@@ -3388,10 +3356,10 @@ upCopyDone:
 upCheckReset:
     mov ax,1
     shl ax,cl
-    test ax,ds:ehc_reset
-    jz upDone
+;    test ax,ds:ehc_reset
+;    jz upDone
 ;
-    Signal
+;    Signal
     jmp upDone
 
 upDetach:
@@ -4193,7 +4161,6 @@ AddFunction  Proc near
     mov ds:ehc_function,ch    
 ;
     mov ds:ehc_reg_sel,bp
-    mov ds:ehc_reset,0
     mov ds:ehc_async_head_va,0
 ;
     mov es,bp

@@ -105,8 +105,6 @@ uhc_pipe_list    DW ?
 uhc_spinlock     spinlock_typ <>
 uhc_section      section_typ <>
 
-uhc_reset        DW ?
-
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
 
@@ -2440,16 +2438,6 @@ IsConnected   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDev   Proc far
-    push ax
-    push cx
-;    
-    mov cl,es:usbd_port
-    mov ax,1
-    shl ax,cl
-    lock or ds:uhc_reset,ax
-;
-    pop cx
-    pop ax
     retf32
 ResetDev   Endp
 
@@ -3619,28 +3607,7 @@ htTryAttach:
     movzx dx,dl
     xor bx,bx
     UsbAttach
-    jc htUnlock
-
-htAttached:
-    WaitForSignal
 ;
-    call fword ptr ds:is_dev_connected_proc
-    jc htDetach
-;
-    mov cl,bl
-    mov ax,1
-    shl ax,cl
-    test ax,ds:uhc_reset
-    jz htHandle
-;
-    not ax
-    lock and ds:uhc_reset,ax
-    jmp htDetach
-
-htHandle:
-    jmp htAttached
-
-htUnlock:
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
     add dx,di    
@@ -3828,10 +3795,10 @@ upCopyDone:
 upCheckReset:
     mov ax,1
     shl ax,cl
-    test ax,ds:uhc_reset
-    jz upDone
+;    test ax,ds:uhc_reset
+;    jz upDone
 ;
-    Signal
+;    Signal
     jmp upDone
 
 upDetach:
@@ -4056,7 +4023,6 @@ AddFunction  Proc near
     mov ds:uhc_pci_func,ch
     mov ds:uhc_pipe_list,0
     InitSpinlock ds:uhc_spinlock
-    mov ds:uhc_reset,0
     InitSection ds:uhc_section
 ;    
     mov eax,1000h
