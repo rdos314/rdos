@@ -551,18 +551,18 @@ RemovePipe  Proc near
 ;
     mov si,fs
     cmp si,ds:uhc_pipe_list
-    jne rpDone
+    jne rppDone
 ;
     cmp si,di
-    je rpEmpty
+    je rppEmpty
 ;
     mov ds:uhc_pipe_list,di
-    jmp rpDone    
+    jmp rppDone    
 
-rpEmpty:
+rppEmpty:
     mov ds:uhc_pipe_list,0    
 
-rpDone:
+rppDone:
     ReleaseSpinlock ds:uhc_spinlock
     pop di
     pop si
@@ -3483,17 +3483,77 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:               UnlinkFunc
+;       NAME:               ResetPort
 ;
-;       DESCRIPTION:        Unlink function
+;       DESCRIPTION:        Reset port
 ;
 ;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;       RETURNS:            AL      Speed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkFunc   Proc far
+ResetPort   Proc far
+    push bx
+    push dx
+;
+    mov bl,dl
+;    
+    movzx di,bl
+    add di,di
+;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+;
+    mov ax,50
+    WaitMilliSec
+;
+    in ax,dx
+    and ax,NOT 200h
+    out dx,ax
+;
+    mov cx,10
+
+rpLoop:
+    in ax,dx
+    test ax,4
+    clc
+    jnz rpNotify
+;
+    or ax,4
+    out dx,ax
+    loop rpLoop
+;
+    jmp rpFail
+
+rpNotify:
+    mov ax,200
+    WaitMilliSec
+;
+    in ax,dx
+    test al,1
+    jz rpFail
+;
+    mov al,ah
+    xor al,1
+    and al,1
+    clc
+    jmp rpDone
+
+rpFail:
+    stc
+
+rpDone:
+    pop dx
+    pop bx
     retf32
-UnlinkFunc   Endp
+ResetPort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3554,65 +3614,17 @@ handler_thread:
     GetThread
     mov ds:[di].usb_thread_arr,ax
     LeaveSection ds:usb_section
-;
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    add dx,di    
 
 htTryAttach:
-    in ax,dx
-    or ax,200h
-    out dx,ax
-;
-    mov ax,50
-    WaitMilliSec
-;
     LockUsb
 ;
-    in ax,dx
-    and ax,NOT 200h
-    out dx,ax
+    call fword ptr ds:reset_port_proc
+    jc htUnlock
 ;
-    push cx
-    mov cx,10
-
-htLoop:
-    in ax,dx
-    test ax,4
-    clc
-    jnz htNotify
-;
-    or ax,4
-    out dx,ax
-    loop htLoop
-;
-    pop cx
-    jmp htUnlock
-
-htNotify:
-    pop cx
-;    
-    mov ax,200
-    WaitMilliSec
-;
-    in ax,dx
-    test al,1
-    jz htUnlock
-;
-    xor ah,1
-    and ah,1
-    mov bh,ah
-;
-    push bx
-    push dx
-;
-    mov ah,bh
-    movzx dx,bl
+    mov ah,al
+    movzx dx,dl
     xor bx,bx
     UsbAttach
-;
-    pop dx
-    pop bx
     jc htUnlock
 
 htAttached:
@@ -3635,6 +3647,10 @@ htHandle:
     jmp htAttached
 
 htUnlock:
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
     mov ax,es
     or ax,ax
     jz htFreed
@@ -3901,7 +3917,7 @@ ut12 DD OFFSET ReqBuffer,           SEG code
 ut13 DD OFFSET RelBuffer,           SEG code
 ut14 DD OFFSET IsRunning,           SEG code
 ut15 DD OFFSET FreeDev,             SEG code
-ut16 DD OFFSET UnlinkFunc,          SEG code
+ut16 DD OFFSET ResetPort,           SEG code
 
 InitFunction    Proc near
     push ds
