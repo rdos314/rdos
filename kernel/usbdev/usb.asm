@@ -4092,7 +4092,7 @@ notify_usb_port_state Proc far
     add edi,edi
 ;
     test al,1
-    jz npsDone
+    jz npsDetach
     
 npsAttach:
     mov si,ds:[edi].usb_thread_arr
@@ -4149,6 +4149,22 @@ npsCopyDone:
     popad
     pop es
     pop ds
+    jmp npsDone
+
+npsDetach:
+    EnterSection ds:usb_section
+    mov bx,-1
+    xchg bx,ds:[edi].usb_thread_arr
+    or bx,bx
+    jz npsLeave
+;
+    cmp bx,-1
+    je npsLeave
+;    
+    Signal
+
+npsLeave:
+    LeaveSection ds:usb_section
 
 npsDone:
     pop edi

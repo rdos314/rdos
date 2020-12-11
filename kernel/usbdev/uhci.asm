@@ -3692,6 +3692,8 @@ UpdatePort   Proc near
     add dx,si    
     in ax,dx
     pop dx
+;
+    xor bx,bx
     NotifyUsbPortState
 ;
     pop si

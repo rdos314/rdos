@@ -2988,6 +2988,7 @@ UpdatePort   Proc near
     mov es,ds:ohc_reg_sel
 ;
     mov eax,es:[si].HcRhPortStatus
+    xor bx,bx
     NotifyUsbPortState
 ;
     pop esi
