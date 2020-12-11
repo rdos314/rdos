@@ -3017,102 +3017,25 @@ HexToAscii      ENDP
 ;           DESCRIPTION:    Update root-hub port status
 ;
 ;       PARAMETERS:     DS      Function selector
-;               CL      Port #
+;                       DL      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
-    push ds
     push es
-    push fs
-    pushad
+    push eax
+    push esi
 ;    
-    movzx si,cl
+    movzx si,dl
     shl si,2
-    movzx edi,cl
-    add edi,edi
     mov es,ds:ohc_reg_sel
 ;
     mov eax,es:[si].HcRhPortStatus
-    test al,1
-    stc
-    jz upDetach
-    
-upAttach:
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jnz upCheckReset
+    NotifyUsbPortState
 ;
-    mov ds:[edi].usb_thread_arr,-1
-;    
-    mov bx,ds
-    mov dx,cx
-;
-    mov esi,OFFSET handler_thread_name
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-
-upCopyLoop:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz upCopyDone
-;
-    stosb
-    jmp upCopyLoop
-
-upCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,cl
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;   
-    xor edi,edi
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET handler_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-    jmp upDone
-
-upCheckReset:
-    mov ax,1
-    shl ax,cl
-;    test ax,ds:ohc_reset
-;    jz upDone
-;
-;    Signal
-    jmp upDone
-
-upDetach:
-    EnterSection ds:usb_section
-    mov bx,ds:[edi].usb_thread_arr
-    or bx,bx
-    jz upLeave
-;    
-    Signal
-
-upLeave:
-    LeaveSection ds:usb_section
-            
-upDone:    
-    popad
-    pop fs
+    pop esi
+    pop eax
     pop es
-    pop ds    
     ret
 UpdatePort   Endp
 
@@ -3140,21 +3063,21 @@ UpdateUsb  Proc near
 
 uuLoop:    
     push ds
-    push cx
+    push dx
     push si
 ;    
     mov ds,ds:[si]
 ;    
-    xor cx,cx
+    xor dx,dx
 
 uuPortLoop:    
     call UpdatePort
-    inc cx
-    cmp cx,ds:ohc_root_ports
+    inc dx
+    cmp dx,ds:ohc_root_ports
     jb uuPortLoop   
 ;
     pop si
-    pop cx
+    pop dx
     pop ds
 ;
     add si,2
