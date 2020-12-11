@@ -2868,136 +2868,6 @@ free_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadUsbDescriptors
-;
-;       Description:    Read USB descriptors
-;
-;       Parameters:     DS      USB function selector
-;                       ES      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_usb_descriptors_name DB 'Read USB Descriptors', 0
-
-read_usb_descriptors       Proc far
-    push gs
-    push es
-    pushad
-;
-    mov ax,es
-    mov gs,ax
-    mov edi,OFFSET usbd_device_descr
-    mov si,OFFSET usbd_control_buf
-    mov es:[si].usd_type,80h
-    mov es:[si].usd_req,GET_DESCR
-    mov es:[si].usd_value,100h
-    mov es:[si].usd_index,0
-    mov es:[si].usd_len,8
-    call fword ptr ds:control_msg_proc
-    jc rudDone
-;
-    cmp cx,8
-    stc
-    jnz rudDone
-;
-    movzx ax,es:[di].udd_maxlen
-    or ax,ax
-    stc
-    jz rudDone
-;
-    cmp ax,es:usbd_maxlen
-    je rudLenOk
-;    
-    mov es:usbd_maxlen,ax
-    call fword ptr ds:update_control_maxlen_proc
-
-rudLenOk:
-    movzx eax,es:[di].udd_len
-    cmp ax,18
-    stc
-    jne rudDone
-;
-    mov es:[si].usd_len,ax
-    call fword ptr ds:control_msg_proc
-    jc rudDone
-;
-    cmp ax,18
-    stc
-    jnz rudDone
-;
-    mov bh,-1
-    xor bl,bl
-
-rudLoop:
-    mov ax,es
-    mov gs,ax
-    mov edi,OFFSET usbd_temp_buf
-;
-    mov al,bl
-    mov ah,2
-    mov es:[si].usd_type,80h
-    mov es:[si].usd_req,GET_DESCR
-    mov es:[si].usd_value,ax
-    mov es:[si].usd_index,0
-    mov es:[si].usd_len,8
-    call fword ptr ds:control_msg_proc
-    jnc rudGetFull
-;
-    or bx,bx
-    stc
-    jz rudDone
-;
-    clc
-    jmp rudDone
-
-rudGetFull:
-    mov al,es:[di].ucd_config_id
-    cmp al,bh
-    clc
-    je rudDone
-;
-    mov bh,al
-    mov cx,es:[di].ucd_size
-;
-    push es
-    movzx eax,cx
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-    xor edi,edi
-    pop es
-;
-    mov es:[si].usd_len,cx
-    call fword ptr ds:control_msg_proc
-    jnc rudSave
-;
-    push es
-    mov ax,gs
-    mov es,ax
-    xor ax,ax
-    mov gs,ax
-    FreeMem
-    pop es
-    stc
-    jmp rudDone
-
-rudSave:
-    movzx di,bl
-    add di,di
-    mov es:[di].usbd_config_sel,gs
-    inc bl
-    jmp rudLoop
-
-rudDone:
-    popad
-    pop es
-    pop gs
-    retf32
-read_usb_descriptors   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           NotifyUsbAttach
 ;
 ;       Description:    Notify USB attach event
@@ -3903,6 +3773,134 @@ AddDevice  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadDescriptors
+;
+;       Description:    Read descriptors
+;
+;       Parameters:     DS      USB function selector
+;                       ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadDescriptors       Proc near
+    push gs
+    push es
+    pushad
+;
+    mov ax,es
+    mov gs,ax
+    mov edi,OFFSET usbd_device_descr
+    mov si,OFFSET usbd_control_buf
+    mov es:[si].usd_type,80h
+    mov es:[si].usd_req,GET_DESCR
+    mov es:[si].usd_value,100h
+    mov es:[si].usd_index,0
+    mov es:[si].usd_len,8
+    call fword ptr ds:control_msg_proc
+    jc rudDone
+;
+    cmp cx,8
+    stc
+    jnz rudDone
+;
+    movzx ax,es:[di].udd_maxlen
+    or ax,ax
+    stc
+    jz rudDone
+;
+    cmp ax,es:usbd_maxlen
+    je rudLenOk
+;    
+    mov es:usbd_maxlen,ax
+    call fword ptr ds:update_control_maxlen_proc
+
+rudLenOk:
+    movzx eax,es:[di].udd_len
+    cmp ax,18
+    stc
+    jne rudDone
+;
+    mov es:[si].usd_len,ax
+    call fword ptr ds:control_msg_proc
+    jc rudDone
+;
+    cmp ax,18
+    stc
+    jnz rudDone
+;
+    mov bh,-1
+    xor bl,bl
+
+rudLoop:
+    mov ax,es
+    mov gs,ax
+    mov edi,OFFSET usbd_temp_buf
+;
+    mov al,bl
+    mov ah,2
+    mov es:[si].usd_type,80h
+    mov es:[si].usd_req,GET_DESCR
+    mov es:[si].usd_value,ax
+    mov es:[si].usd_index,0
+    mov es:[si].usd_len,8
+    call fword ptr ds:control_msg_proc
+    jnc rudGetFull
+;
+    or bx,bx
+    stc
+    jz rudDone
+;
+    clc
+    jmp rudDone
+
+rudGetFull:
+    mov al,es:[di].ucd_config_id
+    cmp al,bh
+    clc
+    je rudDone
+;
+    mov bh,al
+    mov cx,es:[di].ucd_size
+;
+    push es
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    xor edi,edi
+    pop es
+;
+    mov es:[si].usd_len,cx
+    call fword ptr ds:control_msg_proc
+    jnc rudSave
+;
+    push es
+    mov ax,gs
+    mov es,ax
+    xor ax,ax
+    mov gs,ax
+    FreeMem
+    pop es
+    stc
+    jmp rudDone
+
+rudSave:
+    movzx di,bl
+    add di,di
+    mov es:[di].usbd_config_sel,gs
+    inc bl
+    jmp rudLoop
+
+rudDone:
+    popad
+    pop es
+    pop gs
+    ret
+ReadDescriptors   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UsbAttach
 ;
 ;       description:    USB attach
@@ -3938,8 +3936,9 @@ usb_attach    Proc far
     or es:usbd_flags,FLAG_ADDRESSED
     call fword ptr ds:change_address_proc
     call AddDevice
-    UnlockUsb
-    ReadUsbDescriptors
+    LeaveSection ds:usb_addr_section
+;
+    call ReadDescriptors
 
 uaDone:
     pop cx
@@ -4031,12 +4030,6 @@ init    Proc far
     mov edi,OFFSET get_hub_descr_name
     xor cl,cl
     mov ax,get_usb_hub_descriptor_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET read_usb_descriptors
-    mov edi,OFFSET read_usb_descriptors_name
-    xor cl,cl
-    mov ax,read_usb_descriptors_nr
     RegisterOsGate
 ;
     mov esi,OFFSET config_usb_hub
