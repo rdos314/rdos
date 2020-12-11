@@ -3168,9 +3168,6 @@ htWaitNotify:
     movzx dx,cl
     UsbAttach
     pop dx
-;
-    call fword ptr ds:create_control_proc
-    call fword ptr ds:address_device_proc
     jc htUnlockFree
 ;
     call fword ptr ds:change_address_proc

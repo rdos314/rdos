@@ -3853,11 +3853,11 @@ hook_usb_attach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UsbAttach
+;       NAME:           InitDevice
 ;
-;       description:    USB attach
+;       description:    Init device
 ;
-;       parameters:     DS      Function sel
+;       parameters:     ES      Device sel
 ;                       AL      Address
 ;                       AH      Speed
 ;                       BX      Hub selector
@@ -3867,12 +3867,10 @@ hook_usb_attach   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usb_attach_name DB 'Usb Attach', 0
-
-usb_attach    Proc far
-    pusha
-;
-    call fword ptr ds:create_dev_proc
+InitDevice Proc near
+    push ax
+    push cx
+    push di
 ;
     mov es:usbd_parent_hub,bx
     mov es:usbd_my_hub,0
@@ -3893,12 +3891,41 @@ usb_attach    Proc far
     rep stosw
 ;
     or bx,bx
-    jz usdNoHub
+    jz idNoHub
 ;
     mov es:usbd_func_sel,bx
 
-usdNoHub:
-    popa
+idNoHub:
+    pop di
+    pop cx
+    pop ax
+    ret
+InitDevice Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UsbAttach
+;
+;       description:    USB attach
+;
+;       parameters:     DS      Function sel
+;                       AL      Address
+;                       AH      Speed
+;                       BX      Hub selector
+;                       DL      Port #
+;
+;       Returns:        ES     Dev sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_attach_name DB 'Usb Attach', 0
+
+usb_attach    Proc far
+    call fword ptr ds:create_dev_proc
+    call InitDevice
+    call fword ptr ds:create_control_proc
+    call fword ptr ds:address_device_proc
     retf32
 usb_attach    Endp    
 

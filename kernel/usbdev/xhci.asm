@@ -3379,9 +3379,6 @@ htSlotAlloc:
     xor bx,bx
     movzx dx,cl
     UsbAttach
-;
-    call fword ptr ds:create_control_proc
-    call fword ptr ds:address_device_proc
     jc htUnlockFree
 ;
     call fword ptr ds:change_address_proc
