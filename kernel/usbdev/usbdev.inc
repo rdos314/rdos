@@ -57,6 +57,7 @@ free_address_proc     DD ?,?
 ; IN  AH        Speed
 ; IN  BX        Hub selector
 ; IN  DX        Port
+; OUT DS        Root function sel
 ; OUT ES        Device sel
 create_dev_proc       DD ?,?
 
