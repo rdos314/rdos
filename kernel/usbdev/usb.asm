@@ -3828,11 +3828,11 @@ NotifyAttach       Proc near
     mov es,cx
     mov cx,es:usb_attach_hooks
     or cx,cx
-    je trap_attach_done
+    je naDone
     
     mov si,OFFSET usb_attach_arr
 
-trap_attach_loop:
+naLoop:
     push ds
     push es
     push ax
@@ -3848,9 +3848,9 @@ trap_attach_loop:
     pop ds
 ;       
     add si,8
-    loop trap_attach_loop
+    loop naLoop
 
-trap_attach_done:
+naDone:
     popad
     pop es
     pop ds
