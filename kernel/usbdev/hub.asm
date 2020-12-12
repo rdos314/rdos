@@ -2163,7 +2163,7 @@ udCheckLoop:
     cmp bx,es:hub_controller
     jne udCheckNext
 ;
-    cmp ah,es:hub_port
+    cmp al,es:hub_port
     jne udCheckNext
 ;
     GetThread
