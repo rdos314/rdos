@@ -3981,8 +3981,7 @@ handler_thread:
 ;
     xor cx,cx
     mov es,cx
-    EnterSection ds:usb_addr_section
-;
+    call fword ptr ds:lock_proc
     call fword ptr ds:reset_port_proc
     jc uaLockedError
 ;
@@ -4000,9 +3999,7 @@ handler_thread:
 ;
     call fword ptr ds:change_address_proc
     call AddDevice
-;
-    LeaveSection ds:usb_addr_section
-;
+    call fword ptr ds:unlock_proc
     call ReadDescriptors
     jc uaDetach
 ;
@@ -4031,14 +4028,16 @@ uaLockedError:
     jnz uaDisableDev
 ;
     call fword ptr ds:disable_port_proc
-    LeaveSection ds:usb_addr_section
     jmp uaDone
 
 uaDisableDev:
     call fword ptr ds:disable_device_proc
-    LeaveSection ds:usb_addr_section
+    jmp uaDetachLocked
 
 uaDetach:
+    call fword ptr ds:lock_proc
+
+uaDetachLocked:
     mov ax,es:usbd_parent_hub
     or ax,ax
     jz uaUnlink
@@ -4076,6 +4075,8 @@ uaDetached:
     call FreeDev
 
 uaDone:
+    call fword ptr ds:unlock_proc
+;
     EnterSection ds:usb_section
     mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section
