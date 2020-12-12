@@ -3822,6 +3822,8 @@ ulhDevNext:
     add bx,2
     loop ulhDevLoop
 ;
+    lock or ds:hub_flags,FLAG_HUB_DISCONNECT
+;
     popad
     pop es
     ret
@@ -3920,16 +3922,17 @@ udOutNext:
 ;
     lock sub ds:udd_ref_count,1
     pop ds
-    jnz udDone
+    jnz udUnlinkDev
 ;
     push es
     mov es,ax
     FreeMem
     pop es
 
-udDone:
+udUnlinkDev:
     call fword ptr ds:unlink_proc
-;
+
+udDone:
     popad
     pop ds
     ret
@@ -4019,7 +4022,6 @@ uaDisableDev:
     LeaveSection ds:usb_addr_section
 
 uaDetach:
-    int 3
     call UnlinkDevice
 
 uaDone:
