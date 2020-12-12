@@ -3082,7 +3082,6 @@ cudDone:
     ret
 ConfigUsb    Endp    
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3685,7 +3684,6 @@ udHubDone:
     movzx bx,es:usbd_port
     add bx,bx
     xor ax,ax
-    mov ds:[bx].usb_dev_arr,ax
     xchg ax,ds:[bx].usb_handle_arr
     or ax,ax
     jz udDeviceDone
@@ -3835,37 +3833,117 @@ NotifyDetach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeHub
+;       NAME:           CleanupHub
 ;
-;           description:    Free Hub
+;       description:    Cleanup Hub
 ;
-;       parameters:         DS      USB function selector
+;       parameters:     DS      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeHub       Proc near
+CleanupHub       Proc near
     push es
     pushad
 ;
     mov bx,OFFSET usb_dev_arr
     mov cx,ds:hub_ports
 
-fhLoop:
+chLoop:
     mov ax,ds:[bx]
     or ax,ax
-    jz fhNext
+    jz chNext
 ;
     mov es,ax
-    call FreeDev
+    call CleanupDev
 
-fhNext:
+chNext:
     add bx,2
-    loop fhLoop
+    loop chLoop
 ;
     popad
     pop es
     ret
-FreeHub   Endp
+CleanupHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CleanupDev
+;
+;       Description:    Cleanup device
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupDev       Proc near
+    pushad
+;
+    mov ax,es:usbd_my_hub
+    or ax,ax
+    jz cdHubDone
+;
+    push ds
+    mov ds,ax
+    call CleanupHub
+    pop ds
+
+cdHubDone:
+    mov cx,16
+    mov bx,OFFSET usbd_config_sel
+
+cdConfLoop:
+    mov ax,es:[bx]
+    or ax,ax
+    jz cdConfNext
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+cdConfNext:
+    add bx,2
+    loop cdConfLoop    
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+cdInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz cdInNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+cdInNext:
+    add si,2
+    loop cdInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+cdOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz cdOutNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+cdOutNext:
+    add si,2
+    loop cdOutLoop
+;
+    popad
+    ret
+CleanupDev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3882,79 +3960,19 @@ FreeHub   Endp
 FreeDev       Proc near
     pushad
 ;
-    mov ax,es:usbd_my_hub
-    or ax,ax
-    jz fdHubDone
+    xor ax,ax
+    movzx bx,es:usbd_port
+    add bx,bx
+    mov ds:[bx].usb_dev_arr,ax
 ;
-    push ds
-    mov ds,ax
-    call FreeHub
-    pop ds
-
-fdHubDone:
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
-;
-    mov cx,16
-    mov bx,OFFSET usbd_config_sel
-
-fudConfLoop:
-    mov ax,es:[bx]
-    or ax,ax
-    jz fudConfNext
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-
-fudConfNext:
-    add bx,2
-    loop fudConfLoop    
-;
-    mov cx,15
-    mov si,OFFSET usbd_in_pipe_arr
-
-fudInLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz fudInNext
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-fudInNext:
-    add si,2
-    loop fudInLoop
-;
-    mov cx,15
-    mov si,OFFSET usbd_out_pipe_arr
-
-fudOutLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz fudOutNext
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-fudOutNext:
-    add si,2
-    loop fudOutLoop
-;
-    mov ax,10
-    WaitMilliSec
-;
+    call fword ptr ds:free_dev_proc
     FreeMemBlk
 ;
     popad
     ret
 FreeDev       Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4020,7 +4038,10 @@ uaConnected:
 ;
     not eax
     lock and ds:usb_reset_bitmap,eax
-    jmp uaDetach
+
+uaDetach:
+    call fword ptr ds:lock_proc
+    jmp uaDetachLocked
 
 uaLockedError:
     mov ax,es
@@ -4028,14 +4049,11 @@ uaLockedError:
     jnz uaDisableDev
 ;
     call fword ptr ds:disable_port_proc
+    call fword ptr ds:unlock_proc
     jmp uaDone
 
 uaDisableDev:
     call fword ptr ds:disable_device_proc
-    jmp uaDetachLocked
-
-uaDetach:
-    call fword ptr ds:lock_proc
 
 uaDetachLocked:
     mov ax,es:usbd_parent_hub
@@ -4049,10 +4067,10 @@ uaDetachLocked:
     jz uaUnlink
 ;
     test es:usbd_flags,FLAG_ATTACHED
-    jz uaDone
+    jz uaFree
 ;
     call NotifyDetach
-    jmp uaDone
+    jmp uaFree
 
 uaUnlink:
     call UnlinkDevice
@@ -4063,11 +4081,13 @@ uaUnlink:
     call NotifyDetach
 
 uaDetached:
-    int 3
     mov ax,10
     WaitMilliSec
 ;
-;    call CleanupDev
+    call CleanupDev
+
+uaFree:
+    call fword ptr ds:unlock_proc
 ;
     mov ax,10
     WaitMilliSec
@@ -4075,8 +4095,6 @@ uaDetached:
     call FreeDev
 
 uaDone:
-    call fword ptr ds:unlock_proc
-;
     EnterSection ds:usb_section
     mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section
