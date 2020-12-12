@@ -2703,6 +2703,34 @@ IsRunning   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           Block
+;
+;       DESCRIPTION:    Block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Block   Proc far
+    EnterSection ds:usb_addr_section
+    retf32
+Block   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Unblock
+;
+;       DESCRIPTION:    Unblock
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Unblock   Proc far
+    LeaveSection ds:usb_addr_section
+    retf32
+Unblock   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           UnlinkControl
 ;
 ;       DESCRIPTION:    Unlink control
@@ -2824,6 +2852,7 @@ udvOutNext:
     add si,2
     loop udvOutLoop
 ;
+    int 3
     movzx si,es:usbd_address
     add si,si
     mov ds:[si].ehc_dev_arr,0
@@ -3789,30 +3818,32 @@ StartFunctionThread Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ehci_tab:
-et00 DD OFFSET AllocateAddress,    SEG code
-et01 DD OFFSET FreeAddress,        SEG code
-ec02 DD OFFSET CreateDev,          SEG code
-et03 DD OFFSET CreateControl,      SEG code
-et04 DD OFFSET ChangeAddress,      SEG code
-et05 DD OFFSET DisablePort,        SEG code
-et06 DD OFFSET AddressDev,         SEG code
-et07 DD OFFSET ConfigDev,          SEG code
-et08 DD OFFSET UpdateMaxLen,       SEG code
-ec09 DD OFFSET IsDeviceConnected,  SEG code
-ec0A DD OFFSET ControlMsg,         SEG code
-ec0B DD OFFSET CreateBulkPipe,     SEG code
-ec0C DD OFFSET CreateIntrPipe,     SEG code
-ec0D DD OFFSET Unlink,             SEG code
-ec0E DD OFFSET EnablePipe,         SEG code
-ec0F DD OFFSET DisablePipe,        SEG code
-ec10 DD OFFSET UsedBuffers,        SEG code
-ec11 DD OFFSET FreeBuffers,        SEG code
-ec12 DD OFFSET ReqBuffer,          SEG code
-ec13 DD OFFSET RelBuffer,          SEG code
-ec14 DD OFFSET IsRunning,          SEG code
-ec15 DD OFFSET FreeDev,            SEG code
-ec16 DD OFFSET ResetPort,          SEG code
-ec17 DD OFFSET DisableDev,         SEG code
+et00 DD OFFSET Block,              SEG code
+et01 DD OFFSET Unblock,            SEG code
+ec02 DD OFFSET ResetPort,          SEG code
+et03 DD OFFSET DisablePort,        SEG code
+ec04 DD OFFSET DisableDev,         SEG code
+ec05 DD OFFSET IsRunning,          SEG code
+et06 DD OFFSET AllocateAddress,    SEG code
+et07 DD OFFSET FreeAddress,        SEG code
+et08 DD OFFSET ChangeAddress,      SEG code
+ec09 DD OFFSET CreateDev,          SEG code
+ec0A DD OFFSET Unlink,             SEG code
+ec0B DD OFFSET IsDeviceConnected,  SEG code
+ec0C DD OFFSET FreeDev,            SEG code
+et0D DD OFFSET CreateControl,      SEG code
+ec0E DD OFFSET CreateBulkPipe,     SEG code
+ec0F DD OFFSET CreateIntrPipe,     SEG code
+et10 DD OFFSET AddressDev,         SEG code
+et11 DD OFFSET UpdateMaxLen,       SEG code
+ec12 DD OFFSET ControlMsg,         SEG code
+et13 DD OFFSET ConfigDev,          SEG code
+ec14 DD OFFSET EnablePipe,         SEG code
+ec15 DD OFFSET DisablePipe,        SEG code
+ec16 DD OFFSET UsedBuffers,        SEG code
+ec17 DD OFFSET FreeBuffers,        SEG code
+ec18 DD OFFSET ReqBuffer,          SEG code
+ec19 DD OFFSET RelBuffer,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3834,7 +3865,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*18h
+    mov cx,2*1Ah
 
 ifTabLoop:
     lods dword ptr cs:[si]

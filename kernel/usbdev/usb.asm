@@ -3586,6 +3586,8 @@ UnlinkHub       Proc near
     push es
     pushad
 ;
+    lock or ds:hub_flags,FLAG_HUB_DISCONNECT
+;
     mov bx,OFFSET hub_status_arr
     mov cx,ds:hub_ports
     xor ax,ax
@@ -3609,8 +3611,6 @@ ulhDevLoop:
 ulhDevNext:
     add bx,2
     loop ulhDevLoop
-;
-    lock or ds:hub_flags,FLAG_HUB_DISCONNECT
 ;
     popad
     pop es
@@ -3835,6 +3835,41 @@ NotifyDetach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FreeHub
+;
+;           description:    Free Hub
+;
+;       parameters:         DS      USB function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeHub       Proc near
+    push es
+    pushad
+;
+    mov bx,OFFSET usb_dev_arr
+    mov cx,ds:hub_ports
+
+fhLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz fhNext
+;
+    mov es,ax
+    call FreeDev
+
+fhNext:
+    add bx,2
+    loop fhLoop
+;
+    popad
+    pop es
+    ret
+FreeHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           FreeDev
 ;
 ;       Description:    Free device
@@ -3846,6 +3881,19 @@ NotifyDetach   Endp
 
 FreeDev       Proc near
     pushad
+;
+    mov ax,es:usbd_my_hub
+    or ax,ax
+    jz fdHubDone
+;
+    push ds
+    mov ds,ax
+    call FreeHub
+    pop ds
+
+fdHubDone:
+    mov al,es:usbd_address
+    call fword ptr ds:free_address_proc
 ;
     mov cx,16
     mov bx,OFFSET usbd_config_sel
@@ -3863,9 +3911,6 @@ fudConfLoop:
 fudConfNext:
     add bx,2
     loop fudConfLoop    
-;
-    mov ax,10
-    WaitMilliSec
 ;
     mov cx,15
     mov si,OFFSET usbd_in_pipe_arr
@@ -3909,6 +3954,7 @@ fudOutNext:
     popad
     ret
 FreeDev       Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3993,15 +4039,39 @@ uaDisableDev:
     LeaveSection ds:usb_addr_section
 
 uaDetach:
+    mov ax,es:usbd_parent_hub
+    or ax,ax
+    jz uaUnlink
+;
+    push ds
+    mov ds,ax
+    test ds:hub_flags,FLAG_HUB_DISCONNECT
+    pop ds
+    jz uaUnlink
+;
+    test es:usbd_flags,FLAG_ATTACHED
+    jz uaDone
+;
+    call NotifyDetach
+    jmp uaDone
+
+uaUnlink:
     call UnlinkDevice
+;
     test es:usbd_flags,FLAG_ATTACHED
     jz uaDetached
 ;
     call NotifyDetach
 
 uaDetached:
-    mov al,es:usbd_address
-    call fword ptr ds:free_address_proc
+    int 3
+    mov ax,10
+    WaitMilliSec
+;
+;    call CleanupDev
+;
+    mov ax,10
+    WaitMilliSec
 ;
     call FreeDev
 

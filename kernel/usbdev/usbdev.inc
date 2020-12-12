@@ -48,44 +48,45 @@ USB_PIPE_FLAG_ENABLED = 1
 
 usb_function_struc   STRUC
 
-; OUT AL        Address
-allocate_address_proc DD ?,?
+lock_proc                  DD ?,?
 
-; IN  AL        Address
-free_address_proc     DD ?,?
+unlock_proc                DD ?,?
 
-; OUT ES        Device sel
-create_dev_proc       DD ?,?
-
-; IN  ES        Device sel
-create_control_proc	DD ?,?
-
-; IN  ES        Device sel
-change_address_proc      DD ?,?
+;  IN  DL        Port
+;  OUT AL        Speed
+reset_port_proc            DD ?,?
 
 ; IN  DL        Port
-disable_port_proc        DD ?,?
+disable_port_proc          DD ?,?
 
-;  IN  ES       Device selector
-;  IN  AL       Address
-address_device_proc	DD ?,?
+;  IN  ES        Device
+disable_device_proc        DD ?,?
 
-; IN  FS        Pipe selector
-; IN  CX        Hub sel
-; IN  DL        Configuration #
-config_device_proc	DD ?,?
+is_running_proc            DD ?,?
 
-; IN  ES        Device selector
-; IN  AL        Max len
-update_control_maxlen_proc        DD ?,?
+; OUT AL        Address
+allocate_address_proc      DD ?,?
+
+; IN  AL        Address
+free_address_proc          DD ?,?
+
+; IN  ES        Device sel
+change_address_proc        DD ?,?
+
+; OUT ES        Device sel
+create_dev_proc            DD ?,?
+
+;  IN ES        Device
+unlink_proc                DD ?,?
 
 ;  IN ES        Device
 is_dev_connected_proc      DD ?,?
 
-; IN  ES        Device
-; IN  GS:EDI    Buffer
-; OUT CX        Actual size
-control_msg_proc      DD ?,?
+;  IN  ES        Device
+free_dev_proc              DD ?,?
+
+; IN  ES        Device sel
+create_control_proc        DD ?,?
 
 ; IN  ES        Device
 ; IN  CX        Buffer count
@@ -100,49 +101,52 @@ create_bulk_pipe_proc      DD ?,?
 ; OUT BX        Pipe sel
 create_intr_pipe_proc      DD ?,?
 
-;  IN ES        Device
-unlink_proc      DD ?,?
+;  IN  ES       Device selector
+;  IN  AL       Address
+address_device_proc        DD ?,?
+
+; IN  ES        Device selector
+; IN  AL        Max len
+update_control_maxlen_proc DD ?,?
+
+; IN  ES        Device
+; IN  GS:EDI    Buffer
+; OUT CX        Actual size
+control_msg_proc           DD ?,?
+
+; IN  FS        Pipe selector
+; IN  CX        Hub sel
+; IN  DL        Configuration #
+config_device_proc	   DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel
-enable_pipe_proc      DD ?,?
+enable_pipe_proc           DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel
-disable_pipe_proc      DD ?,?
+disable_pipe_proc          DD ?,?
 
 ;  IN  ES        Device
 ;  IN  GS        Pipe sel
 ;  OUT CX        Used buffer count
-used_buffers_proc      DD ?,?
+used_buffers_proc          DD ?,?
 
 ;  IN  ES        Device
 ;  IN  GS        Pipe sel
 ;  OUT CX        Free buffer count
-free_buffers_proc      DD ?,?
+free_buffers_proc          DD ?,?
 
 ;  IN  ES        Device
 ;  IN  GS        Pipe sel
 ;  OUT EDX       Buffer linear
 ;  OUT CX        Size
-req_buffer_proc      DD ?,?
+req_buffer_proc            DD ?,?
 
 ;  IN  ES        Device
 ;  IN  GS        Pipe sel
 ;  IN  CX        Size
-rel_buffer_proc      DD ?,?
-
-is_running_proc      DD ?,?
-
-;  IN  ES        Device
-free_dev_proc        DD ?,?
-
-;  IN  DL        Port
-;  OUT AL        Speed
-reset_port_proc     DD ?,?
-
-;  IN  ES        Device
-disable_device_proc     DD ?,?
+rel_buffer_proc            DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>

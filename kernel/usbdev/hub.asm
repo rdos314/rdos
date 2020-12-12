@@ -90,6 +90,44 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           Block
+;
+;       DESCRIPTION:    Block
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Block   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:lock_proc
+    pop ds
+    ret
+Block	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Unblock
+;
+;       DESCRIPTION:    Unblock
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Unblock   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:unlock_proc
+    pop ds
+    ret
+Unblock	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateAddress
 ;
 ;       DESCRIPTION:    Allocate address
@@ -779,30 +817,32 @@ UpdateMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hub_tab:
-ht00 DD OFFSET AllocateAddress,     SEG code
-ht01 DD OFFSET FreeAddress,         SEG code
-ht02 DD OFFSET CreateDev,           SEG code
-ht03 DD OFFSET CreateControl,       SEG code
-ht04 DD OFFSET ChangeAddress,       SEG code
-ht05 DD OFFSET DisablePort,         SEG code
-ht06 DD OFFSET AddressDev,          SEG code
-ht07 DD OFFSET ConfigDev,           SEG code
-ht08 DD OFFSET UpdateMaxLen,        SEG code
-ht09 DD OFFSET IsDeviceConnected,   SEG code
-ht0A DD OFFSET ControlMsg,          SEG code
-ht0B DD OFFSET CreateBulkPipe,      SEG code
-ht0C DD OFFSET CreateIntrPipe,      SEG code
-ht0D DD OFFSET UnlinkPipes,         SEG code
-ht0E DD OFFSET EnablePipe,          SEG code
-ht0F DD OFFSET DisablePipe,         SEG code
-ht10 DD OFFSET UsedBuffers,         SEG code
-ht11 DD OFFSET FreeBuffers,         SEG code
-ht12 DD OFFSET ReqBuffer,           SEG code
-ht13 DD OFFSET RelBuffer,           SEG code
-ht14 DD OFFSET IsRunning,           SEG code
-ht15 DD OFFSET FreeDev,             SEG code
-ht16 DD OFFSET ResetPort,           SEG code
-ht17 DD OFFSET DisableDev,          SEG code
+ht00 DD OFFSET Block,               SEG code
+ht01 DD OFFSET Unblock,             SEG code
+ht02 DD OFFSET ResetPort,           SEG code
+ht03 DD OFFSET DisablePort,         SEG code
+ht04 DD OFFSET DisableDev,          SEG code
+ht05 DD OFFSET IsRunning,           SEG code
+ht06 DD OFFSET AllocateAddress,     SEG code
+ht07 DD OFFSET FreeAddress,         SEG code
+ht08 DD OFFSET ChangeAddress,       SEG code
+ht09 DD OFFSET CreateDev,           SEG code
+ht0A DD OFFSET UnlinkPipes,         SEG code
+ht0B DD OFFSET IsDeviceConnected,   SEG code
+ht0C DD OFFSET FreeDev,             SEG code
+ht0D DD OFFSET CreateControl,       SEG code
+ht0E DD OFFSET CreateBulkPipe,      SEG code
+ht0F DD OFFSET CreateIntrPipe,      SEG code
+ht10 DD OFFSET AddressDev,          SEG code
+ht11 DD OFFSET UpdateMaxLen,        SEG code
+ht12 DD OFFSET ControlMsg,          SEG code
+ht13 DD OFFSET ConfigDev,           SEG code
+ht14 DD OFFSET EnablePipe,          SEG code
+ht15 DD OFFSET DisablePipe,         SEG code
+ht16 DD OFFSET UsedBuffers,         SEG code
+ht17 DD OFFSET FreeBuffers,         SEG code
+ht18 DD OFFSET ReqBuffer,           SEG code
+ht19 DD OFFSET RelBuffer,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2096,7 +2136,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*18h
+    mov ecx,2*1Ah
 
 uaTabLoop:
     lods dword ptr cs:[esi]
