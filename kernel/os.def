@@ -559,9 +559,6 @@ get_hid_log_max_nr          = 530
 cond_begin_disc_handler_nr  = 531
 stop_disc_request_nr        = 532
 
-lock_usb_nr                 = 533
-unlock_usb_nr               = 534
-
 restart_can_modules_nr      = 535
 
 send_can_bus_msg_nr         = 536

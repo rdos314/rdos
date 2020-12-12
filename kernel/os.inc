@@ -3952,14 +3952,6 @@ InitUsbFunction   MACRO
     OsGate init_usb_function_nr
                     ENDM
 
-LockUsb MACRO
-    OsGate lock_usb_nr
-                    ENDM
-
-UnlockUsb MACRO
-    OsGate unlock_usb_nr
-                    ENDM
-
 ; IN  ES:EDI  Callback
 ;       BX    Controller #
 ;       AL    Device address

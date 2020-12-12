@@ -2539,38 +2539,6 @@ init_usb_function   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockUsb
-;
-;           description:    Lock USB (for RESET)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lock_usb_name DB 'Lock USB', 0
-
-lock_usb       Proc far
-    EnterSection ds:usb_addr_section
-    retf32
-lock_usb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockUsb
-;
-;           description:    Unlock USB (for RESET)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_usb_name DB 'Unlock USB', 0
-
-unlock_usb       Proc far
-    LeaveSection ds:usb_addr_section
-    retf32
-unlock_usb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AllocateUsbAddress
 ;
 ;       Description:    Allocate USB address
@@ -4221,18 +4189,6 @@ init    Proc far
     mov edi,OFFSET init_usb_function_name
     xor cl,cl
     mov ax,init_usb_function_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET lock_usb
-    mov edi,OFFSET lock_usb_name
-    xor cl,cl
-    mov ax,lock_usb_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET unlock_usb
-    mov edi,OFFSET unlock_usb_name
-    xor cl,cl
-    mov ax,unlock_usb_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_hub_descr
