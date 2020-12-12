@@ -304,7 +304,6 @@ wait_for_signal_timeout_nr  = 299
 notify_ethernet_packet_nr   = 300
 
 init_usb_function_nr        = 301
-notify_usb_detach_nr        = 304
 
 add_com_port_nr             = 305
 

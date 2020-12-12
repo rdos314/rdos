@@ -3960,12 +3960,6 @@ UnlockUsb MACRO
     OsGate unlock_usb_nr
                     ENDM
 
-; IN  AL      Port #
-; IN  DS      Usb device selector
-NotifyUsbDetach MACRO
-    OsGate notify_usb_detach_nr
-                    ENDM
-
 ; IN  ES:EDI  Callback
 ;       BX    Controller #
 ;       AL    Device address

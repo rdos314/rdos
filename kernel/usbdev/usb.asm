@@ -2536,61 +2536,6 @@ init_usb_function Proc far
     retf32
 init_usb_function   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TrapUsbDetach
-;
-;           DESCRIPTION:    Run notification handlers for detach
-;
-;           PARAMETERS:     BX      Controller #
-;                           AH      Port #
-;                           AL      Device address (1..128)
-;                           DS      USB function
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_usb_detach PROC near
-    push ds
-    push es
-    push cx
-    push si
-;       
-    mov cx,SEG data
-    mov es,cx
-    mov cx,es:usb_detach_hooks
-    or cx,cx
-    je trap_detach_done
-    
-    mov si,OFFSET usb_detach_arr
-
-trap_detach_loop:
-    push ds
-    push es
-    push ax
-    push bx
-    push cx
-    push si
-    call fword ptr es:[si]
-    pop si
-    pop cx
-    pop bx
-    pop ax
-    pop es
-    pop ds
-;       
-    add si,8
-    loop trap_detach_loop
-
-trap_detach_done:
-    pop si
-    pop cx
-    pop es
-    pop ds
-    ret
-trap_usb_detach ENDP
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2814,48 +2759,6 @@ fudOutNext:
     popad
     retf32
 free_usb_dev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NotifyUsbDetach
-;
-;           description:    Notify USB detach event
-;
-;       parameters:         AL      Usb port
-;                           DS      USB function selector
-;                           ES      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_usb_detach_name DB 'Notify USB Detach', 0
-
-notify_usb_detach       Proc far
-    push es
-    pushad
-; 
-    mov bx,ds:usb_controller_id
-;
-    push ax
-    push dx
-    push si
-;
-    movzx si,al
-    mov ax,USB_EVENT_DETACH
-    mov dl,-1
-    call DistEvent
-;
-    pop si
-    pop dx
-    pop ax
-;
-    call trap_usb_detach      
-
-nudDone:    
-    popad
-    pop es
-    retf32
-notify_usb_detach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3989,6 +3892,64 @@ UnlinkDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           NotifyDetach
+;
+;           description:    Notify detach event
+;
+;       parameters:         DS      USB function selector
+;                           ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyDetach       Proc near
+    push ds
+    push es
+    pushad
+; 
+    mov bx,ds:usb_controller_id
+    movzx si,es:usbd_port
+    mov ax,USB_EVENT_DETACH
+    mov dl,-1
+    call DistEvent
+;
+    mov bx,ds:usb_controller_id
+    mov al,es:usbd_port
+    mov cx,SEG data
+    mov es,cx
+    mov cx,es:usb_detach_hooks
+    or cx,cx
+    je ndDone
+    
+    mov si,OFFSET usb_detach_arr
+
+ndLoop:
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    call fword ptr es:[si]
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+;       
+    add si,8
+    loop ndLoop
+
+ndDone:
+    popad
+    pop es
+    pop ds
+    ret
+NotifyDetach   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandlerThread
 ;
 ;       description:    USB server thread
@@ -4071,6 +4032,12 @@ uaDisableDev:
 
 uaDetach:
     call UnlinkDevice
+    test es:usbd_flags,FLAG_ATTACHED
+    jz uaDetached
+;
+    call NotifyDetach
+
+uaDetached:
 
 uaDone:
     EnterSection ds:usb_section
@@ -4278,12 +4245,6 @@ init    Proc far
     mov edi,OFFSET config_usb_hub_name
     xor cl,cl
     mov ax,config_usb_hub_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET notify_usb_detach
-    mov edi,OFFSET notify_usb_detach_name
-    xor cl,cl
-    mov ax,notify_usb_detach_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_usb_attach
