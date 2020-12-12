@@ -3114,6 +3114,9 @@ DisablePort   Proc far
     test ax,2000h
     jnz dpDone
 ;
+    test al,1
+    jz dpDone
+;
     and al,NOT 4
     mov gs:[edi],eax
 ;
@@ -3155,6 +3158,9 @@ DisableDev   Proc far
     mov eax,gs:[edi]
     test ax,2000h
     jnz ddDone
+;
+    test al,1
+    jz ddDone
 ;
     and al,NOT 4
     mov gs:[edi],eax

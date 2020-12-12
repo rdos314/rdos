@@ -2981,6 +2981,7 @@ HexToAscii      ENDP
 UpdatePort   Proc near
     push es
     push eax
+    push ebx
     push esi
 ;    
     movzx si,dl
@@ -2992,6 +2993,7 @@ UpdatePort   Proc near
     NotifyUsbPortState
 ;
     pop esi
+    pop ebx
     pop eax
     pop es
     ret
@@ -3021,21 +3023,20 @@ UpdateUsb  Proc near
 
 uuLoop:    
     push ds
-    push dx
+    push cx
     push si
 ;    
-    mov ds,ds:[si]
-;    
+    mov ds,ds:[si]    
     xor dx,dx
+    mov cx,ds:ohc_root_ports
 
 uuPortLoop:    
     call UpdatePort
     inc dx
-    cmp dx,ds:ohc_root_ports
-    jb uuPortLoop   
+    loop uuPortLoop
 ;
     pop si
-    pop dx
+    pop cx
     pop ds
 ;
     add si,2

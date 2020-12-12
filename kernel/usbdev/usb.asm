@@ -4153,13 +4153,9 @@ npsCopyDone:
 
 npsDetach:
     EnterSection ds:usb_section
-    mov bx,-1
-    xchg bx,ds:[edi].usb_thread_arr
+    mov bx,ds:[edi].usb_thread_arr
     or bx,bx
     jz npsLeave
-;
-    cmp bx,-1
-    je npsLeave
 ;    
     Signal
 
