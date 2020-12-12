@@ -3846,9 +3846,6 @@ NotifyDetach   Endp
 
 FreeDev       Proc near
     pushad
-;    
-    mov al,es:usbd_address
-    call fword ptr ds:free_address_proc
 ;
     mov cx,16
     mov bx,OFFSET usbd_config_sel
@@ -3958,7 +3955,6 @@ handler_thread:
     call fword ptr ds:change_address_proc
     call AddDevice
 ;
-    or es:usbd_flags,FLAG_ADDRESSED
     LeaveSection ds:usb_addr_section
 ;
     call ReadDescriptors
@@ -4004,6 +4000,10 @@ uaDetach:
     call NotifyDetach
 
 uaDetached:
+    mov al,es:usbd_address
+    call fword ptr ds:free_address_proc
+;
+    call FreeDev
 
 uaDone:
     EnterSection ds:usb_section
