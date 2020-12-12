@@ -2648,89 +2648,6 @@ address_usb_dev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeUsbDev
-;
-;       Description:    Free usb device
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_usb_dev_name DB 'Free USB Device', 0
-
-free_usb_dev       Proc far
-    pushad
-;    
-    mov al,es:usbd_address
-    call fword ptr ds:free_address_proc
-;
-    mov cx,16
-    mov bx,OFFSET usbd_config_sel
-
-fudConfLoop:
-    mov ax,es:[bx]
-    or ax,ax
-    jz fudConfNext
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-
-fudConfNext:
-    add bx,2
-    loop fudConfLoop    
-;
-    mov ax,10
-    WaitMilliSec
-;
-    mov cx,15
-    mov si,OFFSET usbd_in_pipe_arr
-
-fudInLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz fudInNext
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-fudInNext:
-    add si,2
-    loop fudInLoop
-;
-    mov cx,15
-    mov si,OFFSET usbd_out_pipe_arr
-
-fudOutLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz fudOutNext
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-fudOutNext:
-    add si,2
-    loop fudOutLoop
-;
-    mov ax,10
-    WaitMilliSec
-;
-    FreeMemBlk
-;
-    popad
-    retf32
-free_usb_dev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:               GetUsbAddress
 ;
 ;       description:        Get USB address
@@ -3918,6 +3835,87 @@ NotifyDetach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreeDev
+;
+;       Description:    Free device
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev       Proc near
+    pushad
+;    
+    mov al,es:usbd_address
+    call fword ptr ds:free_address_proc
+;
+    mov cx,16
+    mov bx,OFFSET usbd_config_sel
+
+fudConfLoop:
+    mov ax,es:[bx]
+    or ax,ax
+    jz fudConfNext
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+fudConfNext:
+    add bx,2
+    loop fudConfLoop    
+;
+    mov ax,10
+    WaitMilliSec
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+fudInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fudInNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fudInNext:
+    add si,2
+    loop fudInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+fudOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fudOutNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fudOutNext:
+    add si,2
+    loop fudOutLoop
+;
+    mov ax,10
+    WaitMilliSec
+;
+    FreeMemBlk
+;
+    popad
+    ret
+FreeDev       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandlerThread
 ;
 ;       description:    USB server thread
@@ -4249,12 +4247,6 @@ init    Proc far
     mov edi,OFFSET free_usb_address_name
     xor cl,cl
     mov ax,free_usb_address_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_usb_dev
-    mov edi,OFFSET free_usb_dev_name
-    xor cl,cl
-    mov ax,free_usb_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET address_usb_dev

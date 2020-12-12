@@ -4047,12 +4047,6 @@ NotifyUsbPortState MACRO
     OsGate notify_usb_port_state_nr
                     ENDM
 
-; IN  DS      Function sel
-; IN  ES      Dev sel
-FreeUsbDev MACRO
-    OsGate free_usb_dev_nr
-                    ENDM
-
 ; IN  DS      Usb function selector
 ; IN  AL      Address
 AddressUsbDev   MACRO
