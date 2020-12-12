@@ -2852,7 +2852,6 @@ udvOutNext:
     add si,2
     loop udvOutLoop
 ;
-    int 3
     movzx si,es:usbd_address
     add si,si
     mov ds:[si].ehc_dev_arr,0
