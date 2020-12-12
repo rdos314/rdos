@@ -3832,6 +3832,44 @@ UnlinkHub   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           StopHub
+;
+;           description:    Stop Hub device
+;
+;       parameters:         DS      USB function selector
+;                           ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopHub       Proc near
+    push ax
+    push bx
+    push si
+;
+    mov si,OFFSET usb_thread_arr
+    mov cx,ds:hub_ports
+    xor ax,ax
+
+shLoop:
+    mov bx,ds:[si]
+    or bx,bx
+    jz shNext
+;
+    Signal
+
+shNext:
+    add si,2
+    loop shLoop
+;
+    pop si
+    pop bx
+    pop ax
+    ret
+StopHub   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UnlinkDevice
 ;
 ;           description:    Unlink USB device
@@ -3862,7 +3900,7 @@ udHubDone:
     mov ds:[bx].usb_dev_arr,ax
     xchg ax,ds:[bx].usb_handle_arr
     or ax,ax
-    jz udDone
+    jz udDeviceDone
 ;
     push ds
     mov ds,ax
@@ -3931,6 +3969,16 @@ udOutNext:
 
 udUnlinkDev:
     call fword ptr ds:unlink_proc
+
+udDeviceDone:
+    mov ax,es:usbd_my_hub
+    or ax,ax
+    jz udDone
+;
+    push ds
+    mov ds,ax
+    call StopHub
+    pop ds
 
 udDone:
     popad
