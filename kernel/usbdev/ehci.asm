@@ -2992,6 +2992,7 @@ cdCreate:
     call InitQtd64
     mov es:dev_control_qtd,edx
     mov es:dev_control_thread,0
+    mov es:usbd_parent_thread,0
 ;
     pop ax
     movzx di,al

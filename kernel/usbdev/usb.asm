@@ -4101,6 +4101,7 @@ uaNotified:
     mov ax,10
     WaitMilliSec
 ;
+    mov bx,es:usbd_parent_thread
     call FreeDev
 
 uaDone:
@@ -4108,7 +4109,12 @@ uaDone:
     mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section
 ;
-    call fword ptr ds:exit_proc
+    or bx,bx
+    jz uaExit
+;
+    Signal
+
+uaExit:
     TerminateThread
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

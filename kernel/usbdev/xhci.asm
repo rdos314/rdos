@@ -3328,6 +3328,7 @@ CreateDev   Proc far
 ;
     mov es:xd_dev_sel,ds
     mov es:usbd_speed,al
+    mov es:usbd_parent_thread,0
 ;
     pushad
 ;

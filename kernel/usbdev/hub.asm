@@ -188,6 +188,11 @@ CreateDev   Proc far
     mov ds,ds:hub_parent_sel
     call fword ptr ds:create_dev_proc
     pop ds
+;
+    push ax
+    mov ax,ds:hub_server_thread
+    mov es:usbd_parent_thread,ax
+    pop ax
     ret
 CreateDev   Endp
 
@@ -2086,6 +2091,9 @@ uaReConfig:
     mov gs:hub_port,al
     mov gs:hub_parent_sel,fs
 ;
+    GetThread
+    mov gs:hub_server_thread,ax
+;
     mov ebx,gs
     mov ds,ebx
 ;
@@ -2140,6 +2148,9 @@ uaNotDead:
     mov es:hub_status_thread,0
     mov es:hub_port_thread,0
     InitSection es:hub_section
+;
+    GetThread
+    mov es:hub_server_thread,ax
     jmp uaDevNext
 
 uaDevLoop:

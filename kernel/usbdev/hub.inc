@@ -49,6 +49,7 @@ hub_func_base           usb_function_struc <>
 hub_prev                DW ?
 hub_next                DW ?
 
+hub_server_thread       DW ?
 hub_status_thread       DW ?
 hub_port_thread         DW ?
 hub_detach              DW ?
