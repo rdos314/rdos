@@ -3974,7 +3974,8 @@ handler_thread:
     GetThread
     mov ds:[edi].usb_thread_arr,ax
     LeaveSection ds:usb_section
-;
+
+uaAttach:
     xor cx,cx
     mov es,cx
     call fword ptr ds:lock_proc
@@ -4067,6 +4068,9 @@ uaNotified:
 ;
     mov bx,es:usbd_parent_thread
     call FreeDev
+;
+    call fword ptr ds:is_port_connected_proc
+    jnc uaAttach
 
 uaDone:
     EnterSection ds:usb_section
