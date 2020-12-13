@@ -52,15 +52,21 @@ lock_proc                  DD ?,?
 
 unlock_proc                DD ?,?
 
-;  IN  DL        Port
-;  OUT AL        Speed
+; IN  DL        Port
+; OUT AL        Speed
 reset_port_proc            DD ?,?
 
 ; IN  DL        Port
 disable_port_proc          DD ?,?
 
-;  IN  ES        Device
+; IN  ES        Device
 disable_device_proc        DD ?,?
+
+; IN  DL        Port
+is_port_connected_proc     DD ?,?
+
+; IN  DL        Port
+exit_proc                  DD ?,?
 
 is_running_proc            DD ?,?
 
@@ -70,19 +76,16 @@ allocate_address_proc      DD ?,?
 ; IN  AL        Address
 free_address_proc          DD ?,?
 
-; IN  ES        Device sel
-change_address_proc        DD ?,?
-
 ; OUT ES        Device sel
 create_dev_proc            DD ?,?
 
-;  IN ES        Device
+; IN ES        Device
 unlink_proc                DD ?,?
 
-;  IN ES        Device
+; IN ES        Device
 is_dev_connected_proc      DD ?,?
 
-;  IN  ES        Device
+; IN  ES        Device
 free_dev_proc              DD ?,?
 
 ; IN  ES        Device sel
@@ -104,6 +107,9 @@ create_intr_pipe_proc      DD ?,?
 ;  IN  ES       Device selector
 ;  IN  AL       Address
 address_device_proc        DD ?,?
+
+; IN  ES        Device sel
+change_address_proc        DD ?,?
 
 ; IN  ES        Device selector
 ; IN  AL        Max len

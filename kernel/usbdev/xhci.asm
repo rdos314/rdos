@@ -2563,6 +2563,57 @@ IssueOne   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ExitServer
+;
+;           DESCRIPTION:    Exit server
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExitServer   Proc far
+    retf32
+ExitServer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsPortConnected
+;
+;           DESCRIPTION:    Check if port is connected
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsPortConnected   Proc far
+    push es
+    push fs
+    push eax
+    push si
+;
+    movzx si,dl
+    shl si,4
+    mov eax,es:[si]
+    test al,1
+    clc
+    jnz ipcDone
+;    
+    stc
+
+ipcDone:
+    pop si
+    pop eax
+    pop fs
+    pop es
+    retf32
+IsPortConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDeviceConnected
 ;
 ;           DESCRIPTION:    Check if device is connected
@@ -2822,6 +2873,10 @@ RunControl   Proc near
     push ds
     pushad
 ;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz rcDone
+;
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
 ;
@@ -2840,6 +2895,10 @@ RunControl   Proc near
 rcWait:
     mov ax,4
     WaitMilliSec
+;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz rcDone
 ;
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
@@ -4021,27 +4080,29 @@ et01 DD OFFSET Unblock,             SEG code
 et02 DD OFFSET ResetPort,           SEG code
 et03 DD OFFSET DisablePort,         SEG code
 et04 DD OFFSET DisableDev,          SEG code
-et05 DD OFFSET IsRunning,           SEG code
-et06 DD OFFSET AllocateAddress,     SEG code
-et07 DD OFFSET FreeAddress,         SEG code
-et08 DD OFFSET ChangeAddress,       SEG code
-et09 DD OFFSET CreateDev,           SEG code
-et0A DD OFFSET UnlinkPipes,         SEG code
-et0B DD OFFSET IsDeviceConnected,   SEG code
-et0C DD OFFSET FreeDev,             SEG code
-et0D DD OFFSET CreateControl,       SEG code
-et0E DD OFFSET CreateBulkPipe,      SEG code
-et0F DD OFFSET CreateIntrPipe,      SEG code
-et10 DD OFFSET AddressDevice,       SEG code
-et11 DD OFFSET UpdateMaxLen,        SEG code
-et12 DD OFFSET ControlMsg,          SEG code
-et13 DD OFFSET ConfigDevice,        SEG code
-et14 DD OFFSET EnablePipe,          SEG code
-et15 DD OFFSET DisablePipe,         SEG code
-et16 DD OFFSET UsedBuffers,         SEG code
-et17 DD OFFSET FreeBuffers,         SEG code
-et18 DD OFFSET ReqBuffer,           SEG code
-et19 DD OFFSET RelBuffer,           SEG code
+et05 DD OFFSET IsPortConnected,     SEG code
+et06 DD OFFSET ExitServer,          SEG code
+et07 DD OFFSET IsRunning,           SEG code
+et08 DD OFFSET AllocateAddress,     SEG code
+et09 DD OFFSET FreeAddress,         SEG code
+et0A DD OFFSET CreateDev,           SEG code
+et0B DD OFFSET UnlinkPipes,         SEG code
+et0C DD OFFSET IsDeviceConnected,   SEG code
+et0D DD OFFSET FreeDev,             SEG code
+et0E DD OFFSET CreateControl,       SEG code
+et0F DD OFFSET CreateBulkPipe,      SEG code
+et10 DD OFFSET CreateIntrPipe,      SEG code
+et11 DD OFFSET AddressDevice,       SEG code
+et12 DD OFFSET ChangeAddress,       SEG code
+et13 DD OFFSET UpdateMaxLen,        SEG code
+et14 DD OFFSET ControlMsg,          SEG code
+et15 DD OFFSET ConfigDevice,        SEG code
+et16 DD OFFSET EnablePipe,          SEG code
+et17 DD OFFSET DisablePipe,         SEG code
+et18 DD OFFSET UsedBuffers,         SEG code
+et19 DD OFFSET FreeBuffers,         SEG code
+et1A DD OFFSET ReqBuffer,           SEG code
+et1B DD OFFSET RelBuffer,           SEG code
 
 InitFunction    Proc near
     push es
@@ -4188,7 +4249,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Ah
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]

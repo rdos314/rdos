@@ -1102,8 +1102,12 @@ is_usb_dev_connected     Proc far
     stc
     jnz idvcLeave
 ;
-    push ds
     mov es,ds:udd_sel    
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz idvcLeave
+;
+    push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:is_dev_connected_proc
     pop ds
@@ -3572,16 +3576,15 @@ NotifyAttach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UnlinkHub
+;           NAME:           StopHub
 ;
-;           description:    Unlink Hub
+;           description:    Stop Hub
 ;
 ;       parameters:         DS      USB function selector
-;                           ES      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkHub       Proc near
+StopHub       Proc near
     push es
     pushad
 ;
@@ -3591,44 +3594,43 @@ UnlinkHub       Proc near
     mov cx,ds:hub_ports
     xor ax,ax
 
-ulhStatusLoop:
+shStatusLoop:
     mov ds:[bx],ax
     add bx,2
-    loop ulhStatusLoop
+    loop shStatusLoop
 ;
     mov bx,OFFSET usb_dev_arr
     mov cx,ds:hub_ports
 
-ulhDevLoop:
+shDevLoop:
     mov ax,ds:[bx]
     or ax,ax
-    jz ulhDevNext
+    jz shDevNext
 ;
     mov es,ax
-    call UnlinkDevice
+    call StopDevice
 
-ulhDevNext:
+shDevNext:
     add bx,2
-    loop ulhDevLoop
+    loop shDevLoop
 ;
     popad
     pop es
     ret
-UnlinkHub   Endp
+StopHub   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StopHub
+;           NAME:           SignalHub
 ;
-;           description:    Stop Hub device
+;           description:    Signal Hub device
 ;
 ;       parameters:         DS      USB function selector
-;                           ES      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopHub       Proc near
+SignalHub       Proc near
     push ax
     push bx
     push si
@@ -3652,41 +3654,42 @@ shNext:
     pop bx
     pop ax
     ret
-StopHub   Endp
+SignalHub   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UnlinkDevice
+;           NAME:           StopDevice
 ;
-;           description:    Unlink USB device
+;           description:    Stop USB device
 ;
 ;       parameters:         DS      USB function selector
 ;                           ES      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkDevice       Proc near
+StopDevice       Proc near
     push ds
     pushad
 ;
     mov ax,es:usbd_my_hub
     or ax,ax
-    jz udHubDone
+    jz sdHubDone
 ;
     push ds
     mov ds,ax
-    call UnlinkHub
+    call StopHub
     pop ds
 
-udHubDone:
+sdHubDone:
     lock or es:usbd_flags,FLAG_DETACHED
     movzx bx,es:usbd_port
     add bx,bx
     xor ax,ax
+    mov ds:[bx].usb_dev_arr,ax
     xchg ax,ds:[bx].usb_handle_arr
     or ax,ax
-    jz udDeviceDone
+    jz sdDeviceDone
 ;
     push ds
     mov ds,ax
@@ -3697,80 +3700,77 @@ udHubDone:
     mov cx,15
     mov si,OFFSET usbd_in_pipe_arr
 
-udInLoop:
+sdInLoop:
     mov bx,es:[si]
     or bx,bx
-    jz udInNext
+    jz sdInNext
 ;
     push es
     mov es,bx
     xor bx,bx
     xchg bx,es:usbdp_wait
     or bx,bx
-    jz udInPop
+    jz sdInPop
 ;
     mov es,bx
     SignalWait
 
-udInPop:
+sdInPop:
     pop es
 
-udInNext:
+sdInNext:
     add si,2
-    loop udInLoop
+    loop sdInLoop
 ;
     mov cx,15
     mov si,OFFSET usbd_out_pipe_arr
 
-udOutLoop:
+sdOutLoop:
     mov bx,es:[si]
     or bx,bx
-    jz udOutNext
+    jz sdOutNext
 ;
     push es
     mov es,bx
     xor bx,bx
     xchg bx,es:usbdp_wait
     or bx,bx
-    jz udOutPop
+    jz sdOutPop
 ;
     mov es,bx
     SignalWait
 
-udOutPop:
+sdOutPop:
     pop es
 
-udOutNext:
+sdOutNext:
     add si,2
-    loop udOutLoop
+    loop sdOutLoop
 ;
     lock sub ds:udd_ref_count,1
     pop ds
-    jnz udUnlinkDev
+    jnz sdDeviceDone
 ;
     push es
     mov es,ax
     FreeMem
     pop es
 
-udUnlinkDev:
-    call fword ptr ds:unlink_proc
-
-udDeviceDone:
+sdDeviceDone:
     mov ax,es:usbd_my_hub
     or ax,ax
-    jz udDone
+    jz sdDone
 ;
     push ds
     mov ds,ax
-    call StopHub
+    call SignalHub
     pop ds
 
-udDone:
+sdDone:
     popad
     pop ds
     ret
-UnlinkDevice    Endp
+StopDevice    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3833,37 +3833,53 @@ NotifyDetach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CleanupHub
+;       NAME:           GetActivePorts
 ;
-;       description:    Cleanup Hub
+;       Description:    Return # of active ports
 ;
-;       parameters:     DS      USB function selector
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;       RETURNS:        AX      Active ports
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CleanupHub       Proc near
-    push es
-    pushad
+GetActivePorts       Proc near
+    mov ax,es:usbd_my_hub
+    or ax,ax
+    jz hapDone
 ;
-    mov bx,OFFSET usb_dev_arr
+    push ds
+    push bx
+    push cx
+    push dx
+;
+    mov ds,ax
+    mov bx,OFFSET usb_thread_arr
     mov cx,ds:hub_ports
+    xor dx,dx
 
-chLoop:
+hapLoop:
     mov ax,ds:[bx]
     or ax,ax
-    jz chNext
+    jz hapNext
 ;
-    mov es,ax
-    call CleanupDev
+    inc dx
 
-chNext:
+hapNext:
     add bx,2
-    loop chLoop
+    loop hapLoop
 ;
-    popad
-    pop es
+    mov ax,dx
+;
+    pop dx
+    pop cx
+    pop bx
+    pop ds
+
+hapDone:
     ret
-CleanupHub   Endp
+GetActivePorts     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3880,16 +3896,6 @@ CleanupHub   Endp
 CleanupDev       Proc near
     pushad
 ;
-    mov ax,es:usbd_my_hub
-    or ax,ax
-    jz cdHubDone
-;
-    push ds
-    mov ds,ax
-    call CleanupHub
-    pop ds
-
-cdHubDone:
     mov cx,16
     mov bx,OFFSET usbd_config_sel
 
@@ -3960,11 +3966,6 @@ CleanupDev       Endp
 FreeDev       Proc near
     pushad
 ;
-    xor ax,ax
-    movzx bx,es:usbd_port
-    add bx,bx
-    mov ds:[bx].usb_dev_arr,ax
-;
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
     call fword ptr ds:free_dev_proc
@@ -4027,6 +4028,9 @@ handler_thread:
 uaConnected:
     WaitForSignal
 ;
+    test es:usbd_flags,FLAG_DETACHED
+    jnz uaDetach
+;
     call fword ptr ds:is_dev_connected_proc
     jc uaDetach
 ;
@@ -4056,38 +4060,43 @@ uaDisableDev:
     call fword ptr ds:disable_device_proc
 
 uaDetachLocked:
+    int 3
     mov ax,es:usbd_parent_hub
     or ax,ax
-    jz uaUnlink
+    jz uaStop
 ;
     push ds
     mov ds,ax
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     pop ds
-    jz uaUnlink
+    jnz uaStopped
+
+uaStop:
+    call StopDevice
+
+uaStopped:
+    call fword ptr ds:unlock_proc
+    call fword ptr ds:unlink_proc
+
+uaWaitExit:
+    call GetActivePorts
+    or ax,ax
+    jz uaNotify
 ;
+    WaitForSignal
+    jmp uaWaitExit
+
+uaNotify:
     test es:usbd_flags,FLAG_ATTACHED
-    jz uaFree
+    jz uaNotified
 ;
     call NotifyDetach
-    jmp uaFree
 
-uaUnlink:
-    call UnlinkDevice
-;
-    test es:usbd_flags,FLAG_ATTACHED
-    jz uaDetached
-;
-    call NotifyDetach
-
-uaDetached:
+uaNotified:
     mov ax,10
     WaitMilliSec
 ;
     call CleanupDev
-
-uaFree:
-    call fword ptr ds:unlock_proc
 ;
     mov ax,10
     WaitMilliSec
@@ -4098,6 +4107,8 @@ uaDone:
     EnterSection ds:usb_section
     mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section
+;
+    call fword ptr ds:exit_proc
     TerminateThread
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -988,6 +988,58 @@ Unblock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ExitServer
+;
+;           DESCRIPTION:    Exit server
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExitServer   Proc far
+    retf32
+ExitServer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsPortConnected
+;
+;           DESCRIPTION:    Check if port is connected
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsPortConnected   Proc far
+    push fs
+    push eax
+    push dx
+    push si
+;
+    movzx si,dl
+    shl si,2
+    mov fs,ds:ohc_reg_sel
+    mov eax,fs:[si].HcRhPortStatus
+    test al,1
+    stc
+    jz ipcDone
+;
+    clc
+
+ipcDone:
+    pop si
+    pop dx
+    pop eax
+    pop fs
+    retf32
+IsPortConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDeviceConnected
 ;
 ;           DESCRIPTION:    Check if device is connected
@@ -1003,10 +1055,6 @@ IsDeviceConnected   Proc far
     push dx
     push si
 ;    
-    test es:usbd_flags,FLAG_DETACHED
-    stc
-    jnz idcDone
-;
     movzx si,es:usbd_port    
     shl si,2
     mov fs,ds:ohc_reg_sel
@@ -1018,11 +1066,6 @@ IsDeviceConnected   Proc far
     test al,1
     stc
     jz idcDone
-;
-    mov eax,fs:HcInterruptStatus
-    test al,10h
-    stc
-    jnz idcDone
 ;
     clc
 
@@ -1404,6 +1447,10 @@ rcEnabled:
     mov edx,es:dev_control_ed
     mov fs:[edx].oes_headp,eax
     and fs:[edx].oes_fa_en,NOT 4000h
+;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz rcDone
 ;
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
@@ -3382,27 +3429,29 @@ ot01 DD OFFSET Unblock,             SEG code
 ot02 DD OFFSET ResetPort,           SEG code
 ot03 DD OFFSET DisablePort,         SEG code
 ot04 DD OFFSET DisableDev,          SEG code
-ot05 DD OFFSET IsRunning,           SEG code
-ot06 DD OFFSET AllocateAddress,     SEG code
-ot07 DD OFFSET FreeAddress,         SEG code
-ot08 DD OFFSET ChangeAddress,       SEG code
-ot09 DD OFFSET CreateDev,           SEG code
-ot0A DD OFFSET Unlink,              SEG code
-ot0B DD OFFSET IsDeviceConnected,   SEG code
-ot0C DD OFFSET FreeDev,             SEG code
-ot0D DD OFFSET CreateControl,       SEG code
-ot0E DD OFFSET CreateBulkPipe,      SEG code
-ot0F DD OFFSET CreateIntrPipe,      SEG code
-ot10 DD OFFSET AddressDev,          SEG code
-ot11 DD OFFSET UpdateMaxLen,        SEG code
-ot12 DD OFFSET ControlMsg,          SEG code
-ot13 DD OFFSET ConfigDev,           SEG code
-ot14 DD OFFSET EnablePipe,          SEG code
-ot15 DD OFFSET DisablePipe,         SEG code
-ot16 DD OFFSET UsedBuffers,         SEG code
-ot17 DD OFFSET FreeBuffers,         SEG code
-ot18 DD OFFSET ReqBuffer,           SEG code
-ot19 DD OFFSET RelBuffer,           SEG code
+ot05 DD OFFSET IsPortConnected,     SEG code
+ot06 DD OFFSET ExitServer,          SEG code
+ot07 DD OFFSET IsRunning,           SEG code
+ot08 DD OFFSET AllocateAddress,     SEG code
+ot09 DD OFFSET FreeAddress,         SEG code
+ot0A DD OFFSET CreateDev,           SEG code
+ot0B DD OFFSET Unlink,              SEG code
+ot0C DD OFFSET IsDeviceConnected,   SEG code
+ot0D DD OFFSET FreeDev,             SEG code
+ot0E DD OFFSET CreateControl,       SEG code
+ot0F DD OFFSET CreateBulkPipe,      SEG code
+ot10 DD OFFSET CreateIntrPipe,      SEG code
+ot11 DD OFFSET AddressDev,          SEG code
+ot12 DD OFFSET ChangeAddress,       SEG code
+ot13 DD OFFSET UpdateMaxLen,        SEG code
+ot14 DD OFFSET ControlMsg,          SEG code
+ot15 DD OFFSET ConfigDev,           SEG code
+ot16 DD OFFSET EnablePipe,          SEG code
+ot17 DD OFFSET DisablePipe,         SEG code
+ot18 DD OFFSET UsedBuffers,         SEG code
+ot19 DD OFFSET FreeBuffers,         SEG code
+ot1A DD OFFSET ReqBuffer,           SEG code
+ot1B DD OFFSET RelBuffer,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3460,7 +3509,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Ah
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]
