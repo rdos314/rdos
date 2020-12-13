@@ -3896,6 +3896,8 @@ GetActivePorts     Endp
 CleanupDev       Proc near
     pushad
 ;
+    call fword ptr ds:free_dev_proc
+;
     mov cx,16
     mov bx,OFFSET usbd_config_sel
 
@@ -3968,7 +3970,6 @@ FreeDev       Proc near
 ;
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
-    call fword ptr ds:free_dev_proc
     FreeMemBlk
 ;
     popad

@@ -3002,6 +3002,69 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
+    push fs
+    push gs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov edx,es:dev_control_qh
+    call FreeQh
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+fdvInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fdvInNext
+;
+    mov gs,bx
+    mov edx,gs:ep_qh
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,3
+    jne fdvInFree
+;
+    test fs:[edx].qh_adress,80h
+    jnz fdvInNext
+
+fdvInFree:
+    call FreeQh
+ 
+fdvInNext:
+    add si,2
+    loop fdvInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+fdvOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fdvOutNext
+;
+    mov gs,bx
+    mov edx,gs:ep_qh
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,3
+    jne fdvOutFree
+;
+    test fs:[edx].qh_adress,80h
+    jnz fdvOutNext
+
+fdvOutFree:
+    call FreeQh
+
+fdvOutNext:
+    add si,2
+    loop fdvOutLoop
+;
+    popad
+    pop gs
+    pop fs
     retf32
 FreeDev   Endp
 
