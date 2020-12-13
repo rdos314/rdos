@@ -982,8 +982,6 @@ ClearPortFeature  Proc near
 ;    
     EnterSection ds:hub_section
     inc dx
-    mov ebx,ds
-    mov es,ebx
     mov bx,ds:hub_device_handle
     mov si,dx
     mov dx,ax
@@ -1136,6 +1134,7 @@ ClearControlTT Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPortStatus  Proc near
+    push es
     pushad
 ;    
     push dx
@@ -1167,6 +1166,7 @@ GetPortStatus  Proc near
 
 gpsDone:    
     popad
+    pop es
     ret
 GetPortStatus Endp
         
