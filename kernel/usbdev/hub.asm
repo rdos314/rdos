@@ -492,22 +492,6 @@ CreateControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ExitServer
-;
-;       DESCRIPTION:    Exit server
-;
-;       PARAMETERS:     DS      Function selector
-;                       DL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ExitServer   Proc far
-    ret
-ExitServer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           IsPortConnected
 ;
 ;       DESCRIPTION:    Check if port is connected
@@ -888,28 +872,27 @@ ht02 DD OFFSET ResetPort,           SEG code
 ht03 DD OFFSET DisablePort,         SEG code
 ht04 DD OFFSET DisableDev,          SEG code
 ht05 DD OFFSET IsPortConnected,     SEG code
-ht06 DD OFFSET ExitServer,          SEG code
-ht07 DD OFFSET IsRunning,           SEG code
-ht08 DD OFFSET AllocateAddress,     SEG code
-ht09 DD OFFSET FreeAddress,         SEG code
-ht0A DD OFFSET CreateDev,           SEG code
-ht0B DD OFFSET UnlinkPipes,         SEG code
-ht0C DD OFFSET IsDeviceConnected,   SEG code
-ht0D DD OFFSET FreeDev,             SEG code
-ht0E DD OFFSET CreateControl,       SEG code
-ht0F DD OFFSET CreateBulkPipe,      SEG code
-ht10 DD OFFSET CreateIntrPipe,      SEG code
-ht11 DD OFFSET AddressDev,          SEG code
-ht12 DD OFFSET ChangeAddress,       SEG code
-ht13 DD OFFSET UpdateMaxLen,        SEG code
-ht14 DD OFFSET ControlMsg,          SEG code
-ht15 DD OFFSET ConfigDev,           SEG code
-ht16 DD OFFSET EnablePipe,          SEG code
-ht17 DD OFFSET DisablePipe,         SEG code
-ht18 DD OFFSET UsedBuffers,         SEG code
-ht19 DD OFFSET FreeBuffers,         SEG code
-ht1A DD OFFSET ReqBuffer,           SEG code
-ht1B DD OFFSET RelBuffer,           SEG code
+ht06 DD OFFSET IsRunning,           SEG code
+ht07 DD OFFSET AllocateAddress,     SEG code
+ht08 DD OFFSET FreeAddress,         SEG code
+ht09 DD OFFSET CreateDev,           SEG code
+ht0A DD OFFSET UnlinkPipes,         SEG code
+ht0B DD OFFSET IsDeviceConnected,   SEG code
+ht0C DD OFFSET FreeDev,             SEG code
+ht0D DD OFFSET CreateControl,       SEG code
+ht0E DD OFFSET CreateBulkPipe,      SEG code
+ht0F DD OFFSET CreateIntrPipe,      SEG code
+ht10 DD OFFSET AddressDev,          SEG code
+ht11 DD OFFSET ChangeAddress,       SEG code
+ht12 DD OFFSET UpdateMaxLen,        SEG code
+ht13 DD OFFSET ControlMsg,          SEG code
+ht14 DD OFFSET ConfigDev,           SEG code
+ht15 DD OFFSET EnablePipe,          SEG code
+ht16 DD OFFSET DisablePipe,         SEG code
+ht17 DD OFFSET UsedBuffers,         SEG code
+ht18 DD OFFSET FreeBuffers,         SEG code
+ht19 DD OFFSET ReqBuffer,           SEG code
+ht1A DD OFFSET RelBuffer,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2213,7 +2196,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Ch
+    mov ecx,2*1Bh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

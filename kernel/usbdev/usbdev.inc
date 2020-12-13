@@ -65,9 +65,6 @@ disable_device_proc        DD ?,?
 ; IN  DL        Port
 is_port_connected_proc     DD ?,?
 
-; IN  DL        Port
-exit_proc                  DD ?,?
-
 is_running_proc            DD ?,?
 
 ; OUT AL        Address
