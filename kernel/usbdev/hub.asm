@@ -1808,7 +1808,7 @@ FindAnyDevice	Endp
 ;
 ;    Parameters:     DS      Data seg
 ;                    BX      Controller #
-;                    AH      Port #
+;                    AL      Port #
 ;
 ;    Returns:        NC	     Found
 ;                        GS  CDC sel
@@ -1832,7 +1832,7 @@ fsdLoop:
     cmp bx,ds:hub_controller
     jne fsdNext
 ;
-    cmp ah,ds:hub_port
+    cmp al,ds:hub_port
     jne fsdNext
 ;
     mov ecx,ds
@@ -2091,8 +2091,10 @@ uaReConfig:
     mov gs:hub_port,al
     mov gs:hub_parent_sel,fs
 ;
+    push ax
     GetThread
     mov gs:hub_server_thread,ax
+    pop ax
 ;
     mov ebx,gs
     mov ds,ebx
@@ -2149,8 +2151,10 @@ uaNotDead:
     mov es:hub_port_thread,0
     InitSection es:hub_section
 ;
+    push ax
     GetThread
     mov es:hub_server_thread,ax
+    pop ax
     jmp uaDevNext
 
 uaDevLoop:

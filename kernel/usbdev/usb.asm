@@ -4060,7 +4060,6 @@ uaDisableDev:
     call fword ptr ds:disable_device_proc
 
 uaDetachLocked:
-    int 3
     mov ax,es:usbd_parent_hub
     or ax,ax
     jz uaStop
