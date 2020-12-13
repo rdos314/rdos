@@ -3573,6 +3573,8 @@ naDone:
     ret
 NotifyAttach   Endp
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3588,8 +3590,6 @@ StopHub       Proc near
     push es
     pushad
 ;
-    lock or ds:hub_flags,FLAG_HUB_DISCONNECT
-;
     mov bx,OFFSET hub_status_arr
     mov cx,ds:hub_ports
     xor ax,ax
@@ -3598,42 +3598,6 @@ shStatusLoop:
     mov ds:[bx],ax
     add bx,2
     loop shStatusLoop
-;
-    mov bx,OFFSET usb_dev_arr
-    mov cx,ds:hub_ports
-
-shDevLoop:
-    mov ax,ds:[bx]
-    or ax,ax
-    jz shDevNext
-;
-    mov es,ax
-    call StopDevice
-
-shDevNext:
-    add bx,2
-    loop shDevLoop
-;
-    popad
-    pop es
-    ret
-StopHub   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SignalHub
-;
-;           description:    Signal Hub device
-;
-;       parameters:         DS      USB function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SignalHub       Proc near
-    push ax
-    push bx
-    push si
 ;
     mov si,OFFSET usb_thread_arr
     mov cx,ds:hub_ports
@@ -3650,11 +3614,10 @@ shNext:
     add si,2
     loop shLoop
 ;
-    pop si
-    pop bx
-    pop ax
+    popad
+    pop es
     ret
-SignalHub   Endp
+StopHub   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3682,6 +3645,27 @@ StopDevice       Proc near
     pop ds
 
 sdHubDone:
+    popad
+    pop ds
+    ret
+StopDevice    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlinkDevice
+;
+;           description:    Unlink USB device
+;
+;       parameters:         DS      USB function selector
+;                           ES      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkDevice       Proc near
+    push ds
+    pushad
+;
     lock or es:usbd_flags,FLAG_DETACHED
     movzx bx,es:usbd_port
     add bx,bx
@@ -3689,7 +3673,7 @@ sdHubDone:
     mov ds:[bx].usb_dev_arr,ax
     xchg ax,ds:[bx].usb_handle_arr
     or ax,ax
-    jz sdDeviceDone
+    jz udDeviceDone
 ;
     push ds
     mov ds,ax
@@ -3700,77 +3684,69 @@ sdHubDone:
     mov cx,15
     mov si,OFFSET usbd_in_pipe_arr
 
-sdInLoop:
+udInLoop:
     mov bx,es:[si]
     or bx,bx
-    jz sdInNext
+    jz udInNext
 ;
     push es
     mov es,bx
     xor bx,bx
     xchg bx,es:usbdp_wait
     or bx,bx
-    jz sdInPop
+    jz udInPop
 ;
     mov es,bx
     SignalWait
 
-sdInPop:
+udInPop:
     pop es
 
-sdInNext:
+udInNext:
     add si,2
-    loop sdInLoop
+    loop udInLoop
 ;
     mov cx,15
     mov si,OFFSET usbd_out_pipe_arr
 
-sdOutLoop:
+udOutLoop:
     mov bx,es:[si]
     or bx,bx
-    jz sdOutNext
+    jz udOutNext
 ;
     push es
     mov es,bx
     xor bx,bx
     xchg bx,es:usbdp_wait
     or bx,bx
-    jz sdOutPop
+    jz udOutPop
 ;
     mov es,bx
     SignalWait
 
-sdOutPop:
+udOutPop:
     pop es
 
-sdOutNext:
+udOutNext:
     add si,2
-    loop sdOutLoop
+    loop udOutLoop
 ;
     lock sub ds:udd_ref_count,1
     pop ds
-    jnz sdDeviceDone
+    jnz udDeviceDone
 ;
     push es
     mov es,ax
     FreeMem
     pop es
 
-sdDeviceDone:
-    mov ax,es:usbd_my_hub
-    or ax,ax
-    jz sdDone
+udDeviceDone:
+    call fword ptr ds:unlink_proc
 ;
-    push ds
-    mov ds,ax
-    call SignalHub
-    pop ds
-
-sdDone:
     popad
     pop ds
     ret
-StopDevice    Endp
+UnlinkDevice    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4061,32 +4037,20 @@ uaDisableDev:
     call fword ptr ds:disable_device_proc
 
 uaDetachLocked:
-    mov ax,es:usbd_parent_hub
-    or ax,ax
-    jz uaStop
-;
-    push ds
-    mov ds,ax
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    pop ds
-    jnz uaStopped
-
-uaStop:
     call StopDevice
-
-uaStopped:
     call fword ptr ds:unlock_proc
-    call fword ptr ds:unlink_proc
 
 uaWaitExit:
     call GetActivePorts
     or ax,ax
-    jz uaNotify
+    jz uaUnlink
 ;
     WaitForSignal
     jmp uaWaitExit
 
-uaNotify:
+uaUnlink:
+    call UnlinkDevice
+;
     test es:usbd_flags,FLAG_ATTACHED
     jz uaNotified
 ;
