@@ -1381,19 +1381,12 @@ UnlinkIntrQh    PROC near
     cmp edx,edi
     jne uiqSearch
 ;
-    mov eax,fs:[edx].qh_link_va
-    or eax,eax
-    jnz uiqFirst
-;
     mov fs:[edx].qh_current_qtd,0
     mov fs:[edx].qh_next_qtd,1
     mov fs:[edx].qh_alt_qtd,1
     mov fs:[edx].qh_status,0
     mov fs:[edx].qh_adress,80h
     jmp uiqUpdate
-
-uiqFirst:
-    int 3
         
 uiqSearch:    
     or edi,edi
