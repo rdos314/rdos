@@ -219,21 +219,6 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UnlinkHub
-;
-;       DESCRIPTION:    Unlink hub
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkHub   Proc far
-    ret
-UnlinkHub   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ResetPort
 ;
 ;       DESCRIPTION:    Reset port
@@ -1489,9 +1474,6 @@ tpClosed:
     mov ds:hub_port_thread,0
     mov bx,ds:hub_status_thread
     Signal
-;
-    mov bx,ds:hub_detach
-    Signal
 
 tpFail:
     TerminateThread
@@ -1584,7 +1566,6 @@ usb_hub_status:
     mov es,ebx
 ;
     GetThread
-    mov ds:hub_detach,0
     mov ds:hub_status_thread,ax
     and ds:hub_flags,NOT FLAG_HUB_DISCONNECT
 ;
@@ -1702,8 +1683,6 @@ tsPortDone:
     call CloseHub
 ;
     mov ds:hub_status_thread,0
-    mov bx,ds:hub_detach
-    Signal
 
 tsFail:
     TerminateThread
@@ -2128,7 +2107,6 @@ uaNotDead:
     mov es:hub_controller,bx
     mov es:hub_port,al
     mov es:hub_intr,0
-    mov es:hub_detach,0
     mov es:hub_flags,0
     mov es:hub_status_thread,0
     mov es:hub_port_thread,0
@@ -2266,28 +2244,8 @@ udCheckLoop:
     cmp al,es:hub_port
     jne udCheckNext
 ;
-    GetThread
-    mov es:hub_detach,ax
-;
     or es:hub_flags,FLAG_HUB_DISCONNECT
 ;
-    mov bx,es:hub_status_thread
-    or bx,bx
-    jz udStatusOk
-;
-    mov ecx,10
-
-udStatusSignal:
-    Signal
-;
-    WaitForSignal
-    mov bx,es:hub_status_thread
-    or bx,bx
-    jz udStatusOk
-;
-    loop udStatusSignal
-
-udStatusOk:
     EnterSection ds:hub_list_section
     mov di,ds:hub_dead_list
     or di,di

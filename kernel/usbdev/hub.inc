@@ -52,7 +52,6 @@ hub_next                DW ?
 hub_server_thread       DW ?
 hub_status_thread       DW ?
 hub_port_thread         DW ?
-hub_detach              DW ?
 
 hub_vendor              DW ?
 hub_product             DW ?
