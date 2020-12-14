@@ -194,6 +194,67 @@ UhciInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           uhc_timer
+;
+;           DESCRIPTION:    Port timer
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uhc_timer  Proc far
+    push edx
+    push eax
+;    
+    xor si,si
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov cx,ds:UhciCount 
+    mov bx,OFFSET UhciFunc
+
+utLoop:
+    push ds
+    mov ds,[bx]
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+;
+    in ax,dx    
+    and al,0Fh
+    jz utNext
+;
+    or ds:uhc_status,ax
+    out dx,ax
+;
+    push bx
+    mov bx,ds:uhc_thread
+    Signal
+    pop bx
+
+utNext:
+    pop ds
+    add bx,2
+    loop utLoop
+;
+    pop eax   
+    pop edx
+;    
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov edi,OFFSET uhc_timer
+    StartTimer
+    retf32
+uhc_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitIntrQh
 ;
 ;       DESCRIPTION:    Initialize a queue header in interrupt list
@@ -1589,6 +1650,7 @@ sciStatusOut:
     mov fs:[esi].utd_va_link,0
 ;
     mov eax,es:dev_utd_control
+    or eax,01000000h
     mov fs:[esi].utd_control,eax
 ;
     mov eax,0FFE80000h
@@ -1790,6 +1852,7 @@ scoStatusIn:
     mov fs:[edi].utd_va_link,0
 ;
     mov eax,es:dev_utd_control
+    or eax,01000000h
     mov fs:[edi].utd_control,eax
 ;
     mov eax,0FFE80000h
@@ -2441,40 +2504,6 @@ InitFunction    Proc near
     WritePciWord   
     
 ifNotLegacy:    
-    mov bx,ds:uhc_pci_bus_dev
-    mov ch,ds:uhc_pci_func
-    GetPciMsi
-    jc ifIrq
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc ifIrq    
-;
-    SetupPciMsi
-;    
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET UhciInt
-    RequestMsiHandler
-    jmp ifIntDone
-
-ifIrq:
-    mov ds:uhc_irq,0
-    GetPciIrqNr
-    jc ifIrqFail
-;    
-    mov ds:uhc_irq,al
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET UhciInt
-    RequestIrqHandler
-    jmp ifIntDone
-
-ifIrqFail:
 
 ifIntDone:
     mov si,OFFSET uhci_tab
@@ -2514,7 +2543,7 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-    mov ax,0Fh
+    xor ax,ax
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -2780,6 +2809,14 @@ uhci_func_loop:
     add bx,2
     loop uhci_func_loop
 ;    
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov edi,OFFSET uhc_timer
+    StartTimer
 
 uhci_handle_loop:
     mov ax,250
