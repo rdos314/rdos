@@ -49,26 +49,6 @@ SofReg = 12
 PortscReg1 = 16
 PortscReg2 = 18
 
-usb_pipe_struc      STRUC
-
-usbp_dev_sel        DW ?
-usbp_address        DB ?
-usbp_endpoint       DB ?
-usbp_seq            DB ?
-usbp_mode           DB ?
-usbp_dir            DB ?
-usbp_speed          DB ?
-usbp_maxlen         DW ?
-usbp_section        section_typ <>
-usbp_hub_sel        DW ?
-usbp_hub_port       DW ?
-usbp_signal         DW ?
-usbp_wait           DW ?
-usbp_buf_size       DW ?
-usbp_buf_sel        DW ?
-
-usb_pipe_struc   ENDS
-
 ; this structure should be smaller than or equal to one page (4k)
 
 int_struc   STRUC
@@ -80,6 +60,7 @@ int_8_qh        DB 8 * 32 DUP(?)
 int_4_qh        DB 4 * 32 DUP(?)
 int_2_qh        DB 2 * 32 DUP(?)
 int_1_qh        DB 1 * 32 DUP(?)
+int_per_td      DB 32 DUP(?)
 
 int_struc   ENDS
 
@@ -102,11 +83,11 @@ uhc_period_td    DD ?
 uhc_io_base      DW ?
 
 uhc_pipe_list    DW ?
-uhc_spinlock     spinlock_typ <>
 uhc_section      section_typ <>
 
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
+uhc_irq          DB ?
 
 uhc_64_cnt       DB 64 DUP(?)
 uhc_32_cnt       DB 32 DUP(?)
@@ -131,24 +112,6 @@ dev_curr_address DB ?
 
 uhci_dev_sel    ENDS
 
-USP_FLAG_TRANSFER_PENDING   = 1
-USP_FLAG_TRANSFER_OK    = 2
-USP_FLAG_SINGLE             = 4
-
-uhci_pipe   STRUC
-
-usp_pipe_base       usb_pipe_struc <>
-usp_qh          DD ?
-usp_intr_ptr    DW ?
-usp_intr_cnt    DW ?
-usp_prev        DW ?
-usp_next        DW ?
-usp_data_size       DW ?
-usp_setup_linear    DD ?
-usp_flags       DB ?
-usp_done        DB ?
-
-uhci_pipe   ENDS
 
 ; this structure is always allocated as 32 bytes!
 
@@ -160,7 +123,6 @@ utd_host    DD ?
 utd_buf     DD ?
 
 utd_va_link DD ?
-utd_phys    DD ?
 
 uhci_td ENDS
 
@@ -180,11 +142,6 @@ uqh_phys    DD ?
 uhci_qh ENDS
 
 data    SEGMENT byte public 'DATA'
-
-UhciUsedBlocks  DD ?
-UhciCloseCount  DD ?
-UhciList32      DD ?
-UhciSection     section_typ <>
 
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
@@ -207,388 +164,46 @@ ELSE
     .386p
 ENDIF
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdatePipeList
-;
-;           DESCRIPTION:    Update pipe list
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePipeList  Proc near
-    push ax
-
-uplLoop:
-    RequestSpinlock ds:uhc_spinlock
-    mov ax,ds:uhc_pipe_list
-    or ax,ax
-    jz uplDone
-;
-    push es
-    push fs
-    push ebx
-    push dx
-    push di
-;
-    mov di,ax
-    mov fs,ax
-;
-    mov ax,flat_sel
-    mov es,ax
-
-uplElemLoop:
-    mov edx,fs:usp_qh
-    or edx,edx
-    jz uplNext
-;
-    mov ebx,es:[edx].uqh_va_elem
-    or ebx,ebx
-    jz uplNext
-;
-    test fs:usp_flags, USP_FLAG_SINGLE
-    jz uplMulti
-
-uplSingle:
-    mov eax,es:[edx].uqh_elem
-    and al,0F0h
-    cmp eax,es:[ebx].utd_phys
-    jz uplNext
-    jmp uplSignal
-
-uplMulti:    
-    test byte ptr es:[edx].uqh_elem,1
-    jz uplNext
-
-uplSignal:  
-    mov al,1
-    xchg al,fs:usp_done
-;
-    cmp al,1
-    je uplNext
-;
-    mov bx,fs:usbp_signal
-    or bx,bx
-    jz uplSignalDone
-;
-    ReleaseSpinlock ds:uhc_spinlock    
-    Signal
-;
-    mov bx,fs:usbp_wait
-    or bx,bx
-    jz uplRetry
-;
-    mov es,bx
-    SignalWait
-    jmp uplRetry
-
-uplSignalDone:
-    mov bx,fs:usbp_wait
-    or bx,bx
-    jz uplNext
-;
-    ReleaseSpinlock ds:uhc_spinlock    
-    mov es,bx
-    SignalWait
-
-uplRetry:
-    pop di
-    pop dx
-    pop ebx
-    pop fs
-    pop es    
-    jmp uplLoop
-
-uplNext:    
-    mov ax,fs:usp_next
-    mov fs,ax
-    cmp ax,di
-    jne uplElemLoop
-;
-    pop di
-    pop dx
-    pop ebx
-    pop fs
-    pop es    
-
-uplDone:    
-    ReleaseSpinlock ds:uhc_spinlock
-    pop ax
-    ret
-UpdatePipeList  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           port_timer
+;           NAME:           UhciInt
 ;
-;           DESCRIPTION:    Port timer
+;           DESCRIPTION:    UHCI interrupt
 ;
-;       PARAMETERS:     
+;       PARAMETERS:     DS      Register selector
 ;
 ;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-port_timer  Proc far
-    push edx
-    push eax
-;    
-    xor si,si
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov cx,ds:UhciCount 
-    mov bx,OFFSET UhciFunc
-
-timer_func_loop:
-    push ds
-    mov ds,[bx]
-;
-    mov dx,ds:uhc_io_base
-    add dx,UsbStatusReg
-;
-    in ax,dx    
-    or ds:uhc_status,ax
-    out dx,ax
-;
-    test al,20h
-    jz tNonFatal
-;
+UhciInt Proc far
     int 3
-
-tNonFatal:
-    call UpdatePipeList
-;
-    pop ds
-    add bx,2
-    loop timer_func_loop
-;
-    pop eax   
-    pop edx
-;    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET port_timer
-    StartTimer
     retf32
-port_timer  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateBlock32
-;
-;           DESCRIPTION:    Allocate 32-byte block with page-alignment
-;
-;       PARAMETERS:     ES      Flat sel
-;
-;           RETURNS:        EDX         Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateBlock32 PROC near
-    push ds
-    push eax
-;
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:UhciSection
-    inc ds:UhciUsedBlocks
-    mov edx,ds:UhciList32
-    or edx,edx
-    jnz allocate_block32_done
-;
-    push ecx    
-    mov eax,1000h
-    AllocateBigLinear
-;    
-    push ebx
-    AllocatePhysical32
-    or al,67h
-    SetPageEntry
-    pop ebx
-;    
-    mov ecx,32
-    mov ds:UhciList32,edx
-    
-allocate_block32_loop:
-    mov eax,edx
-    add eax,ecx
-    mov es:[edx],eax
-    mov edx,eax
-    test dx,0FFFh
-    jnz allocate_block32_loop
-;
-    sub edx,ecx
-    mov dword ptr es:[edx],0
-    mov edx,ds:UhciList32
-    pop ecx
-
-allocate_block32_done:
-    mov eax,es:[edx]
-    mov ds:UhciList32,eax
-    LeaveSection ds:UhciSection
-;
-    pop eax
-    pop ds
-    ret
-AllocateBlock32 ENDP
-
+UhciInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeBlock32
+;       NAME:           InitIntrQh
 ;
-;           DESCRIPTION:    Free 32-byte block
+;       DESCRIPTION:    Initialize a queue header in interrupt list
 ;
-;       PARAMETERS:     ES      Flat sel
-;
-;           PARAMETERS:         EDX         Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeBlock32     PROC near
-    push ds
-    push eax
-;    
-    mov ax,SEG data
-    mov ds,ax
-;    
-    EnterSection ds:UhciSection
-    dec ds:UhciUsedBlocks
-    mov eax,ds:UhciList32
-    mov es:[edx],eax
-    mov ds:UhciList32,edx
-    LeaveSection ds:UhciSection
-;       
-    pop eax
-    pop ds
-    ret
-FreeBlock32     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertPipe
-;
-;           DESCRIPTION:    Insert pipe into function pipe-list
-;
-;       PARAMETERS:     DS      Function
-;               FS      Pipe
+;       PARAMETERS:     FS      Flat sel
+;                       EDX         QH
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertPipe  Proc near
-    push di
-    RequestSpinlock ds:uhc_spinlock
-    mov di,ds:uhc_pipe_list
-    or di,di
-    je ipEmpty
-;       
-    push ds
-    push si
-    mov ds,di
-    mov si,ds:usp_prev
-    mov ds:usp_prev,fs
-    mov ds,si
-    mov ds:usp_next,fs
-    mov fs:usp_next,di
-    mov fs:usp_prev,si
-    pop si
-    pop ds
-    pop di
-    jmp ipDone
-    
-ipEmpty:
-    mov fs:usp_next,fs
-    mov fs:usp_prev,fs
-    pop di
-    mov ds:uhc_pipe_list,fs
-
-ipDone:
-    ReleaseSpinlock ds:uhc_spinlock
-    mov fs:usp_done,0
-    ret
-InsertPipe  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RemovePipe
-;
-;           DESCRIPTION:    Remove pipe from function pipe-list
-;
-;       PARAMETERS:     DS      Function
-;               FS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemovePipe  Proc near
-    push si
-    push di
-;       
-    RequestSpinlock ds:uhc_spinlock
-    push ds
-    mov si,fs:usp_prev
-    mov di,fs:usp_next
-    mov ds,di
-    mov ds:usp_prev,si
-    mov ds,si
-    mov ds:usp_next,di
-    pop ds
-;
-    mov si,fs
-    cmp si,ds:uhc_pipe_list
-    jne rppDone
-;
-    cmp si,di
-    je rppEmpty
-;
-    mov ds:uhc_pipe_list,di
-    jmp rppDone    
-
-rppEmpty:
-    mov ds:uhc_pipe_list,0    
-
-rppDone:
-    ReleaseSpinlock ds:uhc_spinlock
-    pop di
-    pop si
-    ret
-RemovePipe  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InitQh
-;
-;           DESCRIPTION:    Initialize a queue header
-;
-;       PARAMETERS:     ES      Flat sel
-;               EDX         QH
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitQh  PROC near
+InitIntrQh  PROC near
     push eax
     push cx
 ;    
-    mov es:[edx].uqh_link,1
-    mov es:[edx].uqh_va_link,0
-    mov es:[edx].uqh_elem,1
-    mov es:[edx].uqh_va_elem,0
-;    
+    mov fs:[edx].uqh_link,1
+    mov fs:[edx].uqh_va_link,0
+    mov fs:[edx].uqh_elem,1
+    mov fs:[edx].uqh_va_elem,0
+;
     push ebx
     GetPageEntry
     or ebx,ebx
@@ -603,597 +218,27 @@ iq32:
     mov cx,dx
     and cx,0FFFh
     or ax,cx
-    mov es:[edx].uqh_phys,eax
+    mov fs:[edx].uqh_phys,eax
 ;
     pop cx   
     pop eax
     ret
-InitQh  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateQh
-;
-;           DESCRIPTION:    Allocate & initialize a queue header
-;
-;       PARAMETERS:     ES      Flat sel
-;
-;           PARAMETERS:         EDX         QH
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateQh      PROC near
-    push eax
-    push cx
-;    
-    call AllocateBlock32
-    mov es:[edx].uqh_link,1
-    mov es:[edx].uqh_va_link,0
-    mov es:[edx].uqh_elem,1
-    mov es:[edx].uqh_va_elem,0
-;
-    push ebx
-    GetPageEntry
-    or ebx,ebx
-    jz aq32
-;
-    int 3
-
-aq32:
-    pop ebx
-;
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-    mov es:[edx].uqh_phys,eax
-;
-    pop cx   
-    pop eax
-    ret
-AllocateQh  ENDP
-
+InitIntrQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateTd
+;       NAME:           CreateIntrQueue
 ;
-;           DESCRIPTION:    Allocate & initialize a TD block
-;
-;       PARAMETERS:     DS      Function selector
-;               ES      Flat sel
-;               FS      Pipe
-;               EDI     Data buffer
-;               CX      Size of data
-;
-;           PARAMETERS:         EDX         TD
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateTd      PROC near
-    push eax
-    push ecx
-;    
-    call AllocateBlock32
-    mov es:[edx].utd_link,1
-    mov es:[edx].utd_va_link,0
-    mov es:[edx].utd_control, 19000000h
-    cmp fs:usbp_speed,0
-    jnz atSpeedOk
-;
-    or es:[edx].utd_control, 4000000h
-    
-atSpeedOk:
-    dec cx
-    and ecx,7FFh    
-    shl ecx,21
-    movzx eax,fs:usbp_endpoint
-    shl eax,15
-    or ecx,eax
-    or ch,fs:usbp_address
-    xor cl,cl
-;    
-    mov al,fs:usbp_seq
-    or al,al
-    jz atIncSeq
-;
-    or ecx,80000h 
-    xor al,al
-    jmp atSaveSeq
-
-atIncSeq:
-    inc al
-
-atSaveSeq:    
-    mov fs:usbp_seq,al   
-    mov es:[edx].utd_host,ecx
-;    
-    push ebx
-    GetPageEntry
-    or ebx,ebx
-    jz at32
-;
-    int 3    
-
-at32:    
-    pop ebx
-;
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-    mov es:[edx].utd_phys,eax
-;
-    xor eax,eax
-    or edi,edi
-    jz atSaveBuf
-;    
-    push edx
-    mov edx,edi
-;    
-    push ebx
-    GetPageEntry
-    or ebx,ebx
-    jz atd32
-;
-    int 3    
-
-atd32:    
-    pop ebx
-;    
-    and ax,0F000h
-    mov cx,dx
-    and cx,0FFFh
-    or ax,cx
-    pop edx
-
-atSaveBuf:
-    mov es:[edx].utd_buf,eax
-;    
-    pop ecx   
-    pop eax
-    ret
-AllocateTd  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertElem
-;
-;           DESCRIPTION:    Insert TD into vertical QH
-;
-;       PARAMETERS:     ES      Flat sel
-;               EDX     QH
-;               EAX     TD
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertElem      PROC near
-    push bx
-    push ecx
-    push edx
-;
-    mov ecx,es:[edx].uqh_va_elem
-    or ecx,ecx
-    jz ieEmpty
-
-ieTraverse:
-    mov edx,ecx
-    mov ecx,es:[edx].utd_va_link
-    or ecx,ecx
-    jnz ieTraverse
-;
-    mov cl,byte ptr es:[eax].utd_link
-    and cl,0E4h
-    or cl,1
-    mov byte ptr es:[eax].utd_link,cl
-;
-    mov ecx,es:[eax].utd_phys
-    mov bl,byte ptr es:[edx].utd_link
-    and bl,4
-    and cl,0E0h
-    or cl,bl
-    mov es:[edx].utd_link,ecx
-    mov es:[edx].utd_va_link,eax
-    jmp ieDone
-    
-ieEmpty:
-    mov cl,byte ptr es:[eax].utd_link
-    and cl,0E4h
-    or cl,1
-    mov byte ptr es:[eax].utd_link,cl
-    mov es:[eax].utd_va_link,0
-;    
-    mov es:[edx].uqh_va_elem,eax
-
-ieDone:
-    pop edx
-    pop ecx
-    pop bx
-    ret
-InsertElem  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertTdFirst
-;
-;           DESCRIPTION:    Insert QH first into TD list
-;
-;       PARAMETERS:     ES      Flat sel
-;               EDX     TD to insert into
-;               EAX     QH to link
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertTdFirst   PROC near
-    push ecx
-;
-    mov ecx,es:[edx].utd_va_link
-    or ecx,ecx
-    jz itdEmpty
-;
-    mov es:[eax].uqh_va_link,ecx
-    mov ecx,es:[edx].utd_link
-    mov es:[eax].uqh_link,ecx
-;
-    mov es:[edx].utd_va_link,eax
-    mov ecx,es:[eax].uqh_phys
-    or cl,2
-    mov es:[edx].utd_link,ecx    
-    jmp itdDone
-    
-itdEmpty:
-    mov es:[eax].uqh_va_link,0
-    mov es:[eax].uqh_link,1
-    mov es:[edx].utd_va_link,eax
-    mov ecx,es:[eax].uqh_phys
-    or cl,2
-    mov es:[edx].utd_link,ecx
-
-itdDone:
-    pop ecx
-    ret
-InsertTdFirst  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertTdLast
-;
-;           DESCRIPTION:    Insert QH last into TD list
-;
-;       PARAMETERS:     ES      Flat sel
-;               EDX     TD to insert into
-;               EAX     QH to link
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertTdLast    PROC near
-    push edx
-    push ecx
-;
-    mov es:[eax].uqh_va_link,0
-    mov es:[eax].uqh_link,1
-;
-    mov edx,es:[edx].utd_va_link    
-
-itlLoop:
-    mov ecx,es:[edx].uqh_va_link
-    or ecx,ecx
-    jz itlDo
-;
-    mov edx,ecx
-    jmp itlLoop
-
-itlDo:
-    mov ecx,es:[eax].uqh_phys
-    or cl,2
-    mov es:[edx].uqh_link,ecx
-    mov es:[edx].uqh_va_link,eax
-;    
-    pop edx
-    pop ecx
-    ret
-InsertTdLast  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Remove
-;
-;           DESCRIPTION:    Remove QH from TD list
-;
-;       PARAMETERS:     ES      Flat sel
-;               EDX     TD list
-;               EAX     QH to delink
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveTd    PROC near
-    push ebx
-    push ecx
-    push edx
-;
-    mov ecx,es:[edx].utd_va_link
-    cmp ecx,eax
-    jne rtdSearch
-;
-    mov ecx,es:[eax].uqh_va_link
-    or ecx,ecx
-    jz rtdEmptyList
-;
-    mov es:[edx].utd_va_link,ecx
-    mov ecx,es:[eax].uqh_link
-    mov es:[edx].utd_link,ecx
-    jmp rtdDone
-
-rtdEmptyList:
-    mov es:[edx].utd_va_link,0
-    mov es:[edx].utd_link,1    
-    jmp rtdDone
-
-rtdSearch:
-    or ecx,ecx
-    jz rtdDone
-;
-    cmp eax,ecx
-    je rtdRemove
-;
-    mov edx,ecx
-    mov ecx,es:[edx].uqh_va_link
-    jmp rtdSearch
-
-rtdRemove:
-    mov ecx,es:[eax].uqh_va_link
-    or ecx,ecx
-    jz rtdEmpty
-;   
-    mov es:[edx].uqh_va_link,ecx
-    mov ecx,es:[eax].uqh_link
-    mov es:[edx].uqh_link,ecx
-    jmp rtdDone
-
-rtdEmpty:
-    mov es:[edx].uqh_va_link,0
-    mov es:[edx].uqh_link,1
-
-rtdDone:
-    pop edx
-    pop ecx
-    pop ebx
-    ret
-RemoveTd  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertIntr
-;
-;           DESCRIPTION:    Insert QH into interrupt list
-;
-;       PARAMETERS:     ES      Flat sel
-;               GS:DI   Intr list
-;               EAX     QH to link
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertIntr      PROC near
-    push ecx
-    push edx
-;    
-    mov es:[eax].uqh_va_link,0
-    mov es:[eax].uqh_link,1
-;
-    mov edx,gs:[di].uqh_va_elem
-    or edx,edx
-    jz iiEmpty
-
-iiLastLoop:
-    mov ecx,es:[edx].uqh_va_link
-    or ecx,ecx
-    jz iiDoLast
-;
-    mov edx,ecx
-    jmp iiLastLoop
-
-iiDoLast:
-    mov ecx,es:[eax].uqh_phys
-    or cl,2
-    mov es:[edx].uqh_link,ecx
-    mov es:[edx].uqh_va_link,eax
-    jmp iiDone
-
-iiEmpty:
-    mov ecx,es:[eax].uqh_phys
-    or cl,2
-    mov gs:[di].uqh_elem,ecx
-    mov gs:[di].uqh_va_elem,eax
-
-iiDone:    
-    pop edx
-    pop ecx
-    ret
-InsertIntr  Endp
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RemoveIntr
-;
-;           DESCRIPTION:    Remove QH from interrupt list
-;
-;       PARAMETERS:     ES      Flat sel
-;               GS:DI   Intr list
-;               EAX     QH to delink
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveIntr      PROC near
-    push ebx
-    push ecx
-;    
-    mov ecx,gs:[di].uqh_va_elem
-    cmp ecx,eax
-    jne riSearch
-;
-    mov ecx,es:[eax].uqh_va_link
-    or ecx,ecx
-    jz riEmptyList
-;
-    mov gs:[di].uqh_va_elem,ecx
-    mov ecx,es:[eax].uqh_link
-    mov gs:[di].uqh_elem,ecx
-    jmp riDone
-
-riEmptyList:
-    mov gs:[di].uqh_va_elem,0
-    mov gs:[di].uqh_elem,1
-    jmp riDone
-
-riSearch:
-    or ecx,ecx
-    jz riDone
-;
-    cmp eax,ecx
-    je riRemove
-;
-    mov edx,ecx
-    mov ecx,es:[edx].uqh_va_link
-    jmp riSearch
-
-riRemove:
-    mov ecx,es:[eax].uqh_va_link
-    or ecx,ecx
-    jz riEmpty
-;   
-    mov es:[edx].uqh_va_link,ecx
-    mov ecx,es:[eax].uqh_link
-    mov es:[edx].uqh_link,ecx
-    jmp riDone
-
-riEmpty:
-    mov es:[edx].uqh_va_link,0
-    mov es:[edx].uqh_link,1
-
-riDone:
-    pop ecx
-    pop ebx
-    ret
-RemoveIntr  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeVaElem
-;
-;           DESCRIPTION:    Free all Tds in vertical va-linked list
-;
-;       PARAMETERS:     ES      Flat sel
-;               EDX     QH
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeVaElem      PROC near
-    push ebx
-    push ecx
-    push edx
-    push esi
-;
-    mov es:[edx].uqh_elem,1
-    xor ebx,ebx
-    xchg ebx,es:[edx].uqh_va_elem
-    mov edx,ebx
-
-fveLoop:
-    or edx,edx
-    jz fveDone
-;
-    mov esi,es:[edx].utd_va_link
-    call FreeBlock32
-    mov edx,esi
-    jmp fveLoop
-        
-fveDone:    
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    ret
-FreeVaElem  Endp
-
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetQhDataSize
-;
-;           DESCRIPTION:    Get data size from transfer
-;
-;       PARAMETERS:     EDX     Qh
-;
-;       RETURNS:    CX      Size of data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetQhDataSize   PROC near
-    push ds
-    push eax
-    push edx
-;    
-    xor cx,cx
-    mov ax,flat_sel
-    mov ds,ax
-    mov edx,[edx].uqh_va_elem
-
-gqdLoop:
-    or edx,edx
-    jz gqdDone
-;
-    mov al,byte ptr [edx].utd_host
-    cmp al,PID_IN
-    jne gqdNext
-;
-    mov ax,word ptr [edx].utd_control
-    inc ax
-    and ax,7FFh
-    add cx,ax
-
-gqdNext:
-    mov edx,[edx].utd_va_link
-    jmp gqdLoop
-        
-gqdDone:    
-    pop edx
-    pop eax
-    pop ds
-    ret
-GetQhDataSize  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateIntrQueue
-;
-;           DESCRIPTION:    Create interrupt queue
+;       DESCRIPTION:    Create interrupt queue
 ;
 ;       PARAMETERS:     DS      Function sel
-;               ES      Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntrQueue PROC near
-    push es
     push fs
+    push gs
     push eax
     push bx
     push cx
@@ -1211,14 +256,14 @@ CreateIntrQueue PROC near
     mov ds:uhc_int_sel,bx
 ;
     mov ax,flat_sel
-    mov es,ax
+    mov fs,ax
 ;
     mov cx,64
     mov edx,OFFSET int_64_qh
     add edx,ds:uhc_int_linear
 
 ciQhLoop:
-    call InitQh
+    call InitIntrQh
     add edx,32
     add bx,4
     loop ciQhLoop
@@ -1228,7 +273,7 @@ ciQhLoop:
     and ax,0F000h
     mov ds:uhc_int_phys,eax    
 ;
-    mov fs,ds:uhc_hw_sel
+    mov gs,ds:uhc_hw_sel
     mov cx,16
     xor bx,bx
 
@@ -1240,7 +285,7 @@ ciHwyLoop:
     or al,2
 
 ciHwiLoop:
-    mov fs:[bx],eax
+    mov gs:[bx],eax
     add eax,32
     add bx,4
     loop ciHwiLoop
@@ -1248,7 +293,6 @@ ciHwiLoop:
     pop cx
     loop ciHwyLoop
 ;
-    mov fs,ds:uhc_int_sel
     mov cx,64
     mov bx,OFFSET int_64_qh
     mov eax,OFFSET int_32_qh
@@ -1258,11 +302,11 @@ ciHwiLoop:
     or al,2
 
 ci32Loop:
-    call InitQh
+    call InitIntrQh
     
 ci32Link:
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -1283,11 +327,11 @@ ci32Next:
     or al,2
 
 ci16Loop:
-    call InitQh
+    call InitIntrQh
     
 ci16Link:
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -1308,11 +352,11 @@ ci16Next:
     or al,2
 
 ci8Loop:
-    call InitQh
+    call InitIntrQh
     
 ci8Link:
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -1333,11 +377,11 @@ ci8Next:
     or al,2
 
 ci4Loop:
-    call InitQh
+    call InitIntrQh
     
 ci4Link:
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -1358,11 +402,11 @@ ci4Next:
     or al,2
 
 ci2Loop:
-    call InitQh
+    call InitIntrQh
     
 ci2Link:
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -1383,17 +427,27 @@ ci2Next:
     or al,2
 
 ci1Loop:
-    call InitQh
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    call InitIntrQh
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
     add bx,32
     loop ci1Loop
 ;
+    mov eax,OFFSET int_per_td
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    mov ds:uhc_period_td,edx
+;
+    mov fs:[edx].utd_link,1
+    mov fs:[edx].utd_va_link,0
+    mov fs:[edx].utd_control, 18000000h
+    mov fs:[edx].utd_host,0
+    mov fs:[edx].utd_buf,0
+;    
     mov bx,OFFSET int_1_qh
-    mov edx,ds:uhc_period_td
-    mov eax,es:[edx].utd_phys
-    mov fs:[bx].uqh_link,eax
-    mov fs:[bx].uqh_va_link,edx
+    mov gs:[bx].uqh_link,eax
+    mov gs:[bx].uqh_va_link,edx
 ;   
     mov cx,64+32+16+8+4+2+1
     mov bx,OFFSET uhc_64_cnt
@@ -1408,51 +462,347 @@ ciInitCount:
     pop cx
     pop bx
     pop eax
+    pop gs
     pop fs
-    pop es
     ret
 CreateIntrQueue Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InsertTdFirst
+;
+;       DESCRIPTION:    Insert QH first into TD list
+;
+;       PARAMETERS:     FS      Flat sel
+;                       EDX     TD to insert into
+;                       EAX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertTdFirst   PROC near
+    push ecx
+;
+    mov ecx,fs:[edx].utd_va_link
+    or ecx,ecx
+    jz itdEmpty
+;
+    mov fs:[eax].uqh_va_link,ecx
+    mov ecx,fs:[edx].utd_link
+    mov fs:[eax].uqh_link,ecx
+;
+    mov fs:[edx].utd_va_link,eax
+    mov ecx,fs:[eax].uqh_phys
+    or cl,2
+    mov fs:[edx].utd_link,ecx    
+    jmp itdDone
+    
+itdEmpty:
+    mov fs:[eax].uqh_va_link,0
+    mov fs:[eax].uqh_link,1
+    mov fs:[edx].utd_va_link,eax
+    mov ecx,fs:[eax].uqh_phys
+    or cl,2
+    mov fs:[edx].utd_link,ecx
+
+itdDone:
+    pop ecx
+    ret
+InsertTdFirst  ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreatePeriodTd
+;       NAME:           InsertTdLast
 ;
-;           DESCRIPTION:    Create periodic interrupt td
+;       DESCRIPTION:    Insert QH last into TD list
 ;
-;       PARAMETERS:     DS      Function sel
-;               ES      Flat sel
+;       PARAMETERS:     FS      Flat sel
+;                       EDX     TD to insert into
+;                       EAX     QH to link
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreatePeriodTd  PROC near
+InsertTdLast    PROC near
+    push edx
+    push ecx
+;
+    mov fs:[eax].uqh_va_link,0
+    mov fs:[eax].uqh_link,1
+;
+    mov edx,fs:[edx].utd_va_link    
+
+itlLoop:
+    mov ecx,fs:[edx].uqh_va_link
+    or ecx,ecx
+    jz itlDo
+;
+    mov edx,ecx
+    jmp itlLoop
+
+itlDo:
+    mov ecx,fs:[eax].uqh_phys
+    or cl,2
+    mov fs:[edx].uqh_link,ecx
+    mov fs:[edx].uqh_va_link,eax
+;    
+    pop edx
+    pop ecx
+    ret
+InsertTdLast  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Remove
+;
+;       DESCRIPTION:    Remove QH from TD list
+;
+;       PARAMETERS:     FS      Flat sel
+;                       EDX     TD list
+;                       EAX     QH to delink
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveTd    PROC near
+    push ebx
+    push ecx
+    push edx
+;
+    mov ecx,fs:[edx].utd_va_link
+    cmp ecx,eax
+    jne rtdSearch
+;
+    mov ecx,fs:[eax].uqh_va_link
+    or ecx,ecx
+    jz rtdEmptyList
+;
+    mov fs:[edx].utd_va_link,ecx
+    mov ecx,fs:[eax].uqh_link
+    mov fs:[edx].utd_link,ecx
+    jmp rtdDone
+
+rtdEmptyList:
+    mov fs:[edx].utd_va_link,0
+    mov fs:[edx].utd_link,1    
+    jmp rtdDone
+
+rtdSearch:
+    or ecx,ecx
+    jz rtdDone
+;
+    cmp eax,ecx
+    je rtdRemove
+;
+    mov edx,ecx
+    mov ecx,fs:[edx].uqh_va_link
+    jmp rtdSearch
+
+rtdRemove:
+    mov ecx,fs:[eax].uqh_va_link
+    or ecx,ecx
+    jz rtdEmpty
+;   
+    mov fs:[edx].uqh_va_link,ecx
+    mov ecx,fs:[eax].uqh_link
+    mov fs:[edx].uqh_link,ecx
+    jmp rtdDone
+
+rtdEmpty:
+    mov fs:[edx].uqh_va_link,0
+    mov fs:[edx].uqh_link,1
+
+rtdDone:
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+RemoveTd  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateQh
+;
+;       DESCRIPTION:    Allocate & initialize a QH object
+;
+;       PARAMETERS:     FS      Flat sel
+;                       
+;       RETURNS:        EDX     QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateQh      PROC near
+    push eax
+    push ecx
+;    
+    mov cx,SIZE uhci_qh
+    AllocateMemBlk
+;
+    mov fs:[edx].uqh_link,1
+    mov fs:[edx].uqh_va_link,0
+    mov fs:[edx].uqh_elem,1
+    mov fs:[edx].uqh_va_elem,0
+    mov fs:[edx].uqh_phys,eax
+;
+    pop ecx   
+    pop eax
+    ret
+AllocateQh  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateTd
+;
+;       DESCRIPTION:    Allocate & initialize a TD object
+;
+;       PARAMETERS:     ES      Device sel
+;                       FS      Flat sel
+;                       DL      Pipe #
+;
+;       RETURNS:        EDX     QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTd    Proc near
+    push eax
+    push ecx
+    pop ecx
+    pop eax
+    ret
+AllocateTd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InsertIntr
+;
+;       DESCRIPTION:    Insert QH into interrupt list
+;
+;       PARAMETERS:     FS      Flat sel
+;                       GS:DI   Intr list
+;                       EAX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertIntr      PROC near
+    push ecx
     push edx
 ;    
-    call AllocateTd
-    mov ds:uhc_period_td,edx
-;    
-    call CreateIntrQueue
+    mov fs:[eax].uqh_va_link,0
+    mov fs:[eax].uqh_link,1
 ;
-    pop edx
-    ret
-CreatePeriodTd  Endp
+    mov edx,gs:[di].uqh_va_elem
+    or edx,edx
+    jz iiEmpty
 
+iiLastLoop:
+    mov ecx,fs:[edx].uqh_va_link
+    or ecx,ecx
+    jz iiDoLast
+;
+    mov edx,ecx
+    jmp iiLastLoop
+
+iiDoLast:
+    mov ecx,fs:[eax].uqh_phys
+    or cl,2
+    mov fs:[edx].uqh_link,ecx
+    mov fs:[edx].uqh_va_link,eax
+    jmp iiDone
+
+iiEmpty:
+    mov ecx,fs:[eax].uqh_phys
+    or cl,2
+    mov gs:[di].uqh_elem,ecx
+    mov gs:[di].uqh_va_elem,eax
+
+iiDone:    
+    pop edx
+    pop ecx
+    ret
+InsertIntr  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RemoveIntr
+;
+;       DESCRIPTION:    Remove QH from interrupt list
+;
+;       PARAMETERS:     FS      Flat sel
+;                       GS:DI   Intr list
+;                       EAX     QH to delink
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveIntr      PROC near
+    push ebx
+    push ecx
+;    
+    mov ecx,gs:[di].uqh_va_elem
+    cmp ecx,eax
+    jne riSearch
+;
+    mov ecx,fs:[eax].uqh_va_link
+    or ecx,ecx
+    jz riEmptyList
+;
+    mov gs:[di].uqh_va_elem,ecx
+    mov ecx,fs:[eax].uqh_link
+    mov gs:[di].uqh_elem,ecx
+    jmp riDone
+
+riEmptyList:
+    mov gs:[di].uqh_va_elem,0
+    mov gs:[di].uqh_elem,1
+    jmp riDone
+
+riSearch:
+    or ecx,ecx
+    jz riDone
+;
+    cmp eax,ecx
+    je riRemove
+;
+    mov edx,ecx
+    mov ecx,fs:[edx].uqh_va_link
+    jmp riSearch
+
+riRemove:
+    mov ecx,fs:[eax].uqh_va_link
+    or ecx,ecx
+    jz riEmpty
+;   
+    mov fs:[edx].uqh_va_link,ecx
+    mov ecx,fs:[eax].uqh_link
+    mov fs:[edx].uqh_link,ecx
+    jmp riDone
+
+riEmpty:
+    mov fs:[edx].uqh_va_link,0
+    mov fs:[edx].uqh_link,1
+
+riDone:
+    pop ecx
+    pop ebx
+    ret
+RemoveIntr  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetIntrQh
+;       NAME:           GetIntrQh
 ;
-;           DESCRIPTION:    Get interrupt QH
+;       DESCRIPTION:    Get interrupt QH
 ;
 ;       PARAMETERS:     DS      Function sel
-;               ES      Flat sel
-;               FS      Pipe sel
-;               CL      Interval
+;                       CL      Interval
 ;
-;       RETURNS:    BX      Offset to count entry
-;               DI      Offset to QH list entry to use
+;       RETURNS:        BX      Offset to count entry
+;                       DI      Offset to QH list entry to use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1599,987 +949,237 @@ GetIntrQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateControl
+;       NAME:           CreateControl
 ;
-;           DESCRIPTION:    Create control pipe
+;       DESCRIPTION:    Create control pipe
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device sel
-;
-;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 CreateControl   Proc far
-    push gs
-    pushad
-;
-;
     push fs
     pushad
 ;
     mov ax,flat_sel
     mov fs,ax
-;    
+;
     mov cx,SIZE uhci_td
     AllocateMemBlk
+;
     mov fs:[edx].utd_link,0
     mov fs:[edx].utd_control,0
     mov fs:[edx].utd_host,0
     mov fs:[edx].utd_buf,0
     mov fs:[edx].utd_va_link,0
-    mov fs:[edx].utd_phys,0
-    mov es:dev_control_head,edx
 ;
     mov eax,18800000h
     cmp es:usbd_speed,0
-    jnz cdSpeedOk
+    jnz ccSpeedOk
 ;
     or eax, 4000000h
     
-cdSpeedOk:
+ccSpeedOk:
+    mov es:dev_control_head,edx
     mov es:dev_utd_control,eax
 ;
-    popad
-    pop fs
-;    
-    push es
-    mov ah,es:usbd_speed
-    push ax
-    mov ax,es
-    mov gs,ax
-    mov eax,SIZE uhci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    pop ax
-    mov es:usbp_speed,ah
-;
-    mov eax,1000h
-    AllocateBigLinear
-    AllocatePhysical32
-    mov al,13h
-    SetPageEntry
-    mov es:usp_setup_linear,edx
-;    
-    mov ax,es
-    mov fs,ax
-    mov dx,flat_sel
-    mov es,dx
     call AllocateQh
-    mov fs:usp_qh,edx
+    mov es:dev_control_qh,edx
 ;
     mov edx,ds:uhc_period_td
     or edx,edx
     jnz ccLinkPeriod    
 ;
-    call CreatePeriodTd
+    call CreateIntrQueue
     mov edx,ds:uhc_period_td
 
 ccLinkPeriod:
-    mov eax,fs:usp_qh
-    mov gs:dev_control_qh,eax
+    mov eax,es:dev_control_qh
     call InsertTdFirst
-    call InsertPipe
-;
-    pop es
     mov es:dev_curr_address,0
 ;
     popad
-    pop gs
+    pop fs
     retf32
 CreateControl   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateBulk
+;       NAME:               Block
 ;
-;           DESCRIPTION:    Create bulk pipe
+;       DESCRIPTION:        Block
 ;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       DL      Pipe # (bit 7, IN)
-;                       CX      Max data size
-;
-;       RETURNS:    FS      Pipe selector
+;       PARAMETERS:         DS      Function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateBulk   Proc far
-    push es
-    pushad
-;    
-    mov ah,es:usbd_speed
-    push ax
-    mov eax,SIZE uhci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    pop ax
-    mov es:usbp_speed,ah
-;    
-    mov ax,es
-    mov fs,ax
-    mov dx,flat_sel
-    mov es,dx
-    call AllocateQh
-    mov fs:usp_qh,edx    
-    mov eax,edx
-    mov edx,ds:uhc_period_td
-    call InsertTdLast
-    call InsertPipe
-;
-    popad
-    pop es
+Block   Proc far
+    EnterSection ds:usb_addr_section
     retf32
-CreateBulk   Endp
+Block   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateIntr
+;       NAME:               Unblock
 ;
-;           DESCRIPTION:    Create interrupt pipe
+;       DESCRIPTION:        Unblock
 ;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       AL      Interval
-;                       DL      Pipe # (bit 7, IN)
-;                       CX      Max data size
-;
-;       RETURNS:    FS      Pipe selector
+;       PARAMETERS:         DS      Function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIntr   Proc far
-    push es
-    push gs
-    pushad
-;    
-    mov ah,es:usbd_speed
-    push ax
-    mov eax,SIZE uhci_pipe
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,ax
-    xor al,al
-    rep stosb
-    pop ax
-    mov es:usbp_speed,ah
-    mov cl,al
-;    
-    mov ax,es
-    mov fs,ax
-    mov ax,flat_sel
-    mov es,ax
-;    
-    call AllocateQh
-    mov fs:usp_qh,edx
-;    
-    call GetIntrQh
-    mov fs:usp_intr_ptr,di
-    mov fs:usp_intr_cnt,bx
-    inc byte ptr ds:[bx]
-;    
-    mov gs,ds:uhc_int_sel
-    mov eax,fs:usp_qh
-    call InsertIntr
-    call InsertPipe
-;
-    popad
-    pop gs
-    pop es
+Unblock   Proc far
+    LeaveSection ds:usb_addr_section
     retf32
-CreateIntr  Endp
+Unblock   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddBuffer
+;       NAME:               ResetPort
 ;
-;           DESCRIPTION:    Allocate input/output buffer
+;       DESCRIPTION:        Reset port
 ;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               EDX     QH
-;               CX      Size
-;               ES:EDI  Data
-;               AL      PID
-;             
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddBuffer    Proc near
-    push es
-    pushad
-;    
-    mov ebp,edx
-    movzx ecx,cx    
-    mov si,ax
-    or cx,cx
-    jnz abHasData
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
 ;
-    mov ax,flat_sel
-    mov es,ax
-    xor edi,edi
-    call AllocateTd
-    or byte ptr es:[edx].utd_link,4
-    mov ax,si
-    or byte ptr es:[edx].utd_host,al
-    or es:[edx].utd_control,800000h
-    mov eax,edx
-    mov edx,ebp
-    call InsertElem
-    jmp abDone
-
-abHasData:
-    mov bx,es
-    cmp bx,flat_sel
-    je abLoop
-;    
-    push ecx
-    GetSelectorBaseSize
-    add edx,edi
-    sub ecx,edi
-    mov eax,ecx
-    pop ecx
-    jc abDone  
-;
-    cmp eax,ecx
-    jb abDone
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx    
-
-abLoop:
-    mov ax,1000h
-    mov dx,di
-    and dx,0FFFh
-    sub ax,dx
-    cmp ax,fs:usbp_maxlen
-    jb abMinOk
-;
-    mov ax,fs:usbp_maxlen
-
-abMinOk:
-    cmp ax,cx
-    jae abLast
-;    
-    movzx eax,ax
-    push eax
-    push cx
-    mov cx,ax
-;
-    call AllocateTd
-    mov ax,si
-    or byte ptr es:[edx].utd_link,4
-    or byte ptr es:[edx].utd_host,al
-    or es:[edx].utd_control,800000h
-    mov eax,edx
-    mov edx,ebp
-    call InsertElem       
-;
-    pop cx
-    pop eax
-    add edi,eax
-    sub cx,ax
-    jmp abLoop
-
-abLast:    
-    call AllocateTd
-    mov ax,si
-    or byte ptr es:[edx].utd_link,4
-    or byte ptr es:[edx].utd_host,al
-    or es:[edx].utd_control,800000h
-    mov eax,edx
-    mov edx,ebp
-    call InsertElem       
-    
-abDone:
-    popad
-    pop es
-    ret
-AddBuffer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddOut
-;
-;           DESCRIPTION:    Add out transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
+;       RETURNS:            AL      Speed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddOut    Proc far
-    push edx
-;   
-    mov edx,fs:usp_qh 
-    mov al,PID_OUT
-    call AddBuffer
-;    
-    pop edx
-    retf32
-AddOut    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddIn
-;
-;           DESCRIPTION:    Add in transaction to queue
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               CX      Buffer size
-;               ES:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddIn    Proc far
-    push edx
-;    
-    mov edx,fs:usp_qh 
-    mov al,PID_IN
-    call AddBuffer
-;    
-    pop edx
-    retf32
-AddIn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IssueTransfer
-;
-;           DESCRIPTION:    Issue transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;               EDX     Queue handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueTransfer    Proc far
-    push es
-    push eax
-    push ecx
-    push edx
-;    
-    mov ax,flat_sel
-    mov es,ax    
-    mov edx,fs:usp_qh
-;
-    mov fs:usp_done,0
-    and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
-    or fs:usp_flags, USP_FLAG_TRANSFER_PENDING
-;    
-    mov eax,es:[edx].uqh_va_elem    
-    or eax,eax
-    jz itDone
-;    
-    mov eax,es:[eax].utd_phys
-    mov es:[edx].uqh_elem,eax
-
-itDone:
-    pop edx 
-    pop ecx
-    pop eax
-    pop es
-    retf32
-IssueTransfer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LocalIsTransferDone
-;
-;           DESCRIPTION:    Check if transfer is done
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LocalIsTransferDone   Proc near
-    push es
-    push eax
-    push ebx
-    push edx
-;
-    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
-    jz itdOk
-;    
-;    IsUsbPipeConnected
-    jc itdOk
-;    
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov al,fs:usp_done
-    or al,al
-    jz itdFail
-;    
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je itdControlBulk
-;
-    cmp al,MODE_BULK
-    jne itdOk
-
-itdControlBulk:
-    mov edx,fs:usp_qh
-;
-    test fs:usp_flags, USP_FLAG_SINGLE
-    jz itdMulti
-
-itdSingle:
-    mov eax,es:[edx].uqh_va_elem
-    test es:[eax].utd_control,400000h    
-    jnz itdRecover
-;
-    mov ebx,es:[edx].uqh_elem
-    and bl,0F0h
-    cmp ebx,es:[eax].utd_phys
-    jz itdFail
-    jmp itdOk
-
-itdMulti:
-    test es:[edx].uqh_elem,1
-    jnz itdOk
-;
-    mov eax,es:[edx].uqh_va_elem
-    test es:[eax].utd_control,400000h    
-    jnz itdRecover
-
-itdFail:
-    stc
-    jmp itdEnd   
-
-itdRecover:
-    mov es:[edx].uqh_elem,1
-
-itdOk:
-    clc
-
-itdEnd:    
-    pop edx
-    pop ebx
-    pop eax
-    pop es
-    ret
-LocalIsTransferDone   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsTransferDone
-;
-;           DESCRIPTION:    Check if transfer is done
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsTransferDone   Proc far
-    call LocalIsTransferDone
-    retf32
-IsTransferDone   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WaitForCompletion
-;
-;           DESCRIPTION:    Wait for transfer to complete
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForCompletion   Proc far
-    push eax
-;
-    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
-    jz wfcDone
-
-wfcWait:
-    call LocalIsTransferDone
-    jnc wfcDone
-;
-    WaitForSignal
-    jmp wfcWait
-
-wfcDone:
-    call LocalEndTransfer
-;    
-    pop eax
-    retf32
-WaitForCompletion   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WasTransferOk
-;
-;           DESCRIPTION:    Check if last transfer was ok
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    NC      Transfer was ok
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WasTransferOk   Proc far
-    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
-    jz wtoNotPending
-;
-    call LocalEndTransfer
-
-wtoNotPending:
-    test fs:usp_flags, USP_FLAG_TRANSFER_OK
-    jnz wtoOk
-;    
-    stc
-    jmp wtoDone
-
-wtoOk:
-    clc
-
-wtoDone:
-    retf32
-WasTransferOk   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LocalEndTransfer
-;
-;           DESCRIPTION:    End transfer and get input data
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LocalEndTransfer   Proc near
-    push es
-    push ax
-    push ecx
-    push edx
-    push edi
-;    
-    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
-    jz etDone
-;    
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov fs:usp_data_size,0     
-    and fs:usp_flags, NOT USP_FLAG_TRANSFER_PENDING
-    and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
-;    
-    mov edx,fs:usp_qh
-    or edx,edx
-    jz etDataDone
-;
-    test byte ptr es:[edx].uqh_elem,1
-    jz etDataDone
-;
-    or fs:usp_flags, USP_FLAG_TRANSFER_OK
-
-etStatusOk:
-    mov edx,fs:usp_qh
-    call GetQhDataSize
-    mov fs:usp_data_size,cx
-    
-etDataDone:
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov edx,fs:usp_qh
-    call FreeVaElem
-
-etDone:   
-    pop edi
-    pop edx
-    pop ecx
-    pop ax
-    pop es
-    ret
-LocalEndTransfer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           EndTransfer
-;
-;           DESCRIPTION:    End transfer and get input data
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EndTransfer   Proc far
-    call LocalEndTransfer
-    retf32
-EndTransfer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetDataSize
-;
-;           DESCRIPTION:    Get input data size for last transfer
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;       RETURNS:    CX      Bytes read
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDataSize   Proc far
-    xor cx,cx
-    test fs:usp_flags, USP_FLAG_TRANSFER_OK
-    jz gdsDone
-;    
-    mov cx,fs:usp_data_size
-
-gdsDone:
-    retf32
-GetDataSize   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClosePipe
-;
-;           DESCRIPTION:    Close pipe
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClosePipe   Proc far
-    push es
-    push eax
-    push edx
-;    
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    inc ds:UhciCloseCount
-    pop ds
-;    
-    call RemovePipe
-;
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je dpControlBulk
-;
-    cmp al,MODE_BULK
-    je dpControlBulk
-;
-    cmp al,MODE_INTR
-    je dpFreeIntr
-;
-    int 3    
-    jmp dpDone    
-
-dpControlBulk:
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,fs:usp_qh
-    call FreeVaElem
-;
-    mov edx,ds:uhc_period_td
-    mov eax,fs:usp_qh
-    call RemoveTd
-    mov edx,eax
-    call FreeBlock32
-    jmp dpDone
-
-dpFreeIntr:
-    push gs
-    push di
-;    
-    mov ax,flat_sel
-    mov es,ax
-    mov gs,ds:uhc_int_sel
-    mov di,fs:usp_intr_ptr
-    mov eax,fs:usp_qh
-    call RemoveIntr
-;    
-    mov edx,eax
-    call FreeBlock32
-;    
-    mov di,fs:usp_intr_cnt
-    dec byte ptr ds:[di]
-;
-    pop di
-    pop gs
-    jmp dpDone
-    
-dpDone:
-    mov edx,fs:usp_setup_linear
-    or edx,edx
-    jz rpSetupDone
-;
-    mov ecx,1000h
-    FreeLinear
-
-rpSetupDone:   
-    mov ax,2
-    WaitMilliSec
-;
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
-    FreeMem
-;
-    pop edx
-    pop eax
-    pop es
-    retf32
-ClosePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ChangeAddress
-;
-;           DESCRIPTION:    Change address for pipe
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ChangeAddress   Proc far
-    push ax
-    mov al,es:usbd_address
-    mov es:dev_curr_address,al
-    pop ax
-    retf32
-ChangeAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsConnected
-;
-;           DESCRIPTION:    Check if pipe is connected
-;
-;       PARAMETERS:     DS      Function selector
-;               FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsConnected   Proc far
-    push es
-    push ax
+ResetPort   Proc far
     push dx
-    push si
 ;    
-    mov es,fs:usbp_dev_sel
-    movzx si,es:usbd_port
-;    
+    movzx di,dl
+    add di,di
+;
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
-    add dx,si
-    add dx,si
+    add dx,di    
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+;
+    mov ax,50
+    WaitMilliSec
+;
+    in ax,dx
+    and ax,NOT 200h
+    out dx,ax
+;
+    mov cx,10
+
+rpLoop:
+    in ax,dx
+    test ax,4
+    clc
+    jnz rpNotify
+;
+    or ax,4
+    out dx,ax
+    loop rpLoop
+;
+    jmp rpFail
+
+rpNotify:
+    mov ax,200
+    WaitMilliSec
 ;
     in ax,dx
     test al,1
-    jz icFail
+    jz rpFail
 ;
-    test ax,200h
+    mov al,ah
+    xor al,1
+    and al,1
     clc
-    jz icDone
+    jmp rpDone
 
-icFail:
+rpFail:
     stc
 
-icDone:
-    pop si
+rpDone:
+    pop dx
+    retf32
+ResetPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DisablePort
+;
+;           DESCRIPTION:    Disable port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePort   Proc far
+    push ax
+    push dx
+    push di
+;    
+    movzx di,dl
+    add di,di
+;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
+    in ax,dx
+    and al,NOT 4
+    out dx,ax
+;
+    mov ax,25
+    WaitMilliSec
+;
+    pop di
     pop dx
     pop ax
-    pop es
     retf32
-IsConnected   Endp
+DisablePort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockEnum
+;           NAME:           DisableDev
 ;
-;           DESCRIPTION:    Lock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockEnum   Proc far
-    EnterSection ds:uhc_section
-    retf32
-LockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockEnum
-;
-;           DESCRIPTION:    Unlock enumeration process
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockEnum   Proc far
-    LeaveSection ds:uhc_section
-    retf32
-UnlockEnum   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Has64Bit
-;
-;           DESCRIPTION:    Check for 64-bit support
+;           DESCRIPTION:    Disable device
 ;
 ;       PARAMETERS:         DS      Function selector
-;
-;       RETURNS:            NC      Supports 64-bit addresses
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Has64Bit   Proc far
-    stc
-    retf32
-Has64Bit     Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IsStalled
-;
-;           DESCRIPTION:    Check if pipe is stalled
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
+;                           ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IsStalled   Proc far
-    int 3
-    clc
-    retf32
-IsStalled   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClearStalled
-;
-;           DESCRIPTION:    Clear stalled pipe
-;
-;       PARAMETERS:         DS      Function selector
-;                           FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearStalled   Proc far
-    int 3
-    retf32
-ClearStalled   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateMaxLen
-;
-;           DESCRIPTION:    Update max len
-;
-;           PARAMETERS:     ES      Device selector
-;                           AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateMaxLen   Proc far
-    retf32
-UpdateMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IssueOne
-;
-;           DESCRIPTION:    Issue one transfer
-;
-;       PARAMETERS:         FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IssueOne   Proc far
-    push es
-    push eax
-    push ecx
-    push edx
+DisableDev   Proc far
+    push ax
+    push dx
 ;    
-    mov ax,flat_sel
-    mov es,ax    
-    mov edx,fs:usp_qh
-;    
-    mov fs:usp_done,0
-    test fs:usp_flags, USP_FLAG_SINGLE
-    jnz iotNew
+    mov dl,es:usbd_port
+    movzx di,dl
+    add di,di
 ;
-    and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
-    or fs:usp_flags, USP_FLAG_TRANSFER_PENDING OR USP_FLAG_SINGLE
-;    
-    mov eax,es:[edx].uqh_va_elem    
-    or eax,eax
-    jz iotDone
-;    
-    mov eax,es:[eax].utd_phys
-    mov es:[edx].uqh_elem,eax
-    jmp iotDone
-
-iotNew:
-    mov ecx,es:[edx].uqh_va_elem    
-    or ecx,ecx
-    jz iotDone
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
 ;
-    mov eax,es:[ecx].utd_va_link
-    mov es:[edx].uqh_va_elem,eax
+    in ax,dx
+    and al,NOT 4
+    out dx,ax
 ;
-    mov edx,ecx
-    call FreeBlock32
-
-iotDone:
-    pop edx 
-    pop ecx
-    pop eax
-    pop es
+    mov ax,25
+    WaitMilliSec
+;
+    pop dx
+    pop ax
     retf32
-IssueOne   Endp
+DisableDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2658,6 +1258,201 @@ idcDone:
     pop ax
     retf32
 IsDeviceConnected   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsTRunning
+;
+;       DESCRIPTION:    Check if controller is running
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsRunning   Proc far
+    push ax
+    push dx
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx
+    test al,20h
+    stc
+    jnz irDone
+;
+    clc
+
+irDone:
+    pop dx
+    pop ax
+    retf32
+IsRunning   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateAddress
+;
+;       DESCRIPTION:    Allocate address
+;
+;       PARAMETERS:     DS      Function sel
+;
+;       RETURNS:        AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateAddress   Proc far
+    AllocateUsbAddress
+    retf32
+AllocateAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeAddress
+;
+;       DESCRIPTION:    Free address
+;
+;       PARAMETERS:     DS      Function sel
+;                       AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    FreeUsbAddress
+    retf32
+FreeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               CreateDev
+;
+;       DESCRIPTION:        Create device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;                           AH      Speed
+;                           BX      Hub selector
+;                           DX      Port #
+;
+;       RETURNS:            ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    pushad
+;
+    mov ax,SIZE uhci_td
+    mov si,SIZE uhci_dev_sel
+    mov cx,16
+    CreateMemBlk32
+    mov es:usbd_parent_thread,0
+    mov es:usbd_func_sel,ds
+;
+    popad
+    retf32
+CreateDev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               FreeDev
+;
+;       DESCRIPTION:        Free device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    retf32
+FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               AddressDev
+;
+;       DESCRIPTION:        Address usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;                           AL      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDev   Proc far
+    AddressUsbDev    
+    retf32
+AddressDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               ConfigDev
+;
+;       DESCRIPTION:        Config usb dev
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDev   Proc far
+    clc
+    retf32
+ConfigDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ChangeAddress
+;
+;       DESCRIPTION:    Change address for pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChangeAddress   Proc far
+    push ax
+    mov al,es:usbd_address
+    mov es:dev_curr_address,al
+    pop ax
+    retf32
+ChangeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateMaxLen
+;
+;           DESCRIPTION:    Update max len
+;
+;           PARAMETERS:     ES      Device selector
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMaxLen   Proc far
+    retf32
+UpdateMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkPipes
+;
+;       DESCRIPTION:    Unlink pipes
+;
+;       PARAMETERS:     ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipes   Proc far
+    int 3
+    retf32
+UnlinkPipes   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3374,341 +2169,6 @@ RelBuffer   Proc far
     int 3
     retf32
 RelBuffer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IsTRunning
-;
-;       DESCRIPTION:    Check if controller is running
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsRunning   Proc far
-    push ax
-    push dx
-;
-    mov dx,ds:uhc_io_base
-    add dx,UsbStatusReg
-    in ax,dx
-    test al,20h
-    stc
-    jnz irDone
-;
-    clc
-
-irDone:
-    pop dx
-    pop ax
-    retf32
-IsRunning   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UnlinkPipes
-;
-;       DESCRIPTION:    Unlink pipes
-;
-;       PARAMETERS:     ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkPipes   Proc far
-    int 3
-    retf32
-UnlinkPipes   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateAddress
-;
-;       DESCRIPTION:    Allocate address
-;
-;       PARAMETERS:     DS      Function sel
-;
-;       RETURNS:        AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateAddress   Proc far
-    AllocateUsbAddress
-    retf32
-AllocateAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeAddress
-;
-;       DESCRIPTION:    Free address
-;
-;       PARAMETERS:     DS      Function sel
-;                       AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeAddress   Proc far
-    FreeUsbAddress
-    retf32
-FreeAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               CreateDev
-;
-;       DESCRIPTION:        Create device sel
-;
-;       PARAMETERS:         DS      Function selector
-;                           AL      Address
-;                           AH      Speed
-;                           BX      Hub selector
-;                           DX      Port #
-;
-;       RETURNS:            ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateDev   Proc far
-    pushad
-;
-    mov ax,SIZE uhci_td
-    mov si,SIZE uhci_dev_sel
-    mov cx,16
-    CreateMemBlk32
-    mov es:usbd_parent_thread,0
-    mov es:usbd_func_sel,ds
-;
-    popad
-    retf32
-CreateDev  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               FreeDev
-;
-;       DESCRIPTION:        Free device sel
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeDev   Proc far
-    retf32
-FreeDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               Block
-;
-;       DESCRIPTION:        Block
-;
-;       PARAMETERS:         DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Block   Proc far
-    EnterSection ds:usb_addr_section
-    retf32
-Block   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               Unblock
-;
-;       DESCRIPTION:        Unblock
-;
-;       PARAMETERS:         DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Unblock   Proc far
-    LeaveSection ds:usb_addr_section
-    retf32
-Unblock   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               ResetPort
-;
-;       DESCRIPTION:        Reset port
-;
-;       PARAMETERS:         DS      Function selector
-;                           DL      Port
-;
-;       RETURNS:            AL      Speed
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetPort   Proc far
-    push dx
-;    
-    movzx di,dl
-    add di,di
-;
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    add dx,di    
-;
-    in ax,dx
-    or ax,200h
-    out dx,ax
-;
-    mov ax,50
-    WaitMilliSec
-;
-    in ax,dx
-    and ax,NOT 200h
-    out dx,ax
-;
-    mov cx,10
-
-rpLoop:
-    in ax,dx
-    test ax,4
-    clc
-    jnz rpNotify
-;
-    or ax,4
-    out dx,ax
-    loop rpLoop
-;
-    jmp rpFail
-
-rpNotify:
-    mov ax,200
-    WaitMilliSec
-;
-    in ax,dx
-    test al,1
-    jz rpFail
-;
-    mov al,ah
-    xor al,1
-    and al,1
-    clc
-    jmp rpDone
-
-rpFail:
-    stc
-
-rpDone:
-    pop dx
-    retf32
-ResetPort   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DisablePort
-;
-;           DESCRIPTION:    Disable port
-;
-;       PARAMETERS:         DS      Function selector
-;                           DL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisablePort   Proc far
-    push ax
-    push dx
-    push di
-;    
-    movzx di,dl
-    add di,di
-;
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    add dx,di    
-;
-    in ax,dx
-    and al,NOT 4
-    out dx,ax
-;
-    mov ax,25
-    WaitMilliSec
-;
-    pop di
-    pop dx
-    pop ax
-    retf32
-DisablePort   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DisableDev
-;
-;           DESCRIPTION:    Disable device
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisableDev   Proc far
-    push ax
-    push dx
-;    
-    mov dl,es:usbd_port
-    movzx di,dl
-    add di,di
-;
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    add dx,di    
-;
-    in ax,dx
-    and al,NOT 4
-    out dx,ax
-;
-    mov ax,25
-    WaitMilliSec
-;
-    pop dx
-    pop ax
-    retf32
-DisableDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               AddressDev
-;
-;       DESCRIPTION:        Address usb dev
-;
-;       PARAMETERS:         DS      Function selector
-;                           AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddressDev   Proc far
-    AddressUsbDev    
-    retf32
-AddressDev   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               ConfigDev
-;
-;       DESCRIPTION:        Config usb dev
-;
-;       PARAMETERS:         DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConfigDev   Proc far
-    clc
-    retf32
-ConfigDev   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3862,6 +2322,40 @@ InitFunction    Proc near
     WritePciWord   
     
 ifNotLegacy:    
+    mov bx,ds:uhc_pci_bus_dev
+    mov ch,ds:uhc_pci_func
+    GetPciMsi
+    jc ifIrq
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc ifIrq    
+;
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET UhciInt
+    RequestMsiHandler
+    jmp ifIntDone
+
+ifIrq:
+    mov ds:uhc_irq,0
+    GetPciIrqNr
+    jc ifIrqFail
+;    
+    mov ds:uhc_irq,al
+    mov ah,14h
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET UhciInt
+    RequestIrqHandler
+    jmp ifIntDone
+
+ifIrqFail:
 
 ifIntDone:
     mov si,OFFSET uhci_tab
@@ -3901,7 +2395,7 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-    xor ax,ax
+    mov ax,0Fh
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -3981,8 +2475,6 @@ AddFunction  Proc near
     mov ds:uhc_io_base,dx
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
-    mov ds:uhc_pipe_list,0
-    InitSpinlock ds:uhc_spinlock
     InitSection ds:uhc_section
 ;    
     mov eax,1000h
@@ -4167,14 +2659,6 @@ uhci_func_loop:
     add bx,2
     loop uhci_func_loop
 ;    
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET port_timer
-    StartTimer
 
 uhci_handle_loop:
     mov ax,250
@@ -4233,54 +2717,6 @@ init_usb_done:
     pop ds
     retf32
 init_usb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetAllocatedUsbBlocks
-;
-;           DESCRIPTION:    Get allocated USB blocks
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        EAX     Number of blocks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_allocated_usb_blocks_name       DB 'Get Allocated USB Blocks',0
-
-get_allocated_usb_blocks    Proc far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:UhciUsedBlocks
-    pop ds
-    retf32
-get_allocated_usb_blocks    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetUsbClosedCount
-;
-;           DESCRIPTION:    Get closed count
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        EAX     Number of blocks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_usb_close_count_name       DB 'Get USB Close Count',0
-
-get_usb_close_count    Proc far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,ds:UhciCloseCount
-    pop ds
-    retf32
-get_usb_close_count    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4356,12 +2792,6 @@ wait_for_uhci   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Init    Proc far
-    mov bx,SEG data
-    mov ds,bx
-    InitSection ds:UhciSection
-    mov ds:UhciUsedBlocks,0
-    mov ds:UhciCloseCount,0
-;
     InitSection ds:WaitSection
     mov ds:WaitThreadArr,0
     mov ds:WaitThreadArr+2,0
@@ -4380,18 +2810,6 @@ Init    Proc far
 ;    
     mov edi,OFFSET init_usb
     HookInitPci
-;
-    mov esi,OFFSET get_allocated_usb_blocks
-    mov edi,OFFSET get_allocated_usb_blocks_name
-    xor dx,dx
-    mov ax,get_allocated_usb_blocks_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_usb_close_count
-    mov edi,OFFSET get_usb_close_count_name
-    xor dx,dx
-    mov ax,get_usb_close_count_nr
-    RegisterBimodalUserGate
     clc
     ret
 Init    Endp
