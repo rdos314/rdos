@@ -80,10 +80,9 @@ uhc_status       DW ?
 
 uhc_period_td    DD ?
 
-uhc_io_base      DW ?
+uhc_thread       DW ?
 
-uhc_pipe_list    DW ?
-uhc_section      section_typ <>
+uhc_io_base      DW ?
 
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
@@ -179,7 +178,16 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UhciInt Proc far
-    int 3
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+;
+    in ax,dx    
+    or ds:uhc_status,ax
+    out dx,ax
+;
+    mov bx,ds:uhc_thread
+    Signal
+;
     retf32
 UhciInt  Endp
 
@@ -963,6 +971,7 @@ CreateControl   Proc far
     push fs
     pushad
 ;
+    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2169,44 +2178,6 @@ RelBuffer   Proc far
     int 3
     retf32
 RelBuffer   Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HexToAscii
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     AL      Number to convert
-;
-;   RETURNS:        AX      Ascii result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HexToAscii      PROC near
-    mov ah,al
-    and al,0F0h
-    rol al,1
-    rol al,1
-    rol al,1
-    rol al,1
-    cmp al,0Ah
-    jb ok_low1
-;
-    add al,7
-
-ok_low1:
-    add al,30h
-    and ah,0Fh
-    cmp ah,0Ah
-    jb ok_high1
-;
-    add ah,7
-
-ok_high1:
-    add ah,30h
-    ret
-HexToAscii      ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2265,6 +2236,152 @@ BiosHandoff    Proc near
     popad
     ret
 BiosHandoff Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UHCI function handler
+;
+;           DESCRIPTION:    UHCI function thread
+;
+;       PARAMETERS:         BX      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uhci_function_handler:
+    mov ds,bx
+    GetThread
+    mov ds:uhc_thread,ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+
+ufhLoop:
+    WaitForSignal    
+;
+    call fword ptr ds:is_running_proc
+    jnc ufhRunning
+;
+    mov ax,USB_EVENT_CONTROLLER_ERROR
+    ReportUsbFunctionEvent
+
+ufhRunning:
+    jmp ufhLoop
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Function sel (passed as bx)
+;                       DX      Passed through
+;                       AX      Prio
+;                       SI      Entry
+;                       DI      Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push es            
+    push ax
+    push si
+;
+    mov si,di
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+
+sfCopyLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    pop si         
+    mov bx,ds
+    xor di,di
+    mov ax,cs
+    mov ds,ax
+    pop ax
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartFunctionThread
+;
+;           DESCRIPTION:    Start UHCI function thread
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+func_name    DB 'UHCI ', 0
+
+StartFunctionThread Proc near
+    mov si,OFFSET uhci_function_handler
+    mov di,OFFSET func_name
+    mov ax,5
+    call StartThread
+    ret
+StartFunctionThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2475,7 +2592,6 @@ AddFunction  Proc near
     mov ds:uhc_io_base,dx
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
-    InitSection ds:uhc_section
 ;    
     mov eax,1000h
     AllocateBigLinear
@@ -2652,7 +2768,10 @@ uhci_func_loop:
     push bx
     push cx
     mov ds,[bx]
+;
     call InitFunction
+    call StartFunctionThread
+;
     pop cx
     pop bx
     pop ds
