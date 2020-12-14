@@ -245,6 +245,7 @@ InitIntrQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntrQueue PROC near
+    push es
     push fs
     push gs
     push eax
@@ -473,6 +474,7 @@ ciInitCount:
     pop eax
     pop gs
     pop fs
+    pop es
     ret
 CreateIntrQueue Endp
 
@@ -972,7 +974,6 @@ CreateControl   Proc far
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
