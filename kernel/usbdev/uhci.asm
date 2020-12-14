@@ -198,7 +198,7 @@ UhciInt  Endp
 ;
 ;       DESCRIPTION:    Initialize a queue header in interrupt list
 ;
-;       PARAMETERS:     FS      Flat sel
+;       PARAMETERS:     ES      Flat sel
 ;                       EDX         QH
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -207,10 +207,10 @@ InitIntrQh  PROC near
     push eax
     push cx
 ;    
-    mov fs:[edx].uqh_link,1
-    mov fs:[edx].uqh_va_link,0
-    mov fs:[edx].uqh_elem,1
-    mov fs:[edx].uqh_va_elem,0
+    mov es:[edx].uqh_link,1
+    mov es:[edx].uqh_va_link,0
+    mov es:[edx].uqh_elem,1
+    mov es:[edx].uqh_va_elem,0
 ;
     push ebx
     GetPageEntry
@@ -226,7 +226,7 @@ iq32:
     mov cx,dx
     and cx,0FFFh
     or ax,cx
-    mov fs:[edx].uqh_phys,eax
+    mov es:[edx].uqh_phys,eax
 ;
     pop cx   
     pop eax
@@ -264,7 +264,7 @@ CreateIntrQueue PROC near
     mov ds:uhc_int_sel,bx
 ;
     mov ax,flat_sel
-    mov fs,ax
+    mov es,ax
 ;
     mov cx,64
     mov edx,OFFSET int_64_qh
@@ -281,7 +281,7 @@ ciQhLoop:
     and ax,0F000h
     mov ds:uhc_int_phys,eax    
 ;
-    mov gs,ds:uhc_hw_sel
+    mov fs,ds:uhc_hw_sel
     mov cx,16
     xor bx,bx
 
@@ -293,7 +293,7 @@ ciHwyLoop:
     or al,2
 
 ciHwiLoop:
-    mov gs:[bx],eax
+    mov fs:[bx],eax
     add eax,32
     add bx,4
     loop ciHwiLoop
@@ -301,6 +301,7 @@ ciHwiLoop:
     pop cx
     loop ciHwyLoop
 ;
+    mov fs,ds:uhc_int_sel
     mov cx,64
     mov bx,OFFSET int_64_qh
     mov eax,OFFSET int_32_qh
@@ -313,8 +314,8 @@ ci32Loop:
     call InitIntrQh
     
 ci32Link:
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -338,8 +339,8 @@ ci16Loop:
     call InitIntrQh
     
 ci16Link:
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -363,8 +364,8 @@ ci8Loop:
     call InitIntrQh
     
 ci8Link:
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -388,8 +389,8 @@ ci4Loop:
     call InitIntrQh
     
 ci4Link:
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -413,8 +414,8 @@ ci2Loop:
     call InitIntrQh
     
 ci2Link:
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
     add bx,32
 ;
     test cx,1
@@ -436,8 +437,8 @@ ci2Next:
 
 ci1Loop:
     call InitIntrQh
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
     add bx,32
     loop ci1Loop
 ;
@@ -447,15 +448,15 @@ ci1Loop:
     add eax,ds:uhc_int_phys
     mov ds:uhc_period_td,edx
 ;
-    mov fs:[edx].utd_link,1
-    mov fs:[edx].utd_va_link,0
-    mov fs:[edx].utd_control, 18000000h
-    mov fs:[edx].utd_host,0
-    mov fs:[edx].utd_buf,0
+    mov es:[edx].utd_link,1
+    mov es:[edx].utd_va_link,0
+    mov es:[edx].utd_control, 18000000h
+    mov es:[edx].utd_host,0
+    mov es:[edx].utd_buf,0
 ;    
     mov bx,OFFSET int_1_qh
-    mov gs:[bx].uqh_link,eax
-    mov gs:[bx].uqh_va_link,edx
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
 ;   
     mov cx,64+32+16+8+4+2+1
     mov bx,OFFSET uhc_64_cnt
@@ -2257,6 +2258,23 @@ uhci_function_handler:
     mov fs,ax
 
 ufhLoop:
+    mov bx,ds:usb_controller_id
+    cmp bx,2
+    jne ufhWait
+;
+    call fword ptr ds:is_running_proc
+    jnc ufhWaitMs
+;
+    mov ax,USB_EVENT_CONTROLLER_ERROR
+    ReportUsbFunctionEvent
+    int 3
+
+ufhWaitMs:
+    mov ax,25
+    WaitMilliSec
+    jmp ufhLoop
+
+ufhWait:
     WaitForSignal    
 ;
     call fword ptr ds:is_running_proc
