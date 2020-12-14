@@ -2259,23 +2259,6 @@ uhci_function_handler:
     mov fs,ax
 
 ufhLoop:
-    mov bx,ds:usb_controller_id
-    cmp bx,2
-    jne ufhWait
-;
-    call fword ptr ds:is_running_proc
-    jnc ufhWaitMs
-;
-    mov ax,USB_EVENT_CONTROLLER_ERROR
-    ReportUsbFunctionEvent
-    int 3
-
-ufhWaitMs:
-    mov ax,25
-    WaitMilliSec
-    jmp ufhLoop
-
-ufhWait:
     WaitForSignal    
 ;
     call fword ptr ds:is_running_proc
