@@ -1873,55 +1873,6 @@ SetupControlOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CheckControlOut
-;
-;       DESCRIPTION:    Copy control IN
-;
-;       PARAMETERS:     ES      Usb device
-;                       FS      Flat sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckControlOut   Proc near
-    pushad
-;
-    mov esi,es:dev_control_head
-    mov eax,fs:[esi].utd_control
-    cmp ax,7
-    stc 
-    jne ccoDone
-;
-    shr eax,16
-    test al,40h
-    stc
-    jne ccoDone
-;
-    mov esi,fs:[esi].utd_va_link
-
-ccoLoop:
-    or esi,esi
-    clc
-    jz ccoDone
-;
-    mov eax,fs:[esi].utd_control
-    shr eax,16
-    test al,40h
-    stc
-    jne ccoDone
-
-ccoNext:
-    xchg edx,esi
-    mov esi,fs:[edx].utd_va_link
-    jmp ccoLoop
-
-ccoDone:
-    popad
-    ret
-CheckControlOut	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -2000,7 +1951,6 @@ rcRetry:
     jmp rcRetry
 
 rcCheck:
-    int 3
     or al,al
     stc
     jnz rcDone
@@ -2104,9 +2054,6 @@ cmDataOut:
     jc cmFail
 ;
     call RunControl
-    jc cmFail
-;
-    call CheckControlOut
     jc cmFail
 ;
     call CleanupControl
@@ -2348,6 +2295,86 @@ BiosHandoff Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReportStatus
+;
+;       DESCRIPTION:    Report status
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       AL      Status
+;                       DL      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReportStatus   Proc near
+    push ds
+    push ax
+    push si
+;
+    movzx si,es:usbd_port
+;
+    test al,40h
+    jz rsNotStalled
+;
+    mov ax,USB_EVENT_STALL
+    ReportUsbPipeEvent
+    jmp rsDone
+
+rsNotStalled:
+    test al,20h
+    jz rsNotBufferError
+;
+    mov ax,USB_EVENT_DATA_BUFFER_ERROR
+    ReportUsbPipeEvent
+    jmp rsDone
+
+rsNotBufferError:
+    test al,10h
+    jz rsNotBabble
+;
+    mov ax,USB_EVENT_BABBLE
+    ReportUsbPipeEvent
+    jmp rsDone
+
+rsNotBabble:
+    test al,8
+    jz rsNotTransErr
+;
+    mov ax,USB_EVENT_TRANS_ERROR
+    ReportUsbPipeEvent
+    jmp rsDone
+
+rsNotTransErr:
+    test al,4
+    jz rsNotCrc
+;
+    mov ax,USB_EVENT_CRC_ERROR
+    ReportUsbPipeEvent
+    jmp rsDone
+
+rsNotCrc:
+    test al,2
+    jz rsNotBit
+;
+    mov ax,USB_EVENT_BIT_STUFFING_ERROR
+    ReportUsbPipeEvent
+    jmp rsDone
+
+rsNotBit:
+    mov ax,USB_EVENT_HALTED
+    ReportUsbPipeEvent
+
+rsDone:
+    pop si
+    pop ax
+    pop ds
+    ret
+ReportStatus   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckControl
 ;
 ;       DESCRIPTION:    Check control
@@ -2359,7 +2386,42 @@ BiosHandoff Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckControl   Proc near
-    int 3
+    push ebx
+    push edx
+;
+    mov edx,es:dev_control_head
+
+cctLoop:
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+;
+    test al,80h
+    jnz cctDone
+;
+    and al,7Eh
+    jnz cctSignal
+;
+    mov edx,fs:[edx].utd_va_link
+    or edx,edx
+    jnz cctLoop
+
+cctSignal:
+    mov es:dev_control_status,al
+;    
+    or al,al
+    jz cctReportDone
+;
+    xor dl,dl
+    call ReportStatus
+
+cctReportDone:
+    xor bx,bx
+    xchg bx,es:dev_control_thread
+    Signal
+
+cctDone:
+    pop edx
+    pop ebx
     ret
 CheckControl   Endp
 
