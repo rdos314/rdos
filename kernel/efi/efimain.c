@@ -903,9 +903,6 @@ static void InitGop()
 
     LfbBase = Gop->Mode->FrameBufferBase;
     LfbSize = Gop->Mode->FrameBufferSize;
-
-    ShowAvailableModes();
-    ShowUsedMode();
 }
 
 static void GetFileInfo(EFI_FILE_HANDLE DirHandle)
@@ -1613,6 +1610,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
+                ShowAvailableModes();
+                ShowUsedMode();
+
                 GetAcpiTable();
 
                 if (ConvertMemoryMap())
