@@ -87,16 +87,20 @@ uhc_io_base      DW ?
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
 uhc_irq          DB ?
+uhc_has_int      DB ?
+uhc_has_timer    DB ?
 
 uhc_64_cnt       DB 64 DUP(?)
 uhc_32_cnt       DB 32 DUP(?)
 uhc_16_cnt       DB 16 DUP(?)
-uhc_8_cnt    DB 8 DUP(?)
-uhc_4_cnt    DB 4 DUP(?)
-uhc_2_cnt    DB 2 DUP(?)
-uhc_1_cnt    DB ?
+uhc_8_cnt        DB 8 DUP(?)
+uhc_4_cnt        DB 4 DUP(?)
+uhc_2_cnt        DB 2 DUP(?)
+uhc_1_cnt        DB ?
 
 uhc_curr_cnt     DB 128 DUP(?)
+
+uhc_dev_arr      DW 127 DUP(?)
 
 uhci_func_sel    ENDS
 
@@ -104,10 +108,12 @@ uhci_dev_sel    STRUC
 
 usb_dev_base     usb_device_struc <>
 
-dev_control_qh   DD ?
-dev_control_head DD ?
-dev_utd_control  DD ?
-dev_curr_address DB ?
+dev_control_qh       DD ?
+dev_control_head     DD ?
+dev_utd_control      DD ?
+dev_control_thread   DW ?
+dev_curr_address     DB ?
+dev_control_status   DB ?
 
 uhci_dev_sel    ENDS
 
@@ -167,13 +173,11 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UhciInt
+;       NAME:           UhciInt
 ;
-;           DESCRIPTION:    UHCI interrupt
+;       DESCRIPTION:    UHCI interrupt
 ;
-;       PARAMETERS:     DS      Register selector
-;
-;           RETURNS:        
+;       PARAMETERS:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -181,66 +185,54 @@ UhciInt Proc far
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
 ;
+    mov ds:uhc_has_int,1
+;
     in ax,dx    
+    and al,3Fh
+    jz uiDone
+;
     or ds:uhc_status,ax
     out dx,ax
 ;
     mov bx,ds:uhc_thread
     Signal
-;
+
+uiDone:
     retf32
 UhciInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           uhc_timer
+;       NAME:           uhc_timer
 ;
-;           DESCRIPTION:    Port timer
+;       DESCRIPTION:    Completion with timer
 ;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;       PARAMETERS:     CX     Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uhc_timer  Proc far
-    push edx
     push eax
+    push edx
 ;    
-    xor si,si
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov cx,ds:UhciCount 
-    mov bx,OFFSET UhciFunc
-
-utLoop:
-    push ds
-    mov ds,[bx]
-;
+    mov ds,cx
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
 ;
     in ax,dx    
-    and al,0Fh
-    jz utNext
+    and al,3Fh
+    jz utDone
 ;
     or ds:uhc_status,ax
     out dx,ax
 ;
-    push bx
     mov bx,ds:uhc_thread
     Signal
-    pop bx
 
-utNext:
-    pop ds
-    add bx,2
-    loop utLoop
-;
-    pop eax   
+utDone:
     pop edx
+    pop eax
 ;    
     add eax,1193
     adc edx,0
@@ -1054,6 +1046,7 @@ CreateControl   Proc far
     or eax, 4000000h
     
 ccSpeedOk:
+    mov es:dev_control_thread,0
     mov es:dev_control_head,edx
     mov es:dev_utd_control,eax
 ;
@@ -1414,12 +1407,18 @@ FreeAddress   Endp
 CreateDev   Proc far
     pushad
 ;
+    push ax
     mov ax,SIZE uhci_td
     mov si,SIZE uhci_dev_sel
     mov cx,16
     CreateMemBlk32
     mov es:usbd_parent_thread,0
     mov es:usbd_func_sel,ds
+    pop ax
+;
+    movzx di,al
+    add di,di
+    mov ds:[di].uhc_dev_arr,es
 ;
     popad
     retf32
@@ -1523,6 +1522,10 @@ UpdateMaxLen   Endp
 
 UnlinkPipes   Proc far
     int 3
+;
+    movzx si,es:usbd_address
+    add si,si
+    mov ds:[si].uhc_dev_arr,0
     retf32
 UnlinkPipes   Endp
 
@@ -1932,6 +1935,20 @@ CheckControlOut	Endp
 RunControl   Proc near
     pushad
 ;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz rcDone
+;    
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:is_dev_connected_proc
+    pop ds
+    jc rcDone
+;
+    GetThread
+    mov es:dev_control_thread,ax
+    mov es:dev_control_status,0FFh
+;
     mov edx,es:dev_control_head
     LinearToPhysicalMemBlk
     mov edx,es:dev_control_qh
@@ -1941,28 +1958,54 @@ RunControl   Proc near
     add si,si
     add si,ds:uhc_io_base
     add si,PortscReg1
-;
-    mov cx,100
 
-rcWait:
-    mov ax,4
-    WaitMilliSec
+rcRetry:
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
 ;
-    test es:usbd_flags,FLAG_DETACHED
+    mov es:dev_control_thread,0
+    mov al,es:dev_control_status
+    cmp al,0FFh
+    jne rcCheck
+;    
+    mov al,ds:uhc_has_timer
+    or al,al
     stc
     jnz rcDone
 ;
-    call fword ptr ds:is_dev_connected_proc
-    jc rcDone
+    push ds
+    push es
+    pushad
 ;
-    mov edx,es:dev_control_head
-    test fs:[edx].uqh_elem,1
+    mov cx,ds
+    GetSystemTime
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov edi,OFFSET uhc_timer
+    StartTimer
+;
+    popad
+    pop es
+    pop ds
+;
+    GetThread
+    mov es:dev_control_thread,ax
+;
+    mov ds:uhc_has_timer,1
+    jmp rcRetry
+
+rcCheck:
+    int 3
+    or al,al
+    stc
+    jnz rcDone
+;
     clc
-    jnz rcDone
-;
-    loop rcWait
-;
-    stc
 
 rcDone:
     popad
@@ -2305,6 +2348,62 @@ BiosHandoff Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CheckControl
+;
+;       DESCRIPTION:    Check control
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckControl   Proc near
+    int 3
+    ret
+CheckControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckIn
+;
+;       DESCRIPTION:    Check IN pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckIn   Proc near
+    int 3
+    ret
+CheckIn   Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckOut
+;
+;       DESCRIPTION:    Check OUT pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckOut   Proc near
+    int 3
+    ret
+CheckOut   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UHCI function handler
 ;
 ;           DESCRIPTION:    UHCI function thread
@@ -2331,7 +2430,76 @@ ufhLoop:
     ReportUsbFunctionEvent
 
 ufhRunning:
+    mov cx,127
+    mov bx,OFFSET uhc_dev_arr
+
+ufhDevLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz ufhDevNext
+;
+    mov es,ax
+    mov ax,es:dev_control_thread
+    or ax,ax
+    jz ufhDevPipes
+;
+    call CheckControl
+
+ufhDevPipes:
+    push ebx
+    push ecx
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+ufhDevInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz ufhDevInNext
+;
+    mov gs,bx
+    call CheckIn
+
+ufhDevInNext:
+    add si,2
+    loop ufhDevInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+ufhDevOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz ufhDevOutNext
+;
+    mov gs,bx
+    call CheckOut
+
+ufhDevOutNext:
+    add si,2
+    loop ufhDevOutLoop
+;
+    pop ecx
+    pop ebx
+
+ufhDevNext:
+    add bx,2
+    loop ufhDevLoop
+;
     jmp ufhLoop
+
+
+
+
+
+
+;
+    mov edx,es:dev_control_head
+    test fs:[edx].uqh_elem,1
+    clc
+    jnz rcDone
+
+
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2504,6 +2672,40 @@ InitFunction    Proc near
     WritePciWord   
     
 ifNotLegacy:    
+    mov ds:uhc_has_int,0
+    mov ds:uhc_has_timer,0
+;
+    mov bx,ds:uhc_pci_bus_dev
+    mov ch,ds:uhc_pci_func
+    GetPciMsi
+    jc ifIrq
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc ifIrq    
+;
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET UhciInt
+    RequestMsiHandler
+    jmp ifIntDone
+
+ifIrq:
+    mov ds:uhc_irq,0
+    GetPciIrqNr
+    jc ifIntDone
+;    
+    mov ds:uhc_irq,al
+    mov ah,14h
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET UhciInt
+    RequestIrqHandler
 
 ifIntDone:
     mov si,OFFSET uhci_tab
@@ -2517,6 +2719,15 @@ ifTabLoop:
     loop ifTabLoop    
 ;
     InitUsbFunction
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    mov di,OFFSET uhc_dev_arr
+    mov cx,127
+    xor ax,ax
+    rep stosw
+    pop es
 ;
     WaitForEhci
 ;    
@@ -2808,15 +3019,6 @@ uhci_func_loop:
     pop ds
     add bx,2
     loop uhci_func_loop
-;    
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET uhc_timer
-    StartTimer
 
 uhci_handle_loop:
     mov ax,250
