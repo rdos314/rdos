@@ -2514,7 +2514,118 @@ ReqBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RelBuffer   Proc far
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_address
+    test al,80h
+    jnz rlbIn
+
+rlbOut:
+    mov bx,gs:up_wr_ptr
+    cmp bx,gs:up_rd_ptr
+    stc
+    je rlbDone
+;
     int 3
+    jmp rlbDone
+
+rlbIn:
+    mov bx,gs:up_rd_ptr
+    cmp bx,gs:up_wr_ptr
+    stc
+    je rlbDone
+;
+    inc bx
+    cmp bx,gs:up_entry_count
+    jb rlbRdPtrOk
+;
+    xor bx,bx
+
+rlbRdPtrOk:
+    mov gs:up_rd_ptr,bx
+;
+    mov bx,gs:up_tail_ptr
+    sub bx,1
+    jnc rlbRdPrevOk
+;
+    mov bx,gs:up_entry_count
+    dec bx
+
+rlbRdPrevOk:
+    shl bx,3
+    mov esi,gs:[bx].up_entry_arr
+;
+    mov bx,gs:up_tail_ptr
+    mov di,bx
+    shl di,3
+;
+    mov edx,gs:[di+4].up_entry_arr
+    or edx,edx
+    jnz rlbRdHasBuffer
+;
+    mov cx,gs:ued_maxsize
+    AllocateMemBlk
+    mov gs:[di+4].up_entry_arr,edx
+
+rlbRdHasBuffer:
+    LinearToPhysicalMemBlk
+;
+    mov edx,gs:[di].up_entry_arr
+    mov eax,21800000h
+    cmp es:usbd_speed,0
+    jnz rlbRdSpeedOk
+;
+    or eax, 4000000h
+    
+rlbRdSpeedOk:
+    mov fs:[edx].utd_control,eax
+    mov fs:[edx].utd_link,5
+;
+    LinearToPhysicalMemBlk
+    or al,4
+    mov fs:[esi].utd_link,eax
+;
+    mov bx,gs:up_tail_ptr
+    cmp bx,gs:up_wr_ptr
+    pushf
+;
+    inc bx
+    cmp bx,gs:up_entry_count
+    jb rlbRdTailOk
+;
+    xor bx,bx
+
+rlbRdTailOk:
+    mov gs:up_tail_ptr,bx
+;
+    popf
+    je rlbRdCheckStart
+;
+    mov esi,gs:up_qh
+    mov eax,fs:[esi].uqh_elem
+    test al,1
+    jz rlbRdOk
+;
+    mov bx,ds:uhc_thread
+    Signal
+    jmp rlbRdOk
+
+rlbRdCheckStart:
+    and al,0F0h
+    mov ebx,eax
+    mov esi,gs:up_qh
+    mov fs:[esi].uqh_elem,eax
+    
+rlbRdOk:
+    clc
+
+rlbDone:
+    popad
+    pop fs
     retf32
 RelBuffer   Endp
     
