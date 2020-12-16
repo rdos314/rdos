@@ -118,20 +118,40 @@ dev_control_status   DB ?
 uhci_dev_sel    ENDS
 
 
-; this structure is always allocated as 32 bytes!
+uhci_pipe_struc    STRUC
 
-uhci_td STRUC
+up_pipe            usb_device_pipe_struc <>
 
-utd_link    DD ?
-utd_control DD ?
-utd_host    DD ?
-utd_buf     DD ?
+up_intr_ptr        DW ?
+up_intr_cnt        DW ?
 
-utd_va_link DD ?
+up_qh              DD ?
+up_rd_ptr          DW ?
+up_wr_ptr          DW ?
+up_tail_ptr        DW ?
+up_entry_count     DW ?
 
-uhci_td ENDS
+up_entry_arr       DD ?
+
+uhci_pipe_struc    ENDS
+
+base_td            STRUC
+
+utd_link           DD ?
+utd_control        DD ?
+utd_host           DD ?
+utd_buf            DD ?
+
+base_td            ENDS
 
 
+uhci_td            STRUC
+
+uhci_base          base_td <>
+
+utd_va_link        DD ?
+
+uhci_td            ENDS
 
 ; this structure is always allocated as 32 bytes!
 
@@ -714,29 +734,6 @@ AllocateQh      PROC near
     pop eax
     ret
 AllocateQh  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateTd
-;
-;       DESCRIPTION:    Allocate & initialize a TD object
-;
-;       PARAMETERS:     ES      Device sel
-;                       FS      Flat sel
-;                       DL      Pipe #
-;
-;       RETURNS:        EDX     QH
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateTd    Proc near
-    push eax
-    push ecx
-    pop ecx
-    pop eax
-    ret
-AllocateTd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2085,6 +2082,71 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocatePipe
+;
+;       DESCRIPTION:    Allocate pipe
+;
+;       PARAMETERS:     FS      Flat sel
+;                       CX      Buffer count
+;
+;       RETURNS:        BX      Pipe sel
+;                       EDX     Head TD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePipe    Proc near
+    push ds
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    inc cx
+    mov esi,edi
+    push es
+    movzx eax,cx
+    shl ax,2
+    add ax,OFFSET up_entry_arr
+    AllocateSmallGlobalMem
+;
+    mov es:up_entry_count,cx
+    mov ax,es
+    mov ds,ax
+    pop es
+;
+    mov di,OFFSET up_entry_arr
+
+apTdLoop:
+    push cx
+;
+    mov cx,SIZE base_td
+    AllocateMemBlk
+    mov esi,edx
+;
+    mov fs:[esi].utd_link,0
+    mov fs:[esi].utd_control,0
+    mov fs:[esi].utd_host,0
+    mov fs:[esi].utd_buf,0
+;
+    mov ds:[di],esi
+    add di,4
+    pop cx
+    loop apTdLoop
+;
+    mov bx,ds
+    mov edx,ds:up_entry_arr
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop ds
+    ret
+AllocatePipe    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateBulkPipe
 ;
 ;       DESCRIPTION:    Create bulk pipe
@@ -2122,7 +2184,51 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntrPipe   Proc far
-    int 3
+    push ds
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov fs,ax
+    push dx
+    call AllocatePipe
+    pop cx
+    mov gs,bx
+    mov cl,ch
+;    
+    call AllocateQh
+    mov gs:up_qh,edx
+;    
+    call GetIntrQh
+    mov gs:up_intr_ptr,di
+    mov gs:up_intr_cnt,bx
+    inc byte ptr ds:[bx]
+;    
+    push gs
+    mov eax,gs:up_qh
+    mov gs,ds:uhc_int_sel
+    call InsertIntr
+    pop ds
+;
+    mov ds:up_rd_ptr,0
+    mov ds:up_wr_ptr,0
+    mov ds:up_tail_ptr,0
+    mov bx,ds
+    clc
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop ds
     retf32
 CreateIntrPipe   Endp
 
@@ -2549,19 +2655,6 @@ ufhDevNext:
     loop ufhDevLoop
 ;
     jmp ufhLoop
-
-
-
-
-
-
-;
-    mov edx,es:dev_control_head
-    test fs:[edx].uqh_elem,1
-    clc
-    jnz rcDone
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
