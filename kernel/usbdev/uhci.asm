@@ -2318,7 +2318,7 @@ sipSave:
     dec ax
     mov gs:up_tail_ptr,ax
 ;
-    mov edx,edi
+    mov edx,gs:up_entry_arr
     LinearToPhysicalMemBlk
     mov edx,gs:up_qh
     mov fs:[edx].uqh_elem,eax
@@ -2664,7 +2664,87 @@ CheckControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckIn   Proc near
+    push ebx
+    push edx
+    push esi
+;
+    mov bx,gs:up_wr_ptr
+    cmp bx,gs:up_tail_ptr
+    je citDone
+;
+    mov si,bx
+    shl si,3
+    mov edx,gs:[si].up_entry_arr
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+;
+    test al,80h
+    jnz citCheckRun
+
+citLoop:
+    inc bx
+    cmp bx,gs:up_entry_count
+    jb citSave
+;
+    xor bx,bx
+
+citSave:
+    mov gs:up_wr_ptr,bx
+;
+    and al,7Ch
+    jnz citReport
+;
+    cmp bx,gs:up_tail_ptr
+    je citSignal
+;
+    mov si,bx
+    shl si,3
+    mov edx,gs:[si].up_entry_arr
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+    test al,80h
+    jz citLoop
+    jmp citSignal
+
+citReport:
+    push edx
+    mov dl,gs:ued_address
+    call ReportStatus
+    pop edx
+
+citSignal:
+    xor bx,bx
+    xchg bx,gs:usbdp_wait
+    or bx,bx
+    jz citSignalOk
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+citSignalOk:
+    mov bx,gs:up_wr_ptr
+    cmp bx,gs:up_tail_ptr
+    je citDone
+
+citCheckRun:
+    mov esi,gs:up_qh
+    mov eax,fs:[esi].uqh_elem
+    test al,1
+    jz citDone
+;
     int 3
+    shl bx,3
+    mov edx,gs:[bx].up_entry_arr
+    LinearToPhysicalMemBlk
+    mov fs:[esi].uqh_elem,eax
+
+citDone:
+    pop esi
+    pop edx
+    pop ebx
+
     ret
 CheckIn   Endp        
 
