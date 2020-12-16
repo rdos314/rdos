@@ -3024,7 +3024,6 @@ citCheckRun:
     test al,1
     jz citDone
 ;
-    int 3
     shl bx,3
     mov edx,gs:[bx].up_entry_arr
     LinearToPhysicalMemBlk
