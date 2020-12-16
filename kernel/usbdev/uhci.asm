@@ -1506,25 +1506,98 @@ UpdateMaxLen   Proc far
     retf32
 UpdateMaxLen   Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UnlinkPipes
+;       NAME:           UnlinkControl
 ;
-;       DESCRIPTION:    Unlink pipes
+;       DESCRIPTION:    Unlink control
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkControl   Proc near
+    ret
+UnlinkControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkPipe
+;
+;       DESCRIPTION:    Unlink pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device
+;                       BX      Pipe sel
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipe   Proc near
+    ret
+UnlinkPipe      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Unlink
+;
+;       DESCRIPTION:    Unlink
 ;
 ;       PARAMETERS:     ES      Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlinkPipes   Proc far
+Unlink   Proc far
     int 3
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call UnlinkControl
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+udvInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udvInNext
+;
+    call UnlinkPipe
+
+udvInNext:
+    add si,2
+    loop udvInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+udvOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udvOutNext
+;
+    call UnlinkPipe
+
+udvOutNext:
+    add si,2
+    loop udvOutLoop
 ;
     movzx si,es:usbd_address
     add si,si
     mov ds:[si].uhc_dev_arr,0
+;
+    popad
+    pop fs
     retf32
-UnlinkPipes   Endp
+Unlink   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2380,7 +2453,18 @@ EnablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DisablePipe   Proc far
-    int 3
+    push fs
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,gs:up_qh
+    mov fs:[edx].uqh_elem,1
+;
+    pop edx
+    pop eax
+    pop fs
     retf32
 DisablePipe   Endp
 
@@ -3162,7 +3246,7 @@ ut06 DD OFFSET IsRunning,           SEG code
 ut07 DD OFFSET AllocateAddress,     SEG code
 ut08 DD OFFSET FreeAddress,         SEG code
 ut09 DD OFFSET CreateDev,           SEG code
-ut0A DD OFFSET UnlinkPipes,         SEG code
+ut0A DD OFFSET Unlink,              SEG code
 ut0B DD OFFSET IsDeviceConnected,   SEG code
 ut0C DD OFFSET FreeDev,             SEG code
 ut0D DD OFFSET CreateControl,       SEG code
