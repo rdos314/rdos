@@ -1405,7 +1405,7 @@ CreateDev   Proc far
     pushad
 ;
     push ax
-    mov ax,SIZE uhci_td
+    mov ax,SIZE base_td
     mov si,SIZE uhci_dev_sel
     mov cx,16
     CreateMemBlk32
@@ -1521,6 +1521,9 @@ UpdateMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkControl   Proc near
+    mov edx,ds:uhc_period_td
+    mov eax,es:dev_control_qh
+    call RemoveTd
     ret
 UnlinkControl   Endp
 
@@ -1533,11 +1536,44 @@ UnlinkControl   Endp
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device
+;                       FS      Flat sel
 ;                       BX      Pipe sel
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkPipe   Proc near
+    push gs
+    pushad
+;   
+    mov gs,bx
+    mov edx,gs:up_qh
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,2
+    je ulpBulk
+;
+    cmp al,3
+    je ulpIntr
+;
+    int 3
+    jmp ulpDone
+
+ulpBulk:
+    mov edx,ds:uhc_period_td
+    mov eax,gs:dev_control_qh
+    call RemoveTd
+    jmp ulpDone
+
+ulpIntr:
+    mov di,gs:up_intr_ptr
+    mov eax,gs:up_qh
+    mov gs,ds:uhc_int_sel
+    call RemoveIntr
+
+ulpDone:
+    popad
+    pop gs
     ret
 UnlinkPipe      Endp
 
@@ -1553,7 +1589,6 @@ UnlinkPipe      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Unlink   Proc far
-    int 3
     push fs
     pushad
 ;
