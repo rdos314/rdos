@@ -2098,14 +2098,16 @@ AllocatePipe    Proc near
     push ds
     push eax
     push ecx
+    push edx
     push esi
     push edi
 ;
-    inc cx
+    add cx,2
+    and cx,0FFFEh
     mov esi,edi
     push es
     movzx eax,cx
-    shl ax,2
+    shl ax,3
     add ax,OFFSET up_entry_arr
     AllocateSmallGlobalMem
 ;
@@ -2123,21 +2125,23 @@ apTdLoop:
     AllocateMemBlk
     mov esi,edx
 ;
-    mov fs:[esi].utd_link,0
-    mov fs:[esi].utd_control,0
-    mov fs:[esi].utd_host,0
-    mov fs:[esi].utd_buf,0
+    xor eax,eax
+    mov fs:[esi].utd_link,eax
+    mov fs:[esi].utd_control,eax
+    mov fs:[esi].utd_host,eax
+    mov fs:[esi].utd_buf,eax
 ;
     mov ds:[di],esi
-    add di,4
+    mov ds:[di+4],eax
+    add di,8
     pop cx
     loop apTdLoop
 ;
     mov bx,ds
-    mov edx,ds:up_entry_arr
 ;
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop eax
     pop ds
@@ -2235,6 +2239,97 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartInPipe
+;
+;       DESCRIPTION:    Start input pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartInPipe     Proc near
+    pushad
+;
+    mov si,OFFSET up_entry_arr
+    mov cx,gs:up_entry_count
+    xor edi,edi
+    xor ebp,ebp
+
+sipLoop:
+    mov edx,gs:[si]
+    or edi,edi
+    jz sipNext
+;
+    LinearToPhysicalMemBlk
+    or al,4
+    mov fs:[edi].utd_link,eax
+
+sipNext:
+    mov edi,edx
+    mov fs:[edi].utd_link,5
+;
+    mov eax,21800000h
+    cmp es:usbd_speed,0
+    jnz sipSpeedOk
+;
+    or eax, 4000000h
+    
+sipSpeedOk:
+    mov fs:[edi].utd_control,eax
+;
+    movzx eax,gs:ued_maxsize
+    dec eax
+    shl eax,21
+    or eax,ebp
+    movzx ebx,gs:ued_address
+    and bl,0Fh
+    shl ebx,15
+    or eax,ebx
+    or ah,es:usbd_address
+    mov al,PID_IN
+    mov fs:[edi].utd_host,eax
+;
+    mov edx,gs:[si+4]
+    or edx,edx
+    jnz sipConv
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    AllocateMemBlk
+    mov gs:[si+4],edx
+    pop cx
+    jmp sipSave
+
+sipConv:
+    LinearToPhysicalMemBlk
+
+sipSave:
+    mov fs:[edi].utd_buf,eax
+;
+    xor ebp,80000h
+    add si,8
+    sub cx,1
+    jnz sipLoop
+;
+    mov ax,gs:up_entry_count
+    dec ax
+    mov gs:up_tail_ptr,ax
+;
+    mov edx,edi
+    LinearToPhysicalMemBlk
+    mov edx,gs:up_qh
+    mov fs:[edx].uqh_elem,eax
+;
+    popad
+    ret
+StartInPipe     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           EnablePipe
 ;
 ;       DESCRIPTION:    Enable pipe
@@ -2245,7 +2340,30 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnablePipe   Proc far
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov dl,gs:ued_address
+    test dl,80h
+    jnz epIn
+
+epOut:
     int 3
+    clc
+    jmp epDone
+
+epIn:
+    call StartInPipe
+    clc
+
+epDone:
+    popad
+    pop fs
+    pop ds
     retf32
 EnablePipe   Endp
 
