@@ -2399,7 +2399,13 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UsedBuffers   Proc far
-    int 3
+    mov cx,gs:up_wr_ptr
+    sub cx,gs:up_rd_ptr
+    jnc ubDone
+;
+    add cx,gs:up_entry_count
+
+ubDone:
     retf32
 UsedBuffers   Endp
 
@@ -2418,7 +2424,20 @@ UsedBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBuffers   Proc far
-    int 3
+    push ax
+;
+    mov ax,gs:up_tail_ptr
+    sub ax,gs:up_rd_ptr
+    jnc fbDone
+;
+    add ax,gs:up_entry_count
+
+fbDone:
+    mov cx,gs:up_entry_count
+    sub cx,ax
+    dec cx
+;
+    pop ax
     retf32
 FreeBuffers   Endp
 
