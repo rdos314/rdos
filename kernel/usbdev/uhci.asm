@@ -2456,7 +2456,48 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqBuffer   Proc far
-    int 3
+    push fs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov al,gs:ued_address
+    test al,80h
+    jnz rqbIn
+
+rqbOut:
+    mov bx,gs:up_wr_ptr
+    cmp bx,gs:up_rd_ptr
+    jne rqbGet
+;
+    stc
+    jmp rqbDone
+
+rqbIn:
+    mov bx,gs:up_rd_ptr
+    cmp bx,gs:up_wr_ptr
+    jne rqbGet
+;
+    stc
+    jmp rqbDone
+
+rqbGet:
+    shl bx,3
+    mov edx,gs:[bx].up_entry_arr
+    mov ecx,fs:[edx].utd_control
+    and cx,7FFh
+    inc cx
+    mov edx,gs:[bx+4].up_entry_arr
+    clc
+
+rqbDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop fs
     retf32
 ReqBuffer   Endp
 
