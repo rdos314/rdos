@@ -303,77 +303,68 @@ real_end:
 
 ; this data is located at 1900.
 
-vbe_info_sign = 5A4Fh
+vbe_req_sign = 5A4Fh
+vbe_ack_sign = 65A4h
 
 vbe_info_struc  STRUC
 
-vbei_sign    DW ?
-vbei_done    DW ?
-vbei_info    vesa_info_struc <>
+vbe_sign    DW ?
+vbe_op      DW ?
+vbe_cx      DW ?
+vbe_res     DW ?
+vbe_buf     DW ?
 
 vbe_info_struc  ENDS
 
 vbe_info_start: 
     mov ax,190h
     mov es,ax
-    mov di,OFFSET vbei_info
+    mov di,OFFSET vbe_buf
     mov ax,140h
     mov ss,ax
     mov sp,400h
-;
-    mov ax,4F00h
+
+vbe_loop:
+    mov ax,es:vbe_op
+    mov cx,es:vbe_cx
     int 10h
-    mov es:vbei_sign,ax
+    mov es:vbe_res,ax
+    mov es:vbe_sign,vbe_ack_sign
+
+vbe_wait:
+    mov ax,es:vbe_sign
+    cmp ax,vbe_req_sign
+    jne short vbe_wait
 ;
-    mov es:vbei_done,vbe_info_sign
+    mov es:vbe_res,-1
+    mov ax,es:vbe_op
+    cmp ax,-1
+    jne short vbe_loop
 ;
     cli
-    hlt
+    mov al,0Fh
+    out 70h,al
+    jmp short $+2
+;
+    xor al,al
+    out 71h,al
+    jmp short $+2
+;
+    xor ax,ax
+    mov ds,ax
+;    
+    mov bx,0F88h
+    lgdt fword ptr ds:[bx]
+;
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
+;
+    db 0EAh
+    dw 0
+    dw 10h
 
 vbe_info_end:
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           VbeGetMode
-;
-;               DESCRIPTION:    Real get VBE mode info
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; this code is loaded at 0100:0000. It should contain no near jumps!
-
-; this data is located at 1900.
-
-vbe_get_mode_sign = 5B4Eh
-
-vbe_get_mode_struc  STRUC
-
-vbeg_sign    DW ?
-vbeg_done    DW ?
-vbeg_mode    DW ?
-vbeg_info    vesa_mode_info <>
-
-vbe_get_mode_struc  ENDS
-
-vbe_get_mode_start: 
-    mov ax,190h
-    mov es,ax
-    mov di,OFFSET vbeg_info
-    mov ax,140h
-    mov ss,ax
-    mov sp,400h
-;
-    mov ax,4F01h
-    mov cx,es:vbeg_mode
-    int 10h
-    mov es:vbeg_sign,ax
-    mov es:vbeg_done,vbe_get_mode_sign
-;
-    cli
-    hlt
-
-vbe_get_mode_end:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3605,11 +3596,132 @@ bcDone:
     pop ds
     ret
 BootCore   Endp
-       
+      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           BootVbeInfo
+;       NAME:           HandleVbe
+;
+;       DESCRIPTION:    Handle VBE session
+;
+;       PARAMETERS:     BX      Requests width
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+vesa_id DB 'VESA'
+
+HandleVbe    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov si,1900h
+    mov ax,ds:[si].vbe_res
+    cmp ax,4Fh
+    jne hvDone
+;
+    add si,OFFSET vbe_buf
+    mov eax,dword ptr ds:[si].vesa_name
+    cmp eax,dword ptr cs:vesa_id
+    jne hvDone
+;
+    movzx eax,word ptr ds:[si].vesa_modes+2
+    shl eax,4
+    movzx esi,word ptr ds:[si].vesa_modes
+    add esi,eax
+;
+    push esi
+    xor ecx,ecx
+
+hvCountLoop:
+    mov ax,ds:[esi]
+    cmp ax,-1
+    je hvCountOk
+;
+    or ax,ax
+    je hvCountOk
+;
+    add esi,2
+    inc ecx
+    jmp hvCountLoop
+
+hvCountOk:
+    pop esi
+;
+    push ecx
+    mov eax,ecx
+    shl eax,1
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    rep movs word ptr es:[edi],ds:[esi]
+;
+    pop ecx
+;
+    xor di,di
+    int 3
+
+hvGetLoop:
+    mov si,1900h
+    mov ds:[si].vbe_op,4F01h
+    mov ax,es:[di]
+    mov ds:[si].vbe_cx,ax
+    mov ds:[si].vbe_sign,vbe_req_sign
+;
+    push cx    
+    mov cx,250
+
+hvWaitLoop:
+    mov ax,ds:[si].vbe_sign
+    cmp ax,vbe_ack_sign
+    je hvGetOk
+;    
+    mov ax,1
+    call DelayMs
+    loop hvWaitLoop
+
+hvGetOk:
+    pop cx
+;
+    mov si,1900h
+    add si,OFFSET vbe_buf
+    mov dx,ds:[si].vmi_mode_attrib
+    and dx,MODE_ATTRIB_REQUIRED
+    cmp dx,MODE_ATTRIB_REQUIRED
+    jne hvGetNext
+;
+    mov dl,ds:[si].vmi_memory_model
+    cmp dl,MODEL_DIRECT
+    jne hvGetNext
+;
+    pushad
+    movzx ax,ds:[si].vmi_bits_per_pixel
+    mov cx,ds:[si].vmi_x_pixels
+    mov dx,ds:[si].vmi_y_pixels
+    mov si,ds:[si].vmi_scan_lines
+    mov edi,ds:[si].vmi_lfb
+    popad
+
+hvGetNext:
+    add di,2
+    sub cx,1
+    jnz hvGetLoop
+
+
+hvDone:
+    popad
+    pop es
+    pop ds
+    ret
+HandleVbe   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           BootVbeCore
 ;
 ;       DESCRIPTION:    Boot a new AP core to collect VBE info
 ;
@@ -3617,7 +3729,7 @@ BootCore   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BootVbeInfo    Proc near
+BootVbeCore    Proc near
     push ds
     push es
     pushad
@@ -3649,8 +3761,9 @@ BootVbeInfo    Proc near
     rep movsb
 ;
     mov di,1900h
-    mov es:[di].vbei_sign,0
-    mov es:[di].vbei_done,0
+    mov es:[di].vbe_sign,vbe_req_sign
+    mov es:[di].vbe_op,4F00h
+    mov es:[di].vbe_cx,0
 ;
     mov bx,467h
     mov ax,0
@@ -3669,39 +3782,41 @@ BootVbeInfo    Proc near
     mov edx,fs:cs_apic
     call SendInit
 ;
-    mov ax,es:[di].vbei_done
-    cmp ax,vbe_info_sign
-    je bviDone
+    mov ax,es:[di].vbe_sign
+    cmp ax,vbe_ack_sign
+    je bvcDone
 ;    
     mov al,1
     call SendStartup
     
     mov cx,250
 
-bviLoop1:
-    mov ax,es:[di].vbei_done
-    cmp ax,vbe_info_sign
-    je bviDone
+bvcLoop1:
+    mov ax,es:[di].vbe_sign
+    cmp ax,vbe_ack_sign
+    je bvcDone
 ;    
     mov ax,1
     call DelayMs
-    loop bviLoop1
+    loop bvcLoop1
 ;
     mov al,1    
     call SendStartup
 ;    
     mov cx,250
 
-bviLoop2:
-    mov ax,es:[di].vbei_done
-    cmp ax,vbe_info_sign
-    je bviDone
+bvcLoop2:
+    mov ax,es:[di].vbe_sign
+    cmp ax,vbe_ack_sign
+    je bvcDone
 ;    
     mov ax,1
     call DelayMs
-    loop bviLoop2
+    loop bvcLoop2
 
-bviDone:
+bvcDone:
+    call HandleVbe
+;
     mov al,0Fh
     out 70h,al
     jmp short $+2
@@ -3724,253 +3839,7 @@ bviDone:
     pop es
     pop ds
     ret
-BootVbeInfo   Endp
-
-       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           BootVbeGetMode
-;
-;       DESCRIPTION:    Boot a new AP core to collect VBE mode info
-;
-;       PARAMETERS:     FS      Core selector
-;                       BP      Mode #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BootVbeGetMode    Proc near
-    push ds
-    push es
-    pushad
-;
-    xor edx,edx
-    GetPageEntry
-    push eax
-    push ebx
-;    
-    mov eax,63h
-    SetPageEntry
-;    
-    mov edx,1000h
-    GetPageEntry
-    push eax
-    push ebx
-;    
-    mov eax,1063h
-    SetPageEntry
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov ax,cs
-    mov ds,ax
-;
-    mov di,1000h
-    mov si,OFFSET vbe_get_mode_start
-    mov cx,OFFSET vbe_get_mode_end - OFFSET vbe_get_mode_start
-    rep movsb
-;
-    mov di,1900h
-    mov es:[di].vbeg_sign,0
-    mov es:[di].vbeg_done,0
-    mov es:[di].vbeg_mode,bp
-;
-    mov bx,467h
-    mov ax,0
-    mov es:[bx],ax
-    mov ax,100h
-    mov es:[bx+2],ax
-;
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
-;
-    mov al,0Ah
-    out 71h,al
-    jmp short $+2
-;
-    mov edx,fs:cs_apic
-    call SendInit
-;
-    mov ax,es:[di].vbeg_done
-    cmp ax,vbe_get_mode_sign
-    je bvgDone
-;    
-    mov al,1
-    call SendStartup
-    
-    mov cx,250
-
-bvgLoop1:
-    mov ax,es:[di].vbeg_done
-    cmp ax,vbe_get_mode_sign
-    je bvgDone
-;    
-    mov ax,1
-    call DelayMs
-    loop bvgLoop1
-;
-    mov al,1    
-    call SendStartup
-;    
-    mov cx,250
-
-bvgLoop2:
-    mov ax,es:[di].vbeg_done
-    cmp ax,vbe_get_mode_sign
-    je bvgDone
-;    
-    mov ax,1
-    call DelayMs
-    loop bvgLoop2
-
-bvgDone:
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
-;
-    xor al,al
-    out 71h,al
-    jmp short $+2
-;
-    pop ebx
-    pop eax
-    mov edx,1000h
-    SetPageEntry
-;
-    pop ebx
-    pop eax
-    xor edx,edx
-    SetPageEntry
-;
-    popad
-    pop es
-    pop ds
-    ret
-BootVbeGetMode   Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetVbe
-;
-;       DESCRIPTION:    Get VBE tables
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-vesa_id DB 'VESA'
-
-GetVbe   Proc near    
-    push ds
-    push es
-    pushad
-;
-    mov ax,flat_sel
-    mov ds,ax
-;
-    call BootVbeInfo
-;
-    mov ebx,1900h
-    mov ax,ds:[ebx].vbei_sign
-    cmp ax,4Fh
-    jne gvDone
-;
-    add ebx,OFFSET vbei_info
-    mov eax,dword ptr ds:[ebx].vesa_name
-    cmp eax,dword ptr cs:vesa_id
-    jne gvDone
-;
-    movzx eax,word ptr ds:[ebx].vesa_modes+2
-    shl eax,4
-    movzx esi,word ptr ds:[ebx].vesa_modes
-    add esi,eax
-;
-    push esi
-    xor ecx,ecx
-
-gvCount:
-    mov ax,ds:[esi]
-    cmp ax,-1
-    je gvCountOk
-;
-    or ax,ax
-    je gvCountOk
-;
-    add esi,2
-    inc ecx
-    jmp gvCount
-
-gvCountOk:
-    pop esi
-;
-    push ecx
-    mov eax,ecx
-    shl eax,1
-    AllocateSmallGlobalMem
-;
-    xor edi,edi
-    rep movs word ptr es:[edi],ds:[esi]
-;
-    xor edi,edi
-    pop ecx
-
-gvcGetLoop:
-    mov bp,es:[edi]
-    call BootVbeGetMode
-;
-    mov ebx,1900h
-    mov ax,ds:[ebx].vbeg_sign
-    cmp ax,4Fh
-    jne gvcGetNext
-;
-    xor si,si
-    add ebx,OFFSET vbeg_info
-    mov dx,ds:[ebx].vmi_mode_attrib
-    and dx,MODE_ATTRIB_REQUIRED
-    cmp dx,MODE_ATTRIB_REQUIRED
-    jne gvcGetNext
-;
-    mov dl,ds:[ebx].vmi_memory_model
-    cmp dl,MODEL_DIRECT
-    jne gvcGetNext
-;
-    push ds
-    push es
-    push ecx
-    push esi
-    push edi
-;
-    mov eax,SIZE vesa_mode_info
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov esi,ebx
-    mov ecx,SIZE vesa_mode_info
-    rep movs byte ptr es:[edi],ds:[esi]
-    mov ax,es
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop es
-    pop ds
-;
-    mov si,ax
-
-gvcGetNext:
-    mov es:[edi],si
-;
-    add edi,2
-    sub ecx,1
-    jnz gvcGetLoop
-;
-    int 3
-
-gvDone:
-    popad
-    pop es
-    pop ds
-    ret
-GetVbe   Endp
+BootVbeCore   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4158,10 +4027,12 @@ init_ap_proc:
     mov fs:cs_apic,edx
     mov al,es:[di].ap_acpi_id
     mov fs:cs_acpi,al
-    cmp al,bl
-    jne init_ap_boot
+    or bx,bx
+    jz init_ap_boot
 ;
-    call GetVbe
+    call BootVbeCore
+    xor bx,bx
+    jmp init_ap_done
 
 init_ap_boot:
     call BootCore
