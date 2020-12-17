@@ -191,6 +191,8 @@ ohci_pipe_struc    STRUC
 
 op_pipe            usb_device_pipe_struc <>
 
+op_section         section_typ <>
+
 op_intr_count      DW ?
 op_intr_list       DW ?
 op_ed              DD ?
@@ -884,7 +886,11 @@ CreateControl   Proc far
 ;    
     mov dx,flat_sel
     mov fs,dx
+;
+    EnterSection ds:ohc_section
     call AddControlEd
+    LeaveSection ds:ohc_section
+;
     mov es:dev_control_ed,edx
     mov eax,fs:[edx].oes_tailp
     mov es:dev_control_tail,eax
@@ -1642,6 +1648,7 @@ apTdLoop:
     loop apTdLoop
 ;
     mov bx,ds
+    InitSection ds:op_section
     mov edx,ds:op_entry_arr
 ;
     pop edi
@@ -1675,8 +1682,11 @@ CreateBulkPipe   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
+;
+    EnterSection ds:ohc_section
     call AllocatePipe
     call AddBulkEd
+    LeaveSection ds:ohc_section
 ;
     mov ds,bx
     mov ds:op_intr_count,0
@@ -1720,11 +1730,15 @@ CreateIntrPipe   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
+;
+    EnterSection ds:ohc_section
     push dx
     call AllocatePipe
     pop cx
     mov cl,ch
     call AddIntrEd
+    LeaveSection ds:ohc_section
+;
     mov ds,bx
     mov ds:op_intr_count,si
     mov ds:op_intr_list,di
@@ -2103,6 +2117,8 @@ RelBuffer   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
+    EnterGsSection gs:op_section
+;
     mov al,gs:ued_address
     test al,80h
     jnz rlbIn
@@ -2181,11 +2197,12 @@ rlbRdTailOk:
     clc
 
 rlbDone:
+    LeaveGsSection gs:op_section
+;
     popad
     pop fs
     retf32
 RelBuffer   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2290,6 +2307,8 @@ niOk:
     jz niDone
 ;
     mov ds,bx
+    EnterSection ds:op_section
+;
     mov bx,ds:op_wr_ptr
     mov si,bx
     shl si,2
@@ -2320,6 +2339,8 @@ niSave:
     pop es
 
 niDone:
+    LeaveSection ds:op_section
+;
     pop esi
     pop ebx
     pop ds
