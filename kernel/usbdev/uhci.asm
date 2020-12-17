@@ -2737,7 +2737,19 @@ rlbRdCheckStart:
     and al,0F0h
     mov ebx,eax
     mov esi,gs:up_qh
-    mov fs:[esi].uqh_elem,eax
+    mov eax,fs:[esi].uqh_elem
+    test al,1
+    jz rlbRdOk
+;
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+    test al,80h
+    jnz rlbRdRestart
+;
+    int 3
+
+rlbRdRestart:
+    mov fs:[esi].uqh_elem,ebx
     
 rlbRdOk:
     clc
@@ -3026,6 +3038,14 @@ citCheckRun:
 ;
     shl bx,3
     mov edx,gs:[bx].up_entry_arr
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+    test al,80h
+    jnz citRestart
+;
+    int 3
+
+citRestart:
     LinearToPhysicalMemBlk
     mov fs:[esi].uqh_elem,eax
 
@@ -3033,7 +3053,6 @@ citDone:
     pop esi
     pop edx
     pop ebx
-
     ret
 CheckIn   Endp        
 
