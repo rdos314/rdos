@@ -191,6 +191,13 @@ hpet_sel            DW ?
 hpet_factor         DD ?
 hpet_counters       DW ?
 
+vbe_desired         DW ?
+vbe_width           DW ?
+vbe_height          DW ?
+vbe_lfb             DD ?
+vbe_mode            DW ?
+vbe_scan_size       DW ?
+
 detected_irqs       DD ?,?
 
 ioapic_count        DW ?
@@ -310,6 +317,7 @@ vbe_info_struc  STRUC
 
 vbe_sign    DW ?
 vbe_op      DW ?
+vbe_bx      DW ?
 vbe_cx      DW ?
 vbe_res     DW ?
 vbe_buf     DW ?
@@ -326,6 +334,7 @@ vbe_info_start:
 
 vbe_loop:
     mov ax,es:vbe_op
+    mov bx,es:vbe_bx
     mov cx,es:vbe_cx
     int 10h
     mov es:vbe_res,ax
@@ -3613,10 +3622,18 @@ vesa_id DB 'VESA'
 HandleVbe    Proc near
     push ds
     push es
+    push fs
     pushad
 ;
     mov ax,flat_sel
     mov ds,ax
+    mov ax,SEG data
+    mov fs,ax
+    mov fs:vbe_width,0
+    mov fs:vbe_height,0
+    mov fs:vbe_lfb,0
+    mov fs:vbe_mode,0
+    mov fs:vbe_scan_size,0
 ;
     mov si,1900h
     mov ax,ds:[si].vbe_res
@@ -3662,13 +3679,12 @@ hvCountOk:
     pop ecx
 ;
     xor di,di
-    int 3
 
 hvGetLoop:
     mov si,1900h
     mov ds:[si].vbe_op,4F01h
-    mov ax,es:[di]
-    mov ds:[si].vbe_cx,ax
+    mov bx,es:[di]
+    mov ds:[si].vbe_cx,bx
     mov ds:[si].vbe_sign,vbe_req_sign
 ;
     push cx    
@@ -3701,18 +3717,94 @@ hvGetOk:
     movzx ax,ds:[si].vmi_bits_per_pixel
     mov cx,ds:[si].vmi_x_pixels
     mov dx,ds:[si].vmi_y_pixels
-    mov si,ds:[si].vmi_scan_lines
-    mov edi,ds:[si].vmi_lfb
+;
+    cmp ax,32
+    jne hvSkip
+;
+    mov bp,fs:vbe_desired
+    cmp bp,1
+    je hvHighest
+
+hvPart:
+    cmp bp,cx
+    je hvSet
+;
+    mov eax,ds:[si].vmi_lfb
+    or eax,eax
+    jz hvSkip
+;    
+    cmp bp,fs:vbe_width
+    je hvSet
+    jmp hvCmp
+
+hvHighest:
+    mov eax,ds:[si].vmi_lfb
+    or eax,eax
+    jz hvSkip
+
+hvCmp:
+    cmp cx,fs:vbe_width
+    jc hvSkip
+
+hvSet:
+    mov eax,ds:[si].vmi_lfb
+    mov fs:vbe_lfb,eax
+    mov fs:vbe_width,cx
+    mov fs:vbe_height,dx
+    mov ax,ds:[si].vmi_scan_lines
+    mov fs:vbe_scan_size,ax
+    mov fs:vbe_mode,bx
+
+hvSkip:
     popad
 
 hvGetNext:
     add di,2
     sub cx,1
     jnz hvGetLoop
+;
+    mov bx,fs:vbe_mode
+    mov si,1900h
+    mov ds:[si].vbe_op,4F02h
+    mov ds:[si].vbe_bx,bx
+    mov ds:[si].vbe_sign,vbe_req_sign
+;
+    push cx    
+    mov cx,250
 
+hvSetLoop:
+    mov ax,ds:[si].vbe_sign
+    cmp ax,vbe_ack_sign
+    je hvSetOk
+;    
+    mov ax,1
+    call DelayMs
+    loop hvSetLoop
+
+hvSetOk:
+    pop cx
+;
+    mov ds:[si].vbe_op,-1
+;
+    mov ax,system_data_sel
+    mov es,ax 
+;
+    mov ax,fs:vbe_width
+    mov es:efi_width,ax
+;
+    mov ax,fs:vbe_height
+    mov es:efi_height,ax
+;
+    mov eax,fs:vbe_lfb
+    mov es:efi_lfb,eax
+    mov es:efi_lfb+4,0
+;
+    movzx eax,fs:vbe_scan_size
+    mov es:efi_scan_size,eax
 
 hvDone:
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -3980,8 +4072,11 @@ StartupApCores    Proc near
     mov es,ax
     mov di,OFFSET vbe_name
     call GetValue
-    pop es
     mov bx,ax
+    mov ax,SEG data
+    mov es,ax
+    mov es:vbe_desired,bx
+    pop es
 ;
     push es
     mov ax,cs
