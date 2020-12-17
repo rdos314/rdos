@@ -840,4 +840,6 @@ report_usb_reg_pipe_event_nr = 763
 
 notify_usb_port_state_nr    = 764
 
+notify_ap_video_mode_nr     = 765
+
 osgate_entries              = 780

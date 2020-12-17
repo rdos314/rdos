@@ -564,6 +564,25 @@ switch_video_mode       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           NotifyApVideoMode
+;
+;           DESCRIPTION:    Notify video mode from AP core
+;
+;           PARAMETERS:     ES:EDI		Mode info
+;                           AX                  Mode #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_ap_video_mode_name DB 'Notify AP Video Mode',0
+
+notify_ap_video_mode       Proc far
+    int 3
+    retf32
+notify_ap_video_mode       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_vbe_thread
 ;
 ;           DESCRIPTION:    Create initial VBE thread
@@ -615,6 +634,12 @@ init    PROC far
     mov edi,OFFSET switch_video_mode_name
     xor cl,cl
     mov ax,switch_video_mode_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_ap_video_mode
+    mov edi,OFFSET notify_ap_video_mode_name
+    xor cl,cl
+    mov ax,notify_ap_video_mode_nr
     RegisterOsGate
 ;    
     BeginGetVideoModes

@@ -3597,6 +3597,12 @@ UnlockFile     MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
+;  IN   AX         Mode #
+;  IN   ES:EDI     Mode info
+NotifyApVideoMode     MACRO
+    OsGate notify_ap_video_mode_nr
+                    ENDM
+
 ;  IN   ES:EDI      UTF-8 string
 ;  IN   BX          font handle
 ;  OUT  AX          start x
