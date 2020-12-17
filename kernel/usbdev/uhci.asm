@@ -82,6 +82,8 @@ uhc_period_td    DD ?
 
 uhc_thread       DW ?
 
+uhc_section      section_typ <>
+
 uhc_io_base      DW ?
 
 uhc_pci_bus_dev  DW ?
@@ -1049,6 +1051,8 @@ ccSpeedOk:
     mov es:dev_control_head,edx
     mov es:dev_utd_control,eax
 ;
+    EnterSection ds:uhc_section
+;
     call AllocateQh
     mov es:dev_control_qh,edx
 ;
@@ -1062,6 +1066,8 @@ ccSpeedOk:
 ccLinkPeriod:
     mov eax,es:dev_control_qh
     call InsertTdFirst
+;
+    LeaveSection ds:uhc_section
     mov es:dev_curr_address,0
 ;
     popad
@@ -1523,9 +1529,11 @@ UpdateMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkControl   Proc near
+    EnterSection ds:uhc_section
     mov edx,ds:uhc_period_td
     mov eax,es:dev_control_qh
     call RemoveTd
+    LeaveSection ds:uhc_section
     ret
 UnlinkControl   Endp
 
@@ -1562,16 +1570,20 @@ UnlinkPipe   Proc near
     jmp ulpDone
 
 ulpBulk:
+    EnterSection ds:uhc_section
     mov edx,ds:uhc_period_td
     mov eax,gs:dev_control_qh
     call RemoveTd
+    LeaveSection ds:uhc_section
     jmp ulpDone
 
 ulpIntr:
+    EnterSection ds:uhc_section
     mov di,gs:up_intr_ptr
     mov eax,gs:up_qh
     mov gs,ds:uhc_int_sel
     call RemoveIntr
+    LeaveSection ds:uhc_section
 
 ulpDone:
     popad
@@ -2316,6 +2328,8 @@ CreateIntrPipe   Proc far
     mov gs,bx
     mov cl,ch
 ;    
+    EnterSection ds:uhc_section
+;
     call AllocateQh
     mov gs:up_qh,edx
 ;    
@@ -2328,6 +2342,7 @@ CreateIntrPipe   Proc far
     mov eax,gs:up_qh
     mov gs,ds:uhc_int_sel
     call InsertIntr
+    LeaveSection ds:uhc_section
     pop ds
 ;
     mov ds:up_rd_ptr,0
@@ -3390,6 +3405,7 @@ ifTabLoop:
     loop ifTabLoop    
 ;
     InitUsbFunction
+    InitSection ds:uhc_section
 ;
     push es
     mov ax,ds
