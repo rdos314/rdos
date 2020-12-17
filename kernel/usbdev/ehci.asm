@@ -144,6 +144,8 @@ ehci_pipe_struc    STRUC
 
 ep_pipe            usb_device_pipe_struc <>
 
+ep_section         section_typ <>
+
 ep_qh              DD ?
 ep_table           DW ?
 ep_table_size      DW ?
@@ -2164,6 +2166,7 @@ apTdLoop:
     loop apTdLoop
 ;
     mov bx,gs
+    InitSection gs:ep_section
 ;
     pop edi
     pop esi
@@ -2589,6 +2592,8 @@ RelBuffer   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
+    EnterGsSection gs:ep_section
+;
     mov al,gs:ued_address
     test al,80h
     jnz rlbIn
@@ -2696,6 +2701,8 @@ rlbRdOk:
     clc
 
 rlbDone:
+    LeaveGsSection gs:ep_section
+;
     popad
     pop fs
     retf32
@@ -3637,6 +3644,8 @@ CheckIn   Proc near
     push edx
     push esi
 ;
+    EnterGsSection gs:ep_section
+;
     mov bx,gs:ep_wr_ptr
     cmp bx,gs:ep_tail_ptr
     je citDone
@@ -3709,6 +3718,8 @@ citCheckRun:
     mov fs:[esi].qh_next_qtd,eax
 
 citDone:
+    LeaveGsSection gs:ep_section
+;
     pop esi
     pop edx
     pop ebx
