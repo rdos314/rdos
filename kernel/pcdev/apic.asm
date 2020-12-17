@@ -3651,8 +3651,17 @@ GetValue    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 max_cores_name  DB 'CORES', 0
+vbe_name        DB 'VBE', 0
 
 StartupApCores    Proc near
+    push es
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET vbe_name
+    call GetValue
+    pop es
+    mov bx,ax
+;
     push es
     mov ax,cs
     mov es,ax
@@ -3697,6 +3706,12 @@ init_ap_proc:
     mov fs:cs_apic,edx
     mov al,es:[di].ap_acpi_id
     mov fs:cs_acpi,al
+    cmp al,bl
+    jne init_ap_boot
+;
+    int 3
+
+init_ap_boot:
     call BootCore
 ;
     inc bp
