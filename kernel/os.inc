@@ -1415,6 +1415,51 @@ leave_section_donep:
     popf
                         ENDM
 
+
+EnterGsSection    MACRO section
+    LOCAL enter_section_donep
+
+    pushf
+    lock sub section.cs_value,1
+    jc enter_section_donep
+;
+    push ds
+    push esi
+;
+    mov si,gs
+    mov ds,si
+    lea esi,section
+    OsGate enter_section_nr
+;
+    pop esi
+    pop ds
+
+enter_section_donep:
+    popf
+                        ENDM
+
+LeaveGsSection    MACRO section
+    LOCAL leave_section_donep
+
+    pushf
+    lock add section.cs_value,1
+    jc leave_section_donep
+;
+    push ds
+    push esi
+;
+    mov si,gs
+    mov ds,si
+    lea esi,section
+    OsGate leave_section_nr
+;
+    pop esi
+    pop ds
+
+leave_section_donep:
+    popf
+                        ENDM
+
 CondEnterSection    MACRO section
     LOCAL enter_section_donep
     lock sub section.cs_value,1

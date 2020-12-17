@@ -122,6 +122,8 @@ uhci_pipe_struc    STRUC
 
 up_pipe            usb_device_pipe_struc <>
 
+up_section         section_typ <>
+
 up_intr_ptr        DW ?
 up_intr_cnt        DW ?
 
@@ -2246,6 +2248,7 @@ apTdLoop:
     loop apTdLoop
 ;
     mov bx,ds
+    InitSection ds:up_section
 ;
     pop edi
     pop esi
@@ -2639,6 +2642,8 @@ RelBuffer   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
+    EnterGsSection gs:up_section
+;
     mov al,gs:ued_address
     test al,80h
     jnz rlbIn
@@ -2755,6 +2760,8 @@ rlbRdOk:
     clc
 
 rlbDone:
+    LeaveGsSection gs:up_section
+;
     popad
     pop fs
     retf32
@@ -2970,6 +2977,9 @@ CheckIn   Proc near
     push edx
     push esi
 ;
+    EnterGsSection gs:up_section
+
+citRetry:
     mov bx,gs:up_wr_ptr
     cmp bx,gs:up_tail_ptr
     je citDone
@@ -3041,15 +3051,15 @@ citCheckRun:
     mov eax,fs:[edx].utd_control
     shr eax,16
     test al,80h
-    jnz citRestart
-;
-    int 3
+    jz citRetry
 
 citRestart:
     LinearToPhysicalMemBlk
     mov fs:[esi].uqh_elem,eax
 
 citDone:
+    LeaveGsSection gs:up_section
+;
     pop esi
     pop edx
     pop ebx
