@@ -3785,6 +3785,10 @@ hvSetOk:
     pop cx
 ;
     mov ds:[si].vbe_op,-1
+    mov ds:[si].vbe_sign,vbe_req_sign
+;
+    mov ax,1
+    call DelayMs
 ;
     mov ax,system_data_sel
     mov es,ax 
@@ -3795,12 +3799,33 @@ hvSetOk:
     mov ax,fs:vbe_height
     mov es:efi_height,ax
 ;
-    mov eax,fs:vbe_lfb
-    mov es:efi_lfb,eax
-    mov es:efi_lfb+4,0
-;
     movzx eax,fs:vbe_scan_size
     mov es:efi_scan_size,eax
+;
+    movzx edx,fs:vbe_scan_size
+    movzx eax,fs:vbe_height
+    mul edx
+    shl eax,2
+    AllocateBigLinear
+;
+    mov eax,fs:vbe_lfb
+    xor ebx,ebx
+    mov al,67h
+    mov es:efi_lfb,edx
+    mov es:mon_fixed_lfb,edx
+;
+    mov es:fixed_lfb_phys,eax
+    mov es:fixed_lfb_phys+4,ebx
+    mov es:fixed_lfb_linear,edx
+
+hvSetupLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop hvSetupLoop
+;
+    mov es:efi_fore_col,0FFFFFFh
+    mov es:efi_back_col,0
 
 hvDone:
     popad
@@ -3847,10 +3872,46 @@ BootVbeCore    Proc near
     mov ax,cs
     mov ds,ax
 ;
+    mov di,0F80h
+    mov si,OFFSET table_start
+    mov cx,OFFSET table_end - OFFSET table_start
+    rep movsb
+;
     mov di,1000h
     mov si,OFFSET vbe_info_start
     mov cx,OFFSET vbe_info_end - OFFSET vbe_info_start
     rep movsb
+;
+    mov di,1400h
+    mov si,OFFSET prot_start
+    mov cx,OFFSET prot_end - OFFSET prot_start
+    rep movsb
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov di,1800h
+    mov eax,cr0
+    mov es:[di].ap_cr0,eax
+    mov eax,cr3
+    mov es:[di].ap_cr3,eax
+;
+    mov eax,cr4
+    mov es:[di].ap_cr4,eax
+;
+    db 66h
+    sidt fword ptr es:[di].ap_idt
+;    
+    mov ax,fs:cs_gdt_size
+    dec ax
+    mov word ptr es:[di].ap_gdt,ax
+    mov eax,fs:cs_gdt_base
+    mov dword ptr es:[di].ap_gdt+2,eax
+;
+    mov eax,fs:cs_stack_offset
+    mov es:[di].ap_stack_offset,eax
+    mov ax,fs:cs_stack_sel
+    mov es:[di].ap_stack_sel,ax
 ;
     mov di,1900h
     mov es:[di].vbe_sign,vbe_req_sign
