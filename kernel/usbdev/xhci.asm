@@ -4093,9 +4093,6 @@ InitFunction    Proc near
     push fs
     pushad
 ;
-    call CreateEventThread
-    call CreatePortThread
-;
     InitSection es:xhc_cmd_section
 ;
     mov ds,es:xhc_reg_sel
@@ -4243,6 +4240,8 @@ ifTabLoop:
     mov ax,es
     mov ds,ax
     InitUsbFunction
+    call CreateEventThread
+    call CreatePortThread
 
 ifDone:
     popad
