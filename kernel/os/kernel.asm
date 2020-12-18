@@ -618,7 +618,7 @@ move_efi_lfb_do:
 ;
     mov eax,ds:efi_lfb
     mov ebx,ds:efi_lfb+4
-    mov al,67h
+    mov al,6Bh
     mov ds:efi_lfb,edx
     mov ds:mon_fixed_lfb,edx
 ;

@@ -3810,7 +3810,7 @@ hvSetOk:
 ;
     mov eax,fs:vbe_lfb
     xor ebx,ebx
-    mov al,67h
+    mov al,6Bh
     mov es:efi_lfb,edx
     mov es:mon_fixed_lfb,edx
 ;
