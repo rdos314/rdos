@@ -179,9 +179,29 @@ pss_lpm     DD ?
 
 port_stat_struc ENDS
 
+xhc_params	STRUC
+
+par_oper_offset    DD ?
+par_db_offset      DD ?
+par_run_offset     DD ?
+par_offset         DW ?
+par_intr_count     DW ?
+par_scratch_count  DW ?
+par_slot_count     DB ?
+par_slot_size      DB ?
+par_port_count     DB ?
+par_seg_count      DB ?
+
+xhc_params   ENDS
+
 xhci_func_sel   STRUC
 
 usb_func_base        usb_function_struc <>
+
+xhc_cap_offset      DD ?
+xhc_oper_offset     DD ?
+xhc_run_offset      DD ?
+xhc_door_offset     DD ?
 
 xhc_hcc_sel         DW ?
 xhc_reg_sel         DW ?
@@ -4320,11 +4340,132 @@ BiosHandoff Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CalcRegSize
+;
+;       DESCRIPTION:    Calc size of registers
+;
+;       PARAMETERS:     EBX:EAX Register base
+;
+;       RETURNS:        ECX     Size
+;                       ES      Params struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcRegSize	Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    push eax
+    mov eax,SIZE xhc_params
+    AllocateSmallGlobalMem
+    pop eax
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and ax,0FFFh
+    mov es:par_offset,ax
+    or dx,ax
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ebx,ds:[edx].hccLen
+    mov es:par_oper_offset,ebx
+;
+    mov eax,ds:[edx].hccParams1
+    mov es:par_slot_count,al
+    shr eax,8
+    and ax,7FFh
+    mov es:par_intr_count,ax
+    shr eax,16
+    mov es:par_port_count,al
+;
+    mov eax,ds:[edx].hccParams2
+    shr eax,4
+    and al,0Fh
+    mov es:par_seg_count,al
+    shr eax,17
+    mov bl,al
+    and bx,1Fh
+    shl bx,6
+    shr ax,16
+    and al,1Fh
+    or bl,al
+    mov es:par_scratch_count,bx
+;
+    mov eax,ds:[edx].hccCap1
+    test al,4
+    jz crsSlot32
+
+crsSlot64:
+    mov es:par_slot_size,64
+    jmp crsSlotOk
+
+crsSlot32:
+    mov es:par_slot_size,32
+
+crsSlotOk:
+    mov eax,ds:[edx].hccDbOff
+    mov es:par_db_offset,eax
+;
+    mov eax,ds:[edx].hccRtsOff
+    mov es:par_run_offset,eax
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    mov ecx,es:par_oper_offset
+    movzx eax,es:par_slot_count
+    shl eax,4
+    add eax,es:par_db_offset
+    cmp ecx,eax
+    ja crsDbOk
+;
+    mov ecx,eax
+
+crsDbOk:
+    movzx eax,es:par_intr_count
+    inc eax
+    shl eax,5
+    add eax,es:par_run_offset
+;
+    cmp ecx,eax
+    ja crsRunOk
+;
+    mov ecx,eax
+
+crsRunOk:
+    movzx eax,es:par_offset
+    add ecx,eax
+;
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+CalcRegSize	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreatePrimaryFunction
 ;
 ;       DESCRIPTION:    Create primary XHCI function
 ;
-;       PARAMETERS:     EDX:EAX Register base
+;       PARAMETERS:     EBX:EAX Register base
 ;
 ;       RETURNS:        NC      OK
 ;                           ES  Function selector
@@ -4335,6 +4476,9 @@ CreatePrimaryFunction  Proc near
     push ds
     pushad
 ;
+    int 3
+    call CalcRegSize
+
     push edx
     push eax
 ;    
@@ -4362,6 +4506,7 @@ cpfDevLoop:
     and eax,0FFFh
     or edx,eax
 ;
+    int 3
     mov ecx,10000h
     mov bx,xhci_hcc_sel
     CreateDataSelector16
@@ -4376,6 +4521,10 @@ cpfDevLoop:
 
 cpf64Ok:        
     call BiosHandoff
+    int 3
+
+
+
 ;    
     mov eax,SIZE xhci_func_sel
     mov cx,ax
@@ -4833,7 +4982,7 @@ InitPciAdapter  Proc near
     push eax    
     mov cl,14h
     ReadPciDword
-    mov edx,eax
+    mov ebx,eax
     pop eax
 
 init_pci_base_ok:
