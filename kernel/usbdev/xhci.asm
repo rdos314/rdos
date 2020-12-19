@@ -191,6 +191,7 @@ par_slot_count     DB ?
 par_slot_size      DB ?
 par_port_count     DB ?
 par_seg_count      DB ?
+par_has_64         DB ?
 
 xhc_params   ENDS
 
@@ -198,10 +199,11 @@ xhci_func_sel   STRUC
 
 usb_func_base        usb_function_struc <>
 
+xhc_reg_phys        DD ?,?
 xhc_cap_offset      DD ?
 xhc_oper_offset     DD ?
 xhc_run_offset      DD ?
-xhc_door_offset     DD ?
+xhc_db_offset       DD ?
 
 xhc_hcc_sel         DW ?
 xhc_reg_sel         DW ?
@@ -4403,6 +4405,17 @@ CalcRegSize	Proc near
     mov es:par_scratch_count,bx
 ;
     mov eax,ds:[edx].hccCap1
+    test al,1
+    jz crsPhys32
+
+crsPhys64:
+    mov es:par_has_64,1
+    jmp crsPhysOk
+
+crsPhys32:
+    mov es:par_has_64,0
+
+crsPhysOk:
     test al,4
     jz crsSlot32
 
@@ -4419,6 +4432,10 @@ crsSlotOk:
 ;
     mov eax,ds:[edx].hccRtsOff
     mov es:par_run_offset,eax
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
 ;
     mov ecx,1000h
     FreeLinear
@@ -4461,6 +4478,93 @@ CalcRegSize	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateFuncSel
+;
+;       DESCRIPTION:    Create function selector
+;
+;       PARAMETERS:     ES      Param
+;                       ECX     Reg size
+;
+;       RETURNS:        DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFuncSel	Proc near
+    pushad
+;
+    push eax
+    push ecx
+    mov eax,ecx
+    add eax,4000h
+    AllocateBigLinear
+    pop ecx
+    pop eax
+;
+    push ecx
+    push edx
+;
+    add edx,4000h
+    shr ecx,12
+    and ax,0F000h
+    or ax,813h
+
+cfsLoop:
+    SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h
+    loop cfsLoop
+;
+    pop edx
+    pop ecx
+;
+    AllocateGdt
+    add ecx,4000h
+    CreateDataSelector32
+    mov ds,bx    
+;    
+    popad
+    ret
+CreateFuncSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitFuncSel
+;
+;       DESCRIPTION:    Init function selector
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Param
+;                       EBX:EAX Register base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitFuncSel	Proc near
+    mov ds:xhc_reg_phys,eax
+    mov ds:xhc_reg_phys+4,ebx
+;
+    mov edx,4000h
+    mov ds:xhc_cap_offset,edx
+;
+    mov eax,es:par_oper_offset
+    add eax,edx
+    mov ds:xhc_oper_offset,eax
+;
+    mov eax,es:par_run_offset
+    add eax,edx
+    mov ds:xhc_run_offset,eax
+;
+    mov eax,es:par_db_offset
+    add eax,edx
+    mov ds:xhc_db_offset,eax
+
+    ret
+InitFuncSel     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreatePrimaryFunction
 ;
 ;       DESCRIPTION:    Create primary XHCI function
@@ -4478,7 +4582,9 @@ CreatePrimaryFunction  Proc near
 ;
     int 3
     call CalcRegSize
-
+    call CreateFuncSel
+    call InitFuncSel
+;
     push edx
     push eax
 ;    
