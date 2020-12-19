@@ -36,6 +36,8 @@ INCLUDE ..\driver.def
 INCLUDE ..\pcdev\apic.inc
 INCLUDE system.inc
 
+IA32_PAT      = 277h
+
 MAJOR_VERSION = 12
 MINOR_VERSION = 7
 RELEASE = 3
@@ -771,6 +773,17 @@ init_no_fpu:
     mov cr0,eax
 
 init_cpu_done:
+    mov eax,ds:cpu_feature_flags
+    test eax,10000h
+    jz init_pat_done
+;
+    mov ecx,IA32_PAT
+    rdmsr
+    and ah,NOT 7
+    or ah,1
+    wrmsr
+
+init_pat_done:
     call ZeroRam
     call MarkupRam
 ;
