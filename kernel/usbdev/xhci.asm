@@ -199,11 +199,16 @@ xhci_func_sel   STRUC
 
 usb_func_base        usb_function_struc <>
 
+xhc_linear          DD ?
+xhc_func_phys       DD ?,?
 xhc_reg_phys        DD ?,?
 xhc_cap_offset      DD ?
 xhc_oper_offset     DD ?
 xhc_run_offset      DD ?
 xhc_db_offset       DD ?
+xhc_port_offset     DD ?
+xhc_intr_offset     DD ?
+
 
 xhc_hcc_sel         DW ?
 xhc_reg_sel         DW ?
@@ -4486,16 +4491,19 @@ CalcRegSize	Endp
 ;                       ECX     Reg size
 ;
 ;       RETURNS:        DS      Function sel
+;                       EDX     Function linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateFuncSel	Proc near
-    pushad
+    push eax
+    push ebx
+    push ecx
 ;
     push eax
     push ecx
     mov eax,ecx
-    add eax,4000h
+    add eax,3000h
     AllocateBigLinear
     pop ecx
     pop eax
@@ -4503,7 +4511,7 @@ CreateFuncSel	Proc near
     push ecx
     push edx
 ;
-    add edx,4000h
+    add edx,3000h
     shr ecx,12
     and ax,0F000h
     or ax,813h
@@ -4519,11 +4527,13 @@ cfsLoop:
     pop ecx
 ;
     AllocateGdt
-    add ecx,4000h
+    add ecx,3000h
     CreateDataSelector32
     mov ds,bx    
 ;    
-    popad
+    pop ecx
+    pop ebx
+    pop eax
     ret
 CreateFuncSel  Endp
 
@@ -4535,25 +4545,55 @@ CreateFuncSel  Endp
 ;       DESCRIPTION:    Init function selector
 ;
 ;       PARAMETERS:     DS      Function sel
+;                       EDX     Function linear
 ;                       ES      Param
 ;                       EBX:EAX Register base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitFuncSel	Proc near
+    push eax
+    push ebx
+;
+    mov al,es:par_has_64
+    jz ifsFunc32
+
+ifsFunc64:
+    AllocatePhysical64
+    jmp ifsFuncOk
+
+ifsFunc32:
+    AllocatePhysical32
+
+ifsFuncOk:
+    mov al,3
+    SetPageEntry
+;
+    mov ds:xhc_linear,edx
+    xor al,al
+    mov ds:xhc_func_phys,eax
+    mov ds:xhc_func_phys+4,ebx
+;
+    pop ebx
+    pop eax    
+;
     mov ds:xhc_reg_phys,eax
     mov ds:xhc_reg_phys+4,ebx
 ;
-    mov edx,4000h
+    mov edx,3000h
     mov ds:xhc_cap_offset,edx
 ;
     mov eax,es:par_oper_offset
     add eax,edx
     mov ds:xhc_oper_offset,eax
+    add eax,400h
+    mov ds:xhc_port_offset,eax
 ;
     mov eax,es:par_run_offset
     add eax,edx
     mov ds:xhc_run_offset,eax
+    add eax,20h
+    mov ds:xhc_intr_offset,eax
 ;
     mov eax,es:par_db_offset
     add eax,edx
