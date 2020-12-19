@@ -858,7 +858,7 @@ apPagesOk:
     push ebx
 ;
     AllocateMultiplePhysical32
-    mov al,67h
+    mov al,13h
     push eax
     mov eax,ecx
     shl eax,12
@@ -1028,7 +1028,7 @@ ipaLoop:
 ;
     push ebx
     xor ebx,ebx
-    or al,67h
+    or al,13h
     SetPageEntry
     pop ebx
 ;

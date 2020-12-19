@@ -1789,7 +1789,7 @@ svmVideo:
 ;
     mov eax,es:vm_lfb
     xor ebx,ebx
-    mov al,67h
+    mov al,0Bh
 
 svmPageLoop:
     SetPageEntry
@@ -2026,7 +2026,7 @@ end_get_video_modes  PROC far
 ;
     mov eax,es:efi_lfb
     mov ebx,es:efi_lfb+4
-    mov al,67h
+    mov al,0Bh
     mov es:efi_lfb,edx
 
 egvMoveLoop:

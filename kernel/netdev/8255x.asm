@@ -271,7 +271,7 @@ saMem:
 ;
     mov eax,ds:MemBase
     xor ebx,ebx
-    or al,67h
+    or al,17h
     SetPageEntry
 ;
     AllocateGdt
@@ -707,7 +707,7 @@ InitCmd Proc near
     mov ds:TxRingSize,eax
 ;
     mov eax,ds:TxRingPhys
-    or al,7
+    or al,13h
     mov ecx,TX_RING_SIZE SHR 12
 
 ic_ring_loop:
@@ -881,7 +881,7 @@ InitRx  Proc near
     mov ds:RxRingSize,eax
 ;
     mov eax,ds:RxRingPhys
-    or al,7
+    or al,13h
     mov ecx,RX_RING_SIZE SHR 12
 
 ir_rxring_loop:

@@ -64,7 +64,7 @@ CreateBlock     Proc near
     push eax
     push ebx
 ;
-    mov al,63h
+    mov al,13h
     SetPageEntry
 ;
     AllocateGdt

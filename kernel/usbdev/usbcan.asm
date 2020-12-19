@@ -164,7 +164,7 @@ CreateSendBuf   Proc near
     AllocateBigLinear
 ;
     AllocatePhysical32
-    or al,67h
+    or al,13h
     SetPageEntry
 ;
     AllocateGdt
@@ -209,7 +209,7 @@ CreateRecBuf    Proc near
     AllocateBigLinear
 ;
     AllocatePhysical32
-    or al,67h
+    or al,13h
     SetPageEntry
 ;
     AllocateGdt
@@ -1612,7 +1612,7 @@ usProg:
     AllocateBigLinear
 ;
     AllocatePhysical32
-    or al,67h
+    or al,13h
     SetPageEntry
 ;
     AllocateGdt

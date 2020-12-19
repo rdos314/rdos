@@ -3022,7 +3022,7 @@ mem_init_pci_found:
     push ecx
 ;    
     xor ebx,ebx
-    mov al,67h
+    mov al,13h
     SetPageEntry
 ;
     add eax,1000h

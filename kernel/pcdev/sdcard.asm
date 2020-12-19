@@ -262,7 +262,7 @@ ipdLoop:
     and ax,0F000h
     push ebx
     xor ebx,ebx
-    mov al,67h
+    mov al,13h
     SetPageEntry
     pop ebx
     pop eax

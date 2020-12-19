@@ -333,7 +333,7 @@ CreateIntrQueue PROC near
     mov eax,1000h
     AllocateBigLinear
     AllocatePhysical32
-    or al,67h
+    or al,13h
     SetPageEntry
     mov ds:uhc_int_linear,edx
     mov ecx,eax
@@ -3525,7 +3525,7 @@ AddFunction  Proc near
     mov eax,1000h
     AllocateBigLinear
     AllocatePhysical32
-    or al,7
+    or al,13h
     SetPageEntry
 ;    
     mov ds:uhc_hw_linear,edx

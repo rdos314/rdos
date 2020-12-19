@@ -679,7 +679,7 @@ SetupDevice  Proc near
     mov si,ax
     and si,0E00h
     and ax,0F000h
-    mov al,67h
+    mov al,13h
     xor ebx,ebx
     SetPageEntry
 ;

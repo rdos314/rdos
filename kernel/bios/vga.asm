@@ -441,7 +441,7 @@ init_v86_io_loop:
     push ebx    
     xor ebx,ebx
     shr ecx,12
-    or al,3
+    or al,0Bh
 
 init_v86_memmap_loop:
     SetPageEntry

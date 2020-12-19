@@ -156,7 +156,7 @@ switch_mode_done:
     push ebx
 ;    
     mov eax,edx
-    or ax,807h
+    or ax,80Bh
     SetPageEntry
 ;
     EnterSection ds:v_section
@@ -197,7 +197,7 @@ switch_mode_done:
     cmp edx,es:p_cr3
     je switch_to_done
 ;
-    or ax,807h
+    or ax,80Bh
     mov edx,ds:v_mem_base
     SetPageEntry
 
@@ -232,7 +232,7 @@ switch_from     Proc far
 ;    
     mov eax,edx
     xor ebx,ebx
-    or ax,807h
+    or ax,80Bh
     SetPageEntry
 ;
     EnterSection ds:v_section
@@ -269,7 +269,7 @@ switch_from     Proc far
     je switch_from_done
 ;
     mov edx,ds:v_mem_base
-    or ax,807h
+    or ax,80Bh
     SetPageEntry
 
 switch_from_done:
@@ -791,7 +791,7 @@ init_mono_loop:
 ;
     mov edx,ds:v_buf_base
     GetPageEntry
-    or ax,807h
+    or ax,80Bh
     mov edx,ds:v_mem_base
     SetPageEntry
     pop ax

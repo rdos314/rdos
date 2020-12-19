@@ -197,7 +197,7 @@ init_org_bit_loop:
         mov cx,10h
         mov edx,ds:v_mem_base
         xor ebx,ebx
-        mov eax,0A0003h
+        mov eax,0A000Bh
 
 init_alias_bit_loop:
         SetPageEntry

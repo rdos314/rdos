@@ -908,7 +908,7 @@ SetupDMA    Proc near
 
 setup_dma_alloc:
     AllocateDmaPhysical
-    or al,3
+    or al,13h
     SetPageEntry
     and ax,0F000h
     cmp eax,1000000h

@@ -322,7 +322,7 @@ AllocateRing    Proc near
     mov ds:RxRingSize,eax
 ;
     mov eax,ds:RxRingPhys
-    or al,7
+    or al,13h
     mov ecx,2 SHL RX_BUF_LEN_IDX
 
 al_rxring_loop:
@@ -333,7 +333,7 @@ al_rxring_loop:
 ;
     mov ecx,2 SHL RX_BUF_LEN_IDX
     mov eax,ds:RxRingPhys
-    or al,7
+    or al,13h
 
 al_arxring_loop:
     SetPageEntry

@@ -472,7 +472,7 @@ CreateRxRing    Proc near
     mov eax,1000h
     AllocateBigLinear
     AllocatePhysical32
-    or al,7
+    or al,13h
     SetPageEntry
     mov edi,edx
     mov ecx,400h
@@ -507,7 +507,7 @@ crLoop:
     pop ecx
     mov es:[di].rx_low_ads,eax
 ;
-    mov al,67h
+    mov al,13h
     SetPageEntry
     add edx,1000h
     add eax,1000h
@@ -584,7 +584,7 @@ CreateTxRing    Proc near
     mov eax,1000h
     AllocateBigLinear
     AllocatePhysical32
-    or al,7
+    or al,13h
     SetPageEntry
     mov edi,edx
     mov ecx,400h
@@ -618,7 +618,7 @@ ctLoop:
     pop ecx
     mov es:[di].tx_low_ads,eax
 ;
-    mov al,67h
+    mov al,13h
     SetPageEntry
     add edx,1000h
     add eax,1000h
