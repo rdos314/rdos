@@ -218,6 +218,7 @@ cev_result  DB ?
 cev_struc   ENDS
 
 CMD_OFFSET = 1000h
+DEV_OFFSET = 1800h
 REG_OFFSET = 2000h
 
 xhci_func_sel   STRUC
@@ -234,9 +235,14 @@ xhc_db_offset       DD ?
 xhc_port_offset     DD ?
 xhc_intr_offset     DD ?
 
-xhc_has_64          DB ?,?
+xhc_has_64          DB ?
+xhc_int_base        DB ?
 
-xhc_cmd_phys        DD ?,?
+xhc_slot_count      DB ?
+xhc_port_count      DB ?
+
+xhc_crcr            DD ?,?
+xhc_dcba            DD ?,?
 
 xhc_cmd_enque       DW ?
 xhc_cmd_pcs         DW ?
@@ -255,12 +261,8 @@ xhc_device_ptr_sel  DW ?
 xhc_cmd_ring_sel    DW ?
 xhc_event_ring_sel  DW ?
 
-xhc_slot_count      DB ?
-xhc_port_count      DB ?
 
 xhc_context_size    DW ?
-xhc_dcba            DD ?,?
-xhc_crcr            DD ?,?
 xhc_erst            DD ?,?
 xhc_edqe            DD ?,?
 
@@ -4047,7 +4049,6 @@ AddFunction    Proc near
     push fs
     pushad
 ;
-    int 3
     InitSection ds:xhc_cmd_section
 ;
     mov edi,ds:xhc_oper_offset
@@ -4081,9 +4082,19 @@ ifWaitReseted:
     mov al,14h
     AllocateInts
     pop cx
-    jc ifIrq    
+    jnc ifMsiSetup
 ;
-    mov dl,1
+    mov ds:xhc_intr_count,1
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc ifIrq
+
+ifMsiSetup:
+    mov ds:xhc_int_base,al
+    mov dx,ds:xhc_intr_count
     SetupPciMsi
     jmp ifReg
 
@@ -4113,7 +4124,7 @@ ifMsiX:
 ifReg:    
     push ds
     push es
-    mov di,es
+    mov di,ds:xhc_intr_arr
     mov ds,di
     mov di,cs
     mov es,di
@@ -4125,34 +4136,29 @@ ifReg:
 
 ifIrq:
     mov ds:xhc_intr_count,1
+    push ds
     push es
     GetPciIrqNr
     mov ah,14h
-    mov di,es
+    mov di,ds:xhc_intr_arr
     mov ds,di
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
     RequestIrqHandler
     pop es
+    pop ds
 
 ifIntDone:    
-    movzx eax,es:xhc_slot_count
-    mov ds:orsConfig,eax
-;
-    push es
-    movzx cx,es:xhc_slot_count
-    mov es,es:xhc_device_ptr_sel
-    xor di,di
-    shl cx,1
-    xor eax,eax
-    rep stosd
-    pop es
+    int 3
+    mov edi,ds:xhc_oper_offset
+    movzx eax,ds:xhc_slot_count
+    mov ds:[edi].orsConfig,eax
 ;    
-    mov eax,es:xhc_dcba
-    mov ds:orsDcbaap,eax
-    mov eax,es:xhc_dcba+4
-    mov ds:orsDcbaap+4,eax
+    mov eax,ds:xhc_dcba
+    mov ds:[edi].orsDcbaap,eax
+    mov eax,ds:xhc_dcba+4
+    mov ds:[edi].orsDcbaap+4,eax
 ;    
     call CreateScratchPad
 ;
@@ -4494,6 +4500,12 @@ ifsFuncOk:
 ifSaveCount:
     mov ds:xhc_intr_count,ax
 ;
+    mov al,es:par_slot_count
+    mov ds:xhc_slot_count,al
+;
+    mov al,es:par_port_count
+    mov ds:xhc_port_count,al
+;
     FreeMem
 ;
     pop edx
@@ -4621,15 +4633,19 @@ ccrPhysOk:
     rep stos dword ptr es:[edi]
 ;
     pop eax
-    mov ds:xhc_cmd_phys,eax
-    mov ds:xhc_cmd_phys+4,ebx
+    mov ds:xhc_crcr,eax
+    mov ds:xhc_crcr+4,ebx
 ;
-    mov edi,CMD_OFFSET + 0FF0h
+    mov edi,DEV_OFFSET - 10h
     mov ds:[edi].trb_param,eax
     mov ds:[edi].trb_param+4,ebx
     mov ds:[edi].trb_status,0
     mov ds:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
     mov ds:[edi].trb_control,0
+;
+    add eax,DEV_OFFSET - CMD_OFFSET
+    mov ds:xhc_dcba,eax
+    mov ds:xhc_dcba+4,ebx
 ;
     popad
     pop es
@@ -4779,7 +4795,6 @@ InitPciAdapter  Proc near
     pop eax
 
 init_pci_base_ok:
-    int 3
     and ax,0FFF0h
     mov ebp,eax
     call CreateFunction
