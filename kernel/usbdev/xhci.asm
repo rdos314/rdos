@@ -38,6 +38,8 @@ INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 include hub.inc
 
+MAX_INTR_COUNT   = 4
+
 TRB_TYPE_NORMAL         = 1
 TRB_TYPE_SETUP          = 2
 TRB_TYPE_DATA           = 3
@@ -195,6 +197,29 @@ par_has_64         DB ?
 
 xhc_params   ENDS
 
+event_seg   STRUC
+
+ev_ers        DD ?,?
+ev_size       DW ?
+ev_resv1      DW ?
+ev_resv2      DD ?
+ev_phys       DD ?,?
+ev_edge       DD ?,?
+ev_hdr_size   DW ?
+
+event_seg   ENDS
+
+cev_struc   STRUC
+
+cev_thread  DW ?
+cev_slot    DB ?
+cev_result  DB ?
+
+cev_struc   ENDS
+
+CMD_OFFSET = 1000h
+REG_OFFSET = 2000h
+
 xhci_func_sel   STRUC
 
 usb_func_base        usb_function_struc <>
@@ -208,6 +233,17 @@ xhc_run_offset      DD ?
 xhc_db_offset       DD ?
 xhc_port_offset     DD ?
 xhc_intr_offset     DD ?
+
+xhc_has_64          DB ?,?
+
+xhc_cmd_phys        DD ?,?
+
+xhc_cmd_enque       DW ?
+xhc_cmd_pcs         DW ?
+
+xhc_intr_count      DW ?
+xhc_intr_arr        DW MAX_INTR_COUNT DUP(?)
+
 
 
 xhc_hcc_sel         DW ?
@@ -227,9 +263,6 @@ xhc_dcba            DD ?,?
 xhc_crcr            DD ?,?
 xhc_erst            DD ?,?
 xhc_edqe            DD ?,?
-
-xhc_cmd_enque       DW ?
-xhc_cmd_pcs         DW ?
 
 xhc_attach_pend     DD ?
 xhc_detach_pend     DD ?
@@ -646,50 +679,6 @@ SetupLinkTrb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateEventRing
-;
-;       DESCRIPTION:    Init event ring
-;
-;       PARAMETERS:     ES      Function selector
-;
-;       RETURNS:        EDI     Event ring linear
-;                       EBX:EAX Event ring physical
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateEventRing   Proc near
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical64
-    mov es:xhc_erst,eax
-    mov es:xhc_erst+4,ebx
-;
-    mov al,13h
-    SetPageEntry
-;
-    push es
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    call AllocateSegment
-;
-    mov es:[edi],eax
-    mov es:[edi+4],ebx
-    mov ecx,256
-    mov es:[edi+8],ecx
-    xor ecx,ecx
-    mov es:[edi+12],ecx
-    pop es
-;    
-    mov es:xhc_edqe,eax
-    mov es:xhc_edqe+4,ebx    
-    ret
-CreateEventRing   Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CreateScratchPad
 ;
 ;       DESCRIPTION:    Create scratch pad area (if needed)
@@ -761,68 +750,6 @@ cspDone:
     pop ds
     ret
 CreateScratchPad   Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateCommandRing
-;
-;       DESCRIPTION:    Create command ring
-;
-;       PARAMETERS:     ES      Function selector
-;
-;       RETURNS:        EDX     Ring linear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateCommandRing   Proc near
-    push gs
-    push edi
-;
-    mov ax,flat_sel
-    mov gs,ax    
-;
-    mov eax,2000h
-    AllocateBigLinear
-;
-    mov ecx,2
-    AllocateMultiplePhysical64
-    mov es:xhc_crcr,eax
-    mov es:xhc_crcr+4,ebx
-;
-    mov al,13h
-    SetPageEntry
-;
-    push eax
-    push edx
-    add eax,1000h
-    add edx,1000h
-    SetPageEntry
-    pop edx
-    pop eax
-;
-    push es
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    mov ecx,800h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-    pop es
-;
-    mov edi,edx
-    add edi,0FF0h
-    mov eax,es:xhc_crcr
-    mov ebx,es:xhc_crcr+4
-    call SetupLinkTrb
-;
-    mov es:xhc_cmd_enque,0
-    mov es:xhc_cmd_pcs,1
-;
-    pop edi
-    pop gs    
-    ret
-CreateCommandRing   Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4280,73 +4207,6 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           BiosHandoff
-;
-;       DESCRIPTION:    Do BIOS handoff
-;
-;       PARAMETERS:     EDX     HCC linear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BiosHandoff Proc near
-    push ds
-    push eax
-    push ebx
-    push ebp
-;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov ebx,ds:[edx].hccCap1
-    shr ebx,16
-    or bx,bx
-    jz bhDone
-;
-    shl ebx,2
-    mov ebp,ebx
-
-bhLoop:
-    mov al,ds:[edx+ebx]
-    cmp al,1
-    jne bhNext
-;
-    add ebx,edx
-    test ds:[ebx+2],1
-    jz bhDone
-
-bhRetry:
-    or ds:[ebx+3],1
-;
-    mov ax,25
-    WaitMilliSec
-;
-    test ds:[ebx+2],1
-    jnz bhRetry
-;
-    test ds:[ebx+3],1
-    jz bhRetry
-    jmp bhDone
-
-bhNext:
-    mov al,ds:[edx+ebx+1]
-    or al,al
-    jz bhDone
-;
-    movzx ebx,al
-    shl ebx,2
-    add ebx,ebp
-    jmp bhLoop
-    
-bhDone:    
-    pop ebp
-    pop ebx
-    pop eax
-    pop ds
-    ret
-BiosHandoff Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CalcRegSize
 ;
 ;       DESCRIPTION:    Calc size of registers
@@ -4503,7 +4363,7 @@ CreateFuncSel	Proc near
     push eax
     push ecx
     mov eax,ecx
-    add eax,3000h
+    add eax,REG_OFFSET
     AllocateBigLinear
     pop ecx
     pop eax
@@ -4511,7 +4371,7 @@ CreateFuncSel	Proc near
     push ecx
     push edx
 ;
-    add edx,3000h
+    add edx,REG_OFFSET
     shr ecx,12
     and ax,0F000h
     or ax,813h
@@ -4527,7 +4387,7 @@ cfsLoop:
     pop ecx
 ;
     AllocateGdt
-    add ecx,3000h
+    add ecx,REG_OFFSET
     CreateDataSelector32
     mov ds,bx    
 ;    
@@ -4553,6 +4413,9 @@ CreateFuncSel  Endp
 
 InitFuncSel	Proc near
     push eax
+    push edx
+;
+    push eax
     push ebx
 ;
     mov al,es:par_has_64
@@ -4566,8 +4429,25 @@ ifsFunc32:
     AllocatePhysical32
 
 ifsFuncOk:
+    push es
+    push eax
+    push ecx
+    push edi
+;
     mov al,3
     SetPageEntry
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
 ;
     mov ds:xhc_linear,edx
     xor al,al
@@ -4580,7 +4460,8 @@ ifsFuncOk:
     mov ds:xhc_reg_phys,eax
     mov ds:xhc_reg_phys+4,ebx
 ;
-    mov edx,3000h
+    movzx edx,es:par_offset
+    add edx,REG_OFFSET
     mov ds:xhc_cap_offset,edx
 ;
     mov eax,es:par_oper_offset
@@ -4598,9 +4479,211 @@ ifsFuncOk:
     mov eax,es:par_db_offset
     add eax,edx
     mov ds:xhc_db_offset,eax
-
+;
+    mov al,es:par_has_64
+    mov ds:xhc_has_64,al
+;
+    FreeMem
+;
+    pop edx
+    pop eax
     ret
 InitFuncSel     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEventRing
+;
+;       DESCRIPTION:    Init event ring
+;
+;       PARAMETERS:     DS      Function selector
+;
+;       RETURNS:        ES      Event ring selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEventRing   Proc near
+    pushad
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,ds:xhc_has_64
+    jz cerPhys32
+
+cerPhys64:
+    AllocatePhysical64
+    jmp cerPhysOk
+
+cerPhys32:
+    AllocatePhysical32
+
+cerPhysOk:
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop eax
+    mov es:[edx].ev_phys,eax
+    mov es:[edx].ev_phys+4,ebx
+;
+    AllocateGdt
+    mov cx,1000h
+    CreateDataSelector16
+    mov es,bx
+;
+    mov ecx,SIZE event_seg
+    dec cx
+    and cx,0FFC0h
+    add cx,40h
+    mov es:ev_hdr_size,cx
+    mov ax,1000h
+    sub ax,cx
+    shr ax,4
+    mov es:ev_size,ax
+    mov es:ev_resv1,0
+    mov es:ev_resv2,0
+;
+    mov eax,es:ev_phys
+    add eax,ecx
+    mov es:ev_ers,eax
+    mov es:ev_edge,eax
+;
+    mov eax,es:ev_phys+4
+    mov es:ev_ers+4,eax
+    mov es:ev_edge+4,eax
+;
+    popad    
+    ret
+CreateEventRing   Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateCommandRing
+;
+;       DESCRIPTION:    Create command ring
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCommandRing   Proc near
+    push es
+    pushad
+;
+    mov ax,flat_sel
+    mov es,ax    
+;
+    mov al,ds:xhc_has_64
+    jz ccrPhys32
+
+ccrPhys64:
+    AllocatePhysical64
+    jmp ccrPhysOk
+
+ccrPhys32:
+    AllocatePhysical32
+
+ccrPhysOk:
+    push eax
+;
+    mov edx,ds:xhc_linear
+    add edx,CMD_OFFSET
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop eax
+    mov ds:xhc_cmd_phys,eax
+    mov ds:xhc_cmd_phys+4,ebx
+;
+    mov edi,CMD_OFFSET + 0FF0h
+    mov ds:[edi].trb_param,eax
+    mov ds:[edi].trb_param+4,ebx
+    mov ds:[edi].trb_status,0
+    mov ds:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
+    mov ds:[edi].trb_control,0
+;
+    popad
+    pop es
+    ret
+CreateCommandRing   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           BiosHandoff
+;
+;       DESCRIPTION:    Do BIOS handoff
+;
+;       PARAMETERS:     DS        Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BiosHandoff Proc near
+    pushad
+;    
+    mov edx,ds:xhc_cap_offset
+    mov ebx,ds:[edx].hccCap1
+    shr ebx,16
+    or bx,bx
+    jz bhDone
+;
+    shl ebx,2
+    mov ebp,ebx
+
+bhLoop:
+    mov al,ds:[edx+ebx]
+    cmp al,1
+    jne bhNext
+;
+    add ebx,edx
+    test ds:[ebx+2],1
+    jz bhDone
+
+bhRetry:
+    or ds:[ebx+3],1
+;
+    mov ax,25
+    WaitMilliSec
+;
+    test ds:[ebx+2],1
+    jnz bhRetry
+;
+    test ds:[ebx+3],1
+    jz bhRetry
+    jmp bhDone
+
+bhNext:
+    mov al,ds:[edx+ebx+1]
+    or al,al
+    jz bhDone
+;
+    movzx ebx,al
+    shl ebx,2
+    add ebx,ebp
+    jmp bhLoop
+    
+bhDone:    
+    popad
+    ret
+BiosHandoff Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4620,52 +4703,16 @@ CreatePrimaryFunction  Proc near
     push ds
     pushad
 ;
-    int 3
     call CalcRegSize
     call CreateFuncSel
     call InitFuncSel
 ;
-    push edx
-    push eax
-;    
-    mov ebx,edx
-    push eax
-    mov eax,10000h
-    AllocateBigLinear
-    pop eax
+    call CreateEventRing
+    mov ds:xhc_intr_count,1
+    mov ds:xhc_intr_arr,es
 ;
-    push eax
-    push edx
-    mov ecx,10h
-    and ax,0F000h
-    or ax,813h
-
-cpfDevLoop:
-    SetPageEntry
-;
-    add edx,1000h
-    add eax,1000h
-    loop cpfDevLoop
-;
-    pop edx
-    pop eax
-    and eax,0FFFh
-    or edx,eax
-;
+    call CreateCommandRing
     int 3
-    mov ecx,10000h
-    mov bx,xhci_hcc_sel
-    CreateDataSelector16
-    mov ds,bx
-;
-    mov eax,ds:hccCap1
-    test al,1
-    jnz cpf64Ok
-;
-    HasPhysical64
-    jnc cpfFail
-
-cpf64Ok:        
     call BiosHandoff
     int 3
 
