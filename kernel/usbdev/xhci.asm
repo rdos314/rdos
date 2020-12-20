@@ -4050,11 +4050,11 @@ AddFunction    Proc near
     int 3
     InitSection ds:xhc_cmd_section
 ;
-    mov ds,es:xhc_reg_sel
-    and ds:orsUsbCmd,NOT 1
+    mov edi,ds:xhc_oper_offset
+    and ds:[edi].orsUsbCmd,NOT 1
 
 ifWaitStop:
-    test ds:orsUsbSts,1
+    test ds:[edi].orsUsbSts,1
     jnz ifWaitStopped
 ;
     mov ax,10
@@ -4062,10 +4062,10 @@ ifWaitStop:
     jmp ifWaitStop
 
 ifWaitStopped:    
-    or ds:orsUsbCmd,2
+    or ds:[edi].orsUsbCmd,2
 
 ifWaitReset:
-    test ds:orsUsbCmd,2
+    test ds:[edi].orsUsbCmd,2
     jz ifWaitReseted
 ;
     mov ax,10
@@ -4077,7 +4077,7 @@ ifWaitReseted:
     jc ifCheckMsiX
 ;
     push cx
-    mov cx,1
+    mov cx,ds:xhc_intr_count
     mov al,14h
     AllocateInts
     pop cx
@@ -4096,7 +4096,7 @@ ifCheckMsiX:
     xor dl,dl
 ;
     push cx
-    mov cx,1
+    mov cx,ds:xhc_intr_count
     mov al,14h
     AllocateInts
     pop cx
@@ -4124,6 +4124,7 @@ ifReg:
     jmp ifIntDone
 
 ifIrq:
+    mov ds:xhc_intr_count,1
     push es
     GetPciIrqNr
     mov ah,14h
@@ -4702,7 +4703,7 @@ BiosHandoff Endp
 ;
 ;       DESCRIPTION:    Create function
 ;
-;       PARAMETERS:     EBX:EAX Base address
+;       PARAMETERS:     EDX:EAX Base address
 ;
 ;       RETURNS:        NC
 ;                         DS    Function sel
@@ -4713,7 +4714,7 @@ CreateFunction  Proc near
     push es
     pushad
 ;
-    int 3
+    mov ebx,edx
     call CalcRegSize
     cmp ecx,10000h
     jbe cfCreate
@@ -4774,10 +4775,11 @@ InitPciAdapter  Proc near
     push eax    
     mov cl,14h
     ReadPciDword
-    mov ebx,eax
+    mov edx,eax
     pop eax
 
 init_pci_base_ok:
+    int 3
     and ax,0FFF0h
     mov ebp,eax
     call CreateFunction
