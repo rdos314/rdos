@@ -297,9 +297,13 @@ xd_control_buf               DD ?
 xd_control_pipe              DW ?
 xd_control_offset            DW ?
 
+xd_slot                      DB ?
+xd_pad                       DB ?
+
 xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
 xd_pipe_context_arr_offset   DW 32 DUP (?)
+
 
 ; might not be needed
 
@@ -1734,22 +1738,6 @@ Unblock  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ChangeAddress
-;
-;           DESCRIPTION:    Change address
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ChangeAddress   Proc far
-    retf32
-ChangeAddress  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DisablePort
 ;
 ;           DESCRIPTION:    Disable port
@@ -2084,355 +2072,6 @@ idcDone:
     pop es
     retf32
 IsDeviceConnected Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetupControlIn
-;
-;       DESCRIPTION:    Setup control IN
-;
-;       PARAMETERS:     ES      Usb device
-;                       FS      Pipe sel
-;                       CX      Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupControlIn   Proc near
-    pushad
-;
-    call WaitForEndpointTrb
-    mov es:xd_control_trb,si
-    mov eax,dword ptr es:usbd_control_buf
-    mov fs:[si].trb_param,eax
-    mov eax,dword ptr es:usbd_control_buf+4
-    mov fs:[si].trb_param+4,eax
-;
-    mov eax,8
-    mov fs:[si].trb_status,eax    
-;
-    mov ax,TRB_TYPE_SETUP SHL 10
-    or ax,fs:xp_ring_pcs
-    or al,40h
-    mov fs:[si].trb_type,ax
-    mov fs:[si].trb_control,0
-;
-    mov fs:xp_size,cx
-;
-    or cx,cx
-    jz sciStatusOut
-;
-    mov fs:[si].trb_control,3
-    AllocateMemBlk
-    mov es:xd_control_buf,edx
-;
-    call WaitForEndpointTrb
-    mov fs:[si].trb_param,eax
-    mov fs:[si].trb_param+4,ebx
-;
-    movzx eax,cx
-    mov fs:[si].trb_status,eax    
-    mov ax,TRB_TYPE_DATA SHL 10
-    or ax,fs:xp_ring_pcs
-    mov fs:[si].trb_type,ax
-    mov fs:[si].trb_control,1
-
-sciStatusOut: 
-    call WaitForEndpointTrb
-    mov ax,TRB_TYPE_STATUS SHL 10
-    or ax,fs:xp_ring_pcs
-    or al,20h
-    mov fs:[si].trb_type,ax
-    clc
-
-sciDone:
-    popad
-    ret
-SetupControlIn	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CopyControlIn
-;
-;       DESCRIPTION:    Copy control IN
-;
-;       PARAMETERS:     ES      Usb device
-;                       FS      Control pipe
-;                       CX      Size
-;                       GS:EDI  Buffer
-;
-;       RETURNS:        CX      Size returned
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyControlIn   Proc near
-    push eax
-;
-    mov al,fs:xp_result
-    or cx,cx
-    jz cciNoData
-
-cciData:
-    cmp al,1
-    stc 
-    jne cciDone
-;
-    push ds
-    push es
-    pushad
-;
-    mov esi,es:xd_control_buf
-    movzx ecx,fs:xp_size
-    sub cx,fs:xp_remain_size
-    mov ax,gs
-    mov es,ax
-    mov ax,flat_sel
-    mov ds,ax
-    rep movs byte ptr es:[edi],ds:[esi]
-;
-    popad
-    pop es
-    pop ds
-;
-    mov cx,fs:xp_size
-    sub cx,fs:xp_remain_size
-    clc
-    jmp cciDone
-
-cciNoData:
-    cmp al,0Dh
-    stc
-    jne cciDone
-;
-    clc
-
-cciDone:
-    pop eax
-    ret
-CopyControlIn   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetupControlOut
-;
-;       DESCRIPTION:    Setup control OUT
-;
-;       PARAMETERS:     ES      Usb device
-;                       FS      Pipe sel
-;                       CX      Size
-;                       GS:EDI  Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupControlOut   Proc near
-    pushad
-;
-    call WaitForEndpointTrb
-    mov es:xd_control_trb,si
-    mov eax,dword ptr es:usbd_control_buf
-    mov fs:[si].trb_param,eax
-    mov eax,dword ptr es:usbd_control_buf+4
-    mov fs:[si].trb_param+4,eax
-;
-    mov eax,8
-    mov fs:[si].trb_status,eax    
-;
-    mov ax,TRB_TYPE_SETUP SHL 10
-    or ax,fs:xp_ring_pcs
-    or al,40h
-    mov fs:[si].trb_type,ax
-    mov fs:[si].trb_control,0
-;
-    mov fs:xp_size,cx
-;
-    or cx,cx
-    jz scoStatusIn
-;
-    mov fs:[si].trb_control,2
-    AllocateMemBlk
-    mov es:xd_control_buf,edx
-;
-    push ds
-    push es
-    pushad
-;
-    mov esi,edi
-    mov edi,es:xd_control_buf
-    mov ax,gs
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-    rep movs byte ptr es:[edi],ds:[esi]
-;
-    popad
-    pop es
-    pop ds
-;
-    call WaitForEndpointTrb
-    mov fs:[si].trb_param,eax
-    mov fs:[si].trb_param+4,ebx
-;
-    movzx eax,cx
-    mov fs:[si].trb_status,eax    
-    mov ax,TRB_TYPE_DATA SHL 10
-    or ax,fs:xp_ring_pcs
-    mov fs:[si].trb_type,ax
-    mov fs:[si].trb_control,0
-
-scoStatusIn: 
-    call WaitForEndpointTrb
-    mov ax,TRB_TYPE_STATUS SHL 10
-    or ax,fs:xp_ring_pcs
-    or al,20h
-    mov fs:[si].trb_type,ax
-    mov fs:[si].trb_control,1
-    clc
-
-scoDone:
-    popad
-    ret
-SetupControlOut	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RunControl
-;
-;       DESCRIPTION:    Run control
-;
-;       PARAMETERS:     DS      Usb function
-;                       ES      Usb device
-;                       FS      Control pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunControl   Proc near
-    push ds
-    pushad
-;
-    test es:usbd_flags,FLAG_DETACHED
-    stc
-    jnz rcDone
-;
-    call fword ptr ds:is_dev_connected_proc
-    jc rcDone
-;
-    mov fs:xp_result,-1
-;
-    push ds
-    mov ds,ds:xhc_db_sel
-    movzx si,fs:xp_slot
-    shl si,2
-    movzx eax,fs:xp_db_target
-    mov ds:[si],eax
-    pop ds
-;
-    mov cx,100
-
-rcWait:
-    mov ax,4
-    WaitMilliSec
-;
-    test es:usbd_flags,FLAG_DETACHED
-    stc
-    jnz rcDone
-;
-    call fword ptr ds:is_dev_connected_proc
-    jc rcDone
-;
-    mov al,fs:xp_result
-    cmp al,-1
-    jne rcCheck
-;
-    loop rcWait
-;
-    stc
-    jmp rcDone
-
-rcCheck:
-    clc
-
-rcDone:
-    popad
-    pop ds
-    ret
-RunControl   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ControlMsg
-;
-;       DESCRIPTION:    Send message over control pipe
-;
-;       PARAMETERS:     ES      Usb device
-;                       GS:EDI  Buffer
-;
-;       RETURNS:        NC      OK
-;                          CX   Transfer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ControlMsg   Proc far
-    push fs
-    push eax
-    push edx
-    push ebp
-;
-    mov cx,es:usbd_control_buf.usd_len
-    mov fs:xp_size,0
-    mov es:xd_control_buf,0
-    mov fs,es:xd_control_pipe
-;
-    test es:usbd_control_buf.usd_type,80h
-    jz cmDataOut
-;
-    call SetupControlIn
-    jc cmDone
-;
-    call RunControl
-    jc cmDone
-;
-    call CopyControlIn
-    jmp cmDone
-
-cmDataOut:
-    call SetupControlOut
-    jc cmDone
-;
-    call RunControl
-    jmp cmDone
-
-cmDone:
-    pushf
-    push ecx
-    push edx
-;
-    xor cx,cx
-    xchg cx,fs:xp_size
-    or cx,cx
-    jz cmFreeOk
-;
-    xor edx,edx
-    xchg edx,es:xd_control_buf
-    or edx,edx
-    jz cmFreeOk
-;
-    FreeLinearMemBlk
-
-cmFreeOk:
-    pop edx
-    pop ecx
-    popf
-;
-    pop ebp
-    pop edx
-    pop eax
-    pop fs
-    retf32
-ControlMsg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3020,8 +2659,9 @@ CreateDev   Proc far
 ;
     call AllocateDevice
 ;
+    mov es:xd_slot,al
     mov es:xd_func_sel,ds
-    mov es:usbd_speed,al
+    mov es:usbd_speed,ah
     mov es:usbd_parent_thread,0
 ;
     mov bx,ds:xhc_context_size
@@ -3039,6 +2679,7 @@ CreateDev   Proc far
     movzx bx,al
     shl bx,1
     mov ds:[bx].xhc_slot_sel_arr,es
+    mov es:usbd_func_sel,ds
 ;
     mov ax,25
     WaitMilliSec
@@ -3279,45 +2920,36 @@ CreateControl   Endp
 ;   DESCRIPTION:    Address device
 ;
 ;   PARAMETERS:     DS      Function selector
-;                   FS      Pipe selector
+;                   ES      Device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-address_text DB 'Address ',0
 
 AddressDevice   Proc far
     push es
     push gs
     pushad
 ;
-    int 3
     call WaitForCommandTrb
 ;    
-    mov es,fs:xp_dev_sel
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,3
     movzx eax,bx
     add eax,es:mblk_physical_base
-    mov gs:[edi].trb_param,eax
+    mov ds:[di].trb_param,eax
     mov eax,es:mblk_physical_base+4
-    mov gs:[edi].trb_param+4,eax
+    mov ds:[di].trb_param+4,eax
 ;
-    mov ah,fs:xp_slot
+    mov ah,es:xd_slot
     xor al,al
-    mov gs:[edi].trb_control,ax
+    mov ds:[di].trb_control,ax
 ;
     mov al,TRB_TYPE_ADDRESS_DEV
     call SendCommandTrb
 ;
-;    push esi
-;    mov esi,OFFSET address_text
-;    call DumpInputContext
-;    pop esi
-;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
 ;
-    mov al,gs:[edi+100Bh]
+    mov al,ds:[si].cev_result
     cmp al,1
     je adOk
 ;
@@ -3325,7 +2957,6 @@ AddressDevice   Proc far
     jmp adDone
 
 adOk:
-    mov al,gs:[edi+100Fh]
     clc        
 
 adDone:
@@ -3334,6 +2965,372 @@ adDone:
     pop es
     retf32
 AddressDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ChangeAddress
+;
+;           DESCRIPTION:    Change address
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChangeAddress   Proc far
+    retf32
+ChangeAddress  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupControlIn
+;
+;       DESCRIPTION:    Setup control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Pipe sel
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlIn   Proc near
+    pushad
+;
+    call WaitForEndpointTrb
+    mov es:xd_control_trb,si
+    mov eax,dword ptr es:usbd_control_buf
+    mov fs:[si].trb_param,eax
+    mov eax,dword ptr es:usbd_control_buf+4
+    mov fs:[si].trb_param+4,eax
+;
+    mov eax,8
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,40h
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,0
+;
+    mov fs:xp_size,cx
+;
+    or cx,cx
+    jz sciStatusOut
+;
+    mov fs:[si].trb_control,3
+    AllocateMemBlk
+    mov es:xd_control_buf,edx
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,1
+
+sciStatusOut: 
+    call WaitForEndpointTrb
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,20h
+    mov fs:[si].trb_type,ax
+    clc
+
+sciDone:
+    popad
+    ret
+SetupControlIn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CopyControlIn
+;
+;       DESCRIPTION:    Copy control IN
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Control pipe
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;       RETURNS:        CX      Size returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyControlIn   Proc near
+    push eax
+;
+    mov al,fs:xp_result
+    or cx,cx
+    jz cciNoData
+
+cciData:
+    cmp al,1
+    stc 
+    jne cciDone
+;
+    push ds
+    push es
+    pushad
+;
+    mov esi,es:xd_control_buf
+    movzx ecx,fs:xp_size
+    sub cx,fs:xp_remain_size
+    mov ax,gs
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    popad
+    pop es
+    pop ds
+;
+    mov cx,fs:xp_size
+    sub cx,fs:xp_remain_size
+    clc
+    jmp cciDone
+
+cciNoData:
+    cmp al,0Dh
+    stc
+    jne cciDone
+;
+    clc
+
+cciDone:
+    pop eax
+    ret
+CopyControlIn   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupControlOut
+;
+;       DESCRIPTION:    Setup control OUT
+;
+;       PARAMETERS:     ES      Usb device
+;                       FS      Pipe sel
+;                       CX      Size
+;                       GS:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupControlOut   Proc near
+    pushad
+;
+    call WaitForEndpointTrb
+    mov es:xd_control_trb,si
+    mov eax,dword ptr es:usbd_control_buf
+    mov fs:[si].trb_param,eax
+    mov eax,dword ptr es:usbd_control_buf+4
+    mov fs:[si].trb_param+4,eax
+;
+    mov eax,8
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,40h
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,0
+;
+    mov fs:xp_size,cx
+;
+    or cx,cx
+    jz scoStatusIn
+;
+    mov fs:[si].trb_control,2
+    AllocateMemBlk
+    mov es:xd_control_buf,edx
+;
+    push ds
+    push es
+    pushad
+;
+    mov esi,edi
+    mov edi,es:xd_control_buf
+    mov ax,gs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    popad
+    pop es
+    pop ds
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,0
+
+scoStatusIn: 
+    call WaitForEndpointTrb
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,20h
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,1
+    clc
+
+scoDone:
+    popad
+    ret
+SetupControlOut	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunControl
+;
+;       DESCRIPTION:    Run control
+;
+;       PARAMETERS:     DS      Usb function
+;                       ES      Usb device
+;                       FS      Control pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunControl   Proc near
+    push ds
+    pushad
+;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz rcDone
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
+;
+    mov fs:xp_result,-1
+;
+    push ds
+    mov ds,ds:xhc_db_sel
+    movzx si,fs:xp_slot
+    shl si,2
+    movzx eax,fs:xp_db_target
+    mov ds:[si],eax
+    pop ds
+;
+    mov cx,100
+
+rcWait:
+    mov ax,4
+    WaitMilliSec
+;
+    test es:usbd_flags,FLAG_DETACHED
+    stc
+    jnz rcDone
+;
+    call fword ptr ds:is_dev_connected_proc
+    jc rcDone
+;
+    mov al,fs:xp_result
+    cmp al,-1
+    jne rcCheck
+;
+    loop rcWait
+;
+    stc
+    jmp rcDone
+
+rcCheck:
+    clc
+
+rcDone:
+    popad
+    pop ds
+    ret
+RunControl   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ControlMsg
+;
+;       DESCRIPTION:    Send message over control pipe
+;
+;       PARAMETERS:     ES      Usb device
+;                       GS:EDI  Buffer
+;
+;       RETURNS:        NC      OK
+;                          CX   Transfer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ControlMsg   Proc far
+    push fs
+    push eax
+    push edx
+    push ebp
+;
+    int 3
+    mov cx,es:usbd_control_buf.usd_len
+    mov fs:xp_size,0
+    mov es:xd_control_buf,0
+    mov fs,es:xd_control_pipe
+;
+    test es:usbd_control_buf.usd_type,80h
+    jz cmDataOut
+;
+    call SetupControlIn
+    jc cmDone
+;
+    call RunControl
+    jc cmDone
+;
+    call CopyControlIn
+    jmp cmDone
+
+cmDataOut:
+    call SetupControlOut
+    jc cmDone
+;
+    call RunControl
+    jmp cmDone
+
+cmDone:
+    pushf
+    push ecx
+    push edx
+;
+    xor cx,cx
+    xchg cx,fs:xp_size
+    or cx,cx
+    jz cmFreeOk
+;
+    xor edx,edx
+    xchg edx,es:xd_control_buf
+    or edx,edx
+    jz cmFreeOk
+;
+    FreeLinearMemBlk
+
+cmFreeOk:
+    pop edx
+    pop ecx
+    popf
+;
+    pop ebp
+    pop edx
+    pop eax
+    pop fs
+    retf32
+ControlMsg   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
