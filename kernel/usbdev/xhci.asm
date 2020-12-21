@@ -3168,7 +3168,6 @@ WaitForCommandTrb    Endp
 SendCommandTrb   Proc near
     push eax
     push ebx
-    push esi
 ;    
     push ax
     mov si,di
@@ -3196,7 +3195,6 @@ sctWait:
     or ax,ax
     jnz sctWait
 ;
-    pop esi
     pop ebx
     pop eax
     ret
@@ -3412,18 +3410,6 @@ SetPortPower    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; port change ???
-    
-;    
-    movzx di,cl
-    shl di,4
-    mov fs,es:xhc_port_sel
-;
-    mov eax,fs:[di]
-    and eax,0EE03E1h
-    mov fs:[di],eax
-
-
 port_thread:
     mov ds,bx
     GetThread
@@ -3554,19 +3540,29 @@ error_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 command_event Proc near
-    int 3
-    mov di,ds:[si]
-    and di,0FF0h
-    mov fs,es:xhc_cmd_ring_sel
-    add di,1000h
+    mov eax,es:[si]
+    mov ebx,es:[si+4]
+    sub eax,ds:xhc_crcr
+    jc ceDone
 ;
-    mov eax,ds:[si+8]
-    mov fs:[di+8],eax
-    mov eax,ds:[si+12]
-    mov fs:[di+12],eax
-;        
+    sbb ebx,ds:xhc_crcr+4
+    jnz ceDone
+;
+    cmp ax,16 * CMD_COUNT
+    ja ceDone
+;
+    shr ax,2
+    mov di,ax
+    add di,OFFSET xhc_cmd_arr
+;
+    mov al,es:[si+11]
+    mov ds:[di].cev_result,al
+;
+    mov al,es:[si+15]
+    mov ds:[di].cev_slot,al
+;
     xor bx,bx
-    xchg bx,fs:[di].cmd_thread
+    xchg bx,ds:[di].cev_thread
     Signal
     ret
 command_event Endp
@@ -4002,7 +3998,6 @@ cspLoop:
 cspDone:    
     ret
 CreateScratchPad   Endp   
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
