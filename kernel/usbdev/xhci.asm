@@ -253,7 +253,8 @@ xhc_cmd_pcs             DW ?
 xhc_cmd_arr             DD CMD_COUNT DUP(?)
 
 xhc_intr_count          DW ?
-xhc_intr_arr            DW MAX_INTR_COUNT DUP(?)
+xhc_intr_sel_arr        DW MAX_INTR_COUNT DUP(?)
+xhc_intr_ref_arr        DW MAX_INTR_COUNT DUP(?)
 
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
@@ -298,7 +299,7 @@ xd_control_pipe              DW ?
 xd_control_offset            DW ?
 
 xd_slot                      DB ?
-xd_pad                       DB ?
+xd_intr                      DB ?
 
 xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
@@ -2681,6 +2682,9 @@ CreateDev   Proc far
     mov ds:[bx].xhc_slot_sel_arr,es
     mov es:usbd_func_sel,ds
 ;
+    call AllocateIntr
+    mov es:xd_intr,al
+;
     mov ax,25
     WaitMilliSec
 ;
@@ -3797,7 +3801,7 @@ event_thread:
     mov ds,bx
     movzx si,dl
     shl si,1
-    mov es,ds:[si].xhc_intr_arr
+    mov es,ds:[si].xhc_intr_sel_arr
     GetThread
     mov es:ev_thread,ax
 ;
@@ -3920,6 +3924,127 @@ XhciInt Proc far
     Signal
     retf32
 XhciInt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEventRing
+;
+;       DESCRIPTION:    Init event ring
+;
+;       PARAMETERS:     DS      Function selector
+;
+;       RETURNS:        ES      Event ring selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEventRing   Proc near
+    pushad
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    call AllocatePhysicalPage
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop eax
+    mov es:[edx].ev_phys,eax
+    mov es:[edx].ev_phys+4,ebx
+;
+    AllocateGdt
+    mov cx,1000h
+    CreateDataSelector16
+    mov es,bx
+;
+    mov ecx,SIZE event_seg
+    dec cx
+    and cx,0FFC0h
+    add cx,40h
+    mov es:ev_hdr_size,cx
+    mov ax,1000h
+    sub ax,cx
+    shr ax,4
+    mov es:ev_size,ax
+    mov es:ev_resv1,0
+    mov es:ev_resv2,0
+;
+    mov eax,es:ev_phys
+    add eax,ecx
+    mov es:ev_ers,eax
+;
+    mov eax,es:ev_phys+4
+    mov es:ev_ers+4,eax
+    mov es:ev_thread,0
+;
+    popad    
+    ret
+CreateEventRing   Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateIntr
+;
+;       DESCRIPTION:    Allocate interupter
+;
+;       PARAMETERS:     DS      Function selector
+;
+;       RETURNS:        AL      Intr #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateIntr   Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov ecx,MAX_INTR_COUNT
+    mov bx,OFFSET xhc_intr_ref_arr
+    mov dx,7FFFh
+    xor si,si
+
+aiLoop:
+    mov ax,ds:[bx]
+    cmp ax,dx
+    jae aiNext
+;
+    mov dx,ax
+    mov si,bx
+
+aiNext:
+    add bx,2
+    loop aiLoop
+;
+    sub si,OFFSET xhc_intr_ref_arr
+;
+    mov ax,ds:[si].xhc_intr_sel_arr
+    or ax,ax
+    jnz aiStarted
+;
+    int 3
+
+aiStarted:
+    mov ax,si
+    shr ax,1
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+AllocateIntr   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4151,7 +4276,7 @@ ifMsiX:
 ifReg:    
     push ds
     push es
-    mov di,ds:xhc_intr_arr
+    mov di,ds:xhc_intr_sel_arr
     mov ds,di
     mov di,cs
     mov es,di
@@ -4167,7 +4292,7 @@ ifIrq:
     push es
     GetPciIrqNr
     mov ah,14h
-    mov di,ds:xhc_intr_arr
+    mov di,ds:xhc_intr_sel_arr
     mov ds,di
     mov di,cs
     mov es,di
@@ -4195,7 +4320,7 @@ ifIntDone:
     mov ds:[edi].orsCrCtrl+4,eax
 ;
     mov edi,ds:xhc_run_offset    
-    mov es,ds:xhc_intr_arr
+    mov es,ds:xhc_intr_sel_arr
     mov eax,es:ev_phys
     mov ebx,es:ev_phys+4
     add ax,es:ev_hdr_size
@@ -4536,6 +4661,7 @@ ifSaveCount:
 ;
     movzx ax,es:par_slot_size
     mov ds:xhc_context_size,ax
+    mov ds:xhc_intr_ref_arr,1
 ;
     FreeMem
 ;
@@ -4543,72 +4669,6 @@ ifSaveCount:
     pop eax
     ret
 InitFuncSel     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateEventRing
-;
-;       DESCRIPTION:    Init event ring
-;
-;       PARAMETERS:     DS      Function selector
-;
-;       RETURNS:        ES      Event ring selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateEventRing   Proc near
-    pushad
-;
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    call AllocatePhysicalPage
-    push eax
-;
-    mov al,13h
-    SetPageEntry
-;
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    pop eax
-    mov es:[edx].ev_phys,eax
-    mov es:[edx].ev_phys+4,ebx
-;
-    AllocateGdt
-    mov cx,1000h
-    CreateDataSelector16
-    mov es,bx
-;
-    mov ecx,SIZE event_seg
-    dec cx
-    and cx,0FFC0h
-    add cx,40h
-    mov es:ev_hdr_size,cx
-    mov ax,1000h
-    sub ax,cx
-    shr ax,4
-    mov es:ev_size,ax
-    mov es:ev_resv1,0
-    mov es:ev_resv2,0
-;
-    mov eax,es:ev_phys
-    add eax,ecx
-    mov es:ev_ers,eax
-;
-    mov eax,es:ev_phys+4
-    mov es:ev_ers+4,eax
-    mov es:ev_thread,0
-;
-    popad    
-    ret
-CreateEventRing   Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4756,7 +4816,7 @@ cfCreate:
     call InitFuncSel
 ;
     call CreateEventRing
-    mov ds:xhc_intr_arr,es
+    mov ds:xhc_intr_sel_arr,es
 ;
     call CreateCommandRing
     call BiosHandoff
