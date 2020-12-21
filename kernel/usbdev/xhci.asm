@@ -204,7 +204,6 @@ ev_size       DW ?
 ev_resv1      DW ?
 ev_resv2      DD ?
 ev_phys       DD ?,?
-ev_edqe       DD ?,?
 ev_hdr_size   DW ?
 ev_thread     DW ?
 ev_ccs        DW ?
@@ -3362,47 +3361,6 @@ command_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           port_event
-;
-;       DESCRIPTION:    Port status change event
-;
-;       PARAMETERS:     ES     Function sel
-;                       DS:SI  Event TRB
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-port_event Proc near
-    mov cl,ds:[si+3]
-    or cl,cl
-    jz peDone
-;
-    dec cl
-    cmp cl,es:xhc_port_count
-    jae peDone
-;    
-    mov eax,1
-    shl eax,cl
-    lock or es:xhc_port_change_mask,eax
-;    
-    movzx di,cl
-    shl di,4
-    mov fs,es:xhc_port_sel
-;
-    mov eax,fs:[di]
-    and eax,0EE03E1h
-    mov fs:[di],eax
-;
-    mov bx,es:xhc_port_thread
-    Signal
-
-peDone:
-    ret
-port_event Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           transfer_event
 ;
 ;       DESCRIPTION:    Transfer event
@@ -3582,6 +3540,21 @@ SetPortPower    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; port change ???
+    
+    mov eax,1
+    shl eax,cl
+    lock or es:xhc_port_change_mask,eax
+;    
+    movzx di,cl
+    shl di,4
+    mov fs,es:xhc_port_sel
+;
+    mov eax,fs:[di]
+    and eax,0EE03E1h
+    mov fs:[di],eax
+
+
 port_thread:
     mov es,bx
     GetThread
@@ -3698,6 +3671,34 @@ cptXhciDone:
 CreatePortThread   Endp
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           port_event
+;
+;       DESCRIPTION:    Port status change event
+;
+;       PARAMETERS:     DS     Function sel
+;                       ES:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+port_event Proc near
+    mov cl,es:[si+3]
+    or cl,cl
+    jz peDone
+;
+    dec cl
+    cmp cl,ds:xhc_port_count
+    jae peDone
+;
+    mov bx,ds:xhc_port_thread
+    Signal
+
+peDone:
+    ret
+port_event Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3821,8 +3822,8 @@ etNext:
 
 etDeq:
     mov edi,ds:xhc_run_offset
-    mov eax,es:ev_edqe
-    mov ebx,es:ev_edqe+4
+    mov eax,es:ev_phys
+    mov ebx,es:ev_phys+4
     or ax,si
     or al,8
     mov ds:[edi].rrsDequeue,eax
@@ -3907,7 +3908,6 @@ CreateEventThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 XhciInt Proc far 
-    int 3
     mov bx,ds:ev_thread
     Signal
     retf32
@@ -4189,8 +4189,9 @@ ifIntDone:
 ;
     mov edi,ds:xhc_run_offset    
     mov es,ds:xhc_intr_arr
-    mov eax,es:ev_edqe
-    mov ebx,es:ev_edqe+4
+    mov eax,es:ev_phys
+    mov ebx,es:ev_phys+4
+    add ax,es:ev_hdr_size
     mov ds:[edi].rrsDequeue,eax
     mov ds:[edi].rrsDequeue+4,ebx    
 ;    
@@ -4591,11 +4592,9 @@ CreateEventRing   Proc near
     mov eax,es:ev_phys
     add eax,ecx
     mov es:ev_ers,eax
-    mov es:ev_edqe,eax
 ;
     mov eax,es:ev_phys+4
     mov es:ev_ers+4,eax
-    mov es:ev_edqe+4,eax
     mov es:ev_thread,0
 ;
     popad    
