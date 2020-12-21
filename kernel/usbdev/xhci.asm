@@ -224,34 +224,38 @@ REG_OFFSET = 2000h
 
 xhci_func_sel   STRUC
 
-usb_func_base        usb_function_struc <>
+usb_func_base           usb_function_struc <>
 
-xhc_linear          DD ?
-xhc_func_phys       DD ?,?
-xhc_reg_phys        DD ?,?
-xhc_cap_offset      DD ?
-xhc_oper_offset     DD ?
-xhc_run_offset      DD ?
-xhc_db_offset       DD ?
-xhc_port_offset     DD ?
-xhc_intr_offset     DD ?
+xhc_linear              DD ?
+xhc_func_phys           DD ?,?
+xhc_reg_phys            DD ?,?
+xhc_cap_offset          DD ?
+xhc_oper_offset         DD ?
+xhc_run_offset          DD ?
+xhc_db_offset           DD ?
+xhc_port_offset         DD ?
+xhc_intr_offset         DD ?
 
-xhc_has_64          DB ?
-xhc_int_base        DB ?
+xhc_has_64              DB ?
+xhc_int_base            DB ?
 
-xhc_slot_count      DB ?
-xhc_port_count      DB ?
+xhc_slot_count          DB ?
+xhc_port_count          DB ?
 
-xhc_crcr            DD ?,?
-xhc_dcba            DD ?,?
+xhc_crcr                DD ?,?
+xhc_dcba                DD ?,?
 
-xhc_cmd_enque       DW ?
-xhc_cmd_pcs         DW ?
+xhc_cmd_enque           DW ?
+xhc_cmd_pcs             DW ?
 
-xhc_intr_count      DW ?
-xhc_intr_arr        DW MAX_INTR_COUNT DUP(?)
+xhc_intr_count          DW ?
+xhc_intr_arr            DW MAX_INTR_COUNT DUP(?)
+
+xhc_port_thread         DW ?
+xhc_port_change_mask    DD ?
 
 
+; might not be used
 
 xhc_hcc_sel         DW ?
 xhc_reg_sel         DW ?
@@ -271,8 +275,6 @@ xhc_detach_pend     DD ?
 
 xhc_cmd_section     section_typ <>
 
-xhc_port_thread         DW ?
-xhc_port_change_mask    DD ?
 
 xhc_port_slot_arr   DB 256 DUP(?)
 
@@ -3390,17 +3392,18 @@ UpdatePort  Endp
 
 SetPortPower  Proc near
     push eax
-    push si
+    push esi
 ;        
-    movzx si,cl
-    shl si,4
+    movzx esi,cl
+    shl esi,4
+    add esi,ds:xhc_port_offset
 ;    
-    mov eax,ds:[si]
+    mov eax,ds:[esi]
     and eax,0EE03E1h
     or ax,200h
-    mov ds:[si],eax
+    mov ds:[esi],eax
 ;
-    pop si
+    pop esi
     pop eax
     ret
 SetPortPower    Endp
@@ -3418,9 +3421,6 @@ SetPortPower    Endp
 
 ; port change ???
     
-    mov eax,1
-    shl eax,cl
-    lock or es:xhc_port_change_mask,eax
 ;    
     movzx di,cl
     shl di,4
@@ -3432,25 +3432,19 @@ SetPortPower    Endp
 
 
 port_thread:
-    int 3
     mov ds,bx
     GetThread
     mov ds:xhc_port_thread,ax
-;        
-    mov es:xhc_attach_pend,0
-    mov es:xhc_detach_pend,0
-    mov ds,es:xhc_port_sel
+    int 3
 ;
     xor cl,cl
 
 ptPowerLoop:    
-    push cx
     call SetPortPower
-    pop cx
 
 ptPowerNext:
     inc cl
-    cmp cl,es:xhc_port_count
+    cmp cl,ds:xhc_port_count
     jb ptPowerLoop
 ;
     mov ax,750
@@ -3462,8 +3456,7 @@ ptLoop:
 ptRetry:    
     xor eax,eax
     xchg eax,es:xhc_port_change_mask
-    or eax,es:xhc_attach_pend
-    or eax,es:xhc_detach_pend
+    or eax,eax
     jz ptLoop
 ;
     xor dl,dl
@@ -3544,8 +3537,6 @@ cptXhciDone:
     pop ds
     ret
 CreatePortThread   Endp
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3693,6 +3684,10 @@ port_event Proc near
     dec cl
     cmp cl,ds:xhc_port_count
     jae peDone
+;    
+    mov eax,1
+    shl eax,cl
+    lock or ds:xhc_port_change_mask,eax
 ;
     mov bx,ds:xhc_port_thread
     Signal
@@ -3912,7 +3907,6 @@ XhciInt Proc far
     Signal
     retf32
 XhciInt Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
