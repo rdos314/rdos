@@ -218,6 +218,8 @@ cev_result  DB ?
 
 cev_struc   ENDS
 
+CMD_COUNT  = 7Fh
+
 CMD_OFFSET = 1000h
 DEV_OFFSET = 1800h
 REG_OFFSET = 2000h
@@ -247,12 +249,15 @@ xhc_dcba                DD ?,?
 
 xhc_cmd_enque           DW ?
 xhc_cmd_pcs             DW ?
+xhc_cmd_arr             DD CMD_COUNT DUP(?)
 
 xhc_intr_count          DW ?
 xhc_intr_arr            DW MAX_INTR_COUNT DUP(?)
 
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
+
+xhc_cmd_section         section_typ <>
 
 
 ; might not be used
@@ -273,7 +278,6 @@ xhc_erst            DD ?,?
 xhc_attach_pend     DD ?
 xhc_detach_pend     DD ?
 
-xhc_cmd_section     section_typ <>
 
 
 xhc_port_slot_arr   DB 256 DUP(?)
@@ -495,47 +499,6 @@ adCrLf:
     pop ds 
     ret
 AddDump Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PortToSpeed
-;
-;           DESCRIPTION:    Convert Port SC to speed
-;
-;       PARAMETERS:         EAX Port SC
-;
-;       RETURNS:            AL  Speed 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ptsTab:
-pts00 DB -1
-pts01 DB 1
-pts02 DB 0
-pts03 DB 2
-pts04 DB 3
-pts05 DB -1  
-pts06 DB -1  
-pts07 DB -1  
-pts08 DB -1  
-pts09 DB -1  
-pts0A DB -1  
-pts0B DB -1  
-pts0C DB -1  
-pts0D DB -1  
-pts0E DB -1  
-pts0F DB -1  
-
-PortToSpeed   Proc near
-    push bx
-    mov bx,ax
-    shr bx,10
-    and bx,0Fh
-    mov al,byte ptr cs:[bx].ptsTab
-    pop bx
-    ret
-PortToSpeed   Endp
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -677,139 +640,6 @@ SetupLinkTrb   Proc near
     mov gs:[edi].trb_control,0
     ret
 SetupLinkTrb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WaitForCommandTrb
-;
-;       DESCRIPTION:    Wait for empty command TRB
-;
-;       PARAMETERS:     DS          Function sel
-;
-;       RETURNS:        GS:EDI      TRB offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForCommandTrb   Proc near
-    push ax
-;
-    EnterSection ds:xhc_cmd_section    
-;    
-    mov gs,ds:xhc_cmd_ring_sel
-    movzx edi,ds:xhc_cmd_enque
-
-wfctLoop:    
-    mov ax,gs:[di].trb_type
-    test ax,2
-    jz wfctRetry
-;
-    xor gs:[di].trb_type,1
-    xor ds:xhc_cmd_pcs,1
-    xor di,di
-    jmp wfctLoop
-
-wfctRetry:    
-    xor ax,ds:xhc_cmd_pcs
-    test al,1
-    jnz wfctOk
-;
-    mov ax,10
-    WaitMilliSec
-    jmp wfctRetry        
-
-wfctOk:
-    mov ax,di
-    add ax,SIZE trb_struc
-    mov ds:xhc_cmd_enque,ax
-;
-    mov gs:[di].trb_param,0
-    mov gs:[di].trb_param+4,0
-    mov gs:[di].trb_status,0
-    mov gs:[di].trb_control,0
-;
-    pop ax        
-    ret
-WaitForCommandTrb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SendCommandTrb
-;
-;       DESCRIPTION:    Send command TRB
-;
-;       PARAMETERS:     AL      TRB type
-;                       DS      Function sel
-;                       GS:EDI  TRB offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCommandTrb   Proc near
-    push eax
-;    
-    push ax
-    GetThread
-    mov gs:[edi+1000h].cmd_thread,ax
-    pop ax
-;
-    movzx ax,al
-    shl ax,10
-    or ax,ds:xhc_cmd_pcs
-    mov gs:[edi].trb_type,ax
-;
-    push ds
-    mov ds,ds:xhc_db_sel
-    xor eax,eax
-    mov ds:[0],eax
-    pop ds
-;
-    LeaveSection ds:xhc_cmd_section    
-
-sctWait:
-    WaitForSignal
-    mov ax,gs:[edi+1000h].cmd_thread
-    or ax,ax
-    jnz sctWait
-;
-    pop eax
-    ret
-SendCommandTrb  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           EnableSlot
-;
-;       DESCRIPTION:    Enable slot
-;
-;       PARAMETERS:     DS      Function sel
-;
-;       RETRURNS:       AL      Slot ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnableSlot  Proc near
-    push gs
-    push edi
-;
-    call WaitForCommandTrb
-    mov al,TRB_TYPE_ENABLE_SLOT
-    call SendCommandTrb
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne esDone
-;
-    mov al,gs:[edi+100Fh]
-    clc        
-
-esDone:
-    pop edi
-    pop gs    
-    ret
-EnableSlot  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3045,24 +2875,6 @@ UnlinkPipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateAddress
-;
-;       DESCRIPTION:    Allocate address (slot)
-;
-;       PARAMETERS:     DS        Function sel
-;
-;       RETURNS:        AL        Address (slot #)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateAddress   Proc far
-    call EnableSlot
-    retf32   
-AllocateAddress   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           FreeAddress
 ;
 ;       DESCRIPTION:    Free address (slot)
@@ -3241,6 +3053,155 @@ FreeDev   Proc far
     retf32
 FreeDev   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PortToSpeed
+;
+;           DESCRIPTION:    Convert Port SC to speed
+;
+;       PARAMETERS:         EAX Port SC
+;
+;       RETURNS:            AL  Speed 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ptsTab:
+pts00 DB -1
+pts01 DB 1
+pts02 DB 0
+pts03 DB 2
+pts04 DB 3
+pts05 DB -1  
+pts06 DB -1  
+pts07 DB -1  
+pts08 DB -1  
+pts09 DB -1  
+pts0A DB -1  
+pts0B DB -1  
+pts0C DB -1  
+pts0D DB -1  
+pts0E DB -1  
+pts0F DB -1  
+
+PortToSpeed   Proc near
+    push bx
+    mov bx,ax
+    shr bx,10
+    and bx,0Fh
+    mov al,byte ptr cs:[bx].ptsTab
+    pop bx
+    ret
+PortToSpeed   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForCommandTrb
+;
+;       DESCRIPTION:    Wait for empty command TRB
+;
+;       PARAMETERS:     DS          Function sel
+;
+;       RETURNS:        DI          TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCommandTrb   Proc near
+    push ax
+;
+    EnterSection ds:xhc_cmd_section    
+;    
+    mov di,ds:xhc_cmd_enque
+
+wfctLoop:    
+    mov ax,ds:[di].trb_type
+    test ax,2
+    jz wfctRetry
+;
+    xor ds:[di].trb_type,1
+    xor ds:xhc_cmd_pcs,1
+    mov di,CMD_OFFSET
+    jmp wfctLoop
+
+wfctRetry:    
+    xor ax,ds:xhc_cmd_pcs
+    test al,1
+    jnz wfctOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp wfctRetry        
+
+wfctOk:
+    mov ax,di
+    add ax,SIZE trb_struc
+    mov ds:xhc_cmd_enque,ax
+;
+    mov ds:[di].trb_param,0
+    mov ds:[di].trb_param+4,0
+    mov ds:[di].trb_status,0
+    mov ds:[di].trb_control,0
+;
+    pop ax        
+    ret
+WaitForCommandTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCommandTrb
+;
+;       DESCRIPTION:    Send command TRB
+;
+;       PARAMETERS:     AL      TRB type
+;                       DS      Function sel
+;                       DI      TRB offset
+;
+;       RETURNS:        SI      Result offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+SendCommandTrb   Proc near
+    push eax
+    push ebx
+    push esi
+;    
+    push ax
+    mov si,di
+    sub si,CMD_OFFSET
+    shr si,2
+    add si,OFFSET xhc_cmd_arr
+    GetThread
+    mov ds:[si].cev_thread,ax
+    pop ax
+;
+    movzx ax,al
+    shl ax,10
+    or ax,ds:xhc_cmd_pcs
+    mov ds:[di].trb_type,ax
+;
+    mov ebx,ds:xhc_db_offset
+    xor eax,eax
+    mov ds:[ebx],eax
+;
+    LeaveSection ds:xhc_cmd_section    
+
+sctWait:
+    WaitForSignal
+    mov ax,ds:[si].cmd_thread
+    or ax,ax
+    jnz sctWait
+;
+    pop esi
+    pop ebx
+    pop eax
+    ret
+SendCommandTrb  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3256,24 +3217,23 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetPort   Proc far
-    push gs
-    push cx
-    push di
+    push ecx
+    push edi
 ;    
-    mov gs,ds:xhc_port_sel
-    movzx di,dl
-    shl di,4
+    movzx edi,dl
+    shl edi,4
+    add edi,ds:xhc_port_offset
 ;    
-    mov eax,gs:[di]
+    mov eax,ds:[edi]
     test al,1
     jz rpFail
 ;
     and eax,0EE03E1h
     or al,10h
-    mov gs:[di],eax
+    mov ds:[edi],eax
 
 rpCheckResetLoop:
-    mov eax,gs:[di]
+    mov eax,ds:[edi]
     test al,1
     jz rpFail
 ;
@@ -3288,13 +3248,10 @@ rpResetDone:
     mov ax,25
     WaitMilliSec
 ;
-    mov bx,ds:xhc_port_thread
-    Signal
-;
     mov cx,100
 
 rpSlotLoop:
-    mov eax,gs:[di]
+    mov eax,ds:[edi]
     call PortToSpeed
     cmp al,-1
     clc
@@ -3308,11 +3265,46 @@ rpFail:
     stc
 
 rpDone:
-    pop di
-    pop cx
-    pop gs
+    pop edi
+    pop ecx
     retf32
 ResetPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateAddress
+;
+;       DESCRIPTION:    Allocate address (slot)
+;
+;       PARAMETERS:     DS        Function sel
+;
+;       RETURNS:        AL        Address (slot #)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateAddress   Proc far
+    int 3
+    push esi
+    push edi
+;
+    call WaitForCommandTrb
+    mov al,TRB_TYPE_ENABLE_SLOT
+    call SendCommandTrb
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    stc
+    jne esDone
+;
+    mov al,ds:[si].cev_slot
+    clc        
+
+esDone:
+    pop edi
+    pop esi
+    retf32   
+AllocateAddress   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3452,7 +3444,6 @@ ptPowerNext:
     
 ptLoop:
     WaitForSignal
-    int 3
 
 ptRetry:    
     xor eax,eax
@@ -4635,6 +4626,8 @@ CreateCommandRing   Proc near
     add eax,DEV_OFFSET - CMD_OFFSET
     mov ds:xhc_dcba,eax
     mov ds:xhc_dcba+4,ebx
+    mov ds:xhc_cmd_enque,CMD_OFFSET
+    mov ds:xhc_cmd_pcs,1
 ;
     popad
     pop es
