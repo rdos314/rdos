@@ -3311,130 +3311,6 @@ rpDone:
     pop gs
     retf32
 ResetPort   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           error_event
-;
-;       DESCRIPTION:    Invalid event
-;
-;       PARAMETERS:     ES     Function sel
-;                       DS:SI  Event TRB
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-error_event Proc near
-    int 3
-    ret
-error_event Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           command_event
-;
-;       DESCRIPTION:    Command event
-;
-;       PARAMETERS:     ES     Function sel
-;                       DS:SI  Event TRB
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-command_event Proc near
-    mov di,ds:[si]
-    and di,0FF0h
-    mov fs,es:xhc_cmd_ring_sel
-    add di,1000h
-;
-    mov eax,ds:[si+8]
-    mov fs:[di+8],eax
-    mov eax,ds:[si+12]
-    mov fs:[di+12],eax
-;        
-    xor bx,bx
-    xchg bx,fs:[di].cmd_thread
-    Signal
-    ret
-command_event Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           transfer_event
-;
-;       DESCRIPTION:    Transfer event
-;
-;       PARAMETERS:     ES     Function sel
-;                       DS:SI  Event TRB
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-transfer_event Proc near
-    mov al,ds:[si+0Fh]
-    movzx bx,al
-    shl bx,1
-    mov ax,es:[bx].xhc_func_sel_arr
-    or ax,ax
-    jz teDone
-;
-    mov fs,ax
-    mov al,ds:[si+0Eh]
-    movzx bx,al
-    dec bx
-    shl bx,1
-    mov ax,fs:[bx].xd_ep_sel_arr
-    or ax,ax
-    jz teDone
-;
-    mov fs,ax
-    mov ax,ds:[si+8]
-    mov fs:xp_remain_size,ax
-    mov al,ds:[si+0Bh]
-    mov fs:xp_result,al
-;
-    mov eax,ds:[si]
-    mov edx,ds:[si+4]
-    sub eax,fs:xp_ring_phys
-    sbb edx,fs:xp_ring_phys+4
-    or edx,edx
-    jnz teDequeDone
-;
-    cmp eax,1000h
-    jae teDequeDone
-;
-    add ax,fs:xp_ring_offset
-    mov di,ax
-    add di,SIZE trb_struc
-    mov ax,fs:[di].trb_type
-    test ax,2
-    jz teSaveDeque
-;
-    mov di,fs:xp_ring_offset
-
-teSaveDeque:
-    mov fs:xp_ring_deque,di
-
-teDequeDone:
-;    mov bx,fs:usbp_signal
-    or bx,bx
-    jz teSignalDone
-;
-    Signal
-
-teSignalDone:
-;    mov bx,fs:usbp_wait
-    or bx,bx
-    jz teDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-teDone:    
-    ret
-transfer_event Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3556,10 +3432,11 @@ SetPortPower    Endp
 
 
 port_thread:
-    mov es,bx
+    int 3
+    mov ds,bx
     GetThread
+    mov ds:xhc_port_thread,ax
 ;        
-    mov es:xhc_port_thread,ax
     mov es:xhc_attach_pend,0
     mov es:xhc_detach_pend,0
     mov ds,es:xhc_port_sel
@@ -3613,11 +3490,11 @@ ptPortNext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreatePortThread
+;       NAME:           CreatePortThread
 ;
-;           DESCRIPTION:    Create port thread
+;       DESCRIPTION:    Create port thread
 ;
-;       PARAMETERS:         ES  Function sel
+;       PARAMETERS:     DS  Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3627,9 +3504,6 @@ CreatePortThread   Proc near
     push ds
     push es
     pushad
-;
-    mov bx,es
-    mov ds,bx
 ;
     mov si,di
     mov eax,100h
@@ -3654,6 +3528,7 @@ cptXhciDone:
     xor al,al
     stosb
 ;
+    mov bx,ds
     mov ax,cs
     mov ds,ax
     xor di,di
@@ -3671,6 +3546,132 @@ cptXhciDone:
 CreatePortThread   Endp
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           error_event
+;
+;       DESCRIPTION:    Invalid event
+;
+;       PARAMETERS:     ES     Function sel
+;                       DS:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+error_event Proc near
+    int 3
+    ret
+error_event Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           command_event
+;
+;       DESCRIPTION:    Command event
+;
+;       PARAMETERS:     DS     Function sel
+;                       ES:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+command_event Proc near
+    int 3
+    mov di,ds:[si]
+    and di,0FF0h
+    mov fs,es:xhc_cmd_ring_sel
+    add di,1000h
+;
+    mov eax,ds:[si+8]
+    mov fs:[di+8],eax
+    mov eax,ds:[si+12]
+    mov fs:[di+12],eax
+;        
+    xor bx,bx
+    xchg bx,fs:[di].cmd_thread
+    Signal
+    ret
+command_event Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           transfer_event
+;
+;       DESCRIPTION:    Transfer event
+;
+;       PARAMETERS:     DS     Function sel
+;                       ES:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+transfer_event Proc near
+    int 3
+    mov al,ds:[si+0Fh]
+    movzx bx,al
+    shl bx,1
+    mov ax,es:[bx].xhc_func_sel_arr
+    or ax,ax
+    jz teDone
+;
+    mov fs,ax
+    mov al,ds:[si+0Eh]
+    movzx bx,al
+    dec bx
+    shl bx,1
+    mov ax,fs:[bx].xd_ep_sel_arr
+    or ax,ax
+    jz teDone
+;
+    mov fs,ax
+    mov ax,ds:[si+8]
+    mov fs:xp_remain_size,ax
+    mov al,ds:[si+0Bh]
+    mov fs:xp_result,al
+;
+    mov eax,ds:[si]
+    mov edx,ds:[si+4]
+    sub eax,fs:xp_ring_phys
+    sbb edx,fs:xp_ring_phys+4
+    or edx,edx
+    jnz teDequeDone
+;
+    cmp eax,1000h
+    jae teDequeDone
+;
+    add ax,fs:xp_ring_offset
+    mov di,ax
+    add di,SIZE trb_struc
+    mov ax,fs:[di].trb_type
+    test ax,2
+    jz teSaveDeque
+;
+    mov di,fs:xp_ring_offset
+
+teSaveDeque:
+    mov fs:xp_ring_deque,di
+
+teDequeDone:
+;    mov bx,fs:usbp_signal
+    or bx,bx
+    jz teSignalDone
+;
+    Signal
+
+teSignalDone:
+;    mov bx,fs:usbp_wait
+    or bx,bx
+    jz teDone
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+teDone:    
+    ret
+transfer_event Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3797,7 +3798,6 @@ event_thread:
 
 etWait:
     WaitForSignal
-    int 3
 
 etNext:    
     mov eax,es:[si+12]
@@ -4216,12 +4216,11 @@ ifTabLoop:
     stosd
     loop ifTabLoop    
 ;
-    int 3
     InitUsbFunction
 ;
     xor dl,dl
     call CreateEventThread
-;    call CreatePortThread
+    call CreatePortThread
 ;    
     mov edi,ds:xhc_oper_offset
     or ds:[edi].orsUsbCmd,4    
