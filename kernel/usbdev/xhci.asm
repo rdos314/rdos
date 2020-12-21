@@ -204,8 +204,10 @@ ev_size       DW ?
 ev_resv1      DW ?
 ev_resv2      DD ?
 ev_phys       DD ?,?
-ev_edge       DD ?,?
+ev_edqe       DD ?,?
 ev_hdr_size   DW ?
+ev_thread     DW ?
+ev_ccs        DW ?
 
 event_seg   ENDS
 
@@ -264,14 +266,11 @@ xhc_event_ring_sel  DW ?
 
 xhc_context_size    DW ?
 xhc_erst            DD ?,?
-xhc_edqe            DD ?,?
 
 xhc_attach_pend     DD ?
 xhc_detach_pend     DD ?
 
-xhc_event_thread    DW ?
 xhc_cmd_section     section_typ <>
-xhc_event_ccs       DW ?
 
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
@@ -3313,26 +3312,6 @@ rpDone:
     pop gs
     retf32
 ResetPort   Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           XhciInt
-;
-;           DESCRIPTION:    XHCI interrupt
-;
-;       PARAMETERS:     DS      Function selector
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-XhciInt Proc far 
-    mov bx,ds:xhc_event_thread
-    Signal
-    retf32
-XhciInt Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3498,132 +3477,6 @@ teSignalDone:
 teDone:    
     ret
 transfer_event Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Event table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EventTab:
-evt00 DW OFFSET error_event
-evt01 DW OFFSET error_event
-evt02 DW OFFSET error_event
-evt03 DW OFFSET error_event
-evt04 DW OFFSET error_event
-evt05 DW OFFSET error_event
-evt06 DW OFFSET error_event
-evt07 DW OFFSET error_event
-evt08 DW OFFSET error_event
-evt09 DW OFFSET error_event
-evt0A DW OFFSET error_event
-evt0B DW OFFSET error_event
-evt0C DW OFFSET error_event
-evt0D DW OFFSET error_event
-evt0E DW OFFSET error_event
-evt0F DW OFFSET error_event
-evt10 DW OFFSET error_event
-evt11 DW OFFSET error_event
-evt12 DW OFFSET error_event
-evt13 DW OFFSET error_event
-evt14 DW OFFSET error_event
-evt15 DW OFFSET error_event
-evt16 DW OFFSET error_event
-evt17 DW OFFSET error_event
-evt18 DW OFFSET error_event
-evt19 DW OFFSET error_event
-evt1A DW OFFSET error_event
-evt1B DW OFFSET error_event
-evt1C DW OFFSET error_event
-evt1D DW OFFSET error_event
-evt1E DW OFFSET error_event
-evt1F DW OFFSET error_event
-evt20 DW OFFSET transfer_event
-evt21 DW OFFSET command_event
-evt22 DW OFFSET port_event
-evt23 DW OFFSET error_event
-evt24 DW OFFSET error_event
-evt25 DW OFFSET error_event
-evt26 DW OFFSET error_event
-evt27 DW OFFSET error_event
-evt28 DW OFFSET error_event
-evt29 DW OFFSET error_event
-evt2A DW OFFSET error_event
-evt2B DW OFFSET error_event
-evt2C DW OFFSET error_event
-evt2D DW OFFSET error_event
-evt2E DW OFFSET error_event
-evt2F DW OFFSET error_event
-evt30 DW OFFSET error_event
-evt31 DW OFFSET error_event
-evt32 DW OFFSET error_event
-evt33 DW OFFSET error_event
-evt34 DW OFFSET error_event
-evt35 DW OFFSET error_event
-evt36 DW OFFSET error_event
-evt37 DW OFFSET error_event
-evt38 DW OFFSET error_event
-evt39 DW OFFSET error_event
-evt3A DW OFFSET error_event
-evt3B DW OFFSET error_event
-evt3C DW OFFSET error_event
-evt3D DW OFFSET error_event
-evt3E DW OFFSET error_event
-evt3F DW OFFSET error_event
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           EventThread
-;
-;           DESCRIPTION:    Event thread
-;
-;       PARAMETERS:         BX  Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-event_thread:
-    mov es,bx
-    GetThread
-    mov es:xhc_event_thread,ax
-;
-    mov ds,es:xhc_event_ring_sel
-    mov gs,es:xhc_rts_sel
-    mov es:xhc_event_ccs,1
-    xor si,si
-
-etWait:
-    WaitForSignal
-
-etNext:    
-    mov eax,ds:[si+12]
-    mov dx,es:xhc_event_ccs
-    and al,1
-    xor dl,al
-    jnz etDeq
-;
-    shr ax,10
-    and ax,3Fh
-    mov bx,ax
-    shl bx,1    
-    call cs:[bx].EventTab
-;    
-    add si,16
-    cmp si,1000h
-    jne etNext
-;
-    xor es:xhc_event_ccs,1
-    xor si,si 
-    jmp etNext
-
-etDeq:
-    mov eax,es:xhc_edqe
-    mov ebx,es:xhc_edqe+4
-    or ax,si
-    or al,8
-    mov gs:rrsDequeue,eax
-    mov gs:rrsDequeue+4,ebx    
-    jmp etWait
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3796,8 +3649,6 @@ ptPortNext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 xhci_name   DB 'XHCI ', 0
-port_name   DB ' Port', 0
-event_name  DB ' Event', 0
 
 CreatePortThread   Proc near
     push ds
@@ -3827,18 +3678,6 @@ cptXhciDone:
     call HexToAscii
     stosw
 ;
-    mov si,OFFSET port_name
-
-cptPortLoop:
-    mov al,cs:[si]
-    inc si
-    or al,al
-    jz cptPortDone
-;
-    stosb
-    jmp cptPortLoop
-
-cptPortDone:
     xor al,al
     stosb
 ;
@@ -3859,14 +3698,146 @@ cptPortDone:
 CreatePortThread   Endp
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Event table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EventTab:
+evt00 DW OFFSET error_event
+evt01 DW OFFSET error_event
+evt02 DW OFFSET error_event
+evt03 DW OFFSET error_event
+evt04 DW OFFSET error_event
+evt05 DW OFFSET error_event
+evt06 DW OFFSET error_event
+evt07 DW OFFSET error_event
+evt08 DW OFFSET error_event
+evt09 DW OFFSET error_event
+evt0A DW OFFSET error_event
+evt0B DW OFFSET error_event
+evt0C DW OFFSET error_event
+evt0D DW OFFSET error_event
+evt0E DW OFFSET error_event
+evt0F DW OFFSET error_event
+evt10 DW OFFSET error_event
+evt11 DW OFFSET error_event
+evt12 DW OFFSET error_event
+evt13 DW OFFSET error_event
+evt14 DW OFFSET error_event
+evt15 DW OFFSET error_event
+evt16 DW OFFSET error_event
+evt17 DW OFFSET error_event
+evt18 DW OFFSET error_event
+evt19 DW OFFSET error_event
+evt1A DW OFFSET error_event
+evt1B DW OFFSET error_event
+evt1C DW OFFSET error_event
+evt1D DW OFFSET error_event
+evt1E DW OFFSET error_event
+evt1F DW OFFSET error_event
+evt20 DW OFFSET transfer_event
+evt21 DW OFFSET command_event
+evt22 DW OFFSET port_event
+evt23 DW OFFSET error_event
+evt24 DW OFFSET error_event
+evt25 DW OFFSET error_event
+evt26 DW OFFSET error_event
+evt27 DW OFFSET error_event
+evt28 DW OFFSET error_event
+evt29 DW OFFSET error_event
+evt2A DW OFFSET error_event
+evt2B DW OFFSET error_event
+evt2C DW OFFSET error_event
+evt2D DW OFFSET error_event
+evt2E DW OFFSET error_event
+evt2F DW OFFSET error_event
+evt30 DW OFFSET error_event
+evt31 DW OFFSET error_event
+evt32 DW OFFSET error_event
+evt33 DW OFFSET error_event
+evt34 DW OFFSET error_event
+evt35 DW OFFSET error_event
+evt36 DW OFFSET error_event
+evt37 DW OFFSET error_event
+evt38 DW OFFSET error_event
+evt39 DW OFFSET error_event
+evt3A DW OFFSET error_event
+evt3B DW OFFSET error_event
+evt3C DW OFFSET error_event
+evt3D DW OFFSET error_event
+evt3E DW OFFSET error_event
+evt3F DW OFFSET error_event
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateEventThread
+;           NAME:           EventThread
 ;
-;           DESCRIPTION:    Create event thread
+;           DESCRIPTION:    Event thread
 ;
-;       PARAMETERS:         ES  Function sel
+;       PARAMETERS:         BX  Function sel
+;                           DL  Interrupter #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+event_thread:
+    mov ds,bx
+    movzx si,dl
+    shl si,1
+    mov es,ds:[si].xhc_intr_arr
+    GetThread
+    mov es:ev_thread,ax
+;
+    mov es:ev_ccs,1
+    mov si,es:ev_hdr_size
+
+etWait:
+    WaitForSignal
+    int 3
+
+etNext:    
+    mov eax,es:[si+12]
+    mov dx,es:ev_ccs
+    and al,1
+    xor dl,al
+    jnz etDeq
+;
+    shr ax,10
+    and ax,3Fh
+    mov bx,ax
+    shl bx,1    
+    call cs:[bx].EventTab
+;    
+    add si,16
+    cmp si,1000h
+    jne etNext
+;
+    xor es:ev_ccs,1
+    mov si,es:ev_hdr_size
+    jmp etNext
+
+etDeq:
+    mov edi,ds:xhc_run_offset
+    mov eax,es:ev_edqe
+    mov ebx,es:ev_edqe+4
+    or ax,si
+    or al,8
+    mov ds:[edi].rrsDequeue,eax
+    mov ds:[edi].rrsDequeue+4,ebx    
+    jmp etWait
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEventThread
+;
+;       DESCRIPTION:    Create event thread
+;
+;       PARAMETERS:     DS  Function sel
+;                       DL  Interrupter #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3874,9 +3845,6 @@ CreateEventThread   Proc near
     push ds
     push es
     pushad
-;
-    mov bx,es
-    mov ds,bx
 ;
     mov si,di
     mov eax,100h
@@ -3898,21 +3866,17 @@ cetXhciDone:
     call HexToAscii
     stosw
 ;
-    mov si,OFFSET event_name
-
-cetEventLoop:
-    mov al,cs:[si]
-    inc si
-    or al,al
-    jz cetEventDone
-;
+    mov al,'.'
     stosb
-    jmp cetEventLoop
-
-cetEventDone:
+;
+    mov al,dl
+    call HexToAscii
+    stosw
+;
     xor al,al
     stosb
 ;
+    mov bx,ds
     mov ax,cs
     mov ds,ax
     mov si,OFFSET event_thread
@@ -3928,9 +3892,26 @@ cetEventDone:
     pop ds
     ret
 CreateEventThread   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           XhciInt
+;
+;       DESCRIPTION:    XHCI interrupt
+;
+;       PARAMETERS:     DS      Event selector
+;
+;       RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
+XhciInt Proc far 
+    int 3
+    mov bx,ds:ev_thread
+    Signal
+    retf32
+XhciInt Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4189,7 +4170,6 @@ ifIrq:
     pop ds
 
 ifIntDone:    
-    int 3
     mov edi,ds:xhc_oper_offset
     movzx eax,ds:xhc_slot_count
     mov ds:[edi].orsConfig,eax
@@ -4201,34 +4181,31 @@ ifIntDone:
 ;    
     call CreateScratchPad
 ;
-    mov eax,es:xhc_crcr
+    mov eax,ds:xhc_crcr
     or al,1
-    mov ds:orsCrCtrl,eax
-    mov eax,es:xhc_crcr+4
-    mov ds:orsCrCtrl+4,eax
+    mov ds:[edi].orsCrCtrl,eax
+    mov eax,ds:xhc_crcr+4
+    mov ds:[edi].orsCrCtrl+4,eax
 ;
-    mov ds,es:xhc_rts_sel
+    mov edi,ds:xhc_run_offset    
+    mov es,ds:xhc_intr_arr
+    mov eax,es:ev_edqe
+    mov ebx,es:ev_edqe+4
+    mov ds:[edi].rrsDequeue,eax
+    mov ds:[edi].rrsDequeue+4,ebx    
 ;    
-    mov eax,es:xhc_edqe
-    mov ebx,es:xhc_edqe+4
-    mov ds:rrsDequeue,eax
-    mov ds:rrsDequeue+4,ebx    
+    mov eax,es:ev_phys
+    mov ebx,es:ev_phys+4
+    mov ds:[edi].rrsBase,eax
+    mov ds:[edi].rrsBase+4,ebx    
 ;    
-    mov eax,es:xhc_erst
-    mov ebx,es:xhc_erst+4
-    mov ds:rrsBase,eax
-    mov ds:rrsBase+4,ebx    
-;    
-    mov ds:rrsRingSize,1
+    mov ds:[edi].rrsRingSize,1
 ;
-    mov ds:rrsImod,400
-    mov ds:rrsIman,3
-;    
-    mov ds,es:xhc_reg_sel
-    or ds:orsUsbCmd,4    
+    mov ds:[edi].rrsImod,400
+    mov ds:[edi].rrsIman,3
 ;
-    or ds:orsUsbCmd,1
-;    
+    mov ax,ds
+    mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
     mov cx,2*1Bh
@@ -4238,11 +4215,16 @@ ifTabLoop:
     stosd
     loop ifTabLoop    
 ;
-    mov ax,es
-    mov ds,ax
+    int 3
     InitUsbFunction
+;
+    xor dl,dl
     call CreateEventThread
-    call CreatePortThread
+;    call CreatePortThread
+;    
+    mov edi,ds:xhc_oper_offset
+    or ds:[edi].orsUsbCmd,4    
+    or ds:[edi].orsUsbCmd,1
 
 ifDone:
     popad
@@ -4609,11 +4591,12 @@ CreateEventRing   Proc near
     mov eax,es:ev_phys
     add eax,ecx
     mov es:ev_ers,eax
-    mov es:ev_edge,eax
+    mov es:ev_edqe,eax
 ;
     mov eax,es:ev_phys+4
     mov es:ev_ers+4,eax
-    mov es:ev_edge+4,eax
+    mov es:ev_edqe+4,eax
+    mov es:ev_thread,0
 ;
     popad    
     ret
