@@ -258,7 +258,8 @@ xhc_intr_arr            DW MAX_INTR_COUNT DUP(?)
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
 
-xhc_context_size    DW ?
+xhc_context_size        DW ?
+xhc_slot_sel_arr        DW 256 DUP(?)
 
 
 ; might not be used
@@ -290,8 +291,7 @@ xhci_dev_struc   STRUC
 
 usb_dev_base                 usb_device_struc <>
 
-xd_device_context            DD ?
-xd_dev_sel                   DW ?
+xd_func_sel                  DW ?
 xd_control_trb               DW ?
 xd_control_buf               DD ?
 xd_control_pipe              DW ?
@@ -3209,6 +3209,7 @@ AllocateDevice    Proc near
     pushad
 ;
     mov al,ds:xhc_has_64
+    or al,al
     jz adMem32
 
 adMem64:
@@ -3276,35 +3277,27 @@ CreateDev   Proc far
     push fs
     pushad
 ;
-    movzx di,al
-    shl di,3
-;
     call AllocateDevice
 ;
-    mov es:xd_dev_sel,ds
+    mov es:xd_func_sel,ds
     mov es:usbd_speed,al
     mov es:usbd_parent_thread,0
-;
-    pushad
 ;
     mov bx,ds:xhc_context_size
     mov es:xd_ep_size,bx
 ;
+    movzx di,al
+    shl di,3
+    add di,DEV_OFFSET
+    movzx eax,es:xd_slot_context_offset
+    add eax,es:mblk_physical_base
+    mov ebx,es:mblk_physical_base+4
+    mov ds:[di],eax
+    mov ds:[di+4],ebx
+;
     movzx bx,al
     shl bx,1
-    mov ds:[bx].xhc_func_sel_arr,es
-;
-    movzx bx,dl    
-    mov ds:[bx].xhc_port_slot_arr,al
-;
-    mov bx,xhci_device_ptr_sel
-    mov fs,bx
-    mov es:xd_device_context,edx
-    mov fs:[di],eax
-    mov fs:[di+4],ebx
-    mov es:usbd_func_sel,ds
-;
-    popad
+    mov ds:[bx].xhc_slot_sel_arr,es
 ;
     mov ax,25
     WaitMilliSec
@@ -3915,6 +3908,7 @@ XhciInt Endp
 
 AllocatePhysicalPage   Proc near
     mov al,ds:xhc_has_64
+    or al,al
     jz app32
 
 app64:
