@@ -2762,6 +2762,10 @@ SetupRootDevice    Proc near
     inc al
     mov es:[bx].s_root_hub,al
 ;
+    movzx ax,es:xd_intr
+    shl ax,6
+    mov es:[bx].s_ttt_int,ax
+;
     mov dx,es:usbd_parent_hub
     or dx,dx
     jz srdDone
@@ -4010,7 +4014,7 @@ AllocateIntr   Proc near
     push edx
     push esi
 ;
-    mov ecx,MAX_INTR_COUNT
+    movzx ecx,ds:xhc_intr_count
     mov bx,OFFSET xhc_intr_ref_arr
     mov dx,7FFFh
     xor si,si
@@ -4033,9 +4037,59 @@ aiNext:
     or ax,ax
     jnz aiStarted
 ;
-    int 3
+    push es
+    push edi
+;
+    call CreateEventRing
+    mov ds:[si].xhc_intr_sel_arr,es
+;
+    mov edi,ds:xhc_run_offset    
+    movzx eax,si
+    shl eax,4
+    add edi,eax
+;
+    mov eax,es:ev_phys
+    mov ebx,es:ev_phys+4
+    add ax,es:ev_hdr_size
+    mov ds:[edi].rrsDequeue,eax
+    mov ds:[edi].rrsDequeue+4,ebx    
+;    
+    mov eax,es:ev_phys
+    mov ebx,es:ev_phys+4
+    mov ds:[edi].rrsBase,eax
+    mov ds:[edi].rrsBase+4,ebx    
+;    
+    mov ds:[edi].rrsRingSize,1
+;
+    mov ds:[edi].rrsImod,400
+    mov ds:[edi].rrsIman,3
+;
+    push ds
+    push esi
+;
+    shr si,1
+    movzx ax,ds:xhc_int_base
+    add ax,si
+;    
+    mov si,es
+    mov ds,si
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestMsiHandler
+;
+    pop esi
+    pop ds
+;
+    pop edi
+    pop es
+;
+    mov dx,si
+    shr dx,1
+    call CreateEventThread
 
 aiStarted:
+    inc ds:[si].xhc_intr_ref_arr
     mov ax,si
     shr ax,1
 ;
