@@ -247,6 +247,7 @@ xhc_port_count          DB ?
 xhc_crcr                DD ?,?
 xhc_dcba                DD ?,?
 
+xhc_cmd_section         section_typ <>
 xhc_cmd_enque           DW ?
 xhc_cmd_pcs             DW ?
 xhc_cmd_arr             DD CMD_COUNT DUP(?)
@@ -257,7 +258,7 @@ xhc_intr_arr            DW MAX_INTR_COUNT DUP(?)
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
 
-xhc_cmd_section         section_typ <>
+xhc_context_size    DW ?
 
 
 ; might not be used
@@ -272,7 +273,6 @@ xhc_cmd_ring_sel    DW ?
 xhc_event_ring_sel  DW ?
 
 
-xhc_context_size    DW ?
 xhc_erst            DD ?,?
 
 xhc_attach_pend     DD ?
@@ -288,20 +288,25 @@ xhci_func_sel   ENDS
 
 xhci_dev_struc   STRUC
 
-usb_dev_base             usb_device_struc <>
+usb_dev_base                 usb_device_struc <>
 
-xd_device_context        DD ?
-xd_dev_sel               DW ?
-xd_control_trb           DW ?
-xd_control_buf           DD ?
-xd_control_pipe          DW ?
+xd_device_context            DD ?
+xd_dev_sel                   DW ?
+xd_control_trb               DW ?
+xd_control_buf               DD ?
+xd_control_pipe              DW ?
 
-xd_input_context_offset  DW ?
-xd_input_slot_offset     DW ?
-xd_ep_size               DW ?
-xd_input_ep_arr_offset   DW 32 DUP (?)
+xd_input_context_offset      DW ?
+xd_slot_context_offset       DW ?
+xd_pipe_context_arr_offset   DW 32 DUP (?)
 
-xd_ep_sel_arr            DW 32 DUP(?)
+; might not be needed
+
+xd_input_slot_offset         DW ?
+xd_ep_size                   DW ?
+xd_input_ep_arr_offset       DW 32 DUP (?)
+
+xd_ep_sel_arr                DW 32 DUP(?)
 
 xhci_dev_struc    ENDS
 
@@ -2892,154 +2897,6 @@ FreeAddress       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateDevice
-;
-;       DESCRIPTION:    Allocate device
-;
-;       PARAMETERS:     DS      Device sel
-;
-;       RETURNS:        ES      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateDevice    Proc near
-    pushad
-;
-    mov ax,ds:xhc_context_size
-    mov si,SIZE xhci_dev_struc
-    mov cx,16
-    CreateMemBlk64
-;    
-    mov cx,ds:xhc_context_size
-    AllocateMemBlk
-    sub edx,es:mblk_linear_base
-    mov es:xd_input_context_offset,dx
-;
-    mov cx,ds:xhc_context_size
-    AllocateMemBlk
-    sub edx,es:mblk_linear_base
-    mov es:xd_input_slot_offset,dx
-;
-    mov di,OFFSET xd_input_ep_arr_offset
-    mov bp,32
-
-adiEpLoop:
-    mov cx,ds:xhc_context_size
-    AllocateMemBlk
-    sub edx,es:mblk_linear_base
-    mov es:[di],dx
-    add di,2 
-    sub bp,1
-    jnz adiEpLoop      
-;
-    popad
-    ret
-AllocateDevice    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateDeviceContext
-;
-;       DESCRIPTION:    Allocate device context
-;
-;       RETURNS:        EBX:EAX		Physical address
-;                       EDX             Device context linear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateDeviceContext    Proc near
-    push es
-    push ecx
-    push edi
-;
-    mov eax,1000h
-    AllocateBigLinear
-;    
-    AllocatePhysical64
-    push eax
-;
-    mov al,13h
-    SetPageEntry
-;    
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    pop eax
-;
-    pop edi
-    pop ecx
-    pop es
-    ret
-AllocateDeviceContext	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateDev
-;
-;       DESCRIPTION:    Create device sel
-;
-;       PARAMETERS:     DS        Function sel
-;                       AL        Address (slot #)
-;                       AH        Speed
-;                       BX        Hub sel
-;                       DX        Port #
-;
-;       RETURNS:        ES        Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateDev   Proc far
-    push fs
-    pushad
-;
-    movzx di,al
-    shl di,3
-;
-    call AllocateDevice
-;
-    mov es:xd_dev_sel,ds
-    mov es:usbd_speed,al
-    mov es:usbd_parent_thread,0
-;
-    pushad
-;
-    mov bx,ds:xhc_context_size
-    mov es:xd_ep_size,bx
-;
-    movzx bx,al
-    shl bx,1
-    mov ds:[bx].xhc_func_sel_arr,es
-;
-    movzx bx,dl    
-    mov ds:[bx].xhc_port_slot_arr,al
-;
-    mov bx,xhci_device_ptr_sel
-    mov fs,bx
-    call AllocateDeviceContext
-    mov es:xd_device_context,edx
-    mov fs:[di],eax
-    mov fs:[di+4],ebx
-    mov es:usbd_func_sel,ds
-;
-    popad
-;
-    mov ax,25
-    WaitMilliSec
-;
-    popad
-    pop fs
-    retf32   
-CreateDev       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:               FreeDev
 ;
 ;       DESCRIPTION:        Free device sel
@@ -3282,7 +3139,6 @@ ResetPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateAddress   Proc far
-    int 3
     push esi
     push edi
 ;
@@ -3303,6 +3159,160 @@ esDone:
     pop esi
     retf32   
 AllocateAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ZeroContext
+;
+;       DESCRIPTION:    Zero context struct
+;
+;       PARAMETERS:     EDX     Context linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ZeroContext    Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    movzx ecx,ds:xhc_context_size
+    shr ecx,2
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+ZeroContext    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateDevice
+;
+;       DESCRIPTION:    Allocate device
+;
+;       PARAMETERS:     DS      Device sel
+;
+;       RETURNS:        ES      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDevice    Proc near
+    pushad
+;
+    mov al,ds:xhc_has_64
+    jz adMem32
+
+adMem64:
+    mov ax,ds:xhc_context_size
+    mov si,SIZE xhci_dev_struc
+    mov cx,16
+    CreateMemBlk64
+    jmp adMemDone
+
+adMem32:
+    mov ax,ds:xhc_context_size
+    mov si,SIZE xhci_dev_struc
+    mov cx,16
+    CreateMemBlk32
+
+adMemDone:
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    call ZeroContext
+    sub edx,es:mblk_linear_base
+    mov es:xd_input_context_offset,dx
+;
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    call ZeroContext
+    sub edx,es:mblk_linear_base
+    mov es:xd_slot_context_offset,dx
+;
+    mov di,OFFSET xd_pipe_context_arr_offset
+    mov bp,32
+
+adiEpLoop:
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    call ZeroContext
+    sub edx,es:mblk_linear_base
+    mov es:[di],dx
+    add di,2 
+    sub bp,1
+    jnz adiEpLoop      
+;
+    popad
+    ret
+AllocateDevice    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDev
+;
+;       DESCRIPTION:    Create device sel
+;
+;       PARAMETERS:     DS        Function sel
+;                       AL        Address (slot #)
+;                       AH        Speed
+;                       BX        Hub sel
+;                       DX        Port #
+;
+;       RETURNS:        ES        Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDev   Proc far
+    int 3
+    push fs
+    pushad
+;
+    movzx di,al
+    shl di,3
+;
+    call AllocateDevice
+;
+    mov es:xd_dev_sel,ds
+    mov es:usbd_speed,al
+    mov es:usbd_parent_thread,0
+;
+    pushad
+;
+    mov bx,ds:xhc_context_size
+    mov es:xd_ep_size,bx
+;
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].xhc_func_sel_arr,es
+;
+    movzx bx,dl    
+    mov ds:[bx].xhc_port_slot_arr,al
+;
+    mov bx,xhci_device_ptr_sel
+    mov fs,bx
+    mov es:xd_device_context,edx
+    mov fs:[di],eax
+    mov fs:[di+4],ebx
+    mov es:usbd_func_sel,ds
+;
+    popad
+;
+    mov ax,25
+    WaitMilliSec
+;
+    popad
+    pop fs
+    retf32   
+CreateDev       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4501,6 +4511,9 @@ ifSaveCount:
 ;
     mov al,es:par_port_count
     mov ds:xhc_port_count,al
+;
+    movzx ax,es:par_slot_size
+    mov ds:xhc_context_size,ax
 ;
     FreeMem
 ;
