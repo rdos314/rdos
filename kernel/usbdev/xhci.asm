@@ -3359,7 +3359,7 @@ HexToAscii      ENDP
 ;
 ;           DESCRIPTION:    Update port
 ;
-;       PARAMETERS:         ES  Function sel
+;       PARAMETERS:         DS  Function sel
 ;                           CL  Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3368,9 +3368,10 @@ UpdatePort  Proc near
     push eax
     push esi
 ;
-    movzx si,dl
-    shl si,4
-    mov eax,ds:[si]
+    movzx esi,dl
+    shl esi,4
+    add esi,ds:xhc_port_offset
+    mov eax,ds:[esi]
     NotifyUsbPortState
 ;
     pop esi
@@ -3435,7 +3436,6 @@ port_thread:
     mov ds,bx
     GetThread
     mov ds:xhc_port_thread,ax
-    int 3
 ;
     xor cl,cl
 
@@ -3452,10 +3452,11 @@ ptPowerNext:
     
 ptLoop:
     WaitForSignal
+    int 3
 
 ptRetry:    
     xor eax,eax
-    xchg eax,es:xhc_port_change_mask
+    xchg eax,ds:xhc_port_change_mask
     or eax,eax
     jz ptLoop
 ;
@@ -3471,14 +3472,8 @@ ptPortNext:
     inc dl
     shr eax,1
     jnz ptPortLoop   
-;    
-    mov eax,es:xhc_attach_pend
-    or eax,es:xhc_detach_pend
-    jz ptLoop    
 ;
-    mov ax,25
-    WaitMilliSec
-    jmp ptRetry    
+    jmp ptLoop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
