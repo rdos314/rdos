@@ -681,81 +681,6 @@ SetupLinkTrb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateScratchPad
-;
-;       DESCRIPTION:    Create scratch pad area (if needed)
-;
-;       PARAMETERS:     ES      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateScratchPad   Proc near
-    push ds
-;    
-    mov bx,xhci_hcc_sel
-    mov ds,bx
-    mov eax,ds:hccParams2
-    mov edx,eax
-    shr edx,27
-    and dx,1Fh
-    shr eax,16
-    and ax,3E0h
-    add ax,dx    
-    or ax,ax
-    jz cspDone
-;
-    push es
-    pushad
-;
-    push ax
-    mov eax,2000h
-    AllocateBigLinear
-    AllocatePhysical64
-    mov al,13h
-    SetPageEntry
-    xor al,al
-    mov si,xhci_device_ptr_sel
-    mov es,si
-    xor si,si
-    mov es:[si],eax
-    mov es:[si+4],ebx
-    pop cx
-;
-    mov ax,flat_sel
-    mov es,ax
-;
-    mov ebp,edx
-    add edx,1000h
-        
-cspLoop:
-    AllocatePhysical64
-    mov es:[ebp],eax
-    mov es:[ebp+4],ebx
-;
-    push ecx
-    mov al,13h
-    SetPageEntry
-;
-    mov edi,edx
-    xor eax,eax
-    mov ecx,400h
-    rep stos dword ptr es:[edi]
-    pop ecx
-;
-    add ebp,8
-    loop cspLoop
-;
-    popad
-    pop es    
-        
-cspDone:    
-    pop ds
-    ret
-CreateScratchPad   Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           WaitForCommandTrb
 ;
 ;       DESCRIPTION:    Wait for empty command TRB
@@ -4004,6 +3929,120 @@ cetEventDone:
     ret
 CreateEventThread   Endp
 
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocatePhysicalPage
+;
+;       DESCRIPTION:    Allocate physical page
+;
+;       PARAMETERS:     DS      Function selector
+;
+;       RETURNS:        EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePhysicalPage   Proc near
+    mov al,ds:xhc_has_64
+    jz app32
+
+app64:
+    AllocatePhysical64
+    jmp appDone
+
+app32:
+    AllocatePhysical32
+
+appDone:
+    ret
+AllocatePhysicalPage   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateScratchPad
+;
+;       DESCRIPTION:    Create scratch pad area (if needed)
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateScratchPad   Proc near
+    mov ebx,ds:xhc_cap_offset
+    mov eax,ds:[ebx].hccParams2
+    mov edx,eax
+    shr edx,27
+    and dx,1Fh
+    shr eax,16
+    and ax,3E0h
+    add ax,dx    
+    or ax,ax
+    jz cspDone
+;
+    push es
+    pushad
+;
+    push ax
+    mov eax,2000h
+    AllocateBigLinear
+;
+    call AllocatePhysicalPage
+    mov al,13h
+    SetPageEntry
+;
+    xor al,al
+    mov esi,DEV_OFFSET
+    mov ds:[esi],eax
+    mov ds:[esi+4],ebx
+    pop cx
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov ebp,edx
+    add edx,1000h
+        
+cspLoop:
+    call AllocatePhysicalPage
+    mov es:[ebp],eax
+    mov es:[ebp+4],ebx
+;
+    push ecx
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    xor eax,eax
+    mov ecx,400h
+    rep stos dword ptr es:[edi]
+    pop ecx
+;
+    add ebp,8
+    loop cspLoop
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    sub edx,1000h
+    SetPageEntry
+;
+    mov ecx,2000h
+    FreeLinear
+;
+    popad
+    pop es    
+        
+cspDone:    
+    ret
+CreateScratchPad   Endp   
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4535,17 +4574,7 @@ CreateEventRing   Proc near
     mov eax,1000h
     AllocateBigLinear
 ;
-    mov al,ds:xhc_has_64
-    jz cerPhys32
-
-cerPhys64:
-    AllocatePhysical64
-    jmp cerPhysOk
-
-cerPhys32:
-    AllocatePhysical32
-
-cerPhysOk:
+    call AllocatePhysicalPage
     push eax
 ;
     mov al,13h
@@ -4608,17 +4637,7 @@ CreateCommandRing   Proc near
     mov ax,flat_sel
     mov es,ax    
 ;
-    mov al,ds:xhc_has_64
-    jz ccrPhys32
-
-ccrPhys64:
-    AllocatePhysical64
-    jmp ccrPhysOk
-
-ccrPhys32:
-    AllocatePhysical32
-
-ccrPhysOk:
+    call AllocatePhysicalPage
     push eax
 ;
     mov edx,ds:xhc_linear
