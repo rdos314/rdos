@@ -3118,7 +3118,6 @@ SetupControlIn	Endp
 ;       DESCRIPTION:    Copy control IN
 ;
 ;       PARAMETERS:     ES      Usb device
-;                       FS      Control pipe
 ;                       CX      Size
 ;                       GS:EDI  Buffer
 ;
@@ -3129,7 +3128,7 @@ SetupControlIn	Endp
 CopyControlIn   Proc near
     push eax
 ;
-    mov al,fs:xp_result
+    mov al,es:xd_control_result
     or cx,cx
     jz cciNoData
 
@@ -3143,8 +3142,8 @@ cciData:
     pushad
 ;
     mov esi,es:xd_control_buf
-    movzx ecx,fs:xp_size
-    sub cx,fs:xp_remain_size
+    movzx ecx,es:xd_control_size
+    sub cx,es:xd_control_remain_size
     mov ax,gs
     mov es,ax
     mov ax,flat_sel
@@ -3155,8 +3154,8 @@ cciData:
     pop es
     pop ds
 ;
-    mov cx,fs:xp_size
-    sub cx,fs:xp_remain_size
+    mov cx,es:xd_control_size
+    sub cx,es:xd_control_remain_size
     clc
     jmp cciDone
 
