@@ -2828,11 +2828,11 @@ CreateControlRing   Proc near
     rep stos dword ptr es:[edi]
     pop eax
 ;
-    mov ds:[edi].trb_param,eax
-    mov ds:[edi].trb_param+4,ebx
-    mov ds:[edi].trb_status,0
-    mov ds:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
-    mov ds:[edi].trb_control,0
+    mov es:[edi].trb_param,eax
+    mov es:[edi].trb_param+4,ebx
+    mov es:[edi].trb_status,0
+    mov es:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
+    mov es:[edi].trb_control,0
 ;
     popad
     ret
@@ -3699,7 +3699,7 @@ ControlEvent Proc near
     mov di,ax
     add di,fs:xd_control_offset
     add di,SIZE trb_struc
-    mov ax,es:[di].trb_type
+    mov ax,fs:[di].trb_type
     test ax,2
     jz cevSave
 ;
