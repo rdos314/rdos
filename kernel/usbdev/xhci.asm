@@ -3290,31 +3290,16 @@ RunControl   Proc near
     mov eax,1
     mov ds:[esi],eax
 ;
-    WaitForSignal
-
-    mov cx,100
-
-rcWait:
-    mov ax,4
-    WaitMilliSec
-;
-    test es:usbd_flags,FLAG_DETACHED
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
+    mov es:xd_control_thread,0
+    mov al,es:xd_control_result
+    cmp al,1
     stc
     jnz rcDone
 ;
-    call fword ptr ds:is_dev_connected_proc
-    jc rcDone
-;
-    mov al,es:xd_control_result
-    cmp al,-1
-    jne rcCheck
-;
-    loop rcWait
-;
-    stc
-    jmp rcDone
-
-rcCheck:
     clc
 
 rcDone:
@@ -3625,6 +3610,122 @@ error_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReportPipeStatus
+;
+;       DESCRIPTION:    Report pipe status
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Device sel
+;                       AL      Status
+;                       DL      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+rpTable:
+r00 DW 0
+r01 DW 0
+r02 DW USB_EVENT_DATA_BUFFER_ERROR
+r03 DW USB_EVENT_BABBLE
+r04 DW USB_EVENT_TRANS_ERROR
+r05 DW USB_EVENT_TRB_ERROR
+r06 DW USB_EVENT_STALL
+r07 DW 0
+r08 DW USB_EVENT_BANDWIDTH_ERROR
+r09 DW USB_EVENT_NO_SLOTS
+r10 DW 0
+r11 DW USB_EVENT_SLOT_NOT_ENABLED
+r12 DW USB_EVENT_PIPE_NOT_ENABLED
+r13 DW 0
+r14 DW 0
+r15 DW 0
+r16 DW 0
+r17 DW 0
+r18 DW 0
+r19 DW 0
+r20 DW USB_EVENT_NO_PING
+
+ReportPipeStatus   Proc near
+    push es
+    push fs
+    push ax
+    push si
+;
+    mov si,fs
+    mov es,si
+    mov si,flat_sel
+    mov fs,si
+;
+    movzx si,al
+    xor ax,ax
+    cmp si,20
+    ja rpsReport
+;
+    add si,si
+    mov ax,word ptr cs:[si].rpTable
+
+rpsReport:    
+    or ax,ax
+    jnz rpsCodeOk
+;
+    mov ax,USB_EVENT_UNKNOWN
+
+rpsCodeOk:
+    movzx si,es:usbd_port
+    ReportUsbPipeEvent
+;
+    pop si
+    pop ax
+    pop fs
+    pop es
+    ret
+ReportPipeStatus   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReportFunctionStatus
+;
+;       DESCRIPTION:    Report function status
+;
+;       PARAMETERS:     DS      Function selector
+;                       AL      Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReportFunctionStatus   Proc near
+    push fs
+    push ax
+    push si
+;
+    mov si,flat_sel
+    mov fs,si
+;
+    movzx si,al
+    xor ax,ax
+    cmp si,20
+    ja rfsReport
+;
+    add si,si
+    mov ax,word ptr cs:[si].rpTable
+
+rfsReport:    
+    or ax,ax
+    jnz rfsCodeOk
+;
+    mov ax,USB_EVENT_CONTROLLER_ERROR
+
+rfsCodeOk:
+    ReportUsbFunctionEvent
+;
+    pop si
+    pop ax
+    pop fs
+    ret
+ReportFunctionStatus   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           command_event
 ;
 ;       DESCRIPTION:    Command event
@@ -3651,6 +3752,13 @@ command_event Proc near
     add di,OFFSET xhc_cmd_arr
 ;
     mov al,es:[si+11]
+    cmp al,1
+    je ceNotError
+;
+    int 3
+    call ReportFunctionStatus
+
+ceNotError:
     mov ds:[di].cev_result,al
 ;
     mov al,es:[si+15]
@@ -3680,7 +3788,14 @@ ControlEvent Proc near
     mov fs:xd_control_remain_size,ax
     mov al,es:[si+0Bh]
     mov fs:xd_control_result,al
+    cmp al,1
+    je cevNotError
 ;
+    int 3
+    xor dl,dl
+    call ReportPipeStatus
+
+cevNotError:
     mov eax,es:[si]
     mov edx,es:[si+4]
     sub eax,fs:mblk_physical_base
@@ -3727,7 +3842,6 @@ ControlEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 transfer_event Proc near
-    int 3
     mov al,es:[si+0Fh]
     movzx bx,al
     shl bx,1

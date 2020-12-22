@@ -41,6 +41,10 @@ public:
     virtual void NotifyAttach(int Controller, int Port);
     virtual void NotifyDetach(int Controller, int Port);
     virtual void NotifyControllerError(int Controller);
+    virtual void NotifyNoSlots(int Controller);
+    virtual void NotifySlotNotEnabled(int Controller);
+    virtual void NotifyPipeNotEnabled(int Controller);
+    virtual void NotifyBandwidthError(int Controller);
     virtual void NotifyCrcError(int Controller, int Port, char Pipe);
     virtual void NotifyBitStuffingError(int Controller, int Port, char Pipe);
     virtual void NotifyDataToggleError(int Controller, int Port, char Pipe);
@@ -57,6 +61,10 @@ public:
     virtual void NotifyTransError(int Controller, int Port, char Pipe);
     virtual void NotifyMissedMicroframe(int Controller, int Port, char Pipe);
     virtual void NotifyHalted(int Controller, int Port, char Pipe);
+    virtual void NotifyTrbError(int Controller, int Port, char Pipe);
+    virtual void NotifyNoPing(int Controller, int Port, char Pipe);
+    virtual void NotifyUnknown(int Controller, int Port, char Pipe);
+
 	
 protected:
     virtual void SignalNewData();

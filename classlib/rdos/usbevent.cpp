@@ -144,6 +144,66 @@ void TUsbEvent::NotifyControllerError(int Controller)
 
 /*##########################################################################
 #
+#   Name       : TUsbEvent::NotifyNoSlots
+#
+#   Purpose....: Notify no slots
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyNoSlots(int Controller)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifySlotNotEnabled
+#
+#   Purpose....: Notify slot not enabled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifySlotNotEnabled(int Controller)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifyPipeNotEnabled
+#
+#   Purpose....: Notify pipe not enabled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyPipeNotEnabled(int Controller)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifyBandwidthError
+#
+#   Purpose....: Notify bandwidth error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyBandwidthError(int Controller)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbEvent::NotifyCrcError
 #
 #   Purpose....: Notify CRC error
@@ -384,6 +444,51 @@ void TUsbEvent::NotifyHalted(int Controller, int Port, char Pipe)
 
 /*##########################################################################
 #
+#   Name       : TUsbEvent::NotifyTrbError
+#
+#   Purpose....: Notify TRB error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyTrbError(int Controller, int Port, char Pipe)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifyNoPing
+#
+#   Purpose....: Notify missing ping
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyNoPing(int Controller, int Port, char Pipe)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifyUnknown
+#
+#   Purpose....: Notify unknown error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyUnknown(int Controller, int Port, char Pipe)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbEvent::SignalNewData
 #
 #   Purpose....: Signal new data is available
@@ -413,6 +518,22 @@ void TUsbEvent::SignalNewData()
 
             case USB_EVENT_CONTROLLER_ERROR:
                 NotifyControllerError(event.Controller);
+                break;
+
+            case USB_EVENT_NO_SLOTS:
+                NotifyNoSlots(event.Controller);
+                break;
+
+            case USB_EVENT_SLOT_NOT_ENABLED:
+                NotifySlotNotEnabled(event.Controller);
+                break;
+
+            case USB_EVENT_PIPE_NOT_ENABLED:
+                NotifyPipeNotEnabled(event.Controller);
+                break;
+
+            case USB_EVENT_BANDWIDTH_ERROR:
+                NotifyBandwidthError(event.Controller);
                 break;
 
             case USB_EVENT_CRC_ERROR:
@@ -477,6 +598,18 @@ void TUsbEvent::SignalNewData()
 
             case USB_EVENT_HALTED:
                 NotifyHalted(event.Controller, event.Port, event.Pipe);
+                break;
+
+            case USB_EVENT_TRB_ERROR:
+                NotifyTrbError(event.Controller, event.Port, event.Pipe);
+                break;
+
+            case USB_EVENT_NO_PING:
+                NotifyNoPing(event.Controller, event.Port, event.Pipe);
+                break;
+
+            case USB_EVENT_UNKNOWN:
+                NotifyUnknown(event.Controller, event.Port, event.Pipe);
                 break;
         }
     }

@@ -20,6 +20,10 @@ public:
     virtual void NotifyAttach(int Controller, int Port);
     virtual void NotifyDetach(int Controller, int Port);
     virtual void NotifyControllerError(int Controller);
+    virtual void NotifyNoSlots(int Controller);
+    virtual void NotifySlotNotEnabled(int Controller);
+    virtual void NotifyPipeNotEnabled(int Controller);
+    virtual void NotifyBandwidthError(int Controller);
     virtual void NotifyCrcError(int Controller, int Port, char Pipe);
     virtual void NotifyBitStuffingError(int Controller, int Port, char Pipe);
     virtual void NotifyDataToggleError(int Controller, int Port, char Pipe);
@@ -36,6 +40,9 @@ public:
     virtual void NotifyTransError(int Controller, int Port, char Pipe);
     virtual void NotifyMissedMicroframe(int Controller, int Port, char Pipe);
     virtual void NotifyHalted(int Controller, int Port, char Pipe);
+    virtual void NotifyTrbError(int Controller, int Port, char Pipe);
+    virtual void NotifyNoPing(int Controller, int Port, char Pipe);
+    virtual void NotifyUnknown(int Controller, int Port, char Pipe);
 
 };
 
@@ -66,6 +73,26 @@ void TMyUsbEvent::NotifyDetach(int Controller, int Port)
 void TMyUsbEvent::NotifyControllerError(int Controller)
 {
     printf("Controller error %02hX\r\n", Controller);
+}
+
+void TMyUsbEvent::NotifyNoSlots(int Controller)
+{
+    printf("No slots %02hX\r\n", Controller);
+}
+
+void TMyUsbEvent::NotifySlotNotEnabled(int Controller)
+{
+    printf("Slot not enabled %02hX\r\n", Controller);
+}
+
+void TMyUsbEvent::NotifyPipeNotEnabled(int Controller)
+{
+    printf("Pipe not enabled %02hX\r\n", Controller);
+}
+
+void TMyUsbEvent::NotifyBandwidthError(int Controller)
+{
+    printf("Bandwidth error %02hX\r\n", Controller);
 }
 
 void TMyUsbEvent::NotifyCrcError(int Controller, int Port, char Pipe)
@@ -146,6 +173,21 @@ void TMyUsbEvent::NotifyMissedMicroframe(int Controller, int Port, char Pipe)
 void TMyUsbEvent::NotifyHalted(int Controller, int Port, char Pipe)
 {
     printf("Halted %02hX:%02hX #%02hX\r\n", Controller, Port, Pipe);
+}
+
+void TMyUsbEvent::NotifyTrbError(int Controller, int Port, char Pipe)
+{
+    printf("TRB error %02hX:%02hX #%02hX\r\n", Controller, Port, Pipe);
+}
+
+void TMyUsbEvent::NotifyNoPing(int Controller, int Port, char Pipe)
+{
+    printf("No ping %02hX:%02hX #%02hX\r\n", Controller, Port, Pipe);
+}
+
+void TMyUsbEvent::NotifyUnknown(int Controller, int Port, char Pipe)
+{
+    printf("Unknown error %02hX:%02hX #%02hX\r\n", Controller, Port, Pipe);
 }
 
 /*##########################################################################

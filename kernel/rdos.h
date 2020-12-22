@@ -145,6 +145,13 @@ typedef struct UsbEvent
 #define USB_EVENT_TRANS_ERROR          17
 #define USB_EVENT_MISSED_MICROFRAME    18
 #define USB_EVENT_HALTED               19
+#define USB_EVENT_TRB_ERROR            20
+#define USB_EVENT_UNKNOWN              21
+#define USB_EVENT_BANDWIDTH_ERROR      22
+#define USB_EVENT_NO_SLOTS             23
+#define USB_EVENT_SLOT_NOT_ENABLED     24
+#define USB_EVENT_PIPE_NOT_ENABLED     25
+#define USB_EVENT_NO_PING              26
 
 
 #define uss_handle  0
