@@ -38,8 +38,6 @@ INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
 include hub.inc
 
-MAX_INTR_COUNT   = 4
-
 TRB_TYPE_NORMAL         = 1
 TRB_TYPE_SETUP          = 2
 TRB_TYPE_DATA           = 3
@@ -252,9 +250,7 @@ xhc_cmd_enque           DW ?
 xhc_cmd_pcs             DW ?
 xhc_cmd_arr             DD CMD_COUNT DUP(?)
 
-xhc_intr_count          DW ?
-xhc_intr_sel_arr        DW MAX_INTR_COUNT DUP(?)
-xhc_intr_ref_arr        DW MAX_INTR_COUNT DUP(?)
+xhc_intr_sel            DW ?
 
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
@@ -304,10 +300,7 @@ xd_control_size              DW ?
 xd_control_remain_size       DW ?
 xd_control_thread            DW ?
 xd_control_result            DB ?
-xd_pad                       DB ?
-
 xd_slot                      DB ?
-xd_intr                      DB ?
 
 xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
@@ -2692,9 +2685,6 @@ CreateDev   Proc far
     mov ds:[di],eax
     mov ds:[di+4],ebx
 ;
-    call AllocateIntr
-    mov es:xd_intr,al
-;
     mov ax,25
     WaitMilliSec
 ;
@@ -2771,10 +2761,7 @@ SetupRootDevice    Proc near
     mov al,cl
     inc al
     mov es:[bx].s_root_hub,al
-;
-    movzx ax,es:xd_intr
-    shl ax,6
-    mov es:[bx].s_ttt_int,ax
+    mov es:[bx].s_ttt_int,0
 ;
     mov dx,es:usbd_parent_hub
     or dx,dx
@@ -3110,9 +3097,7 @@ SetupControlIn   Proc near
 
 sciStatusOut: 
     call WaitForControlTrb
-    movzx eax,es:xd_intr
-    shl eax,22
-    mov es:[si].trb_status,eax
+    mov es:[si].trb_status,0
 ;
     mov ax,TRB_TYPE_STATUS SHL 10
     or ax,es:xd_control_pcs
@@ -3258,9 +3243,7 @@ SetupControlOut   Proc near
 
 scoStatusIn: 
     call WaitForControlTrb
-    movzx eax,es:xd_intr
-    shl eax,22
-    mov es:[si].trb_status,eax
+    mov es:[si].trb_status,0
 ;
     mov ax,TRB_TYPE_STATUS SHL 10
     or ax,es:xd_control_pcs
@@ -3716,7 +3699,7 @@ ControlEvent Proc near
     mov di,ax
     add di,fs:xd_control_offset
     add di,SIZE trb_struc
-    mov ax,fs:[di].trb_type
+    mov ax,es:[di].trb_type
     test ax,2
     jz cevSave
 ;
@@ -3880,15 +3863,12 @@ evt3F DW OFFSET error_event
 ;           DESCRIPTION:    Event thread
 ;
 ;       PARAMETERS:         BX  Function sel
-;                           DL  Interrupter #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 event_thread:
     mov ds,bx
-    movzx si,dl
-    shl si,1
-    mov es,ds:[si].xhc_intr_sel_arr
+    mov es,ds:xhc_intr_sel
     GetThread
     mov es:ev_thread,ax
 ;
@@ -4081,111 +4061,6 @@ CreateEventRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateIntr
-;
-;       DESCRIPTION:    Allocate interupter
-;
-;       PARAMETERS:     DS      Function selector
-;
-;       RETURNS:        AL      Intr #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateIntr   Proc near
-    push ebx
-    push ecx
-    push edx
-    push esi
-;
-    movzx ecx,ds:xhc_intr_count
-    mov bx,OFFSET xhc_intr_ref_arr
-    mov dx,7FFFh
-    xor si,si
-
-aiLoop:
-    mov ax,ds:[bx]
-    cmp ax,dx
-    jae aiNext
-;
-    mov dx,ax
-    mov si,bx
-
-aiNext:
-    add bx,2
-    loop aiLoop
-;
-    sub si,OFFSET xhc_intr_ref_arr
-;
-    mov ax,ds:[si].xhc_intr_sel_arr
-    or ax,ax
-    jnz aiStarted
-;
-    push es
-    push edi
-;
-    call CreateEventRing
-    mov ds:[si].xhc_intr_sel_arr,es
-;
-    mov edi,ds:xhc_run_offset    
-    movzx eax,si
-    shl eax,4
-    add edi,eax
-;
-    mov eax,es:ev_phys
-    mov ebx,es:ev_phys+4
-    add ax,es:ev_hdr_size
-    mov ds:[edi].rrsDequeue,eax
-    mov ds:[edi].rrsDequeue+4,ebx    
-;    
-    mov eax,es:ev_phys
-    mov ebx,es:ev_phys+4
-    mov ds:[edi].rrsBase,eax
-    mov ds:[edi].rrsBase+4,ebx    
-;    
-    mov ds:[edi].rrsRingSize,1
-;
-    mov ds:[edi].rrsImod,400
-    mov ds:[edi].rrsIman,3
-;
-    push ds
-    push esi
-;
-    shr si,1
-    movzx ax,ds:xhc_int_base
-    add ax,si
-;    
-    mov si,es
-    mov ds,si
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET XhciInt
-    RequestMsiHandler
-;
-    pop esi
-    pop ds
-;
-    pop edi
-    pop es
-;
-    mov dx,si
-    shr dx,1
-    call CreateEventThread
-
-aiStarted:
-    inc ds:[si].xhc_intr_ref_arr
-    mov ax,si
-    shr ax,1
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    ret
-AllocateIntr   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AllocatePhysicalPage
 ;
 ;       DESCRIPTION:    Allocate physical page
@@ -4367,13 +4242,12 @@ ifWaitReseted:
     jc ifCheckMsiX
 ;
     push cx
-    mov cx,ds:xhc_intr_count
+    mov cx,1
     mov al,14h
     AllocateInts
     pop cx
     jnc ifMsiSetup
 ;
-    mov ds:xhc_intr_count,1
     push cx
     mov cx,1
     mov al,14h
@@ -4383,7 +4257,7 @@ ifWaitReseted:
 
 ifMsiSetup:
     mov ds:xhc_int_base,al
-    mov dx,ds:xhc_intr_count
+    mov dx,1
     SetupPciMsi
     jmp ifReg
 
@@ -4396,7 +4270,7 @@ ifCheckMsiX:
     xor dl,dl
 ;
     push cx
-    mov cx,ds:xhc_intr_count
+    mov cx,1
     mov al,14h
     AllocateInts
     pop cx
@@ -4413,7 +4287,7 @@ ifMsiX:
 ifReg:    
     push ds
     push es
-    mov di,ds:xhc_intr_sel_arr
+    mov di,ds:xhc_intr_sel
     mov ds,di
     mov di,cs
     mov es,di
@@ -4424,12 +4298,11 @@ ifReg:
     jmp ifIntDone
 
 ifIrq:
-    mov ds:xhc_intr_count,1
     push ds
     push es
     GetPciIrqNr
     mov ah,14h
-    mov di,ds:xhc_intr_sel_arr
+    mov di,ds:xhc_intr_sel
     mov ds,di
     mov di,cs
     mov es,di
@@ -4457,7 +4330,7 @@ ifIntDone:
     mov ds:[edi].orsCrCtrl+4,eax
 ;
     mov edi,ds:xhc_run_offset    
-    mov es,ds:xhc_intr_sel_arr
+    mov es,ds:xhc_intr_sel
     mov eax,es:ev_phys
     mov ebx,es:ev_phys+4
     add ax,es:ev_hdr_size
@@ -4781,15 +4654,6 @@ ifsFuncOk:
     mov al,es:par_has_64
     mov ds:xhc_has_64,al
 ;
-    mov ax,es:par_intr_count
-    cmp ax,MAX_INTR_COUNT
-    jb ifSaveCount
-;
-    mov ax,MAX_INTR_COUNT
-
-ifSaveCount:
-    mov ds:xhc_intr_count,ax
-;
     mov al,es:par_slot_count
     mov ds:xhc_slot_count,al
 ;
@@ -4798,7 +4662,6 @@ ifSaveCount:
 ;
     movzx ax,es:par_slot_size
     mov ds:xhc_context_size,ax
-    mov ds:xhc_intr_ref_arr,1
 ;
     FreeMem
 ;
@@ -4953,7 +4816,7 @@ cfCreate:
     call InitFuncSel
 ;
     call CreateEventRing
-    mov ds:xhc_intr_sel_arr,es
+    mov ds:xhc_intr_sel,es
 ;
     call CreateCommandRing
     call BiosHandoff
