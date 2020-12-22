@@ -3009,6 +3009,7 @@ ConfigUsb      Proc near
     push bp
     push cx
 ;
+    int 3
     mov si,SEG data
     mov ds,si
     mov si,ds:usb_func_count

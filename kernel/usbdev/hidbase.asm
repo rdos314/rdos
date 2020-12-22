@@ -1076,6 +1076,7 @@ OpenIntrPipe_ Proc near
     push es
     pushad
 ;    
+    int 3
     mov cx,fs:hid_pipe_size
     mov ax,fs:hid_intr_size
     xor dx,dx

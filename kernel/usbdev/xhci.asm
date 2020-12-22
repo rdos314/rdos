@@ -1869,67 +1869,6 @@ ClearStalled Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdateMaxLen
-;
-;           DESCRIPTION:    Update max len
-;
-;           PARAMETERS:     ES      Device selector
-;                           AL      Maxlen
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateMaxLen   Proc far
-    push es
-    push gs
-    push eax
-    push ebx
-    push ecx
-    push edi
-;
-    mov bx,es:xd_input_ep_arr_offset
-    mov es:[bx].ec_avg_len,ax
-    mov es:[bx].ec_packet_size,ax
-    call WaitForCommandTrb
-;    
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,2
-    movzx eax,bx
-    add eax,es:mblk_physical_base
-    mov gs:[edi].trb_param,eax
-    mov eax,es:mblk_physical_base+4
-    mov gs:[edi].trb_param+4,eax
-;
-    mov ah,fs:xp_slot
-    xor al,al
-    mov gs:[edi].trb_control,ax
-;
-    mov al,TRB_TYPE_EVALUATE
-    call SendCommandTrb
-;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne smlDone
-;
-    mov al,gs:[edi+100Fh]
-    clc        
-
-smlDone:
-    pop edi
-    pop ecx
-    pop ebx
-    pop eax
-    pop gs    
-    pop es
-    retf32
-UpdateMaxLen   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           IssueOne
 ;
 ;           DESCRIPTION:    Issue one transfer
@@ -2934,8 +2873,6 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddressDevice   Proc far
-    push es
-    push gs
     pushad
 ;
     call WaitForCommandTrb
@@ -2970,8 +2907,6 @@ adOk:
 
 adDone:
     popad
-    pop gs    
-    pop es
     retf32
 AddressDevice   Endp
 
@@ -2990,6 +2925,66 @@ AddressDevice   Endp
 ChangeAddress   Proc far
     retf32
 ChangeAddress  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateMaxLen
+;
+;           DESCRIPTION:    Update max len
+;
+;           PARAMETERS:     ES      Device selector
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMaxLen   Proc far
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    call WaitForCommandTrb
+;
+    mov bx,es:xd_pipe_context_arr_offset
+    mov es:[bx].ec_avg_len,ax
+    mov es:[bx].ec_packet_size,ax
+;    
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,2
+    movzx eax,bx
+    add eax,es:mblk_physical_base
+    mov ds:[di].trb_param,eax
+    mov eax,es:mblk_physical_base+4
+    mov ds:[di].trb_param+4,eax
+;
+    mov ah,es:xd_slot
+    xor al,al
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_EVALUATE
+    call SendCommandTrb
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je smlOk
+;
+    stc
+    jmp smlDone
+
+smlOk:
+    clc        
+
+smlDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    retf32
+UpdateMaxLen   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3259,6 +3254,56 @@ SetupControlOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ResetControl
+;
+;   DESCRIPTION:    Reset control
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetControl   Proc near
+    pushad
+;
+    call WaitForCommandTrb
+;    
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,2
+    movzx eax,bx
+    add eax,es:mblk_physical_base
+    mov ds:[di].trb_param,eax
+    mov eax,es:mblk_physical_base+4
+    mov ds:[di].trb_param+4,eax
+;
+    mov ah,es:xd_slot
+    mov al,1
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_RESET_ENDP
+    call SendCommandTrb
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je rceOk
+;
+    stc
+    jmp rceDone
+
+rceOk:
+    clc        
+
+rceDone:
+    popad
+    ret
+ResetControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -3279,6 +3324,16 @@ RunControl   Proc near
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
 ;
+    mov bx,es:xd_pipe_context_arr_offset
+    mov al,es:[bx].ec_state
+    and al,7
+    cmp al,2
+    jne rcNotHalted
+;
+    int 3
+    call ResetControl
+
+rcNotHalted:
     mov es:xd_control_result,-1
     GetThread
     mov es:xd_control_thread,ax
@@ -3328,7 +3383,6 @@ ControlMsg   Proc far
     push edx
     push ebp
 ;
-    int 3
     mov cx,es:usbd_control_buf.usd_len
     mov es:xd_control_buf,0
 ;
@@ -3790,7 +3844,6 @@ ControlEvent Proc near
     cmp al,1
     je cevNotError
 ;
-    int 3
     xor dl,dl
     call ReportPipeStatus
 
