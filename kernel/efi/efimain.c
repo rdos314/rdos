@@ -106,9 +106,9 @@ struct MemMapEntry
 unsigned int LoaderParamPos = (unsigned int)(RDOS_LOADER + 2);
 struct LoaderParam *LoaderData;
 
-char MemMapBuf[4096];
+char MemMapBuf[8192];
 EFI_MEMORY_DESCRIPTOR *MemMap = (EFI_MEMORY_DESCRIPTOR *)MemMapBuf;
-unsigned int MemMapSize = 4096;
+unsigned int MemMapSize = 8192;
 unsigned int MapKey;
 unsigned int MemDescrSize;
 unsigned int MemDescrVersion;
@@ -1446,6 +1446,8 @@ static int ConvertMemoryMap()
 
     MemMapCount = 0;
     MemMapArr = (struct MemMapEntry *)RdosMemBase;
+
+    MemDescrSize = sizeof(EFI_MEMORY_DESCRIPTOR);
 
     if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
     {
