@@ -245,30 +245,6 @@ xhc_port_change_mask    DD ?
 xhc_context_size        DW ?
 xhc_slot_sel_arr        DW 256 DUP(?)
 
-
-; might not be used
-
-xhc_hcc_sel         DW ?
-xhc_reg_sel         DW ?
-xhc_port_sel        DW ?
-xhc_db_sel          DW ?
-xhc_rts_sel         DW ?
-xhc_device_ptr_sel  DW ?
-xhc_cmd_ring_sel    DW ?
-xhc_event_ring_sel  DW ?
-
-
-xhc_erst            DD ?,?
-
-xhc_attach_pend     DD ?
-xhc_detach_pend     DD ?
-
-
-
-xhc_port_slot_arr   DB 256 DUP(?)
-
-xhc_func_sel_arr    DW 256 DUP(?)
-
 xhci_func_sel   ENDS
 
 xhci_dev_struc   STRUC
@@ -564,7 +540,7 @@ DisableDev   Proc far
     push bx
 ;
     movzx bx,es:usbd_port    
-    mov al,ds:[bx].xhc_port_slot_arr
+;    mov al,ds:[bx].xhc_port_slot_arr
     call DisableSlot
 ;
     pop bx
