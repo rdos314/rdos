@@ -877,94 +877,6 @@ StopEndpoint   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           ConfigDevice
-;
-;   DESCRIPTION:    Configure device endpoints
-;
-;   PARAMETERS:     DS      Device selector
-;                   ES      Function selector
-;                   CX      Hub sel
-;                   DL      Config #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-config_text DB 'Config ', 0
-
-ConfigDevice   Proc far
-    push es
-    push gs
-    push eax
-    push ebx
-    push ecx
-    push edi
-;
-    call WaitForCommandTrb
-    movzx eax,es:xd_input_context_offset
-    add eax,es:mblk_physical_base
-    mov gs:[edi].trb_param,eax
-    mov eax,es:mblk_physical_base+4
-    mov gs:[edi].trb_param+4,eax
-;
-    mov ah,fs:xp_slot
-    xor al,al
-    mov gs:[edi].trb_control,ax
-;
-    or cx,cx
-    jz cdDo
-;
-    push gs
-;
-    mov gs,ecx
-    mov al,fs:xp_slot
-    mov gs:usb_hub_id,al
-;
-    mov bx,es:xd_input_context_offset
-    or es:[bx].icc_add_mask,1
-;
-    mov bx,es:xd_input_slot_offset
-    mov eax,es:[bx].s_misc
-    or eax,04000000h
-    mov es:[bx].s_misc,eax
-;
-    mov ax,gs:hub_ports
-    mov es:[bx].s_hub_ports,al
-;
-    mov ax,es:[bx].s_ttt_int
-    or al,3
-    mov es:[bx].s_ttt_int,ax
-;
-    pop gs
-
-cdDo:
-    mov al,TRB_TYPE_CONFIGURE_ENDP
-    call SendCommandTrb
-;
-;    push esi
-;    mov esi,OFFSET config_text
-;    call DumpInputContext
-;    pop esi
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne ceDone
-;
-    mov al,gs:[edi+100Fh]
-    clc        
-
-ceDone:
-    pop edi
-    pop ecx
-    pop ebx
-    pop eax
-    pop gs    
-    pop es
-    retf32
-ConfigDevice   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CreateBulk
 ;
 ;           DESCRIPTION:    Create bulk pipe
@@ -3064,6 +2976,84 @@ UpdateMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ConfigDevice
+;
+;   DESCRIPTION:    Configure device endpoints
+;
+;   PARAMETERS:     DS      Device selector
+;                   ES      Function selector
+;                   CX      Hub sel
+;                   DL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_text DB 'Config ', 0
+
+ConfigDevice   Proc far
+    push es
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    int 3
+    call WaitForCommandTrb
+    movzx eax,es:xd_input_context_offset
+    add eax,es:mblk_physical_base
+    mov ds:[di].trb_param,eax
+    mov eax,es:mblk_physical_base+4
+    mov ds:[di].trb_param+4,eax
+;
+    mov ah,es:xd_slot
+    xor al,al
+    mov ds:[di].trb_control,ax
+;
+    or cx,cx
+    jz cdDo
+;
+    mov gs,ecx
+    mov al,es:xd_slot
+    mov gs:usb_hub_id,al
+;
+    mov bx,es:xd_input_context_offset
+    or es:[bx].icc_add_mask,1
+;
+    mov bx,es:xd_input_slot_offset
+    mov eax,es:[bx].s_misc
+    or eax,04000000h
+    mov es:[bx].s_misc,eax
+;
+    mov ax,gs:hub_ports
+    mov es:[bx].s_hub_ports,al
+;
+    mov ax,es:[bx].s_ttt_int
+    or al,3
+    mov es:[bx].s_ttt_int,ax
+
+cdDo:
+    mov al,TRB_TYPE_CONFIGURE_ENDP
+    call SendCommandTrb
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je cdDone
+;
+    clc        
+
+cdDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs    
+    pop es
+    retf32
+ConfigDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WaitForControlTrb
 ;
 ;       DESCRIPTION:    Wait for empty control TRB
@@ -3947,6 +3937,8 @@ ceNotError:
     xor bx,bx
     xchg bx,ds:[di].cev_thread
     Signal
+
+ceDone:
     ret
 command_event Endp
 
