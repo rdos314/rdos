@@ -269,13 +269,6 @@ xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
 xd_pipe_context_arr_offset   DW 32 DUP (?)
 
-
-; might not be needed
-
-xd_input_slot_offset         DW ?
-xd_ep_size                   DW ?
-xd_input_ep_arr_offset       DW 32 DUP (?)
-
 xd_ep_sel_arr                DW 32 DUP(?)
 
 xhci_dev_struc    ENDS
@@ -1172,9 +1165,6 @@ CreateDev   Proc far
     mov es:usbd_speed,ah
     mov es:usbd_parent_thread,0
 ;
-    mov bx,ds:xhc_context_size
-    mov es:xd_ep_size,bx
-;
     movzx bx,al
     shl bx,1
     mov ds:[bx].xhc_slot_sel_arr,es
@@ -1616,7 +1606,7 @@ ConfigDevice   Proc far
     mov bx,es:xd_input_context_offset
     or es:[bx].icc_add_mask,1
 ;
-    mov bx,es:xd_input_slot_offset
+    mov bx,es:xd_slot_context_offset
     mov eax,es:[bx].s_misc
     or eax,04000000h
     mov es:[bx].s_misc,eax
@@ -2339,7 +2329,7 @@ ipcNoReset:
     or eax,edx
     mov es:[bx].icc_add_mask,eax
 ;
-    mov bx,es:xd_input_slot_offset    
+    mov bx,es:xd_slot_context_offset    
     mov eax,es:[bx].s_misc
     shr eax,27
     cmp al,gs:xp_db_target
