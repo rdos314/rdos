@@ -675,55 +675,6 @@ ResetSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddConfigEp
-;
-;       DESCRIPTION:    Add config EP
-;
-;       PARAMETERS:     DS      Device sel
-;                       ES      Function sel
-;                       FS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddConfigEp Proc near
-    pushad
-;
-    mov bx,es:xd_input_context_offset
-    mov eax,es:[bx].icc_add_mask
-    test al,2
-    jz aceNoReset
-;
-    mov eax,1
-
-aceNoReset:    
-    mov cl,fs:xp_db_target
-    mov edx,1
-    shl edx,cl
-    or eax,edx
-    mov es:[bx].icc_add_mask,eax
-;
-    mov bx,es:xd_input_slot_offset    
-    mov eax,es:[bx].s_misc
-    shr eax,27
-    cmp al,fs:xp_db_target
-    ja aceCountOk
-;
-    mov ecx,es:[bx].s_misc
-    and ecx,07FFFFFFh
-    mov al,fs:xp_db_target
-    inc al
-    shl eax,27
-    or eax,ecx
-    mov es:[bx].s_misc,eax
-
-aceCountOk:
-    popad
-    ret
-AddConfigEp Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           WaitForEndpointTrb
 ;
 ;       DESCRIPTION:    Wait for empty endpoint TRB
@@ -819,75 +770,6 @@ seDone:
     pop es
     ret
 StopEndpoint   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateBulk
-;
-;           DESCRIPTION:    Create bulk pipe
-;
-;       PARAMETERS:     DS      Device selector
-;                       ES      Function selector
-;                       DL      Pipe #, bit 7 IN.
-;                       CX      Max data size
-;
-;       RETURNS:    FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBulk   Proc far
-    pushad
-;   
-    mov ah,es:usbd_speed
-    call CreateEndpointRing
-;
-    movzx bx,dl
-    and bl,7Fh
-    add bx,bx
-    test dl,80h
-    jz cbDirOk
-;    
-    inc bx
-
-cbDirOk:    
-    mov fs:xp_db_target,bl
-;        
-    mov fs:xp_dev_sel,es
-    mov al,es:usbd_port
-    mov fs:xp_port_nr,al
-    mov ax,ds:xhc_port_sel
-    mov fs:xp_port_sel,ax
-    mov al,es:usbd_address
-    mov fs:xp_slot,al
-;
-    dec bx
-    add bx,bx    
-    mov es:[bx].xd_ep_sel_arr,fs
-; 
-    mov bx,es:[bx].xd_input_ep_arr_offset
-    mov eax,fs:xp_ring_phys
-    or al,1
-    mov es:[bx].ec_tr_dequeue,eax
-    mov eax,fs:xp_ring_phys+4
-    mov es:[bx].ec_tr_dequeue+4,eax        
-    mov es:[bx].ec_avg_len,cx
-    mov es:[bx].ec_packet_size,cx
-;
-    mov al,3 SHL 1
-    or al,2 SHL 3
-    test dl,80h
-    jz cbTypeOk
-;    
-    or al,4 SHL 3
-
-cbTypeOk:    
-    mov es:[bx].ec_param2,al        
-    call AddConfigEp
-;
-    popad
-    retf32
-CreateBulk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2074,59 +1956,6 @@ SendCommandTrb  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SendCommandTrbLowBits
-;
-;       DESCRIPTION:    Send command TRB with low bits
-;
-;       PARAMETERS:     AL      TRB type
-;                       DX      Low bits
-;                       DS      Function sel
-;                       DI      TRB offset
-;
-;       RETURNS:        SI      Result offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-SendCommandTrbLowBits   Proc near
-    push eax
-    push ebx
-;    
-    push ax
-    mov si,di
-    sub si,CMD_OFFSET
-    shr si,2
-    add si,OFFSET xhc_cmd_arr
-    GetThread
-    mov ds:[si].cev_thread,ax
-    pop ax
-;
-    movzx ax,al
-    shl ax,10
-    or ax,dx
-    or ax,ds:xhc_cmd_pcs
-    mov ds:[di].trb_type,ax
-;
-    mov ebx,ds:xhc_db_offset
-    xor eax,eax
-    mov ds:[ebx],eax
-;
-    LeaveSection ds:xhc_cmd_section    
-
-sctlWait:
-    WaitForSignal
-    mov ax,ds:[si].cmd_thread
-    or ax,ax
-    jnz sctlWait
-;
-    pop ebx
-    pop eax
-    ret
-SendCommandTrbLowBits  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           IsPortConnected
 ;
 ;           DESCRIPTION:    Check if port is connected
@@ -2901,157 +2730,6 @@ ConfigDevice   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateEndpointRing
-;
-;       DESCRIPTION:    Create endpoint ring
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
-;                       FS      Flat sel
-;                       CX      TRB countr
-;
-;       RETURNS:        GS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateEndpointRing   Proc near
-    pushad
-;
-    push es
-    mov eax,SIZE xhci_pipe
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-    pop es
-;
-    add cx,2
-    shl cx,4
-    cmp cx,800h
-    jbe cerDo
-;
-    mov cx,800h
-
-cerDo:
-    AllocateMemBlk
-;
-    mov gs:xp_ring_linear,edx
-    mov gs:xp_ring_phys,eax
-    mov gs:xp_ring_phys+4,ebx
-    push eax
-;
-    mov ax,cx
-    shr ax,4
-    mov gs:xp_ring_entries,ax
-;
-    push es
-    mov ax,flat_sel
-    mov es,ax
-    sub cx,10h
-    shr cx,2
-    movzx ecx,cx
-    mov edi,edx
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-    pop es
-;
-    pop eax
-    mov fs:[edi].trb_param,eax
-    mov fs:[edi].trb_param+4,ebx
-    mov fs:[edi].trb_status,0
-    mov fs:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
-    mov fs:[edi].trb_control,0
-;
-    mov gs:xp_rd_ptr,0
-    mov gs:xp_wr_ptr,0
-    mov gs:xp_tail_ptr,0
-    mov gs:xp_ring_pcs,1
-;
-    popad
-    ret
-CreateEndpointRing   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateIntrPipe
-;
-;       DESCRIPTION:    Create interrupt pipe
-;
-;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
-;                       DL      Pipe #
-;                       DH      Interval
-;
-;       RETURNS:        NC      OK
-;                         BX    Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateIntrPipe   Proc far
-    push fs
-    push gs
-    push eax
-;   
-    int 3
-    mov ax,flat_sel
-    mov fs,ax
-    call CreateEndpointRing
-;
-    movzx bx,dl
-    add bx,bx
-    inc bx
-    mov gs:xp_db_target,bl
-;        
-    mov gs:xp_dev_sel,es
-    mov al,es:usbd_port
-    mov gs:xp_port_nr,al
-    mov ax,ds:xhc_port_sel
-    mov gs:xp_port_sel,ax
-    mov al,es:usbd_address
-    mov gs:xp_slot,al
-;
-    dec bx
-    add bx,bx    
-    mov es:[bx].xd_ep_sel_arr,fs
-; 
-    mov bx,es:[bx].xd_input_ep_arr_offset
-;
-    mov ah,3
-
-ciIntLoop:
-    shr al,1
-    jz ciIntOk
-;
-    inc ah
-    jmp ciIntLoop
-
-ciIntOk:    
-    mov es:[bx].ec_interval,ah
-    mov eax,gs:xp_ring_phys
-    or al,1
-    mov es:[bx].ec_tr_dequeue,eax
-    mov eax,gs:xp_ring_phys+4
-    mov es:[bx].ec_tr_dequeue+4,eax        
-    mov es:[bx].ec_avg_len,8
-    mov es:[bx].ec_packet_size,cx
-    movzx ecx,cx
-    mov es:[bx].ec_esit_low,ecx
-;
-    mov al,3 SHL 1
-    or al,7 SHL 3
-    mov es:[bx].ec_param2,al        
-    call AddConfigEp
-    mov bx,gs
-;
-    pop eax
-    pop gs
-    pop fs
-    retf32
-CreateIntrPipe  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           WaitForControlTrb
 ;
 ;       DESCRIPTION:    Wait for empty control TRB
@@ -3548,6 +3226,288 @@ cmFreeOk:
     pop fs
     retf32
 ControlMsg   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocatePipe
+;
+;       DESCRIPTION:    Allocate pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       CX      TRB countr
+;
+;       RETURNS:        BX      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePipe   Proc near
+    push gs
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    push es
+    mov eax,SIZE xhci_pipe
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    pop es
+;
+    add cx,2
+    shl cx,4
+    cmp cx,800h
+    jbe apDo
+;
+    mov cx,800h
+
+apDo:
+    AllocateMemBlk
+;
+    mov gs:xp_ring_linear,edx
+    mov gs:xp_ring_phys,eax
+    mov gs:xp_ring_phys+4,ebx
+    push eax
+;
+    mov ax,cx
+    shr ax,4
+    mov gs:xp_ring_entries,ax
+;
+    push es
+    mov ax,flat_sel
+    mov es,ax
+    sub cx,10h
+    shr cx,2
+    movzx ecx,cx
+    mov edi,edx
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    pop eax
+    mov fs:[edi].trb_param,eax
+    mov fs:[edi].trb_param+4,ebx
+    mov fs:[edi].trb_status,0
+    mov fs:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
+    mov fs:[edi].trb_control,0
+;
+    mov bx,gs
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    ret
+AllocatePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitPipeContext
+;
+;       DESCRIPTION:    Init pipe context
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;                       DL      Pipe #
+;
+;       RETURNS:        BX      Context entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPipeContext   Proc near
+    push eax
+    push ecx
+    push edx
+;
+    movzx bx,dl
+    and bl,0Fh
+    add bx,bx
+    test dl,80h
+    jz ipcDirOk
+;
+    inc bx
+
+ipcDirOk:
+    mov gs:xp_db_target,bl
+;
+    sub bx,2
+    add bx,bx    
+    mov es:[bx].xd_ep_sel_arr,gs
+; 
+    mov bx,es:[bx].xd_pipe_context_arr_offset
+;
+    mov eax,gs:xp_ring_phys
+    or al,1
+    mov es:[bx].ec_tr_dequeue,eax
+    mov eax,gs:xp_ring_phys+4
+    mov es:[bx].ec_tr_dequeue+4,eax        
+;
+    mov ax,es:usbd_maxlen
+    mov es:[bx].ec_avg_len,ax
+    mov es:[bx].ec_packet_size,ax
+    movzx eax,ax
+    mov es:[bx].ec_esit_low,eax
+;
+    mov al,3 SHL 1
+    or al,7 SHL 3
+    mov es:[bx].ec_param2,al        
+;
+    mov gs:xp_rd_ptr,0
+    mov gs:xp_wr_ptr,0
+    mov gs:xp_tail_ptr,0
+    mov gs:xp_ring_pcs,1
+;        
+    mov gs:xp_dev_sel,es
+    mov al,es:usbd_port
+    mov gs:xp_port_nr,al
+    mov al,es:xd_slot
+    mov gs:xp_slot,al
+;
+    mov bx,es:xd_input_context_offset
+    mov eax,es:[bx].icc_add_mask
+    test al,2
+    jz ipcNoReset
+;
+    mov eax,1
+
+ipcNoReset:    
+    mov cl,gs:xp_db_target
+    mov edx,1
+    shl edx,cl
+    or eax,edx
+    mov es:[bx].icc_add_mask,eax
+;
+    mov bx,es:xd_input_slot_offset    
+    mov eax,es:[bx].s_misc
+    shr eax,27
+    cmp al,gs:xp_db_target
+    ja ipcCountOk
+;
+    mov ecx,es:[bx].s_misc
+    and ecx,07FFFFFFh
+    mov al,fs:xp_db_target
+    inc al
+    shl eax,27
+    or eax,ecx
+    mov es:[bx].s_misc,eax
+
+ipcCountOk:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+InitPipeContext Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigPipe
+;
+;       DESCRIPTION:    Config pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigPipe   Proc near
+    pushad
+;
+    call WaitForCommandTrb
+;    
+    mov bx,es:xd_input_context_offset
+    movzx eax,bx
+    add eax,es:mblk_physical_base
+    mov ds:[di].trb_param,eax
+    mov eax,es:mblk_physical_base+4
+    mov ds:[di].trb_param+4,eax
+;
+    mov ah,es:xd_slot
+    xor al,al
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_CONFIGURE_ENDP
+    call SendCommandTrb
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je cpOk
+;
+    stc
+    jmp cpDone
+
+cpOk:
+    clc        
+
+cpDone:
+    popad
+    ret
+ConfigPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateIntrPipe
+;
+;       DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     ES      Device
+;                       CX      Buffer count
+;                       DL      Pipe #
+;                       DH      Interval
+;
+;       RETURNS:        NC      OK
+;                         BX    Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntrPipe   Proc far
+    push fs
+    push gs
+    push eax
+;   
+    int 3
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call AllocatePipe
+    mov gs,bx
+    call InitPipeContext
+;
+    mov al,dh
+    mov ah,3
+
+cipIntLoop:
+    shr al,1
+    jz ciIntOk
+;
+    inc ah
+    jmp cipIntLoop
+
+ciIntOk:    
+    mov es:[bx].ec_interval,ah
+;
+    call ConfigPipe
+;
+    mov bx,gs
+;
+    pop eax
+    pop gs
+    pop fs
+    retf32
+CreateIntrPipe  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
