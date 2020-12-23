@@ -2997,7 +2997,6 @@ ConfigDevice   Proc far
     push ecx
     push edi
 ;
-    int 3
     call WaitForCommandTrb
     movzx eax,es:xd_input_context_offset
     add eax,es:mblk_physical_base
