@@ -2792,22 +2792,19 @@ SetupRootDevice     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateControlRing
+;       NAME:           InitControlRing
 ;
-;       DESCRIPTION:    Create control ring
+;       DESCRIPTION:    Init control ring
 ;
 ;       PARAMETERS:     DS       Function sel
 ;                       ES       Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateControlRing   Proc near
+InitControlRing   Proc near
     pushad
 ;
-    mov cx,40h
-    AllocateMemBlk
-    sub edx,es:mblk_linear_base
-    mov es:xd_control_offset,dx
+    mov dx,es:xd_control_offset
     mov es:xd_control_enque,dx
     mov es:xd_control_deque,dx
     mov es:xd_control_pcs,1
@@ -2825,6 +2822,31 @@ CreateControlRing   Proc near
     mov es:[edi].trb_status,0
     mov es:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
     mov es:[edi].trb_control,0
+;
+    popad
+    ret
+InitControlRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateControlRing
+;
+;       DESCRIPTION:    Create control ring
+;
+;       PARAMETERS:     DS       Function sel
+;                       ES       Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControlRing   Proc near
+    pushad
+;
+    mov cx,40h
+    AllocateMemBlk
+    sub edx,es:mblk_linear_base
+    mov es:xd_control_offset,dx
+    call InitControlRing
 ;
     popad
     ret
@@ -3307,57 +3329,6 @@ SetupControlOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           ResetControl
-;
-;   DESCRIPTION:    Reset control
-;
-;   PARAMETERS:     DS      Function selector
-;                   ES      Device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetControl   Proc near
-    pushad
-;
-    call WaitForCommandTrb
-;    
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,2
-    movzx eax,bx
-    add eax,es:mblk_physical_base
-    mov ds:[di].trb_param,eax
-    mov eax,es:mblk_physical_base+4
-    mov ds:[di].trb_param+4,eax
-;
-    mov ah,es:xd_slot
-    mov al,1
-    mov ds:[di].trb_control,ax
-;
-    mov al,TRB_TYPE_RESET_ENDP
-    mov dx,200h
-    call SendCommandTrbLowBits
-;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
-;
-    mov al,ds:[si].cev_result
-    cmp al,1
-    je rceOk
-;
-    stc
-    jmp rceDone
-
-rceOk:
-    clc        
-
-rceDone:
-    popad
-    ret
-ResetControl   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           RunControl
 ;
 ;       DESCRIPTION:    Run control
@@ -3378,15 +3349,6 @@ RunControl   Proc near
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
 ;
-    mov bx,es:xd_pipe_context_arr_offset
-    mov al,es:[bx].ec_state
-    and al,7
-    cmp al,2
-    jne rcNotHalted
-;
-    call ResetControl
-
-rcNotHalted:
     mov es:xd_control_result,-1
     GetThread
     mov es:xd_control_thread,ax
@@ -3414,6 +3376,106 @@ rcDone:
     pop ds
     ret
 RunControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetControl
+;
+;   DESCRIPTION:    Reset control
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetControl   Proc near
+    pushad
+;
+    call WaitForCommandTrb
+;    
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,2
+    mov ds:[di].trb_param,0
+    mov ds:[di].trb_param+4,0
+;
+    mov ah,es:xd_slot
+    mov al,1
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_RESET_ENDP
+    call SendCommandTrb
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je rceOk
+;
+    stc
+    jmp rceDone
+
+rceOk:
+    clc        
+
+rceDone:
+    popad
+    ret
+ResetControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetControlTr
+;
+;   DESCRIPTION:    Set control TR
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetControlTr   Proc near
+    pushad
+;
+    call WaitForCommandTrb
+;    
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,2
+;
+    movzx eax,es:xd_control_offset
+    add eax,es:mblk_physical_base
+    or al,1
+    mov ds:[di].trb_param,eax
+    mov eax,es:mblk_physical_base+4
+    mov ds:[di].trb_param+4,eax
+;
+    mov ah,es:xd_slot
+    mov al,1
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_SET_TR
+    call SendCommandTrb
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je sctrOk
+;
+    stc
+    jmp sctrDone
+
+sctrOk:
+    call InitControlRing
+    clc        
+
+sctrDone:
+    popad
+    ret
+SetControlTr   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3436,6 +3498,18 @@ ControlMsg   Proc far
     push edx
     push ebp
 ;
+    push bx
+    mov bx,es:xd_pipe_context_arr_offset
+    mov al,es:[bx].ec_state
+    and al,7
+    cmp al,2
+    pop bx
+    jne cmNotHalted
+;
+    call ResetControl
+    call SetControlTr
+
+cmNotHalted:
     mov cx,es:usbd_control_buf.usd_len
     mov es:xd_control_buf,0
 ;
