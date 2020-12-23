@@ -1635,23 +1635,6 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           EnablePipe
-;
-;       DESCRIPTION:    Enable pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnablePipe   Proc far
-    int 3
-    retf32
-EnablePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           DisablePipe
 ;
 ;       DESCRIPTION:    Disable pipe
@@ -3294,6 +3277,17 @@ apDo:
     mov fs:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
     mov fs:[edi].trb_control,0
 ;
+    mov gs:xp_rd_ptr,0
+    mov gs:xp_wr_ptr,0
+    mov gs:xp_tail_ptr,0
+    mov gs:xp_ring_pcs,1
+;        
+    mov gs:xp_dev_sel,es
+    mov al,es:usbd_port
+    mov gs:xp_port_nr,al
+    mov al,es:xd_slot
+    mov gs:xp_slot,al
+;
     mov bx,gs
 ;
     pop edi
@@ -3307,6 +3301,40 @@ AllocatePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateIntrPipe
+;
+;       DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     ES      Device
+;                       CX      Buffer count
+;                       DL      Pipe #
+;                       DH      Interval
+;
+;       RETURNS:        NC      OK
+;                         BX    Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntrPipe   Proc far
+    push fs
+    push gs
+    push eax
+;   
+    int 3
+    mov ax,flat_sel
+    mov fs,ax
+    call AllocatePipe
+;
+    pop eax
+    pop gs
+    pop fs
+    retf32
+CreateIntrPipe  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitPipeContext
 ;
 ;       DESCRIPTION:    Init pipe context
@@ -3315,6 +3343,8 @@ AllocatePipe   Endp
 ;                       ES      Device sel
 ;                       FS      Flat sel
 ;                       GS      Pipe selector
+;                       AL      Pipe type
+;                       AH      Interval
 ;                       DL      Pipe #
 ;
 ;       RETURNS:        BX      Context entry
@@ -3342,6 +3372,8 @@ ipcDirOk:
     mov es:[bx].xd_ep_sel_arr,gs
 ; 
     mov bx,es:[bx].xd_pipe_context_arr_offset
+    mov es:[bx].ec_param2,al        
+    mov es:[bx].ec_interval,ah
 ;
     mov eax,gs:xp_ring_phys
     or al,1
@@ -3354,21 +3386,6 @@ ipcDirOk:
     mov es:[bx].ec_packet_size,ax
     movzx eax,ax
     mov es:[bx].ec_esit_low,eax
-;
-    mov al,3 SHL 1
-    or al,7 SHL 3
-    mov es:[bx].ec_param2,al        
-;
-    mov gs:xp_rd_ptr,0
-    mov gs:xp_wr_ptr,0
-    mov gs:xp_tail_ptr,0
-    mov gs:xp_ring_pcs,1
-;        
-    mov gs:xp_dev_sel,es
-    mov al,es:usbd_port
-    mov gs:xp_port_nr,al
-    mov al,es:xd_slot
-    mov gs:xp_slot,al
 ;
     mov bx,es:xd_input_context_offset
     mov eax,es:[bx].icc_add_mask
@@ -3459,55 +3476,75 @@ ConfigPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateIntrPipe
+;       NAME:           EnablePipe
 ;
-;       DESCRIPTION:    Create interrupt pipe
+;       DESCRIPTION:    Enable pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
-;                       DL      Pipe #
-;                       DH      Interval
-;
-;       RETURNS:        NC      OK
-;                         BX    Pipe sel
+;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIntrPipe   Proc far
-    push fs
-    push gs
+EnablePipe   Proc far
     push eax
-;   
+    push edx
+;
     int 3
-    mov ax,flat_sel
-    mov fs,ax
+    mov al,gs:[di].ued_attrib
+    and al,3
+    cmp al,2
+    je epBulk
 ;
-    call AllocatePipe
-    mov gs,bx
-    call InitPipeContext
+    cmp al,3
+    je epIntr
 ;
-    mov al,dh
+    int 3
+
+epIntr:
+    mov al,gs:[di].ued_interval
     mov ah,3
 
-cipIntLoop:
+epIntLoop:
     shr al,1
-    jz ciIntOk
+    jz epIntOk
 ;
     inc ah
-    jmp cipIntLoop
+    jmp epIntLoop
 
-ciIntOk:    
-    mov es:[bx].ec_interval,ah
-;
+epIntOk:    
+    mov dl,gs:ued_address
+    test dl,80h
+    jnz epIntIn
+
+epIntOut:
+    mov al,3
+    jmp epSetup
+
+epIntIn:
+    mov al,7
+    jmp epSetup
+
+epBulk:
+    xor ah,ah
+    mov dl,gs:ued_address
+    test dl,80h
+    jnz epBulkIn
+
+epBulkOut:
+    mov al,2
+    jmp epSetup
+
+epBulkIn:
+    mov al,6
+
+epSetup:
+    call InitPipeContext
     call ConfigPipe
 ;
-    mov bx,gs
-;
+    pop edx
     pop eax
-    pop gs
-    pop fs
-    retf32
-CreateIntrPipe  Endp
+    ret
+EnablePipe  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
