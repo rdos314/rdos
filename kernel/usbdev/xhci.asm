@@ -2312,6 +2312,59 @@ SendCommandTrb  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SendCommandTrbLowBits
+;
+;       DESCRIPTION:    Send command TRB with low bits
+;
+;       PARAMETERS:     AL      TRB type
+;                       DX      Low bits
+;                       DS      Function sel
+;                       DI      TRB offset
+;
+;       RETURNS:        SI      Result offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+SendCommandTrbLowBits   Proc near
+    push eax
+    push ebx
+;    
+    push ax
+    mov si,di
+    sub si,CMD_OFFSET
+    shr si,2
+    add si,OFFSET xhc_cmd_arr
+    GetThread
+    mov ds:[si].cev_thread,ax
+    pop ax
+;
+    movzx ax,al
+    shl ax,10
+    or ax,dx
+    or ax,ds:xhc_cmd_pcs
+    mov ds:[di].trb_type,ax
+;
+    mov ebx,ds:xhc_db_offset
+    xor eax,eax
+    mov ds:[ebx],eax
+;
+    LeaveSection ds:xhc_cmd_section    
+
+sctlWait:
+    WaitForSignal
+    mov ax,ds:[si].cmd_thread
+    or ax,ax
+    jnz sctlWait
+;
+    pop ebx
+    pop eax
+    ret
+SendCommandTrbLowBits  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsPortConnected
 ;
 ;           DESCRIPTION:    Check if port is connected
@@ -3281,7 +3334,8 @@ ResetControl   Proc near
     mov ds:[di].trb_control,ax
 ;
     mov al,TRB_TYPE_RESET_ENDP
-    call SendCommandTrb
+    mov dx,200h
+    call SendCommandTrbLowBits
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
@@ -3330,7 +3384,6 @@ RunControl   Proc near
     cmp al,2
     jne rcNotHalted
 ;
-    int 3
     call ResetControl
 
 rcNotHalted:
