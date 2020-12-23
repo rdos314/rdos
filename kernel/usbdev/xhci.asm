@@ -63,11 +63,6 @@ TRB_TYPE_CONTROLLER     = 37
 TRB_TYPE_DEV_NOTIFY     = 38
 TRB_TYPE_MFI_WRAP       = 39
 
-XP_FLAG_TRANSFER_PENDING   = 1
-XP_FLAG_CLOSED             = 2
-XP_FLAG_DATA               = 4
-XP_FLAG_SINGLE             = 8
-
 trb_struc   STRUC
 
 trb_param   DD ?,?
@@ -76,14 +71,6 @@ trb_type    DW ?
 trb_control DW ?
 
 trb_struc   ENDS
-
-cmd_struc   STRUC
-
-cmd_thread  DW ?
-cmd_resv    DW ?,?,?
-cmd_event   DD ?,?
-
-cmd_struc   ENDS
 
 input_control_context_struc STRUC
 
@@ -902,7 +889,7 @@ SendCommandTrb   Proc near
 
 sctWait:
     WaitForSignal
-    mov ax,ds:[si].cmd_thread
+    mov ax,ds:[si].cev_thread
     or ax,ax
     jnz sctWait
 ;
