@@ -239,9 +239,6 @@ xhc_cmd_arr             DD CMD_COUNT DUP(?)
 
 xhc_intr_sel            DW ?
 
-xhc_port_thread         DW ?
-xhc_port_change_mask    DD ?
-
 xhc_context_size        DW ?
 xhc_slot_sel_arr        DW 256 DUP(?)
 
@@ -2485,177 +2482,6 @@ ok_high1:
     add ah,30h
     ret
 HexToAscii      ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdatePort
-;
-;           DESCRIPTION:    Update port
-;
-;       PARAMETERS:         DS  Function sel
-;                           CL  Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePort  Proc near
-    push eax
-    push ebx
-    push esi
-;
-    xor bx,bx
-    movzx esi,dl
-    shl esi,4
-    add esi,ds:xhc_port_offset
-    mov eax,ds:[esi]
-    NotifyUsbPortState
-;
-    pop esi
-    pop ebx
-    pop eax
-    ret        
-UpdatePort  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetPortPower
-;
-;           DESCRIPTION:    Turn on power on port
-;
-;       PARAMETERS:         ES  Function sel
-;                           CL  Port #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetPortPower  Proc near
-    push eax
-    push esi
-;        
-    movzx esi,cl
-    shl esi,4
-    add esi,ds:xhc_port_offset
-;    
-    mov eax,ds:[esi]
-    and eax,0EE03E1h
-    or ax,200h
-    mov ds:[esi],eax
-;
-    pop esi
-    pop eax
-    ret
-SetPortPower    Endp
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PortThread
-;
-;           DESCRIPTION:    Port thread
-;
-;       PARAMETERS:         BX  Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-port_thread:
-    mov ds,bx
-    GetThread
-    mov ds:xhc_port_thread,ax
-;
-    xor cl,cl
-
-ptPowerLoop:    
-    call SetPortPower
-
-ptPowerNext:
-    inc cl
-    cmp cl,ds:xhc_port_count
-    jb ptPowerLoop
-;
-    mov ax,750
-    WaitMilliSec
-    
-ptLoop:
-    WaitForSignal
-
-ptRetry:    
-    xor eax,eax
-    xchg eax,ds:xhc_port_change_mask
-    or eax,eax
-    jz ptLoop
-;
-    xor dl,dl
-
-ptPortLoop:    
-    test al,1
-    jz ptPortNext
-;
-    call UpdatePort
-
-ptPortNext:
-    inc dl
-    shr eax,1
-    jnz ptPortLoop   
-;
-    jmp ptLoop    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreatePortThread
-;
-;       DESCRIPTION:    Create port thread
-;
-;       PARAMETERS:     DS  Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-xhci_name   DB 'XHCI ', 0
-
-CreatePortThread   Proc near
-    push ds
-    push es
-    pushad
-;
-    mov si,di
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor di,di
-    mov si,OFFSET xhci_name
-
-cptXhciLoop:
-    mov al,cs:[si]
-    inc si
-    or al,al
-    jz cptXhciDone
-;
-    stosb
-    jmp cptXhciLoop
-
-cptXhciDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    xor di,di
-    mov si,OFFSET port_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-;
-    popad    
-    pop es
-    pop ds
-    ret
-CreatePortThread   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2954,12 +2780,12 @@ port_event Proc near
     cmp cl,ds:xhc_port_count
     jae peDone
 ;    
-    mov eax,1
-    shl eax,cl
-    lock or ds:xhc_port_change_mask,eax
-;
-    mov bx,ds:xhc_port_thread
-    Signal
+    xor bx,bx
+    movzx esi,cl
+    shl esi,4
+    add esi,ds:xhc_port_offset
+    mov eax,ds:[esi]
+    NotifyUsbPortState
 
 peDone:
     ret
@@ -3036,6 +2862,36 @@ evt3C DW OFFSET error_event
 evt3D DW OFFSET error_event
 evt3E DW OFFSET error_event
 evt3F DW OFFSET error_event
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetPortPower
+;
+;           DESCRIPTION:    Turn on power on port
+;
+;       PARAMETERS:         DS  Function sel
+;                           CL  Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPortPower  Proc near
+    push eax
+    push esi
+;        
+    movzx esi,cl
+    shl esi,4
+    add esi,ds:xhc_port_offset
+;    
+    mov eax,ds:[esi]
+    and eax,0EE03E1h
+    or ax,200h
+    mov ds:[esi],eax
+;
+    pop esi
+    pop eax
+    ret
+SetPortPower    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3048,11 +2904,23 @@ evt3F DW OFFSET error_event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+xhci_name   DB 'XHCI ', 0
+
 event_thread:
     mov ds,bx
     mov es,ds:xhc_intr_sel
     GetThread
     mov es:ev_thread,ax
+;
+    xor cl,cl
+
+etPowerLoop:    
+    call SetPortPower
+
+etPowerNext:
+    inc cl
+    cmp cl,ds:xhc_port_count
+    jb etPowerLoop
 ;
     mov es:ev_ccs,1
     mov si,es:ev_hdr_size
@@ -3099,7 +2967,6 @@ etDeq:
 ;       DESCRIPTION:    Create event thread
 ;
 ;       PARAMETERS:     DS  Function sel
-;                       DL  Interrupter #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3125,13 +2992,6 @@ cetXhciLoop:
 
 cetXhciDone:
     mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,dl
     call HexToAscii
     stosw
 ;
@@ -3542,9 +3402,7 @@ ifTabLoop:
 ;
     InitUsbFunction
 ;
-    xor dl,dl
     call CreateEventThread
-    call CreatePortThread
 ;    
     mov edi,ds:xhc_oper_offset
     or ds:[edi].orsUsbCmd,4    
