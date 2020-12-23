@@ -290,26 +290,7 @@ xp_tail_ptr         DW ?
 
 xp_ring_pcs         DW ?
 
-
-; might not be used
-
-xp_ring_offset      DW ?
-xp_ring_fetch       DW ?
-xp_ring_enque       DW ?
-xp_ring_deque       DW ?
-
-xp_setup_offset     DW ?
-
-xp_size             DW ?
-xp_remain_size      DW ?
-
-xp_data_head        DW ?
-xp_data_last        DW ?
-
 xp_db_target        DB ?
-xp_result           DB ?
-
-xp_flags            DB ?
 
 xhci_pipe   ENDS
 
