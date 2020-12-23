@@ -269,7 +269,7 @@ xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
 xd_pipe_context_arr_offset   DW 32 DUP (?)
 
-xd_ep_sel_arr                DW 32 DUP(?)
+xd_pipe_sel_arr                DW 32 DUP(?)
 
 xhci_dev_struc    ENDS
 
@@ -2271,7 +2271,7 @@ ipcDirOk:
 ;
     sub bx,2
     add bx,bx    
-    mov es:[bx].xd_ep_sel_arr,gs
+    mov es:[bx].xd_pipe_sel_arr,gs
 ; 
     mov bx,es:[bx].xd_pipe_context_arr_offset
     mov es:[bx].ec_param2,al        
