@@ -279,17 +279,13 @@ xp_ring_linear      DD ?
 xp_ring_phys        DD ?,?
 xp_ring_entries     DW ?
 
-xp_dev_sel          DW ?
-xp_port_sel         DW ?
-xp_port_nr          DB ?
-xp_slot             DB ?
-
 xp_rd_ptr           DW ?
 xp_wr_ptr           DW ?
 xp_tail_ptr         DW ?
 
 xp_ring_pcs         DW ?
 
+xp_slot             DB ?
 xp_db_target        DB ?
 
 xhci_pipe   ENDS
@@ -421,7 +417,7 @@ StopEndpoint   Proc near
 ;
     call WaitForCommandTrb
 ;    
-    mov es,fs:xp_dev_sel
+;    mov es,fs:xp_dev_sel
     xor eax,eax
     mov gs:[edi].trb_param,eax
     mov gs:[edi].trb_param+4,eax
@@ -2191,9 +2187,6 @@ apDo:
     mov gs:xp_tail_ptr,0
     mov gs:xp_ring_pcs,1
 ;        
-    mov gs:xp_dev_sel,es
-    mov al,es:usbd_port
-    mov gs:xp_port_nr,al
     mov al,es:xd_slot
     mov gs:xp_slot,al
 ;
