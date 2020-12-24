@@ -2772,20 +2772,22 @@ transfer_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 port_event Proc near
-    mov cl,es:[si+3]
-    or cl,cl
+    mov dl,es:[si+3]
+    or dl,dl
     jz peDone
 ;
-    dec cl
-    cmp cl,ds:xhc_port_count
+    dec dl
+    cmp dl,ds:xhc_port_count
     jae peDone
-;    
+;
+    push esi
     xor bx,bx
-    movzx esi,cl
+    movzx esi,dl
     shl esi,4
     add esi,ds:xhc_port_offset
     mov eax,ds:[esi]
     NotifyUsbPortState
+    pop esi
 
 peDone:
     ret
