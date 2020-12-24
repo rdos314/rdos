@@ -264,13 +264,16 @@ xd_slot                      DB ?
 
 xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
-xd_pipe_context_arr_offset   DW 32 DUP (?)
+xd_control_context_offset    DW ?
+xd_pipe_context_arr_offset   DW 30 DUP (?)
 
-xd_pipe_sel_arr                DW 32 DUP(?)
+xd_pipe_sel_arr              DW 30 DUP(?)
 
 xhci_dev_struc    ENDS
 
 xhci_pipe   STRUC
+
+xp_base             usb_device_pipe_struc <>
 
 xp_ring_linear      DD ?
 xp_ring_phys        DD ?,?
@@ -1023,7 +1026,8 @@ AllocateAddress   Endp
 ;
 ;       DESCRIPTION:    Zero context struct
 ;
-;       PARAMETERS:     EDX     Context linear
+;       PARAMETERS:     CX      Size
+;                       EDX     Context linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1036,7 +1040,7 @@ ZeroContext    Proc near
     mov ax,flat_sel
     mov es,ax
     mov edi,edx
-    movzx ecx,ds:xhc_context_size
+    movzx ecx,cx
     shr ecx,2
     xor eax,eax
     rep stos dword ptr es:[edi]
@@ -1082,22 +1086,64 @@ adMem32:
     CreateMemBlk32
 
 adMemDone:
-    mov cx,ds:xhc_context_size
+    mov cx,64
     AllocateMemBlk
     call ZeroContext
     sub edx,es:mblk_linear_base
     mov es:xd_input_context_offset,dx
 ;
     mov cx,ds:xhc_context_size
+    cmp cx,64
+    je adAlloc64
+
+adAlloc32:
+    add es:xd_input_context_offset,32
+;
+    mov cx,64
     AllocateMemBlk
     call ZeroContext
     sub edx,es:mblk_linear_base
     mov es:xd_slot_context_offset,dx
 ;
+    add edx,32
+    mov es:xd_control_context_offset,dx
+;
     mov di,OFFSET xd_pipe_context_arr_offset
-    mov bp,32
+    mov bp,15
 
-adiEpLoop:
+adiEpLoop32:
+    mov cx,64
+    AllocateMemBlk
+    call ZeroContext
+    sub edx,es:mblk_linear_base
+    mov es:[di],dx
+    add di,2 
+;
+    add edx,32
+    mov es:[di],dx
+    add di,2 
+;
+    sub bp,1
+    jnz adiEpLoop32
+    jmp adAllocDone
+
+adAlloc64:
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    call ZeroContext
+    sub edx,es:mblk_linear_base
+    mov es:xd_slot_context_offset,dx
+;
+    mov cx,ds:xhc_context_size
+    AllocateMemBlk
+    call ZeroContext
+    sub edx,es:mblk_linear_base
+    mov es:xd_control_context_offset,dx
+;
+    mov di,OFFSET xd_pipe_context_arr_offset
+    mov bp,30
+
+adEpLoop64:
     mov cx,ds:xhc_context_size
     AllocateMemBlk
     call ZeroContext
@@ -1105,8 +1151,9 @@ adiEpLoop:
     mov es:[di],dx
     add di,2 
     sub bp,1
-    jnz adiEpLoop      
-;
+    jnz adEpLoop64      
+
+adAllocDone:
     popad
     ret
 AllocateDevice    Endp
@@ -1390,7 +1437,7 @@ CreateControl   Proc far
     call SetupRootDevice
     call CreateControlRing
 ;
-    mov bx,es:xd_pipe_context_arr_offset
+    mov bx,es:xd_control_context_offset
     call GetDefaultPacketSize
     mov es:[bx].ec_packet_size,ax
     mov es:[bx].ec_avg_len,ax
@@ -1497,7 +1544,7 @@ UpdateMaxLen   Proc far
 ;
     call WaitForCommandTrb
 ;
-    mov bx,es:xd_pipe_context_arr_offset
+    mov bx,es:xd_control_context_offset
     mov es:[bx].ec_avg_len,ax
     mov es:[bx].ec_packet_size,ax
 ;    
@@ -1540,6 +1587,168 @@ UpdateMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AddEndpoint
+;
+;   DESCRIPTION:    Add endpoint
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;                   FS:DI   Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddEndpoint   Proc near
+    pushad
+;
+    mov dl,fs:[di].ued_address
+    movzx bx,dl
+    and bl,0Fh
+    add bx,bx
+    test dl,80h
+    jz aeDirOk
+;
+    inc bx
+
+aeDirOk:
+    mov si,es:xd_input_context_offset
+    mov eax,es:[si].icc_add_mask
+    mov cl,bl
+    mov edx,1
+    shl edx,cl
+    or eax,edx
+    mov es:[si].icc_add_mask,eax
+;
+    mov si,es:xd_slot_context_offset
+    mov eax,es:[si].s_misc
+    shr eax,27
+    cmp ax,bx
+    jae aeContextOk
+;
+    mov eax,es:[si].s_misc
+    and eax,7FFFFFFh
+    movzx edx,bx
+    shl edx,27
+    or eax,edx
+    mov es:[si].s_misc,eax
+
+aeContextOk:
+    sub bx,2
+    add bx,bx    
+    mov bx,es:[bx].xd_pipe_context_arr_offset
+;
+    mov al,fs:[di].ued_attrib
+    and al,3
+    cmp al,2
+    je aeBulk
+;
+    cmp al,3
+    je aeIntr
+;
+    int 3
+
+aeIntr:
+    mov al,fs:[di].ued_interval
+    mov ah,3
+
+aeIntLoop:
+    shr al,1
+    jz aeIntOk
+;
+    inc ah
+    jmp aeIntLoop
+
+aeIntOk:    
+    mov dl,fs:[di].ued_address
+    test dl,80h
+    jnz aeIntIn
+
+aeIntOut:
+    mov al,3
+    jmp aeSetup
+
+aeIntIn:
+    mov al,7
+    jmp aeSetup
+
+aeBulk:
+    xor ah,ah
+    mov dl,fs:[di].ued_address
+    test dl,80h
+    jnz aeBulkIn
+
+aeBulkOut:
+    mov al,2
+    jmp aeSetup
+
+aeBulkIn:
+    mov al,6
+
+aeSetup:
+    shl al,3
+    mov es:[bx].ec_param2,al        
+    mov es:[bx].ec_interval,ah
+;
+    mov es:[bx].ec_tr_dequeue,0
+    mov es:[bx].ec_tr_dequeue+4,0
+;
+    mov ax,es:usbd_maxlen
+    mov es:[bx].ec_avg_len,ax
+    mov es:[bx].ec_packet_size,ax
+    movzx eax,ax
+    mov es:[bx].ec_esit_low,eax
+;
+    popad
+    ret
+AddEndpoint   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupEndpoints
+;
+;   DESCRIPTION:    Setup endpoints
+;
+;   PARAMETERS:     DS      Device selector
+;                   ES      Function selector
+;                   DL      Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEndpoints   Proc near
+    push fs
+    pushad
+;
+    movzx si,dl
+    dec si
+    add si,si
+    mov ax,es:[si].usbd_config_sel
+    mov fs,ax
+;
+    xor di,di
+    movzx cx,fs:ucd_len
+    add di,cx
+
+seDescrLoop:
+    mov cl,fs:[di].udd_type
+    cmp cl,5
+    jne seDescrNext
+;
+    call AddEndpoint
+
+seDescrNext:    
+    movzx cx,fs:[di].ucd_len
+    add di,cx
+    cmp di,fs:ucd_size
+    jb seDescrLoop    
+;
+    popad
+    pop fs
+    ret
+SetupEndpoints Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ConfigDevice
 ;
 ;   DESCRIPTION:    Configure device endpoints
@@ -1559,6 +1768,9 @@ ConfigDevice   Proc far
     push ecx
     push edi
 ;
+    int 3
+    call SetupEndpoints
+
     call WaitForCommandTrb
     movzx eax,es:xd_input_context_offset
     add eax,es:mblk_physical_base
@@ -1582,7 +1794,7 @@ ConfigDevice   Proc far
 ;
     mov bx,es:xd_slot_context_offset
     mov eax,es:[bx].s_misc
-    or eax,04000000h
+    or eax,4000000h
     mov es:[bx].s_misc,eax
 ;
     mov ax,gs:hub_ports
@@ -2050,7 +2262,7 @@ ControlMsg   Proc far
     push ebp
 ;
     push bx
-    mov bx,es:xd_pipe_context_arr_offset
+    mov bx,es:xd_control_context_offset
     mov al,es:[bx].ec_state
     and al,7
     cmp al,2
@@ -2219,7 +2431,6 @@ CreateIntrPipe   Proc far
     push gs
     push eax
 ;   
-    int 3
     mov ax,flat_sel
     mov fs,ax
     call AllocatePipe
@@ -2229,7 +2440,6 @@ CreateIntrPipe   Proc far
     pop fs
     retf32
 CreateIntrPipe  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2271,6 +2481,7 @@ ipcDirOk:
     mov es:[bx].xd_pipe_sel_arr,gs
 ; 
     mov bx,es:[bx].xd_pipe_context_arr_offset
+    shl al,3
     mov es:[bx].ec_param2,al        
     mov es:[bx].ec_interval,ah
 ;
@@ -2287,13 +2498,6 @@ ipcDirOk:
     mov es:[bx].ec_esit_low,eax
 ;
     mov bx,es:xd_input_context_offset
-    mov eax,es:[bx].icc_add_mask
-    test al,2
-    jz ipcNoReset
-;
-    mov eax,1
-
-ipcNoReset:    
     mov cl,gs:xp_db_target
     mov edx,1
     shl edx,cl
@@ -2308,7 +2512,7 @@ ipcNoReset:
 ;
     mov ecx,es:[bx].s_misc
     and ecx,07FFFFFFh
-    mov al,fs:xp_db_target
+    mov al,gs:xp_db_target
     inc al
     shl eax,27
     or eax,ecx
@@ -2389,7 +2593,7 @@ EnablePipe   Proc far
     push edx
 ;
     int 3
-    mov al,gs:[di].ued_attrib
+    mov al,gs:ued_attrib
     and al,3
     cmp al,2
     je epBulk
@@ -2400,7 +2604,7 @@ EnablePipe   Proc far
     int 3
 
 epIntr:
-    mov al,gs:[di].ued_interval
+    mov al,gs:ued_interval
     mov ah,3
 
 epIntLoop:
