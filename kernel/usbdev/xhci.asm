@@ -1797,6 +1797,9 @@ cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
     call SendCommandTrb
 ;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
     mov al,ds:[si].cev_result
     cmp al,1
     je cdDone
@@ -2336,6 +2339,8 @@ AllocatePipe   Proc near
     push edx
     push edi
 ;
+    push edx
+;
     push es
     mov eax,SIZE xhci_pipe
     AllocateSmallGlobalMem
@@ -2387,6 +2392,18 @@ apDo:
 ;        
     mov al,es:xd_slot
     mov gs:xp_slot,al
+;
+    pop edx
+    movzx bx,dl
+    and bl,0Fh
+    add bx,bx
+    test dl,80h
+    jz apDirOk
+;
+    inc bx
+
+apDirOk:
+    mov gs:xp_db_target,bl
 ;
     mov bx,gs
 ;
