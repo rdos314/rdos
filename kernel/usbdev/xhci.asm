@@ -1286,12 +1286,14 @@ InitControlRing   Proc near
     mov es:xd_control_pcs,1
     mov es:xd_control_thread,0
 ;
-    push eax
     mov edi,edx
     mov ecx,0Ch
     xor eax,eax
     rep stos dword ptr es:[edi]
-    pop eax
+;
+    movzx eax,es:xd_control_offset
+    add eax,es:mblk_physical_base
+    mov ebx,es:mblk_physical_base+4
 ;
     mov es:[edi].trb_param,eax
     mov es:[edi].trb_param+4,ebx
@@ -1756,7 +1758,6 @@ ConfigDevice   Proc far
     push ecx
     push edi
 ;
-    int 3
     call CreateDummyRing
     call SetupEndpoints
     call WaitForCommandTrb
