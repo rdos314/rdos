@@ -157,6 +157,141 @@ CreateLargeSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           AllocateLargeBlock
+;
+;   DESCRIPTION:    Allocate large block
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   CX      Size
+;
+;   RETURNS:        ECX     Block size
+;                   EDX     Linear address
+;                   EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateLargeBlock  Proc near
+    movzx ecx,cx
+    dec ecx
+    and ecx,0F000h
+    add ecx,1000h
+;
+    mov eax,ecx
+    AllocateBigLinear
+;
+    cmp ecx,1000h
+    je albOne
+
+albMulti:
+    mov si,es:mblk_info_offset
+    mov al,es:[si].mblk_is64
+    or al,al
+    jnz albm64
+;
+    push ecx
+    shr ecx,12
+    AllocateMultiplePhysical32
+    pop ecx
+    jmp albmPaging
+
+albm64:
+    push ecx
+    shr ecx,12
+    AllocateMultiplePhysical64
+    pop ecx
+
+albmPaging:
+    push eax
+    push ecx
+    push edx
+;
+    shr ecx,12
+    mov al,13h
+
+albmPageLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop albmPageLoop
+;
+    pop edx
+    pop ecx
+    pop eax
+    jmp albDone
+
+albOne:
+    mov si,es:mblk_info_offset
+    mov al,es:[si].mblk_is64
+    or al,al
+    jnz albo64
+;
+    AllocatePhysical32
+    jmp alboPaging
+
+albo64:
+    AllocatePhysical64
+
+alboPaging:
+    mov al,13h
+    SetPageEntry
+
+albDone:
+    ret
+AllocateLargeBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AllocateEntry
+;
+;   DESCRIPTION:    Allocate new entry
+;
+;   PARAMETERS:     ES      Memory block selector
+;
+;   RETURNS:        DS:SI   Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateEntry  Proc near
+    push eax
+    push ecx
+;
+    call CreateLargeSel
+;
+    xor si,si
+    mov cx,LARGE_ENTRIES
+
+aleLoop:
+    mov eax,ds:[si].mblkl_size
+    or eax,eax
+    jnz aleNext
+;
+    mov eax,1
+    xchg eax,ds:[si].mblkl_size
+    cmp eax,1
+    je aleNext
+;
+    or eax,eax
+    clc
+    jz aleDone
+;
+    mov ds:[si].mblkl_size,eax
+
+aleNext:    
+    add si,SIZE mem_blk_large
+    loop aleLoop
+;
+    stc
+
+aleDone:
+    pop ecx
+    pop eax
+    ret
+AllocateEntry  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           FreeEntry
 ;
 ;   DESCRIPTION:    Free large entry
@@ -166,6 +301,22 @@ CreateLargeSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeEntry  Proc near
+    push ecx
+    push edx
+;
+    xor ecx,ecx
+    xchg ecx,ds:[si].mblkl_size
+;
+    xor edx,edx
+    xchg edx,ds:[si].mblkl_linear_base
+;
+    mov ds:[si].mblkl_physical_base,0
+    mov ds:[si].mblkl_physical_base+4,0
+;
+    FreeLinear
+;
+    pop edx
+    pop ecx
     ret
 FreeEntry  Endp
 
@@ -360,7 +511,24 @@ FreeLargeSel     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateLarge  Proc near
-    stc
+    push ds
+    push si
+;
+    call AllocateEntry
+    jc alDone
+;
+    push ecx
+    call AllocateLargeBlock
+    mov ds:[si].mblkl_physical_base,eax
+    mov ds:[si].mblkl_physical_base+4,ebx
+    mov ds:[si].mblkl_linear_base,edx
+    mov ds:[si].mblkl_size,ecx
+    pop ecx
+    clc
+
+alDone:
+    pop si
+    pop ds
     ret
 AllocateLarge  Endp
 
@@ -1778,7 +1946,7 @@ allocate_mem_blk     Proc far
     jmp ambDone
 
 ambSignOk:
-    cmp cx,1000h
+    cmp cx,0C00h
     jb ambSmall
 ;
     call AllocateLarge
@@ -2314,7 +2482,7 @@ free_physical_mem_blk     Proc far
     push es
     pushad
 ;
-    cmp cx,1000h
+    cmp cx,0C00h
     jb fpSmall
 ;
     call FreePhysicalLarge
@@ -2411,7 +2579,7 @@ free_linear_mem_blk     Proc far
     push es
     pushad
 ;
-    cmp cx,1000h
+    cmp cx,0C00h
     jb flSmall
 ;
     call FreeLinearLarge
