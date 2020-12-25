@@ -719,7 +719,6 @@ InitBlock     Proc near
     pusha
 ;
     mov es:mblk_sign,MEM_BLK_BASE_SIGN
-    mov es:mblk_large_sel,0
 ;
     test si,1
     jz ibStartOk
@@ -730,6 +729,7 @@ ibStartOk:
     mov es:mblk_info_offset,si
     mov es:[si].mblk_ext_size,cx
     mov es:[si].mblk_ext_count,0
+    mov es:[si].mblk_large_sel,0
 ;
     xor cl,cl
     dec ax
@@ -993,7 +993,6 @@ free_mem_blk     Proc far
 fmbSignOk:
     call FreeLargeSel
     mov si,es:mblk_info_offset
-;
     mov cx,es:[si].mblk_ext_size
     lea si,[si].mblk_ext_arr
 
