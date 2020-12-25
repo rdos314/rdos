@@ -32,13 +32,230 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE memblk.inc
 
-MEM_BLK_SIGN    = 0B45Ah
+MEM_BLK_BASE_SIGN     = 0B45Ah
+MEM_BLK_EXTEND_SIGN   = 0A56Ah
+
+LARGE_ENTRIES = 256
+
+mem_blk_info	STRUC
+
+mblk_bitmap_offset   DW ?
+mblk_data_offset     DW ?
+mblk_bitmap_dd_count DW ?
+mblk_free_bits       DW ?
+mblk_size_shift      DB ?
+mblk_is64            DB ?
+mblk_large_sel       DW ?
+mblk_ext_count       DW ?
+mblk_ext_size        DW ?
+mblk_ext_arr         DW ?
+
+mem_blk_info	ENDS
+
+mem_blk_extend	STRUC
+
+mblke_header          mem_blk_header <>
+
+mblke_bitmap_offset   DW ?
+mblke_data_offset     DW ?
+mblke_bitmap_dd_count DW ?
+mblke_free_bits       DW ?
+mblke_size_shift      DB ?
+mblke_pad             DB ?
+
+mem_blk_extend	ENDS
+
+mem_blk_large   STRUC
+
+mblkl_physical_base   DD ?,?
+mblkl_linear_base     DD ?
+mblkl_size            DD ?
+
+mem_blk_large   ENDS
 
     .386p
 
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetLargeSel
+;
+;   DESCRIPTION:    Create and return large selector
+;
+;   PARAMETERS:     ES      Memory block selector
+;
+;   RETURNS:        BX      Large sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLargeSel     Proc near
+    push eax
+    push esi
+;
+    mov si,es:mblk_info_offset
+    mov bx,es:[si].mblk_large_sel
+    or bx,bx
+    jnz glsDone
+;
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ecx,400h
+    xor edi,edi
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov ax,es
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+;
+    mov bx,es:[si].mblk_large_sel
+    or bx,bx
+    jz glsExchange
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+    jmp glsDone
+
+glsExchange:
+    xchg bx,es:[si].mblk_large_sel
+    or bx,bx
+    jz glsDone
+;
+    push es
+    push bx
+;
+    xchg bx,es:[si].mblk_large_sel
+    mov es,bx
+    FreeMem
+;
+    pop bx
+    pop es
+
+glsDone:
+    pop esi
+    pop eax
+    ret
+GetLargeSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeLargeSel
+;
+;   DESCRIPTION:    Free large selector
+;
+;   PARAMETERS:     ES      Memory block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeLargeSel     Proc near
+    ret
+FreeLargeSel     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AllocateLarge
+;
+;   DESCRIPTION:    Allocate large block
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   CX      Size
+;
+;   RETURNS:        EDX     Linear address
+;                   EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateLarge  Proc near
+    stc
+    ret
+AllocateLarge  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreePhysicalLarge
+;
+;   DESCRIPTION:    Free mem block based on physical address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EBX:EAX Physical address
+;                   CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePhysicalLarge  Proc near
+    ret
+FreePhysicalLarge  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeLinearLarge
+;
+;   DESCRIPTION:    Free mem block based on linear address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EDX     Linear address
+;                   CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeLinearLarge  Proc near
+    ret
+FreeLinearLarge  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           PhysicalToLinearLarge
+;
+;   DESCRIPTION:    Convert between physical and linear address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EBX:EAX Physical address
+;
+;   RETURNS:        EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PhysicalToLinearLarge  Proc near
+    stc
+    ret
+PhysicalToLinearLarge  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           LinearToPhysicalLarge
+;
+;   DESCRIPTION:    Convert between linear and physical address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EDX     Linear address
+;
+;   RETURNS:        EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinearToPhysicalLarge  Proc near
+    stc
+    ret
+LinearToPhysicalLarge  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -83,7 +300,6 @@ CreateBlock     Proc near
     mov es:mblk_linear_base,edx
     mov es:mblk_physical_base,eax
     mov es:mblk_physical_base+4,ebx
-    mov es:mblk_sign,MEM_BLK_SIGN
 ;
     popad
     ret
@@ -105,6 +321,9 @@ CreateBlock     Endp
 
 InitBlock     Proc near
     pusha
+;
+    mov es:mblk_sign,MEM_BLK_BASE_SIGN
+    mov es:mblk_large_sel,0
 ;
     test si,1
     jz ibStartOk
@@ -212,6 +431,7 @@ InitBlock     Endp
 InitExtend     Proc near
     pusha
 ;
+    mov es:mblk_sign,MEM_BLK_EXTEND_SIGN
     mov es:mblke_size_shift,cl
 ;
     mov bx,SIZE mem_blk_extend
@@ -367,7 +587,7 @@ free_mem_blk     Proc far
     push esi
 ;
     mov ax,es:mblk_sign
-    cmp ax,MEM_BLK_SIGN
+    cmp ax,MEM_BLK_BASE_SIGN
     je fmbSignOk
 ;
     int 3
@@ -375,7 +595,9 @@ free_mem_blk     Proc far
     jmp fmbDone
 
 fmbSignOk:
+    call FreeLargeSel
     mov si,es:mblk_info_offset
+;
     mov cx,es:[si].mblk_ext_size
     lea si,[si].mblk_ext_arr
 
@@ -1224,7 +1446,7 @@ AllocateExtend  Proc near
     push esi
 ;
     mov ax,es:mblk_sign
-    cmp ax,MEM_BLK_SIGN
+    cmp ax,MEM_BLK_EXTEND_SIGN
     je aeSignOk
 ;
     int 3
@@ -1320,7 +1542,7 @@ allocate_mem_blk     Proc far
     push ebp
 ;
     mov ax,es:mblk_sign
-    cmp ax,MEM_BLK_SIGN
+    cmp ax,MEM_BLK_BASE_SIGN
     je ambSignOk
 ;
     int 3
@@ -1328,6 +1550,13 @@ allocate_mem_blk     Proc far
     jmp ambDone
 
 ambSignOk:
+    cmp cx,1000h
+    jb ambSmall
+;
+    call AllocateLarge
+    jmp ambDone
+
+ambSmall:
     call AllocateBase
     jnc ambDone
 
@@ -1426,8 +1655,7 @@ ptlCheckExt:
     mov si,ds:mblk_info_offset
     mov cx,ds:[si].mblk_ext_count
     or cx,cx
-    stc
-    jz ptlExtDone
+    jz ptlLarge
 ;
     lea di,[si].mblk_ext_arr 
 
@@ -1451,8 +1679,9 @@ ptlExtLoop:
 ptlExtNext:
     add di,2
     loop ptlExtLoop
-;
-    stc
+
+ptlLarge:
+    call PhysicalToLinearLarge
 
 ptlExtDone:
     pop edi
@@ -1510,8 +1739,7 @@ linear_to_physical_mem_blk     Proc far
     mov si,ds:mblk_info_offset
     mov cx,ds:[si].mblk_ext_count
     or cx,cx
-    stc
-    jz ltpExtDone
+    jz ltpLarge
 ;
     lea di,[si].mblk_ext_arr 
 
@@ -1532,8 +1760,9 @@ ltpExtLoop:
 ltpExtNext:
     add di,2
     loop ltpExtLoop
-;
-    stc
+
+ltpLarge:
+    call LinearToPhysicalLarge
 
 ltpExtDone:
     pop edi
@@ -1857,6 +2086,12 @@ free_physical_mem_blk     Proc far
     push es
     pushad
 ;
+    cmp cx,1000h
+    jb fpSmall
+;
+    call FreePhysicalLarge
+
+fpSmall:
     mov dx,ax
     and dx,0FFFh
 ;
@@ -1948,6 +2183,12 @@ free_linear_mem_blk     Proc far
     push es
     pushad
 ;
+    cmp cx,1000h
+    jb flSmall
+;
+    call FreeLinearLarge
+
+flSmall:
     mov ax,dx
     and ax,0FFFh
 ;
