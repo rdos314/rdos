@@ -82,24 +82,25 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           GetLargeSel
+;   NAME:           CreateLargeSel
 ;
 ;   DESCRIPTION:    Create and return large selector
 ;
 ;   PARAMETERS:     ES      Memory block selector
 ;
-;   RETURNS:        BX      Large sel
+;   RETURNS:        DS      Large sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetLargeSel     Proc near
+CreateLargeSel     Proc near
     push eax
+    push ebx
     push esi
 ;
     mov si,es:mblk_info_offset
     mov bx,es:[si].mblk_large_sel
     or bx,bx
-    jnz glsDone
+    jnz clsDone
 ;
     push es
     push eax
@@ -121,18 +122,18 @@ GetLargeSel     Proc near
 ;
     mov bx,es:[si].mblk_large_sel
     or bx,bx
-    jz glsExchange
+    jz clsExchange
 ;
     push es
     mov es,ax
     FreeMem
     pop es
-    jmp glsDone
+    jmp clsDone
 
-glsExchange:
+clsExchange:
     xchg bx,es:[si].mblk_large_sel
     or bx,bx
-    jz glsDone
+    jz clsDone
 ;
     push es
     push bx
@@ -144,11 +145,150 @@ glsExchange:
     pop bx
     pop es
 
-glsDone:
+clsDone:
+    mov ds,bx
+;
     pop esi
+    pop ebx
     pop eax
     ret
-GetLargeSel Endp
+CreateLargeSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreeEntry
+;
+;   DESCRIPTION:    Free large entry
+;
+;   PARAMETERS:     DS:SI   Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeEntry  Proc near
+    ret
+FreeEntry  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FindPhysical
+;
+;   DESCRIPTION:    Find large entry based on physical address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EBX:EAX Physical address
+;
+;   RETURNS:        DS:SI   Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindPhysical  Proc near
+    mov si,es:mblk_info_offset
+    mov si,es:[si].mblk_large_sel
+    or si,si
+    stc
+    jz fpeDone
+;
+    push ecx
+    push edx
+    push edi
+;
+    mov ds,si
+    xor si,si
+    mov cx,LARGE_ENTRIES
+
+fpeLoop:
+    mov edx,ds:[si].mblkl_size
+    or edx,edx
+    jz fpeNext
+;
+    mov edx,eax
+    sub edx,ds:[si].mblkl_physical_base
+    jc fpeNext
+;
+    mov edi,ebx
+    sbb edi,ds:[si].mblkl_physical_base+4
+    jnz fpeNext
+;
+    cmp edx,ds:[si].mblkl_size
+    ja fpeNext
+;
+    pop edi
+    pop edx
+    pop ecx
+    clc
+    jmp fpeDone
+
+fpeNext:
+    add si,SIZE mem_blk_large
+    loop fpeLoop
+;
+    pop edi
+    pop edx
+    pop ecx
+    stc
+
+fpeDone:
+    ret
+FindPhysical  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FindLinear
+;
+;   DESCRIPTION:    Find large entry based on linear address
+;
+;   PARAMETERS:     ES      Memory block selector
+;                   EDX     Linear address
+;
+;   RETURNS:        DS:SI   Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindLinear  Proc near
+    mov si,es:mblk_info_offset
+    mov si,es:[si].mblk_large_sel
+    or si,si
+    stc
+    jz fleDone
+;
+    push eax
+    push ecx
+;
+    mov ds,si
+    xor si,si
+    mov cx,LARGE_ENTRIES
+
+fleLoop:
+    mov eax,ds:[si].mblkl_size
+    or eax,eax
+    jz fleNext
+;
+    mov eax,edx
+    sub eax,ds:[si].mblkl_linear_base
+    jc fleNext
+;
+    cmp eax,ds:[si].mblkl_size
+    ja fleNext
+;
+    pop ecx
+    pop eax
+    clc
+    jmp fleDone
+
+fleNext:
+    add si,SIZE mem_blk_large
+    loop fleLoop
+;
+    pop ecx
+    pop eax
+    stc
+
+fleDone:
+    ret
+FindLinear  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -162,6 +302,45 @@ GetLargeSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeLargeSel     Proc near
+    push si
+;
+    mov si,es:mblk_info_offset
+    mov si,es:[si].mblk_large_sel
+    or si,si
+    jz flsDone
+;
+    push ds
+    push eax
+    push ecx
+;
+    mov ds,si
+    xor si,si
+    mov cx,LARGE_ENTRIES
+
+flsLoop:
+    mov eax,ds:[si].mblkl_size
+    or eax,eax
+    jz flsNext
+;
+    call FreeEntry
+
+flsNext:
+    add si,SIZE mem_blk_large
+    loop flsLoop
+;
+    pop ecx
+    pop eax
+;
+    mov si,ds
+    pop ds
+;
+    push es
+    mov es,si
+    FreeMem
+    pop es
+
+flsDone:
+    pop si
     ret
 FreeLargeSel     Endp
 
@@ -199,6 +378,17 @@ AllocateLarge  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreePhysicalLarge  Proc near
+    push ds
+    push si
+;
+    call FindPhysical
+    jc fplDone
+;
+    call FreeEntry
+
+fplDone:
+    pop si
+    pop ds
     ret
 FreePhysicalLarge  Endp
 
@@ -216,6 +406,17 @@ FreePhysicalLarge  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeLinearLarge  Proc near
+    push ds
+    push si
+;
+    call FindLinear
+    jc fllDone
+;
+    call FreeEntry
+
+fllDone:
+    pop si
+    pop ds
     ret
 FreeLinearLarge  Endp
 
@@ -234,7 +435,20 @@ FreeLinearLarge  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PhysicalToLinearLarge  Proc near
-    stc
+    push ds
+    push si
+;
+    call FindPhysical
+    jc ptllDone
+;
+    mov edx,eax
+    sub edx,ds:[si].mblkl_physical_base
+    add edx,ds:[si].mblkl_linear_base
+    clc
+
+ptllDone:
+    pop si
+    pop ds
     ret
 PhysicalToLinearLarge  Endp
 
@@ -253,7 +467,21 @@ PhysicalToLinearLarge  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LinearToPhysicalLarge  Proc near
-    stc
+    push ds
+    push si
+;
+    call FindLinear
+    jc ltplDone
+;
+    mov eax,edx
+    add eax,ds:[si].mblkl_linear_base
+    sub eax,ds:[si].mblkl_physical_base
+    mov ebx,ds:[si].mblkl_physical_base+4
+    clc
+
+ltplDone:
+    pop si
+    pop ds
     ret
 LinearToPhysicalLarge  Endp
 
