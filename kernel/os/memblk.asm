@@ -113,15 +113,15 @@ CreateLargeSel     Proc near
     xor edi,edi
     xor eax,eax
     rep stos dword ptr es:[edi]
-    mov ax,es
+    mov bx,es
 ;
     pop edi
     pop ecx
     pop eax
     pop es
 ;
-    mov bx,es:[si].mblk_large_sel
-    or bx,bx
+    mov ax,es:[si].mblk_large_sel
+    or ax,ax
     jz clsExchange
 ;
     push es
@@ -146,7 +146,7 @@ clsExchange:
     pop es
 
 clsDone:
-    mov ds,bx
+    mov ds,es:[si].mblk_large_sel
 ;
     pop esi
     pop ebx
@@ -171,6 +171,8 @@ CreateLargeSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateLargeBlock  Proc near
+    push esi
+;
     movzx ecx,cx
     dec ecx
     and ecx,0F000h
@@ -179,7 +181,7 @@ AllocateLargeBlock  Proc near
     mov eax,ecx
     AllocateBigLinear
 ;
-    cmp ecx,1000h
+    cmp ecx,1
     je albOne
 
 albMulti:
@@ -188,24 +190,17 @@ albMulti:
     or al,al
     jnz albm64
 ;
-    push ecx
-    shr ecx,12
     AllocateMultiplePhysical32
-    pop ecx
     jmp albmPaging
 
 albm64:
-    push ecx
-    shr ecx,12
     AllocateMultiplePhysical64
-    pop ecx
 
 albmPaging:
     push eax
     push ecx
     push edx
 ;
-    shr ecx,12
     mov al,13h
 
 albmPageLoop:
@@ -234,8 +229,12 @@ albo64:
 alboPaging:
     mov al,13h
     SetPageEntry
+    xor al,al
 
 albDone:
+    shl ecx,12
+;
+    pop esi
     ret
 AllocateLargeBlock  Endp
 
@@ -482,7 +481,7 @@ flsNext:
     pop ecx
     pop eax
 ;
-    mov si,ds
+   mov si,ds
     pop ds
 ;
     push es
@@ -642,8 +641,8 @@ LinearToPhysicalLarge  Proc near
     jc ltplDone
 ;
     mov eax,edx
-    add eax,ds:[si].mblkl_linear_base
-    sub eax,ds:[si].mblkl_physical_base
+    sub eax,ds:[si].mblkl_linear_base
+    add eax,ds:[si].mblkl_physical_base
     mov ebx,ds:[si].mblkl_physical_base+4
     clc
 
@@ -2028,6 +2027,7 @@ physical_to_linear_mem_blk_name    DB 'Physical To Linear Mem Blk', 0
 
 physical_to_linear_mem_blk     Proc far
     push es
+;
     push eax
 ;
     and ax,0F000h
@@ -2035,8 +2035,7 @@ physical_to_linear_mem_blk     Proc far
     jne ptlCheckExt
 ;
     cmp ebx,es:mblk_physical_base+4
-    clc
-    je ptlDone
+    je ptlFound
 
 ptlCheckExt:
     push ds
@@ -2068,7 +2067,6 @@ ptlExtLoop:
     jne ptlExtNext
 ;
     cmp ebx,es:mblk_physical_base+4
-    clc
     je ptlExtDone
 
 ptlExtNext:
@@ -2076,7 +2074,15 @@ ptlExtNext:
     loop ptlExtLoop
 
 ptlLarge:
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+;
+    pop eax
+;
     call PhysicalToLinearLarge
+    jmp ptlDone
 
 ptlExtDone:
     pop edi
@@ -2084,16 +2090,15 @@ ptlExtDone:
     pop ecx
     pop ds
 
-ptlDone:
+ptlFound:
     pop eax
-    jc ptlPop
 ;
     movzx edx,ax
     and dx,0FFFh
     or edx,es:mblk_linear_base
     clc
 
-ptlPop:
+ptlDone:
     pop es
     retf32
 physical_to_linear_mem_blk     Endp
@@ -2116,12 +2121,12 @@ linear_to_physical_mem_blk_name    DB 'Linear To Physical Mem Blk', 0
 
 linear_to_physical_mem_blk     Proc far
     push es
+;
     push edx
 ;
     and dx,0F000h
     cmp edx,es:mblk_linear_base
-    clc
-    je ltpDone
+    je ltpFound
 ;
     push ds
     push ecx
@@ -2149,7 +2154,6 @@ ltpExtLoop:
     mov es,ax
 ;
     cmp edx,es:mblk_linear_base
-    clc
     je ltpExtDone
 
 ltpExtNext:
@@ -2157,7 +2161,15 @@ ltpExtNext:
     loop ltpExtLoop
 
 ltpLarge:
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+;
+    pop edx
+;
     call LinearToPhysicalLarge
+    jmp ltpDone
 
 ltpExtDone:
     pop edi
@@ -2165,9 +2177,8 @@ ltpExtDone:
     pop ecx
     pop ds
 
-ltpDone:
+ltpFound:
     pop edx
-    jc ltpPop
 ;
     movzx eax,dx
     and ax,0FFFh
@@ -2175,7 +2186,7 @@ ltpDone:
     mov ebx,es:mblk_physical_base+4
     clc
 
-ltpPop:
+ltpDone:
     pop es
     retf32
 linear_to_physical_mem_blk     Endp
@@ -2485,6 +2496,7 @@ free_physical_mem_blk     Proc far
     jb fpSmall
 ;
     call FreePhysicalLarge
+    jmp fpDone
 
 fpSmall:
     mov dx,ax
@@ -2582,6 +2594,7 @@ free_linear_mem_blk     Proc far
     jb flSmall
 ;
     call FreeLinearLarge
+    jmp flDone
 
 flSmall:
     mov ax,dx
