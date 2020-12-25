@@ -196,6 +196,7 @@ op_section         section_typ <>
 op_intr_count      DW ?
 op_intr_list       DW ?
 op_ed              DD ?
+op_tail_td         DD ?
 op_rd_ptr          DW ?
 op_wr_ptr          DW ?
 op_tail_ptr        DW ?
@@ -1627,29 +1628,24 @@ AllocatePipe    Proc near
     pop es
 ;
     mov di,OFFSET op_entry_arr
+    xor eax,eax
 
 apTdLoop:
-    push cx
+    mov ds:[di],eax
+    add di,4
+    loop apTdLoop
 ;
     mov cx,SIZE ohc_td_struc
     AllocateMemBlk
-    mov esi,edx
-;
-    mov fs:[esi].otd_resv,0
-    mov fs:[esi].otd_cbp,0
-    mov fs:[esi].otd_be,0
-    mov fs:[esi].otd_next_td,0
-    mov fs:[esi].otd_next_va,0
-    mov fs:[esi].otd_buffer_va,0
-;
-    mov ds:[di],esi
-    add di,4
-    pop cx
-    loop apTdLoop
-;
-    mov bx,ds
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_buffer_va,0
+    mov ds:op_tail_td,edx
     InitSection ds:op_section
-    mov edx,ds:op_entry_arr
+    mov bx,ds
 ;
     pop edi
     pop esi
@@ -1779,12 +1775,36 @@ StartInPipe     Proc near
     xor edi,edi
 
 sipLoop:
-    mov edx,gs:[si]
     or edi,edi
-    jz sipNext
+    jz sipFirst
 ;
+    mov edx,gs:[si]
+    or edx,edx
+    jnz sipSetup
+;
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+;
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_buffer_va,0
+    mov fs:[edi].otd_next_td,eax    
+;
+    mov gs:[si],edx
+    jmp sipNext
+
+sipSetup:
     LinearToPhysicalMemBlk
     mov fs:[edi].otd_next_td,eax
+
+sipFirst:
+    mov edx,gs:op_tail_td
+    mov gs:[si],edx
 
 sipNext:
     mov edi,edx
@@ -1812,7 +1832,8 @@ sipSave:
     mov al,gs:ued_address
     mov fs:[edi].otd_pipe,al
     add si,4
-    loop sipLoop
+    sub cx,1
+    jnz sipLoop
 ;
     mov ax,gs:op_entry_count
     dec ax
