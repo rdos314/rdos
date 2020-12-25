@@ -162,7 +162,7 @@ ep_qh              DD ?
 ep_table           DW ?
 ep_table_size      DW ?
 ep_entry           DW ?
-ep_entry_sel       DW ?
+ep_td_sel          DW ?
 
 ehci_pipe_struc    ENDS
 
@@ -2209,7 +2209,7 @@ AllocatePipe    Proc near
     mov eax,SIZE ehci_pipe_struc
     AllocateSmallGlobalMem
 ;
-    mov es:ep_entry_sel,bx
+    mov es:ep_td_sel,bx
     mov bx,es
 ;
     pop eax
@@ -2309,7 +2309,7 @@ StartInPipe     Proc near
     push ds
     pushad
 ;
-    mov ds,gs:ep_entry_sel
+    mov ds,gs:ep_td_sel
     mov si,OFFSET et_entry_arr
     mov cx,ds:et_entry_count
     dec cx
@@ -2408,7 +2408,7 @@ spIntr:
     mov fs:[edx].qh_max_packet,ax
 
 spDo:
-    mov ds,gs:ep_entry_sel
+    mov ds,gs:ep_td_sel
     mov bx,ds:et_tail_ptr
     or bx,bx
     jz spDone
@@ -2511,7 +2511,7 @@ DisablePipe   Endp
 UsedBuffers   Proc far
     push ds
 ;
-    mov ds,gs:ep_entry_sel
+    mov ds,gs:ep_td_sel
     mov cx,ds:et_wr_ptr
     sub cx,ds:et_rd_ptr
     jnc ubDone
@@ -2540,7 +2540,7 @@ FreeBuffers   Proc far
     push ax
 ;
     int 3
-    mov ds,gs:ep_entry_sel
+    mov ds,gs:ep_td_sel
     mov ax,ds:et_tail_ptr
     sub ax,ds:et_rd_ptr
     jnc fbDone
@@ -2591,7 +2591,7 @@ rqbOut:
     jmp rqbDone
 
 rqbIn:
-    mov ds,gs:ep_entry_sel
+    mov ds,gs:ep_td_sel
     mov bx,ds:et_rd_ptr
     cmp bx,ds:et_wr_ptr
     jne rqbGet
@@ -2639,7 +2639,7 @@ RelBuffer   Proc far
     mov fs,ax
     mov bp,ds:ehc_thread
 ;
-    mov ds,gs:ep_entry_sel
+    mov ds,gs:ep_td_sel
     EnterSection ds:et_section
 ;
     mov al,gs:ued_address
@@ -3691,7 +3691,7 @@ CheckIn   Proc near
     push esi
     push ebp
 ;
-    mov bx,gs:ep_entry_sel
+    mov bx,gs:ep_td_sel
     or bx,bx
     jz citDone
 ;
