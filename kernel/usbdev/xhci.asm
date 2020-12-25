@@ -2506,27 +2506,6 @@ EnablePipe   Proc far
     push edx
 ;
     int 3
-    mov cx,1000h
-    AllocateMemBlk
-    push eax
-    push ebx
-    push edx
-;
-    mov cx,2000h
-    AllocateMemBlk
-    mov esi,edx
-;
-    pop edx
-    LinearToPhysicalMemBlk
-;
-    pop ebx
-    pop eax
-    PhysicalToLinearMemBlk
-    FreePhysicalMemBlk
-;    
-    mov edx,esi
-    FreeLinearMemBlk
-
     call StopEndpoint
 ;
     pop edx
