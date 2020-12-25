@@ -187,6 +187,19 @@ dev_cc             DB ?
 
 ohci_dev_sel   ENDS
 
+ohci_td_ring    STRUC
+
+ot_section         section_typ <>
+
+ot_rd_ptr          DW ?
+ot_wr_ptr          DW ?
+ot_tail_ptr        DW ?
+ot_entry_count     DW ?
+
+ot_entry_arr       DD ?
+
+ohci_td_ring    ENDS
+
 ohci_pipe_struc    STRUC
 
 op_pipe            usb_device_pipe_struc <>
@@ -197,12 +210,7 @@ op_intr_count      DW ?
 op_intr_list       DW ?
 op_ed              DD ?
 op_tail_td         DD ?
-op_rd_ptr          DW ?
-op_wr_ptr          DW ?
-op_tail_ptr        DW ?
-op_entry_count     DW ?
-
-op_entry_arr       DD ?
+op_td_sel          DW ?
 
 ohci_pipe_struc    ENDS
 
@@ -1595,6 +1603,52 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateTdRing
+;
+;       DESCRIPTION:    Allocate TD ring
+;
+;       PARAMETERS:     FS      Flat sel
+;                       CX      Buffer count
+;
+;       RETURNS:        BX      Ring sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTdRing    Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    inc cx
+    mov esi,edi
+    movzx eax,cx
+    shl ax,2
+    add ax,OFFSET ot_entry_arr
+    AllocateSmallGlobalMem
+    mov es:ot_entry_count,cx
+;
+    mov edi,OFFSET ot_entry_arr
+    xor eax,eax
+    movzx ecx,cx
+    rep stos dword ptr es:[edi]
+;
+    InitSection es:ot_section
+    mov es:ot_rd_ptr,0
+    mov es:ot_wr_ptr,0
+    mov es:ot_tail_ptr,0
+    mov bx,es
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateTdRing    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocatePipe
 ;
 ;       DESCRIPTION:    Allocate pipe
@@ -1610,30 +1664,17 @@ ControlMsg   Endp
 AllocatePipe    Proc near
     push ds
     push eax
-    push ecx
-    push esi
-    push edi
 ;
-    inc cx
-    mov esi,edi
     push es
-    movzx eax,cx
-    shl ax,2
-    add ax,OFFSET op_entry_arr
+    mov eax,SIZE ohci_pipe_struc
     AllocateSmallGlobalMem
 ;
-    mov es:op_entry_count,cx
     mov ax,es
     mov ds,ax
     pop es
 ;
-    mov di,OFFSET op_entry_arr
-    xor eax,eax
-
-apTdLoop:
-    mov ds:[di],eax
-    add di,4
-    loop apTdLoop
+    call AllocateTdRing
+    mov ds:op_td_sel,bx
 ;
     mov cx,SIZE ohc_td_struc
     AllocateMemBlk
@@ -1644,12 +1685,8 @@ apTdLoop:
     mov fs:[edx].otd_next_va,0
     mov fs:[edx].otd_buffer_va,0
     mov ds:op_tail_td,edx
-    InitSection ds:op_section
     mov bx,ds
 ;
-    pop edi
-    pop esi
-    pop ecx
     pop eax
     pop ds
     ret
@@ -1688,9 +1725,6 @@ CreateBulkPipe   Proc far
     mov ds:op_intr_count,0
     mov ds:op_intr_list,0
     mov ds:op_ed,edx
-    mov ds:op_rd_ptr,0
-    mov ds:op_wr_ptr,0
-    mov ds:op_tail_ptr,0
     clc
 ;
     pop edx
@@ -1739,9 +1773,6 @@ CreateIntrPipe   Proc far
     mov ds:op_intr_count,si
     mov ds:op_intr_list,di
     mov ds:op_ed,edx
-    mov ds:op_rd_ptr,0
-    mov ds:op_wr_ptr,0
-    mov ds:op_tail_ptr,0
     clc
 ;
     pop edi
@@ -1768,17 +1799,19 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartInPipe     Proc near
+    push ds
     pushad
 ;
-    mov si,OFFSET op_entry_arr
-    mov cx,gs:op_entry_count
+    mov ds,gs:op_td_sel
+    mov si,OFFSET ot_entry_arr
+    mov cx,ds:ot_entry_count
     xor edi,edi
 
 sipLoop:
     or edi,edi
     jz sipFirst
 ;
-    mov edx,gs:[si]
+    mov edx,ds:[si]
     or edx,edx
     jnz sipSetup
 ;
@@ -1795,7 +1828,7 @@ sipLoop:
     mov fs:[edx].otd_buffer_va,0
     mov fs:[edi].otd_next_td,eax    
 ;
-    mov gs:[si],edx
+    mov ds:[si],edx
     jmp sipNext
 
 sipSetup:
@@ -1804,7 +1837,7 @@ sipSetup:
 
 sipFirst:
     mov edx,gs:op_tail_td
-    mov gs:[si],edx
+    mov ds:[si],edx
 
 sipNext:
     mov edi,edx
@@ -1835,9 +1868,9 @@ sipSave:
     sub cx,1
     jnz sipLoop
 ;
-    mov ax,gs:op_entry_count
+    mov ax,ds:ot_entry_count
     dec ax
-    mov gs:op_tail_ptr,ax
+    mov ds:ot_tail_ptr,ax
 ;
     mov edx,edi
     LinearToPhysicalMemBlk
@@ -1845,6 +1878,7 @@ sipSave:
     mov fs:[edx].oes_tailp,eax
 ;
     popad
+    pop ds
     ret
 StartInPipe     Endp
 
@@ -2004,13 +2038,17 @@ DisablePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UsedBuffers   Proc far
-    mov cx,gs:op_wr_ptr
-    sub cx,gs:op_rd_ptr
+    push ds
+;
+    mov ds,gs:op_td_sel
+    mov cx,ds:ot_wr_ptr
+    sub cx,ds:ot_rd_ptr
     jnc ubDone
 ;
-    add cx,gs:op_entry_count
+    add cx,ds:ot_entry_count
 
 ubDone:
+    pop ds
     retf32
 UsedBuffers   Endp
 
@@ -2029,20 +2067,24 @@ UsedBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBuffers   Proc far
+    push ds
     push ax
 ;
-    mov ax,gs:op_tail_ptr
-    sub ax,gs:op_rd_ptr
+    int 3
+    mov ds,gs:op_td_sel
+    mov ax,ds:ot_tail_ptr
+    sub ax,ds:ot_rd_ptr
     jnc fbDone
 ;
-    add ax,gs:op_entry_count
+    add ax,ds:ot_entry_count
 
 fbDone:
-    mov cx,gs:op_entry_count
+    mov cx,ds:ot_entry_count
     sub cx,ax
     dec cx
 ;
     pop ax
+    pop ds
     retf32
 FreeBuffers   Endp
 
@@ -2062,6 +2104,7 @@ FreeBuffers   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqBuffer   Proc far
+    push ds
     push fs
     push eax
     push ebx
@@ -2069,22 +2112,20 @@ ReqBuffer   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
+    mov ds,gs:op_td_sel
 ;
     mov al,gs:ued_address
     test al,80h
     jnz rqbIn
 
 rqbOut:
-    mov bx,gs:op_wr_ptr
-    cmp bx,gs:op_rd_ptr
-    jne rqbGet
-;
+    int 3
     stc
     jmp rqbDone
 
 rqbIn:
-    mov bx,gs:op_rd_ptr
-    cmp bx,gs:op_wr_ptr
+    mov bx,ds:ot_rd_ptr
+    cmp bx,ds:ot_wr_ptr
     jne rqbGet
 ;
     stc
@@ -2092,7 +2133,7 @@ rqbIn:
 
 rqbGet:
     shl bx,2
-    mov esi,gs:[bx].op_entry_arr
+    mov esi,ds:[bx].ot_entry_arr
     mov eax,fs:[esi].otd_cbp
     or eax,eax
     jnz rqbCalc
@@ -2116,6 +2157,7 @@ rqbDone:
     pop ebx
     pop eax
     pop fs
+    pop ds
     retf32
 ReqBuffer   Endp
 
@@ -2132,46 +2174,44 @@ ReqBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RelBuffer   Proc far
+    push ds
     push fs
     pushad
 ;
     mov ax,flat_sel
     mov fs,ax
+    mov ds,gs:op_td_sel
 ;
-    EnterGsSection gs:op_section
+    EnterSection ds:ot_section
 ;
     mov al,gs:ued_address
     test al,80h
     jnz rlbIn
 
 rlbOut:
-    mov bx,gs:op_wr_ptr
-    cmp bx,gs:op_rd_ptr
-    stc
-    je rlbDone
-;
     int 3
+    stc
     jmp rlbDone
 
 rlbIn:
-    mov bx,gs:op_rd_ptr
-    cmp bx,gs:op_wr_ptr
+    mov bx,ds:ot_rd_ptr
+    cmp bx,ds:ot_wr_ptr
     stc
     je rlbDone
 ;
     inc bx
-    cmp bx,gs:op_entry_count
+    cmp bx,ds:ot_entry_count
     jb rlbRdOk
 ;
     xor bx,bx
 
 rlbRdOk:
-    mov gs:op_rd_ptr,bx
+    mov ds:ot_rd_ptr,bx
 ;
-    mov bx,gs:op_tail_ptr
+    mov bx,ds:ot_tail_ptr
     mov si,bx
     shl si,2
-    mov esi,gs:[si].op_entry_arr
+    mov esi,ds:[si].ot_entry_arr
 ;
     mov fs:[esi].otd_flags,0F004h
     mov edx,fs:[esi].otd_buffer_va
@@ -2197,18 +2237,18 @@ rlbRdSave:
     mov al,gs:ued_address
     mov fs:[esi].otd_pipe,al
 ;
-    mov bx,gs:op_tail_ptr
+    mov bx,ds:ot_tail_ptr
     inc bx
-    cmp bx,gs:op_entry_count
+    cmp bx,ds:ot_entry_count
     jb rlbRdTailOk
 ;
     xor bx,bx
 
 rlbRdTailOk:
-    mov gs:op_tail_ptr,bx
+    mov ds:ot_tail_ptr,bx
 ;
     shl bx,2
-    mov edx,gs:[bx].op_entry_arr
+    mov edx,ds:[bx].ot_entry_arr
     LinearToPhysicalMemBlk
     mov fs:[esi].otd_next_td,eax
 ;
@@ -2218,10 +2258,11 @@ rlbRdTailOk:
     clc
 
 rlbDone:
-    LeaveGsSection gs:op_section
+    LeaveSection ds:ot_section
 ;
     popad
     pop fs
+    pop ds
     retf32
 RelBuffer   Endp
 
@@ -2296,6 +2337,7 @@ cc0F DW USB_EVENT_HALTED
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyIn  Proc near
+    push gs
     push ds
     push ebx
     push esi
@@ -2327,13 +2369,14 @@ niOk:
     or bx,bx
     jz niDone
 ;
-    mov ds,bx
-    EnterSection ds:op_section
+    mov gs,bx
+    mov ds,gs:op_td_sel
+    EnterSection ds:ot_section
 ;
-    mov bx,ds:op_wr_ptr
+    mov bx,ds:ot_wr_ptr
     mov si,bx
     shl si,2
-    cmp edx,ds:[si].op_entry_arr
+    cmp edx,ds:[si].ot_entry_arr
     je niAdvance
 ;
     int 3
@@ -2341,16 +2384,16 @@ niOk:
 
 niAdvance:
     inc bx
-    cmp bx,ds:op_entry_count
+    cmp bx,ds:ot_entry_count
     jb niSave
 ;
     xor bx,bx
 
 niSave:
-    mov ds:op_wr_ptr,bx    
+    mov ds:ot_wr_ptr,bx    
 ;
     xor bx,bx
-    xchg bx,ds:usbdp_wait
+    xchg bx,gs:usbdp_wait
     or bx,bx
     jz niDone
 ;
@@ -2360,11 +2403,12 @@ niSave:
     pop es
 
 niDone:
-    LeaveSection ds:op_section
+    LeaveSection ds:ot_section
 ;
     pop esi
     pop ebx
     pop ds
+    pop gs
     ret
 NotifyIn  Endp
 
