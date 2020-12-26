@@ -3015,6 +3015,39 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+fdvLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz fdvNext
+;
+    push es
+    mov es,bx
+    mov bx,es:op_td_sel
+    or bx,bx
+    jz fdvTdOk
+;
+    mov es,bx
+    FreeMem
+
+fdvTdOk:
+    pop es
+
+fdvNext:
+    add si,2
+    loop fdvLoop
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
     retf32
 FreeDev   Endp
 
