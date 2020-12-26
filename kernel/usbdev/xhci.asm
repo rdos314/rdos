@@ -274,7 +274,7 @@ xhci_dev_struc    ENDS
 
 xhci_pipe   STRUC
 
-xp_base             usb_device_pipe_struc <>
+xp_base             usb_pipe_struc <>
 
 xp_ring_linear      DD ?
 xp_ring_phys        DD ?,?

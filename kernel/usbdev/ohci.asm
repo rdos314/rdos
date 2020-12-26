@@ -202,7 +202,7 @@ ohci_td_ring    ENDS
 
 ohci_pipe_struc    STRUC
 
-op_pipe            usb_device_pipe_struc <>
+op_pipe            usb_pipe_struc <>
 
 op_section         section_typ <>
 
@@ -2411,7 +2411,7 @@ niSave:
     mov ds:ot_wr_ptr,bx    
 ;
     xor bx,bx
-    xchg bx,gs:usbdp_wait
+    xchg bx,gs:usbp_wait
     or bx,bx
     jz niDone
 ;

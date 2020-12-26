@@ -185,10 +185,15 @@ usbd_config_sel         DW 16 DUP(?)
 
 usb_device_struc  ENDS
 
-usb_device_pipe_struc    STRUC
+usb_pipe_struc    STRUC
 
-usbdp_descr        usb_endpoint_descr <>
-usbdp_flags        DB ?
-usbdp_wait         DW ?
+usbp_descr        usb_endpoint_descr <>
+usbp_flags        DB ?
+usbp_wait         DW ?
 
-usb_device_pipe_struc   ENDS
+usbp_rd_ptr       DW ?
+usbp_wr_ptr       DW ?
+usbp_buf_size     DW ?
+usbp_buf_sel      DW ?
+
+usb_pipe_struc   ENDS

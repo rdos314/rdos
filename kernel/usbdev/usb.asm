@@ -1368,11 +1368,11 @@ cpSave:
     push es
     mov es,bx
 ;
-    mov es:usbdp_wait,0
-    mov es:usbdp_flags,0
+    mov es:usbp_wait,0
+    mov es:usbp_flags,0
 ;
     mov si,di
-    mov di,OFFSET usbdp_descr
+    mov di,OFFSET usbp_descr
     mov cx,SIZE usb_endpoint_descr
     rep movs es:[di],gs:[si]
 ;
@@ -2166,7 +2166,7 @@ bwfpOut:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    mov gs:usbdp_wait,bx
+    mov gs:usbp_wait,bx
     push ds
     call fword ptr ds:free_buffers_proc
     pop ds
@@ -2184,7 +2184,7 @@ bwfpIn:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    mov gs:usbdp_wait,bx
+    mov gs:usbp_wait,bx
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:used_buffers_proc
@@ -2194,7 +2194,7 @@ bwfpIn:
 
 bwfpCheckSignal:
     xor bx,bx
-    xchg bx,gs:usbdp_wait
+    xchg bx,gs:usbp_wait
     or bx,bx
     jz bwfpLeave
 
@@ -2258,7 +2258,7 @@ swfpOut:
     jz swfpLeave
 ;
     mov gs,si
-    mov gs:usbdp_wait,0
+    mov gs:usbp_wait,0
     jmp swfpLeave
 
 swfpIn:
@@ -2271,7 +2271,7 @@ swfpIn:
     jz swfpLeave
 ;
     mov gs,si
-    mov gs:usbdp_wait,0
+    mov gs:usbp_wait,0
 
 swfpLeave:
     LeaveSection ds:udd_section
@@ -2327,7 +2327,7 @@ cwfpOut:
     jz cwfpLeave
 ;
     mov gs,si
-    mov gs:usbdp_wait,0
+    mov gs:usbp_wait,0
     jmp cwfpLeave
 
 cwfpIn:
@@ -2340,7 +2340,7 @@ cwfpIn:
     jz cwfpLeave
 ;
     mov gs,si
-    mov gs:usbdp_wait,0
+    mov gs:usbp_wait,0
 
 cwfpLeave:
     LeaveSection ds:udd_section
@@ -3726,7 +3726,7 @@ udInLoop:
     push es
     mov es,bx
     xor bx,bx
-    xchg bx,es:usbdp_wait
+    xchg bx,es:usbp_wait
     or bx,bx
     jz udInPop
 ;
@@ -3751,7 +3751,7 @@ udOutLoop:
     push es
     mov es,bx
     xor bx,bx
-    xchg bx,es:usbdp_wait
+    xchg bx,es:usbp_wait
     or bx,bx
     jz udOutPop
 ;

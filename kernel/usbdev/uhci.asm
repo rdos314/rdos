@@ -126,7 +126,7 @@ uhci_dev_sel    ENDS
 
 uhci_pipe_struc    STRUC
 
-up_pipe            usb_device_pipe_struc <>
+up_pipe            usb_pipe_struc <>
 
 up_section         section_typ <>
 
@@ -3063,7 +3063,7 @@ citReport:
 
 citSignal:
     xor bx,bx
-    xchg bx,gs:usbdp_wait
+    xchg bx,gs:usbp_wait
     or bx,bx
     jz citSignalOk
 ;

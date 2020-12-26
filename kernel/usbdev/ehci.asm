@@ -156,7 +156,7 @@ ehci_td_ring     ENDS
 
 ehci_pipe_struc    STRUC
 
-ep_pipe            usb_device_pipe_struc <>
+ep_pipe            usb_pipe_struc <>
 
 ep_qh              DD ?
 ep_table           DW ?
@@ -3764,7 +3764,7 @@ citReport:
 
 citSignal:
     xor bx,bx
-    xchg bx,gs:usbdp_wait
+    xchg bx,gs:usbp_wait
     or bx,bx
     jz citSignalOk
 ;
