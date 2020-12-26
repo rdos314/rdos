@@ -1688,10 +1688,6 @@ guubOut:
     jz guubLeave
 ;
     mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    stc
-    jz guubLeave
-;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:used_buffers_proc
@@ -1710,10 +1706,6 @@ guubIn:
     jz guubLeave
 ;
     mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    stc
-    jz guubLeave
-;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:used_buffers_proc
@@ -1784,10 +1776,6 @@ gfubOut:
     jz gfubLeave
 ;
     mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    stc
-    jz gfubLeave
-;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:free_buffers_proc
@@ -1806,10 +1794,6 @@ gfubIn:
     jz gfubLeave
 ;
     mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    stc
-    jz gfubLeave
-;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:free_buffers_proc
@@ -1968,10 +1952,6 @@ ReadPipe	Proc near
     jz rupLeave
 ;
     mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    stc
-    jz rupLeave
-;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:req_buffer_proc
@@ -2083,10 +2063,6 @@ WritePipe	Proc near
     jz wupLeave
 ;
     mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    stc
-    jz wupLeave
-;
     push ds
     push cx
     mov ds,es:usbd_func_sel
@@ -2190,9 +2166,6 @@ bwfpOut:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    jz bwfpLeaveSignal
-;
     mov gs:usbdp_wait,bx
     push ds
     call fword ptr ds:free_buffers_proc
@@ -2211,9 +2184,6 @@ bwfpIn:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    jz bwfpLeaveSignal
-;
     mov gs:usbdp_wait,bx
     push ds
     mov ds,es:usbd_func_sel

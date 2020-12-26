@@ -40,6 +40,10 @@ INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
 
+PID_IN = 69h
+PID_OUT = 0E1h
+PID_SETUP = 2Dh
+
 UsbCommandReg = 0
 UsbStatusReg = 2
 UsbIntReg = 4

@@ -30,22 +30,6 @@ MAX_USB_HUB_PORTS = 32
 FLAG_DETACHED     = 1
 FLAG_ATTACHED     = 2
 
-PID_IN = 69h
-PID_OUT = 0E1h
-PID_SETUP = 2Dh
-
-MODE_CONTROL = 1
-MODE_ISO = 2
-MODE_INTR = 3
-MODE_BULK = 4
-
-DIR_IN = 80h
-DIR_OUT = 0
-
-USBF_XHCI   = 1
-
-USB_PIPE_FLAG_ENABLED = 1
-
 usb_function_struc   STRUC
 
 lock_proc                  DD ?,?
