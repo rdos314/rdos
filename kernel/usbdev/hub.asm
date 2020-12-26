@@ -1343,7 +1343,7 @@ CreateHub  Proc near
     mov bx,ds:hub_device_handle
     mov dl,ds:hub_intr
     mov cx,8
-    ConfigUsbPipe
+    ConfigUsbPacketPipe
 ;
     CreateWait
     mov ds:hub_wait_handle,bx
@@ -1352,10 +1352,6 @@ CreateHub  Proc near
     mov dl,ds:hub_intr
     mov ecx,ds
     AddWaitForUsbDevicePipe
-;
-    mov bx,ds:hub_device_handle
-    mov dl,ds:hub_intr
-    EnableUsbPipe
 ;
     popad
     pop es
@@ -1378,7 +1374,7 @@ CloseHub  Proc near
 ;
     mov bx,ds:hub_device_handle
     mov dl,ds:hub_intr
-    DisableUsbPipe
+    StopUsbPipe
 ;
     mov bx,ds:hub_wait_handle
     CloseWait

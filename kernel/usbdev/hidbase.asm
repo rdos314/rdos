@@ -1084,7 +1084,7 @@ OpenIntrPipe_ Proc near
     mov cx,ax
     mov bx,fs:hid_device_handle
     mov dl,fs:hid_intr_in
-    ConfigUsbPipe
+    ConfigUsbPacketPipe
 ;
     CreateWait
     mov fs:hid_intr_wait,bx
@@ -1093,10 +1093,6 @@ OpenIntrPipe_ Proc near
     mov dl,fs:hid_intr_in
     mov ecx,fs
     AddWaitForUsbDevicePipe
-;
-    mov bx,fs:hid_device_handle
-    mov dl,fs:hid_intr_in
-    EnableUsbPipe
 ;
     movzx eax,fs:hid_intr_size
     add eax,10h

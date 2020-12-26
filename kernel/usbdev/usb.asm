@@ -1257,80 +1257,114 @@ send_usb_dev_control_msg32    Proc far
     retf32
 send_usb_dev_control_msg32      Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigUsbPipe
+;       NAME:           GetPipe
 ;
-;       description:    Configure USB pipe
+;       description:    Get pipe selector
 ;
-;       parameters:     BX        Handle
+;       parameters:     DS        Function
+;                       ES        Device
 ;                       DL        Pipe #
-;                       CX        Buffer entries
+;
+;       RETURNS:        GS        Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-config_usb_pipe_name DB 'Configure Usb Pipe', 0
+GetPipe	Proc near
+    push bx
+    push si
+;
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+;
+    test dl,80h
+    jz gpOut
 
-config_usb_pipe	Proc far
-    push ds
-    push es
-    push gs
+gpIn:
+    mov bx,es:[si].usbd_in_pipe_arr
+    jmp gpFound
+
+gpOut:
+    mov bx,es:[si].usbd_out_pipe_arr
+
+gpFound:
+    or bx,bx
+    stc
+    jz gpDone
+;
+    mov gs,bx
+    clc
+
+gpDone:
+    pop si
+    pop bx
+    ret
+GetPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigPipe
+;
+;       description:    Configure pipe
+;
+;       parameters:     DS        Function
+;                       ES        Device
+;                       DL        Pipe #
+;
+;       RETURNS:        GS        Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigPipe	Proc near
     pushad
 ;
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc cdpDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    stc
-    jnz cdpLeaveFail
-;
-    mov es,ds:udd_sel    
+    mov cx,15   ; remove later !!!
+
     mov ax,es:usbd_curr_config
     or ax,ax
-    jz cdpLeaveFail
+    jz cpFail
 ;
     mov gs,ax
     xor edi,edi
     movzx bx,gs:ucd_len
     add di,bx
 
-cdpDescrLoop:
+cpDescrLoop:
     mov al,gs:[di].udd_type
     cmp al,5
-    jne cdpNextDescr
+    jne cpNextDescr
 ;
     cmp dl,gs:[di].ued_address
-    jne cdpNextDescr
+    jne cpNextDescr
 ;
     mov al,gs:[di].ued_attrib
     and al,3
     cmp al,2
-    je cdpBulk
+    je cpBulk
 ;
     cmp al,3
-    jne cdpLeaveFail
+    jne cpFail
 
-cdpIntr:
+cpIntr:
     mov dh,gs:[di].ued_interval
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:create_intr_pipe_proc
     pop ds
-    jmp cdpSave
+    jmp cpSave
 
-cdpBulk:
+cpBulk:
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:create_bulk_pipe_proc
     pop ds
 
-cdpSave:
+cpSave:
     push es
     mov es,bx
 ;
@@ -1350,56 +1384,222 @@ cdpSave:
     add si,si
 ;
     test dl,80h
-    jz cdpOut
+    jz cpOut
 
-cdpIn:
+cpIn:
     mov es:[si].usbd_in_pipe_arr,bx
-    jmp cdpLeave
+    jmp cpOk
 
-cdpOut:
+cpOut:
     mov es:[si].usbd_out_pipe_arr,bx
 
-cdpLeave:
+cpOk:
+    mov gs,bx
     clc
-    LeaveSection ds:udd_section
-    jmp cdpDone
+    jmp cpDone
 
-cdpNextDescr:
+cpNextDescr:
     movzx bx,gs:[di].ucd_len
     or bx,bx
-    jz cdpLeaveFail
+    jz cpFail
 ;
     add di,bx
     cmp di,gs:ucd_size
-    jb cdpDescrLoop    
+    jb cpDescrLoop    
 
-cdpLeaveFail:
+cpFail:
+    xor ax,ax
+    mov gs,ax
+    stc
+    jmp cpDone
+
+cpDone:
+    popad
+    ret
+ConfigPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigUsbPacketPipe
+;
+;       description:    Configure USB packet pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       CX        Buffered packets
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_usb_packet_pipe_name DB 'Configure Usb Packet Pipe', 0
+
+config_usb_packet_pipe	Proc far
+    push ds
+    push es
+    push gs
+    pushad
+;
+    int 3
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc cuppDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    jnz cuppLeaveFail
+;
+    mov es,ds:udd_sel    
+    call GetPipe
+    jnc cuppSetup
+;
+    call ConfigPipe
+    jc cuppLeaveFail
+
+cuppSetup:
+    LeaveSection ds:udd_section
+    clc
+    jmp cuppDone
+
+cuppLeaveFail:
     LeaveSection ds:udd_section
     stc
 
-cdpDone:
+cuppDone:
     popad
     pop gs
     pop es
     pop ds    
     retf32
-config_usb_pipe Endp
+config_usb_packet_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           EnableUsbPipe
+;       NAME:           ConfigUsbStreamPipe
 ;
-;       description:    Enable USB pipe
+;       description:    Configure USB stream pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       CX        Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_usb_stream_pipe_name DB 'Configure Usb Stream Pipe', 0
+
+config_usb_stream_pipe	Proc far
+    push ds
+    push es
+    push gs
+    pushad
+;
+    int 3
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc cuspDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    jnz cuspLeaveFail
+;
+    mov es,ds:udd_sel    
+    call GetPipe
+    jnc cuspSetup
+;
+    call ConfigPipe
+    jc cuspLeaveFail
+
+cuspSetup:
+    LeaveSection ds:udd_section
+    clc
+    jmp cuspDone
+
+cuspLeaveFail:
+    LeaveSection ds:udd_section
+    stc
+
+cuspDone:
+    popad
+    pop gs
+    pop es
+    pop ds    
+    retf32
+config_usb_stream_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConfigUsbRawPipe
+;
+;       description:    Configure USB raw pipe
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_usb_pipe_name DB 'Enable Usb Pipe', 0
+config_usb_raw_pipe_name DB 'Configure Usb Raw Pipe', 0
 
-enable_usb_pipe	Proc far
+config_usb_raw_pipe	Proc far
+    push ds
+    push es
+    push gs
+    pushad
+;
+    int 3
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc curpDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    jnz curpLeaveFail
+;
+    mov es,ds:udd_sel    
+    call GetPipe
+    jnc curpSetup
+;
+    call ConfigPipe
+    jc curpLeaveFail
+
+curpSetup:
+    LeaveSection ds:udd_section
+    clc
+    jmp curpDone
+
+curpLeaveFail:
+    LeaveSection ds:udd_section
+    stc
+
+curpDone:
+    popad
+    pop gs
+    pop es
+    pop ds    
+    retf32
+config_usb_raw_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopUsbPipe
+;
+;       description:    Stop USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_usb_pipe_name DB 'Stop Usb Pipe', 0
+
+stop_usb_pipe	Proc far
     push ds
     push es
     push gs
@@ -1409,67 +1609,25 @@ enable_usb_pipe	Proc far
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
-    jc edpDone
+    jc supDone
 ;
     mov ds,ds:[ebx].udh_dev_sel
     EnterSection ds:udd_section
     mov al,ds:udd_deleted
     or al,al
     stc
-    jnz edpLeave
+    jnz supLeave
 ;
     mov es,ds:udd_sel    
+    call GetPipe
+    jc supLeave
 ;
-    test dl,80h
-    jnz edpIn
+    int 3
 
-edpOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz edpLeave
-;
-    mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jnz edpDone
-;
-    lock or gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:enable_pipe_proc
-    pop ds
-    jmp edpLeave
-
-edpIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_in_pipe_arr
-    or bx,bx
-    stc
-    jz edpLeave
-;
-    mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jnz edpLeave
-;
-    lock or gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:enable_pipe_proc
-    pop ds
-
-edpLeave:
+supLeave:
     LeaveSection ds:udd_section
 
-edpDone:
+supDone:
     pop esi
     pop ebx
     pop eax
@@ -1477,101 +1635,7 @@ edpDone:
     pop es
     pop ds    
     retf32
-enable_usb_pipe Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           DisableUsbPipe
-;
-;       description:    Disable USB pipe
-;
-;       parameters:     BX        Handle
-;                       DL        Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disable_usb_pipe_name DB 'Disable Usb Pipe', 0
-
-disable_usb_pipe	Proc far
-    push ds
-    push es
-    push gs
-    push eax
-    push ebx
-    push esi
-;
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc ddpDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    stc
-    jnz ddpLeave
-;
-    mov es,ds:udd_sel    
-;
-    test dl,80h
-    jnz ddpIn
-
-ddpOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz ddpLeave
-;
-    mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jz ddpLeave
-;
-    lock and gs:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:disable_pipe_proc
-    pop ds
-    jmp ddpLeave
-
-ddpIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_in_pipe_arr
-    or bx,bx
-    stc
-    jz ddpLeave
-;
-    mov gs,bx
-    test gs:usbdp_flags,USB_PIPE_FLAG_ENABLED
-    clc
-    jz ddpLeave
-;
-    lock and gs:usbdp_flags,NOT USB_PIPE_FLAG_ENABLED
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:disable_pipe_proc
-    pop ds
-
-ddpLeave:
-    LeaveSection ds:udd_section
-
-ddpDone:
-    pop esi
-    pop ebx
-    pop eax
-    pop gs
-    pop es
-    pop ds    
-    retf32
-disable_usb_pipe Endp
+stop_usb_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4404,22 +4468,28 @@ init    Proc far
     mov ax,send_usb_dev_control_msg_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET config_usb_pipe
-    mov edi,OFFSET config_usb_pipe_name
+    mov esi,OFFSET config_usb_packet_pipe
+    mov edi,OFFSET config_usb_packet_pipe_name
     xor dx,dx
-    mov ax,config_usb_pipe_nr
+    mov ax,config_usb_packet_pipe_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET enable_usb_pipe
-    mov edi,OFFSET enable_usb_pipe_name
+    mov esi,OFFSET config_usb_stream_pipe
+    mov edi,OFFSET config_usb_stream_pipe_name
     xor dx,dx
-    mov ax,enable_usb_pipe_nr
+    mov ax,config_usb_stream_pipe_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET disable_usb_pipe
-    mov edi,OFFSET disable_usb_pipe_name
+    mov esi,OFFSET config_usb_raw_pipe
+    mov edi,OFFSET config_usb_raw_pipe_name
     xor dx,dx
-    mov ax,disable_usb_pipe_nr
+    mov ax,config_usb_raw_pipe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET stop_usb_pipe
+    mov edi,OFFSET stop_usb_pipe_name
+    xor dx,dx
+    mov ax,stop_usb_pipe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_dev_pipe

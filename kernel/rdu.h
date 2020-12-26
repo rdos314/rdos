@@ -920,9 +920,6 @@
 #define usergate_get_hid_device 0x000002EB
 
 #define usergate_reset_usb_dev 0x000002EC
-#define usergate_config_usb_pipe 0x000002ED
-#define usergate_enable_usb_pipe 0x000002EE
-#define usergate_disable_usb_pipe 0x000002EF
 #define usergate_add_wait_for_usb_dev_pipe 0x000002F0
 #define usergate_get_used_usb_buffers 0x000002F1
 #define usergate_get_free_usb_buffers 0x000002F2
@@ -937,6 +934,11 @@
 
 #define usergate_get_usb_address 0x000002FA
 #define usergate_is_usb_dev_connected 0x000002FB
+
+#define usergate_config_usb_packet_pipe 0x000002FC
+#define usergate_config_usb_stream_pipe 0x000002FD
+#define usergate_config_usb_raw_pipe 0x000002FE
+#define usergate_stop_usb_pipe 0x000002FF
 
 
 
@@ -1863,9 +1865,6 @@
 #define CallGate_get_hid_device 0x55 0x67 0x9a 235 2 0 0 3 0 0x5d
 
 #define CallGate_reset_usb_dev 0x55 0x67 0x9a 236 2 0 0 3 0 0x5d
-#define CallGate_config_usb_pipe 0x55 0x67 0x9a 237 2 0 0 3 0 0x5d
-#define CallGate_enable_usb_pipe 0x55 0x67 0x9a 238 2 0 0 3 0 0x5d
-#define CallGate_disable_usb_pipe 0x55 0x67 0x9a 239 2 0 0 3 0 0x5d
 #define CallGate_add_wait_for_usb_dev_pipe 0x55 0x67 0x9a 240 2 0 0 3 0 0x5d
 #define CallGate_get_used_usb_buffers 0x55 0x67 0x9a 241 2 0 0 3 0 0x5d
 #define CallGate_get_free_usb_buffers 0x55 0x67 0x9a 242 2 0 0 3 0 0x5d
@@ -1880,6 +1879,11 @@
 
 #define CallGate_get_usb_address 0x55 0x67 0x9a 250 2 0 0 3 0 0x5d
 #define CallGate_is_usb_dev_connected 0x55 0x67 0x9a 251 2 0 0 3 0 0x5d
+
+#define CallGate_config_usb_packet_pipe 0x55 0x67 0x9a 252 2 0 0 3 0 0x5d
+#define CallGate_config_usb_stream_pipe 0x55 0x67 0x9a 253 2 0 0 3 0 0x5d
+#define CallGate_config_usb_raw_pipe 0x55 0x67 0x9a 254 2 0 0 3 0 0x5d
+#define CallGate_stop_usb_pipe 0x55 0x67 0x9a 255 2 0 0 3 0 0x5d
 
 #else
 
@@ -2804,9 +2808,6 @@
 #define CallGate_get_hid_device 0x3e 0x67 0x9a 235 2 0 0 3 0
 
 #define CallGate_reset_usb_dev 0x3e 0x67 0x9a 236 2 0 0 3 0
-#define CallGate_config_usb_pipe 0x3e 0x67 0x9a 237 2 0 0 3 0
-#define CallGate_enable_usb_pipe 0x3e 0x67 0x9a 238 2 0 0 3 0
-#define CallGate_disable_usb_pipe 0x3e 0x67 0x9a 239 2 0 0 3 0
 #define CallGate_add_wait_for_usb_dev_pipe 0x3e 0x67 0x9a 240 2 0 0 3 0
 #define CallGate_get_used_usb_buffers 0x3e 0x67 0x9a 241 2 0 0 3 0
 #define CallGate_get_free_usb_buffers 0x3e 0x67 0x9a 242 2 0 0 3 0
@@ -2821,5 +2822,10 @@
 
 #define CallGate_get_usb_address 0x3e 0x67 0x9a 250 2 0 0 3 0
 #define CallGate_is_usb_dev_connected 0x3e 0x67 0x9a 251 2 0 0 3 0
+
+#define CallGate_config_usb_packet_pipe 0x3e 0x67 0x9a 252 2 0 0 3 0
+#define CallGate_config_usb_stream_pipe 0x3e 0x67 0x9a 253 2 0 0 3 0
+#define CallGate_config_usb_raw_pipe 0x3e 0x67 0x9a 254 2 0 0 3 0
+#define CallGate_stop_usb_pipe 0x3e 0x67 0x9a 255 2 0 0 3 0
 
 #endif

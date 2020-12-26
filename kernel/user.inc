@@ -3632,22 +3632,29 @@ SendUsbDeviceControlMsg      MACRO
                                                 ENDM
 
 ;   IN  BX          Device handle
-;   IN  CX          Buffer entries
 ;   IN  DL          Pipe #
-ConfigUsbPipe      MACRO
-        UserGate config_usb_pipe_nr
+;   IN  CX          Buffered packet count
+ConfigUsbPacketPipe      MACRO
+        UserGate config_usb_packet_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
-EnableUsbPipe      MACRO
-        UserGate enable_usb_pipe_nr
+;   IN  CX          Buffer size
+ConfigUsbStreamPipe      MACRO
+        UserGate config_usb_stream_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
-DisableUsbPipe      MACRO
-        UserGate disable_usb_pipe_nr
+ConfigUsbRawPipe      MACRO
+        UserGate config_usb_raw_pipe_nr
+                                                ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+StopUsbPipe      MACRO
+        UserGate stop_usb_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle
