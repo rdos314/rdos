@@ -1785,9 +1785,9 @@ AllocateTdRing    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartInPipe
+;       NAME:           StartPipeBuffer
 ;
-;       DESCRIPTION:    Start input pipe
+;       DESCRIPTION:    Start pipe buffering
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -1796,7 +1796,7 @@ AllocateTdRing    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartInPipe     Proc near
+StartPipeBuffer     Proc near
     push ds
     pushad
 ;
@@ -1805,13 +1805,13 @@ StartInPipe     Proc near
     mov cx,ds:ot_entry_count
     xor edi,edi
 
-sipLoop:
+spbLoop:
     or edi,edi
-    jz sipFirst
+    jz spbFirst
 ;
     mov edx,ds:[si]
     or edx,edx
-    jnz sipSetup
+    jnz spbSetup
 ;
     push cx
     mov cx,SIZE ohc_td_struc
@@ -1827,34 +1827,34 @@ sipLoop:
     mov fs:[edi].otd_next_td,eax    
 ;
     mov ds:[si],edx
-    jmp sipNext
+    jmp spbNext
 
-sipSetup:
+spbSetup:
     LinearToPhysicalMemBlk
     mov fs:[edi].otd_next_td,eax
 
-sipFirst:
+spbFirst:
     mov edx,gs:op_tail_td
     mov ds:[si],edx
 
-sipNext:
+spbNext:
     mov edi,edx
     mov fs:[edi].otd_flags,0F004h
     mov edx,fs:[edi].otd_buffer_va
     or edx,edx
-    jnz sipConv
+    jnz spbConv
 ;
     push cx
     mov cx,gs:ued_maxsize
     AllocateMemBlk
     mov fs:[edi].otd_buffer_va,edx
     pop cx
-    jmp sipSave
+    jmp spbSave
 
-sipConv:
+spbConv:
     LinearToPhysicalMemBlk
 
-sipSave:
+spbSave:
     mov fs:[edi].otd_cbp,eax
     movzx ebx,gs:ued_maxsize
     add eax,ebx
@@ -1864,7 +1864,7 @@ sipSave:
     mov fs:[edi].otd_pipe,al
     add si,4
     sub cx,1
-    jnz sipLoop
+    jnz spbLoop
 ;
     mov ax,ds:ot_entry_count
     dec ax
@@ -1889,18 +1889,49 @@ sipSave:
     or al,dh
 ;    
     cmp es:usbd_speed,0
-    jnz spSpeedOk
+    jnz spbSpeedOk
 ;
     or ah,20h
 
-spSpeedOk:    
+spbSpeedOk:    
     or ah,10h
     mov fs:[esi].oes_fa_en,ax
 ;
     popad
     pop ds
     ret
-StartInPipe     Endp
+StartPipeBuffer     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SignalStart
+;
+;       DESCRIPTION:    Signal start
+;
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalStart Proc near
+    push eax
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,2
+    jne ssDone
+;
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,4
+    mov ds:HcCommandStatus,eax
+
+ssDone:
+    pop eax
+    ret
+SignalStart Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1926,21 +1957,10 @@ SetupPipeBuffer   Proc far
     call AllocateTdRing
     mov gs:op_td_sel,bx
 ;
-    call StartInPipe
-;
-    mov al,gs:ued_attrib
-    and al,3
-    cmp al,2
+    call StartPipeBuffer
+    call SignalStart
     clc
-    jne epDone
 ;
-    mov ds,ds:ohc_reg_sel
-    mov eax,ds:HcCommandStatus
-    or al,4
-    mov ds:HcCommandStatus,eax
-    clc
-
-epDone:
     popad
     pop fs
     pop ds
