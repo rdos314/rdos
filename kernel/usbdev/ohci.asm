@@ -1603,52 +1603,6 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateTdRing
-;
-;       DESCRIPTION:    Allocate TD ring
-;
-;       PARAMETERS:     FS      Flat sel
-;                       CX      Buffer count
-;
-;       RETURNS:        BX      Ring sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateTdRing    Proc near
-    push es
-    push eax
-    push ecx
-    push edi
-;
-    inc cx
-    mov esi,edi
-    movzx eax,cx
-    shl ax,2
-    add ax,OFFSET ot_entry_arr
-    AllocateSmallGlobalMem
-    mov es:ot_entry_count,cx
-;
-    mov edi,OFFSET ot_entry_arr
-    xor eax,eax
-    movzx ecx,cx
-    rep stos dword ptr es:[edi]
-;
-    InitSection es:ot_section
-    mov es:ot_rd_ptr,0
-    mov es:ot_wr_ptr,0
-    mov es:ot_tail_ptr,0
-    mov bx,es
-;
-    pop edi
-    pop ecx
-    pop eax
-    pop es
-    ret
-AllocateTdRing    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AllocatePipe
 ;
 ;       DESCRIPTION:    Allocate pipe
@@ -1781,6 +1735,52 @@ CreateIntrPipe   Proc far
     pop ds
     retf32
 CreateIntrPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateTdRing
+;
+;       DESCRIPTION:    Allocate TD ring
+;
+;       PARAMETERS:     FS      Flat sel
+;                       CX      Buffer count
+;
+;       RETURNS:        BX      Ring sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTdRing    Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    inc cx
+    mov esi,edi
+    movzx eax,cx
+    shl ax,2
+    add ax,OFFSET ot_entry_arr
+    AllocateSmallGlobalMem
+    mov es:ot_entry_count,cx
+;
+    mov edi,OFFSET ot_entry_arr
+    xor eax,eax
+    movzx ecx,cx
+    rep stos dword ptr es:[edi]
+;
+    InitSection es:ot_section
+    mov es:ot_rd_ptr,0
+    mov es:ot_wr_ptr,0
+    mov es:ot_tail_ptr,0
+    mov bx,es
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateTdRing    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1960,16 +1960,6 @@ SetupPipeBuffer   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    mov dl,gs:ued_address
-    test dl,80h
-    jnz epIn
-
-epOut:
-    call StartPipe
-    clc
-    jmp epDone
-
-epIn:
     call AllocateTdRing
     mov gs:op_td_sel,bx
 ;
