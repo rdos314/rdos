@@ -1875,31 +1875,6 @@ sipSave:
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax
 ;
-    popad
-    pop ds
-    ret
-StartInPipe     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartPipe
-;
-;       DESCRIPTION:    Start pipe
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device selector
-;                       FS      Flat sel
-;                       GS      Pipe selector
-;                       
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartPipe  Proc near
-    push eax
-    push edx
-    push esi
-;
     mov esi,gs:op_ed
     mov ax,gs:ued_maxsize
     mov fs:[esi].oes_mps,ax
@@ -1919,25 +1894,13 @@ StartPipe  Proc near
     or ah,20h
 
 spSpeedOk:    
-    test dl,80h
-    jz spOut
-
-spIn:
     or ah,10h
-    jmp spSave
-
-spOut:
-    or ah,8
-
-spSave:
     mov fs:[esi].oes_fa_en,ax
-
-spDone:
-    pop esi
-    pop edx
-    pop eax
+;
+    popad
+    pop ds
     ret
-StartPipe  Endp
+StartInPipe     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1964,7 +1927,6 @@ SetupPipeBuffer   Proc far
     mov gs:op_td_sel,bx
 ;
     call StartInPipe
-    call StartPipe
 ;
     mov al,gs:ued_attrib
     and al,3
