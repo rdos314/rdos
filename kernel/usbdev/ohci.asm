@@ -1739,6 +1739,74 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SignalStart
+;
+;       DESCRIPTION:    Signal start
+;
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalStart Proc near
+    push eax
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,2
+    jne ssDone
+;
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,4
+    mov ds:HcCommandStatus,eax
+
+ssDone:
+    pop eax
+    ret
+SignalStart Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopTdRing
+;
+;       DESCRIPTION:    Stop TD ring
+;
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopTdRing Proc near
+    push fs
+    push eax
+    push ebx
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,gs:op_ed
+    mov fs:[edx].oes_fa_en,4000h
+    mov eax,fs:[edx].oes_tailp
+    mov fs:[edx].oes_headp,eax
+;
+    xor ebx,ebx
+    PhysicalToLinearMemBlk
+    mov gs:op_tail_td,edx
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    ret
+StopTdRing Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateTdRing
 ;
 ;       DESCRIPTION:    Allocate TD ring
@@ -1782,6 +1850,146 @@ AllocateTdRing    Proc near
     ret
 AllocateTdRing    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeTdRing
+;
+;       DESCRIPTION:    Free TDs in buffer ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeTdRing     Proc near
+    push ds
+    pushad
+;
+    mov ebp,gs:op_tail_td
+    mov ds,gs:op_td_sel
+    mov si,OFFSET ot_entry_arr
+    mov cx,ds:ot_entry_count
+    xor edi,edi
+
+ftdLoop:
+    mov edx,ds:[si]
+    or edx,edx
+    jz ftdNext
+;
+    cmp edx,ebp
+    jz ftdNext
+;
+    mov edi,edx
+    mov edx,fs:[edi].otd_buffer_va
+    or edx,edx
+    jz ftdBufFree
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    FreeLinearMemBlk
+    pop cx
+
+ftdBufFree:
+    mov edx,edi
+    push cx
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    pop cx
+
+ftdNext:
+    add si,4
+    sub cx,1
+    jnz ftdLoop
+;
+    popad
+    pop ds
+    ret
+FreeTdRing  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RecreateTdRing
+;
+;       DESCRIPTION:    Recreate TD ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RecreateTdRing Proc near
+    push ax
+    push bx
+;
+    xor bx,bx
+    xchg bx,gs:op_td_sel
+    or bx,bx
+    jz rtdCreate
+;
+    call StopTdRing
+    mov ax,5
+    WaitMilliSec
+    call FreeTdRing    
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+rtdCreate: 
+    call AllocateTdRing
+    mov gs:op_td_sel,bx
+;
+    pop bx
+    pop ax
+    ret
+RecreateTdRing Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DeleteTdRing
+;
+;       DESCRIPTION:    Delete TD ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteTdRing Proc near
+    push ax
+    push bx
+;
+    xor bx,bx
+    xchg bx,gs:op_td_sel
+    or bx,bx
+    jz dtdDone
+;
+    call StopTdRing
+    mov ax,5
+    WaitMilliSec
+    call FreeTdRing    
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+dtdDone:
+    pop bx
+    pop ax
+    ret
+DeleteTdRing Endp
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1905,37 +2113,6 @@ StartPipeBuffer     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SignalStart
-;
-;       DESCRIPTION:    Signal start
-;
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SignalStart Proc near
-    push eax
-;
-    mov al,gs:ued_attrib
-    and al,3
-    cmp al,2
-    jne ssDone
-;
-    mov ds,ds:ohc_reg_sel
-    mov eax,ds:HcCommandStatus
-    or al,4
-    mov ds:HcCommandStatus,eax
-
-ssDone:
-    pop eax
-    ret
-SignalStart Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           SetupPipeBuffer
 ;
 ;       DESCRIPTION:    Setup pipe buffer
@@ -1949,19 +2126,17 @@ SignalStart Endp
 SetupPipeBuffer   Proc far
     push ds
     push fs
-    pushad
+    push ax
 ;
     mov ax,flat_sel
     mov fs,ax
 ;
-    call AllocateTdRing
-    mov gs:op_td_sel,bx
-;
+    call RecreateTdRing
     call StartPipeBuffer
     call SignalStart
     clc
 ;
-    popad
+    pop ax
     pop fs
     pop ds
     retf32
@@ -1980,7 +2155,17 @@ SetupPipeBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearPipeBuffer   Proc far
-    int 3
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call DeleteTdRing
+;
+    pop ax
+    pop fs
+    pop ds
     retf32
 ClearPipeBuffer   Endp
 
@@ -1997,20 +2182,17 @@ ClearPipeBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StopPipe   Proc far
+    push ds
     push fs
-    push eax
-    push edx
+    push ax
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov edx,gs:op_ed
-    mov fs:[edx].oes_fa_en,4000h
-    mov eax,fs:[edx].oes_tailp
-    mov fs:[edx].oes_headp,eax
+    call StopTdRing
 ;
-    pop edx
-    pop eax
+    pop ax
     pop fs
+    pop ds
     retf32
 StopPipe   Endp
 
