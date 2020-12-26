@@ -2289,9 +2289,9 @@ AllocateTdRing	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartInPipe
+;       NAME:           StartPipeBuffer
 ;
-;       DESCRIPTION:    Start input pipe
+;       DESCRIPTION:    Start pipe buffer
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -2300,7 +2300,7 @@ AllocateTdRing	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartInPipe     Proc near
+StartPipeBuffer     Proc near
     push ds
     pushad
 ;
@@ -2350,32 +2350,6 @@ sipSave:
     dec ax
     mov ds:et_tail_ptr,ax
 ;
-    popad
-    pop ds
-    ret
-StartInPipe     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartPipe
-;
-;       DESCRIPTION:    Start pipe
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device selector
-;                       FS      Flat sel
-;                       GS      Pipe selector
-;                       
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartPipe  Proc near
-    push ds
-    push eax
-    push ebx
-    push edx
-;
     mov edx,gs:ep_qh
     mov al,es:usbd_address
     mov fs:[edx].qh_adress,al
@@ -2385,7 +2359,6 @@ StartPipe  Proc near
     and ah,0B0h
     or al,ah
     mov fs:[edx].qh_endpoint,al
-
 ;
     mov al,gs:ued_attrib
     and al,3
@@ -2414,12 +2387,10 @@ spDo:
     mov fs:[edx].qh_next_qtd,eax
 
 spDone:
-    pop edx
-    pop ebx
-    pop eax
+    popad
     pop ds
     ret
-StartPipe  Endp
+StartPipeBuffer     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2445,8 +2416,7 @@ SetupPipeBuffer   Proc far
     call AllocateTdRing
     mov gs:ep_td_sel,bx
 ;
-    call StartInPipe
-    call StartPipe
+    call StartPipeBuffer
     clc
 ;
     popad
