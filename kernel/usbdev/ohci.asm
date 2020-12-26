@@ -1673,9 +1673,6 @@ AllocatePipe    Proc near
     mov ds,ax
     pop es
 ;
-    call AllocateTdRing
-    mov ds:op_td_sel,bx
-;
     mov cx,SIZE ohc_td_struc
     AllocateMemBlk
     mov fs:[edx].otd_resv,0
@@ -1685,6 +1682,7 @@ AllocatePipe    Proc near
     mov fs:[edx].otd_next_va,0
     mov fs:[edx].otd_buffer_va,0
     mov ds:op_tail_td,edx
+    mov ds:op_td_sel,0
     mov bx,ds
 ;
     pop eax
@@ -1972,6 +1970,9 @@ epOut:
     jmp epDone
 
 epIn:
+    call AllocateTdRing
+    mov gs:op_td_sel,bx
+;
     call StartInPipe
     call StartPipe
 ;
