@@ -658,6 +658,40 @@ AllocateQtd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreeQtd
+;
+;       DESCRIPTION:    Free qTD
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeQtd     PROC near
+    push ecx
+;
+    test ds:ehc_hcc_flags,HCC_64
+    jz fqt32
+
+fqt64:
+    mov cx,SIZE qtd64_struc
+    FreeLinearMemBlk
+    jmp fqtDone
+
+fqt32:    
+    mov cx,SIZE qtd32_struc
+    FreeLinearMemBlk
+
+fqtDone:
+    pop ecx
+    ret
+FreeQtd  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddAsyncQh
 ;
 ;       DESCRIPTION:    Add async qh
@@ -2230,6 +2264,36 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StopTdRing
+;
+;       DESCRIPTION:    Stop TD ring
+;
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopTdRing Proc near
+    push fs
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,gs:ep_qh
+    mov fs:[edx].qh_next_qtd,1
+    mov fs:[edx].qh_status,0
+;
+    pop edx
+    pop eax
+    pop fs
+    ret
+StopTdRing Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateTdRing
 ;
 ;       DESCRIPTION:    Allocate TD ring
@@ -2285,6 +2349,135 @@ atdrLoop:
     pop gs
     ret
 AllocateTdRing	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeTdRing
+;
+;       DESCRIPTION:    Free TDs in ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeTdRing Proc near
+    push ds
+    pushad
+;
+    mov ds,gs:ep_td_sel
+    mov si,OFFSET et_entry_arr
+    mov cx,ds:et_entry_count
+
+ftdLoop:
+    mov edx,ds:[si]
+    or edx,edx
+    jz ftdBuf
+;
+    call FreeQtd
+
+ftdBuf:
+    mov edx,ds:[si+4]
+    or edx,edx
+    jz ftdNext
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    FreeLinearMemBlk
+    pop cx
+
+ftdNext:
+    add si,8
+    loop ftdLoop
+;
+    popad
+    pop ds
+    ret
+FreeTdRing Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RecreateTdRing
+;
+;       DESCRIPTION:    Recreate TD ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RecreateTdRing Proc near
+    push ax
+    push bx
+;
+    xor bx,bx
+    xchg bx,gs:ep_td_sel
+    or bx,bx
+    jz rtdCreate
+;
+    call StopTdRing
+    mov ax,5
+    WaitMilliSec
+    call FreeTdRing    
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+rtdCreate: 
+    call AllocateTdRing
+    mov gs:ep_td_sel,bx
+;
+    pop bx
+    pop ax
+    ret
+RecreateTdRing Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DeleteTdRing
+;
+;       DESCRIPTION:    Delete TD ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteTdRing Proc near
+    push ax
+    push bx
+;
+    xor bx,bx
+    xchg bx,gs:ep_td_sel
+    or bx,bx
+    jz dtdDone
+;
+    call StopTdRing
+    mov ax,5
+    WaitMilliSec
+    call FreeTdRing    
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+dtdDone:
+    pop bx
+    pop ax
+    ret
+DeleteTdRing Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2413,9 +2606,7 @@ SetupPipeBuffer   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    call AllocateTdRing
-    mov gs:ep_td_sel,bx
-;
+    call RecreateTdRing
     call StartPipeBuffer
     clc
 ;
@@ -2438,7 +2629,17 @@ SetupPipeBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearPipeBuffer   Proc far
-    int 3
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call DeleteTdRing
+;
+    pop ax
+    pop fs
+    pop ds
     retf32
 ClearPipeBuffer   Endp
 
@@ -2455,19 +2656,17 @@ ClearPipeBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StopPipe   Proc far
+    push ds
     push fs
-    push eax
-    push edx
+    push ax
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov edx,gs:ep_qh
-    mov fs:[edx].qh_next_qtd,1
-    mov fs:[edx].qh_status,0
+    call StopTdRing
 ;
-    pop edx
-    pop eax
+    pop ax
     pop fs
+    pop ds
     retf32
 StopPipe   Endp
 
