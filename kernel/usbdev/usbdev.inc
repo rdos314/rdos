@@ -190,6 +190,7 @@ usb_pipe_struc    STRUC
 usbp_descr        usb_endpoint_descr <>
 usbp_flags        DB ?
 usbp_wait         DW ?
+usbp_timeout      DD ?
 
 usbp_rd_ptr       DW ?
 usbp_wr_ptr       DW ?

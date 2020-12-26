@@ -1323,8 +1323,6 @@ GetPipe  Endp
 ConfigPipe	Proc near
     pushad
 ;
-    mov cx,15   ; remove later !!!
-
     mov ax,es:usbd_curr_config
     or ax,ax
     jz cpFail
@@ -1370,6 +1368,10 @@ cpSave:
 ;
     mov es:usbp_wait,0
     mov es:usbp_flags,0
+    mov es:usbp_buf_sel,0
+    mov es:usbp_buf_size,0
+    mov es:usbp_rd_ptr,0
+    mov es:usbp_wr_ptr,0
 ;
     mov si,di
     mov di,OFFSET usbp_descr
@@ -1428,6 +1430,7 @@ ConfigPipe  Endp
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
 ;                       CX        Buffered packets
+;                       AX        Timeout ms
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1440,6 +1443,14 @@ config_usb_packet_pipe	Proc far
     pushad
 ;
     int 3
+    push dx
+    mov dx,1193
+    mul dx
+    push dx
+    push ax
+    pop esi
+    pop dx
+;
     mov ax,USB_DEV_HANDLE
     DerefHandle
     jc cuppDone
@@ -1458,6 +1469,27 @@ config_usb_packet_pipe	Proc far
     jc cuppLeaveFail
 
 cuppSetup:
+    mov gs:usbp_timeout,esi
+    test dl,80h
+    jz cuppSetupOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:setup_pipe_buffer_proc
+    pop ds
+
+cuppSetupOk:
+    xor ax,ax
+    xchg ax,gs:usbp_buf_sel
+    or ax,ax
+    jz cuppBufOk
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+cuppBufOk:
     LeaveSection ds:udd_section
     clc
     jmp cuppDone
@@ -1496,6 +1528,14 @@ config_usb_stream_pipe	Proc far
     pushad
 ;
     int 3
+    push dx
+    mov dx,1193
+    mul dx
+    push dx
+    push ax
+    pop esi
+    pop dx
+;
     mov ax,USB_DEV_HANDLE
     DerefHandle
     jc cuspDone
@@ -1514,6 +1554,44 @@ config_usb_stream_pipe	Proc far
     jc cuspLeaveFail
 
 cuspSetup:
+    mov gs:usbp_timeout,esi
+    test dl,80h
+    jz cuspSetupOk
+;
+    push ds
+    push cx
+    mov cx,8
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:setup_pipe_buffer_proc
+    pop cx
+    pop ds
+
+cuspSetupOk:
+    mov ax,gs:usbp_buf_sel
+    or ax,ax
+    jz cuspCreateBuf
+;
+    cmp cx,gs:usbp_buf_size
+    je cuspBufOk
+;
+    xor ax,ax
+    xchg ax,gs:usbp_buf_sel
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+cuspCreateBuf:
+    push es    
+    movzx eax,cx
+    add eax,eax
+    AllocateSmallGlobalMem
+    mov gs:usbp_buf_sel,es
+    mov gs:usbp_buf_size,cx
+    mov gs:usbp_rd_ptr,0
+    mov gs:usbp_wr_ptr,0
+
+cuspBufOk:
     LeaveSection ds:udd_section
     clc
     jmp cuspDone
@@ -1551,6 +1629,14 @@ config_usb_raw_pipe	Proc far
     pushad
 ;
     int 3
+    push dx
+    mov dx,1193
+    mul dx
+    push dx
+    push ax
+    pop esi
+    pop dx
+;
     mov ax,USB_DEV_HANDLE
     DerefHandle
     jc curpDone
@@ -1569,6 +1655,27 @@ config_usb_raw_pipe	Proc far
     jc curpLeaveFail
 
 curpSetup:
+    mov gs:usbp_timeout,esi
+    test dl,80h
+    jz curpSetupOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:clear_pipe_buffer_proc
+    pop ds
+
+curpSetupOk:
+    xor ax,ax
+    xchg ax,gs:usbp_buf_sel
+    or ax,ax
+    jz curpBufOk
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+curpBufOk:
     LeaveSection ds:udd_section
     clc
     jmp curpDone
