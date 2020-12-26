@@ -3240,6 +3240,16 @@ fdvInLoop:
     jz fdvInNext
 ;
     mov gs,bx
+    mov bx,gs:ep_td_sel
+    or bx,bx
+    jz fdvInBufDone
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fdvInBufDone:
     mov edx,gs:ep_qh
     mov al,gs:ued_attrib
     and al,3
