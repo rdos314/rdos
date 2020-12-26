@@ -1442,7 +1442,6 @@ config_usb_packet_pipe	Proc far
     push gs
     pushad
 ;
-    int 3
     push dx
     mov dx,1193
     mul dx
@@ -1527,7 +1526,6 @@ config_usb_stream_pipe	Proc far
     push gs
     pushad
 ;
-    int 3
     push dx
     mov dx,1193
     mul dx
@@ -1628,7 +1626,6 @@ config_usb_raw_pipe	Proc far
     push gs
     pushad
 ;
-    int 3
     push dx
     mov dx,1193
     mul dx
