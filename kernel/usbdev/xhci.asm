@@ -496,23 +496,6 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DisablePipe
-;
-;       DESCRIPTION:    Disable pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisablePipe   Proc far
-    int 3
-    retf32
-DisablePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           UsedBuffers
 ;
 ;       DESCRIPTION:    Return used buffers
@@ -2492,16 +2475,17 @@ StopEndpoint   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           EnablePipe
+;       NAME:           SetupPipeBuffer
 ;
-;       DESCRIPTION:    Enable pipe
+;       DESCRIPTION:    Setup pipe buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
+;                       CX      Buffer count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EnablePipe   Proc far
+SetupPipeBuffer   Proc far
     push eax
     push edx
 ;
@@ -2511,7 +2495,41 @@ EnablePipe   Proc far
     pop edx
     pop eax
     ret
-EnablePipe  Endp
+SetupPipeBuffer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClearPipeBuffer
+;
+;       DESCRIPTION:    Clear pipe buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPipeBuffer   Proc far
+    int 3
+    retf32
+ClearPipeBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopPipe
+;
+;       DESCRIPTION:    Stop pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopPipe   Proc far
+    int 3
+    retf32
+StopPipe   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3313,12 +3331,13 @@ et11 DD OFFSET ChangeAddress,       SEG code
 et12 DD OFFSET UpdateMaxLen,        SEG code
 et13 DD OFFSET ControlMsg,          SEG code
 et14 DD OFFSET ConfigDevice,        SEG code
-et15 DD OFFSET EnablePipe,          SEG code
-et16 DD OFFSET DisablePipe,         SEG code
-et17 DD OFFSET UsedBuffers,         SEG code
-et18 DD OFFSET FreeBuffers,         SEG code
-et19 DD OFFSET ReqBuffer,           SEG code
-et1A DD OFFSET RelBuffer,           SEG code
+et15 DD OFFSET SetupPipeBuffer,     SEG code
+et16 DD OFFSET ClearPipeBuffer,     SEG code
+et17 DD OFFSET StopPipe,            SEG code
+et18 DD OFFSET UsedBuffers,         SEG code
+et19 DD OFFSET FreeBuffers,         SEG code
+et1A DD OFFSET ReqBuffer,           SEG code
+et1B DD OFFSET RelBuffer,           SEG code
 
 AddFunction    Proc near
     push es
@@ -3463,7 +3482,7 @@ ifIntDone:
     mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Bh
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]

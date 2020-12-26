@@ -643,42 +643,63 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           EnablePipe
+;       NAME:           SetupPipeBuffer
 ;
-;       DESCRIPTION:    Enable pipe
+;       DESCRIPTION:    Setup pipe buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
+;                       CX      Buffer count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EnablePipe   Proc far
+SetupPipeBuffer   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:enable_pipe_proc
+    call fword ptr ds:setup_pipe_buffer_proc
     pop ds
     ret
-EnablePipe   Endp
+SetupPipeBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DisablePipe
+;       NAME:           ClearPipeBuffer
 ;
-;       DESCRIPTION:    Disable pipe
+;       DESCRIPTION:    Clear pipe buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DisablePipe   Proc far
+ClearPipeBuffer   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:disable_pipe_proc
+    call fword ptr ds:clear_pipe_buffer_proc
     pop ds
     ret
-DisablePipe   Endp
+ClearPipeBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopPipe
+;
+;       DESCRIPTION:    Stop pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopPipe   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:stop_pipe_proc
+    pop ds
+    ret
+StopPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -872,12 +893,13 @@ ht11 DD OFFSET ChangeAddress,       SEG code
 ht12 DD OFFSET UpdateMaxLen,        SEG code
 ht13 DD OFFSET ControlMsg,          SEG code
 ht14 DD OFFSET ConfigDev,           SEG code
-ht15 DD OFFSET EnablePipe,          SEG code
-ht16 DD OFFSET DisablePipe,         SEG code
-ht17 DD OFFSET UsedBuffers,         SEG code
-ht18 DD OFFSET FreeBuffers,         SEG code
-ht19 DD OFFSET ReqBuffer,           SEG code
-ht1A DD OFFSET RelBuffer,           SEG code
+ht15 DD OFFSET SetupPipeBuffer,     SEG code
+ht16 DD OFFSET ClearPipeBuffer,     SEG code
+ht17 DD OFFSET StopPipe,            SEG code
+ht18 DD OFFSET UsedBuffers,         SEG code
+ht19 DD OFFSET FreeBuffers,         SEG code
+ht1A DD OFFSET ReqBuffer,           SEG code
+ht1B DD OFFSET RelBuffer,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1343,6 +1365,7 @@ CreateHub  Proc near
     mov bx,ds:hub_device_handle
     mov dl,ds:hub_intr
     mov cx,8
+    mov ax,5
     ConfigUsbPacketPipe
 ;
     CreateWait
@@ -2170,7 +2193,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Bh
+    mov ecx,2*1Ch
 
 uaTabLoop:
     lods dword ptr cs:[esi]

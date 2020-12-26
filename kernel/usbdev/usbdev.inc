@@ -117,18 +117,23 @@ update_control_maxlen_proc DD ?,?
 ; OUT CX        Actual size
 control_msg_proc           DD ?,?
 
-; IN  FS        Pipe selector
+; IN  ES        Device
 ; IN  CX        Hub sel
 ; IN  DL        Configuration #
 config_device_proc	   DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel
-enable_pipe_proc           DD ?,?
+;  IN CX        Buffer count
+setup_pipe_buffer_proc     DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel
-disable_pipe_proc          DD ?,?
+clear_pipe_buffer_proc     DD ?,?
+
+;  IN ES        Device
+;  IN GS        Pipe sel
+stop_pipe_proc             DD ?,?
 
 ;  IN  ES        Device
 ;  IN  GS        Pipe sel

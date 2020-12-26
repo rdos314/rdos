@@ -3622,19 +3622,19 @@
     CallGate_config_usb_packet_pipe \
     CarryToBool \
     __value [eax] \
-    __parm [__ebx] [__dl] [__ecx]
+    __parm [__ebx] [__dl] [__eax] [__ecx]
 
 #pragma aux RdosConfigUsbStreamPipe = \
     CallGate_config_usb_stream_pipe \
     CarryToBool \
     __value [eax] \
-    __parm [__ebx] [__dl] [__ecx]
+    __parm [__ebx] [__dl] [__eax] [__ecx]
 
 #pragma aux RdosConfigUsbRawPipe = \
     CallGate_config_usb_raw_pipe \
     CarryToBool \
     __value [eax] \
-    __parm [__ebx] [__dl]
+    __parm [__ebx] [__dl] [__eax]
 
 #pragma aux RdosStopUsbPipe = \
     CallGate_stop_usb_pipe \

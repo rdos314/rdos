@@ -2456,16 +2456,17 @@ StartInPipe     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           EnablePipe
+;       NAME:           SetupPipeBuffer
 ;
-;       DESCRIPTION:    Enable pipe
+;       DESCRIPTION:    Setup pipe buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
+;                       CX      Buffer count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EnablePipe   Proc far
+SetupPipeBuffer   Proc far
     push ds
     push fs
     pushad
@@ -2491,21 +2492,38 @@ epDone:
     pop fs
     pop ds
     retf32
-EnablePipe   Endp
+SetupPipeBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DisablePipe
+;       NAME:           ClearPipeBuffer
 ;
-;       DESCRIPTION:    Disable pipe
+;       DESCRIPTION:    Clear pipe buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DisablePipe   Proc far
+ClearPipeBuffer   Proc far
+    int 3
+    retf32
+ClearPipeBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopPipe
+;
+;       DESCRIPTION:    Stop pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopPipe   Proc far
     push fs
     push eax
     push edx
@@ -2519,7 +2537,7 @@ DisablePipe   Proc far
     pop eax
     pop fs
     retf32
-DisablePipe   Endp
+StopPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3335,12 +3353,13 @@ ut11 DD OFFSET ChangeAddress,       SEG code
 ut12 DD OFFSET UpdateMaxLen,        SEG code
 ut13 DD OFFSET ControlMsg,          SEG code
 ut14 DD OFFSET ConfigDev,           SEG code
-ut15 DD OFFSET EnablePipe,          SEG code
-ut16 DD OFFSET DisablePipe,         SEG code
-ut17 DD OFFSET UsedBuffers,         SEG code
-ut18 DD OFFSET FreeBuffers,         SEG code
-ut19 DD OFFSET ReqBuffer,           SEG code
-ut1A DD OFFSET RelBuffer,           SEG code
+ut15 DD OFFSET SetupPipeBuffer,     SEG code
+ut16 DD OFFSET ClearPipeBuffer,     SEG code
+ut17 DD OFFSET StopPipe,            SEG code
+ut18 DD OFFSET UsedBuffers,         SEG code
+ut19 DD OFFSET FreeBuffers,         SEG code
+ut1A DD OFFSET ReqBuffer,           SEG code
+ut1B DD OFFSET RelBuffer,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -3396,7 +3415,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Bh
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]
