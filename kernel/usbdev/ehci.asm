@@ -2204,12 +2204,9 @@ AllocatePipe    Proc near
     push es
     push eax
 ;
-    call AllocateTdRing
-;
     mov eax,SIZE ehci_pipe_struc
     AllocateSmallGlobalMem
-;
-    mov es:ep_td_sel,bx
+    mov es:ep_td_sel,0
     mov bx,es
 ;
     pop eax
@@ -2456,6 +2453,9 @@ epOut:
     jmp epDone
 
 epIn:
+    call AllocateTdRing
+    mov gs:ep_td_sel,bx
+;
     call StartInPipe
     call StartPipe
     clc
