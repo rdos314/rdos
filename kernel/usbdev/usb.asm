@@ -4039,6 +4039,16 @@ cdInLoop:
 ;
     push es
     mov es,bx
+    mov bx,es:usbp_buf_sel
+    or bx,bx
+    jz cdInBufDone
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+cdInBufDone:
     FreeMem
     pop es
 
@@ -4056,6 +4066,16 @@ cdOutLoop:
 ;
     push es
     mov es,bx
+    mov bx,es:usbp_buf_sel
+    or bx,bx
+    jz cdOutBufDone
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+cdOutBufDone:
     FreeMem
     pop es
 
