@@ -1368,10 +1368,8 @@ cpSave:
 ;
     mov es:usbp_wait,0
     mov es:usbp_flags,0
-    mov es:usbp_buf_sel,0
-    mov es:usbp_buf_size,0
-    mov es:usbp_rd_ptr,0
-    mov es:usbp_wr_ptr,0
+    mov es:usbp_packet_sel,0
+    mov es:usbp_stream_sel,0
 ;
     mov si,di
     mov di,OFFSET usbp_descr
@@ -1483,15 +1481,6 @@ cuppSetup:
     pop ds
 
 cuppSetupOk:
-    xor ax,ax
-    xchg ax,gs:usbp_buf_sel
-    or ax,ax
-    jz cuppBufOk
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
 
 cuppBufOk:
     LeaveSection ds:udd_section
@@ -1575,29 +1564,6 @@ cuspSetup:
     pop ds
 
 cuspSetupOk:
-    mov ax,gs:usbp_buf_sel
-    or ax,ax
-    jz cuspCreateBuf
-;
-    cmp cx,gs:usbp_buf_size
-    je cuspBufOk
-;
-    xor ax,ax
-    xchg ax,gs:usbp_buf_sel
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-
-cuspCreateBuf:
-    push es    
-    movzx eax,cx
-    add eax,eax
-    AllocateSmallGlobalMem
-    mov gs:usbp_buf_sel,es
-    mov gs:usbp_buf_size,cx
-    mov gs:usbp_rd_ptr,0
-    mov gs:usbp_wr_ptr,0
 
 cuspBufOk:
     LeaveSection ds:udd_section
@@ -1676,15 +1642,6 @@ curpSetup:
     pop ds
 
 curpSetupOk:
-    xor ax,ax
-    xchg ax,gs:usbp_buf_sel
-    or ax,ax
-    jz curpBufOk
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
 
 curpBufOk:
     LeaveSection ds:udd_section
@@ -4050,19 +4007,10 @@ cdInLoop:
     mov bx,es:[si]
     or bx,bx
     jz cdInNext
-;
-    push es
-    mov es,bx
-    mov bx,es:usbp_buf_sel
-    or bx,bx
-    jz cdInBufDone
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
 
 cdInBufDone:
+    push es
+    mov es,bx
     FreeMem
     pop es
 
@@ -4077,19 +4025,10 @@ cdOutLoop:
     mov bx,es:[si]
     or bx,bx
     jz cdOutNext
-;
-    push es
-    mov es,bx
-    mov bx,es:usbp_buf_sel
-    or bx,bx
-    jz cdOutBufDone
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
 
 cdOutBufDone:
+    push es
+    mov es,bx
     FreeMem
     pop es
 

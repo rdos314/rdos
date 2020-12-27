@@ -187,19 +187,6 @@ dev_cc             DB ?
 
 ohci_dev_sel   ENDS
 
-ohci_td_ring    STRUC
-
-ot_section         section_typ <>
-
-ot_rd_ptr          DW ?
-ot_wr_ptr          DW ?
-ot_tail_ptr        DW ?
-ot_entry_count     DW ?
-
-ot_entry_arr       DD ?
-
-ohci_td_ring    ENDS
-
 ohci_pipe_struc    STRUC
 
 op_pipe            usb_pipe_struc <>
@@ -210,7 +197,6 @@ op_intr_count      DW ?
 op_intr_list       DW ?
 op_ed              DD ?
 op_tail_td         DD ?
-op_td_sel          DW ?
 
 ohci_pipe_struc    ENDS
 
@@ -1636,7 +1622,6 @@ AllocatePipe    Proc near
     mov fs:[edx].otd_next_va,0
     mov fs:[edx].otd_buffer_va,0
     mov ds:op_tail_td,edx
-    mov ds:op_td_sel,0
     mov bx,ds
 ;
     pop eax
@@ -1828,19 +1813,19 @@ AllocateTdRing    Proc near
     mov esi,edi
     movzx eax,cx
     shl ax,2
-    add ax,OFFSET ot_entry_arr
+    add ax,SIZE usb_packet_struc
     AllocateSmallGlobalMem
-    mov es:ot_entry_count,cx
+    mov es:usbpk_entry_count,cx
 ;
-    mov edi,OFFSET ot_entry_arr
+    mov edi,SIZE usb_packet_struc
     xor eax,eax
     movzx ecx,cx
     rep stos dword ptr es:[edi]
 ;
-    InitSection es:ot_section
-    mov es:ot_rd_ptr,0
-    mov es:ot_wr_ptr,0
-    mov es:ot_tail_ptr,0
+    InitSection es:usbpk_section
+    mov es:usbpk_rd_ptr,0
+    mov es:usbpk_wr_ptr,0
+    mov es:usbpk_tail_ptr,0
     mov bx,es
 ;
     pop edi
@@ -1869,9 +1854,9 @@ FreeTdRing     Proc near
     pushad
 ;
     mov ebp,gs:op_tail_td
-    mov ds,gs:op_td_sel
-    mov si,OFFSET ot_entry_arr
-    mov cx,ds:ot_entry_count
+    mov ds,gs:usbp_packet_sel
+    mov si,SIZE usb_packet_struc
+    mov cx,ds:usbpk_entry_count
     xor edi,edi
 
 ftdLoop:
@@ -1912,48 +1897,6 @@ FreeTdRing  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RecreateTdRing
-;
-;       DESCRIPTION:    Recreate TD ring
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device selector
-;                       FS      Flat sel
-;                       GS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RecreateTdRing Proc near
-    push ax
-    push bx
-;
-    xor bx,bx
-    xchg bx,gs:op_td_sel
-    or bx,bx
-    jz rtdCreate
-;
-    call StopTdRing
-    mov ax,5
-    WaitMilliSec
-    call FreeTdRing    
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-rtdCreate: 
-    call AllocateTdRing
-    mov gs:op_td_sel,bx
-;
-    pop bx
-    pop ax
-    ret
-RecreateTdRing Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           DeleteTdRing
 ;
 ;       DESCRIPTION:    Delete TD ring
@@ -1970,7 +1913,7 @@ DeleteTdRing Proc near
     push bx
 ;
     xor bx,bx
-    xchg bx,gs:op_td_sel
+    xchg bx,gs:usbp_packet_sel
     or bx,bx
     jz dtdDone
 ;
@@ -2008,9 +1951,9 @@ StartPipeBuffer     Proc near
     push ds
     pushad
 ;
-    mov ds,gs:op_td_sel
-    mov si,OFFSET ot_entry_arr
-    mov cx,ds:ot_entry_count
+    mov ds,gs:usbp_packet_sel
+    mov si,SIZE usb_packet_struc
+    mov cx,ds:usbpk_entry_count
     xor edi,edi
 
 spbLoop:
@@ -2074,9 +2017,9 @@ spbSave:
     sub cx,1
     jnz spbLoop
 ;
-    mov ax,ds:ot_entry_count
+    mov ax,ds:usbpk_entry_count
     dec ax
-    mov ds:ot_tail_ptr,ax
+    mov ds:usbpk_tail_ptr,ax
 ;
     mov edx,edi
     LinearToPhysicalMemBlk
@@ -2127,15 +2070,19 @@ SetupPacket   Proc far
     push ds
     push fs
     push ax
+    push bx
 ;
     mov ax,flat_sel
     mov fs,ax
 ;
-    call RecreateTdRing
+    call AllocateTdRing
+    mov gs:usbp_packet_sel,bx
+;
     call StartPipeBuffer
     call SignalStart
     clc
 ;
+    pop bx
     pop ax
     pop fs
     pop ds
@@ -2213,12 +2160,12 @@ StopPipe   Endp
 UsedPackets   Proc far
     push ds
 ;
-    mov ds,gs:op_td_sel
-    mov cx,ds:ot_wr_ptr
-    sub cx,ds:ot_rd_ptr
+    mov ds,gs:usbp_packet_sel
+    mov cx,ds:usbpk_wr_ptr
+    sub cx,ds:usbpk_rd_ptr
     jnc upkDone
 ;
-    add cx,ds:ot_entry_count
+    add cx,ds:usbpk_entry_count
 
 upkDone:
     pop ds
@@ -2243,15 +2190,15 @@ FreePackets   Proc far
     push ds
     push ax
 ;
-    mov ds,gs:op_td_sel
-    mov ax,ds:ot_tail_ptr
-    sub ax,ds:ot_rd_ptr
+    mov ds,gs:usbp_packet_sel
+    mov ax,ds:usbpk_tail_ptr
+    sub ax,ds:usbpk_rd_ptr
     jnc fpkDone
 ;
-    add ax,ds:ot_entry_count
+    add ax,ds:usbpk_entry_count
 
 fpkDone:
-    mov cx,ds:ot_entry_count
+    mov cx,ds:usbpk_entry_count
     sub cx,ax
     dec cx
 ;
@@ -2284,9 +2231,9 @@ ReqPacket   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov ds,gs:op_td_sel
-    mov bx,ds:ot_rd_ptr
-    cmp bx,ds:ot_wr_ptr
+    mov ds,gs:usbp_packet_sel
+    mov bx,ds:usbpk_rd_ptr
+    cmp bx,ds:usbpk_wr_ptr
     jne rqpkGet
 ;
     stc
@@ -2294,7 +2241,8 @@ ReqPacket   Proc far
 
 rqpkGet:
     shl bx,2
-    mov esi,ds:[bx].ot_entry_arr
+    add bx,SIZE usb_packet_struc
+    mov esi,ds:[bx]
     mov eax,fs:[esi].otd_cbp
     or eax,eax
     jnz rqpkCalc
@@ -2341,27 +2289,28 @@ RelPacket   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov ds,gs:op_td_sel
+    mov ds,gs:usbp_packet_sel
 ;
-    EnterSection ds:ot_section
-    mov bx,ds:ot_rd_ptr
-    cmp bx,ds:ot_wr_ptr
+    EnterSection ds:usbpk_section
+    mov bx,ds:usbpk_rd_ptr
+    cmp bx,ds:usbpk_wr_ptr
     stc
     je rlpkDone
 ;
     inc bx
-    cmp bx,ds:ot_entry_count
+    cmp bx,ds:usbpk_entry_count
     jb rlpkOk
 ;
     xor bx,bx
 
 rlpkOk:
-    mov ds:ot_rd_ptr,bx
+    mov ds:usbpk_rd_ptr,bx
 ;
-    mov bx,ds:ot_tail_ptr
+    mov bx,ds:usbpk_tail_ptr
     mov si,bx
     shl si,2
-    mov esi,ds:[si].ot_entry_arr
+    add si,SIZE usb_packet_struc
+    mov esi,ds:[si]
 ;
     mov fs:[esi].otd_flags,0F004h
     mov edx,fs:[esi].otd_buffer_va
@@ -2387,18 +2336,19 @@ rlpkSave:
     mov al,gs:ued_address
     mov fs:[esi].otd_pipe,al
 ;
-    mov bx,ds:ot_tail_ptr
+    mov bx,ds:usbpk_tail_ptr
     inc bx
-    cmp bx,ds:ot_entry_count
+    cmp bx,ds:usbpk_entry_count
     jb rlpkTailOk
 ;
     xor bx,bx
 
 rlpkTailOk:
-    mov ds:ot_tail_ptr,bx
+    mov ds:usbpk_tail_ptr,bx
 ;
     shl bx,2
-    mov edx,ds:[bx].ot_entry_arr
+    add bx,SIZE usb_packet_struc
+    mov edx,ds:[bx]
     LinearToPhysicalMemBlk
     mov fs:[esi].otd_next_td,eax
 ;
@@ -2408,7 +2358,7 @@ rlpkTailOk:
     clc
 
 rlpkDone:
-    LeaveSection ds:ot_section
+    LeaveSection ds:usbpk_section
 ;
     popad
     pop fs
@@ -2577,13 +2527,14 @@ niOk:
     jz niDone
 ;
     mov gs,bx
-    mov ds,gs:op_td_sel
-    EnterSection ds:ot_section
+    mov ds,gs:usbp_packet_sel
+    EnterSection ds:usbpk_section
 ;
-    mov bx,ds:ot_wr_ptr
+    mov bx,ds:usbpk_wr_ptr
     mov si,bx
     shl si,2
-    cmp edx,ds:[si].ot_entry_arr
+    add si,SIZE usb_packet_struc
+    cmp edx,ds:[si]
     je niAdvance
 ;
     int 3
@@ -2591,13 +2542,13 @@ niOk:
 
 niAdvance:
     inc bx
-    cmp bx,ds:ot_entry_count
+    cmp bx,ds:usbpk_entry_count
     jb niSave
 ;
     xor bx,bx
 
 niSave:
-    mov ds:ot_wr_ptr,bx    
+    mov ds:usbpk_wr_ptr,bx    
 ;
     xor bx,bx
     xchg bx,gs:usbp_wait
@@ -2610,7 +2561,7 @@ niSave:
     pop es
 
 niDone:
-    LeaveSection ds:ot_section
+    LeaveSection ds:usbpk_section
 ;
     pop esi
     pop ebx
@@ -3049,39 +3000,6 @@ CreateDev  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
-    push eax
-    push ebx
-    push ecx
-    push esi
-;
-    mov cx,15
-    mov si,OFFSET usbd_in_pipe_arr
-
-fdvLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz fdvNext
-;
-    push es
-    mov es,bx
-    mov bx,es:op_td_sel
-    or bx,bx
-    jz fdvTdOk
-;
-    mov es,bx
-    FreeMem
-
-fdvTdOk:
-    pop es
-
-fdvNext:
-    add si,2
-    loop fdvLoop
-;
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
     retf32
 FreeDev   Endp
 

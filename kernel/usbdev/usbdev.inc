@@ -210,13 +210,31 @@ usb_pipe_struc    STRUC
 
 usbp_descr        usb_endpoint_descr <>
 usbp_flags        DB ?
+
 usbp_wait         DW ?
 usbp_timeout      DD ?
-
-usbp_rd_ptr       DW ?
-usbp_wr_ptr       DW ?
-usbp_buf_size     DW ?
-usbp_buf_sel      DW ?
-usbp_buf_linear   DD ?
+usbp_packet_sel   DW ?
+usbp_stream_sel   DW ?
 
 usb_pipe_struc   ENDS
+
+usb_packet_struc     STRUC
+
+usbpk_section        section_typ <>
+
+usbpk_entry_count    DW ?
+usbpk_rd_ptr         DW ?
+usbpk_wr_ptr         DW ?
+usbpk_tail_ptr       DW ?
+
+usb_packet_struc     ENDS
+
+usb_stream_struc  STRUC
+
+usbs_rd_ptr       DW ?
+usbs_wr_ptr       DW ?
+usbs_buf_size     DW ?
+usbs_buf_sel      DW ?
+usbs_buf_linear   DD ?
+
+usb_stream_struc  ENDS
