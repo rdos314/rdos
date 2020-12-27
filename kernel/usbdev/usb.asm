@@ -2465,8 +2465,10 @@ bwfpIn:
 ;
     mov gs,si
     mov gs:usbp_wait,bx
-    call GetUsedPackets
-    or cx,cx
+;
+    mov es,gs:usbp_packet_sel
+    mov cx,es:usbpk_wr_ptr
+    cmp cx,es:usbpk_rd_ptr
     jz bwfpLeave
 
 bwfpCheckSignal:
