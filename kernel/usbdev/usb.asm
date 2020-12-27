@@ -2016,6 +2016,48 @@ get_usb_buffer_size Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadPacket
+;
+;       description:    Read using packet interface
+;
+;       parameters:     GS        Pipe sel
+;                       BP:EDI    Buffer
+;
+;       returns:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPacket	Proc near
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:req_packet_proc
+    jc rpkDone
+;
+    movzx ecx,cx
+    push es
+    push ecx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov es,bp
+    mov esi,edx
+    rep movs byte ptr es:[edi],fs:[esi]
+;
+    pop ecx
+    pop es
+;
+    mov cx,gs:ued_maxsize
+    call fword ptr ds:rel_packet_proc
+    clc
+
+rpkDone:
+    pop ds
+    ret
+ReadPacket	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadUsbPipe
 ;
 ;       description:    Read USB pipe
@@ -2070,30 +2112,15 @@ ReadPipe	Proc near
     jz rupLeave
 ;
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:req_packet_proc
-    jc rupPop
+    test gs:usbp_flags,PIPE_FLAG_PACKET
+    stc
+    jz rupNotPacket
 ;
-    movzx ecx,cx
-    push es
-    push ecx
-;
-    mov ax,flat_sel
-    mov fs,ax
-    mov es,bp
-    mov esi,edx
-    rep movs byte ptr es:[edi],fs:[esi]
-;
-    pop ecx
-    pop es
-;
-    mov cx,gs:ued_maxsize
-    call fword ptr ds:rel_packet_proc
-    clc
+    call ReadPacket
+    jmp rupLeave
 
-rupPop:
-    pop ds
+rupNotPacket:
+    int 3
 
 rupLeave:
     LeaveSection ds:udd_section
@@ -2181,34 +2208,7 @@ WritePipe	Proc near
     jz wupLeave
 ;
     mov gs,bx
-    push ds
-    push cx
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:req_packet_proc
-    pop cx
-    jc wupPop
-;
-    movzx ecx,cx
-    push ds
-    push es
-    push ecx
-;
-    mov ds,bp
-    mov esi,edi
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    rep movs byte ptr es:[edi],fs:[esi]
-;
-    pop ecx
-    pop es
-    pop ds
-;
-    call fword ptr ds:rel_packet_proc
-    clc
-
-wupPop:
-    pop ds
+    int 3
 
 wupLeave:
     LeaveSection ds:udd_section
