@@ -219,6 +219,7 @@ usbp_wait         DW ?
 usbp_timeout      DD ?
 usbp_packet_sel   DW ?
 usbp_stream_sel   DW ?
+usbp_raw_sel      DW ?
 
 usb_pipe_struc   ENDS
 
@@ -242,3 +243,9 @@ usbs_buf_sel      DW ?
 usbs_buf_linear   DD ?
 
 usb_stream_struc  ENDS
+
+usb_raw_struc  STRUC
+
+usbr_max_size     DW ?
+
+usb_raw_struc  ENDS

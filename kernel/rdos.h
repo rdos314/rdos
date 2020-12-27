@@ -928,7 +928,7 @@ int RDOSAPI RdosIsUsbDeviceConnected(int handle);
 void RDOSAPI RdosResetUsbDevice(int handle);
 int RDOSAPI RdosConfigUsbPacketPipe(int handle, char pipe, int TimeoutMs, int PacketCount);
 int RDOSAPI RdosConfigUsbStreamPipe(int handle, char pipe, int TimeoutMs, int BufferSize);
-int RDOSAPI RdosConfigUsbRawPipe(int handle, char pipe, int TimeoutMs);
+int RDOSAPI RdosConfigUsbRawPipe(int handle, char pipe, int TimeoutMs, int MaxSize);
 int RDOSAPI RdosStopUsbPipe(int handle, char pipe);
 int RDOSAPI RdosGetUsedUsbBuffers(int handle, char pipe);
 int RDOSAPI RdosGetFreeUsbBuffers(int handle, char pipe);

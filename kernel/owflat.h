@@ -3634,7 +3634,7 @@
     CallGate_config_usb_raw_pipe \
     CarryToBool \
     __value [eax] \
-    __parm [__ebx] [__dl] [__eax]
+    __parm [__ebx] [__dl] [__eax] [__ecx]
 
 #pragma aux RdosStopUsbPipe = \
     CallGate_stop_usb_pipe \

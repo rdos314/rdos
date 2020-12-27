@@ -1370,6 +1370,7 @@ cpSave:
     mov es:usbp_flags,0
     mov es:usbp_packet_sel,0
     mov es:usbp_stream_sel,0
+    mov es:usbp_raw_sel,0
 ;
     mov si,di
     mov di,OFFSET usbp_descr
@@ -1457,8 +1458,21 @@ srpPacketOk:
     mov ds,es:usbd_func_sel
     call fword ptr ds:close_stream_proc
     pop ds
+;
+    mov bx,es:usbd_thread
+    Signal
 
 srpStreamOk:    
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz srpRawOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_raw_proc
+    pop ds
+
+srpRawOk:    
     clc
     jmp srpDone
 
@@ -1526,7 +1540,17 @@ cuppIn:
     jmp cuppOk
 
 cuppOut:
-    int 3
+    push ds
+    pushad
+;
+    mov ax,gs:ued_maxsize
+    mul cx
+    mov cx,ax
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:open_raw_proc
+;
+    popad
+    pop ds
 
 cuppOk:
     LeaveSection ds:udd_section
@@ -1647,6 +1671,7 @@ config_usb_stream_pipe Endp
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
+;                       CX        Max data size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1680,7 +1705,10 @@ config_usb_raw_pipe	Proc far
     call StartReconfigPipe
     jc curpLeaveFail
 ;
-    int 3
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:open_raw_proc
+    pop ds
 ;
     LeaveSection ds:udd_section
     clc
