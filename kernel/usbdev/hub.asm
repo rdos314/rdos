@@ -534,7 +534,7 @@ IsDeviceConnected   Proc far
     push eax
     push ebx
 ;
-    test es:usbd_flags,FLAG_DETACHED
+    test es:usbd_flags,DEV_FLAG_DETACHED
     stc
     jnz idcDone
 ;
@@ -704,31 +704,9 @@ StopPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UsedBuffers
+;       NAME:           UsedPackets
 ;
-;       DESCRIPTION:    Return used buffers in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedBuffers   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:used_buffers_proc
-    pop ds
-    ret
-UsedBuffers   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeBuffers
-;
-;       DESCRIPTION:    Return free buffers in pipe
+;       DESCRIPTION:    Return used packets in pipe
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
@@ -737,55 +715,144 @@ UsedBuffers   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeBuffers   Proc far
+UsedPackets   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_buffers_proc
+    call fword ptr ds:used_packets_proc
     pop ds
     ret
-FreeBuffers   Endp
+UsedPackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReqBuffer
+;       NAME:           FreePackets
 ;
-;       DESCRIPTION:    Req pipe buffer
+;       DESCRIPTION:    Return free packets in pipe
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePackets   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:free_packets_proc
+    pop ds
+    ret
+FreePackets   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReqPacket
+;
+;       DESCRIPTION:    Req pipe packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
 ;
 ;       RETURNS:        EDX     Buffer linear
+;                       CX      Message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReqBuffer   Proc far
+ReqPacket   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:req_buffer_proc
+    call fword ptr ds:req_packet_proc
     pop ds
     ret
-ReqBuffer   Endp
+ReqPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RelBuffer
+;       NAME:           RelPacket
 ;
-;       DESCRIPTION:    Release pipe buffer
+;       DESCRIPTION:    Release pipe packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RelBuffer   Proc far
+RelPacket   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:rel_buffer_proc
+    call fword ptr ds:rel_packet_proc
     pop ds
     ret
-RelBuffer   Endp
+RelPacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteStream
+;
+;       DESCRIPTION:    Write stream buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStream   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:write_stream_proc
+    pop ds
+    ret
+WriteStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadRaw
+;
+;       DESCRIPTION:    Read raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;       RETURNS:        CX      Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRaw   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:read_raw_proc
+    pop ds
+    ret
+ReadRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteRaw
+;
+;       DESCRIPTION:    Write raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteRaw   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:write_raw_proc
+    pop ds
+    ret
+WriteRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -896,10 +963,13 @@ ht14 DD OFFSET ConfigDev,           SEG code
 ht15 DD OFFSET SetupPipeBuffer,     SEG code
 ht16 DD OFFSET ClearPipeBuffer,     SEG code
 ht17 DD OFFSET StopPipe,            SEG code
-ht18 DD OFFSET UsedBuffers,         SEG code
-ht19 DD OFFSET FreeBuffers,         SEG code
-ht1A DD OFFSET ReqBuffer,           SEG code
-ht1B DD OFFSET RelBuffer,           SEG code
+ht18 DD OFFSET UsedPackets,         SEG code
+ht19 DD OFFSET FreePackets,         SEG code
+ht1A DD OFFSET ReqPacket,           SEG code
+ht1B DD OFFSET RelPacket,           SEG code
+ht1C DD OFFSET WriteStream,         SEG code
+ht1D DD OFFSET ReadRaw,             SEG code
+ht1E DD OFFSET WriteRaw,            SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2193,7 +2263,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Ch
+    mov ecx,2*1Fh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

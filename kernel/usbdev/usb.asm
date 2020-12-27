@@ -1103,7 +1103,7 @@ is_usb_dev_connected     Proc far
     jnz idvcLeave
 ;
     mov es,ds:udd_sel    
-    test es:usbd_flags,FLAG_DETACHED
+    test es:usbd_flags,DEV_FLAG_DETACHED
     stc
     jnz idvcLeave
 ;
@@ -1794,7 +1794,7 @@ guubOut:
     mov gs,bx
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:used_buffers_proc
+    call fword ptr ds:used_packets_proc
     pop ds
     clc
     jmp guubLeave
@@ -1812,7 +1812,7 @@ guubIn:
     mov gs,bx
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:used_buffers_proc
+    call fword ptr ds:used_packets_proc
     pop ds
     clc
 
@@ -1882,7 +1882,7 @@ gfubOut:
     mov gs,bx
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:free_buffers_proc
+    call fword ptr ds:free_packets_proc
     pop ds
     clc
     jmp gfubLeave
@@ -1900,7 +1900,7 @@ gfubIn:
     mov gs,bx
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:free_buffers_proc
+    call fword ptr ds:free_packets_proc
     pop ds
     clc
 
@@ -2058,7 +2058,7 @@ ReadPipe	Proc near
     mov gs,bx
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:req_buffer_proc
+    call fword ptr ds:req_packet_proc
     jc rupPop
 ;
     movzx ecx,cx
@@ -2075,7 +2075,7 @@ ReadPipe	Proc near
     pop es
 ;
     mov cx,gs:ued_maxsize
-    call fword ptr ds:rel_buffer_proc
+    call fword ptr ds:rel_packet_proc
     clc
 
 rupPop:
@@ -2170,7 +2170,7 @@ WritePipe	Proc near
     push ds
     push cx
     mov ds,es:usbd_func_sel
-    call fword ptr ds:req_buffer_proc
+    call fword ptr ds:req_packet_proc
     pop cx
     jc wupPop
 ;
@@ -2190,7 +2190,7 @@ WritePipe	Proc near
     pop es
     pop ds
 ;
-    call fword ptr ds:rel_buffer_proc
+    call fword ptr ds:rel_packet_proc
     clc
 
 wupPop:
@@ -2272,7 +2272,7 @@ bwfpOut:
     mov gs,si
     mov gs:usbp_wait,bx
     push ds
-    call fword ptr ds:free_buffers_proc
+    call fword ptr ds:free_packets_proc
     pop ds
     or cx,cx
     jz bwfpLeave
@@ -2291,7 +2291,7 @@ bwfpIn:
     mov gs:usbp_wait,bx
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:used_buffers_proc
+    call fword ptr ds:used_packets_proc
     pop ds
     or cx,cx
     jz bwfpLeave
@@ -3804,7 +3804,7 @@ UnlinkDevice       Proc near
     push ds
     pushad
 ;
-    lock or es:usbd_flags,FLAG_DETACHED
+    lock or es:usbd_flags,DEV_FLAG_DETACHED
     movzx bx,es:usbd_port
     add bx,bx
     xor ax,ax
@@ -4159,12 +4159,12 @@ uaAttach:
     jc uaDetach
 ;
     call NotifyAttach
-    or es:usbd_flags,FLAG_ATTACHED
+    or es:usbd_flags,DEV_FLAG_ATTACHED
 
 uaConnected:
     WaitForSignal
 ;
-    test es:usbd_flags,FLAG_DETACHED
+    test es:usbd_flags,DEV_FLAG_DETACHED
     jnz uaDetach
 ;
     call fword ptr ds:is_dev_connected_proc
@@ -4210,7 +4210,7 @@ uaWaitExit:
 uaUnlink:
     call UnlinkDevice
 ;
-    test es:usbd_flags,FLAG_ATTACHED
+    test es:usbd_flags,DEV_FLAG_ATTACHED
     jz uaNotified
 ;
     call NotifyDetach

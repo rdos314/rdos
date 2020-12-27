@@ -2009,7 +2009,7 @@ SetupControlOut	Endp
 RunControl   Proc near
     pushad
 ;
-    test es:usbd_flags,FLAG_DETACHED
+    test es:usbd_flags,DEV_FLAG_DETACHED
     stc
     jnz rcDone
 ;    
@@ -2546,9 +2546,9 @@ StopPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UsedBuffers
+;       NAME:           UsedPackets
 ;
-;       DESCRIPTION:    Return used buffers in pipe
+;       DESCRIPTION:    Return used packets in pipe
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
@@ -2557,23 +2557,23 @@ StopPipe   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UsedBuffers   Proc far
+UsedPackets   Proc far
     mov cx,gs:up_wr_ptr
     sub cx,gs:up_rd_ptr
-    jnc ubDone
+    jnc upkDone
 ;
     add cx,gs:up_entry_count
 
-ubDone:
+upkDone:
     retf32
-UsedBuffers   Endp
+UsedPackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeBuffers
+;       NAME:           FreePackets
 ;
-;       DESCRIPTION:    Return free buffers in pipe
+;       DESCRIPTION:    Return free packets in pipe
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
@@ -2582,39 +2582,40 @@ UsedBuffers   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeBuffers   Proc far
+FreePackets   Proc far
     push ax
 ;
     mov ax,gs:up_tail_ptr
     sub ax,gs:up_rd_ptr
-    jnc fbDone
+    jnc fpkDone
 ;
     add ax,gs:up_entry_count
 
-fbDone:
+fpkDone:
     mov cx,gs:up_entry_count
     sub cx,ax
     dec cx
 ;
     pop ax
     retf32
-FreeBuffers   Endp
+FreePackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReqBuffer
+;       NAME:           ReqPacket
 ;
-;       DESCRIPTION:    Req buffer
+;       DESCRIPTION:    Req packet buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
 ;
 ;       RETURNS:        EDX     Buffer linear address
+;                       CX      Message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReqBuffer   Proc far
+ReqPacket   Proc far
     push fs
     push eax
     push ebx
@@ -2622,28 +2623,14 @@ ReqBuffer   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-;
-    mov al,gs:ued_address
-    test al,80h
-    jnz rqbIn
-
-rqbOut:
-    mov bx,gs:up_wr_ptr
-    cmp bx,gs:up_rd_ptr
-    jne rqbGet
-;
-    stc
-    jmp rqbDone
-
-rqbIn:
     mov bx,gs:up_rd_ptr
     cmp bx,gs:up_wr_ptr
-    jne rqbGet
+    jne rqpkGet
 ;
     stc
-    jmp rqbDone
+    jmp rqpkDone
 
-rqbGet:
+rqpkGet:
     shl bx,3
     mov edx,gs:[bx].up_entry_arr
     mov ecx,fs:[edx].utd_control
@@ -2652,27 +2639,27 @@ rqbGet:
     mov edx,gs:[bx+4].up_entry_arr
     clc
 
-rqbDone:
+rqpkDone:
     pop esi
     pop ebx
     pop eax
     pop fs
     retf32
-ReqBuffer   Endp
+ReqPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RelBuffer
+;       NAME:           RelPacket
 ;
-;       DESCRIPTION:    Release buffer
+;       DESCRIPTION:    Release packet buffer
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RelBuffer   Proc far
+RelPacket   Proc far
     push fs
     pushad
 ;
@@ -2680,43 +2667,28 @@ RelBuffer   Proc far
     mov fs,ax
 ;
     EnterGsSection gs:up_section
-;
-    mov al,gs:ued_address
-    test al,80h
-    jnz rlbIn
-
-rlbOut:
-    mov bx,gs:up_wr_ptr
-    cmp bx,gs:up_rd_ptr
-    stc
-    je rlbDone
-;
-    int 3
-    jmp rlbDone
-
-rlbIn:
     mov bx,gs:up_rd_ptr
     cmp bx,gs:up_wr_ptr
     stc
-    je rlbDone
+    je rlpkDone
 ;
     inc bx
     cmp bx,gs:up_entry_count
-    jb rlbRdPtrOk
+    jb rlpkPtrOk
 ;
     xor bx,bx
 
-rlbRdPtrOk:
+rlpkPtrOk:
     mov gs:up_rd_ptr,bx
 ;
     mov bx,gs:up_tail_ptr
     sub bx,1
-    jnc rlbRdPrevOk
+    jnc rlpkPrevOk
 ;
     mov bx,gs:up_entry_count
     dec bx
 
-rlbRdPrevOk:
+rlpkPrevOk:
     shl bx,3
     mov esi,gs:[bx].up_entry_arr
 ;
@@ -2726,23 +2698,23 @@ rlbRdPrevOk:
 ;
     mov edx,gs:[di+4].up_entry_arr
     or edx,edx
-    jnz rlbRdHasBuffer
+    jnz rlpkHasBuffer
 ;
     mov cx,gs:ued_maxsize
     AllocateMemBlk
     mov gs:[di+4].up_entry_arr,edx
 
-rlbRdHasBuffer:
+rlpkHasBuffer:
     LinearToPhysicalMemBlk
 ;
     mov edx,gs:[di].up_entry_arr
     mov eax,21800000h
     cmp es:usbd_speed,0
-    jnz rlbRdSpeedOk
+    jnz rlpkSpeedOk
 ;
     or eax, 4000000h
     
-rlbRdSpeedOk:
+rlpkSpeedOk:
     mov fs:[edx].utd_control,eax
     mov fs:[edx].utd_link,5
 ;
@@ -2756,53 +2728,110 @@ rlbRdSpeedOk:
 ;
     inc bx
     cmp bx,gs:up_entry_count
-    jb rlbRdTailOk
+    jb rlpkTailOk
 ;
     xor bx,bx
 
-rlbRdTailOk:
+rlpkTailOk:
     mov gs:up_tail_ptr,bx
 ;
     popf
-    je rlbRdCheckStart
+    je rlpkCheckStart
 ;
     mov esi,gs:up_qh
     mov eax,fs:[esi].uqh_elem
     test al,1
-    jz rlbRdOk
+    jz rlpkOk
 ;
     mov bx,ds:uhc_thread
     Signal
-    jmp rlbRdOk
+    jmp rlpkOk
 
-rlbRdCheckStart:
+rlpkCheckStart:
     and al,0F0h
     mov ebx,eax
     mov esi,gs:up_qh
     mov eax,fs:[esi].uqh_elem
     test al,1
-    jz rlbRdOk
+    jz rlpkOk
 ;
     mov eax,fs:[edx].utd_control
     shr eax,16
     test al,80h
-    jnz rlbRdRestart
+    jnz rlpkRestart
 ;
     int 3
 
-rlbRdRestart:
+rlpkRestart:
     mov fs:[esi].uqh_elem,ebx
     
-rlbRdOk:
+rlpkOk:
     clc
 
-rlbDone:
+rlpkDone:
     LeaveGsSection gs:up_section
 ;
     popad
     pop fs
     retf32
-RelBuffer   Endp
+RelPacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteStream
+;
+;       DESCRIPTION:    Write stream buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStream   Proc far
+    int 3
+    retf32
+WriteStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadRaw
+;
+;       DESCRIPTION:    Read raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;       RETURNS:        CX      Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRaw   Proc far
+    int 3
+    retf32
+ReadRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteRaw
+;
+;       DESCRIPTION:    Write raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteRaw   Proc far
+    int 3
+    retf32
+WriteRaw   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3360,10 +3389,13 @@ ut14 DD OFFSET ConfigDev,           SEG code
 ut15 DD OFFSET SetupPipeBuffer,     SEG code
 ut16 DD OFFSET ClearPipeBuffer,     SEG code
 ut17 DD OFFSET StopPipe,            SEG code
-ut18 DD OFFSET UsedBuffers,         SEG code
-ut19 DD OFFSET FreeBuffers,         SEG code
-ut1A DD OFFSET ReqBuffer,           SEG code
-ut1B DD OFFSET RelBuffer,           SEG code
+ut18 DD OFFSET UsedPackets,         SEG code
+ut19 DD OFFSET FreePackets,         SEG code
+ut1A DD OFFSET ReqPacket,           SEG code
+ut1B DD OFFSET RelPacket,           SEG code
+ut1C DD OFFSET WriteStream,         SEG code
+ut1D DD OFFSET ReadRaw,             SEG code
+ut1E DD OFFSET WriteRaw,            SEG code
 
 InitFunction    Proc near
     push ds
@@ -3419,7 +3451,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Ch
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

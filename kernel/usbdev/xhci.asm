@@ -496,28 +496,9 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UsedBuffers
+;       NAME:           UsedPackets
 ;
-;       DESCRIPTION:    Return used buffers
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURN:         CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedBuffers   Proc far
-    int 3
-    retf32
-UsedBuffers   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeBuffers
-;
-;       DESCRIPTION:    Return free buffers
+;       DESCRIPTION:    Return used packets
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
@@ -526,46 +507,123 @@ UsedBuffers   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeBuffers   Proc far
+UsedPackets   Proc far
     int 3
     retf32
-FreeBuffers   Endp
+UsedPackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReqBuffer
+;       NAME:           FreePackets
 ;
-;       DESCRIPTION:    Req buffer
+;       DESCRIPTION:    Return free packets
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;       RETURN:         CX      Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePackets   Proc far
+    int 3
+    retf32
+FreePackets   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReqPacket
+;
+;       DESCRIPTION:    Req packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
 ;
 ;       RETURNS:        EDX     Buffer linear address
+;                       CX      Message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReqBuffer   Proc far
+ReqPacket   Proc far
     int 3
     retf32
-ReqBuffer   Endp
+ReqPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RelBuffer
+;       NAME:           RelPacket
 ;
-;       DESCRIPTION:    Release buffer
+;       DESCRIPTION:    Release packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RelBuffer   Proc far
+RelPacket   Proc far
     int 3
     retf32
-RelBuffer   Endp
+RelPacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteStream
+;
+;       DESCRIPTION:    Write stream buffer
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStream   Proc far
+    int 3
+    retf32
+WriteStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadRaw
+;
+;       DESCRIPTION:    Read raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;       RETURNS:        CX      Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRaw   Proc far
+    int 3
+    retf32
+ReadRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteRaw
+;
+;       DESCRIPTION:    Write raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteRaw   Proc far
+    int 3
+    retf32
+WriteRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2080,7 +2138,7 @@ RunControl   Proc near
     push ds
     pushad
 ;
-    test es:usbd_flags,FLAG_DETACHED
+    test es:usbd_flags,DEV_FLAG_DETACHED
     stc
     jnz rcDone
 ;
@@ -3334,10 +3392,13 @@ et14 DD OFFSET ConfigDevice,        SEG code
 et15 DD OFFSET SetupPipeBuffer,     SEG code
 et16 DD OFFSET ClearPipeBuffer,     SEG code
 et17 DD OFFSET StopPipe,            SEG code
-et18 DD OFFSET UsedBuffers,         SEG code
-et19 DD OFFSET FreeBuffers,         SEG code
-et1A DD OFFSET ReqBuffer,           SEG code
-et1B DD OFFSET RelBuffer,           SEG code
+et18 DD OFFSET UsedPackets,         SEG code
+et19 DD OFFSET FreePackets,         SEG code
+et1A DD OFFSET ReqPacket,           SEG code
+et1B DD OFFSET RelPacket,           SEG code
+et1C DD OFFSET WriteStream,         SEG code
+et1D DD OFFSET ReadRaw,             SEG code
+et1E DD OFFSET WriteRaw,            SEG code
 
 AddFunction    Proc near
     push es
@@ -3482,7 +3543,7 @@ ifIntDone:
     mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Ch
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]
