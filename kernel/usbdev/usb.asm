@@ -2131,6 +2131,44 @@ ReadPacket	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadStream
+;
+;       description:    Read using stream interface
+;
+;       parameters:     GS        Pipe sel
+;                       BP:EDI    Buffer
+;
+;       returns:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadStream	Proc near
+    stc
+    ret
+ReadStream	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadRaw
+;
+;       description:    Read using raw interface
+;
+;       parameters:     GS        Pipe sel
+;                       BP:EDI    Buffer
+;
+;       returns:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRaw	Proc near
+    stc
+    ret
+ReadRaw	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadUsbPipe
 ;
 ;       description:    Read USB pipe
@@ -2185,15 +2223,23 @@ ReadPipe	Proc near
     jz rupLeave
 ;
     mov gs,bx
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz rupNotStream
+;
+    call ReadStream
+    jmp rupLeave
+
+rupNotStream:
     mov bx,gs:usbp_packet_sel
-    stc
+    or bx,bx
     jz rupNotPacket
 ;
     call ReadPacket
     jmp rupLeave
 
 rupNotPacket:
-    int 3
+    call ReadRaw
 
 rupLeave:
     LeaveSection ds:udd_section
@@ -2224,6 +2270,44 @@ read_usb_pipe16	Proc far
     pop edi
     retf32
 read_usb_pipe16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteStream
+;
+;       description:    Write using stream interface
+;
+;       parameters:     GS        Pipe sel
+;                       BP:EDI    Buffer
+;
+;       returns:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStream	Proc near
+    stc
+    ret
+WriteStream	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteRaw
+;
+;       description:    Write using raw interface
+;
+;       parameters:     GS        Pipe sel
+;                       BP:EDI    Buffer
+;
+;       returns:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteRaw	Proc near
+    stc
+    ret
+WriteRaw	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2281,7 +2365,15 @@ WritePipe	Proc near
     jz wupLeave
 ;
     mov gs,bx
-    int 3
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz wupNotStream
+;
+    call WriteStream
+    jmp wupLeave
+
+wupNotStream:
+    call WriteRaw
 
 wupLeave:
     LeaveSection ds:udd_section
