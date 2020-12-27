@@ -2248,9 +2248,9 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopTdRing
+;       NAME:           StopPacketTds
 ;
-;       DESCRIPTION:    Stop TD ring
+;       DESCRIPTION:    Stop packet TDs
 ;
 ;
 ;       PARAMETERS:     ES      Device
@@ -2258,7 +2258,7 @@ CreateIntrPipe   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopTdRing Proc near
+StopPacketTds Proc near
     push fs
     push eax
     push edx
@@ -2273,12 +2273,12 @@ StopTdRing Proc near
     pop eax
     pop fs
     ret
-StopTdRing Endp
+StopPacketTds Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateTdRing
+;       NAME:           AllocatePacketSel
 ;
 ;       DESCRIPTION:    Allocate TD ring
 ;
@@ -2286,11 +2286,11 @@ StopTdRing Endp
 ;                       FS      Flat sel
 ;                       CX      Buffer count
 ;
-;       RETURNS:        BX      TD ring sel
+;       RETURNS:        BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateTdRing    Proc near
+AllocatePacketSel    Proc near
     push gs
     push eax
     push ecx
@@ -2332,12 +2332,12 @@ atdrLoop:
     pop eax
     pop gs
     ret
-AllocateTdRing	Endp
+AllocatePacketSel	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeTdRing
+;       NAME:           FreePacketTds
 ;
 ;       DESCRIPTION:    Free TDs in ring
 ;
@@ -2348,7 +2348,7 @@ AllocateTdRing	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeTdRing Proc near
+FreePacketTds Proc near
     push ds
     pushad
 ;
@@ -2380,14 +2380,14 @@ ftdNext:
     popad
     pop ds
     ret
-FreeTdRing Endp
+FreePacketTds Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DeleteTdRing
+;       NAME:           FreePacketSel
 ;
-;       DESCRIPTION:    Delete TD ring
+;       DESCRIPTION:    Free packet sel
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -2396,7 +2396,7 @@ FreeTdRing Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteTdRing Proc near
+FreePacketSel Proc near
     push ax
     push bx
 ;
@@ -2405,10 +2405,10 @@ DeleteTdRing Proc near
     or bx,bx
     jz dtdDone
 ;
-    call StopTdRing
+    call StopPacketTds
     mov ax,5
     WaitMilliSec
-    call FreeTdRing    
+    call FreePacketTds
 ;
     push es
     mov es,bx
@@ -2419,14 +2419,14 @@ dtdDone:
     pop bx
     pop ax
     ret
-DeleteTdRing Endp
+FreePacketSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartPipeBuffer
+;       NAME:           StartPacketTds
 ;
-;       DESCRIPTION:    Start pipe buffer
+;       DESCRIPTION:    Start packet TDs
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -2435,7 +2435,7 @@ DeleteTdRing Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartPipeBuffer     Proc near
+StartPacketTds     Proc near
     push ds
     pushad
 ;
@@ -2526,7 +2526,7 @@ spDone:
     popad
     pop ds
     ret
-StartPipeBuffer     Endp
+StartPacketTds     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2549,10 +2549,10 @@ OpenPacket   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    call AllocateTdRing
+    call AllocatePacketSel
     mov gs:usbp_packet_sel,bx
 ;
-    call StartPipeBuffer
+    call StartPacketTds
     clc
 ;
     popad
@@ -2580,7 +2580,7 @@ ClosePacket   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    call DeleteTdRing
+    call FreePacketSel
 ;
     pop ax
     pop fs
@@ -3832,6 +3832,130 @@ CheckControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandlePacketIn
+;
+;       DESCRIPTION:    Handle packet IN pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePacketIn   Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bp,ds
+    mov ds,bx
+    EnterSection ds:usbpk_section
+;
+    mov bx,ds:usbpk_wr_ptr
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiLeave
+;
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    mov edx,ds:[si]
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jnz hpiCheckRun
+
+hpiLoop:
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb hpiSave
+;
+    xor bx,bx
+
+hpiSave:
+    mov ds:usbpk_wr_ptr,bx
+;
+    and al,7Ch
+    jnz hpiReport
+;
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiSignal
+;
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    mov edx,ds:[si]
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jz hpiLoop
+    jmp hpiSignal
+
+hpiReport:
+    push ds
+    push edx
+;
+    mov ds,bp
+    mov dl,gs:ued_address
+    call ReportStatus
+;
+    pop edx
+    pop ds
+
+hpiSignal:
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz hpiSignalObj
+;
+    mov bx,es:usbd_thread
+    Signal
+    jmp hpiSignalOk
+
+hpiSignalObj:
+    xor bx,bx
+    xchg bx,gs:usbp_wait
+    or bx,bx
+    jz hpiSignalOk
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+hpiSignalOk:
+    mov bx,ds:usbpk_wr_ptr
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiLeave
+
+hpiCheckRun:
+    mov esi,gs:ep_qh
+    mov al,fs:[esi].qh_status
+    test al,80h
+    jnz hpiLeave
+;
+    and al,7Ch
+    jnz hpiLeave
+;
+    shl bx,3
+    add bx,SIZE usb_packet_struc
+    mov edx,ds:[bx]
+    LinearToPhysicalMemBlk
+    mov fs:[esi].qh_next_qtd,eax
+
+hpiLeave:
+    LeaveSection ds:usbpk_section
+;
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+HandlePacketIn Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -3844,108 +3968,19 @@ CheckControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckIn   Proc near
-    push ds
-    push ebx
-    push edx
-    push esi
-    push ebp
+    push bx
 ;
     mov bx,gs:usbp_packet_sel
     or bx,bx
-    jz citDone
+    jz citNotPacket
 ;
-    mov bp,ds
-    mov ds,bx
-    EnterSection ds:usbpk_section
-;
-    mov bx,ds:usbpk_wr_ptr
-    cmp bx,ds:usbpk_tail_ptr
-    je citLeave
-;
-    mov si,bx
-    shl si,3
-    add si,SIZE usb_packet_struc
-    mov edx,ds:[si]
-    mov al,fs:[edx].qtd_status
-    test al,80h
-    jnz citCheckRun
+    call HandlePacketIn
+    jmp citDone
 
-citLoop:
-    inc bx
-    cmp bx,ds:usbpk_entry_count
-    jb citSave
-;
-    xor bx,bx
-
-citSave:
-    mov ds:usbpk_wr_ptr,bx
-;
-    and al,7Ch
-    jnz citReport
-;
-    cmp bx,ds:usbpk_tail_ptr
-    je citSignal
-;
-    mov si,bx
-    shl si,3
-    add si,SIZE usb_packet_struc
-    mov edx,ds:[si]
-    mov al,fs:[edx].qtd_status
-    test al,80h
-    jz citLoop
-    jmp citSignal
-
-citReport:
-    push ds
-    push edx
-;
-    mov ds,bp
-    mov dl,gs:ued_address
-    call ReportStatus
-;
-    pop edx
-    pop ds
-
-citSignal:
-    xor bx,bx
-    xchg bx,gs:usbp_wait
-    or bx,bx
-    jz citSignalOk
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-citSignalOk:
-    mov bx,ds:usbpk_wr_ptr
-    cmp bx,ds:usbpk_tail_ptr
-    je citLeave
-
-citCheckRun:
-    mov esi,gs:ep_qh
-    mov al,fs:[esi].qh_status
-    test al,80h
-    jnz citLeave
-;
-    and al,7Ch
-    jnz citLeave
-;
-    shl bx,3
-    add bx,SIZE usb_packet_struc
-    mov edx,ds:[bx]
-    LinearToPhysicalMemBlk
-    mov fs:[esi].qh_next_qtd,eax
-
-citLeave:
-    LeaveSection ds:usbpk_section
+citNotPacket:
 
 citDone:
-    pop ebp
-    pop esi
-    pop edx
-    pop ebx
-    pop ds
+    pop bx
     ret
 CheckIn   Endp        
 
