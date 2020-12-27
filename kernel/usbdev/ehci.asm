@@ -2531,9 +2531,9 @@ StartPipeBuffer     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPacket
+;       NAME:           OpenPacket
 ;
-;       DESCRIPTION:    Setup pipe packet
+;       DESCRIPTION:    Open pipe packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
@@ -2541,7 +2541,7 @@ StartPipeBuffer     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPacket   Proc far
+OpenPacket   Proc far
     push ds
     push fs
     pushad
@@ -2559,21 +2559,21 @@ SetupPacket   Proc far
     pop fs
     pop ds
     retf32
-SetupPacket   Endp
+OpenPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPacket
+;       NAME:           ClosePacket
 ;
-;       DESCRIPTION:    Clear pipe packet
+;       DESCRIPTION:    Close pipe packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPacket   Proc far
+ClosePacket   Proc far
     push ds
     push fs
     push ax
@@ -2586,7 +2586,7 @@ ClearPacket   Proc far
     pop fs
     pop ds
     retf32
-ClearPacket   Endp
+ClosePacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2614,66 +2614,6 @@ StopPipe   Proc far
     pop ds
     retf32
 StopPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UsedPackets
-;
-;       DESCRIPTION:    Used packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedPackets   Proc far
-    push ds
-;
-    mov ds,gs:usbp_packet_sel
-    mov cx,ds:usbpk_wr_ptr
-    sub cx,ds:usbpk_rd_ptr
-    jnc upkDone
-;
-    add cx,ds:usbpk_entry_count
-
-upkDone:
-    pop ds
-    retf32
-UsedPackets   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreePackets
-;
-;       DESCRIPTION:    Free packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePackets   Proc far
-    push ds
-    push ax
-;
-    mov ds,gs:usbp_packet_sel
-    mov ax,ds:usbpk_tail_ptr
-    sub ax,ds:usbpk_rd_ptr
-    jnc fpDone
-;
-    add ax,ds:usbpk_entry_count
-
-fpDone:
-    mov cx,ds:usbpk_entry_count
-    sub cx,ax
-    dec cx
-;
-    pop ax
-    pop ds
-    retf32
-FreePackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4164,16 +4104,14 @@ et11 DD OFFSET ChangeAddress,      SEG code
 et12 DD OFFSET UpdateMaxLen,       SEG code
 ec13 DD OFFSET ControlMsg,         SEG code
 et14 DD OFFSET ConfigDev,          SEG code
-ec15 DD OFFSET SetupPacket,        SEG code
-ec16 DD OFFSET ClearPacket,        SEG code
+ec15 DD OFFSET OpenPacket,         SEG code
+ec16 DD OFFSET ClosePacket,        SEG code
 ec17 DD OFFSET StopPipe,           SEG code
-ec18 DD OFFSET UsedPackets,        SEG code
-ec19 DD OFFSET FreePackets,        SEG code
-ec1A DD OFFSET ReqPacket,          SEG code
-ec1B DD OFFSET RelPacket,          SEG code
-ec1C DD OFFSET WriteStream,        SEG code
-ec1D DD OFFSET ReadRaw,            SEG code
-ec1E DD OFFSET WriteRaw,           SEG code
+ec18 DD OFFSET ReqPacket,          SEG code
+ec19 DD OFFSET RelPacket,          SEG code
+ec1A DD OFFSET WriteStream,        SEG code
+ec1B DD OFFSET ReadRaw,            SEG code
+ec1C DD OFFSET WriteRaw,           SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4195,7 +4133,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]

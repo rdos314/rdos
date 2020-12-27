@@ -2056,9 +2056,9 @@ StartPipeBuffer     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPacket
+;       NAME:           OpenPacket
 ;
-;       DESCRIPTION:    Setup packet
+;       DESCRIPTION:    Open packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
@@ -2066,7 +2066,7 @@ StartPipeBuffer     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPacket   Proc far
+OpenPacket   Proc far
     push ds
     push fs
     push ax
@@ -2087,21 +2087,21 @@ SetupPacket   Proc far
     pop fs
     pop ds
     retf32
-SetupPacket   Endp
+OpenPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPacket
+;       NAME:           ClosePacket
 ;
-;       DESCRIPTION:    Clear packet
+;       DESCRIPTION:    Close packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPacket   Proc far
+ClosePacket   Proc far
     push ds
     push fs
     push ax
@@ -2114,7 +2114,7 @@ ClearPacket   Proc far
     pop fs
     pop ds
     retf32
-ClearPacket   Endp
+ClosePacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2142,70 +2142,6 @@ StopPipe   Proc far
     pop ds
     retf32
 StopPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UsedPackets
-;
-;       DESCRIPTION:    Return used packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedPackets   Proc far
-    push ds
-;
-    mov ds,gs:usbp_packet_sel
-    mov cx,ds:usbpk_wr_ptr
-    sub cx,ds:usbpk_rd_ptr
-    jnc upkDone
-;
-    add cx,ds:usbpk_entry_count
-
-upkDone:
-    pop ds
-    retf32
-UsedPackets   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreePackets
-;
-;       DESCRIPTION:    Return free packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePackets   Proc far
-    push ds
-    push ax
-;
-    mov ds,gs:usbp_packet_sel
-    mov ax,ds:usbpk_tail_ptr
-    sub ax,ds:usbpk_rd_ptr
-    jnc fpkDone
-;
-    add ax,ds:usbpk_entry_count
-
-fpkDone:
-    mov cx,ds:usbpk_entry_count
-    sub cx,ax
-    dec cx
-;
-    pop ax
-    pop ds
-    retf32
-FreePackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3674,16 +3610,14 @@ ot11 DD OFFSET ChangeAddress,       SEG code
 ot12 DD OFFSET UpdateMaxLen,        SEG code
 ot13 DD OFFSET ControlMsg,          SEG code
 ot14 DD OFFSET ConfigDev,           SEG code
-ot15 DD OFFSET SetupPacket,         SEG code
-ot16 DD OFFSET ClearPacket,         SEG code
+ot15 DD OFFSET OpenPacket,          SEG code
+ot16 DD OFFSET ClosePacket,         SEG code
 ot17 DD OFFSET StopPipe,            SEG code
-ot18 DD OFFSET UsedPackets,         SEG code
-ot19 DD OFFSET FreePackets,         SEG code
-ot1A DD OFFSET ReqPacket,           SEG code
-ot1B DD OFFSET RelPacket,           SEG code
-ot1C DD OFFSET WriteStream,         SEG code
-ot1D DD OFFSET ReadRaw,             SEG code
-ot1E DD OFFSET WriteRaw,            SEG code
+ot18 DD OFFSET ReqPacket,           SEG code
+ot19 DD OFFSET RelPacket,           SEG code
+ot1A DD OFFSET WriteStream,         SEG code
+ot1B DD OFFSET ReadRaw,             SEG code
+ot1C DD OFFSET WriteRaw,            SEG code
 
 InitFunction    Proc near
     push ds
@@ -3741,7 +3675,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -2460,9 +2460,9 @@ StartInPipe     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPacket
+;       NAME:           OpenPacket
 ;
-;       DESCRIPTION:    Setup packet
+;       DESCRIPTION:    Open packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
@@ -2470,50 +2470,38 @@ StartInPipe     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPacket   Proc far
+OpenPacket   Proc far
     push ds
     push fs
     pushad
 ;
     mov ax,flat_sel
     mov fs,ax
-;
-    mov dl,gs:ued_address
-    test dl,80h
-    jnz epIn
-
-epOut:
-    int 3
-    clc
-    jmp epDone
-
-epIn:
     call StartInPipe
     clc
-
-epDone:
+;
     popad
     pop fs
     pop ds
     retf32
-SetupPacket   Endp
+OpenPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPacket
+;       NAME:           ClosePacket
 ;
-;       DESCRIPTION:    Clear packet
+;       DESCRIPTION:    Close packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPacket   Proc far
+ClosePacket   Proc far
     int 3
     retf32
-ClearPacket   Endp
+ClosePacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2542,63 +2530,6 @@ StopPipe   Proc far
     pop fs
     retf32
 StopPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UsedPackets
-;
-;       DESCRIPTION:    Return used packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedPackets   Proc far
-    mov cx,gs:up_wr_ptr
-    sub cx,gs:up_rd_ptr
-    jnc upkDone
-;
-    add cx,gs:up_entry_count
-
-upkDone:
-    retf32
-UsedPackets   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreePackets
-;
-;       DESCRIPTION:    Return free packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePackets   Proc far
-    push ax
-;
-    mov ax,gs:up_tail_ptr
-    sub ax,gs:up_rd_ptr
-    jnc fpkDone
-;
-    add ax,gs:up_entry_count
-
-fpkDone:
-    mov cx,gs:up_entry_count
-    sub cx,ax
-    dec cx
-;
-    pop ax
-    retf32
-FreePackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3386,16 +3317,14 @@ ut11 DD OFFSET ChangeAddress,       SEG code
 ut12 DD OFFSET UpdateMaxLen,        SEG code
 ut13 DD OFFSET ControlMsg,          SEG code
 ut14 DD OFFSET ConfigDev,           SEG code
-ut15 DD OFFSET SetupPacket,         SEG code
-ut16 DD OFFSET ClearPacket,         SEG code
+ut15 DD OFFSET OpenPacket,          SEG code
+ut16 DD OFFSET ClosePacket,         SEG code
 ut17 DD OFFSET StopPipe,            SEG code
-ut18 DD OFFSET UsedPackets,         SEG code
-ut19 DD OFFSET FreePackets,         SEG code
-ut1A DD OFFSET ReqPacket,           SEG code
-ut1B DD OFFSET RelPacket,           SEG code
-ut1C DD OFFSET WriteStream,         SEG code
-ut1D DD OFFSET ReadRaw,             SEG code
-ut1E DD OFFSET WriteRaw,            SEG code
+ut18 DD OFFSET ReqPacket,           SEG code
+ut19 DD OFFSET RelPacket,           SEG code
+ut1A DD OFFSET WriteStream,         SEG code
+ut1B DD OFFSET ReadRaw,             SEG code
+ut1C DD OFFSET WriteRaw,            SEG code
 
 InitFunction    Proc near
     push ds
@@ -3451,7 +3380,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]

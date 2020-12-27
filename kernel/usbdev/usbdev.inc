@@ -110,54 +110,45 @@ control_msg_proc           DD ?,?
 ; IN  DL        Configuration #
 config_device_proc	   DD ?,?
 
-;  IN ES        Device
-;  IN GS        Pipe sel
-;  IN CX        Packet count
-setup_packet_proc          DD ?,?
+; IN  ES        Device
+; IN  GS        Pipe sel
+; IN  CX        Packet count
+; OUT BX        Packet sel 
+open_packet_proc          DD ?,?
 
-;  IN ES        Device
-;  IN GS        Pipe sel
-clear_packet_proc          DD ?,?
+; IN  ES        Device
+; IN  GS        Pipe sel
+close_packet_proc          DD ?,?
 
-;  IN ES        Device
-;  IN GS        Pipe sel
+; IN  ES        Device
+; IN  GS        Pipe sel
 stop_pipe_proc             DD ?,?
 
-;  IN  ES        Device
-;  IN  GS        Pipe sel
-;  OUT CX        Used buffer count
-used_packets_proc          DD ?,?
-
-;  IN  ES        Device
-;  IN  GS        Pipe sel
-;  OUT CX        Free buffer count
-free_packets_proc          DD ?,?
-
-;  IN  ES        Device
-;  IN  GS        Pipe sel
-;  OUT EDX       Buffer linear
-;  OUT CX        Size
+; IN  ES        Device
+; IN  GS        Pipe sel
+; OUT EDX       Buffer linear
+; OUT CX        Size
 req_packet_proc            DD ?,?
 
-;  IN  ES        Device
-;  IN  GS        Pipe sel
+; IN  ES        Device
+; IN  GS        Pipe sel
 rel_packet_proc            DD ?,?
 
-;  IN  ES        Device
-;  IN  GS        Pipe sel
+; IN  ES        Device
+; IN  GS        Pipe sel
 write_stream_proc          DD ?,?
 
-;  IN  ES        Device
-;  IN  GS        Pipe sel
-;  IN  EDX       Linear buffer
-;  IN  CX        Size
-;  OUT CX        Actual size
+; IN  ES        Device
+; IN  GS        Pipe sel
+; IN  EDX       Linear buffer
+; IN  CX        Size
+; OUT CX        Actual size
 read_raw_proc              DD ?,?
 
-;  IN  ES        Device
-;  IN  GS        Pipe sel
-;  IN  EDX       Linear buffer
-;  IN  CX        Size
+; IN  ES        Device
+; IN  GS        Pipe sel
+; IN  EDX       Linear buffer
+; IN  CX        Size
 write_raw_proc              DD ?,?
 
 

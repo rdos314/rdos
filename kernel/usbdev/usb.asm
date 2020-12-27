@@ -1477,7 +1477,7 @@ cuppSetup:
 ;
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:setup_packet_proc
+    call fword ptr ds:open_packet_proc
     pop ds
 
 cuppSetupOk:
@@ -1559,7 +1559,7 @@ cuspSetup:
     push cx
     mov cx,8
     mov ds,es:usbd_func_sel
-    call fword ptr ds:setup_packet_proc
+    call fword ptr ds:open_packet_proc
     pop cx
     pop ds
 
@@ -1638,7 +1638,7 @@ curpSetup:
 ;
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:clear_packet_proc
+    call fword ptr ds:close_packet_proc
     pop ds
 
 curpSetupOk:
@@ -1715,6 +1715,68 @@ stop_usb_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetUsedPackets
+;
+;       description:    Get used USB pipe packets
+;
+;       parameters:     GS        Pipe sel
+;
+;       returns:        CX        Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetUsedPackets  Proc near
+    push ds
+;
+    mov ds,gs:usbp_packet_sel
+    mov cx,ds:usbpk_wr_ptr
+    sub cx,ds:usbpk_rd_ptr
+    jnc gupDone
+;
+    add cx,ds:usbpk_entry_count
+
+gupDone:
+    pop ds
+    ret
+GetUsedPackets  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetFreePackets
+;
+;       description:    Get free USB pipe packets
+;
+;       parameters:     GS        Pipe sel
+;
+;       returns:        CX        Buffers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFreePackets  Proc near
+    push ds
+    push ax
+;
+    mov ds,gs:usbp_packet_sel
+    mov ax,ds:usbpk_tail_ptr
+    sub ax,ds:usbpk_rd_ptr
+    jnc gfpDone
+;
+    add ax,ds:usbpk_entry_count
+
+gfpDone:
+    mov cx,ds:usbpk_entry_count
+    sub cx,ax
+    dec cx
+;
+    pop ax
+    pop ds
+    ret
+GetFreePackets  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetUsedUsbBuffers
 ;
 ;       description:    Get used USB pipe buffers
@@ -1763,10 +1825,7 @@ guubOut:
     jz guubLeave
 ;
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:used_packets_proc
-    pop ds
+    call GetUsedPackets
     clc
     jmp guubLeave
 
@@ -1781,10 +1840,7 @@ guubIn:
     jz guubLeave
 ;
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:used_packets_proc
-    pop ds
+    call GetUsedPackets
     clc
 
 guubLeave:
@@ -1851,10 +1907,7 @@ gfubOut:
     jz gfubLeave
 ;
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:free_packets_proc
-    pop ds
+    call GetFreePackets
     clc
     jmp gfubLeave
 
@@ -1869,10 +1922,7 @@ gfubIn:
     jz gfubLeave
 ;
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:free_packets_proc
-    pop ds
+    call GetFreePackets
     clc
 
 gfubLeave:
@@ -2241,10 +2291,7 @@ bwfpOut:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    mov gs:usbp_wait,bx
-    push ds
-    call fword ptr ds:free_packets_proc
-    pop ds
+    call GetFreePackets
     or cx,cx
     jz bwfpLeave
     jmp bwfpCheckSignal
@@ -2260,10 +2307,7 @@ bwfpIn:
 ;
     mov gs,si
     mov gs:usbp_wait,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:used_packets_proc
-    pop ds
+    call GetUsedPackets
     or cx,cx
     jz bwfpLeave
 

@@ -643,9 +643,9 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPacket
+;       NAME:           OpenPacket
 ;
-;       DESCRIPTION:    Setup packet
+;       DESCRIPTION:    Open packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
@@ -653,33 +653,33 @@ CreateIntrPipe   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPacket   Proc far
+OpenPacket   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:setup_packet_proc
+    call fword ptr ds:open_packet_proc
     pop ds
     ret
-SetupPacket   Endp
+OpenPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPacket
+;       NAME:           ClosePacket
 ;
-;       DESCRIPTION:    Clear packet
+;       DESCRIPTION:    Close packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPacket   Proc far
+ClosePacket   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:clear_packet_proc
+    call fword ptr ds:close_packet_proc
     pop ds
     ret
-ClearPacket   Endp
+ClosePacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -700,50 +700,6 @@ StopPipe   Proc far
     pop ds
     ret
 StopPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UsedPackets
-;
-;       DESCRIPTION:    Return used packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedPackets   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:used_packets_proc
-    pop ds
-    ret
-UsedPackets   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreePackets
-;
-;       DESCRIPTION:    Return free packets in pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePackets   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:free_packets_proc
-    pop ds
-    ret
-FreePackets   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -960,16 +916,14 @@ ht11 DD OFFSET ChangeAddress,       SEG code
 ht12 DD OFFSET UpdateMaxLen,        SEG code
 ht13 DD OFFSET ControlMsg,          SEG code
 ht14 DD OFFSET ConfigDev,           SEG code
-ht15 DD OFFSET SetupPacket,         SEG code
-ht16 DD OFFSET ClearPacket,         SEG code
+ht15 DD OFFSET OpenPacket,          SEG code
+ht16 DD OFFSET ClosePacket,         SEG code
 ht17 DD OFFSET StopPipe,            SEG code
-ht18 DD OFFSET UsedPackets,         SEG code
-ht19 DD OFFSET FreePackets,         SEG code
-ht1A DD OFFSET ReqPacket,           SEG code
-ht1B DD OFFSET RelPacket,           SEG code
-ht1C DD OFFSET WriteStream,         SEG code
-ht1D DD OFFSET ReadRaw,             SEG code
-ht1E DD OFFSET WriteRaw,            SEG code
+ht18 DD OFFSET ReqPacket,           SEG code
+ht19 DD OFFSET RelPacket,           SEG code
+ht1A DD OFFSET WriteStream,         SEG code
+ht1B DD OFFSET ReadRaw,             SEG code
+ht1C DD OFFSET WriteRaw,            SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2263,7 +2217,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Fh
+    mov ecx,2*1Dh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

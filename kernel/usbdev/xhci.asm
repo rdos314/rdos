@@ -496,44 +496,6 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UsedPackets
-;
-;       DESCRIPTION:    Return used packets
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURN:         CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UsedPackets   Proc far
-    int 3
-    retf32
-UsedPackets   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreePackets
-;
-;       DESCRIPTION:    Return free packets
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;       RETURN:         CX      Buffers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePackets   Proc far
-    int 3
-    retf32
-FreePackets   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ReqPacket
 ;
 ;       DESCRIPTION:    Req packet
@@ -2533,9 +2495,9 @@ StopEndpoint   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPacket
+;       NAME:           OpenPacket
 ;
-;       DESCRIPTION:    Setup packet
+;       DESCRIPTION:    Open packet interface
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
@@ -2543,7 +2505,7 @@ StopEndpoint   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPacket   Proc far
+OpenPacket   Proc far
     push eax
     push edx
 ;
@@ -2553,24 +2515,24 @@ SetupPacket   Proc far
     pop edx
     pop eax
     ret
-SetupPacket  Endp
+OpenPacket  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPacket
+;       NAME:           ClosePacket
 ;
-;       DESCRIPTION:    Clear packet
+;       DESCRIPTION:    Close packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPacket   Proc far
+ClosePacket   Proc far
     int 3
     retf32
-ClearPacket   Endp
+ClosePacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3389,16 +3351,14 @@ et11 DD OFFSET ChangeAddress,       SEG code
 et12 DD OFFSET UpdateMaxLen,        SEG code
 et13 DD OFFSET ControlMsg,          SEG code
 et14 DD OFFSET ConfigDevice,        SEG code
-et15 DD OFFSET SetupPacket,         SEG code
-et16 DD OFFSET ClearPAcket,         SEG code
+et15 DD OFFSET OpenPacket,          SEG code
+et16 DD OFFSET ClosePAcket,         SEG code
 et17 DD OFFSET StopPipe,            SEG code
-et18 DD OFFSET UsedPackets,         SEG code
-et19 DD OFFSET FreePackets,         SEG code
-et1A DD OFFSET ReqPacket,           SEG code
-et1B DD OFFSET RelPacket,           SEG code
-et1C DD OFFSET WriteStream,         SEG code
-et1D DD OFFSET ReadRaw,             SEG code
-et1E DD OFFSET WriteRaw,            SEG code
+et18 DD OFFSET ReqPacket,           SEG code
+et19 DD OFFSET RelPacket,           SEG code
+et1A DD OFFSET WriteStream,         SEG code
+et1B DD OFFSET ReadRaw,             SEG code
+et1C DD OFFSET WriteRaw,            SEG code
 
 AddFunction    Proc near
     push es
@@ -3543,7 +3503,7 @@ ifIntDone:
     mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]
