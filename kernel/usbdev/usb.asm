@@ -1449,6 +1449,16 @@ StartReconfigPipe	Proc near
     pop ds
 
 srpPacketOk:    
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz srpStreamOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_stream_proc
+    pop ds
+
+srpStreamOk:    
     clc
     jmp srpDone
 
@@ -1594,16 +1604,32 @@ config_usb_stream_pipe	Proc far
 
 cuspIn:
     push ds
-    push cx
-    mov cx,8
+    pusha
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:open_stream_proc
+;
+    mov ds,gs:usbp_stream_sel
+    mov ax,ds:usbs_buf_size
+    xor dx,dx
+    div gs:ued_maxsize
+    mov cx,ax
+;
     mov ds,es:usbd_func_sel
     call fword ptr ds:open_packet_proc
-    pop cx
+;
+    mov bx,es:usbd_thread
+    Signal
+;
+    popa
     pop ds
     jmp cuspOk
 
 cuspOut:
-    int 3
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:open_stream_proc
+    pop ds
 
 cuspOk:
     LeaveSection ds:udd_section
