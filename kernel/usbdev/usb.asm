@@ -1421,6 +1421,48 @@ ConfigPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartReconfigPipe
+;
+;       description:    Start to reconfigure pipe
+;
+;       parameters:     DS        Function
+;                       ES        Device
+;                       DL        Pipe #
+;
+;       RETURNS:        GS        Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartReconfigPipe	Proc near
+    push bx
+;
+    call GetPipe
+    jc srpConfig
+;
+    mov bx,gs:usbp_packet_sel
+    or bx,bx
+    jz srpPacketOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_packet_proc
+    pop ds
+
+srpPacketOk:    
+    clc
+    jmp srpDone
+
+srpConfig:
+    call ConfigPipe
+
+srpDone:
+    pop bx
+    ret
+StartReconfigPipe       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ConfigUsbPacketPipe
 ;
 ;       description:    Configure USB packet pipe
@@ -1459,13 +1501,9 @@ config_usb_packet_pipe	Proc far
     jnz cuppLeaveFail
 ;
     mov es,ds:udd_sel    
-    call GetPipe
-    jnc cuppSetup
-;
-    call ConfigPipe
+    call StartReconfigPipe
     jc cuppLeaveFail
-
-cuppSetup:
+;
     mov al,gs:usbp_flags
     and al,NOT PIPE_FLAG_STREAM
     or al,PIPE_FLAG_PACKET
@@ -1473,16 +1511,19 @@ cuppSetup:
 ;
     mov gs:usbp_timeout,esi
     test dl,80h
-    jz cuppSetupOk
-;
+    jz cuppOut
+
+cuppIn:
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:open_packet_proc
     pop ds
+    jmp cuppOk
 
-cuppSetupOk:
+cuppOut:
+    int 3
 
-cuppBufOk:
+cuppOk:
     LeaveSection ds:udd_section
     clc
     jmp cuppDone
@@ -1539,13 +1580,9 @@ config_usb_stream_pipe	Proc far
     jnz cuspLeaveFail
 ;
     mov es,ds:udd_sel    
-    call GetPipe
-    jnc cuspSetup
-;
-    call ConfigPipe
+    call StartReconfigPipe
     jc cuspLeaveFail
-
-cuspSetup:
+;
     mov al,gs:usbp_flags
     and al,NOT PIPE_FLAG_PACKET
     or al,PIPE_FLAG_STREAM
@@ -1553,8 +1590,9 @@ cuspSetup:
 ;
     mov gs:usbp_timeout,esi
     test dl,80h
-    jz cuspSetupOk
-;
+    jz cuspOut
+
+cuspIn:
     push ds
     push cx
     mov cx,8
@@ -1562,10 +1600,12 @@ cuspSetup:
     call fword ptr ds:open_packet_proc
     pop cx
     pop ds
+    jmp cuspOk
 
-cuspSetupOk:
+cuspOut:
+    int 3
 
-cuspBufOk:
+cuspOk:
     LeaveSection ds:udd_section
     clc
     jmp cuspDone
@@ -1621,29 +1661,14 @@ config_usb_raw_pipe	Proc far
     jnz curpLeaveFail
 ;
     mov es,ds:udd_sel    
-    call GetPipe
-    jnc curpSetup
-;
-    call ConfigPipe
+    call StartReconfigPipe
     jc curpLeaveFail
-
-curpSetup:
+;
     mov al,gs:usbp_flags
     and al,NOT (PIPE_FLAG_STREAM OR PIPE_FLAG_PACKET)
     mov gs:usbp_flags,al
+    int 3
 ;
-    mov gs:usbp_timeout,esi
-    test dl,80h
-    jz curpSetupOk
-;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:close_packet_proc
-    pop ds
-
-curpSetupOk:
-
-curpBufOk:
     LeaveSection ds:udd_section
     clc
     jmp curpDone
