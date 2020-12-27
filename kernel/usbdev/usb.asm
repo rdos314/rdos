@@ -3494,6 +3494,7 @@ InitDevice Proc near
     mov es:usbd_flags,0
     mov es:usbd_maxlen,8
     mov es:usbd_curr_config,0
+    mov es:usbd_thread,0
 ;
     xor ax,ax
     mov cx,15
@@ -3750,8 +3751,6 @@ naDone:
     pop ds
     ret
 NotifyAttach   Endp
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4180,6 +4179,9 @@ uaAttach:
     call ReadDescriptors
     jc uaDetach
 ;
+    GetThread
+    mov es:usbd_thread,ax
+;
     call NotifyAttach
     or es:usbd_flags,DEV_FLAG_ATTACHED
 
@@ -4202,6 +4204,8 @@ uaConnected:
     lock and ds:usb_reset_bitmap,eax
 
 uaDetach:
+    mov es:usbd_thread,0
+;
     call fword ptr ds:lock_proc
     jmp uaDetachLocked
 

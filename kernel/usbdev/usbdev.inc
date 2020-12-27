@@ -178,6 +178,7 @@ usbd_parent_hub         DW ?
 usbd_parent_thread      DW ?
 usbd_my_hub             DW ?
 usbd_dev_sel            DW ?
+usbd_thread             DW ?
 usbd_maxlen             DW ?
 usbd_port               DB ?
 usbd_address            DB ?
