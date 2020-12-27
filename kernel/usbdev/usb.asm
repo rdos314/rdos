@@ -2449,8 +2449,21 @@ bwfpOut:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    call GetFreePackets
+    mov cx,gs:usbp_stream_sel
     or cx,cx
+    jz bwfpLeaveSignal
+;
+    mov gs:usbp_wait,bx
+    mov es,cx
+    mov cx,es:usbs_wr_ptr
+    inc cx
+    cmp cx,es:usbs_buf_size
+    je bwfpStreamOutOk
+;
+    xor cx,cx
+
+bwfpStreamOutOk:
+    cmp cx,es:usbs_rd_ptr
     jz bwfpLeave
     jmp bwfpCheckSignal
 
