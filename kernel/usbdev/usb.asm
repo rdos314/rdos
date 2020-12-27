@@ -2143,6 +2143,7 @@ ReadPacket	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadStream	Proc near
+    int 3
     stc
     ret
 ReadStream	Endp
@@ -2162,6 +2163,7 @@ ReadStream	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadRaw	Proc near
+    int 3
     stc
     ret
 ReadRaw	Endp
@@ -2286,6 +2288,7 @@ read_usb_pipe16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteStream	Proc near
+    int 3
     stc
     ret
 WriteStream	Endp
