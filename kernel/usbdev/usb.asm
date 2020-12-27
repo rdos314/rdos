@@ -2421,7 +2421,7 @@ write_usb_pipe16 Endp
 
 start_wait_for_pipe     PROC far
     push ds
-    push fs
+    push es
     push gs
     pushad
 ;
@@ -2435,9 +2435,6 @@ start_wait_for_pipe     PROC far
     jnz bwfpLeaveSignal
 ;
     mov es,ds:udd_sel    
-;
-    mov ax,flat_sel
-    mov fs,ax
 ;
     test dl,80h
     jnz bwfpIn
@@ -2479,17 +2476,15 @@ bwfpCheckSignal:
     jz bwfpLeave
 
 bwfpLeaveSignal:
-    push es    
     mov es,bx
     SignalWait
-    pop es
 
 bwfpLeave:
     LeaveSection ds:udd_section
 ;
     popad
     pop gs
-    pop fs
+    pop es
     pop ds
     retf32
 start_wait_for_pipe Endp
