@@ -2464,6 +2464,18 @@ bwfpIn:
     jz bwfpLeaveSignal
 ;
     mov gs,si
+    mov cx,gs:usbp_stream_sel
+    or cx,cx
+    jz bwfpCheckPacket
+;
+    mov gs:usbp_wait,bx
+    mov es,cx
+    mov cx,es:usbs_wr_ptr
+    cmp cx,es:usbs_rd_ptr
+    jz bwfpLeave
+    jmp bwfpCheckSignal
+
+bwfpCheckPacket:
     mov cx,gs:usbp_packet_sel
     or cx,cx
     jz bwfpLeaveSignal
