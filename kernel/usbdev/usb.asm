@@ -1468,6 +1468,11 @@ config_usb_packet_pipe	Proc far
     jc cuppLeaveFail
 
 cuppSetup:
+    mov al,gs:usbp_flags
+    and al,NOT PIPE_FLAG_STREAM
+    or al,PIPE_FLAG_PACKET
+    mov gs:usbp_flags,al
+;
     mov gs:usbp_timeout,esi
     test dl,80h
     jz cuppSetupOk
@@ -1552,6 +1557,11 @@ config_usb_stream_pipe	Proc far
     jc cuspLeaveFail
 
 cuspSetup:
+    mov al,gs:usbp_flags
+    and al,NOT PIPE_FLAG_PACKET
+    or al,PIPE_FLAG_STREAM
+    mov gs:usbp_flags,al
+;
     mov gs:usbp_timeout,esi
     test dl,80h
     jz cuspSetupOk
@@ -1652,6 +1662,10 @@ config_usb_raw_pipe	Proc far
     jc curpLeaveFail
 
 curpSetup:
+    mov al,gs:usbp_flags
+    and al,NOT (PIPE_FLAG_STREAM OR PIPE_FLAG_PACKET)
+    mov gs:usbp_flags,al
+;
     mov gs:usbp_timeout,esi
     test dl,80h
     jz curpSetupOk

@@ -31,7 +31,7 @@ DEV_FLAG_DETACHED     = 1
 DEV_FLAG_ATTACHED     = 2
 
 PIPE_FLAG_PACKET      = 1
-PIPE_FLAG_BUFFERED    = 2
+PIPE_FLAG_STREAM      = 2
 
 
 usb_function_struc   STRUC
