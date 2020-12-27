@@ -2305,6 +2305,41 @@ RelPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenStream
+;
+;       DESCRIPTION:    Open stream interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;                       CX      Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenStream   Proc far
+    int 3
+    retf32
+OpenStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseStream
+;
+;       DESCRIPTION:    Close stream interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseStream   Proc far
+    int 3
+    retf32
+CloseStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WriteStream
 ;
 ;       DESCRIPTION:    Write stream buffer
@@ -3615,9 +3650,11 @@ ot16 DD OFFSET ClosePacket,         SEG code
 ot17 DD OFFSET StopPipe,            SEG code
 ot18 DD OFFSET ReqPacket,           SEG code
 ot19 DD OFFSET RelPacket,           SEG code
-ot1A DD OFFSET WriteStream,         SEG code
-ot1B DD OFFSET ReadRaw,             SEG code
-ot1C DD OFFSET WriteRaw,            SEG code
+ot1A DD OFFSET OpenStream,          SEG code
+ot1B DD OFFSET CloseStream,         SEG code
+ot1C DD OFFSET WriteStream,         SEG code
+ot1D DD OFFSET ReadRaw,             SEG code
+ot1E DD OFFSET WriteRaw,            SEG code
 
 InitFunction    Proc near
     push ds
@@ -3675,7 +3712,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Dh
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

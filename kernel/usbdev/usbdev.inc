@@ -113,7 +113,6 @@ config_device_proc	   DD ?,?
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; IN  CX        Packet count
-; OUT BX        Packet sel 
 open_packet_proc          DD ?,?
 
 ; IN  ES        Device
@@ -133,6 +132,15 @@ req_packet_proc            DD ?,?
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 rel_packet_proc            DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+; IN  CX        Buffer size
+open_stream_proc          DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+close_stream_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel

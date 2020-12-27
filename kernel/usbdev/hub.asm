@@ -747,6 +747,47 @@ RelPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenStream
+;
+;       DESCRIPTION:    Open stream interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       CX      Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenStream   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:open_stream_proc
+    pop ds
+    ret
+OpenStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseStream
+;
+;       DESCRIPTION:    Close stream interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseStream   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:close_stream_proc
+    pop ds
+    ret
+CloseStream   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WriteStream
 ;
 ;       DESCRIPTION:    Write stream buffer
@@ -921,9 +962,11 @@ ht16 DD OFFSET ClosePacket,         SEG code
 ht17 DD OFFSET StopPipe,            SEG code
 ht18 DD OFFSET ReqPacket,           SEG code
 ht19 DD OFFSET RelPacket,           SEG code
-ht1A DD OFFSET WriteStream,         SEG code
-ht1B DD OFFSET ReadRaw,             SEG code
-ht1C DD OFFSET WriteRaw,            SEG code
+ht1A DD OFFSET OpenStream,          SEG code
+ht1B DD OFFSET CloseStream,         SEG code
+ht1C DD OFFSET WriteStream,         SEG code
+ht1D DD OFFSET ReadRaw,             SEG code
+ht1E DD OFFSET WriteRaw,            SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2217,7 +2260,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Dh
+    mov ecx,2*1Fh
 
 uaTabLoop:
     lods dword ptr cs:[esi]
