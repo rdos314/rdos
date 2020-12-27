@@ -112,12 +112,12 @@ config_device_proc	   DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel
-;  IN CX        Buffer count
-setup_pipe_buffer_proc     DD ?,?
+;  IN CX        Packet count
+setup_packet_proc          DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel
-clear_pipe_buffer_proc     DD ?,?
+clear_packet_proc          DD ?,?
 
 ;  IN ES        Device
 ;  IN GS        Pipe sel

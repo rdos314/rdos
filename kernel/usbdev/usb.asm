@@ -1479,7 +1479,7 @@ cuppSetup:
 ;
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:setup_pipe_buffer_proc
+    call fword ptr ds:setup_packet_proc
     pop ds
 
 cuppSetupOk:
@@ -1570,7 +1570,7 @@ cuspSetup:
     push cx
     mov cx,8
     mov ds,es:usbd_func_sel
-    call fword ptr ds:setup_pipe_buffer_proc
+    call fword ptr ds:setup_packet_proc
     pop cx
     pop ds
 
@@ -1672,7 +1672,7 @@ curpSetup:
 ;
     push ds
     mov ds,es:usbd_func_sel
-    call fword ptr ds:clear_pipe_buffer_proc
+    call fword ptr ds:clear_packet_proc
     pop ds
 
 curpSetupOk:

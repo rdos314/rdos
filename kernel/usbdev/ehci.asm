@@ -2588,17 +2588,17 @@ StartPipeBuffer     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPipeBuffer
+;       NAME:           SetupPacket
 ;
-;       DESCRIPTION:    Setup pipe buffer
+;       DESCRIPTION:    Setup pipe packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
-;                       CX      Buffer count
+;                       CX      Packet count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPipeBuffer   Proc far
+SetupPacket   Proc far
     push ds
     push fs
     pushad
@@ -2614,21 +2614,21 @@ SetupPipeBuffer   Proc far
     pop fs
     pop ds
     retf32
-SetupPipeBuffer   Endp
+SetupPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPipeBuffer
+;       NAME:           ClearPacket
 ;
-;       DESCRIPTION:    Clear pipe buffer
+;       DESCRIPTION:    Clear pipe packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPipeBuffer   Proc far
+ClearPacket   Proc far
     push ds
     push fs
     push ax
@@ -2641,7 +2641,7 @@ ClearPipeBuffer   Proc far
     pop fs
     pop ds
     retf32
-ClearPipeBuffer   Endp
+ClearPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4223,8 +4223,8 @@ et11 DD OFFSET ChangeAddress,      SEG code
 et12 DD OFFSET UpdateMaxLen,       SEG code
 ec13 DD OFFSET ControlMsg,         SEG code
 et14 DD OFFSET ConfigDev,          SEG code
-ec15 DD OFFSET SetupPipeBuffer,    SEG code
-ec16 DD OFFSET ClearPipeBuffer,    SEG code
+ec15 DD OFFSET SetupPacket,        SEG code
+ec16 DD OFFSET ClearPacket,        SEG code
 ec17 DD OFFSET StopPipe,           SEG code
 ec18 DD OFFSET UsedPackets,        SEG code
 ec19 DD OFFSET FreePackets,        SEG code

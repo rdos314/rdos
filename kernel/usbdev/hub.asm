@@ -643,43 +643,43 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupPipeBuffer
+;       NAME:           SetupPacket
 ;
-;       DESCRIPTION:    Setup pipe buffer
+;       DESCRIPTION:    Setup packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
-;                       CX      Buffer count
+;                       CX      Packet count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupPipeBuffer   Proc far
+SetupPacket   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:setup_pipe_buffer_proc
+    call fword ptr ds:setup_packet_proc
     pop ds
     ret
-SetupPipeBuffer   Endp
+SetupPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearPipeBuffer
+;       NAME:           ClearPacket
 ;
-;       DESCRIPTION:    Clear pipe buffer
+;       DESCRIPTION:    Clear packet
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPipeBuffer   Proc far
+ClearPacket   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:clear_pipe_buffer_proc
+    call fword ptr ds:clear_packet_proc
     pop ds
     ret
-ClearPipeBuffer   Endp
+ClearPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -960,8 +960,8 @@ ht11 DD OFFSET ChangeAddress,       SEG code
 ht12 DD OFFSET UpdateMaxLen,        SEG code
 ht13 DD OFFSET ControlMsg,          SEG code
 ht14 DD OFFSET ConfigDev,           SEG code
-ht15 DD OFFSET SetupPipeBuffer,     SEG code
-ht16 DD OFFSET ClearPipeBuffer,     SEG code
+ht15 DD OFFSET SetupPacket,         SEG code
+ht16 DD OFFSET ClearPacket,         SEG code
 ht17 DD OFFSET StopPipe,            SEG code
 ht18 DD OFFSET UsedPackets,         SEG code
 ht19 DD OFFSET FreePackets,         SEG code
