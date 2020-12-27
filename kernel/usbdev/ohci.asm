@@ -1755,9 +1755,9 @@ SignalStart Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopTdRing
+;       NAME:           StopPacketTds
 ;
-;       DESCRIPTION:    Stop TD ring
+;       DESCRIPTION:    Stop packet TDs
 ;
 ;
 ;       PARAMETERS:     ES      Device
@@ -1765,7 +1765,7 @@ SignalStart Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopTdRing Proc near
+StopPacketTds Proc near
     push fs
     push eax
     push ebx
@@ -1787,14 +1787,14 @@ StopTdRing Proc near
     pop eax
     pop fs
     ret
-StopTdRing Endp
+StopPacketTds Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateTdRing
+;       NAME:           AllocatePacketSel
 ;
-;       DESCRIPTION:    Allocate TD ring
+;       DESCRIPTION:    Allocate packet sel
 ;
 ;       PARAMETERS:     FS      Flat sel
 ;                       CX      Buffer count
@@ -1803,7 +1803,7 @@ StopTdRing Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateTdRing    Proc near
+AllocatePacketSel    Proc near
     push es
     push eax
     push ecx
@@ -1833,14 +1833,14 @@ AllocateTdRing    Proc near
     pop eax
     pop es
     ret
-AllocateTdRing    Endp
+AllocatePacketSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeTdRing
+;       NAME:           FreePacketTds
 ;
-;       DESCRIPTION:    Free TDs in buffer ring
+;       DESCRIPTION:    Free packet TDs
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -1849,7 +1849,7 @@ AllocateTdRing    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeTdRing     Proc near
+FreePacketTds     Proc near
     push ds
     pushad
 ;
@@ -1892,14 +1892,14 @@ ftdNext:
     popad
     pop ds
     ret
-FreeTdRing  Endp
+FreePacketTds  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DeleteTdRing
+;       NAME:           FreePacketSel
 ;
-;       DESCRIPTION:    Delete TD ring
+;       DESCRIPTION:    Free packet sel
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -1908,7 +1908,7 @@ FreeTdRing  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteTdRing Proc near
+FreePacketSel Proc near
     push ax
     push bx
 ;
@@ -1917,10 +1917,10 @@ DeleteTdRing Proc near
     or bx,bx
     jz dtdDone
 ;
-    call StopTdRing
+    call StopPacketTds
     mov ax,5
     WaitMilliSec
-    call FreeTdRing    
+    call FreePacketTds
 ;
     push es
     mov es,bx
@@ -1931,14 +1931,14 @@ dtdDone:
     pop bx
     pop ax
     ret
-DeleteTdRing Endp
+FreePacketSel Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartPipeBuffer
+;       NAME:           StartPacketTds
 ;
-;       DESCRIPTION:    Start pipe buffering
+;       DESCRIPTION:    Start packet TDs
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -1947,7 +1947,7 @@ DeleteTdRing Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartPipeBuffer     Proc near
+StartPacketTds     Proc near
     push ds
     pushad
 ;
@@ -2051,7 +2051,7 @@ spbSpeedOk:
     popad
     pop ds
     ret
-StartPipeBuffer     Endp
+StartPacketTds     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2075,10 +2075,10 @@ OpenPacket   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    call AllocateTdRing
+    call AllocatePacketSel
     mov gs:usbp_packet_sel,bx
 ;
-    call StartPipeBuffer
+    call StartPacketTds
     call SignalStart
     clc
 ;
@@ -2108,7 +2108,7 @@ ClosePacket   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    call DeleteTdRing
+    call FreePacketSel
 ;
     pop ax
     pop fs
@@ -2477,6 +2477,77 @@ cc0F DW USB_EVENT_HALTED
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandlePacketIn
+;
+;       DESCRIPTION:    Handle packet IN transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePacketIn  Proc near
+    push ds
+    push bx
+    push si
+;
+    mov ds,gs:usbp_packet_sel
+    EnterSection ds:usbpk_section
+;
+    mov bx,ds:usbpk_wr_ptr
+    mov si,bx
+    shl si,2
+    add si,SIZE usb_packet_struc
+    cmp edx,ds:[si]
+    je hpiAdvance
+;
+    int 3
+    jmp hpiDone
+
+hpiAdvance:
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb hpiSave
+;
+    xor bx,bx
+
+hpiSave:
+    mov ds:usbpk_wr_ptr,bx    
+;
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz hpiSignalObj
+;
+    mov bx,es:usbd_thread
+    Signal
+    jmp hpiDone
+
+hpiSignalObj:
+    xor bx,bx
+    xchg bx,gs:usbp_wait
+    or bx,bx
+    jz hpiDone
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+hpiDone:
+    LeaveSection ds:usbpk_section
+;
+    pop si
+    pop bx
+    pop ds
+    ret
+HandlePacketIn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           NotifyIn
 ;
 ;       DESCRIPTION:    Notify IN transfer completed
@@ -2491,7 +2562,6 @@ cc0F DW USB_EVENT_HALTED
 
 NotifyIn  Proc near
     push gs
-    push ds
     push ebx
     push esi
 ;
@@ -2523,45 +2593,19 @@ niOk:
     jz niDone
 ;
     mov gs,bx
-    mov ds,gs:usbp_packet_sel
-    EnterSection ds:usbpk_section
+    mov bx,gs:usbp_packet_sel
+    or bx,bx
+    jz niNotPacket
 ;
-    mov bx,ds:usbpk_wr_ptr
-    mov si,bx
-    shl si,2
-    add si,SIZE usb_packet_struc
-    cmp edx,ds:[si]
-    je niAdvance
-;
-    int 3
+    call HandlePacketIn
     jmp niDone
 
-niAdvance:
-    inc bx
-    cmp bx,ds:usbpk_entry_count
-    jb niSave
-;
-    xor bx,bx
-
-niSave:
-    mov ds:usbpk_wr_ptr,bx    
-;
-    xor bx,bx
-    xchg bx,gs:usbp_wait
-    or bx,bx
-    jz niDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+niNotPacket:
+    int 3
 
 niDone:
-    LeaveSection ds:usbpk_section
-;
     pop esi
     pop ebx
-    pop ds
     pop gs
     ret
 NotifyIn  Endp
