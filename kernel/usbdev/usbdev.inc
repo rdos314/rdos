@@ -30,10 +30,6 @@ MAX_USB_HUB_PORTS = 32
 DEV_FLAG_DETACHED     = 1
 DEV_FLAG_ATTACHED     = 2
 
-PIPE_FLAG_PACKET      = 1
-PIPE_FLAG_STREAM      = 2
-
-
 usb_function_struc   STRUC
 
 lock_proc                  DD ?,?
@@ -121,10 +117,6 @@ close_packet_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
-stop_pipe_proc             DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
 ; OUT EDX       Buffer linear
 ; OUT CX        Size
 req_packet_proc            DD ?,?
@@ -148,6 +140,15 @@ write_stream_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
+; IN  CX        Buffer size
+open_raw_proc          DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+close_raw_proc          DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
 ; IN  EDX       Linear buffer
 ; IN  CX        Size
 ; OUT CX        Actual size
@@ -159,6 +160,9 @@ read_raw_proc              DD ?,?
 ; IN  CX        Size
 write_raw_proc              DD ?,?
 
+; IN  ES        Device
+; IN  GS        Pipe sel
+stop_raw_proc              DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>

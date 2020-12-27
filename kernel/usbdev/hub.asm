@@ -684,26 +684,6 @@ ClosePacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopPipe
-;
-;       DESCRIPTION:    Stop pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopPipe   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:stop_pipe_proc
-    pop ds
-    ret
-StopPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ReqPacket
 ;
 ;       DESCRIPTION:    Req pipe packet
@@ -808,6 +788,47 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenRaw
+;
+;       DESCRIPTION:    Open raw interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       CX      Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenRaw   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:open_raw_proc
+    pop ds
+    ret
+OpenRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseRaw
+;
+;       DESCRIPTION:    Close raw interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseRaw   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:close_raw_proc
+    pop ds
+    ret
+CloseRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadRaw
 ;
 ;       DESCRIPTION:    Read raw
@@ -850,6 +871,25 @@ WriteRaw   Proc far
     pop ds
     ret
 WriteRaw   Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopRaw
+;
+;       DESCRIPTION:    Stop raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopRaw   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:stop_raw_proc
+    pop ds
+    ret
+StopRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -959,14 +999,16 @@ ht13 DD OFFSET ControlMsg,          SEG code
 ht14 DD OFFSET ConfigDev,           SEG code
 ht15 DD OFFSET OpenPacket,          SEG code
 ht16 DD OFFSET ClosePacket,         SEG code
-ht17 DD OFFSET StopPipe,            SEG code
-ht18 DD OFFSET ReqPacket,           SEG code
-ht19 DD OFFSET RelPacket,           SEG code
-ht1A DD OFFSET OpenStream,          SEG code
-ht1B DD OFFSET CloseStream,         SEG code
-ht1C DD OFFSET WriteStream,         SEG code
-ht1D DD OFFSET ReadRaw,             SEG code
-ht1E DD OFFSET WriteRaw,            SEG code
+ht17 DD OFFSET ReqPacket,           SEG code
+ht18 DD OFFSET RelPacket,           SEG code
+ht19 DD OFFSET OpenStream,          SEG code
+ht1A DD OFFSET CloseStream,         SEG code
+ht1B DD OFFSET WriteStream,         SEG code
+ht1C DD OFFSET OpenRaw,             SEG code
+ht1D DD OFFSET CloseRaw,            SEG code
+ht1E DD OFFSET ReadRaw,             SEG code
+ht1F DD OFFSET WriteRaw,            SEG code
+ht20 DD OFFSET StopRaw,            SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2260,7 +2302,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Fh
+    mov ecx,2*21h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

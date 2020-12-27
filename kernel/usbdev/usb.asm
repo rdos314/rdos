@@ -1514,11 +1514,6 @@ config_usb_packet_pipe	Proc far
     call StartReconfigPipe
     jc cuppLeaveFail
 ;
-    mov al,gs:usbp_flags
-    and al,NOT PIPE_FLAG_STREAM
-    or al,PIPE_FLAG_PACKET
-    mov gs:usbp_flags,al
-;
     mov gs:usbp_timeout,esi
     test dl,80h
     jz cuppOut
@@ -1592,11 +1587,6 @@ config_usb_stream_pipe	Proc far
     mov es,ds:udd_sel    
     call StartReconfigPipe
     jc cuspLeaveFail
-;
-    mov al,gs:usbp_flags
-    and al,NOT PIPE_FLAG_PACKET
-    or al,PIPE_FLAG_STREAM
-    mov gs:usbp_flags,al
 ;
     mov gs:usbp_timeout,esi
     test dl,80h
@@ -1690,9 +1680,6 @@ config_usb_raw_pipe	Proc far
     call StartReconfigPipe
     jc curpLeaveFail
 ;
-    mov al,gs:usbp_flags
-    and al,NOT (PIPE_FLAG_STREAM OR PIPE_FLAG_PACKET)
-    mov gs:usbp_flags,al
     int 3
 ;
     LeaveSection ds:udd_section
@@ -2170,7 +2157,7 @@ ReadPipe	Proc near
     jz rupLeave
 ;
     mov gs,bx
-    test gs:usbp_flags,PIPE_FLAG_PACKET
+    mov bx,gs:usbp_packet_sel
     stc
     jz rupNotPacket
 ;

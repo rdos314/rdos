@@ -2119,33 +2119,6 @@ ClosePacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopPipe
-;
-;       DESCRIPTION:    Stop pipe
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopPipe   Proc far
-    push ds
-    push fs
-    push ax
-;
-    mov ax,flat_sel
-    mov fs,ax
-    call StopTdRing
-;
-    pop ax
-    pop fs
-    pop ds
-    retf32
-StopPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ReqPacket
 ;
 ;       DESCRIPTION:    Req packet
@@ -2357,6 +2330,41 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenRaw
+;
+;       DESCRIPTION:    Open raw interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;                       CX      Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenRaw   Proc far
+    int 3
+    retf32
+OpenRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseRaw
+;
+;       DESCRIPTION:    Close raw interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseRaw   Proc far
+    int 3
+    retf32
+CloseRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadRaw
 ;
 ;       DESCRIPTION:    Read raw
@@ -2393,6 +2401,23 @@ WriteRaw   Proc far
     int 3
     retf32
 WriteRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopRaw
+;
+;       DESCRIPTION:    Stop raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopRaw   Proc far
+    int 3
+    retf32
+StopRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3647,14 +3672,16 @@ ot13 DD OFFSET ControlMsg,          SEG code
 ot14 DD OFFSET ConfigDev,           SEG code
 ot15 DD OFFSET OpenPacket,          SEG code
 ot16 DD OFFSET ClosePacket,         SEG code
-ot17 DD OFFSET StopPipe,            SEG code
-ot18 DD OFFSET ReqPacket,           SEG code
-ot19 DD OFFSET RelPacket,           SEG code
-ot1A DD OFFSET OpenStream,          SEG code
-ot1B DD OFFSET CloseStream,         SEG code
-ot1C DD OFFSET WriteStream,         SEG code
-ot1D DD OFFSET ReadRaw,             SEG code
-ot1E DD OFFSET WriteRaw,            SEG code
+ot17 DD OFFSET ReqPacket,           SEG code
+ot18 DD OFFSET RelPacket,           SEG code
+ot19 DD OFFSET OpenStream,          SEG code
+ot1A DD OFFSET CloseStream,         SEG code
+ot1B DD OFFSET WriteStream,         SEG code
+ot1C DD OFFSET OpenRaw,             SEG code
+ot1D DD OFFSET CloseRaw,            SEG code
+ot1E DD OFFSET ReadRaw,             SEG code
+ot1F DD OFFSET WriteRaw,            SEG code
+ot20 DD OFFSET StopRaw,             SEG code
 
 InitFunction    Proc near
     push ds
@@ -3712,7 +3739,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Fh
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]
