@@ -2243,7 +2243,46 @@ AllocatePipe    Endp
 
 
 CreateBulkPipe   Proc far
-    int 3
+    push ds
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov fs,ax
+    push dx
+    call AllocatePipe
+    pop cx
+    mov gs,bx
+    mov cl,ch
+;    
+    EnterSection ds:uhc_section
+;
+    call AllocateQh
+    mov gs:up_qh,edx
+;
+    push gs
+    mov eax,edx
+    mov edx,ds:uhc_period_td
+    call InsertTdLast
+    LeaveSection ds:uhc_section
+    pop ds
+;
+    mov bx,ds
+    clc
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop ds
     retf32
 CreateBulkPipe   Endp
 
