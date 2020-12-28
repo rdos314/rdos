@@ -118,6 +118,8 @@ uds_intr_interval   DB ?
 uds_port_nr         DW ?
 uds_device_sel      DW ?
 uds_wait            DW ?
+uds_flags           DW ?
+uds_thread          DW ?
 
 usbcom_device_struc   ENDS
 
@@ -132,10 +134,8 @@ uc_port                 DB ?
 
 uc_section              section_typ <>
 
-uc_thread               DW ?
 uc_detach               DW ?
 
-uc_flags                DW ?
 uc_dev_offset           DW ?
 
 uc_prev                 DW ?
@@ -311,8 +311,7 @@ SendSignal  Proc far
     mov ds:ups_timer_active,0
 ;    
     mov ds,ds:ups_device_sel
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_thread
+    mov bx,ds:uds_thread
     Signal    
 
 ssiDone:
@@ -889,8 +888,7 @@ open_com_ftdi   Proc far
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_thread
+    mov bx,ds:uds_thread
     Signal    
     clc
 
@@ -939,8 +937,7 @@ ccfTimerClosed:
     LeaveSection ds:uds_section       
 
 ccfNoDevice:    
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_thread
+    mov bx,ds:uds_thread
     Signal    
 ;
     mov ax,150
@@ -1590,8 +1587,7 @@ open_com_pl     Proc far
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_thread
+    mov bx,ds:uds_thread
     Signal    
     clc
 
@@ -1640,8 +1636,7 @@ ccpTimerClosed:
     LeaveSection ds:uds_section       
 
 ccpNoDevice:    
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_thread
+    mov bx,ds:uds_thread
     Signal    
 ;
     mov ax,150
@@ -2266,8 +2261,7 @@ icmDivisorOk:
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-    mov ds,ds:uds_device_sel
-    mov bx,ds:uc_thread
+    mov bx,ds:uds_thread
     Signal    
     clc
 ;
@@ -2581,8 +2575,7 @@ start_send      PROC far
     jz ssDone
 ;    
     mov es,ax
-    mov es,es:uds_device_sel
-    test es:uc_flags,FLAG_UDS_DISCONNECT
+    test es:uds_flags,FLAG_UDS_DISCONNECT
     jz ssOk
 ;
     mov ds:send_count,0
@@ -2839,7 +2832,6 @@ OpenPort    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePort    Proc near
-    int 3
     mov ax,50
     WaitMilliSec
 ;    
@@ -3154,12 +3146,7 @@ HandleOpen    Endp
 
 usb_com_recreate:
     mov es,bx
-;
-    GetThread
     mov es:uc_detach,0
-    mov es:uc_thread,ax
-;
-    mov es:uc_flags,FLAG_UDS_REINIT
 ;
     movzx si,dl
     add si,si
@@ -3168,13 +3155,15 @@ usb_com_recreate:
     jz tEnd
 ;
     mov ds,ax
+    mov ds:uds_flags,FLAG_UDS_REINIT
+;
+    GetThread
+    mov ds:uds_thread,ax
     jmp tLoop
 
 usb_com_create:
     mov es,bx
-    GetThread
     mov es:uc_detach,0
-    mov es:uc_thread,ax
 ;
     movzx si,dl
     add si,si
@@ -3183,6 +3172,8 @@ usb_com_create:
     jz tEnd
 ;
     mov ds,ax
+    GetThread
+    mov ds:uds_thread,ax
 
 tLoop:
     mov ax,ds:uds_port_sel
@@ -3190,17 +3181,17 @@ tLoop:
     jz tClose
 
 tOpen:
-    test es:uc_flags,FLAG_UDS_DISCONNECT
+    test ds:uds_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
-    test es:uc_flags,FLAG_UDS_REINIT
+    test ds:uds_flags,FLAG_UDS_REINIT
     jz tInitOk
 ;
     EnterSection ds:uds_section
     call ReInit
     LeaveSection ds:uds_section
 ;
-    and es:uc_flags,NOT FLAG_UDS_REINIT
+    and ds:uds_flags,NOT FLAG_UDS_REINIT
 
 tInitOk:
     mov bx,ds:uds_in_buffer
@@ -3215,7 +3206,7 @@ tIsOpen:
     mov bx,ds:uds_wait
     WaitWithoutTimeout
 ;
-    test es:uc_flags,FLAG_UDS_DISCONNECT
+    test ds:uds_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
     EnterSection ds:uds_section
@@ -3224,7 +3215,7 @@ tIsOpen:
     jmp tLoop
 
 tClose:
-    and es:uc_flags,NOT FLAG_UDS_REINIT
+    and ds:uds_flags,NOT FLAG_UDS_REINIT
 ;
     mov bx,ds:uds_in_buffer
     or bx,bx
@@ -3237,7 +3228,7 @@ tClose:
 tIsClosed:
     WaitForSignal
 ;
-    test es:uc_flags,FLAG_UDS_DISCONNECT
+    test ds:uds_flags,FLAG_UDS_DISCONNECT
     jz tLoop
 
 tExit:
@@ -3258,7 +3249,7 @@ tExit:
 tLeave:
     LeaveSection ds:uds_section
 ;
-    mov es:uc_thread,0
+    mov ds:uds_thread,0
     mov bx,es:uc_detach
     Signal
 
@@ -3398,6 +3389,7 @@ apDescrDone:
     mov es:uds_port_sel,0
     mov es:uds_bulk_in,dh
     mov es:uds_bulk_out,dl
+    mov es:uds_flags,0
 ;
     mov dx,si
     mov es:uds_intr_in,dl
@@ -4485,7 +4477,6 @@ cdAdd:
     mov es:uc_controller,bx
     mov es:uc_port,al
     mov es:uc_unit_count,0
-    mov es:uc_flags,0
 ;
     call InsertDevice
     LeaveSection ds:sd_section
@@ -4661,20 +4652,39 @@ udCheckLoop:
 ;
     GetThread
     mov es:uc_detach,ax
-;
-    or es:uc_flags,FLAG_UDS_DISCONNECT
-    mov bx,es:uc_thread
-    or bx,bx
-    jz udUnlink
 
-udSignal:
-    Signal
-    WaitForSignal
-    mov bx,es:uc_thread
+udRetry:
+    xor dl,dl
+    xor dh,dh
+
+udDisLoop:
+    movzx si,dl
+    add si,si
+    mov ds,es:[si].uc_unit_arr
+;
+    or ds:uds_flags,FLAG_UDS_DISCONNECT
+    mov bx,ds:uds_thread
     or bx,bx
-    jnz udSignal
+    jz udDisNext
+;
+    Signal
+    inc dh
+
+udDisNext:
+    inc dl
+    cmp dl,es:uc_unit_count
+    jne udDisLoop
+;
+    or dh,dh
+    jz udUnlink
+;
+    WaitForSignal
+    jmp udRetry
 
 udUnlink:
+    mov dx,SEG data
+    mov ds,dx
+;
     EnterSection ds:sd_section
     mov di,ds:sd_dead_list
     or di,di
