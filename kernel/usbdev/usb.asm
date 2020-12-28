@@ -2119,8 +2119,10 @@ ReadPacket	Proc near
     pop ecx
     pop es
 ;
+    push cx
     mov cx,gs:ued_maxsize
     call fword ptr ds:rel_packet_proc
+    pop cx
     clc
 
 rpkDone:

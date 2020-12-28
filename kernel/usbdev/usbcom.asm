@@ -117,6 +117,7 @@ uds_port_offset     DW ?
 uds_intr_interval   DB ?
 uds_port_nr         DW ?
 uds_device_sel      DW ?
+uds_wait            DW ?
 
 usbcom_device_struc   ENDS
 
@@ -2768,7 +2769,6 @@ CreatePortMct   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort    Proc near
-    int 3
     push es
     movzx eax,ds:uds_in_size
     AllocateSmallGlobalMem
@@ -2789,12 +2789,26 @@ OpenPort    Proc near
     mov dl,ds:uds_bulk_out
     mov cx,256
     mov ax,2
-    ConfigUsbStreamPipe
+;    ConfigUsbStreamPipe
+;
+    CreateWait
+    mov ds:uds_wait,bx
+;
+    mov ax,es:uc_dev_handle
+    mov dl,ds:uds_bulk_in
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
 ;
     mov dl,ds:uds_intr_in
     mov ds:uds_intr_buffer,0
     or dl,dl
     jz opDone
+;
+    push es
+    movzx eax,ds:uds_in_size
+    AllocateSmallGlobalMem
+    mov ds:uds_intr_buffer,es
+    pop es
 ;
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_intr_in
@@ -2802,11 +2816,11 @@ OpenPort    Proc near
     mov ax,2
     ConfigUsbPacketPipe
 ;
-    push es
-    movzx eax,ds:uds_in_size
-    AllocateSmallGlobalMem
-    mov ds:uds_intr_buffer,es
-    pop es
+    mov bx,ds:uds_wait
+    mov ax,es:uc_dev_handle
+    mov dl,ds:uds_intr_in
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
 
 opDone:        
     ret
@@ -2837,6 +2851,9 @@ ClosePort    Proc near
 ;
     mov es,ds:uds_intr_buffer
     FreeMem
+;
+    mov bx,ds:uds_wait
+    CloseWait
 ;
     mov ds:uds_in_buffer,0
     mov ds:uds_out_buffer,0
@@ -3044,43 +3061,20 @@ PollWrite   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandleDevice
+;       NAME:           HandleOpen
 ;
-;       DESCRIPTION:    Handle device
+;       DESCRIPTION:    Handle open
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleDevice    Proc near
+HandleOpen    Proc near
     push ds
     push es
     pushad
 ;
-    test es:uc_flags,FLAG_UDS_DISCONNECT
-    jnz hdDone
-
-hdConn:
-    mov ax,ds:uds_port_sel
-    or ax,ax
-    jz hdClosed
-
-hdOpen:
-    mov bx,ds:uds_in_buffer
-    or bx,bx
-    jnz hdIsOpen
-;
-    call OpenPort    
-
-hdIsOpen:    
-    test es:uc_flags,FLAG_UDS_REINIT
-    jz hdInitOk
-;
-    call ReInit
-    and es:uc_flags,NOT FLAG_UDS_REINIT
-
-hdInitOk:
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_bulk_in
     GetUsedUsbBuffers
@@ -3094,7 +3088,6 @@ hdInitOk:
     xor edi,edi
     movzx ecx,ds:uds_in_size
     ReadUsbPipe
-    mov cx,ax
 ;
     pop edi
     pop es
@@ -3113,6 +3106,7 @@ hdPollReadDo:
     or cx,cx
     jz hdReadDone
 ;
+    int 3
     call PollRead
 
 hdReadDone:
@@ -3138,22 +3132,13 @@ hdReadDone:
     
 hdWrite:
     jmp hdDone
-
-hdClosed:
-    and es:uc_flags,NOT FLAG_UDS_REINIT
-;
-    mov bx,ds:uds_in_buffer
-    jz hdDone
-
-hdIsClosed:
-    call ClosePort
     
 hdDone:
     popad
     pop es
     pop ds
     ret
-HandleDevice    Endp
+HandleOpen    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3183,10 +3168,9 @@ usb_com_recreate:
     jz tEnd
 ;
     mov ds,ax
-    jmp tSignalled
+    jmp tLoop
 
 usb_com_create:
-    int 3
     mov es,bx
     GetThread
     mov es:uc_detach,0
@@ -3201,16 +3185,60 @@ usb_com_create:
     mov ds,ax
 
 tLoop:
-    WaitForSignal
+    mov ax,ds:uds_port_sel
+    or ax,ax
+    jz tClose
 
-TSignalled:
+tOpen:
+    test es:uc_flags,FLAG_UDS_DISCONNECT
+    jnz tExit
+;
+    test es:uc_flags,FLAG_UDS_REINIT
+    jz tInitOk
+;
+    EnterSection ds:uds_section
+    call ReInit
+    LeaveSection ds:uds_section
+;
+    and es:uc_flags,NOT FLAG_UDS_REINIT
+
+tInitOk:
+    mov bx,ds:uds_in_buffer
+    or bx,bx
+    jnz tIsOpen
+;
+    EnterSection ds:uds_section
+    call OpenPort    
+    LeaveSection ds:uds_section
+
+tIsOpen:
+    mov bx,ds:uds_wait
+    WaitWithoutTimeout
+;
     test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
     EnterSection ds:uds_section
-    call HandleDevice
+    call HandleOpen
     LeaveSection ds:uds_section
     jmp tLoop
+
+tClose:
+    and es:uc_flags,NOT FLAG_UDS_REINIT
+;
+    mov bx,ds:uds_in_buffer
+    or bx,bx
+    jz tIsClosed
+;
+    EnterSection ds:uds_section
+    call ClosePort
+    LeaveSection ds:uds_section
+
+tIsClosed:
+    WaitForSignal
+;
+    test es:uc_flags,FLAG_UDS_DISCONNECT
+    jz tLoop
 
 tExit:
     EnterSection ds:uds_section
