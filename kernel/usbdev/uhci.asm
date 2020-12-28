@@ -2329,35 +2329,54 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocatePacketSel    Proc near
-    push es
+    push gs
     push eax
     push ecx
+    push edx
     push edi
 ;
     inc cx
-    mov esi,edi
     movzx eax,cx
     shl ax,3
     add ax,SIZE usb_packet_struc
+    push es
     AllocateSmallGlobalMem
-    mov es:usbpk_entry_count,cx
+    mov ax,es
+    pop es
 ;
-    mov edi,SIZE usb_packet_struc
+    mov gs,ax
+    mov gs:usbpk_entry_count,cx
+    mov gs:usbpk_rd_ptr,0
+    mov gs:usbpk_wr_ptr,0
+    mov gs:usbpk_tail_ptr,0
+;
+    mov di,SIZE usb_packet_struc
+
+atdrLoop:
+    push cx
+    mov cx,SIZE base_td
+    AllocateMemBlk
+    pop cx
+;
     xor eax,eax
-    movzx ecx,cx
-    add ecx,ecx
-    rep stos dword ptr es:[edi]
+    mov fs:[edx].utd_link,eax
+    mov fs:[edx].utd_control,eax
+    mov fs:[edx].utd_host,eax
+    mov fs:[edx].utd_buf,eax
+    mov gs:[di],edx
+    mov gs:[di+4],eax
 ;
-    InitSection es:usbpk_section
-    mov es:usbpk_rd_ptr,0
-    mov es:usbpk_wr_ptr,0
-    mov es:usbpk_tail_ptr,0
-    mov bx,es
+    add di,8
+    loop atdrLoop
+;
+    mov bx,gs
+    InitSection gs:usbpk_section
 ;
     pop edi
+    pop edx
     pop ecx
     pop eax
-    pop es
+    pop gs
     ret
 AllocatePacketSel    Endp
 
@@ -2387,22 +2406,6 @@ StartPacketTds     Proc near
 
 sipLoop:
     mov edx,ds:[si]
-    or edx,edx
-    jnz sipHasTd
-;
-    push cx
-    mov cx,SIZE base_td
-    AllocateMemBlk
-    pop cx
-;
-    xor eax,eax
-    mov fs:[edx].utd_link,eax
-    mov fs:[edx].utd_control,eax
-    mov fs:[edx].utd_host,eax
-    mov fs:[edx].utd_buf,eax
-    mov ds:[si],edx
-
-sipHasTd:
     or edi,edi
     jz sipNext
 ;
