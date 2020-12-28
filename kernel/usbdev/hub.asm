@@ -1743,6 +1743,9 @@ tsNotOver:
     ReadUsbPipe
     jc tsLoop
 ;
+    or cx,cx
+    jz tsLoop
+;
     mov bx,cx
     mov al,es:[edi]
     shr al,1
