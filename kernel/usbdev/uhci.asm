@@ -2218,7 +2218,6 @@ AllocatePipe    Proc near
 ;
     mov eax,SIZE uhci_pipe_struc
     AllocateSmallGlobalMem
-;
     mov bx,es
 ;
     pop eax
@@ -2256,7 +2255,6 @@ CreateBulkPipe   Endp
 ;       DESCRIPTION:    Create interrupt pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
 ;                       DL      Pipe #
 ;                       DH      Interval
 ;
@@ -2313,6 +2311,34 @@ CreateIntrPipe   Proc far
     pop ds
     retf32
 CreateIntrPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopPacketTds
+;
+;       DESCRIPTION:    Stop packet TDs
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopPacketTds   Proc near
+    push fs
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov edx,gs:up_qh
+    mov fs:[edx].uqh_elem,1
+;
+    pop edx
+    pop eax
+    pop fs
+    retf32
+StopPacketTds   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2379,6 +2405,96 @@ atdrLoop:
     pop gs
     ret
 AllocatePacketSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreePacketTds
+;
+;       DESCRIPTION:    Free TDs in ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePacketTds Proc near
+    push ds
+    pushad
+;
+    mov ds,gs:usbp_packet_sel
+    mov si,SIZE usb_packet_struc
+    mov cx,ds:usbpk_entry_count
+
+ftdLoop:
+    mov edx,ds:[si]
+    or edx,edx
+    jz ftdBuf
+;
+    push cx
+    mov cx,SIZE base_td
+    FreeLinearMemBlk
+    pop cx
+
+ftdBuf:
+    mov edx,ds:[si+4]
+    or edx,edx
+    jz ftdNext
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    FreeLinearMemBlk
+    pop cx
+
+ftdNext:
+    add si,8
+    loop ftdLoop
+;
+    popad
+    pop ds
+    ret
+FreePacketTds Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreePacketSel
+;
+;       DESCRIPTION:    Free packet sel
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePacketSel Proc near
+    push ax
+    push bx
+;
+    xor bx,bx
+    xchg bx,gs:usbp_packet_sel
+    or bx,bx
+    jz dtdDone
+;
+    call StopPacketTds
+    mov ax,5
+    WaitMilliSec
+    call FreePacketTds
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+dtdDone:
+    pop bx
+    pop ax
+    ret
+FreePacketSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2523,14 +2639,11 @@ OpenPacket   Endp
 ClosePacket   Proc far
     push fs
     push eax
-    push edx
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov edx,gs:up_qh
-    mov fs:[edx].uqh_elem,1
+    call FreePacketSel
 ;
-    pop edx
     pop eax
     pop fs
     retf32
