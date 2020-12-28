@@ -4463,7 +4463,6 @@ ConfigDevice  Proc near
     mov cx,1000h
     xor di,di
     push ax
-    mov al,ah
     GetUsbConfig
     mov cx,ax
     pop ax
@@ -4472,7 +4471,6 @@ ConfigDevice  Proc near
     jz cdDone
 ;
     push ax
-    mov al,ah
     mov dl,es:ucd_config_id
     ConfigUsbDevice
     pop ax
