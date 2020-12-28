@@ -128,18 +128,10 @@ uhci_pipe_struc    STRUC
 
 up_pipe            usb_pipe_struc <>
 
-up_section         section_typ <>
-
 up_intr_ptr        DW ?
 up_intr_cnt        DW ?
 
 up_qh              DD ?
-up_rd_ptr          DW ?
-up_wr_ptr          DW ?
-up_tail_ptr        DW ?
-up_entry_count     DW ?
-
-up_entry_arr       DD ?
 
 uhci_pipe_struc    ENDS
 
@@ -2221,57 +2213,16 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocatePipe    Proc near
-    push ds
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    add cx,2
-    and cx,0FFFEh
-    mov esi,edi
     push es
-    movzx eax,cx
-    shl ax,3
-    add ax,OFFSET up_entry_arr
+    push eax
+;
+    mov eax,SIZE uhci_pipe_struc
     AllocateSmallGlobalMem
 ;
-    mov es:up_entry_count,cx
-    mov ax,es
-    mov ds,ax
-    pop es
+    mov bx,es
 ;
-    mov di,OFFSET up_entry_arr
-
-apTdLoop:
-    push cx
-;
-    mov cx,SIZE base_td
-    AllocateMemBlk
-    mov esi,edx
-;
-    xor eax,eax
-    mov fs:[esi].utd_link,eax
-    mov fs:[esi].utd_control,eax
-    mov fs:[esi].utd_host,eax
-    mov fs:[esi].utd_buf,eax
-;
-    mov ds:[di],esi
-    mov ds:[di+4],eax
-    add di,8
-    pop cx
-    loop apTdLoop
-;
-    mov bx,ds
-    InitSection ds:up_section
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
     pop eax
-    pop ds
+    pop es
     ret
 AllocatePipe    Endp
 
@@ -2349,9 +2300,6 @@ CreateIntrPipe   Proc far
     LeaveSection ds:uhc_section
     pop ds
 ;
-    mov ds:up_rd_ptr,0
-    mov ds:up_wr_ptr,0
-    mov ds:up_tail_ptr,0
     mov bx,ds
     clc
 ;
@@ -2369,9 +2317,56 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartInPipe
+;       NAME:           AllocatePacketSel
 ;
-;       DESCRIPTION:    Start input pipe
+;       DESCRIPTION:    Allocate packet sel
+;
+;       PARAMETERS:     FS      Flat sel
+;                       CX      Buffer count
+;
+;       RETURNS:        BX      Ring sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePacketSel    Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    inc cx
+    mov esi,edi
+    movzx eax,cx
+    shl ax,3
+    add ax,SIZE usb_packet_struc
+    AllocateSmallGlobalMem
+    mov es:usbpk_entry_count,cx
+;
+    mov edi,SIZE usb_packet_struc
+    xor eax,eax
+    movzx ecx,cx
+    add ecx,ecx
+    rep stos dword ptr es:[edi]
+;
+    InitSection es:usbpk_section
+    mov es:usbpk_rd_ptr,0
+    mov es:usbpk_wr_ptr,0
+    mov es:usbpk_tail_ptr,0
+    mov bx,es
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocatePacketSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPacketTds
+;
+;       DESCRIPTION:    Start packet TDs
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
@@ -2380,16 +2375,34 @@ CreateIntrPipe   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartInPipe     Proc near
+StartPacketTds     Proc near
+    push ds
     pushad
 ;
-    mov si,OFFSET up_entry_arr
-    mov cx,gs:up_entry_count
+    mov ds,gs:usbp_packet_sel
+    mov si,SIZE usb_packet_struc
+    mov cx,ds:usbpk_entry_count
     xor edi,edi
     xor ebp,ebp
 
 sipLoop:
-    mov edx,gs:[si]
+    mov edx,ds:[si]
+    or edx,edx
+    jnz sipHasTd
+;
+    push cx
+    mov cx,SIZE base_td
+    AllocateMemBlk
+    pop cx
+;
+    xor eax,eax
+    mov fs:[edx].utd_link,eax
+    mov fs:[edx].utd_control,eax
+    mov fs:[edx].utd_host,eax
+    mov fs:[edx].utd_buf,eax
+    mov ds:[si],edx
+
+sipHasTd:
     or edi,edi
     jz sipNext
 ;
@@ -2422,14 +2435,14 @@ sipSpeedOk:
     mov al,PID_IN
     mov fs:[edi].utd_host,eax
 ;
-    mov edx,gs:[si+4]
+    mov edx,ds:[si+4]
     or edx,edx
     jnz sipConv
 ;
     push cx
     mov cx,gs:ued_maxsize
     AllocateMemBlk
-    mov gs:[si+4],edx
+    mov ds:[si+4],edx
     pop cx
     jmp sipSave
 
@@ -2444,18 +2457,20 @@ sipSave:
     sub cx,1
     jnz sipLoop
 ;
-    mov ax,gs:up_entry_count
+    mov ax,ds:usbpk_entry_count
     dec ax
-    mov gs:up_tail_ptr,ax
+    mov ds:usbpk_tail_ptr,ax
 ;
-    mov edx,gs:up_entry_arr
+    mov bx,SIZE usb_packet_struc
+    mov edx,ds:[bx]
     LinearToPhysicalMemBlk
     mov edx,gs:up_qh
     mov fs:[edx].uqh_elem,eax
 ;
     popad
+    pop ds
     ret
-StartInPipe     Endp
+StartPacketTds     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2477,7 +2492,11 @@ OpenPacket   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    call StartInPipe
+;
+    call AllocatePacketSel
+    mov gs:usbp_packet_sel,bx
+;
+    call StartPacketTds
     clc
 ;
     popad
@@ -2499,7 +2518,6 @@ OpenPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePacket   Proc far
-    int 3
     push fs
     push eax
     push edx
@@ -2531,6 +2549,7 @@ ClosePacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqPacket   Proc far
+    push ds
     push fs
     push eax
     push ebx
@@ -2538,8 +2557,9 @@ ReqPacket   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov bx,gs:up_rd_ptr
-    cmp bx,gs:up_wr_ptr
+    mov ds,gs:usbp_packet_sel
+    mov bx,ds:usbpk_rd_ptr
+    cmp bx,ds:usbpk_wr_ptr
     jne rqpkGet
 ;
     stc
@@ -2547,11 +2567,12 @@ ReqPacket   Proc far
 
 rqpkGet:
     shl bx,3
-    mov edx,gs:[bx].up_entry_arr
+    add bx,SIZE usb_packet_struc
+    mov edx,ds:[bx]
     mov ecx,fs:[edx].utd_control
     and cx,7FFh
     inc cx
-    mov edx,gs:[bx+4].up_entry_arr
+    mov edx,ds:[bx+4]
     clc
 
 rqpkDone:
@@ -2559,6 +2580,7 @@ rqpkDone:
     pop ebx
     pop eax
     pop fs
+    pop ds
     retf32
 ReqPacket   Endp
 
@@ -2575,54 +2597,59 @@ ReqPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RelPacket   Proc far
+    push ds
     push fs
     pushad
 ;
     mov ax,flat_sel
     mov fs,ax
+    mov bp,ds
+    mov ds,gs:usbp_packet_sel
 ;
-    EnterGsSection gs:up_section
-    mov bx,gs:up_rd_ptr
-    cmp bx,gs:up_wr_ptr
+    EnterSection ds:usbpk_section
+    mov bx,ds:usbpk_rd_ptr
+    cmp bx,ds:usbpk_wr_ptr
     stc
     je rlpkDone
 ;
     inc bx
-    cmp bx,gs:up_entry_count
+    cmp bx,ds:usbpk_entry_count
     jb rlpkPtrOk
 ;
     xor bx,bx
 
 rlpkPtrOk:
-    mov gs:up_rd_ptr,bx
+    mov ds:usbpk_rd_ptr,bx
 ;
-    mov bx,gs:up_tail_ptr
+    mov bx,ds:usbpk_tail_ptr
     sub bx,1
     jnc rlpkPrevOk
 ;
-    mov bx,gs:up_entry_count
+    mov bx,ds:usbpk_entry_count
     dec bx
 
 rlpkPrevOk:
     shl bx,3
-    mov esi,gs:[bx].up_entry_arr
+    add bx,SIZE usb_packet_struc
+    mov esi,ds:[bx]
 ;
-    mov bx,gs:up_tail_ptr
+    mov bx,ds:usbpk_tail_ptr
     mov di,bx
     shl di,3
+    add di,SIZE usb_packet_struc
 ;
-    mov edx,gs:[di+4].up_entry_arr
+    mov edx,ds:[di+4]
     or edx,edx
     jnz rlpkHasBuffer
 ;
     mov cx,gs:ued_maxsize
     AllocateMemBlk
-    mov gs:[di+4].up_entry_arr,edx
+    mov ds:[di+4],edx
 
 rlpkHasBuffer:
     LinearToPhysicalMemBlk
 ;
-    mov edx,gs:[di].up_entry_arr
+    mov edx,ds:[di]
     mov eax,21800000h
     cmp es:usbd_speed,0
     jnz rlpkSpeedOk
@@ -2637,18 +2664,18 @@ rlpkSpeedOk:
     or al,4
     mov fs:[esi].utd_link,eax
 ;
-    mov bx,gs:up_tail_ptr
-    cmp bx,gs:up_wr_ptr
+    mov bx,ds:usbpk_tail_ptr
+    cmp bx,ds:usbpk_wr_ptr
     pushf
 ;
     inc bx
-    cmp bx,gs:up_entry_count
+    cmp bx,ds:usbpk_entry_count
     jb rlpkTailOk
 ;
     xor bx,bx
 
 rlpkTailOk:
-    mov gs:up_tail_ptr,bx
+    mov ds:usbpk_tail_ptr,bx
 ;
     popf
     je rlpkCheckStart
@@ -2658,8 +2685,11 @@ rlpkTailOk:
     test al,1
     jz rlpkOk
 ;
+    push ds
+    mov ds,bp
     mov bx,ds:uhc_thread
     Signal
+    pop ds
     jmp rlpkOk
 
 rlpkCheckStart:
@@ -2684,10 +2714,11 @@ rlpkOk:
     clc
 
 rlpkDone:
-    LeaveGsSection gs:up_section
+    LeaveSection ds:usbpk_section
 ;
     popad
     pop fs
+    pop ds
     retf32
 RelPacket   Endp
 
@@ -3029,6 +3060,120 @@ CheckControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandlePacketIn
+;
+;       DESCRIPTION:    Handle packet IN pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePacketIn   Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+;
+    mov ds,gs:usbp_packet_sel
+    EnterSection ds:usbpk_section
+
+hpiRetry:
+    mov bx,ds:usbpk_wr_ptr
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiDone
+;
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    mov edx,ds:[si]
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+;
+    test al,80h
+    jnz hpiCheckRun
+
+hpiLoop:
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb hpiSave
+;
+    xor bx,bx
+
+hpiSave:
+    mov ds:usbpk_wr_ptr,bx
+;
+    and al,7Ch
+    jnz hpiReport
+;
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiSignal
+;
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    mov edx,ds:[si]
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+    test al,80h
+    jz hpiLoop
+    jmp hpiSignal
+
+hpiReport:
+    push edx
+    mov dl,gs:ued_address
+    call ReportStatus
+    pop edx
+
+hpiSignal:
+    xor bx,bx
+    xchg bx,gs:usbp_wait
+    or bx,bx
+    jz hpiSignalOk
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+hpiSignalOk:
+    mov bx,ds:usbpk_wr_ptr
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiDone
+
+hpiCheckRun:
+    mov esi,gs:up_qh
+    mov eax,fs:[esi].uqh_elem
+    test al,1
+    jz hpiDone
+;
+    shl bx,3
+    add bx,SIZE usb_packet_struc
+    mov edx,ds:[bx]
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+    test al,80h
+    jz hpiRetry
+
+hpiRestart:
+    LinearToPhysicalMemBlk
+    mov fs:[esi].uqh_elem,eax
+
+hpiDone:
+    LeaveSection ds:usbpk_section
+;
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+HandlePacketIn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -3042,94 +3187,14 @@ CheckControl   Endp
 
 CheckIn   Proc near
     push ebx
-    push edx
-    push esi
 ;
-    EnterGsSection gs:up_section
-
-citRetry:
-    mov bx,gs:up_wr_ptr
-    cmp bx,gs:up_tail_ptr
-    je citDone
-;
-    mov si,bx
-    shl si,3
-    mov edx,gs:[si].up_entry_arr
-    mov eax,fs:[edx].utd_control
-    shr eax,16
-;
-    test al,80h
-    jnz citCheckRun
-
-citLoop:
-    inc bx
-    cmp bx,gs:up_entry_count
-    jb citSave
-;
-    xor bx,bx
-
-citSave:
-    mov gs:up_wr_ptr,bx
-;
-    and al,7Ch
-    jnz citReport
-;
-    cmp bx,gs:up_tail_ptr
-    je citSignal
-;
-    mov si,bx
-    shl si,3
-    mov edx,gs:[si].up_entry_arr
-    mov eax,fs:[edx].utd_control
-    shr eax,16
-    test al,80h
-    jz citLoop
-    jmp citSignal
-
-citReport:
-    push edx
-    mov dl,gs:ued_address
-    call ReportStatus
-    pop edx
-
-citSignal:
-    xor bx,bx
-    xchg bx,gs:usbp_wait
+    mov bx,gs:usbp_packet_sel
     or bx,bx
-    jz citSignalOk
+    jz ciDone
 ;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
+    call HandlePacketIn
 
-citSignalOk:
-    mov bx,gs:up_wr_ptr
-    cmp bx,gs:up_tail_ptr
-    je citDone
-
-citCheckRun:
-    mov esi,gs:up_qh
-    mov eax,fs:[esi].uqh_elem
-    test al,1
-    jz citDone
-;
-    shl bx,3
-    mov edx,gs:[bx].up_entry_arr
-    mov eax,fs:[edx].utd_control
-    shr eax,16
-    test al,80h
-    jz citRetry
-
-citRestart:
-    LinearToPhysicalMemBlk
-    mov fs:[esi].uqh_elem,eax
-
-citDone:
-    LeaveGsSection gs:up_section
-;
-    pop esi
-    pop edx
+ciDone:
     pop ebx
     ret
 CheckIn   Endp        
