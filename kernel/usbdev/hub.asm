@@ -613,6 +613,7 @@ CreateBulkPipe   Proc far
     mov ds,ds:hub_parent_sel
     call fword ptr ds:create_bulk_pipe_proc
     pop ds
+    ret
 CreateBulkPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
