@@ -109,15 +109,9 @@ uds_interface       DB ?
 uds_intr_in         DB ?
 uds_bulk_in         DB ?
 uds_bulk_out        DB ?
-uds_intr_handle     DW ?
-uds_in_handle       DW ?
-uds_out_handle      DW ?
 uds_intr_buffer     DW ?
 uds_in_buffer       DW ?
 uds_out_buffer      DW ?
-uds_intr_req        DW ?
-uds_in_req          DW ?
-uds_out_req         DW ?
 uds_link            DW ?
 uds_port_offset     DW ?
 uds_intr_interval   DB ?
@@ -2774,54 +2768,43 @@ CreatePortMct   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort    Proc near
-    mov bx,es:uc_controller
-;    mov al,es:uc_device
-    mov dl,ds:uds_bulk_in
-;    OpenUsbPipe
-    mov ds:uds_in_handle,bx
-;
-;    CreateUsbReq
-    mov ds:uds_in_req,bx    
-;    
+    int 3
     push es
-    mov cx,ds:uds_in_size
-    xor ax,ax
-;    AddReadUsbDataReq
+    movzx eax,ds:uds_in_size
+    AllocateSmallGlobalMem
     mov ds:uds_in_buffer,es
-    pop es
 ;
-    mov bx,es:uc_controller
-;    mov al,es:uc_device
-    mov dl,ds:uds_bulk_out
-;    OpenUsbPipe    
-    mov ds:uds_out_handle,bx
-;
-;    CreateUsbReq
-    mov ds:uds_out_req,bx
-;    
-    push es
-    mov cx,ds:uds_out_size
-    mov ax,1
-;    AddWriteUsbDataReq
+    movzx eax,ds:uds_out_size
+    AllocateSmallGlobalMem
     mov ds:uds_out_buffer,es
     pop es
 ;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_in
+    mov cx,10
+    mov ax,2
+    ConfigUsbPacketPipe
+;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_out
+    mov cx,256
+    mov ax,2
+    ConfigUsbStreamPipe
+;
     mov dl,ds:uds_intr_in
+    mov ds:uds_intr_buffer,0
     or dl,dl
     jz opDone
-;    
-    mov bx,es:uc_controller
-;    mov al,es:uc_device
-;    OpenUsbPipe    
-    mov ds:uds_intr_handle,bx
-;    
-;    CreateUsbReq
-    mov ds:uds_intr_req,bx
+;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_intr_in
+    mov cx,10
+    mov ax,2
+    ConfigUsbPacketPipe
 ;
     push es
-    mov cx,ds:uds_in_size
-    xor ax,ax
-;    AddReadUsbDataReq
+    movzx eax,ds:uds_in_size
+    AllocateSmallGlobalMem
     mov ds:uds_intr_buffer,es
     pop es
 
@@ -2842,49 +2825,22 @@ OpenPort    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePort    Proc near
+    int 3
     mov ax,50
     WaitMilliSec
 ;    
-    xor ax,ax
-    mov es,ax
-;    
-    mov bx,ds:uds_in_req
-;    CloseUsbReq
-    mov ds:uds_in_req,0
+    mov es,ds:uds_in_buffer
+    FreeMem
 ;
-    mov bx,ds:uds_in_handle
-;    CloseUsbPipe    
-    mov ds:uds_in_handle,0
+    mov es,ds:uds_out_buffer
+    FreeMem
 ;
-    mov bx,ds:uds_out_req
-;    CloseUsbReq
-    mov ds:uds_out_req,0
+    mov es,ds:uds_intr_buffer
+    FreeMem
 ;
-    mov bx,ds:uds_out_handle
-;    CloseUsbPipe    
-    mov ds:uds_out_handle,0
-;
-    mov bx,ds:uds_intr_req
-    or bx,bx
-    jz cIntrReqDone
-;
-;    CloseUsbReq
-    mov ds:uds_intr_req,0
-
-cIntrReqDone:
-    mov bx,ds:uds_intr_handle
-    or bx,bx
-    jz cIntrHandleDone
-;    
-;    CloseUsbPipe
-    mov ds:uds_intr_handle,0
-
-cIntrHandleDone:    
     mov ds:uds_in_buffer,0
     mov ds:uds_out_buffer,0
     mov ds:uds_intr_buffer,0
-
-cIntrMemDone:    
     ret
 ClosePort   Endp
 
@@ -3099,6 +3055,8 @@ PollWrite   Endp
 
 HandleDevice    Proc near
     push ds
+    push es
+    pushad
 ;
     test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz hdDone
@@ -3109,7 +3067,7 @@ hdConn:
     jz hdClosed
 
 hdOpen:
-    mov bx,ds:uds_in_req
+    mov bx,ds:uds_in_buffer
     or bx,bx
     jnz hdIsOpen
 ;
@@ -3123,19 +3081,23 @@ hdIsOpen:
     and es:uc_flags,NOT FLAG_UDS_REINIT
 
 hdInitOk:
-    mov bx,ds:uds_in_req
-;    IsUsbReqStarted
-    jnc hdOpenOk
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_in
+    GetUsedUsbBuffers
+    or cx,cx
+    jz hdReadDone
 ;
-;    StartUsbReq
-
-hdOpenOk:    
-    mov bx,ds:uds_in_req
-;    IsUsbReqReady
-    jc hdReadDone
+    push es
+    push edi
 ;
-;    GetUsbReqData
-    jc hdReadRestart
+    mov es,ds:uds_in_buffer
+    xor edi,edi
+    movzx ecx,ds:uds_in_size
+    ReadUsbPipe
+    mov cx,ax
+;
+    pop edi
+    pop es
 ;    
     mov ax,ds:uds_device_type
     xor al,al
@@ -3145,85 +3107,63 @@ hdOpenOk:
 ;
     mov si,2
     sub cx,2
-    jbe hdReadRestart
+    jbe hdReadDone
 
 hdPollReadDo:
     or cx,cx
-    jz hdReadRestart
-;    
+    jz hdReadDone
+;
     call PollRead
 
-hdReadRestart:
-    mov bx,ds:uds_in_req
-;    StartUsbReq
-
 hdReadDone:
-    mov bx,ds:uds_intr_req
-    or bx,bx
+    mov dl,ds:uds_intr_in
     jz hdWrite
 ;
-;    IsUsbReqStarted
-    jc hdStartIntr
+    int 3
+    mov bx,es:uc_dev_handle
+    GetUsedUsbBuffers
+    jz hdWrite
 ;
-;    IsUsbReqReady
-    jc hdWrite
+    push es
+    push edi
 ;
-;    GetUsbReqData
     mov es,ds:uds_intr_buffer
-
-hdStartIntr:
-;    StartUsbReq
+    xor edi,edi
+    movzx ecx,ds:uds_in_size
+    ReadUsbPipe
+    mov cx,ax
+;
+    pop edi
+    pop es
     
 hdWrite:
-    mov bx,ds:uds_out_req
-;    IsUsbReqStarted
-    jc hdCheckWrite
-;    
-;    IsUsbReqReady
-    jc hdDone
-;
-    push ds
-    mov ds,ds:uds_port_sel
-    mov bx,ds:send_wait
-    pop ds
-    or bx,bx
-    jz hdCheckWrite
-;    
-    Signal
-
-hdCheckWrite:
-    call PollWrite
-    or cx,cx
-    jz hdDone
-;
-    mov bx,ds:uds_out_req
-;    StartUsbReq
     jmp hdDone
 
 hdClosed:
     and es:uc_flags,NOT FLAG_UDS_REINIT
 ;
-    mov bx,ds:uds_in_req
-    or bx,bx
+    mov bx,ds:uds_in_buffer
     jz hdDone
 
 hdIsClosed:
     call ClosePort
     
 hdDone:
-    xor ax,ax
-    mov es,ax
+    popad
+    pop es
     pop ds
     ret
 HandleDevice    Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UsbComThread
+;   NAME:           UsbComThread
 ;
-;           DESCRIPTION:    Com-port handler thread
+;   DESCRIPTION:    Com-port handler thread
+;
+;   PARAMETERS:     BX      Device sel
+;                   DL      Unit       
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3235,13 +3175,30 @@ usb_com_recreate:
     mov es:uc_thread,ax
 ;
     mov es:uc_flags,FLAG_UDS_REINIT
+;
+    movzx si,dl
+    add si,si
+    mov ax,es:[si].uc_unit_arr
+    or ax,ax
+    jz tEnd
+;
+    mov ds,ax
     jmp tSignalled
 
 usb_com_create:
+    int 3
     mov es,bx
     GetThread
     mov es:uc_detach,0
     mov es:uc_thread,ax
+;
+    movzx si,dl
+    add si,si
+    mov ax,es:[si].uc_unit_arr
+    or ax,ax
+    jz tEnd
+;
+    mov ds,ax
 
 tLoop:
     WaitForSignal
@@ -3250,53 +3207,12 @@ TSignalled:
     test es:uc_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
-    movzx cx,es:uc_unit_count
-    or cx,cx
-    jz tEnd
-;
-    xor si,si
-
-tDevLoop:
-    mov ax,es:[si].uc_unit_arr
-    or ax,ax
-    jz tDevNext
-;
-    push es
-    push cx
-    push si
-    mov ds,ax
-;
     EnterSection ds:uds_section
     call HandleDevice
     LeaveSection ds:uds_section
-;
-    pop si
-    pop cx
-    pop es
-    
-tDevNext:
-    add si,2
-    loop tDevLoop
-;    
     jmp tLoop
 
 tExit:
-    movzx cx,es:uc_unit_count
-    or cx,cx
-    jz tEnd
-;
-    xor si,si
-
-tCloseLoop:
-    mov ax,es:[si].uc_unit_arr
-    or ax,ax
-    jz tCloseNext
-;
-    push es
-    push cx
-    push si
-    mov ds,ax
-;
     EnterSection ds:uds_section
     call ClosePort
 ;
@@ -3313,15 +3229,6 @@ tCloseLoop:
 
 tLeave:
     LeaveSection ds:uds_section
-;
-    pop si
-    pop cx
-    pop es
-    
-tCloseNext:
-    add si,2
-    sub cx,1
-    jnz tCloseLoop
 ;
     mov es:uc_thread,0
     mov bx,es:uc_detach
@@ -3471,15 +3378,9 @@ apDescrDone:
     mov es:uds_out_size,bp
     shr ebp,16
     mov es:uds_in_size,bp
-    mov es:uds_in_handle,0
-    mov es:uds_in_req,0
     mov es:uds_in_buffer,0
-    mov es:uds_out_handle,0
-    mov es:uds_out_req,0
     mov es:uds_out_buffer,0
-    mov es:uds_intr_handle,0
     mov es:uds_intr_buffer,0
-    mov es:uds_intr_req,0
     InitSection es:uds_section
 ;
     mov si,SEG data
@@ -4202,6 +4103,10 @@ CreateServerThread    Proc near
 ;
     mov eax,100h
     AllocateSmallGlobalMem
+;
+    xor dl,dl
+
+cstUnitLoop:
     xor edi,edi
     mov esi,OFFSET com_name
 
@@ -4226,16 +4131,31 @@ cstCopyDone:
     call HexToAscii
     stosw
 ;
+    mov al,'-'
+    stosb
+;
+    mov al,dl
+    add al,'0'
+    stosb
+;
     xor al,al
     stosb
 ;
+    push ds
+;
     xor edi,edi
-    mov edx,cs
-    mov ds,edx
+    mov eax,cs
+    mov ds,eax
     mov esi,ebp
     mov eax,3
     mov ecx,stack0_size
     CreateThread
+;
+    pop ds
+;
+    inc dl
+    cmp dl,ds:uc_unit_count
+    jne cstUnitLoop
 ;
     FreeMem
 ;
@@ -4542,12 +4462,11 @@ cdAdd:
     call InsertDevice
     LeaveSection ds:sd_section
 ;
-    push ebp
+    call fword ptr fs:[ebp].cs_dev_attach_proc
+;
     mov ebp,OFFSET usb_com_create
     call CreateServerThread
-    pop ebp
-;
-    call fword ptr fs:[ebp].cs_dev_attach_proc
+    clc
     jmp cdDone
 
 cdRecreate:
