@@ -1735,9 +1735,6 @@ tsNotOver:
     mov bx,ds:hub_wait_handle
     WaitWithoutTimeout
 ;
-    test ds:hub_flags,FLAG_HUB_DISCONNECT
-    jnz tsExit
-;
     mov ebx,ds
     mov es,ebx
     mov edi,OFFSET hub_buf
@@ -1745,9 +1742,6 @@ tsNotOver:
     mov dl,ds:hub_intr
     ReadUsbPipe
     jc tsLoop
-;
-    or cx,cx
-    jz tsLoop
 ;
     mov bx,cx
     mov al,es:[edi]

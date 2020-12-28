@@ -3083,6 +3083,7 @@ HandleOpen    Proc near
 ;
     pop edi
     pop es
+    jc hdReadDone
 ;    
     mov ax,ds:uds_device_type
     xor al,al
@@ -3103,6 +3104,7 @@ hdPollReadDo:
 
 hdReadDone:
     mov dl,ds:uds_intr_in
+    or dl,dl
     jz hdWrite
 ;
     int 3
