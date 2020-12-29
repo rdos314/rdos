@@ -2935,7 +2935,63 @@ ReadRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteRaw   Proc far
+    push ds
+    push fs
+    pushad
+;
     int 3
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov ds,gs:usbp_raw_sel
+    GetThread
+    mov ds:usbr_thread,ax
+;
+    mov edx,ds:usbr_buf_linear
+    LinearToPhysicalMemBlk
+;
+    mov edx,ds:er_td
+    mov fs:[edx].qtd_next,1
+    mov fs:[edx].qtd_alt,1
+    mov fs:[edx].qtd_status,80h
+    mov fs:[edx].qtd_flags,8Ch
+    mov fs:[edx].qtd_page0,eax
+    mov fs:[edx].qtd_size,cx
+    LinearToPhysicalMemBlk
+    push eax
+;
+    mov edx,gs:ep_qh
+    mov al,es:usbd_address
+    mov fs:[edx].qh_adress,al
+    mov al,gs:ued_address
+    and al,0Fh
+    mov ah,fs:[edx].qh_endpoint
+    and ah,0B0h
+    or al,ah
+    mov fs:[edx].qh_endpoint,al
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,3
+    je wrIntr
+
+wrBulk:
+    mov ax,gs:ued_maxsize
+    or ax,0F000h
+    mov fs:[edx].qh_max_packet,ax
+    jmp wrDo
+
+wrIntr:
+    mov ax,gs:ued_maxsize
+    mov fs:[edx].qh_max_packet,ax
+
+wrDo:
+    pop eax
+    mov fs:[edx].qh_next_qtd,eax
+;
+    popad
+    pop fs
+    pop ds
     retf32
 WriteRaw   Endp
 
