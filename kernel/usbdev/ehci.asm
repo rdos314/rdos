@@ -2842,7 +2842,6 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
-    int 3
     push fs
     push gs
     push eax
@@ -2873,6 +2872,7 @@ OpenRaw   Proc far
 ;
     call AllocateQtd
     mov gs:er_td,edx
+    mov gs:usbr_thread,0
 ;
     pop edx
     pop ecx
@@ -3885,6 +3885,7 @@ CheckControl   Endp
 ;                       ES      Device sel
 ;                       FS      Flat sel
 ;                       GS      Pipe sel
+;                       BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4001,6 +4002,36 @@ HandlePacketIn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandleRawOut
+;
+;       DESCRIPTION:    Handle raw OUT pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Raw sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRawOut   Proc near
+    push ds
+;
+    mov ds,bx
+    mov bx,ds:usbr_thread
+    or bx,bx
+    jz hroDone
+;
+    int 3
+
+hroDone:
+    pop ds
+    ret
+HandleRawOut  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -4044,7 +4075,16 @@ CheckIn   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckOut   Proc near
-    int 3
+    push bx
+;
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz cotDone
+;
+    call HandleRawOut
+
+cotDone:
+    pop bx
     ret
 CheckOut   Endp
 

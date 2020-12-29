@@ -249,5 +249,6 @@ usb_raw_struc  STRUC
 usbr_buf_size     DW ?
 usbr_buf_linear   DD ?
 usbr_buf_sel      DW ?
+usbr_thread       DW ?
 
 usb_raw_struc  ENDS
