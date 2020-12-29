@@ -3630,18 +3630,6 @@
     __value [eax] \
     __parm [__ebx] [__dl] [__eax] [__ecx]
 
-#pragma aux RdosConfigUsbRawPipe = \
-    CallGate_config_usb_raw_pipe \
-    CarryToBool \
-    __value [eax] \
-    __parm [__ebx] [__dl] [__eax] [__ecx]
-
-#pragma aux RdosStopUsbPipe = \
-    CallGate_stop_usb_pipe \
-    CarryToBool \
-    __value [eax] \
-    __parm [__ebx] [__dl]
-
 #pragma aux RdosGetUsedUsbBuffers = \
     CallGate_get_used_usb_buffers \
     "jc fail" \

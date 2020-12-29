@@ -3649,20 +3649,6 @@ ConfigUsbStreamPipe      MACRO
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
-;   IN  AX          Timeout in ms
-;   IN  CX          Max data size
-ConfigUsbRawPipe      MACRO
-        UserGate config_usb_raw_pipe_nr
-                                                ENDM
-
-;   IN  BX          Device handle
-;   IN  DL          Pipe #
-StopUsbPipe      MACRO
-        UserGate stop_usb_pipe_nr
-                                                ENDM
-
-;   IN  BX          Device handle
-;   IN  DL          Pipe #
 ;   OUT CX          Buffers
 GetUsedUsbBuffers      MACRO
         UserGate get_used_usb_buffers_nr

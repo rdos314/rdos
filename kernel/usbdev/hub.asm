@@ -1505,10 +1505,6 @@ CreateHub   Endp
 CloseHub  Proc near
     push bx
 ;
-    mov bx,ds:hub_device_handle
-    mov dl,ds:hub_intr
-    StopUsbPipe
-;
     mov bx,ds:hub_wait_handle
     CloseWait
 ;    

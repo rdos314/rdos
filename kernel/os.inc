@@ -4104,6 +4104,15 @@ AddressUsbDev   MACRO
     OsGate address_usb_dev_nr
                     ENDM
 
+; IN  BX      Device handle
+; IN  DL      Pipe #
+; IN  AX      Timeout in ms
+; IN  CX      Buffer size
+; OUT ES      Buffer sel
+ConfigUsbRawPipe      MACRO
+    OsGate config_usb_raw_pipe_nr
+                                                ENDM
+
 ;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register

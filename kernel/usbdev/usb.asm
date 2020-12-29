@@ -1671,7 +1671,9 @@ config_usb_stream_pipe Endp
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
-;                       CX        Max data size
+;                       CX        Buffer size
+;
+;       RETURNS:        ES        Buffer sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1679,10 +1681,10 @@ config_usb_raw_pipe_name DB 'Configure Usb Raw Pipe', 0
 
 config_usb_raw_pipe	Proc far
     push ds
-    push es
     push gs
     pushad
 ;
+    int 3
     push dx
     mov dx,1193
     mul dx
@@ -1721,62 +1723,9 @@ curpLeaveFail:
 curpDone:
     popad
     pop gs
-    pop es
     pop ds    
     retf32
 config_usb_raw_pipe Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StopUsbPipe
-;
-;       description:    Stop USB pipe
-;
-;       parameters:     BX        Handle
-;                       DL        Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_usb_pipe_name DB 'Stop Usb Pipe', 0
-
-stop_usb_pipe	Proc far
-    push ds
-    push es
-    push gs
-    push eax
-    push ebx
-    push esi
-;
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc supDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    stc
-    jnz supLeave
-;
-    mov es,ds:udd_sel    
-    call GetPipe
-    jc supLeave
-;
-    int 3
-
-supLeave:
-    LeaveSection ds:udd_section
-
-supDone:
-    pop esi
-    pop ebx
-    pop eax
-    pop gs
-    pop es
-    pop ds    
-    retf32
-stop_usb_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4694,6 +4643,12 @@ init    Proc far
     mov ax,notify_usb_port_state_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET config_usb_raw_pipe
+    mov edi,OFFSET config_usb_raw_pipe_name
+    xor cl,cl
+    mov ax,config_usb_raw_pipe_nr
+    RegisterOsGate
+;
     mov ebx,OFFSET get_usb_device16
     mov esi,OFFSET get_usb_device32
     mov edi,OFFSET get_usb_device_name
@@ -4761,18 +4716,6 @@ init    Proc far
     mov edi,OFFSET config_usb_stream_pipe_name
     xor dx,dx
     mov ax,config_usb_stream_pipe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET config_usb_raw_pipe
-    mov edi,OFFSET config_usb_raw_pipe_name
-    xor dx,dx
-    mov ax,config_usb_raw_pipe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET stop_usb_pipe
-    mov edi,OFFSET stop_usb_pipe_name
-    xor dx,dx
-    mov ax,stop_usb_pipe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_dev_pipe

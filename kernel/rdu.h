@@ -937,8 +937,6 @@
 
 #define usergate_config_usb_packet_pipe 0x000002FC
 #define usergate_config_usb_stream_pipe 0x000002FD
-#define usergate_config_usb_raw_pipe 0x000002FE
-#define usergate_stop_usb_pipe 0x000002FF
 
 
 
@@ -1882,8 +1880,6 @@
 
 #define CallGate_config_usb_packet_pipe 0x55 0x67 0x9a 252 2 0 0 3 0 0x5d
 #define CallGate_config_usb_stream_pipe 0x55 0x67 0x9a 253 2 0 0 3 0 0x5d
-#define CallGate_config_usb_raw_pipe 0x55 0x67 0x9a 254 2 0 0 3 0 0x5d
-#define CallGate_stop_usb_pipe 0x55 0x67 0x9a 255 2 0 0 3 0 0x5d
 
 #else
 
@@ -2825,7 +2821,5 @@
 
 #define CallGate_config_usb_packet_pipe 0x3e 0x67 0x9a 252 2 0 0 3 0
 #define CallGate_config_usb_stream_pipe 0x3e 0x67 0x9a 253 2 0 0 3 0
-#define CallGate_config_usb_raw_pipe 0x3e 0x67 0x9a 254 2 0 0 3 0
-#define CallGate_stop_usb_pipe 0x3e 0x67 0x9a 255 2 0 0 3 0
 
 #endif

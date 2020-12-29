@@ -2766,10 +2766,6 @@ OpenPort    Proc near
     movzx eax,ds:uds_in_size
     AllocateSmallGlobalMem
     mov ds:uds_in_buffer,es
-;
-    movzx eax,ds:uds_out_size
-    AllocateSmallGlobalMem
-    mov ds:uds_out_buffer,es
     pop es
 ;
     mov bx,es:uc_dev_handle
@@ -2778,11 +2774,14 @@ OpenPort    Proc near
     mov ax,2
     ConfigUsbPacketPipe
 ;
+    push es
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_bulk_out
-    mov cx,256
+    mov cx,ds:uds_out_size
     mov ax,2
-;    ConfigUsbStreamPipe
+    ConfigUsbRawPipe
+    mov ds:uds_out_buffer,es
+    pop es
 ;
     CreateWait
     mov ds:uds_wait,bx
