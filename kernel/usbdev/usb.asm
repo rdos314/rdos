@@ -1684,7 +1684,6 @@ config_usb_raw_pipe	Proc far
     push gs
     pushad
 ;
-    int 3
     push dx
     mov dx,1193
     mul dx
@@ -1711,6 +1710,9 @@ config_usb_raw_pipe	Proc far
     mov ds,es:usbd_func_sel
     call fword ptr ds:open_raw_proc
     pop ds
+;
+    mov es,gs:usbp_raw_sel
+    mov es,es:usbr_buf_sel
 ;
     LeaveSection ds:udd_section
     clc

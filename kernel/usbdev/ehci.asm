@@ -151,6 +151,14 @@ ep_entry           DW ?
 
 ehci_pipe_struc    ENDS
 
+ehci_raw_sel       STRUC
+
+er_base            usb_raw_struc <>
+
+er_td              DD ?
+
+ehci_raw_sel       ENDS
+
 qtd_struc         STRUC
 
 qtd_next          DD ?
@@ -2835,6 +2843,43 @@ WriteStream   Endp
 
 OpenRaw   Proc far
     int 3
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    push es
+    mov eax,SIZE ehci_raw_sel
+    AllocateSmallGlobalMem
+    mov bx,es
+    pop es
+;
+    mov gs:usbp_raw_sel,bx
+    mov gs,bx
+    mov gs:usbr_buf_size,cx
+;
+    AllocateMemBlk
+    mov gs:usbr_buf_linear,edx
+;
+    AllocateGdt
+    movzx ecx,cx
+    CreateDataSelector16
+    mov gs:usbr_buf_sel,bx
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call AllocateQtd
+    mov gs:er_td,edx
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
     retf32
 OpenRaw   Endp
 

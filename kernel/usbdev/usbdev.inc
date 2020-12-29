@@ -246,6 +246,8 @@ usb_stream_struc  ENDS
 
 usb_raw_struc  STRUC
 
-usbr_max_size     DW ?
+usbr_buf_size     DW ?
+usbr_buf_linear   DD ?
+usbr_buf_sel      DW ?
 
 usb_raw_struc  ENDS
