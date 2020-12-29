@@ -291,78 +291,6 @@ CloseDevHandle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SendSignal
-;
-;           description:    Sends signal to USB-handler thread
-;
-;       Parameters:     CX      Port selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendSignal  Proc far
-    push ds
-    push ax
-    push bx
-;    
-    verw cx
-    jnz ssiDone
-;    
-    mov ds,cx
-    mov ds:ups_timer_active,0
-;    
-    mov ds,ds:ups_device_sel
-    mov bx,ds:uds_thread
-    Signal    
-
-ssiDone:
-    pop bx
-    pop ax
-    pop ds
-    retf32
-SendSignal  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           StartSendTimer
-;
-;           description:    Starts send timeout
-;
-;       Parameters:     DS      Port selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartSendTimer Proc near
-    push es
-    pushad
-;       
-    mov al,1    
-    xchg al,ds:ups_timer_active
-    or al,al
-    jnz sstDone
-;
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-;       
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET SendSignal
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-
-sstDone:
-    popad
-    pop es
-    ret
-StartSendTimer Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetDivisorError
 ;
 ;           description:    Get baud-rate divisor, error type
@@ -2576,17 +2504,16 @@ start_send      PROC far
 ;    
     mov es,ax
     test es:uds_flags,FLAG_UDS_DISCONNECT
-    jz ssOk
+    jz ssDone
 ;
     mov ds:send_count,0
     mov ds:send_head,0
     mov ds:send_tail,0
-    jmp ssDone
-
-ssOk:    
-    call StartSendTimer
 
 ssDone:
+    mov bx,es:uds_thread
+    Signal    
+;
     pop ax
     pop es    
     retf32
@@ -2956,121 +2883,30 @@ prDone:
     ret
 PollRead    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PollWrite
-;
-;           DESCRIPTION:    Poll output-buffer
-;
-;       PARAMETERS:     DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollWrite    Proc near
-    push ds
-    push fs
-;   
-    xor cx,cx
-    mov bp,ds:uds_out_size
-    mov ax,ds:uds_out_buffer
-    or ax,ax
-    jz pwDone
-;    
-    mov es,ax
-    mov ds,ds:uds_port_sel
-    mov al,ds:ups_timer_active
-    or al,al
-    jnz pwDone
-;    
-    xor di,di
-    mov fs,ds:send_buf
-    cmp ds:uds_device_type,DEVICE_TYPE_SIO
-    jne pwStartOk
-;
-    mov di,1
-
-pwStartOk:
-    mov dx,ds:send_count
-    or dx,dx
-    jz pwDone
-
-pwLoop:
-    RequestSpinlock ds:com_spinlock
-    mov dx,ds:send_count
-    or dx,dx
-    jz pwSend
-;       
-    dec dx
-    mov ds:send_count,dx
-    mov bx,ds:send_head
-    mov al,fs:[bx]
-    stosb
-    inc bx
-    cmp bx,ds:send_size
-    jnz pwWrapOk
-;       
-    xor bx,bx
-
-pwWrapOk:
-    mov ds:send_head,bx
-    ReleaseSpinlock ds:com_spinlock
-;
-    inc cx
-    cmp cx,bp
-    jb pwLoop
-    jmp pwSendRel
-
-pwSend:
-    ReleaseSpinlock ds:com_spinlock
-
-pwSendRel:
-    mov ax,ds:send_size    
-    or ax,ax
-    jz pwTimerOk
-;
-    call StartSendTimer    
-
-pwTimerOk:
-    cmp ds:uds_device_type,DEVICE_TYPE_SIO
-    jne pwDone
-;
-    mov al,cl
-    shl al,2
-    or al,1
-    mov es:[0],al    
-    inc cx
-
-pwDone:
-    pop fs
-    pop ds    
-    ret
-PollWrite   Endp    
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandleOpen
+;       NAME:           HandleRead
 ;
-;       DESCRIPTION:    Handle open
+;       DESCRIPTION:    Handle read
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleOpen    Proc near
-    push ds
-    push es
-    pushad
+HandleRead    Proc near
+    push bx
+    push cx
+    push dx
+    push si
 ;
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_bulk_in
     GetUsedUsbBuffers
     or cx,cx
-    jz hdReadDone
+    jz hdrDone
 ;
     push es
     push edi
@@ -3082,56 +2918,132 @@ HandleOpen    Proc near
 ;
     pop edi
     pop es
-    jc hdReadDone
+    jc hdrDone
 ;    
     mov ax,ds:uds_device_type
     xor al,al
     xor si,si
     cmp ax,DEVICE_TYPE_PL2303
-    je hdPollReadDo
+    je hdrDo
 ;
     mov si,2
     sub cx,2
-    jbe hdReadDone
+    jbe hdrDone
 
-hdPollReadDo:
+hdrDo:
     or cx,cx
-    jz hdReadDone
+    jz hdrDone
 ;
     int 3
     call PollRead
-
-hdReadDone:
-    mov dl,ds:uds_intr_in
-    or dl,dl
-    jz hdWrite
-;
-    int 3
-    mov bx,es:uc_dev_handle
-    GetUsedUsbBuffers
-    jz hdWrite
-;
-    push es
-    push edi
-;
-    mov es,ds:uds_intr_buffer
-    xor edi,edi
-    movzx ecx,ds:uds_in_size
-    ReadUsbPipe
-    mov cx,ax
-;
-    pop edi
-    pop es
     
-hdWrite:
-    jmp hdDone
-    
-hdDone:
-    popad
-    pop es
-    pop ds
+hdrDone:
+    pop si
+    pop dx
+    pop cx
+    pop bx
     ret
-HandleOpen    Endp
+HandleRead    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleWrite
+;
+;       DESCRIPTION:    Handle output-buffer
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleWrite    Proc near
+    push gs
+;
+    mov gs,ds:uds_port_sel
+    mov dx,gs:send_count
+    or dx,dx
+    jz pwDone
+;       
+    push es
+    push fs
+;
+    mov bp,ds:uds_out_size
+    mov es,ds:uds_out_buffer
+    xor di,di
+    mov fs,gs:send_buf
+;
+    cmp ds:uds_device_type,DEVICE_TYPE_SIO
+    jne pwLoop
+;
+    mov di,1
+
+pwLoop:
+    RequestSpinlock gs:com_spinlock
+    mov dx,gs:send_count
+    or dx,dx
+    jz pwNoMore
+;       
+    dec dx
+    mov gs:send_count,dx
+    mov bx,gs:send_head
+    mov al,fs:[bx]
+    stosb
+    inc bx
+    cmp bx,gs:send_size
+    jnz pwWrapOk
+;       
+    xor bx,bx
+
+pwWrapOk:
+    mov gs:send_head,bx
+    ReleaseSpinlock gs:com_spinlock
+;
+    cmp di,bp
+    jb pwLoop
+    jmp pwDoSend
+
+pwNoMore:
+    ReleaseSpinlock gs:com_spinlock
+;
+    mov cx,5
+
+pwWaitLoop:
+    call HandleRead
+;
+    mov ax,2
+    WaitMilliSec
+;
+    loop pwWaitLoop
+;
+    mov dx,gs:send_count
+    or dx,dx
+    jnz pwLoop
+
+pwDoSend:
+    int 3
+    mov cx,di
+;
+    cmp ds:uds_device_type,DEVICE_TYPE_SIO
+    jne pwSend
+;
+    mov al,cl
+    shl al,2
+    or al,1
+    mov es:[0],al    
+    inc cx
+
+pwSend:
+    pop fs
+    pop es
+;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_out
+    PostUsbRawPipe
+    
+pwDone:
+    pop gs
+    ret
+HandleWrite   Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3211,7 +3123,8 @@ tIsOpen:
     jnz tExit
 ;
     EnterSection ds:uds_section
-    call HandleOpen
+    call HandleWrite
+    call HandleRead
     LeaveSection ds:uds_section
     jmp tLoop
 

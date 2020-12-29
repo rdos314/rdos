@@ -4113,6 +4113,13 @@ ConfigUsbRawPipe      MACRO
     OsGate config_usb_raw_pipe_nr
                                                 ENDM
 
+; IN  BX      Device handle
+; IN  DL      Pipe #
+; IN  CX      Buffer size
+PostUsbRawPipe      MACRO
+    OsGate post_usb_raw_pipe_nr
+                                                ENDM
+
 ;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register

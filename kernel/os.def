@@ -843,5 +843,6 @@ notify_usb_port_state_nr    = 764
 notify_ap_video_mode_nr     = 765
 
 config_usb_raw_pipe_nr      = 766
+post_usb_raw_pipe_nr        = 767
 
 osgate_entries              = 780
