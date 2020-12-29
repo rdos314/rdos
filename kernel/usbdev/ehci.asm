@@ -2843,11 +2843,12 @@ WriteStream   Endp
 
 OpenRaw   Proc far
     push fs
-    push gs
     push eax
     push ebx
     push ecx
     push edx
+;
+    push gs
 ;
     push es
     mov eax,SIZE ehci_raw_sel
@@ -2871,14 +2872,42 @@ OpenRaw   Proc far
     mov fs,ax
 ;
     call AllocateQtd
+    mov fs:[edx].qtd_status,80h
     mov gs:er_td,edx
     mov gs:usbr_thread,0
 ;
+    pop gs
+;
+    mov edx,gs:ep_qh
+    mov al,es:usbd_address
+    mov fs:[edx].qh_adress,al
+    mov al,gs:ued_address
+    and al,0Fh
+    mov ah,fs:[edx].qh_endpoint
+    and ah,0B0h
+    or al,ah
+    mov fs:[edx].qh_endpoint,al
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,3
+    je orIntr
+
+orBulk:
+    mov ax,gs:ued_maxsize
+    or ax,0F000h
+    mov fs:[edx].qh_max_packet,ax
+    jmp orDone
+
+orIntr:
+    mov ax,gs:ued_maxsize
+    mov fs:[edx].qh_max_packet,ax
+
+orDone:
     pop edx
     pop ecx
     pop ebx
     pop eax
-    pop gs
     pop fs
     retf32
 OpenRaw   Endp
@@ -2939,10 +2968,10 @@ WriteRaw   Proc far
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
+    ClearSignal
     mov ds,gs:usbp_raw_sel
     GetThread
     mov ds:usbr_thread,ax
@@ -2958,37 +2987,40 @@ WriteRaw   Proc far
     mov fs:[edx].qtd_page0,eax
     mov fs:[edx].qtd_size,cx
     LinearToPhysicalMemBlk
-    push eax
 ;
     mov edx,gs:ep_qh
-    mov al,es:usbd_address
-    mov fs:[edx].qh_adress,al
-    mov al,gs:ued_address
-    and al,0Fh
-    mov ah,fs:[edx].qh_endpoint
-    and ah,0B0h
-    or al,ah
-    mov fs:[edx].qh_endpoint,al
-;
-    mov al,gs:ued_attrib
-    and al,3
-    cmp al,3
-    je wrIntr
-
-wrBulk:
-    mov ax,gs:ued_maxsize
-    or ax,0F000h
-    mov fs:[edx].qh_max_packet,ax
-    jmp wrDo
-
-wrIntr:
-    mov ax,gs:ued_maxsize
-    mov fs:[edx].qh_max_packet,ax
-
-wrDo:
-    pop eax
     mov fs:[edx].qh_next_qtd,eax
 ;
+    push edx
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+;
+    mov eax,fs:[edx].qh_next_qtd
+    test al,1
+    clc
+    jnz wrDone
+;
+    push edx
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+;
+    mov eax,fs:[edx].qh_next_qtd
+    test al,1
+    clc
+    jnz wrDone
+;
+    mov fs:[edx].qh_next_qtd,1
+    mov ax,25
+    WaitMilliSec
+    stc
+
+wrDone:
     popad
     pop fs
     pop ds
@@ -4071,15 +4103,39 @@ HandlePacketIn Endp
 
 HandleRawOut   Proc near
     push ds
+    push edx
+    push ebp
 ;
+    mov bp,ds
     mov ds,bx
     mov bx,ds:usbr_thread
     or bx,bx
     jz hroDone
 ;
-    int 3
+    mov edx,ds:er_td
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jnz hroDone
+;
+    and al,7Ch
+    jz hroSignal
+;
+    push ds
+    push edx
+;
+    mov ds,bp
+    mov dl,gs:ued_address
+    call ReportStatus
+;
+    pop edx
+    pop ds
+
+hroSignal:
+    Signal
 
 hroDone:
+    pop ebp
+    pop edx
     pop ds
     ret
 HandleRawOut  Endp
