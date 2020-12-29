@@ -1568,7 +1568,7 @@ UnlinkPipe   Proc near
 ulpBulk:
     EnterSection ds:uhc_section
     mov edx,ds:uhc_period_td
-    mov eax,gs:dev_control_qh
+    mov eax,gs:up_qh
     call RemoveTd
     LeaveSection ds:uhc_section
     jmp ulpDone
