@@ -3020,7 +3020,6 @@ pwWaitLoop:
     jnz pwLoop
 
 pwDoSend:
-    int 3
     mov cx,di
 ;
     cmp ds:uds_device_type,DEVICE_TYPE_SIO

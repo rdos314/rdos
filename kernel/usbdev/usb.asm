@@ -1732,6 +1732,106 @@ config_usb_raw_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PostRaw
+;
+;       description:    Post to raw pipe
+;
+;       parameters:     DS        Function sel
+;                       ES        Device sel
+;                       GS        Pipe sel
+;                       CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+PostRaw Proc near
+    int 3
+    ret
+PostRaw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PostUsbRawPipe
+;
+;       description:    Post USB raw pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+post_usb_raw_pipe_name DB 'Post Usb Raw Pipe', 0
+
+post_usb_raw_pipe Proc far
+    int 3
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc purpDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz purpLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    jz purpOut
+
+purpIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz purpLeave
+;
+    mov gs,bx
+    call PostRaw
+    jmp purpLeave
+
+purpOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz purpLeave
+;
+    mov gs,bx
+    call PostRaw
+
+purpLeave:
+    LeaveSection ds:udd_section
+
+purpDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds    
+    retf32
+post_usb_raw_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetUsedPackets
 ;
 ;       description:    Get used USB pipe packets
@@ -4649,6 +4749,12 @@ init    Proc far
     mov edi,OFFSET config_usb_raw_pipe_name
     xor cl,cl
     mov ax,config_usb_raw_pipe_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET post_usb_raw_pipe
+    mov edi,OFFSET post_usb_raw_pipe_name
+    xor cl,cl
+    mov ax,post_usb_raw_pipe_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16
