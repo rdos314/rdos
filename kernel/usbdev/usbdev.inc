@@ -149,14 +149,12 @@ close_raw_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
-; IN  EDX       Linear buffer
 ; IN  CX        Size
 ; OUT CX        Actual size
 read_raw_proc              DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
-; IN  EDX       Linear buffer
 ; IN  CX        Size
 write_raw_proc              DD ?,?
 

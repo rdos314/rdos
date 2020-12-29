@@ -2930,7 +2930,6 @@ ReadRaw   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
-;                       EDX     Linear buffer
 ;                       CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

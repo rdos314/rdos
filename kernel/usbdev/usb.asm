@@ -1732,26 +1732,6 @@ config_usb_raw_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PostRaw
-;
-;       description:    Post to raw pipe
-;
-;       parameters:     DS        Function sel
-;                       ES        Device sel
-;                       GS        Pipe sel
-;                       CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-PostRaw Proc near
-    int 3
-    ret
-PostRaw Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           PostUsbRawPipe
 ;
 ;       description:    Post USB raw pipe
@@ -1765,7 +1745,6 @@ PostRaw Endp
 post_usb_raw_pipe_name DB 'Post Usb Raw Pipe', 0
 
 post_usb_raw_pipe Proc far
-    int 3
     push ds
     push es
     push gs
@@ -1800,7 +1779,10 @@ purpIn:
     jz purpLeave
 ;
     mov gs,bx
-    call PostRaw
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:read_raw_proc
+    pop ds
     jmp purpLeave
 
 purpOut:
@@ -1814,7 +1796,10 @@ purpOut:
     jz purpLeave
 ;
     mov gs,bx
-    call PostRaw
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:write_raw_proc
+    pop ds
 
 purpLeave:
     LeaveSection ds:udd_section
