@@ -2572,7 +2572,7 @@ sipNext:
     mov edi,edx
     mov fs:[edi].utd_link,5
 ;
-    mov eax,21800000h
+    mov eax,1800000h
     cmp es:usbd_speed,0
     jnz sipSpeedOk
 ;
@@ -2805,7 +2805,7 @@ rlpkHasBuffer:
     LinearToPhysicalMemBlk
 ;
     mov edx,ds:[di]
-    mov eax,21800000h
+    mov eax,1800000h
     cmp es:usbd_speed,0
     jnz rlpkSpeedOk
 ;
