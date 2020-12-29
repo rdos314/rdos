@@ -3618,17 +3618,21 @@
     __value [__eax] \
     __modify [__ecx]
 
-#pragma aux RdosConfigUsbPacketPipe = \
-    CallGate_config_usb_packet_pipe \
+#pragma aux RdosOpenUsbPacketPipe = \
+    CallGate_open_usb_packet_pipe \
     CarryToBool \
     __value [eax] \
     __parm [__ebx] [__dl] [__eax] [__ecx]
 
-#pragma aux RdosConfigUsbStreamPipe = \
-    CallGate_config_usb_stream_pipe \
+#pragma aux RdosOpenUsbStreamPipe = \
+    CallGate_open_usb_stream_pipe \
     CarryToBool \
     __value [eax] \
     __parm [__ebx] [__dl] [__eax] [__ecx]
+
+#pragma aux RdosCloseUsbPipe = \
+    CallGate_close_usb_pipe \
+    __parm [__ebx] [__dl]
 
 #pragma aux RdosGetUsedUsbBuffers = \
     CallGate_get_used_usb_buffers \

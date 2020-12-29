@@ -4109,8 +4109,8 @@ AddressUsbDev   MACRO
 ; IN  AX      Timeout in ms
 ; IN  CX      Buffer size
 ; OUT ES      Buffer sel
-ConfigUsbRawPipe      MACRO
-    OsGate config_usb_raw_pipe_nr
+OpenUsbRawPipe      MACRO
+    OsGate open_usb_raw_pipe_nr
                                                 ENDM
 
 ; IN  BX      Device handle

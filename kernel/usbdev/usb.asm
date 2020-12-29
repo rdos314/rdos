@@ -1422,6 +1422,59 @@ ConfigPipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ClearPipe
+;
+;       description:    Clear pipe
+;
+;       parameters:     DS        Function
+;                       ES        Device
+;                       GS        Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearPipe	Proc near
+    push bx
+;
+    mov bx,gs:usbp_packet_sel
+    or bx,bx
+    jz clpPacketOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_packet_proc
+    pop ds
+
+clpPacketOk:    
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz clpStreamOk
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_stream_proc
+    pop ds
+;
+    mov bx,es:usbd_thread
+    Signal
+
+clpStreamOk:    
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz clpDone
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_raw_proc
+    pop ds
+
+clpDone:    
+    pop bx
+    ret
+ClearPipe       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           StartReconfigPipe
 ;
 ;       description:    Start to reconfigure pipe
@@ -1440,39 +1493,7 @@ StartReconfigPipe	Proc near
     call GetPipe
     jc srpConfig
 ;
-    mov bx,gs:usbp_packet_sel
-    or bx,bx
-    jz srpPacketOk
-;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:close_packet_proc
-    pop ds
-
-srpPacketOk:    
-    mov bx,gs:usbp_stream_sel
-    or bx,bx
-    jz srpStreamOk
-;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:close_stream_proc
-    pop ds
-;
-    mov bx,es:usbd_thread
-    Signal
-
-srpStreamOk:    
-    mov bx,gs:usbp_raw_sel
-    or bx,bx
-    jz srpRawOk
-;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:close_raw_proc
-    pop ds
-
-srpRawOk:    
+    call ClearPipe
     clc
     jmp srpDone
 
@@ -1487,9 +1508,9 @@ StartReconfigPipe       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigUsbPacketPipe
+;       NAME:           OpenUsbPacketPipe
 ;
-;       description:    Configure USB packet pipe
+;       description:    Open USB packet pipe
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
@@ -1498,9 +1519,9 @@ StartReconfigPipe       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-config_usb_packet_pipe_name DB 'Configure Usb Packet Pipe', 0
+open_usb_packet_pipe_name DB 'Configure Usb Packet Pipe', 0
 
-config_usb_packet_pipe	Proc far
+open_usb_packet_pipe	Proc far
     push ds
     push es
     push gs
@@ -1567,14 +1588,14 @@ cuppDone:
     pop es
     pop ds    
     retf32
-config_usb_packet_pipe Endp
+open_usb_packet_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigUsbStreamPipe
+;       NAME:           OpenUsbStreamPipe
 ;
-;       description:    Configure USB stream pipe
+;       description:    Open USB stream pipe
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
@@ -1582,9 +1603,9 @@ config_usb_packet_pipe Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-config_usb_stream_pipe_name DB 'Configure Usb Stream Pipe', 0
+open_usb_stream_pipe_name DB 'Open Usb Stream Pipe', 0
 
-config_usb_stream_pipe	Proc far
+open_usb_stream_pipe	Proc far
     push ds
     push es
     push gs
@@ -1660,14 +1681,14 @@ cuspDone:
     pop es
     pop ds    
     retf32
-config_usb_stream_pipe Endp
+open_usb_stream_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConfigUsbRawPipe
+;       NAME:           OpenUsbRawPipe
 ;
-;       description:    Configure USB raw pipe
+;       description:    Open USB raw pipe
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
@@ -1677,9 +1698,9 @@ config_usb_stream_pipe Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-config_usb_raw_pipe_name DB 'Configure Usb Raw Pipe', 0
+open_usb_raw_pipe_name DB 'Open Usb Raw Pipe', 0
 
-config_usb_raw_pipe	Proc far
+open_usb_raw_pipe	Proc far
     push ds
     push gs
     pushad
@@ -1727,7 +1748,59 @@ curpDone:
     pop gs
     pop ds    
     retf32
-config_usb_raw_pipe Endp
+open_usb_raw_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseUsbPipe
+;
+;       description:    Close USB pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_usb_pipe_name DB 'Close Usb Pipe', 0
+
+close_usb_pipe	Proc far
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc cupDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz cupLeave
+;
+    mov es,ds:udd_sel    
+    call GetPipe
+    jc cupLeave
+;
+    call ClearPipe
+
+cupLeave:
+    LeaveSection ds:udd_section
+
+cupDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds    
+    retf32
+close_usb_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4730,10 +4803,10 @@ init    Proc far
     mov ax,notify_usb_port_state_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET config_usb_raw_pipe
-    mov edi,OFFSET config_usb_raw_pipe_name
+    mov esi,OFFSET open_usb_raw_pipe
+    mov edi,OFFSET open_usb_raw_pipe_name
     xor cl,cl
-    mov ax,config_usb_raw_pipe_nr
+    mov ax,open_usb_raw_pipe_nr
     RegisterOsGate
 ;
     mov esi,OFFSET post_usb_raw_pipe
@@ -4799,16 +4872,22 @@ init    Proc far
     mov ax,send_usb_dev_control_msg_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET config_usb_packet_pipe
-    mov edi,OFFSET config_usb_packet_pipe_name
+    mov esi,OFFSET open_usb_packet_pipe
+    mov edi,OFFSET open_usb_packet_pipe_name
     xor dx,dx
-    mov ax,config_usb_packet_pipe_nr
+    mov ax,open_usb_packet_pipe_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET config_usb_stream_pipe
-    mov edi,OFFSET config_usb_stream_pipe_name
+    mov esi,OFFSET open_usb_stream_pipe
+    mov edi,OFFSET open_usb_stream_pipe_name
     xor dx,dx
-    mov ax,config_usb_stream_pipe_nr
+    mov ax,open_usb_stream_pipe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_usb_pipe
+    mov edi,OFFSET close_usb_pipe_name
+    xor dx,dx
+    mov ax,close_usb_pipe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_dev_pipe

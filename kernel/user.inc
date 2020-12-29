@@ -3635,16 +3635,22 @@ SendUsbDeviceControlMsg      MACRO
 ;   IN  DL          Pipe #
 ;   IN  AX          Timeout in ms
 ;   IN  CX          Buffered packet count
-ConfigUsbPacketPipe      MACRO
-        UserGate config_usb_packet_pipe_nr
+OpenUsbPacketPipe      MACRO
+        UserGate open_usb_packet_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
 ;   IN  AX          Timeout in ms
 ;   IN  CX          Buffer size
-ConfigUsbStreamPipe      MACRO
-        UserGate config_usb_stream_pipe_nr
+OpenUsbStreamPipe      MACRO
+        UserGate open_usb_stream_pipe_nr
+                                                ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
+CloseUsbPipe      MACRO
+        UserGate close_usb_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle

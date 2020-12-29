@@ -2699,14 +2699,14 @@ OpenPort    Proc near
     mov dl,ds:uds_bulk_in
     mov cx,10
     mov ax,2
-    ConfigUsbPacketPipe
+    OpenUsbPacketPipe
 ;
     push es
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_bulk_out
     mov cx,ds:uds_out_size
     mov ax,2
-    ConfigUsbRawPipe
+    OpenUsbRawPipe
     mov ds:uds_out_buffer,es
     pop es
 ;
@@ -2733,7 +2733,7 @@ OpenPort    Proc near
     mov dl,ds:uds_intr_in
     mov cx,10
     mov ax,2
-    ConfigUsbPacketPipe
+    OpenUsbPacketPipe
 ;
     mov bx,ds:uds_wait
     mov ax,es:uc_dev_handle
@@ -2744,7 +2744,6 @@ OpenPort    Proc near
 opDone:        
     ret
 OpenPort    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2760,19 +2759,33 @@ OpenPort    Endp
 ClosePort    Proc near
     mov ax,50
     WaitMilliSec
+;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_in
+    CloseUsbPipe
+;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_out
+    CloseUsbPipe
 ;    
     mov es,ds:uds_in_buffer
-    FreeMem
-;
-    mov es,ds:uds_out_buffer
-    FreeMem
-;
-    mov es,ds:uds_intr_buffer
     FreeMem
 ;
     mov bx,ds:uds_wait
     CloseWait
 ;
+    mov dl,ds:uds_intr_in
+    mov ds:uds_intr_buffer,0
+    or dl,dl
+    jz cpDone
+;
+    mov bx,es:uc_dev_handle
+    CloseUsbPipe
+;    
+    mov es,ds:uds_in_buffer
+    FreeMem
+
+cpDone:
     mov ds:uds_in_buffer,0
     mov ds:uds_out_buffer,0
     mov ds:uds_intr_buffer,0

@@ -1476,7 +1476,7 @@ CreateHub  Proc near
     mov dl,ds:hub_intr
     mov cx,8
     mov ax,5
-    ConfigUsbPacketPipe
+    OpenUsbPacketPipe
 ;
     CreateWait
     mov ds:hub_wait_handle,bx
@@ -1504,6 +1504,10 @@ CreateHub   Endp
 
 CloseHub  Proc near
     push bx
+;
+    mov bx,ds:hub_device_handle
+    mov dl,ds:hub_intr
+    CloseUsbPipe
 ;
     mov bx,ds:hub_wait_handle
     CloseWait
