@@ -3090,6 +3090,8 @@ WriteRaw   Proc far
     stc
 
 wrDone:
+    mov ds:usbr_thread,0
+;
     popad
     pop fs
     pop ds

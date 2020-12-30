@@ -135,6 +135,18 @@ up_qh              DD ?
 
 uhci_pipe_struc    ENDS
 
+
+uhci_raw_sel       STRUC
+
+ur_base            usb_raw_struc <>
+
+ur_host            DD ?
+ur_td_count        DW ?
+ur_td_arr          DD ?
+
+uhci_raw_sel       ENDS
+
+
 base_td            STRUC
 
 utd_link           DD ?
@@ -2944,6 +2956,89 @@ WriteStream   Endp
 
 OpenRaw   Proc far
     int 3
+    push fs
+    push gs
+    pushad
+;
+    mov bp,gs:ued_maxsize
+;
+    movzx eax,bp
+    dec eax
+    shl eax,21
+    movzx ebx,gs:ued_address
+    and bl,0Fh
+    shl ebx,15
+    or eax,ebx
+    or ah,es:usbd_address
+    push eax
+;
+    mov ax,cx
+    xor dx,dx
+    dec ax
+    add ax,bp
+    cmp ax,1000h
+    jbe orInRange
+;
+    mov ax,1000h
+
+orInRange:
+    div bp
+    mov cx,ax
+    mul bp
+    push ax
+;
+    push es
+    movzx eax,cx
+    shl eax,2
+    add eax,OFFSET ur_td_arr
+    AllocateSmallGlobalMem
+    mov bx,es
+    pop es
+;
+    mov gs:usbp_raw_sel,bx
+    mov gs,bx
+    mov gs:ur_td_count,cx
+;
+    pop ax
+    mov gs:usbr_buf_size,ax
+;
+    movzx ecx,ax
+    AllocateMemBlk
+    mov gs:usbr_buf_linear,edx
+;
+    AllocateGdt
+    CreateDataSelector16
+    mov gs:usbr_buf_sel,bx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov cx,gs:ur_td_count
+    mov di,OFFSET ur_td_arr
+
+orLoop:
+    push cx
+    mov cx,SIZE base_td
+    AllocateMemBlk
+    pop cx
+;
+    xor eax,eax
+    mov fs:[edx].utd_link,eax
+    mov fs:[edx].utd_control,eax
+    mov fs:[edx].utd_host,eax
+    mov fs:[edx].utd_buf,eax
+    mov gs:[di],edx
+;
+    add di,4
+    loop orLoop
+;
+    pop eax
+    mov gs:ur_host,eax
+    mov gs:usbr_thread,0
+
+orDone:
+    popad
+    pop gs
+    pop fs
     retf32
 OpenRaw   Endp
 
@@ -3329,6 +3424,67 @@ HandlePacketIn  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandleRawOut
+;
+;       DESCRIPTION:    Handle raw OUT pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Raw sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRawOut   Proc near
+    push ds
+    push edx
+    push esi
+    push ebp
+;
+    mov bp,ds
+    mov ds,bx
+    mov bx,ds:usbr_thread
+    or bx,bx
+    jz hroDone
+;
+    int 3
+    mov cx,ds:ur_td_count
+    mov si,OFFSET ur_td_arr
+
+hroLoop:
+    mov edx,ds:[si]
+    mov eax,fs:[edx].utd_control
+    shr eax,16
+;
+    test al,80h
+    jnz hroDone
+;
+    and al,7Ch
+    jnz hroNext
+;
+    push edx
+    mov dl,gs:ued_address
+    call ReportStatus
+    pop edx
+
+hroNext:
+    add si,4
+    loop hroLoop
+;
+    Signal
+
+hroDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ds
+    ret
+HandleRawOut  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -3369,7 +3525,16 @@ CheckIn   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckOut   Proc near
-    int 3
+    push ebx
+;
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz cotDone
+;
+    call HandleRawOut
+
+cotDone:
+    pop ebx
     ret
 CheckOut   Endp
 
