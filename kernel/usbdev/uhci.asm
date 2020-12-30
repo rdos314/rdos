@@ -131,6 +131,7 @@ up_pipe            usb_pipe_struc <>
 up_intr_ptr        DW ?
 up_intr_cnt        DW ?
 
+up_host            DD ?
 up_qh              DD ?
 
 uhci_pipe_struc    ENDS
@@ -140,7 +141,6 @@ uhci_raw_sel       STRUC
 
 ur_base            usb_raw_struc <>
 
-ur_host            DD ?
 ur_td_count        DW ?
 ur_td_arr          DD ?
 
@@ -2230,6 +2230,7 @@ AllocatePipe    Proc near
 ;
     mov eax,SIZE uhci_pipe_struc
     AllocateSmallGlobalMem
+    mov es:up_host,0
     mov bx,es
 ;
     pop eax
@@ -2955,14 +2956,15 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
-    int 3
     push fs
     push gs
     pushad
 ;
-    mov bp,gs:ued_maxsize
+    mov eax,gs:up_host
+    or eax,eax
+    jnz orHostOk
 ;
-    movzx eax,bp
+    movzx eax,gs:ued_maxsize
     dec eax
     shl eax,21
     movzx ebx,gs:ued_address
@@ -2970,8 +2972,10 @@ OpenRaw   Proc far
     shl ebx,15
     or eax,ebx
     or ah,es:usbd_address
-    push eax
-;
+    mov gs:up_host,eax
+
+orHostOk:
+    mov bp,gs:ued_maxsize
     mov ax,cx
     xor dx,dx
     dec ax
@@ -3031,8 +3035,6 @@ orLoop:
     add di,4
     loop orLoop
 ;
-    pop eax
-    mov gs:ur_host,eax
     mov gs:usbr_thread,0
 
 orDone:

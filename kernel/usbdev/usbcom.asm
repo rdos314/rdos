@@ -2705,6 +2705,7 @@ OpenPort    Proc near
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_bulk_out
     mov cx,ds:uds_out_size
+    shl cx,2
     mov ax,2
     OpenUsbRawPipe
     mov ds:uds_out_buffer,es
@@ -2974,6 +2975,7 @@ HandleWrite    Proc near
     push es
 ;
     mov bp,ds:uds_out_size
+    shl bp,2
     mov es,ds:uds_out_buffer
     xor di,di
     mov fs,gs:send_buf
@@ -3003,7 +3005,7 @@ pwLoop:
 pwWrapOk:
     mov gs:send_head,bx
     ReleaseSpinlock gs:com_spinlock
-;
+;    
     cmp di,bp
     jb pwLoop
     jmp pwDoSend
