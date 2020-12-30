@@ -2256,9 +2256,9 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopPacketTds
+;       NAME:           StopTds
 ;
-;       DESCRIPTION:    Stop packet TDs
+;       DESCRIPTION:    Stop TDs
 ;
 ;
 ;       PARAMETERS:     ES      Device
@@ -2266,7 +2266,7 @@ CreateIntrPipe   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopPacketTds Proc near
+StopTds Proc near
     push fs
     push eax
     push edx
@@ -2274,14 +2274,22 @@ StopPacketTds Proc near
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:ep_qh
-    mov fs:[edx].qh_next_qtd,1
+    mov eax,1
+    xchg eax,fs:[edx].qh_next_qtd
     mov fs:[edx].qh_status,0
+    test al,1
+    jnz stDone
 ;
+    mov ax,5
+    WaitMilliSec
+
+stDone:
     pop edx
     pop eax
     pop fs
     ret
-StopPacketTds Endp
+StopTds Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2353,31 +2361,33 @@ AllocatePacketSel	Endp
 ;                       ES      Device selector
 ;                       FS      Flat sel
 ;                       GS      Pipe selector
+;                       BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreePacketTds Proc near
-    push ds
+    push gs
     pushad
 ;
-    mov ds,gs:usbp_packet_sel
+    mov bp,gs:ued_maxsize
+    mov gs,bx
     mov si,SIZE usb_packet_struc
-    mov cx,ds:usbpk_entry_count
+    mov cx,gs:usbpk_entry_count
 
 ftdLoop:
-    mov edx,ds:[si]
+    mov edx,gs:[si]
     or edx,edx
     jz ftdBuf
 ;
     call FreeQtd
 
 ftdBuf:
-    mov edx,ds:[si+4]
+    mov edx,gs:[si+4]
     or edx,edx
     jz ftdNext
 ;
     push cx
-    mov cx,gs:ued_maxsize
+    mov cx,bp
     FreeLinearMemBlk
     pop cx
 
@@ -2386,7 +2396,7 @@ ftdNext:
     loop ftdLoop
 ;
     popad
-    pop ds
+    pop gs
     ret
 FreePacketTds Endp
       
@@ -2413,9 +2423,7 @@ FreePacketSel Proc near
     or bx,bx
     jz dtdDone
 ;
-    call StopPacketTds
-    mov ax,5
-    WaitMilliSec
+    call StopTds
     call FreePacketTds
 ;
     push es
@@ -2911,6 +2919,57 @@ orDone:
     pop fs
     retf32
 OpenRaw   Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeRawSel
+;
+;       DESCRIPTION:    Free packet sel
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeRawSel Proc near
+    push es
+    push gs
+    pushad
+;
+    xor bx,bx
+    xchg bx,gs:usbp_raw_sel
+    or bx,bx
+    jz frsDone
+;
+    call StopTds
+;
+    push bx
+    mov gs,bx
+;
+    mov cx,gs:usbr_buf_size
+    mov edx,gs:usbr_buf_linear
+    FreeLinearMemBlk
+;
+    mov bx,gs:usbr_buf_sel
+    FreeGdt
+;
+    mov edx,gs:er_td
+    call FreeQtd
+;
+    xor bx,bx
+    mov gs,bx
+    pop es
+    FreeMem
+
+frsDone:
+    popad
+    pop gs
+    pop es
+    ret
+FreeRawSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2925,7 +2984,17 @@ OpenRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseRaw   Proc far
-    int 3
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call FreeRawSel
+;
+    pop ax
+    pop fs
+    pop ds
     retf32
 CloseRaw   Endp
 
@@ -3041,6 +3110,7 @@ WriteRaw   Endp
 
 StopRaw   Proc far
     int 3
+    call StopTds
     retf32
 StopRaw   Endp
 

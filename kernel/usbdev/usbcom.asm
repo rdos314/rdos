@@ -2768,27 +2768,31 @@ ClosePort    Proc near
     mov dl,ds:uds_bulk_out
     CloseUsbPipe
 ;    
+    push es
     mov es,ds:uds_in_buffer
     FreeMem
+    pop es
 ;
     mov bx,ds:uds_wait
     CloseWait
 ;
     mov dl,ds:uds_intr_in
-    mov ds:uds_intr_buffer,0
     or dl,dl
     jz cpDone
 ;
     mov bx,es:uc_dev_handle
     CloseUsbPipe
 ;    
-    mov es,ds:uds_in_buffer
+    push es
+    mov es,ds:uds_intr_buffer
     FreeMem
+    pop es
 
 cpDone:
     mov ds:uds_in_buffer,0
     mov ds:uds_out_buffer,0
     mov ds:uds_intr_buffer,0
+    mov ds:uds_wait,0
     ret
 ClosePort   Endp
 
@@ -2972,7 +2976,11 @@ HandleRead    Endp
 HandleWrite    Proc near
     push gs
 ;
-    mov gs,ds:uds_port_sel
+    mov dx,ds:uds_port_sel
+    or dx,dx
+    jz pwDone
+;
+    mov gs,dx
     mov dx,gs:send_count
     or dx,dx
     jz pwDone
