@@ -2838,68 +2838,6 @@ ReInit    Proc near
     pop ds
     ret
 ReInit  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PollRead
-;
-;           DESCRIPTION:    Poll input-buffer
-;
-;       PARAMETERS:     DS      Function sel
-;               SI      Buffer offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollRead    Proc near
-    push ds
-    push fs
-    mov fs,ds:uds_in_buffer
-    mov ds,ds:uds_port_sel
-    mov es,ds:rec_buf
-
-prGetLoop:
-    lods byte ptr fs:[si]
-    RequestSpinlock ds:com_spinlock
-    mov dx,ds:rec_count
-    cmp dx,ds:rec_size
-    je prSignal
-;       
-    inc dx
-    mov ds:rec_count,dx
-    mov bx,ds:rec_tail
-    mov es:[bx],al
-    inc bx
-    cmp bx,ds:rec_size
-    jnz prWrapOk
-;
-    xor bx,bx
-    
-prWrapOk:
-    mov ds:rec_tail,bx
-    ReleaseSpinlock ds:com_spinlock
-    loop prGetLoop
-    jmp prSigRel
-
-prSignal:
-    ReleaseSpinlock ds:com_spinlock
-
-prSigRel:
-    xor bx,bx
-    xchg bx,ds:avail_obj
-    or bx,bx
-    jz prDone
-;
-    mov es,bx
-    SignalWait
-    
-prDone:
-    pop fs
-    pop ds
-    ret
-PollRead    Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2914,27 +2852,15 @@ PollRead    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleRead    Proc near
-    push bx
-    push cx
-    push dx
-    push si
-;
-    mov bx,es:uc_dev_handle
-    mov dl,ds:uds_bulk_in
-    GetUsedUsbBuffers
-    or cx,cx
-    jz hdrDone
-;
+    push ds
     push es
-    push edi
+    push fs
+    pushad
 ;
     mov es,ds:uds_in_buffer
     xor edi,edi
     movzx ecx,ds:uds_in_size
     ReadUsbPipe
-;
-    pop edi
-    pop es
     jc hdrDone
 ;    
     mov ax,ds:uds_device_type
@@ -2951,16 +2877,83 @@ hdrDo:
     or cx,cx
     jz hdrDone
 ;
-    int 3
-    call PollRead
+    mov fs,ds:uds_in_buffer
+    mov ds,ds:uds_port_sel
+    mov es,ds:rec_buf
+
+hdrGetLoop:
+    lods byte ptr fs:[si]
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:rec_count
+    cmp dx,ds:rec_size
+    je hdrSignal
+;       
+    inc dx
+    mov ds:rec_count,dx
+    mov bx,ds:rec_tail
+    mov es:[bx],al
+    inc bx
+    cmp bx,ds:rec_size
+    jnz hdrWrapOk
+;
+    xor bx,bx
+    
+hdrWrapOk:
+    mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
+    loop hdrGetLoop
+    jmp hdrSigRel
+
+hdrSignal:
+    ReleaseSpinlock ds:com_spinlock
+
+hdrSigRel:
+    xor bx,bx
+    xchg bx,ds:avail_obj
+    or bx,bx
+    jz hdrDone
+;
+    mov es,bx
+    SignalWait
     
 hdrDone:
-    pop si
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+HandleRead    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckRead
+;
+;       DESCRIPTION:    Check read buffer
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckRead    Proc near
+    push bx
+    push cx
+    push dx
+;
+    mov bx,es:uc_dev_handle
+    mov dl,ds:uds_bulk_in
+    GetUsedUsbBuffers
+    or cx,cx
+    jz crDone
+;
+    call HandleRead
+
+crDone:
     pop dx
     pop cx
     pop bx
     ret
-HandleRead    Endp
+CheckRead  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2970,23 +2963,15 @@ HandleRead    Endp
 ;       DESCRIPTION:    Handle output-buffer
 ;
 ;       PARAMETERS:     DS      Function sel
+;                       GS      Port sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleWrite    Proc near
-    push gs
-;
-    mov dx,ds:uds_port_sel
-    or dx,dx
-    jz pwDone
-;
-    mov gs,dx
-    mov dx,gs:send_count
-    or dx,dx
-    jz pwDone
-;       
-    push es
     push fs
+    pushad
+;
+    push es
 ;
     mov bp,ds:uds_out_size
     mov es,ds:uds_out_buffer
@@ -3029,7 +3014,7 @@ pwNoMore:
     mov cx,5
 
 pwWaitLoop:
-    call HandleRead
+    call CheckRead
 ;
     mov ax,2
     WaitMilliSec
@@ -3053,17 +3038,48 @@ pwDoSend:
     inc cx
 
 pwSend:
-    pop fs
     pop es
 ;
     mov bx,es:uc_dev_handle
     mov dl,ds:uds_bulk_out
     PostUsbRawPipe
-    
-pwDone:
-    pop gs
+;
+    popad
+    pop fs
     ret
 HandleWrite   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckWrite
+;
+;       DESCRIPTION:    Check output-buffer
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckWrite    Proc near
+    push gs
+    push dx
+;
+    mov dx,ds:uds_port_sel
+    or dx,dx
+    jz cwDone
+;
+    mov gs,dx
+    mov dx,gs:send_count
+    or dx,dx
+    jz cwDone
+;       
+    call HandleWrite
+
+cwDone:
+    pop dx
+    pop gs
+    ret
+CheckWrite  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3143,8 +3159,8 @@ tIsOpen:
     jnz tExit
 ;
     EnterSection ds:uds_section
-    call HandleWrite
-    call HandleRead
+    call CheckWrite
+    call CheckRead
     LeaveSection ds:uds_section
     jmp tLoop
 
