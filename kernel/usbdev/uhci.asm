@@ -2368,16 +2368,16 @@ CreateIntrPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopPacketTds
+;       NAME:           StopTds
 ;
-;       DESCRIPTION:    Stop packet TDs
+;       DESCRIPTION:    Stop TDs
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopPacketTds   Proc near
+StopTds   Proc near
     push fs
     push eax
     push edx
@@ -2385,13 +2385,20 @@ StopPacketTds   Proc near
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:up_qh
-    mov fs:[edx].uqh_elem,1
+    mov eax,1
+    xchg eax,fs:[edx].uqh_elem
+    test al,1
+    jnz stDone
 ;
+    mov ax,5
+    WaitMilliSec
+
+stDone:
     pop edx
     pop eax
     pop fs
-    retf32
-StopPacketTds   Endp
+    ret
+StopTds   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2470,6 +2477,7 @@ AllocatePacketSel    Endp
 ;                       ES      Device selector
 ;                       FS      Flat sel
 ;                       GS      Pipe selector
+;                       BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2477,7 +2485,7 @@ FreePacketTds Proc near
     push ds
     pushad
 ;
-    mov ds,gs:usbp_packet_sel
+    mov ds,bx
     mov si,SIZE usb_packet_struc
     mov cx,ds:usbpk_entry_count
 
@@ -2533,9 +2541,7 @@ FreePacketSel Proc near
     or bx,bx
     jz dtdDone
 ;
-    call StopPacketTds
-    mov ax,5
-    WaitMilliSec
+    call StopTds
     call FreePacketTds
 ;
     push es
@@ -3045,6 +3051,67 @@ OpenRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreeRawSel
+;
+;       DESCRIPTION:    Free packet sel
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeRawSel Proc near
+    push es
+    push gs
+    pushad
+;
+    xor bx,bx
+    xchg bx,gs:usbp_raw_sel
+    or bx,bx
+    jz frsDone
+;
+    call StopTds
+;
+    push bx
+    mov gs,bx
+;
+    mov cx,gs:usbr_buf_size
+    mov edx,gs:usbr_buf_linear
+    FreeLinearMemBlk
+;
+    mov bx,gs:usbr_buf_sel
+    FreeGdt
+;
+    mov cx,gs:ur_td_count
+    mov si,OFFSET ur_td_arr
+
+frsLoop:
+    mov edx,gs:[si]
+    push cx
+    mov cx,SIZE base_td
+    FreeLinearMemBlk
+    pop cx
+;
+    add si,4
+    loop frsLoop
+;
+    xor bx,bx
+    mov gs,bx
+    pop es
+    FreeMem
+
+frsDone:
+    popad
+    pop gs
+    pop es
+    ret
+FreeRawSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CloseRaw
 ;
 ;       DESCRIPTION:    Close raw interface
@@ -3055,7 +3122,17 @@ OpenRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseRaw   Proc far
-    int 3
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call FreeRawSel
+;
+    pop ax
+    pop fs
+    pop ds
     retf32
 CloseRaw   Endp
 
