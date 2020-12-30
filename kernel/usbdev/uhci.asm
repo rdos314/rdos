@@ -141,6 +141,7 @@ uhci_raw_sel       STRUC
 
 ur_base            usb_raw_struc <>
 
+ur_curr_count      DW ?
 ur_td_count        DW ?
 ur_td_arr          DD ?
 
@@ -2964,13 +2965,9 @@ OpenRaw   Proc far
     or eax,eax
     jnz orHostOk
 ;
-    movzx eax,gs:ued_maxsize
-    dec eax
-    shl eax,21
-    movzx ebx,gs:ued_address
-    and bl,0Fh
-    shl ebx,15
-    or eax,ebx
+    movzx eax,gs:ued_address
+    and al,0Fh
+    shl eax,15
     or ah,es:usbd_address
     mov gs:up_host,eax
 
@@ -3002,6 +2999,7 @@ orInRange:
     mov gs:usbp_raw_sel,bx
     mov gs,bx
     mov gs:ur_td_count,cx
+    mov gs:ur_curr_count,0
 ;
     pop ax
     mov gs:usbr_buf_size,ax
@@ -3097,7 +3095,116 @@ ReadRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteRaw   Proc far
-    int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    ClearSignal
+    mov ds,gs:usbp_raw_sel
+    GetThread
+    mov ds:usbr_thread,ax
+;
+    mov edx,ds:usbr_buf_linear
+    LinearToPhysicalMemBlk
+    mov ebp,eax
+;
+    mov si,OFFSET ur_td_arr
+    xor edi,edi
+    xor bx,bx
+    
+wrLoop:
+    mov edx,ds:[si]
+    or edi,edi
+    jz wrNext
+;
+    LinearToPhysicalMemBlk
+    or al,4
+    mov fs:[edi].utd_link,eax
+
+wrNext:
+    mov edi,edx
+    mov fs:[edi].utd_link,5
+;
+    mov eax,1800000h
+    cmp es:usbd_speed,0
+    jnz wrSpeedOk
+;
+    or eax, 4000000h
+    
+wrSpeedOk:
+    mov fs:[edi].utd_control,eax
+;
+    mov ax,cx
+    cmp ax,gs:ued_maxsize
+    jb wrSizeOk
+;
+    mov ax,gs:ued_maxsize
+
+wrSizeOk:
+    sub cx,ax
+;
+    movzx eax,ax
+    dec eax
+    shl eax,21
+    mov edx,gs:up_host
+    or eax,edx
+    mov al,PID_OUT
+    mov fs:[edi].utd_host,eax
+    xor edx,80000h
+    mov gs:up_host,edx
+;
+    mov fs:[edi].utd_buf,ebp
+;
+    movzx eax,gs:ued_maxsize
+    add ebp,eax
+;
+    inc bx
+    add si,4
+    or cx,cx
+    jnz wrLoop
+;
+    mov ds:ur_curr_count,bx
+;
+    mov edx,ds:ur_td_arr
+    LinearToPhysicalMemBlk
+    mov esi,gs:up_qh
+    mov fs:[esi].uqh_elem,eax
+;
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov eax,fs:[esi].uqh_elem
+    test al,1
+    clc
+    jnz wrDone
+;
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov eax,fs:[esi].uqh_elem
+    test al,1
+    clc
+    jnz wrDone
+;
+    mov fs:[esi].uqh_elem,1
+    mov ax,25
+    WaitMilliSec
+    stc
+
+wrDone:
+    mov ds:usbr_thread,0
+    mov ds:ur_curr_count,0
+;
+    popad
+    pop fs
+    pop ds
     retf32
 WriteRaw   Endp
 
@@ -3440,18 +3547,20 @@ HandlePacketIn  Endp
 
 HandleRawOut   Proc near
     push ds
+    push ecx
     push edx
     push esi
     push ebp
 ;
-    mov bp,ds
     mov ds,bx
     mov bx,ds:usbr_thread
     or bx,bx
     jz hroDone
 ;
-    int 3
-    mov cx,ds:ur_td_count
+    mov cx,ds:ur_curr_count
+    or cx,cx
+    jz hroDone
+;
     mov si,OFFSET ur_td_arr
 
 hroLoop:
@@ -3463,7 +3572,7 @@ hroLoop:
     jnz hroDone
 ;
     and al,7Ch
-    jnz hroNext
+    jz hroNext
 ;
     push edx
     mov dl,gs:ued_address
@@ -3480,6 +3589,7 @@ hroDone:
     pop ebp
     pop esi
     pop edx
+    pop ecx
     pop ds
     ret
 HandleRawOut  Endp
