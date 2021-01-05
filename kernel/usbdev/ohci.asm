@@ -3136,162 +3136,6 @@ cc0F DW USB_EVENT_HALTED
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandlePacketIn
-;
-;       DESCRIPTION:    Handle packet IN transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandlePacketIn  Proc near
-    push ds
-    push bx
-    push si
-;
-    mov ds,gs:usbp_packet_sel
-    EnterSection ds:usbpk_section
-;
-    mov bx,ds:usbpk_wr_ptr
-    mov si,bx
-    shl si,3
-    add si,SIZE usb_packet_struc
-    cmp edx,ds:[si]
-    je hpiAdvance
-;
-    int 3
-    jmp hpiDone
-
-hpiAdvance:
-    inc bx
-    cmp bx,ds:usbpk_entry_count
-    jb hpiSave
-;
-    xor bx,bx
-
-hpiSave:
-    mov ds:usbpk_wr_ptr,bx    
-;
-    mov bx,gs:usbp_stream_sel
-    or bx,bx
-    jz hpiSignalObj
-;
-    mov bx,es:usbd_thread
-    Signal
-    jmp hpiDone
-
-hpiSignalObj:
-    xor bx,bx
-    xchg bx,gs:usbp_wait
-    or bx,bx
-    jz hpiDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-hpiDone:
-    LeaveSection ds:usbpk_section
-;
-    pop si
-    pop bx
-    pop ds
-    ret
-HandlePacketIn  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyIn
-;
-;       DESCRIPTION:    Notify IN transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;                       BL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyIn  Proc near
-    push gs
-    push ebx
-    push esi
-;
-    mov si,fs:[edx].otd_flags
-    shr si,12
-    add si,si
-    mov si,word ptr cs:[si].cc_tab
-    or si,si
-    je niOk
-;
-    push ax
-    push dx
-;
-    mov ax,si
-    mov dl,bl
-    movzx si,fs:[edi].usbd_port
-    ReportUsbRegPipeEvent
-;
-    pop dx
-    pop ax
-
-niOk:
-    movzx esi,bl
-    and esi,0Fh
-    dec esi
-    add esi,esi
-    mov bx,fs:[edi+esi].usbd_in_pipe_arr
-    or bx,bx
-    jz niDone
-;
-    mov gs,bx
-    mov bx,gs:usbp_packet_sel
-    or bx,bx
-    jz niNotPacket
-;
-    call HandlePacketIn
-    jmp niDone
-
-niNotPacket:
-    int 3
-
-niDone:
-    pop esi
-    pop ebx
-    pop gs
-    ret
-NotifyIn  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyOut
-;
-;       DESCRIPTION:    Notify OUT transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;                       BL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyOut  Proc near
-    int 3
-    ret
-NotifyOut  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CheckControl
 ;
 ;       DESCRIPTION:    Check control
@@ -3305,6 +3149,7 @@ NotifyOut  Endp
 CheckControl   Proc near
     push ebx
     push edx
+    push esi
 ;
     mov bx,es:dev_control_thread
     or bx,bx
@@ -3332,23 +3177,12 @@ cctError:
     mov es:dev_cc,bl
 ;
     add bx,bx
-    mov bx,word ptr cs:[bx].cc_tab
-    or bx,bx
+    mov ax,word ptr cs:[bx].cc_tab
+    or ax,ax
     jz cctSignal
 ;
-    push ax
-    push dx
-    push si
-;
-    mov ax,bx
     xor dl,dl
-    movzx si,fs:[edi].usbd_port
-    ReportUsbRegPipeEvent
-;
-    pop si
-    pop dx
-    pop ax
-    jmp cctSignal
+    ReportUsbPipeEvent
 
 cctSignal:
     xor bx,bx
@@ -3356,10 +3190,107 @@ cctSignal:
     Signal
 
 cctDone:
+    pop esi
     pop edx
     pop ebx
     ret
 CheckControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandlePacketIn
+;
+;       DESCRIPTION:    Handle packet IN transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Packet sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePacketIn  Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+;
+    mov ds,bx
+    EnterSection ds:usbpk_section
+
+hpiRetry:
+    mov bx,ds:usbpk_wr_ptr
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiDone
+;
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    mov edx,ds:[si]
+;
+    mov ax,fs:[edx].otd_flags
+    shr ax,12
+    cmp ax,0Fh
+    je hpiDone
+
+hpiLoop:
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb hpiSave
+;
+    xor bx,bx
+
+hpiSave:
+    mov ds:usbpk_wr_ptr,bx
+;
+    or ax,ax
+    jnz hpiReport
+;
+    cmp bx,ds:usbpk_tail_ptr
+    je hpiSignal
+;
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    mov edx,ds:[si]
+    mov ax,fs:[edx].otd_flags
+    shr ax,12
+    cmp ax,0Fh
+    jnz hpiLoop
+    jmp hpiSignal
+
+hpiReport:
+    mov ax,bx
+    add bx,bx
+    mov ax,word ptr cs:[bx].cc_tab
+    or ax,ax
+    jz hpiSignal
+;
+    mov dl,gs:ued_address
+    ReportUsbPipeEvent
+
+hpiSignal:
+    xor bx,bx
+    xchg bx,gs:usbp_wait
+    or bx,bx
+    jz hpiDone
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+hpiDone:
+    LeaveSection ds:usbpk_section
+;
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+HandlePacketIn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3382,7 +3313,6 @@ CheckIn   Proc near
     or bx,bx
     jz ciDone
 ;
-    int 3
     call HandlePacketIn
 
 ciDone:
