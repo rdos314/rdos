@@ -102,6 +102,7 @@ otd_be          DD ?
 ;driver part
 
 otd_next_va     DD ?
+otd_link_va     DD ?
 otd_buffer_va   DD ?
 otd_buffer_size DW ?
 otd_pipe        DB ?
@@ -199,6 +200,16 @@ op_ed              DD ?
 op_tail_td         DD ?
 
 ohci_pipe_struc    ENDS
+
+ohci_raw_sel       STRUC
+
+or_base            usb_raw_struc <>
+
+or_curr_count      DW ?
+or_td_count        DW ?
+or_td_arr          DD ?
+
+ohci_raw_sel       ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -1775,12 +1786,12 @@ StopPacketTds Proc near
     mov fs,ax
     mov edx,gs:op_ed
     mov fs:[edx].oes_fa_en,4000h
+;
+    mov ax,5
+    WaitMilliSec
+;
     mov eax,fs:[edx].oes_tailp
     mov fs:[edx].oes_headp,eax
-;
-    xor ebx,ebx
-    PhysicalToLinearMemBlk
-    mov gs:op_tail_td,edx
 ;
     pop edx
     pop ebx
@@ -1812,7 +1823,7 @@ AllocatePacketSel    Proc near
     inc cx
     mov esi,edi
     movzx eax,cx
-    shl ax,2
+    shl ax,3
     add ax,SIZE usb_packet_struc
     AllocateSmallGlobalMem
     mov es:usbpk_entry_count,cx
@@ -1820,6 +1831,7 @@ AllocatePacketSel    Proc near
     mov edi,SIZE usb_packet_struc
     xor eax,eax
     movzx ecx,cx
+    add ecx,ecx
     rep stos dword ptr es:[edi]
 ;
     InitSection es:usbpk_section
@@ -1860,15 +1872,7 @@ FreePacketTds     Proc near
     xor edi,edi
 
 ftdLoop:
-    mov edx,ds:[si]
-    or edx,edx
-    jz ftdNext
-;
-    cmp edx,ebp
-    jz ftdNext
-;
-    mov edi,edx
-    mov edx,fs:[edi].otd_buffer_va
+    mov edx,ds:[si+4]
     or edx,edx
     jz ftdBufFree
 ;
@@ -1878,14 +1882,20 @@ ftdLoop:
     pop cx
 
 ftdBufFree:
-    mov edx,edi
+    mov edx,ds:[si]
+    or edx,edx
+    jz ftdNext
+;
+    cmp edx,ebp
+    jz ftdNext
+;
     push cx
     mov cx,SIZE ohc_td_struc
     FreeLinearMemBlk
     pop cx
 
 ftdNext:
-    add si,4
+    add si,8
     sub cx,1
     jnz ftdLoop
 ;
@@ -1918,8 +1928,6 @@ FreePacketSel Proc near
     jz dtdDone
 ;
     call StopPacketTds
-    mov ax,5
-    WaitMilliSec
     call FreePacketTds
 ;
     push es
@@ -1985,21 +1993,34 @@ spbSetup:
     mov fs:[edi].otd_next_td,eax
 
 spbFirst:
-    mov edx,gs:op_tail_td
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+;
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_buffer_va,0
+;
+    xchg edx,gs:op_tail_td
     mov ds:[si],edx
 
 spbNext:
     mov edi,edx
     mov fs:[edi].otd_flags,0F004h
-    mov edx,fs:[edi].otd_buffer_va
+;
+    mov edx,ds:[si+4]
     or edx,edx
     jnz spbConv
 ;
     push cx
     mov cx,gs:ued_maxsize
     AllocateMemBlk
-    mov fs:[edi].otd_buffer_va,edx
     pop cx
+    mov ds:[si+4],edx
     jmp spbSave
 
 spbConv:
@@ -2013,7 +2034,7 @@ spbSave:
     mov fs:[edi].otd_be,eax
     mov al,gs:ued_address
     mov fs:[edi].otd_pipe,al
-    add si,4
+    add si,8
     sub cx,1
     jnz spbLoop
 ;
@@ -2021,8 +2042,11 @@ spbSave:
     dec ax
     mov ds:usbpk_tail_ptr,ax
 ;
-    mov edx,edi
+    mov edx,gs:op_tail_td
+    mov fs:[edx].otd_next_td,0
+;
     LinearToPhysicalMemBlk
+    mov fs:[edi].otd_next_td,eax
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax
 ;
@@ -2075,6 +2099,7 @@ OpenPacket   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
+    int 3
     call AllocatePacketSel
     mov gs:usbp_packet_sel,bx
 ;
@@ -2138,6 +2163,7 @@ ReqPacket   Proc far
     push ebx
     push esi
 ;
+    int 3
     mov ax,flat_sel
     mov fs,ax
     mov ds,gs:usbp_packet_sel
@@ -2149,14 +2175,14 @@ ReqPacket   Proc far
     jmp rqpkDone
 
 rqpkGet:
-    shl bx,2
+    shl bx,3
     add bx,SIZE usb_packet_struc
     mov esi,ds:[bx]
     mov eax,fs:[esi].otd_cbp
     or eax,eax
     jnz rqpkCalc
 ;
-    mov edx,fs:[esi].otd_buffer_va
+    mov edx,ds:[bx+4]
     movzx ecx,gs:ued_maxsize
     clc
     jmp rqpkDone
@@ -2164,10 +2190,10 @@ rqpkGet:
 rqpkCalc:
     xor ebx,ebx
     PhysicalToLinearMemBlk
-    mov ecx,fs:[esi].otd_buffer_va
+    mov ecx,ds:[bx+4]
     sub ecx,edx
     neg ecx
-    mov edx,fs:[esi].otd_buffer_va
+    mov edx,ds:[bx+4]
     clc
 
 rqpkDone:
@@ -2196,6 +2222,7 @@ RelPacket   Proc far
     push fs
     pushad
 ;
+    int 3
     mov ax,flat_sel
     mov fs,ax
     mov ds,gs:usbp_packet_sel
@@ -2217,33 +2244,33 @@ rlpkOk:
 ;
     mov bx,ds:usbpk_tail_ptr
     mov si,bx
-    shl si,2
+    shl si,3
     add si,SIZE usb_packet_struc
-    mov esi,ds:[si]
-;
-    mov fs:[esi].otd_flags,0F004h
-    mov edx,fs:[esi].otd_buffer_va
+    mov edi,gs:op_tail_td
+    xchg edi,ds:[si]
+    mov fs:[edi].otd_flags,0F004h
+    mov edx,ds:[si+4]
     or edx,edx
     jnz rlpkConv
 ;
     push cx
     mov cx,gs:ued_maxsize
     AllocateMemBlk
-    mov fs:[esi].otd_buffer_va,edx
     pop cx
+    mov ds:[si+4],edx
     jmp rlpkSave
 
 rlpkConv:
     LinearToPhysicalMemBlk
 
 rlpkSave:
-    mov fs:[esi].otd_cbp,eax
+    mov fs:[edi].otd_cbp,eax
     movzx ebx,gs:ued_maxsize
     add eax,ebx
     dec eax
-    mov fs:[esi].otd_be,eax
+    mov fs:[edi].otd_be,eax
     mov al,gs:ued_address
-    mov fs:[esi].otd_pipe,al
+    mov fs:[edi].otd_pipe,al
 ;
     mov bx,ds:usbpk_tail_ptr
     inc bx
@@ -2255,11 +2282,9 @@ rlpkSave:
 rlpkTailOk:
     mov ds:usbpk_tail_ptr,bx
 ;
-    shl bx,2
-    add bx,SIZE usb_packet_struc
-    mov edx,ds:[bx]
+    mov edx,gs:op_tail_td
     LinearToPhysicalMemBlk
-    mov fs:[esi].otd_next_td,eax
+    mov fs:[edi].otd_next_td,eax
 ;
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax
@@ -2341,7 +2366,79 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
-    int 3
+    push fs
+    push gs
+    pushad
+;
+    mov bp,gs:ued_maxsize
+    mov ax,cx
+    xor dx,dx
+    dec ax
+    add ax,bp
+    cmp ax,1000h
+    jbe orInRange
+;
+    mov ax,1000h
+
+orInRange:
+    div bp
+    mov cx,ax
+    mul bp
+    push ax
+;
+    push es
+    movzx eax,cx
+    shl eax,2
+    add eax,OFFSET or_td_arr
+    AllocateSmallGlobalMem
+    mov bx,es
+    pop es
+;
+    mov gs:usbp_raw_sel,bx
+    mov gs,bx
+    mov gs:or_td_count,cx
+    mov gs:or_curr_count,0
+;
+    pop ax
+    mov gs:usbr_buf_size,ax
+;
+    movzx ecx,ax
+    AllocateMemBlk
+    mov gs:usbr_buf_linear,edx
+;
+    AllocateGdt
+    CreateDataSelector16
+    mov gs:usbr_buf_sel,bx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov cx,gs:or_td_count
+    mov di,OFFSET or_td_arr
+
+orLoop:
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+;
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_buffer_va,0
+    mov fs:[edi].otd_next_td,0
+    mov gs:[di],edx
+;
+    add di,4
+    loop orLoop
+;
+    mov gs:usbr_thread,0
+
+orDone:
+    popad
+    pop gs
+    pop fs
     retf32
 OpenRaw   Endp
 
@@ -2447,268 +2544,6 @@ irDone:
     pop fs
     retf32
 IsRunning   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CC table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-cc_tab:
-cc00 DW 0
-cc01 DW USB_EVENT_CRC_ERROR
-cc02 DW USB_EVENT_BIT_STUFFING_ERROR
-cc03 DW USB_EVENT_DATA_TOGGLE_ERROR
-cc04 DW USB_EVENT_STALL
-cc05 DW USB_EVENT_NOT_RESPONDING
-cc06 DW USB_EVENT_PID_FAILURE
-cc07 DW USB_EVENT_UNEXPECTED_PID
-cc08 DW USB_EVENT_DATA_OVERRUN
-cc09 DW USB_EVENT_DATA_UNDERRUN
-cc0A DW 0
-cc0B DW 0
-cc0C DW USB_EVENT_BUFFER_OVERRUN
-cc0D DW USB_EVENT_BUFFER_UNDERRUN
-cc0E DW 0
-cc0F DW USB_EVENT_HALTED
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           HandlePacketIn
-;
-;       DESCRIPTION:    Handle packet IN transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandlePacketIn  Proc near
-    push ds
-    push bx
-    push si
-;
-    mov ds,gs:usbp_packet_sel
-    EnterSection ds:usbpk_section
-;
-    mov bx,ds:usbpk_wr_ptr
-    mov si,bx
-    shl si,2
-    add si,SIZE usb_packet_struc
-    cmp edx,ds:[si]
-    je hpiAdvance
-;
-    int 3
-    jmp hpiDone
-
-hpiAdvance:
-    inc bx
-    cmp bx,ds:usbpk_entry_count
-    jb hpiSave
-;
-    xor bx,bx
-
-hpiSave:
-    mov ds:usbpk_wr_ptr,bx    
-;
-    mov bx,gs:usbp_stream_sel
-    or bx,bx
-    jz hpiSignalObj
-;
-    mov bx,es:usbd_thread
-    Signal
-    jmp hpiDone
-
-hpiSignalObj:
-    xor bx,bx
-    xchg bx,gs:usbp_wait
-    or bx,bx
-    jz hpiDone
-;
-    push es
-    mov es,bx
-    SignalWait
-    pop es
-
-hpiDone:
-    LeaveSection ds:usbpk_section
-;
-    pop si
-    pop bx
-    pop ds
-    ret
-HandlePacketIn  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyIn
-;
-;       DESCRIPTION:    Notify IN transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;                       BL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyIn  Proc near
-    push gs
-    push ebx
-    push esi
-;
-    mov si,fs:[edx].otd_flags
-    shr si,12
-    add si,si
-    mov si,word ptr cs:[si].cc_tab
-    or si,si
-    je niOk
-;
-    push ax
-    push dx
-;
-    mov ax,si
-    mov dl,bl
-    movzx si,fs:[edi].usbd_port
-    ReportUsbRegPipeEvent
-;
-    pop dx
-    pop ax
-
-niOk:
-    movzx esi,bl
-    and esi,0Fh
-    dec esi
-    add esi,esi
-    mov bx,fs:[edi+esi].usbd_in_pipe_arr
-    or bx,bx
-    jz niDone
-;
-    mov gs,bx
-    mov bx,gs:usbp_packet_sel
-    or bx,bx
-    jz niNotPacket
-;
-    call HandlePacketIn
-    jmp niDone
-
-niNotPacket:
-    int 3
-
-niDone:
-    pop esi
-    pop ebx
-    pop gs
-    ret
-NotifyIn  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyOut
-;
-;       DESCRIPTION:    Notify OUT transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;                       BL      Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyOut  Proc near
-    int 3
-    ret
-NotifyOut  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyTransfer
-;
-;       DESCRIPTION:    Notify transfer completed
-;
-;       PARAMETERS:     DS      Function sel
-;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyTransfer   Proc near
-    push bx
-;
-    mov bl,fs:[edx].otd_pipe
-    or bl,bl
-    jz ntControl
-;
-    test bl,80h
-    jz ntOut
-
-ntIn:
-    call NotifyIn
-    jmp ntDone
-
-ntOut:
-    call NotifyOut
-    jmp ntDone
-
-ntControl:
-    mov bx,fs:[edx].otd_flags
-    shr bx,12
-    or bx,bx
-    jz ntControlOk
-;
-    mov fs:[edi].dev_cc,bl
-;
-    add bx,bx
-    mov bx,word ptr cs:[bx].cc_tab
-    or bx,bx
-    jz ntControlSignal
-;
-    push ax
-    push dx
-    push si
-;
-    mov ax,bx
-    xor dl,dl
-    movzx si,fs:[edi].usbd_port
-    ReportUsbRegPipeEvent
-;
-    pop si
-    pop dx
-    pop ax
-    jmp ntControlSignal
-
-ntControlOk:
-    mov bx,fs:[edx].otd_flags
-    shr bx,5
-    and bx,7
-    jnz ntDone
-;
-    mov fs:[edi].dev_cc,0
-     
-ntControlSignal:
-    xor bx,bx
-    xchg bx,fs:[edi].dev_control_thread
-    or bx,bx
-    jz ntDone
-;
-    Signal
-
-ntDone:
-    pop bx
-    ret
-NotifyTransfer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3275,6 +3110,268 @@ ConfigDev   Proc far
     clc
     retf32
 ConfigDev   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CC table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cc_tab:
+cc00 DW 0
+cc01 DW USB_EVENT_CRC_ERROR
+cc02 DW USB_EVENT_BIT_STUFFING_ERROR
+cc03 DW USB_EVENT_DATA_TOGGLE_ERROR
+cc04 DW USB_EVENT_STALL
+cc05 DW USB_EVENT_NOT_RESPONDING
+cc06 DW USB_EVENT_PID_FAILURE
+cc07 DW USB_EVENT_UNEXPECTED_PID
+cc08 DW USB_EVENT_DATA_OVERRUN
+cc09 DW USB_EVENT_DATA_UNDERRUN
+cc0A DW 0
+cc0B DW 0
+cc0C DW USB_EVENT_BUFFER_OVERRUN
+cc0D DW USB_EVENT_BUFFER_UNDERRUN
+cc0E DW 0
+cc0F DW USB_EVENT_HALTED
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandlePacketIn
+;
+;       DESCRIPTION:    Handle packet IN transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePacketIn  Proc near
+    push ds
+    push bx
+    push si
+;
+    mov ds,gs:usbp_packet_sel
+    EnterSection ds:usbpk_section
+;
+    mov bx,ds:usbpk_wr_ptr
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    cmp edx,ds:[si]
+    je hpiAdvance
+;
+    int 3
+    jmp hpiDone
+
+hpiAdvance:
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb hpiSave
+;
+    xor bx,bx
+
+hpiSave:
+    mov ds:usbpk_wr_ptr,bx    
+;
+    mov bx,gs:usbp_stream_sel
+    or bx,bx
+    jz hpiSignalObj
+;
+    mov bx,es:usbd_thread
+    Signal
+    jmp hpiDone
+
+hpiSignalObj:
+    xor bx,bx
+    xchg bx,gs:usbp_wait
+    or bx,bx
+    jz hpiDone
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+hpiDone:
+    LeaveSection ds:usbpk_section
+;
+    pop si
+    pop bx
+    pop ds
+    ret
+HandlePacketIn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyIn
+;
+;       DESCRIPTION:    Notify IN transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;                       BL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyIn  Proc near
+    push gs
+    push ebx
+    push esi
+;
+    mov si,fs:[edx].otd_flags
+    shr si,12
+    add si,si
+    mov si,word ptr cs:[si].cc_tab
+    or si,si
+    je niOk
+;
+    push ax
+    push dx
+;
+    mov ax,si
+    mov dl,bl
+    movzx si,fs:[edi].usbd_port
+    ReportUsbRegPipeEvent
+;
+    pop dx
+    pop ax
+
+niOk:
+    movzx esi,bl
+    and esi,0Fh
+    dec esi
+    add esi,esi
+    mov bx,fs:[edi+esi].usbd_in_pipe_arr
+    or bx,bx
+    jz niDone
+;
+    mov gs,bx
+    mov bx,gs:usbp_packet_sel
+    or bx,bx
+    jz niNotPacket
+;
+    call HandlePacketIn
+    jmp niDone
+
+niNotPacket:
+    int 3
+
+niDone:
+    pop esi
+    pop ebx
+    pop gs
+    ret
+NotifyIn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyOut
+;
+;       DESCRIPTION:    Notify OUT transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;                       BL      Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyOut  Proc near
+    int 3
+    ret
+NotifyOut  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyTransfer
+;
+;       DESCRIPTION:    Notify transfer completed
+;
+;       PARAMETERS:     DS      Function sel
+;                       FS      Flat sel
+;                       EDI     Device linear
+;                       EDX     Transfer descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyTransfer   Proc near
+    push bx
+;
+    mov bl,fs:[edx].otd_pipe
+    or bl,bl
+    jz ntControl
+;
+    test bl,80h
+    jz ntOut
+
+ntIn:
+    call NotifyIn
+    jmp ntDone
+
+ntOut:
+    call NotifyOut
+    jmp ntDone
+
+ntControl:
+    mov bx,fs:[edx].otd_flags
+    shr bx,12
+    or bx,bx
+    jz ntControlOk
+;
+    mov fs:[edi].dev_cc,bl
+;
+    add bx,bx
+    mov bx,word ptr cs:[bx].cc_tab
+    or bx,bx
+    jz ntControlSignal
+;
+    push ax
+    push dx
+    push si
+;
+    mov ax,bx
+    xor dl,dl
+    movzx si,fs:[edi].usbd_port
+    ReportUsbRegPipeEvent
+;
+    pop si
+    pop dx
+    pop ax
+    jmp ntControlSignal
+
+ntControlOk:
+    mov bx,fs:[edx].otd_flags
+    shr bx,5
+    and bx,7
+    jnz ntDone
+;
+    mov fs:[edi].dev_cc,0
+     
+ntControlSignal:
+    xor bx,bx
+    xchg bx,fs:[edi].dev_control_thread
+    or bx,bx
+    jz ntDone
+;
+    Signal
+
+ntDone:
+    pop bx
+    ret
+NotifyTransfer   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3576,7 +3673,7 @@ ofhMainBlk:
     sub edx,fs:[edi].mblk_physical_base
     add edx,fs:[edi].mblk_linear_base
     mov eax,fs:[edx].otd_next_td
-    mov fs:[edx].otd_next_td,ebp
+    mov fs:[edx].otd_link_va,ebp
     mov ebp,edx
     jmp ofhAddLoop
 
@@ -3594,7 +3691,7 @@ ofhProcessLoop:
     jz ofhEnable
 ;
     call NotifyTransfer
-    mov edx,fs:[edx].otd_next_td
+    mov edx,fs:[edx].otd_link_va
     jmp ofhProcessLoop
 
 ofhEnable:
