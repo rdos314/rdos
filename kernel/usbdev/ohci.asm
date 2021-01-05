@@ -1993,18 +1993,7 @@ spbSetup:
     mov fs:[edi].otd_next_td,eax
 
 spbFirst:
-    push cx
-    mov cx,SIZE ohc_td_struc
-    AllocateMemBlk
-    pop cx
-;
-    mov fs:[edx].otd_resv,0
-    mov fs:[edx].otd_cbp,0
-    mov fs:[edx].otd_be,0
-    mov fs:[edx].otd_next_td,0
-    mov fs:[edx].otd_next_va,0
-    mov fs:[edx].otd_buffer_va,0
-;
+    xor edx,edx
     xchg edx,gs:op_tail_td
     mov ds:[si],edx
 
@@ -2038,11 +2027,16 @@ spbSave:
     sub cx,1
     jnz spbLoop
 ;
-    mov ax,ds:usbpk_entry_count
-    dec ax
-    mov ds:usbpk_tail_ptr,ax
+    mov bx,ds:usbpk_entry_count
+    dec bx
+    mov ds:usbpk_tail_ptr,bx
 ;
-    mov edx,gs:op_tail_td
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    xor edx,edx
+    xchg edx,ds:[si]
+    mov gs:op_tail_td,edx
     mov fs:[edx].otd_next_td,0
 ;
     LinearToPhysicalMemBlk
@@ -2162,7 +2156,6 @@ ReqPacket   Proc far
     push ebx
     push esi
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
     mov ds,gs:usbp_packet_sel
@@ -2224,7 +2217,6 @@ RelPacket   Proc far
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
     mov ds,gs:usbp_packet_sel
@@ -2248,8 +2240,9 @@ rlpkOk:
     mov si,bx
     shl si,3
     add si,SIZE usb_packet_struc
-    mov edi,gs:op_tail_td
-    xchg edi,ds:[si]
+    xor edi,edi
+    xchg edi,gs:op_tail_td
+    mov ds:[si],edi
     mov fs:[edi].otd_flags,0F004h
     mov edx,ds:[si+4]
     or edx,edx
@@ -2284,10 +2277,16 @@ rlpkSave:
 rlpkTailOk:
     mov ds:usbpk_tail_ptr,bx
 ;
-    mov edx,gs:op_tail_td
+    mov si,bx
+    shl si,3
+    add si,SIZE usb_packet_struc
+    xor edx,edx
+    xchg edx,ds:[si]
+    mov gs:op_tail_td,edx
+    mov fs:[edx].otd_next_td,0
+;
     LinearToPhysicalMemBlk
     mov fs:[edi].otd_next_td,eax
-;
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax
 ;
