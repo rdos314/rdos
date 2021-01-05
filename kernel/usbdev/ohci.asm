@@ -111,14 +111,16 @@ ohc_td_struc    ENDS
 
 ohci_func_sel   STRUC
 
-usb_func_base    usb_function_struc <>
+usb_func_base       usb_function_struc <>
 
-ohc_reg_sel     DW ?
-ohc_map_sel     DW ?
+ohc_dev_arr         DW 127 DUP(?)
+
+ohc_reg_sel         DW ?
+ohc_map_sel         DW ?
 ohc_map_linear      DD ?
 ohc_int_status      DD ?
-ohc_linear      DD ?
-ohc_phys        DD ?
+ohc_linear          DD ?
+ohc_phys            DD ?
 ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_thread          DW ?
@@ -130,20 +132,18 @@ ohc_usb_dev         DB ?
 ohc_usb_func        DB ?
 ohc_irq             DB ?
 
-ohc_linear_dev_arr  DD 127 DUP(?)
-
 ohc_fm_reg          DD ?
 
-ohc_section     section_typ <>
+ohc_section         section_typ <>
 
-ohc_32_cnt      DB 32 DUP(?)
-ohc_16_cnt      DB 16 DUP(?)
-ohc_8_cnt       DB 8 DUP(?)
-ohc_4_cnt       DB 4 DUP(?)
-ohc_2_cnt       DB 2 DUP(?)
-ohc_1_cnt       DB ?
+ohc_32_cnt          DB 32 DUP(?)
+ohc_16_cnt          DB 16 DUP(?)
+ohc_8_cnt           DB 8 DUP(?)
+ohc_4_cnt           DB 4 DUP(?)
+ohc_2_cnt           DB 2 DUP(?)
+ohc_1_cnt           DB ?
 
-ohc_curr_cnt    DB 32 DUP(?)
+ohc_curr_cnt        DB 32 DUP(?)
 
 ohci_func_sel    ENDS
 
@@ -2765,11 +2765,9 @@ udvOutNext:
     add si,2
     loop udvOutLoop
 ;
-    mov al,es:usbd_address
-    dec al
-    movzx si,al
-    shl si,2
-    mov ds:[si].ohc_linear_dev_arr,0
+    movzx si,es:usbd_address
+    add si,si
+    mov ds:[si].ohc_dev_arr,0
 ;
     pop esi
     pop ecx
@@ -2844,11 +2842,9 @@ CreateDev   Proc far
     CreateMemBlk32
     pop eax
 ;
-    dec al
     movzx di,al
-    shl di,2
-    mov edx,es:mblk_linear_base
-    mov ds:[di].ohc_linear_dev_arr,edx
+    add di,di
+    mov ds:[di].ohc_dev_arr,es
 ;
     call AllocateTd
     mov es:dev_control_head,edx
@@ -3296,47 +3292,49 @@ NotifyOut  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           NotifyTransfer
+;       NAME:           CheckControl
 ;
-;       DESCRIPTION:    Notify transfer completed
+;       DESCRIPTION:    Check control
 ;
-;       PARAMETERS:     DS      Function sel
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
 ;                       FS      Flat sel
-;                       EDI     Device linear
-;                       EDX     Transfer descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NotifyTransfer   Proc near
-    push bx
+CheckControl   Proc near
+    push ebx
+    push edx
 ;
-    mov bl,fs:[edx].otd_pipe
-    or bl,bl
-    jz ntControl
+    mov bx,es:dev_control_thread
+    or bx,bx
+    jz cctDone
 ;
-    test bl,80h
-    jz ntOut
+    mov edx,es:dev_control_head
 
-ntIn:
-    call NotifyIn
-    jmp ntDone
-
-ntOut:
-    call NotifyOut
-    jmp ntDone
-
-ntControl:
+cctLoop:
     mov bx,fs:[edx].otd_flags
     shr bx,12
-    or bx,bx
-    jz ntControlOk
+    cmp bx,0Fh
+    je cctDone
 ;
-    mov fs:[edi].dev_cc,bl
+    or bx,bx
+    jnz cctError
+;
+    mov edx,fs:[edx].otd_next_va
+    or edx,edx
+    jnz cctLoop
+;
+    mov es:dev_cc,0
+    jmp cctSignal
+
+cctError:
+    mov es:dev_cc,bl
 ;
     add bx,bx
     mov bx,word ptr cs:[bx].cc_tab
     or bx,bx
-    jz ntControlSignal
+    jz cctSignal
 ;
     push ax
     push dx
@@ -3350,28 +3348,76 @@ ntControl:
     pop si
     pop dx
     pop ax
-    jmp ntControlSignal
+    jmp cctSignal
 
-ntControlOk:
-    mov bx,fs:[edx].otd_flags
-    shr bx,5
-    and bx,7
-    jnz ntDone
-;
-    mov fs:[edi].dev_cc,0
-     
-ntControlSignal:
+cctSignal:
     xor bx,bx
-    xchg bx,fs:[edi].dev_control_thread
-    or bx,bx
-    jz ntDone
-;
+    xchg bx,es:dev_control_thread
     Signal
 
-ntDone:
-    pop bx
+cctDone:
+    pop edx
+    pop ebx
     ret
-NotifyTransfer   Endp
+CheckControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckIn
+;
+;       DESCRIPTION:    Check IN pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckIn   Proc near
+    push ebx
+;
+    mov bx,gs:usbp_packet_sel
+    or bx,bx
+    jz ciDone
+;
+    int 3
+    call HandlePacketIn
+
+ciDone:
+    pop ebx
+    ret
+CheckIn   Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckOut
+;
+;       DESCRIPTION:    Check OUT pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckOut   Proc near
+    push ebx
+;
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz cotDone
+;
+    int 3
+;    call HandleRawOut
+
+cotDone:
+    pop ebx
+    ret
+CheckOut   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3647,54 +3693,62 @@ ofhLoop:
     ReportUsbFunctionEvent
 
 ofhRunning:
-    xor eax,eax
-    xor ebp,ebp
-    mov bx,ohc_hca_base + OFFSET hcca_done_head
-    lock xchg eax,ds:[bx]
-    and al,NOT 1
-
-ofhAddLoop:
-    or eax,eax
-    jz ofhProcess
-;
-    mov si,OFFSET ohc_linear_dev_arr
     mov cx,127
-    mov edx,eax
-    and ax,0F000h
+    mov bx,OFFSET ohc_dev_arr
 
-ofhMainBlk:
-    mov edi,[si]
-    or edi,edi
-    jz ofhMainNext
+ofhDevLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz ofhDevNext
 ;
-    cmp eax,fs:[edi].mblk_physical_base        
-    jne ofhMainNext
+    mov es,ax
+    mov ax,es:dev_control_thread
+    or ax,ax
+    jz ofhDevPipes
 ;
-    sub edx,fs:[edi].mblk_physical_base
-    add edx,fs:[edi].mblk_linear_base
-    mov eax,fs:[edx].otd_next_td
-    mov fs:[edx].otd_link_va,ebp
-    mov ebp,edx
-    jmp ofhAddLoop
+    call CheckControl
 
-ofhMainNext:
-    add si,4
-    loop ofhMainBlk
+ofhDevPipes:
+    push ebx
+    push ecx
 ;
-    int 3
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
 
-ofhProcess:
-    mov edx,ebp
-
-ofhProcessLoop:
-    or edx,edx
-    jz ofhEnable
+ofhDevInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz ofhDevInNext
 ;
-    call NotifyTransfer
-    mov edx,fs:[edx].otd_link_va
-    jmp ofhProcessLoop
+    mov gs,bx
+    call CheckIn
 
-ofhEnable:
+ofhDevInNext:
+    add si,2
+    loop ofhDevInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+ofhDevOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz ofhDevOutNext
+;
+    mov gs,bx
+    call CheckOut
+
+ofhDevOutNext:
+    add si,2
+    loop ofhDevOutLoop
+;
+    pop ecx
+    pop ebx
+
+ofhDevNext:
+    add bx,2
+    loop ofhDevLoop
+;
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
     and al,NOT 2
@@ -3888,18 +3942,18 @@ ifTabLoop:
     add di,4
     loop ifTabLoop    
 ;
+    InitUsbFunction
+    InitSection ds:ohc_section
+;    
     push es
     mov ax,ds
     mov es,ax
+    mov di,OFFSET ohc_dev_arr
     mov cx,127
-    mov di,OFFSET ohc_linear_dev_arr
-    xor eax,eax
-    rep stosd
+    xor ax,ax
+    rep stosw
     pop es
 ;
-    InitUsbFunction
-;    
-    InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
 ;
     WaitForEhci
