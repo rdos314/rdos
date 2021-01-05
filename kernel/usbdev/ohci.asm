@@ -2099,7 +2099,6 @@ OpenPacket   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    int 3
     call AllocatePacketSel
     mov gs:usbp_packet_sel,bx
 ;
@@ -2188,8 +2187,11 @@ rqpkGet:
     jmp rqpkDone
 
 rqpkCalc:
+    push bx
     xor ebx,ebx
     PhysicalToLinearMemBlk
+    pop bx
+;
     mov ecx,ds:[bx+4]
     sub ecx,edx
     neg ecx
@@ -2289,6 +2291,10 @@ rlpkTailOk:
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax
 ;
+    push ds
+    mov ds,es:usbd_func_sel
+    call SignalStart
+    pop ds
     clc
 
 rlpkDone:
@@ -3341,7 +3347,6 @@ CheckOut   Proc near
     or bx,bx
     jz cotDone
 ;
-    int 3
 ;    call HandleRawOut
 
 cotDone:
