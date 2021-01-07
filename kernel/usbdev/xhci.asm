@@ -2417,7 +2417,6 @@ AllocatePipe   Endp
 ;       DESCRIPTION:    Create interrupt pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
 ;                       DL      Pipe #
 ;                       DH      Interval
 ;
@@ -2449,7 +2448,6 @@ CreateIntrPipe  Endp
 ;       DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
 ;                       DL      Pipe #
 ;
 ;       RETURNS:        NC      OK
@@ -2481,7 +2479,6 @@ OpenPacket   Proc far
     push edx
 ;
     int 3
-    call StopEndpoint
 ;
     pop edx
     pop eax
