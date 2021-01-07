@@ -2431,7 +2431,6 @@ CreateIntrPipe   Proc far
     push gs
     push eax
 ;   
-    int 3
     mov ax,flat_sel
     mov fs,ax
     call AllocatePipe
@@ -2968,6 +2967,32 @@ ControlEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PipeEvent
+;
+;       DESCRIPTION:    Pipe event
+;
+;       PARAMETERS:     DS     Function sel
+;                       ES:SI  Event TRB
+;                       FS     Device sel
+;                       GS     Pipe sel
+;                       DL     Pipe #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PipeEvent Proc near
+    mov al,es:[si+0Bh]
+    cmp al,1
+    je pevNotError
+;
+    call ReportPipeStatus
+
+pevNotError:
+    ret
+PipeEvent Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           transfer_event
 ;
 ;       DESCRIPTION:    Transfer event
@@ -2995,7 +3020,33 @@ teControl:
     jmp teDone
 
 tePipe:
+    mov dl,es:[si+0Eh]
+    mov al,dl
+    shr dl,1
+    test al,1
+    jz teOut
+
+teIn:
+    movzx bx,dl
+    dec bx
+    add bx,bx
+    mov ax,fs:[bx].usbd_in_pipe_arr
+    or dl,80h
+    jmp tePe
+
+teOut:
+    movzx bx,dl
+    dec bx
+    add bx,bx
+    mov ax,fs:[bx].usbd_out_pipe_arr
+
+tePe:
+    or ax,ax
+    jz teDone
+;
     int 3
+    mov gs,ax
+    call PipeEvent
 
 teDone:    
     ret
