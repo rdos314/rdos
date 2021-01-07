@@ -2447,7 +2447,18 @@ orLoop:
     or ah,20h
 
 orSpeedOk:    
+    int 3
+    test gs:ued_address,80h
+    jz orOut
+
+orIn:
     or ah,10h
+    jmp orSaveEndp
+
+orOut:
+    or ah,8
+
+orSaveEndp:
     mov fs:[esi].oes_fa_en,ax
 
 orDone:
