@@ -276,7 +276,6 @@ xd_slot                      DB ?
 xd_input_sel                 DW ?
 
 xd_dummy_ring_linear         DD ?
-xd_input_context_offset      DW ?
 xd_slot_context_offset       DW ?
 xd_control_context_offset    DW ?
 xd_pipe_context_arr_offset   DW 30 DUP (?)
@@ -951,7 +950,6 @@ AllocateInput    Proc near
     CreateDataSelector16
     mov es,bx
 ;
-    int 3
     mov bx,SIZE xhci_input_struc
     dec bx
     shr bx,6
@@ -1032,19 +1030,11 @@ adMem32:
     CreateMemBlk32
 
 adMemDone:
-    mov cx,64
-    AllocateMemBlk
-    call ZeroContext
-    sub edx,es:mblk_linear_base
-    mov es:xd_input_context_offset,dx
-;
     mov cx,ds:xhc_context_size
     cmp cx,64
     je adAlloc64
 
 adAlloc32:
-    add es:xd_input_context_offset,32
-;
     mov cx,64
     AllocateMemBlk
     call ZeroContext
@@ -1202,8 +1192,9 @@ SpeedToPsi   Endp
 ;
 ;       DESCRIPTION:    Setup root device context
 ;
-;       PARAMETERS:     DS      Device sel
-;                       ES      Function sel
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Input context sel
 ;                       CL      Port #
 ;                       AL      PSI speed value
 ;
@@ -1212,19 +1203,19 @@ SpeedToPsi   Endp
 SetupRootDevice    Proc near
     pushad
 ;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
+    mov bx,fs:xi_input_offset
+    mov fs:[bx].icc_add_mask,0
 ;    
     mov ch,al
-    mov bx,es:xd_slot_context_offset
+    mov bx,fs:xi_slot_offset
     movzx eax,al
     shl eax,20
     or eax,08000000h
-    mov es:[bx].s_misc,eax
+    mov fs:[bx].s_misc,eax
     mov al,cl
     inc al
-    mov es:[bx].s_root_hub,al
-    mov es:[bx].s_ttt_int,0
+    mov fs:[bx].s_root_hub,al
+    mov fs:[bx].s_ttt_int,0
 ;
     mov dx,es:usbd_parent_hub
     or dx,dx
@@ -1236,22 +1227,22 @@ SetupRootDevice    Proc near
     cmp ch,3
     jae srdSpeedOk
 ;
-    mov al,es:[bx].s_root_hub
-    mov es:[bx].s_tt_port_nr,al
+    mov al,fs:[bx].s_root_hub
+    mov fs:[bx].s_tt_port_nr,al
     mov al,gs:usb_hub_id
-    mov es:[bx].s_tt_slot_id,al
+    mov fs:[bx].s_tt_slot_id,al
 
 srdSpeedOk:
-    movzx eax,es:[bx].s_root_hub
+    movzx eax,fs:[bx].s_root_hub
     mov cl,gs:usb_route_depth
     shl cl,2
     shl eax,cl
     or eax,gs:usb_route_str
     and eax,0FFFFFFh
-    or es:[bx].s_misc,eax
+    or fs:[bx].s_misc,eax
 ;
     mov al,gs:usb_root_port
-    mov es:[bx].s_root_hub,al
+    mov fs:[bx].s_root_hub,al
 ;
     pop gs
 
@@ -1378,33 +1369,36 @@ GetDefaultPacketSize   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControl   Proc far
+    push fs
     pushad
 ;
     mov ah,es:usbd_speed
     call SpeedToPsi
 ;
+    mov fs,es:xd_input_sel
     mov cl,es:usbd_port
     call SetupRootDevice
     call CreateControlRing
 ;
-    mov bx,es:xd_control_context_offset
+    mov bx,fs:xi_control_offset
     call GetDefaultPacketSize
-    mov es:[bx].ec_packet_size,ax
-    mov es:[bx].ec_avg_len,ax
+    mov fs:[bx].ec_packet_size,ax
+    mov fs:[bx].ec_avg_len,ax
 ;
     movzx eax,es:xd_control_offset
     add eax,es:mblk_physical_base
     or al,1
-    mov es:[bx].ec_tr_dequeue,eax
+    mov fs:[bx].ec_tr_dequeue,eax
     mov eax,es:mblk_physical_base+4
-    mov es:[bx].ec_tr_dequeue+4,eax        
+    mov fs:[bx].ec_tr_dequeue+4,eax        
 ;
     mov al,3 SHL 1
     or al,4 SHL 3
-    mov es:[bx].ec_param2,al
+    mov fs:[bx].ec_param2,al
     clc
 ;
     popad
+    pop fs
     retf32
 CreateControl   Endp
 
@@ -1421,17 +1415,19 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddressDevice   Proc far
+    push fs
     pushad
 ;
     call WaitForCommandTrb
 ;    
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,3
+
+    mov fs,es:xd_input_sel
+    mov bx,fs:xi_input_offset
+    mov fs:[bx].icc_add_mask,3
     movzx eax,bx
-    add eax,es:mblk_physical_base
+    add eax,fs:xi_phys_base
     mov ds:[di].trb_param,eax
-    mov eax,es:mblk_physical_base+4
-    mov ds:[di].trb_param+4,eax
+    mov ds:[di].trb_param+4,0
 ;
     mov ah,es:xd_slot
     xor al,al
@@ -1440,8 +1436,8 @@ AddressDevice   Proc far
     mov al,TRB_TYPE_ADDRESS_DEV
     call SendCommandTrb
 ;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
+    mov bx,fs:xi_input_offset
+    mov fs:[bx].icc_add_mask,0
 ;
     mov al,ds:[si].cev_result
     cmp al,1
@@ -1455,6 +1451,7 @@ adOk:
 
 adDone:
     popad
+    pop fs
     retf32
 AddressDevice   Endp
 
@@ -1487,6 +1484,7 @@ ChangeAddress  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateMaxLen   Proc far
+    push fs
     push eax
     push ebx
     push ecx
@@ -1494,17 +1492,17 @@ UpdateMaxLen   Proc far
 ;
     call WaitForCommandTrb
 ;
-    mov bx,es:xd_control_context_offset
-    mov es:[bx].ec_avg_len,ax
-    mov es:[bx].ec_packet_size,ax
+    mov fs,es:xd_input_sel
+    mov bx,fs:xi_control_offset
+    mov fs:[bx].ec_avg_len,ax
+    mov fs:[bx].ec_packet_size,ax
 ;    
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,2
+    mov bx,fs:xi_input_offset
+    mov fs:[bx].icc_add_mask,2
     movzx eax,bx
-    add eax,es:mblk_physical_base
+    add eax,fs:xi_phys_base
     mov ds:[di].trb_param,eax
-    mov eax,es:mblk_physical_base+4
-    mov ds:[di].trb_param+4,eax
+    mov ds:[di].trb_param+4,0
 ;
     mov ah,es:xd_slot
     xor al,al
@@ -1513,8 +1511,8 @@ UpdateMaxLen   Proc far
     mov al,TRB_TYPE_EVALUATE
     call SendCommandTrb
 ;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
+    mov bx,fs:xi_input_offset
+    mov fs:[bx].icc_add_mask,0
 ;
     mov al,ds:[si].cev_result
     cmp al,1
@@ -1531,6 +1529,7 @@ smlDone:
     pop ecx
     pop ebx
     pop eax
+    pop fs
     retf32
 UpdateMaxLen   Endp
 
@@ -1580,7 +1579,11 @@ CreateDummyRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddEndpoint   Proc near
+    push gs
     pushad
+;
+    int 3
+    mov gs,es:xd_input_sel
 ;
     mov dl,fs:[di].ued_address
     movzx bx,dl
@@ -1592,31 +1595,31 @@ AddEndpoint   Proc near
     inc bx
 
 aeDirOk:
-    mov si,es:xd_input_context_offset
+    mov si,gs:xi_input_offset
     mov eax,es:[si].icc_add_mask
     mov cl,bl
     mov edx,1
     shl edx,cl
     or eax,edx
-    mov es:[si].icc_add_mask,eax
+    mov gs:[si].icc_add_mask,eax
 ;
-    mov si,es:xd_slot_context_offset
-    mov eax,es:[si].s_misc
+    mov si,gs:xi_slot_offset
+    mov eax,gs:[si].s_misc
     shr eax,27
     cmp ax,bx
     jae aeContextOk
 ;
-    mov eax,es:[si].s_misc
+    mov eax,gs:[si].s_misc
     and eax,7FFFFFFh
     movzx edx,bx
     shl edx,27
     or eax,edx
-    mov es:[si].s_misc,eax
+    mov gs:[si].s_misc,eax
 
 aeContextOk:
     sub bx,2
     add bx,bx    
-    mov si,es:[bx].xd_pipe_context_arr_offset
+    mov si,gs:[bx].xd_pipe_context_arr_offset
 ;
     mov al,fs:[di].ued_attrib
     and al,3
@@ -1667,22 +1670,23 @@ aeBulkIn:
 
 aeSetup:
     shl al,3
-    mov es:[si].ec_param2,al        
-    mov es:[si].ec_interval,ah
+    mov gs:[si].ec_param2,al        
+    mov gs:[si].ec_interval,ah
 ;
     mov edx,es:xd_dummy_ring_linear
     LinearToPhysicalMemBlk
     or al,1
-    mov es:[si].ec_tr_dequeue,eax
-    mov es:[si].ec_tr_dequeue+4,ebx
+    mov gs:[si].ec_tr_dequeue,eax
+    mov gs:[si].ec_tr_dequeue+4,ebx
 ;
     mov ax,es:usbd_maxlen
-    mov es:[si].ec_avg_len,ax
-    mov es:[si].ec_packet_size,ax
+    mov gs:[si].ec_avg_len,ax
+    mov gs:[si].ec_packet_size,ax
     movzx eax,ax
-    mov es:[si].ec_esit_low,eax
+    mov gs:[si].ec_esit_low,eax
 ;
     popad
+    pop gs
     ret
 AddEndpoint   Endp
 
@@ -1747,27 +1751,30 @@ SetupEndpoints Endp
 
 ConfigDevice   Proc far
     push es
+    push fs
     push gs
     push eax
     push ebx
     push ecx
     push edi
 ;
+    int 3
     call CreateDummyRing
     call SetupEndpoints
     call WaitForCommandTrb
-    movzx eax,es:xd_input_context_offset
-    add eax,es:mblk_physical_base
+;
+    mov fs,es:xd_input_sel
+    movzx eax,fs:xi_input_offset
+    add eax,fs:xi_phys_base
     mov ds:[di].trb_param,eax
-    mov eax,es:mblk_physical_base+4
-    mov ds:[di].trb_param+4,eax
+    mov ds:[di].trb_param+4,0
 ;
     mov ah,es:xd_slot
     xor al,al
     mov ds:[di].trb_control,ax
 ;
-    mov bx,es:xd_input_context_offset
-    or es:[bx].icc_add_mask,1
+    mov bx,fs:xi_input_offset
+    or fs:[bx].icc_add_mask,1
 ;
     or cx,cx
     jz cdDo
@@ -1776,24 +1783,24 @@ ConfigDevice   Proc far
     mov al,es:xd_slot
     mov gs:usb_hub_id,al
 ;
-    mov bx,es:xd_slot_context_offset
-    mov eax,es:[bx].s_misc
+    mov bx,fs:xi_slot_offset
+    mov eax,fs:[bx].s_misc
     or eax,4000000h
-    mov es:[bx].s_misc,eax
+    mov fs:[bx].s_misc,eax
 ;
     mov ax,gs:hub_ports
-    mov es:[bx].s_hub_ports,al
+    mov fs:[bx].s_hub_ports,al
 ;
-    mov ax,es:[bx].s_ttt_int
+    mov ax,fs:[bx].s_ttt_int
     or al,3
-    mov es:[bx].s_ttt_int,ax
+    mov fs:[bx].s_ttt_int,ax
 
 cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
     call SendCommandTrb
 ;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
+    mov bx,fs:xi_input_offset
+    mov fs:[bx].icc_add_mask,0
 ;
     mov al,ds:[si].cev_result
     cmp al,1
@@ -1807,6 +1814,7 @@ cdDone:
     pop ebx
     pop eax
     pop gs    
+    pop fs
     pop es
     retf32
 ConfigDevice   Endp
@@ -2144,8 +2152,6 @@ ResetControl   Proc near
 ;
     call WaitForCommandTrb
 ;    
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,2
     mov ds:[di].trb_param,0
     mov ds:[di].trb_param+4,0
 ;
@@ -2155,9 +2161,6 @@ ResetControl   Proc near
 ;
     mov al,TRB_TYPE_RESET_ENDP
     call SendCommandTrb
-;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
 ;
     mov al,ds:[si].cev_result
     cmp al,1
@@ -2190,9 +2193,6 @@ SetControlTr   Proc near
     pushad
 ;
     call WaitForCommandTrb
-;    
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,2
 ;
     movzx eax,es:xd_control_offset
     add eax,es:mblk_physical_base
@@ -2207,9 +2207,6 @@ SetControlTr   Proc near
 ;
     mov al,TRB_TYPE_SET_TR
     call SendCommandTrb
-;
-    mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,0
 ;
     mov al,ds:[si].cev_result
     cmp al,1
