@@ -1766,9 +1766,9 @@ SignalStart Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopPacketTds
+;       NAME:           StopTds
 ;
-;       DESCRIPTION:    Stop packet TDs
+;       DESCRIPTION:    Stop TDs
 ;
 ;
 ;       PARAMETERS:     ES      Device
@@ -1776,7 +1776,7 @@ SignalStart Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopPacketTds Proc near
+StopTds Proc near
     push fs
     push eax
     push ebx
@@ -1798,7 +1798,7 @@ StopPacketTds Proc near
     pop eax
     pop fs
     ret
-StopPacketTds Endp
+StopTds Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1927,7 +1927,7 @@ FreePacketSel Proc near
     or bx,bx
     jz dtdDone
 ;
-    call StopPacketTds
+    call StopTds
     call FreePacketTds
 ;
     push es
@@ -2447,7 +2447,6 @@ orLoop:
     or ah,20h
 
 orSpeedOk:    
-    int 3
     test gs:ued_address,80h
     jz orOut
 
@@ -2520,7 +2519,6 @@ ReadRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteRaw   Proc far
-    int 3
     push ds
     push fs
     pushad
@@ -2568,7 +2566,7 @@ wrFirst:
 
 wrNext:
     mov edi,edx
-    mov fs:[edi].otd_flags,0F004h
+    mov fs:[edi].otd_flags,0F0E4h
 ;
     mov eax,ebp
     mov fs:[edi].otd_cbp,eax
@@ -2607,6 +2605,7 @@ wrSizeOk:
     mov fs:[edx].otd_next_va,0
     mov fs:[edx].otd_buffer_va,0
     mov fs:[edi].otd_next_td,eax    
+    mov fs:[edi].otd_flags,0F004h
     mov gs:op_tail_td,edx
 ;
     mov edx,gs:op_ed
@@ -2617,6 +2616,62 @@ wrSizeOk:
     call SignalStart
     pop ds
 ;
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov edx,gs:op_ed
+    mov eax,fs:[edx].oes_headp
+    and al,0F0h
+    cmp eax,fs:[edx].oes_tailp
+    clc
+    je wrFree
+;
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov edx,gs:op_ed
+    mov eax,fs:[edx].oes_headp
+    and al,0F0h
+    cmp eax,fs:[edx].oes_tailp
+    clc
+    je wrFree
+;
+    call StopTds
+    stc
+
+wrFree:
+    pushf
+    mov ds:usbr_thread,0
+    xor cx,cx
+    xchg cx,ds:or_curr_count
+    or cx,cx
+    jz wrFreeDone
+;
+    mov si,OFFSET or_td_arr
+    
+wrFreeLoop:
+    xor edx,edx
+    xchg edx,ds:[si]
+    or edx,edx
+    jz wrFreeNext
+;
+    push cx
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    pop cx
+
+wrFreeNext:
+    add si,4
+    loop wrFreeLoop
+
+wrFreeDone:
+    popf
+
+wrDone:
     popad
     pop fs
     pop ds
@@ -3419,6 +3474,75 @@ HandlePacketIn  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandleRawOut
+;
+;       DESCRIPTION:    Handle raw pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Raw sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRaw   Proc near
+    push ds
+    push ecx
+    push edx
+    push esi
+    push ebp
+;
+    mov ds,bx
+    mov bx,ds:usbr_thread
+    or bx,bx
+    jz hroDone
+;
+    mov cx,ds:or_curr_count
+    or cx,cx
+    jz hroDone
+;
+    mov si,OFFSET or_td_arr
+
+hroLoop:
+    mov edx,ds:[si]
+    mov ax,fs:[edx].otd_flags
+    shr ax,12
+    cmp ax,0Fh
+    je hroDone
+;
+    or ax,ax
+    jz hroNext
+;
+    push bx
+    mov bx,ax
+    add bx,bx
+    mov ax,word ptr cs:[bx].cc_tab
+    pop bx
+    or ax,ax
+    jz hroNext
+;
+    mov dl,gs:ued_address
+    ReportUsbPipeEvent
+
+hroNext:
+    add si,4
+    loop hroLoop
+;
+    Signal
+
+hroDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+HandleRaw  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -3465,7 +3589,7 @@ CheckOut   Proc near
     or bx,bx
     jz cotDone
 ;
-;    call HandleRawOut
+    call HandleRaw
 
 cotDone:
     pop ebx
