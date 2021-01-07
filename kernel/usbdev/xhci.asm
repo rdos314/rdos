@@ -1582,7 +1582,6 @@ AddEndpoint   Proc near
     push gs
     pushad
 ;
-    int 3
     mov gs,es:xd_input_sel
 ;
     mov dl,fs:[di].ued_address
@@ -1596,7 +1595,7 @@ AddEndpoint   Proc near
 
 aeDirOk:
     mov si,gs:xi_input_offset
-    mov eax,es:[si].icc_add_mask
+    mov eax,gs:[si].icc_add_mask
     mov cl,bl
     mov edx,1
     shl edx,cl
@@ -1619,7 +1618,7 @@ aeDirOk:
 aeContextOk:
     sub bx,2
     add bx,bx    
-    mov si,gs:[bx].xd_pipe_context_arr_offset
+    mov si,gs:[bx].xi_pipe_arr_offset
 ;
     mov al,fs:[di].ued_attrib
     and al,3
@@ -1758,7 +1757,6 @@ ConfigDevice   Proc far
     push ecx
     push edi
 ;
-    int 3
     call CreateDummyRing
     call SetupEndpoints
     call WaitForCommandTrb
@@ -1799,8 +1797,13 @@ cdDo:
     mov al,TRB_TYPE_CONFIGURE_ENDP
     call SendCommandTrb
 ;
-    mov bx,fs:xi_input_offset
-    mov fs:[bx].icc_add_mask,0
+    push es
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    pop es
+    mov es:xd_input_sel,0
 ;
     mov al,ds:[si].cev_result
     cmp al,1
