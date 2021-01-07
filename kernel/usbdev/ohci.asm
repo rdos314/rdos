@@ -1858,6 +1858,7 @@ AllocatePacketSel    Endp
 ;                       ES      Device selector
 ;                       FS      Flat sel
 ;                       GS      Pipe selector
+;                       BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1866,7 +1867,7 @@ FreePacketTds     Proc near
     pushad
 ;
     mov ebp,gs:op_tail_td
-    mov ds,gs:usbp_packet_sel
+    mov ds,bx
     mov si,SIZE usb_packet_struc
     mov cx,ds:usbpk_entry_count
     xor edi,edi
@@ -2470,6 +2471,71 @@ OpenRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreeRawSel
+;
+;       DESCRIPTION:    Free packet sel
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeRawSel Proc near
+    push es
+    push gs
+    pushad
+;
+    xor bx,bx
+    xchg bx,gs:usbp_raw_sel
+    or bx,bx
+    jz frsDone
+;
+    call StopTds
+;
+    push bx
+    mov gs,bx
+;
+    mov cx,gs:usbr_buf_size
+    mov edx,gs:usbr_buf_linear
+    FreeLinearMemBlk
+;
+    mov bx,gs:usbr_buf_sel
+    FreeGdt
+;
+    mov cx,gs:or_curr_count
+    or cx,cx
+    jz frsFree
+;
+    mov si,OFFSET or_td_arr
+
+frsLoop:
+    mov edx,gs:[si]
+    push cx
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    pop cx
+;
+    add si,4
+    loop frsLoop
+
+frsFree:
+    xor bx,bx
+    mov gs,bx
+    pop es
+    FreeMem
+
+frsDone:
+    popad
+    pop gs
+    pop es
+    ret
+FreeRawSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CloseRaw
 ;
 ;       DESCRIPTION:    Close raw interface
@@ -2480,7 +2546,17 @@ OpenRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseRaw   Proc far
-    int 3
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call FreeRawSel
+;
+    pop ax
+    pop fs
+    pop ds
     retf32
 CloseRaw   Endp
 
