@@ -2371,8 +2371,8 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
+    push ds
     push fs
-    push gs
     pushad
 ;
     mov bp,gs:ued_maxsize
@@ -2400,50 +2400,60 @@ orInRange:
     pop es
 ;
     mov gs:usbp_raw_sel,bx
-    mov gs,bx
-    mov gs:or_td_count,cx
-    mov gs:or_curr_count,0
+    mov ds,bx
+    mov ds:or_td_count,cx
+    mov ds:or_curr_count,0
 ;
     pop ax
-    mov gs:usbr_buf_size,ax
+    mov ds:usbr_buf_size,ax
 ;
     movzx ecx,ax
     AllocateMemBlk
-    mov gs:usbr_buf_linear,edx
+    mov ds:usbr_buf_linear,edx
 ;
     AllocateGdt
     CreateDataSelector16
-    mov gs:usbr_buf_sel,bx
+    mov ds:usbr_buf_sel,bx
 ;
     mov ax,flat_sel
     mov fs,ax
-    mov cx,gs:or_td_count
+    mov cx,ds:or_td_count
     mov di,OFFSET or_td_arr
+    xor edx,edx
 
 orLoop:
-    push cx
-    mov cx,SIZE ohc_td_struc
-    AllocateMemBlk
-    pop cx
-;
-    mov fs:[edx].otd_resv,0
-    mov fs:[edx].otd_cbp,0
-    mov fs:[edx].otd_be,0
-    mov fs:[edx].otd_next_td,0
-    mov fs:[edx].otd_next_va,0
-    mov fs:[edx].otd_buffer_va,0
-    mov fs:[edi].otd_next_td,0
-    mov gs:[di],edx
-;
+    mov ds:[di],edx
     add di,4
     loop orLoop
 ;
-    mov gs:usbr_thread,0
+    mov ds:usbr_thread,0
+;
+    mov esi,gs:op_ed
+    mov ax,gs:ued_maxsize
+    mov fs:[esi].oes_mps,ax
+;
+    mov dl,gs:ued_address
+    mov ah,dl
+    and ah,0Fh
+    xor al,al
+    shr ax,1
+    mov dh,es:usbd_address
+    and dh,7Fh
+    or al,dh
+;    
+    cmp es:usbd_speed,0
+    jnz orSpeedOk
+;
+    or ah,20h
+
+orSpeedOk:    
+    or ah,10h
+    mov fs:[esi].oes_fa_en,ax
 
 orDone:
     popad
-    pop gs
     pop fs
+    pop ds
     retf32
 OpenRaw   Endp
 
@@ -2494,13 +2504,111 @@ ReadRaw   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
-;                       EDX     Linear buffer
 ;                       CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteRaw   Proc far
     int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    ClearSignal
+    mov ds,gs:usbp_raw_sel
+    GetThread
+    mov ds:usbr_thread,ax
+;
+    mov edx,ds:usbr_buf_linear
+    LinearToPhysicalMemBlk
+    mov ebp,eax
+;
+    mov si,OFFSET or_td_arr
+    xor edi,edi
+    xor bx,bx
+    
+wrLoop:
+    or edi,edi
+    jz wrFirst
+;
+    push cx
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+    pop cx
+;
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_buffer_va,0
+    mov fs:[edi].otd_next_td,eax    
+;
+    mov ds:[si],edx
+    jmp spbNext
+
+wrFirst:
+    xor edx,edx
+    xchg edx,gs:op_tail_td
+    mov ds:[si],edx
+
+wrNext:
+    mov edi,edx
+    mov fs:[edi].otd_flags,0F004h
+;
+    mov eax,ebp
+    mov fs:[edi].otd_cbp,eax
+;
+    movzx ebx,cx
+    cmp bx,gs:ued_maxsize
+    jb wrSizeOk
+;
+    mov bx,gs:ued_maxsize
+
+wrSizeOk:
+    sub cx,bx
+;
+    add eax,ebx
+    dec eax
+    mov fs:[edi].otd_be,eax
+;
+    movzx eax,gs:ued_maxsize
+    add ebp,eax
+;
+    add si,4
+    or cx,cx
+    jnz wrLoop
+;
+    sub si,OFFSET or_td_arr
+    shr si,2
+    mov ds:or_curr_count,si
+;
+    mov cx,SIZE ohc_td_struc
+    AllocateMemBlk
+;
+    mov fs:[edx].otd_resv,0
+    mov fs:[edx].otd_cbp,0
+    mov fs:[edx].otd_be,0
+    mov fs:[edx].otd_next_td,0
+    mov fs:[edx].otd_next_va,0
+    mov fs:[edx].otd_buffer_va,0
+    mov fs:[edi].otd_next_td,eax    
+    mov gs:op_tail_td,edx
+;
+    mov edx,gs:op_ed
+    mov fs:[edx].oes_tailp,eax
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call SignalStart
+    pop ds
+;
+    popad
+    pop fs
+    pop ds
     retf32
 WriteRaw   Endp
 
