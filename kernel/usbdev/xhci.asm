@@ -1485,10 +1485,7 @@ ChangeAddress  Endp
 
 UpdateMaxLen   Proc far
     push fs
-    push eax
-    push ebx
-    push ecx
-    push edi
+    pushad
 ;
     call WaitForCommandTrb
 ;
@@ -1525,10 +1522,7 @@ smlOk:
     clc        
 
 smlDone:
-    pop edi
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop fs
     retf32
 UpdateMaxLen   Endp
