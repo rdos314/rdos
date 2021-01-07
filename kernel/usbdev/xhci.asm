@@ -244,6 +244,17 @@ xhc_slot_sel_arr        DW 256 DUP(?)
 
 xhci_func_sel   ENDS
 
+xhci_input_struc   STRUC
+
+xi_phys_base         DD ?
+
+xi_input_offset      DW ?
+xi_slot_offset       DW ?
+xi_control_offset    DW ?
+xi_pipe_arr_offset   DW 30 DUP (?)
+
+xhci_input_struc   ENDS
+
 xhci_dev_struc   STRUC
 
 usb_dev_base                 usb_device_struc <>
@@ -261,6 +272,8 @@ xd_control_remain_size       DW ?
 xd_control_thread            DW ?
 xd_control_result            DB ?
 xd_slot                      DB ?
+
+xd_input_sel                 DW ?
 
 xd_dummy_ring_linear         DD ?
 xd_input_context_offset      DW ?
@@ -895,13 +908,106 @@ ZeroContext    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateInput
+;
+;       DESCRIPTION:    Allocate input
+;
+;       PARAMETERS:     DS      Device sel
+;
+;       RETURNS:        BX      Input sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateInput    Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop eax
+    mov es:[edx].xi_phys_base,eax
+;
+    AllocateGdt
+    mov cx,1000h
+    CreateDataSelector16
+    mov es,bx
+;
+    int 3
+    mov bx,SIZE xhci_input_struc
+    dec bx
+    shr bx,6
+    inc bx
+    shl bx,6
+;
+    mov al,ds:xhc_has_64
+    or al,al
+    jz ai32
+
+ai64:
+    mov si,64
+    jmp aiSizeOk
+
+ai32:
+    mov si,32
+
+aiSizeOk:
+    mov es:xi_input_offset,bx
+;
+    add bx,si
+    mov es:xi_slot_offset,bx
+;
+    add bx,si
+    mov es:xi_control_offset,bx
+;
+    mov di,OFFSET xi_pipe_arr_offset
+    mov cx,30
+
+aiLoop:
+    add bx,si
+    mov es:[di],bx
+    add di,2
+    loop aiLoop
+;
+    mov bx,es
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateInput  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateDevice
 ;
 ;       DESCRIPTION:    Allocate device
 ;
-;       PARAMETERS:     DS      Device sel
+;       PARAMETERS:     DS      Function sel
 ;
-;       RETURNS:        ES      Function sel
+;       RETURNS:        ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1020,6 +1126,8 @@ CreateDev   Proc far
     pushad
 ;
     call AllocateDevice
+    call AllocateInput
+    mov es:xd_input_sel,bx
 ;
     mov es:xd_slot,al
     mov es:xd_func_sel,ds
