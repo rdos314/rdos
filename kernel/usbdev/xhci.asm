@@ -2308,159 +2308,6 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocatePipe
-;
-;       DESCRIPTION:    Allocate pipe
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
-;                       FS      Flat sel
-;                       CX      TRB countr
-;
-;       RETURNS:        BX      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocatePipe   Proc near
-    push gs
-    push eax
-    push ecx
-    push edx
-    push edi
-;
-    push edx
-;
-    push es
-    mov eax,SIZE xhci_pipe
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-    pop es
-;
-    add cx,2
-    shl cx,4
-    cmp cx,800h
-    jbe apDo
-;
-    mov cx,800h
-
-apDo:
-    AllocateMemBlk
-;
-    mov gs:xp_ring_linear,edx
-    mov gs:xp_ring_phys,eax
-    mov gs:xp_ring_phys+4,ebx
-    push eax
-;
-    mov ax,cx
-    shr ax,4
-    mov gs:xp_ring_entries,ax
-;
-    push es
-    mov ax,flat_sel
-    mov es,ax
-    sub cx,10h
-    shr cx,2
-    movzx ecx,cx
-    mov edi,edx
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-    pop es
-;
-    pop eax
-    mov fs:[edi].trb_param,eax
-    mov fs:[edi].trb_param+4,ebx
-    mov fs:[edi].trb_status,0
-    mov fs:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
-    mov fs:[edi].trb_control,0
-;
-    mov gs:xp_rd_ptr,0
-    mov gs:xp_wr_ptr,0
-    mov gs:xp_tail_ptr,0
-    mov gs:xp_ring_pcs,1
-;        
-    mov al,es:xd_slot
-    mov gs:xp_slot,al
-;
-    pop edx
-    movzx bx,dl
-    and bl,0Fh
-    add bx,bx
-    test dl,80h
-    jz apDirOk
-;
-    inc bx
-
-apDirOk:
-    mov gs:xp_db_target,bl
-;
-    mov bx,gs
-;
-    pop edi
-    pop edx
-    pop ecx
-    pop eax
-    pop gs
-    ret
-AllocatePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateIntrPipe
-;
-;       DESCRIPTION:    Create interrupt pipe
-;
-;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
-;                       DL      Pipe #
-;                       DH      Interval
-;
-;       RETURNS:        NC      OK
-;                         BX    Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateIntrPipe   Proc far
-    push fs
-    push gs
-    push eax
-;   
-    mov ax,flat_sel
-    mov fs,ax
-    call AllocatePipe
-;
-    pop eax
-    pop gs
-    pop fs
-    retf32
-CreateIntrPipe  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateBulkPipe
-;
-;       DESCRIPTION:    Create bulk pipe
-;
-;       PARAMETERS:     ES      Device
-;                       CX      Buffer count
-;                       DL      Pipe #
-;
-;       RETURNS:        NC      OK
-;                         BX    Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-CreateBulkPipe   Proc far
-    int 3
-    retf32
-CreateBulkPipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           StopEndpoint
 ;
 ;   DESCRIPTION:    Stop endpoint
@@ -2499,6 +2346,123 @@ seDone:
     pop eax
     ret
 StopEndpoint   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocatePipe
+;
+;       DESCRIPTION:    Allocate pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       DL      Pipe #
+;
+;       RETURNS:        BX      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePipe   Proc near
+    push gs
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    push edx
+;
+    push es
+    mov eax,SIZE xhci_pipe
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    pop es
+;
+    mov gs:xp_rd_ptr,0
+    mov gs:xp_wr_ptr,0
+    mov gs:xp_tail_ptr,0
+    mov gs:xp_ring_pcs,1
+;        
+    mov al,es:xd_slot
+    mov gs:xp_slot,al
+;
+    pop edx
+    movzx bx,dl
+    and bl,0Fh
+    add bx,bx
+    test dl,80h
+    jz apDirOk
+;
+    inc bx
+
+apDirOk:
+    mov gs:xp_db_target,bl
+    call StopEndpoint
+    mov bx,gs
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    ret
+AllocatePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateIntrPipe
+;
+;       DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     ES      Device
+;                       CX      Buffer count
+;                       DL      Pipe #
+;                       DH      Interval
+;
+;       RETURNS:        NC      OK
+;                         BX    Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntrPipe   Proc far
+    push fs
+    push gs
+    push eax
+;   
+    int 3
+    mov ax,flat_sel
+    mov fs,ax
+    call AllocatePipe
+;
+    pop eax
+    pop gs
+    pop fs
+    retf32
+CreateIntrPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateBulkPipe
+;
+;       DESCRIPTION:    Create bulk pipe
+;
+;       PARAMETERS:     ES      Device
+;                       CX      Buffer count
+;                       DL      Pipe #
+;
+;       RETURNS:        NC      OK
+;                         BX    Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+CreateBulkPipe   Proc far
+    int 3
+    retf32
+CreateBulkPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
