@@ -2614,7 +2614,8 @@ AllocatePacketSel    Proc near
     mov gs:usbpk_entry_count,cx
     mov gs:usbpk_rd_ptr,0
     mov gs:usbpk_wr_ptr,0
-    mov gs:usbpk_tail_ptr,0
+    dec cx
+    mov gs:usbpk_tail_ptr,cx
 ;
     mov di,SIZE usb_packet_struc
     xor eax,eax
@@ -2653,7 +2654,7 @@ StartPacketTds     Proc near
 ;
     mov esi,gs:xp_ring_linear
     mov cx,gs:xp_ring_entries
-    sub cx,2
+    dec cx
 
 sptBufLoop:
     mov eax,fs:[esi].trb_param
@@ -2676,7 +2677,12 @@ sptBufNext:
     loop sptBufLoop
 ;
     mov cx,gs:xp_ring_entries
-    sub cx,2
+    dec cx
+    sub esi,10h
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or al,20h
+    mov fs:[esi].trb_type,ax
+    mov fs:[esi].trb_control,0
 
 sptStartLoop:
     sub esi,10h
@@ -2690,7 +2696,6 @@ sptStartLoop:
     popad
     ret
 StartPacketTds     Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2825,7 +2830,6 @@ CloseStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqPacket   Proc far
-    int 3
     push ds
     push fs
     push eax
@@ -2885,7 +2889,57 @@ ReqPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RelPacket   Proc far
-    int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov ds,gs:usbp_packet_sel
+    EnterSection ds:usbpk_section
+;
+    mov bx,ds:usbpk_rd_ptr
+    cmp bx,ds:usbpk_wr_ptr
+    stc
+    je rlpkDone
+;
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb rlpkPtrOk
+;
+    xor bx,bx
+
+rlpkPtrOk:
+    mov ds:usbpk_rd_ptr,bx
+;
+    mov bx,ds:usbpk_tail_ptr
+    mov edx,gs:xp_ring_linear
+    movzx eax,bx
+    shl eax,4
+    add edx,eax
+    xor fs:[edx].trb_type,1
+;
+    inc bx
+    cmp bx,ds:usbpk_entry_count
+    jb rlpkTailOk
+;
+    xor bx,bx
+    add edx,10h
+    xor fs:[edx].trb_type,1
+
+rlpkTailOk:
+    mov ds:usbpk_tail_ptr,bx
+    clc
+
+rlpkDone:
+    LeaveSection ds:usbpk_section
+;
+    popad
+    pop fs
+    pop ds
+;
+    call StartPipe
     retf32
 RelPacket   Endp
 
