@@ -408,38 +408,6 @@ ResetSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           Block
-;
-;       DESCRIPTION:    Block
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Block   Proc far
-    EnterSection ds:usb_addr_section
-    retf32
-Block  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           Unblock
-;
-;       DESCRIPTION:    Unblock
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Unblock   Proc far
-    LeaveSection ds:usb_addr_section
-    retf32
-Unblock  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DisablePort
 ;
 ;           DESCRIPTION:    Disable port
@@ -456,31 +424,6 @@ DisablePort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DisableDev
-;
-;           DESCRIPTION:    Disable device
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisableDev   Proc far
-    push ax
-    push bx
-;
-    movzx bx,es:usbd_port    
-;    mov al,ds:[bx].xhc_port_slot_arr
-    call DisableSlot
-;
-    pop bx
-    pop ax
-    retf32
-DisableDev Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           IsRunning
 ;
 ;       DESCRIPTION:    Check if running
@@ -491,22 +434,6 @@ IsRunning   Proc far
     stc
     retf32
 IsRunning   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UnlinkPipes
-;
-;       DESCRIPTION:    Unlink pipes
-;
-;       PARAMETERS:     ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkPipes   Proc far
-    int 3
-    retf32
-UnlinkPipes   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -538,12 +465,9 @@ FreeAddress       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
+    int 3
     retf32
 FreeDev   Endp
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3051,6 +2975,123 @@ StopRaw   Proc far
     int 3
     retf32
 StopRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Block
+;
+;       DESCRIPTION:    Block
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Block   Proc far
+    EnterSection ds:usb_addr_section
+    retf32
+Block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Unblock
+;
+;       DESCRIPTION:    Unblock
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Unblock   Proc far
+    LeaveSection ds:usb_addr_section
+    retf32
+Unblock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UnlinkPipes
+;
+;       DESCRIPTION:    Unlink pipes
+;
+;       PARAMETERS:     ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkPipes   Proc far
+    push fs
+    push gs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+udvInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udvInNext
+;
+    mov gs,bx
+    call StopPipe
+
+udvInNext:
+    add si,2
+    loop udvInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+udvOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz udvOutNext
+;
+    mov gs,bx
+    call StopPipe
+
+udvOutNext:
+    add si,2
+    loop udvOutLoop
+;
+    movzx si,es:usbd_address
+    add si,si
+    mov ds:[si].xhc_slot_sel_arr,0
+;
+    popad
+    pop gs
+    pop fs
+    retf32
+UnlinkPipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DisableDev
+;
+;           DESCRIPTION:    Disable device
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableDev   Proc far
+    int 3
+    push ax
+    push bx
+;
+    movzx bx,es:usbd_port    
+;    mov al,ds:[bx].xhc_port_slot_arr
+    call DisableSlot
+;
+    pop bx
+    pop ax
+    retf32
+DisableDev Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
