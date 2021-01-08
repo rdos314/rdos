@@ -298,16 +298,6 @@ xp_db_target        DB ?
 
 xhci_pipe   ENDS
 
-
-xhci_packet_struc   STRUC
-
-xpk_base             usb_packet_struc <>
-
-xpk_result           DB ?
-
-xhci_packet_struc   ENDS
-
-
 data    SEGMENT byte public 'DATA'
 
 dummy   DB ?
@@ -2607,8 +2597,14 @@ FreePipeRing   Endp
 AllocatePacketSel    Proc near
     push gs
     push eax
+    push ecx
+    push edi
 ;
-    mov eax,SIZE xhci_packet_struc
+    inc cx
+    movzx eax,cx
+    shl ax,2
+    add ax,SIZE usb_packet_struc
+;
     push es
     AllocateSmallGlobalMem
     mov ax,es
@@ -2620,9 +2616,19 @@ AllocatePacketSel    Proc near
     mov gs:usbpk_wr_ptr,0
     mov gs:usbpk_tail_ptr,0
 ;
+    mov di,SIZE usb_packet_struc
+    xor eax,eax
+
+atdrLoop:
+    mov gs:[di],eax
+    add di,4
+    loop atdrLoop
+;
     mov bx,gs
     InitSection gs:usbpk_section
 ;
+    pop edi
+    pop ecx
     pop eax
     pop gs
     ret
@@ -3230,6 +3236,72 @@ ControlEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CheckIn
+;
+;       DESCRIPTION:    Check IN pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       ECX     Status
+;                       EDX     TRB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckIn   Proc near
+    int 3
+    push bx
+;
+    mov bx,gs:usbp_packet_sel
+    or bx,bx
+    jz citNotPacket
+;
+    int 3
+;    call HandlePacketIn
+    jmp citDone
+
+citNotPacket:
+
+citDone:
+    pop bx
+    ret
+CheckIn   Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckOut
+;
+;       DESCRIPTION:    Check OUT pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       ECX     Status
+;                       EDX     TRB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckOut   Proc near
+    push bx
+;
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz cotDone
+;
+    int 3
+;    call HandleRawOut
+
+cotDone:
+    pop bx
+    ret
+CheckOut   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PipeEvent
 ;
 ;       DESCRIPTION:    Pipe event
@@ -3266,6 +3338,9 @@ PipeEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 transfer_event Proc near
+    push es
+    push esi
+;
     mov al,es:[si+0Fh]
     movzx bx,al
     shl bx,1
@@ -3283,35 +3358,48 @@ teControl:
     jmp teDone
 
 tePipe:
-    mov dl,es:[si+0Eh]
-    mov al,dl
-    shr dl,1
-    test al,1
+    push fs
+    mov eax,es:[si].trb_param
+    mov ebx,es:[si].trb_param+4
+    mov ecx,es:[si].trb_status
+    mov si,es:[si+0Eh]
+    pop es
+    PhysicalToLinearMemBlk
+;
+    mov bx,si
+    mov bh,bl
+    shr bl,1
+    test bh,1
     jz teOut
 
 teIn:
-    movzx bx,dl
+    movzx bx,bl
     dec bx
     add bx,bx
-    mov ax,fs:[bx].usbd_in_pipe_arr
-    or dl,80h
-    jmp tePe
-
-teOut:
-    movzx bx,dl
-    dec bx
-    add bx,bx
-    mov ax,fs:[bx].usbd_out_pipe_arr
-
-tePe:
+    mov ax,es:[bx].usbd_in_pipe_arr
+;
     or ax,ax
     jz teDone
 ;
     int 3
     mov gs,ax
-    call PipeEvent
+    call CheckIn
+
+teOut:
+    movzx bx,bl
+    dec bx
+    add bx,bx
+    mov ax,es:[bx].usbd_out_pipe_arr
+;
+    or ax,ax
+    jz teDone
+;
+    mov gs,ax
+    call CheckOut
 
 teDone:    
+    pop esi
+    pop es
     ret
 transfer_event Endp
 
