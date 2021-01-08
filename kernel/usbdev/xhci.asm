@@ -319,97 +319,6 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ResetSlot
-;
-;       DESCRIPTION:    Reset slot
-;
-;       PARAMETERS:     DS      Function sel
-;                       AL      Slot ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetSlot  Proc near
-    push gs
-    push ax
-    push edi
-;
-    push ax
-    call WaitForCommandTrb
-    pop dx
-;    
-    xor eax,eax
-    mov gs:[edi].trb_param,eax
-    mov gs:[edi].trb_param+4,eax
-;
-    mov ah,dl
-    xor al,al
-    mov gs:[edi].trb_control,ax
-    mov al,TRB_TYPE_RESET_DEV
-    call SendCommandTrb
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne rsDone
-;
-    clc        
-
-rsDone:
-    pop edi
-    pop ax
-    pop gs    
-    ret
-ResetSlot  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DisablePort
-;
-;           DESCRIPTION:    Disable port
-;
-;       PARAMETERS:         DS      Function selector
-;                           DL      Port
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisablePort   Proc far
-    retf32
-DisablePort Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           IsRunning
-;
-;       DESCRIPTION:    Check if running
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsRunning   Proc far
-    stc
-    retf32
-IsRunning   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeAddress
-;
-;       DESCRIPTION:    Free address (slot)
-;
-;       PARAMETERS:     DS        Function sel
-;                       AL        Address (slot #)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeAddress   Proc far
-    retf32   
-FreeAddress       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           PortToSpeed
 ;
 ;           DESCRIPTION:    Convert Port SC to speed
@@ -552,6 +461,51 @@ sctWait:
     pop eax
     ret
 SendCommandTrb  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DisablePort
+;
+;           DESCRIPTION:    Disable port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisablePort   Proc far
+    retf32
+DisablePort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsRunning
+;
+;       DESCRIPTION:    Check if running
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsRunning   Proc far
+    push edi
+;
+    mov edi,ds:xhc_oper_offset
+;
+    test ds:[edi].orsUsbSts,1
+    jnz isrHalted
+;
+    clc
+    jmp isrDone
+
+isrHalted:
+    int 3
+    stc
+
+isrDone:
+    pop edi
+    retf32
+IsRunning   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1365,6 +1319,22 @@ AddressDevice   Endp
 ChangeAddress   Proc far
     retf32
 ChangeAddress  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeAddress
+;
+;       DESCRIPTION:    Free address (slot)
+;
+;       PARAMETERS:     DS        Function sel
+;                       AL        Address (slot #)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAddress   Proc far
+    retf32   
+FreeAddress       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
