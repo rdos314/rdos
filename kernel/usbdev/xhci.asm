@@ -767,18 +767,7 @@ AllocateInput    Proc near
     inc bx
     shl bx,6
 ;
-    mov al,ds:xhc_has_64
-    or al,al
-    jz ai32
-
-ai64:
-    mov si,64
-    jmp aiSizeOk
-
-ai32:
-    mov si,32
-
-aiSizeOk:
+    mov si,ds:xhc_context_size
     mov es:xi_input_offset,bx
 ;
     add bx,si
