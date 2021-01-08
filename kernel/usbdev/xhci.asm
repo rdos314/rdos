@@ -2516,7 +2516,7 @@ CreatePipeRing   Proc near
     push es
     pushad
 ;
-    inc cx
+    add cx,2
     mov gs:xp_ring_entries,cx
     shl cx,4
     AllocateMemBlk
@@ -2600,6 +2600,7 @@ AllocatePacketSel    Proc near
     push ecx
     push edi
 ;
+    inc cx
     movzx eax,cx
     shl ax,2
     add ax,SIZE usb_packet_struc
@@ -2652,7 +2653,7 @@ StartPacketTds     Proc near
 ;
     mov esi,gs:xp_ring_linear
     mov cx,gs:xp_ring_entries
-    dec cx
+    sub cx,2
 
 sptBufLoop:
     mov eax,fs:[esi].trb_param
@@ -2675,7 +2676,7 @@ sptBufNext:
     loop sptBufLoop
 ;
     mov cx,gs:xp_ring_entries
-    dec cx
+    sub cx,2
 
 sptStartLoop:
     sub esi,10h
@@ -2825,6 +2826,49 @@ CloseStream   Endp
 
 ReqPacket   Proc far
     int 3
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    mov ds,gs:usbp_packet_sel
+    mov bx,ds:usbpk_rd_ptr
+    cmp bx,ds:usbpk_wr_ptr
+    jne rqpkGet
+;
+    stc
+    jmp rqpkDone
+
+rqpkGet:
+    shl bx,2
+    add bx,SIZE usb_packet_struc
+    xor eax,eax
+    xchg eax,ds:[bx]
+    mov cx,gs:ued_maxsize
+    sub cx,ax
+    shr eax,24
+    cmp al,1
+    stc
+    jne rqpkDone
+;
+    mov edx,gs:xp_ring_linear
+    movzx eax,ds:usbpk_rd_ptr
+    shl eax,4
+    add edx,eax
+    mov eax,fs:[edx].trb_param
+    mov ebx,fs:[edx].trb_param+4
+    PhysicalToLinearMemBlk
+    clc
+
+rqpkDone:
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+
     retf32
 ReqPacket   Endp
 
