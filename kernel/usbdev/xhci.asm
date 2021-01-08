@@ -2600,7 +2600,6 @@ AllocatePacketSel    Proc near
     push ecx
     push edi
 ;
-    inc cx
     movzx eax,cx
     shl ax,2
     add ax,SIZE usb_packet_struc
@@ -3266,7 +3265,6 @@ HandlePacketIn   Proc near
     cmp edx,eax
     jae hpiLeave
 ;
-    int 3
     mov bx,dx
     shl bx,2
     add bx,SIZE usb_packet_struc
