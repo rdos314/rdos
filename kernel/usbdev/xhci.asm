@@ -2313,9 +2313,9 @@ ControlMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           StopEndpoint
+;   NAME:           StopPipe
 ;
-;   DESCRIPTION:    Stop endpoint
+;   DESCRIPTION:    Stop pipe
 ;
 ;   PARAMETERS:     DS      Function selector
 ;                   ES      Device selector
@@ -2323,7 +2323,7 @@ ControlMsg   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopEndpoint   Proc near
+StopPipe   Proc near
     push eax
     push edi
 ;
@@ -2350,7 +2350,54 @@ seDone:
     pop edi
     pop eax
     ret
-StopEndpoint   Endp
+StopPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetPipeTr
+;
+;   DESCRIPTION:    Set pipe TR
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;                   GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPipeTr   Proc near
+    pushad
+;
+    call WaitForCommandTrb
+;
+    mov eax,gs:xp_ring_phys
+    or al,1
+    mov ds:[di].trb_param,eax
+    mov eax,gs:xp_ring_phys+4
+    mov ds:[di].trb_param+4,eax
+;
+    mov ah,es:xd_slot
+    mov al,gs:xp_db_target
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_SET_TR
+    call SendCommandTrb
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    je sptrOk
+;
+    stc
+    jmp sptrDone
+
+sptrOk:
+    call InitControlRing
+    clc        
+
+sptrDone:
+    popad
+    ret
+SetPipeTr   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2398,7 +2445,7 @@ AllocatePipe   Proc near
 
 apDirOk:
     mov gs:xp_db_target,bl
-    call StopEndpoint
+    call StopPipe
     mov bx,gs
 ;
     pop edi
@@ -2596,13 +2643,77 @@ AllocatePacketSel	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartPacketTds     Proc near
-    push ds
     pushad
 ;
+    mov esi,gs:xp_ring_linear
+    mov cx,gs:xp_ring_entries
+    dec cx
+
+sptBufLoop:
+    mov eax,fs:[esi].trb_param
+    or eax,fs:[esi].trb_param+4
+    jnz sptBufNext
+;
+    push cx
+    mov cx,gs:ued_maxsize
+    AllocateMemBlk
+    pop cx
+;
+    mov fs:[esi].trb_param,eax
+    mov fs:[esi].trb_param+4,ebx
+
+sptBufNext:
+    movzx eax,gs:ued_maxsize
+    mov fs:[esi].trb_status,eax    
+;
+    add esi,10h
+    loop sptBufLoop
+;
+    mov cx,gs:xp_ring_entries
+    dec cx
+
+sptStartLoop:
+    sub esi,10h
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or ax,gs:xp_ring_pcs
+    or al,20h
+    mov fs:[esi].trb_type,ax
+    mov fs:[esi].trb_control,0
+    loop sptStartLoop
+;
     popad
-    pop ds
     ret
 StartPacketTds     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPipe
+;
+;       DESCRIPTION:    Start pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPipe     Proc near
+    push eax
+    push esi
+;
+    movzx esi,es:xd_slot
+    shl esi,2
+    add esi,ds:xhc_db_offset
+    movzx eax,gs:xp_db_target
+    mov ds:[esi],eax
+;
+    pop esi
+    pop eax
+    ret
+StartPipe   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2631,6 +2742,8 @@ OpenPacket   Proc far
     mov gs:usbp_packet_sel,bx
 ;
     call StartPacketTds
+    call SetPipeTr
+    call StartPipe
     clc
 ;
     popad
