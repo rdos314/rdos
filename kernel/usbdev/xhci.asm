@@ -319,50 +319,6 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DisableSlot
-;
-;       DESCRIPTION:    Disable slot
-;
-;       PARAMETERS:     DS      Function sel
-;                       AL      Slot ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisableSlot  Proc near
-    push gs
-    push edi
-;
-    push ax
-    call WaitForCommandTrb
-    pop dx
-;    
-    xor eax,eax
-    mov gs:[edi].trb_param,eax
-    mov gs:[edi].trb_param+4,eax
-;
-    mov ah,dl
-    xor al,al
-    mov gs:[edi].trb_control,ax
-    mov al,TRB_TYPE_DISABLE_SLOT
-    call SendCommandTrb
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne dsDone
-;
-    mov al,gs:[edi+100Fh]
-    clc        
-
-dsDone:
-    pop edi
-    pop gs    
-    ret
-DisableSlot  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ResetSlot
 ;
 ;       DESCRIPTION:    Reset slot
@@ -448,26 +404,8 @@ IsRunning   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeAddress   Proc far
-    call DisableSlot
     retf32   
 FreeAddress       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:               FreeDev
-;
-;       DESCRIPTION:        Free device sel
-;
-;       PARAMETERS:         DS      Function selector
-;                           ES      Device
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeDev   Proc far
-    int 3
-    retf32
-FreeDev   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1064,6 +1002,45 @@ CreateDev   Proc far
     pop fs
     retf32   
 CreateDev       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               FreeDev
+;
+;       DESCRIPTION:        Free device sel
+;
+;       PARAMETERS:         DS      Function selector
+;                           ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDev   Proc far
+    int 3
+    push esi
+    push edi
+;
+    call WaitForCommandTrb
+;
+    mov ah,es:xd_slot
+    xor al,al
+    mov ds:[di].trb_control,ax
+;
+    mov al,TRB_TYPE_DISABLE_SLOT
+    call SendCommandTrb
+;
+    mov al,ds:[si].cev_result
+    cmp al,1
+    stc
+    jne fdDone
+;
+    clc        
+
+fdDone:
+    pop edi
+    pop esi
+    retf32
+FreeDev   Endp
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3081,15 +3058,6 @@ UnlinkPipes   Endp
 
 DisableDev   Proc far
     int 3
-    push ax
-    push bx
-;
-    movzx bx,es:usbd_port    
-;    mov al,ds:[bx].xhc_port_slot_arr
-    call DisableSlot
-;
-    pop bx
-    pop ax
     retf32
 DisableDev Endp
         
