@@ -1016,7 +1016,6 @@ CreateDev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev   Proc far
-    int 3
     push esi
     push edi
 ;
@@ -1168,7 +1167,7 @@ InitControlRing   Proc near
     mov es:xd_control_pcs,1
     mov es:xd_control_thread,0
 ;
-    mov edi,edx
+    movzx edi,dx
     mov ecx,0Ch
     xor eax,eax
     rep stos dword ptr es:[edi]
