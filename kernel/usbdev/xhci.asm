@@ -3574,6 +3574,8 @@ port_event Proc near
     shl esi,4
     add esi,ds:xhc_port_offset
     mov eax,ds:[esi]
+    and eax,0EE03E1h
+    mov ds:[esi],eax
     NotifyUsbPortState
     pop esi
 
