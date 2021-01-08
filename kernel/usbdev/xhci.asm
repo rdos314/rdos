@@ -3236,6 +3236,82 @@ ControlEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandlePacketIn
+;
+;       DESCRIPTION:    Handle packet IN pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Packet sel
+;                       ECX     Status
+;                       EDX     TRB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePacketIn   Proc near
+    push ds
+    push ebx
+    push edx
+;
+    mov ds,bx
+    EnterSection ds:usbpk_section
+;
+    sub edx,gs:xp_ring_linear
+    jc hpiLeave
+;
+    shr edx,4
+    movzx eax,ds:usbpk_entry_count
+    cmp edx,eax
+    jae hpiLeave
+;
+    int 3
+    mov bx,dx
+    shl bx,2
+    add bx,SIZE usb_packet_struc
+    mov ds:[bx],ecx
+;
+    inc dx
+    cmp dx,ds:usbpk_entry_count
+    jb hpiSave
+;
+    xor dx,dx
+
+hpiSave:
+    mov ds:usbpk_wr_ptr,dx
+;
+    mov eax,ecx
+    shr eax,24
+    cmp al,1
+    je hpiNotError
+;
+    mov dl,gs:ued_address
+    call ReportPipeStatus
+
+hpiNotError:
+    xor bx,bx
+    xchg bx,gs:usbp_wait
+    or bx,bx
+    jz hpiLeave
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+hpiLeave:
+    LeaveSection ds:usbpk_section
+;
+    pop edx
+    pop ebx
+    pop ds
+    ret
+HandlePacketIn Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -3250,15 +3326,13 @@ ControlEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckIn   Proc near
-    int 3
     push bx
 ;
     mov bx,gs:usbp_packet_sel
     or bx,bx
     jz citNotPacket
 ;
-    int 3
-;    call HandlePacketIn
+    call HandlePacketIn
     jmp citDone
 
 citNotPacket:
@@ -3298,32 +3372,6 @@ cotDone:
     pop bx
     ret
 CheckOut   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PipeEvent
-;
-;       DESCRIPTION:    Pipe event
-;
-;       PARAMETERS:     DS     Function sel
-;                       ES:SI  Event TRB
-;                       FS     Device sel
-;                       GS     Pipe sel
-;                       DL     Pipe #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PipeEvent Proc near
-    mov al,es:[si+0Bh]
-    cmp al,1
-    je pevNotError
-;
-    call ReportPipeStatus
-
-pevNotError:
-    ret
-PipeEvent Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3381,7 +3429,6 @@ teIn:
     or ax,ax
     jz teDone
 ;
-    int 3
     mov gs,ax
     call CheckIn
 
@@ -3394,6 +3441,7 @@ teOut:
     or ax,ax
     jz teDone
 ;
+    int 3
     mov gs,ax
     call CheckOut
 
