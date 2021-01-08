@@ -2733,7 +2733,6 @@ OpenPacket   Proc far
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,ax
 ;
@@ -2749,7 +2748,7 @@ OpenPacket   Proc far
     popad
     pop fs
     pop ds
-    ret
+    retf32
 OpenPacket  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
