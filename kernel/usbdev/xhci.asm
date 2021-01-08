@@ -291,17 +291,22 @@ xp_base             usb_pipe_struc <>
 xp_ring_linear      DD ?
 xp_ring_phys        DD ?,?
 xp_ring_entries     DW ?
-
-xp_rd_ptr           DW ?
-xp_wr_ptr           DW ?
-xp_tail_ptr         DW ?
-
 xp_ring_pcs         DW ?
 
 xp_slot             DB ?
 xp_db_target        DB ?
 
 xhci_pipe   ENDS
+
+
+xhci_packet_struc   STRUC
+
+xpk_base             usb_packet_struc <>
+
+xpk_result           DB ?
+
+xhci_packet_struc   ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -2379,11 +2384,6 @@ AllocatePipe   Proc near
     mov gs,ax
     pop es
 ;
-    mov gs:xp_rd_ptr,0
-    mov gs:xp_wr_ptr,0
-    mov gs:xp_tail_ptr,0
-    mov gs:xp_ring_pcs,1
-;        
     mov al,es:xd_slot
     mov gs:xp_slot,al
 ;
@@ -2464,6 +2464,149 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreatePipeRing
+;
+;       DESCRIPTION:    Create pipe ring
+;
+;       PARAMETERS:     DS       Function sel
+;                       ES       Device sel
+;                       GS       Pipe sel
+;                       CX       Entries (excluding link)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePipeRing   Proc near
+    push es
+    pushad
+;
+    inc cx
+    mov gs:xp_ring_entries,cx
+    shl cx,4
+    AllocateMemBlk
+    mov gs:xp_ring_linear,edx
+    mov gs:xp_ring_phys,eax
+    mov gs:xp_ring_phys+4,ebx
+    mov gs:xp_ring_pcs,1
+;
+    push eax
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    movzx ecx,gs:xp_ring_entries
+    dec ecx
+    shl ecx,2
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop eax
+;
+    mov es:[edi].trb_param,eax
+    mov es:[edi].trb_param+4,ebx
+    mov es:[edi].trb_status,0
+    mov es:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
+    mov es:[edi].trb_control,0
+;
+    popad
+    pop es
+    ret
+CreatePipeRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreePipeRing
+;
+;       DESCRIPTION:    Free pipe ring
+;
+;       PARAMETERS:     DS       Function sel
+;                       ES       Device sel
+;                       GS       Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePipeRing   Proc near
+    pushad
+;
+    mov cx,gs:xp_ring_entries
+    inc cx
+    shl cx,4
+    mov edx,gs:xp_ring_linear
+    FreeLinearMemBlk
+;
+    mov gs:xp_ring_linear,0
+    mov gs:xp_ring_phys,0
+    mov gs:xp_ring_phys+4,0
+;
+    popad
+    ret
+FreePipeRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocatePacketSel
+;
+;       DESCRIPTION:    Allocate TD ring
+;
+;       PARAMETERS:     ES      Device sel
+;                       FS      Flat sel
+;                       CX      Buffer count
+;
+;       RETURNS:        BX      Packet sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePacketSel    Proc near
+    push gs
+    push eax
+;
+    mov eax,SIZE xhci_packet_struc
+    push es
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es
+;
+    mov gs,ax
+    mov gs:usbpk_entry_count,cx
+    mov gs:usbpk_rd_ptr,0
+    mov gs:usbpk_wr_ptr,0
+    mov gs:usbpk_tail_ptr,0
+;
+    mov bx,gs
+    InitSection gs:usbpk_section
+;
+    pop eax
+    pop gs
+    ret
+AllocatePacketSel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPacketTds
+;
+;       DESCRIPTION:    Start packet TDs
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPacketTds     Proc near
+    push ds
+    pushad
+;
+    popad
+    pop ds
+    ret
+StartPacketTds     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           OpenPacket
 ;
 ;       DESCRIPTION:    Open packet interface
@@ -2475,13 +2618,24 @@ CreateBulkPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPacket   Proc far
-    push eax
-    push edx
+    push ds
+    push fs
+    pushad
 ;
     int 3
+    mov ax,flat_sel
+    mov fs,ax
 ;
-    pop edx
-    pop eax
+    call CreatePipeRing
+    call AllocatePacketSel
+    mov gs:usbp_packet_sel,bx
+;
+    call StartPacketTds
+    clc
+;
+    popad
+    pop fs
+    pop ds
     ret
 OpenPacket  Endp
 
