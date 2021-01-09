@@ -303,6 +303,7 @@ xhci_raw_struc     STRUC
 xr_base            usb_raw_struc <>
 
 xr_pos             DW ?
+xr_remain          DW ?
 xr_res             DB ?
 
 xhci_raw_struc     ENDS
@@ -3760,6 +3761,67 @@ HandlePacketIn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandleRaw
+;
+;       DESCRIPTION:    Handle raw packet
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Raw sel
+;                       ECX     Status
+;                       EDX     TRB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRaw   Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ds,bx
+    mov bx,ds:usbr_thread
+    or bx,bx
+    jz hrDone
+;
+    sub edx,gs:xp_ring_linear
+    jc hrDone
+;
+    shr edx,4
+    movzx eax,ds:xr_pos
+    cmp edx,eax
+    jae hrDone
+;
+    mov ds:xr_remain,cx
+;
+    mov eax,ecx
+    shr eax,24
+    mov ds:xr_res,al
+;
+    cmp al,1
+    je hrNotError
+;
+    mov dl,gs:ued_address
+    call ReportPipeStatus
+
+hrNotError:
+    Signal
+
+hrDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+HandleRaw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -3784,6 +3846,12 @@ CheckIn   Proc near
     jmp citDone
 
 citNotPacket:
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz citDone
+;
+    int 3
+    call HandleRaw
 
 citDone:
     pop bx
@@ -3814,7 +3882,7 @@ CheckOut   Proc near
     jz cotDone
 ;
     int 3
-;    call HandleRawOut
+    call HandleRaw
 
 cotDone:
     pop bx
