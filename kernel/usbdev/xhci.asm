@@ -298,6 +298,15 @@ xp_db_target        DB ?
 
 xhci_pipe   ENDS
 
+xhci_raw_struc     STRUC
+
+xr_base            usb_raw_struc <>
+
+xr_pos             DW ?
+xr_res             DB ?
+
+xhci_raw_struc     ENDS
+
 data    SEGMENT byte public 'DATA'
 
 dummy   DB ?
@@ -3006,9 +3015,10 @@ OpenRaw   Proc far
     push edx
 ;
     push es
-    mov eax,SIZE usb_raw_struc
+    mov eax,SIZE xhci_raw_struc
     AllocateSmallGlobalMem
     mov bx,es
+    mov es:xr_pos,0
     pop es
 ;
     mov ax,cx
@@ -3175,6 +3185,92 @@ ReadRaw   Endp
 
 WriteRaw   Proc far
     int 3
+    push fs
+    pushad
+;
+    ClearSignal
+    mov fs,gs:usbp_raw_sel
+    GetThread
+    mov fs:usbr_thread,ax
+    mov fs:xr_res,0
+;
+    movzx esi,fs:xr_pos
+    shl esi,4
+    add esi,gs:xp_ring_linear
+    movzx ecx,cx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov fs:[esi].trb_status,ecx
+    xor fs:[esi].trb_type,1
+    pop ds
+;
+    call StartPipe
+;
+    push edx
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+;
+    mov fs,gs:usbp_raw_sel
+    mov al,fs:xr_res
+    or al,al
+    jnz wrEval
+;
+    push edx
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+;
+    mov fs,gs:usbp_raw_sel
+    mov al,fs:xr_res
+    or al,al
+    jnz wrEval
+;
+    call StopPipe
+    mov ax,25
+    WaitMilliSec
+    stc
+
+wrEval:
+    mov fs,gs:usbp_raw_sel
+    mov fs:usbr_thread,0
+;
+    mov bx,fs:xr_pos
+    inc bx
+    mov ax,gs:xp_ring_entries
+    dec ax
+    cmp bx,ax
+    jb wrPtrOk
+;
+    push fs
+    mov ax,flat_sel
+    mov fs,ax
+    movzx esi,bx
+    dec esi    
+    shl esi,4
+    add esi,gs:xp_ring_linear
+    xor fs:[esi].trb_type,1
+    pop fs
+;
+    xor bx,bx
+
+wrPtrOk:
+    mov fs:xr_pos,bx
+;
+    cmp al,1
+    clc
+    je wrDone
+;
+    stc
+
+wrDone:
+    popad
+    pop fs
     retf32
 WriteRaw   Endp
 
