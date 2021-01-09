@@ -2203,6 +2203,7 @@ ControlMsg   Endp
 
 StopPipe   Proc near
     push eax
+    push esi
     push edi
 ;
     call GetPipeState
@@ -2230,6 +2231,7 @@ StopPipe   Proc near
 
 seDone:
     pop edi
+    pop esi
     pop eax
     ret
 StopPipe   Endp
