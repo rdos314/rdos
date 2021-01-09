@@ -143,7 +143,7 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;       DESCRIPTION:    Open USB event
 ;
-;       PARAMETERS:     CX	Max events
+;       PARAMETERS:     CX      Max events
 ;
 ;       RETURNS:        BX      Event handle       
 ;                           
@@ -623,7 +623,7 @@ delete_event_handle    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddEvent	Proc near
+AddEvent        Proc near
     push di
 ;
     mov di,es:ues_wr_ptr
@@ -677,7 +677,7 @@ AddEvent        Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DistEvent	Proc near
+DistEvent       Proc near
     push ds
     push es
     push cx
@@ -703,7 +703,7 @@ dueLeave:
     pop es
     pop ds
     ret
-DistEvent	Endp
+DistEvent       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1272,7 +1272,7 @@ send_usb_dev_control_msg32      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetPipe	Proc near
+GetPipe Proc near
     push bx
     push si
 ;
@@ -1320,7 +1320,7 @@ GetPipe  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConfigPipe	Proc near
+ConfigPipe      Proc near
     pushad
 ;
     mov ax,es:usbd_curr_config
@@ -1432,7 +1432,7 @@ ConfigPipe  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearPipe	Proc near
+ClearPipe       Proc near
     push bx
 ;
     mov bx,gs:usbp_packet_sel
@@ -1487,7 +1487,7 @@ ClearPipe       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartReconfigPipe	Proc near
+StartReconfigPipe       Proc near
     push bx
 ;
     call GetPipe
@@ -1521,7 +1521,7 @@ StartReconfigPipe       Endp
 
 open_usb_packet_pipe_name DB 'Configure Usb Packet Pipe', 0
 
-open_usb_packet_pipe	Proc far
+open_usb_packet_pipe    Proc far
     push ds
     push es
     push gs
@@ -1605,7 +1605,7 @@ open_usb_packet_pipe Endp
 
 open_usb_stream_pipe_name DB 'Open Usb Stream Pipe', 0
 
-open_usb_stream_pipe	Proc far
+open_usb_stream_pipe    Proc far
     push ds
     push es
     push gs
@@ -1700,7 +1700,7 @@ open_usb_stream_pipe Endp
 
 open_usb_raw_pipe_name DB 'Open Usb Raw Pipe', 0
 
-open_usb_raw_pipe	Proc far
+open_usb_raw_pipe       Proc far
     push ds
     push gs
     pushad
@@ -1764,7 +1764,7 @@ open_usb_raw_pipe Endp
 
 close_usb_pipe_name DB 'Close Usb Pipe', 0
 
-close_usb_pipe	Proc far
+close_usb_pipe  Proc far
     push ds
     push es
     push gs
@@ -1965,7 +1965,7 @@ GetFreePackets  Endp
 
 get_used_usb_buffers_name DB 'Get Used Usb Buffers', 0
 
-get_used_usb_buffers	Proc far
+get_used_usb_buffers    Proc far
     push ds
     push es
     push gs
@@ -2047,7 +2047,7 @@ get_used_usb_buffers Endp
 
 get_free_usb_buffers_name DB 'Get Free Usb Buffers', 0
 
-get_free_usb_buffers	Proc far
+get_free_usb_buffers    Proc far
     push ds
     push es
     push gs
@@ -2129,7 +2129,7 @@ get_free_usb_buffers Endp
 
 get_usb_buffer_size_name DB 'Get Usb Buffer Size', 0
 
-get_usb_buffer_size	Proc far
+get_usb_buffer_size     Proc far
     push ds
     push es
     push gs
@@ -2209,7 +2209,7 @@ get_usb_buffer_size Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPacket	Proc near
+ReadPacket      Proc near
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:req_packet_proc
@@ -2237,7 +2237,7 @@ ReadPacket	Proc near
 rpkDone:
     pop ds
     ret
-ReadPacket	Endp
+ReadPacket      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2253,11 +2253,11 @@ ReadPacket	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadStream	Proc near
+ReadStream      Proc near
     int 3
     stc
     ret
-ReadStream	Endp
+ReadStream      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2273,11 +2273,11 @@ ReadStream	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadRaw	Proc near
+ReadRaw Proc near
     int 3
     stc
     ret
-ReadRaw	Endp
+ReadRaw Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2296,7 +2296,7 @@ ReadRaw	Endp
 
 read_usb_pipe_name DB 'Read Usb Pipe', 0
 
-ReadPipe	Proc near
+ReadPipe        Proc near
     push ds
     push es
     push fs
@@ -2371,12 +2371,12 @@ rupDone:
     ret
 ReadPipe Endp
 
-read_usb_pipe32	Proc far
+read_usb_pipe32 Proc far
     call ReadPipe
     retf32
 read_usb_pipe32 Endp
 
-read_usb_pipe16	Proc far
+read_usb_pipe16 Proc far
     push edi
     movzx edi,di
     call ReadPipe
@@ -2398,11 +2398,11 @@ read_usb_pipe16 Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteStream	Proc near
+WriteStream     Proc near
     int 3
     stc
     ret
-WriteStream	Endp
+WriteStream     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2418,10 +2418,10 @@ WriteStream	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteRaw	Proc near
+WriteRaw        Proc near
     stc
     ret
-WriteRaw	Endp
+WriteRaw        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2439,7 +2439,7 @@ WriteRaw	Endp
 
 write_usb_pipe_name DB 'Write Usb Pipe', 0
 
-WritePipe	Proc near
+WritePipe       Proc near
     push ds
     push es
     push fs
@@ -2506,12 +2506,12 @@ wupDone:
     ret
 WritePipe Endp
 
-write_usb_pipe32	Proc far
+write_usb_pipe32        Proc far
     call WritePipe
     retf32
 write_usb_pipe32 Endp
 
-write_usb_pipe16	Proc far
+write_usb_pipe16        Proc far
     push edi
     movzx edi,di
     call WritePipe
@@ -4309,6 +4309,161 @@ GetActivePorts     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CleanupPipes
+;
+;       Description:    Cleanup pipes
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupPipes       Proc near
+    push gs
+    push bx
+    push cx
+    push si
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+clpInLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz clpInNext
+;
+    mov gs,bx
+    call ClearPipe
+
+clpInNext:
+    add si,2
+    loop clpInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+clpOutLoop:
+    mov bx,es:[si]
+    or bx,bx
+    jz clpOutNext
+;
+    mov gs,bx
+    call ClearPipe
+
+clpOutNext:
+    add si,2
+    loop clpOutLoop
+;
+    pop si
+    pop cx
+    pop bx
+    pop gs
+    ret
+CleanupPipes  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeConfig
+;
+;       Description:    Free configurations
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeConfig       Proc near
+    push ax
+    push bx
+    push cx
+;
+    mov cx,16
+    mov bx,OFFSET usbd_config_sel
+
+fcLoop:
+    xor ax,ax
+    xchg ax,es:[bx]
+    or ax,ax
+    jz fcNext
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+fcNext:
+    add bx,2
+    loop fcLoop    
+;
+    pop cx
+    pop bx
+    pop ax
+    ret
+FreeConfig   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreePipes
+;
+;       Description:    Free pipes
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePipes       Proc near
+    push bx
+    push cx
+    push si
+;
+    mov cx,15
+    mov si,OFFSET usbd_in_pipe_arr
+
+fpInLoop:
+    xor bx,bx
+    xchg bx,es:[si]
+    or bx,bx
+    jz fpInNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fpInNext:
+    add si,2
+    loop fpInLoop
+;
+    mov cx,15
+    mov si,OFFSET usbd_out_pipe_arr
+
+fpOutLoop:
+    xor bx,bx
+    xchg bx,es:[si]
+    or bx,bx
+    jz fpOutNext
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+fpOutNext:
+    add si,2
+    loop fpOutLoop
+;
+    pop si
+    pop cx
+    pop bx
+    ret
+FreePipes  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CleanupDev
 ;
 ;       Description:    Cleanup device
@@ -4319,64 +4474,10 @@ GetActivePorts     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CleanupDev       Proc near
-    pushad
-;
+    call CleanupPipes
     call fword ptr ds:free_dev_proc
-;
-    mov cx,16
-    mov bx,OFFSET usbd_config_sel
-
-cdConfLoop:
-    mov ax,es:[bx]
-    or ax,ax
-    jz cdConfNext
-;
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-
-cdConfNext:
-    add bx,2
-    loop cdConfLoop    
-;
-    mov cx,15
-    mov si,OFFSET usbd_in_pipe_arr
-
-cdInLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz cdInNext
-
-cdInBufDone:
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-cdInNext:
-    add si,2
-    loop cdInLoop
-;
-    mov cx,15
-    mov si,OFFSET usbd_out_pipe_arr
-
-cdOutLoop:
-    mov bx,es:[si]
-    or bx,bx
-    jz cdOutNext
-
-cdOutBufDone:
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-cdOutNext:
-    add si,2
-    loop cdOutLoop
-;
-    popad
+    call FreeConfig
+    call FreePipes
     ret
 CleanupDev       Endp
 
@@ -4393,13 +4494,13 @@ CleanupDev       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDev       Proc near
-    pushad
+    push ax
 ;
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
     FreeMemBlk
 ;
-    popad
+    pop ax
     ret
 FreeDev       Endp
 
@@ -4586,7 +4687,7 @@ HexToAscii      ENDP
 ;
 ;       description:    Notify USB port state
 ;
-;       parameters:     DS	Function
+;       parameters:     DS      Function
 ;                       BX      Hub sel
 ;                       DL      Port
 ;                       AX      State
