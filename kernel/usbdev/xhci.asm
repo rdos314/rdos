@@ -1384,6 +1384,35 @@ UpdateMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetPipeState
+;
+;   DESCRIPTION:    Get pipe state
+;
+;   PARAMETERS:     DS      Function selector
+;                   ES      Device selector
+;                   GS      Pipe sel
+;
+;   RETURNS:        AL      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPipeState   Proc near
+    push bx
+;
+    movzx bx,gs:xp_db_target
+    sub bx,2
+    add bx,bx
+    mov bx,es:[bx].xd_pipe_context_arr_offset
+    mov al,es:[bx].ec_state
+    and al,7
+;
+    pop bx
+    ret
+GetPipeState  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           CreateDummyRing
 ;
 ;   DESCRIPTION:    Create dummy ring
@@ -2175,6 +2204,10 @@ ControlMsg   Endp
 StopPipe   Proc near
     push eax
     push edi
+;
+    call GetPipeState
+    cmp al,1
+    jne seDone
 ;
     call WaitForCommandTrb
 ;    
