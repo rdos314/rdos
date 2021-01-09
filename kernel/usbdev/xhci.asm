@@ -2951,6 +2951,42 @@ WriteStream   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupRawTds
+;
+;       DESCRIPTION:    Setup raw TDs
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;                       EBX:EAX Buffer physical address
+;                       ECX     Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupRawTds     Proc near
+    pushad
+;
+    mov esi,gs:xp_ring_linear
+    mov bp,gs:xp_ring_entries
+    dec bp
+
+srtBufLoop:
+    mov fs:[esi].trb_param,eax
+    mov fs:[esi].trb_param+4,ebx
+    mov fs:[esi].trb_status,ecx
+;
+    add esi,10h
+    sub bp,1
+    jnz srtBufLoop
+;
+    popad
+    ret
+SetupRawTds    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           OpenRaw
 ;
 ;       DESCRIPTION:    Open raw interface
@@ -2963,6 +2999,65 @@ WriteStream   Endp
 
 OpenRaw   Proc far
     int 3
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    push es
+    mov eax,SIZE usb_raw_struc
+    AllocateSmallGlobalMem
+    mov bx,es
+    pop es
+;
+    mov ax,cx
+    xor dx,dx
+    dec ax
+    add ax,gs:ued_maxsize
+    cmp ax,1000h
+    jbe orInRange
+;
+    mov ax,1000h
+
+orInRange:
+    div gs:ued_maxsize
+    mul gs:ued_maxsize
+    mov cx,ax
+;
+    mov gs:usbp_raw_sel,bx
+;
+    push gs
+;
+    mov gs,bx
+    mov gs:usbr_buf_size,cx
+;
+    AllocateMemBlk
+    mov gs:usbr_buf_linear,edx
+;
+    push bx
+    AllocateGdt
+    movzx ecx,cx
+    CreateDataSelector16
+    mov gs:usbr_buf_sel,bx
+    pop bx
+;
+    pop gs
+;
+    push cx
+    mov cx,3
+    call CreatePipeRing
+    pop cx
+;
+    call SetupRawTds
+    call SetPipeTr
+
+orDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
     ret
 OpenRaw  Endp
 

@@ -2864,6 +2864,20 @@ OpenRaw   Proc far
     mov bx,es
     pop es
 ;
+    mov ax,cx
+    xor dx,dx
+    dec ax
+    add ax,gs:ued_maxsize
+    cmp ax,1000h
+    jbe orInRange
+;
+    mov ax,1000h
+
+orInRange:
+    div gs:ued_maxsize
+    mul gs:ued_maxsize
+    mov cx,ax
+;
     mov gs:usbp_raw_sel,bx
     mov gs,bx
     mov gs:usbr_buf_size,cx
