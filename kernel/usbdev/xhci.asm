@@ -2460,7 +2460,6 @@ FreePipeRing   Proc near
     pushad
 ;
     mov cx,gs:xp_ring_entries
-    inc cx
     shl cx,4
     mov edx,gs:xp_ring_linear
     FreeLinearMemBlk
@@ -2623,6 +2622,91 @@ StartPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FreePacketTds
+;
+;       DESCRIPTION:    Free TDs in ring
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;                       BX      Packet sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePacketTds Proc near
+    push gs
+    pushad
+;
+    mov esi,gs:xp_ring_linear
+    mov cx,gs:xp_ring_entries
+    dec cx
+
+fptBufLoop:
+    mov eax,fs:[esi].trb_param
+    mov ebx,fs:[esi].trb_param+4
+    or eax,eax
+    jnz fptBufFree
+;
+    or ebx,ebx
+    jz fptBufNext
+
+fptBufFree:
+    push cx
+    mov cx,gs:ued_maxsize
+    FreePhysicalMemBlk
+    pop cx
+
+fptBufNext:
+    add esi,10h
+    loop fptBufLoop
+;
+    popad
+    pop gs
+    ret
+FreePacketTds Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreePacketSel
+;
+;       DESCRIPTION:    Free packet sel
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device selector
+;                       FS      Flat sel
+;                       GS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePacketSel Proc near
+    push ax
+    push bx
+;
+    xor bx,bx
+    xchg bx,gs:usbp_packet_sel
+    or bx,bx
+    jz dtdDone
+;
+    call StopPipe
+    call FreePacketTds
+    call FreePipeRing
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+
+dtdDone:
+    pop bx
+    pop ax
+    ret
+FreePacketSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           OpenPacket
 ;
 ;       DESCRIPTION:    Open packet interface
@@ -2669,7 +2753,17 @@ OpenPacket  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePacket   Proc far
-    int 3
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+    call FreePacketSel
+;
+    pop ax
+    pop fs
+    pop ds
     retf32
 ClosePacket   Endp
 
