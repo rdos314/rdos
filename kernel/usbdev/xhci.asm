@@ -2985,6 +2985,11 @@ srtBufLoop:
     mov fs:[esi].trb_param+4,ebx
     mov fs:[esi].trb_status,ecx
 ;
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or al,20h
+    mov fs:[esi].trb_type,ax
+    mov fs:[esi].trb_control,0
+;
     add esi,10h
     sub bp,1
     jnz srtBufLoop
