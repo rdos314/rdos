@@ -1501,7 +1501,6 @@ StartReconfigPipe       Endp
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
 ;                       CX        Buffered packets
-;                       AX        Timeout ms
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1512,14 +1511,6 @@ open_usb_packet_pipe    Proc far
     push es
     push gs
     pushad
-;
-    push dx
-    mov dx,1193
-    mul dx
-    push dx
-    push ax
-    pop esi
-    pop dx
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
@@ -1535,7 +1526,6 @@ open_usb_packet_pipe    Proc far
     call StartReconfigPipe
     jc cuppLeaveFail
 ;
-    mov gs:usbp_timeout,esi
     test dl,80h
     jz cuppOut
 
@@ -1586,6 +1576,7 @@ open_usb_packet_pipe Endp
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
 ;                       CX        Buffer size
+;                       AX        Timeout
 ;
 ;       RETURNS:        ES        Buffer sel
 ;
@@ -1626,6 +1617,7 @@ open_usb_raw_pipe       Proc far
     pop ds
 ;
     mov es,gs:usbp_raw_sel
+    mov es:usbr_timeout,esi
     mov es,es:usbr_buf_sel
 ;
     LeaveSection ds:udd_section

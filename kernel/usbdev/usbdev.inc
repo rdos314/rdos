@@ -201,7 +201,6 @@ usbp_descr        usb_endpoint_descr <>
 usbp_flags        DB ?
 
 usbp_wait         DW ?
-usbp_timeout      DD ?
 usbp_packet_sel   DW ?
 usbp_raw_sel      DW ?
 
@@ -223,5 +222,6 @@ usbr_buf_size     DW ?
 usbr_buf_linear   DD ?
 usbr_buf_sel      DW ?
 usbr_thread       DW ?
+usbr_timeout      DD ?
 
 usb_raw_struc  ENDS

@@ -3622,7 +3622,7 @@
     CallGate_open_usb_packet_pipe \
     CarryToBool \
     __value [eax] \
-    __parm [__ebx] [__dl] [__eax] [__ecx]
+    __parm [__ebx] [__dl] [__ecx]
 
 #pragma aux RdosCloseUsbPipe = \
     CallGate_close_usb_pipe \
