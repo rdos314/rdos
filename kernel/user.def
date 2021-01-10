@@ -936,7 +936,6 @@ get_usb_address_nr                = 762
 is_usb_dev_connected_nr           = 763
 
 open_usb_packet_pipe_nr           = 764
-open_usb_stream_pipe_nr           = 765
 close_usb_pipe_nr                 = 766
 
 usergate_entries                  = 780

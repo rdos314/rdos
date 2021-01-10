@@ -2780,41 +2780,6 @@ ClosePacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenStream
-;
-;       DESCRIPTION:    Open stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;                       CX      Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenStream   Proc far
-    int 3
-    ret
-OpenStream  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseStream
-;
-;       DESCRIPTION:    Close stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseStream   Proc far
-    int 3
-    retf32
-CloseStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ReqPacket
 ;
 ;       DESCRIPTION:    Req packet
@@ -2940,23 +2905,6 @@ rlpkDone:
     call StartPipe
     retf32
 RelPacket   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteStream
-;
-;       DESCRIPTION:    Write stream buffer
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStream   Proc far
-    int 3
-    retf32
-WriteStream   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3194,10 +3142,7 @@ WriteRaw   Proc far
     push fs
     pushad
 ;
-    ClearSignal
     mov fs,gs:usbp_raw_sel
-    GetThread
-    mov fs:usbr_thread,ax
     mov fs:xr_res,0
 ;
     movzx esi,fs:xr_pos
@@ -3213,45 +3158,53 @@ WriteRaw   Proc far
 ;
     call StartPipe
 ;
-    push edx
-    GetSystemTime
-    add eax,1193 * 5
-    adc edx,0
-    WaitForSignalWithTimeout
-    pop edx
+    popad
+    pop fs
+    retf32
+WriteRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FinishRaw
+;
+;       DESCRIPTION:    Finish raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;       RETURNS:        NC
+;                         CX    Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FinishRaw   Proc far
+    int 3
+    push fs
+    push eax
+    push ebx
+    push esi
 ;
     mov fs,gs:usbp_raw_sel
     mov al,fs:xr_res
     or al,al
-    jnz wrEval
-;
-    push edx
-    GetSystemTime
-    add eax,1193 * 5
-    adc edx,0
-    WaitForSignalWithTimeout
-    pop edx
-;
-    mov fs,gs:usbp_raw_sel
-    mov al,fs:xr_res
-    or al,al
-    jnz wrEval
+    jnz frEval
 ;
     call StopPipe
     mov ax,25
     WaitMilliSec
     stc
+    jmp frDone
 
-wrEval:
+frEval:
     mov fs,gs:usbp_raw_sel
-    mov fs:usbr_thread,0
 ;
     mov bx,fs:xr_pos
     inc bx
     mov ax,gs:xp_ring_entries
     dec ax
     cmp bx,ax
-    jb wrPtrOk
+    jb frPtrOk
 ;
     push fs
     mov ax,flat_sel
@@ -3265,37 +3218,24 @@ wrEval:
 ;
     xor bx,bx
 
-wrPtrOk:
+frPtrOk:
     mov fs:xr_pos,bx
+    mov ecx,fs:[esi].trb_status
+    sub cx,fs:xr_remain
 ;
     cmp al,1
     clc
-    je wrDone
+    je frDone
 ;
     stc
 
-wrDone:
-    popad
+frDone:
+    pop esi
+    pop ebx
+    pop eax
     pop fs
     retf32
-WriteRaw   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StopRaw
-;
-;       DESCRIPTION:    Stop raw
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StopRaw   Proc far
-    int 3
-    retf32
-StopRaw   Endp
+FinishRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4459,14 +4399,11 @@ et15 DD OFFSET OpenPacket,          SEG code
 et16 DD OFFSET ClosePAcket,         SEG code
 et17 DD OFFSET ReqPacket,           SEG code
 et18 DD OFFSET RelPacket,           SEG code
-et19 DD OFFSET OpenStream,          SEG code
-et1A DD OFFSET CloseStream,         SEG code
-et1B DD OFFSET WriteStream,         SEG code
-et1C DD OFFSET OpenRaw,             SEG code
-et1D DD OFFSET CloseRaw,            SEG code
-et1E DD OFFSET ReadRaw,             SEG code
-et1F DD OFFSET WriteRaw,            SEG code
-et20 DD OFFSET StopRaw,             SEG code
+et19 DD OFFSET OpenRaw,             SEG code
+et1A DD OFFSET CloseRaw,            SEG code
+et1B DD OFFSET ReadRaw,             SEG code
+et1C DD OFFSET WriteRaw,            SEG code
+et1D DD OFFSET FinishRaw,           SEG code
 
 AddFunction    Proc near
     push es
@@ -4611,7 +4548,7 @@ ifIntDone:
     mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*1Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

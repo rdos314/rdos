@@ -2309,58 +2309,6 @@ RelPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenStream
-;
-;       DESCRIPTION:    Open stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;                       CX      Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenStream   Proc far
-    int 3
-    retf32
-OpenStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseStream
-;
-;       DESCRIPTION:    Close stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseStream   Proc far
-    int 3
-    retf32
-CloseStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteStream
-;
-;       DESCRIPTION:    Write stream buffer
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStream   Proc far
-    int 3
-    retf32
-WriteStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           OpenRaw
 ;
 ;       DESCRIPTION:    Open raw interface
@@ -2601,11 +2549,7 @@ WriteRaw   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-;
-    ClearSignal
     mov ds,gs:usbp_raw_sel
-    GetThread
-    mov ds:usbr_thread,ax
 ;
     mov edx,ds:usbr_buf_linear
     LinearToPhysicalMemBlk
@@ -2633,7 +2577,7 @@ wrLoop:
     mov fs:[edi].otd_next_td,eax    
 ;
     mov ds:[si],edx
-    jmp spbNext
+    jmp wrNext
 
 wrFirst:
     xor edx,edx
@@ -2691,61 +2635,6 @@ wrSizeOk:
     mov ds,es:usbd_func_sel
     call SignalStart
     pop ds
-;
-    GetSystemTime
-    add eax,1193 * 5
-    adc edx,0
-    WaitForSignalWithTimeout
-;
-    mov edx,gs:op_ed
-    mov eax,fs:[edx].oes_headp
-    and al,0F0h
-    cmp eax,fs:[edx].oes_tailp
-    clc
-    je wrFree
-;
-    GetSystemTime
-    add eax,1193 * 5
-    adc edx,0
-    WaitForSignalWithTimeout
-;
-    mov edx,gs:op_ed
-    mov eax,fs:[edx].oes_headp
-    and al,0F0h
-    cmp eax,fs:[edx].oes_tailp
-    clc
-    je wrFree
-;
-    call StopTds
-    stc
-
-wrFree:
-    pushf
-    mov ds:usbr_thread,0
-    xor cx,cx
-    xchg cx,ds:or_curr_count
-    or cx,cx
-    jz wrFreeDone
-;
-    mov si,OFFSET or_td_arr
-    
-wrFreeLoop:
-    xor edx,edx
-    xchg edx,ds:[si]
-    or edx,edx
-    jz wrFreeNext
-;
-    push cx
-    mov cx,SIZE ohc_td_struc
-    FreeLinearMemBlk
-    pop cx
-
-wrFreeNext:
-    add si,4
-    loop wrFreeLoop
-
-wrFreeDone:
-    popf
 
 wrDone:
     popad
@@ -2757,19 +2646,100 @@ WriteRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopRaw
+;       NAME:           FinishRaw
 ;
-;       DESCRIPTION:    Stop raw
+;       DESCRIPTION:    Finish raw
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
+;       RETURNS:        NC
+;                         CX    Size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopRaw   Proc far
-    int 3
+FinishRaw   Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov ds,gs:usbp_raw_sel
+;
+    mov edx,ds:usbr_buf_linear
+    LinearToPhysicalMemBlk
+    mov ebp,eax
+;
+    mov edx,gs:op_ed
+    mov eax,fs:[edx].oes_headp
+    and al,0F0h
+    cmp eax,fs:[edx].oes_tailp
+    clc
+    je frRel
+;
+    call StopTds
+    stc
+
+frRel:
+    pushf
+    xor cx,cx
+    xchg cx,ds:or_curr_count
+    or cx,cx
+    jz frDone
+;
+    mov si,OFFSET or_td_arr
+    
+frLoop:
+    xor edx,edx
+    xchg edx,ds:[si]
+    or edx,edx
+    jz frNext
+;
+    mov eax,fs:[edx].otd_cbp
+    or eax,eax
+    jz frWhole
+;
+    mov eax,fs:[edx].otd_be
+    inc eax
+    mov ebp,eax
+    jmp frSizeOk
+
+frWhole:
+    movzx eax,gs:ued_maxsize
+    add ebp,eax
+
+frSizeOk:
+    push cx
+    mov cx,SIZE ohc_td_struc
+    FreeLinearMemBlk
+    pop cx
+
+frNext:
+    add si,4
+    loop frLoop
+;
+    mov edx,ds:usbr_buf_linear
+    LinearToPhysicalMemBlk
+    sub ebp,eax
+    mov cx,bp
+
+frDone:
+    popf
+;
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
     retf32
-StopRaw   Endp
+FinishRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4122,14 +4092,11 @@ ot15 DD OFFSET OpenPacket,          SEG code
 ot16 DD OFFSET ClosePacket,         SEG code
 ot17 DD OFFSET ReqPacket,           SEG code
 ot18 DD OFFSET RelPacket,           SEG code
-ot19 DD OFFSET OpenStream,          SEG code
-ot1A DD OFFSET CloseStream,         SEG code
-ot1B DD OFFSET WriteStream,         SEG code
-ot1C DD OFFSET OpenRaw,             SEG code
-ot1D DD OFFSET CloseRaw,            SEG code
-ot1E DD OFFSET ReadRaw,             SEG code
-ot1F DD OFFSET WriteRaw,            SEG code
-ot20 DD OFFSET StopRaw,             SEG code
+ot19 DD OFFSET OpenRaw,             SEG code
+ot1A DD OFFSET CloseRaw,            SEG code
+ot1B DD OFFSET ReadRaw,             SEG code
+ot1C DD OFFSET WriteRaw,            SEG code
+ot1D DD OFFSET FinishRaw,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4187,7 +4154,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*1Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

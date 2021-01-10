@@ -3624,12 +3624,6 @@
     __value [eax] \
     __parm [__ebx] [__dl] [__eax] [__ecx]
 
-#pragma aux RdosOpenUsbStreamPipe = \
-    CallGate_open_usb_stream_pipe \
-    CarryToBool \
-    __value [eax] \
-    __parm [__ebx] [__dl] [__eax] [__ecx]
-
 #pragma aux RdosCloseUsbPipe = \
     CallGate_close_usb_pipe \
     __parm [__ebx] [__dl]

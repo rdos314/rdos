@@ -728,67 +728,6 @@ RelPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenStream
-;
-;       DESCRIPTION:    Open stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;                       CX      Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenStream   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:open_stream_proc
-    pop ds
-    ret
-OpenStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseStream
-;
-;       DESCRIPTION:    Close stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseStream   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:close_stream_proc
-    pop ds
-    ret
-CloseStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteStream
-;
-;       DESCRIPTION:    Write stream buffer
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStream   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:write_stream_proc
-    pop ds
-    ret
-WriteStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           OpenRaw
 ;
 ;       DESCRIPTION:    Open raw interface
@@ -875,22 +814,25 @@ WriteRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopRaw
+;       NAME:           FinishRaw
 ;
-;       DESCRIPTION:    Stop raw
+;       DESCRIPTION:    Finish raw
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
+;       RETURNS:        NC
+;                         CX    Size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopRaw   Proc far
+FinishRaw   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:stop_raw_proc
+    call fword ptr ds:finish_raw_proc
     pop ds
     ret
-StopRaw   Endp
+FinishRaw   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1002,14 +944,11 @@ ht15 DD OFFSET OpenPacket,          SEG code
 ht16 DD OFFSET ClosePacket,         SEG code
 ht17 DD OFFSET ReqPacket,           SEG code
 ht18 DD OFFSET RelPacket,           SEG code
-ht19 DD OFFSET OpenStream,          SEG code
-ht1A DD OFFSET CloseStream,         SEG code
-ht1B DD OFFSET WriteStream,         SEG code
-ht1C DD OFFSET OpenRaw,             SEG code
-ht1D DD OFFSET CloseRaw,            SEG code
-ht1E DD OFFSET ReadRaw,             SEG code
-ht1F DD OFFSET WriteRaw,            SEG code
-ht20 DD OFFSET StopRaw,            SEG code
+ht19 DD OFFSET OpenRaw,             SEG code
+ht1A DD OFFSET CloseRaw,            SEG code
+ht1B DD OFFSET ReadRaw,             SEG code
+ht1C DD OFFSET WriteRaw,            SEG code
+ht1D DD OFFSET FinishRaw,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2306,7 +2245,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*21h
+    mov ecx,2*1Eh
 
 uaTabLoop:
     lods dword ptr cs:[esi]

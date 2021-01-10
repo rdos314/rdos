@@ -1369,7 +1369,6 @@ cpSave:
     mov es:usbp_wait,0
     mov es:usbp_flags,0
     mov es:usbp_packet_sel,0
-    mov es:usbp_stream_sel,0
     mov es:usbp_raw_sel,0
 ;
     mov si,di
@@ -1445,19 +1444,6 @@ ClearPipe       Proc near
     pop ds
 
 clpPacketOk:    
-    mov bx,gs:usbp_stream_sel
-    or bx,bx
-    jz clpStreamOk
-;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:close_stream_proc
-    pop ds
-;
-    mov bx,es:usbd_thread
-    Signal
-
-clpStreamOk:    
     mov bx,gs:usbp_raw_sel
     or bx,bx
     jz clpDone
@@ -1589,99 +1575,6 @@ cuppDone:
     pop ds    
     retf32
 open_usb_packet_pipe Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           OpenUsbStreamPipe
-;
-;       description:    Open USB stream pipe
-;
-;       parameters:     BX        Handle
-;                       DL        Pipe #
-;                       CX        Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_usb_stream_pipe_name DB 'Open Usb Stream Pipe', 0
-
-open_usb_stream_pipe    Proc far
-    push ds
-    push es
-    push gs
-    pushad
-;
-    push dx
-    mov dx,1193
-    mul dx
-    push dx
-    push ax
-    pop esi
-    pop dx
-;
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc cuspDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    jnz cuspLeaveFail
-;
-    mov es,ds:udd_sel    
-    call StartReconfigPipe
-    jc cuspLeaveFail
-;
-    mov gs:usbp_timeout,esi
-    test dl,80h
-    jz cuspOut
-
-cuspIn:
-    push ds
-    pusha
-;
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:open_stream_proc
-;
-    mov ds,gs:usbp_stream_sel
-    mov ax,ds:usbs_buf_size
-    xor dx,dx
-    div gs:ued_maxsize
-    mov cx,ax
-;
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:open_packet_proc
-;
-    mov bx,es:usbd_thread
-    Signal
-;
-    popa
-    pop ds
-    jmp cuspOk
-
-cuspOut:
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:open_stream_proc
-    pop ds
-
-cuspOk:
-    LeaveSection ds:udd_section
-    clc
-    jmp cuspDone
-
-cuspLeaveFail:
-    LeaveSection ds:udd_section
-    stc
-
-cuspDone:
-    popad
-    pop gs
-    pop es
-    pop ds    
-    retf32
-open_usb_stream_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1851,10 +1744,30 @@ purpIn:
     stc
     jz purpLeave
 ;
-    mov gs,bx
     push ds
+    mov gs,bx
+    ClearSignal
+    mov ds,gs:usbp_raw_sel
+    GetThread
+    mov ds:usbr_thread,ax
+;
     mov ds,es:usbd_func_sel
     call fword ptr ds:read_raw_proc
+;
+    push eax
+    push edx
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
+;
+    mov ds,gs:usbp_raw_sel
+    mov ds:usbr_thread,0
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:finish_raw_proc
     pop ds
     jmp purpLeave
 
@@ -1868,10 +1781,30 @@ purpOut:
     stc
     jz purpLeave
 ;
-    mov gs,bx
     push ds
+    mov gs,bx
+    ClearSignal
+    mov ds,gs:usbp_raw_sel
+    GetThread
+    mov ds:usbr_thread,ax
+;
     mov ds,es:usbd_func_sel
     call fword ptr ds:write_raw_proc
+;
+    push eax
+    push edx
+    GetSystemTime
+    add eax,1193 * 5
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
+;
+    mov ds,gs:usbp_raw_sel
+    mov ds:usbr_thread,0
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:finish_raw_proc
     pop ds
 
 purpLeave:
@@ -2242,26 +2175,6 @@ ReadPacket      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadStream
-;
-;       description:    Read using stream interface
-;
-;       parameters:     GS        Pipe sel
-;                       BP:EDI    Buffer
-;
-;       returns:        CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadStream      Proc near
-    int 3
-    stc
-    ret
-ReadStream      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           ReadRaw
 ;
 ;       description:    Read using raw interface
@@ -2336,14 +2249,6 @@ ReadPipe        Proc near
     jz rupLeave
 ;
     mov gs,bx
-    mov bx,gs:usbp_stream_sel
-    or bx,bx
-    jz rupNotStream
-;
-    call ReadStream
-    jmp rupLeave
-
-rupNotStream:
     mov bx,gs:usbp_packet_sel
     or bx,bx
     jz rupNotPacket
@@ -2383,26 +2288,6 @@ read_usb_pipe16 Proc far
     pop edi
     retf32
 read_usb_pipe16 Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteStream
-;
-;       description:    Write using stream interface
-;
-;       parameters:     GS        Pipe sel
-;                       BP:EDI    Buffer
-;
-;       returns:        CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStream     Proc near
-    int 3
-    stc
-    ret
-WriteStream     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2479,14 +2364,6 @@ WritePipe       Proc near
     jz wupLeave
 ;
     mov gs,bx
-    mov bx,gs:usbp_stream_sel
-    or bx,bx
-    jz wupNotStream
-;
-    call WriteStream
-    jmp wupLeave
-
-wupNotStream:
     call WriteRaw
 
 wupLeave:
@@ -2560,23 +2437,7 @@ bwfpOut:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    mov cx,gs:usbp_stream_sel
-    or cx,cx
-    jz bwfpLeaveSignal
-;
-    mov gs:usbp_wait,bx
-    mov es,cx
-    mov cx,es:usbs_wr_ptr
-    inc cx
-    cmp cx,es:usbs_buf_size
-    je bwfpStreamOutOk
-;
-    xor cx,cx
-
-bwfpStreamOutOk:
-    cmp cx,es:usbs_rd_ptr
-    jz bwfpLeave
-    jmp bwfpCheckSignal
+    jmp bwfpLeaveSignal
 
 bwfpIn:
     movzx si,dl
@@ -2588,18 +2449,6 @@ bwfpIn:
     jz bwfpLeaveSignal
 ;
     mov gs,si
-    mov cx,gs:usbp_stream_sel
-    or cx,cx
-    jz bwfpCheckPacket
-;
-    mov gs:usbp_wait,bx
-    mov es,cx
-    mov cx,es:usbs_wr_ptr
-    cmp cx,es:usbs_rd_ptr
-    jz bwfpLeave
-    jmp bwfpCheckSignal
-
-bwfpCheckPacket:
     mov cx,gs:usbp_packet_sel
     or cx,cx
     jz bwfpLeaveSignal
@@ -4977,12 +4826,6 @@ init    Proc far
     mov edi,OFFSET open_usb_packet_pipe_name
     xor dx,dx
     mov ax,open_usb_packet_pipe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET open_usb_stream_pipe
-    mov edi,OFFSET open_usb_stream_pipe_name
-    xor dx,dx
-    mov ax,open_usb_stream_pipe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_usb_pipe

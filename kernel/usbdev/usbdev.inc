@@ -128,19 +128,6 @@ rel_packet_proc            DD ?,?
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; IN  CX        Buffer size
-open_stream_proc          DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
-close_stream_proc          DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
-write_stream_proc          DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
-; IN  CX        Buffer size
 open_raw_proc          DD ?,?
 
 ; IN  ES        Device
@@ -150,7 +137,6 @@ close_raw_proc          DD ?,?
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; IN  CX        Size
-; OUT CX        Actual size
 read_raw_proc              DD ?,?
 
 ; IN  ES        Device
@@ -160,7 +146,8 @@ write_raw_proc              DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
-stop_raw_proc              DD ?,?
+; OUT CX        Actual size
+finish_raw_proc              DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
@@ -216,7 +203,6 @@ usbp_flags        DB ?
 usbp_wait         DW ?
 usbp_timeout      DD ?
 usbp_packet_sel   DW ?
-usbp_stream_sel   DW ?
 usbp_raw_sel      DW ?
 
 usb_pipe_struc   ENDS
@@ -230,17 +216,6 @@ usbpk_wr_ptr         DW ?
 usbpk_tail_ptr       DW ?
 
 usb_packet_struc     ENDS
-
-usb_stream_struc  STRUC
-
-usbs_section      section_typ <>
-usbs_rd_ptr       DW ?
-usbs_wr_ptr       DW ?
-usbs_buf_size     DW ?
-usbs_buf_sel      DW ?
-usbs_buf_linear   DD ?
-
-usb_stream_struc  ENDS
 
 usb_raw_struc  STRUC
 

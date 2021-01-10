@@ -2900,58 +2900,6 @@ RelPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenStream
-;
-;       DESCRIPTION:    Open stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;                       CX      Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenStream   Proc far
-    int 3
-    retf32
-OpenStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseStream
-;
-;       DESCRIPTION:    Close stream interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseStream   Proc far
-    int 3
-    retf32
-CloseStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteStream
-;
-;       DESCRIPTION:    Write stream buffer
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStream   Proc far
-    int 3
-    retf32
-WriteStream   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           OpenRaw
 ;
 ;       DESCRIPTION:    Open raw interface
@@ -3177,11 +3125,7 @@ WriteRaw   Proc far
 ;
     mov ax,flat_sel
     mov fs,ax
-;
-    ClearSignal
     mov ds,gs:usbp_raw_sel
-    GetThread
-    mov ds:usbr_thread,ax
 ;
     mov edx,ds:usbr_buf_linear
     LinearToPhysicalMemBlk
@@ -3249,35 +3193,6 @@ wrSizeOk:
     mov esi,gs:up_qh
     mov fs:[esi].uqh_elem,eax
 ;
-    GetSystemTime
-    add eax,1193 * 5
-    adc edx,0
-    WaitForSignalWithTimeout
-;
-    mov eax,fs:[esi].uqh_elem
-    test al,1
-    clc
-    jnz wrDone
-;
-    GetSystemTime
-    add eax,1193 * 5
-    adc edx,0
-    WaitForSignalWithTimeout
-;
-    mov eax,fs:[esi].uqh_elem
-    test al,1
-    clc
-    jnz wrDone
-;
-    mov fs:[esi].uqh_elem,1
-    mov ax,25
-    WaitMilliSec
-    stc
-
-wrDone:
-    mov ds:usbr_thread,0
-    mov ds:ur_curr_count,0
-;
     popad
     pop fs
     pop ds
@@ -3287,19 +3202,77 @@ WriteRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopRaw
+;       NAME:           FinishRaw
 ;
-;       DESCRIPTION:    Stop raw
+;       DESCRIPTION:    Finish raw
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
 ;
+;       RETURNS:        NC
+;                         CX    Size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StopRaw   Proc far
-    int 3
+FinishRaw   Proc far
+    push ds
+    push fs
+    push eax
+    push edx
+    push esi
+    push ebp
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov ds,gs:usbp_raw_sel
+;
+    mov edx,gs:up_qh
+    mov eax,fs:[edx].uqh_elem
+    test al,1
+    jz frFail
+;
+    mov cx,ds:ur_curr_count
+    or cx,cx
+    clc
+    jz frDone
+;
+    mov si,OFFSET ur_td_arr
+    xor bp,bp
+    
+frLoop:
+    mov edx,ds:[si]
+    or edx,edx
+    jz frNext
+;
+    mov eax,fs:[edx].utd_control
+    and ax,7FFh
+    inc ax
+    add bp,ax
+
+frNext:
+    add si,4
+    loop frLoop
+;
+    mov cx,bp    
+    clc
+    jmp frDone
+
+frFail:
+    call StopTds
+    stc
+    xor cx,cx
+
+frDone:
+    mov ds:ur_curr_count,0
+;
+    pop ebp
+    pop esi
+    pop edx
+    pop eax
+    pop fs
+    pop ds
     retf32
-StopRaw   Endp
+FinishRaw   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3965,14 +3938,11 @@ ut15 DD OFFSET OpenPacket,          SEG code
 ut16 DD OFFSET ClosePacket,         SEG code
 ut17 DD OFFSET ReqPacket,           SEG code
 ut18 DD OFFSET RelPacket,           SEG code
-ut19 DD OFFSET OpenStream,          SEG code
-ut1A DD OFFSET CloseStream,         SEG code
-ut1B DD OFFSET WriteStream,         SEG code
-ut1C DD OFFSET OpenRaw,             SEG code
-ut1D DD OFFSET CloseRaw,            SEG code
-ut1E DD OFFSET ReadRaw,             SEG code
-ut1F DD OFFSET WriteRaw,            SEG code
-ut20 DD OFFSET StopRaw,             SEG code
+ut19 DD OFFSET OpenRaw,             SEG code
+ut1A DD OFFSET CloseRaw,            SEG code
+ut1B DD OFFSET ReadRaw,             SEG code
+ut1C DD OFFSET WriteRaw,            SEG code
+ut1D DD OFFSET FinishRaw,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4028,7 +3998,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*1Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

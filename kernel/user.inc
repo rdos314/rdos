@@ -3641,14 +3641,6 @@ OpenUsbPacketPipe      MACRO
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
-;   IN  AX          Timeout in ms
-;   IN  CX          Buffer size
-OpenUsbStreamPipe      MACRO
-        UserGate open_usb_stream_pipe_nr
-                                                ENDM
-
-;   IN  BX          Device handle
-;   IN  DL          Pipe #
 CloseUsbPipe      MACRO
         UserGate close_usb_pipe_nr
                                                 ENDM
