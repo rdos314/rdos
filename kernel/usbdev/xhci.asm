@@ -2285,7 +2285,6 @@ SetPipeTr   Proc near
     jmp sptrDone
 
 sptrOk:
-    call InitControlRing
     clc        
 
 sptrDone:
@@ -2925,7 +2924,6 @@ RelPacket   Endp
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Device selector
-;                       FS      Flat sel
 ;                       GS      Pipe selector
 ;                       EBX:EAX Buffer physical address
 ;                       ECX     Buffer size
@@ -2933,7 +2931,11 @@ RelPacket   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupRawTds     Proc near
+    push fs
     pushad
+;
+    mov bp,flat_sel
+    mov fs,bp
 ;
     mov esi,gs:xp_ring_linear
     mov bp,gs:xp_ring_entries
@@ -2954,6 +2956,7 @@ srtBufLoop:
     jnz srtBufLoop
 ;
     popad
+    pop fs
     ret
 SetupRawTds    Endp
 
@@ -2971,7 +2974,6 @@ SetupRawTds    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
-    int 3
     push fs
     push eax
     push ebx
@@ -3032,7 +3034,7 @@ orDone:
     pop ebx
     pop eax
     pop fs
-    ret
+    retf32
 OpenRaw  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
