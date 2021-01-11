@@ -2700,18 +2700,13 @@ frLoop:
     or edx,edx
     jz frNext
 ;
-    mov eax,fs:[edx].otd_cbp
-    or eax,eax
-    jz frWhole
+    mov ebp,fs:[edx].otd_cbp
+    or ebp,ebp
+    jnz frSizeOk
 ;
     mov eax,fs:[edx].otd_be
     inc eax
     mov ebp,eax
-    jmp frSizeOk
-
-frWhole:
-    movzx eax,gs:ued_maxsize
-    add ebp,eax
 
 frSizeOk:
     push cx
