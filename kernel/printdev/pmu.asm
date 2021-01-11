@@ -73,6 +73,7 @@ data    SEGMENT byte public 'DATA'
 pmu_controller       DW ?
 pmu_port             DB ?
 pmu_flag             DB ?
+pmu_status           DD ?
 
 pmu_dev_handle       DW ?
 
@@ -415,6 +416,146 @@ ClosePipes    Proc near
     lock or ds:pmu_flag,FLAG_CLOSED
     ret
 ClosePipes   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadAnswer
+;
+;       DESCRIPTION:    Check status
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CX          Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadAnswer    Proc near
+    push es
+    push edi
+;
+    mov es,ds:pmu_in_buffer
+    xor edi,edi
+
+raWaitLoop:
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz raDone
+;
+    mov bx,ds:pmu_wait
+    WaitWithoutTimeout
+;
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    jz raDone
+;
+    mov es,ds:pmu_in_buffer
+    xor edi,edi
+    movzx ecx,ds:pmu_max_in
+    ReadUsbPipe
+    or cx,cx
+    jz raWaitLoop
+;
+    add di,cx
+
+raDataLoop:
+    mov bx,ds:pmu_wait
+    WaitWithoutTimeout
+;
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    clc
+    jz raDone
+;
+    movzx ecx,ds:pmu_max_in
+    ReadUsbPipe
+    or cx,cx
+    clc
+    jz raDone
+;
+    add di,cx
+    jmp raDataLoop
+
+raDone:
+    pop edi
+    pop es
+    ret
+ReadAnswer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckStatus
+;
+;       DESCRIPTION:    Check status
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckStatus    Proc near
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,10h
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov al,10h
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov al,2
+    stosb
+;
+    mov al,10h
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov al,3
+    stosb
+;
+    mov al,10h
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    call ReadAnswer
+    cmp cx,4
+    jne csDone
+;
+    int 3
+    mov es,ds:pmu_in_buffer
+    xor bx,bx
+    mov eax,es:[bx]
+    mov ds:pmu_status,eax
+
+csDone:
+    ret
+CheckStatus  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -991,12 +1132,18 @@ pmuRestart:
     mov al,ds:pmu_port
     OpenUsbDevice
     mov ds:pmu_dev_handle,bx
+    mov ds:pmu_status,0
 ;
     mov ax,250
     WaitMilliSec
 ;
-    int 3
     call OpenPipes
+;
+
+pmuStatusLoop:
+    call CheckStatus
+    jmp pmuStatusLoop
+
     call ClearReceiver
 ;    
     int 3
