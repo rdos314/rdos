@@ -481,6 +481,8 @@ raDataLoop:
     jmp raDataLoop
 
 raDone:
+    mov cx,di
+;
     pop edi
     pop es
     ret
@@ -547,7 +549,6 @@ CheckStatus    Proc near
     cmp cx,4
     jne csDone
 ;
-    int 3
     mov es,ds:pmu_in_buffer
     xor bx,bx
     mov eax,es:[bx]
