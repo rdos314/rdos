@@ -2827,9 +2827,13 @@ rqpkGet:
     sub cx,ax
     shr eax,24
     cmp al,1
+    je rqpkOk
+;
+    cmp al,0Dh
     stc
     jne rqpkDone
-;
+
+rqpkOk:
     mov edx,gs:xp_ring_linear
     movzx eax,ds:usbpk_rd_ptr
     shl eax,4
@@ -3150,7 +3154,6 @@ ReadRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteRaw   Proc far
-    int 3
     push fs
     pushad
 ;
@@ -3166,7 +3169,6 @@ WriteRaw   Proc far
     mov fs,ax
     mov fs:[esi].trb_status,ecx
     xor fs:[esi].trb_type,1
-    pop ds
 ;
     call StartPipe
 ;
@@ -3191,7 +3193,7 @@ WriteRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FinishRaw   Proc far
-    int 3
+    push ds
     push fs
     push eax
     push ebx
@@ -3209,43 +3211,51 @@ FinishRaw   Proc far
     jmp frDone
 
 frEval:
-    mov fs,gs:usbp_raw_sel
+    mov ax,flat_sel
+    mov fs,ax
+    mov ds,gs:usbp_raw_sel
 ;
-    mov bx,fs:xr_pos
+    mov bx,ds:xr_pos
+    movzx esi,bx
+    shl esi,4
+    add esi,gs:xp_ring_linear
+    mov ecx,fs:[esi].trb_status
+;
     inc bx
     mov ax,gs:xp_ring_entries
     dec ax
     cmp bx,ax
     jb frPtrOk
 ;
-    push fs
-    mov ax,flat_sel
-    mov fs,ax
     movzx esi,bx
-    dec esi    
     shl esi,4
     add esi,gs:xp_ring_linear
     xor fs:[esi].trb_type,1
-    pop fs
 ;
     xor bx,bx
 
 frPtrOk:
-    mov fs:xr_pos,bx
-    mov ecx,fs:[esi].trb_status
-    sub cx,fs:xr_remain
+    mov ds:xr_pos,bx
+    sub cx,ds:xr_remain
 ;
+    mov al,ds:xr_res
     cmp al,1
-    clc
-    je frDone
+    je frOk
 ;
+    cmp al,0Dh
     stc
+    jne frDone
+
+frOk:
+    clc
 
 frDone:
+    int 3
     pop esi
     pop ebx
     pop eax
     pop fs
+    pop ds
     retf32
 FinishRaw   Endp
 
@@ -3687,6 +3697,9 @@ hpiSave:
     cmp al,1
     je hpiNotError
 ;
+    cmp al,0Dh
+    je hpiNotError
+;
     mov dl,gs:ued_address
     call ReportPipeStatus
 
@@ -3745,8 +3758,12 @@ HandleRaw   Proc near
     shr edx,4
     movzx eax,ds:xr_pos
     cmp edx,eax
-    jae hrDone
+    je hrHandle
 ;
+    int 3
+    jmp hrDone
+
+hrHandle:
     mov ds:xr_remain,cx
 ;
     mov eax,ecx
@@ -3754,6 +3771,9 @@ HandleRaw   Proc near
     mov ds:xr_res,al
 ;
     cmp al,1
+    je hrNotError
+;
+    cmp al,0Dh
     je hrNotError
 ;
     mov dl,gs:ued_address
@@ -3833,7 +3853,6 @@ CheckOut   Proc near
     or bx,bx
     jz cotDone
 ;
-    int 3
     call HandleRaw
 
 cotDone:
@@ -3909,7 +3928,6 @@ teOut:
     or ax,ax
     jz teDone
 ;
-    int 3
     mov gs,ax
     call CheckOut
 
