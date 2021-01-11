@@ -1155,6 +1155,7 @@ reset_usb_dev     Proc far
     jnz rdvLeave
 ;
     mov es,ds:udd_sel    
+    mov ds,es:usbd_func_sel
     mov cl,es:usbd_port
     mov eax,1
     shl eax,cl
