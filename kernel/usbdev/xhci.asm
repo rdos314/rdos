@@ -3103,7 +3103,6 @@ FreeRawSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseRaw   Proc far
-    int 3
     push ds
     push fs
     push ax
@@ -3250,7 +3249,6 @@ frOk:
     clc
 
 frDone:
-    int 3
     pop esi
     pop ebx
     pop eax

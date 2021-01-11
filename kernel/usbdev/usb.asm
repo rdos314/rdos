@@ -1746,16 +1746,15 @@ purpIn:
     mov ds,es:usbd_func_sel
     call fword ptr ds:read_raw_proc
 ;
+    mov ds,gs:usbp_raw_sel
     push eax
     push edx
     GetSystemTime
-    add eax,1193 * 5
+    add eax,ds:usbr_timeout
     adc edx,0
     WaitForSignalWithTimeout
     pop edx
     pop eax
-;
-    mov ds,gs:usbp_raw_sel
     mov ds:usbr_thread,0
 ;
     mov ds,es:usbd_func_sel
@@ -1783,16 +1782,16 @@ purpOut:
     mov ds,es:usbd_func_sel
     call fword ptr ds:write_raw_proc
 ;
+;
+    mov ds,gs:usbp_raw_sel
     push eax
     push edx
     GetSystemTime
-    add eax,1193 * 5
+    add eax,ds:usbr_timeout
     adc edx,0
     WaitForSignalWithTimeout
     pop edx
     pop eax
-;
-    mov ds,gs:usbp_raw_sel
     mov ds:usbr_thread,0
 ;
     mov ds,es:usbd_func_sel
