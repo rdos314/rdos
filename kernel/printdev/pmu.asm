@@ -793,6 +793,7 @@ reset_printer   Proc far
     stc
     jz reset_done
 ;    
+    int 3
     lock and ds:pmu_flag,NOT FLAG_ATTACHED
     mov bx,ds:pmu_dev_handle
     ResetUsbDevice
