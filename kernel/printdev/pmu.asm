@@ -88,11 +88,7 @@ pmu_in_pipe          DB ?
 
 pmu_section          section_typ <>
 
-
-pmu_session_thread   DW ?
-
-pmu_session_list     DW ?
-pmu_session_count    DW ?
+pmu_server_thread    DW ?
 
 data    ENDS
 
@@ -101,248 +97,6 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateSessionSel
-;
-;       DESCRIPTION:    Create a session selector
-;
-;       PARAMETERS:     CX      Size of send buffer
-;
-;       RETURNS:        ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateSessionSel   Proc near
-    push eax
-    mov ax,SIZE cmd_session_struc
-    add ax,cx
-    movzx eax,ax
-    AllocateSmallGlobalMem
-    mov es:cs_next,0
-    mov es:cs_req_size,cx
-    mov es:cs_reply_min,0
-    mov es:cs_reply_size,0
-    mov es:cs_reply_buf,0
-    mov es:cs_wait,0
-    pop eax
-    ret
-CreateSessionSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeSessionSel
-;
-;       DESCRIPTION:    Free a session selector
-;
-;       PARAMETERS:     ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeSessionSel   Proc near
-    push ax
-;    
-    mov ax,es:cs_reply_size
-    or ax,ax
-    jz fssReplyOk
-;
-    push es
-    mov es,es:cs_reply_buf
-    FreeMem
-    pop es 
-
-fssReplyOk:
-    FreeMem
-;
-    pop ax
-    ret
-FreeSessionSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateWaitSessionSel
-;
-;       DESCRIPTION:    Create a wait-for-answer session selector
-;
-;       PARAMETERS:     CX      Size of send buffer
-;
-;       RETURNS:        ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateWaitSessionSel   Proc near
-    push ax
-    call CreateSessionSel
-    GetThread
-    mov es:cs_wait,ax
-    pop ax
-    ret
-CreateWaitSessionSel    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InsertSessionSel
-;
-;       DESCRIPTION:    Insert session selector into session list
-;
-;       PARAMETERS:     DS      Data
-;                       ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertSessionSel   Proc near
-    push bx
-    EnterSection ds:pmu_section
-;    
-    inc ds:pmu_session_count
-    mov bx,ds:pmu_session_list
-    or bx,bx
-    jz issEmpty
-;
-    push fs
-
-issNext:
-    mov fs,bx
-    mov bx,fs:cs_next
-    or bx,bx
-    jnz issNext
-;
-    mov es:cs_next,0
-    mov fs:cs_next,es
-    pop fs
-    jmp issDone
-
-issEmpty:
-    mov es:cs_next,0
-    mov ds:pmu_session_list,es
-
-issDone:
-    LeaveSection ds:pmu_section
-    mov bx,ds:pmu_session_thread
-    Signal
-    pop bx
-    ret
-InsertSessionSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           DoSession
-;
-;       DESCRIPTION:    Perform session
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoSession   Proc near
-    push es
-    push ax
-
-dsLoop:    
-    mov ax,ds:pmu_session_list
-    or ax,ax
-    jz dsDone
-;
-    EnterSection ds:pmu_section
-    mov es,ds:pmu_session_list
-    mov ax,es:cs_next
-    mov ds:pmu_session_list,ax
-    dec ds:pmu_session_count
-    LeaveSection ds:pmu_section
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz dsDone
-;    
-
-dsDone:
-    pop ax
-    pop es
-    ret
-DoSession   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyUsbData
-;
-;       DESCRIPTION:    Handle incoming data
-;
-;       PARAMETERS:     DS      SEG data
-;                       CX      Size
-;                       ES      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyUsbData   Proc near
-    int 3
-    ret
-NotifyUsbData   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetId
-;
-;       DESCRIPTION:    Get printer ID
-;
-;       PARAMETERS:     DS      Data
-;                       AL      ID #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetId   Proc near
-    push es
-    push cx
-    push di
-;
-    mov ah,al
-    mov es,ds:pmu_out_buffer
-    xor di,di
-;    
-    mov al,GS_CH
-    stosb
-;
-    mov al,'I'
-    stosb
-;
-    mov al,ah
-    stosb
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz giOk
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    mov cx,3
-    PostUsbRawPipe
-
-giOk:
-    pop di
-    pop cx
-    pop es
-    ret
-GetId    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ClearReceiver
-;
-;       DESCRIPTION:    Clear receiver
-;
-;       PARAMETERS:     DS      SEG data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearReceiver    Proc near
-    ret
-ClearReceiver    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1052,38 +806,6 @@ reset_printer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StatusTimeout
-;
-;       DESCRIPTION:    Timer that signals control thread in order to read status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StatusTimeout  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    lock or ds:pmu_flag,FLAG_STATUS
-;
-    mov bx,ds:pmu_session_thread
-    or bx,bx
-    jz stDone
-;    
-    Signal    
-;    
-    add eax,1193000 * 2 ; 2s to next call
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds:pmu_session_thread
-    StartTimer
-
-stDone:    
-    ret
-StatusTimeout  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           InitKrThread
 ;
 ;               DESCRIPTION:    Init PMU printer
@@ -1219,7 +941,7 @@ pmu_thread:
     mov ax,SEG data
     mov ds,ax
     GetThread
-    mov ds:pmu_session_thread,ax
+    mov ds:pmu_server_thread,ax
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
@@ -1282,17 +1004,7 @@ pmu_thread:
     mov es:pr_wait_for_print_proc+4,cs
 ;    
     mov es:pr_reset_proc,OFFSET reset_printer
-    mov es:pr_reset_proc+4,cs
-;    
-    GetSystemTime
-    add eax,1193000 * 2  ; 2s
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds:pmu_session_thread
-    mov cx,ds       
-    StartTimer
+    mov es:pr_reset_proc+4,cs    
 
 pmuRestart:
     mov bx,ds:pmu_controller
@@ -1316,81 +1028,11 @@ pmuStatusLoop:
     mov ax,250
     WaitMilliSec
     jmp pmuStatusLoop
-
-    call ClearReceiver
-;    
-    int 3
-    mov al,'1'
-    call GetId
-
-    lock or ds:pmu_flag, FLAG_INIT
-;    
-    mov esi,OFFSET init_thread
-    mov edi,OFFSET init_thread_name
-    mov ax,2
-    call StartThread
-    
-pmuLoop:
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz pmuDetached
-
-pmuDoSession:
-    call DoSession
-;
-    test ds:pmu_flag,FLAG_INIT
-    jz pmuDoStatus
-;
-    mov ax,50
-    WaitMilliSec
-    jmp pmuLoop        
-
-pmuDoStatus:
-    mov bx,ds:pmu_session_list
-    or bx,bx
-    jnz pmuLoop
-
-pmuWait:    
-    WaitForSignal
-    jmp pmuLoop
         
 pmuDetached:
     xor bx,bx
     xchg bx,ds:pmu_dev_handle
     CloseUsbDevice
-;
-    mov ax,5
-    WaitMilliSec
-;    
-    mov ax,ds:pmu_session_list
-    or ax,ax
-    jz pmuDetachClose
-;
-    EnterSection ds:pmu_section
-    mov es,ds:pmu_session_list
-    mov ax,es:cs_next
-    mov ds:pmu_session_list,ax
-    dec ds:pmu_session_count
-    LeaveSection ds:pmu_section
-;
-    mov bx,es:cs_wait
-    or bx,bx
-    jz pmuFreeSession
-;
-    Signal
-    xor ax,ax
-    mov es,ax
-    jmp pmuDetached
-        
-pmuFreeSession:
-    call FreeSessionSel
-    xor ax,ax
-    mov es,ax
-    jmp pmuDetached
-
-pmuDetachClose:
-    test ds:pmu_flag,FLAG_INIT
-    jnz pmuDetached
-;    
     call ClosePipes
 
 pmuWaitAttach:
@@ -1428,8 +1070,6 @@ OpenPrinterPipes Proc near
     mov ds:pmu_out_pipe,0
     mov ds:pmu_in_pipe,0
     mov ds:pmu_max_in,0
-    mov ds:pmu_session_list,0
-    mov ds:pmu_session_count,0
 ;
     lock or ds:pmu_flag,FLAG_ATTACHED
 ;
@@ -1477,7 +1117,7 @@ opDescrDone:
     jz opDone
 ;    
     test ds:pmu_flag,FLAG_STARTED
-    jnz opDone
+    jnz opSignal
 ;
     lock or ds:pmu_flag,FLAG_STARTED    
 ;
@@ -1485,6 +1125,11 @@ opDescrDone:
     mov edi,OFFSET pmu_thread_name
     mov ax,2
     call StartThread
+    jmp opDone
+
+opSignal:
+    mov bx,ds:pmu_server_thread
+    Signal
     
 opDone:
     popad
@@ -1615,7 +1260,7 @@ usb_detach  Proc far
     lock and ds:pmu_flag,NOT FLAG_ATTACHED
 
 udWaitLoop:    
-    mov bx,ds:pmu_session_thread
+    mov bx,ds:pmu_server_thread
     Signal
 ;
     mov ax,5
