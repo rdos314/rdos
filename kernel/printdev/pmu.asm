@@ -212,6 +212,8 @@ raWaitLoop:
     xor edi,edi
     movzx ecx,ds:pmu_max_in
     ReadUsbPipe
+    jc raDone
+;
     or cx,cx
     jnz raHasData
 
@@ -238,6 +240,7 @@ raDataLoop:
 ;
     movzx ecx,ds:pmu_max_in
     ReadUsbPipe
+    jc raDone
     or cx,cx
     clc
     jz raDone
@@ -315,6 +318,7 @@ CheckStatus    Proc near
     mov bx,ds:pmu_dev_handle
     mov dl,ds:pmu_out_pipe
     PostUsbRawPipe
+    jc csDone
 ;
     call ReadAnswer
     cmp cx,4
@@ -806,20 +810,119 @@ reset_printer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           InitKrThread
+;               NAME:           PmuThread
 ;
-;               DESCRIPTION:    Init PMU printer
+;               DESCRIPTION:    Printer handler thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread_name  DB 'Init PMU ', 0
+pmu_thread_name  DB 'PMU ', 0
 
-init_thread Proc far
+pmu_thread:
     mov ax,SEG data
     mov ds,ax
-    int 3
-    ret
-init_thread Endp
+    GetThread
+    mov ds:pmu_server_thread,ax
+;
+    mov eax,SIZE usb_printer_struc
+    AllocateSmallGlobalMem
+    mov es:printer_device,0
+;    
+    mov ax,ds:pmu_controller
+    movzx dx,ds:pmu_port
+    push ds
+    mov bx,es
+    mov ds,bx
+    AddPrinter
+    pop ds
+;
+    mov es:pr_get_name_proc,OFFSET get_printer_name
+    mov es:pr_get_name_proc+4,cs
+;
+    mov es:pr_jammed_proc,OFFSET is_jammed
+    mov es:pr_jammed_proc+4,cs
+;    
+    mov es:pr_paper_low_proc,OFFSET is_paper_low
+    mov es:pr_paper_low_proc+4,cs
+;    
+    mov es:pr_paper_end_proc,OFFSET is_paper_end
+    mov es:pr_paper_end_proc+4,cs
+;    
+    mov es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
+    mov es:pr_cutter_jammed_proc+4,cs
+;    
+    mov es:pr_ok_proc,OFFSET is_ok
+    mov es:pr_ok_proc+4,cs
+;    
+    mov es:pr_head_lifted_proc,OFFSET is_head_lifted
+    mov es:pr_head_lifted_proc+4,cs
+;    
+    mov es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
+    mov es:pr_paper_in_presenter_proc+4,cs
+;    
+    mov es:pr_temp_error_proc,OFFSET has_temp_error
+    mov es:pr_temp_error_proc+4,cs
+;    
+    mov es:pr_feed_error_proc,OFFSET has_feed_error
+    mov es:pr_feed_error_proc+4,cs
+;    
+    mov es:pr_print_test_proc,OFFSET print_test
+    mov es:pr_print_test_proc+4,cs
+;    
+    mov es:pr_create_bitmap_proc,OFFSET create_bitmap
+    mov es:pr_create_bitmap_proc+4,cs
+;    
+    mov es:pr_print_bitmap_proc,OFFSET print_bitmap
+    mov es:pr_print_bitmap_proc+4,cs
+;    
+    mov es:pr_present_media_proc,OFFSET present_media
+    mov es:pr_present_media_proc+4,cs
+;    
+    mov es:pr_eject_media_proc,OFFSET eject_media
+    mov es:pr_eject_media_proc+4,cs
+;    
+    mov es:pr_wait_for_print_proc,OFFSET wait_for_print
+    mov es:pr_wait_for_print_proc+4,cs
+;    
+    mov es:pr_reset_proc,OFFSET reset_printer
+    mov es:pr_reset_proc+4,cs    
+
+pmuRestart:
+    mov bx,ds:pmu_controller
+    mov al,ds:pmu_port
+    OpenUsbDevice
+    mov ds:pmu_dev_handle,bx
+    mov ds:pmu_status,0
+;
+    mov ax,250
+    WaitMilliSec
+;
+    call OpenPipes
+;
+
+pmuStatusLoop:
+    test ds:pmu_flag,FLAG_ATTACHED
+    jz pmuDetached
+;
+    call CheckStatus
+;
+    mov ax,250
+    WaitMilliSec
+    jmp pmuStatusLoop
+        
+pmuDetached:
+    call ClosePipes
+;
+    xor bx,bx
+    xchg bx,ds:pmu_dev_handle
+    CloseUsbDevice
+
+pmuWaitAttach:
+    test ds:pmu_flag,FLAG_ATTACHED
+    jnz pmuRestart
+;
+    WaitForSignal
+    jmp pmuWaitAttach        
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -925,122 +1028,6 @@ sfCopyDone:
     pop ds
     ret
 StartThread Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           PmuThread
-;
-;               DESCRIPTION:    Printer handler thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-pmu_thread_name  DB 'PMU ', 0
-
-pmu_thread:
-    mov ax,SEG data
-    mov ds,ax
-    GetThread
-    mov ds:pmu_server_thread,ax
-;
-    mov eax,SIZE usb_printer_struc
-    AllocateSmallGlobalMem
-    mov es:printer_device,0
-;    
-    mov ax,ds:pmu_controller
-    movzx dx,ds:pmu_port
-    push ds
-    mov bx,es
-    mov ds,bx
-    AddPrinter
-    pop ds
-;
-    mov es:pr_get_name_proc,OFFSET get_printer_name
-    mov es:pr_get_name_proc+4,cs
-;
-    mov es:pr_jammed_proc,OFFSET is_jammed
-    mov es:pr_jammed_proc+4,cs
-;    
-    mov es:pr_paper_low_proc,OFFSET is_paper_low
-    mov es:pr_paper_low_proc+4,cs
-;    
-    mov es:pr_paper_end_proc,OFFSET is_paper_end
-    mov es:pr_paper_end_proc+4,cs
-;    
-    mov es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
-    mov es:pr_cutter_jammed_proc+4,cs
-;    
-    mov es:pr_ok_proc,OFFSET is_ok
-    mov es:pr_ok_proc+4,cs
-;    
-    mov es:pr_head_lifted_proc,OFFSET is_head_lifted
-    mov es:pr_head_lifted_proc+4,cs
-;    
-    mov es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
-    mov es:pr_paper_in_presenter_proc+4,cs
-;    
-    mov es:pr_temp_error_proc,OFFSET has_temp_error
-    mov es:pr_temp_error_proc+4,cs
-;    
-    mov es:pr_feed_error_proc,OFFSET has_feed_error
-    mov es:pr_feed_error_proc+4,cs
-;    
-    mov es:pr_print_test_proc,OFFSET print_test
-    mov es:pr_print_test_proc+4,cs
-;    
-    mov es:pr_create_bitmap_proc,OFFSET create_bitmap
-    mov es:pr_create_bitmap_proc+4,cs
-;    
-    mov es:pr_print_bitmap_proc,OFFSET print_bitmap
-    mov es:pr_print_bitmap_proc+4,cs
-;    
-    mov es:pr_present_media_proc,OFFSET present_media
-    mov es:pr_present_media_proc+4,cs
-;    
-    mov es:pr_eject_media_proc,OFFSET eject_media
-    mov es:pr_eject_media_proc+4,cs
-;    
-    mov es:pr_wait_for_print_proc,OFFSET wait_for_print
-    mov es:pr_wait_for_print_proc+4,cs
-;    
-    mov es:pr_reset_proc,OFFSET reset_printer
-    mov es:pr_reset_proc+4,cs    
-
-pmuRestart:
-    mov bx,ds:pmu_controller
-    mov al,ds:pmu_port
-    OpenUsbDevice
-    mov ds:pmu_dev_handle,bx
-    mov ds:pmu_status,0
-;
-    mov ax,250
-    WaitMilliSec
-;
-    call OpenPipes
-;
-
-pmuStatusLoop:
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz pmuDetached
-;
-    call CheckStatus
-;
-    mov ax,250
-    WaitMilliSec
-    jmp pmuStatusLoop
-        
-pmuDetached:
-    xor bx,bx
-    xchg bx,ds:pmu_dev_handle
-    CloseUsbDevice
-    call ClosePipes
-
-pmuWaitAttach:
-    test ds:pmu_flag,FLAG_ATTACHED
-    jnz pmuRestart
-;
-    WaitForSignal
-    jmp pmuWaitAttach        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
