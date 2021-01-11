@@ -2706,7 +2706,7 @@ OpenPort    Proc near
     mov dl,ds:uds_bulk_out
     mov cx,ds:uds_out_size
     shl cx,2
-    mov ax,2
+    mov ax,5
     OpenUsbRawPipe
     mov ds:uds_out_buffer,es
     pop es
