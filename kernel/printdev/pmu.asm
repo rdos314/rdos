@@ -432,10 +432,13 @@ ClosePipes   Endp
 
 ReadAnswer    Proc near
     push es
+    push edx
     push edi
+    push ebp
 ;
     mov es,ds:pmu_in_buffer
     xor edi,edi
+    mov bp,16
 
 raWaitLoop:
     test ds:pmu_flag,FLAG_ATTACHED
@@ -449,15 +452,23 @@ raWaitLoop:
     mov dl,ds:pmu_in_pipe
     GetUsedUsbBuffers
     or cx,cx
-    jz raDone
+    jz raNext
 ;
     mov es,ds:pmu_in_buffer
     xor edi,edi
     movzx ecx,ds:pmu_max_in
     ReadUsbPipe
     or cx,cx
-    jz raWaitLoop
+    jnz raHasData
+
+raNext:
+    sub bp,1
+    jnz raWaitLoop
 ;
+    stc
+    jmp raDone
+  
+raHasData:
     add di,cx
 
 raDataLoop:
@@ -483,7 +494,9 @@ raDataLoop:
 raDone:
     mov cx,di
 ;
+    pop ebp
     pop edi
+    pop edx
     pop es
     ret
 ReadAnswer  Endp
@@ -500,6 +513,10 @@ ReadAnswer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckStatus    Proc near
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz csDone
+;
     mov es,ds:pmu_out_buffer
     xor di,di
 ;
@@ -603,7 +620,25 @@ get_printer_name   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_jammed   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
     clc
+    jz ijDone
+;
+    mov eax,ds:pmu_status
+    test eax,40000h
+    stc
+    jnz ijDone
+;
+    clc
+
+ijDone:
+    pop eax
+    pop ds
     ret
 is_jammed   Endp
 
@@ -621,7 +656,29 @@ is_jammed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_paper_low   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
     clc
+    jz iplDone
+;
+    mov eax,ds:pmu_status
+    test eax,8000000h
+    stc
+    jnz iplDone
+;
+    test eax,4000000h
+    stc
+    jnz iplDone
+;
+    clc
+
+iplDone:
+    pop eax
+    pop ds
     ret
 is_paper_low   Endp
 
@@ -639,7 +696,25 @@ is_paper_low   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_paper_end   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
     clc
+    jz ipeDone
+;
+    mov eax,ds:pmu_status
+    test eax,20000000h
+    stc
+    jnz ipeDone
+;
+    clc
+
+ipeDone:
+    pop eax
+    pop ds
     ret
 is_paper_end   Endp
 
@@ -657,7 +732,25 @@ is_paper_end   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_cutter_jammed   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
     clc
+    jz icjDone
+;
+    mov eax,ds:pmu_status
+    test eax,80000h
+    stc
+    jnz icjDone
+;
+    clc
+
+icjDone:
+    pop eax
+    pop ds
     ret
 is_cutter_jammed   Endp
 
@@ -675,7 +768,25 @@ is_cutter_jammed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_ok   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz iokDone
+;
+    mov eax,ds:pmu_status
+    test eax,8
+    stc
+    jnz iokDone
+;
     clc
+
+iokDone:
+    pop eax
+    pop ds
     ret
 is_ok   Endp
 
@@ -693,7 +804,25 @@ is_ok   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_head_lifted   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
     clc
+    jz ihlDone
+;
+    mov eax,ds:pmu_status
+    test eax,400h
+    stc
+    jnz ihlDone
+;
+    clc
+
+ihlDone:
+    pop eax
+    pop ds
     ret
 is_head_lifted   Endp
 
@@ -711,7 +840,25 @@ is_head_lifted   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 has_paper_in_presenter   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
     clc
+    jz hppDone
+;
+    mov eax,ds:pmu_status
+    test eax,40000000h
+    stc
+    jz hppDone
+;
+    clc
+
+hppDone:
+    pop eax
+    pop ds
     ret
 has_paper_in_presenter   Endp
 
@@ -747,6 +894,25 @@ has_temp_error   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 has_feed_error   Proc far
+    push ds
+    push eax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:pmu_flag,FLAG_ATTACHED
+    clc
+    jz hfeDone
+;
+    mov eax,ds:pmu_status
+    test eax,4000h
+    stc
+    jnz hfeDone
+;
+    clc
+
+hfeDone:
+    pop eax
+    pop ds
     ret
 has_feed_error   Endp
 
@@ -1143,6 +1309,9 @@ pmuRestart:
 
 pmuStatusLoop:
     call CheckStatus
+;
+    mov ax,250
+    WaitMilliSec
     jmp pmuStatusLoop
 
     call ClearReceiver
