@@ -2398,7 +2398,17 @@ CreateIntrPipe  Endp
 
 
 CreateBulkPipe   Proc far
-    int 3
+    push fs
+    push gs
+    push eax
+;   
+    mov ax,flat_sel
+    mov fs,ax
+    call AllocatePipe
+;
+    pop eax
+    pop gs
+    pop fs
     retf32
 CreateBulkPipe   Endp
 
