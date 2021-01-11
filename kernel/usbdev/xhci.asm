@@ -1565,7 +1565,7 @@ aeSetup:
     mov gs:[si].ec_tr_dequeue,eax
     mov gs:[si].ec_tr_dequeue+4,ebx
 ;
-    mov ax,es:usbd_maxlen
+    mov ax,fs:[di].ued_maxsize
     mov gs:[si].ec_avg_len,ax
     mov gs:[si].ec_packet_size,ax
     movzx eax,ax
