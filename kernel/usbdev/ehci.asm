@@ -156,6 +156,7 @@ ehci_raw_sel       STRUC
 er_base            usb_raw_struc <>
 
 er_td              DD ?
+er_size            DW ?
 
 ehci_raw_sel       ENDS
 
@@ -3034,6 +3035,7 @@ WriteRaw   Proc far
     mov edx,ds:usbr_buf_linear
     LinearToPhysicalMemBlk
 ;
+    mov ds:er_size,cx
     mov edx,ds:er_td
     mov fs:[edx].qtd_next,1
     mov fs:[edx].qtd_alt,1
@@ -3079,16 +3081,16 @@ FinishRaw   Proc far
     mov ds,gs:usbp_raw_sel
 ;
     mov edx,ds:er_td
-    mov eax,fs:[edx].qh_next_qtd
-    test al,1
-    jnz frOk
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jz frOk
 ;
     call StopTds
     stc
     jmp frDone
 
 frOk:
-    mov cx,gs:ued_maxsize
+    mov cx,ds:er_size
     mov ax,fs:[edx].qtd_size
     and ax,7FFFh
     sub cx,ax
