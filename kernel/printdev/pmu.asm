@@ -72,6 +72,9 @@ data    SEGMENT byte public 'DATA'
 
 pmu_controller       DW ?
 pmu_port             DB ?
+pmu_pad              DB ?
+
+pmu_dev_handle       DW ?
 
 pmu_max_in           DW ?
 
@@ -1231,9 +1234,16 @@ pmu_thread:
     StartTimer
 
 pmuRestart:
+    int 3
+    mov bx,ds:pmu_controller
+    mov al,ds:pmu_port
+    OpenUsbDevice
+    mov ds:pmu_dev_handle,bx
+;
     mov ax,250
     WaitMilliSec
 ;
+    int 3
     call OpenPipes
     call ClearReceiver
 ;    
@@ -1272,6 +1282,11 @@ pmuWait:
     jmp pmuLoop
         
 pmuDetached:
+    int 3
+    xor bx,bx
+    xchg bx,ds:pmu_dev_handle
+    CloseUsbDevice
+;
     mov ax,5
     WaitMilliSec
 ;    
@@ -1564,6 +1579,7 @@ init    Proc far
     mov ds,ax
     InitSection ds:pmu_section
     mov ds:pmu_flag,0
+    mov ds:pmu_dev_handle,0
 ;    
     mov ax,cs
     mov ds,ax
