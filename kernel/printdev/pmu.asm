@@ -1308,6 +1308,9 @@ pmuRestart:
 ;
 
 pmuStatusLoop:
+    test ds:pmu_flag,FLAG_ATTACHED
+    jz pmuDetached
+;
     call CheckStatus
 ;
     mov ax,250
@@ -1351,7 +1354,6 @@ pmuWait:
     jmp pmuLoop
         
 pmuDetached:
-    int 3
     xor bx,bx
     xchg bx,ds:pmu_dev_handle
     CloseUsbDevice
