@@ -37,7 +37,7 @@ include ..\usbdev\usb.inc
 
         .386p
 
-MAX_OUT_SIZE = 260 * 16
+MAX_OUT_SIZE = 4096
 
 FLAG_ATTACHED          = 1
 FLAG_STARTED           = 2
@@ -72,27 +72,21 @@ data    SEGMENT byte public 'DATA'
 
 pmu_controller       DW ?
 pmu_port             DB ?
-pmu_pad              DB ?
+pmu_flag             DB ?
 
 pmu_dev_handle       DW ?
 
 pmu_max_in           DW ?
+pmu_wait             DW ?
 
 pmu_in_buffer        DW ?
 pmu_out_buffer       DW ?
-
-pmu_in_handle        DW ?
-pmu_out_handle       DW ?
-
-pmu_in_req           DW ?
-pmu_out_req          DW ?
 
 pmu_out_pipe         DB ?
 pmu_in_pipe          DB ?
 
 pmu_section          section_typ <>
 
-pmu_flag             DB ?
 
 pmu_session_thread   DW ?
 
@@ -262,178 +256,8 @@ dsLoop:
     LeaveSection ds:pmu_section
 ;
     test ds:pmu_flag,FLAG_ATTACHED
-    jz dsCheckRead
+    jz dsDone
 ;    
-    push ds
-    push es
-    pusha
-;    
-    mov cx,50
-    mov bx,ds:pmu_out_req
-;    IsUsbReqStarted
-    jc dsWriteDo
-
-dsWriteWait:    
-;    IsUsbReqReady
-    jnc dsWriteDo
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz dsWritePop
-;
-    mov ax,5
-    WaitMilliSec
-    loop dsWriteWait
-;
-    jmp dsWritePop
-
-dsWriteDo:
-    mov ax,es
-    mov es,ds:pmu_out_buffer
-    mov ds,ax
-    mov si,SIZE cmd_session_struc
-    xor di,di
-    mov cx,ds:cs_req_size
-    rep movsb
-    mov cx,ds:cs_req_size
-;    StartUsbReq
-
-dsWritePop:
-    popa
-    pop es
-    pop ds    
-
-dsCheckRead:
-    mov ax,es:cs_wait
-    or ax,ax
-    jz dsFree
-;
-    push bx
-    push cx
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz dsSignal
-;
-    mov cx,10
-
-dsReadLoop:
-    mov bx,ds:pmu_in_req
-;    IsUsbReqStarted
-    jnc dsReadStarted
-;
-    push es
-;    StartUsbReq
-    pop es
-
-dsReadStarted:    
-    mov bx,ds:pmu_in_req
-;    IsUsbReqReady
-    jnc dsGetData
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz dsSignal
-;
-    mov ax,5
-    WaitMilliSec
-    loop dsReadLoop
-;
-    jmp dsSignal
-
-dsGetData:
-    push es
-;    GetUsbReqData
-    pop es
-    jc dsSignal
-;
-    push ds
-    push es
-    push cx
-    push si
-    push di
-    mov ds,ds:pmu_in_buffer
-    xor si,si
-    mov ax,cx
-    cmp ax,es:cs_reply_min
-    jae dsAllocReply
-;
-    mov ax,es:cs_reply_min
-
-dsAllocReply:
-    movzx eax,ax
-    AllocateSmallGlobalMem
-    xor di,di
-    rep movsb
-    mov ax,es
-    pop di
-    pop si
-    pop cx
-    pop es
-    pop ds
-;
-    mov es:cs_reply_buf,ax
-    mov es:cs_reply_size,cx
-
-dsReadMore:
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz dsSignal
-;
-    cmp cx,es:cs_reply_min
-    jae dsSignal
-;
-    mov bx,ds:pmu_in_req
-    push es
-;    StartUsbReq
-    pop es
-;    
-    mov ax,5
-    WaitMilliSec
-;    
-;    IsUsbReqReady
-    jc dsSignal
-;
-    push es
-;    GetUsbReqData
-    pop es
-    jc dsSignal
-;
-    push ds
-    push es
-    push cx
-    push si
-    push di
-    mov ds,ds:pmu_in_buffer
-    xor si,si
-    mov di,es:cs_reply_size
-    mov ax,di
-    add ax,cx
-    cmp ax,es:cs_reply_min
-    jbe dsCopyMore
-;
-    mov cx,es:cs_reply_min
-    sub cx,di
-
-dsCopyMore:    
-    mov es,es:cs_reply_buf
-    rep movsb
-    pop di
-    pop si
-    pop cx
-    pop es
-    pop ds
-;
-    add es:cs_reply_size,cx
-    mov cx,es:cs_reply_size
-    jmp dsReadMore
-
-dsSignal:
-    mov bx,es:cs_wait
-    Signal
-    pop cx
-    pop bx
-    jmp dsLoop
-
-dsFree:
-    call FreeSessionSel
-    jmp dsLoop
 
 dsDone:
     pop ax
@@ -477,7 +301,6 @@ GetId   Proc near
     push di
 ;
     mov ah,al
-    mov bx,ds:pmu_out_req
     mov es,ds:pmu_out_buffer
     xor di,di
 ;    
@@ -491,53 +314,12 @@ GetId   Proc near
     stosb
 ;
     test ds:pmu_flag,FLAG_ATTACHED
-    jz giOffline
+    jz giOk
 ;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
     mov cx,3
-;    StartUsbReq
-;
-    xor dx,dx
-    mov bx,ds:pmu_in_req
-;    IsUsbReqStarted
-    jnc giLoop
-;
-;    StartUsbReq
-
-giLoop:
-    mov ax,5
-    WaitMilliSec
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz giOffline
-;
-    mov bx,ds:pmu_in_req
-;    IsUsbReqReady
-    jnc giRead
-;
-    inc dx
-    cmp dx,30
-    jne giLoop
-;
-    jmp giOffline
-
-giRead:
-;    GetUsbReqData
-    mov es,ds:pmu_in_buffer
-;
-;    StartUsbReq
-;
-    mov ax,5
-    WaitMilliSec
-;
-    test ds:pmu_flag,FLAG_ATTACHED
-    jz giOffline
-;
-    mov bx,ds:pmu_in_req
-;    IsUsbReqReady
-    jnc giRead
-    jmp giOk
-
-giOffline:    
+    PostUsbRawPipe
 
 giOk:
     pop di
@@ -558,30 +340,6 @@ GetId    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearReceiver    Proc near
-    mov bx,ds:pmu_in_req
-;    IsUsbReqStarted
-    jnc crLoop
-
-;    StartUsbReq
-    mov ax,50
-    WaitMilliSec
-
-crLoop:
-;    IsUsbReqReady
-    jc crDone
-;
-    push es
-;    GetUsbReqData
-    pop es
-    jc crDone
-;
-;    StartUsbReq
-;
-    mov ax,50
-    WaitMilliSec
-    jmp crLoop
-
-crDone:
     ret
 ClearReceiver    Endp
 
@@ -595,30 +353,33 @@ ClearReceiver    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPipes   Proc near
-    mov bx,ds:pmu_controller
-;    mov al,ds:pmu_device
-    mov dl,ds:pmu_in_pipe
-;    OpenUsbPipe
-    mov ds:pmu_in_handle,bx
-;
-;    CreateUsbReq
-    mov ds:pmu_in_req,bx    
-    mov cx,ds:pmu_max_in
-;    AddReadUsbDataReq
+    push es
+    movzx eax,ds:pmu_max_in
+    AllocateSmallGlobalMem
     mov ds:pmu_in_buffer,es
+    pop es
 ;
-    mov bx,ds:pmu_controller
-;    mov al,ds:pmu_device
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_in_pipe
+    mov cx,10
+    OpenUsbPacketPipe
+;
+    push es
+    mov bx,ds:pmu_dev_handle
     mov dl,ds:pmu_out_pipe
-;    OpenUsbPipe    
-    mov ds:pmu_out_handle,bx
-;
-;    CreateUsbReq
-    mov ds:pmu_out_req,bx
     mov cx,MAX_OUT_SIZE
-;    AddWriteUsbDataReq
+    mov ax,5
+    OpenUsbRawPipe
     mov ds:pmu_out_buffer,es
+    pop es
 ;
+    CreateWait
+    mov ds:pmu_wait,bx
+;
+    mov ax,ds:pmu_dev_handle
+    mov dl,ds:pmu_in_pipe
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
     ret
 OpenPipes   Endp    
 
@@ -637,23 +398,18 @@ ClosePipes    Proc near
     xor ax,ax
     mov es,ax
     mov fs,ax
-;    
-    mov bx,ds:pmu_in_req
-;    CloseUsbReq
-    mov ds:pmu_in_req,0
 ;
-    mov bx,ds:pmu_in_handle
-;    CloseUsbPipe    
-    mov ds:pmu_in_handle,0
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_in_pipe
+    CloseUsbPipe
 ;
-    mov bx,ds:pmu_out_req
-;    CloseUsbReq
-    mov ds:pmu_out_req,0
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    CloseUsbPipe
 ;
-    mov bx,ds:pmu_out_handle
-;    CloseUsbPipe    
-    mov ds:pmu_out_handle,0
-    mov ds:pmu_in_buffer,0
+    mov bx,ds:pmu_wait
+    CloseWait
+;
     mov ds:pmu_out_buffer,0
 ;
     lock or ds:pmu_flag,FLAG_CLOSED
@@ -972,11 +728,8 @@ reset_printer   Proc far
     jz reset_done
 ;    
     lock and ds:pmu_flag,NOT FLAG_ATTACHED
-    mov bx,ds:pmu_controller
-    mov al,ds:pmu_port
-    OpenUsbDevice
+    mov bx,ds:pmu_dev_handle
     ResetUsbDevice
-    CloseUsbDevice
     clc
 
 reset_done:    
@@ -1234,7 +987,6 @@ pmu_thread:
     StartTimer
 
 pmuRestart:
-    int 3
     mov bx,ds:pmu_controller
     mov al,ds:pmu_port
     OpenUsbDevice
