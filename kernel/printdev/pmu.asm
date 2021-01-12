@@ -47,6 +47,14 @@ FLAG_STATUS            = 10h
 
 GS_CH                  = 1Dh
 
+bitmap_sel       STRUC
+
+bs_line_size     DW ?
+bs_height        DW ?
+bs_data          DB ?
+
+bitmap_sel       ENDS
+
 usb_printer_struc       STRUC
 
 ups_base_struc  printer_struc <>
@@ -528,6 +536,69 @@ GetPrinterVersion  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateLocalBitmap
+;
+;       DESCRIPTION:    create local bitmap
+;
+;       PARAMETERS:     DS        Printer sel
+;                       CX        Width
+;                       DX        Height       
+;
+;       RETURNS:        BX        Bitmap selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateLocalBitmap    Proc near
+    push ds
+    push es
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,1
+    CreateBitmap
+;
+    SetFilledStyle
+;
+    mov eax,0FFFFFFFFh
+    SetDrawColor
+;
+    shr cx,1
+    shr dx,1
+    mov si,cx
+    mov di,dx
+    DrawEllipse
+;
+    GetBitmapInfo
+    movzx ecx,si
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    movzx eax,dx
+    mul ecx
+    mov ecx,eax
+    add eax,OFFSET bs_data
+    AllocateSmallGlobalMem
+    mov es:bs_line_size,cx
+    mov es:bs_height,dx
+    mov edi,OFFSET bs_data
+    rep movsb
+    int 3
+    mov bx,es
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    pop ds
+    ret
+CreateLocalBitmap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetPageMode
 ;
 ;       DESCRIPTION:    Set page mode
@@ -765,10 +836,10 @@ PrintGraphLine    Proc near
 
 pglLoop:
     stosb
-    not al
-    stosb
-    not al
-    stosb
+    push ax
+    mov ax,0FFh
+    stosw
+    pop ax
     dec al
     loop pglLoop
 ;
@@ -836,6 +907,14 @@ PrintTextLine  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrintText    Proc near
+    int 3
+    mov cx,576
+    mov dx,100
+    call CreateLocalBitmap
+    
+
+
+
     push ds
     push es
 ;
