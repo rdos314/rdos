@@ -730,11 +730,6 @@ is_ok   Proc far
     stc
     jz iokDone
 ;
-    mov eax,ds:pmu_status
-    test eax,8
-    stc
-    jnz iokDone
-;
     clc
 
 iokDone:
