@@ -90,6 +90,8 @@ pmu_section          section_typ <>
 
 pmu_server_thread    DW ?
 
+pmu_model            DB 32 DUP(?)
+
 data    ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -336,6 +338,191 @@ CheckStatus  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetPrinterModel
+;
+;       DESCRIPTION:    Get printer model
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+def_model DB 'PMU', 0
+
+GetPrinterModel    Proc near
+    push ds
+    push es
+;
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz gpmDone
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,49h
+    stosb
+;
+    mov al,67
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+    jc gpmDone
+;
+    call ReadAnswer
+    or cx,cx
+    jz gpmFail
+;
+    mov ax,ds
+    mov es,ax
+    mov ds,ds:pmu_in_buffer
+    mov esi,1
+    mov edi,OFFSET pmu_model
+    mov ecx,30
+
+gpmCopyName:
+    lodsb
+    stosb
+    or al,al
+    jz gpmOk
+;
+    loop gpmCopyName
+;
+    xor al,al
+    stosb
+
+gpmOk:
+    clc
+    jmp gpmDone
+
+gpmFail:
+    mov ax,ds
+    mov es,ax
+    mov ax,cs
+    mov ds,ax
+;
+    mov esi,OFFSET def_model
+    mov edi,OFFSET pmu_model
+    mov ecx,30
+
+gpmDefName:
+    lodsb
+    stosb
+    or al,al
+    jz gpmOk
+;
+    loop gpmDefName
+;
+    xor al,al
+    stosb
+;
+    stc
+
+gpmDone:
+    pop es
+    pop ds
+    ret
+GetPrinterModel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetPrinterVersion
+;
+;       DESCRIPTION:    Get printer version
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPrinterVersion    Proc near
+    push ds
+    push es
+;
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz gpvDone
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,49h
+    stosb
+;
+    mov al,65
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+    jc gpvDone
+;
+    call ReadAnswer
+    or cx,cx
+    jz gpvDone
+;
+    int 3
+    mov ax,ds
+    mov es,ax
+    mov edi,OFFSET pmu_model
+    mov ecx,30
+
+gpvScanLoop:
+    mov al,es:[edi]
+    or al,al
+    jz gpvScanOk
+;
+    inc edi
+    loop gpvScanLoop
+
+gpvScanOk:
+    or ecx,ecx
+    jz gpvDone
+;
+    mov al,' '
+    stosb
+    sub ecx,1
+    jz gpvPad
+;
+    mov ds,ds:pmu_in_buffer
+    mov esi,1
+
+gpvCopyLoop:
+    lodsb
+    stosb
+;
+    or al,al
+    jz gpvDone
+;
+    cmp al,0Ah
+    jz gpvPad
+;
+    loop gpvCopyLoop
+
+gpvPad:
+    xor al,al
+    stosb
+
+gpvDone:
+    pop es
+    pop ds
+    ret
+GetPrinterVersion  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetPrinterName
 ;
 ;       DESCRIPTION:    Get printer name
@@ -345,22 +532,25 @@ CheckStatus  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-my_name DB 'PMU', 0
 
 get_printer_name   Proc far
-    push si
+    push ds
+    push esi
     push edi
 ;
-    mov si,OFFSET my_name
+    mov ax,SEG data
+    mov ds,ax
+    mov esi,OFFSET pmu_model
 
-get_pr_name_loop:    
-    lods byte ptr cs:[si]
-    stos byte ptr es:[edi]
+get_pr_name_loop:  
+    lodsb  
+    stosb
     or al,al
     jnz get_pr_name_loop
 ;
     pop edi
-    pop si    
+    pop esi
+    pop ds    
     ret
 get_printer_name   Endp
 
@@ -900,6 +1090,8 @@ pmuRestart:
 ;
     call OpenPipes
 ;
+    call GetPrinterModel
+    call GetPrinterVersion
 
 pmuStatusLoop:
     test ds:pmu_flag,FLAG_ATTACHED
