@@ -747,6 +747,8 @@ PrintGraphLine    Proc near
     mov es,ds:pmu_out_buffer
     xor di,di
 ;
+    mov cx,576
+;
     mov al,1Bh
     stosb
 ;
@@ -756,14 +758,19 @@ PrintGraphLine    Proc near
     mov al,21h
     stosb
 ;
-    mov al,8
-    stosb
-;
-    mov al,0
-    stosb
+    mov ax,cx
+    stosw
 ;
     mov al,0FFh
+
+pglLoop:
     stosb
+    not al
+    stosb
+    not al
+    stosb
+    dec al
+    loop pglLoop
 ;
     mov cx,di
 ;    
@@ -839,7 +846,8 @@ PrintText    Proc near
     call SetPageSize
     call SetPrintDir
 ;
-    call PrintTextLine
+    call PrintGraphLine
+;
     call PrintPage    
     call FullCut
 ;
