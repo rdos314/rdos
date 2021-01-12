@@ -472,7 +472,6 @@ GetPrinterVersion    Proc near
     or cx,cx
     jz gpvDone
 ;
-    int 3
     mov ax,ds
     mov es,ax
     mov edi,OFFSET pmu_model
@@ -506,8 +505,14 @@ gpvCopyLoop:
     jz gpvDone
 ;
     cmp al,0Ah
-    jz gpvPad
+    jnz gpvNext
 ;
+    dec edi
+    xor al,al
+    stosb
+    jmp gpvDone
+
+gpvNext:
     loop gpvCopyLoop
 
 gpvPad:
