@@ -528,6 +528,279 @@ GetPrinterVersion  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetPageMode
+;
+;       DESCRIPTION:    Set page mode
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPageMode    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Bh
+    stosb
+;
+    mov al,4Ch
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+SetPageMode  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetPageSize
+;
+;       DESCRIPTION:    Set page size
+;
+;       PARAMETERS:     DS        Printer sel
+;                       CX        Width
+;                       DX        Height       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPageSize    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Bh
+    stosb
+;
+    mov al,57h
+    stosb
+;
+    xor ax,ax
+    stosw
+;
+    xor ax,ax
+    stosw
+;
+    mov ax,cx
+    stosw
+;
+    mov ax,dx
+    stosw
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+SetPageSize  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetPrintDir
+;
+;       DESCRIPTION:    Set print direction
+;
+;       PARAMETERS:     DS        Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPrintDir    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Bh
+    stosb
+;
+    mov al,54h
+    stosb
+;
+    xor al,al
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+SetPrintDir  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintPage
+;
+;       DESCRIPTION:    Print page
+;
+;       PARAMETERS:     DS        Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintPage    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,0Ch
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+PrintPage  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FullCut
+;
+;       DESCRIPTION:    Do a full cut + feed
+;
+;       PARAMETERS:     DS        Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FullCut    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,56h
+    stosb
+;
+    mov al,65
+    stosb
+;
+    mov al,50
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+FullCut  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintText
+;
+;       DESCRIPTION:    Print text
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintText    Proc near
+    push ds
+    push es
+;
+    call SetPageMode
+;
+    mov cx,576
+    mov dx,100
+    call SetPageSize
+    call SetPrintDir
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+;    mov al,1Bh
+;    stosb
+;
+;    mov al,2Ah
+;    stosb
+;
+;    mov al,21h
+;    stosb
+;
+;    mov al,8
+;    stosb
+;
+;    mov al,0
+;    stosb
+;
+;    mov al,0FFh
+;    stosb
+;
+    mov al,'H'
+    stosb
+;
+    mov al,'e'
+    stosb
+;
+    mov al,'j'
+    stosb
+;
+    mov al,'!'
+    stosb
+;
+    mov al,0Dh
+    stosb
+;
+    mov al,0Ah
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    call PrintPage
+    call FullCut
+;
+    pop es
+    pop ds
+    ret
+PrintText  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetPrinterName
 ;
 ;       DESCRIPTION:    Get printer name
@@ -1092,6 +1365,7 @@ pmuRestart:
 ;
     call GetPrinterModel
     call GetPrinterVersion
+    call PrintText
 
 pmuStatusLoop:
     test ds:pmu_flag,FLAG_ATTACHED
