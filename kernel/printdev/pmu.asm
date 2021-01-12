@@ -667,6 +667,12 @@ PrintPage    Proc near
     mov es,ds:pmu_out_buffer
     xor di,di
 ;
+    mov al,0Dh
+    stosb
+;
+    mov al,0Ah
+    stosb
+;
     mov al,0Ch
     stosb
 ;
@@ -709,7 +715,7 @@ FullCut    Proc near
     mov al,65
     stosb
 ;
-    mov al,50
+    mov al,200
     stosb
 ;
     mov cx,di
@@ -722,6 +728,94 @@ FullCut    Proc near
     pop ds
     ret
 FullCut  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintGraphLine
+;
+;       DESCRIPTION:    Print graph line
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintGraphLine    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,1Bh
+    stosb
+;
+    mov al,2Ah
+    stosb
+;
+    mov al,21h
+    stosb
+;
+    mov al,8
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,0FFh
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+PrintGraphLine  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintTextLine
+;
+;       DESCRIPTION:    Print text line
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintTextLine    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor di,di
+;
+    mov al,'H'
+    stosb
+;
+    mov al,'e'
+    stosb
+;
+    mov al,'j'
+    stosb
+;
+    mov al,'!'
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+PrintTextLine  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -745,52 +839,8 @@ PrintText    Proc near
     call SetPageSize
     call SetPrintDir
 ;
-    mov es,ds:pmu_out_buffer
-    xor di,di
-;
-;    mov al,1Bh
-;    stosb
-;
-;    mov al,2Ah
-;    stosb
-;
-;    mov al,21h
-;    stosb
-;
-;    mov al,8
-;    stosb
-;
-;    mov al,0
-;    stosb
-;
-;    mov al,0FFh
-;    stosb
-;
-    mov al,'H'
-    stosb
-;
-    mov al,'e'
-    stosb
-;
-    mov al,'j'
-    stosb
-;
-    mov al,'!'
-    stosb
-;
-    mov al,0Dh
-    stosb
-;
-    mov al,0Ah
-    stosb
-;
-    mov cx,di
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    PostUsbRawPipe
-;
-    call PrintPage
+    call PrintTextLine
+    call PrintPage    
     call FullCut
 ;
     pop es
