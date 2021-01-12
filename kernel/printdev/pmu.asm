@@ -285,7 +285,7 @@ CheckStatus    Proc near
     jz csDone
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,10h
     stosb
@@ -365,7 +365,7 @@ GetPrinterModel    Proc near
     jz gpmDone
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,1Dh
     stosb
@@ -458,7 +458,7 @@ GetPrinterVersion    Proc near
     jz gpvDone
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,1Dh
     stosb
@@ -584,7 +584,6 @@ CreateLocalBitmap    Proc near
     mov es:bs_height,dx
     mov edi,OFFSET bs_data
     rep movsb
-    int 3
     mov bx,es
 ;
     pop edi
@@ -595,6 +594,80 @@ CreateLocalBitmap    Proc near
     pop ds
     ret
 CreateLocalBitmap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintLine
+;
+;       DESCRIPTION:    Print graphic line
+;
+;       PARAMETERS:     DS      Printer sel
+;                       BX      Bitmap sel
+;                       DX      Start height
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintLine    Proc near
+    push ds
+    push es
+;
+    mov es,ds:pmu_out_buffer
+    xor edi,edi
+;
+    mov cx,576
+;
+    mov al,1Bh
+    stosb
+;
+    mov al,2Ah
+    stosb
+;
+    mov al,21h
+    stosb
+;
+    mov ax,cx
+    stosw
+;
+    mov ds,bx
+    movzx edx,dx
+    movzx eax,ds:bs_line_size
+    mul edx
+    add eax,OFFSET bs_data
+    mov esi,eax
+;
+    push edi
+    mov ecx,6
+    xor eax,eax
+    rep stosd
+    pop edi
+;
+    mov eax,ds:[esi]
+
+
+
+
+    mov al,0FFh
+
+pglLoop:
+    stosb
+    push ax
+    mov ax,0FFh
+    stosw
+    pop ax
+    dec al
+    loop pglLoop
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+;
+    pop es
+    pop ds
+    ret
+PrintGraphLine  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -612,7 +685,7 @@ SetPageMode    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,1Bh
     stosb
@@ -649,7 +722,7 @@ SetPageSize    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,1Bh
     stosb
@@ -697,7 +770,7 @@ SetPrintDir    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,1Bh
     stosb
@@ -719,7 +792,6 @@ SetPrintDir    Proc near
     ret
 SetPrintDir  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -736,7 +808,7 @@ PrintPage    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,0Dh
     stosb
@@ -775,7 +847,7 @@ FullCut    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,1Dh
     stosb
@@ -816,7 +888,7 @@ PrintGraphLine    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov cx,576
 ;
@@ -870,7 +942,7 @@ PrintTextLine    Proc near
     push es
 ;
     mov es,ds:pmu_out_buffer
-    xor di,di
+    xor edi,edi
 ;
     mov al,'H'
     stosb
