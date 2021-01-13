@@ -1071,24 +1071,56 @@ PrintTextLine  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrintText    Proc near
-    int 3
     push ds
     push es
 ;
     mov cx,576
     mov dx,100
     call CreateLocalBitmap
-    push ebx
+    mov es,bx
 ;
     call SetPageMode
 ;
     mov cx,576
-    mov dx,100
+    mov dx,24
     call SetPageSize
     call SetPrintDir
 ;
-    pop es
+    xor dx,dx
+    call PrintLine
+;
+    call PrintPage    
+;
+    call SetPageMode
+;
+    mov cx,576
+    mov dx,24
+    call SetPageSize
+    call SetPrintDir
+;
+    mov dx,24
+    call PrintLine
+;
+    call PrintPage    
+;
+    call SetPageMode
+;
+    mov cx,576
+    mov dx,24
+    call SetPageSize
+    call SetPrintDir
+;
     mov dx,48 
+    call PrintLine
+;
+    call PrintPage    
+;
+    mov cx,576
+    mov dx,24
+    call SetPageSize
+    call SetPrintDir
+;
+    mov dx,72
     call PrintLine
 ;
     call PrintPage    
