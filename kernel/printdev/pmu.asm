@@ -548,6 +548,8 @@ GetPrinterVersion  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+test_text DB 'RDOS', 0
+
 CreateLocalBitmap    Proc near
     push ds
     push es
@@ -559,10 +561,27 @@ CreateLocalBitmap    Proc near
     mov ax,1
     CreateBitmap
 ;
-    SetFilledStyle
-;
     mov eax,0FFFFFFFFh
     SetDrawColor
+;
+    push bx
+    mov ax,75
+    xor dx,dx
+    OpenFont
+    mov ax,bx
+    pop bx
+    SetFont
+;
+    push es
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET test_text
+    mov cx,100
+    xor dx,dx
+    DrawString
+    pop es
+;    
+    SetHollowStyle
 ;
     xor cx,cx
     xor dx,dx
@@ -908,13 +927,13 @@ PrintPage    Proc near
     mov es,ds:pmu_out_buffer
     xor edi,edi
 ;
-    mov al,0Dh
+    mov al,1Bh
     stosb
 ;
-    mov al,0Ah
+    mov al,4Ah
     stosb
 ;
-    mov al,0Ch
+    mov al,1
     stosb
 ;
     mov cx,di
@@ -1082,13 +1101,6 @@ PrintOne Proc near
     pushad
 ;
     mov si,dx
-;
-    call SetPageMode
-;
-    mov cx,576
-    mov dx,24
-    call SetPageSize
-    call SetPrintDir
 ;
     mov dx,si
     call PrintLine
