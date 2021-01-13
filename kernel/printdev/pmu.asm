@@ -575,12 +575,13 @@ CreateLocalBitmap    Proc near
     mov ax,es
     mov ds,ax
     mov esi,edi
+    mov di,cx
     movzx eax,dx
     mul ecx
     mov ecx,eax
     add eax,OFFSET bs_data
     AllocateSmallGlobalMem
-    mov es:bs_line_size,cx
+    mov es:bs_line_size,di
     mov es:bs_height,dx
     mov edi,OFFSET bs_data
     rep movsb
@@ -603,16 +604,20 @@ CreateLocalBitmap  Endp
 ;       DESCRIPTION:    Print graphic line
 ;
 ;       PARAMETERS:     DS      Printer sel
-;                       BX      Bitmap sel
+;                       ES      Bitmap sel
 ;                       DX      Start height
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrintLine    Proc near
-    push ds
     push es
+    pushad
 ;
+    push ds
+    mov ax,es
     mov es,ds:pmu_out_buffer
+    mov ds,ax
+;
     xor edi,edi
 ;
     mov cx,576
@@ -629,45 +634,132 @@ PrintLine    Proc near
     mov ax,cx
     stosw
 ;
-    mov ds,bx
     movzx edx,dx
     movzx eax,ds:bs_line_size
     mul edx
     add eax,OFFSET bs_data
     mov esi,eax
+    xor cx,cx
+    movzx edx,ds:bs_line_size
+
+plLoop:
+    push esi
 ;
-    push edi
-    mov ecx,6
-    xor eax,eax
-    rep stosd
-    pop edi
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
 ;
-    mov eax,ds:[esi]
-
-
-
-
-    mov al,0FFh
-
-pglLoop:
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
     stosb
-    push ax
-    mov ax,0FFh
-    stosw
-    pop ax
-    dec al
-    loop pglLoop
 ;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+    stosb
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+;
+    bt ds:[esi],cx
+    rcl al,1    
+    add esi,edx
+    stosb
+;
+    pop esi
+    inc cx
+    cmp cx,576
+    jne plLoop
+;    
     mov cx,di
+    pop ds
 ;    
     mov bx,ds:pmu_dev_handle
     mov dl,ds:pmu_out_pipe
     PostUsbRawPipe
 ;
+    popad
     pop es
-    pop ds
     ret
-PrintGraphLine  Endp
+PrintLine  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -980,15 +1072,13 @@ PrintTextLine  Endp
 
 PrintText    Proc near
     int 3
+    push ds
+    push es
+;
     mov cx,576
     mov dx,100
     call CreateLocalBitmap
-    
-
-
-
-    push ds
-    push es
+    push ebx
 ;
     call SetPageMode
 ;
@@ -997,7 +1087,9 @@ PrintText    Proc near
     call SetPageSize
     call SetPrintDir
 ;
-    call PrintGraphLine
+    pop es
+    mov dx,48 
+    call PrintLine
 ;
     call PrintPage    
     call FullCut
