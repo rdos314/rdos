@@ -810,7 +810,7 @@ FinishLine    Proc near
     mov al,4Ah
     stosb
 ;
-    mov al,1
+    xor al,al
     stosb
 ;
     mov cx,di
