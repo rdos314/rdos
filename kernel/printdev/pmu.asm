@@ -624,9 +624,9 @@ CreateLocalBitmap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PrintLine
+;       NAME:           SendLine
 ;
-;       DESCRIPTION:    Print graphic line
+;       DESCRIPTION:    Send graphic line
 ;
 ;       PARAMETERS:     DS      Printer sel
 ;                       ES      Bitmap sel
@@ -634,7 +634,7 @@ CreateLocalBitmap  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PrintLine    Proc near
+SendLine    Proc near
     push es
     pushad
 ;
@@ -667,7 +667,7 @@ PrintLine    Proc near
     xor cx,cx
     movzx edx,ds:bs_line_size
 
-plLoop:
+slLoop:
     push esi
 ;
     bt ds:[esi],cx
@@ -772,7 +772,7 @@ plLoop:
     pop esi
     inc cx
     cmp cx,576
-    jne plLoop
+    jne slLoop
 ;    
     mov cx,di
     pop ds
@@ -784,145 +784,22 @@ plLoop:
     popad
     pop es
     ret
-PrintLine  Endp
+SendLine  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetPageMode
+;       NAME:           FinishLine
 ;
-;       DESCRIPTION:    Set page mode
-;
-;       DS              Printer sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetPageMode    Proc near
-    push ds
-    push es
-;
-    mov es,ds:pmu_out_buffer
-    xor edi,edi
-;
-    mov al,1Bh
-    stosb
-;
-    mov al,4Ch
-    stosb
-;
-    mov cx,di
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    PostUsbRawPipe
-;
-    pop es
-    pop ds
-    ret
-SetPageMode  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetPageSize
-;
-;       DESCRIPTION:    Set page size
-;
-;       PARAMETERS:     DS        Printer sel
-;                       CX        Width
-;                       DX        Height       
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetPageSize    Proc near
-    push ds
-    push es
-;
-    mov es,ds:pmu_out_buffer
-    xor edi,edi
-;
-    mov al,1Bh
-    stosb
-;
-    mov al,57h
-    stosb
-;
-    xor ax,ax
-    stosw
-;
-    xor ax,ax
-    stosw
-;
-    mov ax,cx
-    stosw
-;
-    mov ax,dx
-    stosw
-;
-    mov cx,di
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    PostUsbRawPipe
-;
-    pop es
-    pop ds
-    ret
-SetPageSize  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetPrintDir
-;
-;       DESCRIPTION:    Set print direction
+;       DESCRIPTION:    Finish line
 ;
 ;       PARAMETERS:     DS        Printer sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetPrintDir    Proc near
-    push ds
+FinishLine    Proc near
     push es
-;
-    mov es,ds:pmu_out_buffer
-    xor edi,edi
-;
-    mov al,1Bh
-    stosb
-;
-    mov al,54h
-    stosb
-;
-    xor al,al
-    stosb
-;
-    mov cx,di
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    PostUsbRawPipe
-;
-    pop es
-    pop ds
-    ret
-SetPrintDir  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PrintPage
-;
-;       DESCRIPTION:    Print page
-;
-;       PARAMETERS:     DS        Printer sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintPage    Proc near
-    push ds
-    push es
+    pushad
 ;
     mov es,ds:pmu_out_buffer
     xor edi,edi
@@ -942,16 +819,15 @@ PrintPage    Proc near
     mov dl,ds:pmu_out_pipe
     PostUsbRawPipe
 ;
+    popad
     pop es
-    pop ds
     ret
-PrintPage  Endp
-
+FinishLine  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FullCut
+;       NAME:           SendCut
 ;
 ;       DESCRIPTION:    Do a full cut + feed
 ;
@@ -959,9 +835,9 @@ PrintPage  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FullCut    Proc near
-    push ds
+SendCut    Proc near
     push es
+    pushad
 ;
     mov es,ds:pmu_out_buffer
     xor edi,edi
@@ -984,132 +860,10 @@ FullCut    Proc near
     mov dl,ds:pmu_out_pipe
     PostUsbRawPipe
 ;
-    pop es
-    pop ds
-    ret
-FullCut  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PrintGraphLine
-;
-;       DESCRIPTION:    Print graph line
-;
-;       DS              Printer sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintGraphLine    Proc near
-    push ds
-    push es
-;
-    mov es,ds:pmu_out_buffer
-    xor edi,edi
-;
-    mov cx,576
-;
-    mov al,1Bh
-    stosb
-;
-    mov al,2Ah
-    stosb
-;
-    mov al,21h
-    stosb
-;
-    mov ax,cx
-    stosw
-;
-    mov al,0FFh
-
-pglLoop:
-    stosb
-    push ax
-    mov ax,0FFh
-    stosw
-    pop ax
-    dec al
-    loop pglLoop
-;
-    mov cx,di
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    PostUsbRawPipe
-;
-    pop es
-    pop ds
-    ret
-PrintGraphLine  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PrintTextLine
-;
-;       DESCRIPTION:    Print text line
-;
-;       DS              Printer sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintTextLine    Proc near
-    push ds
-    push es
-;
-    mov es,ds:pmu_out_buffer
-    xor edi,edi
-;
-    mov al,'H'
-    stosb
-;
-    mov al,'e'
-    stosb
-;
-    mov al,'j'
-    stosb
-;
-    mov al,'!'
-    stosb
-;
-    mov cx,di
-;    
-    mov bx,ds:pmu_dev_handle
-    mov dl,ds:pmu_out_pipe
-    PostUsbRawPipe
-;
-    pop es
-    pop ds
-    ret
-PrintTextLine  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PrintOne
-;
-;       DESCRIPTION:    Print one block
-;
-;       PARAMETERS:     DS          Printer sel
-;                       ES          Bitmap sel
-;                       DX          offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintOne Proc near
-    pushad
-;
-    mov si,dx
-;
-    mov dx,si
-    call PrintLine
-;
-    call PrintPage    
-;
     popad
+    pop es
     ret
-PrintOne Endp    
+SendCut  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1134,12 +888,14 @@ PrintText    Proc near
     xor dx,dx
 
 ptLoop:
-    call PrintOne
+    call SendLine
+    call FinishLine
+;
     add dx,24
     cmp dx,96
     jb ptLoop
 ;
-    call FullCut
+    call SendCut
 ;
     pop es
     pop ds
