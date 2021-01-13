@@ -564,10 +564,16 @@ CreateLocalBitmap    Proc near
     mov eax,0FFFFFFFFh
     SetDrawColor
 ;
-    shr cx,1
-    shr dx,1
-    mov si,cx
-    mov di,dx
+    xor cx,cx
+    xor dx,dx
+    mov si,80
+    mov di,80
+    DrawEllipse
+;
+    mov cx,576 - 80
+    xor dx,dx
+    mov si,80
+    mov di,80
     DrawEllipse
 ;
     GetBitmapInfo
@@ -1062,6 +1068,40 @@ PrintTextLine  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PrintOne
+;
+;       DESCRIPTION:    Print one block
+;
+;       PARAMETERS:     DS          Printer sel
+;                       ES          Bitmap sel
+;                       DX          offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintOne Proc near
+    pushad
+;
+    mov si,dx
+;
+    call SetPageMode
+;
+    mov cx,576
+    mov dx,24
+    call SetPageSize
+    call SetPrintDir
+;
+    mov dx,si
+    call PrintLine
+;
+    call PrintPage    
+;
+    popad
+    ret
+PrintOne Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PrintText
 ;
 ;       DESCRIPTION:    Print text
@@ -1079,51 +1119,14 @@ PrintText    Proc near
     call CreateLocalBitmap
     mov es,bx
 ;
-    call SetPageMode
-;
-    mov cx,576
-    mov dx,24
-    call SetPageSize
-    call SetPrintDir
-;
     xor dx,dx
-    call PrintLine
+
+ptLoop:
+    call PrintOne
+    add dx,24
+    cmp dx,96
+    jb ptLoop
 ;
-    call PrintPage    
-;
-    call SetPageMode
-;
-    mov cx,576
-    mov dx,24
-    call SetPageSize
-    call SetPrintDir
-;
-    mov dx,24
-    call PrintLine
-;
-    call PrintPage    
-;
-    call SetPageMode
-;
-    mov cx,576
-    mov dx,24
-    call SetPageSize
-    call SetPrintDir
-;
-    mov dx,48 
-    call PrintLine
-;
-    call PrintPage    
-;
-    mov cx,576
-    mov dx,24
-    call SetPageSize
-    call SetPrintDir
-;
-    mov dx,72
-    call PrintLine
-;
-    call PrintPage    
     call FullCut
 ;
     pop es
