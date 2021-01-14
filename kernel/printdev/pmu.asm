@@ -1200,14 +1200,6 @@ create_bitmap   Proc far
     push cx
     push dx
 ;
-    mov ax,dx
-    dec ax
-    xor dx,dx
-    mov cx,24
-    div cx
-    inc ax
-    mul cx
-    mov dx,ax
     mov ax,1
     mov cx,576
     CreateBitmap
@@ -1237,22 +1229,54 @@ print_bitmap   Proc far
     pushad
 ;
     GetBitmapInfo
-    movzx ecx,si
+    push edx
+;
     mov ax,es
     mov ds,ax
-    mov esi,edi
-    mov di,cx
-    movzx eax,dx
-    push edx
-    mul ecx
-    pop edx
-    mov ecx,eax
+;
+    mov ax,dx
+    dec ax
+    xor dx,dx
+    mov cx,24
+    div cx
+    inc ax
+    mul cx
+    mov bx,ax
+;
+    movzx ebp,si
+    movzx eax,ax
+    mul ebp
     add eax,OFFSET bs_data
+;
+    pop edx
+;
+    push eax
+    push edx
+    movzx eax,dx
+    mul ebp
+    mov ecx,eax
+    pop edx
+    pop eax
+;
+    mov esi,edi
     AllocateSmallGlobalMem
-    mov es:bs_line_size,di
-    mov es:bs_height,dx
+;
+    mov es:bs_line_size,bp
+    mov es:bs_height,bx
     mov edi,OFFSET bs_data
     rep movsb
+    int 3
+;
+    sub bx,dx
+    jz pbWait
+;
+    movzx eax,bx
+    mul ebp
+    movzx ecx,ax
+    mov al,-1
+    rep stosb
+
+pbWait:
     mov bx,es
 ;
     mov ax,SEG data
