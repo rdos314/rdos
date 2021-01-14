@@ -88,16 +88,13 @@ data    SEGMENT byte public 'DATA'
 kr_controller       DW ?
 kr_port             DB ?
 
+kr_dev_handle       DW ?
+
 kr_max_in           DW ?
+kr_wait             DW ?
 
 kr_in_buffer        DW ?
 kr_out_buffer       DW ?
-
-kr_in_handle        DW ?
-kr_out_handle       DW ?
-
-kr_in_req           DW ?
-kr_out_req          DW ?
 
 kr_out_pipe         DB ?
 kr_in_pipe          DB ?
@@ -589,8 +586,8 @@ UpdateStatus   Proc near
 ;
     call ClearStatus
 ;
-    mov bx,ds:kr_out_req
-    mov es,ds:kr_out_buffer
+;    mov bx,ds:kr_out_req
+;    mov es,ds:kr_out_buffer
     xor di,di
 ;    
     mov al,ESC
@@ -609,7 +606,7 @@ UpdateStatus   Proc near
 ;    StartUsbReq
 ;
     xor dx,dx
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
 ;    IsUsbReqStarted
     jnc dsStatusLoop
 ;
@@ -622,7 +619,7 @@ dsStatusLoop:
     test ds:kr_flag,FLAG_ATTACHED
     jz dsOffline
 ;
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
 ;    IsUsbReqReady
     jnc dsGetStatus
 ;
@@ -645,7 +642,7 @@ dsGetStatus:
     test ds:kr_flag,FLAG_ATTACHED
     jz dsOffline
 ;
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
 ;    IsUsbReqReady
     jnc dsGetStatus
     jmp dsStatusOk
@@ -679,8 +676,8 @@ DoHardReset   Proc near
     push cx
     push di
 ;
-    mov bx,ds:kr_out_req
-    mov es,ds:kr_out_buffer
+;    mov bx,ds:kr_out_req
+;    mov es,ds:kr_out_buffer
     xor di,di
 ;    
     mov al,ESC
@@ -736,7 +733,7 @@ dsLoop:
     pusha
 ;    
     mov cx,50
-    mov bx,ds:kr_out_req
+;    mov bx,ds:kr_out_req
 ;    IsUsbReqStarted
     jc dsWriteDo
 
@@ -783,7 +780,7 @@ dsCheckRead:
     mov cx,10
 
 dsReadLoop:
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
 ;    IsUsbReqStarted
     jnc dsReadStarted
 ;
@@ -792,7 +789,7 @@ dsReadLoop:
     pop es
 
 dsReadStarted:    
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
 ;    IsUsbReqReady
     jnc dsGetData
 ;
@@ -846,7 +843,7 @@ dsReadMore:
     cmp cx,es:cs_reply_min
     jae dsSignal
 ;
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
     push es
 ;    StartUsbReq
     pop es
@@ -938,7 +935,7 @@ NotifyUsbData   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearReceiver    Proc near
-    mov bx,ds:kr_in_req
+;    mov bx,ds:kr_in_req
 ;    IsUsbReqStarted
     jnc crLoop
 
@@ -975,30 +972,34 @@ ClearReceiver    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPipes   Proc near
-    mov bx,ds:kr_controller
-;    mov al,ds:kr_device
-    mov dl,ds:kr_in_pipe
-;    OpenUsbPipe
-    mov ds:kr_in_handle,bx
-;
-;    CreateUsbReq
-    mov ds:kr_in_req,bx    
-    mov cx,ds:kr_max_in
-;    AddReadUsbDataReq
+    int 3
+    push es
+    movzx eax,ds:kr_max_in
+    AllocateSmallGlobalMem
     mov ds:kr_in_buffer,es
+    pop es
 ;
-    mov bx,ds:kr_controller
-;    mov al,ds:kr_device
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    mov cx,10
+    OpenUsbPacketPipe
+;
+    push es
+    mov bx,ds:kr_dev_handle
     mov dl,ds:kr_out_pipe
-;    OpenUsbPipe    
-    mov ds:kr_out_handle,bx
-;
-;    CreateUsbReq
-    mov ds:kr_out_req,bx
     mov cx,MAX_OUT_SIZE
-;    AddWriteUsbDataReq
+    mov ax,25
+    OpenUsbRawPipe
     mov ds:kr_out_buffer,es
+    pop es
 ;
+    CreateWait
+    mov ds:kr_wait,bx
+;
+    mov ax,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
     ret
 OpenPipes   Endp    
 
@@ -1017,23 +1018,19 @@ ClosePipes    Proc near
     xor ax,ax
     mov es,ax
     mov fs,ax
-;    
-    mov bx,ds:kr_in_req
-;    CloseUsbReq
-    mov ds:kr_in_req,0
+    int 3
 ;
-    mov bx,ds:kr_in_handle
-;    CloseUsbPipe    
-    mov ds:kr_in_handle,0
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    CloseUsbPipe
 ;
-    mov bx,ds:kr_out_req
-;    CloseUsbReq
-    mov ds:kr_out_req,0
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    CloseUsbPipe
 ;
-    mov bx,ds:kr_out_handle
-;    CloseUsbPipe    
-    mov ds:kr_out_handle,0
-    mov ds:kr_in_buffer,0
+    mov bx,ds:kr_wait
+    CloseWait
+;
     mov ds:kr_out_buffer,0
 ;
     lock or ds:kr_flag,FLAG_CLOSED
@@ -2404,6 +2401,12 @@ kr203_thread:
     StartTimer
 
 krRestart:
+    int 3
+    mov bx,ds:kr_controller
+    mov al,ds:kr_port
+    OpenUsbDevice
+    mov ds:kr_dev_handle,bx
+;
     mov ax,250
     WaitMilliSec
 ;
@@ -2508,6 +2511,10 @@ krDetachClose:
     jnz krDetached
 ;    
     call ClosePipes
+;
+    xor bx,bx
+    xchg bx,ds:kr_dev_handle
+    CloseUsbDevice
 
 krWaitAttach:
     test ds:kr_flag,FLAG_ATTACHED
