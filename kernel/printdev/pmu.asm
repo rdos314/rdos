@@ -1265,7 +1265,6 @@ print_bitmap   Proc far
     mov es:bs_height,bx
     mov edi,OFFSET bs_data
     rep movsb
-    int 3
 ;
     sub bx,dx
     jz pbWait
