@@ -3187,6 +3187,7 @@ wrSizeOk:
     jnz wrLoop
 ;
     mov ds:ur_curr_count,bx
+    ClearSignal
 ;
     mov edx,ds:ur_td_arr
     LinearToPhysicalMemBlk
