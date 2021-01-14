@@ -98,6 +98,9 @@ pmu_section          section_typ <>
 
 pmu_server_thread    DW ?
 
+pmu_bitmap           DW ?
+pmu_pr_thread        DW ?
+
 pmu_model            DB 32 DUP(?)
 
 data    ENDS
@@ -536,94 +539,6 @@ GetPrinterVersion  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateLocalBitmap
-;
-;       DESCRIPTION:    create local bitmap
-;
-;       PARAMETERS:     DS        Printer sel
-;                       CX        Width
-;                       DX        Height       
-;
-;       RETURNS:        BX        Bitmap selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_text DB 'RDOS', 0
-
-CreateLocalBitmap    Proc near
-    push ds
-    push es
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov ax,1
-    CreateBitmap
-;
-    mov eax,0FFFFFFFFh
-    SetDrawColor
-;
-    push bx
-    mov ax,75
-    xor dx,dx
-    OpenFont
-    mov ax,bx
-    pop bx
-    SetFont
-;
-    push es
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET test_text
-    mov cx,100
-    xor dx,dx
-    DrawString
-    pop es
-;    
-    SetHollowStyle
-;
-    xor cx,cx
-    xor dx,dx
-    mov si,80
-    mov di,80
-    DrawEllipse
-;
-    mov cx,576 - 80
-    xor dx,dx
-    mov si,80
-    mov di,80
-    DrawEllipse
-;
-    GetBitmapInfo
-    movzx ecx,si
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-    mov di,cx
-    movzx eax,dx
-    mul ecx
-    mov ecx,eax
-    add eax,OFFSET bs_data
-    AllocateSmallGlobalMem
-    mov es:bs_line_size,di
-    mov es:bs_height,dx
-    mov edi,OFFSET bs_data
-    rep movsb
-    mov bx,es
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop es
-    pop ds
-    ret
-CreateLocalBitmap  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           SendLine
 ;
 ;       DESCRIPTION:    Send graphic line
@@ -701,6 +616,7 @@ slLoop:
     bt ds:[esi],cx
     rcl al,1    
     add esi,edx
+    not al
     stosb
 ;
     bt ds:[esi],cx
@@ -734,6 +650,7 @@ slLoop:
     bt ds:[esi],cx
     rcl al,1    
     add esi,edx
+    not al
     stosb
 ;
     bt ds:[esi],cx
@@ -767,6 +684,7 @@ slLoop:
     bt ds:[esi],cx
     rcl al,1    
     add esi,edx
+    not al
     stosb
 ;
     pop esi
@@ -868,21 +786,21 @@ SendCut  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PrintText
+;       NAME:           SendBitmap
 ;
-;       DESCRIPTION:    Print text
+;       DESCRIPTION:    Print bitmap
 ;
-;       DS              Printer sel
+;       PARAMETERS:     DS      Printer sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PrintText    Proc near
-    push ds
-    push es
+SendBitmap    Proc near
+    xor bx,bx
+    xchg bx,ds:pmu_bitmap
+    or bx,bx
+    jz sbDone
 ;
-    mov cx,576
-    mov dx,100
-    call CreateLocalBitmap
+    push es
     mov es,bx
 ;
     xor dx,dx
@@ -891,16 +809,23 @@ ptLoop:
     call SendLine
     call FinishLine
 ;
+    mov ax,25
+    WaitMilliSec
+;
     add dx,24
-    cmp dx,96
+    cmp dx,es:bs_height
     jb ptLoop
 ;
     call SendCut
-;
+    FreeMem
     pop es
-    pop ds
+;
+    mov bx,ds:pmu_pr_thread
+    Signal
+
+sbDone:
     ret
-PrintText  Endp
+SendBitmap  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1271,6 +1196,26 @@ print_test    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_bitmap   Proc far
+    push ax
+    push cx
+    push dx
+;
+    mov ax,dx
+    dec ax
+    xor dx,dx
+    mov cx,24
+    div cx
+    inc ax
+    mul cx
+    mov dx,ax
+    mov ax,1
+    mov cx,576
+    CreateBitmap
+    clc
+;
+    pop dx
+    pop cx
+    pop ax
     ret
 create_bitmap    Endp
 
@@ -1287,6 +1232,44 @@ create_bitmap    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_bitmap   Proc far
+    push ds
+    push es
+    pushad
+;
+    GetBitmapInfo
+    movzx ecx,si
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    mov di,cx
+    movzx eax,dx
+    push edx
+    mul ecx
+    pop edx
+    mov ecx,eax
+    add eax,OFFSET bs_data
+    AllocateSmallGlobalMem
+    mov es:bs_line_size,di
+    mov es:bs_height,dx
+    mov edi,OFFSET bs_data
+    rep movsb
+    mov bx,es
+;
+    mov ax,SEG data
+    mov ds,ax
+    ClearSignal
+    GetThread
+    mov ds:pmu_pr_thread,ax
+    mov ds:pmu_bitmap,bx
+;
+    mov bx,ds:pmu_server_thread
+    signal
+;
+    WaitForSignal
+;
+    popad
+    pop es
+    pop ds
     ret
 print_bitmap    Endp
 
@@ -1469,16 +1452,18 @@ pmuRestart:
 ;
     call GetPrinterModel
     call GetPrinterVersion
-    call PrintText
 
 pmuStatusLoop:
     test ds:pmu_flag,FLAG_ATTACHED
     jz pmuDetached
 ;
+    call SendBitmap
     call CheckStatus
 ;
-    mov ax,250
-    WaitMilliSec
+    GetSystemTime
+    add eax,250 * 1193
+    adc edx,0
+    WaitForSignalWithTimeout
     jmp pmuStatusLoop
         
 pmuDetached:
@@ -1854,6 +1839,8 @@ init    Proc far
     InitSection ds:pmu_section
     mov ds:pmu_flag,0
     mov ds:pmu_dev_handle,0
+    mov ds:pmu_bitmap,0
+    mov ds:pmu_pr_thread,0
 ;    
     mov ax,cs
     mov ds,ax
