@@ -2745,8 +2745,8 @@ rqpkGet:
     add bx,SIZE usb_packet_struc
     mov edx,ds:[bx]
     mov ecx,fs:[edx].utd_control
-    and cx,7FFh
     inc cx
+    and cx,7FFh
     mov edx,ds:[bx+4]
     clc
 

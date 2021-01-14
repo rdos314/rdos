@@ -136,7 +136,7 @@ OpenPipes   Proc near
     mov bx,ds:pmu_dev_handle
     mov dl,ds:pmu_out_pipe
     mov cx,MAX_OUT_SIZE
-    mov ax,5
+    mov ax,25
     OpenUsbRawPipe
     mov ds:pmu_out_buffer,es
     pop es
