@@ -935,28 +935,30 @@ NotifyUsbData   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearReceiver    Proc near
-;    mov bx,ds:kr_in_req
-;    IsUsbReqStarted
-    jnc crLoop
-
-;    StartUsbReq
-    mov ax,50
-    WaitMilliSec
+    GetSystemTime
+    add eax,5000 * 1193
+    adc edx,0
+    mov bx,ds:kr_wait
+    WaitWithTimeout
 
 crLoop:
-;    IsUsbReqReady
-    jc crDone
-;
-    push es
-;    GetUsbReqData
-    pop es
-    jc crDone
-;
-;    StartUsbReq
-;
     mov ax,50
     WaitMilliSec
-    jmp crLoop
+;
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    jz crDone
+;
+    mov es,ds:kr_in_buffer
+    xor edi,edi
+    movzx ecx,ds:kr_max_in
+    ReadUsbPipe
+    jc crDone
+;
+    or cx,cx
+    jnz crLoop
 
 crDone:
     ret
@@ -972,7 +974,6 @@ ClearReceiver    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPipes   Proc near
-    int 3
     push es
     movzx eax,ds:kr_max_in
     AllocateSmallGlobalMem
@@ -1018,7 +1019,6 @@ ClosePipes    Proc near
     xor ax,ax
     mov es,ax
     mov fs,ax
-    int 3
 ;
     mov bx,ds:kr_dev_handle
     mov dl,ds:kr_in_pipe
@@ -2401,7 +2401,6 @@ kr203_thread:
     StartTimer
 
 krRestart:
-    int 3
     mov bx,ds:kr_controller
     mov al,ds:kr_port
     OpenUsbDevice
@@ -2412,6 +2411,7 @@ krRestart:
 ;
     call OpenPipes
     call ClearReceiver
+    int 3
 ;    
     lock or ds:kr_flag, FLAG_INIT
     lock or ds:kr_status,STATUS_OFFLINE
