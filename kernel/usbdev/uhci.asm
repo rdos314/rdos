@@ -3229,8 +3229,16 @@ FinishRaw   Proc far
     mov edx,gs:up_qh
     mov eax,fs:[edx].uqh_elem
     test al,1
-    jz frFail
+    jnz frOk
 ;
+    mov ax,25
+    WaitMilliSec
+;
+    mov eax,fs:[edx].uqh_elem
+    test al,1
+    jz frFail
+    
+frOk:
     mov cx,ds:ur_curr_count
     or cx,cx
     clc
@@ -3258,6 +3266,7 @@ frNext:
     jmp frDone
 
 frFail:
+    int 3
     call StopTds
     stc
     xor cx,cx
