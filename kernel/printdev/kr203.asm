@@ -2244,25 +2244,24 @@ print_bitmap   Proc far
     or dx,dx
     jz pbDone
 ;
-    int 3
+    mov ax,es
+    mov ds,ax
     movzx ebp,si
 ;
-    push eax
     push edx
     movzx eax,dx
     mul ebp
     mov ecx,eax
-    pop edx
-    pop eax
-;
     add eax,OFFSET bs_data
     mov esi,edi
     AllocateSmallGlobalMem
+    pop edx
 ;
     mov es:bs_line_size,bp
-    mov es:bs_height,bx
+    mov es:bs_height,dx
     mov edi,OFFSET bs_data
     rep movsb
+    int 3
     mov bx,es
 ;
     mov ax,SEG data
