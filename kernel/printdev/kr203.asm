@@ -101,7 +101,6 @@ kr_in_pipe          DB ?
 
 kr_section          section_typ <>
 
-kr_temp_status      DW ?
 kr_status           DW ?
 
 kr_flag             DB ?
@@ -194,6 +193,154 @@ ReadAnswer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetByteParam
+;
+;       DESCRIPTION:    Get a byte parameter
+;
+;       PARAMETERS:     DS      Data
+;                       BL      Parameter
+;
+;       RETURNS:        AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetByteParam   Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov dx,ax
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,ENQ
+    stosb
+;
+    mov al,'P'
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+    jc gbpDone
+;
+    call ReadAnswer
+    jc gbpDone
+;
+    cmp cx,1
+    stc
+    jnz gbpDone
+;
+    xor di,di
+    mov al,es:[di]
+
+gbpDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+GetByteParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetByteParam
+;
+;       DESCRIPTION:    Set a byte parameter
+;
+;       PARAMETERS:     DS      Data
+;                       BL      Parameter
+;                       AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetByteParam   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov dx,ax
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,'&'
+    stosb
+;
+    mov al,'P'
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    mov al,dl
+    stosb                
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+SetByteParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckByteParam
+;
+;       DESCRIPTION:    Check byte parameter
+;
+;       PARAMETERS:     DS      Data
+;                       BL      Parameter
+;                       AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckByteParam   Proc near
+    push dx
+;
+    mov dl,al
+    call GetByteParam
+    jc cbpDone
+;
+    cmp al,dl
+    clc
+    je cbpDone
+;
+    mov al,dl
+    call SetByteParam
+
+cbpDone:
+    pop dx
+    ret
+CheckByteParam  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetWordParam
 ;
 ;       DESCRIPTION:    Get a word parameter
@@ -208,6 +355,7 @@ ReadAnswer  Endp
 GetWordParam   Proc near
     push es
     push ebx
+    push ecx
     push edx
     push edi
 ;
@@ -236,6 +384,10 @@ GetWordParam   Proc near
     call ReadAnswer
     jc gwpDone
 ;
+    cmp cx,2
+    stc
+    jne gwpDone
+;
     xor di,di
     mov ax,es:[di]
     xchg al,ah
@@ -243,6 +395,7 @@ GetWordParam   Proc near
 gwpDone:
     pop edi
     pop edx
+    pop ecx
     pop ebx
     pop es
     ret
@@ -265,7 +418,9 @@ SetWordParam   Proc near
     push es
     push eax
     push ebx
+    push ecx
     push edx
+    push edi
 ;
     mov dx,ax
     mov es,ds:kr_out_buffer
@@ -291,7 +446,9 @@ SetWordParam   Proc near
     mov dl,ds:kr_out_pipe
     PostUsbRawPipe
 ;
+    pop edi
     pop edx
+    pop ecx
     pop ebx
     pop eax
     pop es
@@ -329,6 +486,154 @@ cwpDone:
     pop dx
     ret
 CheckWordParam  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           NotifyStatus
+;
+;       DESCRIPTION:    Notify status
+;
+;       PARAMETERS:     DS      Data
+;                       ES      Status
+;                       CX      Size of status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stab:
+st00 DW 0
+st01 DW STATUS_PAPER_JAM
+st02 DW STATUS_CUTTER_JAM
+st03 DW STATUS_NO_PAPER
+st04 DW STATUS_HEAD_LIFTED
+st05 DW STATUS_FEED_ERROR
+st06 DW STATUS_TEMP_ERROR
+st07 DW 0
+st08 DW 0
+st09 DW 0
+st10 DW 0
+st11 DW 0
+st12 DW 0
+st13 DW 0
+st14 DW 0
+st15 DW 0
+st16 DW 0
+st17 DW 0
+st18 DW 0
+st19 DW STATUS_PAPER_LOW
+st20 DW STATUS_PAPER_PRESENTER
+
+NotifyStatus   Proc near
+    push ax
+    push bx
+    push dx
+    push di
+;
+    xor di,di
+    or cx,cx
+    jz nsReset
+;
+    xor dx,dx
+    cmp cx,1
+    jne nsNext
+;
+    mov al,es:[di]
+    cmp al,6
+    je nsSave
+    jmp nsDone
+    
+nsNext:
+    mov al,es:[di]
+    cmp al,15h
+    stc
+    jne nsDone
+;
+    sub cx,1
+    stc
+    jz nsDone
+;
+    inc di
+    movzx bx,byte ptr es:[di]
+    add bx,bx
+    or dx,word ptr cs:[bx].stab
+;
+    inc di    
+    sub cx,1
+    jnz nsNext
+
+nsSave:
+    mov ds:kr_status,dx
+    clc
+    jmp nsDone
+
+nsReset:
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz nsDone
+;    
+    lock and ds:kr_flag,NOT FLAG_ATTACHED
+    mov bx,ds:kr_dev_handle
+    ResetUsbDevice
+    stc
+
+nsDone:
+    pop di
+    pop dx
+    pop bx
+    pop ax
+    ret
+NotifyStatus    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateStatus
+;
+;       DESCRIPTION:    Update printer status
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateStatus   Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    mov dx,ax
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,ENQ
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+    jc usDone
+;
+    call ReadAnswer
+    jc usDone
+;
+    call NotifyStatus
+
+usDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+UpdateStatus    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -676,198 +981,6 @@ gwpFree:
     pop es
     ret
 GetWordParameter    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ClearStatus
-;
-;       DESCRIPTION:    Clear status
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearStatus   Proc near
-    mov ds:kr_temp_status,0
-    ret
-ClearStatus    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyStatus
-;
-;       DESCRIPTION:    Notify status
-;
-;       PARAMETERS:     DS      Data
-;                       ES      Status
-;                       CX      Size of status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stab:
-st00 DW 0
-st01 DW STATUS_PAPER_JAM
-st02 DW STATUS_CUTTER_JAM
-st03 DW STATUS_NO_PAPER
-st04 DW STATUS_HEAD_LIFTED
-st05 DW STATUS_FEED_ERROR
-st06 DW STATUS_TEMP_ERROR
-st07 DW 0
-st08 DW 0
-st09 DW 0
-st10 DW 0
-st11 DW 0
-st12 DW 0
-st13 DW 0
-st14 DW 0
-st15 DW 0
-st16 DW 0
-st17 DW 0
-st18 DW 0
-st19 DW STATUS_PAPER_LOW
-st20 DW STATUS_PAPER_PRESENTER
-
-NotifyStatus   Proc near
-    push ax
-    push bx
-    push di
-;
-    xor di,di
-    or cx,cx
-    jz nsReset
-    
-nsNext:
-    mov al,es:[di]
-    cmp al,15h
-    jne nsDone
-;
-    sub cx,1
-    jz nsDone
-;
-    inc di
-    movzx bx,byte ptr es:[di]
-    add bx,bx
-    mov ax,word ptr cs:[bx].stab
-    or ds:kr_temp_status,ax
-;
-    inc di    
-    sub cx,1
-    jnz nsNext
-    jmp nsDone
-
-nsReset:
-    test ds:kr_flag,FLAG_ATTACHED
-    jz nsDone
-;    
-    lock and ds:kr_flag,NOT FLAG_ATTACHED
-    pushad
-    mov bx,ds:kr_controller
-    mov al,ds:kr_port
-    OpenUsbDevice
-    ResetUsbDevice
-    CloseUsbDevice
-    popad
-
-nsDone:
-    pop di
-    pop bx
-    pop ax
-    ret
-NotifyStatus    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UpdateStatus
-;
-;       DESCRIPTION:    Update printer status
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateStatus   Proc near
-    push es
-    push cx
-    push di
-;
-    call ClearStatus
-;
-;    mov bx,ds:kr_out_req
-;    mov es,ds:kr_out_buffer
-    xor di,di
-;    
-    mov al,ESC
-    stosb
-;
-    mov al,ENQ
-    stosb
-;
-    mov al,1
-    stosb
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsOffline
-;    
-    mov cx,3
-;    StartUsbReq
-;
-    xor dx,dx
-;    mov bx,ds:kr_in_req
-;    IsUsbReqStarted
-    jnc dsStatusLoop
-;
-;    StartUsbReq
-
-dsStatusLoop:
-    mov ax,5
-    WaitMilliSec
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsOffline
-;
-;    mov bx,ds:kr_in_req
-;    IsUsbReqReady
-    jnc dsGetStatus
-;
-    inc dx
-    cmp dx,30
-    jne dsStatusLoop
-;
-    jmp dsOffline
-
-dsGetStatus:
-;    GetUsbReqData
-    mov es,ds:kr_in_buffer
-    call NotifyStatus
-;
-;    StartUsbReq
-;
-    mov ax,5
-    WaitMilliSec
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsOffline
-;
-;    mov bx,ds:kr_in_req
-;    IsUsbReqReady
-    jnc dsGetStatus
-    jmp dsStatusOk
-
-dsOffline:    
-    or ds:kr_temp_status,STATUS_OFFLINE
-
-dsStatusOk:
-    mov ax,ds:kr_temp_status
-    mov ds:kr_status,ax
-;    
-    pop di
-    pop cx
-    pop es
-    ret
-UpdateStatus    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2350,74 +2463,256 @@ StatusTimeout  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           InitKrThread
+;               NAME:           Kr203Thread
 ;
-;               DESCRIPTION:    Init KR203 printer
+;               DESCRIPTION:    Printer handler thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread_name  DB 'Init KR203 ', 0
+kr203_thread_name  DB 'KR203 ', 0
 
-init_thread:
-    int 3
+kr203_thread:
     mov ax,SEG data
     mov ds,ax
-    mov ds:kr_init_count,0
-
-init_thread_retry:
-    test ds:kr_flag,FLAG_ATTACHED
-    jz init_done
-;    
-    mov ax,ds:kr_init_count
-    inc ax
-    cmp ax,50
-    jb init_thread_do
+    GetThread
+    mov ds:kr_session_thread,ax
 ;
-    call reset_printer
-    jmp init_done
+    mov eax,SIZE usb_printer_struc
+    AllocateSmallGlobalMem
+    mov es:printer_device,0
+;    
+    mov ax,ds:kr_controller
+    movzx dx,ds:kr_port
+    push ds
+    mov bx,es
+    mov ds,bx
+    AddPrinter
+    pop ds
+;
+    mov es:pr_get_name_proc,OFFSET get_printer_name
+    mov es:pr_get_name_proc+4,cs
+;
+    mov es:pr_jammed_proc,OFFSET is_jammed
+    mov es:pr_jammed_proc+4,cs
+;    
+    mov es:pr_paper_low_proc,OFFSET is_paper_low
+    mov es:pr_paper_low_proc+4,cs
+;    
+    mov es:pr_paper_end_proc,OFFSET is_paper_end
+    mov es:pr_paper_end_proc+4,cs
+;    
+    mov es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
+    mov es:pr_cutter_jammed_proc+4,cs
+;    
+    mov es:pr_ok_proc,OFFSET is_ok
+    mov es:pr_ok_proc+4,cs
+;    
+    mov es:pr_head_lifted_proc,OFFSET is_head_lifted
+    mov es:pr_head_lifted_proc+4,cs
+;    
+    mov es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
+    mov es:pr_paper_in_presenter_proc+4,cs
+;    
+    mov es:pr_temp_error_proc,OFFSET has_temp_error
+    mov es:pr_temp_error_proc+4,cs
+;    
+    mov es:pr_feed_error_proc,OFFSET has_feed_error
+    mov es:pr_feed_error_proc+4,cs
+;    
+    mov es:pr_print_test_proc,OFFSET print_test
+    mov es:pr_print_test_proc+4,cs
+;    
+    mov es:pr_create_bitmap_proc,OFFSET create_bitmap
+    mov es:pr_create_bitmap_proc+4,cs
+;    
+    mov es:pr_print_bitmap_proc,OFFSET print_bitmap
+    mov es:pr_print_bitmap_proc+4,cs
+;    
+    mov es:pr_present_media_proc,OFFSET present_media
+    mov es:pr_present_media_proc+4,cs
+;    
+    mov es:pr_eject_media_proc,OFFSET eject_media
+    mov es:pr_eject_media_proc+4,cs
+;    
+    mov es:pr_wait_for_print_proc,OFFSET wait_for_print
+    mov es:pr_wait_for_print_proc+4,cs
+;    
+    mov es:pr_reset_proc,OFFSET reset_printer
+    mov es:pr_reset_proc+4,cs
+;    
+    GetSystemTime
+    add eax,1193000 * 2  ; 2s
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET StatusTimeout
+    mov bx,ds:kr_session_thread
+    mov cx,ds       
+    StartTimer
 
-init_thread_do:
-    mov ds:kr_init_count,ax
-;        
+krRestart:
+    mov bx,ds:kr_controller
+    mov al,ds:kr_port
+    OpenUsbDevice
+    mov ds:kr_dev_handle,bx
+;
     mov ax,250
     WaitMilliSec
+;
+    call OpenPipes
+    call ClearReceiver
 ;    
+    lock or ds:kr_flag, FLAG_INIT
+    lock or ds:kr_status,STATUS_OFFLINE
+;
+    mov cx,10
+
+krInitLoop:
+    test ds:kr_flag,FLAG_ATTACHED
+    jz krDetached
+;
     mov bl,6
     mov ax,250
-    call SetWordParameter
+    call CheckWordParam
+    jc krRetry
 ;    
     mov bl,7
     mov ax,1000
-    call SetWordParameter
+    call CheckWordParam
+    jc krRetry
 ;    
     mov bl,8
     mov al,75
-    call SetByteParameter
+    call CheckByteParam
+    jc krRetry
 ;    
     mov bl,65
-    mov al,0
-    call SetByteParameter
+    xor al,al
+    call CheckByteParam
+    jc krRetry
 ;
     mov bl,66
-    mov al,0
-    call SetByteParameter
-;
-    mov bl,65
-    call GetByteParameter
-    jc init_thread_retry
-;
-    or al,al
-    jnz init_thread_retry
-;
-    mov bl,66
-    call GetByteParameter
-    jc init_thread_retry
-;
-    or al,al
-    jnz init_thread_retry
+    xor al,al
+    call CheckByteParam
+    jnc krInitOk
 
-init_done:
-    TerminateThread
+krRetry:
+    loop krInitLoop
+;
+    int 3
+    lock and ds:kr_flag,NOT FLAG_ATTACHED
+    mov bx,ds:kr_dev_handle
+    ResetUsbDevice
+    jmp krDetached
+
+krInitOk:
+    call UpdateStatus
+    mov ax,500
+    WaitMilliSec
+    jmp krInitOk
+    int 3
+    
+krLoop:
+    test ds:kr_flag,FLAG_ATTACHED
+    jz krDetached
+
+krDoSession:
+    int 3
+    call DoSession
+;
+    test ds:kr_flag,FLAG_INIT
+    jz krDoStatus
+;
+    lock or ds:kr_status,STATUS_OFFLINE
+;
+    mov ax,50
+    WaitMilliSec
+    jmp krLoop        
+
+krDoStatus:
+    test ds:kr_flag,FLAG_STATUS
+    jz krStatusDone
+;
+    lock and ds:kr_flag,NOT FLAG_STATUS    
+
+krStatusDone:    
+    test ds:kr_status,STATUS_CUTTER_JAM
+    jz krClearCutter
+;
+    test ds:kr_status,STATUS_HEAD_LIFTED
+    jnz krSetLifted
+;
+    test ds:kr_flag,FLAG_WAS_LIFTED
+    jz krClearDone
+;
+    mov ax,1000
+    WaitMilliSec
+;    
+    call DoHardReset
+    jmp krClearCutter
+
+krSetLifted:
+    lock or ds:kr_flag,FLAG_WAS_LIFTED
+    jmp krClearDone
+
+krClearCutter:
+    lock and ds:kr_flag,NOT FLAG_WAS_LIFTED
+
+krClearDone:    
+    mov bx,ds:kr_session_list
+    or bx,bx
+    jnz krLoop
+
+krWait:    
+    WaitForSignal
+    jmp krLoop
+        
+krDetached:
+    mov ax,5
+    WaitMilliSec
+;    
+    mov ax,ds:kr_session_list
+    or ax,ax
+    jz krDetachClose
+;
+    EnterSection ds:kr_section
+    mov es,ds:kr_session_list
+    mov ax,es:cs_next
+    mov ds:kr_session_list,ax
+    dec ds:kr_session_count
+    LeaveSection ds:kr_section
+;
+    mov bx,es:cs_wait
+    or bx,bx
+    jz krFreeSession
+;
+    Signal
+    xor ax,ax
+    mov es,ax
+    jmp krDetached
+        
+krFreeSession:
+    call FreeSessionSel
+    xor ax,ax
+    mov es,ax
+    jmp krDetached
+
+krDetachClose:
+    test ds:kr_flag,FLAG_INIT
+    jnz krDetached
+;    
+    call ClosePipes
+;
+    xor bx,bx
+    xchg bx,ds:kr_dev_handle
+    CloseUsbDevice
+
+krWaitAttach:
+    test ds:kr_flag,FLAG_ATTACHED
+    jnz krRestart
+;
+    WaitForSignal
+    jmp krWaitAttach        
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2523,230 +2818,6 @@ sfCopyDone:
     pop ds
     ret
 StartThread Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           Kr203Thread
-;
-;               DESCRIPTION:    Printer handler thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-kr203_thread_name  DB 'KR203 ', 0
-
-kr203_thread:
-    mov ax,SEG data
-    mov ds,ax
-    GetThread
-    mov ds:kr_session_thread,ax
-;
-    mov eax,SIZE usb_printer_struc
-    AllocateSmallGlobalMem
-    mov es:printer_device,0
-;    
-    mov ax,ds:kr_controller
-    movzx dx,ds:kr_port
-    push ds
-    mov bx,es
-    mov ds,bx
-    AddPrinter
-    pop ds
-;
-    mov es:pr_get_name_proc,OFFSET get_printer_name
-    mov es:pr_get_name_proc+4,cs
-;
-    mov es:pr_jammed_proc,OFFSET is_jammed
-    mov es:pr_jammed_proc+4,cs
-;    
-    mov es:pr_paper_low_proc,OFFSET is_paper_low
-    mov es:pr_paper_low_proc+4,cs
-;    
-    mov es:pr_paper_end_proc,OFFSET is_paper_end
-    mov es:pr_paper_end_proc+4,cs
-;    
-    mov es:pr_cutter_jammed_proc,OFFSET is_cutter_jammed
-    mov es:pr_cutter_jammed_proc+4,cs
-;    
-    mov es:pr_ok_proc,OFFSET is_ok
-    mov es:pr_ok_proc+4,cs
-;    
-    mov es:pr_head_lifted_proc,OFFSET is_head_lifted
-    mov es:pr_head_lifted_proc+4,cs
-;    
-    mov es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
-    mov es:pr_paper_in_presenter_proc+4,cs
-;    
-    mov es:pr_temp_error_proc,OFFSET has_temp_error
-    mov es:pr_temp_error_proc+4,cs
-;    
-    mov es:pr_feed_error_proc,OFFSET has_feed_error
-    mov es:pr_feed_error_proc+4,cs
-;    
-    mov es:pr_print_test_proc,OFFSET print_test
-    mov es:pr_print_test_proc+4,cs
-;    
-    mov es:pr_create_bitmap_proc,OFFSET create_bitmap
-    mov es:pr_create_bitmap_proc+4,cs
-;    
-    mov es:pr_print_bitmap_proc,OFFSET print_bitmap
-    mov es:pr_print_bitmap_proc+4,cs
-;    
-    mov es:pr_present_media_proc,OFFSET present_media
-    mov es:pr_present_media_proc+4,cs
-;    
-    mov es:pr_eject_media_proc,OFFSET eject_media
-    mov es:pr_eject_media_proc+4,cs
-;    
-    mov es:pr_wait_for_print_proc,OFFSET wait_for_print
-    mov es:pr_wait_for_print_proc+4,cs
-;    
-    mov es:pr_reset_proc,OFFSET reset_printer
-    mov es:pr_reset_proc+4,cs
-;    
-    GetSystemTime
-    add eax,1193000 * 2  ; 2s
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds:kr_session_thread
-    mov cx,ds       
-    StartTimer
-
-krRestart:
-    mov bx,ds:kr_controller
-    mov al,ds:kr_port
-    OpenUsbDevice
-    mov ds:kr_dev_handle,bx
-;
-    mov ax,250
-    WaitMilliSec
-;
-    call OpenPipes
-    call ClearReceiver
-;    
-    lock or ds:kr_flag, FLAG_INIT
-    lock or ds:kr_status,STATUS_OFFLINE
-;
-    mov bl,6
-    mov ax,250
-    call CheckWordParam
-;    
-    mov bl,7
-    mov ax,1000
-    call CheckWordParam
-    int 3
-
-
-;    
-    mov esi,OFFSET init_thread
-    mov edi,OFFSET init_thread_name
-    mov ax,2
-    call StartThread
-    
-krLoop:
-    test ds:kr_flag,FLAG_ATTACHED
-    jz krDetached
-
-krDoSession:
-    int 3
-    call DoSession
-;
-    test ds:kr_flag,FLAG_INIT
-    jz krDoStatus
-;
-    lock or ds:kr_status,STATUS_OFFLINE
-;
-    mov ax,50
-    WaitMilliSec
-    jmp krLoop        
-
-krDoStatus:
-    test ds:kr_flag,FLAG_STATUS
-    jz krStatusDone
-;
-    lock and ds:kr_flag,NOT FLAG_STATUS    
-    call UpdateStatus
-
-krStatusDone:    
-    test ds:kr_status,STATUS_CUTTER_JAM
-    jz krClearCutter
-;
-    test ds:kr_status,STATUS_HEAD_LIFTED
-    jnz krSetLifted
-;
-    test ds:kr_flag,FLAG_WAS_LIFTED
-    jz krClearDone
-;
-    mov ax,1000
-    WaitMilliSec
-;    
-    call DoHardReset
-    jmp krClearCutter
-
-krSetLifted:
-    lock or ds:kr_flag,FLAG_WAS_LIFTED
-    jmp krClearDone
-
-krClearCutter:
-    lock and ds:kr_flag,NOT FLAG_WAS_LIFTED
-
-krClearDone:    
-    mov bx,ds:kr_session_list
-    or bx,bx
-    jnz krLoop
-
-krWait:    
-    WaitForSignal
-    jmp krLoop
-        
-krDetached:
-    mov ax,5
-    WaitMilliSec
-;    
-    mov ax,ds:kr_session_list
-    or ax,ax
-    jz krDetachClose
-;
-    EnterSection ds:kr_section
-    mov es,ds:kr_session_list
-    mov ax,es:cs_next
-    mov ds:kr_session_list,ax
-    dec ds:kr_session_count
-    LeaveSection ds:kr_section
-;
-    mov bx,es:cs_wait
-    or bx,bx
-    jz krFreeSession
-;
-    Signal
-    xor ax,ax
-    mov es,ax
-    jmp krDetached
-        
-krFreeSession:
-    call FreeSessionSel
-    xor ax,ax
-    mov es,ax
-    jmp krDetached
-
-krDetachClose:
-    test ds:kr_flag,FLAG_INIT
-    jnz krDetached
-;    
-    call ClosePipes
-;
-    xor bx,bx
-    xchg bx,ds:kr_dev_handle
-    CloseUsbDevice
-
-krWaitAttach:
-    test ds:kr_flag,FLAG_ATTACHED
-    jnz krRestart
-;
-    WaitForSignal
-    jmp krWaitAttach        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
