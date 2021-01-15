@@ -909,38 +909,45 @@ SendCut    Endp
 ;
 ;       NAME:           SendBitmap
 ;
-;       DESCRIPTION:    Print a single line
+;       DESCRIPTION:    Print bitmap
 ;
-;       PARAMETERS:     DS      Data
-;                       FS:ESI  Bitmap data
-;                       CX      Width in bytes
+;       PARAMETERS:     DS      Printer sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendBitmap   Proc near
-
-    mov ax,es
-    mov fs,ax
-    movzx ecx,si
-    mov esi,edi
+SendBitmap    Proc near
+    pushad
+;
+    xor bx,bx
+    xchg bx,ds:kr_bitmap
+    or bx,bx
+    jz sbDone
+;
+    int 3
+    push es
+    mov es,bx
+;
+    mov dx,es:bs_height
+    mov esi,OFFSET bs_data
     xor bp,bp
 
-print_bitmap_loop:
+sbLoop:
     cmp dx,16
-    jb print_bitmap_one
+    jb sb1
 ;
     inc bp
     cmp bp,16
-    jne print_bitmap16
+    jne sb16
 ;
     mov bl,8
-    call GetByteParameter    
-    jnc print_bitmap_wait
+    call GetByteParam
+    jnc sbWait
 ;
     mov al,50    
 
-print_bitmap_wait:
+sbWait:
     call ForcePrint
+;
     push cx
     push dx
     movzx cx,al
@@ -955,39 +962,45 @@ print_bitmap_wait:
 ;
     test ds:kr_flag,FLAG_ATTACHED
     stc
-    jz print_bitmap_done
+    jz sbFree
 
-print_bitmap16:
+sb16:
     call PrintLine16
     mov eax,ecx
     shl eax,4
     add esi,eax
     sub dx,16
-    jnz print_bitmap_loop    
-;
-    jmp print_bitmap_cut
+    jnz sbLoop    
+    jmp sbCut
 
-print_bitmap_one:
+sb1:
     call PrintOneLine
     add esi,ecx
     sub dx,1
-    jnz print_bitmap_loop
+    jnz sbLoop
 
-print_bitmap_cut:
+sbCut:
     call ForcePrint
 ;
     mov bl,8
-    call GetByteParameter    
-    jnc print_bitmap_fwait
+    call GetByteParam    
+    jnc sbFwait
 ;
     mov al,50    
 
-print_bitmap_fwait:
+sbFwait:
     call ForcePrint
     call SendCut
-        
-print_bitmap_done:
 
+sbFree:
+    FreeMem
+    pop es
+;
+    mov bx,ds:kr_pr_thread
+    Signal
+
+sbDone:
+    popad
     ret
 SendBitmap  Endp
 
@@ -2131,45 +2144,6 @@ has_feed_error   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_test   Proc far
-    push ds
-    push es
-    push ax
-    push cx
-    push di
-;
-    mov ax,SEG data
-    mov ds,ax
-    test ds:kr_flag,FLAG_ATTACHED
-    stc
-    jz ptDone
-;
-    mov ax,ds:kr_session_thread
-    or ax,ax
-    stc
-    jz ptDone
-;    
-    mov cx,3
-    call CreateWaitSessionSel
-;    
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,'P'
-    stosb
-;
-    mov al,0
-    stosb
-;
-    call InsertSessionSel
-    clc
-
-ptDone:    
-    pop di
-    pop cx
-    pop ax
-    pop es
-    pop ds
     ret
 print_test    Endp
 
@@ -2261,7 +2235,6 @@ print_bitmap   Proc far
     mov es:bs_height,dx
     mov edi,OFFSET bs_data
     rep movsb
-    int 3
     mov bx,es
 ;
     mov ax,SEG data
@@ -2621,7 +2594,7 @@ krInitLoop:
     mov cl,8
     mul cl
     mov ds:kr_width,ax
-    jmp krInitOk
+    jmp krLoop
 
 krRetry:
     loop krInitLoop
@@ -2632,66 +2605,17 @@ krRetry:
     ResetUsbDevice
     jmp krDetached
 
-krInitOk:
-    call UpdateStatus
-    mov ax,500
-    WaitMilliSec
-    jmp krInitOk
-    int 3
-    
 krLoop:
     test ds:kr_flag,FLAG_ATTACHED
     jz krDetached
-
-krDoSession:
-    int 3
-    call DoSession
 ;
-    test ds:kr_flag,FLAG_INIT
-    jz krDoStatus
+    call SendBitmap
+    call UpdateStatus
 ;
-    lock or ds:kr_status,STATUS_OFFLINE
-;
-    mov ax,50
-    WaitMilliSec
-    jmp krLoop        
-
-krDoStatus:
-    test ds:kr_flag,FLAG_STATUS
-    jz krStatusDone
-;
-    lock and ds:kr_flag,NOT FLAG_STATUS    
-
-krStatusDone:    
-    test ds:kr_status,STATUS_CUTTER_JAM
-    jz krClearCutter
-;
-    test ds:kr_status,STATUS_HEAD_LIFTED
-    jnz krSetLifted
-;
-    test ds:kr_flag,FLAG_WAS_LIFTED
-    jz krClearDone
-;
-    mov ax,1000
-    WaitMilliSec
-;    
-    call DoHardReset
-    jmp krClearCutter
-
-krSetLifted:
-    lock or ds:kr_flag,FLAG_WAS_LIFTED
-    jmp krClearDone
-
-krClearCutter:
-    lock and ds:kr_flag,NOT FLAG_WAS_LIFTED
-
-krClearDone:    
-    mov bx,ds:kr_session_list
-    or bx,bx
-    jnz krLoop
-
-krWait:    
-    WaitForSignal
+    GetSystemTime
+    add eax,250 * 1193
+    adc edx,0
+    WaitForSignalWithTimeout
     jmp krLoop
         
 krDetached:
