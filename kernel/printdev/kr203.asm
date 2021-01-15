@@ -37,6 +37,7 @@ include ..\usbdev\usb.inc
 
    .386p
 
+MAX_IN_SIZE  = 1000h
 MAX_OUT_SIZE = 260 * 16
 
 FLAG_ATTACHED          = 1
@@ -131,6 +132,47 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClearReceiver
+;
+;       DESCRIPTION:    Clear receiver
+;
+;       PARAMETERS:     DS      SEG data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearReceiver    Proc near
+    GetSystemTime
+    add eax,5000 * 1193
+    adc edx,0
+    mov bx,ds:kr_wait
+    WaitWithTimeout
+
+crLoop:
+    mov ax,50
+    WaitMilliSec
+;
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    jz crDone
+;
+    mov es,ds:kr_in_buffer
+    xor edi,edi
+    movzx ecx,ds:kr_max_in
+    ReadUsbPipe
+    jc crDone
+;
+    or cx,cx
+    jnz crLoop
+
+crDone:
+    ret
+ClearReceiver    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -336,12 +378,13 @@ CheckByteParam   Proc near
 ;
     mov dl,al
     call GetByteParam
-    jc cbpDone
+    jc cbpWrite
 ;
     cmp al,dl
     clc
     je cbpDone
-;
+
+cbpWrite:
     mov al,dl
     call SetByteParam
 
@@ -485,12 +528,13 @@ CheckWordParam   Proc near
 ;
     mov dx,ax
     call GetWordParam
-    jc cwpDone
+    jc cwpWrite
 ;
     cmp ax,dx
     clc
     je cwpDone
-;
+
+cwpWrite:
     mov ax,dx
     call SetWordParam
 
@@ -650,59 +694,116 @@ UpdateStatus    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PrintOneLine
+;       NAME:           SendPrint
+;
+;       DESCRIPTION:    Send printout
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendPrint   Proc near
+    push es
+    pushad
+;
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;    
+    mov al,'p'
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendPrint    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCut
+;
+;       DESCRIPTION:    Send cut command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCut   Proc near
+    push es
+    pushad
+;
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,RS
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendCut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendLine
 ;
 ;       DESCRIPTION:    Print a single line
 ;
 ;       PARAMETERS:     DS      Data
-;                       FS:ESI  Bitmap data
-;                       CX      Width in bytes
+;                       ES:ESI  Bitmap data
+;
+;       RETURNS:        ES:ESI  New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PrintOneLine   Proc near
-    push ds
+SendLine   Proc near
     push es
-    pushad
-
-poWait: 
-    mov ax,ds:kr_session_count
-    cmp ax,16
-    jb poDo
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
 ;
-    mov ax,5
-    WaitMilliSec
+    push ds
+    mov ax,es
+    mov es,ds:kr_out_buffer
+    mov ds,ax
+    xor edi,edi
 ;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz poDone
-;        
-    jmp poWait
-
-poDo:
-    push cx
-    add cx,5
-    call CreateSessionSel
-    pop cx
-;
-    mov edi,SIZE cmd_session_struc
     mov al,ESC
     stosb
 ;    
     mov al,'S'
     stosb
 ;    
-    mov al,cl
-    add al,2
-    stosb
-;
-    mov al,0
-    stosb
+    mov ax,ds:bs_line_size
+    add ax,2
+    stosw
 ;
     mov al,80h
     stosb
+;
+    mov cx,ds:bs_line_size
 
 poCopy:
-    lods byte ptr fs:[esi]
+    lods byte ptr es:[esi]
     not al
     mov ah,al
     xor al,al
@@ -724,185 +825,22 @@ poCopy:
     rcl al,1
     stosb
     loop poCopy
-;        
-    call InsertSessionSel
-
-poDone:
-    popad
-    pop es
-    pop ds    
-    ret
-PrintOneLine    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;
-;       NAME:           PrintLine16
-;
-;       DESCRIPTION:    Print 16 lines
-;
-;       PARAMETERS:     DS      Data
-;                       FS:ESI  Bitmap data
-;                       CX      Width in bytes (of single line)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintLine16   Proc near
-    push ds
-    push es
-    pushad
-
-p16Wait: 
-    mov ax,ds:kr_session_count
-    cmp ax,16
-    jb p16Do
-;
-    mov ax,1
-    WaitMilliSec
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz p16Done
+    mov cx,di
+    pop ds
 ;    
-    jmp p16Wait
-
-p16Do:
-    push cx
-    add cx,5
-    shl cx,4
-    call CreateSessionSel
-    pop cx
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
 ;
-    mov edi,SIZE cmd_session_struc
-    mov dx,16
-
-p16YCopy:    
-    mov al,ESC
-    stosb
-;    
-    mov al,'S'
-    stosb
-;    
-    mov al,cl
-    add al,2
-    stosb
-;
-    mov al,0
-    stosb
-;
-    mov al,80h
-    stosb
-;
-    push cx    
-
-p16Copy:
-    lods byte ptr fs:[esi]
-    not al
-    mov ah,al
-    xor al,al
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    stosb
-    loop p16Copy
-;
-    pop cx    
-;      
-    sub dx,1
-    jnz p16YCopy
-;
-    call InsertSessionSel
-
-p16Done:
-    popad
-    pop es
-    pop ds    
-    ret
-PrintLine16    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ForcePrint
-;
-;       DESCRIPTION:    Force printout
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ForcePrint   Proc near
-    push es
-    push ax
-    push cx
-    push di
-;
-    mov cx,2
-    call CreateSessionSel
-;
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;    
-    mov al,'p'
-    stosb
-;    
-    call InsertSessionSel
-;
-    pop di
-    pop cx
-    pop ax
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
     pop es
     ret
-ForcePrint    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SendCut
-;
-;       DESCRIPTION:    Send cut command
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCut   Proc near
-    push es
-    push ax
-    push cx
-    push di
-;
-    mov cx,2
-    call CreateSessionSel
-;
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,RS
-    stosb
-;    
-    call InsertSessionSel
-;
-    pop di
-    pop cx
-    pop ax
-    pop es
-    ret
-SendCut    Endp
+SendLine    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -927,17 +865,13 @@ SendBitmap    Proc near
     push es
     mov es,bx
 ;
-    mov dx,es:bs_height
     mov esi,OFFSET bs_data
     xor bp,bp
 
 sbLoop:
-    cmp dx,16
-    jb sb1
-;
     inc bp
-    cmp bp,16
-    jne sb16
+    cmp bp,256
+    jne sbDo
 ;
     mov bl,8
     call GetByteParam
@@ -946,7 +880,7 @@ sbLoop:
     mov al,50    
 
 sbWait:
-    call ForcePrint
+    call SendPrint
 ;
     push cx
     push dx
@@ -964,23 +898,21 @@ sbWait:
     stc
     jz sbFree
 
-sb16:
-    call PrintLine16
-    mov eax,ecx
-    shl eax,4
-    add esi,eax
-    sub dx,16
-    jnz sbLoop    
-    jmp sbCut
+sbDo:
+    call SendLine
+    inc dx
+;
+    or dl,0Fh
+    jnz sbNext
+;
+    call SendPrint
 
-sb1:
-    call PrintOneLine
-    add esi,ecx
-    sub dx,1
+sbNext:
+    cmp dx,es:bs_height
     jnz sbLoop
 
 sbCut:
-    call ForcePrint
+    call SendPrint
 ;
     mov bl,8
     call GetByteParam    
@@ -989,7 +921,7 @@ sbCut:
     mov al,50    
 
 sbFwait:
-    call ForcePrint
+    call SendPrint
     call SendCut
 
 sbFree:
@@ -1621,47 +1553,6 @@ NotifyUsbData   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearReceiver
-;
-;       DESCRIPTION:    Clear receiver
-;
-;       PARAMETERS:     DS      SEG data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearReceiver    Proc near
-    GetSystemTime
-    add eax,5000 * 1193
-    adc edx,0
-    mov bx,ds:kr_wait
-    WaitWithTimeout
-
-crLoop:
-    mov ax,50
-    WaitMilliSec
-;
-    mov bx,ds:kr_dev_handle
-    mov dl,ds:kr_in_pipe
-    GetUsedUsbBuffers
-    or cx,cx
-    jz crDone
-;
-    mov es,ds:kr_in_buffer
-    xor edi,edi
-    movzx ecx,ds:kr_max_in
-    ReadUsbPipe
-    jc crDone
-;
-    or cx,cx
-    jnz crLoop
-
-crDone:
-    ret
-ClearReceiver    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:                   OpenPipes
 ;
 ;               DESCRIPTION:    Open USB pipes
@@ -1670,7 +1561,7 @@ ClearReceiver    Endp
 
 OpenPipes   Proc near
     push es
-    movzx eax,ds:kr_max_in
+    mov eax,MAX_IN_SIZE
     AllocateSmallGlobalMem
     mov ds:kr_in_buffer,es
     pop es
@@ -2271,6 +2162,7 @@ print_bitmap    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 present_media   Proc far
+    int 3
     push ds
     push es
     push ax
@@ -2328,6 +2220,7 @@ present_media    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 eject_media   Proc far
+    int 3
     push ds
     push es
     push ax
@@ -2376,6 +2269,7 @@ eject_media    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wait_for_print   Proc far
+    int 3
     push ds
     push es
     push ax
@@ -2547,13 +2441,8 @@ krRestart:
     OpenUsbDevice
     mov ds:kr_dev_handle,bx
 ;
-    mov ax,250
-    WaitMilliSec
-;
     call OpenPipes
-    call ClearReceiver
 ;    
-    lock or ds:kr_flag, FLAG_INIT
     lock or ds:kr_status,STATUS_OFFLINE
 ;
     mov cx,10
@@ -2561,6 +2450,16 @@ krRestart:
 krInitLoop:
     test ds:kr_flag,FLAG_ATTACHED
     jz krDetached
+;
+    mov bl,66
+    xor al,al
+    call SetByteParam
+    jc krRetry
+;    
+    mov bl,65
+    xor al,al
+    call SetByteParam
+    jc krRetry
 ;
     mov bl,6
     mov ax,250
@@ -2574,16 +2473,6 @@ krInitLoop:
 ;    
     mov bl,8
     mov al,75
-    call CheckByteParam
-    jc krRetry
-;    
-    mov bl,65
-    xor al,al
-    call CheckByteParam
-    jc krRetry
-;
-    mov bl,66
-    xor al,al
     call CheckByteParam
     jc krRetry
 ;
