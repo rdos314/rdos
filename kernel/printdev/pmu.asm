@@ -1229,6 +1229,14 @@ print_bitmap   Proc far
     pushad
 ;
     GetBitmapInfo
+    jc pbDone
+;
+    cmp al,1
+    jne pbDone
+;
+    or dx,dx
+    jz pbDone    
+;    
     push edx
 ;
     mov ax,es
@@ -1289,7 +1297,9 @@ pbWait:
     signal
 ;
     WaitForSignal
-;
+    clc
+
+pbDone:
     popad
     pop es
     pop ds

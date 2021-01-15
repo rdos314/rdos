@@ -76,6 +76,14 @@ cs_wait         DW ?
 
 cmd_session_struc   ENDS
 
+bitmap_sel       STRUC
+
+bs_line_size     DW ?
+bs_height        DW ?
+bs_data          DB ?
+
+bitmap_sel       ENDS
+
 usb_printer_struc       STRUC
 
 ups_base_struc  printer_struc <>
@@ -103,9 +111,13 @@ kr_section          section_typ <>
 
 kr_status           DW ?
 
+kr_width            DW ?
+
 kr_flag             DB ?
 
 kr_session_thread   DW ?
+kr_pr_thread        DW ?
+kr_bitmap           DW ?
 
 kr_session_list     DW ?
 kr_session_count    DW ?
@@ -634,6 +646,350 @@ usDone:
     pop es
     ret
 UpdateStatus    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintOneLine
+;
+;       DESCRIPTION:    Print a single line
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;                       CX      Width in bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintOneLine   Proc near
+    push ds
+    push es
+    pushad
+
+poWait: 
+    mov ax,ds:kr_session_count
+    cmp ax,16
+    jb poDo
+;
+    mov ax,5
+    WaitMilliSec
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz poDone
+;        
+    jmp poWait
+
+poDo:
+    push cx
+    add cx,5
+    call CreateSessionSel
+    pop cx
+;
+    mov edi,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;    
+    mov al,'S'
+    stosb
+;    
+    mov al,cl
+    add al,2
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,80h
+    stosb
+
+poCopy:
+    lods byte ptr fs:[esi]
+    not al
+    mov ah,al
+    xor al,al
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    stosb
+    loop poCopy
+;        
+    call InsertSessionSel
+
+poDone:
+    popad
+    pop es
+    pop ds    
+    ret
+PrintOneLine    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintLine16
+;
+;       DESCRIPTION:    Print 16 lines
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;                       CX      Width in bytes (of single line)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintLine16   Proc near
+    push ds
+    push es
+    pushad
+
+p16Wait: 
+    mov ax,ds:kr_session_count
+    cmp ax,16
+    jb p16Do
+;
+    mov ax,1
+    WaitMilliSec
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz p16Done
+;    
+    jmp p16Wait
+
+p16Do:
+    push cx
+    add cx,5
+    shl cx,4
+    call CreateSessionSel
+    pop cx
+;
+    mov edi,SIZE cmd_session_struc
+    mov dx,16
+
+p16YCopy:    
+    mov al,ESC
+    stosb
+;    
+    mov al,'S'
+    stosb
+;    
+    mov al,cl
+    add al,2
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,80h
+    stosb
+;
+    push cx    
+
+p16Copy:
+    lods byte ptr fs:[esi]
+    not al
+    mov ah,al
+    xor al,al
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    stosb
+    loop p16Copy
+;
+    pop cx    
+;      
+    sub dx,1
+    jnz p16YCopy
+;
+    call InsertSessionSel
+
+p16Done:
+    popad
+    pop es
+    pop ds    
+    ret
+PrintLine16    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ForcePrint
+;
+;       DESCRIPTION:    Force printout
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ForcePrint   Proc near
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov cx,2
+    call CreateSessionSel
+;
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;    
+    mov al,'p'
+    stosb
+;    
+    call InsertSessionSel
+;
+    pop di
+    pop cx
+    pop ax
+    pop es
+    ret
+ForcePrint    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCut
+;
+;       DESCRIPTION:    Send cut command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCut   Proc near
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov cx,2
+    call CreateSessionSel
+;
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;
+    mov al,RS
+    stosb
+;    
+    call InsertSessionSel
+;
+    pop di
+    pop cx
+    pop ax
+    pop es
+    ret
+SendCut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendBitmap
+;
+;       DESCRIPTION:    Print a single line
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;                       CX      Width in bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendBitmap   Proc near
+
+    mov ax,es
+    mov fs,ax
+    movzx ecx,si
+    mov esi,edi
+    xor bp,bp
+
+print_bitmap_loop:
+    cmp dx,16
+    jb print_bitmap_one
+;
+    inc bp
+    cmp bp,16
+    jne print_bitmap16
+;
+    mov bl,8
+    call GetByteParameter    
+    jnc print_bitmap_wait
+;
+    mov al,50    
+
+print_bitmap_wait:
+    call ForcePrint
+    push cx
+    push dx
+    movzx cx,al
+    mov ax,32000
+    xor dx,dx
+    div cx
+    pop dx
+    pop cx
+    add ax,10
+    WaitMilliSec
+    xor bp,bp
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz print_bitmap_done
+
+print_bitmap16:
+    call PrintLine16
+    mov eax,ecx
+    shl eax,4
+    add esi,eax
+    sub dx,16
+    jnz print_bitmap_loop    
+;
+    jmp print_bitmap_cut
+
+print_bitmap_one:
+    call PrintOneLine
+    add esi,ecx
+    sub dx,1
+    jnz print_bitmap_loop
+
+print_bitmap_cut:
+    call ForcePrint
+;
+    mov bl,8
+    call GetByteParameter    
+    jnc print_bitmap_fwait
+;
+    mov al,50    
+
+print_bitmap_fwait:
+    call ForcePrint
+    call SendCut
+        
+print_bitmap_done:
+
+    ret
+SendBitmap  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1838,14 +2194,7 @@ create_bitmap   Proc far
 ;
     mov ax,SEG data
     mov ds,ax
-;
-    mov bl,69
-    call GetByteParameter    
-    jc create_bitmap_done
-;
-    mov cl,8
-    mul cl
-    mov cx,ax
+    mov cx,ds:kr_width
     mov ax,1
     CreateBitmap
     clc
@@ -1856,263 +2205,6 @@ create_bitmap_done:
     pop ds
     ret
 create_bitmap    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PrintOneLine
-;
-;       DESCRIPTION:    Print a single line
-;
-;       PARAMETERS:     DS      Data
-;                       FS:ESI  Bitmap data
-;                       CX      Width in bytes
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintOneLine   Proc near
-    push ds
-    push es
-    pushad
-
-poWait: 
-    mov ax,ds:kr_session_count
-    cmp ax,16
-    jb poDo
-;
-    mov ax,5
-    WaitMilliSec
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz poDone
-;        
-    jmp poWait
-
-poDo:
-    push cx
-    add cx,5
-    call CreateSessionSel
-    pop cx
-;
-    mov edi,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;    
-    mov al,'S'
-    stosb
-;    
-    mov al,cl
-    add al,2
-    stosb
-;
-    mov al,0
-    stosb
-;
-    mov al,80h
-    stosb
-
-poCopy:
-    lods byte ptr fs:[esi]
-    not al
-    mov ah,al
-    xor al,al
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    stosb
-    loop poCopy
-;        
-    call InsertSessionSel
-
-poDone:
-    popad
-    pop es
-    pop ds    
-    ret
-PrintOneLine    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PrintLine16
-;
-;       DESCRIPTION:    Print 16 lines
-;
-;       PARAMETERS:     DS      Data
-;                       FS:ESI  Bitmap data
-;                       CX      Width in bytes (of single line)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrintLine16   Proc near
-    push ds
-    push es
-    pushad
-
-p16Wait: 
-    mov ax,ds:kr_session_count
-    cmp ax,16
-    jb p16Do
-;
-    mov ax,1
-    WaitMilliSec
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz p16Done
-;    
-    jmp p16Wait
-
-p16Do:
-    push cx
-    add cx,5
-    shl cx,4
-    call CreateSessionSel
-    pop cx
-;
-    mov edi,SIZE cmd_session_struc
-    mov dx,16
-
-p16YCopy:    
-    mov al,ESC
-    stosb
-;    
-    mov al,'S'
-    stosb
-;    
-    mov al,cl
-    add al,2
-    stosb
-;
-    mov al,0
-    stosb
-;
-    mov al,80h
-    stosb
-;
-    push cx    
-
-p16Copy:
-    lods byte ptr fs:[esi]
-    not al
-    mov ah,al
-    xor al,al
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    rcr ah,1
-    rcl al,1
-    stosb
-    loop p16Copy
-;
-    pop cx    
-;      
-    sub dx,1
-    jnz p16YCopy
-;
-    call InsertSessionSel
-
-p16Done:
-    popad
-    pop es
-    pop ds    
-    ret
-PrintLine16    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ForcePrint
-;
-;       DESCRIPTION:    Force printout
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ForcePrint   Proc near
-    push es
-    push ax
-    push cx
-    push di
-;
-    mov cx,2
-    call CreateSessionSel
-;
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;    
-    mov al,'p'
-    stosb
-;    
-    call InsertSessionSel
-;
-    pop di
-    pop cx
-    pop ax
-    pop es
-    ret
-ForcePrint    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SendCut
-;
-;       DESCRIPTION:    Send cut command
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCut   Proc near
-    push es
-    push ax
-    push cx
-    push di
-;
-    mov cx,2
-    call CreateSessionSel
-;
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,RS
-    stosb
-;    
-    call InsertSessionSel
-;
-    pop di
-    pop cx
-    pop ax
-    pop es
-    ret
-SendCut    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2136,90 +2228,57 @@ print_bitmap   Proc far
     mov ds,ax
     test ds:kr_flag,FLAG_ATTACHED
     stc
-    jz print_bitmap_done
+    jz pbDone
 ;
     mov ax,ds:kr_session_thread
     or ax,ax
     stc
-    jz print_bitmap_done
+    jz pbDone
 ;
     GetBitmapInfo
-    jc print_bitmap_done
+    jc pbDone
 ;
     cmp al,1
-    jne print_bitmap_done
+    jne pbDone
 ;
     or dx,dx
-    jz print_bitmap_done    
-;    
-    mov ax,es
-    mov fs,ax
-    movzx ecx,si
+    jz pbDone
+;
+    int 3
+    movzx ebp,si
+;
+    push eax
+    push edx
+    movzx eax,dx
+    mul ebp
+    mov ecx,eax
+    pop edx
+    pop eax
+;
+    add eax,OFFSET bs_data
     mov esi,edi
-    xor bp,bp
+    AllocateSmallGlobalMem
+;
+    mov es:bs_line_size,bp
+    mov es:bs_height,bx
+    mov edi,OFFSET bs_data
+    rep movsb
+    mov bx,es
+;
+    mov ax,SEG data
+    mov ds,ax
+    ClearSignal
+    GetThread
+    mov ds:kr_pr_thread,ax
+    mov ds:kr_bitmap,bx
+;
+    mov bx,ds:kr_session_thread
+    signal
+;
+    WaitForSignal
+    clc
 
-print_bitmap_loop:
-    cmp dx,16
-    jb print_bitmap_one
-;
-    inc bp
-    cmp bp,16
-    jne print_bitmap16
-;
-    mov bl,8
-    call GetByteParameter    
-    jnc print_bitmap_wait
-;
-    mov al,50    
-
-print_bitmap_wait:
-    call ForcePrint
-    push cx
-    push dx
-    movzx cx,al
-    mov ax,32000
-    xor dx,dx
-    div cx
-    pop dx
-    pop cx
-    add ax,10
-    WaitMilliSec
-    xor bp,bp
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    stc
-    jz print_bitmap_done
-
-print_bitmap16:
-    call PrintLine16
-    mov eax,ecx
-    shl eax,4
-    add esi,eax
-    sub dx,16
-    jnz print_bitmap_loop    
-;
-    jmp print_bitmap_cut
-
-print_bitmap_one:
-    call PrintOneLine
-    add esi,ecx
-    sub dx,1
-    jnz print_bitmap_loop
-
-print_bitmap_cut:
-    call ForcePrint
-;
-    mov bl,8
-    call GetByteParameter    
-    jnc print_bitmap_fwait
-;
-    mov al,50    
-
-print_bitmap_fwait:
-    call ForcePrint
-    call SendCut
-        
-print_bitmap_done:
+pbDone:
     popad
     pop fs
     pop es
@@ -2431,38 +2490,6 @@ reset_printer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StatusTimeout
-;
-;       DESCRIPTION:    Timer that signals control thread in order to read status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StatusTimeout  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    lock or ds:kr_flag,FLAG_STATUS
-;
-    mov bx,ds:kr_session_thread
-    or bx,bx
-    jz stDone
-;    
-    Signal    
-;    
-    add eax,1193000 * 2 ; 2s to next call
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds:kr_session_thread
-    StartTimer
-
-stDone:    
-    ret
-StatusTimeout  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           Kr203Thread
 ;
 ;               DESCRIPTION:    Printer handler thread
@@ -2476,6 +2503,8 @@ kr203_thread:
     mov ds,ax
     GetThread
     mov ds:kr_session_thread,ax
+    mov ds:kr_pr_thread,0
+    mov ds:kr_bitmap,0
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
@@ -2539,16 +2568,6 @@ kr203_thread:
 ;    
     mov es:pr_reset_proc,OFFSET reset_printer
     mov es:pr_reset_proc+4,cs
-;    
-    GetSystemTime
-    add eax,1193000 * 2  ; 2s
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds:kr_session_thread
-    mov cx,ds       
-    StartTimer
 
 krRestart:
     mov bx,ds:kr_controller
@@ -2594,7 +2613,16 @@ krInitLoop:
     mov bl,66
     xor al,al
     call CheckByteParam
-    jnc krInitOk
+    jc krRetry
+;
+    mov bl,69
+    call GetByteParam
+    jc krRetry
+;
+    mov cl,8
+    mul cl
+    mov ds:kr_width,ax
+    jmp krInitOk
 
 krRetry:
     loop krInitLoop
