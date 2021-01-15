@@ -63,20 +63,6 @@ RS = 1Eh
 FF = 0Ch
 ACK = 06h
 
-cmd_session_struc   STRUC
-
-cs_next         DW ?
-
-cs_req_size     DW ?
-
-cs_reply_min    DW ?
-cs_reply_size   DW ?
-cs_reply_buf    DW ?      
-
-cs_wait         DW ?
-
-cmd_session_struc   ENDS
-
 bitmap_sel       STRUC
 
 bs_line_size     DW ?
@@ -116,12 +102,9 @@ kr_width            DW ?
 
 kr_flag             DB ?
 
-kr_session_thread   DW ?
+kr_server_thread    DW ?
 kr_pr_thread        DW ?
 kr_bitmap           DW ?
-
-kr_session_list     DW ?
-kr_session_count    DW ?
 
 kr_init_count       DW ?
 
@@ -132,47 +115,6 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ClearReceiver
-;
-;       DESCRIPTION:    Clear receiver
-;
-;       PARAMETERS:     DS      SEG data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearReceiver    Proc near
-    GetSystemTime
-    add eax,5000 * 1193
-    adc edx,0
-    mov bx,ds:kr_wait
-    WaitWithTimeout
-
-crLoop:
-    mov ax,50
-    WaitMilliSec
-;
-    mov bx,ds:kr_dev_handle
-    mov dl,ds:kr_in_pipe
-    GetUsedUsbBuffers
-    or cx,cx
-    jz crDone
-;
-    mov es,ds:kr_in_buffer
-    xor edi,edi
-    movzx ecx,ds:kr_max_in
-    ReadUsbPipe
-    jc crDone
-;
-    or cx,cx
-    jnz crLoop
-
-crDone:
-    ret
-ClearReceiver    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -939,602 +881,6 @@ SendBitmap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateSessionSel
-;
-;       DESCRIPTION:    Create a session selector
-;
-;       PARAMETERS:     CX      Size of send buffer
-;
-;       RETURNS:        ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateSessionSel   Proc near
-    push eax
-    mov ax,SIZE cmd_session_struc
-    add ax,cx
-    movzx eax,ax
-    AllocateSmallGlobalMem
-    mov es:cs_next,0
-    mov es:cs_req_size,cx
-    mov es:cs_reply_min,0
-    mov es:cs_reply_size,0
-    mov es:cs_reply_buf,0
-    mov es:cs_wait,0
-    pop eax
-    ret
-CreateSessionSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeSessionSel
-;
-;       DESCRIPTION:    Free a session selector
-;
-;       PARAMETERS:     ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeSessionSel   Proc near
-    push ax
-;    
-    mov ax,es:cs_reply_size
-    or ax,ax
-    jz fssReplyOk
-;
-    push es
-    mov es,es:cs_reply_buf
-    FreeMem
-    pop es 
-
-fssReplyOk:
-    FreeMem
-;
-    pop ax
-    ret
-FreeSessionSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateWaitSessionSel
-;
-;       DESCRIPTION:    Create a wait-for-answer session selector
-;
-;       PARAMETERS:     CX      Size of send buffer
-;
-;       RETURNS:        ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateWaitSessionSel   Proc near
-    push ax
-    call CreateSessionSel
-    GetThread
-    mov es:cs_wait,ax
-    pop ax
-    ret
-CreateWaitSessionSel    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InsertSessionSel
-;
-;       DESCRIPTION:    Insert session selector into session list
-;
-;       PARAMETERS:     DS      Data
-;                       ES      Session sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertSessionSel   Proc near
-    push bx
-    EnterSection ds:kr_section
-;    
-    inc ds:kr_session_count
-    mov bx,ds:kr_session_list
-    or bx,bx
-    jz issEmpty
-;
-    push fs
-
-issNext:
-    mov fs,bx
-    mov bx,fs:cs_next
-    or bx,bx
-    jnz issNext
-;
-    mov es:cs_next,0
-    mov fs:cs_next,es
-    pop fs
-    jmp issDone
-
-issEmpty:
-    mov es:cs_next,0
-    mov ds:kr_session_list,es
-
-issDone:
-    LeaveSection ds:kr_section
-    mov bx,ds:kr_session_thread
-    Signal
-    pop bx
-    ret
-InsertSessionSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetByteParameter
-;
-;       DESCRIPTION:    Set a byte parameter
-;
-;       PARAMETERS:     DS      Data
-;                       BL      Parameter
-;                       AL      Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetByteParameter   Proc near
-    push es
-    push eax
-    push bx
-;
-    mov bh,al
-    mov cx,5
-    call CreateSessionSel
-;
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,'&'
-    stosb
-;
-    mov al,'P'
-    stosb
-;
-    mov al,bl
-    stosb
-;
-    mov al,bh
-    stosb                
-;
-    call InsertSessionSel
-;
-    pop bx
-    pop eax
-    pop es
-    ret
-SetByteParameter    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetByteParameter
-;
-;       DESCRIPTION:    Get a byte parameter
-;
-;       PARAMETERS:     DS      Data
-;                       BL      Parameter
-;
-;       RETURNS:        AL      Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetByteParameter   Proc near
-    push es
-    push cx
-    push di
-;
-    mov cx,4
-    call CreateWaitSessionSel
-    mov es:cs_reply_min,1
-;    
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,ENQ
-    stosb
-;
-    mov al,'P'
-    stosb
-;
-    mov al,bl
-    stosb
-;
-    ClearSignal
-    call InsertSessionSel
-    WaitForSignal
-;
-    mov ax,es:cs_reply_size
-    cmp ax,1
-    stc
-    jne gbpFree
-;
-    push es
-    mov es,es:cs_reply_buf
-    mov al,es:[0]
-    pop es
-    clc
-
-gbpFree:
-    pushf
-    call FreeSessionSel
-    popf
-;    
-    pop di
-    pop cx
-    pop es
-    ret
-GetByteParameter    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SetWordParameter
-;
-;       DESCRIPTION:    Set a word parameter
-;
-;       PARAMETERS:     DS      Data
-;                       BL      Parameter
-;                       AX      Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetWordParameter   Proc near
-    push es
-    push eax
-    push bx
-    push dx
-;
-    mov dx,ax
-    xchg dl,dh
-    mov cx,6
-    call CreateSessionSel
-;
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,'&'
-    stosb
-;
-    mov al,'P'
-    stosb
-;
-    mov al,bl
-    stosb
-;
-    mov ax,dx
-    stosw
-;
-    call InsertSessionSel
-;
-    pop dx
-    pop bx
-    pop eax
-    pop es
-    ret
-SetWordParameter    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetWordParameter
-;
-;       DESCRIPTION:    Get a word parameter
-;
-;       PARAMETERS:     DS      Data
-;                       BL      Parameter
-;
-;       RETURNS:        AX      Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetWordParameter   Proc near
-    push es
-    push cx
-    push di
-;
-    mov cx,4
-    call CreateWaitSessionSel
-    mov es:cs_reply_min,2
-;    
-    mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;
-    mov al,ENQ
-    stosb
-;
-    mov al,'P'
-    stosb
-;
-    mov al,bl
-    stosb
-;
-    ClearSignal
-    call InsertSessionSel
-    WaitForSignal
-;
-    mov ax,es:cs_reply_size
-    cmp ax,2
-    stc
-    jne gwpFree
-;
-    push es
-    mov es,es:cs_reply_buf
-    mov ax,es:[0]
-    xchg al,ah
-    pop es
-    clc
-
-gwpFree:
-    pushf
-    call FreeSessionSel
-    popf
-;    
-    pop di
-    pop cx
-    pop es
-    ret
-GetWordParameter    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           DoHardReset
-;
-;       DESCRIPTION:    Do hard RESET
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoHardReset   Proc near
-    push es
-    push cx
-    push di
-;
-;    mov bx,ds:kr_out_req
-;    mov es,ds:kr_out_buffer
-    xor di,di
-;    
-    mov al,ESC
-    stosb
-;
-    mov al,'?'
-    stosb
-;    
-    mov cx,2
-;    StartUsbReq
-;    
-    mov ax,250
-    WaitMilliSec
-;    
-    pop di
-    pop cx
-    pop es
-    ret
-DoHardReset    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           DoSession
-;
-;       DESCRIPTION:    Perform session
-;
-;       PARAMETERS:     DS      Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoSession   Proc near
-    push es
-    push ax
-
-dsLoop:    
-    mov ax,ds:kr_session_list
-    or ax,ax
-    jz dsDone
-;
-    EnterSection ds:kr_section
-    mov es,ds:kr_session_list
-    mov ax,es:cs_next
-    mov ds:kr_session_list,ax
-    dec ds:kr_session_count
-    LeaveSection ds:kr_section
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsCheckRead
-;    
-    push ds
-    push es
-    pusha
-;    
-    mov ax,es
-    mov es,ds:kr_out_buffer
-    mov ds,ax
-    mov si,SIZE cmd_session_struc
-    xor di,di
-    mov cx,ds:cs_req_size
-    rep movsb
-    mov cx,ds:cs_req_size
-    mov bx,es:kr_dev_handle
-    mov dl,es:kr_out_pipe
-    PostUsbRawPipe
-;
-    popa
-    pop es
-    pop ds    
-
-dsCheckRead:
-    mov ax,es:cs_wait
-    or ax,ax
-    jz dsFree
-;
-    push bx
-    push cx
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsSignal
-;
-    mov cx,10
-
-dsReadLoop:
-    GetSystemTime
-    add eax,5000 * 1193
-    adc edx,0
-    mov bx,ds:kr_wait
-    WaitWithTimeout
-;
-    mov bx,ds:kr_dev_handle
-    mov dl,ds:kr_in_pipe
-    GetUsedUsbBuffers
-    or cx,cx
-    jz dsSignal
-;
-    mov es,ds:kr_in_buffer
-    xor edi,edi
-    movzx ecx,ds:kr_max_in
-    ReadUsbPipe
-    jc dsSignal
-;
-
-
-
-;    mov bx,ds:kr_in_req
-;    IsUsbReqStarted
-    jnc dsReadStarted
-;
-    push es
-;    StartUsbReq
-    pop es
-
-dsReadStarted:    
-;    mov bx,ds:kr_in_req
-;    IsUsbReqReady
-    jnc dsGetData
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsSignal
-;
-    mov ax,5
-    WaitMilliSec
-    sub cx,1
-    jnz dsReadLoop
-;
-    jmp dsSignal
-
-dsGetData:
-    push es
-;    GetUsbReqData
-    pop es
-    jc dsSignal
-;
-    push ds
-    push es
-    push cx
-    push si
-    push di
-    mov ds,ds:kr_in_buffer
-    xor si,si
-    mov ax,cx
-    cmp ax,es:cs_reply_min
-    jae dsAllocReply
-;
-    mov ax,es:cs_reply_min
-
-dsAllocReply:
-    movzx eax,ax
-    AllocateSmallGlobalMem
-    xor di,di
-    rep movsb
-    mov ax,es
-    pop di
-    pop si
-    pop cx
-    pop es
-    pop ds
-;
-    mov es:cs_reply_buf,ax
-    mov es:cs_reply_size,cx
-
-dsReadMore:
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsSignal
-;
-    cmp cx,es:cs_reply_min
-    jae dsSignal
-;
-;    mov bx,ds:kr_in_req
-    push es
-;    StartUsbReq
-    pop es
-;    
-    mov ax,5
-    WaitMilliSec
-;    
-;    IsUsbReqReady
-    jc dsSignal
-;
-    push es
-;    GetUsbReqData
-    pop es
-    jc dsSignal
-;
-    push ds
-    push es
-    push cx
-    push si
-    push di
-    mov ds,ds:kr_in_buffer
-    xor si,si
-    mov di,es:cs_reply_size
-    mov ax,di
-    add ax,cx
-    cmp ax,es:cs_reply_min
-    jbe dsCopyMore
-;
-    mov cx,es:cs_reply_min
-    sub cx,di
-
-dsCopyMore:    
-    mov es,es:cs_reply_buf
-    rep movsb
-    pop di
-    pop si
-    pop cx
-    pop es
-    pop ds
-;
-    add es:cs_reply_size,cx
-    mov cx,es:cs_reply_size
-    jmp dsReadMore
-
-dsSignal:
-    mov bx,es:cs_wait
-    Signal
-    pop cx
-    pop bx
-    jmp dsLoop
-
-dsFree:
-    call FreeSessionSel
-    jmp dsLoop
-
-dsDone:
-    pop ax
-    pop es
-    ret
-DoSession   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           NotifyUsbData
 ;
 ;       DESCRIPTION:    Handle incoming data
@@ -1677,7 +1023,7 @@ is_jammed   Proc far
     clc
     jz ijDone
 ;    
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz ijDone
@@ -1718,7 +1064,7 @@ is_paper_low   Proc far
     clc
     jz iplDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz iplDone
@@ -1759,7 +1105,7 @@ is_paper_end   Proc far
     clc
     jz ipeDone
 ;    
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz ipeDone
@@ -1800,7 +1146,7 @@ is_cutter_jammed   Proc far
     clc
     jz icjDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz icjDone
@@ -1841,7 +1187,7 @@ is_ok   Proc far
     stc
     jz ioDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     stc
     jz ioDone
@@ -1882,7 +1228,7 @@ is_head_lifted   Proc far
     clc
     jz ihlDone
 ;    
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz ihlDone
@@ -1923,7 +1269,7 @@ has_paper_in_presenter   Proc far
     clc
     jz hppDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz hppDone
@@ -1964,7 +1310,7 @@ has_temp_error   Proc far
     clc
     jz hteDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz hteDone
@@ -2005,7 +1351,7 @@ has_feed_error   Proc far
     clc
     jz hfeDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     clc
     jz hfeDone
@@ -2095,7 +1441,7 @@ print_bitmap   Proc far
     stc
     jz pbDone
 ;
-    mov ax,ds:kr_session_thread
+    mov ax,ds:kr_server_thread
     or ax,ax
     stc
     jz pbDone
@@ -2135,7 +1481,7 @@ print_bitmap   Proc far
     mov ds:kr_pr_thread,ax
     mov ds:kr_bitmap,bx
 ;
-    mov bx,ds:kr_session_thread
+    mov bx,ds:kr_server_thread
     signal
 ;
     WaitForSignal
@@ -2170,22 +1516,6 @@ present_media   Proc far
     push cx
     push di
 ;
-    mov bl,al
-    mov ax,SEG data
-    mov ds,ax
-    test ds:kr_flag,FLAG_ATTACHED
-    stc
-    jz present_media_done
-;
-    mov ax,ds:kr_session_thread
-    or ax,ax
-    stc
-    jz present_media_done
-;    
-    mov cx,3
-    call CreateWaitSessionSel
-;    
-    mov di,SIZE cmd_session_struc
     mov al,ESC
     stosb
 ;
@@ -2194,8 +1524,6 @@ present_media   Proc far
 ;
     mov al,bl
     stosb
-;
-    call InsertSessionSel
     clc
 
 present_media_done:    
@@ -2227,26 +1555,8 @@ eject_media   Proc far
     push cx
     push di
 ;
-    mov ax,SEG data
-    mov ds,ax
-    test ds:kr_flag,FLAG_ATTACHED
-    stc
-    jz eject_media_done
-;
-    mov ax,ds:kr_session_thread
-    or ax,ax
-    stc
-    jz eject_media_done
-;    
-    mov cx,1
-    call CreateWaitSessionSel
-;    
-    mov di,SIZE cmd_session_struc
     mov al,ENQ
     stosb
-;
-    call InsertSessionSel
-    clc
 
 eject_media_done:    
     pop di
@@ -2276,21 +1586,6 @@ wait_for_print   Proc far
     push cx
     push di
 ;
-    mov ax,SEG data
-    mov ds,ax
-    test ds:kr_flag,FLAG_ATTACHED
-    stc
-    jz wait_for_print_done
-;
-    mov ax,ds:kr_session_thread
-    or ax,ax
-    stc
-    jz wait_for_print_done
-;    
-    mov cx,3
-    call CreateWaitSessionSel
-;    
-    mov di,SIZE cmd_session_struc
     mov al,ESC
     stosb
 ;    
@@ -2299,8 +1594,6 @@ wait_for_print   Proc far
 ;    
     mov al,0FEh
     stosb
-;
-    call InsertSessionSel
     clc
     
 wait_for_print_done:
@@ -2368,7 +1661,7 @@ kr203_thread:
     mov ax,SEG data
     mov ds,ax
     GetThread
-    mov ds:kr_session_thread,ax
+    mov ds:kr_server_thread,ax
     mov ds:kr_pr_thread,0
     mov ds:kr_bitmap,0
 ;
@@ -2510,37 +1803,7 @@ krLoop:
 krDetached:
     mov ax,5
     WaitMilliSec
-;    
-    mov ax,ds:kr_session_list
-    or ax,ax
-    jz krDetachClose
 ;
-    EnterSection ds:kr_section
-    mov es,ds:kr_session_list
-    mov ax,es:cs_next
-    mov ds:kr_session_list,ax
-    dec ds:kr_session_count
-    LeaveSection ds:kr_section
-;
-    mov bx,es:cs_wait
-    or bx,bx
-    jz krFreeSession
-;
-    Signal
-    xor ax,ax
-    mov es,ax
-    jmp krDetached
-        
-krFreeSession:
-    call FreeSessionSel
-    xor ax,ax
-    mov es,ax
-    jmp krDetached
-
-krDetachClose:
-    test ds:kr_flag,FLAG_INIT
-    jnz krDetached
-;    
     call ClosePipes
 ;
     xor bx,bx
@@ -2687,8 +1950,6 @@ OpenPrinterPipes Proc near
     mov ds:kr_out_pipe,0
     mov ds:kr_in_pipe,0
     mov ds:kr_max_in,0
-    mov ds:kr_session_list,0
-    mov ds:kr_session_count,0
 ;
     lock or ds:kr_flag,FLAG_ATTACHED
 ;
@@ -2873,7 +2134,7 @@ usb_detach  Proc far
     lock and ds:kr_flag,NOT FLAG_ATTACHED
 
 udWaitLoop:    
-    mov bx,ds:kr_session_thread
+    mov bx,ds:kr_server_thread
     Signal
 ;
     mov ax,5
