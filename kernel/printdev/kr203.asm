@@ -124,6 +124,215 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadAnswer
+;
+;       DESCRIPTION:    Read answer
+;
+;       PARAMETERS:     DS        Data
+;
+;       RETURNS:        NC
+;                         CX      Answer size
+;                         ES      Answer buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadAnswer   Proc near
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    GetSystemTime
+    add eax,500 * 1193
+    adc edx,0
+    mov bx,ds:kr_wait
+    WaitWithTimeout
+;
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    stc
+    jz raDone
+;
+    mov es,ds:kr_in_buffer
+    xor edi,edi
+    movzx ecx,ds:kr_max_in
+    ReadUsbPipe
+    jc raDone
+
+raLoop:
+    add edi,ecx
+    GetSystemTime
+    add eax,10 * 1193
+    adc edx,0
+    mov bx,ds:kr_wait
+    WaitWithTimeout
+;
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    jz raOk
+;
+    movzx ecx,ds:kr_max_in
+    ReadUsbPipe
+    jnc raLoop
+
+raOk:
+    mov cx,di
+    clc
+
+raDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    ret
+ReadAnswer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetWordParam
+;
+;       DESCRIPTION:    Get a word parameter
+;
+;       PARAMETERS:     DS      Data
+;                       BL      Parameter
+;
+;       RETURNS:        AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetWordParam   Proc near
+    push es
+    push ebx
+    push edx
+    push edi
+;
+    mov dx,ax
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,ENQ
+    stosb
+;
+    mov al,'P'
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+    jc gwpDone
+;
+    call ReadAnswer
+    jc gwpDone
+;
+    xor di,di
+    mov ax,es:[di]
+    xchg al,ah
+
+gwpDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop es
+    ret
+GetWordParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetWordParam
+;
+;       DESCRIPTION:    Set a word parameter
+;
+;       PARAMETERS:     DS      Data
+;                       BL      Parameter
+;                       AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetWordParam   Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+;
+    mov dx,ax
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,'&'
+    stosb
+;
+    mov al,'P'
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    mov ax,dx
+    stosw
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+SetWordParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckWordParam
+;
+;       DESCRIPTION:    Check word parameter
+;
+;       PARAMETERS:     DS      Data
+;                       BL      Parameter
+;                       AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckWordParam   Proc near
+    push dx
+;
+    mov dx,ax
+    call GetWordParam
+    jc cwpDone
+;
+    cmp ax,dx
+    clc
+    je cwpDone
+;
+    mov ax,dx
+    call SetWordParam
+
+cwpDone:
+    pop dx
+    ret
+CheckWordParam  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateSessionSel
 ;
 ;       DESCRIPTION:    Create a session selector
@@ -732,25 +941,6 @@ dsLoop:
     push es
     pusha
 ;    
-    mov cx,50
-;    mov bx,ds:kr_out_req
-;    IsUsbReqStarted
-    jc dsWriteDo
-
-dsWriteWait:    
-;    IsUsbReqReady
-    jnc dsWriteDo
-;
-    test ds:kr_flag,FLAG_ATTACHED
-    jz dsWritePop
-;
-    mov ax,5
-    WaitMilliSec
-    loop dsWriteWait
-;
-    jmp dsWritePop
-
-dsWriteDo:
     mov ax,es
     mov es,ds:kr_out_buffer
     mov ds,ax
@@ -759,9 +949,10 @@ dsWriteDo:
     mov cx,ds:cs_req_size
     rep movsb
     mov cx,ds:cs_req_size
-;    StartUsbReq
-
-dsWritePop:
+    mov bx,es:kr_dev_handle
+    mov dl,es:kr_out_pipe
+    PostUsbRawPipe
+;
     popa
     pop es
     pop ds    
@@ -780,6 +971,27 @@ dsCheckRead:
     mov cx,10
 
 dsReadLoop:
+    GetSystemTime
+    add eax,5000 * 1193
+    adc edx,0
+    mov bx,ds:kr_wait
+    WaitWithTimeout
+;
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    jz dsSignal
+;
+    mov es,ds:kr_in_buffer
+    xor edi,edi
+    movzx ecx,ds:kr_max_in
+    ReadUsbPipe
+    jc dsSignal
+;
+
+
+
 ;    mov bx,ds:kr_in_req
 ;    IsUsbReqStarted
     jnc dsReadStarted
@@ -798,7 +1010,8 @@ dsReadStarted:
 ;
     mov ax,5
     WaitMilliSec
-    loop dsReadLoop
+    sub cx,1
+    jnz dsReadLoop
 ;
     jmp dsSignal
 
@@ -2146,6 +2359,7 @@ StatusTimeout  Endp
 init_thread_name  DB 'Init KR203 ', 0
 
 init_thread:
+    int 3
     mov ax,SEG data
     mov ds,ax
     mov ds:kr_init_count,0
@@ -2411,10 +2625,20 @@ krRestart:
 ;
     call OpenPipes
     call ClearReceiver
-    int 3
 ;    
     lock or ds:kr_flag, FLAG_INIT
     lock or ds:kr_status,STATUS_OFFLINE
+;
+    mov bl,6
+    mov ax,250
+    call CheckWordParam
+;    
+    mov bl,7
+    mov ax,1000
+    call CheckWordParam
+    int 3
+
+
 ;    
     mov esi,OFFSET init_thread
     mov edi,OFFSET init_thread_name
@@ -2426,6 +2650,7 @@ krLoop:
     jz krDetached
 
 krDoSession:
+    int 3
     call DoSession
 ;
     test ds:kr_flag,FLAG_INIT
