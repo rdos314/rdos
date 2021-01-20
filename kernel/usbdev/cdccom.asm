@@ -78,6 +78,8 @@ ucd_in_buffer       DW ?
 ucd_out_buffer      DW ?
 
 ucd_wait            DW ?
+ucd_thread          DW ?
+ucd_detach          DW ?
 
 ucd_section         section_typ <>
 
@@ -161,76 +163,6 @@ get_usb_cdc_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SendSignal
-;
-;           description:    Sends signal to USB-handler thread
-;
-;       Parameters:         CX      Port selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendSignal  Proc far
-    push ds
-    push ax
-    push bx
-;    
-    verw cx
-    jnz ssiDone
-;    
-    mov ds,cx
-    mov ds:ucp_timer_active,0
-;    
-    mov ds,ds:ucp_cdc_sel
-    mov bx,ds:cdc_thread
-    Signal    
-
-ssiDone:
-    pop bx
-    pop ax
-    pop ds
-    ret
-SendSignal  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartSendTimer
-;
-;       description:    Starts send timeout
-;
-;       Parameters:     DS      Port selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartSendTimer Proc near
-    push es
-    pushad
-;       
-    mov al,1    
-    xchg al,ds:ucp_timer_active
-    or al,al
-    jnz sstDone
-;
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-;       
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET SendSignal
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-
-sstDone:
-    popad
-    pop es
-    ret
-StartSendTimer Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           open_com
 ;
 ;           description:    Open a serial port
@@ -257,8 +189,7 @@ open_com   Proc far
     mov ds:ucd_port_sel,dx
     LeaveSection ds:ucd_section       
 ;
-    mov ds,ds:ucd_cdc_sel
-    mov bx,ds:cdc_thread
+    mov bx,ds:ucd_thread
     Signal    
     clc
 ;
@@ -519,7 +450,7 @@ start_send      PROC far
     jmp ssDone
 
 ssOk:    
-    call StartSendTimer
+;    call StartSendTimer
 
 ssDone:
     pop ax
@@ -1094,7 +1025,7 @@ pwSendRel:
     or ax,ax
     jz pwDone
 ;
-    call StartSendTimer    
+;    call StartSendTimer    
 
 pwDone:
     pop fs
@@ -1201,65 +1132,20 @@ HandleDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           CDC com threads
+;   NAME:           CDC server thread
 ;
 ;   DESCRIPTION:    
 ;
-;   PARAMETERS:     BX      CDC selector
+;   PARAMETERS:     BX      CDC sel
+;                   DL      Unit       
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public cdc_com_start
-    public cdc_com_recreate
+cdc_server:
+    int 3
+    mov es,bx
+    mov ds,es:cdc_com_dev_sel
 
-cdc_com_recreate:
-    mov ds,ebx
-    call FindInterfaces
-    jc tFail
-;
-    call CheckInterfaces
-    jc tFail
-;
-    call OpenControl
-;
-    GetThread
-    mov ds:cdc_detach,0
-    mov ds:cdc_thread,ax
-    or ds:cdc_flags,FLAG_CDC_REINIT
-    and ds:cdc_flags,NOT FLAG_CDC_DISCONNECT
-;
-    mov eax,ds
-    mov es,eax
-    mov ds,ds:cdc_com_dev_sel
-    jmp tSignalled
-
-cdc_com_start:
-    mov ds,ebx
-    call FindInterfaces
-    jc tFail
-;
-    call CheckInterfaces
-    jc tFail
-;
-    call OpenControl
-;
-    GetThread
-    mov ds:cdc_detach,0
-    mov ds:cdc_thread,ax
-
-    movzx ecx,ds:cdc_unit_count
-    mov ebx,OFFSET cdc_unit_arr
-
-tOpenLoop:
-    mov fs,ds:[ebx]
-    call CreateComDevice
-;
-    add ebx,2
-    loop tOpenLoop
-;
-    mov eax,ds
-    mov es,eax
-    mov ds,ds:cdc_com_dev_sel
 
 tLoop:
     WaitForSignal
@@ -1322,12 +1208,183 @@ udPortHandleOk:
     mov eax,es
     mov ds,eax
     call CloseControl
-;
-    mov ds:cdc_thread,0
-    mov bx,ds:cdc_detach
-    Signal
 
 tFail:
+    TerminateThread
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateServerThread
+;
+;   Description:    Create server thread
+;
+;   PARAMETERS:     DS		CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+com_name  DB 'CDC Com ', 0
+
+CreateServerThread    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    mov bx,ds
+    xor dl,dl
+
+cstUnitLoop:
+    xor edi,edi
+    mov esi,OFFSET com_name
+
+cstCopyLoop:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cstCopyDone
+;
+    stosb
+    jmp cstCopyLoop
+
+cstCopyDone:
+    mov ax,ds:cdc_controller
+    call HexToAscii
+    stosw
+;
+    mov al,'.'
+    stosb
+;
+    mov al,ds:cdc_port
+    call HexToAscii
+    stosw
+;
+    mov al,'-'
+    stosb
+;
+    mov al,dl
+    add al,'0'
+    stosb
+;
+    xor al,al
+    stosb
+;
+    push ds
+;
+    xor edi,edi
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET cdc_server
+    mov eax,3
+    mov ecx,stack0_size
+    CreateThread
+;
+    pop ds
+;
+    inc dl
+    cmp dl,ds:cdc_unit_count
+    jne cstUnitLoop
+;
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreateServerThread   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CDC com threads
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     BX      CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public cdc_com_start
+    public cdc_com_recreate
+
+cdc_com_recreate:
+    mov ds,ebx
+    call FindInterfaces
+    jc tFail
+;
+    call CheckInterfaces
+    jc ccFail
+;
+    or ds:cdc_flags,FLAG_CDC_REINIT
+    and ds:cdc_flags,NOT FLAG_CDC_DISCONNECT
+;
+    mov eax,ds
+    mov es,eax
+    mov ds,ds:cdc_com_dev_sel
+    jmp ccStart
+
+cdc_com_start:
+    mov ds,ebx
+    call FindInterfaces
+    jc ccFail
+;
+    call CheckInterfaces
+    jc ccFail
+;
+    movzx ecx,ds:cdc_unit_count
+    mov ebx,OFFSET cdc_unit_arr
+
+ccOpenLoop:
+    mov fs,ds:[ebx]
+    call CreateComDevice
+;
+    add ebx,2
+    loop ccOpenLoop
+
+ccStart:
+    call CreateServerThread
+
+ccFail:
     TerminateThread
                 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1347,21 +1404,6 @@ cdc_com_detach	Proc near
     push ds
     push eax
     push ebx
-;
-    mov ds,ebx
-    GetThread
-    mov ds:cdc_detach,ax
-;
-    or ds:cdc_flags,FLAG_CDC_DISCONNECT
-    mov bx,ds:cdc_thread
-
-ccdSignal:
-    Signal
-;
-    WaitForSignal
-    mov bx,ds:cdc_thread
-    or bx,bx
-    jnz ccdSignal
 ;
     pop ebx
     pop eax

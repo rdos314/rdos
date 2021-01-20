@@ -55,9 +55,6 @@ cdc_abs_control_cap     DB ?
 
 cdc_dev_handle          DW ?
 
-cdc_thread              DW ?
-cdc_detach              DW ?
-
 cdc_com_dev_sel         DW ?
 
 cdc_dev_offset          DD ?
