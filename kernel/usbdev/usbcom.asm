@@ -4634,6 +4634,9 @@ udDisNext:
     jmp udRetry
 
 udUnlink:
+    mov bx,es:uc_dev_handle
+    CloseUsbDevice
+;
     mov dx,SEG data
     mov ds,dx
 ;
