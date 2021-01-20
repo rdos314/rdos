@@ -53,8 +53,7 @@ cdc_sub_class		DB ?
 cdc_protocol            DB ?
 cdc_abs_control_cap     DB ?
 
-cdc_control_wait        DW ?
-cdc_control_pipe        DW ?
+cdc_dev_handle          DW ?
 
 cdc_thread              DW ?
 cdc_detach              DW ?

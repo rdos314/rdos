@@ -784,19 +784,10 @@ CheckInterfaces	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenControl	Proc near
-    CreateWait
-    mov ds:cdc_control_wait,bx
-;
     mov bx,ds:cdc_controller
-;    mov al,ds:cdc_device
-    xor dl,dl
-;    OpenUsbPipe
-    mov ds:cdc_control_pipe,bx
-;
-    mov ax,ds:cdc_control_pipe
-    mov bx,ds:cdc_control_wait
-    movzx ecx,bx
-;    AddWaitForUsbPipe
+    mov al,ds:cdc_port
+    OpenUsbDevice
+    mov ds:cdc_dev_handle,bx
     ret
 OpenControl	Endp
 
@@ -812,11 +803,8 @@ OpenControl	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseControl	Proc near
-    mov bx,ds:cdc_control_pipe
-;    CloseUsbPipe
-;
-    mov bx,ds:cdc_control_wait
-    CloseWait
+    mov bx,ds:cdc_dev_handle
+    CloseUsbDevice
     ret
 CloseControl	Endp
 
@@ -910,6 +898,8 @@ Reinit	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort    Proc near
+    int 3
+
     mov bx,es:cdc_controller
 ;    mov al,es:cdc_device
     mov dl,fs:unit_bulk_in
@@ -958,6 +948,9 @@ OpenPort    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePort    Proc near
+    int 3
+
+
     mov ax,50
     WaitMilliSec
 ;    
