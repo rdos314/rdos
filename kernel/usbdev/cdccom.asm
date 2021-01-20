@@ -74,14 +74,10 @@ ucd_cdc_unit_sel    DW ?
 ucd_port_offset     DD ?
 ucd_port_nr         DW ?
 
-ucd_in_handle       DW ?
-ucd_out_handle      DW ?
-
 ucd_in_buffer       DW ?
 ucd_out_buffer      DW ?
 
-ucd_in_req          DW ?
-ucd_out_req         DW ?
+ucd_wait            DW ?
 
 ucd_section         section_typ <>
 
@@ -830,12 +826,9 @@ CreateComDevice	Proc near
     mov es:ucd_port_sel,0
     mov es:ucd_cdc_sel,ds
     mov es:ucd_cdc_unit_sel,fs
-    mov es:ucd_in_handle,0
-    mov es:ucd_out_handle,0
     mov es:ucd_in_buffer,0
     mov es:ucd_out_buffer,0
-    mov es:ucd_in_req,0
-    mov es:ucd_out_req,0
+    mov es:ucd_wait,0
 ;
     mov dword ptr es:cd_create_proc,OFFSET CreateComPort
     mov dword ptr es:cd_create_proc+4,cs
@@ -899,38 +892,35 @@ Reinit	Endp
 
 OpenPort    Proc near
     int 3
-
-    mov bx,es:cdc_controller
-;    mov al,es:cdc_device
-    mov dl,fs:unit_bulk_in
-;    OpenUsbPipe
-    mov ds:ucd_in_handle,bx
-;
-;    CreateUsbReq
-    mov ds:ucd_in_req,bx    
-;    
     push es
-    mov cx,fs:unit_in_size
-    xor ax,ax
-;    AddReadUsbDataReq
+    movzx eax,fs:unit_in_size
+    AllocateSmallGlobalMem
     mov ds:ucd_in_buffer,es
     pop es
 ;
-    mov bx,es:cdc_controller
-;    mov al,es:cdc_device
-    mov dl,fs:unit_bulk_out
-;    OpenUsbPipe    
-    mov ds:ucd_out_handle,bx
+    mov bx,es:cdc_dev_handle
+    mov dl,fs:unit_bulk_in
+    mov cx,10
+    mov ax,2
+    OpenUsbPacketPipe
 ;
-;    CreateUsbReq
-    mov ds:ucd_out_req,bx
-;    
     push es
+    mov bx,es:cdc_dev_handle
+    mov dl,fs:unit_bulk_out
     mov cx,fs:unit_out_size
-    mov ax,1
-;    AddWriteUsbDataReq
+    shl cx,2
+    mov ax,5
+    OpenUsbRawPipe
     mov ds:ucd_out_buffer,es
     pop es
+;
+    CreateWait
+    mov ds:ucd_wait,bx
+;
+    mov bx,es:cdc_dev_handle
+    mov dl,fs:unit_bulk_in
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
     ret
 OpenPort    Endp
 
@@ -949,29 +939,21 @@ OpenPort    Endp
 
 ClosePort    Proc near
     int 3
-
-
-    mov ax,50
-    WaitMilliSec
+    mov bx,es:cdc_dev_handle
+    mov dl,fs:unit_bulk_in
+    CloseUsbPipe
+;
+    mov bx,es:cdc_dev_handle
+    mov dl,fs:unit_bulk_out
+    CloseUsbPipe
 ;    
-    mov bx,ds:ucd_in_req
-;    CloseUsbReq
-    mov ds:ucd_in_req,0
+    push es
+    mov es,ds:ucd_in_buffer
+    FreeMem
+    pop es
 ;
-    mov bx,ds:ucd_in_handle
-;    CloseUsbPipe    
-    mov ds:ucd_in_handle,0
-;
-    mov bx,ds:ucd_out_req
-;    CloseUsbReq
-    mov ds:ucd_out_req,0
-;
-    mov bx,ds:ucd_out_handle
-;    CloseUsbPipe    
-    mov ds:ucd_out_handle,0
-;
-    mov ds:ucd_in_buffer,0
-    mov ds:ucd_out_buffer,0
+    mov bx,ds:ucd_wait
+    CloseWait
     ret
 ClosePort   Endp
 
@@ -1145,9 +1127,9 @@ hdConn:
     jz hdClosed
 
 hdOpen:
-    mov bx,ds:ucd_in_req
-    or bx,bx
-    jnz hdIsOpen
+;    mov bx,ds:ucd_in_req
+;    or bx,bx
+;    jnz hdIsOpen
 ;
     call OpenPort    
 ;
@@ -1158,14 +1140,14 @@ hdOpen:
     and es:cdc_flags,NOT FLAG_CDC_REINIT
 
 hdIsOpen:    
-    mov bx,ds:ucd_in_req
+;    mov bx,ds:ucd_in_req
 ;    IsUsbReqStarted
     jnc hdOpenOk
 ;
 ;    StartUsbReq
 
 hdOpenOk:    
-    mov bx,ds:ucd_in_req
+;    mov bx,ds:ucd_in_req
 ;    IsUsbReqReady
     jc hdReadDone
 ;
@@ -1175,11 +1157,11 @@ hdOpenOk:
     call PollRead
 
 hdReadRestart:
-    mov bx,ds:ucd_in_req
+;    mov bx,ds:ucd_in_req
 ;    StartUsbReq
 
 hdReadDone:
-    mov bx,ds:ucd_out_req
+;    mov bx,ds:ucd_out_req
 ;    IsUsbReqStarted
     jc hdCheckWrite
 ;    
@@ -1200,16 +1182,16 @@ hdCheckWrite:
     or cx,cx
     jz hdDone
 ;
-    mov bx,ds:ucd_out_req
+;    mov bx,ds:ucd_out_req
 ;    StartUsbReq
     jmp hdDone
 
 hdClosed:
     and es:cdc_flags,NOT FLAG_CDC_REINIT
 ;
-    mov bx,ds:ucd_in_req
-    or bx,bx
-    jz hdDone
+;    mov bx,ds:ucd_in_req
+;    or bx,bx
+;    jz hdDone
 
 hdIsClosed:
     call ClosePort
