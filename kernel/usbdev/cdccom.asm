@@ -699,42 +699,6 @@ CheckInterfaces	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           OpenControl
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     DS		CDC selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenControl	Proc near
-    mov bx,ds:cdc_controller
-    mov al,ds:cdc_port
-    OpenUsbDevice
-    mov ds:cdc_dev_handle,bx
-    ret
-OpenControl	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CloseControl
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     DS		CDC selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseControl	Proc near
-    mov bx,ds:cdc_dev_handle
-    CloseUsbDevice
-    ret
-CloseControl	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           CreateComDevice
 ;
 ;   DESCRIPTION:    
@@ -1205,9 +1169,6 @@ udPortHandleOk:
     add ebx,2
     loop tCloseLoop
 ;    
-    mov eax,es
-    mov ds,eax
-    call CloseControl
 
 tFail:
     TerminateThread
@@ -1267,6 +1228,11 @@ CreateServerThread    Proc near
     push ds
     push es
     pushad
+;
+    mov bx,ds:cdc_controller
+    mov al,ds:cdc_port
+    OpenUsbDevice
+    mov ds:cdc_dev_handle,bx
 ;
     mov eax,100h
     AllocateSmallGlobalMem
@@ -1404,6 +1370,9 @@ cdc_com_detach	Proc near
     push ds
     push eax
     push ebx
+;
+    mov bx,ds:cdc_dev_handle
+    CloseUsbDevice
 ;
     pop ebx
     pop eax
