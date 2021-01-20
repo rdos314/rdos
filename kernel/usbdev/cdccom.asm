@@ -546,11 +546,8 @@ reset_port       PROC far
     push edi
 ;
     mov es,ds:ucp_cdc_sel
-    mov bx,es:cdc_controller
-    movzx ax,es:cdc_port
-    OpenUsbDevice
+    mov bx,es:cdc_dev_handle
     ResetUsbDevice
-    CloseUsbDevice
 ;
     pop edi
     pop ecx
@@ -891,7 +888,6 @@ Reinit	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort    Proc near
-    int 3
     push es
     movzx eax,fs:unit_in_size
     AllocateSmallGlobalMem
@@ -938,7 +934,6 @@ OpenPort    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePort    Proc near
-    int 3
     mov bx,es:cdc_dev_handle
     mov dl,fs:unit_bulk_in
     CloseUsbPipe
@@ -954,9 +949,12 @@ ClosePort    Proc near
 ;
     mov bx,ds:ucd_wait
     CloseWait
+;
+    mov ds:ucd_wait,0
+    mov ds:ucd_in_buffer,0
+    mov ds:ucd_out_buffer,0
     ret
 ClosePort   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1127,9 +1125,9 @@ hdConn:
     jz hdClosed
 
 hdOpen:
-;    mov bx,ds:ucd_in_req
-;    or bx,bx
-;    jnz hdIsOpen
+    mov bx,ds:ucd_wait
+    or bx,bx
+    jnz hdIsOpen
 ;
     call OpenPort    
 ;
