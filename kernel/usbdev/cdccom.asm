@@ -813,7 +813,7 @@ OpenPort    Proc near
     CreateWait
     mov ds:ucd_wait,bx
 ;
-    mov bx,es:cdc_dev_handle
+    mov ax,es:cdc_dev_handle
     mov dl,fs:unit_bulk_in
     mov ecx,ds
     AddWaitForUsbDevicePipe
@@ -1001,102 +1001,6 @@ pwDone:
     pop ds    
     ret
 PollWrite   Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           HandleDevice
-;
-;   DESCRIPTION:    Handle device
-;
-;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
-;                   FS          CDC unit
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleDevice    Proc near
-    test es:cdc_flags,FLAG_CDC_DISCONNECT
-    jnz hdDone
-
-hdConn:
-    mov ax,ds:ucd_port_sel
-    or ax,ax
-    jz hdClosed
-
-hdOpen:
-    mov bx,ds:ucd_wait
-    or bx,bx
-    jnz hdIsOpen
-;
-    call OpenPort    
-;
-    test es:cdc_flags,FLAG_CDC_REINIT
-    jz hdIsOpen    
-;
-    call ReInit
-    and es:cdc_flags,NOT FLAG_CDC_REINIT
-
-hdIsOpen:    
-;    mov bx,ds:ucd_in_req
-;    IsUsbReqStarted
-    jnc hdOpenOk
-;
-;    StartUsbReq
-
-hdOpenOk:    
-;    mov bx,ds:ucd_in_req
-;    IsUsbReqReady
-    jc hdReadDone
-;
-;    GetUsbReqData
-    jc hdReadRestart
-;    
-    call PollRead
-
-hdReadRestart:
-;    mov bx,ds:ucd_in_req
-;    StartUsbReq
-
-hdReadDone:
-;    mov bx,ds:ucd_out_req
-;    IsUsbReqStarted
-    jc hdCheckWrite
-;    
-;    IsUsbReqReady
-    jc hdDone
-;
-    push ds
-    mov ds,ds:ucd_port_sel
-    mov bx,ds:send_wait
-    pop ds
-    or bx,bx
-    jz hdCheckWrite
-;    
-    Signal
-
-hdCheckWrite:
-    call PollWrite
-    or cx,cx
-    jz hdDone
-;
-;    mov bx,ds:ucd_out_req
-;    StartUsbReq
-    jmp hdDone
-
-hdClosed:
-    and es:cdc_flags,NOT FLAG_CDC_REINIT
-;
-;    mov bx,ds:ucd_in_req
-;    or bx,bx
-;    jz hdDone
-
-hdIsClosed:
-    call ClosePort
-    
-hdDone:
-    ret
-HandleDevice    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1117,70 +1021,66 @@ cdc_server:
     shl bx,1
     mov ax,es:[bx].cdc_com_arr
     or ax,ax
-    jz tFail
+    jz tExit
 ;
     mov ds,ax
+    GetThread
+    mov ds:ucd_thread,ax
 
 tLoop:
-    WaitForSignal
-
-tSignalled:
+    mov ax,ds:ucd_port_sel
+    or ax,ax
+    jz tClose
+;
     test es:cdc_flags,FLAG_CDC_DISCONNECT
     jnz tExit
 ;
-    movzx ecx,es:cdc_unit_count
-    mov ebx,OFFSET cdc_unit_arr
-
-tDevLoop:
-    push es
-    push ebx
-    push ecx
+    test es:cdc_flags,FLAG_CDC_REINIT
+    jz tOpen    
 ;
-    mov fs,es:[ebx]
     EnterSection ds:ucd_section
-    push ds
-    call HandleDevice
-    pop ds
+    call ReInit
     LeaveSection ds:ucd_section
+    and es:cdc_flags,NOT FLAG_CDC_REINIT
+
+tOpen:
+    mov bx,ds:ucd_in_buffer
+    or bx,bx
+    jnz tIsOpen
 ;
-    pop ecx
-    pop ebx
-    pop es    
-    add ebx,2
-    loop tDevLoop
-;    
+    call OpenPort    
+
+tIsOpen:
+    mov bx,ds:ucd_wait
+    WaitWithoutTimeout
+;
+    test es:cdc_flags,FLAG_CDC_DISCONNECT
+    jnz tExit
+;
+    EnterSection ds:ucd_section
+;    call CheckWrite
+;    call CheckRead
+    LeaveSection ds:ucd_section
     jmp tLoop
 
-tExit:
-    movzx ecx,es:cdc_unit_count
-    mov ebx,OFFSET cdc_unit_arr
-
-tCloseLoop:
-    push es
-    push ebx
-    push ecx
+tClose:
+    and es:cdc_flags,NOT FLAG_CDC_REINIT
 ;
-    mov fs,es:[ebx]
+    mov bx,ds:ucd_in_buffer
+    or bx,bx
+    jz tIsClosed
+;
     EnterSection ds:ucd_section
-    push ds
-    mov ax,ds:ucd_port_sel
-    or ax,ax
-    jz udPortHandleOk
-;
     call ClosePort
-
-udPortHandleOk:    
-    pop ds
     LeaveSection ds:ucd_section
-;
-    pop ecx
-    pop ebx
-    pop es    
-    add ebx,2
-    loop tCloseLoop
-;    
 
-tFail:
+tIsClosed:
+    WaitForSignal
+;
+    test es:cdc_flags,FLAG_CDC_DISCONNECT
+    jz tLoop
+
+tExit:
     TerminateThread
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
