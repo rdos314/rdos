@@ -77,6 +77,11 @@ ucd_port_nr         DW ?
 ucd_in_buffer       DW ?
 ucd_out_buffer      DW ?
 
+ucd_in_size         DW ?
+ucd_out_size        DW ?
+ucd_bulk_in         DB ?
+ucd_bulk_out        DB ?
+
 ucd_wait            DW ?
 ucd_thread          DW ?
 ucd_detach          DW ?
@@ -792,10 +797,12 @@ OpenPort    Proc near
     movzx eax,fs:unit_in_size
     AllocateSmallGlobalMem
     mov ds:ucd_in_buffer,es
+    mov ds:ucd_in_size,ax
     pop es
 ;
     mov bx,es:cdc_dev_handle
     mov dl,fs:unit_bulk_in
+    mov ds:ucd_bulk_in,dl
     mov cx,10
     mov ax,2
     OpenUsbPacketPipe
@@ -803,7 +810,9 @@ OpenPort    Proc near
     push es
     mov bx,es:cdc_dev_handle
     mov dl,fs:unit_bulk_out
+    mov ds:ucd_bulk_out,dl
     mov cx,fs:unit_out_size
+    mov ds:ucd_out_size,cx
     shl cx,2
     mov ax,5
     OpenUsbRawPipe
@@ -855,73 +864,6 @@ ClosePort    Proc near
     mov ds:ucd_out_buffer,0
     ret
 ClosePort   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           PollRead
-;
-;   DESCRIPTION:    Poll input-buffer
-;
-;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
-;                   FS          CDC unit
-;                   CX          Count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollRead    Proc near
-    push ds
-    push fs
-;
-    xor si,si
-    mov fs,ds:ucd_in_buffer
-    mov ds,ds:ucd_port_sel
-    mov es,ds:rec_buf
-    or cx,cx
-    jz prDone
-
-prGetLoop:
-    lods byte ptr fs:[si]
-    RequestSpinlock ds:com_spinlock
-    mov dx,ds:rec_count
-    cmp dx,ds:rec_size
-    je prSignal
-;       
-    inc dx
-    mov ds:rec_count,dx
-    mov bx,ds:rec_tail
-    mov es:[bx],al
-    inc bx
-    cmp bx,ds:rec_size
-    jnz prWrapOk
-;
-    xor bx,bx
-    
-prWrapOk:
-    mov ds:rec_tail,bx
-    ReleaseSpinlock ds:com_spinlock
-    loop prGetLoop
-    jmp prSigRel
-
-prSignal:
-    ReleaseSpinlock ds:com_spinlock
-
-prSigRel:
-    xor bx,bx
-    xchg bx,ds:avail_obj
-    or bx,bx
-    jz prDone
-;
-    mov es,bx
-    SignalWait
-    
-prDone:
-    pop fs
-    pop ds
-    ret
-PollRead    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1001,6 +943,114 @@ pwDone:
     pop ds    
     ret
 PollWrite   Endp    
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleRead
+;
+;       DESCRIPTION:    Handle read
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRead    Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov es,ds:ucd_in_buffer
+    xor edi,edi
+    movzx ecx,ds:ucd_in_size
+    ReadUsbPipe
+    jc hdrDone
+;    
+    or cx,cx
+    jz hdrDone
+;
+    mov fs,ds:ucd_in_buffer
+    mov ds,ds:ucd_port_sel
+    mov es,ds:rec_buf
+    xor si,si
+
+hdrGetLoop:
+    lods byte ptr fs:[si]
+    RequestSpinlock ds:com_spinlock
+    mov dx,ds:rec_count
+    cmp dx,ds:rec_size
+    je hdrSignal
+;       
+    inc dx
+    mov ds:rec_count,dx
+    mov bx,ds:rec_tail
+    mov es:[bx],al
+    inc bx
+    cmp bx,ds:rec_size
+    jnz hdrWrapOk
+;
+    xor bx,bx
+    
+hdrWrapOk:
+    mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
+    loop hdrGetLoop
+    jmp hdrSigRel
+
+hdrSignal:
+    ReleaseSpinlock ds:com_spinlock
+
+hdrSigRel:
+    xor bx,bx
+    xchg bx,ds:avail_obj
+    or bx,bx
+    jz hdrDone
+;
+    mov es,bx
+    SignalWait
+    
+hdrDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+HandleRead    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CheckRead
+;
+;   DESCRIPTION:    Check read buffer
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckRead    Proc near
+    push bx
+    push cx
+    push dx
+;
+    mov bx,es:cdc_dev_handle
+    mov dl,ds:ucd_bulk_in
+    GetUsedUsbBuffers
+    or cx,cx
+    jz crDone
+;
+    call HandleRead
+
+crDone:
+    pop dx
+    pop cx
+    pop bx
+    ret
+CheckRead  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1059,7 +1109,7 @@ tIsOpen:
 ;
     EnterSection ds:ucd_section
 ;    call CheckWrite
-;    call CheckRead
+    call CheckRead
     LeaveSection ds:ucd_section
     jmp tLoop
 
