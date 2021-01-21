@@ -55,8 +55,6 @@ cdc_abs_control_cap     DB ?
 
 cdc_dev_handle          DW ?
 
-cdc_com_dev_sel         DW ?
-
 cdc_dev_offset          DD ?
 cdc_flags               DW ?
 
@@ -65,6 +63,9 @@ cdc_next                DW ?
 
 cdc_unit_count          DB ?
 cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)
+
+cdc_com_count           DB ?
+cdc_com_arr             DW MAX_CDC_UNITS DUP(?)
 
 cdc_dev_descr_size      DW ?
 cdc_dev_descr_buf       DB ?

@@ -3219,6 +3219,7 @@ tEnd:
 ;   DESCRIPTION:    Add port to list of available ports
 ;
 ;   PARAMETERS:     AL      Port #
+;                   AH      Unit #
 ;                   BX      Controller id
 ;                   DX      Device type
 ;                   ES      Device sel
@@ -3372,7 +3373,7 @@ apDescrDone:
     mov dword ptr ds:cd_create_proc,edi
     mov dword ptr ds:cd_create_proc+4,cs
 ;    
-    movzx dx,al
+    mov dx,ax
     mov ax,bx
     AddComPort
     mov ds:uds_port_nr,ax
@@ -3403,6 +3404,7 @@ AddUnit	Proc near
 ;
     mov bx,es:uc_controller
     mov al,es:uc_port
+    mov ah,es:uc_unit_count
     call AddPort
 ;
     mov ds:uds_device_sel,es

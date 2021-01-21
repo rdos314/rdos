@@ -90,44 +90,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           HexToAscii
-;
-;   DESCRIPTION:    
-;
-;   PARAMETERS:     AL      Number to convert
-;
-;   RETURNS:        AX      Ascii result
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HexToAscii      PROC near
-    mov ah,al
-    and al,0F0h
-    rol al,1
-    rol al,1
-    rol al,1
-    rol al,1
-    cmp al,0Ah
-    jb ok_low1
-;
-    add al,7
-
-ok_low1:
-    add al,30h
-    and ah,0Fh
-    cmp ah,0Ah
-    jb ok_high1
-;
-    add ah,7
-
-ok_high1:
-    add ah,30h
-    ret
-HexToAscii      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;    NAME:           FindAnyDevice
 ;
 ;    Description:    Search for dead device
@@ -496,45 +458,7 @@ uaReConfig:
 ;
     mov ebx,gs
     mov ds,ebx
-;
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov esi,OFFSET cdc_name
-
-uaReCopyCdc:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz uaReCopyDone
-;
-    stosb
-    jmp uaReCopyCdc
-
-uaReCopyDone:
-    mov ax,ds:cdc_controller
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,ds:cdc_port
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;
-    xor edi,edi
-    mov edx,cs
-    mov ds,edx
-    mov esi,OFFSET cdc_com_recreate
-    mov eax,3
-    mov ecx,stack0_size
-    CreateThread
-;
-    FreeMem
+    call cdc_com_recreate
     jmp uaDone
 
 uaNotDead:
@@ -581,7 +505,7 @@ uaNotDead:
     mov es:cdc_port,al
     mov es:cdc_abs_control_cap,0
     mov es:cdc_unit_count,0
-    mov es:cdc_com_dev_sel,0
+    mov es:cdc_com_count,0
     mov es:cdc_flags,0
 ;
     mov cl,es:[edi].uid_sub_class
@@ -630,45 +554,7 @@ uaDevOk:
 ;
     mov ebx,es
     mov ds,ebx
-;
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov esi,OFFSET cdc_name
-
-uaCopyCdc:
-    mov al,cs:[esi]
-    inc esi
-    or al,al
-    jz uaCopyDone
-;
-    stosb
-    jmp uaCopyCdc
-
-uaCopyDone:
-    mov ax,ds:cdc_controller
-    call HexToAscii
-    stosw
-;
-    mov al,'.'
-    stosb
-;
-    mov al,ds:cdc_port
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;
-    xor edi,edi
-    mov edx,cs
-    mov ds,edx
-    mov esi,OFFSET cdc_com_start
-    mov eax,3
-    mov ecx,stack0_size
-    CreateThread
-;
-    FreeMem
+    call cdc_com_start
     jmp uaDone
 
 uaFail:

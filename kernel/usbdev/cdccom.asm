@@ -726,7 +726,8 @@ CreateComDevice	Proc near
     mov dword ptr es:cd_create_proc+4,cs
 ;
     mov ax,ds:cdc_controller
-    movzx dx,ds:cdc_port
+    mov dl,ds:cdc_port
+    mov dh,ds:cdc_com_count    
 ;
     push ds
     mov esi,SEG data
@@ -740,11 +741,15 @@ CreateComDevice	Proc near
     mov esi,es
     mov ds,esi
     InitSection ds:ucd_section
-;    
+;
     AddComPort
     mov ds:ucd_port_nr,ax
     pop ds
-    mov ds:cdc_com_dev_sel,es
+;
+    movzx bx,ds:cdc_com_count
+    shl bx,1
+    mov ds:[bx].cdc_com_arr,es
+    inc ds:cdc_com_count
 ;
     popad
     pop es
@@ -1107,9 +1112,6 @@ HandleDevice    Endp
 
 cdc_server:
     int 3
-    mov es,bx
-    mov ds,es:cdc_com_dev_sel
-
 
 tLoop:
     WaitForSignal
@@ -1239,6 +1241,8 @@ CreateServerThread    Proc near
 ;
     mov bx,ds
     xor dl,dl
+    cmp dl,ds:cdc_com_count
+    jz cstFree
 
 cstUnitLoop:
     xor edi,edi
@@ -1288,9 +1292,10 @@ cstCopyDone:
     pop ds
 ;
     inc dl
-    cmp dl,ds:cdc_unit_count
+    cmp dl,ds:cdc_com_count
     jne cstUnitLoop
-;
+
+cstFree:
     FreeMem
 ;
     popad
@@ -1306,52 +1311,54 @@ CreateServerThread   Endp
 ;
 ;   DESCRIPTION:    
 ;
-;   PARAMETERS:     BX      CDC selector
+;   PARAMETERS:     DS      CDC selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public cdc_com_start
     public cdc_com_recreate
 
-cdc_com_recreate:
-    mov ds,ebx
+cdc_com_recreate  Proc near
     call FindInterfaces
-    jc tFail
+    jc ccrFail
 ;
     call CheckInterfaces
-    jc ccFail
+    jc ccrFail
 ;
     or ds:cdc_flags,FLAG_CDC_REINIT
     and ds:cdc_flags,NOT FLAG_CDC_DISCONNECT
-;
-    mov eax,ds
-    mov es,eax
-    mov ds,ds:cdc_com_dev_sel
-    jmp ccStart
+    call CreateServerThread
 
-cdc_com_start:
-    mov ds,ebx
+ccrFail:
+    ret
+cdc_com_recreate Endp
+
+    public cdc_com_start
+
+cdc_com_start  Proc near
     call FindInterfaces
-    jc ccFail
+    jc ccsFail
 ;
     call CheckInterfaces
-    jc ccFail
+    jc ccsFail
+;
+    mov ds:cdc_com_count,0
 ;
     movzx ecx,ds:cdc_unit_count
     mov ebx,OFFSET cdc_unit_arr
 
-ccOpenLoop:
+ccsCreateLoop:
     mov fs,ds:[ebx]
     call CreateComDevice
 ;
     add ebx,2
-    loop ccOpenLoop
+    loop ccsCreateLoop
 
-ccStart:
+ccsStart:
     call CreateServerThread
 
-ccFail:
-    TerminateThread
+ccsFail:
+    ret
+cdc_com_start Endp
                 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
