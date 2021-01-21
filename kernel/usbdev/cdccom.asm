@@ -1112,6 +1112,14 @@ HandleDevice    Endp
 
 cdc_server:
     int 3
+    mov es,bx
+    movzx bx,dl
+    shl bx,1
+    mov ax,es:[bx].cdc_com_arr
+    or ax,ax
+    jz tFail
+;
+    mov ds,ax
 
 tLoop:
     WaitForSignal
