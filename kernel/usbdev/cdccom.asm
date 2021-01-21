@@ -59,8 +59,6 @@ ucp_cdc_sel         DW ?
 ucp_cdc_unit_sel    DW ?
 ucp_flgs            DB ?
 
-ucp_timer_active    DB ?
-
 usb_cdc_port_struc       ENDS
 
 usb_cdc_device_struc   STRUC
@@ -185,7 +183,7 @@ open_com   Proc far
     push ds
     pushad
 ;
-    mov ds:ucp_timer_active,0
+    mov ds:ucp_device_sel,es
 ;
     mov edx,ds
     mov eax,es
@@ -215,15 +213,28 @@ open_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_com  Proc far
-    mov al,ds:ucp_timer_active
-    or al,al
-    jz ccfTimerClosed
+    push ds
+    push bx
+;    
+    mov ax,ds
+    mov bx,ds:ucp_device_sel
+    or bx,bx
+    jz ccfNoDevice
 ;
-    mov ebx,ds
-    StopTimer
-    mov ds:ucp_timer_active,0
+    mov ds,bx    
+    EnterSection ds:ucd_section
+    mov ds:ucd_port_sel,0
+    LeaveSection ds:ucd_section       
 
-ccfTimerClosed:
+ccfNoDevice:    
+    mov bx,ds:ucd_thread
+    Signal    
+;
+    mov ax,150
+    WaitMilliSec    
+;
+    pop bx
+    pop ds    
     ret
 close_com  Endp
 
@@ -455,7 +466,13 @@ start_send      PROC far
     jmp ssDone
 
 ssOk:    
-;    call StartSendTimer
+    mov bx,ds:ucp_device_sel
+    or bx,bx
+    jz ssDone
+;
+    mov ds,bx    
+    mov bx,ds:ucd_thread
+    Signal    
 
 ssDone:
     pop ax
@@ -864,96 +881,16 @@ ClosePort    Proc near
     mov ds:ucd_out_buffer,0
     ret
 ClosePort   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           PollWrite
-;
-;   DESCRIPTION:    Poll output-buffer
-;
-;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
-;                   FS          CDC unit
-;
-;   RETURNS:        CX          Count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollWrite    Proc near
-    push ds
-    push fs
-;   
-    xor cx,cx
-    mov bp,fs:unit_out_size
-    mov ax,ds:ucd_out_buffer
-    or ax,ax
-    jz pwDone
-;    
-    mov es,ax
-    mov ds,ds:ucd_port_sel
-    mov al,ds:ucp_timer_active
-    or al,al
-    jnz pwDone
-;    
-    xor di,di
-    mov fs,ds:send_buf
-    mov dx,ds:send_count
-    or dx,dx
-    jz pwDone
-
-pwLoop:
-    RequestSpinlock ds:com_spinlock
-    mov dx,ds:send_count
-    or dx,dx
-    jz pwSend
-;       
-    dec dx
-    mov ds:send_count,dx
-    mov bx,ds:send_head
-    mov al,fs:[bx]
-    stosb
-    inc bx
-    cmp bx,ds:send_size
-    jnz pwWrapOk
-;       
-    xor bx,bx
-
-pwWrapOk:
-    mov ds:send_head,bx
-    ReleaseSpinlock ds:com_spinlock
-;
-    inc cx
-    cmp cx,bp
-    jb pwLoop
-    jmp pwSendRel
-
-pwSend:
-    ReleaseSpinlock ds:com_spinlock
-
-pwSendRel:
-    mov ax,ds:send_size    
-    or ax,ax
-    jz pwDone
-;
-;    call StartSendTimer    
-
-pwDone:
-    pop fs
-    pop ds    
-    ret
-PollWrite   Endp    
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandleRead
+;    NAME:           HandleRead
 ;
-;       DESCRIPTION:    Handle read
+    DESCRIPTION:    Handle read
 ;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1051,6 +988,118 @@ crDone:
     pop bx
     ret
 CheckRead  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleWrite
+;
+;   DESCRIPTION:    Handle output-buffer
+;
+;   PARAMETERS:     DS          Device selector
+;                   ES		CDC selector
+;                   GS      Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleWrite    Proc near
+    push fs
+    pushad
+;
+    push es
+;
+    mov bp,ds:ucd_out_size
+    shl bp,2
+    mov es,ds:ucd_out_buffer
+    xor di,di
+    mov fs,gs:send_buf
+
+pwLoop:
+    RequestSpinlock gs:com_spinlock
+    mov dx,gs:send_count
+    or dx,dx
+    jz pwNoMore
+;       
+    dec dx
+    mov gs:send_count,dx
+    mov bx,gs:send_head
+    mov al,fs:[bx]
+    stosb
+    inc bx
+    cmp bx,gs:send_size
+    jnz pwWrapOk
+;       
+    xor bx,bx
+
+pwWrapOk:
+    mov gs:send_head,bx
+    ReleaseSpinlock gs:com_spinlock
+;    
+    cmp di,bp
+    jb pwLoop
+    jmp pwDoSend
+
+pwNoMore:
+    ReleaseSpinlock gs:com_spinlock
+;
+    mov cx,5
+
+pwWaitLoop:
+    call CheckRead
+;
+    mov ax,2
+    WaitMilliSec
+;
+    loop pwWaitLoop
+;
+    mov dx,gs:send_count
+    or dx,dx
+    jnz pwLoop
+
+pwDoSend:
+    mov cx,di
+    pop es
+;
+    mov bx,es:cdc_dev_handle
+    mov dl,ds:ucd_bulk_out
+    PostUsbRawPipe
+;
+    popad
+    pop fs
+    ret
+HandleWrite   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckWrite
+;
+;       DESCRIPTION:    Check output-buffer
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckWrite    Proc near
+    push gs
+    push dx
+;
+    mov dx,ds:ucd_port_sel
+    or dx,dx
+    jz cwDone
+;
+    mov gs,dx
+    mov dx,gs:send_count
+    or dx,dx
+    jz cwDone
+;       
+    call HandleWrite
+
+cwDone:
+    pop dx
+    pop gs
+    ret
+CheckWrite  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1065,7 +1114,6 @@ CheckRead  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cdc_server:
-    int 3
     mov es,bx
     movzx bx,dl
     shl bx,1
@@ -1108,7 +1156,7 @@ tIsOpen:
     jnz tExit
 ;
     EnterSection ds:ucd_section
-;    call CheckWrite
+    call CheckWrite
     call CheckRead
     LeaveSection ds:ucd_section
     jmp tLoop

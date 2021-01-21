@@ -85,7 +85,6 @@ ups_device_sel      DW ?
 ups_index           DW ?
 ups_device_type     DW ?
 ups_divisor         DD ?
-ups_timer_active    DB ?
 ups_data_bits       DB ?
 ups_stop_bits       DB ?
 ups_parity          DB ?
@@ -791,7 +790,6 @@ open_com_ftdi   Proc far
     push ds
     pushad
 ;
-    mov ds:ups_timer_active,0
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
@@ -842,15 +840,6 @@ close_com_ftdi  Proc far
     push ds
     push bx
 ;
-    mov al,ds:ups_timer_active
-    or al,al
-    jz ccfTimerClosed
-;
-    mov bx,ds
-    StopTimer
-    mov ds:ups_timer_active,0
-    
-ccfTimerClosed:   
     call reset_rts_ftdi
     call reset_dtr_ftdi
 ;    
@@ -1495,7 +1484,6 @@ open_com_pl     Proc far
     push ds
     pushad
 ;
-    mov ds:ups_timer_active,0
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
@@ -1541,15 +1529,6 @@ close_com_pl    Proc far
     push ds
     push bx
 ;
-    mov al,ds:ups_timer_active
-    or al,al
-    jz ccpTimerClosed
-;
-    mov bx,ds
-    StopTimer
-    mov ds:ups_timer_active,0
-    
-ccpTimerClosed:   
     call reset_rts_pl
     call reset_dtr_pl
 ;    
@@ -2156,7 +2135,6 @@ open_com_mct    Proc far
     push ds
     pushad
 ;
-    mov ds:ups_timer_active,0
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
