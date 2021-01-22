@@ -1429,27 +1429,36 @@ IsHidConnected_   Endp
 
 WaitForReport_    Proc near
     push ds
-    push bx
-    push dx
-    push si
+    push ebx
+    push edx
+    push esi
 ;
     mov bx,fs:hid_intr_wait
     WaitWithoutTimeout
 ;
     mov es,fs:hid_intr_buf
     xor edi,edi
-    mov bx,fs:hid_device_handle
-    mov dl,fs:hid_intr_in
     mov si,fs:hid_intr_size
 
 wfrRead:
+    mov bx,fs:hid_device_handle
+    mov dl,fs:hid_intr_in
     ReadUsbPipe
     jc wfrFail
 ;
     sub si,cx
     jz wfrOk
 ;
+    cmp cx,fs:hid_pipe_size
+    jne wfrFail
+;
     add di,cx
+;
+    GetSystemTime
+    add eax,1193 * 100
+    adc edx,0
+    mov bx,fs:hid_intr_wait
+    WaitWithTimeout
     jmp wfrRead    
 
 wfrFail:
@@ -1457,14 +1466,14 @@ wfrFail:
     mov es,edi
     jmp wfrDone
 
-wfrOk:    
+wfrOk:
     mov es,fs:hid_intr_buf
     xor edi,edi
 
 wfrDone:
-    pop si
-    pop dx
-    pop bx
+    pop esi
+    pop edx
+    pop ebx
     pop ds
     ret
 WaitForReport_    Endp
