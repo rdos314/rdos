@@ -1307,7 +1307,7 @@ reset_hid  Proc far
 ;
     mov ds,ebx
     mov bx,ds:hid_device_handle
-;    ResetUsbPipe    
+    ResetUsbDevice
 ;
     pop ebx
     pop ds
