@@ -709,9 +709,9 @@ SendCut    Endp
 ;       DESCRIPTION:    Print a single line
 ;
 ;       PARAMETERS:     DS      Data
-;                       ES:ESI  Bitmap data
+;                       FS:ESI  Bitmap data
 ;
-;       RETURNS:        ES:ESI  New position
+;       RETURNS:        FS:ESI  New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -735,17 +735,17 @@ SendLine   Proc near
     mov al,'S'
     stosb
 ;    
-    mov ax,ds:bs_line_size
+    mov ax,fs:bs_line_size
     add ax,2
     stosw
 ;
     mov al,80h
     stosb
 ;
-    mov cx,ds:bs_line_size
+    mov cx,fs:bs_line_size
 
 poCopy:
-    lods byte ptr es:[esi]
+    lods byte ptr fs:[esi]
     not al
     mov ah,al
     xor al,al
@@ -803,12 +803,12 @@ SendBitmap    Proc near
     or bx,bx
     jz sbDone
 ;
-    int 3
-    push es
-    mov es,bx
+    push fs
+    mov fs,bx
 ;
     mov esi,OFFSET bs_data
     xor bp,bp
+    xor dx,dx
 
 sbLoop:
     inc bp
@@ -824,15 +824,7 @@ sbLoop:
 sbWait:
     call SendPrint
 ;
-    push cx
-    push dx
-    movzx cx,al
-    mov ax,32000
-    xor dx,dx
-    div cx
-    pop dx
-    pop cx
-    add ax,10
+    mov al,10
     WaitMilliSec
     xor bp,bp
 ;
@@ -844,31 +836,30 @@ sbDo:
     call SendLine
     inc dx
 ;
-    or dl,0Fh
+    test dl,0Fh
     jnz sbNext
 ;
     call SendPrint
 
 sbNext:
-    cmp dx,es:bs_height
+    cmp dx,fs:bs_height
     jnz sbLoop
 
 sbCut:
     call SendPrint
-;
-    mov bl,8
-    call GetByteParam    
-    jnc sbFwait
-;
-    mov al,50    
-
-sbFwait:
     call SendPrint
     call SendCut
 
 sbFree:
+    push es
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
     FreeMem
     pop es
+;
+    pop fs
 ;
     mov bx,ds:kr_pr_thread
     Signal
