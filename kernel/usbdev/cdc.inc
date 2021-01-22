@@ -27,6 +27,9 @@
 
 MAX_CDC_UNITS =	16
 
+FLAG_CDC_DISCONNECT = 2
+FLAG_CDC_REINIT = 4
+
 unit_struc      STRUC
 
 unit_com_sel    DW ?
@@ -60,6 +63,8 @@ cdc_flags               DW ?
 
 cdc_prev                DW ?
 cdc_next                DW ?
+
+cdc_detach              DW ?
 
 cdc_unit_count          DB ?
 cdc_unit_arr            DW MAX_CDC_UNITS DUP(?)

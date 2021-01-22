@@ -447,10 +447,7 @@ uaRecreate:
 uaReConfig:
     LeaveSection ds:sd_section
 ;
-    push ax
-    mov al,ah
     ConfigUsbDevice
-    pop ax
     jc uaFail
 ;
     mov gs:cdc_controller,bx
@@ -576,8 +573,7 @@ usb_attach  Endp
 ;           description:    USB detach callback
 ;
 ;           Parameters:     BX      Controller #
-;                           AH      Port
-;                           AL      Device address
+;                           AL      Port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -604,9 +600,10 @@ udCheckLoop:
     cmp bx,es:cdc_controller
     jne udCheckNext
 ;
-    cmp ah,es:cdc_port
+    cmp al,es:cdc_port
     jne udCheckNext
 ;
+    or es:cdc_flags,FLAG_CDC_DISCONNECT
     mov bx,es
     call cdc_com_detach
 ;

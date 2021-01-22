@@ -45,9 +45,6 @@ ENDIF
 
 MAX_PORTS       = 32
 
-FLAG_CDC_DISCONNECT = 2
-FLAG_CDC_REINIT = 4
-
 FLG_ENABLE_AUTO_RTS  = 1
 
 usb_cdc_port_struc       STRUC
@@ -1179,6 +1176,30 @@ tIsClosed:
     jz tLoop
 
 tExit:
+    EnterSection ds:ucd_section
+    call ClosePort
+;
+    mov ax,ds:ucd_port_sel
+    or ax,ax
+    jz tLeave
+;
+    push es
+    mov es,ax
+    mov es:send_count,0
+    mov es:send_head,0
+    mov es:send_tail,0
+    pop es
+
+tLeave:
+    LeaveSection ds:ucd_section
+;
+    mov ds:ucd_thread,0
+    mov bx,es:cdc_detach
+    Signal
+
+tEnd:
+    mov ax,200
+    WaitMilliSec
     TerminateThread
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1330,6 +1351,7 @@ cdc_com_recreate  Proc near
     call CheckInterfaces
     jc ccrFail
 ;
+    mov ds:cdc_detach,0
     or ds:cdc_flags,FLAG_CDC_REINIT
     and ds:cdc_flags,NOT FLAG_CDC_DISCONNECT
     call CreateServerThread
@@ -1347,6 +1369,7 @@ cdc_com_start  Proc near
     call CheckInterfaces
     jc ccsFail
 ;
+    mov ds:cdc_detach,0
     mov ds:cdc_com_count,0
 ;
     movzx ecx,ds:cdc_unit_count
@@ -1384,7 +1407,39 @@ cdc_com_detach	Proc near
     push eax
     push ebx
 ;
-    mov bx,ds:cdc_dev_handle
+    mov es,ebx
+    GetThread
+    mov es:cdc_detach,ax
+
+udRetry:
+    xor dl,dl
+    xor dh,dh
+
+udDisLoop:
+    movzx si,dl
+    add si,si
+    mov ds,es:[si].cdc_com_arr
+;
+    mov bx,ds:ucd_thread
+    or bx,bx
+    jz udDisNext
+;
+    Signal
+    inc dh
+
+udDisNext:
+    inc dl
+    cmp dl,es:cdc_com_count
+    jne udDisLoop
+;
+    or dh,dh
+    jz udUnlink
+;
+    WaitForSignal
+    jmp udRetry
+
+udUnlink:
+    mov bx,es:cdc_dev_handle
     CloseUsbDevice
 ;
     pop ebx
