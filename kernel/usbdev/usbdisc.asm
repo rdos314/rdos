@@ -612,6 +612,9 @@ ResetDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Inquiry Proc near
+    push ds
+    push es
+;
     mov es,fs:disc_bulk_out_buf
     mov es:disc_cbw_sign,43425355h
     mov es:disc_cbw_lun,0
@@ -633,11 +636,6 @@ Inquiry Proc near
     jc inqDone
 ;    
     mov es,fs:disc_bulk_in_buf
-    xor edi,edi
-    mov ecx,36
-    mov ax,5Ah
-    rep stosb
-;
     mov ecx,36
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
@@ -645,6 +643,17 @@ Inquiry Proc near
     int 3
     jc inqDone
 ;    
+    cmp cx,36
+    jb inqDone
+;
+    mov ds,fs:disc_bulk_in_buf
+    mov ax,fs
+    mov es,ax
+    xor esi,esi
+    mov edi,OFFSET disc_peri
+    mov ecx,36
+    rep movsb
+;
 
 
     call ReceiveCsw
