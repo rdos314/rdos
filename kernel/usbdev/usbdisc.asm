@@ -832,17 +832,16 @@ ReadSector Proc near
     mov word ptr es:disc_cbw_cmd_data+7,ax
 ;
     mov es:disc_cbw_cmd_data+9,0
-    pop es
 ;
     mov eax,edx
     call SendCbw
+    pop es
     jc rsDone
 ;    
     mov ecx,200h
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
-    int 3
     jc rsDone
 ;    
     cmp cx,200h
@@ -856,6 +855,7 @@ ReadSector Proc near
     call ReceiveCsw
 
 rsDone:
+    int 3
     popad
     pop ds
     ret
