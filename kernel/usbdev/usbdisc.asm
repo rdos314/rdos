@@ -484,6 +484,8 @@ GetFs   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendCbw Proc near
+    pushad
+;
     mov es:disc_cbw_lun,0
     mov es:disc_cbw_sign,43425355h
     mov es:disc_cbw_tag,eax
@@ -493,6 +495,16 @@ SendCbw Proc near
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
     PostUsbRawPipe
+    jc scbwDone
+;
+    cmp cx,31
+    stc
+    jnz scbwDone
+;
+    clc
+
+scbwDone:
+    popad
     ret
 SendCbw Endp
 
@@ -509,6 +521,7 @@ SendCbw Endp
 
 ReceiveCsw Proc near
     push es
+    pushad
 ;
     mov ecx,13
     mov bx,fs:disc_dev_handle
@@ -517,6 +530,10 @@ ReceiveCsw Proc near
     jc rcswDone
     
 rcswOk:
+    cmp cx,13
+    stc
+    jnz rcswDone
+;
     mov es,fs:disc_bulk_in_buf
     mov eax,es:disc_csw_sign
     cmp eax,53425355h
@@ -535,7 +552,8 @@ rcswOk:
 ;    
     clc
 
-rcswDone:        
+rcswDone:     
+    popad   
     pop es    
     ret
 ReceiveCsw Endp
@@ -703,7 +721,6 @@ RequestSense Proc near
     call ReceiveCsw
 
 reqsDone:
-    int 3
     pop es
     pop ds
     ret
@@ -721,44 +738,50 @@ RequestSense Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadCapacity Proc near
-    mov fs:disc_cbw_tag,0D000DDDDh
-    mov fs:disc_cbw_transfer_len,8
-    mov fs:disc_cbw_flags,80h
-    mov fs:disc_cbw_cmd_len,10
-    mov fs:disc_cbw_cmd_data,25h
-    mov fs:disc_cbw_cmd_data+1,0
-    mov fs:disc_cbw_cmd_data+2,0
-    mov fs:disc_cbw_cmd_data+3,0
-    mov fs:disc_cbw_cmd_data+4,0
-    mov fs:disc_cbw_cmd_data+5,0
-    mov fs:disc_cbw_cmd_data+6,0
-    mov fs:disc_cbw_cmd_data+7,0
-    mov fs:disc_cbw_cmd_data+8,0
-    mov fs:disc_cbw_cmd_data+9,0
+    push ds
+    push es
 ;
-    int 3
+    mov es,fs:disc_bulk_out_buf
+    mov es:disc_cbw_transfer_len,8
+    mov es:disc_cbw_flags,80h
+    mov es:disc_cbw_cmd_len,10
+    mov es:disc_cbw_cmd_data,25h
+    mov es:disc_cbw_cmd_data+1,0
+    mov es:disc_cbw_cmd_data+2,0
+    mov es:disc_cbw_cmd_data+3,0
+    mov es:disc_cbw_cmd_data+4,0
+    mov es:disc_cbw_cmd_data+5,0
+    mov es:disc_cbw_cmd_data+6,0
+    mov es:disc_cbw_cmd_data+7,0
+    mov es:disc_cbw_cmd_data+8,0
+    mov es:disc_cbw_cmd_data+9,0
+;
+    mov eax,0D000DDDDh
     call SendCbw
     jc rcDone
 ;    
-    mov ax,fs
-    mov es,ax    
-    mov edi,OFFSET disc_cap
+    mov es,fs:disc_bulk_in_buf
     mov ecx,8
-    call ReceiveData
-    jc rcDone
-;    
-    call ReceiveCsw
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
     jc rcDone
 ;
-    mov eax,fs:disc_cap+4
-    xchg al,ah
-    rol eax,16
-    xchg al,ah
-    cmp eax,200h
-    stc
-    jnz rcDone
+    xor di,di
+    mov eax,es:[di]
+    mov edx,es:[di+4]
 ;    
-    mov eax,fs:disc_cap
+    call ReceiveCsw
+    int 3
+    jc rcDone
+;
+    xchg dl,dh
+    rol edx,16
+    xchg dl,dh
+    cmp edx,200h
+    stc
+    jne rcDone
+;
     xchg al,ah
     rol eax,16
     xchg al,ah
