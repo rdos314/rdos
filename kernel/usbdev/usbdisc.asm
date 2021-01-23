@@ -1457,31 +1457,38 @@ rdDoTrans:
     mov edx,eax
 ;    
     shl ebp,9
-    mov fs:disc_cbw_tag,edx
-    mov fs:disc_cbw_transfer_len,ebp
-    mov fs:disc_cbw_flags,80h
-    mov fs:disc_cbw_cmd_len,10
-    mov fs:disc_cbw_cmd_data,28h
-    mov fs:disc_cbw_cmd_data+1,0
-;    
+
+rdRetry:
+    push es
+    mov es,fs:disc_bulk_out_buf    
+    mov es:disc_cbw_tag,edx
+    mov es:disc_cbw_transfer_len,ebp
+    mov es:disc_cbw_flags,80h
+    mov es:disc_cbw_cmd_len,10
+    mov es:disc_cbw_cmd_data,28h
+    mov es:disc_cbw_cmd_data+1,0
+;
     mov eax,edx
     xchg al,ah
     rol eax,16
     xchg al,ah
-    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+    mov dword ptr es:disc_cbw_cmd_data+2,eax
 ;
-    mov fs:disc_cbw_cmd_data+6,0
+    mov es:disc_cbw_cmd_data+6,0
 ;
     shr ebp,9
     mov ax,bp
     xchg al,ah    
     mov word ptr fs:disc_cbw_cmd_data+7,ax
-    mov fs:disc_cbw_cmd_data+9,0
-
-rdRetry:
-    int 3
+    mov es:disc_cbw_cmd_data+9,0
+;
+    mov eax,edx
     call SendCbw
+    pop es
+    int 3
     jc rdFail
+
+
 ;    
     push ebp
     push esi
@@ -1557,6 +1564,7 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive     Proc near
+    int 3
 
 wdLoop:    
     push ecx
@@ -1708,7 +1716,6 @@ write_drive     Endp
 perform_one     Proc near
 
 perform_one_loop:
-    int 3
     mov ecx,128
     GetDiscRequestArray
     jc perform_one_done
