@@ -4141,9 +4141,9 @@ HandlePacketIn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandleRawOut
+;       NAME:           HandleRaw
 ;
-;       DESCRIPTION:    Handle raw OUT pipe
+;       DESCRIPTION:    Handle raw pipe
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device sel
@@ -4153,7 +4153,7 @@ HandlePacketIn Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleRawOut   Proc near
+HandleRaw   Proc near
     push ds
     push edx
     push ebp
@@ -4162,15 +4162,15 @@ HandleRawOut   Proc near
     mov ds,bx
     mov bx,ds:usbr_thread
     or bx,bx
-    jz hroDone
+    jz hrDone
 ;
     mov edx,ds:er_td
     mov al,fs:[edx].qtd_status
     test al,80h
-    jnz hroDone
+    jnz hrDone
 ;
     and al,7Ch
-    jz hroSignal
+    jz hrSignal
 ;
     push ds
     push edx
@@ -4182,15 +4182,15 @@ HandleRawOut   Proc near
     pop edx
     pop ds
 
-hroSignal:
+hrSignal:
     Signal
 
-hroDone:
+hrDone:
     pop ebp
     pop edx
     pop ds
     ret
-HandleRawOut  Endp
+HandleRaw  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4217,6 +4217,11 @@ CheckIn   Proc near
     jmp citDone
 
 citNotPacket:
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz citDone
+;
+    call HandleRaw
 
 citDone:
     pop bx
@@ -4244,7 +4249,7 @@ CheckOut   Proc near
     or bx,bx
     jz cotDone
 ;
-    call HandleRawOut
+    call HandleRaw
 
 cotDone:
     pop bx
