@@ -514,7 +514,6 @@ ReceiveCsw Proc near
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
-    int 3
     jc rcswDone
     
 rcswOk:
@@ -648,6 +647,9 @@ Inquiry Proc near
     call ReceiveCsw
 
 inqDone:
+    int 3
+    pop es
+    pop ds
     ret
 Inquiry Endp
 
