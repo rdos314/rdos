@@ -87,17 +87,16 @@ drive_struc ENDS
 
 disc_struc   STRUC
 
+disc_dev_handle         DW ?
+
 disc_bulk_in_pipe       DB ?
 disc_bulk_out_pipe      DB ?
 
 disc_bulk_in_maxsize    DW ?
 disc_bulk_out_maxsize   DW ?
 
-disc_bulk_in_handle     DW ?
-disc_bulk_out_handle    DW ?
-
-disc_bulk_in_wait       DW ?
-disc_bulk_out_wait      DW ?
+disc_bulk_in_buf        DW ?
+disc_bulk_out_buf       DW ?
 
 disc_controller         DW ?
 disc_port               DB ?
@@ -478,20 +477,11 @@ SendCbw Proc near
     mov ax,fs
     mov es,ax
 ;    
-    mov bx,fs:disc_bulk_out_handle
-    mov edi,OFFSET disc_cbw_sign
+    int 3
     mov ecx,31
-;    WriteUsbData
-;    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:disc_bulk_out_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:disc_bulk_out_handle
-;    WasUsbTransactionOk
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    PostUsbRawPipe
 ;   
     pop es    
     ret
@@ -513,21 +503,12 @@ ReceiveCsw Proc near
 ;
     mov ax,fs
     mov es,ax
-;    
-    mov bx,fs:disc_bulk_in_handle
-    mov edi,OFFSET disc_csw_sign
+;
+    int 3
     mov ecx,13
-;    ReqUsbData
-;    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:disc_bulk_in_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:disc_bulk_in_handle
-;    WasUsbTransactionOk
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
     jc rcswDone
     
 rcswOk:
@@ -567,18 +548,10 @@ ReceiveCsw Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveData Proc near
-    mov bx,fs:disc_bulk_in_handle
-;    ReqUsbData
-;    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:disc_bulk_in_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:disc_bulk_in_handle
-;    WasUsbTransactionOk
+    int 3
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
     ret
 ReceiveData Endp
 
@@ -596,18 +569,10 @@ ReceiveData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteData Proc near
-    mov bx,fs:disc_bulk_out_handle
-;    UserGateForce32 write_usb_data_nr
-;    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:disc_bulk_out_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:disc_bulk_out_handle
-;    WasUsbTransactionOk
+    int 3
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    PostUsbRawPipe
     ret
 WriteData Endp
 
@@ -1509,8 +1474,10 @@ rdBufLoop:
     mov edi,es:[esi]
     mov edi,es:[edi].dh_data
     mov ecx,200h
-    mov bx,fs:disc_bulk_in_handle
-;    ReqUsbData
+    int 3
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
 ;
     add esi,4
     sub ebp,1
@@ -1518,18 +1485,6 @@ rdBufLoop:
 ;
     pop esi
     pop ebp
-;
-;    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:disc_bulk_in_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:disc_bulk_in_handle
-;    WasUsbTransactionOk
-    jc rdFail
 ;    
     call ReceiveCsw
     jnc rdOk
@@ -1669,8 +1624,10 @@ wdBufLoop:
     mov edi,es:[esi]
     mov edi,es:[edi].dh_data
     mov ecx,200h
-    mov bx,fs:disc_bulk_out_handle
-;    UserGateForce32 write_usb_data_nr
+    int 3
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    PostUsbRawPipe
 ;
     add esi,4
     sub ebp,1
@@ -1678,18 +1635,6 @@ wdBufLoop:
 ;
     pop esi
     pop ebp
-;
-;    StartUsbTransaction
-;    
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    mov bx,fs:disc_bulk_out_wait
-    WaitWithTimeout
-;    
-    mov bx,fs:disc_bulk_out_handle
-;    WasUsbTransactionOk
-    jc wdFail
 ;    
     call ReceiveCsw
     jnc wdOk
@@ -1817,33 +1762,29 @@ dtInsDo:
     mov fs:disc_cbw_sign,43425355h
     mov fs:disc_cbw_lun,0
 ;
+    int 3
     mov bx,fs:disc_controller
-;    movzx ax,fs:disc_device
-    mov dl,fs:disc_bulk_in_pipe
-;    OpenUsbPipe
-    mov fs:disc_bulk_in_handle,bx
+    mov al,fs:disc_port
+    OpenUsbDevice
+    mov fs:disc_dev_handle,bx
 ;
-    CreateWait
-    mov fs:disc_bulk_in_wait,bx
-;    
-    mov ax,fs:disc_bulk_in_handle
-    mov bx,fs:disc_bulk_in_wait
-    movzx ecx,bx
-;    AddWaitForUsbPipe
-;
-    mov bx,fs:disc_controller
-;    movzx ax,fs:disc_device
+    push es
+    mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
-;    OpenUsbPipe
-    mov fs:disc_bulk_out_handle,bx
+    mov cx,1000h
+    mov ax,5
+    OpenUsbRawPipe
+    mov ds:disc_bulk_out_buf,es
+    pop es
 ;
-    CreateWait
-    mov fs:disc_bulk_out_wait,bx
-;    
-    mov ax,fs:disc_bulk_out_handle
-    mov bx,fs:disc_bulk_out_wait
-    movzx ecx,bx
-;    AddWaitForUsbPipe
+    push es
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    mov cx,1000h
+    mov ax,5
+    OpenUsbRawPipe
+    mov ds:disc_bulk_in_buf,es
+    pop es
 ;
     mov cx,32
 
@@ -1940,17 +1881,17 @@ dtFailed:
     EndDiscHandler    
     
 dtEnd: 
-    mov bx,fs:disc_bulk_in_wait
-    CloseWait
+    int 3
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    CloseUsbPipe
 ;
-    mov bx,fs:disc_bulk_in_handle
-;    CloseUsbPipe
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    CloseUsbPipe
 ;
-    mov bx,fs:disc_bulk_out_wait
-    CloseWait
-;
-    mov bx,fs:disc_bulk_out_handle
-;    CloseUsbPipe
+    mov bx,fs:disc_dev_handle
+    CloseUsbDevice
 ;
     mov bx,fs:disc_handle
     StopDisc    
