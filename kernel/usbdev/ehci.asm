@@ -2981,6 +2981,7 @@ ReadRaw   Proc far
     push ds
     push fs
     push eax
+    push ebx
     push edx
 ;
     mov ax,flat_sel
@@ -3004,6 +3005,7 @@ ReadRaw   Proc far
     mov fs:[edx].qh_next_qtd,eax
 ;
     pop edx
+    pop ebx
     pop eax
     pop fs
     pop ds
@@ -3027,6 +3029,7 @@ WriteRaw   Proc far
     push ds
     push fs
     push eax
+    push ebx
     push edx
 ;
     mov ax,flat_sel
@@ -3050,6 +3053,7 @@ WriteRaw   Proc far
     mov fs:[edx].qh_next_qtd,eax
 ;
     pop edx
+    pop ebx
     pop eax
     pop fs
     pop ds
