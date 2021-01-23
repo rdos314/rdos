@@ -772,7 +772,6 @@ ReadCapacity Proc near
     mov edx,es:[di+4]
 ;    
     call ReceiveCsw
-    int 3
     jc rcDone
 ;
     xchg dl,dh
@@ -790,6 +789,8 @@ ReadCapacity Proc near
     clc
 
 rcDone:
+    pop es
+    pop ds
     ret
 ReadCapacity Endp
 
@@ -1321,6 +1322,7 @@ SetupGpt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupDrives Proc near
+    int 3
     mov fs:disc_drive_arr,0
     mov fs:disc_drive_arr+2,0
     mov fs:disc_drive_arr+4,0
@@ -1862,6 +1864,7 @@ dtRetryLoop:
     jnc dtOk
 
 dtRetry:
+    int 3
     pop cx
     sub cx,1
     jz dtFailed
