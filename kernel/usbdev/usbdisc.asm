@@ -808,105 +808,58 @@ ReadCapacity Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector Proc near
-    push es
+    push ds
     pushad
-;    
-    mov ecx,200h
-    mov fs:disc_cbw_tag,edx
-    mov fs:disc_cbw_transfer_len,ecx
-    mov fs:disc_cbw_flags,80h
-    mov fs:disc_cbw_cmd_len,10
-    mov fs:disc_cbw_cmd_data,28h
-    mov fs:disc_cbw_cmd_data+1,0
+;
+    push es
+    mov es,fs:disc_bulk_out_buf    
+    mov es:disc_cbw_transfer_len,200h
+    mov es:disc_cbw_flags,80h
+    mov es:disc_cbw_cmd_len,10
+    mov es:disc_cbw_cmd_data,28h
+    mov es:disc_cbw_cmd_data+1,0
 ;
     mov eax,edx
     xchg al,ah
     rol eax,16
     xchg al,ah
-    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+    mov dword ptr es:disc_cbw_cmd_data+2,eax
 ;
-    mov fs:disc_cbw_cmd_data+6,0
+    mov es:disc_cbw_cmd_data+6,0
 ;
     mov ax,1
     xchg al,ah    
-    mov word ptr fs:disc_cbw_cmd_data+7,ax
+    mov word ptr es:disc_cbw_cmd_data+7,ax
 ;
-    mov fs:disc_cbw_cmd_data+9,0
+    mov es:disc_cbw_cmd_data+9,0
+    pop es
 ;
-    int 3
-    push edi
+    mov eax,edx
     call SendCbw
-    pop edi
     jc rsDone
 ;    
     mov ecx,200h
-    call ReceiveData
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
+    int 3
     jc rsDone
 ;    
+    cmp cx,200h
+    jb rsDone
+;    
+    mov ds,fs:disc_bulk_in_buf
+    xor esi,esi
+    mov ecx,80h
+    rep movs dword ptr es:[edi],ds:[esi]
+;
     call ReceiveCsw
 
 rsDone:
     popad
-    pop es
+    pop ds
     ret
 ReadSector Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           WriteSector
-;
-;   DESCRIPTION:    Write sector
-;
-;   PARAMETERS:     FS      Disc sel
-;                   ES:EDI  Buffer
-;                   EDX     Sector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteSector Proc near
-    push es
-    pushad
-;    
-    mov ecx,200h
-    mov fs:disc_cbw_tag,edx
-    mov fs:disc_cbw_transfer_len,ecx
-    mov fs:disc_cbw_flags,0
-    mov fs:disc_cbw_cmd_len,10
-    mov fs:disc_cbw_cmd_data,2Ah
-    mov fs:disc_cbw_cmd_data+1,0
-;
-    mov eax,edx
-    xchg al,ah
-    rol eax,16
-    xchg al,ah
-    mov dword ptr fs:disc_cbw_cmd_data+2,eax
-;
-    mov fs:disc_cbw_cmd_data+6,0
-;
-    mov ax,1
-    xchg al,ah    
-    mov word ptr fs:disc_cbw_cmd_data+7,ax
-;
-    mov fs:disc_cbw_cmd_data+9,0
-;
-    int 3
-    push edi
-    call SendCbw
-    pop edi
-    jc wsDone
-;    
-    mov ecx,200h
-    call WriteData
-    jc wsDone
-;    
-    call ReceiveCsw
-
-wsDone:
-    popad
-    pop es
-    ret
-WriteSector Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1322,7 +1275,6 @@ SetupGpt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupDrives Proc near
-    int 3
     mov fs:disc_drive_arr,0
     mov fs:disc_drive_arr+2,0
     mov fs:disc_drive_arr+4,0
@@ -1335,6 +1287,7 @@ SetupDrives Proc near
     mov edi,edx    
     xor edx,edx
     call ReadSector
+    int 3
 ;
     mov bp,OFFSET disc_drive_arr
     mov esi,1BEh
