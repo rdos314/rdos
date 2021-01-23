@@ -1485,29 +1485,57 @@ rdRetry:
     mov eax,edx
     call SendCbw
     pop es
-    int 3
     jc rdFail
-
-
 ;    
     push ebp
     push esi
 
 rdBufLoop:  
-    mov edi,es:[esi]
-    mov edi,es:[edi].dh_data
-    mov ecx,200h
-    int 3
+    cmp ebp,8
+    ja rdBufWhole
+;
+    mov eax,200h
+    mul ebp
+    mov ecx,eax
+    jmp rdBufDo
+
+rdBufWhole:
+    mov ecx,1000h
+
+rdBufDo:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
+    jc rdBufReadDone
+;
+    xor edx,edx
+
+rdBufCopy:
+    push ecx
+    push esi
+    mov edi,es:[esi]
+    mov edi,es:[edi].dh_data
+    mov ecx,80h
+    mov ds,fs:disc_bulk_in_buf
+    mov esi,edx
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov edx,esi
+    pop esi
+    pop ecx
 ;
     add esi,4
     sub ebp,1
-    jnz rdBufLoop
+    clc
+    jz rdBufReadDone
 ;
+    sub ecx,200h
+    jnz rdBufCopy
+    jmp rdBufLoop
+
+rdBufReadDone:
     pop esi
     pop ebp
+    jc rdFail
 ;    
     call ReceiveCsw
     jnc rdOk
