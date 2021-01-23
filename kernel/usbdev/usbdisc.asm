@@ -855,7 +855,6 @@ ReadSector Proc near
     call ReceiveCsw
 
 rsDone:
-    int 3
     popad
     pop ds
     ret
@@ -1287,7 +1286,6 @@ SetupDrives Proc near
     mov edi,edx    
     xor edx,edx
     call ReadSector
-    int 3
 ;
     mov bp,OFFSET disc_drive_arr
     mov esi,1BEh
@@ -1710,6 +1708,7 @@ write_drive     Endp
 perform_one     Proc near
 
 perform_one_loop:
+    int 3
     mov ecx,128
     GetDiscRequestArray
     jc perform_one_done
@@ -1817,7 +1816,6 @@ dtRetryLoop:
     jnc dtOk
 
 dtRetry:
-    int 3
     pop cx
     sub cx,1
     jz dtFailed
