@@ -647,7 +647,6 @@ Inquiry Proc near
     call ReceiveCsw
 
 inqDone:
-    int 3
     pop es
     pop ds
     ret
@@ -665,34 +664,48 @@ Inquiry Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RequestSense Proc near
-    mov fs:disc_cbw_tag,0E000EEEEh
-    mov fs:disc_cbw_transfer_len,18
-    mov fs:disc_cbw_flags,80h
-    mov fs:disc_cbw_cmd_len,6
-    mov fs:disc_cbw_cmd_data,3
-    mov fs:disc_cbw_cmd_data+1,0
-    mov fs:disc_cbw_cmd_data+2,0
-    mov fs:disc_cbw_cmd_data+3,0
-    mov fs:disc_cbw_cmd_data+4,18
-    mov fs:disc_cbw_cmd_data+5,0
+    push ds
+    push es
 ;
-    int 3
+    mov es,fs:disc_bulk_out_buf
+    mov es:disc_cbw_transfer_len,18
+    mov es:disc_cbw_flags,80h
+    mov es:disc_cbw_cmd_len,6
+    mov es:disc_cbw_cmd_data,3
+    mov es:disc_cbw_cmd_data+1,0
+    mov es:disc_cbw_cmd_data+2,0
+    mov es:disc_cbw_cmd_data+3,0
+    mov es:disc_cbw_cmd_data+4,18
+    mov es:disc_cbw_cmd_data+5,0
+;
+    mov eax,0E000EEEEh
     call SendCbw
     jc reqsDone
 ;    
-    mov ax,500
-    WaitMilliSec
-;    
+    mov es,fs:disc_bulk_in_buf
+    mov ecx,18
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
+    jc reqsDone
+;
+    cmp cx,18
+    jb reqsDone
+;
+    mov ds,fs:disc_bulk_in_buf
     mov ax,fs
-    mov es,ax    
+    mov es,ax
+    xor esi,esi
     mov edi,OFFSET disc_sense_data
     mov ecx,18
-    call ReceiveData
-    jc reqsDone
+    rep movsb
 ;    
     call ReceiveCsw
 
 reqsDone:
+    int 3
+    pop es
+    pop ds
     ret
 RequestSense Endp
 
@@ -1797,7 +1810,7 @@ dtInsDo:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
     mov cx,1000h
-    mov ax,5
+    mov ax,25
     OpenUsbRawPipe
     mov fs:disc_bulk_out_buf,es
     pop es
@@ -1806,7 +1819,7 @@ dtInsDo:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     mov cx,1000h
-    mov ax,5
+    mov ax,500
     OpenUsbRawPipe
     mov fs:disc_bulk_in_buf,es
     pop es
