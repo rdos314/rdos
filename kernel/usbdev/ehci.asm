@@ -2990,6 +2990,7 @@ ReadRaw   Proc far
     mov edx,ds:usbr_buf_linear
     LinearToPhysicalMemBlk
 ;
+    mov ds:er_size,cx
     mov edx,ds:er_td
     mov fs:[edx].qtd_next,1
     mov fs:[edx].qtd_alt,1

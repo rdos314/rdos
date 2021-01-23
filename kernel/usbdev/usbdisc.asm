@@ -85,6 +85,27 @@ drive_nr                DB ?
 
 drive_struc ENDS
 
+cbw_struc   STRUC
+
+disc_cbw_sign           DD ?
+disc_cbw_tag            DD ?
+disc_cbw_transfer_len   DD ?
+disc_cbw_flags          DB ?
+disc_cbw_lun            DB ?
+disc_cbw_cmd_len        DB ?
+disc_cbw_cmd_data       DB 10 DUP(?)
+
+cbw_struc  ENDS
+
+csw_struc  STRUC
+
+disc_csw_sign           DD ?
+disc_csw_tag            DD ?
+disc_csw_residue        DD ?
+disc_csw_status         DB ?
+
+csw_struc  ENDS
+
 disc_struc   STRUC
 
 disc_dev_handle         DW ?
@@ -112,19 +133,6 @@ disc_drive_arr          DW 4 DUP(?)
 disc_serial             DB ?
 disc_vendor             DW ?
 disc_prod               DW ?
-
-disc_cbw_sign           DD ?
-disc_cbw_tag            DD ?
-disc_cbw_transfer_len   DD ?
-disc_cbw_flags          DB ?
-disc_cbw_lun            DB ?
-disc_cbw_cmd_len        DB ?
-disc_cbw_cmd_data       DB 10 DUP(?)
-
-disc_csw_sign           DD ?
-disc_csw_tag            DD ?
-disc_csw_residue        DD ?
-disc_csw_status         DB ?
 
 ;
 ; do not reorganize, connected to responses
@@ -604,27 +612,41 @@ ResetDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Inquiry Proc near
-    mov fs:disc_cbw_tag,0F000FFFFh
-    mov fs:disc_cbw_transfer_len,36
-    mov fs:disc_cbw_flags,80h
-    mov fs:disc_cbw_cmd_len,6
-    mov fs:disc_cbw_cmd_data,12h
-    mov fs:disc_cbw_cmd_data+1,0
-    mov fs:disc_cbw_cmd_data+2,0
-    mov fs:disc_cbw_cmd_data+3,0
-    mov fs:disc_cbw_cmd_data+4,36
-    mov fs:disc_cbw_cmd_data+5,0
+    mov es,fs:disc_bulk_out_buf
+    mov es:disc_cbw_sign,43425355h
+    mov es:disc_cbw_lun,0
+    mov es:disc_cbw_tag,0F000FFFFh
+    mov es:disc_cbw_transfer_len,36
+    mov es:disc_cbw_flags,80h
+    mov es:disc_cbw_cmd_len,6
+    mov es:disc_cbw_cmd_data,12h
+    mov es:disc_cbw_cmd_data+1,0
+    mov es:disc_cbw_cmd_data+2,0
+    mov es:disc_cbw_cmd_data+3,0
+    mov es:disc_cbw_cmd_data+4,36
+    mov es:disc_cbw_cmd_data+5,0
 ;
-    call SendCbw
+    mov ecx,31
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    PostUsbRawPipe
     jc inqDone
 ;    
-    mov ax,fs
-    mov es,ax    
-    mov edi,OFFSET disc_peri
+    mov es,fs:disc_bulk_in_buf
+    xor edi,edi
     mov ecx,36
-    call ReceiveData
+    mov ax,5Ah
+    rep stosb
+;
+    mov ecx,36
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
+    int 3
     jc inqDone
 ;    
+
+
     call ReceiveCsw
 
 inqDone:
@@ -1759,10 +1781,7 @@ dtInsDo:
     mov ds:[si],bx
 ;
     mov fs,bx
-    mov fs:disc_cbw_sign,43425355h
-    mov fs:disc_cbw_lun,0
 ;
-    int 3
     mov bx,fs:disc_controller
     mov al,fs:disc_port
     OpenUsbDevice
@@ -1774,7 +1793,7 @@ dtInsDo:
     mov cx,1000h
     mov ax,5
     OpenUsbRawPipe
-    mov ds:disc_bulk_out_buf,es
+    mov fs:disc_bulk_out_buf,es
     pop es
 ;
     push es
@@ -1783,7 +1802,7 @@ dtInsDo:
     mov cx,1000h
     mov ax,5
     OpenUsbRawPipe
-    mov ds:disc_bulk_in_buf,es
+    mov fs:disc_bulk_in_buf,es
     pop es
 ;
     mov cx,32
