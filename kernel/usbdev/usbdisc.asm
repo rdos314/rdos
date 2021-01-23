@@ -134,6 +134,7 @@ disc_serial             DB ?
 disc_vendor             DW ?
 disc_prod               DW ?
 
+disc_exp_tag            DD ?
 ;
 ; do not reorganize, connected to responses
 ;
@@ -477,21 +478,21 @@ GetFs   Endp
 ;   DESCRIPTION:    Send CBW
 ;
 ;   PARAMETERS:     FS      Disc sel
+;                   ES      Bulk out sel
+;                   EAX     Tag
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendCbw Proc near
-    push es
-    mov ax,fs
-    mov es,ax
-;    
-    int 3
+    mov es:disc_cbw_lun,0
+    mov es:disc_cbw_sign,43425355h
+    mov es:disc_cbw_tag,eax
+    mov fs:disc_exp_tag,eax
+;
     mov ecx,31
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
     PostUsbRawPipe
-;   
-    pop es    
     ret
 SendCbw Endp
 
@@ -509,28 +510,26 @@ SendCbw Endp
 ReceiveCsw Proc near
     push es
 ;
-    mov ax,fs
-    mov es,ax
-;
-    int 3
     mov ecx,13
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
+    int 3
     jc rcswDone
     
 rcswOk:
-    mov eax,fs:disc_csw_sign
+    mov es,fs:disc_bulk_in_buf
+    mov eax,es:disc_csw_sign
     cmp eax,53425355h
     stc
     jne rcswDone
 ;
-    mov eax,fs:disc_csw_tag
-    cmp eax,fs:disc_cbw_tag
+    mov eax,es:disc_csw_tag
+    cmp eax,fs:disc_exp_tag
     stc
     jne rcswDone
 ;
-    mov al,fs:disc_csw_status
+    mov al,es:disc_csw_status
     or al,al    
     stc
     jnz rcswDone
@@ -616,9 +615,6 @@ Inquiry Proc near
     push es
 ;
     mov es,fs:disc_bulk_out_buf
-    mov es:disc_cbw_sign,43425355h
-    mov es:disc_cbw_lun,0
-    mov es:disc_cbw_tag,0F000FFFFh
     mov es:disc_cbw_transfer_len,36
     mov es:disc_cbw_flags,80h
     mov es:disc_cbw_cmd_len,6
@@ -628,19 +624,14 @@ Inquiry Proc near
     mov es:disc_cbw_cmd_data+3,0
     mov es:disc_cbw_cmd_data+4,36
     mov es:disc_cbw_cmd_data+5,0
-;
-    mov ecx,31
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_out_pipe
-    PostUsbRawPipe
-    jc inqDone
+    mov eax,0F000FFFFh
+    call SendCbw
 ;    
     mov es,fs:disc_bulk_in_buf
     mov ecx,36
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
-    int 3
     jc inqDone
 ;    
     cmp cx,36
@@ -654,8 +645,6 @@ Inquiry Proc near
     mov ecx,36
     rep movsb
 ;
-
-
     call ReceiveCsw
 
 inqDone:
@@ -685,6 +674,7 @@ RequestSense Proc near
     mov fs:disc_cbw_cmd_data+4,18
     mov fs:disc_cbw_cmd_data+5,0
 ;
+    int 3
     call SendCbw
     jc reqsDone
 ;    
@@ -731,6 +721,7 @@ ReadCapacity Proc near
     mov fs:disc_cbw_cmd_data+8,0
     mov fs:disc_cbw_cmd_data+9,0
 ;
+    int 3
     call SendCbw
     jc rcDone
 ;    
@@ -803,6 +794,7 @@ ReadSector Proc near
 ;
     mov fs:disc_cbw_cmd_data+9,0
 ;
+    int 3
     push edi
     call SendCbw
     pop edi
@@ -859,6 +851,7 @@ WriteSector Proc near
 ;
     mov fs:disc_cbw_cmd_data+9,0
 ;
+    int 3
     push edi
     call SendCbw
     pop edi
@@ -1495,6 +1488,7 @@ rdDoTrans:
     mov fs:disc_cbw_cmd_data+9,0
 
 rdRetry:
+    int 3
     call SendCbw
     jc rdFail
 ;    
@@ -1645,6 +1639,7 @@ wdDoTrans:
     mov fs:disc_cbw_cmd_data+9,0
 
 wdRetry:
+    int 3
     call SendCbw
     jc wdFail
 ;    
