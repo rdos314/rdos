@@ -104,7 +104,7 @@ Block   Proc far
     call fword ptr ds:lock_proc
     pop ds
     ret
-Block	Endp
+Block   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -123,7 +123,7 @@ Unblock   Proc far
     call fword ptr ds:unlock_proc
     pop ds
     ret
-Unblock	Endp
+Unblock Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -144,7 +144,7 @@ AllocateAddress   Proc far
     call fword ptr ds:allocate_address_proc
     pop ds
     ret
-AllocateAddress	Endp
+AllocateAddress Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -164,7 +164,7 @@ FreeAddress   Proc far
     call fword ptr ds:free_address_proc
     pop ds
     ret
-FreeAddress	Endp
+FreeAddress     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -431,7 +431,7 @@ AddressDev   Proc far
     call fword ptr ds:address_device_proc
     pop ds
     ret
-AddressDev	Endp
+AddressDev      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -450,7 +450,7 @@ ConfigDev   Proc far
     call fword ptr ds:config_device_proc
     pop ds
     ret
-ConfigDev	Endp
+ConfigDev       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -472,7 +472,7 @@ CreateControl   Proc far
     call fword ptr ds:create_control_proc
     pop ds
     ret
-CreateControl	Endp
+CreateControl   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1557,7 +1557,7 @@ tpFail:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreatePortThread	Proc near
+CreatePortThread        Proc near
     push ds
     push es
     pushad
@@ -1614,7 +1614,7 @@ cptCopyDone:
     pop es
     pop ds
     ret
-CreatePortThread	Endp
+CreatePortThread        Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1679,7 +1679,7 @@ tsNotOver:
     mov edi,OFFSET hub_buf
     mov bx,ds:hub_device_handle
     mov dl,ds:hub_intr
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc tsLoop
 ;
     or cx,cx
@@ -1766,16 +1766,16 @@ tsFail:
 ;    Description:    Search for dead device
 ;
 ;    Parameters:     DS         Data seg
-;                    ES   	Descriptor
+;                    ES         Descriptor
 ;                    ESI        Vendor & product
-;                    EBP	Descriptor size
+;                    EBP        Descriptor size
 ;
-;    Returns:        ECX	Number of matches
+;    Returns:        ECX        Number of matches
 ;                    GS         CDC sel of last match
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindAnyDevice	Proc near
+FindAnyDevice   Proc near
     push ds
     push eax
     push ebx
@@ -1830,7 +1830,7 @@ fadDone:
     pop eax
     pop ds
     ret
-FindAnyDevice	Endp
+FindAnyDevice   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1843,12 +1843,12 @@ FindAnyDevice	Endp
 ;                    BX      Controller #
 ;                    AL      Port #
 ;
-;    Returns:        NC	     Found
+;    Returns:        NC      Found
 ;                        GS  CDC sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindSpecificDevice	Proc near
+FindSpecificDevice      Proc near
     push ds
     push ecx
     push edx
@@ -1885,7 +1885,7 @@ fsdDone:
     pop ecx    
     pop ds
     ret
-FindSpecificDevice	Endp
+FindSpecificDevice      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1898,7 +1898,7 @@ FindSpecificDevice	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateStatusThread	Proc near
+CreateStatusThread      Proc near
     push ds
     push es
     pushad
@@ -1955,7 +1955,7 @@ cstCopyDone:
     pop es
     pop ds
     ret
-CreateStatusThread	Endp
+CreateStatusThread      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

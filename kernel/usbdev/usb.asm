@@ -2167,29 +2167,9 @@ ReadPacket      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadRaw
+;       NAME:           GetUsbPacketPipe
 ;
-;       description:    Read using raw interface
-;
-;       parameters:     GS        Pipe sel
-;                       BP:EDI    Buffer
-;
-;       returns:        CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadRaw Proc near
-    int 3
-    stc
-    ret
-ReadRaw Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReadUsbPipe
-;
-;       description:    Read USB pipe
+;       description:    Get USB packet pipe
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
@@ -2199,7 +2179,7 @@ ReadRaw Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_usb_pipe_name DB 'Read Usb Pipe', 0
+get_usb_packet_pipe_name DB 'Get Usb Packet Pipe', 0
 
 ReadPipe        Proc near
     push ds
@@ -2249,7 +2229,7 @@ ReadPipe        Proc near
     jmp rupLeave
 
 rupNotPacket:
-    call ReadRaw
+    stc
 
 rupLeave:
     LeaveSection ds:udd_section
@@ -2268,125 +2248,18 @@ rupDone:
     ret
 ReadPipe Endp
 
-read_usb_pipe32 Proc far
-    call ReadPipe
+get_usb_packet_pipe32 Proc far
+    call GetPipe
     retf32
-read_usb_pipe32 Endp
+get_usb_packet_pipe32 Endp
 
-read_usb_pipe16 Proc far
+get_usb_packet_pipe16 Proc far
     push edi
     movzx edi,di
-    call ReadPipe
+    call GetPipe
     pop edi
     retf32
-read_usb_pipe16 Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteRaw
-;
-;       description:    Write using raw interface
-;
-;       parameters:     GS        Pipe sel
-;                       BP:EDI    Buffer
-;
-;       returns:        CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteRaw        Proc near
-    stc
-    ret
-WriteRaw        Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteUsbPipe
-;
-;       description:    Write USB pipe
-;
-;       parameters:     BX        Handle
-;                       DL        Pipe #
-;                       ES:(E)DI  Buffer
-;                       CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_usb_pipe_name DB 'Write Usb Pipe', 0
-
-WritePipe       Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ebx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov bp,es
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc wupDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    stc
-    jnz wupLeave
-;
-    mov es,ds:udd_sel    
-;
-    test dl,80h
-    stc
-    jnz wupLeave
-;
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz wupLeave
-;
-    mov gs,bx
-    call WriteRaw
-
-wupLeave:
-    LeaveSection ds:udd_section
-
-wupDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ebx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds    
-    ret
-WritePipe Endp
-
-write_usb_pipe32        Proc far
-    call WritePipe
-    retf32
-write_usb_pipe32 Endp
-
-write_usb_pipe16        Proc far
-    push edi
-    movzx edi,di
-    call WritePipe
-    pop edi
-    retf32
-write_usb_pipe16 Endp
+get_usb_packet_pipe16 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4850,18 +4723,11 @@ init    Proc far
     mov ax,get_usb_buffer_size_nr
     RegisterBimodalUserGate
 ;
-    mov ebx,OFFSET read_usb_pipe16
-    mov esi,OFFSET read_usb_pipe32
-    mov edi,OFFSET read_usb_pipe_name
+    mov ebx,OFFSET get_usb_packet_pipe16
+    mov esi,OFFSET get_usb_packet_pipe32
+    mov edi,OFFSET get_usb_packet_pipe_name
     mov dx,virt_es_in
-    mov ax,read_usb_pipe_nr
-    RegisterUserGate
-;
-    mov ebx,OFFSET write_usb_pipe16
-    mov esi,OFFSET write_usb_pipe32
-    mov edi,OFFSET write_usb_pipe_name
-    mov dx,virt_es_in
-    mov ax,write_usb_pipe_nr
+    mov ax,get_usb_packet_pipe_nr
     RegisterUserGate
 ;
     mov esi,OFFSET open_usb_event

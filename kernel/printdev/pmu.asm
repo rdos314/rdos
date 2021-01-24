@@ -224,7 +224,7 @@ raWaitLoop:
     mov es,ds:pmu_in_buffer
     xor edi,edi
     movzx ecx,ds:pmu_max_in
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc raDone
 ;
     or cx,cx
@@ -252,7 +252,7 @@ raDataLoop:
     jz raDone
 ;
     movzx ecx,ds:pmu_max_in
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc raDone
     or cx,cx
     clc

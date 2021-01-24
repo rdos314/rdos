@@ -1443,7 +1443,7 @@ WaitForReport_    Proc near
 wfrRead:
     mov bx,fs:hid_device_handle
     mov dl,fs:hid_intr_in
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc wfrFail
 ;
     sub si,cx

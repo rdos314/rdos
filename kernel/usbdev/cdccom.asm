@@ -90,7 +90,7 @@ data    SEGMENT byte public 'DATA'
 sd_ports        DW ?
 sd_port_arr     DW MAX_PORTS DUP(?)
 
-data	ENDS
+data    ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -514,7 +514,7 @@ reset_port Endp
 ;
 ;   DESCRIPTION:    
 ;
-;   PARAMETERS:     DS		CDC selector
+;   PARAMETERS:     DS          CDC selector
 ;                   FS          CDC unit
 ;
 ;   RETURNS:        ES          Port selector
@@ -539,7 +539,7 @@ cpt13 DD OFFSET full_duplex,        SEG code
 cpt14 DD OFFSET is_auto_rts_on,     SEG code
 cpt15 DD OFFSET send_break,         SEG code
 
-CreateComPort	Proc far
+CreateComPort   Proc far
     pushad
 ;
     mov eax,SIZE usb_cdc_port_struc
@@ -562,7 +562,7 @@ CreateComPort	Proc far
 ;    
     popad
     ret
-CreateComPort	Endp
+CreateComPort   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -575,7 +575,7 @@ CreateComPort	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindInterfaces	Proc near
+FindInterfaces  Proc near
     mov eax,1000h
     AllocateSmallGlobalMem
     mov cx,SIZE usb_device_descr
@@ -675,7 +675,7 @@ fiFail:
 
 fiDone:
     ret
-FindInterfaces	Endp
+FindInterfaces  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -688,7 +688,7 @@ FindInterfaces	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckInterfaces	Proc near
+CheckInterfaces Proc near
     movzx ecx,ds:cdc_unit_count
     mov ebx,OFFSET cdc_unit_arr
 
@@ -713,7 +713,7 @@ ciFail:
 
 ciDone:
     ret
-CheckInterfaces	Endp
+CheckInterfaces Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -722,12 +722,12 @@ CheckInterfaces	Endp
 ;
 ;   DESCRIPTION:    
 ;
-;   PARAMETERS:     DS		CDC selector
+;   PARAMETERS:     DS          CDC selector
 ;                   FS          CDC unit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateComDevice	Proc near
+CreateComDevice Proc near
     push ds
     push es
     pushad
@@ -774,7 +774,7 @@ CreateComDevice	Proc near
     pop es
     pop ds
     ret
-CreateComDevice	Endp
+CreateComDevice Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -784,14 +784,14 @@ CreateComDevice	Endp
 ;   DESCRIPTION:    Reinit unit
 ;
 ;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
+;                   ES          CDC selector
 ;                   FS          CDC unit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Reinit  Proc near
     ret
-Reinit	Endp
+Reinit  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -801,7 +801,7 @@ Reinit	Endp
 ;   DESCRIPTION:    Open port
 ;
 ;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
+;                   ES          CDC selector
 ;                   FS          CDC unit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -851,7 +851,7 @@ OpenPort    Endp
 ;   DESCRIPTION:    Close port
 ;
 ;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
+;                   ES          CDC selector
 ;                   FS          CDC unit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -887,7 +887,7 @@ ClosePort   Endp
     DESCRIPTION:    Handle read
 ;
 ;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
+;                   ES          CDC selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -900,7 +900,7 @@ HandleRead    Proc near
     mov es,ds:ucd_in_buffer
     xor edi,edi
     movzx ecx,ds:ucd_in_size
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc hdrDone
 ;    
     or cx,cx
@@ -962,7 +962,7 @@ HandleRead    Endp
 ;   DESCRIPTION:    Check read buffer
 ;
 ;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
+;                   ES          CDC selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -994,7 +994,7 @@ CheckRead  Endp
 ;   DESCRIPTION:    Handle output-buffer
 ;
 ;   PARAMETERS:     DS          Device selector
-;                   ES		CDC selector
+;                   ES          CDC selector
 ;                   GS      Port sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1247,7 +1247,7 @@ HexToAscii      ENDP
 ;
 ;   Description:    Create server thread
 ;
-;   PARAMETERS:     DS		CDC selector
+;   PARAMETERS:     DS          CDC selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1402,7 +1402,7 @@ cdc_com_start Endp
 
     public cdc_com_detach
 
-cdc_com_detach	Proc near
+cdc_com_detach  Proc near
     push ds
     push eax
     push ebx
@@ -1446,7 +1446,7 @@ udUnlink:
     pop eax
     pop ds
     ret
-cdc_com_detach	Endp
+cdc_com_detach  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1459,7 +1459,7 @@ cdc_com_detach	Endp
 
     public init_cdc_com
 
-init_cdc_com	Proc near
+init_cdc_com    Proc near
     mov eax,SEG data
     mov ds,eax
     mov ds:sd_ports,0
@@ -1473,7 +1473,7 @@ init_cdc_com	Proc near
     mov ax,get_usb_cdc_com_par_nr
     RegisterBimodalUserGate
     ret
-init_cdc_com	Endp
+init_cdc_com    Endp
         
 code    ENDS
 

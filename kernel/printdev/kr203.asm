@@ -153,7 +153,7 @@ ReadAnswer   Proc near
     mov es,ds:kr_in_buffer
     xor edi,edi
     movzx ecx,ds:kr_max_in
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc raDone
 
 raLoop:
@@ -171,7 +171,7 @@ raLoop:
     jz raOk
 ;
     movzx ecx,ds:kr_max_in
-    ReadUsbPipe
+    GetUsbPacketPipe
     jnc raLoop
 
 raOk:

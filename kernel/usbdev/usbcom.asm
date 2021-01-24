@@ -122,7 +122,7 @@ uds_thread          DW ?
 
 usbcom_device_struc   ENDS
 
-usb_com_struc	STRUC
+usb_com_struc   STRUC
 
 uc_vendor               DW ?
 uc_product              DW ?
@@ -148,11 +148,11 @@ uc_unit_arr             DW MAX_COM_UNITS DUP(?)
 uc_dev_descr_size       DW ?
 uc_dev_descr_buf        DB ?
 
-usb_com_struc	ENDS
+usb_com_struc   ENDS
 
-com_setup	STRUC
+com_setup       STRUC
 
-cs_dev_type_proc	DD ?,?
+cs_dev_type_proc        DD ?,?
 cs_dev_attach_proc      DD ?,?
 
 com_setup       ENDS
@@ -2839,7 +2839,7 @@ HandleRead    Proc near
     mov es,ds:uds_in_buffer
     xor edi,edi
     movzx ecx,ds:uds_in_size
-    ReadUsbPipe
+    GetUsbPacketPipe
     jc hdrDone
 ;    
     mov ax,ds:uds_device_type
@@ -3374,7 +3374,7 @@ AddPort Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddUnit	Proc near
+AddUnit Proc near
     push ds
     push ax
     push bx
@@ -3397,7 +3397,7 @@ AddUnit	Proc near
     pop ax
     pop ds
     ret
-AddUnit	Endp
+AddUnit Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3406,7 +3406,7 @@ AddUnit	Endp
 ;
 ;    Description:    Check for FTDI device
 ;
-;    Parameters:     ES		Device descriptor
+;    Parameters:     ES         Device descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3580,7 +3580,7 @@ ftAB    DW 0403h,       0DD20h  ; ACG_HFDUAL
 ftAC    DW 0856h,       0AC27h  ; 232USB9M
 ftAD    DW 0403h,       06015h  ; Vera
 
-IsFTDI	Proc near
+IsFTDI  Proc near
     push cx
     push si
     push di
@@ -3612,7 +3612,7 @@ iftDone:
     pop si
     pop bp
     ret
-IsFTDI	Endp
+IsFTDI  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3621,9 +3621,9 @@ IsFTDI	Endp
 ;
 ;   Description:    Get FTDI device type
 ;
-;   Parameters:     ES	    Device descritor
+;   Parameters:     ES      Device descritor
 ;
-;   Returns:        SI	    Device type
+;   Returns:        SI      Device type
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3706,7 +3706,7 @@ AttachFTDI  Endp
 ;
 ;    Description:    Check for PL2303 device
 ;
-;    Parameters:     ES		Device descriptor
+;    Parameters:     ES         Device descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3742,7 +3742,7 @@ pl1B    DW 0E55h,       0110Bh  ; SPEEDDRAGON
 pl1C    DW 0EA0h,       06858h  ; OTI
 pl1D    DW 067Bh,       02303h  ; PL2303
 
-IsPL2303	Proc near
+IsPL2303        Proc near
     push cx
     push si
     push di
@@ -3774,7 +3774,7 @@ iplDone:
     pop si
     pop bp
     ret
-IsPL2303	Endp
+IsPL2303        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3783,7 +3783,7 @@ IsPL2303	Endp
 ;
 ;   Description:    Attach PL2303 devices
 ;
-;   Parameters:     ES	    Device descritor
+;   Parameters:     ES      Device descritor
 ;
 ;   Returns:        SI      Device type
 ;
@@ -3859,7 +3859,7 @@ AttachPL2303  Endp
 ;
 ;   Description:    Check for MCT device
 ;
-;   Parameters:     ES		Device descriptor
+;   Parameters:     ES          Device descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3869,7 +3869,7 @@ mc01    DW 0711h,       0230h   ; Sitecom
 mc02    DW 0711h,       0200h   ; D-link
 mc03    DW 050Dh,       0109h   ; Belkin
 
-IsMct	Proc near
+IsMct   Proc near
     push cx
     push di
     push bp
@@ -3899,7 +3899,7 @@ imctDone:
     pop di
     pop bp
     ret
-IsMct	Endp
+IsMct   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3908,7 +3908,7 @@ IsMct	Endp
 ;
 ;   Description:    Get MCT type
 ;
-;   Parameters:     ES	    Device descritor
+;   Parameters:     ES      Device descritor
 ;
 ;   Returns:        SI      Device type
 ;
@@ -4124,12 +4124,12 @@ CreateServerThread   Endp
 ;
 ;   Description:    Insert device
 ;
-;   Parameters:     DS	    Data segment
+;   Parameters:     DS      Data segment
 ;                   ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertDevice	Proc near
+InsertDevice    Proc near
     push si
 ;
     mov si,ds:sd_dev_count
@@ -4150,15 +4150,15 @@ InsertDevice   Endp
 ;    Description:    Search device
 ;
 ;    Parameters:     DS         Device sel
-;                    ES   	Descriptor
+;                    ES         Descriptor
 ;                    ESI        Vendor & product
-;                    BP	        Descriptor size
+;                    BP         Descriptor size
 ;
 ;    Returns:        NC         Match
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckDevice	Proc near
+CheckDevice     Proc near
     push eax
 ;
     mov ax,ds:uc_vendor
@@ -4190,7 +4190,7 @@ chdFail:
 chdDone:
     pop eax
     ret
-CheckDevice	Endp
+CheckDevice     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4200,16 +4200,16 @@ CheckDevice	Endp
 ;    Description:    Search for dead device
 ;
 ;    Parameters:     DS         Data seg
-;                    ES   	Descriptor
+;                    ES         Descriptor
 ;                    ESI        Vendor & product
-;                    BP	        Descriptor size
+;                    BP         Descriptor size
 ;
-;    Returns:        ECX	Number of matches
+;    Returns:        ECX        Number of matches
 ;                    GS         Device sel of last match
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindAnyDevice	Proc near
+FindAnyDevice   Proc near
     push ds
     push eax
     push ebx
@@ -4245,7 +4245,7 @@ fadDone:
     pop eax
     pop ds
     ret
-FindAnyDevice	Endp
+FindAnyDevice   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4259,12 +4259,12 @@ FindAnyDevice	Endp
 ;                    AH      Port #
 ;                    AL      Device address
 ;
-;    Returns:        NC	     Found
+;    Returns:        NC      Found
 ;                        GS  Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindSpecificDevice	Proc near
+FindSpecificDevice      Proc near
     push ds
     push ecx
     push edx
@@ -4304,7 +4304,7 @@ fsdDone:
     pop ecx    
     pop ds
     ret
-FindSpecificDevice	Endp
+FindSpecificDevice      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
