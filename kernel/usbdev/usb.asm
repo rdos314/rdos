@@ -2394,8 +2394,10 @@ ausIn:
     jc ausLeave
 ;
     mov gs,bx
+    push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:add_scatter_proc
+    pop ds
     jmp ausLeave
 
 ausOut:
@@ -2412,8 +2414,10 @@ ausOut:
     jc ausLeave
 ;
     mov gs,bx
+    push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:add_scatter_proc
+    pop ds
 
 ausLeave:
     LeaveSection ds:udd_section
@@ -2497,8 +2501,10 @@ pusIn:
     jz pusLeave
 ;
     mov gs,bx
+    push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:post_scatter_proc
+    pop ds
     jmp pusLeave
 
 pusOut:
@@ -2512,8 +2518,10 @@ pusOut:
     jz pusLeave
 ;
     mov gs,bx
+    push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:post_scatter_proc
+    pop ds
 
 pusLeave:
     LeaveSection ds:udd_section

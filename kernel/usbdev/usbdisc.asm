@@ -1421,17 +1421,25 @@ ReadScatter      Proc near
     push ebp
     push esi
     int 3
-;
-    push es
-    mov eax,10h
-    AllocateSmallGlobalMem
-    mov edi,8
-    mov ecx,9
+
+rscLoop:
+    mov edi,es:[esi]
+    mov edi,es:[edi].dh_data
+    mov ecx,200h
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
-    AddUsbScatterPipe    
-    pop es
+    UserGateForce32 add_usb_scatter_pipe_nr    
+    jc rscDone
 ;
+    add esi,4
+    sub ebp,1
+    jnz rscLoop
+;
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbScatterPipe    
+
+rscDone:
     pop esi
     pop ebp
     ret
