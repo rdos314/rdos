@@ -1395,6 +1395,75 @@ start_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadRaw
+;
+;       DESCRIPTION:    Read using raw interface
+;
+;       PARAMETERS:     FS      Disc selector
+;                       ESI     Disc handle array
+;                       EBP     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRaw      Proc near
+    push ebp
+    push esi
+
+rwBufLoop:  
+    cmp ebp,8
+    ja rwBufWhole
+;
+    mov eax,200h
+    mul ebp
+    mov ecx,eax
+    jmp rwBufDo
+
+rwBufWhole:
+    mov ecx,1000h
+
+rwBufDo:
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    PostUsbRawPipe
+    jc rwBufReadDone
+;
+    xor edx,edx
+
+rwBufCopy:
+    push es
+    push ecx
+    push esi
+;
+    mov edi,es:[esi]
+    mov edi,es:[edi].dh_data
+    mov ecx,80h
+    mov ds,fs:disc_bulk_in_buf
+    mov esi,edx
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov edx,esi
+;
+    pop esi
+    pop ecx
+    pop ds
+;
+    add esi,4
+    sub ebp,1
+    clc
+    jz rwBufReadDone
+;
+    sub ecx,200h
+    jnz rwBufCopy
+    jmp rwBufLoop
+
+rwBufReadDone:
+    pop esi
+    pop ebp
+    ret
+ReadRaw  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       read_drive
 ;
 ;       DESCRIPTION:    Read drive
@@ -1487,54 +1556,7 @@ rdRetry:
     pop es
     jc rdFail
 ;    
-    push ebp
-    push esi
-
-rdBufLoop:  
-    cmp ebp,8
-    ja rdBufWhole
-;
-    mov eax,200h
-    mul ebp
-    mov ecx,eax
-    jmp rdBufDo
-
-rdBufWhole:
-    mov ecx,1000h
-
-rdBufDo:
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_in_pipe
-    PostUsbRawPipe
-    jc rdBufReadDone
-;
-    xor edx,edx
-
-rdBufCopy:
-    push ecx
-    push esi
-    mov edi,es:[esi]
-    mov edi,es:[edi].dh_data
-    mov ecx,80h
-    mov ds,fs:disc_bulk_in_buf
-    mov esi,edx
-    rep movs dword ptr es:[edi],ds:[esi]
-    mov edx,esi
-    pop esi
-    pop ecx
-;
-    add esi,4
-    sub ebp,1
-    clc
-    jz rdBufReadDone
-;
-    sub ecx,200h
-    jnz rdBufCopy
-    jmp rdBufLoop
-
-rdBufReadDone:
-    pop esi
-    pop ebp
+    call ReadRaw
     jc rdFail
 ;    
     call ReceiveCsw
@@ -1545,6 +1567,8 @@ rdFail:
     jmp rdRetry
 
 rdFailLoop:    
+    pop ecx
+;
     mov edi,es:[esi]
     mov eax,es:[edi].dh_data
     mov es:[eax].dh_state,STATE_BAD
@@ -1745,6 +1769,7 @@ perform_one     Proc near
 
 perform_one_loop:
     mov ecx,128
+    mov bx,fs:disc_handle
     GetDiscRequestArray
     jc perform_one_done
 ;
