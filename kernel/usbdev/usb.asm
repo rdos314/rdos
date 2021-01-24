@@ -2262,6 +2262,218 @@ get_usb_packet_pipe16 Proc far
 get_usb_packet_pipe16 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasUsbScatter
+;
+;       description:    Has USB scatter
+;
+;       parameters:     BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_usb_scatter_name DB 'Has Usb Scatter', 0
+
+has_usb_scatter        Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc husDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    mov ds,ds:udd_sel    
+    mov ds,ds:usbd_func_sel
+    int 3
+
+husDone:
+    pop ebx
+    pop eax
+    pop ds    
+    retf32
+has_usb_scatter Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddUsbScatterPipe
+;
+;       description:    Add USB scatter pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;                       ES:(E)DI  Buffer
+;                       (E)CX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_usb_scatter_pipe_name DB 'Add Usb Scatter Pipe', 0
+
+AddScatter        Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov bp,es
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc ausDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz ausLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    jz ausOut
+
+ausIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz ausLeave
+;
+    mov gs,bx
+    int 3
+    jmp ausLeave
+
+ausOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz ausLeave
+;
+    mov gs,bx
+    int 3
+
+ausLeave:
+    LeaveSection ds:udd_section
+
+ausDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds    
+    ret
+AddScatter Endp
+
+add_usb_scatter_pipe32 Proc far
+    call AddScatter
+    retf32
+add_usb_scatter_pipe32 Endp
+
+add_usb_scatter_pipe16 Proc far
+    push edi
+    movzx edi,di
+    call AddScatter
+    pop edi
+    retf32
+add_usb_scatter_pipe16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PostUsbScatterPipe
+;
+;       description:    Post USB scatter pipe
+;
+;       parameters:     BX        Handle
+;                       DL        Pipe #
+;
+;       RETURNS:        CX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+post_usb_scatter_pipe_name DB 'Post Usb Scatter Pipe', 0
+
+post_usb_scatter_pipe        Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,USB_DEV_HANDLE
+    DerefHandle
+    jc pusDone
+;
+    mov ds,ds:[ebx].udh_dev_sel
+    EnterSection ds:udd_section
+    mov al,ds:udd_deleted
+    or al,al
+    stc
+    jnz pusLeave
+;
+    mov es,ds:udd_sel    
+;
+    test dl,80h
+    jz pusOut
+
+pusIn:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_in_pipe_arr
+    or bx,bx
+    stc
+    jz pusLeave
+;
+    mov gs,bx
+    int 3
+    jmp pusLeave
+
+pusOut:
+    movzx si,dl
+    and si,0Fh
+    dec si
+    add si,si
+    mov bx,es:[si].usbd_out_pipe_arr
+    or bx,bx
+    stc
+    jz pusLeave
+;
+    mov gs,bx
+    int 3
+
+pusLeave:
+    LeaveSection ds:udd_section
+
+pusDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds    
+    retf32
+post_usb_scatter_pipe Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           StartWaitForPipe
@@ -4729,6 +4941,25 @@ init    Proc far
     mov dx,virt_es_in
     mov ax,get_usb_packet_pipe_nr
     RegisterUserGate
+;
+    mov esi,OFFSET has_usb_scatter
+    mov edi,OFFSET has_usb_scatter_name
+    xor dx,dx
+    mov ax,has_usb_scatter_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET add_usb_scatter_pipe16
+    mov esi,OFFSET add_usb_scatter_pipe32
+    mov edi,OFFSET add_usb_scatter_pipe_name
+    mov dx,virt_es_in
+    mov ax,add_usb_scatter_pipe_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET post_usb_scatter_pipe
+    mov edi,OFFSET post_usb_scatter_pipe_name
+    xor dx,dx
+    mov ax,post_usb_scatter_pipe_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_usb_event
     mov edi,OFFSET open_usb_event_name
