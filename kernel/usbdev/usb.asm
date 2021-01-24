@@ -1456,15 +1456,16 @@ clpPacketOk:
     pop ds
     
 clpRawDone:
-    mov bx,gs:usbp_scatter_sel
+    xor bx,bx
+    xchg bx,gs:usbp_scatter_sel
     or bx,bx
     jz clpDone
 ;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:close_scatter_proc
-    pop ds
-
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+ 
 clpDone:    
     pop bx
     ret
@@ -2308,11 +2309,99 @@ has_usb_scatter Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetScatter
+;
+;       description:    Get scatter
+;
+;       parameters:     GS      Pipe sel
+;
+;       RETURNS:        DS      Scatter sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetScatter        Proc near
+    push eax
+;
+    mov ax,gs:usbp_scatter_sel
+    or ax,ax
+    jnz gssDone
+;
+    push es
+    mov eax,SIZE usb_scatter_struc
+    AllocateSmallGlobalMem
+    mov es:usbsc_thread,0
+    mov es:usbsc_count,0
+    mov gs:usbp_scatter_sel,es
+    mov ax,es
+    pop es
+
+gssDone:
+    mov ds,ax
+;
+    pop eax
+    ret
+GetScatter        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InsertScatter
+;
+;       description:    Insert scatter
+;
+;       parameters:     GS      Pipe sel
+;                       EBX:EAX Physical buffer
+;                       ECX     Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertScatter        Proc near
+    push ds
+    push si
+;
+    call GetScatter
+    mov si,ds:usbsc_count
+    or si,si
+    jz isAdd
+;
+    dec si
+    shl si,4
+    cmp ebx,ds:[si].usbsc_arr.usbe_phys+4
+    jne isAdd
+;
+    push edx
+    mov edx,ds:[si].usbsc_arr.usbe_phys
+    add edx,ds:[si].usbsc_arr.usbe_size
+    cmp edx,eax
+    pop edx
+    jne isAdd
+;
+    add ds:[si].usbsc_arr.usbe_size,ecx
+    jmp isDone
+
+isAdd:
+    mov si,ds:usbsc_count
+    shl si,4
+    mov ds:[si].usbsc_arr.usbe_phys,eax
+    mov ds:[si].usbsc_arr.usbe_phys+4,ebx
+    mov ds:[si].usbsc_arr.usbe_size,ecx
+    inc ds:usbsc_count
+
+isDone:
+    pop si
+    pop ds
+    ret
+InsertScatter  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ProcessScatter
 ;
 ;       description:    Process scatter
 ;
-;       parameters:     BP:EDI  Buffer
+;       parameters:     GS      Pipe sel
+;                       BP:EDI  Buffer
 ;                       ECX     Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2369,8 +2458,7 @@ psComp:
 psAdd:
     push ecx
     mov ecx,esi
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:add_scatter_proc
+    call InsertScatter
     pop ecx
 ;
     sub ecx,esi
@@ -2494,6 +2582,7 @@ add_usb_scatter_pipe16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunScatter        Proc near
+    int 3
     push ds
     mov gs,bx
     ClearSignal

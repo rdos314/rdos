@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MAX_USB_HUB_PORTS = 32
+MAX_USB_SCATTER_COUNT = 32
 
 DEV_FLAG_DETACHED     = 1
 DEV_FLAG_ATTACHED     = 2
@@ -248,8 +249,19 @@ usbr_timeout      DD ?
 
 usb_raw_struc  ENDS
 
+usb_scatter_entry  STRUC
+
+usbe_phys         DD ?,?
+usbe_size         DD ?
+usbe_td           DD ?
+
+usb_scatter_entry  ENDS
+
 usb_scatter_struc  STRUC
 
 usbsc_thread      DW ?
+usbsc_count       DW ?
+
+usbsc_arr         DD 4 * MAX_USB_SCATTER_COUNT DUP(?)
 
 usb_scatter_struc  ENDS
