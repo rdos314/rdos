@@ -2249,14 +2249,14 @@ rupDone:
 ReadPipe Endp
 
 get_usb_packet_pipe32 Proc far
-    call GetPipe
+    call ReadPipe
     retf32
 get_usb_packet_pipe32 Endp
 
 get_usb_packet_pipe16 Proc far
     push edi
     movzx edi,di
-    call GetPipe
+    call ReadPipe
     pop edi
     retf32
 get_usb_packet_pipe16 Endp

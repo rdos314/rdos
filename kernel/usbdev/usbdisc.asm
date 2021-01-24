@@ -130,6 +130,7 @@ disc_sectors_per_unit   DW ?
 
 disc_drive_arr          DW 4 DUP(?)
 
+disc_scatter            DB ?
 disc_serial             DB ?
 disc_vendor             DW ?
 disc_prod               DW ?
@@ -1849,11 +1850,19 @@ dtInsDo:
 ;
     mov fs,bx
 ;
+    int 3
     mov bx,fs:disc_controller
     mov al,fs:disc_port
     OpenUsbDevice
     mov fs:disc_dev_handle,bx
 ;
+    mov fs:disc_scatter,0
+    HasUsbScatter
+    jc dtScatterOk
+;
+    mov fs:disc_scatter,1
+
+dtScatterOk:
     push es
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
