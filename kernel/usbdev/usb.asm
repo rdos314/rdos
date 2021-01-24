@@ -2582,7 +2582,6 @@ add_usb_scatter_pipe16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunScatter        Proc near
-    int 3
     push ds
     mov gs,bx
     ClearSignal

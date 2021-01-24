@@ -1665,7 +1665,7 @@ SetupControl   Proc near
     pop edx
     pop eax
     ret
-SetupControl	Endp
+SetupControl    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1777,7 +1777,7 @@ sciStatusOut:
 sciDone:
     popad
     ret
-SetupControlIn	Endp
+SetupControlIn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1855,7 +1855,7 @@ cciDone:
     pop ebx
     pop eax
     ret
-CopyControlIn	Endp
+CopyControlIn   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1983,7 +1983,7 @@ scoStatusIn:
 scoDone:
     popad
     ret
-SetupControlOut	Endp
+SetupControlOut Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2349,7 +2349,7 @@ atdrLoop:
     pop eax
     pop gs
     ret
-AllocatePacketSel	Endp
+AllocatePacketSel       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3171,7 +3171,97 @@ AddScatter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartScatter   Proc far
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov bx,ds
+;
+    mov edx,gs:ep_qh
+    mov al,es:usbd_address
+    mov fs:[edx].qh_adress,al
+    mov al,gs:ued_address
+    and al,0Fh
+    mov ah,fs:[edx].qh_endpoint
+    and ah,0B0h
+    or al,ah
+    mov fs:[edx].qh_endpoint,al
+;
+    mov al,gs:ued_attrib
+    and al,3
+    cmp al,3
+    je scIntr
+
+scBulk:
+    mov ax,gs:ued_maxsize
+    or ax,0F000h
+    mov fs:[edx].qh_max_packet,ax
+    jmp scQhOk
+
+scIntr:
+    mov ax,gs:ued_maxsize
+    mov fs:[edx].qh_max_packet,ax
+
+scQhOk:
+    mov ds,gs:usbp_scatter_sel
+    mov si,OFFSET usbsc_arr
+    mov cx,ds:usbsc_count
+    xor edi,edi
+
+scLoop:
+    push ds
+    mov ds,bx
+    call AllocateQtd
+    mov fs:[edx].qtd_status,80h
+    pop ds
+;
+    mov ds:[si].usbe_td,edx
+    or edi,edi
+    jz scNext
+;
+    LinearToPhysicalMemBlk
+    mov fs:[edi].qtd_next,eax
+
+scNext:
+    mov edi,edx
+    mov fs:[edi].qtd_next,1
+    mov fs:[edi].qtd_alt,1
+    mov fs:[edi].qtd_status,80h
+    mov al,gs:ued_address
+    rol al,1
+    and al,1
+    or al,0Ch
+    mov fs:[edi].qtd_flags,al
+;
+    mov eax,ds:[si].usbe_phys
+    mov fs:[edi].qtd_page0,eax
+;
+    mov eax,ds:[si].usbe_phys+4
+    or eax,eax
+    jz scSize
+;
+    mov fs:[edi].qtdu64_page0,eax
+
+scSize:
+    mov eax,ds:[si].usbe_size
+    mov fs:[edi].qtd_size,ax
+    add si,16
+    sub cx,1
+    jnz scLoop
+;
+    or fs:[edi].qtd_flags,80h
+;
+    mov edx,ds:usbsc_arr.usbe_td
+    LinearToPhysicalMemBlk
+    mov edx,gs:ep_qh
+    mov fs:[edx].qh_next_qtd,eax
+;
     int 3
+    popad
+    pop fs
+    pop ds
     retf32
 StartScatter   Endp
 
@@ -4301,6 +4391,73 @@ HandleRaw  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandleScatter
+;
+;       DESCRIPTION:    Handle scatter pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Device sel
+;                       FS      Flat sel
+;                       GS      Pipe sel
+;                       BX      Scatter sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleScatter   Proc near
+    int 3
+    push ds
+    push ecx
+    push edx
+    push esi
+    push ebp
+;
+    mov bp,ds
+    mov ds,bx
+    mov bx,ds:usbsc_thread
+    or bx,bx
+    jz hscDone
+;
+    mov si,OFFSET usbsc_arr
+    mov cx,ds:usbsc_count
+
+hscLoop:
+    mov edx,ds:[si].usbe_td
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jnz hscDone
+;
+    and al,7Ch
+    jz hscNext
+;
+    push ds
+    push edx
+;
+    mov ds,bp
+    mov dl,gs:ued_address
+    call ReportStatus
+;
+    pop edx
+    pop ds
+
+hscNext:
+    add si,16
+    loop hscLoop
+
+hscSignal:
+    Signal
+
+hscDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+HandleScatter  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -4315,6 +4472,14 @@ HandleRaw  Endp
 CheckIn   Proc near
     push bx
 ;
+    mov bx,gs:usbp_scatter_sel
+    or bx,bx
+    jz citNotScatter
+;
+    call HandleScatter
+    jmp citDone
+
+citNotScatter:
     mov bx,gs:usbp_packet_sel
     or bx,bx
     jz citNotPacket
@@ -4351,6 +4516,14 @@ CheckIn   Endp
 CheckOut   Proc near
     push bx
 ;
+    mov bx,gs:usbp_scatter_sel
+    or bx,bx
+    jz cotNotScatter
+;
+    call HandleScatter
+    jmp cotDone
+
+cotNotScatter:
     mov bx,gs:usbp_raw_sel
     or bx,bx
     jz cotDone
