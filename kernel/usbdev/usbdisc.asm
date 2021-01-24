@@ -612,7 +612,18 @@ WriteData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetDevice Proc near
+    pushad
+;
     int 3
+    mov bx,fs:disc_dev_handle
+    mov al,0FFh
+    mov ah,21h
+    xor dx,dx
+    xor si,si
+    xor cx,cx
+    SendUsbDeviceControlMsg
+;
+    popad
     ret
 ResetDevice	Endp
 
