@@ -2606,6 +2606,17 @@ RunScatter        Proc near
     mov ds,es:usbd_func_sel
     call fword ptr ds:finish_scatter_proc
     pop ds
+;
+    push es
+    pushf
+;
+    xor ax,ax
+    xchg ax,gs:usbp_scatter_sel
+    mov es,ax
+    FreeMem
+;
+    popf
+    pop es
     ret
 RunScatter     Endp
 
