@@ -1407,6 +1407,39 @@ start_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ReadScatter
+;
+;       DESCRIPTION:    Read using scatter interface
+;
+;       PARAMETERS:     FS      Disc selector
+;                       ESI     Disc handle array
+;                       EBP     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadScatter      Proc near
+    push ebp
+    push esi
+    int 3
+;
+    push es
+    mov eax,10h
+    AllocateSmallGlobalMem
+    mov edi,8
+    mov ecx,9
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    AddUsbScatterPipe    
+    pop es
+;
+    pop esi
+    pop ebp
+    ret
+ReadScatter      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadRaw
 ;
 ;       DESCRIPTION:    Read using raw interface
@@ -1568,7 +1601,17 @@ rdRetry:
     pop es
     jc rdFail
 ;    
+    mov al,fs:disc_scatter
+    or al,al
+    jz rdRaw
+;
+    call ReadScatter
+    jmp rdCsw
+
+rdRaw:
     call ReadRaw
+
+rdCsw:
     jc rdFail
 ;    
     call ReceiveCsw
@@ -1850,7 +1893,6 @@ dtInsDo:
 ;
     mov fs,bx
 ;
-    int 3
     mov bx,fs:disc_controller
     mov al,fs:disc_port
     OpenUsbDevice

@@ -2433,10 +2433,13 @@ add_usb_scatter_pipe32 Proc far
 add_usb_scatter_pipe32 Endp
 
 add_usb_scatter_pipe16 Proc far
+    push ecx
     push edi
+    movzx ecx,cx
     movzx edi,di
     call AddScatter
     pop edi
+    pop ecx
     retf32
 add_usb_scatter_pipe16 Endp
 
