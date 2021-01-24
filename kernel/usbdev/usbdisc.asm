@@ -1420,7 +1420,6 @@ start_thread:
 ReadScatter      Proc near
     push ebp
     push esi
-    int 3
 
 rscLoop:
     mov edi,es:[esi]

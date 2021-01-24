@@ -2298,47 +2298,83 @@ has_usb_scatter Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ConvertScatter
+;       NAME:           ProcessScatter
 ;
-;       description:    Convert scatter to linear address
+;       description:    Process scatter
 ;
 ;       parameters:     BP:EDI  Buffer
 ;                       ECX     Size
 ;
-;       returns:        EDX     Linear address
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConvertScatter        Proc near
-    push eax
-    push ebx
-    push ecx
+ProcessScatter        Proc near
+    push ds
+    pushad
 ;
     cmp bp,flat_sel
-    je csFlat
+    jne psSel
 ;
+    mov edx,edi
+    jmp psDo
+
+psSel:
     mov bx,bp
     mov eax,ecx
     GetSelectorBaseSize
-    jc csDone
+    jc psDone
 ;
     add edx,edi
     sub ecx,edi
-    jc csDone
+    jc psDone
 ;    
     cmp ecx,eax
-    jmp csDone
+    jc psDone
+;
+    mov ecx,eax
 
-csFlat:
-    mov edx,edi
-    clc
+psDo:
+    mov ax,flat_sel
+    mov ds,ax
+    mov al,ds:[edx]
+    GetPageEntry
+;
+    mov si,dx
+    and si,0FFFh
+    and ax,0F000h
+    or ax,si
+;
+    xor si,si
+    sub si,ax
+    and esi,0FFFh
+    jnz psComp
+;
+    mov si,1000h
 
-csDone:
+psComp:
+    cmp esi,ecx
+    jb psAdd
+;
+    mov esi,ecx
+
+psAdd:
+    push ecx
+    mov ecx,esi
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:add_scatter_proc
     pop ecx
-    pop ebx
-    pop eax
+;
+    sub ecx,esi
+    clc
+    jz psDone
+;
+    add edx,esi
+    jmp psDo
+
+psDone:
+    popad
+    pop ds
     ret
-ConvertScatter     Endp
+ProcessScatter     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2390,14 +2426,9 @@ ausIn:
     stc
     jz ausLeave
 ;
-    call ConvertScatter
-    jc ausLeave
-;
+    int 3
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:add_scatter_proc
-    pop ds
+    call ProcessScatter
     jmp ausLeave
 
 ausOut:
@@ -2410,14 +2441,8 @@ ausOut:
     stc
     jz ausLeave
 ;
-    call ConvertScatter
-    jc ausLeave
-;
     mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:add_scatter_proc
-    pop ds
+    call ProcessScatter
 
 ausLeave:
     LeaveSection ds:udd_section
