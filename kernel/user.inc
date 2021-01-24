@@ -3640,8 +3640,36 @@ OpenUsbPacketPipe      MACRO
 
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
+;   IN  ES(E)DI     Packet buffer
+;   OUT CX          Packet size
+GetUsbPacketPipe      MACRO
+        UserGate get_usb_packet_pipe_nr
+                                                ENDM
+
+;   IN  BX          Device handle
+;   IN  DL          Pipe #
 CloseUsbPipe      MACRO
         UserGate close_usb_pipe_nr
+                                                ENDM
+
+; IN  BX      Device handle
+HasUsbScatter      MACRO
+        UserGate has_usb_scatter_nr
+                                                ENDM
+
+; IN  BX      Device handle
+; IN  DL      Pipe #
+; IN  ECX     Buffer size
+; IN  ES:EDI  Buffer data
+AddUsbScatterPipe      MACRO
+        UserGate add_usb_scatter_pipe_nr
+                                                ENDM
+
+; IN  AX      Timeout in ms
+; IN  BX      Device handle
+; IN  DL      Pipe #
+PostUsbScatterPipe      MACRO
+        UserGate post_usb_scatter_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle
@@ -3663,14 +3691,6 @@ GetFreeUsbBuffers      MACRO
 ;   OUT CX          Buffer size
 GetUsbBufferSize      MACRO
         UserGate get_usb_buffer_size_nr
-                                                ENDM
-
-;   IN  BX          Device handle
-;   IN  DL          Pipe #
-;   IN  ES(E)DI     Buffer
-;   OUT CX          Read size
-ReadUsbPipe      MACRO
-        UserGate read_usb_pipe_nr
                                                 ENDM
 
 ;   IN  BX          Device handle

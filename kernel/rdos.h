@@ -927,12 +927,14 @@ int RDOSAPI RdosSendUsbDeviceControlMsg(int handle, char Type, char Req, int Val
 int RDOSAPI RdosIsUsbDeviceConnected(int handle);
 void RDOSAPI RdosResetUsbDevice(int handle);
 int RDOSAPI RdosOpenUsbPacketPipe(int handle, char pipe, int PacketCount);
+int RDOSAPI RdosGetUsbPacketPipe(int handle, char pipe, char *Buf);
 void RDOSAPI RdosCloseUsbPipe(int handle, char pipe);
+int RDOSAPI RdosHasUsbScatter(int handle);
+int RDOSAPI RdosAddUsbScatterPipe(int handle, char pipe, char *buf, int size);
+int RDOSAPI RdosPostUsbScatterPipe(int handle, char pipe, int timeout);
 int RDOSAPI RdosGetUsedUsbBuffers(int handle, char pipe);
 int RDOSAPI RdosGetFreeUsbBuffers(int handle, char pipe);
 int RDOSAPI RdosGetUsbBufferSize(int handle, char pipe);
-int RDOSAPI RdosReadUsbPipe(int handle, char pipe, char *Buf);
-void RDOSAPI RdosWriteUsbPipe(int handle, char pipe, char *Buf, int Size);
 void RDOSAPI RdosAddWaitForUsbPipe(int whandle, int devhandle, char pipe, int ID);
 int RDOSAPI RdosOpenUsbEvent(int QueueSize);
 void RDOSAPI RdosCloseUsbEvent(int handle);

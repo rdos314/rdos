@@ -3624,9 +3624,39 @@
     __value [eax] \
     __parm [__ebx] [__dl] [__ecx]
 
+#pragma aux RdosGetUsbPacketPipe = \
+    CallGate_get_usb_packet_pipe \
+    "jc fail" \
+    "movzx eax,cx" \
+    "jmp done" \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__ebx] [__dl] [__edi] \
+    __value [eax] \
+    __modify [__ecx]
+
 #pragma aux RdosCloseUsbPipe = \
     CallGate_close_usb_pipe \
     __parm [__ebx] [__dl]
+
+#pragma aux RdosHasUsbScatter = \
+    CallGate_has_usb_scatter \
+    CarryToBool \
+    __value [eax] \
+    __parm [__ebx]
+
+#pragma aux RdosAddUsbScatterPipe = \
+    CallGate_add_usb_scatter_pipe \
+    CarryToBool \
+    __value [eax] \
+    __parm [__ebx] [__dl] [__ecx] [__edi]
+
+#pragma aux RdosPostUsbScatterPipe = \
+    CallGate_post_usb_scatter_pipe \
+    CarryToBool \
+    __value [eax] \
+    __parm [__ebx] [__dl] [__eax]
 
 #pragma aux RdosGetUsedUsbBuffers = \
     CallGate_get_used_usb_buffers \
@@ -3663,22 +3693,6 @@
     __parm [__ebx] [__dl] \
     __value [eax] \
     __modify [__ecx]
-
-#pragma aux RdosReadUsbPipe = \
-    CallGate_read_usb_pipe \
-    "jc fail" \
-    "movzx eax,cx" \
-    "jmp done" \
-    "fail: " \
-    "xor eax,eax" \
-    "done: " \
-    __parm [__ebx] [__dl] [__edi] \
-    __value [eax] \
-    __modify [__ecx]
-
-#pragma aux RdosWriteUsbPipe = \
-    CallGate_write_usb_pipe \
-    __parm [__ebx] [__dl] [__edi] [__ecx]
 
 #pragma aux RdosAddWaitForUsbPipe = \
     CallGate_add_wait_for_usb_dev_pipe  \

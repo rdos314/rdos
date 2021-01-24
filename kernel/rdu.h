@@ -924,8 +924,7 @@
 #define usergate_get_used_usb_buffers 0x000002F1
 #define usergate_get_free_usb_buffers 0x000002F2
 #define usergate_get_usb_buffer_size 0x000002F3
-#define usergate_read_usb_pipe 0x000002F4
-#define usergate_write_usb_pipe 0x000002F5
+#define usergate_get_usb_packet_pipe 0x000002F4
 
 #define usergate_open_usb_event 0x000002F6
 #define usergate_close_usb_event 0x000002F7
@@ -937,6 +936,10 @@
 
 #define usergate_open_usb_packet_pipe 0x000002FC
 #define usergate_close_usb_pipe 0x000002FE
+
+#define usergate_has_usb_scatter 0x000002FF
+#define usergate_add_usb_scatter_pipe 0x00000300
+#define usergate_post_usb_scatter_pipe 0x00000301
 
 
 
@@ -1867,8 +1870,7 @@
 #define CallGate_get_used_usb_buffers 0x55 0x67 0x9a 241 2 0 0 3 0 0x5d
 #define CallGate_get_free_usb_buffers 0x55 0x67 0x9a 242 2 0 0 3 0 0x5d
 #define CallGate_get_usb_buffer_size 0x55 0x67 0x9a 243 2 0 0 3 0 0x5d
-#define CallGate_read_usb_pipe 0x55 0x67 0x9a 244 2 0 0 3 0 0x5d
-#define CallGate_write_usb_pipe 0x55 0x67 0x9a 245 2 0 0 3 0 0x5d
+#define CallGate_get_usb_packet_pipe 0x55 0x67 0x9a 244 2 0 0 3 0 0x5d
 
 #define CallGate_open_usb_event 0x55 0x67 0x9a 246 2 0 0 3 0 0x5d
 #define CallGate_close_usb_event 0x55 0x67 0x9a 247 2 0 0 3 0 0x5d
@@ -1880,6 +1882,10 @@
 
 #define CallGate_open_usb_packet_pipe 0x55 0x67 0x9a 252 2 0 0 3 0 0x5d
 #define CallGate_close_usb_pipe 0x55 0x67 0x9a 254 2 0 0 3 0 0x5d
+
+#define CallGate_has_usb_scatter 0x55 0x67 0x9a 255 2 0 0 3 0 0x5d
+#define CallGate_add_usb_scatter_pipe 0x55 0x67 0x9a 0 3 0 0 3 0 0x5d
+#define CallGate_post_usb_scatter_pipe 0x55 0x67 0x9a 1 3 0 0 3 0 0x5d
 
 #else
 
@@ -2808,8 +2814,7 @@
 #define CallGate_get_used_usb_buffers 0x3e 0x67 0x9a 241 2 0 0 3 0
 #define CallGate_get_free_usb_buffers 0x3e 0x67 0x9a 242 2 0 0 3 0
 #define CallGate_get_usb_buffer_size 0x3e 0x67 0x9a 243 2 0 0 3 0
-#define CallGate_read_usb_pipe 0x3e 0x67 0x9a 244 2 0 0 3 0
-#define CallGate_write_usb_pipe 0x3e 0x67 0x9a 245 2 0 0 3 0
+#define CallGate_get_usb_packet_pipe 0x3e 0x67 0x9a 244 2 0 0 3 0
 
 #define CallGate_open_usb_event 0x3e 0x67 0x9a 246 2 0 0 3 0
 #define CallGate_close_usb_event 0x3e 0x67 0x9a 247 2 0 0 3 0
@@ -2821,5 +2826,9 @@
 
 #define CallGate_open_usb_packet_pipe 0x3e 0x67 0x9a 252 2 0 0 3 0
 #define CallGate_close_usb_pipe 0x3e 0x67 0x9a 254 2 0 0 3 0
+
+#define CallGate_has_usb_scatter 0x3e 0x67 0x9a 255 2 0 0 3 0
+#define CallGate_add_usb_scatter_pipe 0x3e 0x67 0x9a 0 3 0 0 3 0
+#define CallGate_post_usb_scatter_pipe 0x3e 0x67 0x9a 1 3 0 0 3 0
 
 #endif

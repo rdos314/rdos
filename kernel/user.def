@@ -924,8 +924,7 @@ add_wait_for_usb_dev_pipe_nr      = 752
 get_used_usb_buffers_nr           = 753
 get_free_usb_buffers_nr           = 754
 get_usb_buffer_size_nr            = 755
-read_usb_pipe_nr                  = 756
-write_usb_pipe_nr                 = 757
+get_usb_packet_pipe_nr           = 756
 
 open_usb_event_nr                 = 758
 close_usb_event_nr                = 759
@@ -937,5 +936,9 @@ is_usb_dev_connected_nr           = 763
 
 open_usb_packet_pipe_nr           = 764
 close_usb_pipe_nr                 = 766
+
+has_usb_scatter_nr                = 767
+add_usb_scatter_pipe_nr           = 768
+post_usb_scatter_pipe_nr          = 769
 
 usergate_entries                  = 780
