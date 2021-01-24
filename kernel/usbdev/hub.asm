@@ -855,28 +855,6 @@ HasScatter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddScatter
-;
-;       DESCRIPTION:    Add scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;                       EBX:EAX Physical buffer
-;                       ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddScatter   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:add_scatter_proc
-    pop ds
-    ret
-AddScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           StartScatter
 ;
 ;       DESCRIPTION:    Start scatter
@@ -915,26 +893,6 @@ FinishScatter   Proc far
     pop ds
     ret
 FinishScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseScatter
-;
-;       DESCRIPTION:    Close scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseScatter   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:close_scatter_proc
-    pop ds
-    ret
-CloseScatter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1052,10 +1010,8 @@ ht1B DD OFFSET ReadRaw,             SEG code
 ht1C DD OFFSET WriteRaw,            SEG code
 ht1D DD OFFSET FinishRaw,           SEG code
 ht1E DD OFFSET HasScatter,          SEG code
-ht1F DD OFFSET AddScatter,          SEG code
-ht20 DD OFFSET StartScatter,        SEG code
-ht21 DD OFFSET FinishScatter,       SEG code
-ht22 DD OFFSET CloseScatter,        SEG code
+ht1F DD OFFSET StartScatter,        SEG code
+ht20 DD OFFSET FinishScatter,       SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1119,7 +1075,7 @@ SetPortFeature  Proc near
     mov dx,ax
     xor cx,cx
     mov al,SET_FEATURE
-    mov ah,23h
+    mov ah,21h
     SendUsbDeviceControlMsg
     LeaveSection ds:hub_section
 ;

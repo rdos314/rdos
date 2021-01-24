@@ -154,22 +154,12 @@ has_scatter_proc            DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
-; IN  EBX:EAX   Physical buffer
-; IN  ECX       Size
-add_scatter_proc            DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
 start_scatter_proc            DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; OUT ECX       Size
 finish_scatter_proc            DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
-close_scatter_proc            DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>

@@ -3142,25 +3142,6 @@ HasScatter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddScatter
-;
-;       DESCRIPTION:    Add scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;                       EBX:EAX Physical buffer
-;                       ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddScatter   Proc far
-    int 3
-    retf32
-AddScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           StartScatter
 ;
 ;       DESCRIPTION:    Start scatter
@@ -3258,7 +3239,6 @@ scSize:
     mov edx,gs:ep_qh
     mov fs:[edx].qh_next_qtd,eax
 ;
-    int 3
     popad
     pop fs
     pop ds
@@ -3283,23 +3263,6 @@ FinishScatter   Proc far
     int 3
     retf32
 FinishScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseScatter
-;
-;       DESCRIPTION:    Close scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseScatter   Proc far
-    int 3
-    retf32
-CloseScatter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4404,7 +4367,6 @@ HandleRaw  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleScatter   Proc near
-    int 3
     push ds
     push ecx
     push edx
@@ -4741,10 +4703,8 @@ ec1B DD OFFSET ReadRaw,            SEG code
 ec1C DD OFFSET WriteRaw,           SEG code
 ec1D DD OFFSET FinishRaw,          SEG code
 ec1E DD OFFSET HasScatter,         SEG code
-ec1F DD OFFSET AddScatter,         SEG code
-ec20 DD OFFSET StartScatter,       SEG code
-ec21 DD OFFSET FinishScatter,      SEG code
-ec22 DD OFFSET CloseScatter,       SEG code
+ec1F DD OFFSET StartScatter,       SEG code
+ec20 DD OFFSET FinishScatter,      SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4766,7 +4726,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*23h
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]
