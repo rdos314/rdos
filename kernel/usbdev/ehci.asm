@@ -3260,7 +3260,79 @@ StartScatter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FinishScatter   Proc far
-    int 3
+    push ds
+    push fs
+    push eax
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov bx,ds
+    mov ds,gs:usbp_scatter_sel
+;
+    mov si,ds:usbsc_count
+    dec si
+    shl si,4
+    mov edx,ds:[si].usbsc_arr.usbe_td
+    mov al,fs:[edx].qtd_status
+    test al,80h
+    jz fscOk
+;
+    call StopTds
+    xor ecx,ecx
+    stc
+    jmp fscClean
+
+fscOk:
+    xor ebp,ebp
+    mov si,OFFSET usbsc_arr
+    mov cx,ds:usbsc_count
+
+fscSizeLoop:
+    mov edx,ds:[si].usbe_td
+    mov edi,ds:[si].usbe_size
+    mov ax,fs:[edx].qtd_size
+    and eax,7FFFh
+    sub edi,eax
+    add ebp,edi
+;
+    add si,16
+    loop fscSizeLoop
+;
+    mov ecx,ebp
+    clc
+
+fscClean:
+    push ecx
+    pushf
+;
+    mov si,OFFSET usbsc_arr
+    mov cx,ds:usbsc_count
+
+fscClearLoop:
+    mov edx,ds:[si].usbe_td
+    push ds
+    mov ds,bx
+    call FreeQtd
+    pop ds
+;
+    add si,16
+    loop fscClearLoop
+;
+    popf
+    pop ecx
+
+fscDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+    pop fs
+    pop ds
     retf32
 FinishScatter   Endp
 
