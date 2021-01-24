@@ -3119,7 +3119,23 @@ FinishRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HasScatter   Proc far
+    push eax
+    push ebx
+;
+    GetHighestPhysical
+    or ebx,ebx
     clc
+    jz hsDone
+;
+    test ds:ehc_hcc_flags,HCC_64
+    stc
+    jz hsDone
+;
+    clc
+
+hsDone:
+    pop ebx
+    pop eax
     retf32
 HasScatter   Endp
 
