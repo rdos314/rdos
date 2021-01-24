@@ -3148,7 +3148,7 @@ HasScatter   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
-;                       EDX     Linear buffer
+;                       EBX:EAX Physical buffer
 ;                       ECX     Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

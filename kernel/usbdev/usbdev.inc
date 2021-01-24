@@ -153,7 +153,7 @@ has_scatter_proc            DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
-; IN  EDX       Buffer linear
+; IN  EBX:EAX   Physical buffer
 ; IN  ECX       Size
 add_scatter_proc            DD ?,?
 

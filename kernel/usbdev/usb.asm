@@ -2426,7 +2426,6 @@ ausIn:
     stc
     jz ausLeave
 ;
-    int 3
     mov gs,bx
     call ProcessScatter
     jmp ausLeave
