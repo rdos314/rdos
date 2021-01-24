@@ -159,8 +159,16 @@ add_scatter_proc            DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
+start_scatter_proc            DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
 ; OUT ECX       Size
-post_scatter_proc            DD ?,?
+finish_scatter_proc            DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+close_scatter_proc            DD ?,?
 
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
@@ -216,6 +224,7 @@ usbp_flags        DB ?
 usbp_wait         DW ?
 usbp_packet_sel   DW ?
 usbp_raw_sel      DW ?
+usbp_scatter_sel  DW ?
 
 usb_pipe_struc   ENDS
 
@@ -238,3 +247,9 @@ usbr_thread       DW ?
 usbr_timeout      DD ?
 
 usb_raw_struc  ENDS
+
+usb_scatter_struc  STRUC
+
+usbsc_thread      DW ?
+
+usb_scatter_struc  ENDS

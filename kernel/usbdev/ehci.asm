@@ -3161,9 +3161,26 @@ AddScatter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PostScatter
+;       NAME:           StartScatter
 ;
-;       DESCRIPTION:    Post scatter
+;       DESCRIPTION:    Start scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartScatter   Proc far
+    int 3
+    retf32
+StartScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FinishScatter
+;
+;       DESCRIPTION:    Finish scatter
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
@@ -3172,10 +3189,27 @@ AddScatter   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PostScatter   Proc far
+FinishScatter   Proc far
     int 3
     retf32
-PostScatter   Endp
+FinishScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseScatter
+;
+;       DESCRIPTION:    Close scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseScatter   Proc far
+    int 3
+    retf32
+CloseScatter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4535,7 +4569,9 @@ ec1C DD OFFSET WriteRaw,           SEG code
 ec1D DD OFFSET FinishRaw,          SEG code
 ec1E DD OFFSET HasScatter,         SEG code
 ec1F DD OFFSET AddScatter,         SEG code
-ec20 DD OFFSET PostScatter,        SEG code
+ec20 DD OFFSET StartScatter,       SEG code
+ec21 DD OFFSET FinishScatter,      SEG code
+ec22 DD OFFSET CloseScatter,       SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4557,7 +4593,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*23h
 
 ifTabLoop:
     lods dword ptr cs:[si]

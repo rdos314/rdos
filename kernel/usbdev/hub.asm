@@ -877,9 +877,29 @@ AddScatter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           PostScatter
+;       NAME:           StartScatter
 ;
-;       DESCRIPTION:    Post scatter
+;       DESCRIPTION:    Start scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartScatter   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:start_scatter_proc
+    pop ds
+    ret
+StartScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FinishScatter
+;
+;       DESCRIPTION:    Finish scatter
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
@@ -888,13 +908,33 @@ AddScatter   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PostScatter   Proc far
+FinishScatter   Proc far
     push ds
     mov ds,ds:hub_parent_sel
-    call fword ptr ds:post_scatter_proc
+    call fword ptr ds:finish_scatter_proc
     pop ds
     ret
-PostScatter   Endp
+FinishScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CloseScatter
+;
+;       DESCRIPTION:    Close scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseScatter   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:close_scatter_proc
+    pop ds
+    ret
+CloseScatter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1013,7 +1053,9 @@ ht1C DD OFFSET WriteRaw,            SEG code
 ht1D DD OFFSET FinishRaw,           SEG code
 ht1E DD OFFSET HasScatter,          SEG code
 ht1F DD OFFSET AddScatter,          SEG code
-ht20 DD OFFSET PostScatter,         SEG code
+ht20 DD OFFSET StartScatter,        SEG code
+ht21 DD OFFSET FinishScatter,       SEG code
+ht22 DD OFFSET CloseScatter,        SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2310,7 +2352,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*21h
+    mov ecx,2*23h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

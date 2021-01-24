@@ -1371,6 +1371,7 @@ cpSave:
     mov es:usbp_flags,0
     mov es:usbp_packet_sel,0
     mov es:usbp_raw_sel,0
+    mov es:usbp_scatter_sel,0
 ;
     mov si,di
     mov di,OFFSET usbp_descr
@@ -1447,11 +1448,21 @@ ClearPipe       Proc near
 clpPacketOk:    
     mov bx,gs:usbp_raw_sel
     or bx,bx
-    jz clpDone
+    jz clpRawDone
 ;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:close_raw_proc
+    pop ds
+    
+clpRawDone:
+    mov bx,gs:usbp_scatter_sel
+    or bx,bx
+    jz clpDone
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:close_scatter_proc
     pop ds
 
 clpDone:    
@@ -1782,7 +1793,6 @@ purpOut:
 ;
     mov ds,es:usbd_func_sel
     call fword ptr ds:write_raw_proc
-;
 ;
     mov ds,gs:usbp_raw_sel
     push eax
@@ -2474,12 +2484,53 @@ add_usb_scatter_pipe16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           RunScatter
+;
+;       description:    Run scatter
+;
+;       PARAMETERS:     BX    Pipe sel
+;                       EDI   Timeout in tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunScatter        Proc near
+    push ds
+    mov gs,bx
+    ClearSignal
+    mov ds,gs:usbp_scatter_sel
+    GetThread
+    mov ds:usbsc_thread,ax
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:start_scatter_proc
+;
+    mov ds,gs:usbp_scatter_sel
+    push eax
+    push edx
+    GetSystemTime
+    add eax,edi
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
+    mov ds:usbsc_thread,0
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:finish_scatter_proc
+    pop ds
+    ret
+RunScatter     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           PostUsbScatterPipe
 ;
 ;       description:    Post USB scatter pipe
 ;
 ;       parameters:     BX        Handle
 ;                       DL        Pipe #
+;                       AX        Timeout
 ;
 ;       RETURNS:        CX        Size
 ;
@@ -2497,6 +2548,14 @@ post_usb_scatter_pipe        Proc far
     push edx
     push esi
     push edi
+;
+    push dx
+    mov dx,1193
+    mul dx
+    push dx
+    push ax
+    pop edi
+    pop dx
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
@@ -2524,11 +2583,7 @@ pusIn:
     stc
     jz pusLeave
 ;
-    mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:post_scatter_proc
-    pop ds
+    call RunScatter
     jmp pusLeave
 
 pusOut:
@@ -2541,11 +2596,7 @@ pusOut:
     stc
     jz pusLeave
 ;
-    mov gs,bx
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:post_scatter_proc
-    pop ds
+    call RunScatter
 
 pusLeave:
     LeaveSection ds:udd_section
