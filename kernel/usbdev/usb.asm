@@ -2286,7 +2286,7 @@ has_usb_scatter        Proc far
     mov ds,ds:[ebx].udh_dev_sel
     mov ds,ds:udd_sel    
     mov ds,ds:usbd_func_sel
-    int 3
+    call fword ptr ds:has_scatter_proc
 
 husDone:
     pop ebx
@@ -2294,6 +2294,51 @@ husDone:
     pop ds    
     retf32
 has_usb_scatter Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ConvertScatter
+;
+;       description:    Convert scatter to linear address
+;
+;       parameters:     BP:EDI  Buffer
+;                       ECX     Size
+;
+;       returns:        EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvertScatter        Proc near
+    push eax
+    push ebx
+    push ecx
+;
+    cmp bp,flat_sel
+    je csFlat
+;
+    mov bx,bp
+    mov eax,ecx
+    GetSelectorBaseSize
+    jc csDone
+;
+    add edx,edi
+    sub ecx,edi
+    jc csDone
+;    
+    cmp ecx,eax
+    jmp csDone
+
+csFlat:
+    mov edx,edi
+    clc
+
+csDone:
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+ConvertScatter     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2345,8 +2390,12 @@ ausIn:
     stc
     jz ausLeave
 ;
+    call ConvertScatter
+    jc ausLeave
+;
     mov gs,bx
-    int 3
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:add_scatter_proc
     jmp ausLeave
 
 ausOut:
@@ -2359,8 +2408,12 @@ ausOut:
     stc
     jz ausLeave
 ;
+    call ConvertScatter
+    jc ausLeave
+;
     mov gs,bx
-    int 3
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:add_scatter_proc
 
 ausLeave:
     LeaveSection ds:udd_section
@@ -2441,7 +2494,8 @@ pusIn:
     jz pusLeave
 ;
     mov gs,bx
-    int 3
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:post_scatter_proc
     jmp pusLeave
 
 pusOut:
@@ -2455,7 +2509,8 @@ pusOut:
     jz pusLeave
 ;
     mov gs,bx
-    int 3
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:post_scatter_proc
 
 pusLeave:
     LeaveSection ds:udd_section
