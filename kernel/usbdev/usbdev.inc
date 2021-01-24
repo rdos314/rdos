@@ -149,6 +149,19 @@ write_raw_proc              DD ?,?
 ; OUT CX        Actual size
 finish_raw_proc              DD ?,?
 
+has_scatter_proc            DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+; IN  EDX       Buffer linear
+; IN  ECX       Size
+add_scatter_proc            DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+; OUT ECX       Size
+post_scatter_proc            DD ?,?
+
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
 

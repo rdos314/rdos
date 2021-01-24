@@ -3112,6 +3112,58 @@ FinishRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HasScatter
+;
+;       DESCRIPTION:    Has scatter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HasScatter   Proc far
+    clc
+    retf32
+HasScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddScatter
+;
+;       DESCRIPTION:    Add scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddScatter   Proc far
+    int 3
+    retf32
+AddScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PostScatter
+;
+;       DESCRIPTION:    Post scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PostScatter   Proc far
+    int 3
+    retf32
+PostScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           IsRunning
 ;
 ;       DESCRIPTION:    Check if conntroller is running
@@ -4465,6 +4517,9 @@ ec1A DD OFFSET CloseRaw,           SEG code
 ec1B DD OFFSET ReadRaw,            SEG code
 ec1C DD OFFSET WriteRaw,           SEG code
 ec1D DD OFFSET FinishRaw,          SEG code
+ec1E DD OFFSET HasScatter,         SEG code
+ec1F DD OFFSET AddScatter,         SEG code
+ec20 DD OFFSET PostScatter,        SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4486,7 +4541,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Eh
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]

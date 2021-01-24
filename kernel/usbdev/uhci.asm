@@ -3283,6 +3283,58 @@ frDone:
     pop ds
     retf32
 FinishRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasScatter
+;
+;       DESCRIPTION:    Has scatter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HasScatter   Proc far
+    stc
+    retf32
+HasScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddScatter
+;
+;       DESCRIPTION:    Add scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddScatter   Proc far
+    stc
+    retf32
+AddScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PostScatter
+;
+;       DESCRIPTION:    Post scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PostScatter   Proc far
+    stc
+    retf32
+PostScatter   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3953,6 +4005,9 @@ ut1A DD OFFSET CloseRaw,            SEG code
 ut1B DD OFFSET ReadRaw,             SEG code
 ut1C DD OFFSET WriteRaw,            SEG code
 ut1D DD OFFSET FinishRaw,           SEG code
+ut1E DD OFFSET HasScatter,          SEG code
+ut1F DD OFFSET AddScatter,          SEG code
+ut20 DD OFFSET PostScatter,         SEG code
 
 InitFunction    Proc near
     push ds
@@ -4008,7 +4063,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Eh
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]

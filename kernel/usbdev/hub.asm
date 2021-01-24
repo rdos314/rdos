@@ -811,6 +811,7 @@ WriteRaw   Proc far
     pop ds
     ret
 WriteRaw   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -833,6 +834,67 @@ FinishRaw   Proc far
     pop ds
     ret
 FinishRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasScatter
+;
+;       DESCRIPTION:    Has scatter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HasScatter   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:has_scatter_proc
+    pop ds
+    ret
+HasScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddScatter
+;
+;       DESCRIPTION:    Add scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddScatter   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:add_scatter_proc
+    pop ds
+    ret
+AddScatter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PostScatter
+;
+;       DESCRIPTION:    Post scatter
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;       RETURNS:        ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PostScatter   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:post_scatter_proc
+    pop ds
+    ret
+PostScatter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -949,6 +1011,9 @@ ht1A DD OFFSET CloseRaw,            SEG code
 ht1B DD OFFSET ReadRaw,             SEG code
 ht1C DD OFFSET WriteRaw,            SEG code
 ht1D DD OFFSET FinishRaw,           SEG code
+ht1E DD OFFSET HasScatter,          SEG code
+ht1F DD OFFSET AddScatter,          SEG code
+ht20 DD OFFSET PostScatter,         SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2245,7 +2310,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*1Eh
+    mov ecx,2*21h
 
 uaTabLoop:
     lods dword ptr cs:[esi]
