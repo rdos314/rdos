@@ -93,7 +93,7 @@ disc_cbw_transfer_len   DD ?
 disc_cbw_flags          DB ?
 disc_cbw_lun            DB ?
 disc_cbw_cmd_len        DB ?
-disc_cbw_cmd_data       DB 10 DUP(?)
+disc_cbw_cmd_data       DB 16 DUP(?)
 
 cbw_struc  ENDS
 
@@ -700,15 +700,25 @@ RequestSense Proc near
     mov es,fs:disc_bulk_out_buf
     mov es:disc_cbw_transfer_len,18
     mov es:disc_cbw_flags,80h
-    mov es:disc_cbw_cmd_len,6
+    mov es:disc_cbw_cmd_len,12
     mov es:disc_cbw_cmd_data,3
     mov es:disc_cbw_cmd_data+1,0
     mov es:disc_cbw_cmd_data+2,0
     mov es:disc_cbw_cmd_data+3,0
     mov es:disc_cbw_cmd_data+4,18
     mov es:disc_cbw_cmd_data+5,0
+    mov es:disc_cbw_cmd_data+6,0
+    mov es:disc_cbw_cmd_data+7,0
+    mov es:disc_cbw_cmd_data+8,0
+    mov es:disc_cbw_cmd_data+9,0
+    mov es:disc_cbw_cmd_data+10,0
+    mov es:disc_cbw_cmd_data+11,0
+    mov es:disc_cbw_cmd_data+12,0
+    mov es:disc_cbw_cmd_data+13,0
+    mov es:disc_cbw_cmd_data+14,0
+    mov es:disc_cbw_cmd_data+15,0
 ;
-    mov eax,0E000EEEEh
+    mov eax,2
     call SendCbw
     jc reqsDone
 ;    
@@ -1601,7 +1611,7 @@ rdRetry:
     shr ebp,9
     mov ax,bp
     xchg al,ah    
-    mov word ptr fs:disc_cbw_cmd_data+7,ax
+    mov word ptr es:disc_cbw_cmd_data+7,ax
     mov es:disc_cbw_cmd_data+9,0
 ;
     mov eax,edx
@@ -1613,8 +1623,8 @@ rdRetry:
     or al,al
     jz rdRaw
 ;
-    call ReadScatter
-    jmp rdCsw
+;    call ReadScatter
+;    jmp rdCsw
 
 rdRaw:
     call ReadRaw
@@ -1917,7 +1927,7 @@ dtScatterOk:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
     mov cx,1000h
-    mov ax,25
+    mov ax,500
     OpenUsbRawPipe
     mov fs:disc_bulk_out_buf,es
     pop es
@@ -1926,7 +1936,7 @@ dtScatterOk:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     mov cx,1000h
-    mov ax,500
+    mov ax,1500
     OpenUsbRawPipe
     mov fs:disc_bulk_in_buf,es
     pop es
@@ -1936,10 +1946,10 @@ dtScatterOk:
 dtRetryLoop:
     push cx
 ;    
-    call Inquiry    
+    call RequestSense
     jc dtRetry
 ;    
-    call RequestSense
+    call Inquiry    
     jc dtRetry
 ;
     call ReadCapacity
