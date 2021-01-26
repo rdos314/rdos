@@ -1075,7 +1075,7 @@ SetPortFeature  Proc near
     mov dx,ax
     xor cx,cx
     mov al,SET_FEATURE
-    mov ah,21h
+    mov ah,23h
     SendUsbDeviceControlMsg
     LeaveSection ds:hub_section
 ;
@@ -2308,7 +2308,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*23h
+    mov ecx,2*21h
 
 uaTabLoop:
     lods dword ptr cs:[esi]
