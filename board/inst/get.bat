@@ -60,6 +60,7 @@ copy ..\..\kernel\usbdev\usbcom.rdv files
 copy ..\..\kernel\usbdev\usbcan.rdv files
 copy ..\..\kernel\usbdev\usbdisc.rdv files
 copy ..\..\kernel\printdev\kr203.rdv files
+copy ..\..\kernel\printdev\pmu.rdv files
 copy ..\..\kernel\touchdev\dmc6000.rdv files
 copy ..\..\kernel\touchdev\egalax.rdv files
 copy ..\..\kernel\audiodev\cs5536a.rdv files

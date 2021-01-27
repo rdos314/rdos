@@ -47,6 +47,10 @@ FLAG_WAS_LIFTED        = 8
 FLAG_INIT              = 10h
 FLAG_STATUS            = 20h
 
+CMD_PRESENT           = 1
+CMD_EJECT             = 2
+CMD_FORCE             = 4
+
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
 STATUS_NO_PAPER        = 4h
@@ -101,6 +105,8 @@ kr_status           DW ?
 kr_width            DW ?
 
 kr_flag             DB ?
+kr_cmd              DB ?
+kr_present_mm       DB ?
 
 kr_server_thread    DW ?
 kr_pr_thread        DW ?
@@ -704,6 +710,112 @@ SendCut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SendPresent
+;
+;       DESCRIPTION:    Send present command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendPresent   Proc near
+    push es
+    pushad
+;
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,FF
+    stosb
+;
+    mov al,ds:kr_present_mm
+    stosb
+    clc
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendPresent    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendEject
+;
+;       DESCRIPTION:    Send eject command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendEject   Proc near
+    push es
+    pushad
+;
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ENQ
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendEject    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendForce
+;
+;       DESCRIPTION:    Send force eject command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendForce   Proc near
+    push es
+    pushad
+;
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;    
+    mov al,ACK
+    stosb
+;    
+    mov al,0FEh
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendForce    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SendLine
 ;
 ;       DESCRIPTION:    Print a single line
@@ -861,6 +973,45 @@ sbDone:
     popad
     ret
 SendBitmap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCommand
+;
+;       DESCRIPTION:    Send print commands
+;
+;       PARAMETERS:     DS      Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCommand    Proc near
+    pushad
+;
+    test ds:kr_cmd,CMD_PRESENT
+    jz scNotPresent
+;
+    lock and ds:kr_cmd,NOT CMD_PRESENT
+    call SendPresent
+
+scNotPresent:
+    test ds:kr_cmd,CMD_EJECT
+    jz scNotEject
+;
+    lock and ds:kr_cmd,NOT CMD_EJECT
+    call SendEject
+
+scNotEject:
+    test ds:kr_cmd,CMD_FORCE
+    jz scNotForce
+;
+    lock and ds:kr_cmd,NOT CMD_FORCE
+    call SendForce
+
+scNotForce:
+    popad
+    ret
+SendCommand  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1492,30 +1643,22 @@ print_bitmap    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 present_media   Proc far
-    int 3
     push ds
-    push es
-    push ax
     push bx
-    push cx
-    push di
 ;
-    mov al,ESC
-    stosb
+    mov bx,SEG data
+    mov ds,bx
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz pmDone
 ;
-    mov al,FF
-    stosb
-;
-    mov al,bl
-    stosb
-    clc
+    mov ds:kr_present_mm,al
+    lock or ds:kr_cmd,CMD_PRESENT
+    mov bx,ds:kr_server_thread
+    signal
 
-present_media_done:    
-    pop di
-    pop cx
+pmDone:
     pop bx
-    pop ax
-    pop es
     pop ds
     ret
 present_media    Endp
@@ -1532,24 +1675,24 @@ present_media    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 eject_media   Proc far
-    int 3
     push ds
-    push es
-    push ax
-    push cx
-    push di
+    push bx
 ;
-    mov al,ENQ
-    stosb
+    mov bx,SEG data
+    mov ds,bx
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz emDone
+;
+    lock or ds:kr_cmd,CMD_EJECT
+    mov bx,ds:kr_server_thread
+    signal
 
-eject_media_done:    
-    pop di
-    pop cx
-    pop ax
-    pop es
+emDone:
+    pop bx
     pop ds
     ret
-eject_media    Endp
+eject_media  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1563,28 +1706,21 @@ eject_media    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wait_for_print   Proc far
-    int 3
     push ds
-    push es
-    push ax
-    push cx
-    push di
+    push bx
 ;
-    mov al,ESC
-    stosb
-;    
-    mov al,ACK
-    stosb
-;    
-    mov al,0FEh
-    stosb
-    clc
-    
-wait_for_print_done:
-    pop di
-    pop cx
-    pop ax
-    pop es
+    mov bx,SEG data
+    mov ds,bx
+    test ds:kr_flag,FLAG_ATTACHED
+    stc
+    jz fpDone
+;
+    lock or ds:kr_cmd,CMD_FORCE
+    mov bx,ds:kr_server_thread
+    signal
+
+fpDone:
+    pop bx
     pop ds
     ret
 wait_for_print    Endp
@@ -1777,6 +1913,7 @@ krLoop:
 ;
     call SendBitmap
     call UpdateStatus
+    call SendCommand
 ;
     GetSystemTime
     add eax,250 * 1193
@@ -2152,6 +2289,7 @@ init    Proc far
     mov ds,ax
     InitSection ds:kr_section
     mov ds:kr_flag,0
+    mov ds:kr_cmd,0
 ;    
     mov ax,cs
     mov ds,ax
