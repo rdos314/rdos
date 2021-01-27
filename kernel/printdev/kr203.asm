@@ -815,16 +815,9 @@ sbLoop:
     cmp bp,256
     jne sbDo
 ;
-    mov bl,8
-    call GetByteParam
-    jnc sbWait
-;
-    mov al,50    
-
-sbWait:
     call SendPrint
 ;
-    mov al,10
+    mov ax,10
     WaitMilliSec
     xor bp,bp
 ;
