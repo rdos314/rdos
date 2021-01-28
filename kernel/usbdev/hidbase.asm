@@ -1442,6 +1442,10 @@ WaitForReport_    Proc near
 
 wfrRead:
     mov bx,fs:hid_device_handle
+    IsUsbDeviceConnected
+    jc wfrFail
+;
+    mov bx,fs:hid_device_handle
     mov dl,fs:hid_intr_in
     GetUsbPacketPipe
     jc wfrFail
