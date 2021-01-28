@@ -3110,6 +3110,10 @@ tLoop:
     jz tClose
 
 tOpen:
+    mov bx,es:uc_dev_handle
+    IsUsbDeviceConnected
+    jc tExit
+;
     test ds:uds_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
@@ -3135,6 +3139,10 @@ tIsOpen:
     mov bx,ds:uds_wait
     WaitWithoutTimeout
 ;
+    mov bx,es:uc_dev_handle
+    IsUsbDeviceConnected
+    jc tExit
+;
     test ds:uds_flags,FLAG_UDS_DISCONNECT
     jnz tExit
 ;
@@ -3157,6 +3165,10 @@ tClose:
 
 tIsClosed:
     WaitForSignal
+;
+    mov bx,es:uc_dev_handle
+    IsUsbDeviceConnected
+    jc tExit
 ;
     test ds:uds_flags,FLAG_UDS_DISCONNECT
     jz tLoop
