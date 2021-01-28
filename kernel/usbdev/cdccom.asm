@@ -1123,6 +1123,10 @@ cdc_server:
     mov ds:ucd_thread,ax
 
 tLoop:
+    mov bx,es:cdc_dev_handle
+    IsUsbDeviceConnected
+    jc tExit
+;
     mov ax,ds:ucd_port_sel
     or ax,ax
     jz tClose
@@ -1149,6 +1153,10 @@ tIsOpen:
     mov bx,ds:ucd_wait
     WaitWithoutTimeout
 ;
+    mov bx,es:cdc_dev_handle
+    IsUsbDeviceConnected
+    jc tExit
+;
     test es:cdc_flags,FLAG_CDC_DISCONNECT
     jnz tExit
 ;
@@ -1171,6 +1179,10 @@ tClose:
 
 tIsClosed:
     WaitForSignal
+;
+    mov bx,es:cdc_dev_handle
+    IsUsbDeviceConnected
+    jc tExit
 ;
     test es:cdc_flags,FLAG_CDC_DISCONNECT
     jz tLoop
