@@ -1750,11 +1750,8 @@ reset_printer   Proc far
     jz reset_done
 ;    
     lock and ds:kr_flag,NOT FLAG_ATTACHED
-    mov bx,ds:kr_controller
-    mov al,ds:kr_port
-    OpenUsbDevice
+    mov bx,ds:kr_dev_handle
     ResetUsbDevice
-    CloseUsbDevice
     clc
 
 reset_done:    
@@ -1861,6 +1858,10 @@ krRestart:
     mov cx,10
 
 krInitLoop:
+    mov bx,ds:kr_dev_handle
+    IsUsbDeviceConnected
+    jc krDetached
+;
     test ds:kr_flag,FLAG_ATTACHED
     jz krDetached
 ;
@@ -1908,6 +1909,10 @@ krRetry:
     jmp krDetached
 
 krLoop:
+    mov bx,ds:kr_dev_handle
+    IsUsbDeviceConnected
+    jc krDetached
+;
     test ds:kr_flag,FLAG_ATTACHED
     jz krDetached
 ;
@@ -1936,7 +1941,7 @@ krWaitAttach:
     jnz krRestart
 ;
     WaitForSignal
-    jmp krWaitAttach        
+    jmp krWaitAttach
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
