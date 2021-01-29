@@ -1467,6 +1467,9 @@ WaitForReport_    Proc near
     shr esi,3
     inc esi
 ;
+    cmp si,cx
+    jbe wfrOk
+;
     mov es,fs:hid_intr_buf
     xor edi,edi
     jmp wfrHandle
@@ -1483,7 +1486,7 @@ wfrRead:
 
 wfrHandle:
     sub si,cx
-    jbe wfrOk
+    je wfrOk
 ;
     cmp cx,fs:hid_pipe_size
     jne wfrFail
