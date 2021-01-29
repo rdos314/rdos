@@ -84,11 +84,10 @@ cd_super_thread  DW ?
 cd_rec_thread    DW ?
 cd_send_thread   DW ?
 cd_controller    DW ?
-cd_in_pipe       DW ?
 cd_in_wait       DW ?
-cd_out_pipe      DW ?
-cd_out_wait      DW ?
 cd_dev_handle    DW ?
+cd_in_buffer     DW ?
+cd_out_buffer    DW ?
 cd_port          DB ?
 cd_active        DB ?
 
@@ -580,7 +579,7 @@ gimLoop:
     push si
 ;
     movzx edi,di
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
     mov ecx,10
 ;    WriteUsbDataNoCopy
 ;
@@ -622,7 +621,7 @@ psPoll:
     jc psStart
 ;
     movzx edi,di
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
     mov ecx,10
 ;    WriteUsbDataNoCopy
     jmp psPoll
@@ -641,14 +640,14 @@ psRetry:
     GetSystemTime
     add eax,1193 * 200
     adc edx,0
-    mov bx,ds:cd_out_wait
+;    mov bx,ds:cd_out_wait
     WaitWithTimeout
 ;
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
 ;    IsUsbTransactionDone
     jc psRetry
 ;
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
 ;    WasUsbTransactionOk
     jc psReset
 
@@ -909,7 +908,7 @@ is_can_online   Proc far
     cmp ax,-1
     jz icoFail
 ;
-    mov ax,ds:cd_in_pipe
+    mov ax,ds:cd_in_wait
     or ax,ax
     jz icoFail
 ;
@@ -1180,6 +1179,7 @@ HandleMsg   Endp
 usbcan_rec_thread_name DB 'USB Can Rec ', 0
 
 usbcan_rec_thread:
+    int 3
     mov ax,SEG data
     mov ds,ax
     mov es,ax
@@ -1191,7 +1191,7 @@ ureWaitOpen:
     or al,al
     jz ureEnd
 ;
-    mov bx,ds:cd_in_pipe
+    mov bx,ds:cd_in_buffer
     or bx,bx
     jnz ureStart
 ;
@@ -1201,7 +1201,7 @@ ureWaitOpen:
 
 ureStart:
     mov cx,REC_BUF_COUNT
-    mov bx,ds:cd_in_pipe
+;    mov bx,ds:cd_in_pipe
 
 ureAddReqLoop:
     call GetRecBuffer
@@ -1239,7 +1239,7 @@ ureLoop:
     or al,al
     jnz ureEnd
 ;
-    mov bx,ds:cd_in_pipe
+;    mov bx,ds:cd_in_pipe
 ;    IsUsbTransactionDone
     jc ureLoop
 ;
@@ -1256,7 +1256,7 @@ ureLoop:
     mov edx,es:[di+6]
     call HandleMsg
 ;
-    mov bx,ds:cd_in_pipe
+;    mov bx,ds:cd_in_pipe
     mov ecx,10
 ;    ReqUsbDataNoCopy
 ;    StartOneUsbTransaction
@@ -1267,7 +1267,7 @@ ureEnd:
     mov ds:cd_rec_thread,0
 
 ureWaitClose:
-    mov bx,ds:cd_in_pipe
+    mov bx,ds:cd_in_buffer
     or bx,bx
     jz ureTerm
 ;
@@ -1314,7 +1314,7 @@ usuPipeOk:
     or al,al
     jz usuEnd
 ;
-    mov ax,ds:cd_in_pipe
+    mov ax,ds:cd_in_wait
     or ax,ax
     jz usuRestart
 ;
@@ -1344,37 +1344,39 @@ usuRestart:
 ;
     mov ds:can_restart,0
 ;
-    mov ax,ds:cd_in_pipe
+    int 3
+    mov ax,ds:cd_in_wait
     or ax,ax
     jnz usuRestartWait
+;
+    push es
+    mov eax,10
+    AllocateSmallGlobalMem
+    mov ds:cd_in_buffer,es
+    pop es
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    mov cx,20
+    mov ax,2
+    OpenUsbPacketPipe
+;
+    push es
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    mov cx,10
+    mov ax,5
+    OpenUsbRawPipe
+    mov ds:cd_out_buffer,es
+    pop es
 ;
     CreateWait
     mov ds:cd_in_wait,bx
 ;
-    mov bx,ds:cd_controller
-;    movzx ax,ds:cd_device
+    mov dx,ds:cd_dev_handle
     mov dl,81h
-;    OpenUsbPipe
-    mov ds:cd_in_pipe,bx
-;
-    mov ax,ds:cd_in_pipe
-    mov bx,ds:cd_in_wait
-    movzx ecx,bx
-;    AddWaitForUsbPipe
-;
-    CreateWait
-    mov ds:cd_out_wait,bx
-;
-    mov bx,ds:cd_controller
-;    movzx ax,ds:cd_device
-    mov dl,2
-;    OpenUsbPipe
-    mov ds:cd_out_pipe,bx
-;
-    mov ax,ds:cd_out_pipe
-    mov bx,ds:cd_out_wait
-    movzx ecx,bx
-;    AddWaitForUsbPipe
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
 
 usuRestartWait:
     mov ds:can_active,1
@@ -1413,13 +1415,16 @@ usuProgWaitDead:
     jmp usuProgStart
 
 usuProgAllDead:
-    mov bx,ds:cd_in_pipe
-;    CloseUsbPipe
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    CloseUsbPipe
+;
+    xor bx,bx
+    xchg bx,ds:cd_in_wait
+    CloseWait
 ;
     mov ax,100
     WaitMilliSec
-;
-    mov ds:cd_in_pipe,0
 ;
     call StartDownload
     jc usuProgDone
@@ -1481,23 +1486,35 @@ usuProgDone:
     mov es,ax
     FreeMem
 ;
-    mov bx,ds:cd_out_pipe
-;    CloseUsbPipe
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    CloseUsbPipe
     jmp usuWaitDead
 
 usuEnd:
-    mov bx,ds:cd_in_pipe
-;    CloseUsbPipe
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    CloseUsbPipe
 ;
-    mov bx,ds:cd_out_pipe
-;    CloseUsbPipe
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    CloseUsbPipe
+;    
+    push es
+    mov es,ds:cd_in_buffer
+    FreeMem
+    pop es
+;
+    xor bx,bx
+    xchg bx,ds:cd_in_wait
+    CloseWait
+;
+    mov ds:cd_in_buffer,0    
+    mov ds:cd_out_buffer,0    
 
 usuWaitDead:
     mov ax,25
     WaitMilliSec
-;
-    mov ds:cd_in_pipe,0
-    mov ds:cd_out_pipe,0
 ;
     mov bx,ds:cd_rec_thread
     or bx,bx
@@ -1520,18 +1537,10 @@ usuAllDead:
     jz usuResetDone
 ;
     mov ds:req_reset,0
-;    mov bx,ds:cd_control_pipe
-;    ResetUsbPipe
+    mov bx,ds:cd_dev_handle
+    ResetUsbDevice
 
 usuResetDone:
-    mov bx,ds:cd_in_wait
-    CloseWait
-    mov ds:cd_in_wait,0
-;
-    mov bx,ds:cd_out_wait
-    CloseWait
-    mov ds:cd_out_wait,0
-;
     mov bx,ds:cd_dev_handle
     CloseUsbDevice
 ;
@@ -1552,6 +1561,7 @@ usuResetDone:
 usbcan_send_thread_name DB 'USB Can Send ', 0
 
 usbcan_send_thread:
+    int 3
     mov ax,SEG data
     mov ds,ax
     mov es,ax
@@ -1567,7 +1577,7 @@ usLoop:
     or al,al
     jnz usEnd
 ;
-    mov bx,ds:cd_out_pipe
+    mov bx,ds:cd_out_buffer
     or bx,bx
     jnz usActive
 ;
@@ -1597,7 +1607,7 @@ usProgEnd:
     mov ds:cd_send_thread,0
 
 usWaitClose:
-    mov bx,ds:cd_out_pipe
+    mov bx,ds:cd_out_buffer
     or bx,bx
     jz usTerm
 ;
@@ -1652,7 +1662,7 @@ usSendDo:
 ;
     mov ecx,10
     xor edi,edi
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
 ;    WriteUsbData
 ;
 ;    StartUsbTransaction        
@@ -1664,10 +1674,10 @@ usWaitLoop:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    mov bx,ds:cd_out_wait
+;    mov bx,ds:cd_out_wait
     WaitWithTimeout
 ;
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
 ;    IsUsbTransactionDone
     pop ecx
     jnc usProgDone
@@ -1677,7 +1687,7 @@ usWaitLoop:
     jmp usProgFail
 
 usProgDone:
-    mov bx,ds:cd_out_pipe
+;    mov bx,ds:cd_out_pipe
 ;    WasUsbTransactionOk
     jc usProgFail
 
@@ -2434,8 +2444,8 @@ init    Proc far
     mov es:cd_controller,-1
     mov es:cd_active,0
     mov es:cd_dev_handle,0
-    mov es:cd_in_pipe,0
-    mov es:cd_out_pipe,0
+    mov es:cd_in_buffer,0
+    mov es:cd_out_buffer,0
     mov es:can_active,0
     mov es:can_restart,0
     mov es:req_reset,0
