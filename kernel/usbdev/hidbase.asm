@@ -1425,6 +1425,9 @@ IsHidConnected_   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+    extern HidGetReportSize:near
+
     public WaitForReport_
 
 WaitForReport_    Proc near
@@ -1438,7 +1441,35 @@ WaitForReport_    Proc near
 ;
     mov es,fs:hid_intr_buf
     xor edi,edi
-    mov si,fs:hid_intr_size
+;
+    mov bx,fs:hid_device_handle
+    IsUsbDeviceConnected
+    jc wfrFail
+;
+    mov bx,fs:hid_device_handle
+    mov dl,fs:hid_intr_in
+    GetUsbPacketPipe
+    jc wfrFail
+;
+    push ecx
+    movzx ebx,es:[edi]
+    mov edx,fs
+    mov es,edx
+    mov edi,esi
+    call HidGetReportSize
+    mov esi,ecx
+    pop ecx
+;
+    or esi,esi
+    jz wfrFail
+;
+    dec esi
+    shr esi,3
+    inc esi
+;
+    mov es,fs:hid_intr_buf
+    xor edi,edi
+    jmp wfrHandle
 
 wfrRead:
     mov bx,fs:hid_device_handle
@@ -1449,9 +1480,10 @@ wfrRead:
     mov dl,fs:hid_intr_in
     GetUsbPacketPipe
     jc wfrFail
-;
+
+wfrHandle:
     sub si,cx
-    jz wfrOk
+    jbe wfrOk
 ;
     cmp cx,fs:hid_pipe_size
     jne wfrFail

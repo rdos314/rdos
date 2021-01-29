@@ -92,7 +92,6 @@ hw_minor         DB ?
 ver_major        DB ?
 ver_minor        DB ?
 ver_sub          DB ?
-req_reset        DB ?
 
 prog_state       DB ?
 
@@ -847,157 +846,9 @@ usProgFail:
 usProgFree:
     FreeMem
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           USB CAN thread
-;
-;       DESCRIPTION:    USB can thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcan_thread_name DB 'USB Can ', 0
+ustProg:
 
-usbcan_thread:
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ax
-    GetThread
-    mov ds:cd_server_thread,ax
-;
-    NotifyCanOnline
-;
-    call GetSoftwareVersion
-
-usuLoop:
-    mov al,ds:cd_active
-    or al,al
-    jz usuEnd
-;
-usuPipeOk:
-    mov ax,ds:can_prog_sel
-    or ax,ax
-    jnz usuProg
-;
-    mov al,ds:cd_active
-    or al,al
-    jz usuEnd
-;
-    mov ax,ds:cd_in_wait
-    or ax,ax
-    jz usuRestart
-;
-    mov al,ds:req_reset
-    or al,al
-    jnz usuEnd
-;
-    mov al,ds:can_restart
-    or al,al
-    jz usuRestartOk
-
-usuRestart:
-    call PowerDownModules
-    jc usuEnd
-;
-    mov ax,500
-    WaitMilliSec
-;
-    call PowerUpModules
-    jc usuEnd
-;
-    mov ax,4000
-    WaitMilliSec
-;
-    call StartModules
-    jc usuEnd
-;
-    mov ds:can_restart,0
-;
-    mov ax,ds:cd_in_wait
-    or ax,ax
-    jnz usuRestartWait
-;
-    push es
-    mov eax,10
-    AllocateSmallGlobalMem
-    mov ds:cd_in_buffer,es
-    pop es
-;
-    mov bx,ds:cd_dev_handle
-    mov dl,81h
-    mov cx,20
-    mov ax,2
-    OpenUsbPacketPipe
-;
-    push es
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    mov cx,10
-    mov ax,5
-    OpenUsbRawPipe
-    mov ds:cd_out_buffer,es
-    pop es
-;
-    CreateWait
-    mov ds:cd_in_wait,bx
-;
-    mov ax,ds:cd_dev_handle
-    mov dl,81h
-    mov ecx,ds
-    AddWaitForUsbDevicePipe
-
-usuRestartWait:
-    mov ds:can_active,1
-    NotifyCanModulesUp
-
-usuRestartOk:
-    mov bx,ds:cd_dev_handle
-    IsUsbDeviceConnected
-    jc usuEnd
-;
-    mov bx,ds:cd_in_wait
-    WaitWithoutTimeout
-
-usuMsgLoop:
-    mov bx,ds:cd_dev_handle
-    IsUsbDeviceConnected
-    jc usuEnd
-;
-    mov es,ds:cd_in_buffer
-    xor edi,edi
-    mov ecx,10
-    mov dl,81h
-    GetUsbPacketPipe
-    jc usuNoRec
-;
-    mov cl,es:[di+1]
-    and cl,0Fh
-    movzx ebx,word ptr es:[di]
-    xchg bl,bh
-    and bl,0F0h
-    shl ebx,14
-    mov eax,es:[di+2]
-    mov edx,es:[di+6]
-    call HandleMsg
-
-usuNoRec:
-    call GetSendBuffer
-    jc usuRestartOk
-;
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    mov ecx,10
-    PostUsbRawPipe
-    jmp usuMsgLoop
-
-
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    WaitForSignalWithTimeout
-    jmp usuPipeOk
-
-usuProg:
     mov ds:prog_state,0
 
 usuProgStart:
@@ -1071,7 +922,7 @@ usuProgEndRetry:
     jmp usuProgEndRetry
 
 usuProgDone:
-    mov ds:req_reset,1
+;    mov ds:req_reset,1
     mov ax,25
     WaitMilliSec
 ;
@@ -1083,9 +934,147 @@ usuProgDone:
     mov bx,ds:cd_dev_handle
     mov dl,2
     CloseUsbPipe
-    jmp usuWaitDead
 
-usuEnd:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           USB CAN thread
+;
+;       DESCRIPTION:    USB can thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usbcan_thread_name DB 'USB Can ', 0
+
+usbcan_thread:
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    GetThread
+    mov ds:cd_server_thread,ax
+;
+    NotifyCanOnline
+;
+    call GetSoftwareVersion
+
+ustLoop:
+    mov al,ds:cd_active
+    or al,al
+    jz ustEnd
+
+ustPipeOk:
+    mov ax,ds:can_prog_sel
+    or ax,ax
+    jnz ustProg
+;
+    mov al,ds:cd_active
+    or al,al
+    jz ustEnd
+;
+    mov ax,ds:cd_in_wait
+    or ax,ax
+    jz ustRestart
+;
+    mov al,ds:can_restart
+    or al,al
+    jz ustMsgWait
+
+ustRestart:
+    call PowerDownModules
+    jc ustEnd
+;
+    mov ax,500
+    WaitMilliSec
+;
+    call PowerUpModules
+    jc ustEnd
+;
+    mov ax,4000
+    WaitMilliSec
+;
+    call StartModules
+    jc ustEnd
+;
+    mov ds:can_restart,0
+;
+    mov ax,ds:cd_in_wait
+    or ax,ax
+    jnz ustRestartWait
+;
+    push es
+    mov eax,10
+    AllocateSmallGlobalMem
+    mov ds:cd_in_buffer,es
+    pop es
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    mov cx,20
+    mov ax,2
+    OpenUsbPacketPipe
+;
+    push es
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    mov cx,10
+    mov ax,5
+    OpenUsbRawPipe
+    mov ds:cd_out_buffer,es
+    pop es
+;
+    CreateWait
+    mov ds:cd_in_wait,bx
+;
+    mov ax,ds:cd_dev_handle
+    mov dl,81h
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
+
+ustRestartWait:
+    mov ds:can_active,1
+    NotifyCanModulesUp
+
+ustMsgWait:
+    mov bx,ds:cd_dev_handle
+    IsUsbDeviceConnected
+    jc ustEnd
+;
+    mov bx,ds:cd_in_wait
+    WaitWithoutTimeout
+
+ustMsgLoop:
+    mov bx,ds:cd_dev_handle
+    IsUsbDeviceConnected
+    jc ustEnd
+;
+    mov es,ds:cd_in_buffer
+    xor edi,edi
+    mov ecx,10
+    mov dl,81h
+    GetUsbPacketPipe
+    jc ustNoRec
+;
+    mov cl,es:[di+1]
+    and cl,0Fh
+    movzx ebx,word ptr es:[di]
+    xchg bl,bh
+    and bl,0F0h
+    shl ebx,14
+    mov eax,es:[di+2]
+    mov edx,es:[di+6]
+    call HandleMsg
+
+ustNoRec:
+    call GetSendBuffer
+    jc ustMsgWait
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    mov ecx,10
+    PostUsbRawPipe
+    jmp ustMsgLoop
+
+ustEnd:
     mov bx,ds:cd_dev_handle
     mov dl,81h
     CloseUsbPipe
@@ -1105,20 +1094,7 @@ usuEnd:
 ;
     mov ds:cd_in_buffer,0    
     mov ds:cd_out_buffer,0    
-
-usuWaitDead:
-    mov ax,25
-    WaitMilliSec
 ;
-    mov al,ds:req_reset
-    or al,al
-    jz usuResetDone
-;
-    mov ds:req_reset,0
-    mov bx,ds:cd_dev_handle
-    ResetUsbDevice
-
-usuResetDone:
     mov bx,ds:cd_dev_handle
     CloseUsbDevice
 ;
@@ -1855,7 +1831,6 @@ init    Proc far
     mov es:cd_out_buffer,0
     mov es:can_active,0
     mov es:can_restart,0
-    mov es:req_reset,0
     InitSection es:capture_section
     mov es:capture_handle,0
     mov es:capture_thread,0

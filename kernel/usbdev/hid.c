@@ -3021,6 +3021,42 @@ void __far HidThread(void *param)
     RdosTerminateThread();
 }
 
+
+/*##########################################################################
+#
+#   Name       : HidGetReportSize
+#
+#   Purpose....: Get HID report size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux HidGetReportSize "*" rdosdev parm routine [es edi] [ebx] value [ecx]
+int HidGetReportSize(struct THidDevice *dev, int id)
+{
+    int size = 0;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+
+    if (dev->ReportIdArr[0])
+        id = 0;
+
+    if (id >= 0 && id < MAX_REPORT_IDS)
+    {
+        report = dev->ReportIdArr[id];
+
+        if (report && report->InputCount)
+        {
+            entry = &report->InputArr[report->InputCount - 1];
+            size = entry->StartBit + entry->BitCount;
+        }
+    }
+
+    return size;
+}
+
 /*##########################################################################
 #
 #   Name       : CreateHid
@@ -3075,6 +3111,7 @@ void CreateHid(int controller, int port, char *config)
             dev->StopReq = FALSE;
             dev->ConfigBuf = config;
             dev->Thread = 0;
+
             sprintf(ThreadName, "Hid %02hX.%02hX", controller, port);
             RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
 
