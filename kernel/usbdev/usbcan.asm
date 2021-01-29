@@ -66,23 +66,10 @@ db_next     DW ?
 
 data_block   ENDS
 
-send_buf_struc  STRUC
-
-send_sel         DW ?
-send_count       DW ?
-send_head        DW ?
-send_tail        DW ?
-send_curr_count  DW ?
-
-send_section     section_typ <>
-
-send_buf_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
-cd_super_thread  DW ?
-cd_rec_thread    DW ?
-cd_send_thread   DW ?
+cd_server_thread DW ?
 cd_controller    DW ?
 cd_in_wait       DW ?
 cd_dev_handle    DW ?
@@ -95,9 +82,6 @@ in_buf           DB 10 DUP(?)
 
 can_active       DB ?
 can_restart      DB ?
-
-rec_sel          DW ?
-rec_pos          DW ?
 
 can_prog_sel     DW ?
 can_prog_size    DD ?
@@ -112,8 +96,12 @@ req_reset        DB ?
 
 prog_state       DB ?
 
-default_send_buf DW ?
-send_buf_arr     DW 15 DUP(?)
+send_sel         DW ?
+send_count       DW ?
+send_head        DW ?
+send_tail        DW ?
+
+send_section     section_typ <>
 
 can_id_hook_arr  DD 15 * 4 DUP(?)
 
@@ -146,8 +134,6 @@ ENDIF
 ;
 ;       DESCRIPTION:    Create a send buffer
 ;
-;       RETURNS:        AX    Buffer sel
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateSendBuf   Proc near
@@ -156,28 +142,17 @@ CreateSendBuf   Proc near
     push ecx
     push edx
 ;
-    mov eax,SIZE send_buf_struc
-    AllocateSmallGlobalMem
+    mov ax,SEG data
+    mov ds,ax
 ;
     mov eax,1000h
-    AllocateBigLinear
+    AllocateGlobalMem
 ;
-    AllocatePhysical32
-    or al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es:send_sel,bx
-;
-    mov es:send_count,0
-    mov es:send_head,0
-    mov es:send_tail,0
-    mov es:send_curr_count,0
-    InitSection es:send_section
-;
-    mov ax,es
+    mov ds:send_sel,es
+    mov ds:send_count,0
+    mov ds:send_head,0
+    mov ds:send_tail,0
+    InitSection ds:send_section
 ;
     pop edx
     pop ecx
@@ -185,81 +160,6 @@ CreateSendBuf   Proc near
     pop es
     ret
 CreateSendBuf   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateRecBuf
-;
-;       DESCRIPTION:    Create a receive buffer
-;
-;       RETURNS:        AX    Buffer sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateRecBuf    Proc near
-    push ds
-    push ebx
-    push ecx
-    push edx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical32
-    or al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:rec_sel,bx
-    mov ds:rec_pos,0
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop ds
-    ret
-CreateRecBuf    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitBuf
-;
-;       DESCRIPTION:    Init buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitBuf   Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    call CreateRecBuf
-;
-    call CreateSendBuf
-    mov ds:default_send_buf,ax
-;
-    mov cx,15
-    mov bx,OFFSET send_buf_arr
-
-ibHookLoop:
-    call CreateSendBuf
-    mov ds:[bx],ax
-;
-    add bx,2
-    loop ibHookLoop
-;
-    popad
-    pop es
-    pop ds
-    ret
-InitBuf  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -280,40 +180,6 @@ InsertSend   Proc near
     push si
     push di
 ;
-    push eax
-    push ecx
-;
-    mov si,OFFSET can_id_hook_arr
-    mov cx,15
-
-isIdLoop:
-    mov di,ds:[si].ih_sel
-    or di,di
-    jz isIdNext
-;
-    mov eax,ds:[si].ih_mask
-    and eax,NOT 10000000h
-    and eax,ebx
-    cmp eax,ds:[si].ih_id
-    je isIdOk
-
-isIdNext:
-    add si,16
-    loop isIdLoop
-;
-    mov si,OFFSET default_send_buf
-    jmp isIdFound
-    
-isIdOk:
-    sub si,OFFSET can_id_hook_arr
-    shr si,3
-    add si,OFFSET send_buf_arr
-
-isIdFound:
-    pop ecx
-    pop eax
-;
-    mov ds,ds:[si]
     EnterSection ds:send_section
     mov di,ds:send_count
     cmp di,100h
@@ -349,7 +215,7 @@ isDone:
     push bx
     mov bx,SEG data
     mov ds,bx
-    mov bx,ds:cd_send_thread
+    mov bx,ds:cd_server_thread
     Signal
     pop bx
 ;
@@ -362,93 +228,13 @@ InsertSend   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           CheckSendBuffer
-;
-;   DESCRIPTION:    Check send buffer
-;
-;   RETURNS:        NC        Has data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckSendBuffer   Proc near
-    push dx
-;
-    EnterSection ds:send_section
-    mov dx,ds:send_count
-    or dx,dx
-    stc
-    jz csbDone
-;
-    sub dx,ds:send_curr_count
-    stc
-    jz csbDone
-;       
-    clc
-
-csbDone:
-    LeaveSection ds:send_section
-;
-    pop dx
-    ret
-CheckSendBuffer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CheckAnySendBuffer
-;
-;   DESCRIPTION:    Check for data in any send buffer
-;
-;   RETURNS:        NC        Has data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckAnySendBuffer   Proc near
-    push ds
-    push es
-    push si
-;
-    mov si,SEG data
-    mov es,si
-;
-    mov ds,es:default_send_buf
-    call CheckSendBuffer
-    jnc casbDone
-;
-    mov si,OFFSET send_buf_arr
-    mov cx,15
-
-casbLoop:
-    mov ds,es:[si]
-    call CheckSendBuffer
-    jnc casbDone
-;
-    add si,2
-    loop casbLoop
-;
-    stc
-
-casbDone:
-    pop si
-    pop es
-    pop ds
-    ret
-CheckAnySendBuffer      Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           GetSendBuffer
 ;
 ;   DESCRIPTION:    Get send buffer
 ;
-;   RETURNS:        NC        Success
-;                       ES:DI Buffer
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetSendBuffer   Proc near
-    push eax
     push bx
     push dx
 ;
@@ -458,17 +244,29 @@ GetSendBuffer   Proc near
     stc
     jz gsbDone
 ;
-    sub dx,ds:send_curr_count
-    stc
-    jz gsbDone
-;       
-    inc ds:send_curr_count
+    dec dx
+    mov ds:send_count,dx
 ;
-    mov es,ds:send_sel
+    push ds
+    push es
+    push si
+    push di
+;
+    mov es,ds:cd_out_buffer
+    mov si,ds:send_head
+    shl si,4
+    mov ds,ds:send_sel
+    xor di,di
+    movsd
+    movsd
+    movsw
+;
+    pop di
+    pop si
+    pop es
+    pop ds
+;
     mov bx,ds:send_head
-    mov di,bx
-    shl di,4
-;
     inc bx
     cmp bx,100h
     jnz gsbWrapOk
@@ -484,221 +282,8 @@ gsbDone:
 ;
     pop dx
     pop bx
-    pop eax
     ret
 GetSendBuffer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdateSendBuf
-;
-;   DESCRIPTION:    Update with sent package(s)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateSendBuf   Proc near
-    push ax
-;
-    EnterSection ds:send_section
-;
-    xor ax,ax
-    xchg ax,ds:send_curr_count
-    sub ds:send_count,ax   
-;
-    LeaveSection ds:send_section
-;
-    pop ax
-    ret
-UpdateSendBuf   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdateSent
-;
-;   DESCRIPTION:    Update with sent package(s)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateSent   Proc near
-    push ds
-    push es
-    push cx
-    push si
-;
-    mov ax,SEG data
-    mov es,ax
-;
-    mov ds,es:default_send_buf
-    call UpdateSendBuf
-;
-    mov si,OFFSET send_buf_arr
-    mov cx,15
-
-usIdLoop:
-    mov ds,es:[si]
-    call UpdateSendBuf
-;
-    add si,2
-    loop usIdLoop
-;
-    pop si
-    pop cx
-    pop es
-    pop ds
-    ret
-UpdateSent   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           GetIdMsg
-;
-;   DESCRIPTION:    Get ID messages
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetIdMsg        Proc near
-    push ds
-    push cx
-    push si
-;
-    mov si,OFFSET send_buf_arr
-    mov cx,15
-
-gimLoop:
-    push ds
-    mov ds,ds:[si]
-    call GetSendBuffer
-    pop ds
-    jc gimNext
-;
-    push cx
-    push si
-;
-    movzx edi,di
-;    mov bx,ds:cd_out_pipe
-    mov ecx,10
-;    WriteUsbDataNoCopy
-;
-    pop si
-    pop cx
-
-gimNext:
-    add si,2
-    loop gimLoop
-;
-    pop si
-    pop cx
-    pop ds
-    ret
-GetIdMsg        Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           PollSend
-;
-;   DESCRIPTION:    Poll send
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-PollSend   Proc near
-    call CheckAnySendBuffer
-    jc psDone
-;
-    call GetIdMsg
-
-psPoll:
-    push ds
-    mov ds,ds:default_send_buf
-    call GetSendBuffer
-    pop ds
-    jc psStart
-;
-    movzx edi,di
-;    mov bx,ds:cd_out_pipe
-    mov ecx,10
-;    WriteUsbDataNoCopy
-    jmp psPoll
-
-psStart:
-    call GetIdMsg
-;
-;    StartUsbTransaction        
-;
-    mov bp, 5 * 5
-
-psRetry:
-    sub bp,1
-    jz psReset
-;
-    GetSystemTime
-    add eax,1193 * 200
-    adc edx,0
-;    mov bx,ds:cd_out_wait
-    WaitWithTimeout
-;
-;    mov bx,ds:cd_out_pipe
-;    IsUsbTransactionDone
-    jc psRetry
-;
-;    mov bx,ds:cd_out_pipe
-;    WasUsbTransactionOk
-    jc psReset
-
-psUpdate:
-    call UpdateSent
-    jmp PollSend
-
-psReset:
-    mov ds:req_reset,1
-
-psDone:
-    ret
-PollSend    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           GetRecBuffer
-;
-;   DESCRIPTION:    Get receive buffer
-;
-;   RETURNS:        ES:DI Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetRecBuffer   Proc near
-    push eax
-    push bx
-    push dx
-;
-    mov es,ds:rec_sel
-    mov bx,ds:rec_pos
-    mov di,bx
-    shl di,4
-;
-    inc bx
-    cmp bx,REC_BUF_COUNT
-    jnz grbWrapOk
-;       
-    xor bx,bx
-
-grbWrapOk:
-    mov ds:rec_pos,bx
-    clc
-
-grbDone:
-    pop dx
-    pop bx
-    pop eax
-    ret
-GetRecBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1029,7 +614,7 @@ ctpExit:
 ;
 ;   NAME:           NotifyMsg
 ;
-;   Description:    Notify reception of ethernet packet
+;   Description:    Notify reception of CAN packet
 ;
 ;   PARAMETERS:     EDX:EAX     Data
 ;                   CL          Size (0..8)
@@ -1118,7 +703,6 @@ NotifyMsg  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 HandleMsg   Proc near
     push ds
     push es
@@ -1170,450 +754,10 @@ HandleMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           USB CAN rec thread
-;
-;       DESCRIPTION:    USB can rec thread
+;       NAME:           Program
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcan_rec_thread_name DB 'USB Can Rec ', 0
-
-usbcan_rec_thread:
-    int 3
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ax
-    GetThread
-    mov ds:cd_rec_thread,ax
-
-ureWaitOpen:
-    mov al,ds:cd_active
-    or al,al
-    jz ureEnd
-;
-    mov bx,ds:cd_in_buffer
-    or bx,bx
-    jnz ureStart
-;
-    mov ax,25
-    WaitMilliSec
-    jmp ureWaitOpen
-
-ureStart:
-    mov cx,REC_BUF_COUNT
-;    mov bx,ds:cd_in_pipe
-
-ureAddReqLoop:
-    call GetRecBuffer
-    movzx edi,di
-;
-    push cx
-    mov ecx,10
-;    ReqUsbDataNoCopy
-    pop cx
-;
-    loop ureAddReqLoop
-;
-;    StartOneUsbTransaction
-
-ureLoop:
-    mov al,ds:cd_active
-    or al,al
-    jz ureEnd
-;
-    mov al,ds:req_reset
-    or al,al
-    jnz ureEnd
-;
-    GetSystemTime
-    add eax,1193 * 200
-    adc edx,0
-    mov bx,ds:cd_in_wait
-    WaitWithTimeout
-;
-    mov al,ds:cd_active
-    or al,al
-    jz ureEnd
-;
-    mov al,ds:req_reset
-    or al,al
-    jnz ureEnd
-;
-;    mov bx,ds:cd_in_pipe
-;    IsUsbTransactionDone
-    jc ureLoop
-;
-    call GetRecBuffer
-    movzx edi,di
-;
-    mov cl,es:[di+1]
-    and cl,0Fh
-    movzx ebx,word ptr es:[di]
-    xchg bl,bh
-    and bl,0F0h
-    shl ebx,14
-    mov eax,es:[di+2]
-    mov edx,es:[di+6]
-    call HandleMsg
-;
-;    mov bx,ds:cd_in_pipe
-    mov ecx,10
-;    ReqUsbDataNoCopy
-;    StartOneUsbTransaction
-;
-    jmp ureLoop
-
-ureEnd:
-    mov ds:cd_rec_thread,0
-
-ureWaitClose:
-    mov bx,ds:cd_in_buffer
-    or bx,bx
-    jz ureTerm
-;
-    mov ax,25
-    WaitMilliSec
-    jmp ureWaitClose
-
-ureTerm:
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           USB CAN supervisor thread
-;
-;       DESCRIPTION:    USB can supervisor thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-usbcan_super_thread_name DB 'USB Can Super ', 0
-
-usbcan_super_thread:
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ax
-    GetThread
-    mov ds:cd_super_thread,ax
-;
-    NotifyCanOnline
-;
-    call GetSoftwareVersion
-
-usuLoop:
-    mov al,ds:cd_active
-    or al,al
-    jz usuEnd
-;
-usuPipeOk:
-    mov ax,ds:can_prog_sel
-    or ax,ax
-    jnz usuProg
-;
-    mov al,ds:cd_active
-    or al,al
-    jz usuEnd
-;
-    mov ax,ds:cd_in_wait
-    or ax,ax
-    jz usuRestart
-;
-    mov al,ds:req_reset
-    or al,al
-    jnz usuEnd
-;
-    mov al,ds:can_restart
-    or al,al
-    jz usuRestartOk
-
-usuRestart:
-    call PowerDownModules
-    jc usuEnd
-;
-    mov ax,500
-    WaitMilliSec
-;
-    call PowerUpModules
-    jc usuEnd
-;
-    mov ax,4000
-    WaitMilliSec
-;
-    call StartModules
-    jc usuEnd
-;
-    mov ds:can_restart,0
-;
-    int 3
-    mov ax,ds:cd_in_wait
-    or ax,ax
-    jnz usuRestartWait
-;
-    push es
-    mov eax,10
-    AllocateSmallGlobalMem
-    mov ds:cd_in_buffer,es
-    pop es
-;
-    mov bx,ds:cd_dev_handle
-    mov dl,81h
-    mov cx,20
-    mov ax,2
-    OpenUsbPacketPipe
-;
-    push es
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    mov cx,10
-    mov ax,5
-    OpenUsbRawPipe
-    mov ds:cd_out_buffer,es
-    pop es
-;
-    CreateWait
-    mov ds:cd_in_wait,bx
-;
-    mov dx,ds:cd_dev_handle
-    mov dl,81h
-    mov ecx,ds
-    AddWaitForUsbDevicePipe
-
-usuRestartWait:
-    mov ds:can_active,1
-    NotifyCanModulesUp
-
-usuRestartOk:
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    WaitForSignalWithTimeout
-    jmp usuPipeOk
-
-usuProg:
-    mov ds:prog_state,0
-
-usuProgStart:
-    mov ds:cd_active,0
-    mov bx,ds:cd_rec_thread
-    or bx,bx
-    jz usuProgRecDead
-;
-    Signal
-    jmp usuProgWaitDead
-
-usuProgRecDead:
-    mov al,ds:prog_state
-    cmp al,-1
-    je usuProgAllDead
-    
-    mov bx,ds:cd_send_thread
-    Signal
-
-usuProgWaitDead:
-    mov ax,25
-    WaitMilliSec
-    jmp usuProgStart
-
-usuProgAllDead:
-    mov bx,ds:cd_dev_handle
-    mov dl,81h
-    CloseUsbPipe
-;
-    xor bx,bx
-    xchg bx,ds:cd_in_wait
-    CloseWait
-;
-    mov ax,100
-    WaitMilliSec
-;
-    call StartDownload
-    jc usuProgDone
-
-usuProgRetry:
-    call GetDownloadStatus    
-    jc usuProgDone
-;
-    mov ds:prog_state,al
-    or al,al
-    jz usuSendNext
-;
-    cmp al,11h
-    jne usuProgDone
-;
-    mov ax,5
-    WaitMilliSec
-    jmp usuProgRetry
-
-usuSendNext:
-    mov bx,ds:cd_send_thread
-    Signal
-
-usuWaitSend:
-    WaitForSignal
-    mov al,ds:prog_state
-    or al,al
-    jz usuWaitSend
-;
-    cmp al,-1
-    jne usuProgDone
-;
-    mov ecx,ds:can_prog_size
-    or ecx,ecx
-    jnz usuProgRetry
-
-usuProgEndRetry:
-    call GetDownloadStatus    
-    jc usuProgDone
-;
-    mov ds:prog_state,al
-    cmp al,10h
-    je usuProgDone
-;
-    cmp al,11h
-    jne usuProgDone
-;
-    mov ax,5
-    WaitMilliSec
-    jmp usuProgEndRetry
-
-usuProgDone:
-    mov ds:req_reset,1
-    mov ax,25
-    WaitMilliSec
-;
-    xor ax,ax
-    xchg ax,ds:can_prog_sel
-    mov es,ax
-    FreeMem
-;
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    CloseUsbPipe
-    jmp usuWaitDead
-
-usuEnd:
-    mov bx,ds:cd_dev_handle
-    mov dl,81h
-    CloseUsbPipe
-;
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    CloseUsbPipe
-;    
-    push es
-    mov es,ds:cd_in_buffer
-    FreeMem
-    pop es
-;
-    xor bx,bx
-    xchg bx,ds:cd_in_wait
-    CloseWait
-;
-    mov ds:cd_in_buffer,0    
-    mov ds:cd_out_buffer,0    
-
-usuWaitDead:
-    mov ax,25
-    WaitMilliSec
-;
-    mov bx,ds:cd_rec_thread
-    or bx,bx
-    jz usuRecDead
-;
-    Signal
-    jmp usuWaitDead
-
-usuRecDead:
-    mov bx,ds:cd_send_thread
-    or bx,bx
-    jz usuAllDead
-;
-    Signal
-    jmp usuWaitDead
-
-usuAllDead:
-    mov al,ds:req_reset
-    or al,al
-    jz usuResetDone
-;
-    mov ds:req_reset,0
-    mov bx,ds:cd_dev_handle
-    ResetUsbDevice
-
-usuResetDone:
-    mov bx,ds:cd_dev_handle
-    CloseUsbDevice
-;
-    mov ds:can_active,0
-    mov ds:cd_active,0
-    mov ds:cd_super_thread,0
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           USB CAN send thread
-;
-;       DESCRIPTION:    USB can send thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-usbcan_send_thread_name DB 'USB Can Send ', 0
-
-usbcan_send_thread:
-    int 3
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ax
-    GetThread
-    mov ds:cd_send_thread,ax
-
-usLoop:
-    mov al,ds:cd_active
-    or al,al
-    jz usEnd
-;
-    mov al,ds:req_reset
-    or al,al
-    jnz usEnd
-;
-    mov bx,ds:cd_out_buffer
-    or bx,bx
-    jnz usActive
-;
-    mov ax,25
-    WaitMilliSec
-    jmp usLoop
-
-usActive:
-    GetSystemTime
-    add eax,1193 * 100
-    adc edx,0
-    WaitForSignalWithTimeout
-;
-    mov ax,ds:cd_super_thread
-    or ax,ax
-    jz usEnd
-;
-    call PollSend
-    jmp usLoop
-
-usEnd:
-    mov ax,ds:can_prog_sel
-    or ax,ax
-    jnz usProg
-
-usProgEnd:
-    mov ds:cd_send_thread,0
-
-usWaitClose:
-    mov bx,ds:cd_out_buffer
-    or bx,bx
-    jz usTerm
-;
-    mov ax,25
-    WaitMilliSec
-    jmp usWaitClose
 
 usProg:
     mov ds:prog_state,-1
@@ -1693,7 +837,7 @@ usProgDone:
 
 usSignal:
     mov ds:prog_state,-1
-    mov bx,ds:cd_super_thread
+    mov bx,ds:cd_server_thread
     Signal
     jmp usProgLoop
 
@@ -1702,10 +846,287 @@ usProgFail:
 
 usProgFree:
     FreeMem
-    jmp usProgEnd
 
-usTerm:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           USB CAN thread
+;
+;       DESCRIPTION:    USB can thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usbcan_thread_name DB 'USB Can ', 0
+
+usbcan_thread:
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    GetThread
+    mov ds:cd_server_thread,ax
+;
+    NotifyCanOnline
+;
+    call GetSoftwareVersion
+
+usuLoop:
+    mov al,ds:cd_active
+    or al,al
+    jz usuEnd
+;
+usuPipeOk:
+    mov ax,ds:can_prog_sel
+    or ax,ax
+    jnz usuProg
+;
+    mov al,ds:cd_active
+    or al,al
+    jz usuEnd
+;
+    mov ax,ds:cd_in_wait
+    or ax,ax
+    jz usuRestart
+;
+    mov al,ds:req_reset
+    or al,al
+    jnz usuEnd
+;
+    mov al,ds:can_restart
+    or al,al
+    jz usuRestartOk
+
+usuRestart:
+    call PowerDownModules
+    jc usuEnd
+;
+    mov ax,500
+    WaitMilliSec
+;
+    call PowerUpModules
+    jc usuEnd
+;
+    mov ax,4000
+    WaitMilliSec
+;
+    call StartModules
+    jc usuEnd
+;
+    mov ds:can_restart,0
+;
+    mov ax,ds:cd_in_wait
+    or ax,ax
+    jnz usuRestartWait
+;
+    push es
+    mov eax,10
+    AllocateSmallGlobalMem
+    mov ds:cd_in_buffer,es
+    pop es
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    mov cx,20
+    mov ax,2
+    OpenUsbPacketPipe
+;
+    push es
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    mov cx,10
+    mov ax,5
+    OpenUsbRawPipe
+    mov ds:cd_out_buffer,es
+    pop es
+;
+    CreateWait
+    mov ds:cd_in_wait,bx
+;
+    mov ax,ds:cd_dev_handle
+    mov dl,81h
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
+
+usuRestartWait:
+    mov ds:can_active,1
+    NotifyCanModulesUp
+
+usuRestartOk:
+    mov bx,ds:cd_dev_handle
+    IsUsbDeviceConnected
+    jc usuEnd
+;
+    mov bx,ds:cd_in_wait
+    WaitWithoutTimeout
+
+usuMsgLoop:
+    mov bx,ds:cd_dev_handle
+    IsUsbDeviceConnected
+    jc usuEnd
+;
+    mov es,ds:cd_in_buffer
+    xor edi,edi
+    mov ecx,10
+    mov dl,81h
+    GetUsbPacketPipe
+    jc usuNoRec
+;
+    mov cl,es:[di+1]
+    and cl,0Fh
+    movzx ebx,word ptr es:[di]
+    xchg bl,bh
+    and bl,0F0h
+    shl ebx,14
+    mov eax,es:[di+2]
+    mov edx,es:[di+6]
+    call HandleMsg
+
+usuNoRec:
+    call GetSendBuffer
+    jc usuRestartOk
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    mov ecx,10
+    PostUsbRawPipe
+    jmp usuMsgLoop
+
+
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
+    jmp usuPipeOk
+
+usuProg:
+    mov ds:prog_state,0
+
+usuProgStart:
+    mov al,ds:prog_state
+    cmp al,-1
+    je usuProgAllDead
+    
+usuProgWaitDead:
+    mov ax,25
+    WaitMilliSec
+    jmp usuProgStart
+
+usuProgAllDead:
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    CloseUsbPipe
+;
+    xor bx,bx
+    xchg bx,ds:cd_in_wait
+    CloseWait
+;
+    mov ax,100
+    WaitMilliSec
+;
+    call StartDownload
+    jc usuProgDone
+
+usuProgRetry:
+    call GetDownloadStatus    
+    jc usuProgDone
+;
+    mov ds:prog_state,al
+    or al,al
+    jz usuSendNext
+;
+    cmp al,11h
+    jne usuProgDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp usuProgRetry
+
+usuSendNext:
+
+usuWaitSend:
+    WaitForSignal
+    mov al,ds:prog_state
+    or al,al
+    jz usuWaitSend
+;
+    cmp al,-1
+    jne usuProgDone
+;
+    mov ecx,ds:can_prog_size
+    or ecx,ecx
+    jnz usuProgRetry
+
+usuProgEndRetry:
+    call GetDownloadStatus    
+    jc usuProgDone
+;
+    mov ds:prog_state,al
+    cmp al,10h
+    je usuProgDone
+;
+    cmp al,11h
+    jne usuProgDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp usuProgEndRetry
+
+usuProgDone:
+    mov ds:req_reset,1
+    mov ax,25
+    WaitMilliSec
+;
+    xor ax,ax
+    xchg ax,ds:can_prog_sel
+    mov es,ax
+    FreeMem
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    CloseUsbPipe
+    jmp usuWaitDead
+
+usuEnd:
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    CloseUsbPipe
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    CloseUsbPipe
+;    
+    push es
+    mov es,ds:cd_in_buffer
+    FreeMem
+    pop es
+;
+    xor bx,bx
+    xchg bx,ds:cd_in_wait
+    CloseWait
+;
+    mov ds:cd_in_buffer,0    
+    mov ds:cd_out_buffer,0    
+
+usuWaitDead:
+    mov ax,25
+    WaitMilliSec
+;
+    mov al,ds:req_reset
+    or al,al
+    jz usuResetDone
+;
+    mov ds:req_reset,0
+    mov bx,ds:cd_dev_handle
+    ResetUsbDevice
+
+usuResetDone:
+    mov bx,ds:cd_dev_handle
+    CloseUsbDevice
+;
+    mov ds:can_active,0
+    mov ds:cd_active,0
+    mov ds:cd_server_thread,0
     TerminateThread
+
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1838,27 +1259,15 @@ AddDevice Proc near
     OpenUsbDevice
     mov ds:cd_dev_handle,bx
 ;
-    mov dx,ds:cd_super_thread
+    mov dx,ds:cd_server_thread
     or dx,dx
     jnz adThreadStarted
 ;
     mov ds:can_restart,1
-    mov ds:cd_super_thread,-1    
-    mov ds:cd_rec_thread,-1    
-    mov ds:cd_send_thread,-1    
+    mov ds:cd_server_thread,-1    
 ;
-    mov esi,OFFSET usbcan_super_thread
-    mov edi,OFFSET usbcan_super_thread_name
-    mov ax,2
-    call StartThread
-;
-    mov esi,OFFSET usbcan_rec_thread
-    mov edi,OFFSET usbcan_rec_thread_name
-    mov ax,2
-    call StartThread
-;
-    mov esi,OFFSET usbcan_send_thread
-    mov edi,OFFSET usbcan_send_thread_name
+    mov esi,OFFSET usbcan_thread
+    mov edi,OFFSET usbcan_thread_name
     mov ax,2
     call StartThread
         
@@ -1977,7 +1386,7 @@ usb_detach  Proc far
     mov ds:cd_active,0
     mov ds:can_restart,1
 ;
-    mov bx,ds:cd_super_thread
+    mov bx,ds:cd_server_thread
     Signal
 ;
     mov ax,100
@@ -2163,7 +1572,7 @@ send_can_bus_msg    Proc far
 ;
     mov bp,SEG data
     mov ds,bp
-    mov bp,ds:cd_send_thread
+    mov bp,ds:cd_server_thread
     or bp,bp
     jz scbDone
 ;
@@ -2342,7 +1751,7 @@ program_can_bridge Proc near
     CloseFile
     mov ds:can_prog_sel,es
 ;    
-    mov bx,ds:cd_super_thread
+    mov bx,ds:cd_server_thread
     Signal   
     clc
     jmp pcbDone
@@ -2438,9 +1847,7 @@ wait_for_can_bridge_programming Endp
 init    Proc far
     mov bx,SEG data
     mov es,bx
-    mov es:cd_super_thread,0
-    mov es:cd_rec_thread,0
-    mov es:cd_send_thread,0
+    mov es:cd_server_thread,0
     mov es:cd_controller,-1
     mov es:cd_active,0
     mov es:cd_dev_handle,0
@@ -2455,7 +1862,6 @@ init    Proc far
     mov es:capture_list,0
     mov ds:can_prog_sel,0
     mov ds:can_prog_size,0
-    call InitBuf
 ;
     mov di,OFFSET can_id_hook_arr
     mov cx,4 * 15
@@ -2536,6 +1942,8 @@ init    Proc far
 ;
     mov edi,OFFSET usb_detach
     HookUsbDetach
+;
+    call CreateSendBuf
     clc
     ret
 init    Endp
