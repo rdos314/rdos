@@ -31,11 +31,19 @@
 #include "serial.h"
 #include "sockobj.h"
 
+class TModbusDevice;
+
 class TModbus
 {
+friend class TModbusDevice;
+friend class TSerialModbusDevice;
+friend class TSocketModbusDevice;
 public:
-    TModbus();
-    virtual ~TModbus();
+    TModbus(TModbusDevice *dev, char adr);
+    ~TModbus();
+
+    TModbusDevice *GetDevice();
+    char GetAddress();
 
     int ReadCoilStatus(int Coil);
     int ReadInputStatus(int Input);
@@ -52,9 +60,7 @@ public:
     int ReadHoldingRegisterABCD(int Reg, float *Val);
     int PresetRegisterABCD(int Reg, float Val);
 
-    virtual int ReqHoldingRegisters(int Reg, int Count) = 0;
-    virtual int SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size) = 0;
-
+    int ReqHoldingRegisters(int Reg, int Count);
     int GetReplySize();
     void GetReplyBuf(char *Buf);
     int GetBufferedHoldingRegister(int Reg, int *Val);
@@ -66,8 +72,6 @@ public:
     int DoWritePresetRegisters();
 
 protected:
-    virtual int Session(char FunctionCode, const char *buf, int size, char *reply) = 0;
-
     int FBigEndian;
 
     int FStartReg;
@@ -77,55 +81,76 @@ protected:
 
     char FWriteBuf[100];
     int FWriteSize;
-};
 
-class TSerialModbusDevice;
-
-class TSerialModbus : public TModbus
-{
-public:
-    TSerialModbus(TSerialModbusDevice *dev, char Address);
-    virtual ~TSerialModbus();
-
-    TSerialModbusDevice *GetDevice();
-    virtual int ReqHoldingRegisters(int Reg, int Count);
-    virtual int SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size);
-
-protected:
-    virtual int Session(char FunctionCode, const char *buf, int size, char *reply);
-
-    TSerialModbusDevice *FDevice;
+    TModbusDevice *FDevice;
     char FAddress;
 };
 
-class TSerialModbusDevice
+class TModbusDevice
 {
-friend class TSerialModbus;
+friend class TModbus;
+public:
+    TModbusDevice();
+    virtual ~TModbusDevice();
+
+    void SetTimeout(int ms);
+    void Add(int Address, TModbus *Modbus);
+    int IsUsed(int Address);
+
+protected:
+    virtual int Session(TModbus *modbus, int code, const char *buf, int size) = 0;
+
+    TModbus *FModbusArr[0x80];
+    int FTimeout;
+
+    TSection FSection;
+};
+
+class TSerialModbusDevice : public TModbusDevice
+{
 public:
     TSerialModbusDevice(TSerialDevice *serial);
-    ~TSerialModbusDevice();
+    virtual ~TSerialModbusDevice();
 
     void Reset();
 
     void EnableEcho();
     void DisableEcho();
 
-    void SetTimeout(int ms);
-
-    void Add(int Address, TSerialModbus *Modbus);
-    int IsUsed(int Address);
     TSerialDevice *GetSerial();
 
 protected:
+    virtual int Session(TModbus *modbus, int code, const char *buf, int size);
+
     void CalcCrc(const char *buf, int size, char crc[2]);
-    int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
+
+    char FRecBuf[266];
+    char FSendBuf[266];
 
     int FHasEcho;
-    int FTimeout;
 
-    TSerialModbus *FModbusArr[0x80];
     TSerialDevice *FSerial;
-    TSection FSection;
+};
+
+class TSocketModbusDevice : public TModbusDevice
+{
+public:
+    TSocketModbusDevice(long Ip);
+    TSocketModbusDevice(long Ip, int Port);
+    virtual ~TSocketModbusDevice();
+
+protected:
+    void Init();
+
+    virtual int Session(TModbus *modbus, int code, const char *buf, int size);
+
+    char FRecBuf[266];
+    char FSendBuf[266];
+
+    short int FTransId;
+    long FIp;
+    int FPort;
+    TSocket *FSocket;
 };
 
 #endif

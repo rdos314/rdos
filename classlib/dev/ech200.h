@@ -76,7 +76,7 @@ protected:
     int FAutoAlarms;
     int FManualAlarms;
 
-    TSerialModbus FModbus;
+    TModbus FModbus;
 
 };
 
