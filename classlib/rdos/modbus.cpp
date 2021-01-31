@@ -46,6 +46,8 @@
 ##########################################################################*/
 TModbus::TModbus()
 {
+    FBigEndian = TRUE;
+    FReplySize = 0;
 }
 
 /*##########################################################################
@@ -65,21 +67,715 @@ TModbus::~TModbus()
 
 /*##########################################################################
 #
-#   Name       : TSerialModbus::TSerialModbus
+#   Name       : TModbus::ReadCoilStatus
 #
-#   Purpose....: Constructor for TSerialModbus
+#   Purpose....: Read status of single coil
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialModbus::TSerialModbus(TSerialModbusDevice *Device, char Address)
+int TModbus::ReadCoilStatus(int Coil)
 {
-    FDevice = Device;
-    FAddress = Address;
-    FBigEndian = TRUE;
-    FReplySize = 0;
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Coil > 0)
+    {
+        temp = (short int)(Coil - 1);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(1, msg, 4, reply);
+
+        if (len > 0)
+            if (reply[3] & 1)
+                return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputStatus
+#
+#   Purpose....: Read status of single input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputStatus(int Input)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Input > 10000)
+    {
+        temp = (short int)(Input - 10001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(2, msg, 4, reply);
+
+        if (len >= 1)
+        {
+            temp = (unsigned char)reply[3];
+            return temp;
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadHoldingRegister
+#
+#   Purpose....: Read single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadHoldingRegister(int Reg)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(3, msg, 4, reply);
+
+        if (len >= 2)
+        {
+            memcpy(&temp, &reply[3], 2);
+            if (FBigEndian)
+                temp = RdosSwapShort(temp);
+            return temp;
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputRegister
+#
+#   Purpose....: Read single input register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputRegister(int Reg)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 30000)
+    {
+        temp = (short int)(Reg - 30001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(4, msg, 4, reply);
+
+        if (len >= 2)
+        {
+            memcpy(&temp, &reply[3], 2);
+            if (FBigEndian)
+                temp = RdosSwapShort(temp);
+            return temp;
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadCoilStatus
+#
+#   Purpose....: Read status of single coil
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadCoilStatus(int Coil, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Coil > 0)
+    {
+        temp = (short int)(Coil - 1);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(1, msg, 4, reply);
+
+        if (len > 0)
+        {
+            if (reply[3] & 1)
+                *Val = TRUE;
+            else
+                *Val = FALSE;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputStatus
+#
+#   Purpose....: Read status of single input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputStatus(int Input, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Input > 10000)
+    {
+        temp = (short int)(Input - 10001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(2, msg, 4, reply);
+
+        if (len >= 1)
+        {
+            temp = (unsigned char)reply[3];
+            *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadHoldingRegister
+#
+#   Purpose....: Read single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadHoldingRegister(int Reg, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(3, msg, 4, reply);
+
+        if (len >= 2)
+        {
+            memcpy(&temp, &reply[3], 2);
+            if (FBigEndian)
+                temp = RdosSwapShort(temp);
+            *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputRegister
+#
+#   Purpose....: Read single input register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputRegister(int Reg, int *Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 30000)
+    {
+        temp = (short int)(Reg - 30001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(4, msg, 4, reply);
+
+        if (len >= 2)
+        {
+            memcpy(&temp, &reply[3], 2);
+            if (FBigEndian)
+                temp = RdosSwapShort(temp);
+            *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::PresetRegister
+#
+#   Purpose....: Preset single register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::PresetRegister(int Reg, int Val)
+{
+    int len;
+    short int temp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = (short int)Val;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(6, msg, 4, reply);
+
+        if (len == 4)
+            if (memcmp(msg, &reply[2], 4) == 0)
+                return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadHoldingRegisterABCD
+#
+#   Purpose....: Read single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
+{
+    int len;
+    short int temp;
+    int itemp;
+    char msg[4];
+    char reply[100];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 2;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        len = Session(3, msg, 4, reply);
+
+        if (len >= 4)
+        {
+            memcpy(&itemp, &reply[3], 4);
+            if (FBigEndian)
+                itemp = RdosSwapLong(itemp);
+            memcpy(Val, &itemp, 4);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::PresetRegisterABCD
+#
+#   Purpose....: Preset single register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::PresetRegisterABCD(int Reg, float Val)
+{
+    int len;
+    short int temp;
+    int itemp;
+    char msg[9];
+    char reply[100];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[0], &temp, 2);
+
+        temp = 2;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        msg[4] = 4;
+
+        memcpy(&itemp, &Val, 4);
+        if (FBigEndian)
+            itemp = RdosSwapLong(itemp);
+        memcpy(&msg[5], &itemp, 4);
+
+        len = Session(16, msg, 9, reply);
+
+        if (len == 4)
+            if (memcmp(msg, &reply[2], 4) == 0)
+                return TRUE;
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetReplySize
+#
+#   Purpose....: Get reply size (multiple registers)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::GetReplySize()
+{
+    return FReplySize;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetReplyBuf
+#
+#   Purpose....: Get reply buf (multiple registers)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::GetReplyBuf(char *buf)
+{
+    memcpy(buf, FReplyBuf, FReplySize);
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetBufferedHoldingRegister
+#
+#   Purpose....: Read buffered holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::GetBufferedHoldingRegister(int Reg, int *Val)
+{
+    int ok = FALSE;
+    int RelReg = Reg - FStartReg;
+    int len;
+    short int temp;
+
+    if (FReplySize >= 3)
+        ok = TRUE;
+
+    if (ok)
+        if (FReplyBuf[1] != 3)
+            ok = FALSE;
+
+    if (ok)
+        if (RelReg < 0 || RelReg >= FRegCount)
+            ok = FALSE;
+
+    if (ok)
+    {
+        len = (unsigned int)FReplyBuf[2];
+        if (len != 2 * FRegCount)
+            ok = FALSE;
+    }
+
+    if (ok)
+    {
+        memcpy(&temp, &FReplyBuf[3 + 2 * RelReg], 2);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        *Val = temp;
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::GetBufferedHoldingRegisterABCD
+#
+#   Purpose....: Read buffered holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
+{
+    int ok = FALSE;
+    int RelReg = Reg - FStartReg;
+    int len;
+    int temp;
+
+    if (FReplySize >= 3)
+        ok = TRUE;
+
+    if (ok)
+        if (FReplyBuf[1] != 3)
+            ok = FALSE;
+
+    if (ok)
+        if (RelReg < 0 || RelReg + 1 >= FRegCount)
+            ok = FALSE;
+
+    if (ok)
+    {
+        len = (unsigned int)FReplyBuf[2];
+        if (len != 2 * FRegCount)
+            ok = FALSE;
+    }
+
+    if (ok)
+    {
+        memcpy(&temp, &FReplyBuf[3 + 2 * RelReg], 4);
+        if (FBigEndian)
+            temp = RdosSwapLong(temp);
+        memcpy(Val, &temp, 4);
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::StartWritePresetRegisters
+#
+#   Purpose....: Start write multiple preset registers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
+{
+    int i;
+    short int temp;
+
+    if (Reg > 40000)
+    {
+        FStartReg = Reg;
+        FRegCount = Count;
+
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&FWriteBuf[0], &temp, 2);
+
+        temp = Count;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&FWriteBuf[2], &temp, 2);
+
+        FWriteBuf[4] = 2 * Count;
+
+        temp = Default;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+
+        for (i = 0; i < Count; i++)
+            memcpy(&FWriteBuf[5 + 2 * i], &temp, 2);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::AddPresetRegister
+#
+#   Purpose....: Add preset register to write req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::AddPresetRegister(int Reg, int Val)
+{
+    int RelReg = Reg - FStartReg;
+    short int temp;
+
+    if (RelReg < FRegCount)
+    {
+        temp = Val;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+
+        memcpy(&FWriteBuf[5 + 2 * RelReg], &temp, 2);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::AddPresetRegisterABCD
+#
+#   Purpose....: Add ABCD preset register to write req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::AddPresetRegisterABCD(int Reg, float Val)
+{
+    int RelReg = Reg - FStartReg;
+    int itemp;
+
+    if (RelReg < FRegCount - 1)
+    {
+        memcpy(&itemp, &Val, 4);
+        if (FBigEndian)
+            itemp = RdosSwapLong(itemp);
+        memcpy(&FWriteBuf[5 + 2 * RelReg], &itemp, 4);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::DoWritePresetRegisters
+#
+#   Purpose....: Do a multiple preset register write
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::DoWritePresetRegisters()
+{
+    int len;
+    char reply[100];
+
+    len = Session(16, FWriteBuf, 5 + 2 * FRegCount, reply);
+
+    if (len == 4)
+        if (memcmp(FWriteBuf, &reply[2], 4) == 0)
+            return TRUE;
+
+    return FALSE;
 }
 
 /*##########################################################################
@@ -93,12 +789,10 @@ TSerialModbus::TSerialModbus(TSerialModbusDevice *Device, char Address)
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialModbus::TSerialModbus()
+TSerialModbus::TSerialModbus(TSerialModbusDevice *Device, char Address)
 {
-    FDevice = 0;
-    FAddress = 0;
-    FBigEndian = TRUE;
-    FReplySize = 0;
+    FDevice = Device;
+    FAddress = Address;
 }
 
 /*##########################################################################
@@ -191,477 +885,6 @@ int TSerialModbus::Session(char FunctionCode, const char *buf, int size, char *r
 
 /*##########################################################################
 #
-#   Name       : TSerialModbus::ReadCoilStatus
-#
-#   Purpose....: Read status of single coil
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadCoilStatus(int Coil)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Coil > 0)
-    {
-        temp = (short int)(Coil - 1);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(1, msg, 4, reply);
-
-        if (len > 0)
-            if (reply[3] & 1)
-                return TRUE;
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadInputStatus
-#
-#   Purpose....: Read status of single input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadInputStatus(int Input)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Input > 10000)
-    {
-        temp = (short int)(Input - 10001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(2, msg, 4, reply);
-
-        if (len >= 1)
-        {
-            temp = (unsigned char)reply[3];
-            return temp;
-        }
-    }
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadHoldingRegister
-#
-#   Purpose....: Read single holding register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadHoldingRegister(int Reg)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(3, msg, 4, reply);
-
-        if (len >= 2)
-        {
-            memcpy(&temp, &reply[3], 2);
-            if (FBigEndian)
-                temp = RdosSwapShort(temp);
-            return temp;
-        }
-    }
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadInputRegister
-#
-#   Purpose....: Read single input register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadInputRegister(int Reg)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Reg > 30000)
-    {
-        temp = (short int)(Reg - 30001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(4, msg, 4, reply);
-
-        if (len >= 2)
-        {
-            memcpy(&temp, &reply[3], 2);
-            if (FBigEndian)
-                temp = RdosSwapShort(temp);
-            return temp;
-        }
-    }
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadCoilStatus
-#
-#   Purpose....: Read status of single coil
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadCoilStatus(int Coil, int *Val)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Coil > 0)
-    {
-        temp = (short int)(Coil - 1);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(1, msg, 4, reply);
-
-        if (len > 0)
-        {
-            if (reply[3] & 1)
-                *Val = TRUE;
-            else
-                *Val = FALSE;
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadInputStatus
-#
-#   Purpose....: Read status of single input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadInputStatus(int Input, int *Val)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Input > 10000)
-    {
-        temp = (short int)(Input - 10001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(2, msg, 4, reply);
-
-        if (len >= 1)
-        {
-            temp = (unsigned char)reply[3];
-            *Val = temp;
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadHoldingRegister
-#
-#   Purpose....: Read single holding register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadHoldingRegister(int Reg, int *Val)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(3, msg, 4, reply);
-
-        if (len >= 2)
-        {
-            memcpy(&temp, &reply[3], 2);
-            if (FBigEndian)
-                temp = RdosSwapShort(temp);
-            *Val = temp;
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadInputRegister
-#
-#   Purpose....: Read single input register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadInputRegister(int Reg, int *Val)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Reg > 30000)
-    {
-        temp = (short int)(Reg - 30001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(4, msg, 4, reply);
-
-        if (len >= 2)
-        {
-            memcpy(&temp, &reply[3], 2);
-            if (FBigEndian)
-                temp = RdosSwapShort(temp);
-            *Val = temp;
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::PresetRegister
-#
-#   Purpose....: Preset single register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::PresetRegister(int Reg, int Val)
-{
-    int len;
-    short int temp;
-    char msg[4];
-    char reply[100];
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = (short int)Val;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(6, msg, 4, reply);
-
-        if (len == 4)
-            if (memcmp(msg, &reply[2], 4) == 0)
-                return TRUE;
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::ReadHoldingRegisterABCD
-#
-#   Purpose....: Read single holding register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
-{
-    int len;
-    short int temp;
-    int itemp;
-    char msg[4];
-    char reply[100];
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 2;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        len = Session(3, msg, 4, reply);
-
-        if (len >= 4)
-        {
-            memcpy(&itemp, &reply[3], 4);
-            if (FBigEndian)
-                itemp = RdosSwapLong(itemp);
-            memcpy(Val, &itemp, 4);
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::PresetRegisterABCD
-#
-#   Purpose....: Preset single register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::PresetRegisterABCD(int Reg, float Val)
-{
-    int len;
-    short int temp;
-    int itemp;
-    char msg[9];
-    char reply[100];
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[0], &temp, 2);
-
-        temp = 2;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&msg[2], &temp, 2);
-
-        msg[4] = 4;
-
-        memcpy(&itemp, &Val, 4);
-        if (FBigEndian)
-            itemp = RdosSwapLong(itemp);
-        memcpy(&msg[5], &itemp, 4);
-
-        len = Session(16, msg, 9, reply);
-
-        if (len == 4)
-            if (memcmp(msg, &reply[2], 4) == 0)
-                return TRUE;
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
 #   Name       : TSerialModbus::ReqHoldingRegisters
 #
 #   Purpose....: Read multiple holding registers
@@ -709,39 +932,7 @@ int TSerialModbus::ReqHoldingRegisters(int Reg, int Count)
 
 /*##########################################################################
 #
-#   Name       : TSerialModbus::GetReplySize
-#
-#   Purpose....: Get reply size (multiple registers)
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::GetReplySize()
-{
-    return FReplySize;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::GetReplyBuf
-#
-#   Purpose....: Get reply buf (multiple registers)
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialModbus::GetReplyBuf(char *buf)
-{
-    memcpy(buf, FReplyBuf, FReplySize);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::SetBufferedRegisters
+#   Name       : TModbus::SetBufferedRegisters
 #
 #   Purpose....: Set multiple registers buffer
 #
@@ -804,216 +995,6 @@ int TSerialModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int
         FReplySize = 0;
 
     return ok;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::GetBufferedHoldingRegister
-#
-#   Purpose....: Read buffered holding register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::GetBufferedHoldingRegister(int Reg, int *Val)
-{
-    int ok = FALSE;
-    int RelReg = Reg - FStartReg;
-    int len;
-    short int temp;
-
-    if (FReplySize >= 3)
-        ok = TRUE;
-
-    if (ok)
-        if (FReplyBuf[1] != 3)
-            ok = FALSE;
-
-    if (ok)
-        if (RelReg < 0 || RelReg >= FRegCount)
-            ok = FALSE;
-
-    if (ok)
-    {
-        len = (unsigned int)FReplyBuf[2];
-        if (len != 2 * FRegCount)
-            ok = FALSE;
-    }
-
-    if (ok)
-    {
-        memcpy(&temp, &FReplyBuf[3 + 2 * RelReg], 2);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        *Val = temp;
-    }
-    return ok;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::GetBufferedHoldingRegisterABCD
-#
-#   Purpose....: Read buffered holding register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
-{
-    int ok = FALSE;
-    int RelReg = Reg - FStartReg;
-    int len;
-    int temp;
-
-    if (FReplySize >= 3)
-        ok = TRUE;
-
-    if (ok)
-        if (FReplyBuf[1] != 3)
-            ok = FALSE;
-
-    if (ok)
-        if (RelReg < 0 || RelReg + 1 >= FRegCount)
-            ok = FALSE;
-
-    if (ok)
-    {
-        len = (unsigned int)FReplyBuf[2];
-        if (len != 2 * FRegCount)
-            ok = FALSE;
-    }
-
-    if (ok)
-    {
-        memcpy(&temp, &FReplyBuf[3 + 2 * RelReg], 4);
-        if (FBigEndian)
-            temp = RdosSwapLong(temp);
-        memcpy(Val, &temp, 4);
-    }
-    return ok;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::StartWritePresetRegisters
-#
-#   Purpose....: Start write multiple preset registers
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
-{
-    int i;
-    short int temp;
-
-    if (Reg > 40000)
-    {
-        FStartReg = Reg;
-        FRegCount = Count;
-
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&FWriteBuf[0], &temp, 2);
-
-        temp = Count;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(&FWriteBuf[2], &temp, 2);
-
-        FWriteBuf[4] = 2 * Count;
-
-        temp = Default;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-
-        for (i = 0; i < Count; i++)
-            memcpy(&FWriteBuf[5 + 2 * i], &temp, 2);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::AddPresetRegister
-#
-#   Purpose....: Add preset register to write req
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialModbus::AddPresetRegister(int Reg, int Val)
-{
-    int RelReg = Reg - FStartReg;
-    short int temp;
-
-    if (RelReg < FRegCount)
-    {
-        temp = Val;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-
-        memcpy(&FWriteBuf[5 + 2 * RelReg], &temp, 2);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::AddPresetRegisterABCD
-#
-#   Purpose....: Add ABCD preset register to write req
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialModbus::AddPresetRegisterABCD(int Reg, float Val)
-{
-    int RelReg = Reg - FStartReg;
-    int itemp;
-
-    if (RelReg < FRegCount - 1)
-    {
-        memcpy(&itemp, &Val, 4);
-        if (FBigEndian)
-            itemp = RdosSwapLong(itemp);
-        memcpy(&FWriteBuf[5 + 2 * RelReg], &itemp, 4);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbus::DoWritePresetRegisters
-#
-#   Purpose....: Do a multiple preset register write
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialModbus::DoWritePresetRegisters()
-{
-    int len;
-    char reply[100];
-
-    len = Session(16, FWriteBuf, 5 + 2 * FRegCount, reply);
-
-    if (len == 4)
-        if (memcmp(FWriteBuf, &reply[2], 4) == 0)
-            return TRUE;
-
-    return FALSE;
 }
 
 /*##################  TSerialModbusDevice::TSerialModbusDevice  ###############

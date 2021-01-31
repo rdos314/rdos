@@ -37,77 +37,37 @@ public:
     TModbus();
     virtual ~TModbus();
 
-    virtual int ReadCoilStatus(int Coil) = 0;
-    virtual int ReadInputStatus(int Input) = 0;
-    virtual int ReadHoldingRegister(int Reg) = 0;
-    virtual int ReadInputRegister(int Reg) = 0;
+    int ReadCoilStatus(int Coil);
+    int ReadInputStatus(int Input);
+    int ReadHoldingRegister(int Reg);
+    int ReadInputRegister(int Reg);
 
-    virtual int ReadCoilStatus(int Coil, int *val) = 0;
-    virtual int ReadInputStatus(int Input, int *val) = 0;
-    virtual int ReadHoldingRegister(int Reg, int *val) = 0;
-    virtual int ReadInputRegister(int Reg, int *val) = 0;
+    int ReadCoilStatus(int Coil, int *val);
+    int ReadInputStatus(int Input, int *val);
+    int ReadHoldingRegister(int Reg, int *val);
+    int ReadInputRegister(int Reg, int *val);
 
-    virtual int PresetRegister(int Reg, int Val) = 0;
+    int PresetRegister(int Reg, int Val);
 
-    virtual int ReadHoldingRegisterABCD(int Reg, float *Val) = 0;
-    virtual int PresetRegisterABCD(int Reg, float Val) = 0;
+    int ReadHoldingRegisterABCD(int Reg, float *Val);
+    int PresetRegisterABCD(int Reg, float Val);
 
     virtual int ReqHoldingRegisters(int Reg, int Count) = 0;
-    virtual int GetReplySize() = 0;
-    virtual void GetReplyBuf(char *Buf) = 0;
     virtual int SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size) = 0;
-    virtual int GetBufferedHoldingRegister(int Reg, int *Val) = 0;
-    virtual int GetBufferedHoldingRegisterABCD(int Reg, float *Val) = 0;
 
-    virtual void StartWritePresetRegisters(int Reg, int Count, int Default) = 0;
-    virtual void AddPresetRegister(int Reg, int val) = 0;
-    virtual void AddPresetRegisterABCD(int Reg, float val) = 0;
-    virtual int DoWritePresetRegisters() = 0;
-};
+    int GetReplySize();
+    void GetReplyBuf(char *Buf);
+    int GetBufferedHoldingRegister(int Reg, int *Val);
+    int GetBufferedHoldingRegisterABCD(int Reg, float *Val);
 
-class TSerialModbusDevice;
-
-class TSerialModbus : public TModbus
-{
-public:
-    TSerialModbus(TSerialModbusDevice *dev, char Address);
-    TSerialModbus();
-    virtual ~TSerialModbus();
-
-    TSerialModbusDevice *GetDevice();
-
-    virtual int ReadCoilStatus(int Coil);
-    virtual int ReadInputStatus(int Input);
-    virtual int ReadHoldingRegister(int Reg);
-    virtual int ReadInputRegister(int Reg);
-
-    virtual int ReadCoilStatus(int Coil, int *val);
-    virtual int ReadInputStatus(int Input, int *val);
-    virtual int ReadHoldingRegister(int Reg, int *val);
-    virtual int ReadInputRegister(int Reg, int *val);
-
-    virtual int PresetRegister(int Reg, int Val);
-
-    virtual int ReadHoldingRegisterABCD(int Reg, float *Val);
-    virtual int PresetRegisterABCD(int Reg, float Val);
-
-    virtual int ReqHoldingRegisters(int Reg, int Count);
-    virtual int GetReplySize();
-    virtual void GetReplyBuf(char *Buf);
-    virtual int SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size);
-    virtual int GetBufferedHoldingRegister(int Reg, int *Val);
-    virtual int GetBufferedHoldingRegisterABCD(int Reg, float *Val);
-
-    virtual void StartWritePresetRegisters(int Reg, int Count, int Default);
-    virtual void AddPresetRegister(int Reg, int val);
-    virtual void AddPresetRegisterABCD(int Reg, float val);
-    virtual int DoWritePresetRegisters();
+    void StartWritePresetRegisters(int Reg, int Count, int Default);
+    void AddPresetRegister(int Reg, int val);
+    void AddPresetRegisterABCD(int Reg, float val);
+    int DoWritePresetRegisters();
 
 protected:
-    int Session(char FunctionCode, const char *buf, int size, char *reply);
+    virtual int Session(char FunctionCode, const char *buf, int size, char *reply) = 0;
 
-    TSerialModbusDevice *FDevice;
-    char FAddress;
     int FBigEndian;
 
     int FStartReg;
@@ -117,6 +77,25 @@ protected:
 
     char FWriteBuf[100];
     int FWriteSize;
+};
+
+class TSerialModbusDevice;
+
+class TSerialModbus : public TModbus
+{
+public:
+    TSerialModbus(TSerialModbusDevice *dev, char Address);
+    virtual ~TSerialModbus();
+
+    TSerialModbusDevice *GetDevice();
+    virtual int ReqHoldingRegisters(int Reg, int Count);
+    virtual int SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size);
+
+protected:
+    virtual int Session(char FunctionCode, const char *buf, int size, char *reply);
+
+    TSerialModbusDevice *FDevice;
+    char FAddress;
 };
 
 class TSerialModbusDevice
