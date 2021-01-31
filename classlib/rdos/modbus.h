@@ -30,6 +30,7 @@
 
 #include "serial.h"
 #include "sockobj.h"
+#include "device.h"
 
 class TModbusDevice;
 
@@ -86,7 +87,7 @@ protected:
     char FAddress;
 };
 
-class TModbusDevice
+class TModbusDevice : public TThread
 {
 friend class TModbus;
 public:
@@ -141,7 +142,9 @@ public:
 
 protected:
     void Init();
+    bool Connect();
 
+    virtual void Execute();
     virtual int Session(TModbus *modbus, int code, const char *buf, int size);
 
     char FRecBuf[266];
@@ -150,7 +153,8 @@ protected:
     short int FTransId;
     long FIp;
     int FPort;
-    TSocket *FSocket;
+    int FPushCounter;
+    TTcpSocket *FSocket;
 };
 
 #endif

@@ -1238,10 +1238,62 @@ TSocketModbusDevice::~TSocketModbusDevice()
 ##########################################################################*/
 void TSocketModbusDevice::Init()
 {
+    FPushCounter = 0;
     FSocket = 0;
     FTransId = (short int)RdosGetRandom(65535);
     if (FTransId == 0)
         FTransId++;
+
+    Start("Modbus TCP", 0x8000);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketModbusDevice::Connect
+#
+#   Purpose....: Connect socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TSocketModbusDevice::Connect()
+{
+    TTcpSocket *socket;
+    bool open;
+
+    if (FSocket)
+        open = !FSocket->IsOpen();
+    else
+        open = true;
+
+    if (open)
+    {
+        FPushCounter = 0;
+
+        if (FSocket)
+        {
+            delete FSocket;
+            FSocket = 0;
+        }
+
+        socket = new TTcpSocket(FIp, FPort, 5000, 0x2000);
+        socket->WaitForConnection(5000);
+
+        if (socket->IsOpen())
+        {
+            FSocket = socket;
+            return true;
+        }
+        else
+        {
+            delete socket;
+            return false;
+        }
+    }
+    else
+        return true;
 }
 
 /*##########################################################################
@@ -1263,9 +1315,11 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
     int datalen = 0;
     int i;
     short int temp;
-    int ok = FALSE;
+    bool ok = false;
 
     FSection.Enter();
+
+    FPushCounter = 0;
 
     FTransId++;
     if (FTransId == 0)
@@ -1284,11 +1338,12 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
     FSendBuf[5] = modbus->FAddress;
     FSendBuf[6] = code;
 
-    if (size < 256)
+    if (Connect() && size < 256)
     {
         memcpy(FSendBuf + 7, buf, size);
 
         FSocket->Write(FSendBuf, size + 7);
+        FSocket->Push();
 
         pos = 0;
 
@@ -1309,4 +1364,36 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
     FSection.Leave();
 
     return datalen;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketModbusDevice::Execute
+#
+#   Purpose....: Execute method
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketModbusDevice::Execute()
+{
+    for (;;)
+    {
+        if (FSocket)
+        {
+            FPushCounter++;
+            if (FPushCounter == 30)
+            {
+                FSection.Enter();
+
+                if (FSocket && FSocket->IsOpen())
+                    FSocket->Push();
+
+                FSection.Leave();
+            }
+        }
+        RdosWaitMilli(1000);
+    }
 }
