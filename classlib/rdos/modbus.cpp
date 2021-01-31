@@ -375,6 +375,50 @@ int TModbus::ReadHoldingRegister(int Reg, int *Val)
 
 /*##########################################################################
 #
+#   Name       : TModbus::ReadHoldingRegister32
+#
+#   Purpose....: Read single holding register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadHoldingRegister32(int Reg, int *Val)
+{
+    int len;
+    short int temp;
+    int lt;
+    char msg[4];
+
+    if (Reg > 40000)
+    {
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(msg, &temp, 2);
+
+        temp = 2;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(msg + 2, &temp, 2);
+
+        len = FDevice->Session(this, 3, msg, 4);
+
+        if (len >= 4)
+        {
+            memcpy(&lt, FReplyBuf + 1, 4);
+            if (FBigEndian)
+                lt = RdosSwapLong(lt);
+            *Val = lt;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TModbus::ReadInputRegister
 #
 #   Purpose....: Read single input register
@@ -410,6 +454,50 @@ int TModbus::ReadInputRegister(int Reg, int *Val)
             if (FBigEndian)
                 temp = RdosSwapShort(temp);
             *Val = temp;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReadInputRegister32
+#
+#   Purpose....: Read two input registers as 32-bit data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReadInputRegister32(int Reg, int *Val)
+{
+    int len;
+    short int temp;
+    int it;
+    char msg[4];
+
+    if (Reg > 30000)
+    {
+        temp = (short int)(Reg - 30001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(msg, &temp, 2);
+
+        temp = 1;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(msg + 2, &temp, 2);
+
+        len = FDevice->Session(this, 4, msg, 4);
+
+        if (len >= 4)
+        {
+            memcpy(&it, FReplyBuf + 1, 4);
+            if (FBigEndian)
+                it = RdosSwapLong(it);
+            *Val = it;
             return TRUE;
         }
     }
@@ -1382,6 +1470,7 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
         if (ok)
         {
             ptr = modbus->FReplyBuf;
+            len--;
             modbus->FReplySize = len;
 
             for (i = 0; i < len && ok; i++)
@@ -1403,7 +1492,7 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
                 case 2:
                 case 3:
                 case 4:
-                    datalen = (unsigned int)FRecBuf[0];
+                    datalen = (unsigned int)modbus->FReplyBuf[0];
                     break;
 
                 case 5:

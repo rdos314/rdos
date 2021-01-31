@@ -54,7 +54,9 @@ public:
     int ReadCoilStatus(int Coil, int *val);
     int ReadInputStatus(int Input, int *val);
     int ReadHoldingRegister(int Reg, int *val);
+    int ReadHoldingRegister32(int Reg, int *val);
     int ReadInputRegister(int Reg, int *val);
+    int ReadInputRegister32(int Reg, int *val);
 
     int PresetRegister(int Reg, int Val);
 
