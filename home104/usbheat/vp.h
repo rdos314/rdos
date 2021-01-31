@@ -148,7 +148,7 @@ protected:
     TControlThread *FControl;
 
     TSerialDevice FSerial;
-    TModbusDevice FModDev;
+    TSerialModbusDevice FModDev;
     TEch200 FEch;
 
     TSection FSection;

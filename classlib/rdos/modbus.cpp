@@ -44,31 +44,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TModbus::TModbus(TModbusDevice *Device, char Address)
-{
-    FDevice = Device;
-    FAddress = Address;
-    FBigEndian = TRUE;
-    FReplySize = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::TModbus
-#
-#   Purpose....: Constructor for TModbus
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 TModbus::TModbus()
 {
-    FDevice = 0;
-    FAddress = 0;
-    FBigEndian = TRUE;
-    FReplySize = 0;
 }
 
 /*##########################################################################
@@ -88,7 +65,60 @@ TModbus::~TModbus()
 
 /*##########################################################################
 #
-#   Name       : TModbus::GetDevice
+#   Name       : TSerialModbus::TSerialModbus
+#
+#   Purpose....: Constructor for TSerialModbus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialModbus::TSerialModbus(TSerialModbusDevice *Device, char Address)
+{
+    FDevice = Device;
+    FAddress = Address;
+    FBigEndian = TRUE;
+    FReplySize = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialModbus::TSerialModbus
+#
+#   Purpose....: Constructor for TSerialModbus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialModbus::TSerialModbus()
+{
+    FDevice = 0;
+    FAddress = 0;
+    FBigEndian = TRUE;
+    FReplySize = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialModbus::~TSerialModbus
+#
+#   Purpose....: Destructor for TSerialModbus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialModbus::~TSerialModbus()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialModbus::GetDevice
 #
 #   Purpose....: Get modbus device
 #
@@ -97,14 +127,14 @@ TModbus::~TModbus()
 #   Returns....: *
 #
 ##########################################################################*/
-TModbusDevice *TModbus::GetDevice()
+TSerialModbusDevice *TSerialModbus::GetDevice()
 {
     return FDevice;
 }
 
 /*##########################################################################
 #
-#   Name       : TModbus::Session
+#   Name       : TSerialModbus::Session
 #
 #   Purpose....: Do a session
 #
@@ -113,7 +143,7 @@ TModbusDevice *TModbus::GetDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
+int TSerialModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
 {
     char msg[256];
     int datalen;
@@ -161,7 +191,7 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadCoilStatus
+#   Name       : TSerialModbus::ReadCoilStatus
 #
 #   Purpose....: Read status of single coil
 #
@@ -170,7 +200,7 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadCoilStatus(int Coil)
+int TSerialModbus::ReadCoilStatus(int Coil)
 {
     int len;
     short int temp;
@@ -200,7 +230,7 @@ int TModbus::ReadCoilStatus(int Coil)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadInputStatus
+#   Name       : TSerialModbus::ReadInputStatus
 #
 #   Purpose....: Read status of single input
 #
@@ -209,7 +239,7 @@ int TModbus::ReadCoilStatus(int Coil)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadInputStatus(int Input)
+int TSerialModbus::ReadInputStatus(int Input)
 {
     int len;
     short int temp;
@@ -241,7 +271,7 @@ int TModbus::ReadInputStatus(int Input)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadHoldingRegister
+#   Name       : TSerialModbus::ReadHoldingRegister
 #
 #   Purpose....: Read single holding register
 #
@@ -250,7 +280,7 @@ int TModbus::ReadInputStatus(int Input)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadHoldingRegister(int Reg)
+int TSerialModbus::ReadHoldingRegister(int Reg)
 {
     int len;
     short int temp;
@@ -284,7 +314,7 @@ int TModbus::ReadHoldingRegister(int Reg)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadInputRegister
+#   Name       : TSerialModbus::ReadInputRegister
 #
 #   Purpose....: Read single input register
 #
@@ -293,7 +323,7 @@ int TModbus::ReadHoldingRegister(int Reg)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadInputRegister(int Reg)
+int TSerialModbus::ReadInputRegister(int Reg)
 {
     int len;
     short int temp;
@@ -327,7 +357,7 @@ int TModbus::ReadInputRegister(int Reg)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadCoilStatus
+#   Name       : TSerialModbus::ReadCoilStatus
 #
 #   Purpose....: Read status of single coil
 #
@@ -336,7 +366,7 @@ int TModbus::ReadInputRegister(int Reg)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadCoilStatus(int Coil, int *Val)
+int TSerialModbus::ReadCoilStatus(int Coil, int *Val)
 {
     int len;
     short int temp;
@@ -371,7 +401,7 @@ int TModbus::ReadCoilStatus(int Coil, int *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadInputStatus
+#   Name       : TSerialModbus::ReadInputStatus
 #
 #   Purpose....: Read status of single input
 #
@@ -380,7 +410,7 @@ int TModbus::ReadCoilStatus(int Coil, int *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadInputStatus(int Input, int *Val)
+int TSerialModbus::ReadInputStatus(int Input, int *Val)
 {
     int len;
     short int temp;
@@ -413,7 +443,7 @@ int TModbus::ReadInputStatus(int Input, int *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadHoldingRegister
+#   Name       : TSerialModbus::ReadHoldingRegister
 #
 #   Purpose....: Read single holding register
 #
@@ -422,7 +452,7 @@ int TModbus::ReadInputStatus(int Input, int *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadHoldingRegister(int Reg, int *Val)
+int TSerialModbus::ReadHoldingRegister(int Reg, int *Val)
 {
     int len;
     short int temp;
@@ -457,7 +487,7 @@ int TModbus::ReadHoldingRegister(int Reg, int *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadInputRegister
+#   Name       : TSerialModbus::ReadInputRegister
 #
 #   Purpose....: Read single input register
 #
@@ -466,7 +496,7 @@ int TModbus::ReadHoldingRegister(int Reg, int *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadInputRegister(int Reg, int *Val)
+int TSerialModbus::ReadInputRegister(int Reg, int *Val)
 {
     int len;
     short int temp;
@@ -501,7 +531,7 @@ int TModbus::ReadInputRegister(int Reg, int *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::PresetRegister
+#   Name       : TSerialModbus::PresetRegister
 #
 #   Purpose....: Preset single register
 #
@@ -510,7 +540,7 @@ int TModbus::ReadInputRegister(int Reg, int *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::PresetRegister(int Reg, int Val)
+int TSerialModbus::PresetRegister(int Reg, int Val)
 {
     int len;
     short int temp;
@@ -540,7 +570,7 @@ int TModbus::PresetRegister(int Reg, int Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReadHoldingRegisterABCD
+#   Name       : TSerialModbus::ReadHoldingRegisterABCD
 #
 #   Purpose....: Read single holding register
 #
@@ -549,7 +579,7 @@ int TModbus::PresetRegister(int Reg, int Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
+int TSerialModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
 {
     int len;
     short int temp;
@@ -585,7 +615,7 @@ int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::PresetRegisterABCD
+#   Name       : TSerialModbus::PresetRegisterABCD
 #
 #   Purpose....: Preset single register
 #
@@ -594,7 +624,7 @@ int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::PresetRegisterABCD(int Reg, float Val)
+int TSerialModbus::PresetRegisterABCD(int Reg, float Val)
 {
     int len;
     short int temp;
@@ -632,7 +662,7 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::ReqHoldingRegisters
+#   Name       : TSerialModbus::ReqHoldingRegisters
 #
 #   Purpose....: Read multiple holding registers
 #
@@ -641,7 +671,7 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::ReqHoldingRegisters(int Reg, int Count)
+int TSerialModbus::ReqHoldingRegisters(int Reg, int Count)
 {
     int len;
     short int temp;
@@ -679,7 +709,7 @@ int TModbus::ReqHoldingRegisters(int Reg, int Count)
 
 /*##########################################################################
 #
-#   Name       : TModbus::GetReplySize
+#   Name       : TSerialModbus::GetReplySize
 #
 #   Purpose....: Get reply size (multiple registers)
 #
@@ -688,14 +718,14 @@ int TModbus::ReqHoldingRegisters(int Reg, int Count)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::GetReplySize()
+int TSerialModbus::GetReplySize()
 {
     return FReplySize;
 }
 
 /*##########################################################################
 #
-#   Name       : TModbus::GetReplyBuf
+#   Name       : TSerialModbus::GetReplyBuf
 #
 #   Purpose....: Get reply buf (multiple registers)
 #
@@ -704,14 +734,14 @@ int TModbus::GetReplySize()
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbus::GetReplyBuf(char *buf)
+void TSerialModbus::GetReplyBuf(char *buf)
 {
     memcpy(buf, FReplyBuf, FReplySize);
 }
 
 /*##########################################################################
 #
-#   Name       : TModbus::SetBufferedRegisters
+#   Name       : TSerialModbus::SetBufferedRegisters
 #
 #   Purpose....: Set multiple registers buffer
 #
@@ -720,7 +750,7 @@ void TModbus::GetReplyBuf(char *buf)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
+int TSerialModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
 {
     int datalen = 0;
     int replylen = 0;
@@ -778,7 +808,7 @@ int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
 
 /*##########################################################################
 #
-#   Name       : TModbus::GetBufferedHoldingRegister
+#   Name       : TSerialModbus::GetBufferedHoldingRegister
 #
 #   Purpose....: Read buffered holding register
 #
@@ -787,7 +817,7 @@ int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::GetBufferedHoldingRegister(int Reg, int *Val)
+int TSerialModbus::GetBufferedHoldingRegister(int Reg, int *Val)
 {
     int ok = FALSE;
     int RelReg = Reg - FStartReg;
@@ -824,7 +854,7 @@ int TModbus::GetBufferedHoldingRegister(int Reg, int *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::GetBufferedHoldingRegisterABCD
+#   Name       : TSerialModbus::GetBufferedHoldingRegisterABCD
 #
 #   Purpose....: Read buffered holding register
 #
@@ -833,7 +863,7 @@ int TModbus::GetBufferedHoldingRegister(int Reg, int *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
+int TSerialModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
 {
     int ok = FALSE;
     int RelReg = Reg - FStartReg;
@@ -870,7 +900,7 @@ int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::StartWritePresetRegisters
+#   Name       : TSerialModbus::StartWritePresetRegisters
 #
 #   Purpose....: Start write multiple preset registers
 #
@@ -879,7 +909,7 @@ int TModbus::GetBufferedHoldingRegisterABCD(int Reg, float *Val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
+void TSerialModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
 {
     int i;
     short int temp;
@@ -912,7 +942,7 @@ void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
 
 /*##########################################################################
 #
-#   Name       : TModbus::AddPresetRegister
+#   Name       : TSerialModbus::AddPresetRegister
 #
 #   Purpose....: Add preset register to write req
 #
@@ -921,7 +951,7 @@ void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbus::AddPresetRegister(int Reg, int Val)
+void TSerialModbus::AddPresetRegister(int Reg, int Val)
 {
     int RelReg = Reg - FStartReg;
     short int temp;
@@ -938,7 +968,7 @@ void TModbus::AddPresetRegister(int Reg, int Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::AddPresetRegisterABCD
+#   Name       : TSerialModbus::AddPresetRegisterABCD
 #
 #   Purpose....: Add ABCD preset register to write req
 #
@@ -947,7 +977,7 @@ void TModbus::AddPresetRegister(int Reg, int Val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbus::AddPresetRegisterABCD(int Reg, float Val)
+void TSerialModbus::AddPresetRegisterABCD(int Reg, float Val)
 {
     int RelReg = Reg - FStartReg;
     int itemp;
@@ -963,7 +993,7 @@ void TModbus::AddPresetRegisterABCD(int Reg, float Val)
 
 /*##########################################################################
 #
-#   Name       : TModbus::DoWritePresetRegisters
+#   Name       : TSerialModbus::DoWritePresetRegisters
 #
 #   Purpose....: Do a multiple preset register write
 #
@@ -972,7 +1002,7 @@ void TModbus::AddPresetRegisterABCD(int Reg, float Val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbus::DoWritePresetRegisters()
+int TSerialModbus::DoWritePresetRegisters()
 {
     int len;
     char reply[100];
@@ -986,14 +1016,14 @@ int TModbus::DoWritePresetRegisters()
     return FALSE;
 }
 
-/*##################  TModbusDevice::TModbusDevice  ###############
-*   Purpose....: Constructor for TModbusDevice                                            #
+/*##################  TSerialModbusDevice::TSerialModbusDevice  ###############
+*   Purpose....: Constructor for TSerialModbusDevice                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TModbusDevice::TModbusDevice(TSerialDevice *serial)
+TSerialModbusDevice::TSerialModbusDevice(TSerialDevice *serial)
  : FSection("Modbus")
 {
     int i;
@@ -1006,38 +1036,38 @@ TModbusDevice::TModbusDevice(TSerialDevice *serial)
         FModbusArr[i] = 0;
 }
 
-/*##################  TModbusDevice::TModbusDevice  ###############
-*   Purpose....: Destructor for TModbusDevice                                            #
+/*##################  TSerialModbusDevice::~TSerialModbusDevice  ###############
+*   Purpose....: Destructor for TSerialModbusDevice                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TModbusDevice::~TModbusDevice()
+TSerialModbusDevice::~TSerialModbusDevice()
 {
 }
 
-/*##################  TModbusDevice::Add  ###############
+/*##################  TSerialModbusDevice::Add  ###############
 *   Purpose....: Add a specific address                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TModbusDevice::Add(int Address, TModbus *Modbus)
+void TSerialModbusDevice::Add(int Address, TSerialModbus *Modbus)
 {
     if (Address < 0x80)
         FModbusArr[Address] = Modbus;
 }
 
-/*##################  TModbusDevice::IsUsed  ###############
+/*##################  TSerialModbusDevice::IsUsed  ###############
 *   Purpose....: Check if specific address is used                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-int TModbusDevice::IsUsed(int Address)
+int TSerialModbusDevice::IsUsed(int Address)
 {
     if (Address < 0x80)
         if (FModbusArr[Address])
@@ -1045,33 +1075,33 @@ int TModbusDevice::IsUsed(int Address)
     return FALSE;
 }
 
-/*##################  TModbusDevice::GetSerial  ###############
+/*##################  TSerialModbusDevice::GetSerial  ###############
 *   Purpose....: Get serial device                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TSerialDevice *TModbusDevice::GetSerial()
+TSerialDevice *TSerialModbusDevice::GetSerial()
 {
     return FSerial;
 }
 
-/*##################  TModbusDevice::Reset  ###############
+/*##################  TSerialModbusDevice::Reset  ###############
 *   Purpose....: Reset serial device                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TModbusDevice::Reset()
+void TSerialModbusDevice::Reset()
 {
     FSerial->Reset();
 }
 
 /*##########################################################################
 #
-#   Name       : TModbus::EnableEcho
+#   Name       : TSerialModbusDevice::EnableEcho
 #
 #   Purpose....: Enable echo
 #
@@ -1080,14 +1110,14 @@ void TModbusDevice::Reset()
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbusDevice::EnableEcho()
+void TSerialModbusDevice::EnableEcho()
 {
     FHasEcho = TRUE;
 }
 
 /*##########################################################################
 #
-#   Name       : TModbus::DisableEcho
+#   Name       : TSerialModbusDevice::DisableEcho
 #
 #   Purpose....: Disable echo
 #
@@ -1096,14 +1126,14 @@ void TModbusDevice::EnableEcho()
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbusDevice::DisableEcho()
+void TSerialModbusDevice::DisableEcho()
 {
     FHasEcho = FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TModbus::SetTimeout
+#   Name       : TSerialModbusDevice::SetTimeout
 #
 #   Purpose....: Set timeout
 #
@@ -1112,14 +1142,14 @@ void TModbusDevice::DisableEcho()
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbusDevice::SetTimeout(int ms)
+void TSerialModbusDevice::SetTimeout(int ms)
 {
     FTimeout = ms;
 }
 
 /*##########################################################################
 #
-#   Name       : TModbusDevice::CalcCrc
+#   Name       : TSerialModbusDevice::CalcCrc
 #
 #   Purpose....: Calc CRC
 #
@@ -1128,7 +1158,7 @@ void TModbusDevice::SetTimeout(int ms)
 #   Returns....: *
 #
 ##########################################################################*/
-void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
+void TSerialModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 {
     int lcrc = 0xFFFF;
     int pos;
@@ -1156,7 +1186,7 @@ void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 
 /*##########################################################################
 #
-#   Name       : TModbusDevice::SendAndReceive
+#   Name       : TSerialModbusDevice::SendAndReceive
 #
 #   Purpose....: Send message & receive answer
 #
@@ -1165,7 +1195,7 @@ void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 #   Returns....: *
 #
 ##########################################################################*/
-int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen)
+int TSerialModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen)
 {
     char msg[256];
     char crc[2];

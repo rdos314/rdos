@@ -34,7 +34,7 @@
 class TEch200 : public TThread
 {
 public:
-    TEch200(TModbusDevice *moddev, int address);
+    TEch200(TSerialModbusDevice *moddev, int address);
     virtual ~TEch200();
 
     void SetHeatLimit(int Limit);
@@ -76,7 +76,7 @@ protected:
     int FAutoAlarms;
     int FManualAlarms;
 
-    TModbus FModbus;
+    TSerialModbus FModbus;
 
 };
 

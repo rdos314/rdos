@@ -41,7 +41,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TEch200::TEch200(TModbusDevice *moddev, int address)
+TEch200::TEch200(TSerialModbusDevice *moddev, int address)
   : FModbus(moddev, address)
 {
     FHeatInlet = 0;
