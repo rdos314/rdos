@@ -1105,7 +1105,7 @@ int TSerialModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
 
         if (ok)
         {
-            switch (FRecBuf[1])
+            switch (code)
             {
                 case 1:
                 case 2:
@@ -1313,6 +1313,7 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
     int pos;
     int len;
     int datalen = 0;
+    char *ptr;
     int i;
     short int temp;
     bool ok = false;
@@ -1335,28 +1336,93 @@ int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
     temp = RdosSwapShort(temp);
     memcpy(FSendBuf + 4, &temp, 2);
 
-    FSendBuf[5] = modbus->FAddress;
-    FSendBuf[6] = code;
+    FSendBuf[6] = modbus->FAddress;
+    FSendBuf[7] = code;
 
     if (Connect() && size < 256)
     {
-        memcpy(FSendBuf + 7, buf, size);
+        memcpy(FSendBuf + 8, buf, size);
 
-        FSocket->Write(FSendBuf, size + 7);
+        FSocket->Write(FSendBuf, size + 8);
         FSocket->Push();
 
-        pos = 0;
+        for (pos = 0; pos < 7 && FSocket->WaitForData(FTimeout); pos++)
+            FRecBuf[pos] = FSocket->Read();
+
+        if (pos == 7)
+            ok = true;
+
+        if (ok)
+        {
+            memcpy(&temp, FRecBuf, 2);
+            temp = RdosSwapShort(temp);
+            if (temp != FTransId)
+                ok = false;
+        }
+
+        if (ok)
+        {
+            memcpy(&temp, FRecBuf + 2, 2);
+            if (temp)
+                ok = false;
+        }
+
+        if (ok)
+            if (FRecBuf[6] != modbus->FAddress)
+                ok = false;
+
+        if (ok)
+        {
+            memcpy(&temp, FRecBuf + 4, 2);
+            len = RdosSwapShort(temp);
+            if (len >= 256)
+                ok = false;
+        }
+
+        if (ok)
+        {
+            ptr = modbus->FReplyBuf;
+            modbus->FReplySize = len;
+
+            for (i = 0; i < len && ok; i++)
+            {
+                ok = FSocket->WaitForData(FTimeout);
+                if (ok)
+                {
+                    *ptr = FSocket->Read();
+                    ptr++;
+                }
+            }
+        }
+
+        if (ok)
+        {
+            switch (code)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    datalen = (unsigned int)FRecBuf[0];
+                    break;
+
+                case 5:
+                case 6:
+                case 15:
+                case 16:
+                    datalen = 4;
+                    break;
+
+                default:
+                    ok = FALSE;
+                    break;
+            }
+        }
 
     }
 
-    if (ok)
+    if (!ok)
     {
-        memcpy(modbus->FReplyBuf, FRecBuf + 2, len - 4);
-        modbus->FReplySize = len - 4;
-    }
-    else
-    {
-
         modbus->FReplySize = 0;
         datalen = 0;
     }
