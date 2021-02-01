@@ -259,12 +259,15 @@ get_usb_com_par     ENDP
 
 OpenDevHandle Proc near
     push es
+    push ax
 ;
     mov es,ds:ups_device_sel
     mov es,es:uds_device_sel
-    mov es,es:uc_dev_sel
-    OpenUsbDeviceSel
+    mov bx,es:uc_controller
+    mov al,es:uc_port
+    OpenUsbDevice
 ;
+    pop ax
     pop es
     ret
 OpenDevHandle Endp
