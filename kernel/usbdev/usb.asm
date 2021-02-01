@@ -4685,6 +4685,7 @@ FreeDev       Endp
 
 handler_thread:
     mov ds,bp
+    xor bp,bp
     movzx edi,dl
     add edi,edi
 ;    
@@ -4749,6 +4750,7 @@ uaDetach:
     jmp uaDetachLocked
 
 uaLockedError:
+    mov bp,ds
     mov ax,es
     or ax,ax
     jnz uaDisableDev
@@ -4789,7 +4791,7 @@ uaNotified:
     mov ax,10
     WaitMilliSec
 ;
-    mov bx,es:usbd_parent_thread
+    mov ax,es:usbd_parent_thread
     call FreeDev
 ;
     call fword ptr ds:is_port_connected_proc
@@ -4800,9 +4802,10 @@ uaDone:
     mov ds:[edi].usb_thread_arr,0
     LeaveSection ds:usb_section
 ;
-    or bx,bx
+    or ax,ax
     jz uaExit
 ;
+    mov bx,ax
     Signal
 
 uaExit:
