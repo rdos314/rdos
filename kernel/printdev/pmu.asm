@@ -809,8 +809,8 @@ ptLoop:
     call SendLine
     call FinishLine
 ;
-    mov ax,25
-    WaitMilliSec
+;    mov ax,25
+;    WaitMilliSec
 ;
     add dx,24
     cmp dx,es:bs_height

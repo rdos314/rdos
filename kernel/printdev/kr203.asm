@@ -1902,7 +1902,6 @@ krInitLoop:
 krRetry:
     loop krInitLoop
 ;
-    int 3
     lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_dev_handle
     ResetUsbDevice
