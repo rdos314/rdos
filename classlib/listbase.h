@@ -79,7 +79,6 @@ public:
 	int RemoveLast();
 	int RemoveCurrent();
 	int Remove(int n);
-	int ReplaceCurrent(const TListBaseNode *newln);
 
     void Concat(const TListBase &src1, const TListBase &src2); 
     void Intersect(const TListBase &src1, const TListBase &src2); 
@@ -101,6 +100,7 @@ protected:
 	int Replace(int n, const TListBaseNode *newln);
 	TListBaseNode *Get(int n);
 	int Compare(const TListBase &l) const;
+	int ReplaceCurrent(const TListBaseNode *newln);
 
 	virtual TListBaseNode *Clone(const TListBaseNode *ln) const = 0;
 
