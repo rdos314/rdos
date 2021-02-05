@@ -705,6 +705,8 @@ int TStorageList::Replace(int pos, const void *data)
 int TStorageList::ReplaceCurrent(const void *data)
 {
     TStorageListNode n = TStorageListNode(data, FDataSize);
+    TStorageListNode *curr = (TStorageListNode *)FCurrPos;
+    n.FID = curr->FID;
     return TListBase::ReplaceCurrent(&n);
 }
 
