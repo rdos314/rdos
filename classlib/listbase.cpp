@@ -1083,6 +1083,52 @@ int TListBase::Remove(int pos)
 
 /*##########################################################################
 #
+#   Name       : TListBase::ReplaceCurrent
+#
+#   Purpose....: Replace current entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TListBase::ReplaceCurrent(const TListBaseNode *newln)
+{
+    int success;
+    TListBaseNode *p;
+    TListBaseNode *prev;
+
+    FSection.Enter();
+
+    if (FList && FCurrPos)
+    {
+        prev = 0;
+        p = FList;
+        while (p && p != FCurrPos)
+        {
+            prev = p;
+            p = p->FNext;
+        }
+
+        if (p)
+        {
+            p->Load(*newln);
+            Update(p);
+            success = TRUE;
+        }
+        else
+            success = FALSE;
+    }
+    else
+        success = FALSE;
+        
+    FSection.Leave();
+
+    return success;
+}
+
+/*##########################################################################
+#
 #   Name       : TListBase::Replace
 #
 #   Purpose....: Replace specified entry

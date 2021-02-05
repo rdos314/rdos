@@ -79,6 +79,7 @@ public:
 	int RemoveLast();
 	int RemoveCurrent();
 	int Remove(int n);
+	int ReplaceCurrent(const TListBaseNode *newln);
 
     void Concat(const TListBase &src1, const TListBase &src2); 
     void Intersect(const TListBase &src1, const TListBase &src2); 
