@@ -78,6 +78,7 @@ public:
 	void AddLast(const void *data);
 	void AddAt(int n, const void *data);
     int Replace(int n, const void *data);
+    int ReplaceCurrent(const void *data);
 	virtual void Update(TListBaseNode *ln);
 
     const void *Get();

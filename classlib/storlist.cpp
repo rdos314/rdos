@@ -691,6 +691,23 @@ int TStorageList::Replace(int pos, const void *data)
         return TListBase::Replace(pos, &n);
 }
 
+/*##########################################################################
+#
+#   Name       : TStorageList::ReplaceCurrent
+#
+#   Purpose....: Replace current entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStorageList::ReplaceCurrent(const void *data)
+{
+    TStorageListNode n = TStorageListNode(data, FDataSize);
+    return TListBase::ReplaceCurrent(&n);
+}
+
 /*##################  TStorageList::CalcCrc ############
 *   Purpose....: Calculate CRC                      #
 *   In params..: *                                                          #
