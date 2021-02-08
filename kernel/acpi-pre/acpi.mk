@@ -1,3 +1,3 @@
-project : C:\rdos\kernel\acpi-pre\acpi.rdv .SYMBOLIC
+project : F:\rdos\kernel\acpi-pre\acpi.rdv .SYMBOLIC
 
-!include C:\rdos\kernel\acpi-pre\acpi.mk1
+!include F:\rdos\kernel\acpi-pre\acpi.mk1
