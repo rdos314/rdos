@@ -1467,6 +1467,13 @@ clpRawDone:
     pop es
  
 clpDone:    
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    clc
+    jz clpOk
+;
+    stc
+
+clpOk:
     pop bx
     ret
 ClearPipe       Endp
@@ -1493,7 +1500,6 @@ StartReconfigPipe       Proc near
     jc srpConfig
 ;
     call ClearPipe
-    clc
     jmp srpDone
 
 srpConfig:
@@ -1749,8 +1755,12 @@ purpIn:
     stc
     jz purpLeave
 ;
-    push ds
     mov gs,bx
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    stc
+    jnz purpLeave
+;
+    push ds
     ClearSignal
     mov ds,gs:usbp_raw_sel
     GetThread
@@ -1785,8 +1795,12 @@ purpOut:
     stc
     jz purpLeave
 ;
-    push ds
     mov gs,bx
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    stc
+    jnz purpLeave
+;
+    push ds
     ClearSignal
     mov ds,gs:usbp_raw_sel
     GetThread
@@ -2584,6 +2598,10 @@ add_usb_scatter_pipe16 Endp
 RunScatter        Proc near
     push ds
     mov gs,bx
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    stc
+    jnz rsDone
+;
     ClearSignal
     mov ds,gs:usbp_scatter_sel
     GetThread
@@ -2606,7 +2624,8 @@ RunScatter        Proc near
     mov ds,es:usbd_func_sel
     call fword ptr ds:finish_scatter_proc
     pop ds
-;
+
+rsDone:
     push es
     pushf
 ;
@@ -2769,6 +2788,9 @@ bwfpIn:
     mov cx,gs:usbp_packet_sel
     or cx,cx
     jz bwfpLeaveSignal
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz bwfpLeaveSignal
 ;
     mov gs:usbp_wait,bx
     mov es,cx

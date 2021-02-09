@@ -31,6 +31,9 @@ MAX_USB_SCATTER_COUNT = 32
 DEV_FLAG_DETACHED     = 1
 DEV_FLAG_ATTACHED     = 2
 
+PIPE_FLAG_ACTIVE      = 1
+PIPE_FLAG_FAULT       = 2
+
 usb_function_struc   STRUC
 
 lock_proc                  DD ?,?

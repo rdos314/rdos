@@ -2272,6 +2272,8 @@ StopTds Proc near
     push eax
     push edx
 ;
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:ep_qh
@@ -2528,6 +2530,8 @@ spIntr:
     mov fs:[edx].qh_max_packet,ax
 
 spDo:
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
+;
     mov ds,gs:usbp_packet_sel
     mov bx,ds:usbpk_tail_ptr
     or bx,bx
@@ -3001,6 +3005,7 @@ ReadRaw   Proc far
     mov fs:[edx].qtd_size,cx
     LinearToPhysicalMemBlk
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
     mov edx,gs:ep_qh
     mov fs:[edx].qh_next_qtd,eax
 ;
@@ -3049,6 +3054,7 @@ WriteRaw   Proc far
     mov fs:[edx].qtd_size,cx
     LinearToPhysicalMemBlk
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
     mov edx,gs:ep_qh
     mov fs:[edx].qh_next_qtd,eax
 ;
@@ -3095,6 +3101,8 @@ FinishRaw   Proc far
     jmp frDone
 
 frOk:
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     mov cx,ds:er_size
     mov ax,fs:[edx].qtd_size
     and ax,7FFFh
@@ -3234,6 +3242,8 @@ scSize:
 ;
     or fs:[edi].qtd_flags,80h
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
+;
     mov edx,ds:usbsc_arr.usbe_td
     LinearToPhysicalMemBlk
     mov edx,gs:ep_qh
@@ -3287,6 +3297,8 @@ FinishScatter   Proc far
     jmp fscClean
 
 fscOk:
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     xor ebp,ebp
     mov si,OFFSET usbsc_arr
     mov cx,ds:usbsc_count
@@ -4320,6 +4332,7 @@ hpiReport:
     push ds
     push edx
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
     mov ds,bp
     mov dl,gs:ued_address
     call ReportStatus
@@ -4406,6 +4419,7 @@ HandleRaw   Proc near
     push ds
     push edx
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
     mov ds,bp
     mov dl,gs:ued_address
     call ReportStatus
@@ -4466,6 +4480,7 @@ hscLoop:
     push ds
     push edx
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
     mov ds,bp
     mov dl,gs:ued_address
     call ReportStatus
@@ -4505,6 +4520,12 @@ HandleScatter  Endp
 
 CheckIn   Proc near
     push bx
+;
+    test gs:usbp_flags,PIPE_FLAG_ACTIVE
+    jz citDone
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz citDone
 ;
     mov bx,gs:usbp_scatter_sel
     or bx,bx
@@ -4549,6 +4570,12 @@ CheckIn   Endp
 
 CheckOut   Proc near
     push bx
+;
+    test gs:usbp_flags,PIPE_FLAG_ACTIVE
+    jz cotDone
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz cotDone
 ;
     mov bx,gs:usbp_scatter_sel
     or bx,bx
