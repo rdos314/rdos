@@ -1782,6 +1782,8 @@ StopTds Proc near
     push ebx
     push edx
 ;
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:op_ed
@@ -2057,7 +2059,7 @@ spbSave:
     mov dh,es:usbd_address
     and dh,7Fh
     or al,dh
-;    
+;
     cmp es:usbd_speed,0
     jnz spbSpeedOk
 ;
@@ -2065,6 +2067,7 @@ spbSave:
 
 spbSpeedOk:    
     or ah,10h
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
     mov fs:[esi].oes_fa_en,ax
 ;
     popad
@@ -2628,6 +2631,7 @@ wrSizeOk:
     mov fs:[edi].otd_flags,0F004h
     mov gs:op_tail_td,edx
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax
 ;
@@ -2687,6 +2691,7 @@ FinishRaw   Proc far
 
 frRel:
     pushf
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
     xor cx,cx
     xchg cx,ds:or_curr_count
     or cx,cx
@@ -3538,6 +3543,7 @@ hpiReport:
     or ax,ax
     jz hpiSignal
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
     mov dl,gs:ued_address
     ReportUsbPipeEvent
 
@@ -3613,6 +3619,7 @@ hroLoop:
     or ax,ax
     jz hroNext
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
     mov dl,gs:ued_address
     ReportUsbPipeEvent
 
@@ -3648,6 +3655,12 @@ HandleRaw  Endp
 CheckIn   Proc near
     push ebx
 ;
+    test gs:usbp_flags,PIPE_FLAG_ACTIVE
+    jz ciDone
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz ciDone
+;
     mov bx,gs:usbp_packet_sel
     or bx,bx
     jz ciDone
@@ -3675,6 +3688,12 @@ CheckIn   Endp
 
 CheckOut   Proc near
     push ebx
+;
+    test gs:usbp_flags,PIPE_FLAG_ACTIVE
+    jz cotDone
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz cotDone
 ;
     mov bx,gs:usbp_raw_sel
     or bx,bx
