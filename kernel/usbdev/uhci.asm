@@ -2382,6 +2382,8 @@ StopTds   Proc near
     push eax
     push edx
 ;
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     mov ax,flat_sel
     mov fs,ax
     mov edx,gs:up_qh
@@ -2638,6 +2640,8 @@ sipSave:
     mov ax,ds:usbpk_entry_count
     dec ax
     mov ds:usbpk_tail_ptr,ax
+;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
 ;
     mov bx,SIZE usb_packet_struc
     mov edx,ds:[bx]
@@ -3189,6 +3193,8 @@ wrSizeOk:
     mov ds:ur_curr_count,bx
     ClearSignal
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
+;
     mov edx,ds:ur_td_arr
     LinearToPhysicalMemBlk
     mov esi,gs:up_qh
@@ -3240,6 +3246,8 @@ FinishRaw   Proc far
     jz frFail
     
 frOk:
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     mov cx,ds:ur_curr_count
     or cx,cx
     clc
@@ -3590,6 +3598,8 @@ hpiSave:
     jmp hpiSignal
 
 hpiReport:
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
+;
     push edx
     mov dl,gs:ued_address
     call ReportStatus
@@ -3683,6 +3693,8 @@ hroLoop:
     and al,7Ch
     jz hroNext
 ;
+    lock or gs:usbp_flags,PIPE_FLAG_FAULT
+;
     push edx
     mov dl,gs:ued_address
     call ReportStatus
@@ -3720,6 +3732,12 @@ HandleRawOut  Endp
 CheckIn   Proc near
     push ebx
 ;
+    test gs:usbp_flags,PIPE_FLAG_ACTIVE
+    jz ciDone
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz ciDone
+;
     mov bx,gs:usbp_packet_sel
     or bx,bx
     jz ciDone
@@ -3747,6 +3765,12 @@ CheckIn   Endp
 
 CheckOut   Proc near
     push ebx
+;
+    test gs:usbp_flags,PIPE_FLAG_ACTIVE
+    jz cotDone
+;
+    test gs:usbp_flags,PIPE_FLAG_FAULT
+    jnz cotDone
 ;
     mov bx,gs:usbp_raw_sel
     or bx,bx
