@@ -4333,6 +4333,13 @@ hpiReport:
     push edx
 ;
     lock or gs:usbp_flags,PIPE_FLAG_FAULT
+    lock or es:usbd_flags,DEV_FLAG_FAULT
+;
+    push bx
+    mov bx,es:usbd_thread
+    Signal
+    pop bx
+;
     mov ds,bp
     mov dl,gs:ued_address
     call ReportStatus
@@ -4420,6 +4427,13 @@ HandleRaw   Proc near
     push edx
 ;
     lock or gs:usbp_flags,PIPE_FLAG_FAULT
+    lock or es:usbd_flags,DEV_FLAG_FAULT
+;
+    push bx
+    mov bx,es:usbd_thread
+    Signal
+    pop bx
+;
     mov ds,bp
     mov dl,gs:ued_address
     call ReportStatus
@@ -4481,6 +4495,13 @@ hscLoop:
     push edx
 ;
     lock or gs:usbp_flags,PIPE_FLAG_FAULT
+    lock or es:usbd_flags,DEV_FLAG_FAULT
+;
+    push bx
+    mov bx,es:usbd_thread
+    Signal
+    pop bx
+;
     mov ds,bp
     mov dl,gs:ued_address
     call ReportStatus

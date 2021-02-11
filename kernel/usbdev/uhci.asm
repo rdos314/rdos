@@ -3599,6 +3599,12 @@ hpiSave:
 
 hpiReport:
     lock or gs:usbp_flags,PIPE_FLAG_FAULT
+    lock or es:usbd_flags,DEV_FLAG_FAULT
+;
+    push bx
+    mov bx,es:usbd_thread
+    Signal
+    pop bx
 ;
     push edx
     mov dl,gs:ued_address
@@ -3694,6 +3700,12 @@ hroLoop:
     jz hroNext
 ;
     lock or gs:usbp_flags,PIPE_FLAG_FAULT
+    lock or es:usbd_flags,DEV_FLAG_FAULT
+;
+    push bx
+    mov bx,es:usbd_thread
+    Signal
+    pop bx
 ;
     push edx
     mov dl,gs:ued_address

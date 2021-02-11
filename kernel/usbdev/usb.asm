@@ -4759,6 +4759,9 @@ uaConnected:
     test es:usbd_flags,DEV_FLAG_DETACHED
     jnz uaDetach
 ;
+    test es:usbd_flags,DEV_FLAG_FAULT
+    jnz uaDetach
+;
     call fword ptr ds:is_dev_connected_proc
     jc uaDetach
 ;
