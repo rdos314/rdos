@@ -3652,26 +3652,6 @@ CloseUsbPipe      MACRO
         UserGate close_usb_pipe_nr
                                                 ENDM
 
-; IN  BX        Device handle
-HasUsbScatter      MACRO
-        UserGate has_usb_scatter_nr
-                                                ENDM
-
-; IN  BX        Device handle
-; IN  DL        Pipe #
-; IN  (E)CX     Buffer size
-; IN  ES:(E)DI  Buffer data
-AddUsbScatterPipe      MACRO
-        UserGate add_usb_scatter_pipe_nr
-                                                ENDM
-
-; IN  AX        Timeout in ms
-; IN  BX        Device handle
-; IN  DL        Pipe #
-PostUsbScatterPipe      MACRO
-        UserGate post_usb_scatter_pipe_nr
-                                                ENDM
-
 ;   IN  BX          Device handle
 ;   IN  DL          Pipe #
 ;   OUT CX          Buffers

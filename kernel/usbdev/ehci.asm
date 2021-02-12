@@ -3120,237 +3120,6 @@ FinishRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HasScatter
-;
-;       DESCRIPTION:    Has scatter
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HasScatter   Proc far
-    push eax
-    push ebx
-;
-    GetHighestPhysical
-    or ebx,ebx
-    clc
-    jz hsDone
-;
-    test ds:ehc_hcc_flags,HCC_64
-    stc
-    jz hsDone
-;
-    clc
-
-hsDone:
-    pop ebx
-    pop eax
-    retf32
-HasScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartScatter
-;
-;       DESCRIPTION:    Start scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartScatter   Proc far
-    push ds
-    push fs
-    pushad
-;
-    mov ax,flat_sel
-    mov fs,ax
-    mov bx,ds
-;
-    mov edx,gs:ep_qh
-    mov al,es:usbd_address
-    mov fs:[edx].qh_adress,al
-    mov al,gs:ued_address
-    and al,0Fh
-    mov ah,fs:[edx].qh_endpoint
-    and ah,0B0h
-    or al,ah
-    mov fs:[edx].qh_endpoint,al
-;
-    mov al,gs:ued_attrib
-    and al,3
-    cmp al,3
-    je scIntr
-
-scBulk:
-    mov ax,gs:ued_maxsize
-    or ax,0F000h
-    mov fs:[edx].qh_max_packet,ax
-    jmp scQhOk
-
-scIntr:
-    mov ax,gs:ued_maxsize
-    mov fs:[edx].qh_max_packet,ax
-
-scQhOk:
-    mov ds,gs:usbp_scatter_sel
-    mov si,OFFSET usbsc_arr
-    mov cx,ds:usbsc_count
-    xor edi,edi
-
-scLoop:
-    push ds
-    mov ds,bx
-    call AllocateQtd
-    mov fs:[edx].qtd_status,80h
-    pop ds
-;
-    mov ds:[si].usbe_td,edx
-    or edi,edi
-    jz scNext
-;
-    LinearToPhysicalMemBlk
-    mov fs:[edi].qtd_next,eax
-
-scNext:
-    mov edi,edx
-    mov fs:[edi].qtd_next,1
-    mov fs:[edi].qtd_alt,1
-    mov fs:[edi].qtd_status,80h
-    mov al,gs:ued_address
-    rol al,1
-    and al,1
-    or al,0Ch
-    mov fs:[edi].qtd_flags,al
-;
-    mov eax,ds:[si].usbe_phys
-    mov fs:[edi].qtd_page0,eax
-;
-    mov eax,ds:[si].usbe_phys+4
-    or eax,eax
-    jz scSize
-;
-    mov fs:[edi].qtdu64_page0,eax
-
-scSize:
-    mov eax,ds:[si].usbe_size
-    mov fs:[edi].qtd_size,ax
-    add si,16
-    sub cx,1
-    jnz scLoop
-;
-    or fs:[edi].qtd_flags,80h
-;
-    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
-;
-    mov edx,ds:usbsc_arr.usbe_td
-    LinearToPhysicalMemBlk
-    mov edx,gs:ep_qh
-    mov fs:[edx].qh_next_qtd,eax
-;
-    popad
-    pop fs
-    pop ds
-    retf32
-StartScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FinishScatter
-;
-;       DESCRIPTION:    Finish scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FinishScatter   Proc far
-    push ds
-    push fs
-    push eax
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov ax,flat_sel
-    mov fs,ax
-    mov bx,ds
-    mov ds,gs:usbp_scatter_sel
-;
-    mov si,ds:usbsc_count
-    dec si
-    shl si,4
-    mov edx,ds:[si].usbsc_arr.usbe_td
-    mov al,fs:[edx].qtd_status
-    test al,80h
-    jz fscOk
-;
-    call StopTds
-    xor ecx,ecx
-    stc
-    jmp fscClean
-
-fscOk:
-    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
-;
-    xor ebp,ebp
-    mov si,OFFSET usbsc_arr
-    mov cx,ds:usbsc_count
-
-fscSizeLoop:
-    mov edx,ds:[si].usbe_td
-    mov edi,ds:[si].usbe_size
-    mov ax,fs:[edx].qtd_size
-    and eax,7FFFh
-    sub edi,eax
-    add ebp,edi
-;
-    add si,16
-    loop fscSizeLoop
-;
-    mov ecx,ebp
-    clc
-
-fscClean:
-    push ecx
-    pushf
-;
-    mov si,OFFSET usbsc_arr
-    mov cx,ds:usbsc_count
-
-fscClearLoop:
-    mov edx,ds:[si].usbe_td
-    push ds
-    mov ds,bx
-    call FreeQtd
-    pop ds
-;
-    add si,16
-    loop fscClearLoop
-;
-    popf
-    pop ecx
-
-fscDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop eax
-    pop fs
-    pop ds
-    retf32
-FinishScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           IsRunning
 ;
 ;       DESCRIPTION:    Check if conntroller is running
@@ -3707,6 +3476,40 @@ fdvOutNext:
     pop fs
     retf32
 FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               PowerOffPort
+;
+;       DESCRIPTION:        Power off port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOffPort   Proc far
+    int 3
+    retf32
+PowerOffPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               PowerOnPort
+;
+;       DESCRIPTION:        Power on port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOnPort   Proc far
+    int 3
+    retf32
+PowerOnPort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4461,80 +4264,6 @@ HandleRaw  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandleScatter
-;
-;       DESCRIPTION:    Handle scatter pipe
-;
-;       PARAMETERS:     DS      Function selector
-;                       ES      Device sel
-;                       FS      Flat sel
-;                       GS      Pipe sel
-;                       BX      Scatter sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleScatter   Proc near
-    push ds
-    push ecx
-    push edx
-    push esi
-    push ebp
-;
-    mov bp,ds
-    mov ds,bx
-    mov bx,ds:usbsc_thread
-    or bx,bx
-    jz hscDone
-;
-    mov si,OFFSET usbsc_arr
-    mov cx,ds:usbsc_count
-
-hscLoop:
-    mov edx,ds:[si].usbe_td
-    mov al,fs:[edx].qtd_status
-    test al,80h
-    jnz hscDone
-;
-    and al,7Ch
-    jz hscNext
-;
-    push ds
-    push edx
-;
-    lock or gs:usbp_flags,PIPE_FLAG_FAULT
-    lock or es:usbd_flags,DEV_FLAG_FAULT
-;
-    push bx
-    mov bx,es:usbd_thread
-    Signal
-    pop bx
-;
-    mov ds,bp
-    mov dl,gs:ued_address
-    call ReportStatus
-;
-    pop edx
-    pop ds
-
-hscNext:
-    add si,16
-    loop hscLoop
-
-hscSignal:
-    Signal
-
-hscDone:
-    pop ebp
-    pop esi
-    pop edx
-    pop ecx
-    pop ds
-    ret
-HandleScatter  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CheckIn
 ;
 ;       DESCRIPTION:    Check IN pipe
@@ -4555,14 +4284,6 @@ CheckIn   Proc near
     test gs:usbp_flags,PIPE_FLAG_FAULT
     jnz citDone
 ;
-    mov bx,gs:usbp_scatter_sel
-    or bx,bx
-    jz citNotScatter
-;
-    call HandleScatter
-    jmp citDone
-
-citNotScatter:
     mov bx,gs:usbp_packet_sel
     or bx,bx
     jz citNotPacket
@@ -4605,14 +4326,6 @@ CheckOut   Proc near
     test gs:usbp_flags,PIPE_FLAG_FAULT
     jnz cotDone
 ;
-    mov bx,gs:usbp_scatter_sel
-    or bx,bx
-    jz cotNotScatter
-;
-    call HandleScatter
-    jmp cotDone
-
-cotNotScatter:
     mov bx,gs:usbp_raw_sel
     or bx,bx
     jz cotDone
@@ -4801,37 +4514,36 @@ StartFunctionThread Endp
 ehci_tab:
 et00 DD OFFSET Block,              SEG code
 et01 DD OFFSET Unblock,            SEG code
-ec02 DD OFFSET ResetPort,          SEG code
-et03 DD OFFSET DisablePort,        SEG code
-ec04 DD OFFSET DisableDev,         SEG code
-ec05 DD OFFSET IsPortConnected,    SEG code
-ec06 DD OFFSET IsRunning,          SEG code
-et07 DD OFFSET AllocateAddress,    SEG code
-et08 DD OFFSET FreeAddress,        SEG code
-ec09 DD OFFSET CreateDev,          SEG code
-ec0A DD OFFSET Unlink,             SEG code
-ec0B DD OFFSET IsDeviceConnected,  SEG code
-ec0C DD OFFSET FreeDev,            SEG code
-et0D DD OFFSET CreateControl,      SEG code
-ec0E DD OFFSET CreateBulkPipe,     SEG code
-ec0F DD OFFSET CreateIntrPipe,     SEG code
-et10 DD OFFSET AddressDev,         SEG code
-et11 DD OFFSET ChangeAddress,      SEG code
-et12 DD OFFSET UpdateMaxLen,       SEG code
-ec13 DD OFFSET ControlMsg,         SEG code
-et14 DD OFFSET ConfigDev,          SEG code
-ec15 DD OFFSET OpenPacket,         SEG code
-ec16 DD OFFSET ClosePacket,        SEG code
-ec17 DD OFFSET ReqPacket,          SEG code
-ec18 DD OFFSET RelPacket,          SEG code
-ec19 DD OFFSET OpenRaw,            SEG code
-ec1A DD OFFSET CloseRaw,           SEG code
-ec1B DD OFFSET ReadRaw,            SEG code
-ec1C DD OFFSET WriteRaw,           SEG code
-ec1D DD OFFSET FinishRaw,          SEG code
-ec1E DD OFFSET HasScatter,         SEG code
-ec1F DD OFFSET StartScatter,       SEG code
-ec20 DD OFFSET FinishScatter,      SEG code
+ec02 DD OFFSET PowerOffPort,       SEG code
+ec03 DD OFFSET PowerOnPort,        SEG code
+ec04 DD OFFSET ResetPort,          SEG code
+et05 DD OFFSET DisablePort,        SEG code
+ec06 DD OFFSET DisableDev,         SEG code
+ec07 DD OFFSET IsPortConnected,    SEG code
+ec08 DD OFFSET IsRunning,          SEG code
+et09 DD OFFSET AllocateAddress,    SEG code
+et0A DD OFFSET FreeAddress,        SEG code
+ec0B DD OFFSET CreateDev,          SEG code
+ec0C DD OFFSET Unlink,             SEG code
+ec0D DD OFFSET IsDeviceConnected,  SEG code
+ec0E DD OFFSET FreeDev,            SEG code
+et0F DD OFFSET CreateControl,      SEG code
+ec10 DD OFFSET CreateBulkPipe,     SEG code
+ec11 DD OFFSET CreateIntrPipe,     SEG code
+et12 DD OFFSET AddressDev,         SEG code
+et13 DD OFFSET ChangeAddress,      SEG code
+et14 DD OFFSET UpdateMaxLen,       SEG code
+ec15 DD OFFSET ControlMsg,         SEG code
+et16 DD OFFSET ConfigDev,          SEG code
+ec17 DD OFFSET OpenPacket,         SEG code
+ec18 DD OFFSET ClosePacket,        SEG code
+ec19 DD OFFSET ReqPacket,          SEG code
+ec1A DD OFFSET RelPacket,          SEG code
+ec1B DD OFFSET OpenRaw,            SEG code
+ec1C DD OFFSET CloseRaw,           SEG code
+ec1D DD OFFSET ReadRaw,            SEG code
+ec1E DD OFFSET WriteRaw,           SEG code
+ec1F DD OFFSET FinishRaw,          SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -4853,7 +4565,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

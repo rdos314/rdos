@@ -3640,23 +3640,6 @@
     CallGate_close_usb_pipe \
     __parm [__ebx] [__dl]
 
-#pragma aux RdosHasUsbScatter = \
-    CallGate_has_usb_scatter \
-    CarryToBool \
-    __value [eax] \
-    __parm [__ebx]
-
-#pragma aux RdosAddUsbScatterPipe = \
-    CallGate_add_usb_scatter_pipe \
-    CarryToBool \
-    __value [eax] \
-    __parm [__ebx] [__dl] [__ecx] [__edi]
-
-#pragma aux RdosPostUsbScatterPipe = \
-    CallGate_post_usb_scatter_pipe \
-    CarryToBool \
-    __value [eax] \
-    __parm [__ebx] [__dl] [__eax]
 
 #pragma aux RdosGetUsedUsbBuffers = \
     CallGate_get_used_usb_buffers \

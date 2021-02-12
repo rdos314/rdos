@@ -2744,56 +2744,6 @@ FinishRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HasScatter
-;
-;       DESCRIPTION:    Has scatter
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HasScatter   Proc far
-    stc
-    retf32
-HasScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartScatter
-;
-;       DESCRIPTION:    Start scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartScatter   Proc far
-    stc
-    retf32
-StartScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FinishScatter
-;
-;       DESCRIPTION:    Finish scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FinishScatter   Proc far
-    stc
-    retf32
-FinishScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           IsRunning
 ;
 ;       DESCRIPTION:    Check if controller is running
@@ -3148,6 +3098,40 @@ CreateDev  Endp
 FreeDev   Proc far
     retf32
 FreeDev   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               PowerOffPort
+;
+;       DESCRIPTION:        Power off port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOffPort   Proc far
+    int 3
+    retf32
+PowerOffPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               PowerOnPort
+;
+;       DESCRIPTION:        Power on port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOnPort   Proc far
+    int 3
+    retf32
+PowerOnPort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4147,37 +4131,36 @@ StartFunctionThread Endp
 ohci_tab:
 ot00 DD OFFSET Block,               SEG code
 ot01 DD OFFSET Unblock,             SEG code
-ot02 DD OFFSET ResetPort,           SEG code
-ot03 DD OFFSET DisablePort,         SEG code
-ot04 DD OFFSET DisableDev,          SEG code
-ot05 DD OFFSET IsPortConnected,     SEG code
-ot06 DD OFFSET IsRunning,           SEG code
-ot07 DD OFFSET AllocateAddress,     SEG code
-ot08 DD OFFSET FreeAddress,         SEG code
-ot09 DD OFFSET CreateDev,           SEG code
-ot0A DD OFFSET Unlink,              SEG code
-ot0B DD OFFSET IsDeviceConnected,   SEG code
-ot0C DD OFFSET FreeDev,             SEG code
-ot0D DD OFFSET CreateControl,       SEG code
-ot0E DD OFFSET CreateBulkPipe,      SEG code
-ot0F DD OFFSET CreateIntrPipe,      SEG code
-ot10 DD OFFSET AddressDev,          SEG code
-ot11 DD OFFSET ChangeAddress,       SEG code
-ot12 DD OFFSET UpdateMaxLen,        SEG code
-ot13 DD OFFSET ControlMsg,          SEG code
-ot14 DD OFFSET ConfigDev,           SEG code
-ot15 DD OFFSET OpenPacket,          SEG code
-ot16 DD OFFSET ClosePacket,         SEG code
-ot17 DD OFFSET ReqPacket,           SEG code
-ot18 DD OFFSET RelPacket,           SEG code
-ot19 DD OFFSET OpenRaw,             SEG code
-ot1A DD OFFSET CloseRaw,            SEG code
-ot1B DD OFFSET ReadRaw,             SEG code
-ot1C DD OFFSET WriteRaw,            SEG code
-ot1D DD OFFSET FinishRaw,           SEG code
-ot1E DD OFFSET HasScatter,          SEG code
-ot1F DD OFFSET StartScatter,        SEG code
-ot20 DD OFFSET FinishScatter,       SEG code
+ot02 DD OFFSET PowerOffPort,        SEG code
+ot03 DD OFFSET PowerOnPort,         SEG code
+ot04 DD OFFSET ResetPort,           SEG code
+ot05 DD OFFSET DisablePort,         SEG code
+ot06 DD OFFSET DisableDev,          SEG code
+ot07 DD OFFSET IsPortConnected,     SEG code
+ot08 DD OFFSET IsRunning,           SEG code
+ot09 DD OFFSET AllocateAddress,     SEG code
+ot0A DD OFFSET FreeAddress,         SEG code
+ot0B DD OFFSET CreateDev,           SEG code
+ot0C DD OFFSET Unlink,              SEG code
+ot0D DD OFFSET IsDeviceConnected,   SEG code
+ot0E DD OFFSET FreeDev,             SEG code
+ot0F DD OFFSET CreateControl,       SEG code
+ot10 DD OFFSET CreateBulkPipe,      SEG code
+ot11 DD OFFSET CreateIntrPipe,      SEG code
+ot12 DD OFFSET AddressDev,          SEG code
+ot13 DD OFFSET ChangeAddress,       SEG code
+ot14 DD OFFSET UpdateMaxLen,        SEG code
+ot15 DD OFFSET ControlMsg,          SEG code
+ot16 DD OFFSET ConfigDev,           SEG code
+ot17 DD OFFSET OpenPacket,          SEG code
+ot18 DD OFFSET ClosePacket,         SEG code
+ot19 DD OFFSET ReqPacket,           SEG code
+ot1A DD OFFSET RelPacket,           SEG code
+ot1B DD OFFSET OpenRaw,             SEG code
+ot1C DD OFFSET CloseRaw,            SEG code
+ot1D DD OFFSET ReadRaw,             SEG code
+ot1E DD OFFSET WriteRaw,            SEG code
+ot1F DD OFFSET FinishRaw,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4235,7 +4218,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

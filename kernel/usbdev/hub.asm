@@ -219,6 +219,40 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PowerOffPort
+;
+;       DESCRIPTION:    Power off port
+;
+;       PARAMETERS:     DS      Function selector
+;                       DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOffPort   Proc far
+    int 3
+    ret
+PowerOffPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PowerOnPort
+;
+;       DESCRIPTION:    Power on port
+;
+;       PARAMETERS:     DS      Function selector
+;                       DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOnPort   Proc far
+    int 3
+    ret
+PowerOnPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ResetPort
 ;
 ;       DESCRIPTION:    Reset port
@@ -838,65 +872,6 @@ FinishRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HasScatter
-;
-;       DESCRIPTION:    Has scatter
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HasScatter   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:has_scatter_proc
-    pop ds
-    ret
-HasScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartScatter
-;
-;       DESCRIPTION:    Start scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartScatter   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:start_scatter_proc
-    pop ds
-    ret
-StartScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FinishScatter
-;
-;       DESCRIPTION:    Finish scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FinishScatter   Proc far
-    push ds
-    mov ds,ds:hub_parent_sel
-    call fword ptr ds:finish_scatter_proc
-    pop ds
-    ret
-FinishScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           IsRunning
 ;
 ;       DESCRIPTION:    Check if running
@@ -981,37 +956,36 @@ UpdateMaxLen   Endp
 hub_tab:
 ht00 DD OFFSET Block,               SEG code
 ht01 DD OFFSET Unblock,             SEG code
-ht02 DD OFFSET ResetPort,           SEG code
-ht03 DD OFFSET DisablePort,         SEG code
-ht04 DD OFFSET DisableDev,          SEG code
-ht05 DD OFFSET IsPortConnected,     SEG code
-ht06 DD OFFSET IsRunning,           SEG code
-ht07 DD OFFSET AllocateAddress,     SEG code
-ht08 DD OFFSET FreeAddress,         SEG code
-ht09 DD OFFSET CreateDev,           SEG code
-ht0A DD OFFSET UnlinkPipes,         SEG code
-ht0B DD OFFSET IsDeviceConnected,   SEG code
-ht0C DD OFFSET FreeDev,             SEG code
-ht0D DD OFFSET CreateControl,       SEG code
-ht0E DD OFFSET CreateBulkPipe,      SEG code
-ht0F DD OFFSET CreateIntrPipe,      SEG code
-ht10 DD OFFSET AddressDev,          SEG code
-ht11 DD OFFSET ChangeAddress,       SEG code
-ht12 DD OFFSET UpdateMaxLen,        SEG code
-ht13 DD OFFSET ControlMsg,          SEG code
-ht14 DD OFFSET ConfigDev,           SEG code
-ht15 DD OFFSET OpenPacket,          SEG code
-ht16 DD OFFSET ClosePacket,         SEG code
-ht17 DD OFFSET ReqPacket,           SEG code
-ht18 DD OFFSET RelPacket,           SEG code
-ht19 DD OFFSET OpenRaw,             SEG code
-ht1A DD OFFSET CloseRaw,            SEG code
-ht1B DD OFFSET ReadRaw,             SEG code
-ht1C DD OFFSET WriteRaw,            SEG code
-ht1D DD OFFSET FinishRaw,           SEG code
-ht1E DD OFFSET HasScatter,          SEG code
-ht1F DD OFFSET StartScatter,        SEG code
-ht20 DD OFFSET FinishScatter,       SEG code
+ht02 DD OFFSET PowerOffPort,        SEG code
+ht03 DD OFFSET PowerOnPort,         SEG code
+ht04 DD OFFSET ResetPort,           SEG code
+ht05 DD OFFSET DisablePort,         SEG code
+ht06 DD OFFSET DisableDev,          SEG code
+ht07 DD OFFSET IsPortConnected,     SEG code
+ht08 DD OFFSET IsRunning,           SEG code
+ht09 DD OFFSET AllocateAddress,     SEG code
+ht0A DD OFFSET FreeAddress,         SEG code
+ht0B DD OFFSET CreateDev,           SEG code
+ht0C DD OFFSET UnlinkPipes,         SEG code
+ht0D DD OFFSET IsDeviceConnected,   SEG code
+ht0E DD OFFSET FreeDev,             SEG code
+ht0F DD OFFSET CreateControl,       SEG code
+ht10 DD OFFSET CreateBulkPipe,      SEG code
+ht11 DD OFFSET CreateIntrPipe,      SEG code
+ht12 DD OFFSET AddressDev,          SEG code
+ht13 DD OFFSET ChangeAddress,       SEG code
+ht14 DD OFFSET UpdateMaxLen,        SEG code
+ht15 DD OFFSET ControlMsg,          SEG code
+ht16 DD OFFSET ConfigDev,           SEG code
+ht17 DD OFFSET OpenPacket,          SEG code
+ht18 DD OFFSET ClosePacket,         SEG code
+ht19 DD OFFSET ReqPacket,           SEG code
+ht1A DD OFFSET RelPacket,           SEG code
+ht1B DD OFFSET OpenRaw,             SEG code
+ht1C DD OFFSET CloseRaw,            SEG code
+ht1D DD OFFSET ReadRaw,             SEG code
+ht1E DD OFFSET WriteRaw,            SEG code
+ht1F DD OFFSET FinishRaw,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2308,7 +2282,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*21h
+    mov ecx,2*20h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

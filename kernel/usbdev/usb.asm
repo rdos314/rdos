@@ -1383,7 +1383,6 @@ cpSave:
     mov es:usbp_flags,0
     mov es:usbp_packet_sel,0
     mov es:usbp_raw_sel,0
-    mov es:usbp_scatter_sel,0
 ;
     mov si,di
     mov di,OFFSET usbp_descr
@@ -1460,24 +1459,13 @@ ClearPipe       Proc near
 clpPacketOk:    
     mov bx,gs:usbp_raw_sel
     or bx,bx
-    jz clpRawDone
+    jz clpDone
 ;
     push ds
     mov ds,es:usbd_func_sel
     call fword ptr ds:close_raw_proc
     pop ds
-    
-clpRawDone:
-    xor bx,bx
-    xchg bx,gs:usbp_scatter_sel
-    or bx,bx
-    jz clpDone
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
- 
+     
 clpDone:    
     test gs:usbp_flags,PIPE_FLAG_FAULT
     clc
@@ -2297,452 +2285,6 @@ get_usb_packet_pipe16 Proc far
     pop edi
     retf32
 get_usb_packet_pipe16 Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           HasUsbScatter
-;
-;       description:    Has USB scatter
-;
-;       parameters:     BX        Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-has_usb_scatter_name DB 'Has Usb Scatter', 0
-
-has_usb_scatter        Proc far
-    push ds
-    push eax
-    push ebx
-;
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc husDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    mov ds,ds:udd_sel    
-    mov ds,ds:usbd_func_sel
-    call fword ptr ds:has_scatter_proc
-
-husDone:
-    pop ebx
-    pop eax
-    pop ds    
-    retf32
-has_usb_scatter Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetScatter
-;
-;       description:    Get scatter
-;
-;       parameters:     GS      Pipe sel
-;
-;       RETURNS:        DS      Scatter sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetScatter        Proc near
-    push eax
-;
-    mov ax,gs:usbp_scatter_sel
-    or ax,ax
-    jnz gssDone
-;
-    push es
-    mov eax,SIZE usb_scatter_struc
-    AllocateSmallGlobalMem
-    mov es:usbsc_thread,0
-    mov es:usbsc_count,0
-    mov gs:usbp_scatter_sel,es
-    mov ax,es
-    pop es
-
-gssDone:
-    mov ds,ax
-;
-    pop eax
-    ret
-GetScatter        Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InsertScatter
-;
-;       description:    Insert scatter
-;
-;       parameters:     GS      Pipe sel
-;                       EBX:EAX Physical buffer
-;                       ECX     Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertScatter        Proc near
-    push ds
-    push si
-;
-    call GetScatter
-    mov si,ds:usbsc_count
-    or si,si
-    jz isAdd
-;
-    dec si
-    shl si,4
-    cmp ebx,ds:[si].usbsc_arr.usbe_phys+4
-    jne isAdd
-;
-    push edx
-    mov edx,ds:[si].usbsc_arr.usbe_phys
-    add edx,ds:[si].usbsc_arr.usbe_size
-    cmp edx,eax
-    pop edx
-    jne isAdd
-;
-    add ds:[si].usbsc_arr.usbe_size,ecx
-    jmp isDone
-
-isAdd:
-    mov si,ds:usbsc_count
-    shl si,4
-    mov ds:[si].usbsc_arr.usbe_phys,eax
-    mov ds:[si].usbsc_arr.usbe_phys+4,ebx
-    mov ds:[si].usbsc_arr.usbe_size,ecx
-    inc ds:usbsc_count
-
-isDone:
-    pop si
-    pop ds
-    ret
-InsertScatter  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ProcessScatter
-;
-;       description:    Process scatter
-;
-;       parameters:     GS      Pipe sel
-;                       BP:EDI  Buffer
-;                       ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessScatter        Proc near
-    push ds
-    pushad
-;
-    cmp bp,flat_sel
-    jne psSel
-;
-    mov edx,edi
-    jmp psDo
-
-psSel:
-    mov bx,bp
-    mov eax,ecx
-    GetSelectorBaseSize
-    jc psDone
-;
-    add edx,edi
-    sub ecx,edi
-    jc psDone
-;    
-    cmp ecx,eax
-    jc psDone
-;
-    mov ecx,eax
-
-psDo:
-    mov ax,flat_sel
-    mov ds,ax
-    mov al,ds:[edx]
-    GetPageEntry
-;
-    mov si,dx
-    and si,0FFFh
-    and ax,0F000h
-    or ax,si
-;
-    xor si,si
-    sub si,ax
-    and esi,0FFFh
-    jnz psComp
-;
-    mov si,1000h
-
-psComp:
-    cmp esi,ecx
-    jb psAdd
-;
-    mov esi,ecx
-
-psAdd:
-    push ecx
-    mov ecx,esi
-    call InsertScatter
-    pop ecx
-;
-    sub ecx,esi
-    clc
-    jz psDone
-;
-    add edx,esi
-    jmp psDo
-
-psDone:
-    popad
-    pop ds
-    ret
-ProcessScatter     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AddUsbScatterPipe
-;
-;       description:    Add USB scatter pipe
-;
-;       parameters:     BX        Handle
-;                       DL        Pipe #
-;                       ES:(E)DI  Buffer
-;                       (E)CX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_usb_scatter_pipe_name DB 'Add Usb Scatter Pipe', 0
-
-AddScatter        Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
-    mov bp,es
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc ausDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    stc
-    jnz ausLeave
-;
-    mov es,ds:udd_sel    
-;
-    test dl,80h
-    jz ausOut
-
-ausIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_in_pipe_arr
-    or bx,bx
-    stc
-    jz ausLeave
-;
-    mov gs,bx
-    call ProcessScatter
-    jmp ausLeave
-
-ausOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz ausLeave
-;
-    mov gs,bx
-    call ProcessScatter
-
-ausLeave:
-    LeaveSection ds:udd_section
-
-ausDone:
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds    
-    ret
-AddScatter Endp
-
-add_usb_scatter_pipe32 Proc far
-    call AddScatter
-    retf32
-add_usb_scatter_pipe32 Endp
-
-add_usb_scatter_pipe16 Proc far
-    push ecx
-    push edi
-    movzx ecx,cx
-    movzx edi,di
-    call AddScatter
-    pop edi
-    pop ecx
-    retf32
-add_usb_scatter_pipe16 Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RunScatter
-;
-;       description:    Run scatter
-;
-;       PARAMETERS:     BX    Pipe sel
-;                       EDI   Timeout in tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunScatter        Proc near
-    push ds
-    mov gs,bx
-    test gs:usbp_flags,PIPE_FLAG_FAULT
-    stc
-    jnz rsDone
-;
-    ClearSignal
-    mov ds,gs:usbp_scatter_sel
-    GetThread
-    mov ds:usbsc_thread,ax
-;
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:start_scatter_proc
-;
-    mov ds,gs:usbp_scatter_sel
-    push eax
-    push edx
-    GetSystemTime
-    add eax,edi
-    adc edx,0
-    WaitForSignalWithTimeout
-    pop edx
-    pop eax
-    mov ds:usbsc_thread,0
-;
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:finish_scatter_proc
-    pop ds
-
-rsDone:
-    push es
-    pushf
-;
-    xor ax,ax
-    xchg ax,gs:usbp_scatter_sel
-    mov es,ax
-    FreeMem
-;
-    popf
-    pop es
-    ret
-RunScatter     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           PostUsbScatterPipe
-;
-;       description:    Post USB scatter pipe
-;
-;       parameters:     BX        Handle
-;                       DL        Pipe #
-;                       AX        Timeout
-;
-;       RETURNS:        CX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-post_usb_scatter_pipe_name DB 'Post Usb Scatter Pipe', 0
-
-post_usb_scatter_pipe        Proc far
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ebx
-    push edx
-    push esi
-    push edi
-;
-    push dx
-    mov dx,1193
-    mul dx
-    push dx
-    push ax
-    pop edi
-    pop dx
-;
-    mov ax,USB_DEV_HANDLE
-    DerefHandle
-    jc pusDone
-;
-    mov ds,ds:[ebx].udh_dev_sel
-    EnterSection ds:udd_section
-    mov al,ds:udd_deleted
-    or al,al
-    stc
-    jnz pusLeave
-;
-    mov es,ds:udd_sel    
-;
-    test dl,80h
-    jz pusOut
-
-pusIn:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_in_pipe_arr
-    or bx,bx
-    stc
-    jz pusLeave
-;
-    call RunScatter
-    jmp pusLeave
-
-pusOut:
-    movzx si,dl
-    and si,0Fh
-    dec si
-    add si,si
-    mov bx,es:[si].usbd_out_pipe_arr
-    or bx,bx
-    stc
-    jz pusLeave
-;
-    call RunScatter
-
-pusLeave:
-    LeaveSection ds:udd_section
-
-pusDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ebx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds    
-    retf32
-post_usb_scatter_pipe Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4924,6 +4466,8 @@ npsOc:
     lock bts word ptr ds:usb_oc_bitmap,cx
     jc npsOcOk
 ;
+    call fword ptr ds:power_off_port_proc
+;
     pushad
     mov bx,ds:usb_controller_id
     movzx si,dl
@@ -4947,6 +4491,9 @@ npsSignalDone:
 npsNoOc:
     movzx cx,dl
     lock btr word ptr ds:usb_oc_bitmap,cx
+    jnc npsOcOk
+;
+    call fword ptr ds:power_on_port_proc
 
 npsOcOk:
     test al,1
@@ -5260,25 +4807,6 @@ init    Proc far
     mov dx,virt_es_in
     mov ax,get_usb_packet_pipe_nr
     RegisterUserGate
-;
-    mov esi,OFFSET has_usb_scatter
-    mov edi,OFFSET has_usb_scatter_name
-    xor dx,dx
-    mov ax,has_usb_scatter_nr
-    RegisterBimodalUserGate
-;
-    mov ebx,OFFSET add_usb_scatter_pipe16
-    mov esi,OFFSET add_usb_scatter_pipe32
-    mov edi,OFFSET add_usb_scatter_pipe_name
-    mov dx,virt_es_in
-    mov ax,add_usb_scatter_pipe_nr
-    RegisterUserGate
-;
-    mov esi,OFFSET post_usb_scatter_pipe
-    mov edi,OFFSET post_usb_scatter_pipe_name
-    xor dx,dx
-    mov ax,post_usb_scatter_pipe_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_usb_event
     mov edi,OFFSET open_usb_event_name

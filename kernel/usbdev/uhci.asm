@@ -1119,6 +1119,40 @@ Unblock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               PowerOffPort
+;
+;       DESCRIPTION:        Power off port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOffPort   Proc far
+    int 3
+    retf32
+PowerOffPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               PowerOnPort
+;
+;       DESCRIPTION:        Power on port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOnPort   Proc far
+    int 3
+    retf32
+PowerOnPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:               ResetPort
 ;
 ;       DESCRIPTION:        Reset port
@@ -3291,56 +3325,6 @@ frDone:
     pop ds
     retf32
 FinishRaw   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           HasScatter
-;
-;       DESCRIPTION:    Has scatter
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HasScatter   Proc far
-    stc
-    retf32
-HasScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartScatter
-;
-;       DESCRIPTION:    Start scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartScatter   Proc far
-    stc
-    retf32
-StartScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FinishScatter
-;
-;       DESCRIPTION:    Finish scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FinishScatter   Proc far
-    stc
-    retf32
-FinishScatter   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4012,37 +3996,36 @@ StartFunctionThread Endp
 uhci_tab:
 ut00 DD OFFSET Block,               SEG code
 ut01 DD OFFSET Unblock,             SEG code
-ut02 DD OFFSET ResetPort,           SEG code
-ut03 DD OFFSET DisablePort,         SEG code
-ut04 DD OFFSET DisableDev,          SEG code
-ut05 DD OFFSET IsPortConnected,     SEG code
-ut06 DD OFFSET IsRunning,           SEG code
-ut07 DD OFFSET AllocateAddress,     SEG code
-ut08 DD OFFSET FreeAddress,         SEG code
-ut09 DD OFFSET CreateDev,           SEG code
-ut0A DD OFFSET Unlink,              SEG code
-ut0B DD OFFSET IsDeviceConnected,   SEG code
-ut0C DD OFFSET FreeDev,             SEG code
-ut0D DD OFFSET CreateControl,       SEG code
-ut0E DD OFFSET CreateBulkPipe,      SEG code
-ut0F DD OFFSET CreateIntrPipe,      SEG code
-ut10 DD OFFSET AddressDev,          SEG code
-ut11 DD OFFSET ChangeAddress,       SEG code
-ut12 DD OFFSET UpdateMaxLen,        SEG code
-ut13 DD OFFSET ControlMsg,          SEG code
-ut14 DD OFFSET ConfigDev,           SEG code
-ut15 DD OFFSET OpenPacket,          SEG code
-ut16 DD OFFSET ClosePacket,         SEG code
-ut17 DD OFFSET ReqPacket,           SEG code
-ut18 DD OFFSET RelPacket,           SEG code
-ut19 DD OFFSET OpenRaw,             SEG code
-ut1A DD OFFSET CloseRaw,            SEG code
-ut1B DD OFFSET ReadRaw,             SEG code
-ut1C DD OFFSET WriteRaw,            SEG code
-ut1D DD OFFSET FinishRaw,           SEG code
-ut1E DD OFFSET HasScatter,          SEG code
-ut1F DD OFFSET StartScatter,        SEG code
-ut20 DD OFFSET FinishScatter,       SEG code
+ut02 DD OFFSET PowerOffPort,        SEG code
+ut03 DD OFFSET PowerOnPort,         SEG code
+ut04 DD OFFSET ResetPort,           SEG code
+ut05 DD OFFSET DisablePort,         SEG code
+ut06 DD OFFSET DisableDev,          SEG code
+ut07 DD OFFSET IsPortConnected,     SEG code
+ut08 DD OFFSET IsRunning,           SEG code
+ut09 DD OFFSET AllocateAddress,     SEG code
+ut0A DD OFFSET FreeAddress,         SEG code
+ut0B DD OFFSET CreateDev,           SEG code
+ut0C DD OFFSET Unlink,              SEG code
+ut0D DD OFFSET IsDeviceConnected,   SEG code
+ut0E DD OFFSET FreeDev,             SEG code
+ut0F DD OFFSET CreateControl,       SEG code
+ut10 DD OFFSET CreateBulkPipe,      SEG code
+ut11 DD OFFSET CreateIntrPipe,      SEG code
+ut12 DD OFFSET AddressDev,          SEG code
+ut13 DD OFFSET ChangeAddress,       SEG code
+ut14 DD OFFSET UpdateMaxLen,        SEG code
+ut15 DD OFFSET ControlMsg,          SEG code
+ut16 DD OFFSET ConfigDev,           SEG code
+ut17 DD OFFSET OpenPacket,          SEG code
+ut18 DD OFFSET ClosePacket,         SEG code
+ut19 DD OFFSET ReqPacket,           SEG code
+ut1A DD OFFSET RelPacket,           SEG code
+ut1B DD OFFSET OpenRaw,             SEG code
+ut1C DD OFFSET CloseRaw,            SEG code
+ut1D DD OFFSET ReadRaw,             SEG code
+ut1E DD OFFSET WriteRaw,            SEG code
+ut1F DD OFFSET FinishRaw,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4098,7 +4081,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

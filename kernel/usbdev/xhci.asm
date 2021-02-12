@@ -592,6 +592,40 @@ IsDeviceConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:               PowerOffPort
+;
+;       DESCRIPTION:        Power off port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOffPort   Proc far
+    int 3
+    retf32
+PowerOffPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               PowerOnPort
+;
+;       DESCRIPTION:        Power on port
+;
+;       PARAMETERS:         DS      Function selector
+;                           DL      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOnPort   Proc far
+    int 3
+    retf32
+PowerOnPort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:               ResetPort
 ;
 ;       DESCRIPTION:        Reset port
@@ -3260,73 +3294,6 @@ FinishRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HasScatter
-;
-;       DESCRIPTION:    Has scatter
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HasScatter   Proc far
-    push eax
-    push ebx
-;
-    GetHighestPhysical
-    or ebx,ebx
-    clc
-    jz hsDone
-;
-    mov al,ds:xhc_has_64
-    or al,al
-    stc
-    jz hsDone
-;
-    clc
-
-hsDone:
-    pop ebx
-    pop eax
-    retf32
-HasScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           StartScatter
-;
-;       DESCRIPTION:    Start scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartScatter   Proc far
-    int 3
-    retf32
-StartScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FinishScatter
-;
-;       DESCRIPTION:    Finish scatter
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;
-;       RETURNS:        ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FinishScatter   Proc far
-    int 3
-    retf32
-FinishScatter   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           Block
 ;
 ;       DESCRIPTION:    Block
@@ -4471,37 +4438,36 @@ CreateScratchPad   Endp
 xhci_tab:
 et00 DD OFFSET Block,               SEG code
 et01 DD OFFSET Unblock,             SEG code
-et02 DD OFFSET ResetPort,           SEG code
-et03 DD OFFSET DisablePort,         SEG code
-et04 DD OFFSET DisableDev,          SEG code
-et05 DD OFFSET IsPortConnected,     SEG code
-et06 DD OFFSET IsRunning,           SEG code
-et07 DD OFFSET AllocateAddress,     SEG code
-et08 DD OFFSET FreeAddress,         SEG code
-et09 DD OFFSET CreateDev,           SEG code
-et0A DD OFFSET UnlinkPipes,         SEG code
-et0B DD OFFSET IsDeviceConnected,   SEG code
-et0C DD OFFSET FreeDev,             SEG code
-et0D DD OFFSET CreateControl,       SEG code
-et0E DD OFFSET CreateBulkPipe,      SEG code
-et0F DD OFFSET CreateIntrPipe,      SEG code
-et10 DD OFFSET AddressDevice,       SEG code
-et11 DD OFFSET ChangeAddress,       SEG code
-et12 DD OFFSET UpdateMaxLen,        SEG code
-et13 DD OFFSET ControlMsg,          SEG code
-et14 DD OFFSET ConfigDevice,        SEG code
-et15 DD OFFSET OpenPacket,          SEG code
-et16 DD OFFSET ClosePAcket,         SEG code
-et17 DD OFFSET ReqPacket,           SEG code
-et18 DD OFFSET RelPacket,           SEG code
-et19 DD OFFSET OpenRaw,             SEG code
-et1A DD OFFSET CloseRaw,            SEG code
-et1B DD OFFSET ReadRaw,             SEG code
-et1C DD OFFSET WriteRaw,            SEG code
-et1D DD OFFSET FinishRaw,           SEG code
-et1E DD OFFSET HasScatter,          SEG code
-et1F DD OFFSET StartScatter,        SEG code
-et20 DD OFFSET FinishScatter,       SEG code
+et02 DD OFFSET PowerOffPort,        SEG code
+et03 DD OFFSET PowerOnPort,         SEG code
+et04 DD OFFSET ResetPort,           SEG code
+et05 DD OFFSET DisablePort,         SEG code
+et06 DD OFFSET DisableDev,          SEG code
+et07 DD OFFSET IsPortConnected,     SEG code
+et08 DD OFFSET IsRunning,           SEG code
+et09 DD OFFSET AllocateAddress,     SEG code
+et0A DD OFFSET FreeAddress,         SEG code
+et0B DD OFFSET CreateDev,           SEG code
+et0C DD OFFSET UnlinkPipes,         SEG code
+et0D DD OFFSET IsDeviceConnected,   SEG code
+et0E DD OFFSET FreeDev,             SEG code
+et0F DD OFFSET CreateControl,       SEG code
+et10 DD OFFSET CreateBulkPipe,      SEG code
+et11 DD OFFSET CreateIntrPipe,      SEG code
+et12 DD OFFSET AddressDevice,       SEG code
+et13 DD OFFSET ChangeAddress,       SEG code
+et14 DD OFFSET UpdateMaxLen,        SEG code
+et15 DD OFFSET ControlMsg,          SEG code
+et16 DD OFFSET ConfigDevice,        SEG code
+et17 DD OFFSET OpenPacket,          SEG code
+et18 DD OFFSET ClosePAcket,         SEG code
+et19 DD OFFSET ReqPacket,           SEG code
+et1A DD OFFSET RelPacket,           SEG code
+et1B DD OFFSET OpenRaw,             SEG code
+et1C DD OFFSET CloseRaw,            SEG code
+et1D DD OFFSET ReadRaw,             SEG code
+et1E DD OFFSET WriteRaw,            SEG code
+et1F DD OFFSET FinishRaw,           SEG code
 
 AddFunction    Proc near
     push es
@@ -4646,7 +4612,7 @@ ifIntDone:
     mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*21h
+    mov cx,2*20h
 
 ifTabLoop:
     lods dword ptr cs:[si]

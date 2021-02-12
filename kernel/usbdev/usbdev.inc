@@ -43,6 +43,14 @@ unlock_proc                DD ?,?
 
 ; IN  DL        Port
 ; OUT AL        Speed
+power_off_port_proc        DD ?,?
+
+; IN  DL        Port
+; OUT AL        Speed
+power_on_port_proc         DD ?,?
+
+; IN  DL        Port
+; OUT AL        Speed
 reset_port_proc            DD ?,?
 
 ; IN  DL        Port
@@ -154,17 +162,6 @@ write_raw_proc              DD ?,?
 ; OUT CX        Actual size
 finish_raw_proc              DD ?,?
 
-has_scatter_proc            DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
-start_scatter_proc            DD ?,?
-
-; IN  ES        Device
-; IN  GS        Pipe sel
-; OUT ECX       Size
-finish_scatter_proc            DD ?,?
-
 usb_section            section_typ <>
 usb_addr_section       section_typ <>
 
@@ -220,7 +217,6 @@ usbp_flags        DB ?
 usbp_wait         DW ?
 usbp_packet_sel   DW ?
 usbp_raw_sel      DW ?
-usbp_scatter_sel  DW ?
 
 usb_pipe_struc   ENDS
 

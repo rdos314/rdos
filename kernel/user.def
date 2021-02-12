@@ -937,8 +937,4 @@ is_usb_dev_connected_nr           = 763
 open_usb_packet_pipe_nr           = 764
 close_usb_pipe_nr                 = 766
 
-has_usb_scatter_nr                = 767
-add_usb_scatter_pipe_nr           = 768
-post_usb_scatter_pipe_nr          = 769
-
 usergate_entries                  = 780

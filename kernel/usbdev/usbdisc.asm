@@ -130,7 +130,6 @@ disc_sectors_per_unit   DW ?
 
 disc_drive_arr          DW 4 DUP(?)
 
-disc_scatter            DB ?
 disc_serial             DB ?
 disc_vendor             DW ?
 disc_prod               DW ?
@@ -1414,46 +1413,6 @@ start_thread:
     StartDisc
     TerminateThread
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReadScatter
-;
-;       DESCRIPTION:    Read using scatter interface
-;
-;       PARAMETERS:     FS      Disc selector
-;                       ESI     Disc handle array
-;                       EBP     Entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadScatter      Proc near
-    push ebp
-    push esi
-
-rscLoop:
-    mov edi,es:[esi]
-    mov edi,es:[edi].dh_data
-    mov ecx,200h
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_in_pipe
-    UserGateForce32 add_usb_scatter_pipe_nr    
-    jc rscDone
-;
-    add esi,4
-    sub ebp,1
-    jnz rscLoop
-;
-    mov ax,500
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_in_pipe
-    PostUsbScatterPipe    
-
-rscDone:
-    pop esi
-    pop ebp
-    ret
-ReadScatter      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1619,14 +1578,6 @@ rdRetry:
     pop es
     jc rdFail
 ;    
-    mov al,fs:disc_scatter
-    or al,al
-    jz rdRaw
-;
-;    call ReadScatter
-;    jmp rdCsw
-
-rdRaw:
     call ReadRaw
 
 rdCsw:
@@ -1916,13 +1867,6 @@ dtInsDo:
     OpenUsbDevice
     mov fs:disc_dev_handle,bx
 ;
-    mov fs:disc_scatter,0
-    HasUsbScatter
-    jc dtScatterOk
-;
-    mov fs:disc_scatter,1
-
-dtScatterOk:
     push es
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
