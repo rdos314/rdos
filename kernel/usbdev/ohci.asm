@@ -1454,6 +1454,7 @@ rcEnabled:
     GetThread
     mov es:dev_control_thread,ax
     mov es:dev_cc,0Fh
+    ClearSignal
 ;
     push ds
     mov ds,ds:ohc_reg_sel
@@ -2631,6 +2632,7 @@ wrSizeOk:
     mov fs:[edi].otd_flags,0F004h
     mov gs:op_tail_td,edx
 ;
+    ClearSignal
     lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
     mov edx,gs:op_ed
     mov fs:[edx].oes_tailp,eax

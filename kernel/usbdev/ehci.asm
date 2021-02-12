@@ -3055,6 +3055,7 @@ WriteRaw   Proc far
     mov fs:[edx].qtd_size,cx
     LinearToPhysicalMemBlk
 ;
+    ClearSignal
     lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
     mov edx,gs:ep_qh
     mov fs:[edx].qh_next_qtd,eax

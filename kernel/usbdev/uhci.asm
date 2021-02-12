@@ -2059,6 +2059,7 @@ RunControl   Proc near
     GetThread
     mov es:dev_control_thread,ax
     mov es:dev_control_status,0FFh
+    ClearSignal
 ;
     mov edx,es:dev_control_head
     LinearToPhysicalMemBlk
