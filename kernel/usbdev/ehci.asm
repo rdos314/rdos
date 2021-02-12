@@ -4053,6 +4053,13 @@ UpdatePort   Proc near
     test ax,2000h
     jnz upDone
 ; 
+    and al,NOT 8
+    test al,10h
+    jz upNotify
+;
+    or al,8
+
+upNotify:
     NotifyUsbPortState   
                 
 upDone:    

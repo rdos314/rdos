@@ -3144,6 +3144,7 @@ init_usb_function Proc far
     InitSection ds:usb_section
     InitSection ds:usb_addr_section
     mov ds:usb_reset_bitmap,0
+    mov ds:usb_oc_bitmap,0
     mov ax,ds
     mov es,ax
 ;
@@ -4906,11 +4907,34 @@ name_base DB 'USB Dev ', 0
 
 notify_usb_port_state Proc far
     push ebx
+    push ecx
     push edi
 ;
     movzx edi,dl
     add edi,edi
 ;
+    test al,8
+    jz npsNoOc
+
+npsOc:
+    movzx cx,dl
+    lock bts word ptr ds:usb_oc_bitmap,cx
+    jc npsOcOk
+;
+    pushad
+    mov bx,ds:usb_controller_id
+    movzx si,dl
+    mov ax,USB_EVENT_OVER_CURRENT
+    mov dl,-1
+    call DistEvent
+    popad
+    jmp npsOcOk
+
+npsNoOc:
+    movzx cx,dl
+    lock btr word ptr ds:usb_oc_bitmap,cx
+
+npsOcOk:
     test al,1
     jz npsDetach
     
@@ -4984,6 +5008,7 @@ npsLeave:
 
 npsDone:
     pop edi
+    pop ecx
     pop ebx
     retf32
 notify_usb_port_state Endp
