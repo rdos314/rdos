@@ -1162,6 +1162,12 @@ reset_usb_dev     Proc far
     shl eax,cl
     lock or ds:usb_reset_bitmap,eax
 ;
+    mov bx,ds:usb_controller_id
+    movzx si,es:usbd_port
+    mov ax,USB_EVENT_RESET
+    mov dl,-1
+    call DistEvent
+;
     mov bx,es:usbd_thread
     Signal
 ;

@@ -489,6 +489,36 @@ void TUsbEvent::NotifyUnknown(int Controller, int Port, char Pipe)
 
 /*##########################################################################
 #
+#   Name       : TUsbEvent::NotifyReset
+#
+#   Purpose....: Notify reset
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyReset(int Controller, int Port)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbEvent::NotifyOverCurrent
+#
+#   Purpose....: Notify overcurrent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbEvent::NotifyOverCurrent(int Controller, int Port)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbEvent::SignalNewData
 #
 #   Purpose....: Signal new data is available
@@ -610,6 +640,14 @@ void TUsbEvent::SignalNewData()
 
             case USB_EVENT_UNKNOWN:
                 NotifyUnknown(event.Controller, event.Port, event.Pipe);
+                break;
+
+            case USB_EVENT_RESET:
+                NotifyReset(event.Controller, event.Port);
+                break;
+
+            case USB_EVENT_OVER_CURRENT:
+                NotifyOverCurrent(event.Controller, event.Port);
                 break;
         }
     }

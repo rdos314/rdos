@@ -51,6 +51,8 @@ USB_EVENT_NO_SLOTS              = 23
 USB_EVENT_SLOT_NOT_ENABLED      = 24
 USB_EVENT_PIPE_NOT_ENABLED      = 25
 USB_EVENT_NO_PING               = 26
+USB_EVENT_RESET                 = 27
+USB_EVENT_OVER_CURRENT          = 28
 
 usb_event       STRUC
 

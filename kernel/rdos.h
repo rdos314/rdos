@@ -152,6 +152,8 @@ typedef struct UsbEvent
 #define USB_EVENT_SLOT_NOT_ENABLED     24
 #define USB_EVENT_PIPE_NOT_ENABLED     25
 #define USB_EVENT_NO_PING              26
+#define USB_EVENT_RESET                27
+#define USB_EVENT_OVER_CURRENT         28
 
 
 #define uss_handle  0

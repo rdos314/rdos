@@ -64,6 +64,8 @@ public:
     virtual void NotifyTrbError(int Controller, int Port, char Pipe);
     virtual void NotifyNoPing(int Controller, int Port, char Pipe);
     virtual void NotifyUnknown(int Controller, int Port, char Pipe);
+    virtual void NotifyReset(int Controller, int Port);
+    virtual void NotifyOverCurrent(int Controller, int Port);
 
 	
 protected:
