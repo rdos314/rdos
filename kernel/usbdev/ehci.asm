@@ -2012,6 +2012,7 @@ RunControl   Proc near
     pop ds
     jc rcDone
 ;
+    ClearSignal
     GetThread
     mov es:dev_control_thread,ax
     mov es:dev_control_status,0FFh
