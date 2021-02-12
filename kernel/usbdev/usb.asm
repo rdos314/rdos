@@ -4775,6 +4775,9 @@ uaConnected:
     mov cl,es:usbd_port
     mov eax,1
     shl eax,cl
+    test eax,ds:usb_oc_bitmap
+    jnz uaDetach
+;
     test eax,ds:usb_reset_bitmap
     jz uaConnected
 ;
@@ -4927,6 +4930,17 @@ npsOc:
     mov ax,USB_EVENT_OVER_CURRENT
     mov dl,-1
     call DistEvent
+;
+    mov bx,ds:[edi].usb_thread_arr
+    or bx,bx
+    jz npsSignalDone
+;
+    cmp bx,-1
+    je npsSignalDone
+;
+    Signal
+
+npsSignalDone: 
     popad
     jmp npsOcOk
 

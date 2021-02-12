@@ -3368,6 +3368,7 @@ UpdatePort   Proc near
     in ax,dx
     pop dx
 ;
+    and al,NOT 8
     xor bx,bx
     NotifyUsbPortState
 ;
