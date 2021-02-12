@@ -1129,7 +1129,6 @@ Unblock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOffPort   Proc far
-    int 3
     retf32
 PowerOffPort   Endp
 
@@ -1146,7 +1145,6 @@ PowerOffPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOnPort   Proc far
-    int 3
     retf32
 PowerOnPort   Endp
 

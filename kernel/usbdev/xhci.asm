@@ -602,7 +602,6 @@ IsDeviceConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOffPort   Proc far
-    int 3
     retf32
 PowerOffPort   Endp
 
@@ -619,7 +618,23 @@ PowerOffPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOnPort   Proc far
-    int 3
+    push ecx
+    push edi
+;    
+    movzx edi,dl
+    shl edi,4
+    add edi,ds:xhc_port_offset
+;    
+    mov eax,ds:[edi]
+    test al,1
+    jz rpFail
+;
+    and eax,0EE03E1h
+    or ax,200h
+    mov ds:[edi],eax
+;
+    pop edi
+    pop ecx
     retf32
 PowerOnPort   Endp
 
@@ -2250,6 +2265,8 @@ StopPipe   Proc near
     push esi
     push edi
 ;
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     call GetPipeState
     cmp al,1
     jne seDone
@@ -2660,6 +2677,8 @@ StartPacketTds     Endp
 StartPipe     Proc near
     push eax
     push esi
+;
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
 ;
     movzx esi,es:xd_slot
     shl esi,2
@@ -3244,6 +3263,8 @@ FinishRaw   Proc far
     jmp frDone
 
 frEval:
+    lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
+;
     mov ax,flat_sel
     mov fs,ax
     mov ds,gs:usbp_raw_sel

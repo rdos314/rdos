@@ -3112,7 +3112,22 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOffPort   Proc far
-    int 3
+    push gs
+    push eax
+    push edi
+;
+    mov gs,ds:ohc_reg_sel
+;    
+    movzx di,dl
+    shl di,2
+    add di,OFFSET HcRhPortStatus
+;    
+    mov eax,200h
+    mov gs:[di],eax
+;
+    pop edi
+    pop eax
+    pop gs
     retf32
 PowerOffPort   Endp
 
@@ -3129,7 +3144,22 @@ PowerOffPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOnPort   Proc far
-    int 3
+    push gs
+    push eax
+    push edi
+;
+    mov gs,ds:ohc_reg_sel
+;    
+    movzx di,dl
+    shl di,2
+    add di,OFFSET HcRhPortStatus
+;    
+    mov eax,100h
+    mov gs:[di],eax
+;
+    pop edi
+    pop eax
+    pop gs
     retf32
 PowerOnPort   Endp
 

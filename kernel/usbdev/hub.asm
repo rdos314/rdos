@@ -229,7 +229,15 @@ FreeDev   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOffPort   Proc far
-    int 3
+    push eax
+    push edx
+;
+    movzx dx,dl
+    mov ax,PORT_RESET
+    call ClearPortFeature
+;
+    pop edx
+    pop eax
     ret
 PowerOffPort   Endp
 
@@ -246,7 +254,15 @@ PowerOffPort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PowerOnPort   Proc far
-    int 3
+    push eax
+    push edx
+;
+    movzx dx,dl
+    mov ax,PORT_RESET
+    call SetPortFeature
+;
+    pop edx
+    pop eax
     ret
 PowerOnPort   Endp
 
