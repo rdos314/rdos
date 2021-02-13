@@ -47,6 +47,7 @@ MSR_SYSENTER_ESP = 175h
 MSR_SYSENTER_EIP = 176h
 
 MAX_CORES   = 64
+WAIT_DEV_COUNT = 256
 
 SLEEP_TYPE_WAIT  = 1
 SLEEP_TYPE_SIGNAL = 2
@@ -54,6 +55,7 @@ SLEEP_TYPE_FUTEX = 3
 SLEEP_TYPE_SECTION = 4
 SLEEP_TYPE_DEBUG = 5
 SLEEP_TYPE_SUSPEND = 6
+SLEEP_TYPE_WAIT_DEV = 7
 
 section_handle_seg          STRUC
 
@@ -75,6 +77,15 @@ fh_list     DW ?
 fh_lock     DW ?
 
 futex_handle_seg          ENDS
+
+; this should always be 4 bytes!
+
+wait_dev_seg  STRUC
+
+wd_lock     DW ?
+wd_thread   DW ?
+
+wait_dev_seg  ENDS
 
 process_callback_seg    STRUC
 cm_mode     DW ?
@@ -114,6 +125,12 @@ cr_esi      EQU -30
 cr_edi      EQU -34
 
 data    SEGMENT byte public 'DATA'
+
+; keep this at 0
+
+wait_dev_arr        DD WAIT_DEV_COUNT DUP(?)
+
+wait_dev_pos        DW ?
 
 term_thread_list    DW ?
 term_proc_list      DW ?
@@ -162,6 +179,9 @@ unlock_list_proc            DW OFFSET UnlockListSingle
 
 lock_signal_proc            DW OFFSET LockSignalSingle
 unlock_signal_proc          DW OFFSET UnlockSignalSingle
+
+lock_wait_dev_proc          DW OFFSET LockWaitDevSingle
+unlock_wait_dev_proc        DW OFFSET UnlockWaitDevSingle
 
 lock_kernel_section_proc    DW OFFSET LockKernelSectionSingle
 unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
@@ -2352,6 +2372,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:lock_signal_proc,OFFSET LockSignalMultiple
     mov ds:unlock_signal_proc,OFFSET UnlockSignalMultiple
+    mov ds:lock_wait_dev_proc,OFFSET LockWaitDevMultiple
+    mov ds:unlock_wait_dev_proc,OFFSET UnlockWaitDevMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
@@ -2734,6 +2756,93 @@ UnlockSignalMultiple  PROC near
     sti
     ret
 UnlockSignalMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockWaitDevSingle
+;
+;           DESCRIPTION:    Lock wait dev, single core
+;
+;           PARAMETERS:     DS:SI    Wait dev struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockWaitDevSingle  PROC near
+    sti
+    ret
+LockWaitDevSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockWaitDevMultiple
+;
+;           DESCRIPTION:    Lock wait dev, multiple core
+;
+;           PARAMETERS:     DS:SI    Wait dev struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockWaitDevMultiple  PROC near
+    push ax
+
+lwdmTryLock:    
+    mov ax,ds:[si].wd_lock
+    or ax,ax
+    je lwdmGet
+;
+    sti
+    pause
+    jmp lwdmTryLock
+
+lwdmGet:
+    cli
+    inc ax
+    xchg ax,ds:[si].wd_lock
+    or ax,ax
+    je lwdmLocked
+;
+    sti
+    jmp lwdmTryLock
+
+lwdmLocked:
+    pop ax
+    ret
+LockWaitDevMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockWaitDevSingle
+;
+;           DESCRIPTION:    Unlock wait dev, single core
+;
+;           PARAMETERS:     DS:SI    Wait dev struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockWaitDevSingle  PROC near
+    sti
+    ret
+UnlockWaitDevSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockWaitDevMultiple
+;
+;           DESCRIPTION:    Unlock wait dev, multiple core
+;
+;           PARAMETERS:     DS:SI    Wait dev struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockWaitDevMultiple  PROC near
+    mov ds:[si].wd_lock,0
+    sti
+    ret
+UnlockWaitDevMultiple  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5412,6 +5521,337 @@ wait_for_signal_timeout ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreateWaitDev
+;
+;           DESCRIPTION:    Create wait device
+;
+;           RETURNS:        BX          Wait dev handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_wait_dev_name    DB 'Create Wait Device',0
+
+create_wait_dev   Proc far
+    push ds
+    push ax
+    push cx
+    push si
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov bx,ds:wait_dev_pos
+    mov si,bx
+    shl si,2
+    mov cx,WAIT_DEV_COUNT
+
+crwdLoop:
+    cmp bx,WAIT_DEV_COUNT
+    jne crwdCheck
+;
+    xor bx,bx
+    xor si,si
+
+crwdCheck:
+    mov ax,ds:[si].wd_thread
+    cmp ax,-1
+    je crwdOk
+;
+    add si,4
+    inc bx
+    loop crwdLoop
+;
+    int 3
+    stc
+    jmp crwdDone
+
+crwdOk:
+    mov ds:[si].wd_lock,0
+    mov ds:[si].wd_thread,0
+    inc bx
+    mov ds:wait_dev_pos,bx
+    clc
+
+crwdDone:
+    pop si
+    pop cx
+    pop ax
+    pop ds
+    retf32
+create_wait_dev   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseWaitDev
+;
+;           DESCRIPTION:    Close wait device
+;
+;           PARAMETERS:     BX          Wait dev handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_wait_dev_name    DB 'Close Wait Device',0
+
+close_wait_dev PROC far
+    push ds
+    push si
+;
+    or bx,bx
+    jz clwdDone
+;
+    cmp bx,WAIT_DEV_COUNT
+    ja clwdDone
+;
+    mov si,SEG data
+    mov ds,si
+    mov si,bx
+    dec si
+    shl si,2
+    mov ds:[si].wd_thread,-1
+
+clwdDone:
+    pop si
+    pop ds
+    retf32
+close_wait_dev  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           PrepareWaitDev
+;
+;           DESCRIPTION:    Prepare wait for device
+;
+;           PARAMS:         BX          Wait dev handle
+;                           ES:EDI      Name of dev
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+prepare_wait_dev_name    DB 'Prepare Wait Device',0
+
+prepare_wait_dev   Proc far
+    push ds
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    or bx,bx
+    jz pwdDone
+;
+    cmp bx,WAIT_DEV_COUNT
+    ja pwdDone
+;
+    GetThread
+    mov ds,ax
+    mov esi,OFFSET p_list_name
+    mov ecx,31
+
+pwdCopy:    
+    mov al,es:[edi]
+    mov ds:[esi],al
+    inc esi
+    inc edi
+    or al,al
+    jz pwdCopied
+;
+    loop pwdCopy
+
+pwdCopied:
+    xor al,al
+    mov ds:[esi],al
+;
+    mov cx,ds
+    mov ax,SEG data
+    mov ds,ax
+    mov si,bx
+    dec si
+    shr si,2
+    mov ax,ds:[si].wd_thread
+    cmp ax,-1
+    je pwdDone
+;
+    mov ds:[si].wd_thread,cx
+   
+pwdDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop ds
+    retf32
+prepare_wait_dev  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           wait_dev_timeout
+;
+;       DESCRIPTION:    Wait dev timeout handler
+;
+;       PARAMETERS:     CX      Wait dev handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_dev_timeout  PROC far
+    mov bx,cx
+    SignalWaitDev
+    retf32
+wait_dev_timeout  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitForDevice
+;
+;           DESCRIPTION:    Wait for a device
+;
+;           PARAMETERS:     BX          Wait dev handle
+;                           EDX:EAX     Timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_dev_name    DB 'Wait For Device',0
+
+wait_for_dev PROC far
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    push edi
+;
+    or bx,bx
+    jz wfdDone
+;
+    cmp bx,WAIT_DEV_COUNT
+    ja wfdDone
+;
+    mov cx,SEG data
+    mov ds,cx
+    mov si,bx
+    dec si
+    shl si,2
+    mov cx,ds:[si].wd_thread
+    cmp cx,-1
+    je wfdDone
+;
+    cli
+    call LockCore
+    mov es,fs:cs_curr_thread
+    call cs:lock_wait_dev_proc
+;    
+    mov cx,ds:[si].wd_thread
+    or cx,cx
+    jz wfdUnlock
+;
+    mov es:p_sleep_type,SLEEP_TYPE_WAIT_DEV
+    call cs:unlock_wait_dev_proc
+;
+    mov cx,bx
+    mov bx,es
+    mov edi,OFFSET wait_dev_timeout    
+    StartTimer
+;
+    push OFFSET wfdClear
+    call SaveLockedThread
+    xor ax,ax
+    mov es,ax 
+    mov fs:cs_curr_thread,ax
+    jmp LoadThread
+
+wfdUnlock:
+    call cs:unlock_wait_dev_proc
+    call UnlockCore
+    jmp wfdDone
+
+wfdClear:
+    mov ds:[si].wd_thread,0
+;
+    GetThread
+    mov bx,ax
+    StopTimer
+    
+wfdDone:
+    pop edi
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
+wait_for_dev ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SignalWaitDev
+;
+;           DESCRIPTION:    Signal wait dev
+;
+;           PARAMETERS:     BX        Wait dev handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+signal_wait_dev_name      DB 'Signal Wait Device',0
+
+signal_wait_dev   PROC far
+    push ds
+    push es
+    push ax
+    push si
+;
+    or bx,bx
+    jz swdDone
+;
+    cmp bx,WAIT_DEV_COUNT
+    ja swdDone
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov si,bx
+    dec si
+    shl si,2
+    mov ax,ds:[si].wd_thread
+    cmp ax,-1
+    je swdDone
+;
+    cli
+    call TryLockCore
+;
+    call cs:lock_wait_dev_proc
+    xor ax,ax
+    xchg ax,ds:[si].wd_thread
+    or ax,ax
+    jz swdUnlock
+;    
+    mov es,ax
+    mov es:p_sleep_type,0
+    call cs:unlock_wait_dev_proc
+    call InsertWakeup    
+    jmp swdCore
+
+swdUnlock:
+    call cs:unlock_wait_dev_proc
+
+swdCore:
+    call TryUnlockCore
+
+swdDone:       
+    pop si
+    pop ax
+    pop es
+    pop ds
+    retf32
+signal_wait_dev   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           enter_section
 ;
 ;           DESCRIPTION:    Enter section
@@ -7256,6 +7696,31 @@ check_futex_done:
     jmp check_done
 
 check_not_futex:
+    cmp ax,SLEEP_TYPE_WAIT_DEV
+    jne check_not_wait_dev
+;
+    mov si,OFFSET p_list_name
+    mov cx,32
+
+check_wait_dev_copy:
+    mov al,fs:[si]
+    or al,al
+    jz check_wait_dev_done
+
+    inc si
+    stos byte ptr es:[edi]
+    loop check_wait_dev_copy
+
+check_wait_dev_done:
+    xor al,al    
+    stos byte ptr es:[edi]
+;
+    xor cx,cx
+    xor edx,edx
+    clc
+    jmp check_done
+
+check_not_wait_dev:
     cmp ax,SEG data
     jne check_failed
 ;
@@ -10253,6 +10718,16 @@ init       PROC far
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
+    mov ds:wait_dev_pos,0
+;       
+    mov cx,WAIT_DEV_COUNT
+    xor bx,bx
+
+wait_dev_init:
+    mov ds:[bx].wd_lock,0
+    mov ds:[bx].wd_thread,-1
+    add bx,4
+    loop wait_dev_init
 ;
     InitSection ds:futex_section
     mov ds:timer_spinlock,0
@@ -10457,6 +10932,36 @@ timer_free_list_create:
     mov edi,OFFSET wait_for_signal_timeout_name
     xor cl,cl
     mov ax,wait_for_signal_timeout_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_wait_dev
+    mov edi,OFFSET create_wait_dev_name
+    xor cl,cl
+    mov ax,create_wait_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_wait_dev
+    mov edi,OFFSET close_wait_dev_name
+    xor cl,cl
+    mov ax,close_wait_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET prepare_wait_dev
+    mov edi,OFFSET prepare_wait_dev_name
+    xor cl,cl
+    mov ax,prepare_wait_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET wait_for_dev
+    mov edi,OFFSET wait_for_dev_name
+    xor cl,cl
+    mov ax,wait_for_dev_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET signal_wait_dev
+    mov edi,OFFSET signal_wait_dev_name
+    xor cl,cl
+    mov ax,signal_wait_dev_nr
     RegisterOsGate
 ;
     mov esi,OFFSET fpu_exception

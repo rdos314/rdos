@@ -1304,6 +1304,33 @@ WaitForSignalWithTimeout    MACRO
     OsGate wait_for_signal_timeout_nr
                     ENDM
 
+; OUT BX      Wait dev handle
+CreateWaitDev    MACRO
+    OsGate create_wait_dev_nr
+                    ENDM
+
+; IN  BX      Wait dev handle
+CloseWaitDev    MACRO
+    OsGate close_wait_dev_nr
+                    ENDM
+
+; IN  BX      Wait dev handle
+; IN  ES:EDI  Dev name
+PrepateWaitDev    MACRO
+    OsGate prepare_wait_dev_nr
+                    ENDM
+
+; IN  BX      Wait dev handle
+; IN  EDX:EAX Timeout
+WaitForDev    MACRO
+    OsGate wait_for_dev_nr
+                    ENDM
+
+; IN  BX      Wait dev handle
+SignalWaitDev    MACRO
+    OsGate signal_wait_dev_nr
+                    ENDM
+
 ; IN  AX      Extra bytes needed in wait object
 ; IN  BX      Wait handle
 ; IN  ES:EDI  Method table (init, abort, peek)

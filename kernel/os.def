@@ -845,4 +845,10 @@ notify_ap_video_mode_nr     = 765
 open_usb_raw_pipe_nr        = 766
 post_usb_raw_pipe_nr        = 767
 
+create_wait_dev_nr          = 768
+close_wait_dev_nr           = 769
+prepare_wait_dev_nr         = 770
+wait_for_dev_nr             = 771
+signal_wait_dev_nr          = 772
+
 osgate_entries              = 780
