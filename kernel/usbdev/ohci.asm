@@ -2467,30 +2467,9 @@ CloseRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadRaw
+;       NAME:           RawIo
 ;
-;       DESCRIPTION:    Read raw
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe
-;                       EDX     Linear buffer
-;                       CX      Size
-;
-;       RETURNS:        CX      Read size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadRaw   Proc far
-    int 3
-    retf32
-ReadRaw   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteRaw
-;
-;       DESCRIPTION:    Write raw
+;       DESCRIPTION:    Raw IO
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe
@@ -2498,7 +2477,7 @@ ReadRaw   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteRaw   Proc far
+RawIo   Proc near
     push ds
     push fs
     pushad
@@ -2515,9 +2494,9 @@ WriteRaw   Proc far
     xor edi,edi
     xor bx,bx
     
-wrLoop:
+rioLoop:
     or edi,edi
-    jz wrFirst
+    jz rioFirst
 ;
     push cx
     mov cx,SIZE ohc_td_struc
@@ -2533,14 +2512,14 @@ wrLoop:
     mov fs:[edi].otd_next_td,eax    
 ;
     mov ds:[si],edx
-    jmp wrNext
+    jmp rioNext
 
-wrFirst:
+rioFirst:
     xor edx,edx
     xchg edx,gs:op_tail_td
     mov ds:[si],edx
 
-wrNext:
+rioNext:
     mov edi,edx
     mov fs:[edi].otd_flags,0F0E4h
 ;
@@ -2549,11 +2528,11 @@ wrNext:
 ;
     movzx ebx,cx
     cmp bx,gs:ued_maxsize
-    jb wrSizeOk
+    jb rioSizeOk
 ;
     mov bx,gs:ued_maxsize
 
-wrSizeOk:
+rioSizeOk:
     sub cx,bx
 ;
     add eax,ebx
@@ -2565,7 +2544,7 @@ wrSizeOk:
 ;
     add si,4
     or cx,cx
-    jnz wrLoop
+    jnz rioLoop
 ;
     sub si,OFFSET or_td_arr
     shr si,2
@@ -2594,10 +2573,49 @@ wrSizeOk:
     call SignalStart
     pop ds
 
-wrDone:
+rioDone:
     popad
     pop fs
     pop ds
+    ret
+RawIo   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadRaw
+;
+;       DESCRIPTION:    Read raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       EDX     Linear buffer
+;                       CX      Size
+;
+;       RETURNS:        CX      Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadRaw   Proc far
+    call RawIo
+    retf32
+ReadRaw   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteRaw
+;
+;       DESCRIPTION:    Write raw
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;                       CX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteRaw   Proc far
+    call RawIo
     retf32
 WriteRaw   Endp
 
@@ -3640,9 +3658,17 @@ CheckIn   Proc near
 ;
     mov bx,gs:usbp_packet_sel
     or bx,bx
-    jz ciDone
+    jz ciNotPkt
 ;
     call HandlePacketIn
+    jmp ciDone
+
+ciNotPkt:
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz ciDone
+;
+    call HandleRaw
 
 ciDone:
     pop ebx
