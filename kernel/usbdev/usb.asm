@@ -3511,6 +3511,12 @@ InitDevice Proc near
     mov es:usbd_curr_config,0
     mov es:usbd_thread,0
 ;
+    int 3
+    push bx
+    CreateWaitDev
+    mov es:usbd_wait_dev,bx
+    pop bx
+;
     xor ax,ax
     mov cx,15
     mov di,OFFSET usbd_in_pipe_arr
@@ -4238,11 +4244,17 @@ CleanupDev       Endp
 
 FreeDev       Proc near
     push ax
+    push bx
+;
+    int 3
+    mov bx,es:usbd_wait_dev
+    CloseWaitDev
 ;
     mov al,es:usbd_address
     call fword ptr ds:free_address_proc
     FreeMemBlk
 ;
+    pop bx
     pop ax
     ret
 FreeDev       Endp

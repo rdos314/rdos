@@ -57,6 +57,9 @@ SLEEP_TYPE_DEBUG = 5
 SLEEP_TYPE_SUSPEND = 6
 SLEEP_TYPE_WAIT_DEV = 7
 
+WAIT_DEV_ACTIVE   = 1
+WAIT_DEV_SIGNAL   = 2
+
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -82,7 +85,8 @@ futex_handle_seg          ENDS
 
 wait_dev_seg  STRUC
 
-wd_lock     DW ?
+wd_flags    DB ?
+wd_lock     DB ?
 wd_thread   DW ?
 
 wait_dev_seg  ENDS
@@ -2788,8 +2792,8 @@ LockWaitDevMultiple  PROC near
     push ax
 
 lwdmTryLock:    
-    mov ax,ds:[si].wd_lock
-    or ax,ax
+    mov al,ds:[si].wd_lock
+    or al,al
     je lwdmGet
 ;
     sti
@@ -2798,9 +2802,9 @@ lwdmTryLock:
 
 lwdmGet:
     cli
-    inc ax
-    xchg ax,ds:[si].wd_lock
-    or ax,ax
+    inc al
+    xchg al,ds:[si].wd_lock
+    or al,al
     je lwdmLocked
 ;
     sti
@@ -5555,8 +5559,14 @@ crwdLoop:
 crwdCheck:
     mov ax,ds:[si].wd_thread
     cmp ax,-1
-    je crwdOk
+    jne crwdNext
 ;
+    xor ax,ax
+    xchg ax,ds:[si].wd_thread
+    cmp ax,-1
+    je crwdOK
+
+crwdNext:
     add si,4
     inc bx
     loop crwdLoop
@@ -5566,8 +5576,8 @@ crwdCheck:
     jmp crwdDone
 
 crwdOk:
+    mov ds:[si].wd_flags,0
     mov ds:[si].wd_lock,0
-    mov ds:[si].wd_thread,0
     inc bx
     mov ds:wait_dev_pos,bx
     clc
@@ -5672,7 +5682,8 @@ pwdCopied:
     cmp ax,-1
     je pwdDone
 ;
-    mov ds:[si].wd_thread,cx
+    mov ds:[si].wd_thread,0
+    mov ds:[si].wd_flags,WAIT_DEV_ACTIVE
    
 pwdDone:
     pop edi
@@ -5717,6 +5728,7 @@ wait_for_dev_name    DB 'Wait For Device',0
 wait_for_dev PROC far
     push ds
     push es
+    push fs
     push ax
     push bx
     push cx
@@ -5743,11 +5755,16 @@ wait_for_dev PROC far
     mov es,fs:cs_curr_thread
     call cs:lock_wait_dev_proc
 ;    
-    mov cx,ds:[si].wd_thread
-    or cx,cx
-    jz wfdUnlock
+    test ds:[si].wd_flags,WAIT_DEV_SIGNAL
+    jnz wfdUnlock
+;
+    mov ds:[si].wd_thread,es
+    lock or ds:[si].wd_flags,WAIT_DEV_ACTIVE
 ;
     mov es:p_sleep_type,SLEEP_TYPE_WAIT_DEV
+    mov es:p_sleep_sel,ds
+    mov word ptr es:p_sleep_offset,si
+    mov word ptr es:p_sleep_offset+2,0
     call cs:unlock_wait_dev_proc
 ;
     mov cx,bx
@@ -5763,11 +5780,15 @@ wait_for_dev PROC far
     jmp LoadThread
 
 wfdUnlock:
+    mov ds:[si].wd_flags,0
+    mov ds:[si].wd_thread,0
+;
     call cs:unlock_wait_dev_proc
     call UnlockCore
     jmp wfdDone
 
 wfdClear:
+    mov ds:[si].wd_flags,0
     mov ds:[si].wd_thread,0
 ;
     GetThread
@@ -5780,6 +5801,7 @@ wfdDone:
     pop cx
     pop bx
     pop ax
+    pop fs
     pop es
     pop ds
     retf32
@@ -5801,6 +5823,7 @@ signal_wait_dev_name      DB 'Signal Wait Device',0
 signal_wait_dev   PROC far
     push ds
     push es
+    push fs
     push ax
     push si
 ;
@@ -5824,6 +5847,10 @@ signal_wait_dev   PROC far
     call TryLockCore
 ;
     call cs:lock_wait_dev_proc
+    test ds:[si].wd_flags,WAIT_DEV_ACTIVE
+    jz swdUnlock
+;
+    lock or ds:[si].wd_flags,WAIT_DEV_SIGNAL
     xor ax,ax
     xchg ax,ds:[si].wd_thread
     or ax,ax
@@ -5844,6 +5871,7 @@ swdCore:
 swdDone:       
     pop si
     pop ax
+    pop fs
     pop es
     pop ds
     retf32
