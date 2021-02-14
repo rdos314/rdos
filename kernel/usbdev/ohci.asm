@@ -182,7 +182,6 @@ usb_dev_base       usb_device_struc <>
 dev_control_ed     DD ?
 dev_control_tail   DD ?
 dev_control_head   DD ?
-dev_control_thread DW ?
 dev_curr_addr      DB ?
 dev_cc             DB ?
 
@@ -1451,10 +1450,10 @@ rcEnabled:
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
 ;
-    GetThread
-    mov es:dev_control_thread,ax
+    lock or es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     mov es:dev_cc,0Fh
-    ClearSignal
+    mov bx,es:usbd_wait_dev
+    PrepareWaitDev
 ;
     push ds
     mov ds,ds:ohc_reg_sel
@@ -1466,8 +1465,9 @@ rcEnabled:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    WaitForSignalWithTimeout
-    mov es:dev_control_thread,0
+    WaitForDev
+    lock and es:usbd_flags,NOT DEV_FLAG_CONTROL_ACTIVE
+;
     mov al,es:dev_cc
     cmp al,0Fh
     stc
@@ -3076,7 +3076,6 @@ CreateDev   Proc far
     call AllocateTd
     mov es:dev_control_head,edx
     mov es:dev_curr_addr,0
-    mov es:dev_control_thread,0
     mov es:usbd_parent_thread,0
     mov es:usbd_func_sel,ds
 ;
@@ -3442,8 +3441,7 @@ CheckControl   Proc near
     push edx
     push esi
 ;
-    mov bx,es:dev_control_thread
-    or bx,bx
+    test es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     jz cctDone
 ;
     mov edx,es:dev_control_head
@@ -3476,9 +3474,9 @@ cctError:
     ReportUsbPipeEvent
 
 cctSignal:
-    xor bx,bx
-    xchg bx,es:dev_control_thread
-    Signal
+    CrashGate
+    mov bx,es:usbd_wait_dev
+    SignalWaitDev
 
 cctDone:
     pop esi
@@ -4019,10 +4017,6 @@ ofhDevLoop:
     jz ofhDevNext
 ;
     mov es,ax
-    mov ax,es:dev_control_thread
-    or ax,ax
-    jz ofhDevPipes
-;
     call CheckControl
 
 ofhDevPipes:

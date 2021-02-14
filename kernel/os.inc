@@ -1316,7 +1316,7 @@ CloseWaitDev    MACRO
 
 ; IN  BX      Wait dev handle
 ; IN  ES:EDI  Dev name
-PrepateWaitDev    MACRO
+PrepareWaitDev    MACRO
     OsGate prepare_wait_dev_nr
                     ENDM
 

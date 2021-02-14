@@ -5654,6 +5654,7 @@ prepare_wait_dev   Proc far
     ja pwdDone
 ;
     GetThread
+    CrashGate
     mov ds,ax
     mov esi,OFFSET p_list_name
     mov ecx,31
@@ -5677,7 +5678,7 @@ pwdCopied:
     mov ds,ax
     mov si,bx
     dec si
-    shr si,2
+    shl si,2
     mov ax,ds:[si].wd_thread
     cmp ax,-1
     je pwdDone
