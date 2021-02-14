@@ -2810,12 +2810,13 @@ RelPacket   Endp
 ;                       GS      Pipe
 ;                       CX      Buffer size
 ;
+;       RETURNS:        BX      Raw sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
     push fs
     push eax
-    push ebx
     push ecx
     push edx
 ;
@@ -2824,9 +2825,6 @@ OpenRaw   Proc far
     push es
     mov eax,SIZE ehci_raw_sel
     AllocateSmallGlobalMem
-;
-    CreateWaitDev
-    mov es:usbr_wait_dev,bx
 ;
     mov bx,es
     pop es
@@ -2845,7 +2843,6 @@ orInRange:
     mul gs:ued_maxsize
     mov cx,ax
 ;
-    mov gs:usbp_raw_sel,bx
     mov gs,bx
     mov gs:usbr_buf_size,cx
 ;
@@ -2864,6 +2861,7 @@ orInRange:
     mov fs:[edx].qtd_status,80h
     mov gs:er_td,edx
 ;
+    mov bx,gs
     pop gs
 ;
     mov edx,gs:ep_qh
@@ -2894,7 +2892,6 @@ orIntr:
 orDone:
     pop edx
     pop ecx
-    pop ebx
     pop eax
     pop fs
     retf32

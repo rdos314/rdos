@@ -1513,6 +1513,36 @@ StartReconfigPipe       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenRaw
+;
+;       description:    Open raw sel
+;
+;       PARAMETERS:     ES        Device
+;                       GS        Pipe sel
+;                       CX        Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenRaw  Proc near
+    push ds
+    push bx
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:open_raw_proc
+    mov gs:usbp_raw_sel,bx
+;
+    mov ds,bx
+    CreateWaitDev
+    mov ds:usbr_wait_dev,bx
+;
+    pop bx
+    pop ds
+    ret
+OpenRaw  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           OpenUsbPacketPipe
 ;
 ;       description:    Open USB packet pipe
@@ -1556,17 +1586,14 @@ cuppIn:
     jmp cuppOk
 
 cuppOut:
-    push ds
     pushad
 ;
     mov ax,gs:ued_maxsize
     mul cx
     mov cx,ax
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:open_raw_proc
+    call OpenRaw
 ;
     popad
-    pop ds
 
 cuppOk:
     LeaveSection ds:udd_section
@@ -1630,10 +1657,7 @@ open_usb_raw_pipe       Proc far
     call StartReconfigPipe
     jc curpLeaveFail
 ;
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:open_raw_proc
-    pop ds
+    call OpenRaw
 ;
     mov es,gs:usbp_raw_sel
     mov es:usbr_timeout,esi

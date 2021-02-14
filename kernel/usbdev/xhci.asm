@@ -3036,23 +3036,22 @@ SetupRawTds    Endp
 ;                       GS      Pipe sel
 ;                       CX      Buffer size
 ;
+;       RETURNS:        BX      Raw sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
     push fs
     push eax
-    push ebx
     push ecx
     push edx
+    push ebp
 ;
     push es
     mov eax,SIZE xhci_raw_struc
     AllocateSmallGlobalMem
 ;
-    CreateWaitDev
-    mov es:usbr_wait_dev,bx
-;
-    mov bx,es
+    mov bp,es
     mov es:xr_pos,0
     pop es
 ;
@@ -3070,11 +3069,9 @@ orInRange:
     mul gs:ued_maxsize
     mov cx,ax
 ;
-    mov gs:usbp_raw_sel,bx
-;
     push gs
 ;
-    mov gs,bx
+    mov gs,bp
     mov gs:usbr_buf_size,cx
 ;
     AllocateMemBlk
@@ -3098,9 +3095,11 @@ orInRange:
     call SetPipeTr
 
 orDone:
+    mov bx,bp
+;
+    pop ebp
     pop edx
     pop ecx
-    pop ebx
     pop eax
     pop fs
     retf32

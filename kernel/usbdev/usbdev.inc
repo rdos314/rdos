@@ -142,6 +142,7 @@ rel_packet_proc            DD ?,?
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; IN  CX        Buffer size
+; OUT BX        Raw sel
 open_raw_proc          DD ?,?
 
 ; IN  ES        Device

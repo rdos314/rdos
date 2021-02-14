@@ -2329,6 +2329,8 @@ RelPacket   Endp
 ;                       GS      Pipe sel
 ;                       CX      Buffer size
 ;
+;       RETURNS:        BX      Raw sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
@@ -2358,13 +2360,9 @@ orInRange:
     add eax,OFFSET or_td_arr
     AllocateSmallGlobalMem
 ;
-    CreateWaitDev
-    mov es:usbr_wait_dev,bx
-;
     mov bx,es
     pop es
 ;
-    mov gs:usbp_raw_sel,bx
     mov ds,bx
     mov ds:or_td_count,cx
     mov ds:or_curr_count,0
@@ -2425,6 +2423,8 @@ orSaveEndp:
 
 orDone:
     popad
+    mov bx,ds
+;
     pop fs
     pop ds
     retf32

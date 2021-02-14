@@ -786,6 +786,8 @@ RelPacket   Endp
 ;                       GS      Pipe
 ;                       CX      Buffer size
 ;
+;       RETURNS:        BX      Raw sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenRaw   Proc far
