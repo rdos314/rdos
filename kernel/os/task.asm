@@ -5767,10 +5767,11 @@ wait_for_dev PROC far
     mov word ptr es:p_sleep_offset+2,0
     call cs:unlock_wait_dev_proc
 ;
+    push es
     mov cx,cs
     mov es,cx
     mov cx,bx
-    mov bx,es
+    pop bx
     mov edi,OFFSET wait_dev_timeout    
     StartTimer
 ;
