@@ -2583,8 +2583,6 @@ AllocatePacketSel    Proc near
 ;
     mov gs,ax
     mov gs:usbpk_entry_count,cx
-    mov gs:usbpk_rd_ptr,0
-    mov gs:usbpk_wr_ptr,0
     dec cx
     mov gs:usbpk_tail_ptr,cx
 ;
@@ -2597,7 +2595,6 @@ atdrLoop:
     loop atdrLoop
 ;
     mov bx,gs
-    InitSection gs:usbpk_section
 ;
     pop edi
     pop ecx

@@ -2528,8 +2528,6 @@ OpenPacket   Proc far
 ;
     mov gs,ax
     mov gs:usbpk_entry_count,cx
-    mov gs:usbpk_rd_ptr,0
-    mov gs:usbpk_wr_ptr,0
     mov gs:usbpk_tail_ptr,0
 ;
     mov di,SIZE usb_packet_struc
@@ -2552,9 +2550,8 @@ atdrLoop:
     loop atdrLoop
 ;
     mov bx,gs
-    InitSection gs:usbpk_section
-;
     clc
+;
     pop edi
     pop edx
     pop ecx

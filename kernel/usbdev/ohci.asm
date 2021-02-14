@@ -2035,9 +2035,6 @@ OpenPacket   Proc far
     add ecx,ecx
     rep stos dword ptr es:[edi]
 ;
-    InitSection es:usbpk_section
-    mov es:usbpk_rd_ptr,0
-    mov es:usbpk_wr_ptr,0
     mov es:usbpk_tail_ptr,0
     mov bx,es
     clc

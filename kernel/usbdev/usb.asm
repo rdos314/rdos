@@ -1523,6 +1523,37 @@ StartReconfigPipe       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenPacket
+;
+;       description:    Open packet sel
+;
+;       PARAMETERS:     ES        Device
+;                       GS        Pipe sel
+;                       CX        Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenPacket  Proc near
+    push ds
+    push bx
+;
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:open_packet_proc
+    mov gs:usbp_packet_sel,bx
+;
+    mov ds,bx
+    mov ds:usbpk_rd_ptr,0
+    mov ds:usbpk_wr_ptr,0
+    InitSection ds:usbpk_section
+;
+    pop bx
+    pop ds
+    ret
+OpenPacket  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           OpenRaw
 ;
 ;       description:    Open raw sel
@@ -1589,11 +1620,7 @@ open_usb_packet_pipe    Proc far
     jz cuppOut
 
 cuppIn:
-    push ds
-    mov ds,es:usbd_func_sel
-    call fword ptr ds:open_packet_proc
-    pop ds
-    mov gs:usbp_packet_sel,bx
+    call OpenPacket
 ;
     push ds
     mov ds,es:usbd_func_sel
@@ -1602,14 +1629,10 @@ cuppIn:
     jmp cuppOk
 
 cuppOut:
-    pushad
-;
     mov ax,gs:ued_maxsize
     mul cx
     mov cx,ax
     call OpenRaw
-;
-    popad
 
 cuppOk:
     LeaveSection ds:udd_section
