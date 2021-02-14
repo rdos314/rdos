@@ -1721,7 +1721,7 @@ close_usb_pipe Endp
 
 post_usb_raw_pipe_name DB 'Post Usb Raw Pipe', 0
 
-raw_text DB 'Raw', 0
+raw_text DB 'USB Raw', 0
 
 post_usb_raw_pipe Proc far
     push ds

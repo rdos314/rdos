@@ -2033,7 +2033,7 @@ SetupControlOut	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-control_text DB 'Control', 0
+control_text DB 'USB Control', 0
 
 RunControl   Proc near
     push ds
