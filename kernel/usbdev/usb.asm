@@ -1564,9 +1564,14 @@ OpenPacket  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+raw_text DB 'USB Raw ', 0
+
 OpenRaw  Proc near
     push ds
     push bx
+    push cx
+    push si
+    push di
 ;
     mov ds,es:usbd_func_sel
     call fword ptr ds:open_raw_proc
@@ -1576,6 +1581,31 @@ OpenRaw  Proc near
     CreateWaitDev
     mov ds:usbr_wait_dev,bx
 ;
+    mov si,OFFSET raw_text
+    mov di,OFFSET usbr_name
+
+orCopy:
+    mov al,cs:[si]
+    or al,al
+    jz orVal
+;
+    mov ds:[di],al
+    inc si
+    inc di
+    jmp orCopy
+
+orVal:
+    mov al,gs:ued_address
+    call HexToAscii
+    mov ds:[di],ax
+;
+    add di,2
+    xor al,al
+    mov ds:[di],al
+;
+    pop di
+    pop si
+    pop cx
     pop bx
     pop ds
     ret
@@ -1784,8 +1814,6 @@ close_usb_pipe Endp
 
 post_usb_raw_pipe_name DB 'Post Usb Raw Pipe', 0
 
-raw_text DB 'USB Raw', 0
-
 post_usb_raw_pipe Proc far
     push ds
     push es
@@ -1829,9 +1857,9 @@ purpIn:
     push ds
     mov ds,gs:usbp_raw_sel
     push es
-    mov ax,cs
+    mov ax,ds
     mov es,ax
-    mov edi,OFFSET raw_text
+    mov edi,OFFSET usbr_name
     mov bx,ds:usbr_wait_dev
     PrepareWaitDev
     pop es

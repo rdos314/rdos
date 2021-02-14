@@ -247,6 +247,7 @@ usbr_buf_linear   DD ?
 usbr_buf_sel      DW ?
 usbr_wait_dev     DW ?
 usbr_timeout      DD ?
+usbr_name         DB 12 DUP(?)
 
 usb_raw_struc  ENDS
 
