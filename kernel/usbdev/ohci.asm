@@ -1919,43 +1919,6 @@ FreePacketTds  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreePacketSel
-;
-;       DESCRIPTION:    Free packet sel
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device selector
-;                       FS      Flat sel
-;                       GS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePacketSel Proc near
-    push ax
-    push bx
-;
-    xor bx,bx
-    xchg bx,gs:usbp_packet_sel
-    or bx,bx
-    jz dtdDone
-;
-    call StopTds
-    call FreePacketTds
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-
-dtdDone:
-    pop bx
-    pop ax
-    ret
-FreePacketSel Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           StartPacketTds
 ;
 ;       DESCRIPTION:    Start packet TDs
@@ -2129,6 +2092,7 @@ OpenPacket   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
+;                       BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2136,11 +2100,20 @@ ClosePacket   Proc far
     push ds
     push fs
     push ax
+    push bx
 ;
     mov ax,flat_sel
     mov fs,ax
-    call FreePacketSel
 ;
+    call StopTds
+    call FreePacketTds
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+;
+    pop bx
     pop ax
     pop fs
     pop ds

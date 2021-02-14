@@ -1980,7 +1980,6 @@ dtFailed:
     EndDiscHandler    
     
 dtEnd: 
-    int 3
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     CloseUsbPipe

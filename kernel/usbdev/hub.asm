@@ -721,6 +721,7 @@ OpenPacket   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
+;                       BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
