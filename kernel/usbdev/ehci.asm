@@ -135,7 +135,6 @@ usb_dev_base        usb_device_struc <>
 
 dev_control_qtd     DD ?
 dev_control_qh      DD ?
-dev_control_thread  DW ?
 dev_control_status  DB ?
 
 ehci_dev_sel     ENDS
@@ -1998,6 +1997,8 @@ SetupControlOut Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+control_text DB 'Control', 0
+
 RunControl   Proc near
     push ds
     pushad
@@ -2012,10 +2013,16 @@ RunControl   Proc near
     pop ds
     jc rcDone
 ;
-    ClearSignal
-    GetThread
-    mov es:dev_control_thread,ax
+    lock or es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     mov es:dev_control_status,0FFh
+;
+    push es
+    mov bx,es:usbd_wait_dev
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET control_text
+    PrepareWaitDev
+    pop es
 ;
     mov edx,es:dev_control_qtd
     LinearToPhysicalMemBlk
@@ -2027,8 +2034,10 @@ RunControl   Proc near
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    WaitForSignalWithTimeout
-    mov es:dev_control_thread,0
+    mov bx,es:usbd_wait_dev
+    WaitForDev
+    lock and es:usbd_flags,NOT DEV_FLAG_CONTROL_ACTIVE
+;
     mov al,es:dev_control_status
     or al,al
     stc
@@ -3386,7 +3395,6 @@ cdCreate:
     AllocateMemBlk
     call InitQtd64
     mov es:dev_control_qtd,edx
-    mov es:dev_control_thread,0
     mov es:usbd_parent_thread,0
 ;
     pop ax
@@ -4075,6 +4083,9 @@ CheckControl   Proc near
     push ebx
     push edx
 ;
+    test es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
+    jz cctDone
+;
     mov edx,es:dev_control_qtd
 
 cctLoop:
@@ -4099,9 +4110,8 @@ cctSignal:
     call ReportStatus
 
 cctReportDone:
-    xor bx,bx
-    xchg bx,es:dev_control_thread
-    Signal
+    mov bx,es:usbd_wait_dev
+    SignalWaitDev
 
 cctDone:
     pop edx
@@ -4408,10 +4418,6 @@ efhDevLoop:
     jz efhDevNext
 ;
     mov es,ax
-    mov ax,es:dev_control_thread
-    or ax,ax
-    jz efhDevPipes
-;
     call CheckControl
 
 efhDevPipes:
