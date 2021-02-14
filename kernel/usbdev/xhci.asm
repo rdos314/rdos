@@ -3170,7 +3170,26 @@ CloseRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadRaw   Proc far
-    int 3
+    push fs
+    pushad
+;
+    mov fs,gs:usbp_raw_sel
+    mov fs:xr_res,0
+;
+    movzx esi,fs:xr_pos
+    shl esi,4
+    add esi,gs:xp_ring_linear
+    movzx ecx,cx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov fs:[esi].trb_status,ecx
+    xor fs:[esi].trb_type,1
+;
+    call StartPipe
+;
+    popad
+    pop fs
     retf32
 ReadRaw   Endp
 
@@ -3606,7 +3625,6 @@ command_event Proc near
     cmp al,1
     je ceNotError
 ;
-    int 3
     call ReportFunctionStatus
 
 ceNotError:
@@ -3860,7 +3878,6 @@ citNotPacket:
     or bx,bx
     jz citDone
 ;
-    int 3
     call HandleRaw
 
 citDone:
