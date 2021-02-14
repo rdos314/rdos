@@ -123,12 +123,17 @@ config_device_proc	   DD ?,?
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; IN  CX        Packet count
+; OUT BX        Packet sel
 open_packet_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
 ; IN  BX        Packet sel
 close_packet_proc          DD ?,?
+
+; IN  ES        Device
+; IN  GS        Pipe sel
+start_packet_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel

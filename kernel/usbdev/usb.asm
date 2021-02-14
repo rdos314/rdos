@@ -1593,6 +1593,12 @@ cuppIn:
     mov ds,es:usbd_func_sel
     call fword ptr ds:open_packet_proc
     pop ds
+    mov gs:usbp_packet_sel,bx
+;
+    push ds
+    mov ds,es:usbd_func_sel
+    call fword ptr ds:start_packet_proc
+    pop ds
     jmp cuppOk
 
 cuppOut:

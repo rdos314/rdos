@@ -702,6 +702,8 @@ CreateIntrPipe   Endp
 ;                       GS      Pipe
 ;                       CX      Packet count
 ;
+;       RETURNS:        BX      Packet sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPacket   Proc far
@@ -732,6 +734,26 @@ ClosePacket   Proc far
     pop ds
     ret
 ClosePacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPacket
+;
+;       DESCRIPTION:    Start packet interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPacket   Proc far
+    push ds
+    mov ds,ds:hub_parent_sel
+    call fword ptr ds:start_packet_proc
+    pop ds
+    ret
+StartPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -999,13 +1021,14 @@ ht15 DD OFFSET ControlMsg,          SEG code
 ht16 DD OFFSET ConfigDev,           SEG code
 ht17 DD OFFSET OpenPacket,          SEG code
 ht18 DD OFFSET ClosePacket,         SEG code
-ht19 DD OFFSET ReqPacket,           SEG code
-ht1A DD OFFSET RelPacket,           SEG code
-ht1B DD OFFSET OpenRaw,             SEG code
-ht1C DD OFFSET CloseRaw,            SEG code
-ht1D DD OFFSET ReadRaw,             SEG code
-ht1E DD OFFSET WriteRaw,            SEG code
-ht1F DD OFFSET FinishRaw,           SEG code
+ht19 DD OFFSET StartPacket,         SEG code
+ht1A DD OFFSET ReqPacket,           SEG code
+ht1B DD OFFSET RelPacket,           SEG code
+ht1C DD OFFSET OpenRaw,             SEG code
+ht1D DD OFFSET CloseRaw,            SEG code
+ht1E DD OFFSET ReadRaw,             SEG code
+ht1F DD OFFSET WriteRaw,            SEG code
+ht20 DD OFFSET FinishRaw,           SEG code
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2302,7 +2325,7 @@ uaDevConfig:
 ;
     mov esi,OFFSET hub_tab
     xor edi,edi
-    mov ecx,2*20h
+    mov ecx,2*21h
 
 uaTabLoop:
     lods dword ptr cs:[esi]

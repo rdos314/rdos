@@ -2443,72 +2443,6 @@ StopTds   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocatePacketSel
-;
-;       DESCRIPTION:    Allocate packet sel
-;
-;       PARAMETERS:     FS      Flat sel
-;                       CX      Buffer count
-;
-;       RETURNS:        BX      Ring sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocatePacketSel    Proc near
-    push gs
-    push eax
-    push ecx
-    push edx
-    push edi
-;
-    inc cx
-    movzx eax,cx
-    shl ax,3
-    add ax,SIZE usb_packet_struc
-    push es
-    AllocateSmallGlobalMem
-    mov ax,es
-    pop es
-;
-    mov gs,ax
-    mov gs:usbpk_entry_count,cx
-    mov gs:usbpk_rd_ptr,0
-    mov gs:usbpk_wr_ptr,0
-    mov gs:usbpk_tail_ptr,0
-;
-    mov di,SIZE usb_packet_struc
-
-atdrLoop:
-    push cx
-    mov cx,SIZE base_td
-    AllocateMemBlk
-    pop cx
-;
-    xor eax,eax
-    mov fs:[edx].utd_link,eax
-    mov fs:[edx].utd_control,eax
-    mov fs:[edx].utd_host,eax
-    mov fs:[edx].utd_buf,eax
-    mov gs:[di],edx
-    mov gs:[di+4],eax
-;
-    add di,8
-    loop atdrLoop
-;
-    mov bx,gs
-    InitSection gs:usbpk_section
-;
-    pop edi
-    pop edx
-    pop ecx
-    pop eax
-    pop gs
-    ret
-AllocatePacketSel    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           FreePacketTds
 ;
 ;       DESCRIPTION:    Free TDs in ring
@@ -2561,20 +2495,128 @@ FreePacketTds Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartPacketTds
+;       NAME:           OpenPacket
 ;
-;       DESCRIPTION:    Start packet TDs
+;       DESCRIPTION:    Open packet interface
 ;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device selector
-;                       FS      Flat sel
-;                       GS      Pipe selector
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;                       CX      Packet count
+;
+;       RETURNS:        BX      Packet sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartPacketTds     Proc near
+OpenPacket   Proc far
+    push gs
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    inc cx
+    movzx eax,cx
+    shl ax,3
+    add ax,SIZE usb_packet_struc
+    push es
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es
+;
+    mov gs,ax
+    mov gs:usbpk_entry_count,cx
+    mov gs:usbpk_rd_ptr,0
+    mov gs:usbpk_wr_ptr,0
+    mov gs:usbpk_tail_ptr,0
+;
+    mov di,SIZE usb_packet_struc
+
+atdrLoop:
+    push cx
+    mov cx,SIZE base_td
+    AllocateMemBlk
+    pop cx
+;
+    xor eax,eax
+    mov fs:[edx].utd_link,eax
+    mov fs:[edx].utd_control,eax
+    mov fs:[edx].utd_host,eax
+    mov fs:[edx].utd_buf,eax
+    mov gs:[di],edx
+    mov gs:[di+4],eax
+;
+    add di,8
+    loop atdrLoop
+;
+    mov bx,gs
+    InitSection gs:usbpk_section
+;
+    clc
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    retf32
+OpenPacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClosePacket
+;
+;       DESCRIPTION:    Close packet interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;                       BX      Packet sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePacket   Proc far
+    push fs
+    push eax
+    push ebx
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call StopTds
+    call FreePacketTds
+;
+    push es
+    mov es,bx
+    FreeMem
+    pop es
+;
+    pop ebx
+    pop eax
+    pop fs
+    retf32
+ClosePacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPacket
+;
+;       DESCRIPTION:    Start packet interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPacket   Proc far
     push ds
+    push fs
     pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
 ;
     mov ds,gs:usbp_packet_sel
     mov si,SIZE usb_packet_struc
@@ -2650,78 +2692,12 @@ sipSave:
     mov edx,gs:up_qh
     mov fs:[edx].uqh_elem,eax
 ;
-    popad
-    pop ds
-    ret
-StartPacketTds     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           OpenPacket
-;
-;       DESCRIPTION:    Open packet interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;                       CX      Packet count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenPacket   Proc far
-    push ds
-    push fs
-    pushad
-;
-    mov ax,flat_sel
-    mov fs,ax
-;
-    call AllocatePacketSel
-    mov gs:usbp_packet_sel,bx
-;
-    call StartPacketTds
     clc
-;
     popad
     pop fs
     pop ds
     retf32
-OpenPacket   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ClosePacket
-;
-;       DESCRIPTION:    Close packet interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;                       BX      Packet sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClosePacket   Proc far
-    push fs
-    push eax
-    push ebx
-;
-    mov ax,flat_sel
-    mov fs,ax
-;
-    call StopTds
-    call FreePacketTds
-;
-    push es
-    mov es,bx
-    FreeMem
-    pop es
-;
-    pop ebx
-    pop eax
-    pop fs
-    retf32
-ClosePacket   Endp
+StartPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3967,13 +3943,14 @@ ut15 DD OFFSET ControlMsg,          SEG code
 ut16 DD OFFSET ConfigDev,           SEG code
 ut17 DD OFFSET OpenPacket,          SEG code
 ut18 DD OFFSET ClosePacket,         SEG code
-ut19 DD OFFSET ReqPacket,           SEG code
-ut1A DD OFFSET RelPacket,           SEG code
-ut1B DD OFFSET OpenRaw,             SEG code
-ut1C DD OFFSET CloseRaw,            SEG code
-ut1D DD OFFSET ReadRaw,             SEG code
-ut1E DD OFFSET WriteRaw,            SEG code
-ut1F DD OFFSET FinishRaw,           SEG code
+ut19 DD OFFSET StartPacket,         SEG code
+ut1A DD OFFSET ReqPacket,           SEG code
+ut1B DD OFFSET RelPacket,           SEG code
+ut1C DD OFFSET OpenRaw,             SEG code
+ut1D DD OFFSET CloseRaw,            SEG code
+ut1E DD OFFSET ReadRaw,             SEG code
+ut1F DD OFFSET WriteRaw,            SEG code
+ut20 DD OFFSET FinishRaw,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4029,7 +4006,7 @@ ifIrq:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]

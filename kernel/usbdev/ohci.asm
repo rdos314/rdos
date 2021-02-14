@@ -1814,53 +1814,6 @@ StopTds Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocatePacketSel
-;
-;       DESCRIPTION:    Allocate packet sel
-;
-;       PARAMETERS:     FS      Flat sel
-;                       CX      Buffer count
-;
-;       RETURNS:        BX      Ring sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocatePacketSel    Proc near
-    push es
-    push eax
-    push ecx
-    push edi
-;
-    inc cx
-    mov esi,edi
-    movzx eax,cx
-    shl ax,3
-    add ax,SIZE usb_packet_struc
-    AllocateSmallGlobalMem
-    mov es:usbpk_entry_count,cx
-;
-    mov edi,SIZE usb_packet_struc
-    xor eax,eax
-    movzx ecx,cx
-    add ecx,ecx
-    rep stos dword ptr es:[edi]
-;
-    InitSection es:usbpk_section
-    mov es:usbpk_rd_ptr,0
-    mov es:usbpk_wr_ptr,0
-    mov es:usbpk_tail_ptr,0
-    mov bx,es
-;
-    pop edi
-    pop ecx
-    pop eax
-    pop es
-    ret
-AllocatePacketSel    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           FreePacketTds
 ;
 ;       DESCRIPTION:    Free packet TDs
@@ -2058,30 +2011,43 @@ StartPacketTds     Endp
 ;                       GS      Pipe sel
 ;                       CX      Packet count
 ;
+;       RETURNS:        BX      Packet sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPacket   Proc far
-    push ds
-    push fs
-    push ax
-    push bx
+    push es
+    push eax
+    push ecx
+    push edi
 ;
-    mov ax,flat_sel
-    mov fs,ax
+    inc cx
+    mov esi,edi
+    movzx eax,cx
+    shl ax,3
+    add ax,SIZE usb_packet_struc
+    AllocateSmallGlobalMem
+    mov es:usbpk_entry_count,cx
 ;
-    call AllocatePacketSel
-    mov gs:usbp_packet_sel,bx
+    mov edi,SIZE usb_packet_struc
+    xor eax,eax
+    movzx ecx,cx
+    add ecx,ecx
+    rep stos dword ptr es:[edi]
 ;
-    call StartPacketTds
-    call SignalStart
+    InitSection es:usbpk_section
+    mov es:usbpk_rd_ptr,0
+    mov es:usbpk_wr_ptr,0
+    mov es:usbpk_tail_ptr,0
+    mov bx,es
     clc
 ;
-    pop bx
-    pop ax
-    pop fs
-    pop ds
+    pop edi
+    pop ecx
+    pop eax
+    pop es
     retf32
-OpenPacket   Endp
+OpenPacket    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2119,6 +2085,38 @@ ClosePacket   Proc far
     pop ds
     retf32
 ClosePacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPacket
+;
+;       DESCRIPTION:    Start packet interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPacket   Proc far
+    push ds
+    push fs
+    push ax
+    push bx
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call StartPacketTds
+    call SignalStart
+    clc
+;
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    retf32
+StartPacket   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4134,13 +4132,14 @@ ot15 DD OFFSET ControlMsg,          SEG code
 ot16 DD OFFSET ConfigDev,           SEG code
 ot17 DD OFFSET OpenPacket,          SEG code
 ot18 DD OFFSET ClosePacket,         SEG code
-ot19 DD OFFSET ReqPacket,           SEG code
-ot1A DD OFFSET RelPacket,           SEG code
-ot1B DD OFFSET OpenRaw,             SEG code
-ot1C DD OFFSET CloseRaw,            SEG code
-ot1D DD OFFSET ReadRaw,             SEG code
-ot1E DD OFFSET WriteRaw,            SEG code
-ot1F DD OFFSET FinishRaw,           SEG code
+ot19 DD OFFSET StartPacket,         SEG code
+ot1A DD OFFSET ReqPacket,           SEG code
+ot1B DD OFFSET RelPacket,           SEG code
+ot1C DD OFFSET OpenRaw,             SEG code
+ot1D DD OFFSET CloseRaw,            SEG code
+ot1E DD OFFSET ReadRaw,             SEG code
+ot1F DD OFFSET WriteRaw,            SEG code
+ot20 DD OFFSET FinishRaw,           SEG code
 
 InitFunction    Proc near
     push ds
@@ -4198,7 +4197,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]

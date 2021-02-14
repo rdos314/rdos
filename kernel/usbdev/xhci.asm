@@ -2757,26 +2757,23 @@ FreePacketTds Endp
 ;                       GS      Pipe sel
 ;                       CX      Packet count
 ;
+;       RETURNS:        BX      Packet sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPacket   Proc far
     push ds
     push fs
-    pushad
+    push ax
 ;
     mov ax,flat_sel
     mov fs,ax
 ;
     call CreatePipeRing
     call AllocatePacketSel
-    mov gs:usbp_packet_sel,bx
-;
-    call StartPacketTds
-    call SetPipeTr
-    call StartPipe
     clc
 ;
-    popad
+    pop ax
     pop fs
     pop ds
     retf32
@@ -2819,6 +2816,37 @@ ClosePacket   Proc far
     pop ds
     retf32
 ClosePacket   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPacket
+;
+;       DESCRIPTION:    Start packet interface
+;
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartPacket   Proc far
+    push ds
+    push fs
+    push ax
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    call StartPacketTds
+    call SetPipeTr
+    call StartPipe
+    clc
+;
+    pop ax
+    pop fs
+    pop ds
+    retf32
+StartPacket  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4441,14 +4469,15 @@ et14 DD OFFSET UpdateMaxLen,        SEG code
 et15 DD OFFSET ControlMsg,          SEG code
 et16 DD OFFSET ConfigDevice,        SEG code
 et17 DD OFFSET OpenPacket,          SEG code
-et18 DD OFFSET ClosePAcket,         SEG code
-et19 DD OFFSET ReqPacket,           SEG code
-et1A DD OFFSET RelPacket,           SEG code
-et1B DD OFFSET OpenRaw,             SEG code
-et1C DD OFFSET CloseRaw,            SEG code
-et1D DD OFFSET ReadRaw,             SEG code
-et1E DD OFFSET WriteRaw,            SEG code
-et1F DD OFFSET FinishRaw,           SEG code
+et18 DD OFFSET ClosePacket,         SEG code
+et19 DD OFFSET StartPacket,         SEG code
+et1A DD OFFSET ReqPacket,           SEG code
+et1B DD OFFSET RelPacket,           SEG code
+et1C DD OFFSET OpenRaw,             SEG code
+et1D DD OFFSET CloseRaw,            SEG code
+et1E DD OFFSET ReadRaw,             SEG code
+et1F DD OFFSET WriteRaw,            SEG code
+et20 DD OFFSET FinishRaw,           SEG code
 
 AddFunction    Proc near
     push es
@@ -4593,7 +4622,7 @@ ifIntDone:
     mov es,ax
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*20h
+    mov cx,2*21h
 
 ifTabLoop:
     lods dword ptr cs:[si]
