@@ -807,6 +807,7 @@ OpenRaw   Endp
 ;
 ;       PARAMETERS:     ES      Device
 ;                       GS      Pipe sel
+;                       BX      Raw sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -1457,13 +1457,22 @@ ClearPipe       Proc near
     pop ds
 
 clpPacketOk:    
-    mov bx,gs:usbp_raw_sel
+    xor bx,bx
+    xchg bx,gs:usbp_raw_sel
     or bx,bx
     jz clpDone
 ;
     push ds
+;
+    push bx
+    mov ds,bx
+    mov bx,ds:usbr_wait_dev
+    CloseWaitDev
+    pop bx
+;
     mov ds,es:usbd_func_sel
     call fword ptr ds:close_raw_proc
+;
     pop ds
      
 clpDone:    

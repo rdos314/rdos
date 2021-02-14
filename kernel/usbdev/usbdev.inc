@@ -147,6 +147,7 @@ open_raw_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
+; IN  BX        Raw sel
 close_raw_proc          DD ?,?
 
 ; IN  ES        Device

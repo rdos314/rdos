@@ -2433,34 +2433,30 @@ OpenRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FreeRawSel
+;       NAME:           CloseRaw
 ;
-;       DESCRIPTION:    Free packet sel
+;       DESCRIPTION:    Close raw interface
 ;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device selector
-;                       FS      Flat sel
-;                       GS      Pipe selector
+;       PARAMETERS:     ES      Device
+;                       GS      Pipe sel
+;                       BX      Raw sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeRawSel Proc near
+CloseRaw   Proc far
+    push ds
     push es
+    push fs
     push gs
     pushad
 ;
-    xor bx,bx
-    xchg bx,gs:usbp_raw_sel
-    or bx,bx
-    jz frsDone
+    mov ax,flat_sel
+    mov fs,ax
 ;
     call StopTds
 ;
     push bx
     mov gs,bx
-;
-    mov bx,gs:usbr_wait_dev
-    CloseWaitDev
 ;
     mov cx,gs:usbr_buf_size
     mov edx,gs:usbr_buf_linear
@@ -2494,33 +2490,8 @@ frsFree:
 frsDone:
     popad
     pop gs
-    pop es
-    ret
-FreeRawSel Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CloseRaw
-;
-;       DESCRIPTION:    Close raw interface
-;
-;       PARAMETERS:     ES      Device
-;                       GS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseRaw   Proc far
-    push ds
-    push fs
-    push ax
-;
-    mov ax,flat_sel
-    mov fs,ax
-    call FreeRawSel
-;
-    pop ax
     pop fs
+    pop es
     pop ds
     retf32
 CloseRaw   Endp
