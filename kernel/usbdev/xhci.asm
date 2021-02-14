@@ -269,7 +269,6 @@ xd_control_deque             DW ?
 xd_control_pcs               DW ?
 xd_control_size              DW ?
 xd_control_remain_size       DW ?
-xd_control_thread            DW ?
 xd_control_result            DB ?
 xd_slot                      DB ?
 
@@ -1167,7 +1166,6 @@ InitControlRing   Proc near
     mov es:xd_control_enque,dx
     mov es:xd_control_deque,dx
     mov es:xd_control_pcs,1
-    mov es:xd_control_thread,0
 ;
     movzx edi,dx
     mov ecx,0Ch
@@ -2035,6 +2033,8 @@ SetupControlOut	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+control_text DB 'Control', 0
+
 RunControl   Proc near
     push ds
     pushad
@@ -2046,9 +2046,16 @@ RunControl   Proc near
     call fword ptr ds:is_dev_connected_proc
     jc rcDone
 ;
+    lock or es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     mov es:xd_control_result,-1
-    GetThread
-    mov es:xd_control_thread,ax
+;
+    push es
+    mov bx,es:usbd_wait_dev
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET control_text
+    PrepareWaitDev
+    pop es
 ;
     movzx esi,es:xd_slot
     shl esi,2
@@ -2059,8 +2066,9 @@ RunControl   Proc near
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    WaitForSignalWithTimeout
-    mov es:xd_control_thread,0
+    WaitForDev
+    lock and es:usbd_flags,NOT DEV_FLAG_CONTROL_ACTIVE
+;
     mov al,es:xd_control_result
     cmp al,1
     stc
@@ -3691,8 +3699,12 @@ cevNotError:
 
 cevSave:
     mov fs:xd_control_deque,di
-    mov bx,fs:xd_control_thread
-    Signal
+;
+    test es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
+    jz cevDone
+;
+    mov bx,es:usbd_wait_dev
+    SignalWaitDev
 
 cevDone:
     ret
