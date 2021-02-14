@@ -561,48 +561,6 @@ ReceiveCsw Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           ReceiveData
-;
-;   DESCRIPTION:    Receive data
-;
-;   PARAMETERS:     FS      Disc sel
-;                   ES:EDI  Buffer
-;                   ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReceiveData Proc near
-    int 3
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_in_pipe
-    PostUsbRawPipe
-    ret
-ReceiveData Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           WriteData
-;
-;   DESCRIPTION:    Write data
-;
-;   PARAMETERS:     FS      Disc sel
-;                   ES:EDI  Buffer
-;                   ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteData Proc near
-    int 3
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_out_pipe
-    PostUsbRawPipe
-    ret
-WriteData Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           ResetDevice
 ;
 ;   DESCRIPTION:    Reset device
@@ -1413,7 +1371,6 @@ start_thread:
     StartDisc
     TerminateThread
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1579,8 +1536,6 @@ rdRetry:
     jc rdFail
 ;    
     call ReadRaw
-
-rdCsw:
     jc rdFail
 ;    
     call ReceiveCsw
@@ -1629,6 +1584,86 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WriteRaw
+;
+;       DESCRIPTION:    Write using raw interface
+;
+;       PARAMETERS:     FS      Disc selector
+;                       ESI     Disc handle array
+;                       EBP     Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteRaw      Proc near
+    push ebp
+    push esi
+
+wrBufLoop:  
+    cmp ebp,8
+    ja wrBufWhole
+;
+    mov eax,200h
+    mul ebp
+    mov ecx,eax
+    jmp wrBufDo
+
+wrBufWhole:
+    mov ecx,1000h
+
+wrBufDo:
+    push ecx
+    xor edx,edx
+
+wrBufCopy:
+    push ds
+    push es
+    push ecx
+    push esi
+;
+    mov esi,es:[esi]
+    mov esi,es:[esi].dh_data
+    mov ax,es
+    mov ds,ax
+    mov ecx,80h
+    mov es,fs:disc_bulk_out_buf
+    mov edi,edx
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov edx,edi
+;
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+;
+    add esi,4
+    sub ebp,1
+    jz wrBufWrite
+;
+    sub ecx,200h
+    jnz wrBufCopy
+
+wrBufWrite:
+    pop ecx
+;
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    PostUsbRawPipe
+    jc wrBufWriteDone
+;
+    or ebp,ebp
+    jnz wrBufLoop
+;
+    clc
+
+wrBufWriteDone:
+    pop esi
+    pop ebp
+    ret
+WriteRaw  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       write_drive
 ;
 ;       DESCRIPTION:    Perform a write request
@@ -1640,7 +1675,6 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive     Proc near
-    int 3
 
 wdLoop:    
     push ecx
@@ -1690,52 +1724,40 @@ wdDoTrans:
     movzx ebx,es:[edi].dh_sector
     add eax,ebx
     mov edx,eax
-;    
+;
     shl ebp,9
-    mov fs:disc_cbw_tag,edx
-    mov fs:disc_cbw_transfer_len,ebp
-    mov fs:disc_cbw_flags,0
-    mov fs:disc_cbw_cmd_len,10
-    mov fs:disc_cbw_cmd_data,2Ah
-    mov fs:disc_cbw_cmd_data+1,0
+
+wdRetry:
+    push es
+    mov es,fs:disc_bulk_out_buf    
+    mov es:disc_cbw_tag,edx
+    mov es:disc_cbw_transfer_len,ebp
+    mov es:disc_cbw_flags,0
+    mov es:disc_cbw_cmd_len,10
+    mov es:disc_cbw_cmd_data,2Ah
+    mov es:disc_cbw_cmd_data+1,0
 ;    
     mov eax,edx
     xchg al,ah
     rol eax,16
     xchg al,ah
-    mov dword ptr fs:disc_cbw_cmd_data+2,eax
+    mov dword ptr es:disc_cbw_cmd_data+2,eax
 ;
-    mov fs:disc_cbw_cmd_data+6,0
+    mov es:disc_cbw_cmd_data+6,0
 ;
     shr ebp,9
     mov ax,bp
     xchg al,ah    
-    mov word ptr fs:disc_cbw_cmd_data+7,ax
-    mov fs:disc_cbw_cmd_data+9,0
-
-wdRetry:
-    int 3
+    mov word ptr es:disc_cbw_cmd_data+7,ax
+    mov es:disc_cbw_cmd_data+9,0
+;
+    mov eax,edx
     call SendCbw
+    pop es
     jc wdFail
 ;    
-    push ebp
-    push esi
-
-wdBufLoop:  
-    mov edi,es:[esi]
-    mov edi,es:[edi].dh_data
-    mov ecx,200h
-    int 3
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_out_pipe
-    PostUsbRawPipe
-;
-    add esi,4
-    sub ebp,1
-    jnz wdBufLoop
-;
-    pop esi
-    pop ebp
+    call WriteRaw
+    jc wdFail
 ;    
     call ReceiveCsw
     jnc wdOk
