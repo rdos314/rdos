@@ -1408,6 +1408,8 @@ SetupControlOut Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+control_text DB 'Control', 0
+
 RunControl   Proc near
     pushad
 ;
@@ -1452,8 +1454,14 @@ rcEnabled:
 ;
     lock or es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     mov es:dev_cc,0Fh
+;
+    push es
     mov bx,es:usbd_wait_dev
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET control_text
     PrepareWaitDev
+    pop es
 ;
     push ds
     mov ds,ds:ohc_reg_sel
@@ -3474,7 +3482,6 @@ cctError:
     ReportUsbPipeEvent
 
 cctSignal:
-    CrashGate
     mov bx,es:usbd_wait_dev
     SignalWaitDev
 

@@ -5654,7 +5654,6 @@ prepare_wait_dev   Proc far
     ja pwdDone
 ;
     GetThread
-    CrashGate
     mov ds,ax
     mov esi,OFFSET p_list_name
     mov ecx,31
@@ -5768,6 +5767,8 @@ wait_for_dev PROC far
     mov word ptr es:p_sleep_offset+2,0
     call cs:unlock_wait_dev_proc
 ;
+    mov cx,cs
+    mov es,cx
     mov cx,bx
     mov bx,es
     mov edi,OFFSET wait_dev_timeout    
