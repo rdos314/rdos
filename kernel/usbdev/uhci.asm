@@ -117,7 +117,6 @@ usb_dev_base     usb_device_struc <>
 dev_control_qh       DD ?
 dev_control_head     DD ?
 dev_utd_control      DD ?
-dev_control_thread   DW ?
 dev_curr_address     DB ?
 dev_control_status   DB ?
 
@@ -1056,7 +1055,6 @@ CreateControl   Proc far
     or eax, 4000000h
     
 ccSpeedOk:
-    mov es:dev_control_thread,0
     mov es:dev_control_head,edx
     mov es:dev_utd_control,eax
 ;
@@ -2043,6 +2041,8 @@ SetupControlOut	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+control_text DB 'Control', 0
+
 RunControl   Proc near
     pushad
 ;
@@ -2056,10 +2056,16 @@ RunControl   Proc near
     pop ds
     jc rcDone
 ;
-    GetThread
-    mov es:dev_control_thread,ax
+    lock or es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     mov es:dev_control_status,0FFh
-    ClearSignal
+;
+    push es
+    mov bx,es:usbd_wait_dev
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET control_text
+    PrepareWaitDev
+    pop es
 ;
     mov edx,es:dev_control_head
     LinearToPhysicalMemBlk
@@ -2075,9 +2081,10 @@ rcRetry:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    WaitForSignalWithTimeout
+    mov bx,es:usbd_wait_dev
+    WaitForDev
+    lock and es:usbd_flags,NOT DEV_FLAG_CONTROL_ACTIVE
 ;
-    mov es:dev_control_thread,0
     mov al,es:dev_control_status
     cmp al,0FFh
     jne rcCheck
@@ -2105,10 +2112,8 @@ rcRetry:
     pop es
     pop ds
 ;
-    GetThread
-    mov es:dev_control_thread,ax
-;
     mov ds:uhc_has_timer,1
+    lock or es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     jmp rcRetry
 
 rcCheck:
@@ -3481,6 +3486,9 @@ CheckControl   Proc near
     push ebx
     push edx
 ;
+    test es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
+    jz cctDone
+;
     mov edx,es:dev_control_head
 
 cctLoop:
@@ -3507,9 +3515,8 @@ cctSignal:
     call ReportStatus
 
 cctReportDone:
-    xor bx,bx
-    xchg bx,es:dev_control_thread
-    Signal
+    mov bx,es:usbd_wait_dev
+    SignalWaitDev
 
 cctDone:
     pop edx
@@ -3817,10 +3824,6 @@ ufhDevLoop:
     jz ufhDevNext
 ;
     mov es,ax
-    mov ax,es:dev_control_thread
-    or ax,ax
-    jz ufhDevPipes
-;
     call CheckControl
 
 ufhDevPipes:
