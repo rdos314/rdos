@@ -3048,6 +3048,10 @@ OpenRaw   Proc far
     push es
     mov eax,SIZE xhci_raw_struc
     AllocateSmallGlobalMem
+;
+    CreateWaitDev
+    mov es:usbr_wait_dev,bx
+;
     mov bx,es
     mov es:xr_pos,0
     pop es
@@ -3131,6 +3135,9 @@ FreeRawSel Proc near
 ;
     push bx
     mov gs,bx
+;
+    mov bx,gs:usbr_wait_dev
+    CloseWaitDev
 ;
     mov cx,gs:usbr_buf_size
     mov edx,gs:usbr_buf_linear
@@ -3813,9 +3820,7 @@ HandleRaw   Proc near
     push edx
 ;
     mov ds,bx
-    mov bx,ds:usbr_thread
-    or bx,bx
-    jz hrDone
+    mov bx,ds:usbr_wait_dev
 ;
     sub edx,gs:xp_ring_linear
     jc hrDone
@@ -3845,7 +3850,7 @@ hrHandle:
     call ReportPipeStatus
 
 hrNotError:
-    Signal
+    SignalWaitDev
 
 hrDone:
     pop edx

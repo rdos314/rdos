@@ -237,7 +237,7 @@ usb_raw_struc  STRUC
 usbr_buf_size     DW ?
 usbr_buf_linear   DD ?
 usbr_buf_sel      DW ?
-usbr_thread       DW ?
+usbr_wait_dev     DW ?
 usbr_timeout      DD ?
 
 usb_raw_struc  ENDS

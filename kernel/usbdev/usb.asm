@@ -1721,6 +1721,8 @@ close_usb_pipe Endp
 
 post_usb_raw_pipe_name DB 'Post Usb Raw Pipe', 0
 
+raw_text DB 'Raw', 0
+
 post_usb_raw_pipe Proc far
     push ds
     push es
@@ -1728,6 +1730,7 @@ post_usb_raw_pipe Proc far
     push eax
     push ebx
     push esi
+    push edi
 ;
     mov ax,USB_DEV_HANDLE
     DerefHandle
@@ -1761,10 +1764,14 @@ purpIn:
     jnz purpLeave
 ;
     push ds
-    ClearSignal
     mov ds,gs:usbp_raw_sel
-    GetThread
-    mov ds:usbr_thread,ax
+    push es
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET raw_text
+    mov bx,ds:usbr_wait_dev
+    PrepareWaitDev
+    pop es
 ;
     mov ds,es:usbd_func_sel
     call fword ptr ds:read_raw_proc
@@ -1775,10 +1782,10 @@ purpIn:
     GetSystemTime
     add eax,ds:usbr_timeout
     adc edx,0
-    WaitForSignalWithTimeout
+    mov bx,ds:usbr_wait_dev
+    WaitForDev
     pop edx
     pop eax
-    mov ds:usbr_thread,0
 ;
     mov ds,es:usbd_func_sel
     call fword ptr ds:finish_raw_proc
@@ -1801,10 +1808,14 @@ purpOut:
     jnz purpLeave
 ;
     push ds
-    ClearSignal
     mov ds,gs:usbp_raw_sel
-    GetThread
-    mov ds:usbr_thread,ax
+    push es
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET raw_text
+    mov bx,ds:usbr_wait_dev
+    PrepareWaitDev
+    pop es
 ;
     mov ds,es:usbd_func_sel
     call fword ptr ds:write_raw_proc
@@ -1815,10 +1826,10 @@ purpOut:
     GetSystemTime
     add eax,ds:usbr_timeout
     adc edx,0
-    WaitForSignalWithTimeout
+    mov bx,ds:usbr_wait_dev
+    WaitForDev
     pop edx
     pop eax
-    mov ds:usbr_thread,0
 ;
     mov ds,es:usbd_func_sel
     call fword ptr ds:finish_raw_proc
@@ -1828,6 +1839,7 @@ purpLeave:
     LeaveSection ds:udd_section
 
 purpDone:
+    pop edi
     pop esi
     pop ebx
     pop eax

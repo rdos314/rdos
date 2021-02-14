@@ -2824,6 +2824,10 @@ OpenRaw   Proc far
     push es
     mov eax,SIZE ehci_raw_sel
     AllocateSmallGlobalMem
+;
+    CreateWaitDev
+    mov es:usbr_wait_dev,bx
+;
     mov bx,es
     pop es
 ;
@@ -2859,7 +2863,6 @@ orInRange:
     call AllocateQtd
     mov fs:[edx].qtd_status,80h
     mov gs:er_td,edx
-    mov gs:usbr_thread,0
 ;
     pop gs
 ;
@@ -2925,6 +2928,9 @@ FreeRawSel Proc near
 ;
     push bx
     mov gs,bx
+;
+    mov bx,gs:usbr_wait_dev
+    CloseWaitDev
 ;
     mov cx,gs:usbr_buf_size
     mov edx,gs:usbr_buf_linear
@@ -4265,9 +4271,7 @@ HandleRaw   Proc near
 ;
     mov bp,ds
     mov ds,bx
-    mov bx,ds:usbr_thread
-    or bx,bx
-    jz hrDone
+    mov bx,ds:usbr_wait_dev
 ;
     mov edx,ds:er_td
     mov al,fs:[edx].qtd_status
@@ -4296,7 +4300,7 @@ HandleRaw   Proc near
     pop ds
 
 hrSignal:
-    Signal
+    SignalWaitDev
 
 hrDone:
     pop ebp

@@ -2357,6 +2357,10 @@ orInRange:
     shl eax,2
     add eax,OFFSET or_td_arr
     AllocateSmallGlobalMem
+;
+    CreateWaitDev
+    mov es:usbr_wait_dev,bx
+;
     mov bx,es
     pop es
 ;
@@ -2386,8 +2390,6 @@ orLoop:
     mov ds:[di],edx
     add di,4
     loop orLoop
-;
-    mov ds:usbr_thread,0
 ;
     mov esi,gs:op_ed
     mov ax,gs:ued_maxsize
@@ -2456,6 +2458,9 @@ FreeRawSel Proc near
 ;
     push bx
     mov gs,bx
+;
+    mov bx,gs:usbr_wait_dev
+    CloseWaitDev
 ;
     mov cx,gs:usbr_buf_size
     mov edx,gs:usbr_buf_linear
@@ -3619,9 +3624,7 @@ HandleRaw   Proc near
     push ebp
 ;
     mov ds,bx
-    mov bx,ds:usbr_thread
-    or bx,bx
-    jz hroDone
+    mov bx,ds:usbr_wait_dev
 ;
     mov cx,ds:or_curr_count
     or cx,cx
@@ -3662,7 +3665,7 @@ hroNext:
     add si,4
     loop hroLoop
 ;
-    Signal
+    SignalWaitDev
 
 hroDone:
     pop ebp
