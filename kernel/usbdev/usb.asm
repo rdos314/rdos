@@ -1447,7 +1447,8 @@ ConfigPipe  Endp
 ClearPipe       Proc near
     push bx
 ;
-    mov bx,gs:usbp_packet_sel
+    xor bx,bx
+    xchg bx,gs:usbp_packet_sel
     or bx,bx
     jz clpPacketOk
 ;

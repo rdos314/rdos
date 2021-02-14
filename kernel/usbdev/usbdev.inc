@@ -127,6 +127,7 @@ open_packet_proc          DD ?,?
 
 ; IN  ES        Device
 ; IN  GS        Pipe sel
+; IN  BX        Packet sel
 close_packet_proc          DD ?,?
 
 ; IN  ES        Device
