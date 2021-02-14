@@ -3064,7 +3064,84 @@ CloseRaw   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadRaw   Proc far
-    int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov ds,gs:usbp_raw_sel
+;
+    mov edx,ds:usbr_buf_linear
+    LinearToPhysicalMemBlk
+    mov ebp,eax
+;
+    mov si,OFFSET ur_td_arr
+    xor edi,edi
+    xor bx,bx
+    
+rdLoop:
+    mov edx,ds:[si]
+    or edi,edi
+    jz rdNext
+;
+    LinearToPhysicalMemBlk
+    or al,4
+    mov fs:[edi].utd_link,eax
+
+rdNext:
+    mov edi,edx
+    mov fs:[edi].utd_link,5
+;
+    mov eax,1800000h
+    cmp es:usbd_speed,0
+    jnz rdSpeedOk
+;
+    or eax, 4000000h
+    
+rdSpeedOk:
+    mov fs:[edi].utd_control,eax
+;
+    mov ax,cx
+    cmp ax,gs:ued_maxsize
+    jb rdSizeOk
+;
+    mov ax,gs:ued_maxsize
+
+rdSizeOk:
+    sub cx,ax
+;
+    movzx eax,ax
+    dec eax
+    shl eax,21
+    mov edx,gs:up_host
+    or eax,edx
+    mov al,PID_IN
+    mov fs:[edi].utd_host,eax
+    xor edx,80000h
+    mov gs:up_host,edx
+;
+    mov fs:[edi].utd_buf,ebp
+;
+    movzx eax,gs:ued_maxsize
+    add ebp,eax
+;
+    inc bx
+    add si,4
+    or cx,cx
+    jnz rdLoop
+;
+    mov ds:ur_curr_count,bx
+    lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
+;
+    mov edx,ds:ur_td_arr
+    LinearToPhysicalMemBlk
+    mov esi,gs:up_qh
+    mov fs:[esi].uqh_elem,eax
+;
+    popad
+    pop fs
+    pop ds
     retf32
 ReadRaw   Endp
 
@@ -3150,8 +3227,6 @@ wrSizeOk:
     jnz wrLoop
 ;
     mov ds:ur_curr_count,bx
-    ClearSignal
-;
     lock or gs:usbp_flags,PIPE_FLAG_ACTIVE
 ;
     mov edx,ds:ur_td_arr
@@ -3572,7 +3647,7 @@ HandlePacketIn  Endp
 ;
 ;       NAME:           HandleRawOut
 ;
-;       DESCRIPTION:    Handle raw OUT pipe
+;       DESCRIPTION:    Handle raw pipe
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       ES      Device sel
@@ -3582,7 +3657,7 @@ HandlePacketIn  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleRawOut   Proc near
+HandleRaw   Proc near
     push ds
     push ecx
     push edx
@@ -3594,20 +3669,20 @@ HandleRawOut   Proc near
 ;
     mov cx,ds:ur_curr_count
     or cx,cx
-    jz hroDone
+    jz hrDone
 ;
     mov si,OFFSET ur_td_arr
 
-hroLoop:
+hrLoop:
     mov edx,ds:[si]
     mov eax,fs:[edx].utd_control
     shr eax,16
 ;
     test al,80h
-    jnz hroDone
+    jnz hrDone
 ;
     and al,7Ch
-    jz hroNext
+    jz hrNext
 ;
     lock or gs:usbp_flags,PIPE_FLAG_FAULT
     lock or es:usbd_flags,DEV_FLAG_FAULT
@@ -3622,20 +3697,20 @@ hroLoop:
     call ReportStatus
     pop edx
 
-hroNext:
+hrNext:
     add si,4
-    loop hroLoop
+    loop hrLoop
 ;
     SignalWaitDev
 
-hroDone:
+hrDone:
     pop ebp
     pop esi
     pop edx
     pop ecx
     pop ds
     ret
-HandleRawOut  Endp
+HandleRaw  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3662,9 +3737,17 @@ CheckIn   Proc near
 ;
     mov bx,gs:usbp_packet_sel
     or bx,bx
-    jz ciDone
+    jz ciNotPkt
 ;
     call HandlePacketIn
+    jmp ciDone
+
+ciNotPkt:
+    mov bx,gs:usbp_raw_sel
+    or bx,bx
+    jz ciDone
+;
+    call HandleRaw
 
 ciDone:
     pop ebx
@@ -3698,7 +3781,7 @@ CheckOut   Proc near
     or bx,bx
     jz cotDone
 ;
-    call HandleRawOut
+    call HandleRaw
 
 cotDone:
     pop ebx
