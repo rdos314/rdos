@@ -3511,7 +3511,6 @@ InitDevice Proc near
     mov es:usbd_curr_config,0
     mov es:usbd_thread,0
 ;
-    int 3
     push bx
     CreateWaitDev
     mov es:usbd_wait_dev,bx
@@ -4246,7 +4245,6 @@ FreeDev       Proc near
     push ax
     push bx
 ;
-    int 3
     mov bx,es:usbd_wait_dev
     CloseWaitDev
 ;
