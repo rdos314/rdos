@@ -981,19 +981,19 @@ ustPipeOk:
 
 ustRestart:
     call PowerDownModules
-    jc ustEnd
+    jc ustReset
 ;
     mov ax,500
     WaitMilliSec
 ;
     call PowerUpModules
-    jc ustEnd
+    jc ustReset
 ;
     mov ax,4000
     WaitMilliSec
 ;
     call StartModules
-    jc ustEnd
+    jc ustReset
 ;
     mov ds:can_restart,0
 ;
@@ -1073,6 +1073,10 @@ ustNoRec:
     mov ecx,10
     PostUsbRawPipe
     jmp ustMsgLoop
+
+ustReset:
+    mov bx,ds:cd_dev_handle
+    ResetUsbDevice
 
 ustEnd:
     mov bx,ds:cd_dev_handle
