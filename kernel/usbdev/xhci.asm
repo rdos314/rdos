@@ -689,8 +689,7 @@ rpSlotLoop:
     mov eax,ds:[edi]
     call PortToSpeed
     cmp al,-1
-    clc
-    jne rpDone
+    jne rpOk
 ;
     mov ax,25
     WaitMilliSec
@@ -698,6 +697,14 @@ rpSlotLoop:
 
 rpFail:
     stc
+    jmp rpDone
+
+rpOk:
+    push ax
+    mov ax,25
+    WaitMilliSec
+    pop ax
+    clc
 
 rpDone:
     pop edi
