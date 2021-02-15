@@ -701,7 +701,7 @@ rpFail:
 
 rpOk:
     push ax
-    mov ax,25
+    mov ax,250
     WaitMilliSec
     pop ax
     clc
@@ -3425,7 +3425,6 @@ UnlinkPipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DisableDev   Proc far
-    int 3
     retf32
 DisableDev Endp
         
@@ -3700,10 +3699,10 @@ cevNotError:
 cevSave:
     mov fs:xd_control_deque,di
 ;
-    test es:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
+    test fs:usbd_flags,DEV_FLAG_CONTROL_ACTIVE
     jz cevDone
 ;
-    mov bx,es:usbd_wait_dev
+    mov bx,fs:usbd_wait_dev
     SignalWaitDev
 
 cevDone:
