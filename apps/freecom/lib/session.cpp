@@ -54,6 +54,7 @@
 #include "showpart.h"
 #include "rmpart.h"
 #include "mkpart.h"
+#include "syncpart.h"
 #include "inithd.h"
 #include "initfd.h"
 #include "ping.h"
@@ -162,6 +163,7 @@ static TCommandFactory *rmpart;
 static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *switchcmd;
+static TCommandFactory *syncpart;
 static TCommandFactory *type;
 static TCommandFactory *timev;
 static TCommandFactory *temp;
@@ -211,6 +213,7 @@ TSession::TSession()
         switchcmd = new TSwitchFactory;
         sysinfo = new TSysinfoFactory;
         synctime = new TSyncTimeFactory;
+        syncpart = new TSyncPartitionFactory;
         state = new TStateFactory;
         set = new TSetFactory;
         rmpart = new TRemovePartitionFactory;
@@ -251,7 +254,7 @@ TSession::TSession()
             crash = new TShowCrashFactory;
         else
             crash = 0;
-            
+
         cpy = new TCopyFactory;
         com = new TComFactory;
         newsess = new TNewSessionFactory;
@@ -328,6 +331,7 @@ TSession::~TSession()
         delete temp;
         delete switchcmd;
         delete synctime;
+        delete syncpart;
         delete state;
         delete set;
         delete rmpart;
@@ -521,7 +525,7 @@ void TSession::DisplayPrompt()
                     Write('$');
                     break;
 
-                case 'T':                              
+                case 'T':
                     str = FormatTime(currtime);
                     Write(str.GetData());
                     break;
@@ -642,7 +646,7 @@ int TSession::ReadCon(char *str, int maxsize)
                             {
                                 CurrX = MAX_X;
                                 CurrY--;
-                            }                                
+                            }
                             RdosSetConsoleCursorPosition(CurrY, CurrX);
                             Write(' ');
                             RdosSetConsoleCursorPosition(CurrY, CurrX);
@@ -946,7 +950,7 @@ int TSession::ReadCmd(char *str, int maxsize)
         {
             ch = 0;
             read(FBatHandle, &ch, 1);
-    
+
             if (ch == 0 || ch == 0xa)
             {
                 *str = 0;
@@ -1003,12 +1007,12 @@ const char *TSession::GetArg(int ArgNr)
     arg = FArgList;
 
     while(i != ArgNr && arg)
-        arg = arg->FList; 
+        arg = arg->FList;
 
     if (arg)
         return arg->FName.GetData();
     else
-        return "";   
+        return "";
 }
 
 /*##########################################################################
@@ -1060,7 +1064,7 @@ TString TSession::ExpandParam(const char *param)
         {
             str += *param;
             param++;
-        }    
+        }
     }
     return str;
 }
@@ -1086,7 +1090,7 @@ void TSession::Run()
     if (!env->Find("COMSPEC", param))
     {
         TPathName CurrDir;
-        CurrDir += "command.exe";       
+        CurrDir += "command.exe";
         env->Add("COMSPEC", CurrDir.Get().GetData());
 
         TSession *session = new TSession(*this);
@@ -1112,7 +1116,7 @@ void TSession::Run()
                     break;
             }
             else
-            {                   
+            {
                 cmd->Run();
                 delete cmd;
             }
@@ -1141,7 +1145,7 @@ void TSession::Run(const char *param)
     if (cmd->IsExit())
         delete cmd;
     else
-    {                   
+    {
         cmd->Run();
         delete cmd;
     }
@@ -1197,7 +1201,7 @@ int TSession::Run(const char *name, TArg *ArgList)
                     break;
                 }
                 else
-                {                       
+                {
                     cmd->Run();
                     delete cmd;
                 }

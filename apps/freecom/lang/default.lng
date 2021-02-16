@@ -1514,6 +1514,13 @@ RMPART [/Y] disc part
 Partition %d not found or invalid
 .
 
+:TEXT_CMDHELP_SYNCPART
+Sync harddrive partition
+
+SYNCPART disc
+  disc            Disc number
+.
+
 :TEXT_RMPART_DRIVE_HEAD
 Removing drive %s
 Size: %s
